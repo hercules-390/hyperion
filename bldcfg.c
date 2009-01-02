@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.99  2009/01/02 14:01:02  rbowler
+// herclogo being ignored if not the last statement in config
+//
 // Revision 1.98  2008/12/29 00:00:54  ivan
 // Change semantics for DIAG8CMD configuration statement
 // Disable command redisplay at the console when NOECHO is set
@@ -776,6 +779,7 @@ char   *ssysepoch;                      /* -> System epoch           */
 char   *syroffset;                      /* -> System year offset     */
 char   *stzoffset;                      /* -> System timezone offset */
 char   *sdiag8cmd;                      /* -> Allow diagnose 8       */
+char   *sdiag8echo;                     /* -> Diag 8 Echo opt        */
 char   *sshcmdopt;                      /* -> SHCMDOPT shell cmd opt */
 char   *stoddrag;                       /* -> TOD clock drag factor  */
 char   *sostailor;                      /* -> OS to tailor system to */
@@ -1080,6 +1084,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         syroffset = NULL;
         stzoffset = NULL;
         sdiag8cmd = NULL;
+        sdiag8echo = NULL;
         sshcmdopt = NULL;
         stoddrag = NULL;
         sostailor = NULL;
@@ -1233,6 +1238,11 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             else if (strcasecmp (keyword, "diag8cmd") == 0)
             {
                 sdiag8cmd = operand;
+                if(addargc)
+                {
+                    sdiag8echo = addargv[0];
+                    addargc--;
+                }
             }
             else if (strcasecmp (keyword, "SHCMDOPT") == 0)
             {
@@ -1974,75 +1984,51 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         /* Parse diag8cmd operand */
         if (sdiag8cmd != NULL)
         {
-            char    *tokn;
-            char    *optcpy;
-            int     haveena=0,havedisa=0,haveecho=0,havenecho=0;
-            optcpy=strdup(sdiag8cmd);
-            tokn=strtok(optcpy,",");
-            while(tokn)
+            int d8ena=0,d8echo=1;
+            do
+            {
+                if(strcasecmp(sdiag8cmd,"enable")==0)
+                {
+                    d8ena=1;
+                    break;
+                }
+                if(strcasecmp(sdiag8cmd,"disable")==0)
+                {
+                    break;
+                }
+                fprintf(stderr, _("HHCCF052S Error in %s line %d: "
+                        "invalid diag8cmd option : Operand 1 should be ENABLE or DISABLE\n"),
+                        fname, inc_stmtnum[inc_level]);
+                delayed_exit(1);
+            } while(0);
+            if(sdiag8echo != NULL)
             {
                 do
                 {
-                    if(strcasecmp(tokn,"enable")==0)
+                    if(strcasecmp(sdiag8echo,"echo")==0)
                     {
-                        haveena=1;
+                        d8echo=1;
                         break;
                     }
-                    if(strcasecmp(tokn,"disable")==0)
+                    if(strcasecmp(sdiag8echo,"noecho")==0)
                     {
-                        havedisa=1;
+                        d8echo=0;
                         break;
                     }
-                    if(strcasecmp(tokn,"echo")==0)
-                    {
-                        haveecho=1;
-                        break;
-                    }
-                    if(strcasecmp(tokn,"noecho")==0)
-                    {
-                        havenecho=1;
-                        break;
-                    }
-                    fprintf(stderr, _("HHCCF052S Error in %s line %d: "
-                            "%s: invalid diag8cmd option\n"),
-                            fname, inc_stmtnum[inc_level], tokn);
+                    fprintf(stderr, _("HHCCF053S Error in %s line %d: "
+                            "incorrect diag8cmd option : Operand 2 should be ECHO or NOECHO\n"),
+                            fname, inc_stmtnum[inc_level]);
                     delayed_exit(1);
                 } while(0);
-                tokn=strtok(NULL,",");
-            }
-            free(optcpy);
-            if(haveena & havedisa)
-            {
-                /* can't have disable & enable together ! */
-                fprintf(stderr, _("HHCCF052S Error in %s line %d: "
-                        "invalid diag8cmd option : enable and disable are mutually exclusive\n"),
-                        fname, inc_stmtnum[inc_level]);
-                delayed_exit(1);
-            }
-            if(haveecho & havenecho)
-            {
-                /* can't have echo & noecho together ! */
-                fprintf(stderr, _("HHCCF053W Error in %s line %d: "
-                        "invalid diag8cmd option : echo and noecho are mutually exclusive. echo assumed\n"),
-                        fname, inc_stmtnum[inc_level]);
-                havenecho=0;
-            }
-            if(!haveecho && !havenecho)
-            {
-                haveecho=1;
-            }
-            if(!haveena && !havedisa)
-            {
-                havedisa=1;
             }
 
             diag8cmd=0;
 
-            if (haveena)
+            if (d8ena)
             {
                 diag8cmd = 1;
             }
-            if(havenecho)
+            if(d8echo==0)
             {
                 diag8cmd|=0x80;
             }
