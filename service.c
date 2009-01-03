@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.108  2009/01/03 19:55:11  jj
+// Updated comments - no functional change
+//
 // Revision 1.107  2009/01/03 10:58:58  jj
 // Fix storage reference
 // Update path length to 1024
@@ -724,7 +727,6 @@ U16             residual;               /* Residual data count       */
             /* Set response code X'0040' if unit check occurred */
             if (unitstat & CSW_UC)
             {
-            logmsg(D_("Unit check\n"));
                 /* Set response code X'0040' in SCCB header */
                 sccb->reas = SCCB_REAS_NONE;
                 sccb->resp = SCCB_RESP_BACKOUT;
@@ -747,7 +749,8 @@ U16             residual;               /* Residual data count       */
             sccb->reas = SCCB_REAS_NONE;
             sccb->resp = SCCB_RESP_COMPLETE;
         }
-        else {
+        else
+        {
             evd_len = sizeof(SCCB_EVD_HDR) + 1;
 	    *sysg_cmd = 0x80;
 
