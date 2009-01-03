@@ -4,6 +4,11 @@
 // $Id$
 //
 // $Log$
+// Revision 1.46  2009/01/02 19:21:50  jj
+// DVD-RAM IPL
+// RAMSAVE
+// SYSG Integrated 3270 console fixes
+//
 // Revision 1.45  2008/12/27 23:34:37  rbowler
 // Integrated 3270 (SYSG) console send command
 //
@@ -100,6 +105,7 @@
 #define FEATURE_REGION_RELOCATE
 #define FEATURE_RESUME_PROGRAM
 #define FEATURE_S390_DAT
+#define FEATURE_SCEDIO
 #define FEATURE_SERVICE_PROCESSOR
 #define FEATURE_SET_ADDRESS_SPACE_CONTROL_FAST
 #define FEATURE_SQUARE_ROOT

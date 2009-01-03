@@ -23,6 +23,11 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.106  2009/01/02 19:21:52  jj
+// DVD-RAM IPL
+// RAMSAVE
+// SYSG Integrated 3270 console fixes
+//
 // Revision 1.105  2008/12/31 17:00:44  rbowler
 // Corrections to SYSG console read modified commands
 //
@@ -227,11 +232,16 @@ void sclp_attn_thread(U16 *type)
 
 void sclp_attn_async(U16 type)
 {
-TID sclp_attn_tid;
-U16 *typ;
-    typ=malloc(sizeof(U16));
-    *typ=type;
-    create_thread(&sclp_attn_tid, &sysblk.detattr, sclp_attn_thread, typ, "attn_thread");
+    if(!IS_IC_SERVSIG)
+        sclp_attention(type);
+    else
+    {
+    TID sclp_attn_tid;
+    U16 *typ;
+        typ=malloc(sizeof(U16));
+        *typ=type;
+        create_thread(&sclp_attn_tid, &sysblk.detattr, sclp_attn_thread, typ, "attn_thread");
+    }
 }
 
 
@@ -694,7 +704,7 @@ U16             residual;               /* Residual data count       */
         sysg_data+=1;
 
         /* Execute previously saved 3270 read command */
-        if (IS_CCW_READ(servc_sysg_cmdcode))
+        if (servc_sysg_cmdcode)
         {
             *sysg_cmd = 0x00;
 

@@ -4,6 +4,9 @@
 // $Id$
 
 // $Log$
+// Revision 1.5  2009/01/02 23:03:08  rbowler
+// scedasd.c(221) : error C2065 : 'S_IROTH' : undeclared identifier
+//
 // Revision 1.4  2009/01/02 22:44:06  rbowler
 // scedasd.c(115) : warning C4013: 'assert' undefined
 //
@@ -257,6 +260,7 @@ U64 totwrite = 0;
         ste = (FWORD*)(sysblk.mainstor + sto);
 #endif /*!defined(FEATURE_ESAME)*/
         FETCH_W(pto, ste);
+        STORAGE_KEY(sto, &sysblk) |= (STORKEY_REF);
         if( pto & SEGTAB_INVALID )
             goto eof;
 #if defined(FEATURE_ESAME)
@@ -285,6 +289,7 @@ U64 totwrite = 0;
             pte = (FWORD*)(sysblk.mainstor + pto);
 #endif /*!defined(FEATURE_ESAME)*/
             FETCH_W(pgo, pte);
+            STORAGE_KEY(pto, &sysblk) |= (STORKEY_REF);
             if( !(pgo & PAGETAB_INVALID) )
             {
 #if defined(FEATURE_ESAME)
@@ -356,6 +361,7 @@ U64 totread = 0;
             ste = (FWORD*)(sysblk.mainstor + sto);
 #endif /*!defined(FEATURE_ESAME)*/
             FETCH_W(pto, ste);
+            STORAGE_KEY(sto, &sysblk) |= (STORKEY_REF);
             if( pto & SEGTAB_INVALID )
                 goto eof;
 #if defined(FEATURE_ESAME)
@@ -383,6 +389,7 @@ U64 totread = 0;
                 pte = (FWORD*)(sysblk.mainstor + pto);
 #endif /*!defined(FEATURE_ESAME)*/
                 FETCH_W(pgo, pte);
+                STORAGE_KEY(pto, &sysblk) |= (STORKEY_REF);
                 if( pgo & PAGETAB_INVALID )
                     goto eof;
 #if defined(FEATURE_ESAME)
@@ -419,7 +426,7 @@ S64     seek;
 S64     length;
 S64     totread, totwrite;
 U64     sto;
-char    fname[256];
+char    fname[1024];
 
     switch(scedio_bk->type) {
 
