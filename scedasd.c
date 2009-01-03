@@ -4,6 +4,11 @@
 // $Id$
 
 // $Log$
+// Revision 1.6  2009/01/03 10:58:58  jj
+// Fix storage reference
+// Update path length to 1024
+// Enable SCEDIO in ESA/390 mode
+//
 // Revision 1.5  2009/01/02 23:03:08  rbowler
 // scedasd.c(221) : error C2065 : 'S_IROTH' : undeclared identifier
 //
@@ -470,7 +475,7 @@ char    fname[1024];
         FETCH_DW(length,scedio_bk->length);
 
         totwrite = ARCH_DEP(write_file)(fname,
-          ((scedio_bk->type == SCCB_SCEDIO_TYPE_CREATE) ? O_CREAT : O_APPEND), sto, length);
+          ((scedio_bk->type == SCCB_SCEDIO_TYPE_CREATE) ? (O_CREAT|O_TRUNC) : O_APPEND), sto, length);
 
         STORE_DW(scedio_bk->ncomp,totwrite);
         scedio_bk->flag3 |= SCCB_SCEDIO_FLG3_COMPLETE;
