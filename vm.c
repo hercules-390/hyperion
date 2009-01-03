@@ -14,6 +14,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.49  2008/12/29 00:40:55  ivan
+// Fix signed/unsigned pb after diag8cmd noecho patch
+//
 // Revision 1.48  2008/12/29 00:00:55  ivan
 // Change semantics for DIAG8CMD configuration statement
 // Disable command redisplay at the console when NOECHO is set
@@ -692,7 +695,7 @@ BYTE       c;                           /* Character work area       */
     }
 
     /* Bytes 0-7 contain the system name ("HERCULES" in EBCDIC) */
-    memcpy (buf, "\xC8\xC5\xD9\xC3\xE4\xD3\xC5\xE2", 8);
+    get_lparname(buf);
 
     /* Bytes 8-9 contain the execution environment bits */
     buf[8] = 0x00;
