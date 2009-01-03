@@ -23,6 +23,11 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.107  2009/01/03 10:58:58  jj
+// Fix storage reference
+// Update path length to 1024
+// Enable SCEDIO in ESA/390 mode
+//
 // Revision 1.106  2009/01/02 19:21:52  jj
 // DVD-RAM IPL
 // RAMSAVE
@@ -580,9 +585,7 @@ SCCB_SGQ_BK *sgq_bk = (SCCB_SGQ_BK*)(evd_hdr+1);
 /*      evd_hdr Address of event data header within SCCB             */
 /* Output:                                                           */
 /*      Reason and response codes are set in the SCCB                */
-/* Return code:                                                      */
-/*      0 = Data written to SYSG console                             */
-/*      -1 = SYSG console not ready or unit check                    */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
 void sclp_sysg_write(SCCB_HEADER *sccb)
 {
@@ -657,7 +660,7 @@ BYTE            cmdcode;                /* 3270 read/write command   */
 
         /* Set response code X'0020' in SCCB header */
         sccb->reas = SCCB_REAS_NONE;
-        sccb->resp = SCCB_RESP_COMPLETE;  // maybe this needs to be INFO / COMPLETE
+        sccb->resp = SCCB_RESP_COMPLETE;
     }
 }
     
@@ -669,9 +672,9 @@ BYTE            cmdcode;                /* 3270 read/write command   */
 /* of a 3270 AID byte, followed by a two-byte 3270 cursor address,   */
 /* followed by 3270 orders and data.                                 */
 /*                                                                   */
-/* Return code:                                                      */
-/*      0 = No data pending from SYSG console                        */
-/*      1 = Data copied from SYSG console                            */
+/* Output:                                                           */
+/*      Data, reason and response codes are set in the SCCB          */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
 void sclp_sysg_poll(SCCB_HEADER *sccb)
 {
@@ -742,7 +745,7 @@ U16             residual;               /* Residual data count       */
 
             /* Set response code X'0020' in SCCB header */
             sccb->reas = SCCB_REAS_NONE;
-            sccb->resp = SCCB_RESP_COMPLETE;  // maybe this needs to be INFO / COMPLETE
+            sccb->resp = SCCB_RESP_COMPLETE;
         }
         else {
             evd_len = sizeof(SCCB_EVD_HDR) + 1;
@@ -750,7 +753,7 @@ U16             residual;               /* Residual data count       */
 
             /* Set response code X'0020' in SCCB header */
             sccb->reas = SCCB_REAS_NONE;
-            sccb->resp = SCCB_RESP_COMPLETE;  // maybe this needs to be INFO / COMPLETE
+            sccb->resp = SCCB_RESP_COMPLETE;
         }
 
         /* Update SCCB length field if variable request */
