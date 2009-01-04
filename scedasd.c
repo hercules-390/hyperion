@@ -4,6 +4,9 @@
 // $Id$
 
 // $Log$
+// Revision 1.7  2009/01/03 20:25:20  jj
+// Ensure file is properly rewritten if it already exists (Add O_TRUNC)
+//
 // Revision 1.6  2009/01/03 10:58:58  jj
 // Fix storage reference
 // Update path length to 1024
@@ -477,8 +480,13 @@ char    fname[1024];
         totwrite = ARCH_DEP(write_file)(fname,
           ((scedio_bk->type == SCCB_SCEDIO_TYPE_CREATE) ? (O_CREAT|O_TRUNC) : O_APPEND), sto, length);
 
-        STORE_DW(scedio_bk->ncomp,totwrite);
-        scedio_bk->flag3 |= SCCB_SCEDIO_FLG3_COMPLETE;
+        if(totwrite > 0)
+        {
+            STORE_DW(scedio_bk->ncomp,totwrite);
+            scedio_bk->flag3 |= SCCB_SCEDIO_FLG3_COMPLETE;
+        }
+        else
+            scedio_bk->flag3 &= ~SCCB_SCEDIO_FLG3_COMPLETE;
         break;
 
     default:
@@ -487,10 +495,6 @@ char    fname[1024];
 
     OBTAIN_INTLOCK(NULL);
 
-    // The VM boys appear to have made an error in not
-    // allowing for asyncronous attentions to be merged
-    // with pending interrupts as such we will wait here
-    // until a pending interrupt has been cleared. *JJ
     while(IS_IC_SERVSIG)
     {
         RELEASE_INTLOCK(NULL);
