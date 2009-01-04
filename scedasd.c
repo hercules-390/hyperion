@@ -4,6 +4,9 @@
 // $Id$
 
 // $Log$
+// Revision 1.8  2009/01/04 20:10:24  jj
+// Return error on HMC dasd write error
+//
 // Revision 1.7  2009/01/03 20:25:20  jj
 // Ensure file is properly rewritten if it already exists (Add O_TRUNC)
 //
@@ -480,7 +483,7 @@ char    fname[1024];
         totwrite = ARCH_DEP(write_file)(fname,
           ((scedio_bk->type == SCCB_SCEDIO_TYPE_CREATE) ? (O_CREAT|O_TRUNC) : O_APPEND), sto, length);
 
-        if(totwrite > 0)
+        if(totwrite >= 0)
         {
             STORE_DW(scedio_bk->ncomp,totwrite);
             scedio_bk->flag3 |= SCCB_SCEDIO_FLG3_COMPLETE;
