@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.97  2008/12/27 23:34:37  rbowler
+// Integrated 3270 (SYSG) console send command
+//
 // Revision 1.96  2008/11/24 14:52:21  jj
 // Add PTYP=IFL
 // Change SCPINFO processing to check on ptyp for IFL specifics
@@ -776,6 +779,10 @@ struct SYSBLK {
         int     regs_copy_len;          /* Length to copy for REGS   */
 
         REGS    dummyregs;              /* Regs for unconfigured CPU */
+
+#ifdef OPTION_MSGHLD
+        int     keep_timeout_secs;      /* Message hold time         */
+#endif
 
 };
 

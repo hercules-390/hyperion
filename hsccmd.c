@@ -18,6 +18,11 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.261  2009/01/02 19:21:51  jj
+// DVD-RAM IPL
+// RAMSAVE
+// SYSG Integrated 3270 console fixes
+//
 // Revision 1.260  2009/01/01 02:00:41  hsg001
 // Allow iplc to work with service processor load
 //
@@ -2119,6 +2124,37 @@ int panrate_cmd(int argc, char *argv[], char *cmdline)
 }
 
 #endif /*PANEL_REFRESH_RATE */
+
+#ifdef OPTION_MSGHLD
+///////////////////////////////////////////////////////////////////////
+/* msghldsec command - display or set rate at which console refreshes */
+
+int msghldsec_cmd(int argc, char *argv[], char *cmdline)
+{
+  UNREFERENCED(cmdline);
+  if(argc == 2)
+  {
+    if(!strcasecmp(argv[1], "info"))
+    {
+      logmsg("Current message held time is %d seconds.\n", sysblk.keep_timeout_secs);
+      return(0);
+    }
+    else
+    {
+      int new_timeout;
+
+      if(sscanf(argv[1], "%d", &new_timeout) && new_timeout >= 0)
+      {
+        sysblk.keep_timeout_secs = new_timeout;
+        logmsg("The message held time is set to %d seconds.\n", sysblk.keep_timeout_secs);
+        return(0);
+      }
+    }
+  }
+  logmsg("msghldsec: Invalid usage\n");
+  return(0);
+}
+#endif // OPTION_MSGHLD
 
 ///////////////////////////////////////////////////////////////////////
 /* shell command */
@@ -6814,6 +6850,9 @@ COMMAND ( "toddrag",   toddrag_cmd,   "display or set TOD clock drag factor" )
 #ifdef PANEL_REFRESH_RATE
 COMMAND ( "panrate",   panrate_cmd,   "display or set rate at which console refreshes" )
 #endif
+#ifdef OPTION_MSGHLD
+COMMAND ( "msghldsec", msghldsec_cmd, "display or set the timeout of held messages")
+#endif
 COMMAND ( "syncio",    syncio_cmd,    "display syncio devices statistics" )
 #if defined(OPTION_INSTRUCTION_COUNTING)
 COMMAND ( "icount",    icount_cmd,    "display individual instruction counts" )
@@ -7362,6 +7401,11 @@ CMDHELP ( "panrate",   "Format: \"panrate [nnn | fast | slow]\". Sets or display
                        "panrate fast sets the refresh rate to " MSTRING(PANEL_REFRESH_RATE_FAST) " milliseconds.\n"
                        "panrate slow sets the refresh rate to " MSTRING(PANEL_REFRESH_RATE_SLOW) " milliseconds.\n"
                        "If no operand is specified, panrate displays the current refresh rate.\n"
+                       )
+#endif
+
+#ifdef OPTION_MSGHLD
+CMDHELP ( "msghldsec", "Format: \"mesghldsec [value | info]\". Sets or displays the message held timeout value.\n"
                        )
 #endif
 

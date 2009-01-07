@@ -12,6 +12,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.128  2008/11/04 05:56:31  fish
+// Put ensure consistent create_thread ATTR usage change back in
+//
 // Revision 1.127  2008/11/03 15:31:54  rbowler
 // Back out consistent create_thread ATTR modification
 //
@@ -281,6 +284,11 @@ TID     logcbtid;                       /* RC file thread identifier */
 
     /* Clear the system configuration block */
     memset (&sysblk, 0, sizeof(SYSBLK));
+
+#ifdef OPTION_MSGHLD
+    /* Set the default timeout value */
+    sysblk.keep_timeout_secs = 120;
+#endif
 
     /* Initialize thread creation attributes so all of hercules
        can use them at any time when they need to create_thread
