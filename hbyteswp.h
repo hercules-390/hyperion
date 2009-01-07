@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.10  2006/12/08 09:43:21  jj
+// Add CVS message log
+//
 
 #ifndef _BYTESWAP_H
 #define _BYTESWAP_H
@@ -32,13 +35,21 @@
 
     static __inline__ uint16_t (ATTR_REGPARM(1) bswap_16)(uint16_t x)
     {
+#if defined(__x86_64__)
+      __asm__("xchgb %b0,%h0" : "=Q" (x) :  "0" (x));
+#else
       __asm__("xchgb %b0,%h0" : "=q" (x) :  "0" (x));
+#endif
       return x;
     }
 
     static __inline__ uint32_t (ATTR_REGPARM(1) bswap_32)(uint32_t x)
     {
+#if defined(__x86_64__)
+      __asm__("bswapl %0" : "=r" (x) : "0" (x));
+#else
       __asm__("bswap %0" : "=r" (x) : "0" (x));
+#endif
       return x;
     }
 
@@ -80,7 +91,8 @@
 
 #else // !defined( _MSVC_ )
 
-  #define bswap_64(_x) \
+  #if !defined(NO_ASM_BYTESWAP)
+    #define bswap_64(_x) \
           ( ((U64)((_x) & 0xFF00000000000000ULL) >> 56) \
           | ((U64)((_x) & 0x00FF000000000000ULL) >> 40) \
           | ((U64)((_x) & 0x0000FF0000000000ULL) >> 24) \
@@ -89,6 +101,31 @@
           | ((U64)((_x) & 0x0000000000FF0000ULL) << 24) \
           | ((U64)((_x) & 0x000000000000FF00ULL) << 40) \
           | ((U64)((_x) & 0x00000000000000FFULL) << 56) )
+  #else
+    static __inline__ uint64_t (ATTR_REGPARM(1) bswap_64)(uint64_t x)
+    {
+    #if defined(__x86_64__)
+      __asm__("bswapq %0" : "=r" (x) : "0" (x));
+      return x;
+    #else // swap the two words after byteswapping them
+      union
+      {
+        struct
+        {
+          uint32_t high,low;
+        } words;
+        uint64_t quad;
+      } value;
+      
+      value.quad=x;
+      __asm__("bswap %0" : "=r" (value.words.high) : "0" (value.words.high));
+      __asm__("bswap %0" : "=r" (value.words.low) : "0" (value.words.low));
+      __asm__("xchgl %0,%1" : "=r" (value.words.high), "=r" (value.words.low) :
+              "0" (value.words.high), "1" (value.words.low));
+      return value.quad;
+    #endif // defined(__x86_64__)
+    }
+  #endif // !defined(NO_ASM_BYTESWAP)
 
 #endif // defined( _MSVC_ )
 
