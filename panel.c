@@ -28,6 +28,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.251  2008/12/21 03:27:47  ivan
+// Logic change for instruction count formating
+// previous logic was having problems with numbers larger than 10 billion
+//
 // Revision 1.250  2008/12/18 16:14:57  bernard
 // instcount with comma separator
 //
@@ -595,7 +599,7 @@ void colormsg(PANMSG *p)
 #if defined(OPTION_MSGHLD)
         p->keep = 1;
         gettimeofday(&p->expiration, NULL);
-        p->expiration.tv_sec += KEEP_TIMEOUT_SECS;
+        p->expiration.tv_sec += sysblk.keep_timeout_secs;
 #endif // defined(OPTION_MSGHLD)
         i += 4; // skip keep
       }
