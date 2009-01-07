@@ -4,6 +4,9 @@
 // $Id$
 
 // $Log$
+// Revision 1.9  2009/01/04 20:51:26  jj
+// typo
+//
 // Revision 1.8  2009/01/04 20:10:24  jj
 // Return error on HMC dasd write error
 //
@@ -93,11 +96,12 @@ int ARCH_DEP(load_hmc) (char *fname, int cpu, int clear)
 {
 REGS   *regs;                           /* -> Regs                   */
 FILE   *fp;
-char    inputline[1024];
+char    inputbuff[1024];
+char   *inputline;
 char    filename[1024];                 /* filename of image file    */
 char    pathname[1024];                 /* pathname of image file    */
 U32     fileaddr;
-int     rc, rx;                         /* Return codes (work)       */
+int     rc = 0;                         /* Return codes (work)       */
 
     /* Get started */
     if (ARCH_DEP(common_load_begin) (cpu, clear) != 0)
@@ -128,16 +132,24 @@ int     rc, rx;                         /* Return codes (work)       */
 
     do
     {
-        rc = fgets(inputline,sizeof(inputline),fp) != NULL;
-        ASSERT(sizeof(pathname) == 1024);
-        rx = sscanf(inputline,"%1024s %i",pathname,&fileaddr);
-        hostpath(filename, pathname, sizeof(filename));
+        inputline = fgets(inputbuff,sizeof(inputbuff),fp);
+
+#if !defined(_MSVC_)
+        if(inputline && *inputline == 0x1a)
+            inputline = NULL;
+#endif /*!defined(_MSVC_)*/
+
+        if(inputline)
+        {
+            rc = sscanf(inputline,"%1024s %i",pathname,&fileaddr);
+            hostpath(filename, pathname, sizeof(filename));
+        }
 
         /* If no load address was found load to location zero */
-        if(rc && rx < 2)
+        if(inputline && rc < 2)
             fileaddr = 0;
 
-        if(rc && rx > 0 && *filename != '*' && *filename != '#')
+        if(inputline && rc > 0 && *filename != '*' && *filename != '#')
         {
             /* Prepend the directory name if one was found
                and if no full pathname was specified */
@@ -163,7 +175,7 @@ int     rc, rx;                         /* Return codes (work)       */
             }
             sysblk.main_clear = sysblk.xpnd_clear = 0;
         }
-    } while(rc);
+    } while(inputline);
     fclose(fp);
 
     /* Finish up... */
