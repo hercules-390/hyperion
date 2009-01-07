@@ -32,6 +32,9 @@
 ###############################################################################
 
 # $Log$
+# Revision 1.199  2008/12/17 23:03:06  rbowler
+# Remove rogue spaces from AC_SUBST by Pasi Pirhonen
+#
 # Revision 1.198  2008/12/04 17:39:02  rbowler
 # Add ability to configure group name with --enable-setuid-hercifc=name
 #
@@ -1567,44 +1570,6 @@ else
     hc_cv_setuid_hercifc=no
 fi
 
-if test "$hc_cv_is_apple" = "yes"; then
-
-    AC_ARG_ENABLE( universal-binary,
-
-        AC_HELP_STRING( [--enable-universal-binary],
-
-            [build Mac OS X universal binary]
-        ),
-        [
-            case "${enableval}" in
-            yes) hc_cv_opt_build_apple_univ_binary=yes             ;;
-            no)  hc_cv_opt_build_apple_univ_binary=no              ;;
-            *)   AC_MSG_RESULT( [ERROR: invalid 'universal-binary' option] )
-                 hc_error=yes
-                 ;;
-            esac
-        ],
-        [hc_cv_opt_build_apple_univ_binary=no]
-    )
-
-    hc_cv_build_apple_univ_binary=$hc_cv_opt_build_apple_univ_binary
-
-    # If we're building a universal binary, turn off regparm and assembler
-    # byteswap: while the Intel compiler can deal with them, the PPC
-    # compiler cannot, and only those options common to both can be used.
-    # Turn off dependency tracking, too. -- JRM
-
-    if test "$hc_cv_build_apple_univ_binary" = "yes"; then
-        hc_cv_regparm_attr_supported=no
-        hc_cv_asm_byteswap=no
-        am_cv_CC_dependencies_compiler_type=none
-        am_cv_CXX_dependencies_compiler_type=none
-    fi
-
-else
-    hc_cv_build_apple_univ_binary=no
-fi
-
 #-----------------------------------------------------------------
 #  The handling of AC_ARG_ENABLE for "--enable-getoptwrapper"
 #  is defined within the 'HC_ARG_ENABLE_GETOPTWRAPPER' macro
@@ -1867,22 +1832,6 @@ if test "$hc_cv_auto_optimize" = "yes"; then
             ;;
     esac
 
-    if test "$hc_cv_is_intel_x86_arch" = "yes"; then
-
-        if test "$hc_cv_build_apple_univ_binary" = "yes"; then
-            hc_cv_optimization_flags="$hc_cv_optimization_flags -arch i386 -arch ppc"
-        else
-            hc_cv_optimization_flags="$hc_cv_optimization_flags -march=$hc_cv_intel_cpu_type"
-
-            if test "$hc_cv_builtin_alloca_broke" != "yes"  &&
-               test "$hc_cv_opt_debug"            != "yes"; then
-
-                hc_cv_optimization_flags="$hc_cv_optimization_flags -fomit-frame-pointer"
-            else
-                hc_cv_optimization_flags="$hc_cv_optimization_flags -fno-omit-frame-pointer"
-            fi
-        fi
-    fi
 fi
 
 if test "x$hc_cv_optimization_flags" = "x"; then

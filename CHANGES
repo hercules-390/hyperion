@@ -1,3 +1,5 @@
+07 Jan 2009 Remove --enable-universal-binary configure option; doesn't work
+            on Leopard due to libtool compiler options - Jay Maynard
 07 Jan 2009 Preliminary changes for 3.06 - Jay Maynard
 07 Jan 2009 Added x86_64 assembler byteswap assists - Jay Maynard
 07 Jan 2009 msghld command with clear option - Bernard van der Helm
