@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.252  2009/01/07 16:11:16  bernard
+// msghldsec command
+//
 // Revision 1.251  2008/12/21 03:27:47  ivan
 // Logic change for instruction count formating
 // previous logic was having problems with numbers larger than 10 billion
@@ -501,7 +504,7 @@ static void unkeep_by_keepnum( int keepnum, int perm )
 /*-------------------------------------------------------------------*/
 /* unkeep messages once expired                                      */
 /*-------------------------------------------------------------------*/
-void expire_kept_msgs()
+void expire_kept_msgs(int unconditional)
 {
 #if defined(OPTION_MSGHLD)
   struct timeval now;
@@ -514,7 +517,7 @@ void expire_kept_msgs()
   {
     for (i=0, pk=keptmsgs; pk; i++, pk = pk->next)
     {
-      if (now.tv_sec >= pk->expiration.tv_sec)
+      if (unconditional || now.tv_sec >= pk->expiration.tv_sec)
       {
         unkeep_by_keepnum(i,1); // remove message from chain
         break;                  // start over again from the beginning
@@ -672,7 +675,7 @@ static void scroll_up_lines( int numlines, int doexpire )
     int i;
 
     if (doexpire)
-        expire_kept_msgs();
+        expire_kept_msgs(0);
 
     for (i=0; i < numlines && topmsg != oldest_msg(); i++)
     {
@@ -703,7 +706,7 @@ static void scroll_down_lines( int numlines, int doexpire )
     int i;
 
     if (doexpire)
-        expire_kept_msgs();
+        expire_kept_msgs(0);
 
     for (i=0; i < numlines && topmsg != newest_msg(); i++)
     {
@@ -734,20 +737,20 @@ static void scroll_down_lines( int numlines, int doexpire )
 static void page_up( int doexpire )
 {
     if (doexpire)
-        expire_kept_msgs();
+        expire_kept_msgs(0);
     scroll_up_lines( SCROLL_LINES - 1, 0 );
 }
 static void page_down( int doexpire )
 {
     if (doexpire)
-        expire_kept_msgs();
+        expire_kept_msgs(0);
     scroll_down_lines( SCROLL_LINES - 1, 0 );
 }
 
 static void scroll_to_top_line( int doexpire )
 {
     if (doexpire)
-        expire_kept_msgs();
+        expire_kept_msgs(0);
     topmsg = oldest_msg();
     while (keptmsgs)
         unkeep( keptmsgs );
@@ -756,7 +759,7 @@ static void scroll_to_top_line( int doexpire )
 static void scroll_to_bottom_line( int doexpire )
 {
     if (doexpire)
-        expire_kept_msgs();
+        expire_kept_msgs(0);
     while (topmsg != newest_msg())
         scroll_down_lines( 1, 0 );
 }
@@ -764,7 +767,7 @@ static void scroll_to_bottom_line( int doexpire )
 static void scroll_to_bottom_screen( int doexpire )
 {
     if (doexpire)
-        expire_kept_msgs();
+        expire_kept_msgs(0);
     scroll_to_bottom_line( 0 );
     page_up( 0 );
 }
@@ -2905,7 +2908,7 @@ FinishShutdown:
                 saved_cons_col = cur_cons_col;
 
                 /* Unkeep kept messages if needed */
-                expire_kept_msgs();
+                expire_kept_msgs(0);
 
                 /* Draw kept messages first */
                 for (i=0, p=keptmsgs; i < (SCROLL_LINES + numkept) && p; i++, p = p->next)
