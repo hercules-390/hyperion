@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.262  2009/01/07 16:00:02  bernard
+// add msghldsec command
+//
 // Revision 1.261  2009/01/02 19:21:51  jj
 // DVD-RAM IPL
 // RAMSAVE
@@ -2127,9 +2130,9 @@ int panrate_cmd(int argc, char *argv[], char *cmdline)
 
 #ifdef OPTION_MSGHLD
 ///////////////////////////////////////////////////////////////////////
-/* msghldsec command - display or set rate at which console refreshes */
+/* msghld command - display or set rate at which console refreshes */
 
-int msghldsec_cmd(int argc, char *argv[], char *cmdline)
+int msghld_cmd(int argc, char *argv[], char *cmdline)
 {
   UNREFERENCED(cmdline);
   if(argc == 2)
@@ -2137,6 +2140,12 @@ int msghldsec_cmd(int argc, char *argv[], char *cmdline)
     if(!strcasecmp(argv[1], "info"))
     {
       logmsg("Current message held time is %d seconds.\n", sysblk.keep_timeout_secs);
+      return(0);
+    }
+    else if(!strcasecmp(argv[1], "clear"))
+    {
+      expire_kept_msgs(1);
+      logmsg("Held messages cleared.\n");
       return(0);
     }
     else
@@ -2151,7 +2160,7 @@ int msghldsec_cmd(int argc, char *argv[], char *cmdline)
       }
     }
   }
-  logmsg("msghldsec: Invalid usage\n");
+  logmsg("msghld: Invalid usage\n");
   return(0);
 }
 #endif // OPTION_MSGHLD
@@ -6851,7 +6860,7 @@ COMMAND ( "toddrag",   toddrag_cmd,   "display or set TOD clock drag factor" )
 COMMAND ( "panrate",   panrate_cmd,   "display or set rate at which console refreshes" )
 #endif
 #ifdef OPTION_MSGHLD
-COMMAND ( "msghldsec", msghldsec_cmd, "display or set the timeout of held messages")
+COMMAND ( "msghld",    msghld_cmd, "display or set the timeout of held messages")
 #endif
 COMMAND ( "syncio",    syncio_cmd,    "display syncio devices statistics" )
 #if defined(OPTION_INSTRUCTION_COUNTING)
@@ -7405,7 +7414,10 @@ CMDHELP ( "panrate",   "Format: \"panrate [nnn | fast | slow]\". Sets or display
 #endif
 
 #ifdef OPTION_MSGHLD
-CMDHELP ( "msghldsec", "Format: \"mesghldsec [value | info]\". Sets or displays the message held timeout value.\n"
+CMDHELP ( "msghld",    "Format: \"msghld [value | info | clear]\".\n"
+                       "  value: timeout value of held message in seconds\n"
+                       "  info:  displays the timeout value\n"
+                       "  clear: releases the held messages\n"
                        )
 #endif
 

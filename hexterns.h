@@ -10,6 +10,11 @@
 // $Id$
 //
 // $Log$
+// Revision 1.26  2009/01/02 19:21:51  jj
+// DVD-RAM IPL
+// RAMSAVE
+// SYSG Integrated 3270 console fixes
+//
 // Revision 1.25  2008/12/30 15:40:01  rbowler
 // Allow $(LPARNAME) in herclogo file
 //
@@ -242,6 +247,7 @@ extern const char* arch_name[];
 extern const char* get_arch_mode_string(REGS* regs);
 
 /* Functions in module panel.c */
+void expire_kept_msgs(int unconditional);
 #ifdef OPTION_MIPS_COUNTING
 HPAN_DLL_IMPORT U32    maxrates_rpt_intvl;  // (reporting interval)
 HPAN_DLL_IMPORT U32    curr_high_mips_rate; // (high water mark for current interval)
