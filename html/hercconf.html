@@ -121,6 +121,8 @@ and how they are used.
     0228.8    <a href="#3270">3270</a>    GROUP2
     0230.16   <a href="#3270">3270</a>
 
+    0000      <a href="#SYSG">SYSG</a>    SYSGCONS
+
     0120      <a href="#3380">3380</a>    <a href="#ENHSYMINC">${DASD_PATH=dasd/}</a>mvsv5r.120
     0121      <a href="#3380">3380</a>    <a href="#ENHSYMINC">${DASD_PATH=dasd/}</a>mvsv5d.121
     0122      <a href="#3380">3380</a>    <a href="#ENHSYMINC">${DASD_PATH=dasd/}</a>mvswk1.122
@@ -1664,6 +1666,11 @@ and how they are used.
                 <td>TN3270 client connection</td>
             </tr>
 
+            <tr><td>SYSG</td>
+                <td><a href="#SYSG">Integrated 3270 console</a></td>
+                <td>TN3270 client connection</td>
+            </tr>
+
             <tr><td>1052, 3215</td>
                 <td><a href="#conprkb">Console printer-keyboards</a></td>
                 <td>Telnet client connection</td>
@@ -1802,6 +1809,7 @@ and how they are used.
     <p>
 
     <dl>
+    <a name="loc3270group"></a>
     <dt><code><em>groupname</em></code>
     <dd><p>
         If a terminal group name is given on the device statement, a device type
@@ -1816,6 +1824,7 @@ and how they are used.
         obviously <i>not</i> be a hexadecimal number.
         <p>
 
+    <a name="loc3270ipaddr"></a>
     <dt><code><em>ipaddr</em> [ <em>mask</em> ]</code>
     <dd><p>
         The optional IP address and optional subnet mask specify the ip address(es)
@@ -1860,6 +1869,34 @@ and how they are used.
     To summarize, the device number suffix always takes precedence over any group name
     which may also be specified, and any group name, if specified, always takes precedence
     over any ip address / subnet mask value which may also be specified.
+    <p>
+
+<hr width="50%"><p>
+
+<a name="SYSG"></a>
+<dt><em>Integrated 3270 console device</em>
+<dd><p>
+
+    The integrated 3270 (SYSG) console is similar to a <a href="#loc3270">local non-SNA
+    3270</a> device, except that it is not addressed by subchannel number and it is
+    supported only by certain system control programs. The SYSG console is defined
+    like a 3270 device except that the device type is SYSG and the device number is
+    ignored. Only one SYSG console can be defined in a configuration.
+    <p>
+
+    Use tn3270 client software to connect to the SYSG console device via the port number
+    specified on the <a href="#CNSLPORT">CNSLPORT</a> statement, just as you would connect
+    to a regular local non-SNA 3270 device.
+    <p>
+
+    The SYSG console configuration statement recognizes optional arguments which specify
+    <a href="#loc3270group">group name</a> and <a href="#loc3270ipaddr">IP address</a>
+    in the same way as previously described for a <a href="#loc3270">local non-SNA
+    3270</a> device. These optional arguments provide a means to ensure that a given
+    tn3270 client can connect directly to the SYSG console. If the group name and IP
+    address arguments are not specified, then the SYSG console is considered to be a
+    member of the general pool of devices eligible for connection to any incoming
+    tn3270 client.
     <p>
 
 <hr width="50%"><p>
