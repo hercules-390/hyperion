@@ -8,6 +8,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.11  2009/01/07 18:00:13  jmaynard
+// Added x86_64 assembler swap assists for those systems that don't have
+// byteswap.h in the library.
+//
 // Revision 1.10  2006/12/08 09:43:21  jj
 // Add CVS message log
 //
@@ -91,7 +95,7 @@
 
 #else // !defined( _MSVC_ )
 
-  #if !defined(NO_ASM_BYTESWAP)
+  #if defined(NO_ASM_BYTESWAP)
     #define bswap_64(_x) \
           ( ((U64)((_x) & 0xFF00000000000000ULL) >> 56) \
           | ((U64)((_x) & 0x00FF000000000000ULL) >> 40) \
@@ -125,7 +129,7 @@
       return value.quad;
     #endif // defined(__x86_64__)
     }
-  #endif // !defined(NO_ASM_BYTESWAP)
+  #endif // defined(NO_ASM_BYTESWAP)
 
 #endif // defined( _MSVC_ )
 
