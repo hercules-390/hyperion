@@ -597,8 +597,7 @@ and how they are used.
     [,...]</code>
 <dd><p>
     specifies the type of engine for each installed processor.
-    The default engine type is CP or IL depending on the value of
-    the <a href=#PGMPRDOS>PGMPRDOS</a> parameter.
+    The default engine type is CP.
     <p>
     <em>nn</em>* is an optional repeat count.
     <p>
@@ -617,7 +616,7 @@ and how they are used.
     variable MAX_CPU_ENGINES.
     If the ENGINES statement specifies more than MAX_CPU_ENGINES, the excess
     engines are ignored. If fewer than MAX_CPU_ENGINES are specified, the
-    remaining engines are set to the default engine type.
+    remaining engines are set to type CP.
     <p>
     See the <a href="#NUMCPU">NUMCPU</a> statement for a discussion of
     MAX_CPU_ENGINES.
@@ -839,8 +838,7 @@ and how they are used.
 <dd><p>
     specifies the number of emulated processor engines
     which will be configured online at startup time.
-    All processors are IFL engines unless otherwise specified by the
-    <a href="#PGMPRDOS">PGMPRDOS</a> or
+    All processors are CP engines unless otherwise specified by the
     <a href="#ENGINES">ENGINES</a> statement.
     If NUMCPU is less than MAX_CPU_ENGINES then the remaining engines can be
     configured online later.
@@ -934,13 +932,12 @@ and how they are used.
 <dt><code>PGMPRDOS &nbsp; RESTRICTED &#124; LICENSED</code>
 <dd><p>
     specifies whether or not Hercules will run licensed program product ESA
-    or z/Architecture operating systems.  Specify <code>RESTRICTED</code> to
-    make Hercules emulate an IFL (Integrated Facility for Linux) CPU. With
-    this specified, licensed ESA or z/Architecture OSes will refuse to
-    start. OS/390 and z/OS will enter an A7A wait state, with reason code 7,
-    at IPL time.  Specify <code>LICENSED</code> to allow these operating
-    systems to run normally. This parameter has no effect on Linux/390,
-    Linux for z/Series, or any 370-mode OS.
+    or z/Architecture operating systems. If <code>RESTRICTED</code> is
+    specified, these operating systems will cause Hercules to stop all CPUs
+    when they identify themselves to the service processor.  Specify
+    <code>LICENSED</code> to allow these operating systems to run normally.
+    This parameter has no effect on Linux/390, Linux for z/Series, or any
+    370-mode OS.
     <p>
 
     <p class="warning">
