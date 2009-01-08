@@ -31,6 +31,11 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.101  2009/01/02 19:21:50  jj
+// DVD-RAM IPL
+// RAMSAVE
+// SYSG Integrated 3270 console fixes
+//
 // Revision 1.100  2009/01/02 14:11:18  ivan
 // Change DIAG8CMD command statement semantics to be more consistent with other configuration statements
 // Syntax is now :
@@ -875,6 +880,7 @@ int     ptt = 0;                        /* Pthread trace table size  */
 #endif /*OPTION_PTTRACE*/
 BYTE    c;                              /* Work area for sscanf      */
 char   *styp;                           /* -> Engine type string     */
+char   *styp_values[] = {"CP","CF","AP","IL","??","IP"}; /* type values */
 BYTE    ptyp;                           /* Processor engine type     */
 #if defined(OPTION_LPARNAME)
 char   *lparname;                       /* DIAG 204 lparname         */
@@ -1919,8 +1925,8 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 }
                 while (count-- > 0 && cpu < MAX_CPU_ENGINES)
                 {
-                    logmsg("HHCCF077I Engine %d is type %d\n",
-                            cpu, ptyp);
+                    logmsg("HHCCF077I Engine %d set to type %d (%s)\n",
+                            cpu, ptyp, styp_values[ptyp]);
                     sysblk.ptyp[cpu++] = ptyp;
                 }
                 styp = strtok(NULL,",");

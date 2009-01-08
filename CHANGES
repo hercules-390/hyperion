@@ -1,3 +1,5 @@
+08 Jan 2009 Cosmetic improvement to CPU type display on startup - Jay
+            Maynard
 07 Jan 2009 Remove --enable-universal-binary configure option; doesn't work
             on Leopard due to libtool compiler options - Jay Maynard
 07 Jan 2009 Preliminary changes for 3.06 - Jay Maynard
