@@ -11,19 +11,38 @@ Hercules: What's new</TITLE>
 <h2>What's new in release 3.06</h2>
 <p>Release date: 10 January 2009
 <ul>
-<li>Integrated 3270 (SYSG) and VT220 (SYSASCII) console support (Roger Bowler,
-Jan Jaeger)
+<li>Integrated 3270 (SYSG) console support (Roger Bowler, Jan Jaeger)
 <li>HMC DVD-RAM read/write support (Jan Jaeger)
 <li>64-bit native version now supported on Mac OS X (Jay Maynard)
 <li>Ability to specify IFL, zIIP, and zAAP engine types (Roger Bowler, Jan
-Jaeger)
+Jaeger, Ivan Warren)
 <li>Important messages now held on command-line console (Bernard van der
 Helm, David "Fish" Trout)
+<li>Tape automount CCW support (David "Fish" Trout)
 <li>Support for FLEX-ES FakeTape tape images (David "Fish" Trout; FLEX-ES and
 FakeTape are trademarks of Fundamental Software, Inc.)
 <li>More complete 3490 and 3590 tape support (David "Fish" Trout)
 <li>Solaris build support (Jeff Savit)
-<li>z10 instruction feature support (Roger Bowler, Jan Jaeger, Paul Leisy)
+<li>FreeBSD build support
+<li>Panel enhancements
+<ul>
+<li>Display virtual storage in primary, secondary, and home space (Paul Leisy)
+<li>Display and modify PSW fields by panel command (Roger Bowler)
+<li>Modify control registers by panel command (Roger Bowler)
+<li>Specify IPL parameter by PARM operand (Ivan Warren)
+<li>New panel commands: automount cmdtgt ctc herc msghld pscp scp sfk (David
+"Fish" Trout, Bernard van der Helm)
+</ul>
+<li>LEGACYSENSEID configuration statement (Ivan Warren)
+<li>z10 instruction feature support
+<ul>
+<li>Parsing-Enhancement Facility (Bernard van der Helm)
+<li>Message-Security-Assist Extension 2 (Bernard van der Helm)
+<li>General-Instructions-Extension Facility (Roger Bowler, Jan Jaeger)
+<li>Execute-Extensions Facility (Roger Bowler)
+<li>Move-with-Optional-Specifications Facility (Roger Bowler)
+<li>Compare-and-Swap-and-Store Facility 2 (Ivan Warren)
+</ul>
 <li>Many emulation fixes (Roger Bowler, Jan Jaeger, Ivan Warren, David
 "Fish" Trout, Greg Smith, Paul Leisy, Jay Maynard, Bernard van der Helm,
 Kevin Leonard, Tony Harminc)
@@ -34,7 +53,7 @@ Kevin Leonard, Tony Harminc)
 <p>Release date: 23 June 2007
 <ul>
 <li>Prebuilt Cygwin binary no longer supplied; building Cygwin version from
-source still supported (Jay Maynard) 
+source still supported (Jay Maynard)
 <li>New system features: Compare-and-Swap-and-Store, Conditional SSKE, Decimal
 Floating Point, Floating Point Support Enhancement (Roger Bowler)
 <li>Extract CPU Time Facility (Jan Jaeger)
@@ -62,7 +81,7 @@ Bowler), logopt (Kevin Leonard), cd, pwd, timerint, defsym (David "Fish" Trout)
 <h2>What's new in release 3.04.1</h2>
 <p>Release date: 25 March 2006
 <ul>
-<li>Fix to allow building for Intel-based Mac OS X (Jay Maynard) 
+<li>Fix to allow building for Intel-based Mac OS X (Jay Maynard)
 <br>Note: This version only applies to the Mac OS X 10.4 (Tiger) platform.
 Version 3.04 is current for all other platforms.
 </ul>
