@@ -12,15 +12,16 @@ also need to tell configure what environment you're building for, with
 ARCHITECTURE    -arch   --host
 32-bit Intel    i386    i686
 64-bit Intel    x86_64  x86_64
-32-bit PowerPC  ppc     ppc
-64-bit PowerPC  ppc64   ppc64
+32-bit PowerPC  ppc     powerpc
+64-bit PowerPC  ppc64   powerpc64
 
 The argument for --host is the first part of a build triplet, specified as
-<architecture>-<vendor>-<OS>. OS is "darwin8.8.0" for OS X 10.4 (Tiger), and
-"darwin9.6.0" for OS X 10.5 (Leopard). This makes, for example, building for
-64-bit Intel on Leopard use "--host x86_64-apple-darwin9.6.0". The -arch
-argument is specified by overriding the CC (C compiler) value and adding it
-to the end, as in CC="gcc -arch x86_64".
+<architecture>-<vendor>-<OS>. The vendor is apple for all OS X builds. OS is
+"darwin8.8.0" for OS X 10.4 (Tiger), and "darwin9.6.0" for OS X 10.5
+(Leopard). This makes, for example, building for 64-bit Intel on Leopard use
+"--host x86_64-apple-darwin9.6.0". The -arch argument is specified by
+overriding the CC (C compiler) value and adding it to the end, as in CC="gcc
+-arch x86_64".
 
 If you're building for an OS that's not the one you're running on, you also
 need to tell the build environment that you're doing so. For building for
@@ -54,4 +55,3 @@ Once you have the various architectures built, you can combine them into one
 binary with lipo. This is done by saying "lipo <input-files> -output
 <output-file> -create". The best approach is to automate this with a shell
 script; I've done this for my own use.
-
