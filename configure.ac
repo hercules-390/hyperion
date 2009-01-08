@@ -32,6 +32,11 @@
 ###############################################################################
 
 # $Log$
+# Revision 1.200  2009/01/07 23:38:43  jmaynard
+# Remove --enable-universal-binary option, since it doesn't work with Leopard:
+# gcc 4.0 complains about libtool-mandated options when multiple architectures
+# are specified.
+#
 # Revision 1.199  2008/12/17 23:03:06  rbowler
 # Remove rogue spaces from AC_SUBST by Pasi Pirhonen
 #
@@ -1831,7 +1836,18 @@ if test "$hc_cv_auto_optimize" = "yes"; then
             hc_cv_optimization_flags="$hc_cv_optimization_flags -mcpu=$host_cpu -mtune=$host_cpu -frename-registers"
             ;;
     esac
+    if test "$hc_cv_is_intel_x86_arch" = "yes"; then
 
+        hc_cv_optimization_flags="$hc_cv_optimization_flags -march=$hc_cv_intel_cpu_type"
+
+        if test "$hc_cv_builtin_alloca_broke" != "yes"  &&
+           test "$hc_cv_opt_debug"            != "yes"; then
+
+            hc_cv_optimization_flags="$hc_cv_optimization_flags -fomit-frame-pointer"
+        else
+            hc_cv_optimization_flags="$hc_cv_optimization_flags -fno-omit-frame-pointer"
+        fi
+    fi
 fi
 
 if test "x$hc_cv_optimization_flags" = "x"; then
