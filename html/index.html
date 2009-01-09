@@ -106,15 +106,17 @@ RPM (if you want to build RPMs yourself)
 Windows Installer package
 <li><a href="http://www.hercules-390.org/hercules-3.06-native.exe">hercules-3.06-native.exe</a>:
 Binaries only self-extracting archive
+<li><a href="http://www.hercules-390.org/hercules-3.06-native.zip">hercules-3.06-native.zip</a>:
+Pre-installed archive
 <p>
 <small>
-<b>Note:</b> if you haven't ever installed the MSVC (native) version of
-Hercules on your system before (i.e. if this is the first time you are
-installing it), please use the .msi Windows Installer package since it will
-ensure the required Microsoft support DLLs are also installed. If you are
-simply upgrading from a previous MSVC (native) installation however, then
-since you only need the new Hercules binaries (and not the MS support DLLs),
-you may, if you wish, use the self-extracting archive instead.
+<b>Note:</b>Installing the .msi Windows Installer package ensures the
+required Microsoft Runtime components are installed and also provides
+convenience shortcuts in the programs menu. If the required components
+are already present and the shortcuts are not needed on the target system,
+the self-extracting or .zip archive may be used instead.
+<br>
+The required component for this build is the x86 version of the C runtime at level 8.50727.762.
 </small>
 </ul>
 <p>
