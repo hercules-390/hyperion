@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.253  2009/01/07 16:37:29  bernard
+// msghld command
+//
 // Revision 1.252  2009/01/07 16:11:16  bernard
 // msghldsec command
 //
@@ -1663,7 +1666,7 @@ static void NP_update(REGS *regs)
     for (i = 0, dev = sysblk.firstdev; dev != NULL; i++, dev = dev->nextdev)
     {
         if (i >= cons_rows - 3) break;
-        if (!(dev->pmcw.flag5 & PMCW5_V)) continue;
+        if (!dev->allocated) continue;
 
         online = (dev->console && dev->connected) || strlen(dev->filename) > 0;
         busy   = dev->busy != 0 || IOPENDING(dev) != 0;
