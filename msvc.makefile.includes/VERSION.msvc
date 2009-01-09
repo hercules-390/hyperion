@@ -10,6 +10,9 @@
 #
 #                           CHANGE HISTORY
 # $Log$
+# Revision 1.5  2008/01/31 22:45:17  rbowler
+# Fix LNK4010: invalid subsystem version number 4.0
+#
 # DD/MM/YY Description
 #
 # 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
@@ -24,7 +27,7 @@
 #   >>> Fish!! <<<  If you move this again, please change the comment in
 #                   configure.ac so I can find it again! :-)
 
-VERSION = \"3.05\"
+VERSION = \"3.06\"
 
 # The below VERSION digits values SHOULD match the ABOVE VERSION number.
 #
@@ -51,7 +54,7 @@ VERSION = \"3.05\"
 # correspond to V1=3, V2=03, V3=0, V4=2). -- JRM, 12 Feb 06
 
 V1 = 3
-V2 = 05
+V2 = 06
 V3 = 0
 V4 = 0
 

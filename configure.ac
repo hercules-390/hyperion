@@ -32,6 +32,9 @@
 ###############################################################################
 
 # $Log$
+# Revision 1.201  2009/01/08 01:57:55  jmaynard
+# Oops. Ripped out a little too much when removing --enable-universal-binary.
+#
 # Revision 1.200  2009/01/07 23:38:43  jmaynard
 # Remove --enable-universal-binary option, since it doesn't work with Leopard:
 # gcc 4.0 complains about libtool-mandated options when multiple architectures
@@ -76,7 +79,7 @@
 AC_INIT(hercules.h)                     # (package, version, bugreport email, etc)
 AC_REVISION($Revision$)         # (the version of this configure.ac)
 AC_CONFIG_AUX_DIR(autoconf)             # (directory containing auxillary build tools)
-AM_INIT_AUTOMAKE(hercules,3.05)         # (the version of our software package)
+AM_INIT_AUTOMAKE(hercules,3.06)         # (the version of our software package)
 # Don't forget to change it in msvc.makefile.includes/VERSION.msvc, too!
 AM_CONFIG_HEADER(config.h)              # (the file the resulting configure script will produce)
 AM_MAINTAINER_MODE()
