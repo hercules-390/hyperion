@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.263  2009/01/07 16:37:12  bernard
+// hldmsg command
+//
 // Revision 1.262  2009/01/07 16:00:02  bernard
 // add msghldsec command
 //
@@ -3262,7 +3265,7 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
 
     for (dev = sysblk.firstdev; dev && nDevCount <= MAX_DEVLIST_DEVICES; dev = dev->nextdev)
     {
-        if (dev->pmcw.flag5 & PMCW5_V)  // (valid device?)
+        if (dev->allocated)  // (valid device?)
         {
             if (single_devnum && (dev->ssid != ssid || dev->devnum != devnum))
                 continue;
@@ -3296,7 +3299,6 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
     for (i = nDevCount, pDevBlkPtr = orig_pDevBlkPtrs; i; --i, pDevBlkPtr++)
     {
         dev = *pDevBlkPtr;                  // --> DEVBLK
-        ASSERT(dev->pmcw.flag5 & PMCW5_V);  // (sanity check)
 
         /* Call device handler's query definition function */
 
@@ -3394,7 +3396,7 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
 
     for (dev = sysblk.firstdev; dev && nDevCount <= MAX_DEVLIST_DEVICES; dev = dev->nextdev)
     {
-        if (dev->pmcw.flag5 & PMCW5_V)  // (valid device?)
+        if (dev->allocated)  // (valid device?)
         {
             if (single_devnum && (dev->ssid != ssid || dev->devnum != devnum))
                 continue;
