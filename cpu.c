@@ -30,6 +30,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.207  2008/12/21 02:51:58  ivan
+// Place the configuration in system check-stop state when a READ SCP INFO
+// is issued from a CPU that is not a CP Engine.
+//
 // Revision 1.206  2008/12/05 11:26:00  jj
 // Fix SIE psw update when host interrupt occurs durng guest processing
 //
@@ -445,6 +449,11 @@ REGS   *realregs;                       /* True regs structure       */
 RADR    px;                             /* host real address of pfx  */
 int     code;                           /* pcode without PER ind.    */
 int     ilc;                            /* instruction length        */
+#if defined(FEATURE_ESAME)
+/** FIXME : SEE ISW20090110-1 */
+void   *zmoncode;                       /* special reloc for z/Arch  */
+                                        /* mon call SIE intercept    */
+#endif
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
 int     sie_ilc=0;                      /* SIE instruction length    */
 #endif
@@ -799,6 +808,13 @@ static char *pgmintname[] = {
         /* Point to PSA in main storage */
         psa = (void*)(regs->mainstor + px);
 #if defined(_FEATURE_SIE)
+#if defined(FEATURE_ESAME)
+/** FIXME : SEE ISW20090110-1 */
+        if(code == PGM_MONITOR_EVENT)
+        {
+            zmoncode=psa->moncode;
+        }
+#endif
         nointercept = 1;
     }
     else
@@ -811,6 +827,15 @@ static char *pgmintname[] = {
             psa = (void*)(regs->hostregs->mainstor + SIE_STATE(regs) + SIE_IP_PSA_OFFSET);
             /* Set the main storage reference and change bits */
             STORAGE_KEY(SIE_STATE(regs), regs->hostregs) |= (STORKEY_REF | STORKEY_CHANGE);
+#if defined(FEATURE_ESAME)
+/** FIXME : SEE ISW20090110-1 */
+            if(code == PGM_MONITOR_EVENT)
+            {
+                PSA *_psa;
+                _psa=(void *)(regs->hostregs->mainstor + SIE_STATE(regs) + SIE_II_PSA_OFFSET);
+                zmoncode=_psa->ioid;
+            }
+#endif
         }
         else
         {
@@ -981,8 +1006,23 @@ static char *pgmintname[] = {
 
             /* Store the monitor code word at PSA+156 */
             /* or doubleword at PSA+176               */
+            /* ISW20090110-1 ZSIEMCFIX                */
+            /* In the event of a z/Arch guest being   */
+            /* intercepted during a succesful Monitor */
+            /* call, the monitor code is not stored   */
+            /* at psa->moncode (which is beyond sie2bk->ip */
+            /* but rather at the same location as an  */
+            /* I/O interrupt would store the SSID     */
+            /*    zmoncode points to this location    */
+            /*  **** FIXME **** FIXME  *** FIXME ***  */
+            /* ---- The determination of the location */
+            /*      of the z/Sie Intercept moncode    */
+            /*      should be made more flexible      */
+            /*      and should be put somewhere in    */
+            /*      esa390.h                          */
+            /*  **** FIXME **** FIXME  *** FIXME ***  */
 #if defined(FEATURE_ESAME)
-            STORE_DW(psa->moncode, regs->MONCODE);
+            STORE_DW(zmoncode, regs->MONCODE);
 #else
             STORE_W(psa->moncode, regs->MONCODE);
 #endif
