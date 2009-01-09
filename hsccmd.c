@@ -18,6 +18,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.264  2009/01/09 13:43:52  jj
+// Ensure that devices which have the subchannel valid bit disabled can be
+// processed
+//
 // Revision 1.263  2009/01/07 16:37:12  bernard
 // hldmsg command
 //
@@ -7614,8 +7618,9 @@ void *panel_command (void *cmdline)
     }
 
 #ifdef OPTION_CMDTGT
-    /* check for herc, scp or pscp command */
-    if(!strncasecmp(cmd, "herc ", 5) || !strncasecmp(cmd, "scp ", 4) || !strncasecmp(cmd, "pscp ", 5))
+    /* check for cmdtgt, herc, scp or pscp command */
+    if(!strncasecmp(cmd, "cmdtgt ",7) || !strncasecmp(cmd, "herc ", 5) ||
+       !strncasecmp(cmd, "scp ", 4) || !strncasecmp(cmd, "pscp ", 5))
     {
       ProcessPanelCommand(cmd);
       return NULL;
