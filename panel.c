@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.254  2009/01/09 13:40:13  jj
+// Ensure SYSG devices are listed in the panel display
+//
 // Revision 1.253  2009/01/07 16:37:29  bernard
 // msghld command
 //
@@ -2608,7 +2611,8 @@ char    buf[1024];                      /* Buffer workarea           */
 
                 /* Process the command when the ENTER key is pressed */
                 if (kbbuf[i] == '\n') {
-                    if (cmdlen == 0 && NPDup == 0 && !sysblk.inststep) {
+                    if (cmdlen == 0 && NPDup == 0 && !sysblk.inststep &&
+                        sysblk.cmdtgt == 0) {
                         history_show();
                     } else {
                         cmdline[cmdlen] = '\0';

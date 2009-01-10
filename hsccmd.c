@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.265  2009/01/09 23:41:36  jmaynard
+// Add ability to switch from cmdtgt scp/pscp back to cmdtgt herc.
+//
 // Revision 1.264  2009/01/09 13:43:52  jj
 // Ensure that devices which have the subchannel valid bit disabled can be
 // processed
@@ -7607,8 +7610,9 @@ void *panel_command (void *cmdline)
     cmd[i] = 0;
 
     /* Ignore null commands (just pressing enter)
-       unless instruction stepping is enabled. */
-    if (!sysblk.inststep && 0 == cmd[0])
+       unless instruction stepping is enabled or
+       commands are being sent to the SCP by default. */
+    if (!sysblk.inststep && (sysblk.cmdtgt == 0) && (0 == cmd[0]))
         return NULL;
 
     /* Echo the command to the control panel */
@@ -7649,11 +7653,21 @@ void *panel_command (void *cmdline)
       }
       case 1: // cmdtgt scp
       {
+        if(!cmd[0])
+        {
+          cmd[0] = ' ';
+          cmd[1] = 0;
+        }
         scp_command(cmd, 0);
         break;
       }
       case 2: // cmdtgt pscp
       {
+        if(!cmd[0])
+        {
+          cmd[0] = ' ';
+          cmd[1] = 0;
+        }
         scp_command(cmd, 1);
         break;
       }
