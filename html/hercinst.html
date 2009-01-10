@@ -634,150 +634,165 @@ panel commands.
 <p>
 <pre>
 
-    Command      Description
-    -------      -----------------------------------------------
-    ?            list all commands
-    help         command specific help
+  Command      Description... 
+  -------      ----------------------------------------------- 
+  ?            list all commands 
+  help         command specific help
+ 
+  *            (log comment to syslog)
+ 
+  message      display message on console a la VM 
+  msg          same as message 
+  msgnoh       same as message - no header
+ 
+  hst          history of commands 
+  hao          Hercules Automatic Operator 
+  log          direct log output 
+  logopt       change log options 
+  version      display version information
+ 
+  quit         terminate the emulator 
+  exit         (synonym for 'quit')
+ 
+  cpu          define target cpu for panel display and commands
+ 
+  start        start CPU (or printer device if argument given) 
+  stop         stop CPU (or printer device if argument given)
+ 
+  startall     start all CPU's 
+  stopall      stop all CPU's
+ 
+  cf           configure current CPU online or offline 
+  cfall        configure all CPU's online or offline
+ 
+  .reply       scp command 
+  !message     scp priority messsage 
+  ssd          Signal Shutdown
+ 
+  ptt          display pthread trace
+ 
+  i            generate I/O attention interrupt for device 
+  ext          generate external interrupt 
+  restart      generate restart interrupt 
+  archmode     set architecture mode 
+  loadparm     set IPL parameter
+ 
+  ipl          IPL Normal from device xxxx 
+  iplc         IPL Clear from device xxxx 
+  sysreset     Issue SYSTEM Reset manual operation 
+  sysclear     Issue SYSTEM Clear Reset manual operation 
+  store        store CPU status at absolute zero
+ 
+  psw          display or alter program status word 
+  gpr          display or alter general purpose registers 
+  fpr          display floating point registers 
+  fpc          display floating point control register 
+  cr           display or alter control registers 
+  ar           display access registers 
+  pr           display prefix register 
+  timerint     display or set timers update interval 
+  clocks       display tod clkc and cpu timer 
+  ipending     display pending interrupts 
+  ds           display subchannel 
+  r            display or alter real storage 
+  v            display or alter virtual storage 
+  u            disassemble storage 
+  devtmax      display or set max device threads 
+  k            display cckd internal trace
+ 
+  attach       configure device 
+  detach       remove device 
+  define       rename device 
+  devinit      reinitialize device 
+  devlist      list device or all devices
+ 
+  qd           query dasd
+ 
+  automount    show/update allowable tape automount directories
+ 
+  scsimount    automatic SCSI tape mounts
+ 
+  cd           change directory 
+  pwd          print working directory 
+  sh           shell command
+ 
+  cache        cache command 
+  cckd         cckd command 
+  shrd         shrd command 
+  conkpalv     display/alter console TCP keep-alive settings 
+  quiet        toggle automatic refresh of panel display data
+ 
+  t            instruction trace 
+  t+           instruction trace on 
+  t-           instruction trace off 
+  t?           instruction trace query 
+  s            instruction stepping 
+  s+           instruction stepping on 
+  s-           instruction stepping off 
+  s?           instruction stepping query 
+  b            set breakpoint 
+  b+           set breakpoint 
+  b-           delete breakpoint 
+  g            turn off instruction stepping and start CPU
+ 
+  ostailor     trace program interrupts 
+  pgmtrace     trace program interrupts 
+  savecore     save a core image to file 
+  loadcore     load a core image file 
+  loadtext     load a text deck file
+ 
+  ldmod        load a module 
+  rmmod        delete a module 
+  lsmod        list dynamic modules 
+  lsdep        list module dependencies
+ 
+  iodelay      display or set I/O delay value 
+  ctc          enable/disable CTC debugging 
+  toddrag      display or set TOD clock drag factor 
+  panrate      display or set rate at which console refreshes 
+  msghld       display or set the timeout of held messages 
+  syncio       display syncio devices statistics 
+  maxrates     display maximum observed MIPS/SIOS rate for the
+               defined interval or define a new reporting interval
+ 
+  defsym       Define symbol 
+  script       Run a sequence of panel commands contained in a file 
+  cscript      Cancels a running script thread
+ 
+  evm          ECPS:VM Commands (Deprecated) 
+  ecpsvm       ECPS:VM Commands
+ 
+  aea          Display AEA tables 
+  aia          Display AIA fields 
+  tlb          Display TLB tables
+ 
+  sizeof       Display size of structures
+ 
+  suspend      Suspend hercules 
+  resume       Resume hercules
+ 
+  herclogo     Read a new hercules logo file
+ 
+  traceopt     Instruction trace display options
+ 
+  cmdtgt       Specify the command target
+ 
+  herc         Hercules command
+ 
+  scp          Send scp command
+ 
+  pscp         Send prio message scp command
+ 
+  sf+dev       add shadow file 
+  sf-dev       delete shadow file 
+  sfc          compress shadow files 
+  sfk          check shadow files 
+  sfd          display shadow file stats 
 
-    *            (log comment to syslog)
-
-    hst          history of commands
-    log          direct log output
-    logopt       change log options
-    version      display version information
-
-    quit         terminate the emulator
-    exit         (synonym for 'quit')
-
-    cpu          define target cpu for panel display and commands
-
-    start        start CPU (or printer device if argument given)
-    stop         stop CPU (or printer device if argument given)
-
-    startall     start all CPU's
-    stopall      stop all CPU's
-
-    cf           configure current CPU online or offline
-    cfall        configure all CPU's online or offline
-
-    .reply       scp command
-    !message     scp priority messsage
-    ssd          Signal Shutdown
-
-    ptt          display pthread trace
-
-    i            generate I/O attention interrupt for device
-    ext          generate external interrupt
-    restart      generate restart interrupt
-    archmode     set architecture mode
-    loadparm     set IPL parameter
-
-    ipl          IPL Normal from device xxxx
-    iplc         IPL Clear from device xxxx
-    sysreset     Issue SYSTEM Reset manual operation
-    sysclear     Issue SYSTEM Clear Reset manual operation
-    store        store CPU status at absolute zero
-
-    psw          display or alter program status word
-    gpr          display or alter general purpose registers
-    fpr          display floating point registers
-    fpc          display floating point control register
-    cr           display or alter control registers
-    ar           display access registers
-    pr           display prefix register
-    timerint     display or set timers update interval
-    clocks       display tod clkc and cpu timer
-    ipending     display pending interrupts
-    ds           display subchannel
-    r            display or alter real storage
-    v            display or alter virtual storage
-    u            disassemble storage
-    devtmax      display or set max device threads
-    k            display cckd internal trace
-
-    attach       configure device
-    detach       remove device
-    define       rename device
-    devinit      reinitialize device
-    devlist      list device or all devices
-
-    qd           query dasd
-
-    scsimount    automatic SCSI tape mounts
-
-    cd           change directory
-    pwd          print working directory
-    sh           shell command
-
-    cache        cache command
-    cckd         cckd command
-    shrd         shrd command
-    conkpalv     display/alter console TCP keep-alive settings
-    quiet        toggle automatic refresh of panel display data
-
-    t            instruction trace
-    t+           instruction trace on
-    t-           instruction trace off
-    t?           instruction trace query
-    s            instruction stepping
-    s+           instruction stepping on
-    s-           instruction stepping off
-    s?           instruction stepping query
-    b            set breakpoint
-    b+           set breakpoint
-    b-           delete breakpoint
-    g            turn off instruction stepping and start CPU
-
-    ostailor     trace program interrupts
-    pgmtrace     trace program interrupts
-    savecore     save a core image to file
-    loadcore     load a core image file
-    loadtext     load a text deck file
-
-    ldmod        load a module
-    rmmod        delete a module
-    lsmod        list dynamic modules
-    lsdep        list module dependencies
-
-    iodelay      display or set I/O delay value
-    tt32stats    (deprecated; use 'tt32' cmd instead)
-    tt32         control/query CTCI-W32 functionality
-    toddrag      display or set TOD clock drag factor
-    panrate      display or set rate at which console refreshes
-    syncio       display syncio devices statistics
-    maxrates     display maximum observed MIPS/SIOS rate for the
-                 defined interval or define a new reporting interval
-
-    defsym       Define symbol
-    script       Run a sequence of panel commands contained in a file
-    cscript      Cancels a running script thread
-
-    evm          ECPS:VM Commands (Deprecated)
-    ecpsvm       ECPS:VM Commands
-
-    aea          Display AEA tables
-    aia          Display AIA fields
-    tlb          Display TLB tables
-
-    sizeof       Display size of structures
-
-    suspend      Suspend hercules
-    resume       Resume hercules
-
-    herclogo     Read a new hercules logo file
-
-    traceopt     Instruction trace display options
-
-    sf+dev       add shadow file
-    sf-dev       delete shadow file
-    sf=dev ..    rename shadow file
-    sfc          compress shadow files
-    sfd          display shadow file stats
-
-    t{+/-}dev    turn CCW tracing on/off
-    s{+/-}dev    turn CCW stepping on/off
-    t{+/-}CKD    turn CKD_KEY tracing on/off
-    f{+/-}adr    mark frames unusable/usable
+  t{+/-}dev    turn CCW tracing on/off 
+  s{+/-}dev    turn CCW stepping on/off 
+  t{+/-}CKD    turn CKD_KEY tracing on/off 
+  f{+/-}adr    mark frames unusable/usable 
 
 </pre>
 <p>
@@ -809,6 +824,10 @@ Press ? to obtain help in either control panel.
 Some commands also offer additional help information regarding their syntax,
 etc. Enter&nbsp; "<tt>help <i>&lt;command name&gt;</i></tt>" &nbsp; to display
 this additional help information. (Note: not every command supports help)
+<p>
+When a command is prefixed with '-', the the command will not be redisplayed at
+the console. This can be used in scripts and is also used internally when commands
+are to be invoked without being redisplayed at the panel.
 
 <p>
 <hr width="50%">
