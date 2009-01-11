@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.170  2008/12/24 07:50:16  ivan
+// CSST Fix - Parm 2 alignement check error
+//
 // Revision 1.169  2008/12/23 13:44:57  ivan
 // CSST Facility 2 fix
 //
@@ -3458,16 +3461,7 @@ U32    *p;                              /* Mainstor pointer          */
 
     /* Load R1 register from second operand */
 
-    /* FOLLOWING BLOCK COMMENTED OUT ISW 20060119 */
-#if 0
-    if ((effective_addr2 & 3) == 0)
-    {
-        p = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
-        regs->GR_L(r1) = fetch_fw(p);
-    }
-    else
-#endif
-        regs->GR_L(r1) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+    regs->GR_L(r1) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
 
 } /* end DEF_INST(load) */
 
