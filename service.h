@@ -4,6 +4,11 @@
 // $Id$
 //
 // $Log$
+// Revision 1.22  2009/01/02 19:21:52  jj
+// DVD-RAM IPL
+// RAMSAVE
+// SYSG Integrated 3270 console fixes
+//
 // Revision 1.21  2008/12/28 15:30:09  jj
 // SYSG and SYSA mods
 //
@@ -509,19 +514,23 @@ typedef struct _SCCB_XST_MAP {
 typedef struct _SCCB_SCEDIO_BK {
         BYTE    flag0;
         BYTE    flag1;
+#define SCCB_SCEDIO_FLG1_IOR       0x03
+#define SCCB_SCEDIO_FLG1_IOV       0x04
         BYTE    flag2;
         BYTE    flag3;
 #define SCCB_SCEDIO_FLG3_COMPLETE  0x80
 
-        BYTE    type;
-#define SCCB_SCEDIO_TYPE_INIT      0x00  
-#define SCCB_SCEDIO_TYPE_READ      0x01   
-#define SCCB_SCEDIO_TYPE_CREATE    0x02 
-#define SCCB_SCEDIO_TYPE_APPEND    0x03 
-        BYTE    flag5;
-        BYTE    flag6;
-        BYTE    flag7;
+    } SCCB_SCEDIO_BK;
 
+typedef struct _SCCB_SCEDIOV_BK {
+        BYTE    type;
+#define SCCB_SCEDIOV_TYPE_INIT     0x00  
+#define SCCB_SCEDIOV_TYPE_READ     0x01   
+#define SCCB_SCEDIOV_TYPE_CREATE   0x02 
+#define SCCB_SCEDIOV_TYPE_APPEND   0x03 
+        BYTE    flag1;
+        BYTE    flag2;
+        BYTE    flag3;
         DBLWRD  seek;
         DBLWRD  ncomp;
         DBLWRD  length;
@@ -529,7 +538,21 @@ typedef struct _SCCB_SCEDIO_BK {
         DBLWRD  resv3;
         DBLWRD  sto;
         BYTE    filename[256];
-    } SCCB_SCEDIO_BK;
+    } SCCB_SCEDIOV_BK;
+
+typedef struct _SCCB_SCEDIOR_BK {
+        BYTE    type;
+#define SCCB_SCEDIOR_TYPE_INIT     0x00  
+#define SCCB_SCEDIOR_TYPE_READ     0x01   
+        BYTE    flag1;
+        BYTE    flag2;
+        BYTE    flag3;
+        FWORD   origin;
+        FWORD   resv1;
+        FWORD   resv2;
+        BYTE    image[8];
+    } SCCB_SCEDIOR_BK;
+        
 // #endif /*defined(FEATURE_SCEDIO )*/
 
 #endif /*!defined(_SERVICE_H)*/
