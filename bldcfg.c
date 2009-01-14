@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.102  2009/01/08 14:43:38  jmaynard
+// Cosmetic update to CPU type display on startup.
+//
 // Revision 1.101  2009/01/02 19:21:50  jj
 // DVD-RAM IPL
 // RAMSAVE
@@ -223,6 +226,7 @@ static char *operand;                   /* -> First argument         */
 static int  addargc;                    /* Number of additional args */
 static char *addargv[MAX_ARGS];         /* Additional argument array */
 
+int ProcessConfigCommand ( int, char**, char* );
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to parse an argument string. The string that is passed */
@@ -715,6 +719,13 @@ char   *buf1;                           /* Pointer to resolved buffer*/
             }
         }
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
+
+
+        if( !ProcessConfigCommand (addargc, (char**)addargv, cnfline) )
+        {
+            free(cnfline);
+            continue;
+        }
 
         free(cnfline);
 

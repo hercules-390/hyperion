@@ -18,6 +18,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.267  2009/01/14 10:12:36  jj
+// Restrict SCLP DISK I/O to the path relative to the .ins file that has been IPL-ed
+// Add SCLPROOT command to override the above
+//
 // Revision 1.266  2009/01/10 00:18:33  jmaynard
 // Allow a bare ENTER in cmdtgt scp or cmdtgt pscp mode to send a blank command
 // to the SCP.
@@ -6742,14 +6746,17 @@ typedef int CMDFUNC(int argc, char *argv[], char *cmdline);
 typedef struct _CMDTAB
 {
     const char* pszCommand;     /* command          */
+    const int   type;           /* Is command allowed from config */
+#define CFG     0x01            /* Config statement */
+#define CMD     0x02            /* Command statement */
     const size_t cmdAbbrev;      /* Min abbreviation */
     CMDFUNC*    pfnCommand;     /* handler function */
     const char* pszCmdDesc;     /* description      */
 }
 CMDTAB;
 
-#define COMMAND(cmd,func,desc)  { cmd, 0, func, desc },
-#define COMMANDA(cmd,abbrev,func,desc)  { cmd, abbrev, func, desc },
+#define COMMAND(cmd,_type,func,desc)  { cmd, (_type), 0, func, desc },
+#define COMMANDA(cmd,_type,abbrev,func,desc)  { cmd, (_type), abbrev, func, desc },
 
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
@@ -6761,198 +6768,216 @@ int  HelpCommand     (int argc, char *argv[], char *cmdline);  /*(forward refere
 
 CMDTAB Commands[] =
 {
-/*        command       function        one-line description...
+/*        command    type   function        one-line description...
         (max 9 chars)
 */
-COMMAND ( "?",         ListAllCommands, "list all commands" )
-COMMAND ( "help",      HelpCommand,   "command specific help\n" )
+COMMAND ( "?",       CMD,   ListAllCommands, "list all commands" )
+COMMAND ( "help",    CMD,   HelpCommand,   "command specific help\n" )
 
-COMMAND ( "*",         comment_cmd,   "(log comment to syslog)\n" )
-COMMANDA( "message", 1,msg_cmd,       "display message on console a la VM" )
-COMMANDA( "msg",     1,msg_cmd,       "same as message"         )
-COMMAND ( "msgnoh",    msgnoh_cmd,    "same as message - no header\n" )
+COMMAND ( "*",       CMD,   comment_cmd,   "(log comment to syslog)\n" )
+COMMANDA( "message", CMD, 1,msg_cmd,       "display message on console a la VM" )
+COMMANDA( "msg",     CMD, 1,msg_cmd,       "same as message"         )
+COMMAND ( "msgnoh",  CMD,   msgnoh_cmd,    "same as message - no header\n" )
 
-COMMAND ( "hst",       History,       "history of commands" )
+COMMAND ( "hst",     CMD,   History,       "history of commands" )
 #if defined(OPTION_HAO)
-COMMAND ( "hao",       hao_cmd,       "Hercules Automatic Operator" )
+COMMAND ( "hao",     CMD,   hao_cmd,       "Hercules Automatic Operator" )
 #endif /* defined(OPTION_HAO) */
-COMMAND ( "log",       log_cmd,       "direct log output" )
-COMMAND ( "logopt",    logopt_cmd,    "change log options" )
-COMMAND ( "version",   version_cmd,   "display version information\n" )
+COMMAND ( "log",     CMD,   log_cmd,       "direct log output" )
+COMMAND ( "logopt",  CMD,   logopt_cmd,    "change log options" )
+COMMAND ( "version", CMD,   version_cmd,   "display version information\n" )
 
-COMMAND ( "quit",      quit_cmd,      "terminate the emulator" )
-COMMAND ( "exit",      quit_cmd,      "(synonym for 'quit')\n" )
+COMMAND ( "quit",    CMD,   quit_cmd,      "terminate the emulator" )
+COMMAND ( "exit",    CMD,   quit_cmd,      "(synonym for 'quit')\n" )
 
-COMMAND ( "cpu",       cpu_cmd,       "define target cpu for panel display and commands\n" )
+COMMAND ( "cpu",     CMD,   cpu_cmd,       "define target cpu for panel display and commands\n" )
 
-COMMAND ( "start",     start_cmd,     "start CPU (or printer device if argument given)" )
-COMMAND ( "stop",      stop_cmd,      "stop CPU (or printer device if argument given)\n" )
+COMMAND ( "start",   CMD,   start_cmd,     "start CPU (or printer device if argument given)" )
+COMMAND ( "stop",    CMD,   stop_cmd,      "stop CPU (or printer device if argument given)\n" )
 
-COMMAND ( "startall",  startall_cmd,  "start all CPU's" )
-COMMAND ( "stopall",   stopall_cmd,   "stop all CPU's\n" )
+COMMAND ( "startall",CMD,   startall_cmd,  "start all CPU's" )
+COMMAND ( "stopall", CMD,   stopall_cmd,   "stop all CPU's\n" )
 
 #ifdef _FEATURE_CPU_RECONFIG
-COMMAND ( "cf",        cf_cmd,        "configure current CPU online or offline" )
-COMMAND ( "cfall",     cfall_cmd,     "configure all CPU's online or offline\n" )
+COMMAND ( "cf",      CMD,   cf_cmd,        "configure current CPU online or offline" )
+COMMAND ( "cfall",   CMD,   cfall_cmd,     "configure all CPU's online or offline\n" )
 #endif
 
 #ifdef _FEATURE_SYSTEM_CONSOLE
-COMMAND ( ".reply",    g_cmd,         "scp command" )
-COMMAND ( "!message",    g_cmd,       "scp priority messsage" )
-COMMAND ( "ssd",       ssd_cmd,       "Signal Shutdown\n" )
+COMMAND ( ".reply",  CMD,   g_cmd,         "scp command" )
+COMMAND ( "!message",CMD,   g_cmd,         "scp priority messsage" )
+COMMAND ( "ssd",     CMD,   ssd_cmd,       "Signal Shutdown\n" )
 #endif
 
 #ifdef OPTION_PTTRACE
-COMMAND ( "ptt",  EXT_CMD(ptt_cmd),   "display pthread trace\n" )
+COMMAND ( "ptt",     CMD, EXT_CMD(ptt_cmd),"display pthread trace\n" )
 #endif
 
-COMMAND ( "i",         i_cmd,         "generate I/O attention interrupt for device" )
-COMMAND ( "ext",       ext_cmd,       "generate external interrupt" )
-COMMAND ( "restart",   restart_cmd,   "generate restart interrupt" )
-COMMAND ( "archmode",  archmode_cmd,  "set architecture mode" )
-COMMAND ( "loadparm",  loadparm_cmd,  "set IPL parameter\n" )
+COMMAND ( "i",       CMD,   i_cmd,         "generate I/O attention interrupt for device" )
+COMMAND ( "ext",     CMD,   ext_cmd,       "generate external interrupt" )
+COMMAND ( "restart", CMD,   restart_cmd,   "generate restart interrupt" )
+COMMAND ( "archmode",CMD,   archmode_cmd,  "set architecture mode" )
+COMMAND ( "loadparm",CMD,   loadparm_cmd,  "set IPL parameter\n" )
 
-COMMAND ( "ipl",       ipl_cmd,       "IPL Normal from device xxxx" )
-COMMAND ( "iplc",      iplc_cmd,      "IPL Clear from device xxxx" )
-COMMAND ( "sysreset",  sysr_cmd,      "Issue SYSTEM Reset manual operation" )
-COMMAND ( "sysclear",  sysc_cmd,      "Issue SYSTEM Clear Reset manual operation" )
-COMMAND ( "store",     store_cmd,     "store CPU status at absolute zero\n" )
+COMMAND ( "ipl",     CMD,   ipl_cmd,       "IPL Normal from device xxxx" )
+COMMAND ( "iplc",    CMD,   iplc_cmd,      "IPL Clear from device xxxx" )
+COMMAND ( "sysreset",CMD,   sysr_cmd,      "Issue SYSTEM Reset manual operation" )
+COMMAND ( "sysclear",CMD,   sysc_cmd,      "Issue SYSTEM Clear Reset manual operation" )
+COMMAND ( "store",   CMD,   store_cmd,     "store CPU status at absolute zero\n" )
 
-COMMAND ( "sclproot",  sclproot_cmd,  "set SCLP base directory\n" )
+COMMAND ( "sclproot",CMD|CFG, sclproot_cmd,"set SCLP base directory\n" )
 
-COMMAND ( "psw",       psw_cmd,       "display or alter program status word" )
-COMMAND ( "gpr",       gpr_cmd,       "display or alter general purpose registers" )
-COMMAND ( "fpr",       fpr_cmd,       "display floating point registers" )
-COMMAND ( "fpc",       fpc_cmd,       "display floating point control register" )
-COMMAND ( "cr",        cr_cmd,        "display or alter control registers" )
-COMMAND ( "ar",        ar_cmd,        "display access registers" )
-COMMAND ( "pr",        pr_cmd,        "display prefix register" )
-COMMAND ( "timerint",  timerint_cmd,  "display or set timers update interval" )
-COMMAND ( "clocks",    clocks_cmd,    "display tod clkc and cpu timer" )
-COMMAND ( "ipending",  ipending_cmd,  "display pending interrupts" )
-COMMAND ( "ds",        ds_cmd,        "display subchannel" )
-COMMAND ( "r",         r_cmd,         "display or alter real storage" )
-COMMAND ( "v",         v_cmd,         "display or alter virtual storage" )
-COMMAND ( "u",         u_cmd,         "disassemble storage" )
-COMMAND ( "devtmax",   devtmax_cmd,   "display or set max device threads" )
-COMMAND ( "k",         k_cmd,         "display cckd internal trace\n" )
+COMMAND ( "psw",     CMD,   psw_cmd,       "display or alter program status word" )
+COMMAND ( "gpr",     CMD,   gpr_cmd,       "display or alter general purpose registers" )
+COMMAND ( "fpr",     CMD,   fpr_cmd,       "display floating point registers" )
+COMMAND ( "fpc",     CMD,   fpc_cmd,       "display floating point control register" )
+COMMAND ( "cr",      CMD,   cr_cmd,        "display or alter control registers" )
+COMMAND ( "ar",      CMD,   ar_cmd,        "display access registers" )
+COMMAND ( "pr",      CMD,   pr_cmd,        "display prefix register" )
+COMMAND ( "timerint",CMD,   timerint_cmd,  "display or set timers update interval" )
+COMMAND ( "clocks",  CMD,   clocks_cmd,    "display tod clkc and cpu timer" )
+COMMAND ( "ipending",CMD,   ipending_cmd,  "display pending interrupts" )
+COMMAND ( "ds",      CMD,   ds_cmd,        "display subchannel" )
+COMMAND ( "r",       CMD,   r_cmd,         "display or alter real storage" )
+COMMAND ( "v",       CMD,   v_cmd,         "display or alter virtual storage" )
+COMMAND ( "u",       CMD,   u_cmd,         "disassemble storage" )
+COMMAND ( "devtmax", CMD,   devtmax_cmd,   "display or set max device threads" )
+COMMAND ( "k",       CMD,   k_cmd,         "display cckd internal trace\n" )
 
-COMMAND ( "attach",    attach_cmd,    "configure device" )
-COMMAND ( "detach",    detach_cmd,    "remove device" )
-COMMAND ( "define",    define_cmd,    "rename device" )
-COMMAND ( "devinit",   devinit_cmd,   "reinitialize device" )
-COMMAND ( "devlist",   devlist_cmd,   "list device or all devices\n" )
-COMMAND ( "qd",        qd_cmd,        "query dasd\n" )
+COMMAND ( "attach",  CMD,   attach_cmd,    "configure device" )
+COMMAND ( "detach",  CMD,   detach_cmd,    "remove device" )
+COMMAND ( "define",  CMD,   define_cmd,    "rename device" )
+COMMAND ( "devinit", CMD,   devinit_cmd,   "reinitialize device" )
+COMMAND ( "devlist", CMD,   devlist_cmd,   "list device or all devices\n" )
+COMMAND ( "qd",      CMD,   qd_cmd,        "query dasd\n" )
 
 #if defined( OPTION_TAPE_AUTOMOUNT )
-COMMAND ( "automount", automount_cmd, "show/update allowable tape automount directories\n" )
+COMMAND ( "automount",CMD,  automount_cmd, "show/update allowable tape automount directories\n" )
 #endif /* OPTION_TAPE_AUTOMOUNT */
 #if defined( OPTION_SCSI_TAPE )
-COMMAND ( "scsimount", scsimount_cmd, "automatic SCSI tape mounts\n" )
+COMMAND ( "scsimount",CMD,  scsimount_cmd, "automatic SCSI tape mounts\n" )
 #endif /* defined( OPTION_SCSI_TAPE ) */
 
-COMMAND ( "cd",        cd_cmd,          "change directory" )
-COMMAND ( "pwd",       pwd_cmd,         "print working directory" )
-COMMAND ( "sh",        sh_cmd,          "shell command\n" )
+COMMAND ( "cd",      CMD,   cd_cmd,        "change directory" )
+COMMAND ( "pwd",     CMD,   pwd_cmd,       "print working directory" )
+COMMAND ( "sh",      CMD,   sh_cmd,        "shell command\n" )
 
-COMMAND ( "cache", EXT_CMD(cache_cmd),  "cache command" )
-COMMAND ( "cckd",      cckd_cmd,        "cckd command" )
-COMMAND ( "shrd",  EXT_CMD(shared_cmd), "shrd command" )
-COMMAND ( "conkpalv",  conkpalv_cmd,    "display/alter console TCP keep-alive settings" )
-COMMAND ( "quiet",     quiet_cmd,       "toggle automatic refresh of panel display data\n" )
+COMMAND ( "cache",   CMD,EXT_CMD(cache_cmd), "cache command" )
+COMMAND ( "cckd",    CMD,   cckd_cmd,        "cckd command" )
+COMMAND ( "shrd",    CMD,EXT_CMD(shared_cmd),"shrd command" )
+COMMAND ( "conkpalv",CMD,   conkpalv_cmd,    "display/alter console TCP keep-alive settings" )
+COMMAND ( "quiet",   CMD,   quiet_cmd,       "toggle automatic refresh of panel display data\n" )
 
-COMMAND ( "t",         trace_cmd,     "instruction trace" )
-COMMAND ( "t+",        trace_cmd,     "instruction trace on" )
-COMMAND ( "t-",        trace_cmd,     "instruction trace off" )
-COMMAND ( "t?",        trace_cmd,     "instruction trace query" )
-COMMAND ( "s",         trace_cmd,     "instruction stepping" )
-COMMAND ( "s+",        trace_cmd,     "instruction stepping on" )
-COMMAND ( "s-",        trace_cmd,     "instruction stepping off" )
-COMMAND ( "s?",        trace_cmd,     "instruction stepping query" )
-COMMAND ( "b",         trace_cmd,     "set breakpoint" )
-COMMAND ( "b+",        trace_cmd,     "set breakpoint" )
-COMMAND ( "b-",        trace_cmd,     "delete breakpoint" )
-COMMAND ( "g",         g_cmd,         "turn off instruction stepping and start CPU\n" )
+COMMAND ( "t",       CMD,   trace_cmd,     "instruction trace" )
+COMMAND ( "t+",      CMD,   trace_cmd,     "instruction trace on" )
+COMMAND ( "t-",      CMD,   trace_cmd,     "instruction trace off" )
+COMMAND ( "t?",      CMD,   trace_cmd,     "instruction trace query" )
+COMMAND ( "s",       CMD,   trace_cmd,     "instruction stepping" )
+COMMAND ( "s+",      CMD,   trace_cmd,     "instruction stepping on" )
+COMMAND ( "s-",      CMD,   trace_cmd,     "instruction stepping off" )
+COMMAND ( "s?",      CMD,   trace_cmd,     "instruction stepping query" )
+COMMAND ( "b",       CMD,   trace_cmd,     "set breakpoint" )
+COMMAND ( "b+",      CMD,   trace_cmd,     "set breakpoint" )
+COMMAND ( "b-",      CMD,   trace_cmd,     "delete breakpoint" )
+COMMAND ( "g",       CMD,   g_cmd,         "turn off instruction stepping and start CPU\n" )
 
-COMMAND ( "ostailor",  ostailor_cmd,  "trace program interrupts" )
-COMMAND ( "pgmtrace",  pgmtrace_cmd,  "trace program interrupts" )
-COMMAND ( "savecore",  savecore_cmd,  "save a core image to file" )
-COMMAND ( "loadcore",  loadcore_cmd,  "load a core image file" )
-COMMAND ( "loadtext",  loadtext_cmd,  "load a text deck file\n" )
+COMMAND ( "ostailor",CMD,   ostailor_cmd,  "trace program interrupts" )
+COMMAND ( "pgmtrace",CMD,   pgmtrace_cmd,  "trace program interrupts" )
+COMMAND ( "savecore",CMD,   savecore_cmd,  "save a core image to file" )
+COMMAND ( "loadcore",CMD,   loadcore_cmd,  "load a core image file" )
+COMMAND ( "loadtext",CMD,   loadtext_cmd,  "load a text deck file\n" )
 
 #if defined(OPTION_DYNAMIC_LOAD)
-COMMAND ( "ldmod",     ldmod_cmd,     "load a module" )
-COMMAND ( "rmmod",     rmmod_cmd,     "delete a module" )
-COMMAND ( "lsmod",     lsmod_cmd,     "list dynamic modules" )
-COMMAND ( "lsdep",     lsdep_cmd,     "list module dependencies\n" )
+COMMAND ( "ldmod",   CMD,   ldmod_cmd,     "load a module" )
+COMMAND ( "rmmod",   CMD,   rmmod_cmd,     "delete a module" )
+COMMAND ( "lsmod",   CMD,   lsmod_cmd,     "list dynamic modules" )
+COMMAND ( "lsdep",   CMD,   lsdep_cmd,     "list module dependencies\n" )
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
 
 #ifdef OPTION_IODELAY_KLUDGE
-COMMAND ( "iodelay",   iodelay_cmd,   "display or set I/O delay value" )
+COMMAND ( "iodelay", CMD,   iodelay_cmd,   "display or set I/O delay value" )
 #endif
-COMMAND ( "ctc",       ctc_cmd,       "enable/disable CTC debugging" )
+COMMAND ( "ctc",     CMD,   ctc_cmd,       "enable/disable CTC debugging" )
 #if defined(OPTION_W32_CTCI)
-COMMAND ( "tt32",      tt32_cmd,      "control/query CTCI-W32 functionality" )
+COMMAND ( "tt32",    CMD,   tt32_cmd,      "control/query CTCI-W32 functionality" )
 #endif
-COMMAND ( "toddrag",   toddrag_cmd,   "display or set TOD clock drag factor" )
+COMMAND ( "toddrag", CMD,   toddrag_cmd,   "display or set TOD clock drag factor" )
 #ifdef PANEL_REFRESH_RATE
-COMMAND ( "panrate",   panrate_cmd,   "display or set rate at which console refreshes" )
+COMMAND ( "panrate", CMD,   panrate_cmd,   "display or set rate at which console refreshes" )
 #endif
 #ifdef OPTION_MSGHLD
-COMMAND ( "msghld",    msghld_cmd, "display or set the timeout of held messages")
+COMMAND ( "msghld",  CMD,   msghld_cmd, "display or set the timeout of held messages")
 #endif
-COMMAND ( "syncio",    syncio_cmd,    "display syncio devices statistics" )
+COMMAND ( "syncio",  CMD,   syncio_cmd,    "display syncio devices statistics" )
 #if defined(OPTION_INSTRUCTION_COUNTING)
-COMMAND ( "icount",    icount_cmd,    "display individual instruction counts" )
+COMMAND ( "icount",  CMD,   icount_cmd,    "display individual instruction counts" )
 #endif
 #ifdef OPTION_MIPS_COUNTING
-COMMAND ( "maxrates",  maxrates_cmd,  "display maximum observed MIPS/SIOS rate for the\n               defined interval or define a new reporting interval\n" )
+COMMAND ( "maxrates",CMD,   maxrates_cmd,  "display maximum observed MIPS/SIOS rate for the\n               defined interval or define a new reporting interval\n" )
 #endif // OPTION_MIPS_COUNTING
 
 #if defined(FISH_HANG)
-COMMAND ( "FishHangReport", FishHangReport_cmd, "(DEBUG) display thread/lock/event objects\n" )
+COMMAND ( "FishHangReport", CMD, FishHangReport_cmd, "(DEBUG) display thread/lock/event objects\n" )
 #endif
 #if defined(OPTION_CONFIG_SYMBOLS)
-COMMAND ( "defsym",    defsym_cmd,    "Define symbol" )
+COMMAND ( "defsym",  CMD,   defsym_cmd,    "Define symbol" )
 #endif
-COMMAND ( "script",    script_cmd,    "Run a sequence of panel commands contained in a file" )
-COMMAND ( "cscript",   cscript_cmd,   "Cancels a running script thread\n" )
+COMMAND ( "script",  CMD,   script_cmd,    "Run a sequence of panel commands contained in a file" )
+COMMAND ( "cscript", CMD,   cscript_cmd,   "Cancels a running script thread\n" )
 #if defined(FEATURE_ECPSVM)
-COMMAND ( "evm",       evm_cmd_1,     "ECPS:VM Commands (Deprecated)" )
-COMMAND ( "ecpsvm",    evm_cmd,       "ECPS:VM Commands\n" )
+COMMAND ( "evm",     CMD,   evm_cmd_1,     "ECPS:VM Commands (Deprecated)" )
+COMMAND ( "ecpsvm",  CMD,   evm_cmd,       "ECPS:VM Commands\n" )
 #endif
 
-COMMAND ( "aea",       aea_cmd,       "Display AEA tables" )
-COMMAND ( "aia",       aia_cmd,       "Display AIA fields" )
-COMMAND ( "tlb",       tlb_cmd,       "Display TLB tables\n" )
+COMMAND ( "aea",     CMD,   aea_cmd,       "Display AEA tables" )
+COMMAND ( "aia",     CMD,   aia_cmd,       "Display AIA fields" )
+COMMAND ( "tlb",     CMD,   tlb_cmd,       "Display TLB tables\n" )
 
 #if defined(SIE_DEBUG_PERFMON)
-COMMAND ( "spm",       spm_cmd,       "SIE performance monitor\n" )
+COMMAND ( "spm",     CMD,   spm_cmd,       "SIE performance monitor\n" )
 #endif
 #if defined(OPTION_COUNTING)
-COMMAND ( "count",     count_cmd,     "Display/clear overall instruction count\n" )
+COMMAND ( "count",   CMD,   count_cmd,     "Display/clear overall instruction count\n" )
 #endif
-COMMAND ( "sizeof",    sizeof_cmd,    "Display size of structures\n" )
+COMMAND ( "sizeof",  CMD,   sizeof_cmd,    "Display size of structures\n" )
 
-COMMAND ( "suspend",   suspend_cmd,   "Suspend hercules" )
-COMMAND ( "resume",    resume_cmd,    "Resume hercules\n" )
+COMMAND ( "suspend", CMD,   suspend_cmd,   "Suspend hercules" )
+COMMAND ( "resume",  CMD,   resume_cmd,    "Resume hercules\n" )
 
-COMMAND ( "herclogo",    herclogo_cmd,    "Read a new hercules logo file\n" )
+COMMAND ( "herclogo",CMD,   herclogo_cmd,  "Read a new hercules logo file\n" )
 
-COMMAND ( "traceopt",  traceopt_cmd,  "Instruction trace display options\n" )
+COMMAND ( "traceopt",CMD,   traceopt_cmd,  "Instruction trace display options\n" )
 
 #define   TEST_CMD "$test"          // (hidden internal command)
-COMMAND ( TEST_CMD, test_cmd,        "(hidden internal command)" )
+COMMAND ( TEST_CMD, CMD, test_cmd,        "(hidden internal command)" )
 
 #ifdef OPTION_CMDTGT
-COMMAND ( "cmdtgt",    cmdtgt_cmd,    "Specify the command target\n" )
-COMMAND ( "herc",      herc_cmd,      "Hercules command\n")
-COMMAND ( "scp",       scp_cmd,       "Send scp command\n")
-COMMAND ( "pscp",      prioscp_cmd,   "Send prio message scp command\n")
+COMMAND ( "cmdtgt",  CMD,   cmdtgt_cmd,    "Specify the command target\n" )
+COMMAND ( "herc",    CMD,   herc_cmd,      "Hercules command\n")
+COMMAND ( "scp",     CMD,   scp_cmd,       "Send scp command\n")
+COMMAND ( "pscp",    CMD,   prioscp_cmd,   "Send prio message scp command\n")
 #endif // OPTION_CMDTGT
 
-COMMAND ( NULL, NULL, NULL )         /* (end of table) */
+COMMAND ( NULL, 0, NULL, NULL )         /* (end of table) */
 };
+
+#if !defined(MAX)
+#define MAX(_x,_y) ( ( ( _x ) > ( _y ) ) ? ( _x ) : ( _y ) )
+#endif
+
+int ProcessConfigCommand (int argc, char **argv, char *cmdline)
+{
+CMDTAB* cmdtab;
+
+    if (argc)
+        for (cmdtab = Commands; cmdtab->pszCommand; cmdtab++)
+            if(cmdtab->type | CFG)
+                if(!strcasecmp(argv[0], cmdtab->pszCommand))
+                    return cmdtab->pfnCommand(argc, argv, cmdline);
+
+    return -1;
+}
+
 
 ///////////////////////////////////////////////////////////////////////
 // Main panel command processing function...
@@ -7012,24 +7037,24 @@ int ProcessPanelCommand (char* pszCmdLine)
     if (cmd_argc)
         for (pCmdTab = Commands; pCmdTab->pszCommand; pCmdTab++)
         {
-            if (!pCmdTab->cmdAbbrev)
+            if(pCmdTab->type | CMD)
             {
-                if(!strcasecmp(cmd_argv[0], pCmdTab->pszCommand))
+                if (!pCmdTab->cmdAbbrev)
                 {
-                    rc = pCmdTab->pfnCommand(cmd_argc, (char**)cmd_argv, pszSaveCmdLine);
-                    goto ProcessPanelCommandExit;
+                    if(!strcasecmp(cmd_argv[0], pCmdTab->pszCommand))
+                    {
+                        rc = pCmdTab->pfnCommand(cmd_argc, (char**)cmd_argv, pszSaveCmdLine);
+                        goto ProcessPanelCommandExit;
+                    }
                 }
-            }
-            else
-            {
-#if !defined(MAX)
-#define MAX(_x,_y) ( ( ( _x ) > ( _y ) ) ? ( _x ) : ( _y ) )
-#endif
-                cmdl=MAX(strlen(cmd_argv[0]),pCmdTab->cmdAbbrev);
-                if(!strncasecmp(cmd_argv[0],pCmdTab->pszCommand,cmdl))
+                else
                 {
-                    rc = pCmdTab->pfnCommand(cmd_argc, (char**)cmd_argv, pszSaveCmdLine);
-                    goto ProcessPanelCommandExit;
+                    cmdl=MAX(strlen(cmd_argv[0]),pCmdTab->cmdAbbrev);
+                    if(!strncasecmp(cmd_argv[0],pCmdTab->pszCommand,cmdl))
+                    {
+                        rc = pCmdTab->pfnCommand(cmd_argc, (char**)cmd_argv, pszSaveCmdLine);
+                        goto ProcessPanelCommandExit;
+                    }
                 }
             }
         }
