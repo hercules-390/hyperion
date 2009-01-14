@@ -7,6 +7,11 @@
 // $Id$
 //
 // $Log$
+// Revision 1.231  2009/01/02 19:21:51  jj
+// DVD-RAM IPL
+// RAMSAVE
+// SYSG Integrated 3270 console fixes
+//
 // Revision 1.230  2008/12/29 11:03:10  jj
 // Move HMC disk I/O functions to scedasd.c
 //
@@ -2863,6 +2868,8 @@ void xstorage_clear(void);
 
 
 /* Functions in module scedasd.c */
+void         set_sce_dir        (char *path);
+char        *get_sce_dir        ();
 int          load_main          (char *fname, RADR startloc);
 int ARCH_DEP(load_main)         (char *fname, RADR startloc);
 int          load_hmc           (char *fname, int cpu, int clear);

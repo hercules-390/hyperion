@@ -4,6 +4,9 @@
 // $Id$
 
 // $Log$
+// Revision 1.11  2009/01/12 16:33:52  jj
+// Support DIAG 2C0 type SCLP I/O
+//
 // Revision 1.10  2009/01/07 07:16:33  jj
 // Allow for DOS formatted .ins files
 //
@@ -51,27 +54,104 @@
 
 static TID     scedio_tid;             /* Thread id of the i/o driver
                                                                      */
-static char sce_base_dir[1024];
+static char *sce_basedir = NULL;
 
 
-static char *set_base_dir(char *path)
+char *get_sce_dir()
 {
-char *base_dir;
+    return sce_basedir;
+}
 
-    strlcpy(sce_base_dir,path,sizeof(sce_base_dir));
 
-    if((base_dir = strrchr(sce_base_dir,'/')))
+void set_sce_dir(char *path)
+{
+char realdir[1024];
+
+    if(sce_basedir)
     {
-        *(++base_dir) = '\0';
-        return strrchr(path,'/') + 1;
+        free(sce_basedir);
+        sce_basedir = NULL;
+    }
+
+    if(!path)
+        sce_basedir = NULL;
+    else
+        if(!realpath(path,realdir))
+        {
+            logmsg(_("HHCSC011E set_sce_dir: %s: %s\n"),path,strerror(errno));
+            sce_basedir = NULL;
+        }
+        else
+        {
+            strlcat(realdir,"/",sizeof(realdir));
+            sce_basedir = strdup(realdir);
+        }
+}
+
+
+static char *set_sce_basedir(char *path)
+{
+char *basedir;
+char realdir[1024];
+
+    if(sce_basedir)
+    {
+        free(sce_basedir);
+        sce_basedir = NULL;
+    }
+
+    if(!realpath(path,realdir))
+    {
+        logmsg(_("HHCSC012E set_sce_basedir: %s: %s\n"),path,strerror(errno));
+        sce_basedir = NULL;
+        return NULL;
+    }
+
+    if((basedir = strrchr(realdir,'/')))
+    {
+        *(++basedir) = '\0';
+        sce_basedir = strdup(realdir);
+        return (basedir = strrchr(path,'/')) ? ++basedir : path;
     }
     else
     {
-        *sce_base_dir = '\0';
+        sce_basedir = NULL; 
         return path;
     }
 }
 
+
+static char *check_sce_filepath(const char *path, char *fullpath)
+{
+char temppath[1024];
+
+    /* Return file access error if no basedir has been set */
+    if(!sce_basedir)
+    {
+        strlcpy(fullpath,path,sizeof(temppath));
+        errno = EACCES;
+        return NULL;
+    }
+
+    /* Esthablish the full path of the file we are trying to access */
+    strlcpy(temppath,sce_basedir,sizeof(temppath));
+    strlcat(temppath,path,sizeof(temppath));
+    
+    if(!realpath(temppath,fullpath))
+    {
+        if(strncmp( sce_basedir, fullpath, strlen(sce_basedir)))
+            errno = EACCES;
+        return NULL;
+    }
+    
+    if(strncmp( sce_basedir, fullpath, strlen(sce_basedir)))
+    {
+        errno = EACCES;
+        return NULL;
+    }
+
+    return fullpath;
+}
 
 #endif /* !defined(_SCEDASD_C) */
 
@@ -117,19 +197,22 @@ int     rc = 0;                         /* Return codes (work)       */
     if(fname == NULL)                   /* Default ipl from DASD     */
         fname = "HERCULES.ins";         /*   from HERCULES.ins       */
 
-    hostpath(pathname, fname, sizeof(filename));
+    hostpath(pathname, fname, sizeof(pathname));
 
-    fname = set_base_dir(pathname);
+    if(!(fname = set_sce_basedir(pathname)))
+        return -1;
 
-    /* reconstruct full name */
-    strlcpy(filename,sce_base_dir,sizeof(filename));
-    strlcat(filename,fname,sizeof(filename));
-
-    hostpath(pathname, filename, sizeof(filename));
-    fp = fopen(pathname, "r");
+    /* Construct and check full pathname */
+    if(!check_sce_filepath(fname,filename))
+    {
+        logmsg(_("HHCSC001E Load from %s failed: %s\n"),fname,strerror(errno));
+        return -1;
+    }
+    
+    fp = fopen(filename, "r");
     if(fp == NULL)
     {
-        logmsg(_("HHCCP031E Load from %s failed: %s\n"),fname,strerror(errno));
+        logmsg(_("HHCSC002E Load from %s failed: %s\n"),fname,strerror(errno));
         return -1;
     }
 
@@ -144,8 +227,7 @@ int     rc = 0;                         /* Return codes (work)       */
 
         if(inputline)
         {
-            rc = sscanf(inputline,"%1024s %i",pathname,&fileaddr);
-            hostpath(filename, pathname, sizeof(filename));
+            rc = sscanf(inputline,"%1024s %i",filename,&fileaddr);
         }
 
         /* If no load address was found load to location zero */
@@ -154,26 +236,17 @@ int     rc = 0;                         /* Return codes (work)       */
 
         if(inputline && rc > 0 && *filename != '*' && *filename != '#')
         {
-            /* Prepend the directory name if one was found
-               and if no full pathname was specified */
-            if(
-#ifndef WIN32
-                filename[0] != '/'
-#else // WIN32
-                filename[1] != ':'
-#endif // !WIN32
-            )
-            {
-                strlcpy(pathname,sce_base_dir,sizeof(pathname));
-                strlcat(pathname,filename,sizeof(pathname));
-            }
-            else
-                strlcpy(pathname,filename,sizeof(pathname));
+            hostpath(pathname, filename, sizeof(pathname));
 
-            if( ARCH_DEP(load_main) (pathname, fileaddr) < 0 )
+            /* Construct and check full pathname */
+            if(!check_sce_filepath(pathname,filename))
             {
-                if(errno == ENOENT)  /* File not found errors are suppressed by load_main */
-                    logmsg(_("HHCCP032E load_hmc: %s: %s\n"), fname, strerror(errno));
+                logmsg(_("HHCSC003E Load from %s failed: %s\n"),pathname,strerror(errno));
+                return -1;
+            }
+
+            if( ARCH_DEP(load_main) (filename, fileaddr) < 0 )
+            {
                 fclose(fp);
                 HDC1(debug_cpu_state, regs);
                 return -1;
@@ -199,15 +272,12 @@ int len;
 int rc = 0;
 RADR pageaddr;
 U32  pagesize;
-char pathname[MAX_PATH];
 
-    hostpath(pathname, fname, sizeof(pathname));
-
-    fd = open (pathname, O_RDONLY|O_BINARY);
+    fd = open (fname, O_RDONLY|O_BINARY);
     if (fd < 0)
     {
         if(errno != ENOENT)
-            logmsg(_("HHCCP033E load_main: %s: %s\n"), fname, strerror(errno));
+            logmsg(_("HHCSC031E load_main: %s: %s\n"), fname, strerror(errno));
         return fd;
     }
 
@@ -217,7 +287,7 @@ char pathname[MAX_PATH];
     for( ; ; ) {
         if (pageaddr >= sysblk.mainsize)
         {
-            logmsg(_("HHCCP034W load_main: terminated at end of mainstor\n"));
+            logmsg(_("HHCSC032W load_main: terminated at end of mainstor\n"));
             close(fd);
             return rc;
         }
@@ -261,7 +331,7 @@ U64 totwrite = 0;
 #endif
     if (fd < 0)
     {
-        logmsg ("HHCRD001I %s open error: %s\n", fname, strerror(errno));
+        logmsg (_("HHCSC041E %s open error: %s\n"), fname, strerror(errno));
         return -1;
     }
 
@@ -360,7 +430,7 @@ U64 totread = 0;
     if (fd < 0)
     {
         if(errno != ENOENT)
-            logmsg ("HHCRD002I %s open error: %s\n", fname, strerror(errno));
+            logmsg (_("HHCSC051E %s open error: %s\n"), fname, strerror(errno));
         return -1;
     }
 
@@ -461,8 +531,13 @@ char filename[1024];
         image[i] = guest_to_host((int)scedior_bk->image[i]);
     image[i] = '\0';
 
-    strlcpy(filename,sce_base_dir,sizeof(filename));
-    strlcat(filename,image,sizeof(filename));
+    /* Ensure file access is allowed and within specified directory */
+    if(!check_sce_filepath(image,filename))
+    {
+        if(errno != ENOENT)
+            logmsg (_("HHCSC101E access error: %s: %s\n"), image, strerror(errno));
+        return FALSE;
+    }
 
     size = ARCH_DEP(load_main)(filename,origin);
 
@@ -486,8 +561,13 @@ char    fname[1024];
 
 
     case SCCB_SCEDIOV_TYPE_READ:
-        strlcpy(fname,sce_base_dir,sizeof(fname));
-        strlcat(fname,(char *)scediov_bk->filename,sizeof(fname));
+        /* Ensure file access is allowed and within specified directory */
+        if(!check_sce_filepath((char*)scediov_bk->filename,fname))
+        {
+            if(errno != ENOENT)
+                logmsg (_("HHCSC201E access error: %s: %s\n"), fname, strerror(errno));
+            return FALSE;
+        }
         FETCH_DW(sto,scediov_bk->sto);
         FETCH_DW(seek,scediov_bk->seek);
         FETCH_DW(length,scediov_bk->length);
@@ -513,8 +593,16 @@ char    fname[1024];
 
     case SCCB_SCEDIOV_TYPE_CREATE:
     case SCCB_SCEDIOV_TYPE_APPEND:
-        strlcpy(fname,sce_base_dir,sizeof(fname));
-        strlcat(fname,(char *)scediov_bk->filename,sizeof(fname));
+        /* Ensure file access is allowed and within specified directory */
+        if(!check_sce_filepath((char*)scediov_bk->filename,fname))
+        {
+            if(errno != ENOENT)
+                logmsg (_("HHCSC202I access error: %s: %s\n"), fname, strerror(errno));
+
+            /* A file not found error may be expected for a create request */
+            if(!(errno == ENOENT && scediov_bk->type == SCCB_SCEDIOV_TYPE_CREATE))
+                return FALSE;
+        }
         FETCH_DW(sto,scediov_bk->sto);
         FETCH_DW(seek,scediov_bk->seek);
         FETCH_DW(length,scediov_bk->length);
@@ -530,6 +618,7 @@ char    fname[1024];
         else
             return FALSE;
         break;
+
 
     default:
         return FALSE;
@@ -554,7 +643,6 @@ SCCB_SCEDIOR_BK *scedior_bk;
             scedio_bk->flag3 |= SCCB_SCEDIO_FLG3_COMPLETE;
         else
             scedio_bk->flag3 &= ~SCCB_SCEDIO_FLG3_COMPLETE;
-
         break;
 
     case SCCB_SCEDIO_FLG1_IOR:
@@ -667,7 +755,7 @@ static int scedio_pending;
                         {
                             OBTAIN_INTLOCK(NULL);
                             signal_thread(scedio_tid, SIGKILL);
-                                    scedio_tid = 0;
+                            scedio_tid = 0;
                             scedio_pending = 0;
                             RELEASE_INTLOCK(NULL);
                         }

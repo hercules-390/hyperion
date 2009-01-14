@@ -18,6 +18,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.266  2009/01/10 00:18:33  jmaynard
+// Allow a bare ENTER in cmdtgt scp or cmdtgt pscp mode to send a blank command
+// to the SCP.
+//
 // Revision 1.265  2009/01/09 23:41:36  jmaynard
 // Add ability to switch from cmdtgt scp/pscp back to cmdtgt herc.
 //
@@ -2074,6 +2078,30 @@ REGS *regs;
     logmsg (_("HHCCP010I CPU%4.4X store status completed.\n"),
             regs->cpuad);
 
+    return 0;
+}
+
+
+///////////////////////////////////////////////////////////////////////
+/* sclproot command - set SCLP base directory */
+
+int sclproot_cmd(int argc, char *argv[], char *cmdline)
+{
+char *basedir;
+
+    UNREFERENCED(cmdline);
+
+    if (argc > 1)
+        if (!strcasecmp(argv[1],"none"))
+            set_sce_dir(NULL);
+        else
+            set_sce_dir(argv[1]);
+    else
+        if((basedir = get_sce_dir()))
+            logmsg(_("SCLPROOT %s\n"),basedir);
+        else
+            logmsg(_("SCLP DISK I/O Disabled\n"));
+   
     return 0;
 }
 
@@ -6789,6 +6817,8 @@ COMMAND ( "iplc",      iplc_cmd,      "IPL Clear from device xxxx" )
 COMMAND ( "sysreset",  sysr_cmd,      "Issue SYSTEM Reset manual operation" )
 COMMAND ( "sysclear",  sysc_cmd,      "Issue SYSTEM Clear Reset manual operation" )
 COMMAND ( "store",     store_cmd,     "store CPU status at absolute zero\n" )
+
+COMMAND ( "sclproot",  sclproot_cmd,  "set SCLP base directory\n" )
 
 COMMAND ( "psw",       psw_cmd,       "display or alter program status word" )
 COMMAND ( "gpr",       gpr_cmd,       "display or alter general purpose registers" )
