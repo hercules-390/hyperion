@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.272  2009/01/14 15:31:43  jj
+// Move loadparm logic to command handler
+//
 // Revision 1.271  2009/01/14 15:23:20  jj
 // Move modpath logic to hsccmd.c
 //
@@ -6848,7 +6851,7 @@ COMMAND ( "ptt",     CMD, EXT_CMD(ptt_cmd),"display pthread trace\n" )
 COMMAND ( "i",       CMD,   i_cmd,         "generate I/O attention interrupt for device" )
 COMMAND ( "ext",     CMD,   ext_cmd,       "generate external interrupt" )
 COMMAND ( "restart", CMD,   restart_cmd,   "generate restart interrupt" )
-COMMAND ( "archmode",CMD,   archmode_cmd,  "set architecture mode" )
+COMMAND ( "archmode",CMD|CFG, archmode_cmd,"set architecture mode" )
 COMMAND ( "loadparm",CMD|CFG, loadparm_cmd,"set IPL parameter\n" )
 
 COMMAND ( "ipl",     CMD,   ipl_cmd,       "IPL Normal from device xxxx" )

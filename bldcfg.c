@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.106  2009/01/14 15:31:43  jj
+// Move loadparm logic to command handler
+//
 // Revision 1.105  2009/01/14 15:23:20  jj
 // Move modpath logic to hsccmd.c
 //
@@ -802,7 +805,6 @@ char   *sxpndsize;                      /* -> Expanded size string   */
 char   *snumcpu;                        /* -> Number of CPUs         */
 char   *snumvec;                        /* -> Number of VFs          */
 char   *sengines;                       /* -> Processor engine types */
-char   *sarchmode;                      /* -> Architectural mode     */
 char   *ssysepoch;                      /* -> System epoch           */
 char   *syroffset;                      /* -> System year offset     */
 char   *stzoffset;                      /* -> System timezone offset */
@@ -858,7 +860,6 @@ U16     numvec;                         /* Number of VFs             */
 #if defined(OPTION_SHARED_DEVICES)
 U16     shrdport;                       /* Shared device port number */
 #endif /*defined(OPTION_SHARED_DEVICES)*/
-int     archmode;                       /* Architectural mode        */
 S32     sysepoch;                       /* System epoch year         */
 S32     tzoffset;                       /* System timezone offset    */
 S32     yroffset;                       /* System year offset        */
@@ -947,9 +948,12 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     shcmdopt = 0;
     toddrag = 1.0;
 #if defined(_390)
-    archmode = ARCH_390;
+    sysblk.arch_mode = ARCH_390;
 #else
-    archmode = ARCH_370;
+    sysblk.arch_mode = ARCH_370;
+#endif
+#if defined(_900)
+    sysblk.arch_z900 = ARCH_900;
 #endif
     ostailor = OS_NONE;
     panrate  = PANEL_REFRESH_RATE_SLOW;
@@ -1099,7 +1103,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         snumcpu = NULL;
         snumvec = NULL;
         sengines = NULL;
-        sarchmode = NULL;
         ssysepoch = NULL;
         syroffset = NULL;
         stzoffset = NULL;
@@ -1261,10 +1264,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             else if (strcasecmp (keyword, "ostailor") == 0)
             {
                 sostailor = operand;
-            }
-            else if (strcasecmp (keyword, "archmode") == 0)
-            {
-                sarchmode = operand;
             }
             else if (strcasecmp (keyword, "cpuverid") == 0)
             {
@@ -1599,44 +1598,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
         } /* end else (not old-style CPU statement) */
 
-        if (sarchmode != NULL)
-        {
-#if defined(_370)
-            if (strcasecmp (sarchmode, arch_name[ARCH_370]) == 0)
-            {
-                archmode = ARCH_370;
-            }
-            else
-#endif
-#if defined(_390)
-            if (strcasecmp (sarchmode, arch_name[ARCH_390]) == 0)
-            {
-                archmode = ARCH_390;
-            }
-            else
-#endif
-#if defined(_900)
-            if (0
-                || strcasecmp (sarchmode, arch_name[ARCH_900]) == 0
-                || strcasecmp (sarchmode, "ESAME") == 0
-            )
-            {
-                archmode = ARCH_900;
-            }
-            else
-#endif
-            {
-                fprintf(stderr, _("HHCCF010S Error in %s line %d: "
-                        "Unknown or unsupported ARCHMODE specification %s\n"),
-                        fname, inc_stmtnum[inc_level], sarchmode);
-                delayed_exit(1);
-            }
-        }
-        sysblk.arch_mode = archmode;
-#if defined(_900)
-        /* Indicate if z/Architecture is supported */
-        sysblk.arch_z900 = sysblk.arch_mode != ARCH_390;
-#endif
         /* Parse "logopt" operands */
         if (slogopt[0])
         {
@@ -2841,7 +2802,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 #endif
 
 #ifdef _FEATURE_CPU_RECONFIG
-    sysblk.maxcpu = archmode == ARCH_370 ? numcpu : MAX_CPU_ENGINES;
+    sysblk.maxcpu = sysblk.arch_mode == ARCH_370 ? numcpu : MAX_CPU_ENGINES;
 #else
     sysblk.maxcpu = numcpu;
 #endif /*_FEATURE_CPU_RECONFIG*/
