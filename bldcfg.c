@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.109  2009/01/14 16:27:10  jj
+// move cckd config to cmd handler
+//
 // Revision 1.108  2009/01/14 15:58:54  jj
 // Move panrate config to command handler
 //
@@ -818,7 +821,6 @@ char   *sdiag8cmd;                      /* -> Allow diagnose 8       */
 char   *sdiag8echo;                     /* -> Diag 8 Echo opt        */
 char   *sshcmdopt;                      /* -> SHCMDOPT shell cmd opt */
 char   *stoddrag;                       /* -> TOD clock drag factor  */
-char   *sostailor;                      /* -> OS to tailor system to */
 char   *stimerint;                      /* -> Timer update interval  */
 char   *sdevtmax;                       /* -> Max device threads     */
 char   *slegacysenseid;                 /* -> legacy senseid option  */
@@ -871,7 +873,6 @@ S64     ly1960;                         /* Leap offset for 1960 epoch*/
 int     diag8cmd;                       /* Allow diagnose 8 commands */
 BYTE    shcmdopt;                       /* Shell cmd allow option(s) */
 double  toddrag;                        /* TOD clock drag factor     */
-U64     ostailor;                       /* OS to tailor system to    */
 int     legacysenseid;                  /* ena/disa x'E4' on old devs*/
 int     timerint;                       /* Timer update interval     */
 int     hercprio;                       /* Hercules base priority    */
@@ -958,7 +959,8 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 #if defined(_900)
     sysblk.arch_z900 = ARCH_900;
 #endif
-    ostailor = OS_NONE;
+    sysblk.pgminttr = OS_NONE;
+
     timerint = DEFAULT_TIMER_REFRESH_USECS;
     hercprio = DEFAULT_HERCPRIO;
     todprio  = DEFAULT_TOD_PRIO;
@@ -1116,7 +1118,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         sdiag8echo = NULL;
         sshcmdopt = NULL;
         stoddrag = NULL;
-        sostailor = NULL;
         stimerint = NULL;
         shercprio = NULL;
         stodprio = NULL;
@@ -1258,10 +1259,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             else if (strcasecmp (keyword, "timerint") == 0)
             {
                 stimerint = operand;
-            }
-            else if (strcasecmp (keyword, "ostailor") == 0)
-            {
-                sostailor = operand;
             }
             else if (strcasecmp (keyword, "cpuverid") == 0)
             {
@@ -2009,86 +2006,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             }
         }
 
-        /* Parse OS tailoring operand */
-        if (sostailor != NULL)
-        {
-            if (strcasecmp (sostailor, "OS/390") == 0)
-            {
-                ostailor = OS_OS390;
-            }
-            else if (strcasecmp (sostailor, "+OS/390") == 0)
-            {
-                ostailor &= OS_OS390;
-            }
-            else if (strcasecmp (sostailor, "-OS/390") == 0)
-            {
-                ostailor |= ~OS_OS390;
-            }
-            else if (strcasecmp (sostailor, "Z/OS") == 0)
-            {
-                ostailor = OS_ZOS;
-            }
-            else if (strcasecmp (sostailor, "+Z/OS") == 0)
-            {
-                ostailor &= OS_ZOS;
-            }
-            else if (strcasecmp (sostailor, "-Z/OS") == 0)
-            {
-                ostailor |= ~OS_ZOS;
-            }
-            else if (strcasecmp (sostailor, "VSE") == 0)
-            {
-                ostailor = OS_VSE;
-            }
-            else if (strcasecmp (sostailor, "+VSE") == 0)
-            {
-                ostailor &= OS_VSE;
-            }
-            else if (strcasecmp (sostailor, "-VSE") == 0)
-            {
-                ostailor |= ~OS_VSE;
-            }
-            else if (strcasecmp (sostailor, "VM") == 0)
-            {
-                ostailor = OS_VM;
-            }
-            else if (strcasecmp (sostailor, "+VM") == 0)
-            {
-                ostailor &= OS_VM;
-            }
-            else if (strcasecmp (sostailor, "-VM") == 0)
-            {
-                ostailor |= ~OS_VM;
-            }
-            else if (strcasecmp (sostailor, "LINUX") == 0)
-            {
-                ostailor = OS_LINUX;
-            }
-            else if (strcasecmp (sostailor, "+LINUX") == 0)
-            {
-                ostailor &= OS_LINUX;
-            }
-            else if (strcasecmp (sostailor, "-LINUX") == 0)
-            {
-                ostailor |= ~OS_LINUX;
-            }
-            else if (strcasecmp (sostailor, "NULL") == 0)
-            {
-                ostailor = 0xFFFFFFFFFFFFFFFFULL;
-            }
-            else if (strcasecmp (sostailor, "QUIET") == 0)
-            {
-                ostailor = 0;
-            }
-            else
-            {
-                fprintf(stderr, _("HHCCF026S Error in %s line %d: "
-                        "Unknown OS tailor specification %s\n"),
-                        fname, inc_stmtnum[inc_level], sostailor);
-                delayed_exit(1);
-            }
-        }
-
         /* Parse Maximum number of device threads */
         if (sdevtmax != NULL)
         {
@@ -2611,9 +2528,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
     /* Set clock steering based on drag factor */
     set_tod_steering(-(1.0-(1.0/toddrag)));
-
-    /* Set the system OS tailoring value */
-    sysblk.pgminttr = ostailor;
 
     /* Set the licence flag */
     losc_set(pgmprdos);

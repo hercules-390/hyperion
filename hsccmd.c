@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.276  2009/01/14 16:27:10  jj
+// move cckd config to cmd handler
+//
 // Revision 1.275  2009/01/14 15:58:54  jj
 // Move panrate config to command handler
 //
@@ -6925,7 +6928,7 @@ COMMAND ( "b+",      CMD,   trace_cmd,     "set breakpoint" )
 COMMAND ( "b-",      CMD,   trace_cmd,     "delete breakpoint" )
 COMMAND ( "g",       CMD,   g_cmd,         "turn off instruction stepping and start CPU\n" )
 
-COMMAND ( "ostailor",CMD,   ostailor_cmd,  "trace program interrupts" )
+COMMAND ( "ostailor",CMD|CFG, ostailor_cmd,"trace program interrupts" )
 COMMAND ( "pgmtrace",CMD,   pgmtrace_cmd,  "trace program interrupts" )
 COMMAND ( "savecore",CMD,   savecore_cmd,  "save a core image to file" )
 COMMAND ( "loadcore",CMD,   loadcore_cmd,  "load a core image file" )
