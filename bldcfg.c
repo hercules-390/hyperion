@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.111  2009/01/14 19:00:22  jj
+// Make lparname command as well as config statement
+//
 // Revision 1.110  2009/01/14 18:46:10  jj
 // Differentiate between ostailor OS/390 and VSE
 //
@@ -823,7 +826,6 @@ char   *stzoffset;                      /* -> System timezone offset */
 char   *sdiag8cmd;                      /* -> Allow diagnose 8       */
 char   *sdiag8echo;                     /* -> Diag 8 Echo opt        */
 char   *sshcmdopt;                      /* -> SHCMDOPT shell cmd opt */
-char   *stoddrag;                       /* -> TOD clock drag factor  */
 char   *stimerint;                      /* -> Timer update interval  */
 char   *sdevtmax;                       /* -> Max device threads     */
 char   *slegacysenseid;                 /* -> legacy senseid option  */
@@ -875,7 +877,6 @@ S32     yroffset;                       /* System year offset        */
 S64     ly1960;                         /* Leap offset for 1960 epoch*/
 int     diag8cmd;                       /* Allow diagnose 8 commands */
 BYTE    shcmdopt;                       /* Shell cmd allow option(s) */
-double  toddrag;                        /* TOD clock drag factor     */
 int     legacysenseid;                  /* ena/disa x'E4' on old devs*/
 int     timerint;                       /* Timer update interval     */
 int     hercprio;                       /* Hercules base priority    */
@@ -950,7 +951,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     tzoffset = 0;
     diag8cmd = 0;
     shcmdopt = 0;
-    toddrag = 1.0;
 #if defined(_390)
     sysblk.arch_mode = ARCH_390;
 #else
@@ -1117,7 +1117,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         sdiag8cmd = NULL;
         sdiag8echo = NULL;
         sshcmdopt = NULL;
-        stoddrag = NULL;
         stimerint = NULL;
         shercprio = NULL;
         stodprio = NULL;
@@ -1248,10 +1247,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             else if (strcasecmp (keyword, "SHCMDOPT") == 0)
             {
                 sshcmdopt = operand;
-            }
-            else if (strcasecmp (keyword, "toddrag") == 0)
-            {
-                stoddrag = operand;
             }
             else if (strcasecmp (keyword, "timerint") == 0)
             {
@@ -1963,19 +1958,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             }
         }
 
-        /* Parse TOD clock drag factor operand */
-        if (stoddrag != NULL)
-        {
-            if (sscanf(stoddrag, "%lf%c", &toddrag, &c) != 1
-                || toddrag < 0.0001 || toddrag > 10000.0)
-            {
-                fprintf(stderr, _("HHCCF024S Error in %s line %d: "
-                        "Invalid TOD clock drag factor %s\n"),
-                        fname, inc_stmtnum[inc_level], stoddrag);
-                delayed_exit(1);
-            }
-        }
-
         /* Parse timer update interval*/
         if (stimerint)
         {
@@ -2511,9 +2493,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
     /* Set the timezone offset */
     adjust_tod_epoch((tzoffset/100*3600+(tzoffset%100)*60)*16000000LL);
-
-    /* Set clock steering based on drag factor */
-    set_tod_steering(-(1.0-(1.0/toddrag)));
 
     /* Set the licence flag */
     losc_set(pgmprdos);

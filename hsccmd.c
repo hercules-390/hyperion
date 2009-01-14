@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.278  2009/01/14 19:00:22  jj
+// Make lparname command as well as config statement
+//
 // Revision 1.277  2009/01/14 18:46:10  jj
 // Differentiate between ostailor OS/390 and VSE
 //
@@ -6970,7 +6973,7 @@ COMMAND ( "ctc",     CMD,   ctc_cmd,       "enable/disable CTC debugging" )
 #if defined(OPTION_W32_CTCI)
 COMMAND ( "tt32",    CMD,   tt32_cmd,      "control/query CTCI-W32 functionality" )
 #endif
-COMMAND ( "toddrag", CMD,   toddrag_cmd,   "display or set TOD clock drag factor" )
+COMMAND ( "toddrag", CMD|CFG, toddrag_cmd, "display or set TOD clock drag factor" )
 #ifdef PANEL_REFRESH_RATE
 COMMAND ( "panrate", CMD|CFG, panrate_cmd, "display or set rate at which console refreshes" )
 #endif
