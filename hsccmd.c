@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.273  2009/01/14 15:49:36  jj
+// Move archmode config to command processing
+//
 // Revision 1.272  2009/01/14 15:31:43  jj
 // Move loadparm logic to command handler
 //
@@ -6926,7 +6929,7 @@ COMMAND ( "loadtext",CMD,   loadtext_cmd,  "load a text deck file\n" )
 COMMAND ( "ldmod",   CMD|CFG,ldmod_cmd,    "load a module" )
 COMMAND ( "rmmod",   CMD,   rmmod_cmd,     "delete a module" )
 COMMAND ( "lsmod",   CMD,   lsmod_cmd,     "list dynamic modules" )
-COMMAND ( "lsdep",   CMD,   lsdep_cmd,     "list module dependencies\n" )
+COMMAND ( "lsdep",   CMD,   lsdep_cmd,     "list module dependencies" )
 COMMAND ( "modpath", CMD|CFG, modpath_cmd, "set module load path\n" )
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
 
