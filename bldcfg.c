@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.110  2009/01/14 18:46:10  jj
+// Differentiate between ostailor OS/390 and VSE
+//
 // Revision 1.109  2009/01/14 16:27:10  jj
 // move cckd config to cmd handler
 //
@@ -898,9 +901,6 @@ BYTE    c;                              /* Work area for sscanf      */
 char   *styp;                           /* -> Engine type string     */
 char   *styp_values[] = {"CP","CF","AP","IL","??","IP"}; /* type values */
 BYTE    ptyp;                           /* Processor engine type     */
-#if defined(OPTION_LPARNAME)
-char   *lparname;                       /* DIAG 204 lparname         */
-#endif /*defined(OPTION_LPARNAME)*/
 #if defined(OPTION_SET_STSI_INFO)
 char   *stsi_model;                     /* Info                      */
 char   *stsi_plant;                     /*      for                  */
@@ -1146,9 +1146,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 #ifdef OPTION_PTTRACE
         sptt = NULL;
 #endif /*OPTION_PTTRACE*/
-#if defined(OPTION_LPARNAME)
-        lparname = NULL;
-#endif /*defined(OPTION_LPARNAME)*/
 #if defined(OPTION_SET_STSI_INFO)
         stsi_model = NULL;
         stsi_plant = NULL;
@@ -1534,12 +1531,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 sshrdport = operand;
             }
 #endif /*defined(OPTION_SHARED_DEVICES)*/
-#if defined(OPTION_LPARNAME)
-            else if (strcasecmp (keyword, "lparname") == 0)
-            {
-               lparname = operand;
-            }
-#endif /*defined(OPTION_LPARNAME)*/
 
 #if defined(OPTION_SET_STSI_INFO)
             else if (strcasecmp (keyword, "model") == 0)
@@ -2255,11 +2246,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             }
         }
 #endif /*OPTION_PTTRACE*/
-
-#if defined(OPTION_LPARNAME)
-        if(lparname)
-            set_lparname(lparname);
-#endif /*defined(OPTION_LPARNAME)*/
 
 #if defined(OPTION_SET_STSI_INFO)
         if(stsi_model)

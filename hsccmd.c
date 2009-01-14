@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.277  2009/01/14 18:46:10  jj
+// Differentiate between ostailor OS/390 and VSE
+//
 // Revision 1.276  2009/01/14 16:27:10  jj
 // move cckd config to cmd handler
 //
@@ -3041,6 +3044,23 @@ int ext_cmd(int argc, char *argv[], char *cmdline)
 }
 
 ///////////////////////////////////////////////////////////////////////
+/* lparname xxxxxxxx command - set LPAR name */
+
+int lparname_cmd(int argc, char *argv[], char *cmdline)
+{
+
+    UNREFERENCED(cmdline);
+
+    /* Update LPAR name if operand is specified */
+    if (argc > 1)
+        set_lparname(argv[1]);
+    else
+        logmsg( _("HHCPN056I LPAR name = %s\n"),str_lparname());
+
+    return 0;
+}
+
+
 /* loadparm xxxxxxxx command - set IPL parameter */
 
 int loadparm_cmd(int argc, char *argv[], char *cmdline)
@@ -3050,10 +3070,9 @@ int loadparm_cmd(int argc, char *argv[], char *cmdline)
 
     /* Update IPL parameter if operand is specified */
     if (argc > 1)
-    set_loadparm(argv[1]);
-
-    /* Display IPL parameter */
-    logmsg( _("HHCPN051I LOADPARM=%s\n"),str_loadparm());
+        set_loadparm(argv[1]);
+    else
+        logmsg( _("HHCPN051I LOADPARM=%s\n"),str_loadparm());
 
     return 0;
 }
@@ -6865,6 +6884,8 @@ COMMAND ( "ext",     CMD,   ext_cmd,       "generate external interrupt" )
 COMMAND ( "restart", CMD,   restart_cmd,   "generate restart interrupt" )
 COMMAND ( "archmode",CMD|CFG, archmode_cmd,"set architecture mode" )
 COMMAND ( "loadparm",CMD|CFG, loadparm_cmd,"set IPL parameter\n" )
+
+COMMAND ( "lparname",CMD|CFG, lparname_cmd,"set LPAR name\n" )
 
 COMMAND ( "ipl",     CMD,   ipl_cmd,       "IPL Normal from device xxxx" )
 COMMAND ( "iplc",    CMD,   iplc_cmd,      "IPL Clear from device xxxx" )
