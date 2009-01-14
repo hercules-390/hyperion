@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.112  2009/01/14 19:04:25  jj
+// Move TODDRAG config statement to command handler
+//
 // Revision 1.111  2009/01/14 19:00:22  jj
 // Make lparname command as well as config statement
 //
@@ -826,7 +829,6 @@ char   *stzoffset;                      /* -> System timezone offset */
 char   *sdiag8cmd;                      /* -> Allow diagnose 8       */
 char   *sdiag8echo;                     /* -> Diag 8 Echo opt        */
 char   *sshcmdopt;                      /* -> SHCMDOPT shell cmd opt */
-char   *stimerint;                      /* -> Timer update interval  */
 char   *sdevtmax;                       /* -> Max device threads     */
 char   *slegacysenseid;                 /* -> legacy senseid option  */
 char   *shercprio;                      /* -> Hercules base priority */
@@ -878,7 +880,6 @@ S64     ly1960;                         /* Leap offset for 1960 epoch*/
 int     diag8cmd;                       /* Allow diagnose 8 commands */
 BYTE    shcmdopt;                       /* Shell cmd allow option(s) */
 int     legacysenseid;                  /* ena/disa x'E4' on old devs*/
-int     timerint;                       /* Timer update interval     */
 int     hercprio;                       /* Hercules base priority    */
 int     todprio;                        /* Timer thread priority     */
 int     cpuprio;                        /* CPU thread priority       */
@@ -961,7 +962,8 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 #endif
     sysblk.pgminttr = OS_NONE;
 
-    timerint = DEFAULT_TIMER_REFRESH_USECS;
+    sysblk.timerint = DEFAULT_TIMER_REFRESH_USECS;
+
     hercprio = DEFAULT_HERCPRIO;
     todprio  = DEFAULT_TOD_PRIO;
     cpuprio  = DEFAULT_CPU_PRIO;
@@ -1117,7 +1119,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         sdiag8cmd = NULL;
         sdiag8echo = NULL;
         sshcmdopt = NULL;
-        stimerint = NULL;
         shercprio = NULL;
         stodprio = NULL;
         scpuprio = NULL;
@@ -1247,10 +1248,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             else if (strcasecmp (keyword, "SHCMDOPT") == 0)
             {
                 sshcmdopt = operand;
-            }
-            else if (strcasecmp (keyword, "timerint") == 0)
-            {
-                stimerint = operand;
             }
             else if (strcasecmp (keyword, "cpuverid") == 0)
             {
@@ -1958,27 +1955,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             }
         }
 
-        /* Parse timer update interval*/
-        if (stimerint)
-        {
-            if  (strcasecmp (stimerint, "default") == 0)
-                timerint = DEFAULT_TIMER_REFRESH_USECS;
-            else
-            {
-                if (0
-                    || sscanf(stimerint, "%d%c", &timerint, &c) != 1
-                    || timerint < 1
-                    || timerint > 1000000
-                )
-                {
-                    fprintf(stderr, _("HHCCF025S Error in %s line %d: "
-                            "Invalid timer update interval %s\n"),
-                            fname, inc_stmtnum[inc_level], stimerint);
-                    delayed_exit(1);
-                }
-            }
-        }
-
         /* Parse Maximum number of device threads */
         if (sdevtmax != NULL)
         {
@@ -2499,9 +2475,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
     /* set the legacy device senseid option */
     sysblk.legacysenseid = legacysenseid;
-
-    /* Set the timer update interval */
-    sysblk.timerint = timerint;
 
     /* Gabor Hoffer (performance option) */
     copy_opcode_tables();

@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.279  2009/01/14 19:04:25  jj
+// Move TODDRAG config statement to command handler
+//
 // Revision 1.278  2009/01/14 19:00:22  jj
 // Make lparname command as well as config statement
 //
@@ -1182,8 +1185,8 @@ int timerint_cmd(int argc, char *argv[], char *cmdline)
             }
         }
     }
-
-    logmsg( _("HHCPN037I Timer update interval = %d microsecond(s)\n"),
+    else
+        logmsg( _("HHCPN037I Timer update interval = %d microsecond(s)\n"),
               sysblk.timerint );
 
     return 0;
@@ -6905,7 +6908,7 @@ COMMAND ( "fpc",     CMD,   fpc_cmd,       "display floating point control regis
 COMMAND ( "cr",      CMD,   cr_cmd,        "display or alter control registers" )
 COMMAND ( "ar",      CMD,   ar_cmd,        "display access registers" )
 COMMAND ( "pr",      CMD,   pr_cmd,        "display prefix register" )
-COMMAND ( "timerint",CMD,   timerint_cmd,  "display or set timers update interval" )
+COMMAND ( "timerint",CMD|CFG, timerint_cmd,"display or set timers update interval" )
 COMMAND ( "clocks",  CMD,   clocks_cmd,    "display tod clkc and cpu timer" )
 COMMAND ( "ipending",CMD,   ipending_cmd,  "display pending interrupts" )
 COMMAND ( "ds",      CMD,   ds_cmd,        "display subchannel" )
