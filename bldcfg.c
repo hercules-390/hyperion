@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.105  2009/01/14 15:23:20  jj
+// Move modpath logic to hsccmd.c
+//
 // Revision 1.104  2009/01/14 14:59:06  jj
 // simplify i/o delay config procesing
 //
@@ -800,7 +803,6 @@ char   *snumcpu;                        /* -> Number of CPUs         */
 char   *snumvec;                        /* -> Number of VFs          */
 char   *sengines;                       /* -> Processor engine types */
 char   *sarchmode;                      /* -> Architectural mode     */
-char   *sloadparm;                      /* -> IPL load parameter     */
 char   *ssysepoch;                      /* -> System epoch           */
 char   *syroffset;                      /* -> System year offset     */
 char   *stzoffset;                      /* -> System timezone offset */
@@ -1098,7 +1100,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         snumvec = NULL;
         sengines = NULL;
         sarchmode = NULL;
-        sloadparm = NULL;
         ssysepoch = NULL;
         syroffset = NULL;
         stzoffset = NULL;
@@ -1162,7 +1163,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             sxpndsize = addargv[1];
             config_cnslport = strdup(addargv[2]);
             snumcpu = addargv[3];
-            sloadparm = addargv[4];
+            set_loadparm(addargv[4]);
         }
         else
         {
@@ -1201,10 +1202,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             else if (strcasecmp (keyword, "engines") == 0)
             {
                 sengines = operand;
-            }
-            else if (strcasecmp (keyword, "loadparm") == 0)
-            {
-                sloadparm = operand;
             }
             else if (strcasecmp (keyword, "sysepoch") == 0)
             {
@@ -1909,21 +1906,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 }
                 styp = strtok(NULL,",");
             }
-        }
-
-        /* Parse load parameter operand */
-        if (sloadparm != NULL)
-        {
-            if (strlen(sloadparm) > 8)
-            {
-                fprintf(stderr, _("HHCCF021S Error in %s line %d: "
-                        "Load parameter %s exceeds 8 characters\n"),
-                        fname, inc_stmtnum[inc_level], sloadparm);
-                delayed_exit(1);
-            }
-
-            /* Convert the load parameter to EBCDIC */
-            set_loadparm(sloadparm);
         }
 
         /* Parse system epoch operand */

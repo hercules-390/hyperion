@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.271  2009/01/14 15:23:20  jj
+// Move modpath logic to hsccmd.c
+//
 // Revision 1.270  2009/01/14 14:59:06  jj
 // simplify i/o delay config procesing
 //
@@ -6846,7 +6849,7 @@ COMMAND ( "i",       CMD,   i_cmd,         "generate I/O attention interrupt for
 COMMAND ( "ext",     CMD,   ext_cmd,       "generate external interrupt" )
 COMMAND ( "restart", CMD,   restart_cmd,   "generate restart interrupt" )
 COMMAND ( "archmode",CMD,   archmode_cmd,  "set architecture mode" )
-COMMAND ( "loadparm",CMD,   loadparm_cmd,  "set IPL parameter\n" )
+COMMAND ( "loadparm",CMD|CFG, loadparm_cmd,"set IPL parameter\n" )
 
 COMMAND ( "ipl",     CMD,   ipl_cmd,       "IPL Normal from device xxxx" )
 COMMAND ( "iplc",    CMD,   iplc_cmd,      "IPL Clear from device xxxx" )
