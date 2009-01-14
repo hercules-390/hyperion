@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.268  2009/01/14 14:45:20  jj
+// hercules command table now also used for config commands
+//
 // Revision 1.267  2009/01/14 10:12:36  jj
 // Restrict SCLP DISK I/O to the path relative to the .ins file that has been IPL-ed
 // Add SCLPROOT command to override the above
@@ -6971,7 +6974,7 @@ CMDTAB* cmdtab;
 
     if (argc)
         for (cmdtab = Commands; cmdtab->pszCommand; cmdtab++)
-            if(cmdtab->type | CFG)
+            if(cmdtab->type & CFG)
                 if(!strcasecmp(argv[0], cmdtab->pszCommand))
                     return cmdtab->pfnCommand(argc, argv, cmdline);
 
@@ -7037,7 +7040,7 @@ int ProcessPanelCommand (char* pszCmdLine)
     if (cmd_argc)
         for (pCmdTab = Commands; pCmdTab->pszCommand; pCmdTab++)
         {
-            if(pCmdTab->type | CMD)
+            if(pCmdTab->type & CMD)
             {
                 if (!pCmdTab->cmdAbbrev)
                 {
