@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.280  2009/01/14 19:22:27  jj
+// Move timerint config statement to command handler
+//
 // Revision 1.279  2009/01/14 19:04:25  jj
 // Move TODDRAG config statement to command handler
 //
@@ -6821,6 +6824,7 @@ typedef struct _CMDTAB
     const int   type;           /* Is command allowed from config */
 #define CFG     0x01            /* Config statement */
 #define CMD     0x02            /* Command statement */
+#define HID     0x80            /* Hidden            */
     const size_t cmdAbbrev;      /* Min abbreviation */
     CMDFUNC*    pfnCommand;     /* handler function */
     const char* pszCmdDesc;     /* description      */
@@ -7023,8 +7027,7 @@ COMMAND ( "herclogo",CMD,   herclogo_cmd,  "Read a new hercules logo file\n" )
 
 COMMAND ( "traceopt",CMD,   traceopt_cmd,  "Instruction trace display options\n" )
 
-#define   TEST_CMD "$test"          // (hidden internal command)
-COMMAND ( TEST_CMD, CMD, test_cmd,        "(hidden internal command)" )
+COMMAND ( "$test",  HID|CMD, test_cmd,        "(hidden internal command)" )
 
 #ifdef OPTION_CMDTGT
 COMMAND ( "cmdtgt",  CMD,   cmdtgt_cmd,    "Specify the command target\n" )
@@ -7194,8 +7197,7 @@ int ListAllCommands(int argc, char *argv[], char *cmdline)
 
     for (pCmdTab = Commands; pCmdTab->pszCommand; pCmdTab++)
     {
-        // (don't display hidden internal commands)
-        if ( strcasecmp( pCmdTab->pszCommand, TEST_CMD ) != 0 )
+        if ( (pCmdTab->type & CMD) && !(pCmdTab->type & HID))
             logmsg( _("  %-9.9s    %s \n"), pCmdTab->pszCommand, pCmdTab->pszCmdDesc );
     }
 
