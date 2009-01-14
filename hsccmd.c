@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.270  2009/01/14 14:59:06  jj
+// simplify i/o delay config procesing
+//
 // Revision 1.269  2009/01/14 14:54:07  jj
 // Fix logic error in determining command/config statement
 //
@@ -6500,6 +6503,26 @@ int lsdep_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
+//
+///////////////////////////////////////////////////////////////////////
+/* modpath - set module path */
+
+int modpath_cmd(int argc, char *argv[], char *cmdline)
+{
+    UNREFERENCED(cmdline);
+
+    if(argc <= 1)
+    {
+        logmsg("Usage: %s <path>\n",argv[0]);
+        return -1;
+    }
+    else
+    {
+        hdl_setpath(strdup(argv[1]));
+        return 0;
+    }
+}
+
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
 
 ///////////////////////////////////////////////////////////////////////
@@ -6894,10 +6917,11 @@ COMMAND ( "loadcore",CMD,   loadcore_cmd,  "load a core image file" )
 COMMAND ( "loadtext",CMD,   loadtext_cmd,  "load a text deck file\n" )
 
 #if defined(OPTION_DYNAMIC_LOAD)
-COMMAND ( "ldmod",   CMD,   ldmod_cmd,     "load a module" )
+COMMAND ( "ldmod",   CMD|CFG,ldmod_cmd,    "load a module" )
 COMMAND ( "rmmod",   CMD,   rmmod_cmd,     "delete a module" )
 COMMAND ( "lsmod",   CMD,   lsmod_cmd,     "list dynamic modules" )
 COMMAND ( "lsdep",   CMD,   lsdep_cmd,     "list module dependencies\n" )
+COMMAND ( "modpath", CMD|CFG, modpath_cmd, "set module load path\n" )
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
 
 #ifdef OPTION_IODELAY_KLUDGE

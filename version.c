@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.50  2007/12/07 12:50:22  rbowler
+// Show multi_byte assist status at startup
+//
 // Revision 1.49  2007/06/23 00:04:19  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -81,9 +84,6 @@ static const char *build_info[] = {
 #endif
 #if defined(OPTION_DYNAMIC_LOAD)
     "Dynamic loading support",
-#if defined(MODULESDIR)
-    "Loadable module default base directory is "MODULESDIR,
-#endif
 #else
     "No Dynamic loading support",
 #endif

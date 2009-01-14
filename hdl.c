@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.54  2008/11/23 23:29:44  rbowler
+// Fix win64 type conversion warnings in hdl.c
+//
 // Revision 1.53  2007/06/23 00:04:10  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -50,7 +53,7 @@ static DLLENT *hdl_cdll;                 /* current dll (hdl_lock)   */
 
 static HDLDEP *hdl_depend;               /* Version codes in hdlmain */
 
-static char *hdl_modpath = HDL_DEFAULT_PATH;
+static char *hdl_modpath = NULL;
 
 #endif
 
@@ -134,7 +137,11 @@ HDLSHD *shdent;
  */
 DLL_EXPORT void hdl_setpath(char *path)
 {
-    hdl_modpath = path;
+    if(hdl_modpath)
+        free(hdl_modpath);
+
+    hdl_modpath = strdup(path);
+
     logmsg(_("HHCHD018I Loadable module directory is %s\n"),hdl_modpath);
 }
 
@@ -667,6 +674,8 @@ HDLPRE *preload;
 
     initialize_lock(&hdl_lock);
     initialize_lock(&hdl_sdlock);
+
+    hdl_setpath(HDL_DEFAULT_PATH);
 
     dlinit();
 

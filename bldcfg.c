@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.104  2009/01/14 14:59:06  jj
+// simplify i/o delay config procesing
+//
 // Revision 1.103  2009/01/14 14:45:20  jj
 // hercules command table now also used for config commands
 //
@@ -1163,23 +1166,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         }
         else
         {
-#if defined(OPTION_DYNAMIC_LOAD)
-            if (!strcasecmp (keyword, "modpath"))
-            {
-                hdl_setpath(strdup(operand));
-            }
-            else
-            if (!strcasecmp (keyword, "ldmod"))
-            {
-                hdl_load(operand, 0);
-
-                for(i = 0; i < addargc; i++)
-                    hdl_load(addargv[i], 0);
-
-                addargc = 0;
-            }
-            else
-#endif /*defined(OPTION_DYNAMIC_LOAD)*/
             if (strcasecmp (keyword, "cpuserial") == 0)
             {
                 sserial = operand;
