@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.154  2008/12/06 22:42:37  ivan
+// Enable STFLE in ESA/390 Mode.
+//
 // Revision 1.153  2008/03/28 21:50:43  rbowler
 // Correct formatting of disassembly for relative instructions
 //
@@ -2554,11 +2557,11 @@ DLL_EXPORT zz_func opcode_01xx[256][GEN_MAXARCH] = {
  /*0102*/ GENx___x390x900 (update_tree,E,"UPT"),
  /*0103*/ GENx___x___x___ ,
  /*0104*/ GENx___x___x900 (perform_timing_facility_function,E,"PTFF"),
- /*0105*/ GENx___x___x___ ,                                     /* CMSG      */
- /*0106*/ GENx___x___x___ ,                                     /* TMSG      */
+ /*0105*/ GENx___x___x___ , /*(clear_message,?,"CMSG"),*/
+ /*0106*/ GENx___x___x___ , /*(test_message,?,"TMSG"),*/
  /*0107*/ GENx___x390x900 (set_clock_programmable_field,E,"SCKPF"),
- /*0108*/ GENx___x___x___ ,                                     /* TMPS      */
- /*0109*/ GENx___x___x___ ,                                     /* CMPS      */
+ /*0108*/ GENx___x___x___ , /*(test_message_path_state,?,"TMPS"),*/
+ /*0109*/ GENx___x___x___ , /*(clear_message_path_state,?,"CMPS"),*/
  /*010A*/ GENx___x390x900 (perform_floating_point_operation,E,"PFPO"),
  /*010B*/ GENx___x390x900 (test_addressing_mode,E,"TAM"),
  /*010C*/ GENx___x390x900 (set_addressing_mode_24,E,"SAM24"),
@@ -3212,10 +3215,10 @@ DLL_EXPORT zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B262*/ GENx___x390x900 (lock_page,RRE,"LKPG"),
  /*B263*/ GENx___x390x900 (compression_call,RRE,"CMPSC"),
  /*B264*/ GENx___x___x___ ,                                     /* Sysplex   */
- /*B265*/ GENx___x___x___ ,                                     /* Sysplex   */
+ /*B265*/ GENx___x___x___ , /*(set_vector_summary,?,"SVS"),*/   /* Sysplex   */
  /*B266*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B267*/ GENx___x___x___ ,                                     /* Sysplex   */
- /*B268*/ GENx___x___x___ ,                                     /* Sysplex   */
+ /*B268*/ GENx___x___x___ , /*(define_vector,?,"DV"),*/         /* Sysplex   */
  /*B269*/ GENx___x___x___ ,                                     /* Crypto    */
  /*B26A*/ GENx___x___x___ ,                                     /* Crypto    */
  /*B26B*/ GENx___x___x___ ,                                     /* Crypto    */
@@ -3239,21 +3242,21 @@ DLL_EXPORT zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B27D*/ GENx370x390x900 (store_system_information,S,"STSI"),
  /*B27E*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B27F*/ GENx___x___x___ ,                                     /* Sysplex   */
- /*B280*/ GENx___x___x___ ,                                     /*#LN L      */
+ /*B280*/ GENx___x___x___ , /*(set_program_parameter,?,"SPP"),*//*#LN L      */
  /*B281*/ GENx___x___x___ ,                                     /*#LN S      */
  /*B282*/ GENx___x___x___ ,                                     /*#EXP L     */
  /*B283*/ GENx___x___x___ ,                                     /*#EXP S     */
- /*B284*/ GENx___x___x___ ,                                     /*#LOG L     */
- /*B285*/ GENx___x___x___ ,                                     /*#LOG S     */
- /*B286*/ GENx___x___x___ ,                                     /*#POWER L   */
- /*B287*/ GENx___x___x___ ,                                     /*#POWER S   */
+ /*B284*/ GENx___x___x___ , /*(set_cpu_counter_set_controls,?,"SCCTL"),*//*#LOG L*/
+ /*B285*/ GENx___x___x___ , /*(set_peripheral_counter_set_controls,?,"SPCTL"),*//*#LOG S*/
+ /*B286*/ GENx___x___x___ , /*(query_sampling_information,?,"QSI"),*//*#POWER L*/
+ /*B287*/ GENx___x___x___ , /*(set_sampling_controls,?,"SSCTL"),*//*#POWER S */
  /*B288*/ GENx___x___x___ ,                                     /*#SIN L     */
  /*B289*/ GENx___x___x___ ,                                     /*#SIN S     */
  /*B28A*/ GENx___x___x___ ,                                     /*#COS L     */
  /*B28B*/ GENx___x___x___ ,                                     /*#COS S     */
  /*B28C*/ GENx___x___x___ ,
  /*B28D*/ GENx___x___x___ ,
- /*B28E*/ GENx___x___x___ ,
+ /*B28E*/ GENx___x___x___ , /*(query_counter_information,?,"QCTRI"),*/
  /*B28F*/ GENx___x___x___ ,
  /*B290*/ GENx___x___x___ ,
  /*B291*/ GENx___x___x___ ,
@@ -3275,7 +3278,7 @@ DLL_EXPORT zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B2A1*/ GENx___x___x___ ,
  /*B2A2*/ GENx___x___x___ ,
  /*B2A3*/ GENx___x___x___ ,
- /*B2A4*/ GENx___x___x___ ,                                     /* Sysplex   */
+ /*B2A4*/ GENx___x___x___ , /*(move_channel_buffer_data_multiple,?,"MCBDM"),*//*Sysplex*/
  /*B2A5*/ GENx370x390x900 (translate_extended,RRE,"TRE"),
  /*B2A6*/ GENx370x390x900 (convert_utf16_to_utf8,RRF_M3,"CU21 (CUUTF)"),
  /*B2A7*/ GENx370x390x900 (convert_utf8_to_utf16,RRF_M3,"CU12 (CUTFU)"),
@@ -3290,7 +3293,7 @@ DLL_EXPORT zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B2B0*/ GENx___x390x900 (store_facility_list_extended,S,"STFLE"), /*!SARCH */    /*@Z9*/
  /*B2B1*/ GENx___x390x900 (store_facility_list,S,"STFL"),
  /*B2B2*/ GENx___x___x900 (load_program_status_word_extended,S,"LPSWE"),
- /*B2B3*/ GENx___x___x___ ,
+ /*B2B3*/ GENx___x___x___ , /*(store_etr_attachment_information,?,"STEAI"),*/
  /*B2B4*/ GENx___x___x___ ,
  /*B2B5*/ GENx___x___x___ ,
  /*B2B6*/ GENx___x___x___ ,
@@ -3335,12 +3338,12 @@ DLL_EXPORT zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B2DD*/ GENx___x___x___ ,
  /*B2DE*/ GENx___x___x___ ,
  /*B2DF*/ GENx___x___x___ ,
- /*B2E0*/ GENx___x___x___ ,
- /*B2E1*/ GENx___x___x___ ,
+ /*B2E0*/ GENx___x___x___ , /*(set_cpu_counter,?,"SCCTR"),*/
+ /*B2E1*/ GENx___x___x___ , /*(set_peripheral_counter,?,"SPCTR"),*/
  /*B2E2*/ GENx___x___x___ ,
  /*B2E3*/ GENx___x___x___ ,
- /*B2E4*/ GENx___x___x___ ,
- /*B2E5*/ GENx___x___x___ ,
+ /*B2E4*/ GENx___x___x___ , /*(extract_cpu_counter,?,"ECCTR"),*/
+ /*B2E5*/ GENx___x___x___ , /*(extract_peripheral_counter,?,"EPCTR"),*/
  /*B2E6*/ GENx___x___x___ ,
  /*B2E7*/ GENx___x___x___ ,
  /*B2E8*/ GENx___x___x___ ,
@@ -3348,7 +3351,7 @@ DLL_EXPORT zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B2EA*/ GENx___x___x___ ,
  /*B2EB*/ GENx___x___x___ ,
  /*B2EC*/ GENx___x___x___ ,
- /*B2ED*/ GENx___x___x___ ,
+ /*B2ED*/ GENx___x___x___ , /*(extract_coprocessor_group_address,?,ECA),*/
  /*B2EE*/ GENx___x___x___ ,
  /*B2EF*/ GENx___x___x___ ,
  /*B2F0*/ GENx370x390x900 (inter_user_communication_vehicle,S,"IUCV"),
@@ -3790,7 +3793,7 @@ DLL_EXPORT zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B999*/ GENx___x390x900 (subtract_logical_borrow_register,RRE,"SLBR"),
  /*B99A*/ GENx___x___x900 (extract_primary_asn_and_instance,RRE_R1,"EPAIR"),
  /*B99B*/ GENx___x___x900 (extract_secondary_asn_and_instance,RRE_R1,"ESAIR"),
- /*B99C*/ GENx___x___x___ ,
+ /*B99C*/ GENx___x___x___ , /*(extract_qdio_buffer_state,?,"EQBS"),*/
  /*B99D*/ GENx___x___x900 (extract_and_set_extended_authority,RRE_R1,"ESEA"),
  /*B99E*/ GENx___x___x900 (program_transfer_with_instance,RRE,"PTI"),
  /*B99F*/ GENx___x___x900 (set_secondary_asn_with_instance,RRE_R1,"SSAIR"),
@@ -3805,7 +3808,7 @@ DLL_EXPORT zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B9A8*/ GENx___x___x___ ,
  /*B9A9*/ GENx___x___x___ ,
  /*B9AA*/ GENx___x___x900 (load_page_table_entry_address,RRF_RM,"LPTEA"),          /*@Z9*/
- /*B9AB*/ GENx___x___x___ ,
+ /*B9AB*/ GENx___x___x___ , /*(extract_and_set_storage_attributes,?,"ESSA"),*/
  /*B9AC*/ GENx___x___x___ ,
  /*B9AD*/ GENx___x___x___ ,
  /*B9AE*/ GENx___x___x___ ,
@@ -4909,7 +4912,7 @@ DLL_EXPORT zz_func opcode_ebxx[256][GEN_MAXARCH] = {
  /*EB87*/ GENx___x___x___ ,
  /*EB88*/ GENx___x___x___ ,
  /*EB89*/ GENx___x___x___ ,
- /*EB8A*/ GENx___x___x___ ,
+ /*EB8A*/ GENx___x___x___ , /*(set_qdio_buffer_state,?,"SQBS"),*/
  /*EB8B*/ GENx___x___x___ ,
  /*EB8C*/ GENx___x___x___ ,
  /*EB8D*/ GENx___x___x___ ,
