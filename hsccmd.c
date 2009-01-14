@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.274  2009/01/14 15:51:18  jj
+// Remove blank line from help output
+//
 // Revision 1.273  2009/01/14 15:49:36  jj
 // Move archmode config to command processing
 //
@@ -6942,7 +6945,7 @@ COMMAND ( "tt32",    CMD,   tt32_cmd,      "control/query CTCI-W32 functionality
 #endif
 COMMAND ( "toddrag", CMD,   toddrag_cmd,   "display or set TOD clock drag factor" )
 #ifdef PANEL_REFRESH_RATE
-COMMAND ( "panrate", CMD,   panrate_cmd,   "display or set rate at which console refreshes" )
+COMMAND ( "panrate", CMD|CFG, panrate_cmd, "display or set rate at which console refreshes" )
 #endif
 #ifdef OPTION_MSGHLD
 COMMAND ( "msghld",  CMD,   msghld_cmd, "display or set the timeout of held messages")

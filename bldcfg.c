@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.107  2009/01/14 15:49:36  jj
+// Move archmode config to command processing
+//
 // Revision 1.106  2009/01/14 15:31:43  jj
 // Move loadparm logic to command handler
 //
@@ -813,7 +816,6 @@ char   *sdiag8echo;                     /* -> Diag 8 Echo opt        */
 char   *sshcmdopt;                      /* -> SHCMDOPT shell cmd opt */
 char   *stoddrag;                       /* -> TOD clock drag factor  */
 char   *sostailor;                      /* -> OS to tailor system to */
-char   *spanrate;                       /* -> Panel refresh rate     */
 char   *stimerint;                      /* -> Timer update interval  */
 char   *sdevtmax;                       /* -> Max device threads     */
 char   *slegacysenseid;                 /* -> legacy senseid option  */
@@ -870,7 +872,6 @@ double  toddrag;                        /* TOD clock drag factor     */
 U64     ostailor;                       /* OS to tailor system to    */
 int     legacysenseid;                  /* ena/disa x'E4' on old devs*/
 int     timerint;                       /* Timer update interval     */
-int     panrate;                        /* Panel refresh rate        */
 int     hercprio;                       /* Hercules base priority    */
 int     todprio;                        /* Timer thread priority     */
 int     cpuprio;                        /* CPU thread priority       */
@@ -956,7 +957,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     sysblk.arch_z900 = ARCH_900;
 #endif
     ostailor = OS_NONE;
-    panrate  = PANEL_REFRESH_RATE_SLOW;
     timerint = DEFAULT_TIMER_REFRESH_USECS;
     hercprio = DEFAULT_HERCPRIO;
     todprio  = DEFAULT_TOD_PRIO;
@@ -978,6 +978,10 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
     asnandlxreuse = 0;  /* ASN And LX Reuse is defaulted to DISABLE */
+#endif
+  
+#ifdef PANEL_REFRESH_RATE
+    sysblk.panrate = PANEL_REFRESH_RATE_SLOW;
 #endif
 
     /* Default CPU type CP */
@@ -1111,7 +1115,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         sshcmdopt = NULL;
         stoddrag = NULL;
         sostailor = NULL;
-        spanrate = NULL;
         stimerint = NULL;
         shercprio = NULL;
         stodprio = NULL;
@@ -1251,12 +1254,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             {
                 stoddrag = operand;
             }
-#ifdef PANEL_REFRESH_RATE
-            else if (strcasecmp (keyword, "panrate") == 0)
-            {
-                spanrate = operand;
-            }
-#endif /*PANEL_REFRESH_RATE*/
             else if (strcasecmp (keyword, "timerint") == 0)
             {
                 stimerint = operand;
@@ -1995,31 +1992,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             }
         }
 
-#ifdef PANEL_REFRESH_RATE
-        /* Parse panel refresh rate operand */
-        if (spanrate != NULL)
-        {
-            switch (toupper((char)spanrate[0]))
-            {
-            case 'F': /* fast */
-                panrate = PANEL_REFRESH_RATE_FAST;
-                break;
-            case 'S': /* slow */
-                panrate = PANEL_REFRESH_RATE_SLOW;
-                break;
-            default:
-                if (sscanf(spanrate, "%u%c", &panrate, &c) != 1
-                    || panrate < (1000/CLK_TCK) || panrate > 5000)
-                {
-                    fprintf(stderr, _("HHCCF025S Error in %s line %d: "
-                            "Invalid panel refresh rate %s\n"),
-                            fname, inc_stmtnum[inc_level], spanrate);
-                    delayed_exit(1);
-                }
-            }
-        }
-#endif /*PANEL_REFRESH_RATE*/
-
         /* Parse timer update interval*/
         if (stimerint)
         {
@@ -2653,9 +2625,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
     /* Set the licence flag */
     losc_set(pgmprdos);
-
-    /* Set the panel refresh rate */
-    sysblk.panrate = panrate;
 
     /* set the legacy device senseid option */
     sysblk.legacysenseid = legacysenseid;
