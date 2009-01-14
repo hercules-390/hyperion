@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.275  2009/01/14 15:58:54  jj
+// Move panrate config to command handler
+//
 // Revision 1.274  2009/01/14 15:51:18  jj
 // Remove blank line from help output
 //
@@ -6851,7 +6854,7 @@ COMMAND ( "ssd",     CMD,   ssd_cmd,       "Signal Shutdown\n" )
 #endif
 
 #ifdef OPTION_PTTRACE
-COMMAND ( "ptt",     CMD, EXT_CMD(ptt_cmd),"display pthread trace\n" )
+COMMAND ( "ptt",     CMD|CFG, EXT_CMD(ptt_cmd),"display pthread trace\n" )
 #endif
 
 COMMAND ( "i",       CMD,   i_cmd,         "generate I/O attention interrupt for device" )
@@ -6904,7 +6907,7 @@ COMMAND ( "pwd",     CMD,   pwd_cmd,       "print working directory" )
 COMMAND ( "sh",      CMD,   sh_cmd,        "shell command\n" )
 
 COMMAND ( "cache",   CMD,EXT_CMD(cache_cmd), "cache command" )
-COMMAND ( "cckd",    CMD,   cckd_cmd,        "cckd command" )
+COMMAND ( "cckd",    CMD|CFG,cckd_cmd,       "cckd command" )
 COMMAND ( "shrd",    CMD,EXT_CMD(shared_cmd),"shrd command" )
 COMMAND ( "conkpalv",CMD,   conkpalv_cmd,    "display/alter console TCP keep-alive settings" )
 COMMAND ( "quiet",   CMD,   quiet_cmd,       "toggle automatic refresh of panel display data\n" )

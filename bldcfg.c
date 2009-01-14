@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.108  2009/01/14 15:58:54  jj
+// Move panrate config to command handler
+//
 // Revision 1.107  2009/01/14 15:49:36  jj
 // Move archmode config to command processing
 //
@@ -844,7 +847,6 @@ char   *sshrdport;                      /* -> Shared device port nbr */
 #if defined(OPTION_PTTRACE)
 char   *sptt;                           /* Pthread trace table size  */
 #endif /*defined(OPTION_PTTRACE)*/
-char   *scckd;                          /* -> CCKD parameters        */
 #if defined( OPTION_SCSI_TAPE )
 char   *sauto_scsi_mount;               /* Auto SCSI tape mounts     */
 #endif /* defined( OPTION_SCSI_TAPE ) */
@@ -1143,7 +1145,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 #ifdef OPTION_PTTRACE
         sptt = NULL;
 #endif /*OPTION_PTTRACE*/
-        scckd = NULL;
 #if defined(OPTION_LPARNAME)
         lparname = NULL;
 #endif /*defined(OPTION_LPARNAME)*/
@@ -1536,11 +1537,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 sshrdport = operand;
             }
 #endif /*defined(OPTION_SHARED_DEVICES)*/
-            else if (strcasecmp (keyword, "cckd") == 0)
-            {
-                scckd = operand;
-            }
-
 #if defined(OPTION_LPARNAME)
             else if (strcasecmp (keyword, "lparname") == 0)
             {
@@ -2342,10 +2338,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             }
         }
 #endif /*OPTION_PTTRACE*/
-
-        /* Parse cckd value value */
-        if (scckd)
-            cckd_command (scckd, 0);
 
 #if defined(OPTION_LPARNAME)
         if(lparname)
