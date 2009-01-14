@@ -10,6 +10,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.11  2009/01/14 18:46:10  jj
+// Differentiate between ostailor OS/390 and VSE
+//
 // Revision 1.10  2008/05/28 16:36:17  fish
 // #define PATH_SEP constant
 //
@@ -237,7 +240,7 @@
 
 /* Definitions for OS tailoring - msb eq mon event, lsb eq oper exc. */
 #define OS_NONE         0x7FFFFFFFF7DE7FFFULL   /* No spec OS tail.  */
-#define OS_OS390        0x7FF673FFF7DE7FFEULL   /* OS/390            */
+#define OS_OS390        0x7FF673FFF7DE7FFDULL   /* OS/390            */
 #define OS_ZOS          0x7B7673FFF7DE7FB7ULL   /* z/OS              */
 #define OS_VSE          0x7FF673FFF7DE7FFFULL   /* VSE               */
 #define OS_VM           0x7FFFFFFFF7DE7FFCULL   /* VM                */
