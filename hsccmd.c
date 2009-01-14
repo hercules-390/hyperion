@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.269  2009/01/14 14:54:07  jj
+// Fix logic error in determining command/config statement
+//
 // Revision 1.268  2009/01/14 14:45:20  jj
 // hercules command table now also used for config commands
 //
@@ -6898,7 +6901,7 @@ COMMAND ( "lsdep",   CMD,   lsdep_cmd,     "list module dependencies\n" )
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
 
 #ifdef OPTION_IODELAY_KLUDGE
-COMMAND ( "iodelay", CMD,   iodelay_cmd,   "display or set I/O delay value" )
+COMMAND ( "iodelay", CMD|CFG, iodelay_cmd,   "display or set I/O delay value" )
 #endif
 COMMAND ( "ctc",     CMD,   ctc_cmd,       "enable/disable CTC debugging" )
 #if defined(OPTION_W32_CTCI)

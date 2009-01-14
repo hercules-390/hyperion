@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.103  2009/01/14 14:45:20  jj
+// hercules command table now also used for config commands
+//
 // Revision 1.102  2009/01/08 14:43:38  jmaynard
 // Cosmetic update to CPU type display on startup.
 //
@@ -829,10 +832,6 @@ int    ecpsvmac;                        /* -> ECPS:VM add'l arg cnt  */
 #if defined(OPTION_SHARED_DEVICES)
 char   *sshrdport;                      /* -> Shared device port nbr */
 #endif /*defined(OPTION_SHARED_DEVICES)*/
-#ifdef OPTION_IODELAY_KLUDGE
-char   *siodelay;                       /* -> I/O delay value        */
-char   *siodelay_warn = NULL;           /* -> I/O delay warning      */
-#endif /*OPTION_IODELAY_KLUDGE*/
 #if defined(OPTION_PTTRACE)
 char   *sptt;                           /* Pthread trace table size  */
 #endif /*defined(OPTION_PTTRACE)*/
@@ -882,10 +881,6 @@ int     devtmax;                        /* Max number device threads */
 int     ecpsvmavail;                    /* ECPS:VM Available flag    */
 int     ecpsvmlevel;                    /* ECPS:VM declared level    */
 #endif /*defined(_FEATURE_ECPSVM)*/
-#ifdef OPTION_IODELAY_KLUDGE
-int     iodelay=-1;                     /* I/O delay value           */
-int     iodelay_warn = 0;               /* Issue iodelay warning     */
-#endif /*OPTION_IODELAY_KLUDGE*/
 #ifdef OPTION_PTTRACE
 int     ptt = 0;                        /* Pthread trace table size  */
 #endif /*OPTION_PTTRACE*/
@@ -1135,9 +1130,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 #if defined(OPTION_SHARED_DEVICES)
         sshrdport = NULL;
 #endif /*defined(OPTION_SHARED_DEVICES)*/
-#ifdef OPTION_IODELAY_KLUDGE
-        siodelay = NULL;
-#endif /*OPTION_IODELAY_KLUDGE*/
 #ifdef OPTION_PTTRACE
         sptt = NULL;
 #endif /*OPTION_PTTRACE*/
@@ -1373,17 +1365,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 addargc=0;
             }
 #endif /*defined(_FEATURE_ECPSVM)*/
-#ifdef OPTION_IODELAY_KLUDGE
-            else if (strcasecmp (keyword, "iodelay") == 0)
-            {
-                siodelay = operand;
-                if (addargc > 0)
-                {
-                    siodelay_warn = addargv[0];
-                    addargc--;
-                }
-            }
-#endif /*OPTION_IODELAY_KLUDGE*/
 #ifdef OPTION_PTTRACE
             else if (strcasecmp (keyword, "ptt") == 0)
             {
@@ -2446,27 +2427,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         }
 #endif /*defined(_FEATURE_ASN_AND_LX_REUSE)*/
 
-#ifdef OPTION_IODELAY_KLUDGE
-        /* Parse I/O delay value */
-        if (siodelay != NULL)
-        {
-            if (sscanf(siodelay, "%d%c", &iodelay, &c) != 1)
-            {
-                fprintf(stderr, _("HHCCF030S Error in %s line %d: "
-                        "Invalid I/O delay value: %s\n"),
-                        fname, inc_stmtnum[inc_level], siodelay);
-                delayed_exit(1);
-            }
-            /* See http://games.groups.yahoo.com/group/zHercules/message/10688 */
-            iodelay_warn = iodelay;
-            if (siodelay_warn != NULL
-             && (strcasecmp(siodelay_warn, "NOWARN") == 0
-              || strcasecmp(siodelay_warn, "IKNOWWHATIMDOINGDAMMIT") == 0
-                )
-               )
-                iodelay_warn = 0;
-        }
-#endif /*OPTION_IODELAY_KLUDGE*/
 
 #ifdef OPTION_PTTRACE
         /* Parse pthread trace value */
@@ -2764,18 +2724,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
     /* Set the licence flag */
     losc_set(pgmprdos);
-
-#ifdef OPTION_IODELAY_KLUDGE
-    /* Set I/O delay value */
-    if (iodelay >= 0)
-    {
-        sysblk.iodelay = iodelay;
-        if (iodelay_warn)
-            logmsg (_("HHCCF037W Nonzero IODELAY value specified.\n"
-             "          This is only necessary if you are running an older Linux kernel.\n"
-             "          Otherwise, performance degradation may result.\n"));
-    }
-#endif /*OPTION_IODELAY_KLUDGE*/
 
     /* Set the panel refresh rate */
     sysblk.panrate = panrate;
