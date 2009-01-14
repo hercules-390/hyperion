@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.26  2009/01/14 14:45:20  jj
+# hercules command table now also used for config commands
+#
 # Revision 1.25  2008/12/01 16:19:49  jj
 # Check for licensed operating systems without impairing architectural
 # compliance of IFL's
@@ -31,8 +34,6 @@
   ARCHMODE  ESA/390             # Architecture mode S/370, ESA/390 or z/Arch
   ALRF      DISABLE             # ASN-and-LX-Reuse facility
   ECPSVM    NO                  # VM Assist : NO or Level (20 recommended)
-  sclproot /tmp
-  blup
 PGMPRDOS LICENSED
 
 #------------------------------------------------------------------------------
