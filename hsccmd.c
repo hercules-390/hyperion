@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.286  2009/01/15 08:58:31  jj
+// Remove logopt duplication in bldcfg.c
+//
 // Revision 1.285  2009/01/15 08:54:36  jj
 // Make alrf command as well as config statement
 //
@@ -3095,6 +3098,42 @@ int ext_cmd(int argc, char *argv[], char *cmdline)
 
     RELEASE_INTLOCK(NULL);
 
+    return 0;
+}
+
+///////////////////////////////////////////////////////////////////////
+/* pgmprdos config command */
+
+int pgmprdos_cmd(int argc, char *argv[], char *cmdline)
+{
+
+    UNREFERENCED(cmdline);
+
+    /* Parse program product OS allowed */
+    if (argc > 1)
+    {
+        if (strcasecmp (argv[1], "LICENSED") == 0)
+        {
+            losc_set(PGM_PRD_OS_LICENSED);
+        }
+        /* Handle silly British spelling. */
+        else if (strcasecmp (argv[1], "LICENCED") == 0)
+        {
+            losc_set(PGM_PRD_OS_LICENSED);
+        }
+        else if (strcasecmp (argv[1], "RESTRICTED") == 0)
+        {
+            losc_set(PGM_PRD_OS_RESTRICTED);
+        }
+        else
+        {
+            logmsg( _("HHCCF028S Invalid program product OS license setting %s\n"),
+                    argv[1]);
+        }
+    }
+    else
+        return -1;
+            
     return 0;
 }
 
@@ -6931,6 +6970,8 @@ COMMAND ( "archmode",CMD|CFG, archmode_cmd,"set architecture mode" )
 COMMAND ( "loadparm",CMD|CFG, loadparm_cmd,"set IPL parameter\n" )
 
 COMMAND ( "lparname",CMD|CFG, lparname_cmd,"set LPAR name\n" )
+
+COMMAND ( "pgmprdos",CFG,   pgmprdos_cmd,  "set LPP license setting\n" )
 
 COMMAND ( "ipl",     CMD,   ipl_cmd,       "IPL Normal from device xxxx" )
 COMMAND ( "iplc",    CMD,   iplc_cmd,      "IPL Clear from device xxxx" )

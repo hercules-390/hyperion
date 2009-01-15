@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.116  2009/01/15 08:58:31  jj
+// Remove logopt duplication in bldcfg.c
+//
 // Revision 1.115  2009/01/15 08:54:36  jj
 // Make alrf command as well as config statement
 //
@@ -845,7 +848,6 @@ char   *shercprio;                      /* -> Hercules base priority */
 char   *stodprio;                       /* -> Timer thread priority  */
 char   *scpuprio;                       /* -> CPU thread priority    */
 char   *sdevprio;                       /* -> Device thread priority */
-char   *spgmprdos;                      /* -> Program product OS OK  */
 char   *slogofile;                      /* -> 3270 logo file         */
 char   *smountedtapereinit;             /* -> mounted tape reinit opt*/
 char   *straceopt;                      /* -> display_inst option    */
@@ -889,7 +891,6 @@ int     hercprio;                       /* Hercules base priority    */
 int     todprio;                        /* Timer thread priority     */
 int     cpuprio;                        /* CPU thread priority       */
 int     devprio;                        /* Device thread priority    */
-BYTE    pgmprdos;                       /* Program product OS OK     */
 DEVBLK *dev;                            /* -> Device Block           */
 char   *sdevnum;                        /* -> Device number string   */
 char   *sdevtype;                       /* -> Device type string     */
@@ -970,7 +971,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     todprio  = DEFAULT_TOD_PRIO;
     cpuprio  = DEFAULT_CPU_PRIO;
     devprio  = DEFAULT_DEV_PRIO;
-    pgmprdos = PGM_PRD_OS_RESTRICTED;
     devtmax  = MAX_DEVICE_THREADS;
     legacysenseid = 0;
     sysblk.kaidle = KEEPALIVE_IDLE_TIME;
@@ -991,6 +991,9 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 #ifdef PANEL_REFRESH_RATE
     sysblk.panrate = PANEL_REFRESH_RATE_SLOW;
 #endif
+
+    /* Default the licence setting */
+    losc_set(PGM_PRD_OS_RESTRICTED);
 
     /* Default CPU type CP */
     for (i = 0; i < MAX_CPU; i++)
@@ -1127,7 +1130,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         sdevprio = NULL;
         sdevtmax = NULL;
         slegacysenseid = NULL;
-        spgmprdos = NULL;
         slogofile = NULL;
         straceopt = NULL;
         sconkpalv = NULL;
@@ -1263,10 +1265,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             else if (strcasecmp (keyword, "legacysenseid") == 0)
             {
                 slegacysenseid = operand;
-            }
-            else if (strcasecmp (keyword, "pgmprdos") == 0)
-            {
-                spgmprdos = operand;
             }
             else if (strcasecmp (keyword, "codepage") == 0)
             {
@@ -1944,31 +1942,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             }
         }
 
-        /* Parse program product OS allowed */
-        if (spgmprdos != NULL)
-        {
-            if (strcasecmp (spgmprdos, "LICENSED") == 0)
-            {
-                pgmprdos = PGM_PRD_OS_LICENSED;
-            }
-            /* Handle silly British spelling. */
-            else if (strcasecmp (spgmprdos, "LICENCED") == 0)
-            {
-                pgmprdos = PGM_PRD_OS_LICENSED;
-            }
-            else if (strcasecmp (spgmprdos, "RESTRICTED") == 0)
-            {
-                pgmprdos = PGM_PRD_OS_RESTRICTED;
-            }
-            else
-            {
-                fprintf(stderr, _("HHCCF028S Error in %s line %d: "
-                        "Invalid program product OS permission %s\n"),
-                        fname, inc_stmtnum[inc_level], spgmprdos);
-                delayed_exit(1);
-            }
-        }
-
         /* Parse terminal logo option */
         if (slogofile != NULL)
         {
@@ -2395,9 +2368,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
     /* Set the timezone offset */
     adjust_tod_epoch((tzoffset/100*3600+(tzoffset%100)*60)*16000000LL);
-
-    /* Set the licence flag */
-    losc_set(pgmprdos);
 
     /* set the legacy device senseid option */
     sysblk.legacysenseid = legacysenseid;
