@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.103  2008/12/25 21:30:31  ivan
+// STSI Update part II : Add secondary CPU capacity in 1.2.2 SYSIB
+//
 // Revision 1.102  2008/12/25 21:14:31  ivan
 // STSI Update part 1 : add CPU Type percentage fields in 1.1.1 SYSIB
 //
@@ -1336,6 +1339,7 @@ typedef struct _MBK {
 #define PLO_CSTSTX              23      /* C/S/TS              ESAME */
 
 /* Bit definitions for Store Facilities List instruction */
+/* Byte STFL_0: STFL/STFLE bits 0-7 */
 #define STFL_0_N3               0x80    /* Instructions marked N3 in
                                            the reference summary are
                                            available in ESA/390 mode */
@@ -1352,6 +1356,7 @@ typedef struct _MBK {
                                            is installed              */
 #define STFL_0_STFL_EXTENDED    0x01    /* Store facility list    @Z9
                                            extended is installed  @Z9*/
+/* Byte STFL_1: STFL/STFLE bits 8-15 */
 #define STFL_1_ENHANCED_DAT     0x80    /* Enhanced-DAT facility  208
                                            is installed           208*/
 #define STFL_1_SENSE_RUN_STATUS 0x40    /* Sense running status   @Z9
@@ -1360,6 +1365,7 @@ typedef struct _MBK {
                                            is installed           407*/
 #define STFL_1_CONFIG_TOPOLOGY  0x10    /* STSI-enhancement for
                                            configuration topology    */
+/* Byte STFL_2: STFL/STFLE bits 16-23 */
 #define STFL_2_TRAN_FAC2        0x80    /* Extended translation
                                            facility 2 is installed   */
 #define STFL_2_MSG_SECURITY     0x40    /* Message security assist
@@ -1376,6 +1382,7 @@ typedef struct _MBK {
                                            facility 3 is installed   */
 #define STFL_2_HFP_UNNORM_EXT   0x01    /* HFP unnormalized extension
                                            facility is installed  @Z9*/
+/* Byte STFL_3: STFL/STFLE bits 24-31 */
 #define STFL_3_ETF2_ENHANCEMENT 0x80    /* Extended translation   @Z9
                                            facility 2 enhancement @Z9*/
 #define STFL_3_STORE_CLOCK_FAST 0x40    /* Store clock fast       @Z9
@@ -1390,6 +1397,7 @@ typedef struct _MBK {
                                            facility 3 enhancement @Z9*/
 #define STFL_3_EXTRACT_CPU_TIME 0x01    /* Extract CPU time facility
                                            is installed           407*/
+/* Byte STFL_4: STFLE bits 32-39 */
 #define STFL_4_CSSF             0x80    /* Compare-and-Swap-and-Store
                                            facility is installed     */
 #define STFL_4_CSSF2            0x40    /* Compare-and-Swap-and-Store
@@ -1398,6 +1406,9 @@ typedef struct _MBK {
                                            facility is installed  208*/
 #define STFL_4_EXECUTE_EXTN     0x10    /* Execute-Extensions     208
                                            facility is installed  208*/
+/* Byte STFL_5: STFLE bits 40-47 */
+#define STFL_5_SET_PROG_PARAM   0x80    /* 40:Set-Program-Parameter
+                                           facility installed (ESAME)*/
 #define STFL_5_FPS_ENHANCEMENT  0x40    /* Floating point support    
                                            enhancements (FPR-GR-loading
                                            FPS-sign-handling, and
@@ -1406,6 +1417,13 @@ typedef struct _MBK {
                                            (DFP) facility            */
 #define STFL_5_DFP_HPERF        0x10    /* DFP has high performance  */
 #define STFL_5_PFPO             0x08    /* PFPO instruction installed*/
+/* Byte STFL_6: STFLE bits 48-55 */
+/* Byte STFL_7: STFLE bits 56-63 */
+/* Byte STFL_8: STFLE bits 64-71 */
+#define STFL_8_CPU_MEAS_COUNTER 0x10    /* 67:CPU-measurement counter
+                                           facility installed (ESAME)*/
+#define STFL_8_CPU_MEAS_SAMPLNG 0x08    /* 68:CPU-measurement sampling
+                                           facility installed (ESAME)*/
 
 /* Bit definitions for the Vector Facility */
 #define VSR_M    0x0001000000000000ULL  /* Vector mask mode bit      */

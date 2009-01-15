@@ -20,6 +20,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.202  2008/05/06 22:15:42  rbowler
+// Fix warning: operation on `p1' may be undefined
+//
 // Revision 1.201  2008/04/11 14:28:29  bernard
 // Integrate regs->exrl into base Hercules code.
 //
@@ -4913,7 +4916,7 @@ DEF_INST(perform_timing_facility_function)
 
 
 #if defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390)
-BYTE ARCH_DEP(stfl_data)[8] = {
+BYTE ARCH_DEP(stfl_data)[16] = {
                  0
 #if defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)
                  | STFL_0_N3
@@ -5010,6 +5013,9 @@ BYTE ARCH_DEP(stfl_data)[8] = {
 #endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/         /*208*/
                  ,
                  0
+#if defined(FEATURE_SET_PROGRAM_PARAMETER_FACILITY)
+                 | STFL_5_SET_PROG_PARAM
+#endif /*defined(FEATURE_SET_PROGRAM_PARAMETER_FACILITY)*/
 #if defined(FEATURE_FPS_ENHANCEMENT)
                  | STFL_5_FPS_ENHANCEMENT
 #endif /*defined(FEATURE_FPS_ENHANCEMENT)*/
@@ -5020,6 +5026,28 @@ BYTE ARCH_DEP(stfl_data)[8] = {
 #if defined(FEATURE_PFPO)
                  | STFL_5_PFPO
 #endif /*defined(FEATURE_PFPO)*/
+                 ,
+                 0
+                 ,
+                 0
+                 ,
+                 0
+#if defined(FEATURE_CPU_MEASUREMENT_COUNTER_FACILITY)
+                 | STFL_8_CPU_MEAS_COUNTER
+#endif /*defined(FEATURE_CPU_MEASUREMENT_COUNTER_FACILITY)*/
+#if defined(FEATURE_CPU_MEASUREMENT_SAMPLING_FACILITY)
+                 | STFL_8_CPU_MEAS_SAMPLNG
+#endif /*defined(FEATURE_CPU_MEASUREMENT_SAMPLING_FACILITY)*/
+                 ,
+                 0
+                 ,
+                 0
+                 ,
+                 0
+                 ,
+                 0
+                 ,
+                 0
                  ,
                  0
                  ,
