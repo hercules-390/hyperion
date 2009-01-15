@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.113  2009/01/14 19:22:27  jj
+// Move timerint config statement to command handler
+//
 // Revision 1.112  2009/01/14 19:04:25  jj
 // Move TODDRAG config statement to command handler
 //
@@ -739,6 +742,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
 #endif /*defined(OPTION_CONFIG_SYMBOLS)*/
 
         parse_args (buf, MAX_ARGS, addargv, &addargc);
+
 #if defined(OPTION_DYNAMIC_LOAD)
         if(config_command)
         {

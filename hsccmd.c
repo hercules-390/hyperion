@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.283  2009/01/15 06:57:40  jj
+// Simplify command help
+//
 // Revision 1.282  2009/01/15 05:32:00  jj
 // Remove blank lines in cmdhelp output
 //
@@ -1354,8 +1357,8 @@ int iodelay_cmd(int argc, char *argv[], char *cmdline)
         else
             sysblk.iodelay = iodelay;
     }
-
-    logmsg( _("HHCPN030I I/O delay = %d\n"), sysblk.iodelay );
+    else
+        logmsg( _("HHCPN030I I/O delay = %d\n"), sysblk.iodelay );
 
     return 0;
 }
@@ -2174,8 +2177,8 @@ int toddrag_cmd(int argc, char *argv[], char *cmdline)
             set_tod_steering(-(1.0-(1.0/toddrag)));
         }
     }
-
-    logmsg( _("HHCPN036I TOD clock drag factor = %lf\n"), (1.0/(1.0+get_tod_steering())));
+    else
+        logmsg( _("HHCPN036I TOD clock drag factor = %lf\n"), (1.0/(1.0+get_tod_steering())));
 
     return 0;
 }
@@ -2206,8 +2209,8 @@ int panrate_cmd(int argc, char *argv[], char *cmdline)
                 sysblk.panrate = trate;
         }
     }
-
-    logmsg( _("HHCPN037I Panel refresh rate = %d millisecond(s)\n"),
+    else
+        logmsg( _("HHCPN037I Panel refresh rate = %d millisecond(s)\n"),
               sysblk.panrate );
 
     return 0;
@@ -2269,7 +2272,7 @@ int sh_cmd(int argc, char *argv[], char *cmdline)
     while (isspace(*cmd)) cmd++;
     if (*cmd)
         return herc_system (cmd);
-    panel_command ("help sh");
+
     return -1;
 }
 
@@ -5898,15 +5901,6 @@ char    pathname[MAX_PATH];             /* (work)                    */
         for (scrlen = strlen(scrbuf); scrlen && isspace(scrbuf[scrlen-1]); scrlen--);
         scrbuf[scrlen] = 0;
 
-        /* '#' == silent comment, '*' == loud comment */
-
-        if ('#' == scrbuf[0] || '*' == scrbuf[0])
-        {
-            if ('*' == scrbuf[0])
-                logmsg ("%s\n",scrbuf);
-            continue;
-        }
-
         /* Remove any # comments on the line before processing */
 
         if ((p = strchr(scrbuf,'#')) && p > scrbuf)
@@ -6052,9 +6046,6 @@ int archmode_cmd(int argc, char *argv[], char *cmdline)
 
     /* Indicate if z/Architecture is supported */
     sysblk.arch_z900 = sysblk.arch_mode != ARCH_390;
-
-    logmsg( _("HHCPN129I Architecture successfully set to %s mode.\n"),
-              get_arch_mode_string(NULL) );
 
 #if defined(_FEATURE_CPU_RECONFIG) && defined(_S370)
     /* Configure CPUs for S/370 mode */
@@ -6855,7 +6846,9 @@ CMDTAB Commands[] =
 COMMAND ( "?",       CMD,   ListAllCommands, "list all commands" )
 COMMAND ( "help",    CMD,   HelpCommand,   "command specific help\n" )
 
-COMMAND ( "*",       CMD,   comment_cmd,   "(log comment to syslog)\n" )
+COMMAND ( "*",       CMD|CFG, comment_cmd,   NULL )   // "(log comment to syslog)"
+COMMAND ( "#",       CMD|CFG, comment_cmd,   NULL )   // "(log comment to syslog)"
+
 COMMANDA( "message", CMD, 1,msg_cmd,       "display message on console a la VM" )
 COMMANDA( "msg",     CMD, 1,msg_cmd,       "same as message"         )
 COMMAND ( "msgnoh",  CMD,   msgnoh_cmd,    "same as message - no header\n" )
