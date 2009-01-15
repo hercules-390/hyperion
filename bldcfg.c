@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.115  2009/01/15 08:54:36  jj
+// Make alrf command as well as config statement
+//
 // Revision 1.114  2009/01/15 08:18:14  jj
 // panrate & iodelay command output consistancy
 //
@@ -845,8 +848,6 @@ char   *sdevprio;                       /* -> Device thread priority */
 char   *spgmprdos;                      /* -> Program product OS OK  */
 char   *slogofile;                      /* -> 3270 logo file         */
 char   *smountedtapereinit;             /* -> mounted tape reinit opt*/
-char   *slogopt[MAX_ARGS-1];            /* -> log options            */
-int    logoptc;                         /*    count of log options   */
 char   *straceopt;                      /* -> display_inst option    */
 char   *sconkpalv;                      /* -> console keep-alive opt */
 #if defined(_FEATURE_ECPSVM)
@@ -1131,8 +1132,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         straceopt = NULL;
         sconkpalv = NULL;
         smountedtapereinit = NULL;
-        slogopt[0] = NULL;
-        logoptc = 0;
 #if defined(_FEATURE_ECPSVM)
         secpsvmlevel = NULL;
         secpsvmlvl = NULL;
@@ -1215,17 +1214,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                     syroffset = addargv[0];
                     addargc--;
                 }
-            }
-            else if (strcasecmp (keyword, "logopt") == 0)
-            {
-                slogopt[0] = operand;
-                logoptc = addargc + 1;
-
-                for(i = 0; i < addargc; i++)
-                    slogopt[i+1] = addargv[i];
-
-                addargc = 0;
-
             }
             else if (strcasecmp (keyword, "yroffset") == 0)
             {
@@ -1562,31 +1550,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             }
 
         } /* end else (not old-style CPU statement) */
-
-        /* Parse "logopt" operands */
-        if (slogopt[0])
-        {
-            for(i=0; i < logoptc; i++)
-            {
-                if (strcasecmp(slogopt[i],"timestamp") == 0 ||
-                    strcasecmp(slogopt[i],"time"     ) == 0)
-                {
-                    sysblk.logoptnotime = 0;
-                    continue;
-                }
-                if (strcasecmp(slogopt[i],"notimestamp") == 0 ||
-                    strcasecmp(slogopt[i],"notime"     ) == 0)
-                {
-                    sysblk.logoptnotime = 1;
-                    continue;
-                }
-
-                fprintf(stderr, _("HHCCF089S Error in %s line %d: "
-                        "Invalid log option keyword %s\n"),
-                        fname, inc_stmtnum[inc_level], slogopt[i]);
-                delayed_exit(1);
-            } /* for(i=0; i < logoptc; i++) */
-        }
 
         /* Parse CPU version number operand */
         if (sversion != NULL)

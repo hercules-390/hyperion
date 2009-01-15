@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.285  2009/01/15 08:54:36  jj
+// Make alrf command as well as config statement
+//
 // Revision 1.284  2009/01/15 08:18:14  jj
 // panrate & iodelay command output consistancy
 //
@@ -6892,7 +6895,7 @@ COMMAND ( "hst",     CMD,   History,       "history of commands" )
 COMMAND ( "hao",     CMD,   hao_cmd,       "Hercules Automatic Operator" )
 #endif /* defined(OPTION_HAO) */
 COMMAND ( "log",     CMD,   log_cmd,       "direct log output" )
-COMMAND ( "logopt",  CMD,   logopt_cmd,    "change log options" )
+COMMAND ( "logopt",  CMD|CFG, logopt_cmd,  "change log options" )
 COMMAND ( "version", CMD,   version_cmd,   "display version information\n" )
 
 COMMAND ( "quit",    CMD,   quit_cmd,      "terminate the emulator" )
