@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.287  2009/01/15 09:20:20  jj
+// Update pgmprdos parsing
+//
 // Revision 1.286  2009/01/15 08:58:31  jj
 // Remove logopt duplication in bldcfg.c
 //
@@ -3136,6 +3139,81 @@ int pgmprdos_cmd(int argc, char *argv[], char *cmdline)
             
     return 0;
 }
+
+///////////////////////////////////////////////////////////////////////
+/* diag8cmd command */
+
+int diag8_cmd(int argc, char *argv[], char *cmdline)
+{
+int i;
+
+    UNREFERENCED(cmdline);
+
+    /* Parse diag8cmd operand */
+    if(argc > 1)
+        for(i = 1; i < argc; i++)
+        {
+            if(strcasecmp(argv[i],"echo")==0)
+                sysblk.diag8cmd |= 0x80;
+            else
+            if(strcasecmp(argv[i],"noecho")==0)
+                sysblk.diag8cmd &= ~0x80;
+            else
+            if(strcasecmp(argv[i],"enable")==0)
+                sysblk.diag8cmd |= 0x01;
+            else
+            if(strcasecmp(argv[i],"disable")==0)
+                sysblk.diag8cmd = 0x00; // implies no echo
+            else
+            {
+                logmsg(_("HHCCF053I DIAG8CMD invalid option: %s\n"),argv[i]);
+                return -1;
+            }
+    
+        }
+    else
+        logmsg(_("HHCCF054S DIAG8CMD: %sable, %secho\n"),sysblk.diag8cmd ? "en" : "dis", (sysblk.diag8cmd & 0x80) ? "" : "no");
+
+    return 0;
+}
+
+
+///////////////////////////////////////////////////////////////////////
+/* shcmdopt command */
+
+int shcmdopt_cmd(int argc, char *argv[], char *cmdline)
+{
+int i;
+
+    UNREFERENCED(cmdline);
+
+    /* Parse SHCMDOPT operand */
+    if (argc > 1)
+        for(i = 1; i < argc; i++)
+        {
+            if (strcasecmp (argv[i], "enable") == 0)
+                sysblk.shcmdopt &= ~SHCMDOPT_DISABLE;
+            else
+            if (strcasecmp (argv[i], "diag8") == 0)
+                sysblk.shcmdopt &= ~SHCMDOPT_NODIAG8;
+            else
+            if (strcasecmp (argv[i], "disable") == 0)
+                sysblk.shcmdopt |= SHCMDOPT_DISABLE;
+            else
+            if (strcasecmp (argv[i], "nodiag8") == 0)
+                sysblk.shcmdopt |= SHCMDOPT_NODIAG8;
+            else
+            {
+                logmsg(_("HHCCF053I SHCMDOPT invalid option: %s\n"),argv[i]);
+                return -1;
+            }
+        }
+    else
+        logmsg(_("HHCCF053I SCHMDOPT %sabled%s\n"),(sysblk.shcmdopt&SHCMDOPT_DISABLE)?"Dis":"En",(sysblk.shcmdopt&SHCMDOPT_NODIAG8)?" NoDiag8":"");
+
+    return 0;
+}
+
 
 ///////////////////////////////////////////////////////////////////////
 /* lparname xxxxxxxx command - set LPAR name */
@@ -6972,6 +7050,9 @@ COMMAND ( "loadparm",CMD|CFG, loadparm_cmd,"set IPL parameter\n" )
 COMMAND ( "lparname",CMD|CFG, lparname_cmd,"set LPAR name\n" )
 
 COMMAND ( "pgmprdos",CFG,   pgmprdos_cmd,  "set LPP license setting\n" )
+
+COMMAND ( "diag8cmd",CFG,   diag8_cmd,     "Set diag8 command option\n" )
+COMMAND ( "shcmdopt",CFG,   shcmdopt_cmd,  "Set diag8 sh option\n" )  // This should never be a command!!! *JJ
 
 COMMAND ( "ipl",     CMD,   ipl_cmd,       "IPL Normal from device xxxx" )
 COMMAND ( "iplc",    CMD,   iplc_cmd,      "IPL Clear from device xxxx" )

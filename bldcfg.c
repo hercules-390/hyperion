@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.117  2009/01/15 09:20:19  jj
+// Update pgmprdos parsing
+//
 // Revision 1.116  2009/01/15 08:58:31  jj
 // Remove logopt duplication in bldcfg.c
 //
@@ -839,9 +842,6 @@ char   *sengines;                       /* -> Processor engine types */
 char   *ssysepoch;                      /* -> System epoch           */
 char   *syroffset;                      /* -> System year offset     */
 char   *stzoffset;                      /* -> System timezone offset */
-char   *sdiag8cmd;                      /* -> Allow diagnose 8       */
-char   *sdiag8echo;                     /* -> Diag 8 Echo opt        */
-char   *sshcmdopt;                      /* -> SHCMDOPT shell cmd opt */
 char   *sdevtmax;                       /* -> Max device threads     */
 char   *slegacysenseid;                 /* -> legacy senseid option  */
 char   *shercprio;                      /* -> Hercules base priority */
@@ -884,8 +884,6 @@ S32     sysepoch;                       /* System epoch year         */
 S32     tzoffset;                       /* System timezone offset    */
 S32     yroffset;                       /* System year offset        */
 S64     ly1960;                         /* Leap offset for 1960 epoch*/
-int     diag8cmd;                       /* Allow diagnose 8 commands */
-BYTE    shcmdopt;                       /* Shell cmd allow option(s) */
 int     legacysenseid;                  /* ena/disa x'E4' on old devs*/
 int     hercprio;                       /* Hercules base priority    */
 int     todprio;                        /* Timer thread priority     */
@@ -953,8 +951,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     sysepoch = 1900;
     yroffset = 0;
     tzoffset = 0;
-    diag8cmd = 0;
-    shcmdopt = 0;
 #if defined(_390)
     sysblk.arch_mode = ARCH_390;
 #else
@@ -1121,9 +1117,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         ssysepoch = NULL;
         syroffset = NULL;
         stzoffset = NULL;
-        sdiag8cmd = NULL;
-        sdiag8echo = NULL;
-        sshcmdopt = NULL;
         shercprio = NULL;
         stodprio = NULL;
         scpuprio = NULL;
@@ -1224,19 +1217,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             else if (strcasecmp (keyword, "tzoffset") == 0)
             {
                 stzoffset = operand;
-            }
-            else if (strcasecmp (keyword, "diag8cmd") == 0)
-            {
-                sdiag8cmd = operand;
-                if(addargc)
-                {
-                    sdiag8echo = addargv[0];
-                    addargc--;
-                }
-            }
-            else if (strcasecmp (keyword, "SHCMDOPT") == 0)
-            {
-                sshcmdopt = operand;
             }
             else if (strcasecmp (keyword, "cpuverid") == 0)
             {
@@ -1838,75 +1818,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             }
         }
 
-        /* Parse diag8cmd operand */
-        if (sdiag8cmd != NULL)
-        {
-            int d8ena=0,d8echo=1;
-            do
-            {
-                if(strcasecmp(sdiag8cmd,"enable")==0)
-                {
-                    d8ena=1;
-                    break;
-                }
-                if(strcasecmp(sdiag8cmd,"disable")==0)
-                {
-                    break;
-                }
-                fprintf(stderr, _("HHCCF052S Error in %s line %d: "
-                        "invalid diag8cmd option : Operand 1 should be ENABLE or DISABLE\n"),
-                        fname, inc_stmtnum[inc_level]);
-                delayed_exit(1);
-            } while(0);
-            if(sdiag8echo != NULL)
-            {
-                do
-                {
-                    if(strcasecmp(sdiag8echo,"echo")==0)
-                    {
-                        d8echo=1;
-                        break;
-                    }
-                    if(strcasecmp(sdiag8echo,"noecho")==0)
-                    {
-                        d8echo=0;
-                        break;
-                    }
-                    fprintf(stderr, _("HHCCF053S Error in %s line %d: "
-                            "incorrect diag8cmd option : Operand 2 should be ECHO or NOECHO\n"),
-                            fname, inc_stmtnum[inc_level]);
-                    delayed_exit(1);
-                } while(0);
-            }
-
-            diag8cmd=0;
-
-            if (d8ena)
-            {
-                diag8cmd = 1;
-            }
-            if(d8echo==0)
-            {
-                diag8cmd|=0x80;
-            }
-        }
-
-        /* Parse SHCMDOPT operand */
-        if (sshcmdopt != NULL)
-        {
-            if (strcasecmp (sshcmdopt, "DISABLE") == 0)
-                shcmdopt = SHCMDOPT_DISABLE;
-            else
-            if (strcasecmp (sshcmdopt, "NODIAG8") == 0)
-                shcmdopt = SHCMDOPT_NODIAG8;
-            else
-            {
-                fprintf(stderr, _("HHCCF052S Error in %s line %d: "
-                        "%s: invalid argument\n"),
-                        fname, inc_stmtnum[inc_level], sshcmdopt);
-                delayed_exit(1);
-            }
-        }
 
         /* Parse Maximum number of device threads */
         if (sdevtmax != NULL)
@@ -2256,9 +2167,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     sysblk.shrdport = shrdport;
 #endif /*defined(OPTION_SHARED_DEVICES)*/
 
-    sysblk.diag8cmd = diag8cmd;
-    sysblk.shcmdopt = shcmdopt;
-
 #if defined(_370) || defined(_390)
     if(dfltver)
         version =
@@ -2515,21 +2423,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 #else
     sysblk.maxcpu = numcpu;
 #endif /*_FEATURE_CPU_RECONFIG*/
-
-    /* Log some significant some RUN OPTIONS */
-
-    logmsg
-    (
-        "HHCCF069I Run-options enabled for this run:\n"
-        "          NUMCPU:           %d\n"
-#if defined(_FEATURE_ASN_AND_LX_REUSE)
-        "          ASN-and-LX-reuse: %sabled\n"
-#endif
-        "          DIAG8CMD:         %sabled\n"
-
-        ,sysblk.numcpu
-        ,( sysblk.diag8cmd      ) ? "EN" : "DIS"
-    );
 
     /* Start the CPUs */
     OBTAIN_INTLOCK(NULL);
