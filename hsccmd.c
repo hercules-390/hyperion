@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.282  2009/01/15 05:32:00  jj
+// Remove blank lines in cmdhelp output
+//
 // Revision 1.281  2009/01/14 19:43:50  jj
 // Change hidden command logic
 //
@@ -7038,6 +7041,26 @@ COMMAND ( "scp",     CMD,   scp_cmd,       "Send scp command")
 COMMAND ( "pscp",    CMD,   prioscp_cmd,   "Send prio message scp command\n")
 #endif // OPTION_CMDTGT
 
+    // The actual command table ends here (NULL command address)
+    // Help continues with the list non-standard formatted commands...
+
+    /* sf commands - shadow file add/remove/set/compress/display */
+
+COMMAND ( "sf+dev",  CMD,     NULL,        "add shadow file")
+COMMAND ( "sf-dev",  CMD,     NULL,        "delete shadow file")
+COMMAND ( "sfc",     CMD,     NULL,        "compress shadow files")
+COMMAND ( "sfk",     CMD,     NULL,        "check shadow files")
+COMMAND ( "sfd",     CMD,     NULL,        "display shadow file stats\n")
+
+    /* x+ and x- commands - turn switches on or off */
+
+COMMAND ( "t{+/-}dev", CMD,   NULL,        "turn CCW tracing on/off")
+COMMAND ( "s{+/-}dev", CMD,   NULL,        "turn CCW stepping on/off\n")
+#ifdef OPTION_CKD_KEY_TRACING
+COMMAND ( "t{+/-}CKD", CMD,   NULL,        "turn CKD_KEY tracing on/off\n")
+#endif
+COMMAND ( "f{+/-}adr", CMD,   NULL,        "mark frames unusable/usable\n")
+
 COMMAND ( NULL, 0, NULL, NULL )         /* (end of table) */
 };
 
@@ -7050,7 +7073,7 @@ int ProcessConfigCommand (int argc, char **argv, char *cmdline)
 CMDTAB* cmdtab;
 
     if (argc)
-        for (cmdtab = Commands; cmdtab->pszCommand; cmdtab++)
+        for (cmdtab = Commands; cmdtab->pfnCommand; cmdtab++)
             if(cmdtab->type & CFG)
                 if(!strcasecmp(argv[0], cmdtab->pszCommand))
                     return cmdtab->pfnCommand(argc, argv, cmdline);
@@ -7115,7 +7138,7 @@ int ProcessPanelCommand (char* pszCmdLine)
 
     /* Route standard formatted commands from our routing table... */
     if (cmd_argc)
-        for (pCmdTab = Commands; pCmdTab->pszCommand; pCmdTab++)
+        for (pCmdTab = Commands; pCmdTab->pfnCommand; pCmdTab++)
         {
             if(pCmdTab->type & CMD)
             {
@@ -7203,26 +7226,6 @@ int ListAllCommands(int argc, char *argv[], char *cmdline)
             logmsg( _("  %-9.9s    %s \n"), pCmdTab->pszCommand, pCmdTab->pszCmdDesc );
     }
 
-    // List non-standard formatted commands...
-
-    /* sf commands - shadow file add/remove/set/compress/display */
-
-    logmsg( "  %-9.9s    %s \n", "sf+dev",    _("add shadow file") );
-    logmsg( "  %-9.9s    %s \n", "sf-dev",    _("delete shadow file") );
-    logmsg( "  %-9.9s    %s \n", "sfc",       _("compress shadow files") );
-    logmsg( "  %-9.9s    %s \n", "sfk",       _("check shadow files") );
-    logmsg( "  %-9.9s    %s \n", "sfd",       _("display shadow file stats") );
-
-    logmsg("\n");
-
-    /* x+ and x- commands - turn switches on or off */
-
-    logmsg( "  %-9.9s    %s \n", "t{+/-}dev", _("turn CCW tracing on/off") );
-    logmsg( "  %-9.9s    %s \n", "s{+/-}dev", _("turn CCW stepping on/off") );
-#ifdef OPTION_CKD_KEY_TRACING
-    logmsg( "  %-9.9s    %s \n", "t{+/-}CKD", _("turn CKD_KEY tracing on/off") );
-#endif
-    logmsg( "  %-9.9s    %s \n", "f{+/-}adr", _("mark frames unusable/usable") );
 
     return 0;
 }
