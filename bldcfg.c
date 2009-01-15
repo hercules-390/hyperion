@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.121  2009/01/15 15:38:05  jj
+// Move STSI command parsing to hsccmd.c
+//
 // Revision 1.120  2009/01/15 11:12:51  jj
 // Change traceopt/symptom parsing
 //
@@ -224,7 +227,6 @@
 #include "hercules.h"
 #include "devtype.h"
 #include "opcode.h"
-#include "httpmisc.h"
 #include "hostinfo.h"
 
 #if defined(OPTION_FISHIO)
@@ -873,9 +875,6 @@ char   *sptt;                           /* Pthread trace table size  */
 #if defined( OPTION_SCSI_TAPE )
 char   *sauto_scsi_mount;               /* Auto SCSI tape mounts     */
 #endif /* defined( OPTION_SCSI_TAPE ) */
-#if defined( HTTP_SERVER_CONNECT_KLUDGE )
-char   *shttp_server_kludge_msecs;
-#endif // defined( HTTP_SERVER_CONNECT_KLUDGE )
 U16     version = 0x00;                 /* CPU version code          */
 int     dfltver = 1;                    /* Default version code      */
 U32     serial;                         /* CPU serial number         */
@@ -963,6 +962,10 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     sysblk.pgminttr = OS_NONE;
 
     sysblk.timerint = DEFAULT_TIMER_REFRESH_USECS;
+
+#if defined( HTTP_SERVER_CONNECT_KLUDGE )
+    sysblk.http_server_kludge_msecs = 10;
+#endif // defined( HTTP_SERVER_CONNECT_KLUDGE )
 
     hercprio = DEFAULT_HERCPRIO;
     todprio  = DEFAULT_TOD_PRIO;
@@ -1140,9 +1143,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 #if defined( OPTION_SCSI_TAPE )
         sauto_scsi_mount = NULL;
 #endif /* defined( OPTION_SCSI_TAPE ) */
-#if defined( HTTP_SERVER_CONNECT_KLUDGE )
-        shttp_server_kludge_msecs = NULL;
-#endif // defined( HTTP_SERVER_CONNECT_KLUDGE )
 
         /* Check for old-style CPU statement */
         if (scount == 0 && addargc == 5 && strlen(keyword) == 6
@@ -1317,71 +1317,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 addargc--;
             }
 #endif /* defined(OPTION_CONFIG_SYMBOLS) */
-#if defined(OPTION_HTTP_SERVER)
-            else if (strcasecmp (keyword, "httpport") == 0)
-            {
-                if (!operand)
-                {
-                    fprintf(stderr, _("HHCCF007S Error in %s line %d: "
-                        "Missing argument.\n"),
-                        fname, inc_stmtnum[inc_level]);
-                    delayed_exit(1);
-                }
-                if (sscanf(operand, "%hu%c", &sysblk.httpport, &c) != 1
-                    || sysblk.httpport == 0 || (sysblk.httpport < 1024 && sysblk.httpport != 80) )
-                {
-                    fprintf(stderr, _("HHCCF029S Error in %s line %d: "
-                            "Invalid HTTP port number %s\n"),
-                            fname, inc_stmtnum[inc_level], operand);
-                    delayed_exit(1);
-                }
-                if (addargc > 0)
-                {
-                    if (!strcasecmp(addargv[0],"auth"))
-                        sysblk.httpauth = 1;
-                    else if (strcasecmp(addargv[0],"noauth"))
-                    {
-                        fprintf(stderr, _("HHCCF005S Error in %s line %d: "
-                            "Unrecognized argument %s\n"),
-                            fname, inc_stmtnum[inc_level], addargv[0]);
-                        delayed_exit(1);
-                    }
-                    addargc--;
-                }
-                if (addargc > 0)
-                {
-                    if (sysblk.httpuser) free(sysblk.httpuser);
-                    sysblk.httpuser = strdup(addargv[1]);
-                    if (--addargc)
-                    {
-                        if (sysblk.httppass) free(sysblk.httppass);
-                        sysblk.httppass = strdup(addargv[2]);
-                    }
-                    else
-                    {
-                        fprintf(stderr, _("HHCCF006S Error in %s line %d: "
-                            "Userid, but no password given %s\n"),
-                            fname, inc_stmtnum[inc_level], addargv[1]);
-                        delayed_exit(1);
-                    }
-                    addargc--;
-                }
-
-            }
-            else if (strcasecmp (keyword, "httproot") == 0)
-            {
-                if (!operand)
-                {
-                    fprintf(stderr, _("HHCCF007S Error in %s line %d: "
-                        "Missing argument.\n"),
-                        fname, inc_stmtnum[inc_level]);
-                    delayed_exit(1);
-                }
-                if (sysblk.httproot) free(sysblk.httproot);
-                sysblk.httproot = strdup(operand);
-                /* (will be validated later) */
-            }
-#endif /*defined(OPTION_HTTP_SERVER)*/
 #if defined( OPTION_TAPE_AUTOMOUNT )
             else if (strcasecmp (keyword, "automount") == 0)
             {
@@ -1469,16 +1404,10 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             }
 #endif /* defined( OPTION_SCSI_TAPE ) */
 
-#if defined( HTTP_SERVER_CONNECT_KLUDGE )
-            else if (strcasecmp (keyword, "HTTP_SERVER_CONNECT_KLUDGE") == 0)
-            {
-               shttp_server_kludge_msecs = operand;
-            }
-#endif // defined( HTTP_SERVER_CONNECT_KLUDGE )
             else
             {
                 logmsg( _("HHCCF008E Error in %s line %d: "
-                        "Unrecognized keyword %s\n"),
+                        "Syntax error: %s\n"),
                         fname, inc_stmtnum[inc_level], keyword);
                 operand = "";
                 addargc = 0;
@@ -1972,30 +1901,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         }
 #endif /* defined( OPTION_SCSI_TAPE ) */
 
-#if defined( HTTP_SERVER_CONNECT_KLUDGE )
-        if ( shttp_server_kludge_msecs )
-        {
-            int http_server_kludge_msecs;
-            if ( sscanf( shttp_server_kludge_msecs, "%d%c", &http_server_kludge_msecs, &c ) != 1
-                || http_server_kludge_msecs <= 0 || http_server_kludge_msecs > 50 )
-            {
-                fprintf
-                (
-                    stderr,
-
-                    _( "HHCCF066S Error in %s line %d: Invalid HTTP_SERVER_CONNECT_KLUDGE value: %s\n" )
-
-                    ,fname
-                    ,inc_stmtnum[inc_level]
-                    ,shttp_server_kludge_msecs
-                );
-                delayed_exit(1);
-            }
-            sysblk.http_server_kludge_msecs = http_server_kludge_msecs;
-            shttp_server_kludge_msecs = NULL;
-        }
-#endif // defined( HTTP_SERVER_CONNECT_KLUDGE )
-
     } /* end for(scount) (end of configuration file statement loop) */
 
     /* Read the logofile */
@@ -2048,11 +1953,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             sysblk.defdir);
     }
 #endif /* OPTION_TAPE_AUTOMOUNT */
-
-#if defined( HTTP_SERVER_CONNECT_KLUDGE )
-    if (!sysblk.http_server_kludge_msecs)
-        sysblk.http_server_kludge_msecs = 10;
-#endif // defined( HTTP_SERVER_CONNECT_KLUDGE )
 
     /* Set root mode in order to set priority */
     SETMODE(ROOT);

@@ -12,6 +12,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.129  2009/01/07 16:00:43  bernard
+// add msghldsec command
+//
 // Revision 1.128  2008/11/04 05:56:31  fish
 // Put ensure consistent create_thread ATTR usage change back in
 //
@@ -52,7 +55,6 @@
 #include "opcode.h"
 #include "devtype.h"
 #include "herc_getopt.h"
-#include "httpmisc.h"
 #include "hostinfo.h"
 #include "history.h"
 
@@ -512,21 +514,6 @@ TID     logcbtid;                       /* RC file thread identifier */
         delayed_exit(1);
     }
 #endif /*!defined(NO_SIGABEND_HANDLER)*/
-
-#if defined(OPTION_HTTP_SERVER)
-    if (sysblk.httpport)
-    {
-        /* Start the http server connection thread */
-        if ( create_thread (&sysblk.httptid, DETACHED,
-                            http_server, NULL, "http_server") )
-        {
-            fprintf (stderr,
-                  _("HHCIN005S Cannot create http_server thread: %s\n"),
-                    strerror(errno));
-            delayed_exit(1);
-        }
-    }
-#endif /*defined(OPTION_HTTP_SERVER)*/
 
 #ifdef OPTION_SHARED_DEVICES
     /* Start the shared server */

@@ -8,6 +8,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.203  2008/11/04 05:56:31  fish
+// Put ensure consistent create_thread ATTR usage change back in
+//
 // Revision 1.202  2008/11/03 15:31:57  rbowler
 // Back out consistent create_thread ATTR modification
 //
@@ -53,7 +56,6 @@
 
 #include "hercules.h"
 #include "opcode.h"
-#include "httpmisc.h"
 
 #if !defined(_GEN_ARCH)
 

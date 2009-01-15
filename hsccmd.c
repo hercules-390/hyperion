@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.291  2009/01/15 15:38:05  jj
+// Move STSI command parsing to hsccmd.c
+//
 // Revision 1.290  2009/01/15 11:12:51  jj
 // Change traceopt/symptom parsing
 //
@@ -344,6 +347,8 @@
 #include "opcode.h"
 
 #include "history.h"
+
+#include "httpmisc.h"
 
 #if defined(OPTION_FISHIO)
 #include "w32chan.h"
@@ -2178,6 +2183,122 @@ char *basedir;
     return 0;
 }
 
+
+#if defined(OPTION_HTTP_SERVER)
+/* httproot command - set HTTP server base directory */
+
+int httproot_cmd(int argc, char *argv[], char *cmdline)
+{
+    UNREFERENCED(cmdline);
+
+    if (argc > 1)
+    {
+        if (sysblk.httproot)
+            free(sysblk.httproot);
+        sysblk.httproot = strdup(argv[1]);
+    }
+    else
+        if(sysblk.httproot)
+            logmsg(_("HHCnnxxxI HTTPROOT %s\n"),sysblk.httproot);
+        else
+            logmsg(_("HHCnnxxxI HTTPROOT not specified\n"));
+   
+    return 0;
+}
+
+
+/* httpport command - set HTTP server port */
+
+int httpport_cmd(int argc, char *argv[], char *cmdline)
+{
+char c;
+
+    UNREFERENCED(cmdline);
+
+    if (argc > 1)
+    {
+        if (!strcasecmp(argv[1],"none") && sysblk.httpport)
+        {
+            sysblk.httpport = 0;
+            signal_thread(sysblk.httptid, SIGUSR2);
+        }
+        else if(sysblk.httpport)
+        {
+            logmsg(_("HHCxxnnnS HTTP server already active\n"));
+            return -1;
+        }
+        else
+        {
+            if (sscanf(argv[1], "%hu%c", &sysblk.httpport, &c) != 1
+                || sysblk.httpport == 0 || (sysblk.httpport < 1024 && sysblk.httpport != 80) )
+            {
+                logmsg(_("HHCCF029S Invalid HTTP port number %s\n"), argv[1]);
+                return -1;
+            }
+            if (argc > 2)
+            {
+                if (!strcasecmp(argv[2],"auth"))
+                    sysblk.httpauth = 1;
+                else if (strcasecmp(argv[2],"noauth"))
+                {
+                    logmsg(_("HHCCF005S Unrecognized argument %s\n"),argv[2]);
+                    return -1;
+                }
+            }
+            if (argc > 3)
+            {
+                if (sysblk.httpuser)
+                    free(sysblk.httpuser);
+                sysblk.httpuser = strdup(argv[3]);
+            }
+            if (argc > 4)
+            {
+                if (sysblk.httppass)
+                    free(sysblk.httppass);
+                sysblk.httppass = strdup(argv[4]);
+            }
+
+            /* Start the http server connection thread */
+            if ( create_thread (&sysblk.httptid, DETACHED,
+                                http_server, NULL, "http_server") )
+            {
+                logmsg(_("HHCIN005S Cannot create http_server thread: %s\n"),
+                        strerror(errno));
+                return -1;
+            }
+        }
+    }
+    else
+        logmsg(_("HHCxxnnnI HTTPPORT %d\n"),sysblk.httpport);
+    return 0;
+}
+
+#if defined( HTTP_SERVER_CONNECT_KLUDGE )
+/* http_server_kludge_msecs */
+
+int httpskm_cmd(int argc, char *argv[], char *cmdline)
+{
+    UNREFERENCED(cmdline);
+
+    if (argc > 1)
+    {
+    int http_server_kludge_msecs;
+        if ( sscanf( argv[1], "%d%c", &http_server_kludge_msecs, &c ) != 1
+            || http_server_kludge_msecs <= 0 || http_server_kludge_msecs > 50 )
+        {
+            logmsg(_("HHCCF066S Invalid HTTP_SERVER_CONNECT_KLUDGE value: %s\n" ),argv[1]);
+            return -1;
+        }
+        sysblk.http_server_kludge_msecs = http_server_kludge_msecs;
+    }
+    else
+        logmsg(_("HHCxxnnnS HTTP_SERVER_CONNECT_KLUDGE value: %s\n" )
+                ,sysblk.http_server_kludge_msecs);
+    return 0;
+}
+#endif // defined( HTTP_SERVER_CONNECT_KLUDGE )
+
+#endif /*defined(OPTION_HTTP_SERVER)*/
 
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
 ///////////////////////////////////////////////////////////////////////
@@ -7199,6 +7320,14 @@ COMMAND ( "sysclear",CMD,   sysc_cmd,      "Issue SYSTEM Clear Reset manual oper
 COMMAND ( "store",   CMD,   store_cmd,     "store CPU status at absolute zero\n" )
 
 COMMAND ( "sclproot",CMD|CFG, sclproot_cmd,"set SCLP base directory\n" )
+
+#if defined(OPTION_HTTP_SERVER)
+COMMAND ( "httproot",CFG|CMD, httproot_cmd,"Set HTTP server root directory" )  
+COMMAND ( "httpport",CFG|CMD, httpport_cmd,"Set HTTP server port\n" )   
+#if defined( HTTP_SERVER_CONNECT_KLUDGE )
+COMMAND  "HTTP_SERVER_CONNECT_KLUDGE", CFG, httpskm_cmd, "HTTP_SERVER_CONNECT_KLUDGE" )
+#endif // defined( HTTP_SERVER_CONNECT_KLUDGE )
+#endif /*defined(OPTION_HTTP_SERVER)*/
 
 COMMAND ( "psw",     CMD,   psw_cmd,       "display or alter program status word" )
 COMMAND ( "gpr",     CMD,   gpr_cmd,       "display or alter general purpose registers" )

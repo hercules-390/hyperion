@@ -30,6 +30,9 @@
 /*                                           Jan Jaeger - 28/03/2002 */
 
 // $Log$
+// Revision 1.78  2008/11/04 05:56:31  fish
+// Put ensure consistent create_thread ATTR usage change back in
+//
 // Revision 1.77  2008/11/03 15:31:54  rbowler
 // Back out consistent create_thread ATTR modification
 //
@@ -741,7 +744,7 @@ TID                     httptid;        /* Negotiation thread id     */
     server.sin_port = htons(server.sin_port);
 
     /* Attempt to bind the socket to the port */
-    while (1)
+    while (TRUE)
     {
         rc = bind (lsock, (struct sockaddr *)&server, sizeof(server));
 
@@ -771,7 +774,7 @@ TID                     httptid;        /* Negotiation thread id     */
             sysblk.httpport);
 
     /* Handle http requests */
-    while (TRUE) {
+    while (sysblk.httpport) {
 
         /* Initialize the select parameters */
         FD_ZERO (&selset);
@@ -818,6 +821,13 @@ TID                     httptid;        /* Negotiation thread id     */
 
     /* Close the listening socket */
     close_socket (lsock);
+
+    /* Display thread started message on control panel */
+    logmsg (_("HHCHT009I HTTP listener thread ended: "
+            "tid="TIDPAT", pid=%d\n"),
+            thread_id(), getpid());
+
+    sysblk.httptid = 0;
 
     return NULL;
 

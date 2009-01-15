@@ -20,6 +20,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.50  2007/06/23 00:04:14  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.49  2007/01/16 01:45:33  gsmith
 // Tweaks to instruction stepping/tracing
 //
@@ -295,7 +298,8 @@ int i;
     {
     DEVBLK *dev;
         if ( equal_threads( tid, sysblk.cnsltid ) ||
-             equal_threads( tid, sysblk.socktid ) )
+             equal_threads( tid, sysblk.socktid ) ||
+             equal_threads( tid, sysblk.httptid ) )
             return;
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
             if ( equal_threads( dev->tid, tid ) ||
