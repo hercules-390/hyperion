@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.292  2009/01/15 17:36:43  jj
+// Change http server startup
+//
 // Revision 1.291  2009/01/15 15:38:05  jj
 // Move STSI command parsing to hsccmd.c
 //
@@ -2390,6 +2393,27 @@ int panrate_cmd(int argc, char *argv[], char *cmdline)
 }
 
 #endif /*PANEL_REFRESH_RATE */
+
+/* pantitle xxxxxxxx command - set console title */
+
+int pantitle_cmd(int argc, char *argv[], char *cmdline)
+{
+
+    UNREFERENCED(cmdline);
+
+    /* Update pantitle if operand is specified */
+    if (argc > 1)
+    {
+        if (sysblk.pantitle)
+            free(sysblk.pantitle);
+        sysblk.pantitle = strdup(argv[1]);
+    }
+    else
+        logmsg( _("HHCxxnnnI pantitle = %s\n"),sysblk.pantitle);
+
+    return 0;
+}
+
 
 #ifdef OPTION_MSGHLD
 ///////////////////////////////////////////////////////////////////////
@@ -7408,6 +7432,7 @@ COMMAND ( "toddrag", CMD|CFG, toddrag_cmd, "display or set TOD clock drag factor
 #ifdef PANEL_REFRESH_RATE
 COMMAND ( "panrate", CMD|CFG, panrate_cmd, "display or set rate at which console refreshes" )
 #endif
+COMMAND ( "pantitle",CFG,   pantitle_cmd, "display or set console title" )
 #ifdef OPTION_MSGHLD
 COMMAND ( "msghld",  CMD,   msghld_cmd, "display or set the timeout of held messages")
 #endif

@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.122  2009/01/15 17:36:43  jj
+// Change http server startup
+//
 // Revision 1.121  2009/01/15 15:38:05  jj
 // Move STSI command parsing to hsccmd.c
 //
@@ -1245,12 +1248,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             else if (strcasecmp (keyword, "herclogo") == 0)
             {
                 slogofile=operand;
-            }
-            else if (strcasecmp (keyword, "pantitle") == 0)
-            {
-                if (sysblk.pantitle)
-                    free(sysblk.pantitle);
-                sysblk.pantitle = strdup(operand);
             }
             else if (strcasecmp (keyword, "mounted_tape_reinit") == 0)
             {
