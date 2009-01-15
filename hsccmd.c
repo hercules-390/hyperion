@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.284  2009/01/15 08:18:14  jj
+// panrate & iodelay command output consistancy
+//
 // Revision 1.283  2009/01/15 06:57:40  jj
 // Simplify command help
 //
@@ -2156,6 +2159,37 @@ char *basedir;
    
     return 0;
 }
+
+
+#if defined(_FEATURE_ASN_AND_LX_REUSE)
+///////////////////////////////////////////////////////////////////////
+/* alrf command - display or set alrf */
+
+int alrf_cmd(int argc, char *argv[], char *cmdline)
+{
+    UNREFERENCED(cmdline);
+
+    if (argc > 1)
+    {
+        if(strcasecmp(argv[1],"enable")==0)
+            sysblk.asnandlxreuse=1;
+        else
+        {
+            if(strcasecmp(argv[1],"disable")==0)
+                sysblk.asnandlxreuse=0;
+            else {
+                logmsg(_("HHCCF067S Incorrect keyword %s for the ASN_AND_LX_REUSE statement.\n"),
+                            argv[1]);
+                return -1;
+                }
+        }
+    }
+    else
+        logmsg(_("HHCCF0028I ASN and LX reuse is %s\n"),sysblk.asnandlxreuse ? "Enabled" : "Disabled");
+
+    return 0;
+}
+#endif /*defined(_FEATURE_ASN_AND_LX_REUSE)*/
 
 
 ///////////////////////////////////////////////////////////////////////
@@ -6992,6 +7026,11 @@ COMMAND ( "icount",  CMD,   icount_cmd,    "display individual instruction count
 #ifdef OPTION_MIPS_COUNTING
 COMMAND ( "maxrates",CMD,   maxrates_cmd,  "display maximum observed MIPS/SIOS rate for the\n               defined interval or define a new reporting interval\n" )
 #endif // OPTION_MIPS_COUNTING
+
+#if defined(_FEATURE_ASN_AND_LX_REUSE)
+COMMAND ( "asn_and_lx_reuse", CMD|CFG, alrf_cmd, "Enable/Disable ASN and LX reuse facility" )
+COMMAND ( "alrf"            , CMD|CFG, alrf_cmd, "Alias for asn_and_lx_reuse\n"             )
+#endif /* defined(_FEATURE_ASN_AND_LX_REUSE) */
 
 #if defined(FISH_HANG)
 COMMAND ( "FishHangReport", CMD, FishHangReport_cmd, "(DEBUG) display thread/lock/event objects\n" )

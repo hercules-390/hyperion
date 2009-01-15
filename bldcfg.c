@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.114  2009/01/15 08:18:14  jj
+// panrate & iodelay command output consistancy
+//
 // Revision 1.113  2009/01/14 19:22:27  jj
 // Move timerint config statement to command handler
 //
@@ -846,9 +849,6 @@ char   *slogopt[MAX_ARGS-1];            /* -> log options            */
 int    logoptc;                         /*    count of log options   */
 char   *straceopt;                      /* -> display_inst option    */
 char   *sconkpalv;                      /* -> console keep-alive opt */
-#if defined(_FEATURE_ASN_AND_LX_REUSE)
-char   *sasnandlxreuse;                 /* -> ASNLXREUSE Optional    */
-#endif
 #if defined(_FEATURE_ECPSVM)
 char   *secpsvmlevel;                   /* -> ECPS:VM Keyword        */
 char   *secpsvmlvl;                     /* -> ECPS:VM level (or 'no')*/
@@ -888,9 +888,6 @@ int     hercprio;                       /* Hercules base priority    */
 int     todprio;                        /* Timer thread priority     */
 int     cpuprio;                        /* CPU thread priority       */
 int     devprio;                        /* Device thread priority    */
-#if defined(_FEATURE_ASN_AND_LX_REUSE)
-int     asnandlxreuse;                  /* ASN And LX Reuse option   */
-#endif
 BYTE    pgmprdos;                       /* Program product OS OK     */
 DEVBLK *dev;                            /* -> Device Block           */
 char   *sdevnum;                        /* -> Device number string   */
@@ -987,7 +984,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 #endif /*defined(OPTION_SHARED_DEVICES)*/
 
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
-    asnandlxreuse = 0;  /* ASN And LX Reuse is defaulted to DISABLE */
+    sysblk.asnandlxreuse = 0;  /* ASN And LX Reuse is defaulted to DISABLE */
 #endif
   
 #ifdef PANEL_REFRESH_RATE
@@ -1141,9 +1138,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         secpsvmlvl = NULL;
         ecpsvmac = 0;
 #endif /*defined(_FEATURE_ECPSVM)*/
-#if defined(_FEATURE_ASN_AND_LX_REUSE)
-        sasnandlxreuse = NULL;
-#endif
+
 #if defined(OPTION_SHARED_DEVICES)
         sshrdport = NULL;
 #endif /*defined(OPTION_SHARED_DEVICES)*/
@@ -1513,13 +1508,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 }
             }
 #endif /* OPTION_TAPE_AUTOMOUNT */
-#if defined(_FEATURE_ASN_AND_LX_REUSE)
-            else if (strcasecmp(keyword,"asn_and_lx_reuse") == 0
-                     || strcasecmp(keyword,"alrf") == 0)
-            {
-                sasnandlxreuse = operand;
-            }
-#endif /* defined(_FEATURE_ASN_AND_LX_REUSE) */
 
 #if defined(OPTION_SHARED_DEVICES)
             else if (strcasecmp (keyword, "shrdport") == 0)
@@ -2170,31 +2158,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         }
 #endif /*defined(OPTION_SHARED_DEVICES)*/
 
-#if defined(_FEATURE_ASN_AND_LX_REUSE)
-        /* Parse asn_and_lx_reuse (alrf) operand */
-        if(sasnandlxreuse != NULL)
-        {
-            if(strcasecmp(sasnandlxreuse,"enable")==0)
-            {
-                asnandlxreuse=1;
-            }
-            else
-            {
-                if(strcasecmp(sasnandlxreuse,"disable")==0)
-                {
-                    asnandlxreuse=0;
-                }
-                else {
-                    fprintf(stderr, _("HHCCF067S Error in %s line %d: "
-                                "Incorrect keyword %s for the ASN_AND_LX_REUSE statement.\n"),
-                                fname, inc_stmtnum[inc_level], sasnandlxreuse);
-                                delayed_exit(1);
-                }
-            }
-        }
-#endif /*defined(_FEATURE_ASN_AND_LX_REUSE)*/
-
-
 #ifdef OPTION_PTTRACE
         /* Parse pthread trace value */
         if (sptt != NULL)
@@ -2356,10 +2319,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 #if defined(OPTION_SHARED_DEVICES)
     sysblk.shrdport = shrdport;
 #endif /*defined(OPTION_SHARED_DEVICES)*/
-
-#if defined(_FEATURE_ASN_AND_LX_REUSE)
-    sysblk.asnandlxreuse=asnandlxreuse;
-#endif
 
     sysblk.diag8cmd = diag8cmd;
     sysblk.shcmdopt = shcmdopt;
@@ -2636,9 +2595,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         "          DIAG8CMD:         %sabled\n"
 
         ,sysblk.numcpu
-#if defined(_FEATURE_ASN_AND_LX_REUSE)
-        ,( sysblk.asnandlxreuse ) ? "EN" : "DIS"
-#endif
         ,( sysblk.diag8cmd      ) ? "EN" : "DIS"
     );
 
