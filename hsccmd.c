@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.281  2009/01/14 19:43:50  jj
+// Change hidden command logic
+//
 // Revision 1.280  2009/01/14 19:22:27  jj
 // Move timerint config statement to command handler
 //
@@ -6824,7 +6827,6 @@ typedef struct _CMDTAB
     const int   type;           /* Is command allowed from config */
 #define CFG     0x01            /* Config statement */
 #define CMD     0x02            /* Command statement */
-#define HID     0x80            /* Hidden            */
     const size_t cmdAbbrev;      /* Min abbreviation */
     CMDFUNC*    pfnCommand;     /* handler function */
     const char* pszCmdDesc;     /* description      */
@@ -7027,12 +7029,12 @@ COMMAND ( "herclogo",CMD,   herclogo_cmd,  "Read a new hercules logo file\n" )
 
 COMMAND ( "traceopt",CMD,   traceopt_cmd,  "Instruction trace display options\n" )
 
-COMMAND ( "$test",  HID|CMD, test_cmd,        "(hidden internal command)" )
+COMMAND ( "$test",   CMD,   test_cmd,       NULL )     // "(hidden internal command)"
 
 #ifdef OPTION_CMDTGT
-COMMAND ( "cmdtgt",  CMD,   cmdtgt_cmd,    "Specify the command target\n" )
-COMMAND ( "herc",    CMD,   herc_cmd,      "Hercules command\n")
-COMMAND ( "scp",     CMD,   scp_cmd,       "Send scp command\n")
+COMMAND ( "cmdtgt",  CMD,   cmdtgt_cmd,    "Specify the command target" )
+COMMAND ( "herc",    CMD,   herc_cmd,      "Hercules command")
+COMMAND ( "scp",     CMD,   scp_cmd,       "Send scp command")
 COMMAND ( "pscp",    CMD,   prioscp_cmd,   "Send prio message scp command\n")
 #endif // OPTION_CMDTGT
 
@@ -7197,7 +7199,7 @@ int ListAllCommands(int argc, char *argv[], char *cmdline)
 
     for (pCmdTab = Commands; pCmdTab->pszCommand; pCmdTab++)
     {
-        if ( (pCmdTab->type & CMD) && !(pCmdTab->type & HID))
+        if ( (pCmdTab->type & CMD) && (pCmdTab->pszCmdDesc))
             logmsg( _("  %-9.9s    %s \n"), pCmdTab->pszCommand, pCmdTab->pszCmdDesc );
     }
 
