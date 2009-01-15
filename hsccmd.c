@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.288  2009/01/15 10:31:48  jj
+// Rework diag8cmd & shcmdopt parsing logic
+//
 // Revision 1.287  2009/01/15 09:20:20  jj
 // Update pgmprdos parsing
 //
@@ -3210,6 +3213,62 @@ int i;
         }
     else
         logmsg(_("HHCCF053I SCHMDOPT %sabled%s\n"),(sysblk.shcmdopt&SHCMDOPT_DISABLE)?"Dis":"En",(sysblk.shcmdopt&SHCMDOPT_NODIAG8)?" NoDiag8":"");
+
+    return 0;
+}
+
+
+///////////////////////////////////////////////////////////////////////
+/* legacysenseid command */
+
+int lsid_cmd(int argc, char *argv[], char *cmdline)
+{
+
+    UNREFERENCED(cmdline);
+
+    /* Parse Legacy SenseID option */
+    if (argc > 1)
+    {
+        if(strcasecmp(argv[1],"enable") == 0)
+            sysblk.legacysenseid = 1;
+        else
+        if(strcasecmp(argv[1],"on") == 0)
+            sysblk.legacysenseid = 1;
+        else
+        if(strcasecmp(argv[1],"disable") == 0)
+            sysblk.legacysenseid = 0;
+        else
+        if(strcasecmp(argv[1],"off") == 0)
+            sysblk.legacysenseid = 0;
+        else
+        {
+            logmsg(_("HHCxxnnnE Legacysenseid invalid option: %s\n"),argv[1]);
+            return -1;
+        }
+    }
+    else
+        logmsg(_("HHCxxnnnE Legacysenseid %sabled\n"),sysblk.legacysenseid?"En":"Dis");
+
+    return 0;
+}
+
+
+///////////////////////////////////////////////////////////////////////
+/* codepage xxxxxxxx command */
+
+int codepage_cmd(int argc, char *argv[], char *cmdline)
+{
+
+    UNREFERENCED(cmdline);
+
+    /* Update LPAR name if operand is specified */
+    if (argc > 1)
+        set_codepage(argv[1]);
+    else
+    {
+        logmsg( _("Usage %s <codepage>\n"),argv[0]);
+        return -1;
+    }
 
     return 0;
 }
@@ -7051,8 +7110,12 @@ COMMAND ( "lparname",CMD|CFG, lparname_cmd,"set LPAR name\n" )
 
 COMMAND ( "pgmprdos",CFG,   pgmprdos_cmd,  "set LPP license setting\n" )
 
+COMMAND ( "codepage",CMD|CFG, codepage_cmd,"set codepage conversion table\n" )
+
 COMMAND ( "diag8cmd",CFG,   diag8_cmd,     "Set diag8 command option\n" )
 COMMAND ( "shcmdopt",CFG,   shcmdopt_cmd,  "Set diag8 sh option\n" )  // This should never be a command!!! *JJ
+
+COMMAND ( "legacysenseid",CFG|CMD,lsid_cmd,"set legacysenseid setting\n" )
 
 COMMAND ( "ipl",     CMD,   ipl_cmd,       "IPL Normal from device xxxx" )
 COMMAND ( "iplc",    CMD,   iplc_cmd,      "IPL Clear from device xxxx" )

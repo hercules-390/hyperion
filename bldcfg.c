@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.118  2009/01/15 10:31:48  jj
+// Rework diag8cmd & shcmdopt parsing logic
+//
 // Revision 1.117  2009/01/15 09:20:19  jj
 // Update pgmprdos parsing
 //
@@ -843,7 +846,6 @@ char   *ssysepoch;                      /* -> System epoch           */
 char   *syroffset;                      /* -> System year offset     */
 char   *stzoffset;                      /* -> System timezone offset */
 char   *sdevtmax;                       /* -> Max device threads     */
-char   *slegacysenseid;                 /* -> legacy senseid option  */
 char   *shercprio;                      /* -> Hercules base priority */
 char   *stodprio;                       /* -> Timer thread priority  */
 char   *scpuprio;                       /* -> CPU thread priority    */
@@ -884,7 +886,6 @@ S32     sysepoch;                       /* System epoch year         */
 S32     tzoffset;                       /* System timezone offset    */
 S32     yroffset;                       /* System year offset        */
 S64     ly1960;                         /* Leap offset for 1960 epoch*/
-int     legacysenseid;                  /* ena/disa x'E4' on old devs*/
 int     hercprio;                       /* Hercules base priority    */
 int     todprio;                        /* Timer thread priority     */
 int     cpuprio;                        /* CPU thread priority       */
@@ -968,7 +969,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     cpuprio  = DEFAULT_CPU_PRIO;
     devprio  = DEFAULT_DEV_PRIO;
     devtmax  = MAX_DEVICE_THREADS;
-    legacysenseid = 0;
     sysblk.kaidle = KEEPALIVE_IDLE_TIME;
     sysblk.kaintv = KEEPALIVE_PROBE_INTERVAL;
     sysblk.kacnt  = KEEPALIVE_PROBE_COUNT;
@@ -1122,7 +1122,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         scpuprio = NULL;
         sdevprio = NULL;
         sdevtmax = NULL;
-        slegacysenseid = NULL;
         slogofile = NULL;
         straceopt = NULL;
         sconkpalv = NULL;
@@ -1241,14 +1240,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             else if (strcasecmp (keyword, "devtmax") == 0)
             {
                 sdevtmax = operand;
-            }
-            else if (strcasecmp (keyword, "legacysenseid") == 0)
-            {
-                slegacysenseid = operand;
-            }
-            else if (strcasecmp (keyword, "codepage") == 0)
-            {
-                set_codepage(operand);
             }
             else if (strcasecmp (keyword, "logofile") == 0)
             {
@@ -1832,27 +1823,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             }
         }
 
-        /* Parse Legacy SenseID option */
-        if (slegacysenseid != NULL)
-        {
-            if(strcasecmp(slegacysenseid,"enable") == 0)
-            {
-                legacysenseid = 1;
-            }
-            if(strcasecmp(slegacysenseid,"on") == 0)
-            {
-                legacysenseid = 1;
-            }
-            if(strcasecmp(slegacysenseid,"disable") == 0)
-            {
-                legacysenseid = 0;
-            }
-            if(strcasecmp(slegacysenseid,"off") == 0)
-            {
-                legacysenseid = 0;
-            }
-        }
-
         /* Parse terminal logo option */
         if (slogofile != NULL)
         {
@@ -2276,9 +2246,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
     /* Set the timezone offset */
     adjust_tod_epoch((tzoffset/100*3600+(tzoffset%100)*60)*16000000LL);
-
-    /* set the legacy device senseid option */
-    sysblk.legacysenseid = legacysenseid;
 
     /* Gabor Hoffer (performance option) */
     copy_opcode_tables();
