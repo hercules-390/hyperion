@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.290  2009/01/15 11:12:51  jj
+// Change traceopt/symptom parsing
+//
 // Revision 1.289  2009/01/15 11:05:25  jj
 // Make codepage and legacysenseid available as commands
 //
@@ -3275,6 +3278,68 @@ int codepage_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
+
+
+#if defined(OPTION_SET_STSI_INFO)
+/* model config statement */
+
+int stsi_model_cmd(int argc, char *argv[], char *cmdline)
+{
+
+    UNREFERENCED(cmdline);
+
+    /* Update model name if operand is specified */
+    if (argc > 1)
+        set_model(argv[1]);
+    else
+    {
+        logmsg( _("HHCxxnnnE MODEL: no model code\n"));
+        return -1;
+    }
+
+    return 0;
+}
+
+
+/* plant config statement */
+
+int stsi_plant_cmd(int argc, char *argv[], char *cmdline)
+{
+
+    UNREFERENCED(cmdline);
+
+    /* Update model name if operand is specified */
+    if (argc > 1)
+        set_plant(argv[1]);
+    else
+    {
+        logmsg( _("HHCxxnnnE PLANT: no plant code\n"));
+        return -1;
+    }
+
+    return 0;
+}
+
+
+/* manufacturer config statement */
+
+int stsi_mfct_cmd(int argc, char *argv[], char *cmdline)
+{
+
+    UNREFERENCED(cmdline);
+
+    /* Update model name if operand is specified */
+    if (argc > 1)
+        set_manufacturer(argv[1]);
+    else
+    {
+        logmsg( _("HHCxxnnnE MANUFACTURER: no manufacturer code\n"));
+        return -1;
+    }
+
+    return 0;
+}
+#endif /* defined(OPTION_SET_STSI_INFO) */
 
 
 ///////////////////////////////////////////////////////////////////////
@@ -7110,7 +7175,13 @@ COMMAND ( "restart", CMD,   restart_cmd,   "generate restart interrupt" )
 COMMAND ( "archmode",CMD|CFG, archmode_cmd,"set architecture mode" )
 COMMAND ( "loadparm",CMD|CFG, loadparm_cmd,"set IPL parameter\n" )
 
-COMMAND ( "lparname",CMD|CFG, lparname_cmd,"set LPAR name\n" )
+COMMAND ( "lparname",CFG,  lparname_cmd,    "set LPAR name\n" )
+
+#if defined(OPTION_SET_STSI_INFO)
+COMMAND ( "model",   CFG,  stsi_model_cmd,  "Set STSI model code" )
+COMMAND ( "plant",   CFG,  stsi_plant_cmd,  "Set STSI plant code" )
+COMMAND ( "manufacturer",CFG,stsi_mfct_cmd, "Set STSI manufacturer code\n")
+#endif /* defined(OPTION_SET_STSI_INFO) */
 
 COMMAND ( "pgmprdos",CFG,   pgmprdos_cmd,  "set LPP license setting\n" )
 

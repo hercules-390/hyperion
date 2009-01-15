@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.120  2009/01/15 11:12:51  jj
+// Change traceopt/symptom parsing
+//
 // Revision 1.119  2009/01/15 11:05:25  jj
 // Make codepage and legacysenseid available as commands
 //
@@ -907,11 +910,6 @@ BYTE    c;                              /* Work area for sscanf      */
 char   *styp;                           /* -> Engine type string     */
 char   *styp_values[] = {"CP","CF","AP","IL","??","IP"}; /* type values */
 BYTE    ptyp;                           /* Processor engine type     */
-#if defined(OPTION_SET_STSI_INFO)
-char   *stsi_model;                     /* Info                      */
-char   *stsi_plant;                     /*      for                  */
-char   *stsi_manufacturer;              /*          STSI             */ 
-#endif /*defined(OPTION_SET_STSI_INFO) */
 #ifdef OPTION_SELECT_KLUDGE
 int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                                            this allows the console to
@@ -1139,11 +1137,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 #ifdef OPTION_PTTRACE
         sptt = NULL;
 #endif /*OPTION_PTTRACE*/
-#if defined(OPTION_SET_STSI_INFO)
-        stsi_model = NULL;
-        stsi_plant = NULL;
-        stsi_manufacturer = NULL;
-#endif /* defined(OPTION_SET_STSI_INFO) */
 #if defined( OPTION_SCSI_TAPE )
         sauto_scsi_mount = NULL;
 #endif /* defined( OPTION_SCSI_TAPE ) */
@@ -1468,21 +1461,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 sshrdport = operand;
             }
 #endif /*defined(OPTION_SHARED_DEVICES)*/
-
-#if defined(OPTION_SET_STSI_INFO)
-            else if (strcasecmp (keyword, "model") == 0)
-            {
-                stsi_model = operand;
-            }
-            else if (strcasecmp (keyword, "plant") == 0)
-            {
-                stsi_plant = operand;
-            }
-            else if (strcasecmp (keyword, "manufacturer") == 0)
-            {
-                stsi_manufacturer = operand;
-            }
-#endif /* defined(OPTION_SET_STSI_INFO) */
 
 #if defined( OPTION_SCSI_TAPE )
             else if (strcasecmp (keyword, "auto_scsi_mount") == 0)
@@ -1957,15 +1935,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             }
         }
 #endif /*OPTION_PTTRACE*/
-
-#if defined(OPTION_SET_STSI_INFO)
-        if(stsi_model)
-            set_model(stsi_model);
-        if(stsi_plant)
-            set_plant(stsi_plant);
-        if(stsi_manufacturer)
-            set_manufacturer(stsi_manufacturer);
-#endif /* defined(OPTION_SET_STSI_INFO) */
 
 #if defined( OPTION_SCSI_TAPE )
         /* Parse automatic SCSI tape mounts operand */
