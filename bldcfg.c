@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.119  2009/01/15 11:05:25  jj
+// Make codepage and legacysenseid available as commands
+//
 // Revision 1.118  2009/01/15 10:31:48  jj
 // Rework diag8cmd & shcmdopt parsing logic
 //
@@ -852,7 +855,6 @@ char   *scpuprio;                       /* -> CPU thread priority    */
 char   *sdevprio;                       /* -> Device thread priority */
 char   *slogofile;                      /* -> 3270 logo file         */
 char   *smountedtapereinit;             /* -> mounted tape reinit opt*/
-char   *straceopt;                      /* -> display_inst option    */
 char   *sconkpalv;                      /* -> console keep-alive opt */
 #if defined(_FEATURE_ECPSVM)
 char   *secpsvmlevel;                   /* -> ECPS:VM Keyword        */
@@ -1123,7 +1125,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         sdevprio = NULL;
         sdevtmax = NULL;
         slogofile = NULL;
-        straceopt = NULL;
         sconkpalv = NULL;
         smountedtapereinit = NULL;
 #if defined(_FEATURE_ECPSVM)
@@ -1261,11 +1262,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             else if (strcasecmp (keyword, "mounted_tape_reinit") == 0)
             {
                 smountedtapereinit = operand;
-            }
-            else if (strcasecmp (keyword, "traceopt") == 0
-                     || strcasecmp (keyword, "symptom") == 0)
-            {
-                straceopt = operand;
             }
 #if defined(_FEATURE_ECPSVM)
             /* ECPS:VM support */
@@ -1828,33 +1824,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         {
             strncpy(hlogofile, slogofile, sizeof(hlogofile)-1);
             hlogofile[sizeof(hlogofile)-1] = '\0';
-        }
-
-        /* Parse "traceopt" option */
-        if (straceopt)
-        {
-            if (strcasecmp(straceopt, "traditional") == 0)
-            {
-                sysblk.showregsfirst = 0;
-                sysblk.showregsnone = 0;
-            }
-            else if (strcasecmp(straceopt, "regsfirst") == 0)
-            {
-                sysblk.showregsfirst = 1;
-                sysblk.showregsnone = 0;
-            }
-            else if (strcasecmp(straceopt, "noregs") == 0)
-            {
-                sysblk.showregsfirst = 0;
-                sysblk.showregsnone = 1;
-            }
-            else
-            {
-                fprintf(stderr, _("HHCCF088S Error in %s line %d: "
-                        "Invalid trace option keyword %s\n"),
-                        fname, inc_stmtnum[inc_level], straceopt);
-                delayed_exit(1);
-            }
         }
 
         /* Parse "conkpalv" option */

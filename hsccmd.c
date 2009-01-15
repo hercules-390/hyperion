@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.289  2009/01/15 11:05:25  jj
+// Make codepage and legacysenseid available as commands
+//
 // Revision 1.288  2009/01/15 10:31:48  jj
 // Rework diag8cmd & shcmdopt parsing logic
 //
@@ -6893,7 +6896,7 @@ int conkpalv_cmd( int argc, char *argv[], char *cmdline )
 int traceopt_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
-    if (argc == 2)
+    if (argc > 1)
     {
         if (strcasecmp(argv[1], "traditional") == 0)
         {
@@ -6911,10 +6914,11 @@ int traceopt_cmd(int argc, char *argv[], char *cmdline)
             sysblk.showregsnone = 1;
         }
     }
-    logmsg(_("HHCPN162I Hercules instruction trace displayed in %s mode\n"),
-        sysblk.showregsnone ? _("noregs") :
-        sysblk.showregsfirst ? _("regsfirst") :
-                        _("traditional"));
+    else
+        logmsg(_("HHCPN162I Hercules instruction trace displayed in %s mode\n"),
+            sysblk.showregsnone ? _("noregs") :
+            sysblk.showregsfirst ? _("regsfirst") :
+                            _("traditional"));
     return 0;
 }
 
@@ -7250,7 +7254,8 @@ COMMAND ( "resume",  CMD,   resume_cmd,    "Resume hercules\n" )
 
 COMMAND ( "herclogo",CMD,   herclogo_cmd,  "Read a new hercules logo file\n" )
 
-COMMAND ( "traceopt",CMD,   traceopt_cmd,  "Instruction trace display options\n" )
+COMMAND ( "traceopt",CFG|CMD,traceopt_cmd, "Instruction trace display options\n" )
+COMMAND ( "symptom", CFG,    traceopt_cmd, "Alias for traceopt\n" )
 
 COMMAND ( "$test",   CMD,   test_cmd,       NULL )     // "(hidden internal command)"
 
