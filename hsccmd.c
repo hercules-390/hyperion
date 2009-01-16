@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.295  2009/01/16 08:31:51  jj
+// Fix compile warning msgs
+//
 // Revision 1.294  2009/01/16 08:25:14  jj
 // Reset config default settings (as per herc doc)
 // add $zapcmd to enable/disable commands and config statements
@@ -7476,11 +7479,11 @@ COMMAND ( "loadcore",CMD,   loadcore_cmd,  "load a core image file" )
 COMMAND ( "loadtext",CMD,   loadtext_cmd,  "load a text deck file\n" )
 
 #if defined(OPTION_DYNAMIC_LOAD)
-COMMAND ( "ldmod",   CMD|CFG,ldmod_cmd,    "load a module" )
+COMMAND ( "modpath", CFG,   modpath_cmd,   "set module load path" )
+COMMAND ( "ldmod",   CFG|CMD,ldmod_cmd,    "load a module" )
 COMMAND ( "rmmod",   CMD,   rmmod_cmd,     "delete a module" )
 COMMAND ( "lsmod",   CMD,   lsmod_cmd,     "list dynamic modules" )
-COMMAND ( "lsdep",   CMD,   lsdep_cmd,     "list module dependencies" )
-COMMAND ( "modpath", CFG,   modpath_cmd,    "set module load path\n" )
+COMMAND ( "lsdep",   CMD,   lsdep_cmd,     "list module dependencies\n" )
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
 
 #ifdef OPTION_IODELAY_KLUDGE
