@@ -10,6 +10,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.27  2009/01/07 16:36:55  bernard
+// hldmsg command
+//
 // Revision 1.26  2009/01/02 19:21:51  jj
 // DVD-RAM IPL
 // RAMSAVE
@@ -269,6 +272,7 @@ HAO_DLL_IMPORT void hao_message(char *message); /* process message */
 /* Functions in module hsccmd.c (so PTT debugging patches can access them) */
 HCMD_DLL_IMPORT int aia_cmd     (int argc, char *argv[], char *cmdline);
 HCMD_DLL_IMPORT int stopall_cmd (int argc, char *argv[], char *cmdline);
+HCMD_DLL_IMPORT int ProcessConfigCommand (int argc, char **argv, char *cmdline);
 
 /* Functions in losc.c */
 void losc_set (int license_status);

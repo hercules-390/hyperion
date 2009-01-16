@@ -44,6 +44,9 @@
 /*********************************************************************/
 
 // $Log$
+// Revision 1.64  2008/11/23 22:27:43  rbowler
+// Fix win64 type conversion warnings in w32util.c
+//
 // Revision 1.63  2008/02/12 08:42:15  fish
 // dyngui tweaks: new def devlist fmt, new debug_cd_cmd hook
 //
@@ -1963,7 +1966,11 @@ void Cleanup()
 
 void gui_panel_display ()
 {
+static const char *DisQuietCmd[] = { "$zapcmd", "quiet", "NoCmd" };
+
     SET_THREAD_NAME("dyngui");
+
+    ProcessConfigCommand(3,DisQuietCmd,NULL); // Disable the quiet command
 
     if ( !bDoneProcessing )
     {
