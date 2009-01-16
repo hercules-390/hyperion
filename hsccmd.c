@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.293  2009/01/15 21:05:35  jj
+// Move pantitle to hsccmd.c from bldcfg.c
+//
 // Revision 1.292  2009/01/15 17:36:43  jj
 // Change http server startup
 //
@@ -7219,7 +7222,6 @@ int herc_cmd(int argc, char *argv[], char *cmdline)
   return 0;
 }
 #endif // OPTION_CMDTGT
-
 ///////////////////////////////////////////////////////////////////////
 // Handle externally defined commands...
 
@@ -7244,10 +7246,11 @@ typedef int CMDFUNC(int argc, char *argv[], char *cmdline);
 
 typedef struct _CMDTAB
 {
-    const char* pszCommand;     /* command          */
-    const int   type;           /* Is command allowed from config */
-#define CFG     0x01            /* Config statement */
-#define CMD     0x02            /* Command statement */
+    const char* pszCommand;     /* statement        */
+          int   type;           /* statement type */
+#define DIS     0x00            /* disabled statement */
+#define CFG     0x01            /* config statement */
+#define CMD     0x02            /* command statement */
     const size_t cmdAbbrev;      /* Min abbreviation */
     CMDFUNC*    pfnCommand;     /* handler function */
     const char* pszCmdDesc;     /* description      */
@@ -7265,11 +7268,62 @@ CMDTAB;
 int  ListAllCommands (int argc, char *argv[], char *cmdline);  /*(forward reference)*/
 int  HelpCommand     (int argc, char *argv[], char *cmdline);  /*(forward reference)*/
 
+CMDTAB Commands[];  // Forward reference
+/* $zapcmd - internal debug - may cause havoc - use with caution */
+int zapcmd_cmd(int argc, char *argv[], char *cmdline)
+{
+CMDTAB* cmdtab;
+int i;
+
+    UNREFERENCED(cmdline);
+
+    if (argc > 1)
+    {
+        for (cmdtab = Commands; cmdtab->pfnCommand; cmdtab++)
+        {
+            if(!strcasecmp(argv[1], cmdtab->pszCommand))
+            {
+                if(argc > 2)
+                    for(i = 2; i < argc; i++)
+                    {
+                        if(!strcasecmp(argv[i],"Cfg"))
+                            cmdtab->type |= CFG;
+                        else
+                        if(!strcasecmp(argv[i],"NoCfg"))
+                            cmdtab->type &= ~CFG;
+                        else
+                        if(!strcasecmp(argv[i],"Cmd"))
+                            cmdtab->type |= CMD;
+                        else
+                        if(!strcasecmp(argv[i],"NoCmd"))
+                            cmdtab->type &= ~CMD;
+                        else
+                        {
+                            logmsg(_("Invalid arg: %s: %s %s [(No)Cfg|(No)Cmd]\n"),argv[i],argv[0],argv[1]);
+                            return -1;
+                        }
+                    }
+                else
+                    logmsg(_("%s: %s(%sCfg,%sCmd)\n"),argv[0],cmdtab->pszCommand,
+                      (cmdtab->type&CFG)?"":"No",(cmdtab->type&CMD)?"":"No");
+                return 0;
+            }
+        }
+        logmsg(_("%s: %s not in command table\n"),argv[0],argv[1]);
+        return -1;
+    }
+    else
+        logmsg(_("Usage: %s <command> [(No)Cfg|(No)Cmd]\n"),argv[0]);
+    return -1;
+}
+
 CMDTAB Commands[] =
 {
 /*        command    type   function        one-line description...
         (max 9 chars)
 */
+// COMMAND ("sample"  CMD|CFG, sample_cmd,  "help text" )   
+
 COMMAND ( "?",       CMD,   ListAllCommands, "list all commands" )
 COMMAND ( "help",    CMD,   HelpCommand,   "command specific help\n" )
 
@@ -7330,12 +7384,12 @@ COMMAND ( "manufacturer",CFG,stsi_mfct_cmd, "Set STSI manufacturer code\n")
 
 COMMAND ( "pgmprdos",CFG,   pgmprdos_cmd,  "set LPP license setting\n" )
 
-COMMAND ( "codepage",CMD|CFG, codepage_cmd,"set codepage conversion table\n" )
+COMMAND ( "codepage",CFG,   codepage_cmd,  "set codepage conversion table\n" )
 
 COMMAND ( "diag8cmd",CFG,   diag8_cmd,     "Set diag8 command option\n" )
 COMMAND ( "shcmdopt",CFG,   shcmdopt_cmd,  "Set diag8 sh option\n" )  // This should never be a command!!! *JJ
 
-COMMAND ( "legacysenseid",CFG|CMD,lsid_cmd,"set legacysenseid setting\n" )
+COMMAND ( "legacysenseid",CFG,lsid_cmd,    "set legacysenseid setting\n" )
 
 COMMAND ( "ipl",     CMD,   ipl_cmd,       "IPL Normal from device xxxx" )
 COMMAND ( "iplc",    CMD,   iplc_cmd,      "IPL Clear from device xxxx" )
@@ -7343,11 +7397,11 @@ COMMAND ( "sysreset",CMD,   sysr_cmd,      "Issue SYSTEM Reset manual operation"
 COMMAND ( "sysclear",CMD,   sysc_cmd,      "Issue SYSTEM Clear Reset manual operation" )
 COMMAND ( "store",   CMD,   store_cmd,     "store CPU status at absolute zero\n" )
 
-COMMAND ( "sclproot",CMD|CFG, sclproot_cmd,"set SCLP base directory\n" )
+COMMAND ( "sclproot",CFG,   sclproot_cmd,  "set SCLP base directory\n" )
 
 #if defined(OPTION_HTTP_SERVER)
-COMMAND ( "httproot",CFG|CMD, httproot_cmd,"Set HTTP server root directory" )  
-COMMAND ( "httpport",CFG|CMD, httpport_cmd,"Set HTTP server port\n" )   
+COMMAND ( "httproot",CFG,    httproot_cmd, "Set HTTP server root directory" )  
+COMMAND ( "httpport",CFG,    httpport_cmd, "Set HTTP server port\n" )   
 #if defined( HTTP_SERVER_CONNECT_KLUDGE )
 COMMAND  "HTTP_SERVER_CONNECT_KLUDGE", CFG, httpskm_cmd, "HTTP_SERVER_CONNECT_KLUDGE" )
 #endif // defined( HTTP_SERVER_CONNECT_KLUDGE )
@@ -7445,8 +7499,8 @@ COMMAND ( "maxrates",CMD,   maxrates_cmd,  "display maximum observed MIPS/SIOS r
 #endif // OPTION_MIPS_COUNTING
 
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
-COMMAND ( "asn_and_lx_reuse", CMD|CFG, alrf_cmd, "Enable/Disable ASN and LX reuse facility" )
-COMMAND ( "alrf"            , CMD|CFG, alrf_cmd, "Alias for asn_and_lx_reuse\n"             )
+COMMAND ( "asn_and_lx_reuse", CFG, alrf_cmd, "Enable/Disable ASN and LX reuse facility" )
+COMMAND ( "alrf"            , CFG, alrf_cmd, "Alias for asn_and_lx_reuse\n"             )
 #endif /* defined(_FEATURE_ASN_AND_LX_REUSE) */
 
 #if defined(FISH_HANG)
@@ -7482,7 +7536,8 @@ COMMAND ( "herclogo",CMD,   herclogo_cmd,  "Read a new hercules logo file\n" )
 COMMAND ( "traceopt",CFG|CMD,traceopt_cmd, "Instruction trace display options\n" )
 COMMAND ( "symptom", CFG,    traceopt_cmd, "Alias for traceopt\n" )
 
-COMMAND ( "$test",   CMD,   test_cmd,       NULL )     // "(hidden internal command)"
+COMMAND ( "$zapcmd", CFG,   zapcmd_cmd,     NULL )     // enable/disable commands and config statements
+COMMAND ( "$test",   DIS,   test_cmd,       NULL )     // enable in config with: $zapcmd $test cmd
 
 #ifdef OPTION_CMDTGT
 COMMAND ( "cmdtgt",  CMD,   cmdtgt_cmd,    "Specify the command target" )
