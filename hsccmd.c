@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.296  2009/01/16 08:33:39  jj
+// Fix spacing in hdl commands help output
+//
 // Revision 1.295  2009/01/16 08:31:51  jj
 // Fix compile warning msgs
 //
@@ -2234,10 +2237,13 @@ char c;
 
     if (argc > 1)
     {
-        if (!strcasecmp(argv[1],"none") && sysblk.httpport)
+        if (!strcasecmp(argv[1],"none"))
         {
-            sysblk.httpport = 0;
-            signal_thread(sysblk.httptid, SIGUSR2);
+            if(sysblk.httpport)
+            {
+                sysblk.httpport = 0;
+                signal_thread(sysblk.httptid, SIGUSR2);
+            }
         }
         else if(sysblk.httpport)
         {
