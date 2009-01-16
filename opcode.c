@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.155  2009/01/14 18:41:34  bernard
+// add David Bond comments
+//
 // Revision 1.154  2008/12/06 22:42:37  ivan
 // Enable STFLE in ESA/390 Mode.
 //
@@ -876,6 +879,29 @@
  UNDEF_INST(connect_channel_set)
  UNDEF_INST(disconnect_channel_set)
 #endif /*!defined(FEATURE_CHANNEL_SWITCHING)*/
+
+
+#if !defined(FEATURE_SET_PROGRAM_PARAMETER_FACILITY)
+ UNDEF_INST(set_program_parameter)
+#endif /*!defined(FEATURE_SET_PROGRAM_PARAMETER_FACILITY)*/
+
+
+#if !defined(FEATURE_CPU_MEASUREMENT_COUNTER_FACILITY)
+ UNDEF_INST(extract_coprocessor_group_address)
+ UNDEF_INST(extract_cpu_counter)
+ UNDEF_INST(extract_peripheral_counter)
+ UNDEF_INST(query_counter_information)
+ UNDEF_INST(set_cpu_counter)
+ UNDEF_INST(set_cpu_counter_set_controls)
+ UNDEF_INST(set_peripheral_counter)
+ UNDEF_INST(set_peripheral_counter_set_controls)
+#endif /*!defined(FEATURE_CPU_MEASUREMENT_COUNTER_FACILITY)*/
+
+
+#if !defined(FEATURE_CPU_MEASUREMENT_SAMPLING_FACILITY)
+ UNDEF_INST(query_sampling_information)
+ UNDEF_INST(set_sampling_controls)
+#endif /*!defined(FEATURE_CPU_MEASUREMENT_SAMPLING_FACILITY)*/
 
 
 #if !defined(FEATURE_EXTENDED_TRANSLATION)
@@ -3242,21 +3268,21 @@ DLL_EXPORT zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B27D*/ GENx370x390x900 (store_system_information,S,"STSI"),
  /*B27E*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B27F*/ GENx___x___x___ ,                                     /* Sysplex   */
- /*B280*/ GENx___x___x___ , /*(set_program_parameter,?,"SPP"),*//*#LN L      */
+ /*B280*/ GENx___x___x900 (set_program_parameter,S,"SPP"),      /*#LN L      */
  /*B281*/ GENx___x___x___ ,                                     /*#LN S      */
  /*B282*/ GENx___x___x___ ,                                     /*#EXP L     */
  /*B283*/ GENx___x___x___ ,                                     /*#EXP S     */
- /*B284*/ GENx___x___x___ , /*(set_cpu_counter_set_controls,?,"SCCTL"),*//*#LOG L*/
- /*B285*/ GENx___x___x___ , /*(set_peripheral_counter_set_controls,?,"SPCTL"),*//*#LOG S*/
- /*B286*/ GENx___x___x___ , /*(query_sampling_information,?,"QSI"),*//*#POWER L*/
- /*B287*/ GENx___x___x___ , /*(set_sampling_controls,?,"SSCTL"),*//*#POWER S */
+ /*B284*/ GENx___x___x900 (set_cpu_counter_set_controls,S,"SCCTL"), /*#LOG L */
+ /*B285*/ GENx___x___x900 (set_peripheral_counter_set_controls,S,"SPCTL"),/*#LOG S*/
+ /*B286*/ GENx___x___x900 (query_sampling_information,S,"QSI"), /*#POWER L   */
+ /*B287*/ GENx___x___x900 (set_sampling_controls,S,"SSCTL"),    /*#POWER S   */
  /*B288*/ GENx___x___x___ ,                                     /*#SIN L     */
  /*B289*/ GENx___x___x___ ,                                     /*#SIN S     */
  /*B28A*/ GENx___x___x___ ,                                     /*#COS L     */
  /*B28B*/ GENx___x___x___ ,                                     /*#COS S     */
  /*B28C*/ GENx___x___x___ ,
  /*B28D*/ GENx___x___x___ ,
- /*B28E*/ GENx___x___x___ , /*(query_counter_information,?,"QCTRI"),*/
+ /*B28E*/ GENx___x___x900 (query_counter_information,S,"QCTRI"),
  /*B28F*/ GENx___x___x___ ,
  /*B290*/ GENx___x___x___ ,
  /*B291*/ GENx___x___x___ ,
@@ -3338,12 +3364,12 @@ DLL_EXPORT zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B2DD*/ GENx___x___x___ ,
  /*B2DE*/ GENx___x___x___ ,
  /*B2DF*/ GENx___x___x___ ,
- /*B2E0*/ GENx___x___x___ , /*(set_cpu_counter,?,"SCCTR"),*/
- /*B2E1*/ GENx___x___x___ , /*(set_peripheral_counter,?,"SPCTR"),*/
+ /*B2E0*/ GENx___x___x900 (set_cpu_counter,RRE,"SCCTR"),
+ /*B2E1*/ GENx___x___x900 (set_peripheral_counter,RRE,"SPCTR"),
  /*B2E2*/ GENx___x___x___ ,
  /*B2E3*/ GENx___x___x___ ,
- /*B2E4*/ GENx___x___x___ , /*(extract_cpu_counter,?,"ECCTR"),*/
- /*B2E5*/ GENx___x___x___ , /*(extract_peripheral_counter,?,"EPCTR"),*/
+ /*B2E4*/ GENx___x___x900 (extract_cpu_counter,RRE,"ECCTR"),
+ /*B2E5*/ GENx___x___x900 (extract_peripheral_counter,RRE,"EPCTR"),
  /*B2E6*/ GENx___x___x___ ,
  /*B2E7*/ GENx___x___x___ ,
  /*B2E8*/ GENx___x___x___ ,
@@ -3351,7 +3377,7 @@ DLL_EXPORT zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B2EA*/ GENx___x___x___ ,
  /*B2EB*/ GENx___x___x___ ,
  /*B2EC*/ GENx___x___x___ ,
- /*B2ED*/ GENx___x___x___ , /*(extract_coprocessor_group_address,?,ECA),*/
+ /*B2ED*/ GENx___x___x900 (extract_coprocessor_group_address,RRE,"ECA"),
  /*B2EE*/ GENx___x___x___ ,
  /*B2EF*/ GENx___x___x___ ,
  /*B2F0*/ GENx370x390x900 (inter_user_communication_vehicle,S,"IUCV"),
