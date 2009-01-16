@@ -18,6 +18,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.294  2009/01/16 08:25:14  jj
+// Reset config default settings (as per herc doc)
+// add $zapcmd to enable/disable commands and config statements
+//
 // Revision 1.293  2009/01/15 21:05:35  jj
 // Move pantitle to hsccmd.c from bldcfg.c
 //
@@ -409,6 +413,8 @@ void do_test_msgs()
 
 void* test_thread(void* parg)
 {
+    UNREFERENCED(parg);
+
     logmsg("test thread: STARTING\n");
 
     SLEEP( 5 );
@@ -1403,6 +1409,8 @@ int iodelay_cmd(int argc, char *argv[], char *cmdline)
 
 int automount_cmd(int argc, char *argv[], char *cmdline)
 {
+UNREFERENCED(cmdline);
+
     int rc;
 
     if (argc < 2)
@@ -1441,7 +1449,7 @@ int automount_cmd(int argc, char *argv[], char *cmdline)
     {
         char tamdir[MAX_PATH+1]; /* +1 for optional '+' or '-' prefix */
         TAMDIR* pTAMDIR = NULL;
-        int was_empty = (sysblk.tamdir == NULL);
+//      int was_empty = (sysblk.tamdir == NULL);
 
         if (argc != 3)
         {
@@ -1546,7 +1554,7 @@ int automount_cmd(int argc, char *argv[], char *cmdline)
         TAMDIR* pPrevTAMDIR = NULL;
         TAMDIR* pCurrTAMDIR = sysblk.tamdir;
 
-        int was_empty = (sysblk.tamdir == NULL);
+//      int was_empty = (sysblk.tamdir == NULL);
 
         if (argc != 3)
         {
@@ -7472,7 +7480,7 @@ COMMAND ( "ldmod",   CMD|CFG,ldmod_cmd,    "load a module" )
 COMMAND ( "rmmod",   CMD,   rmmod_cmd,     "delete a module" )
 COMMAND ( "lsmod",   CMD,   lsmod_cmd,     "list dynamic modules" )
 COMMAND ( "lsdep",   CMD,   lsdep_cmd,     "list module dependencies" )
-COMMAND ( "modpath", CMD|CFG, modpath_cmd, "set module load path\n" )
+COMMAND ( "modpath", CFG,   modpath_cmd,    "set module load path\n" )
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
 
 #ifdef OPTION_IODELAY_KLUDGE
