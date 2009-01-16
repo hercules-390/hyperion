@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.123  2009/01/15 21:05:35  jj
+// Move pantitle to hsccmd.c from bldcfg.c
+//
 // Revision 1.122  2009/01/15 17:36:43  jj
 // Change http server startup
 //
@@ -285,7 +288,6 @@ static char *operand;                   /* -> First argument         */
 static int  addargc;                    /* Number of additional args */
 static char *addargv[MAX_ARGS];         /* Additional argument array */
 
-int ProcessConfigCommand ( int, char**, char* );
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to parse an argument string. The string that is passed */

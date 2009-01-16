@@ -44,6 +44,9 @@
 /*********************************************************************/
 
 // $Log$
+// Revision 1.65  2009/01/16 09:49:10  jj
+// Disable the quiet command in dyngui
+//
 // Revision 1.64  2008/11/23 22:27:43  rbowler
 // Fix win64 type conversion warnings in w32util.c
 //
@@ -1966,7 +1969,7 @@ void Cleanup()
 
 void gui_panel_display ()
 {
-static const char *DisQuietCmd[] = { "$zapcmd", "quiet", "NoCmd" };
+static char *DisQuietCmd[] = { "$zapcmd", "quiet", "NoCmd" };
 
     SET_THREAD_NAME("dyngui");
 
