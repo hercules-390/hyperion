@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.297  2009/01/16 08:41:59  jj
+// allow 'httpport none' in config
+//
 // Revision 1.296  2009/01/16 08:33:39  jj
 // Fix spacing in hdl commands help output
 //
@@ -1415,9 +1418,9 @@ int iodelay_cmd(int argc, char *argv[], char *cmdline)
 
 int automount_cmd(int argc, char *argv[], char *cmdline)
 {
-UNREFERENCED(cmdline);
+int rc;
 
-    int rc;
+    UNREFERENCED(cmdline);
 
     if (argc < 2)
     {
@@ -2301,6 +2304,8 @@ char c;
 
 int httpskm_cmd(int argc, char *argv[], char *cmdline)
 {
+char c;
+
     UNREFERENCED(cmdline);
 
     if (argc > 1)
@@ -7420,7 +7425,7 @@ COMMAND ( "sclproot",CFG,   sclproot_cmd,  "set SCLP base directory\n" )
 COMMAND ( "httproot",CFG,    httproot_cmd, "Set HTTP server root directory" )  
 COMMAND ( "httpport",CFG,    httpport_cmd, "Set HTTP server port\n" )   
 #if defined( HTTP_SERVER_CONNECT_KLUDGE )
-COMMAND  "HTTP_SERVER_CONNECT_KLUDGE", CFG, httpskm_cmd, "HTTP_SERVER_CONNECT_KLUDGE" )
+COMMAND ( "HTTP_SERVER_CONNECT_KLUDGE", CFG, httpskm_cmd, "HTTP_SERVER_CONNECT_KLUDGE" )
 #endif // defined( HTTP_SERVER_CONNECT_KLUDGE )
 #endif /*defined(OPTION_HTTP_SERVER)*/
 
