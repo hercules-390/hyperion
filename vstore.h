@@ -35,6 +35,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.83  2008/04/02 21:52:19  rbowler
+// Fix PIC4 when MVCOS operand finishes on page boundary
+//
 // Revision 1.82  2008/03/23 06:13:07  rbowler
 // Add MVCOS instruction (part 3)
 //
@@ -865,7 +868,8 @@ int     len2, len3;                     /* Lengths to copy           */
 
     /* Translate addresses of leftmost operand bytes */
     source1 = MADDR (addr2, arn2, regs, ACCTYPE_READ, key2);
-    dest1 = MADDR (addr1, arn1, regs, ACCTYPE_WRITE, key1);
+    dest1 = MADDR (addr1, arn1, regs, ACCTYPE_WRITE_SKP, key1);
+    sk1 = regs->dat.storkey;
 
     /* There are several scenarios (in optimal order):
      * (1) dest boundary and source boundary not crossed
@@ -895,13 +899,10 @@ int     len2, len3;                     /* Lengths to copy           */
             concpy (regs, dest1, source1, len2);
             concpy (regs, dest1 + len2, source2, len - len2 + 1);
         }
+        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
     }
     else
     {
-        dest1 = MADDR (addr1, arn1, regs, ACCTYPE_WRITE_SKP, key1);
-        sk1 = regs->dat.storkey;
-        source1 = MADDR (addr2, arn2, regs, ACCTYPE_READ, key2);
-
         /* First operand crosses a boundary */
         len2 = 0x800 - (addr1 & 0x7FF);
         dest2 = MADDR ((addr1 + len2) & ADDRESS_MAXWRAP(regs),
@@ -941,6 +942,8 @@ int     len2, len3;                     /* Lengths to copy           */
                 concpy (regs, dest2, source2 + len2 - len3, len - len2 + 1);
             }
         }
+        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
+        *sk2 |= (STORKEY_REF | STORKEY_CHANGE);
     }
     ITIMER_UPDATE(addr1,len,regs);
 
