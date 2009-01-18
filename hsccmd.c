@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.299  2009/01/18 20:49:25  jj
+// Rework command table and move to separate source files
+//
 // Revision 1.298  2009/01/16 11:32:50  rbowler
 // Fix MSVC compilation errors introduced by rev 1.292
 //
@@ -6892,22 +6895,23 @@ int conkpalv_cmd( int argc, char *argv[], char *cmdline )
     intv = sysblk.kaintv;
     cnt  = sysblk.kacnt;
 
-    if (0
-        ||  argc == 1
-        || (argc == 2 && parse_conkpalv( argv[1], &idle, &intv, &cnt ) == 0)
-    )
+    if(argc < 2)
+        logmsg( _("HHCPN190I Keep-alive = (%d,%d,%d)\n"),idle,intv,cnt);
+    else
     {
-        if (argc == 2)
+        if (argc == 2 && parse_conkpalv( argv[1], &idle, &intv, &cnt ) == 0)
         {
             sysblk.kaidle = idle;
             sysblk.kaintv = intv;
             sysblk.kacnt  = cnt;
         }
-        logmsg( _("HHCPN190I Keep-alive = (%d,%d,%d)\n"),idle,intv,cnt);
-        return 0;
+        else
+        {
+            logmsg( _("HHCPN192E Invalid format. Enter \"help conkpalv\" for help.\n"));
+            return -1;
+        }
     }
-    logmsg( _("HHCPN192E Invalid format. Enter \"help conkpalv\" for help.\n"));
-    return -1;
+    return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////

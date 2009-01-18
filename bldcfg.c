@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.124  2009/01/16 13:57:49  rbowler
+// Fix  warning C4090: 'function' : different 'const' qualifiers in dyngui.c
+//
 // Revision 1.123  2009/01/15 21:05:35  jj
 // Move pantitle to hsccmd.c from bldcfg.c
 //
@@ -865,7 +868,6 @@ char   *scpuprio;                       /* -> CPU thread priority    */
 char   *sdevprio;                       /* -> Device thread priority */
 char   *slogofile;                      /* -> 3270 logo file         */
 char   *smountedtapereinit;             /* -> mounted tape reinit opt*/
-char   *sconkpalv;                      /* -> console keep-alive opt */
 #if defined(_FEATURE_ECPSVM)
 char   *secpsvmlevel;                   /* -> ECPS:VM Keyword        */
 char   *secpsvmlvl;                     /* -> ECPS:VM level (or 'no')*/
@@ -1131,7 +1133,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         sdevprio = NULL;
         sdevtmax = NULL;
         slogofile = NULL;
-        sconkpalv = NULL;
         smountedtapereinit = NULL;
 #if defined(_FEATURE_ECPSVM)
         secpsvmlevel = NULL;
@@ -1182,10 +1183,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             else if (strcasecmp (keyword, "cnslport") == 0)
             {
                 config_cnslport = strdup(operand);
-            }
-            else if (strcasecmp (keyword, "conkpalv") == 0)
-            {
-                sconkpalv = operand;
             }
             else if (strcasecmp (keyword, "numcpu") == 0)
             {
@@ -1730,22 +1727,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         {
             strncpy(hlogofile, slogofile, sizeof(hlogofile)-1);
             hlogofile[sizeof(hlogofile)-1] = '\0';
-        }
-
-        /* Parse "conkpalv" option */
-        if (sconkpalv)
-        {
-            int idle, intv, cnt;
-            if (parse_conkpalv(sconkpalv, &idle, &intv, &cnt) != 0)
-            {
-                fprintf(stderr, _("HHCCF088S Error in %s line %d: "
-                        "Invalid format: %s\n"),
-                        fname, inc_stmtnum[inc_level], sconkpalv);
-                delayed_exit(1);
-            }
-            sysblk.kaidle = idle;
-            sysblk.kaintv = intv;
-            sysblk.kacnt  = cnt;
         }
 
         /* Parse "mounted_tape_reinit" option */

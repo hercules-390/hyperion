@@ -343,7 +343,7 @@ COMMAND ( "cckd",      PANEL+CONFIG, cckd_cmd,       "cckd command", NULL )
 
 COMMAND ( "shrd",      PANEL,        shared_cmd,"shrd command", NULL )
 
-COMMAND ( "conkpalv",  PANEL,        conkpalv_cmd, 
+COMMAND ( "conkpalv",  PANEL+CONFIG, conkpalv_cmd, 
   "Display/alter console TCP keep-alive settings",
     "Format: \"conkpalv (idle,intv,count)\" where 'idle', 'intv' and 'count' are the\n"
     "new values for the TCP keep-alive settings for console connections:\n"
