@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.126  2009/01/18 21:57:30  jj
+// rework devtmax config statement
+//
 // Revision 1.125  2009/01/18 21:07:44  jj
 // Rework conkpalv config statement
 //
@@ -1274,41 +1277,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 sptt = operand;
             }
 #endif /*OPTION_PTTRACE*/
-#if defined(OPTION_CONFIG_SYMBOLS)
-            else if (strcasecmp(keyword,"defsym")==0)
-            {
-                /* Execute this operation immediatelly */
-                if(operand==NULL)
-                {
-                    fprintf(stderr, _("HHCCF059S Error in %s line %d: "
-                        "Missing symbol name on DEFSYM statement\n"),
-                        fname, inc_stmtnum[inc_level]);
-                    delayed_exit(1);
-                }
-                if(addargc!=1)
-                {
-                    fprintf(stderr, _("HHCCF060S Error in %s line %d: "
-                        "DEFSYM requires a single symbol value (include quotation marks if necessary)\n"),
-                        fname, inc_stmtnum[inc_level]);
-                    delayed_exit(1);
-                }
-        /*
-                subval=resolve_symbol_string(addargv[0]);
-                if(subval!=NULL)
-                {
-                    set_symbol(operand,subval);
-                    free(subval);
-                }
-                else
-                {
-        */
-                    set_symbol(operand,addargv[0]);
-        /*
-                }
-        */
-                addargc--;
-            }
-#endif /* defined(OPTION_CONFIG_SYMBOLS) */
 #if defined( OPTION_TAPE_AUTOMOUNT )
             else if (strcasecmp (keyword, "automount") == 0)
             {

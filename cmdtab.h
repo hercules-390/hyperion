@@ -560,7 +560,7 @@ COMMAND ( "FishHangReport",   PANEL, FishHangReport_cmd,
 #endif
 
 #if defined(OPTION_CONFIG_SYMBOLS)
-COMMAND ( "defsym",    PANEL,        defsym_cmd,  
+COMMAND ( "defsym",    PANEL+CONFIG, defsym_cmd,  
   "Define symbol",
     "Format: \"defsym symbol [value]\". Defines symbol 'symbol' to contain value 'value'.\n"
     "The symbol can then be the object of a substitution for later panel commands.\n"
