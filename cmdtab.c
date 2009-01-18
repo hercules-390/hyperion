@@ -7,6 +7,9 @@
 // $Id$
 
 // $Log$
+// Revision 1.1  2009/01/18 20:49:25  jj
+// Rework command table and move to separate source files
+//
 
 
 #include "hstdinc.h"
@@ -277,15 +280,16 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
     {
         for (pCmdTab = cmdtab; pCmdTab->statement; pCmdTab++)
         {
-            if (!strcasecmp(pCmdTab->statement,argv[1]) && (pCmdTab->type & PANEL))
+            if (!strcasecmp(pCmdTab->statement,argv[1]) && (pCmdTab->type & PANEL) )
             {
                 logmsg( _("%s: %s\n"),pCmdTab->statement,pCmdTab->shortdesc);
-                logmsg( _("%s"),pCmdTab->longdesc );
+                if(pCmdTab->longdesc)
+                    logmsg( _("%s\n"),pCmdTab->longdesc );
                 return 0;
             }
         }
     
-        logmsg( _("HHCPN142I No additional help available.\n") );
+        logmsg( _("HHCPN142I Command %s not found - no help available\n"),argv[1]);
         return -1;
     }
     return 0;

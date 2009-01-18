@@ -16,7 +16,7 @@
 // COMMAND ("sample4"  DISABLED,     sample4_cmd,  NULL, NULL ) // Disabled command - generally debugging only
 
 COMMAND ( "help",      PANEL,         HelpCommand, 
-  "list all commands / command specific help\n",
+  "list all commands / command specific help",
     "Enter \"help cmd\" where cmd is the command you need help\n"
     "with. If the command has additional help text defined for it,\n"
     "it will be displayed. Help text is usually limited to explaining\n"
