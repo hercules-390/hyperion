@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.125  2009/01/18 21:07:44  jj
+// Rework conkpalv config statement
+//
 // Revision 1.124  2009/01/16 13:57:49  rbowler
 // Fix  warning C4090: 'function' : different 'const' qualifiers in dyngui.c
 //
@@ -861,7 +864,6 @@ char   *sengines;                       /* -> Processor engine types */
 char   *ssysepoch;                      /* -> System epoch           */
 char   *syroffset;                      /* -> System year offset     */
 char   *stzoffset;                      /* -> System timezone offset */
-char   *sdevtmax;                       /* -> Max device threads     */
 char   *shercprio;                      /* -> Hercules base priority */
 char   *stodprio;                       /* -> Timer thread priority  */
 char   *scpuprio;                       /* -> CPU thread priority    */
@@ -904,7 +906,6 @@ int     devprio;                        /* Device thread priority    */
 DEVBLK *dev;                            /* -> Device Block           */
 char   *sdevnum;                        /* -> Device number string   */
 char   *sdevtype;                       /* -> Device type string     */
-int     devtmax;                        /* Max number device threads */
 #if defined(_FEATURE_ECPSVM)
 int     ecpsvmavail;                    /* ECPS:VM Available flag    */
 int     ecpsvmlevel;                    /* ECPS:VM declared level    */
@@ -978,7 +979,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     todprio  = DEFAULT_TOD_PRIO;
     cpuprio  = DEFAULT_CPU_PRIO;
     devprio  = DEFAULT_DEV_PRIO;
-    devtmax  = MAX_DEVICE_THREADS;
+    sysblk.devtmax  = MAX_DEVICE_THREADS;
     sysblk.kaidle = KEEPALIVE_IDLE_TIME;
     sysblk.kaintv = KEEPALIVE_PROBE_INTERVAL;
     sysblk.kacnt  = KEEPALIVE_PROBE_COUNT;
@@ -1131,7 +1132,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         stodprio = NULL;
         scpuprio = NULL;
         sdevprio = NULL;
-        sdevtmax = NULL;
         slogofile = NULL;
         smountedtapereinit = NULL;
 #if defined(_FEATURE_ECPSVM)
@@ -1232,10 +1232,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             else if (strcasecmp (keyword, "devprio") == 0)
             {
                 sdevprio = operand;
-            }
-            else if (strcasecmp (keyword, "devtmax") == 0)
-            {
-                sdevtmax = operand;
             }
             else if (strcasecmp (keyword, "logofile") == 0)
             {
@@ -1709,19 +1705,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         }
 
 
-        /* Parse Maximum number of device threads */
-        if (sdevtmax != NULL)
-        {
-            if (sscanf(sdevtmax, "%d%c", &devtmax, &c) != 1
-                || devtmax < -1)
-            {
-                fprintf(stderr, _("HHCCF027S Error in %s line %d: "
-                        "Invalid maximum device threads %s\n"),
-                        fname, inc_stmtnum[inc_level], sdevtmax);
-                delayed_exit(1);
-            }
-        }
-
         /* Parse terminal logo option */
         if (slogofile != NULL)
         {
@@ -1993,13 +1976,12 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         sysblk.arch_mode,               // (for calling execute_ccw_chain)
         &sysblk.devprio,                // (ptr to device thread priority)
         MAX_DEVICE_THREAD_IDLE_SECS,    // (maximum device thread wait time)
-        devtmax                         // (maximum #of device threads allowed)
+        sysblk.devtmax                  // (maximum #of device threads allowed)
     );
 #else // !defined(OPTION_FISHIO)
     initialize_lock (&sysblk.ioqlock);
     initialize_condition (&sysblk.ioqcond);
     /* Set max number device threads */
-    sysblk.devtmax = devtmax;
     sysblk.devtwait = sysblk.devtnbr =
     sysblk.devthwm  = sysblk.devtunavail = 0;
 #endif // defined(OPTION_FISHIO)

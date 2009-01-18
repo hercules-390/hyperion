@@ -269,7 +269,7 @@ COMMAND ( "v",         PANEL,        v_cmd,
 
 COMMAND ( "u",         PANEL,        u_cmd,         "disassemble storage", NULL )
 
-COMMAND ( "devtmax",   PANEL,        devtmax_cmd,   "display or set max device threads", NULL )
+COMMAND ( "devtmax",   PANEL+CONFIG, devtmax_cmd,   "display or set max device threads", NULL )
 
 COMMAND ( "k",         PANEL,        k_cmd,         "display cckd internal trace\n", NULL )
 

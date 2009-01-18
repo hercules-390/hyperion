@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.300  2009/01/18 21:07:44  jj
+// Rework conkpalv config statement
+//
 // Revision 1.299  2009/01/18 20:49:25  jj
 // Rework command table and move to separate source files
 //
@@ -4462,22 +4465,22 @@ int devtmax_cmd(int argc, char *argv[], char *cmdline)
      */
 
     if (argc > 1)
-        sscanf(argv[1], "%d", &devtmax);
-    else
-        devtmax = ios_devtmax;
-
-    if (devtmax >= -1)
-        ios_devtmax = devtmax;
-    else
     {
-        logmsg( _("HHCPN075E Invalid max device threads value "
-                  "(must be -1 to n)\n") );
-        return -1;
+        sscanf(argv[1], "%d", &devtmax);
+
+        if (devtmax >= -1)
+            ios_devtmax = devtmax;
+        else
+        {
+            logmsg( _("HHCPN075E Invalid max device threads value "
+                      "(must be -1 to n)\n") );
+            return -1;
+        }
+
+        TrimDeviceThreads();    /* (enforce newly defined threshold) */
     }
-
-    TrimDeviceThreads();    /* (enforce newly defined threshold) */
-
-    logmsg( _("HHCPN076I Max device threads: %d, current: %d, most: %d, "
+    else
+        logmsg( _("HHCPN076I Max device threads: %d, current: %d, most: %d, "
             "waiting: %d, max exceeded: %d\n"),
             ios_devtmax, ios_devtnbr, ios_devthwm,
             (int)ios_devtwait, ios_devtunavail
@@ -4490,29 +4493,29 @@ int devtmax_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(cmdline);
 
     if (argc > 1)
-        sscanf(argv[1], "%d", &devtmax);
-    else
-        devtmax = sysblk.devtmax;
-
-    if (devtmax >= -1)
-        sysblk.devtmax = devtmax;
-    else
     {
-        logmsg( _("HHCPN077E Invalid max device threads value "
-                  "(must be -1 to n)\n") );
-        return -1;
+        sscanf(argv[1], "%d", &devtmax);
+
+        if (devtmax >= -1)
+            sysblk.devtmax = devtmax;
+        else
+        {
+            logmsg( _("HHCPN077E Invalid max device threads value "
+                      "(must be -1 to n)\n") );
+            return -1;
+        }
+
+        /* Create a new device thread if the I/O queue is not NULL
+           and more threads can be created */
+
+        if (sysblk.ioq && (!sysblk.devtmax || sysblk.devtnbr < sysblk.devtmax))
+            create_thread(&tid, DETACHED, device_thread, NULL, "idle device thread");
+
+        /* Wakeup threads in case they need to terminate */
+        broadcast_condition (&sysblk.ioqcond);
     }
-
-    /* Create a new device thread if the I/O queue is not NULL
-       and more threads can be created */
-
-    if (sysblk.ioq && (!sysblk.devtmax || sysblk.devtnbr < sysblk.devtmax))
-        create_thread(&tid, DETACHED, device_thread, NULL, "idle device thread");
-
-    /* Wakeup threads in case they need to terminate */
-    broadcast_condition (&sysblk.ioqcond);
-
-    logmsg( _("HHCPN078E Max device threads %d current %d most %d "
+    else
+        logmsg( _("HHCPN078E Max device threads %d current %d most %d "
             "waiting %d total I/Os queued %d\n"),
             sysblk.devtmax, sysblk.devtnbr, sysblk.devthwm,
             sysblk.devtwait, sysblk.devtunavail
