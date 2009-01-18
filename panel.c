@@ -28,6 +28,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.255  2009/01/10 00:18:34  jmaynard
+// Allow a bare ENTER in cmdtgt scp or cmdtgt pscp mode to send a blank command
+// to the SCP.
+//
 // Revision 1.254  2009/01/09 13:40:13  jj
 // Ensure SYSG devices are listed in the panel display
 //
@@ -3031,8 +3035,11 @@ FinishShutdown:
 #if defined(_FEATURE_SIE)
                     else
             if( SIE_MODE(regs) )
-                            for(i = 0;i < 17;i++)
-                                buf[len++] = ' ';
+            {
+                            for(i = 0;i < 16;i++)
+                                buf[len++] = '-';
+                            buf[len++] = ' ';
+            }
 #endif /*defined(_FEATURE_SIE)*/
                     len += sprintf (buf+len, "%2d%c%c%c%c%c%c%c%c",
                            regs->psw.amode64                  ? 64 :
