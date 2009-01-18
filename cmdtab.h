@@ -294,7 +294,7 @@ COMMAND ( "devlist",   PANEL,        devlist_cmd,   "list device or all devices\
 COMMAND ( "qd",        PANEL,        qd_cmd,        "query dasd\n", NULL )
 
 #if defined( OPTION_TAPE_AUTOMOUNT )
-COMMAND ( "automount", PANEL,        automount_cmd,
+COMMAND ( "automount", PANEL+CONFIG, automount_cmd,
   "Show/Update allowable tape automount directories\n", 
     "Format:  \"automount  { add <dir> | del <dir> | list }\".\n"
     "\n"

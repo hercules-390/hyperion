@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.301  2009/01/18 21:57:30  jj
+// rework devtmax config statement
+//
 // Revision 1.300  2009/01/18 21:07:44  jj
 // Rework conkpalv config statement
 //
@@ -1463,21 +1466,38 @@ int rc;
         return 0;
     }
 
-    if (strcasecmp(argv[1],"add") == 0)
+    if (strcasecmp(argv[1],"add") == 0 || *argv[1] == '+')
     {
+        char *argv2;
         char tamdir[MAX_PATH+1]; /* +1 for optional '+' or '-' prefix */
         TAMDIR* pTAMDIR = NULL;
 //      int was_empty = (sysblk.tamdir == NULL);
 
-        if (argc != 3)
+        if(*argv[1] == '+')
         {
-            logmsg(_("HHCPN204E Invalid syntax; enter 'HELP AUTOMOUNT' for help.\n"));
-            return -1;
+            argv2 = argv[1] + 1;
+            
+            if (argc != 2 )
+            {
+                logmsg(_("HHCPN204E Invalid syntax; enter 'HELP AUTOMOUNT' for help.\n"));
+                return -1;
+            }
         }
+        else
+        {
+            argv2 = argv[2];
+            
+            if (argc != 3 )
+            {
+                logmsg(_("HHCPN204E Invalid syntax; enter 'HELP AUTOMOUNT' for help.\n"));
+                return -1;
+            }
+        }
+
 
         // Add the requested entry...
 
-        strlcpy (tamdir, argv[2], sizeof(tamdir));
+        strlcpy (tamdir, argv2, sizeof(tamdir));
         rc = add_tamdir( tamdir, &pTAMDIR );
 
         // Did that work?
@@ -1562,8 +1582,9 @@ int rc;
         }
     }
 
-    if (strcasecmp(argv[1],"del") == 0)
+    if (strcasecmp(argv[1],"del") == 0 || *argv[1] == '-')
     {
+        char *argv2;
         char tamdir1[MAX_PATH+1] = {0};     // (resolved path)
         char tamdir2[MAX_PATH+1] = {0};     // (expanded but unresolved path)
         char workdir[MAX_PATH+1] = {0};     // (work)
@@ -1574,15 +1595,30 @@ int rc;
 
 //      int was_empty = (sysblk.tamdir == NULL);
 
-        if (argc != 3)
+        if(*argv[1] == '-')
         {
-            logmsg(_("HHCPN213E Invalid syntax; enter 'HELP AUTOMOUNT' for help.\n"));
-            return -1;
+            argv2 = argv[1] + 1;
+            
+            if (argc != 2 )
+            {
+                logmsg(_("HHCPN213E Invalid syntax; enter 'HELP AUTOMOUNT' for help.\n"));
+                return -1;
+            }
+        }
+        else
+        {
+            argv2 = argv[2];
+            
+            if (argc != 3 )
+            {
+                logmsg(_("HHCPN213E Invalid syntax; enter 'HELP AUTOMOUNT' for help.\n"));
+                return -1;
+            }
         }
 
         // Convert argument to absolute path ending with a slash
 
-        strlcpy( tamdir2, argv[2], sizeof(tamdir2) );
+        strlcpy( tamdir2, argv2, sizeof(tamdir2) );
         if      (tamdir2[0] == '-') memmove (&tamdir2[0], &tamdir2[1], MAX_PATH);
         else if (tamdir2[0] == '+') memmove (&tamdir2[0], &tamdir2[1], MAX_PATH);
 

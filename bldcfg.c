@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.127  2009/01/18 22:07:43  jj
+// Rework defsym config statement
+//
 // Revision 1.126  2009/01/18 21:57:30  jj
 // rework devtmax config statement
 //
@@ -1277,78 +1280,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 sptt = operand;
             }
 #endif /*OPTION_PTTRACE*/
-#if defined( OPTION_TAPE_AUTOMOUNT )
-            else if (strcasecmp (keyword, "automount") == 0)
-            {
-                char tamdir[MAX_PATH+1]; /* +1 for optional '+' or '-' prefix */
-                TAMDIR* pTAMDIR = NULL;
-
-                if (!operand)
-                {
-                    fprintf(stderr, _("HHCCF007S Error in %s line %d: "
-                        "Missing argument.\n"),
-                        fname, inc_stmtnum[inc_level]);
-                    delayed_exit(1);
-                }
-
-                strlcpy (tamdir, operand, sizeof(tamdir));
-                rc = add_tamdir( tamdir, &pTAMDIR );
-
-                switch (rc)
-                {
-                    default:     /* (oops!) */
-                    {
-                        logmsg( _("HHCCF999S **LOGIC ERROR** file \"%s\", line %d\n"),
-                            __FILE__, __LINE__);
-                        delayed_exit(1);
-                    }
-                    break;
-
-                    case 5:     /* ("out of memory") */
-                    {
-                        logmsg( _("HHCCF900S Out of memory!\n"));
-                        delayed_exit(1);
-                    }
-                    break;
-
-                    case 1:     /* ("unresolvable path") */
-                    case 2:     /* ("path inaccessible") */
-                    {
-                        logmsg( _("HHCCF091S Invalid AUTOMOUNT directory: \"%s\": %s\n"),
-                               tamdir, strerror(errno));
-                        delayed_exit(1);
-                    }
-                    break;
-
-                    case 3:     /* ("conflict w/previous") */
-                    {
-                        logmsg( _("HHCCF092S AUTOMOUNT directory \"%s\""
-                            " conflicts with previous specification\n"),
-                            tamdir);
-                        delayed_exit(1);
-                    }
-                    break;
-
-                    case 4:     /* ("duplicates previous") */
-                    {
-                        logmsg( _("HHCCF093E AUTOMOUNT directory \"%s\""
-                            " duplicates previous specification\n"),
-                            tamdir);
-                        /* (non-fatal) */
-                    }
-                    break;
-
-                    case 0:     /* ("success") */
-                    {
-                        logmsg(_("HHCCF090I %s%s AUTOMOUNT directory = \"%s\"\n"),
-                            pTAMDIR->dir == sysblk.defdir ? "Default " : "",
-                            pTAMDIR->rej ? "Disallowed" : "Allowed",
-                            pTAMDIR->dir);
-                    }
-                    break;
-                }
-            }
-#endif /* OPTION_TAPE_AUTOMOUNT */
 
 #if defined(OPTION_SHARED_DEVICES)
             else if (strcasecmp (keyword, "shrdport") == 0)
