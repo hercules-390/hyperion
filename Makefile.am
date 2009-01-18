@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.186  2008/12/29 11:03:10  jj
+# Move HMC disk I/O functions to scedasd.c
+#
 # Revision 1.185  2008/12/04 17:39:02  rbowler
 # Add ability to configure group name with --enable-setuid-hercifc=name
 #
@@ -778,21 +781,12 @@ cckd: cckd2ckd$(EXEEXT)  \
 tar: dist
 
 install-exec-local:
-if SETUID_HERCIFC
-	chown root $(DESTDIR)$(bindir)/hercifc
-if HERCIFC_GROUPSET
-	chgrp $(HERCIFC_GROUPNAME) $(DESTDIR)$(bindir)/hercifc
-endif
-	chmod 0750 $(DESTDIR)$(bindir)/hercifc
-	chmod +s   $(DESTDIR)$(bindir)/hercifc
-	rm                             hercifc
-endif
 
 install-exec-hook:
+if BUILD_SHARED
 	rm -f $(DESTDIR)$(libdir)/libherc*.a
 	rm -f $(DESTDIR)$(modexecdir)/dyn*.a
 	rm -f $(DESTDIR)$(modexecdir)/hdt*.a
-if BUILD_SHARED
 else
 	rm -f $(DESTDIR)$(libdir)/libherc*
 endif
@@ -807,6 +801,15 @@ endif
 	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) cfba2fba$(EXEEXT))
 	rm -f $(DESTDIR)$(bindir)/cckd2ckd$(EXEEXT)
 	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) cckd2ckd$(EXEEXT))
+if SETUID_HERCIFC
+	chown root $(DESTDIR)$(bindir)/hercifc
+if HERCIFC_GROUPSET
+	chgrp $(HERCIFC_GROUPNAME) $(DESTDIR)$(bindir)/hercifc
+endif
+	chmod 0750 $(DESTDIR)$(bindir)/hercifc
+	chmod +s   $(DESTDIR)$(bindir)/hercifc
+	rm                             hercifc
+endif
 
 uninstall-local:
 
