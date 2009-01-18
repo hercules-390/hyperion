@@ -5,6 +5,10 @@
 # $Id$
 #
 # $Log$
+# Revision 1.187  2009/01/18 00:52:19  jmaynard
+# Fix Gentoo reported bug: unable to do multithreaded "make install" reliably
+# if --enable-setuid-hercifc is specified.
+#
 # Revision 1.186  2008/12/29 11:03:10  jj
 # Move HMC disk I/O functions to scedasd.c
 #
@@ -427,6 +431,7 @@ endif
                        cgibin.c     \
                        loadparm.c   \
                        hsccmd.c     \
+                       cmdtab.c     \
                        hao.c        \
                        hscmisc.c    \
                        sr.c         \
@@ -725,6 +730,7 @@ noinst_HEADERS = fishhang.h     \
                  memrchr.h      \
                  shared.h       \
                  hscutl.h       \
+                 cmdtab.h       \
                  hdl.h          \
                  crypto.h       \
                  sockdev.h      \

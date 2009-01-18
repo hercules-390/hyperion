@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.298  2009/01/16 11:32:50  rbowler
+// Fix MSVC compilation errors introduced by rev 1.292
+//
 // Revision 1.297  2009/01/16 08:41:59  jj
 // allow 'httpport none' in config
 //
@@ -385,8 +388,8 @@
 #if defined(FEATURE_ECPSVM)
 extern void ecpsvm_command(int argc,char **argv);
 #endif
-int process_script_file(char *,int);
 int ProcessPanelCommand (char*);
+int process_script_file(char *,int);
 
 
 ///////////////////////////////////////////////////////////////////////
@@ -6200,224 +6203,6 @@ int defsym_cmd(int argc, char *argv[], char *cmdline)
 
 #endif // defined(OPTION_CONFIG_SYMBOLS)
 
-///////////////////////////////////////////////////////////////////////
-/* PATCH ISW20030220 - Script command support */
-
-static int scr_recursion=0;     /* Recursion count (set to 0) */
-static int scr_aborted=0;          /* Script abort flag */
-static int scr_uaborted=0;          /* Script user abort flag */
-TID scr_tid=0;
-
-///////////////////////////////////////////////////////////////////////
-
-int cscript_cmd(int argc, char *argv[], char *cmdline)
-{
-    UNREFERENCED(cmdline);
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
-    if(scr_tid!=0)
-    {
-        scr_uaborted=1;
-    }
-    return 0;
-}
-
-///////////////////////////////////////////////////////////////////////
-
-int script_cmd(int argc, char *argv[], char *cmdline)
-{
-
-    int i;
-
-    UNREFERENCED(cmdline);
-    if(argc<2)
-    {
-        logmsg(_("HHCPN996E The script command requires a filename\n"));
-        return 1;
-    }
-    if(scr_tid==0)
-    {
-        scr_tid=thread_id();
-        scr_aborted=0;
-        scr_uaborted=0;
-    }
-    else
-    {
-        if(scr_tid!=thread_id())
-        {
-            logmsg(_("HHCPN997E Only 1 script may be invoked from the panel at any time\n"));
-            return 1;
-        }
-    }
-
-    for(i=1;i<argc;i++)
-    {
-        process_script_file(argv[i],0);
-    }
-    return(0);
-}
-
-///////////////////////////////////////////////////////////////////////
-
-void script_test_userabort()
-{
-        if(scr_uaborted)
-        {
-           logmsg(_("HHCPN998E Script aborted : user cancel request\n"));
-           scr_aborted=1;
-        }
-}
-
-///////////////////////////////////////////////////////////////////////
-
-int process_script_file(char *script_name,int isrcfile)
-{
-FILE   *scrfp;                          /* RC file pointer           */
-size_t  scrbufsize = 1024;              /* Size of RC file  buffer   */
-char   *scrbuf = NULL;                  /* RC file input buffer      */
-int     scrlen;                         /* length of RC file record  */
-int     scr_pause_amt = 0;              /* seconds to pause RC file  */
-char   *p;                              /* (work)                    */
-char    pathname[MAX_PATH];             /* (work)                    */
-
-    /* Check the recursion level - if it exceeds a certain amount
-       abort the script stack
-    */
-    if(scr_recursion>=10)
-    {
-        logmsg(_("HHCPN998E Script aborted : Script recursion level exceeded\n"));
-        scr_aborted=1;
-        return 0;
-    }
-
-    /* Open RC file */
-
-    hostpath(pathname, script_name, sizeof(pathname));
-
-    if (!(scrfp = fopen(pathname, "r")))
-    {
-        int save_errno = errno;
-
-        if (!isrcfile)
-        {
-            if (ENOENT != errno)
-                logmsg(_("HHCPN007E Script file \"%s\" open failed: %s\n"),
-                    script_name, strerror(errno));
-            else
-                logmsg(_("HHCPN995E Script file \"%s\" not found\n"),
-                    script_name);
-        }
-        else /* (this IS the .rc file...) */
-        {
-            if (ENOENT != errno)
-                logmsg(_("HHCPN007E Script file \"%s\" open failed: %s\n"),
-                    script_name, strerror(errno));
-        }
-
-        errno = save_errno;
-        return -1;
-    }
-
-    scr_recursion++;
-
-    if(isrcfile)
-    {
-        logmsg(_("HHCPN008I Script file processing started using file \"%s\"\n"),
-           script_name);
-    }
-
-    /* Obtain storage for the SCRIPT file buffer */
-
-    if (!(scrbuf = malloc (scrbufsize)))
-    {
-        logmsg(_("HHCPN009E Script file buffer malloc failed: %s\n"),
-            strerror(errno));
-        fclose(scrfp);
-        return 0;
-    }
-
-    for (; ;)
-    {
-        script_test_userabort();
-        if(scr_aborted)
-        {
-           break;
-        }
-        /* Read a complete line from the SCRIPT file */
-
-        if (!fgets(scrbuf, scrbufsize, scrfp)) break;
-
-        /* Remove trailing whitespace */
-
-        for (scrlen = strlen(scrbuf); scrlen && isspace(scrbuf[scrlen-1]); scrlen--);
-        scrbuf[scrlen] = 0;
-
-        /* Remove any # comments on the line before processing */
-
-        if ((p = strchr(scrbuf,'#')) && p > scrbuf)
-            do *p = 0; while (isspace(*--p) && p >= scrbuf);
-
-        if (strncasecmp(scrbuf,"pause",5) == 0)
-        {
-            sscanf(scrbuf+5, "%d", &scr_pause_amt);
-
-            if (scr_pause_amt < 0 || scr_pause_amt > 999)
-            {
-                logmsg(_("HHCPN010W Ignoring invalid SCRIPT file pause "
-                         "statement: %s\n"),
-                         scrbuf+5);
-                continue;
-            }
-
-            logmsg (_("HHCPN011I Pausing SCRIPT file processing for %d "
-                      "seconds...\n"),
-                      scr_pause_amt);
-            SLEEP(scr_pause_amt);
-            logmsg (_("HHCPN012I Resuming SCRIPT file processing...\n"));
-
-            continue;
-        }
-
-        /* Process the command */
-
-        for (p = scrbuf; isspace(*p); p++);
-
-        panel_command(p);
-        script_test_userabort();
-        if(scr_aborted)
-        {
-           break;
-        }
-    }
-
-    if (feof(scrfp))
-        logmsg (_("HHCPN013I EOF reached on SCRIPT file. Processing complete.\n"));
-    else
-    {
-        if(!scr_aborted)
-        {
-           logmsg (_("HHCPN014E I/O error reading SCRIPT file: %s\n"),
-                 strerror(errno));
-        }
-        else
-        {
-           logmsg (_("HHCPN999I Script \"%s\" aborted due to previous conditions\n"),
-               script_name);
-           scr_uaborted=1;
-        }
-    }
-
-    fclose(scrfp);
-    scr_recursion--;    /* Decrement recursion count */
-    if(scr_recursion==0)
-    {
-      scr_aborted=0;    /* reset abort flag */
-      scr_tid=0;    /* reset script thread id */
-    }
-
-    return 0;
-}
-/* END PATCH ISW20030220 */
 
 ///////////////////////////////////////////////////////////////////////
 /* archmode command - set architecture mode */
@@ -7244,1112 +7029,225 @@ int herc_cmd(int argc, char *argv[], char *cmdline)
   return 0;
 }
 #endif // OPTION_CMDTGT
-///////////////////////////////////////////////////////////////////////
-// Handle externally defined commands...
-
-// (for use in CMDTAB COMMAND entry further below)
-#define      EXT_CMD(xxx_cmd)  call_ ## xxx_cmd
-
-// (for defining routing function immediately below)
-#define CALL_EXT_CMD(xxx_cmd)  \
-int call_ ## xxx_cmd ( int argc, char *argv[], char *cmdline )  { \
-    return   xxx_cmd (     argc,       argv,         cmdline ); }
-
-// Externally defined commands routing functions...
-
-CALL_EXT_CMD ( ptt_cmd    )
-CALL_EXT_CMD ( cache_cmd  )
-CALL_EXT_CMD ( shared_cmd )
 
 ///////////////////////////////////////////////////////////////////////
-// Layout of command routing table...
+/* PATCH ISW20030220 - Script command support */
 
-typedef int CMDFUNC(int argc, char *argv[], char *cmdline);
+static int scr_recursion=0;     /* Recursion count (set to 0) */
+static int scr_aborted=0;          /* Script abort flag */
+static int scr_uaborted=0;          /* Script user abort flag */
+TID scr_tid=0;
 
-typedef struct _CMDTAB
+int scr_recursion_level() { return scr_recursion; }
+
+///////////////////////////////////////////////////////////////////////
+
+int cscript_cmd(int argc, char *argv[], char *cmdline)
 {
-    const char* pszCommand;     /* statement        */
-          int   type;           /* statement type */
-#define DIS     0x00            /* disabled statement */
-#define CFG     0x01            /* config statement */
-#define CMD     0x02            /* command statement */
-    const size_t cmdAbbrev;      /* Min abbreviation */
-    CMDFUNC*    pfnCommand;     /* handler function */
-    const char* pszCmdDesc;     /* description      */
-}
-CMDTAB;
-
-#define COMMAND(cmd,_type,func,desc)  { cmd, (_type), 0, func, desc },
-#define COMMANDA(cmd,_type,abbrev,func,desc)  { cmd, (_type), abbrev, func, desc },
-
-///////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-// Define all panel commands here...
-
-int  ListAllCommands (int argc, char *argv[], char *cmdline);  /*(forward reference)*/
-int  HelpCommand     (int argc, char *argv[], char *cmdline);  /*(forward reference)*/
-
-CMDTAB Commands[];  // Forward reference
-/* $zapcmd - internal debug - may cause havoc - use with caution */
-int zapcmd_cmd(int argc, char *argv[], char *cmdline)
-{
-CMDTAB* cmdtab;
-int i;
-
-    UNREFERENCED(cmdline);
-
-    if (argc > 1)
-    {
-        for (cmdtab = Commands; cmdtab->pfnCommand; cmdtab++)
-        {
-            if(!strcasecmp(argv[1], cmdtab->pszCommand))
-            {
-                if(argc > 2)
-                    for(i = 2; i < argc; i++)
-                    {
-                        if(!strcasecmp(argv[i],"Cfg"))
-                            cmdtab->type |= CFG;
-                        else
-                        if(!strcasecmp(argv[i],"NoCfg"))
-                            cmdtab->type &= ~CFG;
-                        else
-                        if(!strcasecmp(argv[i],"Cmd"))
-                            cmdtab->type |= CMD;
-                        else
-                        if(!strcasecmp(argv[i],"NoCmd"))
-                            cmdtab->type &= ~CMD;
-                        else
-                        {
-                            logmsg(_("Invalid arg: %s: %s %s [(No)Cfg|(No)Cmd]\n"),argv[i],argv[0],argv[1]);
-                            return -1;
-                        }
-                    }
-                else
-                    logmsg(_("%s: %s(%sCfg,%sCmd)\n"),argv[0],cmdtab->pszCommand,
-                      (cmdtab->type&CFG)?"":"No",(cmdtab->type&CMD)?"":"No");
-                return 0;
-            }
-        }
-        logmsg(_("%s: %s not in command table\n"),argv[0],argv[1]);
-        return -1;
-    }
-    else
-        logmsg(_("Usage: %s <command> [(No)Cfg|(No)Cmd]\n"),argv[0]);
-    return -1;
-}
-
-CMDTAB Commands[] =
-{
-/*        command    type   function        one-line description...
-        (max 9 chars)
-*/
-// COMMAND ("sample"  CMD|CFG, sample_cmd,  "help text" )   
-
-COMMAND ( "?",       CMD,   ListAllCommands, "list all commands" )
-COMMAND ( "help",    CMD,   HelpCommand,   "command specific help\n" )
-
-COMMAND ( "*",       CMD|CFG, comment_cmd,   NULL )   // "(log comment to syslog)"
-COMMAND ( "#",       CMD|CFG, comment_cmd,   NULL )   // "(log comment to syslog)"
-
-COMMANDA( "message", CMD, 1,msg_cmd,       "display message on console a la VM" )
-COMMANDA( "msg",     CMD, 1,msg_cmd,       "same as message"         )
-COMMAND ( "msgnoh",  CMD,   msgnoh_cmd,    "same as message - no header\n" )
-
-COMMAND ( "hst",     CMD,   History,       "history of commands" )
-#if defined(OPTION_HAO)
-COMMAND ( "hao",     CMD,   hao_cmd,       "Hercules Automatic Operator" )
-#endif /* defined(OPTION_HAO) */
-COMMAND ( "log",     CMD,   log_cmd,       "direct log output" )
-COMMAND ( "logopt",  CMD|CFG, logopt_cmd,  "change log options" )
-COMMAND ( "version", CMD,   version_cmd,   "display version information\n" )
-
-COMMAND ( "quit",    CMD,   quit_cmd,      "terminate the emulator" )
-COMMAND ( "exit",    CMD,   quit_cmd,      "(synonym for 'quit')\n" )
-
-COMMAND ( "cpu",     CMD,   cpu_cmd,       "define target cpu for panel display and commands\n" )
-
-COMMAND ( "start",   CMD,   start_cmd,     "start CPU (or printer device if argument given)" )
-COMMAND ( "stop",    CMD,   stop_cmd,      "stop CPU (or printer device if argument given)\n" )
-
-COMMAND ( "startall",CMD,   startall_cmd,  "start all CPU's" )
-COMMAND ( "stopall", CMD,   stopall_cmd,   "stop all CPU's\n" )
-
-#ifdef _FEATURE_CPU_RECONFIG
-COMMAND ( "cf",      CMD,   cf_cmd,        "configure current CPU online or offline" )
-COMMAND ( "cfall",   CMD,   cfall_cmd,     "configure all CPU's online or offline\n" )
-#endif
-
-#ifdef _FEATURE_SYSTEM_CONSOLE
-COMMAND ( ".reply",  CMD,   g_cmd,         "scp command" )
-COMMAND ( "!message",CMD,   g_cmd,         "scp priority messsage" )
-COMMAND ( "ssd",     CMD,   ssd_cmd,       "Signal Shutdown\n" )
-#endif
-
-#ifdef OPTION_PTTRACE
-COMMAND ( "ptt",     CMD|CFG, EXT_CMD(ptt_cmd),"display pthread trace\n" )
-#endif
-
-COMMAND ( "i",       CMD,   i_cmd,         "generate I/O attention interrupt for device" )
-COMMAND ( "ext",     CMD,   ext_cmd,       "generate external interrupt" )
-COMMAND ( "restart", CMD,   restart_cmd,   "generate restart interrupt" )
-COMMAND ( "archmode",CMD|CFG, archmode_cmd,"set architecture mode" )
-COMMAND ( "loadparm",CMD|CFG, loadparm_cmd,"set IPL parameter\n" )
-
-COMMAND ( "lparname",CFG,  lparname_cmd,    "set LPAR name\n" )
-
-#if defined(OPTION_SET_STSI_INFO)
-COMMAND ( "model",   CFG,  stsi_model_cmd,  "Set STSI model code" )
-COMMAND ( "plant",   CFG,  stsi_plant_cmd,  "Set STSI plant code" )
-COMMAND ( "manufacturer",CFG,stsi_mfct_cmd, "Set STSI manufacturer code\n")
-#endif /* defined(OPTION_SET_STSI_INFO) */
-
-COMMAND ( "pgmprdos",CFG,   pgmprdos_cmd,  "set LPP license setting\n" )
-
-COMMAND ( "codepage",CFG,   codepage_cmd,  "set codepage conversion table\n" )
-
-COMMAND ( "diag8cmd",CFG,   diag8_cmd,     "Set diag8 command option\n" )
-COMMAND ( "shcmdopt",CFG,   shcmdopt_cmd,  "Set diag8 sh option\n" )  // This should never be a command!!! *JJ
-
-COMMAND ( "legacysenseid",CFG,lsid_cmd,    "set legacysenseid setting\n" )
-
-COMMAND ( "ipl",     CMD,   ipl_cmd,       "IPL Normal from device xxxx" )
-COMMAND ( "iplc",    CMD,   iplc_cmd,      "IPL Clear from device xxxx" )
-COMMAND ( "sysreset",CMD,   sysr_cmd,      "Issue SYSTEM Reset manual operation" )
-COMMAND ( "sysclear",CMD,   sysc_cmd,      "Issue SYSTEM Clear Reset manual operation" )
-COMMAND ( "store",   CMD,   store_cmd,     "store CPU status at absolute zero\n" )
-
-COMMAND ( "sclproot",CFG,   sclproot_cmd,  "set SCLP base directory\n" )
-
-#if defined(OPTION_HTTP_SERVER)
-COMMAND ( "httproot",CFG,    httproot_cmd, "Set HTTP server root directory" )  
-COMMAND ( "httpport",CFG,    httpport_cmd, "Set HTTP server port\n" )   
-#if defined( HTTP_SERVER_CONNECT_KLUDGE )
-COMMAND ( "HTTP_SERVER_CONNECT_KLUDGE", CFG, httpskm_cmd, "HTTP_SERVER_CONNECT_KLUDGE" )
-#endif // defined( HTTP_SERVER_CONNECT_KLUDGE )
-#endif /*defined(OPTION_HTTP_SERVER)*/
-
-COMMAND ( "psw",     CMD,   psw_cmd,       "display or alter program status word" )
-COMMAND ( "gpr",     CMD,   gpr_cmd,       "display or alter general purpose registers" )
-COMMAND ( "fpr",     CMD,   fpr_cmd,       "display floating point registers" )
-COMMAND ( "fpc",     CMD,   fpc_cmd,       "display floating point control register" )
-COMMAND ( "cr",      CMD,   cr_cmd,        "display or alter control registers" )
-COMMAND ( "ar",      CMD,   ar_cmd,        "display access registers" )
-COMMAND ( "pr",      CMD,   pr_cmd,        "display prefix register" )
-COMMAND ( "timerint",CMD|CFG, timerint_cmd,"display or set timers update interval" )
-COMMAND ( "clocks",  CMD,   clocks_cmd,    "display tod clkc and cpu timer" )
-COMMAND ( "ipending",CMD,   ipending_cmd,  "display pending interrupts" )
-COMMAND ( "ds",      CMD,   ds_cmd,        "display subchannel" )
-COMMAND ( "r",       CMD,   r_cmd,         "display or alter real storage" )
-COMMAND ( "v",       CMD,   v_cmd,         "display or alter virtual storage" )
-COMMAND ( "u",       CMD,   u_cmd,         "disassemble storage" )
-COMMAND ( "devtmax", CMD,   devtmax_cmd,   "display or set max device threads" )
-COMMAND ( "k",       CMD,   k_cmd,         "display cckd internal trace\n" )
-
-COMMAND ( "attach",  CMD,   attach_cmd,    "configure device" )
-COMMAND ( "detach",  CMD,   detach_cmd,    "remove device" )
-COMMAND ( "define",  CMD,   define_cmd,    "rename device" )
-COMMAND ( "devinit", CMD,   devinit_cmd,   "reinitialize device" )
-COMMAND ( "devlist", CMD,   devlist_cmd,   "list device or all devices\n" )
-COMMAND ( "qd",      CMD,   qd_cmd,        "query dasd\n" )
-
-#if defined( OPTION_TAPE_AUTOMOUNT )
-COMMAND ( "automount",CMD,  automount_cmd, "show/update allowable tape automount directories\n" )
-#endif /* OPTION_TAPE_AUTOMOUNT */
-#if defined( OPTION_SCSI_TAPE )
-COMMAND ( "scsimount",CMD,  scsimount_cmd, "automatic SCSI tape mounts\n" )
-#endif /* defined( OPTION_SCSI_TAPE ) */
-
-COMMAND ( "cd",      CMD,   cd_cmd,        "change directory" )
-COMMAND ( "pwd",     CMD,   pwd_cmd,       "print working directory" )
-COMMAND ( "sh",      CMD,   sh_cmd,        "shell command\n" )
-
-COMMAND ( "cache",   CMD,EXT_CMD(cache_cmd), "cache command" )
-COMMAND ( "cckd",    CMD|CFG,cckd_cmd,       "cckd command" )
-COMMAND ( "shrd",    CMD,EXT_CMD(shared_cmd),"shrd command" )
-COMMAND ( "conkpalv",CMD,   conkpalv_cmd,    "display/alter console TCP keep-alive settings" )
-COMMAND ( "quiet",   CMD,   quiet_cmd,       "toggle automatic refresh of panel display data\n" )
-
-COMMAND ( "t",       CMD,   trace_cmd,     "instruction trace" )
-COMMAND ( "t+",      CMD,   trace_cmd,     "instruction trace on" )
-COMMAND ( "t-",      CMD,   trace_cmd,     "instruction trace off" )
-COMMAND ( "t?",      CMD,   trace_cmd,     "instruction trace query" )
-COMMAND ( "s",       CMD,   trace_cmd,     "instruction stepping" )
-COMMAND ( "s+",      CMD,   trace_cmd,     "instruction stepping on" )
-COMMAND ( "s-",      CMD,   trace_cmd,     "instruction stepping off" )
-COMMAND ( "s?",      CMD,   trace_cmd,     "instruction stepping query" )
-COMMAND ( "b",       CMD,   trace_cmd,     "set breakpoint" )
-COMMAND ( "b+",      CMD,   trace_cmd,     "set breakpoint" )
-COMMAND ( "b-",      CMD,   trace_cmd,     "delete breakpoint" )
-COMMAND ( "g",       CMD,   g_cmd,         "turn off instruction stepping and start CPU\n" )
-
-COMMAND ( "ostailor",CMD|CFG, ostailor_cmd,"trace program interrupts" )
-COMMAND ( "pgmtrace",CMD,   pgmtrace_cmd,  "trace program interrupts" )
-COMMAND ( "savecore",CMD,   savecore_cmd,  "save a core image to file" )
-COMMAND ( "loadcore",CMD,   loadcore_cmd,  "load a core image file" )
-COMMAND ( "loadtext",CMD,   loadtext_cmd,  "load a text deck file\n" )
-
-#if defined(OPTION_DYNAMIC_LOAD)
-COMMAND ( "modpath", CFG,   modpath_cmd,   "set module load path" )
-COMMAND ( "ldmod",   CFG|CMD,ldmod_cmd,    "load a module" )
-COMMAND ( "rmmod",   CMD,   rmmod_cmd,     "delete a module" )
-COMMAND ( "lsmod",   CMD,   lsmod_cmd,     "list dynamic modules" )
-COMMAND ( "lsdep",   CMD,   lsdep_cmd,     "list module dependencies\n" )
-#endif /*defined(OPTION_DYNAMIC_LOAD)*/
-
-#ifdef OPTION_IODELAY_KLUDGE
-COMMAND ( "iodelay", CMD|CFG, iodelay_cmd,   "display or set I/O delay value" )
-#endif
-COMMAND ( "ctc",     CMD,   ctc_cmd,       "enable/disable CTC debugging" )
-#if defined(OPTION_W32_CTCI)
-COMMAND ( "tt32",    CMD,   tt32_cmd,      "control/query CTCI-W32 functionality" )
-#endif
-COMMAND ( "toddrag", CMD|CFG, toddrag_cmd, "display or set TOD clock drag factor" )
-#ifdef PANEL_REFRESH_RATE
-COMMAND ( "panrate", CMD|CFG, panrate_cmd, "display or set rate at which console refreshes" )
-#endif
-COMMAND ( "pantitle",CFG,   pantitle_cmd, "display or set console title" )
-#ifdef OPTION_MSGHLD
-COMMAND ( "msghld",  CMD,   msghld_cmd, "display or set the timeout of held messages")
-#endif
-COMMAND ( "syncio",  CMD,   syncio_cmd,    "display syncio devices statistics" )
-#if defined(OPTION_INSTRUCTION_COUNTING)
-COMMAND ( "icount",  CMD,   icount_cmd,    "display individual instruction counts" )
-#endif
-#ifdef OPTION_MIPS_COUNTING
-COMMAND ( "maxrates",CMD,   maxrates_cmd,  "display maximum observed MIPS/SIOS rate for the\n               defined interval or define a new reporting interval\n" )
-#endif // OPTION_MIPS_COUNTING
-
-#if defined(_FEATURE_ASN_AND_LX_REUSE)
-COMMAND ( "asn_and_lx_reuse", CFG, alrf_cmd, "Enable/Disable ASN and LX reuse facility" )
-COMMAND ( "alrf"            , CFG, alrf_cmd, "Alias for asn_and_lx_reuse\n"             )
-#endif /* defined(_FEATURE_ASN_AND_LX_REUSE) */
-
-#if defined(FISH_HANG)
-COMMAND ( "FishHangReport", CMD, FishHangReport_cmd, "(DEBUG) display thread/lock/event objects\n" )
-#endif
-#if defined(OPTION_CONFIG_SYMBOLS)
-COMMAND ( "defsym",  CMD,   defsym_cmd,    "Define symbol" )
-#endif
-COMMAND ( "script",  CMD,   script_cmd,    "Run a sequence of panel commands contained in a file" )
-COMMAND ( "cscript", CMD,   cscript_cmd,   "Cancels a running script thread\n" )
-#if defined(FEATURE_ECPSVM)
-COMMAND ( "evm",     CMD,   evm_cmd_1,     "ECPS:VM Commands (Deprecated)" )
-COMMAND ( "ecpsvm",  CMD,   evm_cmd,       "ECPS:VM Commands\n" )
-#endif
-
-COMMAND ( "aea",     CMD,   aea_cmd,       "Display AEA tables" )
-COMMAND ( "aia",     CMD,   aia_cmd,       "Display AIA fields" )
-COMMAND ( "tlb",     CMD,   tlb_cmd,       "Display TLB tables\n" )
-
-#if defined(SIE_DEBUG_PERFMON)
-COMMAND ( "spm",     CMD,   spm_cmd,       "SIE performance monitor\n" )
-#endif
-#if defined(OPTION_COUNTING)
-COMMAND ( "count",   CMD,   count_cmd,     "Display/clear overall instruction count\n" )
-#endif
-COMMAND ( "sizeof",  CMD,   sizeof_cmd,    "Display size of structures\n" )
-
-COMMAND ( "suspend", CMD,   suspend_cmd,   "Suspend hercules" )
-COMMAND ( "resume",  CMD,   resume_cmd,    "Resume hercules\n" )
-
-COMMAND ( "herclogo",CMD,   herclogo_cmd,  "Read a new hercules logo file\n" )
-
-COMMAND ( "traceopt",CFG|CMD,traceopt_cmd, "Instruction trace display options\n" )
-COMMAND ( "symptom", CFG,    traceopt_cmd, "Alias for traceopt\n" )
-
-COMMAND ( "$zapcmd", CFG,   zapcmd_cmd,     NULL )     // enable/disable commands and config statements
-COMMAND ( "$test",   DIS,   test_cmd,       NULL )     // enable in config with: $zapcmd $test cmd
-
-#ifdef OPTION_CMDTGT
-COMMAND ( "cmdtgt",  CMD,   cmdtgt_cmd,    "Specify the command target" )
-COMMAND ( "herc",    CMD,   herc_cmd,      "Hercules command")
-COMMAND ( "scp",     CMD,   scp_cmd,       "Send scp command")
-COMMAND ( "pscp",    CMD,   prioscp_cmd,   "Send prio message scp command\n")
-#endif // OPTION_CMDTGT
-
-    // The actual command table ends here (NULL command address)
-    // Help continues with the list non-standard formatted commands...
-
-    /* sf commands - shadow file add/remove/set/compress/display */
-
-COMMAND ( "sf+dev",  CMD,     NULL,        "add shadow file")
-COMMAND ( "sf-dev",  CMD,     NULL,        "delete shadow file")
-COMMAND ( "sfc",     CMD,     NULL,        "compress shadow files")
-COMMAND ( "sfk",     CMD,     NULL,        "check shadow files")
-COMMAND ( "sfd",     CMD,     NULL,        "display shadow file stats\n")
-
-    /* x+ and x- commands - turn switches on or off */
-
-COMMAND ( "t{+/-}dev", CMD,   NULL,        "turn CCW tracing on/off")
-COMMAND ( "s{+/-}dev", CMD,   NULL,        "turn CCW stepping on/off\n")
-#ifdef OPTION_CKD_KEY_TRACING
-COMMAND ( "t{+/-}CKD", CMD,   NULL,        "turn CKD_KEY tracing on/off\n")
-#endif
-COMMAND ( "f{+/-}adr", CMD,   NULL,        "mark frames unusable/usable\n")
-
-COMMAND ( NULL, 0, NULL, NULL )         /* (end of table) */
-};
-
-#if !defined(MAX)
-#define MAX(_x,_y) ( ( ( _x ) > ( _y ) ) ? ( _x ) : ( _y ) )
-#endif
-
-int ProcessConfigCommand (int argc, char **argv, char *cmdline)
-{
-CMDTAB* cmdtab;
-
-    if (argc)
-        for (cmdtab = Commands; cmdtab->pfnCommand; cmdtab++)
-            if(cmdtab->type & CFG)
-                if(!strcasecmp(argv[0], cmdtab->pszCommand))
-                    return cmdtab->pfnCommand(argc, argv, cmdline);
-
-    return -1;
-}
-
-
-///////////////////////////////////////////////////////////////////////
-// Main panel command processing function...
-
-int    cmd_argc;
-char*  cmd_argv[MAX_ARGS];
-
-int ProcessPanelCommand (char* pszCmdLine)
-{
-    CMDTAB*  pCmdTab         = NULL;
-    char*    pszSaveCmdLine  = NULL;
-    char*    cl              = NULL;
-    int      rc              = -1;
-    int      cmdl;
-
-    if (!pszCmdLine || !*pszCmdLine)
-    {
-        /* [enter key] by itself: start the CPU
-           (ignore if not instruction stepping) */
-        if (sysblk.inststep)
-            rc = start_cmd(0,NULL,NULL);
-        goto ProcessPanelCommandExit;
-    }
-
-#if defined(OPTION_CONFIG_SYMBOLS)
-    /* Perform variable substitution */
-    /* First, set some 'dynamic' symbols to their own values */
-    set_symbol("CUU","$(CUU)");
-    set_symbol("cuu","$(cuu)");
-    set_symbol("CCUU","$(CCUU)");
-    set_symbol("ccuu","$(ccuu)");
-    cl=resolve_symbol_string(pszCmdLine);
-#else
-    cl=pszCmdLine;
-#endif
-
-    /* Save unmodified copy of the command line in case
-       its format is unusual and needs customized parsing. */
-    pszSaveCmdLine = strdup(cl);
-
-    /* Parse the command line into its individual arguments...
-       Note: original command line now sprinkled with nulls */
-    parse_args (cl, MAX_ARGS, cmd_argv, &cmd_argc);
-
-    /* If no command was entered (i.e. they entered just a comment
-       (e.g. "# comment")) then ignore their input */
-    if ( !cmd_argv[0] )
-        goto ProcessPanelCommandExit;
-
-#if defined(OPTION_DYNAMIC_LOAD)
-    if(system_command)
-        if((rc = system_command(cmd_argc, (char**)cmd_argv, pszSaveCmdLine)))
-            goto ProcessPanelCommandExit;
-#endif
-
-    /* Route standard formatted commands from our routing table... */
-    if (cmd_argc)
-        for (pCmdTab = Commands; pCmdTab->pfnCommand; pCmdTab++)
-        {
-            if(pCmdTab->type & CMD)
-            {
-                if (!pCmdTab->cmdAbbrev)
-                {
-                    if(!strcasecmp(cmd_argv[0], pCmdTab->pszCommand))
-                    {
-                        rc = pCmdTab->pfnCommand(cmd_argc, (char**)cmd_argv, pszSaveCmdLine);
-                        goto ProcessPanelCommandExit;
-                    }
-                }
-                else
-                {
-                    cmdl=MAX(strlen(cmd_argv[0]),pCmdTab->cmdAbbrev);
-                    if(!strncasecmp(cmd_argv[0],pCmdTab->pszCommand,cmdl))
-                    {
-                        rc = pCmdTab->pfnCommand(cmd_argc, (char**)cmd_argv, pszSaveCmdLine);
-                        goto ProcessPanelCommandExit;
-                    }
-                }
-            }
-        }
-
-    /* Route non-standard formatted commands... */
-
-    /* sf commands - shadow file add/remove/set/compress/display */
-    if (0
-        || !strncasecmp(pszSaveCmdLine,"sf+",3)
-        || !strncasecmp(pszSaveCmdLine,"sf-",3)
-        || !strncasecmp(pszSaveCmdLine,"sfc",3)
-        || !strncasecmp(pszSaveCmdLine,"sfd",3)
-        || !strncasecmp(pszSaveCmdLine,"sfk",3)
-    )
-    {
-        rc = ShadowFile_cmd(cmd_argc,(char**)cmd_argv,pszSaveCmdLine);
-        goto ProcessPanelCommandExit;
-    }
-
-    /* x+ and x- commands - turn switches on or off */
-    if ('+' == pszSaveCmdLine[1] || '-' == pszSaveCmdLine[1])
-    {
-        rc = OnOffCommand(cmd_argc,(char**)cmd_argv,pszSaveCmdLine);
-        goto ProcessPanelCommandExit;
-    }
-
-    /* Error: unknown/unsupported command... */
-    ASSERT( cmd_argv[0] );
-
-    logmsg( _("HHCPN139E Command \"%s\" not found; enter '?' for list.\n"),
-              cmd_argv[0] );
-
-ProcessPanelCommandExit:
-
-    /* Free our saved copy */
-    free(pszSaveCmdLine);
-
-#if defined(OPTION_CONFIG_SYMBOLS)
-    if (cl != pszCmdLine)
-        free(cl);
-#endif
-
-    return rc;
-}
-
-///////////////////////////////////////////////////////////////////////
-/* ? command - list all commands */
-
-int ListAllCommands(int argc, char *argv[], char *cmdline)
-{
-    CMDTAB* pCmdTab;
-
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
     UNREFERENCED(argv);
-
-    logmsg( _("HHCPN140I Valid panel commands are...\n\n") );
-    logmsg( "  %-9.9s    %s \n", "Command", "Description..." );
-    logmsg( "  %-9.9s    %s \n", "-------", "-----------------------------------------------" );
-
-    /* List standard formatted commands from our routing table... */
-
-    for (pCmdTab = Commands; pCmdTab->pszCommand; pCmdTab++)
+    if(scr_tid!=0)
     {
-        if ( (pCmdTab->type & CMD) && (pCmdTab->pszCmdDesc))
-            logmsg( _("  %-9.9s    %s \n"), pCmdTab->pszCommand, pCmdTab->pszCmdDesc );
+        scr_uaborted=1;
     }
-
-
     return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-// Layout of command help table...
 
-typedef struct _HELPTAB
+int script_cmd(int argc, char *argv[], char *cmdline)
 {
-    const char* pszCommand;     /* command          */
-    const char* pszCmdHelp;     /* help text        */
-}
-HELPTAB;
 
-#define CMDHELP(cmd,help)  { cmd, help },
-
-///////////////////////////////////////////////////////////////////////
-// Define all help text here...
-
-HELPTAB HelpTab[] =
-{
-/*        command         additional help text...
-        (max 9 chars)
-*/
-CMDHELP ( "*",         "The '*' comment command simply provides a convenient means\n"
-                       "of entering comments into the console log without otherwise\n"
-                       "doing anything. It is not processed in any way other than to\n"
-                       "simply echo it to the console.\n"
-                       )
-
-CMDHELP ( "help",      "Enter \"help cmd\" where cmd is the command you need help\n"
-                       "with. If the command has additional help text defined for it,\n"
-                       "it will be displayed. Help text is usually limited to explaining\n"
-                       "the format of the command and its various required or optional\n"
-                       "parameters and is not meant to replace reading the documentation.\n"
-                       )
-
-CMDHELP ( "quiet",     "'quiet' either disables automatic screen refreshing if it is\n"
-                       "currently enabled or enables it if it is currently disabled.\n"
-                       "When disabled you will no be able to see the response of any\n"
-                       "entered commands nor any messages issued by the system nor be\n"
-                       "able to scroll the display, etc. Basically all screen updating\n"
-                       "is disabled. Entering 'quiet' again re-enables screen updating.\n"
-                       )
-
-CMDHELP ( "ctc",       "Format:  \"ctc  debug  { on | off }  [ <devnum> | ALL ]\".\n\n"
-
-                       "Enables/disables debug packet tracing for the specified CTCI/LCS\n"
-                       "device group(s) identified by <devnum> or for all CTCI/LCS device\n"
-                       "groups if <devnum> is not specified or specified as 'ALL'.\n"
-                       )
-
-#if defined( OPTION_W32_CTCI )
-CMDHELP ( "tt32",      "Format:  \"tt32   debug | nodebug | stats <devnum>\".\n\n"
-
-                       "Enables or disables global CTCI-W32 debug tracing\n"
-                       "or displays TunTap32 stats for the specified CTC device.\n"
-                       )
-#endif /* defined( OPTION_W32_CTCI ) */
-
-#if defined( OPTION_TAPE_AUTOMOUNT )
-
-CMDHELP ( "automount", "Format:  \"automount  { add <dir> | del <dir> | list }\".\n\n"
-
-                       "Adds or deletes entries from the list of allowable/unallowable tape\n"
-                       "automount directories, or lists all currently defined list entries,\n"
-                       "if any.\n"
-                       "\n"
-                       "The format of the <dir> directory operand for add/del operations is\n"
-                       "identical to that as described in the documentation for the AUTOMOUNT\n"
-                       "configuration file statement (i.e. prefix with '+' or '-' as needed).\n"
-                       "\n"
-                       "The automount feature is approriately enabled or disabled for all tape\n"
-                       "devices as needed depending on the updated empty/non-empty list state.\n"
-                       )
-#endif /* OPTION_TAPE_AUTOMOUNT */
-
-#if defined( OPTION_SCSI_TAPE )
-CMDHELP ( "scsimount", "Format:    \"scsimount  [ no | yes | 0-99 ]\".\n\n"
-
-                       "Displays or modifies the automatic SCSI tape mounts option.\n\n"
-
-                       "When entered without any operands, it displays the current interval\n"
-                       "and any pending tape mount requests. Entering 'no' (or 0 seconds)\n"
-                       "disables automount detection.\n\n"
-
-                       "Entering a value between 1-99 seconds (or 'yes') enables the option\n"
-                       "and specifies how often to query SCSI tape drives to automatically\n"
-                       "detect when a tape has been mounted (upon which an unsolicited\n"
-                       "device-attention interrupt will be presented to the guest operating\n"
-                       "system). 'yes' is equivalent to specifying a 5 second interval.\n"
-                       )
-#endif /* defined( OPTION_SCSI_TAPE ) */
-
-CMDHELP ( "hst",       "Format: \"hst | hst n | hst l\". Command \"hst l\" or \"hst 0\" displays\n"
-                       "list of last ten commands entered from command line\n"
-                       "hst n, where n is a positive number retrieves n-th command from list\n"
-                       "hst n, where n is a negative number retrieves n-th last command\n"
-                       "hst without an argument works exactly as hst -1, it retrieves last command\n"
-                       )
-#if defined(OPTION_HAO)
-// Hercules Automatic Operator
-CMDHELP ( "hao",       "Format: \"hao  tgt <tgt> | cmd <cmd> | list <n> | del <n> | clear \".\n"
-                       "  hao tgt <tgt> : define target rule (regex pattern) to react on\n"
-                       "  hao cmd <cmd> : define command for previously defined rule\n"
-                       "  hao list <n>  : list all rules/commands or only at index <n>\n"
-                       "  hao del <n>   : delete the rule at index <n>\n"
-                       "  hao clear     : delete all rules (stops automatic operator)\n"
-                       )
-#endif /* defined(OPTION_HAO) */
-
-CMDHELP ( "cpu",       "Format: \"cpu hh\" where 'hh' is the hexadecimal cpu address of the cpu\n"
-                       "in your multiprocessor configuration which you wish all panel commands\n"
-                       "to apply to. For example, entering 'cpu 1F' followed by \"gpr\" will\n"
-                       "display the general purpose registers for cpu 31 of your configuration.\n"
-                       )
-
-CMDHELP ( "cf",        "Configure current CPU online or offline:  Format->  \"cf [on|off]\"\n"
-                       "Where the 'current' CPU is defined as whatever CPU was defined as\n"
-                       "the panel command target cpu via the \"cpu\" panel command. (Refer\n"
-                       "to the 'cpu' command for further information) Entering 'cf' by itself\n"
-                       "simply displays the current online/offline status of the current cpu.\n"
-                       "Otherwise the current cpu is configured online or offline as specified.\n"
-                       "Use 'cfall' to configure/display all CPUs online/offline state.\n"
-                       )
-
-CMDHELP ( "start",     "Entering the 'start' command by itself simply starts a stopped\n"
-                       "CPU, whereas 'start <devn>' presses the virtual start button on\n"
-                       "printer device <devn>.\n"
-                       )
-
-#if defined(OPTION_IPLPARM)
-CMDHELP ( "ipl",       "Format: \"ipl nnnn [parm xxxxxxxxxxxxxx]\"\n"
-                       "Performs the Initial Program Load manual control function. The operand 'nnnn'\n"
-                       "can either be a device address or the name of a .ins file to be loaded.\n"
-                       "An optional 'parm' keyword followed by a string can also be passed to the IPL\n"
-                       "command processor. The string will be loaded into the low-order 32 bits of the\n"
-                       "general purpose registers (4 characters per register for up to 64 bytes).\n"
-                       "The PARM option behaves similarly to the VM IPL command.\n"
-                       )
-#else
-CMDHELP ( "ipl",       "Format: \"ipl nnnn\"\n"
-                       "Performs the Initial Program Load manual control function. The operand 'nnnn'\n"
-                       "can either be a device address or the name of a .ins file to be loaded.\n"
-                       )
-#endif
-CMDHELP ( "iplc",      "Performs the Load Clear manual control function. See \"ipl\".\n")
-
-CMDHELP ( "sysreset",  "Performs the System Reset manual control function. A CPU and I/O\n"
-                       "subsystem reset are performed.\n")
-
-CMDHELP ( "sysclear",  "Performs the System Reset Clear manual control function. Same as\n"
-                       "the \"sysreset\" command but also clears main storage to 0. Also, registers\n"
-                       "control registers, etc.. are reset to their initial value. At this\n"
-                       "point, the system is essentially in the same state as it was just after\n"
-                       "having been started\n")
-
-
-CMDHELP ( "stop",      "Entering the 'stop' command by itself simply stops a running\n"
-                       "CPU, whereas 'stop <devn>' presses the virtual stop button on\n"
-                       "printer device <devn>, usually causing an INTREQ.\n"
-                       )
-
-#ifdef _FEATURE_SYSTEM_CONSOLE
-CMDHELP ( ".reply",    "To reply to a system control program (i.e. guest operating system)\n"
-                       "message that gets issued to the hercules console, prefix the reply\n"
-                       "with a period.\n"
-                       )
-
-CMDHELP ( "!message",  "To enter a system control program (i.e. guest operating system)\n"
-                       "priority command on the hercules console, simply prefix the command\n"
-                       "with an exclamation point '!'.\n"
-                       )
-
-CMDHELP ( "ssd",       "The SSD (signal shutdown) command signals an imminent hypervisor shutdown to\n"
-                       "the guest.  Guests who support this are supposed to perform a shutdown upon\n"
-                       "receiving this request.\n"
-                       "An implicit ssd command is given on a hercules \"quit\" command if the guest\n"
-                       "supports ssd.  In that case hercules shutdown will be delayed until the guest\n"
-                       "has shutdown or a 2nd quit command is given.\n"
-                       )
-#endif
-
-CMDHELP ( "psw",       "Format: \"psw [operand ...]\" where 'operand ...' is one or more optional\n"
-                       "parameters which modify the contents of the Program Status Word.\n"
-                       "sm=xx modifies the PSW system mask (xx is 2 hex digits)\n"
-                       "pk=n modifies the PSW protection key (n is decimal 0 to 15)\n"
-                       "cmwp=x modifies the EC/M/W/P bits of the PSW (x is one hex digit)\n"
-                       "as=pri|sec|ar|home modifies the PSW address-space control bits\n"
-                       "cc=n modifies the PSW condition code (n is decimal 0 to 3)\n"
-                       "pm=x modifies the PSW program mask (x is one hex digit)\n"
-                       "ia=xxx modifies the PSW instruction address (xxx is 1 to 16 hex digits)\n"
-                       "as=24|31|64 modifies the addressing mode bits of the PSW\n"
-                       "Enter \"psw\" by itself to display the current PSW without altering it.\n"
-                       )
-
-CMDHELP ( "gpr",       "Format: \"gpr [nn=xxxxxxxxxxxxxxxx]\" where 'nn' is the optional register\n"
-                       "number (0 to 15) and 'xxxxxxxxxxxxxxxx' is the register value in hexadecimal\n"
-                       "(1-8 hex digits for 32-bit registers or 1-16 hex digits for 64-bit registers).\n"
-                       "Enter \"gpr\" by itself to display the register values without altering them.\n"
-                       )
-CMDHELP ( "cr",        "Format: \"cr [nn=xxxxxxxxxxxxxxxx]\" where 'nn' is the optional control register\n"
-                       "number (0 to 15) and 'xxxxxxxxxxxxxxxx' is the control register value in hex\n"
-                       "(1-8 hex digits for 32-bit registers or 1-16 hex digits for 64-bit registers).\n"
-                       "Enter \"cr\" by itself to display the control registers without altering them.\n"
-                       )
-CMDHELP ( "r",         "Format: \"r addr[.len]\" or \"r addr-addr\" to display real\n"
-                       "storage, or \"r addr=value\" to alter real storage, where 'value'\n"
-                       "is a hex string of up to 32 pairs of digits.\n"
-                       )
-CMDHELP ( "v",         "Format: \"v [P|S|H] addr[.len]\" or \"v [P|S|H] addr-addr\" to display virtual\n"
-                       "storage, or \"v [P|S|H] addr=value\" to alter virtual storage, where 'value'\n"
-                       "is a hex string of up to 32 pairs of digits. The optional 'P' or 'S' or 'H'\n"
-                       "will force Primary, Secondary, or Home translation instead of current PSW mode.\n"
-                       )
-
-CMDHELP ( "attach",    "Format: \"attach devn type [arg...]\n"
-                       )
-
-CMDHELP ( "define",    "Format: \"define olddevn newdevn\"\n"
-                       )
-
-CMDHELP ( "devinit",   "Format: \"devinit devn [arg...]\"\n"
-                       "If no arguments are given then the same arguments are used\n"
-                       "as were used the last time the device was created/initialized.\n"
-                       )
-
-CMDHELP ( "sh",        "Format: \"sh command [args...]\" where 'command' is any valid shell\n"
-                       "command. The entered command and any arguments are passed as-is to the\n"
-                       "shell for processing and the results are displayed on the console.\n"
-                       )
-
-CMDHELP ( "b",         "Format: \"b addr\" or \"b addr-addr\" where 'addr' is the instruction\n"
-                       "address or range of addresses where you wish to halt execution. This\n"
-                       "command is synonymous with the \"s+\" command.\n"
-                       )
-
-CMDHELP ( "b-",        "Format: \"b-\"  This command is the same as \"s-\"\n"
-                       )
-
-CMDHELP ( "s",         "Format: \"s addr-addr\" or \"s addr:addr\" or \"s addr.length\"\n"
-                       "sets the instruction stepping and instruction breaking range,\n"
-                       "(which is totally separate from the instruction tracing range).\n"
-                       "With or without a range, the s command displays whether instruction\n"
-                       "stepping is on or off and the range if any.\n"
-                       "The s command by itself does not activate instruction stepping.\n"
-                       "Use the s+ command to activate instruction stepping.\n"
-                       "\"s 0\" eliminates the range (all addresses will be stepped).\n"
-                       )
-
-CMDHELP ( "s?",        "Format: \"s?\" displays whether instruction stepping is on or off\n"
-                       "and the range if any.\n"
-                       )
-
-CMDHELP ( "s+",        "Format: \"s+\" turns on instruction stepping. A range can be specified\n"
-                       "as for the \"s\" command, otherwise the existing range is used. If there\n"
-                       "is no range (or range was specified as 0) then the range includes all\n"
-                       "addresses. When an instruction within the range is about to be executed,\n"
-                       "the CPU is temporarily stopped and the next instruction is displayed.\n"
-                       "You may then examine registers and/or storage, etc, before pressing Enter\n"
-                       "to execute the instruction and stop at the next instruction. To turn\n"
-                       "off instruction stepping and continue execution, enter the \"g\" command.\n"
-                       )
-
-CMDHELP ( "s-",        "Format: \"s-\" turns off instruction stepping.\n"
-                       )
-
-CMDHELP ( "t",         "Format: \"t addr-addr\" or \"t addr:addr\" or \"t addr.length\"\n"
-                       "sets the instruction tracing range (which is totally separate from\n"
-                       "the instruction stepping and breaking range).\n"
-                       "With or without a range, the t command displays whether instruction\n"
-                       "tracing is on or off and the range if any.\n"
-                       "The t command by itself does not activate instruction tracing.\n"
-                       "Use the t+ command to activate instruction tracing.\n"
-                       "\"t 0\" eliminates the range (all addresses will be traced).\n"
-                       )
-
-CMDHELP ( "t?",        "Format: \"t?\" displays whether instruction tracing is on or off\n"
-                       "and the range if any.\n"
-                       )
-
-CMDHELP ( "t+",        "Format: \"t+\" turns on instruction tracing. A range can be specified\n"
-                       "as for the \"t\" command, otherwise the existing range is used. If there\n"
-                       "is no range (or range was specified as 0) then all instructions will be\n"
-                       "traced.\n"
-                       )
-
-CMDHELP ( "t-",        "Format: \"t-\" turns off instruction tracing.\n"
-                       )
-
-CMDHELP ( "pgmtrace",  "Format: \"pgmtrace [-]intcode\" where 'intcode' is any valid program\n"
-                       "interruption code in the range 0x01 to 0x40. Precede the interrupt code\n"
-                       "with a '-' to stop tracing of that particular program interruption.\n"
-                       )
-
-CMDHELP ( "ostailor",  "Format: \"ostailor quiet | os/390 | z/os | vm | vse | linux | null\". Specifies\n"
-                       "the intended operating system. The effect is to reduce control panel message\n"
-                       "traffic by selectively suppressing program check trace messages which are\n"
-                       "considered normal in the specified environment. 'quiet' suppresses all\n"
-                       "exception messages, whereas 'null' suppresses none of them. The other options\n"
-                       "suppress some messages and not others depending on the specified o/s. Prefix\n"
-                       "values with '+' to combine them with existing values or '-' to exclude them.\n"
-                       "SEE ALSO the 'pgmtrace' command which allows you to further fine tune\n"
-                       "the tracing of program interrupt exceptions.\n"
-                       )
-
-CMDHELP ( "savecore",  "Format: \"savecore filename [{start|*}] [{end|*}]\" where 'start' and 'end'\n"
-                       "define the starting and ending addresss of the range of real storage to be\n"
-                       "saved to file 'filename'.  '*' for either the start address or end address\n"
-                       "(the default) means: \"the first/last byte of the first/last modified page\n"
-                       "as determined by the storage-key 'changed' bit\".\n"
-                       )
-CMDHELP ( "loadcore",  "Format: \"loadcore filename [address]\" where 'address' is the storage address\n"
-                       "of where to begin loading memory. The file 'filename' is presumed to be a pure\n"
-                       "binary image file previously created via the 'savecore' command. The default for\n"
-                       "'address' is 0 (begining of storage).\n"
-                       )
-CMDHELP ( "loadtext",  "Format: \"loadtext filename [address]\". This command is essentially identical\n"
-                       "to the 'loadcore' command except that it loads a text deck file with \"TXT\"\n"
-                       "and \"END\" 80 byte records (i.e. an object deck).\n"
-                       )
-
-#ifdef PANEL_REFRESH_RATE
-CMDHELP ( "panrate",   "Format: \"panrate [nnn | fast | slow]\". Sets or displays the panel refresh rate.\n"
-                       "panrate nnn sets the refresh rate to nnn milliseconds.\n"
-                       "panrate fast sets the refresh rate to " MSTRING(PANEL_REFRESH_RATE_FAST) " milliseconds.\n"
-                       "panrate slow sets the refresh rate to " MSTRING(PANEL_REFRESH_RATE_SLOW) " milliseconds.\n"
-                       "If no operand is specified, panrate displays the current refresh rate.\n"
-                       )
-#endif
-
-#ifdef OPTION_MSGHLD
-CMDHELP ( "msghld",    "Format: \"msghld [value | info | clear]\".\n"
-                       "  value: timeout value of held message in seconds\n"
-                       "  info:  displays the timeout value\n"
-                       "  clear: releases the held messages\n"
-                       )
-#endif
-
-#if defined(OPTION_CONFIG_SYMBOLS)
-CMDHELP ( "defsym",    "Format: \"defsym symbol [value]\". Defines symbol 'symbol' to contain value 'value'.\n"
-                       "The symbol can then be the object of a substitution for later panel commands.\n"
-                       "If 'value' contains blanks or spaces, then it should be enclosed within double\n"
-                       "quotation marks (""). For more detailed information regarding symbol substitution\n"
-                       "refer to the 'DEFSYM' configuration file statement in Hercules documentation.\n"
-                       )
-#endif
-
-CMDHELP ( "script",    "Format: \"script filename [...filename...]\". Sequentially executes the commands contained\n"
-                       "within the file -filename-. The script file may also contain \"script\" commands,\n"
-                       "but the system ensures that no more than 10 levels of script are invoked at any\n"
-                       "one time (to avoid a recursion loop)\n"
-                       )
-
-CMDHELP ( "cscript",   "Format: \"cscript\". This command will cancel the currently running script.\n"
-                       "if no script is running, no action is taken\n"
-                       )
-
-CMDHELP ( "archmode",  "Format: \"archmode [S/370 | ESA/390 | z/Arch | ESAME]\". Entering the command\n"
-                       "without any argument simply displays the current architecture mode. Entering\n"
-                       "the command with an argument sets the architecture mode to the specified value.\n"
-                       "Note: \"ESAME\" (Enterprise System Architecture, Modal Extensions) is simply a\n"
-                       "synonym for \"z/Arch\". (they are identical to each other and mean the same thing)\n"
-                       )
-
-#if defined(FEATURE_ECPSVM)
-CMDHELP ( "ecpsvm",   "Format: \"ecpsvm\". This command invokes ECPS:VM Subcommands.\n"
-                       "Type \"ecpsvm help\" to see a list of available commands\n"
-                       )
-CMDHELP ( "evm",      "Format: \"evm\". This command is deprecated.\n"
-                       "use \"ecpsvm\" instead\n"
-                       )
-#endif
-
-CMDHELP ( "herclogo",  "Format: \"herclogo [<filename>]\". Load a new logo file for 3270 terminal sessions\n"
-                       "If no filename is specified, the built-in logo is used instead\n"
-                       )
-
-CMDHELP ( "traceopt",  "Format: \"traceopt [regsfirst | noregs | traditional]\". Determines how the\n"
-                       "registers are displayed during instruction tracing and stepping. Entering\n"
-                       "the command without any argument simply displays the current mode.\n"
-                       )
-
-CMDHELP ( "sfk",       "Format: \"sfk{*|xxxx} [n]\". Performs a chkdsk on the active shadow file\n"
-                       "where xxxx is the device number (*=all cckd devices)\n"
-                       "and n is the optional check level (default is 2):\n"
-                       " -1 devhdr, cdevhdr, l1 table\n"
-                       " 0 devhdr, cdevhdr, l1 table, l2 tables\n"
-                       " 1 devhdr, cdevhdr, l1 table, l2 tables, free spaces\n"
-                       " 2 devhdr, cdevhdr, l1 table, l2 tables, free spaces, trkhdrs\n"
-                       " 3 devhdr, cdevhdr, l1 table, l2 tables, free spaces, trkimgs\n"
-                       " 4 devhdr, cdevhdr. Build everything else from recovery\n"
-                       "You probably don't want to use `4' unless you have a backup and are\n"
-                       "prepared to wait a long time.\n"
-                       )
-
-CMDHELP ( "logopt",    "Format: \"logopt [timestamp | notimestamp]\".   Sets logging options.\n"
-                       "\"timestamp\" inserts a time stamp in front of each log message.\n"
-                       "\"notimestamp\" displays log messages with no time stamps.  Entering\n"
-                       "the command with no arguments displays current logging options.\n"
-                       "\"timestamp\" and \"notimestamp\" may be abbreviated as \"time\"\n"
-                       "and \"notime\" respectively.\n"
-                       )
-
-CMDHELP ( "conkpalv",  "Format: \"conkpalv (idle,intv,count)\" where 'idle', 'intv' and 'count' are the\n"
-                       "new values for the TCP keep-alive settings for console connections:\n"
-                       "- send probe when connection goes idle for 'idle' seconds\n"
-                       "- wait maximum of 'intv' seconds for a response to probe\n"
-                       "- disconnect after 'count' consecutive failed probes\n"
-                       "The format must be exactly as shown, with each value separated from the next by\n"
-                       "a single comma, no intervening spaces between them, surrounded by parenthesis.\n"
-                       "The command \"conkpalv\" without any operand displays the current values.\n"
-                       )
-
-#if defined(FISH_HANG)
-CMDHELP ( "FishHangReport", "When built with --enable-fthreads --enable-fishhang, a detailed record of\n"
-                       "every thread, lock and event that is created is maintained for debugging purposes.\n"
-                       "If a lock is accessed before it has been initialized or if a thread exits while\n"
-                       "still holding a lock, etc (including deadlock situations), the FishHang logic will\n"
-                       "detect and report it. If you suspect one of hercules's threads is hung waiting for\n"
-                       "a condition to be signalled for example, entering \"FishHangReport\" will display\n"
-                       "the internal list of thread, locks and events to possibly help you determine where\n"
-                       "it's hanging and what event (condition) it's hung on.\n"
-                       )
-#endif
-
-#ifdef OPTION_MIPS_COUNTING
-CMDHELP ( "maxrates",  "Format: \"maxrates [nnnn]\" where 'nnnn' is the desired reporting\n"
-                       " interval in minutes. Acceptable values are from 1 to 1440. The default\n"
-                       " is 1440 minutes (one day). Entering \"maxrates\" by itself displays\n"
-                       " the current highest rates observed during the defined intervals.\n"
-                       )
-#endif // OPTION_MIPS_COUNTING
-
-#ifdef OPTION_CMDTGT
-CMDHELP ( "cmdtgt",    "Format: \"cmdtgt [herc | scp | pscp | ?]\". Specify the command target.\n")
-CMDHELP ( "herc",      "Format: \"herc [cmd]\". Send hercules cmd in any cmdtgt mode.\n")
-CMDHELP ( "scp",       "Format: \"scp [cmd]\". Send scp cmd in any cmdtgt mode.\n")
-CMDHELP ( "pscp",      "Format: \"pscp [cmd]\". Send priority message cmd to scp in any cmdtgt mode.\n")
-#endif // OPTION_CMDTGT
-
-CMDHELP ( NULL, NULL )         /* (end of table) */
-};
-
-///////////////////////////////////////////////////////////////////////
-/* help command - display additional help for a given command */
-
-int HelpCommand(int argc, char *argv[], char *cmdline)
-{
-    HELPTAB* pHelpTab;
+    int i;
 
     UNREFERENCED(cmdline);
-
-    if (argc < 2)
+    if(argc<2)
     {
-        logmsg( _("HHCPN141E Missing argument\n") );
+        logmsg(_("HHCPN996E The script command requires a filename\n"));
+        return 1;
+    }
+    if(scr_tid==0)
+    {
+        scr_tid=thread_id();
+        scr_aborted=0;
+        scr_uaborted=0;
+    }
+    else
+    {
+        if(scr_tid!=thread_id())
+        {
+            logmsg(_("HHCPN997E Only 1 script may be invoked from the panel at any time\n"));
+            return 1;
+        }
+    }
+
+    for(i=1;i<argc;i++)
+    {
+        process_script_file(argv[i],0);
+    }
+    return(0);
+}
+
+///////////////////////////////////////////////////////////////////////
+
+void script_test_userabort()
+{
+        if(scr_uaborted)
+        {
+           logmsg(_("HHCPN998E Script aborted : user cancel request\n"));
+           scr_aborted=1;
+        }
+}
+
+///////////////////////////////////////////////////////////////////////
+
+int process_script_file(char *script_name,int isrcfile)
+{
+FILE   *scrfp;                          /* RC file pointer           */
+size_t  scrbufsize = 1024;              /* Size of RC file  buffer   */
+char   *scrbuf = NULL;                  /* RC file input buffer      */
+int     scrlen;                         /* length of RC file record  */
+int     scr_pause_amt = 0;              /* seconds to pause RC file  */
+char   *p;                              /* (work)                    */
+char    pathname[MAX_PATH];             /* (work)                    */
+
+    /* Check the recursion level - if it exceeds a certain amount
+       abort the script stack
+    */
+    if(scr_recursion>=10)
+    {
+        logmsg(_("HHCPN998E Script aborted : Script recursion level exceeded\n"));
+        scr_aborted=1;
+        return 0;
+    }
+
+    /* Open RC file */
+
+    hostpath(pathname, script_name, sizeof(pathname));
+
+    if (!(scrfp = fopen(pathname, "r")))
+    {
+        int save_errno = errno;
+
+        if (!isrcfile)
+        {
+            if (ENOENT != errno)
+                logmsg(_("HHCPN007E Script file \"%s\" open failed: %s\n"),
+                    script_name, strerror(errno));
+            else
+                logmsg(_("HHCPN995E Script file \"%s\" not found\n"),
+                    script_name);
+        }
+        else /* (this IS the .rc file...) */
+        {
+            if (ENOENT != errno)
+                logmsg(_("HHCPN007E Script file \"%s\" open failed: %s\n"),
+                    script_name, strerror(errno));
+        }
+
+        errno = save_errno;
         return -1;
     }
 
-    for (pHelpTab = HelpTab; pHelpTab->pszCommand; pHelpTab++)
+    scr_recursion++;
+
+    if(isrcfile)
     {
-        if (!strcasecmp(pHelpTab->pszCommand,argv[1]))
+        logmsg(_("HHCPN008I Script file processing started using file \"%s\"\n"),
+           script_name);
+    }
+
+    /* Obtain storage for the SCRIPT file buffer */
+
+    if (!(scrbuf = malloc (scrbufsize)))
+    {
+        logmsg(_("HHCPN009E Script file buffer malloc failed: %s\n"),
+            strerror(errno));
+        fclose(scrfp);
+        return 0;
+    }
+
+    for (; ;)
+    {
+        script_test_userabort();
+        if(scr_aborted)
         {
-            logmsg( _("%s"),pHelpTab->pszCmdHelp );
-            return 0;
+           break;
+        }
+        /* Read a complete line from the SCRIPT file */
+
+        if (!fgets(scrbuf, scrbufsize, scrfp)) break;
+
+        /* Remove trailing whitespace */
+
+        for (scrlen = strlen(scrbuf); scrlen && isspace(scrbuf[scrlen-1]); scrlen--);
+        scrbuf[scrlen] = 0;
+
+        /* Remove any # comments on the line before processing */
+
+        if ((p = strchr(scrbuf,'#')) && p > scrbuf)
+            do *p = 0; while (isspace(*--p) && p >= scrbuf);
+
+        if (strncasecmp(scrbuf,"pause",5) == 0)
+        {
+            sscanf(scrbuf+5, "%d", &scr_pause_amt);
+
+            if (scr_pause_amt < 0 || scr_pause_amt > 999)
+            {
+                logmsg(_("HHCPN010W Ignoring invalid SCRIPT file pause "
+                         "statement: %s\n"),
+                         scrbuf+5);
+                continue;
+            }
+
+            logmsg (_("HHCPN011I Pausing SCRIPT file processing for %d "
+                      "seconds...\n"),
+                      scr_pause_amt);
+            SLEEP(scr_pause_amt);
+            logmsg (_("HHCPN012I Resuming SCRIPT file processing...\n"));
+
+            continue;
+        }
+
+        /* Process the command */
+
+        for (p = scrbuf; isspace(*p); p++);
+
+        panel_command(p);
+        script_test_userabort();
+        if(scr_aborted)
+        {
+           break;
         }
     }
 
-    logmsg( _("HHCPN142I No additional help available.\n") );
-    return -1;
-}
-
-///////////////////////////////////////////////////////////////////////
-
-#if defined(OPTION_DYNAMIC_LOAD)
-DLL_EXPORT void *panel_command_r (void *cmdline)
-#else
-void *panel_command (void *cmdline)
-#endif
-{
-#define MAX_CMD_LEN (32768)
-    char  cmd[MAX_CMD_LEN];             /* Copy of panel command     */
-    char *pCmdLine;
-    unsigned i;
-    int noredisp;
-
-    pCmdLine = cmdline; ASSERT(pCmdLine);
-    /* every command will be stored in history list */
-    /* except null commands and script commands */
-    if (*pCmdLine != 0 && scr_recursion == 0)
-        history_add(cmdline);
-
-    /* Copy panel command to work area, skipping leading blanks */
-
-    /* If the command starts with a -, then strip it and indicate
-     * we do not want command redisplay
-     */
-
-    noredisp=0;
-    while (*pCmdLine && isspace(*pCmdLine)) pCmdLine++;
-    i = 0;
-    while (*pCmdLine && i < (MAX_CMD_LEN-1))
+    if (feof(scrfp))
+        logmsg (_("HHCPN013I EOF reached on SCRIPT file. Processing complete.\n"));
+    else
     {
-        if(i==0 && *pCmdLine=='-')
+        if(!scr_aborted)
         {
-            noredisp=1;
-            /* and remove blanks again.. */
-            while (*pCmdLine && isspace(*pCmdLine)) pCmdLine++;
-        }
-        else
-        {
-            cmd[i] = *pCmdLine;
-            i++;
-        }
-        pCmdLine++;
-    }
-    cmd[i] = 0;
-
-    /* Ignore null commands (just pressing enter)
-       unless instruction stepping is enabled or
-       commands are being sent to the SCP by default. */
-    if (!sysblk.inststep && (sysblk.cmdtgt == 0) && (0 == cmd[0]))
-        return NULL;
-
-    /* Echo the command to the control panel */
-    if(!noredisp)
-    {
-        logmsg( "%s\n", cmd);
-    }
-
-#ifdef OPTION_CMDTGT
-    /* check for cmdtgt, herc, scp or pscp command */
-    if(!strncasecmp(cmd, "cmdtgt ",7) || !strncasecmp(cmd, "herc ", 5) ||
-       !strncasecmp(cmd, "scp ", 4) || !strncasecmp(cmd, "pscp ", 5))
-    {
-      ProcessPanelCommand(cmd);
-      return NULL;
-    }
-
-    /* Send command to the selected command target */
-    switch(sysblk.cmdtgt)
-    {
-      case 0: // cmdtgt herc
-      {
-        /* Stay compatible */
-#ifdef _FEATURE_SYSTEM_CONSOLE
-        if(cmd[0] == '.' || cmd[0] == '!')
-        {
-          if(!cmd[1])
-          {
-            cmd[1] = ' ';
-            cmd[2] = 0;
-          }
-          scp_command(cmd + 1, cmd[0] == '!');
+           logmsg (_("HHCPN014E I/O error reading SCRIPT file: %s\n"),
+                 strerror(errno));
         }
         else
-#endif /*_FEATURE_SYSTEM_CONSOLE*/
-          ProcessPanelCommand(cmd);
-        break;
-      }
-      case 1: // cmdtgt scp
-      {
-        if(!cmd[0])
         {
-          cmd[0] = ' ';
-          cmd[1] = 0;
+           logmsg (_("HHCPN999I Script \"%s\" aborted due to previous conditions\n"),
+               script_name);
+           scr_uaborted=1;
         }
-        scp_command(cmd, 0);
-        break;
-      }
-      case 2: // cmdtgt pscp
-      {
-        if(!cmd[0])
-        {
-          cmd[0] = ' ';
-          cmd[1] = 0;
-        }
-        scp_command(cmd, 1);
-        break;
-      }
     }
-#elif // OPTION_CMDTGT
-#ifdef _FEATURE_SYSTEM_CONSOLE
-    if ('.' == cmd[0] || '!' == cmd[0])
+
+    fclose(scrfp);
+    scr_recursion--;    /* Decrement recursion count */
+    if(scr_recursion==0)
     {
-        if (!cmd[1]) { cmd[1]=' '; cmd[2]=0; }
-        scp_command (cmd+1, cmd[0] == '!');
-        return NULL;
+      scr_aborted=0;    /* reset abort flag */
+      scr_tid=0;    /* reset script thread id */
     }
-#endif /*_FEATURE_SYSTEM_CONSOLE*/
 
-    ProcessPanelCommand(cmd);
-#endif // OPTION_CMDTGT
-
-    return NULL;
+    return 0;
 }
+/* END PATCH ISW20030220 */
 
-///////////////////////////////////////////////////////////////////////

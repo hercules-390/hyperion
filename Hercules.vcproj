@@ -739,6 +739,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\cmdtab.c"
+							>
+						</File>
+						<File
 							RelativePath=".\hscmisc.c"
 							>
 						</File>
@@ -976,6 +980,10 @@
 						</File>
 						<File
 							RelativePath=".\getopt.h"
+							>
+						</File>
+						<File
+							RelativePath=".\cmdtab.h"
 							>
 						</File>
 						<File
