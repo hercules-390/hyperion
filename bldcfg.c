@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.128  2009/01/18 22:27:27  jj
+// Allow both automount config syntax and automount command syntax
+//
 // Revision 1.127  2009/01/18 22:07:43  jj
 // Rework defsym config statement
 //
@@ -912,6 +915,7 @@ int     devprio;                        /* Device thread priority    */
 DEVBLK *dev;                            /* -> Device Block           */
 char   *sdevnum;                        /* -> Device number string   */
 char   *sdevtype;                       /* -> Device type string     */
+int     devtmax;                        /* Max number device threads */
 #if defined(_FEATURE_ECPSVM)
 int     ecpsvmavail;                    /* ECPS:VM Available flag    */
 int     ecpsvmlevel;                    /* ECPS:VM declared level    */
@@ -985,7 +989,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     todprio  = DEFAULT_TOD_PRIO;
     cpuprio  = DEFAULT_CPU_PRIO;
     devprio  = DEFAULT_DEV_PRIO;
-    sysblk.devtmax  = MAX_DEVICE_THREADS;
+    devtmax  = MAX_DEVICE_THREADS;
     sysblk.kaidle = KEEPALIVE_IDLE_TIME;
     sysblk.kaintv = KEEPALIVE_PROBE_INTERVAL;
     sysblk.kacnt  = KEEPALIVE_PROBE_COUNT;
@@ -1875,12 +1879,13 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         sysblk.arch_mode,               // (for calling execute_ccw_chain)
         &sysblk.devprio,                // (ptr to device thread priority)
         MAX_DEVICE_THREAD_IDLE_SECS,    // (maximum device thread wait time)
-        sysblk.devtmax                  // (maximum #of device threads allowed)
+        devtmax                         // (maximum #of device threads allowed)
     );
 #else // !defined(OPTION_FISHIO)
     initialize_lock (&sysblk.ioqlock);
     initialize_condition (&sysblk.ioqcond);
     /* Set max number device threads */
+    sysblk.devtmax = devtmax;
     sysblk.devtwait = sysblk.devtnbr =
     sysblk.devthwm  = sysblk.devtunavail = 0;
 #endif // defined(OPTION_FISHIO)
