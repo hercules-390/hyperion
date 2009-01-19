@@ -10,6 +10,9 @@
 #
 #                           CHANGE HISTORY
 # $Log$
+# Revision 1.7  2008/12/29 11:03:11  jj
+# Move HMC disk I/O functions to scedasd.c
+#
 # Revision 1.6  2008/12/01 20:28:21  rbowler
 # Add new module losc.c in build process
 #
@@ -93,6 +96,7 @@ hengine_OBJ = \
     $(O)channel.obj  \
     $(O)chsc.obj     \
     $(O)clock.obj    \
+    $(O)cmdtab.obj   \
     $(O)cmpsc.obj    \
     $(O)config.obj   \
     $(O)control.obj  \
