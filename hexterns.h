@@ -10,6 +10,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.28  2009/01/16 09:49:10  jj
+// Disable the quiet command in dyngui
+//
 // Revision 1.27  2009/01/07 16:36:55  bernard
 // hldmsg command
 //
@@ -99,6 +102,16 @@
 #endif  /* _HENGINE_DLL_ */
 #else
 #define HCMD_DLL_IMPORT DLL_EXPORT
+#endif
+
+#ifndef _CMDTAB_C_
+#ifndef _HENGINE_DLL_
+#define CMDT_DLL_IMPORT DLL_IMPORT
+#else   /* _HENGINE_DLL_ */
+#define CMDT_DLL_IMPORT extern
+#endif  /* _HENGINE_DLL_ */
+#else
+#define CMDT_DLL_IMPORT DLL_EXPORT
 #endif
 
 #ifndef _HAO_C_
@@ -272,7 +285,9 @@ HAO_DLL_IMPORT void hao_message(char *message); /* process message */
 /* Functions in module hsccmd.c (so PTT debugging patches can access them) */
 HCMD_DLL_IMPORT int aia_cmd     (int argc, char *argv[], char *cmdline);
 HCMD_DLL_IMPORT int stopall_cmd (int argc, char *argv[], char *cmdline);
-HCMD_DLL_IMPORT int ProcessConfigCommand (int argc, char **argv, char *cmdline);
+
+/* Functions in module cmdtab.c */
+CMDT_DLL_IMPORT int ProcessConfigCommand (int argc, char **argv, char *cmdline);
 
 /* Functions in losc.c */
 void losc_set (int license_status);
@@ -281,7 +296,7 @@ void losc_check(char *ostype);
 #if defined(OPTION_DYNAMIC_LOAD)
 
 HHDL_DLL_IMPORT char *(*hdl_device_type_equates) (const char *);
-HCMD_DLL_IMPORT void *(panel_command_r)          (void *cmdline);
+CMDT_DLL_IMPORT void *(panel_command_r)          (void *cmdline);
 HPAN_DLL_IMPORT void  (panel_display_r)          (void);
 
 HSYS_DLL_IMPORT int   (*config_command) (int argc, char *argv[], char *cmdline);

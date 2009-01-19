@@ -7,6 +7,9 @@
 // $Id$
 
 // $Log$
+// Revision 1.2  2009/01/18 21:43:59  jj
+// Always display short help info, detailed info only if available
+//
 // Revision 1.1  2009/01/18 20:49:25  jj
 // Rework command table and move to separate source files
 //
@@ -20,6 +23,22 @@
 #include "hercules.h"
 #include "history.h"
 
+
+// Handle externally defined commands...
+
+// (for use in CMDTAB COMMAND entry further below)
+#define      EXT_CMD(xxx_cmd)  call_ ## xxx_cmd
+
+// (for defining routing function immediately below)
+#define CALL_EXT_CMD(xxx_cmd)  \
+int call_ ## xxx_cmd ( int argc, char *argv[], char *cmdline )  { \
+    return   xxx_cmd (     argc,       argv,         cmdline ); }
+
+// Externally defined commands routing functions...
+
+CALL_EXT_CMD ( ptt_cmd    )
+CALL_EXT_CMD ( cache_cmd  )
+CALL_EXT_CMD ( shared_cmd )
 
 // Create forward references for all commands in the command table 
 #define _FW_REF
@@ -113,6 +132,7 @@ int i;
 #define MAX(_x,_y) ( ( ( _x ) > ( _y ) ) ? ( _x ) : ( _y ) )
 #endif
 
+CMDT_DLL_IMPORT
 int ProcessConfigCommand (int argc, char **argv, char *cmdline)
 {
 CMDTAB* cmdent;

@@ -4,9 +4,9 @@
 /*              Defines all Hercules Configuration statements        */
 /*              and panel commands                                   */
 
-// $id$
+// $Id$
 
-// $log$
+// $Log$
 
 
 //          command    type          function      one-line description...
@@ -129,7 +129,7 @@ COMMAND ( "ssd",       PANEL,        ssd_cmd,
 #endif
 
 #ifdef OPTION_PTTRACE
-COMMAND ( "ptt",       PANEL+CONFIG, ptt_cmd,      "display pthread trace\n", NULL )
+COMMAND ( "ptt",       PANEL+CONFIG, EXT_CMD(ptt_cmd), "display pthread trace\n", NULL )
 #endif
 
 COMMAND ( "i",         PANEL,        i_cmd,        "generate I/O attention interrupt for device", NULL )
@@ -337,11 +337,11 @@ COMMAND ( "sh",        PANEL,        sh_cmd,
     "command. The entered command and any arguments are passed as-is to the\n"
     "shell for processing and the results are displayed on the console.\n" )
 
-COMMAND ( "cache",     PANEL,        cache_cmd, "cache command", NULL )
+COMMAND ( "cache",     PANEL,        EXT_CMD(cache_cmd), "cache command", NULL )
 
 COMMAND ( "cckd",      PANEL+CONFIG, cckd_cmd,       "cckd command", NULL )
 
-COMMAND ( "shrd",      PANEL,        shared_cmd,"shrd command", NULL )
+COMMAND ( "shrd",      PANEL,        EXT_CMD(shared_cmd), "shrd command", NULL )
 
 COMMAND ( "conkpalv",  PANEL+CONFIG, conkpalv_cmd, 
   "Display/alter console TCP keep-alive settings",
