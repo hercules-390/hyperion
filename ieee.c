@@ -2,7 +2,7 @@
  * Hercules System/370, ESA/390, z/Architecture emulator
  * ieee.c
  * Binary (IEEE) Floating Point Instructions
- * Copyright (c) 2001-2007 Willem Konynenberg <wfk@xos.nl>
+ * Copyright (c) 2001-2009 Willem Konynenberg <wfk@xos.nl>
  * TCEB, TCDB and TCXB contributed by Per Jessen, 20 September 2001.
  * THDER,THDR by Roger Bowler, 19 July 2003.
  * Additional instructions by Roger Bowler, November 2004:
@@ -61,6 +61,9 @@
  */
 
 // $Log$
+// Revision 1.84  2008/04/18 12:13:59  rbowler
+// Fix incorrect results from THDER,THDR instructions
+//
 // Revision 1.83  2008/04/16 19:57:55  rbowler
 // Fix condition code in LCEBR,LCDBR,LCXBR instructions
 //

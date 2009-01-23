@@ -1,4 +1,4 @@
-/* SIE.C        (c) Copyright Jan Jaeger, 1999-2007                  */
+/* SIE.C        (c) Copyright Jan Jaeger, 1999-2009                  */
 /*              Interpretive Execution                               */
 
 /*      This module contains the SIE instruction as                  */
@@ -13,6 +13,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.109  2008/08/21 18:34:48  fish
+// Fix i/o-interrupt-queue race condition
+//
 // Revision 1.108  2008/04/10 10:28:03  bernard
 // Allign instruction executing to real instructions (12 unrolled instead of 8)
 //

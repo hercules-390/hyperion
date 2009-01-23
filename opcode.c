@@ -1,13 +1,16 @@
-/* OPCODE.C     (c) Copyright Jan Jaeger, 2000-2007                  */
+/* OPCODE.C     (c) Copyright Jan Jaeger, 2000-2009                  */
 /*              Instruction decoding functions                       */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
 
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 
 // $Id$
 //
 // $Log$
+// Revision 1.156  2009/01/16 22:26:55  rbowler
+// Opcode definitions for CPU measurement facility
+//
 // Revision 1.155  2009/01/14 18:41:34  bernard
 // add David Bond comments
 //

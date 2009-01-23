@@ -1,4 +1,4 @@
-/* PANEL.C      (c) Copyright Roger Bowler, 1999-2007                */
+/* PANEL.C      (c) Copyright Roger Bowler, 1999-2009                */
 /*              ESA/390 Control Panel Commands                       */
 
 // $Id$
@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.256  2009/01/18 08:38:33  bernard
+// Cosmatic PSW adjustment in command panel
+//
 // Revision 1.255  2009/01/10 00:18:34  jmaynard
 // Allow a bare ENTER in cmdtgt scp or cmdtgt pscp mode to send a blank command
 // to the SCP.

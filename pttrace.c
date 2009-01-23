@@ -1,4 +1,4 @@
-/* PTTRACE.C   (c) Copyright Greg Smith, 2003-2007                   */
+/* PTTRACE.C   (c) Copyright Greg Smith, 2003-2009                   */
 /*       pthreads trace debugger                                     */
 
 // $Id$
@@ -8,6 +8,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.31  2008/11/24 22:31:49  rbowler
+// Fix win64 warning C4312 type cast conversion in pttrace.c
+//
 // Revision 1.30  2007/06/23 00:04:15  ivan
 // Update copyright notices to include current year (2007)
 //

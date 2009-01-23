@@ -1,4 +1,4 @@
-/* LOADPARM.C   (c) Copyright Jan Jaeger, 2004-2007                  */
+/* LOADPARM.C   (c) Copyright Jan Jaeger, 2004-2009                  */
 /*              SCLP / MSSF loadparm                                 */
 
 // $Id$
@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.13  2008/12/30 15:40:01  rbowler
+// Allow $(LPARNAME) in herclogo file
+//
 // Revision 1.12  2007/06/23 00:04:14  ivan
 // Update copyright notices to include current year (2007)
 //

@@ -1,9 +1,12 @@
-/* IEEE-SOL.H   (c) Copyright Jeff Savit, 2007-2008                  */
+/* IEEE-SOL.H   (c) Copyright Jeff Savit, 2007-2009                  */
 /*              Hercules IEEE floating point definitions for Solaris */
 
 // $Id$
 //
 // $Log$
+// Revision 1.1  2008/02/07 00:29:04  rbowler
+// Solaris build support by Jeff Savit
+//
 
 #ifndef _IEEE_SOL_H
 #define _IEEE_SOL_H

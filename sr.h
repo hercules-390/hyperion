@@ -1,4 +1,4 @@
-/* SR.H         (c)Copyright Greg Smith, 2004-2007                   */
+/* SR.H         (c)Copyright Greg Smith, 2004-2009                   */
 /*              Suspend/Resume a Hercules session                    */
 
 // $Id$
@@ -128,6 +128,9 @@
  */
 
 // $Log$
+// Revision 1.15  2007/06/23 00:04:16  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.14  2006/12/08 09:43:30  jj
 // Add CVS message log
 //

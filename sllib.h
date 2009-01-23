@@ -1,6 +1,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.10  2007/06/23 00:04:15  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.9  2006/12/08 09:43:30  jj
 // Add CVS message log
 //
@@ -23,7 +26,7 @@
 /*
 || ----------------------------------------------------------------------------
 ||
-|| SLLIB.H      (c) Copyright Leland Lucius, 2000-2007
+|| SLLIB.H      (c) Copyright Leland Lucius, 2000-2009
 ||              Released under terms of the Q Public License.
 ||
 || Header for Standard Label library.

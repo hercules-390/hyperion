@@ -1,9 +1,12 @@
-/* SHARED.C     (c)Copyright Greg Smith, 2002-2007                   */
+/* SHARED.C     (c)Copyright Greg Smith, 2002-2009                   */
 /*              Shared Device Server                                 */
 
 // $Id$
 //
 // $Log$
+// Revision 1.40  2008/11/04 05:56:31  fish
+// Put ensure consistent create_thread ATTR usage change back in
+//
 // Revision 1.39  2008/11/03 15:31:53  rbowler
 // Back out consistent create_thread ATTR modification
 //

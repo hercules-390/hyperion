@@ -1,9 +1,12 @@
-/* LOSC.C       (c) Copyright Jan Jaeger, 2008                       */
+/* LOSC.C       (c) Copyright Jan Jaeger, 2009                       */
 /*              Hercules Licensed Operating System Check             */
 
 // $Id$
 //
 // $Log$
+// Revision 1.3  2008/12/13 19:05:21  jj
+// Only use generic names in license check
+//
 // Revision 1.2  2008/12/03 16:27:40  jj
 // Fix deadly intlock embrace
 //

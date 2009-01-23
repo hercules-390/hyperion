@@ -1,4 +1,4 @@
-/* LOGGER.C     (c) Copyright Jan Jaeger, 2003-2007                  */
+/* LOGGER.C     (c) Copyright Jan Jaeger, 2003-2009                  */
 /*              System logger functions                              */
 
 // $Id$
@@ -14,6 +14,9 @@
 /* for isatty()                                                      */
 
 // $Log$
+// Revision 1.54  2008/11/29 21:28:01  rbowler
+// Fix warnings C4267 because win64 declares send length as int not size_t
+//
 // Revision 1.53  2008/11/04 05:56:31  fish
 // Put ensure consistent create_thread ATTR usage change back in
 //

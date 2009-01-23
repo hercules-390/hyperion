@@ -1,4 +1,4 @@
-/* TAPECCWS.C   (c) Copyright Roger Bowler, 1999-2007                */
+/* TAPECCWS.C   (c) Copyright Roger Bowler, 1999-2009                */
 /*              ESA/390 Tape Device Handler                          */
 
 /* Original Author: Roger Bowler                                     */
@@ -111,6 +111,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.18  2008/11/04 05:56:31  fish
+// Put ensure consistent create_thread ATTR usage change back in
+//
 // Revision 1.17  2008/11/03 15:31:53  rbowler
 // Back out consistent create_thread ATTR modification
 //

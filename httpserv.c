@@ -1,4 +1,4 @@
-/* HTTPSERV.C   (c)Copyright Jan Jaeger, 2002-2007                   */
+/* HTTPSERV.C   (c)Copyright Jan Jaeger, 2002-2009                   */
 /*              HTTP Server                                          */
 
 // $Id$
@@ -30,6 +30,9 @@
 /*                                           Jan Jaeger - 28/03/2002 */
 
 // $Log$
+// Revision 1.79  2009/01/15 17:36:43  jj
+// Change http server startup
+//
 // Revision 1.78  2008/11/04 05:56:31  fish
 // Put ensure consistent create_thread ATTR usage change back in
 //

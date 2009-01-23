@@ -1,9 +1,12 @@
-/* SR.C         (c)Copyright Greg Smith, 2005-2007                   */
+/* SR.C         (c)Copyright Greg Smith, 2005-2009                   */
 /*              Suspend/Resume a Hercules session                    */
 
 // $Id$
 //
 // $Log$
+// Revision 1.35  2008/11/04 05:56:31  fish
+// Put ensure consistent create_thread ATTR usage change back in
+//
 // Revision 1.34  2008/11/03 15:31:53  rbowler
 // Back out consistent create_thread ATTR modification
 //

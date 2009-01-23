@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // SCSITAPE.C   --   Hercules SCSI tape handling module
 //
-// (c) Copyright "Fish" (David B. Trout), 2005-2007. Released under
+// (c) Copyright "Fish" (David B. Trout), 2005-2009. Released under
 // the Q Public License (http://www.hercules-390.org/herclic.html)
 // as modifications to Hercules.
 ////////////////////////////////////////////////////////////////////////////////////
@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.33  2008/11/04 05:56:31  fish
+// Put ensure consistent create_thread ATTR usage change back in
+//
 // Revision 1.32  2008/11/03 15:31:53  rbowler
 // Back out consistent create_thread ATTR modification
 //

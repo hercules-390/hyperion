@@ -1,8 +1,8 @@
-/* STACK.C      (c) Copyright Roger Bowler, 1999-2007                */
+/* STACK.C      (c) Copyright Roger Bowler, 1999-2009                */
 /*              ESA/390 Linkage Stack Operations                     */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 
 // $Id$
 
@@ -25,6 +25,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.89  2008/04/11 14:29:28  bernard
+// Integrate regs->exrl into base Hercules code.
+//
 // Revision 1.88  2008/04/09 07:38:58  bernard
 // Allign to Rogers terminal ;-)
 //

@@ -1,4 +1,4 @@
-/* TAPECOPY.C   (c) Copyright Roger Bowler, 1999-2007                */
+/* TAPECOPY.C   (c) Copyright Roger Bowler, 1999-2009                */
 /*              Convert SCSI tape into AWSTAPE format                */
 
 // $Id$
@@ -14,6 +14,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.44  2008/11/04 04:50:46  fish
+// Ensure consistent utility startup
+//
 // Revision 1.43  2008/06/22 05:54:30  fish
 // Fix print-formatting issue (mostly in tape modules)
 // that can sometimes, in certain circumstances,

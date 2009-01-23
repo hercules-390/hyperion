@@ -1,9 +1,12 @@
-/* SOCKDEV.C    (c) Copyright Hercules development, 2003-2007        */
+/* SOCKDEV.C    (c) Copyright Hercules development, 2003-2009        */
 /*              Socketdevice support                                 */
 
 // $Id$
 //
 // $Log$
+// Revision 1.29  2008/11/04 05:56:31  fish
+// Put ensure consistent create_thread ATTR usage change back in
+//
 // Revision 1.28  2008/11/03 15:31:53  rbowler
 // Back out consistent create_thread ATTR modification
 //

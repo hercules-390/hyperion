@@ -1,4 +1,4 @@
-/* QDIO.C       (c) Copyright Jan Jaeger, 2003-2007                  */
+/* QDIO.C       (c) Copyright Jan Jaeger, 2003-2009                  */
 /*              Queued Direct Input Output                           */
 
 // $Id$
@@ -6,6 +6,9 @@
 /*      This module contains the Signal Adapter instruction          */
 
 // $Log$
+// Revision 1.23  2007/06/23 00:04:15  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.22  2007/01/13 07:24:14  bernard
 // backout ccmask
 //

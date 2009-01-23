@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------
- * Shared device support           (c)Copyright Greg Smith, 2002-2007
+ * Shared device support           (c)Copyright Greg Smith, 2002-2009
  *
  * $Id$
  *
@@ -312,6 +312,9 @@
  *
  *
  * $Log$
+ * Revision 1.16  2007/06/23 00:04:15  ivan
+ * Update copyright notices to include current year (2007)
+ *
  * Revision 1.15  2006/12/28 20:32:54  fish
  * Fix "HHCSH043I 0.0.0.0 disconnected from ..."; save clientip in SHRD block at connect and use at disconnect.
  *

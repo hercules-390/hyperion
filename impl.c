@@ -1,4 +1,4 @@
-/* IMPL.C       (c) Copyright Roger Bowler, 1999-2007                */
+/* IMPL.C       (c) Copyright Roger Bowler, 1999-2009                */
 /*              Hercules Initialization Module                       */
 
 // $Id$
@@ -12,6 +12,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.130  2009/01/15 17:36:44  jj
+// Change http server startup
+//
 // Revision 1.129  2009/01/07 16:00:43  bernard
 // add msghldsec command
 //

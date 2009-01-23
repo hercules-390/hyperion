@@ -1,7 +1,7 @@
-/* MACHCHK.C    (c) Copyright Jan Jaeger, 2000-2007                  */
+/* MACHCHK.C    (c) Copyright Jan Jaeger, 2000-2009                  */
 /*              ESA/390 Machine Check Functions                      */
 
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 
 // $Id$
 
@@ -20,6 +20,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.51  2009/01/15 17:36:44  jj
+// Change http server startup
+//
 // Revision 1.50  2007/06/23 00:04:14  ivan
 // Update copyright notices to include current year (2007)
 //

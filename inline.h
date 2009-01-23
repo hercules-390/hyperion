@@ -1,11 +1,11 @@
-/* INLINE.H     (c) Copyright Jan Jaeger, 2000-2007                  */
+/* INLINE.H     (c) Copyright Jan Jaeger, 2000-2009                  */
 /*              Inline function definitions                          */
 
 // $Id$
 
 /* Original author Roger Bowler, 1999                                */
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 
 /* Storage protection override fix               Jan Jaeger 31/08/00 */
 /* ESAME low-address protection          v208d Roger Bowler 20/01/01 */
@@ -13,6 +13,9 @@
 /* Multiply/Divide Logical instructions         Vic Cross 13/02/2001 */
 
 // $Log$
+// Revision 1.49  2007/06/23 00:04:14  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.48  2007/03/20 22:28:52  gsmith
 // Use non-concurrent load for fetch_doubleword_absolute on 32bit hosts
 //

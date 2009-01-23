@@ -1,4 +1,4 @@
-/* PFPO.C       (c) Copyright Roger Bowler, 2007                     */
+/* PFPO.C       (c) Copyright Roger Bowler, 2009                     */
 /*              Perform Floating Point Operation instruction         */
 
 // $Id$
@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.1  2007/06/02 13:46:42  rbowler
+// PFPO framework
+//
 
 #include "hstdinc.h"
 
