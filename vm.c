@@ -1,7 +1,7 @@
-/* VM.C         (c) Copyright Roger Bowler, 2000-2007                */
+/* VM.C         (c) Copyright Roger Bowler, 2000-2009                */
 /*              ESA/390 VM Diagnose calls and IUCV instruction       */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
 
 // $Id$
 
@@ -10,10 +10,13 @@
 /* described in SC24-5670 VM/ESA CP Programming Services             */
 /* and SC24-5855 VM/ESA CP Diagnosis Reference.                      */
 /*      Modifications for Interpretive Execution (SIE) by Jan Jaeger */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.50  2009/01/03 10:19:43  jj
+// Use LPARNAME in VM system name
+//
 // Revision 1.49  2008/12/29 00:40:55  ivan
 // Fix signed/unsigned pb after diag8cmd noecho patch
 //

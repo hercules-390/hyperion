@@ -4,7 +4,7 @@
 // $Id$
 
 /*              Read from AWSTAPE and write to SCSI tape mods        */
-/*              Copyright 2005-2007 James R. Maynard III             */
+/*              Copyright 2005-2009 James R. Maynard III             */
 
 /*-------------------------------------------------------------------*/
 /* This program reads a SCSI tape and produces a disk file with      */
@@ -14,6 +14,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.45  2009/01/23 13:05:56  bernard
+// copyright notice
+//
 // Revision 1.44  2008/11/04 04:50:46  fish
 // Ensure consistent utility startup
 //

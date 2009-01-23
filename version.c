@@ -1,4 +1,4 @@
-/* VERSION.C    (c) Copyright Roger Bowler, 1999-2007                */
+/* VERSION.C    (c) Copyright Roger Bowler, 1999-2009                */
 /*              Hercules Version Display Module                      */
 
 // $Id$
@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.51  2009/01/14 15:23:20  jj
+// Move modpath logic to hsccmd.c
+//
 // Revision 1.50  2007/12/07 12:50:22  rbowler
 // Show multi_byte assist status at startup
 //

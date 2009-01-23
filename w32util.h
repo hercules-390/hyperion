@@ -1,13 +1,16 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //   w32util.h        Windows porting functions
 //////////////////////////////////////////////////////////////////////////////////////////
-// (c) Copyright "Fish" (David B. Trout), 2005-2007. Released under the Q Public License
+// (c) Copyright "Fish" (David B. Trout), 2005-2009. Released under the Q Public License
 // (http://www.hercules-390.org/herclic.html) as modifications to Hercules.
 //////////////////////////////////////////////////////////////////////////////////////////
 
 // $Id$
 //
 // $Log$
+// Revision 1.13  2008/11/23 22:27:43  rbowler
+// Fix win64 type conversion warnings in w32util.c
+//
 // Revision 1.12  2007/11/30 14:54:34  jmaynard
 // Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
 //

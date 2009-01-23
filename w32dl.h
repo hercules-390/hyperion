@@ -1,9 +1,12 @@
-/* W32DL.H      (c) Copyright Jan Jaeger, 2004-2007                  */
+/* W32DL.H      (c) Copyright Jan Jaeger, 2004-2009                  */
 /*              dlopen compat                                        */
 
 // $Id$
 //
 // $Log$
+// Revision 1.6  2007/06/23 00:04:19  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.5  2006/12/08 09:43:33  jj
 // Add CVS message log
 //

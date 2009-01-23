@@ -5,13 +5,16 @@
 /* SA22-7832-04: z/Architecture Principles of Operation within the Hercules   */
 /* z/Architecture emulator.                                                   */
 /*                                                                            */
-/*                              (c) Copyright Bernard van der Helm, 2003-2008 */
+/*                              (c) Copyright Bernard van der Helm, 2003-2009 */
 /*                              Noordwijkerhout, The Netherlands.             */
 /*----------------------------------------------------------------------------*/
 
 // $Id$
 //
 // $Log$
+// Revision 1.65  2008/10/24 15:01:42  bernard
+// update copyright notice to current year 2007
+//
 // Revision 1.64  2008/03/29 16:44:49  bernard
 // Alligning the dyncrypt.c license with the other hercules files.
 //
@@ -3113,7 +3116,7 @@ HDL_REGISTER_SECTION;
   HDL_REGISTER(z900_compute_message_authentication_code, z900_compute_message_authentication_code_d);
 #endif /*defined(_900_FEATURE_MESSAGE_SECURITY_ASSIST)*/
 
-  logmsg("Crypto module loaded (c) Copyright Bernard van der Helm, 2003-2008\n");
+  logmsg("Crypto module loaded (c) Copyright Bernard van der Helm, 2003-2009\n");
   logmsg("  Active: Message Security Assist\n");
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
   logmsg("          Message Security Assist Extension 1\n");

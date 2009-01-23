@@ -1,4 +1,4 @@
-/* tapesplt.C  (c) Copyright Jay Maynard, 2000-2007                 */
+/* tapesplt.C  (c) Copyright Jay Maynard, 2000-2009                 */
 /*              Split AWSTAPE format tape image                      */
 
 // $Id$
@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.27  2008/11/04 04:50:46  fish
+// Ensure consistent utility startup
+//
 // Revision 1.26  2007/06/23 00:04:18  ivan
 // Update copyright notices to include current year (2007)
 //

@@ -1,13 +1,16 @@
 /* XSTORE.C   Expanded storage related instructions - Jan Jaeger     */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 
 /* MVPG moved from cpu.c to xstore.c   05/07/00 Jan Jaeger */
 
 // $Id$
 //
 // $Log$
+// Revision 1.47  2007/06/23 00:04:19  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.46  2007/06/06 22:14:58  gsmith
 // Fix SYNCHRONIZE_CPUS when numcpu > number of host processors - Greg
 //

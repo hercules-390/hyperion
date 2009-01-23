@@ -1,10 +1,10 @@
-/* TRACE.C      (c) Copyright Jan Jaeger, 2000-2007                  */
+/* TRACE.C      (c) Copyright Jan Jaeger, 2000-2009                  */
 /*              Implicit tracing functions                           */
 
 // $Id$
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 
 /*-------------------------------------------------------------------*/
 /* This module contains procedures for creating entries in the       */
@@ -19,6 +19,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.32  2008/02/28 22:06:34  ptl00
+// Fix mode switch trace
+//
 // Revision 1.31  2007/06/23 00:04:19  ivan
 // Update copyright notices to include current year (2007)
 //

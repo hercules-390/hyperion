@@ -1,4 +1,4 @@
-/* TAPEDEV.C    (c) Copyright Roger Bowler, 1999-2007                */
+/* TAPEDEV.C    (c) Copyright Roger Bowler, 1999-2009                */
 /*              ESA/390 Tape Device Handler                          */
 
 /* Original Author: Roger Bowler                                     */
@@ -112,6 +112,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.151  2008/11/01 20:40:09  fish
+// Fix tapedev gettapetype_bydata function for HET/AWS tapes
+// that start with a tapemark -- Liam Cold [liamcold@yahoo.com]
+//
 // Revision 1.150  2008/09/10 02:06:48  fish
 // Add test for OMA file "@TDF" signature
 // to 'gettapetype_bydata' function

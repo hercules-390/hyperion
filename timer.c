@@ -1,10 +1,13 @@
 /* TIMER.C   */
 
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 
 // $Id$
 //
 // $Log$
+// Revision 1.67  2007/12/10 23:12:02  gsmith
+// Tweaks to OPTION_MIPS_COUNTING processing
+//
 // Revision 1.66  2007/09/05 00:24:18  gsmith
 // Use integer arithmetic calculating cpupct
 //

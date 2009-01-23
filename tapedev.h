@@ -1,4 +1,4 @@
-/* TAPEDEV.H    (c) Copyright Ivan Warren and others, 2003-2007      */
+/* TAPEDEV.H    (c) Copyright Ivan Warren and others, 2003-2009      */
 /*                                                                   */
 /* This module contains tape related structures and defines          */
 /* for the Hercules ESA/390 emulator.                                */
@@ -6,6 +6,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.26  2008/07/08 05:35:51  fish
+// AUTOMOUNT redesign: support +allowed/-disallowed dirs
+// and create associated 'automount' panel command - Fish
+//
 // Revision 1.25  2008/05/22 21:17:30  fish
 // Tape file extension neutrality support
 //

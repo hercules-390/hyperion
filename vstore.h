@@ -1,8 +1,8 @@
-/* VSTORE.H     (c) Copyright Roger Bowler, 1999-2007                */
+/* VSTORE.H     (c) Copyright Roger Bowler, 1999-2009                */
 /*              ESA/390 Virtual Storage Functions                    */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 
 // $Id$
 
@@ -35,6 +35,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.84  2009/01/17 17:02:15  jj
+// Fix change recording on page crossing first op of MVC - Reported by Greg Price
+//
 // Revision 1.83  2008/04/02 21:52:19  rbowler
 // Fix PIC4 when MVCOS operand finishes on page boundary
 //

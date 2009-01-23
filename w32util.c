@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //   w32util.c        Windows porting functions
 //////////////////////////////////////////////////////////////////////////////////////////
-// (c) Copyright "Fish" (David B. Trout), 2005-2007. Released under the Q Public License
+// (c) Copyright "Fish" (David B. Trout), 2005-2009. Released under the Q Public License
 // (http://www.hercules-390.org/herclic.html) as modifications to Hercules.
 //////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.33  2008/11/23 22:27:43  rbowler
+// Fix win64 type conversion warnings in w32util.c
+//
 // Revision 1.32  2008/08/29 07:08:41  fish
 // Fix parsing bug/issue in "w32_parse_piped_process_stdxxx_data" function
 //

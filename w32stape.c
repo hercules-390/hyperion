@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // W32STAPE.C   --   Hercules Win32 SCSI Tape handling module
 //
-// (c) Copyright "Fish" (David B. Trout), 2005-2007. Released under
+// (c) Copyright "Fish" (David B. Trout), 2005-2009. Released under
 // the Q Public License (http://www.hercules-390.org/herclic.html)
 // as modifications to Hercules.
 ////////////////////////////////////////////////////////////////////////////////////
@@ -17,6 +17,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.18  2008/03/31 06:36:49  fish
+// (untab)
+//
 // Revision 1.17  2008/03/30 02:51:34  fish
 // Fix SCSI tape EOV (end of volume) processing
 //
