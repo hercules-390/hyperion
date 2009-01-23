@@ -1,4 +1,4 @@
-/* CCKDSWAP.C   (c) Copyright Roger Bowler, 1999-2007                */
+/* CCKDSWAP.C   (c) Copyright Roger Bowler, 1999-2009                */
 /*       Swap the `endianess' of a compressed CKD file.              */
 
 // $Id$
@@ -8,6 +8,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.22  2008/11/04 04:50:45  fish
+// Ensure consistent utility startup
+//
 // Revision 1.21  2007/06/23 00:04:03  ivan
 // Update copyright notices to include current year (2007)
 //

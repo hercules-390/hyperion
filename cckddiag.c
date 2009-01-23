@@ -1,4 +1,4 @@
-/* CCKDDIAG.C   (c) Copyright Roger Bowler, 1999-2007                */
+/* CCKDDIAG.C   (c) Copyright Roger Bowler, 1999-2009                */
 /*       CCKD diagnostic tool                                        */
 /* 2003-02-07 James M. Morrison initial implementation               */
 /* portions borrowed from cckdcdsk & other CCKD code                 */
@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.28  2008/11/04 04:50:45  fish
+// Ensure consistent utility startup
+//
 // Revision 1.27  2008/06/22 05:54:30  fish
 // Fix print-formatting issue (mostly in tape modules)
 // that can sometimes, in certain circumstances,

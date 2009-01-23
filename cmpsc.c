@@ -7,7 +7,7 @@
 /* Mario Bezzi. Thanks Mario! Also special thanks to Greg Smith who           */
 /* introduced iregs, needed when a page fault occurs.                         */
 /*                                                                            */
-/*                              (c) Copyright Bernard van der Helm, 2000-2008 */
+/*                              (c) Copyright Bernard van der Helm, 2000-2009 */
 /*                              Noordwijkerhout, The Netherlands.             */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.66  2008/11/01 09:57:49  bernard
+// Added likely, unlikely
+//
 // Revision 1.65  2008/10/26 13:26:39  bernard
 // Store_is will zero the remaining bits in the working byte, just like
 // other famous manufacturers will do. All former generated compressed

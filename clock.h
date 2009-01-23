@@ -1,9 +1,12 @@
-/* CLOCK.H      (c) Copyright Jan Jaeger, 2000-2007                  */
+/* CLOCK.H      (c) Copyright Jan Jaeger, 2000-2009                  */
 /*              TOD Clock functions                                  */
 
 // $Id$
 //
 // $Log$
+// Revision 1.28  2007/12/11 15:03:10  rbowler
+// Fix untab columns
+//
 // Revision 1.27  2007/12/10 23:12:02  gsmith
 // Tweaks to OPTION_MIPS_COUNTING processing
 //

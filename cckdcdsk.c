@@ -1,4 +1,4 @@
-/* CCKDCDSK.C   (c) Copyright Roger Bowler, 1999-2007                */
+/* CCKDCDSK.C   (c) Copyright Roger Bowler, 1999-2009                */
 /*       Perform chkdsk for a Compressed CKD Direct Access Storage   */
 /*       Device file.                                                */
 
@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.45  2008/11/04 04:50:45  fish
+// Ensure consistent utility startup
+//
 // Revision 1.44  2008/09/09 23:45:27  fish
 // 0 - 4, not 3
 //

@@ -1,4 +1,4 @@
-/* DIAGMSSF.C   (c) Copyright Jan Jaeger, 1999-2007                  */
+/* DIAGMSSF.C   (c) Copyright Jan Jaeger, 1999-2009                  */
 /*              ESA/390 Diagnose Functions                           */
 
 // $Id$
@@ -10,10 +10,13 @@
 /* LPAR RMF interface call                                           */
 /*                                                                   */
 /*                                             04/12/1999 Jan Jaeger */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.47  2008/12/23 11:07:43  ivan
+// Indicate CPU engine types in DIAG 204 CPU part structure array
+//
 // Revision 1.46  2008/12/21 21:25:59  ivan
 // Fix spelling
 //

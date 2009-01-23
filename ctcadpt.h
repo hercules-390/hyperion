@@ -2,12 +2,15 @@
 // Hercules Channel to Channel Emulation Support
 // ====================================================================
 //
-// Copyright (C) 2002-2008 by James A. Pierson    (original author)
-// Copyright (C) 2002-2008 by David B. Trout      (current maintainer)
+// Copyright (C) 2002-2009 by James A. Pierson    (original author)
+// Copyright (C) 2002-2009 by David B. Trout      (current maintainer)
 
 // $Id$
 //
 // $Log$
+// Revision 1.27  2008/08/19 21:36:37  fish
+// Init LCS interface ASAP to fix wrong MAC being used
+//
 // Revision 1.26  2008/07/17 07:19:12  fish
 // Fix FCS (Frame Check Sequence) bug in LCS_Write function
 // and other minor bugs.

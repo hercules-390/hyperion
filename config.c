@@ -1,4 +1,4 @@
-/* CONFIG.C     (c) Copyright Jan Jaeger, 2000-2007                  */
+/* CONFIG.C     (c) Copyright Jan Jaeger, 2000-2009                  */
 /*              Device configuration functions                       */
 
 // $Id$
@@ -8,6 +8,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.204  2009/01/15 17:36:43  jj
+// Change http server startup
+//
 // Revision 1.203  2008/11/04 05:56:31  fish
 // Put ensure consistent create_thread ATTR usage change back in
 //

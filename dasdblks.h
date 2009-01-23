@@ -1,4 +1,4 @@
-/* DASDBLKS.H   (c) Copyright Roger Bowler, 1999-2007                */
+/* DASDBLKS.H   (c) Copyright Roger Bowler, 1999-2009                */
 /*              DASD control block structures                        */
 
 // $Id$
@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.21  2007/06/23 00:04:08  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.20  2006/12/08 09:43:19  jj
 // Add CVS message log
 //

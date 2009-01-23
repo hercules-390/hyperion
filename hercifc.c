@@ -2,8 +2,8 @@
 // Hercules Interface Configuration Program
 // ====================================================================
 //
-// Copyright    (C) Copyright Roger Bowler, 2000-2007
-//              (C) Copyright James A. Pierson, 2002-2007
+// Copyright    (C) Copyright Roger Bowler, 2000-2009
+//              (C) Copyright James A. Pierson, 2002-2009
 //
 // Based on code originally written by Roger Bowler
 // Modified to communicate via unix sockets.
@@ -22,6 +22,11 @@
 // $Id$
 //
 // $Log$
+// Revision 1.31  2008/06/22 05:54:30  fish
+// Fix print-formatting issue (mostly in tape modules)
+// that can sometimes, in certain circumstances,
+// cause herc to crash.  (%8.8lx --> I32_FMTX, etc)
+//
 // Revision 1.30  2008/02/19 11:49:19  ivan
 // - Move setting of CPU priority after spwaning timer thread
 // - Added support for Posix 1003.1e capabilities

@@ -1,11 +1,11 @@
-/* GENERAL1.C   (c) Copyright Roger Bowler, 1994-2007                */
+/* GENERAL1.C   (c) Copyright Roger Bowler, 1994-2009                */
 /*              ESA/390 CPU Emulator                                 */
 /*              Instructions A-M                                     */
 
-/*              (c) Copyright Peter Kuschnerus, 1999-2007 (UPT & CFC)*/
+/*              (c) Copyright Peter Kuschnerus, 1999-2009 (UPT & CFC)*/
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 
 // $Id$
 
@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.171  2009/01/11 20:28:33  ivan
+// Remove dead code
+//
 // Revision 1.170  2008/12/24 07:50:16  ivan
 // CSST Fix - Parm 2 alignement check error
 //
@@ -1164,8 +1167,8 @@ U32     n;                              /* 32-bit operand values     */
 
 /*-------------------------------------------------------------------*/
 /* B21A CFC   - Compare and Form Codeword                        [S] */
-/*              (c) Copyright Peter Kuschnerus, 1999-2007            */
-/*              (c) Copyright "Fish" (David B. Trout), 2005-2007     */
+/*              (c) Copyright Peter Kuschnerus, 1999-2009            */
+/*              (c) Copyright "Fish" (David B. Trout), 2005-2009     */
 /*-------------------------------------------------------------------*/
 
 DEF_INST(compare_and_form_codeword)

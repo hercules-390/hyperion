@@ -1,4 +1,4 @@
-/* DASDCONV.C   (c) Copyright Roger Bowler, 1999-2007                */
+/* DASDCONV.C   (c) Copyright Roger Bowler, 1999-2009                */
 /*              Hercules DASD Utilities: DASD image converter        */
 
 // $Id$
@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.17  2008/11/04 04:50:45  fish
+// Ensure consistent utility startup
+//
 // Revision 1.16  2007/06/23 00:04:08  ivan
 // Update copyright notices to include current year (2007)
 //

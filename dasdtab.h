@@ -1,4 +1,4 @@
-/* DASDTAB.H    (c) Copyright Roger Bowler, 1999-2007                */
+/* DASDTAB.H    (c) Copyright Roger Bowler, 1999-2009                */
 /*              DASD table structures                                */
 
 // $Id$
@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.14  2007/06/23 00:04:08  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.13  2007/03/06 22:54:19  gsmith
 // Fix ckd RDC response
 //

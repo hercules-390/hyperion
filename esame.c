@@ -1,4 +1,4 @@
-/* ESAME.C      (c) Copyright Jan Jaeger, 2000-2007                  */
+/* ESAME.C      (c) Copyright Jan Jaeger, 2000-2009                  */
 /*              ESAME (z/Architecture) instructions                  */
 
 // $Id$
@@ -20,6 +20,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.203  2009/01/15 17:27:02  rbowler
+// STFLE bit settings for CPU Measurement Facility
+//
 // Revision 1.202  2008/05/06 22:15:42  rbowler
 // Fix warning: operation on `p1' may be undefined
 //

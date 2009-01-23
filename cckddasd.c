@@ -1,4 +1,4 @@
-/* CCKDDASD.C   (c) Copyright Roger Bowler, 1999-2007                */
+/* CCKDDASD.C   (c) Copyright Roger Bowler, 1999-2009                */
 /*       ESA/390 Compressed CKD Direct Access Storage Device Handler */
 
 // $Id$
@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.146  2008/11/04 05:56:30  fish
+// Put ensure consistent create_thread ATTR usage change back in
+//
 // Revision 1.145  2008/11/03 15:31:58  rbowler
 // Back out consistent create_thread ATTR modification
 //

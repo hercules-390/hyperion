@@ -1,7 +1,7 @@
 /*
 || ----------------------------------------------------------------------------
 ||
-|| HETGET.C     (c) Copyright Leland Lucius, 2000-2007
+|| HETGET.C     (c) Copyright Leland Lucius, 2000-2009
 ||              Released under terms of the Q Public License.
 ||
 || Extract files from an HET file
@@ -12,6 +12,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.26  2008/11/04 04:50:46  fish
+// Ensure consistent utility startup
+//
 // Revision 1.25  2007/06/23 00:04:10  ivan
 // Update copyright notices to include current year (2007)
 //

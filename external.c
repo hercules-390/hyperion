@@ -1,10 +1,10 @@
-/* EXTERNAL.C   (c) Copyright Roger Bowler, 1999-2007                */
+/* EXTERNAL.C   (c) Copyright Roger Bowler, 1999-2009                */
 /*              ESA/390 External Interrupt and Timer                 */
 
 // $Id$
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 
 /*-------------------------------------------------------------------*/
 /* This module implements external interrupt, timer, and signalling  */
@@ -25,6 +25,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.72  2008/12/28 22:00:57  rbowler
+// Issue message if service signal interrupt occurs while stepping or tracing
+//
 // Revision 1.71  2007/06/23 00:04:09  ivan
 // Update copyright notices to include current year (2007)
 //

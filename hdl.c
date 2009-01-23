@@ -1,9 +1,12 @@
-/* HDL.C        (c) Copyright Jan Jaeger, 2003-2007                  */
+/* HDL.C        (c) Copyright Jan Jaeger, 2003-2009                  */
 /*              Hercules Dynamic Loader                              */
 
 // $Id$
 //
 // $Log$
+// Revision 1.55  2009/01/14 15:23:20  jj
+// Move modpath logic to hsccmd.c
+//
 // Revision 1.54  2008/11/23 23:29:44  rbowler
 // Fix win64 type conversion warnings in hdl.c
 //

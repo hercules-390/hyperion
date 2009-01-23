@@ -1,4 +1,4 @@
-/* DASDINIT.C   (c) Copyright Roger Bowler, 1999-2007                */
+/* DASDINIT.C   (c) Copyright Roger Bowler, 1999-2009                */
 /*              Hercules DASD Utilities: DASD image builder          */
 
 // $Id$
@@ -40,6 +40,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.50  2008/11/04 04:50:46  fish
+// Ensure consistent utility startup
+//
 // Revision 1.49  2007/09/30 13:30:08  rbowler
 // Revert extra blank lines inserted by rev 1.12
 //

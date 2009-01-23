@@ -1,4 +1,4 @@
-/* CARDRDR.C    (c) Copyright Roger Bowler, 1999-2007                */
+/* CARDRDR.C    (c) Copyright Roger Bowler, 1999-2009                */
 /*              ESA/390 Card Reader Device Handler                   */
 
 // $Id$
@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.47  2007/11/21 22:54:13  fish
+// Use new BEGIN_DEVICE_CLASS_QUERY macro
+//
 // Revision 1.46  2007/06/23 00:04:03  ivan
 // Update copyright notices to include current year (2007)
 //

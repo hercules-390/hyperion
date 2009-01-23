@@ -1,4 +1,4 @@
-/* HSTRUCTS.H   (c) Copyright Roger Bowler, 1999-2007                */
+/* HSTRUCTS.H   (c) Copyright Roger Bowler, 1999-2009                */
 /*              Hercules Structure Definitions                       */
 
 //      This header auto-#included by 'hercules.h'...
@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.98  2009/01/07 16:00:26  bernard
+// add msghldsec command
+//
 // Revision 1.97  2008/12/27 23:34:37  rbowler
 // Integrated 3270 (SYSG) console send command
 //

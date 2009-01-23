@@ -1,4 +1,4 @@
-/* HSTDINC.H    (c) Copyright Roger Bowler, 1999-2007                */
+/* HSTDINC.H    (c) Copyright Roger Bowler, 1999-2009                */
 /*              Hercules precompilation-eligible Header Files        */
 
 /* This file contains #include statements for all of the header      */
@@ -8,6 +8,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.16  2008/02/19 11:49:19  ivan
+// - Move setting of CPU priority after spwaning timer thread
+// - Added support for Posix 1003.1e capabilities
+//
 // Revision 1.15  2007/06/23 00:04:11  ivan
 // Update copyright notices to include current year (2007)
 //

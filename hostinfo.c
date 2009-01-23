@@ -1,4 +1,4 @@
-/* HOSTINFO.C   (c) Copyright "Fish" (David B. Trout), 2002-2007     */
+/* HOSTINFO.C   (c) Copyright "Fish" (David B. Trout), 2002-2009     */
 
 // $Id$
 
@@ -11,6 +11,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.17  2007/11/30 14:54:32  jmaynard
+// Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
+//
 // Revision 1.16  2007/06/23 00:04:11  ivan
 // Update copyright notices to include current year (2007)
 //

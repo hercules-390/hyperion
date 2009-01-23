@@ -1,4 +1,4 @@
-/* CONSOLE.C    (c)Copyright Roger Bowler, 1999-2007                 */
+/* CONSOLE.C    (c)Copyright Roger Bowler, 1999-2009                 */
 /*              ESA/390 Console Device Handler                       */
 
 // $Id$
@@ -53,6 +53,11 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.104  2009/01/02 19:21:50  jj
+// DVD-RAM IPL
+// RAMSAVE
+// SYSG Integrated 3270 console fixes
+//
 // Revision 1.103  2008/12/30 15:40:01  rbowler
 // Allow $(LPARNAME) in herclogo file
 //
@@ -1278,7 +1283,7 @@ static char *herclogo[]={
     " HHH          HHH",
     " HHH          HHH     My PC thinks it's a MAINFRAME",
     "",
-    " Copyright (c) 1999-2007 Roger Bowler, Jan Jaeger, and others"};
+    " Copyright (c) 1999-2009 Roger Bowler, Jan Jaeger, and others"};
     */
 
 static char *herclogo[]={
@@ -1339,7 +1344,7 @@ static char *herclogo[]={
 "           HHH          HHH",
 "           HHH          HHH     My PC thinks it's a MAINFRAME",
 "",
-"           Copyright (c) 1999-2007 Roger Bowler, Jan Jaeger, and others"};
+"           Copyright (c) 1999-2009 Roger Bowler, Jan Jaeger, and others"};
 
 #define LOGO_BUFFERSIZE 256;
 

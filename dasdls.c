@@ -1,12 +1,15 @@
 /*
  * dasdls
  *
- * Copyright 2000-2007 by Malcolm Beattie
- * Based on code copyright by Roger Bowler, 1999-2007
+ * Copyright 2000-2009 by Malcolm Beattie
+ * Based on code copyright by Roger Bowler, 1999-2009
  *
  * $Id$
  *
  * $Log$
+ * Revision 1.27  2008/11/04 04:50:46  fish
+ * Ensure consistent utility startup
+ *
  * Revision 1.26  2007/06/23 00:04:08  ivan
  * Update copyright notices to include current year (2007)
  *

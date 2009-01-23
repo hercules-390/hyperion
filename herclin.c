@@ -1,5 +1,5 @@
 /************************************************/
-/* (C) Copyright 2005-2007 Roger Bowler & Others*/
+/* (C) Copyright 2005-2009 Roger Bowler & Others*/
 /* Initial author : Ivan Warren                 */
 /*                                              */
 /* HERCLIN.C                                    */
@@ -12,6 +12,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.5  2007/06/23 00:04:10  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.4  2006/12/08 09:43:25  jj
 // Add CVS message log
 //

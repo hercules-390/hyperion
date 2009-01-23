@@ -1,9 +1,12 @@
-/* CODEPAGE.C   (c) Copyright Jan Jaeger, 1999-2007                  */
+/* CODEPAGE.C   (c) Copyright Jan Jaeger, 1999-2009                  */
 /*              Code Page conversion                                 */
 
 // $Id$
 //
 // $Log$
+// Revision 1.25  2008/01/14 17:25:16  rbowler
+// Additional ISO-8859-1 to European EBCDIC codepages
+//
 // Revision 1.24  2007/06/23 00:04:04  ivan
 // Update copyright notices to include current year (2007)
 //

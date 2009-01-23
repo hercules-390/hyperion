@@ -1,12 +1,17 @@
 /* HERCULES.H   (c) Copyright Roger Bowler, 1999-2009                */
 /*              Hercules Header Files                                */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 
 // $Id$
 //
 // $Log$
+// Revision 1.303  2009/01/02 19:21:51  jj
+// DVD-RAM IPL
+// RAMSAVE
+// SYSG Integrated 3270 console fixes
+//
 // Revision 1.302  2008/05/22 21:34:22  fish
 // Attempt to fix my *nix SCSI tape BSR over tapemark bug identified by Bob Schneider [bschneider@pingdata.net]
 //

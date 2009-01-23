@@ -1,13 +1,16 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //   hconsole.h        Hercules hardware console (panel) support functions
 //////////////////////////////////////////////////////////////////////////////////////////
-// (c) Copyright "Fish" (David B. Trout), 2007. Released under the Q Public License
+// (c) Copyright "Fish" (David B. Trout), 2009. Released under the Q Public License
 // (http://www.hercules-390.org/herclic.html) as modifications to Hercules.
 //////////////////////////////////////////////////////////////////////////////////////////
 
 // $Id$
 //
 // $Log$
+// Revision 1.13  2008/09/02 06:08:09  fish
+// ALT_RIGHTARROW and ALT_LEFTARROW
+//
 // Revision 1.12  2008/08/29 10:22:08  fish
 // Lay groundwork for eventual extended cursor handling
 //

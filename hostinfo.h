@@ -1,4 +1,4 @@
-/* HOSTINFO.H   (c) Copyright "Fish" (David B. Trout), 2002-2007     */
+/* HOSTINFO.H   (c) Copyright "Fish" (David B. Trout), 2002-2009     */
 
 /*   Released under the Q Public License                             */
 /*      (http://www.hercules-390.org/herclic.html)                   */
@@ -11,6 +11,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.13  2007/11/30 14:54:32  jmaynard
+// Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
+//
 // Revision 1.12  2007/06/23 00:04:11  ivan
 // Update copyright notices to include current year (2007)
 //

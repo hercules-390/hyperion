@@ -1,4 +1,4 @@
-/* DFP.C        (c) Copyright Roger Bowler, 2007-2007                */
+/* DFP.C        (c) Copyright Roger Bowler, 2007-2009                */
 /*              Decimal Floating Point instructions                  */
 
 // $Id$
@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.70  2008/11/23 11:18:50  rbowler
+// Fix signed/unsigned mismatch caused by previous fix
+//
 // Revision 1.69  2008/11/23 11:11:54  rbowler
 // Fix warning C4267 conversion from 'size_t' to 'int' in win64
 //

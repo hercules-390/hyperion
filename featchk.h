@@ -1,4 +1,4 @@
-/* FEATCHK.H    (c) Copyright Jan Jaeger, 2000-2007                  */
+/* FEATCHK.H    (c) Copyright Jan Jaeger, 2000-2009                  */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
 /*           Feature definition consistency checks                   */
@@ -13,6 +13,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.51  2008/12/27 23:34:37  rbowler
+// Integrated 3270 (SYSG) console send command
+//
 // Revision 1.50  2008/12/24 22:35:53  rbowler
 // Framework for integrated 3270 and ASCII console features
 //

@@ -1,4 +1,4 @@
-/* CCKDUTIL.C   (c) Copyright Roger Bowler, 1999-2007                */
+/* CCKDUTIL.C   (c) Copyright Roger Bowler, 1999-2009                */
 /*       ESA/390 Compressed CKD Common routines                      */
 
 // $Id$
@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.57  2008/09/04 22:03:15  gsmith
+// Fix 64-bit length problem in cdsk_valid_trk - Tony Harminc
+//
 // Revision 1.56  2007/12/01 23:31:57  fish
 // Fix cckdcdsk/cckdcomp/cckdutil no message o/p issue
 //

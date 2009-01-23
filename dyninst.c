@@ -1,4 +1,4 @@
-/* DYNINST.C    (c) Copyright Jan Jaeger, 2003-2007                  */
+/* DYNINST.C    (c) Copyright Jan Jaeger, 2003-2009                  */
 /*              Hercules Dynamic Loader                              */
 
 // $Id$
@@ -10,6 +10,9 @@
 /* instruction 2 3 or 4 digits.                                      */
 
 // $Log$
+// Revision 1.24  2008/02/29 15:53:10  rbowler
+// Instruction decoder for C4xx and C6xx instructions
+//
 // Revision 1.23  2008/02/29 12:05:06  rbowler
 // dyninst.c incorrect restore of C8xx opcodes
 //

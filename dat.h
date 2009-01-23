@@ -1,8 +1,8 @@
-/* DAT.H        (c) Copyright Roger Bowler, 1999-2007                */
+/* DAT.H        (c) Copyright Roger Bowler, 1999-2009                */
 /*              ESA/390 Dynamic Address Translation                  */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 
 // $Id$
 
@@ -24,6 +24,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.112  2008/12/08 20:38:20  ivan
+// Fix SIE DAT Issue with ESA/390 Guest on z/Arch host with >2GB of storage
+//
 // Revision 1.111  2008/03/16 00:04:37  rbowler
 // Replace ACC_ARMODE by USE_ARMODE for LPTEA
 //

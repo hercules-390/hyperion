@@ -1,4 +1,4 @@
-/* DMAP2HRC.C   (c) Copyright Jay Maynard, 2001-2007                 */
+/* DMAP2HRC.C   (c) Copyright Jay Maynard, 2001-2009                 */
 /*              Convert P/390 DEVMAP to Hercules config file         */
 
 // $Id$
@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.21  2008/11/04 04:50:46  fish
+// Ensure consistent utility startup
+//
 // Revision 1.20  2007/06/23 00:04:08  ivan
 // Update copyright notices to include current year (2007)
 //

@@ -1,4 +1,4 @@
-/* DASDCOPY.C   (c) Copyright Roger Bowler, 1999-2007                */
+/* DASDCOPY.C   (c) Copyright Roger Bowler, 1999-2009                */
 /*              Copy a dasd file to another dasd file                */
 
 // $Id$
@@ -24,6 +24,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.32  2008/11/04 04:50:45  fish
+// Ensure consistent utility startup
+//
 // Revision 1.31  2008/11/03 00:03:52  rbowler
 // Program name may be corrupted in dasdcopy messages
 //

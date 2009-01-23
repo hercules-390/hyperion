@@ -1,4 +1,4 @@
-/* CGIBIN.C     (c)Copyright Jan Jaeger, 2002-2007                   */
+/* CGIBIN.C     (c)Copyright Jan Jaeger, 2002-2009                   */
 /*              HTTP cgi-bin routines                                */
 
 // $Id$
@@ -45,6 +45,9 @@
 /*                                           Jan Jaeger - 28/03/2002 */
 
 // $Log$
+// Revision 1.75  2008/05/23 20:38:13  fish
+// Change device query calls to not ask for what they don't need
+//
 // Revision 1.74  2007/06/23 00:04:03  ivan
 // Update copyright notices to include current year (2007)
 //

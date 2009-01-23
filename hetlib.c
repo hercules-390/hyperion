@@ -1,7 +1,7 @@
 /*
 || ----------------------------------------------------------------------------
 ||
-|| HETLIB.C     (c) Copyright Leland Lucius, 2000-2007
+|| HETLIB.C     (c) Copyright Leland Lucius, 2000-2009
 ||              Released under terms of the Q Public License.
 ||
 || Library for managing Hercules Emulated Tapes.
@@ -12,6 +12,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.34  2007/11/21 23:30:41  fish
+// (comment change only)
+//
 // Revision 1.33  2007/07/24 22:36:32  fish
 // Fix tape Synchronize CCW (x'43') to do actual commit
 //

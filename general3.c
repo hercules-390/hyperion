@@ -1,4 +1,4 @@
-/* GENERAL3.C   (c) Copyright Roger Bowler, 2008                     */
+/* GENERAL3.C   (c) Copyright Roger Bowler, 2009                     */
 /*              Additional General Instructions                      */
 
 // $Id$
@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.22  2008/05/12 16:08:29  rbowler
+// ECAG correction
+//
 // Revision 1.21  2008/03/30 00:07:58  rbowler
 // Incorrect bit selection again for RNSBG,RISBG,ROSBG,RXSBG
 //

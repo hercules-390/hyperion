@@ -1,4 +1,4 @@
-/* HETTAPE.C    (c) Copyright Roger Bowler, 1999-2007                */
+/* HETTAPE.C    (c) Copyright Roger Bowler, 1999-2009                */
 /*              ESA/390 Tape Device Handler                          */
 
 /* Original Author: Roger Bowler                                     */
@@ -111,6 +111,11 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.7  2008/06/22 05:54:30  fish
+// Fix print-formatting issue (mostly in tape modules)
+// that can sometimes, in certain circumstances,
+// cause herc to crash.  (%8.8lx --> I32_FMTX, etc)
+//
 // Revision 1.6  2008/05/22 19:25:58  fish
 // Flex FakeTape support
 //

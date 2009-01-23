@@ -1,9 +1,12 @@
-/* FEAT370.H    (c) Copyright Jan Jaeger, 2000-2007                  */
+/* FEAT370.H    (c) Copyright Jan Jaeger, 2000-2009                  */
 /*              S/370 feature definitions                            */
 
 // $Id$
 //
 // $Log$
+// Revision 1.31  2008/09/18 11:12:58  rbowler
+// Permit General Instructions Extension facility to be activated in S/370 mode
+//
 // Revision 1.30  2008/01/21 22:20:35  rbowler
 // Correct previous changelog entry (ETF3 not ETF2)
 //

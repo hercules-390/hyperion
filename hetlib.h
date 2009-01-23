@@ -4,7 +4,7 @@
 /*
 || ----------------------------------------------------------------------------
 ||
-|| HETLIB.H     (c) Copyright Leland Lucius, 2000-2007
+|| HETLIB.H     (c) Copyright Leland Lucius, 2000-2009
 ||              Released under terms of the Q Public License.
 ||
 || Header for the Hercules Emulated Tape library.
@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.18  2007/07/24 22:36:33  fish
+// Fix tape Synchronize CCW (x'43') to do actual commit
+//
 // Revision 1.17  2007/06/23 00:04:11  ivan
 // Update copyright notices to include current year (2007)
 //

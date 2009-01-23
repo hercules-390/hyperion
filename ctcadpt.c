@@ -1,11 +1,11 @@
 // Hercules Channel-to-Channel Emulation Support
 // ====================================================================
 //
-// Copyright (C) James A. Pierson, 2002-2007
-//               Roger Bowler, 2000-2006
+// Copyright (C) James A. Pierson, 2002-2009
+//               Roger Bowler, 2000-2009
 //
-// vmnet     (C) Copyright Willem Konynenberg, 2000-2007
-// CTCT      (C) Copyright Vic Cross, 2001-2007
+// vmnet     (C) Copyright Willem Konynenberg, 2000-2009
+// CTCT      (C) Copyright Vic Cross, 2001-2009
 //
 // Notes:
 //   This module contains the remaining CTC emulation modes that
@@ -18,6 +18,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.75  2008/11/04 05:56:31  fish
+// Put ensure consistent create_thread ATTR usage change back in
+//
 // Revision 1.74  2008/11/03 15:31:57  rbowler
 // Back out consistent create_thread ATTR modification
 //

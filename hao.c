@@ -6,7 +6,7 @@
 /* Jan Jaeger, who always has an answer to any question. Thanks for the      */
 /* regex advice!                                                             */
 /*                                                                           */
-/*                            (c) Copyright Bernard van der Helm, 2002-2007  */
+/*                            (c) Copyright Bernard van der Helm, 2002-2009  */
 /*                            Noordwijkerhout, The Netherlands.              */
 /*                                                                           */
 /*---------------------------------------------------------------------------*/
@@ -14,6 +14,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.15  2008/11/30 09:12:41  bernard
+// End the licensed OS experiment
+//
 // Revision 1.14  2008/11/29 12:26:19  bernard
 // PGMPRDOS implementation within hoa. Not perfect! please provide command
 // hoa clear if you want to violate the PGMPRDOS warning.

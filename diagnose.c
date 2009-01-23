@@ -1,4 +1,4 @@
-/* DIAGNOSE.C   (c) Copyright Roger Bowler, 2000-2007                */
+/* DIAGNOSE.C   (c) Copyright Roger Bowler, 2000-2009                */
 /*              ESA/390 Diagnose Functions                           */
 
 // $Id$
@@ -11,10 +11,15 @@
 /* Additional credits:                                               */
 /*      Hercules-specific diagnose calls by Jay Maynard.             */
 /*      Set/reset bad frame indicator call by Jan Jaeger.            */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.54  2008/12/29 00:00:54  ivan
+// Change semantics for DIAG8CMD configuration statement
+// Disable command redisplay at the console when NOECHO is set
+// Commands typed with a '-' as the first character are not redisplayed
+//
 // Revision 1.53  2008/11/04 05:58:01  fish
 // Put ensure consistent create_thread ATTR usage change back in,
 // and put original diag 0x308 re-IPL fix back in too.

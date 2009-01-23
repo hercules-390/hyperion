@@ -1,4 +1,4 @@
-/* FLOAT.C      (c) Copyright Peter Kuschnerus, 2000-2007            */
+/* FLOAT.C      (c) Copyright Peter Kuschnerus, 2000-2009            */
 /*              ESA/390 Hex Floatingpoint Instructions               */
 
 // $Id$
@@ -12,7 +12,7 @@
 /* Incorporated all floating point instructions from cpu.c in order  */
 /* to implement revised instruction decoding.                        */
 /*                                               Jan Jaeger 01/07/00 */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.56  2008/05/04 14:14:03  rbowler
+// Fix CGXR to handle values exceeding 2G
+//
 // Revision 1.55  2008/05/04 10:01:48  rbowler
 // Fix CGDR to handle values exceeding 2G
 //

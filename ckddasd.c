@@ -1,4 +1,4 @@
-/* CKDDASD.C    (c) Copyright Roger Bowler, 1999-2007                */
+/* CKDDASD.C    (c) Copyright Roger Bowler, 1999-2009                */
 /*              ESA/390 CKD Direct Access Storage Device Handler     */
 
 // $Id$
@@ -19,6 +19,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.95  2008/12/01 21:31:02  rbowler
+// Show filename in msg HHCDA002E by enrico sorichetti
+//
 // Revision 1.94  2008/07/18 23:58:13  fish
 // Revert prior PSF order 18 length change; len s/b 12, not 16.
 // Bug is in S390 Linux dasd_eckd driver, not Hercules.

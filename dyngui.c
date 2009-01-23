@@ -1,6 +1,6 @@
 /*********************************************************************/
 /* DYNGUI.C     Hercules External GUI Interface DLL                  */
-/*              (c) Copyright "Fish" (David B. Trout), 2003-2007     */
+/*              (c) Copyright "Fish" (David B. Trout), 2003-2009     */
 /*                                                                   */
 /* Primary contact:   Fish   [fish@infidels.com]                     */
 /*                                                                   */
@@ -44,6 +44,9 @@
 /*********************************************************************/
 
 // $Log$
+// Revision 1.66  2009/01/16 13:57:49  rbowler
+// Fix  warning C4090: 'function' : different 'const' qualifiers in dyngui.c
+//
 // Revision 1.65  2009/01/16 09:49:10  jj
 // Disable the quiet command in dyngui
 //

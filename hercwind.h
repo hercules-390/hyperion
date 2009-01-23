@@ -1,4 +1,4 @@
-/* HERCWIND.H   (c) Copyright Roger Bowler, 2005-2007                */
+/* HERCWIND.H   (c) Copyright Roger Bowler, 2005-2009                */
 /*              MSVC Environment Specific Definitions                */
 
 /*-------------------------------------------------------------------*/
@@ -9,6 +9,11 @@
 // $Id$
 //
 // $Log$
+// Revision 1.19  2008/06/22 05:54:30  fish
+// Fix print-formatting issue (mostly in tape modules)
+// that can sometimes, in certain circumstances,
+// cause herc to crash.  (%8.8lx --> I32_FMTX, etc)
+//
 // Revision 1.18  2008/05/28 16:37:48  fish
 // #define PATH_MAX  from _MAX_PATH if available
 //

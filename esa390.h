@@ -1,12 +1,15 @@
-/* ESA390.H     (c) Copyright Roger Bowler, 1994-2007                */
+/* ESA390.H     (c) Copyright Roger Bowler, 1994-2009                */
 /*              ESA/390 Data Areas                                   */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 
 // $Id$
 //
 // $Log$
+// Revision 1.104  2009/01/15 17:27:02  rbowler
+// STFLE bit settings for CPU Measurement Facility
+//
 // Revision 1.103  2008/12/25 21:30:31  ivan
 // STSI Update part II : Add secondary CPU capacity in 1.2.2 SYSIB
 //

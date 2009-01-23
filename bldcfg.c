@@ -1,7 +1,7 @@
 /* BLDCFG.C     (c) Copyright Roger Bowler, 1999-2009                */
 /*              ESA/390 Configuration Builder                        */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
 
 // $Id$
 
@@ -22,7 +22,7 @@
 /*      PANRATE parameter by Reed H. Petty                           */
 /*      CPUPRIO parameter by Jan Jaeger                              */
 /*      HERCPRIO, TODPRIO, DEVPRIO parameters by Mark L. Gaubatz     */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 /*      $(DEFSYM) symbol substitution support by Ivan Warren         */
 /*      Patch for ${var=def} symbol substitution (hax #26),          */
 /*          and INCLUDE <filename> support (modified hax #27),       */
@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.129  2009/01/19 12:18:04  rbowler
+// bldcfg.c rev 1.126 was incompatible with OPTION_FISHIO
+//
 // Revision 1.128  2009/01/18 22:27:27  jj
 // Allow both automount config syntax and automount command syntax
 //

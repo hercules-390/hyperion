@@ -1,4 +1,4 @@
-/* DASDTAB.C    (c) Copyright Roger Bowler, 1999-2007                */
+/* DASDTAB.C    (c) Copyright Roger Bowler, 1999-2009                */
 /*              Hercules Supported DASD definitions                  */
 
 // $Id$
@@ -15,6 +15,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.40  2008/11/02 21:45:07  rbowler
+// Correction to dasdtab entries for 3375 and 3380
+//
 // Revision 1.39  2008/10/27 15:10:32  rbowler
 // Revert to 3990 as default control unit for 3390 devices
 //

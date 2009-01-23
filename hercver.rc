@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 // HercVer.rc  --  defines the Windows resources to be linked into the product
-//                 (c) Copyright "Fish" (David B. Trout), 2005
+//                 (c) Copyright "Fish" (David B. Trout), 2009
 //                 Released under the Q Public License as modifications to Hercules.
 //                 (http://www.hercules-390.org/herclic.html)
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.7  2008/05/17 13:45:07  ivan
+// Update (c) info in hercver.rc
+//
 // Revision 1.6  2007/11/30 14:54:32  jmaynard
 // Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
 //
@@ -32,7 +35,7 @@
 #endif
 
 #define HERCULES_PRODUCT          "The Hercules System/370, ESA/390, and z/Architecture Emulator"
-#define HERCULES_COPYRIGHT        "(c)Copyright 1999-2008"
+#define HERCULES_COPYRIGHT        "(c)Copyright 1999-2009"
 #define HERCULES_COMPANY          "by Roger Bowler, Jan Jaeger, and others"
 #define HERCULES_PRODUCT_URL      "http://www.hercules-390.org"
 #define HERCULES_PRODUCT_EMAIL    "hercules-390@yahoogroups.com"

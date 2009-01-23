@@ -1,8 +1,8 @@
-/* CONTROL.C    (c) Copyright Roger Bowler, 1994-2007                */
+/* CONTROL.C    (c) Copyright Roger Bowler, 1994-2009                */
 /*              ESA/390 CPU Emulator                                 */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 
 // $Id$
 
@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.271  2008/12/25 23:39:46  ivan
+// STSI FC 2 : Set CC to 0 at completion
+//
 // Revision 1.270  2008/12/25 23:31:17  ivan
 // STSI Update Part III : FC 2 - Store LPAR Information
 //
