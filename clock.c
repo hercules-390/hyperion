@@ -1,4 +1,4 @@
-/* CLOCK.C      (c) Copyright Jan Jaeger, 2000-2007                  */
+/* CLOCK.C      (c) Copyright Jan Jaeger, 2000-2009                  */
 /*              TOD Clock functions                                  */
 
 // $Id$
@@ -7,6 +7,10 @@
 /* by means of an offset and a steering rate.                        */
 
 // $Log$
+// Revision 1.43  2008/08/22 04:43:50  fish
+// Fix TOD clock race condition identified by Fred
+// Feucht -- by Marcin Cieslak [saper@system.pl]
+//
 // Revision 1.42  2007/11/21 22:55:49  fish
 // (untab)
 //
