@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.132  2009/01/25 11:10:33  jj
+// Rework PTT config statement
+//
 // Revision 1.131  2009/01/25 10:21:24  jj
 // Thread initialisation now before config processing
 //
@@ -887,7 +890,6 @@ char   *stodprio;                       /* -> Timer thread priority  */
 char   *scpuprio;                       /* -> CPU thread priority    */
 char   *sdevprio;                       /* -> Device thread priority */
 char   *slogofile;                      /* -> 3270 logo file         */
-char   *smountedtapereinit;             /* -> mounted tape reinit opt*/
 #if defined(_FEATURE_ECPSVM)
 char   *secpsvmlevel;                   /* -> ECPS:VM Keyword        */
 char   *secpsvmlvl;                     /* -> ECPS:VM level (or 'no')*/
@@ -1183,7 +1185,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         scpuprio = NULL;
         sdevprio = NULL;
         slogofile = NULL;
-        smountedtapereinit = NULL;
 #if defined(_FEATURE_ECPSVM)
         secpsvmlevel = NULL;
         secpsvmlvl = NULL;
@@ -1290,10 +1291,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             else if (strcasecmp (keyword, "herclogo") == 0)
             {
                 slogofile=operand;
-            }
-            else if (strcasecmp (keyword, "mounted_tape_reinit") == 0)
-            {
-                smountedtapereinit = operand;
             }
 #if defined(_FEATURE_ECPSVM)
             /* ECPS:VM support */
@@ -1644,27 +1641,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         {
             strncpy(hlogofile, slogofile, sizeof(hlogofile)-1);
             hlogofile[sizeof(hlogofile)-1] = '\0';
-        }
-
-        /* Parse "mounted_tape_reinit" option */
-        if ( smountedtapereinit )
-        {
-            if ( strcasecmp( smountedtapereinit, "disallow" ) == 0 )
-            {
-                sysblk.nomountedtapereinit = 1;
-            }
-            else if ( strcasecmp( smountedtapereinit, "allow" ) == 0 )
-            {
-                sysblk.nomountedtapereinit = 0;
-            }
-            else
-            {
-                fprintf(stderr, _("HHCCF052S Error in %s line %d: "
-                        "%s: invalid argument\n"),
-                        fname, inc_stmtnum[inc_level], smountedtapereinit);
-                delayed_exit(1);
-            }
-            smountedtapereinit = NULL;
         }
 
 #if defined(_FEATURE_ECPSVM)

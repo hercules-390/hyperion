@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.302  2009/01/18 22:27:27  jj
+// Allow both automount config syntax and automount command syntax
+//
 // Revision 1.301  2009/01/18 21:57:30  jj
 // rework devtmax config statement
 //
@@ -4714,6 +4717,29 @@ char    c;                              /* work for sscan            */
     return 0;
 }
 
+/* mounted_tape_reinit statement */
+int mnttapri_cmd(int argc, char *argv[], char *cmdline)
+{
+    UNREFERENCED(cmdline);
+
+    if(argc > 1)
+    {
+        if ( !strcasecmp( argv[1], "disallow" ) )
+            sysblk.nomountedtapereinit = 1;
+        else if ( !strcasecmp( argv[1], "allow" ) )
+            sysblk.nomountedtapereinit = 0;
+        else
+        {
+            logmsg( _("HHCCF052S %s: %s invalid argument\n"),argv[0],argv[1]);
+            return -1;
+        }
+    }
+    else
+        logmsg( _("Tape mount reinit %sallowed\n"),sysblk.nomountedtapereinit?"dis":"");
+
+    return 0;
+}
+        
 ///////////////////////////////////////////////////////////////////////
 /* devinit command - assign/open a file for a configured device */
 

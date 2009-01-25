@@ -7,6 +7,9 @@
 // $Id$
 
 // $Log$
+// Revision 1.7  2009/01/19 12:16:57  rbowler
+// Fix dynamic linkage errors in cmdtab.c for MSVC
+//
 
 
 //          command    type          function      one-line description...
@@ -292,6 +295,8 @@ COMMAND ( "devinit",   PANEL,        devinit_cmd,
 COMMAND ( "devlist",   PANEL,        devlist_cmd,   "list device or all devices\n", NULL )
 
 COMMAND ( "qd",        PANEL,        qd_cmd,        "query dasd\n", NULL )
+
+COMMAND ( "mounted_tape_reinit", PANEL+CONFIG, mnttapri_cmd,  "Control tape initilisation", NULL )
 
 #if defined( OPTION_TAPE_AUTOMOUNT )
 COMMAND ( "automount", PANEL+CONFIG, automount_cmd,
