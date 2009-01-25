@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.305  2009/01/25 21:23:50  jj
+// Implement auto_scsi_mount command
+//
 // Revision 1.304  2009/01/25 14:44:03  jj
 // Align coding style to hercules standard
 //
@@ -1517,7 +1520,7 @@ int rc;
         if(*argv[1] == '+')
         {
             argv2 = argv[1] + 1;
-            
+
             if (argc != 2 )
             {
                 logmsg(_("HHCPN204E Invalid syntax; enter 'HELP AUTOMOUNT' for help.\n"));
@@ -1527,7 +1530,7 @@ int rc;
         else
         {
             argv2 = argv[2];
-            
+
             if (argc != 3 )
             {
                 logmsg(_("HHCPN204E Invalid syntax; enter 'HELP AUTOMOUNT' for help.\n"));
@@ -1639,7 +1642,7 @@ int rc;
         if(*argv[1] == '-')
         {
             argv2 = argv[1] + 1;
-            
+
             if (argc != 2 )
             {
                 logmsg(_("HHCPN213E Invalid syntax; enter 'HELP AUTOMOUNT' for help.\n"));
@@ -1649,7 +1652,7 @@ int rc;
         else
         {
             argv2 = argv[2];
-            
+
             if (argc != 3 )
             {
                 logmsg(_("HHCPN213E Invalid syntax; enter 'HELP AUTOMOUNT' for help.\n"));
@@ -2290,7 +2293,7 @@ char *basedir;
             logmsg(_("SCLPROOT %s\n"),basedir);
         else
             logmsg(_("SCLP DISK I/O Disabled\n"));
-   
+
     return 0;
 }
 
@@ -2314,7 +2317,7 @@ int httproot_cmd(int argc, char *argv[], char *cmdline)
             logmsg(_("HHCnnxxxI HTTPROOT %s\n"),sysblk.httproot);
         else
             logmsg(_("HHCnnxxxI HTTPROOT not specified\n"));
-   
+
     return 0;
 }
 
@@ -3428,7 +3431,7 @@ int pgmprdos_cmd(int argc, char *argv[], char *cmdline)
     }
     else
         return -1;
-            
+
     return 0;
 }
 
@@ -3462,7 +3465,7 @@ int i;
                 logmsg(_("HHCCF053I DIAG8CMD invalid option: %s\n"),argv[i]);
                 return -1;
             }
-    
+
         }
     else
         logmsg(_("HHCCF054S DIAG8CMD: %sable, %secho\n"),sysblk.diag8cmd ? "en" : "dis", (sysblk.diag8cmd & 0x80) ? "" : "no");
@@ -4854,7 +4857,7 @@ int mnttapri_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
-        
+
 #if defined( OPTION_SCSI_TAPE )
 /*-------------------------------------------------------------------*/
 /* auto_scsi_mount statement                                         */
@@ -6396,7 +6399,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
 int defsym_cmd(int argc, char *argv[], char *cmdline)
 {
     char* sym;
-    char* value = "";
+    char* value;
 
     if (argc < 2)
     {
@@ -6407,15 +6410,15 @@ int defsym_cmd(int argc, char *argv[], char *cmdline)
     /* point to symbol name */
     sym = argv[1];
 
-    if (argc >= 3)
+    if (argc > 3)
     {
-        /* point to first non-blank following symbol name */
-        cmdline += strlen("defsym") + 1;
-        while (isspace(*cmdline)) cmdline++;
-        cmdline += strlen(sym) + 1;
-        value = cmdline;
-        while (*value && isspace(*value)) value++;
+        logmsg(_("HHCCF060S DEFSYM requires a single value"
+                " (use quotes if necessary)\n"));
+        return -1;
     }
+
+    /* point to symbol value if specified, otherwise set to blank */
+    value = (argc > 2) ? argv[2] : "";
 
     /* define the symbol */
     set_symbol(sym,value);
@@ -6555,7 +6558,7 @@ BYTE c;                                 /* Character work area       */
     }
     regs=sysblk.regs[sysblk.pcpu];
 
-    
+
     // f- and f+ commands - mark frames unusable/usable
 
     if ((cmd[0] == 'f') && sscanf(cmd+2, "%x%c", &aaddr, &c) == 1)
@@ -6577,7 +6580,7 @@ BYTE c;                                 /* Character work area       */
     }
 
 #ifdef OPTION_CKD_KEY_TRACING
-    
+
     // t+ckd and t-ckd commands - turn CKD_KEY tracing on/off
 
     if ((cmd[0] == 't') && (strcasecmp(cmd+2, "ckd") == 0))
@@ -6593,7 +6596,7 @@ BYTE c;                                 /* Character work area       */
     }
 
 #endif
-    
+
     // t+devn and t-devn commands - turn CCW tracing on/off
     // s+devn and s-devn commands - turn CCW stepping on/off
 
