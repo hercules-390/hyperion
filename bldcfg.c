@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.133  2009/01/25 13:53:48  jj
+// Implement mounted_tape_reinit as command
+//
 // Revision 1.132  2009/01/25 11:10:33  jj
 // Rework PTT config statement
 //
@@ -898,9 +901,6 @@ int    ecpsvmac;                        /* -> ECPS:VM add'l arg cnt  */
 #if defined(OPTION_SHARED_DEVICES)
 char   *sshrdport;                      /* -> Shared device port nbr */
 #endif /*defined(OPTION_SHARED_DEVICES)*/
-#if defined( OPTION_SCSI_TAPE )
-char   *sauto_scsi_mount;               /* Auto SCSI tape mounts     */
-#endif /* defined( OPTION_SCSI_TAPE ) */
 U16     version = 0x00;                 /* CPU version code          */
 int     dfltver = 1;                    /* Default version code      */
 U32     serial;                         /* CPU serial number         */
@@ -1194,9 +1194,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 #if defined(OPTION_SHARED_DEVICES)
         sshrdport = NULL;
 #endif /*defined(OPTION_SHARED_DEVICES)*/
-#if defined( OPTION_SCSI_TAPE )
-        sauto_scsi_mount = NULL;
-#endif /* defined( OPTION_SCSI_TAPE ) */
 
         /* Check for old-style CPU statement */
         if (scount == 0 && addargc == 5 && strlen(keyword) == 6
@@ -1319,13 +1316,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 sshrdport = operand;
             }
 #endif /*defined(OPTION_SHARED_DEVICES)*/
-
-#if defined( OPTION_SCSI_TAPE )
-            else if (strcasecmp (keyword, "auto_scsi_mount") == 0)
-            {
-               sauto_scsi_mount = operand;
-            }
-#endif /* defined( OPTION_SCSI_TAPE ) */
 
             else
             {
@@ -1723,42 +1713,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             }
         }
 #endif /*defined(OPTION_SHARED_DEVICES)*/
-
-#if defined( OPTION_SCSI_TAPE )
-        /* Parse automatic SCSI tape mounts operand */
-        if ( sauto_scsi_mount )
-        {
-            if ( strcasecmp( sauto_scsi_mount, "no" ) == 0 )
-            {
-                sysblk.auto_scsi_mount_secs = 0;
-            }
-            else if ( strcasecmp( sauto_scsi_mount, "yes" ) == 0 )
-            {
-                sysblk.auto_scsi_mount_secs = DEFAULT_AUTO_SCSI_MOUNT_SECS;
-            }
-            else
-            {
-                int auto_scsi_mount_secs;
-                if ( sscanf( sauto_scsi_mount, "%d%c", &auto_scsi_mount_secs, &c ) != 1
-                    || auto_scsi_mount_secs <= 0 || auto_scsi_mount_secs > 99 )
-                {
-                    fprintf
-                    (
-                        stderr,
-
-                        _( "HHCCF068S Error in %s line %d: Invalid Auto_SCSI_Mount value: %s\n" )
-
-                        ,fname
-                        ,inc_stmtnum[inc_level]
-                        ,sauto_scsi_mount
-                    );
-                    delayed_exit(1);
-                }
-                sysblk.auto_scsi_mount_secs = auto_scsi_mount_secs;
-            }
-            sauto_scsi_mount = NULL;
-        }
-#endif /* defined( OPTION_SCSI_TAPE ) */
 
     } /* end for(scount) (end of configuration file statement loop) */
 

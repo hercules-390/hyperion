@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.304  2009/01/25 14:44:03  jj
+// Align coding style to hercules standard
+//
 // Revision 1.303  2009/01/25 13:53:48  jj
 // Implement mounted_tape_reinit as command
 //
@@ -4852,6 +4855,40 @@ int mnttapri_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
         
+#if defined( OPTION_SCSI_TAPE )
+/*-------------------------------------------------------------------*/
+/* auto_scsi_mount statement                                         */
+/*-------------------------------------------------------------------*/
+int ascsimnt_cmd(int argc, char *argv[], char *cmdline)
+{
+    UNREFERENCED(cmdline);
+
+    if(argc > 1)
+    {
+        if ( !strcasecmp( argv[1], "no" ) )
+            sysblk.auto_scsi_mount_secs = 0;
+        else if ( !strcasecmp( argv[1], "yes" ) )
+            sysblk.auto_scsi_mount_secs = DEFAULT_AUTO_SCSI_MOUNT_SECS;
+        else
+        {
+            int secs; char c;
+            if ( sscanf( argv[1], "%d%c", &secs, &c ) != 1
+                || secs <= 0 || secs > 99 )
+            {
+                logmsg( _("HHCCF052S %s: %s invalid argument\n"),argv[0],argv[1]);
+                return -1;
+            }
+            else
+                sysblk.auto_scsi_mount_secs = secs;
+        }
+    }
+    else
+        logmsg( _("Auto SCSI mount %d seconds\n"),sysblk.auto_scsi_mount_secs);
+
+    return 0;
+}
+#endif /*defined( OPTION_SCSI_TAPE )*/
+
 
 /*-------------------------------------------------------------------*/
 /* devinit command - assign/open a file for a configured device      */
