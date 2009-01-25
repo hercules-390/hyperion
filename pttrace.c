@@ -8,6 +8,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.32  2009/01/23 12:58:42  bernard
+// copyright notice
+//
 // Revision 1.31  2008/11/24 22:31:49  rbowler
 // Fix win64 warning C4312 type cast conversion in pttrace.c
 //
@@ -93,139 +96,143 @@ DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
 
     UNREFERENCED(cmdline);
 
-    /* print trace table if no arguments */
-    if (argc <= 1 && pttracen)
-        return ptt_pthread_print();
-
-    /* process arguments; last arg can be trace table size */
-    for (--argc, argv++; argc; --argc, ++argv)
+    if (argc > 1)
     {
-        if (strcasecmp("opts", argv[0]) == 0)
-            continue;
-        else if (strcasecmp("timer", argv[0]) == 0)
+        /* process arguments; last arg can be trace table size */
+        for (--argc, argv++; argc; --argc, ++argv)
         {
-            pttimer = 1;
-            continue;
-        }
-        else if (strcasecmp("notimer", argv[0]) == 0)
-        {
-            pttimer = 0;
-            continue;
-        }
-        else if (strcasecmp("logger", argv[0]) == 0)
-        {
-            pttlogger = 1;
-            continue;
-        }
-        else if (strcasecmp("nologger", argv[0]) == 0)
-        {
-            pttlogger = 0;
-            continue;
-        }
-        else if (strcasecmp("nothreads", argv[0]) == 0)
-        {
-            pttnothreads = 1;
-            continue;
-        }
-        else if (strcasecmp("threads", argv[0]) == 0)
-        {
-            pttnothreads = 0;
-            continue;
-        }
-        else if (strcasecmp("nolock", argv[0]) == 0)
-        {
-            pttnolock = 1;
-            continue;
-        }
-        else if (strcasecmp("lock", argv[0]) == 0)
-        {
-            pttnolock = 0;
-            continue;
-        }
-        else if (strcasecmp("notod", argv[0]) == 0)
-        {
-            pttnotod = 1;
-            continue;
-        }
-        else if (strcasecmp("tod", argv[0]) == 0)
-        {
-            pttnotod = 0;
-            continue;
-        }
-        else if (strcasecmp("nowrap", argv[0]) == 0)
-        {
-            pttnowrap = 1;
-            continue;
-        }
-        else if (strcasecmp("wrap", argv[0]) == 0)
-        {
-            pttnowrap = 0;
-            continue;
-        }
-        else if (strncasecmp("to=", argv[0], 3) == 0 && strlen(argv[0]) > 3
-              && (sscanf(&argv[0][3], "%d%c", &to, &c) == 1 && to >= 0))
-        {
-            pttto = to;
-            continue;
-        }
-        else if (argc == 1 && sscanf(argv[0], "%d%c", &n, &c) == 1 && n >= 0)
-        {
-            OBTAIN_PTTLOCK;
-            if (pttracen == 0)
+            if (strcasecmp("opts", argv[0]) == 0)
+                continue;
+            else if (strcasecmp("timer", argv[0]) == 0)
             {
-                if (pttrace != NULL)
-                {
-                    RELEASE_PTTLOCK;
-                    logmsg( _("HHCPT002E Trace is busy\n"));
-                    return -1;
-                }
+                pttimer = 1;
+                continue;
             }
-            else if (pttrace)
+            else if (strcasecmp("notimer", argv[0]) == 0)
             {
-                pttracen = 0;
-                RELEASE_PTTLOCK;
-                usleep(1000);
+                pttimer = 0;
+                continue;
+            }
+            else if (strcasecmp("logger", argv[0]) == 0)
+            {
+                pttlogger = 1;
+                continue;
+            }
+            else if (strcasecmp("nologger", argv[0]) == 0)
+            {
+                pttlogger = 0;
+                continue;
+            }
+            else if (strcasecmp("nothreads", argv[0]) == 0)
+            {
+                pttnothreads = 1;
+                continue;
+            }
+            else if (strcasecmp("threads", argv[0]) == 0)
+            {
+                pttnothreads = 0;
+                continue;
+            }
+            else if (strcasecmp("nolock", argv[0]) == 0)
+            {
+                pttnolock = 1;
+                continue;
+            }
+            else if (strcasecmp("lock", argv[0]) == 0)
+            {
+                pttnolock = 0;
+                continue;
+            }
+            else if (strcasecmp("notod", argv[0]) == 0)
+            {
+                pttnotod = 1;
+                continue;
+            }
+            else if (strcasecmp("tod", argv[0]) == 0)
+            {
+                pttnotod = 0;
+                continue;
+            }
+            else if (strcasecmp("nowrap", argv[0]) == 0)
+            {
+                pttnowrap = 1;
+                continue;
+            }
+            else if (strcasecmp("wrap", argv[0]) == 0)
+            {
+                pttnowrap = 0;
+                continue;
+            }
+            else if (strncasecmp("to=", argv[0], 3) == 0 && strlen(argv[0]) > 3
+                  && (sscanf(&argv[0][3], "%d%c", &to, &c) == 1 && to >= 0))
+            {
+                pttto = to;
+                continue;
+            }
+            else if (argc == 1 && sscanf(argv[0], "%d%c", &n, &c) == 1 && n >= 0)
+            {
                 OBTAIN_PTTLOCK;
-                free (pttrace);
-                pttrace = NULL;
+                if (pttracen == 0)
+                {
+                    if (pttrace != NULL)
+                    {
+                        RELEASE_PTTLOCK;
+                        logmsg( _("HHCPT002E Trace is busy\n"));
+                        return -1;
+                    }
+                }
+                else if (pttrace)
+                {
+                    pttracen = 0;
+                    RELEASE_PTTLOCK;
+                    usleep(1000);
+                    OBTAIN_PTTLOCK;
+                    free (pttrace);
+                    pttrace = NULL;
+                }
+                ptt_trace_init (n, 0);
+                RELEASE_PTTLOCK;
             }
-            ptt_trace_init (n, 0);
-            RELEASE_PTTLOCK;
-        }
-        else
+            else
+            {
+                logmsg( _("HHCPT001E Invalid value: %s\n"), argv[0]);
+                rc = -1;
+                break;
+            }
+        } /* for each ptt argument */
+    
+        /* wakeup timeout thread if to= specified */
+        if (to >= 0 && ptttotid)
         {
-            logmsg( _("HHCPT001E Invalid value: %s\n"), argv[0]);
-            rc = -1;
-            break;
+            obtain_lock (&ptttolock);
+            ptttotid = 0;
+            signal_condition (&ptttocond);
+            release_lock (&ptttolock);
         }
-    } /* for each ptt argument */
-
-    logmsg( _("HHCPT003I ptt %s %s %s %s %s %s to=%d %d\n"),
-           pttimer ? "timer" : "notimer",
-           pttnothreads ? "nothreads" : "threads",
-           pttnolock ? "nolock" : "lock",
-           pttnotod ? "notod" : "tod",
-           pttnowrap ? "nowrap" : "wrap",
-           pttlogger ? "logger" : "nologger",
-           pttto,
-           pttracen);
-
-    /* wakeup timeout thread if to= specified */
-    if (to >= 0 && ptttotid)
-    {
-        obtain_lock (&ptttolock);
-        ptttotid = 0;
-        signal_condition (&ptttocond);
-        release_lock (&ptttolock);
+    
+        /* start timeout thread if positive to= specified */
+        if (to > 0)
+        {
+            obtain_lock (&ptttolock);
+            ptttotid = 0;
+            create_thread (&ptttotid, NULL, ptt_timeout, NULL, "ptt_timeout");
+            release_lock (&ptttolock);
+        }
     }
-
-    /* start timeout thread if positive to= specified */
-    if (to > 0)
+    else
     {
-        obtain_lock (&ptttolock);
-        ptttotid = 0;
-        create_thread (&ptttotid, NULL, ptt_timeout, NULL, "ptt_timeout");
-        release_lock (&ptttolock);
+        if (pttracen)
+            rc = ptt_pthread_print();
+    
+        logmsg( _("HHCPT003I ptt %s %s %s %s %s %s to=%d %d\n"),
+               pttimer ? "timer" : "notimer",
+               pttnothreads ? "nothreads" : "threads",
+               pttnolock ? "nolock" : "lock",
+               pttnotod ? "notod" : "tod",
+               pttnowrap ? "nowrap" : "wrap",
+               pttlogger ? "logger" : "nologger",
+               pttto,
+               pttracen);
     }
 
     return rc;

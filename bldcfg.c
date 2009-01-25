@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.131  2009/01/25 10:21:24  jj
+// Thread initialisation now before config processing
+//
 // Revision 1.130  2009/01/23 11:39:41  bernard
 // copyright notice
 //
@@ -893,9 +896,6 @@ int    ecpsvmac;                        /* -> ECPS:VM add'l arg cnt  */
 #if defined(OPTION_SHARED_DEVICES)
 char   *sshrdport;                      /* -> Shared device port nbr */
 #endif /*defined(OPTION_SHARED_DEVICES)*/
-#if defined(OPTION_PTTRACE)
-char   *sptt;                           /* Pthread trace table size  */
-#endif /*defined(OPTION_PTTRACE)*/
 #if defined( OPTION_SCSI_TAPE )
 char   *sauto_scsi_mount;               /* Auto SCSI tape mounts     */
 #endif /* defined( OPTION_SCSI_TAPE ) */
@@ -926,9 +926,6 @@ int     devtmax;                        /* Max number device threads */
 int     ecpsvmavail;                    /* ECPS:VM Available flag    */
 int     ecpsvmlevel;                    /* ECPS:VM declared level    */
 #endif /*defined(_FEATURE_ECPSVM)*/
-#ifdef OPTION_PTTRACE
-int     ptt = 0;                        /* Pthread trace table size  */
-#endif /*OPTION_PTTRACE*/
 BYTE    c;                              /* Work area for sscanf      */
 char   *styp;                           /* -> Engine type string     */
 char   *styp_values[] = {"CP","CF","AP","IL","??","IP"}; /* type values */
@@ -1015,6 +1012,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     sysblk.panrate = PANEL_REFRESH_RATE_SLOW;
 #endif
 
+    /* Initialize locks, conditions, and attributes */
     initialize_lock (&sysblk.todlock);
     initialize_lock (&sysblk.mainlock);
     sysblk.mainowner = LOCK_OWNER_NONE;
@@ -1029,6 +1027,10 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         initialize_lock (&sysblk.cpulock[i]);
     initialize_condition (&sysblk.sync_cond);
     initialize_condition (&sysblk.sync_bc_cond);
+
+#ifdef OPTION_PTTRACE
+    ptt_trace_init (0, 1);
+#endif
 
 #if defined(OPTION_FISHIO)
     InitIOScheduler                     // initialize i/o scheduler...
@@ -1191,9 +1193,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 #if defined(OPTION_SHARED_DEVICES)
         sshrdport = NULL;
 #endif /*defined(OPTION_SHARED_DEVICES)*/
-#ifdef OPTION_PTTRACE
-        sptt = NULL;
-#endif /*OPTION_PTTRACE*/
 #if defined( OPTION_SCSI_TAPE )
         sauto_scsi_mount = NULL;
 #endif /* defined( OPTION_SCSI_TAPE ) */
@@ -1316,12 +1315,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 addargc=0;
             }
 #endif /*defined(_FEATURE_ECPSVM)*/
-#ifdef OPTION_PTTRACE
-            else if (strcasecmp (keyword, "ptt") == 0)
-            {
-                sptt = operand;
-            }
-#endif /*OPTION_PTTRACE*/
 
 #if defined(OPTION_SHARED_DEVICES)
             else if (strcasecmp (keyword, "shrdport") == 0)
@@ -1755,20 +1748,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         }
 #endif /*defined(OPTION_SHARED_DEVICES)*/
 
-#ifdef OPTION_PTTRACE
-        /* Parse pthread trace value */
-        if (sptt != NULL)
-        {
-            if (sscanf(sptt, "%d%c", &ptt, &c) != 1)
-            {
-                fprintf(stderr, _("HHCCF031S Error in %s line %d: "
-                        "Invalid ptt value: %s\n"),
-                        fname, inc_stmtnum[inc_level], sptt);
-                delayed_exit(1);
-            }
-        }
-#endif /*OPTION_PTTRACE*/
-
 #if defined( OPTION_SCSI_TAPE )
         /* Parse automatic SCSI tape mounts operand */
         if ( sauto_scsi_mount )
@@ -1891,11 +1870,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     sysblk.cpuid = ((U64)version << 56)
                  | ((U64)serial << 32)
                  | ((U64)model << 16);
-
-    /* Initialize locks, conditions, and attributes */
-#ifdef OPTION_PTTRACE
-    ptt_trace_init (ptt, 1);
-#endif
 
     /* Reset the clock steering registers */
     csr_reset();
