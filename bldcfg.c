@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.130  2009/01/23 11:39:41  bernard
+// copyright notice
+//
 // Revision 1.129  2009/01/19 12:18:04  rbowler
 // bldcfg.c rev 1.126 was incompatible with OPTION_FISHIO
 //
@@ -1012,6 +1015,38 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     sysblk.panrate = PANEL_REFRESH_RATE_SLOW;
 #endif
 
+    initialize_lock (&sysblk.todlock);
+    initialize_lock (&sysblk.mainlock);
+    sysblk.mainowner = LOCK_OWNER_NONE;
+    initialize_lock (&sysblk.intlock);
+    initialize_lock (&sysblk.iointqlk);
+    sysblk.intowner = LOCK_OWNER_NONE;
+    initialize_lock (&sysblk.sigplock);
+//  initialize_detach_attr (&sysblk.detattr);   // (moved to impl.c)
+//  initialize_join_attr   (&sysblk.joinattr);  // (moved to impl.c)
+    initialize_condition (&sysblk.cpucond);
+    for (i = 0; i < MAX_CPU_ENGINES; i++)
+        initialize_lock (&sysblk.cpulock[i]);
+    initialize_condition (&sysblk.sync_cond);
+    initialize_condition (&sysblk.sync_bc_cond);
+
+#if defined(OPTION_FISHIO)
+    InitIOScheduler                     // initialize i/o scheduler...
+    (
+        sysblk.arch_mode,               // (for calling execute_ccw_chain)
+        &sysblk.devprio,                // (ptr to device thread priority)
+        MAX_DEVICE_THREAD_IDLE_SECS,    // (maximum device thread wait time)
+        devtmax                         // (maximum #of device threads allowed)
+    );
+#else // !defined(OPTION_FISHIO)
+    initialize_lock (&sysblk.ioqlock);
+    initialize_condition (&sysblk.ioqcond);
+    /* Set max number device threads */
+    sysblk.devtmax = devtmax;
+    sysblk.devtwait = sysblk.devtnbr =
+    sysblk.devthwm  = sysblk.devtunavail = 0;
+#endif // defined(OPTION_FISHIO)
+
     /* Default the licence setting */
     losc_set(PGM_PRD_OS_RESTRICTED);
 
@@ -1861,37 +1896,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 #ifdef OPTION_PTTRACE
     ptt_trace_init (ptt, 1);
 #endif
-    initialize_lock (&sysblk.todlock);
-    initialize_lock (&sysblk.mainlock);
-    sysblk.mainowner = LOCK_OWNER_NONE;
-    initialize_lock (&sysblk.intlock);
-    initialize_lock (&sysblk.iointqlk);
-    sysblk.intowner = LOCK_OWNER_NONE;
-    initialize_lock (&sysblk.sigplock);
-//  initialize_detach_attr (&sysblk.detattr);   // (moved to impl.c)
-//  initialize_join_attr   (&sysblk.joinattr);  // (moved to impl.c)
-    initialize_condition (&sysblk.cpucond);
-    for (i = 0; i < MAX_CPU_ENGINES; i++)
-        initialize_lock (&sysblk.cpulock[i]);
-    initialize_condition (&sysblk.sync_cond);
-    initialize_condition (&sysblk.sync_bc_cond);
-
-#if defined(OPTION_FISHIO)
-    InitIOScheduler                     // initialize i/o scheduler...
-    (
-        sysblk.arch_mode,               // (for calling execute_ccw_chain)
-        &sysblk.devprio,                // (ptr to device thread priority)
-        MAX_DEVICE_THREAD_IDLE_SECS,    // (maximum device thread wait time)
-        devtmax                         // (maximum #of device threads allowed)
-    );
-#else // !defined(OPTION_FISHIO)
-    initialize_lock (&sysblk.ioqlock);
-    initialize_condition (&sysblk.ioqcond);
-    /* Set max number device threads */
-    sysblk.devtmax = devtmax;
-    sysblk.devtwait = sysblk.devtnbr =
-    sysblk.devthwm  = sysblk.devtunavail = 0;
-#endif // defined(OPTION_FISHIO)
 
     /* Reset the clock steering registers */
     csr_reset();
@@ -1899,35 +1903,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     /* Set up the system TOD clock offset: compute the number of
      * microseconds offset to 0000 GMT, 1 January 1900 */
 
-#if 0
-    if (sysepoch == 1928)
-    {
-        sysepoch = 1900;
-        yroffset = -28;
-        logmsg( _("HHCCF071W SYSEPOCH 1928 is deprecated and "
-                "will be invalid in a future release.\n"
-                "          Specify SYSEPOCH 1900 and YROFFSET -28 instead.\n"));
-    }
-    if (sysepoch == 1988)
-    {
-        sysepoch = 1960;
-        yroffset = -28;
-        logmsg( _("HHCCF071W SYSEPOCH 1988 is deprecated and "
-                "will be invalid in a future release.\n"
-                "          Specify SYSEPOCH 1960 and YROFFSET -28 instead.\n"));
-    }
-    /* Only 1900 and 1960 are valid by this point. There are 16*1000000 clock
-       increments in one second, 86400 seconds in one day, and 14 leap days
-       between 1 January 1900 and 1 January 1960. */
-    if (sysepoch == 1960)
-        set_tod_epoch(((60*365)+14)*-TOD_DAY);
-    else
-        set_tod_epoch(0);
-
-    /* Set the year offset. This has been handled above for the case of
-       SYSEPOCH 1928 or 1988, for backwards compatibility. */
-    adjust_tod_epoch((yroffset*365+(yroffset/4))*TOD_DAY);
-#else
     if(sysepoch != 1900 && sysepoch != 1960)
     {
         if(sysepoch < 1960)
@@ -1948,7 +1923,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     sysepoch -= 1900 + yroffset;
 
     set_tod_epoch(((sysepoch*365+(sysepoch/4))*-TOD_DAY)+lyear_adjust(sysepoch)+ly1960);
-#endif
+
     sysblk.sysepoch = sysepoch;
 
     /* Set the timezone offset */
