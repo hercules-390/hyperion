@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.303  2009/01/25 13:53:48  jj
+// Implement mounted_tape_reinit as command
+//
 // Revision 1.302  2009/01/18 22:27:27  jj
 // Allow both automount config syntax and automount command syntax
 //
@@ -392,7 +395,7 @@
 #include "dasdtab.h"
 #include "ctcadpt.h"
 
-///////////////////////////////////////////////////////////////////////
+
 // (forward references, etc)
 
 #define MAX_DEVLIST_DEVICES  1024
@@ -404,7 +407,7 @@ int ProcessPanelCommand (char*);
 int process_script_file(char *,int);
 
 
-///////////////////////////////////////////////////////////////////////
+
 /* $test_cmd - do something or other */
 
 #ifdef _MSVC_ // (damn optimizer is getting in the way so disable it)
@@ -450,6 +453,9 @@ void* test_thread(void* parg)
     return NULL;
 }
 
+/*-------------------------------------------------------------------*/
+/* test command                                                      */
+/*-------------------------------------------------------------------*/
 int test_cmd(int argc, char *argv[],char *cmdline)
 {
 //  UNREFERENCED(argc);
@@ -517,11 +523,14 @@ static inline void missing_devnum()
     logmsg( _("HHCPN031E Missing device number\n") );
 }
 
-///////////////////////////////////////////////////////////////////////
+
 /* maxrates command - report maximum seen mips/sios rates */
 
 #ifdef OPTION_MIPS_COUNTING
 
+/*-------------------------------------------------------------------*/
+/* maxrates command                                                  */
+/*-------------------------------------------------------------------*/
 int maxrates_cmd(int argc, char *argv[],char *cmdline)
 {
     UNREFERENCED(cmdline);
@@ -622,10 +631,10 @@ int maxrates_cmd(int argc, char *argv[],char *cmdline)
 
 #endif // OPTION_MIPS_COUNTING
 
-///////////////////////////////////////////////////////////////////////
-/* message command - Display a line of text at the console           */
-///////////////////////////////////////////////////////////////////////
 
+/*-------------------------------------------------------------------*/
+/* message command - Display a line of text at the console           */
+/*-------------------------------------------------------------------*/
 int message_cmd(int argc,char *argv[], char *cmdline,int withhdr)
 {
     char    *msgtxt;
@@ -699,18 +708,28 @@ int message_cmd(int argc,char *argv[], char *cmdline,int withhdr)
     return 0;
 }
 
+
+/*-------------------------------------------------------------------*/
+/* msg command - Display a line of text at the console               */
+/*-------------------------------------------------------------------*/
 int msg_cmd(int argc,char *argv[], char *cmdline)
 {
     return(message_cmd(argc,argv,cmdline,1));
 }
+
+
+/*-------------------------------------------------------------------*/
+/* msgnoh command - Display a line of text at the console            */
+/*-------------------------------------------------------------------*/
 int msgnoh_cmd(int argc,char *argv[], char *cmdline)
 {
     return(message_cmd(argc,argv,cmdline,0));
 }
 
 
-/* comment command - do absolutely nothing */
-
+/*-------------------------------------------------------------------*/
+/* comment command - do absolutely nothing                           */
+/*-------------------------------------------------------------------*/
 int comment_cmd(int argc, char *argv[],char *cmdline)
 {
     UNREFERENCED(argc);
@@ -720,9 +739,10 @@ int comment_cmd(int argc, char *argv[],char *cmdline)
     return 0;   // (make compiler happy)
 }
 
-///////////////////////////////////////////////////////////////////////
-/* quit or exit command - terminate the emulator */
 
+/*-------------------------------------------------------------------*/
+/* quit or exit command - terminate the emulator                     */
+/*-------------------------------------------------------------------*/
 int quit_cmd(int argc, char *argv[],char *cmdline)
 {
     UNREFERENCED(argc);
@@ -732,9 +752,10 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
     return 0;   /* (make compiler happy) */
 }
 
-///////////////////////////////////////////////////////////////////////
-/* history command  */
 
+/*-------------------------------------------------------------------*/
+/* history command                                                   */
+/*-------------------------------------------------------------------*/
 int History(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
@@ -779,9 +800,9 @@ int History(int argc, char *argv[], char *cmdline)
 }
 
 
-///////////////////////////////////////////////////////////////////////
-/* log command - direct log output */
-
+/*-------------------------------------------------------------------*/
+/* log command - direct log output                                   */
+/*-------------------------------------------------------------------*/
 int log_cmd(int argc, char *argv[],char *cmdline)
 {
     UNREFERENCED(cmdline);
@@ -799,9 +820,10 @@ int log_cmd(int argc, char *argv[],char *cmdline)
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* logopt command - change log options */
 
+/*-------------------------------------------------------------------*/
+/* logopt command - change log options                               */
+/*-------------------------------------------------------------------*/
 int logopt_cmd(int argc, char *argv[],char *cmdline)
 {
     UNREFERENCED(cmdline);
@@ -838,9 +860,10 @@ int logopt_cmd(int argc, char *argv[],char *cmdline)
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* version command - display version information */
 
+/*-------------------------------------------------------------------*/
+/* version command - display version information                     */
+/*-------------------------------------------------------------------*/
 int version_cmd(int argc, char *argv[],char *cmdline)
 {
     UNREFERENCED(cmdline);
@@ -850,9 +873,10 @@ int version_cmd(int argc, char *argv[],char *cmdline)
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* start command (or just Enter) - start CPU (or printer device if argument given) */
 
+/*-------------------------------------------------------------------*/
+/* start command - start CPU (or printer device if argument given)   */
+/*-------------------------------------------------------------------*/
 int start_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
@@ -929,9 +953,10 @@ int start_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* g command - turn off single stepping and start CPU */
 
+/*-------------------------------------------------------------------*/
+/* g command - turn off single stepping and start CPU                */
+/*-------------------------------------------------------------------*/
 int g_cmd(int argc, char *argv[], char *cmdline)
 {
     int i;
@@ -953,9 +978,10 @@ int g_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* stop command - stop CPU (or printer device if argument given) */
 
+/*-------------------------------------------------------------------*/
+/* stop command - stop CPU (or printer device if argument given)     */
+/*-------------------------------------------------------------------*/
 int stop_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
@@ -1012,9 +1038,10 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* startall command - start all CPU's */
 
+/*-------------------------------------------------------------------*/
+/* startall command - start all CPU's                                */
+/*-------------------------------------------------------------------*/
 int startall_cmd(int argc, char *argv[], char *cmdline)
 {
     int i;
@@ -1043,9 +1070,10 @@ int startall_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* stopall command - stop all CPU's */
 
+/*-------------------------------------------------------------------*/
+/* stopall command - stop all CPU's                                  */
+/*-------------------------------------------------------------------*/
 DLL_EXPORT int stopall_cmd(int argc, char *argv[], char *cmdline)
 {
     int i;
@@ -1078,9 +1106,10 @@ DLL_EXPORT int stopall_cmd(int argc, char *argv[], char *cmdline)
 
 #ifdef _FEATURE_CPU_RECONFIG
 
-///////////////////////////////////////////////////////////////////////
-/* cf command - configure/deconfigure a CPU */
 
+/*-------------------------------------------------------------------*/
+/* cf command - configure/deconfigure a CPU                          */
+/*-------------------------------------------------------------------*/
 int cf_cmd(int argc, char *argv[], char *cmdline)
 {
     int on = -1;
@@ -1119,9 +1148,10 @@ int cf_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* cfall command - configure/deconfigure all CPU's */
 
+/*-------------------------------------------------------------------*/
+/* cfall command - configure/deconfigure all CPU's                   */
+/*-------------------------------------------------------------------*/
 int cfall_cmd(int argc, char *argv[], char *cmdline)
 {
     int i;
@@ -1164,9 +1194,10 @@ int cfall_cmd(int argc, char *argv[], char *cmdline)
 
 #endif /*_FEATURE_CPU_RECONFIG*/
 
-///////////////////////////////////////////////////////////////////////
-/* quiet command - quiet PANEL */
 
+/*-------------------------------------------------------------------*/
+/* quiet command - quiet PANEL                                       */
+/*-------------------------------------------------------------------*/
 int quiet_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
@@ -1185,7 +1216,7 @@ int quiet_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
+
 /* format_tod - generate displayable date from TOD value */
 /* always uses epoch of 1900 */
 char * format_tod(char *buf, U64 tod, int flagdate)
@@ -1232,9 +1263,10 @@ char * format_tod(char *buf, U64 tod, int flagdate)
     return buf;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* timerint - display or set the timer interval */
 
+/*-------------------------------------------------------------------*/
+/* timerint - display or set the timer interval                      */
+/*-------------------------------------------------------------------*/
 int timerint_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
@@ -1266,9 +1298,10 @@ int timerint_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* clocks command - display tod clkc and cpu timer */
 
+/*-------------------------------------------------------------------*/
+/* clocks command - display tod clkc and cpu timer                   */
+/*-------------------------------------------------------------------*/
 int clocks_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
@@ -1402,9 +1435,10 @@ char arch370_flag = 0;
 
 #ifdef OPTION_IODELAY_KLUDGE
 
-///////////////////////////////////////////////////////////////////////
-/* iodelay command - display or set I/O delay value */
 
+/*-------------------------------------------------------------------*/
+/* iodelay command - display or set I/O delay value                  */
+/*-------------------------------------------------------------------*/
 int iodelay_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
@@ -1427,10 +1461,11 @@ int iodelay_cmd(int argc, char *argv[], char *cmdline)
 
 #endif /*OPTION_IODELAY_KLUDGE*/
 
-#if defined( OPTION_TAPE_AUTOMOUNT )
-///////////////////////////////////////////////////////////////////////////////
-/*  automount_cmd  --  show or update the tape AUTOMOUNT directories list */
 
+#if defined( OPTION_TAPE_AUTOMOUNT )
+/*-------------------------------------------------------------------*/
+/* automount_cmd - show or update AUTOMOUNT directories list         */
+/*-------------------------------------------------------------------*/
 int automount_cmd(int argc, char *argv[], char *cmdline)
 {
 int rc;
@@ -1771,7 +1806,7 @@ int rc;
 
 #if defined( OPTION_SCSI_TAPE )
 
-///////////////////////////////////////////////////////////////////////
+
 // (helper function for 'scsimount' and 'devlist' commands)
 
 static void try_scsi_refresh( DEVBLK* dev )
@@ -1810,9 +1845,10 @@ static void try_scsi_refresh( DEVBLK* dev )
     usleep(10*1000);                                // (let thread start/end)
 }
 
-///////////////////////////////////////////////////////////////////////
-/* scsimount command - display or adjust the SCSI auto-mount option */
 
+/*-------------------------------------------------------------------*/
+/* scsimount command - display or adjust the SCSI auto-mount option  */
+/*-------------------------------------------------------------------*/
 int scsimount_cmd(int argc, char *argv[], char *cmdline)
 {
     char*  eyecatcher =
@@ -1972,9 +2008,10 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
 }
 #endif /* defined( OPTION_SCSI_TAPE ) */
 
-///////////////////////////////////////////////////////////////////////
-/* cckd command */
 
+/*-------------------------------------------------------------------*/
+/* cckd command                                                      */
+/*-------------------------------------------------------------------*/
 int cckd_cmd(int argc, char *argv[], char *cmdline)
 {
     char* p = strtok(cmdline+4," \t");
@@ -1986,9 +2023,9 @@ int cckd_cmd(int argc, char *argv[], char *cmdline)
 }
 
 
-///////////////////////////////////////////////////////////////////////
-/* ctc command - enable/disable CTC debugging */
-
+/*-------------------------------------------------------------------*/
+/* ctc command - enable/disable CTC debugging                        */
+/*-------------------------------------------------------------------*/
 int ctc_cmd( int argc, char *argv[], char *cmdline )
 {
     DEVBLK*  dev;
@@ -2100,11 +2137,11 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
     return 0;
 }
 
+
 #if defined(OPTION_W32_CTCI)
-
-///////////////////////////////////////////////////////////////////////
-/* tt32 command - control/query CTCI-W32 functionality */
-
+/*-------------------------------------------------------------------*/
+/* tt32 command - control/query CTCI-W32 functionality               */
+/*-------------------------------------------------------------------*/
 int tt32_cmd( int argc, char *argv[], char *cmdline )
 {
     int      rc = 0;
@@ -2188,12 +2225,12 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
 
     return rc;
 }
-
 #endif /* defined(OPTION_W32_CTCI) */
 
-///////////////////////////////////////////////////////////////////////
-/* store command - store CPU status at absolute zero */
 
+/*-------------------------------------------------------------------*/
+/* store command - store CPU status at absolute zero                 */
+/*-------------------------------------------------------------------*/
 int store_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
@@ -2231,9 +2268,9 @@ REGS *regs;
 }
 
 
-///////////////////////////////////////////////////////////////////////
-/* sclproot command - set SCLP base directory */
-
+/*-------------------------------------------------------------------*/
+/* sclproot command - set SCLP base directory                        */
+/*-------------------------------------------------------------------*/
 int sclproot_cmd(int argc, char *argv[], char *cmdline)
 {
 char *basedir;
@@ -2256,8 +2293,9 @@ char *basedir;
 
 
 #if defined(OPTION_HTTP_SERVER)
-/* httproot command - set HTTP server base directory */
-
+/*-------------------------------------------------------------------*/
+/* httproot command - set HTTP server base directory                 */
+/*-------------------------------------------------------------------*/
 int httproot_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
@@ -2278,8 +2316,9 @@ int httproot_cmd(int argc, char *argv[], char *cmdline)
 }
 
 
-/* httpport command - set HTTP server port */
-
+/*-------------------------------------------------------------------*/
+/* httpport command - set HTTP server port                           */
+/*-------------------------------------------------------------------*/
 int httpport_cmd(int argc, char *argv[], char *cmdline)
 {
 char c;
@@ -2347,9 +2386,11 @@ char c;
     return 0;
 }
 
-#if defined( HTTP_SERVER_CONNECT_KLUDGE )
-/* http_server_kludge_msecs */
 
+#if defined( HTTP_SERVER_CONNECT_KLUDGE )
+/*-------------------------------------------------------------------*/
+/* http_server_kludge_msecs                                          */
+/*-------------------------------------------------------------------*/
 int httpskm_cmd(int argc, char *argv[], char *cmdline)
 {
 char c;
@@ -2373,13 +2414,12 @@ char c;
     return 0;
 }
 #endif // defined( HTTP_SERVER_CONNECT_KLUDGE )
-
 #endif /*defined(OPTION_HTTP_SERVER)*/
 
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
-///////////////////////////////////////////////////////////////////////
-/* alrf command - display or set alrf */
-
+/*-------------------------------------------------------------------*/
+/* alrf command - display or set asn_and_lx_reuse                    */
+/*-------------------------------------------------------------------*/
 int alrf_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
@@ -2407,9 +2447,9 @@ int alrf_cmd(int argc, char *argv[], char *cmdline)
 #endif /*defined(_FEATURE_ASN_AND_LX_REUSE)*/
 
 
-///////////////////////////////////////////////////////////////////////
-/* toddrag command - display or set TOD clock drag factor */
-
+/*-------------------------------------------------------------------*/
+/* toddrag command - display or set TOD clock drag factor            */
+/*-------------------------------------------------------------------*/
 int toddrag_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
@@ -2435,9 +2475,10 @@ int toddrag_cmd(int argc, char *argv[], char *cmdline)
 
 #ifdef PANEL_REFRESH_RATE
 
-///////////////////////////////////////////////////////////////////////
-/* panrate command - display or set rate at which console refreshes */
 
+/*-------------------------------------------------------------------*/
+/* panrate command - display or set rate at which console refreshes  */
+/*-------------------------------------------------------------------*/
 int panrate_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
@@ -2467,8 +2508,10 @@ int panrate_cmd(int argc, char *argv[], char *cmdline)
 
 #endif /*PANEL_REFRESH_RATE */
 
-/* pantitle xxxxxxxx command - set console title */
 
+/*-------------------------------------------------------------------*/
+/* pantitle xxxxxxxx command - set console title                     */
+/*-------------------------------------------------------------------*/
 int pantitle_cmd(int argc, char *argv[], char *cmdline)
 {
 
@@ -2489,9 +2532,9 @@ int pantitle_cmd(int argc, char *argv[], char *cmdline)
 
 
 #ifdef OPTION_MSGHLD
-///////////////////////////////////////////////////////////////////////
-/* msghld command - display or set rate at which console refreshes */
-
+/*-------------------------------------------------------------------*/
+/* msghld command - display or set rate at which console refreshes   */
+/*-------------------------------------------------------------------*/
 int msghld_cmd(int argc, char *argv[], char *cmdline)
 {
   UNREFERENCED(cmdline);
@@ -2525,9 +2568,10 @@ int msghld_cmd(int argc, char *argv[], char *cmdline)
 }
 #endif // OPTION_MSGHLD
 
-///////////////////////////////////////////////////////////////////////
-/* shell command */
 
+/*-------------------------------------------------------------------*/
+/* shell command                                                     */
+/*-------------------------------------------------------------------*/
 int sh_cmd(int argc, char *argv[], char *cmdline)
 {
     char* cmd;
@@ -2546,9 +2590,10 @@ int sh_cmd(int argc, char *argv[], char *cmdline)
     return -1;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* change directory command */
 
+/*-------------------------------------------------------------------*/
+/* change directory command                                          */
+/*-------------------------------------------------------------------*/
 int cd_cmd(int argc, char *argv[], char *cmdline)
 {
     char* path;
@@ -2570,9 +2615,10 @@ int cd_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* print working directory command */
 
+/*-------------------------------------------------------------------*/
+/* print working directory command                                   */
+/*-------------------------------------------------------------------*/
 int pwd_cmd(int argc, char *argv[], char *cmdline)
 {
     char cwd [ MAX_PATH ];
@@ -2593,9 +2639,10 @@ int pwd_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* gpr command - display or alter general purpose registers */
 
+/*-------------------------------------------------------------------*/
+/* gpr command - display or alter general purpose registers          */
+/*-------------------------------------------------------------------*/
 int gpr_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
@@ -2651,9 +2698,10 @@ REGS *regs;
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* fpr command - display floating point registers */
 
+/*-------------------------------------------------------------------*/
+/* fpr command - display floating point registers                    */
+/*-------------------------------------------------------------------*/
 int fpr_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
@@ -2679,9 +2727,10 @@ REGS *regs;
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* fpc command - display floating point control register */
 
+/*-------------------------------------------------------------------*/
+/* fpc command - display floating point control register             */
+/*-------------------------------------------------------------------*/
 int fpc_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
@@ -2707,9 +2756,10 @@ REGS *regs;
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* cr command - display or alter control registers */
 
+/*-------------------------------------------------------------------*/
+/* cr command - display or alter control registers                   */
+/*-------------------------------------------------------------------*/
 int cr_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
@@ -2752,9 +2802,10 @@ U64   cr_value;
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* ar command - display access registers */
 
+/*-------------------------------------------------------------------*/
+/* ar command - display access registers                             */
+/*-------------------------------------------------------------------*/
 int ar_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
@@ -2780,9 +2831,10 @@ REGS *regs;
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* pr command - display prefix register */
 
+/*-------------------------------------------------------------------*/
+/* pr command - display prefix register                              */
+/*-------------------------------------------------------------------*/
 int pr_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
@@ -2811,9 +2863,10 @@ REGS *regs;
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* psw command - display or alter program status word */
 
+/*-------------------------------------------------------------------*/
+/* psw command - display or alter program status word                */
+/*-------------------------------------------------------------------*/
 int psw_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
@@ -3035,9 +3088,10 @@ int   n, errflag, stopflag=0, modflag=0;
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* restart command - generate restart interrupt */
 
+/*-------------------------------------------------------------------*/
+/* restart command - generate restart interrupt                      */
+/*-------------------------------------------------------------------*/
 int restart_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
@@ -3074,9 +3128,10 @@ int restart_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* r command - display or alter real storage */
 
+/*-------------------------------------------------------------------*/
+/* r command - display or alter real storage                         */
+/*-------------------------------------------------------------------*/
 int r_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
@@ -3101,9 +3156,10 @@ REGS *regs;
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* u command - disassemble */
 
+/*-------------------------------------------------------------------*/
+/* u command - disassemble                                           */
+/*-------------------------------------------------------------------*/
 int u_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
@@ -3128,9 +3184,10 @@ REGS *regs;
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* v command - display or alter virtual storage */
 
+/*-------------------------------------------------------------------*/
+/* v command - display or alter virtual storage                      */
+/*-------------------------------------------------------------------*/
 int v_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
@@ -3155,8 +3212,10 @@ REGS *regs;
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* tracing commands: t, t+, t-, t?, s, s+, s-, s?, b  */
+
+/*-------------------------------------------------------------------*/
+/* tracing commands: t, t+, t-, t?, s, s+, s-, s?, b                 */
+/*-------------------------------------------------------------------*/
 int trace_cmd(int argc, char *argv[], char *cmdline)
 {
 int  on = 0, off = 0, query = 0;
@@ -3251,9 +3310,10 @@ char range[256];
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* i command - generate I/O attention interrupt for device */
 
+/*-------------------------------------------------------------------*/
+/* i command - generate I/O attention interrupt for device           */
+/*-------------------------------------------------------------------*/
 int i_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
@@ -3308,9 +3368,10 @@ REGS *regs;
     return rc;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* ext command - generate external interrupt */
 
+/*-------------------------------------------------------------------*/
+/* ext command - generate external interrupt                         */
+/*-------------------------------------------------------------------*/
 int ext_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
@@ -3331,9 +3392,10 @@ int ext_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* pgmprdos config command */
 
+/*-------------------------------------------------------------------*/
+/* pgmprdos config command                                           */
+/*-------------------------------------------------------------------*/
 int pgmprdos_cmd(int argc, char *argv[], char *cmdline)
 {
 
@@ -3367,9 +3429,10 @@ int pgmprdos_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* diag8cmd command */
 
+/*-------------------------------------------------------------------*/
+/* diag8cmd command                                                  */
+/*-------------------------------------------------------------------*/
 int diag8_cmd(int argc, char *argv[], char *cmdline)
 {
 int i;
@@ -3405,9 +3468,9 @@ int i;
 }
 
 
-///////////////////////////////////////////////////////////////////////
-/* shcmdopt command */
-
+/*-------------------------------------------------------------------*/
+/* shcmdopt command                                                  */
+/*-------------------------------------------------------------------*/
 int shcmdopt_cmd(int argc, char *argv[], char *cmdline)
 {
 int i;
@@ -3431,20 +3494,23 @@ int i;
                 sysblk.shcmdopt |= SHCMDOPT_NODIAG8;
             else
             {
-                logmsg(_("HHCCF053I SHCMDOPT invalid option: %s\n"),argv[i]);
+                logmsg(_("HHCCF053I SHCMDOPT invalid option: %s\n"),
+                  argv[i]);
                 return -1;
             }
         }
     else
-        logmsg(_("HHCCF053I SCHMDOPT %sabled%s\n"),(sysblk.shcmdopt&SHCMDOPT_DISABLE)?"Dis":"En",(sysblk.shcmdopt&SHCMDOPT_NODIAG8)?" NoDiag8":"");
+        logmsg(_("HHCCF053I SCHMDOPT %sabled%s\n"),
+          (sysblk.shcmdopt&SHCMDOPT_DISABLE)?"Dis":"En",
+          (sysblk.shcmdopt&SHCMDOPT_NODIAG8)?" NoDiag8":"");
 
     return 0;
 }
 
 
-///////////////////////////////////////////////////////////////////////
-/* legacysenseid command */
-
+/*-------------------------------------------------------------------*/
+/* legacysenseid command                                             */
+/*-------------------------------------------------------------------*/
 int lsid_cmd(int argc, char *argv[], char *cmdline)
 {
 
@@ -3466,20 +3532,22 @@ int lsid_cmd(int argc, char *argv[], char *cmdline)
             sysblk.legacysenseid = 0;
         else
         {
-            logmsg(_("HHCxxnnnE Legacysenseid invalid option: %s\n"),argv[1]);
+            logmsg(_("HHCxxnnnE Legacysenseid invalid option: %s\n"),
+              argv[1]);
             return -1;
         }
     }
     else
-        logmsg(_("HHCxxnnnE Legacysenseid %sabled\n"),sysblk.legacysenseid?"En":"Dis");
+        logmsg(_("HHCxxnnnE Legacysenseid %sabled\n"),
+          sysblk.legacysenseid?"En":"Dis");
 
     return 0;
 }
 
 
-///////////////////////////////////////////////////////////////////////
-/* codepage xxxxxxxx command */
-
+/*-------------------------------------------------------------------*/
+/* codepage xxxxxxxx command                                         */
+/*-------------------------------------------------------------------*/
 int codepage_cmd(int argc, char *argv[], char *cmdline)
 {
 
@@ -3499,8 +3567,9 @@ int codepage_cmd(int argc, char *argv[], char *cmdline)
 
 
 #if defined(OPTION_SET_STSI_INFO)
-/* model config statement */
-
+/*-------------------------------------------------------------------*/
+/* model config statement                                            */
+/*-------------------------------------------------------------------*/
 int stsi_model_cmd(int argc, char *argv[], char *cmdline)
 {
 
@@ -3519,8 +3588,9 @@ int stsi_model_cmd(int argc, char *argv[], char *cmdline)
 }
 
 
-/* plant config statement */
-
+/*-------------------------------------------------------------------*/
+/* plant config statement                                            */
+/*-------------------------------------------------------------------*/
 int stsi_plant_cmd(int argc, char *argv[], char *cmdline)
 {
 
@@ -3539,8 +3609,9 @@ int stsi_plant_cmd(int argc, char *argv[], char *cmdline)
 }
 
 
-/* manufacturer config statement */
-
+/*-------------------------------------------------------------------*/
+/* manufacturer config statement                                     */
+/*-------------------------------------------------------------------*/
 int stsi_mfct_cmd(int argc, char *argv[], char *cmdline)
 {
 
@@ -3560,9 +3631,9 @@ int stsi_mfct_cmd(int argc, char *argv[], char *cmdline)
 #endif /* defined(OPTION_SET_STSI_INFO) */
 
 
-///////////////////////////////////////////////////////////////////////
-/* lparname xxxxxxxx command - set LPAR name */
-
+/*-------------------------------------------------------------------*/
+/* lparname - set or display LPAR name                               */
+/*-------------------------------------------------------------------*/
 int lparname_cmd(int argc, char *argv[], char *cmdline)
 {
 
@@ -3578,8 +3649,9 @@ int lparname_cmd(int argc, char *argv[], char *cmdline)
 }
 
 
-/* loadparm xxxxxxxx command - set IPL parameter */
-
+/*-------------------------------------------------------------------*/
+/* loadparm - set or display IPL parameter                           */
+/*-------------------------------------------------------------------*/
 int loadparm_cmd(int argc, char *argv[], char *cmdline)
 {
 
@@ -3593,8 +3665,12 @@ int loadparm_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
-/* system reset/system reset clear handlers */
-int reset_cmd(int ac,char *av[],char *cmdline,int clear)
+
+
+/*-------------------------------------------------------------------*/
+/* system reset/system reset clear function                          */
+/*-------------------------------------------------------------------*/
+static int reset_cmd(int ac,char *av[],char *cmdline,int clear)
 {
     int i;
 
@@ -3619,19 +3695,29 @@ int reset_cmd(int ac,char *av[],char *cmdline,int clear)
     return 0;
 
 }
+
+
+/*-------------------------------------------------------------------*/
+/* system reset command                                              */
+/*-------------------------------------------------------------------*/
 int sysr_cmd(int ac,char *av[],char *cmdline)
 {
     return(reset_cmd(ac,av,cmdline,0));
 }
+
+
+/*-------------------------------------------------------------------*/
+/* system reset clear command                                        */
+/*-------------------------------------------------------------------*/
 int sysc_cmd(int ac,char *av[],char *cmdline)
 {
     return(reset_cmd(ac,av,cmdline,1));
 }
 
-///////////////////////////////////////////////////////////////////////
-/* ipl xxxx command - IPL from device xxxx */
 
-
+/*-------------------------------------------------------------------*/
+/* ipl function                                                      */
+/*-------------------------------------------------------------------*/
 int ipl_cmd2(int argc, char *argv[], char *cmdline, int clear)
 {
 BYTE c;                                 /* Character work area       */
@@ -3741,18 +3827,28 @@ char *cdev, *clcss;
     return rc;
 }
 
+
+/*-------------------------------------------------------------------*/
+/* ipl command                                                       */
+/*-------------------------------------------------------------------*/
 int ipl_cmd(int argc, char *argv[], char *cmdline)
 {
     return(ipl_cmd2(argc,argv,cmdline,0));
 }
+
+
+/*-------------------------------------------------------------------*/
+/* ipl clear command                                                 */
+/*-------------------------------------------------------------------*/
 int iplc_cmd(int argc, char *argv[], char *cmdline)
 {
     return(ipl_cmd2(argc,argv,cmdline,1));
 }
 
-///////////////////////////////////////////////////////////////////////
-/* cpu command - define target cpu for panel display and commands */
 
+/*-------------------------------------------------------------------*/
+/* cpu command - define target cpu for panel display and commands    */
+/*-------------------------------------------------------------------*/
 int cpu_cmd(int argc, char *argv[], char *cmdline)
 {
 BYTE c;                                 /* Character work area       */
@@ -3780,11 +3876,11 @@ BYTE c;                                 /* Character work area       */
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* FishHangReport - verify/debug proper Hercules LOCK handling...    */
 
 #if defined(FISH_HANG)
-
+/*-------------------------------------------------------------------*/
+/* FishHangReport - verify/debug proper Hercules LOCK handling...    */
+/*-------------------------------------------------------------------*/
 int FishHangReport_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
@@ -3796,19 +3892,20 @@ int FishHangReport_cmd(int argc, char *argv[], char *cmdline)
 #endif
     return 0;
 }
-
 #endif // defined(FISH_HANG)
 
-///////////////////////////////////////////////////////////////////////
-/* devlist command - list devices */
 
-int SortDevBlkPtrsAscendingByDevnum(const void* pDevBlkPtr1, const void* pDevBlkPtr2)
+static int SortDevBlkPtrsAscendingByDevnum(const void* pDevBlkPtr1, const void* pDevBlkPtr2)
 {
     return
         ((int)((*(DEVBLK**)pDevBlkPtr1)->devnum) -
          (int)((*(DEVBLK**)pDevBlkPtr2)->devnum));
 }
 
+
+/*-------------------------------------------------------------------*/
+/* devlist command - list devices                                    */
+/*-------------------------------------------------------------------*/
 int devlist_cmd(int argc, char *argv[], char *cmdline)
 {
     DEVBLK*  dev;
@@ -3954,8 +4051,10 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* qd command - query dasd */
+
+/*-------------------------------------------------------------------*/
+/* qd command - query dasd                                           */
+/*-------------------------------------------------------------------*/
 int qd_cmd(int argc, char *argv[], char *cmdline)
 {
     DEVBLK*  dev;
@@ -4105,9 +4204,10 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
 #undef CONFIG_DATA_SIZE
 }
 
-///////////////////////////////////////////////////////////////////////
-/* attach command - configure a device */
 
+/*-------------------------------------------------------------------*/
+/* attach command - configure a device                               */
+/*-------------------------------------------------------------------*/
 int attach_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
@@ -4160,9 +4260,10 @@ int attach_cmd(int argc, char *argv[], char *cmdline)
 #endif
 }
 
-///////////////////////////////////////////////////////////////////////
-/* detach command - remove device */
 
+/*-------------------------------------------------------------------*/
+/* detach command - remove device                                    */
+/*-------------------------------------------------------------------*/
 int detach_cmd(int argc, char *argv[], char *cmdline)
 {
 U16  devnum;
@@ -4186,9 +4287,10 @@ int rc;
     return  detach_device (lcss, devnum);
 }
 
-///////////////////////////////////////////////////////////////////////
-/* define command - rename a device */
 
+/*-------------------------------------------------------------------*/
+/* define command - rename a device                                  */
+/*-------------------------------------------------------------------*/
 int define_cmd(int argc, char *argv[], char *cmdline)
 {
 U16  devnum, newdevn;
@@ -4222,9 +4324,10 @@ int rc;
     return  define_device (lcss, devnum, newdevn);
 }
 
-///////////////////////////////////////////////////////////////////////
-/* pgmtrace command - trace program interrupts */
 
+/*-------------------------------------------------------------------*/
+/* pgmtrace command - trace program interrupts                       */
+/*-------------------------------------------------------------------*/
 int pgmtrace_cmd(int argc, char *argv[], char *cmdline)
 {
 int abs_rupt_num, rupt_num;
@@ -4280,9 +4383,10 @@ BYTE    c;                              /* Character work area       */
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* ostailor command - trace program interrupts */
 
+/*-------------------------------------------------------------------*/
+/* ostailor command - trace program interrupts                       */
+/*-------------------------------------------------------------------*/
 int ostailor_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
@@ -4390,9 +4494,10 @@ int ostailor_cmd(int argc, char *argv[], char *cmdline)
     return -1;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* k command - print out cckd internal trace */
 
+/*-------------------------------------------------------------------*/
+/* k command - print out cckd internal trace                         */
+/*-------------------------------------------------------------------*/
 int k_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
@@ -4404,9 +4509,10 @@ int k_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* ds - display subchannel */
 
+/*-------------------------------------------------------------------*/
+/* ds - display subchannel                                           */
+/*-------------------------------------------------------------------*/
 int ds_cmd(int argc, char *argv[], char *cmdline)
 {
 DEVBLK*  dev;
@@ -4441,9 +4547,9 @@ int rc;
 }
 
 
-///////////////////////////////////////////////////////////////////////
-/* syncio command - list syncio devices statistics */
-
+/*-------------------------------------------------------------------*/
+/* syncio command - list syncio devices statistics                   */
+/*-------------------------------------------------------------------*/
 int syncio_cmd(int argc, char *argv[], char *cmdline)
 {
     DEVBLK*   dev;
@@ -4482,13 +4588,14 @@ int syncio_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* devtmax command - display or set max device threads */
 
 #if !defined(OPTION_FISHIO)
 void *device_thread(void *arg);
 #endif /* !defined(OPTION_FISHIO) */
 
+/*-------------------------------------------------------------------*/
+/* devtmax command - display or set max device threads               */
+/*-------------------------------------------------------------------*/
 int devtmax_cmd(int argc, char *argv[], char *cmdline)
 {
     int devtmax = -2;
@@ -4565,9 +4672,11 @@ int devtmax_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* sf commands - shadow file add/remove/set/compress/display */
 
+
+/*-------------------------------------------------------------------*/
+/* sf commands - shadow file add/remove/set/compress/display         */
+/*-------------------------------------------------------------------*/
 int ShadowFile_cmd(int argc, char *argv[], char *cmdline)
 {
 char    action;                         /* Action character `+-cd'   */
@@ -4717,7 +4826,10 @@ char    c;                              /* work for sscan            */
     return 0;
 }
 
-/* mounted_tape_reinit statement */
+
+/*-------------------------------------------------------------------*/
+/* mounted_tape_reinit statement                                     */
+/*-------------------------------------------------------------------*/
 int mnttapri_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
@@ -4740,9 +4852,10 @@ int mnttapri_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
         
-///////////////////////////////////////////////////////////////////////
-/* devinit command - assign/open a file for a configured device */
 
+/*-------------------------------------------------------------------*/
+/* devinit command - assign/open a file for a configured device      */
+/*-------------------------------------------------------------------*/
 int devinit_cmd(int argc, char *argv[], char *cmdline)
 {
 DEVBLK*  dev;
@@ -4886,9 +4999,10 @@ char   **init_argv;
     return rc;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* savecore filename command - save a core image to file */
 
+/*-------------------------------------------------------------------*/
+/* savecore filename command - save a core image to file             */
+/*-------------------------------------------------------------------*/
 int savecore_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
@@ -5016,9 +5130,10 @@ REGS *regs;
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* loadcore filename command - load a core image file */
 
+/*-------------------------------------------------------------------*/
+/* loadcore filename command - load a core image file                */
+/*-------------------------------------------------------------------*/
 int loadcore_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
@@ -5090,9 +5205,10 @@ REGS *regs;
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* loadtext filename command - load a text deck file */
 
+/*-------------------------------------------------------------------*/
+/* loadtext filename command - load a text deck file                 */
+/*-------------------------------------------------------------------*/
 int loadtext_cmd(int argc, char *argv[], char *cmdline)
 {
     char   *fname;                      /* -> File name (ASCIIZ)     */
@@ -5198,9 +5314,10 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* ipending command - display pending interrupts */
 
+/*-------------------------------------------------------------------*/
+/* ipending command - display pending interrupts                     */
+/*-------------------------------------------------------------------*/
 int ipending_cmd(int argc, char *argv[], char *cmdline)
 {
     DEVBLK *dev;                        /* -> Device block           */
@@ -5471,11 +5588,11 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
+
 #if defined(OPTION_INSTRUCTION_COUNTING)
-
-///////////////////////////////////////////////////////////////////////
-/* icount command - display instruction counts */
-
+/*-------------------------------------------------------------------*/
+/* icount command - display instruction counts                       */
+/*-------------------------------------------------------------------*/
 int icount_cmd(int argc, char *argv[], char *cmdline)
 {
     int i, i1, i2, i3;
@@ -6235,11 +6352,10 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
 #endif /*defined(OPTION_INSTRUCTION_COUNTING)*/
 
 
-///////////////////////////////////////////////////////////////////////
-/* defsym command - define substitution symbol */
-
 #if defined(OPTION_CONFIG_SYMBOLS)
-
+/*-------------------------------------------------------------------*/
+/* defsym command - define substitution symbol                       */
+/*-------------------------------------------------------------------*/
 int defsym_cmd(int argc, char *argv[], char *cmdline)
 {
     char* sym;
@@ -6268,13 +6384,12 @@ int defsym_cmd(int argc, char *argv[], char *cmdline)
     set_symbol(sym,value);
     return 0;
 }
-
 #endif // defined(OPTION_CONFIG_SYMBOLS)
 
 
-///////////////////////////////////////////////////////////////////////
-/* archmode command - set architecture mode */
-
+/*-------------------------------------------------------------------*/
+/* archmode command - set architecture mode                          */
+/*-------------------------------------------------------------------*/
 int archmode_cmd(int argc, char *argv[], char *cmdline)
 {
     int i;
@@ -6366,9 +6481,10 @@ int archmode_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* x+ and x- commands - turn switches on or off */
 
+/*-------------------------------------------------------------------*/
+/* x+ and x- commands - turn switches on or off                      */
+/*-------------------------------------------------------------------*/
 int OnOffCommand(int argc, char *argv[], char *cmdline)
 {
     char   *cmd = cmdline;              /* Copy of panel command     */
@@ -6402,7 +6518,7 @@ BYTE c;                                 /* Character work area       */
     }
     regs=sysblk.regs[sysblk.pcpu];
 
-    /////////////////////////////////////////////////////
+    
     // f- and f+ commands - mark frames unusable/usable
 
     if ((cmd[0] == 'f') && sscanf(cmd+2, "%x%c", &aaddr, &c) == 1)
@@ -6424,7 +6540,7 @@ BYTE c;                                 /* Character work area       */
     }
 
 #ifdef OPTION_CKD_KEY_TRACING
-    /////////////////////////////////////////////////////
+    
     // t+ckd and t-ckd commands - turn CKD_KEY tracing on/off
 
     if ((cmd[0] == 't') && (strcasecmp(cmd+2, "ckd") == 0))
@@ -6440,7 +6556,7 @@ BYTE c;                                 /* Character work area       */
     }
 
 #endif
-    /////////////////////////////////////////////////////
+    
     // t+devn and t-devn commands - turn CCW tracing on/off
     // s+devn and s-devn commands - turn CCW stepping on/off
 
@@ -6484,9 +6600,10 @@ static char *name[] = { "DAT-Off", "Primary", "AR", "Secondary", "Home",
     return name[(mode & 0x0f) | ((mode & 0xf0) ? 8 : 0)];
 }
 
-///////////////////////////////////////////////////////////////////////
-/* aea - display aea values */
 
+/*-------------------------------------------------------------------*/
+/* aea - display aea values                                          */
+/*-------------------------------------------------------------------*/
 int aea_cmd(int argc, char *argv[], char *cmdline)
 {
     int     i;                          /* Index                     */
@@ -6577,12 +6694,12 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* aia - display aia values */
 
+/*-------------------------------------------------------------------*/
+/* aia - display aia values                                          */
+/*-------------------------------------------------------------------*/
 DLL_EXPORT int aia_cmd(int argc, char *argv[], char *cmdline)
 {
-    /* int     i; */                         /* Index                     */
     REGS   *regs;
 
     UNREFERENCED(argc);
@@ -6615,8 +6732,10 @@ DLL_EXPORT int aia_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
+
+/*-------------------------------------------------------------------*/
 /* tlb - display tlb table                                           */
+/*-------------------------------------------------------------------*/
 /*                                                                   */
 /* NOTES:                                                            */
 /*   The "tlbid" field is part of TLB_VADDR so it must be extracted  */
@@ -6625,7 +6744,7 @@ DLL_EXPORT int aia_cmd(int argc, char *argv[], char *cmdline)
 /*   with (i << shift) The "main" field of the tlb contains an XOR   */
 /*   hash of effective address. So MAINADDR() macro is used to remove*/
 /*   the hash before it's displayed.                                 */
-
+/*                                                                   */
 int tlb_cmd(int argc, char *argv[], char *cmdline)
 {
     int     i;                          /* Index                     */
@@ -6707,10 +6826,11 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-#if defined(SIE_DEBUG_PERFMON)
-///////////////////////////////////////////////////////////////////////
-/* spm - SIE performance monitor table */
 
+#if defined(SIE_DEBUG_PERFMON)
+/*-------------------------------------------------------------------*/
+/* spm - SIE performance monitor table                               */
+/*-------------------------------------------------------------------*/
 int spm_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(argc);
@@ -6723,10 +6843,11 @@ int spm_cmd(int argc, char *argv[], char *cmdline)
 }
 #endif
 
-#if defined(_FEATURE_SYSTEM_CONSOLE)
-///////////////////////////////////////////////////////////////////////
-/* ssd - signal shutdown command */
 
+#if defined(_FEATURE_SYSTEM_CONSOLE)
+/*-------------------------------------------------------------------*/
+/* ssd - signal shutdown command                                     */
+/*-------------------------------------------------------------------*/
 int ssd_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(argc);
@@ -6739,10 +6860,11 @@ int ssd_cmd(int argc, char *argv[], char *cmdline)
 }
 #endif
 
-#if defined(OPTION_COUNTING)
-///////////////////////////////////////////////////////////////////////
-/* count - display counts */
 
+#if defined(OPTION_COUNTING)
+/*-------------------------------------------------------------------*/
+/* count - display counts                                            */
+/*-------------------------------------------------------------------*/
 int count_cmd(int argc, char *argv[], char *cmdline)
 {
     int     i;                          /* Index                     */
@@ -6772,10 +6894,11 @@ int count_cmd(int argc, char *argv[], char *cmdline)
 }
 #endif
 
-#if defined(OPTION_DYNAMIC_LOAD)
-///////////////////////////////////////////////////////////////////////
-/* ldmod - load a module */
 
+#if defined(OPTION_DYNAMIC_LOAD)
+/*-------------------------------------------------------------------*/
+/* ldmod - load a module                                             */
+/*-------------------------------------------------------------------*/
 int ldmod_cmd(int argc, char *argv[], char *cmdline)
 {
     int     i;                          /* Index                     */
@@ -6798,9 +6921,10 @@ int ldmod_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* rmmod - delete a module */
 
+/*-------------------------------------------------------------------*/
+/* rmmod - delete a module                                           */
+/*-------------------------------------------------------------------*/
 int rmmod_cmd(int argc, char *argv[], char *cmdline)
 {
     int     i;                          /* Index                     */
@@ -6823,9 +6947,10 @@ int rmmod_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* lsmod - list dynamic modules */
 
+/*-------------------------------------------------------------------*/
+/* lsmod - list dynamic modules                                      */
+/*-------------------------------------------------------------------*/
 int lsmod_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
@@ -6837,9 +6962,10 @@ int lsmod_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* lsdep - list module dependencies */
 
+/*-------------------------------------------------------------------*/
+/* lsdep - list module dependencies                                  */
+/*-------------------------------------------------------------------*/
 int lsdep_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
@@ -6850,10 +6976,11 @@ int lsdep_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
-//
-///////////////////////////////////////////////////////////////////////
-/* modpath - set module path */
 
+
+/*-------------------------------------------------------------------*/
+/* modpath - set module path                                         */
+/*-------------------------------------------------------------------*/
 int modpath_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
@@ -6872,10 +6999,11 @@ int modpath_cmd(int argc, char *argv[], char *cmdline)
 
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
 
-///////////////////////////////////////////////////////////////////////
-/* evm - ECPS:VM command */
 
 #ifdef FEATURE_ECPSVM
+/*-------------------------------------------------------------------*/
+/* evm - ECPS:VM command                                             */
+/*-------------------------------------------------------------------*/
 int evm_cmd_1(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
@@ -6886,6 +7014,11 @@ int evm_cmd_1(int argc, char *argv[], char *cmdline)
     ecpsvm_command(argc,argv);
     return 0;
 }
+
+
+/*-------------------------------------------------------------------*/
+/* evm - ECPS:VM command                                             */
+/*-------------------------------------------------------------------*/
 int evm_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
@@ -6897,7 +7030,10 @@ int evm_cmd(int argc, char *argv[], char *cmdline)
 }
 #endif
 
-/* Set the hercules logo file */
+
+/*-------------------------------------------------------------------*/
+/* herclogo - Set the hercules logo file                             */
+/*-------------------------------------------------------------------*/
 int herclogo_cmd(int argc,char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
@@ -6910,8 +7046,10 @@ int herclogo_cmd(int argc,char *argv[], char *cmdline)
     return readlogo(argv[1]);
 }
 
-///////////////////////////////////////////////////////////////////////
-/* sizeof - Display sizes of various structures/tables */
+
+/*-------------------------------------------------------------------*/
+/* sizeof - Display sizes of various structures/tables               */
+/*-------------------------------------------------------------------*/
 int sizeof_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
@@ -6934,10 +7072,11 @@ int sizeof_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* hao - Hercules Automatic Operator */
 
 #if defined(OPTION_HAO)
+/*-------------------------------------------------------------------*/
+/* hao - Hercules Automatic Operator                                 */
+/*-------------------------------------------------------------------*/
 int hao_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(argc);
@@ -6947,9 +7086,10 @@ int hao_cmd(int argc, char *argv[], char *cmdline)
 }
 #endif /* defined(OPTION_HAO) */
 
-///////////////////////////////////////////////////////////////////////
-// conkpalv - set tn3270/telnet console session TCP keep-alive values
 
+/*-------------------------------------------------------------------*/
+/* conkpalv - set console session TCP keep-alive values              */
+/*-------------------------------------------------------------------*/
 int conkpalv_cmd( int argc, char *argv[], char *cmdline )
 {
     int idle, intv, cnt;
@@ -6979,9 +7119,10 @@ int conkpalv_cmd( int argc, char *argv[], char *cmdline )
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* traceopt - perform display_inst traditionally or new */
 
+/*-------------------------------------------------------------------*/
+/* traceopt - perform display_inst traditionally or new              */
+/*-------------------------------------------------------------------*/
 int traceopt_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
@@ -7011,9 +7152,11 @@ int traceopt_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
+
 #ifdef OPTION_CMDTGT
-///////////////////////////////////////////////////////////////////////
-/* cmdtgt - Specify the command target */
+/*-------------------------------------------------------------------*/
+/* cmdtgt - Specify the command target                               */
+/*-------------------------------------------------------------------*/
 int cmdtgt_cmd(int argc, char *argv[], char *cmdline)
 {
   int print = 1;
@@ -7062,8 +7205,10 @@ int cmdtgt_cmd(int argc, char *argv[], char *cmdline)
   return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* scp - Send scp command in any mode */
+
+/*-------------------------------------------------------------------*/
+/* scp - Send scp command in any mode                                */
+/*-------------------------------------------------------------------*/
 int scp_cmd(int argc, char *argv[], char *cmdline)
 {
   UNREFERENCED(argv);
@@ -7074,8 +7219,10 @@ int scp_cmd(int argc, char *argv[], char *cmdline)
   return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* pscp - Send a priority message in any mode */
+
+/*-------------------------------------------------------------------*/
+/* pscp - Send a priority message in any mode                        */
+/*-------------------------------------------------------------------*/
 int prioscp_cmd(int argc, char *argv[], char *cmdline)
 {
   UNREFERENCED(argv);
@@ -7086,8 +7233,10 @@ int prioscp_cmd(int argc, char *argv[], char *cmdline)
   return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-/* herc - Send a Hercules command in any mode */
+
+/*-------------------------------------------------------------------*/
+/* herc - Send a Hercules command in any mode                        */
+/*-------------------------------------------------------------------*/
 int herc_cmd(int argc, char *argv[], char *cmdline)
 {
   UNREFERENCED(argv);
@@ -7099,18 +7248,17 @@ int herc_cmd(int argc, char *argv[], char *cmdline)
 }
 #endif // OPTION_CMDTGT
 
-///////////////////////////////////////////////////////////////////////
-/* PATCH ISW20030220 - Script command support */
 
+/* PATCH ISW20030220 - Script command support */
 static int scr_recursion=0;     /* Recursion count (set to 0) */
 static int scr_aborted=0;          /* Script abort flag */
 static int scr_uaborted=0;          /* Script user abort flag */
 TID scr_tid=0;
-
 int scr_recursion_level() { return scr_recursion; }
 
-///////////////////////////////////////////////////////////////////////
-
+/*-------------------------------------------------------------------*/
+/* cancel script command                                             */
+/*-------------------------------------------------------------------*/
 int cscript_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
@@ -7123,8 +7271,10 @@ int cscript_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
 
+/*-------------------------------------------------------------------*/
+/* script command                                                    */
+/*-------------------------------------------------------------------*/
 int script_cmd(int argc, char *argv[], char *cmdline)
 {
 
@@ -7158,7 +7308,7 @@ int script_cmd(int argc, char *argv[], char *cmdline)
     return(0);
 }
 
-///////////////////////////////////////////////////////////////////////
+
 
 void script_test_userabort()
 {
@@ -7169,7 +7319,7 @@ void script_test_userabort()
         }
 }
 
-///////////////////////////////////////////////////////////////////////
+
 
 int process_script_file(char *script_name,int isrcfile)
 {
