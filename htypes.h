@@ -5,6 +5,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.11  2008/07/08 05:35:51  fish
+// AUTOMOUNT redesign: support +allowed/-disallowed dirs
+// and create associated 'automount' panel command - Fish
+//
 // Revision 1.10  2008/06/22 05:54:30  fish
 // Fix print-formatting issue (mostly in tape modules)
 // that can sometimes, in certain circumstances,
@@ -51,6 +55,7 @@ typedef  int16_t    S16;        // signed 16-bits
 typedef  int32_t    S32;        // signed 32-bits
 typedef  int64_t    S64;        // signed 64-bits
 
+typedef  uint8_t    U8;         // unsigned 8-bits
 typedef  uint16_t   U16;        // unsigned 16-bits
 typedef  uint32_t   U32;        // unsigned 32-bits
 typedef  uint64_t   U64;        // unsigned 64-bits
