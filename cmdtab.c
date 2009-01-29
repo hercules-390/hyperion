@@ -7,6 +7,9 @@
 // $Id$
 
 // $Log$
+// Revision 1.3  2009/01/19 12:16:57  rbowler
+// Fix dynamic linkage errors in cmdtab.c for MSVC
+//
 // Revision 1.2  2009/01/18 21:43:59  jj
 // Always display short help info, detailed info only if available
 //
@@ -40,7 +43,9 @@ CALL_EXT_CMD ( ptt_cmd    )
 CALL_EXT_CMD ( cache_cmd  )
 CALL_EXT_CMD ( shared_cmd )
 
-// Create forward references for all commands in the command table 
+/*-------------------------------------------------------------------*/
+/* Create forward references for all commands in the command table   */
+/*-------------------------------------------------------------------*/
 #define _FW_REF
 #define COMMAND(_stmt, _type, _func, _sdesc, _ldesc)        \
 int (_func)(int argc, char *argv[], char *cmdline);
@@ -54,7 +59,7 @@ int (_func)(int argc, char *argv[], char *cmdline);
 
 typedef int CMDFUNC(int argc, char *argv[], char *cmdline);
 
-// Layout of command routing table...
+/* Layout of command routing table                        */
 typedef struct _CMDTAB
 {
     const char  *statement;        /* statement           */
@@ -76,11 +81,13 @@ typedef struct _CMDTAB
 static CMDTAB cmdtab[] =
 {
 #include "cmdtab.h"
-COMMAND ( NULL, 0, NULL, NULL, NULL ) // End of table
+COMMAND ( NULL, 0, NULL, NULL, NULL ) /* End of table */
 };
 
 
-/* $zapcmd - internal debug - may cause havoc - use with caution */
+/*-------------------------------------------------------------------*/
+/* $zapcmd - internal debug - may cause havoc - use with caution     */
+/*-------------------------------------------------------------------*/
 int zapcmd_cmd(int argc, char *argv[], char *cmdline)
 {
 CMDTAB* cmdent;
@@ -147,9 +154,9 @@ CMDTAB* cmdent;
 }
 
 
-///////////////////////////////////////////////////////////////////////
-// Main panel command processing function...
-
+/*-------------------------------------------------------------------*/
+/* Main panel command processing function                            */
+/*-------------------------------------------------------------------*/
 int OnOffCommand(int argc, char *argv[], char *cmdline);
 int ShadowFile_cmd(int argc, char *argv[], char *cmdline);
 
@@ -272,9 +279,9 @@ ProcessPanelCommandExit:
 }
 
 
-///////////////////////////////////////////////////////////////////////
-/* help command - display additional help for a given command */
-
+/*-------------------------------------------------------------------*/
+/* help command - display additional help for a given command        */
+/*-------------------------------------------------------------------*/
 int HelpCommand(int argc, char *argv[], char *cmdline)
 {
     CMDTAB* pCmdTab;
