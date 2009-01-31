@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.173  2009/01/31 17:49:17  ivan
+// Ensure proper nullification of MVCL if an access exception occurs during the 1st unit of operation
+//
 // Revision 1.172  2009/01/23 11:55:54  bernard
 // copyright notice
 //
@@ -3950,7 +3953,6 @@ int     orglen1;                        /* Original dest length      */
         }
     }
 
-
     /* Initialize source and dest addresses */
     if (len1)
     {
@@ -3964,13 +3966,12 @@ int     orglen1;                        /* Original dest length      */
         }
         dest = MADDR (addr1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
     }
+
     /* Set the condition code according to the lengths */
     regs->psw.cc = (len1 < len2) ? 1 : (len1 > len2) ? 2 : 0;
 
-    /*
-     * Set the registers *after* translating - so that the instruction is properly
-     * nullified when there is an access exception on the 1st unit of operation
-     */
+    /* Set the registers *after* translating - so that the instruction is properly
+       nullified when there is an access exception on the 1st unit of operation */
     SET_GR_A(r1, regs,addr1);
     SET_GR_A(r2, regs,addr2);
 
