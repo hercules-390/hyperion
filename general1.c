@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.172  2009/01/23 11:55:54  bernard
+// copyright notice
+//
 // Revision 1.171  2009/01/11 20:28:33  ivan
 // Remove dead code
 //
@@ -3907,9 +3910,7 @@ int     orglen1;                        /* Original dest length      */
 
     /* Determine the destination and source addresses */
     addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
-    SET_GR_A(r1, regs,addr1);
     addr2 = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
-    SET_GR_A(r2, regs,addr2);
 
 
     /* Load padding byte from bits 0-7 of R2+1 register */
@@ -3949,8 +3950,6 @@ int     orglen1;                        /* Original dest length      */
         }
     }
 
-    /* Set the condition code according to the lengths */
-    regs->psw.cc = (len1 < len2) ? 1 : (len1 > len2) ? 2 : 0;
 
     /* Initialize source and dest addresses */
     if (len1)
@@ -3965,6 +3964,15 @@ int     orglen1;                        /* Original dest length      */
         }
         dest = MADDR (addr1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
     }
+    /* Set the condition code according to the lengths */
+    regs->psw.cc = (len1 < len2) ? 1 : (len1 > len2) ? 2 : 0;
+
+    /*
+     * Set the registers *after* translating - so that the instruction is properly
+     * nullified when there is an access exception on the 1st unit of operation
+     */
+    SET_GR_A(r1, regs,addr1);
+    SET_GR_A(r2, regs,addr2);
 
     while (len1)
     {
