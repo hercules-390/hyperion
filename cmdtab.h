@@ -7,6 +7,9 @@
 // $Id$
 
 // $Log$
+// Revision 1.10  2009/01/25 23:37:22  rbowler
+// Correct help text for defsym command
+//
 // Revision 1.9  2009/01/25 21:23:50  jj
 // Implement auto_scsi_mount command
 //
@@ -304,8 +307,6 @@ COMMAND ( "qd",        PANEL,        qd_cmd,        "query dasd\n", NULL )
 
 COMMAND ( "mounted_tape_reinit", PANEL+CONFIG, mnttapri_cmd,  "Control tape initilisation", NULL )
 
-COMMAND ( "auto_scsi_mount", PANEL+CONFIG, ascsimnt_cmd,  "Control SCSI tape mount", NULL )
-
 #if defined( OPTION_TAPE_AUTOMOUNT )
 COMMAND ( "automount", PANEL+CONFIG, automount_cmd,
   "Show/Update allowable tape automount directories\n",
@@ -324,6 +325,8 @@ COMMAND ( "automount", PANEL+CONFIG, automount_cmd,
 #endif /* OPTION_TAPE_AUTOMOUNT */
 
 #if defined( OPTION_SCSI_TAPE )
+COMMAND ( "auto_scsi_mount", PANEL+CONFIG, ascsimnt_cmd,  "Control SCSI tape mount", NULL )
+
 COMMAND ( "scsimount", PANEL,        scsimount_cmd,
   "automatic SCSI tape mounts\n",
     "Format:    \"scsimount  [ no | yes | 0-99 ]\".\n"
