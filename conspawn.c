@@ -14,6 +14,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.3  2006/12/08 09:43:18  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -106,7 +109,7 @@ int main(int argc, char* argv[])
         else
             p = NULL;
 
-        rc = (int) ShellExecute( hwnd, lpOperation, lpFile, lpParameters, lpDirectory, nShowCmd );
+        rc = (intptr_t) ShellExecute( hwnd, lpOperation, lpFile, lpParameters, lpDirectory, nShowCmd );
 
         if (p)
             free(p);
