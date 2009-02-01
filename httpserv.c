@@ -30,6 +30,9 @@
 /*                                           Jan Jaeger - 28/03/2002 */
 
 // $Log$
+// Revision 1.80  2009/01/23 12:51:42  bernard
+// copyright notice
+//
 // Revision 1.79  2009/01/15 17:36:43  jj
 // Change http server startup
 //
@@ -809,7 +812,7 @@ TID                     httptid;        /* Negotiation thread id     */
 
             /* Create a thread to execute the http request */
             if ( create_thread (&httptid, DETACHED,
-                                http_request, (void *)(long)csock,
+                                http_request, (void *)(uintptr_t)csock,
                                 "http_request")
                )
             {
