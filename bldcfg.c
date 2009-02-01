@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.134  2009/01/25 21:23:50  jj
+// Implement auto_scsi_mount command
+//
 // Revision 1.133  2009/01/25 13:53:48  jj
 // Implement mounted_tape_reinit as command
 //
@@ -407,7 +410,7 @@ int off;
     }
 
     /* Trying to get mainstor aligned to the next 4K boundary - Greg */
-    off = (long)sysblk.mainstor & 0xFFF;
+    off = (uintptr_t)sysblk.mainstor & 0xFFF;
     sysblk.mainstor += off ? 4096 - off : 0;
 
     /* Obtain main storage key array */
