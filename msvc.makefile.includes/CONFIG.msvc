@@ -11,6 +11,9 @@
 #
 #                           CHANGE HISTORY
 # $Log$
+# Revision 1.3  2009/02/01 18:11:02  rbowler
+# Eliminate extraneous trailing blanks (cosmetic change only)
+#
 # Revision 1.2  2008/01/31 22:32:36  rbowler
 # Move MSVC compiler level determination to CONFIG.msvc
 #
@@ -34,6 +37,21 @@ vsversion=7
 !ELSE
 !MESSAGE Makefile will assume VC++ Toolkit 2003 (MSVC version 13)
 vsversion=7
+!ENDIF
+
+# Use environment variables to determine the target processor type
+
+!IF !DEFINED(CPU) || "$(CPU)" == ""
+CPU=$(PROCESSOR_ARCHITECTURE)
+!ENDIF
+
+!IF "$(CPU)" == "IA64"
+!MESSAGE Target processor type is IA64
+!ELSEIF "$(CPU)" == "AMD64"
+!MESSAGE Target processor type is AMD64
+!ELSE
+!MESSAGE Target processor type is i386
+CPU=i386
 !ENDIF
 !MESSAGE
 
