@@ -31,6 +31,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.273  2009/02/03 17:00:31  ivan
+// Fix TPROT under SIE which was erroneously giving an access register
+// to the translation process even if the guest wasn't executing in XC mode.
+//
 // Revision 1.272  2009/01/23 11:46:07  bernard
 // copyright notice
 //
@@ -7101,7 +7105,6 @@ BYTE    akey;                           /* Access key                */
     {
         /* Under SIE TPROT also indicates if the host is using
            page protection */
-#if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
         /* Translate to real address - eventually using an access
            register if the guest is in XC mode */
         if (SIE_TRANSLATE_ADDR (regs->sie_mso + aaddr,
@@ -7109,10 +7112,6 @@ BYTE    akey;                           /* Access key                */
                                   MULTIPLE_CONTROLLED_DATA_SPACE(regs) ?
                                     b1 : USE_PRIMARY_SPACE,
                                 regs->hostregs, ACCTYPE_SIE))
-#else /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
-        if (SIE_TRANSLATE_ADDR (regs->sie_mso + aaddr,
-                                USE_PRIMARY_SPACE, regs->hostregs, ACCTYPE_SIE))
-#endif /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
         /* Convert host real address to host absolute address */
