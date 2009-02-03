@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.306  2009/01/25 23:48:20  rbowler
+// defsym was not handling quotes or comments correctly
+//
 // Revision 1.305  2009/01/25 21:23:50  jj
 // Implement auto_scsi_mount command
 //
@@ -7098,6 +7101,8 @@ int sizeof_cmd(int argc, char *argv[], char *cmdline)
 
     logmsg(_("HHCPN161I (void *) ..........%7d\n"),sizeof(void *));
     logmsg(_("HHCPN161I (unsigned int) ....%7d\n"),sizeof(unsigned int));
+    logmsg(_("HHCPN161I (long) ............%7d\n"),sizeof(long));
+    logmsg(_("HHCPN161I (long long) .......%7d\n"),sizeof(long long));
     logmsg(_("HHCPN161I (size_t) ..........%7d\n"),sizeof(size_t));
     logmsg(_("HHCPN161I (off_t) ...........%7d\n"),sizeof(off_t));
     logmsg(_("HHCPN161I SYSBLK ............%7d\n"),sizeof(SYSBLK));
