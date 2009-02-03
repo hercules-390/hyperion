@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.52  2009/01/23 13:12:19  bernard
+// copyright notice
+//
 // Revision 1.51  2009/01/14 15:23:20  jj
 // Move modpath logic to hsccmd.c
 //
@@ -45,7 +48,7 @@ static const char *build_info[] = {
   #if defined(DEBUG)
     "** DEBUG ** "
   #endif
-    "build",
+    "build for " MSTRING(HOST_ARCH),
 #endif
 
 #if !defined(_ARCHMODE2)
