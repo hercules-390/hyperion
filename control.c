@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.272  2009/01/23 11:46:07  bernard
+// copyright notice
+//
 // Revision 1.271  2008/12/25 23:39:46  ivan
 // STSI FC 2 : Set CC to 0 at completion
 //
@@ -7099,8 +7102,13 @@ BYTE    akey;                           /* Access key                */
         /* Under SIE TPROT also indicates if the host is using
            page protection */
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+        /* Translate to real address - eventually using an access
+           register if the guest is in XC mode */
         if (SIE_TRANSLATE_ADDR (regs->sie_mso + aaddr,
-                                b1, regs->hostregs, ACCTYPE_SIE))
+                                b1>0 && 
+                                  MULTIPLE_CONTROLLED_DATA_SPACE(regs) ?
+                                    b1 : USE_PRIMARY_SPACE,
+                                regs->hostregs, ACCTYPE_SIE))
 #else /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
         if (SIE_TRANSLATE_ADDR (regs->sie_mso + aaddr,
                                 USE_PRIMARY_SPACE, regs->hostregs, ACCTYPE_SIE))
@@ -7112,7 +7120,6 @@ BYTE    akey;                           /* Access key                */
 
         if (aaddr > regs->hostregs->mainlim)
             ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
-
     }
 #endif /*defined(_FEATURE_SIE)*/
 
