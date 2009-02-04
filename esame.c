@@ -20,6 +20,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.204  2009/01/23 11:53:18  bernard
+// copyright notice
+//
 // Revision 1.203  2009/01/15 17:27:02  rbowler
 // STFLE bit settings for CPU Measurement Facility
 //
@@ -4099,6 +4102,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 int     i, m, n;                        /* Integer work areas        */
 U64    *p1, *p2;                        /* Mainstor pointers         */
+BYTE   *bp1;                            /* Unaligned Mainstor ptr    */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
@@ -4109,20 +4113,33 @@ U64    *p1, *p2;                        /* Mainstor pointers         */
     m = 0x800 - ((VADR_L)effective_addr2 & 0x7ff);
 
     /* Address of operand beginning */
-    p1 = (U64*)MADDR(effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+    bp1 = (BYTE*)MADDR(effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+    p1=(U64*)bp1;
 
     if (likely(n <= m))
     {
         /* Boundary not crossed */
         n >>= 3;
-#if defined(OPTION_SINGLE_CPU_DW) && defined(ASSIST_STORE_DW)
-        if (regs->cpubit == regs->sysblk->started_mask)
-            for (i = 0; i < n; i++, p1++)
-                regs->GR_G((r1 + i) & 0xF) = CSWAP64(*p1);
-        else
+#if defined(OPTION_STRICT_ALIGNMENT)
+        if(likely(!(((uintptr_t)effective_addr2)&0x07)))
+        {
 #endif
-        for (i = 0; i < n; i++, p1++)
-            regs->GR_G((r1 + i) & 0xF) = fetch_dw (p1);
+#if defined(OPTION_SINGLE_CPU_DW) && defined(ASSIST_STORE_DW)
+            if (regs->cpubit == regs->sysblk->started_mask)
+                for (i = 0; i < n; i++, p1++)
+                    regs->GR_G((r1 + i) & 0xF) = CSWAP64(*p1);
+            else
+    #endif
+            for (i = 0; i < n; i++, p1++)
+                regs->GR_G((r1 + i) & 0xF) = fetch_dw (p1);
+#if defined(OPTION_STRICT_ALIGNMENT)
+        }
+        else
+        {
+            for (i = 0; i < n; i++, bp1+=8)
+                regs->GR_G((r1 + i) & 0xF) = fetch_dw (bp1);
+        }
+#endif
     }
     else
     {
@@ -4305,6 +4322,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 int     i, m, n;                        /* Integer work areas        */
 U64    *p1, *p2;                        /* Mainstor pointers         */
+BYTE   *bp1;                            /* Unaligned Mainstor ptr    */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
@@ -4315,20 +4333,38 @@ U64    *p1, *p2;                        /* Mainstor pointers         */
     m = 0x800 - ((VADR_L)effective_addr2 & 0x7ff);
 
     /* Get address of first page */
-    p1 = (U64*)MADDR(effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    bp1 = (BYTE*)MADDR(effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    p1=(U64*)bp1;
 
     if (likely(n <= m))
     {
-        /* boundary not crossed */
+        /* Boundary not crossed */
         n >>= 3;
+#if defined(OPTION_STRICT_ALIGNMENT)
+        if(likely(!(((uintptr_t)effective_addr2)&0x07)))
+        {
+#endif
 #if defined(OPTION_SINGLE_CPU_DW) && defined(ASSIST_STORE_DW)
         if (regs->cpubit == regs->sysblk->started_mask)
             for (i = 0; i < n; i++)
                 *p1++ = CSWAP64(regs->GR_G((r1 + i) & 0xF));
         else
 #endif
-        for (i = 0; i < n; i++)
-            store_dw (p1++, regs->GR_G((r1 + i) & 0xF));
+            for (i = 0; i < n; i++)
+                store_dw (p1++, regs->GR_G((r1 + i) & 0xF));
+#if defined(OPTION_STRICT_ALIGNMENT)
+        }
+        else
+        {
+            for (i = 0; i < n; i++,bp1+=8)
+                store_dw (bp1, regs->GR_G((r1 + i) & 0xF));
+        }
+#endif
+    }
+    if (likely(n <= m))
+    {
+        /* boundary not crossed */
+        n >>= 3;
     }
     else
     {
