@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.209  2009/01/23 11:46:20  bernard
+// copyright notice
+//
 // Revision 1.208  2009/01/09 23:25:59  ivan
 // Fix monitor code location when the monitor call occurs during the interception of a z/Arch SIE guest
 //
@@ -454,7 +457,10 @@ int     code;                           /* pcode without PER ind.    */
 int     ilc;                            /* instruction length        */
 #if defined(FEATURE_ESAME)
 /** FIXME : SEE ISW20090110-1 */
-void   *zmoncode;                       /* special reloc for z/Arch  */
+void   *zmoncode=NULL;                  /* special reloc for z/Arch  */
+                 /* FIXME : zmoncode not being initialized here raises
+                    a potentially non-initialized warning in GCC..
+                    can't find why. ISW 2009/02/04 */
                                         /* mon call SIE intercept    */
 #endif
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)

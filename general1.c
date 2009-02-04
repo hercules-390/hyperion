@@ -32,6 +32,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.175  2009/02/04 12:22:37  ivan
+// Fix issue with unaligned LM/STM when running on a host architecture that
+// enforces alignment
+//
 // Revision 1.174  2009/01/31 21:37:50  rbowler
 // Adopt general coding style - No functional changes
 //
@@ -3982,6 +3986,14 @@ int     orglen1;                        /* Original dest length      */
             source=NULL;
         }
         dest = MADDR (addr1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    }
+    else
+    {
+        /* FIXME : We shouldn't have to do that - just to prevent potentially
+           uninitialized variable warning in GCC.. Can't see where it is getting
+           this diagnostic from. ISW 2009/02/04 */
+        source=NULL;
+        dest=NULL;
     }
 
     /* Set the condition code according to the lengths */
