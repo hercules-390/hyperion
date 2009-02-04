@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.127  2009/01/23 11:56:02  bernard
+// copyright notice
+//
 // Revision 1.126  2008/03/28 13:36:25  rbowler
 // Fix incorrect registers when cc=1 for TRTE,TRTRE
 //
@@ -1186,6 +1189,7 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 int     i, m, n;                        /* Integer work areas        */
 U32    *p1, *p2;                        /* Mainstor pointers         */
+BYTE   *bp1;                            /* Unaligned mainstor ptr    */
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
@@ -1196,14 +1200,28 @@ U32    *p1, *p2;                        /* Mainstor pointers         */
     m = 0x800 - ((VADR_L)effective_addr2 & 0x7ff);
 
     /* Get address of first page */
-    p1 = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    bp1 = (BYTE*)MADDR(effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    p1 = (U32*)bp1;
 
     if (likely(n <= m))
     {
         /* boundary not crossed */
         n >>= 2;
-        for (i = 0; i < n; i++)
-            store_fw (p1++, regs->GR_L((r1 + i) & 0xF));
+#if defined(OPTION_STICT_ALIGNMENT)
+        if(likely(!(((uintptr_t)effective_addr2)&0x03)))
+        {
+#endif
+            for (i = 0; i < n; i++)
+                store_fw (p1++, regs->GR_L((r1 + i) & 0xF));
+#if defined(OPTION_STICT_ALIGNMENT)
+        }
+        else
+        {
+            for (i = 0; i < n; i++,bp1+=4)
+                store_fw (bp1, regs->GR_L((r1 + i) & 0xF));
+        }
+#endif
+
         ITIMER_UPDATE(effective_addr2,(n*4)-1,regs);
     }
     else

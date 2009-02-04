@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.174  2009/01/31 21:37:50  rbowler
+// Adopt general coding style - No functional changes
+//
 // Revision 1.173  2009/01/31 17:49:17  ivan
 // Ensure proper nullification of MVCL if an access exception occurs during the 1st unit of operation
 //
@@ -3672,6 +3675,7 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 int     i, m, n;                        /* Integer work areas        */
 U32    *p1, *p2;                        /* Mainstor pointers         */
+BYTE   *bp1;                            /* Unaligned maintstor ptr   */
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
@@ -3682,14 +3686,27 @@ U32    *p1, *p2;                        /* Mainstor pointers         */
     m = 0x800 - ((VADR_L)effective_addr2 & 0x7ff);
 
     /* Address of operand beginning */
-    p1 = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+    bp1 = (BYTE*)MADDR(effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+    p1=(U32*)bp1;
 
     if (likely(n <= m))
     {
         /* Boundary not crossed */
         n >>= 2;
-        for (i = 0; i < n; i++, p1++)
-            regs->GR_L((r1 + i) & 0xF) = fetch_fw (p1);
+#if defined(OPTION_STRICT_ALIGNMENT)
+        if(likely(!(((uintptr_t)effective_addr2)&0x03)))
+        {
+#endif
+            for (i = 0; i < n; i++, p1++)
+                regs->GR_L((r1 + i) & 0xF) = fetch_fw (p1);
+#if defined(OPTION_STRICT_ALIGNMENT)
+        }
+        else
+        {
+            for (i = 0; i < n; i++, bp1+=4)
+                regs->GR_L((r1 + i) & 0xF) = fetch_fw (bp1);
+        }
+#endif
     }
     else
     {
