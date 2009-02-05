@@ -1,7 +1,7 @@
 # ***************************************************************************
 #     OUTPUT_DIRS.msvc      (!INCLUDE ed by "makefile-dllmod.msvc")
 # --------------------------------------------------------------------------
-# (c) Copyright Roger Bowler, 2005-2007
+# (c) Copyright Roger Bowler, 2005-2009
 # --------------------------------------------------------------------------
 # $Id$
 #
@@ -10,33 +10,51 @@
 #
 #                           CHANGE HISTORY
 # $Log$
+# Revision 1.2  2008/10/11 23:46:01  fish
+# Add CVS "Id" and "Log"
+#
 #
 # DD/MM/YY Description
 #
 # 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
 #
+# SET PREFIX=NONE to generate output directories named bin,obj,pdb,map,cod
+# (this is for nmake version 6 which barfs if the command line is too long)
+# Otherwise the output directories are named:
+# msvc.[debug.]yyy.bin/obj/pdb/map/cod
+# where yyy is "dllmod" (for i386), or "AMD64" or "IA64"
+# (this naming convention is to avoid breaking existing build procedures)
 # ***************************************************************************
 
-!IF ("$(EXEDIR)" == "") || ("$(OBJDIR)" == "") || ("$(PDBDIR)" == "") || ("$(MAPDIR)" == "")
 !IFDEF NODEBUG
-EXEDIR  = msvc.dllmod.bin
-OBJDIR  = msvc.dllmod.obj
-PDBDIR  = msvc.dllmod.pdb
-MAPDIR  = msvc.dllmod.map
+DEBUG_PREFIX =
 !ELSE
-EXEDIR  = msvc.debug.dllmod.bin
-OBJDIR  = msvc.debug.dllmod.obj
-PDBDIR  = msvc.debug.dllmod.pdb
-MAPDIR  = msvc.debug.dllmod.map
+DEBUG_PREFIX = debug.
 !ENDIF
+
+!IF ("$(CPU)" == "i386")
+ARCH_PREFIX = dllmod.
+!ELSE
+ARCH_PREFIX = $(CPU).
+!ENDIF
+
+!IF ("$(PREFIX)" == "NONE") || ("$(PREFIX)" == "none")
+PREFIX =
+!ELSE
+PREFIX = msvc.$(DEBUG_PREFIX)$(ARCH_PREFIX)
+!ENDIF
+
+!IF ("$(EXEDIR)" == "") || ("$(OBJDIR)" == "") || ("$(PDBDIR)" == "") || ("$(MAPDIR)" == "")
+EXEDIR = $(PREFIX)bin
+OBJDIR = $(PREFIX)obj
+PDBDIR = $(PREFIX)pdb
+MAPDIR = $(PREFIX)map
 !ENDIF
 
 !IFNDEF ASSEMBLY_LISTINGS
 !UNDEF ASMDIR
-!ELSEIFDEF NODEBUG
-ASMDIR = msvc.dllmod.cod
-!ELSE
-ASMDIR = msvc.debug.dllmod.cod
+!ELSEIF ("$(ASMDIR)" == "")
+ASMDIR = $(PREFIX)cod
 !ENDIF
 
 # (shorter names are easier to use)
