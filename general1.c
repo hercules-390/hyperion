@@ -32,6 +32,11 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.176  2009/02/04 18:09:39  ivan
+// Temporary fixes for 'potentially uninitialized variables' by GCC.
+// To me, it's bogus. Look for MVCL in general1.c & zmoncode in cpu.c
+// and read FIXME.
+//
 // Revision 1.175  2009/02/04 12:22:37  ivan
 // Fix issue with unaligned LM/STM when running on a host architecture that
 // enforces alignment
@@ -4017,7 +4022,8 @@ int     orglen1;                        /* Original dest length      */
             len3 = NOCROSS2KL(addr1,len1) ? len1 : (int)(0x800 - (addr1 & 0x7FF));
             len4 = NOCROSS2KL(addr2,len2) ? len2 : (int)(0x800 - (addr2 & 0x7FF));
             len = len3 < len4 ? len3 : len4;
-            memcpy (dest, source, len);
+            /* Use concpy to ensure Concurrent block update consistency */
+            concpy (regs, dest, source, len);
         }
 
         /* Check for storage alteration PER event */
@@ -4091,13 +4097,14 @@ DEF_INST(move_long_extended)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-int     i;                              /* Loop counter              */
 int     cc;                             /* Condition code            */
 VADR    addr1, addr2;                   /* Operand addresses         */
 GREG    len1, len2;                     /* Operand lengths           */
-BYTE    obyte;                          /* Operand byte              */
 BYTE    pad;                            /* Padding byte              */
-int     cpu_length;                     /* cpu determined length     */
+size_t  cpu_length;                     /* cpu determined length     */
+size_t  copylen;                        /* Length to copy            */
+BYTE    *dest;                          /* Maint storage pointers    */
+size_t  dstlen,srclen;                  /* Page wide src/dst lengths */
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
@@ -4120,43 +4127,51 @@ int     cpu_length;                     /* cpu determined length     */
     else
         cpu_length = 0x1000 - (addr2 & 0xFFF);
 
+    dstlen=MIN(cpu_length,len1);
+    srclen=MIN(cpu_length,len2);
+    copylen=MIN(dstlen,srclen);
+
     /* Set the condition code according to the lengths */
     cc = (len1 < len2) ? 1 : (len1 > len2) ? 2 : 0;
 
-    /* Process operands from left to right */
-    for (i = 0; len1 > 0; i++)
+    /* Obtain destination pointer */
+    dest = MADDR (addr1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    if(copylen!=0)
     {
-        /* If cpu determined length has been moved, exit with cc=3 */
-        if (i >= cpu_length)
-        {
-            cc = 3;
-            break;
-        }
+        /* here if we need to copy data */
+        BYTE *source;
+        /* get source frame and copy concurrently */
+        source = MADDR (addr2, r3, regs, ACCTYPE_READ, regs->psw.pkey);
+        concpy(regs,dest,source,copylen);
+        /* Adjust operands */
+        addr2+=copylen;
+        len2-=copylen;
+        addr1+=copylen;
+        len1-=copylen;
 
-        /* Fetch byte from source operand, or use padding byte */
-        if (len2 > 0)
-        {
-            obyte = ARCH_DEP(vfetchb) ( addr2, r3, regs );
-            addr2++;
-            addr2 &= ADDRESS_MAXWRAP(regs);
-            len2--;
-        }
-        else
-            obyte = pad;
+        /* Adjust length & pointers for this cycle */
+        dest+=copylen;
+        dstlen-=copylen;
+        srclen-=copylen;
+    }
+    if(srclen==0 && dstlen!=0)
+    {
+        /* here if we need to pad the destination */
+        memset(dest,pad,dstlen);
 
-        /* Store the byte in the destination operand */
-        ARCH_DEP(vstoreb) ( obyte, addr1, r1, regs );
-        addr1++;
-        addr1 &= ADDRESS_MAXWRAP(regs);
-        len1--;
+        /* Adjust destination operands */
+        addr1+=dstlen;
+        len1-=dstlen;
+    }
 
-        /* Update the registers */
-        SET_GR_A(r1, regs,addr1);
-        SET_GR_A(r1+1, regs,len1);
-        SET_GR_A(r3, regs,addr2);
-        SET_GR_A(r3+1, regs,len2);
-
-    } /* end for(i) */
+    /* Update the registers */
+    SET_GR_A(r1, regs,addr1);
+    SET_GR_A(r1+1, regs,len1);
+    SET_GR_A(r3, regs,addr2);
+    SET_GR_A(r3+1, regs,len2);
+    /* if len1 != 0 then set CC to 3 to indicate 
+       we have reached end of CPU dependent length */
+    if(len1>0) cc=3;
 
     regs->psw.cc = cc;
 

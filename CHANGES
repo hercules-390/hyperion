@@ -1,3 +1,4 @@
+07 Deb 2009 MVCL & MVCLE now obey MP Concurrent Block Consistency rules - Ivan Warren
 07 Feb 2009 Prevent restart on special engines - Bernard van der Helm
 04 Feb 2009 Ensure unaligned LM/STM/LMG/STMG work on aligned constrained hosts - Ivan Warren 
 03 Feb 2009 Fix TPROT under SIE problem reported by 'pat' - Ivan Warren
