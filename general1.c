@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.178  2009/02/07 22:54:06  ivan
+// Define MIN() macro for MVCLE use in case it isn't defined
+//
 // Revision 1.177  2009/02/07 22:49:38  ivan
 // Use concpy in MVCL to maintain Concurrent Block Update Consistency
 // Use concpy in MVCLE to maintain Concurrent Block Update Consistency
@@ -4144,6 +4147,13 @@ size_t  dstlen,srclen;                  /* Page wide src/dst lengths */
     cc = (len1 < len2) ? 1 : (len1 > len2) ? 2 : 0;
 
     /* Obtain destination pointer */
+    if(len1==0)
+    {
+        /* bail out if nothing to do */
+        regs->psw.cc = cc;
+        return;
+    }
+
     dest = MADDR (addr1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
     if(copylen!=0)
     {
