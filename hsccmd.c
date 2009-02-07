@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.308  2009/02/07 14:27:45  bernard
+// Prevent restart on special engines (copy code from ipl command)
+//
 // Revision 1.307  2009/02/03 22:51:43  rbowler
 // Display sizeof long and long long
 //
@@ -3115,7 +3118,7 @@ int restart_cmd(int argc, char *argv[], char *cmdline)
      || sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_SUP)
     {
         logmsg(_("HHCPN052E Target CPU %d type %d"
-                " does not allow restart\n"),
+                " does not allow ipl nor restart\n"),
                 sysblk.pcpu, sysblk.ptyp[sysblk.pcpu]);
         return -1;
     }
@@ -3758,7 +3761,7 @@ char *cdev, *clcss;
      || sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_SUP)
     {
         logmsg(_("HHCPN052E Target CPU %d type %d"
-                " does not allow ipl\n"),
+                " does not allow ipl nor restart\n"),
                 sysblk.pcpu, sysblk.ptyp[sysblk.pcpu]);
         return -1;
     }
