@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.307  2009/02/03 22:51:43  rbowler
+// Display sizeof long and long long
+//
 // Revision 1.306  2009/01/25 23:48:20  rbowler
 // defsym was not handling quotes or comments correctly
 //
@@ -3106,6 +3109,16 @@ int restart_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
     UNREFERENCED(argv);
+
+    /* Check that target processor type allows IPL */
+    if (sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_IFA
+     || sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_SUP)
+    {
+        logmsg(_("HHCPN052E Target CPU %d type %d"
+                " does not allow restart\n"),
+                sysblk.pcpu, sysblk.ptyp[sysblk.pcpu]);
+        return -1;
+    }
 
     logmsg( _("HHCPN038I Restart key depressed\n") );
 
@@ -6403,6 +6416,8 @@ int defsym_cmd(int argc, char *argv[], char *cmdline)
 {
     char* sym;
     char* value;
+
+    UNREFERENCED(cmdline);
 
     if (argc < 2)
     {
