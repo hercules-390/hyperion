@@ -32,6 +32,11 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.177  2009/02/07 22:49:38  ivan
+// Use concpy in MVCL to maintain Concurrent Block Update Consistency
+// Use concpy in MVCLE to maintain Concurrent Block Update Consistency
+// Enhance performances for MVCLE
+//
 // Revision 1.176  2009/02/04 18:09:39  ivan
 // Temporary fixes for 'potentially uninitialized variables' by GCC.
 // To me, it's bogus. Look for MVCL in general1.c & zmoncode in cpu.c
@@ -4105,6 +4110,10 @@ size_t  cpu_length;                     /* cpu determined length     */
 size_t  copylen;                        /* Length to copy            */
 BYTE    *dest;                          /* Maint storage pointers    */
 size_t  dstlen,srclen;                  /* Page wide src/dst lengths */
+
+#if !defined(MIN)
+#define MIN(_x,_y) ( ( ( _x ) < ( _y ) ) ? ( _x ) : ( _y ) )
+#endif /* !defined(MIN) */
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
