@@ -25,6 +25,7 @@
 /* ------------------------------------------------------------------ */
 #include <string.h>           // [for memset/memcpy]
 #include <stdio.h>            // [for printf]
+#pragma warning(disable:4244) // [for win64]
 
 #define  DECNUMDIGITS 34      // make decNumbers with space for 34
 #include "decNumber.h"        // base number library

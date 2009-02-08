@@ -27,6 +27,7 @@
 /* ------------------------------------------------------------------ */
 
 #include <string.h>           // for NULL
+#pragma warning(disable:4244) // [for win64]
 #include "decNumber.h"        // base number library
 #include "decPacked.h"        // packed decimal
 #include "decNumberLocal.h"   // decNumber local types, etc.
