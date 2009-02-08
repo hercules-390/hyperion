@@ -1,0 +1,40 @@
+HERCULES FOR WIN64 README FILE
+
+There are two 64-bit architectures supported by 64-bit Windows:
+- x64 also known as x86_64 (for AMD64 and Intel EM64T processors)
+- ia64 (for Intel Itanium processors)
+
+This document covers only the x64 architecture.
+
+HOW TO COMPILE HERCULES FOR AMD64
+
+1. Install Visual Studio 2008 (VS9) Standard or Professional Edition
+   A 90-day evaluation edition can be downloaded from
+   http://msdn.microsoft.com/en-us/evalcenter/bb633753.aspx
+
+2. On a 32-bit Windows system, go to the start menu and choose
+   "All Programs" - "Microsoft Visual Studio 2008" - "Visual Studio Tools"
+   - "Visual Studio 2008 x64 Cross Tools Command Prompt"
+
+3. At the command prompt, enter the command:
+   SET CPU=AMD64
+
+4. Because the build procedure does not yet support the 64-bit versions
+   of the compression and PCRE libraries, enter the following commands:
+   SET ZLIB_DIR=NONE
+   SET BZIP2_DIR=NONE
+   SET PCRE_DIR=NONE
+
+5. nmake clean
+   nmake
+
+6. The binaries will be installed into subfolder "msvc.AMD64.bin"
+   If you compiled on a 32-bit Windows system, copy this folder
+   to your target 64-bit Windows machine.
+
+7. If you copy the binaries to a machine which does not have Visual
+   Studio 2008 (VS9) installed, then you must also install the
+   Microsoft Visual C++ 2008 Redistributable Package (x64)
+   on the target machine. This package can be downloaded from
+   http://www.microsoft.com/downloads/details.aspx?FamilyID=bd2a6171-e2d6-4230-b809-9a8d7548c1b6&DisplayLang=en
+
