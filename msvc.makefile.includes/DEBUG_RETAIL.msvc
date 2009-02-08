@@ -12,6 +12,9 @@
 #
 #                           CHANGE HISTORY
 # $Log$
+# Revision 1.6  2009/02/05 23:43:09  rbowler
+# Reduce warning level from W4 to W3 for win64
+#
 # Revision 1.5  2009/02/05 23:22:18  rbowler
 # C1189: cannot use 32-bit time_t (_USE_32BIT_TIME_T) with _WIN64
 #
@@ -35,7 +38,7 @@
 #       AFTER calling win32.mak since it sets it.
 # -------------------------------------------------
 
-!IF $(vsversion) < 8 
+!IF $(vsversion) < 8
 MAPFILE = /map:$(MAPDIR)\$(@B).map /mapinfo:lines
 !ELSE
 MAPFILE = /map:$(MAPDIR)\$(@B).map
@@ -55,7 +58,7 @@ MAPFILE = /map:$(MAPDIR)\$(@B).map
 # says to use the new /fp option instead.
 # rbowler: Compiler version check (vsversion) is now in CONFIG.msvc
 
-!IF $(vsversion) < 8 
+!IF $(vsversion) < 8
 
 cflags = $(cflags) /QIfist
 
@@ -94,7 +97,7 @@ ldebug = /DEBUG /PDB:$(PDBDIR)\$(@B).pdb
 
 !ENDIF
 
-!IF $(vsversion) >= 8 
+!IF $(vsversion) >= 8
 cflags = $(cflags) -D _CRT_SECURE_NO_DEPRECATE
 cflags = $(cflags) -D _CRT_NONSTDC_NO_DEPRECATE
 ldebug = $(ldebug) /MANIFEST
