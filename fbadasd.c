@@ -14,6 +14,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.49  2009/01/23 11:53:48  bernard
+// copyright notice
+//
 // Revision 1.48  2007/11/21 22:54:14  fish
 // Use new BEGIN_DEVICE_CLASS_QUERY macro
 //
@@ -1418,7 +1421,8 @@ int fbadasd_hsuspend(DEVBLK *dev, void *file) {
 /*-------------------------------------------------------------------*/
 int fbadasd_hresume(DEVBLK *dev, void *file)
 {
-size_t  rc, key, len;
+int     rc;
+size_t  key, len;
 BYTE byte;
 
     do {

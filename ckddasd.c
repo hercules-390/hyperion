@@ -19,6 +19,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.96  2009/01/23 11:43:35  bernard
+// copyright notice
+//
 // Revision 1.95  2008/12/01 21:31:02  rbowler
 // Show filename in msg HHCDA002E by enrico sorichetti
 //
@@ -1257,7 +1260,8 @@ int ckddasd_hsuspend(DEVBLK *dev, void *file) {
 /*-------------------------------------------------------------------*/
 int ckddasd_hresume(DEVBLK *dev, void *file)
 {
-size_t  rc, key, len;
+u_int   rc;
+size_t  key, len;
 BYTE byte;
 
     do {
