@@ -12,6 +12,9 @@
 #
 #                           CHANGE HISTORY
 # $Log$
+# Revision 1.7  2009/02/08 15:07:20  rbowler
+# Eliminate superfluous trailing blanks (cosmetic change only)
+#
 # Revision 1.6  2009/02/05 23:43:09  rbowler
 # Reduce warning level from W4 to W3 for win64
 #
@@ -107,4 +110,7 @@ ldebug = $(ldebug) /MANIFEST
 # C4200: nonstandard extension used : zero-sized array in struct/union
 # C4127: conditional expression is constant
 cflags = $(cflags:-W4=-W3)
+
+# Suppress warning 4267 conversion from size_t to int possible loss of data
+cflags = $(cflags) /wd4267
 
