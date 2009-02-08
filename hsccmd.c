@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.309  2009/02/07 15:59:48  bernard
+// Unify HHCPN052E message for ipl and restart
+//
 // Revision 1.308  2009/02/07 14:27:45  bernard
 // Prevent restart on special engines (copy code from ipl command)
 //
@@ -3112,7 +3115,7 @@ int restart_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
     UNREFERENCED(argv);
-
+#if 0
     /* Check that target processor type allows IPL */
     if (sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_IFA
      || sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_SUP)
@@ -3122,7 +3125,7 @@ int restart_cmd(int argc, char *argv[], char *cmdline)
                 sysblk.pcpu, sysblk.ptyp[sysblk.pcpu]);
         return -1;
     }
-
+#endif
     logmsg( _("HHCPN038I Restart key depressed\n") );
 
     /* Obtain the interrupt lock */
@@ -3761,7 +3764,7 @@ char *cdev, *clcss;
      || sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_SUP)
     {
         logmsg(_("HHCPN052E Target CPU %d type %d"
-                " does not allow ipl nor restart\n"),
+                " does not allow ipl\n"),
                 sysblk.pcpu, sysblk.ptyp[sysblk.pcpu]);
         return -1;
     }
