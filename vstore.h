@@ -35,6 +35,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.85  2009/01/23 13:13:46  bernard
+// copyright notice
+//
 // Revision 1.84  2009/01/17 17:02:15  jj
 // Fix change recording on page crossing first op of MVC - Reported by Greg Price
 //
@@ -774,8 +777,17 @@ static __inline__ void concpy (REGS *regs, void *d, void *s, int n)
      || (dest <= src  && dest + 8 > src)
      || (src  <= dest && src  + 8 > dest))
     {
-        for ( ; n; n--)
-            *(dest++) = *(src++);
+        /* use memset directly when the copy's effect is to
+           propagate a byte over an area - like in MVC 1(255,2),0(2) */
+        if(dest==src+1)
+        {
+            memset(dest,*src,n);
+        }
+        else
+        {
+            for ( ; n; n--)
+                *(dest++) = *(src++);
+        }
         return;
     }
 
