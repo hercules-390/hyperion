@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.41  2009/01/23 13:01:34  bernard
+// copyright notice
+//
 // Revision 1.40  2008/11/04 05:56:31  fish
 // Put ensure consistent create_thread ATTR usage change back in
 //
@@ -1514,7 +1517,7 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
         sendlen = hdrlen + buflen;
     }
 
-    SHRD_SET_HDR(sendbuf, cmd, flag, devnum, id, sendlen - SHRD_HDR_SIZE);
+    SHRD_SET_HDR(sendbuf, cmd, flag, devnum, id, (U16)(sendlen - SHRD_HDR_SIZE));
 
     if (cmd & SHRD_COMP)
         shrdtrc(dev,"client_send %2.2x %2.2x %2.2x %d %d (compressed)\n",
@@ -2182,7 +2185,7 @@ static int serverError (DEVBLK *dev, int ix, int code, int status,
                         char *msg)
 {
 int rc;                                 /* Return code               */
-int len;                                /* Message length            */
+size_t len;                             /* Message length            */
 BYTE hdr[SHRD_HDR_SIZE];                /* Header                    */
 
     /* Get message length */
@@ -2191,11 +2194,11 @@ BYTE hdr[SHRD_HDR_SIZE];                /* Header                    */
         len = SHARED_MAX_MSGLEN;
 
     SHRD_SET_HDR (hdr, code, status, dev ? dev->devnum : 0,
-                  ix < 0 ? 0 : dev->shrd[ix]->id, len);
+                  ix < 0 ? 0 : dev->shrd[ix]->id, (U16)len);
 
     shrdtrc(dev,"server_error %2.2x %2.2x: %s\n", code, status, msg);
 
-    rc = serverSend (dev, ix, hdr, (BYTE *)msg, len);
+    rc = serverSend (dev, ix, hdr, (BYTE *)msg, (int)len);
     return rc;
 
 } /* serverError */
