@@ -7,6 +7,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.232  2009/01/14 10:12:36  jj
+// Restrict SCLP DISK I/O to the path relative to the .ins file that has been IPL-ed
+// Add SCLPROOT command to override the above
+//
 // Revision 1.231  2009/01/02 19:21:51  jj
 // DVD-RAM IPL
 // RAMSAVE
@@ -426,7 +430,7 @@ do { \
 /* PSW Instruction Address manipulation */
 
 #define _PSW_IA(_regs, _n) \
- ((_regs)->AIV + (intptr_t)((_regs)->ip - (_regs)->aip) + (VADR)(_n))
+ ((_regs)->AIV + (uintptr_t)((_regs)->ip - (_regs)->aip) + (VADR)(_n))
 
 #define PSW_IA(_regs, _n) \
  (_PSW_IA((_regs), (_n)) & ADDRESS_MAXWRAP((_regs)))
