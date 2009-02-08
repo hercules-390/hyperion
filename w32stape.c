@@ -17,6 +17,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.19  2009/01/23 13:17:44  bernard
+// copyright notice
+//
 // Revision 1.18  2008/03/31 06:36:49  fish
 // (untab)
 //
@@ -630,7 +633,7 @@ ssize_t  w32_read_tape ( ufd_t ufd, void* buf, size_t nbyte )
     do
     {
         dwBytesRead = 0;
-        bSuccess    = ReadFile( hFile, buf, nbyte, &dwBytesRead, NULL );
+        bSuccess    = ReadFile( hFile, buf, (DWORD)nbyte, &dwBytesRead, NULL );
         errno       = (dwLastError = GetLastError());
         errno       = w32_internal_rc ( pStat );
     }
@@ -704,7 +707,7 @@ ssize_t  w32_write_tape ( ufd_t ufd, const void* buf, size_t nbyte )
     do
     {
         dwBytesWritten = 0;
-        bSuccess       = WriteFile( hFile, buf, nbyte, &dwBytesWritten, NULL );
+        bSuccess       = WriteFile( hFile, buf, (DWORD)nbyte, &dwBytesWritten, NULL );
         errno          = (dwLastError = GetLastError());
         errno          = w32_internal_rc ( pStat );
     }
