@@ -388,12 +388,12 @@ void delayed_exit (int exit_code)
 
 
 /* storage configuration routine. To be moved *JJ */
-static void config_storage(int mainsize, int xpndsize)
+static void config_storage(unsigned mainsize, unsigned xpndsize)
 {
 int off;
 
     /* Obtain main storage */
-    sysblk.mainsize = mainsize * 1024 * 1024L;
+    sysblk.mainsize = mainsize * 1024 * 1024ULL;
 
     sysblk.mainstor = calloc((size_t)(sysblk.mainsize + 8192), 1);
 
@@ -908,8 +908,8 @@ U16     version = 0x00;                 /* CPU version code          */
 int     dfltver = 1;                    /* Default version code      */
 U32     serial;                         /* CPU serial number         */
 U16     model;                          /* CPU model number          */
-int     mainsize;                       /* Main storage size (MB)    */
-int     xpndsize;                       /* Expanded storage size (MB)*/
+unsigned mainsize;                      /* Main storage size (MB)    */
+unsigned xpndsize;                      /* Expanded storage size (MB)*/
 U16     numcpu;                         /* Number of CPUs            */
 U16     numvec;                         /* Number of VFs             */
 #if defined(OPTION_SHARED_DEVICES)
@@ -1384,7 +1384,9 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         if (smainsize != NULL)
         {
             if (sscanf(smainsize, "%u%c", &mainsize, &c) != 1
-             || mainsize < 2)
+             || mainsize < 2
+             || (mainsize > 4095 && sizeof(sysblk.mainsize) < 8)
+             || (mainsize > 4095 && sizeof(size_t) < 8))
             {
                 fprintf(stderr, _("HHCCF013S Error in %s line %d: "
                         "Invalid main storage size %s\n"),
