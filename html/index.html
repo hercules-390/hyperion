@@ -294,32 +294,31 @@ http://linuxvm.org/Present/SHARE99/S2880JMa.pdf</a>
 
 <center><hr width=15% noshade></center>
 <h3>
-The CVS source code repository
+The Subversion source code repository
 </h3>
 
 <p>
 The complete source code for the current <i>development</i> version of
-Hercules is also available via anonymous access from our CVS source code
-repository. The CVS root is:
+Hercules is also available via anonymous access from our Subversion source
+code repository. The Subversion URL is:
 
-<center><b>CVSROOT=:pserver:anonymous@cvs.hercules-390.org:/usr/cvs/hercules</b></center>
+<center><b>svn://svn.hercules-390.org/hercules</b></center>
 
 <p>
 
-Doing a checkout on module "hercules" will get you the source for all of Hercules.
-&nbsp;No password is required; just press enter when asked:
+Doing a checkout on module "hercules" will get you the source for all of
+Hercules. You'll want to check out the trunk, instead of the whole
+repository:
 
 <blockquote>
 <tt>
-    cvs login<br>
-    (Logging in to anonymous@hercules-390.org...)<br>
-    CVS password:<br>
-    cvs -z9 co hercules<br>
-    cvs server: Updating hercules<br>
+    svn checkout svn://svn.hercules-390.org/hercules/trunk hercules
 </tt>
 </blockquote>
 
 <p>
+(The last <tt>hercules</tt> specifies the directory the checked out copy is
+placed into.)
 Please note that this will get you the current
 <i>development</i> version of Hercules, which is <i>not</i>
 release quality and thus might not even work (since it's still under
