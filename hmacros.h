@@ -795,4 +795,18 @@ do { \
 
 #endif /* !defined(NO_SETUID) */
 
+/* min/max macros */
+
+#if !defined(MIN)
+#define MIN(_x,_y) ( ( ( _x ) < ( _y ) ) ? ( _x ) : ( _y ) )
+#endif /*!defined(MIN)*/
+
+#if !defined(MAX)
+#define MAX(_x,_y) ( ( ( _x ) > ( _y ) ) ? ( _x ) : ( _y ) )
+#endif /*!defined(MAX)*/
+
+#if !defined(MINMAX)
+#define  MINMAX(_x,_y,_z)  ((_x) = MIN(MAX((_x),(_y)),(_z)))
+#endif /*!defined(MINMAX)*/
+
 #endif // _HMACROS_H

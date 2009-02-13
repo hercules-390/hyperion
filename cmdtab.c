@@ -135,10 +135,6 @@ int i;
     return -1;
 }
 
-#if !defined(MAX)
-#define MAX(_x,_y) ( ( ( _x ) > ( _y ) ) ? ( _x ) : ( _y ) )
-#endif
-
 CMDT_DLL_IMPORT
 int ProcessConfigCommand (int argc, char **argv, char *cmdline)
 {

@@ -4114,10 +4114,6 @@ size_t  copylen;                        /* Length to copy            */
 BYTE    *dest;                          /* Maint storage pointers    */
 size_t  dstlen,srclen;                  /* Page wide src/dst lengths */
 
-#if !defined(MIN)
-#define MIN(_x,_y) ( ( ( _x ) < ( _y ) ) ? ( _x ) : ( _y ) )
-#endif /* !defined(MIN) */
-
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
     ODD2_CHECK(r1, r3, regs);
