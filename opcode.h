@@ -430,7 +430,7 @@ do { \
 /* PSW Instruction Address manipulation */
 
 #define _PSW_IA(_regs, _n) \
- ((_regs)->AIV + (uintptr_t)((_regs)->ip - (_regs)->aip) + (VADR)(_n))
+ (VADR)((_regs)->AIV + ((intptr_t)(_regs)->ip - (intptr_t)(_regs)->aip) + (_n))
 
 #define PSW_IA(_regs, _n) \
  (_PSW_IA((_regs), (_n)) & ADDRESS_MAXWRAP((_regs)))
