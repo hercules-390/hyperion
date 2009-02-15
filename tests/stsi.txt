@@ -3,7 +3,7 @@ sysclear
 archmode esame
 r 1a0=00000001800000000000000000000200 # z/Arch restart PSW
 r 1d0=00020001800000000000000000BADBAD # z/Arch pgm new PSW
-r 200=41200016     # LA R2,22          R2=Number of test data
+r 200=41200018     # LA R2,24          R2=Number of test data
 r 204=41300800     # LA R3,TEST1       R3=>Test data table
 r 208=41F00900     # LA R15,RES1       R15=>Result table
 r 20C=C04900002000 #A IILF R4,SYSIB    R4=>SYSIB on 4K boundary
@@ -26,9 +26,9 @@ r 24E=41F0F002     # LA R15,2(,R15)    R15=>Next RESn
 r 252=41303008     # LA R3,8(,R3)      R3=>Next TESTn
 r 256=4620020C     # BCT R2,A          Loop to end of TEST table
 r 25A=41000900     # LA R0,RES1        R0->Actual results
-r 25E=41100026     # LA R1,19*2        R1=Length of results table
+r 25E=41100030     # LA R1,24*2        R1=Length of results table
 r 262=41200C00     # LA R2,EXP1        R2->Expected results
-r 266=41300026     # LA R3,19*2        R3=Length of results table
+r 266=41300030     # LA R3,24*2        R3=Length of results table
 r 26A=0F02         # CLCL R0,R2        Compare with expected results
 r 26C=A7740004     # JNE *+8           Error if not equal
 r 270=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
@@ -60,6 +60,8 @@ r 890=F000000200000002                 # TEST19 FC=15,SC1=2,SC2=2
 r 898=2000000100000001                 # TEST20 FC=2,SC1=1,SC2=1
 r 8A0=2000000100000002                 # TEST21 FC=2,SC1=1,SC2=2
 r 8A8=2000000100000003                 # TEST22 FC=2,SC1=1,SC2=3
+r 8B0=0000000000000000                 # TEST23 Unused
+r 8B8=0000000000000000                 # TEST24 Unused
 * Expected results table
 r C00=0000                             # RES1 CC=0
 r C02=0006                             # RES2 PIC6
@@ -83,6 +85,8 @@ r C24=0300                             # RES19 CC=3
 r C26=0300                             # RES20 CC=3
 r C28=0300                             # RES21 CC=3
 r C2A=0300                             # RES22 CC=3
+r C2C=0000                             # RES23 CC=0
+r C2E=0000                             # RES24 CC=0
 ostailor null
 restart
 pause 1
