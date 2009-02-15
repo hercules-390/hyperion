@@ -3,7 +3,7 @@ sysclear
 archmode esame
 r 1a0=00000001800000000000000000000200 # z/Arch restart PSW
 r 1d0=00020001800000000000000000BADBAD # z/Arch pgm new PSW
-r 200=41200013     # LA R2,19          R2=Number of test data
+r 200=41200016     # LA R2,22          R2=Number of test data
 r 204=41300800     # LA R3,TEST1       R3=>Test data table
 r 208=41F00900     # LA R15,RES1       R15=>Result table
 r 20C=C04900002000 #A IILF R4,SYSIB    R4=>SYSIB on 4K boundary
@@ -48,7 +48,7 @@ r 830=1000000200000001                 # TEST7 FC=1,SC1=2,SC2=1
 r 838=1000000200000002                 # TEST8 FC=1,SC1=2,SC2=2
 r 840=1000000200000003                 # TEST9 FC=1,SC1=2,SC2=3
 r 848=1000000000000001                 # TEST10 FC=1,SC1=0,SC2=1
-r 850=2000000100000001                 # TEST11 FC=2,SC1=1,SC2=1
+r 850=2000000200000000                 # TEST11 FC=2,SC1=2,SC2=0
 r 858=2000000200000001                 # TEST12 FC=2,SC1=2,SC2=1
 r 860=2000000200000002                 # TEST13 FC=2,SC1=2,SC2=2
 r 868=2000000200000003                 # TEST14 FC=2,SC1=2,SC2=3
@@ -57,6 +57,9 @@ r 878=3000000100000001                 # TEST16 FC=3,SC1=1,SC2=1
 r 880=F000000100000001                 # TEST17 FC=15,SC1=1,SC2=1
 r 888=F000000100000002                 # TEST18 FC=15,SC1=1,SC2=2
 r 890=F000000200000002                 # TEST19 FC=15,SC1=2,SC2=2
+r 898=2000000100000001                 # TEST20 FC=2,SC1=1,SC2=1
+r 8A0=2000000100000002                 # TEST21 FC=2,SC1=1,SC2=2
+r 8A8=2000000100000003                 # TEST22 FC=2,SC1=1,SC2=3
 * Expected results table
 r C00=0000                             # RES1 CC=0
 r C02=0006                             # RES2 PIC6
@@ -77,12 +80,15 @@ r C1E=0300                             # RES16 CC=3
 r C20=0300                             # RES17 CC=3
 r C22=0300                             # RES18 CC=3
 r C24=0300                             # RES19 CC=3
+r C26=0300                             # RES20 CC=3
+r C28=0300                             # RES21 CC=3
+r C2A=0300                             # RES22 CC=3
 ostailor null
 restart
 pause 1
 * Display test data
-r 800.98
+r 800.C0
 * Display expected results
-r C00.26
+r C00.30
 * Display actual results
-r 900.26
+r 900.30
