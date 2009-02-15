@@ -6528,6 +6528,15 @@ VADR    effective_addr2;                /* Effective address         */
 }
 
 
+/*-------------------------------------------------------------------*/
+/* Calculate CPU capability indicator for STSI instruction           */
+/*                                                                   */
+/* The CPU capability indicator is 32-bit value which is calculated  */
+/* dynamically. A lower value indicates a faster CPU. The value may  */
+/* be either an unsigned binary integer or a floating point number.  */
+/* If bits 0-8 are zero, it is an integer in the range 0 to 2**23-1. */
+/* If bits 0-8 are nonzero, is is a 32-bit short BFP number.         */
+/*-------------------------------------------------------------------*/
 #if !defined(_STSI_CAPABILITY)
 #define _STSI_CAPABILITY
 static inline U32 stsi_capability (REGS *regs)
@@ -6550,6 +6559,9 @@ struct rusage     usage;               /* RMF type data              */
 #if !defined(SET_STSI_STATIC)
 #define SET_STSI_STATIC
 #if defined(OPTION_SET_STSI_INFO)
+/*-------------------------------------------------------------------*/
+/* Subroutine to set manufacturer name for STSI instruction          */
+/*-------------------------------------------------------------------*/
                           /*  "H    R    C"  */
 static BYTE manufact[16] = { 0xC8,0xD9,0xC3,0x40,0x40,0x40,0x40,0x40,
                              0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
@@ -6567,6 +6579,9 @@ void set_manufacturer(char *name)
         manufact[i] = 0x40;
 }
 
+/*-------------------------------------------------------------------*/
+/* Subroutine to set manufacturing plant name for STSI instruction   */
+/*-------------------------------------------------------------------*/
                       /*  "Z    Z"  */
 static BYTE plant[4] = { 0xE9,0xE9,0x40,0x40 };
 
@@ -6582,6 +6597,10 @@ void set_plant(char *name)
     for(; i < sizeof(plant); i++)
         plant[i] = 0x40;
 }
+
+/*-------------------------------------------------------------------*/
+/* Subroutine to set model capacity identfier for STSI instruction   */
+/*-------------------------------------------------------------------*/
                       /*  "E    M    U    L    A    T    O    R" */
 static BYTE model[8] = { 0xC5,0xD4,0xE4,0xD3,0xC1,0xE3,0xD6,0xD9 };
 
@@ -6656,9 +6675,21 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
 
     SIE_INTERCEPT(regs);
 
+#if defined(DEBUG_STSI)
+    logmsg("control.c: STSI %d.%d.%d ia="F_VADR" sysib="F_VADR"\n",
+            (regs->GR_L(0) & STSI_GPR0_FC_MASK) >> 28,
+            regs->GR_L(0) & STSI_GPR0_SEL1_MASK,
+            regs->GR_L(1) & STSI_GPR1_SEL2_MASK,
+            PSW_IA(regs,-4),
+            effective_addr2);
+#endif /*DEBUG_STSI*/
+
     /* Check function code */
     if((regs->GR_L(0) & STSI_GPR0_FC_MASK) > STSI_GPR0_FC_LPAR)
     {
+#ifdef DEBUG_STSI
+        logmsg("control.c: STSI cc=3 function code invalid\n");
+#endif /*DEBUG_STSI*/
         regs->psw.cc = 3;
         return;
     }
@@ -6673,6 +6704,9 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
     {
  //     regs->GR_L(0) |= STSI_GPR0_FC_BASIC;
         regs->GR_L(0) |= STSI_GPR0_FC_LPAR;
+#ifdef DEBUG_STSI
+        logmsg("control.c: STSI cc=0 R0=%8.8X\n", regs->GR_L(0));
+#endif /*DEBUG_STSI*/
         regs->psw.cc = 0;
         return;
     }
@@ -6690,6 +6724,9 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
       || (regs->GR_L(0) & STSI_GPR0_SEL1_MASK) > 2
       || (regs->GR_L(1) & STSI_GPR1_SEL2_MASK) > 2)
     {
+#ifdef DEBUG_STSI
+        logmsg("control.c: STSI cc=3 selector codes invalid\n");
+#endif /*DEBUG_STSI*/
         regs->psw.cc = 3;
         return;
     }
@@ -6813,7 +6850,24 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
         regs->psw.cc = 3;
     } /* function code */
 
-}
+#ifdef DEBUG_STSI
+    /* Display results of STSI */
+    logmsg("control.c: STSI cc=%d\n", regs->psw.cc);
+    for (i=0; i<256; i+=16, m+=16) {
+        BYTE c, s[17]; int j;
+        for (j=0; j<16; j++) {
+            c = guest_to_host(m[j]);
+            s[j] = isprint(c) ? c : '.';
+        }
+        s[j] = '\0';
+        logmsg("+%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
+                "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X *%s*\n",
+                i,m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],
+                m[8],m[9],m[10],m[11],m[12],m[13],m[14],m[15],s); 
+    }
+#endif /*DEBUG_STSI*/
+
+} /* end DEF_INST(store_system_information) */
 #endif /*FEATURE_STORE_SYSTEM_INFORMATION*/
 
 
