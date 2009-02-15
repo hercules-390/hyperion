@@ -1,0 +1,88 @@
+* STSI test $Id$
+sysclear
+archmode esame
+r 1a0=00000001800000000000000000000200 # z/Arch restart PSW
+r 1d0=00020001800000000000000000BADBAD # z/Arch pgm new PSW
+r 200=41200013     # LA R2,19          R2=Number of test data
+r 204=41300800     # LA R3,TEST1       R3=>Test data table
+r 208=41F00900     # LA R15,RES1       R15=>Result table
+r 20C=C04900002000 #A IILF R4,SYSIB    R4=>SYSIB on 4K boundary
+r 212=1894         # LR R9,R4          R9=>SYSIB area
+r 214=C05900001000 # IILF R5,X'1000'   R5=SYSIB area length
+r 21A=C079EE000000 # IILF R7,X'EE000000' R7=Padding byte, zero length
+r 220=0E46         # MVCL R4,R6        Fill SYSIB with padding byte
+r 222=98013000     # LM R0,R1,0(R3)    Load R0=FC-SC1,R1=SC2
+r 226=1B88         # SR R8,R8          Clear for insert, set CC=0
+r 228=E54C008C0000 # MVHI PGMINTC,0    Clear PGM check interrupt code
+r 22E=D20F01D00320 # MVC PGMNPSW,NEWPSWI  Set program check new PSW
+s 234.4            # Set breakpoint on STSI instruction (use s+ to activate)
+r 234=B27D9000     # STSI 0(R9)        Store System Information
+r 238=D20F01D00310 # MVC PGMNPSW,DISWAIT  Restore program check new PSW
+r 23E=B2220080     # IPM R8            R8=Cond code and pgm mask
+r 242=88800014     # SRL R8,20         Shift cond code into byte --X-
+r 246=4380008F     # IC R8,PGMINTC+3   Insert PGM check interrupt code
+r 24A=4080F000     # STH R8,0(,R15)    Store CC and PIC in result table
+r 24E=41F0F002     # LA R15,2(,R15)    R15=>Next RESn
+r 252=41303008     # LA R3,8(,R3)      R3=>Next TESTn
+r 256=4620020C     # BCT R2,A          Loop to end of TEST table
+r 25A=41000900     # LA R0,RES1        R0->Actual results
+r 25E=41100026     # LA R1,19*2        R1=Length of results table
+r 262=41200C00     # LA R2,EXP1        R2->Expected results
+r 266=41300026     # LA R3,19*2        R3=Length of results table
+r 26A=0F02         # CLCL R0,R2        Compare with expected results
+r 26C=A7740004     # JNE *+8           Error if not equal
+r 270=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
+r 274=B2B20310     # LPSWE DISWAIT     Load disabled wait PSW
+r 300=07020001800000000000000000AAAAAA # WAITPSW Enabled wait state PSW
+r 310=00020001800000000000000000BADBAD # DISWAIT Disabled wait state PSW
+r 320=00000001800000000000000000000340 # NEWPSWI New PSW for PGMFLIH
+r 340=B2B20150     #PGMFLIH LPSWE PGMOPSW  Program check interrupt handler
+* Test data table
+r 800=000000AA0000AAAA                 # TEST1 FC=0,SC1=AA,SC2=AA
+r 808=0123450100000001                 # TEST2 FC=0,SC1=1,SC2=1,reserved bits
+r 810=1000000112340001                 # TEST3 FC=1,SC1=1,SC2=1,reserved bits
+r 818=1000000100000001                 # TEST4 FC=1,SC1=1,SC2=1
+r 820=1000000100000002                 # TEST5 FC=1,SC1=1,SC2=2
+r 828=1000000200000000                 # TEST6 FC=1,SC1=2,SC2=0
+r 830=1000000200000001                 # TEST7 FC=1,SC1=2,SC2=1
+r 838=1000000200000002                 # TEST8 FC=1,SC1=2,SC2=2
+r 840=1000000200000003                 # TEST9 FC=1,SC1=2,SC2=3
+r 848=1000000000000001                 # TEST10 FC=1,SC1=0,SC2=1
+r 850=2000000100000001                 # TEST11 FC=2,SC1=1,SC2=1
+r 858=2000000200000001                 # TEST12 FC=2,SC1=2,SC2=1
+r 860=2000000200000002                 # TEST13 FC=2,SC1=2,SC2=2
+r 868=2000000200000003                 # TEST14 FC=2,SC1=2,SC2=3
+r 870=2000000300000001                 # TEST15 FC=2,SC1=3,SC2=1
+r 878=3000000100000001                 # TEST16 FC=3,SC1=1,SC2=1
+r 880=F000000100000001                 # TEST17 FC=15,SC1=1,SC2=1
+r 888=F000000100000002                 # TEST18 FC=15,SC1=1,SC2=2
+r 890=F000000200000002                 # TEST19 FC=15,SC1=2,SC2=2
+* Expected results table
+r C00=0000                             # RES1 CC=0
+r C02=0006                             # RES2 PIC6
+r C04=0006                             # RES3 PIC6
+r C06=0000                             # RES4 CC=0
+r C08=0300                             # RES5 CC=3
+r C0A=0300                             # RES6 CC=3
+r C0C=0000                             # RES7 CC=0
+r C0E=0000                             # RES8 CC=0
+r C10=0300                             # RES9 CC=3
+r C12=0300                             # RES10 CC=3
+r C14=0300                             # RES11 CC=3
+r C16=0000                             # RES12 CC=0
+r C18=0000                             # RES13 CC=0
+r C1A=0300                             # RES14 CC=3
+r C1C=0300                             # RES15 CC=3
+r C1E=0300                             # RES16 CC=3
+r C20=0300                             # RES17 CC=3
+r C22=0300                             # RES18 CC=3
+r C24=0300                             # RES19 CC=3
+ostailor null
+restart
+pause 1
+* Display test data
+r 800.98
+* Display expected results
+r C00.26
+* Display actual results
+r 900.26
