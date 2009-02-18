@@ -372,6 +372,9 @@ _VSTORE_C_STATIC void ARCH_DEP(vstore4) (U32 value, VADR addr, int arn,
 /*      A program check may be generated if the logical address      */
 /*      causes an addressing, translation, or protection             */
 /*      exception, and in this case the function does not return.    */
+/*                                                                   */
+/*      NOTE that vstore8_full should only be invoked when a page    */
+/*           boundary IS going to be crossed.                        */
 /*-------------------------------------------------------------------*/
 _VSTORE_FULL_C_STATIC void ARCH_DEP(vstore8_full)(U64 value, VADR addr,
                                               int arn, REGS *regs)
@@ -395,9 +398,11 @@ BYTE    temp[8];                        /* Copied value              */
 _VSTORE_C_STATIC void ARCH_DEP(vstore8) (U64 value, VADR addr, int arn,
                                                             REGS *regs)
 {
-    /* Most common case : Aligned & not crossing page boundary */
-    if(likely(!((VADR_L)addr & 0x07)) || (((VADR_L)addr & 0x7ff) <= 0x7f8))
+    /* Check alignement. If aligned then we are guaranteed
+       not to cross a page boundary */
+    if(likely(!((VADR_L)addr & 0x07)))
     {
+        /* Most common case : Aligned */
         U64 *mn;
         mn = (U64*)MADDR(addr,arn,regs,ACCTYPE_WRITE,regs->psw.pkey);
 #if defined(OPTION_SINGLE_CPU_DW) && defined(ASSIST_STORE_DW)
@@ -406,10 +411,27 @@ _VSTORE_C_STATIC void ARCH_DEP(vstore8) (U64 value, VADR addr, int arn,
         else
 #endif
         STORE_DW(mn, value);
-        ITIMER_UPDATE(addr,8-1,regs);
     }
     else
-        ARCH_DEP(vstore8_full)(value,addr,arn,regs);
+    {
+        /* We're not aligned. So we have to check whether we are
+           crossing a page boundary. This cannot be the same
+           code as above because casting U64 * to a non aligned
+           pointer may break on those architectures mandating
+           strict alignement */
+        if((((VADR_L)addr & 0x7ff) <= 0x7f8))
+        {
+            /* Non aligned but not crossing page boundary */
+            BYTE *mn;
+            mn = MADDR(addr,arn,regs,ACCTYPE_WRITE,regs->psw.pkey);
+            /* invoking STORE_DW ensures endianness correctness */
+            STORE_DW(mn,value);
+        }
+        else
+            /* Crossing page boundary */
+            ARCH_DEP(vstore8_full)(value,addr,arn,regs);
+    }
+    ITIMER_UPDATE(addr,8-1,regs);
 }
 
 /*-------------------------------------------------------------------*/
@@ -593,9 +615,10 @@ BYTE    temp[16];                       /* Copy destination          */
 
 _VSTORE_C_STATIC U64 ARCH_DEP(vfetch8) (VADR addr, int arn, REGS *regs)
 {
-    if(likely(!((VADR_L)addr & 0x07)) || (((VADR_L)addr & 0x7ff) <= 0x7f8 ))
+    if(likely(!((VADR_L)addr & 0x07)))
     {
-    U64 *mn;
+        /* doubleword aligned fetch */
+        U64 *mn;
         ITIMER_SYNC(addr,8-1,regs);
         mn=(U64*)MADDR (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
 #if defined(OPTION_SINGLE_CPU_DW) && defined(ASSIST_FETCH_DW)
@@ -604,6 +627,18 @@ _VSTORE_C_STATIC U64 ARCH_DEP(vfetch8) (VADR addr, int arn, REGS *regs)
 #endif
         return fetch_dw(mn);
     }
+    else
+    {
+        if((((VADR_L)addr & 0x7ff) <= 0x7f8 ))
+        {
+            /* unaligned, non-crossing doubleword fetch */
+            BYTE *mn;
+            ITIMER_SYNC(addr,8-1,regs);
+            mn=MADDR (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
+            return fetch_dw(mn);
+        }
+    }
+    /* page crossing doubleword fetch */
     return ARCH_DEP(vfetch8_full)(addr,arn,regs);
 }
 #endif
