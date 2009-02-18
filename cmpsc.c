@@ -99,6 +99,9 @@
 
 #ifdef FEATURE_COMPRESSION
 
+/* Work in progress */
+//#define WIP
+
 /*----------------------------------------------------------------------------*/
 /* Debugging options:                                                         */
 /*   0x00: Debug CMPSC calling                                                */
@@ -108,6 +111,7 @@
 //#define OPTION_CMPSC_DEBUGLVL 3      /* Debug all                           */
 #if 0
 #define OPTION_CMPSC_EXPAND_DEBUG
+#define OPTION_CMPSC_COMPRESS_DEBUG
 #endif
 
 /******************************************************************************/
@@ -418,13 +422,16 @@ static int ARCH_DEP(expand_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is);
 static void ARCH_DEP(fetch_cce)(int r2, REGS *regs, BYTE *cce, int index);
 static int ARCH_DEP(fetch_ch)(int r2, REGS *regs, REGS *iregs, BYTE *ch, int offset);
 static void ARCH_DEP(fetch_ece)(int r2, REGS *regs, BYTE *ece, int index);
-static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, U16 index_symbol[8]);
 static int ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, U16 *index_symbol);
+static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, U16 is[8]);
 static void ARCH_DEP(fetch_sd)(int r2, REGS *regs, BYTE *sd, int index);
 static enum cmpsc_status ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, BYTE *cce, BYTE *next_ch, U16 *last_match);
 static enum cmpsc_status ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, BYTE *cce, BYTE *next_ch, U16 *last_match);
 static int ARCH_DEP(store_ch)(int r1, REGS *regs, REGS *iregs, BYTE *data, int length, int offset);
 static void ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 index_symbol);
+#ifdef WIP
+static void ARCH_DEP(store_iss)(int r1, int r2, REGS *regs, REGS *iregs, U16 is[8]);
+#endif
 static int ARCH_DEP(test_ec)(int r2, REGS *regs, REGS *iregs, BYTE *cce);
 
 /******************************************************************************/
@@ -898,6 +905,7 @@ static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, U16 is[8])
       /* 0       1        2        3        4        5        6        7        8        */
       /* 012345670 123456701 234567012 345670123 456701234 567012345 670123456 701234567 */
       /* 012345678 012345678 012345678 012345678 012345678 012345678 012345678 012345678 */
+      /* 0         1         2         3         4         5         6         7         */
       is[0] = ((buf[0]       ) << 1) | (buf[1] >> 7);
       is[1] = ((buf[1] & 0x7f) << 2) | (buf[2] >> 6);
       is[2] = ((buf[2] & 0x3f) << 3) | (buf[3] >> 5);
@@ -913,6 +921,7 @@ static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, U16 is[8])
       /* 0       1        2        3        4        5       6        7        8        9        */
       /* 0123456701 2345670123 4567012345 6701234567 0123456701 2345670123 4567012345 6701234567 */
       /* 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 */
+      /* 0          1          2          3          4          5          6          7          */
       is[0] = ((buf[0]       ) << 2) | (buf[1] >> 6);
       is[1] = ((buf[1] & 0x3f) << 4) | (buf[2] >> 4);
       is[2] = ((buf[2] & 0x0f) << 6) | (buf[3] >> 2);
@@ -928,6 +937,7 @@ static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, U16 is[8])
       /* 0       1        2        3       4        5        6        7       8        9        a        */
       /* 01234567012 34567012345 67012345670 12345670123 45670123456 70123456701 23456701234 56701234567 */
       /* 0123456789a 0123456789a 0123456789a 0123456789a 0123456789a 0123456789a 0123456789a 0123456789a */
+      /* 0           1           2           3           4           5           6           7           */
       is[0] = ((buf[0]       ) <<  3) | (buf[ 1] >> 5);
       is[1] = ((buf[1] & 0x1f) <<  6) | (buf[ 2] >> 2);
       is[2] = ((buf[2] & 0x03) <<  9) | (buf[ 3] << 1) | (buf[4] >> 7);
@@ -943,6 +953,7 @@ static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, U16 is[8])
       /* 0       1        2        3       4        5        6       7        8        9       a        b        */
       /* 012345670123 456701234567 012345670123 456701234567 012345670123 456701234567 012345670123 456701234567 */
       /* 0123456789ab 0123456789ab 0123456789ab 0123456789ab 0123456789ab 0123456789ab 0123456789ab 0123456789ab */
+      /* 0            1            2            3            4            5            6            7            */
       is[0] = ((buf[ 0]       ) << 4) | (buf[ 1] >> 4);
       is[1] = ((buf[ 1] & 0x0f) << 8) | (buf[ 2]     );
       is[2] = ((buf[ 3]       ) << 4) | (buf[ 4] >> 4);
@@ -958,6 +969,7 @@ static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, U16 is[8])
       /* 0       1        2       3        4        5       6        7       8        9        a       b        c        */
       /* 0123456701234 5670123456701 2345670123456 7012345670123 4567012345670 1234567012345 6701234567012 3456701234567 */
       /* 0123456789abc 0123456789abc 0123456789abc 0123456789abc 0123456789abc 0123456789abc 0123456789abc 0123456789abc */
+      /* 0             1             2             3             4             5             6             7             */
       is[0] = ((buf[ 0]       ) <<  5) | (buf[ 1] >> 3);
       is[1] = ((buf[ 1] & 0x07) << 10) | (buf[ 2] << 2) | (buf[ 3] >> 6);
       is[2] = ((buf[ 3] & 0x3f) <<  7) | (buf[ 4] >> 1);
@@ -1321,6 +1333,140 @@ static void ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 inde
   logmsg("store_is : %04X, cbn=%d, GR%02d=" F_VADR ", GR%02d=" F_GREG "\n", index_symbol, GR1_cbn(iregs), r1, iregs->GR(r1), r1 + 1, iregs->GR(r1 + 1));
 #endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1 */
 }
+
+#ifdef WIP
+/*----------------------------------------------------------------------------*/
+/* store_iss (index symbols)                                                  */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(store_iss)(int r1, int r2, REGS *regs, REGS *iregs, U16 iss[8])
+{
+  BYTE buf[13];
+  int i;
+  int smbsz;
+
+  /* Check symbol translation */
+  if(unlikely(GR0_st(regs)))
+  {
+    /* Get and set interchange symbols */
+    for(i = 0; i < 8; i++)
+    {
+      ARCH_DEP(vfetchc)(buf, 1, (GR1_dictor(regs) + GR1_sttoff(regs) + iss[i] * 2) & ADDRESS_MAXWRAP(regs), r2, regs);
+      iss[i] = (buf[0] << 8) | buf[1];
+
+#ifdef OPTION_CMPSC_COMPRESS_DEBUG
+      logmsg("store_iss: %04X -> %02X%02X\n", iss, buf[0], buf[1]);
+#endif
+
+    }
+  } 
+
+  /* Initialize values */
+  smbsz = GR0_smbsz(regs);
+
+  /* Calculate the 8 index symbols */
+  switch(smbsz)
+  {
+    case 9: /* 9-bits */
+    {
+      /* 0        1        2        3        4        5        6        7        8        */
+      /* 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 */
+      /* 01234567 80123456 78012345 67801234 56780123 45678012 34567801 23456780 12345678 */
+      /* 0         1         2         3         4         5         6         7          */
+      buf[0] = ((iss[0]       ) >> 1);
+      buf[1] = ((iss[0] & 0x01) << 7) | (iss[1] >> 2);
+      buf[2] = ((iss[1] & 0x03) << 6) | (iss[2] >> 3);
+      buf[3] = ((iss[2] & 0x07) << 5) | (iss[3] >> 4);
+      buf[4] = ((iss[3] & 0x0f) << 4) | (iss[4] >> 5);
+      buf[5] = ((iss[4] & 0x1f) << 3) | (iss[5] >> 6);
+      buf[6] = ((iss[5] & 0x3f) << 2) | (iss[6] >> 7);
+      buf[7] = ((iss[6] & 0x7f) << 1) | (iss[7] >> 8);
+      buf[8] = ((iss[8] & 0xff)     );
+      break;
+    }
+    case 10: /* 10-bits */
+    {
+      /* 0        1        2        3        4        5        6        7        8        9        */
+      /* 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 */
+      /* 01234567 89012345 67890123 45678901 23456789 01234567 89012345 67890123 45678901 23456789 */
+      /* 0          1          2          3           4          5          6          7           */
+      buf[0] = ((iss[0]       ) >> 2);
+      buf[1] = ((iss[0] & 0x03) << 6) | (iss[1] >> 4);
+      buf[2] = ((iss[1] & 0x0f) << 4) | (iss[2] >> 6);
+      buf[3] = ((iss[2] & 0x3f) << 2) | (iss[3] >> 8);
+      buf[4] = ((iss[3] & 0xff)     );
+      buf[5] = ((iss[4]       ) >> 2);
+      buf[6] = ((iss[4] & 0x03) << 6) | (iss[5] >> 4);
+      buf[7] = ((iss[5] & 0x0f) << 4) | (iss[6] >> 6);
+      buf[8] = ((iss[6] & 0x3f) << 2) | (iss[7] >> 8);
+      buf[9] = ((iss[7] & 0xff)     ); 
+      break;
+    }
+    case 11: /* 11-bits */
+    {
+      /* 0        1        2        3        4        5        6        7        8        9        a        */
+      /* 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 */
+      /* 01234567 89a01234 56789a01 23456789 a0123456 789a0123 456789a0 12345678 9a012345 6789a012 3456789a */
+      /* 0           1           2            3           4           5            6           7            */
+      buf[ 0] = ((iss[0]       ) >> 3);
+      buf[ 1] = ((iss[0] & 0x07) << 5) | (iss[1] >> 6);
+      buf[ 2] = ((iss[1] & 0x3f) << 2) | (iss[2] >> 9);
+      buf[ 3] = ((iss[2] >> 1) & 0xff);
+      buf[ 4] = ((iss[2] & 0x01) << 7) | (iss[3] >> 4);
+      buf[ 5] = ((iss[3] & 0x0f) << 4) | (iss[4] >> 7);
+      buf[ 6] = ((iss[4] & 0x7f) << 1) | (iss[5] >> 10);
+      buf[ 7] = ((iss[5] >> 2) & 0xff);
+      buf[ 8] = ((iss[5] & 0x03) << 6) | (iss[6] >> 5);
+      buf[ 9] = ((iss[6] & 0x1f) << 3) | (iss[7] >> 8);
+      buf[10] = ((iss[7] & 0xff)     );
+      break;
+    }
+    case 12: /* 12-bits */
+    {
+      /* 0        1        2        3        4        5        6        7        8        9        a        b        */
+      /* 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 */
+      /* 01234567 89ab0123 456789ab 01234567 89ab0123 456789ab 01234567 89ab0123 456789ab 01234567 89ab0123 456789ab */
+      /* 0            1             2            3             4            5             6            7             */
+      buf[ 0] = ((iss[0]       ) >> 4);
+      buf[ 1] = ((iss[0] & 0x0f) << 4) | (iss[1] >> 8);
+      buf[ 2] = ((iss[1] & 0xff)     );
+      buf[ 3] = ((iss[2]       ) >> 4);
+      buf[ 4] = ((iss[2] & 0x0f) << 4) | (iss[3] >> 8);
+      buf[ 5] = ((iss[3] & 0xff)     );
+      buf[ 6] = ((iss[4]       ) >> 4);
+      buf[ 7] = ((iss[4] & 0x0f) << 4) | (iss[5] >> 8);
+      buf[ 8] = ((iss[5] & 0xff)     );
+      buf[ 9] = ((iss[6]       ) >> 4);
+      buf[10] = ((iss[6] & 0x0f) << 4) | (iss[7] >> 8);
+      buf[11] = ((iss[7] & 0xff)     );
+      break;
+    }
+     case 13: /* 13-bits */
+    {
+      /* 0        1        2        3        4        5        6        7        8        9        a        b        c        */
+      /* 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 */
+      /* 01234567 89abc012 3456789a bc012345 6789abc0 12345678 9abc0123 456789ab c0123456 789abc01 23456789 abc01234 56789abc */
+      /* 0             1              2             3              4              5             6              7              */
+      buf[ 0] = ((iss[0]       ) >> 5);
+      buf[ 1] = ((iss[0] & 0x1f) << 3) | (iss[ 1] >> 10);
+      buf[ 2] = ((iss[1] >> 2) & 0xff);
+      buf[ 3] = ((iss[1] & 0x03) << 6) | (iss[ 2] >> 7);
+      buf[ 4] = ((iss[2] & 0x7f) << 1) | (iss[ 3] >> 12);
+      buf[ 5] = ((iss[3] >> 4) & 0xff);
+      buf[ 6] = ((iss[3] & 0x0f) << 4) | (iss[ 4] >> 9);
+      buf[ 7] = ((iss[4] >> 1) & 0xff);
+      buf[ 8] = ((iss[4] & 0x01) << 7) | (iss[ 5] >> 6);
+      buf[ 9] = ((iss[5] & 0x3f) << 2) | (iss[ 6] >> 11);
+      buf[10] = ((iss[6] >> 3) & 0xff);
+      buf[11] = ((iss[6] & 0x07) << 5) | (iss[ 7] >> 8);
+      buf[12] = ((iss[7] & 0xff)     );
+      break;
+    }
+  } 
+
+  /* Adjust destination registers */
+  ADJUSTREGS(r1, regs, iregs, smbsz);
+}
+#endif
 
 /*----------------------------------------------------------------------------*/
 /* test_ec (extension characters)                                             */
