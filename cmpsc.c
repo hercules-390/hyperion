@@ -7,7 +7,7 @@
 /* Mario Bezzi. Thanks Mario! Also special thanks to Greg Smith who           */
 /* introduced iregs, needed when a page fault occurs.                         */
 /*                                                                            */
-/*                              (c) Copyright Bernard van der Helm, 2000-2008 */
+/*                              (c) Copyright Bernard van der Helm, 2000-2009 */
 /*                              Noordwijkerhout, The Netherlands.             */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
@@ -106,6 +106,9 @@
 /*   0x02: Debug expansion                                                    */
 /*----------------------------------------------------------------------------*/
 //#define OPTION_CMPSC_DEBUGLVL 3      /* Debug all                           */
+#if 0
+#define OPTION_CMPSC_EXPAND_DEBUG
+#endif
 
 /******************************************************************************/
 /******************************************************************************/
@@ -285,7 +288,7 @@
 /*----------------------------------------------------------------------------*/
 #define TBIT(byte, bit)      ((byte) & (0x80 >> (bit)))
 #define BITS(byte, start, end) (((BYTE)((byte) << (start))) >> (7 - (end) + (start)))
-#define STBIT(bytes, bit)     (TBIT((bytes)[(bit) / 8], (bit) % 8))
+#define STBIT(bytes, bit)    (TBIT((bytes)[(bit) / 8], (bit) % 8))
 #define SBITS(bytes, strt, end) (BITS((bytes)[(strt) / 8], (strt) % 8, (end) % 8))
 
 /******************************************************************************/
@@ -304,13 +307,11 @@
 /* succsful translation of an index symbol to characters, the registers must  */
 /* be updated.                                                                */
 /*----------------------------------------------------------------------------*/
-#if !defined(ADJUSTREGS)
 #define ADJUSTREGS(r, regs, iregs, len) \
 {\
   SET_GR_A((r), (iregs), (GR_A((r), (iregs)) + (len)) & ADDRESS_MAXWRAP((regs)));\
   SET_GR_A((r) + 1, (iregs), GR_A((r)+1, (iregs)) - (len));\
 }
-#endif /* !defined(ADJUSTREGS) */
 
 /*----------------------------------------------------------------------------*/
 /* One of my first implementations was faulty on a page fault. Greg Smith     */
@@ -318,7 +319,6 @@
 /* instruction atomic, we copy intermediate registers to the real ones when a */
 /* full compression or expansion occurred. Thanks Greg!                       */
 /*----------------------------------------------------------------------------*/
-#if !defined(COMMITREGS)
 #define COMMITREGS(regs, iregs, r1, r2) \
 {\
   SET_GR_A(1, (regs), GR_A(1, (iregs)));\
@@ -327,9 +327,16 @@
   SET_GR_A((r2), (regs), GR_A((r2), (iregs)));\
   SET_GR_A((r2) + 1, (regs), GR_A((r2) + 1, (iregs)));\
 }
-#endif /* !defined(COMMITREGS) */
 
-#if !defined(INITREGS)
+/* Same as COMMITREGS, except for GR1 */
+#define COMMITREGS2(regs, iregs, r1, r2) \
+{\
+  SET_GR_A((r1), (regs), GR_A((r1), (iregs)));\
+  SET_GR_A((r1) + 1, (regs), GR_A((r1) + 1, (iregs)));\
+  SET_GR_A((r2), (regs), GR_A((r2), (iregs)));\
+  SET_GR_A((r2) + 1, (regs), GR_A((r2) + 1, (iregs)));\
+}
+
 #define INITREGS(iregs, regs, r1, r2) \
 { \
   (iregs)->gr[1] = (regs)->gr[1]; \
@@ -338,7 +345,6 @@
   (iregs)->gr[(r2)] = (regs)->gr[(r2)]; \
   (iregs)->gr[(r2) + 1] = (regs)->gr[(r2) + 1]; \
 }
-#endif /* !defined(INITREGS) */
 
 #if (__GEN_ARCH == 900)
 #undef INITREGS
@@ -385,7 +391,7 @@
 /*----------------------------------------------------------------------------*/
 /* Constants                                                                  */
 /*----------------------------------------------------------------------------*/
-#define PROCESS_MAX             16384  /* CPU-determined amount of data       */ 
+#define PROCESS_MAX          65536     /* CPU-determined amount of data       */ 
 #define TRUEFALSE(boolean)   ((boolean) ? "True" : "False")
 
 /*----------------------------------------------------------------------------*/
@@ -408,9 +414,11 @@ enum cmpsc_status
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs);
 static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs);
+static int ARCH_DEP(expand_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is);
 static void ARCH_DEP(fetch_cce)(int r2, REGS *regs, BYTE *cce, int index);
 static int ARCH_DEP(fetch_ch)(int r2, REGS *regs, REGS *iregs, BYTE *ch, int offset);
 static void ARCH_DEP(fetch_ece)(int r2, REGS *regs, BYTE *ece, int index);
+static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, U16 index_symbol[8]);
 static int ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, U16 *index_symbol);
 static void ARCH_DEP(fetch_sd)(int r2, REGS *regs, BYTE *sd, int index);
 static enum cmpsc_status ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, BYTE *cce, BYTE *next_ch, U16 *last_match);
@@ -528,111 +536,152 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 {
-  BYTE byte;                           /* a byte                              */
-  U16 index_symbol=0;                  /* Index symbol                        */
-  BYTE ece[8];                         /* Expansion Character Entry           */
-  int entries;                         /* Entries processed                   */
-  GREG exit_value;                     /* return cc=3 on this value           */
-  U16 pptr;                            /* predecessor pointer                 */
-  int written;                         /* Childs written                      */
-  
-  /* Try to generate the CPU-determined amount of data */
-  if(likely(GR_A(r1 + 1, regs) <= PROCESS_MAX))
-    exit_value = 0;
-  else
-    exit_value = GR_A(r1 + 1, regs) - PROCESS_MAX;
-  while(exit_value <= GR_A(r1 + 1, regs))
+  int cw;                              /* Characters written                  */
+  int i;
+  U16 is;                              /* Index symbol                        */
+  U16 iss[8];                          /* Index symbols                       */
+  int rc;                              /* Return code                         */
+  unsigned smbsz;                      /* Symbol size                         */
+
+  /* Initialize values */
+  cw = 0;
+  smbsz = GR0_smbsz(regs);
+
+  /* Process individual index symbols until cbn becomes zero */
+  if(unlikely(GR1_cbn(regs)))
   {
-
-    /* Get an index symbol, return on end of source */
-    if(unlikely(ARCH_DEP(fetch_is)(r2, regs, iregs, &index_symbol)))
-      return;
-
-    /* Check if this is an alphabet entry */
-    if(unlikely(index_symbol <= 0xff))
+    while(likely(GR1_cbn(regs)))
     {
-
-      /* Write the alphabet entry, return on trouble */
-      byte = index_symbol;
-      if(unlikely(ARCH_DEP(store_ch)(r1, regs, iregs, &byte, 1, 0)))
+      if(unlikely(ARCH_DEP(fetch_is)(r2, regs, iregs, &is)))
         return;
-
-      /* Adjust destination registers */
-      ADJUSTREGS(r1, regs, iregs, 1);
-
-      /* Commit registers, we have completed a expansion! (just a copy) */
-      COMMITREGS(regs, iregs, r1, r2);
-
-#if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
-    logmsg("expand   : registers committed\n");
-#endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2 */
-
-    }
-    else
-    {
-
-      /* Get the Expansion character entry */
-      ARCH_DEP(fetch_ece)(r2, regs, ece, index_symbol);
-
-      /* Reset child counter */
-      written = 0;
-
-      /* Reset entries counter */
-      entries = 1;
-
-      /* Process the whole tree to the top */
-      while(!ECE_upr(ece))
-      {
-
-        /* Check for writing child 261 */
-        TESTCH261(regs, written, ECE_psl(ece));
-
-        /* Output extension characters in preceded entry, return on trouble */
-        if(unlikely(ARCH_DEP(store_ch)(r1, regs, iregs, ECE_ec(ece), ECE_psl(ece), ECE_ofst(ece))))
-          return;
-
-        /* Get the preceding entry */
-        pptr = ECE_pptr(ece);
-        ARCH_DEP(fetch_ece)(r2, regs, ece, pptr);
-
-        /* Check for processing entry 128 */
-        if(unlikely(++entries > 127))
-        {
-
-#if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
-          logmsg("expand   : trying to process entry 128\n");
-#endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2 */
-
-          ARCH_DEP(program_interrupt)(regs, PGM_DATA_EXCEPTION);
-        }
-      }
-
-      /* Check for writing child 261 */
-      TESTCH261(regs, written, ECE_csl(ece));
-
-      /* Output extension characters in last or only unpreceded entry, return on trouble */
-      if(unlikely(ARCH_DEP(store_ch)(r1, regs, iregs, ECE_ec(ece), ECE_csl(ece), 0)))
+      rc = ARCH_DEP(expand_is)(r1, r2, regs, iregs, is);
+      if(unlikely(rc == -1))
         return;
-
-      /* Adjust destination registers */
-      ADJUSTREGS(r1, regs, iregs, written);
-
-      /* Commit registers, we have completed an expansion */
-      COMMITREGS(regs, iregs, r1, r2);
-
-#if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
-      logmsg("expand   : registers committed\n");
-#endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2 */
-
+      cw += rc;
     }
+
+    /* Commit, including GR1 */
+    COMMITREGS(regs, iregs, r1, r2);
+
+#ifdef OPTION_CMPSC_EXPAND_DEBUG
+    logmsg("Registers committed\n");
+#endif
   }
 
-  /* CPU-determined amount of data processed */
-  regs->psw.cc = 3;
+  /* Block processing, cbn stays zero */
+  while(likely(GR_A(r2 + 1, iregs) >= smbsz && cw < PROCESS_MAX))
+  {
+    ARCH_DEP(fetch_iss)(r2, regs, iregs, iss);
+    for(i = 0; i < 8; i++)
+    {
+#ifdef OPTION_CMPSC_EXPAND_DEBUG
+      logmsg("expand   : is %04X (%d)\n", iss[i], i);
+#endif
+      rc = ARCH_DEP(expand_is)(r1, r2, regs, iregs, iss[i]);
+      if(unlikely(rc == -1))
+        return;
+      cw += rc;
+    }
 
-#if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
-  logmsg("expand  : reached CPU determined amount of data\n");
-#endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2 */
+    /* Commit, cbn unchanged so except for GR1 */
+    COMMITREGS2(regs, iregs, r1, r2);
+
+#ifdef OPTION_CMPSC_EXPAND_DEBUG
+    logmsg("Registers committed\n");
+#endif 
+  }
+
+  if(unlikely(cw >= PROCESS_MAX))
+  {
+    regs->psw.cc = 3;
+
+#ifdef OPTION_CMPSC_EXPAND_DEBUG
+    logmsg("expand   : reached CPU determined amount of data\n");
+#endif
+
+    return;
+  }
+
+  /* Process last index symbols, never mind about childs written */
+  while(unlikely(!ARCH_DEP(fetch_is)(r2, regs, iregs, &is)))
+  {
+    if(unlikely(ARCH_DEP(expand_is)(r1, r2, regs, iregs, is) == -1))
+      return;
+  }
+
+  /* Commit, including GR1 */
+  COMMITREGS(regs, iregs, r1, r2);
+
+#ifdef OPTION_CMPSC_EXPAND_DEBUG
+    logmsg("Registers committed\n");
+#endif 
+ 
+}
+
+/*----------------------------------------------------------------------------*/
+/* expand_is                                                                  */
+/*----------------------------------------------------------------------------*/
+static int ARCH_DEP(expand_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is)
+{
+  BYTE b;                              /* a byte                              */
+  int cw;                              /* Characters written                  */
+  BYTE ece[8];                         /* Expansion Character Entry           */
+  int eces;                            /* Entries processed                   */
+  U16 pptr;                            /* predecessor pointer                 */
+
+  /* Check if this is an alphabet entry */
+  if(unlikely(is <= 0xff))
+  {
+
+    /* Write the alphabet entry, return on trouble */
+    b = is;
+    if(unlikely(ARCH_DEP(store_ch)(r1, regs, iregs, &b, 1, 0)))
+      return(-1);
+    cw = 1;
+  }
+  else
+  {
+
+    /* Get the Expansion character entry */
+    ARCH_DEP(fetch_ece)(r2, regs, ece, is);
+    eces = 1;
+    cw = 0;
+
+    /* Process the whole tree to the top */
+    while(likely(!ECE_upr(ece)))
+    {
+      /* Count and check for writing child 261 */
+      cw += ECE_psl(ece);
+      if(unlikely(cw > 260))
+        ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
+
+      /* Output extension characters in preceded entry, return on trouble */
+      if(unlikely(ARCH_DEP(store_ch)(r1, regs, iregs, ECE_ec(ece), ECE_psl(ece), ECE_ofst(ece))))
+        return(-1);
+
+      /* Get the preceding entry */
+      pptr = ECE_pptr(ece);
+      ARCH_DEP(fetch_ece)(r2, regs, ece, pptr);
+      eces += 1;
+
+      /* Check for processing entry 128 */
+      if(unlikely(eces > 127))
+        ARCH_DEP(program_interrupt)(regs, PGM_DATA_EXCEPTION);
+    }
+
+    /* Count and check for writing child 261 */
+    cw += ECE_csl(ece);
+    if(unlikely(cw > 260))
+      ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
+
+    /* Output extension characters in last or only unpreceded entry, return on trouble */
+    if(unlikely(unlikely(ARCH_DEP(store_ch)(r1, regs, iregs, ECE_ec(ece), ECE_csl(ece), 0))))
+      return(-1);
+  }
+
+  /* Adjust registers */
+  ADJUSTREGS(r1, regs, iregs, cw);
+  return(cw);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -683,40 +732,19 @@ static void ARCH_DEP(fetch_cce)(int r2, REGS *regs, BYTE *cce, int index)
   if(CCE_cct(cce) < 2)
   {
     if(unlikely(CCE_act(cce) > 4))
-    {
-
-#if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
-      logmsg("fetch_cce: cct<2 and act>4 -> data exception\n");
-#endif
-
       ARCH_DEP(program_interrupt)(regs, PGM_DATA_EXCEPTION);
-    }
   }
   else
   {
     if(!CCE_d(cce))
     {
       if(unlikely(CCE_cct(cce) == 7))
-      {
-
-#if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
-        logmsg("fetch_cce: cct=7 and d=0 -> data exception\n");
-#endif
-
         ARCH_DEP(program_interrupt)(regs, PGM_DATA_EXCEPTION);
-      }
     }
     else
     {
       if(unlikely(CCE_cct(cce) > 5))
-      {
-
-#if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
-        logmsg("fetch_cce: cct>5 and d=1 -> data exception\n");
-#endif
-
         ARCH_DEP(program_interrupt)(regs, PGM_DATA_EXCEPTION);
-      }
     }
   }
 }
@@ -753,7 +781,7 @@ static void ARCH_DEP(fetch_ece)(int r2, REGS *regs, BYTE *ece, int index)
 {
   ARCH_DEP(vfetchc)((ece), 7, (GR1_dictor((regs)) + (index) * 8) & ADDRESS_MAXWRAP((regs)), (r2), (regs));
 
-#if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
+#ifdef OPTION_CMPSC_EXPAND_DEBUG
   int i;
   int prt_detail;
 
@@ -769,50 +797,39 @@ static void ARCH_DEP(fetch_ece)(int r2, REGS *regs, BYTE *ece, int index)
   logmsg("\n");
   if(prt_detail)
   {
-    logmsg("  psl    : %d\n", ECE_psl(ece));
-    logmsg("  csl    : %d\n", ECE_csl(ece));
-    logmsg("  pptr   : %04X\n", ECE_pptr(ece));
-    logmsg("  ofst   : %02X\n", ECE_ofst(ece));
-    logmsg("  upr    > %s\n", TRUEFALSE(ECE_upr(ece)));
-    logmsg("  ecs    >");
-    if(ECE_upr(ece))
+    if(!ECE_psl(ece))
     {
+      logmsg("  psl    : %d\n", ECE_psl(ece));
+      logmsg("  bit34  : %s\n", TRUEFALSE(ECE_bit34(ece)));
+      logmsg("  csl    : %d\n", ECE_csl(ece));
+      logmsg("  ecs    :");
       for(i = 0; i < ECE_csl(ece); i++)
         logmsg(" %02X", ECE_ec(ece)[i]);
+      logmsg("\n");
     }
     else
     {
+      logmsg("  psl    : %d\n", ECE_psl(ece));
+      logmsg("  pptr   : %04X\n", ECE_pptr(ece));
+      logmsg("  ecs    :");
       for(i = 0; i < ECE_psl(ece); i++)
         logmsg(" %02X", ECE_ec(ece)[i]);
+      logmsg("\n");
+      logmsg("  ofst   : %02X\n", ECE_ofst(ece));
     }
-    logmsg("\n");
   }
-#endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2 */
+#endif 
 
   /* Check for data exceptions */
-  if(!ECE_psl(ece))
+  if(ECE_psl(ece))
   {
-    if(unlikely(!ECE_csl(ece) || ECE_bit34(ece)))
-    {
-
-#if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
-      logmsg("fetch_ece: psl=0 and (csl=0 or bit34 nonzero) -> data exception\n");
-#endif
-
+    if(unlikely(ECE_psl(ece) > 5))
       ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
-    }
   }
   else
   {
-    if(unlikely(ECE_psl(ece) > 5))
-    {
-
-#if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
-      logmsg("fetch_ece: psl>5 -> data exception\n");
-#endif
-
+    if(unlikely(!ECE_csl(ece) || ECE_bit34(ece)))
       ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
-    }
   }
 }
 
@@ -828,12 +845,12 @@ static int ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, U16 *index_symbol
   if(unlikely(((GR1_cbn(iregs) + GR0_smbsz(regs) - 1) / 8) >= GR_A(r2 + 1, iregs)))
   {
 
-#if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
+#ifdef OPTION_CMPSC_EXPAND_DEBUG
     logmsg("fetch_is : reached end of source\n");
-#endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1 */
+#endif
 
     regs->psw.cc = 0;
-    return(1);
+    return(-1);
   }
 
   /* Clear possible fetched 3rd byte */
@@ -852,11 +869,109 @@ static int ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, U16 *index_symbol
   /* Calculate and set the new compressed-data bit number */
   GR1_setcbn(iregs, (GR1_cbn(iregs) + GR0_smbsz(regs)) % 8);
 
-#if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
+#ifdef OPTION_CMPSC_EXPAND_DEBUG
   logmsg("fetch_is : %04X, cbn=%d, GR%02d=" F_VADR ", GR%02d=" F_GREG "\n", *index_symbol, GR1_cbn(iregs), r2, iregs->GR(r2), r2 + 1, iregs->GR(r2 + 1));
-#endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2 */
+#endif
 
   return(0);
+}
+
+/*----------------------------------------------------------------------------*/
+/* fetch_iss                                                                  */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, U16 is[8])
+{
+  BYTE buf[13];
+  int smbsz;
+
+  /* Initialize values */
+  smbsz = GR0_smbsz(regs);
+
+  /* Fetch symbol size bytes for 8 index symbols */
+  ARCH_DEP(vfetchc)(&buf, smbsz - 1, GR_A(r2, iregs) & ADDRESS_MAXWRAP(regs), r2, regs);
+
+  /* Calculate the 8 index symbols */
+  switch(smbsz)
+  {
+    case 9: /*9-bits */
+    {
+      /* 0       1        2        3        4        5        6        7        8        */
+      /* 012345670 123456701 234567012 345670123 456701234 567012345 670123456 701234567 */
+      /* 012345678 012345678 012345678 012345678 012345678 012345678 012345678 012345678 */
+      is[0] = ((buf[0]       ) << 1) | (buf[1] >> 7);
+      is[1] = ((buf[1] & 0x7f) << 2) | (buf[2] >> 6);
+      is[2] = ((buf[2] & 0x3f) << 3) | (buf[3] >> 5);
+      is[3] = ((buf[3] & 0x1f) << 4) | (buf[4] >> 4);
+      is[4] = ((buf[4] & 0x0f) << 5) | (buf[5] >> 3);
+      is[5] = ((buf[5] & 0x07) << 6) | (buf[6] >> 2);
+      is[6] = ((buf[6] & 0x03) << 7) | (buf[7] >> 1);
+      is[7] = ((buf[7] & 0x01) << 8) | (buf[8]     );
+      break;
+    }
+    case 10: /* 10-bits */
+    {
+      /* 0       1        2        3        4        5       6        7        8        9        */
+      /* 0123456701 2345670123 4567012345 6701234567 0123456701 2345670123 4567012345 6701234567 */
+      /* 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 */
+      is[0] = ((buf[0]       ) << 2) | (buf[1] >> 6);
+      is[1] = ((buf[1] & 0x3f) << 4) | (buf[2] >> 4);
+      is[2] = ((buf[2] & 0x0f) << 6) | (buf[3] >> 2);
+      is[3] = ((buf[3] & 0x03) << 8) | (buf[4]     );
+      is[4] = ((buf[5]       ) << 2) | (buf[6] >> 6);
+      is[5] = ((buf[6] & 0x3f) << 4) | (buf[7] >> 4);
+      is[6] = ((buf[7] & 0x0f) << 6) | (buf[8] >> 2);
+      is[7] = ((buf[8] & 0x03) << 8) | (buf[9]     );
+      break;
+    }
+    case 11: /* 11-bits */
+    {
+      /* 0       1        2        3       4        5        6        7       8        9        a        */
+      /* 01234567012 34567012345 67012345670 12345670123 45670123456 70123456701 23456701234 56701234567 */
+      /* 0123456789a 0123456789a 0123456789a 0123456789a 0123456789a 0123456789a 0123456789a 0123456789a */
+      is[0] = ((buf[0]       ) <<  3) | (buf[ 1] >> 5);
+      is[1] = ((buf[1] & 0x1f) <<  6) | (buf[ 2] >> 2);
+      is[2] = ((buf[2] & 0x03) <<  9) | (buf[ 3] << 1) | (buf[4] >> 7);
+      is[3] = ((buf[4] & 0x7f) <<  4) | (buf[ 5] >> 4);
+      is[4] = ((buf[5] & 0x0f) <<  7) | (buf[ 6] >> 1);
+      is[5] = ((buf[6] & 0x01) << 10) | (buf[ 7] << 2) | (buf[8] >> 6);
+      is[6] = ((buf[8] & 0x3f) <<  5) | (buf[ 9] >> 3);
+      is[7] = ((buf[9] & 0x07) <<  8) | (buf[10]     );
+      break;
+    }
+    case 12: /* 12-bits */
+    {
+      /* 0       1        2        3       4        5        6       7        8        9       a        b        */
+      /* 012345670123 456701234567 012345670123 456701234567 012345670123 456701234567 012345670123 456701234567 */
+      /* 0123456789ab 0123456789ab 0123456789ab 0123456789ab 0123456789ab 0123456789ab 0123456789ab 0123456789ab */
+      is[0] = ((buf[ 0]       ) << 4) | (buf[ 1] >> 4);
+      is[1] = ((buf[ 1] & 0x0f) << 8) | (buf[ 2]     );
+      is[2] = ((buf[ 3]       ) << 4) | (buf[ 4] >> 4);
+      is[3] = ((buf[ 4] & 0x0f) << 8) | (buf[ 5]     );
+      is[4] = ((buf[ 6]       ) << 4) | (buf[ 7] >> 4);
+      is[5] = ((buf[ 7] & 0x0f) << 8) | (buf[ 8]     );
+      is[6] = ((buf[ 9]       ) << 4) | (buf[10] >> 4);
+      is[7] = ((buf[10] & 0x0f) << 8) | (buf[11]     );
+      break;
+    }
+     case 13: /* 13-bits */
+    {
+      /* 0       1        2       3        4        5       6        7       8        9        a       b        c        */
+      /* 0123456701234 5670123456701 2345670123456 7012345670123 4567012345670 1234567012345 6701234567012 3456701234567 */
+      /* 0123456789abc 0123456789abc 0123456789abc 0123456789abc 0123456789abc 0123456789abc 0123456789abc 0123456789abc */
+      is[0] = ((buf[ 0]       ) <<  5) | (buf[ 1] >> 3);
+      is[1] = ((buf[ 1] & 0x07) << 10) | (buf[ 2] << 2) | (buf[ 3] >> 6);
+      is[2] = ((buf[ 3] & 0x3f) <<  7) | (buf[ 4] >> 1);
+      is[3] = ((buf[ 4] & 0x01) << 12) | (buf[ 5] << 4) | (buf[ 6] >> 4);
+      is[4] = ((buf[ 6] & 0x0f) <<  9) | (buf[ 7] << 1) | (buf[ 8] >> 7);
+      is[5] = ((buf[ 8] & 0x7f) <<  6) | (buf[ 9] >> 2);
+      is[6] = ((buf[ 9] & 0x03) << 11) | (buf[10] << 3) | (buf[11] >> 5);
+      is[7] = ((buf[11] & 0x1f) <<  8) | (buf[12]     );
+      break;
+    }
+  }
+
+  /* Adjust source registers */
+  ADJUSTREGS(r2, regs, iregs, smbsz);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1123,19 +1238,19 @@ static int ARCH_DEP(store_ch)(int r1, REGS *regs, REGS *iregs, BYTE *data, int l
   if(unlikely(GR_A(r1 + 1, iregs) < length + (U32) offset))
   {
 
-#if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
+#ifdef OPTION_CMPSC_EXPAND_DEBUG
     logmsg("store_ch : Reached end of destination\n");
-#endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2 */
+#endif 
 
     /* Indicate end of destination */
     regs->psw.cc = 1;
-    return(1);
+    return(-1);
   }
 
   /* Store the data */
   ARCH_DEP(vstorec)(data, length - 1, (GR_A(r1, iregs) + offset) & ADDRESS_MAXWRAP(regs), r1, regs);
 
-#if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
+#ifdef OPTION_CMPSC_EXPAND_DEBUG
   logmsg("store_ch : at " F_VADR ", len %04d: ", (iregs->GR(r1) + offset), length);
   {
     int i;
@@ -1144,7 +1259,7 @@ static int ARCH_DEP(store_ch)(int r1, REGS *regs, REGS *iregs, BYTE *data, int l
       logmsg("%02X", data[i]);
     logmsg("\n");
   }
-#endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2 */
+#endif 
 
   return(0);
 }
@@ -1240,7 +1355,7 @@ DEF_INST(compression_call)
 
   RRE(inst, regs, r1, r2);
 
-#ifdef OPTION_CMPSC_DEBUGLVL
+#if defined(OPTION_CMPSC_DEBUGLVL) || defined(OPTION_CMPSC_EXPAND_DEBUG) 
   logmsg("CMPSC: compression call\n");
   logmsg(" r1      : GR%02d\n", r1);
   logmsg(" address : " F_VADR "\n", regs->GR(r1));
