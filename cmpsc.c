@@ -964,7 +964,7 @@ static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, U16 is[8])
       is[7] = ((buf[10] & 0x0f) << 8) | (buf[11]     );
       break;
     }
-     case 13: /* 13-bits */
+    case 13: /* 13-bits */
     {
       /* 0       1        2       3        4        5       6        7       8        9        a       b        c        */
       /* 0123456701234 5670123456701 2345670123456 7012345670123 4567012345670 1234567012345 6701234567012 3456701234567 */
@@ -1440,7 +1440,7 @@ static void ARCH_DEP(store_iss)(int r1, int r2, REGS *regs, REGS *iregs, U16 iss
       buf[11] = ((iss[7] & 0xff)     );
       break;
     }
-     case 13: /* 13-bits */
+    case 13: /* 13-bits */
     {
       /* 0        1        2        3        4        5        6        7        8        9        a        b        c        */
       /* 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 */
@@ -1463,7 +1463,8 @@ static void ARCH_DEP(store_iss)(int r1, int r2, REGS *regs, REGS *iregs, U16 iss
     }
   } 
 
-  /* Adjust destination registers */
+  /* Store index symbols and adjust registers */
+  ARCH_DEP(vstorec)(buf, smbsz - 1, GR_A(r1, iregs) & ADDRESS_MAXWRAP(regs), r1, regs);
   ADJUSTREGS(r1, regs, iregs, smbsz);
 }
 #endif
