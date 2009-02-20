@@ -220,15 +220,6 @@
 #define CCE_mcc(cce)         ((CCE_cct((cce)) + (CCE_d((cce)) ? 1 : 0) == 6))
 
 /*----------------------------------------------------------------------------*/
-/* Expansion Character Entry macro's (ECE)                                    */
-/*----------------------------------------------------------------------------*/
-/* ec    : address of first extension character                               */
-/* upr   : indication wheter entry is unpreceded                              */
-/*----------------------------------------------------------------------------*/
-#define ECE_ec(ece)          (ECE_upr((ece)) ? &(ece)[1] : &(ece)[2])
-#define ECE_upr(ece)         (!ECE_psl((ece)))
-
-/*----------------------------------------------------------------------------*/
 /* General Purpose Register 0 macro's (GR0)                                   */
 /*----------------------------------------------------------------------------*/
 /* dctsz      : dictionary size                                               */
@@ -630,17 +621,17 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 /*----------------------------------------------------------------------------*/
 static int ARCH_DEP(expand_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is)
 {
-  BYTE b;                              /* a byte                              */
+  BYTE b;
   int cw;                              /* Characters written                  */
   BYTE ece[8];                         /* Expansion Character Entry           */
   int eces;                            /* Entries processed                   */
-  U16 pptr;                            /* predecessor pointer                 */
+  U16 pptr;                            /* Predecessor pointer                 */
 
-  /* Check if this is an alphabet entry */
+  /* Alphabet entry? */
   if(unlikely(is <= 0xff))
   {
 
-    /* Write the alphabet entry, return on trouble */
+    /* Write alphabet entry */
     b = is;
     if(unlikely(ARCH_DEP(store_ch)(r1, regs, iregs, &b, 1, 0)))
       return(-1);
@@ -649,24 +640,24 @@ static int ARCH_DEP(expand_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is)
   else
   {
 
-    /* Get the Expansion character entry */
+    /* Get expansion character entry */
     ARCH_DEP(fetch_ece)(r2, regs, ece, is);
     eces = 1;
     cw = 0;
 
-    /* Process the whole tree to the top */
-    while(likely(!ECE_upr(ece)))
+    /* Process unpreceded entries */
+    while(likely(ECE_psl(ece)))
     {
       /* Count and check for writing child 261 */
       cw += ECE_psl(ece);
       if(unlikely(cw > 260))
         ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
 
-      /* Output extension characters in preceded entry, return on trouble */
-      if(unlikely(ARCH_DEP(store_ch)(r1, regs, iregs, ECE_ec(ece), ECE_psl(ece), ECE_ofst(ece))))
+      /* Output extension characters in preceded entry */
+      if(unlikely(ARCH_DEP(store_ch)(r1, regs, iregs, &ece[2], ECE_psl(ece), ECE_ofst(ece))))
         return(-1);
 
-      /* Get the preceding entry */
+      /* Get preceding entry */
       pptr = ECE_pptr(ece);
       ARCH_DEP(fetch_ece)(r2, regs, ece, pptr);
       eces += 1;
@@ -681,8 +672,8 @@ static int ARCH_DEP(expand_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is)
     if(unlikely(cw > 260))
       ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
 
-    /* Output extension characters in last or only unpreceded entry, return on trouble */
-    if(unlikely(unlikely(ARCH_DEP(store_ch)(r1, regs, iregs, ECE_ec(ece), ECE_csl(ece), 0))))
+    /* Output extension characters in unpreceded entry */
+    if(unlikely(unlikely(ARCH_DEP(store_ch)(r1, regs, iregs, &ece[1], ECE_csl(ece), 0))))
       return(-1);
   }
 
@@ -804,25 +795,25 @@ static void ARCH_DEP(fetch_ece)(int r2, REGS *regs, BYTE *ece, int index)
   logmsg("\n");
   if(prt_detail)
   {
-    if(!ECE_psl(ece))
+    if(ECE_psl(ece))
+    {
+      logmsg("  psl    : %d\n", ECE_psl(ece));
+      logmsg("  pptr   : %04X\n", ECE_pptr(ece));
+      logmsg("  ecs    :");
+      for(i = 0; i < ECE_psl(ece); i++)
+        logmsg(" %02X", ece[i + 2]);
+      logmsg("\n");
+      logmsg("  ofst   : %02X\n", ECE_ofst(ece));
+    }
+    else
     {
       logmsg("  psl    : %d\n", ECE_psl(ece));
       logmsg("  bit34  : %s\n", TRUEFALSE(ECE_bit34(ece)));
       logmsg("  csl    : %d\n", ECE_csl(ece));
       logmsg("  ecs    :");
       for(i = 0; i < ECE_csl(ece); i++)
-        logmsg(" %02X", ECE_ec(ece)[i]);
+        logmsg(" %02X", ece[i + 1]);
       logmsg("\n");
-    }
-    else
-    {
-      logmsg("  psl    : %d\n", ECE_psl(ece));
-      logmsg("  pptr   : %04X\n", ECE_pptr(ece));
-      logmsg("  ecs    :");
-      for(i = 0; i < ECE_psl(ece); i++)
-        logmsg(" %02X", ECE_ec(ece)[i]);
-      logmsg("\n");
-      logmsg("  ofst   : %02X\n", ECE_ofst(ece));
     }
   }
 #endif 
