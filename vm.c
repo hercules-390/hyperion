@@ -968,6 +968,131 @@ U32     buflen;                         /* Length of data buffer     */
 } /* end function access_reipl_data */
 
 /*-------------------------------------------------------------------*/
+/* Access Certain Virtual Machine Information (Function code 0x260)  */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP(vm_info) (int r1, int r2, REGS *regs)
+{
+DEVBLK  *dev;                          /* -> Device block            */
+U16     devnum;                        /* Device number              */
+#if defined(FEATURE_ESAME)
+RADR    stgarea;                       /* Storage extent area        */
+S64     stglen;                        /* Storage extent area length */
+#endif /* FEATURE_ESAME */
+
+    /* Ry contains the subcode */
+    switch(regs->GR_L(r2))
+    {
+    case 0x00000000: /* Highest addressable byte */
+#if defined(FEATURE_ESAME)
+
+        /* Program check if running in z/Architecture mode and */
+        /* 64-bit addressing is being used.                    */
+        if (regs->psw.amode64)
+        {
+            ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        }
+#endif /* FEATURE_ESAME */
+        regs->GR_L(r1) = regs->mainlim; /* provide highest addressable byte */
+        return;
+
+    case 0x00000004: /* Provide BYUSER ID value */
+            
+        /* Program check if Rx and Ry are the same registers or        */
+        /* or Ry is not an even register or the address provided       */
+        /* in Rx is not on a doubleword boundary or if running         */
+        /* in z/Architecture mode and 64-bit addressing is being used. */
+        if ( r1 == r2 || r2 & 0x1 || regs->GR_L(r1) & 0x7
+#if defined(FEATURE_ESAME)
+             || (regs->psw.amode64)
+#endif /* FEATURE_ESAME */
+           )
+        {
+            ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        }
+        regs->GR_L(r2+1)=0x4; /* Indicate no BYUSER ID for Hercules */
+        return;
+        
+    case 0x00000008: /* Return number of lines per page */
+#if defined(FEATURE_ESAME)
+
+        /* Program check if running in z/Architecture mode and */
+        /* 64-bit addressing is being used.                    */
+        if (regs->psw.amode64)
+        {
+            ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        }
+#endif /* FEATURE_ESAME */
+
+        /* Get the device number from the Rx register */
+        devnum=regs->GR_LHL(r1);
+       
+        /* Locate the device block */
+        dev = find_device_by_devnum(0,devnum);
+
+        /* Set 0 lines per page for a valid printer or console (meaning SPOOL is OFF) */
+        if (dev != NULL &&
+              (dev->devtype == 0x1403 ||
+               dev->devtype == 0x3211 ||
+               dev->devtype == 0x1052 ||
+               dev->devtype == 0x3215 )
+            )
+        {
+           regs->GR_L(r1) = 0; /* Set zero lines per page */
+           regs->GR_L(r2) = 0; /* Set return code to indicate a valid device */
+        }
+        else
+        {
+           regs->GR_L(r2) = 4; /* Set return code to indicate an invalid device */
+        }
+        return;
+        
+#if defined(FEATURE_ESAME)
+    case 0x0000000C: /* Return highest addressable byte for z/Architecture machine */
+         regs->GR_G(r1) = regs->mainlim;
+         regs->GR_G(r2) = regs->mainlim;
+         return;
+
+    case 0x00000010: /* Set storage extent */
+            
+         /* Obtain the storage extent area real address from Rx */
+         /* and its length from Rx+1                            */
+         stgarea=regs->GR_G(r1);
+         stglen=regs->GR_G(r1+1); /* Length is treated as a signed value */
+         
+         /* Program check if Rx is not an even register or the address */
+         /* provided in Rx is not on a quadword boundary or the length */
+         /* provided in Rx+1 is not positive or not a multiple of 16   */
+         if ( r1 & 1 || stgarea & 0xF || stglen <= 0 || stglen & 0xF )
+         {
+             ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+         }
+         
+         /* Convert real addres to absolute address */
+         stgarea=APPLY_PREFIXING(stgarea,regs->PX );
+         
+         /* Check to ensure extent information can be stored */
+         if (stgarea > regs->mainlim - 16)
+         {
+             regs->program_interrupt (regs, PGM_ADDRESSING_EXCEPTION);
+         }
+         /* Set start of storage extent to zero */
+         ARCH_DEP(store_doubleword_absolute)(0,stgarea,regs); 
+         /* Set end of storage extent to last addressable byte of main storage */
+         ARCH_DEP(store_doubleword_absolute)(regs->mainlim,stgarea+8,regs);
+         /* Set number of extents to 1 in Ry */
+         regs->GR_G(r2) = 1;
+         /* Indicate all extents returned */
+         regs->psw.cc = 0;
+         return;
+#endif /* FEATURE_ESAME */
+
+    default: /* Invalid subcode */
+        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+    }
+}
+
+
+/*-------------------------------------------------------------------*/
 /* Pseudo Timer Extended (Function code 0x270)                       */
 /* Pseudo Timer (Function code 0x00C)                                */
 /*-------------------------------------------------------------------*/

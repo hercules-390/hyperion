@@ -2825,6 +2825,7 @@ int  ARCH_DEP(cpcmd_call) (int r1, int r2, REGS *regs);
 void ARCH_DEP(pseudo_timer) (U32 code, int r1, int r2, REGS *regs);
 void ARCH_DEP(access_reipl_data) (int r1, int r2, REGS *regs);
 int  ARCH_DEP(diag_ppagerel) (int r1, int r2, REGS *regs);
+void ARCH_DEP(vm_info) (int r1, int r2, REGS *regs);
 
 
 /* Functions in module control.c */

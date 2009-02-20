@@ -1,3 +1,4 @@
+20 Feb 2009 Implement VM DIAGNOSE X'260' - Harold Grovesteen
 18 Feb 2009 Turbo CMPSC expand - >15% better performance - Bernard van der Helm
 08 Feb 2009 Ability to build 64-bit executables for Windows - Roger Bowler
 07 Feb 2009 MVCL & MVCLE now obey MP Concurrent Block Consistency rules - Ivan Warren

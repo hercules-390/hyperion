@@ -432,6 +432,13 @@ U32   code;
         regs->GR_L(r2) = 0;
         break;
 
+    case 0x260:
+    /*---------------------------------------------------------------*/
+    /* Diagnose 260: Access Certain Virtual Machine Information      */
+    /*---------------------------------------------------------------*/
+        ARCH_DEP(vm_info) (r1, r2, regs);
+        break;
+        
     case 0x264:
     /*---------------------------------------------------------------*/
     /* Diagnose 264: CP Communication                                */
