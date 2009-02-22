@@ -1403,7 +1403,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 #if defined(FEATURE_MPF_INFO)
         /* Define machine capacity */
         STORE_FW(sccbscp->rcci, 10000);
-        sccbmpf = (SCCB_MPF_INFO*)(sccbcpu+1);
+        sccbmpf = (SCCB_MPF_INFO*)(sccbcpu);
         /* We use an MP factor table of 100, 95, 90, ... */
         for (i = 0; i < MAX_CPU; i++, sccbmpf++)
             STORE_HW(sccbmpf->mpfy, (100 - (i*5)));
