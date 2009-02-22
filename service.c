@@ -1156,7 +1156,9 @@ U32             sccblen;                /* Length of SCCB            */
 SCCB_HEADER    *sccb;                   /* -> SCCB header            */
 SCCB_SCP_INFO  *sccbscp;                /* -> SCCB SCP information   */
 SCCB_CPU_INFO  *sccbcpu;                /* -> SCCB CPU information   */
+#if defined(FEATURE_MPF_INFO)
 SCCB_MPF_INFO  *sccbmpf;                /* -> SCCB MPF information   */
+#endif /*defined(FEATURE_MPF_INFO)*/
 #ifdef FEATURE_CHANNEL_SUBSYSTEM
 SCCB_CHP_INFO  *sccbchp;                /* -> SCCB channel path info */
 #else
@@ -1344,14 +1346,18 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         offset = sizeof(SCCB_HEADER) + sizeof(SCCB_SCP_INFO);
         STORE_HW(sccbscp->offcpu, offset);
 
+#if defined(FEATURE_MPF_INFO)
         /* Set MPF array count and offset in SCCB */
         STORE_HW(sccbscp->nummpf, MAX_CPU);
+#endif /*defined(FEATURE_MPF_INFO)*/
         offset += sizeof(SCCB_CPU_INFO) * MAX_CPU;
         STORE_HW(sccbscp->offmpf, offset);
 
         /* Set HSA array count and offset in SCCB */
         STORE_HW(sccbscp->numhsa, 0);
+#if defined(FEATURE_MPF_INFO)
         offset += sizeof(SCCB_MPF_INFO) * MAX_CPU;
+#endif /*defined(FEATURE_MPF_INFO)*/
         STORE_HW(sccbscp->offhsa, offset);
 
         /* Build the MPF information array after the CPU info */
@@ -1394,12 +1400,14 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
         }
 
+#if defined(FEATURE_MPF_INFO)
         /* Define machine capacity */
         STORE_FW(sccbscp->rcci, 10000);
         sccbmpf = (SCCB_MPF_INFO*)(sccbcpu+1);
         /* We use an MP factor table of 100, 95, 90, ... */
         for (i = 0; i < MAX_CPU; i++, sccbmpf++)
             STORE_HW(sccbmpf->mpfy, (100 - (i*5)));
+#endif /*defined(FEATURE_MPF_INFO)*/
 
         /* Set response code X'0010' in SCCB header */
         sccb->reas = SCCB_REAS_NONE;

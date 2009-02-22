@@ -166,6 +166,7 @@
 #define FEATURE_MIDAW                                           /*@Z9*/
 #define FEATURE_MOVE_PAGE_FACILITY_2
 #define FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS               /*208*/
+#define FEATURE_MPF_INFO
 #define FEATURE_MVS_ASSIST
 #define FEATURE_PAGE_PROTECTION
 #define FEATURE_PARSING_ENHANCEMENT_FACILITY                    /*208*/
