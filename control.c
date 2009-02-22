@@ -6812,8 +6812,12 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
 
     case STSI_GPR0_FC_LPAR:
        
-        switch(regs->GR_L(1) & STSI_GPR1_SEL2_MASK)
-        {
+        switch(regs->GR_L(0) & STSI_GPR0_SEL1_MASK) {
+
+        case 2:
+
+            switch(regs->GR_L(1) & STSI_GPR1_SEL2_MASK) {
+
             case 1:
                 /* CURRENT CPU LPAR CONFIG */
                 sysib221 = (SYSIB221 *)(m);
@@ -6826,6 +6830,7 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
                 STORE_HW(sysib221->cpuad,regs->cpuad);
                 regs->psw.cc = 0;
                 break;
+
             case 2:
                 /* All CPUS LPAR CONFIG */
                 sysib222 = (SYSIB222 *)(m);
@@ -6840,10 +6845,15 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
                 STORE_HW(sysib222->shrcpu,sysblk.cpus);
                 regs->psw.cc = 0;
                 break;
+
             default:
                 regs->psw.cc = 3;
-                break;
-        }
+            } /* selector 2 */
+            break;
+
+        default:
+            regs->psw.cc = 3;
+        } /* selector 1 */
         break;
 
     default:
