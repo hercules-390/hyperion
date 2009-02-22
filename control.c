@@ -6747,7 +6747,7 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
 
             case 1:
                 sysib111 = (SYSIB111*)(m);
-                memset(sysib111, 0x00, sizeof(SYSIB111));
+                memset(sysib111, 0x00, MAX(sizeof(SYSIB111),64*4));
                 sysib111->flag1|=SYSIB111_PFLAG;
                 memcpy(sysib111->manufact,manufact,sizeof(manufact));
                 for(i = 0; i < 4; i++)
@@ -6778,7 +6778,7 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
 
             case 1:
                 sysib121 = (SYSIB121*)(m);
-                memset(sysib121, 0x00, sizeof(SYSIB121));
+                memset(sysib121, 0x00, MAX(sizeof(SYSIB121),64*4));
                 memset(sysib121->seqc,0xF0,sizeof(sysib121->seqc));
                 for(i = 0; i < 6; i++)
                     sysib121->seqc[(sizeof(sysib121->seqc) - 6) + i] =
@@ -6790,7 +6790,7 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
 
             case 2:
                 sysib122 = (SYSIB122*)(m);
-                memset(sysib122, 0x00, sizeof(SYSIB122));
+                memset(sysib122, 0x00, MAX(sizeof(SYSIB122),64*4));
                 STORE_FW(sysib122->sccap, STSI_CAPABILITY);
                 STORE_FW(sysib122->cap, STSI_CAPABILITY);
                 STORE_HW(sysib122->totcpu, MAX_CPU);
@@ -6821,7 +6821,7 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
             case 1:
                 /* CURRENT CPU LPAR CONFIG */
                 sysib221 = (SYSIB221 *)(m);
-                memset(sysib221, 0x00, sizeof(SYSIB221));
+                memset(sysib221, 0x00, MAX(sizeof(SYSIB221),64*4));
                 memset(sysib221->seqc,0xF0,sizeof(sysib111->seqc));
                 for(i = 0; i < 6; i++)
                     sysib221->seqc[(sizeof(sysib221->seqc) - 6) + i] =
@@ -6834,7 +6834,7 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
             case 2:
                 /* All CPUS LPAR CONFIG */
                 sysib222 = (SYSIB222 *)(m);
-                memset(sysib222, 0x00, sizeof(SYSIB222));
+                memset(sysib222, 0x00, MAX(sizeof(SYSIB222),64*4));
                 STORE_HW(sysib222->lparnum,1);
                 sysib222->lcpuc[0]=SYSIB222_LCPUC_SHARED;
                 STORE_HW(sysib222->totcpu,MAX_CPU);
