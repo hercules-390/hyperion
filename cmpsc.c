@@ -305,7 +305,7 @@
 #define ADJUSTREGS(r, regs, iregs, len) \
 {\
   SET_GR_A((r), (iregs), (GR_A((r), (iregs)) + (len)) & ADDRESS_MAXWRAP((regs)));\
-  SET_GR_A((r) + 1, (iregs), GR_A((r)+1, (iregs)) - (len));\
+  SET_GR_A((r) + 1, (iregs), GR_A((r) + 1, (iregs)) - (len));\
 }
 
 /*----------------------------------------------------------------------------*/
@@ -418,7 +418,6 @@ static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, U16 is[8]);
 static void ARCH_DEP(fetch_sd)(int r2, REGS *regs, BYTE *sd, int index);
 static enum cmpsc_status ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, BYTE *cce, BYTE *next_ch, U16 *last_match);
 static enum cmpsc_status ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, BYTE *cce, BYTE *next_ch, U16 *last_match);
-static int ARCH_DEP(store_ch)(int r1, REGS *regs, REGS *iregs, BYTE *data, int length, int offset);
 static void ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 index_symbol);
 #ifdef WIP
 static void ARCH_DEP(store_iss)(int r1, int r2, REGS *regs, REGS *iregs, U16 is[8]);
@@ -562,7 +561,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
     COMMITREGS(regs, iregs, r1, r2);
 
 #ifdef OPTION_CMPSC_EXPAND_DEBUG
-    logmsg("Registers committed\n");
+    logmsg("*** Registers committed\n");
 #endif
   }
 
@@ -581,11 +580,11 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
       cw += rc;
     }
 
-    /* Commit, cbn unchanged so except for GR1 */
+    /* Commit, cbn unchanged, so no commit for GR1 needed */
     COMMITREGS2(regs, iregs, r1, r2);
 
 #ifdef OPTION_CMPSC_EXPAND_DEBUG
-    logmsg("Registers committed\n");
+    logmsg("*** Registers committed\n");
 #endif 
   }
 
@@ -611,7 +610,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   COMMITREGS(regs, iregs, r1, r2);
 
 #ifdef OPTION_CMPSC_EXPAND_DEBUG
-    logmsg("Registers committed\n");
+    logmsg("*** Registers committed\n");
 #endif 
  
 }
@@ -621,20 +620,17 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 /*----------------------------------------------------------------------------*/
 static int ARCH_DEP(expand_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is)
 {
-  BYTE b;
-  int cw;                              /* Characters written                  */
+  BYTE buf[261];                       
+  unsigned cw;                         /* Characters written                  */
   BYTE ece[8];                         /* Expansion Character Entry           */
   int eces;                            /* Entries processed                   */
-  U16 pptr;                            /* Predecessor pointer                 */
 
   /* Alphabet entry? */
   if(unlikely(is <= 0xff))
   {
 
     /* Write alphabet entry */
-    b = is;
-    if(unlikely(ARCH_DEP(store_ch)(r1, regs, iregs, &b, 1, 0)))
-      return(-1);
+    buf[0] = is;
     cw = 1;
   }
   else
@@ -653,13 +649,11 @@ static int ARCH_DEP(expand_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is)
       if(unlikely(cw > 260))
         ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
 
-      /* Output extension characters in preceded entry */
-      if(unlikely(ARCH_DEP(store_ch)(r1, regs, iregs, &ece[2], ECE_psl(ece), ECE_ofst(ece))))
-        return(-1);
+      /* Process extension characters in preceded entry */
+      memcpy(&buf[ECE_ofst(ece)], &ece[2], ECE_psl(ece));
 
       /* Get preceding entry */
-      pptr = ECE_pptr(ece);
-      ARCH_DEP(fetch_ece)(r2, regs, ece, pptr);
+      ARCH_DEP(fetch_ece)(r2, regs, ece, ECE_pptr(ece));
       eces += 1;
 
       /* Check for processing entry 128 */
@@ -672,10 +666,29 @@ static int ARCH_DEP(expand_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is)
     if(unlikely(cw > 260))
       ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
 
-    /* Output extension characters in unpreceded entry */
-    if(unlikely(unlikely(ARCH_DEP(store_ch)(r1, regs, iregs, &ece[1], ECE_csl(ece), 0))))
-      return(-1);
+    /* Process extension characters in unpreceded entry */
+    memcpy(buf, &ece[1], ECE_csl(ece));
   }
+
+  /* Check destination size */
+  if(unlikely(GR_A(r1 + 1, iregs) < cw))
+  {
+
+#ifdef OPTION_CMPSC_EXPAND_DEBUG
+    logmsg("expand_is: Reached end of destination\n");
+#endif
+
+    /* Indicate end of destination */
+    regs->psw.cc = 1;
+    return(-1);
+  }
+
+  /* Store the expanded index symbol */
+  ARCH_DEP(vstorec)(buf, cw - 1, GR_A(r1, iregs), r1, regs);
+
+#ifdef OPTION_CMPSC_EXPAND_DEBUG
+  logmsg("expand_is: store at " F_VADR ", len %04u\n", iregs->GR(r1), cw);
+#endif
 
   /* Adjust registers */
   ADJUSTREGS(r1, regs, iregs, cw);
@@ -975,6 +988,10 @@ static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, U16 is[8])
 
   /* Adjust source registers */
   ADJUSTREGS(r2, regs, iregs, smbsz);
+
+#ifdef OPTION_CMPSC_EXPAND_DEBUG
+  logmsg("fetch_iss: GR%02d=" F_VADR ", GR%02d=" F_GREG "\n", r2, iregs->GR(r2), r2 + 1, iregs->GR(r2 + 1));
+#endif
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1229,42 +1246,6 @@ static enum cmpsc_status ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, BY
   }
   while(ind_search_siblings && SD_msc(regs, sd));
   return(write_index_symbol);
-}
-
-/*----------------------------------------------------------------------------*/
-/* store_ch (character)                                                       */
-/*----------------------------------------------------------------------------*/
-static int ARCH_DEP(store_ch)(int r1, REGS *regs, REGS *iregs, BYTE *data, int length, int offset)
-{
-
-  /* Check destination size */
-  if(unlikely(GR_A(r1 + 1, iregs) < length + (U32) offset))
-  {
-
-#ifdef OPTION_CMPSC_EXPAND_DEBUG
-    logmsg("store_ch : Reached end of destination\n");
-#endif 
-
-    /* Indicate end of destination */
-    regs->psw.cc = 1;
-    return(-1);
-  }
-
-  /* Store the data */
-  ARCH_DEP(vstorec)(data, length - 1, (GR_A(r1, iregs) + offset) & ADDRESS_MAXWRAP(regs), r1, regs);
-
-#ifdef OPTION_CMPSC_EXPAND_DEBUG
-  logmsg("store_ch : at " F_VADR ", len %04d: ", (iregs->GR(r1) + offset), length);
-  {
-    int i;
-
-    for(i = 0; i < length; i++)
-      logmsg("%02X", data[i]);
-    logmsg("\n");
-  }
-#endif 
-
-  return(0);
 }
 
 /*----------------------------------------------------------------------------*/
