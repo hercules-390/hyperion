@@ -813,7 +813,7 @@ void print_ece(BYTE *ece)
   int i;
   int prt_detail;
 
-  logmsg("fetch_ece: index %04X\n", index);
+  // logmsg("fetch_ece: index %04X\n", index);
   logmsg("  ece    : ");
   prt_detail = 0;
   for(i = 0; i < 8; i++)
