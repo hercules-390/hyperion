@@ -1969,7 +1969,10 @@ typedef struct _SYSIB121 {              /* Basic Machine CPU         */
     }   SYSIB121;
 
 typedef struct _SYSIB122 {              /* Basic Machine CPUs        */
-        BYTE    resv1[4*7];             /* Reserved                  */
+        BYTE    format;                 /* Format 0 or 1             */
+        BYTE    resv1;                  /* Reserved                  */
+        BYTE    accoff[2*1];            /* Offset to accap field     */
+        BYTE    resv2[4*6];             /* Reserved                  */
         BYTE    sccap[4*1];             /* Secondary CPU Capability  */
         BYTE    cap[4*1];               /* CPU capability            */
         BYTE    totcpu[2*1];            /* Total CPU count           */
@@ -1977,6 +1980,8 @@ typedef struct _SYSIB122 {              /* Basic Machine CPUs        */
         BYTE    sbcpu[2*1];             /* Standby CPU count         */
         BYTE    resvcpu[2*1];           /* Reserved CPU count        */
         BYTE    mpfact[2*MAX_CPU_ENGINES];  /* MP factors            */
+        BYTE    accap[4*1];             /* Alternate CPU Capability  */
+        BYTE    ampfact[2*MAX_CPU_ENGINES]; /* Alternate MP factors  */
     }   SYSIB122;
 
 typedef struct _SYSIB221 {              /* Logical partition CPU     */

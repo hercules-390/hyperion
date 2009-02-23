@@ -6630,6 +6630,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 BYTE   *m;                              /* Mainstor address          */
 int     i;
+U16     offset;                         /* Offset into control block */
 SYSIB111  *sysib111;                    /* Basic machine conf        */
 SYSIB121  *sysib121;                    /* Basic machine CPU         */
 SYSIB122  *sysib122;                    /* Basic machine CPUs        */
@@ -6791,12 +6792,17 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
             case 2:
                 sysib122 = (SYSIB122*)(m);
                 memset(sysib122, 0x00, MAX(sizeof(SYSIB122),64*4));
+                sysib122->format = 1;
+                offset = (U16)(sysib122->accap - (BYTE*)sysib122);
+                STORE_HW(sysib122->accoff, offset);
                 STORE_FW(sysib122->sccap, STSI_CAPABILITY);
                 STORE_FW(sysib122->cap, STSI_CAPABILITY);
                 STORE_HW(sysib122->totcpu, MAX_CPU);
                 STORE_HW(sysib122->confcpu, sysblk.cpus);
                 STORE_HW(sysib122->sbcpu, MAX_CPU - sysblk.cpus);
                 memcpy(sysib122->mpfact,mpfact,(MAX_CPU-1)*2);
+                STORE_FW(sysib122->accap, STSI_CAPABILITY);
+                memcpy(sysib122->ampfact,mpfact,(MAX_CPU-1)*2);
                 regs->psw.cc = 0;
                 break;
 
