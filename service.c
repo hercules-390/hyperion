@@ -705,7 +705,7 @@ U16             residual;               /* Residual data count       */
         sysg_len = evd_len - sizeof(SCCB_EVD_HDR);
 
         /* Insert flag byte before the 3270 input data */
-	sysg_cmd = sysg_data;
+        sysg_cmd = sysg_data;
         sysg_len-=1;
         sysg_data+=1;
 
@@ -752,7 +752,7 @@ U16             residual;               /* Residual data count       */
         else
         {
             evd_len = sizeof(SCCB_EVD_HDR) + 1;
-	    *sysg_cmd = 0x80;
+            *sysg_cmd = 0x80;
 
             /* Set response code X'0020' in SCCB header */
             sccb->reas = SCCB_REAS_NONE;
