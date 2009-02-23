@@ -1348,7 +1348,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
 #if defined(FEATURE_MPF_INFO)
         /* Set MPF array count and offset in SCCB */
-        STORE_HW(sccbscp->nummpf, MAX_CPU);
+        STORE_HW(sccbscp->nummpf, MAX_CPU-1);
 #endif /*defined(FEATURE_MPF_INFO)*/
         offset += sizeof(SCCB_CPU_INFO) * MAX_CPU;
         STORE_HW(sccbscp->offmpf, offset);
@@ -1356,7 +1356,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         /* Set HSA array count and offset in SCCB */
         STORE_HW(sccbscp->numhsa, 0);
 #if defined(FEATURE_MPF_INFO)
-        offset += sizeof(SCCB_MPF_INFO) * MAX_CPU;
+        offset += sizeof(SCCB_MPF_INFO) * MAX_CPU-1;
 #endif /*defined(FEATURE_MPF_INFO)*/
         STORE_HW(sccbscp->offhsa, offset);
 
@@ -1404,9 +1404,11 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         /* Define machine capacity */
         STORE_FW(sccbscp->rcci, 10000);
         sccbmpf = (SCCB_MPF_INFO*)(sccbcpu);
-        /* We use an MP factor table of 100, 95, 90, ... */
-        for (i = 0; i < MAX_CPU; i++, sccbmpf++)
-            STORE_HW(sccbmpf->mpfy, (100 - (i*5)));
+        /* We use an MP factor table of 95, 90, ... */
+        /* the table has one entry less then the amount of installed cpus ie t
+         * there is no entry for the first cpu which is running at rcci speed */
+        for (i = 0; i < MAX_CPU-1; i++, sccbmpf++)
+            STORE_HW(sccbmpf->mpfy, (95 - (i*5)));
 #endif /*defined(FEATURE_MPF_INFO)*/
 
         /* Set response code X'0010' in SCCB header */
