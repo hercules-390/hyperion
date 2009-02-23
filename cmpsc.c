@@ -412,7 +412,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs);
 static int ARCH_DEP(expand_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is);
 static void ARCH_DEP(fetch_cce)(int r2, REGS *regs, BYTE *cce, int index);
 static int ARCH_DEP(fetch_ch)(int r2, REGS *regs, REGS *iregs, BYTE *ch, int offset);
-static void ARCH_DEP(fetch_ece)(int r2, REGS *regs, BYTE *ece, int index);
+static void print_ece(BYTE *ece);
 static int ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, U16 *index_symbol);
 static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, U16 is[8]);
 static void ARCH_DEP(fetch_sd)(int r2, REGS *regs, BYTE *sd, int index);
@@ -637,13 +637,22 @@ static int ARCH_DEP(expand_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is)
   {
 
     /* Get expansion character entry */
-    ARCH_DEP(fetch_ece)(r2, regs, ece, is);
+    ARCH_DEP(vfetchc)(ece, 7, (GR1_dictor(regs) + (is * 8)) & ADDRESS_MAXWRAP(regs), r2, regs);
+
+#ifdef OPTION_CMPSC_EXPAND_DEBUG
+    print_ece(ece);
+#endif
+
     eces = 1;
     cw = 0;
 
     /* Process unpreceded entries */
     while(likely(ECE_psl(ece)))
     {
+      /* Check data exception */
+      if(unlikely(ECE_psl(ece) > 5))
+        ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
+
       /* Count and check for writing child 261 */
       cw += ECE_psl(ece);
       if(unlikely(cw > 260))
@@ -653,13 +662,22 @@ static int ARCH_DEP(expand_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is)
       memcpy(&buf[ECE_ofst(ece)], &ece[2], ECE_psl(ece));
 
       /* Get preceding entry */
-      ARCH_DEP(fetch_ece)(r2, regs, ece, ECE_pptr(ece));
+      ARCH_DEP(vfetchc)(ece, 7, (GR1_dictor(regs) + ECE_pptr(ece) * 8) & ADDRESS_MAXWRAP(regs), r2, regs);
+
+#ifdef OPTION_CMPSC_EXPAND_DEBUG
+    print_ece(ece);
+#endif
+
       eces += 1;
 
       /* Check for processing entry 128 */
       if(unlikely(eces > 127))
         ARCH_DEP(program_interrupt)(regs, PGM_DATA_EXCEPTION);
     }
+
+    /* Check data exception */
+    if(unlikely(!ECE_csl(ece) || ECE_bit34(ece)))
+      ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
 
     /* Count and check for writing child 261 */
     cw += ECE_csl(ece);
@@ -785,14 +803,13 @@ static int ARCH_DEP(fetch_ch)(int r2, REGS *regs, REGS *iregs, BYTE *ch, int off
   return(0);
 }
 
+#ifndef PRINT_ECE_COMPILED
+#define PRINT_ECE_COMPILED
 /*----------------------------------------------------------------------------*/
-/* fetch_ece (expansion character entry).                                     */
+/* print_ece (expansion character entry).                                     */
 /*----------------------------------------------------------------------------*/
-static void ARCH_DEP(fetch_ece)(int r2, REGS *regs, BYTE *ece, int index)
+void print_ece(BYTE *ece)
 {
-  ARCH_DEP(vfetchc)((ece), 7, (GR1_dictor((regs)) + (index) * 8) & ADDRESS_MAXWRAP((regs)), (r2), (regs));
-
-#ifdef OPTION_CMPSC_EXPAND_DEBUG
   int i;
   int prt_detail;
 
@@ -829,20 +846,8 @@ static void ARCH_DEP(fetch_ece)(int r2, REGS *regs, BYTE *ece, int index)
       logmsg("\n");
     }
   }
-#endif 
-
-  /* Check for data exceptions */
-  if(ECE_psl(ece))
-  {
-    if(unlikely(ECE_psl(ece) > 5))
-      ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
-  }
-  else
-  {
-    if(unlikely(!ECE_csl(ece) || ECE_bit34(ece)))
-      ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
-  }
 }
+#endif
 
 /*----------------------------------------------------------------------------*/
 /* fetch_is (index symbol)                                                    */
