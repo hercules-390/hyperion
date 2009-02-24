@@ -412,10 +412,10 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs);
 static int ARCH_DEP(expand_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is);
 static void ARCH_DEP(fetch_cce)(int r2, REGS *regs, BYTE *cce, int index);
 static int ARCH_DEP(fetch_ch)(int r2, REGS *regs, REGS *iregs, BYTE *ch, int offset);
-void print_ece(BYTE *ece);
 static int ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, U16 *index_symbol);
 static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, U16 is[8]);
 static void ARCH_DEP(fetch_sd)(int r2, REGS *regs, BYTE *sd, int index);
+void print_ece(BYTE *ece);
 static enum cmpsc_status ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, BYTE *cce, BYTE *next_ch, U16 *last_match);
 static enum cmpsc_status ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, BYTE *cce, BYTE *next_ch, U16 *last_match);
 static void ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 index_symbol);
@@ -640,6 +640,7 @@ static int ARCH_DEP(expand_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is)
     ARCH_DEP(vfetchc)(ece, 7, (GR1_dictor(regs) + (is * 8)) & ADDRESS_MAXWRAP(regs), r2, regs);
 
 #ifdef OPTION_CMPSC_EXPAND_DEBUG
+    logmsg("fetch ece: index %04X\n", is);
     print_ece(ece);
 #endif
 
@@ -660,6 +661,10 @@ static int ARCH_DEP(expand_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is)
 
       /* Process extension characters in preceded entry */
       memcpy(&buf[ECE_ofst(ece)], &ece[2], ECE_psl(ece));
+
+#ifdef OPTION_CMPSC_EXPAND_DEBUG
+      logmsg("fetch ece: index %04X\n", ECE_pptr(ece));
+#endif
 
       /* Get preceding entry */
       ARCH_DEP(vfetchc)(ece, 7, (GR1_dictor(regs) + ECE_pptr(ece) * 8) & ADDRESS_MAXWRAP(regs), r2, regs);
@@ -803,6 +808,7 @@ static int ARCH_DEP(fetch_ch)(int r2, REGS *regs, REGS *iregs, BYTE *ch, int off
   return(0);
 }
 
+#ifndef OPTION_CMPSC_EXPAND_DEBUG
 #ifndef PRINT_ECE_COMPILED
 #define PRINT_ECE_COMPILED
 /*----------------------------------------------------------------------------*/
@@ -813,7 +819,6 @@ void print_ece(BYTE *ece)
   int i;
   int prt_detail;
 
-  // logmsg("fetch_ece: index %04X\n", index);
   logmsg("  ece    : ");
   prt_detail = 0;
   for(i = 0; i < 8; i++)
@@ -847,7 +852,8 @@ void print_ece(BYTE *ece)
     }
   }
 }
-#endif
+#endif /* PRINT_ECE_COMPILED */
+#endif /* OPTION_CMPSC_EXPAND_DEBUG */
 
 /*----------------------------------------------------------------------------*/
 /* fetch_is (index symbol)                                                    */
