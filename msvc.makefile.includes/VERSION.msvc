@@ -60,7 +60,23 @@ V4 = 0
 
 !ENDIF
 
-!IF $(vsversion) < 9 
+# 
+#  32 bit : 
+#      VS < 9 : Win NT 4 & Win 9X (APPVER 4.0, TARGETOS BOTH)
+#      VS >= 9 : Win 2K (APPVER 5.0, TARGETOS WINNT)
+#  64 bit :
+#      Win 2K3 (APPVER 5.02, TARGETOS WINNT)
+# 
+
+
+!IF (("$(CPU)" == "AMD64") || ("$(CPU)" == "IA64"))
+
+APPVER   = 5.02
+TARGETOS = WINNT
+
+!ELSE # 32 bit build
+
+!IF $(vsversion) < 9
 
 APPVER   = 4.0
 TARGETOS = BOTH
@@ -70,5 +86,6 @@ TARGETOS = BOTH
 APPVER   = 5.0
 TARGETOS = WINNT
 
-!ENDIF
+!ENDIF # vsversion test
 
+!ENDIF # 32/64 bit test
