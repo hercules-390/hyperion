@@ -24,7 +24,11 @@
 #if defined(OPTION_W32_CTCI)
 
 #define MAX_TT32_DLLNAMELEN  (512)
+#if defined(_WIN64)
+#define DEF_TT32_DLLNAME     "TunTap64.dll"
+#else
 #define DEF_TT32_DLLNAME     "TunTap32.dll"
+#endif
 
 #ifndef   MODULESDIR
   #define MODULESDIR         "."           // (i.e. "Current Directory")

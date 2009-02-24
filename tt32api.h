@@ -177,17 +177,23 @@ extern const char* WINAPI EXPORT tuntap32_get_default_iface_ex     (            
 
 /* (in case they want to use LoadLibrary and GetProcAddress instead) */
 
+#if defined(_WIN64)
+#define _WINBITS    "64"
+#else
+#define _WINBITS    "32"
+#endif
+
 #if defined(_UNICODE) || defined(UNICODE)
   #if defined(_DEBUG) || defined(DEBUG)
-    #define  TUNTAP32_DLLNAME  "TunTap32UD.dll"
+    #define  TUNTAP32_DLLNAME  "TunTap" _WINBITS "UD.dll"
   #else // release, not debug
-    #define  TUNTAP32_DLLNAME  "TunTap32U.dll"
+    #define  TUNTAP32_DLLNAME  "TunTap" _WINBITS "U.dll"
   #endif // debug or release
 #else // ansi, not unicode
   #if defined(_DEBUG) || defined(DEBUG)
-    #define  TUNTAP32_DLLNAME  "TunTap32D.dll"
+    #define  TUNTAP32_DLLNAME  "TunTap" _WINBITS "D.dll"
   #else // release, not debug
-    #define  TUNTAP32_DLLNAME  "TunTap32.dll"
+    #define  TUNTAP32_DLLNAME  "TunTap" _WINBITS ".dll"
   #endif // debug or release
 #endif // unicode or ansi
 
