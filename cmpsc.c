@@ -415,7 +415,9 @@ static int ARCH_DEP(fetch_ch)(int r2, REGS *regs, REGS *iregs, BYTE *ch, int off
 static int ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, U16 *index_symbol);
 static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, U16 is[8]);
 static void ARCH_DEP(fetch_sd)(int r2, REGS *regs, BYTE *sd, int index);
-void print_ece(BYTE *ece);
+#ifdef OPTION_CMPSC_EXPAND_DEBUG
+static void print_ece(BYTE *ece);
+#endif
 static enum cmpsc_status ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, BYTE *cce, BYTE *next_ch, U16 *last_match);
 static enum cmpsc_status ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, BYTE *cce, BYTE *next_ch, U16 *last_match);
 static void ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 index_symbol);
@@ -808,13 +810,13 @@ static int ARCH_DEP(fetch_ch)(int r2, REGS *regs, REGS *iregs, BYTE *ch, int off
   return(0);
 }
 
-#ifndef OPTION_CMPSC_EXPAND_DEBUG
+#ifdef OPTION_CMPSC_EXPAND_DEBUG
 #ifndef PRINT_ECE_COMPILED
 #define PRINT_ECE_COMPILED
 /*----------------------------------------------------------------------------*/
 /* print_ece (expansion character entry).                                     */
 /*----------------------------------------------------------------------------*/
-void print_ece(BYTE *ece)
+static void print_ece(BYTE *ece)
 {
   int i;
   int prt_detail;
