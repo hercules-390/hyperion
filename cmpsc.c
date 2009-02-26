@@ -388,7 +388,7 @@
 /* Constants                                                                  */
 /*----------------------------------------------------------------------------*/
 #define PROCESS_MAX          1048575   /* CPU-determined amount of data       */
-#define CACHE_SIZE           16384     /* Expanded iss cache size             */
+#define CACHE_SIZE           32768     /* Expanded iss cache size             */
 #define TRUEFALSE(boolean)   ((boolean) ? "True" : "False")
 
 /*----------------------------------------------------------------------------*/
