@@ -396,7 +396,6 @@
 /* search_cce and search_sd.                                                  */
 /*----------------------------------------------------------------------------*/
 #ifndef NO_2ND_COMPILE
-#define NO_2ND_COMPILE
 enum cmpsc_status
 {
   end_of_source,
@@ -412,7 +411,6 @@ struct ec                              /* Expand cache                        */
   U16 l[8192];                         /* Size of expanded is                 */
   U32 wm;
 #ifdef OPTION_CMPSC_CACHE_DEBUG
-  unsigned long iss;                   /* # index symbols                     */
   unsigned long hit;                   /* # hits                              */
   unsigned long miss;                  /* # misses                            */
 #endif
@@ -568,7 +566,6 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   ec.wm = 0;
 
 #ifdef OPTION_CMPSC_CACHE_DEBUG
-  ec.iss = 0;
   ec.hit = 0;
   ec.miss = 0;
 #endif
@@ -625,7 +622,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
     logmsg("expand   : reached CPU determined amount of data\n");
 #endif
 #ifdef OPTION_CMPSC_CACHE_DEBUG
-    logmsg("Hit %8lu, Miss %8lu, Wm %8lu, Iss %8lu\n", ec.hit, ec.miss, ec.wm, ec.iss);
+    logmsg("Hit %8lu, Miss %8lu, Wm %8lu\n", ec.hit, ec.miss, ec.wm);
 #endif
 
     return;
@@ -645,7 +642,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   logmsg("*** Registers committed\n");
 #endif
 #ifdef OPTION_CMPSC_CACHE_DEBUG
-  logmsg("Hit %8lu, Miss %8lu, Wm %8lu, Iss %8lu\n", ec.hit, ec.miss, ec.wm, ec.iss);
+  logmsg("Hit %8lu, Miss %8lu, Wm %8lu\n", ec.hit, ec.miss, ec.wm);
 #endif
 }
 
@@ -749,10 +746,6 @@ static int ARCH_DEP(expand_is)(int r1, int r2, REGS *regs, REGS *iregs, struct e
         ec->i[is] = ec->wm;
         ec->l[is] = cw;
         ec->wm += cw;
-
-#ifdef OPTION_CMPSC_CACHE_DEBUG
-        ec->iss++;
-#endif 
       }
 
 #ifdef OPTION_CMPSC_CACHE_DEBUG 
@@ -1105,8 +1098,9 @@ static void ARCH_DEP(fetch_sd)(int r2, REGS *regs, BYTE *sd, int index)
   }
 }
 
-#ifdef OPTION_CMPSC_EXPAND_DEBUG
 #ifndef NO_2ND_COMPILE
+#define NO_2ND_COMPILE
+#ifdef OPTION_CMPSC_EXPAND_DEBUG
 /*----------------------------------------------------------------------------*/
 /* print_ece (expansion character entry).                                     */
 /*----------------------------------------------------------------------------*/
@@ -1148,8 +1142,9 @@ static void print_ece(BYTE *ece)
     }
   }
 }
-#endif /* #ifndef NO_2ND_COMPILE */
 #endif /* #ifdef OPTION_CMPSC_EXPAND_DEBUG */
+#endif /* #ifndef NO_2ND_COMPILE */
+
 
 
 /*----------------------------------------------------------------------------*/
