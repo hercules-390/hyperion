@@ -110,6 +110,7 @@
 /*----------------------------------------------------------------------------*/
 //#define OPTION_CMPSC_DEBUGLVL 3      /* Debug all                           */
 #if 0
+#define OPTION_CMPSC_CACHE_DEBUG
 #define OPTION_CMPSC_EXPAND_DEBUG
 #define OPTION_CMPSC_COMPRESS_DEBUG
 #endif
@@ -386,15 +387,16 @@
 /*----------------------------------------------------------------------------*/
 /* Constants                                                                  */
 /*----------------------------------------------------------------------------*/
-#define PROCESS_MAX          65536     /* CPU-determined amount of data       */ 
+#define PROCESS_MAX          1048575   /* CPU-determined amount of data       */
+#define CACHE_SIZE           16384     /* Expanded iss cache size             */
 #define TRUEFALSE(boolean)   ((boolean) ? "True" : "False")
 
 /*----------------------------------------------------------------------------*/
 /* Compression status enumeration for communicating between compress and      */
 /* search_cce and search_sd.                                                  */
 /*----------------------------------------------------------------------------*/
-#if !defined(CMPSC_STATUS_DEFINED)
-#define CMPSC_STATUS_DEFINED
+#ifndef NO_2ND_COMPILE
+#define NO_2ND_COMPILE
 enum cmpsc_status
 {
   end_of_source,
@@ -402,14 +404,27 @@ enum cmpsc_status
   search_siblings,
   write_index_symbol
 };
-#endif /* !defined(CMPSC_STATUS_DEFINED) */
+
+struct ec                              /* Expand cache                        */
+{
+  BYTE c[CACHE_SIZE];                  /* Cache                               */
+  U16 i[8192];                         /* Index within cache for is           */
+  U16 l[8192];                         /* Size of expanded is                 */
+  U32 wm;
+#ifdef OPTION_CMPSC_CACHE_DEBUG
+  unsigned long iss;                   /* # index symbols                     */
+  unsigned long hit;                   /* # hits                              */
+  unsigned long miss;                  /* # misses                            */
+#endif
+};
+#endif /* #ifndef NO_2ND_COMPILE */
 
 /*----------------------------------------------------------------------------*/
 /* Function proto types                                                       */
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs);
 static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs);
-static int ARCH_DEP(expand_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is);
+static int ARCH_DEP(expand_is)(int r1, int r2, REGS *regs, REGS *iregs, struct ec *ec, U16 is);
 static void ARCH_DEP(fetch_cce)(int r2, REGS *regs, BYTE *cce, int index);
 static int ARCH_DEP(fetch_ch)(int r2, REGS *regs, REGS *iregs, BYTE *ch, int offset);
 static int ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, U16 *index_symbol);
@@ -536,15 +551,27 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 {
   int cw;                              /* Characters written                  */
+  struct ec ec;                        /* Expand cache                        */
   int i;
   U16 is;                              /* Index symbol                        */
   U16 iss[8];                          /* Index symbols                       */
   int rc;                              /* Return code                         */
+  int smbs;                            /* Number of index symbols             */
   unsigned smbsz;                      /* Symbol size                         */
 
   /* Initialize values */
   cw = 0;
   smbsz = GR0_smbsz(regs);
+  smbs = 1 << smbsz;
+  for(i = 0x100; i < smbs; i++)        /* No need to clear alphabet entries   */
+    ec.l[i] = 0;
+  ec.wm = 0;
+
+#ifdef OPTION_CMPSC_CACHE_DEBUG
+  ec.iss = 0;
+  ec.hit = 0;
+  ec.miss = 0;
+#endif
 
   /* Process individual index symbols until cbn becomes zero */
   if(unlikely(GR1_cbn(regs)))
@@ -553,7 +580,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
     {
       if(unlikely(ARCH_DEP(fetch_is)(r2, regs, iregs, &is)))
         return;
-      rc = ARCH_DEP(expand_is)(r1, r2, regs, iregs, is);
+      rc = ARCH_DEP(expand_is)(r1, r2, regs, iregs, &ec, is);
       if(unlikely(rc == -1))
         return;
       cw += rc;
@@ -576,7 +603,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 #ifdef OPTION_CMPSC_EXPAND_DEBUG
       logmsg("expand   : is %04X (%d)\n", iss[i], i);
 #endif
-      rc = ARCH_DEP(expand_is)(r1, r2, regs, iregs, iss[i]);
+      rc = ARCH_DEP(expand_is)(r1, r2, regs, iregs, &ec, iss[i]);
       if(unlikely(rc == -1))
         return;
       cw += rc;
@@ -597,6 +624,9 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 #ifdef OPTION_CMPSC_EXPAND_DEBUG
     logmsg("expand   : reached CPU determined amount of data\n");
 #endif
+#ifdef OPTION_CMPSC_CACHE_DEBUG
+    logmsg("Hit %8lu, Miss %8lu, Wm %8lu, Iss %8lu\n", ec.hit, ec.miss, ec.wm, ec.iss);
+#endif
 
     return;
   }
@@ -604,7 +634,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   /* Process last index symbols, never mind about childs written */
   while(unlikely(!ARCH_DEP(fetch_is)(r2, regs, iregs, &is)))
   {
-    if(unlikely(ARCH_DEP(expand_is)(r1, r2, regs, iregs, is) == -1))
+    if(unlikely(ARCH_DEP(expand_is)(r1, r2, regs, iregs, &ec, is) == -1))
       return;
   }
 
@@ -612,17 +642,19 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   COMMITREGS(regs, iregs, r1, r2);
 
 #ifdef OPTION_CMPSC_EXPAND_DEBUG
-    logmsg("*** Registers committed\n");
-#endif 
- 
+  logmsg("*** Registers committed\n");
+#endif
+#ifdef OPTION_CMPSC_CACHE_DEBUG
+  logmsg("Hit %8lu, Miss %8lu, Wm %8lu, Iss %8lu\n", ec.hit, ec.miss, ec.wm, ec.iss);
+#endif
 }
 
 /*----------------------------------------------------------------------------*/
 /* expand_is                                                                  */
 /*----------------------------------------------------------------------------*/
-static int ARCH_DEP(expand_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is)
+static int ARCH_DEP(expand_is)(int r1, int r2, REGS *regs, REGS *iregs, struct ec *ec, U16 is)
 {
-  BYTE buf[261];                       
+  BYTE buf[261];                       /* Buffer for expanded index symbol    */
   unsigned cw;                         /* Characters written                  */
   BYTE ece[8];                         /* Expansion Character Entry           */
   int eces;                            /* Entries processed                   */
@@ -630,69 +662,105 @@ static int ARCH_DEP(expand_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is)
   /* Alphabet entry? */
   if(unlikely(is <= 0xff))
   {
-
     /* Write alphabet entry */
     buf[0] = is;
     cw = 1;
   }
   else
   {
-
-    /* Get expansion character entry */
-    ARCH_DEP(vfetchc)(ece, 7, (GR1_dictor(regs) + (is * 8)) & ADDRESS_MAXWRAP(regs), r2, regs);
-
-#ifdef OPTION_CMPSC_EXPAND_DEBUG
-    logmsg("fetch ece: index %04X\n", is);
-    print_ece(ece);
-#endif
-
-    eces = 1;
-    cw = 0;
-
-    /* Process unpreceded entries */
-    while(likely(ECE_psl(ece)))
+    /* Check cache */
+    if(ec->l[is])
     {
-      /* Check data exception */
-      if(unlikely(ECE_psl(ece) > 5))
-        ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
+      /* Cache hit */
+      memcpy(buf, &ec->c[ec->i[is]], ec->l[is]);
+      cw = ec->l[is];
 
-      /* Count and check for writing child 261 */
-      cw += ECE_psl(ece);
-      if(unlikely(cw > 260))
-        ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
-
-      /* Process extension characters in preceded entry */
-      memcpy(&buf[ECE_ofst(ece)], &ece[2], ECE_psl(ece));
-
-#ifdef OPTION_CMPSC_EXPAND_DEBUG
-      logmsg("fetch ece: index %04X\n", ECE_pptr(ece));
+#ifdef OPTION_CMPSC_CACHE_DEBUG
+      ec->hit++;
 #endif
 
-      /* Get preceding entry */
-      ARCH_DEP(vfetchc)(ece, 7, (GR1_dictor(regs) + ECE_pptr(ece) * 8) & ADDRESS_MAXWRAP(regs), r2, regs);
+    }
+    else
+    {
+
+#ifdef OPTION_CMPSC_CACHE_DEBUG
+      /* Cache miss */
+      ec->miss++;
+#endif
+
+      /* Get expansion character entry */
+      ARCH_DEP(vfetchc)(ece, 7, (GR1_dictor(regs) + (is * 8)) & ADDRESS_MAXWRAP(regs), r2, regs);
+      eces = 1;
+      cw = 0;
 
 #ifdef OPTION_CMPSC_EXPAND_DEBUG
+      logmsg("fetch ece: index %04X\n", is);
       print_ece(ece);
 #endif
 
-      eces += 1;
+      /* Process unpreceded entries */
+      while(likely(ECE_psl(ece)))
+      {
+        /* Check data exception */
+        if(unlikely(ECE_psl(ece) > 5))
+          ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
 
-      /* Check for processing entry 128 */
-      if(unlikely(eces > 127))
-        ARCH_DEP(program_interrupt)(regs, PGM_DATA_EXCEPTION);
+        /* Count and check for writing child 261 */
+        cw += ECE_psl(ece);
+        if(unlikely(cw > 260))
+          ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
+
+        /* Process extension characters in preceded entry */
+        memcpy(&buf[ECE_ofst(ece)], &ece[2], ECE_psl(ece));
+
+#ifdef OPTION_CMPSC_EXPAND_DEBUG
+        logmsg("fetch ece: index %04X\n", ECE_pptr(ece));
+#endif
+
+        /* Get preceding entry */
+        ARCH_DEP(vfetchc)(ece, 7, (GR1_dictor(regs) + ECE_pptr(ece) * 8) & ADDRESS_MAXWRAP(regs), r2, regs);
+        eces += 1;
+
+#ifdef OPTION_CMPSC_EXPAND_DEBUG
+        print_ece(ece);
+#endif
+
+        /* Check for processing entry 128 */
+        if(unlikely(eces > 127))
+          ARCH_DEP(program_interrupt)(regs, PGM_DATA_EXCEPTION);
+      }
+
+      /* Check data exception */
+      if(unlikely(!ECE_csl(ece) || ECE_bit34(ece)))
+        ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
+
+      /* Count and check for writing child 261 */
+      cw += ECE_csl(ece);
+      if(unlikely(cw > 260))
+        ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
+
+      /* Process extension characters in unpreceded entry */
+      memcpy(buf, &ece[1], ECE_csl(ece));
+
+      /* Place within cache */
+      if(ec->wm + cw <= CACHE_SIZE)
+      {
+        memcpy(&ec->c[ec->wm], buf, cw);
+        ec->i[is] = ec->wm;
+        ec->l[is] = cw;
+        ec->wm += cw;
+
+#ifdef OPTION_CMPSC_CACHE_DEBUG
+        ec->iss++;
+#endif 
+      }
+
+#ifdef OPTION_CMPSC_CACHE_DEBUG 
+      else
+        logmsg("expand_is: cache full\n");
+#endif
+
     }
-
-    /* Check data exception */
-    if(unlikely(!ECE_csl(ece) || ECE_bit34(ece)))
-      ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
-
-    /* Count and check for writing child 261 */
-    cw += ECE_csl(ece);
-    if(unlikely(cw > 260))
-      ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
-
-    /* Process extension characters in unpreceded entry */
-    memcpy(buf, &ece[1], ECE_csl(ece));
   }
 
   /* Check destination size */
@@ -809,53 +877,6 @@ static int ARCH_DEP(fetch_ch)(int r2, REGS *regs, REGS *iregs, BYTE *ch, int off
 
   return(0);
 }
-
-#ifdef OPTION_CMPSC_EXPAND_DEBUG
-#ifndef PRINT_ECE_COMPILED
-#define PRINT_ECE_COMPILED
-/*----------------------------------------------------------------------------*/
-/* print_ece (expansion character entry).                                     */
-/*----------------------------------------------------------------------------*/
-static void print_ece(BYTE *ece)
-{
-  int i;
-  int prt_detail;
-
-  logmsg("  ece    : ");
-  prt_detail = 0;
-  for(i = 0; i < 8; i++)
-  {
-    if(!prt_detail && ece[i])
-      prt_detail = 1;
-    logmsg("%02X", ece[i]);
-  }
-  logmsg("\n");
-  if(prt_detail)
-  {
-    if(ECE_psl(ece))
-    {
-      logmsg("  psl    : %d\n", ECE_psl(ece));
-      logmsg("  pptr   : %04X\n", ECE_pptr(ece));
-      logmsg("  ecs    :");
-      for(i = 0; i < ECE_psl(ece); i++)
-        logmsg(" %02X", ece[i + 2]);
-      logmsg("\n");
-      logmsg("  ofst   : %02X\n", ECE_ofst(ece));
-    }
-    else
-    {
-      logmsg("  psl    : %d\n", ECE_psl(ece));
-      logmsg("  bit34  : %s\n", TRUEFALSE(ECE_bit34(ece)));
-      logmsg("  csl    : %d\n", ECE_csl(ece));
-      logmsg("  ecs    :");
-      for(i = 0; i < ECE_csl(ece); i++)
-        logmsg(" %02X", ece[i + 1]);
-      logmsg("\n");
-    }
-  }
-}
-#endif /* PRINT_ECE_COMPILED */
-#endif /* OPTION_CMPSC_EXPAND_DEBUG */
 
 /*----------------------------------------------------------------------------*/
 /* fetch_is (index symbol)                                                    */
@@ -1083,6 +1104,53 @@ static void ARCH_DEP(fetch_sd)(int r2, REGS *regs, BYTE *sd, int index)
     ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
   }
 }
+
+#ifdef OPTION_CMPSC_EXPAND_DEBUG
+#ifndef NO_2ND_COMPILE
+/*----------------------------------------------------------------------------*/
+/* print_ece (expansion character entry).                                     */
+/*----------------------------------------------------------------------------*/
+static void print_ece(BYTE *ece)
+{
+  int i;
+  int prt_detail;
+
+  logmsg("  ece    : ");
+  prt_detail = 0;
+  for(i = 0; i < 8; i++)
+  {
+    if(!prt_detail && ece[i])
+      prt_detail = 1;
+    logmsg("%02X", ece[i]);
+  }
+  logmsg("\n");
+  if(prt_detail)
+  {
+    if(ECE_psl(ece))
+    {
+      logmsg("  psl    : %d\n", ECE_psl(ece));
+      logmsg("  pptr   : %04X\n", ECE_pptr(ece));
+      logmsg("  ecs    :");
+      for(i = 0; i < ECE_psl(ece); i++)
+        logmsg(" %02X", ece[i + 2]);
+      logmsg("\n");
+      logmsg("  ofst   : %02X\n", ECE_ofst(ece));
+    }
+    else
+    {
+      logmsg("  psl    : %d\n", ECE_psl(ece));
+      logmsg("  bit34  : %s\n", TRUEFALSE(ECE_bit34(ece)));
+      logmsg("  csl    : %d\n", ECE_csl(ece));
+      logmsg("  ecs    :");
+      for(i = 0; i < ECE_csl(ece); i++)
+        logmsg(" %02X", ece[i + 1]);
+      logmsg("\n");
+    }
+  }
+}
+#endif /* #ifndef NO_2ND_COMPILE */
+#endif /* #ifdef OPTION_CMPSC_EXPAND_DEBUG */
+
 
 /*----------------------------------------------------------------------------*/
 /* search_cce (compression character entry)                                   */
