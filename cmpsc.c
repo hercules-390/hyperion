@@ -654,7 +654,6 @@ static int ARCH_DEP(expand_is)(int r1, int r2, REGS *regs, REGS *iregs, struct e
   BYTE buf[261];                       /* Buffer for expanded index symbol    */
   unsigned cw;                         /* Characters written                  */
   BYTE ece[8];                         /* Expansion Character Entry           */
-  int eces;                            /* Entries processed                   */
 
   /* Alphabet entry? */
   if(unlikely(is <= 0xff))
@@ -687,7 +686,6 @@ static int ARCH_DEP(expand_is)(int r1, int r2, REGS *regs, REGS *iregs, struct e
 
       /* Get expansion character entry */
       ARCH_DEP(vfetchc)(ece, 7, (GR1_dictor(regs) + (is * 8)) & ADDRESS_MAXWRAP(regs), r2, regs);
-      eces = 1;
       cw = 0;
 
 #ifdef OPTION_CMPSC_EXPAND_DEBUG
@@ -716,15 +714,11 @@ static int ARCH_DEP(expand_is)(int r1, int r2, REGS *regs, REGS *iregs, struct e
 
         /* Get preceding entry */
         ARCH_DEP(vfetchc)(ece, 7, (GR1_dictor(regs) + ECE_pptr(ece) * 8) & ADDRESS_MAXWRAP(regs), r2, regs);
-        eces += 1;
 
 #ifdef OPTION_CMPSC_EXPAND_DEBUG
         print_ece(ece);
 #endif
 
-        /* Check for processing entry 128 */
-        if(unlikely(eces > 127))
-          ARCH_DEP(program_interrupt)(regs, PGM_DATA_EXCEPTION);
       }
 
       /* Check data exception */
@@ -770,6 +764,7 @@ static int ARCH_DEP(expand_is)(int r1, int r2, REGS *regs, REGS *iregs, struct e
   }
 
   /* Store the expanded index symbol */
+  /* !!! Still to check if there are expanded symbols of length above 256 !!! */ 
   ARCH_DEP(vstorec)(buf, cw - 1, GR_A(r1, iregs), r1, regs);
 
 #ifdef OPTION_CMPSC_EXPAND_DEBUG
