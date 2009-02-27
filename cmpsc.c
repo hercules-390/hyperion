@@ -223,9 +223,11 @@
 /*----------------------------------------------------------------------------*/
 /* General Purpose Register 0 macro's (GR0)                                   */
 /*----------------------------------------------------------------------------*/
+/* dcten      : # dictionary entries                                          */
 /* dctsz      : dictionary size                                               */
 /* smbsz      : symbol size                                                   */
 /*----------------------------------------------------------------------------*/
+#define GR0_dcten(regs)      (0x100 << GR0_cdss(regs))
 #define GR0_dctsz(regs)      (0x800 << GR0_cdss((regs)))
 #define GR0_smbsz(regs)      (GR0_cdss((regs)) + 8)
 
@@ -549,19 +551,19 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 {
   int cw;                              /* Characters written                  */
+  int dcten;                           /* Number of different symbols         */
   struct ec ec;                        /* Expand cache                        */
   int i;
   U16 is;                              /* Index symbol                        */
   U16 iss[8];                          /* Index symbols                       */
   int rc;                              /* Return code                         */
-  int smbs;                            /* Number of index symbols             */
   unsigned smbsz;                      /* Symbol size                         */
 
   /* Initialize values */
   cw = 0;
+  dcten = GR0_dcten(regs);
   smbsz = GR0_smbsz(regs);
-  smbs = 1 << smbsz;
-  for(i = 0; i < smbs; i++)
+  for(i = 0; i < dcten; i++)
     ec.l[i] = 0;                       /* l == 0 indicates empty entry        */
   ec.wm = 0;                           /* Set watermark at start of cache     */
 
