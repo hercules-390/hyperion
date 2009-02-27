@@ -563,9 +563,14 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   cw = 0;
   dcten = GR0_dcten(regs);
   smbsz = GR0_smbsz(regs);
-  for(i = 0; i < dcten; i++)
+  for(i = 0; i < 256; i++)             /* Prefill cache with alphabet entries */
+  {
+    ec.l[i] = 1;
+    ec.c[i] = i;
+  }
+  for(i = 256; i < dcten; i++)
     ec.l[i] = 0;                       /* l == 0 indicates empty entry        */
-  ec.wm = 0;                           /* Set watermark at start of cache     */
+  ec.wm = 256;                         /* Set watermark at start of cache     */
 
 #ifdef OPTION_CMPSC_CACHE_DEBUG
   ec.hit = 0;
