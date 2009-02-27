@@ -565,8 +565,9 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   smbsz = GR0_smbsz(regs);
   for(i = 0; i < 256; i++)             /* Prefill cache with alphabet entries */
   {
-    ec.l[i] = 1;
     ec.c[i] = i;
+    ec.i[i] = i;
+    ec.l[i] = 1;
   }
   for(i = 256; i < dcten; i++)
     ec.l[i] = 0;                       /* l == 0 indicates empty entry        */
@@ -776,7 +777,11 @@ static int ARCH_DEP(expand_is)(int r1, int r2, REGS *regs, REGS *iregs, struct e
   }
 
 #ifdef OPTION_CMPSC_EXPAND_DEBUG
-  logmsg("expand_is: store at " F_VADR ", len %04u\n", iregs->GR(r1), cw);
+  logmsg("expand_is: store at " F_VADR ", len %04u", iregs->GR(r1), cw);
+  if(p != buf)
+    logmsg(" *\n");
+  else
+    logmsg("\n");
 #endif
 
   /* Adjust registers */
