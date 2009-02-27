@@ -409,7 +409,7 @@ struct ec                              /* Expand cache                        */
   BYTE c[CACHE_SIZE];                  /* Cache                               */
   U16 i[8192];                         /* Index within cache for is           */
   U16 l[8192];                         /* Size of expanded is                 */
-  U32 wm;
+  U32 wm;                              /* Water mark                          */
 #ifdef OPTION_CMPSC_CACHE_DEBUG
   unsigned long hit;                   /* # hits                              */
   unsigned long miss;                  /* # misses                            */
@@ -561,9 +561,9 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   cw = 0;
   smbsz = GR0_smbsz(regs);
   smbs = 1 << smbsz;
-  for(i = 0x100; i < smbs; i++)        /* No need to clear alphabet entries   */
-    ec.l[i] = 0;
-  ec.wm = 0;
+  for(i = 0; i < smbs; i++)
+    ec.l[i] = 0;                       /* l == 0 indicates empty entry        */
+  ec.wm = 0;                           /* Set watermark at start of cache     */
 
 #ifdef OPTION_CMPSC_CACHE_DEBUG
   ec.hit = 0;
@@ -651,103 +651,99 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 /*----------------------------------------------------------------------------*/
 static int ARCH_DEP(expand_is)(int r1, int r2, REGS *regs, REGS *iregs, struct ec *ec, U16 is)
 {
-  BYTE buf[261];                       /* Buffer for expanded index symbol    */
+  BYTE buf[260];                       /* Buffer for expanded index symbol    */
   unsigned cw;                         /* Characters written                  */
+  GREG dictor;                         /* Dictionary origin                   */
   BYTE ece[8];                         /* Expansion Character Entry           */
+  BYTE *p;                             /* Points to cache or buffer           */
 
-  /* Alphabet entry? */
-  if(unlikely(is <= 0xff))
+  /* Check cache */
+  if(ec->l[is])
   {
-    /* Write alphabet entry */
-    buf[0] = is;
-    cw = 1;
+    /* Cache hit */
+    p = &ec->c[ec->i[is]];
+    cw = ec->l[is];
+
+#ifdef OPTION_CMPSC_CACHE_DEBUG
+    ec->hit++;
+#endif
+
   }
   else
   {
-    /* Check cache */
-    if(ec->l[is])
-    {
-      /* Cache hit */
-      memcpy(buf, &ec->c[ec->i[is]], ec->l[is]);
-      cw = ec->l[is];
 
 #ifdef OPTION_CMPSC_CACHE_DEBUG
-      ec->hit++;
+    /* Cache miss */
+    ec->miss++;
 #endif
 
-    }
-    else
+    /* Get expansion character entry */
+    dictor = GR1_dictor(regs);
+    ARCH_DEP(vfetchc)(ece, 7, (dictor + (is * 8)) & ADDRESS_MAXWRAP(regs), r2, regs);
+    cw = 0;
+
+#ifdef OPTION_CMPSC_EXPAND_DEBUG
+    logmsg("fetch ece: index %04X\n", is);
+    print_ece(ece);
+#endif
+
+    /* Process unpreceded entries */
+    while(likely(ECE_psl(ece)))
     {
-
-#ifdef OPTION_CMPSC_CACHE_DEBUG
-      /* Cache miss */
-      ec->miss++;
-#endif
-
-      /* Get expansion character entry */
-      ARCH_DEP(vfetchc)(ece, 7, (GR1_dictor(regs) + (is * 8)) & ADDRESS_MAXWRAP(regs), r2, regs);
-      cw = 0;
-
-#ifdef OPTION_CMPSC_EXPAND_DEBUG
-      logmsg("fetch ece: index %04X\n", is);
-      print_ece(ece);
-#endif
-
-      /* Process unpreceded entries */
-      while(likely(ECE_psl(ece)))
-      {
-        /* Check data exception */
-        if(unlikely(ECE_psl(ece) > 5))
-          ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
-
-        /* Count and check for writing child 261 */
-        cw += ECE_psl(ece);
-        if(unlikely(cw > 260))
-          ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
-
-        /* Process extension characters in preceded entry */
-        memcpy(&buf[ECE_ofst(ece)], &ece[2], ECE_psl(ece));
-
-#ifdef OPTION_CMPSC_EXPAND_DEBUG
-        logmsg("fetch ece: index %04X\n", ECE_pptr(ece));
-#endif
-
-        /* Get preceding entry */
-        ARCH_DEP(vfetchc)(ece, 7, (GR1_dictor(regs) + ECE_pptr(ece) * 8) & ADDRESS_MAXWRAP(regs), r2, regs);
-
-#ifdef OPTION_CMPSC_EXPAND_DEBUG
-        print_ece(ece);
-#endif
-
-      }
-
       /* Check data exception */
-      if(unlikely(!ECE_csl(ece) || ECE_bit34(ece)))
+      if(unlikely(ECE_psl(ece) > 5))
         ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
 
       /* Count and check for writing child 261 */
-      cw += ECE_csl(ece);
+      cw += ECE_psl(ece);
       if(unlikely(cw > 260))
         ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
 
-      /* Process extension characters in unpreceded entry */
-      memcpy(buf, &ece[1], ECE_csl(ece));
+      /* Process extension characters in preceded entry */
+      memcpy(&buf[ECE_ofst(ece)], &ece[2], ECE_psl(ece));
 
-      /* Place within cache */
-      if(ec->wm + cw <= CACHE_SIZE)
-      {
-        memcpy(&ec->c[ec->wm], buf, cw);
-        ec->i[is] = ec->wm;
-        ec->l[is] = cw;
-        ec->wm += cw;
-      }
+#ifdef OPTION_CMPSC_EXPAND_DEBUG
+      logmsg("fetch ece: index %04X\n", ECE_pptr(ece));
+#endif
 
-#ifdef OPTION_CMPSC_CACHE_DEBUG 
-      else
-        logmsg("expand_is: cache full\n");
+      /* Get preceding entry */
+      ARCH_DEP(vfetchc)(ece, 7, (dictor + ECE_pptr(ece) * 8) & ADDRESS_MAXWRAP(regs), r2, regs);
+
+#ifdef OPTION_CMPSC_EXPAND_DEBUG
+      print_ece(ece);
 #endif
 
     }
+
+    /* Check data exception */
+    if(unlikely(!ECE_csl(ece) || ECE_bit34(ece)))
+      ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
+
+    /* Count and check for writing child 261 */
+    cw += ECE_csl(ece);
+    if(unlikely(cw > 260))
+      ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
+
+    /* Process extension characters in unpreceded entry */
+    memcpy(buf, &ece[1], ECE_csl(ece));
+
+    /* Place within cache */
+    if(ec->wm + cw <= CACHE_SIZE)
+    {
+      memcpy(&ec->c[ec->wm], buf, cw);
+      ec->i[is] = ec->wm;
+      ec->l[is] = cw;
+      ec->wm += cw;
+    }
+
+#ifdef OPTION_CMPSC_CACHE_DEBUG 
+    else
+      logmsg("expand_is: cache full\n");
+#endif
+
+    /* Point to buffer for storing the expanded is */
+    p = buf;
+
   }
 
   /* Check destination size */
@@ -764,8 +760,13 @@ static int ARCH_DEP(expand_is)(int r1, int r2, REGS *regs, REGS *iregs, struct e
   }
 
   /* Store the expanded index symbol */
-  /* !!! Still to check if there are expanded symbols of length above 256 !!! */ 
-  ARCH_DEP(vstorec)(buf, cw - 1, GR_A(r1, iregs), r1, regs);
+  if(likely(cw <= 256))
+    ARCH_DEP(vstorec)(p, cw - 1, GR_A(r1, iregs), r1, regs);
+  else
+  {
+    ARCH_DEP(vstorec)(p, 256 - 1, GR_A(r1, iregs), r1, regs);
+    ARCH_DEP(vstorec)(&p[256], cw - 256 - 1, (GR_A(r1, iregs) + 256) & ADDRESS_MAXWRAP(regs), r1, regs);
+  }
 
 #ifdef OPTION_CMPSC_EXPAND_DEBUG
   logmsg("expand_is: store at " F_VADR ", len %04u\n", iregs->GR(r1), cw);
