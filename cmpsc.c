@@ -13,75 +13,6 @@
 /*----------------------------------------------------------------------------*/
 
 // $Id$
-//
-// $Log$
-// Revision 1.66  2008/11/01 09:57:49  bernard
-// Added likely, unlikely
-//
-// Revision 1.65  2008/10/26 13:26:39  bernard
-// Store_is will zero the remaining bits in the working byte, just like
-// other famous manufacturers will do. All former generated compressed
-// code will expand correctly, don't worry!! But their can be a difference
-// in the compressed output. (This is the case when bits are on, but those
-// are the unused bits after the last index symbol).
-//
-// Revision 1.64  2008/10/24 15:03:21  bernard
-// update copyright notice to current year 2008
-//
-// Revision 1.63  2008/09/24 06:57:47  bernard
-// No need to set data exception code to iregs.
-//
-// Revision 1.62  2008/02/14 07:21:32  bernard
-// added last likely / unlikely
-//
-// Revision 1.61  2008/02/13 08:50:11  bernard
-// The cpu determined amount of data is now 16384 and it is determined
-// on 16k uncompressed data processing in expand and compress.
-//
-// Revision 1.60  2008/02/11 12:15:36  bernard
-// Errors in intermediate registers. They did not harm yet!
-//
-// Revision 1.59  2008/01/19 08:24:47  bernard
-// Grouped data exceptions to the fetching functions. No functional change.
-//
-// Revision 1.58  2008/01/16 22:37:01  fish
-// Data exception test for nonzero bit34 ece entries should ONLY be for UNPRECEDED ece entries, NOT ALL ece entries.
-//
-// Revision 1.57  2008/01/01 16:57:42  bernard
-// Performance patch
-//
-// Revision 1.56  2008/01/01 12:10:18  bernard
-// Added bit34 ece data exception check
-//
-// Revision 1.55  2007/12/31 23:48:21  fish
-// To prevent PC loop, ensure proper Data Exception code is always used:
-//   regs->dxc = DXC_DECIMAL;
-//   iregs.dxc = DXC_DECIMAL;
-//
-// Revision 1.54  2007/12/31 17:45:15  bernard
-// Data exception on fetching cce, ece and sd
-//
-// Revision 1.53  2007/12/31 13:14:43  bernard
-// Added data exeption during expansion when psl and cls are zero
-//
-// Revision 1.52  2007/12/24 14:06:00  bernard
-// compress check output, input swapped to input (cc0), output (cc1)
-//
-// Revision 1.51  2007/06/23 00:04:04  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.50  2007/02/10 09:14:32  bernard
-// Decompression performance patch
-//
-// Revision 1.49  2007/01/13 07:11:45  bernard
-// backout ccmask
-//
-// Revision 1.48  2007/01/12 15:21:12  bernard
-// ccmask phase 1
-//
-// Revision 1.47  2006/12/08 09:43:18  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 
@@ -110,7 +41,6 @@
 /*----------------------------------------------------------------------------*/
 //#define OPTION_CMPSC_DEBUGLVL 3      /* Debug all                           */
 #if 0
-#define OPTION_CMPSC_CACHE_DEBUG
 #define OPTION_CMPSC_EXPAND_DEBUG
 #define OPTION_CMPSC_COMPRESS_DEBUG
 #endif
@@ -406,16 +336,19 @@ enum cmpsc_status
   write_index_symbol
 };
 
+/*----------------------------------------------------------------------------*/
+/* Expand cache                                                               */
+/*                                                                            */
+/* The expanded index symbol can be found at ec.c[ec.i[is]] with length       */
+/* e.l[is]. A length of zero means not within cache. Water mark wm point to   */
+/* the free part within the cache ec.c.                                       */
+/*----------------------------------------------------------------------------*/
 struct ec                              /* Expand cache                        */
 {
   BYTE c[CACHE_SIZE];                  /* Cache                               */
-  U16 i[8192];                         /* Index within cache for is           */
-  U16 l[8192];                         /* Size of expanded is                 */
-  U32 wm;                              /* Water mark                          */
-#ifdef OPTION_CMPSC_CACHE_DEBUG
-  unsigned long hit;                   /* # hits                              */
-  unsigned long miss;                  /* # misses                            */
-#endif
+  int i[8192];                         /* Index within cache for is           */
+  int l[8192];                         /* Size of expanded is                 */
+  int wm;                              /* Water mark                          */
 };
 #endif /* #ifndef NO_2ND_COMPILE */
 
@@ -424,7 +357,7 @@ struct ec                              /* Expand cache                        */
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs);
 static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs);
-static int ARCH_DEP(expand_is)(int r1, int r2, REGS *regs, REGS *iregs, struct ec *ec, U16 is);
+static void ARCH_DEP(expand_is)(int r2, REGS *regs, struct ec *ec, U16 is);
 static void ARCH_DEP(fetch_cce)(int r2, REGS *regs, BYTE *cce, int index);
 static int ARCH_DEP(fetch_ch)(int r2, REGS *regs, REGS *iregs, BYTE *ch, int offset);
 static int ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, U16 *index_symbol);
@@ -435,6 +368,7 @@ static void print_ece(BYTE *ece);
 #endif
 static enum cmpsc_status ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, BYTE *cce, BYTE *next_ch, U16 *last_match);
 static enum cmpsc_status ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, BYTE *cce, BYTE *next_ch, U16 *last_match);
+static inline int ARCH_DEP(store_eis)(int r1, REGS *regs, REGS *iregs, BYTE *eis, unsigned len);
 static void ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 index_symbol);
 #ifdef WIP
 static void ARCH_DEP(store_iss)(int r1, int r2, REGS *regs, REGS *iregs, U16 is[8]);
@@ -556,27 +490,23 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   int i;
   U16 is;                              /* Index symbol                        */
   U16 iss[8];                          /* Index symbols                       */
-  int rc;                              /* Return code                         */
   unsigned smbsz;                      /* Symbol size                         */
 
   /* Initialize values */
   cw = 0;
   dcten = GR0_dcten(regs);
   smbsz = GR0_smbsz(regs);
-  for(i = 0; i < 256; i++)             /* Prefill cache with alphabet entries */
-  {
+
+  /* Initialize cache and prefill with alphabet entries */
+  for(i = 0; i < 256; i++)             /* Alphabet entries                    */
+ {
     ec.c[i] = i;
     ec.i[i] = i;
     ec.l[i] = 1;
   }
-  for(i = 256; i < dcten; i++)
-    ec.l[i] = 0;                       /* l == 0 indicates empty entry        */
-  ec.wm = 256;                         /* Set watermark at start of cache     */
-
-#ifdef OPTION_CMPSC_CACHE_DEBUG
-  ec.hit = 0;
-  ec.miss = 0;
-#endif
+  for(i = 256; i < dcten; i++)         /* Clear all other index symbols       */
+    ec.l[i] = 0;
+  ec.wm = 256;                         /* Set watermark after alphabet part   */
 
   /* Process individual index symbols until cbn becomes zero */
   if(unlikely(GR1_cbn(regs)))
@@ -585,10 +515,11 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
     {
       if(unlikely(ARCH_DEP(fetch_is)(r2, regs, iregs, &is)))
         return;
-      rc = ARCH_DEP(expand_is)(r1, r2, regs, iregs, &ec, is);
-      if(unlikely(rc == -1))
+      if(unlikely(!ec.l[is]))
+        ARCH_DEP(expand_is)(r2, regs, &ec, is);
+      if(unlikely(ARCH_DEP(store_eis)(r1, regs, iregs, &ec.c[ec.i[is]], ec.l[is])))
         return;
-      cw += rc;
+      cw += ec.l[is];
     }
 
     /* Commit, including GR1 */
@@ -605,13 +536,16 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
     ARCH_DEP(fetch_iss)(r2, regs, iregs, iss);
     for(i = 0; i < 8; i++)
     {
+
 #ifdef OPTION_CMPSC_EXPAND_DEBUG
       logmsg("expand   : is %04X (%d)\n", iss[i], i);
 #endif
-      rc = ARCH_DEP(expand_is)(r1, r2, regs, iregs, &ec, iss[i]);
-      if(unlikely(rc == -1))
+
+      if(unlikely(!ec.l[iss[i]]))
+        ARCH_DEP(expand_is)(r2, regs, &ec, iss[i]);
+      if(unlikely(ARCH_DEP(store_eis)(r1, regs, iregs, &ec.c[ec.i[iss[i]]], ec.l[iss[i]])))
         return;
-      cw += rc;
+      cw += ec.l[iss[i]];
     }
 
     /* Commit, cbn unchanged, so no commit for GR1 needed */
@@ -629,17 +563,16 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 #ifdef OPTION_CMPSC_EXPAND_DEBUG
     logmsg("expand   : reached CPU determined amount of data\n");
 #endif
-#ifdef OPTION_CMPSC_CACHE_DEBUG
-    logmsg("Hit %8lu, Miss %8lu, Wm %8lu\n", ec.hit, ec.miss, ec.wm);
-#endif
 
     return;
   }
 
   /* Process last index symbols, never mind about childs written */
-  while(unlikely(!ARCH_DEP(fetch_is)(r2, regs, iregs, &is)))
+  while(likely(!ARCH_DEP(fetch_is)(r2, regs, iregs, &is)))
   {
-    if(unlikely(ARCH_DEP(expand_is)(r1, r2, regs, iregs, &ec, is) == -1))
+    if(unlikely(!ec.l[is]))
+      ARCH_DEP(expand_is)(r2, regs, &ec, is);
+    if(unlikely(ARCH_DEP(store_eis)(r1, regs, iregs, &ec.c[ec.i[is]], ec.l[is])))
       return;
   }
 
@@ -649,144 +582,77 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 #ifdef OPTION_CMPSC_EXPAND_DEBUG
   logmsg("*** Registers committed\n");
 #endif
-#ifdef OPTION_CMPSC_CACHE_DEBUG
-  logmsg("Hit %8lu, Miss %8lu, Wm %8lu\n", ec.hit, ec.miss, ec.wm);
-#endif
+
 }
 
 /*----------------------------------------------------------------------------*/
 /* expand_is                                                                  */
 /*----------------------------------------------------------------------------*/
-static int ARCH_DEP(expand_is)(int r1, int r2, REGS *regs, REGS *iregs, struct ec *ec, U16 is)
+static void ARCH_DEP(expand_is)(int r2, REGS *regs, struct ec *ec, U16 is)
 {
   BYTE buf[260];                       /* Buffer for expanded index symbol    */
-  unsigned cw;                         /* Characters written                  */
+  int cw;                              /* Characters written                  */
   GREG dictor;                         /* Dictionary origin                   */
   BYTE ece[8];                         /* Expansion Character Entry           */
-  BYTE *p;                             /* Points to cache or buffer           */
 
-  /* Check cache */
-  if(ec->l[is])
+  /* Get expansion character entry */
+  dictor = GR1_dictor(regs);
+  ARCH_DEP(vfetchc)(ece, 7, (dictor + (is * 8)) & ADDRESS_MAXWRAP(regs), r2, regs);
+  cw = 0;
+
+#ifdef OPTION_CMPSC_EXPAND_DEBUG
+  logmsg("fetch ece: index %04X\n", is);
+  print_ece(ece);
+#endif
+
+  /* Process unpreceded entries */
+  while(likely(ECE_psl(ece)))
   {
-    /* Cache hit */
-    p = &ec->c[ec->i[is]];
-    cw = ec->l[is];
-
-#ifdef OPTION_CMPSC_CACHE_DEBUG
-    ec->hit++;
-#endif
-
-  }
-  else
-  {
-
-#ifdef OPTION_CMPSC_CACHE_DEBUG
-    /* Cache miss */
-    ec->miss++;
-#endif
-
-    /* Get expansion character entry */
-    dictor = GR1_dictor(regs);
-    ARCH_DEP(vfetchc)(ece, 7, (dictor + (is * 8)) & ADDRESS_MAXWRAP(regs), r2, regs);
-    cw = 0;
-
-#ifdef OPTION_CMPSC_EXPAND_DEBUG
-    logmsg("fetch ece: index %04X\n", is);
-    print_ece(ece);
-#endif
-
-    /* Process unpreceded entries */
-    while(likely(ECE_psl(ece)))
-    {
-      /* Check data exception */
-      if(unlikely(ECE_psl(ece) > 5))
-        ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
-
-      /* Count and check for writing child 261 */
-      cw += ECE_psl(ece);
-      if(unlikely(cw > 260))
-        ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
-
-      /* Process extension characters in preceded entry */
-      memcpy(&buf[ECE_ofst(ece)], &ece[2], ECE_psl(ece));
-
-#ifdef OPTION_CMPSC_EXPAND_DEBUG
-      logmsg("fetch ece: index %04X\n", ECE_pptr(ece));
-#endif
-
-      /* Get preceding entry */
-      ARCH_DEP(vfetchc)(ece, 7, (dictor + ECE_pptr(ece) * 8) & ADDRESS_MAXWRAP(regs), r2, regs);
-
-#ifdef OPTION_CMPSC_EXPAND_DEBUG
-      print_ece(ece);
-#endif
-
-    }
-
     /* Check data exception */
-    if(unlikely(!ECE_csl(ece) || ECE_bit34(ece)))
+    if(unlikely(ECE_psl(ece) > 5))
       ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
 
     /* Count and check for writing child 261 */
-    cw += ECE_csl(ece);
+    cw += ECE_psl(ece);
     if(unlikely(cw > 260))
       ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
 
-    /* Process extension characters in unpreceded entry */
-    memcpy(buf, &ece[1], ECE_csl(ece));
-
-    /* Place within cache */
-    if(ec->wm + cw <= CACHE_SIZE)
-    {
-      memcpy(&ec->c[ec->wm], buf, cw);
-      ec->i[is] = ec->wm;
-      ec->l[is] = cw;
-      ec->wm += cw;
-    }
-
-#ifdef OPTION_CMPSC_CACHE_DEBUG 
-    else
-      logmsg("expand_is: cache full\n");
-#endif
-
-    /* Point to buffer for storing the expanded is */
-    p = buf;
-
-  }
-
-  /* Check destination size */
-  if(unlikely(GR_A(r1 + 1, iregs) < cw))
-  {
+    /* Process extension characters in preceded entry */
+    memcpy(&buf[ECE_ofst(ece)], &ece[2], ECE_psl(ece));
 
 #ifdef OPTION_CMPSC_EXPAND_DEBUG
-    logmsg("expand_is: Reached end of destination\n");
+    logmsg("fetch ece: index %04X\n", ECE_pptr(ece));
 #endif
 
-    /* Indicate end of destination */
-    regs->psw.cc = 1;
-    return(-1);
-  }
-
-  /* Store the expanded index symbol */
-  if(likely(cw <= 256))
-    ARCH_DEP(vstorec)(p, cw - 1, GR_A(r1, iregs), r1, regs);
-  else
-  {
-    ARCH_DEP(vstorec)(p, 256 - 1, GR_A(r1, iregs), r1, regs);
-    ARCH_DEP(vstorec)(&p[256], cw - 256 - 1, (GR_A(r1, iregs) + 256) & ADDRESS_MAXWRAP(regs), r1, regs);
-  }
+    /* Get preceding entry */
+    ARCH_DEP(vfetchc)(ece, 7, (dictor + ECE_pptr(ece) * 8) & ADDRESS_MAXWRAP(regs), r2, regs);
 
 #ifdef OPTION_CMPSC_EXPAND_DEBUG
-  logmsg("expand_is: store at " F_VADR ", len %04u", iregs->GR(r1), cw);
-  if(p != buf)
-    logmsg(" *\n");
-  else
-    logmsg("\n");
+    print_ece(ece);
 #endif
 
-  /* Adjust registers */
-  ADJUSTREGS(r1, regs, iregs, cw);
-  return(cw);
+  }
+
+  /* Check data exception */
+  if(unlikely(!ECE_csl(ece) || ECE_bit34(ece)))
+    ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
+
+  /* Count and check for writing child 261 */
+  cw += ECE_csl(ece);
+  if(unlikely(cw > 260))
+    ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
+
+  /* Process extension characters in unpreceded entry */
+  memcpy(buf, &ece[1], ECE_csl(ece));
+
+  /* Place within cache */
+  if(likely(ec->wm + cw <= CACHE_SIZE))
+  {
+    memcpy(&ec->c[ec->wm], buf, cw);
+    ec->i[is] = ec->wm;
+    ec->l[is] = cw;
+    ec->wm += cw;
+  }
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1153,8 +1019,6 @@ static void print_ece(BYTE *ece)
 #endif /* #ifdef OPTION_CMPSC_EXPAND_DEBUG */
 #endif /* #ifndef NO_2ND_COMPILE */
 
-
-
 /*----------------------------------------------------------------------------*/
 /* search_cce (compression character entry)                                   */
 /*----------------------------------------------------------------------------*/
@@ -1330,6 +1194,42 @@ static enum cmpsc_status ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, BY
   }
   while(ind_search_siblings && SD_msc(regs, sd));
   return(write_index_symbol);
+}
+
+/*----------------------------------------------------------------------------*/
+/* store_eis (expanded index symbol).                                         */
+/*----------------------------------------------------------------------------*/
+static inline int ARCH_DEP(store_eis)(int r1, REGS *regs, REGS *iregs, BYTE *eis, unsigned len)
+{
+  /* Check destination size */
+  if(unlikely(GR_A(r1 + 1, iregs) < len))
+  {
+
+#ifdef OPTION_CMPSC_EXPAND_DEBUG
+    logmsg("store_eis: Reached end of destination\n");
+#endif
+
+    /* Indicate end of destination */
+    regs->psw.cc = 1;
+    return(-1);
+  }
+
+  /* Store the expanded index symbol */
+  if(likely(len <= 256))
+    ARCH_DEP(vstorec)(eis, len - 1, GR_A(r1, iregs), r1, regs);
+  else
+  {
+    ARCH_DEP(vstorec)(eis, 256 - 1, GR_A(r1, iregs), r1, regs);
+    ARCH_DEP(vstorec)(&eis[256], len - 256 - 1, (GR_A(r1, iregs) + 256) & ADDRESS_MAXWRAP(regs), r1, regs);
+  }
+
+#ifdef OPTION_CMPSC_EXPAND_DEBUG
+  logmsg("store_eis: store at " F_VADR ", len %04u\n", iregs->GR(r1), len);
+#endif
+
+  /* Adjust registers */
+  ADJUSTREGS(r1, regs, iregs, len);
+  return(0);
 }
 
 /*----------------------------------------------------------------------------*/
