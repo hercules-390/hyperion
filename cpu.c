@@ -1789,6 +1789,7 @@ REGS    regs;
     /* Switch architecture mode if appropriate */
     if(sysblk.arch_mode != regs.arch_mode)
     {
+        PTT(PTT_CL_INF,"*SETARCH",regs.arch_mode,sysblk.arch_mode,cpu);
         regs.arch_mode = sysblk.arch_mode;
         oldregs = malloc (sizeof(REGS));
         if (oldregs)
