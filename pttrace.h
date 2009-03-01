@@ -98,11 +98,15 @@ typedef struct _PTT_TRACE {
 #define PTT_MAGIC -99
 
 #define PTT(_class,_type,_data1,_data2,_result) \
+do { \
   if (pttclass & (_class)) \
-        ptt_pthread_trace(_class,_type,(void *)(_data1),(void *)(_data2),PTT_LOC,(int)(_result))
+        ptt_pthread_trace(_class,_type,(void *)(_data1),(void *)(_data2),PTT_LOC,(int)(_result)); \
+} while(0)
 
 #define PTTRACE(_type,_data1,_data2,_loc,_result) \
+do { \
   if (pttclass & PTT_CL_THR) \
-    ptt_pthread_trace(PTT_CL_THR,_type,_data1,_data2,_loc,_result)
+    ptt_pthread_trace(PTT_CL_THR,_type,_data1,_data2,_loc,_result); \
+} while(0)
 
 #endif /* defined( _PTTHREAD_H_ ) */
