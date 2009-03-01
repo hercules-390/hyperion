@@ -553,7 +553,10 @@ VADR    effective_addr2,
         RELEASE_MAINLOCK(regs);
 
         if(regs->psw.cc && sysblk.cpus > 1)
+        {
+            PTT(PTT_CL_CSF,"*PLO",regs->GR_L(0),regs->GR_L(r1),regs->psw.IA_L);
             sched_yield();
+        }
 
     }
 }

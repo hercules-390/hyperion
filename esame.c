@@ -1059,6 +1059,8 @@ U64     old;                            /* Old value                 */
     }
     else
     {
+        PTT(PTT_CL_CSF,"*CSPG",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
+
         /* Otherwise yield */
         regs->GR_G(r1) = CSWAP64(old);
         if (sysblk.cpus > 1)
@@ -4948,6 +4950,7 @@ DEF_INST(perform_timing_facility_function)
             regs->psw.cc = 0;
             break;
         default:
+            PTT(PTT_CL_ERR,"*PTFF",regs->GR_L(0),regs->GR_L(1),regs->psw.IA_L);
             regs->psw.cc = 3;
     }
 }
@@ -5134,6 +5137,8 @@ PSA    *psa;                            /* -> Prefixed storage area  */
 
     S(inst, regs, b2, effective_addr2);
 
+    PTT(PTT_CL_INF,"STFL",b2,(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
+
     PRIV_CHECK(regs);
 
     SIE_INTERCEPT(regs);
@@ -5165,6 +5170,8 @@ int     ndbl;                           /* #of doublewords to store  */
 int     cc;                             /* Condition code            */
 
     S(inst, regs, b2, effective_addr2);
+
+    PTT(PTT_CL_INF,"STFLE",b2,(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
 
     SIE_INTERCEPT(regs);
 

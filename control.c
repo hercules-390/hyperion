@@ -876,6 +876,7 @@ U32     old;                            /* old value                 */
     else
     {
         PTT(PTT_CL_CSF,"*CSP",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
+
         /* Otherwise yield */
         regs->GR_L(r1) = CSWAP32(old);
         if (sysblk.cpus > 1)
