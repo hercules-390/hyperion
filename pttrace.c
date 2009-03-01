@@ -129,12 +129,12 @@ DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
                 pttclass &= ~PTT_CL_PGM;
                 continue;
             }
-            else if (strcasecmp("intlock", argv[0]) == 0)
+            else if (strcasecmp("inter", argv[0]) == 0)
             {
                 pttclass |= PTT_CL_CSF;
                 continue;
             }
-            else if (strcasecmp("nointlock", argv[0]) == 0)
+            else if (strcasecmp("nointer", argv[0]) == 0)
             {
                 pttclass &= ~PTT_CL_CSF;
                 continue;
@@ -264,7 +264,7 @@ DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
                (pttclass & PTT_CL_INF) ? "instr " : "",
                (pttclass & PTT_CL_ERR) ? "error " : "",
                (pttclass & PTT_CL_PGM) ? "prog " : "",
-               (pttclass & PTT_CL_CSF) ? "intlock " : "",
+               (pttclass & PTT_CL_CSF) ? "inter " : "",
                (pttclass & PTT_CL_TMR) ? "timer " : "",
                (pttclass & PTT_CL_THR) ? "threads " : "",
                (pttclass & PTT_CL_LOG) ? "logger " : "",

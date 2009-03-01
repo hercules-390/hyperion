@@ -147,7 +147,7 @@ COMMAND ( "ptt",       PANEL+CONFIG, EXT_CMD(ptt_cmd),
      "  (no)instr   - instruction information trace\n"
      "  (no)error   - instruction error trace\n"
      "  (no)prog    - program interrupt trace\n"
-     "  (no)intlock - interlock failure trace\n"
+     "  (no)inter   - interlock failure trace\n"
      "  (no)timer   - timer trace\n"
      "  (no)threads - thread trace\n"
      "  (no)logger  - logger trace\n"
