@@ -552,10 +552,10 @@ int i, n;
 #if defined( _MSVC_ )   // fish debug; appears to be vstore.h
                         // maybe all *.h files are this way??
     {
-        char* p = strrchr( file, '\\' );
-        if (!p) p = strrchr( file, '/' );
+        char* p = strrchr( loc, '\\' );
+        if (!p) p = strrchr( loc, '/' );
         if (p)
-            file = p+1;
+            loc = p+1;
     }
 #endif
 
