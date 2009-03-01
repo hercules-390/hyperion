@@ -655,6 +655,8 @@ BYTE            cmdcode;                /* 3270 read/write command   */
         /* If unit check occured, set response code X'0040' */
         if (unitstat & CSW_UC)
         {
+            PTT(PTT_CL_ERR,"*SERVC",(U32)more,(U32)unitstat,residual);
+            
             /* Set response code X'0040' in SCCB header */
             sccb->reas = SCCB_REAS_NONE;
             sccb->resp = SCCB_RESP_BACKOUT;
@@ -727,6 +729,8 @@ U16             residual;               /* Residual data count       */
             /* Set response code X'0040' if unit check occurred */
             if (unitstat & CSW_UC)
             {
+                PTT(PTT_CL_ERR,"*SERVC",(U32)more,(U32)unitstat,residual);
+
                 /* Set response code X'0040' in SCCB header */
                 sccb->reas = SCCB_REAS_NONE;
                 sccb->resp = SCCB_RESP_BACKOUT;
@@ -736,6 +740,8 @@ U16             residual;               /* Residual data count       */
             /* Set response code X'75F0' if SCCB length exceeded */
             if (more)
             {
+                PTT(PTT_CL_ERR,"*SERVC",(U32)more,(U32)unitstat,residual);
+
                 sccb->reas = SCCB_REAS_EXCEEDS_SCCB;
                 sccb->resp = SCCB_RESP_EXCEEDS_SCCB;
                 return;
