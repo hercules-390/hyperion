@@ -100,7 +100,7 @@ typedef struct _PTT_TRACE {
 #define PTT(_class,_type,_data1,_data2,_result) \
 do { \
   if (pttclass & (_class)) \
-        ptt_pthread_trace(_class,_type,(void *)(_data1),(void *)(_data2),PTT_LOC,(int)(_result)); \
+        ptt_pthread_trace(_class,_type,(void *)(uintptr_t)(_data1),(void *)(uintptr_t)(_data2),PTT_LOC,(int)(_result)); \
 } while(0)
 
 #define PTTRACE(_type,_data1,_data2,_loc,_result) \
