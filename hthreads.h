@@ -26,23 +26,23 @@ typedef fthread_attr_t    ATTR;
 
 #if defined(FISH_HANG)
 
-    #define create_thread(ptid,pat,fn,arg,nm)      fthread_create(__FILE__,__LINE__,(ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),(nm))
-    #define join_thread(tid,pcode)                 fthread_join(__FILE__,__LINE__,(tid),(pcode))
+    #define create_thread(ptid,pat,fn,arg,nm)      fthread_create(PTT_LOC,(ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),(nm))
+    #define join_thread(tid,pcode)                 fthread_join(PTT_LOC,(tid),(pcode))
 
-    #define initialize_lock(plk)                   fthread_mutex_init(__FILE__,__LINE__,(plk),NULL)
-    #define destroy_lock(plk)                      fthread_mutex_destroy(__FILE__,__LINE__,(plk))
-    #define obtain_lock(plk)                       fthread_mutex_lock(__FILE__,__LINE__,(plk))
-    #define try_obtain_lock(plk)                   fthread_mutex_trylock(__FILE__,__LINE__,(plk))
+    #define initialize_lock(plk)                   fthread_mutex_init(PTT_LOC,(plk),NULL)
+    #define destroy_lock(plk)                      fthread_mutex_destroy(PTT_LOC,(plk))
+    #define obtain_lock(plk)                       fthread_mutex_lock(PTT_LOC,(plk))
+    #define try_obtain_lock(plk)                   fthread_mutex_trylock(PTT_LOC,(plk))
     #define test_lock(plk) \
-            (fthread_mutex_trylock(__FILE__,__LINE__,(plk)) ? 1 : fthread_mutex_unlock(__FILE__,__LINE__,(plk)) )
-    #define release_lock(plk)                      fthread_mutex_unlock(__FILE__,__LINE__,(plk))
+            (fthread_mutex_trylock(PTT_LOC,(plk)) ? 1 : fthread_mutex_unlock(PTT_LOC,(plk)) )
+    #define release_lock(plk)                      fthread_mutex_unlock(PTT_LOC,(plk))
 
-    #define initialize_condition(pcond)            fthread_cond_init(__FILE__,__LINE__,(pcond))
-    #define destroy_condition(pcond)               fthread_cond_destroy(__FILE__,__LINE__,(pcond))
-    #define signal_condition(pcond)                fthread_cond_signal(__FILE__,__LINE__,(pcond))
-    #define broadcast_condition(pcond)             fthread_cond_broadcast(__FILE__,__LINE__,(pcond))
-    #define wait_condition(pcond,plk)              fthread_cond_wait(__FILE__,__LINE__,(pcond),(plk))
-    #define timed_wait_condition(pcond,plk,tm)     fthread_cond_timedwait(__FILE__,__LINE__,(pcond),(plk),(tm))
+    #define initialize_condition(pcond)            fthread_cond_init(PTT_LOC,(pcond))
+    #define destroy_condition(pcond)               fthread_cond_destroy(PTT_LOC,(pcond))
+    #define signal_condition(pcond)                fthread_cond_signal(PTT_LOC,(pcond))
+    #define broadcast_condition(pcond)             fthread_cond_broadcast(PTT_LOC,(pcond))
+    #define wait_condition(pcond,plk)              fthread_cond_wait(PTT_LOC,(pcond),(plk))
+    #define timed_wait_condition(pcond,plk,tm)     fthread_cond_timedwait(PTT_LOC,(pcond),(plk),(tm))
 
 #else // !defined(FISH_HANG)
 
@@ -150,52 +150,52 @@ typedef void*THREAD_FUNC(void*);
 
 #undef  initialize_lock
 #define initialize_lock(plk) \
-        ptt_pthread_mutex_init((plk),NULL,__FILE__,__LINE__)
+        ptt_pthread_mutex_init((plk),NULL,PTT_LOC)
 #undef  obtain_lock
 #define obtain_lock(plk) \
-        ptt_pthread_mutex_lock((plk),__FILE__,__LINE__)
+        ptt_pthread_mutex_lock((plk),PTT_LOC)
 #undef  try_obtain_lock
 #define try_obtain_lock(plk) \
-        ptt_pthread_mutex_trylock((plk),__FILE__,__LINE__)
+        ptt_pthread_mutex_trylock((plk),PTT_LOC)
 #undef  test_lock
 #define test_lock(plk) \
-        (ptt_pthread_mutex_trylock ((plk),__FILE__,__LINE__) ? 1 : \
-         ptt_pthread_mutex_unlock  ((plk),__FILE__,__LINE__))
+        (ptt_pthread_mutex_trylock ((plk),PTT_LOC) ? 1 : \
+         ptt_pthread_mutex_unlock  ((plk),PTT_LOC))
 #undef  release_lock
 #define release_lock(plk) \
-        ptt_pthread_mutex_unlock((plk),__FILE__,__LINE__)
+        ptt_pthread_mutex_unlock((plk),PTT_LOC)
 #undef  initialize_condition
 #define initialize_condition(pcond) \
-        ptt_pthread_cond_init((pcond),NULL,__FILE__,__LINE__)
+        ptt_pthread_cond_init((pcond),NULL,PTT_LOC)
 #undef  signal_condition
 #define signal_condition(pcond) \
-        ptt_pthread_cond_signal((pcond),__FILE__,__LINE__)
+        ptt_pthread_cond_signal((pcond),PTT_LOC)
 #undef  broadcast_condition
 #define broadcast_condition(pcond) \
-        ptt_pthread_cond_broadcast((pcond),__FILE__,__LINE__)
+        ptt_pthread_cond_broadcast((pcond),PTT_LOC)
 #undef  wait_condition
 #define wait_condition(pcond,plk) \
-        ptt_pthread_cond_wait((pcond),(plk),__FILE__,__LINE__)
+        ptt_pthread_cond_wait((pcond),(plk),PTT_LOC)
 #undef  timed_wait_condition
 #define timed_wait_condition(pcond,plk,timeout) \
-        ptt_pthread_cond_timedwait((pcond),(plk),(timeout),__FILE__,__LINE__)
+        ptt_pthread_cond_timedwait((pcond),(plk),(timeout),PTT_LOC)
 #undef  create_thread
 #if     defined(OPTION_FTHREADS)
 #define create_thread(ptid,pat,fn,arg,nm) \
-        ptt_pthread_create((ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),(nm),__FILE__,__LINE__)
+        ptt_pthread_create((ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),(nm),PTT_LOC)
 #else
 #define create_thread(ptid,pat,fn,arg,nm) \
-        ptt_pthread_create(ptid,pat,(THREAD_FUNC*)&(fn),arg,(nm),__FILE__,__LINE__)
+        ptt_pthread_create(ptid,pat,(THREAD_FUNC*)&(fn),arg,(nm),PTT_LOC)
 #endif
 #undef  join_thread
 #define join_thread(tid,pcode) \
-        ptt_pthread_join((tid),(pcode),__FILE__,__LINE__)
+        ptt_pthread_join((tid),(pcode),PTT_LOC)
 #undef  detach_thread
 #define detach_thread(tid) \
-        ptt_pthread_detach((tid),__FILE__,__LINE__)
+        ptt_pthread_detach((tid),PTT_LOC)
 #undef  signal_thread
 #define signal_thread(tid,signo) \
-        ptt_pthread_kill((tid),(signo),__FILE__,__LINE__)
+        ptt_pthread_kill((tid),(signo),PTT_LOC)
 
 #endif // OPTION_PTTRACE
 

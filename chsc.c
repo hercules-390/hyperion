@@ -196,6 +196,8 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
 
     RRE(inst, regs, r1, r2);
 
+    PTT(PTT_CL_INF,"CHSC",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
+
     PRIV_CHECK(regs);
 
     SIE_INTERCEPT(regs);
@@ -232,6 +234,8 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
             break;
 #endif
         default:
+
+            PTT(PTT_CL_ERR,"*CHSC",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
 
             if( HDC3(debug_chsc_unknown_request, chsc_rsp, chsc_req, regs) )
                 break;

@@ -875,6 +875,7 @@ U32     old;                            /* old value                 */
     }
     else
     {
+        PTT(PTT_CL_CSF,"*CSP",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
         /* Otherwise yield */
         regs->GR_L(r1) = CSWAP32(old);
         if (sysblk.cpus > 1)
@@ -898,6 +899,8 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
+
+    PTT(PTT_CL_INF,"DIAG",regs->GR_L(r1),regs->GR_L(r3),(U32)(effective_addr2 & 0xffffff));
 
 #if defined(FEATURE_ECPSVM)
     if(ecpsvm_dodiag(regs,r1,r3,b2,effective_addr2)==0)
@@ -5593,6 +5596,8 @@ static char *ordername[] = {
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
+    PTT(PTT_CL_INF,"SIGP",regs->GR_L(r1),regs->GR_L(r3),(U32)(effective_addr2 & 0xffffffff));
+
     PRIV_CHECK(regs);
 
     SIE_INTERCEPT(regs);
@@ -5612,6 +5617,7 @@ static char *ordername[] = {
     /* Return condition code 3 if target CPU does not exist */
     if (cpad >= MAX_CPU)
     {
+        PTT(PTT_CL_ERR,"*SIGP",regs->GR_L(r1),regs->GR_L(r3),(U32)(effective_addr2 & 0xffffffff));
         regs->psw.cc = 3;
         return;
     }
@@ -5622,6 +5628,7 @@ static char *ordername[] = {
     if (order == SIGP_SENSE && !IS_CPU_ONLINE(cpad)
      && cpad >= sysblk.numcpu && cpad >= HI_CPU)
     {
+        PTT(PTT_CL_ERR,"*SIGP",regs->GR_L(r1),regs->GR_L(r3),(U32)(effective_addr2 & 0xffffffff));
         regs->psw.cc = 3;
         return;
     }
@@ -6199,6 +6206,7 @@ static char *ordername[] = {
 #endif /*defined(FEATURE_HERCULES_DIAGCALLS)*/
 
                     default:
+                        PTT(PTT_CL_ERR,"*SIGP",regs->GR_L(r1),regs->GR_L(r3),(U32)(effective_addr2 & 0xffffffff));
                         status |= SIGP_STATUS_INVALID_PARAMETER;
                 } /* end switch(parm & 0xFF) */
             } /* end if(!status) */
@@ -6232,6 +6240,7 @@ static char *ordername[] = {
 #endif /*defined(FEATURE_SENSE_RUNNING_STATUS)*/
 
         default:
+            PTT(PTT_CL_ERR,"*SIGP",regs->GR_L(r1),regs->GR_L(r3),(U32)(effective_addr2 & 0xffffffff));
             status = SIGP_STATUS_INVALID_ORDER;
         } /* end switch(order) */
 
@@ -6672,6 +6681,8 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
 
     S(inst, regs, b2, effective_addr2);
 
+    PTT(PTT_CL_INF,"STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
+
     PRIV_CHECK(regs);
 
     SIE_INTERCEPT(regs);
@@ -6725,6 +6736,7 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
       || (regs->GR_L(0) & STSI_GPR0_SEL1_MASK) > 2
       || (regs->GR_L(1) & STSI_GPR1_SEL2_MASK) > 2)
     {
+        PTT(PTT_CL_ERR,"*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
 #ifdef DEBUG_STSI
         logmsg("control.c: STSI cc=3 selector codes invalid\n");
 #endif /*DEBUG_STSI*/
@@ -6807,11 +6819,13 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
                 break;
 
             default:
+                PTT(PTT_CL_ERR,"*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
                 regs->psw.cc = 3;
             } /* selector 2 */
             break;
 
         default:
+            PTT(PTT_CL_ERR,"*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
             regs->psw.cc = 3;
         } /* selector 1 */
         break;
@@ -6853,16 +6867,19 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
                 break;
 
             default:
+                PTT(PTT_CL_ERR,"*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
                 regs->psw.cc = 3;
             } /* selector 2 */
             break;
 
         default:
+            PTT(PTT_CL_ERR,"*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
             regs->psw.cc = 3;
         } /* selector 1 */
         break;
 
     default:
+        PTT(PTT_CL_ERR,"*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
         regs->psw.cc = 3;
     } /* function code */
 

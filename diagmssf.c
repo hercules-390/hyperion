@@ -369,6 +369,7 @@ DEVBLK            *dev;                /* Device block pointer       */
             break;
 
         default:
+            PTT(PTT_CL_ERR,"*DIAG080",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
             /* Set response code X'06F0' for invalid MSSF command */
             spccb->resp[0] = SPCCB_REAS_UNASSIGNED;
             spccb->resp[1] = SPCCB_RESP_UNASSIGNED;
@@ -497,6 +498,7 @@ static U64        diag204tod;          /* last diag204 tod           */
         break;
 
     default:
+        PTT(PTT_CL_ERR,"*DIAG204",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
         regs->GR_L(r2) = 4;
 
     } /*switch(regs->GR_L(r2))*/

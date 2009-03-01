@@ -8,6 +8,8 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Add instruction trace 01mar09 jj
+//
 // Revision 1.32  2009/01/23 12:58:42  bernard
 // copyright notice
 //
@@ -34,9 +36,6 @@ PTT_TRACE *pttrace;                     /* Pthreads trace table      */
 int        pttracex;                    /* Pthreads trace index      */
 int        pttracen;                    /* Pthreads trace entries    */
 LOCK       pttlock;                     /* Pthreads trace lock       */
-int        pttimer;                     /* 1=trace timer/clock events*/
-int        pttlogger;                   /* 1=trace loger events      */
-int        pttnothreads;                /* 1=no threads events       */
 int        pttnolock;                   /* 1=no PTT locking          */
 int        pttnotod;                    /* 1=don't call gettimeofday */
 int        pttnowrap;                   /* 1=don't wrap              */
@@ -66,9 +65,6 @@ DLL_EXPORT void ptt_trace_init (int n, int init)
 #else
         pthread_mutex_init (&pttlock, NULL);
 #endif
-        pttimer = 0; /* (default = 'notimer') */
-        pttlogger = 0;
-        pttnothreads = 0;
         pttnolock = 0;
         pttnotod = 0;
         pttnowrap = 0;
@@ -103,34 +99,74 @@ DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
         {
             if (strcasecmp("opts", argv[0]) == 0)
                 continue;
+            else if (strcasecmp("error", argv[0]) == 0)
+            {
+                pttclass |= PTT_CL_ERR;
+                continue;
+            }
+            else if (strcasecmp("noerror", argv[0]) == 0)
+            {
+                pttclass &= ~PTT_CL_ERR;
+                continue;
+            }
+            else if (strcasecmp("instr", argv[0]) == 0)
+            {
+                pttclass |= PTT_CL_INF;
+                continue;
+            }
+            else if (strcasecmp("noinstr", argv[0]) == 0)
+            {
+                pttclass &= ~PTT_CL_INF;
+                continue;
+            }
+            else if (strcasecmp("prog", argv[0]) == 0)
+            {
+                pttclass |= PTT_CL_PGM;
+                continue;
+            }
+            else if (strcasecmp("noprog", argv[0]) == 0)
+            {
+                pttclass &= ~PTT_CL_PGM;
+                continue;
+            }
+            else if (strcasecmp("intlock", argv[0]) == 0)
+            {
+                pttclass |= PTT_CL_CSF;
+                continue;
+            }
+            else if (strcasecmp("nointlock", argv[0]) == 0)
+            {
+                pttclass &= ~PTT_CL_CSF;
+                continue;
+            }
             else if (strcasecmp("timer", argv[0]) == 0)
             {
-                pttimer = 1;
+                pttclass |= PTT_CL_TMR;
                 continue;
             }
             else if (strcasecmp("notimer", argv[0]) == 0)
             {
-                pttimer = 0;
+                pttclass &= ~PTT_CL_TMR;
                 continue;
             }
             else if (strcasecmp("logger", argv[0]) == 0)
             {
-                pttlogger = 1;
+                pttclass |= PTT_CL_LOG;
                 continue;
             }
             else if (strcasecmp("nologger", argv[0]) == 0)
             {
-                pttlogger = 0;
+                pttclass &= ~PTT_CL_LOG;
                 continue;
             }
             else if (strcasecmp("nothreads", argv[0]) == 0)
             {
-                pttnothreads = 1;
+                pttclass &= ~PTT_CL_THR;
                 continue;
             }
             else if (strcasecmp("threads", argv[0]) == 0)
             {
-                pttnothreads = 0;
+                pttclass |= PTT_CL_THR;
                 continue;
             }
             else if (strcasecmp("nolock", argv[0]) == 0)
@@ -224,13 +260,17 @@ DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
         if (pttracen)
             rc = ptt_pthread_print();
     
-        logmsg( _("HHCPT003I ptt %s %s %s %s %s %s to=%d %d\n"),
-               pttimer ? "timer" : "notimer",
-               pttnothreads ? "nothreads" : "threads",
+        logmsg( _("HHCPT003I ptt %s%s%s%s%s%s%s%s %s %s to=%d %d\n"),
+               (pttclass & PTT_CL_INF) ? "instr " : "",
+               (pttclass & PTT_CL_ERR) ? "error " : "",
+               (pttclass & PTT_CL_PGM) ? "prog " : "",
+               (pttclass & PTT_CL_CSF) ? "intlock " : "",
+               (pttclass & PTT_CL_TMR) ? "timer " : "",
+               (pttclass & PTT_CL_THR) ? "threads " : "",
+               (pttclass & PTT_CL_LOG) ? "logger " : "",
                pttnolock ? "nolock" : "lock",
                pttnotod ? "notod" : "tod",
                pttnowrap ? "nowrap" : "wrap",
-               pttlogger ? "logger" : "nologger",
                pttto,
                pttracen);
     }
@@ -260,247 +300,247 @@ void *ptt_timeout()
 }
 
 #ifndef OPTION_FTHREADS
-DLL_EXPORT int ptt_pthread_mutex_init(LOCK *mutex, pthread_mutexattr_t *attr, char *file, int line)
+DLL_EXPORT int ptt_pthread_mutex_init(LOCK *mutex, pthread_mutexattr_t *attr, char *loc)
 {
-    PTTRACE ("lock init", mutex, attr, file, line, PTT_MAGIC);
+    PTTRACE ("lock init", mutex, attr, loc, PTT_MAGIC);
     return pthread_mutex_init(mutex, attr);
 }
 
-DLL_EXPORT int ptt_pthread_mutex_lock(LOCK *mutex, char *file, int line)
+DLL_EXPORT int ptt_pthread_mutex_lock(LOCK *mutex, char *loc)
 {
 int result;
 
-    PTTRACE ("lock before", mutex, NULL, file, line, PTT_MAGIC);
+    PTTRACE ("lock before", mutex, NULL, loc, PTT_MAGIC);
     result = pthread_mutex_lock(mutex);
-    PTTRACE ("lock after", mutex, NULL, file, line, result);
+    PTTRACE ("lock after", mutex, NULL, loc, result);
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_mutex_trylock(LOCK *mutex, char *file, int line)
+DLL_EXPORT int ptt_pthread_mutex_trylock(LOCK *mutex, char *loc)
 {
 int result;
 
-    PTTRACE ("try before", mutex, NULL, file, line, PTT_MAGIC);
+    PTTRACE ("try before", mutex, NULL, loc, PTT_MAGIC);
     result = pthread_mutex_trylock(mutex);
-    PTTRACE ("try after", mutex, NULL, file, line, result);
+    PTTRACE ("try after", mutex, NULL, loc, result);
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_mutex_unlock(LOCK *mutex, char *file, int line)
+DLL_EXPORT int ptt_pthread_mutex_unlock(LOCK *mutex, char *loc)
 {
 int result;
 
     result = pthread_mutex_unlock(mutex);
-    PTTRACE ("unlock", mutex, NULL, file, line, result);
+    PTTRACE ("unlock", mutex, NULL, loc, result);
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_cond_init(COND *cond, pthread_condattr_t *attr, char *file, int line)
+DLL_EXPORT int ptt_pthread_cond_init(COND *cond, pthread_condattr_t *attr, char *loc)
 {
-    PTTRACE ("cond init", NULL, cond, file, line, PTT_MAGIC);
+    PTTRACE ("cond init", NULL, cond, loc, PTT_MAGIC);
     return pthread_cond_init(cond, attr);
 }
 
-DLL_EXPORT int ptt_pthread_cond_signal(COND *cond, char *file, int line)
+DLL_EXPORT int ptt_pthread_cond_signal(COND *cond, char *loc)
 {
 int result;
 
     result = pthread_cond_signal(cond);
-    PTTRACE ("signal", NULL, cond, file, line, result);
+    PTTRACE ("signal", NULL, cond, loc, result);
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_cond_broadcast(COND *cond, char *file, int line)
+DLL_EXPORT int ptt_pthread_cond_broadcast(COND *cond, char *loc)
 {
 int result;
 
     result = pthread_cond_broadcast(cond);
-    PTTRACE ("broadcast", NULL, cond, file, line, result);
+    PTTRACE ("broadcast", NULL, cond, loc, result);
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_cond_wait(COND *cond, LOCK *mutex, char *file, int line)
+DLL_EXPORT int ptt_pthread_cond_wait(COND *cond, LOCK *mutex, char *loc)
 {
 int result;
 
-    PTTRACE ("wait before", mutex, cond, file, line, PTT_MAGIC);
+    PTTRACE ("wait before", mutex, cond, loc, PTT_MAGIC);
     result = pthread_cond_wait(cond, mutex);
-    PTTRACE ("wait after", mutex, cond, file, line, result);
+    PTTRACE ("wait after", mutex, cond, loc, result);
     return result;
 }
 
 DLL_EXPORT int ptt_pthread_cond_timedwait(COND *cond, LOCK *mutex,
-                          const struct timespec *time, char *file, int line)
+                          const struct timespec *time, char *loc)
 {
 int result;
 
-    PTTRACE ("tw before", mutex, cond, file, line, PTT_MAGIC);
+    PTTRACE ("tw before", mutex, cond, loc, PTT_MAGIC);
     result = pthread_cond_timedwait(cond, mutex, time);
-    PTTRACE ("tw after", mutex, cond, file, line, result);
+    PTTRACE ("tw after", mutex, cond, loc, result);
     return result;
 }
 
 DLL_EXPORT int ptt_pthread_create(pthread_t *tid, ATTR *attr,
-                       void *(*start)(), void *arg, char *nm, char *file, int line)
+                       void *(*start)(), void *arg, char *nm, char *loc)
 {
 int result;
     UNREFERENCED(nm);
 
     result = pthread_create(tid, attr, start, arg);
-    PTTRACE ("create", (void *)*tid, NULL, file, line, result);
+    PTTRACE ("create", (void *)*tid, NULL, loc, result);
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_join(pthread_t tid, void **value, char *file, int line)
+DLL_EXPORT int ptt_pthread_join(pthread_t tid, void **value, char *loc)
 {
 int result;
 
-    PTTRACE ("join before", (void *)tid, value ? *value : NULL, file, line, PTT_MAGIC);
+    PTTRACE ("join before", (void *)tid, value ? *value : NULL, loc, PTT_MAGIC);
     result = pthread_join(tid,value);
-    PTTRACE ("join after", (void *)tid, value ? *value : NULL, file, line, result);
+    PTTRACE ("join after", (void *)tid, value ? *value : NULL, loc, result);
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_detach(pthread_t tid, char *file, int line)
+DLL_EXPORT int ptt_pthread_detach(pthread_t tid, char *loc)
 {
 int result;
 
-    PTTRACE ("dtch before", (void *)tid, NULL, file, line, PTT_MAGIC);
+    PTTRACE ("dtch before", (void *)tid, NULL, loc, PTT_MAGIC);
     result = pthread_detach(tid);
-    PTTRACE ("dtch after", (void *)tid, NULL, file, line, result);
+    PTTRACE ("dtch after", (void *)tid, NULL, loc, result);
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_kill(pthread_t tid, int sig, char *file, int line)
+DLL_EXPORT int ptt_pthread_kill(pthread_t tid, int sig, char *loc)
 {
-    PTTRACE ("kill", (void *)tid, (void *)(long)sig, file, line, PTT_MAGIC);
+    PTTRACE ("kill", (void *)tid, (void *)(long)sig, loc, PTT_MAGIC);
     return pthread_kill(tid, sig);
 }
 #else /* OPTION_FTHREADS */
-DLL_EXPORT int ptt_pthread_mutex_init(LOCK *mutex, void *attr, char *file, int line)
+DLL_EXPORT int ptt_pthread_mutex_init(LOCK *mutex, void *attr, char *loc)
 {
-    PTTRACE ("lock init", mutex, attr, file, line, PTT_MAGIC);
+    PTTRACE ("lock init", mutex, attr, loc, PTT_MAGIC);
     return fthread_mutex_init(mutex,attr);
 }
 
-DLL_EXPORT int ptt_pthread_mutex_lock(LOCK *mutex, char *file, int line)
+DLL_EXPORT int ptt_pthread_mutex_lock(LOCK *mutex, char *loc)
 {
 int result;
 
-    PTTRACE ("lock before", mutex, NULL, file, line, PTT_MAGIC);
+    PTTRACE ("lock before", mutex, NULL, loc, PTT_MAGIC);
     result = fthread_mutex_lock(mutex);
-    PTTRACE ("lock after", mutex, NULL, file, line, result);
+    PTTRACE ("lock after", mutex, NULL, loc, result);
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_mutex_trylock(LOCK *mutex, char *file, int line)
+DLL_EXPORT int ptt_pthread_mutex_trylock(LOCK *mutex, char *loc)
 {
 int result;
 
-    PTTRACE ("try before", mutex, NULL, file, line, PTT_MAGIC);
+    PTTRACE ("try before", mutex, NULL, loc, PTT_MAGIC);
     result = fthread_mutex_trylock(mutex);
-    PTTRACE ("try after", mutex, NULL, file, line, result);
+    PTTRACE ("try after", mutex, NULL, loc, result);
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_mutex_unlock(LOCK *mutex, char *file, int line)
+DLL_EXPORT int ptt_pthread_mutex_unlock(LOCK *mutex, char *loc)
 {
 int result;
 
     result = fthread_mutex_unlock(mutex);
-    PTTRACE ("unlock", mutex, NULL, file, line, result);
+    PTTRACE ("unlock", mutex, NULL, loc, result);
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_cond_init(COND *cond, void *attr, char *file, int line)
+DLL_EXPORT int ptt_pthread_cond_init(COND *cond, void *attr, char *loc)
 {
     UNREFERENCED(attr);
-    PTTRACE ("cond init", NULL, cond, file, line, PTT_MAGIC);
+    PTTRACE ("cond init", NULL, cond, loc, PTT_MAGIC);
     return fthread_cond_init(cond);
 }
 
-DLL_EXPORT int ptt_pthread_cond_signal(COND *cond, char *file, int line)
+DLL_EXPORT int ptt_pthread_cond_signal(COND *cond, char *loc)
 {
 int result;
 
     result = fthread_cond_signal(cond);
-    PTTRACE ("signal", NULL, cond, file, line, result);
+    PTTRACE ("signal", NULL, cond, loc, result);
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_cond_broadcast(COND *cond, char *file, int line)
+DLL_EXPORT int ptt_pthread_cond_broadcast(COND *cond, char *loc)
 {
 int result;
 
     result = fthread_cond_broadcast(cond);
-    PTTRACE ("broadcast", NULL, cond, file, line, result);
+    PTTRACE ("broadcast", NULL, cond, loc, result);
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_cond_wait(COND *cond, LOCK *mutex, char *file, int line)
+DLL_EXPORT int ptt_pthread_cond_wait(COND *cond, LOCK *mutex, char *loc)
 {
 int result;
 
-    PTTRACE ("wait before", mutex, cond, file, line, PTT_MAGIC);
+    PTTRACE ("wait before", mutex, cond, loc, PTT_MAGIC);
     result = fthread_cond_wait(cond, mutex);
-    PTTRACE ("wait after", mutex, cond, file, line, result);
+    PTTRACE ("wait after", mutex, cond, loc, result);
     return result;
 }
 
 DLL_EXPORT int ptt_pthread_cond_timedwait(COND *cond, LOCK *mutex,
-                                struct timespec *time, char *file, int line)
+                                struct timespec *time, char *loc)
 {
 int result;
 
-    PTTRACE ("tw before", mutex, cond, file, line, PTT_MAGIC);
+    PTTRACE ("tw before", mutex, cond, loc, PTT_MAGIC);
     result = fthread_cond_timedwait(cond, mutex, time);
-    PTTRACE ("tw after", mutex, cond, file, line, result);
+    PTTRACE ("tw after", mutex, cond, loc, result);
     return result;
 }
 
 DLL_EXPORT int ptt_pthread_create(fthread_t *tid, ATTR *attr,
-                       PFT_THREAD_FUNC start, void *arg, char *nm, char *file, int line)
+                       PFT_THREAD_FUNC start, void *arg, char *nm, char *loc)
 {
 int result;
 
     result = fthread_create(tid, attr, start, arg, nm);
-    PTTRACE ("create", (void *)(uintptr_t)(*tid), NULL, file, line, result);
+    PTTRACE ("create", (void *)(uintptr_t)(*tid), NULL, loc, result);
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_join(fthread_t tid, void **value, char *file, int line)
+DLL_EXPORT int ptt_pthread_join(fthread_t tid, void **value, char *loc)
 {
 int result;
 
-    PTTRACE ("join before", (void *)(uintptr_t)tid, value ? *value : NULL, file, line, PTT_MAGIC);
+    PTTRACE ("join before", (void *)(uintptr_t)tid, value ? *value : NULL, loc, PTT_MAGIC);
     result = fthread_join(tid,value);
-    PTTRACE ("join after", (void *)(uintptr_t)tid, value ? *value : NULL, file, line, result);
+    PTTRACE ("join after", (void *)(uintptr_t)tid, value ? *value : NULL, loc, result);
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_detach(fthread_t tid, char *file, int line)
+DLL_EXPORT int ptt_pthread_detach(fthread_t tid, char *loc)
 {
 int result;
 
-    PTTRACE ("dtch before", (void *)(uintptr_t)tid, NULL, file, line, PTT_MAGIC);
+    PTTRACE ("dtch before", (void *)(uintptr_t)tid, NULL, loc, PTT_MAGIC);
     result = fthread_detach(tid);
-    PTTRACE ("dtch after", (void *)(uintptr_t)tid, NULL, file, line, result);
+    PTTRACE ("dtch after", (void *)(uintptr_t)tid, NULL, loc, result);
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_kill(fthread_t tid, int sig, char *file, int line)
+DLL_EXPORT int ptt_pthread_kill(fthread_t tid, int sig, char *loc)
 {
-    PTTRACE ("kill", (void *)(uintptr_t)tid, (void *)(uintptr_t)sig, file, line, PTT_MAGIC);
+    PTTRACE ("kill", (void *)(uintptr_t)tid, (void *)(uintptr_t)sig, loc, PTT_MAGIC);
     return fthread_kill(tid, sig);
 }
 #endif
 
-DLL_EXPORT void ptt_pthread_trace (char * type, void *data1, void *data2,
-                        char *file, int line, int result)
+DLL_EXPORT void ptt_pthread_trace (int class, char * type, void *data1, void *data2,
+                        char *loc, int result)
 {
 int i, n;
 
-    if (pttrace == NULL || pttracen == 0) return;
+    if (pttrace == NULL || pttracen == 0 || !(pttclass & class) ) return;
 
     /*
     ** Fish debug: it appears MSVC sometimes sets the __FILE__ macro
@@ -524,9 +564,9 @@ int i, n;
      * that interesting and take up table space.  Check the flags to
      * see if we want to trace them.
      */
-    if (pttimer   == 0 && strcasecmp(file, "timer.c")  == 0) return;
-    if (pttimer   == 0 && strcasecmp(file, "clock.c")  == 0) return;
-    if (pttlogger == 0 && strcasecmp(file, "logger.c") == 0) return;
+    if (!strncasecmp(loc, "timer.c:", 8)  && !(pttclass & PTT_CL_TMR)) return;
+    if (!strncasecmp(loc, "clock.c:", 8)  && !(pttclass & PTT_CL_TMR)) return;
+    if (!strncasecmp(loc, "logger.c:", 9) && !(pttclass & PTT_CL_LOG)) return;
 
     /* check for `nowrap' */
     if (pttnowrap && pttracex + 1 >= pttracen) return;
@@ -541,11 +581,11 @@ int i, n;
     if (pttracex >= n) pttracex = 0;
     RELEASE_PTTLOCK;
     pttrace[i].tid   = thread_id();
+    pttrace[i].class = class;
     pttrace[i].type  = type;
     pttrace[i].data1 = data1;
     pttrace[i].data2 = data2;
-    pttrace[i].file  = file;
-    pttrace[i].line  = line;
+    pttrace[i].loc  = loc;
     if (pttnotod == 0)
         gettimeofday(&pttrace[i].tv,NULL);
     pttrace[i].result = result;
@@ -572,10 +612,13 @@ const char dot = '.';
         {
             tt = pttrace[i].tv.tv_sec; strcpy(tbuf, ctime(&tt)); tbuf[19] = '\0';
 
-            if (pttrace[i].result == PTT_MAGIC)
+            if (pttrace[i].result == PTT_MAGIC && (pttrace[i].class & PTT_CL_THR))
                 result[0] = '\0';
             else
-                sprintf(result, "%d", pttrace[i].result);
+                if((pttrace[i].class & (PTT_CL_ERR|PTT_CL_INF)))
+                    sprintf(result, "%8.8x", pttrace[i].result);
+                else
+                    sprintf(result, "%d", pttrace[i].result);
 
             logmsg
             (
@@ -583,8 +626,7 @@ const char dot = '.';
                 "%-12.12s "                   // Trace type (string; 12 chars)
                 PTR_FMTx" "                   // Data value 1
                 PTR_FMTx" "                   // Data value 2
-                "%-12.12s "                   // File name
-                "%4d "                        // Line number
+                "%-14.14s "                   // File name
                 "%s%c%6.6ld "                 // Time of day (HH:MM:SS.usecs)
                 "%s\n"                        // Numeric result (or empty string)
 
@@ -592,8 +634,7 @@ const char dot = '.';
                 ,pttrace[i].type              // Trace type (string; 12 chars)
                 ,(uintptr_t)pttrace[i].data1  // Data value 1
                 ,(uintptr_t)pttrace[i].data2  // Data value 2
-                ,pttrace[i].file              // File name
-                ,pttrace[i].line              // Line number
+                ,pttrace[i].loc               // File name
                 ,tbuf + 11                    // Time of day (HH:MM:SS)
                 ,dot                          // Time of day (decimal point)
                 ,pttrace[i].tv.tv_usec        // Time of day (microseconds)

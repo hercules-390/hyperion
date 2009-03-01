@@ -1203,6 +1203,8 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
     RRE(inst, regs, r1, r2);
 
+    PTT(PTT_CL_INF,"SERVC",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
+
     PRIV_CHECK(regs);
 
     SIE_INTERCEPT(regs);
@@ -1645,6 +1647,8 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
         default:
 
+            PTT(PTT_CL_ERR,"*SERVC",regs->GR_L(r1),regs->GR_L(r2),evd_hdr->type);
+
             if( HDC3(debug_sclp_unknown_event, evd_hdr, sccb, regs) )
                 break;
 
@@ -1719,6 +1723,8 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
             sclp_sigq_event(sccb);
             break;
         }
+
+        PTT(PTT_CL_ERR,"*SERVC",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
 
         if( HDC3(debug_sclp_event_data, evd_hdr, sccb, regs) )
             break;
@@ -1965,6 +1971,8 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
     default:
     invalidcmd:
+
+        PTT(PTT_CL_INF|PTT_CL_ERR,"*SERVC",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
 
         if( HDC3(debug_sclp_unknown_command, sclp_command, sccb, regs) )
             break;

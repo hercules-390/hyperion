@@ -141,7 +141,19 @@ COMMAND ( "ssd",       PANEL,        ssd_cmd,
 #endif
 
 #ifdef OPTION_PTTRACE
-COMMAND ( "ptt",       PANEL+CONFIG, EXT_CMD(ptt_cmd), "display pthread trace\n", NULL )
+COMMAND ( "ptt",       PANEL+CONFIG, EXT_CMD(ptt_cmd),
+  "display pthread trace\n",
+     "options:\n"
+     "  (no)instr   - instruction information trace\n"
+     "  (no)error   - instruction error trace\n"
+     "  (no)prog    - program interrupt trace\n"
+     "  (no)intlock - interlock failure trace\n"
+     "  (no)timer   - timer trace\n"
+     "  (no)threads - thread trace\n"
+     "  (no)logger  - logger trace\n"
+     "  (no)lock    - lock trace buffer\n"
+     "  (no)tod     - timestamp trace entries\n"
+     "  (no)wrap    - wrap trace buffer\n"                                  )
 #endif
 
 COMMAND ( "i",         PANEL,        i_cmd,        "generate I/O attention interrupt for device", NULL )

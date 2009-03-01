@@ -428,6 +428,7 @@ VADR    effective_addr2,
             break;
 
         default:
+            PTT(PTT_CL_ERR,"*PLO",regs->GR_L(0),regs->GR_L(r1),regs->psw.IA_L);
             /* indicate function not supported */
             regs->psw.cc = 3;
             break;

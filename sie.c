@@ -275,6 +275,8 @@ U64     dreg;
 
     S(inst, regs, b2, effective_addr2);
 
+    PTT(PTT_CL_INF,"SIE", (U32)(effective_addr2 & 0xffffffff), SIE_ACTIVE(regs), regs->GR_L(15));
+
     SIE_INTERCEPT(regs);
 
     PRIV_CHECK(regs);
@@ -727,6 +729,8 @@ U64     dreg;
         icode = run_sie[GUESTREGS->arch_mode] (regs);
 
     } /* if (setjmp(GUESTREGS->progjmp)) */
+
+    PTT(PTT_CL_INF,"*SIE", (U32)(effective_addr2 & 0xffffffff), icode, regs->GR_L(15));
 
     ARCH_DEP(sie_exit) (regs, icode);
 
@@ -1221,6 +1225,7 @@ RADR    mso,                            /* Main Storage Origin       */
 
     if(zone == 0 || zone >= FEATURE_SIE_MAXZONES)
     {
+        PTT(PTT_CL_ERR,"*SZP", regs->GR_L(1), regs->GR_L(2),regs->psw.IA_L);
         regs->psw.cc = 3;
         return;
     }
