@@ -392,6 +392,13 @@ U32   code;
         regs->psw.cc = 0;
         break;
 
+    case 0x210:
+    /*---------------------------------------------------------------*/
+    /* Diagnose 210: Retrieve Device Information                     */
+    /*---------------------------------------------------------------*/
+        regs->psw.cc = ARCH_DEP(device_info) (r1, r2, regs);
+        break;
+
     case 0x214:
     /*---------------------------------------------------------------*/
     /* Diagnose 214: Pending Page Release                            */

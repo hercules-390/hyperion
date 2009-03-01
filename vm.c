@@ -8,7 +8,8 @@
 /*-------------------------------------------------------------------*/
 /* This module implements miscellaneous diagnose functions           */
 /* described in SC24-5670 VM/ESA CP Programming Services             */
-/* and SC24-5855 VM/ESA CP Diagnosis Reference.                      */
+/* and SC24-5855 VM/ESA CP Diagnosis Reference                       */
+/* and SC24-6084 z/VM 5.4 CP Programming Services.                   */
 /*      Modifications for Interpretive Execution (SIE) by Jan Jaeger */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 /*-------------------------------------------------------------------*/
@@ -49,11 +50,11 @@
 
 #if !defined(_HENGINE_DLL_)
 #define _HENGINE_DLL_
-#endif
+#endif /*_HENGINE_DLL_*/
 
 #if !defined(_VM_C_)
 #define _VM_C_
-#endif
+#endif /* _VM_C_ */
 
 #include "hercules.h"
 
@@ -61,15 +62,20 @@
 
 #include "inline.h"
 
+#include "commadpt.h"
+
 #if defined(FEATURE_EMULATE_VM)
 
 #if !defined(_VM_C)
-
 #define _VM_C
 
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
+#define DEV024(_type,_cls,_typ) \
+       { _type,_cls,_typ,0xC0 }
+#define DEV210(_type,_cls,_typ) \
+       { _type,_cls,_typ,0x40 }
 
 /*-------------------------------------------------------------------*/
 /* Synchronous Block I/O Parameter List                              */
@@ -121,40 +127,369 @@ typedef struct _HCPSGIOP {
 #define HCPSGIOP_FORMAT1_CCW  0x80      /* 1=Format-1 CCW            */
 #define HCPSGIOP_FLAG_RESV    0x7F      /* Reserved bits, must be 0  */
 
+/*-------------------------------------------------------------------*/
+/* DIAGNOSE X'24' and DIAGNOSE X'210' Structures and Table           */
+/*-------------------------------------------------------------------*/
+
+/* VM Device Class Definitions */
+#define DC_TERM 0x80
+#define DC_GRAF 0x40
+#define DC_URI  0x20
+#define DC_URO  0x10
+#define DC_TAPE 0x08
+#define DC_DASD 0x04
+#define DC_SPEC 0x02
+#define DC_FBA  0x01
+
+/* VM Device Type Definitions */
+#define DT_CTCA 0x80
+#define DT_FBA  0x00
+#define DT_OSA  0x20 /* Not yet supported */
+#define DT_UNKN 0x01
+#define DT_0671 0x20
+#define DT_1052 0x00
+#define DT_1403 0x41
+#define DT_1442 0x88
+#define DT_2305 0x02
+#define DT_2311 0x80
+#define DT_2314 0x40
+#define DT_2501 0x81
+#define DT_2703 0x40
+#define DT_3211 0x42
+#define DT_3215 0x00
+#define DT_3277 0x04
+#define DT_3287 0x02
+#define DT_3310 0x01
+#define DT_3330 0x10
+#define DT_3340 0x01
+#define DT_3350 0x08
+#define DT_3370 0x02
+#define DT_3375 0x04
+#define DT_3380 0x20
+#define DT_3390 0x82
+#define DT_3410 0x08
+#define DT_3420 0x10
+#define DT_3422 0x82
+#define DT_3430 0x02
+#define DT_3480 0x01
+#define DT_3490 0x81
+#define DT_3505 0x84
+#define DT_3525 0x84
+#define DT_3590 0x83
+#define DT_370x 0x40
+#define DT_8809 0x04
+#define DT_9332 0x08
+#define DT_9335 0x04
+#define DT_9336 0x40
+#define DT_9345 0x81
+#define DT_9347 0x84
+
+/* VM Virtual Device Status Definitions */
+#define DS_DED    0x01    /* Dedicated device          */
+#define DS_BUSY   0x20    /* Device is busy            */
+
+/* VM Virtual Device Flag Definitions */
+#define DF_ENA     0x80   /* 270x line enabled         */
+#define DF_CONN    0x40   /* 270x line connected       */
+#define DF_RSRL    0x02   /* Reserve/Release supported */
+#define DF_MIDAW   0x01   /* MIDAW's supported         */
+
+/* VM Real Device Features */
+#define DRF_RPS    0x80  /* Device has RPS             */
+#define DRF_EXTSNS 0x40  /* Extended Sense             */
+#define DRF_CTCA   0x40  /* CTCA device                */
+#define DRF_35M    0x08  /* 3340 has 35M data module   */
+#define DRF_70M    0x04  /* 3340 has 70M data module   */
+#define DRF_RSRL   0x02  /* Reserve/Release valid      */
+
+/*-------------------------------------------------------------------*/
+/* Hercules-to-VM Device Table                                       */
+/*-------------------------------------------------------------------*/
+typedef struct _VMDEVTBL {
+        U16     vmhtype;                /* Hercules device type      */
+        BYTE    vmdevcls;               /* VM Device Class           */
+        BYTE    vmdevtyp;               /* VM Device Type            */
+        BYTE    vmdiags;                /* DIAGS recognizing device  */
+#define VMDIAG024 0x80   /* Device recognized by DIAGNOSE X'24'      */
+#define VMDIAG210 0x40   /* Device recognized by DIAGNOSE X'210'     */
+    } VMDEVTBL;
+#define VMDEV_SIZE sizeof(VMDEVTBL)
+
+static VMDEVTBL vmdev[] = {
+   DEV024(0x0671,DC_FBA, DT_0671),
+   DEV024(0x1052,DC_TERM,DT_1052),
+   DEV024(0x1403,DC_URO, DT_1403),
+   DEV024(0x1442,DC_URI, DT_1442),
+   DEV024(0x2305,DC_DASD,DT_2305),
+   DEV024(0x2311,DC_DASD,DT_2311),
+   DEV024(0x2314,DC_DASD,DT_2314),
+   DEV024(0x2501,DC_URI, DT_2501),
+   DEV024(0x2703,DC_TERM,DT_2703),
+   DEV024(0x3088,DC_SPEC,DT_CTCA),
+   DEV024(0x3211,DC_URI, DT_3211),
+   DEV024(0x3215,DC_TERM,DT_3215),
+   DEV024(0x3270,DC_GRAF,DT_3277),
+   DEV024(0x3287,DC_GRAF,DT_3287),
+   DEV024(0x3310,DC_FBA, DT_3310),
+   DEV024(0x3330,DC_DASD,DT_3330),
+   DEV024(0x3340,DC_DASD,DT_3340),
+   DEV024(0x3350,DC_DASD,DT_3350),
+   DEV024(0x3370,DC_FBA, DT_3370),
+   DEV024(0x3375,DC_DASD,DT_3375),
+   DEV024(0x3380,DC_DASD,DT_3380),
+   DEV210(0x3390,DC_DASD,DT_3390),
+   DEV024(0x3410,DC_TAPE,DT_3410),
+   DEV024(0x3420,DC_TAPE,DT_3420),
+   DEV024(0x3422,DC_TAPE,DT_3422),
+   DEV024(0x3430,DC_TAPE,DT_3430),
+   DEV024(0x3480,DC_TAPE,DT_3480),
+   DEV210(0x3490,DC_TAPE,DT_3490),
+   DEV024(0x3505,DC_URI, DT_3505),
+   DEV024(0x3525,DC_URO, DT_3525),
+   DEV024(0x3590,DC_TAPE,DT_3590),
+/*   DEV024(0x3704,DC_SPEC,DT_370x), Not yet supported */
+/*   DEV024(0x3705,DC_SPEC,DT_370x), Not yet supported */
+   DEV024(0x8809,DC_TAPE,DT_8809),
+   DEV024(0x9332,DC_FBA, DT_9332),
+   DEV024(0x9335,DC_FBA, DT_9335),
+   DEV024(0x9336,DC_FBA, DT_9336),
+   DEV210(0x9345,DC_DASD,DT_9345),
+   DEV024(0x9347,DC_TAPE,DT_9347)
+};
+#define VMDEV_NUM (sizeof(vmdev)/VMDEV_SIZE)
+
+/*-------------------------------------------------------------------*/
+/* Virtual Device Data                                               */
+/*-------------------------------------------------------------------*/
+typedef struct _VRDCVDAT {
+        BYTE    vdevcls;                /* Virtual device class      */
+        BYTE    vdevtyp;                /* Virtual device type       */
+        BYTE    vdevstat;               /* Virtual device status     */
+        BYTE    vdevflag;               /* Virtual device flag       */
+    } VRDCVDAT;
+
+/*-------------------------------------------------------------------*/
+/* Real Device Data                                                  */
+/*-------------------------------------------------------------------*/
+typedef struct _VRDCRCDT {
+        BYTE    rdevcls;                /* Real device class         */
+        BYTE    rdevtyp;                /* Real device type          */
+        BYTE    rdevmodl;               /* Real device model         */
+        BYTE    rdevfeat;               /* Real device features      */
+    } VRDCRCDT;
+
+/*-------------------------------------------------------------------*/
+/* Virtual/Real Device Characteristics Block                         */
+/*-------------------------------------------------------------------*/
+typedef struct _VRDCBLOK {
+/*00*/  HWORD    vrdcdvno;       /* Device number                    */
+/*02*/  HWORD    vrdclen;        /* VRDCBLOK length                  */
+/*04*/  VRDCVDAT vrdcvdat;       /* Virtual device data              */
+/*08*/  VRDCRCDT vrdcrcdt;       /* Real device data                 */
+/*0C*/  BYTE     vrdcundv;       /* Real underlying device           */
+/*0D*/  BYTE     vrdcrdaf;       /* Real device additional features  */
+#define VRDCEMRD 0x02            /* No emulated real device          */
+/*0E*/  HWORD    vrdcrsvd;       /* Reserved - must be zeros         */
+/*10*/  BYTE     vrdcrdc[64];    /* READ DEVICE CHARACTERISTICS data */
+/*50*/  BYTE     vrdcpgid[11];   /* Path Group Identifier            */
+/*5B*/  BYTE     resv5[5];       /* reserved                         */
+/*60*/  BYTE     vrdcvers;       /* version                          */
+/*61*/  BYTE     vrdcrsio[31];   /* reserved for Input/Output        */
+/*80*/  HWORD    vrdcrdev;       /* Real device number               */
+/*82*/  BYTE     vrdcrsve[126];  /* reserverd                        */
+/*100*/
+   } VRDCBLOK;
+#define VRDCBLOK_SIZE sizeof(VRDCBLOK)
 
 #endif /*!defined(_VM_C)*/
 
+/*-------------------------------------------------------------------*/
+/* Internal Function Prototypes                                      */
+/*-------------------------------------------------------------------*/
+DEVBLK* ARCH_DEP(vmdevice_data)(int, U16, VRDCVDAT *, VRDCRCDT *);
+
+/*-------------------------------------------------------------------*/
+/* Provide VM Virtual and Real Device Data based upon device number  */
+/*-------------------------------------------------------------------*/
+DEVBLK* ARCH_DEP(vmdevice_data)(int code, U16 devnum, VRDCVDAT *vdat, VRDCRCDT *rdat)
+{
+U32      i;                      /* loop index                      */
+VMDEVTBL *vmentry;               /* -> VMDEVTBL entry found         */
+DEVBLK   *dev;                   /* -> DEVBLK                       */
+
+    /* Clear vdat and rdat */
+    memset (vdat, 0x00, sizeof(vdat));
+    memset (rdat, 0x00, sizeof(rdat));
+
+    /* Locate the device block */
+    dev = find_device_by_devnum (0,devnum);
+    
+    /* Return 0 if device is not found */
+    if (!dev)
+       return 0;
+    
+    /* Indicate the device is dedicated - all Hercules devices are */
+    vdat->vdevstat = DS_DED;
+
+    /* Find the device in the VM table */
+    vmentry=NULL;
+    for (i = 0; i < (int)VMDEV_NUM; i++)
+       {
+#if 0
+           logmsg ("vmdevice_data: i=%i %4.4X %2.2X %2.2X %2.2X\n",i,
+                   vmdev[i].vmhtype,vmdev[i].vmdevcls,vmdev[i].vmdevtyp,vmdev[i].vmdiags);
+#endif
+           if (dev->devtype == vmdev[i].vmhtype)
+           {
+               vmentry = &vmdev[i];
+               break;
+           }
+       }
+#if 0
+    logmsg ("FOUND: %4.4X %2.2X %2.2X %2.2X\n",
+            vmentry->vmhtype,vmentry->vmdevcls,vmentry->vmdevtyp,vmentry->vmdiags);
+#endif
+
+    /* If device is not in the table or it isn't recognized by DIAG X'24' */
+    if ( !vmentry || ( code==0x24 && !vmentry->vmdiags & VMDIAG024 ) )
+    {
+        /* Set the real and virtual data to an unsupported device */
+        vdat->vdevcls = DC_SPEC;
+        vdat->vdevtyp = DT_UNKN;
+        rdat->rdevcls = DC_SPEC;
+        rdat->rdevtyp = DT_UNKN;
+        return dev;
+    }
+
+    /* Set the virtual and real data to the device's VM class and type */
+    vdat->vdevcls = vmentry->vmdevcls;
+    vdat->vdevtyp = vmentry->vmdevtyp;
+    rdat->rdevcls = vmentry->vmdevcls;
+    rdat->rdevtyp = vmentry->vmdevtyp;
+
+    /* Indicate if the device is busy */
+    if ( (dev->busy && dev->ioactive == DEV_SYS_LOCAL) || dev->startpending )
+        vdat->vdevstat |= DS_BUSY;
+    
+    /* Set virtual device flags, and real device model and features */
+    vdat->vdevflag = 0x00;
+    rdat->rdevmodl = 0x00;
+    rdat->rdevfeat = 0x00;
+
+    if (dev->hnd->reserve)           /* Indicate if RESERVE/RELEASE supported */
+        vdat->vdevflag |= DF_RSRL;
+    
+#if defined(FEATURE_MIDAW)
+    /* If DIAGNOSE X'210', indicate if MIDAW's are supported */ 
+    if (code==0x210)
+        vdat->vdevflag |= DF_MIDAW;
+#endif /* FEATURE_MIDAW */
+
+    switch (rdat->rdevcls) {
+    case DC_DASD:
+         if (dev->hnd->reserve)
+            rdat->rdevfeat |= DRF_RSRL;
+         if (dev->numsense==24)
+            rdat->rdevfeat |= DRF_EXTSNS;
+         if (dev->ckdtab->sectors)
+            rdat->rdevfeat |= DRF_RPS;
+         if (dev->devtype == 0x3340)
+         {
+            if (dev->ckdtab->model==0x01)
+               rdat->rdevfeat |= DRF_35M;
+            else
+               rdat->rdevfeat |= DRF_70M;
+         }
+         if ( dev->devtype == 0x3380  && code == 0x24)
+            rdat->rdevmodl = (dev->ckdtab->model & 0x0F) | (dev->ckdcu->model & 0xF0);
+         else
+            rdat->rdevmodl = dev->ckdtab->model;
+         break;
+     case DC_FBA:
+         rdat->rdevmodl = dev->fbatab->model;
+         break;
+     case DC_TERM:
+         if (dev->devtype==0x3215)
+         {
+            rdat->rdevfeat = 0x50;
+            /* Note: 0x50 is carried forward from the previous version of       */
+            /* DIAGNOSE X'24'. The actual meaning was not previously documented */
+         }
+         else
+         {
+            if (dev->devtype==0x2703 && dev->commadpt)
+            {
+                if (dev->commadpt->enabled)
+                   vdat->vdevflag |= DF_ENA;
+                if (dev->commadpt->connect)
+                   vdat->vdevflag |= DF_CONN;
+            }
+         }
+         break;
+     case DC_SPEC:
+         if (rdat->rdevtyp==DT_CTCA)
+            rdat->rdevfeat = DRF_CTCA;
+     }
+     
+     /* Return the located DEVBLK to the caller */
+     return dev;
+
+} /* end function vmdevice_data */
 
 /*-------------------------------------------------------------------*/
 /* Device Type and Features (Function code 0x024)                    */
 /*-------------------------------------------------------------------*/
 int ARCH_DEP(diag_devtype) (int r1, int r2, REGS *regs)
 {
+#if 0
+/* These fields replaced by structs */
 U32             vdevinfo;               /* Virtual device information*/
 U32             rdevinfo;               /* Real device information   */
+#endif
 DEVBLK         *dev;                    /* -> Device block           */
 U16             devnum;                 /* Device number             */
+VRDCVDAT        vdat;                   /* Virtual device data       */
+VRDCRCDT        rdat;                   /* Real device data          */
 
+#if defined(FEATURE_ESAME)
+     /* Program check if 64-bit addressing is being used. */
+     if (regs->psw.amode64)
+     {
+         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+     }
+#endif /* FEATURE_ESAME */
+    
     /* Return console information if R1 register is all ones */
     if (regs->GR_L(r1) == 0xFFFFFFFF)
     {
-        regs->GR_L(r1) = 0x00000009;
+        for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+            if ( dev->allocated 
+                 && ( dev->devtype == 0x3215 || dev->devtype == 0x1503 )
+               )
+            {
+                regs->GR_L(r1) = dev->devnum;
+                break;
+            }
     }
 
     /* Extract the device number from the R1 register */
     devnum = regs->GR_L(r1);
 
-    /* Locate the device block */
-    dev = find_device_by_devnum (0,devnum);
+    /* Locate the device block and set the virtual and real device information */
+    dev = ARCH_DEP(vmdevice_data) (0x24,devnum,&vdat,&rdat);
 
     /* Return condition code 3 if device does not exist */
-    if (dev == NULL) return 3;
+    if (!dev) 
+        return 3;
+
+#if 0
+    /* This implementation replaced by vmdevice_data function */
 
     /* Set the device information according to device type */
     switch (dev->devtype) {
     case 0x3215:
         vdevinfo = 0x80000000;
-        rdevinfo = 0x80000050;
+        rdevinfo = 0x80000050; /* 0x50 preserved in the vmdevice_data function */
         break;
     case 0x2501:
         vdevinfo = 0x20810000;
@@ -176,17 +511,19 @@ U16             devnum;                 /* Device number             */
         vdevinfo = 0x02010000;
         rdevinfo = 0x02010000;
     } /* end switch */
+#endif 
 
     /* Return virtual device information in the R2 register */
-    regs->GR_L(r2) = vdevinfo;
+    FETCH_FW(regs->GR_L(r2),&vdat);
 
     /* Return real device information in the R2+1 register */
     if (r2 != 15)
-        regs->GR_L(r2+1) = rdevinfo;
-
+        FETCH_FW(regs->GR_L(r2+1),&rdat);
+#if 0
     logmsg ("Diagnose X\'024\':"
-            "devnum=%4.4X vdevinfo=%8.8X rdevinfo=%8.8X\n",
-            devnum, vdevinfo, rdevinfo);
+            "devnum=%4.4X VRDCVDAT=%8.8X VRDCRCDT=%8.8X\n",
+            devnum, vdat, rdat);
+#endif
 
     /* Return condition code 0 */
     return 0;
@@ -968,8 +1305,126 @@ U32     buflen;                         /* Length of data buffer     */
 } /* end function access_reipl_data */
 
 /*-------------------------------------------------------------------*/
+/* Access Device Information (Function code 0x210)                   */
+/*-------------------------------------------------------------------*/
+/* Note: This implementation emulates z/VM 5.4                       */
+int  ARCH_DEP(device_info) (int r1, int r2, REGS *regs)
+{
+DEVBLK   *dev;             /* -> Device block                        */
+VRDCBLOK vrdc;             /* VRDCBLOK                               */
+RADR     blokaddr;         /* Location of the VRDCBLOK               */
+U16      bloklen;          /* Length from the VRDCBLOK               */
+#if 0 
+/* Only required if implementation is for the z/VM 5.3 level */
+U16      reserved;         /* Bytes 14 and 15                        */
+#endif 
+U16      devnum;           /* Device number from the VRDCBLOK        */
+
+
+    UNREFERENCED(r2);
+
+    if (regs->GR_L(r1) & 0x3
+#if defined(FEATURE_ESAME)
+        || (regs->psw.amode64)
+#endif /* FEATURE_ESAME */
+       )
+    {
+        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+    }
+    
+    blokaddr = regs->GR_L(r1);
+
+    /* Fetch the first 4 bytes of the VRDCBLOK */
+    ARCH_DEP(vfetchc) (&vrdc, 3, blokaddr, USE_REAL_ADDR, regs);
+
+    /* Get the VRDCBLOK length from the working VRDC */
+    FETCH_HW(bloklen,&vrdc.vrdclen);
+
+    /* VRDCBLOK length must be at least 8 bytes */
+    if (bloklen<8)
+    {
+        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+    }
+
+    /* Fetch remainder of supplied VRDCBLOK, but no more */
+    if (bloklen>VRDCBLOK_SIZE)
+       bloklen=VRDCBLOK_SIZE;
+    ARCH_DEP(vfetchc) (&vrdc.vrdcvdat,bloklen-5,blokaddr+4, USE_REAL_ADDR, regs);
+
+#if 0
+    /* If length is 16 or greater, bytes 14 and 15 must be zero on z/VM 5.3.0 or earlier */
+    if ( bloklen>=16)
+    {
+         FETCH_HW(reserved,&vrdc.vrdcrsvd);
+         if (reserved != 0)
+         {
+              ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+         }
+    }
+#endif
+
+    /* Get the device number from the working VRDC */
+    FETCH_HW(devnum,&vrdc.vrdcdvno);
+
+    /* Locate the device block and set the virtual and real device information */
+    dev = ARCH_DEP(vmdevice_data) (0x210,devnum,&vrdc.vrdcvdat,&vrdc.vrdcrcdt);
+
+    /* Return condition code 3 if device does not exist */
+    if (!dev)
+        return 3;
+    
+    /* Set the underlying device and real device features */
+    vrdc.vrdcundv=0x00;
+    vrdc.vrdcrdaf=0x00;
+
+    /* Create device dependent mappings */
+    if (vrdc.vrdcvdat.vdevcls == DC_DASD)
+    {
+        memcpy(&vrdc.vrdcrdc,dev->devchar,42);
+        switch (dev->devtype)
+        {
+             case 0x2311:
+             case 0x2314:
+             case 0x2305:
+             case 0x3330:
+             case 0x3340:
+             case 0x3350:
+                  /* Set non-keyed overhead */
+                  STORE_HW(&vrdc.vrdcrdc[0x18],dev->ckdtab->f2);
+                  /* Set keyed overhead */
+                  STORE_HW(&vrdc.vrdcrdc[0x1A],dev->ckdtab->f1);
+             /* Note: for all other DASD devices these fields contain bytes 24-27 of the RDC */
+        }
+        /* Set Control Unit ID */
+        vrdc.vrdcrdc[0x2A]=dev->devchar[56];
+    }
+    else if (vrdc.vrdcvdat.vdevcls == DC_FBA)
+        memcpy(&vrdc.vrdcrdc,dev->devchar,32);
+    
+    /* Set Path Group ID */
+    memcpy(&vrdc.vrdcpgid,dev->pgid,11);
+
+    /* Set version */
+    if (bloklen>0x60)
+       vrdc.vrdcvers=0x01;
+
+    /* Set underlying real device */
+    if (!(vrdc.vrdcrdaf & VRDCEMRD))
+       memcpy(&vrdc.vrdcrdev,&vrdc.vrdcdvno,2);
+
+    /* Update the VRDC in main storage */
+    ARCH_DEP(vstorec) (&vrdc, bloklen-1, blokaddr, USE_REAL_ADDR, regs);
+
+    /* Return condition code 0 for success */
+    return 0;
+
+} /* end function device_info */
+
+
+/*-------------------------------------------------------------------*/
 /* Access Certain Virtual Machine Information (Function code 0x260)  */
 /*-------------------------------------------------------------------*/
+/* Note: This implementation emulates z/VM 5.4                       */
 void ARCH_DEP(vm_info) (int r1, int r2, REGS *regs)
 {
 DEVBLK  *dev;                          /* -> Device block            */
