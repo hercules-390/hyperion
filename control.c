@@ -6700,6 +6700,7 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
     /* Check function code */
     if((regs->GR_L(0) & STSI_GPR0_FC_MASK) > STSI_GPR0_FC_LPAR)
     {
+        PTT(PTT_CL_ERR,"*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
 #ifdef DEBUG_STSI
         logmsg("control.c: STSI cc=3 function code invalid\n");
 #endif /*DEBUG_STSI*/
@@ -6782,6 +6783,7 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
                 break;
 
             default:
+                PTT(PTT_CL_ERR,"*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
                 regs->psw.cc = 3;
             } /* selector 2 */
             break;
