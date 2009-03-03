@@ -94,6 +94,7 @@ DEVBLK *dev;                            /* -> device block           */
         || (dev->pmcw.flag5 & PMCW5_V) == 0
         || (dev->pmcw.flag5 & PMCW5_E) == 0)
     {
+        PTT(PTT_CL_ERR,"*CSCH",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
 #if defined(_FEATURE_IO_ASSIST)
         SIE_INTERCEPT(regs);
 #endif
@@ -139,6 +140,7 @@ DEVBLK *dev;                            /* -> device block           */
         || (dev->pmcw.flag5 & PMCW5_V) == 0
         || (dev->pmcw.flag5 & PMCW5_E) == 0)
     {
+        PTT(PTT_CL_ERR,"*HSCH",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
 #if defined(_FEATURE_IO_ASSIST)
         SIE_INTERCEPT(regs);
 #endif
@@ -195,6 +197,7 @@ PMCW    pmcw;                           /* Path management ctl word  */
     /* Condition code 3 if subchannel does not exist */
     if (dev == NULL)
     {
+        PTT(PTT_CL_ERR,"*MSCH",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
         regs->psw.cc = 3;
         return;
     }
@@ -202,6 +205,7 @@ PMCW    pmcw;                           /* Path management ctl word  */
     /* If the subchannel is invalid then return cc0 */
     if (!(dev->pmcw.flag5 & PMCW5_V))
     {
+        PTT(PTT_CL_ERR,"*MSCH",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
         regs->psw.cc = 0;
         return;
     }
@@ -218,6 +222,7 @@ PMCW    pmcw;                           /* Path management ctl word  */
     if ((dev->scsw.flag3 & SCSW3_SC_PEND)
       && !(dev->scsw.flag3 & SCSW3_SC_INTER))
     {
+        PTT(PTT_CL_ERR,"*MSCH",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
         regs->psw.cc = 1;
         release_lock (&dev->lock);
         return;
@@ -226,6 +231,7 @@ PMCW    pmcw;                           /* Path management ctl word  */
     /* Condition code 2 if subchannel is busy */
     if (dev->busy || IOPENDING(dev))
     {
+        PTT(PTT_CL_ERR,"*MSCH",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
         regs->psw.cc = 2;
         release_lock (&dev->lock);
         return;
@@ -351,6 +357,7 @@ DEVBLK *dev;                            /* -> device block           */
         || (dev->pmcw.flag5 & PMCW5_V) == 0
         || (dev->pmcw.flag5 & PMCW5_E) == 0)
     {
+        PTT(PTT_CL_ERR,"*RSCH",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
 #if defined(_FEATURE_IO_ASSIST)
         SIE_INTERCEPT(regs);
 #endif
@@ -519,6 +526,7 @@ ORB     orb;                            /* Operation request block   */
         || (dev->pmcw.flag5 & PMCW5_E) == 0
         || (orb.lpm & dev->pmcw.pam) == 0)
     {
+        PTT(PTT_CL_ERR,"*SSCH",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
 #if defined(_FEATURE_IO_ASSIST)
         SIE_INTERCEPT(regs);
 #endif
@@ -633,6 +641,7 @@ SCHIB   schib;                          /* Subchannel information blk*/
     /* Set condition code 3 if subchannel does not exist */
     if (dev == NULL)
     {
+        PTT(PTT_CL_ERR,"*STSCH",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
         regs->psw.cc = 3;
         return;
     }
@@ -806,6 +815,7 @@ int     cc;                             /* Condition Code            */
         || (dev->pmcw.flag5 & PMCW5_V) == 0
         || (dev->pmcw.flag5 & PMCW5_E) == 0)
     {
+        PTT(PTT_CL_ERR,"*TSCH",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
 #if defined(_FEATURE_IO_ASSIST)
         SIE_INTERCEPT(regs);
 #endif
@@ -863,6 +873,7 @@ DEVBLK *dev;                            /* -> device block           */
         || (dev->pmcw.flag5 & PMCW5_V) == 0
         || (dev->pmcw.flag5 & PMCW5_E) == 0)
     {
+        PTT(PTT_CL_ERR,"*XSCH",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
 #if defined(_FEATURE_IO_ASSIST)
         SIE_INTERCEPT(regs);
 #endif
@@ -914,6 +925,7 @@ BYTE    ccwkey;                         /* Bits 0-3=key, 4=7=zeroes  */
     if(regs->chanset == 0xFFFF
       || !(dev = find_device_by_devnum (regs->chanset,effective_addr2)) )
     {
+        PTT(PTT_CL_ERR,"*SIO",(U32)(effective_addr2 & 0xffffffff),0,regs->psw.IA_L);
         regs->psw.cc = 3;
         return;
     }
@@ -957,6 +969,7 @@ DEVBLK *dev;                            /* -> device block for SIO   */
     if(regs->chanset == 0xFFFF
       || !(dev = find_device_by_devnum (regs->chanset,effective_addr2)) )
     {
+        PTT(PTT_CL_ERR,"*TIO",(U32)(effective_addr2 & 0xffffffff),0,regs->psw.IA_L);
         regs->psw.cc = 3;
         return;
     }
@@ -993,6 +1006,7 @@ DEVBLK *dev;                            /* -> device block for SIO   */
     if(regs->chanset == 0xFFFF
       || !(dev = find_device_by_devnum (regs->chanset,effective_addr2)) )
     {
+        PTT(PTT_CL_ERR,"*HIO",(U32)(effective_addr2 & 0xffffffff),0,regs->psw.IA_L);
         regs->psw.cc = 3;
         return;
     }
@@ -1084,6 +1098,7 @@ int     i;
     /* Hercules has as many channelsets as CSS's */
     if(effective_addr2 >= FEATURE_LCSS_MAX)
     {
+        PTT(PTT_CL_ERR,"*CONCS",(U32)(effective_addr2 & 0xffffffff),0,regs->psw.IA_L);
         regs->psw.cc = 3;
         return;
     }
@@ -1145,6 +1160,7 @@ int     i;
     /* Hercules has as many channelsets as CSS's */
     if(effective_addr2 >= FEATURE_LCSS_MAX)
     {
+        PTT(PTT_CL_ERR,"*DISCS",(U32)(effective_addr2 & 0xffffffff),0,regs->psw.IA_L);
         regs->psw.cc = 3;
         return;
     }

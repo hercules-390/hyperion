@@ -1954,9 +1954,9 @@ typedef struct _SYSIB111 {              /* Basic Machine Config      */
         BYTE    model[4*4];             /* System Model              */
         BYTE    mpci[4*4];              /* Model Perm Capacity ID    */
         BYTE    mtci[4*4];              /* Model Temp Capacity ID    */
-        U32     mcaprating;             /* Model Capacity Rating     */
-        U32     mpcaprating;            /* Model Perm Capacity Rating*/
-        U32     mtcaprating;            /* Model temp Capacity Rating*/
+        FWORD   mcaprating;             /* Model Capacity Rating     */
+        FWORD   mpcaprating;            /* Model Perm Capacity Rating*/
+        FWORD   mtcaprating;            /* Model temp Capacity Rating*/
         BYTE    typepct[5];             /* Secondary CPU types pct   */
     }   SYSIB111;
 
@@ -1964,50 +1964,50 @@ typedef struct _SYSIB121 {              /* Basic Machine CPU         */
         BYTE    resv1[4*20];            /* Reserved                  */
         BYTE    seqc[4*4];              /* Sequence Code             */
         BYTE    plant[4*1];             /* Plant of manufacture      */
-        BYTE    resv2[2*1];             /* Reserved                  */
-        BYTE    cpuad[2*1];             /* CPU address               */
+        HWORD   resv2;                  /* Reserved                  */
+        HWORD   cpuad;                  /* CPU address               */
     }   SYSIB121;
 
 typedef struct _SYSIB122 {              /* Basic Machine CPUs        */
         BYTE    format;                 /* Format 0 or 1             */
         BYTE    resv1;                  /* Reserved                  */
-        BYTE    accoff[2*1];            /* Offset to accap field     */
+        HWORD   accoff;                 /* Offset to accap field     */
         BYTE    resv2[4*6];             /* Reserved                  */
-        BYTE    sccap[4*1];             /* Secondary CPU Capability  */
-        BYTE    cap[4*1];               /* CPU capability            */
-        BYTE    totcpu[2*1];            /* Total CPU count           */
-        BYTE    confcpu[2*1];           /* Configured CPU count      */
-        BYTE    sbcpu[2*1];             /* Standby CPU count         */
-        BYTE    resvcpu[2*1];           /* Reserved CPU count        */
-        BYTE    mpfact[2*MAX_CPU_ENGINES];  /* MP factors            */
-        BYTE    accap[4*1];             /* Alternate CPU Capability  */
-        BYTE    ampfact[2*MAX_CPU_ENGINES]; /* Alternate MP factors  */
+        FWORD   sccap;                  /* Secondary CPU Capability  */
+        FWORD   cap;                    /* CPU capability            */
+        HWORD   totcpu;                 /* Total CPU count           */
+        HWORD   confcpu;                /* Configured CPU count      */
+        HWORD   sbcpu;                  /* Standby CPU count         */
+        HWORD   resvcpu;                /* Reserved CPU count        */
+        HWORD   mpfact[MAX_CPU_ENGINES-1];  /* MP factors            */
+        FWORD   accap;                  /* Alternate CPU Capability  */
+        HWORD   ampfact[MAX_CPU_ENGINES-1]; /* Alternate MP factors  */
     }   SYSIB122;
 
 typedef struct _SYSIB221 {              /* Logical partition CPU     */
         BYTE    resv1[4*20];            /* Reserved                  */
         BYTE    seqc[4*4];              /* Logical CPU Sequence Code */
-        BYTE    lcpuid[2*1];            /* Logical CPU ID            */
-        BYTE    cpuad[2*1];             /* CPU address               */
+        HWORD   lcpuid;                 /* Logical CPU ID            */
+        HWORD   cpuad;                  /* CPU address               */
     }   SYSIB221;
 
 typedef struct _SYSIB222 {              /* Logical partition CPUs    */
         BYTE    resv1[4*8];             /* Reserved                  */
-        BYTE    lparnum[2*1];           /* LPAR number               */
+        HWORD   lparnum;                /* LPAR number               */
         BYTE    resv2[1*1];             /* Reserved                  */
         BYTE    lcpuc[1*1];             /* Logical CPU characteristic*/
 #define SYSIB222_LCPUC_DEDICATED    0x80
 #define SYSIB222_LCPUC_SHARED       0x40
 #define SYSIB222_LCPUC_CAPPED       0x20
-        BYTE    totcpu[2*1];            /* Total CPU count           */
-        BYTE    confcpu[2*1];           /* Configured CPU count      */
-        BYTE    sbcpu[2*1];             /* Standby CPU count         */
-        BYTE    resvcpu[2*1];           /* Reserved CPU count        */
-        BYTE    lparname[4*2];          /* LPAR name                 */
-        BYTE    lparcaf[4*1];           /* LPAR capability adjustment*/
+        HWORD   totcpu;                 /* Total CPU count           */
+        HWORD   confcpu;                /* Configured CPU count      */
+        HWORD   sbcpu;                  /* Standby CPU count         */
+        HWORD   resvcpu;                /* Reserved CPU count        */
+        BYTE    lparname[8];            /* LPAR name                 */
+        FWORD   lparcaf;                /* LPAR capability adjustment*/
         BYTE    resv3[4*4];             /* Reserved                  */
-        BYTE    dedcpu[2*1];            /* Dedicated CPU count       */
-        BYTE    shrcpu[2*1];            /* Shared CPU count          */
+        HWORD   dedcpu;                 /* Dedicated CPU count       */
+        HWORD   shrcpu;                 /* Shared CPU count          */
     }   SYSIB222;
 
 typedef struct _SYSIB322 {              /* Virtual Machines CPUs     */
@@ -2019,12 +2019,12 @@ typedef struct _SYSIB322 {              /* Virtual Machines CPUs     */
 
 typedef struct _SYSIBVMDB {             /* Virtual Machine Desc Block*/
         BYTE    resv1[4*1];             /* Reserved                  */
-        BYTE    totcpu[2*1];            /* Total CPU count           */
-        BYTE    confcpu[2*1];           /* Configured CPU count      */
-        BYTE    sbcpu[2*1];             /* Standby CPU count         */
-        BYTE    resvcpu[2*1];           /* Reserved CPU count        */
-        BYTE    vmname[4*2];            /* VM userid                 */
-        BYTE    vmcaf[4*1];             /* VM capability adjustment  */
+        HWORD   totcpu;                 /* Total CPU count           */
+        HWORD   confcpu;                /* Configured CPU count      */
+        HWORD   sbcpu;                  /* Standby CPU count         */
+        HWORD   resvcpu;                /* Reserved CPU count        */
+        BYTE    vmname[8];              /* VM userid                 */
+        FWORD   vmcaf;                  /* VM capability adjustment  */
         BYTE    cpid[4*4];              /* Control Program ID        */
     }   SYSIBVMDB;
 

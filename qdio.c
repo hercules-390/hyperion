@@ -69,6 +69,7 @@ DEVBLK *dev;                            /* -> device block           */
         || (dev->pmcw.flag5 & PMCW5_E) == 0
         || (dev->pmcw.flag4 & PMCW4_Q) == 0)
     {
+        PTT(PTT_CL_ERR,"*SIGA",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
 #if defined(_FEATURE_QUEUED_DIRECT_IO_ASSIST)
         SIE_INTERCEPT(regs);
 #endif
@@ -82,6 +83,7 @@ DEVBLK *dev;                            /* -> device block           */
     /* Check that device is QDIO active */
     if ((dev->scsw.flag2 & SCSW2_Q) == 0)
     {
+        PTT(PTT_CL_ERR,"*SIGA",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
         release_lock (&dev->lock);
         regs->psw.cc = 1;
         return;
@@ -93,14 +95,20 @@ DEVBLK *dev;                            /* -> device block           */
     if(dev->hnd->siga_r)
             regs->psw.cc = (dev->hnd->siga_r) (dev, regs->GR_L(2) );
         else
+        {
+            PTT(PTT_CL_ERR,"*SIGA",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
             regs->psw.cc = 3;
+        }
         break;
 
     case SIGA_FC_W:
     if(dev->hnd->siga_w)
             regs->psw.cc = (dev->hnd->siga_w) (dev, regs->GR_L(2) );
         else
+        {
+            PTT(PTT_CL_ERR,"*SIGA",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
             regs->psw.cc = 3;
+        }
         break;
 
     case SIGA_FC_S:
@@ -108,6 +116,9 @@ DEVBLK *dev;                            /* -> device block           */
            a real machine */
         regs->psw.cc = 0;
         break;
+
+    default:
+        PTT(PTT_CL_ERR,"*SIGA",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
 
     }
 
