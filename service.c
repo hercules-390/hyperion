@@ -614,6 +614,8 @@ BYTE            cmdcode;                /* 3270 read/write command   */
     dev = sysblk.sysgdev;
     if (dev == NULL)
     {
+        PTT(PTT_CL_ERR,"*SERVC",(U32)cmdcode,(U32)sysg_len,0);
+
         /* Set response code X'05F0' in SCCB header */
         sccb->reas = SCCB_REAS_IMPROPER_RSC;
         sccb->resp = SCCB_RESP_REJECT;

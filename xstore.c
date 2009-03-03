@@ -75,6 +75,7 @@ U32     xaddr;                          /* Expanded storage address  */
         xaddr += regs->sie_xso;
         if(xaddr >= regs->sie_xsl)
         {
+            PTT(PTT_CL_ERR,"*PGIN",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
             regs->psw.cc = 3;
             return;
         }
@@ -84,6 +85,7 @@ U32     xaddr;                          /* Expanded storage address  */
        terminate with cc3 */
     if (xaddr >= sysblk.xpndsize)
     {
+        PTT(PTT_CL_ERR,"*PGIN",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
         regs->psw.cc = 3;
         return;
     }
@@ -137,6 +139,7 @@ U32     xaddr;                          /* Expanded storage address  */
         xaddr += regs->sie_xso;
         if(xaddr >= regs->sie_xsl)
         {
+            PTT(PTT_CL_ERR,"*PGOUT",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
             regs->psw.cc = 3;
             return;
         }
@@ -146,6 +149,7 @@ U32     xaddr;                          /* Expanded storage address  */
        terminate with cc3 */
     if (xaddr >= sysblk.xpndsize)
     {
+        PTT(PTT_CL_ERR,"*PGOUT",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
         regs->psw.cc = 3;
         return;
     }
@@ -600,6 +604,8 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
     return;
 
 mvpg_progck:
+
+    PTT(PTT_CL_ERR,"*MVPG",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
 
     /* If page translation exception (PTE invalid) and condition code
         option in register 0 bit 23 is set, return condition code */
