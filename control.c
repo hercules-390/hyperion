@@ -6782,7 +6782,7 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
                 STORE_FW(sysib111->mtcaprating, STSI_CAPABILITY);
                 for(i=0;i<5;i++)
                 {
-                    sysib111->typepct[i]=100;
+                    sysib111->typepct[i] = 100;
                 }
                 regs->psw.cc = 0;
                 break;
@@ -6870,6 +6870,8 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
                 STORE_HW(sysib222->sbcpu,MAX_CPU - sysblk.cpus);
                 get_lparname(sysib222->lparname);
                 STORE_FW(sysib222->lparcaf,1000);   /* Full capability factor */
+                STORE_FW(sysib222->mdep[0],1000);   /* ZZ nonzero value */
+                STORE_FW(sysib222->mdep[1],1000);   /* ZZ nonzero value */
                 STORE_HW(sysib222->shrcpu,sysblk.cpus);
                 regs->psw.cc = 0;
                 break;
