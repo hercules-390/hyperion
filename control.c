@@ -6775,6 +6775,9 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
                     sysib111->seqc[(sizeof(sysib111->seqc) - 6) + i] =
                     hexebcdic[(sysblk.cpuid >> (52 - (i*4))) & 0x0F];
                 memcpy(sysib111->plant,plant,sizeof(plant));
+                STORE_FW(sysib111->mcaprating, STSI_CAPABILITY);
+                STORE_FW(sysib111->mpcaprating, STSI_CAPABILITY);
+                STORE_FW(sysib111->mtcaprating, STSI_CAPABILITY);
                 for(i=0;i<5;i++)
                 {
                     sysib111->typepct[i]=100;
