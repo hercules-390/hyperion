@@ -1944,16 +1944,17 @@ typedef struct _ZPB2 {
 typedef struct _SYSIB111 {              /* Basic Machine Config      */
         BYTE    flag1;                  /* 1.1.1 SYSIB Flag          */
 #define SYSIB111_PFLAG  0x80            /* Type percentage present   */
-        BYTE    resv1[31];              /* Reserved                  */
-        BYTE    manufact[4*4];          /* Manufacturer              */
-        BYTE    type[4*1];              /* Type                      */
-        BYTE    resv2[4*3];             /* Reserved                  */
-        BYTE    modcapaid[4*4];         /* Model capacity identifier */
-        BYTE    seqc[4*4];              /* Sequence Code             */
-        BYTE    plant[4*1];             /* Plant of manufacture      */
-        BYTE    model[4*4];             /* System Model              */
-        BYTE    mpci[4*4];              /* Model Perm Capacity ID    */
-        BYTE    mtci[4*4];              /* Model Temp Capacity ID    */
+        BYTE    resv1[3];               /* Reserved                  */
+        FWORD   resv2[7];               /* Reserved                  */
+        BYTE    manufact[16];           /* Manufacturer              */
+        BYTE    type[4];                /* Type                      */
+        FWORD   resv3[3];               /* Reserved                  */
+        BYTE    modcapaid[16];          /* Model capacity identifier */
+        BYTE    seqc[16];               /* Sequence Code             */
+        BYTE    plant[4];               /* Plant of manufacture      */
+        BYTE    model[16];              /* System Model              */
+        BYTE    mpci[16];               /* Model Perm Capacity ID    */
+        BYTE    mtci[16];               /* Model Temp Capacity ID    */
         FWORD   mcaprating;             /* Model Capacity Rating     */
         FWORD   mpcaprating;            /* Model Perm Capacity Rating*/
         FWORD   mtcaprating;            /* Model temp Capacity Rating*/
@@ -1961,9 +1962,9 @@ typedef struct _SYSIB111 {              /* Basic Machine Config      */
     }   SYSIB111;
 
 typedef struct _SYSIB121 {              /* Basic Machine CPU         */
-        BYTE    resv1[4*20];            /* Reserved                  */
-        BYTE    seqc[4*4];              /* Sequence Code             */
-        BYTE    plant[4*1];             /* Plant of manufacture      */
+        FWORD   resv1[20];              /* Reserved                  */
+        BYTE    seqc[16];               /* Sequence Code             */
+        BYTE    plant[4];               /* Plant of manufacture      */
         HWORD   resv2;                  /* Reserved                  */
         HWORD   cpuad;                  /* CPU address               */
     }   SYSIB121;
@@ -1972,7 +1973,7 @@ typedef struct _SYSIB122 {              /* Basic Machine CPUs        */
         BYTE    format;                 /* Format 0 or 1             */
         BYTE    resv1;                  /* Reserved                  */
         HWORD   accoff;                 /* Offset to accap field     */
-        BYTE    resv2[4*6];             /* Reserved                  */
+        FWORD   resv2[6];               /* Reserved                  */
         FWORD   sccap;                  /* Secondary CPU Capability  */
         FWORD   cap;                    /* CPU capability            */
         HWORD   totcpu;                 /* Total CPU count           */
@@ -1985,17 +1986,17 @@ typedef struct _SYSIB122 {              /* Basic Machine CPUs        */
     }   SYSIB122;
 
 typedef struct _SYSIB221 {              /* Logical partition CPU     */
-        BYTE    resv1[4*20];            /* Reserved                  */
-        BYTE    seqc[4*4];              /* Logical CPU Sequence Code */
+        FWORD   resv1[20];              /* Reserved                  */
+        BYTE    seqc[16];               /* Logical CPU Sequence Code */
         HWORD   lcpuid;                 /* Logical CPU ID            */
         HWORD   cpuad;                  /* CPU address               */
     }   SYSIB221;
 
 typedef struct _SYSIB222 {              /* Logical partition CPUs    */
-        BYTE    resv1[4*8];             /* Reserved                  */
+        FWORD   resv1[8];               /* Reserved                  */
         HWORD   lparnum;                /* LPAR number               */
-        BYTE    resv2[1*1];             /* Reserved                  */
-        BYTE    lcpuc[1*1];             /* Logical CPU characteristic*/
+        BYTE    resv2;                  /* Reserved                  */
+        BYTE    lcpuc;                  /* Logical CPU characteristic*/
 #define SYSIB222_LCPUC_DEDICATED    0x80
 #define SYSIB222_LCPUC_SHARED       0x40
 #define SYSIB222_LCPUC_CAPPED       0x20
@@ -2005,7 +2006,8 @@ typedef struct _SYSIB222 {              /* Logical partition CPUs    */
         HWORD   resvcpu;                /* Reserved CPU count        */
         BYTE    lparname[8];            /* LPAR name                 */
         FWORD   lparcaf;                /* LPAR capability adjustment*/
-        BYTE    resv3[4*4];             /* Reserved                  */
+        FWORD   mdep[2];                /* Model Dependent           */
+        FWORD   resv3[2];               /* Reserved                  */
         HWORD   dedcpu;                 /* Dedicated CPU count       */
         HWORD   shrcpu;                 /* Shared CPU count          */
     }   SYSIB222;

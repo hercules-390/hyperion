@@ -6770,6 +6770,8 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
                         hexebcdic[(sysblk.cpuid >> (28 - (i*4))) & 0x0F];
                 memset(sysib111->modcapaid, 0x40, sizeof(sysib111->model));
                 memcpy(sysib111->modcapaid, model, sizeof(model));
+                memcpy(sysib111->mpci,sysib111->modcapaid,sizeof(sysib111->modcapaid));
+                memcpy(sysib111->mtci,sysib111->modcapaid,sizeof(sysib111->modcapaid));
                 memset(sysib111->seqc,0xF0,sizeof(sysib111->seqc));
                 for(i = 0; i < 6; i++)
                     sysib111->seqc[(sizeof(sysib111->seqc) - 6) + i] =
@@ -6862,7 +6864,7 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
                 sysib222 = (SYSIB222 *)(m);
                 memset(sysib222, 0x00, MAX(sizeof(SYSIB222),64*4));
                 STORE_HW(sysib222->lparnum,1);
-                sysib222->lcpuc[0]=SYSIB222_LCPUC_SHARED;
+                sysib222->lcpuc=SYSIB222_LCPUC_SHARED;
                 STORE_HW(sysib222->totcpu,MAX_CPU);
                 STORE_HW(sysib222->confcpu,sysblk.cpus);
                 STORE_HW(sysib222->sbcpu,MAX_CPU - sysblk.cpus);
