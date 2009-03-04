@@ -463,8 +463,8 @@ static U64        diag204tod;          /* last diag204 tod           */
               STORE_HW(cpuinfo->cpaddr,sysblk.regs[i]->cpuad);
               cpuinfo->index=sysblk.ptyp[i];
               STORE_HW(cpuinfo->weight,100);
-              dreg = (U64)(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec) / sysblk.cpus;
-              dreg = (dreg * 1000000) + (usage.ru_utime.tv_usec + usage.ru_stime.tv_usec);
+              dreg = (U64)(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec);
+              dreg = ((dreg * 1000000) + (usage.ru_utime.tv_usec + usage.ru_stime.tv_usec)) / sysblk.cpus;
               tdis += dreg;
               STORE_DW(cpuinfo->totdispatch,dreg);
               dreg = (U64)(usage.ru_utime.tv_sec) / sysblk.cpus;
