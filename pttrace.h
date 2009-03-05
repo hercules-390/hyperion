@@ -81,6 +81,9 @@ typedef struct _PTT_TRACE {
 #define PTT_CL_ERR  0x0200              /* Instruction error/unsup    */
 #define PTT_CL_PGM  0x0400              /* Program interrupt          */
 #define PTT_CL_CSF  0x0800              /* Compare&Swap failure       */
+#define PTT_CL_SIE  0x1000              /* Interpretive Execution     */
+#define PTT_CL_SIG  0x2000              /* SIGP signalling            */
+#define PTT_CL_IO   0x4000              /* IO                         */
         char        *type;              /* Trace type                 */
         void        *data1;             /* Data 1                     */
         void        *data2;             /* Data 2                     */

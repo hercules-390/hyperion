@@ -275,11 +275,11 @@ U64     dreg;
 
     S(inst, regs, b2, effective_addr2);
 
-    PTT(PTT_CL_INF,"SIE", regs->GR_L(14), regs->GR_L(15), (U32)(effective_addr2 & 0xffffffff));
-
     SIE_INTERCEPT(regs);
 
     PRIV_CHECK(regs);
+
+    PTT(PTT_CL_SIE,"SIE", regs->GR_L(14), regs->GR_L(15), (U32)(effective_addr2 & 0xffffffff));
 
     SIE_PERFMON(SIE_PERF_ENTER);
 
@@ -745,7 +745,7 @@ void ARCH_DEP(sie_exit) (REGS *regs, int code)
 {
 int     n;
 
-    PTT(PTT_CL_INF,"*SIE", regs->GR_L(14), regs->GR_L(15), code);
+    PTT(PTT_CL_SIE,"*SIE", regs->GR_L(14), regs->GR_L(15), code);
 
 #if defined(SIE_DEBUG)
     logmsg(_("SIE: interception code %d\n"),code);

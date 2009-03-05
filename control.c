@@ -901,8 +901,6 @@ VADR    effective_addr2;                /* Effective address         */
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
-    PTT(PTT_CL_INF,"DIAG",regs->GR_L(r1),regs->GR_L(r3),(U32)(effective_addr2 & 0xffffff));
-
 #if defined(FEATURE_ECPSVM)
     if(ecpsvm_dodiag(regs,r1,r3,b2,effective_addr2)==0)
     {
@@ -921,6 +919,8 @@ VADR    effective_addr2;                /* Effective address         */
     PRIV_CHECK(regs);
 
     SIE_INTERCEPT(regs);
+
+    PTT(PTT_CL_INF,"DIAG",regs->GR_L(r1),regs->GR_L(r3),(U32)(effective_addr2 & 0xffffff));
 
     /* Process diagnose instruction */
     ARCH_DEP(diagnose_call) (effective_addr2, b2, r1, r3, regs);
@@ -5597,11 +5597,11 @@ static char *ordername[] = {
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
-    PTT(PTT_CL_INF,"SIGP",regs->GR_L(r1),regs->GR_L(r3),(U32)(effective_addr2 & 0xffffffff));
-
     PRIV_CHECK(regs);
 
     SIE_INTERCEPT(regs);
+
+    PTT(PTT_CL_SIG,"SIGP",regs->GR_L(r1),regs->GR_L(r3),(U32)(effective_addr2 & 0xffffffff));
 
     /* Perform serialization before starting operation */
     PERFORM_SERIALIZATION (regs);
@@ -6682,11 +6682,11 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
 
     S(inst, regs, b2, effective_addr2);
 
-    PTT(PTT_CL_INF,"STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
-
     PRIV_CHECK(regs);
 
     SIE_INTERCEPT(regs);
+
+    PTT(PTT_CL_INF,"STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
 
 #if defined(DEBUG_STSI)
     logmsg("control.c: STSI %d.%d.%d ia="F_VADR" sysib="F_VADR"\n",

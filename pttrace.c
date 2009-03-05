@@ -109,12 +109,12 @@ DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
                 pttclass &= ~PTT_CL_ERR;
                 continue;
             }
-            else if (strcasecmp("instr", argv[0]) == 0)
+            else if (strcasecmp("control", argv[0]) == 0)
             {
                 pttclass |= PTT_CL_INF;
                 continue;
             }
-            else if (strcasecmp("noinstr", argv[0]) == 0)
+            else if (strcasecmp("nocontrol", argv[0]) == 0)
             {
                 pttclass &= ~PTT_CL_INF;
                 continue;
@@ -137,6 +137,36 @@ DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
             else if (strcasecmp("nointer", argv[0]) == 0)
             {
                 pttclass &= ~PTT_CL_CSF;
+                continue;
+            }
+            else if (strcasecmp("sie", argv[0]) == 0)
+            {
+                pttclass |= PTT_CL_SIE;
+                continue;
+            }
+            else if (strcasecmp("nosie", argv[0]) == 0)
+            {
+                pttclass &= ~PTT_CL_SIE;
+                continue;
+            }
+            else if (strcasecmp("signal", argv[0]) == 0)
+            {
+                pttclass |= PTT_CL_SIG;
+                continue;
+            }
+            else if (strcasecmp("nosignal", argv[0]) == 0)
+            {
+                pttclass &= ~PTT_CL_SIG;
+                continue;
+            }
+            else if (strcasecmp("io", argv[0]) == 0)
+            {
+                pttclass |= PTT_CL_IO;
+                continue;
+            }
+            else if (strcasecmp("noio", argv[0]) == 0)
+            {
+                pttclass &= ~PTT_CL_IO;
                 continue;
             }
             else if (strcasecmp("timer", argv[0]) == 0)
@@ -261,10 +291,13 @@ DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
             rc = ptt_pthread_print();
     
         logmsg( _("HHCPT003I ptt %s%s%s%s%s%s%s%s %s %s to=%d %d\n"),
-               (pttclass & PTT_CL_INF) ? "instr " : "",
+               (pttclass & PTT_CL_INF) ? "control " : "",
                (pttclass & PTT_CL_ERR) ? "error " : "",
                (pttclass & PTT_CL_PGM) ? "prog " : "",
                (pttclass & PTT_CL_CSF) ? "inter " : "",
+               (pttclass & PTT_CL_SIE) ? "sie " : "",
+               (pttclass & PTT_CL_SIG) ? "signal " : "",
+               (pttclass & PTT_CL_IO) ? "io " : "",
                (pttclass & PTT_CL_TMR) ? "timer " : "",
                (pttclass & PTT_CL_THR) ? "threads " : "",
                (pttclass & PTT_CL_LOG) ? "logger " : "",

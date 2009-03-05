@@ -35,6 +35,10 @@
 
 #include "inline.h"
 
+#undef PTIO
+ #define PTIO(_class, _name) \
+ PTT(PTT_CL_IO | PTT_CL_ ## _class,_name,regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L)
+
 #if defined(FEATURE_QUEUED_DIRECT_IO)
 
 /*-------------------------------------------------------------------*/
@@ -51,6 +55,8 @@ DEVBLK *dev;                            /* -> device block           */
     PRIV_CHECK(regs);
 
     SIE_INTERCEPT(regs);
+
+    PTIO(IO,"SIGA");
 
     /* Specification exception if invalid function code */
     if(regs->GR_L(0) > SIGA_FC_MAX)
@@ -69,7 +75,7 @@ DEVBLK *dev;                            /* -> device block           */
         || (dev->pmcw.flag5 & PMCW5_E) == 0
         || (dev->pmcw.flag4 & PMCW4_Q) == 0)
     {
-        PTT(PTT_CL_ERR,"*SIGA",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
+        PTIO(ERR,"*SIGA");
 #if defined(_FEATURE_QUEUED_DIRECT_IO_ASSIST)
         SIE_INTERCEPT(regs);
 #endif
@@ -83,7 +89,7 @@ DEVBLK *dev;                            /* -> device block           */
     /* Check that device is QDIO active */
     if ((dev->scsw.flag2 & SCSW2_Q) == 0)
     {
-        PTT(PTT_CL_ERR,"*SIGA",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
+        PTIO(ERR,"*SIGA");
         release_lock (&dev->lock);
         regs->psw.cc = 1;
         return;
@@ -96,7 +102,7 @@ DEVBLK *dev;                            /* -> device block           */
             regs->psw.cc = (dev->hnd->siga_r) (dev, regs->GR_L(2) );
         else
         {
-            PTT(PTT_CL_ERR,"*SIGA",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
+            PTIO(ERR,"*SIGA");
             regs->psw.cc = 3;
         }
         break;
@@ -106,7 +112,7 @@ DEVBLK *dev;                            /* -> device block           */
             regs->psw.cc = (dev->hnd->siga_w) (dev, regs->GR_L(2) );
         else
         {
-            PTT(PTT_CL_ERR,"*SIGA",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
+            PTIO(ERR,"*SIGA");
             regs->psw.cc = 3;
         }
         break;
@@ -118,7 +124,7 @@ DEVBLK *dev;                            /* -> device block           */
         break;
 
     default:
-        PTT(PTT_CL_ERR,"*SIGA",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
+        PTIO(ERR,"*SIGA");
 
     }
 

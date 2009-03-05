@@ -1211,11 +1211,11 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
     RRE(inst, regs, r1, r2);
 
-    PTT(PTT_CL_INF,"SERVC",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
-
     PRIV_CHECK(regs);
 
     SIE_INTERCEPT(regs);
+
+    PTT(PTT_CL_INF,"SERVC",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
 
     /* R1 is SCLP command word */
     sclp_command = regs->GR_L(r1);

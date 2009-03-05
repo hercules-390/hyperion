@@ -144,10 +144,13 @@ COMMAND ( "ssd",       PANEL,        ssd_cmd,
 COMMAND ( "ptt",       PANEL+CONFIG, EXT_CMD(ptt_cmd),
   "display pthread trace\n",
      "options:\n"
-     "  (no)instr   - instruction information trace\n"
+     "  (no)control - control instruction trace\n"
      "  (no)error   - instruction error trace\n"
      "  (no)prog    - program interrupt trace\n"
      "  (no)inter   - interlock failure trace\n"
+     "  (no)sie     - sie trace\n"
+     "  (no)signal  - signaling intruction trace\n"
+     "  (no)io      - io intruction trace\n"
      "  (no)timer   - timer trace\n"
      "  (no)threads - thread trace\n"
      "  (no)logger  - logger trace\n"

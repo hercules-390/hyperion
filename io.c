@@ -62,6 +62,15 @@
 
 #include "inline.h"
 
+#undef PTIO
+#if defined(FEATURE_CHANNEL_SUBSYSTEM)
+ #define PTIO(_class, _name) \
+ PTT(PTT_CL_ ## _class,_name,regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L)
+#else
+ #define PTIO(_class, _name) \
+ PTT(PTT_CL_ ## _class,_name,(U32)(effective_addr2 & 0xffffffff),0,regs->psw.IA_L)
+#endif
+
 #if defined(FEATURE_CHANNEL_SUBSYSTEM)
 
 /*-------------------------------------------------------------------*/
@@ -82,6 +91,8 @@ DEVBLK *dev;                            /* -> device block           */
 #endif
        SIE_INTERCEPT(regs);
 
+    PTIO(IO,"CSCH");
+
     /* Program check if the ssid including lcss is invalid */
     SSID_CHECK(regs);
 
@@ -94,7 +105,7 @@ DEVBLK *dev;                            /* -> device block           */
         || (dev->pmcw.flag5 & PMCW5_V) == 0
         || (dev->pmcw.flag5 & PMCW5_E) == 0)
     {
-        PTT(PTT_CL_ERR,"*CSCH",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
+        PTIO(ERR,"*CSCH");
 #if defined(_FEATURE_IO_ASSIST)
         SIE_INTERCEPT(regs);
 #endif
@@ -128,6 +139,8 @@ DEVBLK *dev;                            /* -> device block           */
 #endif
        SIE_INTERCEPT(regs);
 
+    PTIO(IO,"HSCH");
+
     /* Program check if the ssid including lcss is invalid */
     SSID_CHECK(regs);
 
@@ -140,7 +153,7 @@ DEVBLK *dev;                            /* -> device block           */
         || (dev->pmcw.flag5 & PMCW5_V) == 0
         || (dev->pmcw.flag5 & PMCW5_E) == 0)
     {
-        PTT(PTT_CL_ERR,"*HSCH",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
+        PTIO(ERR,"*HSCH");
 #if defined(_FEATURE_IO_ASSIST)
         SIE_INTERCEPT(regs);
 #endif
@@ -170,6 +183,8 @@ PMCW    pmcw;                           /* Path management ctl word  */
 
     SIE_INTERCEPT(regs);
 
+    PTIO(IO,"MSCH");
+
     FW_CHECK(effective_addr2, regs);
 
     /* Fetch the updated path management control word */
@@ -197,7 +212,7 @@ PMCW    pmcw;                           /* Path management ctl word  */
     /* Condition code 3 if subchannel does not exist */
     if (dev == NULL)
     {
-        PTT(PTT_CL_ERR,"*MSCH",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
+        PTIO(ERR,"*MSCH");
         regs->psw.cc = 3;
         return;
     }
@@ -205,7 +220,7 @@ PMCW    pmcw;                           /* Path management ctl word  */
     /* If the subchannel is invalid then return cc0 */
     if (!(dev->pmcw.flag5 & PMCW5_V))
     {
-        PTT(PTT_CL_ERR,"*MSCH",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
+        PTIO(ERR,"*MSCH");
         regs->psw.cc = 0;
         return;
     }
@@ -222,7 +237,7 @@ PMCW    pmcw;                           /* Path management ctl word  */
     if ((dev->scsw.flag3 & SCSW3_SC_PEND)
       && !(dev->scsw.flag3 & SCSW3_SC_INTER))
     {
-        PTT(PTT_CL_ERR,"*MSCH",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
+        PTIO(ERR,"*MSCH");
         regs->psw.cc = 1;
         release_lock (&dev->lock);
         return;
@@ -231,7 +246,7 @@ PMCW    pmcw;                           /* Path management ctl word  */
     /* Condition code 2 if subchannel is busy */
     if (dev->busy || IOPENDING(dev))
     {
-        PTT(PTT_CL_ERR,"*MSCH",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
+        PTIO(ERR,"*MSCH");
         regs->psw.cc = 2;
         release_lock (&dev->lock);
         return;
@@ -307,6 +322,8 @@ BYTE    chpid;
 
     SIE_INTERCEPT(regs);
 
+    PTIO(IO,"RCHP");
+
     /* Program check if reg 1 bits 0-23 not zero */
     if(regs->GR_L(1) & 0xFFFFFF00)
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
@@ -345,6 +362,8 @@ DEVBLK *dev;                            /* -> device block           */
 #endif
        SIE_INTERCEPT(regs);
 
+    PTIO(IO,"RSCH");
+
     /* Program check if the ssid including lcss is invalid */
     SSID_CHECK(regs);
 
@@ -357,7 +376,7 @@ DEVBLK *dev;                            /* -> device block           */
         || (dev->pmcw.flag5 & PMCW5_V) == 0
         || (dev->pmcw.flag5 & PMCW5_E) == 0)
     {
-        PTT(PTT_CL_ERR,"*RSCH",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
+        PTIO(ERR,"*RSCH");
 #if defined(_FEATURE_IO_ASSIST)
         SIE_INTERCEPT(regs);
 #endif
@@ -386,6 +405,8 @@ VADR    effective_addr2;                /* Effective address         */
 
     SIE_INTERCEPT(regs);
 
+    PTIO(IO,"SAL");
+
     if(regs->GR_L(1) & 0x8000FFFF)
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
     else
@@ -409,6 +430,8 @@ VADR    effective_addr2;                /* Effective address         */
     if(SIE_STATNB(regs, EC0, IOA) && !regs->sie_pref)
 #endif
         SIE_INTERCEPT(regs);
+
+    PTIO(IO,"SCHM");
 
     /* Reserved bits in gpr1 must be zero */
     if (regs->GR_L(1) & CHM_GPR1_RESV)
@@ -490,6 +513,8 @@ ORB     orb;                            /* Operation request block   */
 #endif
         SIE_INTERCEPT(regs);
 
+    PTIO(IO,"SSCH");
+
     FW_CHECK(effective_addr2, regs);
 
     /* Fetch the operation request block */
@@ -526,7 +551,7 @@ ORB     orb;                            /* Operation request block   */
         || (dev->pmcw.flag5 & PMCW5_E) == 0
         || (orb.lpm & dev->pmcw.pam) == 0)
     {
-        PTT(PTT_CL_ERR,"*SSCH",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
+        PTIO(ERR,"*SSCH");
 #if defined(_FEATURE_IO_ASSIST)
         SIE_INTERCEPT(regs);
 #endif
@@ -570,6 +595,8 @@ BYTE    work[32];                       /* Work area                 */
 
     SIE_INTERCEPT(regs);
 
+    PTIO(IO,"STCPS");
+
     /* Program check if operand not on 32 byte boundary */
     if ( effective_addr2 & 0x0000001F )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
@@ -593,6 +620,8 @@ VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* Integer work area         */
 
     S(inst, regs, b2, effective_addr2);
+
+    PTIO(IO,"STCRW");
 
     PRIV_CHECK(regs);
 
@@ -632,6 +661,8 @@ SCHIB   schib;                          /* Subchannel information blk*/
 
     SIE_INTERCEPT(regs);
 
+    PTIO(IO,"STSCH");
+
     /* Program check if the ssid including lcss is invalid */
     SSID_CHECK(regs);
 
@@ -641,7 +672,7 @@ SCHIB   schib;                          /* Subchannel information blk*/
     /* Set condition code 3 if subchannel does not exist */
     if (dev == NULL)
     {
-        PTT(PTT_CL_ERR,"*STSCH",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
+        PTIO(ERR,"*STSCH");
         regs->psw.cc = 3;
         return;
     }
@@ -697,6 +728,8 @@ RADR    pfx;                            /* Prefix                    */
     if(SIE_STATNB(regs, EC0, IOA) && !regs->sie_pref)
 #endif
        SIE_INTERCEPT(regs);
+
+    PTIO(IO,"TPI");
 
     FW_CHECK(effective_addr2, regs);
 
@@ -801,6 +834,8 @@ int     cc;                             /* Condition Code            */
 #endif
         SIE_INTERCEPT(regs);
 
+    PTIO(IO,"TSCH");
+
     FW_CHECK(effective_addr2, regs);
 
     /* Program check if the ssid including lcss is invalid */
@@ -815,7 +850,7 @@ int     cc;                             /* Condition Code            */
         || (dev->pmcw.flag5 & PMCW5_V) == 0
         || (dev->pmcw.flag5 & PMCW5_E) == 0)
     {
-        PTT(PTT_CL_ERR,"*TSCH",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
+        PTIO(ERR,"*TSCH");
 #if defined(_FEATURE_IO_ASSIST)
         SIE_INTERCEPT(regs);
 #endif
@@ -861,6 +896,8 @@ DEVBLK *dev;                            /* -> device block           */
 #endif
        SIE_INTERCEPT(regs);
 
+    PTIO(IO,"XSCH");
+
     /* Program check if the ssid including lcss is invalid */
     SSID_CHECK(regs);
 
@@ -873,7 +910,7 @@ DEVBLK *dev;                            /* -> device block           */
         || (dev->pmcw.flag5 & PMCW5_V) == 0
         || (dev->pmcw.flag5 & PMCW5_E) == 0)
     {
-        PTT(PTT_CL_ERR,"*XSCH",regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
+        PTIO(ERR,"*XSCH");
 #if defined(_FEATURE_IO_ASSIST)
         SIE_INTERCEPT(regs);
 #endif
@@ -907,6 +944,7 @@ VADR    ccwaddr;                        /* CCW address for start I/O */
 BYTE    ccwkey;                         /* Bits 0-3=key, 4=7=zeroes  */
 
     S(inst, regs, b2, effective_addr2);
+
 #if defined(FEATURE_ECPSVM)
     if((inst[1])!=0x02)
     {
@@ -921,11 +959,13 @@ BYTE    ccwkey;                         /* Bits 0-3=key, 4=7=zeroes  */
 
     SIE_INTERCEPT(regs);
 
+    PTIO(IO,"SIO");
+
     /* Locate the device block */
     if(regs->chanset == 0xFFFF
       || !(dev = find_device_by_devnum (regs->chanset,effective_addr2)) )
     {
-        PTT(PTT_CL_ERR,"*SIO",(U32)(effective_addr2 & 0xffffffff),0,regs->psw.IA_L);
+        PTIO(ERR,"*SIO");
         regs->psw.cc = 3;
         return;
     }
@@ -965,11 +1005,13 @@ DEVBLK *dev;                            /* -> device block for SIO   */
 
     SIE_INTERCEPT(regs);
 
+    PTIO(IO,"TIO");
+
     /* Locate the device block */
     if(regs->chanset == 0xFFFF
       || !(dev = find_device_by_devnum (regs->chanset,effective_addr2)) )
     {
-        PTT(PTT_CL_ERR,"*TIO",(U32)(effective_addr2 & 0xffffffff),0,regs->psw.IA_L);
+        PTIO(ERR,"*TIO");
         regs->psw.cc = 3;
         return;
     }
@@ -1002,11 +1044,13 @@ DEVBLK *dev;                            /* -> device block for SIO   */
 
     SIE_INTERCEPT(regs);
 
+    PTIO(IO,"HIO");
+
     /* Locate the device block */
     if(regs->chanset == 0xFFFF
       || !(dev = find_device_by_devnum (regs->chanset,effective_addr2)) )
     {
-        PTT(PTT_CL_ERR,"*HIO",(U32)(effective_addr2 & 0xffffffff),0,regs->psw.IA_L);
+        PTIO(ERR,"*HIO");
         regs->psw.cc = 3;
         return;
     }
@@ -1032,6 +1076,8 @@ U16     tch_ctl;
     S(inst, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
+
+    PTIO(IO,"TCH");
 
 #if defined(_FEATURE_SIE)
     if(!SIE_MODE(regs))
@@ -1070,6 +1116,8 @@ VADR    effective_addr2;                /* Effective address         */
 
     SIE_INTERCEPT(regs);
 
+    PTIO(IO,"STIDC");
+
     /* Store Channel ID and set condition code */
     regs->psw.cc =
         stchan_id (regs, effective_addr2 & 0xFF00);
@@ -1093,12 +1141,14 @@ int     i;
 
     SIE_INTERCEPT(regs);
 
+    PTIO(IO,"CONCS");
+
     effective_addr2 &= 0xFFFF;
 
     /* Hercules has as many channelsets as CSS's */
     if(effective_addr2 >= FEATURE_LCSS_MAX)
     {
-        PTT(PTT_CL_ERR,"*CONCS",(U32)(effective_addr2 & 0xffffffff),0,regs->psw.IA_L);
+        PTIO(ERR,"*CONCS");
         regs->psw.cc = 3;
         return;
     }
@@ -1157,10 +1207,12 @@ int     i;
 
     SIE_INTERCEPT(regs);
 
+    PTIO(IO,"DISCS");
+
     /* Hercules has as many channelsets as CSS's */
     if(effective_addr2 >= FEATURE_LCSS_MAX)
     {
-        PTT(PTT_CL_ERR,"*DISCS",(U32)(effective_addr2 & 0xffffffff),0,regs->psw.IA_L);
+        PTIO(ERR,"*DISCS");
         regs->psw.cc = 3;
         return;
     }

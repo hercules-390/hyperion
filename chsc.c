@@ -196,11 +196,11 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
 
     RRE(inst, regs, r1, r2);
 
-    PTT(PTT_CL_INF,"CHSC",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
-
     PRIV_CHECK(regs);
 
     SIE_INTERCEPT(regs);
+
+    PTT(PTT_CL_INF,"CHSC",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
 
     n = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
     

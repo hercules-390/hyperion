@@ -5137,11 +5137,11 @@ PSA    *psa;                            /* -> Prefixed storage area  */
 
     S(inst, regs, b2, effective_addr2);
 
-    PTT(PTT_CL_INF,"STFL",b2,(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
-
     PRIV_CHECK(regs);
 
     SIE_INTERCEPT(regs);
+
+    PTT(PTT_CL_INF,"STFL",b2,(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
 
     /* Adjust the facility list to account for runtime options */
     ARCH_DEP(adjust_stfl_data)();
@@ -5171,9 +5171,9 @@ int     cc;                             /* Condition code            */
 
     S(inst, regs, b2, effective_addr2);
 
-    PTT(PTT_CL_INF,"STFLE",b2,(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
-
     SIE_INTERCEPT(regs);
+
+    PTT(PTT_CL_INF,"STFLE",b2,(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
 
     /* Note: STFLE is NOT a privileged instruction (unlike STFL) */
 
