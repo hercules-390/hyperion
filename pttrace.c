@@ -290,7 +290,7 @@ DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
         if (pttracen)
             rc = ptt_pthread_print();
     
-        logmsg( _("HHCPT003I ptt %s%s%s%s%s%s%s%s %s %s to=%d %d\n"),
+        logmsg( _("HHCPT003I ptt %s%s%s%s%s%s%s%s%s%s%s %s %s to=%d %d\n"),
                (pttclass & PTT_CL_INF) ? "control " : "",
                (pttclass & PTT_CL_ERR) ? "error " : "",
                (pttclass & PTT_CL_PGM) ? "prog " : "",
