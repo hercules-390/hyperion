@@ -41,6 +41,7 @@
 /*----------------------------------------------------------------------------*/
 //#define OPTION_CMPSC_DEBUGLVL 3      /* Debug all                           */
 #if 0
+#define OPTION_CMPSC_ECACHE_DEBUG
 #define OPTION_CMPSC_EXPAND_DEBUG
 #define OPTION_CMPSC_COMPRESS_DEBUG
 #endif
@@ -320,7 +321,7 @@
 /* Constants                                                                  */
 /*----------------------------------------------------------------------------*/
 #define PROCESS_MAX          1048575   /* CPU-determined amount of data       */
-#define CACHE_SIZE           32768     /* Expanded iss cache size             */
+#define ECACHE_SIZE          32768     /* Expanded iss cache size             */
 #define TRUEFALSE(boolean)   ((boolean) ? "True" : "False")
 
 /*----------------------------------------------------------------------------*/
@@ -345,10 +346,17 @@ enum cmpsc_status
 /*----------------------------------------------------------------------------*/
 struct ec                              /* Expand cache                        */
 {
-  BYTE c[CACHE_SIZE];                  /* Cache                               */
+  BYTE c[ECACHE_SIZE];                 /* Cache                               */
   int i[8192];                         /* Index within cache for is           */
   int l[8192];                         /* Size of expanded is                 */
   int wm;                              /* Water mark                          */
+#ifdef OPTION_CMPSC_ECACHE_DEBUG
+  unsigned int hit;                    /* Cache hits                          */
+  unsigned int miss;                   /* Cache misses                        */
+#define EC_STAT(a) (a)++;
+#else
+#define EC_STAT(a) ;
+#endif
 };
 #endif /* #ifndef NO_2ND_COMPILE */
 
@@ -508,6 +516,11 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
     ec.l[i] = 0;
   ec.wm = 256;                         /* Set watermark after alphabet part   */
 
+#ifdef OPTION_CMPSC_ECACHE_DEBUG
+  ec.hit = 0;
+  ec.miss = 0;
+#endif
+
   /* Process individual index symbols until cbn becomes zero */
   if(unlikely(GR1_cbn(regs)))
   {
@@ -519,11 +532,13 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
       {
         if(unlikely(ARCH_DEP(store_eis)(r1, regs, iregs, &ec.c[ec.i[is]], ec.l[is])))
           return;
+        EC_STAT(ec.hit);
       }
       else
       {
         if(ARCH_DEP(expand_and_store_is)(r1, r2, regs, iregs, &ec, is))
           return;
+        EC_STAT(ec.miss);
       }
       cw += ec.l[is];
     }
@@ -551,11 +566,13 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
       {
         if(unlikely(ARCH_DEP(store_eis)(r1, regs, iregs, &ec.c[ec.i[iss[i]]], ec.l[iss[i]])))
           return;
+        EC_STAT(ec.hit);
       }
       else
       {
         if(ARCH_DEP(expand_and_store_is)(r1, r2, regs, iregs, &ec, iss[i]))
           return;
+        EC_STAT(ec.miss);
       }
       cw += ec.l[iss[i]];
     }
@@ -575,6 +592,9 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 #ifdef OPTION_CMPSC_EXPAND_DEBUG
     logmsg("expand   : reached CPU determined amount of data\n");
 #endif
+#ifdef OPTION_CMPSC_ECACHE_DEBUG
+    logmsg("ec stats: hit %6u, miss %5u, wm %5u, hwm %5u\n", ec.hit, ec.miss, ec.wm, ECACHE_SIZE);
+#endif
 
     return;
   }
@@ -586,11 +606,13 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
     {
       if(unlikely(ARCH_DEP(store_eis)(r1, regs, iregs, &ec.c[ec.i[is]], ec.l[is])))
         return;
+      EC_STAT(ec.hit);
     }
     else
     {
       if(ARCH_DEP(expand_and_store_is)(r1, r2, regs, iregs, &ec, is))
         return;
+      EC_STAT(ec.miss);
     }
   }
 
@@ -599,6 +621,9 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 
 #ifdef OPTION_CMPSC_EXPAND_DEBUG
   logmsg("*** Registers committed\n");
+#endif
+#ifdef OPTION_CMPSC_ECACHE_DEBUG
+  logmsg("ec stats: hit %6u, miss %5u, wm %5u, hwm %5u\n", ec.hit, ec.miss, ec.wm, ECACHE_SIZE);
 #endif
 
 }
@@ -664,7 +689,7 @@ static int ARCH_DEP(expand_and_store_is)(int r1, int r2, REGS *regs, REGS *iregs
   memcpy(buf, &ece[1], ECE_csl(ece));
 
   /* Place within cache */
-  if(likely(ec->wm + cw <= CACHE_SIZE))
+  if(likely(ec->wm + cw <= ECACHE_SIZE))
   {
     memcpy(&ec->c[ec->wm], buf, cw);
     ec->i[is] = ec->wm;
