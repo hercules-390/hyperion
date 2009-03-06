@@ -5173,7 +5173,7 @@ int     cc;                             /* Condition code            */
 
     SIE_INTERCEPT(regs);
 
-    PTT(PTT_CL_INF,"STFLE",b2,(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
+    PTT(PTT_CL_INF,"STFLE",regs->GR_L(0),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
 
     /* Note: STFLE is NOT a privileged instruction (unlike STFL) */
 
@@ -5183,7 +5183,7 @@ int     cc;                             /* Condition code            */
     ARCH_DEP(adjust_stfl_data)();
 
     /* Calculate number of doublewords of facilities defined */
-    nmax = sizeof(ARCH_DEP(stfl_data)) / 8;
+    nmax = (sizeof(ARCH_DEP(stfl_data)) / 8) + 1;
 
     /* Obtain operand length from register 0 bits 56-63 */
     ndbl = regs->GR_LHLCL(0) + 1;
@@ -5196,11 +5196,12 @@ int     cc;                             /* Condition code            */
     }
     else
     {
+        PTT(PTT_CL_ERR,"*STFLE", ndbl, nmax, regs->psw.IA_L);
         cc = 3;
     }
 
     /* Store facility list at operand location */
-    ARCH_DEP(vstorec) ( &ARCH_DEP(stfl_data), ndbl*8-1,
+    ARCH_DEP(vstorec) ( &ARCH_DEP(stfl_data), (ndbl*8)-1,
                         effective_addr2, b2, regs );
 
     /* Save number of doublewords minus 1 into register 0 bits 56-63 */
