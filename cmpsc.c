@@ -357,7 +357,7 @@ struct ec                              /* Expand cache                        */
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs);
 static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs);
-static void ARCH_DEP(expand_is)(int r2, REGS *regs, struct ec *ec, U16 is);
+static int ARCH_DEP(expand_and_store_is)(int r1, int r2, REGS *regs, REGS *iregs, struct ec *ec, U16 is);
 static void ARCH_DEP(fetch_cce)(int r2, REGS *regs, BYTE *cce, int index);
 static int ARCH_DEP(fetch_ch)(int r2, REGS *regs, REGS *iregs, BYTE *ch, int offset);
 static int ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, U16 *index_symbol);
@@ -499,7 +499,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 
   /* Initialize cache and prefill with alphabet entries */
   for(i = 0; i < 256; i++)             /* Alphabet entries                    */
- {
+  {
     ec.c[i] = i;
     ec.i[i] = i;
     ec.l[i] = 1;
@@ -515,10 +515,16 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
     {
       if(unlikely(ARCH_DEP(fetch_is)(r2, regs, iregs, &is)))
         return;
-      if(unlikely(!ec.l[is]))
-        ARCH_DEP(expand_is)(r2, regs, &ec, is);
-      if(unlikely(ARCH_DEP(store_eis)(r1, regs, iregs, &ec.c[ec.i[is]], ec.l[is])))
-        return;
+      if(unlikely(ec.l[is]))
+      {
+        if(unlikely(ARCH_DEP(store_eis)(r1, regs, iregs, &ec.c[ec.i[is]], ec.l[is])))
+          return;
+      }
+      else
+      {
+        if(ARCH_DEP(expand_and_store_is)(r1, r2, regs, iregs, &ec, is))
+          return;
+      }
       cw += ec.l[is];
     }
 
@@ -541,10 +547,16 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
       logmsg("expand   : is %04X (%d)\n", iss[i], i);
 #endif
 
-      if(unlikely(!ec.l[iss[i]]))
-        ARCH_DEP(expand_is)(r2, regs, &ec, iss[i]);
-      if(unlikely(ARCH_DEP(store_eis)(r1, regs, iregs, &ec.c[ec.i[iss[i]]], ec.l[iss[i]])))
-        return;
+      if(likely(ec.l[iss[i]]))
+      {
+        if(unlikely(ARCH_DEP(store_eis)(r1, regs, iregs, &ec.c[ec.i[iss[i]]], ec.l[iss[i]])))
+          return;
+      }
+      else
+      {
+        if(ARCH_DEP(expand_and_store_is)(r1, r2, regs, iregs, &ec, iss[i]))
+          return;
+      }
       cw += ec.l[iss[i]];
     }
 
@@ -570,10 +582,16 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   /* Process last index symbols, never mind about childs written */
   while(likely(!ARCH_DEP(fetch_is)(r2, regs, iregs, &is)))
   {
-    if(unlikely(!ec.l[is]))
-      ARCH_DEP(expand_is)(r2, regs, &ec, is);
-    if(unlikely(ARCH_DEP(store_eis)(r1, regs, iregs, &ec.c[ec.i[is]], ec.l[is])))
-      return;
+    if(likely(ec.l[is]))
+    {
+      if(unlikely(ARCH_DEP(store_eis)(r1, regs, iregs, &ec.c[ec.i[is]], ec.l[is])))
+        return;
+    }
+    else
+    {
+      if(ARCH_DEP(expand_and_store_is)(r1, r2, regs, iregs, &ec, is))
+        return;
+    }
   }
 
   /* Commit, including GR1 */
@@ -586,9 +604,9 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 }
 
 /*----------------------------------------------------------------------------*/
-/* expand_is                                                                  */
+/* expand_and_store_is                                                        */
 /*----------------------------------------------------------------------------*/
-static void ARCH_DEP(expand_is)(int r2, REGS *regs, struct ec *ec, U16 is)
+static int ARCH_DEP(expand_and_store_is)(int r1, int r2, REGS *regs, REGS *iregs, struct ec *ec, U16 is)
 {
   BYTE buf[260];                       /* Buffer for expanded index symbol    */
   int cw;                              /* Characters written                  */
@@ -653,6 +671,10 @@ static void ARCH_DEP(expand_is)(int r2, REGS *regs, struct ec *ec, U16 is)
     ec->l[is] = cw;
     ec->wm += cw;
   }
+
+  if(unlikely(ARCH_DEP(store_eis)(r1, regs, iregs, buf, cw)))
+    return(-1);
+  return(0);
 }
 
 /*----------------------------------------------------------------------------*/
