@@ -1,0 +1,33 @@
+* STFL/STFLE test $Id$
+sysclear           
+archmode ESAME
+r 000=0008000000000200                 # EC mode restart PSW
+r 068=000A00000000DEAD                 # EC mode pgm new PSW
+r 1a0=00000001800000000000000000000200 # z/Arch restart PSW
+r 1d0=0002000180000000000000000000DEAD # z/Arch pgm new PSW
+r 200=B2B10000     # STFL 0            Store 32 facility bits at PSA+C8
+r 204=58F000C8     # L R15,200         Load facility bits from PSA+C8
+r 208=92EE0400     # MVI LIST1,X'EE'   Initialize...
+r 20C=D2FE04010400 # MVC LIST1+1(255),LIST1  ...result area
+r 212=1F88         # SLR R8,R8         R8=doubleword counter
+r 214=41700004     # LA R7,4           R7=number of tests to perform
+r 218=41600400     # LA R6,RESULT1     R6=pointer to result area
+r 21C=1808         #LOOP LR R0,R8      R0=number of dwords minus 1
+r 21E=40006000     # STH R0,RESULT     Store requested length minus 1
+r 222=B2B06008     # STFLE RESULT+8    Store facility list in result area
+r 226=B2220010     # IPM R1            Insert cc into R1
+r 22A=92006002     # MVI RESULT+2,0    Clear unused byte in result area
+r 22E=BE186003     # STCM R1,B'1000',RESULT+3  Store cc into result area
+r 232=50006004     # ST R0,RESULT+4    Store result length minus 1
+r 236=41606040     # LA R6,64(,R6)     R6=pointer to next result area
+r 23A=41808001     # LA R8,1(,R8)      Increment requested length
+r 23E=4670021C     # BCT R7,LOOP       Repeat
+r 242=82000300     # LPSW WAITPSW      Load enabled wait PSW
+r 300=070A000000FED0D0                 # WAITPSW Enabled wait state PSW
+ostailor null
+restart
+pause 1
+* Display STFL facility bits
+r 0C8.4
+* Display STFLE result table - req.len : cond.code : ret.len : facility bits
+r 400.100          
