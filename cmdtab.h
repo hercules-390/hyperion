@@ -144,19 +144,21 @@ COMMAND ( "ssd",       PANEL,        ssd_cmd,
 COMMAND ( "ptt",       PANEL+CONFIG, EXT_CMD(ptt_cmd),
   "display pthread trace\n",
      "options:\n"
-     "  (no)control - control instruction trace\n"
-     "  (no)error   - instruction error trace\n"
+     "  (no)error   - error trace\n"
+     "  (no)control - control trace\n"
      "  (no)prog    - program interrupt trace\n"
      "  (no)inter   - interlock failure trace\n"
      "  (no)sie     - sie trace\n"
-     "  (no)signal  - signaling intruction trace\n"
-     "  (no)io      - io intruction trace\n"
+     "  (no)signal  - signaling trace\n"
+     "  (no)io      - io trace\n"
      "  (no)timer   - timer trace\n"
      "  (no)threads - thread trace\n"
      "  (no)logger  - logger trace\n"
      "  (no)lock    - lock trace buffer\n"
      "  (no)tod     - timestamp trace entries\n"
-     "  (no)wrap    - wrap trace buffer\n"                                  )
+     "  (no)wrap    - wrap trace buffer\n"
+     "  to=nnn      - trace buffer display timeout\n"
+     "  nnn         - trace buffer size\n"                                  )
 #endif
 
 COMMAND ( "i",         PANEL,        i_cmd,        "generate I/O attention interrupt for device", NULL )
