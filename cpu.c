@@ -1103,6 +1103,8 @@ static void ARCH_DEP(restart_interrupt) (REGS *regs)
 int     rc;                             /* Return code               */
 PSA    *psa;                            /* -> Prefixed storage area  */
 
+    PTT(PTT_CL_INF,"*RESTART",regs->cpuad,regs->cpustate,regs->psw.IA_L);
+
     /* Set the main storage reference and change bits */
     STORAGE_KEY(regs->PX, regs) |= (STORKEY_REF | STORKEY_CHANGE);
 
@@ -1153,6 +1155,8 @@ DBLWRD  csw;                            /* CSW for S/370 channels    */
 
     /* Exit if no interrupt was presented */
     if (icode == 0) return;
+
+    PTT(PTT_CL_IO,"*IOINT",ioid,ioparm,iointid);
 
 #if defined(_FEATURE_IO_ASSIST)
     if(SIE_MODE(regs) && icode != SIE_NO_INTERCEPT)

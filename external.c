@@ -64,6 +64,8 @@ RADR    pfx;
 PSA     *psa;
 int     rc;
 
+    PTT(PTT_CL_SIG,"*EXTINT",code,regs->cpuad,regs->psw.IA_L);
+
 #if defined(_FEATURE_SIE)
     /* Set the main storage reference and change bits */
     if(SIE_MODE(regs)
