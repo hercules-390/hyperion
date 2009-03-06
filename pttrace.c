@@ -648,7 +648,7 @@ const char dot = '.';
             if (pttrace[i].result == PTT_MAGIC && (pttrace[i].class & PTT_CL_THR))
                 result[0] = '\0';
             else
-                if((pttrace[i].class & (PTT_CL_ERR|PTT_CL_INF)))
+                if((pttrace[i].class & ~PTT_CL_THR))
                     sprintf(result, "%8.8x", pttrace[i].result);
                 else
                     sprintf(result, "%d", pttrace[i].result);
