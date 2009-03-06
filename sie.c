@@ -745,7 +745,35 @@ void ARCH_DEP(sie_exit) (REGS *regs, int code)
 {
 int     n;
 
-    PTT(PTT_CL_SIE,"*SIE", regs->GR_L(14), regs->GR_L(15), code);
+#if defined(OPTION_PTTRACE)
+    if(pttclass & PTT_CL_SIE)
+    {
+    U32  nt1 = 0, nt2 = 0;
+    BYTE *ip;
+        if(!GUESTREGS->instinvalid)
+        {
+
+            if(GUESTREGS->ip[0] == 0x44
+#if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
+               || (GUESTREGS->ip[0] == 0xc6 && !(GUESTREGS->ip[1] & 0x0f))
+#endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
+                                                                           )
+            {
+                ip = GUESTREGS->exinst;
+                nt2 = (GUESTREGS->ip[0] == 0x44) ? 0x44 : ((0xc6 << 8) | (GUESTREGS->ip[1] & 0x0f));
+            }
+            else
+                ip = GUESTREGS->ip;
+            nt1 = (ip[0] << 24) | (ip[1] << 16);
+            if(ILC(ip[0]) > 2)
+               nt1 |= (ip[2] << 8) | ip[3];
+            if(ILC(ip[0]) > 4)
+               nt2 |= (ip[4] << 24) | (ip[5] << 16);
+        }
+
+        PTT(PTT_CL_SIE,"*SIE", nt1, nt2, code);
+    }
+#endif /*defined(OPTION_PTTRACE)*/
 
 #if defined(SIE_DEBUG)
     logmsg(_("SIE: interception code %d\n"),code);
@@ -1178,6 +1206,8 @@ int     zone;                           /* Zone number               */
 
     SIE_INTERCEPT(regs);
 
+    PTT(PTT_CL_IO,"STZP", regs->GR_L(1), regs->GR_L(2),regs->psw.IA_L);
+
     FW_CHECK(regs->GR(2), regs);
 
     zone = regs->GR_LHLCL(1);
@@ -1218,6 +1248,8 @@ RADR    mso,                            /* Main Storage Origin       */
     PRIV_CHECK(regs);
 
     SIE_INTERCEPT(regs);
+
+    PTT(PTT_CL_IO,"SZP", regs->GR_L(1), regs->GR_L(2),regs->psw.IA_L);
 
     FW_CHECK(regs->GR(2), regs);
 
@@ -1275,6 +1307,8 @@ int     zone;                           /* Zone number               */
 
     SIE_INTERCEPT(regs);
 
+    PTT(PTT_CL_IO,"TPZI", regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
+
     FW_CHECK(regs->GR(2), regs);
 
     /* Perform serialization and checkpoint-synchronization */
@@ -1285,6 +1319,7 @@ int     zone;                           /* Zone number               */
 
     if(zone >= FEATURE_SIE_MAXZONES)
     {
+        PTT(PTT_CL_ERR,"*TPZI", regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
         regs->psw.cc = 0;
         return;
     }
@@ -1345,6 +1380,7 @@ U32    newgr1;
         || (dev->pmcw.flag5 & PMCW5_V) == 0
         || (dev->pmcw.flag5 & PMCW5_E) == 0)
     {
+        PTT(PTT_CL_ERR,"*DIAG002", regs->GR_L(r1),regs->GR_L(r3),regs->GR_L(1));
         regs->psw.cc = 3;
         return;
     }
