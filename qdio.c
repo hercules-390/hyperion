@@ -37,7 +37,7 @@
 
 #undef PTIO
  #define PTIO(_class, _name) \
- PTT(PTT_CL_IO | PTT_CL_ ## _class,_name,regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L)
+ PTT(PTT_CL_ ## _class,_name,regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L)
 
 #if defined(FEATURE_QUEUED_DIRECT_IO)
 
