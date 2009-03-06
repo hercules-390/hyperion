@@ -198,13 +198,64 @@ typedef struct _DIAG204_PART {
 
 typedef struct _DIAG204_PART_CPU {
         HWORD   cpaddr;                 /* CP address                */
-        BYTE    resv2[2];
+        BYTE    resv1[2];
         BYTE    index;                  /* Index into diag224 area   */
         BYTE    cflag;                  /*   ???                     */
         HWORD   weight;                 /* Weight                    */
         DBLWRD  totdispatch;            /* Total dispatch time       */
         DBLWRD  effdispatch;            /* Effective dispatch time   */
     } DIAG204_PART_CPU;
+
+typedef struct _DIAG204_X_HDR {
+        BYTE    numpart;                /* Number of partitions      */
+        BYTE    flags;                  /* Flag Byte                 */
+#define DIAG204_X_PHYSICAL_PRESENT      0x80
+        HWORD   resv1;                  /* Unknown , 0 on 2003,
+                                           0x0005 under VM           */
+        HWORD   physcpu;                /* Number of phys CP's       */
+        HWORD   offown;                 /* Offset to own partition   */
+        DBLWRD  diagstck;               /* TOD of last diag204       */
+        DBLWRD  currstck;               /* TOD of current diag204    */
+        BYTE    resv2[40];
+    } DIAG204_X_HDR;
+
+typedef struct _DIAG204_X_PART {
+        BYTE    partnum;                /* Logical partition number
+                                           starts with 1             */
+        BYTE    virtcpu;                /* Number of virt CP's       */
+        BYTE    realcpu;                /* Number of real CP's       */
+        BYTE    pflag;
+        FWORD   mlu;      
+        BYTE    partname[8];            /* Partition name            */
+        BYTE    cpcname[8];             /* CPC name                  */
+        BYTE    osname[8];              /* Operating system type     */
+        DBLWRD  cssize;                 /* Central storage size      */
+        DBLWRD  essize;                 /* Expanded Storage size     */
+        BYTE    upid;
+        BYTE    resv1[3];
+        FWORD   gr_mlu;
+        BYTE    gr_name[8];             /* Sysplex name?             */
+        BYTE    resv2[32];
+    } DIAG204_X_PART;
+
+typedef struct _DIAG204_X_PART_CPU {
+        HWORD   cpaddr;                 /* CP address                */
+        BYTE    resv1[2];
+        BYTE    index;                  /* Index into diag224 area   */
+        BYTE    cflag;                  /*   ???                     */
+        HWORD   weight;                 /* Weight                    */
+        DBLWRD  totdispatch;            /* Total dispatch time       */
+        DBLWRD  effdispatch;            /* Effective dispatch time   */
+        HWORD   minweight;
+        HWORD   curweight;
+        HWORD   maxweight;
+        BYTE    resv2[2];
+        DBLWRD  onlinetime;
+        DBLWRD  waittime;
+        FWORD   pmaweight;
+        FWORD   polarweight;
+        BYTE    resv3[40];
+    } DIAG204_X_PART_CPU;
 
 static const char diag224_cputable[]=
 {
