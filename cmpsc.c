@@ -324,19 +324,7 @@
 #define ECACHE_SIZE          32768     /* Expanded iss cache size             */
 #define TRUEFALSE(boolean)   ((boolean) ? "True" : "False")
 
-/*----------------------------------------------------------------------------*/
-/* Compression status enumeration for communicating between compress and      */
-/* search_cce and search_sd.                                                  */
-/*----------------------------------------------------------------------------*/
 #ifndef NO_2ND_COMPILE
-enum cmpsc_status
-{
-  end_of_source,
-  parent_found,
-  search_siblings,
-  write_index_symbol
-};
-
 /*----------------------------------------------------------------------------*/
 /* Expand cache                                                               */
 /*                                                                            */
@@ -374,8 +362,8 @@ static void ARCH_DEP(fetch_sd)(int r2, REGS *regs, BYTE *sd, int i);
 #ifdef OPTION_CMPSC_EXPAND_DEBUG
 static void print_ece(BYTE *ece);
 #endif
-static enum cmpsc_status ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, BYTE *cce, BYTE *ch, U16 *is);
-static enum cmpsc_status ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, BYTE *cce, BYTE *ch, U16 *is);
+static int  ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, BYTE *cce, BYTE *ch, U16 *is);
+static int  ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, BYTE *cce, BYTE *ch, U16 *is);
 static void ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is);
 #ifdef WIP
 static void ARCH_DEP(store_iss)(int r1, int r2, REGS *regs, REGS *iregs, U16 is[8]);
@@ -434,34 +422,8 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
     ADJUSTREGS(r2, regs, iregs, 1);
     is = ch;
 
-    /* As long there is a parent */
-    while(1)
-    {
-
-      /* Try to find a child in compression character entry */
-      switch(ARCH_DEP(search_cce)(r2, regs, iregs, cce, &ch, &is))
-      {
-        case parent_found:
-          continue;
-
-        case search_siblings:
-
-          /* Try to find a child in the sibling descriptors */
-          if(likely(ARCH_DEP(search_sd)(r2, regs, iregs, cce, &ch, &is) == parent_found))
-            continue;
-          break;
-
-        case end_of_source:
-          eos = 1;
-          break;
-
-        default:
-          break;
-      }
-
-      /* No parent found, write index symbol */
-      break;
-    }
+    /* Try to find a child in compression character entry */
+    while(ARCH_DEP(search_cce)(r2, regs, iregs, cce, &ch, &is));
 
     /* Write the last match, this can be the alphabet entry */
     ARCH_DEP(store_is)(r1, r2, regs, iregs, is);
@@ -473,10 +435,11 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
     logmsg("compress : registers committed\n");
 #endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1 */
 
-    /* When reached end of source, return to caller */
-    if(unlikely(eos))
-      return;
   }
+
+  /* When reached end of source, return to caller */
+  if(unlikely(!GR_A(r2 + 1, regs)))
+    return;
 
   /* Reached model dependent CPU processing amount */
   regs->psw.cc = 3;
@@ -1069,7 +1032,7 @@ static void print_ece(BYTE *ece)
 /*----------------------------------------------------------------------------*/
 /* search_cce (compression character entry)                                   */
 /*----------------------------------------------------------------------------*/
-static enum cmpsc_status ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, BYTE *cce, BYTE *ch, U16 *is)
+static int ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, BYTE *cce, BYTE *ch, U16 *is)
 {
   BYTE ccce[8];                        /* child compression character entry   */
   int i;                               /* child character index               */
@@ -1085,7 +1048,7 @@ static enum cmpsc_status ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, B
     logmsg("search_cce: end of source\n");
 #endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2 */
 
-    return(end_of_source);
+    return(0);
   }
 
   /* Now check all children in parent */
@@ -1094,7 +1057,7 @@ static enum cmpsc_status ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, B
 
     /* Stop searching when child tested and no consecutive child character */
     if(unlikely(!ind_search_siblings && !CCE_ccc(cce, i)))
-      return(write_index_symbol);
+      return(0);
 
     /* Compare character with child */
     if(unlikely(*ch == CCE_cc(cce, i)))
@@ -1112,7 +1075,7 @@ static enum cmpsc_status ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, B
         *is = CCE_cptr(cce) + i;
 
         /* Index symbol found */
-        return(write_index_symbol);
+        return(0);
       }
 
       /* Found a child get the character entry */
@@ -1134,23 +1097,23 @@ static enum cmpsc_status ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, B
         memcpy(cce, ccce, 8);
 
         /* We found a parent */
-        return(parent_found);
+        return(1);
       }
     }
   }
 
   /* Are there siblings? */
   if(likely(CCE_mcc(cce)))
-    return(search_siblings);
+    return(ARCH_DEP(search_sd)(r2, regs, iregs, cce, ch, is));
 
   /* No siblings, write found index symbol */
-  return(write_index_symbol);
+  return(0);
 }
 
 /*----------------------------------------------------------------------------*/
 /* search_sd (sibling descriptor)                                             */
 /*----------------------------------------------------------------------------*/
-static enum cmpsc_status ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, BYTE *cce, BYTE *ch, U16 *is)
+static int ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, BYTE *cce, BYTE *ch, U16 *is)
 {
   BYTE ccce[8];                        /* child compression character entry   */
   int i;                               /* sibling character index             */
@@ -1185,7 +1148,7 @@ static enum cmpsc_status ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, BY
 
       /* Stop searching when child tested and no consecutive child character */
       if(unlikely(!ind_search_siblings && !SD_ccc(regs, sd, i)))
-        return(write_index_symbol);
+        return(0);
 
       if(unlikely(*ch == SD_sc(regs, sd, i)))
       {
@@ -1202,7 +1165,7 @@ static enum cmpsc_status ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, BY
           *is = CCE_cptr(cce) + sd_ptr + i + 1;
 
           /* Index symbol found */
-          return(write_index_symbol);
+          return(0);
         }
 
         /* Found a child get the character entry */
@@ -1224,7 +1187,7 @@ static enum cmpsc_status ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, BY
           memcpy(cce, ccce, 8);
 
           /* We found a parent */
-          return(parent_found);
+          return(1);
         }
       }
     }
@@ -1240,7 +1203,7 @@ static enum cmpsc_status ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, BY
 
   }
   while(ind_search_siblings && SD_msc(regs, sd));
-  return(write_index_symbol);
+  return(0);
 }
 
 /*----------------------------------------------------------------------------*/
