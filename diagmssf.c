@@ -537,16 +537,25 @@ static U64        diag204tod;          /* last diag204 tod           */
 //      STORE_HW(cpuinfo->cpaddr,0);
         dreg = (U64)(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec);
         dreg = (dreg * 1000000) + (usage.ru_utime.tv_usec + usage.ru_stime.tv_usec);
-    tdis += dreg;
+        tdis += dreg;
         STORE_DW(cpuinfo->totdispatch,tdis);
         dreg = (U64)(usage.ru_utime.tv_sec);
         dreg = (dreg * 1000000) + (usage.ru_utime.tv_usec);
-    teff += dreg;
+        teff += dreg;
         STORE_DW(cpuinfo->effdispatch,teff);
 
         regs->GR_L(r2) = 0;
 
         break;
+
+    /* Extended subcode 5 returns the size of the data areas provided by extended subcodes 6 and 7 */
+    case 0x00010005:
+
+    /* Provide extended information */
+    case 0x00010006:
+
+    /* Provide extended information, including information about secondary CPUs */
+    case 0x00010007:
 
     default:
         PTT(PTT_CL_ERR,"*DIAG204",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
