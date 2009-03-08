@@ -6566,69 +6566,6 @@ struct rusage     usage;               /* RMF type data              */
 } /* end function stsi_capability */
 #endif /*!defined(_STSI_CAPABILITY)*/
 
-#if !defined(SET_STSI_STATIC)
-#define SET_STSI_STATIC
-#if defined(OPTION_SET_STSI_INFO)
-/*-------------------------------------------------------------------*/
-/* Subroutine to set manufacturer name for STSI instruction          */
-/*-------------------------------------------------------------------*/
-                          /*  "H    R    C"  */
-static BYTE manufact[16] = { 0xC8,0xD9,0xC3,0x40,0x40,0x40,0x40,0x40,
-                             0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
-
-void set_manufacturer(char *name)
-{
-    size_t i;
-
-    for(i = 0; name && i < strlen(name) && i < sizeof(manufact); i++)
-        if(isprint(name[i]))
-            manufact[i] = host_to_guest((int)(islower(name[i]) ? toupper(name[i]) : name[i]));
-        else
-            manufact[i] = 0x40;
-    for(; i < sizeof(manufact); i++)
-        manufact[i] = 0x40;
-}
-
-/*-------------------------------------------------------------------*/
-/* Subroutine to set manufacturing plant name for STSI instruction   */
-/*-------------------------------------------------------------------*/
-                      /*  "Z    Z"  */
-static BYTE plant[4] = { 0xE9,0xE9,0x40,0x40 };
-
-void set_plant(char *name)
-{
-    size_t i;
-
-    for(i = 0; name && i < strlen(name) && i < sizeof(plant); i++)
-        if(isprint(name[i]))
-            plant[i] = host_to_guest((int)(islower(name[i]) ? toupper(name[i]) : name[i]));
-        else
-            plant[i] = 0x40;
-    for(; i < sizeof(plant); i++)
-        plant[i] = 0x40;
-}
-
-/*-------------------------------------------------------------------*/
-/* Subroutine to set model capacity identfier for STSI instruction   */
-/*-------------------------------------------------------------------*/
-                      /*  "E    M    U    L    A    T    O    R" */
-static BYTE model[8] = { 0xC5,0xD4,0xE4,0xD3,0xC1,0xE3,0xD6,0xD9 };
-
-void set_model(char *name)
-{
-    size_t i;
-
-    for(i = 0; name && i < strlen(name) && i < sizeof(model); i++)
-        if(isprint(name[i]))
-            model[i] = host_to_guest((int)(islower(name[i]) ? toupper(name[i]) : name[i]));
-        else
-            model[i] = 0x40;
-    for(; i < sizeof(model); i++)
-        model[i] = 0x40;
-}
-
-#endif /* defined(OPTION_STSI_INFO) */
-#endif /* !defined(SET_STSI_STATIC) */
 
 #ifdef FEATURE_STORE_SYSTEM_INFORMATION
 /*-------------------------------------------------------------------*/
@@ -6651,17 +6588,6 @@ SYSIB322  *sysib322;                    /* VM CPUs                   */
 SYSIBVMDB *sysib322;                    /* VM description block      */
 #endif
 
-#if !defined(OPTION_SET_STSI_INFO)
-                          /*  "H    R    C"  */
-static BYTE manufact[16] = { 0xC8,0xD9,0xC3,0x40,0x40,0x40,0x40,0x40,
-                             0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
-
-                      /*  "Z    Z"  */
-static BYTE plant[4] = { 0xE9,0xE9,0x40,0x40 };
-
-                      /*  "E    M    U    L    A    T    O    R" */
-static BYTE model[8] = { 0xC5,0xD4,0xE4,0xD3,0xC1,0xE3,0xD6,0xD9 };
-#endif /* !defined(OPTION_SET_STSI_INFO) */
 
                            /*  "0    1    2    3    4    5    6    7" */
 static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
@@ -6764,19 +6690,19 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
                 sysib111 = (SYSIB111*)(m);
                 memset(sysib111, 0x00, MAX(sizeof(SYSIB111),64*4));
                 sysib111->flag1|=SYSIB111_PFLAG;
-                memcpy(sysib111->manufact,manufact,sizeof(manufact));
+                get_manufacturer(sysib111->manufact);
+                get_model(sysib111->model);
                 for(i = 0; i < 4; i++)
                     sysib111->type[i] =
                         hexebcdic[(sysblk.cpuid >> (28 - (i*4))) & 0x0F];
-                memset(sysib111->modcapaid, 0x40, sizeof(sysib111->model));
-                memcpy(sysib111->modcapaid, model, sizeof(model));
+                memcpy(sysib111->modcapaid, sysib111->model, sizeof(sysib111->model));
                 memcpy(sysib111->mpci,sysib111->modcapaid,sizeof(sysib111->modcapaid));
                 memcpy(sysib111->mtci,sysib111->modcapaid,sizeof(sysib111->modcapaid));
                 memset(sysib111->seqc,0xF0,sizeof(sysib111->seqc));
                 for(i = 0; i < 6; i++)
                     sysib111->seqc[(sizeof(sysib111->seqc) - 6) + i] =
                     hexebcdic[(sysblk.cpuid >> (52 - (i*4))) & 0x0F];
-                memcpy(sysib111->plant,plant,sizeof(plant));
+                get_plant(sysib111->plant);
                 STORE_FW(sysib111->mcaprating, STSI_CAPABILITY);
                 STORE_FW(sysib111->mpcaprating, STSI_CAPABILITY);
                 STORE_FW(sysib111->mtcaprating, STSI_CAPABILITY);
@@ -6804,7 +6730,7 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
                 for(i = 0; i < 6; i++)
                     sysib121->seqc[(sizeof(sysib121->seqc) - 6) + i] =
                         hexebcdic[sysblk.cpuid >> (52 - (i*4)) & 0x0F];
-                memcpy(sysib121->plant,plant,sizeof(plant));
+                get_plant(sysib121->plant);
                 STORE_HW(sysib121->cpuad,regs->cpuad);
                 regs->psw.cc = 0;
                 break;

@@ -51,6 +51,8 @@
 
 #include "opcode.h"
 
+#include "inline.h"
+
 #include "service.h"
 
 #if !defined(_DIAGMSSF_C)
@@ -454,6 +456,11 @@ void ARCH_DEP(diag204_call) (int r1, int r2, REGS *regs)
 DIAG204_HDR       *hdrinfo;            /* Header                     */
 DIAG204_PART      *partinfo;           /* Partition info             */
 DIAG204_PART_CPU  *cpuinfo;            /* CPU info                   */
+#if defined(FEATURE_EXTENDED_DIAG204)
+DIAG204_X_HDR      *hdrxinfo;          /* Header                     */
+DIAG204_X_PART     *partxinfo;         /* Partition info             */
+DIAG204_X_PART_CPU *cpuxinfo;          /* CPU info                   */
+#endif /*defined(FEATURE_EXTENDED_DIAG204)*/
 RADR              abs;                 /* abs addr of data area      */
 U64               dreg;                /* work doubleword            */
 U64               tdis = 0, teff = 0;
@@ -558,20 +565,54 @@ static U64        diag204tod;          /* last diag204 tod           */
 
         break;
 
+#if defined(FEATURE_EXTENDED_DIAG204)
     /* Extended subcode 5 returns the size of the data areas provided by extended subcodes 6 and 7 */
     case 0x00010005:
-#if 0
-        i = sizeof(DIAG204_X_HDR) + ((sizeof(DIAG_X_PART) + (MAX_CPU * sizeof(DIAG_X_PART_CPU))) * 2);
-	regs->GR_L(r2) = (i + PAGEFRAME_BYTEMASK) / PAGEFAME_PAGESIZE;
+        i = sizeof(DIAG204_X_HDR) + ((sizeof(DIAG204_X_PART) + (MAX_CPU * sizeof(DIAG204_X_PART_CPU))) * 2);
+	regs->GR_L(r1) = (i + PAGEFRAME_BYTEMASK) / PAGEFRAME_PAGESIZE;
 
 	break;
-#endif
 
     /* Provide extended information */
     case 0x00010006:
+        /* We fall through as we do not have any secondary cpus (that we know of) */
 
     /* Provide extended information, including information about secondary CPUs */
     case 0x00010007:
+        /* Program check if RMF data is not on a page boundary */
+        if ( (regs->GR_L(r1) & PAGEFRAME_BYTEMASK) != 0x000)
+            ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+
+        /* Obtain absolute address of main storage block,
+           check protection, and set reference and change bits */
+        hdrxinfo = (DIAG204_X_HDR*)MADDR (regs->GR_L(r1), r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+
+        /* save last diag204 tod */
+        dreg = diag204tod;
+
+        /* Retrieve the TOD clock value and shift out the epoch */
+        diag204tod = tod_clock(regs) << 8;
+
+        memset(hdrxinfo, 0, sizeof(DIAG204_X_HDR));
+        hdrxinfo->numpart = 1;
+        hdrxinfo->flags = DIAG204_X_PHYSICAL_PRESENT;
+        STORE_HW(hdrxinfo->physcpu,sysblk.cpus);
+        STORE_HW(hdrxinfo->offown,sizeof(DIAG204_X_HDR));
+        STORE_DW(hdrxinfo->diagstck,dreg);
+        STORE_DW(hdrxinfo->currstck,diag204tod);
+
+        /* hercules partition */
+        partxinfo = (DIAG204_X_PART*)(hdrxinfo + 1);
+        memset(partxinfo, 0, sizeof(DIAG204_PART));
+        partxinfo->partnum = 1; /* Hercules partition */
+        partxinfo->virtcpu = sysblk.cpus;
+        get_lparname(partxinfo->partname);
+
+        ...
+
+        regs->GR_L(r2) = 0;
+
+#endif /*defined(FEATURE_EXTENDED_DIAG204)*/
 
     default:
         PTT(PTT_CL_ERR,"*DIAG204",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);

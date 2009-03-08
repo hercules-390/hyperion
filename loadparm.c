@@ -108,3 +108,79 @@ char *str_lparname()
 
     return ret_lparname;
 }
+
+
+/*-------------------------------------------------------------------*/
+/* Subroutine to set manufacturer name for STSI instruction          */
+/*-------------------------------------------------------------------*/
+                          /*  "H    R    C"  */
+static BYTE manufact[16] = { 0xC8,0xD9,0xC3,0x40,0x40,0x40,0x40,0x40,
+                             0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
+
+void set_manufacturer(char *name)
+{
+    size_t i;
+
+    for(i = 0; name && i < strlen(name) && i < sizeof(manufact); i++)
+        if(isprint(name[i]))
+            manufact[i] = host_to_guest((int)(islower(name[i]) ? toupper(name[i]) : name[i]));
+        else
+            manufact[i] = 0x40;
+    for(; i < sizeof(manufact); i++)
+        manufact[i] = 0x40;
+}
+
+void get_manufacturer(BYTE *dest)
+{
+    memcpy(dest, manufact, sizeof(manufact));
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Subroutine to set manufacturing plant name for STSI instruction   */
+/*-------------------------------------------------------------------*/
+                      /*  "Z    Z"  */
+static BYTE plant[4] = { 0xE9,0xE9,0x40,0x40 };
+
+void set_plant(char *name)
+{
+    size_t i;
+
+    for(i = 0; name && i < strlen(name) && i < sizeof(plant); i++)
+        if(isprint(name[i]))
+            plant[i] = host_to_guest((int)(islower(name[i]) ? toupper(name[i]) : name[i]));
+        else
+            plant[i] = 0x40;
+    for(; i < sizeof(plant); i++)
+        plant[i] = 0x40;
+}
+
+void get_plant(BYTE *dest)
+{
+    memcpy(dest, plant, sizeof(plant));
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Subroutine to set model capacity identfier for STSI instruction   */
+/*-------------------------------------------------------------------*/
+                      /*  "E    M    U    L    A    T    O    R" */
+static BYTE model[8] = { 0xC5,0xD4,0xE4,0xD3,0xC1,0xE3,0xD6,0xD9 };
+
+void set_model(char *name)
+{
+    size_t i;
+
+    for(i = 0; name && i < strlen(name) && i < sizeof(model); i++)
+        if(isprint(name[i]))
+            model[i] = host_to_guest((int)(islower(name[i]) ? toupper(name[i]) : name[i]));
+        else
+            model[i] = 0x40;
+    for(; i < sizeof(model); i++)
+        model[i] = 0x40;
+}
+
+void get_model(BYTE *dest)
+{
+    memcpy(dest, model, sizeof(model));
+}
