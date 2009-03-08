@@ -4958,7 +4958,7 @@ DEF_INST(perform_timing_facility_function)
 
 
 #if defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390)
-BYTE ARCH_DEP(stfl_data)[16] = {
+BYTE ARCH_DEP(stfl_data)[] = {
                  0
 #if defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)
                  | STFL_0_N3
@@ -5183,7 +5183,7 @@ int     cc;                             /* Condition code            */
     ARCH_DEP(adjust_stfl_data)();
 
     /* Calculate number of doublewords of facilities defined */
-    nmax = sizeof(ARCH_DEP(stfl_data)) / 8;
+    nmax = (sizeof(ARCH_DEP(stfl_data))+7) / 8;
 
     /* Obtain operand length from register 0 bits 56-63 */
     ndbl = regs->GR_LHLCL(0) + 1;
