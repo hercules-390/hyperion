@@ -142,7 +142,14 @@ COMMAND ( "ssd",       PANEL,        ssd_cmd,
 
 #ifdef OPTION_PTTRACE
 COMMAND ( "ptt",       PANEL+CONFIG, EXT_CMD(ptt_cmd),
-  "display pthread trace\n",
+  "Set or display internal trace\n",
+
+    "Format: \"ptt [options] [nnn]\"\n"
+    "When specified with no operands, the ptt command displays the trace options\n"
+    "and the contents of the internal trace table.\n"
+    "When specified with operands, the ptt command sets the trace options and/or\n"
+    "specifies which events are to be traced. If the last operand is numeric, it\n"
+    "sets the size of the trace table and activates the trace.\n"
      "options:\n"
      "  (no)error   - error trace\n"
      "  (no)control - control trace\n"
