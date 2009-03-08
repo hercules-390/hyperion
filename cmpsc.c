@@ -249,7 +249,7 @@
   logmsg("*** Regs committed\n");
 #else
 #define COMMITREGS(regs, iregs, r1, r2) \
-  __COMMITREGS((regs), (iregs), (r1), (r2)) 
+  __COMMITREGS((regs), (iregs), (r1), (r2))
 #endif
 #define __COMMITREGS(regs, iregs, r1, r2) \
 {\
@@ -304,7 +304,7 @@
 /* or searching child number 261. The next macro's does the counting and      */
 /* checking.                                                                  */
 /*----------------------------------------------------------------------------*/
-#ifndef TESTCH261
+#if !defined(TESTCH261)
   #ifdef OPTION_CMPSC_DEBUG
     #define TESTCH261(regs, processed, length) \
       if(unlikely(((processed) += (length)) > 260)) \
@@ -318,7 +318,7 @@
       { \
         ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION); \
       }
-  #endif
+  #endif 
 #endif 
 
 /******************************************************************************/
@@ -375,7 +375,7 @@ static void print_ece(BYTE *ece);
 #endif
 static int  ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, BYTE *cce, BYTE *ch, U16 *is);
 static int  ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, BYTE *cce, BYTE *ch, U16 *is);
-static void ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is);
+static int  ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is);
 #ifdef WIP
 static void ARCH_DEP(store_iss)(int r1, int r2, REGS *regs, REGS *iregs, U16 is[8]);
 #endif
@@ -397,7 +397,7 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
   int eos;                             /* indication end of source            */
   GREG exit_value;                     /* return cc=3 on this value           */
   U16 is;                              /* Last matched index symbol           */
-  BYTE ch=0;                           /* Character read                      */
+  BYTE ch;                             /* Character read                      */
 
   /* Initialize end of source */
   eos = 0;
@@ -414,18 +414,6 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
     if(unlikely(ARCH_DEP(fetch_ch)(r2, regs, iregs, &ch, 0)))
       return;
 
-    /* Can we write an index or interchange symbol */
-    if(unlikely(((GR1_cbn(iregs) + GR0_smbsz(regs) - 1) / 8) >= GR_A(r1 + 1, iregs)))
-    {
-      regs->psw.cc = 1;
-
-#ifdef OPTION_CMPSC_DEBUG
-      logmsg("compress : end of output buffer\n");
-#endif 
-
-      return;
-    }
-
     /* Get the alphabet entry */
     ARCH_DEP(fetch_cce)(r2, regs, cce, ch);
 
@@ -437,7 +425,8 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
     while(ARCH_DEP(search_cce)(r2, regs, iregs, cce, &ch, &is));
 
     /* Write the last match, this can be the alphabet entry */
-    ARCH_DEP(store_is)(r1, r2, regs, iregs, is);
+    if(ARCH_DEP(store_is)(r1, r2, regs, iregs, is))
+      return;
 
     /* Commit registers, we have completed a full compression */
     COMMITREGS(regs, iregs, r1, r2);
@@ -452,7 +441,7 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 
 #ifdef OPTION_CMPSC_DEBUG
   logmsg("compress : reached CPU determined amount of data\n");
-#endif 
+#endif
 
 }
 
@@ -461,7 +450,7 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 {
-  int cw;                              /* Characters written                  */
+  unsigned cw;                         /* Characters written                  */
   int dcten;                           /* Number of different symbols         */
   struct ec ec;                        /* Expand cache                        */
   int i;
@@ -592,7 +581,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 static int ARCH_DEP(expand_and_store)(int r1, int r2, REGS *regs, REGS *iregs, struct ec *ec, U16 is)
 {
   BYTE buf[260];                       /* Buffer for expanded index symbol    */
-  int cw;                              /* Characters written                  */
+  unsigned cw;                         /* Characters written                  */
   GREG dictor;                         /* Dictionary origin                   */
   BYTE ece[8];                         /* Expansion Character Entry           */
 
@@ -736,7 +725,7 @@ static int ARCH_DEP(fetch_ch)(int r2, REGS *regs, REGS *iregs, BYTE *ch, int ofs
 
 #ifdef OPTION_CMPSC_DEBUG
     logmsg("fetch_ch : reached end of source\n");
-#endif 
+#endif
 
     regs->psw.cc = 0;
     return(1);
@@ -745,7 +734,7 @@ static int ARCH_DEP(fetch_ch)(int r2, REGS *regs, REGS *iregs, BYTE *ch, int ofs
 
 #ifdef OPTION_CMPSC_DEBUG
   logmsg("fetch_ch : %02X at " F_VADR "\n", *ch, (GR_A(r2, iregs) + ofst));
-#endif 
+#endif
 
   return(0);
 }
@@ -759,15 +748,18 @@ static int ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, U16 *is)
   BYTE work[3];
 
   /* Check if we can read an index symbol */
-  if(unlikely(((GR1_cbn(iregs) + GR0_smbsz(regs) - 1) / 8) >= GR_A(r2 + 1, iregs)))
+  if(unlikely(GR_A(r2 + 1, iregs) < 2))
   {
+    if(unlikely(((GR1_cbn(iregs) + GR0_smbsz(regs) - 1) / 8) >= GR_A(r2 + 1, iregs)))
+    {
 
 #ifdef OPTION_CMPSC_DEBUG
-    logmsg("fetch_is : reached end of source\n");
+      logmsg("fetch_is : reached end of source\n");
 #endif
 
-    regs->psw.cc = 0;
-    return(-1);
+      regs->psw.cc = 0;
+      return(-1);
+    }
   }
 
   /* Clear possible fetched 3rd byte */
@@ -1021,8 +1013,8 @@ static void print_ece(BYTE *ece)
     }
   }
 }
-#endif 
 #endif
+#endif /* #ifndef NO_2ND_COMPILE */
 
 /*----------------------------------------------------------------------------*/
 /* search_cce (compression character entry)                                   */
@@ -1204,10 +1196,25 @@ static int ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, BYTE *cce, BYTE 
 /*----------------------------------------------------------------------------*/
 /* store_is (index symbol)                                                    */
 /*----------------------------------------------------------------------------*/
-static void ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is)
+static int ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is)
 {
   U32 set_mask;                        /* mask to set the bits                */
   BYTE work[3];                        /* work bytes                          */
+
+  /* Can we write an index or interchange symbol */
+  if(unlikely(GR_A(r1 + 1, iregs) < 2))
+  {
+    if(unlikely(((GR1_cbn(iregs) + GR0_smbsz(regs) - 1) / 8) >= GR_A(r1 + 1, iregs)))
+    {
+      regs->psw.cc = 1;
+
+#ifdef OPTION_CMPSC_DEBUG
+      logmsg("store_is : end of output buffer\n");
+#endif 
+
+      return(-1);
+    }
+  }
 
   /* Check if symbol translation is requested */
   if(unlikely(GR0_st(regs)))
@@ -1257,6 +1264,8 @@ static void ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is)
 #ifdef OPTION_CMPSC_DEBUG
   logmsg("store_is : %04X, cbn=%d, GR%02d=" F_VADR ", GR%02d=" F_GREG "\n", is, GR1_cbn(iregs), r1, iregs->GR(r1), r1 + 1, iregs->GR(r1 + 1));
 #endif 
+
+  return(0);
 }
 
 #ifdef WIP
@@ -1278,7 +1287,7 @@ static void ARCH_DEP(store_iss)(int r1, int r2, REGS *regs, REGS *iregs, U16 iss
       ARCH_DEP(vfetchc)(buf, 1, (GR1_dictor(regs) + GR1_sttoff(regs) + iss[i] * 2) & ADDRESS_MAXWRAP(regs), r2, regs);
       iss[i] = (buf[0] << 8) | buf[1];
 
-#ifdef OPTION_CMPSC_DEBUG
+#ifdef OPTION_CMPSC_COMPRESS_DEBUG
       logmsg("store_iss: %04X -> %02X%02X\n", iss, buf[0], buf[1]);
 #endif
 
