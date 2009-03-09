@@ -487,17 +487,17 @@ static BYTE       physical[8] =
         if ( abs > regs->mainlim )
             ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
-        /* save last diag204 tod */
-        dreg = diag204tod;
-
-        /* Retrieve the TOD clock value and shift out the epoch */
-        diag204tod = tod_clock(regs) << 8;
-
         /* Point to DIAG 204 data area */
         hdrinfo = (DIAG204_HDR*)(regs->mainstor + abs);
 
         /* Mark page referenced */
         STORAGE_KEY(abs, regs) |= STORKEY_REF | STORKEY_CHANGE;
+
+        /* save last diag204 tod */
+        dreg = diag204tod;
+
+        /* Retrieve the TOD clock value and shift out the epoch */
+        diag204tod = tod_clock(regs) << 8;
 
         memset(hdrinfo, 0, sizeof(DIAG204_HDR));
         hdrinfo->numpart = 1;
