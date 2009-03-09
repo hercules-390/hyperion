@@ -711,6 +711,7 @@ static BYTE       physical[8] =
 
         regs->GR_L(r2) = 0;
 
+        break;
 #endif /*defined(FEATURE_EXTENDED_DIAG204)*/
 
     default:
