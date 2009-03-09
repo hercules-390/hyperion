@@ -581,6 +581,7 @@ static BYTE       physical[8] =
     case 0x00010005:
         i = sizeof(DIAG204_X_HDR) + ((sizeof(DIAG204_X_PART) + (MAX_CPU * sizeof(DIAG204_X_PART_CPU))) * 2);
         regs->GR_L(r2+1) = (i + PAGEFRAME_BYTEMASK) / PAGEFRAME_PAGESIZE;
+	regs->GR_L(r2) = 0;
 
         break;
 
