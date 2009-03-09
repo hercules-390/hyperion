@@ -445,6 +445,13 @@ int i;
 char systype[9], sysname[9], sysplex[9];
 U64  syslevel;
 
+    if(*(cpi_bk->system_type))
+        set_systype(cpi_bk->system_type);
+    if(*(cpi_bk->system_name))
+        set_sysname(cpi_bk->system_name);
+    if(*(cpi_bk->sysplex_name))
+        set_sysplex(cpi_bk->sysplex_name);
+
     for(i = 0; i < 8; i++)
     {
         systype[i] = guest_to_host(cpi_bk->system_type[i]);

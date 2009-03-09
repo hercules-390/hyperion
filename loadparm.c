@@ -184,3 +184,39 @@ void get_model(BYTE *dest)
 {
     memcpy(dest, model, sizeof(model));
 }
+
+
+static BYTE systype[8] = { 0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
+void set_systype(BYTE *src)
+{
+    memcpy(systype, src, sizeof(systype));
+}
+
+void get_systype(BYTE *dst)
+{
+    memcpy(dst, systype, sizeof(systype));
+}
+
+
+static BYTE sysname[8] = { 0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
+void set_sysname(BYTE *src)
+{
+    memcpy(sysname, src, sizeof(sysname));
+}
+
+void get_sysname(BYTE *dst)
+{
+    memcpy(dst, sysname, sizeof(sysname));
+}
+
+
+static BYTE sysplex[8] = { 0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
+void set_sysplex(BYTE *src)
+{
+    memcpy(sysplex, src, sizeof(sysplex));
+}
+
+void get_sysplex(BYTE *dst)
+{
+    memcpy(dst, sysplex, sizeof(sysplex));
+}

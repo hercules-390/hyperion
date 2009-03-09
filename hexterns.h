@@ -347,6 +347,12 @@ void set_model(char *name);
 void get_manufacturer(BYTE *name);
 void get_plant(BYTE *name);
 void get_model(BYTE *name);
+void get_sysname(BYTE *name);
+void get_systype(BYTE *name);
+void get_sysplex(BYTE *name);
+void set_sysname(BYTE *name);
+void set_systype(BYTE *name);
+void set_sysplex(BYTE *name);
 
 /* Functions in module impl.c */
 IMPL_DLL_IMPORT void system_cleanup(void);

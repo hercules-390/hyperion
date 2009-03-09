@@ -529,6 +529,7 @@ struct SYSBLK {
         BYTE   *storkeys;               /* -> Main storage key array */
         U32     xpndsize;               /* Expanded size (4K pages)  */
         BYTE   *xpndstor;               /* -> Expanded storage       */
+	U64     todstart;               /* Time of initialisation    */
         U64     cpuid;                  /* CPU identifier for STIDP  */
         TID     wdtid;                  /* Thread-id for watchdog    */
         U16     ipldev;                 /* IPL device                */

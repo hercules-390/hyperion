@@ -500,6 +500,9 @@ TID     logcbtid;                       /* RC file thread identifier */
     /* Build system configuration */
     build_config (cfgfile);
 
+    /* System initialisation time */
+    sysblk.todstart = hw_clock() << 8;
+
 #ifdef OPTION_MIPS_COUNTING
     /* Initialize "maxrates" command reporting intervals */
     curr_int_start_time = time( NULL );
