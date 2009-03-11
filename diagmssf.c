@@ -460,7 +460,7 @@ DIAG204_PART_CPU  *cpuinfo;            /* CPU info                   */
 DIAG204_X_HDR      *hdrxinfo;          /* Header                     */
 DIAG204_X_PART     *partxinfo;         /* Partition info             */
 DIAG204_X_PART_CPU *cpuxinfo;          /* CPU info                   */
-U64               tdis = 0;
+U64               tdis;       
 #endif /*defined(FEATURE_EXTENDED_DIAG204)*/
 RADR              abs;                 /* abs addr of data area      */
 U64               dreg;                /* work doubleword            */
@@ -612,8 +612,8 @@ static BYTE       physical[8] =
 #endif /*defined(FEATURE_PHYSICAL_DIAG204)*/
         STORE_HW(hdrxinfo->physcpu,sysblk.cpus);
         STORE_HW(hdrxinfo->offown,sizeof(DIAG204_X_HDR));
-        STORE_DW(hdrxinfo->diagstck,dreg);
-        STORE_DW(hdrxinfo->currstck,diag204tod);
+        STORE_DW(hdrxinfo->diagstck,(dreg >> 8));
+        STORE_DW(hdrxinfo->currstck,(diag204tod >> 8));
 
         /* hercules partition */
         partxinfo = (DIAG204_X_PART*)(hdrxinfo + 1);
@@ -629,7 +629,6 @@ static BYTE       physical[8] =
 
         /* hercules cpu's */
         getrusage(RUSAGE_SELF,&usage);
-        tdis = 0;
         cpuxinfo = (DIAG204_X_PART_CPU*)(partxinfo + 1);
         for(i = 0; i < MAX_CPU; i++)
           if (IS_CPU_ONLINE(i))
@@ -639,11 +638,10 @@ static BYTE       physical[8] =
               cpuxinfo->index = sysblk.ptyp[i];
               STORE_HW(cpuxinfo->weight,100);
               
-              dreg = (U64)(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec) * 1000000;
-              dreg = (dreg + (usage.ru_utime.tv_usec + usage.ru_stime.tv_usec)) / sysblk.cpus;
-              dreg <<= 12;
-              STORE_DW(cpuxinfo->totdispatch,dreg);
-              tdis += dreg;
+              tdis = (U64)(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec) * 1000000;
+              tdis = (tdis + (usage.ru_utime.tv_usec + usage.ru_stime.tv_usec)) / sysblk.cpus;
+              tdis <<= 12;
+              STORE_DW(cpuxinfo->totdispatch,tdis);
 
               dreg = (U64)(usage.ru_utime.tv_sec)* 1000000;
               dreg = (dreg + (usage.ru_utime.tv_usec)) / sysblk.cpus;
@@ -666,15 +664,14 @@ static BYTE       physical[8] =
 
 #if defined(FEATURE_PHYSICAL_DIAG204)
         /* lpar management */
-        getrusage(RUSAGE_CHILDREN,&usage);
-        partinfo = (DIAG204_PART*)cpuinfo;
-        memset(partinfo, 0, sizeof(DIAG204_PART));
-        partinfo->partnum = 0; /* Physical machine */
-        partinfo->virtcpu = sysblk.cpus;
-        memcpy(partinfo->partname,physical,sizeof(physical));
+        partxinfo = (DIAG204_X_PART*)cpuxinfo;
+        memset(partxinfo, 0, sizeof(DIAG204_X_PART));
+        partxinfo->partnum = 0; /* Physical machine */
+        partxinfo->virtcpu = sysblk.cpus;
+        memcpy(partxinfo->partname,physical,sizeof(physical));
 
         /* report all emulated physical cpu's */
-        getrusage(RUSAGE_SELF,&usage);
+        getrusage(RUSAGE_CHILDREN,&usage);
         cpuxinfo = (DIAG204_PART_CPU*)(partinfo + 1);
         for(i = 0; i < MAX_CPU; i++)
           if (IS_CPU_ONLINE(i))
@@ -684,11 +681,10 @@ static BYTE       physical[8] =
               cpuxinfo->index = sysblk.ptyp[i];
               STORE_HW(cpuxinfo->weight,100);
               
-              dreg = (U64)(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec) * 1000000;
-              dreg = (dreg + (usage.ru_utime.tv_usec + usage.ru_stime.tv_usec)) / sysblk.cpus;
-              dreg <<= 12;
-              STORE_DW(cpuxinfo->totdispatch,dreg);
-              tdis += dreg;
+              tdis = (U64)(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec) * 1000000;
+              tdis = (tdis + (usage.ru_utime.tv_usec + usage.ru_stime.tv_usec)) / sysblk.cpus;
+              tdis <<= 12;
+              STORE_DW(cpuxinfo->totdispatch,tdis);
 
               dreg = (U64)(usage.ru_utime.tv_sec)* 1000000;
               dreg = (dreg + (usage.ru_utime.tv_usec)) / sysblk.cpus;
