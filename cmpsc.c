@@ -36,8 +36,8 @@
 /*----------------------------------------------------------------------------*/
 /* Debugging options:                                                         */
 /*----------------------------------------------------------------------------*/
-#if 1
-//#define OPTION_CMPSC_DEBUG
+#if 0
+#define OPTION_CMPSC_DEBUG
 #define OPTION_CMPSC_ECACHE_DEBUG
 #endif
 
