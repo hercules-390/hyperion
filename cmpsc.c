@@ -354,7 +354,7 @@ struct ec                              /* Expand cache                        */
   unsigned int miss;                   /* Cache misses                        */
 #define EC_STAT(a) (a)++;
 #else
-#define EC_STAT(a) ;
+#define EC_STAT(a) {}
 #endif
 };
 #endif /* #ifndef NO_2ND_COMPILE */
@@ -364,7 +364,7 @@ struct ec                              /* Expand cache                        */
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs);
 static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs);
-static int  ARCH_DEP(expand_and_store)(int r1, int r2, REGS *regs, REGS *iregs, struct ec *ec, U16 is);
+static void ARCH_DEP(expand_is)(int r2, REGS *regs, struct ec *ec, U16 is);
 static void ARCH_DEP(fetch_cce)(int r2, REGS *regs, BYTE *cce, int i);
 static int  ARCH_DEP(fetch_ch)(int r2, REGS *regs, REGS *iregs, BYTE *ch, int ofst);
 static int  ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, U16 *is);
@@ -450,6 +450,8 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 {
+  BYTE oc[2080];                       /* Output cache                        */
+  unsigned oci;                        /* Output cache index                  */
   unsigned cw;                         /* Characters written                  */
   int dcten;                           /* Number of different symbols         */
   struct ec ec;                        /* Expand cache                        */
@@ -486,18 +488,15 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
     {
       if(unlikely(ARCH_DEP(fetch_is)(r2, regs, iregs, &is)))
         return;
-      if(unlikely(ec.l[is]))
+      if(likely(!ec.l[is]))
       {
-        if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, &ec.c[ec.i[is]], ec.l[is])))
-          return;
-        EC_STAT(ec.hit);
-      }
-      else
-      {
-        if(ARCH_DEP(expand_and_store)(r1, r2, regs, iregs, &ec, is))
-          return;
+        ARCH_DEP(expand_is)(r2, regs, &ec, is);
         EC_STAT(ec.miss);
       }
+      else
+        EC_STAT(ec.hit);
+      if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, &ec.c[ec.i[is]], ec.l[is])))
+        return;
       cw += ec.l[is];
     }
 
@@ -509,6 +508,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   while(likely(GR_A(r2 + 1, iregs) >= smbsz && cw < PROCESS_MAX))
   {
     ARCH_DEP(fetch_iss)(r2, regs, iregs, iss);
+    oci = 0;
     for(i = 0; i < 8; i++)
     {
 
@@ -516,22 +516,21 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
       logmsg("expand   : is %04X (%d)\n", iss[i], i);
 #endif
 
-      if(likely(ec.l[iss[i]]))
+      if(unlikely(!ec.l[iss[i]]))
       {
-        if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, &ec.c[ec.i[iss[i]]], ec.l[iss[i]])))
-          return;
-        EC_STAT(ec.hit);
-      }
-      else
-      {
-        if(ARCH_DEP(expand_and_store)(r1, r2, regs, iregs, &ec, iss[i]))
-          return;
+        ARCH_DEP(expand_is)(r2, regs, &ec, iss[i]);
         EC_STAT(ec.miss);
       }
+      else
+        EC_STAT(ec.hit);
+      memcpy(&oc[oci], &ec.c[ec.i[iss[i]]], ec.l[iss[i]]);
+      oci += ec.l[iss[i]];
       cw += ec.l[iss[i]];
     }
 
-    /* Commit, cbn unchanged, so no commit for GR1 needed */
+    /* Write and commit, cbn unchanged, so no commit for GR1 needed */
+    if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, oc, oci)))
+      return;
     COMMITREGS2(regs, iregs, r1, r2);
   }
 
@@ -552,18 +551,15 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   /* Process last index symbols, never mind about childs written */
   while(likely(!ARCH_DEP(fetch_is)(r2, regs, iregs, &is)))
   {
-    if(likely(ec.l[is]))
+    if(unlikely(!ec.l[is]))
     {
-      if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, &ec.c[ec.i[is]], ec.l[is])))
-        return;
-      EC_STAT(ec.hit);
-    }
-    else
-    {
-      if(ARCH_DEP(expand_and_store)(r1, r2, regs, iregs, &ec, is))
-        return;
+      ARCH_DEP(expand_is)(r2, regs, &ec, is);
       EC_STAT(ec.miss);
     }
+    else
+      EC_STAT(ec.hit);
+    if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, &ec.c[ec.i[is]], ec.l[is])))
+      return;
   }
 
   /* Commit, including GR1 */
@@ -576,9 +572,9 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 }
 
 /*----------------------------------------------------------------------------*/
-/* expand_and_store                                                           */
+/* expand_is (index symbol).                                                  */
 /*----------------------------------------------------------------------------*/
-static int ARCH_DEP(expand_and_store)(int r1, int r2, REGS *regs, REGS *iregs, struct ec *ec, U16 is)
+static void ARCH_DEP(expand_is)(int r2, REGS *regs, struct ec *ec, U16 is)
 {
   BYTE buf[260];                       /* Buffer for expanded index symbol    */
   unsigned cw;                         /* Characters written                  */
@@ -643,10 +639,6 @@ static int ARCH_DEP(expand_and_store)(int r1, int r2, REGS *regs, REGS *iregs, s
     ec->l[is] = cw;
     ec->wm += cw;
   }
-
-  if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, buf, cw)))
-    return(-1);
-  return(0);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1428,6 +1420,12 @@ static int ARCH_DEP(test_ec)(int r2, REGS *regs, REGS *iregs, BYTE *cce)
 /*----------------------------------------------------------------------------*/
 static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, BYTE *buf, unsigned len)
 {
+  unsigned i;
+
+#ifdef OPTION_CMPSC_DEBUG
+  unsigned save_len = len;
+#endif
+
   /* Check destination size */
   if(unlikely(GR_A(r1 + 1, iregs) < len))
   {
@@ -1441,21 +1439,24 @@ static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, BYTE *buf, unsigned
     return(-1);
   }
 
-  /* Store the expanded index symbol */
-  if(likely(len <= 256))
-    ARCH_DEP(vstorec)(buf, len - 1, GR_A(r1, iregs), r1, regs);
-  else
+  i = 0;
+  while(unlikely(len >= 256))
   {
-    ARCH_DEP(vstorec)(buf, 256 - 1, GR_A(r1, iregs), r1, regs);
-    ARCH_DEP(vstorec)(&buf[256], len - 256 - 1, (GR_A(r1, iregs) + 256) & ADDRESS_MAXWRAP(regs), r1, regs);
+    ARCH_DEP(vstorec)(&buf[i], 256 - 1, GR_A(r1, iregs), r1, regs);
+    i += 256;
+    len -= 256;
+    ADJUSTREGS(r1, regs, iregs, 256);
+  }
+  if(likely(len))
+  {
+    ARCH_DEP(vstorec)(&buf[i], len - 1, GR_A(r1, iregs), r1, regs);
+    ADJUSTREGS(r1, regs, iregs, len);
   }
 
 #ifdef OPTION_CMPSC_DEBUG
-  logmsg("vstore   : store at " F_VADR ", len %04u\n", iregs->GR(r1), len);
+  logmsg("vstore   : store at " F_VADR ", len %04u\n", iregs->GR(r1), save_len);
 #endif
 
-  /* Adjust registers */
-  ADJUSTREGS(r1, regs, iregs, len);
   return(0);
 }
 
