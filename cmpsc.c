@@ -36,8 +36,8 @@
 /*----------------------------------------------------------------------------*/
 /* Debugging options:                                                         */
 /*----------------------------------------------------------------------------*/
-#if 0
-#define OPTION_CMPSC_DEBUG
+#if 1
+//#define OPTION_CMPSC_DEBUG
 #define OPTION_CMPSC_ECACHE_DEBUG
 #endif
 
@@ -566,7 +566,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   COMMITREGS(regs, iregs, r1, r2);
 
 #ifdef OPTION_CMPSC_ECACHE_DEBUG
-  logmsg("ec stats: hit %6u, miss %5u, wm %5u, hwm %5u\n", ec.hit, ec.miss, ec.wm, ECACHE_SIZE);
+  logmsg("ec stats: hit %6u, miss %5u, free %5u\n", ec.hit, ec.miss, ECACHE_SIZE - ec.wm);
 #endif
 
 }
