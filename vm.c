@@ -1253,7 +1253,7 @@ U32     j,k;
         while(i>0)
         {
             k=(i<255 ? i : 255);
-            ARCH_DEP(vstorec) (&dresp[j], k , respadr+j, USE_REAL_ADDR, regs);
+            ARCH_DEP(vstorec) (&dresp[j], k-1 , respadr+j, USE_REAL_ADDR, regs);
             i-=k;
             j+=k;
         }
