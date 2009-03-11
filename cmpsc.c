@@ -1439,11 +1439,9 @@ static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, BYTE *buf, unsigned
     return(-1);
   }
 
-  i = 0;
-  while(unlikely(len >= 256))
+  for(i = 0; unlikely(len >= 256); i += 256)
   {
     ARCH_DEP(vstorec)(&buf[i], 256 - 1, GR_A(r1, iregs), r1, regs);
-    i += 256;
     len -= 256;
     ADJUSTREGS(r1, regs, iregs, 256);
   }
