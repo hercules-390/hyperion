@@ -216,8 +216,8 @@ typedef struct _DIAG204_X_HDR {
                                            0x0005 under VM           */
         HWORD   physcpu;                /* Number of phys CP's       */
         HWORD   offown;                 /* Offset to own partition   */
-        DBLWRD  diagstck;               /* TOD of last diag204       */
-        DBLWRD  currstck;               /* TOD of current diag204    */
+        DBLWRD  diagstck1;              /* TOD of last diag204       */
+        DBLWRD  diagstck2;              /*   in STCKE format         */
         BYTE    resv2[40];
     } DIAG204_X_HDR;
 
@@ -612,8 +612,8 @@ static BYTE       physical[8] =
 #endif /*defined(FEATURE_PHYSICAL_DIAG204)*/
         STORE_HW(hdrxinfo->physcpu,sysblk.cpus);
         STORE_HW(hdrxinfo->offown,sizeof(DIAG204_X_HDR));
-        STORE_DW(hdrxinfo->diagstck,(dreg >> 8));
-        STORE_DW(hdrxinfo->currstck,(diag204tod >> 8));
+        STORE_DW(hdrxinfo->diagstck1,(dreg >> 8));
+        STORE_DW(hdrxinfo->diagstck2,( 0x0000000001000000ULL | (regs->cpuad << 16) | regs->todpr));
 
         /* hercules partition */
         partxinfo = (DIAG204_X_PART*)(hdrxinfo + 1);
