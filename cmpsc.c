@@ -349,6 +349,8 @@ struct ec                              /* Expand cache                        */
   int i[8192];                         /* Index within cache for is           */
   int l[8192];                         /* Size of expanded is                 */
   int wm;                              /* Water mark                          */
+  BYTE oc[2080];                       /* Output cache                        */
+  unsigned oci;                        /* Output cache index                  */
 #ifdef OPTION_CMPSC_ECACHE_DEBUG
   unsigned int hit;                    /* Cache hits                          */
   unsigned int miss;                   /* Cache misses                        */
@@ -450,8 +452,6 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 {
-  BYTE oc[2080];                       /* Output cache                        */
-  unsigned oci;                        /* Output cache index                  */
   unsigned cw;                         /* Characters written                  */
   int dcten;                           /* Number of different symbols         */
   struct ec ec;                        /* Expand cache                        */
@@ -490,14 +490,20 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
         return;
       if(likely(!ec.l[is]))
       {
+        ec.oci = 0;                    /* Place is in start of output buffer  */
         ARCH_DEP(expand_is)(r2, regs, &ec, is);
+        if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, ec.oc, ec.oci)))
+          return;
+        cw += ec.oci;
         EC_STAT(ec.miss);
       }
       else
+      {
+        if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, &ec.c[ec.i[is]], ec.l[is])))
+          return;
+        cw += ec.l[is];
         EC_STAT(ec.hit);
-      if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, &ec.c[ec.i[is]], ec.l[is])))
-        return;
-      cw += ec.l[is];
+      }
     }
 
     /* Commit, including GR1 */
@@ -508,7 +514,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   while(likely(GR_A(r2 + 1, iregs) >= smbsz && cw < PROCESS_MAX))
   {
     ARCH_DEP(fetch_iss)(r2, regs, iregs, iss);
-    oci = 0;
+    ec.oci = 0;                        /* Reset output buffer index           */
     for(i = 0; i < 8; i++)
     {
 
@@ -522,15 +528,17 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
         EC_STAT(ec.miss);
       }
       else
+      {
+        memcpy(&ec.oc[ec.oci], &ec.c[ec.i[iss[i]]], ec.l[iss[i]]);
+        ec.oci += ec.l[iss[i]];
         EC_STAT(ec.hit);
-      memcpy(&oc[oci], &ec.c[ec.i[iss[i]]], ec.l[iss[i]]);
-      oci += ec.l[iss[i]];
-      cw += ec.l[iss[i]];
+      }
     }
 
     /* Write and commit, cbn unchanged, so no commit for GR1 needed */
-    if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, oc, oci)))
+    if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, ec.oc, ec.oci)))
       return;
+    cw += ec.oci;
     COMMITREGS2(regs, iregs, r1, r2);
   }
 
@@ -553,13 +561,18 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   {
     if(unlikely(!ec.l[is]))
     {
+      ec.oci = 0;                      /* Place is in start of output buffer  */
       ARCH_DEP(expand_is)(r2, regs, &ec, is);
+      if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, ec.oc, ec.oci)))
+        return;
       EC_STAT(ec.miss);
     }
     else
+    {
+      if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, &ec.c[ec.i[is]], ec.l[is])))
+        return;
       EC_STAT(ec.hit);
-    if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, &ec.c[ec.i[is]], ec.l[is])))
-      return;
+    }
   }
 
   /* Commit, including GR1 */
@@ -639,6 +652,10 @@ static void ARCH_DEP(expand_is)(int r2, REGS *regs, struct ec *ec, U16 is)
     ec->l[is] = cw;
     ec->wm += cw;
   }
+
+  /* Place expanded index symbol in output buffer */
+  memcpy(&ec->oc[ec->oci], buf, cw);
+  ec->oci += cw;
 }
 
 /*----------------------------------------------------------------------------*/
