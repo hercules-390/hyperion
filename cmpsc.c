@@ -538,8 +538,8 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
     /* Write and commit, cbn unchanged, so no commit for GR1 needed */
     if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, ec.oc, ec.oci)))
       return;
-    cw += ec.oci;
     COMMITREGS2(regs, iregs, r1, r2);
+    cw += ec.oci;
   }
 
   if(unlikely(cw >= PROCESS_MAX))
@@ -1469,7 +1469,26 @@ static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, BYTE *buf, unsigned
   }
 
 #ifdef OPTION_CMPSC_DEBUG
-  logmsg("vstore   : store at " F_VADR ", len %04u\n", iregs->GR(r1), save_len);
+  static BYTE pbuf[2060];
+  static unsigned plen = 2061;         /* Impossible value                    */
+
+  logmsg("vstore   : store at " F_VADR ", len %04u", iregs->GR(r1), save_len);
+  if(plen == save_len && !memcmp(pbuf, buf, plen))
+    logmsg("\n Same buffer as previously shown\n");
+  else
+  {
+    for(i = 0; i < save_len; i++)
+    {
+      if(!(i % 64))
+        logmsg("\n %03X: ", i);
+      else if(!(i % 8))
+        logmsg(" ");
+      logmsg("%02X", buf[i]);
+    }
+    logmsg("\n");
+    memcpy(pbuf, buf, save_len);
+    plen = save_len;
+  }
 #endif
 
   return(0);
