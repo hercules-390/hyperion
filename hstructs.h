@@ -1076,6 +1076,7 @@ struct DEVBLK {                         /* Device configuration block*/
         u_int   fold:1;                 /* 1=Fold to upper case      */
         u_int   ispiped:1;              /* 1=Piped device            */
         u_int   stopprt:1;              /* 1=stopped; 0=started      */
+        u_int   notrunc:1;		/* 1=do not truncate at open */
 
         /*  Device dependent fields for tapedev                      */
 

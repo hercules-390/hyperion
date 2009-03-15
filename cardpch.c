@@ -77,6 +77,7 @@ int     i;                              /* Array subscript           */
     dev->crlf = 0;
     dev->cardpos = 0;
     dev->cardrem = CARD_LENGTH;
+    dev->notrunc = 0;
 
     if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
         dev->devtype = 0x3525;
@@ -99,6 +100,12 @@ int     i;                              /* Array subscript           */
         if (strcasecmp(argv[i], "crlf") == 0)
         {
             dev->crlf = 1;
+            continue;
+        }
+
+        if (strcasecmp(argv[i], "notrunc") == 0)
+        {
+            dev->notrunc = 1;
             continue;
         }
 
@@ -141,7 +148,8 @@ static void cardpch_query_device (DEVBLK *dev, char **class,
     snprintf (buffer, buflen, "%s%s%s",
                 dev->filename,
                 (dev->ascii ? " ascii" : " ebcdic"),
-                ((dev->ascii && dev->crlf) ? " crlf" : ""));
+                ((dev->ascii && dev->crlf) ? " crlf" : ""),
+                (dev->notrunc ? " notrunc" : ""));
 
 } /* end function cardpch_query_device */
 
@@ -168,6 +176,7 @@ static void cardpch_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
 int             rc;                     /* Return code               */
 int             i;                      /* Loop counter              */
 int             num;                    /* Number of bytes to move   */
+int             open_flags;             /* File open flags           */
 BYTE            c;                      /* Output character          */
 char            pathname[MAX_PATH];     /* file path in host format  */
 
@@ -178,8 +187,12 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     if (dev->fd < 0 && !IS_CCW_SENSE(code))
     {
         hostpath(pathname, dev->filename, sizeof(pathname));
-        rc = open (pathname,
-                    O_WRONLY | O_CREAT | O_TRUNC /* | O_SYNC */ |  O_BINARY,
+        open_flags = O_WRONLY | O_CREAT /* | O_SYNC */ |  O_BINARY;
+        if (dev->notrunc != 1)
+        {
+            open_flags |= O_TRUNC;
+        }
+        rc = open (pathname, open_flags,
                     S_IRUSR | S_IWUSR | S_IRGRP);
         if (rc < 0)
         {

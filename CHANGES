@@ -1,4 +1,6 @@
-11 mAR 2009 CMPSC expand output cache implementation - Bernard van der Helm
+15 Mar 2009 Added "notrunc" option to printer and punch devices to not
+            truncate output file uopn opening - Jay Maynard
+11 Mar 2009 CMPSC expand output cache implementation - Bernard van der Helm
 01 Mar 2009 Complete DIAGNOSE X'24' and Implement DIAGNOSE X'210' - Harold Grovesteen
 27 Feb 2009 >70% better CMPSC expand performance - Bernard van der Helm
 22 Feb 2009 30% better CMPSC expand performance - Bernard van der Helm

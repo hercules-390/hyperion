@@ -110,6 +110,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 #if !defined( _MSVC_ )
 int             pipefd[2];              /* Pipe descriptors          */
 int             rc;                     /* Return code               */
+int             open_flags;             /* File open flags           */
 #endif
 
     /* Regular open if 1st char of filename is not vertical bar */
@@ -117,8 +118,12 @@ int             rc;                     /* Return code               */
     {
         int fd;
         hostpath(pathname, dev->filename, sizeof(pathname));
-        fd = open (pathname, O_BINARY |
-                    O_WRONLY | O_CREAT | O_TRUNC /* | O_SYNC */,
+        open_flags = O_BINARY | O_WRONLY | O_CREAT /* | O_SYNC */;
+        if (dev->notrunc != 1)
+        {
+            open_flags |= O_TRUNC;
+        }
+        fd = open (pathname, open_flags,
                     S_IRUSR | S_IWUSR | S_IRGRP);
         if (fd < 0)
         {
@@ -297,6 +302,7 @@ int     i;                              /* Array subscript           */
     dev->fold = 0;
     dev->crlf = 0;
     dev->stopprt = 0;
+    dev->notrunc = 0;
 
     /* Process the driver arguments */
     for (i = 1; i < argc; i++)
@@ -304,6 +310,12 @@ int     i;                              /* Array subscript           */
         if (strcasecmp(argv[i], "crlf") == 0)
         {
             dev->crlf = 1;
+            continue;
+        }
+
+        if (strcasecmp(argv[i], "notrunc") == 0)
+        {
+            dev->notrunc = 1;
             continue;
         }
 
@@ -345,6 +357,7 @@ static void printer_query_device (DEVBLK *dev, char **class,
     snprintf (buffer, buflen, "%s%s%s",
                 dev->filename,
                 (dev->crlf ? " crlf" : ""),
+                (dev->notrunc ? " notrunc" : ""),
                 (dev->stopprt ? " (stopped)" : ""));
 
 } /* end function printer_query_device */
