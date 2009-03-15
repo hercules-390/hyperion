@@ -1439,10 +1439,6 @@ static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, BYTE *buf, unsigned
 {
   unsigned i;
 
-#ifdef OPTION_CMPSC_DEBUG
-  unsigned save_len = len;
-#endif
-
   /* Check destination size */
   if(unlikely(GR_A(r1 + 1, iregs) < len))
   {
@@ -1456,6 +1452,57 @@ static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, BYTE *buf, unsigned
     return(-1);
   }
 
+#ifdef OPTION_CMPSC_DEBUG
+  unsigned j;
+  static BYTE pbuf[2060];
+  static unsigned plen = 2061;         /* Impossible value                    */
+
+  if(plen == len && !memcmp(pbuf, buf, plen))
+    logmsg(F_GREG " - " F_GREG " Same buffer as previously shown\n", iregs->GR(r1), iregs->GR(r1) + len - 1);
+  else
+  {
+    for(i = 0; i < len; i += 32)
+    {
+      logmsg(F_GREG, iregs->GR(r1) + i);
+      if(i && i + 32 < len && !memcmp(&buf[i], &buf[i - 32], 32))
+      {
+        for(j = i + 32; j + 32 < len && !memcmp(&buf[j], &buf[j - 32], 32); j += 32);
+        if(j > 32)
+        {
+          logmsg(" - " F_GREG " Same line as above\n" F_GREG, iregs->GR(r1) + j - 32, iregs->GR(r1) + j);
+          i = j;
+        }
+      }
+      logmsg(": ");
+      for(j = 0; j < 32; j++)
+      {
+        if(!(j % 8))
+          logmsg(" ");
+        if(i + j >= len)
+          logmsg("  ");
+        else
+          logmsg("%02X", buf[i + j]);
+      }
+      logmsg(" | ");
+      for(j = 0; j < 32; j++)
+      {
+        if(i + j >= len)
+          logmsg(" ");
+        else
+        {
+          if(isprint(guest_to_host(buf[i + j])))
+            logmsg("%c", guest_to_host(buf[i + j]));
+          else
+            logmsg(".");
+        }
+      } 
+      logmsg(" |\n");
+    }
+    memcpy(pbuf, buf, len);
+    plen = len;
+  }
+#endif
+
   for(i = 0; unlikely(len >= 256); i += 256)
   {
     ARCH_DEP(vstorec)(&buf[i], 256 - 1, GR_A(r1, iregs), r1, regs);
@@ -1467,30 +1514,6 @@ static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, BYTE *buf, unsigned
     ARCH_DEP(vstorec)(&buf[i], len - 1, GR_A(r1, iregs), r1, regs);
     ADJUSTREGS(r1, regs, iregs, len);
   }
-
-#ifdef OPTION_CMPSC_DEBUG
-  static BYTE pbuf[2060];
-  static unsigned plen = 2061;         /* Impossible value                    */
-
-  logmsg("vstore   : store at " F_VADR ", len %04u", iregs->GR(r1), save_len);
-  if(plen == save_len && !memcmp(pbuf, buf, plen))
-    logmsg("\n Same buffer as previously shown\n");
-  else
-  {
-    for(i = 0; i < save_len; i++)
-    {
-      if(!(i % 64))
-        logmsg("\n %03X: ", i);
-      else if(!(i % 8))
-        logmsg(" ");
-      logmsg("%02X", buf[i]);
-    }
-    logmsg("\n");
-    memcpy(pbuf, buf, save_len);
-    plen = save_len;
-  }
-#endif
-
   return(0);
 }
 
