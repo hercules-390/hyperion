@@ -107,10 +107,10 @@ open_printer (DEVBLK *dev)
 {
 pid_t           pid;                    /* Child process identifier  */
 char            pathname[MAX_PATH];     /* file path in host format  */
+int             open_flags;             /* File open flags           */
 #if !defined( _MSVC_ )
 int             pipefd[2];              /* Pipe descriptors          */
 int             rc;                     /* Return code               */
-int             open_flags;             /* File open flags           */
 #endif
 
     /* Regular open if 1st char of filename is not vertical bar */
@@ -313,7 +313,7 @@ int     i;                              /* Array subscript           */
             continue;
         }
 
-        if (strcasecmp(argv[i], "notrunc") == 0)
+        if (strcasecmp(argv[i], "noclear") == 0)
         {
             dev->notrunc = 1;
             continue;

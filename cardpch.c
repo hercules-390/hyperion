@@ -103,7 +103,7 @@ int     i;                              /* Array subscript           */
             continue;
         }
 
-        if (strcasecmp(argv[i], "notrunc") == 0)
+        if (strcasecmp(argv[i], "noclear") == 0)
         {
             dev->notrunc = 1;
             continue;

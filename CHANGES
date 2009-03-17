@@ -1,3 +1,5 @@
+17 Mar 2009 Changed "notrunc" to "noclear" and fix compile error on MSVC -
+            Jay Maynard
 15 Mar 2009 Added "notrunc" option to printer and punch devices to not
             truncate output file uopn opening - Jay Maynard
 11 Mar 2009 CMPSC expand output cache implementation - Bernard van der Helm

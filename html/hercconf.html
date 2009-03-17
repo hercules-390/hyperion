@@ -113,7 +113,7 @@ and how they are used.
     000A      <a href="#1442">1442</a>    adrdmprs.rdr
     000C      <a href="#3505">3505</a>    jcl.txt     ascii  trunc
     000D      <a href="#3525">3525</a>    pch00d.txt  ascii
-    000E      <a href="#1403">1403</a>    prt00e.txt  notrunc
+    000E      <a href="#1403">1403</a>    prt00e.txt  noclear
 
     001F      <a href="#3270">3270</a>    * 192.168.0.1
     0200.4    <a href="#3270">3270</a>    * 192.168.0.0  255.255.255.0
@@ -2072,11 +2072,11 @@ and how they are used.
         line-feeds only are written at the end of each line.
         <p>
 
-    <dt><code>notrunc</code>
+    <dt><code>noclear</code>
     <dd><p>
-        specifies that the output file will not be truncated to zero
+        specifies that the output file will not be cleared to zero
         bytes when it is opened. 
-        If the <code>notrunc</code> argument is not specified, then
+        If the <code>noclear</code> argument is not specified, then
         any previous content of the file is destroyed when the file
         is opened for output.
         <p>
@@ -2112,11 +2112,11 @@ and how they are used.
         line-feeds only are written at the end of each line.
         <p>
 
-    <dt><code>notrunc</code>
+    <dt><code>noclear</code>
     <dd><p>
-        specifies that the output file will not be truncated to zero
+        specifies that the output file will not be cleared to zero
         bytes when it is opened. 
-        If the <code>notrunc</code> argument is not specified, then
+        If the <code>noclear</code> argument is not specified, then
         any previous content of the file is destroyed when the file
         is opened for output.
         <p>
