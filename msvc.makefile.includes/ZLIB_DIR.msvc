@@ -41,11 +41,18 @@
 !UNDEF ZLIB_DIR
 !ENDIF
 !ELSE
+!IF "$(CPU)" == "i386"
 # ISW 20050311
 # If winbuild\zlib\win32_32 exists (relative to current dir)
 # then use it for ZLIB_DIR *UNLESS* ZLIB_DIR is already set.
 !IF EXIST(winbuild\zlib\win32_32)
 ZLIB_DIR = winbuild\zlib\win32_32
+!ENDIF
+!ELSE
+# For 64-bit the default directory is winbuild\zlib\win32_AMD64 or IA64
+!IF EXIST(winbuild\zlib\win32_$(CPU))
+ZLIB_DIR = winbuild\zlib\win32_$(CPU)
+!ENDIF
 !ENDIF
 !ENDIF
 #
@@ -65,7 +72,7 @@ ZLIB_DIR = winbuild\zlib\win32_32
 !ERROR ZLIB_DIR "$(ZLIB_DIR)\zlib1.dll" does not exist. Check ZLIB_DIR
 !ENDIF
 
-!MESSAGE ZLIB support will be included from "$(ZLIB_DIR)" 
+!MESSAGE ZLIB support will be included from "$(ZLIB_DIR)"
 
 !ELSE
 !MESSAGE ZLIB support will not be generated
