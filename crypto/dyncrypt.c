@@ -137,6 +137,7 @@
     logmsg("      "); \
     for(j = 0; j < (x); j++) \
       logmsg("%02X", (v)[i * (x) + j]); \
+    logmsg(" | "); \
     for(j = 0; j < (x); j++) \
     { \
       if(isprint(guest_to_host((v)[i * (x) + j]))) \
@@ -144,7 +145,7 @@
       else \
         logmsg("."); \
     } \
-    logmsg("\n"); \
+    logmsg(" |\n"); \
   } \
 }
 
