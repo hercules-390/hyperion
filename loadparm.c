@@ -179,8 +179,9 @@ void get_plant(BYTE *dest)
 /* Set by: MODEL configuration statement                             */
 /* Retrieved by: STSI instruction                                    */
 /*-------------------------------------------------------------------*/
-                      /*  "E    M    U    L    A    T    O    R" */
-static BYTE model[8] = { 0xC5,0xD4,0xE4,0xD3,0xC1,0xE3,0xD6,0xD9 };
+                       /*  "E    M    U    L    A    T    O    R" */
+static BYTE model[16] = { 0xC5,0xD4,0xE4,0xD3,0xC1,0xE3,0xD6,0xD9,
+                          0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
 
 void set_model(char *name)
 {
