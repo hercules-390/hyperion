@@ -5,7 +5,7 @@
 
 /*-------------------------------------------------------------------*/
 /* This module contains functions which set, copy, and retrieve the  */
-/* values of the LOADPARM and LPARNAME parameters                    */
+/* values of the LOADPARM and various other environmental parameters */
 /*-------------------------------------------------------------------*/
 
 // $Log$
@@ -27,8 +27,12 @@
 #include "hercules.h"
 
 
+/*-------------------------------------------------------------------*/
+/* LOAD PARAMETER                                                    */
+/* Set by: LOADPARM configuration statement or panel command         */
+/* Retrieved by: SERVC and MSSF_CALL instructions                    */
+/*-------------------------------------------------------------------*/
 static BYTE loadparm[8] = {0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40};
-
 
 void set_loadparm(char *name)
 {
@@ -68,6 +72,11 @@ char *str_loadparm()
 }
 
 
+/*-------------------------------------------------------------------*/
+/* LOGICAL PARTITION NAME                                            */
+/* Set by: LPARNAME configuration statement                          */
+/* Retrieved by: STSI and MSSF_CALL instructions                     */
+/*-------------------------------------------------------------------*/
 static BYTE lparname[8] = {0xC8, 0xC5, 0xD9, 0xC3, 0xE4, 0xD3, 0xC5, 0xE2};
                           /* HERCULES */
 
@@ -111,7 +120,9 @@ char *str_lparname()
 
 
 /*-------------------------------------------------------------------*/
-/* Subroutine to set manufacturer name for STSI instruction          */
+/* MANUFACTURER NAME                                                 */
+/* Set by: MANUFACTURER configuration statement                      */
+/* Retrieved by: STSI instruction                                    */
 /*-------------------------------------------------------------------*/
                           /*  "H    R    C"  */
 static BYTE manufact[16] = { 0xC8,0xD9,0xC3,0x40,0x40,0x40,0x40,0x40,
@@ -137,7 +148,9 @@ void get_manufacturer(BYTE *dest)
 
 
 /*-------------------------------------------------------------------*/
-/* Subroutine to set manufacturing plant name for STSI instruction   */
+/* MANUFACTURING PLANT NAME                                          */
+/* Set by: PLANT configuration statement                             */
+/* Retrieved by: STSI instruction                                    */
 /*-------------------------------------------------------------------*/
                       /*  "Z    Z"  */
 static BYTE plant[4] = { 0xE9,0xE9,0x40,0x40 };
@@ -162,7 +175,9 @@ void get_plant(BYTE *dest)
 
 
 /*-------------------------------------------------------------------*/
-/* Subroutine to set model capacity identfier for STSI instruction   */
+/* MODEL IDENTIFICATION                                              */
+/* Set by: MODEL configuration statement                             */
+/* Retrieved by: STSI instruction                                    */
 /*-------------------------------------------------------------------*/
                       /*  "E    M    U    L    A    T    O    R" */
 static BYTE model[8] = { 0xC5,0xD4,0xE4,0xD3,0xC1,0xE3,0xD6,0xD9 };
@@ -186,7 +201,13 @@ void get_model(BYTE *dest)
 }
 
 
+/*-------------------------------------------------------------------*/
+/* SYSTEM TYPE IDENTIFICATION                                        */
+/* Set by: SERVC instruction                                         */
+/* Retrieved by: DIAG204 instruction                                 */
+/*-------------------------------------------------------------------*/
 static BYTE systype[8] = { 0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
+
 void set_systype(BYTE *src)
 {
     memcpy(systype, src, sizeof(systype));
@@ -198,7 +219,13 @@ void get_systype(BYTE *dst)
 }
 
 
+/*-------------------------------------------------------------------*/
+/* SYSTEM NAME                                                       */
+/* Set by: SERVC instruction                                         */
+/* Retrieved by: DIAG204 instruction                                 */
+/*-------------------------------------------------------------------*/
 static BYTE sysname[8] = { 0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
+
 void set_sysname(BYTE *src)
 {
     memcpy(sysname, src, sizeof(sysname));
@@ -210,7 +237,13 @@ void get_sysname(BYTE *dst)
 }
 
 
+/*-------------------------------------------------------------------*/
+/* SYSPLEX NAME                                                      */
+/* Set by: SERVC instruction                                         */
+/* Retrieved by:                                                     */
+/*-------------------------------------------------------------------*/
 static BYTE sysplex[8] = { 0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
+
 void set_sysplex(BYTE *src)
 {
     memcpy(sysplex, src, sizeof(sysplex));
