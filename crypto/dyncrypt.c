@@ -10,62 +10,6 @@
 /*----------------------------------------------------------------------------*/
 
 // $Id$
-//
-// $Log$
-// Revision 1.65  2008/10/24 15:01:42  bernard
-// update copyright notice to current year 2007
-//
-// Revision 1.64  2008/03/29 16:44:49  bernard
-// Alligning the dyncrypt.c license with the other hercules files.
-//
-// Revision 1.63  2008/03/25 19:39:16  fish
-// Oops! Dunno how the frick that happened folks! Sorry. This file
-// was NOT supposed to be part of the *SCSI* changes! (Duh!) And
-// I have no idea how the frick it got changed in the first place! But
-// in any case, the indentation of the #ifdef statements has been re-
-// stored back to the way it was. Sorry about that Bernard! - Fish
-//
-// Revision 1.62  2008/03/25 11:41:31  fish
-// SCSI TAPE MODS part 1: groundwork: non-functional changes:
-// rename some functions, comments, general restructuring, etc.
-// New source modules awstape.c, omatape.c, hettape.c and
-// tapeccws.c added, but not yet used (all will be used in a future
-// commit though when tapedev.c code is eventually split)
-//
-// Revision 1.61  2008/02/28 15:52:44  bernard
-// typo in comment
-//
-// Revision 1.60  2008/02/27 16:00:53  bernard
-// Error in klmd_sha512 and extension 2 is now announced in the log
-//
-// Revision 1.59  2008/02/27 14:49:56  bernard
-// Query functions return extension_1 bitstrings due to errors in #define
-// statements at the top.
-//
-// Revision 1.58  2008/02/27 14:16:34  bernard
-// Added feature message_security_assist_extension_2
-//
-// Revision 1.57  2008/02/13 08:31:07  bernard
-// 16k is 16384 @#$^$@#^$
-//
-// Revision 1.56  2008/02/11 12:17:39  bernard
-// Enlarged cpu determined data from 4k to 16k
-//
-// Revision 1.55  2007/08/26 08:14:05  bernard
-// prepare future extension, no code change!
-//
-// Revision 1.54  2007/06/23 00:04:19  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.53  2007/01/13 07:40:10  bernard
-// backout ccmask
-//
-// Revision 1.52  2007/01/12 15:30:41  bernard
-// ccmask phase 1
-//
-// Revision 1.51  2006/12/08 09:43:34  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 
@@ -168,7 +112,15 @@
   logmsg("  " s " "); \
   for(i = 0; i < (x); i++) \
     logmsg("%02X", (v)[i]); \
-  logmsg("\n"); \
+  logmsg(" | "); \
+  for(i = 0; i < (x); i++) \
+  { \
+    if(isprint(guest_to_host((v)[i]))) \
+      logmsg("%c", guest_to_host((v)[i])); \
+    else \
+      logmsg("."); \
+  } \
+  logmsg(" |\n"); \
 }
 
 /*----------------------------------------------------------------------------*/
@@ -185,6 +137,13 @@
     logmsg("      "); \
     for(j = 0; j < (x); j++) \
       logmsg("%02X", (v)[i * (x) + j]); \
+    for(j = 0; j < (x); j++) \
+    { \
+      if(isprint(guest_to_host((v)[i * (x) + j]))) \
+        logmsg("%c", guest_to_host((v)[i * (x) + j])); \
+      else \
+        logmsg("."); \
+    } \
     logmsg("\n"); \
   } \
 }
