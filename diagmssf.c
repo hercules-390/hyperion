@@ -625,7 +625,7 @@ static BYTE       physical[8] =
         get_systype(partxinfo->osname);
         STORE_DW(partxinfo->cssize,sysblk.mainsize);
         STORE_DW(partxinfo->essize,sysblk.xpndsize);
-        get_systype(partxinfo->gr_name);
+        get_sysplex(partxinfo->gr_name);
 
         /* hercules cpu's */
         getrusage(RUSAGE_SELF,&usage);

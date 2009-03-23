@@ -241,7 +241,7 @@ void get_sysname(BYTE *dst)
 /*-------------------------------------------------------------------*/
 /* SYSPLEX NAME                                                      */
 /* Set by: SERVC instruction                                         */
-/* Retrieved by:                                                     */
+/* Retrieved by: DIAG204 instruction                                 */
 /*-------------------------------------------------------------------*/
 static BYTE sysplex[8] = { 0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
 
