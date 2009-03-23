@@ -227,11 +227,13 @@
 
 #ifdef _MSVC_
   #define HOW_TO_IMPLEMENT_SH_COMMAND   USE_W32_POOR_MANS_FORK
+  #define SET_CONSOLE_CURSOR_SHAPE_METHOD CURSOR_SHAPE_WINDOWS_NATIVE
+  #define OPTION_EXTCURS                /* Extended cursor handling  */
 #else
   #define HOW_TO_IMPLEMENT_SH_COMMAND   USE_FORK_API_FOR_SH_COMMAND
+  #define SET_CONSOLE_CURSOR_SHAPE_METHOD CURSOR_SHAPE_VIA_SPECIAL_LINUX_ESCAPE
+  #undef  OPTION_EXTCURS                /* Normal cursor handling    */
 #endif
-#define SET_CONSOLE_CURSOR_SHAPE_METHOD CURSOR_SHAPE_WINDOWS_NATIVE
-#define OPTION_EXTCURS                  /* Extended cursor handling  */
 
 
 /*-------------------------------------------------------------------*/
