@@ -254,7 +254,7 @@ __fpclassifyl (long double x)
 int
 fetestexcept (int excepts)
 {
-  int temp;
+  short temp;
 
 #if defined(NO_INLINE_ASM)
   /* Use CRT function to get current FPU status word */
