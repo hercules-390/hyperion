@@ -235,6 +235,7 @@
   #undef  OPTION_EXTCURS                /* Normal cursor handling    */
 #endif
 
+#define IsEventSet(h)   (WaitForSingleObject(h,0) == WAIT_OBJECT_0)
 
 /*-------------------------------------------------------------------*/
 /* Hard-coded Solaris-specific features and options...               */

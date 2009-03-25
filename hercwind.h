@@ -37,9 +37,6 @@
 #if !defined(_HERCWIND_H)
 #define _HERCWIND_H
 
-// (just a handy macro to have around)
-#define  IsEventSet(h)  (WaitForSingleObject(h,0) == WAIT_OBJECT_0)
-
 // PROGRAMMING NOTE: Cygwin has a bug in setvbuf requiring us
 // to do an 'fflush()' after each stdout/err write, and it doesn't
 // hurt doing it for the MSVC build either...
