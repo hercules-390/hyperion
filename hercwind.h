@@ -99,8 +99,8 @@
 #endif
 
 struct dirent {
-        long            d_ino;          
-        char            d_name[FILENAME_MAX + 1]; 
+        long            d_ino;
+        char            d_name[FILENAME_MAX + 1];
 };
 
 typedef unsigned __int32 in_addr_t;
@@ -138,9 +138,9 @@ typedef int             mode_t;
 #define S_ISFIFO(m)     (((m) & _S_IFMT) == _S_IFIFO)
 
 /* Bit settings for access() function */
-#define F_OK            0       
-#define W_OK            2       
-#define R_OK            4       
+#define F_OK            0
+#define W_OK            2
+#define R_OK            4
 
 #define strcasecmp      stricmp
 #define strncasecmp     strnicmp
@@ -166,7 +166,7 @@ typedef int             mode_t;
 #define OPTION_CONFIG_SYMBOLS
 #define OPTION_ENHANCED_CONFIG_SYMBOLS
 #define OPTION_ENHANCED_CONFIG_INCLUDE
-#define OPTION_FTHREADS 
+#define OPTION_FTHREADS
 #define HAVE_STRSIGNAL
 #define EXTERNALGUI
 #define NO_SETUID
@@ -222,20 +222,20 @@ inline void DebugTrace(char* fmt, ...)
     int buffsize = 0;
     char* buffer = NULL;
     int rc = -1;
-	va_list args;
-	va_start( args, fmt );
+    va_list args;
+    va_start( args, fmt );
     do
     {
         if (buffer) free( buffer );
         buffsize += chunksize;
         buffer = malloc( buffsize );
         if (!buffer) __debugbreak();
-	    rc = vsnprintf( buffer, buffsize, fmt, args);
+        rc = vsnprintf( buffer, buffsize, fmt, args);
     }
     while (rc < 0 || rc >= buffsize);
     OutputDebugStringA( buffer );
     free( buffer );
-	va_end( args );
+    va_end( args );
 }
 
 #endif /*!defined(_HERCWIND_H)*/
