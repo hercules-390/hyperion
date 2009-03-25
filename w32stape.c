@@ -51,7 +51,7 @@
 #include "w32stape.h"
 #include "tapedev.h"        // (need IS_TAPE_BLKID_BOT)
 
-#ifdef WIN32
+#ifdef _MSVC_
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Global data...
@@ -1241,4 +1241,4 @@ int  w32_internal_mtpos ( HANDLE hFile, U32* pStat, DWORD* pdwLogPos,
 
 ////////////////////////////////////////////////////////////////////////////////////
 
-#endif /* WIN32 */
+#endif /* _MSVC_ */
