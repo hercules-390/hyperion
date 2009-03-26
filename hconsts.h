@@ -8,26 +8,6 @@
 //      presumed to have already been #included ahead of it...
 
 // $Id$
-//
-// $Log$
-// Revision 1.11  2009/01/14 18:46:10  jj
-// Differentiate between ostailor OS/390 and VSE
-//
-// Revision 1.10  2008/05/28 16:36:17  fish
-// #define PATH_SEP constant
-//
-// Revision 1.9  2008/03/16 00:04:37  rbowler
-// Replace ACC_ARMODE by USE_ARMODE for LPTEA
-//
-// Revision 1.8  2007/03/20 22:23:33  gsmith
-// Redefine ACC_ and ACCTYPE_ macros
-//
-// Revision 1.7  2007/01/11 19:54:33  fish
-// Addt'l keep-alive mods: create associated supporting config-file stmt and panel command where individual customer-preferred values can be specified and/or dynamically modified.
-//
-// Revision 1.6  2006/12/08 09:43:25  jj
-// Add CVS message log
-//
 
 #ifndef _HCONSTS_H
 #define _HCONSTS_H
@@ -39,7 +19,11 @@
 /*-------------------------------------------------------------------*/
 
 #ifndef     MAX_PATH
-  #define   MAX_PATH          PATH_MAX
+  #ifdef    PATH_MAX
+    #define MAX_PATH          PATH_MAX
+  #else
+    #define MAX_PATH          4096
+  #endif
 #endif
 
 #ifndef     PATH_SEP
