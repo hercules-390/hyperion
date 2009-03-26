@@ -7,156 +7,6 @@
 //      presumed to have already been #included ahead of it...
 
 // $Id$
-//
-// $Log$
-// Revision 1.98  2009/01/07 16:00:26  bernard
-// add msghldsec command
-//
-// Revision 1.97  2008/12/27 23:34:37  rbowler
-// Integrated 3270 (SYSG) console send command
-//
-// Revision 1.96  2008/11/24 14:52:21  jj
-// Add PTYP=IFL
-// Change SCPINFO processing to check on ptyp for IFL specifics
-//
-// Revision 1.95  2008/11/04 05:56:31  fish
-// Put ensure consistent create_thread ATTR usage change back in
-//
-// Revision 1.94  2008/11/03 15:31:54  rbowler
-// Back out consistent create_thread ATTR modification
-//
-// Revision 1.93  2008/10/18 09:32:21  fish
-// Ensure consistent create_thread ATTR usage
-//
-// Revision 1.92  2008/10/14 20:56:21  rbowler
-// Propagate processor type from sysblk
-//
-// Revision 1.91  2008/08/21 18:34:47  fish
-// Fix i/o-interrupt-queue race condition
-//
-// Revision 1.90  2008/07/24 14:44:14  bernard
-// cmdtgt version 2
-//
-// Revision 1.89  2008/07/20 12:11:11  bernard
-// OPTION_CMDTGT
-//
-// Revision 1.88  2008/07/08 05:35:51  fish
-// AUTOMOUNT redesign: support +allowed/-disallowed dirs
-// and create associated 'automount' panel command - Fish
-//
-// Revision 1.87  2008/05/28 16:46:29  fish
-// Misleading VTAPE support renamed to AUTOMOUNT instead and fixed and enhanced so that it actually WORKS now.
-//
-// Revision 1.86  2008/05/25 06:36:43  fish
-// VTAPE automount support (0x4B + 0xE4)
-//
-// Revision 1.85  2008/05/22 21:34:22  fish
-// Attempt to fix my *nix SCSI tape BSR over tapemark bug identified by Bob Schneider [bschneider@pingdata.net]
-//
-// Revision 1.84  2008/04/08 17:13:47  bernard
-// Added execute relative long instruction
-//
-// Revision 1.83  2008/03/30 02:51:33  fish
-// Fix SCSI tape EOV (end of volume) processing
-//
-// Revision 1.82  2008/03/29 08:36:46  fish
-// More complete/extensive 3490/3590 tape support
-//
-// Revision 1.81  2008/03/28 02:09:42  fish
-// Add --blkid-24 option support, poserror flag renamed to fenced,
-// added 'generic', 'readblkid' and 'locateblk' tape media handler
-// call vectors.
-//
-// Revision 1.80  2008/03/04 01:10:29  ivan
-// Add LEGACYSENSEID config statement to allow X'E4' Sense ID on devices
-// that originally didn't support it. Defaults to off for compatibility reasons
-//
-// Revision 1.79  2008/02/29 15:53:10  rbowler
-// Instruction decoder for C4xx and C6xx instructions
-//
-// Revision 1.78  2008/01/04 02:28:52  gsmith
-// sf commands update
-//
-// Revision 1.77  2007/12/10 23:12:02  gsmith
-// Tweaks to OPTION_MIPS_COUNTING processing
-//
-// Revision 1.76  2007/12/02 16:22:09  rbowler
-// Enable B9xx,EBxx opcodes in S/370 mode for ETF2
-//
-// Revision 1.75  2007/11/21 00:31:38  gsmith
-// LRE support (try #1)
-//
-// Revision 1.74  2007/11/18 22:18:51  rbowler
-// Permit FEATURE_IMMEDIATE_AND_RELATIVE to be activated in S/370 mode
-//
-// Revision 1.73  2007/09/05 00:24:18  gsmith
-// Use integer arithmetic calculating cpupct
-//
-// Revision 1.72  2007/08/06 22:12:49  gsmith
-// cpu thread exitjmp
-//
-// Revision 1.71  2007/08/06 16:48:20  ivan
-// Implement "PARM" option for IPL command (same as VM IPL PARM XXX)
-// Also add command helps for ipl, iplc, sysclear, sysreset
-//
-// Revision 1.70  2007/07/24 22:39:35  fish
-// (align a single comment; no code was changed)
-//
-// Revision 1.69  2007/06/23 00:04:11  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.68  2007/06/06 22:14:58  gsmith
-// Fix SYNCHRONIZE_CPUS when numcpu > number of host processors - Greg
-//
-// Revision 1.67  2007/03/22 11:56:19  rbowler
-// Remove double hyphen option from print-to-pipe feature
-//
-// Revision 1.66  2007/03/15 20:57:55  gsmith
-// Fix fba when the fba device is > 4G
-//
-// Revision 1.65  2007/03/13 15:55:29  fish
-// Backward-compatible fix of print-to-pipe to accept parameters.  :)
-//
-// Revision 1.64  2007/03/05 14:44:17  rbowler
-// Restore original print-to-pipe parameter-passing
-//
-// Revision 1.63  2007/02/26 15:35:07  fish
-// Fix print-to-pipe to accept paramters
-//
-// Revision 1.62  2007/02/03 18:58:06  gsmith
-// Fix MVT tape CMDREJ error
-//
-// Revision 1.61  2007/01/31 00:48:03  kleonard
-// Add logopt config statement and panel command
-//
-// Revision 1.60  2007/01/11 19:54:34  fish
-// Addt'l keep-alive mods: create associated supporting config-file stmt and panel command where individual customer-preferred values can be specified and/or dynamically modified.
-//
-// Revision 1.59  2007/01/07 11:25:33  rbowler
-// Instruction tracing regsfirst and noregs modes
-//
-// Revision 1.58  2007/01/06 09:05:18  gsmith
-// Enable display_inst to display traditionally too
-//
-// Revision 1.57  2007/01/04 23:12:04  gsmith
-// remove thunk calls for program_interrupt
-//
-// Revision 1.56  2007/01/04 01:08:41  gsmith
-// 03 Jan 2007 single_cpu_dw fetch/store patch for ia32
-//
-// Revision 1.55  2006/12/21 22:39:39  gsmith
-// 21 Dec 2006 Range for s+, t+ - Greg Smith
-//
-// Revision 1.54  2006/12/20 04:26:20  gsmith
-// 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
-//
-// Revision 1.53  2006/12/11 11:39:17  ivan
-// Set tape blockid type to U32 in devblk instead of long that becomes 64 bit wide
-// on 64 bit systems. Suggested by rod/zazubek on main list
-//
-// Revision 1.52  2006/12/08 09:43:28  jj
-// Add CVS message log
-//
 
 #ifndef _HSTRUCTS_H
 #define _HSTRUCTS_H
@@ -529,7 +379,7 @@ struct SYSBLK {
         BYTE   *storkeys;               /* -> Main storage key array */
         U32     xpndsize;               /* Expanded size (4K pages)  */
         BYTE   *xpndstor;               /* -> Expanded storage       */
-	U64     todstart;               /* Time of initialisation    */
+        U64     todstart;               /* Time of initialisation    */
         U64     cpuid;                  /* CPU identifier for STIDP  */
         TID     wdtid;                  /* Thread-id for watchdog    */
         U16     ipldev;                 /* IPL device                */
@@ -943,8 +793,8 @@ struct DEVBLK {                         /* Device configuration block*/
         int     ioactive;               /* System Id active on device*/
 #define DEV_SYS_NONE    0               /* No active system on device*/
 #define DEV_SYS_LOCAL   0xffff          /* Local system active on dev*/
-        BYTE    drvpwd[11];             /* Password for drive        */   
-        BYTE    reserved3;              /* (pad/align/unused/avail)  */   
+        BYTE    drvpwd[11];             /* Password for drive        */
+        BYTE    reserved3;              /* (pad/align/unused/avail)  */
 
         /*  control flags...                                         */
 
@@ -1076,7 +926,7 @@ struct DEVBLK {                         /* Device configuration block*/
         u_int   fold:1;                 /* 1=Fold to upper case      */
         u_int   ispiped:1;              /* 1=Piped device            */
         u_int   stopprt:1;              /* 1=stopped; 0=started      */
-        u_int   notrunc:1;		/* 1=do not truncate at open */
+        u_int   notrunc:1;              /* 1=do not truncate at open */
 
         /*  Device dependent fields for tapedev                      */
 

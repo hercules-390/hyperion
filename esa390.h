@@ -5,62 +5,6 @@
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 
 // $Id$
-//
-// $Log$
-// Revision 1.104  2009/01/15 17:27:02  rbowler
-// STFLE bit settings for CPU Measurement Facility
-//
-// Revision 1.103  2008/12/25 21:30:31  ivan
-// STSI Update part II : Add secondary CPU capacity in 1.2.2 SYSIB
-//
-// Revision 1.102  2008/12/25 21:14:31  ivan
-// STSI Update part 1 : add CPU Type percentage fields in 1.1.1 SYSIB
-//
-// Revision 1.101  2008/12/22 16:31:49  jj
-// *** empty log message ***
-//
-// Revision 1.100  2008/12/22 16:30:47  jj
-// Fix EDAT typo
-//
-// Revision 1.99  2008/12/22 16:22:19  jj
-// EDAT definitions
-//
-// Revision 1.98  2008/12/22 15:20:12  jj
-// Some EDAT definitions
-//
-// Revision 1.97  2008/12/08 20:38:20  ivan
-// Fix SIE DAT Issue with ESA/390 Guest on z/Arch host with >2GB of storage
-//
-// Revision 1.96  2008/03/04 17:09:14  rbowler
-// Add CRT,CGRT,CIT,CGIT,CLRT,CLGRT,CLFIT,CLGIT instructions
-//
-// Revision 1.95  2008/02/28 10:11:50  rbowler
-// STFL bit settings for new features in zPOP-06
-//
-// Revision 1.94  2007/06/23 00:04:09  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.93  2007/06/02 16:23:33  rbowler
-// IUCV external interrupt code and submask definitions
-//
-// Revision 1.92  2007/04/27 10:50:40  rbowler
-// STFL bit 27 for MVCOS
-//
-// Revision 1.91  2007/04/26 22:27:48  rbowler
-// Conditional SSKE feature (non SIE-mode)
-//
-// Revision 1.90  2007/04/24 16:34:41  rbowler
-// Define feature macros and STFL bit settings for new features in zPOP-05
-//
-// Revision 1.89  2007/02/01 16:53:51  rbowler
-// Additional STFL bit definitions
-//
-// Revision 1.88  2006/12/20 04:26:19  gsmith
-// 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
-//
-// Revision 1.87  2006/12/08 09:43:20  jj
-// Add CVS message log
-//
 
 #ifndef _ESA390_H
 #define _ESA390_H
@@ -665,7 +609,7 @@ typedef struct _LSED {
 #define CC_CLOCK_SET    0               /* Clock in set state        */
 #define CC_CLOCK_NOTSET 1               /* Clock in not-set state    */
 #define CC_CLOCK_ERROR  2               /* Clock in error state      */
-#define CC_CLOCK_STOP   3               /* Clock in stopped state or 
+#define CC_CLOCK_STOP   3               /* Clock in stopped state or
                                            not-operational state     */
 
 /* SIGP order codes */
@@ -1412,7 +1356,7 @@ typedef struct _MBK {
 /* Byte STFL_5: STFLE bits 40-47 */
 #define STFL_5_SET_PROG_PARAM   0x80    /* 40:Set-Program-Parameter
                                            facility installed (ESAME)*/
-#define STFL_5_FPS_ENHANCEMENT  0x40    /* Floating point support    
+#define STFL_5_FPS_ENHANCEMENT  0x40    /* Floating point support
                                            enhancements (FPR-GR-loading
                                            FPS-sign-handling, and
                                            DFP-rounding) installed   */
