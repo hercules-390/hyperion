@@ -8,58 +8,6 @@
 //      presumed to have already been #included ahead of it...
 
 // $Id$
-//
-// $Log$
-// Revision 1.28  2009/01/16 09:49:10  jj
-// Disable the quiet command in dyngui
-//
-// Revision 1.27  2009/01/07 16:36:55  bernard
-// hldmsg command
-//
-// Revision 1.26  2009/01/02 19:21:51  jj
-// DVD-RAM IPL
-// RAMSAVE
-// SYSG Integrated 3270 console fixes
-//
-// Revision 1.25  2008/12/30 15:40:01  rbowler
-// Allow $(LPARNAME) in herclogo file
-//
-// Revision 1.24  2008/12/28 21:05:08  rbowler
-// Integrated 3270 (SYSG) console attn/read commands
-//
-// Revision 1.23  2008/12/24 15:42:14  jj
-// Add debug entry point for sclp event masks
-//
-// Revision 1.22  2008/12/22 13:10:21  jj
-// Add sclp debug entry points
-//
-// Revision 1.21  2008/12/01 23:57:21  rbowler
-// Fix warning C4273: 'losc_set/check' : inconsistent dll linkage
-//
-// Revision 1.20  2008/12/01 16:19:49  jj
-// Check for licensed operating systems without impairing architectural
-// compliance of IFL's
-//
-// Revision 1.19  2008/07/08 05:35:49  fish
-// AUTOMOUNT redesign: support +allowed/-disallowed dirs
-// and create associated 'automount' panel command - Fish
-//
-// Revision 1.18  2008/02/19 11:49:19  ivan
-// - Move setting of CPU priority after spwaning timer thread
-// - Added support for Posix 1003.1e capabilities
-//
-// Revision 1.17  2008/02/12 08:42:15  fish
-// dyngui tweaks: new def devlist fmt, new debug_cd_cmd hook
-//
-// Revision 1.16  2008/01/04 02:28:51  gsmith
-// sf commands update
-//
-// Revision 1.15  2007/01/11 19:54:33  fish
-// Addt'l keep-alive mods: create associated supporting config-file stmt and panel command where individual customer-preferred values can be specified and/or dynamically modified.
-//
-// Revision 1.14  2006/12/08 09:43:26  jj
-// Add CVS message log
-//
 
 #ifndef _HEXTERNS_H
 #define _HEXTERNS_H
@@ -343,10 +291,13 @@ void get_lparname(BYTE *dest);
 LOADPARM_DLL_IMPORT char *str_lparname();
 void set_manufacturer(char *name);
 void set_plant(char *name);
-void set_model(char *name);
+void set_model(int argc, char *m1, char* m2, char* m3, char* m4);
 void get_manufacturer(BYTE *name);
 void get_plant(BYTE *name);
 void get_model(BYTE *name);
+void get_modelcapa(BYTE *name);
+void get_modelperm(BYTE *name);
+void get_modeltemp(BYTE *name);
 void get_sysname(BYTE *name);
 void get_systype(BYTE *name);
 void get_sysplex(BYTE *name);

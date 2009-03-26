@@ -786,10 +786,22 @@ and how they are used.
     <p>
 
 <a name="MODEL"></a>
-<dt><code>MODEL &nbsp; <em>name</em></code>
+<dt><code>MODEL &nbsp; <em>hardware_model</em>
+    [ <em>capacity_model</em> ]
+    [ <em>perm_capacity_model</em> ]
+    [ <em>temp_capacity_model</em> ]
+    </code>
 <dd><p>
-    specifies the MODEL name returned by the STSI instruction.  The default is
-    <code>EMULATOR</code>.
+    specifies the MODEL names returned by the STSI instruction.
+    <p>
+    If two operands are supplied, the first is the hardware model name (CPC
+    ND model) and the second is the capacity model name (CPC SI model).
+    If only one operand is supplied, it is used as both the hardware model
+    name and the capacity model name.
+    The optional third and fourth operands specify the permanent capacity
+    model name and the temporary capacity model name respectively.
+    <p>
+    The default is <code>EMULATOR</code>.
     <p>
 
 <a name="MODPATH"></a>

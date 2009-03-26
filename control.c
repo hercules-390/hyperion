@@ -30,130 +30,6 @@
 /*      SIGP orders 11,12.2,13,15 - Fish                     Oct 2005*/
 /*-------------------------------------------------------------------*/
 
-// $Log$
-// Revision 1.273  2009/02/03 17:00:31  ivan
-// Fix TPROT under SIE which was erroneously giving an access register
-// to the translation process even if the guest wasn't executing in XC mode.
-//
-// Revision 1.272  2009/01/23 11:46:07  bernard
-// copyright notice
-//
-// Revision 1.271  2008/12/25 23:39:46  ivan
-// STSI FC 2 : Set CC to 0 at completion
-//
-// Revision 1.270  2008/12/25 23:31:17  ivan
-// STSI Update Part III : FC 2 - Store LPAR Information
-//
-// Revision 1.269  2008/12/25 21:30:31  ivan
-// STSI Update part II : Add secondary CPU capacity in 1.2.2 SYSIB
-//
-// Revision 1.268  2008/12/25 21:14:31  ivan
-// STSI Update part 1 : add CPU Type percentage fields in 1.1.1 SYSIB
-//
-// Revision 1.267  2008/05/06 22:15:42  rbowler
-// Fix warning: operation on `p1' may be undefined
-//
-// Revision 1.266  2008/04/11 14:28:00  bernard
-// Integrate regs->exrl into base Hercules code.
-//
-// Revision 1.265  2008/04/08 23:57:15  rbowler
-// Fix '#' : invalid character : possibly the result of a macro expansion
-//
-// Revision 1.264  2008/04/08 17:12:03  bernard
-// Added execute relative long instruction
-//
-// Revision 1.263  2008/03/16 00:09:57  rbowler
-// Add MVCOS instruction (part 2)
-//
-// Revision 1.262  2008/03/12 23:44:03  rbowler
-// Add MVCOS instruction (part 1)
-//
-// Revision 1.261  2008/02/28 22:05:57  ptl00
-// Fix mode switch trace
-//
-// Revision 1.260  2008/02/23 00:18:28  ptl00
-// Fix BSA pic06 in z/arch mode
-//
-// Revision 1.259  2008/02/20 23:45:54  ptl00
-// Fix BSA pic06/05
-//
-// Revision 1.258  2008/02/15 21:12:33  ptl00
-//
-// Fix PC pic13 (higher pri than trace exceptions)
-//
-// Revision 1.257  2008/02/13 06:54:35  jj
-// *** empty log message ***
-//
-// Revision 1.256  2007/12/10 23:12:02  gsmith
-// Tweaks to OPTION_MIPS_COUNTING processing
-//
-// Revision 1.255  2007/06/23 00:04:05  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.254  2007/06/06 22:14:57  gsmith
-// Fix SYNCHRONIZE_CPUS when numcpu > number of host processors - Greg
-//
-// Revision 1.253  2007/05/26 21:16:11  rbowler
-// fix control.c:4990: warning: return type defaults to `int'
-//
-// Revision 1.252  2007/05/20 15:36:44  jj
-// Ensure that the reference bit of the rcp area is set when conditional SSKE refers to the storage key in the rcp area
-//
-// Revision 1.251  2007/05/17 22:47:35  rbowler
-// Conditional SSKE for SIE
-//
-// Revision 1.250  2007/05/17 13:51:31  rbowler
-// Conditional SSKE correction
-//
-// Revision 1.249  2007/04/26 22:27:48  rbowler
-// Conditional SSKE feature (non SIE-mode)
-//
-// Revision 1.248  2007/04/26 21:09:08  rbowler
-// Change SSKE instruction format from RRE to RRF_M
-//
-// Revision 1.247  2007/03/31 20:18:17  gsmith
-// Init tlbID after copying regs to newregs
-//
-// Revision 1.246  2007/03/25 04:20:36  gsmith
-// Ensure started_mask CPU bit is off for terminating cpu thread - Fish by Greg
-//
-// Revision 1.245  2007/02/12 22:36:29  rbowler
-// Remove tabs, reformat comments
-//
-// Revision 1.244  2007/02/12 06:16:45  fish
-// Don't log Sense Running State SIGP
-//
-// Revision 1.243  2007/01/14 23:31:46  gsmith
-// nerak's patch, one more time
-//
-// Revision 1.242  2007/01/13 07:13:41  bernard
-// backout ccmask
-//
-// Revision 1.241  2007/01/12 15:21:31  bernard
-// ccmaks phase 1
-//
-// Revision 1.240  2007/01/05 14:26:08  fish
-// Fix SIGP processing in light of recent AIA performance mods
-//
-// Revision 1.239  2006/12/31 21:16:32  gsmith
-// 2006 Dec 31 really back out mainlockx.pat
-//
-// Revision 1.238  2006/12/22 00:51:43  gsmith
-// 21 Dec 2006 Fix SIGP to do single logmsg - Greg Smith
-//
-// Revision 1.237  2006/12/20 09:09:40  jj
-// Fix bogus log entries
-//
-// Revision 1.236  2006/12/20 04:26:19  gsmith
-// 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
-//
-// Revision 1.235  2006/12/20 04:22:00  gsmith
-// 2006 Dec 19 Backout mainlockx.pat - possible SMP problems - Greg Smith
-//
-// Revision 1.234  2006/12/08 09:43:18  jj
-// Add CVS message log
-//
-
 #include "hstdinc.h"
 
 #if !defined(_HENGINE_DLL_)
@@ -6695,9 +6571,11 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
                 for(i = 0; i < 4; i++)
                     sysib111->type[i] =
                         hexebcdic[(sysblk.cpuid >> (28 - (i*4))) & 0x0F];
-                memcpy(sysib111->modcapaid, sysib111->model, sizeof(sysib111->model));
-                memcpy(sysib111->mpci,sysib111->modcapaid,sizeof(sysib111->modcapaid));
-                memcpy(sysib111->mtci,sysib111->modcapaid,sizeof(sysib111->modcapaid));
+                get_modelcapa(sysib111->modcapaid);
+                if (sysib111->modcapaid[0] == '\0')
+                    memcpy(sysib111->modcapaid, sysib111->model, sizeof(sysib111->model));
+                get_modelperm(sysib111->mpci);
+                get_modeltemp(sysib111->mtci);
                 memset(sysib111->seqc,0xF0,sizeof(sysib111->seqc));
                 for(i = 0; i < 6; i++)
                     sysib111->seqc[(sizeof(sysib111->seqc) - 6) + i] =

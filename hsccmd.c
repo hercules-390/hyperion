@@ -3597,6 +3597,7 @@ int codepage_cmd(int argc, char *argv[], char *cmdline)
 #if defined(OPTION_SET_STSI_INFO)
 /*-------------------------------------------------------------------*/
 /* model config statement                                            */
+/* operands: hardware_model [capacity_model [perm_model temp_model]] */
 /*-------------------------------------------------------------------*/
 int stsi_model_cmd(int argc, char *argv[], char *cmdline)
 {
@@ -3605,7 +3606,7 @@ int stsi_model_cmd(int argc, char *argv[], char *cmdline)
 
     /* Update model name if operand is specified */
     if (argc > 1)
-        set_model(argv[1]);
+        set_model(argc, argv[1], argv[2], argv[3], argv[4]);
     else
     {
         logmsg( _("HHCxxnnnE MODEL: no model code\n"));

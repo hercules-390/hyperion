@@ -8,17 +8,6 @@
 /* values of the LOADPARM and various other environmental parameters */
 /*-------------------------------------------------------------------*/
 
-// $Log$
-// Revision 1.13  2008/12/30 15:40:01  rbowler
-// Allow $(LPARNAME) in herclogo file
-//
-// Revision 1.12  2007/06/23 00:04:14  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.11  2006/12/08 09:43:28  jj
-// Add CVS message log
-//
-
 #include "hstdinc.h"
 
 #define _HENGINE_DLL_
@@ -26,6 +15,22 @@
 
 #include "hercules.h"
 
+
+/*-------------------------------------------------------------------*/
+/* SUBROUTINE TO COPY A STRINGZ TO A FIXED-LENGTH EBCDIC FIELD       */
+/*-------------------------------------------------------------------*/
+static void copy_stringz_to_ebcdic(BYTE* fld, size_t len, char *name)
+{
+    size_t i;
+
+    for(i = 0; name && i < strlen(name) && i < len; i++)
+        if(isprint(name[i]))
+            fld[i] = host_to_guest((int)(islower(name[i]) ? toupper(name[i]) : name[i]));
+        else
+            fld[i] = 0x40;
+    for(; i < len; i++)
+        fld[i] = 0x40;
+}
 
 /*-------------------------------------------------------------------*/
 /* LOAD PARAMETER                                                    */
@@ -182,23 +187,40 @@ void get_plant(BYTE *dest)
                        /*  "E    M    U    L    A    T    O    R" */
 static BYTE model[16] = { 0xC5,0xD4,0xE4,0xD3,0xC1,0xE3,0xD6,0xD9,
                           0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
+static BYTE modelcapa[16] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
+static BYTE modelperm[16] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
+static BYTE modeltemp[16] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 
-void set_model(char *name)
+void set_model(int argc, char *m1, char *m2, char *m3, char *m4)
 {
-    size_t i;
-
-    for(i = 0; name && i < strlen(name) && i < sizeof(model); i++)
-        if(isprint(name[i]))
-            model[i] = host_to_guest((int)(islower(name[i]) ? toupper(name[i]) : name[i]));
-        else
-            model[i] = 0x40;
-    for(; i < sizeof(model); i++)
-        model[i] = 0x40;
+    if (argc > 1 && m1 != NULL)
+        copy_stringz_to_ebcdic(model, sizeof(model), m1);
+    if (argc > 2 && m2 != NULL)
+        copy_stringz_to_ebcdic(modelcapa, sizeof(modelcapa), m2);
+    if (argc > 3 && m3 != NULL)
+        copy_stringz_to_ebcdic(modelperm, sizeof(modelperm), m3);
+    if (argc > 4 && m4 != NULL)
+        copy_stringz_to_ebcdic(modeltemp, sizeof(modeltemp), m4);
 }
 
 void get_model(BYTE *dest)
 {
     memcpy(dest, model, sizeof(model));
+}
+
+void get_modelcapa(BYTE *dest)
+{
+    memcpy(dest, modelcapa, sizeof(modelcapa));
+}
+
+void get_modelperm(BYTE *dest)
+{
+    memcpy(dest, modelperm, sizeof(modelperm));
+}
+
+void get_modeltemp(BYTE *dest)
+{
+    memcpy(dest, modeltemp, sizeof(modeltemp));
 }
 
 
