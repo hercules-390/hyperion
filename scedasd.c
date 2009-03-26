@@ -3,45 +3,6 @@
 
 // $Id$
 
-// $Log$
-// Revision 1.11  2009/01/12 16:33:52  jj
-// Support DIAG 2C0 type SCLP I/O
-//
-// Revision 1.10  2009/01/07 07:16:33  jj
-// Allow for DOS formatted .ins files
-//
-// Revision 1.9  2009/01/04 20:51:26  jj
-// typo
-//
-// Revision 1.8  2009/01/04 20:10:24  jj
-// Return error on HMC dasd write error
-//
-// Revision 1.7  2009/01/03 20:25:20  jj
-// Ensure file is properly rewritten if it already exists (Add O_TRUNC)
-//
-// Revision 1.6  2009/01/03 10:58:58  jj
-// Fix storage reference
-// Update path length to 1024
-// Enable SCEDIO in ESA/390 mode
-//
-// Revision 1.5  2009/01/02 23:03:08  rbowler
-// scedasd.c(221) : error C2065 : 'S_IROTH' : undeclared identifier
-//
-// Revision 1.4  2009/01/02 22:44:06  rbowler
-// scedasd.c(115) : warning C4013: 'assert' undefined
-//
-// Revision 1.3  2009/01/02 19:21:52  jj
-// DVD-RAM IPL
-// RAMSAVE
-// SYSG Integrated 3270 console fixes
-//
-// Revision 1.2  2008/12/29 16:13:37  jj
-// Make sce_base_dir externally available
-//
-// Revision 1.1  2008/12/29 11:03:11  jj
-// Move HMC disk I/O functions to scedasd.c
-//
-
 #include "hstdinc.h"
 
 #define _HENGINE_DLL_
@@ -65,7 +26,7 @@ char *get_sce_dir()
 
 void set_sce_dir(char *path)
 {
-char realdir[1024];
+char realdir[MAX_PATH];
 
     if(sce_basedir)
     {
@@ -92,7 +53,7 @@ char realdir[1024];
 static char *set_sce_basedir(char *path)
 {
 char *basedir;
-char realdir[1024];
+char realdir[MAX_PATH];
 
     if(sce_basedir)
     {
@@ -123,7 +84,7 @@ char realdir[1024];
 
 static char *check_sce_filepath(const char *path, char *fullpath)
 {
-char temppath[1024];
+char temppath[MAX_PATH];
 
     /* Return file access error if no basedir has been set */
     if(!sce_basedir)
@@ -179,10 +140,10 @@ int ARCH_DEP(load_hmc) (char *fname, int cpu, int clear)
 {
 REGS   *regs;                           /* -> Regs                   */
 FILE   *fp;
-char    inputbuff[1024];
+char    inputbuff[MAX_PATH];
 char   *inputline;
-char    filename[1024];                 /* filename of image file    */
-char    pathname[1024];                 /* pathname of image file    */
+char    filename[MAX_PATH];                 /* filename of image file    */
+char    pathname[MAX_PATH];                 /* pathname of image file    */
 U32     fileaddr;
 int     rc = 0;                         /* Return codes (work)       */
 
@@ -227,7 +188,7 @@ int     rc = 0;                         /* Return codes (work)       */
 
         if(inputline)
         {
-            rc = sscanf(inputline,"%1024s %i",filename,&fileaddr);
+            rc = sscanf(inputline,"%" MSTRING(MAX_PATH) "s %i",filename,&fileaddr);
         }
 
         /* If no load address was found load to location zero */
@@ -522,7 +483,7 @@ U32  origin;
 char image[9];
 S32  size;
 unsigned int i;
-char filename[1024];
+char filename[MAX_PATH];
 
     FETCH_FW(origin,scedior_bk->origin);
 
@@ -551,7 +512,7 @@ S64     seek;
 S64     length;
 S64     totread, totwrite;
 U64     sto;
-char    fname[1024];
+char    fname[MAX_PATH];
 
     switch(scediov_bk->type) {
 
