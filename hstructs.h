@@ -382,6 +382,8 @@ struct SYSBLK {
         U64     todstart;               /* Time of initialisation    */
         U64     cpuid;                  /* CPU identifier for STIDP  */
         TID     wdtid;                  /* Thread-id for watchdog    */
+        U16     lparnuml;               /* #digits (0-2) in lparnum  */
+        U16     lparnum;                /* LPAR identification number*/
         U16     ipldev;                 /* IPL device                */
         int     iplcpu;                 /* IPL cpu                   */
         int     ipllcss;                /* IPL lcss                  */

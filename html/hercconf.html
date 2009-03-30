@@ -45,6 +45,7 @@ and how they are used.
     <a href="#CPUMODEL">CPUMODEL</a>   3090
     <a href="#CPUVERID">CPUVERID</a>   FD
     <a href="#LPARNAME">LPARNAME</a>   HERCULES
+    <a href="#LPARNUM">LPARNUM</a>    21
     <a href="#MODEL">MODEL</a>      EMULATOR
     <a href="#PLANT">PLANT</a>      ZZ
     <a href="#MANUFACTURER">MANUFACTURER</a> HRC
@@ -438,8 +439,9 @@ and how they are used.
 <a name="CPUMODEL"></a>
 <dt><code>CPUMODEL &nbsp; <em>xxxx</em></code>
 <dd><p>
-    specifies the 4 hexadecimal digit CPU model number
+    specifies the 4 hexadecimal digit CPU machine type number
     stored by the STIDP instruction
+    <i>Note: Prior to ESA/390 this was known as the CPU model number</i>
     <p>
 
 <a name="CPUPRIO"></a>
@@ -766,6 +768,16 @@ and how they are used.
 <dd><p>
     specifies the LPAR name returned by DIAG X'204'.  The default is
     <code>HERCULES</code>.
+    <p>
+
+<a name="LPARNUM"></a>
+<dt><code>LPARNUM &nbsp; <em>xx</em></code>
+<dd><p>
+    specifies the one- or two-digit hexadecimal LPAR identification number 
+    stored by the STIDP instruction.
+    If a one-digit number is specified then STIDP stores a format-0 CPU ID.
+    If a two-digit number is specified then STIDP stores a format-1 CPU ID.
+    If LPARNUM is not specified, then STIDP stores a basic-mode CPU ID.
     <p>
 
 <a name="MAINSIZE"></a>

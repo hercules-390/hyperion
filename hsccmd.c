@@ -17,379 +17,6 @@
 /* near the end of this module.                                      */
 /*-------------------------------------------------------------------*/
 
-// $Log$
-// Revision 1.309  2009/02/07 15:59:48  bernard
-// Unify HHCPN052E message for ipl and restart
-//
-// Revision 1.308  2009/02/07 14:27:45  bernard
-// Prevent restart on special engines (copy code from ipl command)
-//
-// Revision 1.307  2009/02/03 22:51:43  rbowler
-// Display sizeof long and long long
-//
-// Revision 1.306  2009/01/25 23:48:20  rbowler
-// defsym was not handling quotes or comments correctly
-//
-// Revision 1.305  2009/01/25 21:23:50  jj
-// Implement auto_scsi_mount command
-//
-// Revision 1.304  2009/01/25 14:44:03  jj
-// Align coding style to hercules standard
-//
-// Revision 1.303  2009/01/25 13:53:48  jj
-// Implement mounted_tape_reinit as command
-//
-// Revision 1.302  2009/01/18 22:27:27  jj
-// Allow both automount config syntax and automount command syntax
-//
-// Revision 1.301  2009/01/18 21:57:30  jj
-// rework devtmax config statement
-//
-// Revision 1.300  2009/01/18 21:07:44  jj
-// Rework conkpalv config statement
-//
-// Revision 1.299  2009/01/18 20:49:25  jj
-// Rework command table and move to separate source files
-//
-// Revision 1.298  2009/01/16 11:32:50  rbowler
-// Fix MSVC compilation errors introduced by rev 1.292
-//
-// Revision 1.297  2009/01/16 08:41:59  jj
-// allow 'httpport none' in config
-//
-// Revision 1.296  2009/01/16 08:33:39  jj
-// Fix spacing in hdl commands help output
-//
-// Revision 1.295  2009/01/16 08:31:51  jj
-// Fix compile warning msgs
-//
-// Revision 1.294  2009/01/16 08:25:14  jj
-// Reset config default settings (as per herc doc)
-// add $zapcmd to enable/disable commands and config statements
-//
-// Revision 1.293  2009/01/15 21:05:35  jj
-// Move pantitle to hsccmd.c from bldcfg.c
-//
-// Revision 1.292  2009/01/15 17:36:43  jj
-// Change http server startup
-//
-// Revision 1.291  2009/01/15 15:38:05  jj
-// Move STSI command parsing to hsccmd.c
-//
-// Revision 1.290  2009/01/15 11:12:51  jj
-// Change traceopt/symptom parsing
-//
-// Revision 1.289  2009/01/15 11:05:25  jj
-// Make codepage and legacysenseid available as commands
-//
-// Revision 1.288  2009/01/15 10:31:48  jj
-// Rework diag8cmd & shcmdopt parsing logic
-//
-// Revision 1.287  2009/01/15 09:20:20  jj
-// Update pgmprdos parsing
-//
-// Revision 1.286  2009/01/15 08:58:31  jj
-// Remove logopt duplication in bldcfg.c
-//
-// Revision 1.285  2009/01/15 08:54:36  jj
-// Make alrf command as well as config statement
-//
-// Revision 1.284  2009/01/15 08:18:14  jj
-// panrate & iodelay command output consistancy
-//
-// Revision 1.283  2009/01/15 06:57:40  jj
-// Simplify command help
-//
-// Revision 1.282  2009/01/15 05:32:00  jj
-// Remove blank lines in cmdhelp output
-//
-// Revision 1.281  2009/01/14 19:43:50  jj
-// Change hidden command logic
-//
-// Revision 1.280  2009/01/14 19:22:27  jj
-// Move timerint config statement to command handler
-//
-// Revision 1.279  2009/01/14 19:04:25  jj
-// Move TODDRAG config statement to command handler
-//
-// Revision 1.278  2009/01/14 19:00:22  jj
-// Make lparname command as well as config statement
-//
-// Revision 1.277  2009/01/14 18:46:10  jj
-// Differentiate between ostailor OS/390 and VSE
-//
-// Revision 1.276  2009/01/14 16:27:10  jj
-// move cckd config to cmd handler
-//
-// Revision 1.275  2009/01/14 15:58:54  jj
-// Move panrate config to command handler
-//
-// Revision 1.274  2009/01/14 15:51:18  jj
-// Remove blank line from help output
-//
-// Revision 1.273  2009/01/14 15:49:36  jj
-// Move archmode config to command processing
-//
-// Revision 1.272  2009/01/14 15:31:43  jj
-// Move loadparm logic to command handler
-//
-// Revision 1.271  2009/01/14 15:23:20  jj
-// Move modpath logic to hsccmd.c
-//
-// Revision 1.270  2009/01/14 14:59:06  jj
-// simplify i/o delay config procesing
-//
-// Revision 1.269  2009/01/14 14:54:07  jj
-// Fix logic error in determining command/config statement
-//
-// Revision 1.268  2009/01/14 14:45:20  jj
-// hercules command table now also used for config commands
-//
-// Revision 1.267  2009/01/14 10:12:36  jj
-// Restrict SCLP DISK I/O to the path relative to the .ins file that has been IPL-ed
-// Add SCLPROOT command to override the above
-//
-// Revision 1.266  2009/01/10 00:18:33  jmaynard
-// Allow a bare ENTER in cmdtgt scp or cmdtgt pscp mode to send a blank command
-// to the SCP.
-//
-// Revision 1.265  2009/01/09 23:41:36  jmaynard
-// Add ability to switch from cmdtgt scp/pscp back to cmdtgt herc.
-//
-// Revision 1.264  2009/01/09 13:43:52  jj
-// Ensure that devices which have the subchannel valid bit disabled can be
-// processed
-//
-// Revision 1.263  2009/01/07 16:37:12  bernard
-// hldmsg command
-//
-// Revision 1.262  2009/01/07 16:00:02  bernard
-// add msghldsec command
-//
-// Revision 1.261  2009/01/02 19:21:51  jj
-// DVD-RAM IPL
-// RAMSAVE
-// SYSG Integrated 3270 console fixes
-//
-// Revision 1.260  2009/01/01 02:00:41  hsg001
-// Allow iplc to work with service processor load
-//
-// Revision 1.259  2008/12/29 00:00:54  ivan
-// Change semantics for DIAG8CMD configuration statement
-// Disable command redisplay at the console when NOECHO is set
-// Commands typed with a '-' as the first character are not redisplayed
-//
-// Revision 1.258  2008/12/28 12:39:02  ivan
-// Define MAX() is not defined
-//
-// Revision 1.257  2008/12/28 06:11:47  ivan
-// MSG panel command support fixes
-//
-// Revision 1.256  2008/12/28 05:46:44  ivan
-// Emulate VM's MESSAGE & MSGNOH commands
-//
-// Revision 1.255  2008/11/25 23:00:11  rbowler
-// Issue HHCPN052E if ipl target is AP or IP engine
-//
-// Revision 1.254  2008/11/04 05:56:31  fish
-// Put ensure consistent create_thread ATTR usage change back in
-//
-// Revision 1.253  2008/11/03 15:31:56  rbowler
-// Back out consistent create_thread ATTR modification
-//
-// Revision 1.252  2008/10/18 09:32:21  fish
-// Ensure consistent create_thread ATTR usage
-//
-// Revision 1.251  2008/09/02 06:10:58  fish
-// Modified "$TEST" command (test_cmd function) to
-// help debug panel MSGHLD (sticky messages) logic
-//
-// Revision 1.250  2008/08/30 05:51:00  fish
-// Add help text for 'quiet' command
-//
-// Revision 1.249  2008/07/28 15:15:34  bernard
-// !scp -> pscp
-//
-// Revision 1.248  2008/07/27 10:21:03  rbowler
-// Fix  warning C4013: 'ProcessPanelCommand' undefined
-//
-// Revision 1.247  2008/07/24 14:42:21  bernard
-// cmdtgt version 2
-//
-// Revision 1.246  2008/07/20 12:10:57  bernard
-// OPTION_CMDTGT
-//
-// Revision 1.245  2008/07/16 11:05:10  fish
-// automount delete command: fix MINOR memory leak
-// and add support for optional relative path resolution.
-//
-// Revision 1.244  2008/07/08 05:35:49  fish
-// AUTOMOUNT redesign: support +allowed/-disallowed dirs
-// and create associated 'automount' panel command - Fish
-//
-// Revision 1.243  2008/05/28 16:38:34  fish
-// (fix typo in comment; no code was changed)
-//
-// Revision 1.242  2008/05/23 20:38:13  fish
-// Change device query calls to not ask for what they don't need
-//
-// Revision 1.241  2008/04/14 21:09:58  rbowler
-// Include C4xx,C6xx,C8xx instructions in icount display
-//
-// Revision 1.240  2008/03/28 02:09:42  fish
-// Add --blkid-24 option support, poserror flag renamed to fenced,
-// added 'generic', 'readblkid' and 'locateblk' tape media handler
-// call vectors.
-//
-// Revision 1.239  2008/03/25 11:41:31  fish
-// SCSI TAPE MODS part 1: groundwork: non-functional changes:
-// rename some functions, comments, general restructuring, etc.
-// New source modules awstape.c, omatape.c, hettape.c and
-// tapeccws.c added, but not yet used (all will be used in a future
-// commit though when tapedev.c code is eventually split)
-//
-// Revision 1.238  2008/03/07 17:46:17  ptl00
-// Add pri, sec, home options to v command
-//
-// Revision 1.237  2008/02/12 08:42:15  fish
-// dyngui tweaks: new def devlist fmt, new debug_cd_cmd hook
-//
-// Revision 1.236  2008/01/25 00:50:18  gsmith
-// Fix invalidate_tlbe processing - Paul Leisy
-//
-// Revision 1.235  2008/01/18 16:19:07  rbowler
-// Help text for sfk command
-//
-// Revision 1.234  2008/01/11 21:33:21  fish
-// new 'ctc' command to enable/disable debug option on demand
-//
-// Revision 1.233  2008/01/04 02:28:51  gsmith
-// sf commands update
-//
-// Revision 1.232  2007/12/10 23:12:02  gsmith
-// Tweaks to OPTION_MIPS_COUNTING processing
-//
-// Revision 1.231  2007/11/30 14:54:32  jmaynard
-// Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
-//
-// Revision 1.230  2007/11/21 23:33:46  fish
-// remove dead #if 0 code
-//
-// Revision 1.229  2007/11/11 17:14:22  rbowler
-// Add help panrate command
-//
-// Revision 1.228  2007/08/27 20:21:03  rbowler
-// PSW command logmsg format correction
-//
-// Revision 1.227  2007/08/27 11:13:04  rbowler
-// Modify PSW fields by psw command (part 3)
-//
-// Revision 1.226  2007/08/26 21:04:45  rbowler
-// Modify PSW fields by psw command (part 2)
-//
-// Revision 1.225  2007/08/24 16:31:26  rbowler
-// Modify PSW fields by psw command (part 1)
-//
-// Revision 1.224  2007/08/24 12:05:10  rbowler
-// Help for SSD command, sundry punctuation and spelling corrections.
-//
-// Revision 1.223  2007/08/24 11:21:54  rbowler
-// Modify control registers by cr command
-//
-// Revision 1.222  2007/08/07 11:18:30  ivan
-// Remove #if statement within macro parameter that MSVC doesn't seem to like
-//
-// Revision 1.221  2007/08/06 16:48:20  ivan
-// Implement "PARM" option for IPL command (same as VM IPL PARM XXX)
-// Also add command helps for ipl, iplc, sysclear, sysreset
-//
-// Revision 1.220  2007/07/29 10:05:05  fish
-// Fix PR# 34/tape bug causing crash if non-tape devinit
-//
-// Revision 1.219  2007/06/23 00:04:11  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.218  2007/06/22 14:45:11  bernard
-// Sorted icount plus percentage
-//
-// Revision 1.217  2007/06/06 22:14:57  gsmith
-// Fix SYNCHRONIZE_CPUS when numcpu > number of host processors - Greg
-//
-// Revision 1.216  2007/04/11 11:26:38  ivan
-// Rename the $test_cmd function to test_cmd since it causes grief with some compilers
-//
-// Revision 1.215  2007/02/18 23:49:25  kleonard
-// Add TIME and NOTIME synonyms for LOGOPT operands
-//
-// Revision 1.214  2007/01/31 00:48:03  kleonard
-// Add logopt config statement and panel command
-//
-// Revision 1.213  2007/01/31 00:00:52  kleonard
-// Add message numbers to tt32 messages
-//
-// Revision 1.212  2007/01/29 15:16:39  rbowler
-// Eliminate pwd command after cd command
-//
-// Revision 1.211  2007/01/19 16:13:02  rbowler
-// Modify conkpalv help text
-//
-// Revision 1.210  2007/01/14 23:14:12  rbowler
-// Fix signed/unsigned mismatch in 370-only build
-//
-// Revision 1.209  2007/01/11 19:54:33  fish
-// Addt'l keep-alive mods: create associated supporting config-file
-// stmt and panel command where individual customer-preferred values
-// can be specified and/or dynamically modified.
-//
-// Revision 1.208  2007/01/08 09:52:00  rbowler
-// Rename symptom command as traceopt
-//
-// Revision 1.207  2007/01/07 22:07:34  rbowler
-// Help text for new inststep/insttrace commands
-//
-// Revision 1.206  2007/01/07 11:25:33  rbowler
-// Instruction tracing regsfirst and noregs modes
-//
-// Revision 1.205  2007/01/06 09:05:18  gsmith
-// Enable display_inst to display traditionally too
-//
-// Revision 1.204  2007/01/03 14:21:41  rbowler
-// Reinstate semantics of 'g' command changed by hsccmd rev 1.197
-//
-// Revision 1.203  2006/12/31 21:53:13  fish
-// new 'cd' and 'pwd' commands to go along with existing 'sh' command
-//
-// Revision 1.202  2006/12/31 13:44:10  rbowler
-// Omit null commands and script commands in panel command history
-//
-// Revision 1.201  2006/12/31 07:44:52  fish
-// Fix format of 'gpr' help info.
-//
-// Revision 1.200  2006/12/31 07:32:45  fish
-// Fix message number
-//
-// Revision 1.199  2006/12/30 20:26:52  fish
-// Add ability to modify gpr reg values to gpr command
-//
-// Revision 1.198  2006/12/28 03:31:40  fish
-// Fix minor bug in new "QD" (query dasd) command RCD display causing garbled text display.
-//
-// Revision 1.197  2006/12/21 22:39:38  gsmith
-// 21 Dec 2006 Range for s+, t+ - Greg Smith
-//
-// Revision 1.196  2006/12/20 04:26:20  gsmith
-// 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
-//
-// Revision 1.195  2006/12/19 14:22:30  rbowler
-// New FPC command to display FPC register
-//
-// Revision 1.194  2006/12/18 15:24:48  rbowler
-// Correction of comment (c/tracing/stepping/)
-//
-// Revision 1.193  2006/12/08 09:43:26  jj
-// Add CVS message log
-//
-
 #include "hstdinc.h"
 
 #define _HSCCMD_C_
@@ -3673,6 +3300,40 @@ int lparname_cmd(int argc, char *argv[], char *cmdline)
         set_lparname(argv[1]);
     else
         logmsg( _("HHCPN056I LPAR name = %s\n"),str_lparname());
+
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* lparnum command - set or display LPAR identification number       */
+/*-------------------------------------------------------------------*/
+int lparnum_cmd(int argc, char *argv[], char *cmdline)
+{
+int     errflag = 1;
+U16     id;
+BYTE    c;
+
+    UNREFERENCED(cmdline);
+
+    /* Update LPAR identification number if operand is specified */
+    if (argc > 1)
+    {
+        if (argv[1] != NULL
+          && strlen(argv[1]) >= 1 && strlen(argv[1]) <= 2
+          && sscanf(argv[1], "%hx%c", &id, &c) == 1)  
+        {
+            sysblk.lparnum = id;
+            sysblk.lparnuml = strlen(argv[1]);
+        }
+        else
+        {
+            logmsg( _("HHCPN058E LPARNUM must be one or two hex digits\n"));
+            return -1;
+        }
+    }
+    else
+        logmsg( _("HHCPN060I LPAR number = %"I16_FMT"X\n"), sysblk.lparnum);
 
     return 0;
 }

@@ -6,20 +6,6 @@
 
 // $Id$
 
-// $Log$
-// Revision 1.10  2009/01/25 23:37:22  rbowler
-// Correct help text for defsym command
-//
-// Revision 1.9  2009/01/25 21:23:50  jj
-// Implement auto_scsi_mount command
-//
-// Revision 1.8  2009/01/25 13:53:48  jj
-// Implement mounted_tape_reinit as command
-//
-// Revision 1.7  2009/01/19 12:16:57  rbowler
-// Fix dynamic linkage errors in cmdtab.c for MSVC
-//
-
 
 //          command    type          function      one-line description...
 // COMMAND ("sample"   PANEL,      , sample_cmd,   "short help text", "long help text" )
@@ -184,7 +170,9 @@ COMMAND ( "archmode",  PANEL+CONFIG, archmode_cmd,
 
 COMMAND ( "loadparm",  PANEL+CONFIG, loadparm_cmd, "set IPL parameter\n", NULL )
 
-COMMAND ( "lparname",  CONFIG,       lparname_cmd, "set LPAR name\n", NULL )
+COMMAND ( "lparname",  PANEL+CONFIG, lparname_cmd, "set LPAR name\n", NULL )
+
+COMMAND ( "lparnum",   PANEL+CONFIG, lparnum_cmd,  "set LPAR identification number\n", NULL )
 
 #if defined(OPTION_SET_STSI_INFO)
 COMMAND ( "model",     CONFIG,       stsi_model_cmd,"Set STSI model code", NULL )

@@ -2,94 +2,6 @@
 /*              ESAME feature definitions                            */
 
 // $Id$
-//
-// $Log$
-// Revision 1.89  2009/01/02 19:21:51  jj
-// DVD-RAM IPL
-// RAMSAVE
-// SYSG Integrated 3270 console fixes
-//
-// Revision 1.88  2008/12/29 11:04:29  jj
-// Disable 3270 & ASCII console features
-//
-// Revision 1.87  2008/12/29 11:03:10  jj
-// Move HMC disk I/O functions to scedasd.c
-//
-// Revision 1.86  2008/12/24 22:35:53  rbowler
-// Framework for integrated 3270 and ASCII console features
-//
-// Revision 1.85  2008/12/22 00:29:10  ivan
-// Implement February 2008 z/Arch Compare And Swap And Store Facility 2
-// Update FAQ to reflect change
-// update FAQ to also indicate z/Arch DAT Enhancement is implemented
-//
-// Revision 1.84  2008/08/04 22:06:00  rbowler
-// DIAG308 function codes for Program-directed re-IPL
-//
-// Revision 1.83  2008/04/08 17:13:06  bernard
-// Added execute relative long instruction
-//
-// Revision 1.82  2008/03/23 06:20:47  rbowler
-// Activate Move-with-Optional-Specifications Facility for ESAME
-//
-// Revision 1.81  2008/03/08 23:34:30  rbowler
-// Activate General Instructions Extension Facility for ESAME
-//
-// Revision 1.80  2008/03/01 12:19:04  rbowler
-// Rename new features to include the word facility
-//
-// Revision 1.79  2008/02/29 16:25:48  bernard
-// Enabled Parsing Enhancement Facility
-//
-// Revision 1.78  2008/02/28 11:05:13  rbowler
-// Deactivate new features not yet coded
-//
-// Revision 1.77  2008/02/28 10:11:50  rbowler
-// STFL bit settings for new features in zPOP-06
-//
-// Revision 1.76  2008/02/27 17:09:58  bernard
-// introduce FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FEATURE
-//
-// Revision 1.75  2008/02/27 14:14:50  bernard
-// Implemented feature_message_security_assist_extension_2
-//
-// Revision 1.74  2007/11/30 15:14:14  rbowler
-// Permit String-Instruction facility to be activated in S/370 mode
-//
-// Revision 1.73  2007/07/19 17:53:55  ivan
-// Disable DIAG 308. Current implementation isn't complete enough to allow
-// for a proper 2.6.21 linux kernel IPL
-//
-// Revision 1.72  2007/06/23 00:04:09  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.71  2007/06/02 13:46:41  rbowler
-// PFPO framework
-//
-// Revision 1.70  2007/05/26 21:45:25  rbowler
-// Activate Compare-and-Swap-and-Store feature
-//
-// Revision 1.69  2007/05/18 21:49:04  rbowler
-// Activate Conditional-SSKE feature
-//
-// Revision 1.68  2007/04/27 10:50:41  rbowler
-// STFL bit 27 for MVCOS
-//
-// Revision 1.67  2007/04/26 21:09:08  rbowler
-// Change SSKE instruction format from RRE to RRF_M
-//
-// Revision 1.66  2007/04/25 15:27:01  rbowler
-// Activate Extract-CPU-Time facility
-//
-// Revision 1.65  2007/04/25 12:10:27  rbowler
-// Move LFAS,SFASR to IEEE-exception-simulation facility
-//
-// Revision 1.64  2007/01/30 16:43:28  rbowler
-// Activate Decimal Floating Point Facility
-//
-// Revision 1.63  2006/12/08 09:43:21  jj
-// Add CVS message log
-//
 
 #if defined(OPTION_900_MODE)
 #define _ARCH_900_NAME "z/Arch" /* also: "ESAME" */
@@ -118,7 +30,6 @@
 //#define FEATURE_CPU_MEASUREMENT_COUNTER_FACILITY
 //#define FEATURE_CPU_MEASUREMENT_SAMPLING_FACILITY
 #define FEATURE_CPU_RECONFIG
-#define FEATURE_CPUID_FORMAT_1
 #define FEATURE_DAT_ENHANCEMENT
 #define FEATURE_DAT_ENHANCEMENT_FACILITY_2                      /*@Z9*/
 #define FEATURE_DECIMAL_FLOATING_POINT                          /*DFP*/
