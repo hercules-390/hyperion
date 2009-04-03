@@ -27,6 +27,7 @@ char *get_sce_dir()
 void set_sce_dir(char *path)
 {
 char realdir[MAX_PATH];
+char tempdir[MAX_PATH];
 
     if(sce_basedir)
     {
@@ -37,13 +38,14 @@ char realdir[MAX_PATH];
     if(!path)
         sce_basedir = NULL;
     else
-        if(!realpath(path,realdir))
+        if(!realpath(path,tempdir))
         {
             logmsg(_("HHCSC011E set_sce_dir: %s: %s\n"),path,strerror(errno));
             sce_basedir = NULL;
         }
         else
         {
+            hostpath(realdir, tempdir, sizeof(realdir));
             strlcat(realdir,"/",sizeof(realdir));
             sce_basedir = strdup(realdir);
         }
@@ -54,6 +56,7 @@ static char *set_sce_basedir(char *path)
 {
 char *basedir;
 char realdir[MAX_PATH];
+char tempdir[MAX_PATH];
 
     if(sce_basedir)
     {
@@ -61,12 +64,13 @@ char realdir[MAX_PATH];
         sce_basedir = NULL;
     }
 
-    if(!realpath(path,realdir))
+    if(!realpath(path,tempdir))
     {
         logmsg(_("HHCSC012E set_sce_basedir: %s: %s\n"),path,strerror(errno));
         sce_basedir = NULL;
         return NULL;
     }
+    hostpath(realdir, tempdir, sizeof(realdir));
 
     if((basedir = strrchr(realdir,'/')))
     {
@@ -85,6 +89,7 @@ char realdir[MAX_PATH];
 static char *check_sce_filepath(const char *path, char *fullpath)
 {
 char temppath[MAX_PATH];
+char tempreal[MAX_PATH];
 
     /* Return file access error if no basedir has been set */
     if(!sce_basedir)
@@ -94,17 +99,19 @@ char temppath[MAX_PATH];
         return NULL;
     }
 
-    /* Esthablish the full path of the file we are trying to access */
+    /* Establish the full path of the file we are trying to access */
     strlcpy(temppath,sce_basedir,sizeof(temppath));
     strlcat(temppath,path,sizeof(temppath));
     
-    if(!realpath(temppath,fullpath))
+    if(!realpath(temppath,tempreal))
     {
+        hostpath(fullpath, tempreal, sizeof(temppath));
         if(strncmp( sce_basedir, fullpath, strlen(sce_basedir)))
             errno = EACCES;
         return NULL;
     }
     
+    hostpath(fullpath, tempreal, sizeof(temppath));
     if(strncmp( sce_basedir, fullpath, strlen(sce_basedir)))
     {
         errno = EACCES;
