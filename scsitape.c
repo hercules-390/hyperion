@@ -13,59 +13,6 @@
 ////////////////////////////////////////////////////////////////////////////////////
 
 // $Id$
-//
-// $Log$
-// Revision 1.33  2008/11/04 05:56:31  fish
-// Put ensure consistent create_thread ATTR usage change back in
-//
-// Revision 1.32  2008/11/03 15:31:53  rbowler
-// Back out consistent create_thread ATTR modification
-//
-// Revision 1.31  2008/10/18 09:32:21  fish
-// Ensure consistent create_thread ATTR usage
-//
-// Revision 1.30  2008/05/22 21:34:22  fish
-// Attempt to fix my *nix SCSI tape BSR over tapemark bug identified by Bob Schneider [bschneider@pingdata.net]
-//
-// Revision 1.29  2008/03/31 06:36:49  fish
-// (untab)
-//
-// Revision 1.28  2008/03/30 02:51:33  fish
-// Fix SCSI tape EOV (end of volume) processing
-//
-// Revision 1.27  2008/03/29 08:36:46  fish
-// More complete/extensive 3490/3590 tape support
-//
-// Revision 1.26  2008/03/28 02:09:42  fish
-// Add --blkid-24 option support, poserror flag renamed to fenced,
-// added 'generic', 'readblkid' and 'locateblk' tape media handler
-// call vectors.
-//
-// Revision 1.25  2008/03/27 07:14:16  fish
-// SCSI MODS: groundwork: part 3: final shuffling around.
-// Moved functions from one module to another and resequenced
-// functions within each. NO CODE WAS ACTUALLY CHANGED.
-// Next commit will begin the actual changes.
-//
-// Revision 1.24  2008/03/25 11:41:31  fish
-// SCSI TAPE MODS part 1: groundwork: non-functional changes:
-// rename some functions, comments, general restructuring, etc.
-// New source modules awstape.c, omatape.c, hettape.c and
-// tapeccws.c added, but not yet used (all will be used in a future
-// commit though when tapedev.c code is eventually split)
-//
-// Revision 1.23  2007/11/30 14:54:33  jmaynard
-// Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
-//
-// Revision 1.22  2007/07/24 22:36:33  fish
-// Fix tape Synchronize CCW (x'43') to do actual commit
-//
-// Revision 1.21  2007/06/23 00:04:15  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.20  2006/12/08 09:43:29  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 #include "hercules.h"
@@ -559,7 +506,7 @@ struct mtop opblk;
     if (rc >= 0)
     {
         /* Increment current file number since tapemark was written */
-/*      dev->curfilen++; /* (CCW processor handles this automatically
+        /*dev->curfilen++;*/ /* (CCW processor handles this automatically
                              so there's no need for us to do it here) */
 
         /* (tapemarks count as block identifiers too!) */
@@ -1990,7 +1937,7 @@ void int_scsi_status_update( DEVBLK* dev, int mountstat_only ) // (internal call
         (
             buf, sizeof(buf),
 
-            "%u:%4.4X filename=%s (%s), sstat=0x%8.8X: %s %s"
+            "%u:%4.4X filename=%s (%s), sstat=0x%8.8lX: %s %s"
 
             ,SSID_TO_LCSS(dev->ssid)
             ,dev->devnum
