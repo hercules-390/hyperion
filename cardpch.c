@@ -8,17 +8,6 @@
 /* System/370 card punch devices.                                    */
 /*-------------------------------------------------------------------*/
 
-// $Log$
-// Revision 1.32  2007/11/21 22:54:13  fish
-// Use new BEGIN_DEVICE_CLASS_QUERY macro
-//
-// Revision 1.31  2007/06/23 00:04:03  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.30  2006/12/08 09:43:16  jj
-// Add CVS message log
-//
-
 #include "hstdinc.h"
 #include "hercules.h"
 
@@ -145,7 +134,7 @@ static void cardpch_query_device (DEVBLK *dev, char **class,
 
     BEGIN_DEVICE_CLASS_QUERY( "PCH", dev, class, buflen, buffer );
 
-    snprintf (buffer, buflen, "%s%s%s",
+    snprintf (buffer, buflen, "%s%s%s%s",
                 dev->filename,
                 (dev->ascii ? " ascii" : " ebcdic"),
                 ((dev->ascii && dev->crlf) ? " crlf" : ""),
