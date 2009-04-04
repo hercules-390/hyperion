@@ -196,8 +196,11 @@ COMMAND ( "legacysenseid",CONFIG,     lsid_cmd,    "set legacysenseid setting\n"
 COMMAND ( "ipl",       PANEL,         ipl_cmd,
   "IPL Normal from device xxxx",
     "Format: \"ipl nnnn [parm xxxxxxxxxxxxxx]\"\n"
-    "Performs the Initial Program Load manual control function. The operand 'nnnn'\n"
-    "can either be a device address or the name of a .ins file to be loaded.\n"
+    "Performs the Initial Program Load manual control function. If the first operand\n"
+    "'nnnn' is a 1- to 4-digit hexadecimal number, a CCW-type IPL is initiated from\n"
+    "the indicated device number, and SCLP disk I/O is disabled.\n"
+    "Otherwise a list-directed IPL is performed from the .ins file named 'nnnn', and\n"
+    "SCLP disk I/O is enabled for the directory path where the .ins file is located.\n"
     "An optional 'parm' keyword followed by a string can also be passed to the IPL\n"
     "command processor. The string will be loaded into the low-order 32 bits of the\n"
     "general purpose registers (4 characters per register for up to 64 bytes).\n"
@@ -222,7 +225,13 @@ COMMAND ( "sysclear",  PANEL,        sysc_cmd,
 
 COMMAND ( "store",     PANEL,        store_cmd,    "store CPU status at absolute zero\n", NULL )
 
-COMMAND ( "sclproot",  CONFIG+PANEL, sclproot_cmd, "set SCLP base directory\n", NULL )
+COMMAND ( "sclproot",  CONFIG+PANEL, sclproot_cmd,
+  "set SCLP base directory",
+    "Format: \"sclproot [path|NONE]\"\n"
+    "Enables SCLP disk I/O for the specified directory path, or disables SCLP disk\n"
+    "I/O if NONE is specified. A subsequent list-directed IPL resets the path to\n"
+    "the location of the .ins file, and a CCW-type IPL disables SCLP disk I/O.\n"
+    "If no operand is specified, sclproot displays the current setting.\n")
 
 #if defined(OPTION_HTTP_SERVER)
 COMMAND ( "httproot",  CONFIG,       httproot_cmd, "Set HTTP server root directory", NULL )
