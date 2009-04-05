@@ -3310,7 +3310,6 @@ int lparname_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int lparnum_cmd(int argc, char *argv[], char *cmdline)
 {
-int     errflag = 1;
 U16     id;
 BYTE    c;
 

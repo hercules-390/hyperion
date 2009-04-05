@@ -8,41 +8,6 @@
 /* System/370 line printer devices.                                  */
 /*-------------------------------------------------------------------*/
 
-// $Log$
-// Revision 1.47  2007/11/29 16:30:42  jmaynard
-// Allow ALLOW DATA CHECK to precede LOAD UCS AND FOLD on 1403 for TSS/370.
-//
-// Revision 1.46  2007/11/21 22:54:14  fish
-// Use new BEGIN_DEVICE_CLASS_QUERY macro
-//
-// Revision 1.45  2007/06/23 00:04:15  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.44  2007/03/22 11:56:19  rbowler
-// Remove double hyphen option from print-to-pipe feature
-//
-// Revision 1.43  2007/03/15 04:16:14  fish
-// fix query func to show ptp pargs too
-//
-// Revision 1.42  2007/03/15 02:56:47  fish
-// (minor fix)
-//
-// Revision 1.41  2007/03/13 15:55:29  fish
-// Backward-compatible fix of print-to-pipe to accept parameters.  :)
-//
-// Revision 1.40  2007/03/05 14:44:17  rbowler
-// Restore original print-to-pipe parameter-passing
-//
-// Revision 1.39  2007/02/26 15:35:07  fish
-// Fix print-to-pipe to accept paramters
-//
-// Revision 1.38  2007/02/26 13:38:51  rbowler
-// Messages HHCPR001E,HHCPR002E not logged to control panel
-//
-// Revision 1.37  2006/12/08 09:43:29  jj
-// Add CVS message log
-//
-
 #include "hstdinc.h"
 
 #include "hercules.h"
@@ -354,7 +319,7 @@ static void printer_query_device (DEVBLK *dev, char **class,
 {
     BEGIN_DEVICE_CLASS_QUERY( "PRT", dev, class, buflen, buffer );
 
-    snprintf (buffer, buflen, "%s%s%s",
+    snprintf (buffer, buflen, "%s%s%s%s",
                 dev->filename,
                 (dev->crlf ? " crlf" : ""),
                 (dev->notrunc ? " notrunc" : ""),

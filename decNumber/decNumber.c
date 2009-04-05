@@ -158,7 +158,9 @@
 #include <stdio.h>                 // for printf [if needed]
 #include <string.h>                // for strcpy
 #include <ctype.h>                 // for lower
+#if defined(_MSVC_)
 #pragma warning(disable:4244)      // [for win64]
+#endif /*defined(_MSVC_)*/
 #include "decNumber.h"             // base number library
 #include "decNumberLocal.h"        // decNumber local types, etc.
 

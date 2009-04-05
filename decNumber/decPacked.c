@@ -27,7 +27,9 @@
 /* ------------------------------------------------------------------ */
 
 #include <string.h>           // for NULL
+#if defined(_MSVC_)
 #pragma warning(disable:4244) // [for win64]
+#endif /*defined(_MSVC_)*/
 #include "decNumber.h"        // base number library
 #include "decPacked.h"        // packed decimal
 #include "decNumberLocal.h"   // decNumber local types, etc.
