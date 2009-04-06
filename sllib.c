@@ -10,17 +10,6 @@
 */
 
 // $Id$
-//
-// $Log$
-// Revision 1.17  2009/01/23 13:02:48  bernard
-// copyright notice
-//
-// Revision 1.16  2007/06/23 00:04:15  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.15  2006/12/08 09:43:30  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 
