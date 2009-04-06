@@ -947,7 +947,7 @@ sl_vol( SLLABEL *lab,
     }
 
     len = strlen( volser );
-    if( ( len > 6 ) || ( (int)strspn( volser, sl_cset ) != len ) )
+    if( ( len > 6 ) || ( strspn( volser, sl_cset ) != len ) )
     {
         return( SLE_VOLSER );
     }
