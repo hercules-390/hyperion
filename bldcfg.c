@@ -30,229 +30,6 @@
 /*          original patches by "Hackules"                           */
 /*-------------------------------------------------------------------*/
 
-// $Log$
-// Revision 1.134  2009/01/25 21:23:50  jj
-// Implement auto_scsi_mount command
-//
-// Revision 1.133  2009/01/25 13:53:48  jj
-// Implement mounted_tape_reinit as command
-//
-// Revision 1.132  2009/01/25 11:10:33  jj
-// Rework PTT config statement
-//
-// Revision 1.131  2009/01/25 10:21:24  jj
-// Thread initialisation now before config processing
-//
-// Revision 1.130  2009/01/23 11:39:41  bernard
-// copyright notice
-//
-// Revision 1.129  2009/01/19 12:18:04  rbowler
-// bldcfg.c rev 1.126 was incompatible with OPTION_FISHIO
-//
-// Revision 1.128  2009/01/18 22:27:27  jj
-// Allow both automount config syntax and automount command syntax
-//
-// Revision 1.127  2009/01/18 22:07:43  jj
-// Rework defsym config statement
-//
-// Revision 1.126  2009/01/18 21:57:30  jj
-// rework devtmax config statement
-//
-// Revision 1.125  2009/01/18 21:07:44  jj
-// Rework conkpalv config statement
-//
-// Revision 1.124  2009/01/16 13:57:49  rbowler
-// Fix  warning C4090: 'function' : different 'const' qualifiers in dyngui.c
-//
-// Revision 1.123  2009/01/15 21:05:35  jj
-// Move pantitle to hsccmd.c from bldcfg.c
-//
-// Revision 1.122  2009/01/15 17:36:43  jj
-// Change http server startup
-//
-// Revision 1.121  2009/01/15 15:38:05  jj
-// Move STSI command parsing to hsccmd.c
-//
-// Revision 1.120  2009/01/15 11:12:51  jj
-// Change traceopt/symptom parsing
-//
-// Revision 1.119  2009/01/15 11:05:25  jj
-// Make codepage and legacysenseid available as commands
-//
-// Revision 1.118  2009/01/15 10:31:48  jj
-// Rework diag8cmd & shcmdopt parsing logic
-//
-// Revision 1.117  2009/01/15 09:20:19  jj
-// Update pgmprdos parsing
-//
-// Revision 1.116  2009/01/15 08:58:31  jj
-// Remove logopt duplication in bldcfg.c
-//
-// Revision 1.115  2009/01/15 08:54:36  jj
-// Make alrf command as well as config statement
-//
-// Revision 1.114  2009/01/15 08:18:14  jj
-// panrate & iodelay command output consistancy
-//
-// Revision 1.113  2009/01/14 19:22:27  jj
-// Move timerint config statement to command handler
-//
-// Revision 1.112  2009/01/14 19:04:25  jj
-// Move TODDRAG config statement to command handler
-//
-// Revision 1.111  2009/01/14 19:00:22  jj
-// Make lparname command as well as config statement
-//
-// Revision 1.110  2009/01/14 18:46:10  jj
-// Differentiate between ostailor OS/390 and VSE
-//
-// Revision 1.109  2009/01/14 16:27:10  jj
-// move cckd config to cmd handler
-//
-// Revision 1.108  2009/01/14 15:58:54  jj
-// Move panrate config to command handler
-//
-// Revision 1.107  2009/01/14 15:49:36  jj
-// Move archmode config to command processing
-//
-// Revision 1.106  2009/01/14 15:31:43  jj
-// Move loadparm logic to command handler
-//
-// Revision 1.105  2009/01/14 15:23:20  jj
-// Move modpath logic to hsccmd.c
-//
-// Revision 1.104  2009/01/14 14:59:06  jj
-// simplify i/o delay config procesing
-//
-// Revision 1.103  2009/01/14 14:45:20  jj
-// hercules command table now also used for config commands
-//
-// Revision 1.102  2009/01/08 14:43:38  jmaynard
-// Cosmetic update to CPU type display on startup.
-//
-// Revision 1.101  2009/01/02 19:21:50  jj
-// DVD-RAM IPL
-// RAMSAVE
-// SYSG Integrated 3270 console fixes
-//
-// Revision 1.100  2009/01/02 14:11:18  ivan
-// Change DIAG8CMD command statement semantics to be more consistent with other configuration statements
-// Syntax is now :
-// DIAG8CMD DISABLE|ENABLE [ECHO|NOECHO]
-//
-// Revision 1.99  2009/01/02 14:01:02  rbowler
-// herclogo being ignored if not the last statement in config
-//
-// Revision 1.98  2008/12/29 00:00:54  ivan
-// Change semantics for DIAG8CMD configuration statement
-// Disable command redisplay at the console when NOECHO is set
-// Commands typed with a '-' as the first character are not redisplayed
-//
-// Revision 1.97  2008/12/28 14:04:59  ivan
-// Allow DIAG8CMD NOECHO
-// This configures suppression of messages related to diag 8 issued by guests
-//
-// Revision 1.96  2008/12/01 22:07:16  fish
-// remove unused #defines
-//
-// Revision 1.95  2008/12/01 16:19:49  jj
-// Check for licensed operating systems without impairing architectural
-// compliance of IFL's
-//
-// Revision 1.94  2008/11/24 14:52:21  jj
-// Add PTYP=IFL
-// Change SCPINFO processing to check on ptyp for IFL specifics
-//
-// Revision 1.93  2008/11/24 13:44:03  rbowler
-// Fix bldcfg.c:1851: warning: short unsigned int format, different type arg
-//
-// Revision 1.92  2008/11/04 05:56:30  fish
-// Put ensure consistent create_thread ATTR usage change back in
-//
-// Revision 1.91  2008/11/03 15:31:58  rbowler
-// Back out consistent create_thread ATTR modification
-//
-// Revision 1.90  2008/10/18 09:32:20  fish
-// Ensure consistent create_thread ATTR usage
-//
-// Revision 1.89  2008/10/14 22:41:08  rbowler
-// Add ENGINES configuration statement
-//
-// Revision 1.88  2008/08/29 07:06:00  fish
-// Add KEEPMSG to blank lines in message HHCCF039W
-//
-// Revision 1.87  2008/08/23 11:54:54  fish
-// Reformat/center  "HHCCF039W PGMPRDOS LICENSED"  message
-//
-// Revision 1.86  2008/08/21 18:34:45  fish
-// Fix i/o-interrupt-queue race condition
-//
-// Revision 1.85  2008/08/02 18:31:28  bernard
-// type in PGMPRDOS message
-//
-// Revision 1.84  2008/08/02 13:25:00  bernard
-// Put PGMPRDOS message in red.
-//
-// Revision 1.83  2008/07/08 05:35:48  fish
-// AUTOMOUNT redesign: support +allowed/-disallowed dirs
-// and create associated 'automount' panel command - Fish
-//
-// Revision 1.82  2008/05/28 16:46:29  fish
-// Misleading VTAPE support renamed to AUTOMOUNT instead and fixed and enhanced so that it actually WORKS now.
-//
-// Revision 1.81  2008/03/04 01:10:29  ivan
-// Add LEGACYSENSEID config statement to allow X'E4' Sense ID on devices
-// that originally didn't support it. Defaults to off for compatibility reasons
-//
-// Revision 1.80  2008/01/18 23:44:12  rbowler
-// Segfault instead of HHCCF004S if no device records in config file
-//
-// Revision 1.79  2008/01/18 22:08:33  rbowler
-// HHCCF008E Error in hercules.cnf: Unrecognized keyword 0:0009
-//
-// Revision 1.78  2007/12/29 14:38:39  fish
-// init sysblk.dummyregs.hostregs = &sysblk.dummyregs; to prevent panel or dyngui threads from crashing when using new INSTCOUNT macro.
-//
-// Revision 1.77  2007/06/23 00:04:03  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.76  2007/06/06 22:14:57  gsmith
-// Fix SYNCHRONIZE_CPUS when numcpu > number of host processors - Greg
-//
-// Revision 1.75  2007/02/27 05:30:36  fish
-// Fix minor glitch in enhanced symbol substitution
-//
-// Revision 1.74  2007/02/26 21:33:46  rbowler
-// Allow either quotes or apostrophes as argument delimiters in config statements
-//
-// Revision 1.73  2007/02/18 23:49:25  kleonard
-// Add TIME and NOTIME synonyms for LOGOPT operands
-//
-// Revision 1.72  2007/01/31 00:48:03  kleonard
-// Add logopt config statement and panel command
-//
-// Revision 1.71  2007/01/14 19:42:38  gsmith
-// Fix S370 only build - nerak60510
-//
-// Revision 1.70  2007/01/14 18:36:53  gsmith
-// Fix S370 only build - nerak60510
-//
-// Revision 1.69  2007/01/11 19:54:33  fish
-// Addt'l keep-alive mods: create associated supporting config-file stmt and panel command where individual customer-preferred values can be specified and/or dynamically modified.
-//
-// Revision 1.68  2007/01/08 09:52:00  rbowler
-// Rename symptom command as traceopt
-//
-// Revision 1.67  2007/01/07 11:25:33  rbowler
-// Instruction tracing regsfirst and noregs modes
-//
-// Revision 1.66  2007/01/06 09:05:18  gsmith
-// Enable display_inst to display traditionally too
-//
-// Revision 1.65  2006/12/08 09:43:16  jj
-// Add CVS message log
-//
-
 #include "hstdinc.h"
 
 #if !defined(_BLDCFG_C_)
@@ -885,6 +662,7 @@ char   *smodel;                         /* -> CPU model string       */
 char   *sversion;                       /* -> CPU version string     */
 char   *smainsize;                      /* -> Main size string       */
 char   *sxpndsize;                      /* -> Expanded size string   */
+char   *smaxcpu;                        /* -> Maximum number of CPUs */
 char   *snumcpu;                        /* -> Number of CPUs         */
 char   *snumvec;                        /* -> Number of VFs          */
 char   *sengines;                       /* -> Processor engine types */
@@ -910,6 +688,7 @@ U32     serial;                         /* CPU serial number         */
 U16     model;                          /* CPU model number          */
 unsigned mainsize;                      /* Main storage size (MB)    */
 unsigned xpndsize;                      /* Expanded storage size (MB)*/
+U16     maxcpu;                         /* Maximum number of CPUs    */
 U16     numcpu;                         /* Number of CPUs            */
 U16     numvec;                         /* Number of VFs             */
 #if defined(OPTION_SHARED_DEVICES)
@@ -972,6 +751,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     model = 0x0586;
     mainsize = 2;
     xpndsize = 0;
+    maxcpu = 0;
     numcpu = 0;
     numvec = MAX_CPU_ENGINES;
     sysepoch = 1900;
@@ -1177,6 +957,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         sversion = NULL;
         smainsize = NULL;
         sxpndsize = NULL;
+        smaxcpu = NULL;
         snumcpu = NULL;
         snumvec = NULL;
         sengines = NULL;
@@ -1231,6 +1012,10 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             else if (strcasecmp (keyword, "cnslport") == 0)
             {
                 config_cnslport = strdup(operand);
+            }
+            else if (strcasecmp (keyword, "maxcpu") == 0)
+            {
+                smaxcpu = operand;
             }
             else if (strcasecmp (keyword, "numcpu") == 0)
             {
@@ -1506,6 +1291,20 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 #endif /*!defined(NO_SETUID)*/
 
         sysblk.devprio = devprio;
+
+        /* Parse maximum number of CPUs operand */
+        if (smaxcpu != NULL)
+        {
+            if (sscanf(smaxcpu, "%hu%c", &maxcpu, &c) != 1
+                || maxcpu < 1
+                || maxcpu > MAX_CPU_ENGINES)
+            {
+                fprintf(stderr, _("HHCCF021S Error in %s line %d: "
+                        "Invalid maximum number of CPUs %s\n"),
+                        fname, inc_stmtnum[inc_level], smaxcpu);
+                delayed_exit(1);
+            }
+        }
 
         /* Parse number of CPUs operand */
         if (snumcpu != NULL)
@@ -1976,11 +1775,19 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         close(dummyfd[i]);
 #endif
 
+    /* Set default maximum number of CPUs */
 #ifdef _FEATURE_CPU_RECONFIG
     sysblk.maxcpu = sysblk.arch_mode == ARCH_370 ? numcpu : MAX_CPU_ENGINES;
 #else
     sysblk.maxcpu = numcpu;
 #endif /*_FEATURE_CPU_RECONFIG*/
+
+    /* Set maximum number of CPUs to specified value */
+    if (maxcpu > 0) {
+        sysblk.maxcpu = maxcpu;
+        if (sysblk.maxcpu < sysblk.numcpu)
+            sysblk.maxcpu = sysblk.numcpu;
+    }
 
     /* Start the CPUs */
     OBTAIN_INTLOCK(NULL);
