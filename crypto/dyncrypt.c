@@ -359,8 +359,7 @@ static void ARCH_DEP(kimd_sha_1)(int r1, int r2, REGS *regs)
   sha1_seticv(&context, parameter_block);
 
   /* Try to process the CPU-determined amount of data */
-  crypted = 0;
-  while(crypted += 64 < PROCESS_MAX)
+  for(crypted = 0; crypted < PROCESS_MAX; crypted += 64)
   {
     /* Fetch and process a block of data */
     ARCH_DEP(vfetchc)(message_block, 63, GR_A(r2, regs), r2, regs);
@@ -442,8 +441,7 @@ static void ARCH_DEP(kimd_sha_256)(int r1, int r2, REGS *regs)
   sha256_seticv(&context, parameter_block);
 
   /* Try to process the CPU-determined amount of data */
-  crypted = 0;
-  while(crypted += 64 < PROCESS_MAX)
+  for(crypted = 0; crypted < PROCESS_MAX; crypted += 64)
   {
     /* Fetch and process a block of data */
     ARCH_DEP(vfetchc)(message_block, 63, GR_A(r2, regs), r2, regs);
@@ -526,8 +524,7 @@ static void ARCH_DEP(kimd_sha_512)(int r1, int r2, REGS *regs)
   sha512_seticv(&context, parameter_block);
 
   /* Try to process the CPU-determined amount of data */
-  crypted = 0;
-  while(crypted += 128 < PROCESS_MAX)
+  for(crypted = 0; crypted < PROCESS_MAX; crypted += 128)
   {
     /* Fetch and process a block of data */
     ARCH_DEP(vfetchc)(message_block, 127, GR_A(r2, regs), r2, regs);
@@ -632,8 +629,7 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
   sha1_seticv(&context, parameter_block);
 
   /* Try to process the CPU-determined amount of data */
-  crypted = 0;
-  while(crypted += 64 < PROCESS_MAX)
+  for(crypted = 0; crypted < PROCESS_MAX; crypted += 64)
   {
     /* Check for last block */
     if(likely(GR_A(r2 + 1, regs) < 64))
@@ -765,8 +761,7 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
   sha256_seticv(&context, parameter_block);
 
   /* Try to process the CPU-determined amount of data */
-  crypted = 0;
-  while(crypted += 64 < PROCESS_MAX)
+  for(crypted = 0; crypted < PROCESS_MAX; crypted += 64)
   {
     /* Check for last block */
     if(likely(GR_A(r2 + 1, regs) < 64))
@@ -899,8 +894,7 @@ static void ARCH_DEP(klmd_sha_512)(int r1, int r2, REGS *regs)
   sha512_seticv(&context, parameter_block);
 
   /* Try to process the CPU-determined amount of data */
-  crypted = 0;
-  while(crypted += 128 < PROCESS_MAX)
+  for(crypted = 0; crypted < PROCESS_MAX; crypted += 128)
   {
     /* Check for last block */
     if(likely(GR_A(r2 + 1, regs) < 128))
@@ -1060,10 +1054,9 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
   des_set_key(&context, parameter_block);
 
   /* Try to process the CPU-determined amount of data */
-  crypted = 0;
   modifier_bit = GR0_m(regs);
   r1_is_not_r2 = r1 != r2;
-  while(crypted += 8 < PROCESS_MAX)
+  for(crypted = 0; crypted < PROCESS_MAX; crypted += 8)
   {
     /* Fetch a block of data */
     ARCH_DEP(vfetchc)(message_block, 7, GR_A(r2, regs), r2, regs);
@@ -1148,10 +1141,9 @@ static void ARCH_DEP(km_tdea_128)(int r1, int r2, REGS *regs)
   des3_set_2keys(&context, parameter_block, &parameter_block[8]);
 
   /* Try to process the CPU-determined amount of data */
-  crypted = 0;
   modifier_bit = GR0_m(regs);
   r1_is_not_r2 = r1 != r2;
-  while(crypted += 8 < PROCESS_MAX)
+  for(crypted = 0; crypted < PROCESS_MAX; crypted += 8)
   {
     /* Fetch a block of data */
     ARCH_DEP(vfetchc)(message_block, 7, GR_A(r2, regs), r2, regs);
@@ -1237,10 +1229,9 @@ static void ARCH_DEP(km_tdea_192)(int r1, int r2, REGS *regs)
   des3_set_3keys(&context, parameter_block, &parameter_block[8], &parameter_block[16]);
 
   /* Try to process the CPU-determined amount of data */
-  crypted = 0;
   modifier_bit = GR0_m(regs);
   r1_is_not_r2 = r1 != r2;
-  while(crypted += 8 < PROCESS_MAX)
+  for(crypted = 0; crypted < PROCESS_MAX; crypted += 8)
   {
     /* Fetch a block of data */
     ARCH_DEP(vfetchc)(message_block, 7, GR_A(r2, regs), r2, regs);
@@ -1325,10 +1316,9 @@ static void ARCH_DEP(km_aes_128)(int r1, int r2, REGS *regs)
   aes_set_key(&context, parameter_block, 128);
 
   /* Try to process the CPU-determined amount of data */
-  crypted = 0;
   modifier_bit = GR0_m(regs);
   r1_is_not_r2 = r1 != r2;
-  while(crypted += 16 < PROCESS_MAX)
+  for(crypted = 0; crypted < PROCESS_MAX; crypted += 16)
   {
     /* Fetch a block of data */
     ARCH_DEP(vfetchc)(message_block, 15, GR_A(r2, regs), r2, regs);
@@ -1414,10 +1404,9 @@ static void ARCH_DEP(km_aes_192)(int r1, int r2, REGS *regs)
   aes_set_key(&context, parameter_block, 192);
 
   /* Try to process the CPU-determined amount of data */
-  crypted = 0;
   modifier_bit = GR0_m(regs);
   r1_is_not_r2 = r1 != r2;
-  while(crypted += 16 < PROCESS_MAX)
+  for(crypted = 0; crypted < PROCESS_MAX; crypted += 16)
   {
     /* Fetch a block of data */
     ARCH_DEP(vfetchc)(message_block, 15, GR_A(r2, regs), r2, regs);
@@ -1501,10 +1490,9 @@ static void ARCH_DEP(km_aes_256)(int r1, int r2, REGS *regs)
   aes_set_key(&context, parameter_block, 256);
 
   /* Try to process the CPU-determined amount of data */
-  crypted = 0;
   modifier_bit = GR0_m(regs);
   r1_is_not_r2 = r1 != r2;
-  while(crypted += 16 < PROCESS_MAX)
+  for(crypted = 0; crypted < PROCESS_MAX; crypted += 16)
   {
     /* Fetch a block of data */
     ARCH_DEP(vfetchc)(message_block, 15, GR_A(r2, regs), r2, regs);
@@ -1622,8 +1610,7 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
   des_set_key(&context, &parameter_block[8]);
 
   /* Try to process the CPU-determined amount of data */
-  crypted = 0;
-  while(crypted += 8 < PROCESS_MAX)
+  for(crypted = 0; crypted < PROCESS_MAX; crypted += 8)
   {
     /* Fetch a block of data */
     ARCH_DEP(vfetchc)(message_block, 7, GR_A(r2, regs), r2, regs);
@@ -1713,8 +1700,7 @@ static void ARCH_DEP(kmac_tdea_128)(int r1, int r2, REGS *regs)
   des_set_key(&context2, &parameter_block[16]);
 
   /* Try to process the CPU-determined amount of data */
-  crypted = 0;
-  while(crypted += 8 < PROCESS_MAX)
+  for(crypted = 0; crypted < PROCESS_MAX; crypted += 8)
   {
     /* Fetch a block of data */
     ARCH_DEP(vfetchc)(message_block, 7, GR_A(r2, regs), r2, regs);
@@ -1809,8 +1795,7 @@ static void ARCH_DEP(kmac_tdea_192)(int r1, int r2, REGS *regs)
   des_set_key(&context3, &parameter_block[24]);
 
   /* Try to process the CPU-determined amount of data */
-  crypted = 0;
-  while(crypted += 8 < PROCESS_MAX)
+  for(crypted = 0; crypted < PROCESS_MAX; crypted += 8)
   {
     /* Fetch a block of data */
     ARCH_DEP(vfetchc)(message_block, 7, GR_A(r2, regs), r2, regs);
@@ -1926,10 +1911,9 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
   des_set_key(&context, &parameter_block[8]);
 
   /* Try to process the CPU-determined amount of data */
-  crypted = 0;
   modifier_bit = GR0_m(regs);
   r1_is_not_r2 = r1 != r2;
-  while(crypted += 8 < PROCESS_MAX)
+  for(crypted = 0; crypted < PROCESS_MAX; crypted += 8)
   {
     /* Fetch a block of data */
     ARCH_DEP(vfetchc)(message_block, 7, GR_A(r2, regs), r2, regs);
@@ -2049,10 +2033,9 @@ static void ARCH_DEP(kmc_tdea_128)(int r1, int r2, REGS *regs)
   des_set_key(&context2, &parameter_block[16]);
 
   /* Try to process the CPU-determined amount of data */
-  crypted = 0;
   modifier_bit = GR0_m(regs);
   r1_is_not_r2 = r1 != r2;
-  while(crypted += 8 < PROCESS_MAX)
+  for(crypted = 0; crypted < PROCESS_MAX; crypted += 8)
   {
     /* Fetch a block of data */
     ARCH_DEP(vfetchc)(message_block, 7, GR_A(r2, regs), r2, regs);
@@ -2179,10 +2162,9 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
   des_set_key(&context3, &parameter_block[24]);
 
   /* Try to process the CPU-determined amount of data */
-  crypted = 0;
   modifier_bit = GR0_m(regs);
   r1_is_not_r2 = r1 != r2;
-  while(crypted += 8 < PROCESS_MAX)
+  for(crypted = 0; crypted < PROCESS_MAX; crypted += 8)
   {
     /* Fetch a block of data */
     ARCH_DEP(vfetchc)(message_block, 7, GR_A(r2, regs), r2, regs);
@@ -2304,10 +2286,9 @@ static void ARCH_DEP(kmc_aes_128)(int r1, int r2, REGS *regs)
   aes_set_key(&context, &parameter_block[16], 128);
 
   /* Try to process the CPU-determined amount of data */
-  crypted = 0;
   modifier_bit = GR0_m(regs);
   r1_is_not_r2 = r1 != r2;
-  while(crypted += 16 < PROCESS_MAX)
+  for(crypted = 0; crypted < PROCESS_MAX; crypted += 16)
   {
     /* Fetch a block of data */
     ARCH_DEP(vfetchc)(message_block, 15, GR_A(r2, regs), r2, regs);
@@ -2426,10 +2407,9 @@ static void ARCH_DEP(kmc_aes_192)(int r1, int r2, REGS *regs)
   aes_set_key(&context, &parameter_block[16], 192);
 
   /* Try to process the CPU-determined amount of data */
-  crypted = 0;
   modifier_bit = GR0_m(regs);
   r1_is_not_r2 = r1 != r2;
-  while(crypted += 16 < PROCESS_MAX)
+  for(crypted = 0; crypted < PROCESS_MAX; crypted += 16)
   {
     /* Fetch a block of data */
     ARCH_DEP(vfetchc)(message_block, 15, GR_A(r2, regs), r2, regs);
@@ -2546,10 +2526,9 @@ static void ARCH_DEP(kmc_aes_256)(int r1, int r2, REGS *regs)
   aes_set_key(&context, &parameter_block[16], 256);
 
   /* Try to process the CPU-determined amount of data */
-  crypted = 0;
   modifier_bit = GR0_m(regs);
   r1_is_not_r2 = r1 != r2;
-  while(crypted += 16 < PROCESS_MAX)
+  for(crypted = 0; crypted < PROCESS_MAX; crypted += 16)
   {
     /* Fetch a block of data */
     ARCH_DEP(vfetchc)(message_block, 15, GR_A(r2, regs), r2, regs);
@@ -2674,9 +2653,8 @@ static void ARCH_DEP(kmc_prng)(int r1, int r2, REGS *regs)
   des_set_key(&context3, &parameter_block[24]);
 
   /* Try to process the CPU-determined amount of data */
-  crypted = 0;
   r1_is_not_r2 = r1 != r2;
-  while(crypted += 8 < PROCESS_MAX)
+  for(crypted = 0; crypted < PROCESS_MAX; crypted += 8)
   {
     /* Fetch a block of data */
     ARCH_DEP(vfetchc)(message_block, 7, GR_A(r2, regs), r2, regs);
