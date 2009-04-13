@@ -1,4 +1,4 @@
-13 Apr 2009 CMPSC store_is now uses MADDR instead of vstorec. Thanks Greg for sending 
+13 Apr 2009 CMPSC vstore now uses MADDR instead of vstorec. Thanks Greg for sending 
             the zHercules mail on Sat Feb 19, 2005 3:28 pm - Bernard van der Helm
 17 Mar 2009 Changed "notrunc" to "noclear" and fix compile error on MSVC -
             Jay Maynard
