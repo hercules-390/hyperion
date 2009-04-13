@@ -1373,7 +1373,7 @@ static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, BYTE *buf, unsigned
     memcpy(MADDR((GR_A(r1, regs) + len1) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey), &buf[len1], len - len1);
   }
   ADJUSTREGS(r1, regs, iregs, len);
-  ITIMER_UPDATE(GR_A(r1, regs), len, regs);
+  ITIMER_UPDATE(GR_A(r1, regs), len - 1, regs);
   return(0); 
 }
 
