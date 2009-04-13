@@ -1296,7 +1296,8 @@ static int ARCH_DEP(test_ec)(int r2, REGS *regs, REGS *iregs, BYTE *cce)
 /*----------------------------------------------------------------------------*/
 static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, BYTE *buf, unsigned len)
 {
-  unsigned i;
+  BYTE *dest1;
+  int len1;
 
   /* Check destination size */
   if(unlikely(GR_A(r1 + 1, iregs) < len))
@@ -1362,18 +1363,18 @@ static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, BYTE *buf, unsigned
   }
 #endif
 
-  for(i = 0; unlikely(len >= 256); i += 256)
+  dest1 = MADDR(GR_A(r1, regs), r1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey); 
+  if(NOCROSS2K(GR_A(r1, regs), len))
+    memcpy(dest1, buf, len);
+  else
   {
-    ARCH_DEP(vstorec)(&buf[i], 256 - 1, GR_A(r1, iregs), r1, regs);
-    len -= 256;
-    ADJUSTREGS(r1, regs, iregs, 256);
+    len1 = 0x800 - (GR_A(r1, regs) & 0x7ff);
+    memcpy(dest1, buf, len1);
+    memcpy(MADDR((GR_A(r1, regs) + len1) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey), &buf[len1], len - len1);
   }
-  if(likely(len))
-  {
-    ARCH_DEP(vstorec)(&buf[i], len - 1, GR_A(r1, iregs), r1, regs);
-    ADJUSTREGS(r1, regs, iregs, len);
-  }
-  return(0);
+  ADJUSTREGS(r1, regs, iregs, len);
+  ITIMER_UPDATE(GR_A(r1, regs), len, regs);
+  return(0); 
 }
 
 /*----------------------------------------------------------------------------*/
