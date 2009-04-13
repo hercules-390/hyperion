@@ -1364,7 +1364,7 @@ static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, BYTE *buf, unsigned
 #endif
 
   dest1 = MADDR(GR_A(r1, regs), r1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey); 
-  if(NOCROSS2K(GR_A(r1, regs), len))
+  if(NOCROSS2KL(GR_A(r1, regs), len))
     memcpy(dest1, buf, len);
   else
   {
