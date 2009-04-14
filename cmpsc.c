@@ -1313,6 +1313,7 @@ static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, BYTE *buf, unsigned
   }
 
 #ifdef OPTION_CMPSC_DEBUG
+  unsigned i;
   unsigned j;
   static BYTE pbuf[2060];
   static unsigned plen = 2061;         /* Impossible value                    */
