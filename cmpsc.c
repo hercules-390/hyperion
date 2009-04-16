@@ -1296,8 +1296,7 @@ static int ARCH_DEP(test_ec)(int r2, REGS *regs, REGS *iregs, BYTE *cce)
 /*----------------------------------------------------------------------------*/
 static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, BYTE *buf, unsigned len)
 {
-  BYTE *dest1;
-  int len1;
+  unsigned i;
 
   /* Check destination size */
   if(unlikely(GR_A(r1 + 1, iregs) < len))
@@ -1313,7 +1312,6 @@ static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, BYTE *buf, unsigned
   }
 
 #ifdef OPTION_CMPSC_DEBUG
-  unsigned i;
   unsigned j;
   static BYTE pbuf[2060];
   static unsigned plen = 2061;         /* Impossible value                    */
@@ -1364,20 +1362,17 @@ static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, BYTE *buf, unsigned
   }
 #endif
 
-  if(NOCROSS2KL(GR_A(r1, iregs), len))
+  for(i = 0; unlikely(len >= 256); i += 256)
   {
-    dest1 = MADDR(GR_A(r1, iregs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
-    memcpy(dest1, buf, len);
-    ITIMER_UPDATE(GR_A(r1, iregs), len - 1, regs);
+    ARCH_DEP(vstorec)(&buf[i], 256 - 1, GR_A(r1, iregs), r1, regs);
+    len -= 256;
+    ADJUSTREGS(r1, regs, iregs, 256);
   }
-  else
+  if(likely(len))
   {
-    dest1 = MADDR(GR_A(r1, iregs), r1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
-    len1 = 0x800 - (GR_A(r1, iregs) & 0x7ff);
-    memcpy(dest1, buf, len1);
-    memcpy(MADDR((GR_A(r1, iregs) + len1) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey), &buf[len1], len - len1);
+    ARCH_DEP(vstorec)(&buf[i], len - 1, GR_A(r1, iregs), r1, regs);
+    ADJUSTREGS(r1, regs, iregs, len);
   }
-  ADJUSTREGS(r1, regs, iregs, len);
   return(0); 
 }
 
