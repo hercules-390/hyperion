@@ -1364,17 +1364,20 @@ static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, BYTE *buf, unsigned
   }
 #endif
 
-  dest1 = MADDR(GR_A(r1, iregs), r1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey); 
   if(NOCROSS2KL(GR_A(r1, iregs), len))
+  {
+    dest1 = MADDR(GR_A(r1, iregs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
     memcpy(dest1, buf, len);
+    ITIMER_UPDATE(GR_A(r1, iregs), len - 1, regs);
+  }
   else
   {
+    dest1 = MADDR(GR_A(r1, iregs), r1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
     len1 = 0x800 - (GR_A(r1, iregs) & 0x7ff);
     memcpy(dest1, buf, len1);
-    memcpy(MADDR((GR_A(r1, iregs) + len1) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey), &buf[len1], len - len1);
+    memcpy(MADDR((GR_A(r1, iregs) + len1) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey), &buf[len1], len - len1);
   }
   ADJUSTREGS(r1, regs, iregs, len);
-  ITIMER_UPDATE(GR_A(r1, iregs), len - 1, regs);
   return(0); 
 }
 
