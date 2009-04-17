@@ -826,7 +826,7 @@ static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, struct ec *ec, 
   if(unlikely(ec->ici == ec->icl))
   {
     ec->ici = smbsz;
-    ec->icl = (GR_A(r2, regs) > 256u ? 256u - (256 % smbsz) : GR_A(r2, regs) - (GR_A(r2, regs) % smbsz));
+    ec->icl = (GR_A(r2 + 1, regs) > 256u ? 256u - (256 % smbsz) : GR_A(r2 + 1, regs) - (GR_A(r2 + 1, regs) % smbsz));
     ARCH_DEP(vfetchc)(ec->ic, ec->icl - 1, GR_A(r2, iregs) & ADDRESS_MAXWRAP(regs), r2, regs);
     memcpy(buf, ec->ic, smbsz);
   }
