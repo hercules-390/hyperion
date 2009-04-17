@@ -318,6 +318,12 @@
   #endif 
 #endif 
 
+#ifdef OPTION_CMPSC_ECACHE_DEBUG
+  #define EC_STAT(a) (a)++;
+  #else
+  #define EC_STAT(a) {}
+#endif
+
 /******************************************************************************/
 /******************************************************************************/
 /* Here is the last part of definitions. The constants,typedefs and function  */
@@ -334,26 +340,39 @@
 
 #ifndef NO_2ND_COMPILE
 /*----------------------------------------------------------------------------*/
-/* Expand cache                                                               */
+/* Expand caches                                                              */
 /*                                                                            */
-/* The expanded index symbol can be found at ec.c[ec.i[is]] with length       */
-/* e.l[is]. A length of zero means not within cache. Water mark wm point to   */
-/* the free part within the cache ec.c.                                       */
+/* Input cache                                                                */
+/* The input cache can contain as many index symbols that fit in 256 bytes.   */
+/* The value ici points to the next byte to be read until maximum icl.        */
+/*                                                                            */
+/* Expanded index symbol cache                                                */
+/* The expanded index symbol can be found at ec.ec[ec.eci[is]] with length    */
+/* ec.ecl[is]. A length of zero means not within cache. Water mark eiwm       */
+/* points to the free part within the cache ec.ec.                            */
+/*                                                                            */
+/* Output cache                                                               */
+/* The output cache can contain 8 index symbols (maxlen is = 260). The ocl    */
+/* contains the written length.                                               */
+/*                                                                            */
 /*----------------------------------------------------------------------------*/
-struct ec                              /* Expand cache                        */
+struct ec                              /* Expand caches                       */
 {
-  BYTE c[ECACHE_SIZE];                 /* Cache                               */
-  int i[8192];                         /* Index within cache for is           */
-  int l[8192];                         /* Size of expanded is                 */
-  int wm;                              /* Water mark                          */
+  BYTE ic[256];                        /* Input cache                         */
+  unsigned ici;                        /* Input cache index                   */
+  unsigned icl;                        /* Input cache length                  */
+
+  BYTE ec[ECACHE_SIZE];                /* Expanded index symbol cache         */
+  int eci[8192];                       /* Index within cache for is           */
+  int ecl[8192];                       /* Size of expanded is                 */
+  int ecwm;                            /* Water mark                          */
+
   BYTE oc[2080];                       /* Output cache                        */
-  unsigned oci;                        /* Output cache index                  */
+  unsigned ocl;                        /* Output cache length                 */
+
 #ifdef OPTION_CMPSC_ECACHE_DEBUG
   unsigned int hit;                    /* Cache hits                          */
   unsigned int miss;                   /* Cache misses                        */
-#define EC_STAT(a) (a)++;
-#else
-#define EC_STAT(a) {}
 #endif
 };
 #endif /* #ifndef NO_2ND_COMPILE */
@@ -367,7 +386,7 @@ static void ARCH_DEP(expand_is)(int r2, REGS *regs, struct ec *ec, U16 is);
 static void ARCH_DEP(fetch_cce)(int r2, REGS *regs, BYTE *cce, int i);
 static int  ARCH_DEP(fetch_ch)(int r2, REGS *regs, REGS *iregs, BYTE *ch, int ofst);
 static int  ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, U16 *is);
-static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, U16 is[8]);
+static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, struct ec *ec, U16 is[8]);
 static void ARCH_DEP(fetch_sd)(int r2, REGS *regs, BYTE *sd, int i);
 #ifdef OPTION_CMPSC_DEBUG
 static void print_ece(BYTE *ece);
@@ -459,16 +478,20 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   dcten = GR0_dcten(regs);
   smbsz = GR0_smbsz(regs);
 
-  /* Initialize cache and prefill with alphabet entries */
+  /* Initialize input cache */
+  ec.ici = 0;
+  ec.icl = 0;
+
+  /* Initialize expanded index symbol cache and prefill with alphabet entries */
   for(i = 0; i < 256; i++)             /* Alphabet entries                    */
   {
-    ec.c[i] = i;
-    ec.i[i] = i;
-    ec.l[i] = 1;
+    ec.ec[i] = i;
+    ec.eci[i] = i;
+    ec.ecl[i] = 1;
   }
   for(i = 256; i < dcten; i++)         /* Clear all other index symbols       */
-    ec.l[i] = 0;
-  ec.wm = 256;                         /* Set watermark after alphabet part   */
+    ec.ecl[i] = 0;
+  ec.ecwm = 256;                       /* Set watermark after alphabet part   */
 
 #ifdef OPTION_CMPSC_ECACHE_DEBUG
   ec.hit = 0;
@@ -482,20 +505,20 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
     {
       if(unlikely(ARCH_DEP(fetch_is)(r2, regs, iregs, &is)))
         return;
-      if(likely(!ec.l[is]))
+      if(likely(!ec.ecl[is]))
       {
-        ec.oci = 0;                    /* Place is in start of output buffer  */
+        ec.ocl = 0;                    /* Initialize output cache             */
         ARCH_DEP(expand_is)(r2, regs, &ec, is);
-        if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, ec.oc, ec.oci)))
+        if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, ec.oc, ec.ocl)))
           return;
-        cw += ec.oci;
+        cw += ec.ocl;
         EC_STAT(ec.miss);
       }
       else
       {
-        if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, &ec.c[ec.i[is]], ec.l[is])))
+        if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, &ec.ec[ec.eci[is]], ec.ecl[is])))
           return;
-        cw += ec.l[is];
+        cw += ec.ecl[is];
         EC_STAT(ec.hit);
       }
     }
@@ -507,8 +530,8 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   /* Block processing, cbn stays zero */
   while(likely(GR_A(r2 + 1, iregs) >= smbsz && cw < PROCESS_MAX))
   {
-    ARCH_DEP(fetch_iss)(r2, regs, iregs, iss);
-    ec.oci = 0;                        /* Reset output buffer index           */
+    ARCH_DEP(fetch_iss)(r2, regs, iregs, &ec, iss);
+    ec.ocl = 0;                        /* Initialize output cache             */
     for(i = 0; i < 8; i++)
     {
 
@@ -516,24 +539,24 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
       logmsg("expand   : is %04X (%d)\n", iss[i], i);
 #endif
 
-      if(unlikely(!ec.l[iss[i]]))
+      if(unlikely(!ec.ecl[iss[i]]))
       {
         ARCH_DEP(expand_is)(r2, regs, &ec, iss[i]);
         EC_STAT(ec.miss);
       }
       else
       {
-        memcpy(&ec.oc[ec.oci], &ec.c[ec.i[iss[i]]], ec.l[iss[i]]);
-        ec.oci += ec.l[iss[i]];
+        memcpy(&ec.oc[ec.ocl], &ec.ec[ec.eci[iss[i]]], ec.ecl[iss[i]]);
+        ec.ocl += ec.ecl[iss[i]];
         EC_STAT(ec.hit);
       }
     }
 
     /* Write and commit, cbn unchanged, so no commit for GR1 needed */
-    if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, ec.oc, ec.oci)))
+    if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, ec.oc, ec.ocl)))
       return;
     COMMITREGS2(regs, iregs, r1, r2);
-    cw += ec.oci;
+    cw += ec.ocl;
   }
 
   if(unlikely(cw >= PROCESS_MAX))
@@ -544,7 +567,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
     logmsg("expand   : reached CPU determined amount of data\n");
 #endif
 #ifdef OPTION_CMPSC_ECACHE_DEBUG
-    logmsg("ec stats: hit %6u, miss %5u, wm %5u, hwm %5u\n", ec.hit, ec.miss, ec.wm, ECACHE_SIZE);
+    logmsg("ec stats: hit %6u, miss %5u, wm %5u, hwm %5u\n", ec.hit, ec.miss, ec.ecwm, ECACHE_SIZE);
 #endif
 
     return;
@@ -553,17 +576,17 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   /* Process last index symbols, never mind about childs written */
   while(likely(!ARCH_DEP(fetch_is)(r2, regs, iregs, &is)))
   {
-    if(unlikely(!ec.l[is]))
+    if(unlikely(!ec.ecl[is]))
     {
-      ec.oci = 0;                      /* Place is in start of output buffer  */
+      ec.ocl = 0;                      /* Initialize output cache             */
       ARCH_DEP(expand_is)(r2, regs, &ec, is);
-      if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, ec.oc, ec.oci)))
+      if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, ec.oc, ec.ocl)))
         return;
       EC_STAT(ec.miss);
     }
     else
     {
-      if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, &ec.c[ec.i[is]], ec.l[is])))
+      if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, &ec.ec[ec.eci[is]], ec.ecl[is])))
         return;
       EC_STAT(ec.hit);
     }
@@ -573,7 +596,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   COMMITREGS(regs, iregs, r1, r2);
 
 #ifdef OPTION_CMPSC_ECACHE_DEBUG
-  logmsg("ec stats: hit %6u, miss %5u, free %5u\n", ec.hit, ec.miss, ECACHE_SIZE - ec.wm);
+  logmsg("ec stats: hit %6u, miss %5u, free %5u\n", ec.hit, ec.miss, ECACHE_SIZE - ec.ecwm);
 #endif
 
 }
@@ -639,17 +662,17 @@ static void ARCH_DEP(expand_is)(int r2, REGS *regs, struct ec *ec, U16 is)
   memcpy(buf, &ece[1], ECE_csl(ece));
 
   /* Place within cache */
-  if(likely(ec->wm + cw <= ECACHE_SIZE))
+  if(likely(ec->ecwm + cw <= ECACHE_SIZE))
   {
-    memcpy(&ec->c[ec->wm], buf, cw);
-    ec->i[is] = ec->wm;
-    ec->l[is] = cw;
-    ec->wm += cw;
+    memcpy(&ec->ec[ec->ecwm], buf, cw);
+    ec->eci[is] = ec->ecwm;
+    ec->ecl[is] = cw;
+    ec->ecwm += cw;
   }
 
   /* Place expanded index symbol in output buffer */
-  memcpy(&ec->oc[ec->oci], buf, cw);
-  ec->oci += cw;
+  memcpy(&ec->oc[ec->ocl], buf, cw);
+  ec->ocl += cw;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -791,7 +814,7 @@ static int ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, U16 *is)
 /*----------------------------------------------------------------------------*/
 /* fetch_iss                                                                  */
 /*----------------------------------------------------------------------------*/
-static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, U16 is[8])
+static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, struct ec *ec, U16 is[8])
 {
   BYTE buf[13];
   int smbsz;
@@ -799,8 +822,20 @@ static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, U16 is[8])
   /* Initialize values */
   smbsz = GR0_smbsz(regs);
 
-  /* Fetch symbol size bytes for 8 index symbols */
-  ARCH_DEP(vfetchc)(&buf, smbsz - 1, GR_A(r2, iregs) & ADDRESS_MAXWRAP(regs), r2, regs);
+  /* Empty input cache? */
+  if(unlikely(ec->ici == ec->icl))
+  {
+    ec->ici = smbsz;
+    ec->icl = (GR_A(r2, regs) > 256u ? 256u - (256 % smbsz) : GR_A(r2, regs) - (GR_A(r2, regs) % smbsz));
+    ARCH_DEP(vfetchc)(ec->ic, ec->icl - 1, GR_A(r2, iregs) & ADDRESS_MAXWRAP(regs), r2, regs);
+    memcpy(buf, ec->ic, smbsz);
+  }
+  else
+  {
+    /* Get if from the input cache */
+    memcpy(buf, &ec->ic[ec->ici], smbsz);
+    ec->ici += smbsz;
+  }   
 
   /* Calculate the 8 index symbols */
   switch(smbsz)
@@ -1362,7 +1397,7 @@ static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, BYTE *buf, unsigned
   }
 #endif
 
-  for(i = 0; unlikely(len >= 256); i += 256)
+  for(i = 0; len >= 256; i += 256)
   {
     ARCH_DEP(vstorec)(&buf[i], 256 - 1, GR_A(r1, iregs), r1, regs);
     len -= 256;
@@ -1402,8 +1437,6 @@ DEF_INST(compression_call)
   logmsg("   cdss  : %d\n", GR0_cdss(regs));
   logmsg("   f1    : %s\n", TRUEFALSE(GR0_f1(regs)));
   logmsg("   e     : %s\n", TRUEFALSE(GR0_e(regs)));
-  logmsg("   smbsz > %d\n", GR0_smbsz(regs));
-  logmsg("   dctsz > %08X\n", GR0_dctsz(regs));
   logmsg(" GR01    : " F_GREG "\n", regs->GR(1));
   logmsg("   dictor: " F_GREG "\n", GR1_dictor(regs));
   logmsg("   sttoff: %08X\n", GR1_sttoff(regs));
