@@ -65,17 +65,17 @@
 /*----------------------------------------------------------------------------*/
 /* Expansion Character Entry macro's (ECE)                                    */
 /*----------------------------------------------------------------------------*/
-/* bit34 : Value of bits 3 and 4 (what else ;-)                               */
+/* bit34 : indication of bits 3 and 4 (what else ;-)                          */
 /* csl   : complete symbol length                                             */
 /* ofst  : offset from current position in output area                        */
 /* pptr  : predecessor pointer                                                */
 /* psl   : partial symbol length                                              */
 /*----------------------------------------------------------------------------*/
-#define ECE_bit34(ece)       (SBITS((ece), 3, 4))
-#define ECE_csl(ece)         (SBITS((ece), 5, 7))
+#define ECE_bit34(ece)       ((ece)[0] & 0x18)
+#define ECE_csl(ece)         ((ece)[0] & 0x07)
 #define ECE_ofst(ece)        ((ece)[7])
-#define ECE_pptr(ece)        ((SBITS((ece), 3, 7) << 8) | ((ece)[1]))
-#define ECE_psl(ece)         (SBITS((ece), 0, 2))
+#define ECE_pptr(ece)        ((((ece)[0] & 0x1f) << 8) | (ece)[1])
+#define ECE_psl(ece)         ((ece)[0] >> 5)
 
 /*----------------------------------------------------------------------------*/
 /* General Purpose Register 0 macro's (GR0)                                   */
@@ -607,9 +607,11 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 static void ARCH_DEP(expand_is)(int r2, REGS *regs, struct ec *ec, U16 is)
 {
   BYTE buf[260];                       /* Buffer for expanded index symbol    */
+  int csl;                             /* Complete symbol length              */
   unsigned cw;                         /* Characters written                  */
   GREG dictor;                         /* Dictionary origin                   */
   BYTE ece[8];                         /* Expansion Character Entry           */
+  int psl;                             /* Partial symbol length               */
 
   /* Get expansion character entry */
   dictor = GR1_dictor(regs);
@@ -621,20 +623,21 @@ static void ARCH_DEP(expand_is)(int r2, REGS *regs, struct ec *ec, U16 is)
   print_ece(ece);
 #endif
 
-  /* Process unpreceded entries */
-  while(likely(ECE_psl(ece)))
+  /* Process preceded entries */
+  psl = ECE_psl(ece);
+  while(likely(psl))
   {
     /* Check data exception */
-    if(unlikely(ECE_psl(ece) > 5))
+    if(unlikely(psl > 5))
       ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
 
     /* Count and check for writing child 261 */
-    cw += ECE_psl(ece);
+    cw += psl;
     if(unlikely(cw > 260))
       ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
 
     /* Process extension characters in preceded entry */
-    memcpy(&buf[ECE_ofst(ece)], &ece[2], ECE_psl(ece));
+    memcpy(&buf[ECE_ofst(ece)], &ece[2], psl);
 
 #ifdef OPTION_CMPSC_DEBUG
     logmsg("fetch ece: index %04X\n", ECE_pptr(ece));
@@ -642,6 +645,7 @@ static void ARCH_DEP(expand_is)(int r2, REGS *regs, struct ec *ec, U16 is)
 
     /* Get preceding entry */
     ARCH_DEP(vfetchc)(ece, 7, (dictor + ECE_pptr(ece) * 8) & ADDRESS_MAXWRAP(regs), r2, regs);
+    psl = ECE_psl(ece);
 
 #ifdef OPTION_CMPSC_DEBUG
     print_ece(ece);
@@ -650,16 +654,17 @@ static void ARCH_DEP(expand_is)(int r2, REGS *regs, struct ec *ec, U16 is)
   }
 
   /* Check data exception */
-  if(unlikely(!ECE_csl(ece) || ECE_bit34(ece)))
+  csl = ECE_csl(ece);
+  if(unlikely(!csl || ECE_bit34(ece)))
     ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
 
   /* Count and check for writing child 261 */
-  cw += ECE_csl(ece);
+  cw += csl;
   if(unlikely(cw > 260))
     ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
 
   /* Process extension characters in unpreceded entry */
-  memcpy(buf, &ece[1], ECE_csl(ece));
+  memcpy(buf, &ece[1], csl);
 
   /* Place within cache */
   if(likely(ec->ecwm + cw <= ECACHE_SIZE))
