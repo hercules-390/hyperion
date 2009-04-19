@@ -606,13 +606,10 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(expand_is)(int r2, REGS *regs, struct ec *ec, U16 is)
 {
-  BYTE buf[8];                         /* ECE if placed over 2 pages          */
   int csl;                             /* Complete symbol length              */
   unsigned cw;                         /* Characters written                  */
   GREG dictor;                         /* Dictionary origin                   */
   BYTE *ece;                           /* Expansion Character Entry           */
-  int len1;                            /* Length ECE in first page            */
-  BYTE *main2;                         /* Address of second page              */
   int psl;                             /* Partial symbol length               */
   GREG vece;                           /* ECE virtual address                 */
 
@@ -621,18 +618,10 @@ static void ARCH_DEP(expand_is)(int r2, REGS *regs, struct ec *ec, U16 is)
   dictor = GR1_dictor(regs);
 
   /* Get expansion character entry */
+  /* Keep in mind that this never crosses 2k */
   vece = dictor + (is * 8);
   ece = MADDR(vece, r2, regs, ACCTYPE_READ, regs->psw.pkey);
-  if(likely(NOCROSS2K(vece, 8 - 1)))
-    ITIMER_SYNC(vece, 8 - 1, regs);
-  else
-  {
-    len1 = 0x800 - (vece & 0x7ff);
-    main2 = MADDR((vece + len1) & ADDRESS_MAXWRAP(regs), r2, regs, ACCTYPE_READ, regs->psw.pkey);
-    memcpy(&buf[0], ece, len1);
-    memcpy(&buf[len1], main2, 8 - len1);
-    ece = &buf[0];
-  } 
+  ITIMER_SYNC(vece, 8 - 1, regs);
 
 #ifdef OPTION_CMPSC_DEBUG
   logmsg("fetch ece: index %04X\n", is);
@@ -660,18 +649,11 @@ static void ARCH_DEP(expand_is)(int r2, REGS *regs, struct ec *ec, U16 is)
 #endif
 
     /* Get preceding entry */
+    /* Also here no cross of 2k */
     vece = dictor + (ECE_pptr(ece) * 8);
     ece = MADDR(vece, r2, regs, ACCTYPE_READ, regs->psw.pkey);
-    if(likely(NOCROSS2K(vece, 8 - 1)))
-      ITIMER_SYNC(vece, 8 - 1, regs);
-    else
-    {
-      len1 = 0x800 - (vece & 0x7ff);
-      main2 = MADDR((vece + len1) & ADDRESS_MAXWRAP(regs), r2, regs, ACCTYPE_READ, regs->psw.pkey);
-      memcpy(&buf[0], ece, len1);
-      memcpy(&buf[len1], main2, 8 - len1);
-      ece = &buf[0];
-    }
+    ITIMER_SYNC(vece, 8 - 1, regs);
+
     psl = ECE_psl(ece);
 
 #ifdef OPTION_CMPSC_DEBUG
@@ -847,8 +829,8 @@ static int ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, U16 *is)
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, struct ec *ec, U16 is[8])
 {
-  BYTE buf[13];
-  int smbsz;
+  BYTE buf[13];                        /* Buffer for 8 index symbols          */
+  int smbsz;                           /* Symbol size                         */
 
   /* Initialize values */
   smbsz = GR0_smbsz(regs);
@@ -857,7 +839,7 @@ static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, struct ec *ec, 
   if(unlikely(ec->ici == ec->icl))
   {
     ec->ici = smbsz;
-    ec->icl = (GR_A(r2 + 1, regs) > 256u ? 256u - (256 % smbsz) : GR_A(r2 + 1, regs) - (GR_A(r2 + 1, regs) % smbsz));
+    ec->icl = (GR_A(r2 + 1, iregs) > 256u ? 256u - (256 % smbsz) : GR_A(r2 + 1, iregs) - (GR_A(r2 + 1, iregs) % smbsz));
     ARCH_DEP(vfetchc)(ec->ic, ec->icl - 1, GR_A(r2, iregs) & ADDRESS_MAXWRAP(regs), r2, regs);
     memcpy(buf, ec->ic, smbsz);
   }
