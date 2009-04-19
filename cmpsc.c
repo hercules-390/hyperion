@@ -1450,15 +1450,11 @@ static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, BYTE *buf, unsigned
     memcpy(main1, buf, len1);
     memcpy(main2, &buf[len1], l - len1);
   }
-  ADJUSTREGS(r1, regs, iregs, l);
 
   /* Maximum length left is 32 bytes */
-  if(unlikely(len > l))
-  {
-    len -= 2048;
-    ARCH_DEP(vstorec)(&buf[2048], len - 1, GR_A(r1, iregs), r1, regs);
-    ADJUSTREGS(r1, regs, iregs, len);
-  }
+  if(unlikely(len > 2048))
+    ARCH_DEP(vstorec)(&buf[2048], len - 2048 - 1, (GR_A(r1, iregs) + 2048) & ADDRESS_MAXWRAP(regs), r1, regs);
+  ADJUSTREGS(r1, regs, iregs, len);
   return(0); 
 }
 
