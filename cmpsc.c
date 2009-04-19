@@ -606,17 +606,33 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(expand_is)(int r2, REGS *regs, struct ec *ec, U16 is)
 {
-  BYTE buf[260];                       /* Buffer for expanded index symbol    */
+  BYTE buf[8];                         /* ECE if placed over 2 pages          */
   int csl;                             /* Complete symbol length              */
   unsigned cw;                         /* Characters written                  */
   GREG dictor;                         /* Dictionary origin                   */
-  BYTE ece[8];                         /* Expansion Character Entry           */
+  BYTE *ece;                           /* Expansion Character Entry           */
+  int len1;                            /* Length ECE in first page            */
+  BYTE *main2;                         /* Address of second page              */
   int psl;                             /* Partial symbol length               */
+  GREG vece;                           /* ECE virtual address                 */
+
+  /* Initialize values */
+  cw = 0;
+  dictor = GR1_dictor(regs);
 
   /* Get expansion character entry */
-  dictor = GR1_dictor(regs);
-  ARCH_DEP(vfetchc)(ece, 7, (dictor + (is * 8)) & ADDRESS_MAXWRAP(regs), r2, regs);
-  cw = 0;
+  vece = dictor + (is * 8);
+  ece = MADDR(vece, r2, regs, ACCTYPE_READ, regs->psw.pkey);
+  if(likely(NOCROSS2K(vece, 8 - 1)))
+    ITIMER_SYNC(vece, 8 - 1, regs);
+  else
+  {
+    len1 = 0x800 - (vece & 0x7ff);
+    main2 = MADDR((vece + len1) & ADDRESS_MAXWRAP(regs), r2, regs, ACCTYPE_READ, regs->psw.pkey);
+    memcpy(&buf[0], ece, len1);
+    memcpy(&buf[len1], main2, 8 - len1);
+    ece = &buf[0];
+  } 
 
 #ifdef OPTION_CMPSC_DEBUG
   logmsg("fetch ece: index %04X\n", is);
@@ -637,14 +653,25 @@ static void ARCH_DEP(expand_is)(int r2, REGS *regs, struct ec *ec, U16 is)
       ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
 
     /* Process extension characters in preceded entry */
-    memcpy(&buf[ECE_ofst(ece)], &ece[2], psl);
+    memcpy(&ec->oc[ec->ocl + ECE_ofst(ece)], &ece[2], psl);
 
 #ifdef OPTION_CMPSC_DEBUG
     logmsg("fetch ece: index %04X\n", ECE_pptr(ece));
 #endif
 
     /* Get preceding entry */
-    ARCH_DEP(vfetchc)(ece, 7, (dictor + ECE_pptr(ece) * 8) & ADDRESS_MAXWRAP(regs), r2, regs);
+    vece = dictor + (ECE_pptr(ece) * 8);
+    ece = MADDR(vece, r2, regs, ACCTYPE_READ, regs->psw.pkey);
+    if(likely(NOCROSS2K(vece, 8 - 1)))
+      ITIMER_SYNC(vece, 8 - 1, regs);
+    else
+    {
+      len1 = 0x800 - (vece & 0x7ff);
+      main2 = MADDR((vece + len1) & ADDRESS_MAXWRAP(regs), r2, regs, ACCTYPE_READ, regs->psw.pkey);
+      memcpy(&buf[0], ece, len1);
+      memcpy(&buf[len1], main2, 8 - len1);
+      ece = &buf[0];
+    }
     psl = ECE_psl(ece);
 
 #ifdef OPTION_CMPSC_DEBUG
@@ -664,19 +691,18 @@ static void ARCH_DEP(expand_is)(int r2, REGS *regs, struct ec *ec, U16 is)
     ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
 
   /* Process extension characters in unpreceded entry */
-  memcpy(buf, &ece[1], csl);
+  memcpy(&ec->oc[ec->ocl], &ece[1], csl);
 
   /* Place within cache */
   if(likely(ec->ecwm + cw <= ECACHE_SIZE))
   {
-    memcpy(&ec->ec[ec->ecwm], buf, cw);
+    memcpy(&ec->ec[ec->ecwm], &ec->oc[ec->ocl], cw);
     ec->eci[is] = ec->ecwm;
     ec->ecl[is] = cw;
     ec->ecwm += cw;
   }
 
-  /* Place expanded index symbol in output buffer */
-  memcpy(&ec->oc[ec->ocl], buf, cw);
+  /* Commit in output buffer */
   ec->ocl += cw;
 }
 
@@ -1336,7 +1362,11 @@ static int ARCH_DEP(test_ec)(int r2, REGS *regs, REGS *iregs, BYTE *cce)
 /*----------------------------------------------------------------------------*/
 static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, BYTE *buf, unsigned len)
 {
-  unsigned i;
+  unsigned l;
+  int len1;
+  BYTE *main1;
+  BYTE *main2;
+  BYTE *sk;
 
   /* Check destination size */
   if(unlikely(GR_A(r1 + 1, iregs) < len))
@@ -1402,15 +1432,31 @@ static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, BYTE *buf, unsigned
   }
 #endif
 
-  for(i = 0; len >= 256; i += 256)
+  l = len;
+  if(unlikely(l > 2048))
+    l = 2048;
+  if(likely(NOCROSS2K(GR_A(r1, iregs), l - 1)))
   {
-    ARCH_DEP(vstorec)(&buf[i], 256 - 1, GR_A(r1, iregs), r1, regs);
-    len -= 256;
-    ADJUSTREGS(r1, regs, iregs, 256);
+    memcpy(MADDR(GR_A(r1, iregs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey), buf, l);
+    ITIMER_UPDATE(GR_A(r1, iregs), l - 1, regs);
   }
-  if(likely(len))
+  else
   {
-    ARCH_DEP(vstorec)(&buf[i], len - 1, GR_A(r1, iregs), r1, regs);
+    len1 = 0x800 - (GR_A(r1, iregs) & 0x7ff);
+    main1 = MADDR(GR_A(r1, iregs), r1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
+    sk = regs->dat.storkey;
+    main2 = MADDR((GR_A(r1, iregs) + len1) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    *sk |= (STORKEY_REF | STORKEY_CHANGE);
+    memcpy(main1, buf, len1);
+    memcpy(main2, &buf[len1], l - len1);
+  }
+  ADJUSTREGS(r1, regs, iregs, l);
+
+  /* Maximum length left is 32 bytes */
+  if(unlikely(len > l))
+  {
+    len -= 2048;
+    ARCH_DEP(vstorec)(&buf[2048], len - 1, GR_A(r1, iregs), r1, regs);
     ADJUSTREGS(r1, regs, iregs, len);
   }
   return(0); 
