@@ -1,3 +1,4 @@
+19 Apr 2009 MAXCPU configuration statement - Roger Bowler
 19 Apr 2009 CMPSC expand works optimized with absolute addresses - Bernard
 17 Mar 2009 Changed "notrunc" to "noclear" and fix compile error on MSVC -
             Jay Maynard

@@ -355,7 +355,7 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
   (sysblk.regs[(_cpu)] != NULL)
 
 #if defined(_FEATURE_CPU_RECONFIG)
- #define MAX_CPU MAX_CPU_ENGINES
+ #define MAX_CPU sysblk.maxcpu
 #else
  #define MAX_CPU sysblk.numcpu
 #endif
