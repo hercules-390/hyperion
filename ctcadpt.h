@@ -256,7 +256,7 @@ typedef struct _ARPFRM ARPFRM, *PARPFRM;
 
 #define CTC_READ_TIMEOUT_SECS  (5)          // five seconds
 
-#define CTC_DELAY_USECS        (100000)     // 100 millisecond delay; used
+#define CTC_DELAY_USECS        (100)        // 100 microseconds delay; used
                                             // mostly by enqueue frame buffer
                                             // full delay loop...
 
