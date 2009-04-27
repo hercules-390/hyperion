@@ -6,25 +6,6 @@
 /* features selected and thus are eligible for precompilation        */
 
 // $Id$
-//
-// $Log$
-// Revision 1.16  2008/02/19 11:49:19  ivan
-// - Move setting of CPU priority after spwaning timer thread
-// - Added support for Posix 1003.1e capabilities
-//
-// Revision 1.15  2007/06/23 00:04:11  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.14  2007/01/10 16:30:48  rbowler
-// Include netinet/tcp.h for Unix keepalive settings
-//
-// Revision 1.13  2007/01/10 09:32:39  fish
-// Enable connection keep-alive to try and detect 3270 clients that
-// have died (MSVC only right now; don't know how to do it on *nix)
-//
-// Revision 1.12  2006/12/08 09:43:28  jj
-// Add CVS message log
-//
 
 #ifndef _HSTDINC_H
 #define _HSTDINC_H
@@ -79,6 +60,9 @@
 #include <fcntl.h>
 #ifndef O_BINARY
 #define O_BINARY 0
+#endif
+#ifndef O_NONBLOCK
+#define O_NONBLOCK 0
 #endif
 #include <limits.h>
 #include <time.h>

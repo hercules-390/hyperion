@@ -90,11 +90,11 @@ int rc;
 
     /* Open the SCSI tape device */
     dev->readonly = 0;
-    rc = open_tape (dev->filename, O_RDWR | O_BINARY);
+    rc = open_tape (dev->filename, O_RDWR | O_BINARY | O_NONBLOCK);
     if (rc < 0 && EROFS == errno )
     {
         dev->readonly = 1;
-        rc = open_tape (dev->filename, O_RDONLY | O_BINARY);
+        rc = open_tape (dev->filename, O_RDONLY | O_BINARY | O_NONBLOCK);
     }
 
     /* Check for successful open */
@@ -169,7 +169,14 @@ int rc;
 int finish_scsitape_open( DEVBLK *dev, BYTE *unitstat, BYTE code )
 {
 int             rc;                     /* Return code               */
+int             oflags;                 /* re-open flags             */
 struct mtop     opblk;                  /* Area for MTIOCTOP ioctl   */
+
+    /* Switch drive over to BLOCKING-mode i/o... */
+
+    close_tape( dev->fd );
+    oflags = O_BINARY | (dev->readonly ? O_RDONLY : O_RDWR);
+    VERIFY( (dev->fd = open_tape (dev->filename, oflags)) > 0);
 
     /* Since a tape was just mounted, reset the blockid back to zero */
 
@@ -2038,11 +2045,11 @@ void *scsi_tapemountmon_thread( void *db )
         if ( (fd = dev->fd) < 0 )
         {
             dev->readonly = 0;
-            fd = open_tape (dev->filename, O_RDWR | O_BINARY);
+            fd = open_tape (dev->filename, O_RDWR | O_BINARY | O_NONBLOCK);
             if (fd < 0 && EROFS == errno )
             {
                 dev->readonly = 1;
-                fd = open_tape (dev->filename, O_RDONLY | O_BINARY);
+                fd = open_tape (dev->filename, O_RDONLY | O_BINARY | O_NONBLOCK);
             }
 
             // Check for successful open
