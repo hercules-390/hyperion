@@ -723,8 +723,9 @@ and how they are used.
 <dd><p>
     specifies whether the SENSE ID CCW (X'E4') will be honored for
     the devices that originally didn't support that feature. This
-    includes (but may not be limited to) the 3410 and 3420 tape drives
-    as well as the 2703 communication controllers.
+    includes (but may not be limited to) 3410 and 3420 tape drives,
+    2311 and 2314 direct access storage devices, 
+    and 2703 communication controllers.
     <p>
 
     Specify <code>ON</code> or <code>ENABLE</code> if your guest
@@ -3233,7 +3234,8 @@ ROUTE  00  172.021.003.032  255.255.255.224
         <blockquote>
             <table border=1 cellpadding=3>
             <tr align="center"><th>Device type</th><th>Default CU type</dev></th></tr>
-            <tr align="center"><td>2311 2314</td><td>2841</td></tr>
+            <tr align="center"><td>2311</td><td>2841</td></tr>
+            <tr align="center"><td>2314</td><td>2314</td></tr>
             <tr align="center"><td>3330 3340<br>3350 3375<br>3380</td><td>3880</td></tr>
             <tr align="center"><td>3390</td><td>3990</td></tr>
             <tr align="center"><td>9345</td><td>9343</td></tr>

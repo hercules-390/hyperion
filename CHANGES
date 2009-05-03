@@ -1,3 +1,5 @@
+03 May 2009 Disable SENSE ID CCW for 2311, 2314 subject to LEGACYSENSEID setting,
+            change 2314 control unit from 2841 to 2314 - Kevin Leonard
 19 Apr 2009 MAXCPU configuration statement - Roger Bowler
 19 Apr 2009 CMPSC expand works optimized with absolute addresses - Bernard
 17 Mar 2009 Changed "notrunc" to "noclear" and fix compile error on MSVC -

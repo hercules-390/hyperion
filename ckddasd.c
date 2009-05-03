@@ -5638,6 +5638,16 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
     /* SENSE ID                                                      */
     /*---------------------------------------------------------------*/
+
+        /* If numdevid is 0, then 0xE4 Sense ID is not supported */
+        if (dev->numdevid == 0)
+        {
+            ckd_build_sense (dev, SENSE_CR, 0, 0,
+                            FORMAT_0, MESSAGE_1);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
         /* Command reject if within the domain of a Locate Record */
         if (dev->ckdlcount > 0)
         {
