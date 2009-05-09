@@ -600,6 +600,7 @@ static void ARCH_DEP(expand_is)(REGS *regs, struct ec *ec, U16 is)
 {
   int csl;                             /* Complete symbol length              */
   unsigned cw;                         /* Characters written                  */
+  U16 index;
 
 #ifdef FEATURE_INTERVAL_TIMER
   GREG dictor;                         /* Dictionary origin                   */
@@ -616,8 +617,9 @@ static void ARCH_DEP(expand_is)(REGS *regs, struct ec *ec, U16 is)
 #endif
 
   /* Get expansion character entry */
-  ece = &ec->dict[(is * 8) / 2048][(is * 8) % 2048];
-  ITIMER_SYNC(dictor + (is * 8), 8 - 1, regs);
+  index = is * 8;
+  ece = &ec->dict[index / 2048][index % 2048];
+  ITIMER_SYNC(dictor + index, 8 - 1, regs);
 
 #ifdef OPTION_CMPSC_DEBUG
   logmsg("fetch ece: index %04X\n", is);
@@ -645,8 +647,9 @@ static void ARCH_DEP(expand_is)(REGS *regs, struct ec *ec, U16 is)
 #endif
 
     /* Get preceding entry */
-    ece = &ec->dict[(ECE_pptr(ece) * 8) / 2048][(ECE_pptr(ece) * 8) % 2048];
-    ITIMER_SYNC(dictor + (is * 8), 8 - 1, regs);
+    index = ECE_pptr(ece) * 8;
+    ece = &ec->dict[index / 2048][index % 2048];
+    ITIMER_SYNC(dictor + index, 8 - 1, regs);
 
     /* Calculate partial symbol length */
     psl = ECE_psl(ece);
