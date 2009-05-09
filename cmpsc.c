@@ -351,6 +351,9 @@ struct ec                              /* Expand caches                       */
   BYTE oc[2080];                       /* Output cache                        */
   unsigned ocl;                        /* Output cache length                 */
 
+  BYTE *dict[32];                      /* MADDR address to dictionary         */
+
+
 #ifdef OPTION_CMPSC_ECACHE_DEBUG
   unsigned int hit;                    /* Cache hits                          */
   unsigned int miss;                   /* Cache misses                        */
@@ -453,6 +456,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   U16 is;                              /* Index symbol                        */
   U16 iss[8];                          /* Index symbols                       */
   unsigned smbsz;                      /* Symbol size                         */
+  GREG vaddr;
 
   /* Initialize values */
   cw = 0;
@@ -478,6 +482,14 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   ec.hit = 0;
   ec.miss = 0;
 #endif
+
+  /* Initialize dictionary dma addresses */
+  vaddr = GR1_dictor(regs);
+  for(i = 0; i < (0x01 << GR0_cdss(regs)); i++)
+  {
+    ec.dict[i] = MADDR(vaddr, r2, regs, ACCTYPE_READ, regs->psw.pkey);
+    vaddr += 2048;
+  } 
 
   /* Process individual index symbols until cbn becomes zero */
   if(unlikely(GR1_cbn(regs)))
@@ -589,20 +601,22 @@ static void ARCH_DEP(expand_is)(int r2, REGS *regs, struct ec *ec, U16 is)
 {
   int csl;                             /* Complete symbol length              */
   unsigned cw;                         /* Characters written                  */
+#ifdef FEATURE_INTERVAL_TIMER
   GREG dictor;                         /* Dictionary origin                   */
+#endif
   BYTE *ece;                           /* Expansion Character Entry           */
+  BYTE *tece;
   int psl;                             /* Partial symbol length               */
-  GREG vece;                           /* ECE virtual address                 */
 
   /* Initialize values */
   cw = 0;
+#ifdef FEATURE_INTERVAL_TIMER
   dictor = GR1_dictor(regs);
+#endif
 
   /* Get expansion character entry */
-  /* Keep in mind that this never crosses 2k */
-  vece = dictor + (is * 8);
-  ece = MADDR(vece, r2, regs, ACCTYPE_READ, regs->psw.pkey);
-  ITIMER_SYNC(vece, 8 - 1, regs);
+  ece = &ec->dict[(is * 8) / 2048][(is * 8) % 2048];
+  ITIMER_SYNC(dictor + (is * 8), 8 - 1, regs);
 
 #ifdef OPTION_CMPSC_DEBUG
   logmsg("fetch ece: index %04X\n", is);
@@ -630,11 +644,10 @@ static void ARCH_DEP(expand_is)(int r2, REGS *regs, struct ec *ec, U16 is)
 #endif
 
     /* Get preceding entry */
-    /* Also here no cross of 2k */
-    vece = dictor + (ECE_pptr(ece) * 8);
-    ece = MADDR(vece, r2, regs, ACCTYPE_READ, regs->psw.pkey);
-    ITIMER_SYNC(vece, 8 - 1, regs);
+    ece = &ec->dict[(ECE_pptr(ece) * 8) / 2048][(ECE_pptr(ece) * 8) % 2048];
+    ITIMER_SYNC(dictor + (is * 8), 8 - 1, regs);
 
+    /* Calculate partial symbol length */
     psl = ECE_psl(ece);
 
 #ifdef OPTION_CMPSC_DEBUG
