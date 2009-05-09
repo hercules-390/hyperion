@@ -55,12 +55,12 @@
 /* x(i)   : examine child bit for children 1 to 5                             */
 /* y(i)   : examine child bit for 6th/13th and 7th/14th sibling               */
 /*----------------------------------------------------------------------------*/
-#define CCE_act(cce)         (SBITS((cce), 8, 10))
-#define CCE_cct(cce)         (SBITS((cce), 0, 2))
-#define CCE_cptr(cce)        ((SBITS((cce), 11, 15) << 8) | (cce)[2])
-#define CCE_d(cce)           (STBIT((cce), 10))
-#define CCE_x(cce, i)        (STBIT((cce), (i) + 3))
-#define CCE_y(cce, i)        (STBIT((cce), (i) + 8))
+#define CCE_act(cce)         ((cce)[1] >> 5)
+#define CCE_cct(cce)         ((cce)[0] >> 5)
+#define CCE_cptr(cce)        ((((cce)[1] & 0x1f) << 8) | (cce)[2])
+#define CCE_d(cce)           ((cce)[1] & 0x20)
+#define CCE_x(cce, i)        ((cce)[0] & (0x10 >> (i)))
+#define CCE_y(cce, i)        ((cce)[1] & (0x80 >> (i)))
 
 /*----------------------------------------------------------------------------*/
 /* Expansion Character Entry macro's (ECE)                                    */
@@ -107,8 +107,8 @@
 /* sct    : sibling count                                                     */
 /* y(i)   : examine child bit for siblings 1 to 5                             */
 /*----------------------------------------------------------------------------*/
-#define SD0_sct(sd0)         (SBITS((sd0), 0, 2))
-#define SD0_y(sd0, i)        (STBIT((sd0), (i) + 3))
+#define SD0_sct(sd0)         ((sd0)[0] >> 5)
+#define SD0_y(sd0, i)        ((sd0)[0] & (0x10 >> (i)))
 
 /*----------------------------------------------------------------------------*/
 /* Format-1 Sibling Descriptors macro's (SD1)                                 */
@@ -116,8 +116,8 @@
 /* sct    : sibling count                                                     */
 /* y(i)   : examine child bit for sibling 1 to 12                             */
 /*----------------------------------------------------------------------------*/
-#define SD1_sct(sd1)         (SBITS((sd1), 0, 3))
-#define SD1_y(sd1, i)        (STBIT((sd1), (i) + 4))
+#define SD1_sct(sd1)         ((sd1)[0] >> 4)
+#define SD1_y(sd1, i)        ((i) < 4 ? ((sd1)[0] & (0x08 >> (i))): ((sd1)[1] & (0x800 >> (i))))
 
 /******************************************************************************/
 /******************************************************************************/
@@ -192,25 +192,6 @@
 #define SD_msc(regs, sd)     (GR0_f1((regs)) ? SD1_msc((sd)) : SD0_msc((sd)))
 #define SD_sc(regs, sd, i)   (GR0_f1((regs)) ? SD1_sc((sd), (i)) : SD0_sc((sd), (i)))
 #define SD_scs(regs, sd)     (GR0_f1((regs)) ? SD1_scs((sd)) : SD0_scs((sd)))
-
-/******************************************************************************/
-/******************************************************************************/
-/* This part are macro's that handle the bit operations.                      */
-/******************************************************************************/
-/******************************************************************************/
-
-/*----------------------------------------------------------------------------*/
-/* Bit operation macro's                                                      */
-/*----------------------------------------------------------------------------*/
-/* TBIT   : return bit in byte                                                */
-/* BITS   : return bits in byte                                               */
-/* STBIT  : return bit in bytes                                               */
-/* SBITS  : return bits in bytes (bits must be in one byte!)                  */
-/*----------------------------------------------------------------------------*/
-#define TBIT(byte, bit)      ((byte) & (0x80 >> (bit)))
-#define BITS(byte, start, end) (((BYTE)((byte) << (start))) >> (7 - (end) + (start)))
-#define STBIT(bytes, bit)    (TBIT((bytes)[(bit) / 8], (bit) % 8))
-#define SBITS(bytes, strt, end) (BITS((bytes)[(strt) / 8], (strt) % 8, (end) % 8))
 
 /******************************************************************************/
 /******************************************************************************/
