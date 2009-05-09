@@ -353,7 +353,6 @@ struct ec                              /* Expand caches                       */
 
   BYTE *dict[32];                      /* MADDR address to dictionary         */
 
-
 #ifdef OPTION_CMPSC_ECACHE_DEBUG
   unsigned int hit;                    /* Cache hits                          */
   unsigned int miss;                   /* Cache misses                        */
@@ -366,7 +365,7 @@ struct ec                              /* Expand caches                       */
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs);
 static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs);
-static void ARCH_DEP(expand_is)(int r2, REGS *regs, struct ec *ec, U16 is);
+static void ARCH_DEP(expand_is)(REGS *regs, struct ec *ec, U16 is);
 static void ARCH_DEP(fetch_cce)(int r2, REGS *regs, BYTE *cce, int i);
 static int  ARCH_DEP(fetch_ch)(int r2, REGS *regs, REGS *iregs, BYTE *ch, int ofst);
 static int  ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, U16 *is);
@@ -501,7 +500,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
       if(likely(!ec.ecl[is]))
       {
         ec.ocl = 0;                    /* Initialize output cache             */
-        ARCH_DEP(expand_is)(r2, regs, &ec, is);
+        ARCH_DEP(expand_is)(regs, &ec, is);
         if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, ec.oc, ec.ocl)))
           return;
         cw += ec.ocl;
@@ -534,7 +533,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 
       if(unlikely(!ec.ecl[iss[i]]))
       {
-        ARCH_DEP(expand_is)(r2, regs, &ec, iss[i]);
+        ARCH_DEP(expand_is)(regs, &ec, iss[i]);
         EC_STAT(ec.miss);
       }
       else
@@ -572,7 +571,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
     if(unlikely(!ec.ecl[is]))
     {
       ec.ocl = 0;                      /* Initialize output cache             */
-      ARCH_DEP(expand_is)(r2, regs, &ec, is);
+      ARCH_DEP(expand_is)(regs, &ec, is);
       if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, ec.oc, ec.ocl)))
         return;
       EC_STAT(ec.miss);
@@ -597,19 +596,21 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 /*----------------------------------------------------------------------------*/
 /* expand_is (index symbol).                                                  */
 /*----------------------------------------------------------------------------*/
-static void ARCH_DEP(expand_is)(int r2, REGS *regs, struct ec *ec, U16 is)
+static void ARCH_DEP(expand_is)(REGS *regs, struct ec *ec, U16 is)
 {
   int csl;                             /* Complete symbol length              */
   unsigned cw;                         /* Characters written                  */
+
 #ifdef FEATURE_INTERVAL_TIMER
   GREG dictor;                         /* Dictionary origin                   */
 #endif
+
   BYTE *ece;                           /* Expansion Character Entry           */
-  BYTE *tece;
   int psl;                             /* Partial symbol length               */
 
   /* Initialize values */
   cw = 0;
+
 #ifdef FEATURE_INTERVAL_TIMER
   dictor = GR1_dictor(regs);
 #endif
@@ -1358,6 +1359,7 @@ static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, BYTE *buf, unsigned
   }
 
 #ifdef OPTION_CMPSC_DEBUG
+  unsigned i;
   unsigned j;
   static BYTE pbuf[2060];
   static unsigned plen = 2061;         /* Impossible value                    */
