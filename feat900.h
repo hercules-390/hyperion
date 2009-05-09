@@ -113,6 +113,7 @@
 #define FEATURE_TOD_CLOCK_STEERING                              /*@Z9*/
 #define FEATURE_TRACING
 #define FEATURE_WAITSTATE_ASSIST
+//#define FEATURE_VM_BLOCKIO
 
 #endif /*defined(OPTION_900_MODE)*/
 /* end of FEAT900.H */

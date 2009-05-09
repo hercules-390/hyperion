@@ -61,6 +61,7 @@
 #define FEATURE_S370E_EXTENDED_ADDRESSING
 #define FEATURE_TEST_BLOCK
 #define FEATURE_ECPSVM
+//#define FEATURE_VM_BLOCKIO
 
 /* The following ESA/390 features can be retrofitted to S/370 and
    may be activated if desired by uncommenting the appropriate

@@ -206,6 +206,7 @@
 #undef FEATURE_TOD_CLOCK_STEERING                               /*@Z9*/
 #undef FEATURE_TRACING
 #undef FEATURE_VECTOR_FACILITY
+#undef FEATURE_VM_BLOCKIO
 #undef FEATURE_WAITSTATE_ASSIST
 
 /* end of FEATALL.H */

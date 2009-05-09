@@ -424,6 +424,9 @@
  #error Integrated ASCII console requires FEATURE_SYSTEM_CONSOLE
 #endif
 
+#if defined(FEATURE_VM_BLOCKIO) && !defined(FEATURE_EMULATE_VM)
+ #error VM Standard Block I/O DIAGNOSE 0x250 requires FEATURE_EMULATE_VM
+#endif
 
 #if defined(FEATURE_MESSAGE_SECURITY_ASSIST)
  #if defined(_370)
