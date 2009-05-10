@@ -339,10 +339,6 @@
 /*----------------------------------------------------------------------------*/
 struct ec                              /* Expand caches                       */
 {
-  BYTE ic[256];                        /* Input cache                         */
-  unsigned ici;                        /* Input cache index                   */
-  unsigned icl;                        /* Input cache length                  */
-
   BYTE ec[ECACHE_SIZE];                /* Expanded index symbol cache         */
   int eci[8192];                       /* Index within cache for is           */
   int ecl[8192];                       /* Size of expanded is                 */
@@ -352,6 +348,8 @@ struct ec                              /* Expand caches                       */
   unsigned ocl;                        /* Output cache length                 */
 
   BYTE *dict[32];                      /* MADDR address to dictionary         */
+
+  BYTE *src;                           /* Source MADDR page address           */
 
 #ifdef OPTION_CMPSC_ECACHE_DEBUG
   unsigned int hit;                    /* Cache hits                          */
@@ -462,10 +460,6 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   dcten = GR0_dcten(regs);
   smbsz = GR0_smbsz(regs);
 
-  /* Initialize input cache */
-  ec.ici = 0;
-  ec.icl = 0;
-
   /* Initialize expanded index symbol cache and prefill with alphabet entries */
   for(i = 0; i < 256; i++)             /* Alphabet entries                    */
   {
@@ -478,17 +472,21 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   ec.ecwm = 256;                       /* Set watermark after alphabet part   */
 
 #ifdef OPTION_CMPSC_ECACHE_DEBUG
+  /* Initialize cache statistics */
   ec.hit = 0;
   ec.miss = 0;
 #endif
 
-  /* Initialize dictionary dma addresses */
+  /* Initialize dictionary maddr addresses */
   vaddr = GR1_dictor(regs);
   for(i = 0; i < (0x01 << GR0_cdss(regs)); i++)
   {
     ec.dict[i] = MADDR(vaddr, r2, regs, ACCTYPE_READ, regs->psw.pkey);
     vaddr += 2048;
   } 
+
+  /* Initialize source maddr page address */
+  ec.src = MADDR(GR_A(r2, iregs) & ~0x7ff & ADDRESS_MAXWRAP(regs), r2, regs, ACCTYPE_READ, regs->psw.pkey);
 
   /* Process individual index symbols until cbn becomes zero */
   if(unlikely(GR1_cbn(regs)))
@@ -828,25 +826,30 @@ static int ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, U16 *is)
 static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, struct ec *ec, U16 is[8])
 {
   BYTE buf[13];                        /* Buffer for 8 index symbols          */
+  unsigned len1;                       /* Lenght in first page                */
+  BYTE *mem;                           /* Pointer to maddr or buf             */
+  unsigned ofst;                       /* Offset in first page                */
   int smbsz;                           /* Symbol size                         */
 
   /* Initialize values */
   smbsz = GR0_smbsz(regs);
 
-  /* Empty input cache? */
-  if(unlikely(ec->ici == ec->icl))
-  {
-    ec->ici = smbsz;
-    ec->icl = (GR_A(r2 + 1, iregs) > 256u ? 256u - (256 % smbsz) : GR_A(r2 + 1, iregs) - (GR_A(r2 + 1, iregs) % smbsz));
-    ARCH_DEP(vfetchc)(ec->ic, ec->icl - 1, GR_A(r2, iregs) & ADDRESS_MAXWRAP(regs), r2, regs);
-    memcpy(buf, ec->ic, smbsz);
-  }
+  /* Fingers crossed that we stay within one page */
+  ofst = GR_A(r2, iregs) & 0x7ff;
+  if(likely(ofst + smbsz < 0x800))
+  { 
+    ITIMER_SYNC(GR_A(r2, iregs), smbsz, regs);
+    mem = &ec->src[ofst]; 
+  } 
   else
   {
-    /* Get if from the input cache */
-    memcpy(buf, &ec->ic[ec->ici], smbsz);
-    ec->ici += smbsz;
-  }   
+    /* We need data spread over 2 pages */
+    len1 = 0x800 - ofst;
+    memcpy(buf, &ec->src[ofst], len1);
+    ec->src = MADDR((GR_A(r2, iregs) + len1) & ADDRESS_MAXWRAP(regs), r2, regs, ACCTYPE_READ, regs->psw.pkey);
+    memcpy(&buf[len1], ec->src, smbsz - len1 + 1);
+    mem = buf;
+  }
 
   /* Calculate the 8 index symbols */
   switch(smbsz)
@@ -857,14 +860,14 @@ static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, struct ec *ec, 
       /* 012345670 123456701 234567012 345670123 456701234 567012345 670123456 701234567 */
       /* 012345678 012345678 012345678 012345678 012345678 012345678 012345678 012345678 */
       /* 0         1         2         3         4         5         6         7         */
-      is[0] = ((buf[0] << 1) | (buf[1] >> 7));
-      is[1] = ((buf[1] << 2) | (buf[2] >> 6)) & 0x01ff;
-      is[2] = ((buf[2] << 3) | (buf[3] >> 5)) & 0x01ff;
-      is[3] = ((buf[3] << 4) | (buf[4] >> 4)) & 0x01ff;
-      is[4] = ((buf[4] << 5) | (buf[5] >> 3)) & 0x01ff;
-      is[5] = ((buf[5] << 6) | (buf[6] >> 2)) & 0x01ff;
-      is[6] = ((buf[6] << 7) | (buf[7] >> 1)) & 0x01ff;
-      is[7] = ((buf[7] << 8) | (buf[8]     )) & 0x01ff;
+      is[0] = ((mem[0] << 1) | (mem[1] >> 7));
+      is[1] = ((mem[1] << 2) | (mem[2] >> 6)) & 0x01ff;
+      is[2] = ((mem[2] << 3) | (mem[3] >> 5)) & 0x01ff;
+      is[3] = ((mem[3] << 4) | (mem[4] >> 4)) & 0x01ff;
+      is[4] = ((mem[4] << 5) | (mem[5] >> 3)) & 0x01ff;
+      is[5] = ((mem[5] << 6) | (mem[6] >> 2)) & 0x01ff;
+      is[6] = ((mem[6] << 7) | (mem[7] >> 1)) & 0x01ff;
+      is[7] = ((mem[7] << 8) | (mem[8]     )) & 0x01ff;
       break;
     }
     case 10: /* 10-bits */
@@ -873,14 +876,14 @@ static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, struct ec *ec, 
       /* 0123456701 2345670123 4567012345 6701234567 0123456701 2345670123 4567012345 6701234567 */
       /* 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 */
       /* 0          1          2          3          4          5          6          7          */
-      is[0] = ((buf[0] << 2) | (buf[1] >> 6));
-      is[1] = ((buf[1] << 4) | (buf[2] >> 4)) & 0x03ff;
-      is[2] = ((buf[2] << 6) | (buf[3] >> 2)) & 0x03ff;
-      is[3] = ((buf[3] << 8) | (buf[4]     )) & 0x03ff;
-      is[4] = ((buf[5] << 2) | (buf[6] >> 6));
-      is[5] = ((buf[6] << 4) | (buf[7] >> 4)) & 0x03ff;
-      is[6] = ((buf[7] << 6) | (buf[8] >> 2)) & 0x03ff;
-      is[7] = ((buf[8] << 8) | (buf[9]     )) & 0x03ff;
+      is[0] = ((mem[0] << 2) | (mem[1] >> 6));
+      is[1] = ((mem[1] << 4) | (mem[2] >> 4)) & 0x03ff;
+      is[2] = ((mem[2] << 6) | (mem[3] >> 2)) & 0x03ff;
+      is[3] = ((mem[3] << 8) | (mem[4]     )) & 0x03ff;
+      is[4] = ((mem[5] << 2) | (mem[6] >> 6));
+      is[5] = ((mem[6] << 4) | (mem[7] >> 4)) & 0x03ff;
+      is[6] = ((mem[7] << 6) | (mem[8] >> 2)) & 0x03ff;
+      is[7] = ((mem[8] << 8) | (mem[9]     )) & 0x03ff;
       break;
     }
     case 11: /* 11-bits */
@@ -889,14 +892,14 @@ static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, struct ec *ec, 
       /* 01234567012 34567012345 67012345670 12345670123 45670123456 70123456701 23456701234 56701234567 */
       /* 0123456789a 0123456789a 0123456789a 0123456789a 0123456789a 0123456789a 0123456789a 0123456789a */
       /* 0           1           2           3           4           5           6           7           */
-      is[0] = ((buf[0] <<  3) | (buf[ 1] >> 5)                );
-      is[1] = ((buf[1] <<  6) | (buf[ 2] >> 2)                ) & 0x07ff;
-      is[2] = ((buf[2] <<  9) | (buf[ 3] << 1) | (buf[4] >> 7)) & 0x07ff;
-      is[3] = ((buf[4] <<  4) | (buf[ 5] >> 4)                ) & 0x07ff;
-      is[4] = ((buf[5] <<  7) | (buf[ 6] >> 1)                ) & 0x07ff;
-      is[5] = ((buf[6] << 10) | (buf[ 7] << 2) | (buf[8] >> 6)) & 0x07ff;
-      is[6] = ((buf[8] <<  5) | (buf[ 9] >> 3)                ) & 0x07ff;
-      is[7] = ((buf[9] <<  8) | (buf[10]     )                ) & 0x07ff;
+      is[0] = ((mem[0] <<  3) | (mem[ 1] >> 5)                );
+      is[1] = ((mem[1] <<  6) | (mem[ 2] >> 2)                ) & 0x07ff;
+      is[2] = ((mem[2] <<  9) | (mem[ 3] << 1) | (mem[4] >> 7)) & 0x07ff;
+      is[3] = ((mem[4] <<  4) | (mem[ 5] >> 4)                ) & 0x07ff;
+      is[4] = ((mem[5] <<  7) | (mem[ 6] >> 1)                ) & 0x07ff;
+      is[5] = ((mem[6] << 10) | (mem[ 7] << 2) | (mem[8] >> 6)) & 0x07ff;
+      is[6] = ((mem[8] <<  5) | (mem[ 9] >> 3)                ) & 0x07ff;
+      is[7] = ((mem[9] <<  8) | (mem[10]     )                ) & 0x07ff;
       break;
     }
     case 12: /* 12-bits */
@@ -905,14 +908,14 @@ static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, struct ec *ec, 
       /* 012345670123 456701234567 012345670123 456701234567 012345670123 456701234567 012345670123 456701234567 */
       /* 0123456789ab 0123456789ab 0123456789ab 0123456789ab 0123456789ab 0123456789ab 0123456789ab 0123456789ab */
       /* 0            1            2            3            4            5            6            7            */
-      is[0] = ((buf[ 0] << 4) | (buf[ 1] >> 4));
-      is[1] = ((buf[ 1] << 8) | (buf[ 2]     )) & 0x0fff;
-      is[2] = ((buf[ 3] << 4) | (buf[ 4] >> 4));
-      is[3] = ((buf[ 4] << 8) | (buf[ 5]     )) & 0x0fff;
-      is[4] = ((buf[ 6] << 4) | (buf[ 7] >> 4));
-      is[5] = ((buf[ 7] << 8) | (buf[ 8]     )) & 0x0fff;
-      is[6] = ((buf[ 9] << 4) | (buf[10] >> 4));
-      is[7] = ((buf[10] << 8) | (buf[11]     )) & 0x0fff;
+      is[0] = ((mem[ 0] << 4) | (mem[ 1] >> 4));
+      is[1] = ((mem[ 1] << 8) | (mem[ 2]     )) & 0x0fff;
+      is[2] = ((mem[ 3] << 4) | (mem[ 4] >> 4));
+      is[3] = ((mem[ 4] << 8) | (mem[ 5]     )) & 0x0fff;
+      is[4] = ((mem[ 6] << 4) | (mem[ 7] >> 4));
+      is[5] = ((mem[ 7] << 8) | (mem[ 8]     )) & 0x0fff;
+      is[6] = ((mem[ 9] << 4) | (mem[10] >> 4));
+      is[7] = ((mem[10] << 8) | (mem[11]     )) & 0x0fff;
       break;
     }
     case 13: /* 13-bits */
@@ -921,14 +924,14 @@ static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, struct ec *ec, 
       /* 0123456701234 5670123456701 2345670123456 7012345670123 4567012345670 1234567012345 6701234567012 3456701234567 */
       /* 0123456789abc 0123456789abc 0123456789abc 0123456789abc 0123456789abc 0123456789abc 0123456789abc 0123456789abc */
       /* 0             1             2             3             4             5             6             7             */
-      is[0] = ((buf[ 0] <<  5) | (buf[ 1] >> 3)                 );
-      is[1] = ((buf[ 1] << 10) | (buf[ 2] << 2) | (buf[ 3] >> 6)) & 0x1fff;
-      is[2] = ((buf[ 3] <<  7) | (buf[ 4] >> 1)                 ) & 0x1fff;
-      is[3] = ((buf[ 4] << 12) | (buf[ 5] << 4) | (buf[ 6] >> 4)) & 0x1fff;
-      is[4] = ((buf[ 6] <<  9) | (buf[ 7] << 1) | (buf[ 8] >> 7)) & 0x1fff;
-      is[5] = ((buf[ 8] <<  6) | (buf[ 9] >> 2)                 ) & 0x1fff;
-      is[6] = ((buf[ 9] << 11) | (buf[10] << 3) | (buf[11] >> 5)) & 0x1fff;
-      is[7] = ((buf[11] <<  8) | (buf[12]     )                 ) & 0x1fff;
+      is[0] = ((mem[ 0] <<  5) | (mem[ 1] >> 3)                 );
+      is[1] = ((mem[ 1] << 10) | (mem[ 2] << 2) | (mem[ 3] >> 6)) & 0x1fff;
+      is[2] = ((mem[ 3] <<  7) | (mem[ 4] >> 1)                 ) & 0x1fff;
+      is[3] = ((mem[ 4] << 12) | (mem[ 5] << 4) | (mem[ 6] >> 4)) & 0x1fff;
+      is[4] = ((mem[ 6] <<  9) | (mem[ 7] << 1) | (mem[ 8] >> 7)) & 0x1fff;
+      is[5] = ((mem[ 8] <<  6) | (mem[ 9] >> 2)                 ) & 0x1fff;
+      is[6] = ((mem[ 9] << 11) | (mem[10] << 3) | (mem[11] >> 5)) & 0x1fff;
+      is[7] = ((mem[11] <<  8) | (mem[12]     )                 ) & 0x1fff;
       break;
     }
   }
@@ -1474,6 +1477,13 @@ DEF_INST(compression_call)
   /* Check the registers on even-odd pairs and valid compression-data symbol size */
   if(unlikely(r1 & 0x01 || r2 & 0x01 || !GR0_cdss(regs) || GR0_cdss(regs) > 5))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+  /* Check for empty input */
+  if(unlikely(!GR_A(r2 + 1, regs)))
+  {
+    regs->psw.cc = 0;
+    return;
+  }
 
   /* Set possible Data Exception code right away */
   regs->dxc = DXC_DECIMAL;     
