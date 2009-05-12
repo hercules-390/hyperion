@@ -1436,7 +1436,7 @@ static char *build_logo(char **logodata,size_t logosize,size_t *blen)
     len=0;
     alen=0;
     bfr=buffer_addchar(bfr,&len,&alen,0xf5);
-    bfr=buffer_addchar(bfr,&len,&alen,0x40);
+    bfr=buffer_addchar(bfr,&len,&alen,0x42);
     if(bfr==NULL)
     {
         return NULL;
