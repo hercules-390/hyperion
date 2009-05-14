@@ -1,3 +1,4 @@
+13 May 2009 Add TTY and 2741 support to 2703 - Jay Maynard, for "ikj1234i"
 03 May 2009 Disable SENSE ID CCW for 2311, 2314 subject to LEGACYSENSEID setting,
             change 2314 control unit from 2841 to 2314 - Kevin Leonard
 19 Apr 2009 MAXCPU configuration statement - Roger Bowler

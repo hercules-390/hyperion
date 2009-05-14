@@ -35,6 +35,75 @@
 // Add CVS message log
 //
 
+/* ********************************************************************
+
+   TTY Mode Additions (c) Copyright, 2007 MHP <ikj1234i at yahoo dot com>
+
+   Feb. 2007- Add support for 2703 Telegraph Terminal Control Type II 
+   (for use with TTY ASR 33/35 or compatible terminals).
+
+   To enable TTY mode for a particular port, specify ``LNCTL=ASYNC'' in the
+   hercules conf file.
+
+   The host sends and receives bytes directly in ASCII, but bits are
+   reversed from standard ASCII bit order.  Lookup tables are used to
+   perform the reversals on each byte, to make even parity for sending
+   toward the host, and to skip certain noxious characters emitted by
+   TSO/TCAM.
+
+   This code contains minimal TELNET support.  It accepts TELNET
+   IP (Interrupt Process) which is mapped and transmitted to the host
+   as a BREAK (ATTN) sequence.  All TELNET commands are responded
+   negatively.
+
+   ***************************************************************** 
+
+   2741 Mode Additions (c) Copyright, 2008 MHP <ikj1234i at yahoo dot com>
+
+   2741 mode is now working, though imperfectly as of yet.
+
+   There is a new param (term=tty|2741) in the conf file to select termtype.
+
+   Specify code=ebcd for EBCD, or code=corr for correspondence code.
+   Also code=none to disable all translation.  The code= option applies to
+   2741 mode only.
+
+   Another new param (skip=) is a byte string, specified in hex, to specify
+   "garbage" code points that are to be suppressed in output processing.
+   This allows distinct lists to be used for different terminal types.
+
+   Automatic translation to Uppercase is enabled by setting uctrans=yes .
+   This is for both 2741 and TTY terminals.
+
+   You can specify lnctl=tele2 for TTY and lnctl=ibm1 for 2741.
+
+   Samples:
+     0045 2703 lport=32003 dial=IN lnctl=ibm1 term=2741 skip=5EDE code=ebcd
+     0045 2703 lport=32003 dial=IN lnctl=tele2 uctrans=yes term=tty skip=88C9DF
+
+   For TCAM, if you are zapping device UCB's, the following type values 
+   seem to work:
+   55 10 40 13 - 2741
+   51 10 40 53 - TTY (3335)
+
+   When running TCAM in 2741 mode if you experience A00 abends, the following
+   zap (to member IEDQTCAM in 'SYS1.LINKLIB') may help
+
+   NAME IEDQTCAM IEDQKA01
+   VER 0E38 012C
+   REP 0E38 0101
+
+   The 2741 mode enables ordinary remote ASCII TELNET clients to connect.
+   The translate tables were lifted from IEDQ27 and IEDQ28.  Instead of
+   translating directly between ASCII and the host's 2741-correspondence code,
+   we add an intermediate EBCDIC step.  This enables use of all pre-
+   existing tables so I don't have to code any new ones :)
+
+   Also, 2740 OS consoles should work.  It may be necessary to modify the
+   driver to end READ CCWs even when no data has been received (see comment)
+
+******************************************************************** */
+
 #include "hstdinc.h"
 #include "hercules.h"
 #include "devtype.h"
@@ -94,6 +163,11 @@ static PARSER ptab[]={
     {"pto","%s"},
     {"eto","%s"},
     {"switched","%s"},
+    {"lnctl","%s"},
+    {"term","%s"},
+    {"code","%s"},
+    {"uctrans","%s"},
+    {"skip","%s"},
     {NULL,NULL}
 };
 
@@ -106,8 +180,124 @@ enum {
     COMMADPT_KW_READTO,
     COMMADPT_KW_POLLTO,
     COMMADPT_KW_ENABLETO,
-    COMMADPT_KW_SWITCHED
+    COMMADPT_KW_SWITCHED,
+    COMMADPT_KW_LNCTL,
+    COMMADPT_KW_TERM,
+    COMMADPT_KW_CODE,
+    COMMADPT_KW_UCTRANS,
+    COMMADPT_KW_SKIP
 } commadpt_kw;
+
+static BYTE byte_reverse_table[256] = {
+    0x00,0x80,0x40,0xC0,0x20,0xA0,0x60,0xE0,0x10,0x90,0x50,0xD0,0x30,0xB0,0x70,0xF0,
+    0x08,0x88,0x48,0xC8,0x28,0xA8,0x68,0xE8,0x18,0x98,0x58,0xD8,0x38,0xB8,0x78,0xF8,
+    0x04,0x84,0x44,0xC4,0x24,0xA4,0x64,0xE4,0x14,0x94,0x54,0xD4,0x34,0xB4,0x74,0xF4,
+    0x0C,0x8C,0x4C,0xCC,0x2C,0xAC,0x6C,0xEC,0x1C,0x9C,0x5C,0xDC,0x3C,0xBC,0x7C,0xFC,
+    0x02,0x82,0x42,0xC2,0x22,0xA2,0x62,0xE2,0x12,0x92,0x52,0xD2,0x32,0xB2,0x72,0xF2,
+    0x0A,0x8A,0x4A,0xCA,0x2A,0xAA,0x6A,0xEA,0x1A,0x9A,0x5A,0xDA,0x3A,0xBA,0x7A,0xFA,
+    0x06,0x86,0x46,0xC6,0x26,0xA6,0x66,0xE6,0x16,0x96,0x56,0xD6,0x36,0xB6,0x76,0xF6,
+    0x0E,0x8E,0x4E,0xCE,0x2E,0xAE,0x6E,0xEE,0x1E,0x9E,0x5E,0xDE,0x3E,0xBE,0x7E,0xFE,
+    0x01,0x81,0x41,0xC1,0x21,0xA1,0x61,0xE1,0x11,0x91,0x51,0xD1,0x31,0xB1,0x71,0xF1,
+    0x09,0x89,0x49,0xC9,0x29,0xA9,0x69,0xE9,0x19,0x99,0x59,0xD9,0x39,0xB9,0x79,0xF9,
+    0x05,0x85,0x45,0xC5,0x25,0xA5,0x65,0xE5,0x15,0x95,0x55,0xD5,0x35,0xB5,0x75,0xF5,
+    0x0D,0x8D,0x4D,0xCD,0x2D,0xAD,0x6D,0xED,0x1D,0x9D,0x5D,0xDD,0x3D,0xBD,0x7D,0xFD,
+    0x03,0x83,0x43,0xC3,0x23,0xA3,0x63,0xE3,0x13,0x93,0x53,0xD3,0x33,0xB3,0x73,0xF3,
+    0x0B,0x8B,0x4B,0xCB,0x2B,0xAB,0x6B,0xEB,0x1B,0x9B,0x5B,0xDB,0x3B,0xBB,0x7B,0xFB,
+    0x07,0x87,0x47,0xC7,0x27,0xA7,0x67,0xE7,0x17,0x97,0x57,0xD7,0x37,0xB7,0x77,0xF7,
+    0x0F,0x8F,0x4F,0xCF,0x2F,0xAF,0x6F,0xEF,0x1F,0x9F,0x5F,0xDF,0x3F,0xBF,0x7F,0xFF
+};
+
+/* 2741 EBCD code tables */
+/* directly copied from mvs src file iedq27 */
+static BYTE xlate_table_ebcd_toebcdic[256] = {
+	0x3F, 0x40, 0xF1, 0x3F, 0xF2, 0x3F, 0x3F, 0xF3, 0xF4, 0x3F, 0x3F, 0xF5, 0x3F, 0xF6, 0xF7, 0x3F, 
+	0xF8, 0x3F, 0x3F, 0xF9, 0x3F, 0xF0, 0x7B, 0x3F, 0x3F, 0x3F, 0x35, 0x3F, 0x36, 0x3F, 0x3F, 0x37, 
+	0x7C, 0x3F, 0x3F, 0x61, 0x3F, 0xA2, 0xA3, 0x3F, 0x3F, 0xA4, 0xA5, 0x3F, 0xA6, 0x3F, 0x3F, 0xA7, 
+	0x3F, 0xA8, 0xA9, 0x3F, 0x3F, 0x3F, 0x3F, 0x6B, 0x24, 0x3F, 0x3F, 0x25, 0x3F, 0x26, 0x27, 0x3F, 
+	0x60, 0x3F, 0x3F, 0x91, 0x3F, 0x92, 0x93, 0x3F, 0x3F, 0x94, 0x95, 0x3F, 0x96, 0x3F, 0x3F, 0x97, 
+	0x3F, 0x98, 0x99, 0x3F, 0x3F, 0x3F, 0x3F, 0x5B, 0x14, 0x3F, 0x3F, 0x15, 0x3F, 0x16, 0x17, 0x3F, 
+	0x3F, 0x50, 0x81, 0x3F, 0x82, 0x3F, 0x3F, 0x83, 0x84, 0x3F, 0x3F, 0x85, 0x3F, 0x86, 0x87, 0x3F, 
+	0x88, 0x3F, 0x3F, 0x89, 0x3F, 0x3F, 0x4B, 0x3F, 0x3F, 0x3F, 0x05, 0x3F, 0x06, 0x3F, 0x3F, 0x07, 
+	0x3F, 0x40, 0x7E, 0x3F, 0x4C, 0x3F, 0x3F, 0x5E, 0x7A, 0x3F, 0x3F, 0x6C, 0x3F, 0x7D, 0x6E, 0x3F, 
+	0x5C, 0x3F, 0x3F, 0x4D, 0x3F, 0x5D, 0x7F, 0x3F, 0x3F, 0x3F, 0x35, 0x3F, 0x36, 0x3F, 0x3F, 0x3F, 
+	0x4A, 0x3F, 0x3F, 0x6F, 0x3F, 0xE2, 0xE3, 0x3F, 0x3F, 0xE4, 0xE5, 0x3F, 0xE6, 0x3F, 0x3F, 0xE7, 
+	0x3F, 0xE8, 0xE9, 0x3F, 0x3F, 0x3F, 0x3F, 0x4F, 0x24, 0x3F, 0x3F, 0x25, 0x3F, 0x26, 0x27, 0x3F, 
+	0x6D, 0x3F, 0x3F, 0xD1, 0x3F, 0xD2, 0xD3, 0x3F, 0x3F, 0xD4, 0xD5, 0x3F, 0xD6, 0x3F, 0x3F, 0xD7, 
+	0x3F, 0xD8, 0xD9, 0x3F, 0x3F, 0x3F, 0x3F, 0x5A, 0x14, 0x3F, 0x3F, 0x15, 0x3F, 0x16, 0x17, 0x3F, 
+	0x3F, 0x4E, 0xC1, 0x3F, 0xC2, 0x3F, 0x3F, 0xC3, 0xC4, 0x3F, 0x3F, 0xC5, 0x3F, 0xC6, 0xC7, 0x3F, 
+	0xC8, 0x3F, 0x3F, 0xC9, 0x3F, 0x3F, 0x5F, 0x3F, 0x3F, 0x3F, 0x05, 0x3F, 0x06, 0x3F, 0x3F, 0x07
+};
+
+static BYTE xlate_table_ebcd_fromebcdic[256] = {
+	0x88, 0x88, 0x88, 0x88, 0x88, 0x7A, 0x7C, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x5B, 0x88, 0x88, 
+	0x88, 0x88, 0x88, 0x88, 0x58, 0x5B, 0x5D, 0x5E, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 
+	0x88, 0x88, 0x88, 0x88, 0x38, 0x3B, 0x88, 0x3E, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 
+	0x88, 0x88, 0x5E, 0x88, 0x88, 0x88, 0x1C, 0x1F, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 
+	0x01, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0xA0, 0x76, 0x84, 0x93, 0xE1, 0xB7, 
+	0x61, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0xD7, 0x57, 0x90, 0x95, 0x87, 0xF6, 
+	0x40, 0x23, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x37, 0x8B, 0xC0, 0x8E, 0xA3, 
+	0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x16, 0x20, 0x8D, 0x82, 0x96, 
+	0x88, 0x62, 0x64, 0x67, 0x68, 0x6B, 0x6D, 0x6E, 0x70, 0x73, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 
+	0x88, 0x43, 0x45, 0x46, 0x49, 0x4A, 0x4C, 0x4F, 0x51, 0x52, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 
+	0x88, 0x88, 0x25, 0x26, 0x29, 0x2A, 0x2C, 0x2F, 0x31, 0x32, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 
+	0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 
+	0x88, 0xE2, 0xE4, 0xE7, 0xE8, 0xEB, 0xED, 0xEE, 0xF0, 0xF3, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 
+	0x88, 0xC3, 0xC5, 0xC6, 0xC9, 0xCA, 0xCC, 0xCF, 0xD1, 0xD2, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 
+	0x88, 0x88, 0xA5, 0xA6, 0xA9, 0xAA, 0xAC, 0xAF, 0xB1, 0xB2, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 
+	0x15, 0x02, 0x04, 0x07, 0x08, 0x0B, 0x0D, 0x0E, 0x10, 0x13, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88
+};
+
+/* 2741 correspondence code tables */
+/* directly copied from mvs src file iedq28 */
+static BYTE xlate_table_cc_toebcdic[256] = {
+	0x3F, 0x40, 0xF1, 0x3F, 0xF2, 0x3F, 0x3F, 0xF3, 0xF5, 0x3F, 0x3F, 0xF7, 0x3F, 0xF6, 0xF8, 0x3F, 
+	0xF4, 0x3F, 0x3F, 0xF0, 0x3F, 0xA9, 0xF9, 0x3F, 0x3F, 0x34, 0x35, 0x3F, 0x36, 0x3F, 0x3F, 0x37, 
+	0xA3, 0x3F, 0x3F, 0xA7, 0x3F, 0x95, 0xA4, 0x3F, 0x3F, 0x85, 0x84, 0x3F, 0x92, 0x3F, 0x3F, 0x83, 
+	0x3F, 0x93, 0x88, 0x3F, 0x3F, 0x3F, 0x3F, 0x82, 0x24, 0x3F, 0x3F, 0x25, 0x3F, 0x26, 0x27, 0x3F, 
+	0x5A, 0x3F, 0x3F, 0x94, 0x3F, 0x4B, 0xA5, 0x3F, 0x3F, 0x7D, 0x99, 0x3F, 0x89, 0x3F, 0x3F, 0x81, 
+	0x3F, 0x96, 0xA2, 0x3F, 0x3F, 0x3F, 0x3F, 0xA6, 0x14, 0x3F, 0x3F, 0x15, 0x3F, 0x16, 0x17, 0x3F, 
+	0x3F, 0x91, 0x87, 0x3F, 0x7E, 0x3F, 0x3F, 0x86, 0x97, 0x3F, 0x3F, 0x5E, 0x3F, 0x98, 0x6B, 0x3F, 
+	0x61, 0x3F, 0x3F, 0xA8, 0x3F, 0x3F, 0x60, 0x3F, 0x3F, 0x04, 0x05, 0x3F, 0x06, 0x3F, 0x3F, 0x07, 
+	0x3F, 0x40, 0x4F, 0x3F, 0x7C, 0x3F, 0x3F, 0x7B, 0x6C, 0x3F, 0x3F, 0x50, 0x3F, 0x4C, 0x5C, 0x3F, 
+	0x5B, 0x3F, 0x3F, 0x5D, 0x3F, 0xE9, 0x4D, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x36, 0x3F, 0x3F, 0x37, 
+	0xE3, 0x3F, 0x3F, 0xE7, 0x3F, 0xD5, 0xE4, 0x3F, 0x3F, 0xC5, 0xC4, 0x3F, 0xD2, 0x3F, 0x3F, 0xC3, 
+	0x3F, 0xD3, 0xC8, 0x3F, 0x3F, 0x3F, 0x3F, 0xC2, 0x24, 0x3F, 0x3F, 0x25, 0x3F, 0x3F, 0x27, 0x3F, 
+	0x6E, 0x3F, 0x3F, 0xD4, 0x3F, 0x4B, 0xE5, 0x3F, 0x3F, 0x7F, 0xD9, 0x3F, 0xC9, 0x3F, 0x3F, 0xC1, 
+	0x3F, 0xD6, 0xE2, 0x3F, 0x3F, 0x3F, 0x3F, 0xE6, 0x14, 0x3F, 0x3F, 0x15, 0x3F, 0x16, 0x3F, 0x3F, 
+	0x3F, 0xD1, 0xC7, 0x3F, 0x4E, 0x3F, 0x3F, 0xC6, 0xD7, 0x3F, 0x3F, 0x7A, 0x3F, 0xD8, 0x6B, 0x3F, 
+	0x6F, 0x3F, 0x3F, 0xE8, 0x3F, 0x3F, 0x6D, 0x3F, 0x3F, 0x3F, 0x05, 0x3F, 0x06, 0x3F, 0x3F, 0x3F, 
+};
+
+static BYTE xlate_table_cc_fromebcdic[256] = {
+	0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0x7A, 0x7C, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0x5B, 0xEB, 0xEB, 
+	0xEB, 0xEB, 0xEB, 0xEB, 0x58, 0x5B, 0x5D, 0x5E, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 
+	0xEB, 0xEB, 0xEB, 0xEB, 0x38, 0x3B, 0xEB, 0x3E, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 
+	0xEB, 0xEB, 0x5E, 0xEB, 0x19, 0x1A, 0x1C, 0x1F, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 
+	0x01, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0x45, 0x8D, 0x96, 0xE4, 0x82, 
+	0x8B, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0x40, 0x90, 0x8E, 0x93, 0x6B, 0xEB, 
+	0x76, 0x70, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0x6E, 0x88, 0xF6, 0xC0, 0xF0, 
+	0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0x87, 0x84, 0x49, 0x64, 0xC9, 
+	0xEB, 0x4F, 0x37, 0x2F, 0x2A, 0x29, 0x67, 0x62, 0x32, 0x4C, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 
+	0xEB, 0x61, 0x2C, 0x31, 0x43, 0x25, 0x51, 0x68, 0x6D, 0x4A, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 
+	0xEB, 0xEB, 0x52, 0x20, 0x26, 0x46, 0x57, 0x23, 0x73, 0x15, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 
+	0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 
+	0xEB, 0xCF, 0xB7, 0xAF, 0xAA, 0xA9, 0xE7, 0xE2, 0xB2, 0xCC, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 
+	0xEB, 0xE1, 0xAC, 0xB1, 0xC3, 0xA5, 0xD1, 0xE8, 0xED, 0xCA, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 
+	0xEB, 0xEB, 0xD2, 0xA0, 0xA6, 0xC6, 0xD7, 0xA3, 0xF3, 0x95, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 
+	0x13, 0x02, 0x04, 0x07, 0x10, 0x08, 0x0D, 0x0B, 0x0E, 0x16, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 0xEB, 
+};
+
+static BYTE byte_parity_table [128] = {
+/* value: 0 = even parity, 1 = odd parity */
+    0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
+    1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1,
+    1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1,
+    0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
+    1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1,
+    0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
+    0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
+    1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1
+};
 
 static void logdump(char *txt,DEVBLK *dev,BYTE *bfr,size_t sz)
 {
@@ -512,6 +702,22 @@ static int     commadpt_initiate_userdial(COMMADPT *ca)
     ca->rhost=destip;
     return(commadpt_connout(ca));
 }
+
+static void connect_message(int sfd, int devnum, int term) {
+    int rc;
+    struct sockaddr_in client;
+    socklen_t namelen;
+    char *ipaddr;
+    char msgtext[256];
+    namelen = sizeof(client);
+    rc = getpeername (sfd, (struct sockaddr *)&client, &namelen);
+    ipaddr = inet_ntoa(client.sin_addr);
+    sprintf(msgtext, "%s:%d TERMINAL CONNECTED CUA=%4.4X TERM=%s", ipaddr, (int)ntohs(client.sin_port), devnum, (term == COMMADPT_TERM_TTY) ? "TTY" : "2741");
+    logmsg( _("%s\n"), msgtext);
+    write(sfd, msgtext, strlen(msgtext));
+    write(sfd, "\r\n", 2);
+}
+
 /*-------------------------------------------------------------------*/
 /* Communication Thread - Read socket data (after POLL request       */
 /*-------------------------------------------------------------------*/
@@ -540,6 +746,95 @@ static int commadpt_read_poll(COMMADPT *ca)
     return(0);
 }
 
+static void commadpt_read_tty(COMMADPT *ca, BYTE * bfr, int len)
+{
+    BYTE        bfr2[256];
+    BYTE        bfr3[3];
+    BYTE        c;
+    int i1;
+    int o1;
+	   for (i1 = 0, o1 = 0; i1 < len; i1++) {
+		c = (unsigned char) bfr[i1];
+		if (ca->telnet_opt) {
+			ca->telnet_opt = 0;
+		          if(ca->dev->ccwtrace)
+			    logmsg(_("HHCCA300D %4.4X: Received TELNET CMD 0x%02x 0x%02x\n"),
+			            ca->dev->devnum,
+				    ca->telnet_cmd, c);
+			bfr3[0] = 0xff;  /* IAC */
+			/* set won't/don't for all received commands */
+			bfr3[1] = (ca->telnet_cmd == 0xfd) ? 0xfc : 0xfe;
+			bfr3[2] = c;
+		          if(ca->dev->ccwtrace)
+			    logmsg(_("HHCCA300D %4.4X: Sending TELNET CMD 0x%02x 0x%02x\n"),
+			            ca->dev->devnum,
+				    bfr3[1], bfr3[2]);
+                    	commadpt_ring_pushbfr(&ca->outbfr,bfr3,3);
+			continue;
+		}
+		if (ca->telnet_iac) {
+			ca->telnet_iac = 0;
+		          if(ca->dev->ccwtrace)
+			    logmsg(_("HHCCA300D %4.4X: Received TELNET IAC 0x%02x\n"),
+			            ca->dev->devnum,
+				    c);
+			switch (c) {
+			case 0xFB:  /* TELNET WILL option cmd */
+			case 0xFD:  /* TELNET DO option cmd */
+				ca->telnet_opt = 1;
+				ca->telnet_cmd = c;
+				break;
+			case 0xF4:  /* TELNET interrupt */
+				if (!ca->telnet_int) {
+					ca->telnet_int = 1;
+					commadpt_ring_flush(&ca->inbfr);
+					commadpt_ring_flush(&ca->rdwrk);
+					commadpt_ring_flush(&ca->outbfr);
+				}
+				break;
+			}
+			continue;
+		}
+		if (c == 0xFF) {  /* TELNET IAC */
+			ca->telnet_iac = 1;
+			continue;
+		} else {
+			ca->telnet_iac = 0;
+		}
+		if (c == 0x0a)
+			continue;
+		c &= 0x7f;
+		if  (ca->uctrans && c >= 'a' && c <= 'z') {
+			c = toupper( c );     /* make uppercase */
+		}
+		if (ca->term == COMMADPT_TERM_TTY) {
+#if 0
+		    if (c == 0x0d)  // char was CR ?
+#endif
+			ca->eol_flag = 1;
+		    if (byte_parity_table[(unsigned int)(c & 0x7f)])
+			c |= 0x80;     // make even parity
+		    bfr2[o1++] = byte_reverse_table[(unsigned int)(c & 0xff)];
+		} else {   /* 2741 */
+		    if (c == 0x0d) { // char was CR ?
+			ca->eol_flag = 1;
+#if 0
+ 			continue;   // ignore
+#endif
+		    }
+		    if (ca->code_table_fromebcdic) {  // do only if code != none
+		        c = host_to_guest(c & 0x7f);  // first translate to EBCDIC
+                        bfr2[o1++] = ca->code_table_fromebcdic[ c ];   // then to 2741 code
+		    }
+		}
+	    }
+	 if (o1) {
+          commadpt_ring_pushbfr(&ca->inbfr,bfr2,(size_t)o1);
+          logdump("RCV2",ca->dev,bfr2,o1);
+	  ca->readcomp = 1;
+	 }
+}
+
 /*-------------------------------------------------------------------*/
 /* Communication Thread - Read socket data                           */
 /*-------------------------------------------------------------------*/
@@ -549,10 +844,26 @@ static void commadpt_read(COMMADPT *ca)
     int gotdata;
     int rc;
     gotdata=0;
-    while((rc=read_socket(ca->sfd,bfr,256))>0)
-    {
+    for (;;) {
+        if (IS_BSC_LNCTL(ca)) {
+          rc=read_socket(ca->sfd,bfr,256);
+        } else {
+        /* read_socket has changed from 3.04 to 3.06 - async needs old way */
+        /* is BSC similarly broken? */
+#ifdef _MSVC_
+          rc=recv(ca->sfd,bfr,256,0);
+#else
+          rc=read(ca->sfd,bfr,256);
+#endif
+        }
+        if (rc <= 0)
+            break;
         logdump("RECV",ca->dev,bfr,rc);
-        commadpt_ring_pushbfr(&ca->inbfr,bfr,(size_t)rc);
+        if (IS_ASYNC_LNCTL(ca)) {
+            commadpt_read_tty(ca, bfr, rc);
+        } else {
+            commadpt_ring_pushbfr(&ca->inbfr,bfr,(size_t)rc);
+        }  /* end of else (async) */
         gotdata=1;
     }
     if(!gotdata)
@@ -897,6 +1208,13 @@ static void *commadpt_thread(void *vca)
                             }
                         }
                     }
+                    if (IS_ASYNC_LNCTL(ca)) {
+			/* Sleep for 0.01 sec - for faithful emulation we would
+			 * slow everything down to 110 or 150 baud or worse :)
+			 * Without this sleep, CPU use is excessive.
+			 */
+                        usleep(10000);
+                    }
                 }
                 else
                 {
@@ -1141,7 +1459,7 @@ static void *commadpt_thread(void *vca)
                 {
                         logmsg(_("HHCCA300D %4.4X:cthread - inbound socket data\n"),devnum);
                 }
-                if(pollact)
+                if(pollact && IS_BSC_LNCTL(ca))
                 {
                     switch(commadpt_read_poll(ca))
                     {
@@ -1166,7 +1484,7 @@ static void *commadpt_thread(void *vca)
                             break;
                     }
                 }
-                if(!dopoll)
+                if(IS_ASYNC_LNCTL(ca) || !dopoll)
                 {
                     commadpt_read(ca);
                     ca->curpending=COMMADPT_PEND_IDLE;
@@ -1256,6 +1574,9 @@ static void *commadpt_thread(void *vca)
                         ca->connect=1;
                         ca->sfd=tempfd;
                         signal_condition(&ca->ipc);
+                        if (IS_ASYNC_LNCTL(ca)) {
+                            connect_message(ca->sfd, ca->devnum, ca->term);
+                        }
                         continue;
                     }
                     /* if this is a leased line, accept the */
@@ -1264,6 +1585,9 @@ static void *commadpt_thread(void *vca)
                     {
                         ca->connect=1;
                         ca->sfd=tempfd;
+                        if (IS_ASYNC_LNCTL(ca)) {
+                            connect_message(ca->sfd, ca->devnum, ca->term);
+                        }
                         continue;
                     }
                 }
@@ -1354,6 +1678,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
 {
     char thread_name[32];
     int i;
+    int ix;
     int rc;
     int pc; /* Parse code */
     int errcnt;
@@ -1365,6 +1690,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         int num;
         char text[80];
     } res;
+    char bf[4];
         dev->devtype=0x2703;
         if(dev->ccwtrace)
         {
@@ -1396,6 +1722,12 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         dev->commadpt->rto=3000;        /* Read Time-Out in milis */
         dev->commadpt->pto=3000;        /* Poll Time-out in milis */
         dev->commadpt->eto=10000;       /* Enable Time-out in milis */
+        dev->commadpt->lnctl=COMMADPT_LNCTL_BSC;
+        dev->commadpt->term=COMMADPT_TERM_TTY;
+        dev->commadpt->uctrans=FALSE;
+        dev->commadpt->code_table_toebcdic   = xlate_table_ebcd_toebcdic;
+        dev->commadpt->code_table_fromebcdic = xlate_table_ebcd_fromebcdic;
+        memset(dev->commadpt->byte_skip_table, 0, 256);
         etospec=0;
 
         for(i=0;i<argc;i++)
@@ -1470,6 +1802,65 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
                 case COMMADPT_KW_ENABLETO:
                     dev->commadpt->eto=atoi(res.text);
                     etospec=1;
+                    break;
+                case COMMADPT_KW_LNCTL:
+                    if(strcasecmp(res.text,"tele2")==0
+                    || strcasecmp(res.text,"ibm1")==0 ) {
+                        dev->commadpt->lnctl = COMMADPT_LNCTL_ASYNC;
+                        dev->commadpt->rto=28000;        /* Read Time-Out in milis */
+                    } else if(strcasecmp(res.text,"bsc")) {
+                        dev->commadpt->lnctl = COMMADPT_LNCTL_BSC;
+		    } else {
+			    msg013e(dev,"LNCTL",res.text);
+		    }
+                    break;
+                case COMMADPT_KW_TERM:
+                    if(strcasecmp(res.text,"tty")==0) {
+                        dev->commadpt->term = COMMADPT_TERM_TTY;
+		    }
+		    else if(strcasecmp(res.text,"2741")==0) {
+                        dev->commadpt->term = COMMADPT_TERM_2741;
+		    } else {
+			    msg013e(dev,"TERM",res.text);
+		    }
+                    break;
+                case COMMADPT_KW_CODE:
+                    if(strcasecmp(res.text,"corr")==0) {
+                        dev->commadpt->code_table_toebcdic   = xlate_table_cc_toebcdic;
+                        dev->commadpt->code_table_fromebcdic = xlate_table_cc_fromebcdic;
+		    }
+		    else if(strcasecmp(res.text,"ebcd")==0) {
+                        dev->commadpt->code_table_toebcdic   = xlate_table_ebcd_toebcdic;
+                        dev->commadpt->code_table_fromebcdic = xlate_table_ebcd_fromebcdic;
+		    }
+		    else if(strcasecmp(res.text,"none")==0) {
+                        dev->commadpt->code_table_toebcdic   = NULL;
+                        dev->commadpt->code_table_fromebcdic = NULL;
+		    }
+		    else {
+			    msg013e(dev,"CODE",res.text);
+		    }
+                    break;
+                case COMMADPT_KW_UCTRANS:
+                    if(strcasecmp(res.text,"no")==0) {
+                        dev->commadpt->uctrans = FALSE;
+		    }
+		    else if(strcasecmp(res.text,"yes")==0) {
+                        dev->commadpt->uctrans = TRUE;
+		    } else {
+                        msg013e(dev,"UCTRANS",res.text);
+		    }
+                    break;
+                case COMMADPT_KW_SKIP:
+		    if  (strlen(res.text) < 2)
+			    break;
+		    for (i=0; i < (int)strlen(res.text); i+= 2) {
+			    bf[0] = res.text[i+0];
+			    bf[1] = res.text[i+1];
+			    bf[2] = 0;
+			    sscanf(bf, "%x", &ix);
+			    dev->commadpt->byte_skip_table[ix] = 1;
+		    }
                     break;
                 case COMMADPT_KW_SWITCHED:
                 case COMMADPT_KW_DIAL:
@@ -1628,9 +2019,14 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         /* Initialise various flags & statuses */
         dev->commadpt->enabled=0;
         dev->commadpt->connect=0;
-        dev->commadpt->lnctl=COMMADPT_LNCTL_BSC;
         dev->fd=100;    /* Ensures 'close' function called */
         dev->commadpt->devnum=dev->devnum;
+
+        dev->commadpt->telnet_opt=0;
+        dev->commadpt->telnet_iac=0;
+        dev->commadpt->telnet_int=0;
+        dev->commadpt->eol_flag=0;
+        dev->commadpt->telnet_cmd=0;
 
         /* Initialize the device identifier bytes */
         dev->numdevid = sysblk.legacysenseid ? 7 : 0;
@@ -1702,7 +2098,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
 static char *commadpt_lnctl_names[]={
     "NONE",
     "BSC",
-    "TELE2"
+    "ASYNC"
 };
 
 /*-------------------------------------------------------------------*/
@@ -2029,6 +2425,7 @@ BYTE    gotdle;                 /* Write routine DLE marker */
         /* READ                                                          */
         /*---------------------------------------------------------------*/
         case 0x02:
+        case 0x0a:          /* also INHIBIT */
                 setux=0;
                 /* Check the line is enabled */
                 if(!dev->commadpt->enabled)
@@ -2048,8 +2445,16 @@ BYTE    gotdle;                 /* Write routine DLE marker */
                 /* Check for any remaining data in read work buffer */
                 if(dev->commadpt->readcomp)
                 {
-                    if(dev->commadpt->rdwrk.havedata)
+		  if (IS_ASYNC_LNCTL(dev->commadpt)) {
+		    while (dev->commadpt->inbfr.havedata) {
+			commadpt_ring_push(&dev->commadpt->rdwrk, commadpt_ring_pop(&dev->commadpt->inbfr));
+		    }
+		  }
+                    if (( IS_BSC_LNCTL(dev->commadpt) && dev->commadpt->rdwrk.havedata)
+                    || (IS_ASYNC_LNCTL(dev->commadpt) && dev->commadpt->rdwrk.havedata && dev->commadpt->eol_flag))
                     {
+                        if(IS_ASYNC_LNCTL(dev->commadpt) && dev->commadpt->term == COMMADPT_TERM_2741)
+				dev->commadpt->eol_flag = 0;
                         num=commadpt_ring_popbfr(&dev->commadpt->rdwrk,iobuf,count);
                         if(dev->commadpt->rdwrk.havedata)
                         {
@@ -2057,9 +2462,25 @@ BYTE    gotdle;                 /* Write routine DLE marker */
                         }
                         *residual=count-num;
                         *unitstat=CSW_CE|CSW_DE;
+                        if(IS_ASYNC_LNCTL(dev->commadpt) && dev->commadpt->term == COMMADPT_TERM_2741)
+                            *unitstat|=CSW_UX;   // 2741 EOT
                         break;
                     }
                 }
+                if(IS_ASYNC_LNCTL(dev->commadpt) && dev->commadpt->telnet_int)
+                {
+                        dev->commadpt->telnet_int = 0;
+                        *residual=count;
+                        *unitstat=CSW_CE|CSW_DE|CSW_UC;
+                        dev->sense[0]=SENSE_IR;
+                        break;
+		}
+#if 0
+		// MHP TEST 2740
+                *residual=count;
+                *unitstat=CSW_CE|CSW_DE;
+                break;
+#endif
                 if(dev->commadpt->datalostcond)
                 {
                         dev->commadpt->datalostcond=0;
@@ -2115,15 +2536,26 @@ BYTE    gotdle;                 /* Write routine DLE marker */
                         break;
                     }
 
+                    if (IS_ASYNC_LNCTL(dev->commadpt) && dev->commadpt->telnet_int) {
+                            dev->commadpt->telnet_int = 0;
+                            *residual=count;
+                            *unitstat=CSW_CE|CSW_DE|CSW_UC;
+                            dev->sense[0]=SENSE_IR;
+                            break;
+                    }
+
                     /* If no data is present - 3 seconds have passed without */
                     /* receiving data (or a SYNC)                            */
-                    if(!dev->commadpt->inbfr.havedata)
+                    /* (28 seconds for LNCTL_ASYNC)                          */
+                    /* INHIBIT command does not time out                     */
+                    if(!dev->commadpt->inbfr.havedata && code != 0x0a)
                     {
                         *unitstat=CSW_DE|CSW_CE|CSW_UC;
                         dev->sense[0]=0x01;
                         dev->sense[1]=0xe3;
                         break;
                     }
+		if (IS_BSC_LNCTL(dev->commadpt)) {
                     /* Start processing data flow here */
                     /* Pop bytes until we run out of data or */
                     /* until the processing indicates the read */
@@ -2316,10 +2748,17 @@ BYTE    gotdle;                 /* Write routine DLE marker */
                         }
                         dev->commadpt->gotdle=0;
                     } /* END WHILE - READ FROM DATA BUFFER */
+		} /* end of if (bsc) */
                     /* If readcomp is set, then we may exit the read loop */
                     if(dev->commadpt->readcomp)
                     {
-                        if(dev->commadpt->rdwrk.havedata)
+                     if (IS_ASYNC_LNCTL(dev->commadpt)) {
+		      while (dev->commadpt->inbfr.havedata) {
+			commadpt_ring_push(&dev->commadpt->rdwrk, commadpt_ring_pop(&dev->commadpt->inbfr));
+		      }
+		     }  /* end of if(async) */
+                        if (( IS_BSC_LNCTL(dev->commadpt) && dev->commadpt->rdwrk.havedata)
+                        || (IS_ASYNC_LNCTL(dev->commadpt) && dev->commadpt->rdwrk.havedata && dev->commadpt->eol_flag))
                         {
                             num=commadpt_ring_popbfr(&dev->commadpt->rdwrk,iobuf,count);
                             if(dev->commadpt->rdwrk.havedata)
@@ -2329,6 +2768,8 @@ BYTE    gotdle;                 /* Write routine DLE marker */
                             *residual=count-num;
                             *unitstat=CSW_CE|CSW_DE|(setux?CSW_UX:0);
                             logdump("Read",dev,iobuf,num);
+                            if(IS_ASYNC_LNCTL(dev->commadpt) && dev->commadpt->term == COMMADPT_TERM_2741)
+                                dev->commadpt->eol_flag = 0;
                             break;
                         }
                     }
@@ -2339,6 +2780,7 @@ BYTE    gotdle;                 /* Write routine DLE marker */
         /* WRITE                                                         */
         /*---------------------------------------------------------------*/
         case 0x01:
+        case 0x0d:       /* also CCW=BREAK */
                 logdump("Writ",dev,iobuf,count);
                 *residual=count;
 
@@ -2360,6 +2802,12 @@ BYTE    gotdle;                 /* Write routine DLE marker */
 
                 /* read 1 byte to check for pending input */
                 i=read_socket(dev->commadpt->sfd,&b,1);
+               if (IS_ASYNC_LNCTL(dev->commadpt)) {
+                if(i>0) {
+                  logdump("RCV0",dev,&b,1);
+                  commadpt_read_tty(dev->commadpt,&b,1);
+                }
+               } else {
                 if(i>0)
                 {
                     /* Push it in the communication input buffer ring */
@@ -2372,6 +2820,7 @@ BYTE    gotdle;                 /* Write routine DLE marker */
                     *unitstat=CSW_CE|CSW_DE|CSW_UX;
                     break;
                 }
+               }  /* end of else (async) */
                 /*
                  * Fill in the Write Buffer
                  */
@@ -2379,6 +2828,16 @@ BYTE    gotdle;                 /* Write routine DLE marker */
                 /* To start : not transparent mode, no DLE received yet */
                 turnxpar=0;
                 gotdle=0;
+               if(IS_ASYNC_LNCTL(dev->commadpt) && dev->commadpt->telnet_int
+                   /* ugly hack for TSO ATTN to fix IEA000I 0C3,IOE,01,0E40,40008900002C,,,TCAM */
+                   && !(iobuf[0] == 0xdf && iobuf[1] == 0xdf && iobuf[2] == 0xdf && count == 3))
+               {
+                       dev->commadpt->telnet_int = 0;
+                       *residual=count;
+                       *unitstat=CSW_CE|CSW_DE|CSW_UC;
+                       dev->sense[0]=SENSE_IR;
+                       break;
+               }
 
                 /* Scan the I/O buffer */
                 for(i=0;i<count;i++)
@@ -2386,6 +2845,18 @@ BYTE    gotdle;                 /* Write routine DLE marker */
                     /* Get 1 byte */
                     b=iobuf[i];
 
+                   if (IS_ASYNC_LNCTL(dev->commadpt)) {
+		    if (dev->commadpt->byte_skip_table[b])
+			continue;
+		    if (dev->commadpt->term == COMMADPT_TERM_TTY) {
+                        b = byte_reverse_table[b] & 0x7f;
+		    } else { /* 2741 */
+		        if (dev->commadpt->code_table_toebcdic) {   // only if code != none
+		            b = dev->commadpt->code_table_toebcdic[b];  // first translate to EBCDIC
+		            b = guest_to_host(b) & 0x7f; // then EBCDIC to ASCII
+			}
+		    }
+                   } else {   /* line is BSC */
                     /* If we are in transparent mode, we must double the DLEs */
                     if(turnxpar)
                     {
@@ -2416,9 +2887,11 @@ BYTE    gotdle;                 /* Write routine DLE marker */
                             }
                         }
                     }
+                   }  /* end of else (async) */
                     /* Put the current byte on the output ring */
                     commadpt_ring_push(&dev->commadpt->outbfr,b);
                 }
+               if (IS_BSC_LNCTL(dev->commadpt)) {
                 /* If we had a DLE/STX, the line is now in Transparent Write Wait state */
                 /* meaning that no CCW codes except Write, No-Op, Sense are allowed     */
                 /* (that's what the manual says.. I doubt DISABLE is disallowed)        */
@@ -2435,6 +2908,7 @@ BYTE    gotdle;                 /* Write routine DLE marker */
                 {
                     dev->commadpt->xparwwait=0;
                 }
+               }  /* end of if(bsc line) */
                 /* Indicate to the worker thread the current operation is OUTPUT */
                 dev->commadpt->curpending=COMMADPT_PEND_WRITE;
 
@@ -2459,6 +2933,7 @@ BYTE    gotdle;                 /* Write routine DLE marker */
                 if(dev->commadpt->haltpending)
                 {
                     *unitstat=CSW_CE|CSW_DE|CSW_UX;
+                    dev->commadpt->haltpending = 0;
                     break;
                 }
                 *unitstat=CSW_CE|CSW_DE;
@@ -2481,6 +2956,15 @@ BYTE    gotdle;                 /* Write routine DLE marker */
                     dev->sense[1]=0x06;
                     break;
                 }
+
+                if (IS_ASYNC_LNCTL(dev->commadpt)) {
+                    *unitstat=CSW_CE|CSW_DE;
+                    if(dev->commadpt->haltpending) {
+                        dev->commadpt->haltpending=0;
+                        *unitstat |= CSW_UX;
+		    }
+                    break;
+               } /* end of if(async) */
 
                 /* Transparent Write Wait State test */
                 if(dev->commadpt->xparwwait)

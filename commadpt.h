@@ -21,6 +21,9 @@ struct COMMADPT
 {
     DEVBLK *dev;                /* the devblk to which this CA is attched   */
     BYTE lnctl;                 /* Line control used                        */
+    BYTE term;                  /* Terminal type                            */
+    BYTE* code_table_toebcdic;  /* correspondence or EBCD code tables       */
+    BYTE* code_table_fromebcdic; /* correspondence or EBCD code tables      */
     int  rto;                   /* Read Time-Out                            */
     int  pto;                   /* Poll Time-Out                            */
     int  eto;                   /* Enable Time-Out                          */
@@ -73,12 +76,27 @@ struct COMMADPT
                                 /* has already been issued                  */
     u_int readcomp:1;           /* Data in the read buffer completes a read */
     u_int datalostcond:1;       /* Data Lost Condition Raised               */
+    u_int telnet_opt:1;         /* expecting telnet option char             */
+    u_int telnet_iac:1;         /* expecting telnet command char            */
+    u_int telnet_int:1;         /* telnet interrupt received                */
+    u_int eol_flag:1;           /* carriage return received flag            */
+    u_int uctrans:1;            /* Uppercase translate flag                 */
+    BYTE telnet_cmd;            /* telnet command received                  */
+    BYTE byte_skip_table[256];  /* async: characters to suppress in output  */
 };
 
 enum {
     COMMADPT_LNCTL_BSC=1,       /* BSC Line Control                         */
     COMMADPT_LNCTL_ASYNC        /* ASYNC Line Control                       */
 } commadpt_lnctl;
+
+enum {
+	COMMADPT_TERM_TTY,      /* TTY (TELE2) */
+	COMMADPT_TERM_2741,	/* 2741 (IBM1) */
+} commadpt_term;
+
+#define IS_BSC_LNCTL(ca)    ((ca->lnctl == COMMADPT_LNCTL_BSC))
+#define IS_ASYNC_LNCTL(ca)  ((ca->lnctl == COMMADPT_LNCTL_ASYNC))
 
 enum {
     COMMADPT_PEND_IDLE=0,       /* NO CCW currently executing               */
