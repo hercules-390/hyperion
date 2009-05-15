@@ -133,6 +133,7 @@ dynamic_SRC        = dyngui.c   \
                      hdteq.c
 
 dyndev_SRC         = commadpt.c  \
+                     comm3705.c  \
                      console.c   \
                      cardpch.c   \
                      cardrdr.c   \
@@ -219,6 +220,7 @@ endif
              hdteq.la    \
              hdt1403.la  \
              hdt2703.la  \
+             hdt3705.la  \
              hdt3088.la  \
              hdt3270.la  \
              hdt3420.la  \
@@ -283,6 +285,10 @@ if OPTION_DYNAMIC_LOAD
   hdt2703_la_SOURCES = commadpt.c
   hdt2703_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
   hdt2703_la_LIBADD  = $(DYNMOD_LD_ADD)
+
+  hdt3705_la_SOURCES = comm3705.c
+  hdt3705_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
+  hdt3705_la_LIBADD  = $(DYNMOD_LD_ADD)
 
   hdt3088_la_SOURCES = ctc_lcs.c ctc_ctci.c ctcadpt.c w32ctca.c tuntap.c
   hdt3088_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
@@ -477,6 +483,7 @@ else
              -dlopen hdt1403.la   \
              -dlopen hdt3420.la   \
              -dlopen hdt2703.la   \
+             -dlopen hdt3705.la   \
              -dlopen hdt3088.la   \
              -dlopen hdt3270.la   \
              -dlopen hdt3505.la   \
@@ -490,6 +497,7 @@ else
              hdt1403.la   \
              hdt3420.la   \
              hdt2703.la   \
+             hdt3705.la   \
              hdt3088.la   \
              hdt3270.la   \
              hdt3505.la   \
@@ -726,6 +734,7 @@ noinst_HEADERS = fishhang.h     \
                  scsitape.h     \
                  logger.h       \
                  commadpt.h     \
+                 comm3705.h     \
                  cache.h        \
                  ecpsvm.h       \
                  memrchr.h      \
