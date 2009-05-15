@@ -1350,12 +1350,9 @@ static int ARCH_DEP(test_ec)(int r2, REGS *regs, REGS *iregs, BYTE *cce)
 /*----------------------------------------------------------------------------*/
 static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, struct ec *ec, BYTE *buf, unsigned len)
 {
-//  unsigned l;
-//  int len1;
   unsigned len1;
   unsigned len2;
   BYTE *main1;
-//  BYTE *main2;
   unsigned ofst;
   BYTE *sk;
 
@@ -1452,9 +1449,9 @@ static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, struct ec *ec, BYTE
       if(unlikely(len2 > 0x800))
       {
         len1 += 0x800;
+        len2 -= 0x800;
         ec->dest = MADDR((GR_A(r1, iregs) + len1) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
         sk = regs->dat.storkey;
-        len2 -= 0x800;
       }
       else
         len2 = 0;
