@@ -339,6 +339,10 @@
 /*----------------------------------------------------------------------------*/
 struct ec                              /* Expand caches                       */
 {
+  BYTE *dest;                          /* Destination MADDR page address      */
+
+  BYTE *dict[32];                      /* MADDR address to dictionary         */
+
   BYTE ec[ECACHE_SIZE];                /* Expanded index symbol cache         */
   int eci[8192];                       /* Index within cache for is           */
   int ecl[8192];                       /* Size of expanded is                 */
@@ -346,8 +350,6 @@ struct ec                              /* Expand caches                       */
 
   BYTE oc[2080];                       /* Output cache                        */
   unsigned ocl;                        /* Output cache length                 */
-
-  BYTE *dict[32];                      /* MADDR address to dictionary         */
 
   BYTE *src;                           /* Source MADDR page address           */
 
@@ -376,7 +378,7 @@ static int  ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, BYTE *cce, BYT
 static int  ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, BYTE *cce, BYTE *ch, U16 *is);
 static int  ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is);
 static int  ARCH_DEP(test_ec)(int r2, REGS *regs, REGS *iregs, BYTE *cce);
-static int  ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, BYTE *buf, unsigned len);
+static int  ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, struct ec *ec, BYTE *buf, unsigned len);
 
 /******************************************************************************/
 /******************************************************************************/
@@ -460,6 +462,17 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   dcten = GR0_dcten(regs);
   smbsz = GR0_smbsz(regs);
 
+  /* Initialize destination dictionary address */
+  ec.dest = NULL;
+
+  /* Initialize dictionary maddr addresses */
+  vaddr = GR1_dictor(regs);
+  for(i = 0; i < (0x01 << GR0_cdss(regs)); i++)
+  {
+    ec.dict[i] = MADDR(vaddr, r2, regs, ACCTYPE_READ, regs->psw.pkey);
+    vaddr += 2048;
+  }
+
   /* Initialize expanded index symbol cache and prefill with alphabet entries */
   for(i = 0; i < 256; i++)             /* Alphabet entries                    */
   {
@@ -471,22 +484,14 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
     ec.ecl[i] = 0;
   ec.ecwm = 256;                       /* Set watermark after alphabet part   */
 
+  /* Initialize source maddr page address */
+  ec.src = MADDR(GR_A(r2, iregs) & ~0x7ff & ADDRESS_MAXWRAP(regs), r2, regs, ACCTYPE_READ, regs->psw.pkey);
+
 #ifdef OPTION_CMPSC_ECACHE_DEBUG
   /* Initialize cache statistics */
   ec.hit = 0;
   ec.miss = 0;
 #endif
-
-  /* Initialize dictionary maddr addresses */
-  vaddr = GR1_dictor(regs);
-  for(i = 0; i < (0x01 << GR0_cdss(regs)); i++)
-  {
-    ec.dict[i] = MADDR(vaddr, r2, regs, ACCTYPE_READ, regs->psw.pkey);
-    vaddr += 2048;
-  } 
-
-  /* Initialize source maddr page address */
-  ec.src = MADDR(GR_A(r2, iregs) & ~0x7ff & ADDRESS_MAXWRAP(regs), r2, regs, ACCTYPE_READ, regs->psw.pkey);
 
   /* Process individual index symbols until cbn becomes zero */
   if(unlikely(GR1_cbn(regs)))
@@ -499,14 +504,14 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
       {
         ec.ocl = 0;                    /* Initialize output cache             */
         ARCH_DEP(expand_is)(regs, &ec, is);
-        if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, ec.oc, ec.ocl)))
+        if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, &ec, ec.oc, ec.ocl)))
           return;
         cw += ec.ocl;
         EC_STAT(ec.miss);
       }
       else
       {
-        if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, &ec.ec[ec.eci[is]], ec.ecl[is])))
+        if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, &ec, &ec.ec[ec.eci[is]], ec.ecl[is])))
           return;
         cw += ec.ecl[is];
         EC_STAT(ec.hit);
@@ -543,7 +548,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
     }
 
     /* Write and commit, cbn unchanged, so no commit for GR1 needed */
-    if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, ec.oc, ec.ocl)))
+    if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, &ec, ec.oc, ec.ocl)))
       return;
     COMMITREGS2(regs, iregs, r1, r2);
     cw += ec.ocl;
@@ -570,13 +575,13 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
     {
       ec.ocl = 0;                      /* Initialize output cache             */
       ARCH_DEP(expand_is)(regs, &ec, is);
-      if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, ec.oc, ec.ocl)))
+      if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, &ec, ec.oc, ec.ocl)))
         return;
       EC_STAT(ec.miss);
     }
     else
     {
-      if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, &ec.ec[ec.eci[is]], ec.ecl[is])))
+      if(unlikely(ARCH_DEP(vstore)(r1, regs, iregs, &ec, &ec.ec[ec.eci[is]], ec.ecl[is])))
         return;
       EC_STAT(ec.hit);
     }
@@ -1343,12 +1348,15 @@ static int ARCH_DEP(test_ec)(int r2, REGS *regs, REGS *iregs, BYTE *cce)
 /*----------------------------------------------------------------------------*/
 /* vstore                                                                     */
 /*----------------------------------------------------------------------------*/
-static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, BYTE *buf, unsigned len)
+static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, struct ec *ec, BYTE *buf, unsigned len)
 {
-  unsigned l;
-  int len1;
+//  unsigned l;
+//  int len1;
+  unsigned len1;
+  unsigned len2;
   BYTE *main1;
-  BYTE *main2;
+//  BYTE *main2;
+  unsigned ofst;
   BYTE *sk;
 
   /* Check destination size */
@@ -1416,28 +1424,43 @@ static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, BYTE *buf, unsigned
   }
 #endif
 
-  l = len;
-  if(unlikely(l > 2048))
-    l = 2048;
-  if(likely(NOCROSS2K(GR_A(r1, iregs), l - 1)))
+  /* Fingers crossed that we stay within one page */
+  ofst = GR_A(r1, iregs) & 0x7ff;
+  if(likely(ofst + len < 0x800))
   {
-    memcpy(MADDR(GR_A(r1, iregs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey), buf, l);
-    ITIMER_UPDATE(GR_A(r1, iregs), l - 1, regs);
+    if(unlikely(!ec->dest))
+      ec->dest = MADDR((GR_A(r1, iregs) & ~0x7ff) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    memcpy(&ec->dest[ofst], buf, len);
+    ITIMER_UPDATE(GR_A(r1, iregs), len - 1, regs);
   }
   else
   {
-    len1 = 0x800 - (GR_A(r1, iregs) & 0x7ff);
-    main1 = MADDR(GR_A(r1, iregs), r1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
+    /* We need multiple pages */
+    if(unlikely(!ec->dest))
+      main1 = MADDR((GR_A(r1, iregs) & ~0x7ff) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
+    else
+      main1 = ec->dest;
     sk = regs->dat.storkey;
-    main2 = MADDR((GR_A(r1, iregs) + len1) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
-    *sk |= (STORKEY_REF | STORKEY_CHANGE);
-    memcpy(main1, buf, len1);
-    memcpy(main2, &buf[len1], l - len1);
+    len1 = 0x800 - ofst;
+    ec->dest = MADDR((GR_A(r1, iregs) + len1) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    memcpy(&main1[ofst], buf, len1);
+    len2 = len - len1 + 1;
+    while(len2)
+    {
+      memcpy(ec->dest, &buf[len1], (len2 > 0x800 ? 0x800 : len2));
+      *sk |= (STORKEY_REF | STORKEY_CHANGE);
+      if(unlikely(len2 > 0x800))
+      {
+        len1 += 0x800;
+        ec->dest = MADDR((GR_A(r1, iregs) + len1) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        sk = regs->dat.storkey;
+        len2 -= 0x800;
+      }
+      else
+        len2 = 0;
+    }
   }
-
-  /* Maximum length left is 32 bytes */
-  if(unlikely(len > 2048))
-    ARCH_DEP(vstorec)(&buf[2048], len - 2048 - 1, (GR_A(r1, iregs) + 2048) & ADDRESS_MAXWRAP(regs), r1, regs);
+  
   ADJUSTREGS(r1, regs, iregs, len);
   return(0); 
 }
