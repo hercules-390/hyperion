@@ -172,6 +172,8 @@ struct cc                              /* Compress context                    */
 {
   BYTE *cce;                           /* Character entry under investigation */
   BYTE *dict[32];                      /* Dictionary MADDR addresses          */
+  BYTE *edict[32];                     /* Expansion dictionary MADDR addrs    */
+  int f1;                              /* Indication format-1 sibling descr   */
 };
 
 struct ec                              /* Expand context                      */
@@ -194,10 +196,10 @@ static void ARCH_DEP(expand_is)(REGS *regs, struct ec *ec, U16 is);
 static int  ARCH_DEP(fetch_ch)(int r2, REGS *regs, REGS *iregs, BYTE *ch, int ofst);
 static int  ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, U16 *is);
 static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, struct ec *ec, U16 is[8]);
-static void ARCH_DEP(fetch_sd)(int r2, REGS *regs, BYTE *sd, int i);
 #ifdef OPTION_CMPSC_DEBUG
-static void print_ece(BYTE *ece);
 static void print_cce(BYTE *cce);
+static void print_ece(BYTE *ece);
+static void print_sd(int f1, BYTE *sd1, BYTE *sd2);
 #endif
 static int  ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, struct cc *cc, BYTE *ch, U16 *is);
 static int  ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, struct cc *cc, BYTE *ch, U16 *is);
@@ -297,10 +299,10 @@ DEF_INST(compression_call)
 /* ecs    : number of additional extension characters                         */
 /* mcc    : indication if siblings follow child characters                    */
 /*----------------------------------------------------------------------------*/
-#define CCE_cc(cce, i)       ((&(&(cce)[3])[CCE_ecs((cce))])[(i)])
+#define CCE_cc(cce, i)       ((cce)[3 + CCE_ecs((cce)) + (i)])
 #define CCE_ccc(cce, i)      (CCE_cc((cce), (i)) == CCE_cc((cce), 0))
 #define CCE_ccs(cce)         (CCE_cct((cce)) - (CCE_mcc((cce)) ? 1 : 0))
-#define CCE_ec(cce, i)       ((&(cce)[3])[(i)])
+#define CCE_ec(cce, i)       ((cce)[3 + (i)])
 #define CCE_ecs(cce)         ((CCE_cct((cce)) <= 1) ? CCE_act((cce)) : (CCE_d((cce)) ? 1 : 0))
 #define CCE_mcc(cce)         ((CCE_cct((cce)) + (CCE_d((cce)) ? 1 : 0) == 6))
 
@@ -325,7 +327,7 @@ DEF_INST(compression_call)
 #define SD0_ccc(sd0, i)      (SD0_sc((sd0), (i)) == SD0_sc((sd0), 0))
 #define SD0_ecb(sd0, i, cce, y) (((i) < 5) ? SD0_y((sd0), (i)) : (y) ? CCE_y((cce), ((i) - 5)) : 1)
 #define SD0_msc(sd0)         (!SD0_sct((sd0)))
-#define SD0_sc(sd0, i)       ((&(sd0)[1])[(i)])
+#define SD0_sc(sd0, i)       ((sd0)[1 + (i)])
 #define SD0_scs(sd0)         (SD0_msc((sd0)) ? 7 : SD0_sct((sd0)))
 
 /*----------------------------------------------------------------------------*/
@@ -346,20 +348,20 @@ DEF_INST(compression_call)
 /* sc(i)  : sibling character                                                 */
 /* scs    : number of sibling characters                                      */
 /*----------------------------------------------------------------------------*/
-#define SD1_ccc(sd1, i)      (SD1_sc((sd1), (i)) == SD1_sc((sd1), 0))
+#define SD1_ccc(sd1, sd2, i) (SD1_sc((sd1), (sd2), (i)) == SD1_sc((sd1), (sd2), 0))
 #define SD1_ecb(sd1, i, cce, y) (((i) < 12) ? SD1_y((sd1), (i)) : (y) ? CCE_y((cce), ((i) - 12)) : 1)
 #define SD1_msc(sd1)         ((SD1_sct((sd1)) == 15))
-#define SD1_sc(sd1,i)        ((&(sd1)[2])[(i)])
+#define SD1_sc(sd1, sd2, i)  ((i) < 6 ? (sd1)[2 + (i)] : (sd2)[(i) - 6])
 #define SD1_scs(sd1)         (SD1_msc((sd1)) ? 14 : SD1_sct((sd1)))
 
 /*----------------------------------------------------------------------------*/
 /* Format independent sibling descriptor macro's                              */
 /*----------------------------------------------------------------------------*/
-#define SD_ccc(regs, sd, i)  (GR0_f1((regs)) ? SD1_ccc((sd), (i)) : SD0_ccc((sd), (i)))
-#define SD_ecb(regs, sd, i, cce, y) (GR0_f1((regs)) ? SD1_ecb((sd), (i), (cce), (y)) : SD0_ecb((sd), (i), (cce), (y)))
-#define SD_msc(regs, sd)     (GR0_f1((regs)) ? SD1_msc((sd)) : SD0_msc((sd)))
-#define SD_sc(regs, sd, i)   (GR0_f1((regs)) ? SD1_sc((sd), (i)) : SD0_sc((sd), (i)))
-#define SD_scs(regs, sd)     (GR0_f1((regs)) ? SD1_scs((sd)) : SD0_scs((sd)))
+#define SD_ccc(f1, sd1, sd2, i) ((f1) ? SD1_ccc((sd1), (sd2), (i)) : SD0_ccc((sd1), (i)))
+#define SD_ecb(f1, sd1, i, cce, y) ((f1) ? SD1_ecb((sd1), (i), (cce), (y)) : SD0_ecb((sd1), (i), (cce), (y)))
+#define SD_msc(f1, sd1)      ((f1) ? SD1_msc((sd1)) : SD0_msc((sd1)))
+#define SD_sc(f1, sd1, sd2, i) ((f1) ? SD1_sc((sd1), (sd2), (i)) : SD0_sc((sd1), (i)))
+#define SD_scs(f1, sd1)      ((f1) ? SD1_scs((sd1)) : SD0_scs((sd1)))
 
 /*----------------------------------------------------------------------------*/
 /* Check character entry for data exception                                   */
@@ -387,11 +389,7 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 {
   struct cc cc;                        /* Compression context                 */
   BYTE ch;                             /* Character read                      */
-
-#ifdef FEATURE_INTERVAL_TIMER
   GREG dictor;                         /* Dictionary origin                   */
-#endif
-
   int eos;                             /* indication end of source            */
   GREG exit_value;                     /* return cc=3 on this value           */
   int i;
@@ -400,18 +398,29 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
   GREG vaddr;
 
   /* Initialize values */
+  dictor = GR1_dictor(regs);
   eos = 0;
 
-#ifdef FEATURE_INTERVAL_TIMER
-  dictor = GR1_dictor(regs);
-#endif
-
-  /* Initialize dictionary maddr addresses */
-  vaddr = GR1_dictor(regs);
+  /* Initialize dictionary MADDR addresses */
+  vaddr = dictor;
   for(i = 0; i < (0x01 << GR0_cdss(regs)); i++)
   {
     cc.dict[i] = MADDR(vaddr, r2, regs, ACCTYPE_READ, regs->psw.pkey);
     vaddr += 0x800;
+  }
+
+  /* Initialize format-1 sibling descriptor indicator */
+  cc.f1 = GR0_f1(regs);
+
+  /* Initialize expansion dictionary MADDR addresses */
+  if(cc.f1)
+  {
+    vaddr = dictor + GR0_dctsz(regs);
+    for(i = 0; i < (0x01 << GR0_cdss(regs)); i++)
+    {
+      cc.edict[i] = MADDR(vaddr, r2, regs, ACCTYPE_READ, regs->psw.pkey);
+      vaddr += 0x800;
+    }
   }
 
   /* Try to process the CPU-determined amount of data */
@@ -566,82 +575,71 @@ static int ARCH_DEP(fetch_ch)(int r2, REGS *regs, REGS *iregs, BYTE *ch, int ofs
   return(0);
 }
 
+#ifndef NO_2ND_COMPILE
+#ifdef OPTION_CMPSC_DEBUG
 /*----------------------------------------------------------------------------*/
 /* fetch_sd (sibling descriptor).                                             */
 /*----------------------------------------------------------------------------*/
-static void ARCH_DEP(fetch_sd)(int r2, REGS *regs, BYTE *sd, int i)
+static void print_sd(int f1, BYTE *sd1, BYTE *sd2)
 {
-  ARCH_DEP(vfetchc)((sd), 7, (GR1_dictor((regs)) + (i) * 8) & ADDRESS_MAXWRAP((regs)), (r2), (regs));
-  if(GR0_f1(regs))
-    ARCH_DEP(vfetchc)(&(sd)[8], 7, (GR1_dictor((regs)) + GR0_dctsz((regs)) + (i) * 8) & ADDRESS_MAXWRAP((regs)), r2, (regs));
-
-#ifdef OPTION_CMPSC_DEBUG
   int j;
   int prt_detail;
 
-  if(GR0_f1(regs))
+  if(f1)
   {
-    logmsg("fetch_sd1: index %04X\n", i);
     logmsg("  sd1    : ");
     prt_detail = 0;
-    for(j = 0; j < 16; j++)
+    for(j = 0; j < 8; j++)
     {
-      if(!prt_detail && sd[j])
+      if(!prt_detail && sd1[j])
         prt_detail = 1;
-      logmsg("%02X", sd[j]);
+      logmsg("%02X", sd1[j]);
+    }
+    for(j = 0; j < 8; j++)
+    {
+      if(!prt_detail && sd2[j])
+        prt_detail = 1;
+      logmsg("%02X", sd2[j]);
     }
     logmsg("\n");
     if(prt_detail)
     {
-      logmsg("  sct    : %d\n", SD1_sct(sd));
+      logmsg("  sct    : %d\n", SD1_sct(sd1));
       logmsg("  y1..y12: ");
       for(j = 0; j < 12; j++)
-        logmsg("%c", (SD1_y(sd, j) ? '1' : '0'));
-      logmsg("\n  msc    > %s\n", TRUEFALSE(SD1_msc(sd)));
-      logmsg("  sc's   >");
-      for(j = 0; j < SD1_scs(sd); j++)
-        logmsg(" %02X", SD1_sc(sd, j));
+        logmsg("%c", (SD1_y(sd1, j) ? '1' : '0'));
+      logmsg("\n  sc(s)  :");
+      for(j = 0; j < SD1_scs(sd1); j++)
+        logmsg(" %02X", SD1_sc(sd1, sd2, j));
       logmsg("\n");
     }
   }
   else
   {
-    logmsg("fetch_sd0: index %04X\n", i);
     logmsg("  sd0    : ");
     prt_detail = 0;
     for(j = 0; j < 8; j++)
     {
-      if(!prt_detail && sd[j])
+      if(!prt_detail && sd1[j])
         prt_detail = 1;
-      logmsg("%02X", sd[j]);
+      logmsg("%02X", sd1[j]);
     }
     logmsg("\n");
     if(prt_detail)
     {
-      logmsg("  sct    : %d\n", SD0_sct(sd));
+      logmsg("  sct    : %d\n", SD0_sct(sd1));
       logmsg("  y1..y5 : ");
       for(j = 0; j < 5; j++)
-        logmsg("%c", (SD0_y(sd, j) ? '1' : '0'));
-      logmsg("\n  msc    > %s\n", TRUEFALSE(SD0_msc(sd)));
-      logmsg("  sc's   >");
-      for(j = 0; j < SD0_scs(sd); j++)
-        logmsg(" %02X", SD0_sc(sd, j));
+        logmsg("%c", (SD0_y(sd1, j) ? '1' : '0'));
+      logmsg("\n  sc(s)  :");
+      for(j = 0; j < SD0_scs(sd1); j++)
+        logmsg(" %02X", SD0_sc(sd1, j));
       logmsg("\n");
     }
   }
-#endif 
-
-  /* Check for data exceptions */
-  if(unlikely((GR0_f1(regs) && !SD1_sct(sd))))
-  {
-
-#ifdef OPTION_CMPSC_DEBUG
-    logmsg("fetch_sd : format-1 sd and sct=0 -> data exception\n");
-#endif
-
-    ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
-  }
 }
+#endif
+#endif /* #ifndef NO_2ND_COMPILE */
 
 /*----------------------------------------------------------------------------*/
 /* search_cce (compression character entry)                                   */
@@ -749,26 +747,26 @@ static int ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, struct cc *cc, 
 /*----------------------------------------------------------------------------*/
 static int ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, struct cc *cc, BYTE *ch, U16 *is)
 {
-  BYTE *ccce;                          /* child compression character entry   */
+  BYTE *ccce;                          /* Child compression character entry   */
 
 #ifdef FEATURE_INTERVAL_TIMER
   GREG dictor;                         /* Dictionary origin                   */
 #endif
 
-  int i;                               /* sibling character index             */
+  int i;                               /* Sibling character index             */
   U16 index;
-  int ind_search_siblings;             /* indicator for keep searching        */
-  BYTE sd[16];                         /* sibling descriptor fmt-0 and fmt-1  */
-  int sd_ptr;                          /* pointer to sibling descriptor       */
-  int searched;                        /* number of children searched         */
-  int y_in_parent;                     /* indicator if y bits are in parent   */
+  int ind_search_siblings;             /* Indicator for keep searching        */
+  BYTE *sd1;                           /* Sibling descriptor fmt-0|1 part 1   */
+  BYTE *sd2;                           /* Sibling descriptor fmt-1 part 2     */
+  int sd_ptr;                          /* Pointer to sibling descriptor       */
+  int searched;                        /* Number of children searched         */
+  int y_in_parent;                     /* Indicator if y bits are in parent   */
 
   /* Initialize values */
-  ind_search_siblings = 1;
-
 #ifdef FEATURE_INTERVAL_TIMER
   dictor = GR1_dictor(regs);
 #endif
+  ind_search_siblings = 1;
 
   /* For the first sibling descriptor y bits are in the cce parent */
   y_in_parent = 1;
@@ -782,26 +780,54 @@ static int ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, struct cc *cc, B
   /* As long there are sibling characters */
   do
   {
-
     /* Get the sibling descriptor */
-    ARCH_DEP(fetch_sd)(r2, regs, sd, CCE_cptr(cc->cce) + sd_ptr);
+    index = (CCE_cptr(cc->cce) + sd_ptr) * 8;
+    sd1 = &cc->dict[index / 0x800][index % 0x800];
+    ITIMER_SYNC(GR0_dictor(regs) + index, 8 - 1, regs);
+
+    /* If format-1, get second half from the expansion dictionary */ 
+    if(cc->f1)
+    {
+      sd2 = &cc->edict[index / 0x800][index % 0x800];
+      ITIMER_SYNC(GR0_dictor(regs) + GR0_dctsz(regs) + index, 8 - 1, regs);
+
+#ifdef OPTION_CMPSC_DEBUG
+      /* Print before possible exception */
+      logmsg("fetch sd1: index %04X\n", CCE_cptr(cc->cce) + sd_ptr);
+      print_sd(1, sd1, sd2);
+#endif
+
+      /* Check for data exception */
+      if(!SD1_sct(sd1))
+        ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
+    }
+    else
+    {
+
+#ifdef OPTION_CMPSC_DEBUG
+      /* Also print for format-0 sibling descriptors */
+      logmsg("fetchr sd0: index %04X\n", CCE_cptr(cc->cce) + sd_ptr);
+      print_sd(0, sd1, sd2);
+#endif
+ 
+    }
 
     /* Check all children in sibling descriptor */
-    for(i = 0; i < SD_scs(regs, sd); i++)
+    for(i = 0; i < SD_scs(cc->f1, sd1); i++)
     {
 
       /* Stop searching when child tested and no consecutive child character */
-      if(unlikely(!ind_search_siblings && !SD_ccc(regs, sd, i)))
+      if(unlikely(!ind_search_siblings && !SD_ccc(cc->f1, sd1, sd2, i)))
         return(0);
 
-      if(unlikely(*ch == SD_sc(regs, sd, i)))
+      if(unlikely(*ch == SD_sc(cc->f1, sd1, sd2, i)))
       {
 
         /* Child is tested, so stop searching for siblings*/
         ind_search_siblings = 0;
 
         /* Check if child should not be examined */
-        if(unlikely(!SD_ecb(regs, sd, i, cc->cce, y_in_parent)))
+        if(unlikely(!SD_ecb(cc->f1, sd1, i, cc->cce, y_in_parent)))
         {
 
           /* No need to examine child, found the last match */
@@ -846,10 +872,10 @@ static int ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, struct cc *cc, B
     }
 
     /* Next sibling follows last possible child */
-    sd_ptr += SD_scs(regs, sd) + 1;
+    sd_ptr += SD_scs(cc->f1, sd1) + 1;
 
     /* test for searching child 261 */
-    searched += SD_scs(regs, sd);
+    searched += SD_scs(cc->f1, sd1);
     if(unlikely(searched > 260))
       ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION); 
 
@@ -857,7 +883,7 @@ static int ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, struct cc *cc, B
     y_in_parent = 0;
 
   }
-  while(ind_search_siblings && SD_msc(regs, sd));
+  while(ind_search_siblings && SD_msc(cc->f1, sd1));
   return(0);
 }
 
