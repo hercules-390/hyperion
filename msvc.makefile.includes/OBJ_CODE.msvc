@@ -149,6 +149,7 @@ hengine_OBJ = \
 hmodule_OBJ = \
     $(O)cardpch.obj  \
     $(O)cardrdr.obj  \
+    $(O)comm3705.obj \
     $(O)commadpt.obj \
     $(O)console.obj  \
     $(O)ctc_ctci.obj \
