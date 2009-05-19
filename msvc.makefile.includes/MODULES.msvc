@@ -28,6 +28,7 @@ MODULES = \
     $(X)hdt1052c.dll \
     $(X)hdt1403.dll  \
     $(X)hdt2703.dll  \
+    $(X)hdt3705.dll  \
     $(X)hdt3088.dll  \
     $(X)hdt3270.dll  \
     $(X)hdt3420.dll  \

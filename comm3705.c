@@ -52,7 +52,9 @@
   #define sysblk (*psysblk)
 #endif
 
+#if !defined(min)
 #define  min(a,b)              (((a) <= (b)) ? (a) : (b))
+#endif
 
 static void make_sna_requests2(COMMADPT*);
 static void make_sna_requests3(COMMADPT*);
