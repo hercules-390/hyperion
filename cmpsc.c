@@ -174,6 +174,8 @@ struct cc                              /* Compress context                    */
   BYTE *dict[32];                      /* Dictionary MADDR addresses          */
   BYTE *edict[32];                     /* Expansion dictionary MADDR addrs    */
   int f1;                              /* Indication format-1 sibling descr   */
+  BYTE *src;                           /* Source MADDR page address           */
+  unsigned ofst;                       /* Latest fetched offset               */
 };
 
 struct ec                              /* Expand context                      */
@@ -193,7 +195,6 @@ struct ec                              /* Expand context                      */
 static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs);
 static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs);
 static void ARCH_DEP(expand_is)(REGS *regs, struct ec *ec, U16 is);
-static int  ARCH_DEP(fetch_ch)(int r2, REGS *regs, REGS *iregs, BYTE *ch, int ofst);
 static int  ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, U16 *is);
 static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, struct ec *ec, U16 is[8]);
 #ifdef OPTION_CMPSC_DEBUG
@@ -204,7 +205,7 @@ static void print_sd(int f1, BYTE *sd1, BYTE *sd2);
 static int  ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, struct cc *cc, BYTE *ch, U16 *is);
 static int  ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, struct cc *cc, BYTE *ch, U16 *is);
 static int  ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is);
-static int  ARCH_DEP(test_ec)(int r2, REGS *regs, REGS *iregs, BYTE *cce);
+static int  ARCH_DEP(test_ec)(int r2, REGS *regs, REGS *iregs, /*struct cc *cc,*/ BYTE *cce);
 static int  ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, struct ec *ec, BYTE *buf, unsigned len);
 
 /*----------------------------------------------------------------------------*/
@@ -393,9 +394,10 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
   int eos;                             /* indication end of source            */
   GREG exit_value;                     /* return cc=3 on this value           */
   int i;
-  U16 index;
+  U16 index;                           /* Index within dictionary             */
   U16 is;                              /* Last matched index symbol           */
-  GREG vaddr;
+  unsigned ofst;                       /* Offset within page                  */
+  GREG vaddr;                          /* Virtual address                     */
 
   /* Initialize values */
   dictor = GR1_dictor(regs);
@@ -423,6 +425,10 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
     }
   }
 
+  /* Initialize source maddr page address */
+  cc.src = NULL;
+  cc.ofst = 0;
+
   /* Try to process the CPU-determined amount of data */
   if(likely(GR_A(r2 + 1, regs) <= PROCESS_MAX))
     exit_value = 0;
@@ -432,8 +438,27 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
   {
 
     /* Get the next character, return on end of source */
-    if(unlikely(ARCH_DEP(fetch_ch)(r2, regs, iregs, &ch, 0)))
+    if(unlikely(!GR_A(r2 + 1, iregs)))
+    {
+
+#ifdef OPTION_CMPSC_DEBUG
+      logmsg("fetch_ch : reached end of source\n");
+#endif
+
+      regs->psw.cc = 0;
       return;
+    }
+
+    ofst = GR_A(r2, iregs) & 0x7ff;
+    ITIMER_SYNC(GR_A(r2, iregs), 1 - 1, regs);
+    if(unlikely(!cc.src || ofst < cc.ofst))
+      cc.src = MADDR((GR_A(r2, iregs) & ~0x7ff) & ADDRESS_MAXWRAP(regs), r2, regs, ACCTYPE_READ, regs->psw.pkey);
+    ch = cc.src[ofst];
+    cc.ofst = ofst;
+
+#ifdef OPTION_CMPSC_DEBUG
+    logmsg("fetch_ch : %02X at " F_VADR "\n", ch, GR_A(r2, iregs));
+#endif
 
     /* Get the alphabet entry */
     index = ch * 8;
@@ -441,7 +466,7 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
     ITIMER_SYNC(dictor + index, 8 - 1, regs);
 
 #ifdef OPTION_CMPSC_DEBUG
-    logmsg("fetch cce: index %04X\n", ch);
+    logmsg("fetch_cce: index %04X\n", ch);
     print_cce(cc.cce);
 #endif
 
@@ -547,38 +572,9 @@ static void print_cce(BYTE *cce)
     }
   }
 }
-#endif
-#endif /* #ifndef NO_2ND_COMPILE */
 
 /*----------------------------------------------------------------------------*/
-/* fetch_ch (character)                                                       */
-/*----------------------------------------------------------------------------*/
-static int ARCH_DEP(fetch_ch)(int r2, REGS *regs, REGS *iregs, BYTE *ch, int ofst)
-{
-  /* Check for end of source condition */
-  if(unlikely(GR_A(r2 + 1, iregs) <= (U32) ofst))
-  {
-
-#ifdef OPTION_CMPSC_DEBUG
-    logmsg("fetch_ch : reached end of source\n");
-#endif
-
-    regs->psw.cc = 0;
-    return(1);
-  }
-  *ch = ARCH_DEP(vfetchb)((GR_A(r2, iregs) + ofst) & ADDRESS_MAXWRAP(regs), r2, regs);
-
-#ifdef OPTION_CMPSC_DEBUG
-  logmsg("fetch_ch : %02X at " F_VADR "\n", *ch, (GR_A(r2, iregs) + ofst));
-#endif
-
-  return(0);
-}
-
-#ifndef NO_2ND_COMPILE
-#ifdef OPTION_CMPSC_DEBUG
-/*----------------------------------------------------------------------------*/
-/* fetch_sd (sibling descriptor).                                             */
+/* print_sd (sibling descriptor).                                             */
 /*----------------------------------------------------------------------------*/
 static void print_sd(int f1, BYTE *sd1, BYTE *sd2)
 {
@@ -653,8 +649,9 @@ static int ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, struct cc *cc, 
 #endif
 
   int i;                               /* child character index               */
-  U16 index;
+  U16 index;                           /* Index within dictionary             */
   int ind_search_siblings;             /* Indicator for searching siblings    */
+  unsigned ofst;                       /* Offset within page                  */
 
   /* Initialize values */
   ind_search_siblings = 1;
@@ -664,14 +661,30 @@ static int ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, struct cc *cc, 
 #endif
 
   /* Get the next character when there are children */
-  if(unlikely((CCE_ccs(cc->cce) && ARCH_DEP(fetch_ch)(r2, regs, iregs, ch, 0))))
+  if(likely(CCE_ccs(cc->cce)))
   {
+    /* Check for end of source condition */
+    if(unlikely(!GR_A(r2 + 1, iregs)))
+    {
 
 #ifdef OPTION_CMPSC_DEBUG
-    logmsg("search_cce: end of source\n");
+      logmsg("fetch_ch : reached end of source\n");
 #endif
 
-    return(0);
+      regs->psw.cc = 0;
+      return(0);
+    }  
+
+    ofst = GR_A(r2, iregs) & 0x7ff;
+    ITIMER_SYNC(GR_A(r2, iregs), 1 - 1, regs);
+    if(unlikely(!cc->src || ofst < cc->ofst))
+      cc->src = MADDR((GR_A(r2, iregs) & ~0x7ff) & ADDRESS_MAXWRAP(regs), r2, regs, ACCTYPE_READ, regs->psw.pkey);
+    *ch = cc->src[ofst];
+    cc->ofst = ofst;
+
+#ifdef OPTION_CMPSC_DEBUG
+    logmsg("fetch_ch : %02X at " F_VADR "\n", *ch, GR_A(r2, iregs));
+#endif
   }
 
   /* Now check all children in parent */
@@ -707,14 +720,14 @@ static int ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, struct cc *cc, 
       ITIMER_SYNC(dictor + index, 8 - 1, regs);
 
 #ifdef OPTION_CMPSC_DEBUG
-      logmsg("fetch cce: index %04X\n", CCE_cptr(cc->cce) + i);
+      logmsg("fetch_cce: index %04X\n", CCE_cptr(cc->cce) + i);
       print_cce(ccce);
 #endif
 
       CCE_check(ccce);
 
       /* Check if additional extension characters match */
-      if(likely(ARCH_DEP(test_ec)(r2, regs, iregs, ccce)))
+      if(likely(ARCH_DEP(test_ec)(r2, regs, iregs, /*cc,*/ ccce)))
       {
 
         /* Set last match */
@@ -754,7 +767,7 @@ static int ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, struct cc *cc, B
 #endif
 
   int i;                               /* Sibling character index             */
-  U16 index;
+  U16 index;                           /* Index within dictionary             */
   int ind_search_siblings;             /* Indicator for keep searching        */
   BYTE *sd1;                           /* Sibling descriptor fmt-0|1 part 1   */
   BYTE *sd2;                           /* Sibling descriptor fmt-1 part 2     */
@@ -793,7 +806,7 @@ static int ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, struct cc *cc, B
 
 #ifdef OPTION_CMPSC_DEBUG
       /* Print before possible exception */
-      logmsg("fetch sd1: index %04X\n", CCE_cptr(cc->cce) + sd_ptr);
+      logmsg("fetch_sd : index %04X\n", CCE_cptr(cc->cce) + sd_ptr);
       print_sd(1, sd1, sd2);
 #endif
 
@@ -806,7 +819,7 @@ static int ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, struct cc *cc, B
 
 #ifdef OPTION_CMPSC_DEBUG
       /* Also print for format-0 sibling descriptors */
-      logmsg("fetchr sd0: index %04X\n", CCE_cptr(cc->cce) + sd_ptr);
+      logmsg("fetch_sd : index %04X\n", CCE_cptr(cc->cce) + sd_ptr);
       print_sd(0, sd1, sd2);
 #endif
  
@@ -844,14 +857,14 @@ static int ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, struct cc *cc, B
         ITIMER_SYNC(dictor + index, 8 - 1, regs);
 
 #ifdef OPTION_CMPSC_DEBUG
-        logmsg("fetch cce: index %04X\n", CCE_cptr(cc->cce) + sd_ptr + i + 1);
+        logmsg("fetch_cce: index %04X\n", CCE_cptr(cc->cce) + sd_ptr + i + 1);
         print_cce(ccce);
 #endif
 
         CCE_check(ccce);
 
         /* Check if additional extension characters match */
-        if(unlikely(ARCH_DEP(test_ec)(r2, regs, iregs, ccce)))
+        if(unlikely(ARCH_DEP(test_ec)(r2, regs, iregs, /*cc,*/ ccce)))
         {
 
           /* Set last match */
@@ -965,16 +978,17 @@ static int ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is)
 /*----------------------------------------------------------------------------*/
 /* test_ec (extension characters)                                             */
 /*----------------------------------------------------------------------------*/
-static int ARCH_DEP(test_ec)(int r2, REGS *regs, REGS *iregs, BYTE *cce)
+static int ARCH_DEP(test_ec)(int r2, REGS *regs, REGS *iregs, /*struct cc *cc,*/ BYTE *cce)
 {
   BYTE ch;
   int i;
 
   for(i = 0; i < CCE_ecs(cce); i++)
   {
-
-    /* Get a character return on nomatch or end of source */
-    if(unlikely(ARCH_DEP(fetch_ch)(r2, regs, iregs, &ch, i + 1) || ch != CCE_ec(cce, i)))
+    if(unlikely(GR_A(r2 + 1, iregs) <= (U32) i + 1))
+      return(0);
+    ch = ARCH_DEP(vfetchb)((GR_A(r2, iregs) + i + 1) & ADDRESS_MAXWRAP(regs), r2, regs);
+    if(unlikely(ch != CCE_ec(cce, i)))
       return(0);
   }
 
@@ -1013,7 +1027,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   U16 is;                              /* Index symbol                        */
   U16 iss[8];                          /* Index symbols                       */
   unsigned smbsz;                      /* Symbol size                         */
-  GREG vaddr;
+  GREG vaddr;                          /* Virtual address                     */
 
   /* Initialize values */
   cw = 0;
@@ -1139,7 +1153,7 @@ static void ARCH_DEP(expand_is)(REGS *regs, struct ec *ec, U16 is)
 {
   int csl;                             /* Complete symbol length              */
   unsigned cw;                         /* Characters written                  */
-  U16 index;
+  U16 index;                           /* Index within dictionary             */
 
 #ifdef FEATURE_INTERVAL_TIMER
   GREG dictor;                         /* Dictionary origin                   */
@@ -1161,7 +1175,7 @@ static void ARCH_DEP(expand_is)(REGS *regs, struct ec *ec, U16 is)
   ITIMER_SYNC(dictor + index, 8 - 1, regs);
 
 #ifdef OPTION_CMPSC_DEBUG
-  logmsg("fetch ece: index %04X\n", is);
+  logmsg("fetch_ece: index %04X\n", is);
   print_ece(ece);
 #endif
 
@@ -1187,7 +1201,7 @@ static void ARCH_DEP(expand_is)(REGS *regs, struct ec *ec, U16 is)
     ITIMER_SYNC(dictor + index, 8 - 1, regs);
 
 #ifdef OPTION_CMPSC_DEBUG
-    logmsg("fetch ece: index %04X\n", ECE_pptr(ece));
+    logmsg("fetch_ece: index %04X\n", ECE_pptr(ece));
     print_ece(ece);
 #endif
 
@@ -1287,7 +1301,7 @@ static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, struct ec *ec, 
     ec->src = MADDR((GR_A(r2, iregs) & ~0x7ff) & ADDRESS_MAXWRAP(regs), r2, regs, ACCTYPE_READ, regs->psw.pkey);
   if(likely(ofst + smbsz < 0x800))
   { 
-    ITIMER_SYNC(GR_A(r2, iregs), smbsz, regs);
+    ITIMER_SYNC(GR_A(r2, iregs), smbsz - 1, regs);
     mem = &ec->src[ofst]; 
   } 
   else
@@ -1444,11 +1458,11 @@ static void print_ece(BYTE *ece)
 /*----------------------------------------------------------------------------*/
 static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, struct ec *ec, BYTE *buf, unsigned len)
 {
-  unsigned len1;
-  unsigned len2;
-  BYTE *main1;
-  unsigned ofst;
-  BYTE *sk;
+  unsigned len1;                       /* Length in first page                */
+  unsigned len2;                       /* Length in second page               */
+  BYTE *main1;                         /* Address first page                  */
+  unsigned ofst;                       /* Offset within page                  */
+  BYTE *sk;                            /* Storage key                         */
 
   /* Check destination size */
   if(unlikely(GR_A(r1 + 1, iregs) < len))
