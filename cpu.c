@@ -574,10 +574,10 @@ static char *pgmintname[] = {
 
     /* Ensure psw.IA is set and aia invalidated */
     INVALIDATE_AIA(realregs);
-#if defined(_FEATURE_INTERPRETIVE_EXECUTION)
+#if defined(FEATURE_INTERPRETIVE_EXECUTION)
     if(realregs->sie_active)
         INVALIDATE_AIA(realregs->guestregs);
-#endif /*defined(_FEATURE_INTERPRETIVE_EXECUTION)*/
+#endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
 
     /* Set instruction length (ilc) */
     ilc = realregs->psw.zeroilc ? 0 : REAL_ILC(realregs);
@@ -590,7 +590,7 @@ static char *pgmintname[] = {
         realregs->psw.IA += ilc;
         realregs->psw.ilc = ilc;
     }
-#if defined(_FEATURE_INTERPRETIVE_EXECUTION)
+#if defined(FEATURE_INTERPRETIVE_EXECUTION)
     if(realregs->sie_active)
     {
         sie_ilc = realregs->guestregs->psw.zeroilc
@@ -603,14 +603,14 @@ static char *pgmintname[] = {
             realregs->guestregs->psw.ilc = sie_ilc;
         }
     }
-#endif /*defined(_FEATURE_INTERPRETIVE_EXECUTION)*/
+#endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
 
     /* Set `execflag' to 0 in case EXecuted instruction program-checked */
     realregs->execflag = 0;
-#if defined(_FEATURE_INTERPRETIVE_EXECUTION)
+#if defined(FEATURE_INTERPRETIVE_EXECUTION)
     if(realregs->sie_active)
         realregs->guestregs->execflag = 0;
-#endif /*defined(_FEATURE_INTERPRETIVE_EXECUTION)*/
+#endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
 
     /* Unlock the main storage lock if held */
     if (realregs->cpuad == sysblk.mainowner)
@@ -692,7 +692,7 @@ static char *pgmintname[] = {
     {
         realregs->psw.IA -= ilc;
         realregs->psw.IA &= ADDRESS_MAXWRAP(realregs);
-#if defined(_FEATURE_INTERPRETIVE_EXECUTION)
+#if defined(FEATURE_INTERPRETIVE_EXECUTION)
         /* When in SIE mode the guest instruction causing this
            host exception must also be nullified */
         if(realregs->sie_active && !realregs->guestregs->instinvalid)
@@ -700,7 +700,7 @@ static char *pgmintname[] = {
             realregs->guestregs->psw.IA -= sie_ilc;
             realregs->guestregs->psw.IA &= ADDRESS_MAXWRAP(realregs->guestregs);
         }
-#endif /*defined(_FEATURE_INTERPRETIVE_EXECUTION)*/
+#endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
     }
 
     /* The OLD PSW must be incremented on the following
@@ -758,11 +758,11 @@ static char *pgmintname[] = {
 
     realregs->instinvalid = 0;
 
-#if defined(_FEATURE_INTERPRETIVE_EXECUTION)
+#if defined(FEATURE_INTERPRETIVE_EXECUTION)
     /* If this is a host exception in SIE state then leave SIE */
     if(realregs->sie_active)
         ARCH_DEP(sie_exit) (realregs, SIE_HOST_PGMINT);
-#endif /*defined(_FEATURE_INTERPRETIVE_EXECUTION)*/
+#endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
 
     /* Absolute address of prefix page */
     px = realregs->PX;
