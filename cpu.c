@@ -640,6 +640,7 @@ static char *pgmintname[] = {
 #if defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
       || code == PGM_ALET_SPECIFICATION_EXCEPTION
       || code == PGM_ALEN_TRANSLATION_EXCEPTION
+      || code == PGM_ALE_SEQUENCE_EXCEPTION
 #endif /*defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
         ) )
     {
