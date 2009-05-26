@@ -641,6 +641,7 @@ static char *pgmintname[] = {
       || code == PGM_ALET_SPECIFICATION_EXCEPTION
       || code == PGM_ALEN_TRANSLATION_EXCEPTION
       || code == PGM_ALE_SEQUENCE_EXCEPTION
+      || code == PGM_EXTENDED_AUTHORITY_EXCEPTION
 #endif /*defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
         ) )
     {
@@ -796,6 +797,10 @@ static char *pgmintname[] = {
 #endif /*FEATURE_VECTOR_FACILITY*/
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
       && !(code == PGM_ALEN_TRANSLATION_EXCEPTION
+        && SIE_FEATB(regs, MX, XC))
+      && !(code == PGM_ALE_SEQUENCE_EXCEPTION
+        && SIE_FEATB(regs, MX, XC))
+      && !(code == PGM_EXTENDED_AUTHORITY_EXCEPTION
         && SIE_FEATB(regs, MX, XC))
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
       /* And conditional for the following exceptions */
