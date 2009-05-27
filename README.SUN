@@ -1,4 +1,4 @@
-HOW TO BUILD HERCULES FROM CVS UNDER SOLARIS
+HOW TO BUILD HERCULES FROM SVN UNDER SOLARIS
 
 1. DOWNLOAD AND INSTALL THE GNU COMPILER AND TOOLS
 
@@ -29,7 +29,7 @@ HOW TO BUILD HERCULES FROM CVS UNDER SOLARIS
       pkg-get install textutils
       pkg-get install automake
       pkg-get install autoconf
-      pkg-get install cvs
+      pkg-get install subversion
       pkg-get install flex
       pkg-get install gmake
       pkg-get install ggrep
@@ -37,13 +37,13 @@ HOW TO BUILD HERCULES FROM CVS UNDER SOLARIS
 
   (d) Check that all the required tools are installed:
 
-      pkg-get compare cvs autoconf automake flex gawk gcc3
+      pkg-get compare subversion autoconf automake flex gawk gcc3
       pkg-get compare ggettext ggrep libiconv gm4 gmake perl gsed
 
       which should produce output something like this:
 
        software                    localrev                   remoterev
-            cvs      1.11.22,REV=2007.12.02                        SAME
+     subversion        1.4.5,REV=2007.11.18                        SAME
        autoconf         2.61,REV=2007.07.13                        SAME
        automake                       1.9.6                        SAME
            flex        2.5.4,REV=2005.10.03                        SAME
@@ -68,16 +68,14 @@ HOW TO BUILD HERCULES FROM CVS UNDER SOLARIS
       ln -s /opt/csw/bin/gmake make
       ln -s /opt/csw/bin/gsed sed
 
-2. DOWNLOAD THE HERCULES SOURCE FROM CVS
+2. DOWNLOAD THE HERCULES SOURCE FROM SVN
 
-      Add the following lines to your .profile
+      Add the following line to your .profile file:
       PATH=/opt/csw/bin:${PATH}
-      CVSROOT=:pserver:anonymous@cvs.hercules-390.org:/usr/cvs/hercules
 
-      From your home directory issue these commands:
+      From your home directory issue this command:
 
-      cvs login (no password is required; just press enter when asked)
-      cvs -z9 co hercules
+      svn checkout svn://svn.hercules-390.org/hercules/trunk hercules
 
 3. CHECK THAT THE REQUIRED LEVELS OF TOOLS ARE INSTALLED
 
