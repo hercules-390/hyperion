@@ -2200,7 +2200,11 @@ int     ix = TLBIX(addr);               /* TLB index                 */
 
         /* Indicate a host real space entry for a XC dataspace */
         if (arn > 0 && MULTIPLE_CONTROLLED_DATA_SPACE(regs))
+        {
             regs->tlb.TLB_ASD(ix) = regs->dat.asd;
+            /* Ensure that the private bit is percolated to the guest such that LAP is applied correctly */
+            regs->dat.private = regs->hostregs->dat.private;
+        }
 
         /* Convert host real address to host absolute address */
         regs->hostregs->dat.aaddr = aaddr =
