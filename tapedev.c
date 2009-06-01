@@ -1105,17 +1105,23 @@ int gettapetype_bydata (DEVBLK *dev)
             if (memcmp(hdr, "@TDF", 4) == 0)
                 return OMATAPE_FMTENTRY;
 
-            if (hdr[0] == 0x30 && hdr[1] == 0x30 && hdr[2] == 0x30 && hdr[3] == 0x30)
-                return FAKETAPE_FMTENTRY;
+            if (1
+                && hdr[0] == 0x30           /* "ASCII"-zero len prev block? */
+                && hdr[1] == 0x30
+                && hdr[2] == 0x30
+                && hdr[3] == 0x30
+            )
+                return FAKETAPE_FMTENTRY;   /* Then obviously Flex FakeTape */
 
-            if (hdr[2] == 0 && hdr[3] == 0)
+            if (hdr[2] == 0 && hdr[3] == 0)             /* 0 len prev blk?  */
             {
-                if (hdr[4] & 0x40)  /* TapeMark? */
-                    return -1;      /* Unable to determine */
-                if (hdr[4] & 0x03)  /* ZLIB and/or BZIP2 compressed? */
-                    return HETTAPE_FMTENTRY;
+                if (hdr[4] & HETHDR_FLAGS1_TAPEMARK)    /* If tapemark then */
+                    return -1;                          /* can't tell type. */
+                if (hdr[4] & HETHDR_FLAGS1_COMPRESS ||  /* ZLIB or BZIP2 or */
+                    hdr[5] & HETHDR_FLAGS2_COMPRESS)    /* Bus-Tech ZLIB?   */
+                    return HETTAPE_FMTENTRY;            /* Then HET format. */
                 else
-                    return AWSTAPE_FMTENTRY;    /* (default) */
+                    return AWSTAPE_FMTENTRY;            /* Else default AWS */
             }
         }
     }
@@ -1132,28 +1138,24 @@ int gettapetype_bydata (DEVBLK *dev)
 int gettapetype (DEVBLK *dev, char **short_descr)
 {
     char*       descr;                  /* Device descr from fmttab  */
-    int         i = -1;                 /* fmttab entry#             */
+    int         i;                      /* fmttab entry#             */
 
-    /* Try to determine device type by actual file contents first,
-       but only if this isn't a SCSI tape device. (Thus we need to
-       check by name first to determine if it's a SCSI device) */
+    i = gettapetype_byname( dev );      /* Get type based on name    */
+
 #if defined(OPTION_SCSI_TAPE)
-    i = gettapetype_byname( dev );          // (check if this is a SCSI)
-
-    if (i != SCSITAPE_FMTENTRY)             // (if not, then check by..
+    if (i != SCSITAPE_FMTENTRY)         /* If not SCSI tape...       */
 #endif
     {
-        int i2 = gettapetype_bydata( dev ); // ..reading the file data)
-        if (i2 >= 0)                        // (if that worked..)
-            i = i2;                         // (..then we know the type)
+        int i2 = gettapetype_bydata( dev ); // Get type based on data..
+
+        if (i2 >= 0 &&                      // If valid type by data, AND
+           (i2 != AWSTAPE_FMTENTRY ||       // *not* AWS by data (or if it
+            i  != HETTAPE_FMTENTRY)         // is, if it's not HET by name)..
+        )
+            i = i2;                         // ..Use type based on data.
     }
 
-    /* If we couldn't determine the device type based on the file's
-       contents, then try again but this time based on its filename */
-    if (i < 0)
-        i = gettapetype_byname( dev );
-
-    /* If still unknown, use a reasonable default value */
+    /* If file type still unknown, use a reasonable default value... */
     if (i < 0)
     {
         i = DEFAULT_FMTENTRY;
