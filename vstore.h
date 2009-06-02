@@ -832,7 +832,7 @@ static __inline__ void concpy (REGS *regs, void *d, void *s, int n)
     for ( ; n2; n2--)
         *(dest++) = *(src++);
 
-#if defined(SIZEOF_LONG) && SIZEOF_LONG == 8 && !defined(OPTION_STRICT_ALIGNMENT)
+#if defined(MAX_ATOMIC_BITS) && MAX_ATOMIC_BITS >= 64 && !defined(OPTION_STRICT_ALIGNMENT)
     UNREFERENCED(regs);
     /* copy 8 bytes at a time */
     for ( ; n >= 8; n -= 8, dest += 8, src += 8)

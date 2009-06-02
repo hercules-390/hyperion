@@ -132,14 +132,17 @@
 
   #if defined( _M_IX86 ) && ( _M_IX86 >= 600 )
     #define MSC_X86_32BIT
+    #define MAX_ATOMIC_BITS 64
   #endif
   #if defined( _M_AMD64 )
     #define MSC_X86_AMD64
     #define MSC_X86_64BIT
+    #define MAX_ATOMIC_BITS 64
   #endif
   #if defined( _M_IA64 )
     #define MSC_X86_IA64
     #define MSC_X86_64BIT
+    #define MAX_ATOMIC_BITS 64
   #endif
 
   #if defined(GEN_MSC_ASSISTS) && (defined(MSC_X86_32BIT) || defined(MSC_X86_64BIT))
@@ -151,8 +154,6 @@
     #define  ASSIST_CMPXCHG1    // (indicate machine-dependent assist function used)
     #define  ASSIST_CMPXCHG4    // (indicate machine-dependent assist function used)
     #define  ASSIST_CMPXCHG8    // (indicate machine-dependent assist function used)
-    #define  ASSIST_FETCH_DW    // (indicate machine-dependent assist function used)
-    #define  ASSIST_STORE_DW    // (indicate machine-dependent assist function used)
 
     #define  cmpxchg1(  x, y, z )  cmpxchg1_x86( x, y, z )
     #define  cmpxchg4(  x, y, z )  cmpxchg4_x86( x, y, z )
@@ -241,26 +242,6 @@
         return cc;
     }
 
-    #if defined(MSC_X86_32BIT)
-
-      #define fetch_dw_noswap(_p) fetch_dw_x86_noswap((_p))
-      // (must follow cmpxchg8 since it uses it)
-      static __inline U64 __fastcall fetch_dw_x86_noswap ( volatile void *ptr )
-      {
-        U64 value = *(U64*)ptr;
-        cmpxchg8( &value, value, (U64*)ptr );
-        return value;
-      }
-
-      #define store_dw_noswap(_p, _v) store_dw_x86_noswap( (_p), (_v))
-      // (must follow cmpxchg8 since it uses it)
-      static __inline void __fastcall store_dw_x86_noswap ( volatile void *ptr, U64 value )
-      {
-        U64 orig = *(U64*)ptr;
-        while ( cmpxchg8( &orig, value, (U64*)ptr ) );
-      }
-    #endif /* defined(MSC_X86_32BIT) */
-
   #endif // defined(GEN_MSC_ASSISTS) && (defined(MSC_X86_32BIT) || defined(MSC_X86_64BIT))
 
   // ------------------------------------------------------------------
@@ -321,15 +302,18 @@
       defined(__pentium4__) || defined(__athlon__) || \
       defined(__athlon)
     #define _ext_ia32
+    #define MAX_ATOMIC_BITS 64
   #endif
 
   #if defined(__amd64__)
     #define _ext_amd64
+    #define MAX_ATOMIC_BITS 64
   #endif
 
   #if defined(__powerpc__) || defined(__ppc__) || \
       defined(__POWERPC__) || defined(__PPC__)
     #define _ext_ppc
+    #define MAX_ATOMIC_BITS 64
   #endif
 
 /*-------------------------------------------------------------------
@@ -560,6 +544,10 @@ U32  *ptr4, val4, old4, new4;
 #endif /* defined(_ext_ppc) */
 
 #endif // !defined( _MSVC_ )
+
+#ifndef   MAX_ATOMIC_BITS
+  #define MAX_ATOMIC_BITS 32
+#endif
 
 /*-------------------------------------------------------------------
  * Define the ASSIST_ macros

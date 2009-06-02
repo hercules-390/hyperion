@@ -1,3 +1,5 @@
+02 Jun 2009 Fix MSVC fetch_dw_noswap/store_dw_noswap inefficiency to gain
+            an immediate 12%+ performance boost for Windows builds - Fish
 02 Jun 2009 Configuration Topology Facility support for PTF and STSI - Fish
 01 Jun 2009 socket printer support - Fish
 01 Jun 2009 New TT32 pre-v3.3 header and stats - Fish

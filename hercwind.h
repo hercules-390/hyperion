@@ -209,8 +209,10 @@ typedef int             mode_t;
 #endif
 
 #if defined( _WIN64 )
+  #define  SIZEOF_INT_P       8
   #define  SIZEOF_SIZE_T      8
 #else
+  #define  SIZEOF_INT_P       4
   #define  SIZEOF_SIZE_T      4
 #endif
 
