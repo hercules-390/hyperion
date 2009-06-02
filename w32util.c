@@ -2918,6 +2918,8 @@ DLL_EXPORT void w32_set_thread_name( TID tid, char* name )
 {
     THREADNAME_INFO info;
 
+    if (!name) return;              // (ignore premature calls)
+
     info.dwType     = 0x1000;
     info.pszName    = name;         // (should really be LPCTSTR)
     info.dwThreadID = tid;          // (-1 == current thread, else tid)
