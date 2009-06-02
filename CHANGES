@@ -1,3 +1,4 @@
+02 Jun 2009 Miscellaneous minor hetget fixes - kerravon86 by Fish
 02 Jun 2009 Fix MSVC fetch_dw_noswap/store_dw_noswap inefficiency to gain
             an immediate 12%+ performance boost for Windows builds - Fish
 02 Jun 2009 Configuration Topology Facility support for PTF and STSI - Fish
