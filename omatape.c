@@ -523,6 +523,13 @@ int             rc;                     /* Return code               */
 OMATAPE_DESC   *omadesc;                /* -> OMA descriptor entry   */
 char            pathname[MAX_PATH];     /* file path in host format  */
 
+     /* Check for no tape in drive */
+     if (!strcmp (dev->filename, TAPE_UNLOADED))
+     {
+         build_senseX(TAPE_BSENSE_TAPEUNLOADED,dev,unitstat,code);
+         return -1;
+     }
+
     /* Read the OMA descriptor file if necessary */
     if (dev->omadesc == NULL)
     {
