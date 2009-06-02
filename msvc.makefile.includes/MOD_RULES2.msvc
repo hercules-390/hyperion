@@ -73,7 +73,7 @@ $(X)hdt3088.dll: $(O)ctc_lcs.obj $(O)ctc_ctci.obj $(O)ctcadpt.obj $(O)w32ctca.ob
 $(X)hdt3420.dll: $(hdt3420_OBJ) $(O)hengine.lib $(O)htape.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
     $(linkdll)
 
-$(X)hdt1403.dll: $(O)printer.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
+$(X)hdt1403.dll: $(O)printer.obj $(O)sockdev.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
     $(linkdll)
 
 $(X)hdt3505.dll: $(O)cardrdr.obj $(O)sockdev.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res

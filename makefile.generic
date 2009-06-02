@@ -88,7 +88,7 @@ hercules_OBJ = hostinfo.o impl.o config.o panel.o \
                version.o ipl.o assist.o dat.o stack.o cpu.o \
                vstore.o general1.o general2.o general3.o \
                pfpo.o plo.o control.o io.o decimal.o \
-	       service.o scedasd.o opcode.o diagnose.o \
+               service.o scedasd.o opcode.o diagnose.o \
                diagmssf.o vm.o channel.o ckddasd.o fbadasd.o \
                crypto.o external.o float.o trace.o chsc.o losc.o \
                machchk.o vector.o xstore.o cmpsc.o sie.o qdio.o \
@@ -100,7 +100,7 @@ hercules_OBJ = hostinfo.o impl.o config.o panel.o \
                hscutl.o hscutl2.o hsys.o bootstrap.o pttrace.o \
                strsignal.o hconsole.o w32util.o
 
-hdt1403_OBJ  = printer.o
+hdt1403_OBJ  = printer.o sockdev.o
 hdt2703_OBJ  = commadpt.o
 hdt3088_OBJ  = ctc_lcs.o ctc_ctci.o ctcadpt.o w32ctca.o tuntap.o
 hdt3270_OBJ  = console.o

@@ -274,7 +274,7 @@ if OPTION_DYNAMIC_LOAD
   hdteq_la_LDFLAGS   = $(DYNMOD_LD_FLAGS)
   hdteq_la_LIBADD    = $(DYNMOD_LD_ADD)
 
-  hdt1403_la_SOURCES = printer.c
+  hdt1403_la_SOURCES = printer.c sockdev.c
   hdt1403_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
   hdt1403_la_LIBADD  = $(DYNMOD_LD_ADD)
 

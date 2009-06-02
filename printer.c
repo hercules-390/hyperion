@@ -64,6 +64,119 @@ static BYTE printer_immed_commands[256]=
 /*-------------------------------------------------------------------*/
 #define LINE_LENGTH     150
 
+static void* spthread (DEVBLK* dev);        /*  (forward reference)  */
+
+/*-------------------------------------------------------------------*/
+/* Sockdev "OnConnection" callback function                          */
+/*-------------------------------------------------------------------*/
+static int onconnect_callback (DEVBLK* dev)
+{
+    TID tid;
+    if (create_thread( &tid, DETACHED, spthread, dev, NULL ))
+    {
+        logmsg( _( "HHCPR015E Create spthread failed for %4.4X: errno=%d: %s\n" ),
+            dev->devnum, errno, strerror( errno ) );
+        return 0;
+    }
+    return 1;
+}
+
+/*-------------------------------------------------------------------*/
+/* Thread to monitor the sockdev remote print spooler connection     */
+/*-------------------------------------------------------------------*/
+static void* spthread (DEVBLK* dev)
+{
+    BYTE byte;
+    fd_set readset, errorset;
+    struct timeval tv;
+    int rc, fd = dev->fd;           // (save original fd)
+
+    /* Fix thread name */
+    {
+        char thread_name[32];
+        TID tid = thread_id();
+        thread_name[sizeof(thread_name)-1] = 0;
+        snprintf( thread_name, sizeof(thread_name)-1,
+            "spthread %4.4X", dev->devnum );
+        SET_THREAD_NAME( thread_name );
+    }
+
+    // Looooop...  until shutdown or disconnect...
+
+    // PROGRAMMING NOTE: we do our select specifying an immediate
+    // timeout to prevent our select from holding up (slowing down)
+    // the device thread (which does the actual writing of data to
+    // the client). The only purpose for our thread even existing
+    // is to detect a severed connection (i.e. to detect when the
+    // client disconnects)...
+
+    while ( !sysblk.shutdown && dev->fd == fd )
+    {
+        if (dev->busy)
+        {
+            SLEEP(3);
+            continue;
+        }
+
+        FD_ZERO( &readset );
+        FD_ZERO( &errorset );
+
+        FD_SET( fd, &readset );
+        FD_SET( fd, &errorset );
+
+        tv.tv_sec = 0;
+        tv.tv_usec = 0;
+
+        rc = select( fd+1, &readset, NULL, &errorset, &tv );
+
+        if (rc < 0)
+            break;
+
+        if (rc == 0)
+        {
+            SLEEP(3);
+            continue;
+        }
+
+        if (FD_ISSET( fd, &errorset ))
+            break;
+
+        // Read and ignore any data they send us...
+        // Note: recv should complete immediately
+        // as we know data is waiting to be read.
+
+        ASSERT( FD_ISSET( fd, &readset ) );
+
+        rc = recv( fd, &byte, sizeof(byte), 0 );
+
+        if (rc <= 0)
+            break;
+    }
+
+    obtain_lock( &dev->lock );
+
+    // PROGRAMMING NOTE: the following tells us whether we detected
+    // the error or if the device thread already did. If the device
+    // thread detected it while we were sleeping (and subsequently
+    // closed the connection) then we don't need to do anything at
+    // all; just exit. If we were the ones that detected the error
+    // however, then we need to close the connection so the device
+    // thread can learn of it...
+
+    if (dev->fd == fd)
+    {
+        dev->fd = -1;
+        close_socket( fd );
+        logmsg (_("HHCPR016I %s (%s) disconnected from device %4.4X (%s)\n"),
+            dev->bs->clientname, dev->bs->clientip, dev->devnum, dev->bs->spec);
+    }
+
+    release_lock( &dev->lock );
+
+    return NULL;
+
+} /* end function spthread */
+
 /*-------------------------------------------------------------------*/
 /* Subroutine to open the printer file or pipe                       */
 /*-------------------------------------------------------------------*/
@@ -79,9 +192,15 @@ int             rc;                     /* Return code               */
 #endif
 
     /* Regular open if 1st char of filename is not vertical bar */
-    if (dev->filename[0] != '|')
+    if (!dev->ispiped)
     {
         int fd;
+
+        /* Socket printer? */
+        if (dev->bs)
+            return (dev->fd < 0 ? -1 : 0);
+
+        /* Normal printer */
         hostpath(pathname, dev->filename, sizeof(pathname));
         open_flags = O_BINARY | O_WRONLY | O_CREAT /* | O_SYNC */;
         if (dev->notrunc != 1)
@@ -99,13 +218,10 @@ int             rc;                     /* Return code               */
 
         /* Save file descriptor in device block and return */
         dev->fd = fd;
-        dev->ispiped = 0;
         return 0;
     }
 
     /* Filename is in format |xxx, set up pipe to program xxx */
-
-    dev->ispiped = 1;
 
 #if defined( _MSVC_ )
 
@@ -223,17 +339,42 @@ write_buffer (DEVBLK *dev, char *buf, int len, BYTE *unitstat)
 int             rc;                     /* Return code               */
 
     /* Write data to the printer file */
-    rc = write (dev->fd, buf, len);
-
-    /* Equipment check if error writing to printer file */
-    if (rc < len)
+    if (dev->bs)
     {
-        logmsg (_("HHCPR003E %4.4X Error writing to %s: %s\n"),
-                dev->devnum, dev->filename,
-                (errno == 0 ? _("incomplete"): strerror(errno)));
-        dev->sense[0] = SENSE_EC;
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
+        /* (socket printer) */
+        rc = write_socket (dev->fd, buf, len);
+
+        /* Check for socket error */
+        if (rc < len)
+        {
+            /* Close the connection */
+            if (dev->fd != -1)
+            {
+                close_socket( dev->fd );
+                logmsg (_("HHCPR017I %s (%s) disconnected from device %4.4X (%s)\n"),
+                    dev->bs->clientname, dev->bs->clientip, dev->devnum, dev->bs->spec);
+                dev->fd = -1;
+            }
+
+            /* Set unit check with intervention required */
+            dev->sense[0] = SENSE_IR;
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        }
+    }
+    else
+    {
+        /* Write data to the printer file */
+        rc = write (dev->fd, buf, len);
+
+        /* Equipment check if error writing to printer file */
+        if (rc < len)
+        {
+            logmsg (_("HHCPR003E %4.4X Error writing to %s: %s\n"),
+                    dev->devnum, dev->filename,
+                    (errno == 0 ? _("incomplete"): strerror(errno)));
+            dev->sense[0] = SENSE_EC;
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        }
     }
 
 } /* end function write_buffer */
@@ -244,6 +385,11 @@ int             rc;                     /* Return code               */
 static int printer_init_handler (DEVBLK *dev, int argc, char *argv[])
 {
 int     i;                              /* Array subscript           */
+int     sockdev  = 0;                   /* 1 == is socket device     */
+
+    /* Forcibly disconnect anyone already currently connected */
+    if (dev->bs && !unbind_device_ex(dev,1))
+        return -1; // (error msg already issued)
 
     /* The first argument is the file name */
     if (argc == 0 || strlen(argv[0]) > sizeof(dev->filename)-1)
@@ -268,6 +414,7 @@ int     i;                              /* Array subscript           */
     dev->crlf = 0;
     dev->stopprt = 0;
     dev->notrunc = 0;
+    dev->ispiped = (dev->filename[0] == '|');
 
     /* Process the driver arguments */
     for (i = 1; i < argc; i++)
@@ -275,6 +422,17 @@ int     i;                              /* Array subscript           */
         if (strcasecmp(argv[i], "crlf") == 0)
         {
             dev->crlf = 1;
+            continue;
+        }
+
+        /* sockdev means the device file is actually
+           a connected socket instead of a disk file.
+           The file name is the socket_spec (host:port)
+           to listen for connections on.
+        */
+        if (!dev->ispiped && strcasecmp(argv[i], "sockdev") == 0)
+        {
+            sockdev = 1;
             continue;
         }
 
@@ -287,6 +445,30 @@ int     i;                              /* Array subscript           */
         logmsg (_("HHCPR002E Invalid argument for printer %4.4X: %s\n"),
                 dev->devnum, argv[i]);
         return -1;
+    }
+
+    /* Check for incompatible options */
+    if (sockdev && dev->crlf)
+    {
+        logmsg (_("HHCPR019E Incompatible option specified for socket printer %4.4X: 'crlf'\n"),
+                dev->devnum);
+        return -1;
+    }
+
+    if (sockdev && dev->notrunc)
+    {
+        logmsg (_("HHCPR019E Incompatible option specified for socket printer %4.4X: 'notrunc'\n"),
+                dev->devnum);
+        return -1;
+    }
+
+    /* If socket device, create a listening socket
+       to accept connections on.
+    */
+    if (sockdev && !bind_device_ex( dev,
+        dev->filename, onconnect_callback, dev ))
+    {
+        return -1;  // (error msg already issued)
     }
 
     /* Set length of print buffer */
@@ -319,10 +501,11 @@ static void printer_query_device (DEVBLK *dev, char **class,
 {
     BEGIN_DEVICE_CLASS_QUERY( "PRT", dev, class, buflen, buffer );
 
-    snprintf (buffer, buflen, "%s%s%s%s",
-                dev->filename,
-                (dev->crlf ? " crlf" : ""),
-                (dev->notrunc ? " notrunc" : ""),
+    snprintf (buffer, buflen, "%s%s%s%s%s",
+                 dev->filename,
+                (dev->bs      ? " sockdev"   : ""),
+                (dev->crlf    ? " crlf"      : ""),
+                (dev->notrunc ? " noclear"   : ""),
                 (dev->stopprt ? " (stopped)" : ""));
 
 } /* end function printer_query_device */
@@ -332,7 +515,8 @@ static void printer_query_device (DEVBLK *dev, char **class,
 /*-------------------------------------------------------------------*/
 static int printer_close_device ( DEVBLK *dev )
 {
-    if (dev->fd < 0) return 0;  /* (nothing to close!) */
+    if (dev->fd == -1)
+        return 0;
 
     /* Close the device file */
     if ( dev->ispiped )
@@ -348,7 +532,21 @@ static int printer_close_device ( DEVBLK *dev )
         dev->ptpcpid = 0;
     }
     else
-        close (dev->fd);
+    {
+        if (dev->bs)
+        {
+            /* Socket printer */
+            close_socket (dev->fd);
+            logmsg (_("HHCPR018I %s (%s) disconnected from device %4.4X (%s)\n"),
+                dev->bs->clientname, dev->bs->clientip, dev->devnum, dev->bs->spec);
+        }
+        else
+        {
+            /* Regular printer */
+            close (dev->fd);
+        }
+    }
+
     dev->fd = -1;
     dev->stopprt = 0;
 

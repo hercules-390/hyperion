@@ -116,6 +116,7 @@ and how they are used.
     000C      <a href="#3505">3505</a>    jcl.txt     ascii  trunc
     000D      <a href="#3525">3525</a>    pch00d.txt  ascii
     000E      <a href="#1403">1403</a>    prt00e.txt  noclear
+    001E      <a href="#1403">1403</a>    192.168.200.1:1403 sockdev
 
     001F      <a href="#3270">3270</a>    * 192.168.0.1
     0200.4    <a href="#3270">3270</a>    * 192.168.0.0  255.255.255.0
@@ -2144,6 +2145,20 @@ and how they are used.
     <p>
 
     <dl>
+    <dt><code>sockdev</code>
+    <dd><p>
+        indicates the line printer is a socket device wherein the
+        filename is actually a socket specification instead of a
+        device filename.  When used, there must only be one filename
+        specified in the form: <code>port</code> or <code>host:port</code>.
+        The device then accepts
+        remote connections on the given TCP/IP port,
+        and writes data to the socket instead of to a device
+        file. This allows automatic remote spooling of line printer
+        data. The sockdev option is mutually exclusive with all other
+        printer options (e.g. crlf, etc) and must be specified alone.
+        <p>
+
     <dt><code>crlf</code>
     <dd><p>
         specifies, for ASCII files, that carriage return line feed

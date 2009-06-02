@@ -281,41 +281,12 @@ void socket_device_connection_handler (bind_struct* bs)
     logdebug("socket_device_connection_handler(dev=%4.4X)\n",
         dev->devnum);
 
-    /* Obtain the device lock */
-
-    obtain_lock (&dev->lock);
-
-    /* Reject if device is busy or interrupt pending */
-
-    if (dev->busy || IOPENDING(dev)
-     || (dev->scsw.flag3 & SCSW3_SC_PEND))
-    {
-        release_lock (&dev->lock);
-        logmsg (_("HHCSD015E Connect to device %4.4X (%s) rejected; "
-            "device busy or interrupt pending\n"),
-            dev->devnum, bs->spec);
-        return;
-    }
-
-    /* Reject if previous connection not closed (should not occur) */
-
-    if (dev->fd != -1)
-    {
-        release_lock (&dev->lock);
-        logmsg (_("HHCSD016E Connect to device %4.4X (%s) rejected; "
-            "client %s (%s) still connected\n"),
-            dev->devnum, bs->spec, bs->clientip, bs->clientname);
-        close_socket(accept(bs->sd, 0, 0));  /* Should reject */
-        return;
-    }
-
     /* Accept the connection... */
 
     csock = accept(bs->sd, 0, 0);
 
     if (csock == -1)
     {
-        release_lock (&dev->lock);
         logmsg (_("HHCSD017E Connect to device %4.4X (%s) failed: %s\n"),
             dev->devnum, bs->spec, strerror(HSO_errno));
         return;
@@ -325,7 +296,7 @@ void socket_device_connection_handler (bind_struct* bs)
 
     namelen = sizeof(client);
     clientip = NULL;
-    clientname = "host name unknown";
+    clientname = "<unknown>";
 
     if (1
         && getpeername(csock, (struct sockaddr*) &client, &namelen) == 0
@@ -338,20 +309,41 @@ void socket_device_connection_handler (bind_struct* bs)
         clientname = (char*) pHE->h_name;
     }
 
-    /* Log the connection */
+    if (!clientip) clientip = "<unknown>";
 
-    if (clientip)
+    /* Obtain the device lock */
+
+    obtain_lock (&dev->lock);
+
+    /* Reject if device is busy or interrupt pending */
+
+    if (dev->busy || IOPENDING(dev)
+     || (dev->scsw.flag3 & SCSW3_SC_PEND))
     {
-        logmsg (_("HHCSD018I %s (%s) connected to device %4.4X (%s)\n"),
-            clientip, clientname, dev->devnum, bs->spec);
-    }
-    else
-    {
-        logmsg (_("HHCSD019I <unknown> connected to device %4.4X (%s)\n"),
-            dev->devnum, bs->spec);
+        closesocket( csock );
+        logmsg (_("HHCSD015E Client %s (%s) connection to device %4.4X "
+            "(%s) rejected: device busy or interrupt pending\n"),
+            clientname, clientip, dev->devnum, bs->spec);
+        release_lock (&dev->lock);
+        return;
     }
 
-    /* Save the connected client information in the bind_struct */
+    /* Reject new client if previous client still connected */
+
+    if (dev->fd != -1)
+    {
+        closesocket( csock );
+        logmsg (_("HHCSD016E Client %s (%s) connection to device %4.4X "
+            "(%s) rejected: client %s (%s) still connected\n"),
+            clientname, clientip, dev->devnum, bs->spec,
+            bs->clientname, bs->clientip);
+        release_lock (&dev->lock);
+        return;
+    }
+
+    /* Indicate that a client is now connected to this device */
+
+    dev->fd = csock;
 
     if (bs->clientip)   free(bs->clientip);
     if (bs->clientname) free(bs->clientname);
@@ -359,18 +351,24 @@ void socket_device_connection_handler (bind_struct* bs)
     bs->clientip   = strdup(clientip);
     bs->clientname = strdup(clientname);
 
-    /* Indicate that a client is now connected to device (prevents
-     * listening for new connections until THIS client disconnects).
-     */
+    /* Call the boolean onconnect callback */
 
-    dev->fd = csock;        /* (indicate client connected to device) */
+    if (bs->fn && !bs->fn( bs->arg ))
+    {
+        /* Callback says it can't accept it */
+        closesocket( dev->fd );
+        dev->fd = -1;
+        logmsg (_("HHCSD026E Client %s (%s) connection to device %4.4X "
+            "(%s) rejected: by onconnect callback\n"),
+            clientname, clientip, dev->devnum, bs->spec);
+        release_lock (&dev->lock);
+        return;
+    }
 
-    /* Release the device lock */
+    logmsg (_("HHCSD018I Client %s (%s) connected to device %4.4X (%s)\n"),
+        clientname, clientip, dev->devnum, bs->spec);
 
     release_lock (&dev->lock);
-
-    /* Raise unsolicited device end interrupt for the device */
-
     device_attention (dev, CSW_DE);
 }
 
@@ -470,7 +468,7 @@ void* socket_thread( void* arg )
 /* bind_device   bind a device to a socket (adds entry to our list   */
 /*               of bound devices) (1=success, 0=failure)            */
 /*-------------------------------------------------------------------*/
-int bind_device (DEVBLK* dev, char* spec)
+int bind_device_ex (DEVBLK* dev, char* spec, ONCONNECT* fn, void* arg )
 {
     bind_struct* bs;
     int was_list_empty;
@@ -491,13 +489,18 @@ int bind_device (DEVBLK* dev, char* spec)
 
     /* Create a new bind_struct entry */
     bs = malloc(sizeof(bind_struct));
+
     if (!bs)
     {
         logmsg (_("HHCSD002E bind_device malloc() failed for device %4.4X\n"),
             dev->devnum);
         return 0;   /* (failure) */
     }
+
     memset(bs,0,sizeof(bind_struct));
+
+    bs->fn  = fn;
+    bs->arg = arg;
 
     if (!(bs->spec = strdup(spec)))
     {
@@ -518,7 +521,7 @@ int bind_device (DEVBLK* dev, char* spec)
         return 0; /* (failure) */
     }
 
-    /* Chain device and socket to each other */
+    /* Chain device and bind_struct to each other */
     dev->bs = bs;
     bs->dev = dev;
 
@@ -563,7 +566,7 @@ int bind_device (DEVBLK* dev, char* spec)
 /* unbind_device   unbind a device from a socket (removes entry from */
 /*                 our list and discards it) (1=success, 0=failure)  */
 /*-------------------------------------------------------------------*/
-int unbind_device (DEVBLK* dev)
+int unbind_device_ex (DEVBLK* dev, int forced)
 {
     bind_struct* bs;
 
@@ -577,12 +580,25 @@ int unbind_device (DEVBLK* dev)
         return 0;   /* (failure) */
     }
 
-    /* Error if someone still connected */
+    /* Is anyone still connected? */
     if (dev->fd != -1)
     {
-        logmsg (_("HHCSD006E Client %s (%s) still connected to device %4.4X (%s)\n"),
-            dev->bs->clientip, dev->bs->clientname, dev->devnum, dev->bs->spec);
-        return 0;   /* (failure) */
+        /* Yes. Should we forcibly disconnect them? */
+        if (forced)
+        {
+            /* Yes. Then do so... */
+            close_socket( dev->fd );
+            dev->fd = -1;
+            logmsg (_("HHCSD025I Client %s (%s) disconnected from device %4.4X (%s)\n"),
+                dev->bs->clientip, dev->bs->clientname, dev->devnum, dev->bs->spec);
+        }
+        else
+        {
+            /* No. Then fail the request. */
+            logmsg (_("HHCSD006E Client %s (%s) still connected to device %4.4X (%s)\n"),
+                dev->bs->clientip, dev->bs->clientname, dev->devnum, dev->bs->spec);
+            return 0;   /* (failure) */
+        }
     }
 
     /* Remove the entry from our list */
@@ -598,7 +614,7 @@ int unbind_device (DEVBLK* dev)
     if (bs->sd != -1)
         close_socket (bs->sd);
 
-    /* Unchain device and socket from each another */
+    /* Unchain device and bind_struct from each another */
 
     dev->bs = NULL;
     bs->dev = NULL;
