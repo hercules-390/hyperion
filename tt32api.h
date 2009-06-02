@@ -1,65 +1,84 @@
-/**********************************************************************************\
- *
- *                        T U N T A P 3 2 . D L L
- *
- *                     EXPORTED FUNCTION DEFINITIONS
- *
- *    These functions provide a 'C' language interface and can be called from
- *    any type of app that can access a DLL: VB, C/C++, PowerBuilder, etc.
- *
- **********************************************************************************
-
-  Copyright (c) Software Development Laboratories, aka "Fish" (David B. Trout)
-
-  Licensed under terms of the ZLIB/LIBPNG Open Source Software License
-  http://www.opensource.org/licenses/zlib-license.php
-
-  THIS SOFTWARE IS PROVIDED 'AS-IS', WITHOUT ANY EXPRESS OR IMPLIED WARRANTY.
-  IN NO EVENT WILL THE AUTHOR(S) BE HELD LIABLE FOR ANY DAMAGES ARISING FROM
-  THE USE OF THIS SOFTWARE.
-
-  Permission is granted to anyone to use this software for any purpose, including
-  commercial applications, and to alter it and redistribute it freely, subject to
-  the following restrictions:
-
-   1. The origin of this software must not be misrepresented; you must not claim
-      that you wrote the original software. If you use this software in a product,
-      an acknowledgment in the product documentation would be appreciated but is
-      not required.
-
-   2. Altered source versions must be plainly marked as such, and must not be
-      misrepresented as being the original software.
-
-   3. This notice nor the above Copyright information may not be removed or altered
-      from any source distribution.
-
- **********************************************************************************
- *
- *                            CHANGE HISTORY
- *
- *  MM/DD/YY   Version    Description...
- *  --------  ---------  -------------------------------------------------------
- *
- *  12/22/01    1.0.0     Fish: Created.
- *  07/20/02    2.0.0     JAP: LCS modifications/enhancements.
- *  07/02/03    2.0.2     Fish: use std 'uint32_t' type instead of Win32 DWORD
- *  06/16/04    2.1.0     Fish: 'ex' variant functions to pass errno value.
- *  11/01/03    3.1.0     Fish: TT32MINMTU, TT32MAXMTU, TT32DEFMTU
- *  11/03/03    3.1.0     Fish: TT32_MAX_MULTICAST_LIST_ENTRIES
- *  12/31/03    3.1.0     Fish: support for deprecated functions dropped/deleted.
- *  02/05/06    3.1.0     Fish: New exported function: 'tuntap32_build_herc_iface_mac'
- *  02/14/06    3.1.0     Fish: Added #defines for TUNTAP32_DLLNAME
- *  04/14/06    3.1.0     Fish: Added 'tuntap32_calc_checksum' function
- *  07/02/06    3.2.0     Fish: Added #defines for min/max/def buffer sizes
- *
-\**********************************************************************************/
-
-// $Id$
+// Copyright (c) 2002-2008, Software Development Laboratories, "Fish" (David B. Trout)
+/////////////////////////////////////////////////////////////////////////////////////////
 //
-// $Log$
+//  TT32API.h  --  TunTap32 DLL exported functions interface
+//
+/////////////////////////////////////////////////////////////////////////////////////////
+//
+//                        T U N T A P 3 2 . D L L
+//
+//                     EXPORTED FUNCTION DEFINITIONS
+//
+//    These functions provide a 'C' language interface and can be called from
+//    any type of app that can access a DLL: VB, C/C++, PowerBuilder, etc.
+//
+/////////////////////////////////////////////////////////////////////////////////////////
+//
+//  Change History:
+//
+//  12/22/01    1.0.0   Created.
+//  07/20/02    2.0.0   JAP: LCS modifications/enhancements.
+//  07/02/03    2.0.2   use std 'uint32_t' type instead of Win32 DWORD
+//  06/16/04    2.1.0   'ex' variant functions to pass errno value.
+//  11/01/03    3.1.0   TT32MINMTU, TT32MAXMTU, TT32DEFMTU
+//  11/03/03    3.1.0   TT32_MAX_MULTICAST_LIST_ENTRIES
+//  12/31/03    3.1.0   support for deprecated functions dropped/deleted.
+//  02/05/06    3.1.0   New exported function: 'tuntap32_build_herc_iface_mac'
+//  02/14/06    3.1.0   Added #defines for TUNTAP32_DLLNAME
+//  04/14/06    3.1.0   Added 'tuntap32_calc_checksum' function
+//  07/02/06    3.1.2   Added #defines for min/max/def buffer sizes
+//  08/09/06    3.1.6   Added 'tuntap32_calc_checksum' function
+//  mm/dd/07    3.2.0   VS2005 + x64 + WinPCap 4.0
+//  11/06/08    3.3.0   VS2008 + auto-link pragma.
+//  11/06/08    3.3.0   Additional counters...
+//
+//////////////////////////////////////////////////////////////////////////////////////////
 
 #ifndef _TT32API_H_
 #define _TT32API_H_
+
+/////////////////////////////////////////////////////////////////////////////////////////
+//                            TunTap32.dll name
+/////////////////////////////////////////////////////////////////////////////////////////
+
+#if defined(_WIN64)
+  #if defined(_UNICODE) || defined(UNICODE)
+    #if defined(_DEBUG) || defined(DEBUG)
+      #define  BASE_TUNTAP32_NAME  "TunTap64UD"
+    #else 
+      #define  BASE_TUNTAP32_NAME  "TunTap64U"
+    #endif
+  #else
+    #if defined(_DEBUG) || defined(DEBUG)
+      #define  BASE_TUNTAP32_NAME  "TunTap64D"
+    #else
+      #define  BASE_TUNTAP32_NAME  "TunTap64"
+    #endif
+  #endif
+#else
+  #if defined(_UNICODE) || defined(UNICODE)
+    #if defined(_DEBUG) || defined(DEBUG)
+      #define  BASE_TUNTAP32_NAME  "TunTap32UD"
+    #else 
+      #define  BASE_TUNTAP32_NAME  "TunTap32U"
+    #endif
+  #else
+    #if defined(_DEBUG) || defined(DEBUG)
+      #define  BASE_TUNTAP32_NAME  "TunTap32D"
+    #else
+      #define  BASE_TUNTAP32_NAME  "TunTap32"
+    #endif
+  #endif
+#endif
+
+#if defined( _MSC_VER ) && defined( AUTOLINK_TUNTAP32_LIB )
+  #pragma comment ( lib, BASE_TUNTAP32_NAME ".lib" )
+#endif
+#define TUNTAP32_DLLNAME  BASE_TUNTAP32_NAME ".dll"
+
+/////////////////////////////////////////////////////////////////////////////////////////
+//                   TunTap32 structures, #defines and typedefs, etc...
+/////////////////////////////////////////////////////////////////////////////////////////
 
 #ifdef __cplusplus
 extern "C"
@@ -100,17 +119,17 @@ struct tt32ctl
 #define tt32ctl_iobuffsize   tt32_ctlu.ctlu_iobuffsize
 #define tt32ctl_readtimeout  tt32_ctlu.ctlu_readtimeout
 
-/* WinPCap device driver capture buffer sizes */
+// WinPCap device driver capture buffer sizes
 
-#define MIN_CAPTURE_BUFFSIZE  (64*1024)      /* minimum = 64K */
-#define DEF_CAPTURE_BUFFSIZE  (1*1024*1024)  /* default =  1M */
-#define MAX_CAPTURE_BUFFSIZE  (16*1024*1024) /* maximum = 16M */
+#define MIN_CAPTURE_BUFFSIZE  (64*1024)      // minimum = 64K
+#define DEF_CAPTURE_BUFFSIZE  (1*1024*1024)  // default =  1M
+#define MAX_CAPTURE_BUFFSIZE  (16*1024*1024) // maximum = 16M
 
-/* FishPack I/O buffer sizes */
+// FishPack I/O buffer sizes
 
-#define MIN_PACKET_BUFFSIZE   (16*1024)      /* minimum =  16K */
-#define DEF_PACKET_BUFFSIZE   (1*64*1024)    /* default =  64K */
-#define MAX_PACKET_BUFFSIZE   (1024*1024)    /* maximum =   1M */
+#define MIN_PACKET_BUFFSIZE   (16*1024)      // minimum =  16K
+#define DEF_PACKET_BUFFSIZE   (1*64*1024)    // default =  64K
+#define MAX_PACKET_BUFFSIZE   (1024*1024)    // maximum =   1M
 
 typedef struct TT32STATS
 {
@@ -133,17 +152,23 @@ typedef struct TT32STATS
 
     int64_t  n64InternalPackets;        // total #of packets handled internally
     int64_t  n64IgnoredPackets;         // total #of packets ignored
+
+    // New version 3.3 counters...
+
+    int64_t  n64OwnPacketsIgnored;      // total #of packets read with our source MAC
+    int64_t  n64ZeroMACPacketsRead;     // total #of packets read with dest MAC all zeros
+    int64_t  n64ZeroMACPacketsWritten;  // total #of packets written with dest MAC all zeros
 }
 TT32STATS, *PTT32STATS;
 
 
 #ifndef EXPORT
-#define EXPORT /*(we must be importing instead of exporting)*/
+#define EXPORT   // we must be importing instead of exporting)
 #endif
 
-/**********************************************************************************\
-                     TunTap32.dll exported functions...
-\**********************************************************************************/
+/////////////////////////////////////////////////////////////////////////////////////////
+//                   TunTap32.dll exported functions...
+/////////////////////////////////////////////////////////////////////////////////////////
 
 typedef void (__cdecl *ptr_to_print_debug_string_func)(const char* debug_string);
 
@@ -160,8 +185,9 @@ extern int         WINAPI EXPORT tuntap32_get_stats                (int fd, TT32
 extern const char* WINAPI EXPORT tuntap32_get_default_iface        ();
 extern void        WINAPI EXPORT tuntap32_build_herc_iface_mac     (u_char* mac, const u_char* ip);
 extern u_short     WINAPI EXPORT tuntap32_calc_inet_checksum       (u_char* buffer, u_long bytes);
+extern u_short     WINAPI EXPORT tuntap32_calc_checksum            (u_char* buffer, u_long bytes);
 
-/* (functions to work around an as-yet unidentified/unresolved 'errno' bug) */
+// (functions to work around an as-yet unidentified/unresolved 'errno' bug)
 
 extern const char* WINAPI EXPORT tuntap32_copyright_string_ex      (                                                int* eno);
 extern const char* WINAPI EXPORT tuntap32_version_string_ex        (                                                int* eno);
@@ -175,27 +201,7 @@ extern int         WINAPI EXPORT tuntap32_ioctl_ex                 (int fd, int 
 extern int         WINAPI EXPORT tuntap32_get_stats_ex             (int fd, TT32STATS* stats,                       int* eno);
 extern const char* WINAPI EXPORT tuntap32_get_default_iface_ex     (                                                int* eno);
 
-/* (in case they want to use LoadLibrary and GetProcAddress instead) */
-
-#if defined(_WIN64)
-#define _WINBITS    "64"
-#else
-#define _WINBITS    "32"
-#endif
-
-#if defined(_UNICODE) || defined(UNICODE)
-  #if defined(_DEBUG) || defined(DEBUG)
-    #define  TUNTAP32_DLLNAME  "TunTap" _WINBITS "UD.dll"
-  #else // release, not debug
-    #define  TUNTAP32_DLLNAME  "TunTap" _WINBITS "U.dll"
-  #endif // debug or release
-#else // ansi, not unicode
-  #if defined(_DEBUG) || defined(DEBUG)
-    #define  TUNTAP32_DLLNAME  "TunTap" _WINBITS "D.dll"
-  #else // release, not debug
-    #define  TUNTAP32_DLLNAME  "TunTap" _WINBITS ".dll"
-  #endif // debug or release
-#endif // unicode or ansi
+// (in case they want to use LoadLibrary and GetProcAddress instead)
 
 typedef const char* (WINAPI *ptuntap32_copyright_string)           ();
 typedef const char* (WINAPI *ptuntap32_version_string)             ();
@@ -209,9 +215,10 @@ typedef int         (WINAPI *ptuntap32_ioctl)                      (int,int,char
 typedef int         (WINAPI *ptuntap32_get_stats)                  (int fd, TT32STATS* stats);
 typedef const char* (WINAPI *ptuntap32_get_default_iface)          ();
 typedef void        (WINAPI *ptuntap32_build_herc_iface_mac)       (u_char* mac, const u_char* ip);
+typedef u_short     (WINAPI *ptuntap32_calc_inet_checksum)         (u_char*, u_long);
 typedef u_short     (WINAPI *ptuntap32_calc_checksum)              (u_char*, u_long);
 
-/* (functions to work around an as-yet unidentified/unresolved 'errno' bug) */
+// (functions to work around an as-yet unidentified/unresolved 'errno' bug)
 
 typedef const char* (WINAPI *ptuntap32_copyright_string_ex)        (                                                int* eno);
 typedef const char* (WINAPI *ptuntap32_version_string_ex)          (                                                int* eno);
@@ -225,7 +232,7 @@ typedef int         (WINAPI *ptuntap32_ioctl_ex)                   (int fd, int 
 typedef int         (WINAPI *ptuntap32_get_stats_ex)               (int fd, TT32STATS* stats,                       int* eno);
 typedef const char* (WINAPI *ptuntap32_get_default_iface_ex)       (                                                int* eno);
 
-/**********************************************************************************/
+/////////////////////////////////////////////////////////////////////////////////////////
 
 #ifdef __cplusplus
 }
@@ -233,4 +240,4 @@ typedef const char* (WINAPI *ptuntap32_get_default_iface_ex)       (            
 
 #endif /* _TT32API_H_ */
 
-/**********************************************************************************/
+/////////////////////////////////////////////////////////////////////////////////////////

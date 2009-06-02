@@ -1,3 +1,4 @@
+01 Jun 2009 New TT32 pre-v3.3 header and stats - Fish
 01 Jun 2009 Fix OMA (TDF) unloaded tape open bug - kerravon86 by Fish
 01 Jun 2009 Support for non-default Windows tape device names - Fish
 01 Jun 2009 Fix tape file extension neutrality special case - Fish

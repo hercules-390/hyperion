@@ -23,15 +23,13 @@
 
 #if defined(OPTION_W32_CTCI)
 
+#include "tt32api.h"                            // (#define TUNTAP32_DLLNAME)
+
 #define MAX_TT32_DLLNAMELEN  (512)
-#if defined(_WIN64)
-#define DEF_TT32_DLLNAME     "TunTap64.dll"
-#else
-#define DEF_TT32_DLLNAME     "TunTap32.dll"
-#endif
+#define DEF_TT32_DLLNAME     TUNTAP32_DLLNAME   // (from tt32api.h)
 
 #ifndef   MODULESDIR
-  #define MODULESDIR         "."           // (i.e. "Current Directory")
+  #define MODULESDIR         "."                // (i.e. "Current Directory")
 #endif
 
 extern char   g_tt32_dllname   [MAX_TT32_DLLNAMELEN];
