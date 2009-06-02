@@ -3,6 +3,7 @@
 13 May 2009 Add TTY and 2741 support to 2703 - Jay Maynard, for Max H. Parke
 03 May 2009 Disable SENSE ID CCW for 2311, 2314 subject to LEGACYSENSEID setting,
             change 2314 control unit from 2841 to 2314 - Kevin Leonard
+27 May 2009 Fix scsitape open hang on *nix causing Machine Check - Fish
 19 Apr 2009 MAXCPU configuration statement - Roger Bowler
 19 Apr 2009 CMPSC expand works optimized with absolute addresses - Bernard
 17 Mar 2009 Changed "notrunc" to "noclear" and fix compile error on MSVC -
