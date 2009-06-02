@@ -4957,6 +4957,71 @@ DEF_INST(perform_timing_facility_function)
 #endif /*defined(FEATURE_TOD_CLOCK_STEERING)*/
 
 
+#if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
+/*-------------------------------------------------------------------*/
+/* B9A2 PTF   - Perform Topology Function                      [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(perform_topology_function)
+{
+int     r1, unused;                     /* Values of R fields        */
+int     fc, rc = 0;                     /* Function / Reason Code    */
+
+    RRE(inst, regs, r1, unused);
+
+    PTT(PTT_CL_INF,"PTF",regs->GR_G(r1),0,regs->psw.IA_L);
+
+    PRIV_CHECK(regs);
+
+    SIE_INTERCEPT(regs);
+
+    /* Specification Exception if bits 0-55 of general register R1
+       are not zeros */
+    if (regs->GR_G(r1) & 0xFFFFFFFFFFFFFF00ULL)
+    {
+        PTT(PTT_CL_ERR,"*PTF",regs->GR_G(r1),rc,regs->psw.IA_L);
+        regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
+    }
+
+    /* Extract function code */
+    fc = (int)(regs->GR_G(r1) & 0x00000000000000FFULL);
+
+    /* Perform requested function */
+    switch (fc)
+    {
+    case 0:                     /* Request horizontal polarization */
+        regs->psw.cc = 2;       /* Request rejected */
+        rc = 1;                 /* Already polarized as specified */
+        break;
+
+    case 1:                     /* Request vertical polarization */
+        regs->psw.cc = 2;       /* Request rejected */
+        rc = 0;                 /* No reason specified */
+        break;
+
+    case 2:                     /* Check topology-change status */
+        OBTAIN_INTLOCK(NULL);
+        regs->psw.cc = sysblk.topchnge ? 1    /* (report was pending) */
+                                       : 0;   /* (report not pending) */
+        sysblk.topchnge = 0;                  /* (clear pending flag) */
+        RELEASE_INTLOCK(NULL);
+        break;
+
+    default:
+        /* Undefined function code */
+        PTT(PTT_CL_ERR,"*PTF",regs->GR_G(r1),rc,regs->psw.IA_L);
+        regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
+    }
+
+    /* Set reason code in bits 48-55 when condition code is 2 */
+    if (regs->psw.cc == 2)
+        regs->GR_G(r1) |= rc << 8;
+
+    if (regs->psw.cc != 0)
+        PTT(PTT_CL_ERR,"*PTF",regs->GR_G(r1),rc,regs->psw.IA_L);
+}
+#endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
+
+
 #if defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390)
 BYTE ARCH_DEP(stfl_data)[] = {
                  0

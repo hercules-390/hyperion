@@ -1875,10 +1875,11 @@ typedef struct _ZPB2 {
 #define LKPG_GPR0_RESV          0x0000FD00
 
 #define STSI_GPR0_FC_MASK       0xF0000000
-#define STSI_GPR0_FC_CURRENT    0x00000000
+#define STSI_GPR0_FC_CURRNUM    0x00000000
 #define STSI_GPR0_FC_BASIC      0x10000000
 #define STSI_GPR0_FC_LPAR       0x20000000
 #define STSI_GPR0_FC_VM         0x30000000
+#define STSI_GPR0_FC_CURRINFO   0xF0000000
 #define STSI_GPR0_SEL1_MASK     0x000000FF
 #define STSI_GPR0_RESERVED      0x0FFFFF00
 
@@ -1925,8 +1926,14 @@ typedef struct _SYSIB122 {              /* Basic Machine CPUs        */
         HWORD   sbcpu;                  /* Standby CPU count         */
         HWORD   resvcpu;                /* Reserved CPU count        */
         HWORD   mpfact[MAX_CPU_ENGINES-1];  /* MP factors            */
+#if ((MAX_CPU_ENGINES-1) % 2)           /* if prev is odd #of HWORDs */
+        HWORD   resv3;                  /* then need some alignment  */
+#endif
         FWORD   accap;                  /* Alternate CPU Capability  */
         HWORD   ampfact[MAX_CPU_ENGINES-1]; /* Alternate MP factors  */
+#if ((MAX_CPU_ENGINES-1) % 2)           /* if prev is odd #of HWORDs */
+        HWORD   resv4;                  /* then need some alignment  */
+#endif
     }   SYSIB122;
 
 typedef struct _SYSIB221 {              /* Logical partition CPU     */
@@ -1962,6 +1969,41 @@ typedef struct _SYSIB322 {              /* Virtual Machines CPUs     */
         BYTE    dbct;                   /* Four bit desc block count */
         BYTE    vmdb[4*16];             /* Virtual Machine desc block*/
     }   SYSIB322;
+
+typedef struct _SYSIB1512 {             /* Configuration Topology    */
+        HWORD   resv1;                  /* Reserved                  */
+        HWORD   len;                    /* Length                    */
+        BYTE    mag[6];                 /* Magnitudes 6, 5, ... 1    */
+        BYTE    resv2;                  /* Reserved                  */
+        BYTE    mnest;                  /* Nesting Level             */
+        FWORD   resv3;                  /* Reserved                  */
+#ifdef C99_FLEXIBLE_ARRAYS
+        BYTE    tles[];                 /* Topology List Entries     */
+#else
+        BYTE    tles[0];                /* Topology List Entries     */
+#endif
+    }   SYSIB1512;
+
+typedef struct _TLECNTNR {              /* Container TLE             */
+        BYTE    nl;                     /* Nesting Level             */
+        BYTE    resv1[3];               /* Reserved                  */
+        BYTE    resv2;                  /* Reserved                  */
+        BYTE    resv3[2];               /* Reserved                  */
+        BYTE    cntnrid;                /* Container Id              */
+    }   TLECNTNR;
+
+typedef struct _TLECPU {                /* CPU TLE                   */
+        BYTE    nl;                     /* Nesting Level             */
+        BYTE    resv1[3];               /* Reserved                  */
+        BYTE    flags;                  /* Flags                     */
+        BYTE    cputype;                /* CPU Type                  */
+        U16     cpuadorg;               /* CPU Address Origin        */
+        DW      cpumask;                /* CPU Mask                  */
+    }   TLECPU;
+
+#define CPUTLE_FLAG_RESERVED    0xF8
+#define CPUTLE_FLAG_DEDICATED   0x04
+#define CPUTLE_FLAG_VPOLARMASK  0x03
 
 typedef struct _SYSIBVMDB {             /* Virtual Machine Desc Block*/
         BYTE    resv1[4*1];             /* Reserved                  */

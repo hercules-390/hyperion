@@ -137,6 +137,11 @@ int ARCH_DEP(system_reset) (int cpu, int clear)
 
     }
 
+#if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
+    /* Clear topology-change-report-pending condition */
+    sysblk.topchnge = 0;
+#endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
+
     /* ZZ FIXME: we should probably present a machine-check
        if we encounter any errors during the reset (rc != 0) */
     return rc;

@@ -285,6 +285,7 @@ typedef struct _SCCB_CPU_INFO {
 #define SCCB_PTYP_IFA                                   2
 #define SCCB_PTYP_IFL                                   3
 #define SCCB_PTYP_SUP                                   5
+#define SCCB_PTYP_MAX                                   5 /*(maximum value)*/
 
 /* Definitions for crypto unit identifier */
 #define SCCB_KSID_CRYPTO_UNIT_ID                        0x01

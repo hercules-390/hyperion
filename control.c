@@ -6483,6 +6483,12 @@ SYSIB222  *sysib222;                    /* LPAR CPUs                 */
 SYSIB322  *sysib322;                    /* VM CPUs                   */
 SYSIBVMDB *sysib322;                    /* VM description block      */
 #endif
+#if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
+SYSIB1512 *sysib1512;                   /* Configuration Topology    */
+TLECPU    *tlecpu;                      /* CPU TLE Type              */
+U64        cpumask;                     /* work                      */
+int        cputype;                     /* work                      */
+#endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
 
 
                            /*  "0    1    2    3    4    5    6    7" */
@@ -6520,7 +6526,11 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
 #endif /*DEBUG_STSI*/
 
     /* Check function code */
-    if((regs->GR_L(0) & STSI_GPR0_FC_MASK) > STSI_GPR0_FC_LPAR)
+    if((regs->GR_L(0) & STSI_GPR0_FC_MASK) >  STSI_GPR0_FC_LPAR
+#if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
+        && (regs->GR_L(0) & STSI_GPR0_FC_MASK) != STSI_GPR0_FC_CURRINFO
+#endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
+    )
     {
         PTT(PTT_CL_ERR,"*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
 #ifdef DEBUG_STSI
@@ -6530,15 +6540,14 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
         return;
     }
 
-    /* Program check if reserved bit not zero */
+    /* Program check if reserved bits not zero */
     if(regs->GR_L(0) & STSI_GPR0_RESERVED
        || regs->GR_L(1) & STSI_GPR1_RESERVED)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Return current level if function code is zero */
-    if((regs->GR_L(0) & STSI_GPR0_FC_MASK) == STSI_GPR0_FC_CURRENT)
+    if((regs->GR_L(0) & STSI_GPR0_FC_MASK) == STSI_GPR0_FC_CURRNUM)
     {
- //     regs->GR_L(0) |= STSI_GPR0_FC_BASIC;
         regs->GR_L(0) |= STSI_GPR0_FC_LPAR;
 #ifdef DEBUG_STSI
         logmsg("control.c: STSI cc=0 R0=%8.8X\n", regs->GR_L(0));
@@ -6552,13 +6561,54 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Return with cc3 if selector codes invalid */
-    if( ((regs->GR_L(0) & STSI_GPR0_FC_MASK)   == STSI_GPR0_FC_BASIC
-      && (regs->GR_L(0) & STSI_GPR0_SEL1_MASK) == 1
-      && (regs->GR_L(1) & STSI_GPR1_SEL2_MASK) >  1)
-      || (regs->GR_L(0) & STSI_GPR0_SEL1_MASK) == 0
-      || (regs->GR_L(1) & STSI_GPR1_SEL2_MASK) == 0
-      || (regs->GR_L(0) & STSI_GPR0_SEL1_MASK) > 2
-      || (regs->GR_L(1) & STSI_GPR1_SEL2_MASK) > 2)
+    /*
+      Func-          
+      tion  Selec- Selec-
+      Code  tor 1  tor 2  Information Requested about
+      ----  -----  -----  ----------------------------
+
+        1     1      1    Basic-machine configuration
+        1     2      1    Basic-machine CPU
+        1     2      2    Basic-machine CPUs
+
+        2     2      1    Logical-partition CPU
+        2     2      2    Logical-partition CPUs
+
+        3     2      2    Virtual-machine CPUs
+
+        15    1      2    Topology information of current configuration
+    */
+    if (0
+        || ((regs->GR_L(0) & STSI_GPR0_FC_MASK) == STSI_GPR0_FC_BASIC
+            && (0
+                || (regs->GR_L(0) & STSI_GPR0_SEL1_MASK) == 0
+                || (regs->GR_L(0) & STSI_GPR0_SEL1_MASK) >  2
+                || (regs->GR_L(1) & STSI_GPR1_SEL2_MASK) == 0
+                || (regs->GR_L(1) & STSI_GPR1_SEL2_MASK) >  2
+               )
+           )
+        || ((regs->GR_L(0) & STSI_GPR0_FC_MASK) == STSI_GPR0_FC_LPAR
+            && (0
+                || (regs->GR_L(0) & STSI_GPR0_SEL1_MASK) != 2
+                || (regs->GR_L(1) & STSI_GPR1_SEL2_MASK) == 0
+                || (regs->GR_L(1) & STSI_GPR1_SEL2_MASK) >  2
+               )
+           )
+        || ((regs->GR_L(0) & STSI_GPR0_FC_MASK) == STSI_GPR0_FC_VM
+            && (0
+                || (regs->GR_L(0) & STSI_GPR0_SEL1_MASK) != 2
+                || (regs->GR_L(1) & STSI_GPR1_SEL2_MASK) != 2
+               )
+           )
+#if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
+        || ((regs->GR_L(0) & STSI_GPR0_FC_MASK) == STSI_GPR0_FC_CURRINFO
+            && (0
+                || (regs->GR_L(0) & STSI_GPR0_SEL1_MASK) != 1
+                || (regs->GR_L(1) & STSI_GPR1_SEL2_MASK) != 2
+               )
+           )
+#endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
+    )
     {
         PTT(PTT_CL_ERR,"*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
 #ifdef DEBUG_STSI
@@ -6583,9 +6633,10 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
             switch(regs->GR_L(1) & STSI_GPR1_SEL2_MASK) {
 
             case 1:
+                /* Basic-machine configuration */
                 sysib111 = (SYSIB111*)(m);
                 memset(sysib111, 0x00, MAX(sizeof(SYSIB111),64*4));
-                sysib111->flag1|=SYSIB111_PFLAG;
+                sysib111->flag1 |= SYSIB111_PFLAG;
                 get_manufacturer(sysib111->manufact);
                 get_model(sysib111->model);
                 for(i = 0; i < 4; i++)
@@ -6601,7 +6652,7 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
                     sysib111->seqc[(sizeof(sysib111->seqc) - 6) + i] =
                     hexebcdic[(sysblk.cpuid >> (52 - (i*4))) & 0x0F];
                 get_plant(sysib111->plant);
-                STORE_FW(sysib111->mcaprating, STSI_CAPABILITY);
+                STORE_FW(sysib111->mcaprating,  STSI_CAPABILITY);
                 STORE_FW(sysib111->mpcaprating, STSI_CAPABILITY);
                 STORE_FW(sysib111->mtcaprating, STSI_CAPABILITY);
                 for(i=0;i<5;i++)
@@ -6622,6 +6673,7 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
             switch(regs->GR_L(1) & STSI_GPR1_SEL2_MASK) {
 
             case 1:
+                /* Basic-machine Current CPU */
                 sysib121 = (SYSIB121*)(m);
                 memset(sysib121, 0x00, MAX(sizeof(SYSIB121),64*4));
                 memset(sysib121->seqc,0xF0,sizeof(sysib121->seqc));
@@ -6634,13 +6686,14 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
                 break;
 
             case 2:
+                /* Basic-machine All CPUs */
                 sysib122 = (SYSIB122*)(m);
                 memset(sysib122, 0x00, MAX(sizeof(SYSIB122),64*4));
                 sysib122->format = 1;
                 offset = (U16)(sysib122->accap - (BYTE*)sysib122);
                 STORE_HW(sysib122->accoff, offset);
                 STORE_FW(sysib122->sccap, STSI_CAPABILITY);
-                STORE_FW(sysib122->cap, STSI_CAPABILITY);
+                STORE_FW(sysib122->cap,   STSI_CAPABILITY);
                 STORE_HW(sysib122->totcpu, MAX_CPU);
                 STORE_HW(sysib122->confcpu, sysblk.cpus);
                 STORE_HW(sysib122->sbcpu, MAX_CPU - sysblk.cpus);
@@ -6663,7 +6716,7 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
         break;
 
     case STSI_GPR0_FC_LPAR:
-       
+
         switch(regs->GR_L(0) & STSI_GPR0_SEL1_MASK) {
 
         case 2:
@@ -6671,7 +6724,7 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
             switch(regs->GR_L(1) & STSI_GPR1_SEL2_MASK) {
 
             case 1:
-                /* CURRENT CPU LPAR CONFIG */
+                /* Logical-partition Current CPU */
                 sysib221 = (SYSIB221 *)(m);
                 memset(sysib221, 0x00, MAX(sizeof(SYSIB221),64*4));
                 memset(sysib221->seqc,0xF0,sizeof(sysib111->seqc));
@@ -6684,11 +6737,11 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
                 break;
 
             case 2:
-                /* All CPUS LPAR CONFIG */
+                /* Logical-partition All CPUs */
                 sysib222 = (SYSIB222 *)(m);
                 memset(sysib222, 0x00, MAX(sizeof(SYSIB222),64*4));
                 STORE_HW(sysib222->lparnum,1);
-                sysib222->lcpuc=SYSIB222_LCPUC_SHARED;
+                sysib222->lcpuc = SYSIB222_LCPUC_SHARED;
                 STORE_HW(sysib222->totcpu,MAX_CPU);
                 STORE_HW(sysib222->confcpu,sysblk.cpus);
                 STORE_HW(sysib222->sbcpu,MAX_CPU - sysblk.cpus);
@@ -6711,6 +6764,86 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
             regs->psw.cc = 3;
         } /* selector 1 */
         break;
+
+#if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
+    case STSI_GPR0_FC_CURRINFO:
+
+        switch(regs->GR_L(0) & STSI_GPR0_SEL1_MASK) {
+
+        case 1:
+
+            switch(regs->GR_L(1) & STSI_GPR1_SEL2_MASK) {
+
+            case 2:
+                /* Topology information of current configuration */
+                sysib1512 = (SYSIB1512 *)(m);
+                memset(sysib1512, 0x00, sizeof(SYSIB1512));
+
+                // PROGRAMMING NOTE: we only support horizontal polarization,
+                // not vertical.
+
+                sysib1512->mnest = 1;
+                sysib1512->mag[5] = sysblk.cpus;
+                tlecpu = (TLECPU *)(sysib1512->tles);
+
+                /* For each type of CPU... */
+                for (cputype = 0; cputype <= SCCB_PTYP_MAX; cputype++)
+                {
+                    /* For each CPU of this type */
+                    cpumask = 0;
+                    for (i=0; i < sysblk.hicpu; i++)
+                    {
+                        if (1
+                            && sysblk.regs[i]
+                            && sysblk.regs[i]->configured
+                            && sysblk.ptyp[i] == cputype
+                        )
+                        {
+                            /* Initialize new TLE for this type */
+                            if (!cpumask)
+                            {
+                                memset(tlecpu, 0x00, sizeof(TLECPU));
+                                tlecpu->nl = 0;
+                                tlecpu->flags = CPUTLE_FLAG_DEDICATED;
+                                tlecpu->cpuadorg = 0;
+                                tlecpu->cputype = cputype;
+                            }
+                            /* Update CPU mask field for this type */
+                            cpumask |= 0x8000000000000000ULL >> sysblk.regs[i]->cpuad;
+                        }
+                    }
+                    /* Bump to next TLE */
+                    if (cpumask)
+                    {
+                        STORE_DW( &tlecpu->cpumask, cpumask );
+                        tlecpu++;
+                    }
+                }
+
+                /* Save the length of this System Information Block */
+                STORE_HW(sysib1512->len,(U16)((BYTE*)tlecpu - (BYTE*)sysib1512));
+
+                /* Successful completion */
+                regs->psw.cc = 0;
+
+                /* Clear topology-change-report-pending condition */
+                OBTAIN_INTLOCK(NULL);
+                sysblk.topchnge = 0;
+                RELEASE_INTLOCK(NULL);
+                break;
+
+            default:
+                PTT(PTT_CL_ERR,"*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
+                regs->psw.cc = 3;
+            } /* selector 2 */
+            break;
+
+        default:
+            PTT(PTT_CL_ERR,"*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
+            regs->psw.cc = 3;
+        } /* selector 1 */
+        break;
+#endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
 
     default:
         PTT(PTT_CL_ERR,"*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
