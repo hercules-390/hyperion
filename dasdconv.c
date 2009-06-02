@@ -27,23 +27,6 @@
 /*              This program will not overwrite an existing file.    */
 /*-------------------------------------------------------------------*/
 
-// $Log$
-// Revision 1.17  2008/11/04 04:50:45  fish
-// Ensure consistent utility startup
-//
-// Revision 1.16  2007/06/23 00:04:08  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.15  2007/06/08 15:28:19  rbowler
-// Error message if dasdconv does not support gz input file
-//
-// Revision 1.14  2007/01/08 12:25:26  rbowler
-// Add dasdconv -q (quiet) option
-//
-// Revision 1.13  2006/12/08 09:43:19  jj
-// Add CVS message log
-//
-
 #include "hstdinc.h"
 
 #include "hercules.h"
@@ -80,6 +63,7 @@ BYTE eighthexFF[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 BYTE twelvehex00[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 BYTE ebcdicvol1[] = {0xE5, 0xD6, 0xD3, 0xF1};
 BYTE gz_magic_id[] = {0x1F, 0x8B};
+BYTE ckd_ident[] = {0x43, 0x4B, 0x44, 0x5F}; /* CKD_ in ASCII */
 
 /*-------------------------------------------------------------------*/
 /* Definition of file descriptor for gzip and non-gzip builds        */
@@ -350,6 +334,15 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         EXIT(3);
     }
   #endif /*!defined(HAVE_LIBZ)*/
+
+    /* Reject input if it is already in CKD or CCKD format */
+    if (memcmp((BYTE*)&h30trkhdr, ckd_ident, sizeof(ckd_ident)) == 0)
+    {
+        fprintf (stderr,
+                "Input file %s is already in CKD format, use dasdcopy\n",
+                ifname);
+        EXIT(3);
+    }
 
     /* Extract the device type code from the track header */
     FETCH_HW (code, h30trkhdr.devcode);
