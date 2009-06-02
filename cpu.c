@@ -543,13 +543,13 @@ static char *pgmintname[] = {
         /* 26 */ /* was "Page-fault-assist exception", */
         /* 27 */ /* was "Control-switch exception", */
 
-    PTT(PTT_CL_PGM,"*PROG",pcode,(U32)(regs->TEA & 0xffffffff),regs->psw.IA_L);
-
     /* If called with ghost registers (ie from hercules command
        then ignore all interrupt handling and report the error
        to the caller */
     if(regs->ghostregs)
         longjmp(regs->progjmp, pcode);
+
+    PTT(PTT_CL_PGM,"*PROG",pcode,(U32)(regs->TEA & 0xffffffff),regs->psw.IA_L);
 
     /* program_interrupt() may be called with a shadow copy of the
        regs structure, realregs is the pointer to the real structure
