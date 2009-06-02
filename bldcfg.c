@@ -181,7 +181,7 @@ int off;
 
     if (sysblk.mainstor == NULL)
     {
-        fprintf(stderr, _("HHCCF031S Cannot obtain %dMB main storage: %s\n"),
+        logmsg(_("HHCCF031S Cannot obtain %dMB main storage: %s\n"),
                 mainsize, strerror(errno));
         delayed_exit(1);
     }
@@ -199,7 +199,7 @@ int off;
     }
     if (sysblk.storkeys == NULL)
     {
-        fprintf(stderr, _("HHCCF032S Cannot obtain storage key array: %s\n"),
+        logmsg(_("HHCCF032S Cannot obtain storage key array: %s\n"),
                 strerror(errno));
         delayed_exit(1);
     }
@@ -229,7 +229,7 @@ int off;
             sysblk.xpndstor = malloc(sysblk.xpndsize * XSTORE_PAGESIZE);
         if (sysblk.xpndstor == NULL)
         {
-            fprintf(stderr, _("HHCCF033S Cannot obtain %dMB expanded storage: "
+            logmsg(_("HHCCF033S Cannot obtain %dMB expanded storage: "
                     "%s\n"),
                     xpndsize, strerror(errno));
             delayed_exit(1);
@@ -402,7 +402,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
             /* Check for I/O error */
             if (ferror(fp))
             {
-                fprintf(stderr, _("HHCCF001S Error reading file %s line %d: %s\n"),
+                logmsg(_("HHCCF001S Error reading file %s line %d: %s\n"),
                     fname, inc_stmtnum[inc_level], strerror(errno));
                 delayed_exit(1);
             }
@@ -425,7 +425,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
             /* Check that statement does not overflow buffer */
             if (stmtlen >= (int)(sizeof(buf) - 1))
             {
-                fprintf(stderr, _("HHCCF002S File %s line %d is too long\n"),
+                logmsg(_("HHCCF002S File %s line %d is too long\n"),
                     fname, inc_stmtnum[inc_level]);
                 delayed_exit(1);
             }
@@ -489,7 +489,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
                             /* Check that statement does not overflow buffer */
                             if (stmtlen+strlen(inc_envvar) >= sizeof(buf) - 1)
                             {
-                                fprintf(stderr, _("HHCCF002S File %s line %d is too long\n"),
+                                logmsg(_("HHCCF002S File %s line %d is too long\n"),
                                                 fname, inc_stmtnum[inc_level]);
                                 delayed_exit(1);
                             }
@@ -570,7 +570,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
     {
         if(strlen(buf1)>=sizeof(buf))
         {
-            fprintf(stderr, _("HHCCF002S File %s line %d is too long\n"),
+            logmsg(_("HHCCF002S File %s line %d is too long\n"),
                 fname, inc_stmtnum[inc_level]);
             free(buf1);
             delayed_exit(1);
@@ -740,7 +740,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     inc_fp[inc_level] = fopen (pathname, "r");
     if (inc_fp[inc_level] == NULL)
     {
-        fprintf(stderr, _("HHCCF003S Open error file %s: %s\n"),
+        logmsg(_("HHCCF003S Open error file %s: %s\n"),
                 fname, strerror(errno));
         delayed_exit(1);
     }
@@ -871,7 +871,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         }
         if (inc_level < 0)
         {
-            fprintf(stderr, _("HHCCF004S No device records in file %s\n"),
+            logmsg(_("HHCCF004S No device records in file %s\n"),
                     fname);
             delayed_exit(1);
         }
@@ -894,7 +894,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         {              
             if (++inc_level >= MAX_INC_LEVEL)
             {
-                fprintf(stderr, _( "HHCCF082S Error in %s line %d: "
+                logmsg(_( "HHCCF082S Error in %s line %d: "
                         "Maximum nesting level (%d) reached\n"),
                         fname, inc_stmtnum[inc_level-1], MAX_INC_LEVEL);
                 delayed_exit(1);
@@ -909,13 +909,13 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 inc_level--;
                 if ( inc_ignore_errors == 1 ) 
                 {
-                    fprintf(stderr, _("HHCCF084W %s Open error ignored file %s: %s\n"),
+                    logmsg(_("HHCCF084W %s Open error ignored file %s: %s\n"),
                                     fname, operand, strerror(errno));
                     continue ;
                 }
                 else 
                 {
-                    fprintf(stderr, _("HHCCF085S %s Open error file %s: %s\n"),
+                    logmsg(_("HHCCF085S %s Open error file %s: %s\n"),
                                     fname, operand, strerror(errno));
                     delayed_exit(1);
                 }
@@ -1068,7 +1068,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             }
             else if (strcasecmp (keyword, "logofile") == 0)
             {
-                fprintf(stderr, _("HHCCF061W Warning in %s line %d: "
+                logmsg(_("HHCCF061W Warning in %s line %d: "
                     "LOGOFILE statement deprecated. Use HERCLOGO instead\n"),
                     fname, inc_stmtnum[inc_level]);
                 slogofile=operand;
@@ -1084,7 +1084,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 secpsvmlevel=operand;
                 secpsvmlvl=addargv[0];
                 ecpsvmac=addargc;
-                fprintf(stderr, _("HHCCF061W Warning in %s line %d: "
+                logmsg(_("HHCCF061W Warning in %s line %d: "
                     "ECPS:VM Statement deprecated. Use ECPSVM instead\n"),
                     fname, inc_stmtnum[inc_level]);
                 addargc=0;
@@ -1131,7 +1131,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 || sscanf(sversion, "%hx%c", &version, &c) != 1
                 || version>255)
             {
-                fprintf(stderr, _("HHCCF012S Error in %s line %d: "
+                logmsg(_("HHCCF012S Error in %s line %d: "
                         "%s is not a valid CPU version code\n"),
                         fname, inc_stmtnum[inc_level], sversion);
                 delayed_exit(1);
@@ -1145,7 +1145,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             if (strlen(sserial) != 6
                 || sscanf(sserial, "%x%c", &serial, &c) != 1)
             {
-                fprintf(stderr, _("HHCCF051S Error in %s line %d: "
+                logmsg(_("HHCCF051S Error in %s line %d: "
                         "%s is not a valid serial number\n"),
                         fname, inc_stmtnum[inc_level], sserial);
                 delayed_exit(1);
@@ -1158,7 +1158,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             if (strlen(smodel) != 4
                 || sscanf(smodel, "%hx%c", &model, &c) != 1)
             {
-                fprintf(stderr, _("HHCCF012S Error in %s line %d: "
+                logmsg(_("HHCCF012S Error in %s line %d: "
                         "%s is not a valid CPU model\n"),
                         fname, inc_stmtnum[inc_level], smodel);
                 delayed_exit(1);
@@ -1173,7 +1173,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
              || (mainsize > 4095 && sizeof(sysblk.mainsize) < 8)
              || (mainsize > 4095 && sizeof(size_t) < 8))
             {
-                fprintf(stderr, _("HHCCF013S Error in %s line %d: "
+                logmsg(_("HHCCF013S Error in %s line %d: "
                         "Invalid main storage size %s\n"),
                         fname, inc_stmtnum[inc_level], smainsize);
                 delayed_exit(1);
@@ -1186,7 +1186,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             if (sscanf(sxpndsize, "%u%c", &xpndsize, &c) != 1
                 || xpndsize > 1024)
             {
-                fprintf(stderr, _("HHCCF014S Error in %s line %d: "
+                logmsg(_("HHCCF014S Error in %s line %d: "
                         "Invalid expanded storage size %s\n"),
                         fname, inc_stmtnum[inc_level], sxpndsize);
                 delayed_exit(1);
@@ -1197,7 +1197,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         if (shercprio != NULL)
             if (sscanf(shercprio, "%d%c", &hercprio, &c) != 1)
             {
-                fprintf(stderr, _("HHCCF016S Error in %s line %d: "
+                logmsg(_("HHCCF016S Error in %s line %d: "
                         "Invalid Hercules process group thread priority %s\n"),
                         fname, inc_stmtnum[inc_level], shercprio);
                 delayed_exit(1);
@@ -1218,7 +1218,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         if (stodprio != NULL)
             if (sscanf(stodprio, "%d%c", &todprio, &c) != 1)
             {
-                fprintf(stderr, _("HHCCF016S Error in %s line %d: "
+                logmsg(_("HHCCF016S Error in %s line %d: "
                         "Invalid TOD Clock thread priority %s\n"),
                         fname, inc_stmtnum[inc_level], stodprio);
                 delayed_exit(1);
@@ -1239,7 +1239,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         if (scpuprio != NULL)
             if (sscanf(scpuprio, "%d%c", &cpuprio, &c) != 1)
             {
-                fprintf(stderr, _("HHCCF016S Error in %s line %d: "
+                logmsg(_("HHCCF016S Error in %s line %d: "
                         "Invalid CPU thread priority %s\n"),
                         fname, inc_stmtnum[inc_level], scpuprio);
                 delayed_exit(1);
@@ -1260,7 +1260,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         if (sdevprio != NULL)
             if (sscanf(sdevprio, "%d%c", &devprio, &c) != 1)
             {
-                fprintf(stderr, _("HHCCF016S Error in %s line %d: "
+                logmsg(_("HHCCF016S Error in %s line %d: "
                         "Invalid device thread priority %s\n"),
                         fname, inc_stmtnum[inc_level], sdevprio);
                 delayed_exit(1);
@@ -1278,7 +1278,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         if (sdevprio != NULL)
             if (sscanf(sdevprio, "%d%c", &devprio, &c) != 1)
             {
-                fprintf(stderr, _("HHCCF016S Error in %s line %d: "
+                logmsg(_("HHCCF016S Error in %s line %d: "
                         "Invalid device thread priority %s\n"),
                         fname, inc_stmtnum[inc_level], sdevprio);
                 delayed_exit(1);
@@ -1312,7 +1312,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             if (sscanf(snumcpu, "%hu%c", &numcpu, &c) != 1
                 || numcpu > MAX_CPU_ENGINES)
             {
-                fprintf(stderr, _("HHCCF018S Error in %s line %d: "
+                logmsg(_("HHCCF018S Error in %s line %d: "
                         "Invalid number of CPUs %s\n"),
                         fname, inc_stmtnum[inc_level], snumcpu);
                 delayed_exit(1);
@@ -1327,7 +1327,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             if (sscanf(snumvec, "%hu%c", &numvec, &c) != 1
                 || numvec > MAX_CPU_ENGINES)
             {
-                fprintf(stderr, _("HHCCF019S Error in %s line %d: "
+                logmsg(_("HHCCF019S Error in %s line %d: "
                         "Invalid number of VFs %s\n"),
                         fname, inc_stmtnum[inc_level], snumvec);
                 delayed_exit(1);
@@ -1351,7 +1351,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                     if (sscanf(styp, "%d%c", &count, &c) != 2
                         || c != '*' || count < 1)
                     {
-                        fprintf(stderr, _("HHCCF074S Error in %s line %d: "
+                        logmsg(_("HHCCF074S Error in %s line %d: "
                                 "Invalid engine syntax %s\n"),
                                 fname, inc_stmtnum[inc_level], styp);
                         delayed_exit(1);
@@ -1370,7 +1370,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 else if (strcasecmp(styp,"ip") == 0)
                     ptyp = SCCB_PTYP_SUP;
                 else {
-                    fprintf(stderr, _("HHCCF075S Error in %s line %d: "
+                    logmsg(_("HHCCF075S Error in %s line %d: "
                             "Invalid engine type %s\n"),
                             fname, inc_stmtnum[inc_level], styp);
                     delayed_exit(1);
@@ -1393,7 +1393,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 || sscanf(ssysepoch, "%d%c", &sysepoch, &c) != 1
                 || sysepoch <= 1800 || sysepoch >= 2100)
             {
-                fprintf(stderr, _("HHCCF022S Error in %s line %d: "
+                logmsg(_("HHCCF022S Error in %s line %d: "
                         "%s is not a valid system epoch.\n"
                         "          The only valid values are "
                         "1801-2099\n"),
@@ -1408,7 +1408,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             if (sscanf(syroffset, "%d%c", &yroffset, &c) != 1
                 || (yroffset < -142) || (yroffset > 142))
             {
-                fprintf(stderr, _("HHCCF070S Error in %s line %d: "
+                logmsg(_("HHCCF070S Error in %s line %d: "
                         "%s is not a valid year offset\n"),
                         fname, inc_stmtnum[inc_level], syroffset);
                 delayed_exit(1);
@@ -1422,7 +1422,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 || sscanf(stzoffset, "%d%c", &tzoffset, &c) != 1
                 || (tzoffset < -2359) || (tzoffset > 2359))
             {
-                fprintf(stderr, _("HHCCF023S Error in %s line %d: "
+                logmsg(_("HHCCF023S Error in %s line %d: "
                         "%s is not a valid timezone offset\n"),
                         fname, inc_stmtnum[inc_level], stzoffset);
                 delayed_exit(1);
@@ -1510,7 +1510,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             if (sscanf(sshrdport, "%hu%c", &shrdport, &c) != 1
                 || shrdport < 1024 )
             {
-                fprintf(stderr, _("HHCCF029S Error in %s line %d: "
+                logmsg(_("HHCCF029S Error in %s line %d: "
                         "Invalid SHRDPORT port number %s\n"),
                         fname, inc_stmtnum[inc_level], sshrdport);
                 delayed_exit(1);
@@ -1652,7 +1652,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
         if (sdevnum == NULL || sdevtype == NULL)
         {
-            fprintf(stderr, _("HHCCF035S Error in %s line %d: "
+            logmsg(_("HHCCF035S Error in %s line %d: "
                     "Missing device number or device type\n"),
                     fname, inc_stmtnum[inc_level]);
             delayed_exit(1);
@@ -1662,7 +1662,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
         if(rc==-2)
         {
-            fprintf(stderr, _("HHCCF036S Error in %s line %d: "
+            logmsg(_("HHCCF036S Error in %s line %d: "
                     "%s is not a valid device number(s) specification\n"),
                     fname, inc_stmtnum[inc_level], sdevnum);
             delayed_exit(1);
@@ -1682,7 +1682,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
             if (++inc_level >= MAX_INC_LEVEL)
             {
-                fprintf(stderr, _( "HHCCF082S Error in %s line %d: "
+                logmsg(_( "HHCCF082S Error in %s line %d: "
                         "Maximum nesting level (%d) reached\n"),
                         fname, inc_stmtnum[inc_level-1], MAX_INC_LEVEL);
                 delayed_exit(1);
@@ -1697,13 +1697,13 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 inc_level--;
                 if ( inc_ignore_errors == 1 ) 
                 {
-                    fprintf(stderr, _("HHCCF084W %s Open error ignored file %s: %s\n"),
+                    logmsg(_("HHCCF084W %s Open error ignored file %s: %s\n"),
                                     fname, operand, strerror(errno));
                     continue ;
                 }
                 else 
                 {
-                    fprintf(stderr, _("HHCCF085E %s Open error file %s: %s\n"),
+                    logmsg(_("HHCCF085E %s Open error file %s: %s\n"),
                                     fname, operand, strerror(errno));
                     delayed_exit(1);
                 }
