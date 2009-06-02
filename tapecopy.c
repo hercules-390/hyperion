@@ -516,8 +516,8 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
     }
 
     if (0
-        || ( strlen( argv[1] ) > 5 && strnfilenamecmp( argv[1], "/dev/",       5 ) == 0 )
-        || ( strlen( argv[1] ) > 8 && strnfilenamecmp( argv[1], "\\\\.\\Tape", 8 ) == 0 )
+        || ( strlen( argv[1] ) > 5 && strnfilenamecmp( argv[1], "/dev/",   5 ) == 0 )
+        || ( strlen( argv[1] ) > 4 && strnfilenamecmp( argv[1], "\\\\.\\", 4 ) == 0 )
     )
     {
         devnamein = argv[1];
@@ -535,8 +535,8 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
     if (argc > 2 && argv[2] )
     {
         if (0
-            || ( strlen( argv[2] ) > 5 && strnfilenamecmp( argv[2], "/dev/",       5 ) == 0 )
-            || ( strlen( argv[2] ) > 8 && strnfilenamecmp( argv[2], "\\\\.\\Tape", 8 ) == 0 )
+            || ( strlen( argv[2] ) > 5 && strnfilenamecmp( argv[2], "/dev/",   5 ) == 0 )
+            || ( strlen( argv[2] ) > 4 && strnfilenamecmp( argv[2], "\\\\.\\", 4 ) == 0 )
         )
         {
             devnameout = argv[2];
@@ -567,7 +567,7 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
         hostpath( pathname, devnamein, sizeof(pathname) );
         devfd = open_tape (pathname, O_RDONLY|O_BINARY);
     }
-    else
+    else // (devnameout)
     {
         hostpath( pathname, devnameout, sizeof(pathname) );
         devfd = open_tape (pathname, O_RDWR|O_BINARY);

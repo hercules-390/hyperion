@@ -948,7 +948,7 @@ struct  tape_format_entry   fmttab   [] =   /*    (table itself)     */
 #undef   SCSITAPE_FMTENTRY
 #define  SCSITAPE_FMTENTRY  5
     {
-        "^\\\\\\\\\\.\\\\Tape[0-9]",
+        "^\\\\\\\\\\.\\\\\\w",
         TAPEDEVT_SCSITAPE,
         &tmh_scsi,
         "SCSI attached tape drive",
@@ -1057,9 +1057,8 @@ int gettapetype_byname (DEVBLK *dev)
     }
 #if defined(_MSVC_)
     if (1
-        && strncasecmp(dev->filename, "\\\\.\\Tape", 8) == 0
-        && isdigit(*(dev->filename+8))
-        &&  0  ==  *(dev->filename+9)
+        && strncasecmp(dev->filename, "\\\\.\\", 4) == 0
+        &&           *(dev->filename        +    4) != 0
     )
     {
         return SCSITAPE_FMTENTRY;
