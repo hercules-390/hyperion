@@ -350,10 +350,11 @@ int             rc;                     /* Return code               */
             /* Close the connection */
             if (dev->fd != -1)
             {
-                close_socket( dev->fd );
+                int fd = dev->fd;
+                dev->fd = -1;
+                close_socket( fd );
                 logmsg (_("HHCPR017I %s (%s) disconnected from device %4.4X (%s)\n"),
                     dev->bs->clientname, dev->bs->clientip, dev->devnum, dev->bs->spec);
-                dev->fd = -1;
             }
 
             /* Set unit check with intervention required */
@@ -457,7 +458,7 @@ int     sockdev  = 0;                   /* 1 == is socket device     */
 
     if (sockdev && dev->notrunc)
     {
-        logmsg (_("HHCPR019E Incompatible option specified for socket printer %4.4X: 'notrunc'\n"),
+        logmsg (_("HHCPR019E Incompatible option specified for socket printer %4.4X: 'noclear'\n"),
                 dev->devnum);
         return -1;
     }
@@ -515,16 +516,21 @@ static void printer_query_device (DEVBLK *dev, char **class,
 /*-------------------------------------------------------------------*/
 static int printer_close_device ( DEVBLK *dev )
 {
-    if (dev->fd == -1)
+int fd = dev->fd;
+
+    if (fd == -1)
         return 0;
+
+    dev->fd      = -1;
+    dev->stopprt =  0;
 
     /* Close the device file */
     if ( dev->ispiped )
     {
 #if !defined( _MSVC_ )
-        close_pipe ( dev->fd );
+        close_pipe (fd);
 #else /* defined( _MSVC_ ) */
-        close (dev->fd);
+        close (fd);
         /* Log end of child process */
         logmsg (_("HHCPR011I pipe receiver (pid=%d) terminating for %4.4X\n"),
                 dev->ptpcpid, dev->devnum);
@@ -536,19 +542,16 @@ static int printer_close_device ( DEVBLK *dev )
         if (dev->bs)
         {
             /* Socket printer */
-            close_socket (dev->fd);
+            close_socket (fd);
             logmsg (_("HHCPR018I %s (%s) disconnected from device %4.4X (%s)\n"),
                 dev->bs->clientname, dev->bs->clientip, dev->devnum, dev->bs->spec);
         }
         else
         {
             /* Regular printer */
-            close (dev->fd);
+            close (fd);
         }
     }
-
-    dev->fd = -1;
-    dev->stopprt = 0;
 
     return 0;
 } /* end function printer_close_device */
