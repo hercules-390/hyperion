@@ -60,9 +60,9 @@ PRODUCTVERSION  V1, V2, V3, V4
 FILEOS          VOS_NT_WINDOWS32
 FILETYPE        VFT_UNKNOWN
 #if defined(DEBUG) || defined(_DEBUG)
-FILEFLAGS       ISPRERELEASE | VS_FF_DEBUG
+FILEFLAGS       ISPRERELEASE | VS_FF_SPECIALBUILD | VS_FF_DEBUG
 #else
-FILEFLAGS       ISPRERELEASE
+FILEFLAGS       ISPRERELEASE | VS_FF_SPECIALBUILD
 #endif
 FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
 
@@ -87,19 +87,25 @@ FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
       VALUE "Hercules Email",   HERCULES_PRODUCT_EMAIL  "\0"
       VALUE "Hercules Version", VERSION                 "\0"
 
-#if defined(DEBUG) || defined(_DEBUG)
 #if defined(PRERELEASE)
-      VALUE "SpecialBuild",    "PRERELEASE DEBUG version" "\0"
+#define PRE "PRERELEASE "
 #else
-      VALUE "SpecialBuild",    "DEBUG version"          "\0"
+#define PRE
 #endif
+
+#if defined(_WIN64)
+#define ARCH "64-bit "
 #else
-#if defined(PRERELEASE)
-      VALUE "SpecialBuild",    "PRERELEASE Version"     "\0"
+#define ARCH "32-bit "
+#endif
+
+#if defined(_DEBUG) || defined(DEBUG)
+#define CFG "DEBUG "
 #else
-      VALUE "SpecialBuild",    "Release version"        "\0"
+#define CFG "RETAIL "
 #endif
-#endif
+
+      VALUE "SpecialBuild",    PRE ARCH CFG "version"  "\0"
 
     }
   }
