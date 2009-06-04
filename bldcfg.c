@@ -1184,7 +1184,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         if (sxpndsize != NULL)
         {
             if (sscanf(sxpndsize, "%u%c", &xpndsize, &c) != 1
-                || xpndsize > 1024)
+                || xpndsize > 1024*1024)
             {
                 logmsg(_("HHCCF014S Error in %s line %d: "
                         "Invalid expanded storage size %s\n"),
