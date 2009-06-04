@@ -237,7 +237,7 @@ j        USING INFMJFCB,jfcb
          L     r2,vt.DCBDEBAD            load deb address for cvaf
          N     r2,=A(X'00FFFFFF')
         #MSG   1,'%s:6 vtoc opened',volser
-        #MSG   0,'%s:6 has %d cyls, %d cyls/trk and %d total trks',    x
+        #MSG   0,'%s:6 has %d cyls, %d trks/cyl and %d total trks',    x
                volser,cyls,trks_per_cyl,trks
 
 */* ----------------------------------------------------------------
@@ -738,16 +738,16 @@ o        USING IHADCB,outdcb
 * *      get sysut2 i/o areas
 * * ---------------------------------------------------------------- */
 
-         STORAGE OBTAIN,LENGTH=4096,BNDRY=PAGE
+         STORAGE OBTAIN,LENGTH=16384,BNDRY=PAGE
          ST    r1,out_buf                first output buffer
-         MVC   out_bufsz,=A(4096)
+         MVC   out_bufsz,=A(16384)
 
 *        build the headers
          LR    r3,r1
          USING VDHDR,r3
          ST    r3,vdhdr_addr
          LR    r0,r3
-         L     r1,=A(4096)
+         L     r1,=A(16384)
          SLR   rf,rf
          MVCL  r0,re
          USING CKDDASD_DEVHDR,VDH_devhdr
@@ -1116,7 +1116,7 @@ write_track    DS 0H
 wt_l2t_1  ST   r5,last_rw            update last rewrite entry addr
 *         if the table fills this buffer then write it out
           LR   r0,r4                 copy next pos
-          N    r0,=A(x'fffff000')    convert to buf pos
+          N    r0,=A(x'ffffc000')    convert to buf pos
           CL   r0,out_buf_pos        need to write this buf ?
           BE   wt_l2t_ok               no, continue
           L    r6,out_buf            write the current buf
@@ -1124,18 +1124,18 @@ wt_l2t_1  ST   r5,last_rw            update last rewrite entry addr
           CHECK outdecb
           NOTE  outdcb               note its file position
           ST   r1,rw_ttr
-          STORAGE OBTAIN,LENGTH=4096,BNDRY=PAGE
+          STORAGE OBTAIN,LENGTH=16384,BNDRY=PAGE
           L    r0,out_bufsz
-          AL   r0,=A(4096)
+          AL   r0,=A(16384)
           ST   r0,out_bufsz
           LR   r6,r1
           ST   r6,out_buf            new output buf
           LR   r0,r6                 clear the buf
-          L    r1,=A(4096)
+          L    r1,=A(16384)
           SLR  rf,rf
           MVCL r0,re
           L    r1,out_buf_pos        load previous buf pos
-          AL   r1,=A(4096)           set new buf pos
+          AL   r1,=A(16384)          set new buf pos
           ST   r1,out_buf_pos        set new buf pos
 *         if the table spans into the new buf then set it for rewrite
           CLR  r4,r1                 new pos same as new buf pos ?
@@ -1164,7 +1164,7 @@ w         USING L2TAB,dw
           SRL  r2,21                 shift back but multiplied by 8
           AR   r2,r3                 have pos for lvl 2 tab entry
           LR   rf,r2
-          N    rf,=A(x'fffff000')    pos of buf for this entry
+          N    rf,=A(x'ffffc000')    pos of buf for this entry
           L    r4,last_rw            find the rewrite entry
           USING rw_ent,r4
           CL   rf,rw_pos
@@ -1173,12 +1173,12 @@ w         USING L2TAB,dw
           CL   rf,rw_pos
           BNE  wt_logic_err            not good
 wt_l2t_2  L    rf,rw_buf             load buf addr for this entry
-          N    r2,=A(x'00000fff')    get buf offset from pos
+          N    r2,=A(x'00003fff')    get buf offset from pos
           AR   r2,rf                 now have addr of lvl 2 entry
 
 *         copy the work entry to the actual entry
           USING L2TAB,r2
-          A    rf,=A(4096)           calculate length
+          A    rf,=A(16384)          calculate length
           SR   rf,r2                 left in this buf
           CH   rf,=Y(8)              check length to copy
           BNH  *+8
@@ -1203,10 +1203,10 @@ wt_l2t_x  DS   0H                    lvl 2 tab entry built
 wt_data   LTR  r5,r5                 anything left to copy ?
           BZ   wt_return              no, return
           L    r2,out_pos            get current pos
-          N    r2,=A(x'00000fff')     convert to buf offset
+          N    r2,=A(x'00003fff')     convert to buf offset
           L    r3,out_buf            get current buf addr
           ALR  r2,r3                 now have target addr
-          AL   r3,=A(4096)           calculate target length
+          AL   r3,=A(16384)          calculate target length
           SLR  r3,r2
           CLR  r3,r5                 check lengths
           BNH  *+6                    and set target length
@@ -1217,7 +1217,7 @@ wt_data   LTR  r5,r5                 anything left to copy ?
           ALR  r2,r1                 new pos
           ST   r2,out_pos            set new pos
           L    r3,out_buf_pos        load current buf pos
-          N    r2,=A(x'fffff000')    new buf pos
+          N    r2,=A(x'ffffc000')    new buf pos
           CLR  r2,r3                 is current buf full ?
           BE   wt_data                no [but r5 should be 0]
           ST   r2,out_buf_pos        set new buf pos
@@ -1235,13 +1235,13 @@ wt_data   LTR  r5,r5                 anything left to copy ?
 wt_data_1 NOTE outdcb                note disk addr for old buf
           ST   r1,rw_ttr
           DROP r6
-          STORAGE OBTAIN,LENGTH=4096,BNDRY=PAGE
+          STORAGE OBTAIN,LENGTH=16384,BNDRY=PAGE
           L    r0,out_bufsz
-          AL   r0,=A(4096)
+          AL   r0,=A(16384)
           ST   r0,out_bufsz
           ST   r1,out_buf            new buf
 wt_data_2 LR   r0,r1                 clear the buf
-          L    r1,=A(4096)
+          L    r1,=A(16384)
           SLR  rf,rf
           MVCL r0,re
           B    wt_data
@@ -1261,14 +1261,14 @@ wt_finish DS  0H
 
 *         unused space at the end is free space
           L    r2,out_pos            get next available pos
-          N    r2,=A(x'00000fff')    convert to buf offset
+          N    r2,=A(x'00003fff')    convert to buf offset
           BZ   wt_fsp_ok             if zero then no free space
-          L    r3,=A(4096)           calculate length of free space
+          L    r3,=A(16384)          calculate length of free space
           SLR  r3,r2                   on current block
           LR   r4,r3                 copy
           CH   r4,=Y(8)              minimum free space is 8 bytes
           BNL  *+8                     otherwise we need
-          AL   r4,=A(4096)               another block
+          AL   r4,=A(16384)              another block
           ST   r4,bytes_free         remember free space
           XC   dw,dw                 build the free entry in a work
           STLE r4,dw+4                area since we may span buffers
@@ -1298,15 +1298,15 @@ wt_fsp_wr L    r6,out_buf            write the buffer
 wt_fsp_1  NOTE outdcb                note disk addr for old buf
           ST   r1,rw_ttr
           DROP r6
-          STORAGE OBTAIN,LENGTH=4096,BNDRY=PAGE
+          STORAGE OBTAIN,LENGTH=16384,BNDRY=PAGE
           L    r0,out_bufsz
-          AL   r0,=A(4096)
+          AL   r0,=A(16384)
           ST   r0,out_bufsz
           ST   r1,out_buf            new buf
-wt_fsp_2  AL   r3,=A(4096)           new buf pos
+wt_fsp_2  AL   r3,=A(16384)          new buf pos
           ST   r3,out_buf_pos        set new pos
           LR   r0,r1                 clear the buf
-          L    r1,=A(4096)
+          L    r1,=A(16384)
           SLR  rf,rf
           MVCL r0,re
           LTR  r5,r5                 more to copy ?
@@ -1358,18 +1358,18 @@ wt_update C    r2,next_rw             at end of entries ?
           READ outdecb,SF,outdcb,(r3),MF=E
           CHECK outdecb
           LR   r0,r3                  copy the rewrite buf
-          L    r1,=A(4096)
+          L    r1,=A(16384)
           L    re,rw_buf
           LR   rf,r1
           MVCL r0,re
           WRITE outdecb,SF,outdcb,(r3),MF=E
           CHECK outdecb
           L    r1,rw_buf              free the buf
-          STORAGE RELEASE,ADDR=(1),LENGTH=4096
+          STORAGE RELEASE,ADDR=(1),LENGTH=16384
           LA   r2,rw_next             point to the next entry
           B    wt_update              loop back
 wt_upd_ok CLOSE outdcb,MF=(E,openl24)
-          STORAGE RELEASE,ADDR=(r3),LENGTH=4096
+          STORAGE RELEASE,ADDR=(r3),LENGTH=16384
           LM   r1,r2,rw_area          free stuff
           STORAGE RELEASE,ADDR=(1),LENGTH=(r2)
          #MSG  1,'file SYSUT2 closed for update'
@@ -1676,7 +1676,7 @@ model_vtdcb_l    EQU  *-model_vtdcb
 model_exdcb      DCB  DDNAME=SYSUT1,DSORG=DA,MACRF=E
 model_exdcb_l    EQU  *-model_exdcb
 model_outdcb     DCB  DDNAME=SYSUT2,DSORG=PS,MACRF=(RP,WP),            x
-               RECFM=F,BLKSIZE=4096,LRECL=4096
+               RECFM=F,BLKSIZE=16384,LRECL=16384
 model_outdcb_l   EQU  *-model_outdcb
 model_openl      OPEN (0),MODE=31,MF=L
 model_openl_l    EQU  *-model_openl

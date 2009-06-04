@@ -158,7 +158,7 @@ main     RMODE ANY
          B     init-*(,rf)
          DC    AL1(init-*)
 pgmid    DC    CL8'cckdload'
-vrm      DC    X'000100'          version 0 release 1 modlvl 0
+vrm      DC    X'000101'          version 0 release 1 modlvl 1
          DC    C' &SYSDATE &SYSTIME '
 init     SAVE  (14,12)
          LR    rc,rf              set base reg
@@ -823,9 +823,9 @@ compbz2  LR    r6,r5
          ST    r1,complen
          LA    r1,complen
          STM   re,r1,pl
-         LR    re,r7
-         SH    re,=Y(CKDDASD_TRKHDR_SIZE)
-         LA    rf,CKDDASD_TRKHDR_SIZE(,r5)
+         LA    re,CKDDASD_TRKHDR_SIZE(,r5)
+         LR    rf,r7
+         SH    rf,=Y(CKDDASD_TRKHDR_SIZE)
          SLR   r0,r0
          SLR   r1,r1
          STM   re,r1,pl+16
@@ -1279,7 +1279,7 @@ r_gotblk1 DS   0H
           N    r5,=A(X'00000fff')    in the first block
           LH   r6,=Y(4096)          calculate data length
           SR   r6,r5                 in the first block
-          AR   r2,r5                new offset
+          AR   r2,r6                new offset
           LR   re,r4                target address
           LR   rf,r6                data length in the first block
           CR   rf,r3                if requested length is less
