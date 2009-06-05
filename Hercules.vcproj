@@ -1,33 +1,40 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="9.00"
 	Name="Hercules"
-	ProjectGUID="{F17348EA-9067-49DC-9497-5D4BF1E6635B}"
+	ProjectGUID="{A0F495FF-9C35-4DFB-A51A-0427D8420779}"
 	RootNamespace="Hercules"
 	Keyword="MakeFileProj"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
 			Name="Win32"
+		/>
+		<Platform
+			Name="x64"
+		/>
+		<Platform
+			Name="Itanium"
 		/>
 	</Platforms>
 	<ToolFiles>
 	</ToolFiles>
 	<Configurations>
 		<Configuration
-			Name="Debug-dllmod|Win32"
+			Name="Debug|Win32"
 			OutputDirectory="./msvc.debug.dllmod.bin"
 			IntermediateDirectory="./msvc.debug.dllmod.obj"
 			ConfigurationType="0"
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="makefile.bat DEBUG makefile-dllmod.msvc 32"
-				ReBuildCommandLine="makefile.bat DEBUG makefile-dllmod.msvc 32 -a"
-				CleanCommandLine="makefile.bat DEBUG makefile-dllmod.msvc 32 clean"
+				BuildCommandLine="makefile.bat DEBUG makefile.msvc 32"
+				ReBuildCommandLine="makefile.bat DEBUG makefile.msvc 32 -a"
+				CleanCommandLine="makefile.bat DEBUG makefile.msvc 32 clean"
 				Output="$(OutDir)"
-				PreprocessorDefinitions="WIN32;_DEBUG;_MSVC_"
+				PreprocessorDefinitions="WIN32;_DEBUG;_MSVC_;CPU=i386;HOST_ARCH=i386"
 				IncludeSearchPath=""
 				ForcedIncludes=""
 				AssemblySearchPath=""
@@ -36,18 +43,275 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Release-dllmod|Win32"
+			Name="Debug|x64"
+			OutputDirectory="./msvc.debug.AMD64.bin"
+			IntermediateDirectory="./msvc.debug.AMD64.bin"
+			ConfigurationType="0"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="makefile.bat DEBUG-X64 makefile.msvc 32"
+				ReBuildCommandLine="makefile.bat DEBUG-X64 makefile.msvc 32 -a"
+				CleanCommandLine="makefile.bat DEBUG-X64 makefile.msvc 32 clean"
+				Output="$(OutDir)"
+				PreprocessorDefinitions="WIN32;_WIN64;_DEBUG;_MSVC_;CPU=AMD64;HOST_ARCH=AMD64"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug|Itanium"
+			OutputDirectory="./msvc.debug.IA64.bin"
+			IntermediateDirectory="./msvc.debug.IA64.bin"
+			ConfigurationType="0"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="makefile.bat DEBUG-IA64 makefile.msvc 32"
+				ReBuildCommandLine="makefile.bat DEBUG-IA64 makefile.msvc 32 -a"
+				CleanCommandLine="makefile.bat DEBUG-IA64 makefile.msvc 32 clean"
+				Output="$(OutDir)"
+				PreprocessorDefinitions="WIN32;_WIN64;_DEBUG;_MSVC_;CPU=IA64;HOST_ARCH=IA64"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|Win32"
 			OutputDirectory="./msvc.dllmod.bin"
 			IntermediateDirectory="./msvc.dllmod.obj"
 			ConfigurationType="0"
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="makefile.bat RETAIL makefile-dllmod.msvc 32"
-				ReBuildCommandLine="makefile.bat RETAIL makefile-dllmod.msvc 32 -a"
-				CleanCommandLine="makefile.bat RETAIL makefile-dllmod.msvc 32 clean"
+				BuildCommandLine="makefile.bat RETAIL makefile.msvc 32"
+				ReBuildCommandLine="makefile.bat RETAIL makefile.msvc 32 -a"
+				CleanCommandLine="makefile.bat RETAIL makefile.msvc 32 clean"
 				Output="$(OutDir)"
-				PreprocessorDefinitions="WIN32;NDEBUG;_MSVC_"
+				PreprocessorDefinitions="WIN32;NDEBUG;_MSVC_;CPU=i386;HOST_ARCH=i386"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|x64"
+			OutputDirectory="./msvc.AMD64.bin"
+			IntermediateDirectory="./msvc.AMD64.bin"
+			ConfigurationType="0"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="makefile.bat RETAIL-X64 makefile.msvc 32"
+				ReBuildCommandLine="makefile.bat RETAIL-X64 makefile.msvc 32 -a"
+				CleanCommandLine="makefile.bat RETAIL-X64 makefile.msvc 32 clean"
+				Output="$(OutDir)"
+				PreprocessorDefinitions="WIN32;_WIN64;NDEBUG;_MSVC_;CPU=AMD64;HOST_ARCH=AMD64"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|Itanium"
+			OutputDirectory="./msvc.IA64.bin"
+			IntermediateDirectory="./msvc.IA64.bin"
+			ConfigurationType="0"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="makefile.bat RETAIL-IA64 makefile.msvc 32"
+				ReBuildCommandLine="makefile.bat RETAIL-IA64 makefile.msvc 32 -a"
+				CleanCommandLine="makefile.bat RETAIL-IA64 makefile.msvc 32 clean"
+				Output="$(OutDir)"
+				PreprocessorDefinitions="WIN32;_WIN64;NDEBUG;_MSVC_;CPU=IA64;HOST_ARCH=IA64"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug-All|Win32"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="0"
+			BuildLogFile="$(SolutionDir)$(ConfigurationName) BuildLog.htm"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="makefile.bat DEBUG-ALL makefile.msvc 32 &quot;$(SolutionDir)&quot;"
+				ReBuildCommandLine="makefile.bat DEBUG-ALL makefile.msvc 32 -a &quot;$(SolutionDir)&quot;"
+				CleanCommandLine="makefile.bat DEBUG-ALL makefile.msvc 32 clean &quot;$(SolutionDir)&quot;"
+				Output="$(OutDir)"
+				PreprocessorDefinitions="WIN32;_DEBUG;_MSVC_;CPU=i386;HOST_ARCH=i386"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug-All|x64"
+			ConfigurationType="0"
+			BuildLogFile="$(SolutionDir)$(ConfigurationName) BuildLog.htm"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="makefile.bat DEBUG-ALL makefile.msvc 32 &quot;$(SolutionDir)&quot;"
+				ReBuildCommandLine="makefile.bat DEBUG-ALL makefile.msvc 32 -a &quot;$(SolutionDir)&quot;"
+				CleanCommandLine="makefile.bat DEBUG-ALL makefile.msvc 32 clean &quot;$(SolutionDir)&quot;"
+				Output="$(OutDir)"
+				PreprocessorDefinitions="WIN32;_WIN64;_DEBUG;_MSVC_;CPU=AMD64;HOST_ARCH=AMD64"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug-All|Itanium"
+			ConfigurationType="0"
+			BuildLogFile="$(SolutionDir)$(ConfigurationName) BuildLog.htm"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="makefile.bat DEBUG-ALL makefile.msvc 32 &quot;$(SolutionDir)&quot;"
+				ReBuildCommandLine="makefile.bat DEBUG-ALL makefile.msvc 32 -a &quot;$(SolutionDir)&quot;"
+				CleanCommandLine="makefile.bat DEBUG-ALL makefile.msvc 32 clean &quot;$(SolutionDir)&quot;"
+				Output="$(OutDir)"
+				PreprocessorDefinitions="WIN32;_WIN64;_DEBUG;_MSVC_;CPU=IA64;HOST_ARCH=IA64"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release-All|Win32"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="0"
+			BuildLogFile="$(SolutionDir)$(ConfigurationName) BuildLog.htm"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="makefile.bat RETAIL-ALL makefile.msvc 32 &quot;$(SolutionDir)&quot;"
+				ReBuildCommandLine="makefile.bat RETAIL-ALL makefile.msvc 32 -a &quot;$(SolutionDir)&quot;"
+				CleanCommandLine="makefile.bat RETAIL-ALL makefile.msvc 32 clean &quot;$(SolutionDir)&quot;"
+				Output="$(OutDir)"
+				PreprocessorDefinitions="WIN32;NDEBUG;_MSVC_;CPU=i386;HOST_ARCH=i386"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release-All|x64"
+			ConfigurationType="0"
+			BuildLogFile="$(SolutionDir)$(ConfigurationName) BuildLog.htm"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="makefile.bat RETAIL-ALL makefile.msvc 32 &quot;$(SolutionDir)&quot;"
+				ReBuildCommandLine="makefile.bat RETAIL-ALL makefile.msvc 32 -a &quot;$(SolutionDir)&quot;"
+				CleanCommandLine="makefile.bat RETAIL-ALL makefile.msvc 32 clean &quot;$(SolutionDir)&quot;"
+				Output="$(OutDir)"
+				PreprocessorDefinitions="WIN32;_WIN64;NDEBUG;_MSVC_;CPU=AMD64;HOST_ARCH=AMD64"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release-All|Itanium"
+			ConfigurationType="0"
+			BuildLogFile="$(SolutionDir)$(ConfigurationName) BuildLog.htm"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="makefile.bat RETAIL-ALL makefile.msvc 32 &quot;$(SolutionDir)&quot;"
+				ReBuildCommandLine="makefile.bat RETAIL-ALL makefile.msvc 32 -a &quot;$(SolutionDir)&quot;"
+				CleanCommandLine="makefile.bat RETAIL-ALL makefile.msvc 32 clean &quot;$(SolutionDir)&quot;"
+				Output="$(OutDir)"
+				PreprocessorDefinitions="WIN32;_WIN64;NDEBUG;_MSVC_;CPU=IA64;HOST_ARCH=IA64"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="All-All|Win32"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="0"
+			BuildLogFile="$(SolutionDir)$(ConfigurationName) BuildLog.htm"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="makefile.bat ALL-ALL makefile.msvc 32 &quot;$(SolutionDir)&quot;"
+				ReBuildCommandLine="makefile.bat ALL-ALL makefile.msvc 32 -a &quot;$(SolutionDir)&quot;"
+				CleanCommandLine="makefile.bat ALL-ALL makefile.msvc 32 clean &quot;$(SolutionDir)&quot;"
+				Output="$(OutDir)"
+				PreprocessorDefinitions="WIN32;_MSVC_;CPU=i386;HOST_ARCH=i386"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="All-All|x64"
+			ConfigurationType="0"
+			BuildLogFile="$(SolutionDir)$(ConfigurationName) BuildLog.htm"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="makefile.bat ALL-ALL makefile.msvc 32 &quot;$(SolutionDir)&quot;"
+				ReBuildCommandLine="makefile.bat ALL-ALL makefile.msvc 32 -a &quot;$(SolutionDir)&quot;"
+				CleanCommandLine="makefile.bat ALL-ALL makefile.msvc 32 clean &quot;$(SolutionDir)&quot;"
+				Output="$(OutDir)"
+				PreprocessorDefinitions="WIN32;_WIN64;_MSVC_;CPU=AMD64;HOST_ARCH=AMD64"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="All-All|Itanium"
+			ConfigurationType="0"
+			BuildLogFile="$(SolutionDir)$(ConfigurationName) BuildLog.htm"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="makefile.bat ALL-ALL makefile.msvc 32 &quot;$(SolutionDir)&quot;"
+				ReBuildCommandLine="makefile.bat ALL-ALL makefile.msvc 32 -a &quot;$(SolutionDir)&quot;"
+				CleanCommandLine="makefile.bat ALL-ALL makefile.msvc 32 clean &quot;$(SolutionDir)&quot;"
+				Output="$(OutDir)"
+				PreprocessorDefinitions="WIN32;_WIN64;_MSVC_;CPU=IA64;HOST_ARCH=IA64"
 				IncludeSearchPath=""
 				ForcedIncludes=""
 				AssemblySearchPath=""
@@ -62,7 +326,7 @@
 		<Filter
 			Name="Source Files"
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
-			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
+			UniqueIdentifier="{5B799457-D8CE-492d-B610-D73BC167A0BF}"
 			>
 			<Filter
 				Name="Utilities"
@@ -1233,6 +1497,10 @@
 						RelativePath=".\README.TAPE"
 						>
 					</File>
+					<File
+						RelativePath=".\README.WIN64"
+						>
+					</File>
 				</Filter>
 				<Filter
 					Name="html"
@@ -1477,6 +1745,10 @@
 						RelativePath=".\makefile.bat"
 						>
 					</File>
+					<File
+						RelativePath=".\makefile.msvc"
+						>
+					</File>
 					<Filter
 						Name="makefile includes"
 						>
@@ -1558,6 +1830,22 @@
 						</File>
 						<File
 							RelativePath=".\msvc.makefile.includes\ZLIB_RULES.msvc"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="runjobs.jobs"
+						>
+						<File
+							RelativePath=".\all-all.jobs"
+							>
+						</File>
+						<File
+							RelativePath=".\debug-all.jobs"
+							>
+						</File>
+						<File
+							RelativePath=".\retail-all.jobs"
 							>
 						</File>
 					</Filter>
@@ -1943,6 +2231,14 @@
 					</File>
 					<File
 						RelativePath=".\tests\srdt.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\stfle.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\stsi.txt"
 						>
 					</File>
 					<File

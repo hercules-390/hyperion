@@ -40,6 +40,10 @@ cflags = $(cflags) /FAcs /Fa$(ASMDIR)\$(NULL)
 rcflags = $(rcflags) -D PRERELEASE=1
 !ENDIF
 
+!IFDEF _WIN64
+rcflags = $(rcflags) -D _WIN64
+!ENDIF
+
 !IFNDEF MAX_CPU_ENGINES
 MAX_CPU_ENGINES = 8
 !ENDIF
@@ -59,4 +63,45 @@ cflags = $(cflags) /D HDL_BUILD_SHARED /D OPTION_DYNAMIC_LOAD
 
 !IFDEF FISH_HANG
 cflags = $(cflags) -D FISH_HANG
+!ENDIF
+
+# Suppress some deprecation warnings that aren't really deprecation warnings
+!IF $(vsversion) >= 8
+cflags = $(cflags) -D _CRT_SECURE_NO_DEPRECATE
+cflags = $(cflags) -D _CRT_NONSTDC_NO_DEPRECATE
+ldebug = $(ldebug) /MANIFEST
+!ENDIF
+
+# Override win32.mak options for WIN64 to eliminate the following warnings
+# C4200: nonstandard extension used : zero-sized array in struct/union
+# C4127: conditional expression is constant
+cflags = $(cflags:-W4=-W3)
+cflags = $(cflags:/W4=/W3)
+
+# Suppress warning 4267 conversion from size_t to int possible loss of data
+cflags = $(cflags) /wd4267
+
+# D9035: option 'Wp64' has been deprecated and will be removed in a future release.
+cflags = $(cflags:-Wp64=)
+cflags = $(cflags:/Wp64=)
+
+# Enable "/MP (Build with Multiple Processes)" option
+# if the building host has more than one processor...
+!IF $(vsversion) >= 9 && $(NUMBER_OF_PROCESSORS) > 1
+cflags = $(cflags) /MP
+!ENDIF
+
+# Note: the "/Gm (Enable Minimal Rebuild)" option is incompatible
+# with the "/MP (Build with Multiple Processes)" option (and besides
+# that it's still somewhat buggy) so remove it if it's present...
+cdebug  = $(cdebug:-Gm=)
+cdebug  = $(cdebug:/Gm=)
+
+# Specify module base address directly via linker option
+# so we don't have to rely on user having rebase utility.
+ldebug = $(ldebug) /base:0x400000
+
+# Optimize for AMD64 CPU architecture
+!IF "$(CPU)" == "AMD64"
+cflags = $(cflags) /favor:AMD64
 !ENDIF

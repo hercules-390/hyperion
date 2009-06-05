@@ -5,16 +5,7 @@
 # --------------------------------------------------------------------------
 # $Id$
 #
-#  Handles support for PCRE (Perl Compatible Regular Expressions),
-#  for MSVC, needed by HAO (Hercules Automatic Operator) facility...
-#
-#
-#                           CHANGE HISTORY
-# $Log$
-#
-# DD/MM/YY Description
-#
-# 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
+#  Handles support for PCRE (Perl Compatible Regular Expressions).
 #
 # ***************************************************************************
 
@@ -32,11 +23,27 @@
 !IFDEF PCRE_DIR
 !IF "$(PCRE_DIR)" == "NONE"
 !UNDEF PCRE_DIR
+!ELSE # use defined dir or subdir
+!IFDEF _WIN64
+!IF "$(CPU)" == "IA64"
+PCRE_DIR = $(PCRE_DIR)\ia64
+!ELSE # "$(CPU)" == "AMD64"
+PCRE_DIR = $(PCRE_DIR)\x64
 !ENDIF
-!ELSE
-# PCRE_DIR defaults to winbuild\pcre relative to current directory
+!ENDIF
+!ENDIF
+!ELSE # (not defined)
+!IF "$(CPU)" == "i386"
 !IF EXIST(winbuild\pcre)
 PCRE_DIR = winbuild\pcre
+!ENDIF
+!ELSEIF "$(CPU)" == "AMD64"
+ARCH_DIR = \x64
+!ELSE # $(CPU) == "IA64"
+ARCH_DIR = \ia64
+!ENDIF
+!IF EXIST(winbuild\pcre$(ARCH_DIR))
+PCRE_DIR = winbuild\pcre$(ARCH_DIR)
 !ENDIF
 !ENDIF
 

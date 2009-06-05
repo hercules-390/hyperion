@@ -7,14 +7,6 @@
 #
 #  Handles support for ZLIB compression...
 #
-#
-#                           CHANGE HISTORY
-# $Log$
-#
-# DD/MM/YY Description
-#
-# 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
-#
 # ***************************************************************************
 
 # ---------------------------------------------------------------------
@@ -39,31 +31,31 @@
 !IFDEF ZLIB_DIR
 !IF "$(ZLIB_DIR)" == "NONE"
 !UNDEF ZLIB_DIR
+!ELSE # use defined dir or subdir
+!IFDEF _WIN64
+!IF "$(CPU)" == "IA64"
+ZLIB_DIR = $(ZLIB_DIR)\ia64
+!ELSE # CPU == AMD64
+ZLIB_DIR = $(ZLIB_DIR)\x64
 !ENDIF
-!ELSE
+!ENDIF
+!ENDIF
+!ELSE # (not defined)
 !IF "$(CPU)" == "i386"
-# ISW 20050311
-# If winbuild\zlib\win32_32 exists (relative to current dir)
-# then use it for ZLIB_DIR *UNLESS* ZLIB_DIR is already set.
-!IF EXIST(winbuild\zlib\win32_32)
-ZLIB_DIR = winbuild\zlib\win32_32
+!IF EXIST(winbuild\zlib)
+ZLIB_DIR = winbuild\zlib
 !ENDIF
-!ELSE
-# For 64-bit the default directory is winbuild\zlib\win32_AMD64 or IA64
-!IF EXIST(winbuild\zlib\win32_$(CPU))
-ZLIB_DIR = winbuild\zlib\win32_$(CPU)
+!ELSEIF "$(CPU)" == "AMD64"
+ARCH_DIR = \x64
+!ELSE # $(CPU) == "IA64"
+ARCH_DIR = \ia64
+!ENDIF
+!IF EXIST(winbuild\zlib$(ARCH_DIR))
+ZLIB_DIR = winbuild\zlib$(ARCH_DIR)
 !ENDIF
 !ENDIF
-!ENDIF
-#
-# If ZLIB_DIR is improperly set, issue a message and exit *UNLESS*
-# it is set to the word "NONE"
-#
-# DBT 20050312
-# Minor changes to support paths with blanks in them.
 
 !IFDEF ZLIB_DIR
-
 !IF !EXIST("$(ZLIB_DIR)\include\zlib.h")
 !ERROR ZLIB_DIR "$(ZLIB_DIR)\include\zlib.h" does not exist. Check ZLIB_DIR
 !ELSEIF !EXIST("$(ZLIB_DIR)\lib\zdll.lib")
@@ -71,9 +63,7 @@ ZLIB_DIR = winbuild\zlib\win32_$(CPU)
 !ELSEIF !EXIST("$(ZLIB_DIR)\zlib1.dll")
 !ERROR ZLIB_DIR "$(ZLIB_DIR)\zlib1.dll" does not exist. Check ZLIB_DIR
 !ENDIF
-
 !MESSAGE ZLIB support will be included from "$(ZLIB_DIR)"
-
 !ELSE
 !MESSAGE ZLIB support will not be generated
 !ENDIF

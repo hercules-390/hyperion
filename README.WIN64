@@ -1,3 +1,4 @@
+-------------------------------------------------------------------------------
 HERCULES FOR WIN64 README FILE
 
 There are two 64-bit architectures supported by 64-bit Windows:
@@ -42,3 +43,49 @@ HOW TO COMPILE HERCULES FOR AMD64
    on the target machine. This package can be downloaded from
    http://www.microsoft.com/downloads/details.aspx?FamilyID=bd2a6171-e2d6-4230-b809-9a8d7548c1b6&DisplayLang=en
 
+
+-------------------------------------------------------------------------------
+
+          How to build Hercules for the x64 (AMD64 and EM64T)
+            and/or Intel Itanium (IA64) Architectures:
+
+
+                 The Fish "Visual Studio 2008" method
+
+
+              (which accomplishes the exact same thing as
+               the above command-line build instructions)
+
+
+
+
+  1. Install Visual Studio 2008.
+
+     Be sure to select support for either/both of "x64" and/or "Ia64" Itanium
+     builds when installing depending on which (or both) you wish to support.
+     Note that only the Team Edition of Visual Studio supports Itanium builds.
+
+
+
+  2. Open the "hercules.sln" Solution file.
+
+
+
+  3. Select your desired Solution Configuration (Debug or Release) and Solution
+     Platform (Win32, x64, or Itanium) from the appropriate dropdowns.
+
+
+
+  4. Click the "Build Solution" or "Rebuild Solution" toolbar button.
+
+
+
+
+  Note: Your 64-bit versions of the ZLIB, BZIP2, and/or PCRE development
+        packages should be in an appropriate 'x64' and/or 'ia64' subdirectory
+        beneath their normal package home directory. See the 'ZLIB_DIR',
+        'BZIP2_dir' and 'PCRE_DIR' sections of the "README.MSVC" document
+        for further details.
+
+
+-------------------------------------------------------------------------------
