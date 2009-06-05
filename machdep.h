@@ -425,7 +425,6 @@ __asm__ __volatile__ (
  return value;
 }
 
-#define ASSIST_STORE_DW
 #define store_dw_noswap(x,y) store_dw_i686_noswap(x,y)
 static __inline__ void store_dw_i686_noswap(void *ptr, U64 value) {
 __asm__ __volatile__ (
