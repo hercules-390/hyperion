@@ -738,18 +738,6 @@ U16     eax;                            /* Authorization index       */
                     regs->aea_common[CR_ALB_OFFSET + arn] = (regs->dat.asd & ASD_PRIVATE) == 0;
                     regs->aea_aleprot[arn] = regs->dat.protect & 2;
 
-                    /* Build a host real space entry for each XC dataspace */
-                    if (arn > 0 && SIE_ACTIVE(regs)
-                     && MULTIPLE_CONTROLLED_DATA_SPACE(regs->guestregs))
-                    {
-                        regs->guestregs->dat.asd = regs->dat.asd ^ TLB_HOST_ASD;
-
-                        regs->guestregs->CR(CR_ALB_OFFSET + arn) = regs->guestregs->dat.asd;
-                        regs->guestregs->aea_ar[arn] = CR_ALB_OFFSET + arn;
-                        regs->guestregs->aea_common[CR_ALB_OFFSET + arn] = (regs->dat.asd & ASD_PRIVATE) == 0;
-                        regs->guestregs->aea_aleprot[arn] = regs->dat.protect & 2;
-                    }
-
                 }
 
             } /* end switch(alet) */
@@ -2204,6 +2192,13 @@ int     ix = TLBIX(addr);               /* TLB index                 */
             regs->tlb.TLB_ASD(ix) = regs->dat.asd;
             /* Ensure that the private bit is percolated to the guest such that LAP is applied correctly */
             regs->dat.private = regs->hostregs->dat.private;
+            
+            /* Build tlb entry of XC dataspace */
+            regs->dat.asd = regs->hostregs->dat.asd ^ TLB_HOST_ASD;
+            regs->CR(CR_ALB_OFFSET + arn) = regs->dat.asd;
+            regs->aea_ar[arn] = CR_ALB_OFFSET + arn;
+            regs->aea_common[CR_ALB_OFFSET + arn] = (regs->dat.asd & ASD_PRIVATE) == 0;
+            regs->aea_aleprot[arn] = regs->hostregs->dat.protect & 2;
         }
 
         /* Convert host real address to host absolute address */
