@@ -60,6 +60,12 @@ V4 = 0
 
 !ENDIF
 
+!IF !DEFINED(V1) || !DEFINED(V2) || !DEFINED(V2) || !DEFINED(V3)
+!  ERROR VERSION not set correctly: V1/V2/V3/V4 are undefined.
+!ENDIF
+
+!MESSAGE VERSION = $(VERSION) ($(V1).$(V2).$(V3).$(V4))
+
 # 
 #  32 bit : 
 #      VS < 9 : Win NT 4 & Win 9X (APPVER 4.0, TARGETOS BOTH)
