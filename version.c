@@ -44,7 +44,7 @@ static const char *build_info[] = {
 #endif
 
 #if defined(_MSVC_)
-    "Win32 (MSVC) "
+    "Windows (MSVC) "
   #if defined(DEBUG)
     "** DEBUG ** "
   #endif
