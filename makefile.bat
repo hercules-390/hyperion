@@ -1,6 +1,14 @@
 @echo off
 
-rem $Id:
+
+  :: Jay! HERE is where you set the version now! Not in VERSION.msvc any more!
+  :: (the batch file takes care of setting V1/V2/V3/V4 for you automatically)
+
+  set VERSION="3.06"
+
+
+  :: Uncomment the below to set a custom build description.
+  ::set CUSTOM_BUILD_STRING="(whatever you want it to be)"
 
 
   ::  Uncomment the below to ALWAYS generate assembly (.cod) listings, or
