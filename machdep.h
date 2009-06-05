@@ -151,10 +151,6 @@
 
     #pragma  intrinsic  ( _InterlockedCompareExchange )
 
-    #define  ASSIST_CMPXCHG1    // (indicate machine-dependent assist function used)
-    #define  ASSIST_CMPXCHG4    // (indicate machine-dependent assist function used)
-    #define  ASSIST_CMPXCHG8    // (indicate machine-dependent assist function used)
-
     #define  cmpxchg1(  x, y, z )  cmpxchg1_x86( x, y, z )
     #define  cmpxchg4(  x, y, z )  cmpxchg4_x86( x, y, z )
     #define  cmpxchg8(  x, y, z )  cmpxchg8_x86( x, y, z )
@@ -241,6 +237,26 @@
 
         return cc;
     }
+
+    #if defined(MSC_X86_32BIT)
+
+      #define fetch_dw_noswap(_p) fetch_dw_x86_noswap((_p))
+      // (must follow cmpxchg8 since it uses it)
+      static __inline U64 __fastcall fetch_dw_x86_noswap ( volatile void *ptr )
+      {
+        U64 value = *(U64*)ptr;
+        cmpxchg8( &value, value, (U64*)ptr );
+        return value;
+      }
+
+      #define store_dw_noswap(_p, _v) store_dw_x86_noswap( (_p), (_v))
+      // (must follow cmpxchg8 since it uses it)
+      static __inline void __fastcall store_dw_x86_noswap ( volatile void *ptr, U64 value )
+      {
+        U64 orig = *(U64*)ptr;
+        while ( cmpxchg8( &orig, value, (U64*)ptr ) );
+      }
+    #endif /* defined(MSC_X86_32BIT) */
 
   #endif // defined(GEN_MSC_ASSISTS) && (defined(MSC_X86_32BIT) || defined(MSC_X86_64BIT))
 
