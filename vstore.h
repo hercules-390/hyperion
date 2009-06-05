@@ -834,7 +834,7 @@ static __inline__ void concpy (REGS *regs, void *d, void *s, int n)
 
 // (*** TEMPORARY MSVC Concurrent Block Update fix ***)
 //  defined(MAX_ATOMIC_BITS) && MAX_ATOMIC_BITS >= 64 && !defined(OPTION_STRICT_ALIGNMENT)
-#if defined(MAX_ATOMIC_BITS) && MAX_ATOMIC_BITS >= 64 && !defined(OPTION_STRICT_ALIGNMENT) && !defined(_MSVC_)
+#if defined(MAX_ATOMIC_BITS) && MAX_ATOMIC_BITS >= 64 && !defined(OPTION_STRICT_ALIGNMENT) && (!defined(_MSVC_) || defined(_WIN64))
 // (*** TEMPORARY MSVC Concurrent Block Update fix ***)
 
     UNREFERENCED(regs);
