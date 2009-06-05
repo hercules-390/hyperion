@@ -5321,35 +5321,44 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
 
     UNREFERENCED(cmdline);
 
+    obtain_lock( &sysblk.icount_lock );
+
     if (argc > 1 && !strcasecmp(argv[1], "clear"))
     {
         memset(IMAP_FIRST,0,IMAP_SIZE);
         logmsg( _("HHCPN124I Instruction counts reset to zero.\n") );
+        release_lock( &sysblk.icount_lock );
         return 0;
     }
+
+#define  MAX_ICOUNT_INSTR   1000    /* Maximum number of instructions
+                                     in architecture instruction set */
 
     if(argc > 1 && !strcasecmp(argv[1], "sort"))
     {
       /* Allocate space */
-      if(!(opcode1 = malloc(500 * sizeof(unsigned char))))
+      if(!(opcode1 = malloc(MAX_ICOUNT_INSTR * sizeof(unsigned char))))
       {
         logmsg("Sorry, not enough memory\n");
+        release_lock( &sysblk.icount_lock );
         return 0;
       }
-      if(!(opcode2 = malloc(500 * sizeof(unsigned char))))
+      if(!(opcode2 = malloc(MAX_ICOUNT_INSTR * sizeof(unsigned char))))
       {
         logmsg("Sorry, not enough memory\n");
         free(opcode1);
+        release_lock( &sysblk.icount_lock );
         return 0;
       }
-      if(!(count = malloc(500 * sizeof(U64))))
+      if(!(count = malloc(MAX_ICOUNT_INSTR * sizeof(U64))))
       {
         logmsg("Sorry, not enough memory\n");
         free(opcode1);
         free(opcode2);
+        release_lock( &sysblk.icount_lock );
         return(0);
       }
-      for(i = 0; i < 499; i++)
+      for(i = 0; i < (MAX_ICOUNT_INSTR-1); i++)
       {
         opcode1[i] = 0;
         opcode2[i] = 0;
@@ -5373,12 +5382,13 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 opcode2[i] = i2;
                 count[i++] = sysblk.imap01[i2];
                 total += sysblk.imap01[i2];
-                if(i == 499)
+                if(i == (MAX_ICOUNT_INSTR-1))
                 {
                   logmsg("Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
+                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -5395,12 +5405,13 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 opcode2[i] = i2;
                 count[i++] = sysblk.imapa4[i2];
                 total += sysblk.imapa4[i2];
-                if(i == 499)
+                if(i == (MAX_ICOUNT_INSTR-1))
                 {
                   logmsg("Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
+                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -5417,12 +5428,13 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 opcode2[i] = i2;
                 count[i++] = sysblk.imapa5[i2];
                 total += sysblk.imapa5[i2];
-                if(i == 499)
+                if(i == (MAX_ICOUNT_INSTR-1))
                 {
                   logmsg("Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
+                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -5439,12 +5451,13 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 opcode2[i] = i2;
                 count[i++] = sysblk.imapa6[i2];
                 total += sysblk.imapa6[i2];
-                if(i == 499)
+                if(i == (MAX_ICOUNT_INSTR-1))
                 {
                   logmsg("Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
+                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -5461,12 +5474,13 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 opcode2[i] = i2;
                 count[i++] = sysblk.imapa7[i2];
                 total += sysblk.imapa7[i2];
-                if(i == 499)
+                if(i == (MAX_ICOUNT_INSTR-1))
                 {
                   logmsg("Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
+                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -5483,12 +5497,13 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 opcode2[i] = i2;
                 count[i++] = sysblk.imapb2[i2];
                 total += sysblk.imapb2[i2];
-                if(i == 499)
+                if(i == (MAX_ICOUNT_INSTR-1))
                 {
                   logmsg("Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
+                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -5505,12 +5520,13 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 opcode2[i] = i2;
                 count[i++] = sysblk.imapb3[i2];
                 total += sysblk.imapb3[i2];
-                if(i == 499)
+                if(i == (MAX_ICOUNT_INSTR-1))
                 {
                   logmsg("Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
+                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -5527,12 +5543,13 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 opcode2[i] = i2;
                 count[i++] = sysblk.imapb9[i2];
                 total += sysblk.imapb9[i2];
-                if(i == 499)
+                if(i == (MAX_ICOUNT_INSTR-1))
                 {
                   logmsg("Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
+                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -5549,12 +5566,13 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 opcode2[i] = i2;
                 count[i++] = sysblk.imapc0[i2];
                 total += sysblk.imapc0[i2];
-                if(i == 499)
+                if(i == (MAX_ICOUNT_INSTR-1))
                 {
                   logmsg("Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
+                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -5571,12 +5589,13 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 opcode2[i] = i2;
                 count[i++] = sysblk.imapc2[i2];
                 total += sysblk.imapc2[i2];
-                if(i == 499)
+                if(i == (MAX_ICOUNT_INSTR-1))
                 {
                   logmsg("Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
+                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -5593,12 +5612,13 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 opcode2[i] = i2;
                 count[i++] = sysblk.imapc4[i2];
                 total += sysblk.imapc4[i2];
-                if(i == 499)
+                if(i == (MAX_ICOUNT_INSTR-1))
                 {
                   logmsg("Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
+                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -5615,12 +5635,13 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 opcode2[i] = i2;
                 count[i++] = sysblk.imapc6[i2];
                 total += sysblk.imapc6[i2];
-                if(i == 499)
+                if(i == (MAX_ICOUNT_INSTR-1))
                 {
                   logmsg("Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
+                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -5637,12 +5658,13 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 opcode2[i] = i2;
                 count[i++] = sysblk.imapc8[i2];
                 total += sysblk.imapc8[i2];
-                if(i == 499)
+                if(i == (MAX_ICOUNT_INSTR-1))
                 {
                   logmsg("Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
+                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -5659,12 +5681,13 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 opcode2[i] = i2;
                 count[i++] = sysblk.imape3[i2];
                 total += sysblk.imape3[i2];
-                if(i == 499)
+                if(i == (MAX_ICOUNT_INSTR-1))
                 {
                   logmsg("Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
+                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -5681,12 +5704,13 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 opcode2[i] = i2;
                 count[i++] = sysblk.imape4[i2];
                 total += sysblk.imape4[i2];
-                if(i == 499)
+                if(i == (MAX_ICOUNT_INSTR-1))
                 {
                   logmsg("Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
+                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -5703,12 +5727,13 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 opcode2[i] = i2;
                 count[i++] = sysblk.imape5[i2];
                 total += sysblk.imape5[i2];
-                if(i == 499)
+                if(i == (MAX_ICOUNT_INSTR-1))
                 {
                   logmsg("Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
+                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -5725,12 +5750,13 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 opcode2[i] = i2;
                 count[i++] = sysblk.imapeb[i2];
                 total += sysblk.imapeb[i2];
-                if(i == 499)
+                if(i == (MAX_ICOUNT_INSTR-1))
                 {
                   logmsg("Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
+                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -5747,12 +5773,13 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 opcode2[i] = i2;
                 count[i++] = sysblk.imapec[i2];
                 total += sysblk.imapec[i2];
-                if(i == 499)
+                if(i == (MAX_ICOUNT_INSTR-1))
                 {
                   logmsg("Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
+                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -5769,12 +5796,13 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 opcode2[i] = i2;
                 count[i++] = sysblk.imaped[i2];
                 total += sysblk.imaped[i2];
-                if(i == 499)
+                if(i == (MAX_ICOUNT_INSTR-1))
                 {
                   logmsg("Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
+                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -5789,12 +5817,13 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
               opcode2[i] = 0;
               count[i++] = sysblk.imapxx[i1];
               total += sysblk.imapxx[i1];
-              if(i == 500)
+              if(i == (MAX_ICOUNT_INSTR-1))
               {
                 logmsg("Sorry, too many instructions\n");
                 free(opcode1);
                 free(opcode2);
                 free(count);
+                release_lock( &sysblk.icount_lock );
                 return 0;
               }
             }
@@ -5813,16 +5842,20 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
             i3 = i2;
         }
         /* Exchange */
-        opcode1[499] = opcode1[i1];
-        opcode2[499] = opcode2[i1];
-        count[499] = count[i1];
+        opcode1[(MAX_ICOUNT_INSTR-1)] = opcode1[i1];
+        opcode2[(MAX_ICOUNT_INSTR-1)] = opcode2[i1];
+        count  [(MAX_ICOUNT_INSTR-1)] = count  [i1];
+
         opcode1[i1] = opcode1[i3];
         opcode2[i1] = opcode2[i3];
-        count[i1] = count[i3];
-        opcode1[i3] = opcode1[499];
-        opcode2[i3] = opcode2[499];
-        count[i3] = count[499];
+        count  [i1] = count  [i3];
+
+        opcode1[i3] = opcode1[(MAX_ICOUNT_INSTR-1)];
+        opcode2[i3] = opcode2[(MAX_ICOUNT_INSTR-1)];
+        count  [i3] = count  [(MAX_ICOUNT_INSTR-1)];
       }
+
+#define  ICOUNT_WIDTH  "12"     /* Print field width */
 
       /* Print */
       logmsg(_("HHCPN125I Sorted instruction count display:\n"));
@@ -5832,102 +5865,102 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
         {
           case 0x01:
           {
-            logmsg("          INST=%2.2X%2.2X\tCOUNT=%10" I64_FMT "u\t(%2d%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             break;
           }
           case 0xA4:
           {
-            logmsg("          INST=%2.2X%2.2X\tCOUNT=%10" I64_FMT "u\t(%2d%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             break;
           }
           case 0xA5:
           {
-            logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%10" I64_FMT "u\t(%2d%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             break;
           }
           case 0xA6:
           {
-            logmsg("          INST=%2.2X%2.2X\tCOUNT=%10" I64_FMT "u\t(%2d%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             break;
           }
           case 0xA7:
           {
-            logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%10" I64_FMT "u\t(%2d%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             break;
           }
           case 0xB2:
           {
-            logmsg("          INST=%2.2X%2.2X\tCOUNT=%10" I64_FMT "u\t(%2d%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             break;
           }
           case 0xB3:
           {
-            logmsg("          INST=%2.2X%2.2X\tCOUNT=%10" I64_FMT "u\t(%2d%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             break;
           }
           case 0xB9:
           {
-            logmsg("          INST=%2.2X%2.2X\tCOUNT=%10" I64_FMT "u\t(%2d%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             break;
           }
           case 0xC0:
           {
-            logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%10" I64_FMT "u\t(%2d%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             break;
           }
           case 0xC2:
           {
-            logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%10" I64_FMT "u\t(%2d%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             break;
           }
           case 0xC4:
           {
-            logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%10" I64_FMT "u\t(%2d%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             break;
           }
           case 0xC6:
           {
-            logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%10" I64_FMT "u\t(%2d%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             break;
           }
           case 0xC8:
           {
-            logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%10" I64_FMT "u\t(%2d%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             break;
           }
           case 0xE3:
           {
-            logmsg("          INST=%2.2X%2.2X\tCOUNT=%10" I64_FMT "u\t(%2d%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             break;
           }
           case 0xE4:
           {
-            logmsg("          INST=%2.2X%2.2X\tCOUNT=%10" I64_FMT "u\t(%2d%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             break;
           }
           case 0xE5:
           {
-            logmsg("          INST=%2.2X%2.2X\tCOUNT=%10" I64_FMT "u\t(%2d%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             break;
           }
           case 0xEB:
           {
-            logmsg("          INST=%2.2X%2.2X\tCOUNT=%10" I64_FMT "u\t(%2d%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             break;
           }
           case 0xEC:
           {
-            logmsg("          INST=%2.2X%2.2X\tCOUNT=%10" I64_FMT "u\t(%2d%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             break;
           }
           case 0xED:
           {
-            logmsg("          INST=%2.2X%2.2X\tCOUNT=%10" I64_FMT "u\t(%2d%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             break;
           }
           default:
           {
-            logmsg("          INST=%2.2X  \tCOUNT=%10" I64_FMT "u\t(%2d%)\n", opcode1[i1], count[i1], (int) (count[i1] * 100 / total));
+            logmsg("          INST=%2.2X  \tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], count[i1], (int) (count[i1] * 100 / total));
             break;
           }
         }
@@ -5935,6 +5968,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
       free(opcode1);
       free(opcode2);
       free(count);
+      release_lock( &sysblk.icount_lock );
       return 0;
     }
 
@@ -5946,124 +5980,125 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
             case 0x01:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imap01[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" I64_FMT "u\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
                             i1, i2, sysblk.imap01[i2]);
                 break;
             case 0xA4:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapa4[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" I64_FMT "u\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
                             i1, i2, sysblk.imapa4[i2]);
                 break;
             case 0xA5:
                 for(i2 = 0; i2 < 16; i2++)
                     if(sysblk.imapa5[i2])
-                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" I64_FMT "u\n",
+                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
                             i1, i2, sysblk.imapa5[i2]);
                 break;
             case 0xA6:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapa6[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" I64_FMT "u\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
                             i1, i2, sysblk.imapa6[i2]);
                 break;
             case 0xA7:
                 for(i2 = 0; i2 < 16; i2++)
                     if(sysblk.imapa7[i2])
-                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" I64_FMT "u\n",
+                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
                             i1, i2, sysblk.imapa7[i2]);
                 break;
             case 0xB2:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapb2[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" I64_FMT "u\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
                             i1, i2, sysblk.imapb2[i2]);
                 break;
             case 0xB3:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapb3[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" I64_FMT "u\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
                             i1, i2, sysblk.imapb3[i2]);
                 break;
             case 0xB9:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapb9[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" I64_FMT "u\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
                             i1, i2, sysblk.imapb9[i2]);
                 break;
             case 0xC0:
                 for(i2 = 0; i2 < 16; i2++)
                     if(sysblk.imapc0[i2])
-                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" I64_FMT "u\n",
+                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
                             i1, i2, sysblk.imapc0[i2]);
                 break;
             case 0xC2:                                                      /*@Z9*/
                 for(i2 = 0; i2 < 16; i2++)                                  /*@Z9*/
                     if(sysblk.imapc2[i2])                                   /*@Z9*/
-                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" I64_FMT "u\n",  /*@Z9*/
+                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",  /*@Z9*/
                             i1, i2, sysblk.imapc2[i2]);                     /*@Z9*/
                 break;                                                      /*@Z9*/
             case 0xC4:
                 for(i2 = 0; i2 < 16; i2++)
                     if(sysblk.imapc4[i2])
-                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" I64_FMT "u\n",
+                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
                             i1, i2, sysblk.imapc4[i2]);
                 break;
             case 0xC6:
                 for(i2 = 0; i2 < 16; i2++)
                     if(sysblk.imapc6[i2])
-                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" I64_FMT "u\n",
+                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
                             i1, i2, sysblk.imapc6[i2]);
                 break;
             case 0xC8:
                 for(i2 = 0; i2 < 16; i2++)
                     if(sysblk.imapc8[i2])
-                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" I64_FMT "u\n",
+                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
                             i1, i2, sysblk.imapc8[i2]);
                 break;
             case 0xE3:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imape3[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" I64_FMT "u\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
                             i1, i2, sysblk.imape3[i2]);
                 break;
             case 0xE4:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imape4[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" I64_FMT "u\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
                             i1, i2, sysblk.imape4[i2]);
                 break;
             case 0xE5:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imape5[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" I64_FMT "u\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
                             i1, i2, sysblk.imape5[i2]);
                 break;
             case 0xEB:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapeb[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" I64_FMT "u\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
                             i1, i2, sysblk.imapeb[i2]);
                 break;
             case 0xEC:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapec[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" I64_FMT "u\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
                             i1, i2, sysblk.imapec[i2]);
                 break;
             case 0xED:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imaped[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" I64_FMT "u\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
                             i1, i2, sysblk.imaped[i2]);
                 break;
             default:
                 if(sysblk.imapxx[i1])
-                    logmsg("          INST=%2.2X  \tCOUNT=%" I64_FMT "u\n",
+                    logmsg("          INST=%2.2X  \tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
                         i1, sysblk.imapxx[i1]);
                 break;
         }
     }
+    release_lock( &sysblk.icount_lock );
     return 0;
 }
 

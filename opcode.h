@@ -380,8 +380,10 @@ int used; \
     } \
     if(!used) \
     { \
+    obtain_lock( &sysblk.icount_lock ); \
     logmsg("First use: "); \
     ARCH_DEP(display_inst) ((_regs), (_inst)); \
+    release_lock( &sysblk.icount_lock ); \
     } \
 } while(0)
 

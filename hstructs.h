@@ -576,6 +576,7 @@ struct SYSBLK {
 #endif
 
 #if defined(OPTION_INSTRUCTION_COUNTING)
+        LOCK  icount_lock;
 #define IMAP_FIRST sysblk.imap01
         U64 imap01[256];
         U64 imapa4[256];

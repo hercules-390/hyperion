@@ -812,6 +812,9 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         initialize_lock (&sysblk.cpulock[i]);
     initialize_condition (&sysblk.sync_cond);
     initialize_condition (&sysblk.sync_bc_cond);
+#if defined(OPTION_INSTRUCTION_COUNTING)
+    initialize_lock (&sysblk.icount_lock);
+#endif
 
 #ifdef OPTION_PTTRACE
     ptt_trace_init (0, 1);
