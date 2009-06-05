@@ -572,7 +572,7 @@ U32  *ptr4, val4, old4, new4;
  #define ASSIST_CMPXCHG1
 #endif
 
-#if defined(cmpxchg1)
+#if defined(cmpxchg4)
  #define ASSIST_CMPXCHG4
 #endif
 
