@@ -871,6 +871,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\cmdtab.c"
+							>
+						</File>
+						<File
 							RelativePath=".\cmpsc.c"
 							>
 						</File>
@@ -1003,10 +1007,6 @@
 							>
 						</File>
 						<File
-							RelativePath=".\cmdtab.c"
-							>
-						</File>
-						<File
 							RelativePath=".\hscmisc.c"
 							>
 						</File>
@@ -1103,6 +1103,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\scedasd.c"
+							>
+						</File>
+						<File
 							RelativePath=".\service.c"
 							>
 						</File>
@@ -1179,6 +1183,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\cmdtab.h"
+							>
+						</File>
+						<File
 							RelativePath=".\codepage.h"
 							>
 						</File>
@@ -1244,10 +1252,6 @@
 						</File>
 						<File
 							RelativePath=".\getopt.h"
-							>
-						</File>
-						<File
-							RelativePath=".\cmdtab.h"
 							>
 						</File>
 						<File
