@@ -2,9 +2,6 @@
 
 rem $Id:
 
-set VERSION="3.06"
-set CUSTOM_BUILD_STRING="** Special build by Fish on %date% at %time% **"
-
 
   ::  Uncomment the below to ALWAYS generate assembly (.cod) listings, or
   ::  define it yourself via 'set' command before invoking this batch file.
