@@ -23,13 +23,9 @@
 #define _HENGINE_DLL_
 
 #include "hercules.h"
-
 #include "devtype.h"
-
 #include "opcode.h"
-
 #include "history.h"
-
 #include "httpmisc.h"
 
 #if defined(OPTION_FISHIO)
@@ -50,7 +46,6 @@ extern void ecpsvm_command(int argc,char **argv);
 #endif
 int ProcessPanelCommand (char*);
 int process_script_file(char *,int);
-
 
 
 /* $test_cmd - do something or other */
@@ -7196,4 +7191,3 @@ char    pathname[MAX_PATH];             /* (work)                    */
     return 0;
 }
 /* END PATCH ISW20030220 */
-
