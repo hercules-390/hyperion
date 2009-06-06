@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 # $Id$
 #
-#  Handles support for ZLIB compression...
+#  Handles support for ZLIB compression
 #
 # ***************************************************************************
 
@@ -31,24 +31,14 @@
 !IFDEF ZLIB_DIR
 !IF "$(ZLIB_DIR)" == "NONE"
 !UNDEF ZLIB_DIR
-!ELSE # use defined dir or subdir
-!IFDEF _WIN64
-!IF "$(CPU)" == "IA64"
-ZLIB_DIR = $(ZLIB_DIR)\ia64
-!ELSE # CPU == AMD64
-ZLIB_DIR = $(ZLIB_DIR)\x64
 !ENDIF
-!ENDIF
-!ENDIF
-!ELSE # (not defined)
-!IF "$(CPU)" == "i386"
-!IF EXIST(winbuild\zlib)
-ZLIB_DIR = winbuild\zlib
-!ENDIF
-!ELSEIF "$(CPU)" == "AMD64"
+!ELSE
+!IF "$(CPU)" == "AMD64"
 ARCH_DIR = \x64
-!ELSE # $(CPU) == "IA64"
+!ELSEIF "$(CPU)" == "IA64"
 ARCH_DIR = \ia64
+!ELSE
+ARCH_DIR =
 !ENDIF
 !IF EXIST(winbuild\zlib$(ARCH_DIR))
 ZLIB_DIR = winbuild\zlib$(ARCH_DIR)
@@ -56,6 +46,7 @@ ZLIB_DIR = winbuild\zlib$(ARCH_DIR)
 !ENDIF
 
 !IFDEF ZLIB_DIR
+
 !IF !EXIST("$(ZLIB_DIR)\include\zlib.h")
 !ERROR ZLIB_DIR "$(ZLIB_DIR)\include\zlib.h" does not exist. Check ZLIB_DIR
 !ELSEIF !EXIST("$(ZLIB_DIR)\lib\zdll.lib")
@@ -63,7 +54,9 @@ ZLIB_DIR = winbuild\zlib$(ARCH_DIR)
 !ELSEIF !EXIST("$(ZLIB_DIR)\zlib1.dll")
 !ERROR ZLIB_DIR "$(ZLIB_DIR)\zlib1.dll" does not exist. Check ZLIB_DIR
 !ENDIF
+
 !MESSAGE ZLIB support will be included from "$(ZLIB_DIR)"
+
 !ELSE
 !MESSAGE ZLIB support will not be generated
 !ENDIF

@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 # $Id$
 #
-#  Handles support for BZIP2 compression...
+#  Handles support for BZIP2 compression
 #
 # ***************************************************************************
 
@@ -29,24 +29,15 @@
 !IFDEF BZIP2_DIR
 !IF "$(BZIP2_DIR)" == "NONE"
 !UNDEF BZIP2_DIR
-!ELSE # use defined dir or subdir
-!IFDEF _WIN64
-!IF "$(CPU)" == "IA64"
-BZIP2_DIR = $(BZIP2_DIR)\ia64
-!ELSE # "$(CPU)" == "AMD64"
-BZIP2_DIR = $(BZIP2_DIR)\x64
 !ENDIF
-!ENDIF
-!ENDIF
-!ELSE # (not defined)
-!IF "$(CPU)" == "i386"
-!IF EXIST(winbuild\bzip2)
-BZIP2_DIR = winbuild\bzip2
-!ENDIF
-!ELSEIF "$(CPU)" == "AMD64"
+!ELSE
+# BZIP2_DIR defaults to winbuild\bzip2 relative to current directory
+!IF "$(CPU)" == "AMD64"
 ARCH_DIR = \x64
-!ELSE # $(CPU) == "IA64"
+!ELSEIF "$(CPU)" == "IA64"
 ARCH_DIR = \ia64
+!ELSE
+ARCH_DIR =
 !ENDIF
 !IF EXIST(winbuild\bzip2$(ARCH_DIR))
 BZIP2_DIR = winbuild\bzip2$(ARCH_DIR)
@@ -54,6 +45,7 @@ BZIP2_DIR = winbuild\bzip2$(ARCH_DIR)
 !ENDIF
 
 !IFDEF BZIP2_DIR
+
 !IF !EXIST("$(BZIP2_DIR)\bzlib.h")
 !ERROR BZIP2_DIR "$(BZIP2_DIR)\bzlib.h" does not exist. Check BZIP2_DIR
 !ELSEIF !EXIST("$(BZIP2_DIR)\libbz2.lib")
@@ -61,7 +53,9 @@ BZIP2_DIR = winbuild\bzip2$(ARCH_DIR)
 !ELSEIF !EXIST("$(BZIP2_DIR)\libbz2.dll")
 !ERROR BZIP2_DIR "$(BZIP2_DIR)\libbz2.dll" does not exist. Check BZIP2_DIR
 !ENDIF
+
 !MESSAGE BZIP2 support will be included from "$(BZIP2_DIR)" 
+
 !ELSE
 !MESSAGE BZIP2 support will not be generated
 !ENDIF

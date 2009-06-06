@@ -5,7 +5,8 @@
 # --------------------------------------------------------------------------
 # $Id$
 #
-#  Handles support for PCRE (Perl Compatible Regular Expressions).
+#  Handles support for PCRE (Perl Compatible Regular Expressions),
+#  for MSVC, needed by HAO (Hercules Automatic Operator) facility
 #
 # ***************************************************************************
 
@@ -23,24 +24,15 @@
 !IFDEF PCRE_DIR
 !IF "$(PCRE_DIR)" == "NONE"
 !UNDEF PCRE_DIR
-!ELSE # use defined dir or subdir
-!IFDEF _WIN64
-!IF "$(CPU)" == "IA64"
-PCRE_DIR = $(PCRE_DIR)\ia64
-!ELSE # "$(CPU)" == "AMD64"
-PCRE_DIR = $(PCRE_DIR)\x64
 !ENDIF
-!ENDIF
-!ENDIF
-!ELSE # (not defined)
-!IF "$(CPU)" == "i386"
-!IF EXIST(winbuild\pcre)
-PCRE_DIR = winbuild\pcre
-!ENDIF
-!ELSEIF "$(CPU)" == "AMD64"
+!ELSE
+# PCRE_DIR defaults to winbuild\pcre relative to current directory
+!IF "$(CPU)" == "AMD64"
 ARCH_DIR = \x64
-!ELSE # $(CPU) == "IA64"
+!ELSEIF "$(CPU)" == "IA64"
 ARCH_DIR = \ia64
+!ELSE
+ARCH_DIR =
 !ENDIF
 !IF EXIST(winbuild\pcre$(ARCH_DIR))
 PCRE_DIR = winbuild\pcre$(ARCH_DIR)
