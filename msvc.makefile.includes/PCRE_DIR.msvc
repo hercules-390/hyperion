@@ -27,15 +27,12 @@
 !ENDIF
 !ELSE
 # PCRE_DIR defaults to winbuild\pcre relative to current directory
-!IF "$(CPU)" == "AMD64"
-ARCH_DIR = \x64
-!ELSEIF "$(CPU)" == "IA64"
-ARCH_DIR = \ia64
-!ELSE
-ARCH_DIR =
-!ENDIF
-!IF EXIST(winbuild\pcre$(ARCH_DIR))
-PCRE_DIR = winbuild\pcre$(ARCH_DIR)
+!IF "$(CPU)" == "i386" && EXIST(winbuild\pcre)
+PCRE_DIR = winbuild\pcre
+!ELSEIF "$(CPU)" == "AMD64" && EXIST(winbuild\pcre\x64)
+PCRE_DIR = winbuild\pcre\x64
+!ELSEIF "$(CPU)" == "IA64" && EXIST(winbuild\pcre\ia64)
+PCRE_DIR = winbuild\pcre\ia64
 !ENDIF
 !ENDIF
 

@@ -33,15 +33,16 @@
 !UNDEF ZLIB_DIR
 !ENDIF
 !ELSE
-!IF "$(CPU)" == "AMD64"
-ARCH_DIR = \x64
-!ELSEIF "$(CPU)" == "IA64"
-ARCH_DIR = \ia64
-!ELSE
-ARCH_DIR =
-!ENDIF
-!IF EXIST(winbuild\zlib$(ARCH_DIR))
-ZLIB_DIR = winbuild\zlib$(ARCH_DIR)
+# ZLIB_DIR defaults to winbuild\zlib relative to current directory
+!IF "$(CPU)" == "i386" && EXIST(winbuild\zlib\win32_32)
+# Avoid breaking existing builds, use win32_32 subdir if it exists
+ZLIB_DIR = winbuild\zlib\win32_32
+!ELSEIF "$(CPU)" == "i386" && EXIST(winbuild\zlib)
+ZLIB_DIR = winbuild\zlib
+!ELSEIF "$(CPU)" == "AMD64" && EXIST(winbuild\zlib\x64)
+ZLIB_DIR = winbuild\zlib\x64
+!ELSEIF "$(CPU)" == "IA64" && EXIST(winbuild\zlib\ia64)
+ZLIB_DIR = winbuild\zlib\ia64
 !ENDIF
 !ENDIF
 

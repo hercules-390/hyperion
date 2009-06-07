@@ -32,15 +32,12 @@
 !ENDIF
 !ELSE
 # BZIP2_DIR defaults to winbuild\bzip2 relative to current directory
-!IF "$(CPU)" == "AMD64"
-ARCH_DIR = \x64
-!ELSEIF "$(CPU)" == "IA64"
-ARCH_DIR = \ia64
-!ELSE
-ARCH_DIR =
-!ENDIF
-!IF EXIST(winbuild\bzip2$(ARCH_DIR))
-BZIP2_DIR = winbuild\bzip2$(ARCH_DIR)
+!IF "$(CPU)" == "i386" && EXIST(winbuild\bzip2)
+BZIP2_DIR = winbuild\bzip2
+!ELSEIF "$(CPU)" == "AMD64" && EXIST(winbuild\bzip2\x64)
+BZIP2_DIR = winbuild\bzip2\x64
+!ELSEIF "$(CPU)" == "IA64" && EXIST(winbuild\bzip2\ia64)
+BZIP2_DIR = winbuild\bzip2\ia64
 !ENDIF
 !ENDIF
 
