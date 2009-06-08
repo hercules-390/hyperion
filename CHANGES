@@ -1,8 +1,5 @@
 05 Jun 2009 Visual Studio 2008 + makefile.bat x64 & runjobs support - Fish
 02 Jun 2009 Miscellaneous minor hetget fixes - kerravon86 by Fish
-02 Jun 2009 Modified MSVC fetch_dw_noswap/store_dw_noswap and vstore.h
-            to gain a 12%+ performance boost for Windows builds, but broke
-            Concurrent Block Updating for all platforms in the process - Fish
 02 Jun 2009 Configuration Topology Facility support for PTF and STSI - Fish
 01 Jun 2009 socket printer support - Fish
 01 Jun 2009 New TT32 pre-v3.3 header and stats - Fish
