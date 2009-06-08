@@ -832,29 +832,40 @@ static __inline__ void concpy (REGS *regs, void *d, void *s, int n)
     for ( ; n2; n2--)
         *(dest++) = *(src++);
 
-// (*** TEMPORARY MSVC Concurrent Block Update fix ***)
-//  defined(MAX_ATOMIC_BITS) && MAX_ATOMIC_BITS >= 64 && !defined(OPTION_STRICT_ALIGNMENT)
-#if defined(MAX_ATOMIC_BITS) && MAX_ATOMIC_BITS >= 64 && !defined(OPTION_STRICT_ALIGNMENT) && (!defined(_MSVC_) || defined(_WIN64))
-// (*** TEMPORARY MSVC Concurrent Block Update fix ***)
+#if !defined(OPTION_STRICT_ALIGNMENT) && \
+    ((!defined(_MSVC_) && defined(SIZEOF_LONG)  && SIZEOF_LONG  >= 8) || \
+     ( defined(_MSVC_) && defined(SIZEOF_INT_P) && SIZEOF_INT_P >= 8))
 
+    /* Below for 64-bit BUILDS ONLY, since the below C code
+       does NOT generate atomic 64-bit load/store assembler
+       code sequence compatible with Concurrent Block Update
+       except when building for 64-bit systems...
+    */
     UNREFERENCED(regs);
+
     /* copy 8 bytes at a time */
     for ( ; n >= 8; n -= 8, dest += 8, src += 8)
         *(U64 *)dest = *(U64 *)src;
-#else
+
+#else /* 32-bit builds... */
+
  #if !defined(OPTION_STRICT_ALIGNMENT)
+
     /* copy 4 bytes at a time if only one cpu started */
     if (regs->cpubit == regs->sysblk->started_mask)
         for ( ; n >= 4; n -= 4, dest += 4, src += 4)
             *(U32 *)dest = *(U32 *)src;
     else
- #else
+
+ #else /* defined(OPTION_STRICT_ALIGNMENT) */
     UNREFERENCED(regs);
  #endif
+
     /* else copy 8 bytes at a time concurrently */
         for ( ; n >= 8; n -= 8, dest += 8, src += 8)
             store_dw_noswap(dest,fetch_dw_noswap(src));
-#endif
+
+#endif /* (64-bit builds test...) */
 
     /* copy leftovers */
     for ( ; n; n--)
