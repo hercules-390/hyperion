@@ -28,13 +28,19 @@ V4 = 0
 
 !MESSAGE VERSION = $(VERSION) ($(V1).$(V2).$(V3).$(V4))
 
-#----------------------------------------------------------------------------
-#
-#  32 bit:  Win NT 4 & Win 9X  (VS <  9)  ==>  APPVER 4.0,  TARGETOS BOTH
-#  32 bit:  Win 2K             (VS >= 9)  ==>  APPVER 5.0,  TARGETOS WINNT
-#  64 bit:  Win 2K3                       ==>  APPVER 5.02, TARGETOS WINNT
-#
-#----------------------------------------------------------------------------
+#  The following logic determines the minimum version of Windows on which
+#  the application can run. The minimum version depends on both the target
+#  architecture and the version of Visual Studio used for the build. The
+#  APPVER and TARGETOS variables are set as required by Win32.Mak (SDK)
+
+# 
+#  32 bit : 
+#      VS < 9 : Win NT 4 & Win 9X (APPVER 4.0, TARGETOS BOTH)
+#      VS >= 9 : Win 2K (APPVER 5.0, TARGETOS WINNT)
+#  64 bit :
+#      Win 2K3 (APPVER 5.02, TARGETOS WINNT)
+# 
+
 
 !IF (("$(CPU)" == "AMD64") || ("$(CPU)" == "IA64"))
 
