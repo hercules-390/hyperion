@@ -212,7 +212,8 @@ Invalid expanded storage size <em>size</em>
   <dt>Meaning
   <dd>The expanded storage size <code><em>size</em></code> specified on the <code>XPNDSIZE</code>
 configuration statement at line number <code><em>lineno</em></code> of the
-file named <code><em>filename</em></code> must be a valid decimal number between 0 and 1048576.
+file named <code><em>filename</em></code> must be a valid decimal number between 0 and 16777215.
+For 32-bit platforms the value must not exceed 4095.
   <dt>Action
   <dd>Correct the expanded storage size and restart Hercules.
   <dt>Issued by

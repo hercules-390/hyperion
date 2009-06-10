@@ -36,7 +36,8 @@ DEF_INST(page_in)
 int     r1, r2;                         /* Values of R fields        */
 VADR    vaddr;                          /* Virtual storage address   */
 BYTE   *maddr;                          /* Main storage address      */
-U32     xaddr;                          /* Expanded storage address  */
+U32     xaddr;                          /* Expanded storage block#   */
+size_t  xoffs;                          /* Byte offset into xpndstor */
 
     RRE(inst, regs, r1, r2);
 
@@ -75,14 +76,14 @@ U32     xaddr;                          /* Expanded storage address  */
     }
 
     /* Byte offset in expanded storage */
-    xaddr <<= XSTORE_PAGESHIFT;
+    xoffs = (size_t)xaddr << XSTORE_PAGESHIFT;
 
     /* Obtain abs address, verify access and set ref/change bits */
     vaddr = (regs->GR(r1) & ADDRESS_MAXWRAP(regs)) & XSTORE_PAGEMASK;
     maddr = MADDR (vaddr, USE_REAL_ADDR, regs, ACCTYPE_WRITE, 0);
 
     /* Copy data from expanded to main */
-    memcpy (maddr, sysblk.xpndstor + xaddr, XSTORE_PAGESIZE);
+    memcpy (maddr, sysblk.xpndstor + xoffs, XSTORE_PAGESIZE);
 
     /* cc0 means pgin ok */
     regs->psw.cc = 0;
@@ -100,7 +101,8 @@ DEF_INST(page_out)
 int     r1, r2;                         /* Values of R fields        */
 VADR    vaddr;                          /* Virtual storage address   */
 BYTE   *maddr;                          /* Main storage address      */
-U32     xaddr;                          /* Expanded storage address  */
+U32     xaddr;                          /* Expanded storage block#   */
+size_t  xoffs;                          /* Byte offset into xpndstor */
 
     RRE(inst, regs, r1, r2);
 
@@ -139,14 +141,14 @@ U32     xaddr;                          /* Expanded storage address  */
     }
 
     /* Byte offset in expanded storage */
-    xaddr <<= XSTORE_PAGESHIFT;
+    xoffs = (size_t)xaddr << XSTORE_PAGESHIFT;
 
     /* Obtain abs address, verify access and set ref/change bits */
     vaddr = (regs->GR(r1) & ADDRESS_MAXWRAP(regs)) & XSTORE_PAGEMASK;
     maddr = MADDR (vaddr, USE_REAL_ADDR, regs, ACCTYPE_READ, 0);
 
     /* Copy data from main to expanded */
-    memcpy (sysblk.xpndstor + xaddr, maddr, XSTORE_PAGESIZE);
+    memcpy (sysblk.xpndstor + xoffs, maddr, XSTORE_PAGESIZE);
 
     /* cc0 means pgout ok */
     regs->psw.cc = 0;
@@ -548,7 +550,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 
         /* Move 4K bytes from expanded storage to main storage */
         memcpy (main1,
-                sysblk.xpndstor + (xpblk2 << XSTORE_PAGESHIFT),
+                sysblk.xpndstor + ((size_t)xpblk2 << XSTORE_PAGESHIFT),
                 XSTORE_PAGESIZE);
     }
     else if (xpvalid1)
@@ -557,7 +559,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
         STORE_W(regs->mainstor + raddr1, pte1 | PAGETAB_ESREF | PAGETAB_ESCHA);
 
         /* Move 4K bytes from main storage to expanded storage */
-        memcpy (sysblk.xpndstor + (xpblk1 << XSTORE_PAGESHIFT),
+        memcpy (sysblk.xpndstor + ((size_t)xpblk1 << XSTORE_PAGESHIFT),
                 main2,
                 XSTORE_PAGESIZE);
     }

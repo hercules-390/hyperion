@@ -16,39 +16,6 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
-// $Log$
-// Revision 1.107  2008/12/29 11:03:10  jj
-// Move HMC disk I/O functions to scedasd.c
-//
-// Revision 1.106  2008/12/04 08:34:40  jj
-// Fix CDROM ipl when loading at non page boundary - reported by Harold Grovesteen
-//
-// Revision 1.105  2008/08/21 18:34:48  fish
-// Fix i/o-interrupt-queue race condition
-//
-// Revision 1.104  2007/12/10 23:12:02  gsmith
-// Tweaks to OPTION_MIPS_COUNTING processing
-//
-// Revision 1.103  2007/08/26 21:04:45  rbowler
-// Modify PSW fields by psw command (part 2)
-//
-// Revision 1.102  2007/08/06 16:48:20  ivan
-// Implement "PARM" option for IPL command (same as VM IPL PARM XXX)
-// Also add command helps for ipl, iplc, sysclear, sysreset
-//
-// Revision 1.101  2007/06/23 00:04:14  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.100  2006/12/20 15:41:16  rbowler
-// Clear FPC register during Initial CPU Reset
-//
-// Revision 1.99  2006/12/20 15:11:54  rbowler
-// Clear AR, FPR, and VR registers during Clear Reset
-//
-// Revision 1.98  2006/12/08 09:43:28  jj
-// Add CVS message log
-//
-
 #include "hstdinc.h"
 
 #define _IPL_C
@@ -641,7 +608,7 @@ void xstorage_clear()
 {
     if(sysblk.xpndsize && !sysblk.xpnd_clear)
     {
-        memset(sysblk.xpndstor,0,sysblk.xpndsize * XSTORE_PAGESIZE);
+        memset(sysblk.xpndstor,0,(size_t)sysblk.xpndsize * XSTORE_PAGESIZE);
         sysblk.xpnd_clear = 1;
     }
 }

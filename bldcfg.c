@@ -226,7 +226,7 @@ int off;
         if (sysblk.xpndstor)
             sysblk.xpnd_clear = 1;
         else
-            sysblk.xpndstor = malloc(sysblk.xpndsize * XSTORE_PAGESIZE);
+            sysblk.xpndstor = malloc((size_t)sysblk.xpndsize * XSTORE_PAGESIZE);
         if (sysblk.xpndstor == NULL)
         {
             logmsg(_("HHCCF033S Cannot obtain %dMB expanded storage: "
@@ -1187,7 +1187,8 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         if (sxpndsize != NULL)
         {
             if (sscanf(sxpndsize, "%u%c", &xpndsize, &c) != 1
-                || xpndsize > 1024*1024)
+                || xpndsize > (0x100000000ULL / XSTORE_PAGESIZE) - 1
+                || (xpndsize > 4095 && sizeof(size_t) < 8))
             {
                 logmsg(_("HHCCF014S Error in %s line %d: "
                         "Invalid expanded storage size %s\n"),
@@ -1749,7 +1750,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         if(sysblk.xpndsize)
         {
             sysblk.zpb[i].eso = 0;
-            sysblk.zpb[i].esl = (sysblk.xpndsize * XSTORE_PAGESIZE - 1) >> 20;
+            sysblk.zpb[i].esl = ((size_t)sysblk.xpndsize * XSTORE_PAGESIZE - 1) >> 20;
         }
         else
         {
