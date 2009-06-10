@@ -1,4 +1,5 @@
-/* XSTORE.C   Expanded storage related instructions - Jan Jaeger     */
+/* XSTORE.C     (c) Copyright Jan Jaeger, 1999-2009                  */
+/*              Expanded storage related instructions                */
 
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
@@ -6,26 +7,11 @@
 /* MVPG moved from cpu.c to xstore.c   05/07/00 Jan Jaeger */
 
 // $Id$
-//
-// $Log$
-// Revision 1.47  2007/06/23 00:04:19  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.46  2007/06/06 22:14:58  gsmith
-// Fix SYNCHRONIZE_CPUS when numcpu > number of host processors - Greg
-//
-// Revision 1.45  2007/01/13 07:27:40  bernard
-// backout ccmask
-//
-// Revision 1.44  2007/01/12 15:25:39  bernard
-// ccmask phase 1
-//
-// Revision 1.43  2007/01/04 23:12:04  gsmith
-// remove thunk calls for program_interrupt
-//
-// Revision 1.42  2006/12/08 09:43:34  jj
-// Add CVS message log
-//
+
+/*-------------------------------------------------------------------*/
+/* This module implements the expanded storage instructions          */
+/* for the Hercules ESA/390 emulator.                                */
+/*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
 
@@ -38,9 +24,7 @@
 #endif
 
 #include "hercules.h"
-
 #include "opcode.h"
-
 #include "inline.h"
 
 #if defined(FEATURE_EXPANDED_STORAGE)
@@ -103,7 +87,7 @@ U32     xaddr;                          /* Expanded storage address  */
     /* cc0 means pgin ok */
     regs->psw.cc = 0;
 
-}
+} /* end DEF_INST(page_in) */
 #endif /*defined(FEATURE_EXPANDED_STORAGE)*/
 
 
@@ -167,13 +151,13 @@ U32     xaddr;                          /* Expanded storage address  */
     /* cc0 means pgout ok */
     regs->psw.cc = 0;
 
-}
+} /* end DEF_INST(page_out) */
 #endif /*defined(FEATURE_EXPANDED_STORAGE)*/
 
 
 #if defined(FEATURE_MOVE_PAGE_FACILITY_2) && defined(FEATURE_EXPANDED_STORAGE)
 /*-------------------------------------------------------------------*/
-/* B259 IESBE - Invalidate Expanded Storage Blk Entry          [RRE] */
+/* B259 IESBE - Invalidate Expanded Storage Block Entry        [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(invalidate_expanded_storage_block_entry)
 {
@@ -201,8 +185,9 @@ int     r1, r2;                         /* Values of R fields        */
     /* Perform serialization after operation */
     PERFORM_SERIALIZATION (regs);
 
-}
+} /* end DEF_INST(invalidate_expanded_storage_block_entry) */
 #endif /*defined(FEATURE_EXPANDED_STORAGE)*/
+
 
 #if defined(_MSVC_)
   /* Workaround for "fatal error C1001: INTERNAL COMPILER ERROR" in MSVC */
@@ -211,26 +196,13 @@ int     r1, r2;                         /* Values of R fields        */
 
 #if defined(FEATURE_MOVE_PAGE_FACILITY_2)
 /*-------------------------------------------------------------------*/
-/* Move Page (Facility 2)                                            */
-/*                                                                   */
-/* Input:                                                            */
-/*      r1      First operand register number                        */
-/*      r2      Second operand register number                       */
-/*      regs    Pointer to the CPU register context                  */
-/* Return value:                                                     */
-/*      Returns the condition code for the MVPG instruction.         */
-/*                                                                   */
-/*      This function does not return if a program check occurs.     */
-/*-------------------------------------------------------------------*/
-
-/*-------------------------------------------------------------------*/
 /* B254 MVPG  - Move Page                                      [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(move_page)
 {
 int     r1, r2;                         /* Register values           */
 int     rc = 0;                         /* Return code               */
-int     cc = 0;             /* Condition code            */
+int     cc = 0;                         /* Condition code            */
 VADR    vaddr1, vaddr2;                 /* Virtual addresses         */
 RADR    raddr1=0, raddr2=0, xpkeya;     /* Real addresses            */
 BYTE   *main1 = NULL, *main2 = NULL;    /* Mainstor addresses        */
@@ -625,14 +597,15 @@ mvpg_progck:
         regs->opndrid = (r1 << 4) | r2;
     }
     regs->program_interrupt (regs, regs->dat.xcode);
-} /* end function move_page */
 
+} /* end DEF_INST(move_page) */
 #endif /*defined(FEATURE_MOVE_PAGE_FACILITY_2)*/
 
 #if defined(_MSVC_)
   /* Workaround for "fatal error C1001: INTERNAL COMPILER ERROR" in MSVC */
   #pragma optimize("",on)
 #endif /*defined(_MSVC_)*/
+
 
 #if !defined(_GEN_ARCH)
 
