@@ -26,11 +26,8 @@
 # BZIP2_DIR = E:\MyProjects\bzip2
 # ---------------------------------------------------------------------
 
-!IFDEF BZIP2_DIR
-!IF "$(BZIP2_DIR)" == "NONE"
-!UNDEF BZIP2_DIR
-!ENDIF
-!ELSE
+!IFNDEF BZIP2_DIR
+# Undefined: use default value, if it exists.
 # BZIP2_DIR defaults to winbuild\bzip2 relative to current directory
 !IF "$(CPU)" == "i386" && EXIST(winbuild\bzip2)
 BZIP2_DIR = winbuild\bzip2
@@ -39,10 +36,29 @@ BZIP2_DIR = winbuild\bzip2\x64
 !ELSEIF "$(CPU)" == "IA64" && EXIST(winbuild\bzip2\ia64)
 BZIP2_DIR = winbuild\bzip2\ia64
 !ENDIF
+!ELSE
+# Defined: use explicit directory or subdirectory
+# unless "NONE" is specified or it doesn't exist.
+!IF "$(BZIP2_DIR)" == "NONE"
+!UNDEF BZIP2_DIR
+!ELSE
+!IF "$(CPU)" == "i386"
+!IF !EXIST($(BZIP2_DIR))
+!UNDEF BZIP2_DIR
+!ENDIF
+!ELSEIF "$(CPU)" == "AMD64"
+!IF EXIST($(BZIP2_DIR)\x64)
+BZIP2_DIR = $(BZIP2_DIR)\x64
+!ENDIF
+!ELSEIF "$(CPU)" == "IA64"
+!IF EXIST($(BZIP2_DIR)\ia64)
+BZIP2_DIR = $(BZIP2_DIR)\ia64
+!ENDIF
+!ENDIF
+!ENDIF
 !ENDIF
 
 !IFDEF BZIP2_DIR
-
 !IF !EXIST("$(BZIP2_DIR)\bzlib.h")
 !ERROR BZIP2_DIR "$(BZIP2_DIR)\bzlib.h" does not exist. Check BZIP2_DIR
 !ELSEIF !EXIST("$(BZIP2_DIR)\libbz2.lib")
@@ -50,9 +66,7 @@ BZIP2_DIR = winbuild\bzip2\ia64
 !ELSEIF !EXIST("$(BZIP2_DIR)\libbz2.dll")
 !ERROR BZIP2_DIR "$(BZIP2_DIR)\libbz2.dll" does not exist. Check BZIP2_DIR
 !ENDIF
-
 !MESSAGE BZIP2 support will be included from "$(BZIP2_DIR)" 
-
 !ELSE
 !MESSAGE BZIP2 support will not be generated
 !ENDIF

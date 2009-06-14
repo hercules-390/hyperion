@@ -28,11 +28,8 @@
 # ZLIB_DIR = C:\winbuild\zlib\win32_32
 # ---------------------------------------------------------------------
 
-!IFDEF ZLIB_DIR
-!IF "$(ZLIB_DIR)" == "NONE"
-!UNDEF ZLIB_DIR
-!ENDIF
-!ELSE
+!IFNDEF ZLIB_DIR
+# Undefined: use default value, if it exists.
 # ZLIB_DIR defaults to winbuild\zlib relative to current directory
 !IF "$(CPU)" == "i386" && EXIST(winbuild\zlib\win32_32)
 # Avoid breaking existing builds, use win32_32 subdir if it exists
@@ -44,10 +41,29 @@ ZLIB_DIR = winbuild\zlib\x64
 !ELSEIF "$(CPU)" == "IA64" && EXIST(winbuild\zlib\ia64)
 ZLIB_DIR = winbuild\zlib\ia64
 !ENDIF
+!ELSE
+# Defined: use explicit directory or subdirectory
+# unless "NONE" is specified or it doesn't exist.
+!IF "$(ZLIB_DIR)" == "NONE"
+!UNDEF ZLIB_DIR
+!ELSE
+!IF "$(CPU)" == "i386"
+!IF !EXIST($(ZLIB_DIR))
+!UNDEF ZLIB_DIR
+!ENDIF
+!ELSEIF "$(CPU)" == "AMD64"
+!IF EXIST($(ZLIB_DIR)\x64)
+ZLIB_DIR = $(ZLIB_DIR)\x64
+!ENDIF
+!ELSEIF "$(CPU)" == "IA64"
+!IF EXIST($(ZLIB_DIR)\ia64)
+ZLIB_DIR = $(ZLIB_DIR)\ia64
+!ENDIF
+!ENDIF
+!ENDIF
 !ENDIF
 
 !IFDEF ZLIB_DIR
-
 !IF !EXIST("$(ZLIB_DIR)\include\zlib.h")
 !ERROR ZLIB_DIR "$(ZLIB_DIR)\include\zlib.h" does not exist. Check ZLIB_DIR
 !ELSEIF !EXIST("$(ZLIB_DIR)\lib\zdll.lib")
@@ -55,9 +71,7 @@ ZLIB_DIR = winbuild\zlib\ia64
 !ELSEIF !EXIST("$(ZLIB_DIR)\zlib1.dll")
 !ERROR ZLIB_DIR "$(ZLIB_DIR)\zlib1.dll" does not exist. Check ZLIB_DIR
 !ENDIF
-
 !MESSAGE ZLIB support will be included from "$(ZLIB_DIR)"
-
 !ELSE
 !MESSAGE ZLIB support will not be generated
 !ENDIF
