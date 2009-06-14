@@ -61,6 +61,7 @@ COMMAND ( "logopt",    PANEL+CONFIG, logopt_cmd,
     "\"timestamp\" and \"notimestamp\" may be abbreviated as \"time\"\n"
     "and \"notime\" respectively.\n"                                      )
 
+COMMAND ( "uptime",    PANEL,        uptime_cmd,   "display how long Hercules has been running\n", NULL )
 COMMAND ( "version",   PANEL,        version_cmd,  "display version information\n", NULL )
 
 COMMAND ( "quit",      PANEL,        quit_cmd,     "terminate the emulator", NULL )

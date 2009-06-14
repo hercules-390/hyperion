@@ -290,6 +290,9 @@ TID     logcbtid;                       /* RC file thread identifier */
     /* Clear the system configuration block */
     memset (&sysblk, 0, sizeof(SYSBLK));
 
+    /* Save TOD of when we were first IMPL'ed */
+    time( &sysblk.impltime );
+
 #ifdef OPTION_MSGHLD
     /* Set the default timeout value */
     sysblk.keep_timeout_secs = 120;

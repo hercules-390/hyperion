@@ -502,6 +502,60 @@ int logopt_cmd(int argc, char *argv[],char *cmdline)
 
 
 /*-------------------------------------------------------------------*/
+/* uptime command - display how long Hercules has been running       */
+/*-------------------------------------------------------------------*/
+
+int uptime_cmd(int argc, char *argv[],char *cmdline)
+{
+time_t  now;
+UINT    uptime, weeks, days, hours, mins, secs;
+
+    UNREFERENCED( cmdline );
+    UNREFERENCED(  argc   );
+    UNREFERENCED(  argv   );
+
+    time( &now );
+
+    uptime = (UINT) difftime( now, sysblk.impltime );
+
+#define  SECS_PER_MIN     ( 60                 )
+#define  SECS_PER_HOUR    ( 60 * SECS_PER_MIN  )
+#define  SECS_PER_DAY     ( 24 * SECS_PER_HOUR ) 
+#define  SECS_PER_WEEK    (  7 * SECS_PER_DAY  )
+
+    weeks = uptime /  SECS_PER_WEEK;
+            uptime %= SECS_PER_WEEK;
+    days  = uptime /  SECS_PER_DAY;
+            uptime %= SECS_PER_DAY;
+    hours = uptime /  SECS_PER_HOUR;
+            uptime %= SECS_PER_HOUR;
+    mins  = uptime /  SECS_PER_MIN;
+            uptime %= SECS_PER_MIN;
+    secs  = uptime;
+
+    if (weeks)
+    {
+        logmsg(_("Hercules has been up for %u week%s, %u day%s, %02u:%02u:%02u.\n"),
+                    weeks, weeks >  1 ? "s" : "",
+                    days,  days  != 1 ? "s" : "",
+                    hours, mins, secs);
+    }
+    else if (days)
+    {
+        logmsg(_("Hercules has been up for %u day%s, %02u:%02u:%02u.\n"),
+                    days, days != 1 ? "s" : "",
+                    hours, mins, secs);
+    }
+    else
+    {
+        logmsg(_("Hercules has been up for %02u:%02u:%02u.\n"),
+                    hours, mins, secs);
+    }
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
 /* version command - display version information                     */
 /*-------------------------------------------------------------------*/
 int version_cmd(int argc, char *argv[],char *cmdline)
