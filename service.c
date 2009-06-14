@@ -22,123 +22,6 @@
 /*      Added CPI - Control Program Information ev. - JJ 2001-11-19  */
 /*-------------------------------------------------------------------*/
 
-// $Log$
-// Revision 1.108  2009/01/03 19:55:11  jj
-// Updated comments - no functional change
-//
-// Revision 1.107  2009/01/03 10:58:58  jj
-// Fix storage reference
-// Update path length to 1024
-// Enable SCEDIO in ESA/390 mode
-//
-// Revision 1.106  2009/01/02 19:21:52  jj
-// DVD-RAM IPL
-// RAMSAVE
-// SYSG Integrated 3270 console fixes
-//
-// Revision 1.105  2008/12/31 17:00:44  rbowler
-// Corrections to SYSG console read modified commands
-//
-// Revision 1.104  2008/12/29 22:40:53  rbowler
-// Integrated 3270 (SYSG) console corrections
-//
-// Revision 1.103  2008/12/29 15:21:39  jj
-// Fix typo in signal quiesce
-//
-// Revision 1.102  2008/12/29 13:56:18  jj
-// Correction to sclp event suppression
-//
-// Revision 1.101  2008/12/28 21:05:08  rbowler
-// Integrated 3270 (SYSG) console attn/read commands
-//
-// Revision 1.100  2008/12/28 15:30:09  jj
-// SYSG and SYSA mods
-//
-// Revision 1.99  2008/12/27 23:34:37  rbowler
-// Integrated 3270 (SYSG) console send command
-//
-// Revision 1.98  2008/12/24 22:37:17  rbowler
-// Eliminate superfluous trailing blanks (cosmetic)
-//
-// Revision 1.97  2008/12/24 22:35:53  rbowler
-// Framework for integrated 3270 and ASCII console features
-//
-// Revision 1.96  2008/12/24 15:42:14  jj
-// Add debug entry point for sclp event masks
-//
-// Revision 1.95  2008/12/22 13:10:22  jj
-// Add sclp debug entry points
-//
-// Revision 1.94  2008/12/22 11:13:46  jj
-// Do not issue syscons active message on non-syscons type SCLP send/recv
-//
-// Revision 1.93  2008/12/21 23:09:39  ivan
-// More precise wording for system check-stop state in case of READ_SCP_INFO on non CP engine
-//
-// Revision 1.92  2008/12/21 06:40:22  ivan
-// Indicate the configuration is ZAAP capable regardless of whether a ZAAP is actually defined.
-//
-// Revision 1.91  2008/12/21 02:51:58  ivan
-// Place the configuration in system check-stop state when a READ SCP INFO
-// is issued from a CPU that is not a CP Engine.
-//
-// Revision 1.90  2008/12/21 00:05:28  ivan
-// disable SCCB config Byte 11 change : Possible conflict
-//
-// Revision 1.89  2008/12/20 23:40:05  ivan
-// Use type char instead of BYTE for host strings (removes signedness warning on losc call)
-//
-// Revision 1.88  2008/12/20 23:38:51  ivan
-// Fill SCP_INFO SCCB config byte 11 with PER3 and List Directed IPL capability flags
-//
-// Revision 1.87  2008/12/18 00:41:08  ivan
-// Set SCCB_CFG4_IFA_FACILITY if configuration contains anything else than CP engines (vs when only a ZAAP is present).
-//
-// Revision 1.86  2008/12/06 08:36:33  jj
-// Correct IFL scpinfo case
-//
-// Revision 1.85  2008/12/05 12:05:43  jj
-// Fix IFL servc processing
-//
-// Revision 1.84  2008/12/05 10:54:58  jj
-// Correct system console message highlight
-//
-// Revision 1.83  2008/12/01 16:19:49  jj
-// Check for licensed operating systems without impairing architectural
-// compliance of IFL's
-//
-// Revision 1.82  2008/11/24 14:52:21  jj
-// Add PTYP=IFL
-// Change SCPINFO processing to check on ptyp for IFL specifics
-//
-// Revision 1.81  2008/10/14 20:56:21  rbowler
-// Propagate processor type from sysblk
-//
-// Revision 1.80  2008/10/12 21:43:27  rbowler
-// SCCB SCPINFO updates from GA22-7584-10
-//
-// Revision 1.79  2008/08/06 14:01:52  bernard
-// Added pnl(keep) at console messages starting with a '*'
-//
-// Revision 1.78  2008/08/02 13:25:28  bernard
-// Put z/OS *messages in lightyellow.
-//
-// Revision 1.77  2008/08/02 09:05:05  bernard
-// SCP message colors
-//
-// Revision 1.76  2007/06/23 00:04:15  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.75  2007/01/13 07:25:10  bernard
-// backout ccmask
-//
-// Revision 1.74  2007/01/12 15:24:46  bernard
-// ccmask phase 1
-//
-// Revision 1.73  2006/12/08 09:43:30  jj
-// Add CVS message log
-//
-
 #include "hstdinc.h"
 
 #if !defined(_HENGINE_DLL_)
@@ -150,11 +33,8 @@
 #endif
 
 #include "hercules.h"
-
 #include "opcode.h"
-
 #include "inline.h"
-
 #include "sr.h"
 
 #if !defined(_SERVICE_C)
@@ -1344,8 +1224,8 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
 #ifdef FEATURE_EXPANDED_STORAGE
         /* Set expanded storage size in SCCB */
-        xstincnum = (sysblk.xpndsize << XSTORE_PAGESHIFT)
-                        / XSTORE_INCREMENT_SIZE;
+        xstincnum = sysblk.xpndsize /
+                    (XSTORE_INCREMENT_SIZE >> XSTORE_PAGESHIFT);
         STORE_FW(sccbscp->xpndinum, xstincnum);
         xstblkinc = XSTORE_INCREMENT_SIZE >> XSTORE_PAGESHIFT;
         STORE_FW(sccbscp->xpndsz4K, xstblkinc);
@@ -1858,8 +1738,8 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         sccbxmap = (SCCB_XST_MAP*)(sccb+1);
 
         /* Verify expanded storage increment number */
-        xstincnum = (sysblk.xpndsize << XSTORE_PAGESHIFT)
-                        / XSTORE_INCREMENT_SIZE;
+        xstincnum = sysblk.xpndsize /
+                    (XSTORE_INCREMENT_SIZE >> XSTORE_PAGESHIFT);
         FETCH_FW(i, sccbxmap->incnum);
         if ( i < 1 || (U32)i > xstincnum )
         {

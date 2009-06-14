@@ -1,3 +1,4 @@
+14 Jun 2009 Support expanded storage sizes exceeding 4GB (64-bit only) - Roger Bowler
 05 Jun 2009 Visual Studio 2008 + makefile.bat x64 & runjobs support - Fish
 02 Jun 2009 Miscellaneous minor hetget fixes - kerravon86 by Fish
 02 Jun 2009 Configuration Topology Facility support for PTF and STSI - Fish
