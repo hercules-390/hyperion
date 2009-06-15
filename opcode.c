@@ -6,131 +6,6 @@
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 
 // $Id$
-//
-// $Log$
-// Revision 1.156  2009/01/16 22:26:55  rbowler
-// Opcode definitions for CPU measurement facility
-//
-// Revision 1.155  2009/01/14 18:41:34  bernard
-// add David Bond comments
-//
-// Revision 1.154  2008/12/06 22:42:37  ivan
-// Enable STFLE in ESA/390 Mode.
-//
-// Revision 1.153  2008/03/28 21:50:43  rbowler
-// Correct formatting of disassembly for relative instructions
-//
-// Revision 1.152  2008/03/10 15:06:41  rbowler
-// Fix warning: "/*" within comment
-//
-// Revision 1.151  2008/03/08 23:25:40  rbowler
-// Indicate CGRJ,CLGRJ,CGIJ,CLGIJ as ESAME only in opcode table
-//
-// Revision 1.150  2008/03/04 14:42:28  rbowler
-// Permit CGHSI,CLGHSI,CLFHSI instructions in S/370 and ESA/390 mode
-//
-// Revision 1.149  2008/03/03 23:20:03  rbowler
-// Allow MVGHI in S/370 and ESA/390 (does not use 64-bit regs)
-//
-// Revision 1.148  2008/03/03 23:14:43  rbowler
-// Remove extraneous trailing blanks (cosmetic change only)
-//
-// Revision 1.147  2008/03/01 23:12:39  rbowler
-// Permit AGSI,ALGSI instructions in S/370 and ESA/390 mode
-//
-// Revision 1.146  2008/03/01 12:19:04  rbowler
-// Rename new features to include the word facility
-//
-// Revision 1.145  2008/02/29 15:53:10  rbowler
-// Instruction decoder for C4xx and C6xx instructions
-//
-// Revision 1.144  2008/02/29 02:01:48  rbowler
-// Opcode tables for General-Instructions-Extension feature
-//
-// Revision 1.143  2008/02/29 00:57:03  rbowler
-// Modify compare_and_branch instruction names
-//
-// Revision 1.142  2008/02/29 00:08:25  rbowler
-// Additional RIE instruction formats
-//
-// Revision 1.141  2008/02/28 23:01:35  rbowler
-// RRS,SIL instruction formats
-//
-// Revision 1.140  2008/02/28 18:54:51  rbowler
-// RIS instruction format
-//
-// Revision 1.139  2008/02/28 17:18:00  rbowler
-// Opcodes for General-Instructions-Extension feature
-//
-// Revision 1.138  2008/02/28 11:08:26  rbowler
-// Opcodes for new instructions in zPOP-06
-//
-// Revision 1.137  2008/02/28 10:11:50  rbowler
-// STFL bit settings for new features in zPOP-06
-//
-// Revision 1.136  2008/02/18 17:28:20  rbowler
-// Misplaced definition causes duplicate symbol set_dfp_rounding_mode
-//
-// Revision 1.135  2008/01/21 22:20:35  rbowler
-// Correct previous changelog entry (ETF3 not ETF2)
-//
-// Revision 1.134  2008/01/21 14:02:13  rbowler
-// Permit Extended-Translation-Facility-3 in S/370 and ESA/390 modes
-//
-// Revision 1.133  2007/12/23 00:29:20  rbowler
-// reset_channel_path, cancel_subchannel unresolved if no channel subsystem feature
-//
-// Revision 1.132  2007/12/02 16:34:23  rbowler
-// Permit Extended-Translation-Facility-2 to be activated in S/370 mode
-//
-// Revision 1.131  2007/12/02 15:59:12  rbowler
-// Enable B9xx,EBxx opcodes in S/370 mode for ETF2
-//
-// Revision 1.130  2007/12/02 15:45:17  rbowler
-// Permit Extended-Translation facility to be activated in S/370 mode
-//
-// Revision 1.129  2007/12/02 15:32:46  rbowler
-// Permit Compare-and-Move-Extended facility to be activated in S/370 mode
-//
-// Revision 1.128  2007/11/30 15:14:14  rbowler
-// Permit String-Instruction facility to be activated in S/370 mode
-//
-// Revision 1.127  2007/11/23 14:12:04  rbowler
-// Permit LDGR, LGDR in ESAME mode only
-//
-// Revision 1.126  2007/11/18 22:18:51  rbowler
-// Permit FEATURE_IMMEDIATE_AND_RELATIVE to be activated in S/370 mode
-//
-// Revision 1.125  2007/11/16 13:01:49  rbowler
-// Add HFP-multiply-add/subtract facility to ESA/390
-//
-// Revision 1.124  2007/06/23 00:04:14  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.123  2007/06/02 13:46:41  rbowler
-// PFPO framework
-//
-// Revision 1.122  2007/04/26 21:09:08  rbowler
-// Change SSKE instruction format from RRE to RRF_M
-//
-// Revision 1.121  2007/04/25 14:46:35  rbowler
-// Rename RSS instruction format as SSF
-//
-// Revision 1.120  2007/04/25 12:33:20  rbowler
-// Move SRNMT to Floating-point-support-enhancement facility
-//
-// Revision 1.119  2007/04/25 12:10:27  rbowler
-// Move LFAS,SFASR to IEEE-exception-simulation facility
-//
-// Revision 1.118  2007/04/24 16:34:41  rbowler
-// Define feature macros and STFL bit settings for new features in zPOP-05
-//
-// Revision 1.117  2006/12/20 04:26:20  gsmith
-// 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
-//
-// Revision 1.116  2006/12/08 09:43:29  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 
@@ -2103,6 +1978,7 @@ static zz_func s370_opcode_a5xx[256];
 static zz_func s370_opcode_a6xx[256];
 static zz_func s370_opcode_a7xx[256];
 static zz_func s370_opcode_b2xx[256];
+static zz_func s370_opcode_b3xx[256];                           /*FPE*/
 static zz_func s370_opcode_b9xx[256];
 static zz_func s370_opcode_c2xx[256];                           /*208*/
 static zz_func s370_opcode_c4xx[256];                           /*208*/
@@ -2163,6 +2039,7 @@ int i;
         s370_opcode_a6xx [i] = v_opcode_a6xx [i][ARCH_370];
         s370_opcode_a7xx [i] = opcode_a7xx [i&0x0F][ARCH_370];
         s370_opcode_b2xx [i] = opcode_b2xx [i][ARCH_370];
+        s370_opcode_b3xx [i] = opcode_b3xx [i][ARCH_370];       /*FPE*/
         s370_opcode_b9xx [i] = opcode_b9xx [i][ARCH_370];
         s370_opcode_c2xx [i] = opcode_c2xx [i&0x0F][ARCH_370];  /*208*/
         s370_opcode_c4xx [i] = opcode_c4xx [i&0x0F][ARCH_370];  /*208*/
@@ -2240,6 +2117,7 @@ void set_opcode_pointers(REGS *regs)
     regs->s370_opcode_b9xx = s370_opcode_b9xx;
     regs->s370_opcode_ebxx = s370_opcode_ebxx;
  #endif
+    regs->s370_opcode_b3xx = s370_opcode_b3xx;                  /*FPE*/
     regs->s370_opcode_c2xx = s370_opcode_c2xx;                  /*208*/
     regs->s370_opcode_c4xx = s370_opcode_c4xx;                  /*208*/
     regs->s370_opcode_c6xx = s370_opcode_c6xx;                  /*208*/

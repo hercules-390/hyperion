@@ -262,6 +262,7 @@ struct REGS {                           /* Processor registers       */
                *s370_opcode_b9xx,
                *s370_opcode_ebxx,
  #endif
+               *s370_opcode_b3xx,                               /*FPE*/
                *s370_opcode_c2xx,                               /*208*/
                *s370_opcode_c4xx,                               /*208*/
                *s370_opcode_c6xx,                               /*208*/
