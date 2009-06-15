@@ -464,7 +464,7 @@ static BYTE *ARCH_DEP(fetch_cce)(REGS *regs, struct cc *cc, unsigned index)
 
   index *= 8;
   cce = &cc->dict[index / 0x800][index % 0x800];
-  ITIMER_SYNC(GR0_dictor(regs) + index, 8 - 1, regs);
+  ITIMER_SYNC(GR1_dictor(regs) + index, 8 - 1, regs);
 
 #ifdef OPTION_CMPSC_DEBUG
   logmsg("fetch_cce: index %04X\n", index / 8);
@@ -792,13 +792,13 @@ static int ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, struct cc *cc, B
     /* Get the sibling descriptor */
     index = (CCE_cptr(cc->cce) + sd_ptr) * 8;
     sd1 = &cc->dict[index / 0x800][index % 0x800];
-    ITIMER_SYNC(GR0_dictor(regs) + index, 8 - 1, regs);
+    ITIMER_SYNC(GR1_dictor(regs) + index, 8 - 1, regs);
 
     /* If format-1, get second half from the expansion dictionary */ 
     if(cc->f1)
     {
       sd2 = &cc->edict[index / 0x800][index % 0x800];
-      ITIMER_SYNC(GR0_dictor(regs) + GR0_dctsz(regs) + index, 8 - 1, regs);
+      ITIMER_SYNC(GR1_dictor(regs) + GR0_dctsz(regs) + index, 8 - 1, regs);
 
 #ifdef OPTION_CMPSC_DEBUG
       /* Print before possible exception */
