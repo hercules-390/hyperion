@@ -1980,13 +1980,16 @@ static zz_func s370_opcode_a7xx[256];
 static zz_func s370_opcode_b2xx[256];
 static zz_func s370_opcode_b3xx[256];                           /*FPE*/
 static zz_func s370_opcode_b9xx[256];
+static zz_func s370_opcode_c0xx[256];                           /*@N3*/
 static zz_func s370_opcode_c2xx[256];                           /*208*/
 static zz_func s370_opcode_c4xx[256];                           /*208*/
 static zz_func s370_opcode_c6xx[256];                           /*208*/
+static zz_func s370_opcode_e3xx[256];                           /*@N3*/
 static zz_func s370_opcode_e4xx[256];
 static zz_func s370_opcode_e5xx[256];
 static zz_func s370_opcode_e6xx[256];
 static zz_func s370_opcode_ebxx[256];
+static zz_func s370_opcode_ecxx[256];                           /*@N3*/
 
 zz_func s390_opcode_table[256];
 static zz_func s390_opcode_01xx[256];
@@ -2041,13 +2044,16 @@ int i;
         s370_opcode_b2xx [i] = opcode_b2xx [i][ARCH_370];
         s370_opcode_b3xx [i] = opcode_b3xx [i][ARCH_370];       /*FPE*/
         s370_opcode_b9xx [i] = opcode_b9xx [i][ARCH_370];
+        s370_opcode_c0xx [i] = opcode_c0xx [i&0x0F][ARCH_370];  /*@N3*/
         s370_opcode_c2xx [i] = opcode_c2xx [i&0x0F][ARCH_370];  /*208*/
         s370_opcode_c4xx [i] = opcode_c4xx [i&0x0F][ARCH_370];  /*208*/
         s370_opcode_c6xx [i] = opcode_c6xx [i&0x0F][ARCH_370];  /*208*/
+        s370_opcode_e3xx [i] = opcode_e3xx [i][ARCH_370];       /*@N3*/
         s370_opcode_e4xx [i] = v_opcode_e4xx [i][ARCH_370];
         s370_opcode_e5xx [i] = opcode_e5xx [i][ARCH_370];
         s370_opcode_e6xx [i] = opcode_e6xx [i][ARCH_370];
         s370_opcode_ebxx [i] = opcode_ebxx [i][ARCH_370];
+        s370_opcode_ecxx [i] = opcode_ecxx [i][ARCH_370];       /*@N3*/
 #endif
 
 #if defined(_390)
@@ -2109,12 +2115,18 @@ void set_opcode_pointers(REGS *regs)
            sizeof(s370_opcode_b2xx));
     memcpy(regs->s370_opcode_b9xx, s370_opcode_b9xx,
            sizeof(s370_opcode_b9xx));
+    memcpy(regs->s370_opcode_c0xx, s370_opcode_c0xx,            /*@N3*/
+           sizeof(s370_opcode_c0xx));                           /*@N3*/
+    memcpy(regs->s370_opcode_e3xx, s370_opcode_e3xx,            /*@N3*/
+           sizeof(s370_opcode_e3xx));                           /*@N3*/
     memcpy(regs->s370_opcode_ebxx, s370_opcode_ebxx,
            sizeof(s370_opcode_ebxx));
  #else
     regs->s370_opcode_a7xx = s370_opcode_a7xx;
     regs->s370_opcode_b2xx = s370_opcode_b2xx;
     regs->s370_opcode_b9xx = s370_opcode_b9xx;
+    regs->s370_opcode_c0xx = s370_opcode_c0xx;                  /*@N3*/
+    regs->s370_opcode_e3xx = s370_opcode_e3xx;                  /*@N3*/
     regs->s370_opcode_ebxx = s370_opcode_ebxx;
  #endif
     regs->s370_opcode_b3xx = s370_opcode_b3xx;                  /*FPE*/
@@ -2124,6 +2136,7 @@ void set_opcode_pointers(REGS *regs)
     regs->s370_opcode_e4xx = s370_opcode_e4xx;
     regs->s370_opcode_e5xx = s370_opcode_e5xx;
     regs->s370_opcode_e6xx = s370_opcode_e6xx;
+    regs->s370_opcode_ecxx = s370_opcode_ecxx;                  /*@N3*/
 #endif
 #if defined(_390)
     memcpy(regs->s390_opcode_table, s390_opcode_table,

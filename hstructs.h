@@ -255,11 +255,15 @@ struct REGS {                           /* Processor registers       */
                 s370_opcode_a7xx[256],
                 s370_opcode_b2xx[256],
                 s370_opcode_b9xx[256],
+                s370_opcode_c0xx[256],                          /*@N3*/
+                s370_opcode_e3xx[256],                          /*@N3*/
                 s370_opcode_ebxx[256],
  #else
                *s370_opcode_a7xx,
                *s370_opcode_b2xx,
                *s370_opcode_b9xx,
+               *s370_opcode_c0xx,                               /*@N3*/
+               *s370_opcode_e3xx,                               /*@N3*/
                *s370_opcode_ebxx,
  #endif
                *s370_opcode_b3xx,                               /*FPE*/
@@ -269,6 +273,7 @@ struct REGS {                           /* Processor registers       */
                *s370_opcode_e4xx,
                *s370_opcode_e5xx,
                *s370_opcode_e6xx,
+               *s370_opcode_ecxx,                               /*@N3*/
                *s370_opcode_edxx;
 
         FUNC    s390_opcode_table[256];
