@@ -1,154 +1,10 @@
-/* OPCODE.H (c) Copyright Jan Jaeger, 2000-2009          */
-/*      Instruction decoding macros and prototypes       */
+/* OPCODE.H     (c) Copyright Jan Jaeger, 2000-2009                  */
+/*              Instruction decoding macros and prototypes           */
 
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 
 // $Id$
-//
-// $Log$
-// Revision 1.232  2009/01/14 10:12:36  jj
-// Restrict SCLP DISK I/O to the path relative to the .ins file that has been IPL-ed
-// Add SCLPROOT command to override the above
-//
-// Revision 1.231  2009/01/02 19:21:51  jj
-// DVD-RAM IPL
-// RAMSAVE
-// SYSG Integrated 3270 console fixes
-//
-// Revision 1.230  2008/12/29 11:03:10  jj
-// Move HMC disk I/O functions to scedasd.c
-//
-// Revision 1.229  2008/12/21 02:51:58  ivan
-// Place the configuration in system check-stop state when a READ SCP INFO
-// is issued from a CPU that is not a CP Engine.
-//
-// Revision 1.228  2008/12/08 20:38:20  ivan
-// Fix SIE DAT Issue with ESA/390 Guest on z/Arch host with >2GB of storage
-//
-// Revision 1.227  2008/04/12 10:00:03  bernard
-// replaced exrl ifs within macros for conditional expressions
-//
-// Revision 1.226  2008/04/11 14:29:17  bernard
-// Integrate regs->exrl into base Hercules code.
-//
-// Revision 1.225  2008/04/09 06:53:05  bernard
-// Changes on request of Roger Bowler (No functional change)
-//
-// Revision 1.224  2008/04/08 17:14:36  bernard
-// Added execute relative long instruction
-//
-// Revision 1.223  2008/03/28 23:03:54  rbowler
-// Correct relative address calculation for RIL-format instructions
-//
-// Revision 1.222  2008/03/12 23:44:03  rbowler
-// Add MVCOS instruction (part 1)
-//
-// Revision 1.221  2008/03/12 21:41:21  rbowler
-// Add comment explaining 0 and _B forms of instruction decoders
-//
-// Revision 1.220  2008/03/08 22:28:04  rbowler
-// Add CHRL,CGHRL,CLRL,CLGRL,CLGFRL,CLHRL,CLGHRL,
-// CRL,CGRL,CGFRL instructions
-//
-// Revision 1.219  2008/03/04 15:42:49  rbowler
-// Add CRB,CGRB,CIB,CGIB,CLRB,CLGRB,CLIB,CLGIB instructions
-//
-// Revision 1.218  2008/02/29 15:53:10  rbowler
-// Instruction decoder for C4xx and C6xx instructions
-//
-// Revision 1.217  2008/02/29 00:57:03  rbowler
-// Modify compare_and_branch instruction names
-//
-// Revision 1.216  2008/02/29 00:08:25  rbowler
-// Additional RIE instruction formats
-//
-// Revision 1.215  2008/02/28 23:01:35  rbowler
-// RRS,SIL instruction formats
-//
-// Revision 1.214  2008/02/28 18:54:51  rbowler
-// RIS instruction format
-//
-// Revision 1.213  2008/02/28 17:18:01  rbowler
-// Opcodes for General-Instructions-Extension feature
-//
-// Revision 1.212  2008/02/28 11:08:26  rbowler
-// Opcodes for new instructions in zPOP-06
-//
-// Revision 1.211  2008/02/19 11:49:19  ivan
-// - Move setting of CPU priority after spwaning timer thread
-// - Added support for Posix 1003.1e capabilities
-//
-// Revision 1.210  2007/12/13 16:57:35  rbowler
-// Correct GENx___x390x___ definition (by Enrico Sorichetti)
-//
-// Revision 1.209  2007/11/15 22:54:43  rbowler
-// Correct PIC6 when loading DRM bits into FPC
-//
-// Revision 1.208  2007/06/23 00:04:14  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.207  2007/06/06 22:14:58  gsmith
-// Fix SYNCHRONIZE_CPUS when numcpu > number of host processors - Greg
-//
-// Revision 1.206  2007/06/02 13:46:41  rbowler
-// PFPO framework
-//
-// Revision 1.205  2007/05/26 14:23:56  rbowler
-// CSST instruction
-//
-// Revision 1.204  2007/04/25 14:46:35  rbowler
-// Rename RSS instruction format as SSF
-//
-// Revision 1.203  2007/04/25 12:33:20  rbowler
-// Move SRNMT to Floating-point-support-enhancement facility
-//
-// Revision 1.202  2007/04/25 12:10:27  rbowler
-// Move LFAS,SFASR to IEEE-exception-simulation facility
-//
-// Revision 1.201  2007/03/20 02:06:02  gsmith
-// Rename IS_MCDS macro to MULTIPLE_CONTROLLED_DATA_SPACE
-//
-// Revision 1.200  2007/03/18 19:22:25  gsmith
-// Fix typo
-//
-// Revision 1.199  2007/03/18 18:47:43  gsmith
-// Simplify MULTIPLE_CONTROLLED_DATA_SPACE tests
-//
-// Revision 1.198  2007/02/26 00:52:42  gsmith
-// Fix tracing range check
-//
-// Revision 1.197  2007/01/16 01:45:33  gsmith
-// Tweaks to instruction stepping/tracing
-//
-// Revision 1.196  2007/01/15 21:41:36  ivan
-// Move SET_ADDRESSING_MODE beyond auto inclusion barrier in opcode.h P/O Greg
-// Move BEAR related macros also
-//
-// Revision 1.195  2007/01/09 05:11:46  gsmith
-// Bypass mainlock if only 1 cpu started
-//
-// Revision 1.194  2007/01/06 23:28:40  rbowler
-// Add RRF_MM instruction format
-//
-// Revision 1.193  2007/01/04 23:12:04  gsmith
-// remove thunk calls for program_interrupt
-//
-// Revision 1.192  2007/01/03 05:53:34  gsmith
-// 03 Jan 2007 Sloppy fetch - Greg Smith
-//
-// Revision 1.191  2006/12/20 10:47:52  rbowler
-// Correct warning C4013: 'RRF_M4_DECODER_TEST' undefined
-//
-// Revision 1.190  2006/12/20 04:26:20  gsmith
-// 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
-//
-// Revision 1.189  2006/12/15 22:49:02  rbowler
-// Decimal Floating Point: CSXTR instruction
-//
-// Revision 1.188  2006/12/08 09:43:29  jj
-// Add CVS message log
-//
 
 #ifndef _OPCODE_H
 #define _OPCODE_H
@@ -265,6 +121,13 @@
         (void*)&disasm_ ## _format, \
         (void*)& _mnemonic "\0" #_name \
     }
+
+/* The following variants of the opcode table definition macros
+   specify 37X (370 EXTENSIONS) instead of 370 to indicate that
+   they are ESA/390 and ESAME instructions back-ported to S/370 */
+#define GENx37Xx390x___ GENx370x390x___
+#define GENx37Xx___x900 GENx370x___x900
+#define GENx37Xx390x900 GENx370x390x900
 
 
 typedef void (ATTR_REGPARM(2) *zz_func) (BYTE inst[], REGS *regs);
