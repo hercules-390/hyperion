@@ -1,11 +1,10 @@
--------------------------------------------------------------------------------
 HERCULES FOR WIN64 README FILE
 
 There are two 64-bit architectures supported by 64-bit Windows:
 - x64 also known as x86_64 (for AMD64 and Intel EM64T processors)
 - ia64 (for Intel Itanium processors)
 
-This document covers only the x64 architecture.
+This section of the document covers only the x64 architecture.
 
 HOW TO COMPILE HERCULES FOR AMD64
 
@@ -24,11 +23,15 @@ HOW TO COMPILE HERCULES FOR AMD64
    "All Programs" - "Microsoft Visual Studio 2008" - "Visual Studio Tools"
    - "Visual Studio 2008 x64 Win64 Command Prompt"
 
-4. Because the build procedure does not yet support the 64-bit versions
-   of the compression and PCRE libraries, enter the following commands:
-   SET ZLIB_DIR=NONE
-   SET BZIP2_DIR=NONE
-   SET PCRE_DIR=NONE
+4. If you require gzip or bzip2 for disk or tape compression, or if you
+   require PCRE for the Hercules Automatic Operator facility, you should
+   install the AMD64 versions of these programs in winbuild\zlib\x64
+   winbuild\bzip2\x64 and winbuild\pcre\x64 under the Hercules directory. 
+   You may override these default directory locations by setting
+   environment variables, for example:
+   SET ZLIB_DIR=c:\packages\zlib
+   SET BZIP2_DIR=c:\packages\bzip2
+   SET PCRE_DIR=c:\packages\pcre
 
 5. nmake clean
    nmake
