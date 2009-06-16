@@ -77,6 +77,17 @@ HOW TO BUILD HERCULES FROM SVN UNDER SOLARIS
 
       svn checkout svn://svn.hercules-390.org/hercules/trunk hercules
 
+      Note: svn will fail if you do not have libuuid installed on your system
+      ld.so.1: svn: fatal: libuuid.so.1: open failed: No such file or directory
+
+      If you get this message, you will need to install a patch from Sun:
+      1. Go to sunsolve.sun.com and select "Patch Finder"
+      2. Scroll down to "Download Product Specific Patches" and select your
+         version of Solaris (for example, Solaris 2.9 SPARC)
+      3. Look for a patch which contains libuuid (for example, 114129-02)
+      4. Download the patch and unzip it into /var/spool/patch
+      5. patchadd /var/spool/patch/114129-02
+
 3. CHECK THAT THE REQUIRED LEVELS OF TOOLS ARE INSTALLED
 
       From your home directory issue these commands:
