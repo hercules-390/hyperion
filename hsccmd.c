@@ -508,7 +508,7 @@ int logopt_cmd(int argc, char *argv[],char *cmdline)
 int uptime_cmd(int argc, char *argv[],char *cmdline)
 {
 time_t  now;
-UINT    uptime, weeks, days, hours, mins, secs;
+unsigned uptime, weeks, days, hours, mins, secs;
 
     UNREFERENCED( cmdline );
     UNREFERENCED(  argc   );
@@ -516,7 +516,7 @@ UINT    uptime, weeks, days, hours, mins, secs;
 
     time( &now );
 
-    uptime = (UINT) difftime( now, sysblk.impltime );
+    uptime = (unsigned) difftime( now, sysblk.impltime );
 
 #define  SECS_PER_MIN     ( 60                 )
 #define  SECS_PER_HOUR    ( 60 * SECS_PER_MIN  )
