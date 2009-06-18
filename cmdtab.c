@@ -428,7 +428,7 @@ void *panel_command (void *cmdline)
         break;
       }
     }
-#elif // OPTION_CMDTGT
+#else // OPTION_CMDTGT
 #ifdef _FEATURE_SYSTEM_CONSOLE
     if ('.' == cmd[0] || '!' == cmd[0])
     {
