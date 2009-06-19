@@ -4131,7 +4131,7 @@ BYTE   *bp1;                            /* Unaligned Mainstor ptr    */
                 for (i = 0; i < n; i++, p1++)
                     regs->GR_G((r1 + i) & 0xF) = CSWAP64(*p1);
             else
-    #endif
+#endif
             for (i = 0; i < n; i++, p1++)
                 regs->GR_G((r1 + i) & 0xF) = fetch_dw (p1);
 #if defined(OPTION_STRICT_ALIGNMENT)
