@@ -375,17 +375,6 @@
  UNDEF_INST(execute_ecxx)
  UNDEF_INST(execute_c0xx)
  UNDEF_INST(execute_c2xx)                                       /*@Z9*/
- UNDEF_INST(set_address_mode_24)
- UNDEF_INST(set_address_mode_31)
- UNDEF_INST(set_address_mode_64)
- UNDEF_INST(test_under_mask_highword_high)
- UNDEF_INST(test_under_mask_highword_low)
- UNDEF_INST(branch_relative_on_count_long)
- UNDEF_INST(load_long_halfword_immediate)
- UNDEF_INST(add_long_halfword_immediate)
- UNDEF_INST(multiply_long_halfword_immediate)
- UNDEF_INST(compare_long_halfword_immedate)
- UNDEF_INST(load_psw_extended)
 #endif /*!defined(FEATURE_ESAME) && !defined(FEATURE_ESAME_N3_ESA390)*/
 
 #if !defined(FEATURE_ESAME)
