@@ -841,7 +841,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     losc_set(PGM_PRD_OS_RESTRICTED);
 
     /* Default CPU type CP */
-    for (i = 0; i < MAX_CPU; i++)
+    for (i = 0; i < MAX_CPU_ENGINES; i++)
         sysblk.ptyp[i] = SCCB_PTYP_CP;
 
     /* Cap the default priorities at zero if setuid not available */
