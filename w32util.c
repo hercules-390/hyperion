@@ -1856,6 +1856,17 @@ DLL_EXPORT int socketpair( int domain, int type, int protocol, int socket_vector
     struct sockaddr_in  localhost_addr;
     int    len = sizeof(localhost_addr);
 
+    /* FIXME ISW ? In some situations, it seems the sockaddr_in structure */
+    /*         returned by getsockname() isn't appropriate for use        */
+    /*         by connect(). We therefore use another sockaddr_in for the */
+    /*         sole purpose of fetching the automatic port number issued  */
+    /*         during the bind() operation.                               */
+    /* NOTE : This is a workaround. The actual root cause for this        */
+    /*        problem is presently unknown because it is hard to reproduce*/
+
+    struct  sockaddr_in tempaddr;
+    int     talen=sizeof(tempaddr);
+
     // Technique: create a pair of sockets bound to each other by first creating a
     // temporary listening socket bound to the localhost loopback address (127.0.0.1)
     // and then having the other socket connect to it...
@@ -1876,6 +1887,7 @@ DLL_EXPORT int socketpair( int domain, int type, int protocol, int socket_vector
     }
 
     memset( &localhost_addr, 0, len);
+    memset( &tempaddr, 0, len);
 
     localhost_addr.sin_family       = AF_INET;
     localhost_addr.sin_port         = htons( 0 );
@@ -1884,7 +1896,7 @@ DLL_EXPORT int socketpair( int domain, int type, int protocol, int socket_vector
     if (0
         || SOCKET_ERROR   == bind( temp_listen_socket, (SOCKADDR*) &localhost_addr, len )
         || SOCKET_ERROR   == listen( temp_listen_socket, 1 )
-        || SOCKET_ERROR   == getsockname( temp_listen_socket, (SOCKADDR*) &localhost_addr, &len )
+        || SOCKET_ERROR   == getsockname( temp_listen_socket, (SOCKADDR*) &tempaddr, &len )
         || INVALID_SOCKET == (SOCKET)( socket_vector[1] = socket( AF_INET, SOCK_STREAM, 0 ) )
     )
     {
@@ -1893,6 +1905,11 @@ DLL_EXPORT int socketpair( int domain, int type, int protocol, int socket_vector
         errno = nLastError;
         return -1;
     }
+
+    /* Get the temporary port number assigned automatically */
+    /* by bind(127.0.0.1/0)                                 */
+
+    localhost_addr.sin_port=tempaddr.sin_port;
 
     if (0
         || SOCKET_ERROR   == connect( socket_vector[1], (SOCKADDR*) &localhost_addr, len )
