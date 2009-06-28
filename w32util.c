@@ -1875,8 +1875,8 @@ DLL_EXPORT int socketpair( int domain, int type, int protocol, int socket_vector
     //   -1 shall be returned and errno set to indicate the error."
 
     if ( AF_INET     != domain   ) { errno = WSAEAFNOSUPPORT;    return -1; }
-    if ( SOCK_STREAM != protocol ) { errno = WSAEPROTONOSUPPORT; return -1; }
-    if ( IPPROTO_IP  != type     ) { errno = WSAEPROTOTYPE;      return -1; }
+    if ( SOCK_STREAM != type     ) { errno = WSAEPROTONOSUPPORT; return -1; }
+    if ( IPPROTO_IP  != protocol ) { errno = WSAEPROTOTYPE;      return -1; }
 
     socket_vector[0] = socket_vector[1] = INVALID_SOCKET;
 

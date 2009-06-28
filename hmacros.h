@@ -75,7 +75,7 @@
 #endif
 
 #ifdef _MSVC_
-  #define  create_pipe(a)       socketpair(AF_INET,IPPROTO_IP,SOCK_STREAM,a)
+  #define  create_pipe(a)       socketpair(AF_INET,SOCK_STREAM,IPPROTO_IP,a)
   #define  read_pipe(f,b,n)     recv(f,b,n,0)
   #define  write_pipe(f,b,n)    send(f,b,(int)n,0)
   #define  close_pipe(f)        closesocket(f)
