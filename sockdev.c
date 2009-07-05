@@ -320,7 +320,7 @@ void socket_device_connection_handler (bind_struct* bs)
     if (dev->busy || IOPENDING(dev)
      || (dev->scsw.flag3 & SCSW3_SC_PEND))
     {
-        closesocket( csock );
+        close_socket( csock );
         logmsg (_("HHCSD015E Client %s (%s) connection to device %4.4X "
             "(%s) rejected: device busy or interrupt pending\n"),
             clientname, clientip, dev->devnum, bs->spec);
@@ -332,7 +332,7 @@ void socket_device_connection_handler (bind_struct* bs)
 
     if (dev->fd != -1)
     {
-        closesocket( csock );
+        close_socket( csock );
         logmsg (_("HHCSD016E Client %s (%s) connection to device %4.4X "
             "(%s) rejected: client %s (%s) still connected\n"),
             clientname, clientip, dev->devnum, bs->spec,
@@ -356,7 +356,7 @@ void socket_device_connection_handler (bind_struct* bs)
     if (bs->fn && !bs->fn( bs->arg ))
     {
         /* Callback says it can't accept it */
-        closesocket( dev->fd );
+        close_socket( dev->fd );
         dev->fd = -1;
         logmsg (_("HHCSD026E Client %s (%s) connection to device %4.4X "
             "(%s) rejected: by onconnect callback\n"),
