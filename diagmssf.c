@@ -477,7 +477,7 @@ static BYTE       physical[8] =
 
     case 0x04:
 
-        abs = APPLY_PREFIXING (regs->GR(r1), regs->PX);
+        abs = APPLY_PREFIXING (regs->GR_A(r1), regs->PX);
 
         /* Program check if RMF data is not on a page boundary */
         if ( (abs & PAGEFRAME_BYTEMASK) != 0x000)
@@ -597,7 +597,7 @@ static BYTE       physical[8] =
 
         /* Obtain absolute address of main storage block,
            check protection, and set reference and change bits */
-        hdrxinfo = (DIAG204_X_HDR*)MADDR (regs->GR(r1), r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        hdrxinfo = (DIAG204_X_HDR*)MADDR (regs->GR_A(r1), r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
         /* save last diag204 tod */
         dreg = diag204tod;
