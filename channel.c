@@ -1370,8 +1370,6 @@ int     current_priority;               /* Current thread priority   */
             SET_THREAD_NAME(thread_name);
 
             sysblk.ioq = dev->nextioq;
-            if (sysblk.ioq && sysblk.devtwait)
-                signal_condition(&sysblk.ioqcond);
             dev->tid = thread_id();
 
             /* Set priority to requested device priority */
@@ -1398,7 +1396,6 @@ int     current_priority;               /* Current thread priority   */
         /* Wait for work to arrive */
         sysblk.devtwait++;
         wait_condition (&sysblk.ioqcond, &sysblk.ioqlock);
-        sysblk.devtwait--;
     }
 
     sysblk.devtnbr--;
@@ -2350,7 +2347,10 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
         /* Signal a device thread if one is waiting, otherwise create
            a device thread if the maximum number hasn't been created */
         if (sysblk.devtwait)
+        {
+            sysblk.devtwait--;
             signal_condition(&sysblk.ioqcond);
+        }
         else if (sysblk.devtmax == 0 || sysblk.devtnbr < sysblk.devtmax)
         {
             rc = create_thread (&dev->tid, DETACHED,

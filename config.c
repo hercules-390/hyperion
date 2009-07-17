@@ -108,6 +108,7 @@ int     cpu;
 #if !defined(OPTION_FISHIO)
     /* Terminate device threads */
     obtain_lock (&sysblk.ioqlock);
+    sysblk.devtwait=0;
     broadcast_condition (&sysblk.ioqcond);
     release_lock (&sysblk.ioqlock);
 #endif

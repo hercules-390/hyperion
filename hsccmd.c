@@ -4392,11 +4392,15 @@ int devtmax_cmd(int argc, char *argv[], char *cmdline)
         /* Create a new device thread if the I/O queue is not NULL
            and more threads can be created */
 
+        /* the IOQ lock is obtained in order to write to sysblk.devtwait */
+        obtain_lock(&sysblk.ioqlock);
         if (sysblk.ioq && (!sysblk.devtmax || sysblk.devtnbr < sysblk.devtmax))
             create_thread(&tid, DETACHED, device_thread, NULL, "idle device thread");
 
         /* Wakeup threads in case they need to terminate */
+        sysblk.devtwait=0;
         broadcast_condition (&sysblk.ioqcond);
+        release_lock(&sysblk.ioqlock);
     }
     else
         logmsg( _("HHCPN078E Max device threads %d current %d most %d "
