@@ -103,6 +103,7 @@ DEF_INST(perform_floating_point_operation)
       ARCH_DEP(program_interrupt)(regs, PGM_DATA_EXCEPTION);
     }
 
+    /* Test function requested ? */
     if(GR0_test_bit(regs))
     {
       /* Check GR0 bits 33-63 for valid function and function combination */
@@ -145,6 +146,11 @@ DEF_INST(perform_floating_point_operation)
             return;
           }
           break;
+        }
+        default:
+        {
+          regs->psw.cc = 3;
+          return;
         }
       }
       if(GR0_PFPO_rounding_method(regs) & Invalid_rounding_method)
