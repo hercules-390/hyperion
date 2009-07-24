@@ -32,17 +32,18 @@
 #include "decimal32.h"
 #include "decPacked.h"
 
+//#define FEATURE_PFPO
 #if defined(FEATURE_PFPO)
 
 //Fields in GR0 for PFPO
-#define GR0_test_bit(regs)                               ((GR_L(0, (regs)) & 0x80000000) ? 1 : 0)
-#define GR0_PFPO_operation_type_code(regs)               ((GR_L(0, (regs)) & 0x7f000000) >> 24)
-#define GR0_PFPO_operand_format_code_for_operand_1(regs) ((GR_L(0, (regs)) & 0x00ff0000) >> 16)
-#define GR0_PFPO_operand_format_code_for_operand_2(regs) ((GR_L(0, (regs)) & 0x0000ff00) >> 8)
-#define GR0_inexact_suppression_control(regs)            ((GR_L(0, (regs)) & 0x00000080) ? 1 : 0)
-#define GR0_alternate-exception_action_code(regs)        ((GR_L(0, (regs)) & 0x00000040) ? 1 : 0)
-#define GR0_target_radix_dependent_controls(regs)        ((GR_L(0, (regs)) & 0x00000030) >> 4)
-#define GR0_PFPO_rounding_method(regs)                   ((GR_L(0, (regs)) & 0x0000000f))
+#define GR0_test_bit(regs)                               (((regs)->GR_L(0) & 0x80000000) ? 1 : 0)
+#define GR0_PFPO_operation_type_code(regs)               (((regs)->GR_L(0) & 0x7f000000) >> 24)
+#define GR0_PFPO_operand_format_code_for_operand_1(regs) (((regs)->GR_L(0) & 0x00ff0000) >> 16)
+#define GR0_PFPO_operand_format_code_for_operand_2(regs) (((regs)->GR_L(0) & 0x0000ff00) >> 8)
+#define GR0_inexact_suppression_control(regs)            (((regs)->GR_L(0) & 0x00000080) ? 1 : 0)
+#define GR0_alternate_exception_action_code(regs)        (((regs)->GR_L(0) & 0x00000040) ? 1 : 0)
+#define GR0_target_radix_dependent_controls(regs)        (((regs)->GR_L(0) & 0x00000030) >> 4)
+#define GR0_PFPO_rounding_method(regs)                   (((regs)->GR_L(0) & 0x0000000f))
 
 //PFPO-Operation-Type Code (GR0 bits 33-39)
 #define PFPO_convert_floating_point_radix 0x01
@@ -74,6 +75,7 @@
 #define Round_to_nearest_with_ties_toward_zero    0x0d
 #define Round_away_from_zero                      0x0e
 #define Round_to_prepare_for_shorter_precision    0x0f
+#define Invalid_rounding_method                   0xfc
 
 #if !defined(_PFPO_ARCH_INDEPENDENT_)
 /*-------------------------------------------------------------------*/
@@ -92,10 +94,69 @@
 /*-------------------------------------------------------------------*/
 DEF_INST(perform_floating_point_operation)
 {
-
     E(inst, regs);
 
-    UNREFERENCED(inst);
+    /* Check AFP-register-control bit, bit 45 of control register */
+    if(!(regs->CR(0) & CR0_AFP))
+    {
+      regs->dxc = DXC_AFP_REGISTER;
+      ARCH_DEP(program_interrupt)(regs, PGM_DATA_EXCEPTION);
+    }
+
+    if(GR0_test_bit(regs))
+    {
+      /* Check GR0 bits 33-63 for valid function and function combination */
+      if(GR0_PFPO_operation_type_code(regs) != PFPO_convert_floating_point_radix)
+      {
+        regs->psw.cc = 3;
+        return;
+      }
+      switch(GR0_PFPO_operand_format_code_for_operand_2(regs))
+      {
+        case HFP_short:
+        case HFP_long:
+        case HFP_extended:
+        {
+          if(GR0_PFPO_operand_format_code_for_operand_1(regs) & ~(BFP_short | BFP_long | BFP_extended | DFP_short | DFP_long | DFP_extended))
+          {
+            regs->psw.cc = 3;
+            return;
+          }
+          break;
+        }
+        case BFP_short:
+        case BFP_long:
+        case BFP_extended:
+        {
+          if(GR0_PFPO_operand_format_code_for_operand_1(regs) & ~(HFP_short | HFP_long | HFP_extended | DFP_short | DFP_long | DFP_extended))
+          {
+            regs->psw.cc = 3;
+            return;
+          }
+          break;
+        }
+        case DFP_short:
+        case DFP_long:
+        case DFP_extended:
+        {
+          if(GR0_PFPO_operand_format_code_for_operand_1(regs) & ~(HFP_short | HFP_long | HFP_extended | BFP_short | BFP_long | BFP_extended))
+          {
+            regs->psw.cc = 3;
+            return;
+          }
+          break;
+        }
+      }
+      if(GR0_PFPO_rounding_method(regs) & Invalid_rounding_method)
+      {
+        regs->psw.cc = 3;
+        return;
+      }
+
+      /* Valid function and function combination */
+      regs->psw.cc = 0;
+      return;
+    }
 
     ARCH_DEP(operation_exception)(inst,regs);
 
