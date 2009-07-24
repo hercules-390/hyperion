@@ -46,23 +46,23 @@
 #define GR0_PFPO_rounding_method(regs)                   (((regs)->GR_L(0) & 0x0000000f))
 
 //PFPO-Operation-Type Code (GR0 bits 33-39)
-#define PFPO_convert_floating_point_radix 0x01
+#define PFPO_convert_floating_point_radix         0x01
 
 //PFPO-Operand-Format Codes (GR0 bits 40-47 and 48-55)
-#define HFP_short    0x00
-#define HFP_long     0x01
-#define HFP_extended 0x03
-#define BFP_short    0x05
-#define BFP_long     0x06
-#define BFP_extended 0x07
-#define DFP_short    0x08
-#define DFP_long     0x09
-#define DFP_extended 0x0a
+#define HFP_short                                 0x00
+#define HFP_long                                  0x01
+#define HFP_extended                              0x03
+#define BFP_short                                 0x05
+#define BFP_long                                  0x06
+#define BFP_extended                              0x07
+#define DFP_short                                 0x08
+#define DFP_long                                  0x09
+#define DFP_extended                              0x0a
 
 //PFPO-Target-Radix-Dependent Controls (GR0, bits 58-59)
-#define HFP_overflow_control          0x20
-#define HFP_underflow_control         0x10
-#define DFP_preferred_quantum_control 0x10
+#define HFP_overflow_control                      0x02
+#define HFP_underflow_control                     0x01
+#define DFP_preferred_quantum_control             0x01
 
 //PFPO-Rounding Method (GR0 bits 60-63)
 #define According_to_current_DFP_rounding_mode    0x01
@@ -75,7 +75,7 @@
 #define Round_to_nearest_with_ties_toward_zero    0x0d
 #define Round_away_from_zero                      0x0e
 #define Round_to_prepare_for_shorter_precision    0x0f
-#define Invalid_rounding_method                   0xfc
+#define Invalid_rounding_method                   0x0c
 
 #if !defined(_PFPO_ARCH_INDEPENDENT_)
 /*-------------------------------------------------------------------*/
