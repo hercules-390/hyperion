@@ -43,21 +43,21 @@
 /*----------------------------------------------------------------------------*/
 static void BFP_short_get(mpf_t *bfp_short, U32 r)
 {
-  int bias;
   char buf[33];
+  int exp;
   int i;
   int j;
   U32 mask;
 
-  bias = ((r & 0x7f800000) >> 23) - 127;
-  sprintf(buf, "%c0.%c", (r & 0x80000000) ? '-' : ' ', bias ? '1' : '0');
+  exp = ((r & 0x7f800000) >> 23) - 127;
+  sprintf(buf, "%c0.%c", (r & 0x80000000) ? '-' : ' ', exp ? '1' : '0');
   mask = 0x00400000;
   for(i = 4, j = 0; j < 23; j++)
   {
     buf[i++] = (mask & r) ? '1' : '0';
     mask >>= 1;
   }
-  sprintf(&buf[i], "@%d", bias);
+  sprintf(&buf[i], "@%d", exp);
   mpf_set_prec(*bfp_short, 24);
   mpf_set_str(*bfp_short, buf, 2);
 
@@ -116,21 +116,21 @@ static void BFP_short_set(U32 *r, mpf_t *bfp_short)
 /*----------------------------------------------------------------------------*/
 static void BFP_long_get(mpf_t *bfp_long, U64 r)
 {
-  int bias;
   char buf[63];
+  int exp;
   int i;
   int j;
   U64 mask;
 
-  bias = ((r & 0x7ff0000000000000) >> 52) - 1023;
-  sprintf(buf, "%c0.%c", (r & 0x8000000000000000) ? '-' : ' ', bias ? '1' : '0');
+  exp = ((r & 0x7ff0000000000000) >> 52) - 1023;
+  sprintf(buf, "%c0.%c", (r & 0x8000000000000000) ? '-' : ' ', exp ? '1' : '0');
   mask = 0x0008000000000000;
   for(i = 4, j = 0; j < 52; j++)\
   {
     buf[i++] = (mask & r) ? '1' : '0';
     mask >>= 1;
   }
-  sprintf(&buf[i], "@%d", bias);
+  sprintf(&buf[i], "@%d", exp);
   mpf_set_prec(*bfp_long, 53);
   mpf_set_str(*bfp_long, buf, 2);
 
@@ -189,14 +189,14 @@ static void BFP_long_set(U64 *r, mpf_t *bfp_long)
 /*----------------------------------------------------------------------------*/
 static void BFP_extended_get(mpf_t *bfp_extended, U64 h, U64 l)
 {
-  int bias;
   char buf[124];
+  int exp;
   int i;
   int j;
   U64 mask;
 
-  bias = ((h & 0x7fff000000000000) >> 48) - 16383;
-  sprintf(buf, "%c0.%c", (h & 0x8000000000000000) ? '-' : ' ', bias ? '1' : '0');
+  exp = ((h & 0x7fff000000000000) >> 48) - 16383;
+  sprintf(buf, "%c0.%c", (h & 0x8000000000000000) ? '-' : ' ', exp ? '1' : '0');
   mask = 0x0000800000000000;
   for(i = 4, j = 0; j < 48; j++)\
   {
@@ -209,7 +209,7 @@ static void BFP_extended_get(mpf_t *bfp_extended, U64 h, U64 l)
     buf[i++] = (mask & l) ? '1' : '0';
     mask >>= 1;
   }
-  sprintf(&buf[i], "@%d", bias);
+  sprintf(&buf[i], "@%d", exp);
   mpf_set_prec(*bfp_extended, 113);
   mpf_set_str(*bfp_extended, buf, 2);
 
