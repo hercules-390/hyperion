@@ -31,6 +31,9 @@
 
 #if defined(FEATURE_PFPO)
 
+#define GR0_test_bit(regs)        (((regs)->GR_L(0) & 0x80000000) ? 1 : 0)
+#define GR0_PFPO_function(regs)   (((regs)->GR_L(0) & 0x7fffff00) >> 8)
+
 #include <gmp.h>
 
 #ifndef __COMPILE_ONCE
@@ -334,7 +337,7 @@ static void HFP_long_get(mpf_t *hfp_long, U64 r)
 {
   char buf[22];
 
-  sprintf(buf, "%c0.%lx@%d", (r & 0x8000000000000000) ? '-' : ' ', (r & 0x00ffffffffffffff), ((r & 0x7f00000000000000) >> 56) - 64);
+  sprintf(buf, "%c0.%lx@%lu", (r & 0x8000000000000000) ? '-' : ' ', (r & 0x00ffffffffffffff), ((r & 0x7f00000000000000) >> 56) - 64);
   mpf_set_prec(*hfp_long, 56);
   mpf_set_str(*hfp_long, buf, 16);
 
@@ -390,7 +393,7 @@ static void HFP_extended_get(mpf_t *hfp_extended, U64 h, U64 l)
 {
   char buf[36];
 
-  sprintf(buf, "%c0.%lx%07lx@%d", (h & 0x8000000000000000) ? '-' : ' ', (h & 0x00ffffffffffffff), (l & 0x00ffffffffffffff), ((h & 0x7f00000000000000) >> 56) - 64);
+  sprintf(buf, "%c0.%lx%07lx@%lu", (h & 0x8000000000000000) ? '-' : ' ', (h & 0x00ffffffffffffff), (l & 0x00ffffffffffffff), ((h & 0x7f00000000000000) >> 56) - 64);
   mpf_set_prec(*hfp_extended, 112);
   mpf_set_str(*hfp_extended, buf, 16);
 
@@ -453,8 +456,179 @@ static void HFP_extended_set(U64 *h, U64 *l, mpf_t *bfp_extended)
 /*-------------------------------------------------------------------*/
 DEF_INST(perform_floating_point_operation)
 {
+  U32 from32;
+  U64 from64;
+  U64 from1;
+  U64 from2;  
+
   E(inst, regs);
-  ARCH_DEP(operation_exception)(inst,regs);
+
+  /* Check AFP-register-control bit, bit 45 of control register 0 */
+  if(!(regs->CR(0) & CR0_AFP))
+  {
+    regs->dxc = DXC_AFP_REGISTER;
+    ARCH_DEP(program_interrupt)(regs, PGM_DATA_EXCEPTION);
+  }
+
+  switch(GR0_PFPO_function(regs))
+  {
+    /* Convert floating point radix HFP short to ... */
+    case 0x010500: /* BFP short */
+    case 0x010600: /* BFP long */
+    case 0x010700: /* BFP extended */
+    case 0x010800: /* DFP short */
+    case 0x010900: /* DFP long */
+    case 0x010a00: /* DFP extended */
+    {
+      if(GR0_test_bit(regs))
+      {
+        regs->psw.cc = 0;
+        return;
+      }
+      from32 = regs->fpr[FPR2I(4)];
+    }
+
+
+    /* Convert floating point radix HFP long to ... */
+    case 0x010501: /* BFP short */
+    case 0x010601: /* BFP long */
+    case 0x010701: /* BFP extended */
+    case 0x010801: /* DFP short */
+    case 0x010901: /* DFP long */
+    case 0x010a01: /* DFP extended */
+    {
+      if(GR0_test_bit(regs))
+      {
+        regs->psw.cc = 0;
+        return;
+      }
+      from64 = ((U64) regs->fpr[FPR2I(4)]) << 32 | regs->fpr[FPR2I(4) + 1];
+    }
+
+    /* Convert floating point radix HFP extended to ... */
+    case 0x010502: /* BFP short */
+    case 0x010602: /* BFP long */
+    case 0x010702: /* BFP extended */
+    case 0x010802: /* DFP short */
+    case 0x010902: /* DFP long */
+    case 0x010a02: /* DFP extended */
+    {
+      if(GR0_test_bit(regs))
+      {
+        regs->psw.cc = 0;
+        return;
+      }
+      from1 = ((U64) regs->fpr[FPR2I(4)]) << 32 | regs->fpr[FPR2I(4) + 1];
+      from2 = ((U64) regs->fpr[FPR2I(6)]) << 32 | regs->fpr[FPR2I(6) + 1];
+    }
+
+    /* Convert floating point radix BFP short to ... */
+    case 0x010005: /* HFP short */
+    case 0x010105: /* HFP long */
+    case 0x010205: /* HFP extended */
+    case 0x010805: /* DFP short */
+    case 0x010905: /* DFP long */
+    case 0x010a05: /* DFP extended */
+    {
+      if(GR0_test_bit(regs))
+      {
+        regs->psw.cc = 0;
+        return;
+      }
+      from32 = regs->fpr[FPR2I(4)];
+    } 
+
+    /* Convert floating point radix BFP long to ... */
+    case 0x010006: /* HFP short */
+    case 0x010106: /* HFP long */
+    case 0x010206: /* HFP extended */
+    case 0x010806: /* DFP short */
+    case 0x010906: /* DFP long */
+    case 0x010a06: /* DFP extended */
+    {
+      if(GR0_test_bit(regs))
+      {
+        regs->psw.cc = 0;
+        return;
+      }
+      from64 = ((U64) regs->fpr[FPR2I(4)]) << 32 | regs->fpr[FPR2I(4) + 1];
+    }
+
+    /* Convert floating point radix BFP extended to ... */
+    case 0x010007: /* HFP short */
+    case 0x010107: /* HFP long */
+    case 0x010207: /* HFP extended */
+    case 0x010807: /* DFP short */
+    case 0x010907: /* DFP long */
+    case 0x010a07: /* DFP extended */
+    {
+      if(GR0_test_bit(regs))
+      {
+        regs->psw.cc = 0;
+        return;
+      }
+      from1 = ((U64) regs->fpr[FPR2I(4)]) << 32 | regs->fpr[FPR2I(4) + 1];
+      from2 = ((U64) regs->fpr[FPR2I(6)]) << 32 | regs->fpr[FPR2I(6) + 1];
+    }
+
+    /* Convert floating point radix DFP short to ... */
+    case 0x010008: /* HFP short */
+    case 0x010108: /* HFP long */
+    case 0x010208: /* HFP extended */
+    case 0x010508: /* BFP short */
+    case 0x010608: /* BFP long */
+    case 0x010708: /* BFP extended */
+    {
+      if(GR0_test_bit(regs))
+      {
+        regs->psw.cc = 0;
+        return;
+      }
+      from32 = regs->fpr[FPR2I(4)];
+    }
+
+    /* Convert floating point radix DFP long to ... */
+    case 0x010009: /* HFP short */
+    case 0x010109: /* HFP long */
+    case 0x010209: /* HFP extended */
+    case 0x010509: /* BFP short */
+    case 0x010609: /* BFP long */
+    case 0x010709: /* BFP extended */
+    {
+      if(GR0_test_bit(regs))
+      {
+        regs->psw.cc = 0;
+        return;
+      }
+      from64 = ((U64) regs->fpr[FPR2I(4)]) << 32 | regs->fpr[FPR2I(4) + 1];
+    }
+
+   /* Convert floating point radix DFP extended to ... */
+    case 0x01000a: /* HFP short */
+    case 0x01010a: /* HFP long */
+    case 0x01020a: /* HFP extended */
+    case 0x01050a: /* BFP short */
+    case 0x01060a: /* BFP long */
+    case 0x01070a: /* BFP extended */
+    {
+      if(GR0_test_bit(regs))
+      {
+        regs->psw.cc = 0;
+        return;
+      }
+      from1 = ((U64) regs->fpr[FPR2I(4)]) << 32 | regs->fpr[FPR2I(4) + 1];
+      from2 = ((U64) regs->fpr[FPR2I(6)]) << 32 | regs->fpr[FPR2I(6) + 1];
+    }
+    default:
+    {
+      if(GR0_test_bit(regs))
+      {
+        regs->psw.cc = 3;
+        return;
+      }
+      ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+    }
+  }
 
 } /* end DEF_INST(perform_floating_point_operation) */
 
