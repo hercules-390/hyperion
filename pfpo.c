@@ -33,7 +33,7 @@
 
 #define GR0_test_bit(regs)        (((regs)->GR_L(0) & 0x80000000) ? 1 : 0)
 #define GR0_PFPO_function(regs)   (((regs)->GR_L(0) & 0x7fffff00) >> 8)
-
+#define GR0_PFPO_fmt_op2(regs)    (((regs)->GR_L(0) & 0x0000ff00) >> 8)
 #include <gmp.h>
 
 #ifndef __COMPILE_ONCE
@@ -449,6 +449,58 @@ static void HFP_extended_set(U64 *h, U64 *l, mpf_t *bfp_extended)
     logmsg("HFP_extended_set: 0.%s@%d => %016lx %016lx\n", buf, exp, *h, *l);
 #endif
 }
+
+static void get_from(REGS *regs, mpf_t *from)
+{
+  switch(GR0_PFPO_fmt_op2(regs))
+  {
+    case 0x00:
+    {
+      HFP_short_get(from, regs->fpr[FPR2I(4)]);
+      break;
+    }
+    case 0x01:
+    {
+      HFP_long_get(from, ((U64) regs->fpr[FPR2I(4)]) << 32 | regs->fpr[FPR2I(4) + 1]);
+      break;
+    }
+    case 0x02:
+    {
+      HFP_extended_get(from, ((U64) regs->fpr[FPR2I(4)]) << 32 | regs->fpr[FPR2I(4) + 1], ((U64) regs->fpr[FPR2I(6)]) << 32 | regs->fpr[FPR2I(6) + 1]);
+      break;
+    }
+    case 0x05:
+    {
+      BFP_short_get(from, regs->fpr[FPR2I(4)]);
+      break;
+    }
+    case 0x06:
+    {
+      BFP_long_get(from, ((U64) regs->fpr[FPR2I(4)]) << 32 | regs->fpr[FPR2I(4) + 1]);
+      break;
+    }
+    case 0x07:
+    {
+      BFP_extended_get(from, ((U64) regs->fpr[FPR2I(4)]) << 32 | regs->fpr[FPR2I(4) + 1], ((U64) regs->fpr[FPR2I(6)]) << 32 | regs->fpr[FPR2I(6) + 1]);
+      break;
+    }
+    case 0x08:
+    {
+//      DFP_short_get(from, regs->fpr[FPR2I(4)]);
+      break;
+    }
+    case 0x09:
+    {
+//      DFP_long_get(from, ((U64) regs->fpr[FPR2I(4)]) << 32 | regs->fpr[FPR2I(4) + 1]);
+      break;
+    }
+    case 0x0a:
+    {
+//      DFP_extended_get(from, ((U64) regs->fpr[FPR2I(4)]) << 32 | regs->fpr[FPR2I(4) + 1], ((U64) regs->fpr[FPR2I(6)]) << 32 | regs->fpr[FPR2I(6) + 1]);
+      break;
+    }
+  }
+}
 #endif // __COMPILE_ONCE
 
 /*-------------------------------------------------------------------*/
@@ -456,10 +508,8 @@ static void HFP_extended_set(U64 *h, U64 *l, mpf_t *bfp_extended)
 /*-------------------------------------------------------------------*/
 DEF_INST(perform_floating_point_operation)
 {
-  U32 from32;
-  U64 from64;
-  U64 from1;
-  U64 from2;  
+  mpf_t from;
+  mpf_t to;
 
   E(inst, regs);
 
@@ -472,152 +522,148 @@ DEF_INST(perform_floating_point_operation)
 
   switch(GR0_PFPO_function(regs))
   {
-    /* Convert floating point radix HFP short to ... */
-    case 0x010500: /* BFP short */
-    case 0x010600: /* BFP long */
-    case 0x010700: /* BFP extended */
-    case 0x010800: /* DFP short */
-    case 0x010900: /* DFP long */
-    case 0x010a00: /* DFP extended */
+    /* Convert to floating point radix HFP short from ... */
+    case 0x010005: /* BFP short */
+    case 0x010006: /* BFP long */
+    case 0x010007: /* BFP extended */
+    case 0x010008: /* DFP short */
+    case 0x010009: /* DFP long */
+    case 0x01000a: /* DFP extended */
     {
       if(GR0_test_bit(regs))
       {
         regs->psw.cc = 0;
         return;
       }
-      from32 = regs->fpr[FPR2I(4)];
+      get_from(regs, &from);
     }
 
-
-    /* Convert floating point radix HFP long to ... */
-    case 0x010501: /* BFP short */
-    case 0x010601: /* BFP long */
-    case 0x010701: /* BFP extended */
-    case 0x010801: /* DFP short */
-    case 0x010901: /* DFP long */
-    case 0x010a01: /* DFP extended */
+    /* Convert to floating point radix HFP long from ... */
+    case 0x010105: /* BFP short */
+    case 0x010106: /* BFP long */
+    case 0x010107: /* BFP extended */
+    case 0x010108: /* DFP short */
+    case 0x010109: /* DFP long */
+    case 0x01010a: /* DFP extended */
     {
       if(GR0_test_bit(regs))
       {
         regs->psw.cc = 0;
         return;
       }
-      from64 = ((U64) regs->fpr[FPR2I(4)]) << 32 | regs->fpr[FPR2I(4) + 1];
+      get_from(regs, &from);
     }
 
-    /* Convert floating point radix HFP extended to ... */
-    case 0x010502: /* BFP short */
-    case 0x010602: /* BFP long */
-    case 0x010702: /* BFP extended */
-    case 0x010802: /* DFP short */
-    case 0x010902: /* DFP long */
-    case 0x010a02: /* DFP extended */
+    /* Convert to floating point radix HFP extended from ... */
+    case 0x010205: /* BFP short */
+    case 0x010206: /* BFP long */
+    case 0x010207: /* BFP extended */
+    case 0x010208: /* DFP short */
+    case 0x010209: /* DFP long */
+    case 0x01020a: /* DFP extended */
     {
       if(GR0_test_bit(regs))
       {
         regs->psw.cc = 0;
         return;
       }
-      from1 = ((U64) regs->fpr[FPR2I(4)]) << 32 | regs->fpr[FPR2I(4) + 1];
-      from2 = ((U64) regs->fpr[FPR2I(6)]) << 32 | regs->fpr[FPR2I(6) + 1];
+      get_from(regs, &from);
     }
 
-    /* Convert floating point radix BFP short to ... */
-    case 0x010005: /* HFP short */
-    case 0x010105: /* HFP long */
-    case 0x010205: /* HFP extended */
-    case 0x010805: /* DFP short */
-    case 0x010905: /* DFP long */
-    case 0x010a05: /* DFP extended */
+    /* Convert to floating point radix BFP short from ... */
+    case 0x010500: /* HFP short */
+    case 0x010501: /* HFP long */
+    case 0x010502: /* HFP extended */
+    case 0x010508: /* DFP short */
+    case 0x010509: /* DFP long */
+    case 0x01050a: /* DFP extended */
     {
       if(GR0_test_bit(regs))
       {
         regs->psw.cc = 0;
         return;
       }
-      from32 = regs->fpr[FPR2I(4)];
+      get_from(regs, &from);
     } 
 
-    /* Convert floating point radix BFP long to ... */
-    case 0x010006: /* HFP short */
-    case 0x010106: /* HFP long */
-    case 0x010206: /* HFP extended */
-    case 0x010806: /* DFP short */
-    case 0x010906: /* DFP long */
-    case 0x010a06: /* DFP extended */
+    /* Convert to floating point radix BFP long from ... */
+    case 0x010600: /* HFP short */
+    case 0x010601: /* HFP long */
+    case 0x010602: /* HFP extended */
+    case 0x010608: /* DFP short */
+    case 0x010609: /* DFP long */
+    case 0x01060a: /* DFP extended */
     {
       if(GR0_test_bit(regs))
       {
         regs->psw.cc = 0;
         return;
       }
-      from64 = ((U64) regs->fpr[FPR2I(4)]) << 32 | regs->fpr[FPR2I(4) + 1];
+      get_from(regs, &from);
     }
 
-    /* Convert floating point radix BFP extended to ... */
-    case 0x010007: /* HFP short */
-    case 0x010107: /* HFP long */
-    case 0x010207: /* HFP extended */
-    case 0x010807: /* DFP short */
-    case 0x010907: /* DFP long */
-    case 0x010a07: /* DFP extended */
+    /* Convert to floating point radix BFP extended from ... */
+    case 0x010700: /* HFP short */
+    case 0x010701: /* HFP long */
+    case 0x010702: /* HFP extended */
+    case 0x010708: /* DFP short */
+    case 0x010709: /* DFP long */
+    case 0x01070a: /* DFP extended */
     {
       if(GR0_test_bit(regs))
       {
         regs->psw.cc = 0;
         return;
       }
-      from1 = ((U64) regs->fpr[FPR2I(4)]) << 32 | regs->fpr[FPR2I(4) + 1];
-      from2 = ((U64) regs->fpr[FPR2I(6)]) << 32 | regs->fpr[FPR2I(6) + 1];
+      get_from(regs, &from);
     }
 
-    /* Convert floating point radix DFP short to ... */
-    case 0x010008: /* HFP short */
-    case 0x010108: /* HFP long */
-    case 0x010208: /* HFP extended */
-    case 0x010508: /* BFP short */
-    case 0x010608: /* BFP long */
-    case 0x010708: /* BFP extended */
+    /* Convert to floating point radix DFP short from ... */
+    case 0x010800: /* HFP short */
+    case 0x010801: /* HFP long */
+    case 0x010802: /* HFP extended */
+    case 0x010805: /* BFP short */
+    case 0x010806: /* BFP long */
+    case 0x010807: /* BFP extended */
     {
       if(GR0_test_bit(regs))
       {
         regs->psw.cc = 0;
         return;
       }
-      from32 = regs->fpr[FPR2I(4)];
+      get_from(regs, &from);
     }
 
-    /* Convert floating point radix DFP long to ... */
-    case 0x010009: /* HFP short */
-    case 0x010109: /* HFP long */
-    case 0x010209: /* HFP extended */
-    case 0x010509: /* BFP short */
-    case 0x010609: /* BFP long */
-    case 0x010709: /* BFP extended */
+    /* Convert to floating point radix DFP long from ... */
+    case 0x010900: /* HFP short */
+    case 0x010901: /* HFP long */
+    case 0x010902: /* HFP extended */
+    case 0x010905: /* BFP short */
+    case 0x010906: /* BFP long */
+    case 0x010907: /* BFP extended */
     {
       if(GR0_test_bit(regs))
       {
         regs->psw.cc = 0;
         return;
       }
-      from64 = ((U64) regs->fpr[FPR2I(4)]) << 32 | regs->fpr[FPR2I(4) + 1];
+      get_from(regs, &from);
     }
 
-   /* Convert floating point radix DFP extended to ... */
-    case 0x01000a: /* HFP short */
-    case 0x01010a: /* HFP long */
-    case 0x01020a: /* HFP extended */
-    case 0x01050a: /* BFP short */
-    case 0x01060a: /* BFP long */
-    case 0x01070a: /* BFP extended */
+   /* Convert to floating point radix DFP extended from ... */
+    case 0x010a00: /* HFP short */
+    case 0x010a01: /* HFP long */
+    case 0x010a02: /* HFP extended */
+    case 0x010a05: /* BFP short */
+    case 0x010a06: /* BFP long */
+    case 0x010a07: /* BFP extended */
     {
       if(GR0_test_bit(regs))
       {
         regs->psw.cc = 0;
         return;
       }
-      from1 = ((U64) regs->fpr[FPR2I(4)]) << 32 | regs->fpr[FPR2I(4) + 1];
-      from2 = ((U64) regs->fpr[FPR2I(6)]) << 32 | regs->fpr[FPR2I(6) + 1];
+      get_from(regs, &from);
     }
     default:
     {
