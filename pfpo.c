@@ -272,6 +272,123 @@ static void BFP_extended_set(U64 *h, U64 *l, mpf_t *bfp_extended)
 }
 
 /*----------------------------------------------------------------------------*/
+/* DFP_short_get                                                              */
+/*                                                                            */
+/* Converts a short DFP situated in U32 r into a GNU multi precision float    */
+/* situated in bfp_short.                                                     */
+/*----------------------------------------------------------------------------*/
+static void DFP_short_get(mpf_t *dfp_short, U32 r)
+{
+  char buf[DECIMAL32_String];
+  decimal32 d32;
+  int i;
+  U32 temp;
+
+  temp = r;
+  for(i = 0; i < 4; i++)
+  {
+    d32.bytes[4 - 1 - i] = temp & 0x000000ff;
+    temp >>= 8;
+  }
+  decimal32ToString(&d32, buf);
+  mpf_set_prec(*dfp_short, 24); // 24 bits needed for 7 decimal digits
+  mpf_set_str(*dfp_short, buf, 10);
+
+#ifdef OPTION_PFPO_DEBUG
+  logmsg("DFP_short_get: %s <= %08x\n", buf, r);
+#endif
+}
+
+/*----------------------------------------------------------------------------*/
+/* HFP_short_set                                                              */
+/*                                                                            */
+/* Converts a GNU multi precision float situated in dfp_short into a short    */
+/* HFP situated in U32 r.                                                     */
+/*----------------------------------------------------------------------------*/
+static void DFP_short_set(U32 *r, mpf_t *dfp_short)
+{
+}
+
+/*----------------------------------------------------------------------------*/
+/* DFP_long_get                                                               */
+/*                                                                            */
+/* Converts a long DFP situated in U64 r into a GNU multi precision float     */
+/* situated in dfp_long.                                                      */
+/*----------------------------------------------------------------------------*/
+static void DFP_long_get(mpf_t *dfp_long, U64 r)
+{
+  char buf[DECIMAL64_String];
+  decimal64 d64;
+  int i;
+  U64 temp;
+
+  temp = r;
+  for(i = 0; i < 8; i++)
+  {
+    d64.bytes[8 - 1 - i] = temp & 0x00000000000000ff;
+    temp >>= 8;
+  }
+  decimal64ToString(&d64, buf);
+  mpf_set_prec(*dfp_long, 54); // 54 bits needed for 16 decimal digits
+  mpf_set_str(*dfp_long, buf, 10);
+
+#ifdef OPTION_PFPO_DEBUG
+  logmsg("DFP_long_get: %s <= %016lx\n", buf, r);
+#endif
+}
+/*----------------------------------------------------------------------------*/
+/* DFP_long_set                                                               */
+/*                                                                            */
+/* Converts a GNU multi precision float situated in dfp_long into a long DFP  */
+/* situated in U64 r.                                                         */
+/*----------------------------------------------------------------------------*/
+static void DFP_long_set(U64 *r, mpf_t *dfp_long)
+{
+}
+
+/*----------------------------------------------------------------------------*/
+/* DFP_extended_get                                                           */
+/*                                                                            */
+/* Converts an extended DFP situated in U64 h and l into a GNU multi          */
+/* precision float situated in dfp_extended.                                  */
+/*----------------------------------------------------------------------------*/
+static void DFP_extended_get(mpf_t *dfp_extended, U64 h, U64 l)
+{
+  char buf[DECIMAL128_String];
+  decimal128 d128;
+  int i;
+  U64 temph;
+  U64 templ;
+
+  temph = h;
+  templ = l;
+  for(i = 0; i < 8; i++)
+  {
+    d128.bytes[16 - 1 - i] = templ & 0x00000000000000ff;
+    d128.bytes[8 - 1 - i] = temph & 0x00000000000000ff;
+    templ >>= 8;
+    temph >>= 8;
+  }
+  decimal128ToString(&d128, buf);
+  mpf_set_prec(*dfp_extended, 62); // 62 bits needed for 34 decimal digits
+  mpf_set_str(*dfp_extended, buf, 10);
+
+#ifdef OPTION_PFPO_DEBUG
+  logmsg("DFP_extended_get: %s <= %016lx %016lx\n", buf, h, l);
+#endif
+}
+
+/*----------------------------------------------------------------------------*/
+/* DFP_extended_set                                                           */
+/*                                                                            */
+/* Converts a GNU multi precision float situated in dfp_extended into an      */
+/* extended DFP situated in U64 h and l.                                      */
+/*----------------------------------------------------------------------------*/
+static void DFP_extended_set(U64 *h, U64 *l, mpf_t *dfp_extended)
+{
+}
+
+/*----------------------------------------------------------------------------*/
 /* HFP_short_get                                                              */
 /*                                                                            */
 /* Converts a short HFP situated in U32 r into a GNU multi precision float    */
@@ -455,50 +572,41 @@ static void get_from(REGS *regs, mpf_t *from)
   switch(GR0_PFPO_fmt_op2(regs))
   {
     case 0x00:
-    {
       HFP_short_get(from, regs->fpr[FPR2I(4)]);
       break;
-    }
+
     case 0x01:
-    {
       HFP_long_get(from, ((U64) regs->fpr[FPR2I(4)]) << 32 | regs->fpr[FPR2I(4) + 1]);
       break;
-    }
+    
     case 0x02:
-    {
       HFP_extended_get(from, ((U64) regs->fpr[FPR2I(4)]) << 32 | regs->fpr[FPR2I(4) + 1], ((U64) regs->fpr[FPR2I(6)]) << 32 | regs->fpr[FPR2I(6) + 1]);
       break;
-    }
+    
     case 0x05:
-    {
       BFP_short_get(from, regs->fpr[FPR2I(4)]);
       break;
-    }
+    
     case 0x06:
-    {
       BFP_long_get(from, ((U64) regs->fpr[FPR2I(4)]) << 32 | regs->fpr[FPR2I(4) + 1]);
       break;
-    }
+    
     case 0x07:
-    {
       BFP_extended_get(from, ((U64) regs->fpr[FPR2I(4)]) << 32 | regs->fpr[FPR2I(4) + 1], ((U64) regs->fpr[FPR2I(6)]) << 32 | regs->fpr[FPR2I(6) + 1]);
       break;
-    }
+    
     case 0x08:
-    {
-//      DFP_short_get(from, regs->fpr[FPR2I(4)]);
+      DFP_short_get(from, regs->fpr[FPR2I(4)]);
       break;
-    }
+    
     case 0x09:
-    {
-//      DFP_long_get(from, ((U64) regs->fpr[FPR2I(4)]) << 32 | regs->fpr[FPR2I(4) + 1]);
+      DFP_long_get(from, ((U64) regs->fpr[FPR2I(4)]) << 32 | regs->fpr[FPR2I(4) + 1]);
       break;
-    }
+    
     case 0x0a:
-    {
-//      DFP_extended_get(from, ((U64) regs->fpr[FPR2I(4)]) << 32 | regs->fpr[FPR2I(4) + 1], ((U64) regs->fpr[FPR2I(6)]) << 32 | regs->fpr[FPR2I(6) + 1]);
+      DFP_extended_get(from, ((U64) regs->fpr[FPR2I(4)]) << 32 | regs->fpr[FPR2I(4) + 1], ((U64) regs->fpr[FPR2I(6)]) << 32 | regs->fpr[FPR2I(6) + 1]);
       break;
-    }
+    
   }
 }
 #endif // __COMPILE_ONCE
@@ -529,15 +637,14 @@ DEF_INST(perform_floating_point_operation)
     case 0x010008: /* DFP short */
     case 0x010009: /* DFP long */
     case 0x01000a: /* DFP extended */
-    {
       if(GR0_test_bit(regs))
       {
         regs->psw.cc = 0;
         return;
       }
       get_from(regs, &from);
-    }
-
+      break;
+    
     /* Convert to floating point radix HFP long from ... */
     case 0x010105: /* BFP short */
     case 0x010106: /* BFP long */
@@ -545,14 +652,13 @@ DEF_INST(perform_floating_point_operation)
     case 0x010108: /* DFP short */
     case 0x010109: /* DFP long */
     case 0x01010a: /* DFP extended */
-    {
       if(GR0_test_bit(regs))
       {
         regs->psw.cc = 0;
         return;
       }
       get_from(regs, &from);
-    }
+      break;
 
     /* Convert to floating point radix HFP extended from ... */
     case 0x010205: /* BFP short */
@@ -561,14 +667,13 @@ DEF_INST(perform_floating_point_operation)
     case 0x010208: /* DFP short */
     case 0x010209: /* DFP long */
     case 0x01020a: /* DFP extended */
-    {
       if(GR0_test_bit(regs))
       {
         regs->psw.cc = 0;
         return;
       }
       get_from(regs, &from);
-    }
+      break;
 
     /* Convert to floating point radix BFP short from ... */
     case 0x010500: /* HFP short */
@@ -577,14 +682,13 @@ DEF_INST(perform_floating_point_operation)
     case 0x010508: /* DFP short */
     case 0x010509: /* DFP long */
     case 0x01050a: /* DFP extended */
-    {
       if(GR0_test_bit(regs))
       {
         regs->psw.cc = 0;
         return;
       }
       get_from(regs, &from);
-    } 
+      break;
 
     /* Convert to floating point radix BFP long from ... */
     case 0x010600: /* HFP short */
@@ -593,14 +697,13 @@ DEF_INST(perform_floating_point_operation)
     case 0x010608: /* DFP short */
     case 0x010609: /* DFP long */
     case 0x01060a: /* DFP extended */
-    {
       if(GR0_test_bit(regs))
       {
         regs->psw.cc = 0;
         return;
       }
       get_from(regs, &from);
-    }
+      break;
 
     /* Convert to floating point radix BFP extended from ... */
     case 0x010700: /* HFP short */
@@ -609,14 +712,13 @@ DEF_INST(perform_floating_point_operation)
     case 0x010708: /* DFP short */
     case 0x010709: /* DFP long */
     case 0x01070a: /* DFP extended */
-    {
       if(GR0_test_bit(regs))
       {
         regs->psw.cc = 0;
         return;
       }
       get_from(regs, &from);
-    }
+      break;
 
     /* Convert to floating point radix DFP short from ... */
     case 0x010800: /* HFP short */
@@ -625,14 +727,13 @@ DEF_INST(perform_floating_point_operation)
     case 0x010805: /* BFP short */
     case 0x010806: /* BFP long */
     case 0x010807: /* BFP extended */
-    {
       if(GR0_test_bit(regs))
       {
         regs->psw.cc = 0;
         return;
       }
       get_from(regs, &from);
-    }
+      break;
 
     /* Convert to floating point radix DFP long from ... */
     case 0x010900: /* HFP short */
@@ -641,14 +742,13 @@ DEF_INST(perform_floating_point_operation)
     case 0x010905: /* BFP short */
     case 0x010906: /* BFP long */
     case 0x010907: /* BFP extended */
-    {
       if(GR0_test_bit(regs))
       {
         regs->psw.cc = 0;
         return;
       }
       get_from(regs, &from);
-    }
+      break;
 
    /* Convert to floating point radix DFP extended from ... */
     case 0x010a00: /* HFP short */
@@ -657,23 +757,22 @@ DEF_INST(perform_floating_point_operation)
     case 0x010a05: /* BFP short */
     case 0x010a06: /* BFP long */
     case 0x010a07: /* BFP extended */
-    {
       if(GR0_test_bit(regs))
       {
         regs->psw.cc = 0;
         return;
       }
       get_from(regs, &from);
-    }
+      break;
+
     default:
-    {
       if(GR0_test_bit(regs))
       {
         regs->psw.cc = 3;
         return;
       }
       ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-    }
+      break;
   }
 
 } /* end DEF_INST(perform_floating_point_operation) */
