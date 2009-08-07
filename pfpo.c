@@ -287,7 +287,7 @@ static void DFP_short_get(mpf_t *dfp_short, U32 r)
   temp = r;
   for(i = 0; i < 4; i++)
   {
-    d32.bytes[4 - 1 - i] = temp & 0x000000ff;
+    d32.bytes[i] = temp & 0x000000ff;
     temp >>= 8;
   }
   decimal32ToString(&d32, buf);
@@ -325,7 +325,7 @@ static void DFP_long_get(mpf_t *dfp_long, U64 r)
   temp = r;
   for(i = 0; i < 8; i++)
   {
-    d64.bytes[8 - 1 - i] = temp & 0x00000000000000ff;
+    d64.bytes[i] = temp & 0x00000000000000ff;
     temp >>= 8;
   }
   decimal64ToString(&d64, buf);
@@ -364,8 +364,8 @@ static void DFP_extended_get(mpf_t *dfp_extended, U64 h, U64 l)
   templ = l;
   for(i = 0; i < 8; i++)
   {
-    d128.bytes[16 - 1 - i] = templ & 0x00000000000000ff;
-    d128.bytes[8 - 1 - i] = temph & 0x00000000000000ff;
+    d128.bytes[i] = templ & 0x00000000000000ff;
+    d128.bytes[i + 8] = temph & 0x00000000000000ff;
     templ >>= 8;
     temph >>= 8;
   }
