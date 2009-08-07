@@ -300,13 +300,38 @@ static void DFP_short_get(mpf_t *dfp_short, U32 r)
 }
 
 /*----------------------------------------------------------------------------*/
-/* HFP_short_set                                                              */
+/* DFP_short_set                                                              */
 /*                                                                            */
 /* Converts a GNU multi precision float situated in dfp_short into a short    */
 /* HFP situated in U32 r.                                                     */
 /*----------------------------------------------------------------------------*/
 static void DFP_short_set(U32 *r, mpf_t *dfp_short)
 {
+  char buf[20];
+  char buf2[8];
+  decContext ctx;
+  decimal32 d32;
+  mp_exp_t exp;
+  int i;
+
+  mpf_get_str(buf2, &exp, 10, 7, *bfp_short);
+  if(buf2[0] == '-')
+    sprintf(buf, "-0.%sE%d", &buf2[1], exp);
+  else
+    sprintf(buf, "0.%sE%d", buf2, exp);
+  decContextDefault(&ctx, DEC_INIT_DECIMAL32);
+  decimal32FromString(&d32, buf, &ctx);
+  *r = 0x00000000;
+  for(i = 0; i < 4; i++)
+  {
+    *r <<= 8;
+    *r |= d32.bytes[3 - i];
+  }
+
+#ifdef OPTION_PFPO_DEBUG
+  strchr(buf, 'E')[0] = '@';
+  logmsg("DFP_short_set: %s => %08x\n", buf, *r);
+#endif
 }
 
 /*----------------------------------------------------------------------------*/
