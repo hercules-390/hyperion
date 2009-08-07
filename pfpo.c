@@ -314,11 +314,11 @@ static void DFP_short_set(U32 *r, mpf_t *dfp_short)
   mp_exp_t exp;
   int i;
 
-  mpf_get_str(buf2, &exp, 10, 7, *bfp_short);
+  mpf_get_str(buf2, &exp, 10, 7, *dfp_short);
   if(buf2[0] == '-')
-    sprintf(buf, "-0.%sE%d", &buf2[1], exp);
+    sprintf(buf, "-0.%sE%ld", &buf2[1], exp);
   else
-    sprintf(buf, "0.%sE%d", buf2, exp);
+    sprintf(buf, "0.%sE%ld", buf2, exp);
   decContextDefault(&ctx, DEC_INIT_DECIMAL32);
   decimal32FromString(&d32, buf, &ctx);
   *r = 0x00000000;
@@ -369,6 +369,31 @@ static void DFP_long_get(mpf_t *dfp_long, U64 r)
 /*----------------------------------------------------------------------------*/
 static void DFP_long_set(U64 *r, mpf_t *dfp_long)
 {
+  char buf[50];
+  char buf2[17];
+  decContext ctx;
+  decimal64 d64;
+  mp_exp_t exp;
+  int i;
+
+  mpf_get_str(buf2, &exp, 10, 16, *dfp_long);
+  if(buf2[0] == '-')
+    sprintf(buf, "-0.%sE%ld", &buf2[1], exp);
+  else
+    sprintf(buf, "0.%sE%ld", buf2, exp);
+  decContextDefault(&ctx, DEC_INIT_DECIMAL64);
+  decimal64FromString(&d64, buf, &ctx);
+  *r = 0x0000000000000000;
+  for(i = 0; i < 8; i++)
+  {
+    *r <<= 8;
+    *r |= d64.bytes[7 - i];
+  }
+
+#ifdef OPTION_PFPO_DEBUG
+  strchr(buf, 'E')[0] = '@';
+  logmsg("DFP_long_set: %s => %016lx\n", buf, *r);
+#endif
 }
 
 /*----------------------------------------------------------------------------*/
@@ -411,6 +436,34 @@ static void DFP_extended_get(mpf_t *dfp_extended, U64 h, U64 l)
 /*----------------------------------------------------------------------------*/
 static void DFP_extended_set(U64 *h, U64 *l, mpf_t *dfp_extended)
 {
+  char buf[50];
+  char buf2[35];
+  decContext ctx;
+  decimal128 d128;
+  mp_exp_t exp;
+  int i;
+
+  mpf_get_str(buf2, &exp, 10, 34, *dfp_extended);
+  if(buf2[0] == '-')
+    sprintf(buf, "-0.%sE%ld", &buf2[1], exp);
+  else
+    sprintf(buf, "0.%sE%ld", buf2, exp);
+  decContextDefault(&ctx, DEC_INIT_DECIMAL128);
+  decimal128FromString(&d128, buf, &ctx);
+  *l = 0x0000000000000000;
+  *h = 0x0000000000000000;
+  for(i = 0; i < 8; i++)
+  {
+    *l <<= 8;
+    *h <<= 8;
+    *l |= d128.bytes[7 - i];
+    *h |= d128.bytes[15 - i];
+  }
+
+#ifdef OPTION_PFPO_DEBUG
+  strchr(buf, 'E')[0] = '@';
+  logmsg("DFP_extended_set: %s => %016lx %016lx\n", buf, *h, *l);
+#endif
 }
 
 /*----------------------------------------------------------------------------*/
