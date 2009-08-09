@@ -91,6 +91,8 @@
 #if !defined(_VMD250_C)
 #define _VMD250_C
 
+#if !defined(_VMD250_H)
+#define _VMD250_H
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
@@ -319,6 +321,8 @@ typedef struct _IOCTL64 {
         int     goodblks;            /* Number of successful I/O's   */
         int     badblks;             /* Number of unsuccessful I/O's */
     } IOCTL64;
+    
+#endif /* !defined(_VMD250_H) */
 
 /*-------------------------------------------------------------------*/
 /* Internal Architecture Independent Function Prototypes             */
@@ -2243,14 +2247,11 @@ RADR   bufend;    /* Last byte read or written                 */
    }
    return PSC_SUCCESS;
 
-   
-   
 } /* end function ARCH_DEP(d250_list64) */
 
 #endif /* defined(FEATURE_ESAME) */
 
 #endif /*FEATURE_VM_BLOCKIO*/
-
 
 #if !defined(_GEN_ARCH)
 
