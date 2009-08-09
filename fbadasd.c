@@ -1326,6 +1326,81 @@ int     repcnt;                         /* Replication count         */
 } /* end function fbadasd_execute_ccw */
 
 /*-------------------------------------------------------------------*/
+/* Read Standard Block (used by Diagnose instructions)               */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void fbadasd_read_block 
+      ( DEVBLK *dev, int blknum, int blksize, int blkfactor, 
+        BYTE *iobuf, BYTE *unitstat, U16 *residual )
+{
+int     rc;                             /* Return code               */
+int     sector;       /* First sector being read                     */
+
+    /* Unit check if block number is invalid */
+    sector = blknum * blkfactor;
+    if (sector >= dev->fbanumblk)
+    {
+        dev->sense[0] = SENSE_CR;
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    /* Seek to start of desired block */
+    dev->fbarba = ( dev->fbaorigin + sector ) * dev->fbablksiz;
+
+    /* Read block into I/O buffer */
+    rc = fba_read (dev, iobuf, blksize, unitstat);
+    if (rc < blksize)
+    {
+       dev->sense[0] = SENSE_CR;
+       *unitstat = CSW_CE | CSW_DE | CSW_UC;
+       return;
+    }
+
+    /* Return unit status and residual byte count */
+    *unitstat = CSW_CE | CSW_DE;
+    *residual = 0;
+
+} /* end function fbadasd_read_block */
+
+/*-------------------------------------------------------------------*/
+/* Write Standard Block (used by Diagnose instructions)              */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void fbadasd_write_block ( 
+        DEVBLK *dev, int blknum, int blksize, int blkfactor, 
+        BYTE *iobuf, BYTE *unitstat, U16 *residual )
+{
+int     rc;           /* Return code from write function             */
+int     sector;       /* First sector being read                     */
+                                           
+    /* Unit check if block number is invalid */
+    sector = blknum * blkfactor;
+    if (sector >= dev->fbanumblk)
+    {
+        dev->sense[0] = SENSE_CR;
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
+    /* Seek to start of desired block */
+    dev->fbarba = ( dev->fbaorigin + sector ) * dev->fbablksiz;
+
+    /* Read block into I/O buffer */
+    rc = fba_write (dev, iobuf, blksize, unitstat);
+    if (rc < blksize)
+    {
+       dev->sense[0] = SENSE_CR;
+       *unitstat = CSW_CE | CSW_DE | CSW_UC;
+       return;
+    }
+
+    /* Return unit status and residual byte count */
+    *unitstat = CSW_CE | CSW_DE;
+    *residual = 0;
+
+} /* end function fbadasd_write_block */
+
+/* Deprecated: Will be replaced by fbadasd_read/write_block functions */
+/*-------------------------------------------------------------------*/
 /* Synchronous Fixed Block I/O (used by Diagnose instruction)        */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void fbadasd_syncblk_io ( DEVBLK *dev, BYTE type, int blknum,

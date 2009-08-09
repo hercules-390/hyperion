@@ -344,6 +344,12 @@ int ckddasd_hresume  ( DEVBLK *dev, void *file );
 /* Functions in module fbadasd.c */
 FBA_DLL_IMPORT void fbadasd_syncblk_io (DEVBLK *dev, BYTE type, int blknum,
         int blksize, BYTE *iobuf, BYTE *unitstat, U16 *residual);
+FBA_DLL_IMPORT void fbadasd_read_block 
+      ( DEVBLK *dev, int blknum, int blksize, int blkfactor, 
+        BYTE *iobuf, BYTE *unitstat, U16 *residual );
+FBA_DLL_IMPORT void fbadasd_write_block 
+      ( DEVBLK *dev, int blknum, int blksize, int blkfactor, 
+        BYTE *iobuf, BYTE *unitstat, U16 *residual );
 int fbadasd_init_handler ( DEVBLK *dev, int argc, char *argv[]);
 void fbadasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U16 count, BYTE prevcode, int ccwseq,

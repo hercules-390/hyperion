@@ -189,6 +189,33 @@ static FBADEV fbatab[] = {
 } ;
 #define FBADEV_NUM (sizeof(fbatab)/FBADEV_SIZE)
 
+#if defined(FEATURE_VM_BLOCKIO)
+static BLKTAB blktab[] = {
+#if 0
+   /* Remove conditional compilation when CKD devices supported */
+   CKDIOT("2305",0x2305,15,10,5,3),
+   CKDIOT("2311",0x2311,6,3,1,0),
+   CKDIOT("2314",0x2314,11,6,3,1),
+   CKDIOT("3330",0x3330,20,11,6,3),
+   CKDIOT("3340",0x3340,12,7,3,2),
+   CKDIOT("3350",0x3350,27,15,8,4),
+   CKDIOT("3375",0x3375,40,25,14,8),
+   CKDIOT("3380",0x3380,35,23,14,7),
+   CKDIOT("3390",0x3390,49,33,21,12),
+   CKDIOT("9345",0x9345,41,28,17,9),
+#endif
+   FBAIOT("0671",0x0671),
+   FBAIOT("3310",0x3310),
+   FBAIOT("3370",0x3370),
+   FBAIOT("9332",0x9332),
+   FBAIOT("9335",0x9335),
+   FBAIOT("9336",0x9336)
+};
+#define BLKTAB_NUM (sizeof(blktab)/BLKTAB_SIZE)
+
+#endif /* defined(FEATURE_VM_BLOCKIO) */
+
+
 /*-------------------------------------------------------------------*/
 /* Lookup a table entry either by name or type                       */
 /*-------------------------------------------------------------------*/
@@ -226,7 +253,17 @@ U32 i;                                  /* Loop Index                */
                 return &fbatab[i];
         }
         return NULL;
-
+#if defined(FEATURE_VM_BLOCKIO)
+    case DASD_STDBLK:
+        for (i = 0; i < (int)BLKTAB_NUM; i++)
+        {
+            if ((name && !strcmp(name, blktab[i].name)) ||
+                (U32)devt == (U32)blktab[i].devt || 
+                (U32)devt == (U32)(blktab[i].devt & 0xff))
+                return &blktab[i];
+        }
+        return NULL;
+#endif /* defined(FEATURE_VM_BLOCKIO) */
     default:
         return NULL;
     }

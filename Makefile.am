@@ -417,6 +417,7 @@ endif
                        diagnose.c   \
                        diagmssf.c   \
                        vm.c         \
+                       vmd250.c     \
                        channel.c    \
                        external.c   \
                        float.c      \
@@ -770,6 +771,7 @@ noinst_HEADERS = fishhang.h     \
                  hercwind.h     \
                  getopt.h       \
                  w32mtio.h      \
+                 vmd250.h       \
                  $(extra_dynamic_SRC)
 
 cckd: cckd2ckd$(EXEEXT)  \

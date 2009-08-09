@@ -490,6 +490,12 @@ struct SYSBLK {
         int     devtunavail;            /* Count thread unavailable  */
 #endif // !defined(OPTION_FISHIO)
         RADR    addrlimval;             /* Address limit value (SAL) */
+#if defined(FEATURE_VM_BLOCKIO)
+        U16     servcode;               /* External interrupt code   */
+        BYTE    biosubcd;               /* Block I/O sub int. code   */
+        BYTE    biostat;                /* Block I/O status          */
+        U64     bioparm;                /* Block I/O interrupt parm  */
+#endif /* defined(FEATURE_VM_BLOCKIO) */
         U32     servparm;               /* Service signal parameter  */
         unsigned int                    /* Flags                     */
                 daemon_mode:1,          /* Daemon mode active        */
@@ -859,6 +865,11 @@ struct DEVBLK {                         /* Device configuration block*/
         /*  External GUI fields                                      */
         GUISTAT* pGUIStat;              /* EXTERNALGUI Dev Stat Ctl  */
 #endif
+
+#if defined(FEATURE_VM_BLOCKIO)
+        /* VM DIAGNOSE X'250' Emulation Environment                  */
+        struct VMBIOENV *vmd250env;     /* Established environment   */
+#endif /* defined(FEATURE_VM_BLOCKIO) */
 
         /*  Fields for remote devices                                */
 
@@ -1507,5 +1518,6 @@ struct GUISTAT
     char    szStatStrBuff2[GUI_STATSTR_BUFSIZ];
 };
 #endif // EXTERNALGUI
+
 
 #endif // _HSTRUCTS_H

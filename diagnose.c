@@ -438,6 +438,17 @@ U32   code;
         /* This function is implemented as a no-operation */
         regs->GR_L(r2) = 0;
         break;
+        
+        
+#if defined(FEATURE_VM_BLOCKIO)
+    case 0x250:
+    /*---------------------------------------------------------------*/
+    /* Diagnose 250: Standardized Block I/O                          */
+    /*---------------------------------------------------------------*/
+        regs->psw.cc = ARCH_DEP(vm_blockio) (r1, r2, regs);
+        break;
+#endif /*defined(FEATURE_VM_BLOCKIO)*/
+
 
     case 0x260:
     /*---------------------------------------------------------------*/

@@ -97,8 +97,11 @@ int     rc;
     regs->psw.intcode = code;
 
 
-    /* Zero extcpuad field unless extcall or ems signal */
+    /* Zero extcpuad field unless extcall or ems signal or blockio */
     if(code != EXT_EXTERNAL_CALL_INTERRUPT
+#if defined(FEATURE_VM_BLOCKIO)
+    && code != EXT_BLOCKIO_INTERRUPT
+#endif /* defined(FEATURE_VM_BLOCKIO) */
     && code != EXT_EMERGENCY_SIGNAL_INTERRUPT)
         STORE_HW(psa->extcpad,0);
 
@@ -171,6 +174,12 @@ void ARCH_DEP(perform_external_interrupt) (REGS *regs)
 {
 PSA    *psa;                            /* -> Prefixed storage area  */
 U16     cpuad;                          /* Originating CPU address   */
+#if defined(FEATURE_VM_BLOCKIO)
+#if defined(FEATURE_ESAME)
+RADR    servpadr;      /* Address of 64-bit block I/O interrupt */
+#endif
+U16     servcode;      /* Service Signal or Block I/O Interrupt code */
+#endif /* defined(FEATURE_VM_BLOCKIO) */
 
     /* External interrupt if console interrupt key was depressed */
     if ( OPEN_IC_INTKEY(regs) && !SIE_MODE(regs) )
@@ -331,6 +340,127 @@ U16     cpuad;                          /* Originating CPU address   */
     /* External interrupt if service signal is pending */
     if ( OPEN_IC_SERVSIG(regs) && !SIE_MODE(regs) )
     {
+
+#if defined(FEATURE_VM_BLOCKIO)
+        
+        /* Note: Both Block I/O and Service Signal are enabled by the */
+        /* the same CR0 bit.  Hence they are handled in the same code */
+        switch(sysblk.servcode)
+        {
+        case EXT_BLOCKIO_INTERRUPT:  /* VM Block I/O Interrupt */
+#if 0
+            logmsg (_("Processing Block I/O interrupt: "
+                "code=%4.4X parm=%16.16X status=%2.2X subcode=%2.2X\n"),
+                sysblk.servcode,
+                sysblk.bioparm,
+                sysblk.biostat,
+                sysblk.biosubcd
+                );
+#endif
+           servcode = EXT_BLOCKIO_INTERRUPT;
+
+#if defined(FEATURE_ESAME)
+/* Real address used to store the 64-bit interrupt parameter */
+#define VM_BLOCKIO_INT_PARM 0x11B8
+           if (sysblk.biosubcd == 0x07)
+           {
+           /* 8-byte interrupt parm */
+           
+               if (CPU_STEPPING_OR_TRACING_ALL)
+               {
+                  logmsg (_("HHCCP028I External interrupt: Block I/O %16.16X\n"),
+                     sysblk.bioparm);
+               }
+
+               /* Set the main storage reference and change bits   */
+               /* for 64-bit interruption parameter.               */
+               /* Note: This is handled for the first 4K page in   */
+               /* ARCH_DEP(external_interrupt), but not for the    */
+               /* the second 4K page used for the 64-bit interrupt */
+               /* parameter.                                       */
+
+               /* Point to 2nd page of PSA in main storage */
+               servpadr=APPLY_PREFIXING(VM_BLOCKIO_INT_PARM,regs->PX);
+
+               STORAGE_KEY(servpadr, regs) 
+                     |= (STORKEY_REF | STORKEY_CHANGE);
+
+#if 0
+               /* Store the 64-bit interrupt parameter */
+               logmsg (_("Saving 64-bit Block I/O interrupt parm at "
+                         "%16.16X: %16.16X\n"),
+                         servpadr,
+                         sysblk.bioparm
+                      );
+#endif
+
+               STORE_DW(regs->mainstor + servpadr,sysblk.bioparm);
+               psa = (void*)(regs->mainstor + regs->PX);
+           }
+           else
+           {
+#endif  /* defined(FEATURE_ESAME) */
+
+           /* 4-byte interrupt parm */
+
+              if (CPU_STEPPING_OR_TRACING_ALL)
+              {
+                 logmsg (_("HHCCP028I External interrupt: Block I/O %8.8X\n"),
+                       (U32)sysblk.bioparm);
+              }
+
+              /* Store Block I/O parameter at PSA+X'80' */
+              psa = (void*)(regs->mainstor + regs->PX);
+              STORE_FW(psa->extparm,(U32)sysblk.bioparm);
+
+#if defined(FEATURE_ESAME)
+           }
+#endif
+
+           /* Store sub-interruption code and status at PSA+X'84' */
+           STORE_HW(psa->extcpad,(sysblk.biosubcd<<8)|sysblk.biostat);
+           
+           /* Reset interruption data */
+           sysblk.bioparm  = 0;
+           sysblk.biosubcd = 0;
+           sysblk.biostat  = 0;
+           
+           break;
+
+        case EXT_SERVICE_SIGNAL_INTERRUPT: /* Service Signal */
+        default:
+             servcode = EXT_SERVICE_SIGNAL_INTERRUPT;
+             
+            /* Apply prefixing if the parameter is a storage address */
+            if ( (sysblk.servparm & SERVSIG_ADDR) )
+                sysblk.servparm =
+                     APPLY_PREFIXING (sysblk.servparm, regs->PX);
+
+             if (CPU_STEPPING_OR_TRACING_ALL)
+             {
+                 logmsg (_("HHCCP027I External interrupt: Service signal %8.8X\n"),
+                    sysblk.servparm);
+             }
+
+             /* Store service signal parameter at PSA+X'80' */
+             psa = (void*)(regs->mainstor + regs->PX);
+             STORE_FW(psa->extparm,sysblk.servparm);
+
+        }  /* end switch(sysblk.servcode) */
+        /* Reset service parameter */
+        sysblk.servparm = 0;
+
+        /* Reset service code */
+        sysblk.servcode = 0;
+
+        /* Reset service signal pending */
+        OFF_IC_SERVSIG;
+
+        /* Generate service signal interrupt */
+        ARCH_DEP(external_interrupt) (servcode, regs);
+             
+#else /* defined(FEATURE_VM_BLOCKIO) */
+
         /* Apply prefixing if the parameter is a storage address */
         if ( (sysblk.servparm & SERVSIG_ADDR) )
             sysblk.servparm =
@@ -351,10 +481,13 @@ U16     cpuad;                          /* Originating CPU address   */
 
         /* Reset service signal pending */
         OFF_IC_SERVSIG;
-
+        
         /* Generate service signal interrupt */
         ARCH_DEP(external_interrupt) (EXT_SERVICE_SIGNAL_INTERRUPT, regs);
-    }
+
+#endif /* defined(FEATURE_VM_BLOCKIO) */
+
+    }  /* end OPEN_IC_SERVSIG(regs) */
 
 } /* end function perform_external_interrupt */
 

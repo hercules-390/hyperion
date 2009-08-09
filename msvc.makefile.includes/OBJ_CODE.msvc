@@ -142,6 +142,7 @@ hengine_OBJ = \
     $(O)trace.obj    \
     $(O)vector.obj   \
     $(O)vm.obj       \
+    $(O)vmd250.obj   \
     $(O)vstore.obj   \
     $(O)w32chan.obj  \
     $(O)xstore.obj

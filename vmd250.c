@@ -402,7 +402,7 @@ U32     blksize;                     /* Blocksize                    */
 S32     offset;                      /* Offset                       */
 
 /* Returned by generic INIT function */
-VMBIOENV *bioenv;                   /* -->allocated environement     */
+struct VMBIOENV *bioenv;            /* -->allocated environement     */
 int     rc;                         /* return code                   */
 int     cc;                         /* Condition code to return      */
 
@@ -458,7 +458,7 @@ U32     blksize;                     /* Blocksize                    */
 S64     offset;                      /* Offset                       */
 
 /* Returned by generic INIT function */
-VMBIOENV *bioenv;                    /* -->allocated environement    */
+struct VMBIOENV *bioenv;             /* -->allocated environement    */
 int     rc;                          /* return code                  */
 int     cc;                          /* condition code               */
 
@@ -515,7 +515,7 @@ S32      begblk;        /* Starting block number                     */
 S32      endblk;        /* Ending block number                       */
 BLKTAB  *blktab;     /* Pointer to device std block-to-physical info */
 /* Established environement                                          */
-VMBIOENV *bioenv;       /* -->allocated environement                 */
+struct VMBIOENV *bioenv;  /* -->allocated environement               */
 
    /* Return with an error if the device does not exist */
    if (!dev)
@@ -594,7 +594,7 @@ VMBIOENV *bioenv;       /* -->allocated environement                 */
    begblk=1-offset;
    endblk=numblks-offset;
    
-   if (!(bioenv=(VMBIOENV *)malloc(sizeof(VMBIOENV))))
+   if (!(bioenv=(struct VMBIOENV *)malloc(sizeof(struct VMBIOENV))))
    {
       logmsg (_("HHCVM006E VM BLOCK I/O environment malloc failed\n"));
       *rc = RC_ERROR;  /* Indicate an irrecoverable error occurred */
@@ -760,7 +760,7 @@ void d250_restore(DEVBLK *dev)
 int d250_remove(DEVBLK *dev, int *rc, BIOPL_REMOVE * biopl, REGS *regs)
 {
 BIOPL_REMOVE bioplx00;               /* Use to check reserved fields */
-VMBIOENV *bioenv;                    /* -->allocated environement    */
+struct VMBIOENV *bioenv;             /* -->allocated environement    */
 int       cc;                        /* Condition code to return     */
 
    /* Clear the reserved BIOPL */

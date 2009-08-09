@@ -948,6 +948,9 @@ typedef struct _PSA_900 {               /* Prefixed storage area     */
 #if defined(FEATURE_ECPSVM)
 #define EXT_VINTERVAL_TIMER_INTERRUPT                   0x0100
 #endif
+#if defined(FEATURE_VM_BLOCKIO)
+#define EXT_BLOCKIO_INTERRUPT                           0x2603
+#endif
 
 /* Macros for classifying CCW operation codes */
 #define IS_CCW_WRITE(c)         (((c)&0x03)==0x01)

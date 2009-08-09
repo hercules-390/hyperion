@@ -1212,6 +1212,15 @@ void device_reset (DEVBLK *dev)
     dev->pciioint.pcipending = 1;
     dev->attnioint.dev = dev;
     dev->attnioint.attnpending = 1;
+
+#if defined(FEATURE_VM_BLOCKIO)
+    if (dev->vmd250env)
+    {
+       free(dev->vmd250env);
+       dev->vmd250env = 0 ;
+    }
+#endif /* defined(FEATURE_VM_BLOCKIO) */
+
     release_lock (&dev->lock);
 } /* end device_reset() */
 

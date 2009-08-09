@@ -1146,6 +1146,10 @@
 							RelativePath=".\vm.c"
 							>
 						</File>
+                                                <File
+							RelativePath=".\vmd250.c"
+							>
+						</File>
 						<File
 							RelativePath=".\vstore.c"
 							>
