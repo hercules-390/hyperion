@@ -2694,6 +2694,10 @@ void ARCH_DEP(vm_info) (int r1, int r2, REGS *regs);
 int  ARCH_DEP(device_info) (int r1, int r2, REGS *regs);
 
 
+/* Functions in module vmd250.c */
+int  ARCH_DEP(vm_blockio) (int r1, int r2, REGS *regs);
+
+
 /* Functions in module control.c */
 void ARCH_DEP(load_real_address_proc) (REGS *regs,
     int r1, int b2, VADR effective_addr2);
