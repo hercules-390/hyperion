@@ -1234,6 +1234,11 @@ IOCTL32 *asyncp;     /* Pointer to async thread's storage */
 
    if (biopl->flags & BIOPL_ASYNC)
    {   
+       /* Build the request structure */
+
+       /* Extract the 32-bit interrupt parameter from the BIOPL */
+       FETCH_FW(ioctl.intrparm,biopl->intparm);
+
        if (dev->ccwtrace)
        {
           logmsg(_("%4.4X:HHCVM019I ASYNC BIOEL=%8.8X, "
@@ -1244,10 +1249,6 @@ IOCTL32 *asyncp;     /* Pointer to async thread's storage */
                    ioctl.key,
                    ioctl.intrparm);
        }
-       /* Build the request structure */
-
-       /* Extract the 32-bit interrupt parameter from the BIOPL */
-       FETCH_FW(ioctl.intrparm,biopl->intparm);
 
        /* Set the default status code to an aborted list */
        /* Note: This should be set correctly from the returned PSC */
@@ -1850,6 +1851,11 @@ IOCTL64 *asyncp;     /* Pointer to async thread's free standing storage */
    /* Determine if request is an asynchronous or synchronous */
    if (biopl->flags & BIOPL_ASYNC)
    {
+       /* Build the request structure */
+
+       /* Extract the 64-bit interrupt parameter from the BIOPL */
+       FETCH_DW(ioctl.intrparm,&biopl->intparm);
+
        if (dev->ccwtrace)
        {
           logmsg(_("%4.4X:HHCVM019I ASYNC BIOEL=%16.16X, "
@@ -1860,11 +1866,6 @@ IOCTL64 *asyncp;     /* Pointer to async thread's free standing storage */
                    ioctl.key,
                    ioctl.intrparm);
        }
-
-       /* Build the request structure */
-
-       /* Extract the 64-bit interrupt parameter from the BIOPL */
-       FETCH_DW(ioctl.intrparm,&biopl->intparm);
 
        /* Set the default status code to an aborted list */
        /* Note: This should be set correctly from the returned PSC */
