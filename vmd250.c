@@ -107,9 +107,9 @@
 #define REMOVE 0x02              /* Remove the Block I/O environment */
 
 /* Condition Codes (cc)                                              */
-#define SUCCESS 0                /* Function completed successfully  */
-#define PARTIAL 1                /* Function partially completed     */
-#define FAILED  2                /* Function failed                  */
+#define CC_SUCCESS 0             /* Function completed successfully  */
+#define CC_PARTIAL 1             /* Function partially completed     */
+#define CC_FAILED  2             /* Function failed                  */
 /* Note: cc 3 is not returned by Block I/O                           */
 
 /* General Return Codes (Rx+1)- All functions                        */
@@ -525,7 +525,7 @@ struct VMBIOENV *bioenv;  /* -->allocated environement               */
    if (!dev)
    {
       *rc = RC_NODEV;  /* Set the return code for no device */
-      *cc = FAILED;    /* Indicate the function failed      */
+      *cc = CC_FAILED; /* Indicate the function failed      */
       return 0;
    }
 
@@ -534,7 +534,7 @@ struct VMBIOENV *bioenv;  /* -->allocated environement               */
    if (!blktab)
    {
        *rc = RC_NOSUPP; /* Set the return code for unsuppored device */
-       *cc = FAILED;    /* Indicate the function failed      */
+       *cc = CC_FAILED; /* Indicate the function failed      */
        return NULL;
    }
 
@@ -572,7 +572,7 @@ struct VMBIOENV *bioenv;  /* -->allocated environement               */
          break;
       default:
          *rc = RC_BADBLKSZ;
-         *cc = FAILED;
+         *cc = CC_FAILED;
          return NULL;
    }
    
@@ -602,7 +602,7 @@ struct VMBIOENV *bioenv;  /* -->allocated environement               */
    {
       logmsg (_("HHCVM006E VM BLOCK I/O environment malloc failed\n"));
       *rc = RC_ERROR;  /* Indicate an irrecoverable error occurred */
-      *cc = FAILED;
+      *cc = CC_FAILED;
       return NULL;
    }
    
@@ -635,7 +635,7 @@ struct VMBIOENV *bioenv;  /* -->allocated environement               */
        {
            *rc = RC_SUCCESS  ; /* Set the READ/WRITE success return code */
        }
-       *cc = SUCCESS ; /* Set that the function has succeeded */
+       *cc = CC_SUCCESS ; /* Set that the function has succeeded */
    }
    else
    {
@@ -649,7 +649,7 @@ struct VMBIOENV *bioenv;  /* -->allocated environement               */
        free(bioenv);
        bioenv = NULL ;
        *rc = RC_STATERR;
-       *cc = FAILED;
+       *cc = CC_FAILED;
    }
    
    /* Return the bioenv so that the start and end blocks can     */
@@ -781,7 +781,7 @@ int       cc;                        /* Condition code to return     */
    if (!dev)
    {
       *rc = RC_NODEV;  /* Set the return code for no device */
-      return FAILED;   /* Indicate the function failed      */
+      return CC_FAILED; /* Indicate the function failed     */
    }
    
    /* Attach the environment to the DEVBLK */
@@ -795,7 +795,7 @@ int       cc;                        /* Condition code to return     */
        /* and failed condition code                      */
        release_lock (&dev->lock);
        *rc = RC_STATERR;
-       cc = FAILED;
+       cc = CC_FAILED;
    }
    else
    {
@@ -820,7 +820,7 @@ int       cc;                        /* Condition code to return     */
               dev->devnum);
        }
        *rc = RC_SUCCESS;
-       cc = SUCCESS ; /* Set that the function has succeeded */
+       cc = CC_SUCCESS ; /* Set that the function has succeeded */
    }
    return cc ;
 } /* end function d250_remove */
@@ -995,7 +995,7 @@ int     rc;                            /* return code in Rx+1        */
 int     cc;                            /* condition code             */
 
     rc = RC_ERROR; /* Initialize the return code to error */
-    cc = FAILED;   /* Failure assumed unless otherwise successful */
+    cc = CC_FAILED; /* Failure assumed unless otherwise successful */
     
 #if 0
     if (sizeof(BIOPL) != 64)
@@ -1196,14 +1196,14 @@ IOCTL32 *asyncp;     /* Pointer to async thread's storage */
    if (!dev)
    {
       *rc = RC_NODEV;  /* Set the return code for no device */
-      return FAILED;   /* Indicate the function failed      */
+      return CC_FAILED; /* Indicate the function failed     */
    }
    
    /* If no environment, return with an error */
    if (!(dev->vmd250env))
    {
       *rc = RC_STATERR;
-      return FAILED;
+      return CC_FAILED;
    }
 
    /* Fetch the block count from the BIOPL */
@@ -1213,7 +1213,7 @@ IOCTL32 *asyncp;     /* Pointer to async thread's storage */
    if ((ioctl.blkcount<1) || (ioctl.blkcount>256))
    {
        *rc = RC_CNT_ERR;
-       return FAILED;
+       return CC_FAILED;
    }
 
    /* Fetch the address of the BIO entry list from the BIOPL */
@@ -1256,7 +1256,7 @@ IOCTL32 *asyncp;     /* Pointer to async thread's storage */
        {
           logmsg (_("HHCVM011E VM BLOCK I/O request malloc failed\n"));
           *rc = RC_ERROR;
-          return FAILED;
+          return CC_FAILED;
        }
 
        /* Copy the thread's parameters to its own storage */
@@ -1273,11 +1273,11 @@ IOCTL32 *asyncp;     /* Pointer to async thread's storage */
                   dev->devnum, strerror(errno));
           release_lock (&dev->lock);
           *rc = RC_ERROR;
-          return FAILED;
+          return CC_FAILED;
        }
        /* Launched the async request successfully */
        *rc = RC_ASYNC;
-       return SUCCESS;
+       return CC_SUCCESS;
    }
    else
    {
@@ -1309,26 +1309,26 @@ IOCTL32 *asyncp;     /* Pointer to async thread's storage */
    {
       case PSC_SUCCESS:
          *rc = RC_SUCCESS;
-         return SUCCESS;
+         return CC_SUCCESS;
       case PSC_PARTIAL:
          if (ioctl.goodblks == 0)
          {
             *rc = RC_ALL_BAD;
-            return FAILED;
+            return CC_FAILED;
          }
          else
          {
             *rc = RC_SYN_PART;
-            return PARTIAL;
+            return CC_PARTIAL;
          }
       case PSC_REMOVED:
          *rc = RC_REM_PART;
-         return PARTIAL;
+         return CC_PARTIAL;
       default:
          logmsg (_("HHCVM009E d250_list32 error: PSC=%i\n"),
                  psc);
          *rc = RC_ERROR;
-         return FAILED;
+         return CC_FAILED;
    }
 
 } /* end function ARCH_DEP(d250_iorq32) */
@@ -1803,14 +1803,14 @@ IOCTL64 *asyncp;     /* Pointer to async thread's free standing storage */
    if (!dev)
    {
       *rc = RC_NODEV;  /* Set the return code for no device */
-      return FAILED;   /* Indicate the function failed      */
+      return CC_FAILED; /* Indicate the function failed     */
    }
 
    /* If no environment, return with an error */
    if (!dev->vmd250env)
    {
       *rc = RC_STATERR;
-      return FAILED;
+      return CC_FAILED;
    }
    
    /* Fetch the block count from the BIOPL */
@@ -1824,7 +1824,7 @@ IOCTL64 *asyncp;     /* Pointer to async thread's free standing storage */
    if ((ioctl.blkcount<1) || (ioctl.blkcount>256))
    {
        *rc = RC_CNT_ERR;
-       return FAILED;
+       return CC_FAILED;
    }
 
    /* Fetch the address of the BIO entry list from the BIOPL */
@@ -1873,7 +1873,7 @@ IOCTL64 *asyncp;     /* Pointer to async thread's free standing storage */
        {
           logmsg (_("HHCVM011E VM BLOCK I/O request malloc failed\n"));
           *rc = RC_ERROR;
-          return FAILED;
+          return CC_FAILED;
        }
 
        /* Copy the thread's parameters to its own storage */
@@ -1890,11 +1890,11 @@ IOCTL64 *asyncp;     /* Pointer to async thread's free standing storage */
                   dev->devnum, strerror(errno));
           release_lock (&dev->lock);
           *rc = RC_ERROR;
-          return FAILED;
+          return CC_FAILED;
        }
        /* Launched the async request successfully */
        *rc = RC_ASYNC;
-       return SUCCESS;
+       return CC_SUCCESS;
    }
    else
    {
@@ -1923,26 +1923,26 @@ IOCTL64 *asyncp;     /* Pointer to async thread's free standing storage */
    {
       case PSC_SUCCESS:
          *rc = RC_SUCCESS;
-         return SUCCESS;
+         return CC_SUCCESS;
       case PSC_PARTIAL:
          if (ioctl.goodblks == 0)
          {
             *rc = RC_ALL_BAD;
-            return FAILED;
+            return CC_FAILED;
          }
          else
          {
             *rc = RC_SYN_PART;
-            return PARTIAL;
+            return CC_PARTIAL;
          }
       case PSC_REMOVED:
          *rc = RC_REM_PART;
-         return PARTIAL;
+         return CC_PARTIAL;
       default:
          logmsg (_("HHCVM009E d250_list64 error: PSC=%i\n"),
                  psc);
          *rc = RC_ERROR;
-         return FAILED;
+         return CC_FAILED;
    } /* end switch(psc) */
 
 } /* end function d250_iorq64 */
