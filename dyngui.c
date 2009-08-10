@@ -8,79 +8,6 @@
 
 // $Id$
 
-/*********************************************************************/
-/*                                                                   */
-/* Change log:                                                       */
-/*                                                                   */
-/* mm/dd/yy  Description...                                          */
-/* --------  ------------------------------------------------------- */
-/*                                                                   */
-/* 06/22/03  Created.                                                */
-/* 05/29/04  Minor fix to UpdateTargetCPU, remove max MIPS rate      */
-/*           check in UpdateCPUStatus (trust Herc to be correct),    */
-/*           use Herc-calculate MIPS/SIOS rate.                      */
-/* 06/01/04  Minor fix to detect switching to a different displayed  */
-/*           (target) CPU when no other status has otherwise changed.*/
-/* 06/09/04  Minor fix to UpdateDeviceStatus for terminal devices.   */
-/* 07/28/04  Minor fix to UpdateDeviceStatus for non-terminal devices*/
-/* 10/04/04  Change default maxrates interval to 1440 mins (1 day).  */
-/* 03/12/05  Win32 port...                                           */
-/* 04/22/05  Win32 port continued...                                 */
-/* 04/24/05  Move "maxrates" command and variables to panel.c        */
-/* 05/05/05  Fix streams collision issue via locking (gui_fprintf)   */
-/* 05/13/05  Fix crash @ shutdown when initiated externally.         */
-/* 08/17/05  Moved "high water mark" code to panel.c.                */
-/* 09/20/05  sysblk.mipsrate now per second instead of millisecond   */
-/* 11/18/05  Fix crash in UpdateTargetCPU when NUMCPU=0 (as it might */
-/*           be when, e.g., running as a shared device server mode)  */
-/* 11/18/05  Show offline CPUs as OFFLINE.                           */
-/* 12/01/05  SetCurrentDirectory support for shell commands          */
-/* 12/23/06  64-bit zArch registers support                          */
-/* 12/23/06  Improve efficiency of reporting register updates        */
-/* 12/23/06  Forced GUI status update/refresh support                */
-/* 03/25/07  Prevent need for OBTAIN_INTLOCK same as panel.c         */
-/* 02/10/08  Forced refresh doesn't apply to device-status reporting */
-/*                                                                   */
-/*********************************************************************/
-
-// $Log$
-// Revision 1.66  2009/01/16 13:57:49  rbowler
-// Fix  warning C4090: 'function' : different 'const' qualifiers in dyngui.c
-//
-// Revision 1.65  2009/01/16 09:49:10  jj
-// Disable the quiet command in dyngui
-//
-// Revision 1.64  2008/11/23 22:27:43  rbowler
-// Fix win64 type conversion warnings in w32util.c
-//
-// Revision 1.63  2008/02/12 08:42:15  fish
-// dyngui tweaks: new def devlist fmt, new debug_cd_cmd hook
-//
-// Revision 1.62  2007/12/29 14:40:51  fish
-// fix copyregs function to fallback to using dummyregs whenever regs->hostregs happens to be NULL
-//
-// Revision 1.61  2007/12/10 23:12:02  gsmith
-// Tweaks to OPTION_MIPS_COUNTING processing
-//
-// Revision 1.60  2007/09/05 00:24:18  gsmith
-// Use integer arithmetic calculating cpupct
-//
-// Revision 1.59  2007/06/23 00:04:08  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.58  2007/04/06 15:43:30  fish
-// Prevent need for OBTAIN_INTLOCK same as panel.c
-//
-// Revision 1.57  2006/12/27 21:44:16  fish
-// Fix *nix build error: use ULLONG_MAX instead of _UI64_MAX.
-//
-// Revision 1.56  2006/12/24 13:17:24  fish
-// 64-bit regs support (finally!), better reg update reporting efficiency
-//
-// Revision 1.55  2006/12/08 09:43:20  jj
-// Add CVS message log
-//
-
 #include "hstdinc.h"
 #include "hercules.h"       // (#includes "config." w/#define for VERSION)
 
@@ -1675,7 +1602,7 @@ void  UpdateDeviceStatus ()
             ( pDEVBLK->console && pDEVBLK->connected))                        chOnlineStat  = '1';
         if (pDEVBLK->busy)                                                    chBusyStat    = '1';
         if (IOPENDING(pDEVBLK))                                               chPendingStat = '1';
-        if (pDEVBLK->fd > max(STDIN_FILENO,max(STDOUT_FILENO,STDERR_FILENO))) chOpenStat    = '1';
+        if (pDEVBLK->fd > MAX(STDIN_FILENO,MAX(STDOUT_FILENO,STDERR_FILENO))) chOpenStat    = '1';
 
         // Send status message back to gui...
 
@@ -1777,7 +1704,7 @@ void  NewUpdateDevStats ()
             ( pDEVBLK->console && pDEVBLK->connected))                        chOnlineStat  = '1';
         if (pDEVBLK->busy)                                                    chBusyStat    = '1';
         if (IOPENDING(pDEVBLK))                                               chPendingStat = '1';
-        if (pDEVBLK->fd > max(STDIN_FILENO,max(STDOUT_FILENO,STDERR_FILENO))) chOpenStat    = '1';
+        if (pDEVBLK->fd > MAX(STDIN_FILENO,MAX(STDOUT_FILENO,STDERR_FILENO))) chOpenStat    = '1';
 
         // Build a new "device added" or "device changed"
         // status string for this device...
