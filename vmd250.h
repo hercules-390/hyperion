@@ -1,6 +1,8 @@
 /* VMD250.H     (c) Copyright Harold Grovesteen, 2009                */
 /*              z/VM 5.4 DIAGNOSE call X'250'                        */
 
+// $Id$
+
 #if !defined(__VMD250_H__)
 #define __VMD250_H__
 

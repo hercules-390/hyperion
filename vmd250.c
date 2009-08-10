@@ -8,6 +8,8 @@
 /* Hercules extends the use to System/370 with 4K pages and 2K pages */
 /* with recommended constraints                                      */
 
+// $Id$
+
 /* Unconditional log messages generated */
 /* HHCVM006E - Could not allocate storage for Block I/O environment   */
 /* HHCVM009E - Invalid list processor status code returned            */
