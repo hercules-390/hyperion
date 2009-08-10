@@ -8,74 +8,6 @@
 #    'HC_XXXX..' macros are custom Hercules autoconf macros defined
 #    in the 'hercules.m4' file in the 'autoconf' subdirectory.
 
-###############################################################################
-#
-#                       ***  CHANGE HISTORY  ***
-#
-#  DD/MM/YY Name Description...
-#  -------- ---- --------------------------------------------------------------
-#
-#  09/04/06 Fish Added this Change History section
-#  09/04/06 Fish Added AC_CHECK_MEMBERS for 'sockaddr_in.sin_len'
-#  11/04/06 Fish Remove JRM comments re: SIOCSIFNETMASK, SIOCSIFHWADDR,
-#                SIOCADDRT and SIOCDELRT declarations (AC_CHECK_DECLS)
-#                since now automatically handled by hercwind.h & hostopts.h.
-#  20/04/06 Fish Add AC_CHECK_DECLS check for SIOCDIFADDR per Kees Verruijt
-#                [kees@verruijt.net] for Apple OS X 10.4.6 TUNTAP_ClrIPAddr
-#  16/08/06 Fish Check for C99 flexible arrays support.
-#  25/09/06 Fish OPTION_HAO  <==  --disable/enable-automatic-operator
-#  25/09/06 Fish "--disable/enable-enhanced-configsymbols/configincludes" ==>
-#                OPTION_ENHANCED_CONFIG_SYMBOLS, OPTION_ENHANCED_CONFIG_INCLUDE
-#  27/09/06 Fish Add check for nanosleep.
-#  07/12/06 jj   Add decNumber/Makefile to ac_output
-#
-###############################################################################
-
-# $Log$
-# Revision 1.201  2009/01/08 01:57:55  jmaynard
-# Oops. Ripped out a little too much when removing --enable-universal-binary.
-#
-# Revision 1.200  2009/01/07 23:38:43  jmaynard
-# Remove --enable-universal-binary option, since it doesn't work with Leopard:
-# gcc 4.0 complains about libtool-mandated options when multiple architectures
-# are specified.
-#
-# Revision 1.199  2008/12/17 23:03:06  rbowler
-# Remove rogue spaces from AC_SUBST by Pasi Pirhonen
-#
-# Revision 1.198  2008/12/04 17:39:02  rbowler
-# Add ability to configure group name with --enable-setuid-hercifc=name
-#
-# Revision 1.197  2008/03/25 11:41:31  fish
-# SCSI TAPE MODS part 1: groundwork: non-functional changes:
-# rename some functions, comments, general restructuring, etc.
-# New source modules awstape.c, omatape.c, hettape.c and
-# tapeccws.c added, but not yet used (all will be used in a future
-# commit though when tapedev.c code is eventually split)
-#
-# Revision 1.196  2008/03/10 15:10:46  rbowler
-# Add -lpthread to link options for Solaris 2.9
-#
-# Revision 1.195  2008/02/19 11:49:18  ivan
-# - Move setting of CPU priority after spwaning timer thread
-# - Added support for Posix 1003.1e capabilities
-#
-# Revision 1.194  2008/02/15 23:24:32  rbowler
-# Add -lrt to link options for Solaris
-#
-# Revision 1.193  2007/06/24 04:17:15  jmaynard
-# Grumble. Missed the version tag in the MSVC build. Fixed.
-#
-# Revision 1.192  2007/06/20 23:40:58  jmaynard
-# 3.05 version bump.
-#
-# Revision 1.191  2007/01/10 16:30:48  rbowler
-# Include netinet/tcp.h for Unix keepalive settings
-#
-# Revision 1.190  2006/12/08 09:43:18  jj
-# Add CVS message log
-#
-
 AC_INIT(hercules.h)                     # (package, version, bugreport email, etc)
 AC_REVISION($Revision$)         # (the version of this configure.ac)
 AC_CONFIG_AUX_DIR(autoconf)             # (directory containing auxillary build tools)
@@ -1688,13 +1620,6 @@ if test "$hc_cv_opt_auto_oper" = "yes"  &&
 fi
 
 #------------------------------------------------------------------------------
-
-if test "$hc_cv_opt_external_gui" = "yes"  &&
-   test "$hc_cv_is_windows"      != "yes"; then
-
-   AC_MSG_RESULT( [ERROR: external-gui currently only supported on Windows platforms] )
-   hc_error=yes
-fi
 
 if test "$hc_cv_opt_external_gui"  = "yes"  &&
    test "$hc_cv_opt_dynamic_load" != "yes"; then
