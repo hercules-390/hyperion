@@ -3,6 +3,11 @@
 
 // $Id$
 
+/*-------------------------------------------------------------------*/
+/* This file defines the architectural features which are included   */
+/* at compilation time for ESAME (z/Architecture) mode               */
+/*-------------------------------------------------------------------*/
+ 
 #if defined(OPTION_900_MODE)
 #define _ARCH_900_NAME "z/Arch" /* also: "ESAME" */
 

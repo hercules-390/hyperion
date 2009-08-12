@@ -3,6 +3,11 @@
 
 // $Id$
 
+/*-------------------------------------------------------------------*/
+/* This file defines the architectural features which are included   */
+/* at compilation time for S/370 mode                                */
+/*-------------------------------------------------------------------*/
+
 #if defined(OPTION_370_MODE)
 #define _ARCH_370_NAME "S/370"
 

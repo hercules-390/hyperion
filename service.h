@@ -2,47 +2,6 @@
 /*              Service Processor Architectured fields               */
 
 // $Id$
-//
-// $Log$
-// Revision 1.22  2009/01/02 19:21:52  jj
-// DVD-RAM IPL
-// RAMSAVE
-// SYSG Integrated 3270 console fixes
-//
-// Revision 1.21  2008/12/28 15:30:09  jj
-// SYSG and SYSA mods
-//
-// Revision 1.20  2008/12/24 22:35:53  rbowler
-// Framework for integrated 3270 and ASCII console features
-//
-// Revision 1.19  2008/12/24 15:42:14  jj
-// Add debug entry point for sclp event masks
-//
-// Revision 1.18  2008/12/22 11:13:46  jj
-// Do not issue syscons active message on non-syscons type SCLP send/recv
-//
-// Revision 1.17  2008/12/20 23:38:51  ivan
-// Fill SCP_INFO SCCB config byte 11 with PER3 and List Directed IPL capability flags
-//
-// Revision 1.16  2008/12/18 00:25:38  ivan
-// Set SCCB Processor Type for IFL to 3, not 4
-//
-// Revision 1.15  2008/12/05 10:54:58  jj
-// Correct system console message highlight
-//
-// Revision 1.14  2008/11/24 14:52:21  jj
-// Add PTYP=IFL
-// Change SCPINFO processing to check on ptyp for IFL specifics
-//
-// Revision 1.13  2008/10/12 21:43:27  rbowler
-// SCCB SCPINFO updates from GA22-7584-10
-//
-// Revision 1.12  2007/06/23 00:04:15  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.11  2006/12/08 09:43:30  jj
-// Add CVS message log
-//
 
 #if !defined(_SERVICE_H)
 

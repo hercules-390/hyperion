@@ -2,44 +2,12 @@
 /*              ESA/390 feature definitions                          */
 
 // $Id$
-//
-// $Log$
-// Revision 1.46  2009/01/02 19:21:50  jj
-// DVD-RAM IPL
-// RAMSAVE
-// SYSG Integrated 3270 console fixes
-//
-// Revision 1.45  2008/12/27 23:34:37  rbowler
-// Integrated 3270 (SYSG) console send command
-//
-// Revision 1.44  2008/12/06 22:42:37  ivan
-// Enable STFLE in ESA/390 Mode.
-//
-// Revision 1.43  2008/02/27 14:14:23  bernard
-// Implemented feature_security_assist_extension_2
-//
-// Revision 1.42  2008/01/21 14:04:27  rbowler
-// Activate ETF3 and ETF2/ETF3-Enhancements in ESA/390 mode
-//
-// Revision 1.41  2007/11/30 15:14:14  rbowler
-// Permit String-Instruction facility to be activated in S/370 mode
-//
-// Revision 1.40  2007/11/18 22:27:07  rbowler
-// Add Message-Security-Assist-Extension-1 facility to ESA/390
-//
-// Revision 1.39  2007/11/16 13:01:49  rbowler
-// Add HFP-multiply-add/subtract facility to ESA/390
-//
-// Revision 1.38  2007/06/23 00:04:09  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.37  2007/04/25 12:10:27  rbowler
-// Move LFAS,SFASR to IEEE-exception-simulation facility
-//
-// Revision 1.36  2006/12/08 09:43:21  jj
-// Add CVS message log
-//
 
+/*-------------------------------------------------------------------*/
+/* This file defines the architectural features which are included   */
+/* at compilation time for ESA/390 mode                              */
+/*-------------------------------------------------------------------*/
+ 
 /* This file MUST NOT contain #undef statements */
 #if defined(OPTION_390_MODE)
 #define _ARCH_390_NAME "ESA/390"

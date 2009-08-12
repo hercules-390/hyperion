@@ -1,41 +1,7 @@
-/* FEATURES.H   (c) Copyright Jan Jaeger, 2000-2009                  */
-/*      Architecture-dependent macro definitions                     */
-/*-------------------------------------------------------------------*/
-/* S/370, ESA/390 and ESAME features implemented                     */
-/*-------------------------------------------------------------------*/
-
-//        This header file #included by 'hercules.h'
+/* FEATURE.H    (c) Copyright Jan Jaeger, 2000-2009                  */
+/*              Architecture-dependent macro definitions             */
 
 // $Id$
-//
-// $Log$
-// Revision 1.78  2007/11/21 22:55:49  fish
-// (untab)
-//
-// Revision 1.77  2007/06/23 00:04:09  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.76  2007/01/13 07:30:02  bernard
-// backout ccmask
-//
-// Revision 1.75  2007/01/12 16:43:32  bernard
-// ccmask phase 1
-//
-// Revision 1.74  2007/01/12 16:21:26  bernard
-// ccmask phase 1
-//
-// Revision 1.73  2007/01/12 15:20:44  bernard
-// ccmask phase 1
-//
-// Revision 1.72  2007/01/03 05:53:34  gsmith
-// 03 Jan 2007 Sloppy fetch - Greg Smith
-//
-// Revision 1.71  2006/12/20 04:26:19  gsmith
-// 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
-//
-// Revision 1.70  2006/12/08 09:43:21  jj
-// Add CVS message log
-//
 
 #ifdef HAVE_CONFIG_H
   #include <config.h> // Hercules build configuration options/settings
