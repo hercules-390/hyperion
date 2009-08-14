@@ -252,6 +252,11 @@
  #error Move page facility cannot be defined with 2K storage keys
 #endif
 
+#if defined(FEATURE_FAST_SYNC_DATA_MOVER) \
+ && !defined(FEATURE_MOVE_PAGE_FACILITY_2)
+ #error Fast sync data mover facility requires Move page facility
+#endif
+
 #if defined(FEATURE_ESAME) \
   && defined(FEATURE_INTERPRETIVE_EXECUTION) \
   && !defined(_FEATURE_SIE)

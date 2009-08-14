@@ -868,7 +868,12 @@ BYTE ARCH_DEP(scpinfo_cfg)[6] = {
 #if defined(FEATURE_MOVE_PAGE_FACILITY_2)
                         | SCCB_CFG0_MVPG_FOR_ALL_GUESTS
 #endif /*defined(FEATURE_MOVE_PAGE_FACILITY_2)*/
-//                      | SCCB_CFG0_FAST_SYNCHRONOUS_DATA_MOVER
+#if defined(FEATURE_FAST_SYNC_DATA_MOVER)
+    /* The Fast Sync Data Mover facility is simply a flag which
+       indicates that the MVPG instruction performs faster than
+       the Asynchronous Data Mover facility (see GA22-1030-03) */
+                        | SCCB_CFG0_FAST_SYNCHRONOUS_DATA_MOVER
+#endif /*defined(FEATURE_FAST_SYNC_DATA_MOVER)*/
                         ,
                         0
 //                      | SCCB_CFG1_CSLO
