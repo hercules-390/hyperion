@@ -1146,7 +1146,7 @@
 							RelativePath=".\vm.c"
 							>
 						</File>
-                                                <File
+						<File
 							RelativePath=".\vmd250.c"
 							>
 						</File>
