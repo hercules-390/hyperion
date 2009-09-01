@@ -378,9 +378,10 @@ void *panel_command (void *cmdline)
     }
 
 #ifdef OPTION_CMDTGT
-    /* check for cmdtgt, herc, scp or pscp command */
-    if(!strncasecmp(cmd, "cmdtgt ",7) || !strncasecmp(cmd, "herc ", 5) ||
-       !strncasecmp(cmd, "scp ", 4) || !strncasecmp(cmd, "pscp ", 5))
+    /* check for herc, scp or pscp command */
+    /* Please note that cmdtgt is a hercules command! */
+    /* Changing the target to her in scp mode is done by using herc cmdtgt herc */
+    if(!strncasecmp(cmd, "herc ", 5) || !strncasecmp(cmd, "scp ", 4) || !strncasecmp(cmd, "pscp ", 5))
     {
       ProcessPanelCommand(cmd);
       return NULL;
