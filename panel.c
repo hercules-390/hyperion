@@ -2159,11 +2159,11 @@ char    buf[1024];                      /* Buffer workarea           */
                             break;
                         case 'S':                   /* START */
                         case 's':
-                            do_panel_command("startall");
+                            do_panel_command("herc startall");
                             break;
                         case 'P':                   /* STOP */
                         case 'p':
-                            do_panel_command("stopall");
+                            do_panel_command("herc stopall");
                             break;
                         case 'O':                   /* Store */
                         case 'o':
@@ -2248,7 +2248,7 @@ char    buf[1024];                      /* Buffer workarea           */
                                 redraw_status = 1;
                                 break;
                             }
-                            sprintf (cmdline, "ipl %4.4x", NPdevnum[i]);
+                            sprintf (cmdline, "herc ipl %4.4x", NPdevnum[i]);
                             do_panel_command(cmdline);
                             strcpy(NPprompt2, "");
                             redraw_status = 1;
@@ -2267,7 +2267,7 @@ char    buf[1024];                      /* Buffer workarea           */
                                 redraw_status = 1;
                                 break;
                             }
-                            sprintf (cmdline, "i %4.4x", NPdevnum[i]);
+                            sprintf (cmdline, "herc i %4.4x", NPdevnum[i]);
                             do_panel_command(cmdline);
                             strcpy(NPprompt2, "");
                             redraw_status = 1;
@@ -2669,7 +2669,7 @@ char    buf[1024];                      /* Buffer workarea           */
                                         strcpy(cmdline, NPdevnam[NPasgn]);
                                     }
                                     strcpy(NPdevnam[NPasgn], "");
-                                    sprintf (NPentered, "devinit %4.4x %s",
+                                    sprintf (NPentered, "herc devinit %4.4x %s",
                                              NPdevnum[NPasgn], cmdline);
                                     do_panel_command(NPentered);
                                     strcpy(NPprompt2, "");
