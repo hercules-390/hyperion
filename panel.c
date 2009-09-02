@@ -2309,7 +2309,7 @@ char    buf[1024];                      /* Buffer workarea           */
                             break;
                         case 4:                     /* POWER - 2nd part */
                             if (NPdevice == 'y' || NPdevice == 'Y')
-                                do_panel_command("quit");
+                                do_panel_command("herc quit");
                             strcpy(NPprompt1, "");
                             redraw_status = 1;
                             break;
@@ -2322,7 +2322,7 @@ char    buf[1024];                      /* Buffer workarea           */
                             break;
                         case 5:                    /* Restart - part 2 */
                             if (NPdevice == 'y' || NPdevice == 'Y')
-                                do_panel_command("restart");
+                                do_panel_command("herc restart");
                             strcpy(NPprompt1, "");
                             redraw_status = 1;
                             break;
@@ -2335,7 +2335,7 @@ char    buf[1024];                      /* Buffer workarea           */
                             break;
                         case 6:                    /* External - part 2 */
                             if (NPdevice == 'y' || NPdevice == 'Y')
-                                do_panel_command("ext");
+                                do_panel_command("herc ext");
                             strcpy(NPprompt1, "");
                             redraw_status = 1;
                             break;
