@@ -1618,13 +1618,17 @@ RADR   bufend;    /* Last byte read or written                 */
 
       /* Count if this BIOE was a success or failure */
       if ( status )
+      {
          ioctl->badblks+=1;
          if ( status == BIOE_ABORTED )
          {
              break;
          }
+      }
       else
+      {
          ioctl->goodblks+=1;
+      }
 
       /* Determine the address of the next BIOE */
       bioebeg += sizeof(BIOE32);
@@ -2010,7 +2014,7 @@ RADR   bufend;    /* Last byte read or written                 */
       if (ioctl->dev->ccwtrace)
       {
          logmsg(_("%4.4X:HHCVM020I d250_list64 xcode=%4.4X "
-                  "BIOE32=%8.8X-%8.8X FETCH key=%2.2X\n"),
+                  "BIOE64=%8.8X-%8.8X FETCH key=%2.2X\n"),
                   ioctl->dev->devnum,xcode,bioebeg,bioeend,ioctl->key);
       }
       if ( xcode )
@@ -2201,13 +2205,17 @@ RADR   bufend;    /* Last byte read or written                 */
 
       /* Count if this BIOE was a success or failure */
       if ( status )
+      {
          ioctl->badblks+=1;
          if ( status == BIOE_ABORTED )
          {
              break;
          }
+      }
       else
+      {
          ioctl->goodblks+=1;
+      }
 
       /* Determine the address of the next BIOE */
       bioebeg += sizeof(BIOE64);

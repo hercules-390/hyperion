@@ -1371,6 +1371,9 @@ DLL_EXPORT void fbadasd_write_block (
 {
 int     rc;           /* Return code from write function             */
 int     sector;       /* First sector being read                     */
+#if 0
+U64     rba;          /* Large file size offset                      */
+#endif
                                            
     /* Unit check if block number is invalid */
     sector = blknum * blkfactor;
@@ -1382,6 +1385,7 @@ int     sector;       /* First sector being read                     */
     }
 
     /* Seek to start of desired block */
+    /* rba = ( dev->fbaorigin + sector ) * dev->fbablksiz; */
     dev->fbarba = ( dev->fbaorigin + sector ) * dev->fbablksiz;
 
     /* Read block into I/O buffer */
