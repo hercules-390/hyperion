@@ -525,7 +525,7 @@ off_t           offset;                 /* File offsets              */
         dev->bufupd = 0;
 
         /* Seek to the old block group offset */
-        offset = (off_t)((dev->bufcur * FBA_BLKGRP_SIZE) + dev->bufupdlo);
+        offset = (off_t)(((S64)dev->bufcur * FBA_BLKGRP_SIZE) + dev->bufupdlo);
         offset = lseek (dev->fd, offset, SEEK_SET);
         if (offset < 0)
         {
@@ -635,7 +635,7 @@ fba_read_blkgrp_retry:
     cache_unlock (CACHE_DEVBUF);
 
     /* Get offset and length */
-    offset = (off_t)(blkgrp * FBA_BLKGRP_SIZE);
+    offset = (off_t)((S64)blkgrp * FBA_BLKGRP_SIZE);
     len = fba_blkgrp_len (dev, blkgrp);
 
     logdevtr (dev, _("HHCDA074I read blkgrp %d offset %" I64_FMT "d len %d\n"),
@@ -1377,7 +1377,7 @@ U64     rba;          /* Large file size offset                      */
                                            
     /* Unit check if block number is invalid */
     sector = blknum * blkfactor;
-    if (sector >= dev->fbanumblk)
+    if (sector >= dev->fbanumblk || sector < 0 )
     {
         dev->sense[0] = SENSE_CR;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1385,8 +1385,7 @@ U64     rba;          /* Large file size offset                      */
     }
 
     /* Seek to start of desired block */
-    /* rba = ( dev->fbaorigin + sector ) * dev->fbablksiz; */
-    dev->fbarba = ( dev->fbaorigin + sector ) * dev->fbablksiz;
+    dev->fbarba = (off_t)(( dev->fbaorigin + sector ) * dev->fbablksiz);
 
     /* Read block into I/O buffer */
     rc = fba_write (dev, iobuf, blksize, unitstat);
