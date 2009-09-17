@@ -1,0 +1,13 @@
+* DIAG24 test $Id$
+sysclear
+archmode esa/390
+r 000=000C000000000200                 # ESA/390 restart PSW
+r 068=000A00000000DEAD                 # ESA/390 pgm new PSW
+r 070=000A00000000BEEF                 # ESA/390 mck new PSW
+r 200=41500260     # LA R0,X'260'      Load R5 = device number
+r 204=83580024     # DIAG X'24'        Test data
+r 208=82000300     # LPSW WAITPSW      Load enabled wait PSW
+r 300=070A000080FED0D0                 # WAITPSW Enabled wait state PSW
+ostailor null
+s+
+restart

@@ -26,6 +26,7 @@ EXTRA_DIST =        \
     csst.txt        \
     cxgbr.txt       \
     cxgtr.txt       \
+    diag24.txt      \
     dxtr.txt        \
     epsw.txt        \
     exrl.txt        \
