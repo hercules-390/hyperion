@@ -318,8 +318,8 @@ VMDEVTBL *vmentry;               /* -> VMDEVTBL entry found         */
 DEVBLK   *dev;                   /* -> DEVBLK                       */
 
     /* Clear vdat and rdat */
-    memset (vdat, 0x00, sizeof(vdat));
-    memset (rdat, 0x00, sizeof(rdat));
+    memset (vdat, 0x00, sizeof(*vdat));
+    memset (rdat, 0x00, sizeof(*rdat));
 
     /* Locate the device block */
     dev = find_device_by_devnum (0,devnum);
