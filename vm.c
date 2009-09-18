@@ -14,38 +14,6 @@
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 /*-------------------------------------------------------------------*/
 
-// $Log$
-// Revision 1.50  2009/01/03 10:19:43  jj
-// Use LPARNAME in VM system name
-//
-// Revision 1.49  2008/12/29 00:40:55  ivan
-// Fix signed/unsigned pb after diag8cmd noecho patch
-//
-// Revision 1.48  2008/12/29 00:00:55  ivan
-// Change semantics for DIAG8CMD configuration statement
-// Disable command redisplay at the console when NOECHO is set
-// Commands typed with a '-' as the first character are not redisplayed
-//
-// Revision 1.47  2008/12/28 14:04:59  ivan
-// Allow DIAG8CMD NOECHO
-// This configures suppression of messages related to diag 8 issued by guests
-//
-// Revision 1.46  2007/08/07 19:47:59  ivan
-// Fix a couple of gcc-4.2 warnings
-//
-// Revision 1.45  2007/06/23 00:04:19  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.44  2007/01/13 07:27:04  bernard
-// backout ccmask
-//
-// Revision 1.43  2007/01/12 15:25:23  bernard
-// ccmaks phase 1
-//
-// Revision 1.42  2006/12/08 09:43:31  jj
-// Add CVS message log
-//
-
 #include "hstdinc.h"
 
 #if !defined(_HENGINE_DLL_)
@@ -57,11 +25,8 @@
 #endif /* _VM_C_ */
 
 #include "hercules.h"
-
 #include "opcode.h"
-
 #include "inline.h"
-
 #include "commadpt.h"
 
 #if defined(FEATURE_EMULATE_VM)
@@ -441,11 +406,6 @@ DEVBLK   *dev;                   /* -> DEVBLK                       */
 /*-------------------------------------------------------------------*/
 int ARCH_DEP(diag_devtype) (int r1, int r2, REGS *regs)
 {
-#if 0
-/* These fields replaced by structs */
-U32             vdevinfo;               /* Virtual device information*/
-U32             rdevinfo;               /* Real device information   */
-#endif
 DEVBLK         *dev;                    /* -> Device block           */
 U16             devnum;                 /* Device number             */
 VRDCVDAT        vdat;                   /* Virtual device data       */
@@ -481,37 +441,6 @@ VRDCRCDT        rdat;                   /* Real device data          */
     /* Return condition code 3 if device does not exist */
     if (!dev) 
         return 3;
-
-#if 0
-    /* This implementation replaced by vmdevice_data function */
-
-    /* Set the device information according to device type */
-    switch (dev->devtype) {
-    case 0x3215:
-        vdevinfo = 0x80000000;
-        rdevinfo = 0x80000050; /* 0x50 preserved in the vmdevice_data function */
-        break;
-    case 0x2501:
-        vdevinfo = 0x20810000;
-        rdevinfo = 0x20810000;
-        break;
-    case 0x2540:
-        vdevinfo = 0x20820000;
-        rdevinfo = 0x20820000;
-        break;
-    case 0x3505:
-        vdevinfo = 0x20840000;
-        rdevinfo = 0x20840000;
-        break;
-    case 0x3370:
-        vdevinfo = 0x01020000;
-        rdevinfo = 0x01020000;
-        break;
-    default:
-        vdevinfo = 0x02010000;
-        rdevinfo = 0x02010000;
-    } /* end switch */
-#endif 
 
     /* Return virtual device information in the R2 register */
     FETCH_FW(regs->GR_L(r2),&vdat);
