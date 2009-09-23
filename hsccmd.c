@@ -1267,7 +1267,8 @@ int rc;
 
             case 4:     /* ("duplicates previous") */
             {
-                logmsg( _(" duplicates previous specification\n"),
+                logmsg( _("HHCPN209E AUTOMOUNT directory \"%s\""
+                    " duplicates previous specification\n"),
                     tamdir);
                 return -1;
             }
