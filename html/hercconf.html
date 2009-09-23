@@ -216,8 +216,8 @@ and how they are used.
     <i><b>Caution:</b> &nbsp;Enabling this feature may have security
     consequences depending on which allowable host system directories you
     specify as well as how your guest operating system enforces
-    authorized use of whatever automount functionality it happens to
-    utilize.</i>
+    authorized use of the Set Diagnose (X'4B') channel command code.
+    </i>
     <p>
     All host system virtual tape volumes to be "automounted" by the guest
     must reside within one of the specified allowable host system directories
@@ -226,7 +226,7 @@ and how they are used.
     in order for the guest-invoked automount to be accepted.
     <p>
     Note: specifying a disallowed automount directory does not preclude the
-    Hercules operator from manually mounting any file s/he wishes via the
+    Hercules operator from manually mounting any desired file via the
     <code>devinit</code> panel command -- even one in a currently defined
     "disallowed" automount directory. The AUTOMOUNT statement only controls
     guest-invoked automatic tape mounts and not manual tape mounts performed
@@ -239,10 +239,10 @@ and how they are used.
     add/remove new/existing allowable/unallowable automount
     directories at any time.
     <p>
-    At least one allowable directory should be defined, but defaults to the
-    current directory if one is not specifically defined (i.e. if only
-    unallowable directories are specified, the current directory then
-    becomes the only defined allowable automount directory by default).
+    The automount feature is activated whenever you specify at least
+    one allowable or unallowable directory. If only
+    unallowable directories are specified, then the current directory
+    becomes the only defined allowable automount directory by default.
     <p>
     All specified directories are always resolved to fully-qualified
     absolute directory paths before being saved.
@@ -2634,11 +2634,13 @@ and how they are used.
             of course be specified (or else one that is relative to the
             default directory which happens to resolve to the desired file).
             <p>
-            All attempts to automount host files in any defined "disallowable"
-            directory (or any subdirectory thereof (or otherwise <i>not</i>
-            within any defined "allowable" directory or subdirectory)) will
-            be rejected. An error message is always issued in such cases,
-            just as one is whenever a successful mount or unmount is performed.
+            All attempts to automount host files in a "disallowed"
+            directory or any of its subdirectories will be rejected.
+            Similarly any attempt to automount a file which is not
+            within any "allowable" directory or subdirectory will
+            be rejected. An error message is always issued in such cases.
+            A message is also issued whenever a successful mount or unmount
+            is performed.
             <p>
             A sample guest automount program called <code>TMOUNT</code> for
             the DOS/VSE operating system is provided in the

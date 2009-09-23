@@ -332,7 +332,7 @@ COMMAND ( "mounted_tape_reinit", PANEL+CONFIG, mnttapri_cmd,  "Control tape init
 #if defined( OPTION_TAPE_AUTOMOUNT )
 COMMAND ( "automount", PANEL+CONFIG, automount_cmd,
   "Show/Update allowable tape automount directories\n",
-    "Format:  \"automount  { add <dir> | del <dir> | list }\".\n"
+    "Format: \"automount  { add <dir> | del <dir> | list }\"\n"
     "\n"
     "Adds or deletes entries from the list of allowable/unallowable tape\n"
     "automount directories, or lists all currently defined list entries,\n"
@@ -342,7 +342,7 @@ COMMAND ( "automount", PANEL+CONFIG, automount_cmd,
     "identical to that as described in the documentation for the AUTOMOUNT\n"
     "configuration file statement (i.e. prefix with '+' or '-' as needed).\n"
     "\n"
-    "The automount feature is approriately enabled or disabled for all tape\n"
+    "The automount feature is appropriately enabled or disabled for all tape\n"
     "devices as needed depending on the updated empty/non-empty list state.\n" )
 #endif /* OPTION_TAPE_AUTOMOUNT */
 
