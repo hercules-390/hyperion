@@ -1362,7 +1362,7 @@ int rc;
             strlcpy (tamdir2, workdir, MAX_PATH);
 #endif // _MSVC_
 
-        if (0
+        if (sysblk.defdir == NULL
 #if defined(_MSVC_)
             || tamdir2[1] == ':'    // (fullpath given?)
 #else // !_MSVC_
