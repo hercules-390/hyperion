@@ -348,15 +348,19 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
         switch(sysblk.servcode)
         {
         case EXT_BLOCKIO_INTERRUPT:  /* VM Block I/O Interrupt */
-#if 0
-            logmsg (_("Processing Block I/O interrupt: "
+
+           if (sysblk.biodev->ccwtrace)
+           {
+           logmsg (_("%4.4X:HHCCP031I Processing Block I/O interrupt: "
                 "code=%4.4X parm=%16.16X status=%2.2X subcode=%2.2X\n"),
+                sysblk.biodev->devnum,
                 sysblk.servcode,
                 sysblk.bioparm,
                 sysblk.biostat,
                 sysblk.biosubcd
                 );
-#endif
+           }
+
            servcode = EXT_BLOCKIO_INTERRUPT;
 
 #if defined(FEATURE_ESAME)

@@ -495,6 +495,8 @@ struct SYSBLK {
         BYTE    biosubcd;               /* Block I/O sub int. code   */
         BYTE    biostat;                /* Block I/O status          */
         U64     bioparm;                /* Block I/O interrupt parm  */
+        DEVBLK  *biodev;                /* Block I/O device          */
+        /* Note: biodev is only used to detect BIO interrupt tracing */
 #endif /* defined(FEATURE_VM_BLOCKIO) */
         U32     servparm;               /* Service signal parameter  */
         unsigned int                    /* Flags                     */

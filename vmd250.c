@@ -30,6 +30,7 @@
 /* HHCVM020I - Address checking results                               */
 /* HHCVM021I - Device driver results                                  */
 /* HHCVM022I - Block I/O environment removed                          */
+/* HHCVM023I - Triggered Block I/O interrupt                          */
 
 
 /* The following structure exists between the different functions     */
@@ -345,12 +346,12 @@ int d250_write(DEVBLK *, S64, S32, void *);
 int  d250_remove(DEVBLK *, int *, BIOPL_REMOVE *, REGS *);
 
 /* Asynchronous Interrupt Generation */
-void d250_bio_interrupt(U64 intparm, BYTE status, BYTE code);
+void d250_bio_interrupt(DEVBLK *, U64 intparm, BYTE status, BYTE code);
 
 /*-------------------------------------------------------------------*/
 /*  Trigger Block I/O External Interrupt                             */
 /*-------------------------------------------------------------------*/
-void d250_bio_interrupt(U64 intparm, BYTE status, BYTE subcode)
+void d250_bio_interrupt(DEVBLK *dev, U64 intparm, BYTE status, BYTE subcode)
 {
 
    OBTAIN_INTLOCK(NULL);
@@ -368,6 +369,7 @@ void d250_bio_interrupt(U64 intparm, BYTE status, BYTE subcode)
    sysblk.bioparm  = intparm;   /* Trigger with the interrupt parameter */
    sysblk.biostat  = status;    /* Trigger with the status */
    sysblk.biosubcd = subcode;   /* Trigger with the subcode */
+   sysblk.biodev   = dev;       /* Trigger for this device  */
    sysblk.servcode = EXT_BLOCKIO_INTERRUPT;
 
    /* The Block I/O external interrupt is enabled by the same CR0 bit */
@@ -381,15 +383,17 @@ void d250_bio_interrupt(U64 intparm, BYTE status, BYTE subcode)
    /* Wake up any waiters */
    WAKEUP_CPUS_MASK (sysblk.waiting_mask);
    
-#if 0
-   logmsg (_("Triggered Block I/O interrupt: "
+   if (dev->ccwtrace)
+   {
+      logmsg (_("%4.4X:HHCVM023I Triggered Block I/O interrupt: "
                 "code=%4.4X parm=%16.16X status=%2.2X subcode=%2.2X\n"),
+              sysblk.biodev->devnum,
               sysblk.servcode,
               sysblk.bioparm,
               sysblk.biostat,
               sysblk.biosubcd
            );
-#endif
+   }
 
    /* Free the interrupt lock */
    RELEASE_INTLOCK(NULL);
@@ -1159,7 +1163,7 @@ BYTE    psc;       /* List processing status code   */
    
    /* Trigger the external interrupt here */
 
-   d250_bio_interrupt(ioctl->intrparm, psc, 0x03);
+   d250_bio_interrupt(ioctl->dev, ioctl->intrparm, psc, 0x03);
 
    free(ioctl);
    return NULL;
@@ -1766,7 +1770,7 @@ BYTE     psc;      /* List processing status code */
    /* Call the 32-bit BIOE request processor on this async thread*/
    psc=ARCH_DEP(d250_list64)(ioctl, ASYNC);
 
-   d250_bio_interrupt(ioctl->intrparm, psc, 0x07);
+   d250_bio_interrupt(ioctl->dev, ioctl->intrparm, psc, 0x07);
 
    free(ioctl);
 
