@@ -839,15 +839,15 @@ int d250_read(DEVBLK *dev, S64 pblknum, S32 blksize, void *buffer)
 BYTE unitstat;     /* Device unit status */
 U16  residual;     /* Residual byte count */
 
-/* Note: Called with device lock held */
+/* Note: Not called with device lock held */
 
+    obtain_lock(&dev->lock);
     if (dev->ccwtrace)
     {
        logmsg(_("%4.4X:HHCVM018I d250_read %d-byte block (rel. to 0): %d\n"),
                 dev->devnum, blksize, pblknum);
     }
-    
-    obtain_lock(&dev->lock);
+
     if (dev->vmd250env->isCKD)
     {
        release_lock(&dev->lock);
@@ -859,7 +859,6 @@ U16  residual;     /* Residual byte count */
     }
     else
     {
-       release_lock(&dev->lock);
        /* Do FBA I/O */
        
        /* Call the I/O start exit */
@@ -881,6 +880,8 @@ U16  residual;     /* Residual byte count */
        
        /* Call the I/O end exit */
        if (dev->hnd->end) (dev->hnd->end) (dev);
+       
+       release_lock(&dev->lock);
     }
     /* If an I/O error occurred, return status of I/O Error */
     if ( unitstat != ( CSW_CE | CSW_DE ) )
@@ -907,13 +908,13 @@ int d250_write(DEVBLK *dev, S64 pblknum, S32 blksize, void *buffer)
 BYTE unitstat;     /* Device unit status */
 U16  residual;     /* Residual byte count */
 
+    obtain_lock(&dev->lock);
     if (dev->ccwtrace)
     {
        logmsg(_("%4.4X:HHCVM018I d250_write %d-byte block (rel. to 0): %d\n"),
               dev->devnum, blksize, pblknum);
     }
-    
-    obtain_lock(&dev->lock);
+
     if (!dev->vmd250env)
     {
        release_lock(&dev->lock);
@@ -930,7 +931,14 @@ U16  residual;     /* Residual byte count */
     }
     else
     {
-       release_lock(&dev->lock);
+       /* Do FBA I/O */
+
+       /* Call the I/O start exit */
+       if (dev->hnd->start) (dev->hnd->start) (dev);
+
+       unitstat = 0;
+
+       /* Call the FBA driver's write standard block routine */
        fbadasd_write_block(dev, (int)pblknum, (int)blksize,
                            dev->vmd250env->blkphys, 
                            buffer, &unitstat, &residual );
@@ -940,6 +948,11 @@ U16  residual;     /* Residual byte count */
                    "FBA unit status=%2.2X residual=%d\n"),
                    dev->devnum, unitstat, residual );
        }
+
+       /* Call the I/O end exit */
+       if (dev->hnd->end) (dev->hnd->end) (dev);
+       
+       release_lock(&dev->lock);
     }
     
     /* If an I/O error occurred, return status of 1 */
