@@ -325,9 +325,9 @@
 
 
 /*-------------------------------------------------------------------*/
-/* GNU 'C' (e.g. Linux) options...                                   */
+/* GNU Linux options...                                              */
 /*-------------------------------------------------------------------*/
-#elif defined(__GNUC__)                 /* E.g. Linux options        */
+#elif defined(__gnu_linux__)            /* GNU Linux options         */
 
 #define DLL_IMPORT   extern
 #define DLL_EXPORT
@@ -360,6 +360,8 @@
 /* Hard-coded OTHER (DEFAULT) host-specific features and options...  */
 /*-------------------------------------------------------------------*/
 #else                                   /* "Other platform" options  */
+
+#warning hostopts.h: unknown target platform: defaulting to generic platform settings.
 
 #define DLL_IMPORT   extern             /* (a safe default)          */
 #define DLL_EXPORT
