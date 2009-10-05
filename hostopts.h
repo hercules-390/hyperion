@@ -206,24 +206,10 @@
 #define MAX_DEVICE_THREADS          0   /* (0 == unlimited)          */
 #undef  MIXEDCASE_FILENAMES_ARE_UNIQUE  /* ("Foo" same as "fOo"!!)   */
 
-#if 0
-  // I can't recall the reason (if there even WAS one!) why Windows's
-  // priority settings needed to be set to the below values, so I'm
-  // going to disable them and use more reasonable values instead,
-  // especially since a low TOD thread priority causes DOS/VS's clock
-  // to go kerflunky! (Fish)
-  #define DEFAULT_HERCPRIO    0
-  #define DEFAULT_TOD_PRIO    0
-  #define DEFAULT_CPU_PRIO    0
-  #define DEFAULT_DEV_PRIO   -8
-#else
-  // These look more reasonable to me (and are the same default values
-  // used by all other hosts too) so we'll try them for a while. (Fish)
-  #define DEFAULT_HERCPRIO    0
-  #define DEFAULT_TOD_PRIO  -20
-  #define DEFAULT_CPU_PRIO   15
-  #define DEFAULT_DEV_PRIO    8
-#endif
+#define DEFAULT_HERCPRIO    0
+#define DEFAULT_TOD_PRIO  -20
+#define DEFAULT_CPU_PRIO   15
+#define DEFAULT_DEV_PRIO    8
 
 #ifdef _MSVC_
   #define HOW_TO_IMPLEMENT_SH_COMMAND   USE_W32_POOR_MANS_FORK
