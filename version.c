@@ -39,16 +39,16 @@
 
 static const char *build_info[] = {
 
-#if defined(CUSTOM_BUILD_STRING)
-    CUSTOM_BUILD_STRING,
-#endif
-
 #if defined(_MSVC_)
     "Windows (MSVC) "
   #if defined(DEBUG)
     "** DEBUG ** "
   #endif
-    "build for " MSTRING(HOST_ARCH),
+    "build for " MSTRING(HOST_ARCH)
+  #if defined(CUSTOM_BUILD_STRING)
+    ": \"" CUSTOM_BUILD_STRING "\""
+  #endif
+    ,
 #endif
 
 #if !defined(_ARCHMODE2)
