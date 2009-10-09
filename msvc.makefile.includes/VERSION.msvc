@@ -28,6 +28,13 @@ V4 = 0
 
 !MESSAGE VERSION = $(VERSION) ($(V1).$(V2).$(V3).$(V4))
 
+!IF DEFINED(CUSTOM_BUILD_STRING)
+!MESSAGE CUSTOM_BUILD_STRING = $(CUSTOM_BUILD_STRING)
+!ENDIF
+
+# (blank line for readability)
+!MESSAGE
+
 #  The following logic determines the minimum version of Windows on which
 #  the application can run. The minimum version depends on both the target
 #  architecture and the version of Visual Studio used for the build. The

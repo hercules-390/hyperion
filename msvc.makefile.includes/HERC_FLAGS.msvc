@@ -52,6 +52,10 @@ rcflags = $(rcflags) -D _MSVC_ -D VERSION=$(VERSION) -D V1=$(V1) -D V2=$(V2) -D 
 
 cflags  = $(cflags)  /D _MSVC_ /D VERSION=$(VERSION) /D MAX_CPU_ENGINES=$(MAX_CPU_ENGINES)
 
+!IF DEFINED(CUSTOM_BUILD_STRING)
+cflags  = $(cflags)  /D CUSTOM_BUILD_STRING=\"$(CUSTOM_BUILD_STRING)\"
+!ENDIF
+
 # Allow version.c to display the name of the host CPU architecture
 cflags = $(cflags) /D HOST_ARCH=$(CPU)
 
