@@ -1443,6 +1443,10 @@
 				Name="DOC"
 				>
 				<File
+					RelativePath=".\_TODO.txt"
+					>
+				</File>
+				<File
 					RelativePath=".\CHANGES"
 					>
 				</File>

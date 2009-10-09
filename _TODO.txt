@@ -1,0 +1,13 @@
+
+
+                    ***   TO DO   ***
+
+
+Move TAPEMAP functionality into HETMAP and deprecate TAPEMAP.
+New -verbose option of HETMAP would produce existing display
+whereas without it would produce the more compact single line
+report format that the original TAPEMAP produced. The Blocks
+count that the original TAPEMAP reported are actually chunks
+and should be reported as such by HETMAP. The documentation
+for both should also be appropriately updated.
+
