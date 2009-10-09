@@ -498,7 +498,10 @@
   ::  fully qualified path if found. Otherwise return an empty string.
   ::  Note: the below does not work for directories, only files.
 
+  set save_path=%path%
+  set path=.;%path%
   set fullpath=%~dpnx$PATH:1
+  set path=%save_path%
   goto :EOF
 
 
