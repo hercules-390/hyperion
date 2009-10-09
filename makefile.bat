@@ -252,6 +252,12 @@
 ::-----------------------------------------------------------------------------
 :auto_build_count
 
+  :: PROGRAMMING NOTE: even though Hercules does not currently use the
+  :: AutoBuildCount.h header (even though AutoBuildCount.h is specified
+  :: as a project member) we go through the motions of updating it anyway
+  :: since: 1) that is what the below copied logic was originally designed
+  :: to do, and 2) we need the BUILDCOUNT_NUM anyway...
+
   set abc_filename=AutoBuildCount.h
 
   if exist "%abc_filename%" goto :increment
@@ -285,7 +291,18 @@
   :: that our AutoBuildCount.h header has been updated. This stops the
   :: build system from mistakenly thinking our build is out-of-date...
 
-  touch "--date=2000-01-01" "%abc_filename%"
+  :: PROGRAMMING NOTE: the above paragraph does not apply to Hercules
+  :: since Hercules does not currently use the AutoBuildCount.h header
+  :: (even though AutoBuildCount.h is specified as a project member),
+  :: but we may some day decide to use it so keep the above in mind...
+
+  call :fullpath "touch.exe"
+
+  if not "%fullpath%" == "" (
+    "%fullpath%"  "--date=2000-01-01"  "%abc_filename%"
+  ) else (
+    call :wscript_touch_vbs  "%abc_filename%"  "2000-01-01"
+  )
 
 :done
 
@@ -293,6 +310,48 @@
   if /i "%1" == "-q" goto :EOF
 
   echo AutoBuildCount = %BUILDCOUNT_NUM%
+  goto :EOF
+
+
+::-----------------------------------------------------------------------------
+:wscript_touch_vbs
+
+  :: PROGRAMMING NOTE: this is incredibly lame and terribly inefficient BUT,
+  :: it's the best we can do since Windows doesn't have a 'touch' utility...
+
+  set filename=%~1
+  set datetime=%~2
+
+  set wscript_exe=wscript.exe
+  set touch_vbs=touch.vbs
+
+  call :fullpath "%wscript_exe%"
+  set wscript_exe=%fullpath%
+
+  echo foo > "%touch_vbs%"
+  call :fullpath "%touch_vbs%"
+  set touch_vbs=%fullpath%
+
+  call :fullpath "%filename%"
+  set filename=%fullpath%
+
+  echo Call SetFileModifiedDate^( "%filename%", "2000-01-01" ^)   >  "%touch_vbs%"
+  echo WScript.Quit^(0^)                                          >> "%touch_vbs%"
+  echo Sub SetFileModifiedDate^( strFilePath, newDate ^)          >> "%touch_vbs%"
+  echo  Dim posBackSlash, strDirectory, strFileName               >> "%touch_vbs%"
+  echo  Dim oShell, oFolder, oItem                                >> "%touch_vbs%"
+  echo  posBackSlash = InstrRev ^( strFilePath,     "\"        ^) >> "%touch_vbs%"
+  echo  strDirectory = Left     ^( strFilePath, posBackSlash   ^) >> "%touch_vbs%"
+  echo  strFileName  = Mid      ^( strFilePath, posBackSlash+1 ^) >> "%touch_vbs%"
+  echo  Set oShell  = CreateObject      ^( "Shell.Application" ^) >> "%touch_vbs%"
+  echo  Set oFolder = oShell.NameSpace  ^( strDirectory        ^) >> "%touch_vbs%"
+  echo  Set oItem   = oFolder.ParseName ^( strFileName         ^) >> "%touch_vbs%"
+  echo  oItem.ModifyDate = newDate                                >> "%touch_vbs%"
+  echo End Sub                                                    >> "%touch_vbs%"
+
+  "%wscript_exe%"  "%touch_vbs%"  "%filename%"  "%datetime%"
+  del              "%touch_vbs%"
+
   goto :EOF
 
 
