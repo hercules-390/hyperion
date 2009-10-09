@@ -49,6 +49,8 @@ static const char *build_info[] = {
     ": \"" CUSTOM_BUILD_STRING "\""
   #endif
     ,
+#elif defined(CUSTOM_BUILD_STRING)
+    CUSTOM_BUILD_STRING,
 #endif
 
 #if !defined(_ARCHMODE2)
