@@ -577,8 +577,7 @@
   ::-------------------------------------------------------------------
 
   if "%SolutionDir%" == "" (
-    call :re_set SolutionDir "%extra_nmake_arg%"
-    set extra_nmake_arg=
+    call :re_set SolutionDir "%cd%\"
   )
   call :re_set SolutionPath "%SolutionDir%notused.sln"
   call "%VSTOOLSDIR%vsvars32.bat"
