@@ -228,6 +228,7 @@
 #define OS_ZOS          0x7B7673FFF7DE7FB7ULL   /* z/OS              */
 #define OS_VSE          0x7FF673FFF7DE7FFFULL   /* VSE               */
 #define OS_VM           0x7FFFFFFFF7DE7FFCULL   /* VM                */
+#define OS_OPENSOLARIS  0xF8FFFFFFFFDE7FF7ULL   /* OpenSolaris       */
 #if !defined(NO_IEEE_SUPPORT)
 #define OS_LINUX        0x78FFFFFFF7DE7FF7ULL   /* Linux             */
 #else

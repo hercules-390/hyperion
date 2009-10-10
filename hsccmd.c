@@ -4138,6 +4138,7 @@ int ostailor_cmd(int argc, char *argv[], char *cmdline)
         if (sysblk.pgminttr == OS_VSE   ) sostailor = "VSE";
         if (sysblk.pgminttr == OS_VM    ) sostailor = "VM";
         if (sysblk.pgminttr == OS_LINUX ) sostailor = "LINUX";
+        if (sysblk.pgminttr == OS_OPENSOLARIS ) sostailor = "OpenSolaris";
         if (sysblk.pgminttr == 0xFFFFFFFFFFFFFFFFULL) sostailor = "NULL";
         if (sysblk.pgminttr == 0                    ) sostailor = "QUIET";
         logmsg( _("OSTAILOR %s\n"),sostailor);
@@ -4216,6 +4217,21 @@ int ostailor_cmd(int argc, char *argv[], char *cmdline)
     if (strcasecmp (argv[1], "-LINUX") == 0)
     {
         sysblk.pgminttr |= ~OS_LINUX;
+        return 0;
+    }
+    if (strcasecmp (argv[1], "OpenSolaris") == 0)
+    {
+        sysblk.pgminttr = OS_OPENSOLARIS;
+        return 0;
+    }
+    if (strcasecmp (argv[1], "+OpenSolaris") == 0)
+    {
+        sysblk.pgminttr &= OS_OPENSOLARIS;
+        return 0;
+    }
+    if (strcasecmp (argv[1], "-OpenSolaris") == 0)
+    {
+        sysblk.pgminttr |= ~OS_OPENSOLARIS;
         return 0;
     }
     if (strcasecmp (argv[1], "NULL") == 0)
