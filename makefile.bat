@@ -259,6 +259,10 @@
   :: to do, and 2) we need the BUILDCOUNT_NUM anyway...
 
   set abc_filename=AutoBuildCount.h
+  set abc_increment=0
+
+  :: (only increment build count if full rebuild)
+  if /i "%extra_nmake_arg%" == "-a" set abc_increment=1
 
   if exist "%abc_filename%" goto :increment
 
@@ -272,7 +276,7 @@
   for /f "tokens=1,2,3" %%a in (%abc_filename%) do (
     if "%%a" == "#define" (
       if "%%b" == "BUILDCOUNT_NUM" (
-        set /a BUILDCOUNT_NUM=%%c+1
+        set /a BUILDCOUNT_NUM=%%c+%abc_increment%
       )
     )
   )
