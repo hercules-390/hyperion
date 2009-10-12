@@ -255,7 +255,7 @@ HSYS_DLL_IMPORT void *(*panel_command)  (void *);
 
 HSYS_DLL_IMPORT void *(*debug_device_state)         (DEVBLK *);
 HSYS_DLL_IMPORT void *(*debug_cpu_state)            (REGS *);
-HSYS_DLL_IMPORT void  (*debug_cd_cmd)               (char *);
+HSYS_DLL_IMPORT void *(*debug_cd_cmd)               (char *);
 HSYS_DLL_IMPORT void *(*debug_watchdog_signal)      (REGS *);
 HSYS_DLL_IMPORT void *(*debug_program_interrupt)    (REGS *, int);
 HSYS_DLL_IMPORT void *(*debug_diagnose)             (U32, int,  int, REGS *);

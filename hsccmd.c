@@ -2305,8 +2305,7 @@ int cd_cmd(int argc, char *argv[], char *cmdline)
     chdir(path);
     getcwd( cwd, sizeof(cwd) );
     logmsg("%s\n",cwd);
-    if (debug_cd_cmd)
-        debug_cd_cmd( cwd );
+    HDC1( debug_cd_cmd, cwd );
     return 0;
 }
 

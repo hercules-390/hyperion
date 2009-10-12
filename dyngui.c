@@ -1801,11 +1801,12 @@ void *(*next_debug_call)(REGS *);
 // The following function is called by the 'cd_cmd' panel command to notify
 // the GUI of what the new current directory was just changed to...
 
-void gui_debug_cd_cmd( char* pszCWD )
+void* gui_debug_cd_cmd( char* pszCWD )
 {
     ASSERT( pszCWD );
     if (gui_version >= 1.12)
         gui_fprintf( fStatusStream, "]CWD=%s\n", pszCWD );
+    return NULL;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
