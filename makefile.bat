@@ -300,12 +300,14 @@
   :: (even though AutoBuildCount.h is specified as a project member),
   :: but we may some day decide to use it so keep the above in mind...
 
+  set touchdate=2000-01-01
+
   call :fullpath "touch.exe"
 
   if not "%fullpath%" == "" (
-    "%fullpath%"  "--date=2000-01-01"  "%abc_filename%"
+    "%fullpath%"  "--date=%touchdate%"  "%abc_filename%"
   ) else (
-    call :wscript_touch_vbs  "%abc_filename%"  "2000-01-01"
+    call :wscript_touch_vbs  "%abc_filename%"  "%touchdate%"
   )
 
 :done
@@ -339,7 +341,7 @@
   call :fullpath "%filename%"
   set filename=%fullpath%
 
-  echo Call SetFileModifiedDate^( "%filename%", "2000-01-01" ^)   >  "%touch_vbs%"
+  echo Call SetFileModifiedDate^( "%filename%", "%datetime%" ^)   >  "%touch_vbs%"
   echo WScript.Quit^(0^)                                          >> "%touch_vbs%"
   echo Sub SetFileModifiedDate^( strFilePath, newDate ^)          >> "%touch_vbs%"
   echo  Dim posBackSlash, strDirectory, strFileName               >> "%touch_vbs%"
@@ -353,7 +355,7 @@
   echo  oItem.ModifyDate = newDate                                >> "%touch_vbs%"
   echo End Sub                                                    >> "%touch_vbs%"
 
-  "%wscript_exe%"  "%touch_vbs%"  "%filename%"  "%datetime%"
+  "%wscript_exe%"  "%touch_vbs%"
   del              "%touch_vbs%"
 
   goto :EOF
