@@ -11,15 +11,7 @@
 
 // $Id$
 //
-// $Log$
-// Revision 1.27  2008/11/04 04:50:46  fish
-// Ensure consistent utility startup
-//
-// Revision 1.26  2007/06/23 00:04:11  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.25  2006/12/08 09:43:26  jj
-// Add CVS message log
+// 2009/10/12 KL - Add TAPEMAP format output
 //
 
 #include "hstdinc.h"
@@ -33,15 +25,19 @@
 || Local constant data
 */
 static const char sep[] = "---------------------\n";
-static const char help[] =
-    "%s - Print a map of an HET tape file\n\n"
+static const char help_hetmap[] =
+    "%s - Print a map of an HET or AWS tape file\n\n"
     "Usage: %s [options] filename\n\n"
     "Options:\n"
     "  -a  print all label and file information (default: on)\n"
     "  -d  print only dataset information (default: off)\n"
     "  -f  print only file information (default: off)\n"
     "  -h  display usage summary\n"
-    "  -l  print only label information (default: off)\n";
+    "  -l  print only label information (default: off)\n"
+    "  -t  print TAPEMAP-compatible format output (default: off)\n";
+static const char help_tapemap[] =
+    "%s - Print a map of an HET or AWS tape file\n\n"
+    "Usage: %s filename\n\n";
 
 #ifdef EXTERNALGUI
 /* Previous reported file position */
@@ -131,12 +127,41 @@ printlabel( char *buf, int len )
 }
 
 /*
+|| Print label fields in TAPEMAP format
+ */
+void
+printlabeltapemap( char *buf, int len )
+{
+    SLLABEL lab;
+    BYTE labelrec[81];
+    int i;
+
+    if( sl_islabel( &lab, buf, len ) == FALSE )
+    {
+        return;
+    }
+    for (i=0; i < 80; i++)
+    {
+        labelrec[i] = guest_to_host(buf[i]);
+    }
+    labelrec[i] = '\0';
+    printf("%s\n", labelrec);
+}
+
+/*
 || Prints usage information
 */
 void
 usage( char *name )
 {
-    printf( help, name, name );
+    if  ((strcmp(name, "tapemap") == 0) || (strcmp(name, "TAPEMAP") == 0))
+    {
+        printf( help_tapemap, name, name );
+    }
+    else
+    {
+        printf( help_hetmap, name, name );
+    }
 }
 
 /*
@@ -160,61 +185,91 @@ main( int argc, char *argv[] )
     U32  totubytes;
     U32  totcbytes;
     U32  opts;
+    char pgmpath[MAX_PATH];
+    char *pgm;
 
 #define O_ALL           0xC0
 #define O_FILES         0X80
 #define O_LABELS        0X40
 #define O_DATASETS      0X20
+#define O_TAPEMAP_OUTPUT  0x10
+#define O_TAPEMAP_INVOKED 0x08
 
-    INITIALIZE_UTILITY("hetmap");
+    /* Figure out processing based on the program name */
+    hostpath(pgmpath, argv[0], sizeof(pgmpath));
+    pgm = strrchr(pgmpath, '/');
+    if (pgm)
+    {
+        pgm++;
+    }
+    else
+    {
+        pgm = argv[0];
+    }
+    strtok (pgm, ".");
+    if  ((strcmp(pgm, "tapemap") == 0) || (strcmp(pgm, "TAPEMAP") == 0))
+    {
+        opts = O_TAPEMAP_OUTPUT+O_TAPEMAP_INVOKED;
+    }
 
-    opts = O_ALL;
+    INITIALIZE_UTILITY(pgm);
 
     /* Display the program identification message */
-    display_version (stderr, "Hercules HET map program ", FALSE);
+    display_version (stderr, "Hercules HET and AWS tape map program ", FALSE);
 
-    while( TRUE )
+    if (! (opts & O_TAPEMAP_INVOKED) )
     {
-        rc = getopt( argc, argv, "adfhlt" );
-        if( rc == -1 )
+
+        opts = O_ALL;
+
+        while( TRUE )
         {
-            break;
+            rc = getopt( argc, argv, "adfhlt" );
+            if( rc == -1 )
+            {
+                break;
+            }
+
+            switch( rc )
+            {
+                case 'a':
+                    opts = O_ALL;
+                break;
+
+                case 'd':
+                    opts = O_DATASETS;
+                break;
+
+                case 'f':
+                    opts = O_FILES;
+                break;
+
+                case 'h':
+                    usage( pgm );
+                    exit( 1 );
+                break;
+
+                case 'l':
+                    opts = O_LABELS;
+                break;
+
+                case 't':
+                    opts = O_TAPEMAP_OUTPUT;
+                break;
+
+                default:
+                    usage( pgm );
+                    exit( 1 );
+                break;
+            }
         }
 
-        switch( rc )
-        {
-            case 'a':
-                opts = O_ALL;
-            break;
-
-            case 'd':
-                opts = O_DATASETS;
-            break;
-
-            case 'f':
-                opts = O_FILES;
-            break;
-
-            case 'h':
-                usage( argv[ 0 ] );
-                exit( 1 );
-            break;
-
-            case 'l':
-                opts = O_LABELS;
-            break;
-
-            default:
-                usage( argv[ 0 ] );
-                exit( 1 );
-            break;
-        }
-    }
+    }  // end if (! (opts & O_TAPEMAP_INVOKED) )
 
     argc -= optind;
     if( argc != 1 )
     {
-        usage( argv[ 0 ] );
+        usage( pgm );
         exit( 1 );
     }
 
@@ -264,12 +319,22 @@ main( int argc, char *argv[] )
         rc = het_read( hetb, buf );
         if( rc == HETE_EOT )
         {
+            if( opts & O_TAPEMAP_OUTPUT )
+            {
+                printf ("End of tape.\n");
+            }
             break;
         }
 
         if( rc == HETE_TAPEMARK )
         {
             fileno += 1;
+
+            if( opts & O_TAPEMAP_OUTPUT )
+            {
+                printf ("File %u: Blocks=%u, block size min=%u, max=%u\n",
+                        fileno, blocks, uminsz, umaxsz      );
+            }
 
             if( opts & O_FILES )
             {
@@ -318,6 +383,11 @@ main( int argc, char *argv[] )
         if( opts & O_LABELS )
         {
             printlabel( buf, rc );
+        }
+
+        if( opts & O_TAPEMAP_OUTPUT )
+        {
+            printlabeltapemap( buf, rc );
         }
 
         if( opts & O_DATASETS )
