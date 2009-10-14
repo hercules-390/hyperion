@@ -94,7 +94,6 @@ static void* spthread (DEVBLK* dev)
     /* Fix thread name */
     {
         char thread_name[32];
-        TID tid = thread_id();
         thread_name[sizeof(thread_name)-1] = 0;
         snprintf( thread_name, sizeof(thread_name)-1,
             "spthread %4.4X", dev->devnum );
