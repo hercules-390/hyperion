@@ -220,8 +220,6 @@ hc_error=no
 #  All AC_DEFINE() macros used within autoconf (to define pre-processor vars
 #  used during the actual build process) must have corresponding AH_TEMPLATE
 #  statements coded somewhere. We place them all here simply for convenience.
-#  The order in which they appear below is the very same order that they will
-#  appear in the resulting config.h file. (Not important, but handy to know)
 
 AH_TEMPLATE( [CUSTOM_BUILD_STRING],     [Define to provide additional information about this build] )
 AH_TEMPLATE( [MAX_CPU_ENGINES],         [Defines the maximum number of emulated CPU engines] )
