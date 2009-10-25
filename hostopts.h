@@ -352,7 +352,7 @@
 #define DLL_IMPORT   extern             /* (a safe default)          */
 #define DLL_EXPORT
 
-#undef TUNTAP_IFF_RUNNING_NEEDED        /* (tuntape support unknown) */
+#undef TUNTAP_IFF_RUNNING_NEEDED        /* (tuntap support unknown)  */
 #undef  OPTION_SCSI_TAPE                /* (NO SCSI tape support)    */
 #undef  OPTION_SCSI_ERASE_TAPE          /* (NOT supported)           */
 #undef  OPTION_SCSI_ERASE_GAP           /* (NOT supported)           */
