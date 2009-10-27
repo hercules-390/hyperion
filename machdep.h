@@ -68,17 +68,14 @@
 
   #if defined( _M_IX86 ) && ( _M_IX86 >= 600 )
     #define MSC_X86_32BIT
-    #define MAX_ATOMIC_BITS 64
   #endif
   #if defined( _M_AMD64 )
     #define MSC_X86_AMD64
     #define MSC_X86_64BIT
-    #define MAX_ATOMIC_BITS 64
   #endif
   #if defined( _M_IA64 )
     #define MSC_X86_IA64
     #define MSC_X86_64BIT
-    #define MAX_ATOMIC_BITS 64
   #endif
 
   #if defined(GEN_MSC_ASSISTS) && (defined(MSC_X86_32BIT) || defined(MSC_X86_64BIT))
@@ -254,18 +251,15 @@
       defined(__pentium4__) || defined(__athlon__) || \
       defined(__athlon)
     #define _ext_ia32
-    #define MAX_ATOMIC_BITS 64
   #endif
 
   #if defined(__amd64__)
     #define _ext_amd64
-    #define MAX_ATOMIC_BITS 64
   #endif
 
   #if defined(__powerpc__) || defined(__ppc__) || \
       defined(__POWERPC__) || defined(__PPC__)
     #define _ext_ppc
-    #define MAX_ATOMIC_BITS 64
   #endif
 
 /*-------------------------------------------------------------------
@@ -495,10 +489,6 @@ U32  *ptr4, val4, old4, new4;
 #endif /* defined(_ext_ppc) */
 
 #endif // !defined( _MSVC_ )
-
-#ifndef   MAX_ATOMIC_BITS
-  #define MAX_ATOMIC_BITS 32
-#endif
 
 /*-------------------------------------------------------------------
  * Define the ASSIST_ macros
