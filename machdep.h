@@ -439,21 +439,75 @@ static __inline__ BYTE cmpxchg8_amd64(U64 *old, U64 new, void *ptr) {
 #if defined(_ext_ppc)
 
 /* From /usr/src/linux/include/asm-ppc/system.h */
-static __inline__ unsigned long
-__cmpxchg_u32(volatile int *p, int old, int new)
-{
-    int prev;
 
-    __asm__ __volatile__ ("\n\
-1:  lwarx   %0,0,%2 \n\
-    cmpw    0,%0,%3 \n\
-    bne 2f \n\
-    stwcx.  %4,0,%2 \n\
-    bne-    1b\n"
+/* NOTE: IBM's VisualAge compiler likes 1: style labels
+         but GNU's gcc compiler running on AIX does not. */
+
+#if !defined( __GNUC__ )        // (VisualAge presumed)
+  #define LABEL1 "1:\n"
+  #define LABEL2 "2:\n"
+  #define BRNCH2 "2f"
+  #define BRNCH1 "1b"
+#else                           // (else gcc...)
+  #define LABEL1 "loop%=:\n"
+  #define LABEL2 "exit%=:\n"
+  #define BRNCH2 "exit%="
+  #define BRNCH1 "loop%="
+#endif
+
+/* NOTE: Both VisualAge *and* gcc define __64BIT__
+         see: http://gmplib.org/list-archives/gmp-discuss/2008-July/003339.html */
+
+#if defined( __64BIT__ )
+
+static __inline__ U64
+__cmpxchg_u64(volatile U64 *p, U64 old, U64 new)
+{
+    U64 prev;
+
+    __asm__ __volatile__ ("\n"
+LABEL1
+"       ldarx   %0,0,%2\n\
+        cmpd    0,%0,%3\n\
+        bne     "BRNCH2"\n\
+        stdcx.  %4,0,%2\n\
+        bne-    "BRNCH1"\n"
 #ifdef OPTION_SMP
-"    sync\n"
+"       sync\n"
 #endif /* OPTION_SMP */
-"2:"
+LABEL2
+    : "=&r" (prev), "=m" (*p)
+    : "r" (p), "r" (old), "r" (new), "m" (*p)
+    : "cc", "memory");
+
+    return prev;
+}
+
+#define cmpxchg8(x,y,z) cmpxchg8_ppc(x,y,z)
+static __inline__ BYTE cmpxchg8_ppc(U64 *old, U64 new, void *ptr) {
+/* returns zero on success otherwise returns 1 */
+U64 prev = *old;
+return (prev != (*old = __cmpxchg_u64((U64*)ptr, prev, new)));
+}
+
+#endif // defined( __64BIT__ )
+
+static __inline__ U32
+__cmpxchg_u32(volatile U32 *p, U32 old, U32 new)
+{
+    U32 prev;
+
+    __asm__ __volatile__ ("\n"
+LABEL1
+"       lwarx   %0,0,%2\n\
+        cmpw    0,%0,%3\n\
+        bne     "BRNCH2"\n\
+        stwcx.  %4,0,%2\n\
+        bne-    "BRNCH1"\n"
+#ifdef OPTION_SMP
+"       sync\n"
+#endif /* OPTION_SMP */
+LABEL2
     : "=&r" (prev), "=m" (*p)
     : "r" (p), "r" (old), "r" (new), "m" (*p)
     : "cc", "memory");
@@ -465,7 +519,7 @@ __cmpxchg_u32(volatile int *p, int old, int new)
 static __inline__ BYTE cmpxchg4_ppc(U32 *old, U32 new, void *ptr) {
 /* returns zero on success otherwise returns 1 */
 U32 prev = *old;
-return (prev != (*old = __cmpxchg_u32((int *)ptr, (int)prev, (int)new)));
+return (prev != (*old = __cmpxchg_u32((U32*)ptr, prev, new)));
 }
 
 #define cmpxchg1(x,y,z) cmpxchg1_ppc(x,y,z)
