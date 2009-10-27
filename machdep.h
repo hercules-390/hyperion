@@ -258,7 +258,8 @@
   #endif
 
   #if defined(__powerpc__) || defined(__ppc__) || \
-      defined(__POWERPC__) || defined(__PPC__)
+      defined(__POWERPC__) || defined(__PPC__) || \
+      defined(_POWER)
     #define _ext_ppc
   #endif
 
