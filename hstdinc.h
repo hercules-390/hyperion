@@ -234,6 +234,12 @@
   #include <unistd.h>           // Unix standard definitions
 #endif
 
+#ifdef C99_FLEXIBLE_ARRAYS
+  #define FLEXIBLE_ARRAY        // ("DEVBLK *memdev[];" syntax is supported)
+#else
+  #define FLEXIBLE_ARRAY 0      // ("DEVBLK *memdev[0];" must be used instead)
+#endif
+
 #include "hostopts.h"           // Must come before htypes.h
 #include "htypes.h"             // Hercules-wide data types
 

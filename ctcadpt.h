@@ -144,12 +144,7 @@ struct _ETHFRM
     MAC         bDestMAC;                // 0x00
     MAC         bSrcMAC;                 // 0x06
     HWORD       hwEthernetType;          // 0x0C  (see below #defines)
-
-#ifdef C99_FLEXIBLE_ARRAYS
-    BYTE        bData[];                 // 0x0E
-#else
-    BYTE        bData[0];                // 0x0E
-#endif
+    BYTE        bData[FLEXIBLE_ARRAY];   // 0x0E
 } ATTRIBUTE_PACKED;
 
 
@@ -178,12 +173,7 @@ struct  _IP4FRM
     HWORD       hwChecksum;              // 0x0A
     U32         lSrcIP;                  // 0x0C
     U32         lDstIP;                  // 0x10
-
-#ifdef C99_FLEXIBLE_ARRAYS
-    BYTE        bData[];                 // 0x14
-#else
-    BYTE        bData[0];                // 0x14
-#endif
+    BYTE        bData[FLEXIBLE_ARRAY];   // 0x14
 } ATTRIBUTE_PACKED;
 
 
@@ -328,12 +318,7 @@ struct  _CTCBLK
 struct _CTCIHDR                         // CTCI Block Header
 {
     HWORD   hwOffset;                   // Offset of next block
-
-#ifdef C99_FLEXIBLE_ARRAYS
-    BYTE    bData[];                    // start of data (CTCISEG)
-#else
-    BYTE    bData[0];                   // Start of data (CTCISEG)
-#endif
+    BYTE    bData[FLEXIBLE_ARRAY];      // start of data (CTCISEG)
 } ATTRIBUTE_PACKED;
 
 
@@ -347,12 +332,7 @@ struct _CTCISEG                         // CTCI Segment Header
                                         //   this header
     HWORD   hwType;                     // Ethernet packet type
     HWORD   _reserved;                  // Unused, set to zeroes
-
-#ifdef C99_FLEXIBLE_ARRAYS
-    BYTE    bData[];                    // Start of data (IP pakcet)
-#else
-    BYTE    bData[0];                   // Start of data (IP pakcet)
-#endif
+    BYTE    bData[FLEXIBLE_ARRAY];      // Start of data (IP pakcet)
 } ATTRIBUTE_PACKED;
 
 
@@ -592,12 +572,7 @@ struct _LCSSTDFRM
     HWORD       hwParameterCount;
     BYTE        bOperatorFlags[3];
     BYTE        _reserved[3];
-
-#ifdef C99_FLEXIBLE_ARRAYS
-    BYTE        bData[];
-#else
-    BYTE        bData[0];
-#endif
+    BYTE        bData[FLEXIBLE_ARRAY];
 } ATTRIBUTE_PACKED;
 
 
@@ -693,12 +668,7 @@ struct  _LCSIPMFRM
 struct  _LCSETHFRM
 {
     LCSHDR      bLCSHdr;                // LCS Frame header
-
-#ifdef C99_FLEXIBLE_ARRAYS
-    BYTE        bData[];                // Ethernet Frame
-#else
-    BYTE        bData[0];               // Ethernet Frame
-#endif
+    BYTE        bData[FLEXIBLE_ARRAY];  // Ethernet Frame
 } ATTRIBUTE_PACKED;
 
 

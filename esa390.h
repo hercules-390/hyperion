@@ -1980,11 +1980,7 @@ typedef struct _SYSIB1512 {             /* Configuration Topology    */
         BYTE    resv2;                  /* Reserved                  */
         BYTE    mnest;                  /* Nesting Level             */
         FWORD   resv3;                  /* Reserved                  */
-#ifdef C99_FLEXIBLE_ARRAYS
-        BYTE    tles[];                 /* Topology List Entries     */
-#else
-        BYTE    tles[0];                /* Topology List Entries     */
-#endif
+        BYTE    tles[FLEXIBLE_ARRAY];   /* Topology List Entries     */
     }   SYSIB1512;
 
 typedef struct _TLECNTNR {              /* Container TLE             */

@@ -1182,11 +1182,7 @@ struct DEVGRP {                         /* Device Group Structure    */
         int     members;                /* #of member devices in grp */
         int     acount;                 /* #allocated members in grp */
         void   *grp_data;               /* Group dep data (generic)  */
-#ifdef C99_FLEXIBLE_ARRAYS
-        DEVBLK *memdev[];               /* Member devices            */
-#else
-        DEVBLK *memdev[0];              /* Member devices            */
-#endif
+        DEVBLK *memdev[FLEXIBLE_ARRAY]; /* Member devices            */
 };
 
 
