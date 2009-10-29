@@ -657,6 +657,7 @@ EXTRA_DIST = autoconf/config.rpath \
              RELEASE.NOTES         \
              README.MSVC           \
              README.SUN            \
+             _TODO.txt             \
              makefile.msvc         \
              makefile-dllmod.msvc  \
              msvc.makefile.includes/BZIP2_DIR.msvc    \

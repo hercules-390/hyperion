@@ -1,13 +1,116 @@
 
+                          ---------------------
+                           HERCULES TODO IDEAS
+                          ---------------------
 
-                    ***   TO DO   ***
+
+                         (in no particular order)
 
 
-Move TAPEMAP functionality into HETMAP and deprecate TAPEMAP.
-New -verbose option of HETMAP would produce existing display
-whereas without it would produce the more compact single line
-report format that the original TAPEMAP produced. The Blocks
-count that the original TAPEMAP reported are actually chunks
-and should be reported as such by HETMAP. The documentation
-for both should also be appropriately updated.
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+(WIN64):
+
+  init_hostinfo:
+  BOOL WINAPI IsProcessorFeaturePresent( PF_COMPARE_EXCHANGE128 );
+  _INTEGRAL_MAX_BITS (machdep.h ==> _InterlockedCompareExchange128 ==> cmpxchg16b)
+
+  What might be better though is to design a more platform generic solution.
+  I'm thinking of an initialization function that checks for the availability
+  of certain processor features and then points some sysblk function-pointers
+  to the correct function. That way we can exploit certain features is they're
+  available. Of course going through a function pointer may be too inefficient
+  depending on where the function is being used, but depending on what the
+  function (feature) provides it may end up being an overall gain tha a loss.
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+
+  Support multiple command-line commands (i.e. cmdsep character).
+
+
+  Fix STSI instruction: missing FC 15 support.
+
+
+  Document all DIAGNOSE instruction support
+
+
+  Trace (instruction and/or device) to file instead of to console.
+  (Then new utility to format/display it offline).
+
+
+  Windows block device support (i.e. ability to define an entire drive
+  (Windows drive letter / partition) as a Hercules dasd)
+
+
+  BUG: instruction tracing: control registers not being shown for some
+  instructions which use/modify them. We need a better way to determine
+  if FPRs/CRs/ARs should be traced or not. (New bits in INSTR table?)
+  (see "display_inst_regs" function in "hscmisc.c")
+
+
+  Full 2540 reader/punch support!   mode=1 (normal), mode=2 (binary/"card image")
+                                    hopper selection, etc.
+
+
+  Ability to specify highlighting for console messages via regex pattern.
+
+
+  Add MSVC support for 'MULTI_BYTE_ASSIST' (cpu.c "set_jump_pointers")
+
+
+  ISSUE: there's the possibility for "socketpair" function to connect to some
+  other socket other than the pair's listening socket due to some other socket
+  on the host already listening for connections on INADDR_LOOPBACK. Fix is to
+  change the "socketpair" function to use a starting port# and SO_REUSEADDR
+  in a 'setsockopt' call and detect (HSO_errno == HSO_EADDRINUSE) return code
+  in its 'bind' call and auto-retry again using next port# (in a loop). Refer
+  to the "console_connection_handler" function for reference.
+
+
+  Custom (dynmod?) default Code Page support
+
+
+  DUMP command (Windows only) to create on-demand mini-dump.
+
+
+  Device or facility per Gerhard Postpischil's 9/20/2007 suggestion
+  that allows one to generate random "problems" (i/o errors, machine
+  checks, etc) for better software error recovery testing.
+
+
+  Add new "+rdbwd" 3590-device-only option to set flag in
+  TapeCommands3590 table to allow/accept Read Backward CCW.
+  (Requested by "herc_fun" = Charlie <os_390@hotmail.com>)
+
+
+  Add 'auto' option to MAXRATES command, to have it also issue
+  the command automatically at the end of the interval (so you
+  can monitor the rate).
+
+
+  "Generic-ize" the 'qd' command so that it works for ANY device
+  instead of just dasd devices. SenseId and RDC (Read Device
+  Characteristics) information is valuable information to display
+  for devices other than dasd! (e.g. tape devices for example)
+
+
+  Add SRF (Suspend/Resume) support for tape devices.
+
+
+  Add SRF (Suspend/Resume) support for CTC devices.
+
+  
+  BCTC support for sysplex'ing via GRS.
+  
+
+  Generic native host SCSI support (mostly for tape,
+  but having it opens other interesting possibilities)
+
+
+  QDIO/QETH (custom Herc device driver to directly update guest storage)
+
+
+  Large block support in channel subsystem (blocks > 64K ==> 2MB maximum?)
+
 
