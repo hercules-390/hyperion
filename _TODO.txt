@@ -8,22 +8,27 @@
 
 
 
-//////////////////////////////////////////////////////////////////////////////////////////////
-(WIN64):
+  Also provide separate zip file contiaing .PDB files for download for
+  Windows snapshots (but especially for final official Windows releases!)
+  so that on the rare occasion that Hercules ever does crash we're able
+  to determine exactly where the crash occurred. We cannot do that without
+  the .PDB files!
 
-  init_hostinfo:
-  BOOL WINAPI IsProcessorFeaturePresent( PF_COMPARE_EXCHANGE128 );
-  _INTEGRAL_MAX_BITS (machdep.h ==> _InterlockedCompareExchange128 ==> cmpxchg16b)
 
-  What might be better though is to design a more platform generic solution.
-  I'm thinking of an initialization function that checks for the availability
-  of certain processor features and then points some sysblk function-pointers
-  to the correct function. That way we can exploit certain features is they're
-  available. Of course going through a function pointer may be too inefficient
-  depending on where the function is being used, but depending on what the
-  function (feature) provides it may end up being an overall gain tha a loss.
+  Design a more platform generic cpu features runtime check.that checks for
+  the availability of certain processor features and then points some sysblk
+  function-pointers to the correct function. That way we can exploit certain
+  features is they're available. Of course going through a function pointer
+  may be too inefficient depending on where the function is being used, but
+  depending on what the function (feature) provides it may end up being an
+  overall gain tha a loss.
 
-//////////////////////////////////////////////////////////////////////////////////////////////
+  E.g. (WIN64):
+
+    init_hostinfo:
+    BOOL WINAPI IsProcessorFeaturePresent( PF_COMPARE_EXCHANGE128 );
+    _INTEGRAL_MAX_BITS (machdep.h ==> _InterlockedCompareExchange128 ==> cmpxchg16b)
+
 
 
   Support multiple command-line commands (i.e. cmdsep character).
