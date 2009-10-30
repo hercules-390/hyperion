@@ -34,9 +34,6 @@
   Support multiple command-line commands (i.e. cmdsep character).
 
 
-  Fix STSI instruction: missing FC 15 support.
-
-
   Document all DIAGNOSE instruction support
 
 
