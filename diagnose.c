@@ -217,7 +217,7 @@ U32   code;
         /* If diag8cmd is not enabled then we are not allowed
          * to manipulate the real machine i.e. hercules itself
          */
-        if(!(sysblk.diag8cmd & 0x01))
+        if(!(sysblk.diag8cmd & DIAG8CMD_ENABLE))
             ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
         /* The poweroff diagnose is only valid on the 9221 */
@@ -312,7 +312,7 @@ U32   code;
         /* If diag8cmd is not enabled then we are not allowed
          * to manipulate the real machine i.e. hercules itself
          */
-        if(!(sysblk.diag8cmd & 0x01))
+        if(!(sysblk.diag8cmd & DIAG8CMD_ENABLE))
             ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
         /* Process CP command and set condition code */
@@ -491,7 +491,7 @@ U32   code;
         /* If diag8cmd is not enabled then we are not allowed
          * to manipulate the real machine i.e. hercules itself
          */
-        if(!(sysblk.diag8cmd & 0x01))
+        if(!(sysblk.diag8cmd & DIAG8CMD_ENABLE))
             ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
         sysblk.inststep = 0;
@@ -505,7 +505,7 @@ U32   code;
         /* If diag8cmd is not enabled then we are not allowed
          * to manipulate the real machine i.e. hercules itself
          */
-        if(!(sysblk.diag8cmd & 0x01))
+        if(!(sysblk.diag8cmd & DIAG8CMD_ENABLE))
             ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
         sysblk.inststep = 1;
@@ -526,7 +526,7 @@ U32   code;
         /* If diag8cmd is not enabled then we are not allowed
          * to manipulate the real machine i.e. hercules itself
          */
-        if(!(sysblk.diag8cmd & 0x01))
+        if(!(sysblk.diag8cmd & DIAG8CMD_ENABLE))
             ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
         /* Load 4K block address from R2 register */
@@ -555,7 +555,7 @@ U32   code;
         /* If diag8cmd is not enabled then we are not allowed
          * to manipulate the real machine i.e. hercules itself
          */
-        if(!(sysblk.diag8cmd & 0x01))
+        if(!(sysblk.diag8cmd & DIAG8CMD_ENABLE))
             ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
         regs->cpustate = CPUSTATE_STOPPING;
@@ -682,7 +682,7 @@ char *ipltype;                          /* "ipl" or "iplc"           */
             /* If diag8cmd is not enabled then we are not allowed
              * to manipulate the real machine i.e. hercules itself
              */
-        if(!(sysblk.diag8cmd & 0x01))
+        if(!(sysblk.diag8cmd & DIAG8CMD_ENABLE))
             ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
             regs->cpustate = CPUSTATE_STOPPING;

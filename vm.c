@@ -1098,7 +1098,7 @@ U32     j,k;
 
     /* Prepend '-' if noecho is requested */
     i=0;
-    if(!(sysblk.diag8cmd & 0x80))
+    if(!(sysblk.diag8cmd & DIAG8CMD_ECHO))
     {
         bufo[0]='-';
         i=1;
@@ -1123,11 +1123,11 @@ U32     j,k;
                 (*(p+1) == 'h' || *(p+1) == 'H') && 
                 isspace(*(p+2))) shcmd = 1;
         }
-        if ((sysblk.diag8cmd & 0x01)
+        if ((sysblk.diag8cmd & DIAG8CMD_ENABLE)
             && (!shcmd || !(sysblk.shcmdopt & (SHCMDOPT_DISABLE | SHCMDOPT_NODIAG8)))
         )
         {
-            if(sysblk.diag8cmd & 0x80)
+            if(sysblk.diag8cmd & DIAG8CMD_ECHO)
                 logmsgp (_("HHCVM001I *%s* panel command issued by guest\n"), bufo);
             if (cmdflags & CMDFLAGS_RESPONSE)
             {
@@ -1144,13 +1144,13 @@ U32     j,k;
             else
             {
                 panel_command(bufo);
-                if(sysblk.diag8cmd & 0x80)
+                if(sysblk.diag8cmd & DIAG8CMD_ECHO)
                     logmsgp (_("HHCVM002I *%s* command complete\n"), bufo);
             }
         }
         else
         {
-            if(sysblk.diag8cmd & 0x80)
+            if(sysblk.diag8cmd & DIAG8CMD_ECHO)
             {
                 logmsgp (_("HHCVM005W *%s* panel command issued by guest (but disabled)\n"), bufo);
             }

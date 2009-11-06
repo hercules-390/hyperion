@@ -3148,16 +3148,16 @@ int i;
         for(i = 1; i < argc; i++)
         {
             if(strcasecmp(argv[i],"echo")==0)
-                sysblk.diag8cmd |= 0x80;
+                sysblk.diag8cmd |= DIAG8CMD_ECHO;
             else
             if(strcasecmp(argv[i],"noecho")==0)
-                sysblk.diag8cmd &= ~0x80;
+                sysblk.diag8cmd &= ~DIAG8CMD_ECHO;
             else
             if(strcasecmp(argv[i],"enable")==0)
-                sysblk.diag8cmd |= 0x01;
+                sysblk.diag8cmd |= DIAG8CMD_ENABLE;
             else
             if(strcasecmp(argv[i],"disable")==0)
-                sysblk.diag8cmd = 0x00; // implies no echo
+                sysblk.diag8cmd = DIAG8CMD_ENABLE;
             else
             {
                 logmsg(_("HHCCF053I DIAG8CMD invalid option: %s\n"),argv[i]);

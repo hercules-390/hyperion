@@ -454,6 +454,8 @@ struct SYSBLK {
         int     mbm;                    /* Measurement block mode    */
         int     mbd;                    /* Device connect time mode  */
         int     diag8cmd;               /* Allow diagnose 8 commands */
+#define DIAG8CMD_ECHO     0x80          /* Echo command to console   */
+#define DIAG8CMD_ENABLE   0x01          /* Enable DIAG8 interface    */
         BYTE    shcmdopt;               /* 'sh'ell command option    */
 #define SHCMDOPT_DISABLE  0x80          /* Globally disable 'sh' cmd */
 #define SHCMDOPT_NODIAG8  0x40          /* Disallow only for DIAG8   */
