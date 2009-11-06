@@ -3167,7 +3167,9 @@ int i;
 
         }
     else
-        logmsg(_("HHCCF054S DIAG8CMD: %sable, %secho\n"),sysblk.diag8cmd ? "en" : "dis", (sysblk.diag8cmd & 0x80) ? "" : "no");
+        logmsg(_("HHCCF054S DIAG8CMD: %sable, %secho\n"),
+            (sysblk.diag8cmd & DIAG8CMD_ENABLE) ? "en" : "dis",
+            (sysblk.diag8cmd & DIAG8CMD_ECHO)   ? ""   : "no");
 
     return 0;
 }
