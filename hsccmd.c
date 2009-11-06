@@ -3157,7 +3157,8 @@ int i;
                 sysblk.diag8cmd |= DIAG8CMD_ENABLE;
             else
             if(strcasecmp(argv[i],"disable")==0)
-                sysblk.diag8cmd = DIAG8CMD_ENABLE;
+                // disable implies no echo
+                sysblk.diag8cmd = ~(DIAG8CMD_ENABLE | DIAG8CMD_ECHO);
             else
             {
                 logmsg(_("HHCCF053I DIAG8CMD invalid option: %s\n"),argv[i]);
