@@ -558,25 +558,30 @@ char   *buf1;                           /* Pointer to resolved buffer*/
         cnfline = strdup(buf);
 
         /* Parse the statement just read */
+
 #if defined(OPTION_CONFIG_SYMBOLS)
-    /* Perform variable substitution */
-    /* First, set some 'dynamic' symbols to their own values */
-    set_symbol("CUU","$(CUU)");
-    set_symbol("cuu","$(cuu)");
-    set_symbol("CCUU","$(CCUU)");
-    set_symbol("ccuu","$(ccuu)");
-    buf1=resolve_symbol_string(buf);
-    if(buf1!=NULL)
-    {
-        if(strlen(buf1)>=sizeof(buf))
+
+        /* Perform variable substitution */
+        /* First, set some 'dynamic' symbols to their own values */
+
+        set_symbol("CUU","$(CUU)");
+        set_symbol("cuu","$(cuu)");
+        set_symbol("CCUU","$(CCUU)");
+        set_symbol("ccuu","$(ccuu)");
+
+        buf1=resolve_symbol_string(buf);
+
+        if(buf1!=NULL)
         {
-            logmsg(_("HHCCF002S File %s line %d is too long\n"),
-                fname, inc_stmtnum[inc_level]);
-            free(buf1);
-            delayed_exit(1);
+            if(strlen(buf1)>=sizeof(buf))
+            {
+                logmsg(_("HHCCF002S File %s line %d is too long\n"),
+                    fname, inc_stmtnum[inc_level]);
+                free(buf1);
+                delayed_exit(1);
+            }
+            strcpy(buf,buf1);
         }
-        strcpy(buf,buf1);
-    }
 #endif /*defined(OPTION_CONFIG_SYMBOLS)*/
 
         parse_args (buf, MAX_ARGS, addargv, &addargc);
@@ -591,7 +596,6 @@ char   *buf1;                           /* Pointer to resolved buffer*/
             }
         }
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
-
 
         if( !ProcessConfigCommand (addargc, (char**)addargv, cnfline) )
         {
