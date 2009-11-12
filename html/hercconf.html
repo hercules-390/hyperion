@@ -62,7 +62,7 @@ and how they are used.
     <a href="#HTTPROOT">HTTPROOT</a>   /usr/local/share/hercules/
     <a href="#HTTPPORT">HTTPPORT</a>   8081 NOAUTH
 
-    <a href="cckddasd.html#cckdcommand">CCKD</a>       cache=8
+    <a href="#CCKD">CCKD</a>       RA=2,RAQ=4,RAT=2,WR=2,GCINT=10,GCPARM=0,NOSTRESS=0,TRACE=0,FREEPEND=-1
     <a href="#SHRDPORT">SHRDPORT</a>   3990
 
     <a href="#PANTITLE">PANTITLE</a>   "My own private MAINFRAME!"
@@ -280,6 +280,17 @@ and how they are used.
     associated hardware (SCSI adapter) behaves to drive status queries
     for drives which do not have any media currently mounted on them.
     </i>
+    <p>
+
+<a name="CCKD"></a>
+<dt><code>CCKD &nbsp; <em>cckd-parameters</em></code>
+<dd><p>
+    The CCKD command and initialization statement can be used to affect
+    cckd processing. The CCKD initialization statement is specified as
+    a Hercules configuration file statement and supports the same options
+    as the cckd panel command. Refer to the
+    <a href="cckddasd.html#cckdcommand">Compressed Dasd Emulation</a>
+    web page for more information.
     <p>
 
 <a name="CODEPAGE"></a>
