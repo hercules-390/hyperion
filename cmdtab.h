@@ -247,15 +247,17 @@ COMMAND ( "HTTP_SERVER_CONNECT_KLUDGE", CONFIG, httpskm_cmd, "HTTP_SERVER_CONNEC
 COMMAND ( "psw",       PANEL,        psw_cmd,
   "display or alter program status word",
     "Format: \"psw [operand ...]\" where 'operand ...' is one or more optional\n"
-    "parameters which modify the contents of the Program Status Word.\n"
-    "sm=xx modifies the PSW system mask (xx is 2 hex digits)\n"
-    "pk=n modifies the PSW protection key (n is decimal 0 to 15)\n"
-    "cmwp=x modifies the EC/M/W/P bits of the PSW (x is one hex digit)\n"
-    "as=pri|sec|ar|home modifies the PSW address-space control bits\n"
-    "cc=n modifies the PSW condition code (n is decimal 0 to 3)\n"
-    "pm=x modifies the PSW program mask (x is one hex digit)\n"
-    "ia=xxx modifies the PSW instruction address (xxx is 1 to 16 hex digits)\n"
-    "as=24|31|64 modifies the addressing mode bits of the PSW\n"
+    "parameters which modify the contents of the Program Status Word:\n\n"
+
+    "  sm=xx                 system mask          (2 hex digits)\n"
+    "  pk=n                  protection key       (decimal 0 to 15)\n"
+    "  cmwp=x                C/M/W/P bits         (one hex digit)\n"
+    "  as=pri|sec|ar|home    address-space\n"
+    "  cc=n                  condition code       (decimal 0 to 3)\n"
+    "  pm=x                  program mask         (one hex digit)\n"
+    "  am=24|31|64           addressing mode\n"
+    "  ia=xxx                instruction address  (1 to 16 hex digits)\n\n"
+
     "Enter \"psw\" by itself to display the current PSW without altering it.\n" )
 
 COMMAND ( "gpr",       PANEL,        gpr_cmd,
@@ -471,7 +473,7 @@ COMMAND ( "b-",        PANEL,        trace_cmd,
   "delete breakpoint",
     "Format: \"b-\"  This command is the same as \"s-\"\n"                )
 
-COMMAND ( "g",         PANEL,        g_cmd,        "turn off instruction stepping and start CPU\n", NULL )
+COMMAND ( "g",         PANEL,        g_cmd,        "turn off instruction stepping and start all CPUs\n", NULL )
 
 COMMAND ( "ostailor",  PANEL+CONFIG, ostailor_cmd,
   "trace program interrupts",
