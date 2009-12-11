@@ -315,7 +315,7 @@ DEVBLK   *dev;                   /* -> DEVBLK                       */
 #endif
 
     /* If device is not in the table or it isn't recognized by DIAG X'24' */
-    if ( !vmentry || ( code==0x24 && !vmentry->vmdiags & VMDIAG024 ) )
+    if ( !vmentry || ( code==0x24 && !(vmentry->vmdiags & VMDIAG024 ) ) )
     {
         /* Set the real and virtual data to an unsupported device */
         vdat->vdevcls = DC_SPEC;
