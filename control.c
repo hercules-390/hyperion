@@ -343,7 +343,7 @@ CREG    inst_cr;                        /* Instruction CR            */
         || !ASF_ENABLED(regs))
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
-    inst_cr = regs->CR(regs->aea_ar[USE_INST_SPACE]);
+    inst_cr = regs->CR(regs->aea_ar_special[_USE_INST_SPACE]);
 
 #ifdef FEATURE_TRACING
     /* Perform tracing */
@@ -582,7 +582,7 @@ CREG    inst_cr;                        /* Instruction CR            */
 #endif /*FEATURE_TRACING*/
 
     SET_AEA_COMMON(regs);
-    if (inst_cr != regs->CR(regs->aea_ar[USE_INST_SPACE]))
+    if (inst_cr != regs->CR(regs->aea_ar_special[_USE_INST_SPACE]))
         INVALIDATE_AIA(regs);
 
     /* Check for Successful Branch PER event */
@@ -1592,7 +1592,7 @@ CREG    inst_cr;                        /* Instruction CR            */
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
-    inst_cr = regs->CR(regs->aea_ar[USE_INST_SPACE]);
+    inst_cr = regs->CR(regs->aea_ar_special[_USE_INST_SPACE]);
 
     /* Fetch LASP parameters from first operand location
        (note that the storage-operand references for LASP
@@ -1807,7 +1807,7 @@ CREG    inst_cr;                        /* Instruction CR            */
     } /* end if(ASN_AND_LX_REUSE_ENABLED) */
 
     SET_AEA_COMMON(regs);
-    if (inst_cr != regs->CR(regs->aea_ar[USE_INST_SPACE]))
+    if (inst_cr != regs->CR(regs->aea_ar_special[_USE_INST_SPACE]))
         INVALIDATE_AIA(regs);
 
     /* Return condition code zero */
@@ -1894,7 +1894,7 @@ U16     updated = 0;                    /* Updated control regs      */
 #else
     if (updated & (BIT(1) | BIT(7) | BIT(13)))
         SET_AEA_COMMON(regs);
-    if (updated & BIT(regs->aea_ar[USE_INST_SPACE]))
+    if (updated & BIT(regs->aea_ar_special[_USE_INST_SPACE]))
         INVALIDATE_AIA(regs);
 #endif
     if (updated & BIT(9))
