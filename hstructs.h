@@ -38,9 +38,9 @@ struct REGS {                           /* Processor registers       */
 
         DW      gr[16];                 /* General registers         */
 
-        DW      cr_special[1];          /* Negative Index into cr    */
-#define CR_ASD_REAL     -1
-        DW      cr[16+16];              /* Control registers         */
+//      DW      cr_special[1];          /* Negative Index into cr    */
+#define CR_ASD_REAL     32
+        DW      cr[16+16+1];            /* Control registers         */
 #define CR_ALB_OFFSET   16
 //      DW      alb[16];                /* Accesslist Lookaside cr   */
 
