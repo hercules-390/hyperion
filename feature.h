@@ -697,7 +697,7 @@ do \
 #if defined(FEATURE_ACCESS_REGISTERS)
   #define _CASE_AR_SET_AEA_MODE(_regs) \
     case 2: /* AR */ \
-      (_regs)->aea_ar_special[_USE_INST_SPACE] = 1; \
+      (_regs)->aea_ar[USE_INST_SPACE] = 1; \
       for(i = 0; i < 16; i++) \
           (_regs)->aea_ar[i] = 1; \
       for (i = 1; i < 16; i++) { \
@@ -712,7 +712,7 @@ do \
 #if defined(FEATURE_DUAL_ADDRESS_SPACE)
   #define _CASE_DAS_SET_AEA_MODE(_regs) \
     case 3: /* SEC */ \
-      (_regs)->aea_ar_special[_USE_INST_SPACE] = 1; \
+      (_regs)->aea_ar[USE_INST_SPACE] = 1; \
       for(i = 0; i < 16; i++) \
           (_regs)->aea_ar[i] = 7; \
       break;
@@ -723,7 +723,7 @@ do \
 #if defined(FEATURE_LINKAGE_STACK)
   #define _CASE_HOME_SET_AEA_MODE(_regs) \
     case 4: /* HOME */ \
-      (_regs)->aea_ar_special[_USE_INST_SPACE] = 13; \
+      (_regs)->aea_ar[USE_INST_SPACE] = 13; \
       for(i = 0; i < 16; i++) \
           (_regs)->aea_ar[i] = 13; \
       break;
@@ -734,12 +734,12 @@ do \
 #define SET_AEA_MODE(_regs) \
 do { \
   int i; \
-  int inst_cr = (_regs)->aea_ar_special[_USE_INST_SPACE]; \
+  int inst_cr = (_regs)->aea_ar[USE_INST_SPACE]; \
   BYTE oldmode = (_regs)->aea_mode; \
   (_regs)->aea_mode = AEA_MODE((_regs)); \
   switch ((_regs)->aea_mode & 0x0F) { \
     case 1: /* PRIM */ \
-      (_regs)->aea_ar_special[_USE_INST_SPACE] = 1; \
+      (_regs)->aea_ar[USE_INST_SPACE] = 1; \
       for(i = 0; i < 16; i++) \
           (_regs)->aea_ar[i] = 1; \
       break; \
@@ -747,11 +747,11 @@ do { \
     _CASE_DAS_SET_AEA_MODE((_regs)) \
     _CASE_HOME_SET_AEA_MODE((_regs)) \
     default: /* case 0: REAL */ \
-      (_regs)->aea_ar_special[_USE_INST_SPACE] = CR_ASD_REAL; \
+      (_regs)->aea_ar[USE_INST_SPACE] = CR_ASD_REAL; \
       for(i = 0; i < 16; i++) \
           (_regs)->aea_ar[i] = CR_ASD_REAL; \
   } \
-  if (inst_cr != (_regs)->aea_ar_special[_USE_INST_SPACE]) \
+  if (inst_cr != (_regs)->aea_ar[USE_INST_SPACE]) \
     INVALIDATE_AIA((_regs)); \
   if ((oldmode & PSW_PERMODE) == 0 && ((_regs)->aea_mode & PSW_PERMODE) != 0) { \
     INVALIDATE_AIA((_regs)); \
