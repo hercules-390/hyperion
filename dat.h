@@ -646,7 +646,7 @@ U16     eax;                            /* Authorization index       */
         break;
 
     case USE_INST_SPACE:
-        switch(regs->aea_ar[USE_INST_SPACE]) {
+        switch(regs->aea_ar_special[_USE_INST_SPACE]) {
 
         case 1:
             regs->dat.stid = TEA_ST_PRIMARY;
@@ -658,9 +658,9 @@ U16     eax;                            /* Authorization index       */
     #endif
         default:
             regs->dat.stid = 0;
-        } /* end switch(regs->aea_ar[USE_INST_SPACE]) */
+        } /* end switch(regs->aea_ar_special[_USE_INST_SPACE]) */
 
-        regs->dat.asd = regs->CR(regs->aea_ar[USE_INST_SPACE]);
+        regs->dat.asd = regs->CR(regs->aea_ar_special[_USE_INST_SPACE]);
         break;
 
     default:
