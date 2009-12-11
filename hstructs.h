@@ -228,8 +228,8 @@ struct REGS {                           /* Processor registers       */
 
         BYTE    aea_mode;               /* aea addressing mode       */
 
-        int     aea_ar_special[5];      /* Negative index into ar    */
-        int     aea_ar[16];             /* arn to cr number          */
+//      int     aea_ar_special[5];      /* Negative index into ar    */
+        int     aea_ar[16+5];           /* arn to cr number          */
 
         BYTE    aea_common_special[1];  /* real asd                  */
         BYTE    aea_common[16+16];      /* 1=asd is not private      */
