@@ -1679,7 +1679,7 @@ tran_excp_addr:
     if (ACCESS_REGISTER_MODE(&regs->psw)
      || (SIE_ACTIVE(regs) && MULTIPLE_CONTROLLED_DATA_SPACE(regs->guestregs))
        )
-       regs->excarid = arn < 0 ? 0 : arn;
+       regs->excarid = arn > 15 ? 0 : arn;
 
     /* Return condition code */
     return cc;
@@ -2079,7 +2079,7 @@ static inline int ARCH_DEP(check_sa_per2) (int arn, int acctype, REGS *regs)
     UNREFERENCED(acctype);
     if((regs->dat.asd & SAEVENT_BIT) || !(regs->CR(9) & CR9_SAC))
     {
-        regs->peraid = arn > 0 ? arn : 0;
+        regs->peraid = arn > 0 && arn < 16 ? arn : 0;
         regs->perc |= regs->dat.stid;
         return 1;
     }
@@ -2176,7 +2176,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
     {
 
         if (SIE_TRANSLATE_ADDR (regs->sie_mso + regs->dat.aaddr,
-                    (arn > 0 && MULTIPLE_CONTROLLED_DATA_SPACE(regs)) ? arn : USE_PRIMARY_SPACE,
+                    (arn > 0 && arn < 16 && MULTIPLE_CONTROLLED_DATA_SPACE(regs)) ? arn : USE_PRIMARY_SPACE,
                     regs->hostregs, ACCTYPE_SIE))
             (regs->hostregs->program_interrupt) (regs->hostregs, regs->hostregs->dat.xcode);
 
@@ -2187,7 +2187,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
             regs->tlb.TLB_PTE(ix)   = addr & TLBID_PAGEMASK;
 
         /* Indicate a host real space entry for a XC dataspace */
-        if (arn > 0 && MULTIPLE_CONTROLLED_DATA_SPACE(regs))
+        if (arn > 0 && arn < 16 && MULTIPLE_CONTROLLED_DATA_SPACE(regs))
         {
             regs->tlb.TLB_ASD(ix) = regs->dat.asd;
             /* Ensure that the private bit is percolated to the guest such that LAP is applied correctly */
@@ -2296,7 +2296,7 @@ vabs_prot_excp:
   #endif /*defined(FEATURE_ESAME)*/
     }
     regs->TEA |= regs->dat.stid;
-    regs->excarid = (arn > 0 ? arn : 0);
+    regs->excarid = (arn > 0 && arn < 16 ? arn : 0);
 #endif /*FEATURE_SUPPRESSION_ON_PROTECTION*/
 
 #if defined(_FEATURE_PROTECTION_INTERCEPTION_CONTROL)
