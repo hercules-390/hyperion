@@ -5699,7 +5699,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
         regs->psw.cc = len ? 3 : 0;
 
         /* exit on the cpu determined number of bytes */
-        if((len != 0) && (!(addr1 & 0xfff) || !addr2 & 0xfff))
+        if((len != 0) && (!(addr1 & 0xfff) || !(addr2 & 0xfff)))
             break;
 
     } /* end while */
@@ -5794,7 +5794,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
         regs->psw.cc = len ? 3 : 0;
 
         /* exit on the cpu determined number of bytes */
-        if((len != 0) && (!(addr1 & 0xfff) || !addr2 & 0xfff))
+        if((len != 0) && (!(addr1 & 0xfff) || !(addr2 & 0xfff)))
             break;
 
     } /* end while */
@@ -5895,7 +5895,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
         regs->psw.cc = len ? 3 : 0;
 
         /* exit on the cpu determined number of bytes */
-        if((len != 0) && (!(addr1 & 0xfff) || !addr2 & 0xfff))
+        if((len != 0) && (!(addr1 & 0xfff) || !(addr2 & 0xfff)))
             break;
 
     } /* end while */
@@ -5995,7 +5995,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
         regs->psw.cc = len ? 3 : 0;
 
         /* exit on the cpu determined number of bytes */
-        if((len != 0) && (!(addr1 & 0xfff) || !addr2 & 0xfff))
+        if((len != 0) && (!(addr1 & 0xfff) || !(addr2 & 0xfff)))
             break;
 
     } /* end while */
