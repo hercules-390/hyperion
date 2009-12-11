@@ -659,7 +659,7 @@ do { \
   #define SET_AEA_AR(_regs, _arn) \
   do \
   { \
-    if (ACCESS_REGISTER_MODE(&(_regs)->psw) && (_arn) > 0) { \
+    if (ACCESS_REGISTER_MODE(&(_regs)->psw) && (_arn) > 0 && (_arn) < 16) { \
       if ((_regs)->AR((_arn)) == ALET_PRIMARY) \
         (_regs)->aea_ar[(_arn)] = 1; \
       else if ((_regs)->AR((_arn)) == ALET_SECONDARY) \
