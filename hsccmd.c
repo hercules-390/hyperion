@@ -6471,7 +6471,11 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
     logmsg ("\n");
 
     logmsg ("aea common            ");
-    for (i = -1; i < 16; i++)
+    if(regs->aea_common[32] > 0)
+        logmsg(" %2.2x",regs->aea_common[32]);
+    else
+        logmsg(" %2d",regs->aea_common[32]);    
+    for (i = 0; i < 16; i++)
         if(regs->aea_common[i] > 0)
             logmsg(" %2.2x",regs->aea_common[i]);
         else
@@ -6511,7 +6515,11 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
         logmsg ("\n");
 
         logmsg ("aea common            ");
-        for (i = -1; i < 16; i++)
+        if(regs->aea_common[32] > 0)
+            logmsg(" %2.2x",regs->aea_common[32]);
+        else
+            logmsg(" %2d",regs->aea_common[32]);
+        for (i = 0; i < 16; i++)
         if(regs->aea_common[i] > 0)
             logmsg(" %2.2x",regs->aea_common[i]);
         else
