@@ -541,12 +541,12 @@ _DAT_C_STATIC void ARCH_DEP(purge_alb) (REGS *regs)
 int i;
 
     for(i = 1; i < 16; i++)
-        if(regs->aea_ar[i] >= CR_ALB_OFFSET)
+        if(regs->aea_ar[i] >= CR_ALB_OFFSET && regs->aea_ar[i] != CR_ASD_REAL)
             regs->aea_ar[i] = 0;
 
     if(regs->host && regs->guestregs)
         for(i = 1; i < 16; i++)
-            if(regs->guestregs->aea_ar[i] >= CR_ALB_OFFSET)
+            if(regs->guestregs->aea_ar[i] >= CR_ALB_OFFSET && regs->guestregs->aea_ar[i] != CR_ASD_REAL)
                 regs->guestregs->aea_ar[i] = 0;
 
 } /* end function purge_alb */
@@ -701,7 +701,7 @@ U16     eax;                            /* Authorization index       */
 
             default:
                 /* ALB Lookup */
-                if(regs->aea_ar[arn] >= CR_ALB_OFFSET)
+                if(regs->aea_ar[arn] >= CR_ALB_OFFSET && regs->aea_ar[arn] != CR_ASD_REAL)
                 {
                     regs->dat.asd = regs->CR(regs->aea_ar[arn]);
                     regs->dat.protect = regs->aea_aleprot[arn];
