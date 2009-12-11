@@ -29,7 +29,7 @@
 /* processing you should instead create a worker to perform it in.   */
 /*-------------------------------------------------------------------*/
 
-typedef int ONCONNECT( void* );     // onconnect callback function (opt)
+typedef int (*ONCONNECT)( DEVBLK* );     // onconnect callback function (opt)
 
 /*-------------------------------------------------------------------*/
 /* Bind structure for "Socket Devices"                               */
@@ -47,7 +47,7 @@ struct bind_struct          // Bind structure for "Socket Devices"
     char    *clientname;    // connected client's hostname
     char    *clientip;      // conencted client's ip address
 
-    ONCONNECT   *fn;        // ptr to onconnect callback func (opt)
+    ONCONNECT    fn;        // ptr to onconnect callback func (opt)
     void        *arg;       // argument for callback function (opt)
 };
 
