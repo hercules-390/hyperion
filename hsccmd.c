@@ -6458,7 +6458,12 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
     logmsg ("aea mode   %s\n",aea_mode_str(regs->aea_mode));
 
     logmsg ("aea ar    ");
-    for (i = -5; i < 16; i++)
+    for (i = 0; i < 5; i++)
+         if(regs->aea_ar_special[i] > 0)
+            logmsg(" %2.2x",regs->aea_ar_special[i]);
+        else
+            logmsg(" %2d",regs->aea_ar_special[i]);
+    for (i = 0; i < 16; i++)
          if(regs->aea_ar[i] > 0)
             logmsg(" %2.2x",regs->aea_ar[i]);
         else
@@ -6493,11 +6498,16 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
         logmsg ("aea mode   %s\n",aea_mode_str(regs->aea_mode));
 
         logmsg ("aea ar    ");
-        for (i = -5; i < 16; i++)
-        if(regs->aea_ar[i] > 0)
-            logmsg(" %2.2x",regs->aea_ar[i]);
-        else
-            logmsg(" %2d",regs->aea_ar[i]);
+        for (i = 0; i < 5; i++)
+            if(regs->aea_ar_special[i] > 0)
+                logmsg(" %2.2x",regs->aea_ar_special[i]);
+            else
+                logmsg(" %2d",regs->aea_ar_special[i]);
+        for (i = 0; i < 16; i++)
+            if(regs->aea_ar[i] > 0)
+                logmsg(" %2.2x",regs->aea_ar[i]);
+            else
+                logmsg(" %2d",regs->aea_ar[i]);
         logmsg ("\n");
 
         logmsg ("aea common            ");
