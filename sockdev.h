@@ -53,7 +53,7 @@ struct bind_struct          // Bind structure for "Socket Devices"
 
 /* "Socket Device" functions */
 
-extern        int bind_device_ex   (DEVBLK* dev, char* spec, ONCONNECT* fn, void* arg );
+extern        int bind_device_ex   (DEVBLK* dev, char* spec, ONCONNECT fn, void* arg );
 extern        int unbind_device_ex (DEVBLK* dev, int forced);
 
 static inline int bind_device      (DEVBLK* dev, char* spec) { return bind_device_ex   ( dev, spec, NULL, NULL ); }
