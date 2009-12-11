@@ -468,7 +468,7 @@ void* socket_thread( void* arg )
 /* bind_device   bind a device to a socket (adds entry to our list   */
 /*               of bound devices) (1=success, 0=failure)            */
 /*-------------------------------------------------------------------*/
-int bind_device_ex (DEVBLK* dev, char* spec, ONCONNECT* fn, void* arg )
+int bind_device_ex (DEVBLK* dev, char* spec, ONCONNECT fn, void* arg )
 {
     bind_struct* bs;
     int was_list_empty;
