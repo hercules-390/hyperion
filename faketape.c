@@ -389,6 +389,9 @@ U16             curblkl;                /* Current block length      */
     /* Calculate the offset of the next block header */
     blkpos += sizeof(FAKETAPE_BLKHDR) + curblkl;
 
+#if 0
+    /*BHE following code will never be true!!*/
+
     /* Check that block length will not exceed buffer size */
     if (curblkl > MAX_BLKLEN)
     {
@@ -400,6 +403,7 @@ U16             curblkl;                /* Current block length      */
         build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
         return -1;
     }
+#endif
 
     /* If not a tapemark, read the data block */
     if (curblkl > 0)
