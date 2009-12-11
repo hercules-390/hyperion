@@ -6488,7 +6488,7 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
     for(i = 0; i < 16; i++)
         if(regs->aea_ar[i] > 15)
             logmsg ("    alb[%d] %16.16" I64_FMT "x\n",
-                    regs->alb[i]);
+                    regs->cr[CR_ALB_OFFSET + i]);
 
     if (regs->sie_active)
     {
@@ -6528,7 +6528,7 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
         for(i = 0; i < 16; i++)
             if(regs->aea_ar[i] > 15)
                 logmsg ("    alb[%d] %16.16" I64_FMT "x\n",
-                        regs->alb[i]);
+                        regs->cr[CR_ALB_OFFSET + i]);
     }
 
     release_lock (&sysblk.cpulock[sysblk.pcpu]);
