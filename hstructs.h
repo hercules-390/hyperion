@@ -232,8 +232,8 @@ struct REGS {                           /* Processor registers       */
         int     aea_ar[16];             /* arn to cr number          */
 
         BYTE    aea_common_special[1];  /* real asd                  */
-        BYTE    aea_common[16];         /* 1=asd is not private      */
-        BYTE    aea_common_alb[16];     /* alb pseudo registers      */
+        BYTE    aea_common[16+16];      /* 1=asd is not private      */
+//      BYTE    aea_common_alb[16];     /* alb pseudo registers      */
 
         BYTE    aea_aleprot[16];        /* ale protected             */
 
