@@ -268,12 +268,18 @@
 #define ACCTYPE_STRAG      0               /* STRAG instruction      */
 #define ACCTYPE_LPTEA     (ACC_LPTEA|ACC_NOTLB) /* LPTEA instruction */
 
-/* Special value for arn parameter for translate functions in dat.c */
+/* Special value for arn parameter for translate functions in dat.c  */
+/* _USE_... values for killing the "array subscript" warnings        */
 #define USE_INST_SPACE          (-1)    /* Instruction space virtual */
+#define _USE_INST_SPACE         4
 #define USE_REAL_ADDR           (-2)    /* Real address              */
+#define _USE_REAL_ADDR          3
 #define USE_PRIMARY_SPACE       (-3)    /* Primary space virtual     */
+#define _USE_PRIMARY_SPACE      2
 #define USE_SECONDARY_SPACE     (-4)    /* Secondary space virtual   */
+#define _USE_SECONDARY_SPACE    1
 #define USE_HOME_SPACE          (-5)    /* Home space virtual        */
+#define _USE_HOME_SPACE         0
 #define USE_ARMODE              16      /* OR with access register
                                            number to force AR mode   */
 
