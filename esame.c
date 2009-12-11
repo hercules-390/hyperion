@@ -4296,7 +4296,7 @@ U16     updated = 0;                    /* Updated control regs      */
     SET_IC_MASK(regs);
     if (updated & (BIT(1) | BIT(7) | BIT(13)))
         SET_AEA_COMMON(regs);
-    if (updated & BIT(regs->aea_ar_special[_USE_INST_SPACE]))
+    if (updated & BIT(regs->aea_ar[USE_INST_SPACE]))
         INVALIDATE_AIA(regs);
     if (updated & BIT(9))
     {
