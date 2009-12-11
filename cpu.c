@@ -1477,12 +1477,12 @@ int i;
     regs->CR_G(CR_ASD_REAL) = TLB_REAL_ASD;
 
     for(i = 0; i < 16; i++)
-        regs->aea_ar[i]                        = CR_ASD_REAL;
-    regs->aea_ar_special[_USE_INST_SPACE]      = CR_ASD_REAL;
-    regs->aea_ar_special[_USE_REAL_ADDR]       = CR_ASD_REAL;
-    regs->aea_ar_special[_USE_PRIMARY_SPACE]   =  1;
-    regs->aea_ar_special[_USE_SECONDARY_SPACE] =  7;
-    regs->aea_ar_special[_USE_HOME_SPACE]      = 13;
+        regs->aea_ar[i]               = CR_ASD_REAL;
+    regs->aea_ar[USE_INST_SPACE]      = CR_ASD_REAL;
+    regs->aea_ar[USE_REAL_ADDR]       = CR_ASD_REAL;
+    regs->aea_ar[USE_PRIMARY_SPACE]   =  1;
+    regs->aea_ar[USE_SECONDARY_SPACE] =  7;
+    regs->aea_ar[USE_HOME_SPACE]      = 13;
 
     /* Initialize opcode table pointers */
     set_opcode_pointers (regs);
