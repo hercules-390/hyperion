@@ -102,7 +102,7 @@ int    x;
 /*-------------------------------------------------------------------*/
 /* clean - cleanup before exit                                       */
 /*-------------------------------------------------------------------*/
-void clean() {
+void clean(void) {
     close(fd);
     free(l1);                          /* L1TAB buffer               */
     free(l2);                          /* L2TAB buffer               */
@@ -151,7 +151,7 @@ int readpos(
     if (debug) 
         fprintf(stdout, 
                 "READPOS reading buf addr "PTR_FMTx" length %"SIZE_T_FMT"d (0x"SIZE_T_FMTX")\n",
-                buf, len, len);
+                (uintptr_t)buf, len, len);
     if (read(fd, buf, len) < (ssize_t)len) {
         fprintf(stdout, _("cckddiag: read error: %s\n"),
                         strerror(errno));
@@ -520,7 +520,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             fprintf(stdout, 
                     "DASD table entry not found for devtype 0x%2.2X\n",
                     devhdr.devtype);
-            clean(fd);
+            clean();
             exit(5);
         }
     }
@@ -534,7 +534,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                     "DASD table entry not found for "
                     "devtype 0x%2.2X\n",
                     DEFAULT_FBA_TYPE);
-            clean(fd);
+            clean();
             exit(6);
         }
     }
