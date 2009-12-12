@@ -8195,7 +8195,7 @@ BYTE* get_stfl_data(int mode, int *data_len)
             return &z900_stfl_data[0];
 #endif
     }
-    data_len=0;
+    *data_len=0;
     return NULL;
 }
 
