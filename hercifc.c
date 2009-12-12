@@ -221,7 +221,7 @@ int main( int argc, char **argv )
 
         default:
             snprintf( szMsgBuffer,sizeof(szMsgBuffer),
-                     _("HHCIF004W %s: Unknown request: "I32_FMTX".\n"),
+                     _("HHCIF004W %s: Unknown request: "I64_FMTX".\n"),
                      pszProgName, ctlreq.iCtlOp );
             write( STDERR_FILENO, szMsgBuffer, strlen( szMsgBuffer ) );
             continue;
