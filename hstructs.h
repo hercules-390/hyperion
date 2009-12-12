@@ -38,11 +38,9 @@ struct REGS {                           /* Processor registers       */
 
         DW      gr[16];                 /* General registers         */
 
-//      DW      cr_special[1];          /* Negative Index into cr    */
-#define CR_ASD_REAL     32
-        DW      cr[16+16+1];            /* Control registers         */
-#define CR_ALB_OFFSET   16
-//      DW      alb[16];                /* Accesslist Lookaside cr   */
+        DW      cr[16+16+1];            /* 16 Control registers      */
+#define CR_ALB_OFFSET   16              /* 16 Accesslist lookaside   */
+#define CR_ASD_REAL     32              /*  1 Real asd register      */
 
         U32     ar[16];                 /* Access registers          */
         U32     fpr[32];                /* Floating point registers  */
@@ -228,12 +226,12 @@ struct REGS {                           /* Processor registers       */
 
         BYTE    aea_mode;               /* aea addressing mode       */
 
-//      int     aea_ar_special[5];      /* Negative index into ar    */
         int     aea_ar[16+5];           /* arn to cr number          */
+                                        /* 5 Special registers       */
 
-//      BYTE    aea_common_special[1];  /* real asd                  */
         BYTE    aea_common[16+16+1];    /* 1=asd is not private      */
-//      BYTE    aea_common_alb[16];     /* alb pseudo registers      */
+                                        /* 16 Accesslist lookaside   */
+                                        /*  1 Real asd register      */
 
         BYTE    aea_aleprot[16];        /* ale protected             */
 
