@@ -125,6 +125,9 @@
 
 #if !defined(_ESAME_C_)
 #define _ESAME_C_
+
+BYTE * get_stfl_data(int, int *);
+
 #endif
 
 #include "hercules.h"
@@ -137,6 +140,8 @@
 #include "crypto.h"
 
 #include "clock.h"
+
+
 
 #if defined(FEATURE_BINARY_FLOATING_POINT)
 /*-------------------------------------------------------------------*/
@@ -5164,32 +5169,84 @@ BYTE ARCH_DEP(stfl_data)[] = {
 /*-------------------------------------------------------------------*/
 /* Adjust the facility list to account for runtime options           */
 /*-------------------------------------------------------------------*/
-void ARCH_DEP(adjust_stfl_data) ()
+BYTE * ARCH_DEP(adjust_stfl_data) (int *data_len, REGS *regs)
 {
-#if defined(_900) || defined(FEATURE_ESAME)
-    /* ESAME might be installed but not active */
-    if(sysblk.arch_z900)
-        ARCH_DEP(stfl_data)[0] |= STFL_0_ESAME_INSTALLED;
+int   stfl_len;     /* Length of STFL data                           */
+BYTE *stfl_data;    /* -> STFL data being modified. Depends upon     */
+                    /* installed architecture, but not the current   */
+                    /* architecture mode being executed.             */
+                    /* ARCH_DEP is unreliable choice for STFL data   */
+                    /* post IPL of a z/Architecture machine but      */
+                    /* before the CPU has been placed in             */
+                    /* in z/Architecture mode.  In this case,        */
+                    /* ARCH_DEP selects ESA/390 STFL data which is   */
+                    /* incomplete when z/Architecture is installed.  */
+                    /* This creates problems for OS's that expect to */
+                    /* detect z/Architecture features before         */
+                    /* entering z/Architecture mode and only find    */
+                    /* ESA/390 features.                             */
+
+    if (sysblk.arch_z900)
+    {   
+        /* 'ARCHMODE z/Arch' in configuration (or console configured) */
+
+        /* Locate the STFL data for a z/Architecture system */
+        stfl_data=get_stfl_data(ARCH_900, &stfl_len);
+
+        /* A little overkill, but deals with the possible corner case */
+        if (!stfl_data)
+        {   
+            stfl_len=sizeof(ARCH_DEP(stfl_data));
+            stfl_data=&ARCH_DEP(stfl_data)[0];
+        }
+
+        stfl_data[0] |= STFL_0_ESAME_INSTALLED;
+
+        /* Set whether z/Arch is active based upon CPU mode */
+        if (regs->arch_mode == ARCH_900)
+            stfl_data[0] |= STFL_0_ESAME_ACTIVE;
+        else
+            stfl_data[0] &= ~STFL_0_ESAME_ACTIVE;
+    }
     else
-        ARCH_DEP(stfl_data)[0] &= ~STFL_0_ESAME_INSTALLED;
-#endif /*defined(_900) || defined(FEATURE_ESAME)*/
+    {
+        /* 'ARCHMODE ESA/390' in configuration (or console configured) */
+        
+        /* Locate the STFL data for an ESA/390 system */
+        stfl_data=get_stfl_data(ARCH_390, &stfl_len);
+        
+        /* Same overkill, but just in case */
+        if (!stfl_data)
+        {   
+            stfl_len=sizeof(ARCH_DEP(stfl_data));
+            stfl_data=&ARCH_DEP(stfl_data)[0];
+        }
+        
+        stfl_data[0] &= ~STFL_0_ESAME_INSTALLED;
+        stfl_data[0] &= ~STFL_0_ESAME_ACTIVE;
+    }
 
 #if defined(FEATURE_MESSAGE_SECURITY_ASSIST)
     /* MSA is enabled only if the dyncrypt DLL module is loaded */
     if(ARCH_DEP(cipher_message))
-        ARCH_DEP(stfl_data)[2] |= STFL_2_MSG_SECURITY;
+        stfl_data[2] |= STFL_2_MSG_SECURITY;
     else
-        ARCH_DEP(stfl_data)[2] &= ~STFL_2_MSG_SECURITY;
+        stfl_data[2] &= ~STFL_2_MSG_SECURITY;
 #endif /*defined(FEATURE_MESSAGE_SECURITY_ASSIST)*/
 
-#if defined(FEATURE_ASN_AND_LX_REUSE)
+#if defined(_FEATURE_ASN_AND_LX_REUSE)
     /* ALRF enablement is an option in the configuration file */
     if(sysblk.asnandlxreuse)
-        ARCH_DEP(stfl_data)[0] |= STFL_0_ASN_LX_REUSE;
+        stfl_data[0] |= STFL_0_ASN_LX_REUSE;
     else
-        ARCH_DEP(stfl_data)[0] &= ~STFL_0_ASN_LX_REUSE;
+        stfl_data[0] &= ~STFL_0_ASN_LX_REUSE;
 #endif /*defined(FEATURE_ASN_AND_LX_REUSE)*/
+
+    *data_len=stfl_len;
+    return stfl_data;
 } /* end ARCH_DEP(adjust_stfl_data) */
+
+
 
 /*-------------------------------------------------------------------*/
 /* B2B1 STFL  - Store Facility List                              [S] */
@@ -5198,7 +5255,10 @@ DEF_INST(store_facility_list)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
+int     data_len;                       /* Size of STFL data         */
+        /* Note: data_len not used here, but STFLE needs it          */
 PSA    *psa;                            /* -> Prefixed storage area  */
+BYTE   *stfl_data;                      /* -> STFL data              */
 
     S(inst, regs, b2, effective_addr2);
 
@@ -5209,7 +5269,13 @@ PSA    *psa;                            /* -> Prefixed storage area  */
     PTT(PTT_CL_INF,"STFL",b2,(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
 
     /* Adjust the facility list to account for runtime options */
-    ARCH_DEP(adjust_stfl_data)();
+    stfl_data = ARCH_DEP(adjust_stfl_data)(&data_len, regs);
+
+#if 0
+    logmsg ("store_facility_list STFL data length %i\n",data_len);
+    logmsg ("STFL=%2.2X %2.2X %2.2X %2.2X\n",
+            *stfl_data,*(stfl_data+1),*(stfl_data+2),*(stfl_data+3));
+#endif
 
     /* Set the main storage reference and change bits */
     STORAGE_KEY(regs->PX, regs) |= (STORKEY_REF | STORKEY_CHANGE);
@@ -5217,7 +5283,7 @@ PSA    *psa;                            /* -> Prefixed storage area  */
     /* Point to PSA in main storage */
     psa = (void*)(regs->mainstor + regs->PX);
 
-    memcpy(psa->stfl, ARCH_DEP(stfl_data), sizeof(psa->stfl));
+    memcpy(psa->stfl, stfl_data, sizeof(psa->stfl));
 
 } /* end DEF_INST(store_facility_list) */
 
@@ -5230,9 +5296,11 @@ DEF_INST(store_facility_list_extended)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
+int     data_len;                       /* Size of STFL data         */
 int     nmax;                           /* #of doublewords defined   */
 int     ndbl;                           /* #of doublewords to store  */
 int     cc;                             /* Condition code            */
+BYTE   *stfl_data;                      /* -> STFL data              */
 
     S(inst, regs, b2, effective_addr2);
 
@@ -5245,10 +5313,10 @@ int     cc;                             /* Condition code            */
     DW_CHECK(effective_addr2, regs);
 
     /* Adjust the facility list to account for runtime options */
-    ARCH_DEP(adjust_stfl_data)();
+    stfl_data = ARCH_DEP(adjust_stfl_data)(&data_len, regs);
 
     /* Calculate number of doublewords of facilities defined */
-    nmax = (sizeof(ARCH_DEP(stfl_data))+7) / 8;
+    nmax = (data_len+7) / 8;
 
     /* Obtain operand length from register 0 bits 56-63 */
     ndbl = regs->GR_LHLCL(0) + 1;
@@ -5266,7 +5334,7 @@ int     cc;                             /* Condition code            */
     }
 
     /* Store facility list at operand location */
-    ARCH_DEP(vstorec) ( &ARCH_DEP(stfl_data), ndbl*8-1,
+    ARCH_DEP(vstorec) ( stfl_data, ndbl*8-1,
                         effective_addr2, b2, regs );
 
     /* Save number of doublewords minus 1 into register 0 bits 56-63 */
@@ -5995,7 +6063,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
         regs->psw.cc = len ? 3 : 0;
 
         /* exit on the cpu determined number of bytes */
-        if((len != 0) && (!(addr1 & 0xfff) || !(addr2 & 0xfff)))
+        if((len != 0) && (!(addr1 & 0xfff) || !addr2 & 0xfff))
             break;
 
     } /* end while */
@@ -8106,5 +8174,29 @@ int     n;                              /* Position of leftmost one  */
  #include "esame.c"
 #endif
 
+/*-------------------------------------------------------------------*/
+/* Locate STFL data independent of current architecture mode setting */
+/*-------------------------------------------------------------------*/
+/* Note: this function must be here so that all ARCH_DEP(stlf_data)  */
+/*       with correct architecture settings have been defined with   */
+/*       architecture sensitive features                             */
+BYTE* get_stfl_data(int mode, int *data_len)
+{
+    switch(mode) 
+    {
+#if defined(_390)
+        case ARCH_390:
+            *data_len=sizeof(s390_stfl_data);
+            return &s390_stfl_data[0];
+#endif
+#if defined(_900)
+        case ARCH_900:
+            *data_len=sizeof(z900_stfl_data);
+            return &z900_stfl_data[0];
+#endif
+    }
+    data_len=0;
+    return NULL;
+}
 
 #endif /*!defined(_GEN_ARCH)*/
