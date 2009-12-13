@@ -443,7 +443,7 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
   }
 
   /* When reached end of source, return to caller */
-  if(unlikely(!GR_A(r2 + 1, regs)))
+  if(likely(!GR_A(r2 + 1, regs)))
     return;
 
   /* Reached model dependent CPU processing amount */
