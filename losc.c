@@ -66,20 +66,17 @@ U32 mask;
         {
             if(os_licensed == PGM_PRD_OS_LICENSED)
             {
-                logmsg(_("\n\n"
-                KEEPMSG "HHCCF039W                  PGMPRDOS LICENSED specified.\n"
-                KEEPMSG "\n"
-                KEEPMSG "                A licensed program product operating system is running.\n"
-                KEEPMSG "                You are responsible for meeting all conditions of your\n"
-                KEEPMSG "                                software licenses.\n"
-                KEEPMSG "\n"
-                "\n"));
+                logmsg(_(
+                KEEPMSG "HHCCF039W PGMPRDOS LICENSED specified.\n"
+                KEEPMSG "          A licensed program product operating system is running.\n"
+                KEEPMSG "          You are responsible for meeting all conditions of your\n"
+                KEEPMSG "          software licenses.\n"));
             }
             else
             {
-                logmsg(_("\n\n"
-                KEEPMSG "HHCCF079A A licensed program product operating system has been detected.\n"
-                "\n"));
+                logmsg(_(
+                KEEPMSG "HHCCF079A A licensed program product operating system has been\n"
+                KEEPMSG "          detected. All processors has been stopped.\n"));
                 mask = sysblk.started_mask;
                 for (i = 0; mask; i++)
                 {
