@@ -8,45 +8,6 @@
 //      presumed to have already been #included ahead of it...
 
 // $Id$
-//
-// $Log$
-// Revision 1.26  2008/11/04 04:50:46  fish
-// Ensure consistent utility startup
-//
-// Revision 1.25  2008/09/02 06:09:01  fish
-// Have TRACE macro call DebugTrace function for MSVC DEBUG builds
-//
-// Revision 1.24  2008/08/21 18:34:45  fish
-// Fix i/o-interrupt-queue race condition
-//
-// Revision 1.23  2008/07/16 11:01:41  fish
-// Create "sizeof_member" macro
-//
-// Revision 1.22  2008/06/26 14:00:06  rbowler
-// CAP_SYS_NICE undeclared  when -DNO_SETUID
-//
-// Revision 1.21  2008/05/22 21:17:29  fish
-// Tape file extension neutrality support
-//
-// Revision 1.20  2008/02/19 11:49:19  ivan
-// - Move setting of CPU priority after spwaning timer thread
-// - Added support for Posix 1003.1e capabilities
-//
-// Revision 1.19  2008/01/23 00:47:40  rbowler
-// Modifications for VS9 C++ 2008 Express by Charlie Brint
-//
-// Revision 1.18  2007/12/10 23:12:02  gsmith
-// Tweaks to OPTION_MIPS_COUNTING processing
-//
-// Revision 1.17  2007/06/06 22:14:57  gsmith
-// Fix SYNCHRONIZE_CPUS when numcpu > number of host processors - Greg
-//
-// Revision 1.16  2007/01/04 23:12:04  gsmith
-// remove thunk calls for program_interrupt
-//
-// Revision 1.15  2006/12/08 09:43:26  jj
-// Add CVS message log
-//
 
 #ifndef _HMACROS_H
 #define _HMACROS_H
@@ -429,7 +390,7 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
 #define SYNCHRONIZE_CPUS(_regs) \
  do { \
    int _i, _n = 0; \
-   U32 _mask = sysblk.started_mask \
+   CPU_BITMAP _mask = sysblk.started_mask \
              ^ (sysblk.waiting_mask | (_regs)->hostregs->cpubit); \
    for (_i = 0; _mask && _i < sysblk.hicpu; _i++) { \
      if ((_mask & BIT(_i))) { \
@@ -479,7 +440,7 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
 #define WAKEUP_CPU_MASK(_mask) \
  do { \
    int i; \
-   U32 mask = (_mask); \
+   CPU_BITMAP mask = (_mask); \
    for (i = 0; mask; i++) { \
      if (mask & 1) \
      { \
@@ -493,7 +454,7 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
 #define WAKEUP_CPUS_MASK(_mask) \
  do { \
    int i; \
-   U32 mask = (_mask); \
+   CPU_BITMAP mask = (_mask); \
    for (i = 0; mask; i++) { \
      if (mask & 1) \
        signal_condition(&sysblk.regs[i]->intcond); \

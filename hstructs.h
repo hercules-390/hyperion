@@ -15,6 +15,23 @@
 #include "opcode.h"
 
 /*-------------------------------------------------------------------*/
+/* Typedefs for CPU bitmap fields                                    */
+/*                                                                   */
+/* A CPU bitmap contains one bit for each processing engine.         */
+/* The width of the bitmap depends on the maximum number of          */
+/* processing engines which was selected at build time.              */
+/*-------------------------------------------------------------------*/
+#if MAX_CPU_ENGINES <= 32
+    typedef U32                 CPU_BITMAP;
+    #define F_CPU_BITMAP        "%8.8"I32_FMT"X"
+#elif MAX_CPU_ENGINES <= 64
+    typedef U64                 CPU_BITMAP;
+    #define F_CPU_BITMAP        "%16.16"I64_FMT"X"
+#else
+ #error MAX_CPU_ENGINES cannot exceed 64
+#endif
+
+/*-------------------------------------------------------------------*/
 /* Structure definition for CPU register context                     */
 /*-------------------------------------------------------------------*/
 struct REGS {                           /* Processor registers       */
@@ -186,7 +203,7 @@ struct REGS {                           /* Processor registers       */
         BYTE    peraid;                 /* PER access id             */
 // #endif /*defined(FEATURE_PER)*/
 
-        U32     cpubit;
+        CPU_BITMAP cpubit;              /* Only this CPU's bit is 1  */
         U32     ints_state;             /* CPU Interrupts Status     */
         U32     ints_mask;              /* Respective Interrupts Mask*/
      /*
@@ -521,9 +538,9 @@ struct SYSBLK {
 #endif
                 logoptnotime:1;         /* 1 = don't timestamp log   */
         U32     ints_state;             /* Common Interrupts Status  */
-        U32     config_mask;            /* Configured CPUs           */
-        U32     started_mask;           /* Started CPUs              */
-        U32     waiting_mask;           /* Waiting CPUs              */
+        CPU_BITMAP config_mask;         /* Configured CPUs           */
+        CPU_BITMAP started_mask;        /* Started CPUs              */
+        CPU_BITMAP waiting_mask;        /* Waiting CPUs              */
         U64     traceaddr[2];           /* Tracing address range     */
         U64     stepaddr[2];            /* Stepping address range    */
 #if defined(OPTION_IPLPARM)
@@ -557,7 +574,7 @@ struct SYSBLK {
 #endif
      /* Fields used by SYNCHRONIZE_CPUS */
         int     syncing;                /* 1=Sync in progress        */
-        U32     sync_mask;              /* CPU mask for syncing CPUs */
+        CPU_BITMAP sync_mask;           /* CPU mask for syncing CPUs */
         COND    sync_cond;              /* COND for syncing CPU      */
         COND    sync_bc_cond;           /* COND for other CPUs       */
 #if defined(_FEATURE_ASN_AND_LX_REUSE)

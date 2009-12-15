@@ -739,7 +739,7 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
 int startall_cmd(int argc, char *argv[], char *cmdline)
 {
     int i;
-    U32 mask;
+    CPU_BITMAP mask;
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -771,7 +771,7 @@ int startall_cmd(int argc, char *argv[], char *cmdline)
 DLL_EXPORT int stopall_cmd(int argc, char *argv[], char *cmdline)
 {
     int i;
-    U32 mask;
+    CPU_BITMAP mask;
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -5306,10 +5306,12 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
         }
     }
 
-    logmsg( _("          Config mask %8.8X started mask %8.8X waiting mask %8.8X\n"),
+    logmsg( _("          Config mask "F_CPU_BITMAP
+                " started mask "F_CPU_BITMAP
+                " waiting mask "F_CPU_BITMAP"\n"),
         sysblk.config_mask, sysblk.started_mask, sysblk.waiting_mask
         );
-    logmsg( _("          Syncbc mask %8.8x %s\n"),
+    logmsg( _("          Syncbc mask "F_CPU_BITMAP" %s\n"),
         sysblk.sync_mask, sysblk.syncing ? _("Sync in progress") : ""
         );
     logmsg( _("          Signaling facility %sbusy\n"),
@@ -6921,6 +6923,7 @@ int sizeof_cmd(int argc, char *argv[], char *cmdline)
     logmsg(_("HHCPN161I TLB table .........%7d\n"),sizeof(TLB));
     logmsg(_("HHCPN161I FILENAME_MAX ......%7d\n"),FILENAME_MAX);
     logmsg(_("HHCPN161I PATH_MAX ..........%7d\n"),PATH_MAX);
+    logmsg(_("HHCPN161I CPU_BITMAP ........%7d\n"),sizeof(CPU_BITMAP));
     return 0;
 }
 

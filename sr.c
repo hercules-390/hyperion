@@ -2,26 +2,6 @@
 /*              Suspend/Resume a Hercules session                    */
 
 // $Id$
-//
-// $Log$
-// Revision 1.35  2008/11/04 05:56:31  fish
-// Put ensure consistent create_thread ATTR usage change back in
-//
-// Revision 1.34  2008/11/03 15:31:53  rbowler
-// Back out consistent create_thread ATTR modification
-//
-// Revision 1.33  2008/10/18 09:32:21  fish
-// Ensure consistent create_thread ATTR usage
-//
-// Revision 1.32  2007/06/23 00:04:16  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.31  2006/12/21 22:39:39  gsmith
-// 21 Dec 2006 Range for s+, t+ - Greg Smith
-//
-// Revision 1.30  2006/12/08 09:43:30  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 
@@ -65,7 +45,7 @@ int suspend_cmd(int argc, char *argv[],char *cmdline)
 {
 char    *fn = SR_DEFAULT_FILENAME;
 SR_FILE *file;
-U32      started_mask;
+CPU_BITMAP started_mask;
 struct   timeval tv;
 time_t   tt;
 int      i, j, rc;
@@ -337,7 +317,7 @@ int resume_cmd(int argc, char *argv[],char *cmdline)
 char    *fn = SR_DEFAULT_FILENAME;
 SR_FILE *file;
 U32      key = 0, len = 0;
-U32      started_mask = 0;
+CPU_BITMAP started_mask = 0;
 int      i, rc;
 REGS    *regs = NULL;
 U16      devnum=0;

@@ -2,18 +2,6 @@
 /*              Hercules Licensed Operating System Check             */
 
 // $Id$
-//
-// $Log$
-// Revision 1.3  2008/12/13 19:05:21  jj
-// Only use generic names in license check
-//
-// Revision 1.2  2008/12/03 16:27:40  jj
-// Fix deadly intlock embrace
-//
-// Revision 1.1  2008/12/01 18:41:28  jj
-// Add losc.c license checking module
-//
-//
 
 #include "hstdinc.h"
 
@@ -53,7 +41,7 @@ void losc_check(char *ostype)
 {
 char **lictype;
 int i;
-U32 mask;
+CPU_BITMAP mask;
 
     if(check_done) 
         return;

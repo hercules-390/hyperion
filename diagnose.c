@@ -14,50 +14,6 @@
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 /*-------------------------------------------------------------------*/
 
-// $Log$
-// Revision 1.54  2008/12/29 00:00:54  ivan
-// Change semantics for DIAG8CMD configuration statement
-// Disable command redisplay at the console when NOECHO is set
-// Commands typed with a '-' as the first character are not redisplayed
-//
-// Revision 1.53  2008/11/04 05:58:01  fish
-// Put ensure consistent create_thread ATTR usage change back in,
-// and put original diag 0x308 re-IPL fix back in too.
-//
-// Revision 1.52  2008/11/03 15:38:03  rbowler
-// Fix Error starting thread in diagnose 0x308: Invalid argument
-//
-// Revision 1.51  2008/11/03 15:31:53  rbowler
-// Back out consistent create_thread ATTR modification
-//
-// Revision 1.50  2008/10/18 09:31:04  fish
-// Fix diag 0x308 re-IPL
-//
-// Revision 1.49  2008/08/04 22:06:00  rbowler
-// DIAG308 function codes for Program-directed re-IPL
-//
-// Revision 1.48  2007/12/10 23:12:02  gsmith
-// Tweaks to OPTION_MIPS_COUNTING processing
-//
-// Revision 1.47  2007/06/23 00:04:08  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.46  2007/02/13 19:34:40  fish
-// DIAG  X'9C'  (156)
-//
-// Revision 1.45  2007/01/13 07:17:06  bernard
-// backout ccmask
-//
-// Revision 1.44  2007/01/12 15:22:18  bernard
-// ccmask phase 1
-//
-// Revision 1.43  2007/01/02 18:46:16  fish
-// Fix bug in deconfigure_cpu function & tweak power-off diagnose instructions so that they actually work properly now
-//
-// Revision 1.42  2006/12/08 09:43:20  jj
-// Add CVS message log
-//
-
 #include "hstdinc.h"
 
 #if !defined(_HENGINE_DLL_)
@@ -148,7 +104,7 @@ void *stop_cpus_and_ipl(int *ipltype)
   int i;
   char iplcmd[256];
   int cpustates;
-  int mask;
+  CPU_BITMAP mask;
 
   panel_command("stopall");
   logmsg("HHCDN001I Diagnose 0x308 called: System is re-ipled\n");
