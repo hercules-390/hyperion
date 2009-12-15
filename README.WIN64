@@ -33,8 +33,8 @@ HOW TO COMPILE HERCULES FOR AMD64
    SET BZIP2_DIR=c:\packages\bzip2
    SET PCRE_DIR=c:\packages\pcre
 
-5. nmake clean
-   nmake
+5. nmake clean -f makefile-dllmod.msvc
+   nmake -f makefile-dllmod.msvc
 
 6. The binaries will be installed into subfolder "msvc.AMD64.bin"
    If you compiled on a 32-bit Windows system, copy this folder
