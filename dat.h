@@ -2208,6 +2208,15 @@ int     ix = TLBIX(addr);               /* TLB index                 */
 
         if(regs->hostregs->dat.aaddr > regs->hostregs->mainlim)
             goto vabs_addr_excp;
+        /* Take into account SIE guests with a 2K page scheme 
+           because the SIE host may be operating with a 4K page
+           system */
+#if defined(FEATURE_2K_STORAGE_KEYS)
+        if((addr & PAGEFRAME_PAGEMASK) & 0x800)
+        {
+            apfra|=0x800;
+        }
+#endif
     }
 
     /* Do not apply host key access when SIE fetches/stores data */
@@ -2217,6 +2226,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
 
     /* Check protection and set reference and change bits */
     regs->dat.storkey = &(STORAGE_KEY(aaddr, regs));
+
 
     if (acctype & ACC_READ)
     {
