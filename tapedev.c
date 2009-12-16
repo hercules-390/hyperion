@@ -111,154 +111,6 @@
 /* Flex FakeTape format (http://preview.tinyurl.com/67rgnp)          */
 /*-------------------------------------------------------------------*/
 
-// $Log$
-// Revision 1.151  2008/11/01 20:40:09  fish
-// Fix tapedev gettapetype_bydata function for HET/AWS tapes
-// that start with a tapemark -- Liam Cold [liamcold@yahoo.com]
-//
-// Revision 1.150  2008/09/10 02:06:48  fish
-// Add test for OMA file "@TDF" signature
-// to 'gettapetype_bydata' function
-//
-// Revision 1.149  2008/07/21 22:13:29  rbowler
-// tapedev.c(964) : warning C4101: 'i' : unreferenced local variable
-//
-// Revision 1.148  2008/07/08 05:35:51  fish
-// AUTOMOUNT redesign: support +allowed/-disallowed dirs
-// and create associated 'automount' panel command - Fish
-//
-// Revision 1.147  2008/06/22 05:54:30  fish
-// Fix print-formatting issue (mostly in tape modules)
-// that can sometimes, in certain circumstances,
-// cause herc to crash.  (%8.8lx --> I32_FMTX, etc)
-//
-// Revision 1.146  2008/05/28 16:46:29  fish
-// Misleading VTAPE support renamed to AUTOMOUNT instead and fixed and enhanced so that it actually WORKS now.
-//
-// Revision 1.145  2008/05/25 06:36:43  fish
-// VTAPE automount support (0x4B + 0xE4)
-//
-// Revision 1.144  2008/05/23 20:37:05  fish
-// Fix "presuming" message in gettapetype function to use implemented default shortdesc in message.
-//
-// Revision 1.143  2008/05/22 21:17:29  fish
-// Tape file extension neutrality support
-//
-// Revision 1.142  2008/05/22 20:15:12  fish
-// Correct --blkid-24 typo (SHOULD be --blkid-22, not 24)
-//
-// Revision 1.141  2008/05/22 19:25:58  fish
-// Flex FakeTape support
-//
-// Revision 1.140  2008/04/05 02:36:00  fish
-// Wrap GENTMH_SCSI_ACTION... case in 'generic_tmhcall' function
-// with #ifdef OPTION_SCSI_TAPE to fix undefined symbol error
-// on non-scsi-tape build platforms
-//
-// Revision 1.139  2008/03/30 02:51:34  fish
-// Fix SCSI tape EOV (end of volume) processing
-//
-// Revision 1.138  2008/03/29 08:36:46  fish
-// More complete/extensive 3490/3590 tape support
-//
-// Revision 1.137  2008/03/28 02:09:42  fish
-// Add --blkid-24 option support, poserror flag renamed to fenced,
-// added 'generic', 'readblkid' and 'locateblk' tape media handler
-// call vectors.
-//
-// Revision 1.136  2008/03/27 07:14:17  fish
-// SCSI MODS: groundwork: part 3: final shuffling around.
-// Moved functions from one module to another and resequenced
-// functions within each. NO CODE WAS ACTUALLY CHANGED.
-// Next commit will begin the actual changes.
-//
-// Revision 1.135  2008/03/26 07:23:51  fish
-// SCSI MODS part 2: split tapedev.c: aws, het, oma processing moved
-// to separate modules, CCW processing moved to separate module.
-//
-// Revision 1.134  2008/03/25 11:41:31  fish
-// SCSI TAPE MODS part 1: groundwork: non-functional changes:
-// rename some functions, comments, general restructuring, etc.
-// New source modules awstape.c, omatape.c, hettape.c and
-// tapeccws.c added, but not yet used (all will be used in a future
-// commit though when tapedev.c code is eventually split)
-//
-// Revision 1.133  2008/03/13 01:44:17  kleonard
-// Fix residual read-only setting for tape device
-//
-// Revision 1.132  2008/03/04 01:10:29  ivan
-// Add LEGACYSENSEID config statement to allow X'E4' Sense ID on devices
-// that originally didn't support it. Defaults to off for compatibility reasons
-//
-// Revision 1.131  2008/03/04 00:25:25  ivan
-// Ooops.. finger check on 8809 case for numdevid.. Thanks Roger !
-//
-// Revision 1.130  2008/03/02 12:00:04  ivan
-// Re-disable Sense ID on 3410, 3420, 8809 : report came in that it breaks MTS
-//
-// Revision 1.129  2007/12/14 17:48:52  rbowler
-// Enable SENSE ID CCW for 2703,3410,3420
-//
-// Revision 1.128  2007/11/29 03:36:40  fish
-// Re-sequence CCW opcode 'case' statements to be in ascending order.
-// COSMETIC CHANGE ONLY. NO ACTUAL LOGIC WAS CHANGED.
-//
-// Revision 1.127  2007/11/13 15:10:52  rbowler
-// fsb_awstape support for segmented blocks
-//
-// Revision 1.126  2007/11/11 20:46:50  rbowler
-// read_awstape support for segmented blocks
-//
-// Revision 1.125  2007/11/09 14:59:34  rbowler
-// Move misplaced comment and restore original programming style
-//
-// Revision 1.124  2007/11/02 16:04:15  jmaynard
-// Removing redundant #if !(defined OPTION_SCSI_TAPE).
-//
-// Revision 1.123  2007/09/01 06:32:24  fish
-// Surround 3590 SCSI test w/#ifdef (OPTION_SCSI_TAPE)
-//
-// Revision 1.122  2007/08/26 14:37:17  fish
-// Fix missed unfixed 31 Aug 2006 non-SCSI tape Locate bug
-//
-// Revision 1.121  2007/07/24 23:06:32  fish
-// Force command-reject for 3590 Medium Sense and Mode Sense
-//
-// Revision 1.120  2007/07/24 22:54:49  fish
-// (comment changes only)
-//
-// Revision 1.119  2007/07/24 22:46:09  fish
-// Default to --blkid-32 and --no-erg for 3590 SCSI
-//
-// Revision 1.118  2007/07/24 22:36:33  fish
-// Fix tape Synchronize CCW (x'43') to do actual commit
-//
-// Revision 1.117  2007/07/24 21:57:29  fish
-// Fix Win32 SCSI tape "Locate" and "ReadBlockId" SNAFU
-//
-// Revision 1.116  2007/06/23 00:04:18  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.115  2007/04/06 15:40:25  fish
-// Fix Locate Block & Read BlockId for SCSI tape broken by 31 Aug 2006 preliminary-3590-support change
-//
-// Revision 1.114  2007/02/25 21:10:44  fish
-// Fix het_locate to continue on tapemark
-//
-// Revision 1.113  2007/02/03 18:58:06  gsmith
-// Fix MVT tape CMDREJ error
-//
-// Revision 1.112  2006/12/28 03:04:17  fish
-// PR# tape/100: Fix crash in "open_omatape()" in tapedev.c if bad filespec entered in OMA (TDF)  file
-//
-// Revision 1.111  2006/12/11 17:25:59  rbowler
-// Change locblock from long to U32 to correspond with dev->blockid
-//
-// Revision 1.110  2006/12/08 09:43:30  jj
-// Add CVS message log
-//
-/*-------------------------------------------------------------------*/
-
 #include "hstdinc.h"
 #include "hercules.h"  /* need Hercules control blocks               */
 #include "tapedev.h"   /* Main tape handler header file              */
@@ -1755,7 +1607,6 @@ void ReqAutoMount( DEVBLK *dev )
     BYTE   tapeloaded, autoload, mountreq, unmountreq, stdlbled, ascii, scratch;
     char*  lbltype;
     char*  tapemsg = "";
-    char*  eyecatcher =
 "*******************************************************************************";
 
     ///////////////////////////////////////////////////////////////////
@@ -1932,11 +1783,7 @@ void ReqAutoMount( DEVBLK *dev )
     // Since we currently don't have any way of activating a SCSI tape
     // drive's REAL autoloader mechanism whenever we receive an auto-
     // mount message [from the guest o/s via the Load Display CCW], we
-    // issue a normal operator mount request message instead (in order
-    // to ask the [Hercules] operator (a real human being) to please
-    // perform the automount for us instead since we can't [currently]
-    // do it for them automatically since we don't currently have any
-    // way to send the real request on to the real SCSI device).
+    // leave it to the operator to action the mount message displayed
 
     // Once ASPI code eventually gets added to Herc (and/or something
     // similar for the Linux world), then the following workaround can
@@ -1978,55 +1825,7 @@ void ReqAutoMount( DEVBLK *dev )
                     volser, dev->devnum, dev->filename);
         }
     }
-    else
-    {
-        // If this is a mount or unmount request, inform the
-        // [Hercules] operator of the action they're expected to take...
 
-        if ( unmountreq )
-        {
-            char* keep_or_retain = "";
-
-            if ( 'K' == tapemsg[0] ) keep_or_retain = "and keep ";
-            if ( 'R' == tapemsg[0] ) keep_or_retain = "and retain ";
-
-            if ( scratch )
-            {
-                logmsg(_("\n%s\nAUTOMOUNT: Unmount %sof %s%s scratch tape requested on %4.4X = %s\n%s\n\n"),
-                    eyecatcher,
-                    keep_or_retain,
-                    ascii ? "ASCII " : "",lbltype,
-                    dev->devnum, dev->filename,
-                    eyecatcher );
-            }
-            else
-            {
-                logmsg(_("\n%s\nAUTOMOUNT: Unmount %sof %s%s tape volume \"%s\" requested on %4.4X = %s\n%s\n\n"),
-                    eyecatcher,
-                    keep_or_retain,
-                    ascii ? "ASCII " : "",lbltype,
-                    volser,
-                    dev->devnum, dev->filename,
-                    eyecatcher );
-            }
-        }
-        if ( mountreq )
-        {
-            if ( scratch )
-                logmsg(_("\n%s\nAUTOMOUNT: Mount for %s%s scratch tape requested on %4.4X = %s\n%s\n\n"),
-                    eyecatcher,
-                    ascii ? "ASCII " : "",lbltype,
-                    dev->devnum, dev->filename,
-                    eyecatcher );
-            else
-                logmsg(_("\n%s\nAUTOMOUNT: Mount for %s%s tape volume \"%s\" requested on %4.4X = %s\n%s\n\n"),
-                    eyecatcher,
-                    ascii ? "ASCII " : "",lbltype,
-                    volser,
-                    dev->devnum, dev->filename,
-                    eyecatcher );
-        }
-    }
 
 } /* end function ReqAutoMount */
 
