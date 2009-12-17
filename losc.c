@@ -64,7 +64,7 @@ CPU_BITMAP mask;
             {
                 logmsg(_(
                 KEEPMSG "HHCCF079A A licensed program product operating system has been\n"
-                KEEPMSG "          detected. All processors has been stopped.\n"));
+                KEEPMSG "          detected. All processors have been stopped.\n"));
                 mask = sysblk.started_mask;
                 for (i = 0; mask; i++)
                 {
