@@ -15,12 +15,68 @@
 #   Hercules's VERSION for MSVC builds are now *ALSO* set
 #   at the very beginning of the 'makefile.bat' file too!!
 #
-VERSION = \"3.06\"
-V1 = 3
-V2 = 06
-V3 = 0
+
+# The following logic determines the Hercules version number and SVN 
+# revision number and sets variables VERSION,V1,V2,V3,V4 when VERSION
+# is not already set by makefile.bat
+
+# First extract the Hercules version number from the configure.ac file.
+# We scan the file looking for AM_INIT_AUTOMAKE=(hercules,x.y[.z]) # 
+# and we create a temporary file containing statements V1=x V2=y V3=z
+# Finally we include the temporary file to set the variables V1,V2,V3
+opt = "tokens=1-5 delims=(),. "
+fna = $(TEMP)\hercver.txt
+cmd = @echo V1=%c >$(fna) && @echo V2=%d >>$(fna) && @echo V3=%e >>$(fna)
+!IF ["for /f $(opt) %a in (configure.ac) do @if %a==AM_INIT_AUTOMAKE $(cmd)"] == 0
+!INCLUDE $(fna)
+!ELSE
+V1 = 0
+V2 = 0
+!ENDIF
+
+# If svn.exe exists in the path, use the 'svn info' command to find the
+# subversion revision number, and write V4=nnnn to the temporary file.
+# Then include the temporary file to set the variable V4
+opt="tokens=1-2 usebackq"
+cmd = for /f $(opt) %a in (`svn info`) do @if %a==Revision: @echo V4=%b>$(fna)
+!IF ["for %I in (svn.exe) do @if exist %~$$PATH:I $(cmd)"] == 0
+!INCLUDE $(fna)
+!ENDIF
+
+# If V4 is not set, use the TortoiseSVN program subwcrev (if it exists in the path)
+# to find the subversion revision number, and write V4=nnnn to the temporary file.
+# Then include the temporary file to set the variable V4
+!IF !DEFINED(V4) || "$(V4)" == ""
+opt="tokens=1-5 usebackq"
+cmd = for /f $(opt) %a in (`subwcrev .`) do @if %a%b==Lastcommitted @echo V4=%e>$(fna)
+!IF ["for %I in (subwcrev.exe) do @if exist %~$$PATH:I $(cmd)"] == 0
+!INCLUDE $(fna)
+!ENDIF
+!ENDIF
+
+# If V4 is still not set, then set it to zero 
+!IF !DEFINED(V4) || "$(V4)" == ""
 V4 = 0
 !ENDIF
+
+# Set the version string x.y or x.y.z
+sharp = ^#
+!IF !DEFINED(V3) || "$(V3)" == "" || "$(V3)" == "$(sharp)"
+VERSION = $(V1).$(V2)
+V3 = 0
+!ELSE
+VERSION = $(V1).$(V2).$(V3)
+!ENDIF
+
+# Append the subversion revision number to the version string
+!IF "$(V4)" != "0"
+VERSION = $(VERSION)-svn-$(V4)
+!ENDIF
+
+!MESSAGE Hercules version number is $(VERSION) ($(V1).$(V2).$(V3).$(V4))
+VERSION = \"$(VERSION)\"
+
+!ELSE
 
 !IF !DEFINED(VERSION) || !DEFINED(V1) || !DEFINED(V2) || !DEFINED(V3) || !DEFINED(V4)
 !  ERROR 'VERSION=', 'V1=', 'V2=', 'V3=', and/or V4=' are undefined. Either build Hercules using the supplied 'makefile.bat' or set the variables manually yourself before invoking nmake.
@@ -28,11 +84,12 @@ V4 = 0
 
 !MESSAGE VERSION = $(VERSION) ($(V1).$(V2).$(V3).$(V4))
 
+!ENDIF
+
 !IF DEFINED(CUSTOM_BUILD_STRING)
 !MESSAGE CUSTOM_BUILD_STRING = $(CUSTOM_BUILD_STRING)
 !ENDIF
 
-# (blank line for readability)
 !MESSAGE
 
 #  The following logic determines the minimum version of Windows on which
