@@ -426,7 +426,7 @@
 
   if %rc% NEQ 0        goto :bad_num_cpus
   if %num_cpus% LSS 1  goto :bad_num_cpus
-  if %num_cpus% GTR 32 goto :bad_num_cpus
+  if %num_cpus% GTR 64 goto :bad_num_cpus
   goto :EOF
 
 :bad_num_cpus
