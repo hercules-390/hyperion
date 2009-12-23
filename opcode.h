@@ -887,7 +887,7 @@ do { \
      OBTAIN_INTLOCK ((_regs)); \
      for (i = 0; i < HI_CPU; i++) { \
        if (IS_CPU_ONLINE(i) && i != (_regs)->cpuad) { \
-         if ( sysblk.waiting_mask & BIT(i) ) \
+         if ( sysblk.waiting_mask & CPU_BIT(i) ) \
            ARCH_DEP(invalidate_tlbe)(sysblk.regs[i], mn); \
          else { \
            ON_IC_INTERRUPT(sysblk.regs[i]); \

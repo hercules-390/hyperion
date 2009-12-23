@@ -393,9 +393,9 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
    CPU_BITMAP _mask = sysblk.started_mask \
              ^ (sysblk.waiting_mask | (_regs)->hostregs->cpubit); \
    for (_i = 0; _mask && _i < sysblk.hicpu; _i++) { \
-     if ((_mask & BIT(_i))) { \
+     if ((_mask & CPU_BIT(_i))) { \
        if (sysblk.regs[_i]->intwait || sysblk.regs[_i]->syncio) \
-         _mask ^= BIT(_i); \
+         _mask ^= CPU_BIT(_i); \
        else { \
          ON_IC_INTERRUPT(sysblk.regs[_i]); \
          if (SIE_MODE(sysblk.regs[_i])) \
@@ -412,8 +412,8 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
          else \
            usleep(1); \
          for (_i = 0; _i < sysblk.hicpu; _i++) \
-           if ((_mask & BIT(_i)) && sysblk.regs[_i]->intwait) \
-             _mask ^= BIT(_i); \
+           if ((_mask & CPU_BIT(_i)) && sysblk.regs[_i]->intwait) \
+             _mask ^= CPU_BIT(_i); \
        } \
      } else { \
        sysblk.sync_mask = sysblk.started_mask \
