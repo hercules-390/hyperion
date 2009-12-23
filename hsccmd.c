@@ -5195,7 +5195,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
             );
         logmsg( _("          CPU%4.4X: Waiting for intlock: %s\n"),
             sysblk.regs[i]->cpuad,
-            sysblk.regs[i]->intwait && !(sysblk.waiting_mask & BIT(i)) ? _("yes") : _("no")
+            sysblk.regs[i]->intwait && !(sysblk.waiting_mask & CPU_BIT(i)) ? _("yes") : _("no")
             );
         logmsg( _("          CPU%4.4X: lock %sheld\n"),
             sysblk.regs[i]->cpuad,

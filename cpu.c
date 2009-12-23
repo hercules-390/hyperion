@@ -1428,7 +1428,7 @@ int i;
     obtain_lock (&sysblk.cpulock[cpu]);
 
     regs->cpuad = cpu;
-    regs->cpubit = BIT(cpu);
+    regs->cpubit = CPU_BIT(cpu);
     regs->arch_mode = sysblk.arch_mode;
     regs->mainstor = sysblk.mainstor;
     regs->sysblk = &sysblk;
@@ -1536,9 +1536,9 @@ void *cpu_uninit (int cpu, REGS *regs)
 #endif /*FEATURE_VECTOR_FACILITY*/
 
         /* Remove CPU from all CPU bit masks */
-        sysblk.config_mask &= ~BIT(cpu);
-        sysblk.started_mask &= ~BIT(cpu);
-        sysblk.waiting_mask &= ~BIT(cpu);
+        sysblk.config_mask &= ~CPU_BIT(cpu);
+        sysblk.started_mask &= ~CPU_BIT(cpu);
+        sysblk.waiting_mask &= ~CPU_BIT(cpu);
         sysblk.regs[cpu] = NULL;
         release_lock (&sysblk.cpulock[cpu]);
     }

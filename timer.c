@@ -70,7 +70,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
             if (!IS_IC_CLKC(regs))
             {
                 ON_IC_CLKC(regs);
-                intmask |= BIT(regs->cpuad);
+                intmask |= CPU_BIT(regs->cpuad);
             }
         }
         else if (IS_IC_CLKC(regs))
@@ -84,7 +84,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
             if(TOD_CLOCK(regs->guestregs) > regs->guestregs->clkc)
             {
                 ON_IC_CLKC(regs->guestregs);
-                intmask |= BIT(regs->cpuad);
+                intmask |= CPU_BIT(regs->cpuad);
             }
             else
                 OFF_IC_CLKC(regs->guestregs);
@@ -101,7 +101,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
             if (!IS_IC_PTIMER(regs))
             {
                 ON_IC_PTIMER(regs);
-                intmask |= BIT(regs->cpuad);
+                intmask |= CPU_BIT(regs->cpuad);
             }
         }
         else if(IS_IC_PTIMER(regs))
@@ -115,7 +115,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
             if (CPU_TIMER(regs->guestregs) < 0)
             {
                 ON_IC_PTIMER(regs->guestregs);
-                intmask |= BIT(regs->cpuad);
+                intmask |= CPU_BIT(regs->cpuad);
             }
             else
                 OFF_IC_PTIMER(regs->guestregs);
@@ -130,7 +130,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
         if(regs->arch_mode == ARCH_370)
         {
             if( chk_int_timer(regs) )
-                intmask |= BIT(regs->cpuad);
+                intmask |= CPU_BIT(regs->cpuad);
         }
 
 
@@ -142,7 +142,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
               && SIE_STATNB(regs->guestregs, M, ITMOF))
             {
                 if( chk_int_timer(regs->guestregs) )
-                    intmask |= BIT(regs->cpuad);
+                    intmask |= CPU_BIT(regs->cpuad);
             }
         }
 #endif /*defined(_FEATURE_SIE)*/

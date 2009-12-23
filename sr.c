@@ -1317,7 +1317,7 @@ S64      dreg;
     OBTAIN_INTLOCK(NULL);
     ON_IC_IOPENDING;
     for (i = 0; i < MAX_CPU_ENGINES; i++)
-        if (IS_CPU_ONLINE(i) && (started_mask & BIT(i)))
+        if (IS_CPU_ONLINE(i) && (started_mask & CPU_BIT(i)))
         {
             sysblk.regs[i]->opinterv = 0;
             sysblk.regs[i]->cpustate = CPUSTATE_STARTED;
