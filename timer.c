@@ -44,7 +44,7 @@ void update_cpu_timer(void)
 {
 int             cpu;                    /* CPU counter               */
 REGS           *regs;                   /* -> CPU register context   */
-U32             intmask = 0;            /* Interrupt CPU mask        */
+CPU_BITMAP      intmask = 0;            /* Interrupt CPU mask        */
 
     /* Access the diffent register contexts with the intlock held */
     OBTAIN_INTLOCK(NULL);
