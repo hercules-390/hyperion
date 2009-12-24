@@ -1793,8 +1793,13 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     /* Set maximum number of CPUs to specified value */
     if (maxcpu > 0) {
         sysblk.maxcpu = maxcpu;
-        if (sysblk.maxcpu < sysblk.numcpu)
-            sysblk.maxcpu = sysblk.numcpu;
+    }
+
+    /* Check that numcpu does not exceed maxcpu */
+    if (sysblk.numcpu > sysblk.maxcpu) {
+        logmsg(_("HHCCF086S Error in %s: NUMCPU %d must not exceed MAXCPU %d\n"),
+                fname, sysblk.numcpu, sysblk.maxcpu);
+        delayed_exit(1);
     }
 
     /* Start the CPUs */

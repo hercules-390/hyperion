@@ -1076,6 +1076,25 @@ HHCCF085S <em>fname1</em> Open error file <em>fname2</em>: <em>error</em>
   </dl>
 
 
+<dt><code><a name="HHCCF086S">
+HHCCF086S Error in <em>filename</em>: NUMCPU <em>nn</em> must not exceed MAXCPU <em>mm</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The number of online CPUs <code><em>nn</em></code> specified in the
+<code>NUMCPU</code> configuration statement
+in the file named <code><em>filename</em></code>
+cannot exceed the maximum number of CPUs <code><em>mm</em></code> specified in the
+<code>MAXCPU</code> configuration statement.
+  <dt>Action
+  <dd>Either decrease the <code>NUMCPU</code> parameter,
+  or increase the <code>MAXCPU</code> parameter,
+  and restart Hercules.
+  <dt>Issued by
+  <dd>bldcfg.c, function build_config
+  </dl>
+
+
 
 </dl>
 <p><center><hr width=15% noshade></center>
