@@ -807,27 +807,28 @@ and how they are used.
     All processors are CP engines unless otherwise specified by the
     <a href="#ENGINES">ENGINES</a> statement.
     <p>
-
-    <em>Note:</em>
-    Multiprocessor emulation is only available when the definition of
-    the compile-time variable <code>MAX_CPU_ENGINES</code>
-    in the file <tt>config.h</tt> has a value of more than 1.
-    Current versions of Hercules already have this value
-    set to 8 by default, so all you need to do is specify
-    <tt>NUMCPU 2</tt> or more
-    in your configuration file. If you wish to define a greater value
-    for <tt>MAX_CPU_ENGINES</tt>, use the
-    <tt>--enable-multi-cpu=NUMBER</tt>
-    option when you do your <tt>./configure</tt> before doing your
-    <tt>make</tt>.
-    <p>
-    See also <a href="#NUMCPU">NUMCPU</a> for a discussion of the performance
-    implications of MAX_CPU_ENGINES.
-
-    <p>
     The value of MAXCPU cannot exceed the value of <code>MAX_CPU_ENGINES</code>.
     If MAXCPU is not specified then the default value is the value of
     <code>MAX_CPU_ENGINES</code>.
+    <p>
+    <code>MAX_CPU_ENGINES</code> is a compile-time variable which sets
+    an upper limit on the value of MAXCPU.
+    The value of <code>MAX_CPU_ENGINES</code> is displayed in the
+    Build information message on the Hercules control panel at startup time.
+    To change the value of <code>MAX_CPU_ENGINES</code> you must rebuild
+    Hercules.
+    For Unix builds, specify
+    <tt>./configure --enable-multi-cpu=<em>nn</em></tt>
+    before performing make.
+    For Windows builds, specify
+    <tt>SET MAX_CPU_ENGINES=<em>nn</em></tt>
+    before performing nmake.
+    <p>
+    <code>MAX_CPU_ENGINES</code> cannot exceed 64. For performance reasons,
+    values above 32 are not recommended for 32-bit platforms.
+    If <code>MAX_CPU_ENGINES</code> is set to 1 then multiprocessing is disabled.
+    See also <a href="#NUMCPU">NUMCPU</a> for a discussion of the performance
+    implications of <code>MAX_CPU_ENGINES</code>.
     <p>
 
 <a name="MODEL"></a>
