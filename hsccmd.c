@@ -3161,7 +3161,7 @@ int i;
                 sysblk.diag8cmd &= ~(DIAG8CMD_ENABLE | DIAG8CMD_ECHO);
             else
             {
-                logmsg(_("HHCCF053I DIAG8CMD invalid option: %s\n"),argv[i]);
+                logmsg(_("HHCCF052S DIAG8CMD invalid option: %s\n"),argv[i]);
                 return -1;
             }
 

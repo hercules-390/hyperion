@@ -25,7 +25,7 @@ by <code><em>error</em></code>.
   <dt>Action
   <dd>Correct the error and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function read_config
+  <dd>bldcfg.c, function read_config
   </dl>
 <dt><code><a name="HHCCF002S">
 HHCCF002S File <em>filename</em> line <em>lineno</em> is too long
@@ -38,7 +38,7 @@ cannot be processed.
   <dt>Action
   <dd>Correct the line and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function read_config
+  <dd>bldcfg.c, function read_config
   </dl>
 <dt><code><a name="HHCCF003S">
 HHCCF003S Cannot open file <em>filename</em>: <em>error</em>
@@ -50,7 +50,7 @@ error is described by <code><em>error</em></code>.
   <dt>Action
   <dd>Correct the error and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF004S">
 HHCCF004S No device records in file <em>filename</em>
@@ -64,11 +64,10 @@ work.
   <dd>Specify one or more device definitions in the configuration file and
 restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF005S">
-HHCCF005S Error in <em>filename</em> line <em>lineno</em>:
-Unrecognized argument <em>argument</em>
+HHCCF005S Unrecognized argument <em>argument</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
@@ -79,37 +78,7 @@ Unrecognized argument <em>argument</em>
   <dt>Action
   <dd>Correct the invalid argument and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
-  </dl>
-<dt><code><a name="HHCCF006S">
-HHCCF006S Error in <em>filename</em> line <em>lineno</em>:
-Userid, but no password given <em>userid</em>
-</a></code>
-<dd><dl>
-  <dt>Meaning
-  <dd>A userid, <code><em>userid</em></code>, was specified
-on the <code>HTTPPORT</code> configuration statement in the file named
-<code><em>filename</em></code> at line number <code><em>lineno</em></code>, but no
-password was provided. A password is required if a userid is present.
-  <dt>Action
-  <dd>Either remove the userid, or specify a password, and restart Hercules.
-  <dt>Issued by
-  <dd>config.c, function build_config
-  </dl>
-<dt><code><a name="HHCCF007S">
-HHCCF007S Error in <em>filename</em> line <em>lineno</em>:
-Missing argument
-</a></code>
-<dd><dl>
-  <dt>Meaning
-  <dd>The <code>HTTPROOT</code> configuration statement was specified
-in the file named <code><em>filename</em></code> at line number <code><em>lineno</em></code>, but no
-directory was specified. A directory is required.
-  <dt>Action
-  <dd>Specify the directory where the Hercules web server will find its
-HTML files, and restart Hercules.
-  <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>hsccmd.c, function httpport_cmd
   </dl>
 <dt><code><a name="HHCCF008S">
 HHCCF008S Error in <em>filename</em> line <em>lineno</em>:
@@ -123,7 +92,7 @@ number <code><em>lineno</em></code>. The invalid keyword was <code><em>keyword</
   <dt>Action
   <dd>Correct the invalid statement and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF009S">
 HHCCF009S Error in <em>filename</em> line <em>lineno</em>:
@@ -138,7 +107,7 @@ statement, exactly one operand is required.
   <dt>Action
   <dd>Correct the invalid statement and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF010S">
 HHCCF010S Error in <em>filename</em> line <em>lineno</em>:
@@ -157,7 +126,7 @@ in use was compiled.
 issued because support for the desired architecture was excluded, then
 recompile Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF011S">
 HHCCF011S Error in <em>filename</em> line <em>lineno</em>:
@@ -172,7 +141,7 @@ and must be a valid hexadecimal number.
   <dt>Action
   <dd>Correct the serial number and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF012S">
 HHCCF012S Error in <em>filename</em> line <em>lineno</em>:
@@ -187,7 +156,7 @@ and must be a valid hexadecimal number.
   <dt>Action
   <dd>Correct the model number and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF013S">
 HHCCF013S Error in <em>filename</em> line <em>lineno</em>:
@@ -202,7 +171,7 @@ least 2. For 32-bit platforms the value must not exceed 4095.
   <dt>Action
   <dd>Correct the main storage size and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF014S">
 HHCCF014S Error in <em>filename</em> line <em>lineno</em>:
@@ -217,7 +186,7 @@ For 32-bit platforms the value must not exceed 4095.
   <dt>Action
   <dd>Correct the expanded storage size and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF015S">
 HHCCF015S Error in <em>filename</em> line <em>lineno</em>:
@@ -231,7 +200,7 @@ the file named <code><em>filename</em></code> must be a valid nonzero decimal nu
   <dt>Action
   <dd>Correct the console port number and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF016S">
 HHCCF016S Error in <em>filename</em> line <em>lineno</em>:
@@ -246,7 +215,7 @@ Invalid <em>threadname</em> thread priority <em>priority</em>
   <dt>Action
   <dd>Correct the priority on the statement and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF017W">
 HHCCF017W Hercules is not running as setuid root, cannot raise
@@ -266,7 +235,7 @@ HHCCF017W Hercules is not running as setuid root, cannot raise
 zero to not alter the priority, or omit the statement entirely
 to use the Hercules default CPU thread priority of 15.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF018S">
 HHCCF018S Error in <em>filename</em> line <em>lineno</em>:
@@ -281,7 +250,7 @@ the maximum number (MAX_CPU_ENGINES) defined when Hercules was built.
   <dt>Action
   <dd>Correct the number of emulated CPUs and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF019S">
 HHCCF019S Error in <em>filename</em> line <em>lineno</em>:
@@ -297,7 +266,7 @@ the maximum number defined when Hercules was built (usually 2).
   <dd>Correct the number of emulated Vector Facility engines and restart
 Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF020W">
 HHCCF020W Vector Facility support not configured
@@ -311,7 +280,7 @@ without the Vector Facility code. The request has been ignored.
   <dd>If Vector Facility support is desired, recompile Hercules. If not,
 remove the <code>NUMVEC</code> configuration statement.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF021S">
 HHCCF021S Error in <em>filename</em> line <em>lineno</em>:
@@ -345,7 +314,7 @@ following: <code>1900</code>, <code>1928</code>,
 If a different epoch is desired, a change must be made to the Hercules
 source file config.c and Hercules rebuilt.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF023S">
 HHCCF023S Error in <em>filename</em> line <em>lineno</em>:
@@ -363,7 +332,7 @@ form (<code>+</code>|<code>-</code>)<code>number</code>, where
   <dt>Action
   <dd>Correct the time zone offset and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF024S">
 HHCCF024S Error in <em>filename</em> line <em>lineno</em>:
@@ -378,7 +347,7 @@ the file named <code><em>filename</em></code> must be a valid decimal number bet
   <dt>Action
   <dd>Correct the TOD clock drag factor and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF025S">
 HHCCF025S Error in <em>filename</em> line <em>lineno</em>:
@@ -393,7 +362,7 @@ or a valid decimal number between 1 and 5000.
   <dt>Action
   <dd>Correct the control panel refresh rate and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF026S">
 HHCCF026S Error in <em>filename</em> line <em>lineno</em>:
@@ -412,7 +381,7 @@ the file named <code><em>filename</em></code> must be either
   <dt>Action
   <dd>Correct the OS tailoring value and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF027S">
 HHCCF027S Error in <em>filename</em> line <em>lineno</em>:
@@ -427,38 +396,36 @@ than -1.
   <dt>Action
   <dd>Correct the maximum device threads and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF028S">
-HHCCF028S Error in <em>filename</em> line <em>lineno</em>:
-Invalid program product OS permission <em>permission</em>
+HHCCF028S Invalid program product OS license setting <em>permission</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
   <dd>The program product OS permission <code><em>permission</em></code> specified on the
-<code>PGMPRDOS</code> configuration statement at line number <code><em>lineno</em></code> of
-the file named <code><em>filename</em></code> must be either <code>LICENSED</code> (or
-<code>LICENCED</code>, for those who spell as the British do)
+<code>PGMPRDOS</code> configuration statement
+must be either <code>LICENSED</code>
 or <code>RESTRICTED</code>.
+The alternative spelling <code>LICENCED</code> is also accepted.
   <dt>Action
   <dd>Correct the program product OS permission and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>hsccmd.c, function pgmprdos_cmd
   </dl>
 <dt><code><a name="HHCCF029S">
-HHCCF029S Error in <em>filename</em> line <em>lineno</em>:
-Invalid HTTP port number <em>port</em>
+HHCCF029S Invalid HTTP port number <em>port</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
   <dd>The HTTP server port number <code><em>port</em></code> specified on the
-<code>HTTPPORT</code> configuration statement at line number <code><em>lineno</em></code> of
-the file named <code><em>filename</em></code> must be either 80, or a valid decimal number
+<code>HTTPPORT</code> configuration statement
+must be either 80, or a valid decimal number
 greater than 1024.
   <dt>Action
   <dd>Correct the HTTP server port number and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>hsccmd.c, function httpport_cmd
   </dl>
 <dt><code><a name="HHCCF030S">
 HHCCF030S Error in <em>filename</em> line <em>lineno</em>:
@@ -472,7 +439,7 @@ the file named <code><em>filename</em></code> must be a valid decimal number.
   <dt>Action
   <dd>Correct the I/O delay value and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF031S">
 HHCCF031S Cannot obtain <em>size</em>MB main storage: <em>error</em>
@@ -484,7 +451,7 @@ HHCCF031S Cannot obtain <em>size</em>MB main storage: <em>error</em>
   <dt>Action
   <dd>Correct the error and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF032S">
 HHCCF032S Cannot obtain storage key array: <em>error</em>
@@ -496,7 +463,7 @@ failed for the reason described by <code><em>error</em></code>.
   <dt>Action
   <dd>Correct the error and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF033S">
 HHCCF033S Cannot obtain <em>size</em>MB expanded storage: <em>error</em>
@@ -508,7 +475,7 @@ HHCCF033S Cannot obtain <em>size</em>MB expanded storage: <em>error</em>
   <dt>Action
   <dd>Correct the error and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF034W">
 HHCCF034W Expanded storage support not installed
@@ -522,7 +489,7 @@ support. The request was ignored.
   <dd>Either remove the XPNDSTOR configuration parameter, or recompile
 Hercules with expanded storage support included.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF035S">
 HHCCF035S Error in <em>filename</em> line <em>lineno</em>:
@@ -536,7 +503,7 @@ device type.
   <dt>Action
   <dd>Supply the missing value and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF036S">
 HHCCF036S Error in <em>filename</em> line <em>lineno</em>:
@@ -550,7 +517,7 @@ the file named <code><em>filename</em></code> specified an invalid device number
   <dt>Action
   <dd>Correct the device number and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF037S">
 HHCCF037S Message pipe creation failed: <em>error</em>
@@ -562,7 +529,7 @@ failed. The error is described by <code><em>error</em></code>.
   <dt>Action
   <dd>Correct the error and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF038S">
 HHCCF038S Message pipe open failed: <em>error</em>
@@ -574,7 +541,7 @@ failed. The error is described by <code><em>error</em></code>.
   <dt>Action
   <dd>Correct the error and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><a name="HHCCF039W"><pre>
 HHCCF039W PGMPRDOS LICENSED specified.
@@ -746,19 +713,21 @@ and must be a valid hexadecimal number.
   <dt>Action
   <dd>Correct the model number and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF052S">
-HHCCF052S Error in <em>filename</em> line <em>lineno</em>:
-<em>option</em>: invalid argument
+HHCCF052S DIAG8CMD invalid option:
+<em>option</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The argument <em>option</em> on the DIAG8CMD is invalid.  Valid options are <code><em>enable</em></code> and <code><em>disable</em></code>.
+  <dd>The argument <em>option</em> on the DIAG8CMD is invalid.
+  Valid options are <code><em>enable</em></code>, <code><em>disable</em></code>,
+  <code><em>echo</em></code>, and <code><em>noecho</em></code>,
   <dt>Action
   <dd>Correct the statement and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>hsccmd.c, function diag8_cmd
   </dl>
 <dt><code><a name="HHCCF053E">
 HHCCF053E Incorrect second device number in device range near character <em>c</em>
@@ -874,7 +843,7 @@ HHCCF064W Hercules set priority <em>priority</em> failed: <em>error</em>
       <dd>If performance problems are noted, correct the error and
           restart Hercules.
   <dt>Issued by
-      <dd>config.c, function build_config
+      <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF065I">
 HHCCF065I Hercules: tid=<em>threadid</em>, pid=<em>processid</em>,
@@ -887,7 +856,7 @@ HHCCF065I Hercules: tid=<em>threadid</em>, pid=<em>processid</em>,
       id is <code><em>processgroupid</em></code> and its execution
       priority is <code><em>priority</em></code>.
   <dt>Issued by
-      <dd>config.c, function build_config
+      <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF066E">
 HHCCF066E Invalid HTTPROOT: <em>error</em>
@@ -899,7 +868,7 @@ The error is described by <code><em>error</em></code>.
   <dt>Action
   <dd>Correct the error and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>httpserv.c, function http_server
   </dl>
 <dt><code><a name="HHCCF067S">
 HHCCF067S Incorrect keyword <em>keyword</em> for the ASN_AND_LX_REUSE statement
@@ -911,18 +880,18 @@ HHCCF067S Incorrect keyword <em>keyword</em> for the ASN_AND_LX_REUSE statement
   <dt>Action
   <dd>Correct the error and restart Hercules.
   <dt>Issued by
-  <dd>bldcfg.c, function build_config
+  <dd>hsccmd.c, function alrf_cmd
   </dl>
-<dt><code><a name="HHCCF068S">
-HHCCF068S Error in <em>filename</em> line <em>lineno</em>: Invalid Auto_SCSI_Mount value: <em>value</em>
+<dt><code><a name="HHCCF068E">
+HHCCF068E Invalid value: <em>value</em>; Enter "help scsimount" for help.
 </a></code>
 <dd><dl>
   <dt>Meaning
   <dd>The automatic SCSI tape mount value is not "NO" nor a value between 1 and 99 seconds inclusive.
   <dt>Action
-  <dd>Correct the error and restart Hercules.
+  <dd>Reissue the SCSIMOUNT command.
   <dt>Issued by
-  <dd>bldcfg.c, function build_config
+  <dd>hsccmd.c, function scsimount_cmd
   </dl>
 <dt><code><a name="HHCCF069I"><pre>
 HHCCF069I Run-options enabled for this run:
