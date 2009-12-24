@@ -86,7 +86,7 @@
   echo    {makefile-name}     The name of our makefile:  'makefile.msvc'
   echo.
   echo    {num-cpu-engines}   The maximum number of emulated CPUs (NUMCPU=) you
-  echo                        want this build of Hercules to support: 1 to 32.
+  echo                        want this build of Hercules to support: 1 to 64.
   echo.
   echo    [-a^|clean]          Use '-a' to perform a full rebuild of all Hercules
   echo                        binaries, or 'clean' to delete all temporary work
