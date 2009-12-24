@@ -315,17 +315,18 @@ remove the <code>NUMVEC</code> configuration statement.
   </dl>
 <dt><code><a name="HHCCF021S">
 HHCCF021S Error in <em>filename</em> line <em>lineno</em>:
-Load parameter <em>loadparm</em> exceeds 8 characters
+Invalid maximum number of CPUs <em>number</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The IPL parameter <code><em>loadparm</em></code> specified on the
-<code>LOADPARM</code> configuration statement at line number <code><em>lineno</em></code> of
-the file named <code><em>filename</em></code> must be no more than 8 characters long.
+  <dd>The maximum number of emulated CPUs <code><em>number</em></code> specified on the
+<code>MAXCPU</code> configuration statement at line number <code><em>lineno</em></code> of
+the file named <code><em>filename</em></code> must be a valid decimal number. It must not
+exceed the maximum number (MAX_CPU_ENGINES) defined when Hercules was built.
   <dt>Action
-  <dd>Correct the IPL parameter and restart Hercules.
+  <dd>Correct the <code>MAXCPU</code> parameter and restart Hercules.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>bldcfg.c, function build_config
   </dl>
 <dt><code><a name="HHCCF022S">
 HHCCF022S Error in <em>filename</em> line <em>lineno</em>:
