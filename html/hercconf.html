@@ -559,7 +559,7 @@ and how they are used.
 <dt><code>DIAG8CMD &nbsp; DISABLE &#124; ENABLE [ECHO &#124; NOECHO]</code>
 <dd><p>
     When <code>ENABLE</code> is specified, commands issued through diagnose 8 will be
-    executed by hercules as hercules commands.  When set to <code>DISABLE</code>,
+    executed by Hercules as Hercules commands.  When set to <code>DISABLE</code>,
     commands issued through the diagnose 8 interface will generate a Specification
     Exception program interrupt on the issuing CPU.
     <p>An optional second argument can be given to request whether the commands
@@ -579,7 +579,7 @@ and how they are used.
     <p>
 
     When this feature is enabled it is possible for guest operating systems
-    running under hercules to issue commands directly to the host operating system
+    running under Hercules to issue commands directly to the host operating system
     by means of the Hercules <code>sh</code> (shell) command. This ability may be
     disabled via the <a href="#SHCMDOPT">SHCMDOPT</a> statement.
     <p>
@@ -713,7 +713,7 @@ and how they are used.
 <a name="LDMOD"></a>
 <dt><code>LDMOD &nbsp; <em>module list</em></code>
 <dd><p>
-    specifies additional modules that are to be loaded by the hercules dynamic loader.
+    specifies additional modules that are to be loaded by the Hercules dynamic loader.
     The default search order is with the hercules directory in the default DLL search
     path. Most systems also support absolute filenames (ie names starting with '/'
     or '.') in which case the default search path is not taken.
@@ -1720,7 +1720,7 @@ and how they are used.
 
             <tr><td>1052-C, 3215-C</td>
                 <td><a href="#consysc">Integrated console printer-keyboards</a></td>
-                <td>Integrated on hercules console</td>
+                <td>Integrated on Hercules console</td>
             </tr>
 
             <tr><td>1442, 2501, 3505</td>
@@ -1956,7 +1956,7 @@ and how they are used.
     </em>
     <p>
 
-    To send a logon command to a 1052-C or 3215-C enter /logon on the hercules console.
+    To send a logon command to a 1052-C or 3215-C enter /logon on the Hercules console.
     <p>
     All integrated devices must use a different command prefix.
     <p>
@@ -3194,7 +3194,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
         <p>
 
         syncio is the default for ckd. syncio statistics may be displayed via
-        the hercules <code>syncio</code> panel command.
+        the Hercules <code>syncio</code> panel command.
         <p>
 
         <!-- No longer applicable with current versions of Linux
@@ -3214,7 +3214,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
         readonly returns "write inhibited" sense when a write is attempted.
         Note that not all of the sense bits may be getting set absolutely
         correctly however. (Some people have reported getting different
-        error messages under hercules than a real machine, but it really
+        error messages under Hercules than a real machine, but it really
         hasn't been an issue for a while now.)
         <p>
         <code>readonly</code> may be abbreviated as
@@ -3372,7 +3372,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
     ( Preliminary 2703 BSC Support )
     <p>
 
-    Describes a BSC emulation line entry to either link 2 hercules engines
+    Describes a BSC emulation line entry to either link 2 Hercules engines
     or a custom made program emulating a 2780, 3780 or 3x74, or a custom made
     program interfacing to a real BSC line.
     <p>
