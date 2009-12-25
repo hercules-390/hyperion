@@ -568,19 +568,20 @@ and how they are used.
     When <code>ECHO</code> is specified, a message is issued as the panel is about to issue
     the command, the command is redisplayed as if it was entered through the panel input
     line, and a final message is issued to indicate the command completed. When <code>NOECHO</code>
-    is specified, no such messages are displayed and the command completes silently,
-    except for the output of the command itself if the Diagnose 8 interface didn't request
-    a response buffer.
+    is specified, no such messages are displayed and the command completes silently.
+    <p>The value of <code>ECHO</code> or <code>NOECHO</code> has no affect on
+    command output being placed into a response buffer if the Diagnose 8 interface
+    requested one.
     <p>The default is <code>DISABLE NOECHO</code>
     <p>
 
-    <i><b>Caution:</b> &nbsp; Enabling this feature may have security consequences</i>
+    <i><b>Caution:</b> &nbsp; Enabling this feature may have security consequences.</i>
     <p>
 
-    Note that when this feature is enabled systems
-    running under hercules can even issue host commands through the Hercules
-    <code>sh</code> (shell) command. This ability may be disabled via the
-    <a href="#SHCMDOPT">SHCMDOPT</a> statement.
+    When this feature is enabled it is possible for guest operating systems
+    running under hercules to issue commands directly to the host operating system
+    by means of the Hercules <code>sh</code> (shell) command. This ability may be
+    disabled via the <a href="#SHCMDOPT">SHCMDOPT</a> statement.
     <p>
 
 <a name="ECPSVM"></a>
