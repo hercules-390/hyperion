@@ -558,9 +558,9 @@ and how they are used.
 <a name="DIAG8CMD"></a>
 <dt><code>DIAG8CMD &nbsp; DISABLE &#124; ENABLE [ECHO &#124; NOECHO]</code>
 <dd><p>
-    When <code>ENABLE</code> is specified, commands issued through diagnose 8 will be
-    executed by Hercules as Hercules commands.  When set to <code>DISABLE</code>,
-    commands issued through the diagnose 8 interface will generate a Specification
+    When <code>ENABLE</code> is specified, commands issued through the Diagnose 8 interface
+    will be executed by Hercules as Hercules commands.  When set to <code>DISABLE</code>,
+    commands issued through the Diagnose 8 interface will generate a Specification
     Exception program interrupt on the issuing CPU.
     <p>An optional second argument can be given to request whether the commands
     issued using the Diagnose 8 interface will be traced at the console. This may be
@@ -969,7 +969,7 @@ and how they are used.
     in a Windows command prompt window.
     Note that this option has no effect when Hercules is run under control
     of the Hercules GUI since Hercules's console window is hidden in favor
-    of using the GUI's console window instead.
+    of using the GUI's window instead.
     <p>
 
 <a name="PGMPRDOS"></a>
@@ -1013,7 +1013,7 @@ and how they are used.
     programmatically via the <a href="#DIAG8CMD">DIAG8CMD</a> interface.
     <p>
     When set to <code>NODIAG8</code> only the programmatic execution of shell commands via the
-    the diagnose 8 interface is disabled, but <code>sh</code> (shell) commands entered directly
+    the Diagnose 8 interface is disabled, but <code>sh</code> (shell) commands entered directly
     via the Hercules hardware console will still work.
     <p>
     <b>NOTE:</b> &nbsp;<i>"entered directly via the Hercules hardware console"</i>
