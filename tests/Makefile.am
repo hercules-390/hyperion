@@ -11,6 +11,7 @@ dist_pkgdata_DATA = \
     st.core
 
 EXTRA_DIST =        \
+    agf.txt         \
     alsi.txt        \
     axtr.txt        \
     brc.txt         \
