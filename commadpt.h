@@ -85,15 +85,15 @@ struct COMMADPT
     BYTE byte_skip_table[256];  /* async: characters to suppress in output  */
 };
 
-enum {
+enum commadpt_lnctl {
     COMMADPT_LNCTL_BSC=1,       /* BSC Line Control                         */
     COMMADPT_LNCTL_ASYNC        /* ASYNC Line Control                       */
-} commadpt_lnctl;
+};
 
-enum {
+enum commadpt_term {
 	COMMADPT_TERM_TTY,      /* TTY (TELE2) */
 	COMMADPT_TERM_2741,	/* 2741 (IBM1) */
-} commadpt_term;
+};
 
 #define IS_BSC_LNCTL(ca)    ((ca->lnctl == COMMADPT_LNCTL_BSC))
 #define IS_ASYNC_LNCTL(ca)  ((ca->lnctl == COMMADPT_LNCTL_ASYNC))
