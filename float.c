@@ -275,6 +275,7 @@
 #define NOSIGEX 0                       /* Do not raise significance
                                            exception, use true zero  */
 
+#define FLOAT_DEBUG 0        /* Change to 1 to enable debug messages */
 
 /*-------------------------------------------------------------------*/
 /* Add 128 bit unsigned integer                                      */
@@ -355,6 +356,35 @@
 /*-------------------------------------------------------------------*/
 #define shift_left_U128(ms, ls) \
     (ms) = ((ms) << 1) | ((ls) >> 63); \
+    (ls) <<= 1
+
+/*-------------------------------------------------------------------*/
+/* Shift 128 bit 4 bits right with shifted digit                     */
+/*                                                                   */
+/* ms   most significant 64 bit of operand                           */
+/* ls   least significant 64 bit of operand                          */
+/* dig  lesast significant 4 bits removed by right shift             */
+/*                                                                   */
+/* all operands are expected to be defined as U64                    */
+/*-------------------------------------------------------------------*/
+#define shift_right4_U128(ms, ls, dig) \
+    (dig) = (ls) & 0xF; \
+    (ls) = ((ls) >> 4) | ((ms) << 60); \
+    (ms) >>= 4
+
+
+/*-------------------------------------------------------------------*/
+/* Shift 128 bit 4 bits left with shifted digit                      */
+/*                                                                   */
+/* ms   most significant 64 bit of operand                           */
+/* ls   least significant 64 bit of operand                          */
+/* dig  most significant 4 bits removed by left shift                */
+/*                                                                   */
+/* all operands are expected to be defined as U64                    */
+/*-------------------------------------------------------------------*/
+#define shift_left4_U128(ms, ls, dig) \
+    (dig) = (ms) >> 60; \
+    (ms) = ((ms) << 4) | ((ls) >> 60); \
     (ls) <<= 1
 
 
@@ -524,6 +554,84 @@ static inline void store_ef( EXTENDED_FLOAT *fl, U32 *fpr )
     }
 
 } /* end function store_ef */
+
+#if defined(FEATURE_HFP_UNNORMALIZED_EXTENSION)
+/*-------------------------------------------------------------------*/
+/* Store extended float to register pair unnormalized                */
+/*                                                                   */
+/* Input:                                                            */
+/*      fl      Internal float format to be converted from           */
+/*      fpr     Pointer to register to be converted to               */
+/*-------------------------------------------------------------------*/
+static inline void ARCH_DEP(store_ef_unnorm)( EXTENDED_FLOAT *fl, U32 *fpr )
+{
+    fpr[0] = ((U32)fl->sign << 31)
+           | (((U32)fl->expo & 0x7f) << 24)
+           | (fl->ms_fract >> 24);
+    fpr[1] = (fl->ms_fract << 8)
+           | (fl->ls_fract >> 56);
+    fpr[FPREX] = ((U32)fl->sign << 31)
+               | ((fl->ls_fract >> 32) & 0x00FFFFFF);
+    fpr[FPREX+1] = fl->ls_fract;
+
+    fpr[FPREX] |= ((((U32)fl->expo - 14) << 24) & 0x7f000000);
+
+} /* end ARCH_DEP(store_ef_unnorm) */
+
+
+/*-------------------------------------------------------------------*/
+/* Store extended float high-order part to register unnormalized     */
+/*                                                                   */
+/* Input:                                                            */
+/*      fl      Internal float format to be converted from           */
+/*      fpr     Pointer to register to be converted to               */
+/*-------------------------------------------------------------------*/
+static inline void ARCH_DEP(store_ef_unnorm_hi)( EXTENDED_FLOAT *fl, U32 *fpr )
+{
+    fpr[0] = ((U32)fl->sign << 31)
+           | (((U32)fl->expo & 0x7f) << 24)
+           | (fl->ms_fract >> 24);
+    fpr[1] = (fl->ms_fract << 8)
+           | (fl->ls_fract >> 56);
+
+} /* end ARCH_DEP(store_ef_unnorm_hi) */
+
+
+/*-------------------------------------------------------------------*/
+/* Store extended float low-order part to register unnormalized      */
+/*                                                                   */
+/* Input:                                                            */
+/*      fl      Internal float format to be converted from           */
+/*      fpr     Pointer to register to be converted to               */
+/*-------------------------------------------------------------------*/
+static inline void ARCH_DEP(store_ef_unnorm_lo)( EXTENDED_FLOAT *fl, U32 *fpr )
+{
+    fpr[0] = ((U32)fl->sign << 31)
+           | ((((U32)fl->expo - 14 ) & 0x7f) << 24)
+           | ((fl->ls_fract >> 32) & 0x00FFFFFF);
+    fpr[1] = fl->ls_fract;
+
+} /* end ARCH_DEP(store_ef_unnorm_lo) */
+
+
+/*-------------------------------------------------------------------*/
+/* Convert long to extended format unnormalized                      */
+/*                                                                   */
+/* Input:                                                            */
+/*      fl      Internal float format to be converted from           */
+/*      fpr     Pointer to register to be converted to               */
+/*-------------------------------------------------------------------*/
+static inline void ARCH_DEP(lf_to_ef_unnorm)
+                           ( EXTENDED_FLOAT *fx, LONG_FLOAT *fl )
+{
+    fx->sign = fl->sign;
+    fx->expo = fl->expo;
+    fx->ms_fract = fl->long_fract >> 8;
+    fx->ls_fract = (fl->long_fract & 0xff) << 56;
+
+} /* end ARCH_DEP(lf_to_ef_unnorm) */
+
+#endif /* defined(FEATURE_HFP_UNNORMALIZED_EXTENSION) */
 
 
 /*-------------------------------------------------------------------*/
@@ -2923,6 +3031,217 @@ int     i;
 
 } /* end function div_U256 */
 #endif /* FEATURE_HFP_EXTENSIONS */
+
+#if defined(FEATURE_HFP_UNNORMALIZED_EXTENSION)
+/*-------------------------------------------------------------------*/
+/* Multiply long float to extended float unnormalized                */
+/*                                                                   */
+/* Input:                                                            */
+/*      fl         Multiplicand long float                           */
+/*      mul_fl     Multiplicator long float                          */
+/*      result_fl  Intermediate extended float result                */
+/*      regs       CPU register context                              */
+/* Value:                                                            */
+/*      none                                                         */
+/*-------------------------------------------------------------------*/
+static void ARCH_DEP(mul_lf_to_ef_unnorm)( 
+                     LONG_FLOAT *fl, LONG_FLOAT *mul_fl,
+                     EXTENDED_FLOAT *result_fl )
+{
+U64     wk;
+
+    /* multiply fracts by sum of partial multiplications */
+    wk = (fl->long_fract & 0x00000000FFFFFFFFULL) * (mul_fl->long_fract & 0x00000000FFFFFFFFULL);
+    result_fl->ls_fract = wk & 0x00000000FFFFFFFFULL;
+
+    wk >>= 32;
+    wk += ((fl->long_fract & 0x00000000FFFFFFFFULL) * (mul_fl->long_fract >> 32));
+    wk += ((fl->long_fract >> 32) * (mul_fl->long_fract & 0x00000000FFFFFFFFULL));
+    result_fl->ls_fract |= wk << 32;
+
+    result_fl->ms_fract = (wk >> 32) + ((fl->long_fract >> 32) * (mul_fl->long_fract >> 32));
+
+    /* compute expo */
+    result_fl->expo = fl->expo + mul_fl->expo - 64;
+
+    /* determine sign */
+    result_fl->sign = (fl->sign == mul_fl->sign) ? POS : NEG;
+
+} /* end function mul_lf_to_ef_unnorm */
+
+
+/*-------------------------------------------------------------------*/
+/* Add extended float unnormalized                                   */
+/* Note: This addition is specific to MULTIPLY AND ADD UNNORMALIZED  */
+/*       set of instructions                                         */
+/*                                                                   */
+/* Input:                                                            */
+/*      prod_fl    Extended Intermediate product                     */
+/*      add_fl     Extended Addend                                   */
+/*      result_fl  Extended Intermediate result                      */
+/* Value:                                                            */
+/*      none                                                         */
+/*-------------------------------------------------------------------*/
+static void ARCH_DEP(add_ef_unnorm)( 
+                     EXTENDED_FLOAT *prod_fl, EXTENDED_FLOAT *add_fl,
+                     EXTENDED_FLOAT *result_fl )
+{
+int  ldigits = 0;                  /* or'd left digits shifted      */
+int  rdigits = 0;                  /* or'd right digits shifted     */
+int  xdigit;                       /* digit lost by addend shifting */
+
+    /* Note: In EXTENDED_FLOAT, ms_fract and ls_fract taken together*/
+    /* constitute a U128 value.                                     */
+
+    /* Convert separate high/low fractions to contiguous U128 */
+#if FLOAT_DEBUG
+    logmsg (_("Prod Frac: %16.16llX %16.16llX\n"),
+               prod_fl->ms_fract, prod_fl->ls_fract);
+
+    logmsg (_("Adnd Frac: %16.16llX %16.16llX\n"),
+               add_fl->ms_fract, add_fl->ls_fract);
+#endif
+
+    result_fl->ms_fract = 0;
+    result_fl->ls_fract = 0;
+
+    /* Default result to product sign in case addend expo == prod expo */
+    result_fl->sign = prod_fl->sign;
+
+    /* Step one - shift addend to match product's characteristic */
+    if (add_fl->expo < prod_fl->expo)
+    {
+        while(add_fl->expo != prod_fl->expo)
+        {
+            if ((!add_fl->ms_fract) && (!add_fl->ls_fract))
+            {  /* If both the high and low parts of the fraction are zero */
+               /* we don't need to shift any more digits.                 */
+               /* Just force the exponents equal and quit                 */
+               add_fl->expo = prod_fl->expo;
+               break;
+            }
+            /* shift addend fraction right until characteristics are equal */
+            shift_right4_U128(add_fl->ms_fract, add_fl->ls_fract, xdigit);
+            rdigits |= xdigit;
+            add_fl->expo += 1;
+        }
+    }
+    else if(add_fl->expo > prod_fl->expo)
+    {
+        while(add_fl->expo != prod_fl->expo)
+        {
+            if ((!add_fl->ms_fract) && (!add_fl->ls_fract))
+            {  /* If both the high and low parts of the fraction are zero */
+               /* we don't need to shift any more digits.                 */
+               /* Just force the exponents equal and quit                 */
+               add_fl->expo = prod_fl->expo;
+               break;
+            }
+
+            /* shift addend fraction right until characteristics are equal */
+            shift_left4_U128(add_fl->ms_fract, add_fl->ls_fract, xdigit);
+            ldigits |= xdigit;
+            add_fl->expo -= 1;
+        }
+    }
+#if FLOAT_DEBUG
+    logmsg (_("Shft Frac: %16.16llX %16.16llX\n"),
+               add_fl->ms_fract, add_fl->ls_fract);
+#endif
+
+    /* Step 2 - Do algebraic addition of aligned fractions */
+    if (add_fl->sign == prod_fl->sign)
+    {   /* signs equal, so just add fractions */
+
+        result_fl->sign = prod_fl->sign;
+        result_fl->ms_fract = prod_fl->ms_fract;
+        result_fl->ls_fract = prod_fl->ls_fract;
+
+        add_U128(result_fl->ms_fract, result_fl->ls_fract, 
+                 add_fl->ms_fract, add_fl->ls_fract);
+
+        /* Recognize any overflow of left hand digits */
+        ldigits |= result_fl->ms_fract >> 48;
+
+        /* Remove them from the result */
+        result_fl->ms_fract &= 0x0000FFFFFFFFFFFFULL;
+
+        /* result sign already set to product sign */
+    }
+    else
+    {   /* signs unequal, subtract the larger fraction from the smaller */
+        /* result has sign of the larger fraction                       */
+
+        if ( (prod_fl->ms_fract > add_fl->ms_fract)  
+          || ((prod_fl->ms_fract == add_fl->ms_fract) && 
+              (prod_fl->ls_fract >= add_fl->ls_fract)) )
+        /* product fraction larger than or equal to addend fraction */
+        
+        {  /* subtract addend fraction from product fraction */
+           /* result has sign of product                     */
+
+           result_fl->ms_fract = prod_fl->ms_fract;
+           result_fl->ls_fract = prod_fl->ls_fract;
+
+           if (rdigits)
+           {   /* If any right shifted addend digits, then we need to    */
+               /* borrow from the product fraction to reflect the shifted*/
+               /* digits participation in the result                     */
+               sub_U128(result_fl->ms_fract, result_fl->ls_fract, 
+                        (U64)0, (U64)1);
+#if FLOAT_DEBUG
+               logmsg (_("Barw Frac: %16.16llX %16.16llX\n"),
+                      result_fl->ms_fract, result_fl->ls_fract);
+#endif
+               /* Due to participation of right shifted digits           */
+               /* result fraction NOT zero, so true zero will not result */
+               /* hence, force sign will not to change                   */
+               ldigits = 1;
+           }
+
+           sub_U128(result_fl->ms_fract, result_fl->ls_fract, 
+                    add_fl->ms_fract, add_fl->ls_fract);
+#if FLOAT_DEBUG
+           logmsg (_("P-A  Frac: %16.16llX %16.16llX\n"),
+                      result_fl->ms_fract, result_fl->ls_fract);
+#endif
+           /* result sign already set to product sign above as default */
+        }
+        else
+        /* addend fraction larger than product fraction */
+
+        {  /* subtract product fraction from addend fraction */
+           /* result has sign of addend                      */
+           result_fl->ms_fract = add_fl->ms_fract;
+           result_fl->ls_fract = add_fl->ls_fract;
+
+           sub_U128(result_fl->ms_fract, result_fl->ls_fract, 
+                    prod_fl->ms_fract, prod_fl->ls_fract);
+#if FLOAT_DEBUG
+           logmsg (_("A-P  Frac: %16.16llX %16.16llX\n"),
+                      result_fl->ms_fract, result_fl->ls_fract);
+#endif
+           result_fl->sign = add_fl->sign;
+        }
+    }
+#if FLOAT_DEBUG
+    logmsg (_("Resl Frac: %16.16llX %16.16llX\n"),
+               result_fl->ms_fract, result_fl->ls_fract);
+#endif
+
+    /* result exponent always the same as the product */
+    result_fl->expo = prod_fl->expo;
+
+    /* Step 3 - If fraction is TRULY zero, sign is set to positive */
+    if ( (!result_fl->ms_fract) && (!result_fl->ls_fract) && 
+          (!ldigits) && (!rdigits) )
+    {
+        result_fl->sign = POS;
+    }
+
+} /* end ARCH_DEP(add_ef_unnorm) */
+
+#endif /* defined(FEATURE_HFP_UNNORMALIZED_EXTENSION) */
 
 
 /*-------------------------------------------------------------------*/
@@ -7084,7 +7403,408 @@ int     pgm_check;
     }
 
 } /* end DEF_INST(multiply_subtract_float_long) */
+
 #endif /*defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)*/
+
+
+#if defined(FEATURE_HFP_UNNORMALIZED_EXTENSION)
+/*-------------------------------------------------------------------*/
+/* B338 MAYLR - Multiply and Add Unnorm. Long to Ext. Low Reg. [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(multiply_add_unnormal_float_long_to_ext_low_reg)
+{
+int            r1, r2, r3;              /* Values of R fields        */
+int            i1;                      /* Index of FP register      */
+LONG_FLOAT     fl2, fl3;                /* Multiplier/Multiplicand   */
+LONG_FLOAT     fl1;                     /* Addend                    */
+EXTENDED_FLOAT fxp1;                    /* Intermediate product      */
+EXTENDED_FLOAT fxadd;                   /* Addend in extended format */
+EXTENDED_FLOAT fxres;                   /* Extended result           */
+
+    RRF_R(inst, regs, r1, r2, r3)
+    HFPREG2_CHECK(r2, r3, regs);
+    HFPREG_CHECK(r1, regs);
+    i1 = FPR2I(r1);
+
+    /* Get the operands */
+    get_lf(&fl1, regs->fpr + i1);
+    get_lf(&fl2, regs->fpr + FPR2I(r2));
+    get_lf(&fl3, regs->fpr + FPR2I(r3));
+
+    /* Calculate intermediate product */
+    ARCH_DEP(mul_lf_to_ef_unnorm)(&fl2, &fl3, &fxp1);
+
+    /* Convert Addend to extended format */
+    ARCH_DEP(lf_to_ef_unnorm)(&fxadd, &fl1);
+
+    /* Add the addend to the intermediate product */
+    ARCH_DEP(add_ef_unnorm)(&fxp1, &fxadd, &fxres);
+
+    /* Place low-order part of result in register */
+    ARCH_DEP(store_ef_unnorm_lo)(&fxres, regs->fpr + FPR2I(r1));
+
+
+} /* end DEF_INST(multiply_add_unnormal_float_long_to_ext_low_reg) */
+
+
+/*-------------------------------------------------------------------*/
+/* B339 MYLR  - Multiply Unnormalized Long to Ext. Low FP Reg. [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(multiply_unnormal_float_long_to_ext_low_reg)
+{
+int          r1, r2, r3;                /* Values of R fields        */
+LONG_FLOAT   fl2, fl3;                  /* Multiplier/Multiplicand   */
+EXTENDED_FLOAT fx1;                     /* Intermediate result       */
+
+    RRF_R(inst, regs, r1, r2, r3);
+    HFPREG2_CHECK(r2, r3, regs);
+    HFPREG_CHECK(r1, regs);
+
+    /* Get the operands */
+    get_lf(&fl2, regs->fpr + FPR2I(r2));
+    get_lf(&fl3, regs->fpr + FPR2I(r3));
+
+    /* Calculate intermediate result */
+    ARCH_DEP(mul_lf_to_ef_unnorm)(&fl2, &fl3, &fx1);
+
+    /* Place low-order part of result in register */
+    ARCH_DEP(store_ef_unnorm_lo)(&fx1, regs->fpr + FPR2I(r1));
+
+} /* end DEF_INST(multiply_unnormal_float_long_to_ext_low_reg) */
+
+
+/*-------------------------------------------------------------------*/
+/* B33A MAYR  - Multiply and Add Unnorm. Long to Ext. Reg.     [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(multiply_add_unnormal_float_long_to_ext_reg)
+{
+int            r1, r2, r3;              /* Values of R fields        */
+int            i1;                      /* Index of FP register      */
+LONG_FLOAT     fl2, fl3;                /* Multiplier/Multiplicand   */
+LONG_FLOAT     fl1;                     /* Addend                    */
+EXTENDED_FLOAT fxp1;                    /* Intermediate product      */
+EXTENDED_FLOAT fxadd;                   /* Addend in extended format */
+EXTENDED_FLOAT fxres;                   /* Extended result           */
+
+    RRF_R(inst, regs, r1, r2, r3);
+    HFPREG2_CHECK(r2, r3, regs);
+    HFPREG_CHECK(r1, regs);
+    /* Either the low- or high-numbered register of a pair is valid */
+    r1 &= 13;               /* Convert to the low numbered register */
+    i1 = FPR2I(r1);
+
+    /* Get the operands */
+    get_lf(&fl1, regs->fpr + i1);
+    get_lf(&fl2, regs->fpr + FPR2I(r2));
+    get_lf(&fl3, regs->fpr + FPR2I(r3));
+
+    /* Calculate intermediate product */
+    ARCH_DEP(mul_lf_to_ef_unnorm)(&fl2, &fl3, &fxp1);
+
+    /* Convert Addend to extended format */
+    ARCH_DEP(lf_to_ef_unnorm)(&fxadd, &fl1);
+
+    /* Add the addend to the intermediate product */
+    ARCH_DEP(add_ef_unnorm)(&fxp1, &fxadd, &fxres);
+
+    /* Place result in register */
+    ARCH_DEP(store_ef_unnorm)(&fxres, regs->fpr + FPR2I(r1));
+
+} /* end DEF_INST(multiply_add_unnormal_float_long_to_ext_reg) */
+
+
+/*-------------------------------------------------------------------*/
+/* B33B MYR   - Multiply Unnormalized Long to Extended Reg     [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(multiply_unnormal_float_long_to_ext_reg)
+{
+int            r1, r2, r3;              /* Values of R fields        */
+LONG_FLOAT     fl2, fl3;                /* Multiplier/Multiplicand   */
+EXTENDED_FLOAT fx1;                     /* Intermediate result       */
+
+    RRF_R(inst, regs, r1, r2, r3);
+    HFPODD_CHECK(r1, regs);
+    HFPREG2_CHECK(r2, r3, regs);
+
+    /* Get the operands */
+    get_lf(&fl2, regs->fpr + FPR2I(r2));
+    get_lf(&fl3, regs->fpr + FPR2I(r3));
+    
+    /* Calculate intermediate result */
+    ARCH_DEP(mul_lf_to_ef_unnorm)(&fl2, &fl3, &fx1);
+    
+    /* Place result in register */
+    ARCH_DEP(store_ef_unnorm)(&fx1, regs->fpr + FPR2I(r1));
+
+} /* DEF_INST(multiply_unnormal_float_long_to_ext_reg) */
+
+
+/*-------------------------------------------------------------------*/
+/* B33C MAYHR - Multiply and Add Unnorm. Long to Ext. High Reg [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(multiply_add_unnormal_float_long_to_ext_high_reg)
+{
+int            r1, r2, r3;              /* Values of R fields        */
+int            i1;                      /* Index of FP register      */
+LONG_FLOAT     fl2, fl3;                /* Multiplier/Multiplicand   */
+LONG_FLOAT     fl1;                     /* Addend                    */
+EXTENDED_FLOAT fxp1;                    /* Intermediate product      */
+EXTENDED_FLOAT fxadd;                   /* Addend in extended format */
+EXTENDED_FLOAT fxres;                   /* Extended result           */
+
+    RRF_R(inst, regs, r1, r2, r3);
+    HFPREG2_CHECK(r2, r3, regs);
+    HFPREG_CHECK(r1, regs);
+    i1 = FPR2I(r1);
+
+    /* Get the operands */
+    get_lf(&fl1, regs->fpr + i1);
+    get_lf(&fl2, regs->fpr + FPR2I(r2));
+    get_lf(&fl3, regs->fpr + FPR2I(r3));
+
+    /* Calculate intermediate product */
+    ARCH_DEP(mul_lf_to_ef_unnorm)(&fl2, &fl3, &fxp1);
+
+    /* Convert Addend to extended format */
+    ARCH_DEP(lf_to_ef_unnorm)(&fxadd, &fl1);
+
+    /* Add the addend to the intermediate product */
+    ARCH_DEP(add_ef_unnorm)(&fxp1, &fxadd, &fxres);
+
+    /* Place high-order part of result in register */
+    ARCH_DEP(store_ef_unnorm_hi)(&fxres, regs->fpr + FPR2I(r1));
+
+} /* end DEF_INST(multiply_add_unnormal_float_long_to_ext_high_reg) */
+
+
+/*-------------------------------------------------------------------*/
+/* B33D MYHR   - Multiply Unnormalized Long to Ext. High FP Reg[RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(multiply_unnormal_float_long_to_ext_high_reg)
+{
+int          r1, r2, r3;                /* Values of R fields        */
+LONG_FLOAT   fl2, fl3;                  /* Multiplier/Multiplicand   */
+EXTENDED_FLOAT fx1;                     /* Intermediate result       */
+
+    RRF_R(inst, regs, r1, r2, r3);
+    HFPODD_CHECK(r1, regs);
+    HFPREG2_CHECK(r2, r3, regs);
+
+    /* Get the operands */
+    get_lf(&fl2, regs->fpr + FPR2I(r2));
+    get_lf(&fl3, regs->fpr + FPR2I(r3));
+    
+    /* Calculate intermediate result */
+    ARCH_DEP(mul_lf_to_ef_unnorm)(&fl2, &fl3, &fx1);
+    
+    /* Place high-order part of result in register */
+    ARCH_DEP(store_ef_unnorm_hi)(&fx1, regs->fpr + FPR2I(r1));
+
+} /* end DEF_INST(multiply_unnormal_float_long_to_ext_high_reg) */
+
+
+/*-------------------------------------------------------------------*/
+/* ED38 MAYL  - Multiply and Add Unnorm. Long to Ext. Low FP   [RXF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(multiply_add_unnormal_float_long_to_ext_low)
+{
+int            r1, r3;                  /* Values of R fields        */
+int            b2;                      /* Base of effective addr    */
+VADR           effective_addr2;         /* Effective address         */
+int            i1;                      /* Index of FP register      */
+LONG_FLOAT     fl2,fl3;                 /* Multiplier/Multiplicand   */
+LONG_FLOAT     fl1;                     /* Addend                    */
+EXTENDED_FLOAT fxp1;                    /* Intermediate product      */
+EXTENDED_FLOAT fxadd;                   /* Addend in extended format */
+EXTENDED_FLOAT fxres;                   /* Extended result           */
+
+    RXF(inst, regs, r1, r3, b2, effective_addr2);
+    HFPREG2_CHECK(r1, r3, regs);
+    i1 = FPR2I(r1);
+
+    /* Get the operands */
+    get_lf(&fl1, regs->fpr + i1);
+    vfetch_lf(&fl2, effective_addr2, b2, regs );
+    get_lf(&fl3, regs->fpr + FPR2I(r3));
+
+    /* Calculate intermediate product */
+    ARCH_DEP(mul_lf_to_ef_unnorm)(&fl2, &fl3, &fxp1);
+
+    /* Convert Addend to extended format */
+    ARCH_DEP(lf_to_ef_unnorm)(&fxadd, &fl1);
+
+    /* Add the addend to the intermediate product */
+    ARCH_DEP(add_ef_unnorm)(&fxp1, &fxadd, &fxres);
+
+    /* Place low-order part of result in register */
+    ARCH_DEP(store_ef_unnorm_lo)(&fxres, regs->fpr + FPR2I(r1));
+
+
+} /* end DEF_INST(multiply_add_unnormal_float_long_to_ext_low) */
+
+
+/*-------------------------------------------------------------------*/
+/* ED39 MYL   - Multiply Unnormalized Long to Extended Low FP [RXF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(multiply_unnormal_float_long_to_ext_low)
+{
+int            r1, r3;                  /* Values of R fields        */
+int            b2;                      /* Base of effective addr    */
+VADR           effective_addr2;         /* Effective address         */
+LONG_FLOAT     fl2, fl3;                /* Multiplier/Multiplicand   */
+EXTENDED_FLOAT fx1;                     /* Intermediate result       */
+
+    RXF(inst, regs, r1, r3, b2, effective_addr2);
+    HFPREG2_CHECK(r1, r3, regs);
+
+    /* Get the operands */
+    vfetch_lf(&fl2, effective_addr2, b2, regs );
+    get_lf(&fl3, regs->fpr + FPR2I(r3));
+
+    /* Calculate intermediate result */
+    ARCH_DEP(mul_lf_to_ef_unnorm)(&fl2, &fl3, &fx1);
+
+    /* Place low-order part of result in register */
+    ARCH_DEP(store_ef_unnorm_lo)(&fx1, regs->fpr + FPR2I(r1));
+
+} /* end DEF_INST(multiply_unnormal_float_long_to_ext_low) */
+
+
+/*-------------------------------------------------------------------*/
+/* ED3A MAY   - Multiply and Add Unnorm. Long to Extended FP   [RXF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(multiply_add_unnormal_float_long_to_ext)
+{
+int            r1, r3;                  /* Values of R fields        */
+int            b2;                      /* Base of effective addr    */
+VADR           effective_addr2;         /* Effective address         */
+int            i1;                      /* Index of FP register      */
+LONG_FLOAT     fl2, fl3;                /* Multiplier/Multiplicand   */
+LONG_FLOAT     fl1;                     /* Addend                    */
+EXTENDED_FLOAT fxp1;                    /* Intermediate product      */
+EXTENDED_FLOAT fxadd;                   /* Addend in extended format */
+EXTENDED_FLOAT fxres;                   /* Extended result           */
+
+    RXF(inst, regs, r1, r3, b2, effective_addr2);
+    HFPREG2_CHECK(r1, r3, regs);
+    /* Either the low- or high-numbered register of a pair is valid */
+    r1 &= 13;               /* Convert to the low numbered register */
+    i1 = FPR2I(r1);
+
+    /* Get the operands */
+    get_lf(&fl1, regs->fpr + i1);
+    vfetch_lf(&fl2, effective_addr2, b2, regs );
+    get_lf(&fl3, regs->fpr + FPR2I(r3));
+
+    /* Calculate intermediate product */
+    ARCH_DEP(mul_lf_to_ef_unnorm)(&fl2, &fl3, &fxp1);
+
+    /* Convert Addend to extended format */
+    ARCH_DEP(lf_to_ef_unnorm)(&fxadd, &fl1);
+
+    /* Add the addend to the intermediate product */
+    ARCH_DEP(add_ef_unnorm)(&fxp1, &fxadd, &fxres);
+
+    /* Place result in register */
+    ARCH_DEP(store_ef_unnorm)(&fxres, regs->fpr + FPR2I(r1));
+
+} /* end DEF_INST(multiply_add_unnormal_float_long_to_ext) */
+
+
+/*-------------------------------------------------------------------*/
+/* ED3B MY    - Multiply Unnormalized Long to Extended FP      [RXF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(multiply_unnormal_float_long_to_ext)
+{
+int            r1, r3;                  /* Values of R fields        */
+int            b2;                      /* Base of effective addr    */
+VADR           effective_addr2;         /* Effective address         */
+LONG_FLOAT     fl2, fl3;                /* Multiplier/Multiplicand   */
+EXTENDED_FLOAT fx1;                     /* Intermediate result       */
+
+    RXF(inst, regs, r1, r3, b2, effective_addr2);
+    HFPODD_CHECK(r1, regs);
+    HFPREG_CHECK(r3, regs);
+
+    /* Get the operands */
+    vfetch_lf(&fl2, effective_addr2, b2, regs );
+    get_lf(&fl3, regs->fpr + FPR2I(r3));
+
+    /* Calculate intermediate result */
+    ARCH_DEP(mul_lf_to_ef_unnorm)(&fl2, &fl3, &fx1);
+
+    /* Place result in register */
+    ARCH_DEP(store_ef_unnorm)(&fx1, regs->fpr + FPR2I(r1));
+
+} /* end DEF_INST(multiply_unnormal_float_long_to_ext) */
+
+
+/*-------------------------------------------------------------------*/
+/* ED3C MAYH  - Multiply and Add Unnorm. Long to Extended High [RXF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(multiply_add_unnormal_float_long_to_ext_high)
+{
+int            r1, r3;                  /* Values of R fields        */
+int            b2;                      /* Base of effective addr    */
+VADR           effective_addr2;         /* Effective address         */
+int            i1;                      /* Index of FP register      */
+LONG_FLOAT     fl2, fl3;                /* Multiplier/Multiplicand   */
+LONG_FLOAT     fl1;                     /* Addend                    */
+EXTENDED_FLOAT fxp1;                    /* Intermediate product      */
+EXTENDED_FLOAT fxadd;                   /* Addend in extended format */
+EXTENDED_FLOAT fxres;                   /* Extended result           */
+
+    RXF(inst, regs, r1, r3, b2, effective_addr2);
+    HFPREG2_CHECK(r1, r3, regs);
+    i1 = FPR2I(r1);
+
+    /* Get the operands */
+    get_lf(&fl1, regs->fpr + i1);
+    vfetch_lf(&fl2, effective_addr2, b2, regs );
+    get_lf(&fl3, regs->fpr + FPR2I(r3));
+
+    /* Calculate intermediate product */
+    ARCH_DEP(mul_lf_to_ef_unnorm)(&fl2, &fl3, &fxp1);
+
+    /* Convert Addend to extended format */
+    ARCH_DEP(lf_to_ef_unnorm)(&fxadd, &fl1);
+
+    /* Add the addend to the intermediate product */
+    ARCH_DEP(add_ef_unnorm)(&fxp1, &fxadd, &fxres);
+
+    /* Place high-order part of result in register */
+    ARCH_DEP(store_ef_unnorm_hi)(&fxres, regs->fpr + FPR2I(r1));
+
+} /* end DEF_INST(multiply_add_unnormal_float_long_to_ext_high) */
+
+
+/*-------------------------------------------------------------------*/
+/* ED3D MYH   - Multiply Unnormalized Long to Extended High FP [RXF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(multiply_unnormal_float_long_to_ext_high)
+{
+int          r1, r3;                    /* Values of R fields        */
+int          b2;                        /* Base of effective addr    */
+VADR         effective_addr2;           /* Effective address         */
+LONG_FLOAT   fl2, fl3;                  /* Multiplier/Multiplicand   */
+EXTENDED_FLOAT fx1;                     /* Intermediate result       */
+
+    RXF(inst, regs, r1, r3, b2, effective_addr2);
+    HFPREG2_CHECK(r1, r3, regs);
+
+    /* Get the operands */
+    vfetch_lf(&fl2, effective_addr2, b2, regs );
+    get_lf(&fl3, regs->fpr + FPR2I(r3));
+
+    /* Calculate intermediate result */
+    ARCH_DEP(mul_lf_to_ef_unnorm)(&fl2, &fl3, &fx1);
+
+    /* Place high-order part of result in register */
+    ARCH_DEP(store_ef_unnorm_hi)(&fx1, regs->fpr + FPR2I(r1));
+
+} /* end DEF_INST(multiply_unnormal_float_long_to_ext_high) */
+
+#endif /*defined(FEATURE_HFP_UNNORMALIZED_EXTENSION)*/
 
 
 #if defined(FEATURE_LONG_DISPLACEMENT)

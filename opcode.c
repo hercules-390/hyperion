@@ -3339,12 +3339,12 @@ DLL_EXPORT zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B335*/ GENx___x___x___ ,
  /*B336*/ GENx37Xx390x900 (squareroot_float_ext_reg,RRE,"SQXR"),
  /*B337*/ GENx37Xx390x900 (multiply_float_short_reg,RRE,"MEER"),
- /*B338*/ GENx___x___x900 (multiply_add_unnormal_float_long_to_ext_low_reg,RRF_R,"MAYLR"),  /*@Z9*/
- /*B339*/ GENx___x___x900 (multiply_unnormal_float_long_to_ext_low_reg,RRF_R,"MYLR"),       /*@Z9*/
- /*B33A*/ GENx___x___x900 (multiply_add_unnormal_float_long_to_ext_reg,RRF_R,"MAYR"),       /*@Z9*/
- /*B33B*/ GENx___x___x900 (multiply_unnormal_float_long_to_ext_reg,RRF_R,"MYR"),            /*@Z9*/
- /*B33C*/ GENx___x___x900 (multiply_add_unnormal_float_long_to_ext_high_reg,RRF_R,"MAYHR"), /*@Z9*/
- /*B33D*/ GENx___x___x900 (multiply_unnormal_float_long_to_ext_high_reg,RRF_R,"MYHR"),      /*@Z9*/
+ /*B338*/ GENx37Xx___x900 (multiply_add_unnormal_float_long_to_ext_low_reg,RRF_R,"MAYLR"),  /*@Z9*/
+ /*B339*/ GENx37Xx___x900 (multiply_unnormal_float_long_to_ext_low_reg,RRF_R,"MYLR"),       /*@Z9*/
+ /*B33A*/ GENx37Xx___x900 (multiply_add_unnormal_float_long_to_ext_reg,RRF_R,"MAYR"),       /*@Z9*/
+ /*B33B*/ GENx37Xx___x900 (multiply_unnormal_float_long_to_ext_reg,RRF_R,"MYR"),            /*@Z9*/
+ /*B33C*/ GENx37Xx___x900 (multiply_add_unnormal_float_long_to_ext_high_reg,RRF_R,"MAYHR"), /*@Z9*/
+ /*B33D*/ GENx37Xx___x900 (multiply_unnormal_float_long_to_ext_high_reg,RRF_R,"MYHR"),      /*@Z9*/
  /*B33E*/ GENx37Xx390x900 (multiply_add_float_long_reg,RRF_R,"MADR"),
  /*B33F*/ GENx37Xx390x900 (multiply_subtract_float_long_reg,RRF_R,"MSDR"),
  /*B340*/ GENx37Xx390x900 (load_positive_bfp_ext_reg,RRE,"LPXBR"),
@@ -5262,12 +5262,12 @@ DLL_EXPORT zz_func opcode_edxx[256][GEN_MAXARCH] = {
  /*ED35*/ GENx37Xx390x900 (squareroot_float_long,RXE,"SQD"),
  /*ED36*/ GENx___x___x___ ,
  /*ED37*/ GENx37Xx390x900 (multiply_float_short,RXE,"MEE"),
- /*ED38*/ GENx___x___x900 (multiply_add_unnormal_float_long_to_ext_low,RXF,"MAYL"),  /*@Z9*/
- /*ED39*/ GENx___x___x900 (multiply_unnormal_float_long_to_ext_low,RXF,"MYL"),       /*@Z9*/
- /*ED3A*/ GENx___x___x900 (multiply_add_unnormal_float_long_to_ext,RXF,"MAY"),       /*@Z9*/
- /*ED3B*/ GENx___x___x900 (multiply_unnormal_float_long_to_ext,RXF,"MY"),            /*@Z9*/
- /*ED3C*/ GENx___x___x900 (multiply_add_unnormal_float_long_to_ext_high,RXF,"MAYH"), /*@Z9*/
- /*ED3D*/ GENx___x___x900 (multiply_unnormal_float_long_to_ext_high,RXF,"MYH"),      /*@Z9*/
+ /*ED38*/ GENx37Xx___x900 (multiply_add_unnormal_float_long_to_ext_low,RXF,"MAYL"),  /*@Z9*/
+ /*ED39*/ GENx37Xx___x900 (multiply_unnormal_float_long_to_ext_low,RXF,"MYL"),       /*@Z9*/
+ /*ED3A*/ GENx37Xx___x900 (multiply_add_unnormal_float_long_to_ext,RXF,"MAY"),       /*@Z9*/
+ /*ED3B*/ GENx37Xx___x900 (multiply_unnormal_float_long_to_ext,RXF,"MY"),            /*@Z9*/
+ /*ED3C*/ GENx37Xx___x900 (multiply_add_unnormal_float_long_to_ext_high,RXF,"MAYH"), /*@Z9*/
+ /*ED3D*/ GENx37Xx___x900 (multiply_unnormal_float_long_to_ext_high,RXF,"MYH"),      /*@Z9*/
  /*ED3E*/ GENx37Xx390x900 (multiply_add_float_long,RXF,"MAD"),
  /*ED3F*/ GENx37Xx390x900 (multiply_subtract_float_long,RXF,"MSD"),
  /*ED40*/ GENx___x390x900 (shift_coefficient_left_dfp_long,RXF,"SLDT"),
