@@ -1782,7 +1782,7 @@ HDL_REGISTER_SECTION;
   HDL_REGISTER(z900_compute_message_authentication_code, z900_compute_message_authentication_code_d);
 #endif /*defined(_900_FEATURE_MESSAGE_SECURITY_ASSIST)*/
 
-  logmsg("Crypto module loaded (c) Copyright Bernard van der Helm, 2003-2009\n");
+  logmsg("Crypto module loaded (c) Copyright Bernard van der Helm, 2003-2010\n");
   logmsg("  Active: Message Security Assist\n");
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
   logmsg("          Message Security Assist Extension 1\n");
