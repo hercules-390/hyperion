@@ -741,17 +741,12 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
         break;
 
       case 2:
-        if(modifier_bit)
-          des3_decrypt(&des3_ctx, message_block, message_block);
-        else
-          des3_encrypt(&des3_ctx, message_block, message_block);
-        break;
-
       case 3:
         if(modifier_bit)
           des3_decrypt(&des3_ctx, message_block, message_block);
         else
           des3_encrypt(&des3_ctx, message_block, message_block);
+        break;
     }
 
     /* Store the output */
