@@ -944,8 +944,7 @@
 #if !defined(FEATURE_MESSAGE_SECURITY_ASSIST)
  UNDEF_INST(cipher_message_r)
  UNDEF_INST(cipher_message_with_chaining_r)
- UNDEF_INST(compute_intermediate_message_digest_r)
- UNDEF_INST(compute_last_message_digest_r)
+ UNDEF_INST(compute_message_digest_r)
  UNDEF_INST(compute_message_authentication_code_r)
 #endif /*!defined(FEATURE_MESSAGE_SECURITY_ASSIST)*/
 
@@ -3607,8 +3606,8 @@ DLL_EXPORT zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B93B*/ GENx___x___x___ ,
  /*B93C*/ GENx___x___x___ ,
  /*B93D*/ GENx___x___x___ ,
- /*B93E*/ GENx37Xx390x900 (compute_intermediate_message_digest_r,RRE,"KIMD"),
- /*B93F*/ GENx37Xx390x900 (compute_last_message_digest_r,RRE,"KLMD"),
+ /*B93E*/ GENx37Xx390x900 (compute_message_digest_r,RRE,"KIMD"),
+ /*B93F*/ GENx37Xx390x900 (compute_message_digest_r,RRE,"KLMD"),
  /*B940*/ GENx___x___x___ ,
  /*B941*/ GENx___x___x___ ,
  /*B942*/ GENx___x___x___ ,
