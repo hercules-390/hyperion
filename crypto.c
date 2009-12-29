@@ -1,4 +1,4 @@
-/* CRYPTO.C     (c) Copyright Jan Jaeger, 2000-2009                  */
+/* CRYPTO.C     (c) Copyright Jan Jaeger, 2000-2010                  */
 /*              Cryptographic instructions                           */
 
 // $Id$
@@ -18,7 +18,6 @@
 
 #include "hercules.h"
 
-
 #if defined(FEATURE_MESSAGE_SECURITY_ASSIST)
 
 #include "opcode.h"
@@ -26,10 +25,9 @@
 #define CRYPTO_EXTERN
 #include "crypto.h"
 
-
-/*-------------------------------------------------------------------*/
-/* B92E KM    - Cipher Message                                 [RRE] */
-/*-------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------*/
+/* B92E KM    - Cipher Message                                          [RRE] */
+/*----------------------------------------------------------------------------*/
 DEF_INST(cipher_message_r)
 {
     if( ARCH_DEP(cipher_message) )
@@ -44,10 +42,9 @@ DEF_INST(cipher_message_r)
     }
 }
 
-
-/*-------------------------------------------------------------------*/
-/* B92F KMC   - Cipher Message with Chaining                   [RRE] */
-/*-------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------*/
+/* B92F KMC   - Cipher Message with Chaining                            [RRE] */
+/*----------------------------------------------------------------------------*/
 DEF_INST(cipher_message_with_chaining_r)
 {
     if( ARCH_DEP(cipher_message_with_chaining) )
@@ -62,14 +59,13 @@ DEF_INST(cipher_message_with_chaining_r)
     }
 }
 
-
-/*-------------------------------------------------------------------*/
-/* B93E KIMD  - Compute Intermediate Message Digest            [RRE] */
-/*-------------------------------------------------------------------*/
-DEF_INST(compute_intermediate_message_digest_r)
+/*----------------------------------------------------------------------------*/
+/* B93E/B93F KIMD/KLMD  - Compute Intermediate/Last Message Digest      [RRE] */
+/*----------------------------------------------------------------------------*/
+DEF_INST(compute_message_digest_r)
 {
-    if( ARCH_DEP(compute_intermediate_message_digest) )
-        ARCH_DEP(compute_intermediate_message_digest) (inst, regs);
+    if( ARCH_DEP(compute_message_digest) )
+        ARCH_DEP(compute_message_digest) (inst, regs);
     else
     {
     int  r1, r2;                                /* register values   */
@@ -80,28 +76,9 @@ DEF_INST(compute_intermediate_message_digest_r)
     }
 }
 
-
-/*-------------------------------------------------------------------*/
-/* B93F KLMD  - Compute Last Message Digest                    [RRE] */
-/*-------------------------------------------------------------------*/
-DEF_INST(compute_last_message_digest_r)
-{
-    if( ARCH_DEP(compute_last_message_digest) )
-        ARCH_DEP(compute_last_message_digest) (inst, regs);
-    else
-    {
-    int  r1, r2;                                /* register values   */
-
-        RRE(inst, regs, r1, r2);
-
-        ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
-    }
-}
-
-
-/*-------------------------------------------------------------------*/
-/* B91E KMAC  - Compute Message Authentication Code            [RRE] */
-/*-------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------*/
+/* B91E KMAC  - Compute Message Authentication Code                     [RRE] */
+/*----------------------------------------------------------------------------*/
 DEF_INST(compute_message_authentication_code_r)
 {
     if( ARCH_DEP(compute_message_authentication_code) )
