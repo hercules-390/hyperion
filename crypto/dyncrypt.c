@@ -1000,7 +1000,6 @@ DEF_INST(compute_message_authentication_code_d)
       message_block[i] ^= parameter_block[i];
 
     /* Calculate the output chaining value */
-    des_encrypt(&context1, message_block, parameter_block);
     switch(fc)
     {
       case 1: /* dea */
