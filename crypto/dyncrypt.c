@@ -1771,7 +1771,7 @@ HDL_REGISTER_SECTION;
 #if defined(_390_FEATURE_MESSAGE_SECURITY_ASSIST)
   HDL_REGISTER(s390_cipher_message, s390_cipher_message_d);
   HDL_REGISTER(s390_cipher_message_with_chaining, s390_cipher_message_with_chaining_d);
-  HDL_REGISTER(s390_compute__message_digest, s390_compute_message_digest_d);
+  HDL_REGISTER(s390_compute_message_digest, s390_compute_message_digest_d);
   HDL_REGISTER(s390_compute_message_authentication_code, s390_compute_message_authentication_code_d);
 #endif /*defined(_390_FEATURE_MESSAGE_SECURITY_ASSIST)*/
 
