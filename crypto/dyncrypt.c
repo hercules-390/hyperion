@@ -412,14 +412,14 @@ static void ARCH_DEP(kimd_sha)(int r1, int r2, REGS *regs, int klmd)
     ARCH_DEP(vstorec)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KxMD_DEBUG
-  if(parameter_blocklen > 32)
-  {
-    LOGBYTE2("ocv   :", parameter_block, 16, parameter_blocklen / 16);
-  }
-  else
-  {
-    LOGBYTE("ocv   :", parameter_block, parameter_blocklen);
-  }
+    if(parameter_blocklen > 32)
+    {
+      LOGBYTE2("ocv   :", parameter_block, 16, parameter_blocklen / 16);
+    }
+    else
+    {
+      LOGBYTE("ocv   :", parameter_block, parameter_blocklen);
+    }
 #endif
 
     /* Update the registers */
@@ -432,13 +432,13 @@ static void ARCH_DEP(kimd_sha)(int r1, int r2, REGS *regs, int klmd)
 #endif
 
     /* check for end of data */
-    if(unlikely(!GR_A(r2 + 1, regs)))
+    if(unlikely(GR_A(r2 + 1, regs) < 64))
     {
+      if(unlikely(klmd))
+        return;
       regs->psw.cc = 0;
       return;
     }
-    else if(klmd && GR_A(r2 + 1, regs) < (unsigned) message_blocklen)
-      return;
   }
 
   /* CPU-determined amount of data processed */
