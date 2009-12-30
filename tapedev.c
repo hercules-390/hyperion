@@ -1607,7 +1607,6 @@ void ReqAutoMount( DEVBLK *dev )
     BYTE   tapeloaded, autoload, mountreq, unmountreq, stdlbled, ascii, scratch;
     char*  lbltype;
     char*  tapemsg = "";
-"*******************************************************************************";
 
     ///////////////////////////////////////////////////////////////////
 
