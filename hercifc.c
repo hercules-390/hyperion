@@ -20,29 +20,6 @@
 //
 
 // $Id$
-//
-// $Log$
-// Revision 1.31  2008/06/22 05:54:30  fish
-// Fix print-formatting issue (mostly in tape modules)
-// that can sometimes, in certain circumstances,
-// cause herc to crash.  (%8.8lx --> I32_FMTX, etc)
-//
-// Revision 1.30  2008/02/19 11:49:19  ivan
-// - Move setting of CPU priority after spwaning timer thread
-// - Added support for Posix 1003.1e capabilities
-//
-// Revision 1.29  2007/08/28 20:14:23  gsmith
-// Fix many TUNSETIFF-EINVAL error messages
-//
-// Revision 1.28  2007/06/23 00:04:10  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.27  2007/03/26 23:02:14  gsmith
-// Suppress spurious error messages from hercifc
-//
-// Revision 1.26  2006/12/08 09:43:25  jj
-// Add CVS message log
-//
 
 #include "hercules.h"
 
@@ -221,7 +198,7 @@ int main( int argc, char **argv )
 
         default:
             snprintf( szMsgBuffer,sizeof(szMsgBuffer),
-                     _("HHCIF004W %s: Unknown request: "I64_FMTX".\n"),
+                     _("HHCIF004W %s: Unknown request: %lX\n"),
                      pszProgName, ctlreq.iCtlOp );
             write( STDERR_FILENO, szMsgBuffer, strlen( szMsgBuffer ) );
             continue;
