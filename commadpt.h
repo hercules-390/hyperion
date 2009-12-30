@@ -1,6 +1,7 @@
+/* COMMADPT.H   (c)Copyright Ivan Warren, 2003-2009                  */
+/*              Structure definitions for 2703 line driver           */
+
 // $Id$
-//
-// $Log$
 
 #ifndef __COMMADPT_H__
 #define __COMMADPT_H__
@@ -91,14 +92,14 @@ enum commadpt_lnctl {
 };
 
 enum commadpt_term {
-	COMMADPT_TERM_TTY,      /* TTY (TELE2) */
-	COMMADPT_TERM_2741,	/* 2741 (IBM1) */
+        COMMADPT_TERM_TTY,      /* TTY (TELE2) */
+        COMMADPT_TERM_2741,     /* 2741 (IBM1) */
 };
 
 #define IS_BSC_LNCTL(ca)    ((ca->lnctl == COMMADPT_LNCTL_BSC))
 #define IS_ASYNC_LNCTL(ca)  ((ca->lnctl == COMMADPT_LNCTL_ASYNC))
 
-enum {
+enum commadpt_pendccw {
     COMMADPT_PEND_IDLE=0,       /* NO CCW currently executing               */
     COMMADPT_PEND_READ,         /* A READ CCW is running                    */
     COMMADPT_PEND_WRITE,        /* A WRITE CCW is running                   */
@@ -110,7 +111,7 @@ enum {
     COMMADPT_PEND_TINIT,        /*                                          */
     COMMADPT_PEND_CLOSED,       /*                                          */
     COMMADPT_PEND_SHUTDOWN      /*                                          */
-} commadpt_pendccw;
+};
 
 #define COMMADPT_PEND_TEXT static char *commadpt_pendccw_text[]={\
     "IDLE",\
