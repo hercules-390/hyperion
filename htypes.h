@@ -1,25 +1,7 @@
-/*-------------------------------------------------------------------*/
-/*   HTYPES.H             Hercules typedefs...                       */
-/*-------------------------------------------------------------------*/
+/* HTYPES.H     (c) Copyright Roger Bowler, 1999-2009                */
+/*              Hercules Type Definitions                            */
 
 // $Id$
-//
-// $Log$
-// Revision 1.11  2008/07/08 05:35:51  fish
-// AUTOMOUNT redesign: support +allowed/-disallowed dirs
-// and create associated 'automount' panel command - Fish
-//
-// Revision 1.10  2008/06/22 05:54:30  fish
-// Fix print-formatting issue (mostly in tape modules)
-// that can sometimes, in certain circumstances,
-// cause herc to crash.  (%8.8lx --> I32_FMTX, etc)
-//
-// Revision 1.9  2008/02/19 17:18:36  rbowler
-// Missing u_int8_t causes crypto compile errors on Solaris
-//
-// Revision 1.8  2006/12/08 09:43:28  jj
-// Add CVS message log
-//
 
 #ifndef _HTYPES_H_
 #define _HTYPES_H_
@@ -76,6 +58,10 @@ typedef  uint8_t    QWORD[16];  // unsigned quadword   (16 bytes)
   #define  I16_FMT                  "h"
   #define  I32_FMT                 "I32"
   #define  I64_FMT                 "I64"
+#elif defined(__PRI_64_LENGTH_MODIFIER__) // MAC
+  #define  I16_FMT                  "h"
+  #define  I32_FMT                  ""
+  #define  I64_FMT                  __PRI_64_LENGTH_MODIFIER__
 #elif defined(SIZEOF_LONG) && SIZEOF_LONG >= 8
   #define  I16_FMT                  "h"
   #define  I32_FMT                  ""
