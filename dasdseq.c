@@ -21,14 +21,6 @@
 // user specifies on the command line.  Prior versions always
 // used upper case, which seems unnecessarily loud.
 
-// $Log$
-// Revision 1.17  2007/06/23 00:04:08  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.16  2006/12/08 09:43:19  jj
-// Add CVS message log
-//
-
 #include "hstdinc.h"
 
 #include "hercules.h"
@@ -145,13 +137,13 @@ void showf1(    FILE            *fmsg,
                 f1dscb->ds1syscd, sizeof(f1dscb->ds1syscd));
 
     dsorg = (f1dscb->ds1dsorg[0] << 8) | (f1dscb->ds1dsorg[1]);
-    if (dsorg & (DSORG_IS * 256))               strcpy(txtdsorg, "ISAM");
+    if (dsorg & (DSORG_IS * 256))               strcpy(txtdsorg, "IS");
     if (dsorg & (DSORG_PS * 256))               strcpy(txtdsorg, "PS"); 
     if (dsorg & (DSORG_DA * 256))               strcpy(txtdsorg, "DA"); 
     if (dsorg & (DSORG_PO * 256))               strcpy(txtdsorg, "PO"); 
-    if (dsorg &  DSORG_AM)                      strcpy(txtdsorg, "VSAM");
-    if (txtdsorg[0] == '\0')                    strcpy(txtdsorg, "?"); 
-    if (dsorg & (DSORG_U * 256))                strcat(txtdsorg, "-Unmovable");
+    if (dsorg &  DSORG_AM)                      strcpy(txtdsorg, "VS");
+    if (txtdsorg[0] == '\0')                    strcpy(txtdsorg, "??"); 
+    if (dsorg & (DSORG_U * 256))                strcat(txtdsorg, "U");
  
     if (f1dscb->ds1recfm & RECFM_FORMAT_F)      strcpy(txtrecfm, "F"); 
     if (f1dscb->ds1recfm & RECFM_FORMAT_V)      strcpy(txtrecfm, "V"); 
@@ -161,7 +153,7 @@ void showf1(    FILE            *fmsg,
     if (f1dscb->ds1recfm & RECFM_SPANNED)       strcat(txtrecfm, "S"); 
     if (f1dscb->ds1recfm & RECFM_CTLCHAR_A)     strcat(txtrecfm, "A"); 
     if (f1dscb->ds1recfm & RECFM_CTLCHAR_M)     strcat(txtrecfm, "M"); 
-    if (f1dscb->ds1recfm & RECFM_TRKOFLOW)      strcat(txtrecfm, "-Track overflow");
+    if (f1dscb->ds1recfm & RECFM_TRKOFLOW)      strcat(txtrecfm, "T");
 //  Field ignored: ds1optcd (option codes, same as in DCB)
     blksize = (f1dscb->ds1blkl[0] << 8) | f1dscb->ds1blkl[1];
     lrecl = (f1dscb->ds1lrecl[0] << 8) | f1dscb->ds1lrecl[1];
