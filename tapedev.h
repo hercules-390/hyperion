@@ -1,48 +1,12 @@
 /* TAPEDEV.H    (c) Copyright Ivan Warren and others, 2003-2009      */
-/*                                                                   */
-/* This module contains tape related structures and defines          */
+/*              Tape Device Handler Structure Definitions            */
+
+/*-------------------------------------------------------------------*/
+/* This header file contains tape related structures and defines     */
 /* for the Hercules ESA/390 emulator.                                */
+/*-------------------------------------------------------------------*/
 
 // $Id$
-//
-// $Log$
-// Revision 1.26  2008/07/08 05:35:51  fish
-// AUTOMOUNT redesign: support +allowed/-disallowed dirs
-// and create associated 'automount' panel command - Fish
-//
-// Revision 1.25  2008/05/22 21:17:30  fish
-// Tape file extension neutrality support
-//
-// Revision 1.24  2008/05/22 19:25:58  fish
-// Flex FakeTape support
-//
-// Revision 1.23  2008/03/28 02:09:42  fish
-// Add --blkid-24 option support, poserror flag renamed to fenced,
-// added 'generic', 'readblkid' and 'locateblk' tape media handler
-// call vectors.
-//
-// Revision 1.22  2008/03/27 07:14:17  fish
-// SCSI MODS: groundwork: part 3: final shuffling around.
-// Moved functions from one module to another and resequenced
-// functions within each. NO CODE WAS ACTUALLY CHANGED.
-// Next commit will begin the actual changes.
-//
-// Revision 1.21  2008/03/25 11:41:31  fish
-// SCSI TAPE MODS part 1: groundwork: non-functional changes:
-// rename some functions, comments, general restructuring, etc.
-// New source modules awstape.c, omatape.c, hettape.c and
-// tapeccws.c added, but not yet used (all will be used in a future
-// commit though when tapedev.c code is eventually split)
-//
-// Revision 1.20  2007/07/24 22:36:33  fish
-// Fix tape Synchronize CCW (x'43') to do actual commit
-//
-// Revision 1.19  2007/06/23 00:04:18  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.18  2006/12/08 09:43:30  jj
-// Add CVS message log
-//
 
 #ifndef __TAPEDEV_H__
 #define __TAPEDEV_H__
@@ -361,9 +325,8 @@ typedef struct _GENTMH_PARMS
 GENTMH_PARMS;
 
 /*-------------------------------------------------------------------*/
-/* Generic media-handler-call action codes...                        */
+/* Generic media-handler-call action codes                           */
 /*-------------------------------------------------------------------*/
-
 #define  GENTMH_SCSI_ACTION_UPDATE_STATUS       (0)
 //efine  GENTMH_AWS_ACTION_xxxxx...             (x)
 //efine  GENTMH_HET_ACTION_xxxxx...             (x)
@@ -399,9 +362,8 @@ struct TAPEMEDIA_HANDLER
 };
 
 /*-------------------------------------------------------------------*/
-/* Functions defined in TAPEDEV.C...                                 */
+/* Functions defined in TAPEDEV.C                                    */
 /*-------------------------------------------------------------------*/
-
 extern int   tapedev_init_handler   (DEVBLK *dev, int argc, char *argv[]);
 extern int   tapedev_close_device   (DEVBLK *dev );
 extern void  tapedev_query_device   (DEVBLK *dev, char **class, int buflen, char *buffer);
@@ -436,9 +398,8 @@ extern int   locateblk_virtual      (DEVBLK*, U32 blockid,    BYTE *unitstat, BY
 extern int   generic_tmhcall        (GENTMH_PARMS*);
 
 /*-------------------------------------------------------------------*/
-/* Functions (and data areas) defined in TAPECCWS.C...               */
+/* Functions (and data areas) defined in TAPECCWS.C                  */
 /*-------------------------------------------------------------------*/
-
 typedef void TapeSenseFunc( int, DEVBLK*, BYTE*, BYTE );    // (sense handling function)
 
 #define  TAPEDEVTYPELIST_ENTRYSIZE  (5)    // #of int's per 'TapeDevtypeList' table entry
@@ -465,35 +426,27 @@ extern void  build_sense_3590       (int ERCode, DEVBLK *dev, BYTE *unitstat, BY
 extern void  build_sense_Streaming  (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode);
 
 /*-------------------------------------------------------------------*/
-/* Calculate I/O Residual...                                         */
+/* Calculate I/O Residual                                            */
 /*-------------------------------------------------------------------*/
-
 #define RESIDUAL_CALC(_data_len)         \
-                                         \
     len = (_data_len);                   \
     num = (count < len) ? count : len;   \
     *residual = count - num;             \
     if (count < len) *more = 1
 
 /*-------------------------------------------------------------------*/
-/* Assign a unique Message Id for this asynchronous I/O if needed... */
+/* Assign a unique Message Id for this asynchronous I/O if needed    */
 /*-------------------------------------------------------------------*/
-
 #if defined(OPTION_SCSI_TAPE)
-
   #define INCREMENT_MESSAGEID(_dev)   \
-                                      \
     if ((_dev)->SIC_active)           \
         (_dev)->msgid++
-
 #else
-
   #define INCREMENT_MESSAGEID(_dev)
-
 #endif // defined(OPTION_SCSI_TAPE)
 
 /*-------------------------------------------------------------------*/
-/* Functions defined in AWSTAPE.C...                                 */
+/* Functions defined in AWSTAPE.C                                    */
 /*-------------------------------------------------------------------*/
 extern int  open_awstape      (DEVBLK *dev, BYTE *unitstat, BYTE code);
 extern void close_awstape     (DEVBLK *dev);
@@ -513,7 +466,7 @@ extern int  write_awstape     (DEVBLK *dev, BYTE *buf, U16 blklen,
                                             BYTE *unitstat, BYTE code);
 
 /*-------------------------------------------------------------------*/
-/* Functions defined in FAKETAPE.C...                                */
+/* Functions defined in FAKETAPE.C                                   */
 /*-------------------------------------------------------------------*/
 extern int  open_faketape      (DEVBLK *dev, BYTE *unitstat, BYTE code);
 extern void close_faketape     (DEVBLK *dev);
@@ -537,7 +490,7 @@ extern int  write_faketape     (DEVBLK *dev, BYTE *buf, U16 blklen,
                                              BYTE *unitstat, BYTE code);
 
 /*-------------------------------------------------------------------*/
-/* Functions defined in HETTAPE.C...                                 */
+/* Functions defined in HETTAPE.C                                    */
 /*-------------------------------------------------------------------*/
 extern int  open_het      (DEVBLK *dev, BYTE *unitstat, BYTE code);
 extern void close_het     (DEVBLK *dev);
@@ -555,7 +508,7 @@ extern int  write_het     (DEVBLK *dev, BYTE *buf, U16 blklen,
                                         BYTE *unitstat, BYTE code);
 
 /*-------------------------------------------------------------------*/
-/* Functions defined in OMATAPE.C...                                 */
+/* Functions defined in OMATAPE.C                                    */
 /*-------------------------------------------------------------------*/
 extern int  open_omatape       (DEVBLK *dev, BYTE *unitstat, BYTE code);
 extern void close_omatape      (DEVBLK *dev);
@@ -578,7 +531,7 @@ extern int  readhdr_omaheaders (DEVBLK *dev, OMATAPE_DESC *omadesc,
                                              S32 *pprvhdro, S32 *pnxthdro,     BYTE *unitstat, BYTE code);
 
 /*-------------------------------------------------------------------*/
-/* Functions defined in SCSITAPE.C...                                */
+/* Functions defined in SCSITAPE.C                                   */
 /*-------------------------------------------------------------------*/
 // (see SCSITAPE.H)
 

@@ -1,5 +1,5 @@
 /* FAKETAPE.C   (c) Copyright Roger Bowler, 1999-2009                */
-/*              ESA/390 Tape Device Handler                          */
+/*              Hercules Tape Device Handler for FAKETAPE            */
 
 /* Original Author: "Fish" (David B. Trout)                          */
 /* Prime Maintainer: "Fish" (David B. Trout)                         */
@@ -9,124 +9,22 @@
 
 /*-------------------------------------------------------------------*/
 /* This module contains the FAKETAPE emulated tape format support.   */
-/*-------------------------------------------------------------------*/
 /*                                                                   */
-/* Five emulated tape formats are supported:                         */
+/* The subroutines in this module are called by the general tape     */
+/* device handler (tapedev.c) when the tape format is FAKETAPE.      */
 /*                                                                   */
-/* 1. AWSTAPE   This is the format used by the P/390.                */
-/*              The entire tape is contained in a single flat file.  */
-/*              A tape block consists of one or more block segments. */
-/*              Each block segment is preceded by a 6-byte header.   */
-/*              Files are separated by tapemarks, which consist      */
-/*              of headers with zero block length.                   */
-/*              AWSTAPE files are readable and writable.             */
-/*                                                                   */
-/*              Support for AWSTAPE is in the "AWSTAPE.C" member.    */
-/*                                                                   */
-/*                                                                   */
-/* 2. OMATAPE   This is the Optical Media Attach device format.      */
-/*              Each physical file on the tape is represented by     */
-/*              a separate flat file.  The collection of files that  */
-/*              make up the physical tape is obtained from an ASCII  */
-/*              text file called the "tape description file", whose  */
-/*              file name is always tapes/xxxxxx.tdf (where xxxxxx   */
-/*              is the volume serial number of the tape).            */
-/*              Three formats of tape files are supported:           */
-/*              * FIXED files contain fixed length EBCDIC blocks     */
-/*                with no headers or delimiters. The block length    */
-/*                is specified in the TDF file.                      */
-/*              * TEXT files contain variable length ASCII blocks    */
-/*                delimited by carriage return line feed sequences.  */
-/*                The data is translated to EBCDIC by this module.   */
-/*              * HEADER files contain variable length blocks of     */
-/*                EBCDIC data prefixed by a 16-byte header.          */
-/*              The TDF file and all of the tape files must reside   */
-/*              reside under the same directory which is normally    */
-/*              on CDROM but can be on disk.                         */
-/*              OMATAPE files are supported as read-only media.      */
-/*                                                                   */
-/*              OMATAPE tape Support is in the "OMATAPE.C" member.   */
-/*                                                                   */
-/*                                                                   */
-/* 3. SCSITAPE  This format allows reading and writing of 4mm or     */
-/*              8mm DAT tape, 9-track open-reel tape, or 3480-type   */
-/*              cartridge on an appropriate SCSI-attached drive.     */
-/*              All SCSI tapes are processed using the generalized   */
-/*              SCSI tape driver (st.c) which is controlled using    */
-/*              the MTIOCxxx set of IOCTL commands.                  */
-/*              PROGRAMMING NOTE: the 'tape' portability macros for  */
-/*              physical (SCSI) tapes MUST be used for all tape i/o! */
-/*                                                                   */
-/*              SCSI tape Support is in the "SCSITAPE.C" member.     */
-/*                                                                   */
-/*                                                                   */
-/* 4. HET       This format is based on the AWSTAPE format but has   */
-/*              been extended to support compression.  Since the     */
-/*              basic file format has remained the same, AWSTAPEs    */
-/*              can be read/written using the HET routines.          */
-/*                                                                   */
-/*              Support for HET is in the "HETTAPE.C" member.        */
-/*                                                                   */
-/*                                                                   */
-/* 5. FAKETAPE  This is the format used by Fundamental Software      */
-/*              on their FLEX-ES systems. It it similar to the AWS   */
-/*              format. The entire tape is contained in a single     */
-/*              flat file. A tape block is preceded by a 12-ASCII-   */
-/*              hex-characters header which indicate the size of     */
-/*              the previous and next blocks. Files are separated    */
-/*              by tapemarks which consist of headers with a zero    */
-/*              current block length. FakeTapes are both readable    */
-/*              and writable.                                        */
-/*                                                                   */
-/*              Support for FAKETAPE is in the "FAKETAPE.C" member.  */
-/*                                                                   */
-/*-------------------------------------------------------------------*/
-
-/*-------------------------------------------------------------------*/
-/* Additional credits:                                               */
-/*      3480 commands contributed by Jan Jaeger                      */
-/*      Sense byte improvements by Jan Jaeger                        */
-/*      3480 Read Block ID and Locate CCWs by Brandon Hill           */
-/*      Unloaded tape support by Brandon Hill                    v209*/
-/*      HET format support by Leland Lucius                      v209*/
-/*      JCS - minor changes by John Summerfield                  2003*/
-/*      PERFORM SUBSYSTEM FUNCTION / CONTROL ACCESS support by       */
-/*      Adrian Trenkwalder (with futher enhancements by Fish)        */
-/*      **INCOMPLETE** 3590 support by Fish (David B. Trout)         */
+/* Messages issued by this module are prefixed HHCTA5nn              */
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
 /* Reference information:                                            */
-/* SC53-1200 S/370 and S/390 Optical Media Attach/2 User's Guide     */
-/* SC53-1201 S/370 and S/390 Optical Media Attach/2 Technical Ref    */
-/* SG24-2506 IBM 3590 Tape Subsystem Technical Guide                 */
-/* GA32-0331 IBM 3590 Hardware Reference                             */
-/* GA32-0329 IBM 3590 Introduction and Planning Guide                */
-/* SG24-2594 IBM 3590 Multiplatform Implementation                   */
-/* ANSI INCITS 131-1994 (R1999) SCSI-2 Reference                     */
-/* GA32-0127 IBM 3490E Hardware Reference                            */
-/* GC35-0152 EREP Release 3.5.0 Reference                            */
-/* SA22-7204 ESA/390 Common I/O-Device Commands                      */
-/* Flex FakeTape format (http://preview.tinyurl.com/67rgnp)          */
-/*-------------------------------------------------------------------*/
-
-// $Log$
-// Revision 1.2  2008/06/22 05:54:30  fish
-// Fix print-formatting issue (mostly in tape modules)
-// that can sometimes, in certain circumstances,
-// cause herc to crash.  (%8.8lx --> I32_FMTX, etc)
-//
-// Revision 1.1  2008/05/22 19:26:52  fish
-// Flex FakeTape support
-//
-//
+/* FSIMS100 Faketape manual                                          */
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
 #include "hercules.h"  /* need Hercules control blocks               */
 #include "tapedev.h"   /* Main tape handler header file              */
 
-/*-------------------------------------------------------------------*/
 //#define  ENABLE_TRACING_STMTS     // (Fish: DEBUGGING)
 
 #ifdef ENABLE_TRACING_STMTS
@@ -155,7 +53,8 @@ void close_faketape (DEVBLK *dev)
 {
     if(dev->fd>=0)
     {
-        logmsg(_("HHCTA301I %4.4x - FakeTape %s closed\n"),dev->devnum,dev->filename);
+        logmsg (_("HHCTA501I %4.4X: FakeTape %s closed\n"),
+                dev->devnum, dev->filename);
         close(dev->fd);
     }
     strcpy(dev->filename, TAPE_UNLOADED);
@@ -250,8 +149,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /* Check for successful open */
     if (rc < 0)
     {
-        logmsg (_("HHCTA302E Error opening %s: %s\n"),
-                dev->filename, strerror(errno));
+        logmsg (_("HHCTA502E %4.4X: Error opening %s: %s\n"),
+                dev->devnum, dev->filename, strerror(errno));
 
         strcpy(dev->filename, TAPE_UNLOADED);
         build_senseX(TAPE_BSENSE_TAPELOADFAIL,dev,unitstat,code);
@@ -291,9 +190,9 @@ int             xorblkl;                /* XOR check of block lens   */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        logmsg (_("HHCTA303E Error seeking to offset "I64_FMTX" "
+        logmsg (_("HHCTA503E %4.4X: Error seeking to offset "I64_FMTX" "
                 "in file %s: %s\n"),
-                blkpos, dev->filename, strerror(errno));
+                dev->devnum, blkpos, dev->filename, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
@@ -306,9 +205,9 @@ int             xorblkl;                /* XOR check of block lens   */
     /* Handle read error condition */
     if (rc < 0)
     {
-        logmsg (_("HHCTA304E Error reading block header "
+        logmsg (_("HHCTA504E %4.4X: Error reading block header "
                 "at offset "I64_FMTX" in file %s: %s\n"),
-                blkpos, dev->filename, strerror(errno));
+                dev->devnum, blkpos, dev->filename, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
@@ -318,9 +217,9 @@ int             xorblkl;                /* XOR check of block lens   */
     /* Handle end of file (uninitialized tape) condition */
     if (rc == 0)
     {
-        logmsg (_("HHCTA305E End of file (end of tape) "
+        logmsg (_("HHCTA505E %4.4X: End of file (end of tape) "
                 "at offset "I64_FMTX" in file %s\n"),
-                blkpos, dev->filename);
+                dev->devnum, blkpos, dev->filename);
 
         /* Set unit exception with tape indicate (end of tape) */
         build_senseX(TAPE_BSENSE_EMPTYTAPE,dev,unitstat,code);
@@ -330,9 +229,9 @@ int             xorblkl;                /* XOR check of block lens   */
     /* Handle end of file within block header */
     if (rc < (int)sizeof(FAKETAPE_BLKHDR))
     {
-        logmsg (_("HHCTA306E Unexpected end of file in block header "
+        logmsg (_("HHCTA506E %4.4X: Unexpected end of file in block header "
                 "at offset "I64_FMTX" in file %s\n"),
-                blkpos, dev->filename);
+                dev->devnum, blkpos, dev->filename);
 
         build_senseX(TAPE_BSENSE_BLOCKSHORT,dev,unitstat,code);
         return -1;
@@ -346,9 +245,9 @@ int             xorblkl;                /* XOR check of block lens   */
     /* Verify header integrity using the XOR header field */
     if ( (prvblkl ^ curblkl) != xorblkl )
     {
-        logmsg (_("HHCTA307E Block header damage "
+        logmsg (_("HHCTA507E %4.4X: Block header damage "
                 "at offset "I64_FMTX" in file %s\n"),
-                blkpos, dev->filename);
+                dev->devnum, blkpos, dev->filename);
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
@@ -395,9 +294,9 @@ U16             curblkl;                /* Current block length      */
     /* Check that block length will not exceed buffer size */
     if (curblkl > MAX_BLKLEN)
     {
-        logmsg (_("HHCTA308E Block length exceeds %d "
+        logmsg (_("HHCTA508E %4.4X: Block length exceeds %d "
                 "at offset "I64_FMTX" in file %s\n"),
-                (int)MAX_BLKLEN, blkpos, dev->filename);
+                dev->devnum, (int)MAX_BLKLEN, blkpos, dev->filename);
 
         /* Set unit check with data check */
         build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
@@ -413,9 +312,9 @@ U16             curblkl;                /* Current block length      */
         /* Handle read error condition */
         if (rc < 0)
         {
-            logmsg (_("HHCTA310E Error reading data block "
+            logmsg (_("HHCTA510E %4.4X: Error reading data block "
                     "at offset "I64_FMTX" in file %s: %s\n"),
-                    blkpos, dev->filename, strerror(errno));
+                    dev->devnum, blkpos, dev->filename, strerror(errno));
 
             /* Set unit check with equipment check */
             build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
@@ -425,9 +324,9 @@ U16             curblkl;                /* Current block length      */
         /* Handle end of file within data block */
         if (rc < curblkl)
         {
-            logmsg (_("HHCTA311E Unexpected end of file in data block "
+            logmsg (_("HHCTA511E %4.4X: Unexpected end of file in data block "
                     "at offset "I64_FMTX" in file %s\n"),
-                    blkpos, dev->filename);
+                    dev->devnum, blkpos, dev->filename);
 
             /* Set unit check with data check and partial record */
             build_senseX(TAPE_BSENSE_BLOCKSHORT,dev,unitstat,code);
@@ -475,9 +374,9 @@ char            sblklen[5];             /* work buffer               */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        logmsg (_("HHCTA303E Error seeking to offset "I64_FMTX" "
+        logmsg (_("HHCTA512E %4.4X: Error seeking to offset "I64_FMTX" "
                 "in file %s: %s\n"),
-                blkpos, dev->filename, strerror(errno));
+                dev->devnum, blkpos, dev->filename, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
@@ -500,15 +399,15 @@ char            sblklen[5];             /* work buffer               */
         {
             /* Disk FULL */
             build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
-            logmsg (_("HHCTA313E Media full condition reached "
+            logmsg (_("HHCTA513E %4.4X: Media full condition reached "
                     "at offset "I64_FMTX" in file %s\n"),
-                    blkpos, dev->filename);
+                    dev->devnum, blkpos, dev->filename);
             return -1;
         }
         /* Handle write error condition */
-        logmsg (_("HHCTA314E Error writing block header "
+        logmsg (_("HHCTA514E %4.4X: Error writing block header "
                 "at offset "I64_FMTX" in file %s: %s\n"),
-                blkpos, dev->filename, strerror(errno));
+                dev->devnum, blkpos, dev->filename, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
@@ -553,9 +452,9 @@ U16             prvblkl;                /* Length of previous block  */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        logmsg (_("HHCTA312E Error seeking to offset "I64_FMTX" "
+        logmsg (_("HHCTA515E %4.4X: Error seeking to offset "I64_FMTX" "
                 "in file %s: %s\n"),
-                blkpos, dev->filename, strerror(errno));
+                dev->devnum, blkpos, dev->filename, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
@@ -588,15 +487,15 @@ U16             prvblkl;                /* Length of previous block  */
         {
             /* Disk FULL */
             build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
-            logmsg (_("HHCTA315E Media full condition reached "
+            logmsg (_("HHCTA516E %4.4X: Media full condition reached "
                     "at offset "I64_FMTX" in file %s\n"),
-                    blkpos, dev->filename);
+                    dev->devnum, blkpos, dev->filename);
             return -1;
         }
         /* Handle write error condition */
-        logmsg (_("HHCTA316E Error writing data block "
+        logmsg (_("HHCTA517E %4.4X: Error writing data block "
                 "at offset "I64_FMTX" in file %s: %s\n"),
-                blkpos, dev->filename, strerror(errno));
+                dev->devnum, blkpos, dev->filename, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
@@ -613,9 +512,9 @@ U16             prvblkl;                /* Length of previous block  */
     if (rc != 0)
     {
         /* Handle write error condition */
-        logmsg (_("HHCTA317E Error writing data block "
+        logmsg (_("HHCTA518E %4.4X: Error writing data block "
                 "at offset "I64_FMTX" in file %s: %s\n"),
-                blkpos, dev->filename, strerror(errno));
+                dev->devnum, blkpos, dev->filename, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
@@ -660,9 +559,9 @@ U16             prvblkl;                /* Length of previous block  */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        logmsg (_("HHCTA318E Error seeking to offset "I64_FMTX" "
+        logmsg (_("HHCTA519E %4.4X: Error seeking to offset "I64_FMTX" "
                 "in file %s: %s\n"),
-                blkpos, dev->filename, strerror(errno));
+                dev->devnum, blkpos, dev->filename, strerror(errno));
 
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
         return -1;
@@ -696,9 +595,9 @@ U16             prvblkl;                /* Length of previous block  */
     if (rc != 0)
     {
         /* Handle write error condition */
-        logmsg (_("HHCTA320E Error writing tape mark "
+        logmsg (_("HHCTA520E %4.4X: Error writing tape mark "
                 "at offset "I64_FMTX" in file %s: %s\n"),
-                blkpos, dev->filename, strerror(errno));
+                dev->devnum, blkpos, dev->filename, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
@@ -729,8 +628,7 @@ int sync_faketape (DEVBLK *dev, BYTE *unitstat,BYTE code)
     if (fdatasync( dev->fd ) < 0)
     {
         /* Log the error */
-        logmsg (_("HHCTA321E Sync error on "
-            "device %4.4X = %s: %s\n"),
+        logmsg (_("HHCTA521E %4.4X: Sync error on file %s: %s\n"),
             dev->devnum, dev->filename, strerror(errno));
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);

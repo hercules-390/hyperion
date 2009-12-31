@@ -1,5 +1,5 @@
 /* TAPECCWS.C   (c) Copyright Roger Bowler, 1999-2009                */
-/*              ESA/390 Tape Device Handler                          */
+/*              Hercules Tape Device Handler CCW Processing          */
 
 /* Original Author: Roger Bowler                                     */
 /* Prime Maintainer: Ivan Warren                                     */
@@ -9,96 +9,15 @@
 
 /*-------------------------------------------------------------------*/
 /* This module contains the CCW handling functions for tape devices. */
-/*-------------------------------------------------------------------*/
 /*                                                                   */
-/* Five emulated tape formats are supported:                         */
+/* The subroutines in this module are called by the general tape     */
+/* device handler (tapedev.c) when the tape format is AWSTAPE.       */
 /*                                                                   */
-/* 1. AWSTAPE   This is the format used by the P/390.                */
-/*              The entire tape is contained in a single flat file.  */
-/*              A tape block consists of one or more block segments. */
-/*              Each block segment is preceded by a 6-byte header.   */
-/*              Files are separated by tapemarks, which consist      */
-/*              of headers with zero block length.                   */
-/*              AWSTAPE files are readable and writable.             */
-/*                                                                   */
-/*              Support for AWSTAPE is in the "AWSTAPE.C" member.    */
-/*                                                                   */
-/*                                                                   */
-/* 2. OMATAPE   This is the Optical Media Attach device format.      */
-/*              Each physical file on the tape is represented by     */
-/*              a separate flat file.  The collection of files that  */
-/*              make up the physical tape is obtained from an ASCII  */
-/*              text file called the "tape description file", whose  */
-/*              file name is always tapes/xxxxxx.tdf (where xxxxxx   */
-/*              is the volume serial number of the tape).            */
-/*              Three formats of tape files are supported:           */
-/*              * FIXED files contain fixed length EBCDIC blocks     */
-/*                with no headers or delimiters. The block length    */
-/*                is specified in the TDF file.                      */
-/*              * TEXT files contain variable length ASCII blocks    */
-/*                delimited by carriage return line feed sequences.  */
-/*                The data is translated to EBCDIC by this module.   */
-/*              * HEADER files contain variable length blocks of     */
-/*                EBCDIC data prefixed by a 16-byte header.          */
-/*              The TDF file and all of the tape files must reside   */
-/*              reside under the same directory which is normally    */
-/*              on CDROM but can be on disk.                         */
-/*              OMATAPE files are supported as read-only media.      */
-/*                                                                   */
-/*              OMATAPE tape Support is in the "OMATAPE.C" member.   */
-/*                                                                   */
-/*                                                                   */
-/* 3. SCSITAPE  This format allows reading and writing of 4mm or     */
-/*              8mm DAT tape, 9-track open-reel tape, or 3480-type   */
-/*              cartridge on an appropriate SCSI-attached drive.     */
-/*              All SCSI tapes are processed using the generalized   */
-/*              SCSI tape driver (st.c) which is controlled using    */
-/*              the MTIOCxxx set of IOCTL commands.                  */
-/*              PROGRAMMING NOTE: the 'tape' portability macros for  */
-/*              physical (SCSI) tapes MUST be used for all tape i/o! */
-/*                                                                   */
-/*              SCSI tape Support is in the "SCSITAPE.C" member.     */
-/*                                                                   */
-/*                                                                   */
-/* 4. HET       This format is based on the AWSTAPE format but has   */
-/*              been extended to support compression.  Since the     */
-/*              basic file format has remained the same, AWSTAPEs    */
-/*              can be read/written using the HET routines.          */
-/*                                                                   */
-/*              Support for HET is in the "HETTAPE.C" member.        */
-/*                                                                   */
-/*                                                                   */
-/* 5. FAKETAPE  This is the format used by Fundamental Software      */
-/*              on their FLEX-ES systems. It it similar to the AWS   */
-/*              format. The entire tape is contained in a single     */
-/*              flat file. A tape block is preceded by a 12-ASCII-   */
-/*              hex-characters header which indicate the size of     */
-/*              the previous and next blocks. Files are separated    */
-/*              by tapemarks which consist of headers with a zero    */
-/*              current block length. FakeTapes are both readable    */
-/*              and writable.                                        */
-/*                                                                   */
-/*              Support for FAKETAPE is in the "FAKETAPE.C" member.  */
-/*                                                                   */
-/*-------------------------------------------------------------------*/
-
-/*-------------------------------------------------------------------*/
-/* Additional credits:                                               */
-/*      3480 commands contributed by Jan Jaeger                      */
-/*      Sense byte improvements by Jan Jaeger                        */
-/*      3480 Read Block ID and Locate CCWs by Brandon Hill           */
-/*      Unloaded tape support by Brandon Hill                    v209*/
-/*      HET format support by Leland Lucius                      v209*/
-/*      JCS - minor changes by John Summerfield                  2003*/
-/*      PERFORM SUBSYSTEM FUNCTION / CONTROL ACCESS support by       */
-/*      Adrian Trenkwalder (with futher enhancements by Fish)        */
-/*      **INCOMPLETE** 3590 support by Fish (David B. Trout)         */
+/* Messages issued by this module are prefixed HHCTA0nn              */
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
 /* Reference information:                                            */
-/* SC53-1200 S/370 and S/390 Optical Media Attach/2 User's Guide     */
-/* SC53-1201 S/370 and S/390 Optical Media Attach/2 Technical Ref    */
 /* SG24-2506 IBM 3590 Tape Subsystem Technical Guide                 */
 /* GA32-0331 IBM 3590 Hardware Reference                             */
 /* GA32-0329 IBM 3590 Introduction and Planning Guide                */
@@ -107,156 +26,11 @@
 /* GA32-0127 IBM 3490E Hardware Reference                            */
 /* GC35-0152 EREP Release 3.5.0 Reference                            */
 /* SA22-7204 ESA/390 Common I/O-Device Commands                      */
-/* Flex FakeTape format (http://preview.tinyurl.com/67rgnp)          */
-/*-------------------------------------------------------------------*/
-
-// $Log$
-// Revision 1.18  2008/11/04 05:56:31  fish
-// Put ensure consistent create_thread ATTR usage change back in
-//
-// Revision 1.17  2008/11/03 15:31:53  rbowler
-// Back out consistent create_thread ATTR modification
-//
-// Revision 1.16  2008/10/18 09:32:21  fish
-// Ensure consistent create_thread ATTR usage
-//
-// Revision 1.15  2008/07/08 05:35:51  fish
-// AUTOMOUNT redesign: support +allowed/-disallowed dirs
-// and create associated 'automount' panel command - Fish
-//
-// Revision 1.14  2008/06/22 05:54:30  fish
-// Fix print-formatting issue (mostly in tape modules)
-// that can sometimes, in certain circumstances,
-// cause herc to crash.  (%8.8lx --> I32_FMTX, etc)
-//
-// Revision 1.13  2008/05/28 16:46:29  fish
-// Misleading VTAPE support renamed to AUTOMOUNT instead and fixed and enhanced so that it actually WORKS now.
-//
-// Revision 1.12  2008/05/25 06:36:43  fish
-// VTAPE automount support (0x4B + 0xE4)
-//
-// Revision 1.11  2008/05/22 19:25:58  fish
-// Flex FakeTape support
-//
-// Revision 1.10  2008/03/31 13:55:43  rbowler
-// Reinstate lost comments; cosmetic changes to comments and indentation
-//
-// Revision 1.9  2008/03/31 12:33:46  rbowler
-// Reinstate original code to fix warning: implicit declaration of function `min'
-//
-// Revision 1.8  2008/03/31 12:25:24  rbowler
-// tapeccws.c:613: warning: unused parameter 'ccwseq'
-//
-// Revision 1.7  2008/03/31 03:59:05  fish
-// Fix SCSI tape i/o performance: now 10x faster!
-//
-// Revision 1.6  2008/03/30 02:51:33  fish
-// Fix SCSI tape EOV (end of volume) processing
-//
-// Revision 1.5  2008/03/29 08:36:46  fish
-// More complete/extensive 3490/3590 tape support
-//
-// Revision 1.4  2008/03/28 02:09:42  fish
-// Add --blkid-24 option support, poserror flag renamed to fenced,
-// added 'generic', 'readblkid' and 'locateblk' tape media handler
-// call vectors.
-//
-// Revision 1.3  2008/03/27 07:14:16  fish
-// SCSI MODS: groundwork: part 3: final shuffling around.
-// Moved functions from one module to another and resequenced
-// functions within each. NO CODE WAS ACTUALLY CHANGED.
-// Next commit will begin the actual changes.
-//
-// Revision 1.2  2008/03/26 07:23:51  fish
-// SCSI MODS part 2: split tapedev.c: aws, het, oma processing moved
-// to separate modules, CCW processing moved to separate module.
-//
-// Revision 1.1  2008/03/25 18:42:36  fish
-// AWS, HET and OMA processing logic moved to separate modules.
-// Tape device CCW processing logic also moved to separate module.
-// (tapedev.c was becoming too large and unwieldy)
-//
-// Revision 1.133  2008/03/13 01:44:17  kleonard
-// Fix residual read-only setting for tape device
-//
-// Revision 1.132  2008/03/04 01:10:29  ivan
-// Add LEGACYSENSEID config statement to allow X'E4' Sense ID on devices
-// that originally didn't support it. Defaults to off for compatibility reasons
-//
-// Revision 1.131  2008/03/04 00:25:25  ivan
-// Ooops.. finger check on 8809 case for numdevid.. Thanks Roger !
-//
-// Revision 1.130  2008/03/02 12:00:04  ivan
-// Re-disable Sense ID on 3410, 3420, 8809 : report came in that it breaks MTS
-//
-// Revision 1.129  2007/12/14 17:48:52  rbowler
-// Enable SENSE ID CCW for 2703,3410,3420
-//
-// Revision 1.128  2007/11/29 03:36:40  fish
-// Re-sequence CCW opcode 'case' statements to be in ascending order.
-// COSMETIC CHANGE ONLY. NO ACTUAL LOGIC WAS CHANGED.
-//
-// Revision 1.127  2007/11/13 15:10:52  rbowler
-// fsb_awstape support for segmented blocks
-//
-// Revision 1.126  2007/11/11 20:46:50  rbowler
-// read_awstape support for segmented blocks
-//
-// Revision 1.125  2007/11/09 14:59:34  rbowler
-// Move misplaced comment and restore original programming style
-//
-// Revision 1.124  2007/11/02 16:04:15  jmaynard
-// Removing redundant #if !(defined OPTION_SCSI_TAPE).
-//
-// Revision 1.123  2007/09/01 06:32:24  fish
-// Surround 3590 SCSI test w/#ifdef (OPTION_SCSI_TAPE)
-//
-// Revision 1.122  2007/08/26 14:37:17  fish
-// Fix missed unfixed 31 Aug 2006 non-SCSI tape Locate bug
-//
-// Revision 1.121  2007/07/24 23:06:32  fish
-// Force command-reject for 3590 Medium Sense and Mode Sense
-//
-// Revision 1.120  2007/07/24 22:54:49  fish
-// (comment changes only)
-//
-// Revision 1.119  2007/07/24 22:46:09  fish
-// Default to --blkid-32 and --no-erg for 3590 SCSI
-//
-// Revision 1.118  2007/07/24 22:36:33  fish
-// Fix tape Synchronize CCW (x'43') to do actual commit
-//
-// Revision 1.117  2007/07/24 21:57:29  fish
-// Fix Win32 SCSI tape "Locate" and "ReadBlockId" SNAFU
-//
-// Revision 1.116  2007/06/23 00:04:18  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.115  2007/04/06 15:40:25  fish
-// Fix Locate Block & Read BlockId for SCSI tape broken by 31 Aug 2006 preliminary-3590-support change
-//
-// Revision 1.114  2007/02/25 21:10:44  fish
-// Fix het_locate to continue on tapemark
-//
-// Revision 1.113  2007/02/03 18:58:06  gsmith
-// Fix MVT tape CMDREJ error
-//
-// Revision 1.112  2006/12/28 03:04:17  fish
-// PR# tape/100: Fix crash in "open_omatape()" in tapedev.c if bad filespec entered in OMA (TDF)  file
-//
-// Revision 1.111  2006/12/11 17:25:59  rbowler
-// Change locblock from long to U32 to correspond with dev->blockid
-//
-// Revision 1.110  2006/12/08 09:43:30  jj
-// Add CVS message log
-//
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
 #include "hercules.h"  /* need Hercules control blocks               */
 #include "tapedev.h"   /* Main tape handler header file              */
-
-/*-------------------------------------------------------------------*/
 
 //#define  ENABLE_TRACING_STMTS     // (Fish: DEBUGGING)
 
