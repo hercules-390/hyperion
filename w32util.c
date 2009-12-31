@@ -69,7 +69,7 @@
 
 #if defined( _MSVC_ ) && defined( _MSC_VER ) && ( _MSC_VER >= 1400 )
 
-static void DummyCRTInvalidParameterHandler  // (override Microsoft insanity)
+static void DummyCRTInvalidParameterHandler
 (
     const wchar_t*  expression,
     const wchar_t*  function,
@@ -85,12 +85,9 @@ static void DummyCRTInvalidParameterHandler  // (override Microsoft insanity)
 static _invalid_parameter_handler  old_iph  = NULL;
 static int                         prev_rm  = 0;
 
-// This function's sole purpose is to bypass Microsoft's INSANE handling of
+// This function's sole purpose is to bypass Microsoft's default handling of
 // invalid parameters being passed to CRT functions, which ends up causing
-// TWO COMPLETELY DIFFERENT ASSERTION DIALOGS to appear for EACH and EVERY
-// minor little itty-bitty frickin problem, BOTH of which must be separately
-// dismissed each fricking time of course (which can become VERY annoying
-// after about the sixteenth time I can't even begin to tell you!)
+// two completely different assertion dialogs to appear for each problem
 
 DLL_EXPORT void DisableInvalidParameterHandling()
 {

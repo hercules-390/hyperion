@@ -1,6 +1,5 @@
-/*-------------------------------------------------------------------*/
-/* HOSTOPTS.H   --   HOST-specific features and options              */
-/*-------------------------------------------------------------------*/
+/* HOSTOPTS.H   (c) Copyright "Fish" (David B. Trout), 2005-2009     */
+/*              Host-specific features and options for Hercules      */
 
 // $Id$
 
@@ -36,20 +35,6 @@
 
    Please. :)
 */
-
-// $Log$
-// Revision 1.17  2008/02/15 22:51:39  rbowler
-// Move Solaris specific definition of INADDR_NONE to hostopts.h
-//
-// Revision 1.16  2008/02/07 00:29:04  rbowler
-// Solaris build support by Jeff Savit
-//
-// Revision 1.15  2007/02/26 15:34:46  fish
-// remove stupid fish prt spooler crap
-//
-// Revision 1.14  2006/12/08 09:43:26  jj
-// Add CVS message log
-//
 
 #ifndef _HOSTOPTS_H
 #define _HOSTOPTS_H

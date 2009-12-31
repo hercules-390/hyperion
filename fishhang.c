@@ -150,7 +150,7 @@ typedef struct _tagFishEvent
 FISH_EVENT;
 
 /////////////////////////////////////////////////////////////////////////////
-// Macro to remove Microsoft's stupid fullpath from __FILE__ name...
+// Macro to remove Microsoft's standard fullpath from __FILE__ name...
 
 #define FIXFILENAME( filename )           \
     do { if ( filename ) {                \

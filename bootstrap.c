@@ -1,20 +1,14 @@
-/*********************************/
-/* Hercules main executable code */
-/*********************************/
+/* BOOTSTRAP.C  (c) Copyright Ivan Warren, 2003-2009                 */
+/*              (c) Copyright "Fish" (David B. Trout), 2005-2009     */
+/*              Hercules executable main module                      */
 
 // $Id$
-//
-// $Log$
-// Revision 1.12  2008/02/19 11:49:18  ivan
-// - Move setting of CPU priority after spwaning timer thread
-// - Added support for Posix 1003.1e capabilities
-//
-// Revision 1.11  2006/12/28 03:04:34  fish
-// Permanently disable in bootstrap.c Microsoft's completely INSANE Invalid CRT Parameter handling behavior
-//
-// Revision 1.10  2006/12/08 09:43:16  jj
-// Add CVS message log
-//
+
+/*-------------------------------------------------------------------*/
+/* This module is the initial entry point of the Hercules emulator.  */
+/* The main() function performs platform-specific functions before   */
+/* calling the impl function which launches the emulator.            */
+/*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
 #include "hercules.h"
@@ -22,11 +16,13 @@
 #include "ltdl.h"
 #endif
 
-///////////////////////////////////////////////////////////////////////////////
-// Non-Windows version...
-
 #if !defined( _MSVC_ )
-
+/*-------------------------------------------------------------------*/
+/* For Unix-like platforms, the main() function:                     */
+/* - sets the privilege level                                        */
+/* - initializes the LIBTOOL environment                             */
+/* - passes control to the impl() function in impl.c                 */
+/*-------------------------------------------------------------------*/
 int main(int ac,char *av[])
 {
     DROP_PRIVILEGES(CAP_SYS_NICE);
@@ -39,12 +35,18 @@ int main(int ac,char *av[])
 }
 
 #else // defined( _MSVC_ )
+/*-------------------------------------------------------------------*/
+/* For Windows platforms, the main() function:                       */
+/* - disables the standard CRT invalid parameter handler             */
+/* - requests a minimum resolution for periodic timers               */
+/* - sets up an exception trap                                       */
+/* - passes control to the impl() function in impl.c                 */
+/*                                                                   */
+/* The purpose of the exception trap is to call a function which     */
+/* will write a minidump file in the event of a Hercules crash.      */
+/*-------------------------------------------------------------------*/
 
-// (damn optimizer is getting in the way so disable it)
 #pragma optimize( "", off )
-
-///////////////////////////////////////////////////////////////////////////////
-// Windows version...
 
 typedef BOOL (MINIDUMPWRITEDUMPFUNC)
 (
@@ -95,7 +97,7 @@ int main(int ac,char *av[])
 
     SET_THREAD_NAME("bootstrap");
 
-    // Disable Microsoft's INSANE invalid crt parameter handling!
+    // Disable default invalid crt parameter handling
 
     DISABLE_CRT_INVALID_PARAMETER_HANDLER();
 

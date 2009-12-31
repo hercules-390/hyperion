@@ -50,7 +50,7 @@ int process_script_file(char *,int);
 
 /* $test_cmd - do something or other */
 
-#ifdef _MSVC_ // (damn optimizer is getting in the way so disable it)
+#ifdef _MSVC_ 
 #pragma optimize( "", off )
 #endif
 
@@ -147,7 +147,7 @@ int test_cmd(int argc, char *argv[],char *cmdline)
     return 0;
 }
 
-#ifdef _MSVC_ // (damn optimizer is getting in the way so disable it)
+#ifdef _MSVC_ 
 #pragma optimize( "", on )
 #endif
 
