@@ -1,5 +1,5 @@
-/* PANEL.C      (c) Copyright Roger Bowler, 1999-2009                */
-/*              ESA/390 Control Panel Commands                       */
+/* PANEL.C      (c) Copyright Roger Bowler, 1999-2010                */
+/*              Hercules Control Panel Commands                      */
 
 // $Id$
 
@@ -26,159 +26,6 @@
 /*      Socket Devices originally designed by Malcolm Beattie;       */
 /*      actual implementation by "Fish" (David B. Trout).            */
 /*-------------------------------------------------------------------*/
-
-// $Log$
-// Revision 1.256  2009/01/18 08:38:33  bernard
-// Cosmatic PSW adjustment in command panel
-//
-// Revision 1.255  2009/01/10 00:18:34  jmaynard
-// Allow a bare ENTER in cmdtgt scp or cmdtgt pscp mode to send a blank command
-// to the SCP.
-//
-// Revision 1.254  2009/01/09 13:40:13  jj
-// Ensure SYSG devices are listed in the panel display
-//
-// Revision 1.253  2009/01/07 16:37:29  bernard
-// msghld command
-//
-// Revision 1.252  2009/01/07 16:11:16  bernard
-// msghldsec command
-//
-// Revision 1.251  2008/12/21 03:27:47  ivan
-// Logic change for instruction count formating
-// previous logic was having problems with numbers larger than 10 billion
-//
-// Revision 1.250  2008/12/18 16:14:57  bernard
-// instcount with comma separator
-//
-// Revision 1.249  2008/12/16 07:06:33  bernard
-// Format PSW in the same way on both panels.
-//
-// Revision 1.248  2008/12/15 16:15:33  bernard
-// Readable instcount in millions
-//
-// Revision 1.247  2008/12/04 10:36:40  rbowler
-// Replace tabs by blanks in panel.c
-//
-// Revision 1.246  2008/12/03 11:40:34  rbowler
-// PANTITLE support for rxvt, dtterm, and screen
-//
-// Revision 1.245  2008/12/02 17:05:44  rbowler
-// Support for PANTITLE when console is an xterm window
-//
-// Revision 1.244  2008/09/02 06:13:15  fish
-// New fixed (?) sticky-messages (MSGHLD) logic.
-// This is my logic to hold us off in the mean time
-// until I can finish debugging Bernard's original logic
-// (having trouble debugging it! Sorry it's taking so long!)
-//
-// Revision 1.243  2008/08/30 05:50:30  fish
-// Fix 'quiet' command processing so that screens paint properly
-//
-// Revision 1.242  2008/08/29 19:06:42  fish
-// Panel display extended cursor handling (Windows only)
-//
-// Revision 1.241  2008/08/29 11:11:06  fish
-// Fix message-keep logic  (i.e. sticky/held messages)
-//
-// Revision 1.240  2008/08/29 10:22:52  fish
-// Fix some long outstanding New Panel data-input painting glitches
-//
-// Revision 1.239  2008/08/23 13:50:38  bernard
-// More error scroll_down_lines. Should be ok now!
-//
-// Revision 1.238  2008/08/23 13:27:23  bernard
-// Error in scroll_down_lines
-//
-// Revision 1.237  2008/08/23 12:44:54  bernard
-// Also release messages when scrolling up or down
-//
-// Revision 1.236  2008/08/23 12:35:03  bernard
-// OPTION_MSGHLD Sticky messages
-//
-// Revision 1.235  2008/08/23 11:58:07  fish
-// Fix line-wrap issue MSVC builds
-//
-// Revision 1.234  2008/08/09 01:53:29  fish
-// Another minor panel.c performance tweak: don't bother to repaint
-// the screen when new messages arrive if we're "scrolled back".
-//
-// Revision 1.233  2008/08/09 01:44:13  fish
-// Put 'msgnum' back for efficiency.
-//
-// Revision 1.232  2008/08/08 06:25:22  bernard
-// Removed all OPTION_MSGHLD stuff
-//
-// Revision 1.231  2008/08/07 20:47:18  bernard
-// Removed variable msgnum. I am getting crazy about this variable.
-// It is now less complex to move message arround in the list.
-// Still working on the OPTION_MSGHLD
-//
-// Revision 1.230  2008/08/06 17:03:16  bernard
-// message hold scroll_down implemented
-//
-// Revision 1.229  2008/08/06 15:26:34  bernard
-// message hold scroll_up implemented
-//
-// Revision 1.228  2008/08/06 14:03:29  bernard
-// Implemented keep messages when on autoscroll. You will have to delete
-// the comment before OPTION_MSGHLD on top to activate. Will work on
-// other situations.
-//
-// Revision 1.227  2008/08/04 19:34:46  fish
-// COLOR_DARK_GREY
-//
-// Revision 1.226  2008/08/03 07:20:06  bernard
-// get_color module
-//
-// Revision 1.225  2008/08/02 09:04:51  bernard
-// SCP message colors
-//
-// Revision 1.224  2008/07/28 15:15:48  bernard
-// !scp -> pscp
-//
-// Revision 1.223  2008/07/24 14:42:36  bernard
-// cmdtgt version 2
-//
-// Revision 1.222  2008/07/12 01:18:07  fish
-// .
-//
-// Revision 1.221  2008/07/12 01:17:40  fish
-// no message
-//
-// Revision 1.220  2008/07/12 01:03:44  fish
-// no message
-//
-// Revision 1.219  2008/07/10 18:38:10  fish
-// no message
-//
-// Revision 1.218  2008/07/10 18:34:55  fish
-// Simplifed redesign of panel scrolling logic to support:
-// 1) Ctrl+up, Ctrl+down = scroll one line up/down, and
-// 2) Ctrl+home, Ctrl+end = top/bottom.
-//
-// Revision 1.217  2008/07/09 17:35:22  fish
-// Revert previous changes until I can resolve
-// some remaining issues I forgot about. Sorry.
-//
-// Revision 1.214  2007/12/29 14:40:51  fish
-// fix copyregs function to fallback to using dummyregs whenever regs->hostregs happens to be NULL
-//
-// Revision 1.213  2007/12/10 23:12:02  gsmith
-// Tweaks to OPTION_MIPS_COUNTING processing
-//
-// Revision 1.212  2007/09/05 00:24:18  gsmith
-// Use integer arithmetic calculating cpupct
-//
-// Revision 1.211  2007/06/23 00:04:15  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.210  2006/12/20 04:26:20  gsmith
-// 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
-//
-// Revision 1.209  2006/12/08 09:43:29  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 
@@ -227,6 +74,7 @@ static char   NPsel2;                  /* dev sel part 2 cmd letter */
 static char   NPdevice;                /* Which device is selected  */
 static int    NPasgn;                  /* Index to dev being init'ed*/
 static int    NPlastdev;               /* Number of devices         */
+static int    NPcpugraph_ncpu;         /* Number of CPUs to display */
 
 static char  *NPregnum[]   = {" 0"," 1"," 2"," 3"," 4"," 5"," 6"," 7",
                               " 8"," 9","10","11","12","13","14","15"
@@ -1193,9 +1041,10 @@ static void NP_screen_redraw (REGS *regs)
 
     set_color (COLOR_LIGHT_GREY, COLOR_BLACK);
 
-    /* CPU busy graph if we have enough rows */
+    /* CPU busy graph */
     line = 24;
-    if (cons_rows - line >= sysblk.numcpu + 2)
+    NPcpugraph_ncpu = MIN(cons_rows - line - 2, HI_CPU);
+    if (HI_CPU > 0)
     {
         NPcpugraph = 1;
         NPcpugraph_valid = 0;
@@ -1203,7 +1052,7 @@ static void NP_screen_redraw (REGS *regs)
         fill_text ('-', 38);
         set_pos (line++, 1);
         draw_text ("CPU");
-        for (i = 0; i < HI_CPU; i++)
+        for (i = 0; i < NPcpugraph_ncpu; i++)
         {
             sprintf (buf, "%2d  ", i);
             set_pos (line++, 1);
@@ -1630,7 +1479,7 @@ static void NP_update(REGS *regs)
     /* Optional cpu graph */
     if (NPcpugraph)
     {
-        for (i = 0; i < HI_CPU; i++)
+        for (i = 0; i < NPcpugraph_ncpu; i++)
         {
             if (!IS_CPU_ONLINE(i))
             {
