@@ -1,4 +1,4 @@
-/* DASDCOPY.C   (c) Copyright Roger Bowler, 1999-2009                */
+/* DASDCOPY.C   (c) Copyright Roger Bowler, 1999-2010                */
 /*              Copy a dasd file to another dasd file                */
 
 // $Id$
@@ -22,26 +22,6 @@
 /*              fba2cfba [-options] ifile ofile                      */
 /*              cfba2fba [-options] ifile [sf=sfile] ofile           */
 /*-------------------------------------------------------------------*/
-
-// $Log$
-// Revision 1.32  2008/11/04 04:50:45  fish
-// Ensure consistent utility startup
-//
-// Revision 1.31  2008/11/03 00:03:52  rbowler
-// Program name may be corrupted in dasdcopy messages
-//
-// Revision 1.30  2008/11/02 22:57:01  rbowler
-// Ensure message HHCDC010I is correctly aligned
-//
-// Revision 1.29  2008/04/03 16:16:30  rbowler
-// Standardize comment block in module header (cosmetic change only)
-//
-// Revision 1.28  2007/06/23 00:04:08  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.27  2006/12/08 09:43:19  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 
@@ -441,7 +421,8 @@ char            pgmpath[MAX_PATH];      /* prog path in host format  */
     }
 
     close_image_file(icif); close_image_file(ocif);
-    printf (_("\r" "HHCDC010I %s successfully completed.\n"), pgm);
+    if (!quiet) printf (_("\r"));
+    printf (_("HHCDC010I %s successfully completed.\n"), pgm);
     return 0;
 }
 
