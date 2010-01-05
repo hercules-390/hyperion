@@ -306,20 +306,20 @@ static void ARCH_DEP(kimd_sha)(int r1, int r2, REGS *regs, int klmd)
   fc = GR0_fc(regs);
   switch(fc)
   {
-    case 1:
+    case 1: /* sha-1 */
       message_blocklen = 64;
       parameter_blocklen = 20;
       break;
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
-    case 2:
+    case 2: /* sha-256 */
       message_blocklen = 64;
       parameter_blocklen = 32;
       break;
 #endif
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
-    case 3:
+    case 3: /* sha-512 */
       message_blocklen = 128;
       parameter_blocklen = 64;
 #endif
@@ -357,18 +357,18 @@ static void ARCH_DEP(kimd_sha)(int r1, int r2, REGS *regs, int klmd)
   /* Set initial chaining value */
   switch(fc)
   {
-    case 1:
+    case 1: /* sha-1 */
       sha1_seticv(&sha1_ctx, parameter_block);
       break;
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
-    case 2:
+    case 2: /* sha-256 */
       sha256_seticv(&sha256_ctx, parameter_block);
       break;
 #endif
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
-    case 3:
+    case 3: /* sha-512 */
       sha512_seticv(&sha512_ctx, parameter_block);
       break;
 #endif
@@ -387,20 +387,20 @@ static void ARCH_DEP(kimd_sha)(int r1, int r2, REGS *regs, int klmd)
 
     switch(fc)
     {
-      case 1:
+      case 1: /* sha-1 */
         sha1_process(&sha1_ctx, message_block);
         sha1_getcv(&sha1_ctx, parameter_block);
         break;
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
-      case 2:
+      case 2: /* sha-256 */
         sha256_process(&sha256_ctx, message_block);
         sha256_getcv(&sha256_ctx, parameter_block);
         break;
 #endif
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
-      case 3:
+      case 3: /* sha-512 */
         sha512_process(&sha512_ctx, message_block);
         sha512_getcv(&sha512_ctx, parameter_block);
         break;
@@ -474,14 +474,14 @@ static void ARCH_DEP(klmd_sha)(int r1, int r2, REGS *regs)
   fc = GR0_fc(regs);
   switch(fc)
   {
-    case 1:
+    case 1: /* sha-1 */
       mbllen = 8;
       message_blocklen = 64;
       parameter_blocklen = 20;
       break;
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
-    case 2:
+    case 2: /* sha-256 */
       mbllen = 8;
       message_blocklen = 64;
       parameter_blocklen = 32;
@@ -489,7 +489,7 @@ static void ARCH_DEP(klmd_sha)(int r1, int r2, REGS *regs)
 #endif
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
-    case 3:
+    case 3: /* sha-512 */
       mbllen = 16;
       message_blocklen = 128;
       parameter_blocklen = 64;
@@ -526,18 +526,18 @@ static void ARCH_DEP(klmd_sha)(int r1, int r2, REGS *regs)
   /* Set initial chaining value */
   switch(fc)
   {
-    case 1:
+    case 1: /* sha-1 */
       sha1_seticv(&sha1_ctx, parameter_block);
       break;
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
-    case 2:
+    case 2: /* sha-256 */
       sha256_seticv(&sha256_ctx, parameter_block);
       break;
 #endif
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
-    case 3:
+    case 3: /* sha-512 */
       sha512_seticv(&sha512_ctx, parameter_block);
       break;
 #endif
@@ -570,18 +570,18 @@ static void ARCH_DEP(klmd_sha)(int r1, int r2, REGS *regs)
       message_block[i++] = 0x00;
     switch(fc)
     {
-      case 1:
+      case 1: /* sha-1 */
         sha1_process(&sha1_ctx, message_block);
         break;
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
-      case 2:
+      case 2: /* sha-256 */
         sha256_process(&sha256_ctx, message_block);
         break;
 #endif
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
-      case 3:
+      case 3: /* sha-512 */
         sha512_process(&sha512_ctx, message_block);
         break;
 #endif
@@ -603,20 +603,20 @@ static void ARCH_DEP(klmd_sha)(int r1, int r2, REGS *regs)
   /* Calculate and store the message digest */
   switch(fc)
   {
-    case 1:
+    case 1: /* sha-1 */
       sha1_process(&sha1_ctx, message_block);
       sha1_getcv(&sha1_ctx, parameter_block);
       break;
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
-    case 2:
+    case 2: /* sha-256 */
       sha256_process(&sha256_ctx, message_block);
       sha256_getcv(&sha256_ctx, parameter_block);
       break;      
 #endif
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
-    case 3:
+    case 3: /* sha-512 */
       sha512_process(&sha512_ctx, message_block);
       sha512_getcv(&sha512_ctx, parameter_block);
       break;
@@ -685,16 +685,16 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
 #ifdef OPTION_KM_DEBUG
   switch(fc)
   {
-    case 1:
+    case 1: /* dea */
       LOGBYTE("k     :", parameter_block, 8);
       break;
 
-    case 2:
+    case 2: /* tdea-128 */
       LOGBYTE("k1    :", parameter_block, 8);
       LOGBYTE("k2    :", &parameter_block[8], 8);
       break;
 
-    case 3:
+    case 3: /* tdea-192 */
       LOGBYTE("k1    :", parameter_block, 8);
       LOGBYTE("k2    :", &parameter_block[8], 8);
       LOGBYTE("k3    :", &parameter_block[16], 8);
@@ -705,15 +705,15 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
   /* Set the cryptographic key */
   switch(fc)
   {
-    case 1:
+    case 1: /* dea */
       des_set_key(&context, parameter_block);
       break;
    
-    case 2:
+    case 2: /* tdea-128 */
       des3_set_2keys(&des3_ctx, parameter_block, &parameter_block[8]);
       break;
 
-    case 3:
+    case 3: /* tdea-192 */
       des3_set_3keys(&des3_ctx, parameter_block, &parameter_block[8], &parameter_block[16]);
       break;
   }   
@@ -733,15 +733,15 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
     /* Do the job */
     switch(fc)
     {
-      case 1:
+      case 1: /* dea */
         if(modifier_bit)
           des_decrypt(&context, message_block, message_block); 
         else
           des_encrypt(&context, message_block, message_block);
         break;
 
-      case 2:
-      case 3:
+      case 2: /* tdea-128 */
+      case 3: /* tdea-192 */
         if(modifier_bit)
           des3_decrypt(&des3_ctx, message_block, message_block);
         else
@@ -911,7 +911,7 @@ DEF_INST(compute_message_authentication_code_d)
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Check for query function */
-  if(!fc)
+  if(unlikely(!fc))
   {
     BYTE parameter_block[16] = KMAC_BITS;
 
@@ -1088,18 +1088,18 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
 #ifdef OPTION_KMC_DEBUG
   switch(fc)
   {
-    case 1:
+    case 1: /* dea */
       LOGBYTE("icv   :", parameter_block, 8);
       LOGBYTE("k     :", &parameter_block[8], 8);
       break;
 
-    case 2:
+    case 2: /* tdea-128 */
       LOGBYTE("icv   :", parameter_block, 8);
       LOGBYTE("k1    :", &parameter_block[8], 8);
       LOGBYTE("k2    :", &parameter_block[16], 8);
       break;
 
-    case 3:
+    case 3: /* tdea-192 */
       LOGBYTE("icv   :", parameter_block, 8);
       LOGBYTE("k1    :", &parameter_block[8], 8);
       LOGBYTE("k2    :", &parameter_block[16], 8);
@@ -1111,16 +1111,16 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
   /* Set the cryptographic key */
   switch(fc)
   {
-    case 1:
+    case 1: /* dea */
       des_set_key(&context1, &parameter_block[8]);
       break;
 
-    case 2:
+    case 2: /* tdea-128 */
       des_set_key(&context1, &parameter_block[8]);
       des_set_key(&context2, &parameter_block[16]);
       break;
 
-    case 3:
+    case 3: /* tdea-192 */
       des_set_key(&context1, &parameter_block[8]);
       des_set_key(&context2, &parameter_block[16]);
       des_set_key(&context3, &parameter_block[24]);
@@ -1142,7 +1142,7 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
     /* Do the job */
     switch(fc)
     {
-      case 1:
+      case 1: /* dea */
         if(modifier_bit)
         {
           /* Save the ocv */
@@ -1165,7 +1165,7 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
         }
         break;
 
-      case 2:
+      case 2: /* tdea-128 */
         if(modifier_bit)
         {
           /* Save the ocv */
@@ -1192,7 +1192,7 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
         }
         break;
 
-      case 3:
+      case 3: /* tdea-192 */
         if(modifier_bit)
         {
           /* Save the ocv */
@@ -1725,7 +1725,7 @@ DEF_INST(cipher_message_with_chaining_d)
 #endif
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
-    case 67:
+    case 67: /* prng */
       ARCH_DEP(kmc_prng)(r1, r2, regs);
       break;
 #endif
