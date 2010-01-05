@@ -39,7 +39,6 @@
 /*----------------------------------------------------------------------------*/
 #if 0
 #define OPTION_CMPSC_DEBUG
-#define OPTION_CMPSC_ECACHE_DEBUG
 #define TRUEFALSE(boolean)   ((boolean) ? "True" : "False")
 #endif
 
@@ -174,8 +173,9 @@ struct cc                              /* Compress context                    */
   BYTE *dict[32];                      /* Dictionary MADDR addresses          */
   BYTE *edict[32];                     /* Expansion dictionary MADDR addrs    */
   int f1;                              /* Indication format-1 sibling descr   */
-  BYTE *src;                           /* Source MADDR page address           */
   unsigned ofst;                       /* Latest fetched offset               */
+  unsigned smbsz;                      /* Symbol size                         */
+  BYTE *src;                           /* Source MADDR page address           */
 };
 
 struct ec                              /* Expand context                      */
@@ -188,6 +188,7 @@ struct ec                              /* Expand context                      */
   int ecwm;                            /* Water mark                          */
   BYTE oc[2080];                       /* Output cache                        */
   unsigned ocl;                        /* Output cache length                 */
+  unsigned smbsz;                      /* Symbol size                         */
   BYTE *src;                           /* Source MADDR page address           */
 };
 #endif /* #ifndef NO_2ND_COMPILE */
@@ -197,7 +198,7 @@ static void  ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs);
 static void  ARCH_DEP(expand_is)(REGS *regs, struct ec *ec, U16 is);
 static BYTE *ARCH_DEP(fetch_cce)(REGS *regs, struct cc *cc, unsigned index);
 static int   ARCH_DEP(fetch_ch)(int r2, REGS *regs, REGS *iresg, struct cc *cc, BYTE *ch);
-static int   ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, U16 *is);
+static int   ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, struct ec *ec, U16 *is);
 static void  ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, struct ec *ec, U16 is[8]);
 #ifdef OPTION_CMPSC_DEBUG
 static void  print_cce(BYTE *cce);
@@ -206,7 +207,7 @@ static void  print_sd(int f1, BYTE *sd1, BYTE *sd2);
 #endif
 static int   ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, struct cc *cc, BYTE *ch, U16 *is);
 static int   ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, struct cc *cc, BYTE *ch, U16 *is);
-static int   ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is);
+static int   ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, struct cc *cc, U16 is);
 static int   ARCH_DEP(test_ec)(int r2, REGS *regs, REGS *iregs, struct cc *cc, BYTE *cce);
 static int   ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, struct ec *ec, BYTE *buf, unsigned len);
 
@@ -408,9 +409,10 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
     }
   }
 
-  /* Initialize source maddr page address */
-  cc.src = NULL;
+  /* Initialize source maddr page address and symbol size */
   cc.ofst = 0;
+  cc.smbsz = GR0_smbsz(regs);
+  cc.src = NULL;
 
   /* Try to process the CPU-determined amount of data */
   if(likely(GR_A(r2 + 1, regs) <= PROCESS_MAX))
@@ -435,7 +437,7 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
     while(ARCH_DEP(search_cce)(r2, regs, iregs, &cc, &ch, &is));
 
     /* Write the last match, this can be the alphabet entry */
-    if(unlikely(ARCH_DEP(store_is)(r1, r2, regs, iregs, is)))
+    if(unlikely(ARCH_DEP(store_is)(r1, r2, regs, iregs, &cc, is)))
       return;
 
     /* Commit registers, we have completed a full compression */
@@ -461,6 +463,7 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 static BYTE *ARCH_DEP(fetch_cce)(REGS *regs, struct cc *cc, unsigned index)
 {
   BYTE *cce;
+  unsigned cct;                        /* Child count                         */
 
   index *= 8;
   cce = &cc->dict[index / 0x800][index % 0x800];
@@ -471,7 +474,8 @@ static BYTE *ARCH_DEP(fetch_cce)(REGS *regs, struct cc *cc, unsigned index)
   print_cce(cce);
 #endif
 
-  if(CCE_cct(cce) < 2)
+  cct = CCE_cct(cce);
+  if(cct < 2)
   {
     if(unlikely(CCE_act(cce) > 4))
       ARCH_DEP(program_interrupt)(regs, PGM_DATA_EXCEPTION);
@@ -480,12 +484,12 @@ static BYTE *ARCH_DEP(fetch_cce)(REGS *regs, struct cc *cc, unsigned index)
   {
     if(!CCE_d(cce))
     {
-      if(unlikely(CCE_cct(cce) == 7))
+      if(unlikely(cct == 7))
         ARCH_DEP(program_interrupt)(regs, PGM_DATA_EXCEPTION);
     }
     else 
     {
-      if(unlikely(CCE_cct(cce) > 5))
+      if(unlikely(cct > 5))
         ARCH_DEP(program_interrupt)(regs, PGM_DATA_EXCEPTION);
     }
   }
@@ -670,30 +674,23 @@ static void print_sd(int f1, BYTE *sd1, BYTE *sd2)
 static int ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, struct cc *cc, BYTE *ch, U16 *is)
 {
   BYTE *ccce;                          /* child compression character entry   */
-
-#ifdef FEATURE_INTERVAL_TIMER
-  GREG dictor;                         /* Dictionary origin                   */
-#endif
-
+  int ccs;                             /* Number of child characters          */
   int i;                               /* child character index               */
   int ind_search_siblings;             /* Indicator for searching siblings    */
 
   /* Initialize values */
+  ccs = CCE_ccs(cc->cce);
   ind_search_siblings = 1;
 
-#ifdef FEATURE_INTERVAL_TIMER
-  dictor = GR1_dictor(regs);
-#endif
-
   /* Get the next character when there are children */
-  if(likely(CCE_ccs(cc->cce)))
+  if(likely(ccs))
   {
     if(ARCH_DEP(fetch_ch(r2, regs, iregs, cc, ch)))
       return(0);
   }
 
   /* Now check all children in parent */
-  for(i = 0; i < CCE_ccs(cc->cce); i++)
+  for(i = 0; i < ccs; i++)
   {
 
     /* Stop searching when child tested and no consecutive child character */
@@ -765,6 +762,7 @@ static int ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, struct cc *cc, B
   int i;                               /* Sibling character index             */
   U16 index;                           /* Index within dictionary             */
   int ind_search_siblings;             /* Indicator for keep searching        */
+  int scs;                             /* Number of sibling characters        */
   BYTE *sd1;                           /* Sibling descriptor fmt-0|1 part 1   */
   BYTE *sd2;                           /* Sibling descriptor fmt-1 part 2     */
   int sd_ptr;                          /* Pointer to sibling descriptor       */
@@ -821,7 +819,8 @@ static int ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, struct cc *cc, B
     }
 
     /* Check all children in sibling descriptor */
-    for(i = 0; i < SD_scs(cc->f1, sd1); i++)
+    scs = SD_scs(cc->f1, sd1);
+    for(i = 0; i < scs; i++)
     {
 
       /* Stop searching when child tested and no consecutive child character */
@@ -871,10 +870,10 @@ static int ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, struct cc *cc, B
     }
 
     /* Next sibling follows last possible child */
-    sd_ptr += SD_scs(cc->f1, sd1) + 1;
+    sd_ptr += scs + 1;
 
     /* test for searching child 261 */
-    searched += SD_scs(cc->f1, sd1);
+    searched += scs;
     if(unlikely(searched > 260))
       ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION); 
 
@@ -889,15 +888,19 @@ static int ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, struct cc *cc, B
 /*----------------------------------------------------------------------------*/
 /* store_is (index symbol)                                                    */
 /*----------------------------------------------------------------------------*/
-static int ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is)
+static int ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, struct cc *cc, U16 is)
 {
+  unsigned cbn;                        /* Compressed-data bit number          */
   U32 set_mask;                        /* mask to set the bits                */
   BYTE work[3];                        /* work bytes                          */
+
+  /* Initialize values */
+  cbn = GR1_cbn(iregs);
 
   /* Can we write an index or interchange symbol */
   if(unlikely(GR_A(r1 + 1, iregs) < 2))
   {
-    if(unlikely(((GR1_cbn(iregs) + GR0_smbsz(regs) - 1) / 8) >= GR_A(r1 + 1, iregs)))
+    if(unlikely(((cbn + cc->smbsz - 1) / 8) >= GR_A(r1 + 1, iregs)))
     {
       regs->psw.cc = 1;
 
@@ -925,10 +928,10 @@ static int ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is)
   }
 
   /* Allign set mask */
-  set_mask = ((U32) is) << (24 - GR0_smbsz(regs) - GR1_cbn(iregs));
+  set_mask = ((U32) is) << (24 - cc->smbsz - cbn);
 
   /* Calculate first byte */
-  if(likely(GR1_cbn(iregs)))
+  if(likely(cbn))
   {
     work[0] = ARCH_DEP(vfetchb)(GR_A(r1, iregs) & ADDRESS_MAXWRAP(regs), r1, regs);
     work[0] |= (set_mask >> 16) & 0xff;
@@ -940,7 +943,7 @@ static int ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is)
   work[1] = (set_mask >> 8) & 0xff;
 
   /* Calculate possible third byte and store */
-  if(unlikely((GR0_smbsz(regs) + GR1_cbn(iregs)) > 16))
+  if(unlikely((cc->smbsz + cbn) > 16))
   {
     work[2] = set_mask & 0xff;
     ARCH_DEP(vstorec)(work, 2, GR_A(r1, iregs) & ADDRESS_MAXWRAP(regs), r1, regs);
@@ -949,10 +952,10 @@ static int ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 is)
     ARCH_DEP(vstorec)(work, 1, GR_A(r1, iregs) & ADDRESS_MAXWRAP(regs), r1, regs);
 
   /* Adjust destination registers */
-  ADJUSTREGS(r1, regs, iregs, (GR1_cbn(iregs) + GR0_smbsz(regs)) / 8);
+  ADJUSTREGS(r1, regs, iregs, (cbn + cc->smbsz) / 8);
 
   /* Calculate and set the new Compressed-data Bit Number */
-  GR1_setcbn(iregs, (GR1_cbn(iregs) + GR0_smbsz(regs)) % 8);
+  GR1_setcbn(iregs, (cbn + cc->smbsz) % 8);
 
 #ifdef OPTION_CMPSC_DEBUG
   logmsg("store_is : %04X, cbn=%d, GR%02d=" F_VADR ", GR%02d=" F_GREG "\n", is, GR1_cbn(iregs), r1, iregs->GR(r1), r1 + 1, iregs->GR(r1 + 1));
@@ -1020,13 +1023,11 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   int i;
   U16 is;                              /* Index symbol                        */
   U16 iss[8];                          /* Index symbols                       */
-  unsigned smbsz;                      /* Symbol size                         */
   GREG vaddr;                          /* Virtual address                     */
 
   /* Initialize values */
   cw = 0;
   dcten = GR0_dcten(regs);
-  smbsz = GR0_smbsz(regs);
 
   /* Initialize destination dictionary address */
   ec.dest = NULL;
@@ -1050,7 +1051,8 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
     ec.ecl[i] = 0;
   ec.ecwm = 256;                       /* Set watermark after alphabet part   */
 
-  /* Initialize source maddr page address */
+  /* Initialize source maddr page address and symbols size */
+  ec.smbsz = GR0_smbsz(regs);
   ec.src = NULL;
 
   /* Process individual index symbols until cbn becomes zero */
@@ -1058,7 +1060,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   {
     while(likely(GR1_cbn(regs)))
     {
-      if(unlikely(ARCH_DEP(fetch_is)(r2, regs, iregs, &is)))
+      if(unlikely(ARCH_DEP(fetch_is)(r2, regs, iregs, &ec, &is)))
         return;
       if(likely(!ec.ecl[is]))
       {
@@ -1081,7 +1083,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   }
 
   /* Block processing, cbn stays zero */
-  while(likely(GR_A(r2 + 1, iregs) >= smbsz && cw < PROCESS_MAX))
+  while(likely(GR_A(r2 + 1, iregs) >= ec.smbsz && cw < PROCESS_MAX))
   {
     ARCH_DEP(fetch_iss)(r2, regs, iregs, &ec, iss);
     ec.ocl = 0;                        /* Initialize output cache             */
@@ -1120,7 +1122,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   }
 
   /* Process last index symbols, never mind about childs written */
-  while(likely(!ARCH_DEP(fetch_is)(r2, regs, iregs, &is)))
+  while(likely(!ARCH_DEP(fetch_is)(r2, regs, iregs, &ec, &is)))
   {
     if(unlikely(!ec.ecl[is]))
     {
@@ -1232,15 +1234,19 @@ static void ARCH_DEP(expand_is)(REGS *regs, struct ec *ec, U16 is)
 /*----------------------------------------------------------------------------*/
 /* fetch_is (index symbol)                                                    */
 /*----------------------------------------------------------------------------*/
-static int ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, U16 *is)
+static int ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, struct ec *ec, U16 *is)
 {
+  unsigned cbn;                        /* Compressed-data bit number          */
   U32 mask;
   BYTE work[3];
+
+  /* Initialize values */
+  cbn = GR1_cbn(iregs);
 
   /* Check if we can read an index symbol */
   if(unlikely(GR_A(r2 + 1, iregs) < 2))
   {
-    if(unlikely(((GR1_cbn(iregs) + GR0_smbsz(regs) - 1) / 8) >= GR_A(r2 + 1, iregs)))
+    if(unlikely(((cbn + ec->smbsz - 1) / 8) >= GR_A(r2 + 1, iregs)))
     {
 
 #ifdef OPTION_CMPSC_DEBUG
@@ -1254,19 +1260,19 @@ static int ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, U16 *is)
 
   /* Clear possible fetched 3rd byte */
   work[2] = 0;
-  ARCH_DEP(vfetchc)(&work, (GR0_smbsz(regs) + GR1_cbn(iregs) - 1) / 8, GR_A(r2, iregs) & ADDRESS_MAXWRAP(regs), r2, regs);
+  ARCH_DEP(vfetchc)(&work, (ec->smbsz + cbn - 1) / 8, GR_A(r2, iregs) & ADDRESS_MAXWRAP(regs), r2, regs);
 
   /* Get the bits */
   mask = work[0] << 16 | work[1] << 8 | work[2];
-  mask >>= (24 - GR0_smbsz(regs) - GR1_cbn(iregs));
-  mask &= 0xFFFF >> (16 - GR0_smbsz(regs));
+  mask >>= (24 - ec->smbsz - cbn);
+  mask &= 0xFFFF >> (16 - ec->smbsz);
   *is = mask;
 
   /* Adjust source registers */
-  ADJUSTREGS(r2, regs, iregs, (GR1_cbn(iregs) + GR0_smbsz(regs)) / 8);
+  ADJUSTREGS(r2, regs, iregs, (cbn + ec->smbsz) / 8);
 
   /* Calculate and set the new compressed-data bit number */
-  GR1_setcbn(iregs, (GR1_cbn(iregs) + GR0_smbsz(regs)) % 8);
+  GR1_setcbn(iregs, (cbn + ec->smbsz) % 8);
 
 #ifdef OPTION_CMPSC_DEBUG
   logmsg("fetch_is : %04X, cbn=%d, GR%02d=" F_VADR ", GR%02d=" F_GREG "\n", *is, GR1_cbn(iregs), r2, iregs->GR(r2), r2 + 1, iregs->GR(r2 + 1));
@@ -1284,18 +1290,14 @@ static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, struct ec *ec, 
   unsigned len1;                       /* Lenght in first page                */
   BYTE *mem;                           /* Pointer to maddr or buf             */
   unsigned ofst;                       /* Offset in first page                */
-  int smbsz;                           /* Symbol size                         */
-
-  /* Initialize values */
-  smbsz = GR0_smbsz(regs);
 
   /* Fingers crossed that we stay within one page */
   ofst = GR_A(r2, iregs) & 0x7ff;
   if(unlikely(!ec->src))
     ec->src = MADDR((GR_A(r2, iregs) & ~0x7ff) & ADDRESS_MAXWRAP(regs), r2, regs, ACCTYPE_READ, regs->psw.pkey);
-  if(likely(ofst + smbsz < 0x800))
+  if(likely(ofst + ec->smbsz < 0x800))
   { 
-    ITIMER_SYNC(GR_A(r2, iregs), smbsz - 1, regs);
+    ITIMER_SYNC(GR_A(r2, iregs), ec->smbsz - 1, regs);
     mem = &ec->src[ofst]; 
   } 
   else
@@ -1304,12 +1306,12 @@ static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, struct ec *ec, 
     len1 = 0x800 - ofst;
     memcpy(buf, &ec->src[ofst], len1);
     ec->src = MADDR((GR_A(r2, iregs) + len1) & ADDRESS_MAXWRAP(regs), r2, regs, ACCTYPE_READ, regs->psw.pkey);
-    memcpy(&buf[len1], ec->src, smbsz - len1 + 1);
+    memcpy(&buf[len1], ec->src, ec->smbsz - len1 + 1);
     mem = buf;
   }
 
   /* Calculate the 8 index symbols */
-  switch(smbsz)
+  switch(ec->smbsz)
   {
     case 9: /*9-bits */
     {
@@ -1394,7 +1396,7 @@ static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, struct ec *ec, 
   }
 
   /* Adjust source registers */
-  ADJUSTREGS(r2, regs, iregs, smbsz);
+  ADJUSTREGS(r2, regs, iregs, ec->smbsz);
 
 #ifdef OPTION_CMPSC_DEBUG
   logmsg("fetch_iss: GR%02d=" F_VADR ", GR%02d=" F_GREG "\n", r2, iregs->GR(r2), r2 + 1, iregs->GR(r2 + 1));
