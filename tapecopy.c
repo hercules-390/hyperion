@@ -1,4 +1,4 @@
-/* TAPECOPY.C   (c) Copyright Roger Bowler, 1999-2009                */
+/* TAPECOPY.C   (c) Copyright Roger Bowler, 1999-2010                */
 /*              Convert SCSI tape into AWSTAPE format                */
 
 // $Id$
@@ -716,9 +716,9 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
                 if ( ioctl_tape( devfd, MTIOCPOS, (char*)&mtpos ) == 0 )
                 {
                     if (!is3590)
-                        fprintf( stderr, "BLK=%d\n", (mtpos.mt_blkno >> 24) & 0x0000007F );
+                        fprintf( stderr, "BLK=%ld\n", (mtpos.mt_blkno >> 24) & 0x0000007F );
                     else
-                        fprintf( stderr, "BLK=%d\n", mtpos.mt_blkno );
+                        fprintf( stderr, "BLK=%ld\n", mtpos.mt_blkno );
                 }
             }
         }
