@@ -7,7 +7,7 @@
 /* Mario Bezzi. Thanks Mario! Also special thanks to Greg Smith who           */
 /* introduced iregs, needed when a page fault occurs.                         */
 /*                                                                            */
-/*                              (c) Copyright Bernard van der Helm, 2000-2009 */
+/*                              (c) Copyright Bernard van der Helm, 2000-2010 */
 /*                              Noordwijkerhout, The Netherlands.             */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
@@ -170,9 +170,11 @@
 struct cc                              /* Compress context                    */
 {
   BYTE *cce;                           /* Character entry under investigation */
+  BYTE *dest;                          /* Destination MADDR address           */
   BYTE *dict[32];                      /* Dictionary MADDR addresses          */
   BYTE *edict[32];                     /* Expansion dictionary MADDR addrs    */
   int f1;                              /* Indication format-1 sibling descr   */
+  U16 is[8];                           /* Cache for 8 index symbols           */
   unsigned ofst;                       /* Latest fetched offset               */
   unsigned smbsz;                      /* Symbol size                         */
   BYTE *src;                           /* Source MADDR page address           */
@@ -208,6 +210,7 @@ static void  print_sd(int f1, BYTE *sd1, BYTE *sd2);
 static int   ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, struct cc *cc, BYTE *ch, U16 *is);
 static int   ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, struct cc *cc, BYTE *ch, U16 *is);
 static int   ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, struct cc *cc, U16 is);
+static void  ARCH_DEP(store_iss)(int r1, int r2, REGS *regs, REGS *iregs, struct cc *cc);
 static int   ARCH_DEP(test_ec)(int r2, REGS *regs, REGS *iregs, struct cc *cc, BYTE *cce);
 static int   ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, struct ec *ec, BYTE *buf, unsigned len);
 
@@ -409,16 +412,87 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
     }
   }
 
-  /* Initialize source maddr page address and symbol size */
+  /* Initialize dest, source maddr page address and symbol size */
+  cc.dest = NULL;
   cc.ofst = 0;
   cc.smbsz = GR0_smbsz(regs);
   cc.src = NULL;
+
+  /* Process individual index symbols until cbn bocomes zero */
+  if(unlikely(GR1_cbn(regs)))
+  {
+ 
+#ifdef OPTION_CMPSC_DEBUG
+    logmsg("Cbn not zero, process individual index symbols\n");
+#endif
+
+    while(likely(GR1_cbn(regs)))
+    {
+      /* Get the next character, return on end of source */
+      if(unlikely(ARCH_DEP(fetch_ch)(r2, regs, iregs, &cc, &ch)))
+        return;
+
+      /* Get the alphabet entry */
+      cc.cce = ARCH_DEP(fetch_cce)(regs, &cc, ch);
+
+      /* We always match the alpabet entry, so set last match */
+      ADJUSTREGS(r2, regs, iregs, 1);
+
+      /* Try to find a child in compression character entry */
+      is = ch;
+      while(ARCH_DEP(search_cce)(r2, regs, iregs, &cc, &ch, &is));
+
+      /* Write the last match, this can be the alphabet entry */
+      if(unlikely(ARCH_DEP(store_is)(r1, r2, regs, iregs, &cc, is)))
+        return;
+
+      /* Commit registers, we have completed a full compression */
+      COMMITREGS(regs, iregs, r1, r2);
+    }
+  }
 
   /* Try to process the CPU-determined amount of data */
   if(likely(GR_A(r2 + 1, regs) <= PROCESS_MAX))
     exit_value = 0;
   else
     exit_value = GR_A(r2 + 1, regs) - PROCESS_MAX;
+
+  /* Block processing, cbn stays zero */
+  while(likely(GR_A(r1 + 1, iregs) >= cc.smbsz && exit_value <= GR_A(r2 + 1, regs)))
+  {
+    for(i = 0; i < 8; i++)
+    {
+      /* Get the next character, return on end of source */
+      if(unlikely(ARCH_DEP(fetch_ch)(r2, regs, iregs, &cc, &ch)))
+      {
+        int j;
+
+        /* Write individual found index symbols */
+        for(j = 0; j < i; j++)
+          ARCH_DEP(store_is)(r1, r2, regs, iregs, &cc, cc.is[j]);
+        COMMITREGS(regs, iregs, r1, r2);
+        return;
+      }
+
+      /* Get the alphabet entry */
+      cc.cce = ARCH_DEP(fetch_cce)(regs, &cc, ch);
+
+      /* We always match the alpabet entry, so set last match */
+      ADJUSTREGS(r2, regs, iregs, 1);
+
+      /* Try to find a child in compression character entry */
+      is = ch;
+      while(ARCH_DEP(search_cce)(r2, regs, iregs, &cc, &ch, &is));
+
+      /* Write the last match, this can be the alphabet entry */
+      cc.is[i] = is;
+    }
+    ARCH_DEP(store_iss)(r1, r2, regs, iregs, &cc);
+
+    /* Commit registers, we have completed a full compression */
+    COMMITREGS2(regs, iregs, r1, r2);
+  }
+
   while(exit_value <= GR_A(r2 + 1, regs))
   {
 
@@ -431,9 +505,9 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 
     /* We always match the alpabet entry, so set last match */
     ADJUSTREGS(r2, regs, iregs, 1);
-    is = ch;
 
     /* Try to find a child in compression character entry */
+    is = ch;
     while(ARCH_DEP(search_cce)(r2, regs, iregs, &cc, &ch, &is));
 
     /* Write the last match, this can be the alphabet entry */
@@ -681,7 +755,7 @@ static int ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, struct cc *cc, 
   /* Initialize values */
   ccs = CCE_ccs(cc->cce);
   ind_search_siblings = 1;
-
+  
   /* Get the next character when there are children */
   if(likely(ccs))
   {
@@ -962,6 +1036,173 @@ static int ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, struct cc
 #endif 
 
   return(0);
+}
+
+/*----------------------------------------------------------------------------*/
+/* store_iss (index symbols)                                                  */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(store_iss)(int r1, int r2, REGS *regs, REGS *iregs, struct cc *cc)
+{
+  GREG dictor;                         /* dictionary origin                   */ 
+  int i;
+  U16 *is;                             /* Index symbol array                  */
+  unsigned len1;                       /* Length in first page                */
+  BYTE *main1;                         /* Address first page                  */
+  BYTE mem[13];                        /* Build buffer                        */
+  unsigned ofst;                       /* Offset within page                  */
+  BYTE *sk;                            /* Storage key                         */
+
+  /* Check if symbol translation is requested */
+  if(unlikely(GR0_st(regs)))
+  {
+    dictor = GR1_dictor(regs) + GR1_sttoff(regs);
+    for(i = 0; i < 8; i++)
+    {
+      /* Get the interchange symbol */
+      ARCH_DEP(vfetchc)(mem, 1, (dictor + cc->is[i] * 2) & ADDRESS_MAXWRAP(regs), r2, regs);
+
+#ifdef OPTION_CMPSC_DEBUG
+      logmsg("store_iss: %04X -> %02X%02X\n", cc->is[i], mem[0], mem[1]);
+#endif
+
+      /* set index_symbol to interchange symbol */
+      cc->is[i] = (mem[0] << 8) + mem[1];
+    }
+  }
+
+  /* Calculate buffer for 8 index symbols */
+  is = cc->is;
+  switch(cc->smbsz)
+  {
+    case 9:
+    {
+      /* 0        1        2        3        4        5        6        7        8        */
+      /* 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 */
+      /* 01234567 80123456 78012345 67801234 56780123 45678012 34567801 23456780 12345678 */
+      /* 0         1         2         3         4         5         6         7          */
+      mem[0] = (               (is[0] >> 1));
+      mem[1] = ((is[0] << 7) | (is[1] >> 2)) & 0xff;
+      mem[2] = ((is[1] << 6) | (is[2] >> 3)) & 0xff;
+      mem[3] = ((is[2] << 5) | (is[3] >> 4)) & 0xff;
+      mem[4] = ((is[3] << 4) | (is[4] >> 5)) & 0xff;
+      mem[5] = ((is[4] << 3) | (is[5] >> 6)) & 0xff;
+      mem[6] = ((is[5] << 2) | (is[6] >> 7)) & 0xff;
+      mem[7] = ((is[6] << 1) | (is[7] >> 8)) & 0xff;
+      mem[8] = ((is[7])                    ) & 0xff;
+      break;
+    }
+    case 10:
+    {
+      /* 0        1        2        3        4        5        6        7        8        9        */
+      /* 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 */
+      /* 01234567 89012345 67890123 45678901 23456789 01234567 89012345 67890123 45678901 23456789 */
+      /* 0          1          2          3           4          5          6          7           */
+      mem[0] = (               (is[0] >> 2));
+      mem[1] = ((is[0] << 6) | (is[1] >> 4)) & 0xff;
+      mem[2] = ((is[1] << 4) | (is[2] >> 6)) & 0xff;
+      mem[3] = ((is[2] << 2) | (is[3] >> 8)) & 0xff;
+      mem[4] = ((is[3])                    ) & 0xff;
+      mem[5] = (               (is[4] >> 2)) & 0xff;
+      mem[6] = ((is[4] << 6) | (is[5] >> 4)) & 0xff;
+      mem[7] = ((is[5] << 4) | (is[6] >> 6)) & 0xff;
+      mem[8] = ((is[6] << 2) | (is[7] >> 8)) & 0xff;
+      mem[9] = ((is[7])                    ) & 0xff;
+      break;
+    }
+    case 11:
+    {
+      /* 0        1        2        3        4        5        6        7        8        9        a        */
+      /* 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 */
+      /* 01234567 89a01234 56789a01 23456789 a0123456 789a0123 456789a0 12345678 9a012345 6789a012 3456789a */
+      /* 0           1           2            3           4           5            6           7            */
+      mem[ 0] = (               (is[0] >>  3));
+      mem[ 1] = ((is[0] << 5) | (is[1] >>  6)) & 0xff;
+      mem[ 2] = ((is[1] << 2) | (is[2] >>  9)) & 0xff;
+      mem[ 3] = (               (is[2] >>  1)) & 0xff;
+      mem[ 4] = ((is[2] << 7) | (is[3] >>  4)) & 0xff;
+      mem[ 5] = ((is[3] << 4) | (is[4] >>  7)) & 0xff;
+      mem[ 6] = ((is[4] << 1) | (is[5] >> 10)) & 0xff;
+      mem[ 7] = (               (is[5] >>  2)) & 0xff;
+      mem[ 8] = ((is[5] << 6) | (is[6] >>  5)) & 0xff;
+      mem[ 9] = ((is[6] << 3) | (is[7] >>  8)) & 0xff;
+      mem[10] = ((is[7])                     ) & 0xff;
+      break;
+    }
+    case 12:
+    {
+      /* 0        1        2        3        4        5        6        7        8        9        a        b        */
+      /* 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 */
+      /* 01234567 89ab0123 456789ab 01234567 89ab0123 456789ab 01234567 89ab0123 456789ab 01234567 89ab0123 456789ab */
+      /* 0            1             2            3             4            5             6            7             */
+      mem[ 0] = (               (is[0] >> 4));
+      mem[ 1] = ((is[0] << 4) | (is[1] >> 8)) & 0xff;
+      mem[ 2] = ((is[1])                    ) & 0xff;
+      mem[ 3] = (               (is[2] >> 4)) & 0xff;
+      mem[ 4] = ((is[2] << 4) | (is[3] >> 8)) & 0xff;
+      mem[ 5] = ((is[3])                    ) & 0xff;
+      mem[ 6] = (               (is[4] >> 4)) & 0xff;
+      mem[ 7] = ((is[4] << 4) | (is[5] >> 8)) & 0xff;
+      mem[ 8] = ((is[5])                    ) & 0xff;
+      mem[ 9] = (               (is[6] >> 4)) & 0xff;
+      mem[10] = ((is[6] << 4) | (is[7] >> 8)) & 0xff;
+      mem[11] = ((is[7])                    ) & 0xff;
+      break;
+    }
+    case 13:
+    {
+      /* 0        1        2        3        4        5        6        7        8        9        a        b        c        */
+      /* 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 */
+      /* 01234567 89abc012 3456789a bc012345 6789abc0 12345678 9abc0123 456789ab c0123456 789abc01 23456789 abc01234 56789abc */
+      /* 0             1              2             3              4              5             6              7              */
+      mem[ 0] = (               (is[0] >>  5));
+      mem[ 1] = ((is[0] << 3) | (is[1] >> 10)) & 0xff;
+      mem[ 2] = (               (is[1] >>  2)) & 0xff;
+      mem[ 3] = ((is[1] << 6) | (is[2] >>  7)) & 0xff;
+      mem[ 4] = ((is[2] << 1) | (is[3] >> 12)) & 0xff;
+      mem[ 5] = (               (is[3] >>  4)) & 0xff;
+      mem[ 6] = ((is[3] << 4) | (is[4] >>  9)) & 0xff;
+      mem[ 7] = (               (is[4] >>  1)) & 0xff;
+      mem[ 8] = ((is[4] << 7) | (is[5] >>  6)) & 0xff;
+      mem[ 9] = ((is[5] << 2) | (is[6] >> 11)) & 0xff;
+      mem[10] = (               (is[6] >>  3)) & 0xff;
+      mem[11] = ((is[6] << 5) | (is[7] >>  8)) & 0xff;
+      mem[12] = ((is[7])                     ) & 0xff;
+      break;
+    }
+  }
+
+  /* Fingers crossed that we stay within one page */
+  ofst = GR_A(r1, iregs) & 0x7ff;
+  if(likely(ofst + cc->smbsz < 0x800))
+  {
+    if(unlikely(!cc->dest))
+      cc->dest = MADDR((GR_A(r1, iregs) & ~0x7ff) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    memcpy(&cc->dest[ofst], mem, cc->smbsz);
+    ITIMER_UPDATE(GR_A(r1, iregs), cc->smbsz - 1, regs);
+  }
+  else
+  {
+    /* We need 2 pages */
+    if(unlikely(!cc->dest))
+      main1 = MADDR((GR_A(r1, iregs) & ~0x7ff) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
+    else
+      main1 = cc->dest;
+    sk = regs->dat.storkey;
+    len1 = 0x800 - ofst;
+    cc->dest = MADDR((GR_A(r1, iregs) + len1) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    memcpy(&main1[ofst], mem, len1);
+    memcpy(cc->dest, &mem[len1], cc->smbsz - len1 + 1);
+    *sk |= (STORKEY_REF | STORKEY_CHANGE);
+  }
+  ADJUSTREGS(r1, regs, iregs, cc->smbsz);
+
+#ifdef OPTION_CMPSC_DEBUG
+  logmsg("store_iss:");
+  for(i = 0; i < 8; i++)
+    logmsg(" %04X", cc->is[i]);
+  logmsg(", GR%02d=" F_VADR ", GR%02d=" F_GREG "\n", r1, iregs->GR(r1), r1 + 1, iregs->GR(r1 + 1));
+#endif
+
 }
 
 /*----------------------------------------------------------------------------*/
