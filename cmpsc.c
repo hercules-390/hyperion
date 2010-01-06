@@ -486,6 +486,11 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 
       /* Write the last match, this can be the alphabet entry */
       cc.is[i] = is;
+
+#ifdef OPTION_CMPSC_DEBUG
+      logmsg("compress : is %04X (%d)\n", is, i);
+#endif
+
     }
     ARCH_DEP(store_iss)(r1, r2, regs, iregs, &cc);
 
