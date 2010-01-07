@@ -56,6 +56,7 @@ int process_script_file(char *,int);
 
 int test_p   = 0;
 int test_n   = 0;
+int test_t   = 0;
 TID test_tid = 0;
 int test_msg_num = 0;
 
@@ -117,29 +118,30 @@ int test_cmd(int argc, char *argv[],char *cmdline)
 
     test_p = 0;
     test_n = 0;
+    test_t = 0;
 
     if (argc > 1)
     {
         if (strncasecmp(argv[1],   "p=",2) == 0) test_p = atoi( &argv[1][2] );
         if (strncasecmp(argv[1],   "n=",2) == 0) test_n = atoi( &argv[1][2] );
-        if (            argv[1][0] == '&')       test_tid = 1;
+        if (argv[1][0] == '&') test_t = 1;
     }
 
     if (argc > 2)
     {
         if (strncasecmp(argv[2],   "p=",2) == 0) test_p = atoi( &argv[2][2] );
         if (strncasecmp(argv[2],   "n=",2) == 0) test_n = atoi( &argv[2][2] );
-        if (            argv[2][0] == '&')       test_tid = 1;
+        if (argv[2][0] == '&') test_t = 1;
     }
 
     if (argc > 3)
     {
         if (strncasecmp(argv[3],   "p=",2) == 0) test_p = atoi( &argv[3][2] );
         if (strncasecmp(argv[3],   "n=",2) == 0) test_n = atoi( &argv[3][2] );
-        if (            argv[3][0] == '&')       test_tid = 1;
+        if (argv[3][0] == '&') test_t = 1;
     }
 
-    if (test_tid)
+    if (test_t)
         create_thread( &test_tid, DETACHED, test_thread, NULL, "test thread" );
     else
         do_test_msgs();
