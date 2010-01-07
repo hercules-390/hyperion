@@ -1,27 +1,11 @@
-/* PTTRACE.C   (c) Copyright Greg Smith, 2003-2009                   */
-/*       pthreads trace debugger                                     */
+/* PTTRACE.C    (c) Copyright Greg Smith, 2003-2009                  */
+/*              pthreads trace debugger                              */
 
 // $Id$
 
 /*-------------------------------------------------------------------*/
 /* Trace threading calls                                             */
 /*-------------------------------------------------------------------*/
-
-// $Log$
-// Add instruction trace 01mar09 jj
-//
-// Revision 1.32  2009/01/23 12:58:42  bernard
-// copyright notice
-//
-// Revision 1.31  2008/11/24 22:31:49  rbowler
-// Fix win64 warning C4312 type cast conversion in pttrace.c
-//
-// Revision 1.30  2007/06/23 00:04:15  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.29  2006/12/08 09:43:29  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 

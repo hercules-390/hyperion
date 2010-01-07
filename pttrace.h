@@ -1,6 +1,11 @@
+/* PTTRACE.H    (c) Copyright Greg Smith, 2003-2009                  */
+/*              Header file for pthreads trace debugger              */
+
 // $Id$
-//
-// $Log$
+
+/*-------------------------------------------------------------------*/
+/* Pthread tracing structures and prototypes                         */
+/*-------------------------------------------------------------------*/
 
 #if !defined( _PTTHREAD_H_ )
 #define _PTTHREAD_H_
@@ -14,9 +19,6 @@
 #else   /* _PTTRACE_C_ */
 #define PTT_DLL_IMPORT DLL_EXPORT
 #endif /* _PTTRACE_C_ */
-/*--------------------------------------------------------------------*/
-/* Pthread tracing                                                    */
-/*--------------------------------------------------------------------*/
 
 #if defined(OPTION_FTHREADS)
 #define OBTAIN_PTTLOCK \
@@ -72,7 +74,7 @@ PTT_DLL_IMPORT int  pttclass;
 void *ptt_timeout();
 
 typedef struct _PTT_TRACE {
-        TID          tid;               /* Thead id                   */
+        TID          tid;               /* Thread id                  */
         int          class;             /* Trace record class         */
 #define PTT_CL_LOG  0x0001              /* Logger records             */
 #define PTT_CL_TMR  0x0002              /* Timer/Clock records        */
