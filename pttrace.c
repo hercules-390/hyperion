@@ -639,7 +639,7 @@ const char dot = '.';
 
             logmsg
             (
-                "%8.8x "                      // Thead id
+                "%8.8"I32_FMT"x "             // Thread id (low 32 bits)
                 "%-12.12s "                   // Trace type (string; 12 chars)
                 PTR_FMTx" "                   // Data value 1
                 PTR_FMTx" "                   // Data value 2
@@ -647,7 +647,7 @@ const char dot = '.';
                 "%s%c%6.6ld "                 // Time of day (HH:MM:SS.usecs)
                 "%s\n"                        // Numeric result (or empty string)
 
-                ,(U32)pttrace[i].tid          // Thead id
+                ,(U32)(uintptr_t)(pttrace[i].tid) // Thread id (low 32 bits)
                 ,pttrace[i].type              // Trace type (string; 12 chars)
                 ,(uintptr_t)pttrace[i].data1  // Data value 1
                 ,(uintptr_t)pttrace[i].data2  // Data value 2
