@@ -648,7 +648,7 @@ static void print_cce(BYTE *cce)
       }
       case 1:
       {
-        logmsg("  x1     : %c\n", (int) (CCE_x(cce, j) ? '1' : '0'));
+        logmsg("  x1     : %c\n", (int) (CCE_x(cce, 0) ? '1' : '0'));
         logmsg("  act    : %d\n", (int) CCE_act(cce));
         logmsg("  cptr   : %04X\n", CCE_cptr(cce));
         if(CCE_act(cce))
@@ -1079,7 +1079,7 @@ static void ARCH_DEP(store_iss)(int r1, int r2, REGS *regs, REGS *iregs, struct 
   is = cc->is;
   switch(cc->smbsz)
   {
-    case 9:
+    case 9: /* 9-bits */
     {
       /* 0        1        2        3        4        5        6        7        8        */
       /* 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 */
@@ -1096,7 +1096,7 @@ static void ARCH_DEP(store_iss)(int r1, int r2, REGS *regs, REGS *iregs, struct 
       mem[8] = ((is[7])                    ) & 0xff;
       break;
     }
-    case 10:
+    case 10: /* 10-bits */
     {
       /* 0        1        2        3        4        5        6        7        8        9        */
       /* 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 */
@@ -1114,7 +1114,7 @@ static void ARCH_DEP(store_iss)(int r1, int r2, REGS *regs, REGS *iregs, struct 
       mem[9] = ((is[7])                    ) & 0xff;
       break;
     }
-    case 11:
+    case 11: /* 11-bits */
     {
       /* 0        1        2        3        4        5        6        7        8        9        a        */
       /* 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 */
@@ -1133,7 +1133,7 @@ static void ARCH_DEP(store_iss)(int r1, int r2, REGS *regs, REGS *iregs, struct 
       mem[10] = ((is[7])                     ) & 0xff;
       break;
     }
-    case 12:
+    case 12: /* 12-bits */
     {
       /* 0        1        2        3        4        5        6        7        8        9        a        b        */
       /* 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 */
@@ -1153,7 +1153,7 @@ static void ARCH_DEP(store_iss)(int r1, int r2, REGS *regs, REGS *iregs, struct 
       mem[11] = ((is[7])                    ) & 0xff;
       break;
     }
-    case 13:
+    case 13: /* 13-bits */
     {
       /* 0        1        2        3        4        5        6        7        8        9        a        b        c        */
       /* 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 */
@@ -1559,7 +1559,7 @@ static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, struct ec *ec, 
   /* Calculate the 8 index symbols */
   switch(ec->smbsz)
   {
-    case 9: /*9-bits */
+    case 9: /* 9-bits */
     {
       /* 0       1        2        3        4        5        6        7        8        */
       /* 012345670 123456701 234567012 345670123 456701234 567012345 670123456 701234567 */
