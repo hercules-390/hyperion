@@ -78,7 +78,7 @@
   #define  fdatasync            _commit
   #define  atoll                _atoi64
 #else
-  #if (!defined(HAVE_FDATASYNC)) && ((!defined(_POSIX_SYNCHRONIZED_IO)) || (_POSIX_SYNCHRONIZED_IO < 0))
+  #if !defined(HAVE_FDATASYNC_SUPPORTED)
     #ifdef HAVE_FSYNC
       #define  fdatasync        fsync
     #else

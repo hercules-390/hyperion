@@ -707,6 +707,31 @@ fi
 #AC_CHECK_FUNCS( ffs )
 
 
+# For OS X 10.6 autoconf defines HAVE_FDATASYNC even though there is
+# no function prototype declared for fdatasync() and unistd.h contains
+# define _POSIX_SYNCHRONIZED_IO (-1) which indicates that fdatasync is
+# not supported. So to decide whether fdatasync really can be used, we
+# create a new symbol HAVE_FDATASYNC_SUPPORTED which is defined only if
+# HAVE_FDATASYNC is defined and _POSIX_SYNCHRONIZED_IO is not negative.
+
+AC_CACHE_CHECK([whether fdatasync is supported],[ac_cv_func_fdatasync_supported],[
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <unistd.h>
+    ]],[[
+#if !defined(HAVE_FDATASYNC)
+#error fdatasync is not defined on this platform
+#endif
+#if defined(_POSIX_SYNCHRONIZED_IO) && (_POSIX_SYNCHRONIZED_IO+0 < 0)
+#error fdatasync is not supported on this platform
+#endif
+    ]])],
+    [ac_cv_func_fdatasync_supported=yes],
+    [ac_cv_func_fdatasync_supported=no])
+])
+AS_IF([test "x${ac_cv_func_fdatasync_supported}" = "xyes"],
+    [AC_DEFINE([HAVE_FDATASYNC_SUPPORTED],[1],[Define to 1 if the fdatasync function is supported.])])
+
+
 AC_CACHE_SAVE()
 
 ###############################################################################
