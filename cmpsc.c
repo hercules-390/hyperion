@@ -759,69 +759,65 @@ static int ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, struct cc *cc, 
 
   /* Initialize values */
   ccs = CCE_ccs(cc->cce);
-  ind_search_siblings = 1;
   
   /* Get the next character when there are children */
   if(likely(ccs))
   {
     if(ARCH_DEP(fetch_ch(r2, regs, iregs, cc, ch)))
       return(0);
-  }
+    ind_search_siblings = 1;
 
-  /* Now check all children in parent */
-  for(i = 0; i < ccs; i++)
-  {
-
-    /* Stop searching when child tested and no consecutive child character */
-    if(unlikely(!ind_search_siblings && !CCE_ccc(cc->cce, i)))
-      return(0);
-
-    /* Compare character with child */
-    if(unlikely(*ch == CCE_cc(cc->cce, i)))
+    /* Now check all children in parent */
+    for(i = 0; i < ccs; i++)
     {
-
-      /* Child is tested, so stop searching for siblings*/
-      ind_search_siblings = 0;
-
-      /* Check if child should not be examined */
-      if(unlikely(!CCE_x(cc->cce, i)))
-      {
-
-        /* No need to examine child, found the last match */
-        ADJUSTREGS(r2, regs, iregs, 1);
-        *is = CCE_cptr(cc->cce) + i;
-
-        /* Index symbol is found, stop searching */
+      /* Stop searching when child tested and no consecutive child character */
+      if(unlikely(!ind_search_siblings && !CCE_ccc(cc->cce, i)))
         return(0);
-      }
 
-      /* Found a child get the character entry */
-      ccce = ARCH_DEP(fetch_cce)(regs, cc, CCE_cptr(cc->cce) + i);
-
-      /* Check if additional extension characters match */
-      if(likely(ARCH_DEP(test_ec)(r2, regs, iregs, cc, ccce)))
+      /* Compare character with child */
+      if(unlikely(*ch == CCE_cc(cc->cce, i)))
       {
+        /* Child is tested, so stop searching for siblings*/
+        ind_search_siblings = 0;
 
-        /* Set last match */
-        ADJUSTREGS(r2, regs, iregs, CCE_ecs(ccce) + 1);
-        *is = CCE_cptr(cc->cce) + i;
+        /* Check if child should not be examined */
+        if(unlikely(!CCE_x(cc->cce, i)))
+        {
+          /* No need to examine child, found the last match */
+          ADJUSTREGS(r2, regs, iregs, 1);
+          *is = CCE_cptr(cc->cce) + i;
+
+          /* Index symbol is found, stop searching */
+          return(0);
+        }
+
+        /* Found a child get the character entry */
+        ccce = ARCH_DEP(fetch_cce)(regs, cc, CCE_cptr(cc->cce) + i);
+
+        /* Check if additional extension characters match */
+        if(likely(ARCH_DEP(test_ec)(r2, regs, iregs, cc, ccce)))
+        {
+          /* Set last match */
+          ADJUSTREGS(r2, regs, iregs, CCE_ecs(ccce) + 1);
+          *is = CCE_cptr(cc->cce) + i;
 
 #ifdef OPTION_CMPSC_DEBUG
-        logmsg("search_cce index %04X parent\n", *is);
+          logmsg("search_cce index %04X parent\n", *is);
 #endif 
 
-        /* Found a matching child, make it parent */
-        cc->cce = ccce;
+          /* Found a matching child, make it parent */
+          cc->cce = ccce;
 
-        /* We found a parent, keep searching */
-        return(1);
+          /* We found a parent, keep searching */
+          return(1);
+        }
       }
     }
-  }
 
-  /* Are there siblings? */
-  if(likely(CCE_mcc(cc->cce)))
-    return(ARCH_DEP(search_sd)(r2, regs, iregs, cc, ch, is));
+    /* Are there siblings? */
+    if(likely(CCE_mcc(cc->cce)))
+      return(ARCH_DEP(search_sd)(r2, regs, iregs, cc, ch, is));
+  }
 
   /* No siblings, write found index symbol */
   return(0);
@@ -901,21 +897,18 @@ static int ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, struct cc *cc, B
     scs = SD_scs(cc->f1, sd1);
     for(i = 0; i < scs; i++)
     {
-
       /* Stop searching when child tested and no consecutive child character */
       if(unlikely(!ind_search_siblings && !SD_ccc(cc->f1, sd1, sd2, i)))
         return(0);
 
       if(unlikely(*ch == SD_sc(cc->f1, sd1, sd2, i)))
       {
-
         /* Child is tested, so stop searching for siblings*/
         ind_search_siblings = 0;
 
         /* Check if child should not be examined */
         if(unlikely(!SD_ecb(cc->f1, sd1, i, cc->cce, y_in_parent)))
         {
-
           /* No need to examine child, found the last match */
           ADJUSTREGS(r2, regs, iregs, 1);
           *is = CCE_cptr(cc->cce) + sd_ptr + i + 1;
@@ -930,7 +923,6 @@ static int ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, struct cc *cc, B
         /* Check if additional extension characters match */
         if(unlikely(ARCH_DEP(test_ec)(r2, regs, iregs, cc, ccce)))
         {
-
           /* Set last match */
           ADJUSTREGS(r2, regs, iregs, CCE_ecs(ccce) + 1);
           *is = CCE_cptr(cc->cce) + sd_ptr + i + 1;
@@ -958,7 +950,6 @@ static int ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, struct cc *cc, B
 
     /* We get the next sibling descriptor, no y bits in parent for him */
     y_in_parent = 0;
-
   }
   while(ind_search_siblings && SD_msc(cc->f1, sd1));
   return(0);
@@ -994,7 +985,6 @@ static int ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, struct cc
   /* Check if symbol translation is requested */
   if(unlikely(GR0_st(regs)))
   {
-
     /* Get the interchange symbol */
     ARCH_DEP(vfetchc)(work, 1, (GR1_dictor(regs) + GR1_sttoff(regs) + is * 2) & ADDRESS_MAXWRAP(regs), r2, regs);
 
