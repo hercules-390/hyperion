@@ -610,6 +610,7 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
   do { \
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0) { \
         extgui = 1; \
+        argv[argc-1] = NULL; \
         argc--; \
         setvbuf(stderr, NULL, _IONBF, 0); \
         setvbuf(stdout, NULL, _IONBF, 0); \
