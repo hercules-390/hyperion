@@ -1054,7 +1054,7 @@ static void NP_screen_redraw (REGS *regs)
         draw_text ("CPU");
         for (i = 0; i < NPcpugraph_ncpu; i++)
         {
-            sprintf (buf, "%2d  ", i);
+            sprintf (buf, "%02X  ", i);
             set_pos (line++, 1);
             draw_text (buf);
         }
