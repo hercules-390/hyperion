@@ -1,4 +1,4 @@
-/* ESAME.C      (c) Copyright Jan Jaeger, 2000-2009                  */
+/* ESAME.C      (c) Copyright Jan Jaeger, 2000-2010                  */
 /*              ESAME (z/Architecture) instructions                  */
 
 // $Id$
