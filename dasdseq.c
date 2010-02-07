@@ -1095,8 +1095,8 @@ int main(int argc, char **argv) {
     int      dsn_recs_written = 0, bail, dsorg, rc;
     char     pathname[MAX_PATH];
 
-    fprintf(stderr, "dasdseq %s Copyright 1999-2009 Roger Bowler\n"
-        "Portions Copyright 2001-2009 James M. Morrison\n", VERSION);
+    fprintf(stderr, "dasdseq %s (C) Copyright 1999-2010 Roger Bowler\n"
+        "Portions (C) Copyright 2001-2010 James M. Morrison\n", VERSION);
     if (debug) fprintf(stderr, "DEBUG enabled\n");
 
 //  Parse command line

@@ -1283,7 +1283,7 @@ static char *herclogo[]={
     " HHH          HHH",
     " HHH          HHH     My PC thinks it's a MAINFRAME",
     "",
-    " Copyright (c) 1999-2009 Roger Bowler, Jan Jaeger, and others"};
+    " Copyright (C) 1999-2010 Roger Bowler, Jan Jaeger, and others"};
     */
 
 static char *herclogo[]={
@@ -1344,7 +1344,7 @@ static char *herclogo[]={
 "           HHH          HHH",
 "           HHH          HHH     My PC thinks it's a MAINFRAME",
 "",
-"           Copyright (c) 1999-2009 Roger Bowler, Jan Jaeger, and others"};
+"           Copyright (C) 1999-2010 Roger Bowler, Jan Jaeger, and others"};
 
 #define LOGO_BUFFERSIZE 256;
 
