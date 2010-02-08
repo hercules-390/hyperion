@@ -9,6 +9,7 @@
 #
 # ***************************************************************************
 
+!UNDEF fna
 !IFNDEF VERSION
 #                   >>> Jay! <<<
 #
@@ -25,7 +26,7 @@
 # and we create a temporary file containing statements V1=x V2=y V3=z
 # Finally we include the temporary file to set the variables V1,V2,V3
 opt = "tokens=1-5 delims=(),. "
-fna = $(TEMP)\hercver.txt
+fna = hercver-$(BUILD_TYPE).txt
 cmd = @echo V1=%c >$(fna) && @echo V2=%d >>$(fna) && @echo V3=%e >>$(fna)
 !IF ["for /f $(opt) %a in (configure.ac) do @if %a==AM_INIT_AUTOMAKE $(cmd)"] == 0
 !INCLUDE $(fna)
