@@ -25,9 +25,14 @@
 #  Primary build rules...
 # ---------------------------------------------------------------------
 
-all: allzlib alllibbz2 allpcre
+all: allzlib alllibbz2 allpcre allHercules
     for %I in (rebase.exe) do if exist %~$$PATH:I rebase -b 0x400000 $(X)*.dll
     if exist $(EXEDIR)\*.manifest   del /f /q $(EXEDIR)\*.manifest
+
+allHercules: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR) \
+    $(O)build_pch.pch \
+    $(MODULES) \
+    $(EXECUTABLES)
 
 clean: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR)
     if exist $(OBJDIR)\*.*          rmdir /s /q $(OBJDIR)

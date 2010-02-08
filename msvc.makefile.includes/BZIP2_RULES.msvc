@@ -14,6 +14,7 @@
 # DD/MM/YY Description
 #
 # 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
+# 07/02/10 Fish: allHercules.
 #
 # ***************************************************************************
 
@@ -22,15 +23,12 @@
 $(X)libbz2.dll:
     XCOPY "$(BZIP2_DLL)" $(X) /V /C /F /H /R /K /O /X /Y
 
-alllibbz2: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR) $(O)build_pch.pch \
-    $(MODULES) \
-    $(EXECUTABLES) \
+alllibbz2: allHercules \
     $(X)libbz2.dll
 
 !ELSE
-alllibbz2: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR) $(O)build_pch.pch \
-    $(MODULES) \
-    $(EXECUTABLES)
+
+alllibbz2: allHercules
 
 !ENDIF
 

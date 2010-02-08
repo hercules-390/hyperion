@@ -14,6 +14,7 @@
 # DD/MM/YY Description
 #
 # 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
+# 07/02/10 Fish: allHercules.
 #
 # ***************************************************************************
 
@@ -25,16 +26,13 @@ $(X)$(PCRE_DLLNAME1):
 $(X)$(PCRE_DLLNAME2):
     XCOPY "$(PCRE_DLLPATH2)" $(X) /V /C /F /H /R /K /O /X /Y
 
-allpcre: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR) $(O)build_pch.pch \
-    $(MODULES) \
-    $(EXECUTABLES) \
+allpcre: allHercules \
     $(X)$(PCRE_DLLNAME1) \
     $(X)$(PCRE_DLLNAME2)
 
 !ELSE
-allpcre: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR) $(O)build_pch.pch \
-    $(MODULES) \
-    $(EXECUTABLES)
+
+allpcre: allHercules
 
 !ENDIF
 
