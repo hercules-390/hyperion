@@ -37,6 +37,9 @@ clean: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR)
 !IFDEF ASSEMBLY_LISTINGS
     if exist $(ASMDIR)\*.*          rmdir /s /q $(ASMDIR)
 !ENDIF
+!IFDEF fna
+    if exist $(fna)                 del /f /q $(fna)
+!ENDIF
 
 MT_EXE_CMD=if exist $@.manifest mt.exe -nologo -outputresource:$@;1 -manifest $@.manifest
 MT_DLL_CMD=if exist $@.manifest mt.exe -nologo -outputresource:$@;2 -manifest $@.manifest
