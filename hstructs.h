@@ -392,9 +392,9 @@ struct SYSBLK {
 #define HDL_SIZE_SYSBLK   sizeof(SYSBLK)
         time_t  impltime;               /* TOD system was IMPL'ed    */
         int     arch_mode;              /* Architecturual mode       */
-                                        /* 0 == S/370                */
-                                        /* 1 == ESA/390              */
-                                        /* 2 == ESAME                */
+                                        /* 0 == S/370   (ARCH_370)   */
+                                        /* 1 == ESA/390 (ARCH_390)   */
+                                        /* 2 == ESAME   (ARCH_900)   */
         int     arch_z900;              /* 1 == ESAME supported      */
         RADR    mainsize;               /* Main storage size (bytes) */
         BYTE   *mainstor;               /* -> Main storage           */
