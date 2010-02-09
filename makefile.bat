@@ -1,13 +1,7 @@
-@echo off
-
-
-  :: Jay! HERE is where you set the version now! Not in VERSION.msvc any more!
-  :: (the batch file takes care of setting V1/V2/V3/V4 for you automatically)
-
-  set VERSION="3.06"
-
+@if defined TRACEON (@echo on) else (@echo off)
 
   :: Uncomment the below to set a custom build description.
+
   ::set CUSTOM_BUILD_STRING="(whatever you want it to be)"
 
 
@@ -36,26 +30,46 @@
 ::*      If it doesn't work then I don't know who the heck wrote it.          *
 ::*                                                                           *
 ::*****************************************************************************
+::*                                                                           *
+::*                          PROGRAMMING NOTE                                 *
+::*                                                                           *
+::*  All error messages *MUST* be issued in the following strict format:      *
+::*                                                                           *
+::*         echo %~nx0^(1^) : error C9999 : error-message-text...             *
+::*                                                                           *
+::*  in order for the Visual Studio IDE to detect it as a build error since   *
+::*  exiting with a non-zero return code doesn't do the trick. Visual Studio  *
+::*  apparently examines the message-text looking for error/warning strings.  *
+::*                                                                           *
+::*****************************************************************************
 
   set rc=0
-  goto :begin
+  set "TRACE=if defined TRACEON echo"
+
+  if "%~1" == ""        goto :help
+  if "%~1" == "?"       goto :help
+  if "%~1" == "/?"      goto :help
+  if "%~1" == "-?"      goto :help
+  if "%~1" == "--help"  goto :help
+
+  set build_type=%~1
+  set makefile_name=%~2
+  set num_cpus=%~3
+  set extra_nmake_arg=%~4
+  set SolutionDir=%~5
+
+:extra_args
+
+  if "%~5" == "" goto :begin
+  set extra_nmake_arg=%extra_nmake_arg% %~5
+  shift /1
+  goto :extra_args
 
 ::-----------------------------------------------------------------------------
 ::                                HELP
 ::-----------------------------------------------------------------------------
 :help
 
-  ::***************************************************************************
-  ::
-  ::  All error messages *MUST* be issued in the following strict format:
-  ::
-  ::         echo %~nx0^(1^) : error C9999 : error-message-text...
-  ::
-  ::  in order for the Visual Studio IDE to detect it as a build error since
-  ::  exiting with a non-zero return code doesn't do the trick. Visual Studio
-  ::  apparently examines the message-text looking for error/warning strings.
-  ::
-  ::***************************************************************************
   echo.
   echo %~nx0^(1^) : error C9999 : Help information is as follows:
   echo.
@@ -105,24 +119,6 @@
 ::                                BEGIN
 ::-----------------------------------------------------------------------------
 :begin
-
-
-  set build_type=%~1
-  set makefile_name=%~2
-  set num_cpus=%~3
-  set extra_nmake_arg=%~4
-  set SolutionDir=%~5
-
-
-  if "%build_type%" == ""        goto :help
-  if "%build_type%" == "?"       goto :help
-  if "%build_type%" == "/?"      goto :help
-  if "%build_type%" == "-?"      goto :help
-  if "%build_type%" == "--help"  goto :help
-
-
-  call :set_version %VERSION%
-  if %rc% NEQ 0 exit /b 1
 
 
   call :set_build_env
@@ -217,150 +213,6 @@
 
 ::-----------------------------------------------------------------------------
 ::                        CALLED SUBROUTINES
-::-----------------------------------------------------------------------------
-:set_version
-
-  if "%~1" == "" (
-
-    echo.
-    echo %~nx0^(1^) : error C9999 : VERSION= is undefined.
-    set rc=1
-    goto :EOF
-  )
-
-  :: NOTE: in the below "(set V1=%%a&&set V2=%%b&&set V3=%%c&&set V4=%%d)"
-  :: clause, there is NO SPACE between the '%%a' and the '&&' ampersands
-  :: and the 'set' commands. This is done on purpose so that there are no
-  :: trailing spaces in the value being set.
-
-  for /f "tokens=1,2,3,4 delims=." %%a in ('echo %~1') do (set V1=%%a&&set V2=%%b&&set V3=%%c&&set V4=%%d)
-
-  if     "%V1%" == "" set V1=1
-  if     "%V2%" == "" set V2=0
-  if     "%V3%" == "" set V3=0
-  if not "%V4%" == "" goto :version_done
-
-  call :auto_build_count
-  set V4=%BUILDCOUNT_NUM%
-
-:version_done
-
-  set VERSION=\"%V1%.%V2%.%V3%.%V4%\"
-  goto :EOF
-
-
-::-----------------------------------------------------------------------------
-:auto_build_count
-
-  :: PROGRAMMING NOTE: even though Hercules does not currently use the
-  :: AutoBuildCount.h header (even though AutoBuildCount.h is specified
-  :: as a project member) we go through the motions of updating it anyway
-  :: since: 1) that is what the below copied logic was originally designed
-  :: to do, and 2) we need the BUILDCOUNT_NUM anyway...
-
-  set abc_filename=AutoBuildCount.h
-  set abc_increment=0
-
-  :: (only increment build count if full rebuild)
-  if /i "%extra_nmake_arg%" == "-a" set abc_increment=1
-
-  if exist "%abc_filename%" goto :increment
-
-:create
-
-  set BUILDCOUNT_NUM=1
-  goto :writefile
-
-:increment
-
-  for /f "tokens=1,2,3" %%a in (%abc_filename%) do (
-    if "%%a" == "#define" (
-      if "%%b" == "BUILDCOUNT_NUM" (
-        set /a BUILDCOUNT_NUM=%%c+%abc_increment%
-      )
-    )
-  )
-
-:writefile
-
-  (echo #ifndef AUTOBUILDCOUNT)                     >   "%abc_filename%"
-  (echo #define AUTOBUILDCOUNT)                     >>  "%abc_filename%"
-  (echo #define BUILDCOUNT_NUM  ^%BUILDCOUNT_NUM%)  >>  "%abc_filename%"
-  (echo #define BUILDCOUNT_STR "%BUILDCOUNT_NUM%")  >>  "%abc_filename%"
-  (echo #endif)                                     >>  "%abc_filename%"
-
-:touch
-
-  :: The following is done to prevent the build system from detecting
-  :: that our AutoBuildCount.h header has been updated. This stops the
-  :: build system from mistakenly thinking our build is out-of-date...
-
-  :: PROGRAMMING NOTE: the above paragraph does not apply to Hercules
-  :: since Hercules does not currently use the AutoBuildCount.h header
-  :: (even though AutoBuildCount.h is specified as a project member),
-  :: but we may some day decide to use it so keep the above in mind...
-
-  set touchdate=2000-01-01
-
-  call :fullpath "touch.exe"
-
-  if not "%fullpath%" == "" (
-    "%fullpath%"  "--date=%touchdate%"  "%abc_filename%"
-  ) else (
-    call :wscript_touch_vbs  "%abc_filename%"  "%touchdate%"
-  )
-
-:done
-
-  if /i "%1" == "/q" goto :EOF
-  if /i "%1" == "-q" goto :EOF
-
-  echo AutoBuildCount = %BUILDCOUNT_NUM%
-  goto :EOF
-
-
-::-----------------------------------------------------------------------------
-:wscript_touch_vbs
-
-  :: PROGRAMMING NOTE: this is incredibly lame and terribly inefficient BUT,
-  :: it's the best we can do since Windows doesn't have a 'touch' utility...
-
-  set filename=%~1
-  set datetime=%~2
-
-  set wscript_exe=wscript.exe
-  set touch_vbs=touch.vbs
-
-  call :fullpath "%wscript_exe%"
-  set wscript_exe=%fullpath%
-
-  echo foo > "%touch_vbs%"
-  call :fullpath "%touch_vbs%"
-  set touch_vbs=%fullpath%
-
-  call :fullpath "%filename%"
-  set filename=%fullpath%
-
-  echo Call SetFileModifiedDate^( "%filename%", "%datetime%" ^)   >  "%touch_vbs%"
-  echo WScript.Quit^(0^)                                          >> "%touch_vbs%"
-  echo Sub SetFileModifiedDate^( strFilePath, newDate ^)          >> "%touch_vbs%"
-  echo  Dim posBackSlash, strDirectory, strFileName               >> "%touch_vbs%"
-  echo  Dim oShell, oFolder, oItem                                >> "%touch_vbs%"
-  echo  posBackSlash = InstrRev ^( strFilePath,     "\"        ^) >> "%touch_vbs%"
-  echo  strDirectory = Left     ^( strFilePath, posBackSlash   ^) >> "%touch_vbs%"
-  echo  strFileName  = Mid      ^( strFilePath, posBackSlash+1 ^) >> "%touch_vbs%"
-  echo  Set oShell  = CreateObject      ^( "Shell.Application" ^) >> "%touch_vbs%"
-  echo  Set oFolder = oShell.NameSpace  ^( strDirectory        ^) >> "%touch_vbs%"
-  echo  Set oItem   = oFolder.ParseName ^( strFileName         ^) >> "%touch_vbs%"
-  echo  oItem.ModifyDate = newDate                                >> "%touch_vbs%"
-  echo End Sub                                                    >> "%touch_vbs%"
-
-  "%wscript_exe%"  "%touch_vbs%"
-  del              "%touch_vbs%"
-
-  goto :EOF
-
-
 ::-----------------------------------------------------------------------------
 :set_build_env
 
@@ -580,6 +432,25 @@
 
 
 ::-----------------------------------------------------------------------------
+:ifallorclean
+
+  set @=
+  set #=
+
+:ifallorclean_loop
+
+  if    "%1" == ""      goto :EOF
+  if /i "%1" == "-a"    set @=1
+  if /i "%1" == "/a"    set @=1
+  if /i "%1" == "all"   set @=1
+  if /i "%1" == "clean" set #=1
+
+  shift /1
+
+  goto :ifallorclean_loop
+
+
+::-----------------------------------------------------------------------------
 ::                            CALL NMAKE
 ::-----------------------------------------------------------------------------
 :nmake
@@ -644,15 +515,18 @@
   ::  VCBUILD can work properly (and so that RunJobs can find it!)
   ::-------------------------------------------------------------------
 
-  if "%SolutionDir%" == "" (
-    call :re_set SolutionDir "%cd%\"
-  )
+  if not defined SolutionDir call :re_set SolutionDir "%cd%\"
   call :re_set SolutionPath "%SolutionDir%notused.sln"
   call "%VSTOOLSDIR%vsvars32.bat"
 
-  if /i "%extra_nmake_arg%" == ""      set VCBUILDOPT=/rebuild
-  if /i "%extra_nmake_arg%" == "-a"    set VCBUILDOPT=/rebuild
-  if /i "%extra_nmake_arg%" == "clean" set VCBUILDOPT=/clean
+  call :ifallorclean %extra_nmake_arg%
+  if defined # (
+    set VCBUILDOPT=/clean
+  ) else if defined @ (
+    set VCBUILDOPT=/rebuild
+  ) else (
+    set VCBUILDOPT=/nocolor
+  )
 
   "%runjobs_cmd%" %CFG%-%targ_arch%.jobs
   set rc=%errorlevel%

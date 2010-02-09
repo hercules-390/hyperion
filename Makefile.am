@@ -644,6 +644,7 @@ EXTRA_DIST = autoconf/config.rpath \
              cckdfix.c             \
              README.COMMADPT       \
              README.CVS            \
+             README.DYNMOD         \
              README.ECPSVM         \
              README.HAO            \
              README.HDL            \
@@ -681,6 +682,7 @@ EXTRA_DIST = autoconf/config.rpath \
              msvc.makefile.includes/ZLIB_FLAGS.msvc   \
              msvc.makefile.includes/ZLIB_RULES.msvc   \
              makefile.bat          \
+             dynmake.bat           \
              Hercules.dsp          \
              Hercules.dsw          \
              Hercules.vcproj       \

@@ -11,11 +11,6 @@
 
 !UNDEF fna
 !IFNDEF VERSION
-#                   >>> Jay! <<<
-#
-#   Hercules's VERSION for MSVC builds are now *ALSO* set
-#   at the very beginning of the 'makefile.bat' file too!!
-#
 
 # The following logic determines the Hercules version number and SVN 
 # revision number and sets variables VERSION,V1,V2,V3,V4 when VERSION

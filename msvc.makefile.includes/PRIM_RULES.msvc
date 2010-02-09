@@ -18,6 +18,7 @@
 # DD/MM/YY Description
 #
 # 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
+# 07/02/10 Fish: allHercules, rmdir DYNDIR, del fna
 #
 # ***************************************************************************
 
@@ -41,6 +42,9 @@ clean: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR)
     if exist $(MAPDIR)\*.*          rmdir /s /q $(MAPDIR)
 !IFDEF ASSEMBLY_LISTINGS
     if exist $(ASMDIR)\*.*          rmdir /s /q $(ASMDIR)
+!ENDIF
+!IFDEF DYNDIR
+    if exist $(DYNDIR)\*.*          rmdir /s /q $(DYNDIR)
 !ENDIF
 !IFDEF fna
     if exist $(fna)                 del /f /q $(fna)

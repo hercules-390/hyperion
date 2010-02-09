@@ -60,6 +60,8 @@
 # 06/12/06 Add decNumber for DFP (Decimal Floating Point) support - Roger Bowler
 # 26/12/06 Broke sections out into separate !INCLUDE-able files for easier
 #          maintenance and use by externally built dynamic modules. - Fish
+# 30/01/10 Dynamic module builds now use same makefile as Hercules. - Fish
+#
 # $Log$
 # Revision 1.30  2008/05/06 19:56:29  rbowler
 # Default BZIP2_DIR to winbuild/bzip2 if it exists
@@ -107,6 +109,12 @@ INCDIR = msvc.makefile.includes
 !INCLUDE $(INCDIR)\HERC_FLAGS.msvc
 # ---------------------------------------------------------------------
 
+!IFDEF DYNDIR
+!INCLUDE $(DYNDIR)$(DYNMOD).msvc
+MODULES = $(MODULES) $(X)$(DYNMOD).dll
+rcflags = $(rcflags) -D TARGETFILENAME=\"$(DYNMOD).dll\" -D MAX_CPU_ENGINES_STR=\"$(MAX_CPU_ENGINES)\"
+!ENDIF
+
 # ---------------------------------------------------------------------
 !INCLUDE $(INCDIR)\PRIM_RULES.msvc
 !INCLUDE $(INCDIR)\OUTDIR_RULES.msvc
@@ -116,3 +124,16 @@ INCDIR = msvc.makefile.includes
 !INCLUDE $(INCDIR)\BZIP2_RULES.msvc
 !INCLUDE $(INCDIR)\PCRE_RULES.msvc
 # ---------------------------------------------------------------------
+
+!IFDEF DYNDIR
+
+$(O)$(DYNMOD).res: $(DYNDIR)$(DYNMOD).rc
+    $(rc) $(rcflags) $(rcvars) -fo $(O)$(DYNMOD).res $(DYNDIR)$(DYNMOD).rc
+
+$(X)$(DYNMOD).dll: $(O)$(DYNMOD).res $(DYNOBJ) $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib
+    $(linkdll)
+
+{$(DYNDIR)}.c{$(OBJDIR)}.obj::
+    $(cc) $(cdebug) $(cflags) /Fp"$(OBJDIR)\\build_pch.pch" /Yu"hstdinc.h" $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $<
+
+!ENDIF

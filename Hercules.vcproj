@@ -1466,6 +1466,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\README.DYNMOD"
+						>
+					</File>
+					<File
 						RelativePath=".\README.ECPSVM"
 						>
 					</File>
@@ -1753,6 +1757,10 @@
 				<Filter
 					Name="msvc"
 					>
+					<File
+						RelativePath=".\dynmake.bat"
+						>
+					</File>
 					<File
 						RelativePath=".\makefile-dllmod.msvc"
 						>
