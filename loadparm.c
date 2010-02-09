@@ -276,3 +276,46 @@ void get_sysplex(BYTE *dst)
 {
     memcpy(dst, sysplex, sizeof(sysplex));
 }
+
+/*-------------------------------------------------------------------*/
+/* Retrieve Multiprocessing CPU-Capability Adjustment Factors        */
+/*                                                                   */
+/* This function retrieves the Multiprocessing CPU-Capability        */
+/* Adjustment Factor values for SYSIB (System Information Block)     */
+/* 1.2.2 as described in the Principles of Operations manual for     */
+/* the STORE SYSTEM INFORMATION instruction.                         */
+/*                                                                   */
+/* Input:                                                            */
+/*      dest  Address of where to store the information.             */
+/* Output:                                                           */
+/*      The requested MP Factor values at the address specified.     */
+/* Used by:                                                          */
+/*      B27D STSI  Store System Information (Basic-machine All CPUs) */
+/*      B220 SERVC Service Call             (read_scpinfo)           */
+/*-------------------------------------------------------------------*/
+void get_mpfactors(BYTE *dest)
+{
+#define  MPFACTOR_DENOMINATOR   65536
+#define  MPFACTOR_PERCENT       95
+
+    static U16 mpfactors[MAX_CPU_ENGINES-1] = {0};
+    static BYTE didthis = 0;
+
+    if (!didthis)
+    {
+        /* First time: initialize array... */
+        U32 mpfactor = MPFACTOR_DENOMINATOR;
+        int i;
+        for (i=0; i < arraysize( mpfactors ); i++)
+        {
+            /* Calculate the value of each subsequent entry
+               as percentage of the previous entry's value. */
+            mpfactor = (mpfactor * MPFACTOR_PERCENT) / 100;
+            STORE_HW( &mpfactors[i], (U16) mpfactor );
+        }
+        didthis = 1;
+    }
+
+    /* Return the requested information... */
+    memcpy( dest, &mpfactors[0], (MAX_CPU-1) * sizeof(U16) );
+}

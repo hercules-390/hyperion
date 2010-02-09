@@ -304,6 +304,7 @@ void get_sysplex(BYTE *name);
 void set_sysname(BYTE *name);
 void set_systype(BYTE *name);
 void set_sysplex(BYTE *name);
+void get_mpfactors(BYTE *dest);
 
 /* Functions in module impl.c */
 IMPL_DLL_IMPORT void system_cleanup(void);

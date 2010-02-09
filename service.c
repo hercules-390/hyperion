@@ -1305,12 +1305,9 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 #if defined(FEATURE_MPF_INFO)
         /* Define machine capacity */
         STORE_FW(sccbscp->rcci, 10000);
+        /* Fill in the MP Factors array */
         sccbmpf = (SCCB_MPF_INFO*)(sccbcpu);
-        /* We use an MP factor table of 95, 90, ... */
-        /* the table has one entry less then the amount of installed cpus ie t
-         * there is no entry for the first cpu which is running at rcci speed */
-        for (i = 0; i < MAX_CPU-1; i++, sccbmpf++)
-            STORE_HW(sccbmpf->mpfy, (95 - (i*5)));
+        get_mpfactors((BYTE*)sccbmpf);
 #endif /*defined(FEATURE_MPF_INFO)*/
 
         /* Set response code X'0010' in SCCB header */

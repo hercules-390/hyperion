@@ -6490,21 +6490,10 @@ U64        cpumask;                     /* work                      */
 int        cputype;                     /* work                      */
 #endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
 
-
                            /*  "0    1    2    3    4    5    6    7" */
 static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                            /*  "8    9    A    B    C    D    E    F" */
                               0xF8,0xF9,0xC1,0xC2,0xC3,0xC4,0xC5,0xC6 };
-
-                        /* x'004B' = 75 = 75% for each subsequent cpu */
-static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
-                             0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
-                             0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
-                             0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
-                             0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
-                             0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
-                             0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
-                             0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B };
 
 #define STSI_CAPABILITY   stsi_capability(regs)
 
@@ -6697,9 +6686,9 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
                 STORE_HW(sysib122->totcpu, MAX_CPU);
                 STORE_HW(sysib122->confcpu, sysblk.cpus);
                 STORE_HW(sysib122->sbcpu, MAX_CPU - sysblk.cpus);
-                memcpy(sysib122->mpfact,mpfact,(MAX_CPU-1)*2);
+                get_mpfactors((BYTE*)sysib122->mpfact);
                 STORE_FW(sysib122->accap, STSI_CAPABILITY);
-                memcpy(sysib122->ampfact,mpfact,(MAX_CPU-1)*2);
+                get_mpfactors((BYTE*)sysib122->ampfact);
                 regs->psw.cc = 0;
                 break;
 
