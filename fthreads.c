@@ -664,7 +664,7 @@ static int  QueueTransmission
     // then it simply gets lost (i.e. a "missed signal" situation has essenti-
     // ally occurred), but then that's not our concern here; our only concern
     // here is to transmit the signal (transmission) and nothing more. Tough
-    // beans is there's no one listening to receive it... <shrug>
+    // beans if there's no one listening to receive it... <shrug>
 
     if ( pFT_COND_VAR->nNumWaiting )                    // (anyone interested?)
     {
