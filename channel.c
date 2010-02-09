@@ -3471,7 +3471,7 @@ int     i;                              /* Interruption subclass     */
 /* I/O address and I/O interruption parameter (for channel subsystem)*/
 /* or the I/O address and CSW (for S/370 channels).                  */
 /* This routine does not perform a PSW switch.                       */
-/* The CSW pointer is NULL in the case of TPI`                       */
+/* The CSW pointer is NULL in the case of TPI.                       */
 /* The return value is the condition code for the TPI instruction:   */
 /* 0 if no allowable pending interrupt exists, otherwise 1.          */
 /* Note: The caller MUST hold the interrupt lock (sysblk.intlock).   */
