@@ -4159,19 +4159,18 @@ BYTE   *bp1;                            /* Unaligned Mainstor ptr    */
         {
             /* FIXME: This code blows up on at least Mac OS X Snow Leopard
                (10.6) when compiled for a 32-bit Intel host using gcc 4.2.1
-               unless the three PTT calls in this block are present. DO NOT
-               REMOVE them until this has been found and fixed.
-               JRM, 11 Feb 2010 */
+               unless the PTT call below is present. The problem appears to
+               be in the gcc 4.2.1 optimizer, as the code works when
+               compiled with -O0. DO NOT REMOVE this until it's been found
+               and fixed. -- JRM, 11 Feb 2010 */
             PTT(PTT_CL_INF,"LMG2KIN",p2,0,0);
             /* Addresses are double-word aligned */
             m >>= 3;
             for (i = 0; i < m; i++, p1++)
                 regs->GR_G((r1 + i) & 0xF) = fetch_dw (p1);
             n >>= 3;
-            PTT(PTT_CL_INF,"LMG2KXX",n,m,0);
             for ( ; i < n; i++, p2++)
                 regs->GR_G((r1 + i) & 0xF) = fetch_dw (p2);
-            PTT(PTT_CL_INF,"LMG2KZZ",p1,p2,effective_addr2);
         }
         else
         {
