@@ -4157,18 +4157,21 @@ BYTE   *bp1;                            /* Unaligned Mainstor ptr    */
 
         if (likely((m & 0x7) == 0))
         {
-//            PTT(PTT_CL_INF,"LMG2KIN",p1,p2,effective_addr2);
+            /* FIXME: This code blows up on at least Mac OS X Snow Leopard
+               (10.6) when compiled for a 32-bit Intel host using gcc 4.2.1
+               unless the three PTT calls in this block are present. DO NOT
+               REMOVE them until this has been found and fixed.
+               JRM, 11 Feb 2010 */
+            PTT(PTT_CL_INF,"LMG2KIN",p2,0,0);
             /* Addresses are double-word aligned */
             m >>= 3;
             for (i = 0; i < m; i++, p1++)
                 regs->GR_G((r1 + i) & 0xF) = fetch_dw (p1);
             n >>= 3;
-//            PTT(PTT_CL_INF,"LMG2KXX",n,m,0);
+            PTT(PTT_CL_INF,"LMG2KXX",n,m,0);
             for ( ; i < n; i++, p2++)
                 regs->GR_G((r1 + i) & 0xF) = fetch_dw (p2);
-//            PTT(PTT_CL_INF,"LMG2KZZ",i,n,0);
-//            PTT(PTT_CL_INF,"LMG2KZZ",i,p2,0);
-//            PTT(PTT_CL_INF,"LMG2KZZ",p1,p2,effective_addr2);
+            PTT(PTT_CL_INF,"LMG2KZZ",p1,p2,effective_addr2);
         }
         else
         {
