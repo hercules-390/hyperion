@@ -1834,7 +1834,12 @@ if test "x${DESTPREFIX}" = "x"; then
     fi
 fi
 
-MODULESDIR="${DESTPREFIX}/lib/${PACKAGE}"
+case "x${libdir}" in
+    *lib64*) DESTLIBS="lib64" ;;
+    *)       DESTLIBS="lib" ;;
+esac
+
+MODULESDIR="${DESTPREFIX}/${DESTLIBS}/${PACKAGE}"
 PKGDATADIR="${DESTPREFIX}/share/${PACKAGE}"
 HERC_LOCALEDIR="${DESTPREFIX}/share/locale"
 
