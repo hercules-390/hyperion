@@ -6304,7 +6304,7 @@ int archmode_cmd(int argc, char *argv[], char *cmdline)
 
 #if defined(_FEATURE_CPU_RECONFIG) && defined(_S370)
     /* Configure CPUs for S/370 mode */
-    if (sysblk.archmode == ARCH_S370)
+    if (sysblk.archmode == ARCH_370)
         for (i = MAX_CPU_ENGINES - 1; i >= 0; i--)
             if (i < MAX_CPU && !IS_CPU_ONLINE(i))
                 configure_cpu(i);

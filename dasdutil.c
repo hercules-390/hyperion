@@ -1177,8 +1177,9 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     ckdtab = dasd_lookup (DASD_CKDDEV, NULL, devtype, volcyls);
     if (ckdtab == NULL)
     {
-        logmsg (_("HHCDU028E device type %4.4X not found in dasd table\n"),
-               devtype);
+        fprintf (stderr,
+                  _("HHCDU028E device type %4.4X not found in dasd table\n"),
+                  devtype);
         return -1;
     }
 
