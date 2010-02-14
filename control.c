@@ -1,4 +1,4 @@
-/* CONTROL.C    (c) Copyright Roger Bowler, 1994-2009                */
+/* CONTROL.C    (c) Copyright Roger Bowler, 1994-2010                */
 /*              ESA/390 CPU Emulator                                 */
 
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
@@ -6720,6 +6720,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                 for(i = 0; i < 6; i++)
                     sysib221->seqc[(sizeof(sysib221->seqc) - 6) + i] =
                     hexebcdic[(sysblk.cpuid >> (52 - (i*4))) & 0x0F];
+                get_plant(sysib221->plant);
                 STORE_HW(sysib221->lcpuid,regs->cpuad);
                 STORE_HW(sysib221->cpuad,regs->cpuad);
                 regs->psw.cc = 0;

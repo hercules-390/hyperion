@@ -1,4 +1,4 @@
-/* ESA390.H     (c) Copyright Roger Bowler, 1994-2009                */
+/* ESA390.H     (c) Copyright Roger Bowler, 1994-2010                */
 /*              ESA/390 Data Areas                                   */
 
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
@@ -1942,6 +1942,7 @@ typedef struct _SYSIB122 {              /* Basic Machine CPUs        */
 typedef struct _SYSIB221 {              /* Logical partition CPU     */
         FWORD   resv1[20];              /* Reserved                  */
         BYTE    seqc[16];               /* Logical CPU Sequence Code */
+        BYTE    plant[4];               /* Plant of manufacture      */
         HWORD   lcpuid;                 /* Logical CPU ID            */
         HWORD   cpuad;                  /* CPU address               */
     }   SYSIB221;
