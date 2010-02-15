@@ -346,13 +346,13 @@ static __inline__ U64 fetch_dw_i686_noswap(void *ptr)
 __asm__ __volatile__ (
          XCHG_BREG
          LOCK_PREFIX
-         "cmpxchg8b %4\n\t"
+         "cmpxchg8b (%4)\n\t"
          XCHG_BREG
          : "=A" (value)
          : "0" (value),
            BREG ((unsigned long)value),
            "c"  ((unsigned long)(value >> 32)),
-           "m" (*(U64 *)ptr));
+           "D" (ptr));
  return value;
 }
 

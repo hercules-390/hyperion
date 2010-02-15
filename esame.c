@@ -4163,7 +4163,7 @@ BYTE   *bp1;                            /* Unaligned Mainstor ptr    */
                be in the gcc 4.2.1 optimizer, as the code works when
                compiled with -O0. DO NOT REMOVE this until it's been found
                and fixed. -- JRM, 11 Feb 2010 */
-            PTT(PTT_CL_INF,"LMG2KIN",p2,0,0);
+//            PTT(PTT_CL_INF,"LMG2KIN",p2,0,0);
             /* Addresses are double-word aligned */
             m >>= 3;
             for (i = 0; i < m; i++, p1++)
