@@ -1,4 +1,5 @@
-/* MACHDEP.H  Machine specific code                                  */
+/* MACHDEP.H    (c) Copyright Greg Smith, 2001-2010                  */
+/*              Hercules machine specific code                       */
 
 // $Id$
 
