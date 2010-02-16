@@ -2861,6 +2861,9 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
 //      else
 //          iobuf[0] |= (0x00 & 0x0F);    // MSENSE_UNASSOCIATED
 
+        /* Return unit status */
+        build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
+
 #endif //  ++++  END MEDIUM SENSE HACK  ++++
 
         break;
