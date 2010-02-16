@@ -1,3 +1,4 @@
+16 Feb 2010 Fix Conditional SSKE failing with Storage Key Assist - Ivan Warren
 04 Feb 2010 - Fix building on 64-bit Macs under Snow Leopard - Jay Maynard
 16 Dec 2009 Fix S/370 SIE guests - Ivan Warren
 14 Jun 2009 uptime command - Fish

@@ -5180,7 +5180,8 @@ RADR    n;                              /* Abs frame addr stor key   */
             {
             int  sr;
             BYTE realkey,
-                 rcpkey;
+                 rcpkey,
+                 protkey;
             RADR rcpa;
 
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
@@ -5237,31 +5238,37 @@ RADR    n;                              /* Abs frame addr stor key   */
                    )
                     longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
+                /* fetch the RCP key */
+                rcpkey = regs->mainstor[rcpa];
+                /* set the reference bit in the RCP key */
+                STORAGE_KEY(rcpa, regs) |= STORKEY_REF;
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
                 if(sr)
+                {
                     realkey = 0;
+                    protkey = rcpkey & (STORKEY_REF | STORKEY_CHANGE);
+                    /* rcpa-1 is correct here - would have been SIE Intercepted otherwise */
+                    protkey |= regs->mainstor[rcpa-1] & (STORKEY_KEY | STORKEY_FETCH);
+                }
                 else
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
                 {
                     /* host real to host absolute */
                     n = APPLY_PREFIXING(regs->hostregs->dat.raddr, regs->hostregs->PX);
 
-                    realkey =
+                    protkey =
 #if !defined(_FEATURE_2K_STORAGE_KEYS)
                               STORAGE_KEY(n, regs)
 #else
                               (STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs))
 #endif
-                              & (STORKEY_REF | STORKEY_CHANGE);
+                              ;
+                    realkey = protkey & (STORKEY_REF | STORKEY_CHANGE);
                 }
 
-                /* fetch the RCP key */
-                rcpkey = regs->mainstor[rcpa];
-                /* set the reference bit in the RCP key */
-                STORAGE_KEY(rcpa, regs) |= STORKEY_REF;
 #if defined(FEATURE_CONDITIONAL_SSKE)
                 /* Perform conditional SSKE procedure */
-                if (ARCH_DEP(conditional_sske_procedure)(regs, r1, m3, rcpkey))
+                if (ARCH_DEP(conditional_sske_procedure)(regs, r1, m3, protkey))
                     return;
 #endif /*defined(FEATURE_CONDITIONAL_SSKE)*/
                 /* or with host set */
