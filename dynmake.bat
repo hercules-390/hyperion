@@ -217,8 +217,10 @@
   ::  Validate module name...
 
   call :hasblank "%modname%"
-  if not defined # call :goodfn "%modname%"
+  if defined # goto :bad_modname
+  call :goodfn "%modname%"
   if not defined # (
+:bad_modname
     echo %~nx0^(1^) : error C9999 : Invalid module name "%modname%"
     set rc=1
     goto :EOF
