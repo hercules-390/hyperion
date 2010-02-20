@@ -319,39 +319,25 @@
 ::---------------------------------------------------------------------
 :isfile
 
-  REM  %1  =  string to check
-  REM   #  =  return code: 1 if file exists, undefined if not
+  REM  %1  =  file to check
+  REM   #  =  return code: defined if file exists, else undefined
 
-  setlocal
-  set @=%~1
-  set #=
-  if not exist "%@%" goto :isfile_exit
-  set @a=%~a1
-  if not "%@a:~0,1%" == "-" goto :isfile_exit
-  set #=1
-
-:isfile_exit
-
-  endlocal & set #=%#%
+  set "#=%~a1"
+  if not defined # goto :EOF
+  if "%#:~0,1%" == "-" goto :EOF
+  set "#="
   goto :EOF
 
 ::---------------------------------------------------------------------
 :isdir
 
-  REM  %1  =  string to check
-  REM   #  =  return code: 1 if directory exists, undefined if not
+  REM  %1  =  directory to check
+  REM   #  =  return code: defined if directory exists, else undefined
 
-  setlocal
-  set @=%~1
-  set #=
-  if not exist "%@%" goto :isdir_exit
-  set @a=%~a1
-  if not "%@a:~0,1%" == "d" goto :isdir_exit
-  set #=1
-
-:isdir_exit
-
-  endlocal & set #=%#%
+  set #=%~a1
+  if not defined # goto :EOF
+  if "%#:~0,1%" == "d" goto :EOF
+  set "#="
   goto :EOF
 
 ::---------------------------------------------------------------------
