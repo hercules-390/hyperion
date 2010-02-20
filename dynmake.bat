@@ -299,7 +299,7 @@
   setlocal
   set @=%~1
   set #=
-  for /f "tokens=1*" %%a in ("%@%") do if not "%%b" == "" set #=1
+  for /f "tokens=1*" %%a in ("@%@%@") do if not "%%b" == "" set #=1
   endlocal & set #=%#%
   goto :EOF
 
@@ -312,7 +312,7 @@
   setlocal
   set @=%~1
   set #=1
-  for /f "delims=\/:*?<>|" %%i in ("@%@%") do if not "%%i" == "@%@%" set #=
+  for /f "delims=\/:*?<>|" %%i in ("@%@%@") do if not "%%i" == "@%@%@" set #=
   endlocal & set #=%#%
   goto :EOF
 
