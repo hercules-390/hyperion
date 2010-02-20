@@ -1,3 +1,4 @@
+@REM $Id$
 @if defined TRACEON (@echo on) else (@echo off)
 
   :: Uncomment the below to set a custom build description.

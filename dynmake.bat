@@ -1,3 +1,4 @@
+@REM $Id$
 @if defined TRACEON (@echo on) else (@echo off)
 
   REM   If this batch file works okay then it was written by Fish.
