@@ -374,7 +374,7 @@ void*  gui_panel_command (char* pszCommand)
 
     if (strncasecmp(pszCommand,"SCD=",4) == 0)
     {
-        SetCurrentDirectory(pszCommand+4);
+        chdir(pszCommand+4);
         return NULL;
     }
 
