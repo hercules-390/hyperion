@@ -295,7 +295,12 @@ void get_sysplex(BYTE *dst)
 /*-------------------------------------------------------------------*/
 void get_mpfactors(BYTE *dest)
 {
-#define  MPFACTOR_DENOMINATOR   65536
+/*-------------------------------------------------------------------*/
+/* The new z10 machine will use a denominator of 65535 for better    */
+/* granularity. But this will mess up old software. We will stick    */
+/* to the old value of 100. Bernard Feb 26, 2010.                    */
+/*-------------------------------------------------------------------*/
+#define  MPFACTOR_DENOMINATOR   100   
 #define  MPFACTOR_PERCENT       95
 
     static U16 mpfactors[MAX_CPU_ENGINES-1] = {0};
