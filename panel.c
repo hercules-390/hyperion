@@ -91,8 +91,8 @@ static int    NPcpunum_valid,
               NPregs_valid,
               NPaddr_valid,
               NPdata_valid,
-              NPmips_valid,
 #ifdef OPTION_MIPS_COUNTING
+              NPmips_valid,
               NPsios_valid,
 #endif // OPTION_MIPS_COUNTING
               NPdevices_valid,
@@ -896,8 +896,11 @@ static void NP_screen_redraw (REGS *regs)
     /* Force all data to be redrawn */
     NPcpunum_valid   = NPcpupct_valid   = NPpsw_valid  =
     NPpswstate_valid = NPregs_valid     = NPaddr_valid =
-    NPdata_valid     = NPmips_valid     = NPsios_valid =
+    NPdata_valid     =
     NPdevices_valid  = NPcpugraph_valid = 0;
+#if defined(OPTION_MIPS_COUNTING)
+    NPmips_valid     = NPsios_valid     = 0;
+#endif /*defined(OPTION_MIPS_COUNTING)*/
 
 #if defined(_FEATURE_SIE)
     if(regs->sie_active)
@@ -1022,11 +1025,13 @@ static void NP_screen_redraw (REGS *regs)
     set_pos (19, 32);
     draw_button(COLOR_BLUE,  COLOR_LIGHT_GREY, COLOR_WHITE,  " RS", "T", " "  );
 
+#if defined(OPTION_MIPS_COUNTING)
     set_pos (20, 3);
     set_color (COLOR_LIGHT_GREY, COLOR_BLACK);
     draw_text ("MIPS");
     set_pos (20, 9);
     draw_text ("SIO/s");
+#endif /*defined(OPTION_MIPS_COUNTING)*/
 
     set_pos (22, 2);
     draw_button(COLOR_GREEN, COLOR_LIGHT_GREY, COLOR_WHITE,  " ",   "S", "TR ");
@@ -1464,16 +1469,6 @@ static void NP_update(REGS *regs)
         NPsios = sysblk.siosrate;
         NPsios_valid = 1;
     }
-#else // !OPTION_MIPS_COUNTING
-    instcount = INSTCOUNT(regs);
-    if (!NPmips_valid || NPinstcount != instcount)
-        set_color (COLOR_LIGHT_YELLOW, COLOR_BLACK);
-        set_pos (19, 1);
-        sprintf(buf, "%12.12u", instcount);
-        draw_text (buf);
-        NPinstcount = instcount;
-        NPmips_valid = 1;
-    }
 #endif /* OPTION_MIPS_COUNTING */
 
     /* Optional cpu graph */
@@ -1808,7 +1803,9 @@ QWORD   curpsw;                         /* Current PSW               */
 QWORD   prvpsw;                         /* Previous PSW              */
 BYTE    prvstate = 0xFF;                /* Previous stopped state    */
 U64     prvicount = 0;                  /* Previous instruction count*/
+#if defined(OPTION_MIPS_COUNTING)
 U64     prvtcount = 0;                  /* Previous total count      */
+#endif /*defined(OPTION_MIPS_COUNTING)*/
 int     prvcpupct = 0;                  /* Previous cpu percentage   */
 #if defined(OPTION_SHARED_DEVICES)
 U32     prvscount = 0;                  /* Previous shrdcount        */
@@ -2739,7 +2736,9 @@ FinishShutdown:
          || prvscount != sysblk.shrdcount
 #endif // defined(OPTION_SHARED_DEVICES)
          || prvstate != regs->cpustate
+#if defined(OPTION_MIPS_COUNTING)
          || (NPDup && NPcpugraph && prvtcount != sysblk.instcount)
+#endif /*defined(OPTION_MIPS_COUNTING)*/
            )
         {
             redraw_status = 1;
@@ -2750,7 +2749,9 @@ FinishShutdown:
 #if defined(OPTION_SHARED_DEVICES)
             prvscount = sysblk.shrdcount;
 #endif // defined(OPTION_SHARED_DEVICES)
+#if defined(OPTION_MIPS_COUNTING)
             prvtcount = sysblk.instcount;
+#endif /*defined(OPTION_MIPS_COUNTING)*/
         }
 
         /* =NP= : Display the screen - traditional or NP */
