@@ -28,7 +28,7 @@
 
 all: allzlib alllibbz2 allpcre allHercules
     for %I in (rebase.exe) do if exist %~$$PATH:I rebase -b 0x400000 $(X)*.dll
-    if exist $(EXEDIR)\*.manifest   del /f /q $(EXEDIR)\*.manifest
+    if exist $(EXEDIR)\*.manifest del /f /q $(EXEDIR)\*.manifest
 
 allHercules: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR) \
     $(O)build_pch.pch \
@@ -36,18 +36,18 @@ allHercules: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR) \
     $(EXECUTABLES)
 
 clean: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR)
-    if exist $(OBJDIR)\*.*          rmdir /s /q $(OBJDIR)
-    if exist $(EXEDIR)\*.*          rmdir /s /q $(EXEDIR)
-    if exist $(PDBDIR)\*.*          rmdir /s /q $(PDBDIR)
-    if exist $(MAPDIR)\*.*          rmdir /s /q $(MAPDIR)
+    if exist $(OBJDIR)\*.* rmdir /s /q $(OBJDIR)
+    if exist $(EXEDIR)\*.* rmdir /s /q $(EXEDIR)
+    if exist $(PDBDIR)\*.* rmdir /s /q $(PDBDIR)
+    if exist $(MAPDIR)\*.* rmdir /s /q $(MAPDIR)
 !IFDEF ASSEMBLY_LISTINGS
-    if exist $(ASMDIR)\*.*          rmdir /s /q $(ASMDIR)
+    if exist $(ASMDIR)\*.* rmdir /s /q $(ASMDIR)
 !ENDIF
 !IFDEF DYNDIR
-    if exist $(DYNDIR)\*.*          rmdir /s /q $(DYNDIR)
+    if exist $(DYNDIR)\*.* rmdir /s /q $(DYNDIR)
 !ENDIF
 !IFDEF fna
-    if exist $(fna)                 del /f /q $(fna)
+    if exist $(fna) del /f /q $(fna)
 !ENDIF
 
 MT_EXE_CMD=if exist $@.manifest mt.exe -nologo -outputresource:$@;1 -manifest $@.manifest
