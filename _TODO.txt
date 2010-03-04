@@ -48,6 +48,9 @@
   Support multiple command-line commands (i.e. cmdsep character).
 
 
+  Design a way for users to define command synonyms. (dynmod?)
+
+
   Document all DIAGNOSE instruction support
 
 
