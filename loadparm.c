@@ -310,7 +310,7 @@ void get_mpfactors(BYTE *dest)
     {
         /* First time: initialize array... */
         U32 mpfactor = MPFACTOR_DENOMINATOR;
-        int i;
+        size_t i;
         for (i=0; i < arraysize( mpfactors ); i++)
         {
             /* Calculate the value of each subsequent entry
