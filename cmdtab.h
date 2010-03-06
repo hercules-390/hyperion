@@ -8,12 +8,12 @@
 
 
 //          command    type          function      one-line description...
-// COMMAND ("sample"   PANEL,      , sample_cmd,   "short help text", "long help text" )
+// COMMAND ("sample"   PANEL,        sample_cmd,   "short help text", "long help text" )
 // COMMAND ("sample2"  PANEL+CONFIG, sample2_cmd,  "short help text", NULL )  // No long help provided
 // COMMAND ("sample3"  CONFIG,       sample3_cmd,  NULL, NULL ) // No help provided at all
 // COMMAND ("sample4"  DISABLED,     sample4_cmd,  NULL, NULL ) // Disabled command - generally debugging only
 
-COMMAND ( "help",      PANEL,         HelpCommand,
+COMMAND ( "help",      PANEL,        HelpCommand,
   "list all commands / command specific help",
     "Enter \"help cmd\" where cmd is the command you need help\n"
     "with. If the command has additional help text defined for it,\n"
@@ -21,7 +21,7 @@ COMMAND ( "help",      PANEL,         HelpCommand,
     "the format of the command and its various required or optional\n"
     "parameters and is not meant to replace reading the documentation.\n" )
 
-COMMAND ( "?",         PANEL,         HelpCommand, "alias for help\n", NULL )
+COMMAND ( "?",         PANEL,        HelpCommand,  "alias for help\n", NULL )
 
 COMMAND ( "*",         CONFIG+PANEL, comment_cmd,  "Comment", NULL )
 
