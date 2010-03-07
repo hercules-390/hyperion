@@ -1474,9 +1474,9 @@ static void ARCH_DEP(raise_pci) (
     release_lock (&dev->lock);
 
     /* Update interrupt status */
-    OBTAIN_INTLOCK(dev->regs);
+    OBTAIN_INTLOCK(devregs(dev));
     UPDATE_IC_IOPENDING();
-    RELEASE_INTLOCK(dev->regs);
+    RELEASE_INTLOCK(devregs(dev));
 
 } /* end function raise_pci */
 
@@ -2170,9 +2170,9 @@ DLL_EXPORT int ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat)
     release_lock (&dev->lock);
 
     /* Update interrupt status */
-    OBTAIN_INTLOCK(dev->regs);
+    OBTAIN_INTLOCK(devregs(dev));
     UPDATE_IC_IOPENDING();
-    RELEASE_INTLOCK(dev->regs);
+    RELEASE_INTLOCK(devregs(dev));
 
     return 0;
 } /* end function device_attention */
@@ -2577,9 +2577,9 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
         release_lock (&dev->lock);
 
         /* Update interrupt status */
-        OBTAIN_INTLOCK(dev->regs);
+        OBTAIN_INTLOCK(devregs(dev));
         UPDATE_IC_IOPENDING();
-        RELEASE_INTLOCK(dev->regs);
+        RELEASE_INTLOCK(devregs(dev));
 
         if (dev->ccwtrace || dev->ccwstep || tracethis)
             logmsg (_("HHCCP069I Device %4.4X initial status interrupt\n"),
@@ -2619,9 +2619,9 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             release_lock (&dev->lock);
 
             /* Update interrupt status */
-            OBTAIN_INTLOCK(dev->regs);
+            OBTAIN_INTLOCK(devregs(dev));
             UPDATE_IC_IOPENDING();
-            RELEASE_INTLOCK(dev->regs);
+            RELEASE_INTLOCK(devregs(dev));
 
             if (dev->ccwtrace || dev->ccwstep || tracethis)
                 logmsg (_("HHCCP070I Device %4.4X attention completed\n"),
@@ -2690,9 +2690,9 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             release_lock (&dev->lock);
 
             /* Update interrupt status */
-            OBTAIN_INTLOCK(dev->regs);
+            OBTAIN_INTLOCK(devregs(dev));
             UPDATE_IC_IOPENDING();
-            RELEASE_INTLOCK(dev->regs);
+            RELEASE_INTLOCK(devregs(dev));
 
             if (dev->ccwtrace || dev->ccwstep || tracethis)
                 logmsg (_("HHCCP071I Device %4.4X clear completed\n"),
@@ -2750,9 +2750,9 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             release_lock (&dev->lock);
 
             /* Update interrupt status */
-            OBTAIN_INTLOCK(dev->regs);
+            OBTAIN_INTLOCK(devregs(dev));
             UPDATE_IC_IOPENDING();
-            RELEASE_INTLOCK(dev->regs);
+            RELEASE_INTLOCK(devregs(dev));
 
             if (dev->ccwtrace || dev->ccwstep || tracethis)
                 logmsg (_("HHCCP072I Device %4.4X halt completed\n"),
@@ -2911,9 +2911,9 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 
                     /* Update interrupt status */
                     release_lock (&dev->lock);
-                    OBTAIN_INTLOCK(dev->regs);
+                    OBTAIN_INTLOCK(devregs(dev));
                     UPDATE_IC_IOPENDING();
-                    RELEASE_INTLOCK(dev->regs);
+                    RELEASE_INTLOCK(devregs(dev));
                     obtain_lock (&dev->lock);
                 }
 
@@ -3344,10 +3344,10 @@ resume_suspend:
     release_lock (&dev->lock);
 
     /* Present the interrupt */
-    OBTAIN_INTLOCK(dev->regs);
+    OBTAIN_INTLOCK(devregs(dev));
     if (dev->regs) dev->regs->hostregs->syncio = 0;
     UPDATE_IC_IOPENDING();
-    RELEASE_INTLOCK(dev->regs);
+    RELEASE_INTLOCK(devregs(dev));
 
     return NULL;
 

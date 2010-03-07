@@ -184,6 +184,7 @@ void build_config (char *fname);
 void release_config ();
 CONF_DLL_IMPORT DEVBLK *find_device_by_devnum (U16 lcss, U16 devnum);
 DEVBLK *find_device_by_subchan (U32 ioid);
+REGS *devregs(DEVBLK *dev);
 DEVBLK *get_devblk (U16 lcss, U16 devnum);
 void ret_devblk (DEVBLK *dev);
 int  attach_device (U16 lcss, U16 devnum, const char *devtype, int addargc,

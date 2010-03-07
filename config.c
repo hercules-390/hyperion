@@ -900,8 +900,31 @@ DEVBLK *find_device_by_subchan (U32 ioid)
     return dev;
 } /* end function find_device_by_subchan */
 
-/* Internal device parsing structures */
 
+/*-------------------------------------------------------------------*/
+/* Returns a CPU register context for the device, or else NULL       */
+/*-------------------------------------------------------------------*/
+REGS *devregs(DEVBLK *dev)
+{
+    /* If a register context already exists then use it */
+    if (dev->regs)
+        return dev->regs;
+
+    /* Otherwise attempt to determine what it should be */
+    {
+        int i;
+        TID tid = thread_id();              /* Our own thread id     */
+        for (i=0; i < MAX_CPU; i++)
+            if (tid == sysblk.cputid[i])    /* Are we a cpu thread?  */
+                return sysblk.regs[i];      /* yes, use its context  */
+    }
+    return NULL;    /* Not CPU thread. Return NULL register context  */
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Internal device parsing structures                                */
+/*-------------------------------------------------------------------*/
 typedef struct _DEVARRAY
 {
     U16 cuu1;
