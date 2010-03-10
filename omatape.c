@@ -1124,7 +1124,7 @@ int             rc;                     /* Return code               */
 OMATAPE_DESC   *omadesc;                /* -> OMA descriptor entry   */
 long            blkpos;                 /* Offset of block header    */
 S32             curblkl;                /* Length of current block   */
-S32             prvhdro;                /* Offset of previous header */
+S32             prvhdro = 0;            /* Offset of previous header */
 S32             nxthdro;                /* Offset of next header     */
 
     /* Point to the current file entry in the OMA descriptor table */

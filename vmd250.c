@@ -1390,6 +1390,7 @@ RADR   bufbeg;    /* Address where the read/write will occur   */
 RADR   bufend;    /* Last byte read or written                 */
 
    xcode = 0;   /* Initialize the address check exception code */
+   status = 0;
    
    /* Preserve pending sense if any and establish my ownership */
    /* of the device by reserving it if shared and locking it   */
@@ -1992,6 +1993,7 @@ RADR   bufend;    /* Last byte read or written                 */
         
 
    xcode = 0;   /* Initialize the address check exception code */
+   status = 0;
    
    /* Preserve pending sense if any and establish my ownership */
    /* of the device by reserving it if shared and locking it   */
