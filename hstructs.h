@@ -403,6 +403,7 @@ struct SYSBLK {
         BYTE   *xpndstor;               /* -> Expanded storage       */
         U64     todstart;               /* Time of initialisation    */
         U64     cpuid;                  /* CPU identifier for STIDP  */
+        TID     impltid;                /* Thread-id for main progr. */
         TID     wdtid;                  /* Thread-id for watchdog    */
         U16     lparnuml;               /* #digits (0-2) in lparnum  */
         U16     lparnum;                /* LPAR identification number*/

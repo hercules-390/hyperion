@@ -109,6 +109,27 @@ static void sigint_handler (int signo)
     return;
 } /* end function sigint_handler */
 
+/*-------------------------------------------------------------------*/
+/* Signal handler for SIGTERM signal                                 */
+/*-------------------------------------------------------------------*/
+static void sigterm_handler (int signo)
+{
+//  logmsg ("config: sigterm handler entered for thread %lu\n",/*debug*/
+//          thread_id());                                      /*debug*/
+
+    UNREFERENCED(signo);
+
+    signal(SIGTERM, sigterm_handler);
+    /* Ignore signal unless presented on main program (impl) thread */
+    if ( !equal_threads( thread_id(), sysblk.impltid ) )
+        return;
+
+    /* Initiate system shutdown */
+    do_shutdown();
+
+    return;
+} /* end function sigterm_handler */
+
 
 #if !defined(NO_SIGABEND_HANDLER)
 static void *watchdog_thread(void *arg)
@@ -290,6 +311,9 @@ TID     logcbtid;                       /* RC file thread identifier */
     /* Clear the system configuration block */
     memset (&sysblk, 0, sizeof(SYSBLK));
 
+    /* Save thread ID of main program */
+    sysblk.impltid = thread_id();
+
     /* Save TOD of when we were first IMPL'ed */
     time( &sysblk.impltime );
 
@@ -428,6 +452,14 @@ TID     logcbtid;                       /* RC file thread identifier */
     if ( signal (SIGINT, sigint_handler) == SIG_ERR )
     {
         logmsg(_("HHCIN001S Cannot register SIGINT handler: %s\n"),
+                strerror(errno));
+        delayed_exit(1);
+    }
+
+    /* Register the SIGTERM handler */
+    if ( signal (SIGTERM, sigterm_handler) == SIG_ERR )
+    {
+        logmsg(_("HHCIN009S Cannot register SIGTERM handler: %s\n"),
                 strerror(errno));
         delayed_exit(1);
     }
