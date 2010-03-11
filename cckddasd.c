@@ -3934,6 +3934,7 @@ BYTE            buf[65536];             /* Buffer                    */
         release_lock (&cckd->filelock);
         logmsg (_("HHCCD171E %4.4X file[%d] cannot remove base file\n"),
                 dev->devnum,cckd->sfn);
+        cckd->merging = 0;
         return NULL;
     }
 
@@ -5401,7 +5402,12 @@ int   val, opts = 0;
         else val = -77;
 
         /* Parse the keyword */
-        if (strcasecmp (kw, "stats") == 0)
+        if (strcasecmp (kw, "help") == 0)
+        {
+            if (!cmd) return 0;
+            cckd_command_help();
+        }
+        else if (strcasecmp (kw, "stats") == 0)
         {
             if (!cmd) return 0;
             cckd_command_stats ();
