@@ -104,10 +104,8 @@ DLL_EXPORT int html_include(WEBBLK *webblk, char *filename)
 
     if (!inclfile)
     {
-        logmsg(_("HHCHT011E html_include: Cannot open %s: %s\n"),
-          fullname,strerror(errno));
-        hprintf(webblk->sock,_("ERROR: Cannot open %s: %s\n"),
-          filename,strerror(errno));
+        WRITEMSG(HHCHT011E,fullname,strerror(errno));
+        hprintf(webblk->sock,MSG(HHCHT011E,filename,strerror(errno)));
         return FALSE;
     }
 
@@ -665,10 +663,7 @@ TID                     httptid;        /* Negotiation thread id     */
     UNREFERENCED(arg);
 
     /* Display thread started message on control panel */
-    logmsg (_("HHCHT001I HTTP listener thread started: "
-            "tid="TIDPAT", pid=%d\n"),
-            thread_id(), getpid());
-
+    WRITEMSG (HHCHT001I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "HTTP server");
 
     /* If the HTTP root directory is not specified,
        use a reasonable default */
@@ -704,8 +699,7 @@ TID                     httptid;        /* Negotiation thread id     */
         /* Convert to absolute path */
         if (!realpath(sysblk.httproot,absolute_httproot_path))
         {
-            logmsg( _("HHCCF066E Invalid HTTPROOT: \"%s\": %s\n"),
-                   sysblk.httproot, strerror(errno));
+            WRITEMSG(HHCCF066E, sysblk.httproot, strerror(errno));
             return NULL;
         }
         /* Verify that the absolute path is valid */
@@ -714,8 +708,7 @@ TID                     httptid;        /* Negotiation thread id     */
         // ENOENT = File name or path not found.
         if (access( absolute_httproot_path, R_OK ) != 0)
         {
-            logmsg( _("HHCCF066E Invalid HTTPROOT: \"%s\": %s\n"),
-                   absolute_httproot_path, strerror(errno));
+            WRITEMSG(HHCCF066E, absolute_httproot_path, strerror(errno));
             return NULL;
         }
         /* Append trailing [back]slash, but only if needed */
@@ -725,7 +718,7 @@ TID                     httptid;        /* Negotiation thread id     */
         /* Save the absolute path */
         free(sysblk.httproot);
         sysblk.httproot = strdup(absolute_httproot_path);
-        logmsg(_("HHCHT013I Using HTTPROOT directory \"%s\"\n"),sysblk.httproot);
+        WRITEMSG(HHCHT013I,sysblk.httproot);
     }
 
     /* Obtain a socket */
@@ -733,7 +726,7 @@ TID                     httptid;        /* Negotiation thread id     */
 
     if (lsock < 0)
     {
-        logmsg(_("HHCHT002E socket: %s\n"), strerror(HSO_errno));
+        WRITEMSG(HHCHT002E, strerror(HSO_errno));
         return NULL;
     }
 
@@ -756,14 +749,13 @@ TID                     httptid;        /* Negotiation thread id     */
 
         if (rc == 0 || HSO_errno != HSO_EADDRINUSE) break;
 
-        logmsg (_("HHCHT003W Waiting for port %u to become free\n"),
-                sysblk.httpport);
+        WRITEMSG(HHCHT003W, sysblk.httpport);
         SLEEP(10);
     } /* end while */
 
     if (rc != 0)
     {
-        logmsg(_("HHCHT004E bind: %s\n"), strerror(HSO_errno));
+        WRITEMSG(HHCHT004E, strerror(HSO_errno));
         return NULL;
     }
 
@@ -772,12 +764,11 @@ TID                     httptid;        /* Negotiation thread id     */
 
     if (rc < 0)
     {
-        logmsg(_("HHCHT005E listen: %s\n"), strerror(HSO_errno));
+        WRITEMSG(HHCHT005E, strerror(HSO_errno));
         return NULL;
     }
 
-    logmsg(_("HHCHT006I Waiting for HTTP requests on port %u\n"),
-            sysblk.httpport);
+    WRITEMSG(HHCHT006I, sysblk.httpport);
 
     /* Handle http requests */
     while (sysblk.httpport) {
@@ -794,7 +785,7 @@ TID                     httptid;        /* Negotiation thread id     */
         if (rc < 0 )
         {
             if (HSO_errno == HSO_EINTR) continue;
-            logmsg(_("HHCHT007E select: %s\n"), strerror(HSO_errno));
+            WRITEMSG(HHCHT007E, strerror(HSO_errno));
             break;
         }
 
@@ -806,7 +797,7 @@ TID                     httptid;        /* Negotiation thread id     */
 
             if (csock < 0)
             {
-                logmsg(_("HHCHT008E accept: %s\n"), strerror(HSO_errno));
+                WRITEMSG(HHCHT008E, strerror(HSO_errno));
                 continue;
             }
 
@@ -816,8 +807,7 @@ TID                     httptid;        /* Negotiation thread id     */
                                 "http_request")
                )
             {
-                logmsg(_("HHCHT010E http_request create_thread: %s\n"),
-                        strerror(errno));
+                WRITEMSG(HHCHT010E, strerror(errno));
                 close_socket (csock);
             }
 
@@ -829,9 +819,7 @@ TID                     httptid;        /* Negotiation thread id     */
     close_socket (lsock);
 
     /* Display thread started message on control panel */
-    logmsg (_("HHCHT009I HTTP listener thread ended: "
-            "tid="TIDPAT", pid=%d\n"),
-            thread_id(), getpid());
+    WRITEMSG(HHCHT009I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "HTTP server");
 
     sysblk.httptid = 0;
 
