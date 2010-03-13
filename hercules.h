@@ -149,5 +149,6 @@
 #endif // _MSVC_
 #include "hstructs.h"     // (Hercules-wide structures)
 #include "hexterns.h"     // (Hercules-wide extern function prototypes)
+#include "msgenu.h"       // (Hercules messages)
 
 #endif // _HERCULES_H
