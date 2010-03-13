@@ -110,17 +110,17 @@ DLL_EXPORT void hdl_shut (void)
 {
 HDLSHD *shdent;
 
-    logmsg("HHCHD900I Begin shutdown sequence\n");
+    WRITEMSG(HHCHD900I);
 
     obtain_lock (&hdl_sdlock);
 
     for(shdent = hdl_shdlist; shdent; shdent = hdl_shdlist)
     {
-        logmsg("HHCHD901I Calling %s\n",shdent->shdname);
+        WRITEMSG(HHCHD901I,shdent->shdname);
         {
             (shdent->shdcall) (shdent->shdarg);
         }
-        logmsg("HHCHD902I %s complete\n",shdent->shdname);
+        WRITEMSG(HHCHD902I,shdent->shdname);
 
         /* Remove shutdown call entry to ensure it is called once */
         hdl_shdlist = shdent->next;
@@ -129,7 +129,7 @@ HDLSHD *shdent;
 
     release_lock (&hdl_sdlock);
 
-    logmsg("HHCHD909I Shutdown sequence complete\n");
+    WRITEMSG(HHCHD909I);
 }
 
 
@@ -145,7 +145,7 @@ DLL_EXPORT void hdl_setpath(char *path)
 
     hdl_modpath = strdup(path);
 
-    logmsg(_("HHCHD018I Loadable module directory is %s\n"),hdl_modpath);
+    WRITEMSG(HHCHD018I,hdl_modpath);
 }
 
 
@@ -418,15 +418,13 @@ HDLDEP *depent;
     {
         if(strcmp(version,depent->version))
         {
-            logmsg(_("HHCHD010I Dependency check failed for %s, version(%s) expected(%s)\n"),
-               name,version,depent->version);
+            WRITEMSG(HHCHD010I,name,version,depent->version);
             return -1;
         }
 
         if(size != depent->size)
         {
-            logmsg(_("HHCHD011I Dependency check failed for %s, size(%d) expected(%d)\n"),
-               name,size,depent->size);
+            WRITEMSG(HHCHD011I,name,size,depent->size);
             return -1;
         }
     }
@@ -467,8 +465,7 @@ void *fep;
         {
             if(!(modent = malloc(sizeof(MODENT))))
             {
-                logmsg(_("HHCHD001E registration malloc failed for %s\n"),
-                  name);
+                WRITEMSG(HHCHD001E,name);
                 return NULL;
             }
 
@@ -562,22 +559,22 @@ static void hdl_term (void *unused _HDL_UNUSED)
 {
 DLLENT *dllent;
 
-    logmsg("HHCHD950I Begin HDL termination sequence\n");
+    WRITEMSG(HHCHD950I);
 
     /* Call all final routines, in reverse load order */
     for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
     {
         if(dllent->hdlfini)
         {
-            logmsg("HHCHD951I Calling module %s cleanup routine\n",dllent->name);
+            WRITEMSG(HHCHD951I,dllent->name);
             {
                 (dllent->hdlfini)();
             }
-            logmsg("HHCHD952I Module %s cleanup complete\n",dllent->name);
+            WRITEMSG(HHCHD952I,dllent->name);
         }
     }
 
-    logmsg("HHCHD959I HDL Termination sequence complete\n");
+    WRITEMSG(HHCHD959I);
 }
 
 
@@ -595,8 +592,7 @@ MODENT *modent;
 
     if(!(dllent->dll = (void*)GetModuleHandle( NULL ) ));
     {
-        logmsg(_("HHCHD007E unable to open DLL %s: %s\n"),
-          dllent->name,dlerror());
+        WRITEMSG(HHCHD007E,dllent->name,dlerror());
         free(dllent);
         return -1;
     }
@@ -605,8 +601,7 @@ MODENT *modent;
 
     if(!(dllent->hdldepc = dlsym(dllent->dll,HDL_DEPC_Q)))
     {
-        logmsg(_("HHCHD013E No dependency section in %s: %s\n"),
-          dllent->name, dlerror());
+        WRITEMSG(HHCHD013E,dllent->name, dlerror());
         free(dllent);
         return -1;
     }
@@ -629,8 +624,7 @@ MODENT *modent;
     {
         if((dllent->hdldepc)(&hdl_dchk))
         {
-            logmsg(_("HHCHD014E Dependency check failed for module %s\n"),
-              dllent->name);
+            WRITEMSG(HHCHD014E,dllent->name);
         }
     }
 
@@ -784,15 +778,14 @@ char *modname;
     {
         if(strfilenamecmp(modname,dllent->name) == 0)
         {
-            logmsg(_("HHCHD005E %s already loaded\n"),dllent->name);
+            WRITEMSG(HHCHD005E,dllent->name);
             return -1;
         }
     }
 
     if(!(dllent = malloc(sizeof(DLLENT))))
     {
-        logmsg(_("HHCHD006S cannot allocate memory for DLL descriptor: %s\n"),
-          strerror(errno));
+        WRITEMSG(HHCHD006S,strerror(errno));
         return -1;
     }
 
@@ -801,8 +794,7 @@ char *modname;
     if(!(dllent->dll = hdl_dlopen(name, RTLD_NOW)))
     {
         if(!(flags & HDL_LOAD_NOMSG))
-            logmsg(_("HHCHD007E unable to open DLL %s: %s\n"),
-              name,dlerror());
+            WRITEMSG(HHCHD007E,name,dlerror());
         free(dllent);
         return -1;
     }
@@ -811,8 +803,7 @@ char *modname;
 
     if(!(dllent->hdldepc = dlsym(dllent->dll,HDL_DEPC_Q)))
     {
-        logmsg(_("HHCHD013E No dependency section in %s: %s\n"),
-          dllent->name, dlerror());
+        WRITEMSG(HHCHD013E,dllent->name, dlerror());
         dlclose(dllent->dll);
         free(dllent);
         return -1;
@@ -822,8 +813,7 @@ char *modname;
     {
         if(tmpdll->hdldepc == dllent->hdldepc)
         {
-            logmsg(_("HHCHD016E DLL %s is duplicate of %s\n"),
-              dllent->name, tmpdll->name);
+            WRITEMSG(HHCHD016E,dllent->name, tmpdll->name);
             dlclose(dllent->dll);
             free(dllent);
             return -1;
@@ -849,8 +839,7 @@ char *modname;
     {
         if((dllent->hdldepc)(&hdl_dchk))
         {
-            logmsg(_("HHCHD014E Dependency check failed for module %s\n"),
-              dllent->name);
+            WRITEMSG(HHCHD014E,dllent->name);
             if(!(flags & HDL_LOAD_FORCE))
             {
                 dlclose(dllent->dll);
@@ -916,7 +905,7 @@ char *modname;
         {
             if((*dllent)->flags & (HDL_LOAD_MAIN | HDL_LOAD_NOUNLOAD))
             {
-                logmsg(_("HHCHD015E Unloading of %s not allowed\n"),(*dllent)->name);
+                WRITEMSG(HHCHD015E,(*dllent)->name);
                 release_lock(&hdl_lock);
                 return -1;
             }
@@ -926,7 +915,7 @@ char *modname;
                     for(hnd = (*dllent)->hndent; hnd; hnd = hnd->next)
                         if(hnd->hnd == dev->hnd)
                         {
-                            logmsg(_("HHCHD008E Device %4.4X bound to %s\n"),dev->devnum,(*dllent)->name);
+                            WRITEMSG(HHCHD008E,dev->devnum,(*dllent)->name);
                             release_lock(&hdl_lock);
                             return -1;
                         }
@@ -938,7 +927,7 @@ char *modname;
                 
                 if((rc = ((*dllent)->hdlfini)()))
                 {
-                    logmsg(_("HHCHD017E Unload of %s rejected by final section\n"),(*dllent)->name);
+                    WRITEMSG(HHCHD017E,(*dllent)->name);
                     release_lock(&hdl_lock);
                     return rc;
                 }
@@ -998,7 +987,7 @@ char *modname;
 
     release_lock(&hdl_lock);
 
-    logmsg(_("HHCHD009E %s not found\n"),modname);
+    WRITEMSG(HHCHD009E,modname);
 
     return -1;
 }
