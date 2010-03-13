@@ -181,8 +181,7 @@ int off;
 
     if (sysblk.mainstor == NULL)
     {
-        logmsg(_("HHCCF031S Cannot obtain %dMB main storage: %s\n"),
-                mainsize, strerror(errno));
+        WRITEMSG(HHCCF031S, mainsize, strerror(errno));
         delayed_exit(1);
     }
 
@@ -199,8 +198,7 @@ int off;
     }
     if (sysblk.storkeys == NULL)
     {
-        logmsg(_("HHCCF032S Cannot obtain storage key array: %s\n"),
-                strerror(errno));
+        WRITEMSG(HHCCF032S, strerror(errno));
         delayed_exit(1);
     }
 
@@ -229,15 +227,13 @@ int off;
             sysblk.xpndstor = malloc((size_t)sysblk.xpndsize * XSTORE_PAGESIZE);
         if (sysblk.xpndstor == NULL)
         {
-            logmsg(_("HHCCF033S Cannot obtain %dMB expanded storage: "
-                    "%s\n"),
-                    xpndsize, strerror(errno));
+            WRITEMSG(HHCCF033S, xpndsize, strerror(errno));
             delayed_exit(1);
         }
         /* Initial power-on reset for expanded storage */
         xstorage_clear();
 #else /*!_FEATURE_EXPANDED_STORAGE*/
-        logmsg(_("HHCCF034W Expanded storage support not installed\n"));
+        WRITEMSG(HHCCF034W);
 #endif /*!_FEATURE_EXPANDED_STORAGE*/
     } /* end if(sysblk.xpndsize) */
 }
@@ -402,8 +398,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
             /* Check for I/O error */
             if (ferror(fp))
             {
-                logmsg(_("HHCCF001S Error reading file %s line %d: %s\n"),
-                    fname, inc_stmtnum[inc_level], strerror(errno));
+                WRITEMSG(HHCCF001S, fname, inc_stmtnum[inc_level], strerror(errno));
                 delayed_exit(1);
             }
 
@@ -425,8 +420,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
             /* Check that statement does not overflow buffer */
             if (stmtlen >= (int)(sizeof(buf) - 1))
             {
-                logmsg(_("HHCCF002S File %s line %d is too long\n"),
-                    fname, inc_stmtnum[inc_level]);
+                WRITEMSG(HHCCF002S,fname, inc_stmtnum[inc_level]);
                 delayed_exit(1);
             }
 
@@ -489,8 +483,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
                             /* Check that statement does not overflow buffer */
                             if (stmtlen+strlen(inc_envvar) >= sizeof(buf) - 1)
                             {
-                                logmsg(_("HHCCF002S File %s line %d is too long\n"),
-                                                fname, inc_stmtnum[inc_level]);
+                                WRITEMSG(HHCCF002S, fname, inc_stmtnum[inc_level]);
                                 delayed_exit(1);
                             }
 
@@ -575,8 +568,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
         {
             if(strlen(buf1)>=sizeof(buf))
             {
-                logmsg(_("HHCCF002S File %s line %d is too long\n"),
-                    fname, inc_stmtnum[inc_level]);
+                WRITEMSG(HHCCF002S, fname, inc_stmtnum[inc_level]);
                 free(buf1);
                 delayed_exit(1);
             }
@@ -744,8 +736,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     inc_fp[inc_level] = fopen (pathname, "r");
     if (inc_fp[inc_level] == NULL)
     {
-        logmsg(_("HHCCF003S Open error file %s: %s\n"),
-                fname, strerror(errno));
+        WRITEMSG(HHCCF003S, fname, strerror(errno));
         delayed_exit(1);
     }
     inc_stmtnum[inc_level] = 0;
@@ -878,8 +869,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         }
         if (inc_level < 0)
         {
-            logmsg(_("HHCCF004S No device records in file %s\n"),
-                    fname);
+            WRITEMSG(HHCCF004S, fname);
             delayed_exit(1);
         }
 
@@ -888,8 +878,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         {
             if  (strcasecmp (operand, "include_errors") == 0) 
             {              
-                logmsg( _("HHCCF081I %s Will ignore include errors .\n"),
-                        fname);
+                WRITEMSG(HHCCF081I, fname);
                 inc_ignore_errors = 1 ;
             }
 
@@ -901,14 +890,11 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         {              
             if (++inc_level >= MAX_INC_LEVEL)
             {
-                logmsg(_( "HHCCF082S Error in %s line %d: "
-                        "Maximum nesting level (%d) reached\n"),
-                        fname, inc_stmtnum[inc_level-1], MAX_INC_LEVEL);
+                WRITEMSG(HHCCF082S, fname, inc_stmtnum[inc_level-1], MAX_INC_LEVEL);
                 delayed_exit(1);
             }
 
-            logmsg( _("HHCCF083I %s Including %s at %d.\n"),
-                        fname, operand, inc_stmtnum[inc_level-1]);
+            WRITEMSG(HHCCF083I, fname, operand, inc_stmtnum[inc_level-1]);
             hostpath(pathname, operand, sizeof(pathname));
             inc_fp[inc_level] = fopen (pathname, "r");
             if (inc_fp[inc_level] == NULL)
@@ -916,14 +902,12 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 inc_level--;
                 if ( inc_ignore_errors == 1 ) 
                 {
-                    logmsg(_("HHCCF084W %s Open error ignored file %s: %s\n"),
-                                    fname, operand, strerror(errno));
+                    WRITEMSG(HHCCF084W, fname, operand, strerror(errno));
                     continue ;
                 }
                 else 
                 {
-                    logmsg(_("HHCCF085S %s Open error file %s: %s\n"),
-                                    fname, operand, strerror(errno));
+                    WRITEMSG(HHCCF085S, fname, operand, strerror(errno));
                     delayed_exit(1);
                 }
             }
@@ -1075,9 +1059,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             }
             else if (strcasecmp (keyword, "logofile") == 0)
             {
-                logmsg(_("HHCCF061W Warning in %s line %d: "
-                    "LOGOFILE statement deprecated. Use HERCLOGO instead\n"),
-                    fname, inc_stmtnum[inc_level]);
+                WRITEMSG(HHCCF061W, fname, inc_stmtnum[inc_level], "LOGOFILE", "HERCLOGO");
                 slogofile=operand;
             }
             else if (strcasecmp (keyword, "herclogo") == 0)
@@ -1091,9 +1073,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 secpsvmlevel=operand;
                 secpsvmlvl=addargv[0];
                 ecpsvmac=addargc;
-                logmsg(_("HHCCF061W Warning in %s line %d: "
-                    "ECPS:VM Statement deprecated. Use ECPSVM instead\n"),
-                    fname, inc_stmtnum[inc_level]);
+                WRITEMSG(HHCCF061W, fname, inc_stmtnum[inc_level], "ECPS:VM", "ECPSVM");
                 addargc=0;
             }
             else if(strcasecmp(keyword, "ecpsvm") == 0)
@@ -1114,9 +1094,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
             else
             {
-                logmsg( _("HHCCF008E Error in %s line %d: "
-                        "Syntax error: %s\n"),
-                        fname, inc_stmtnum[inc_level], keyword);
+                WRITEMSG(HHCCF008E, fname, inc_stmtnum[inc_level], keyword);
                 operand = "";
                 addargc = 0;
             }
@@ -1124,9 +1102,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             /* Check for one and only one operand */
             if (operand == NULL || addargc != 0)
             {
-                logmsg( _("HHCCF009E Error in %s line %d: "
-                        "Incorrect number of operands\n"),
-                        fname, inc_stmtnum[inc_level]);
+                WRITEMSG(HHCCF009E, fname, inc_stmtnum[inc_level]);
             }
 
         } /* end else (not old-style CPU statement) */
@@ -1138,9 +1114,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 || sscanf(sversion, "%hx%c", &version, &c) != 1
                 || version>255)
             {
-                logmsg(_("HHCCF012S Error in %s line %d: "
-                        "%s is not a valid CPU version code\n"),
-                        fname, inc_stmtnum[inc_level], sversion);
+                WRITEMSG(HHCCF012S, fname, inc_stmtnum[inc_level], sversion, "version code");
                 delayed_exit(1);
             }
             dfltver = 0;
@@ -1152,9 +1126,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             if (strlen(sserial) != 6
                 || sscanf(sserial, "%x%c", &serial, &c) != 1)
             {
-                logmsg(_("HHCCF051S Error in %s line %d: "
-                        "%s is not a valid serial number\n"),
-                        fname, inc_stmtnum[inc_level], sserial);
+                WRITEMSG(HHCCF051S, fname, inc_stmtnum[inc_level], sserial);
                 delayed_exit(1);
             }
         }
@@ -1165,9 +1137,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             if (strlen(smodel) != 4
                 || sscanf(smodel, "%hx%c", &model, &c) != 1)
             {
-                logmsg(_("HHCCF012S Error in %s line %d: "
-                        "%s is not a valid CPU model\n"),
-                        fname, inc_stmtnum[inc_level], smodel);
+                WRITEMSG(HHCCF012S, fname, inc_stmtnum[inc_level], smodel, "model");
                 delayed_exit(1);
             }
         }
@@ -1180,9 +1150,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
              || (mainsize > 4095 && sizeof(sysblk.mainsize) < 8)
              || (mainsize > 4095 && sizeof(size_t) < 8))
             {
-                logmsg(_("HHCCF013S Error in %s line %d: "
-                        "Invalid main storage size %s\n"),
-                        fname, inc_stmtnum[inc_level], smainsize);
+                WRITEMSG(HHCCF013S, fname, inc_stmtnum[inc_level], smainsize);
                 delayed_exit(1);
             }
         }
@@ -1194,9 +1162,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 || xpndsize > (0x100000000ULL / XSTORE_PAGESIZE) - 1
                 || (xpndsize > 4095 && sizeof(size_t) < 8))
             {
-                logmsg(_("HHCCF014S Error in %s line %d: "
-                        "Invalid expanded storage size %s\n"),
-                        fname, inc_stmtnum[inc_level], sxpndsize);
+                WRITEMSG(HHCCF014S, fname, inc_stmtnum[inc_level], sxpndsize);
                 delayed_exit(1);
             }
         }
@@ -1205,17 +1171,14 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         if (shercprio != NULL)
             if (sscanf(shercprio, "%d%c", &hercprio, &c) != 1)
             {
-                logmsg(_("HHCCF016S Error in %s line %d: "
-                        "Invalid Hercules process group thread priority %s\n"),
-                        fname, inc_stmtnum[inc_level], shercprio);
+                WRITEMSG(HHCCF016S, fname, inc_stmtnum[inc_level], "Hercules process group", shercprio);
                 delayed_exit(1);
             }
 
 #if !defined(NO_SETUID)
         if(sysblk.suid != 0 && hercprio < 0)
         {
-            logmsg(_("HHCCF017W Hercules is not running as setuid root, "
-                    "cannot raise Hercules process group thread priority\n"));
+            WRITEMSG(HHCCF017W, "Hercules process group");
             hercprio = 0;               /* Set priority to Normal     */
         }
 #endif /*!defined(NO_SETUID)*/
@@ -1226,17 +1189,14 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         if (stodprio != NULL)
             if (sscanf(stodprio, "%d%c", &todprio, &c) != 1)
             {
-                logmsg(_("HHCCF016S Error in %s line %d: "
-                        "Invalid TOD Clock thread priority %s\n"),
-                        fname, inc_stmtnum[inc_level], stodprio);
+                WRITEMSG(HHCCF016S, fname, inc_stmtnum[inc_level], "TOD clock", stodprio);
                 delayed_exit(1);
             }
 
 #if !defined(NO_SETUID)
         if(sysblk.suid != 0 && todprio < 0)
         {
-            logmsg(_("HHCCF017W Hercules is not running as setuid root, "
-                    "cannot raise TOD Clock thread priority\n"));
+            WRITEMSG(HHCCF017W, "TOD clock");
             todprio = 0;                /* Set priority to Normal     */
         }
 #endif /*!defined(NO_SETUID)*/
@@ -1247,17 +1207,14 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         if (scpuprio != NULL)
             if (sscanf(scpuprio, "%d%c", &cpuprio, &c) != 1)
             {
-                logmsg(_("HHCCF016S Error in %s line %d: "
-                        "Invalid CPU thread priority %s\n"),
-                        fname, inc_stmtnum[inc_level], scpuprio);
+                WRITEMSG(HHCCF016S, fname, inc_stmtnum[inc_level], "CPU", scpuprio);
                 delayed_exit(1);
             }
 
 #if !defined(NO_SETUID)
         if(sysblk.suid != 0 && cpuprio < 0)
         {
-            logmsg(_("HHCCF017W Hercules is not running as setuid root, "
-                    "cannot raise CPU priority\n"));
+            WRITEMSG(HHCCF017W, "CPU");
             cpuprio = 0;                /* Set priority to Normal     */
         }
 #endif /*!defined(NO_SETUID)*/
@@ -1268,16 +1225,13 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         if (sdevprio != NULL)
             if (sscanf(sdevprio, "%d%c", &devprio, &c) != 1)
             {
-                logmsg(_("HHCCF016S Error in %s line %d: "
-                        "Invalid device thread priority %s\n"),
-                        fname, inc_stmtnum[inc_level], sdevprio);
+                WRITEMSG(HHCCF016S, fname, inc_stmtnum[inc_level], "device", sdevprio);
                 delayed_exit(1);
             }
 
 #if !defined(NO_SETUID)
         if(sysblk.suid != 0 && devprio < 0)
-            logmsg(_("HHCCF017W Hercules is not running as setuid root, "
-                    "cannot raise device thread priority\n"));
+            WRITEMSG(HHCCF017W, "device");
 #endif /*!defined(NO_SETUID)*/
 
         sysblk.devprio = devprio;
@@ -1286,16 +1240,13 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         if (sdevprio != NULL)
             if (sscanf(sdevprio, "%d%c", &devprio, &c) != 1)
             {
-                logmsg(_("HHCCF016S Error in %s line %d: "
-                        "Invalid device thread priority %s\n"),
-                        fname, inc_stmtnum[inc_level], sdevprio);
+                WRITEMSG(HHCCF016S, fname, inc_stmtnum[inc_level], "device", sdevprio);
                 delayed_exit(1);
             }
 
 #if !defined(NO_SETUID)
         if(sysblk.suid != 0 && devprio < 0)
-            logmsg(_("HHCCF017W Hercules is not running as setuid root, "
-                    "cannot raise device thread priority\n"));
+            WRITEMSG(HHCCF017W, "device");
 #endif /*!defined(NO_SETUID)*/
 
         sysblk.devprio = devprio;
@@ -1320,9 +1271,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             if (sscanf(snumcpu, "%hu%c", &numcpu, &c) != 1
                 || numcpu > MAX_CPU_ENGINES)
             {
-                logmsg(_("HHCCF018S Error in %s line %d: "
-                        "Invalid number of CPUs %s\n"),
-                        fname, inc_stmtnum[inc_level], snumcpu);
+                WRITEMSG(HHCCF018S, fname, inc_stmtnum[inc_level], snumcpu);
                 delayed_exit(1);
             }
         }
@@ -1335,13 +1284,11 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             if (sscanf(snumvec, "%hu%c", &numvec, &c) != 1
                 || numvec > MAX_CPU_ENGINES)
             {
-                logmsg(_("HHCCF019S Error in %s line %d: "
-                        "Invalid number of VFs %s\n"),
-                        fname, inc_stmtnum[inc_level], snumvec);
+                WRITEMSG(HHCCF019S, fname, inc_stmtnum[inc_level], snumvec);
                 delayed_exit(1);
             }
 #else /*!_FEATURE_VECTOR_FACILITY*/
-            logmsg(_("HHCCF020W Vector Facility support not configured\n"));
+            WRITEMSG(HHCCF020W);
 #endif /*!_FEATURE_VECTOR_FACILITY*/
         }
         sysblk.numvec = numvec;
@@ -1359,9 +1306,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                     if (sscanf(styp, "%d%c", &count, &c) != 2
                         || c != '*' || count < 1)
                     {
-                        logmsg(_("HHCCF074S Error in %s line %d: "
-                                "Invalid engine syntax %s\n"),
-                                fname, inc_stmtnum[inc_level], styp);
+                        WRITEMSG(HHCCF074S, fname, inc_stmtnum[inc_level], styp);
                         delayed_exit(1);
                         break;
                     }
@@ -1378,16 +1323,13 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 else if (strcasecmp(styp,"ip") == 0)
                     ptyp = SCCB_PTYP_SUP;
                 else {
-                    logmsg(_("HHCCF075S Error in %s line %d: "
-                            "Invalid engine type %s\n"),
-                            fname, inc_stmtnum[inc_level], styp);
+                    WRITEMSG(HHCCF075S, fname, inc_stmtnum[inc_level], styp);
                     delayed_exit(1);
                     break;
                 }
                 while (count-- > 0 && cpu < MAX_CPU_ENGINES)
                 {
-                    logmsg("HHCCF077I Engine %d set to type %d (%s)\n",
-                            cpu, ptyp, styp_values[ptyp]);
+                    WRITEMSG(HHCCF077I, cpu, ptyp, styp_values[ptyp]);
                     sysblk.ptyp[cpu++] = ptyp;
                 }
                 styp = strtok(NULL,",");
@@ -1401,11 +1343,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 || sscanf(ssysepoch, "%d%c", &sysepoch, &c) != 1
                 || sysepoch <= 1800 || sysepoch >= 2100)
             {
-                logmsg(_("HHCCF022S Error in %s line %d: "
-                        "%s is not a valid system epoch.\n"
-                        "          The only valid values are "
-                        "1801-2099\n"),
-                        fname, inc_stmtnum[inc_level], ssysepoch);
+                WRITEMSG(HHCCF022S, fname, inc_stmtnum[inc_level], ssysepoch);
                 delayed_exit(1);
             }
         }
@@ -1416,9 +1354,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             if (sscanf(syroffset, "%d%c", &yroffset, &c) != 1
                 || (yroffset < -142) || (yroffset > 142))
             {
-                logmsg(_("HHCCF070S Error in %s line %d: "
-                        "%s is not a valid year offset\n"),
-                        fname, inc_stmtnum[inc_level], syroffset);
+                WRITEMSG(HHCCF070S, fname, inc_stmtnum[inc_level], syroffset);
                 delayed_exit(1);
             }
         }
@@ -1430,9 +1366,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 || sscanf(stzoffset, "%d%c", &tzoffset, &c) != 1
                 || (tzoffset < -2359) || (tzoffset > 2359))
             {
-                logmsg(_("HHCCF023S Error in %s line %d: "
-                        "%s is not a valid timezone offset\n"),
-                        fname, inc_stmtnum[inc_level], stzoffset);
+                WRITEMSG(HHCCF023S, fname, inc_stmtnum[inc_level], stzoffset);
                 delayed_exit(1);
             }
         }
@@ -1469,18 +1403,14 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                     ecpsvmavail=1;
                     if(ecpsvmac==0)
                     {
-                        logmsg(_("HHCCF062W Warning in %s line %d: "
-                                "Missing ECPSVM level value. 20 Assumed\n"),
-                                fname, inc_stmtnum[inc_level]);
+                        WRITEMSG(HHCCF062W, fname, inc_stmtnum[inc_level]);
                         ecpsvmavail=1;
                         ecpsvmlevel=20;
                         break;
                     }
                     if (sscanf(secpsvmlvl, "%d%c", &ecpsvmlevel, &c) != 1)
                     {
-                        logmsg(_("HHCCF051W Warning in %s line %d: "
-                                "Invalid ECPSVM level value : %s. 20 Assumed\n"),
-                                fname, inc_stmtnum[inc_level], secpsvmlevel);
+                        WRITEMSG(HHCCF052W, fname, inc_stmtnum[inc_level], secpsvmlevel);
                         ecpsvmavail=1;
                         ecpsvmlevel=20;
                         break;
@@ -1490,18 +1420,14 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 ecpsvmavail=1;
                 if (sscanf(secpsvmlevel, "%d%c", &ecpsvmlevel, &c) != 1)
                 {
-                    logmsg(_("HHCCF051W Error in %s line %d: "
-                            "Invalid ECPSVM keyword : %s. NO Assumed\n"),
-                            fname, inc_stmtnum[inc_level], secpsvmlevel);
+                    WRITEMSG(HHCCF053W, fname, inc_stmtnum[inc_level], secpsvmlevel);
                     ecpsvmavail=0;
                     ecpsvmlevel=0;
                     break;
                 }
                 else
                 {
-                    logmsg(_("HHCCF063W Warning in %s line %d: "
-                            "Specifying ECPSVM level directly is deprecated. Use the 'LEVEL' keyword instead.\n"),
-                            fname, inc_stmtnum[inc_level]);
+                    WRITEMSG(HHCCF063W, fname, inc_stmtnum[inc_level]);
                     break;
                 }
                 break;
@@ -1518,9 +1444,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             if (sscanf(sshrdport, "%hu%c", &shrdport, &c) != 1
                 || shrdport < 1024 )
             {
-                logmsg(_("HHCCF029S Error in %s line %d: "
-                        "Invalid SHRDPORT port number %s\n"),
-                        fname, inc_stmtnum[inc_level], sshrdport);
+                WRITEMSG(HHCCF029S, fname, inc_stmtnum[inc_level], sshrdport);
                 delayed_exit(1);
             }
         }
@@ -1561,7 +1485,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         TAMDIR *pNewTAMDIR = malloc( sizeof(TAMDIR) );
         if (!pNewTAMDIR)
         {
-            logmsg( _("HHCCF900S Out of memory!\n"));
+            WRITEMSG(HHCCF900S);
             delayed_exit(1);
         }
         VERIFY( getcwd( cwd, sizeof(cwd) ) != NULL );
@@ -1574,8 +1498,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         pNewTAMDIR->next = sysblk.tamdir;
         sysblk.tamdir = pNewTAMDIR;
         sysblk.defdir = pNewTAMDIR->dir;
-        logmsg(_("HHCCF090I Default Allowed AUTOMOUNT directory = \"%s\"\n"),
-            sysblk.defdir);
+        WRITEMSG(HHCCF090I, sysblk.defdir);
     }
 #endif /* OPTION_TAPE_AUTOMOUNT */
 
@@ -1584,17 +1507,13 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
     /* Set Hercules base priority */
     if (setpriority(PRIO_PGRP, 0, hercprio))
-        logmsg (_("HHCCF064W Hercules set priority %d failed: %s\n"),
-                hercprio, strerror(errno));
+        WRITEMSG(HHCCF064W, hercprio, strerror(errno));
 
     /* Back to user mode */
     SETMODE(USER);
 
     /* Display Hercules thread information on control panel */
-    logmsg (_("HHCCF065I Hercules: tid="TIDPAT", pid=%d, pgid=%d, "
-              "priority=%d\n"),
-            thread_id(), getpid(), getpgrp(),
-            getpriority(PRIO_PGRP,0));
+    WRITEMSG(HHCCF065I, thread_id(), getpid(), getpriority(PRIO_PGRP,0), "Hercules");
 
 #if defined(OPTION_SHARED_DEVICES)
     sysblk.shrdport = shrdport;
@@ -1622,13 +1541,9 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     if(sysepoch != 1900 && sysepoch != 1960)
     {
         if(sysepoch < 1960)
-            logmsg(_("HHCCF072W SYSEPOCH %04d is deprecated. "
-                     "Please specify \"SYSEPOCH 1900 %s%d\".\n"),
-                     sysepoch, 1900-sysepoch > 0 ? "+" : "", 1900-sysepoch);
+            WRITEMSG(HHCCF072W, sysepoch, 1900-sysepoch > 0 ? "+" : "", 1900-sysepoch);
         else
-            logmsg(_("HHCCF073W SYSEPOCH %04d is deprecated. "
-                     "Please specify \"SYSEPOCH 1960 %s%d\".\n"),
-                     sysepoch, 1960-sysepoch > 0 ? "+" : "", 1960-sysepoch);
+            WRITEMSG(HHCCF073W, sysepoch, 1960-sysepoch > 0 ? "+" : "", 1960-sysepoch);
     }
 
     if(sysepoch == 1960 || sysepoch == 1988)
@@ -1660,9 +1575,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
         if (sdevnum == NULL || sdevtype == NULL)
         {
-            logmsg(_("HHCCF035S Error in %s line %d: "
-                    "Missing device number or device type\n"),
-                    fname, inc_stmtnum[inc_level]);
+            WRITEMSG(HHCCF035S, fname, inc_stmtnum[inc_level]);
             delayed_exit(1);
         }
         /* Parse devnum */
@@ -1670,9 +1583,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
         if(rc==-2)
         {
-            logmsg(_("HHCCF036S Error in %s line %d: "
-                    "%s is not a valid device number(s) specification\n"),
-                    fname, inc_stmtnum[inc_level], sdevnum);
+            WRITEMSG(HHCCF036S, fname, inc_stmtnum[inc_level], sdevnum);
             delayed_exit(1);
         }
 
@@ -1690,14 +1601,11 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
             if (++inc_level >= MAX_INC_LEVEL)
             {
-                logmsg(_( "HHCCF082S Error in %s line %d: "
-                        "Maximum nesting level (%d) reached\n"),
-                        fname, inc_stmtnum[inc_level-1], MAX_INC_LEVEL);
+                WRITEMSG(HHCCF082S, fname, inc_stmtnum[inc_level-1], MAX_INC_LEVEL);
                 delayed_exit(1);
             }
 
-            logmsg( _("HHCCF083I %s Including %s at %d .\n"),
-                        fname, operand, inc_stmtnum[inc_level-1]);
+            WRITEMSG(HHCCF083I, fname, operand, inc_stmtnum[inc_level-1]);
             hostpath(pathname, operand, sizeof(pathname));
             inc_fp[inc_level] = fopen (pathname, "r");
             if (inc_fp[inc_level] == NULL)
@@ -1705,14 +1613,12 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 inc_level--;
                 if ( inc_ignore_errors == 1 ) 
                 {
-                    logmsg(_("HHCCF084W %s Open error ignored file %s: %s\n"),
-                                    fname, operand, strerror(errno));
+                    WRITEMSG(HHCCF084W, fname, operand, strerror(errno));
                     continue ;
                 }
                 else 
                 {
-                    logmsg(_("HHCCF085E %s Open error file %s: %s\n"),
-                                    fname, operand, strerror(errno));
+                    WRITEMSG(HHCCF085S, fname, operand, strerror(errno));
                     delayed_exit(1);
                 }
             }
@@ -1797,8 +1703,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
     /* Check that numcpu does not exceed maxcpu */
     if (sysblk.numcpu > sysblk.maxcpu) {
-        logmsg(_("HHCCF086S Error in %s: NUMCPU %d must not exceed MAXCPU %d\n"),
-                fname, sysblk.numcpu, sysblk.maxcpu);
+        WRITEMSG(HHCCF086S, fname, sysblk.numcpu, sysblk.maxcpu);
         delayed_exit(1);
     }
 
