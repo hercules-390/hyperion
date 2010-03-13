@@ -220,21 +220,21 @@ DLL_EXPORT void display_version_2 (FILE *f, char *prog, const char verbose,int h
 
     if ( f != stdout )
         if(httpfd<0)
-            fprintf (f, _("%sVersion %s\n"), prog, VERSION);
+            fprintf (f, MSG(HHCIN010I, prog, VERSION));
         else
-            hprintf (httpfd, _("%sVersion %s\n"), prog, VERSION);
+            hprintf (httpfd, MSG(HHCIN010I, prog, VERSION));
     else
-        logmsg  (   _("%sVersion %s\n"), prog, VERSION);
+        WRITEMSG (HHCIN010I, prog, VERSION);
 
     /* Log Copyright */
 
     if ( f != stdout )
         if(httpfd<0)
-            fprintf (f, "%s\n", HERCULES_COPYRIGHT);
+            fprintf (f, MSG(HHCIN011I, HERCULES_COPYRIGHT));
         else
-            hprintf (httpfd, "%s\n", HERCULES_COPYRIGHT);
+            hprintf (httpfd, MSG(HHCIN011I, HERCULES_COPYRIGHT));
     else
-        logmsg  (   "%s\n", HERCULES_COPYRIGHT);
+        WRITEMSG (HHCIN011I, HERCULES_COPYRIGHT);
 
     /* If we're being verbose, display the rest of the info */
     if (verbose)
@@ -243,31 +243,31 @@ DLL_EXPORT void display_version_2 (FILE *f, char *prog, const char verbose,int h
 
         if ( f != stdout )
             if(httpfd<0)
-                fprintf (f, _("Built on %s at %s\n"), __DATE__, __TIME__);
+                fprintf (f, MSG(HHCIN012I, __DATE__, __TIME__));
             else
-                hprintf (httpfd, _("Built on %s at %s\n"), __DATE__, __TIME__);
+                hprintf (httpfd, MSG(HHCIN012I, __DATE__, __TIME__));
         else
-            logmsg  (   _("Built on %s at %s\n"), __DATE__, __TIME__);
+            WRITEMSG (HHCIN012I, __DATE__, __TIME__);
 
         /* Log "unusual" build options */
 
         if ( f != stdout )
             if(httpfd<0)
-                fprintf (f, _("Build information:\n"));
+                fprintf (f, MSG(HHCIN013I));
             else
-                hprintf (httpfd, _("Build information:\n"));
+                hprintf (httpfd, MSG(HHCIN013I));
         else
-            logmsg  (   _("Build information:\n"));
+            WRITEMSG (HHCIN013I);
 
         if (!(i = get_buildinfo_strings( &ppszBldInfoStr )))
         {
             if ( f != stdout )
                 if(httpfd<0)
-                    fprintf (f, "  (none)\n");
+                    fprintf (f, MSG(HHCIN014I, "  (none)"));
                 else
-                    hprintf (httpfd, "  (none)\n");
+                    hprintf (httpfd, MSG(HHCIN014I, "  (none)"));
             else
-                logmsg  (   "  (none)\n");
+                WRITEMSG (HHCIN014I, "  (none)");
         }
         else
         {
@@ -275,11 +275,11 @@ DLL_EXPORT void display_version_2 (FILE *f, char *prog, const char verbose,int h
             {
                 if ( f != stdout )
                     if(httpfd<0)
-                        fprintf (f, "  %s\n", *ppszBldInfoStr);
+                        fprintf (f, MSG(HHCIN014I, *ppszBldInfoStr));
                     else
-                        hprintf (httpfd, "  %s\n", *ppszBldInfoStr);
+                        hprintf (httpfd, MSG(HHCIN014I, *ppszBldInfoStr));
                 else
-                    logmsg  (   "  %s\n", *ppszBldInfoStr);
+                    WRITEMSG (HHCIN014I, *ppszBldInfoStr);
             }
         }
 

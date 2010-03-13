@@ -113,11 +113,11 @@ DLL_EXPORT void display_hostinfo ( HOST_INFO* pHostInfo, FILE *f, int httpfd )
     if(httpfd<0)
     {
         if (!f) f = stdout; if (f != stdout)
-             fprintf(f, "%s\n", host_info_str);
-        else logmsg(    "%s\n", host_info_str);
+             fprintf(f, MSG(HHCIN015I, host_info_str));
+        else WRITEMSG(HHCIN015I, host_info_str);
     }
     else
     {
-        hprintf(httpfd,"%s\n",host_info_str);
+        hprintf(httpfd, MSG(HHCIN015I,host_info_str));
     }
 }
