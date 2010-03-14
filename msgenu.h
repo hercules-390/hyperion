@@ -42,7 +42,7 @@
 #define HHCCF062W "Warning in %s line %d: Missing ECPSVM level value, 20 Assumed"
 #define HHCCF063W "Warning in %s line %d: Specifying ECPSVM level directly is deprecated. Use the 'LEVEL' keyword instead"
 #define HHCCF064W "Hercules set priority %d failed: %s"
-#define HHCCF065I "Thread started: tid " TIDPAT ", pid %d, prio %d, name %s"
+#define HHCCF065I "Thread started tid " TIDPAT ", pid %d, prio %d, name %s"
 #define HHCCF070S "Error in %s line %d: %s is not a valid year offset"
 #define HHCCF072W "SYSEPOCH %04d is deprecated, please specify \"SYSEPOCH 1900 %s%d\""
 #define HHCCF073W "SYSEPOCH %04d is deprecated, please specify \"SYSEPOCH 1960 %s%d\""
@@ -63,10 +63,10 @@
 #define HHCGI002I "Unable to determine port number from %s"
 #define HHCGI003E "Invalid parameter: %s"
 
-#define HHCTE001I "Thread started: tid " TIDPAT ", pid %d, prio %d, name %s"
+#define HHCTE001I "Thread started tid " TIDPAT ", pid %d, prio %d, name %s"
 #define HHCTE002W "Waiting for port %u to become free"
 #define HHCTE003I "Waiting for console connection on port %u"
-#define HHCTE004I "Thread ended: tid " TIDPAT ", pid %d, prio %d, name %s" 
+#define HHCTE004I "Thread ended tid " TIDPAT ", pid %d, prio %d, name %s" 
 #define HHCTE005E "Cannot create console thread: %s"
 #define HHCTE007I "%4.4X device %4.4X client %s connection closed"
 #define HHCTE008I "Device %4.4X connection closed by client %s"
@@ -81,16 +81,16 @@
 
 /* cpu.c */
 #define HHCCP001W "%s%02X thread set priority %d failed: %s"
-#define HHCCP002I "Thread started: tid " TIDPAT ", pid %d, prio %d, name %s%02X"
+#define HHCCP002I "Thread started tid " TIDPAT ", pid %d, prio %d, name %s%02X"
 #define HHCCP003I "%s%02X architecture mode %s"
 #define HHCCP004I "%s%02X Vector Facility online"
 #define HHCCP006S "Cannot create timer thread: %s"
 #define HHCCP007I "%s%02X architecture mode set to %s"
-#define HHCCP008I "Thread ended: tid " TIDPAT ", pid %d, prio %d, name %s%02X"
+#define HHCCP008I "Thread ended tid " TIDPAT ", pid %d, prio %d, name %s%02X"
 #define HHCCP010I "%s%02X store status completed"
 #define HHCCP011I "%s%02X disabled wait state %s"
-#define HHCCP014I "%s%s%s02X: %s CODE=%4.4X ILC=%d%s"
-#define HHCCP015I "%s%02X PER event: code=%4.4X perc=%2.2X addr=" F_VADR
+#define HHCCP014I "%s%s%s02X: %s CODE %4.4X ILC %d%s"
+#define HHCCP015I "%s%02X PER event: code %4.4X perc %2.2X addr " F_VADR
 #define HHCCP016I "%s%02X: Program interrupt loop: PSW %s"
 #define HHCCP022I "Machine Check code %16.16" I64_FMT "u"
 #define HHCCP043I "Wait state PSW loaded: %s"
@@ -105,8 +105,8 @@
 
 /* hao.c */
 #define HHCIN004S "Cannot create HAO thread: %s"
-#define HHCAO001I "Thread started: tid " TIDPAT ", pid %d, prio %d, name %s"
-#define HHCAO002I "Thread ended: tid " TIDPAT ", pid %d, prio %d, name %s"
+#define HHCAO001I "Thread started tid " TIDPAT ", pid %d, prio %d, name %s"
+#define HHCAO002I "Thread ended tid " TIDPAT ", pid %d, prio %d, name %s"
 #define HHCAO003I "Firing command: '%s'"
 #define HHCAO004I "The defined Automatic Operator rule(s) are:"
 #define HHCAO005I "%02d: '%s' -> '%s'"
@@ -165,7 +165,7 @@
 #define HHCIN015I "%s"
 
 /* httpserv.c */
-#define HHCHT001I "Thread started: tid " TIDPAT ", pid %d, prio %d, name %s"
+#define HHCHT001I "Thread started tid " TIDPAT ", pid %d, prio %d, name %s"
 #define HHCHT002E "Socket error: %s"
 #define HHCHT003W "Waiting for port %u to become free"
 #define HHCHT004E "Bind error: %s"
@@ -173,16 +173,21 @@
 #define HHCHT006I "Waiting for HTTP requests on port %u"
 #define HHCHT007E "Select error: %s"
 #define HHCHT008E "Accept error: %s"
-#define HHCHT009I "Thread ended: tid " TIDPAT ", pid %d, prio %d, name %s"
+#define HHCHT009I "Thread ended tid " TIDPAT ", pid %d, prio %d, name %s"
 #define HHCHT010E "Http_request create_thread error: %s"
 #define HHCHT011E "Html_include: Cannot open %s: %s"
 #define HHCHT013I "Using HTTPROOT directory \"%s\""
 #define HHCCF066E "Invalid HTTPROOT: \"%s\": %s"
 
+/* panel.c */
+#define HHCPN001I "Thread started tid " TIDPAT ", pid %d, prio %d, name %s"
+#define HHCPN002S "Cannot obtain keyboard buffer: %s"
+#define HHCPN003S "Cannot obtain message buffer: %s"
+
 /* timer.c */
 #define HHCTT001W "Timer thread set priority %d failed: %s"
-#define HHCTT002I "Thread started: tid " TIDPAT ", pid %d, prio %d, name %s"
-#define HHCTT003I "Thread ended: tid " TIDPAT ", pid %d, prio %d, name %s"
+#define HHCTT002I "Thread started tid " TIDPAT ", pid %d, prio %d, name %s"
+#define HHCTT003I "Thread ended tid " TIDPAT ", pid %d, prio %d, name %s"
 
 /* version.c */
 #define HHCIN010I "%sversion %s"

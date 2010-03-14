@@ -1822,9 +1822,8 @@ char    buf[1024];                      /* Buffer workarea           */
     SET_THREAD_NAME("panel_display");
 
     /* Display thread started message on control panel */
-    logmsg (_("HHCPN001I Control panel thread started: "
-            "tid="TIDPAT", pid=%d\n"),
-            thread_id(), getpid());
+    WRITEMSG (HHCPN001I,
+            thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "Control panel");
 
     /* Notify logger_thread we're in control */
     sysblk.panel_init = 1;
@@ -1847,8 +1846,7 @@ char    buf[1024];                      /* Buffer workarea           */
     /* Obtain storage for the keyboard buffer */
     if (!(kbbuf = malloc (kbbufsize)))
     {
-        logmsg(_("HHCPN002S Cannot obtain keyboard buffer: %s\n"),
-                strerror(errno));
+        WRITEMSG(HHCPN002S, strerror(errno));
         return;
     }
 
@@ -1857,8 +1855,7 @@ char    buf[1024];                      /* Buffer workarea           */
     if (msgbuf == NULL)
     {
         fprintf (stderr,
-                _("HHCPN003S Cannot obtain message buffer: %s\n"),
-                strerror(errno));
+                MSG(HHCPN003S, strerror(errno)));
         return;
     }
 
