@@ -2004,7 +2004,7 @@ BYTE                   unitstat;        /* Status after receive data */
 
         if (rc == 0 || HSO_errno != HSO_EADDRINUSE) break;
 
-        iWRITEMSG(HHCTE002W, ntohs(server->sin_port));
+        WRITEMSG(HHCTE002W, ntohs(server->sin_port));
         SLEEP(10);
     }
     while (console_cnslcnt);
