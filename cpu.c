@@ -434,8 +434,8 @@ int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
     /* Check for wait state PSW */
     if (WAITSTATE(&regs->psw) && CPU_STEPPING_OR_TRACING_ALL)
     {
-        logmsg (_("HHCCP043I Wait state PSW loaded: "));
-        display_psw (regs);
+	char buf[40];
+        WRITEMSG(HHCCP043I, str_psw(regs, buf));
     }
 
     TEST_SET_AEA_MODE(regs);
@@ -735,17 +735,20 @@ static char *pgmintname[] = {
                         (&sysblk.footprregs[realregs->cpuad][n],
                         sysblk.footprregs[realregs->cpuad][n].inst);
 #endif /*defined(OPTION_FOOTPRINT_BUFFER)*/
-        logmsg(_("HHCCP014I "));
+        char buf1[10] = "";
+        char buf2[10] = "";
 #if defined(_FEATURE_SIE)
-        if(SIE_MODE(realregs))
-            logmsg(_("SIE: "));
+        if (SIE_MODE(realregs))
+          strcpy(buf1, "SIE: ");
 #endif /*defined(_FEATURE_SIE)*/
 #if defined(SIE_DEBUG)
-        logmsg (MSTRING(_GEN_ARCH) " ");
+       strcpy(buf2, MSTRING(_GEN_ARCH));
+       strcat(buf2, " ");
 #endif /*defined(SIE_DEBUG)*/
-        if (code == PGM_DATA_EXCEPTION)
-            sprintf(dxcstr, " DXC=%2.2X", regs->dxc);
-        logmsg (_("CPU%4.4X: %s CODE=%4.4X ILC=%d%s\n"), realregs->cpuad,
+	if (code == PGM_DATA_EXCEPTION)
+	            sprintf(dxcstr, " DXC=%2.2X", regs->dxc);
+	WRITEMSG(HHCCP014I, buf1, buf2, 
+        PTYPSTR(sysblk.ptyp[realregs->cpuad]), realregs->cpuad,
                 pgmintname[ (code - 1) & 0x3F], pcode, ilc, dxcstr);
 
         /* Calculate instruction pointer */
@@ -879,8 +882,7 @@ static char *pgmintname[] = {
     if( OPEN_IC_PER(realregs) )
     {
         if( CPU_STEPPING_OR_TRACING(realregs, ilc) )
-            logmsg(_("HHCCP015I CPU%4.4X PER event: code=%4.4X perc=%2.2X "
-                     "addr=" F_VADR "\n"),
+            WRITEMSG(HHCCP015I, PTYPSTR(sysblk.ptyp[regs->cpuad]),
               regs->cpuad, pcode, IS_IC_PER(realregs) >> 16,
               (realregs->psw.IA - ilc) & ADDRESS_MAXWRAP(realregs) );
 
@@ -1077,9 +1079,10 @@ static char *pgmintname[] = {
             else
 #endif /*defined(_FEATURE_SIE)*/
             {
-                logmsg (_("HHCCP016I CPU%4.4X: Program interrupt loop: "),
-                          realregs->cpuad);
-                display_psw (realregs);
+		char buf[40];
+
+                WRITEMSG(HHCCP016I, PTYPSTR(sysblk.ptyp[realregs->cpuad]), 
+                         realregs->cpuad, str_psw (realregs, buf));
                 OBTAIN_INTLOCK(realregs);
                 realregs->cpustate = CPUSTATE_STOPPING;
                 ON_IC_INTERRUPT(realregs);
@@ -1195,8 +1198,7 @@ DBLWRD  csw;                            /* CSW for S/370 channels    */
 
     /* Trace the I/O interrupt */
     if (CPU_STEPPING_OR_TRACING(regs, 0))
-        logmsg (_("HHCCP044I I/O interrupt code=%4.4X "
-                "CSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n"),
+        WRITEMSG (HHCCP044I,
                 regs->psw.intcode,
                 csw[0], csw[1], csw[2], csw[3],
                 csw[4], csw[5], csw[6], csw[7]);
@@ -1217,11 +1219,9 @@ DBLWRD  csw;                            /* CSW for S/370 channels    */
     /* Trace the I/O interrupt */
     if (CPU_STEPPING_OR_TRACING(regs, 0))
 #if !defined(FEATURE_ESAME) && !defined(_FEATURE_IO_ASSIST)
-        logmsg (_("HHCCP045I I/O interrupt code=%8.8X parm=%8.8X\n"),
-                  ioid, ioparm);
+        WRITEMSG (HHCCP045I, ioid, ioparm);
 #else /*defined(FEATURE_ESAME)*/
-        logmsg (_("HHCCP046I I/O interrupt code=%8.8X parm=%8.8X id=%8.8X\n"),
-          ioid, ioparm, iointid);
+        WRITEMSG (HHCCP046I, ioid, ioparm, iointid);
 #endif /*defined(FEATURE_ESAME)*/
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
@@ -1286,8 +1286,7 @@ RADR    fsta;                           /* Failing storage address   */
 
     /* Trace the machine check interrupt */
     if (CPU_STEPPING_OR_TRACING(regs, 0))
-        logmsg (_("HHCCP022I Machine Check code=%16.16" I64_FMT "u\n"),
-                  (long long)mcic);
+        WRITEMSG (HHCCP022I, (long long)mcic);
 
     /* Store the external damage code at PSA+244 */
     STORE_FW(psa->xdmgcode, xdmg);
@@ -1360,8 +1359,7 @@ int   cpu  = *ptr;
         if ( create_thread (&sysblk.todtid, DETACHED,
              timer_update_thread, NULL, "timer_update_thread") )
         {
-            logmsg (_("HHCCP006S Cannot create timer thread: %s\n"),
-                           strerror(errno));
+            WRITEMSG(HHCCP006S, strerror(errno));
             RELEASE_INTLOCK(NULL);
             return NULL;
         }
@@ -1371,17 +1369,13 @@ int   cpu  = *ptr;
 
     /* Set CPU thread priority */
     if (setpriority(PRIO_PROCESS, 0, sysblk.cpuprio))
-        logmsg (_("HHCCP001W CPU%4.4X thread set priority %d failed: %s\n"),
-                cpu, sysblk.cpuprio, strerror(errno));
+        WRITEMSG(HHCCP001W, PTYPSTR(sysblk.ptyp[cpu]), cpu, sysblk.cpuprio, strerror(errno));
 
     /* Back to user mode */
     SETMODE(USER);
 
     /* Display thread started message on control panel */
-    logmsg (_("HHCCP002I CPU%4.4X thread started: tid="TIDPAT", pid=%d, "
-            "priority=%d\n"),
-            cpu, thread_id(), getpid(),
-            getpriority(PRIO_PROCESS,0));
+    WRITEMSG(HHCCP002I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), PTYPSTR(sysblk.ptyp[cpu]), cpu);
 
     /* Execute the program in specified mode */
     do {
@@ -1405,8 +1399,7 @@ int   cpu  = *ptr;
     signal_condition (&sysblk.cpucond);
 
     /* Display thread ended message on control panel */
-    logmsg (_("HHCCP008I CPU%4.4X thread ended: tid="TIDPAT", pid=%d\n"),
-            cpu, thread_id(), getpid());
+    WRITEMSG(HHCCP008I, thread_id(), getpid(),  getpriority(PRIO_PROCESS,0), PTYPSTR(sysblk.ptyp[cpu]), cpu);
 
     RELEASE_INTLOCK(NULL);
 
@@ -1645,8 +1638,7 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
         {
             OFF_IC_STORSTAT(regs);
             ARCH_DEP(store_status) (regs, 0);
-            logmsg (_("HHCCP010I CPU%4.4X store status completed.\n"),
-                    regs->cpuad);
+            WRITEMSG (HHCCP010I, PTYPSTR(sysblk.ptyp[regs->cpuad]), regs->cpuad);
             /* ISW 20071102 : Do not return via longjmp here. */
             /*    process_interrupt needs to finish putting the */
             /*    CPU in its manual state                     */
@@ -1712,10 +1704,8 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
         /* Test for disabled wait PSW and issue message */
         if( IS_IC_DISABLED_WAIT_PSW(regs) )
         {
-            logmsg (_("HHCCP011I CPU%4.4X: Disabled wait state\n"
-                      "          "),
-                    regs->cpuad);
-            display_psw (regs);
+            char buf[40];
+            WRITEMSG (HHCCP011I, PTYPSTR(sysblk.ptyp[regs->cpuad]), regs->cpuad, str_psw(regs, buf));
             regs->cpustate = CPUSTATE_STOPPING;
             RELEASE_INTLOCK(regs);
             longjmp(regs->progjmp, SIE_NO_INTERCEPT);
@@ -1768,8 +1758,7 @@ REGS    regs;
             regs.guestregs->hostregs = &regs;
         sysblk.regs[cpu] = &regs;
         release_lock(&sysblk.cpulock[cpu]);
-        logmsg (_("HHCCP007I CPU%4.4X architecture mode set to %s\n"),
-                cpu, get_arch_mode_string(&regs));
+        WRITEMSG (HHCCP007I, PTYPSTR(sysblk.ptyp[cpu]), cpu, get_arch_mode_string(&regs));
     }
     else
     {
@@ -1778,13 +1767,11 @@ REGS    regs;
         if (cpu_init (cpu, &regs, NULL))
             return NULL;
 
-        logmsg (_("HHCCP003I CPU%4.4X architecture mode %s\n"),
-                cpu, get_arch_mode_string(&regs));
+        WRITEMSG (HHCCP003I, PTYPSTR(sysblk.ptyp[cpu]), cpu, get_arch_mode_string(&regs));
 
 #ifdef FEATURE_VECTOR_FACILITY
         if (regs->vf->online)
-            logmsg (_("HHCCP004I CPU%4.4X Vector Facility online\n"),
-                    cpu);
+            WRITEMSG (HHCCP004I, PTYPSTR(sysblk.ptyp[cpu]), cpu);
 #endif /*FEATURE_VECTOR_FACILITY*/
     }
 
@@ -1816,8 +1803,7 @@ REGS    regs;
         }
         else
         {
-            logmsg (_("HHCCP080E CPU%4.4X malloc failed for archjmp regs: %s\n"),
-                    cpu, strerror(errno));
+            WRITEMSG (HHCCP080E, PTYPSTR(sysblk.ptyp[cpu]), cpu, strerror(errno));
             cpu_uninit (cpu, &regs);
         }
         return oldregs;
@@ -2077,7 +2063,7 @@ QWORD   qword;                            /* quadword work area      */
     else
     {
         copy_psw (regs, qword);
-        logmsg (_("PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
+        logmsg (_("PSW=%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X "
                 "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X\n"),
                 qword[0], qword[1], qword[2], qword[3],
                 qword[4], qword[5], qword[6], qword[7],
@@ -2086,6 +2072,37 @@ QWORD   qword;                            /* quadword work area      */
     }
 
 } /* end function display_psw */
+
+/*-------------------------------------------------------------------*/
+/* Print program status word into buffer                             */
+/*-------------------------------------------------------------------*/
+char *str_psw (REGS *regs, char *buf)
+{
+QWORD   qword;                            /* quadword work area      */
+
+    memset(qword, 0, sizeof(qword));
+
+    if( regs->arch_mode != ARCH_900 )
+    {
+        copy_psw (regs, qword);
+        sprintf(buf, "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X",
+                qword[0], qword[1], qword[2], qword[3],
+                qword[4], qword[5], qword[6], qword[7]);
+    }
+    else
+    {
+        copy_psw (regs, qword);
+        sprintf(buf, "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X "
+                     "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",
+                qword[0], qword[1], qword[2], qword[3],
+                qword[4], qword[5], qword[6], qword[7],
+                qword[8], qword[9], qword[10], qword[11],
+                qword[12], qword[13], qword[14], qword[15]);
+    }
+    return(buf);
+
+} /* end function str_psw */
+
 
 const char* arch_name[GEN_MAXARCH] =
 {

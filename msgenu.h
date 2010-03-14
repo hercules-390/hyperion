@@ -79,6 +79,26 @@
 #define HHCTE017E "Device %4.4X: Duplicate SYSG console definition"
 #define HHCTE090E "%4.4X malloc() failed for resume buf: %s"
 
+/* cpu.c */
+#define HHCCP001W "%s%02X thread set priority %d failed: %s"
+#define HHCCP002I "Thread started: tid " TIDPAT ", pid %d, prio %d, name %s%02X"
+#define HHCCP003I "%s%02X architecture mode %s"
+#define HHCCP004I "%s%02X Vector Facility online"
+#define HHCCP006S "Cannot create timer thread: %s"
+#define HHCCP007I "%s%02X architecture mode set to %s"
+#define HHCCP008I "Thread ended: tid " TIDPAT ", pid %d, prio %d, name %s%02X"
+#define HHCCP010I "%s%02X store status completed"
+#define HHCCP011I "%s%02X disabled wait state %s"
+#define HHCCP014I "%s%s%s02X: %s CODE=%4.4X ILC=%d%s"
+#define HHCCP015I "%s%02X PER event: code=%4.4X perc=%2.2X addr=" F_VADR
+#define HHCCP016I "%s%02X: Program interrupt loop: PSW %s"
+#define HHCCP022I "Machine Check code %16.16" I64_FMT "u"
+#define HHCCP043I "Wait state PSW loaded: %s"
+#define HHCCP044I "I/O interrupt code %4.4X CSW %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X"
+#define HHCCP045I "I/O interrupt code %8.8X parm %8.8X"
+#define HHCCP046I "I/O interrupt code %8.8X parm %8.8X id %8.8X"
+#define HHCCP080E "%s%02X malloc failed for archjmp regs: %s"
+
 /* crypto/dyncrypt.c */
 #define HHCRY001I "Crypto module loaded (c) Copyright Bernard van der Helm, 2003-2010"
 #define HHCRY002I "Active: %s"

@@ -246,6 +246,15 @@ typedef struct _SCCB_CPU_INFO {
 #define SCCB_PTYP_SUP                                   5
 #define SCCB_PTYP_MAX                                   5 /*(maximum value)*/
 
+/* processor type macro */
+#define PTYPSTR(i) ( \
+		sysblk.ptyp[(i)] == SCCB_PTYP_CP ? "CP" : \
+		sysblk.ptyp[(i)] == SCCB_PTYP_ICF ? "CF" : \
+		sysblk.ptyp[(i)] == SCCB_PTYP_IFA ? "AP" : \
+		sysblk.ptyp[(i)] == SCCB_PTYP_IFL ? "IL" : \
+		sysblk.ptyp[(i)] == SCCB_PTYP_SUP ? "IP" : \
+		"<unknown processor type>")
+
 /* Definitions for crypto unit identifier */
 #define SCCB_KSID_CRYPTO_UNIT_ID                        0x01
 

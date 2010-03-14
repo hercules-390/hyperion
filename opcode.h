@@ -2679,6 +2679,7 @@ CPU_DLL_IMPORT void (ATTR_REGPARM(2) ARCH_DEP(program_interrupt)) (REGS *regs, i
 void *cpu_thread (int *cpu);
 DLL_EXPORT void copy_psw (REGS *regs, BYTE *addr);
 void display_psw (REGS *regs);
+char *str_psw (REGS *regs, char *buf);
 
 
 /* Functions in module vm.c */
