@@ -405,8 +405,7 @@ struct sockaddr_in *sin;
 
         if(!hostent)
         {
-            logmsg(_("HHCGI001I Unable to determine IP address from %s\n"),
-                host);
+            WRITEMSG(HHCGI001I, host);
             free(sin);
             return NULL;
         }
@@ -426,8 +425,7 @@ struct sockaddr_in *sin;
 
             if(!servent)
             {
-                logmsg(_("HHCGI002I Unable to determine port number from %s\n"),
-                    host);
+                WRITEMSG(HHCGI002I, host);
                 free(sin);
                 return NULL;
             }
@@ -440,8 +438,7 @@ struct sockaddr_in *sin;
     }
     else
     {
-        logmsg(_("HHCGI003E Invalid parameter: %s\n"),
-            host_serv);
+        WRITEMSG(HHCGI003E, host_serv);
         free(sin);
         return NULL;
     }
@@ -955,8 +952,7 @@ int     eor = 0;                        /* 1=End of record received  */
 
     if (rc < 0) {
         if ( HSO_ECONNRESET == HSO_errno )
-            logmsg( _( "HHCTE014I %4.4X device %4.4X client %s connection reset\n" ),
-                dev->devtype, dev->devnum, inet_ntoa(dev->ipaddr) );
+            WRITEMSG(HHCTE014I, dev->devtype, dev->devnum, inet_ntoa(dev->ipaddr) );
         else
             TNSERROR("console: DBG023: recv: %s\n", strerror(HSO_errno));
         dev->sense[0] = SENSE_EC;
@@ -965,8 +961,7 @@ int     eor = 0;                        /* 1=End of record received  */
 
     /* If zero bytes were received then client has closed connection */
     if (rc == 0) {
-        logmsg (_("HHCTE007I %4.4X device %4.4X client %s connection closed\n"),
-                dev->devtype, dev->devnum, inet_ntoa(dev->ipaddr));
+        WRITEMSG(HHCTE007I, dev->devtype, dev->devnum, inet_ntoa(dev->ipaddr));
         dev->sense[0] = SENSE_IR;
         return (CSW_ATTN | CSW_UC | CSW_DE);
     }
@@ -1130,8 +1125,7 @@ BYTE    c;                              /* Character work area       */
 
     /* If zero bytes were received then client has closed connection */
     if (num == 0) {
-        logmsg (_("HHCTE008I Device %4.4X connection closed by client %s\n"),
-                dev->devnum, inet_ntoa(dev->ipaddr));
+        WRITEMSG(HHCTE008I, dev->devnum, inet_ntoa(dev->ipaddr));
         dev->sense[0] = SENSE_IR;
         return (CSW_ATTN | CSW_UC);
     }
@@ -1853,8 +1847,7 @@ char                    *logoout;
                   SSID_TO_LCSS(dev->ssid), dev->devnum);
     }
 
-    logmsg (_("HHCTE009I Client %s connected to %4.4X device %d:%4.4X\n"),
-            clientip, dev->devtype, SSID_TO_LCSS(dev->ssid), dev->devnum);
+    WRITEMSG(HHCTE009I, clientip, dev->devtype, SSID_TO_LCSS(dev->ssid), dev->devnum);
 
     /* Send connection message to client */
     if (class != 'K')
@@ -1978,9 +1971,7 @@ BYTE                   unitstat;        /* Status after receive data */
     hdl_adsc("console_shutdown",console_shutdown, NULL);
 
     /* Display thread started message on control panel */
-    logmsg (_("HHCTE001I Console connection thread started: "
-            "tid="TIDPAT", pid=%d\n"),
-            thread_id(), getpid());
+    WRITEMSG(HHCTE001I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "Console connection");
 
     /* Get information about this system */
     init_hostinfo( &cons_hostinfo );
@@ -2002,8 +1993,7 @@ BYTE                   unitstat;        /* Status after receive data */
     /* Prepare the sockaddr structure for the bind */
     if(!( server = get_inet_socket(config_cnslport) ))
     {
-        logmsg(_("HHCTE010E CNSLPORT statement invalid: %s\n"),
-            config_cnslport);
+        WRITEMSG(HHCTE010E, config_cnslport);
         return NULL;
     }
 
@@ -2014,8 +2004,7 @@ BYTE                   unitstat;        /* Status after receive data */
 
         if (rc == 0 || HSO_errno != HSO_EADDRINUSE) break;
 
-        logmsg (_("HHCTE002W Waiting for port %u to become free\n"),
-                ntohs(server->sin_port));
+        iWRITEMSG(HHCTE002W, ntohs(server->sin_port));
         SLEEP(10);
     }
     while (console_cnslcnt);
@@ -2033,8 +2022,7 @@ BYTE                   unitstat;        /* Status after receive data */
         return NULL;
     }
 
-    logmsg (_("HHCTE003I Waiting for console connection on port %u\n"),
-            ntohs(server->sin_port));
+    WRITEMSG(HHCTE003I, ntohs(server->sin_port));
 
     /* Handle connection requests and attention interrupts */
     for (;;)
@@ -2308,7 +2296,7 @@ BYTE                   unitstat;        /* Status after receive data */
     close_socket (lsock);
     free(server);
 
-    logmsg (_("HHCTE004I Console connection thread terminated\n"));
+    WRITEMSG(HHCTE004I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "Console connection");
     sysblk.cnsltid = 0;
 
     return NULL;
@@ -2338,8 +2326,7 @@ console_initialise()
                                 "console_connection_handler")
                )
             {
-                logmsg (_("HHCTE005E Cannot create console thread: %s\n"),
-                        strerror(errno));
+                WRITEMSG(HHCTE005E, strerror(errno));
                 rc = 1;
             }
         }
@@ -2400,8 +2387,7 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
         dev->pmcw.flag5 &= ~PMCW5_V; // Not a regular device
         if (sysblk.sysgdev != NULL)
         {
-            logmsg(_("HHCTE017E Device %4.4X: Duplicate SYSG console definition\n"),
-                dev->devnum);
+            WRITEMSG(HHCTE017E, dev->devnum);
             return -1;
         }
     }
@@ -2442,8 +2428,7 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
         {
             if ((dev->acc_ipaddr = inet_addr(argv[ac])) == (in_addr_t)(-1))
             {
-                logmsg(_("HHCTE011E Device %4.4X: Invalid IP address: %s\n"),
-                    dev->devnum, argv[ac]);
+                WRITEMSG(HHCTE011E, dev->devnum, argv[ac]);
                 return -1;
             }
             else
@@ -2453,8 +2438,7 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
                 {
                     if ((dev->acc_ipmask = inet_addr(argv[ac])) == (in_addr_t)(-1))
                     {
-                        logmsg(_("HHCTE012E Device %4.4X: Invalid mask value: %s\n"),
-                            dev->devnum, argv[ac]);
+                        WRITEMSG(HHCTE012E, dev->devnum, argv[ac]);
                         return -1;
                     }
                     else
@@ -2462,8 +2446,7 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
                         argc--; ac++;
                         if (argc > 0)   // too many args?
                         {
-                            logmsg(_("HHCTE013E Device %4.4X: Extraneous argument(s): %s...\n"),
-                                dev->devnum, argv[ac] );
+                            WRITEMSG(HHCTE013E, dev->devnum, argv[ac] );
                             return -1;
                         }
                     }
@@ -2627,8 +2610,7 @@ loc3270_hresume(DEVBLK *dev, void *file)
             rbuf = malloc(len);
             if (rbuf == NULL)
             {
-                logmsg(_("HHCTE090E %4.4X malloc() failed for resume buf: %s\n"),
-                       dev->devnum, strerror(errno));
+                WRITEMSG(HHCTE090E, dev->devnum, strerror(errno));
                 return 0;
             }
             SR_READ_BUF(file, rbuf, rbuflen);
@@ -2746,8 +2728,7 @@ constty_init_handler ( DEVBLK *dev, int argc, char *argv[] )
         {
             if ((dev->acc_ipaddr = inet_addr(argv[ac])) == (in_addr_t)(-1))
             {
-                logmsg(_("HHCTE011E Device %4.4X: Invalid IP address: %s\n"),
-                    dev->devnum, argv[ac]);
+                WRITEMSG(HHCTE011E, dev->devnum, argv[ac]);
                 return -1;
             }
             else
@@ -2757,8 +2738,7 @@ constty_init_handler ( DEVBLK *dev, int argc, char *argv[] )
                 {
                     if ((dev->acc_ipmask = inet_addr(argv[ac])) == (in_addr_t)(-1))
                     {
-                        logmsg(_("HHCTE012E Device %4.4X: Invalid mask value: %s\n"),
-                            dev->devnum, argv[ac]);
+                        WRITEMSG(HHCTE012E, dev->devnum, argv[ac]);
                         return -1;
                     }
                     else
@@ -2766,8 +2746,7 @@ constty_init_handler ( DEVBLK *dev, int argc, char *argv[] )
                         argc--; ac++;
                         if (argc > 0)   // too many args?
                         {
-                            logmsg(_("HHCTE013E Device %4.4X: Extraneous argument(s): %s...\n"),
-                                dev->devnum, argv[ac] );
+                            WRITEMSG(HHCTE013E, dev->devnum, argv[ac] );
                             return -1;
                         }
                     }

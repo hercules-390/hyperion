@@ -190,16 +190,13 @@ U64     total_sios;                     /* Total SIO rate            */
 
     /* Set timer thread priority */
     if (setpriority(PRIO_PROCESS, 0, sysblk.todprio))
-        logmsg (_("HHCTT001W Timer thread set priority %d failed: %s\n"),
-                sysblk.todprio, strerror(errno));
+        WRITEMSG (HHCTT001W, sysblk.todprio, strerror(errno));
 
     /* Back to user mode */
     SETMODE(USER);
 
     /* Display thread started message on control panel */
-    logmsg (_("HHCTT002I Timer thread started: tid="TIDPAT", pid=%d, "
-            "priority=%d\n"),
-            thread_id(), getpid(), getpriority(PRIO_PROCESS,0));
+    WRITEMSG (HHCTT002I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "Timer");
 
 #ifdef OPTION_MIPS_COUNTING
     then = host_tod();
@@ -290,7 +287,7 @@ U64     total_sios;                     /* Total SIO rate            */
 
     } /* end while */
 
-    logmsg (_("HHCTT003I Timer thread ended\n"));
+    WRITEMSG (HHCTT003I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "Timer");
 
     sysblk.todtid = 0;
 

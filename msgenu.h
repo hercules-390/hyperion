@@ -58,6 +58,27 @@
 #define HHCCF090I "Default Allowed AUTOMOUNT directory = \"%s\""
 #define HHCCF900S "Out of memory"
 
+/* console.c */
+#define HHCGI001I "Unable to determine IP address from %s"
+#define HHCGI002I "Unable to determine port number from %s"
+#define HHCGI003E "Invalid parameter: %s"
+
+#define HHCTE001I "Thread started: tid " TIDPAT ", pid %d, prio %d, name %s"
+#define HHCTE002W "Waiting for port %u to become free"
+#define HHCTE003I "Waiting for console connection on port %u"
+#define HHCTE004I "Thread ended: tid " TIDPAT ", pid %d, prio %d, name %s" 
+#define HHCTE005E "Cannot create console thread: %s"
+#define HHCTE007I "%4.4X device %4.4X client %s connection closed"
+#define HHCTE008I "Device %4.4X connection closed by client %s"
+#define HHCTE009I "Client %s connected to %4.4X device %d:%4.4X"
+#define HHCTE010E "CNSLPORT statement invalid: %s"
+#define HHCTE011E "Device %4.4X: Invalid IP address: %s"
+#define HHCTE012E "Device %4.4X: Invalid mask value: %s"
+#define HHCTE013E "Device %4.4X: Extraneous argument(s): %s..."
+#define HHCTE014I "%4.4X device %4.4X client %s connection reset"
+#define HHCTE017E "Device %4.4X: Duplicate SYSG console definition"
+#define HHCTE090E "%4.4X malloc() failed for resume buf: %s"
+
 /* crypto/dyncrypt.c */
 #define HHCRY001I "Crypto module loaded (c) Copyright Bernard van der Helm, 2003-2010"
 #define HHCRY002I "Active: %s"
@@ -103,6 +124,11 @@
 #define HHCHT011E "Html_include: Cannot open %s: %s"
 #define HHCHT013I "Using HTTPROOT directory \"%s\""
 #define HHCCF066E "Invalid HTTPROOT: \"%s\": %s"
+
+/* timer.c */
+#define HHCTT001W "Timer thread set priority %d failed: %s"
+#define HHCTT002I "Thread started: tid " TIDPAT ", pid %d, prio %d, name %s"
+#define HHCTT003I "Thread ended: tid " TIDPAT ", pid %d, prio %d, name %s"
 
 /* version.c */
 #define HHCIN010I "%sversion %s"
