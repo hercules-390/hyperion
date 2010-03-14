@@ -68,39 +68,6 @@
 /*---------------------------------------------------------------------------*/
 /* constants                                                                 */
 /*---------------------------------------------------------------------------*/
-#define HHCAO001I "HHCAO001I Hercules Automatic Operator thread started;\n" \
-                  "          tid="TIDPAT", pri=%d, pid=%d\n"
-#define HHCAO002I "HHCAO002I Hercules Automatic Operator thread ended\n"
-#define HHCAO003I "HHCAO003I Firing command: '%s'\n"
-#define HHCAO004I "HHCAO004I The defined Automatic Operator rule(s) are:\n"
-#define HHCAO005I "HHCAO005I %02d: '%s' -> '%s'\n"
-#define HHCAO006I "HHCAO006I %d rule(s) displayed\n"
-#define HHCAO007E "HHCAO007E Unknown hao command, valid commands are:\n" \
-                  "  hao tgt <tgt> : define target rule (pattern) to react on\n" \
-                  "  hao cmd <cmd> : define command for previously defined rule\n" \
-                  "  hao list <n>  : list all rules/commands or only at index <n>\n" \
-                  "  hao del <n>   : delete the rule at index <n>\n" \
-                  "  hao clear     : delete all rules (stops automatic operator)\n"
-#define HHCAO008E "HHCAO008E No rule defined at index %d\n"
-#define HHCAO009E "HHCAO009E Invalid index, index must be between 0 and %d\n"
-#define HHCAO010E "HHCAO010E Target not added, table full\n"
-#define HHCAO011E "HHCAO011E Tgt command given, but cmd command expected\n"
-#define HHCAO012E "HHCAO012E Empty target specified\n"
-#define HHCAO013E "HHCAO013E Target not added, duplicate found in table\n"
-#define HHCAO014E "HHCAO014E %s\n"
-#define HHCAO015E "HHCAO015E %s\n"
-#define HHCAO016I "HHCAO016I Target placed at index %d\n"
-#define HHCAO017E "HHCAO017E Cmd command given, but tgt command expected\n"
-#define HHCAO018E "HHCAO018E Empty command specified\n"
-#define HHCAO019E "HHCAO019E Command not added; causes loop with target at index %d\n"
-#define HHCAO020I "HHCAO020I Command placed at index %d\n"
-#define HHCAO021E "HHCAO021E Target not added, causes loop with command at index %d\n"
-#define HHCAO022I "HHCAO022I All automatic operation rules cleared\n"
-#define HHCAO023E "HHCAO023E hao del command given without a valid index\n"
-#define HHCAO024E "HHCAO024E Rule at index %d not deleted, already empty\n"
-#define HHCAO025I "HHCAO025I Rule at index %d succesfully deleted\n"
-#define HHCA0026E "HHCA0026E Command not added, may cause dead locks\n"
-
 #define HAO_WKLEN    256    /* (maximum message length able to tolerate) */
 #define HAO_MAXRULE  64     /* (purely arbitrary and easily increasable) */
 
@@ -156,8 +123,7 @@ DLL_EXPORT void hao_initialize(void)
   if ( create_thread (&sysblk.haotid, JOINABLE,
     hao_thread, NULL, "hao_thread") )
   {
-    logmsg(_("HHCIN004S Cannot create HAO thread: %s\n"),
-      strerror(errno));
+    WRITEMSG(HHCIN004S, strerror(errno));
   }
 
   release_lock(&ao_lock);
@@ -219,7 +185,7 @@ DLL_EXPORT void hao_command(char *cmd)
     return;
   }
 
-  logmsg(HHCAO007E);
+  WRITEMSG(HHCAO007E);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -262,7 +228,7 @@ static void hao_tgt(char *arg)
   if(i == HAO_MAXRULE)
   {
     release_lock(&ao_lock);
-    logmsg(HHCAO010E);
+    WRITEMSG(HHCAO010E);
     return;
   }
 
@@ -272,7 +238,7 @@ static void hao_tgt(char *arg)
     if(ao_tgt[j] && !ao_cmd[j])
     {
       release_lock(&ao_lock);
-      logmsg(HHCAO011E);
+      WRITEMSG(HHCAO011E);
       return;
     }
   }
@@ -281,7 +247,7 @@ static void hao_tgt(char *arg)
   if(!strlen(arg))
   {
     release_lock(&ao_lock);
-    logmsg(HHCAO012E);
+    WRITEMSG(HHCAO012E);
     return;
   }
 
@@ -291,7 +257,7 @@ static void hao_tgt(char *arg)
     if(ao_tgt[j] && !strcmp(arg, ao_tgt[j]))
     {
       release_lock(&ao_lock);
-      logmsg(HHCAO013E);
+      WRITEMSG(HHCAO013E);
       return;
     }
   }
@@ -306,7 +272,7 @@ static void hao_tgt(char *arg)
 
     /* place error in work */
     regerror(rc, (const regex_t *) &ao_preg[i], work, HAO_WKLEN);
-    logmsg(HHCAO014E, work);
+    WRITEMSG(HHCAO014E, work);
     return;
   }
 
@@ -317,7 +283,7 @@ static void hao_tgt(char *arg)
     {
       release_lock(&ao_lock);
       regfree(&ao_preg[i]);
-      logmsg(HHCAO021E, i);
+      WRITEMSG(HHCAO021E, i);
       return;
     }
   }
@@ -330,12 +296,12 @@ static void hao_tgt(char *arg)
   {
     release_lock(&ao_lock);
     regfree(&ao_preg[i]);
-    logmsg(HHCAO015E, strerror(ENOMEM));
+    WRITEMSG(HHCAO015E, strerror(ENOMEM));
     return;
   }
 
   release_lock(&ao_lock);
-  logmsg(HHCAO016I, i);
+  WRITEMSG(HHCAO016I, i);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -360,7 +326,7 @@ static void hao_cmd(char *arg)
   if(i == HAO_MAXRULE)
   {
     release_lock(&ao_lock);
-    logmsg(HHCAO017E);
+    WRITEMSG(HHCAO017E);
     return;
   }
 
@@ -368,7 +334,7 @@ static void hao_cmd(char *arg)
   if(!ao_tgt[i])
   {
     release_lock(&ao_lock);
-    logmsg(HHCAO017E);
+    WRITEMSG(HHCAO017E);
     return;
   }
 
@@ -376,7 +342,7 @@ static void hao_cmd(char *arg)
   if(!strlen(arg))
   {
     release_lock(&ao_lock);
-    logmsg(HHCAO018E);
+    WRITEMSG(HHCAO018E);
     return;
   }
 
@@ -385,7 +351,7 @@ static void hao_cmd(char *arg)
   if(!strcasecmp(&arg[j], "hao") || !strncasecmp(&arg[j], "hao ", 4))
   {
     release_lock(&ao_lock);
-    logmsg(HHCA0026E);
+    WRITEMSG(HHCA0026E);
     return;
   }
 
@@ -395,7 +361,7 @@ static void hao_cmd(char *arg)
     if(ao_tgt[j] && !regexec(&ao_preg[j], arg, 0, NULL, 0))
     {
       release_lock(&ao_lock);
-      logmsg(HHCAO019E, j);
+      WRITEMSG(HHCAO019E, j);
       return;
     }
   }
@@ -407,12 +373,12 @@ static void hao_cmd(char *arg)
   if(!ao_cmd[i])
   {
     release_lock(&ao_lock);
-    logmsg(HHCAO015E, strerror(ENOMEM));
+    WRITEMSG(HHCAO015E, strerror(ENOMEM));
     return;
   }
 
   release_lock(&ao_lock);
-  logmsg(HHCAO020I, i);
+  WRITEMSG(HHCAO020I, i);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -430,14 +396,14 @@ static void hao_del(char *arg)
   rc = sscanf(arg, "%d", &i);
   if(!rc || rc == -1)
   {
-    logmsg(HHCAO023E);
+    WRITEMSG(HHCAO023E);
     return;
   }
 
   /* check if index is valid */
   if(i < 0 || i >= HAO_MAXRULE)
   {
-    logmsg(HHCAO009E, HAO_MAXRULE - 1);
+    WRITEMSG(HHCAO009E, HAO_MAXRULE - 1);
     return;
   }
 
@@ -448,7 +414,7 @@ static void hao_del(char *arg)
   if(!ao_tgt[i])
   {
     release_lock(&ao_lock);
-    logmsg(HHCAO024E, i);
+    WRITEMSG(HHCAO024E, i);
     return;
   }
 
@@ -463,7 +429,7 @@ static void hao_del(char *arg)
   }
 
   release_lock(&ao_lock);
-  logmsg(HHCAO025I, i);
+  WRITEMSG(HHCAO025I, i);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -482,7 +448,7 @@ static void hao_list(char *arg)
   if(!rc || rc == -1)
   {
     /* list all rules */
-    logmsg(HHCAO004I);
+    WRITEMSG(HHCAO004I);
     size = 0;
 
     /* serialize */
@@ -492,27 +458,27 @@ static void hao_list(char *arg)
     {
       if(ao_tgt[i])
       {
-        logmsg(HHCAO005I, i, ao_tgt[i], (ao_cmd[i] ? ao_cmd[i] : "<not specified>"));
+        WRITEMSG(HHCAO005I, i, ao_tgt[i], (ao_cmd[i] ? ao_cmd[i] : "<not specified>"));
         size++;
       }
     }
     release_lock(&ao_lock);
-    logmsg(HHCAO006I, size);
+    WRITEMSG(HHCAO006I, size);
   }
   else
   {
     /* list specific index */
     if(i < 0 || i >= HAO_MAXRULE)
-      logmsg(HHCAO009E, HAO_MAXRULE - 1);
+      WRITEMSG(HHCAO009E, HAO_MAXRULE - 1);
     else
     {
       /* serialize */
       obtain_lock(&ao_lock);
 
       if(!ao_tgt[i])
-        logmsg(HHCAO008E, i);
+        WRITEMSG(HHCAO008E, i);
       else
-        logmsg(HHCAO005I, i, ao_tgt[i], (ao_cmd[i] ? ao_cmd[i] : "not specified"));
+        WRITEMSG(HHCAO005I, i, ao_tgt[i], (ao_cmd[i] ? ao_cmd[i] : "not specified"));
 
       release_lock(&ao_lock);
     }
@@ -550,7 +516,7 @@ static void hao_clear(void)
   }
 
   release_lock(&ao_lock);
-  logmsg(HHCAO022I);
+  WRITEMSG(HHCAO022I);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -571,7 +537,7 @@ static void* hao_thread(void* dummy)
 
   UNREFERENCED(dummy);
 
-  logmsg(HHCAO001I, thread_id(), getpriority(PRIO_PROCESS,0), getpid());
+  WRITEMSG(HHCAO001I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "Hercules Automatic Operator");
 
   /* Wait for panel thread to engage */
   while (!sysblk.panel_init && !sysblk.shutdown)
@@ -610,7 +576,7 @@ static void* hao_thread(void* dummy)
     }
   }
 
-  logmsg(HHCAO002I);
+  WRITEMSG(HHCAO002I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "Hercules Automatic Operator");
   return NULL;
 }
 
@@ -658,7 +624,7 @@ DLL_EXPORT void hao_message(char *buf)
       if (regexec(&ao_preg[i], work, 1, &rm, 0) == 0)
       {
         /* issue command for this rule */
-        logmsg(HHCAO003I, ao_cmd[i]);
+        WRITEMSG(HHCAO003I, ao_cmd[i]);
         panel_command(ao_cmd[i]);
       }
     }

@@ -103,6 +103,40 @@
 #define HHCRY001I "Crypto module loaded (c) Copyright Bernard van der Helm, 2003-2010"
 #define HHCRY002I "Active: %s"
 
+/* hao.c */
+#define HHCIN004S "Cannot create HAO thread: %s"
+#define HHCAO001I "Thread started: tid " TIDPAT ", pid %d, prio %d, name %s"
+#define HHCAO002I "Thread ended: tid " TIDPAT ", pid %d, prio %d, name %s"
+#define HHCAO003I "Firing command: '%s'"
+#define HHCAO004I "The defined Automatic Operator rule(s) are:"
+#define HHCAO005I "%02d: '%s' -> '%s'"
+#define HHCAO006I "%d rule(s) displayed"
+#define HHCAO007E "Unknown hao command, valid commands are:\n" \
+                  "          hao tgt <tgt> : define target rule (pattern) to react on\n" \
+                  "          hao cmd <cmd> : define command for previously defined rule\n" \
+                  "          hao list <n>  : list all rules/commands or only at index <n>\n" \
+                  "          hao del <n>   : delete the rule at index <n>\n" \
+                  "          hao clear     : delete all rules (stops automatic operator)"
+#define HHCAO008E "No rule defined at index %d"
+#define HHCAO009E "Invalid index, index must be between 0 and %d"
+#define HHCAO010E "Target not added, table full"
+#define HHCAO011E "Tgt command given, but cmd command expected"
+#define HHCAO012E "Empty target specified"
+#define HHCAO013E "Target not added, duplicate found in table"
+#define HHCAO014E "%s"
+#define HHCAO015E "%s"
+#define HHCAO016I "Target placed at index %d"
+#define HHCAO017E "Cmd command given, but tgt command expected"
+#define HHCAO018E "Empty command specified"
+#define HHCAO019E "Command not added; causes loop with target at index %d"
+#define HHCAO020I "Command placed at index %d"
+#define HHCAO021E "Target not added, causes loop with command at index %d"
+#define HHCAO022I "All automatic operation rules cleared"
+#define HHCAO023E "Hao del command given without a valid index"
+#define HHCAO024E "Rule at index %d not deleted, already empty"
+#define HHCAO025I "Rule at index %d succesfully deleted"
+#define HHCA0026E "Command not added, may cause dead locks"
+
 /* hdl.c */
 #define HHCHD001E "Registration malloc failed for %s"
 #define HHCHD005E "Module %s already loaded\n"
