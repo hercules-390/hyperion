@@ -952,7 +952,7 @@ int     eor = 0;                        /* 1=End of record received  */
 
     if (rc < 0) {
         if ( HSO_ECONNRESET == HSO_errno )
-            WRITEMSG(HHCTE014I, dev->devtype, dev->devnum, inet_ntoa(dev->ipaddr) );
+            WRITEMSG(HHCTE014I, dev->devnum, dev->devtype, inet_ntoa(dev->ipaddr) );
         else
             TNSERROR("console: DBG023: recv: %s\n", strerror(HSO_errno));
         dev->sense[0] = SENSE_EC;
@@ -961,7 +961,7 @@ int     eor = 0;                        /* 1=End of record received  */
 
     /* If zero bytes were received then client has closed connection */
     if (rc == 0) {
-        WRITEMSG(HHCTE007I, dev->devtype, dev->devnum, inet_ntoa(dev->ipaddr));
+        WRITEMSG(HHCTE007I, dev->devnum, dev->devtype, inet_ntoa(dev->ipaddr));
         dev->sense[0] = SENSE_IR;
         return (CSW_ATTN | CSW_UC | CSW_DE);
     }
@@ -1847,7 +1847,7 @@ char                    *logoout;
                   SSID_TO_LCSS(dev->ssid), dev->devnum);
     }
 
-    WRITEMSG(HHCTE009I, clientip, dev->devtype, SSID_TO_LCSS(dev->ssid), dev->devnum);
+    WRITEMSG(HHCTE009I, clientip, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->devtype);
 
     /* Send connection message to client */
     if (class != 'K')
