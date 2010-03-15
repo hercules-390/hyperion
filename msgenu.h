@@ -88,6 +88,33 @@
 #define HHCCH005W "Releasing inactive buffer space"
 #define HHCCH006E "Unable to calloc buf cache[%d] size(%d): (%s)"
 
+/* cardpch.c */
+#define HHCPU004E "Error writing to file(%s): (%s)"
+#define HHCPU001E "File name missing or invalid"
+#define HHCPU002E "Invalid argument: (%s)"
+#define HHCPU003E "Error opening file(%s): (%s)"
+
+/* cardrdr.c */
+#define HHCRD001E "Out of memory"
+#define HHCRD002E "File name(%s) too long, max is (%ud)"
+#define HHCRD003E "Unable to access file(%s): (%s)"
+#define HHCRD004E "Out of memory"
+#define HHCRD005E "Specify 'ascii' or 'ebcdic' (or neither) but not both"
+#define HHCRD006E "Only one filename (sock_spec) allowed for socket devices"
+#define HHCRD007I "Defaulting to 'ascii' for socket device(%4.4X)"
+#define HHCRD008W "'multifile' option ignored: only one file specified"
+#define HHCRD009E "File name(%s) too long, max is (%ud)"
+#define HHCRD010E "Unable to access file(%s): (%s)"
+#define HHCRD011E "Close error on file(%s): (%s)"
+#define HHCRD012I "%s (%s) disconnected from device(%4.4X) (%s)"
+#define HHCRD013E "Error opening file(%s): (%s)"
+#define HHCRD014E "Error reading file(%s): (%s)"
+#define HHCRD015E "Seek error in file(%s): (%s)"
+#define HHCRD016E "Error reading file(%s): (%s)"
+#define HHCRD017E "Unexpected end of file(%s)"
+#define HHCRD018E "Error reading file(%s): (%s)"
+#define HHCRD019E "Card image exceeds (%d) bytes in file(%s)"
+
 /* console.c */
 #define HHCGI001I "Unable to determine IP address from (%s)"
 #define HHCGI002I "Unable to determine port number from (%s)"

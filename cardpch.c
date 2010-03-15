@@ -25,7 +25,7 @@
 static void
 write_buffer (DEVBLK *dev, BYTE *buf, int len, BYTE *unitstat)
 {
-int             rc;                     /* Return code               */
+int             rc;                 	/* Return code               */
 
     /* Write data to the output file */
     rc = write (dev->fd, buf, len);
@@ -33,8 +33,7 @@ int             rc;                     /* Return code               */
     /* Equipment check if error writing to output file */
     if (rc < len)
     {
-        logmsg (_("HHCPU004E Error writing to %s: %s\n"),
-                dev->filename,
+        WRITEMSG (HHCPU004E, dev->filename,
                 (errno == 0 ? "incomplete": strerror(errno)));
         dev->sense[0] = SENSE_EC;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -53,7 +52,7 @@ int     i;                              /* Array subscript           */
     /* The first argument is the file name */
     if (argc == 0 || strlen(argv[0]) > sizeof(dev->filename)-1)
     {
-        logmsg (_("HHCPU001E File name missing or invalid\n"));
+        WRITEMSG (HHCPU001E);
         return -1;
     }
 
@@ -98,8 +97,7 @@ int     i;                              /* Array subscript           */
             continue;
         }
 
-        logmsg (_("HHCPU002E Invalid argument: %s\n"),
-                argv[i]);
+        WRITEMSG (HHCPU002E, argv[i]);
         return -1;
     }
 
@@ -186,8 +184,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if (rc < 0)
         {
             /* Handle open failure */
-            logmsg (_("HHCPU003E Error opening file %s: %s\n"),
-                    dev->filename, strerror(errno));
+            WRITEMSG (HHCPU003E, dev->filename, strerror(errno));
 
             /* Set unit check with intervention required */
             dev->sense[0] = SENSE_IR;
