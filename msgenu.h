@@ -80,6 +80,14 @@
 #define HHCCF090I "Default Allowed AUTOMOUNT directory = (%s)"
 #define HHCCF900S "Out of memory"
 
+/* cache.c */
+#define HHCCH001E "Calloc failed cache[%d] size(%d): (%s)"
+#define HHCCH002W "Realloc increase failed cache[%d] size(%d): (%s)"
+#define HHCCH003W "Realloc decrease failed cache[%d] size(%d): (%s)"
+#define HHCCH004W "Buf calloc failed cache[%d] size(%d): (%s)"
+#define HHCCH005W "Releasing inactive buffer space"
+#define HHCCH006E "Unable to calloc buf cache[%d] size(%d): (%s)"
+
 /* console.c */
 #define HHCGI001I "Unable to determine IP address from (%s)"
 #define HHCGI002I "Unable to determine port number from (%s)"
@@ -123,7 +131,7 @@
 
 /* crypto/dyncrypt.c */
 #define HHCRY001I "Crypto module loaded (c) Copyright Bernard van der Helm, 2003-2010"
-#define HHCRY002I "Active: %s"
+#define HHCRY002I "  Active: %s"
 
 /* hao.c */
 #define HHCIN004S "Cannot create HAO thread: (%s)"
