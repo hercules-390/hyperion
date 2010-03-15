@@ -135,8 +135,8 @@ char  thread_name[16];
                         &cpu, thread_name)
        )
     {
-        logmsg(_("HHCCF040E Cannot create CPU%4.4X thread: %s\n"),
-               cpu, strerror(errno));
+        logmsg(_("HHCCF040E Cannot create %s%02X thread: %s\n"),
+               PTYPSTR(sysblk.ptyp[cpu]), cpu, strerror(errno));
         return -1;
     }
 
@@ -899,7 +899,6 @@ DEVBLK *find_device_by_subchan (U32 ioid)
 
     return dev;
 } /* end function find_device_by_subchan */
-
 
 /*-------------------------------------------------------------------*/
 /* Returns a CPU register context for the device, or else NULL       */

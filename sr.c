@@ -620,22 +620,24 @@ S64      dreg;
             SR_READ_VALUE(file, len, &i, sizeof(i));
             if (i >= MAX_CPU_ENGINES)
             {
-                logmsg( _("HHCSR113E CPU%4.4d exceeds max allowed cpu (%d)\n"),
-                       i, MAX_CPU_ENGINES-1);
+                logmsg( _("HHCSR113E %s%02X exceeds max allowed cpu (%02d)\n"),
+                       PTYPSTR(sysblk.ptyp[i]), i, MAX_CPU_ENGINES-1);
                 goto sr_error_exit;
             }
             OBTAIN_INTLOCK(NULL);
             if (IS_CPU_ONLINE(i))
             {
                 RELEASE_INTLOCK(NULL);
-                logmsg( _("HHCSR114E CPU%4.4d already configured\n"), i);
+                logmsg( _("HHCSR114E %s%02X already configured\n" ), 
+                    PTYPSTR(sysblk.ptyp[i]), i);
                 goto sr_error_exit;
             }
             rc = configure_cpu(i);
             RELEASE_INTLOCK(NULL);
             if (rc < 0)
             {
-                logmsg( _("HHCSR115E CPU%4.4d unable to configure online\n"), i);
+                logmsg( _("HHCSR115E %s%02X unable to configure online\n"), 
+                    PTYPSTR(sysblk.ptyp[i]), i);
                 goto sr_error_exit;
             }
             regs = sysblk.regs[i];
@@ -650,8 +652,8 @@ S64      dreg;
             if (regs == NULL) goto sr_null_regs_exit;
             if (len != 8 && len != 16)
             {
-                logmsg( _("HHCSR116E CPU%4.4d invalid psw length (%d)\n"),
-                       regs->cpuad, len);
+                logmsg( _("HHCSR116E %s%02X invalid psw length (%d)\n"),
+                       PTYPSTR(sysblk.ptyp[regs->cpuad]), regs->cpuad, len);
                 goto sr_error_exit;
             }
             memset(buf, 0, 16);
@@ -678,8 +680,8 @@ S64      dreg;
             } /* switch (regs->arch_mode) */
             if (rc != 0 && memcmp(buf, zeros, len))
             {
-                logmsg( _("HHCSR117E CPU%4.4d error loading psw (%d)\n"),
-                       regs->cpuad, rc);
+                logmsg( _("HHCSR117E %s%02X error loading psw - rc(%d)\n"),
+                       PTYPSTR(sysblk.ptyp[regs->cpuad]), regs->cpuad, rc);
                 goto sr_error_exit;
             }
             break;

@@ -5524,12 +5524,12 @@ static char *ordername[] = {
         || !IS_CPU_ONLINE(cpad))
     {
         log_sigp = snprintf ( log_buf, sizeof(log_buf), 
-                "CPU%4.4X: SIGP %s (%2.2X) CPU%4.4X, PARM "F_GREG,
-                regs->cpuad,
+                "HHCCO005I %s%02X SIGP %-32s (%2.2X) %s%02X, PARM "F_GREG,
+                PTYPSTR(sysblk.ptyp[regs->cpuad]), regs->cpuad,
                 order >= sizeof(ordername) / sizeof(ordername[0]) ?
                         "Unassigned" : ordername[order],
                 order,
-                cpad,
+                PTYPSTR(sysblk.ptyp[cpad]), cpad,
                 parm);
     }
 

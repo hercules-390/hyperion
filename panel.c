@@ -916,7 +916,7 @@ static void NP_screen_redraw (REGS *regs)
     /* Line 1 - title line */
     set_color (COLOR_WHITE, COLOR_BLUE );
     set_pos   (1, 1);
-    draw_text ("  Hercules  CPU    :    %");
+    draw_text ("  Hercules     CPxx:    %");
     fill_text (' ', 30);
     draw_text ((char *)get_arch_mode_string(NULL));
     fill_text (' ', 38);
@@ -1026,10 +1026,10 @@ static void NP_screen_redraw (REGS *regs)
     draw_button(COLOR_BLUE,  COLOR_LIGHT_GREY, COLOR_WHITE,  " RS", "T", " "  );
 
 #if defined(OPTION_MIPS_COUNTING)
-    set_pos (20, 3);
+    set_pos (20, 4);
     set_color (COLOR_LIGHT_GREY, COLOR_BLACK);
     draw_text ("MIPS");
-    set_pos (20, 9);
+    set_pos (20, 10);
     draw_text ("SIO/s");
 #endif /*defined(OPTION_MIPS_COUNTING)*/
 
@@ -1139,8 +1139,8 @@ static void NP_update(REGS *regs)
     if (!NPcpunum_valid || NPcpunum != regs->cpuad)
     {
         set_color (COLOR_WHITE, COLOR_BLUE);
-        set_pos (1, 16);
-        sprintf (buf, "%4.4X:",regs->cpuad);
+        set_pos (1, 13);
+        sprintf (buf, "   %s%02X:", PTYPSTR(sysblk.ptyp[regs->cpuad]), regs->cpuad);
         draw_text (buf);
         NPcpunum_valid = 1;
         NPcpunum = regs->cpuad;
@@ -1454,7 +1454,7 @@ static void NP_update(REGS *regs)
     {
         set_color (COLOR_LIGHT_YELLOW, COLOR_BLACK);
         set_pos (19, 1);
-        sprintf(buf, "%3.1d.%2.2d",
+        sprintf(buf, "%4.1d.%2.2d",
             sysblk.mipsrate / 1000000, (sysblk.mipsrate % 1000000) / 10000);
         draw_text (buf);
         NPmips = sysblk.mipsrate;
@@ -1463,7 +1463,7 @@ static void NP_update(REGS *regs)
     if (!NPsios_valid || NPsios != sysblk.siosrate)
     {
         set_color (COLOR_LIGHT_YELLOW, COLOR_BLACK);
-        set_pos (19, 7);
+        set_pos (19, 8);
         sprintf(buf, "%7d", sysblk.siosrate);
         draw_text (buf);
         NPsios = sysblk.siosrate;
@@ -2873,7 +2873,8 @@ FinishShutdown:
                 saved_cons_col = cur_cons_col;
 
                 memset (buf, ' ', cons_cols);
-                len = sprintf (buf, "CPU%4.4X ", sysblk.pcpu);
+                len = sprintf ( buf, "%s%02X ", 
+                    PTYPSTR(sysblk.ptyp[sysblk.pcpu]), sysblk.pcpu ) ;
                 if (IS_CPU_ONLINE(sysblk.pcpu))
                 {
                     char ibuf[32];
@@ -2902,11 +2903,24 @@ FinishShutdown:
                            PROBSTATE(&regs->psw)              ? 'P' : '.',
                            SIE_MODE(regs)                     ? 'S' : '.',
                            regs->arch_mode == ARCH_900        ? 'Z' : '.');
+#ifdef OPTION_MIPS_COUNTING
                     buf[len++] = ' ';
-                    sprintf (ibuf, "instcount=%s", format_int(INSTCOUNT(regs)));
+                    if ( cons_cols >= 140 )
+                    {
+                        sprintf (ibuf, "instcount=%s MIPS(%4.1d.%2.2d) SIOS(%7.1d)", 
+                            format_int(INSTCOUNT(regs)),
+                            sysblk.mipsrate / 1000000, 
+                           (sysblk.mipsrate % 1000000) / 10000,
+                            sysblk.siosrate );
+                    }
+                    else
+                    {
+                        sprintf (ibuf, "instcount=%s", format_int(INSTCOUNT(regs)));
+                    }
                     if (len + (int)strlen(ibuf) < cons_cols)
                         len = cons_cols - strlen(ibuf);
                     strcpy (buf + len, ibuf);
+#endif /* OPTION_MIPS_COUNTING */
                 }
                 else
                 {

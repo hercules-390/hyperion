@@ -1,3 +1,6 @@
+15 Mar 2010 Message cleanup, change CPUxxxx to CPxx where CP is the indicated 
+            processor type. CP, CF, AP, IL and IP. "IE" is used to indicate SIE 
+            keeping message similar. 
 11 Mar 2010 Correct cckddasd merge flag error. Correct fbadasd sf= filename error.
 10 Mar 2010 Add SIGTERM handler to cleanly shut down clients - Frans Pop
 16 Feb 2010 Fix Conditional SSKE failing with Storage Key Assist - Ivan Warren

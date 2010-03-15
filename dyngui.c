@@ -666,9 +666,9 @@ void  UpdateCPUStatus ()
 
         gui_fprintf(fStatusStream, "STATUS="
 
-            "CPU%4.4X (((((((((((((((((((((((( OFFLINE ))))))))))))))))))))))))\n"
+            "%s%02X (((((((((((((((((((((((( OFFLINE ))))))))))))))))))))))))\n"
 
-            ,pcpu);
+            PTYPSTR(sysblk.ptyp[pcpu]), ,pcpu);
     }
     else // pTargetCPU_REGS != &sysblk.dummyregs; cpu is online
     {
@@ -676,7 +676,7 @@ void  UpdateCPUStatus ()
     
         gui_fprintf(fStatusStream, "STATUS="
     
-            "CPU%4.4X "
+            "%s%02X "
     
             "PSW=%2.2X%2.2X%2.2X%2.2X "
                 "%2.2X%2.2X%2.2X%2.2X "
@@ -686,7 +686,7 @@ void  UpdateCPUStatus ()
     
             "instcount=%" I64_FMT "u\n"
     
-            ,pTargetCPU_REGS->cpuad
+            ,PTYPSTR(sysblk.ptyp[pTargetCPU_REGS->cpuad]), pTargetCPU_REGS->cpuad
     
             ,psw[0], psw[1], psw[2],  psw[3]
             ,psw[4], psw[5], psw[6],  psw[7]

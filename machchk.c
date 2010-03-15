@@ -340,12 +340,13 @@ int i;
     if(MACHMASK(&regs->psw))
     {
 #if defined(_FEATURE_SIE)
-        logmsg(_("HHCCP017I CPU%4.4X: Machine check due to host error: %s\n"),
-          regs->sie_active ? regs->guestregs->cpuad : regs->cpuad,
-          strsignal(signo));
+        logmsg(_("HHCCP017I %s%02X: Machine check due to host error: %s\n"),
+            regs->sie_active ? "IE" : PTYPSTR(sysblk.ptyp[regs->cpuad]), 
+            regs->sie_active ? regs->guestregs->cpuad : regs->cpuad,
+            strsignal(signo) );
 #else /*!defined(_FEATURE_SIE)*/
-        logmsg(_("HHCCP017I CPU%4.4X: Machine check due to host error: %s\n"),
-          regs->cpuad, strsignal(signo));
+        logmsg(_("HHCCP017I %s%02X: Machine check due to host error: %s\n"),
+            PTYPSTR(sysblk.ptyp[regs->cpuad]), regs->cpuad, strsignal(signo));
 #endif /*!defined(_FEATURE_SIE)*/
 
         display_inst(
@@ -379,12 +380,13 @@ int i;
     else
     {
 #if defined(_FEATURE_SIE)
-        logmsg(_("HHCCP018I CPU%4.4X: Check-Stop due to host error: %s\n"),
-          regs->sie_active ? regs->guestregs->cpuad : regs->cpuad,
-          strsignal(signo));
+        logmsg(_("HHCCP018I %s%02X: Check-Stop due to host error: %s\n"),
+            regs->sie_active ? "IE" : PTYPSTR(sysblk.ptyp[regs->cpuad]), 
+            regs->sie_active ? regs->guestregs->cpuad : regs->cpuad,
+            strsignal(signo));
 #else /*!defined(_FEATURE_SIE)*/
-        logmsg(_("HHCCP018I CPU%4.4X: Check-Stop due to host error: %s\n"),
-          regs->cpuad, strsignal(signo));
+        logmsg(_("HHCCP018I %s%02X: Check-Stop due to host error: %s\n"),
+            PTYPSTR(sysblk.ptyp[regs->cpuad]), regs->cpuad, strsignal(signo));
 #endif /*!defined(_FEATURE_SIE)*/
         display_inst(
 #if defined(_FEATURE_SIE)

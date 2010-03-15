@@ -294,7 +294,7 @@ static void display_regs32(char *hdr,U16 cpuad,U32 *r,int numcpus)
             }
             if(numcpus>1)
             {
-                logmsg("CPU%4.4X: ",cpuad);
+                logmsg("%s%02X: ", PTYPSTR(sysblk.ptyp[cpuad]), cpuad);
             }
         }
         if(i%4)
@@ -330,7 +330,7 @@ static void display_regs64(char *hdr,U16 cpuad,U64 *r,int numcpus)
             }
             if(numcpus>1)
             {
-                logmsg("CPU%4.4X: ",cpuad);
+                logmsg("%s%02X: ", PTYPSTR(sysblk.ptyp[cpuad]), cpuad);
             }
         }
         if(i%rpl)
@@ -481,10 +481,11 @@ void display_aregs (REGS *regs)
 /*-------------------------------------------------------------------*/
 void display_fregs (REGS *regs)
 {
-char    cpustr[10] = {0};               /* "CPU:nnnn " or ""         */
+char    cpustr[6] = {0};               /* "CPnn " or ""         */
 
     if(sysblk.cpus>1)
-        sprintf(cpustr, "CPU%4.4X: ", regs->cpuad);
+        sprintf(cpustr, "%s%02X: ", PTYPSTR(sysblk.ptyp[regs->cpuad]), 
+                                    regs->cpuad);
 
     if(regs->CR(0) & CR0_AFP)
         logmsg
@@ -1148,9 +1149,11 @@ REGS   *regs;                           /* Copied regs               */
     /* Display the PSW */
     memset (qword, 0x00, sizeof(qword));
     copy_psw (regs, qword);
-    if(sysblk.cpus>1)
+
+    if ( sysblk.cpus > 1 )
     {
-        n=sprintf(buf,"CPU%4.4X:  ",regs->cpuad);
+        n = sprintf ( buf, "%s%02X:  ", 
+                      PTYPSTR(sysblk.ptyp[regs->cpuad]), regs->cpuad );
     }
     else
     {
@@ -1299,9 +1302,10 @@ REGS   *regs;                           /* Copied regs               */
                                                 ? ACCTYPE_INSTFETCH :
                                  opcode == 0xB1 ? ACCTYPE_LRA :
                                                   ACCTYPE_READ));
-        if(sysblk.cpus>1)
+        if ( sysblk.cpus > 1 )
         {
-            logmsg ("CPU%4.4X:  ", regs->cpuad);
+            logmsg ( "%s%02X:  ", PTYPSTR(sysblk.ptyp[regs->cpuad]), 
+                                  regs->cpuad );
         }
         logmsg ("%s\n", buf);
     }
@@ -1321,9 +1325,10 @@ REGS   *regs;                           /* Copied regs               */
             n = ARCH_DEP(display_virt) (regs, addr2, buf, b2,
                                         ACCTYPE_READ);
 
-        if(sysblk.cpus>1)
+        if ( sysblk.cpus > 1 )
         {
-            logmsg ("CPU%4.4X:  ", regs->cpuad);
+            logmsg ( "%s%02X:  ", PTYPSTR(sysblk.ptyp[regs->cpuad]), 
+                                  regs->cpuad );
         }
         logmsg ("%s\n", buf);
     }
