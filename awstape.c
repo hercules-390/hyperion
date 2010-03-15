@@ -524,7 +524,7 @@ U16             prvblkl;                /* Length of previous block  */
     if (rc < (int)sizeof(awshdr))
     {
         /* Handle write error condition */
-        iWRITEMSG (HHCTA118E, dev->devnum, blkpos, dev->filename, strerror(errno));
+        WRITEMSG (HHCTA118E, dev->devnum, blkpos, dev->filename, strerror(errno));
 
         build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
         return -1;

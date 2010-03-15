@@ -666,9 +666,9 @@ void  UpdateCPUStatus ()
 
         gui_fprintf(fStatusStream, "STATUS="
 
-            "%s%02X (((((((((((((((((((((((( OFFLINE ))))))))))))))))))))))))\n"
+            "%s%02X (((((((((((((((((((((((( OFFLINE ))))))))))))))))))))))))\n",
 
-            PTYPSTR(sysblk.ptyp[pcpu]), ,pcpu);
+            PTYPSTR(sysblk.ptyp[pcpu]) ,pcpu);
     }
     else // pTargetCPU_REGS != &sysblk.dummyregs; cpu is online
     {
