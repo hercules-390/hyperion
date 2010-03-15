@@ -12,7 +12,7 @@
 // Revision 1.146  2008/11/04 05:56:30  fish
 // Put ensure consistent create_thread ATTR usage change back in
 //
-// Revision 1.145  2008/11/03 15:31:58  rbowler
+// Revision 1.145  
 // Back out consistent create_thread ATTR modification
 //
 // Revision 1.144  2008/10/18 09:32:20  fish
@@ -333,7 +333,7 @@ int             fdflags;                /* File flags                */
     /* open the shadow files */
     if (cckd_sf_init (dev) < 0)
     {
-        logmsg (_("HHCCD101E %4.4X error initializing shadow files\n"), dev->devnum);
+        WRITEMSG (HHCCD101E, dev->devnum);
         return -1;
     }
 
@@ -596,8 +596,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     {
         if (err)
         {
-            logmsg (_("HHCCD130E %4.4X file[%d] %s open error: %s\n"),
-                    dev->devnum, sfx, cckd_sf_name (dev, sfx),
+            WRITEMSG (HHCCD130E, dev->devnum, sfx, cckd_sf_name (dev, sfx),
                     strerror(errno));
             cckd_trace (dev, "file[%d] fd[%d] open %s error flags %8.8x mode %8.8x\n",
                         sfx, cckd->fd[sfx], cckd_sf_name (dev, sfx), flags, mode);
@@ -631,8 +630,7 @@ int             rc = 0;                 /* Return code               */
 
     if (rc < 0)
     {
-        logmsg (_("HHCCD130E %4.4X file[%d] close error: %s\n"),
-                dev->devnum, sfx, strerror(errno));
+        WRITEMSG (HHCCD131E, dev->devnum, sfx, strerror(errno));
         cckd_print_itrace ();
     }
 
@@ -659,8 +657,7 @@ int             rc;                     /* Return code               */
     /* Seek to specified offset */
     if (lseek (cckd->fd[sfx], off, SEEK_SET) < 0)
     {
-        logmsg (_("HHCCD130E %4.4X file[%d] lseek error, offset 0x%" I64_FMT "x: %s\n"),
-                dev->devnum, sfx, (long long)off, strerror(errno));
+        WRITEMSG (HHCCD132E, dev->devnum, sfx, (long long)off, strerror(errno));
         cckd_print_itrace ();
         return -1;
     }
@@ -670,12 +667,9 @@ int             rc;                     /* Return code               */
     if (rc < (int)len)
     {
         if (rc < 0)
-            logmsg (_("HHCCD130E %4.4X file[%d] read error, offset 0x%" I64_FMT "x: %s\n"),
-                    dev->devnum, sfx, (long long)off, strerror(errno));
+            WRITEMSG (HHCCD133E, dev->devnum, sfx, (long long)off, strerror(errno));
         else
-            logmsg (_("HHCCD130E %4.4X file[%d] read incomplete, offset 0x%" I64_FMT "x: "
-                      "read %d expected %d\n"),
-                    dev->devnum, sfx, (long long)off, rc, len);
+            WRITEMSG (HHCCD134E, dev->devnum, sfx, (long long)off, rc, len);
         cckd_print_itrace ();
         return -1;
     }
@@ -700,8 +694,7 @@ int             rc = 0;                 /* Return code               */
     /* Seek to specified offset */
     if (lseek (cckd->fd[sfx], off, SEEK_SET) < 0)
     {
-        logmsg (_("HHCCD130E %4.4X file[%d] lseek error, offset 0x%" I64_FMT "x: %s\n"),
-                dev->devnum, sfx, (long long)off, strerror(errno));
+        WRITEMSG (HHCCD135E, dev->devnum, sfx, (long long)off, strerror(errno));
         return -1;
     }
 
@@ -710,12 +703,9 @@ int             rc = 0;                 /* Return code               */
     if (rc < (int)len)
     {
         if (rc < 0)
-            logmsg (_("HHCCD130E %4.4X file[%d] write error, offset 0x%" I64_FMT "x: %s\n"),
-                    dev->devnum, sfx, (long long)off, strerror(errno));
+            WRITEMSG (HHCCD136E, dev->devnum, sfx, (long long)off, strerror(errno));
         else
-            logmsg (_("HHCCD130E %4.4X file[%d] write incomplete, offset 0x%" I64_FMT "x: "
-                      "wrote %d expected %d\n"),
-                    dev->devnum, sfx, (long long)off, rc, len);
+            WRITEMSG (HHCCD137E, dev->devnum, sfx, (long long)off, rc, len);
         cckd_print_itrace ();
         return -1;
     }
@@ -739,8 +729,7 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
     /* Truncate the file */
     if (ftruncate (cckd->fd[sfx], off) < 0)
     {
-        logmsg (_("HHCCD130E %4.4X file[%d] ftruncate error, offset 0x%" I64_FMT "x: %s\n"),
-                dev->devnum, sfx, (long long)off, strerror(errno));
+        WRITEMSG (HHCCD138E, dev->devnum, sfx, (long long)off, strerror(errno));
         cckd_print_itrace ();
         return -1;
     }
@@ -761,8 +750,7 @@ void           *p;                      /* Pointer                   */
 
     if (p == NULL)
     {
-        logmsg (_("HHCCD130E %4.4X malloc error, size %d: %s\n"),
-                dev ? dev->devnum : 0, size, strerror(errno));
+        WRITEMSG (HHCCD139E, dev ? dev->devnum : 0, size, strerror(errno));
         cckd_print_itrace ();
     }
 
@@ -782,8 +770,7 @@ void           *p;                      /* Pointer                   */
 
     if (p == NULL)
     {
-        logmsg (_("HHCCD130E %4.4X calloc error, size %d: %s\n"),
-                dev ? dev->devnum : 0, n*size, strerror(errno));
+        WRITEMSG (HHCCD140E, dev ? dev->devnum : 0, (n*size), strerror(errno));
         cckd_print_itrace ();
     }
 
@@ -1529,8 +1516,9 @@ TID             tid;                    /* Readahead thread id       */
 
     if (!cckdblk.batch)
     {
-        logmsg (_("HHCCD001I Readahead thread %d started: tid="TIDPAT", pid=%d\n"),
-            ra, thread_id(), getpid());
+	char buf[20];
+        sprintf(buf, "Readahead thread(%d)", ra);
+        WRITEMSG (HHCCD001I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), buf);
     }
 
     while (ra <= cckdblk.ramax)
@@ -1580,8 +1568,11 @@ TID             tid;                    /* Readahead thread id       */
     }
 
     if (!cckdblk.batch)
-    logmsg (_("HHCCD011I Readahead thread %d stopping: tid="TIDPAT", pid=%d\n"),
-            ra, thread_id(), getpid());
+    {
+        char buf[20];
+        sprintf(buf, "Readahead thread(%d)", ra);
+        WRITEMSG (HHCCD011I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), buf);
+    }
     --cckdblk.ras;
     if (!cckdblk.ras) signal_condition(&cckdblk.termcond);
     release_lock(&cckdblk.ralock);
@@ -1730,8 +1721,9 @@ BYTE            buf2[65536];            /* Compress buffer           */
 
     if (!cckdblk.batch)
     {
-        logmsg (_("HHCCD002I Writer thread %d started: tid="TIDPAT", pid=%d\n"),
-            writer, thread_id(), getpid());
+	char buf[20];
+	sprintf(buf, "Writer thread(%d)", writer);
+	WRITEMSG (HHCCD002I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), buf);
     }
 
     while (writer <= cckdblk.wrmax || cckdblk.wrpending)
@@ -1852,8 +1844,11 @@ BYTE            buf2[65536];            /* Compress buffer           */
     }
 
     if (!cckdblk.batch)
-    logmsg (_("HHCCD012I Writer thread %d stopping: tid="TIDPAT", pid=%d\n"),
-            writer, thread_id(), getpid());
+    {
+	char buf[20];
+	sprintf(buf, "Writer thread(%d)", writer);
+	WRITEMSG (HHCCD012I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), buf);
+    }
     cckdblk.wrs--;
     if (cckdblk.wrs == 0) signal_condition(&cckdblk.termcond);
     release_lock(&cckdblk.wrlock);
@@ -1990,8 +1985,7 @@ cckd_get_space_atend:
         fpos = (off_t)cckd->cdevhdr[sfx].size;
         if ((long long)(fpos + len) > cckd->maxsize)
         {
-            logmsg (_("HHCCD102E %4.4X file[%d] get space error, size exceeds %lldM\n"),
-                    dev->devnum, sfx, (cckd->maxsize >> 20) + 1);
+            WRITEMSG (HHCCD102E, dev->devnum, sfx, (cckd->maxsize >> 20) + 1);
             return -1;
         }
         cckd->cdevhdr[sfx].size += len;
@@ -2499,8 +2493,7 @@ CKDDASD_DEVHDR  devhdr;                 /* Device header             */
     else if (!(sfx && memcmp (&devhdr.devid, "CKD_S370", 8) == 0 && cckd->ckddasd)
           && !(sfx && memcmp (&devhdr.devid, "FBA_S370", 8) == 0 && cckd->fbadasd))
     {
-        logmsg (_("HHCCD110E %4.4X file[%d] devhdr id error\n"),
-                dev->devnum, sfx);
+        WRITEMSG (HHCCD110E, dev->devnum, sfx);
         return -1;
     }
 
@@ -3226,8 +3219,7 @@ int             size;                   /* Track size                */
     if (size > dev->ckdtrksz ||
         memcmp (&buf[size-CKDDASD_RECHDR_SIZE], &eighthexFF, 8) != 0)
     {
-        logmsg (_("HHCCD121E %4.4X file[%d] trklen err for %2.2x%2.2x%2.2x%2.2x%2.2x\n"),
-                dev->devnum, cckd->sfn, buf[0], buf[1], buf[2], buf[3], buf[4]);
+        WRITEMSG (HHCCD121E, dev->devnum, cckd->sfn, buf[0], buf[1], buf[2], buf[3], buf[4]);
         size = -1;
     }
 
@@ -3395,8 +3387,7 @@ static char    *comp[] = {"none", "zlib", "bzip2"};
                 if (buf[0] & ~CCKD_COMPRESS_MASK)
                 {
                     if (cckdblk.bytemsgs++ < 10)
-                        logmsg (_("HHCCD122E %4.4X file[%d] invalid byte 0 trk %d: "
-                            "buf %2.2x%2.2x%2.2x%2.2x%2.2x\n"), dev->devnum, cckd->sfn,
+                        WRITEMSG (HHCCD122E, dev->devnum, cckd->sfn,
                             t, buf[0],buf[1],buf[2],buf[3],buf[4]);
                     buf[0] &= CCKD_COMPRESS_MASK;
                 }
@@ -3417,8 +3408,7 @@ static char    *comp[] = {"none", "zlib", "bzip2"};
             {
                 if (buf[0] & ~CCKD_COMPRESS_MASK)
                 {
-                    logmsg (_("HHCCD123E %4.4X file[%d] invalid byte 0 blkgrp %d: "
-                            "buf %2.2x%2.2x%2.2x%2.2x%2.2x\n"), dev->devnum, cckd->sfn,
+                    WRITEMSG (HHCCD123E, dev->devnum, cckd->sfn,
                             t, buf[0],buf[1],buf[2],buf[3],buf[4]);
                     buf[0] &= CCKD_COMPRESS_MASK;
                 }
@@ -3432,17 +3422,13 @@ static char    *comp[] = {"none", "zlib", "bzip2"};
 
     if (badcomp)
     {
-        logmsg (_("HHCCD124E %4.4X file[%d] invalid %s hdr %s %d: "
-                "%s compression unsupported\n"),
-                dev->devnum, cckd->sfn,
+        WRITEMSG (HHCCD124E, dev->devnum, cckd->sfn,
                 cckd->ckddasd ? "trk" : "blk",
                 cckd->ckddasd ? "trk" : "blk", t, comp[buf[0]]);
     }
     else
     {
-        logmsg (_("HHCCD125E %4.4X file[%d] invalid %s hdr %s %d "
-                "buf %p:%2.2x%2.2x%2.2x%2.2x%2.2x\n"),
-                dev->devnum, cckd->sfn,
+        WRITEMSG (HHCCD125E, dev->devnum, cckd->sfn,
                 cckd->ckddasd ? "trk" : "blk",
                 cckd->ckddasd ? "trk" : "blk", trk,
                 buf, buf[0], buf[1], buf[2], buf[3], buf[4]);
@@ -3594,9 +3580,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             {
                 if (strcmp (cckd_sf_name(dev, i),cckd_sf_name(dev2, j)) == 0)
                 {
-                    logmsg (_("HHCCD142E %4.4X file[%d] shadow file name %s\n"
-                            "      collides with %4.4X file[%d] name %s\n"),
-                            dev->devnum, i, cckd_sf_name(dev, i),
+                    WRITEMSG (HHCCD142E, dev->devnum, i, cckd_sf_name(dev, i),
                             dev2->devnum, j, cckd_sf_name(dev2, j));
                     return -1;
                 }
@@ -3639,8 +3623,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if (cckd->open[i] == CCKD_OPEN_RO) continue;
         if (cckd_open (dev, i, O_RDONLY|O_BINARY, 0) < 0)
         {
-            logmsg (_("HHCCD151E %4.4X file[%d] error re-opening %s readonly\n  %s\n"),
-                    dev->devnum, i, cckd_sf_name(dev, i), strerror(errno));
+            WRITEMSG (HHCCD151E, dev->devnum, i, cckd_sf_name(dev, i), strerror(errno));
             return -1;
         }
     }
@@ -3667,16 +3650,14 @@ CKDDASD_DEVHDR  devhdr;                 /* Device header             */
     /* Error if no shadow file name */
     if (dev->dasdsfn == NULL)
     {
-        logmsg (_("HHCCD161E %4.4X file[%d] no shadow file name\n"),
-                dev->devnum, cckd->sfn+1);
+        WRITEMSG (HHCCD161E, dev->devnum, cckd->sfn+1);
         return -1;
     }
 
     /* Error if max number of shadow files exceeded */
     if (cckd->sfn+1 == CCKD_MAX_SF)
     {
-        logmsg (_("HHCCD161E %4.4X file[%d] max shadow files exceeded\n"),
-                dev->devnum, cckd->sfn+1);
+        WRITEMSG (HHCCD162E, dev->devnum, cckd->sfn+1);
         return -1;
     }
 
@@ -3758,19 +3739,18 @@ int             syncio;                 /* Saved syncio bit          */
         for (dev=sysblk.firstdev; dev; dev=dev->nextdev)
             if (dev->cckd_ext)
             {
-                logmsg( _("HHCCD207I Adding device %d:%4.4X\n"),
-                          SSID_TO_LCSS(dev->ssid), dev->devnum );
+                WRITEMSG (HHCCD207I, SSID_TO_LCSS(dev->ssid), dev->devnum );
                 cckd_sf_add (dev);
                 n++;
             }
-        logmsg( _("HHCCD092I %d devices processed\n"), n );
+        WRITEMSG(HHCCD092I, n );
         return NULL;
     }
 
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        logmsg (_("HHCCD160E %4.4X not a cckd device\n"), dev->devnum);
+        WRITEMSG (HHCCD160E, dev->devnum);
         return NULL;
     }
 
@@ -3783,9 +3763,7 @@ int             syncio;                 /* Saved syncio bit          */
     {
         dev->syncio = syncio;
         release_lock (&cckd->iolock);
-        logmsg (_("HHCCD165W %4.4X error adding shadow file, "
-                  "sf command busy on device\n"),
-                dev->devnum,cckd->sfn);
+        WRITEMSG (HHCCD165W, dev->devnum,cckd->sfn);
         return NULL;
     }
     cckd->merging = 1;
@@ -3809,8 +3787,7 @@ int             syncio;                 /* Saved syncio bit          */
 
     /* Create a new shadow file */
     if (cckd_sf_new (dev) < 0) {
-        logmsg (_("HHCCD161E %4.4X file[%d] error adding shadow file\n"),
-                dev->devnum, cckd->sfn+1);
+        WRITEMSG (HHCCD163E, dev->devnum, cckd->sfn+1);
         goto cckd_sf_add_exit;
     }
 
@@ -3818,8 +3795,7 @@ int             syncio;                 /* Saved syncio bit          */
     if (cckd->open[cckd->sfn-1] == CCKD_OPEN_RW)
         cckd_open (dev, cckd->sfn-1, O_RDONLY|O_BINARY, 0);
 
-    logmsg (_("HHCCD162I %4.4X file[%d] %s added\n"),
-            dev->devnum, cckd->sfn, cckd_sf_name (dev, cckd->sfn));
+    WRITEMSG (HHCCD164I, dev->devnum, cckd->sfn, cckd_sf_name (dev, cckd->sfn));
 
 cckd_sf_add_exit:
 
@@ -3872,22 +3848,20 @@ BYTE            buf[65536];             /* Buffer                    */
         for (dev=sysblk.firstdev; dev; dev=dev->nextdev)
             if ((cckd = dev->cckd_ext))
             {
-                logmsg( _("HHCCD179I Merging device %d:%4.4X\n"),
-                          SSID_TO_LCSS(dev->ssid), dev->devnum );
+                WRITEMSG(HHCCD179I, SSID_TO_LCSS(dev->ssid), dev->devnum );
                 cckd->sfmerge = merge;
                 cckd->sfforce = force;
                 cckd_sf_remove (dev);
                 n++;
             }
-        logmsg( _("HHCCD092I %d devices processed\n"), n );
+        WRITEMSG(HHCCD092I, n );
         return NULL;
     }
 
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        logmsg (_("HHCCD170E %4.4X not a cckd device\n"),
-                dev ? dev->devnum : 0);
+        WRITEMSG (HHCCD170E, dev ? dev->devnum : 0);
         return NULL;
     }
 
@@ -3908,9 +3882,7 @@ BYTE            buf[65536];             /* Buffer                    */
     {
         dev->syncio = syncio;
         release_lock (&cckd->iolock);
-        logmsg (_("HHCCD175W %4.4X file[%d] merge failed, "
-                  "sf command busy on device\n"),
-                dev->devnum,cckd->sfn);
+        WRITEMSG (HHCCD175W, dev->devnum,cckd->sfn);
         return NULL;
     }
     cckd->merging = 1;
@@ -3932,8 +3904,7 @@ BYTE            buf[65536];             /* Buffer                    */
     {
         dev->syncio = syncio;
         release_lock (&cckd->filelock);
-        logmsg (_("HHCCD171E %4.4X file[%d] cannot remove base file\n"),
-                dev->devnum,cckd->sfn);
+        WRITEMSG (HHCCD171E, dev->devnum,cckd->sfn);
         cckd->merging = 0;
         return NULL;
     }
@@ -3945,9 +3916,7 @@ BYTE            buf[65536];             /* Buffer                    */
     /* Harden the `from' file */
     if (cckd_harden (dev) < 0)
     {
-        logmsg (_("HHCCD174E %4.4X file[%d] not merged, "
-                "file[%d] not hardened\n"),
-                dev->devnum, from_sfx, from_sfx);
+        WRITEMSG (HHCCD174E, dev->devnum, from_sfx, from_sfx);
         goto sf_remove_exit;
     }
 
@@ -3961,9 +3930,7 @@ BYTE            buf[65536];             /* Buffer                    */
         cckd_open (dev, to_sfx, O_RDONLY|O_BINARY, 0);
         if (merge)
         {
-            logmsg (_("HHCCD172E %4.4X file[%d] not merged, "
-                    "file[%d] cannot be opened read-write%s\n"),
-                    dev->devnum, from_sfx, to_sfx,
+            WRITEMSG (HHCCD172E, dev->devnum, from_sfx, to_sfx,
                     to_sfx == 0 && dev->ckdrdonly && !force
                     ? ", try `force'" : "");
             goto sf_remove_exit;
@@ -3978,9 +3945,7 @@ BYTE            buf[65536];             /* Buffer                    */
         if (cckd_chkdsk (dev, 0) < 0)
         {
             cckd->sfn = from_sfx;
-            logmsg (_("HHCCD173E %4.4X file[%d] not merged, "
-                    "file[%d] check failed\n"),
-                    dev->devnum, to_sfx, to_sfx);
+            WRITEMSG (HHCCD173E, dev->devnum, to_sfx, to_sfx);
             goto sf_remove_exit;
         }
     }
@@ -4122,8 +4087,7 @@ BYTE            buf[65536];             /* Buffer                    */
     /* Add the file back if necessary */
     if (add) rc = cckd_sf_new (dev) ;
 
-    logmsg (_("HHCCD181I %4.4X shadow file [%d] successfully %s\n"),
-            dev->devnum, from_sfx, merge ? "merged" : add ? "re-added" : "removed");
+    WRITEMSG (HHCCD181I, dev->devnum, from_sfx, merge ? "merged" : add ? "re-added" : "removed");
 
 sf_remove_exit:
 
@@ -4148,11 +4112,9 @@ sf_remove_exit:
 sf_merge_error:
 
     if (trk < 0)
-        logmsg (_("HHCCD180E %4.4X file[%d] not merged, error during merge\n"),
-                dev->devnum, from_sfx);
+        WRITEMSG (HHCCD180E, dev->devnum, from_sfx);
     else
-        logmsg (_("HHCCD180E %4.4X file[%d] not merged, error processing trk %d\n"),
-                dev->devnum, from_sfx, trk);
+        WRITEMSG (HHCCD182E, dev->devnum, from_sfx, trk);
 
     if (l2updated && cckd->l1[to_sfx][i] && cckd->l1[to_sfx][i] != 0xffffffff)
     {
@@ -4185,19 +4147,18 @@ int             rc;                     /* Return code               */
         for (dev=sysblk.firstdev; dev; dev=dev->nextdev)
             if (dev->cckd_ext)
             {
-                logmsg( _("HHCCD207I Compressing device %d:%4.4X\n"),
-                          SSID_TO_LCSS(dev->ssid), dev->devnum );
+                WRITEMSG( HHCCD200I, SSID_TO_LCSS(dev->ssid), dev->devnum );
                 cckd_sf_comp (dev);
                 n++;
             }
-        logmsg( _("HHCCD092I %d devices processed\n"), n );
+        WRITEMSG (HHCCD092I, n );
         return NULL;
     }
 
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        logmsg (_("HHCCD205W %4.4X device is not a cckd device\n"), dev->devnum);
+        WRITEMSG (HHCCD205W, dev->devnum);
         return NULL;
     }
 
@@ -4210,9 +4171,7 @@ int             rc;                     /* Return code               */
     {
         dev->syncio = syncio;
         release_lock (&cckd->iolock);
-        logmsg (_("HHCCD206W %4.4X file[%d] compress failed, "
-                  "sf command busy on device\n"),
-                dev->devnum,cckd->sfn);
+        WRITEMSG (HHCCD206W, dev->devnum,cckd->sfn);
         return NULL;
     }
     cckd->merging = 1;
@@ -4274,20 +4233,19 @@ int             level = 2;              /* Check level               */
         for (dev=sysblk.firstdev; dev; dev=dev->nextdev)
             if ((cckd = dev->cckd_ext))
             {
-                logmsg( _("HHCCD207I Checking device %d:%4.4X level %d\n"),
-                          SSID_TO_LCSS(dev->ssid), dev->devnum, level );
+                WRITEMSG (HHCCD201I, SSID_TO_LCSS(dev->ssid), dev->devnum, level );
                 cckd->sflevel = level;
                 cckd_sf_chk (dev);
                 n++;
             }
-        logmsg( _("HHCCD092I %d devices processed\n"), n );
+        WRITEMSG(HHCCD092I, n );
         return NULL;
     }
 
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        logmsg (_("HHCCD205W %4.4X device is not a cckd device\n"), dev->devnum);
+        WRITEMSG (HHCCD205W, dev->devnum);
         return NULL;
     }
 
@@ -4303,9 +4261,7 @@ int             level = 2;              /* Check level               */
     {
         dev->syncio = syncio;
         release_lock (&cckd->iolock);
-        logmsg (_("HHCCD206W %4.4X file[%d] check failed, "
-                  "sf command busy on device\n"),
-                dev->devnum,cckd->sfn);
+        WRITEMSG (HHCCD202W, dev->devnum,cckd->sfn);
         return NULL;
     }
     cckd->merging = 1;
@@ -4368,19 +4324,18 @@ int             freenbr=0;              /* Total number free spaces  */
         for (dev=sysblk.firstdev; dev; dev=dev->nextdev)
             if (dev->cckd_ext)
             {
-                logmsg( _("HHCCD208I Displaying device %d:%4.4X\n"),
-                          SSID_TO_LCSS(dev->ssid), dev->devnum );
+                WRITEMSG( HHCCD208I, SSID_TO_LCSS(dev->ssid), dev->devnum );
                 cckd_sf_stats (dev);
                 n++;
             }
-        logmsg( _("HHCCD092I %d devices processed\n"), n );
+        WRITEMSG(HHCCD092I, n );
         return NULL;
     }
 
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        logmsg (_("HHCCD209W %4.4X device is not a cckd device\n"));
+        WRITEMSG (HHCCD209W, dev->devnum);
         return NULL;
     }
 
@@ -4397,35 +4352,35 @@ int             freenbr=0;              /* Total number free spaces  */
     }
 
     /* header */
-    logmsg (_("HHCCD210I           size free  nbr st   reads  writes l2reads    hits switches\n"));
+    WRITEMSG (HHCCD210I);
     if (cckd->readaheads || cckd->misses)
-    logmsg (_("HHCCD211I                                                  readaheads   misses\n"));
-    logmsg (_("HHCCD212I --------------------------------------------------------------------\n"));
+    WRITEMSG (HHCCD211I);
+    WRITEMSG (HHCCD212I);
 
     /* total statistics */
-    logmsg (_("HHCCD213I [*] %10" I64_FMT "d %3" I64_FMT "d%% %4d    %7d %7d %7d %7d  %7d\n"),
+    WRITEMSG (HHCCD213I,
             size, (free * 100) / size, freenbr,
             cckd->totreads, cckd->totwrites, cckd->totl2reads,
             cckd->cachehits, cckd->switches);
     if (cckd->readaheads || cckd->misses)
-    logmsg (_("HHCCD214I                                                     %7d  %7d\n"),
+    WRITEMSG (HHCCD214I,
             cckd->readaheads, cckd->misses);
 
     /* base file statistics */
-    logmsg (_("HHCCD215I %s\n"), dev->filename);
-    logmsg (_("HHCCD216I [0] %10" I64_FMT "d %3" I64_FMT "d%% %4d %s %7d %7d %7d\n"),
+    WRITEMSG (HHCCD215I, dev->filename);
+    WRITEMSG (HHCCD216I,
             (long long)st.st_size,
             (long long)((long long)((long long)cckd->cdevhdr[0].free_total * 100) / st.st_size),
             cckd->cdevhdr[0].free_number, ost[cckd->open[0]],
             cckd->reads[0], cckd->writes[0], cckd->l2reads[0]);
 
     if (dev->dasdsfn != NULL && CCKD_MAX_SF > 0)
-        logmsg (_("HHCCD217I %s\n"), cckd_sf_name(dev, -1));
+        WRITEMSG (HHCCD217I, cckd_sf_name(dev, -1));
 
     /* shadow file statistics */
     for (i = 1; i <= cckd->sfn; i++)
     {
-        logmsg (_("HHCCD218I [%d] %10" I64_FMT "d %3" I64_FMT "d%% %4d %s %7d %7d %7d\n"),
+        WRITEMSG (HHCCD218I,
                 i, (long long)cckd->cdevhdr[i].size,
                 (long long)((long long)((long long)cckd->cdevhdr[i].free_total * 100) / cckd->cdevhdr[i].size),
                 cckd->cdevhdr[i].free_number, ost[cckd->open[i]],
@@ -4525,8 +4480,7 @@ int             gctab[5]= {             /* default gcol parameters   */
 
     if (!cckdblk.batch)
     {
-        logmsg (_("HHCCD003I Garbage collector thread started: tid="TIDPAT", pid=%d \n"),
-              thread_id(), getpid());
+        WRITEMSG (HHCCD003I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "Garbage collector");
     }
 
     while (gcol <= cckdblk.gcmax)
@@ -4630,8 +4584,7 @@ int             gctab[5]= {             /* default gcol parameters   */
     }
 
     if (!cckdblk.batch)
-    logmsg (_("HHCCD013I Garbage collector thread stopping: tid="TIDPAT", pid=%d\n"),
-            thread_id(), getpid());
+    WRITEMSG (HHCCD013I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "Garbage collector");
 
     cckdblk.gcs--;
     if (!cckdblk.gcs) signal_condition (&cckdblk.termcond);
@@ -4855,8 +4808,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
 
 cckd_gc_perc_space_error:
 
-    logmsg (_("HHCCD190E %4.4X file[%d] offset 0x%" I64_FMT "x unknown space: "
-              "%2.2x%2.2x%2.2x%2.2x%2.2x\n"),
+    WRITEMSG (HHCCD190E,
             dev->devnum,cckd->sfn,(long long)(upos + i),
             buf[i], buf[i+1],buf[i+2], buf[i+3], buf[i+4]);
     cckd->cdevhdr[cckd->sfn].options |= CCKD_SPERRS;
@@ -5125,10 +5077,10 @@ static char    *compress[] = {"none", "zlib", "bzip2"};
     }
 
     /* Unable to uncompress */
-    logmsg (_("HHCCD193E %4.4X file[%d] uncompress error trk %d: %2.2x%2.2x%2.2x%2.2x%2.2x\n"),
+    WRITEMSG (HHCCD193E,
             dev->devnum, cckd->sfn, trk, from[0], from[1], from[2], from[3], from[4]);
     if (comp & ~cckdblk.comps)
-        logmsg (_("HHCCD194E %4.4X file[%d] %s compression not supported\n"),
+        WRITEMSG (HHCCD194E,
                 dev->devnum, cckd->sfn, compress[comp]);
     return NULL;
 }
@@ -5658,7 +5610,7 @@ DLL_EXPORT void cckd_print_itrace()
 CCKD_TRACE     *i, *p;                  /* Trace table pointers      */
 
     if (!cckdblk.itrace) return;
-    logmsg (_("HHCCD900I print_itrace\n"));
+    WRITEMSG (HHCCD900I);
     i = cckdblk.itrace;
     cckdblk.itrace = NULL;
     SLEEP (1);
