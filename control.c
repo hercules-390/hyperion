@@ -5436,7 +5436,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* AE   SIGP  - Signal Processor                                [RS] */
 /*-------------------------------------------------------------------*/
-DEF_INST(signal_procesor)
+DEF_INST(signal_processor)
 {
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */

@@ -2374,7 +2374,7 @@ DLL_EXPORT zz_func opcode_table[256][GEN_MAXARCH] = {
  /*AB*/   GENx___x___x___ ,
  /*AC*/   GENx370x390x900 (store_then_and_system_mask,SI,"STNSM"),
  /*AD*/   GENx370x390x900 (store_then_or_system_mask,SI,"STOSM"),
- /*AE*/   GENx370x390x900 (signal_procesor,RS,"SIGP"),
+ /*AE*/   GENx370x390x900 (signal_processor,RS,"SIGP"),
  /*AF*/   GENx370x390x900 (monitor_call,SI,"MC"),
  /*B0*/   GENx___x___x___ ,
  /*B1*/   GENx370x390x900 (load_real_address,RX,"LRA"),

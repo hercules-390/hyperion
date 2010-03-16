@@ -2955,7 +2955,7 @@ DEF_INST(set_secondary_asn_with_instance);
 DEF_INST(set_storage_key);
 DEF_INST(set_storage_key_extended);
 DEF_INST(set_system_mask);
-DEF_INST(signal_procesor);
+DEF_INST(signal_processor);
 DEF_INST(store_clock_comparator);
 DEF_INST(store_control);
 DEF_INST(store_cpu_address);
