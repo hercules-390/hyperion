@@ -5484,8 +5484,6 @@ static char *ordername[] = {
 
     SIE_INTERCEPT(regs);
 
-    PTT(PTT_CL_SIG,"SIGP",regs->GR_L(r1),regs->GR_L(r3),(U32)(effective_addr2 & 0xffffffff));
-
     /* Perform serialization before starting operation */
     PERFORM_SERIALIZATION (regs);
 
@@ -5498,10 +5496,12 @@ static char *ordername[] = {
     /* Load the parameter from R1 (if R1 odd), or R1+1 (if even) */
     parm = (r1 & 1) ? regs->GR_L(r1) : regs->GR_L(r1+1);
 
+    PTT(PTT_CL_SIG,"SIGP",parm,cpad,order);
+
     /* Return condition code 3 if target CPU does not exist */
     if (cpad >= MAX_CPU)
     {
-        PTT(PTT_CL_ERR,"*SIGP",regs->GR_L(r1),regs->GR_L(r3),(U32)(effective_addr2 & 0xffffffff));
+        PTT(PTT_CL_ERR,"*SIGP",parm,cpad,order);
         regs->psw.cc = 3;
         return;
     }
@@ -5512,7 +5512,7 @@ static char *ordername[] = {
     if (order == SIGP_SENSE && !IS_CPU_ONLINE(cpad)
      && cpad >= sysblk.numcpu && cpad >= HI_CPU)
     {
-        PTT(PTT_CL_ERR,"*SIGP",regs->GR_L(r1),regs->GR_L(r3),(U32)(effective_addr2 & 0xffffffff));
+        PTT(PTT_CL_ERR,"*SIGP",parm,cpad,order);
         regs->psw.cc = 3;
         return;
     }
@@ -5597,9 +5597,9 @@ static char *ordername[] = {
        instruction executed by a CPU addressing itself.
     */
     if (1
-        &&  order != SIGP_SENSE     // if this isn't a sense,
-        &&  cpad != regs->cpuad     // and we're not addressing ourselves,
-        &&  (tregs) && tregs->opinterv         // and operator intervening condition...
+        &&  order != SIGP_SENSE         // if this isn't a sense,
+        &&  cpad != regs->cpuad         // and we're not addressing ourselves,
+        &&  (tregs) && tregs->opinterv  // and operator intervening condition...
     )
     {
         // ...then we cannot proceed
@@ -6090,7 +6090,7 @@ static char *ordername[] = {
 #endif /*defined(FEATURE_HERCULES_DIAGCALLS)*/
 
                     default:
-                        PTT(PTT_CL_ERR,"*SIGP",regs->GR_L(r1),regs->GR_L(r3),(U32)(effective_addr2 & 0xffffffff));
+                        PTT(PTT_CL_ERR,"*SIGP",parm,cpad,order);
                         status |= SIGP_STATUS_INVALID_PARAMETER;
                 } /* end switch(parm & 0xFF) */
             } /* end if(!status) */
@@ -6124,7 +6124,7 @@ static char *ordername[] = {
 #endif /*defined(FEATURE_SENSE_RUNNING_STATUS)*/
 
         default:
-            PTT(PTT_CL_ERR,"*SIGP",regs->GR_L(r1),regs->GR_L(r3),(U32)(effective_addr2 & 0xffffffff));
+            PTT(PTT_CL_ERR,"*SIGP",parm,cpad,order);
             status = SIGP_STATUS_INVALID_ORDER;
         } /* end switch(order) */
 
