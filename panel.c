@@ -2905,17 +2905,24 @@ FinishShutdown:
                            regs->arch_mode == ARCH_900        ? 'Z' : '.');
 #ifdef OPTION_MIPS_COUNTING
                     buf[len++] = ' ';
-                    if ( cons_cols >= 140 )
+                    if ( cons_cols >= 104 )
                     {
-                        sprintf (ibuf, "instcount=%s MIPS(%4.1d.%2.2d) SIOS(%7.1d)", 
+                        sprintf (ibuf, "InstCnt=%s MIPS(%4.1d.%2.2d) SIOS(%7.1d)", 
                             format_int(INSTCOUNT(regs)),
                             sysblk.mipsrate / 1000000, 
                            (sysblk.mipsrate % 1000000) / 10000,
                             sysblk.siosrate );
                     }
-                    else
+                    else if ( cons_cols >= 90 )
                     {
-                        sprintf (ibuf, "instcount=%s", format_int(INSTCOUNT(regs)));
+                        sprintf (ibuf, "InstCnt=%s MIPS(%4.1d.%2.2d)", 
+                            format_int(INSTCOUNT(regs)),
+                            sysblk.mipsrate / 1000000, 
+                           (sysblk.mipsrate % 1000000) / 10000 );
+                    }
+                    else 
+                    {
+                        sprintf (ibuf, "InstCnt=%s", format_int(INSTCOUNT(regs)));
                     }
                     if (len + (int)strlen(ibuf) < cons_cols)
                         len = cons_cols - strlen(ibuf);

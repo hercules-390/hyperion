@@ -1,3 +1,6 @@
+16 Mar 2010 Panel changed to add MIPS and SIOS to bottom status line. MIPS and SIOS
+            are displayed if window is width >= 104. MIPS is displayed if window 
+            width >= 90. If window width < 90 then neither is displayed.
 15 Mar 2010 Expanded w32util hosting information when using VS2008 and MS SDK 7.0
             Code will not expand if less than VS2008. If VS2008 is used, then
             MS SDK 7.0 must be installed. Updates to winNT.h are in MS SDK 7.0 for
