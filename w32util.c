@@ -1260,28 +1260,360 @@ DLL_EXPORT int expand_environ_vars( const char* inbuff, char* outbuff, DWORD out
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Initialize Hercules HOSTINFO structure
+// see: http://msdn.microsoft.com/en-us/library/ms724429(VS.85).aspx
+//   for more information
+
+typedef void (WINAPI *PGNSI)(LPSYSTEM_INFO);
+typedef BOOL (WINAPI *PGPI)(DWORD, DWORD, DWORD, DWORD, PDWORD);
 
 DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
 {
     CRITICAL_SECTION  cs;
-    OSVERSIONINFO     vi;
+    OSVERSIONINFOEX   vi;
+    BOOL              ext;
     SYSTEM_INFO       si;
-    char*             psz;
+    char             *psz, *prod_id, *prod_proc;
     DWORD             dw;
+    PGNSI             pgnsi;
+    PGPI              pgpi;
+
+    ZeroMemory(&si, sizeof(SYSTEM_INFO));
+    ZeroMemory(&vi, sizeof(OSVERSIONINFOEX));
 
     dw = sizeof(pHostInfo->nodename)-1;
     GetComputerName( pHostInfo->nodename, &dw );
     pHostInfo->nodename[sizeof(pHostInfo->nodename)-1] = 0;
 
-    vi.dwOSVersionInfoSize = sizeof(vi);
+    pgnsi = (PGNSI) GetProcAddress( GetModuleHandle(TEXT("kernal32.dll")),
+                                   "GetNativeSystemInfo");
+    if (NULL != pgnsi)
+        pgnsi( &si );
+    else GetSystemInfo( &si );
 
-    VERIFY( GetVersionEx( &vi ) );
+    vi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+    if (!(ext = GetVersionEx ((OSVERSIONINFO *) &vi)))
+    {
+        vi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+        if (!GetVersionEx ((OSVERSIONINFO *) &vi))
+        {
+            psz = "??";
+        }
+    }
 
     switch ( vi.dwPlatformId )
     {
-        case VER_PLATFORM_WIN32_WINDOWS: psz = "9X"; break;
-        case VER_PLATFORM_WIN32_NT:      psz = "NT"; break;
-        default:                         psz = "??"; break;
+        case VER_PLATFORM_WIN32_WINDOWS: 
+            psz = "9x"; 
+            break;
+        case VER_PLATFORM_WIN32_NT:
+#if _MSC_VER >= 1500
+// This list is current as of 2010-03-13 using V7.0 MS SDK
+            if ( vi.dwMajorVersion == 6 )
+            {
+                pgpi = (PGPI) GetProcAddress( 
+                                  GetModuleHandle( TEXT( "kernel32.dll" ) ),
+                                 "GetProductInfo" );
+                pgpi( vi.dwMajorVersion, vi.dwMinorVersion, 
+					  vi.wServicePackMajor, vi.wServicePackMinor, &dw );
+
+                if ( vi.dwMinorVersion == 0 )
+                { 
+                    if ( vi.wProductType == VER_NT_WORKSTATION )
+                        psz = "Vista";
+                    else
+                        psz = "Server 2008";
+                }
+                if ( vi.dwMinorVersion == 1 )
+                { 
+                    if ( vi.wProductType == VER_NT_WORKSTATION )
+                        psz = "7";
+                    else
+                        psz = "Server 2008 R2";
+                }
+
+                switch( dw )
+                {
+                    case PRODUCT_ULTIMATE:
+                    case PRODUCT_ULTIMATE_E:
+                    case PRODUCT_ULTIMATE_N:
+                        prod_id = "Ultimate Edition";
+                        break;
+                    case PRODUCT_PROFESSIONAL:
+                    case PRODUCT_PROFESSIONAL_E:
+                    case PRODUCT_PROFESSIONAL_N:
+                        prod_id = "Professional";
+                        break;
+                    case PRODUCT_HOME_PREMIUM:
+                    case PRODUCT_HOME_PREMIUM_E:
+                    case PRODUCT_HOME_PREMIUM_N:
+                        prod_id = "Home Premium Edition";
+                        break;
+                    case PRODUCT_HOME_BASIC:
+                    case PRODUCT_HOME_BASIC_E:
+                    case PRODUCT_HOME_BASIC_N:
+                        prod_id = "Home Basic Edition";
+                        break;
+                    case PRODUCT_HOME_SERVER:
+                        prod_id = "Home Server";
+                        break;
+                    case PRODUCT_HOME_PREMIUM_SERVER:
+                        prod_id = "Home Premium Server";
+                        break;
+                    case PRODUCT_HYPERV:
+                        prod_id = "Hyper-V";
+                        break;
+                    case PRODUCT_ENTERPRISE:
+                    case PRODUCT_ENTERPRISE_E:
+                    case PRODUCT_ENTERPRISE_N:
+                        prod_id = "Enterprise Edition";
+                        break;
+                    case PRODUCT_BUSINESS:
+                    case PRODUCT_BUSINESS_N:
+                        prod_id = "Business Edition";
+                        break;
+                    case PRODUCT_MEDIUMBUSINESS_SERVER_MANAGEMENT:
+                        prod_id = "Essential Business Server Management";
+                        break;
+                    case PRODUCT_MEDIUMBUSINESS_SERVER_MESSAGING:
+                        prod_id = "Essential Business Server Messaging";
+                        break;
+                    case PRODUCT_MEDIUMBUSINESS_SERVER_SECURITY:
+                        prod_id = "Essential Business Server Security";
+                        break;
+                    case PRODUCT_STARTER:
+                    case PRODUCT_STARTER_E:
+                    case PRODUCT_STARTER_N:
+                        prod_id = "Starter Edition";
+                        break;
+                    case PRODUCT_CLUSTER_SERVER:
+                        prod_id = "Cluster Server Edition";
+                        break;
+                    case PRODUCT_CLUSTER_SERVER_V:
+                        prod_id = "Cluster Server Edition w/o Hyper-V";
+                        break;
+                    case PRODUCT_DATACENTER_SERVER:
+                        prod_id = "Datacenter Edition";
+                        break;
+                    case PRODUCT_DATACENTER_SERVER_V:
+                        prod_id = "Datacenter Edition w/o Hyper-V";
+                        break;
+                    case PRODUCT_DATACENTER_SERVER_CORE:
+                        prod_id = "Datacenter Edition (core)";
+                        break;
+                    case PRODUCT_DATACENTER_SERVER_CORE_V:
+                        prod_id = "Datacenter Edition w/o Hyper-V (core)";
+                        break;
+                    case PRODUCT_ENTERPRISE_SERVER:
+                        prod_id = "Enterprise Edition";
+                        break;
+                    case PRODUCT_ENTERPRISE_SERVER_V:
+                        prod_id = "Enterprise Edition w/o Hyper-V";
+                        break;
+                    case PRODUCT_ENTERPRISE_SERVER_CORE:
+                        prod_id = "Enterprise Edition (core)";
+                        break;
+                    case PRODUCT_ENTERPRISE_SERVER_CORE_V:
+                        prod_id = "Enterprise Edition w/o Hyper-V (core)";
+                        break;
+                    case PRODUCT_ENTERPRISE_SERVER_IA64:
+                        prod_id = "Enterprise Edition for IA64 Systems";
+                        break;
+                    case PRODUCT_SERVER_FOR_SMALLBUSINESS:
+                        prod_id = "Essential Server Solutions";
+                        break;
+                    case PRODUCT_SERVER_FOR_SMALLBUSINESS_V:
+                        prod_id = "Essential Server Solutions w/o Hyper-V";
+                        break;
+                    case PRODUCT_SERVER_FOUNDATION:
+                        prod_id = "Server Foundation";
+                        break;
+                    case PRODUCT_SMALLBUSINESS_SERVER:
+                        prod_id = "Small Business Server";
+                        break;
+                    case PRODUCT_SMALLBUSINESS_SERVER_PREMIUM:
+                        prod_id = "Small Business Server Premium Edition";
+                        break;
+                    case PRODUCT_STANDARD_SERVER:
+                        prod_id = "Standard Edition";
+                        break;
+                    case PRODUCT_STANDARD_SERVER_V:
+                        prod_id = "Standard Edition w/o Hyper-V";
+                        break;
+                    case PRODUCT_STANDARD_SERVER_CORE:
+                        prod_id = "Standard Edition (core)";
+                        break;
+                    case PRODUCT_STANDARD_SERVER_CORE_V:
+                        prod_id = "Standard Edition w/o Hyper-V (core)";
+                        break;
+                    case PRODUCT_STORAGE_ENTERPRISE_SERVER:
+                        prod_id = "Storage Server Enterprise";
+                        break;
+                    case PRODUCT_STORAGE_EXPRESS_SERVER:
+                        prod_id = "Storage Server Express";
+                        break;
+                    case PRODUCT_STORAGE_STANDARD_SERVER:
+                        prod_id = "Storage Server Standard";
+                        break;
+                    case PRODUCT_STORAGE_WORKGROUP_SERVER:
+                        prod_id = "Storage Server Workgroup";
+                        break;
+                    case PRODUCT_STORAGE_ENTERPRISE_SERVER_CORE:
+                        prod_id = "Storage Server Enterprise (core)";
+                        break;
+                    case PRODUCT_STORAGE_EXPRESS_SERVER_CORE:
+                        prod_id = "Storage Server Express (core)";
+                        break;
+                    case PRODUCT_STORAGE_STANDARD_SERVER_CORE:
+                        prod_id = "Storage Server Standard (core)";
+                        break;
+                    case PRODUCT_STORAGE_WORKGROUP_SERVER_CORE:
+                        prod_id = "Storage Server Workgroup (core)";
+                        break;
+                    case PRODUCT_SB_SOLUTION_SERVER:
+                    case PRODUCT_SB_SOLUTION_SERVER_EM:
+                        prod_id = "Small Business Solution Server";
+                        break;
+                    case PRODUCT_SERVER_FOR_SB_SOLUTIONS:
+                    case PRODUCT_SERVER_FOR_SB_SOLUTIONS_EM:
+                        prod_id = "Server for Small Business Solutions";
+                        break;
+                    case PRODUCT_STANDARD_SERVER_SOLUTIONS:
+                        prod_id = "Standard Server Solutions";
+                        break;
+                    case PRODUCT_STANDARD_SERVER_SOLUTIONS_CORE:
+                        prod_id = "Standard Server Solutions (core)";
+                        break;
+                    case PRODUCT_SOLUTION_EMBEDDEDSERVER:
+                        prod_id = "Embedded Solution Server";
+                        break;
+                    case PRODUCT_SOLUTION_EMBEDDEDSERVER_CORE:
+                        prod_id = "Embedded Solution Server (core)";
+                        break;
+                    case PRODUCT_SMALLBUSINESS_SERVER_PREMIUM_CORE:
+                        prod_id = "Small Business Server Premium Edition (core)";
+                        break;
+                    case PRODUCT_ESSENTIALBUSINESS_SERVER_MGMT:
+                        prod_id = "EBS 2008 Management";
+                        break;
+                    case PRODUCT_ESSENTIALBUSINESS_SERVER_ADDL:
+                        prod_id = "EBS 2008 Additional";
+                        break;
+                    case PRODUCT_ESSENTIALBUSINESS_SERVER_MGMTSVC:
+                        prod_id = "EBS 2008 Management Services";
+                        break;
+                    case PRODUCT_ESSENTIALBUSINESS_SERVER_ADDLSVC:
+                        prod_id = "EBS 2008 Additional Services";
+                        break;
+                    case PRODUCT_EMBEDDED:
+                        prod_id = "Embedded Server";
+                        break;
+                    case PRODUCT_WEB_SERVER:
+                        prod_id = "Web Server Edition";
+                        break;
+                    case PRODUCT_WEB_SERVER_CORE:
+                        prod_id = "Web Server Edition (core)";
+                        break;
+                    case PRODUCT_UNDEFINED:
+                        prod_id = "Undefined Product";
+                        break;
+                    case PRODUCT_UNLICENSED:
+                        prod_id = "Unlicensed Product";
+                        break;
+                    default:
+                        prod_id = "unknown";
+                        break;
+                }
+            }
+
+            if ( vi.dwMajorVersion == 5 && vi.dwMinorVersion == 2 )
+            {
+                if ( GetSystemMetrics (SM_SERVERR2) )
+                    psz = "Server 2003 R2";
+                else if ( vi.wSuiteMask & VER_SUITE_STORAGE_SERVER )
+                    psz = "Storage Server 2003";
+                else if ( vi.wSuiteMask & VER_SUITE_WH_SERVER )
+                    psz = "Home Server";
+                else if ( vi.wProductType == VER_NT_WORKSTATION &&
+                          si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64 )
+                    psz = "XP Professional x64 Edition";
+                else
+                    psz = "Server 2003";
+
+                // Test for the server type.
+                if ( vi.wProductType != VER_NT_WORKSTATION )
+                {
+                    if ( si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_IA64 )
+                    {
+                        if ( vi.wSuiteMask & VER_SUITE_DATACENTER )
+                            prod_id = "Datacenter Edition for IA64 Systems";
+                        else if ( vi.wSuiteMask & VER_SUITE_ENTERPRISE )
+                            prod_id = "Enterprise Edition for IA64 Systems";
+                    }
+                    else if ( si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64 )
+                    {
+                        if ( vi.wSuiteMask & VER_SUITE_DATACENTER )
+                            prod_id = "Datacenter x64 Edition";
+                        else if ( vi.wSuiteMask & VER_SUITE_ENTERPRISE )
+                            prod_id = "Enterprise x64 Edition";
+                        else
+                            prod_id = "Standard x64 Edition";
+                    }
+                    else
+                    {
+                        if ( vi.wSuiteMask & VER_SUITE_COMPUTE_SERVER ) 
+                            prod_id = "Computer Cluster Edition";
+                        else if ( vi.wSuiteMask & VER_SUITE_DATACENTER )
+                            prod_id = "Datacenter Edition";
+                        else if ( vi.wSuiteMask & VER_SUITE_ENTERPRISE )
+                            prod_id = "Enterprise Edition";
+                        else if ( vi.wSuiteMask & VER_SUITE_BLADE )
+                            prod_id = "Web Edition";
+                        else 
+                            prod_id = "Standard Edition";
+                    }
+                }
+            }
+            if ( vi.dwMajorVersion == 5 && vi.dwMinorVersion == 1 )
+            {
+                if ( vi.wSuiteMask & VER_SUITE_PERSONAL )
+                    psz = "XP Home Edition";
+                else
+                    psz = "XP Professional";
+            }
+            if ( vi.dwMajorVersion == 5 && vi.dwMinorVersion == 0 )
+            {
+                if ( vi.wProductType == VER_NT_WORKSTATION )
+                    psz = "2000 Professional";
+                else
+                {
+                    psz = "2000";
+                    if ( vi.wSuiteMask & VER_SUITE_DATACENTER )
+                        prod_id = "Datacenter Server";
+                    else if ( vi.wSuiteMask & VER_SUITE_ENTERPRISE )
+                        prod_id = "Enterprise Server";
+                    else
+                        prod_id = "Server";
+                }
+            }
+            if ( vi.dwMajorVersion >= 6 )
+            {
+                if ( si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64 )
+                    prod_proc = ", 64-bit";
+                else if ( si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL )
+                    prod_proc = ", 32-bit";
+                else 
+                    prod_proc = "";
+            }
+            break;
+        default:
+            psz = "unknown";
+            prod_id = "";
+            break;
+#else // !(_MSC_VER >= 1500)
+        psz = "NT";
+        prod_id = "";
+        prod_proc = "";
+#endif // (_MSC_VER >= 1500) 
     }
 
 #if defined(__MINGW32_VERSION)
@@ -1292,23 +1624,24 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
 
     _snprintf(
         pHostInfo->sysname, sizeof(
-        pHostInfo->sysname)-1,        HWIN32_SYSNAME "_%s",  psz );
+        pHostInfo->sysname)-1,        HWIN32_SYSNAME );
         pHostInfo->sysname[ sizeof(
         pHostInfo->sysname)-1] = 0;
 
     _snprintf(
         pHostInfo->release, sizeof(
-        pHostInfo->release)-1,        "%d",  vi.dwMajorVersion );
+        pHostInfo->release)-1,       "%d.%d.%d",            vi.dwMajorVersion,
+                                                            vi.dwMinorVersion,
+                                                            vi.dwBuildNumber);
         pHostInfo->release[ sizeof(
         pHostInfo->release)-1] = 0;
 
     _snprintf(
         pHostInfo->version, sizeof(
-        pHostInfo->version)-1,        "%d",  vi.dwMinorVersion );
+        pHostInfo->version)-1,        " %s %s%s", psz, prod_id, prod_proc );
         pHostInfo->version[ sizeof(
         pHostInfo->version)-1] = 0;
 
-    GetSystemInfo( &si );
 
     switch ( si.wProcessorArchitecture )
     {
@@ -1334,8 +1667,11 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
 #define PROCESSOR_ARCHITECTURE_AMD64            9
 #define PROCESSOR_ARCHITECTURE_IA32_ON_WIN64    10
 
-        case PROCESSOR_ARCHITECTURE_IA64:          strlcpy( pHostInfo->machine, "IA64"          , sizeof(pHostInfo->machine) ); break;
         case PROCESSOR_ARCHITECTURE_AMD64:         strlcpy( pHostInfo->machine, "AMD64"         , sizeof(pHostInfo->machine) ); break;
+        case PROCESSOR_ARCHITECTURE_PPC:           strlcpy( pHostInfo->machine, "PowerPC"       , sizeof(pHostInfo->machine) ); break;
+        case PROCESSOR_ARCHITECTURE_SHX:           strlcpy( pHostInfo->machine, "SH"            , sizeof(pHostInfo->machine) ); break;
+        case PROCESSOR_ARCHITECTURE_ARM:           strlcpy( pHostInfo->machine, "ARM"           , sizeof(pHostInfo->machine) ); break;
+        case PROCESSOR_ARCHITECTURE_IA64:          strlcpy( pHostInfo->machine, "IA64"          , sizeof(pHostInfo->machine) ); break;
         case PROCESSOR_ARCHITECTURE_IA32_ON_WIN64: strlcpy( pHostInfo->machine, "IA32_ON_WIN64" , sizeof(pHostInfo->machine) ); break;
         case PROCESSOR_ARCHITECTURE_ALPHA:         strlcpy( pHostInfo->machine, "ALPHA"         , sizeof(pHostInfo->machine) ); break;
         case PROCESSOR_ARCHITECTURE_MIPS:          strlcpy( pHostInfo->machine, "MIPS"          , sizeof(pHostInfo->machine) ); break;
@@ -2950,5 +3286,6 @@ DLL_EXPORT void w32_set_thread_name( TID tid, char* name )
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+
 
 #endif // defined( _MSVC_ )

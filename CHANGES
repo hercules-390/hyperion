@@ -1,3 +1,7 @@
+15 Mar 2010 Expanded w32util hosting information when using VS2008 and MS SDK 7.0
+            Code will not expand if less than VS2008. If VS2008 is used, then
+            MS SDK 7.0 must be installed. Updates to winNT.h are in MS SDK 7.0 for
+            Windows 7 and Windows Server 2008 R2. 
 15 Mar 2010 Message cleanup, change CPUxxxx to CPxx where CP is the indicated 
             processor type. CP, CF, AP, IL and IP. "IE" is used to indicate SIE 
             keeping message similar. 
