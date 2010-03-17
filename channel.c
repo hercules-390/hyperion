@@ -146,9 +146,7 @@ static void display_ccw (DEVBLK *dev, BYTE ccw[], U32 addr)
 BYTE    area[64];                       /* Data display area         */
 
     format_iobuf_data (addr, area, dev);
-    logmsg (_("HHCCP048I %4.4X:CCW=%2.2X%2.2X%2.2X%2.2X "
-              "%2.2X%2.2X%2.2X%2.2X%s\n"),
-            dev->devnum,
+    WRITEMSG (HHCCP048I, dev->devnum,
             ccw[0], ccw[1], ccw[2], ccw[3],
             ccw[4], ccw[5], ccw[6], ccw[7], area);
 
@@ -159,9 +157,7 @@ BYTE    area[64];                       /* Data display area         */
 /*-------------------------------------------------------------------*/
 static void display_csw (DEVBLK *dev, BYTE csw[])
 {
-    logmsg (_("HHCCP049I %4.4X:Stat=%2.2X%2.2X Count=%2.2X%2.2X  "
-            "CCW=%2.2X%2.2X%2.2X\n"),
-            dev->devnum,
+    WRITEMSG (HHCCP049I, dev->devnum,
             csw[4], csw[5], csw[6], csw[7],
             csw[1], csw[2], csw[3]);
 
@@ -172,10 +168,7 @@ static void display_csw (DEVBLK *dev, BYTE csw[])
 /*-------------------------------------------------------------------*/
 static void display_scsw (DEVBLK *dev, SCSW scsw)
 {
-    logmsg (_("HHCCP050I %4.4X:SCSW=%2.2X%2.2X%2.2X%2.2X "
-            "Stat=%2.2X%2.2X Count=%2.2X%2.2X  "
-            "CCW=%2.2X%2.2X%2.2X%2.2X\n"),
-            dev->devnum,
+    WRITEMSG (HHCCP050I, dev->devnum,
             scsw.flag0, scsw.flag1, scsw.flag2, scsw.flag3,
             scsw.unitstat, scsw.chanstat,
             scsw.count[0], scsw.count[1],
@@ -291,7 +284,7 @@ IOINT *ioint=NULL;
     UNREFERENCED(ibyte);
 
     if (dev->ccwtrace || dev->ccwstep)
-        logmsg (_("HHCCP051I %4.4X: Test I/O\n"), dev->devnum);
+        WRITEMSG (HHCCP051I, dev->devnum);
 
     obtain_lock (&dev->lock);
 
@@ -351,7 +344,7 @@ IOINT *ioint=NULL;
                 memcpy (psa->csw, dev->csw, 8);
                 if (dev->ccwtrace)
                 {
-                    logmsg(_("HHCCP052I TIO modification executed CC=1\n"));
+                    WRITEMSG (HHCCP052I);
                     display_csw (dev, dev->csw);
                 }
             }
@@ -392,7 +385,7 @@ int      pending = 0;                   /* New interrupt pending     */
     UNREFERENCED(ibyte);
 
     if (dev->ccwtrace || dev->ccwstep)
-        logmsg (_("HHCCP053I %4.4X: Halt I/O\n"), dev->devnum);
+        WRITEMSG (HHCCP053I, dev->devnum);
 
     obtain_lock (&dev->lock);
 
@@ -446,7 +439,7 @@ int      pending = 0;                   /* New interrupt pending     */
             memcpy (psa->csw, dev->csw, 8);
             if (dev->ccwtrace)
             {
-                logmsg(_("HHCCP054I HIO modification executed CC=1\n"));
+                WRITEMSG (HHCCP054I);
                 display_csw (dev, dev->csw);
             }
         }
@@ -830,7 +823,7 @@ int pending = 0;
     UNREFERENCED(regs);
 
     if (dev->ccwtrace || dev->ccwstep)
-        logmsg (_("HHCCP055I %4.4X: Clear subchannel\n"), dev->devnum);
+        WRITEMSG (HHCCP055I, dev->devnum);
 
     obtain_lock (&dev->lock);
 
@@ -935,7 +928,7 @@ int pending = 0;
     UNREFERENCED(regs);
 
     if (dev->ccwtrace || dev->ccwstep)
-        logmsg (_("HHCCP056I %4.4X: Halt subchannel\n"), dev->devnum);
+        WRITEMSG (HHCCP056I, dev->devnum);
 
     obtain_lock (&dev->lock);
 
@@ -957,7 +950,7 @@ int pending = 0;
                     (SCSW3_SC_ALERT | SCSW3_SC_PRI | SCSW3_SC_SEC))))
     {
         if (dev->ccwtrace || dev->ccwstep)
-            logmsg (_("HHCCP057I %4.4X: Halt subchannel: cc=1\n"), dev->devnum);
+            WRITEMSG (HHCCP057I, dev->devnum, 1);
         release_lock (&dev->lock);
         return 1;
     }
@@ -967,7 +960,7 @@ int pending = 0;
     if (dev->scsw.flag2 & (SCSW2_AC_HALT | SCSW2_AC_CLEAR))
     {
         if (dev->ccwtrace || dev->ccwstep)
-            logmsg (_("HHCCP058I %4.4X: Halt subchannel: cc=2\n"), dev->devnum);
+            WRITEMSG (HHCCP057I, dev->devnum, 2);
         release_lock (&dev->lock);
         return 2;
     }
@@ -1062,7 +1055,7 @@ int pending = 0;
     }
 
     if (dev->ccwtrace || dev->ccwstep)
-        logmsg (_("HHCCP059I %4.4X: Halt subchannel: cc=0\n"), dev->devnum);
+        WRITEMSG (HHCCP057I, dev->devnum), 0;
 
     /* Return condition code zero */
     return 0;
@@ -1100,8 +1093,7 @@ int resume_subchan (REGS *regs, DEVBLK *dev)
     if (dev->scsw.flag3 & SCSW3_SC_PEND)
     {
         if (dev->ccwtrace || dev->ccwstep)
-            logmsg (_("HHCCP060I %4.4X: Resume subchannel: cc=1\n"),
-                       dev->devnum);
+            WRITEMSG (HHCCP060I, dev->devnum, 1);
         release_lock (&dev->lock);
         return 1;
     }
@@ -1114,8 +1106,7 @@ int resume_subchan (REGS *regs, DEVBLK *dev)
         || (dev->scsw.flag0 & SCSW0_S) == 0)
     {
         if (dev->ccwtrace || dev->ccwstep)
-            logmsg (_("HHCCP061I %4.4X: Resume subchannel: cc=2\n"),
-                      dev->devnum);
+            WRITEMSG (HHCCP060I, dev->devnum, 2);
         release_lock (&dev->lock);
         return 2;
     }
@@ -1137,7 +1128,7 @@ int resume_subchan (REGS *regs, DEVBLK *dev)
     release_lock (&dev->lock);
 
     if (dev->ccwtrace || dev->ccwstep)
-        logmsg (_("HHCCP062I %4.4X: Resume subchannel: cc=0\n"), dev->devnum);
+        WRITEMSG (HHCCP060I, dev->devnum, 0);
 
     /* Return condition code zero */
     return 0;
@@ -1905,11 +1896,7 @@ BYTE    midawflg;                       /* MIDAW flags            @MW*/
             if (dev->ccwtrace || dev->ccwstep)
             {
                 format_iobuf_data (midawdat, area, dev);
-                logmsg ( _("HHCCP078I "         
-                    "%4.4X:MIDAW=%2.2X %4.4"I16_FMT"X %16.16"I64_FMT"X\n"  
-                    "%4.4X:------------- %s\n"),    
-                    dev->devnum, midawflg, midawlen, (U64)midawdat, 
-                    dev->devnum, area);                  
+                WRITEMSG (HHCCP078I, dev->devnum, midawflg, midawlen, (U64)midawdat, area);                  
             }
 
             /* Decrement remaining count */
@@ -2004,16 +1991,9 @@ BYTE    midawflg;                       /* MIDAW flags            @MW*/
                 format_iobuf_data (idadata, area, dev);
                 if (idawfmt == 1)                              /*@IWZ*/
                 {                                              /*@IWZ*/
-                    logmsg ( _("HHCCP063I "                    /*@IWZ*/
-                        "%4.4X:IDAW=%8.8"I32_FMT"X Len=%3.3"I16_FMT"X%s\n"),  
-                        dev->devnum, (U32)idadata, idalen,     /*@IWZ*/
-                        area);                                 /*@IWZ*/
+                    WRITEMSG (HHCCP063I, dev->devnum, (U32)idadata, idalen, area); /*@IWZ*/
                 } else {                                       /*@IWZ*/
-                    logmsg ( _("HHCCP064I "                    /*@IWZ*/
-                        "%4.4X:IDAW=%16.16"I64_FMT"X Len=%4.4"I16_FMT"X\n"   
-                        "%4.4X:---------------------%s\n"),    /*@IWZ*/
-                        dev->devnum, (U64)idadata, idalen,
-                        dev->devnum, area);                    /*@IWZ*/
+                    WRITEMSG (HHCCP064I, dev->devnum, (U64)idadata, idalen, area); /*@IWZ*/
                 }
             }
 
@@ -2126,8 +2106,7 @@ DLL_EXPORT int ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat)
             release_lock (&dev->lock);
 
             if (dev->ccwtrace || dev->ccwstep)
-                logmsg (_("HHCCP065I DEV%4.4X: attention signalled\n"),
-                          dev->devnum);
+                WRITEMSG (HHCCP065I, dev->devnum);
 
             return 0;
         }
@@ -2138,7 +2117,7 @@ DLL_EXPORT int ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat)
     }
 
     if (dev->ccwtrace || dev->ccwstep)
-        logmsg (_("HHCCP066I DEV%4.4X: attention\n"), dev->devnum);
+        WRITEMSG (HHCCP066I, dev->devnum);
 
 #ifdef FEATURE_S370_CHANNEL
     /* Set CSW for attention interrupt */
@@ -2366,8 +2345,7 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
                         device_thread, NULL, "idle device thread");
             if (rc != 0 && sysblk.devtnbr == 0)
             {
-                logmsg (_("HHCCP067E %4.4X create_thread error: %s"),
-                        dev->devnum, strerror(errno));
+                WRITEMSG (HHCCP067E, dev->devnum, strerror(errno));
                 release_lock (&sysblk.ioqlock);
                 release_lock (&dev->lock);
                 return 2;
@@ -2389,8 +2367,7 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
         if ( create_thread (&dev->tid, DETACHED,
                     ARCH_DEP(execute_ccw_chain), dev, thread_name) )
         {
-            logmsg (_("HHCCP068E %4.4X create_thread error: %s"),
-                    dev->devnum, strerror(errno));
+            WRITEMSG (HHCCP067E, dev->devnum, strerror(errno));
             release_lock (&dev->lock);
             return 2;
         }
@@ -2582,8 +2559,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
         RELEASE_INTLOCK(devregs(dev));
 
         if (dev->ccwtrace || dev->ccwstep || tracethis)
-            logmsg (_("HHCCP069I Device %4.4X initial status interrupt\n"),
-                dev->devnum);
+            WRITEMSG (HHCCP069I, dev->devnum);
     }
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
@@ -2624,8 +2600,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             RELEASE_INTLOCK(devregs(dev));
 
             if (dev->ccwtrace || dev->ccwstep || tracethis)
-                logmsg (_("HHCCP070I Device %4.4X attention completed\n"),
-                        dev->devnum);
+                WRITEMSG (HHCCP070I, dev->devnum);
 
             return NULL;
         } /* end attention processing */
@@ -2695,8 +2670,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             RELEASE_INTLOCK(devregs(dev));
 
             if (dev->ccwtrace || dev->ccwstep || tracethis)
-                logmsg (_("HHCCP071I Device %4.4X clear completed\n"),
-                        dev->devnum);
+                WRITEMSG (HHCCP071I, dev->devnum);
 
             return NULL;
         } /* end perform clear subchannel */
@@ -2755,8 +2729,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             RELEASE_INTLOCK(devregs(dev));
 
             if (dev->ccwtrace || dev->ccwstep || tracethis)
-                logmsg (_("HHCCP072I Device %4.4X halt completed\n"),
-                        dev->devnum);
+                WRITEMSG (HHCCP072I, dev->devnum);
 
             return NULL;
         } /* end perform halt subchannel */
@@ -2936,8 +2909,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
                 dev->suspended = 1;
 
                 if (dev->ccwtrace || dev->ccwstep || tracethis)
-                    logmsg (_("HHCCP073I Device %4.4X suspended\n"),
-                            dev->devnum);
+                    WRITEMSG (HHCCP073I, dev->devnum);
 
 // FIXME: Not a very elegant way to fix the suspend/resume problem
                 dev->ccwaddr = ccwaddr;
@@ -2994,8 +2966,7 @@ resume_suspend:
                 dev->busy = 1;
 
                 if (dev->ccwtrace || dev->ccwstep || tracethis)
-                    logmsg (_("HHCCP074I Device %4.4X resumed\n"),
-                            dev->devnum);
+                    WRITEMSG (HHCCP074I, dev->devnum);
 
                 /* Reset the suspended status in the SCSW */
                 dev->scsw.flag3 &= ~SCSW3_AC_SUSP;
@@ -3208,17 +3179,12 @@ resume_suspend:
                 area[0] = '\0';
 
             /* Display status and residual byte count */
-            logmsg (_("HHCCP075I %4.4X:Stat=%2.2X%2.2X Count=%4.4X %s\n"),
-                    dev->devnum, unitstat, chanstat, residual, area);
+            WRITEMSG (HHCCP075I, dev->devnum, unitstat, chanstat, residual, area);
 
             /* Display sense bytes if unit check is indicated */
             if (unitstat & CSW_UC)
             {
-                logmsg (_("HHCCP076I %4.4X:Sense=%2.2X%2.2X%2.2X%2.2X "
-                        "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
-                        "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
-                        "%2.2X%2.2X%2.2X%2.2X\n"),
-                        dev->devnum, dev->sense[0], dev->sense[1],
+                WRITEMSG (HHCCP076I, dev->devnum, dev->sense[0], dev->sense[1],
                         dev->sense[2], dev->sense[3], dev->sense[4],
                         dev->sense[5], dev->sense[6], dev->sense[7],
                         dev->sense[8], dev->sense[9], dev->sense[10],
@@ -3229,9 +3195,7 @@ resume_suspend:
                         dev->sense[23]);
                 if (dev->sense[0] != 0 || dev->sense[1] != 0)
                 {
-                    logmsg (_("HHCCP077I %4.4X:Sense=%s%s%s%s%s%s%s%s"
-                            "%s%s%s%s%s%s%s%s\n"),
-                            dev->devnum,
+                    WRITEMSG (HHCCP077I, dev->devnum,
                             (dev->sense[0] & SENSE_CR) ? "CMDREJ " : "",
                             (dev->sense[0] & SENSE_IR) ? "INTREQ " : "",
                             (dev->sense[0] & SENSE_BOC) ? "BOC " : "",
