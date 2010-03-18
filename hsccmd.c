@@ -569,6 +569,121 @@ int version_cmd(int argc, char *argv[],char *cmdline)
     return 0;
 }
 
+/*-------------------------------------------------------------------*/
+/* fcb - display or load                                             */
+/*-------------------------------------------------------------------*/
+int fcb_cmd(int argc, char *argv[], char *cmdline)
+{
+    UNREFERENCED(cmdline);
+
+    /* process specified printer device */
+
+	U16      devnum;
+	U16      lcss;
+	DEVBLK*  dev;
+	char*    devclass;
+	int      rc;
+
+	int      i,j,chan;
+	char     buf[80];
+	char     wrk[8];
+
+    if (argc < 2)
+    {
+		logmsg( _("HHCPN021E Missing device address\n")) ;
+		return -1 ;
+    }
+
+	rc=parse_single_devnum(argv[1],&lcss,&devnum);
+	if (rc<0)
+	{
+		return -1;
+	}
+
+	if (!(dev = find_device_by_devnum (lcss,devnum)))
+	{
+		devnotfound_msg(lcss,devnum);
+		return -1;
+	}
+
+	(dev->hnd->query)(dev, &devclass, 0, NULL);
+
+	if (strcasecmp(devclass,"PRT"))
+	{
+		logmsg( _("HHCPNzzzE Device %d:%4.4X is not a printer device\n"),
+				  lcss, devnum );
+		return -1;
+	}
+
+	if ( argc == 2 ) 
+	{
+		buf[0]='\0';
+		for ( i = 0; i < 13; i++)
+		{
+			sprintf(wrk,"/%02d",dev->fcb[i]);
+			strcat(buf,wrk);
+		}
+
+		logmsg( _("HHCPNzzzI Device %d:%4.4X fcb %s/\n"),
+				  lcss, devnum, buf );
+		return 0;
+	}
+
+	if ( argc != 3 ) 
+		return -1; 
+
+	/* If not 1403 */
+	if ( dev->devtype != 0x1403 )
+	{
+		logmsg( _("HHCPNzzzE Device %d:%4.4X is not a 1403 device\n"),
+				  lcss, devnum );
+		return -1;
+	}
+
+	if ( !dev->stopprt )
+	{
+		logmsg( _("HHCPNzzzE Device %d:%4.4X not stopped \n"),
+				  lcss, devnum );
+		return -1;
+	}
+
+	if (strlen (argv[2]) != 26 ) 
+	{
+		logmsg( _("HHCPNzzzE Device %d:%4.4X invalid fcb image ==>%s<==\n"),
+				  lcss, devnum, argv[2] );
+        return -1;
+	}
+	for ( j = 0 ; j < 26 ; j++ )
+	{
+		if ( (argv[2][j] < '0') || (argv[2][j] > '9' ) )
+		{
+		logmsg( _("HHCPNzzzE Device %d:%4.4X invalid fcb image ==>%s<==\n"),
+				  lcss, devnum, argv[2] );
+			return -1;
+		}
+	}
+	/* build the fcb image */
+	chan = 0 ;
+	for ( j = 0 ; j < 26 ; j += 2  )
+	{
+		wrk[0] = argv[2][j] ;
+		wrk[1] = argv[2][j+1] ;
+		wrk[2] = '\0' ;
+		dev->fcb[chan] = atoi(wrk);
+		chan++;
+	}
+	buf[0]='\0';
+	for ( i = 0; i < 13; i++)
+	{
+		sprintf(wrk,"/%02d",dev->fcb[i]);
+		strcat(buf,wrk);
+	}
+	logmsg( _("HHCPNzzzI Device %d:%4.4X fcb %s/\n"),
+			  lcss, devnum, buf );
+	return 0;
+
+}
+ 
 
 /*-------------------------------------------------------------------*/
 /* start command - start CPU (or printer device if argument given)   */

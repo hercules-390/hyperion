@@ -74,6 +74,11 @@ COMMAND ( "cpu",       PANEL,        cpu_cmd,
     "to apply to. For example, entering 'cpu 1F' followed by \"gpr\" will\n"
     "display the general purpose registers for cpu 31 of your configuration.\n" )
 
+COMMAND ( "fcb",     PANEL,        fcb_cmd,
+  "display the current FCB (if only the printer is given)\n",
+   "Reset the fcb to the standard one \n" 
+   "Load a fcb image \n" )
+
 COMMAND ( "start",     PANEL,        start_cmd,
   "start CPU (or printer device if argument given)",
     "Entering the 'start' command by itself simply starts a stopped\n"

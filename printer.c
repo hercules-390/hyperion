@@ -1,11 +1,11 @@
-/* PRINTER.C    (c) Copyright Roger Bowler, 1999-2009                */
+/* PRINTER.C    (c) Copyright Roger Bowler, 1999-2010                */
 /*              ESA/390 Line Printer Device Handler                  */
 
 // $Id$
 
 /*-------------------------------------------------------------------*/
 /* This module contains device handling functions for emulated       */
-/* System/370 line printer devices.                                  */
+/* System/370 line printer devices with fcb support and more         */
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
@@ -42,27 +42,114 @@ static BYTE printer_immed_commands[256]=
  *0 1 2 3 4 5 6 7 8 9 A B C D E F
 */
 
-{ 0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,
-  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,
-  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,
-  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,
-  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,
-  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,
-  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,
-  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,
+{ 0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, 
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, 
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, 
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, 
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, 
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, 
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, 
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, 
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, 
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, 
   0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0};
 
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
-#define LINE_LENGTH     150
+//#define LINE_LENGTH		150
+#define BUFF_SIZE		1500
+#define BUFF_OVFL		150
+
+int line;
+int coun;
+int chan;
+int FCB_MASK[] = {66,1,7,13,19,25,31,37,43,61,49,55,61} ;
+
+#define WRITE_LINE() \
+do { \
+	/* Start a new record if not data-chained from previous CCW */ \
+	if ((chained & CCW_FLAGS_CD) == 0) \
+	{ \
+		dev->bufoff = 0; \
+		dev->bufres = BUFF_SIZE; \
+	} /* end if(!data-chained) */ \
+	/* Calculate number of bytes to write and set residual count */ \
+	num = (count < dev->bufres) ? count : dev->bufres; \
+	*residual = count - num; \
+	/* Copy data from channel buffer to print buffer */ \
+	for (i = 0; i < num; i++) \
+	{ \
+		c = guest_to_host(iobuf[i]); \
+		if (dev->fold) c = toupper(c); \
+		if (c == 0) c = SPACE; \
+		dev->buf[dev->bufoff] = c; \
+		dev->bufoff++; \
+		dev->bufres--; \
+	} /* end for(i) */ \
+	/* Perform end of record processing if not data-chaining */ \
+	if ((flags & CCW_FLAGS_CD) == 0) \
+	{ \
+		/* Truncate trailing blanks from print line */ \
+		for (i = dev->bufoff; i > 0; i--) \
+			if (dev->buf[i-1] != SPACE) break; \
+		/* Write print line */ \
+		write_buffer (dev, (char *)dev->buf, i, unitstat); \
+		if (*unitstat != 0) return; \
+		if ( dev->crlf ) \
+		{ \
+			write_buffer (dev, "\r", 1, unitstat); \
+			if (*unitstat != 0) return;	\
+		} \
+	} /* end if(!data-chaining) */ \
+	/* Return normal status */ \
+} while(0)
+
+// 	printf("At  chan ... MC %02x, Ch %02d, Curr %02d, Dest %02d\n", code,chan,dev->currline,dev->destline); 
+#define SKIP_TO_CHAN() \
+do { \
+	chan = ( code - 128 ) / 8 ; \
+	/* test for good channel */ \
+	if ( dev->fcb[chan] == 0 ) \
+	/* channel not found */ \
+	{ \
+		if ( dev->nofcbcheck ) \
+		{ \
+			if ( ( code & 0x02 ) != 0 ) \
+			{ \
+				write_buffer (dev, "\n", 1, unitstat); \
+				if (*unitstat != 0) return; \
+			} \
+		} \
+		else \
+		{ \
+			dev->sense[0] = (dev->devtype == 0x1403 ) ? SENSE_EC :SENSE_EC ; \
+        	*unitstat = CSW_CE | CSW_DE | CSW_UC; \
+			return; \
+		} \
+	} \
+	else \
+	{ \
+		dev->destline = dev->fcb[chan]; \
+		if ( ( chan == 1 ) || ( dev->destline < dev->currline ) ) \
+		{ \
+			write_buffer (dev, "\f", 1, unitstat); \
+			if (*unitstat != 0) return; \
+			dev->currline = 1 ; \
+		} \
+		for ( ; dev->currline <= dev->destline ; dev->currline++ ) \
+		{ \
+			write_buffer (dev, "\n", 1, unitstat); \
+			if (*unitstat != 0) return; \
+		} \
+	} \
+} while (0)
+ 
 
 static void* spthread (DEVBLK* dev);        /*  (forward reference)  */
 
@@ -74,7 +161,7 @@ static int onconnect_callback (DEVBLK* dev)
     TID tid;
     if (create_thread( &tid, DETACHED, spthread, dev, NULL ))
     {
-        logmsg( _( "HHCPR015E Create spthread failed for %4.4X: errno=%d: %s\n" ),
+        logmsg(_("HHCPR015E Create spthread failed for %4.4X: errno=%d: %s\n" ),
             dev->devnum, errno, strerror( errno ) );
         return 0;
     }
@@ -175,6 +262,212 @@ static void* spthread (DEVBLK* dev)
     return NULL;
 
 } /* end function spthread */
+
+/*-------------------------------------------------------------------*/
+/* Initialize the device handler                                     */
+/*-------------------------------------------------------------------*/
+static int printer_init_handler (DEVBLK *dev, int argc, char *argv[])
+{
+	int     i,j;                            /* Array subscript           */
+	int     chan ;
+	char    wrk[3];                         /* for atoi conversion       */ 
+
+	int     sockdev  = 0;                   /* 1 == is socket device     */
+
+    /* Forcibly disconnect anyone already currently connected */
+    if (dev->bs && !unbind_device_ex(dev,1))
+        return -1; // (error msg already issued)
+
+    /* The first argument is the file name */
+    if (argc == 0 || strlen(argv[0]) > sizeof(dev->filename)-1)
+    {
+        logmsg (_("HHCPR001E File name missing or invalid for printer %4.4X\n"),
+                 dev->devnum);
+        return -1;
+    }
+
+    /* Save the file name in the device block */
+    strncpy (dev->filename, argv[0], sizeof(dev->filename));
+
+    if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
+        dev->devtype = 0x3211;
+
+    /* Initialize device dependent fields */
+    dev->fd = -1;
+//	dev->printpos = 0;
+//	dev->printrem = LINE_LENGTH;
+    dev->diaggate = 0;
+    dev->fold = 0;
+    dev->crlf = 0;
+    dev->stopprt = 0;
+    dev->notrunc = 0;
+
+	/* initialize the new fields for FCB+ support */
+	dev->fcbsupp = 1;
+    dev->rawcc = 0;
+	dev->nofcbcheck = 0;
+//	dev->usenoopcc  = 0 ;
+
+    dev->ccpend = 0;
+    dev->prevline = 1;
+    dev->currline = 1;
+    dev->destline = 1;
+
+    for (i = 0; i < 13; i++) dev->fcb[i] = FCB_MASK[i];
+
+    dev->ispiped = (dev->filename[0] == '|');
+
+    /* Process the driver arguments */
+    for (i = 1; i < argc; i++)
+    {
+        if (strcasecmp(argv[i], "crlf") == 0)
+        {
+            dev->crlf = 1;
+            continue;
+        }
+
+        /* sockdev means the device file is actually
+           a connected socket instead of a disk file.
+           The file name is the socket_spec (host:port)
+           to listen for connections on.
+        */
+        if (!dev->ispiped && strcasecmp(argv[i], "sockdev") == 0)
+        {
+            sockdev = 1;
+            continue;
+        }
+
+        if (strcasecmp(argv[i], "noclear") == 0)
+        {
+            dev->notrunc = 1;
+            continue;
+        }
+
+        if (strcasecmp(argv[i], "rawcc") == 0)
+        {
+            dev->rawcc = 1;
+            continue;
+        }
+
+        if (strcasecmp(argv[i], "nofcbcheck") == 0)
+        {
+            dev->nofcbcheck = 1;
+            continue;
+        }
+
+        if (strcasecmp(argv[i], "fcbcheck") == 0)
+        {
+            dev->nofcbcheck = 0;
+            continue;
+        }
+
+        if ( memcmp ("fcb=", argv[i], 4) == 0)
+        {
+			if (strlen (argv[i]) != 30 ) 
+			{
+        		logmsg (_("HHCPR009E parameter %d is invalid: %s\n"),
+                i + 1, argv[i]);
+        		return -1;
+			}
+			for ( j = 4 ; j < 30 ; j++ )
+			{
+            	if ( (argv[i][j] < '0') || (argv[i][j] > '9' ) )
+	            {
+    	    		logmsg (_("HHCPR010E parameter %d is invalid: %s At %d \n"),
+        	        i + 1, argv[i],j);
+        			return -1;
+				}
+			}
+
+			/* build the fcb image */
+			chan = 0 ;
+			for ( j = 4 ; j < 30 ; j += 2  )
+			{
+				wrk[0] = argv[i][j] ;
+				wrk[1] = argv[i][j+1] ;
+				wrk[2] = '\0' ;
+				dev->fcb[chan] = atoi(wrk);
+				chan++;
+			}
+//			printf("FCB ");
+//			for ( chan = 0; chan < 13;  printf("/%02d",dev->FCB[chan++]) );
+//			printf("/\n");
+
+            continue;
+        }
+
+        logmsg (_("HHCPR002E Invalid argument for printer %4.4X: %s\n"),
+                dev->devnum, argv[i]);
+        return -1;
+    }
+
+    /* Check for incompatible options */
+    if (sockdev && dev->crlf)
+    {
+        logmsg (_("HHCPR019E Incompatible option specified for socket printer %4.4X: 'crlf'\n"),
+                dev->devnum);
+        return -1;
+    }
+
+    if (sockdev && dev->notrunc)
+    {
+        logmsg (_("HHCPR019E Incompatible option specified for socket printer %4.4X: 'noclear'\n"),
+                dev->devnum);
+        return -1;
+    }
+
+    /* If socket device, create a listening socket
+       to accept connections on.
+    */
+    if (sockdev && !bind_device_ex( dev,
+        dev->filename, onconnect_callback, dev ))
+    {
+        return -1;  // (error msg already issued)
+    }
+
+    /* Set length of print buffer */
+//	dev->bufsize = LINE_LENGTH + 8;
+	dev->bufsize = BUFF_SIZE + BUFF_OVFL;
+    dev->bufres = BUFF_SIZE;
+    dev->bufoff = 0;
+
+    /* Set number of sense bytes */
+    dev->numsense = 1;
+
+    /* Initialize the device identifier bytes */
+    dev->devid[0] = 0xFF;
+    dev->devid[1] = 0x28; /* Control unit type is 2821-1 */
+    dev->devid[2] = 0x21;
+    dev->devid[3] = 0x01;
+    dev->devid[4] = dev->devtype >> 8;
+    dev->devid[5] = dev->devtype & 0xFF;
+    dev->devid[6] = 0x01;
+    dev->numdevid = 7;
+
+    /* Activate I/O tracing */
+//  dev->ccwtrace = 1;
+
+    return 0;
+} /* end function printer_init_handler */
+
+/*-------------------------------------------------------------------*/
+/* Query the device definition                                       */
+/*-------------------------------------------------------------------*/
+static void printer_query_device (DEVBLK *dev, char **class,
+                int buflen, char *buffer)
+{
+    BEGIN_DEVICE_CLASS_QUERY( "PRT", dev, class, buflen, buffer );
+
+    snprintf (buffer, buflen, "*printer.c* %s%s%s%s%s%s%s",
+                 dev->filename,
+                (dev->bs         ? " sockdev"      : ""),
+                (dev->crlf       ? " crlf"         : ""),
+                (dev->notrunc    ? " noclear"      : ""),
+                (dev->rawcc      ? " rawcc"        : ""),
+                (dev->nofcbcheck ? " nofcbcheck"   : " fcbcheck"),
+                (dev->stopprt    ? " (stopped)"    : ""));
+
+} /* end function printer_query_device */
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to open the printer file or pipe                       */
@@ -380,137 +673,6 @@ int             rc;                     /* Return code               */
 } /* end function write_buffer */
 
 /*-------------------------------------------------------------------*/
-/* Initialize the device handler                                     */
-/*-------------------------------------------------------------------*/
-static int printer_init_handler (DEVBLK *dev, int argc, char *argv[])
-{
-int     i;                              /* Array subscript           */
-int     sockdev  = 0;                   /* 1 == is socket device     */
-
-    /* Forcibly disconnect anyone already currently connected */
-    if (dev->bs && !unbind_device_ex(dev,1))
-        return -1; // (error msg already issued)
-
-    /* The first argument is the file name */
-    if (argc == 0 || strlen(argv[0]) > sizeof(dev->filename)-1)
-    {
-        logmsg (_("HHCPR001E File name missing or invalid for printer %4.4X\n"),
-                 dev->devnum);
-        return -1;
-    }
-
-    /* Save the file name in the device block */
-    strncpy (dev->filename, argv[0], sizeof(dev->filename));
-
-    if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
-        dev->devtype = 0x1403;
-
-    /* Initialize device dependent fields */
-    dev->fd = -1;
-    dev->printpos = 0;
-    dev->printrem = LINE_LENGTH;
-    dev->diaggate = 0;
-    dev->fold = 0;
-    dev->crlf = 0;
-    dev->stopprt = 0;
-    dev->notrunc = 0;
-    dev->ispiped = (dev->filename[0] == '|');
-
-    /* Process the driver arguments */
-    for (i = 1; i < argc; i++)
-    {
-        if (strcasecmp(argv[i], "crlf") == 0)
-        {
-            dev->crlf = 1;
-            continue;
-        }
-
-        /* sockdev means the device file is actually
-           a connected socket instead of a disk file.
-           The file name is the socket_spec (host:port)
-           to listen for connections on.
-        */
-        if (!dev->ispiped && strcasecmp(argv[i], "sockdev") == 0)
-        {
-            sockdev = 1;
-            continue;
-        }
-
-        if (strcasecmp(argv[i], "noclear") == 0)
-        {
-            dev->notrunc = 1;
-            continue;
-        }
-
-        logmsg (_("HHCPR002E Invalid argument for printer %4.4X: %s\n"),
-                dev->devnum, argv[i]);
-        return -1;
-    }
-
-    /* Check for incompatible options */
-    if (sockdev && dev->crlf)
-    {
-        logmsg (_("HHCPR019E Incompatible option specified for socket printer %4.4X: 'crlf'\n"),
-                dev->devnum);
-        return -1;
-    }
-
-    if (sockdev && dev->notrunc)
-    {
-        logmsg (_("HHCPR019E Incompatible option specified for socket printer %4.4X: 'noclear'\n"),
-                dev->devnum);
-        return -1;
-    }
-
-    /* If socket device, create a listening socket
-       to accept connections on.
-    */
-    if (sockdev && !bind_device_ex( dev,
-        dev->filename, onconnect_callback, dev ))
-    {
-        return -1;  // (error msg already issued)
-    }
-
-    /* Set length of print buffer */
-    dev->bufsize = LINE_LENGTH + 8;
-
-    /* Set number of sense bytes */
-    dev->numsense = 1;
-
-    /* Initialize the device identifier bytes */
-    dev->devid[0] = 0xFF;
-    dev->devid[1] = 0x28; /* Control unit type is 2821-1 */
-    dev->devid[2] = 0x21;
-    dev->devid[3] = 0x01;
-    dev->devid[4] = dev->devtype >> 8;
-    dev->devid[5] = dev->devtype & 0xFF;
-    dev->devid[6] = 0x01;
-    dev->numdevid = 7;
-
-    /* Activate I/O tracing */
-//  dev->ccwtrace = 1;
-
-    return 0;
-} /* end function printer_init_handler */
-
-/*-------------------------------------------------------------------*/
-/* Query the device definition                                       */
-/*-------------------------------------------------------------------*/
-static void printer_query_device (DEVBLK *dev, char **class,
-                int buflen, char *buffer)
-{
-    BEGIN_DEVICE_CLASS_QUERY( "PRT", dev, class, buflen, buffer );
-
-    snprintf (buffer, buflen, "%s%s%s%s%s",
-                 dev->filename,
-                (dev->bs      ? " sockdev"   : ""),
-                (dev->crlf    ? " crlf"      : ""),
-                (dev->notrunc ? " noclear"   : ""),
-                (dev->stopprt ? " (stopped)" : ""));
-
-} /* end function printer_query_device */
-
-/*-------------------------------------------------------------------*/
 /* Close the device                                                  */
 /*-------------------------------------------------------------------*/
 static int printer_close_device ( DEVBLK *dev )
@@ -562,11 +724,13 @@ static void printer_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U16 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual)
 {
-int             rc = 0;                 /* Return code               */
-int             i;                      /* Loop counter              */
-int             num;                    /* Number of bytes to move   */
-char           *eor;                    /* -> end of record string   */
-BYTE            c;                      /* Print character           */
+	int             rc = 0;                 /* Return code               */
+	int             i;                      /* Loop counter              */
+	int             num;                    /* Number of bytes to move   */
+	char           *eor;                    /* -> end of record string   */
+	char           *nls = "\n\n\n" ;        /* -> new lines              */
+	BYTE            c;                      /* Print character           */
+	char            hex[3];                 /* for hex conversion        */ 
 
     /* Reset flags at start of CCW chain */
     if (chained == 0)
@@ -595,110 +759,195 @@ BYTE            c;                      /* Print character           */
     }
 
     /* Process depending on CCW opcode */
+//	printf("ctlchar(%02x) count(%d) \n",code,count) ;
     switch (code) {
+	case 0x03: /* No Operation 				     */
+		*unitstat = CSW_CE | CSW_DE;
+		break ;
 
-    case 0x01:
+	case 0x0B: /* Space 1 Line  Immediate        */
+	case 0x13: /* Space 2 Lines Immediate        */
+	case 0x1B: /* Space 3 Lines Immediate        */
+		if ( dev->rawcc ) 
+		{
+			sprintf(hex,"%02x",code);
+			write_buffer (dev, hex, 2, unitstat); 
+			if (*unitstat != 0) return;	
+			eor =  ( dev->crlf ) ? "\r\n" : "\n"; 
+	 		write_buffer (dev, eor, strlen(eor), unitstat);
+			if (*unitstat != 0) return;	
+			*unitstat = CSW_CE | CSW_DE; 
+			return;
+		}
+		dev->ccpend = 0;
+		coun = code / 8 ;
+		dev->currline += coun ; 
+		write_buffer (dev, nls, coun, unitstat); 
+	 	if (*unitstat != 0) return; 
+		*unitstat = CSW_CE | CSW_DE; 
+		return;
+
+	case 0x8B: /* Skip to Channel 1 Immediate    */
+	case 0x93: /* Skip to Channel 2 Immediate    */
+	case 0x9B: /* Skip to Channel 3 Immediate    */
+	case 0xA3: /* Skip to Channel 4 Immediate    */
+	case 0xAB: /* Skip to Channel 5 Immediate    */
+	case 0xB3: /* Skip to Channel 6 Immediate    */
+	case 0xBB: /* Skip to Channel 7 Immediate    */
+	case 0xC3: /* Skip to Channel 8 Immediate    */
+	case 0xCB: /* Skip to Channel 9 Immediate    */
+	case 0xD3: /* Skip to Channel 10 Immediate   */
+	case 0xDB: /* Skip to Channel 11 Immediate   */
+	case 0xE3: /* Skip to Channel 12 Immediate   */
+		if ( dev->rawcc ) 
+		{
+			sprintf(hex,"%02x",code);
+			write_buffer (dev, hex, 2, unitstat); 
+			if (*unitstat != 0) return;	
+			eor =  ( dev->crlf ) ? "\r\n" : "\n"; 
+    		write_buffer (dev, eor, strlen(eor), unitstat);
+			if (*unitstat != 0) return;	
+			*unitstat = CSW_CE | CSW_DE; 
+			return ;
+		}
+		if ( dev->ccpend )
+		{
+        	write_buffer (dev, "\n", 1, unitstat);
+			if (*unitstat != 0) return;	
+			dev->ccpend = 0 ;
+			dev->currline++ ; 
+		}	
+		SKIP_TO_CHAN() ;
+		*unitstat = CSW_CE | CSW_DE;
+		return;
+
+	case 0x01: /* Write Without Spacing 		  */ 
+	case 0x09: /* Write and Space 1 Line 	   	  */
+	case 0x11: /* Write and Space 2 Lines 		  */ 
+	case 0x19: /* Write and Space 3 Lines 		  */	
+		if ( dev->rawcc ) 
+		{
+			sprintf(hex,"%02x",code);
+			write_buffer (dev, hex, 2, unitstat); 
+			if (*unitstat != 0) return;	
+			WRITE_LINE() ;
+	 		write_buffer (dev, "\n", 1, unitstat);
+			if (*unitstat != 0) return;	
+			*unitstat = CSW_CE | CSW_DE; 
+			return ;
+		}
+
+		if ( ((chained & CCW_FLAGS_CD) == 0) && dev->ccpend ) 
+		{
+	     	write_buffer (dev, "\n", 1, unitstat);
+			if (*unitstat != 0) return;	
+			dev->ccpend = 0 ;
+			dev->currline++ ;
+		}
+		WRITE_LINE();
+		if ( code == 0x01 )
+		{ 
+			/* for a write no space set the cc pending indicator */
+			/* and return */
+			dev->ccpend = 1 ;
+			*unitstat = CSW_CE | CSW_DE; 
+			return ;
+		}
+		if ((flags & CCW_FLAGS_CD) == 0) 
+		{
+			coun = code / 8 ; 
+			dev->currline += coun ; 
+			write_buffer (dev, nls, coun, unitstat); 
+	 		if (*unitstat != 0) return; 
+		}
+		*unitstat = CSW_CE | CSW_DE; 
+		return;
+
+
+	case 0x89: /* Write and Skip to Channel 1	 */ 
+	case 0x91: /* Write and Skip to Channel 2 	 */ 
+	case 0x99: /* Write and Skip to Channel 3 	 */  
+	case 0xA1: /* Write and Skip to Channel 4 	 */ 
+	case 0xA9: /* Write and Skip to Channel 5 	 */  
+	case 0xB1: /* Write and Skip to Channel 6 	 */ 
+	case 0xB9: /* Write and Skip to Channel 7 	 */ 
+	case 0xC1: /* Write and Skip to Channel 8 	 */ 
+	case 0xC9: /* Write and Skip to Channel 9 	 */ 
+	case 0xD1: /* Write and Skip to Channel 10 	 */
+	case 0xD9: /* Write and Skip to Channel 11 	 */
+	case 0xE1: /* Write and Skip to Channel 12 	 */
+		if ( dev->rawcc ) 
+		{
+			sprintf(hex,"%02x",code);
+			write_buffer (dev, hex, 2, unitstat); 
+			if (*unitstat != 0) return;	
+			WRITE_LINE() ;
+			eor =  ( dev->crlf ) ? "\r\n" : "\n"; 
+ 			write_buffer (dev, eor, strlen(eor), unitstat);
+			if (*unitstat != 0) return;	
+			*unitstat = CSW_CE | CSW_DE; 
+			return ;
+		}
+		if ( ((chained & CCW_FLAGS_CD) == 0) && dev->ccpend ) 
+		{
+     		write_buffer (dev, "\n", 1, unitstat);
+			if (*unitstat != 0) return;	
+			dev->currline++ ;
+			dev->ccpend = 0 ;
+		}
+		WRITE_LINE();
+		if ((flags & CCW_FLAGS_CD) == 0) 
+		{
+     		write_buffer (dev, "\n", 1, unitstat);
+			if (*unitstat != 0) return;	
+			dev->currline++ ;
+			SKIP_TO_CHAN();
+		}
+		*unitstat = CSW_CE | CSW_DE; 
+		return;
+
+    case 0x63:
     /*---------------------------------------------------------------*/
-    /* WRITE WITHOUT SPACING                                         */
+    /* LOAD FORMS CONTROL BUFFER                                     */
     /*---------------------------------------------------------------*/
-        eor = "\r";
-        goto write;
-
-    case 0x09:
-    /*---------------------------------------------------------------*/
-    /* WRITE AND SPACE 1 LINE                                        */
-    /*---------------------------------------------------------------*/
-        eor = dev->crlf ? "\r\n" : "\n";
-        goto write;
-
-    case 0x11:
-    /*---------------------------------------------------------------*/
-    /* WRITE AND SPACE 2 LINES                                       */
-    /*---------------------------------------------------------------*/
-        eor = dev->crlf ? "\r\n\n" : "\n\n";
-        goto write;
-
-    case 0x19:
-    /*---------------------------------------------------------------*/
-    /* WRITE AND SPACE 3 LINES                                       */
-    /*---------------------------------------------------------------*/
-        eor = dev->crlf ? "\r\n\n\n" : "\n\n\n";
-        goto write;
-
-    case 0x89:
-    /*---------------------------------------------------------------*/
-    /* WRITE AND SKIP TO CHANNEL 1                                   */
-    /*---------------------------------------------------------------*/
-        eor = dev->crlf ? "\r\f" : "\f";
-        goto write;
-
-    case 0xC9:
-    /*---------------------------------------------------------------*/
-    /* WRITE AND SKIP TO CHANNEL 9                                   */
-    /*---------------------------------------------------------------*/
-        eor = dev->crlf ? "\r\n" : "\n";
-        goto write;
-
-    case 0xE1:
-    /*---------------------------------------------------------------*/
-    /* WRITE AND SKIP TO CHANNEL 12                                  */
-    /*---------------------------------------------------------------*/
-        eor = dev->crlf ? "\r\n" : "\n";
-        goto write;
-
-    write:
-        /* Start a new record if not data-chained from previous CCW */
-        if ((chained & CCW_FLAGS_CD) == 0)
-        {
-            dev->printpos = 0;
-            dev->printrem = LINE_LENGTH;
-
-        } /* end if(!data-chained) */
-
-        /* Calculate number of bytes to write and set residual count */
-        num = (count < dev->printrem) ? count : dev->printrem;
-        *residual = count - num;
-
-        /* Copy data from channel buffer to print buffer */
-        for (i = 0; i < num; i++)
-        {
-            c = guest_to_host(iobuf[i]);
-
-            if (dev->fold) c = toupper(c);
-            if (c == 0) c = SPACE;
-
-            dev->buf[dev->printpos] = c;
-            dev->printpos++;
-            dev->printrem--;
-        } /* end for(i) */
-
-        /* Perform end of record processing if not data-chaining */
-        if ((flags & CCW_FLAGS_CD) == 0)
-        {
-            /* Truncate trailing blanks from print line */
-            for (i = dev->printpos; i > 0; i--)
-                if (dev->buf[i-1] != SPACE) break;
-
-            /* Append carriage return and line feed(s) */
-            strcpy ((char *)(dev->buf + i), eor);
-            i += strlen(eor);
-
-            /* Write print line */
-            write_buffer (dev, (char *)dev->buf, i, unitstat);
-            if (*unitstat != 0) break;
-
-        } /* end if(!data-chaining) */
-
+		if ( dev->rawcc ) 
+		{
+			sprintf(hex,"%02x",code);
+			write_buffer (dev, hex, 2, unitstat); 
+			if (*unitstat != 0) return;	
+			for (i = 0; i < count; i++)
+			{ 
+				sprintf(hex,"%02x",iobuf[i]);
+				dev->buf[i*2] = hex[0]; 
+				dev->buf[i*2+1] = hex[1]; 
+			} /* end for(i) */ \
+			write_buffer (dev, (char *)dev->buf, i*2, unitstat); 
+			if (*unitstat != 0) return; 
+			eor =  ( dev->crlf ) ? "\r\n" : "\n"; 
+    		write_buffer (dev, eor, strlen(eor), unitstat);
+			if (*unitstat != 0) return;	
+		}
+		else
+		{
+			/* i index to the DATA */
+			for ( i = 0; i < 13; dev->fcb[i++] = 0 )  ;
+			line = 0;
+			for ( i = 1 ; i < count; i++ )
+			{
+				line++;
+				if ( iobuf[i] & 0x10 ) break ;
+				if ( iobuf[i] != 0x00 )
+				{
+					if ( iobuf[i] == 0x01 ) line = 1 ;		
+					dev->fcb[iobuf[i]] = line;
+				} 
+			}  
+		}
         /* Return normal status */
+        *residual = 0;
         *unitstat = CSW_CE | CSW_DE;
         break;
 
-    case 0x03:
-    /*---------------------------------------------------------------*/
-    /* CONTROL NO-OPERATION                                          */
-    /*---------------------------------------------------------------*/
-        *unitstat = CSW_CE | CSW_DE;
-        break;
 
     case 0x06:
     /*---------------------------------------------------------------*/
@@ -722,7 +971,7 @@ BYTE            c;                      /* Print character           */
     /*---------------------------------------------------------------*/
         /* Command reject if 1403, or if chained to another CCW
            except a no-operation at the start of the CCW chain */
-        if (dev->devtype == 1403 || ccwseq > 1
+        if (dev->devtype == 0x1403 || ccwseq > 1
             || (chained && prevcode != 0x03))
         {
             dev->sense[0] = SENSE_CR;
@@ -755,7 +1004,7 @@ BYTE            c;                      /* Print character           */
 
     case 0x12:
     /*---------------------------------------------------------------*/
-    /* DIAGNOSTIC READ FCB                                           */
+    /* DIAGNOSTIC READ fcb                                           */
     /*---------------------------------------------------------------*/
         /* Reject if 1403 or not preceded by DIAGNOSTIC GATE */
         if (dev->devtype == 0x1403 || dev->diaggate == 0)
@@ -766,48 +1015,6 @@ BYTE            c;                      /* Print character           */
         }
 
         /* Return normal status */
-        *unitstat = CSW_CE | CSW_DE;
-        break;
-
-    case 0x0B:
-    /*---------------------------------------------------------------*/
-    /* SPACE 1 LINE IMMEDIATE                                        */
-    /*---------------------------------------------------------------*/
-        eor = dev->crlf ? "\r\n" : "\n";
-        write_buffer (dev, eor, strlen(eor), unitstat);
-        if (*unitstat != 0) break;
-
-    /*
-        *residual = 0;
-    */
-        *unitstat = CSW_CE | CSW_DE;
-        break;
-
-    case 0x13:
-    /*---------------------------------------------------------------*/
-    /* SPACE 2 LINES IMMEDIATE                                       */
-    /*---------------------------------------------------------------*/
-        eor = dev->crlf ? "\r\n\n" : "\n\n";
-        write_buffer (dev, eor, strlen(eor), unitstat);
-        if (*unitstat != 0) break;
-
-    /*
-        *residual = 0;
-    */
-        *unitstat = CSW_CE | CSW_DE;
-        break;
-
-    case 0x1B:
-    /*---------------------------------------------------------------*/
-    /* SPACE 3 LINES IMMEDIATE                                       */
-    /*---------------------------------------------------------------*/
-        eor = dev->crlf ? "\r\n\n\n" : "\n\n\n";
-        write_buffer (dev, eor, strlen(eor), unitstat);
-        if (*unitstat != 0) break;
-
-    /*
-        *residual = 0;
-    */
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -844,57 +1051,6 @@ BYTE            c;                      /* Print character           */
     /*
         *residual = 0;
     */
-        *unitstat = CSW_CE | CSW_DE;
-        break;
-
-    case 0x8B:
-    /*---------------------------------------------------------------*/
-    /* SKIP TO CHANNEL 1 IMMEDIATE                                   */
-    /*---------------------------------------------------------------*/
-        eor = dev->crlf ? "\r\f" : "\f";
-        write_buffer (dev, eor, strlen(eor), unitstat);
-        if (*unitstat != 0) break;
-
-    /*
-        *residual = 0;
-    */
-        *unitstat = CSW_CE | CSW_DE;
-        break;
-
-    case 0xCB:
-    /*---------------------------------------------------------------*/
-    /* SKIP TO CHANNEL 9 IMMEDIATE                                   */
-    /*---------------------------------------------------------------*/
-        eor = dev->crlf ? "\r\n" : "\n";
-        write_buffer (dev, eor, strlen(eor), unitstat);
-        if (*unitstat != 0) break;
-
-    /*
-        *residual = 0;
-    */
-        *unitstat = CSW_CE | CSW_DE;
-        break;
-
-    case 0xE3: case 0xDB:
-    /*---------------------------------------------------------------*/
-    /* SKIP TO CHANNEL 12 IMMEDIATE (or 11)                          */
-    /*---------------------------------------------------------------*/
-        eor = dev->crlf ? "\r\n" : "\n";
-        write_buffer (dev, eor, strlen(eor), unitstat);
-        if (*unitstat != 0) break;
-
-    /*
-        *residual = 0;
-    */
-        *unitstat = CSW_CE | CSW_DE;
-        break;
-
-    case 0x63:
-    /*---------------------------------------------------------------*/
-    /* LOAD FORMS CONTROL BUFFER                                     */
-    /*---------------------------------------------------------------*/
-        /* Return normal status */
-        *residual = 0;
         *unitstat = CSW_CE | CSW_DE;
         break;
 

@@ -741,6 +741,7 @@ struct DEVBLK {                         /* Device configuration block*/
         int     bufsize;                /* Device data buffer size   */
         int     buflen;                 /* Device buffer length used */
         int     bufoff;                 /* Offset into data buffer   */
+        int     bufres;                 /* buffer residual length    */
         int     bufoffhi;               /* Highest offset allowed    */
         int     bufupdlo;               /* Lowest offset updated     */
         int     bufupdhi;               /* Highest offset updated    */
@@ -970,6 +971,18 @@ struct DEVBLK {                         /* Device configuration block*/
         u_int   ispiped:1;              /* 1=Piped device            */
         u_int   stopprt:1;              /* 1=stopped; 0=started      */
         u_int   notrunc:1;              /* 1=do not truncate at open */
+
+        u_int   fcbsupp:1;              /* fcb support flag          */
+        u_int   rawcc:1;                /* 1=just print cchr and data*/
+        u_int   nofcbcheck:1;           /* ignore FCB errors         */
+        u_int   ccpend:1;               /* cc process pending        */
+
+        int     fcb[13] ;               /* FCB loaded thru loadfcb   */
+        int     stdfcb[13] ;            /* FCB hardcoded RSFI        */
+
+        int     prevline;               /* previous line number      */
+        int     currline;               /* curr line number          */
+        int     destline;               /* destination  line number  */
 
         /*  Device dependent fields for tapedev                      */
 
