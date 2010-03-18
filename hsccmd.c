@@ -574,15 +574,15 @@ int version_cmd(int argc, char *argv[],char *cmdline)
 /*-------------------------------------------------------------------*/
 int fcb_cmd(int argc, char *argv[], char *cmdline)
 {
-	U16      devnum;
-	U16      lcss;
-	DEVBLK*  dev;
-	char*    devclass;
-	int      rc;
+    U16      devnum;
+    U16      lcss;
+    DEVBLK*  dev;
+    char*    devclass;
+    int      rc;
 
-	int      i,j,chan;
-	char     buf[80];
-	char     wrk[8];
+    int      i,j,chan;
+    char     buf[80];
+    char     wrk[8];
 
     UNREFERENCED(cmdline);
 
@@ -590,97 +590,97 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
 
     if (argc < 2)
     {
-		logmsg( _("HHCPN021E Missing device address\n")) ;
-		return -1 ;
+        logmsg( _("HHCPN021E Missing device address\n")) ;
+        return -1 ;
     }
 
-	rc=parse_single_devnum(argv[1],&lcss,&devnum);
-	if (rc<0)
-	{
-		return -1;
-	}
-
-	if (!(dev = find_device_by_devnum (lcss,devnum)))
-	{
-		devnotfound_msg(lcss,devnum);
-		return -1;
-	}
-
-	(dev->hnd->query)(dev, &devclass, 0, NULL);
-
-	if (strcasecmp(devclass,"PRT"))
-	{
-		logmsg( _("HHCPNzzzE Device %d:%4.4X is not a printer device\n"),
-				  lcss, devnum );
-		return -1;
-	}
-
-	if ( argc == 2 ) 
-	{
-		buf[0]='\0';
-		for ( i = 0; i < 13; i++)
-		{
-			sprintf(wrk,"/%02d",dev->fcb[i]);
-			strcat(buf,wrk);
-		}
-
-		logmsg( _("HHCPNzzzI Device %d:%4.4X fcb %s/\n"),
-				  lcss, devnum, buf );
-		return 0;
-	}
-
-	if ( argc != 3 ) 
-		return -1; 
-
-	/* If not 1403 */
-	if ( dev->devtype != 0x1403 )
-	{
-		logmsg( _("HHCPNzzzE Device %d:%4.4X is not a 1403 device\n"),
-				  lcss, devnum );
-		return -1;
-	}
-
-	if ( !dev->stopprt )
-	{
-		logmsg( _("HHCPNzzzE Device %d:%4.4X not stopped \n"),
-				  lcss, devnum );
-		return -1;
-	}
-
-	if (strlen (argv[2]) != 26 ) 
-	{
-		logmsg( _("HHCPNzzzE Device %d:%4.4X invalid fcb image ==>%s<==\n"),
-				  lcss, devnum, argv[2] );
+    rc=parse_single_devnum(argv[1],&lcss,&devnum);
+    if (rc<0)
+    {
         return -1;
-	}
-	for ( j = 0 ; j < 26 ; j++ )
-	{
-		if ( (argv[2][j] < '0') || (argv[2][j] > '9' ) )
-		{
-		logmsg( _("HHCPNzzzE Device %d:%4.4X invalid fcb image ==>%s<==\n"),
-				  lcss, devnum, argv[2] );
-			return -1;
-		}
-	}
-	/* build the fcb image */
-	chan = 0 ;
-	for ( j = 0 ; j < 26 ; j += 2  )
-	{
-		wrk[0] = argv[2][j] ;
-		wrk[1] = argv[2][j+1] ;
-		wrk[2] = '\0' ;
-		dev->fcb[chan] = atoi(wrk);
-		chan++;
-	}
-	buf[0]='\0';
-	for ( i = 0; i < 13; i++)
-	{
-		sprintf(wrk,"/%02d",dev->fcb[i]);
-		strcat(buf,wrk);
-	}
-	logmsg( _("HHCPNzzzI Device %d:%4.4X fcb %s/\n"),
-			  lcss, devnum, buf );
-	return 0;
+    }
+
+    if (!(dev = find_device_by_devnum (lcss,devnum)))
+    {
+        devnotfound_msg(lcss,devnum);
+        return -1;
+    }
+
+    (dev->hnd->query)(dev, &devclass, 0, NULL);
+
+    if (strcasecmp(devclass,"PRT"))
+    {
+        logmsg( _("HHCPNzzzE Device %d:%4.4X is not a printer device\n"),
+                  lcss, devnum );
+        return -1;
+    }
+
+    if ( argc == 2 ) 
+    {
+        buf[0]='\0';
+        for ( i = 0; i < 13; i++)
+        {
+            sprintf(wrk,"/%02d",dev->fcb[i]);
+            strcat(buf,wrk);
+        }
+
+        logmsg( _("HHCPNzzzI Device %d:%4.4X fcb %s/\n"),
+                  lcss, devnum, buf );
+        return 0;
+    }
+
+    if ( argc != 3 ) 
+        return -1; 
+
+    /* If not 1403 */
+    if ( dev->devtype != 0x1403 )
+    {
+        logmsg( _("HHCPNzzzE Device %d:%4.4X is not a 1403 device\n"),
+                  lcss, devnum );
+        return -1;
+    }
+
+    if ( !dev->stopprt )
+    {
+        logmsg( _("HHCPNzzzE Device %d:%4.4X not stopped \n"),
+                  lcss, devnum );
+        return -1;
+    }
+
+    if (strlen (argv[2]) != 26 ) 
+    {
+        logmsg( _("HHCPNzzzE Device %d:%4.4X invalid fcb image ==>%s<==\n"),
+                  lcss, devnum, argv[2] );
+        return -1;
+    }
+    for ( j = 0 ; j < 26 ; j++ )
+    {
+        if ( (argv[2][j] < '0') || (argv[2][j] > '9' ) )
+        {
+        logmsg( _("HHCPNzzzE Device %d:%4.4X invalid fcb image ==>%s<==\n"),
+                  lcss, devnum, argv[2] );
+            return -1;
+        }
+    }
+    /* build the fcb image */
+    chan = 0 ;
+    for ( j = 0 ; j < 26 ; j += 2  )
+    {
+        wrk[0] = argv[2][j] ;
+        wrk[1] = argv[2][j+1] ;
+        wrk[2] = '\0' ;
+        dev->fcb[chan] = atoi(wrk);
+        chan++;
+    }
+    buf[0]='\0';
+    for ( i = 0; i < 13; i++)
+    {
+        sprintf(wrk,"/%02d",dev->fcb[i]);
+        strcat(buf,wrk);
+    }
+    logmsg( _("HHCPNzzzI Device %d:%4.4X fcb %s/\n"),
+              lcss, devnum, buf );
+    return 0;
 
 }
  
@@ -2153,7 +2153,7 @@ char c;
         }
         else if(sysblk.httpport)
         {
-            logmsg(_("HHCxxnnnS HTTP server already active\n"));
+            logmsg(_("HHCCF040S HTTP server already active\n"));
             return -1;
         }
         else
@@ -2191,14 +2191,14 @@ char c;
             if ( create_thread (&sysblk.httptid, DETACHED,
                                 http_server, NULL, "http_server") )
             {
-                logmsg(_("HHCIN005S Cannot create http_server thread: %s\n"),
+                logmsg(_("HHCCF041S Cannot create http_server thread: %s\n"),
                         strerror(errno));
                 return -1;
             }
         }
     }
     else
-        logmsg(_("HHCxxnnnI HTTPPORT %d\n"),sysblk.httpport);
+        logmsg(_("HHCCF049I HTTPPORT %d\n"),sysblk.httpport);
     return 0;
 }
 
@@ -2225,7 +2225,7 @@ char c;
         sysblk.http_server_kludge_msecs = http_server_kludge_msecs;
     }
     else
-        logmsg(_("HHCxxnnnS HTTP_SERVER_CONNECT_KLUDGE value: %s\n" )
+        logmsg(_("HHCCF042S HTTP_SERVER_CONNECT_KLUDGE value: %s\n" )
                 ,sysblk.http_server_kludge_msecs);
     return 0;
 }
@@ -2341,7 +2341,7 @@ int pantitle_cmd(int argc, char *argv[], char *cmdline)
         sysblk.pantitle = strdup(argv[1]);
     }
     else
-        logmsg( _("HHCxxnnnI pantitle = %s\n"),sysblk.pantitle);
+        logmsg( _("HHCCF100I pantitle = %s\n"),sysblk.pantitle);
 
     return 0;
 }
@@ -2358,13 +2358,13 @@ int msghld_cmd(int argc, char *argv[], char *cmdline)
   {
     if(!strcasecmp(argv[1], "info"))
     {
-      logmsg("Current message held time is %d seconds.\n", sysblk.keep_timeout_secs);
+      logmsg("HHCCF101I Current message held time is %d seconds.\n", sysblk.keep_timeout_secs);
       return(0);
     }
     else if(!strcasecmp(argv[1], "clear"))
     {
       expire_kept_msgs(1);
-      logmsg("Held messages cleared.\n");
+      logmsg("HHCCF102I Held messages cleared.\n");
       return(0);
     }
     else
@@ -2374,7 +2374,7 @@ int msghld_cmd(int argc, char *argv[], char *cmdline)
       if(sscanf(argv[1], "%d", &new_timeout) && new_timeout >= 0)
       {
         sysblk.keep_timeout_secs = new_timeout;
-        logmsg("The message held time is set to %d seconds.\n", sysblk.keep_timeout_secs);
+        logmsg("HHCCF103I The message held time is set to %d seconds.\n", sysblk.keep_timeout_secs);
         return(0);
       }
     }
@@ -3371,13 +3371,13 @@ int lsid_cmd(int argc, char *argv[], char *cmdline)
             sysblk.legacysenseid = 0;
         else
         {
-            logmsg(_("HHCxxnnnE Legacysenseid invalid option: %s\n"),
+            logmsg(_("HHCCF110E Legacysenseid invalid option: %s\n"),
               argv[1]);
             return -1;
         }
     }
     else
-        logmsg(_("HHCxxnnnE Legacysenseid %sabled\n"),
+        logmsg(_("HHCCF111I Legacysenseid %sabled\n"),
           sysblk.legacysenseid?"En":"Dis");
 
     return 0;
@@ -3420,7 +3420,7 @@ int stsi_model_cmd(int argc, char *argv[], char *cmdline)
         set_model(argc, argv[1], argv[2], argv[3], argv[4]);
     else
     {
-        logmsg( _("HHCxxnnnE MODEL: no model code\n"));
+        logmsg( _("HHCCF113E MODEL: no model code\n"));
         return -1;
     }
 
@@ -3441,7 +3441,7 @@ int stsi_plant_cmd(int argc, char *argv[], char *cmdline)
         set_plant(argv[1]);
     else
     {
-        logmsg( _("HHCxxnnnE PLANT: no plant code\n"));
+        logmsg( _("HHCCF114E PLANT: no plant code\n"));
         return -1;
     }
 
@@ -3462,7 +3462,7 @@ int stsi_mfct_cmd(int argc, char *argv[], char *cmdline)
         set_manufacturer(argv[1]);
     else
     {
-        logmsg( _("HHCxxnnnE MANUFACTURER: no manufacturer code\n"));
+        logmsg( _("HHCCF115E MANUFACTURER: no manufacturer code\n"));
         return -1;
     }
 
