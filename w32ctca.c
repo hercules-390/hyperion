@@ -106,7 +106,7 @@ error:
 
     FreeLibrary( g_tt32_hmoddll );
     g_tt32_hmoddll = NULL;
-    logmsg( "** tt32_loaddll: One of the GetProcAddress calls failed\n" );
+    logmsg( "HHCWC120E ** tt32_loaddll: One of the GetProcAddress calls failed\n" );
     LeaveCriticalSection(&g_tt32_lock);
     return FALSE;
 }
@@ -116,7 +116,7 @@ error:
 
 void __cdecl tt32_output_debug_string( const char* debug_string )
 {
-    logmsg( "%s", debug_string );
+    logmsg( "HHCWC199D %s", debug_string );
 }
 
 void  enable_tt32_debug_tracing( int enable )
@@ -211,7 +211,7 @@ BOOL tt32_loaddll()
         {
             DWORD dwLastError = GetLastError();
             LeaveCriticalSection(&g_tt32_lock);
-            logmsg("** tt32_loaddll: LoadLibraryEx(\"%s\") failed; rc=%ld: %s\n",
+            logmsg("HHCWC121E ** tt32_loaddll: LoadLibraryEx(\"%s\") failed; rc=%ld: %s\n",
                 g_tt32_dllname,dwLastError,strerror(dwLastError));
             return FALSE;
         }
@@ -222,7 +222,7 @@ BOOL tt32_loaddll()
     if (!GetTT32ProcAddrs())
         return FALSE;
 
-    logmsg("%s version %s initiated\n",
+    logmsg("HHCWC100I %s version %s initiated\n",
         g_tt32_dllname,
         g_tt32_pfn_version_string());
 
@@ -342,7 +342,7 @@ int  display_tt32_stats( int fd )
 
         logmsg
         (
-            "\n%s Statistics:\n\n"
+            "\nHHCWC110I %s Statistics:\n\n"
 
             "Size of Kernel Hold Buffer:      %5luK\n"
             "Size of DLL I/O Buffer:          %5luK\n"
@@ -391,7 +391,7 @@ int  display_tt32_stats( int fd )
 
         logmsg
         (
-            "\n%s Statistics:\n\n"
+            "\nHHCWC111I %s Statistics:\n\n"
 
             "Size of Kernel Hold Buffer:      %5luK\n"
             "Size of DLL I/O Buffer:          %5luK\n"
