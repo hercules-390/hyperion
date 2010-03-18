@@ -574,10 +574,6 @@ int version_cmd(int argc, char *argv[],char *cmdline)
 /*-------------------------------------------------------------------*/
 int fcb_cmd(int argc, char *argv[], char *cmdline)
 {
-    UNREFERENCED(cmdline);
-
-    /* process specified printer device */
-
 	U16      devnum;
 	U16      lcss;
 	DEVBLK*  dev;
@@ -587,6 +583,10 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
 	int      i,j,chan;
 	char     buf[80];
 	char     wrk[8];
+
+    UNREFERENCED(cmdline);
+
+    /* process specified printer device */
 
     if (argc < 2)
     {
