@@ -1,3 +1,4 @@
+18 Mar 2010 Remove requirement to install SDK7. It will be used only if installed.
 18 Mar 2010 Windows changes. Add handlers for CTRL-C, CTRL-Break, CLOSE, SHUTDOWN
             and LOGOFF. CTRL-C does not do anything (yet), CTRL-Break simulates the
             External Interrupt Key being pressed, CLOSE, SHUTDOWN and LOGOFF all 

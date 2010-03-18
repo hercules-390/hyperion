@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //   w32util.c        Windows porting functions
 //////////////////////////////////////////////////////////////////////////////////////////
-// (c) Copyright "Fish" (David B. Trout), 2005-2009. Released under the Q Public License
+// (c) Copyright "Fish" (David B. Trout), 2005-2010. Released under the Q Public License
 // (http://www.hercules-390.org/herclic.html) as modifications to Hercules.
 //////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -13,47 +13,6 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 
 // $Id$
-//
-// $Log$
-// Revision 1.33  2008/11/23 22:27:43  rbowler
-// Fix win64 type conversion warnings in w32util.c
-//
-// Revision 1.32  2008/08/29 07:08:41  fish
-// Fix parsing bug/issue in "w32_parse_piped_process_stdxxx_data" function
-//
-// Revision 1.31  2007/11/30 14:54:34  jmaynard
-// Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
-//
-// Revision 1.30  2007/08/04 19:04:33  fish
-// gethostid
-//
-// Revision 1.29  2007/06/23 00:04:19  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.28  2007/01/11 19:54:34  fish
-// Addt'l keep-alive mods: create associated supporting config-file stmt and panel command where individual customer-preferred values can be specified and/or dynamically modified.
-//
-// Revision 1.27  2007/01/10 15:12:11  rbowler
-// Console keepalive for Unix
-//
-// Revision 1.26  2007/01/10 09:32:39  fish
-// Enable connection keep-alive to try and detect 3270 clients that have died (MSVC only right now; don't know how to do it on *nix)
-//
-// Revision 1.25  2007/01/03 22:02:31  fish
-// Minor correction to PR# build_msc/103 fix
-//
-// Revision 1.24  2006/12/30 18:48:11  fish
-// PR# build_msc/103: fix MSVC diag 8 'sh' capture
-//
-// Revision 1.23  2006/12/28 15:49:35  fish
-// Use _beginthreadex/_endthreadex instead of CreateThread/ExitThread in continuing effort to try and resolve our still existing long-standing 'errno' issue...
-//
-// Revision 1.22  2006/12/28 04:04:33  fish
-// (just a very minor update to some comments)
-//
-// Revision 1.21  2006/12/08 09:43:34  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 
@@ -1275,7 +1234,9 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
     char             *psz, *prod_id, *prod_proc;
     DWORD             dw;
     PGNSI             pgnsi;
+#if _MSC_VER >= 1500 && defined(PRODUCT_ULTIMATE_E)
     PGPI              pgpi;
+#endif /* VS9 && SDK7 */
 
     ZeroMemory(&si, sizeof(SYSTEM_INFO));
     ZeroMemory(&vi, sizeof(OSVERSIONINFOEX));
@@ -1306,7 +1267,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
             psz = "9x"; 
             break;
         case VER_PLATFORM_WIN32_NT:
-#if _MSC_VER >= 1500
+#if _MSC_VER >= 1500 && defined(PRODUCT_ULTIMATE_E)
 // This list is current as of 2010-03-13 using V7.0 MS SDK
             if ( vi.dwMajorVersion == 6 )
             {
@@ -1314,7 +1275,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
                                   GetModuleHandle( TEXT( "kernel32.dll" ) ),
                                  "GetProductInfo" );
                 pgpi( vi.dwMajorVersion, vi.dwMinorVersion, 
-					  vi.wServicePackMajor, vi.wServicePackMinor, &dw );
+                      vi.wServicePackMajor, vi.wServicePackMinor, &dw );
 
                 if ( vi.dwMinorVersion == 0 )
                 { 
@@ -1609,11 +1570,11 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
             psz = "unknown";
             prod_id = "";
             break;
-#else // !(_MSC_VER >= 1500)
+#else /* !(VS9 && SDK7) */
         psz = "NT";
         prod_id = "";
         prod_proc = "";
-#endif // (_MSC_VER >= 1500) 
+#endif /* VS9 && SDK7 */
     }
 
 #if defined(__MINGW32_VERSION)
