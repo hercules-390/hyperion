@@ -1724,10 +1724,10 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
             {
                 timed_wait_condition_relative_usecs
                 (
-                    &pLCSPORT->Event,      // ptr to condition to wait on
-                    &pLCSPORT->EventLock,  // ptr to controlling lock (must be held!)
-                    250*1000,           // max #of microseconds to wait
-                    NULL                // [OPTIONAL] ptr to tod value (may be NULL)
+                    &pLCSPORT->Event,       // ptr to condition to wait on
+                    &pLCSPORT->EventLock,   // ptr to controlling lock (must be held!)
+                    250*1000,               // max #of microseconds to wait
+                    NULL                    // [OPTIONAL] ptr to tod value (may be NULL)
                 );
             }
         }
