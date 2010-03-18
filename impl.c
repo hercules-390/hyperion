@@ -82,7 +82,7 @@ DLL_EXPORT void registerLogCallback(LOGCALLBACK lcb)
 /*-------------------------------------------------------------------*/
 static void sigint_handler (int signo)
 {
-//  logmsg ("config: sigint handler entered for thread %lu\n",/*debug*/
+//  logmsg ("impl.c: sigint handler entered for thread %lu\n",/*debug*/
 //          thread_id());                                     /*debug*/
 
     UNREFERENCED(signo);
@@ -114,7 +114,7 @@ static void sigint_handler (int signo)
 /*-------------------------------------------------------------------*/
 static void sigterm_handler (int signo)
 {
-//  logmsg ("config: sigterm handler entered for thread %lu\n",/*debug*/
+//  logmsg ("impl.c: sigterm handler entered for thread %lu\n",/*debug*/
 //          thread_id());                                      /*debug*/
 
     UNREFERENCED(signo);
@@ -130,6 +130,82 @@ static void sigterm_handler (int signo)
     return;
 } /* end function sigterm_handler */
 
+#if defined( _MSVC_ )
+
+/*-------------------------------------------------------------------*/
+/* Signal handler for Windows signals                                */
+/*-------------------------------------------------------------------*/
+BOOL WINAPI console_ctrl_handler (DWORD signo)
+{
+    int i;
+
+    SetConsoleCtrlHandler(console_ctrl_handler, FALSE);   // turn handler off while processing
+
+    switch ( signo )
+    {
+        case CTRL_BREAK_EVENT:
+            WRITEMSG (HHCIN050I);
+
+            OBTAIN_INTLOCK(NULL);
+
+            ON_IC_INTKEY;
+
+            /* Signal waiting CPUs that an interrupt is pending */
+            WAKEUP_CPUS_MASK (sysblk.waiting_mask);
+
+            RELEASE_INTLOCK(NULL);
+
+            SetConsoleCtrlHandler(console_ctrl_handler, TRUE);  // reset handler
+            return TRUE;
+            break;
+        case CTRL_C_EVENT:
+            WRITEMSG(HHCIN022I);
+            SetConsoleCtrlHandler(console_ctrl_handler, TRUE);  // reset handler
+            return TRUE;
+            break;
+        case CTRL_CLOSE_EVENT:
+        case CTRL_SHUTDOWN_EVENT:
+        case CTRL_LOGOFF_EVENT:
+            if ( !sysblk.shutdown )  // (system shutdown not initiated)
+            {
+                WRITEMSG(HHCIN021I);
+                sysblk.shutimmed = TRUE;
+                do_shutdown();
+
+//                logmsg("%s(%d): return from shutdown\n", __FILE__, __LINE__ ); /* debug */
+
+                for ( i = 0; i < 120; i++ )
+                {
+                    if ( sysblk.shutdown && sysblk.shutfini )
+                    {
+//                        logmsg("%s(%d): %d shutdown completed\n",  /* debug */
+//                                __FILE__, __LINE__, i );           /* debug */
+                        sleep(1);
+                        break;
+                    }
+                    else 
+                    {
+//                        logmsg("%s(%d): %d waiting for shutdown to complete\n",   /* debug */
+//                                __FILE__, __LINE__, i );                          /* debug */
+                        sleep(1);
+                    }
+                }
+
+                socket_deinit();
+            }
+            else
+            {
+                WRITEMSG(HHCIN023W);
+            }
+            usleep(10000);
+            return FALSE;           
+            break;
+        default:
+            return FALSE;
+    }
+
+} /* end function console_ctrl_handler */
+#endif
 
 #if !defined(NO_SIGABEND_HANDLER)
 static void *watchdog_thread(void *arg)
@@ -256,7 +332,8 @@ int     i;                              /* (work)                    */
 #if defined(OPTION_HAO)
     /* Initialize the Hercules Automatic Operator */
 
-    hao_initialize();
+    if ( !hao_initialize() )
+        WRITEMSG(HHCIN004S, strerror(errno));
 #endif /* defined(OPTION_HAO) */
 
     /* Run the script processor for this file */
@@ -264,8 +341,7 @@ int     i;                              /* (work)                    */
     if (process_script_file(rcname,1) != 0)
         if (ENOENT == errno)
             if (!is_default_rc)
-                logmsg(_("HHCPN995E .RC file \"%s\" not found.\n"),
-                    rcname);
+                WRITEMSG(HHCPN995E, rcname);
         // (else error message already issued)
 
     return NULL;
@@ -382,7 +458,7 @@ TID     logcbtid;                       /* RC file thread identifier */
         {
             usleep(10000); /* (give logger thread time to issue
                                preceding HHCHD007E message) */
-            logmsg(_("HHCIN008S DYNGUI.DLL load failed; Hercules terminated.\n"));
+            WRITEMSG(HHCIN008S);
             delayed_exit(1);
         }
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
@@ -451,26 +527,32 @@ TID     logcbtid;                       /* RC file thread identifier */
     /* Register the SIGINT handler */
     if ( signal (SIGINT, sigint_handler) == SIG_ERR )
     {
-        logmsg(_("HHCIN001S Cannot register SIGINT handler: %s\n"),
-                strerror(errno));
+        WRITEMSG(HHCIN001S, strerror(errno));
         delayed_exit(1);
     }
 
     /* Register the SIGTERM handler */
     if ( signal (SIGTERM, sigterm_handler) == SIG_ERR )
     {
-        logmsg(_("HHCIN009S Cannot register SIGTERM handler: %s\n"),
-                strerror(errno));
+        WRITEMSG(HHCIN009S, strerror(errno));
         delayed_exit(1);
     }
+
+#if defined( _MSVC_ )
+    /* Register the Window console ctrl handlers */
+    if (SetConsoleCtrlHandler(console_ctrl_handler, TRUE) == FALSE)
+    {
+        WRITEMSG(HHCIN010S, strerror(errno));
+        delayed_exit(1);
+    }
+#endif
 
 #if defined(HAVE_DECL_SIGPIPE) && HAVE_DECL_SIGPIPE
     /* Ignore the SIGPIPE signal, otherwise Hercules may terminate with
        Broken Pipe error if the printer driver writes to a closed pipe */
     if ( signal (SIGPIPE, SIG_IGN) == SIG_ERR )
     {
-        logmsg(_("HHCIN002E Cannot suppress SIGPIPE signal: %s\n"),
-                strerror(errno));
+        WRITEMSG(HHCIN002E, strerror(errno));
     }
 #endif
 
@@ -507,9 +589,7 @@ TID     logcbtid;                       /* RC file thread identifier */
          || sigaction(SIGUSR1, &sa, NULL)
          || sigaction(SIGUSR2, &sa, NULL) )
         {
-            logmsg(_("HHCIN003S Cannot register SIGILL/FPE/SEGV/BUS/USR "
-                    "handler: %s\n"),
-                    strerror(errno));
+            WRITEMSG(HHCIN003S, strerror(errno));
             delayed_exit(1);
         }
     }
@@ -532,8 +612,7 @@ TID     logcbtid;                       /* RC file thread identifier */
     if ( create_thread (&sysblk.wdtid, DETACHED,
                         watchdog_thread, NULL, "watchdog_thread") )
     {
-        logmsg(_("HHCIN004S Cannot create watchdog thread: %s\n"),
-                strerror(errno));
+        WRITEMSG(HHCIN005S, strerror(errno));
         delayed_exit(1);
     }
 #endif /*!defined(NO_SIGABEND_HANDLER)*/
@@ -544,8 +623,7 @@ TID     logcbtid;                       /* RC file thread identifier */
         if ( create_thread (&sysblk.shrdtid, DETACHED,
                             shared_server, NULL, "shared_server") )
         {
-            logmsg(_("HHCIN006S Cannot create shared_server thread: %s\n"),
-                    strerror(errno));
+            WRITEMSG(HHCIN006S, strerror(errno));
             delayed_exit(1);
         }
 
@@ -560,8 +638,7 @@ TID     logcbtid;                       /* RC file thread identifier */
                            *dev->hnd->init, dev, "device connecting thread")
                    )
                 {
-                    logmsg(_("HHCIN007S Cannot create %4.4X connection thread: %s\n"),
-                            dev->devnum, strerror(errno));
+                    WRITEMSG(HHCIN007S, dev->devnum, strerror(errno));
                     delayed_exit(1);
                 }
     }
@@ -616,12 +693,13 @@ TID     logcbtid;                       /* RC file thread identifier */
     FishHangAtExit();
 #endif
 #ifdef _MSVC_
+    SetConsoleCtrlHandler(console_ctrl_handler, FALSE);
     socket_deinit();
 #endif
 #ifdef DEBUG
     fprintf(stdout, _("IMPL EXIT\n"));
 #endif
-    fprintf(stdout, _("HHCIN099I Hercules terminated\n"));
+    fprintf(stdout, _("HHCIN099I "HHCIN099I"\n"));
     fflush(stdout);
     usleep(10000);
     return 0;
@@ -633,7 +711,7 @@ TID     logcbtid;                       /* RC file thread identifier */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void system_cleanup (void)
 {
-//  logmsg("HHCIN950I Begin system cleanup\n");
+//  WRITEMSG(HHCIN950I);
     /*
         Currently only called by hdlmain,c's HDL_FINAL_SECTION
         after the main 'hercules' module has been unloaded, but
@@ -643,5 +721,5 @@ DLL_EXPORT void system_cleanup (void)
         function currently doesn't do anything yet. Once it DOES
         something, they should be uncommented.
     */
-//  logmsg("HHCIN959I System cleanup complete\n");
+//  WRITEMSG(HHCIN959I);
 }

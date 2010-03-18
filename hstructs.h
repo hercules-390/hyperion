@@ -526,6 +526,9 @@ struct SYSBLK {
                 inststep:1,             /* 1 = Instruction step      */
                 shutdown:1,             /* 1 = shutdown requested    */
                 shutfini:1,             /* 1 = shutdown complete     */
+#if defined( _MSVC_ )
+                shutimmed:1,            /* 1 = shutdown req immed    */
+#endif // defined( _MSVC_ )
                 main_clear:1,           /* 1 = mainstor is cleared   */
                 xpnd_clear:1,           /* 1 = xpndstor is cleared   */
                 showregsfirst:1,        /* 1 = show regs before inst */

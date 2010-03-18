@@ -1,3 +1,10 @@
+18 Mar 2010 Windows changes. Add handlers for CTRL-C, CTRL-Break, CLOSE, SHUTDOWN
+            and LOGOFF. CTRL-C does not do anything (yet), CTRL-Break simulates the
+            External Interrupt Key being pressed, CLOSE, SHUTDOWN and LOGOFF all 
+            initate an immediate shutdown of hercules in order to close all files
+            correctly. An orderly SHUTDOWN is not possible for the GUEST OS because
+            Windows allows just 5 seconds to complete any cleanup (when using the
+            cmd terminal interface). 
 16 Mar 2010 Panel changed to add MIPS and SIOS to bottom status line. MIPS and SIOS
             are displayed if window is width >= 104. MIPS is displayed if window 
             width >= 90. If window width < 90 then neither is displayed.

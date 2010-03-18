@@ -260,14 +260,23 @@ static void do_shutdown_wait()
 void do_shutdown()
 {
 TID tid;
-    if(is_wait_sigq_pending())
-        cancel_wait_sigq();
+#if defined(_MSVC_)
+    if ( sysblk.shutimmed ) 
+        do_shutdown_now();                   
     else
-        if(can_signal_quiesce() && !signal_quiesce(0,0))
-            create_thread(&tid, DETACHED, do_shutdown_wait,
-                          NULL, "do_shutdown_wait");
+    {
+#endif // defined(_MSVC_)
+        if(is_wait_sigq_pending())
+            cancel_wait_sigq();
         else
-            do_shutdown_now();
+            if(can_signal_quiesce() && !signal_quiesce(0,0))
+                create_thread(&tid, DETACHED, do_shutdown_wait,
+                              NULL, "do_shutdown_wait");
+            else
+                do_shutdown_now();
+#if defined(_MSVC_)
+    }
+#endif // defined(_MSVC_)
 }
 /*-------------------------------------------------------------------*/
 /* The following 2 routines display an array of 32/64 registers      */
@@ -484,8 +493,7 @@ void display_fregs (REGS *regs)
 char    cpustr[6] = {0};               /* "CPnn " or ""         */
 
     if(sysblk.cpus>1)
-        sprintf(cpustr, "%s%02X: ", PTYPSTR(sysblk.ptyp[regs->cpuad]), 
-                                    regs->cpuad);
+        sprintf(cpustr, "%s%02X: ", PTYPSTR(sysblk.ptyp[regs->cpuad]), regs->cpuad);
 
     if(regs->CR(0) & CR0_AFP)
         logmsg
@@ -1152,8 +1160,7 @@ REGS   *regs;                           /* Copied regs               */
 
     if ( sysblk.cpus > 1 )
     {
-        n = sprintf ( buf, "%s%02X:  ", 
-                      PTYPSTR(sysblk.ptyp[regs->cpuad]), regs->cpuad );
+        n = sprintf ( buf, "%s%02X:  ", PTYPSTR(sysblk.ptyp[regs->cpuad]), regs->cpuad );
     }
     else
     {
@@ -1304,8 +1311,7 @@ REGS   *regs;                           /* Copied regs               */
                                                   ACCTYPE_READ));
         if ( sysblk.cpus > 1 )
         {
-            logmsg ( "%s%02X:  ", PTYPSTR(sysblk.ptyp[regs->cpuad]), 
-                                  regs->cpuad );
+            logmsg ( "%s%02X:  ", PTYPSTR(sysblk.ptyp[regs->cpuad]), regs->cpuad );
         }
         logmsg ("%s\n", buf);
     }
@@ -1327,8 +1333,7 @@ REGS   *regs;                           /* Copied regs               */
 
         if ( sysblk.cpus > 1 )
         {
-            logmsg ( "%s%02X:  ", PTYPSTR(sysblk.ptyp[regs->cpuad]), 
-                                  regs->cpuad );
+            logmsg ( "%s%02X:  ", PTYPSTR(sysblk.ptyp[regs->cpuad]), regs->cpuad );
         }
         logmsg ("%s\n", buf);
     }
@@ -1489,7 +1494,7 @@ int herc_system (char* command)
 
   #define  SHELL_CMD_SHIM_PGM   "conspawn "
 
-    int rc = strlen(SHELL_CMD_SHIM_PGM) + strlen(command) + 1;
+    int rc = (int)(strlen(SHELL_CMD_SHIM_PGM) + strlen(command) + 1);
     char* pszNewCommandLine = malloc( rc );
     strlcpy( pszNewCommandLine, SHELL_CMD_SHIM_PGM, rc );
     strlcat( pszNewCommandLine, command,            rc );

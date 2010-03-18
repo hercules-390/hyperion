@@ -311,7 +311,6 @@
 #define HHCRY002I "  Active: %s"
 
 /* hao.c */
-#define HHCIN004S "Cannot create HAO thread: (%s)"
 #define HHCAO001I "Thread started tid(" TIDPAT "), pid(%d), prio(%d), name(%s)"
 #define HHCAO002I "Thread ended tid(" TIDPAT "), pid(%d), prio(%d), name(%s)"
 #define HHCAO003I "Firing command: (%s)"
@@ -362,6 +361,7 @@
 #define HHCHD900I "Begin shutdown sequence"
 #define HHCHD901I "Calling (%s)"
 #define HHCHD902I "(%s) complete"
+#define HHCHD903I "(%s) skipped during Windows SHUTDOWN immediate"
 #define HHCHD909I "Shutdown sequence complete"
 #define HHCHD950I "Begin HDL termination sequence"
 #define HHCHD951I "Calling module(%s) cleanup routine"
@@ -385,6 +385,26 @@
 #define HHCHT011E "Html_include: Cannot open file(%s): (%s)"
 #define HHCHT013I "Using HTTPROOT directory (%s)"
 #define HHCCF066E "Invalid HTTPROOT: (%s): (%s)"
+
+/* impl.c */
+#define HHCIN001S "Cannot register SIGINT handler: %s"
+#define HHCIN002E "Cannot suppress SIGPIPE signal: %s"
+#define HHCIN003S "Cannot register SIGILL/FPE/SEGV/BUS/USR handler: %s"
+#define HHCIN004S "Cannot create HAO thread: %s"
+#define HHCIN005S "Cannot create watchdog thread: %s"
+#define HHCIN006S "Cannot create shared_server thread: %s"
+#define HHCIN007S "Cannot create %4.4X connection thread: %s"
+#define HHCIN008S "DYNGUI.DLL load failed; Hercules terminated."
+#define HHCIN009S "Cannot register SIGTERM handler: %s"
+#define HHCIN010S "Cannot register ConsoleCtrl handler: %s"
+#define HHCIN021I "CLOSE Event received, SHUTDOWN Immediate starting..."
+#define HHCIN022I "Ctrl-C intercepted"
+#define HHCIN023W "CLOSE Event received, SHUTDOWN previously requested..."
+#define HHCIN050I "Ctrl-Break intercepted. Interrupt Key depressed simulated."
+#define HHCIN099I "Hercules terminated"
+#define HHCIN950I "Begin system cleanup"
+#define HHCIN959I "System cleanup complete"
+#define HHCPN995E ".RC file \"%s\" not found."
 
 /* panel.c */
 #define HHCPN001I "Thread started tid(" TIDPAT "), pid(%d), prio(%d), name(%s)"
