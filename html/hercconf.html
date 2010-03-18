@@ -2179,6 +2179,40 @@ and how they are used.
         is opened for output.
         <p>
 
+    <dt><code>fcbcheck</code>
+    <dd><p>
+        specifies that an attempt to skip to a FCB channel for which no
+        line number has been set will cause the command to be rejected
+        with a unit check. This is the default.
+        <p>
+
+    <dt><code>nofcbcheck</code>
+    <dd><p>
+        specifies that an attempt to skip to a FCB channel for which no
+        line number has been set will cause the next line of output to be
+        printed on the next line on the printer output. The opposite,
+        <code>fcbcheck</code>, is the default.
+        <p>
+
+    <dt><code>rawcc</code>
+    <dd><p>
+        specifies that printer output CCWs are not to be interpreted, but
+        simply dumped in hex to the printer output file. This is useful for
+        debugging. Default is to interpret printer CCWs normally.
+        <p>
+
+    <dt><code>fcb=</code>
+    <dd><p>
+        specifies an initial FCB image to use for this printer. The argument
+        must be exactly 26 digits long, and consist of digits from 0 to 9.
+        The first pair of digits specifies the number of lines on a printed
+        page. It is followed by 12 pairs of digits which specify, for FCB
+        channels 1-12, the line number on the page that the FCB channel
+        corresponds to. Use <code>00</code> to leave the line number unset
+        for a channel (see <code>fcbcheck</code> above). The default is
+        <code>fcb=66010713192531374361495561</code>.
+        <p>
+
     </dl>
 
     <p>
