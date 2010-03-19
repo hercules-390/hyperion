@@ -156,8 +156,7 @@ int  CTCX_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     // The first argument is the device emulation type
     if( argc < 1 )
     {
-        logmsg( _("HHCCT001E %4.4X: Incorrect number of parameters\n"),
-            pDEVBLK->devnum );
+        WRITEMSG (HHCCT001E, pDEVBLK->devnum );
         return -1;
     }
 
@@ -169,8 +168,7 @@ int  CTCX_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         pDEVBLK->typname = strdup(argv[0]);
         return (pDEVBLK->hnd->init)( pDEVBLK, --argc, ++argv );
     }
-    logmsg (_("HHCCT034E %s: Unrecognized/unsupported CTC emulation type\n"),
-        argv[0]);
+    WRITEMSG (HHCCT034E, argv[0]);
     return -1;
 }
 
@@ -478,8 +476,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
     // Check for correct number of arguments
     if (argc != 4)
     {
-        logmsg( _("HHCCT002E %4.4X: Incorrect number of parameters\n"),
-                dev->devnum );
+        WRITEMSG(HHCCT002E, dev->devnum );
         return -1;
     }
 
@@ -490,8 +487,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
         sscanf( listenp, "%u%c", &lport, &c ) != 1 ||
         lport < 1024 || lport > 65534 )
     {
-        logmsg( _("HHCCT003E %4.4X: Invalid port number: %s\n"),
-                dev->devnum, listenp );
+        WRITEMSG(HHCCT003E, dev->devnum, listenp );
         return -1;
     }
 
@@ -511,8 +507,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
         }
         else
         {
-            logmsg( _("HHCCT004E %4.4X: Invalid IP address %s\n"),
-                    dev->devnum, remaddr );
+            WRITEMSG(HHCCT004E, dev->devnum, remaddr );
             return -1;
         }
     }
@@ -524,8 +519,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
         sscanf( remotep, "%u%c", &rport, &c ) != 1 ||
         rport < 1024 || rport > 65534 )
     {
-        logmsg( _("HHCCT005E %4.4X: Invalid port number: %s\n"),
-                dev->devnum, remotep );
+        WRITEMSG(HHCCT005E, dev->devnum, remotep );
         return -1;
     }
 
@@ -536,8 +530,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
         sscanf( mtusize, "%u%c", &mtu, &c ) != 1 ||
         mtu < 46 || mtu > 65536 )
     {
-        logmsg( _("HHCCT006E %4.4X: Invalid MTU size %s\n"),
-                dev->devnum, mtusize );
+        WRITEMSG(HHCCT006E, dev->devnum, mtusize );
         return -1;
     }
 
@@ -557,8 +550,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
 
     if( parm.listenfd < 0 )
     {
-        logmsg( _("HHCCT007E %4.4X: Error creating socket: %s\n"),
-                dev->devnum, strerror( HSO_errno ) );
+        WRITEMSG (HHCCT007E, dev->devnum, strerror( HSO_errno ) );
         CTCX_Close( dev );
         return -1;
     }
@@ -577,8 +569,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
                sizeof( parm.addr ) );
     if( rc < 0 )
     {
-        logmsg( _("HHCCT008E %4.4X: Error binding to socket: %s\n"),
-                dev->devnum, strerror( HSO_errno ) );
+        WRITEMSG( HHCCT008E, dev->devnum, strerror( HSO_errno ) );
         CTCX_Close( dev );
         return -1;
     }
@@ -598,8 +589,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
         // used to pass parameters to the server thread
         CTCG_PARMBLK* arg;
 
-        logmsg( _("HHCCT009I %4.4X: Connect to %s:%s failed, starting server\n"),
-                dev->devnum, remaddr, remotep );
+        WRITEMSG(HHCCT009I, dev->devnum, remaddr, remotep );
 
         // probably don't need to do this, not sure...
         close_socket( parm.listenfd );
@@ -608,8 +598,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
 
         if( parm.listenfd < 0 )
         {
-            logmsg( _("HHCCT010E %4.4X: Error creating socket: %s\n"),
-                    dev->devnum, strerror( HSO_errno ) );
+            WRITEMSG(HHCCT010E, dev->devnum, strerror( HSO_errno ) );
             CTCX_Close( dev );
             return -1;
         }
@@ -625,16 +614,14 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
                   (struct sockaddr *)&parm.addr,
                   sizeof( parm.addr ) ) < 0 )
         {
-            logmsg( _("HHCCT011E %4.4X: Error binding to socket: %s\n"),
-                    dev->devnum, strerror( HSO_errno ) );
+            WRITEMSG(HHCCT011E, dev->devnum, strerror( HSO_errno ) );
             CTCX_Close( dev );
             return -1;
         }
 
         if( listen( parm.listenfd, 1 ) < 0 )
         {
-            logmsg( _("HHCCT012E %4.4X: Error on call to listen: %s\n"),
-                    dev->devnum, strerror( HSO_errno ) );
+            WRITEMSG(HHCCT012E, dev->devnum, strerror( HSO_errno ) );
             CTCX_Close( dev );
             return -1;
         }
@@ -649,8 +636,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
     }
     else  // successfully connected (outbound) to the other end
     {
-        logmsg( _("HHCCT013I %4.4X: Connected to %s:%s\n"),
-                dev->devnum, remaddr, remotep );
+        WRITEMSG(HHCCT013I, dev->devnum, remaddr, remotep );
         dev->fd = parm.listenfd;
     }
 
@@ -683,8 +669,7 @@ static void  CTCT_Write( DEVBLK* pDEVBLK,   U16   sCount,
     // Check that CCW count is sufficient to contain block header
     if( sCount < sizeof( CTCIHDR ) )
     {
-        logmsg( _("HHCCT014E %4.4X: Write CCW count %u is invalid\n"),
-                pDEVBLK->devnum, sCount );
+        WRITEMSG(HHCCT014E, pDEVBLK->devnum, sCount );
 
         pDEVBLK->sense[0] = SENSE_DC;
         *pUnitStat        = CSW_CE | CSW_DE | CSW_UC;
@@ -713,8 +698,7 @@ static void  CTCT_Write( DEVBLK* pDEVBLK,   U16   sCount,
         FETCH_FW( iStackCmd, *((FWORD*)&pIOBuf[36]) );
 
         // Display stack command and discard the packet
-        logmsg( _("HHCCT015I %4.4X: Interface command: %s %8.8X\n"),
-                pDEVBLK->devnum, szStackID, iStackCmd );
+        WRITEMSG(HHCCT015I, pDEVBLK->devnum, szStackID, iStackCmd );
 
         *pUnitStat = CSW_CE | CSW_DE;
         *pResidual = 0;
@@ -759,9 +743,7 @@ static void  CTCT_Write( DEVBLK* pDEVBLK,   U16   sCount,
         // Check that the segment is fully contained within the block
         if( iPos + sizeof( CTCISEG ) > sOffset )
         {
-            logmsg( _("HHCCT016E %4.4X: Write buffer contains incomplete "
-                      "segment header at offset %4.4X\n"),
-                    pDEVBLK->devnum, iPos );
+            WRITEMSG(HHCCT016E, pDEVBLK->devnum, iPos );
 
             pDEVBLK->sense[0] = SENSE_DC;
             *pUnitStat        = CSW_CE | CSW_DE | CSW_UC;
@@ -779,9 +761,7 @@ static void  CTCT_Write( DEVBLK* pDEVBLK,   U16   sCount,
             ( iPos + sSegLen > sOffset           ) ||
             ( iPos + sSegLen > sCount            ) )
         {
-            logmsg( _("HHCCT017E %4.4X: Write buffer contains invalid "
-                    "segment length %u at offset %4.4X\n"),
-                    pDEVBLK->devnum, sSegLen, iPos );
+            WRITEMSG(HHCCT017E, pDEVBLK->devnum, sSegLen, iPos );
 
             pDEVBLK->sense[0] = SENSE_DC;
             *pUnitStat        = CSW_CE | CSW_DE | CSW_UC;
@@ -794,8 +774,7 @@ static void  CTCT_Write( DEVBLK* pDEVBLK,   U16   sCount,
         // Trace the IP packet before sending
         if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
         {
-            logmsg( _("HHCCT018I %4.4X: Sending packet to %s:\n"),
-                    pDEVBLK->devnum, pDEVBLK->filename );
+            WRITEMSG(HHCCT018I, pDEVBLK->devnum, pDEVBLK->filename );
             if( pDEVBLK->ccwtrace )
                 packet_trace( pSegment->bData, sDataLen );
         }
@@ -805,8 +784,7 @@ static void  CTCT_Write( DEVBLK* pDEVBLK,   U16   sCount,
 
         if( rc < 0 )
         {
-            logmsg( _("HHCCT019E %4.4X: Error writing to %s: %s\n"),
-                    pDEVBLK->devnum, pDEVBLK->filename,
+            WRITEMSG(HHCCT019E, pDEVBLK->devnum, pDEVBLK->filename,
                     strerror( HSO_errno ) );
 
             pDEVBLK->sense[0] = SENSE_EC;
@@ -868,8 +846,7 @@ static void  CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
         if( HSO_errno == HSO_EINTR )
             return;
 
-        logmsg( _("HHCCT020E %4.4X: Error reading from %s: %s\n"),
-                pDEVBLK->devnum, pDEVBLK->filename, strerror( HSO_errno ) );
+        WRITEMSG(HHCCT020E, pDEVBLK->devnum, pDEVBLK->filename, strerror( HSO_errno ) );
 
         pDEVBLK->sense[0] = SENSE_EC;
         *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
@@ -885,8 +862,7 @@ static void  CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
     // Check for other error condition
     if( iLength < 0 )
     {
-        logmsg( _("HHCCT021E %4.4X: Error reading from %s: %s\n"),
-                pDEVBLK->devnum, pDEVBLK->filename, strerror( HSO_errno ) );
+        WRITEMSG(HHCCT021E, pDEVBLK->devnum, pDEVBLK->filename, strerror( HSO_errno ) );
         pDEVBLK->sense[0] = SENSE_EC;
         *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
         return;
@@ -895,8 +871,7 @@ static void  CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
     // Trace the packet received from the TUN device
     if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
     {
-        logmsg( _("HHCCT022I %4.4X: Received packet from %s (%d bytes):\n"),
-                pDEVBLK->devnum, pDEVBLK->filename, iLength );
+        WRITEMSG(HHCCT022I, pDEVBLK->devnum, pDEVBLK->filename, iLength );
         packet_trace( pDEVBLK->buf, iLength );
     }
 
@@ -977,9 +952,7 @@ static void*  CTCT_ListenThread( void* argp )
 
         if( strcmp( str, parm.dev->filename ) != 0 )
         {
-            logmsg( _("HHCCT023E %4.4X: Incorrect client or config error\n"
-                      "                 Config=%s, connecting client=%s\n"),
-                    parm.dev->devnum,
+            WRITEMSG(HHCCT023E, parm.dev->devnum,
                     parm.dev->filename, str);
             close_socket( connfd );
         }
@@ -1021,8 +994,7 @@ int r, i;
 char *ipaddress;
 
     if (argc < 2) {
-        logmsg (_("HHCCT024E %4.4X: Not enough arguments to start vmnet\n"),
-                        dev->devnum);
+        WRITEMSG (HHCCT024E, dev->devnum);
         return -1;
     }
 
@@ -1031,16 +1003,14 @@ char *ipaddress;
     argv++;
 
     if (socketpair (AF_UNIX, SOCK_STREAM, 0, sockfd) < 0) {
-        logmsg (_("HHCCT025E %4.4X: Failed: socketpair: %s\n"),
-                        dev->devnum, strerror(errno));
+        WRITEMSG (HHCCT025E, dev->devnum, strerror(errno));
         return -1;
     }
 
     r = fork ();
 
     if (r < 0) {
-        logmsg (_("HHCCT026E %4.4X: Failed: fork: %s\n"),
-                        dev->devnum, strerror(errno));
+        WRITEMSG (HHCCT026E, dev->devnum, strerror(errno));
         return -1;
     } else if (r == 0) {
         /* child */
@@ -1090,14 +1060,13 @@ U16 lcss;
      * The vmnet is only initialised when both are initialised.
      */
     if (argc < 3) {
-        logmsg(_("HHCCT027E %4.4X: Not enough parameters\n"), dev->devnum);
+        WRITEMSG(HHCCT027E, dev->devnum);
         return -1;
     }
     rc=parse_single_devnum(argv[0],&lcss,&xdevnum);
     if (rc<0)
     {
-        logmsg(_("HHCCT028E %d:%4.4X: Bad device number '%s'\n"),
-                  SSID_TO_LCSS(dev->ssid), dev->devnum, argv[0]);
+        WRITEMSG(HHCCT028E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[0]);
         return -1;
     }
     xdev = find_device_by_devnum(lcss,xdevnum);
@@ -1133,8 +1102,7 @@ BYTE *buffer = dev->buf;
 int len = 0, rem;
 
     if (count < blklen) {
-        logmsg (_("HHCCT029E %4.4X: bad block length: %d < %d\n"),
-                dev->devnum, count, blklen);
+        WRITEMSG (HHCCT029E, dev->devnum, count, blklen);
         blklen = count;
     }
     while (p < iobuf + blklen) {
@@ -1143,13 +1111,11 @@ int len = 0, rem;
         rem = iobuf + blklen - p;
 
         if (rem < pktlen) {
-            logmsg (_("HHCCT030E %4.4X: bad packet length: %d < %d\n"),
-                    dev->devnum, rem, pktlen);
+            WRITEMSG (HHCCT030E, dev->devnum, rem, pktlen);
             pktlen = rem;
         }
         if (pktlen < 6) {
-        logmsg (_("HHCCT031E %4.4X: bad packet length: %d < 6\n"),
-                    dev->devnum, pktlen);
+        WRITEMSG (HHCCT030E, dev->devnum, pktlen, 6);
             pktlen = 6;
         }
 
@@ -1194,16 +1160,13 @@ int n;
             if (n <= 0) {
                 if (n == 0) {
                     /* VMnet died on us. */
-                    logmsg (_("HHCCT032E %4.4X: Error: EOF on read, "
-                              "CTC network down\n"),
-                            dev->devnum);
+                    WRITEMSG (HHCCT032E, dev->devnum);
                     /* -2 will cause an error status to be set */
                     return -2;
                 }
                 if( n == EINTR )
                     return -3;
-                logmsg (_("HHCCT033E %4.4X: Error: read: %s\n"),
-                        dev->devnum, strerror(errno));
+                WRITEMSG (HHCCT033E, dev->devnum, strerror(errno));
                 SLEEP(2);
             }
         } while (n <= 0);

@@ -10,6 +10,7 @@
 
 #define MSG(id, ...)      #id " " id "\n", ## __VA_ARGS__
 #define WRITEMSG(id, ...) logmsg(#id " " id "\n", ## __VA_ARGS__)
+//#define WRITEMSG(id, ...) logmsg("%-10s(%5d) " #id " " id "\n", __FILE__, __LINE__, ## __VA_ARGS__)
 
 /* awstape.c */
 #define HHCTA101I "Device(%4.4X): AWS Tape file(%s) closed"
@@ -64,7 +65,7 @@
 #define HHCCF062W "Warning in file(%s) line(%d): Missing ECPSVM level value, 20 Assumed"
 #define HHCCF063W "Warning in file(%s) line(%d): Specifying ECPSVM level directly is deprecated. Use the 'LEVEL' keyword instead"
 #define HHCCF064W "Hercules set priority (%d) failed: (%s)"
-#define HHCCF065I "Thread started tid(" TIDPAT "), pid(%d), prio(%d), name(%s)"
+#define HHCCF065I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCCF070S "Error in file(%s) line(%d): (%s) is not a valid year offset"
 #define HHCCF072W "SYSEPOCH (%04d) is deprecated, please specify \"SYSEPOCH 1900 (%s%d)\""
 #define HHCCF073W "SYSEPOCH (%04d) is deprecated, please specify \"SYSEPOCH 1960 (%s%d)\""
@@ -116,12 +117,12 @@
 #define HHCRD019E "Card image exceeds (%d) bytes in file(%s)"
 
 /* cckddasd.c */
-#define HHCCD001I "Thread started tid(" TIDPAT "), pid(%d), prio(%d), name(%s)"
-#define HHCCD002I "Thread started tid(" TIDPAT "), pid(%d), prio(%d), name(%s)"
-#define HHCCD003I "Thread started tid(" TIDPAT "), pid(%d), prio(%d), name(%s)"
-#define HHCCD011I "Thread ended tid(" TIDPAT "), pid(%d), prio(%d), name(%s)"
-#define HHCCD012I "Thread ended tid(" TIDPAT "), pid(%d), prio(%d), name(%s)"
-#define HHCCD013I "Thread ended tid(" TIDPAT "), pid(%d), prio(%d), name(%s)"
+#define HHCCD001I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
+#define HHCCD002I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
+#define HHCCD003I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
+#define HHCCD011I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
+#define HHCCD012I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
+#define HHCCD013I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCCD092I "%d devices processed"
 #define HHCCD101E "Device(%4.4X) error initializing shadow files"
 #define HHCCD102E "Device(%4.4X) file[%d] get space error, size exceeds %lldM"
@@ -276,14 +277,14 @@
 
 /* comm3705.c and commadpt.c */
 #define HHCCA001I "Client(%s) connected to %4.4X device(%4.4X)"
-#define HHCCA002I "Thread started tid(" TIDPAT "), pid(%d), prio(%d), name(%s)"
+#define HHCCA002I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCCA003E "Device(%4.4X) Cannot obtain socket for incoming calls: %s"
 #define HHCCA004W "Device(%4.4X) Waiting 5 seconds for port(%d) to become available"
 #define HHCCA005I "Device(%4.4X) Listening on port(%d) for incoming TCP connections"
 #define HHCCA006T "Device(%4.4X) Select failed: %s"
 #define HHCCA007W "Device(%4.4X) Outgoing call failed during %s command: %s"
 #define HHCCA008I "Device(%4.4X) Incoming Call"
-#define HHCCA009I "Thread ended tid(" TIDPAT "), pid(%d), prio(%d), name(%s)"
+#define HHCCA009I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCCA010I "device(%4.4X) initialisation not performed"
 #define HHCCA011E "Device(%4.4X) Error parsing %s"
 #define HHCCA012E "Device(%4.4X) Unrecognized parameter(%s)"
@@ -329,10 +330,10 @@
 #define HHCGI002I "Unable to determine port number from (%s)"
 #define HHCGI003E "Invalid parameter(%s)"
 
-#define HHCTE001I "Thread started tid(" TIDPAT "), pid(%d), prio(%d), name(%s)"
+#define HHCTE001I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCTE002W "Waiting for port(%u) to become free"
 #define HHCTE003I "Waiting for console connection on port(%u)"
-#define HHCTE004I "Thread ended tid(" TIDPAT "), pid(%d), prio(%d), name(%s)" 
+#define HHCTE004I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)" 
 #define HHCTE005E "Cannot create console thread: (%s)"
 #define HHCTE007I "Device(%4.4X): Devtype(%4.4X) client(%s) connection closed"
 #define HHCTE008I "Device(%4.4X): Connection closed by client(%s)"
@@ -347,12 +348,12 @@
 
 /* cpu.c */
 #define HHCCP001W "%s%02X thread set priority(%d) failed: (%s)"
-#define HHCCP002I "Thread started tid(" TIDPAT "), pid(%d), prio(%d), name(%s%02X)"
+#define HHCCP002I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s%02X)"
 #define HHCCP003I "%s%02X architecture mode(%s)"
 #define HHCCP004I "%s%02X Vector Facility online"
 #define HHCCP006S "Cannot create timer thread: (%s)"
 #define HHCCP007I "%s%02X architecture mode set to (%s)"
-#define HHCCP008I "Thread ended tid(" TIDPAT "), pid(%d), prio(%d), name(%s%02X)"
+#define HHCCP008I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s%02X)"
 #define HHCCP010I "%s%02X store status completed"
 #define HHCCP011I "%s%02X disabled wait state(%s)"
 #define HHCCP014I "%s%s%s%02X: (%s) code(%4.4X) ilc(%d%s)"
@@ -369,9 +370,44 @@
 #define HHCRY001I "Crypto module loaded (c) Copyright Bernard van der Helm, 2003-2010"
 #define HHCRY002I "  Active: %s"
 
+/* ctcadpt.c */
+#define HHCCT001E "Device(%4.4X) Incorrect number of parameters"
+#define HHCCT002E "Device(%4.4X) Incorrect number of parameters"
+#define HHCCT003E "Device(%4.4X) Invalid port number(%s)"
+#define HHCCT004E "Device(%4.4X) Invalid IP address(%s)"
+#define HHCCT005E "Device(%4.4X) Invalid port number(%s)"
+#define HHCCT006E "Device(%4.4X) Invalid MTU size(%s)"
+#define HHCCT007E "Device(%4.4X) Error creating socket(%s)"
+#define HHCCT008E "Device(%4.4X) Error binding socket(%s)"
+#define HHCCT009I "Device(%4.4X) Connect to %s:%s failed, starting server"
+#define HHCCT010E "Device(%4.4X) Error creating socket: %s"
+#define HHCCT011E "Device(%4.4X) Error binding socket(%s)"
+#define HHCCT012E "Device(%4.4X) Error on call to listen: %s"
+#define HHCCT013I "Device(%4.4X) Connected to %s:%s"
+#define HHCCT014E "Device(%4.4X) Write CCW count %u is invalid"
+#define HHCCT015I "Device(%4.4X) Interface command: %s %8.8X"
+#define HHCCT016E "Device(%4.4X) Write buffer contains incomplete segment header at offset %4.4X"
+#define HHCCT017E "Device(%4.4X) Write buffer contains invalid segment length %u at offset %4.4X"
+#define HHCCT018I "Device(%4.4X) Sending packet to file(%s)"
+#define HHCCT019E "Device(%4.4X) Error writing to file(%s): %s"
+#define HHCCT020E "Device(%4.4X) Error reading from file(%s): %s"
+#define HHCCT021E "Device(%4.4X) Error reading from file(%s): %s"
+#define HHCCT022I "Device(%4.4X) Received packet from %s (%d bytes)"
+#define HHCCT023E "Device(%4.4X) Incorrect client or config error: Config(%s) connecting client(%s)"
+#define HHCCT024E "Device(%4.4X) Not enough arguments to start vmnet"
+#define HHCCT025E "Device(%4.4X) Failed: socketpair: %s"
+#define HHCCT026E "Device(%4.4X) Failed: fork: %s"
+#define HHCCT027E "Device(%4.4X) Not enough parameters"
+#define HHCCT028E "Device(%d:%4.4X): Bad device number(%s)"
+#define HHCCT029E "Device(%4.4X) bad block length: %d < %d"
+#define HHCCT030E "Device(%4.4X) bad packet length: %d < %d"
+#define HHCCT032E "Device(%4.4X) Error: EOF on read, CTC network down"
+#define HHCCT033E "Device(%4.4X) Error: read: %s"
+#define HHCCT034E "Unrecognized/unsupported CTC emulation type(%s)"
+
 /* hao.c */
-#define HHCAO001I "Thread started tid(" TIDPAT "), pid(%d), prio(%d), name(%s)"
-#define HHCAO002I "Thread ended tid(" TIDPAT "), pid(%d), prio(%d), name(%s)"
+#define HHCAO001I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
+#define HHCAO002I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCAO003I "Firing command: (%s)"
 #define HHCAO004I "The defined Automatic Operator rule(s) are:"
 #define HHCAO005I "(%02d): (%s) -> (%s)"
@@ -431,7 +467,7 @@
 #define HHCIN015I "%s"
 
 /* httpserv.c */
-#define HHCHT001I "Thread started tid(" TIDPAT "), pid(%d), prio(%d), name(%s)"
+#define HHCHT001I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCHT002E "Socket error: (%s)"
 #define HHCHT003W "Waiting for port(%u) to become free"
 #define HHCHT004E "Bind error: (%s)"
@@ -439,7 +475,7 @@
 #define HHCHT006I "Waiting for HTTP requests on port(%u)"
 #define HHCHT007E "Select error: (%s)"
 #define HHCHT008E "Accept error: (%s)"
-#define HHCHT009I "Thread ended tid(" TIDPAT "), pid(%d), prio(%d), name(%s)"
+#define HHCHT009I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCHT010E "Http_request create_thread error: (%s)"
 #define HHCHT011E "Html_include: Cannot open file(%s): (%s)"
 #define HHCHT013I "Using HTTPROOT directory (%s)"
@@ -466,14 +502,14 @@
 #define HHCPN995E ".RC file \"%s\" not found."
 
 /* panel.c */
-#define HHCPN001I "Thread started tid(" TIDPAT "), pid(%d), prio(%d), name(%s)"
+#define HHCPN001I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCPN002S "Cannot obtain keyboard buffer: (%s)"
 #define HHCPN003S "Cannot obtain message buffer: (%s)"
 
 /* timer.c */
 #define HHCTT001W "Timer thread set priority(%d) failed: (%s)"
-#define HHCTT002I "Thread started tid(" TIDPAT "), pid(%d), prio(%d), name(%s)"
-#define HHCTT003I "Thread ended tid(" TIDPAT "), pid(%d), prio(%d), name(%s)"
+#define HHCTT002I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
+#define HHCTT003I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 
 /* version.c */
 #define HHCIN010I "%sversion (%s)"
