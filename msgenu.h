@@ -299,6 +299,31 @@
 #define HHCCA022E "Cannot create commadpt thread: %s"
 #define HHCCA023I "Device(%4.4X) Connect out to %s:%d failed during initial status: %s"
 
+/* con1052c.c */
+#define HHC1C001A "Enter input for console device(%4.4X)"
+
+/* config.c */
+#define HHCCF040E "Cannot create %s%02X thread: %s"
+#define HHCCF041E "Device(%d:%4.4X) already exists"
+#define HHCCF042E "Devtyp(%s) not recognized"
+#define HHCCF043E "Cannot obtain device block: %s"
+#define HHCCF044E "Initialization failed for device(%4.4X)"
+#define HHCCF045E "Cannot obtain buffer for device(%4.4X): %s"
+#define HHCCF046E "%s(%d:%4.4X) does not exist"
+#define HHCCF047I "%s(%d:%4.4X) detached"
+#define HHCCF048E "Device(%d:%4.4X) does not exist"
+#define HHCCF049E "Device(%d:%4.4X) already exists"
+#define HHCCF053E "Incorrect second device number in device range near character(%c)"
+#define HHCCF054E "Incorrect Device count near character(%c)"
+#define HHCCF055E "Incorrect device address specification near character(%c)"
+#define HHCCF056E "Incorrect device address range(%4.4X < %4.4X)"
+#define HHCCF057E "Device(%4.4X_ is on wrong channel (1st device defined on channel(%2.2X))"
+#define HHCCF058E "Some or all devices in %4.4X-%4.4X duplicate devices already defined"
+#define HHCCF074E "Unspecified error occured while parsing Logical Channel Subsystem Identification"
+#define HHCCF075E "No more than 1 Logical Channel Subsystem Identification may be specified"
+#define HHCCF076E "Non numeric Logical Channel Subsystem Identification(%s)"
+#define HHCCF077E "Logical Channel Subsystem Identification(%d) exceeds maximum(%d)"
+
 /* console.c and comm3705.c */
 #define HHCGI001I "Unable to determine IP address from (%s)"
 #define HHCGI002I "Unable to determine port number from (%s)"

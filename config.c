@@ -135,8 +135,7 @@ char  thread_name[16];
                         &cpu, thread_name)
        )
     {
-        logmsg(_("HHCCF040E Cannot create %s%02X thread: %s\n"),
-               PTYPSTR(sysblk.ptyp[cpu]), cpu, strerror(errno));
+        WRITEMSG(HHCCF040E, PTYPSTR(sysblk.ptyp[cpu]), cpu, strerror(errno));
         return -1;
     }
 
@@ -306,8 +305,7 @@ DEVBLK**dvpp;
     {
         if (!(dev = (DEVBLK*)malloc(sizeof(DEVBLK))))
         {
-            logmsg (_("HHCCF043E Cannot obtain device block\n"),
-                    strerror(errno));
+            WRITEMSG (HHCCF043E, strerror(errno));
             return NULL;
         }
         memset (dev, 0, sizeof(DEVBLK));
@@ -422,7 +420,7 @@ int     i;                              /* Loop index                */
     /* Check whether device number has already been defined */
     if (find_device_by_devnum(lcss,devnum) != NULL)
     {
-        logmsg (_("HHCCF041E Device %d:%4.4X already exists\n"), lcss,devnum);
+        WRITEMSG (HHCCF041E, lcss,devnum);
         return 1;
     }
 
@@ -431,7 +429,7 @@ int     i;                              /* Loop index                */
 
     if(!(dev->hnd = hdl_ghnd(type)))
     {
-        logmsg (_("HHCCF042E Device type %s not recognized\n"), type);
+        WRITEMSG (HHCCF042E, type);
 
         ret_devblk(dev);
 
@@ -459,8 +457,7 @@ int     i;                              /* Loop index                */
 
     if (rc < 0)
     {
-        logmsg (_("HHCCF044E Initialization failed for device %4.4X\n"),
-                devnum);
+        WRITEMSG (HHCCF044E, devnum);
 
         for (i = 0; i < dev->argc; i++)
             if (dev->argv[i])
@@ -481,9 +478,7 @@ int     i;                              /* Loop index                */
         dev->buf = malloc (dev->bufsize);
         if (dev->buf == NULL)
         {
-            logmsg (_("HHCCF045E Cannot obtain buffer "
-                    "for device %4.4X: %s\n"),
-                    dev->devnum, strerror(errno));
+            WRITEMSG (HHCCF045E, dev->devnum, strerror(errno));
 
             for (i = 0; i < dev->argc; i++)
                 if (dev->argv[i])
@@ -613,14 +608,14 @@ int    rc;
 
     if (dev == NULL)
     {
-        logmsg (_("HHCCF046E Subchannel %d:%4.4X does not exist\n"), lcss, subchan);
+        WRITEMSG (HHCCF046E, "Subchannel", lcss, subchan);
         return 1;
     }
 
     rc = detach_devblk( dev );
 
     if(!rc)
-        logmsg (_("HHCCF047I Subchannel %d:%4.4X detached\n"), lcss, subchan);
+        WRITEMSG (HHCCF047I, "Subchannel", lcss, subchan);
 
     return rc;
 }
@@ -639,14 +634,14 @@ int    rc;
 
     if (dev == NULL)
     {
-        logmsg (_("HHCCF046E Device %d:%4.4X does not exist\n"), lcss, devnum);
+        WRITEMSG (HHCCF046E, "Device", lcss, devnum);
         return 1;
     }
 
     rc = detach_devblk( dev );
 
     if(!rc)
-        logmsg (_("HHCCF047I Device %4.4X detached\n"), devnum);
+        WRITEMSG (HHCCF047I, "Device", lcss, devnum);
 
     return rc;
 }
@@ -664,14 +659,14 @@ DEVBLK *dev;                            /* -> Device block           */
 
     if (dev == NULL)
     {
-        logmsg (_("HHCCF048E Device %d:%4.4X does not exist\n"), lcss, olddevn);
+        WRITEMSG (HHCCF048E, lcss, olddevn);
         return 1;
     }
 
     /* Check that new device number does not already exist */
     if (find_device_by_devnum(lcss, newdevn) != NULL)
     {
-        logmsg (_("HHCCF049E Device %d:%4.4X already exists\n"), lcss, newdevn);
+        WRITEMSG (HHCCF049E, lcss, newdevn);
         return 1;
     }
 
@@ -969,7 +964,7 @@ parse_lcss(const char *spec,
     {
         if(verbose)
         {
-            logmsg(_("HHCCF074E Unspecified error occured while parsing Logical Channel Subsystem Identification\n"));
+            WRITEMSG(HHCCF074E);
         }
         free(wrk);
         return(-1);
@@ -985,7 +980,7 @@ parse_lcss(const char *spec,
     {
         if(verbose)
         {
-            logmsg(_("HHCCF075E No more than 1 Logical Channel Subsystem Identification may be specified\n"));
+            WRITEMSG(HHCCF075E);
         }
         free(wrk);
         return(-1);
@@ -995,7 +990,7 @@ parse_lcss(const char *spec,
     {
         if(verbose)
         {
-            logmsg(_("HHCCF076E Non numeric Logical Channel Subsystem Identification %s\n"),lcss);
+            WRITEMSG(HHCCF076E,lcss);
         }
         free(wrk);
         return -1;
@@ -1004,7 +999,7 @@ parse_lcss(const char *spec,
     {
         if(verbose)
         {
-            logmsg(_("HHCCF077E Logical Channel Subsystem Identification %d exceeds maximum of %d\n"),lcssid,FEATURE_LCSS_MAX-1);
+            WRITEMSG(HHCCF077E,lcssid,FEATURE_LCSS_MAX-1);
         }
         free(wrk);
         return -1;
@@ -1036,7 +1031,7 @@ parse_single_devnum__INTERNAL(const char *spec,
     {
         if(verbose)
         {
-            logmsg(_("HHCCF055E Incorrect device address specification near character %c\n"),*strptr);
+            WRITEMSG(HHCCF055E,*strptr);
         }
         free(r);
         return -1;
@@ -1135,7 +1130,7 @@ static size_t parse_devnums(const char *spec,DEVNUMSDESC *dd)
             cuu2=strtoul(&strptr[1],&strptr,16);
             if(*strptr!=0)
             {
-                logmsg(_("HHCCF053E Incorrect second device number in device range near character %c\n"),*strptr);
+                WRITEMSG(HHCCF053E,*strptr);
                 free(dgrs);
                 free(sc);
                 return(0);
@@ -1146,14 +1141,14 @@ static size_t parse_devnums(const char *spec,DEVNUMSDESC *dd)
             cuu2--;
             if(*strptr!=0)
             {
-                logmsg(_("HHCCF054E Incorrect Device count near character %c\n"),*strptr);
+                WRITEMSG(HHCCF054E,*strptr);
                 free(dgrs);
                 free(sc);
                 return(0);
             }
             break;
         default:
-            logmsg(_("HHCCF055E Incorrect device address specification near character %c\n"),*strptr);
+            WRITEMSG(HHCCF055E,*strptr);
             free(dgrs);
             free(sc);
             return(0);
@@ -1161,7 +1156,7 @@ static size_t parse_devnums(const char *spec,DEVNUMSDESC *dd)
         /* Check cuu1 <= cuu2 */
         if(cuu1>cuu2)
         {
-            logmsg(_("HHCCF056E Incorrect device address range. %4.4X < %4.4X\n"),cuu2,cuu1);
+            WRITEMSG(HHCCF056E,cuu2,cuu1);
             free(dgrs);
             free(sc);
             return(0);
@@ -1184,7 +1179,7 @@ static size_t parse_devnums(const char *spec,DEVNUMSDESC *dd)
         }
         if(badcuu>=0)
         {
-            logmsg(_("HHCCF057E %4.4X is on wrong channel (1st device defined on channel %2.2X)\n"),badcuu,basechan);
+            WRITEMSG(HHCCF057E,badcuu,basechan);
             free(dgrs);
             free(sc);
             return(0);
@@ -1214,7 +1209,7 @@ static size_t parse_devnums(const char *spec,DEVNUMSDESC *dd)
         }
         if(duplicate)
         {
-            logmsg(_("HHCCF058E Some or all devices in %4.4X-%4.4X duplicate devices already defined\n"),cuu1,cuu2);
+            WRITEMSG(HHCCF058E,cuu1,cuu2);
             free(dgrs);
             free(sc);
             return(0);

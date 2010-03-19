@@ -243,8 +243,7 @@ BYTE    c;                              /* Print character           */
         {
             /* Display prompting message on console if allowed */
             if (dev->prompt1052)
-                logmsg (_("HHC1C001A Enter input for console device %4.4X\n"),
-                  dev->devnum);
+                WRITEMSG (, dev->devnum);
 
             obtain_lock(&dev->lock);
             dev->iowaiters++;
