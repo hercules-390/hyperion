@@ -621,7 +621,7 @@ S64      dreg;
             if (i >= MAX_CPU_ENGINES)
             {
                 logmsg( _("HHCSR113E %s%02X exceeds max allowed cpu (%02d)\n"),
-                       PTYPSTR(sysblk.ptyp[i]), i, MAX_CPU_ENGINES-1);
+                       "CP", i, MAX_CPU_ENGINES-1);
                 goto sr_error_exit;
             }
             OBTAIN_INTLOCK(NULL);
