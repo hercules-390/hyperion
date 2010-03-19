@@ -274,20 +274,30 @@
 #define HHCCF072I "Using %s codepage conversion table %s"
 #define HHCCF051E "Codepage conversion table %s is not defined"
 
-/* comm3705.c */
+/* comm3705.c and commadpt.c */
 #define HHCCA001I "Client(%s) connected to %4.4X device(%4.4X)"
 #define HHCCA002I "Thread started tid(" TIDPAT "), pid(%d), prio(%d), name(%s)"
 #define HHCCA003E "Device(%4.4X) Cannot obtain socket for incoming calls: %s"
+#define HHCCA004W "Device(%4.4X) Waiting 5 seconds for port(%d) to become available"
 #define HHCCA005I "Device(%4.4X) Listening on port(%d) for incoming TCP connections"
+#define HHCCA006T "Device(%4.4X) Select failed: %s"
+#define HHCCA007W "Device(%4.4X) Outgoing call failed during %s command: %s"
+#define HHCCA008I "Device(%4.4X) Incoming Call"
 #define HHCCA009I "Thread ended tid(" TIDPAT "), pid(%d), prio(%d), name(%s)"
-#define HHCCA010I "device(%4.4X)initialisation not performed"
+#define HHCCA010I "device(%4.4X) initialisation not performed"
 #define HHCCA011E "Device(%4.4X) Error parsing %s"
 #define HHCCA012E "Device(%4.4X) Unrecognized parameter(%s)"
 #define HHCCA013E "Device(%4.4X) Incorrect %s specification %s"
+#define HHCCA014E "Device(%4.4X) Incorrect switched/dial specification(%s): defaulting to DIAL=OUT"
+#define HHCCA015E "Device(%4.4X) Missing parameter: DIAL(%s) and %s not specified"
+#define HHCCA016W "Device(%4.4X) Conflicting parameter: DIAL(%s) and %s=%s specified"
+#define HHCCA017I "Device(%4.4X) RPORT parameter ignored"
 #define HHCCA018E "Device(%4.4X) Bind failed: %s"
+#define HHCCA019E "Device(%4.4X) BSC comm thread did not initialise"
 #define HHCCA020E "Device(%4.4X) Memory allocation failure for main control block"
 #define HHCCA021I "Device(%4.4X) Initialisation failed due to previous errors"
 #define HHCCA022E "Cannot create commadpt thread: %s"
+#define HHCCA023I "Device(%4.4X) Connect out to %s:%d failed during initial status: %s"
 
 /* console.c and comm3705.c */
 #define HHCGI001I "Unable to determine IP address from (%s)"

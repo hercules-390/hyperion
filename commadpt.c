@@ -493,8 +493,7 @@ static int commadpt_alloc_device(DEVBLK *dev)
     dev->commadpt=malloc(sizeof(COMMADPT));
     if(dev->commadpt==NULL)
     {
-        logmsg(_("HHCCA020E %4.4X:Memory allocation failure for main control block\n"),
-                dev->devnum);
+        WRITEMSG(HHCCA020E, dev->devnum);
         return -1;
     }
     memset(dev->commadpt,0,sizeof(COMMADPT));
@@ -574,7 +573,7 @@ static int commadpt_connout(COMMADPT *ca)
         {
             strerror_r(HSO_errno,wbfr,256);
             intmp.s_addr=ca->rhost;
-            logmsg(_("HHCCA001I %4.4X:Connect out to %s:%d failed during initial status : %s\n"),
+            WRITEMSG(HHCCA023I,
                     ca->devnum,
                     inet_ntoa(intmp),
                     ca->rport,
@@ -946,7 +945,9 @@ static void *commadpt_thread(void *vca)
 
     init_signaled=0;
 
-    logmsg(_("HHCCA002I %4.4X:Line Communication thread "TIDPAT" started\n"),devnum,thread_id());
+    char buf[40];
+    sprintf(buf, "Device(%4.4X) communication thread");
+    WRITEMSG(HHCCA002I,thread_id(), getpid(), getpriority(PRIO_PROCESS,0), buf);
 
     pollact=0;  /* Initialise Poll activity flag */
 
@@ -958,7 +959,7 @@ static void *commadpt_thread(void *vca)
         ca->lfd=socket(AF_INET,SOCK_STREAM,0);
         if(!socket_is_socket(ca->lfd))
         {
-            logmsg(_("HHCCA003E %4.4X:Cannot obtain socket for incoming calls : %s\n"),devnum,strerror(HSO_errno));
+            WRITEMSG(HHCCA003E,devnum,strerror(HSO_errno));
             ca->have_cthread=0;
             release_lock(&ca->lock);
             return NULL;
@@ -983,7 +984,7 @@ static void *commadpt_thread(void *vca)
             {
                 if(HSO_errno==HSO_EADDRINUSE)
                 {
-                    logmsg(_("HHCCA004W %4.4X:Waiting 5 seconds for port %d to become available\n"),devnum,ca->lport);
+                    WRITEMSG(HHCCA004W,devnum,ca->lport);
                     /*
                      * Check for a shutdown condition on entry
                      */
@@ -1034,7 +1035,7 @@ static void *commadpt_thread(void *vca)
                 }
                 else
                 {
-                    logmsg(_("HHCCA018E %4.4X:Bind failed : %s\n"),devnum,strerror(HSO_errno));
+                    WRITEMSG(HHCCA018E,devnum,strerror(HSO_errno));
                     ca_shutdown=1;
                     break;
                 }
@@ -1048,7 +1049,7 @@ static void *commadpt_thread(void *vca)
         if(!ca_shutdown)
         {
             listen(ca->lfd,10);
-            logmsg(_("HHCCA005I %4.4X:Listening on port %d for incoming TCP connections\n"),
+            WRITEMSG(HHCCA005I,
                     devnum,
                     ca->lport);
             ca->listening=1;
@@ -1388,7 +1389,7 @@ static void *commadpt_thread(void *vca)
                 }
                 continue;
             }
-            logmsg(_("HHCCA006T %4.4X:Select failed : %s\n"),devnum,strerror(HSO_errno));
+            WRITEMSG(HHCCA006T,devnum,strerror(HSO_errno));
             break;
         }
         eintrcount=0;
@@ -1513,7 +1514,7 @@ static void *commadpt_thread(void *vca)
                     }
                     else
                     {
-                        logmsg(_("HHCCA007W %4.4X:Outgoing call failed during %s command : %s\n"),devnum,commadpt_pendccw_text[ca->curpending],strerror(soerr));
+                        WRITEMSG(HHCCA007W,devnum,commadpt_pendccw_text[ca->curpending],strerror(soerr));
                         if(ca->curpending==COMMADPT_PEND_ENABLE)
                         {
                             /* Ensure top of the loop doesn't restart a new call */
@@ -1543,7 +1544,7 @@ static void *commadpt_thread(void *vca)
         {
             if(FD_ISSET(ca->lfd,&rfd))
             {
-                logmsg(_("HHCCA008I %4.4X:cthread - Incoming Call\n"),devnum);
+                WRITEMSG(HHCCA008I,devnum);
                 tempfd=accept(ca->lfd,NULL,0);
                 if(tempfd<0)
                 {
@@ -1609,7 +1610,7 @@ static void *commadpt_thread(void *vca)
     /*        lock is released, because back          */
     /*        notification was made while holding     */
     /*        the lock                                */
-    logmsg(_("HHCCA009I %4.4X:BSC utility thread terminated\n"),ca->devnum);
+    WRITEMSG(HHCCA009I,thread_id(), getpid(), getpriority(PRIO_PROCESS,0), buf);
     release_lock(&ca->lock);
     return NULL;
 }
@@ -1660,16 +1661,16 @@ static void    commadpt_halt(DEVBLK *dev)
 /* that is issued on multiple situations              */
 static void msg013e(DEVBLK *dev,char *kw,char *kv)
 {
-        logmsg(_("HHCCA013E %4.4X:Incorrect %s specification %s\n"),dev->devnum,kw,kv);
+        WRITEMSG(HHCCA013E,dev->devnum,kw,kv);
 }
 static void msg015e(DEVBLK *dev,char *dialt,char *kw)
 {
-        logmsg(_("HHCCA015E %4.4X:Missing parameter : DIAL=%s and %s not specified\n"),dev->devnum,dialt,kw);
+        WRITEMSG(HHCCA015E,dev->devnum,dialt,kw);
 }
 static void msg016w017i(DEVBLK *dev,char *dialt,char *kw,char *kv)
 {
-        logmsg(_("HHCCA016W %4.4X:Conflicting parameter : DIAL=%s and %s=%s specified\n"),dev->devnum,dialt,kw,kv);
-        logmsg(_("HHCCA017I %4.4X:RPORT parameter ignored\n"),dev->devnum);
+        WRITEMSG(HHCCA016W,dev->devnum,dialt,kw,kv);
+        WRITEMSG(HHCCA017I,dev->devnum);
 }
 /*-------------------------------------------------------------------*/
 /* Device Initialisation                                             */
@@ -1700,8 +1701,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         rc=commadpt_alloc_device(dev);
         if(rc<0)
         {
-                logmsg(_("HHCCA010I %4.4X:initialisation not performed\n"),
-                        dev->devnum);
+                WRITEMSG(HHCCA010I, dev->devnum);
             return(-1);
         }
         if(dev->ccwtrace)
@@ -1735,13 +1735,13 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
             pc=parser(ptab,argv[i],&res);
             if(pc<0)
             {
-                logmsg(_("HHCCA011E %4.4X:Error parsing %s\n"),dev->devnum,argv[i]);
+                WRITEMSG(HHCCA011E,dev->devnum,argv[i]);
                 errcnt++;
                 continue;
             }
             if(pc==0)
             {
-                logmsg(_("HHCCA012E %4.4X:Unrecognized parameter %s\n"),dev->devnum,argv[i]);
+                WRITEMSG(HHCCA012E,dev->devnum,argv[i]);
                 errcnt++;
                 continue;
             }
@@ -1888,7 +1888,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
                         dev->commadpt->dialout=1;
                         break;
                     }
-                    logmsg(_("HHCCA014E %4.4X:Incorrect switched/dial specification %s; defaulting to DIAL=OUT\n"),dev->devnum,res.text);
+                    WRITEMSG(HHCCA014E,dev->devnum,res.text);
                     dev->commadpt->dialin=0;
                     dev->commadpt->dialout=0;
                     break;
@@ -2007,7 +2007,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         }
         if(errcnt>0)
         {
-            logmsg(_("HHCCA021I %4.4X:Initialisation failed due to previous errors\n"),dev->devnum);
+            WRITEMSG(HHCCA021I,dev->devnum);
             return -1;
         }
         in_temp.s_addr=dev->commadpt->lhost;
@@ -2075,14 +2075,14 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         dev->commadpt->curpending=COMMADPT_PEND_TINIT;
         if(create_thread(&dev->commadpt->cthread,DETACHED,commadpt_thread,dev->commadpt,thread_name))
         {
-            logmsg(D_("HHCCA022E create_thread: %s\n"),strerror(errno));
+            WRITEMSG(HHCCA022E,strerror(errno));
             release_lock(&dev->commadpt->lock);
             return -1;
         }
         commadpt_wait(dev);
         if(dev->commadpt->curpending!=COMMADPT_PEND_IDLE)
         {
-            logmsg(_("HHCCA019E %4.4x : BSC comm thread did not initialise\n"),dev->devnum);
+            WRITEMSG(HHCCA019E,dev->devnum);
             /* Release the CA lock */
             release_lock(&dev->commadpt->lock);
             return -1;
