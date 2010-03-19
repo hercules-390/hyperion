@@ -1326,6 +1326,7 @@ static void *commadpt_thread(void *vca)
     int rc;                     /* return code from various rtns     */
     int ca_shutdown;            /* Thread shutdown internal flag     */
     int init_signaled;          /* Thread initialisation signaled    */
+    char buf[30];               /* string for WRITEMSG               */
 
     /*---------------------END OF DECLARES---------------------------*/
 
@@ -1343,7 +1344,6 @@ static void *commadpt_thread(void *vca)
 
     init_signaled=0;
 
-    char buf[30];
     sprintf(buf, "3705 device(%4.4X) thread", devnum);
     WRITEMSG(HHCCA002I,thread_id(), getpid(), getpriority(PRIO_PROCESS,0), buf);
 

@@ -928,6 +928,7 @@ static void *commadpt_thread(void *vca)
     int i;                      /* Ye Old Loop Counter               */
     int eintrcount=0;           /* Number of times EINTR occured in  */
                                 /* a row.. Over 100 : Bail out !     */
+    char buf[40];
 
     /*---------------------END OF DECLARES---------------------------*/
 
@@ -945,9 +946,8 @@ static void *commadpt_thread(void *vca)
 
     init_signaled=0;
 
-    char buf[40];
     sprintf(buf, "Device(%4.4X) communication thread");
-    WRITEMSG(HHCCA002I,thread_id(), getpid(), getpriority(PRIO_PROCESS,0), buf);
+    WRITEMSG(HHCCA002I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), buf);
 
     pollact=0;  /* Initialise Poll activity flag */
 
