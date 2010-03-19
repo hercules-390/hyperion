@@ -500,6 +500,13 @@
 #define HHCDN003I "Waiting 1 second for cpu's to stop"
 #define HHCDN004E "Error starting thread in diagnose 0x308: %s"
 
+/* dynguic. */
+#define HHCDG001I "Dyngui.dll initiated"
+#define HHCDG002I "Dyngui.dll terminated"
+#define HHCDG003S "Select failed on input stream: %s"
+#define HHCDG004S "Read failed on input stream: %s"
+#define HHCDG005E "Device(%4.4X) query buffer overflow"
+
 /* hao.c */
 #define HHCAO001I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCAO002I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"

@@ -212,9 +212,9 @@ void ReadInputData ( int nTimeoutMillsecs )
 
         // A bona fide error occurred; abort...
 
-        logmsg
+        WRITEMSG
         (
-            _("HHCDG003S select failed on input stream: %s\n")
+            HHCDG003S
 
             ,strerror(HSO_errno)
         );
@@ -250,9 +250,9 @@ void ReadInputData ( int nTimeoutMillsecs )
 
         // A bona fide error occurred; abort...
 
-        logmsg
+        WRITEMSG
         (
-            _("HHCDG004S read failed on input stream: %s\n")
+            HHCDG004S 
 
             ,strerror(errno)
         );
@@ -1581,9 +1581,9 @@ void  UpdateDeviceStatus ()
 
         if (0 != szQueryDeviceBuff[MAX_DEVICEQUERY_LEN])    // (buffer overflow?)
         {
-            logmsg
+            WRITEMSG
             (
-                _("HHCDG005E Device query buffer overflow! (device=%4.4X)\n")
+                HHCDG005E
 
                 ,pDEVBLK->devnum
 
@@ -1683,9 +1683,9 @@ void  NewUpdateDevStats ()
 
         if (0 != szQueryDeviceBuff[MAX_DEVICEQUERY_LEN])    // (buffer overflow?)
         {
-            logmsg
+            WRITEMSG
             (
-                _("HHCDG005E Device query buffer overflow! (device=%4.4X)\n")
+                HHCDG005E 
 
                 ,pDEVBLK->devnum
 
@@ -1900,10 +1900,10 @@ static char *DisQuietCmd[] = { "$zapcmd", "quiet", "NoCmd" };
 
     if ( !bDoneProcessing )
     {
-        logmsg(_("HHCDG001I dyngui.dll initiated\n"));
+        WRITEMSG(HHCDG001I);
         Initialize();               // (allocate buffers, etc)
         ProcessingLoop();           // (primary processing loop)
-        logmsg(_("HHCDG002I dyngui.dll terminated\n"));
+        WRITEMSG(HHCDG002I);
         Cleanup();                  // (de-allocate resources)
     }
 }
