@@ -2431,7 +2431,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
             if( strlen( pszKeyword ) > 4 ||
                 sscanf( pszKeyword, "%hx%c", &sDevNum, &c ) != 1 )
             {
-                WRITESMG(HHCLC027E, pszOATName, pszKeyword );
+                WRITEMSG(HHCLC027E, pszOATName, pszKeyword );
                 return -1;
             }
 
