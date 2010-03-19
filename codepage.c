@@ -836,9 +836,8 @@ DLL_EXPORT void set_codepage(char *name)
 
     if(codepage_conv->name)
     {
-#if 0
-        logmsg(_("HHCCF072I Using internal codepage conversion table %s\n"),
-                 name);
+#if 1
+        WRITEMSG(HHCCF072I, "internal", name);
 #endif
     }
     else
@@ -846,15 +845,13 @@ DLL_EXPORT void set_codepage(char *name)
 #if defined(HAVE_ICONV)
         if(!set_iconv_cp(name))
         {
-#if 0
-            logmsg(_("HHCCF072I Using external codepage conversion table %s\n"),
-                 name);
+#if 1
+            WRITEMSG(HHCCF072I, "external", name);
 #endif
         }
         else
 #endif /*defined(HAVE_ICONV)*/
-            logmsg(_("HHCCF051E Codepage conversion table %s is not defined\n"),
-                 name);
+            WRITEMSG (HHCCF051E, name);
     }
 }
 

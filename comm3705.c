@@ -320,8 +320,7 @@ struct sockaddr_in *sin;
 
         if(!hostent)
         {
-            logmsg(_("HHCGI001I Unable to determine IP address from %s\n"),
-                host);
+            WRITEMSG(HHCGI001I, host);
             free(sin);
             return NULL;
         }
@@ -341,8 +340,7 @@ struct sockaddr_in *sin;
 
             if(!servent)
             {
-                logmsg(_("HHCGI002I Unable to determine port number from %s\n"),
-                    host);
+                WRITEMSG(HHCGI002I, host);
                 free(sin);
                 return NULL;
             }
@@ -355,8 +353,7 @@ struct sockaddr_in *sin;
     }
     else
     {
-        logmsg(_("HHCGI003E Invalid parameter: %s\n"),
-            host_serv);
+        WRITEMSG(HHCGI003E, host_serv);
         free(sin);
         return NULL;
     }
@@ -896,8 +893,7 @@ char                    group[16];      /* Console group             */
                   0);
     }
 
-    logmsg (_("HHCTE009I Client %s connected to %4.4X device %4.4X\n"),
-            clientip, 0x3270, 0);
+    WRITEMSG(HHCCA001I, clientip, 0x3270, 0);
 
     /* Send connection message to client */
     if (class != 'K')
@@ -1062,8 +1058,7 @@ static int commadpt_alloc_device(DEVBLK *dev)
     dev->commadpt=malloc(sizeof(COMMADPT));
     if(dev->commadpt==NULL)
     {
-        logmsg(_("HHCCA020E %4.4X:Memory allocation failure for main control block\n"),
-                dev->devnum);
+        WRITEMSG(HHCCA020E, dev->devnum);
         return -1;
     }
     memset(dev->commadpt,0,sizeof(COMMADPT));
@@ -1239,7 +1234,7 @@ static void *telnet_thread(void *vca) {
         ca->lfd=socket(AF_INET,SOCK_STREAM,0);
         if(!socket_is_socket(ca->lfd))
         {
-            logmsg(_("HHCCA003E %4.4X:Cannot obtain socket for incoming calls : %s\n"),devnum,strerror(HSO_errno));
+            WRITEMSG(HHCCA003E,devnum,strerror(HSO_errno));
             ca->have_cthread=0;
             release_lock(&ca->lock);
             return NULL;
@@ -1259,7 +1254,7 @@ static void *telnet_thread(void *vca) {
             rc=bind(ca->lfd,(struct sockaddr *)&sin,sizeof(sin));
             if(rc<0)
             {
-                    logmsg(_("HHCCA018E %4.4X:Bind failed : %s\n"),devnum,strerror(HSO_errno));
+                    WRITEMSG(HHCCA018E,devnum,strerror(HSO_errno));
                     ca_shutdown=1;
                     break;
             }
@@ -1272,9 +1267,7 @@ static void *telnet_thread(void *vca) {
         if(!ca_shutdown)
         {
             listen(ca->lfd,10);
-            logmsg(_("HHCCA005I %4.4X:Listening on port %d for incoming TCP connections\n"),
-                    devnum,
-                    ca->lport);
+            WRITEMSG(HHCCA005I, devnum, ca->lport);
         }
         for (;;) {
             ca->sfd = 0;
@@ -1350,7 +1343,9 @@ static void *commadpt_thread(void *vca)
 
     init_signaled=0;
 
-    logmsg(_("HHCCA002I %4.4X:3705 Communication thread "TIDPAT" started\n"),devnum,thread_id());
+    char buf[30];
+    sprintf(buf, "3705 device(%4.4X) thread", devnum);
+    WRITEMSG(HHCCA002I,thread_id(), getpid(), getpriority(PRIO_PROCESS,0), buf);
 
     for (;;) {
         release_lock(&ca->lock);
@@ -1369,7 +1364,7 @@ static void *commadpt_thread(void *vca)
                 }
     }
 
-    logmsg(_("HHCCA009I %4.4X:3705 utility thread terminated\n"),ca->devnum);
+    WRITEMSG(HHCCA009I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), buf);
     release_lock(&ca->lock);
     return NULL;
 }
@@ -1389,7 +1384,7 @@ static void    commadpt_halt(DEVBLK *dev)
 /* that is issued on multiple situations              */
 static void msg013e(DEVBLK *dev,char *kw,char *kv)
 {
-        logmsg(_("HHCCA013E %4.4X:Incorrect %s specification %s\n"),dev->devnum,kw,kv);
+        WRITEMSG(HHCCA013E,dev->devnum,kw,kv);
 }
 /*-------------------------------------------------------------------*/
 /* Device Initialisation                                             */
@@ -1421,8 +1416,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         rc=commadpt_alloc_device(dev);
         if(rc<0)
         {
-                logmsg(_("HHCCA010I %4.4X:initialisation not performed\n"),
-                        dev->devnum);
+                WRITEMSG(HHCCA010I, dev->devnum);
             return(-1);
         }
         if(dev->ccwtrace)
@@ -1443,13 +1437,13 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
             pc=parser(ptab,argv[i],&res);
             if(pc<0)
             {
-                logmsg(_("HHCCA011E %4.4X:Error parsing %s\n"),dev->devnum,argv[i]);
+                WRITEMSG(HHCCA011E,dev->devnum,argv[i]);
                 errcnt++;
                 continue;
             }
             if(pc==0)
             {
-                logmsg(_("HHCCA012E %4.4X:Unrecognized parameter %s\n"),dev->devnum,argv[i]);
+                WRITEMSG(HHCCA012E,dev->devnum,argv[i]);
                 errcnt++;
                 continue;
             }
@@ -1490,7 +1484,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         }
         if(errcnt>0)
         {
-            logmsg(_("HHCCA021I %4.4X:Initialisation failed due to previous errors\n"),dev->devnum);
+            WRITEMSG(HHCCA021I,dev->devnum);
             return -1;
         }
         in_temp.s_addr=dev->commadpt->lhost;
@@ -1527,7 +1521,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
 
         if(create_thread(&dev->commadpt->tthread,&sysblk.detattr,telnet_thread,dev->commadpt,thread_name2))
         {
-            logmsg(D_("HHCCA022E create_thread: %s\n"),strerror(errno));
+            WRITEMSG(HHCCA022E,strerror(errno));
             release_lock(&dev->commadpt->lock);
             return -1;
         }
@@ -1541,7 +1535,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
 
         if(create_thread(&dev->commadpt->cthread,&sysblk.detattr,commadpt_thread,dev->commadpt,thread_name))
         {
-            logmsg(D_("HHCCA022E create_thread: %s\n"),strerror(errno));
+            WRITEMSG(HHCCA022E,strerror(errno));
             release_lock(&dev->commadpt->lock);
             return -1;
         }

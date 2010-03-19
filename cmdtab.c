@@ -258,8 +258,7 @@ int ProcessPanelCommand (char* pszCmdLine)
     /* Error: unknown/unsupported command... */
     ASSERT( cmd_argv[0] );
 
-    logmsg( _("HHCPN139E Command \"%s\" not found; enter '?' for list.\n"),
-              cmd_argv[0] );
+    WRITEMSG( HHCPN139E, cmd_argv[0] );
 
 ProcessPanelCommandExit:
 
@@ -286,9 +285,7 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
 
     if (argc < 2)
     {
-        logmsg( _("HHCPN140I Valid panel commands are...\n\n") );
-        logmsg( "  %-9.9s    %s \n", "Command", "Description..." );
-        logmsg( "  %-9.9s    %s \n", "-------", "-----------------------------------------------" );
+        WRITEMSG( HHCPN140I, "Command", "Description", "-------", "-----------------------------------------------" );
 
         /* List standard formatted commands from our routing table... */
 
@@ -312,7 +309,7 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
             }
         }
     
-        logmsg( _("HHCPN142I Command %s not found - no help available\n"),argv[1]);
+        WRITEMSG( HHCPN142I, argv[1]);
         return -1;
     }
     return 0;

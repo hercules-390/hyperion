@@ -265,10 +265,34 @@
 #define HHCDA054I "Set file mask(%2.2X)"
 #define HHCDA055I "Search key(%s)"
 
-/* console.c */
+/* cmdtab.c */
+#define HHCPN139E "Command(%s) not found, enter '?' for list"
+#define HHCPN140I "Valid panel commands are\n  %-9.9s    %s \n  %-9.9s    %s "
+#define HHCPN142I "Command(%s) not found - no help available"
+
+/* codepage.c */
+#define HHCCF072I "Using %s codepage conversion table %s"
+#define HHCCF051E "Codepage conversion table %s is not defined"
+
+/* comm3705.c */
+#define HHCCA001I "Client(%s) connected to %4.4X device(%4.4X)"
+#define HHCCA002I "Thread started tid(" TIDPAT "), pid(%d), prio(%d), name(%s)"
+#define HHCCA003E "Device(%4.4X) Cannot obtain socket for incoming calls: %s"
+#define HHCCA005I "Device(%4.4X) Listening on port(%d) for incoming TCP connections"
+#define HHCCA009I "Thread ended tid(" TIDPAT "), pid(%d), prio(%d), name(%s)"
+#define HHCCA010I "device(%4.4X)initialisation not performed"
+#define HHCCA011E "Device(%4.4X) Error parsing %s"
+#define HHCCA012E "Device(%4.4X) Unrecognized parameter(%s)"
+#define HHCCA013E "Device(%4.4X) Incorrect %s specification %s"
+#define HHCCA018E "Device(%4.4X) Bind failed: %s"
+#define HHCCA020E "Device(%4.4X) Memory allocation failure for main control block"
+#define HHCCA021I "Device(%4.4X) Initialisation failed due to previous errors"
+#define HHCCA022E "Cannot create commadpt thread: %s"
+
+/* console.c and comm3705.c */
 #define HHCGI001I "Unable to determine IP address from (%s)"
 #define HHCGI002I "Unable to determine port number from (%s)"
-#define HHCGI003E "Invalid parameter: (%s)"
+#define HHCGI003E "Invalid parameter(%s)"
 
 #define HHCTE001I "Thread started tid(" TIDPAT "), pid(%d), prio(%d), name(%s)"
 #define HHCTE002W "Waiting for port(%u) to become free"
