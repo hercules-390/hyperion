@@ -1234,7 +1234,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
     char             *psz, *prod_id, *prod_proc;
     DWORD             dw;
     PGNSI             pgnsi;
-#if _MSC_VER >= 1500 && defined(PRODUCT_ULTIMATE_E)
+#if _MSC_VER >= 1500 // && defined(PRODUCT_ULTIMATE_E)
     PGPI              pgpi;
 #endif /* VS9 && SDK7 */
 
@@ -1267,7 +1267,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
             psz = "9x"; 
             break;
         case VER_PLATFORM_WIN32_NT:
-#if _MSC_VER >= 1500 && defined(PRODUCT_ULTIMATE_E)
+#if _MSC_VER >= 1500 // && defined(PRODUCT_ULTIMATE_E)
 // This list is current as of 2010-03-13 using V7.0 MS SDK
             if ( vi.dwMajorVersion == 6 )
             {
@@ -1295,99 +1295,150 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
                 switch( dw )
                 {
                     case PRODUCT_ULTIMATE:
+#if defined(PRODUCT_ULTIMATE_E)
                     case PRODUCT_ULTIMATE_E:
+#endif // defined(PRODUCT_ULTIMATE_E)
+#if defined(PRODUCT_ULTIMATE_N)
                     case PRODUCT_ULTIMATE_N:
+#endif // defined(PRODUCT_ULTIMATE_N)
                         prod_id = "Ultimate Edition";
                         break;
+#if defined(PRODUCT_PROFESSIONAL) || defined(PRODUCT_PROFESSIONAL_E) || defined(PRODUCT_PROFESSION_N)
+#if defined(PRODUCT_PROFESSIONAL)
                     case PRODUCT_PROFESSIONAL:
+#endif 
+#if defined(PRODUCT_PROFESSIONAL_E)
                     case PRODUCT_PROFESSIONAL_E:
+#endif 
+#if defined(PRODUCT_PROFESSIONAL_N)
                     case PRODUCT_PROFESSIONAL_N:
+#endif 
                         prod_id = "Professional";
                         break;
+#endif 
                     case PRODUCT_HOME_PREMIUM:
+#if defined(PRODUCT_HOME_PREMIUM_E)
                     case PRODUCT_HOME_PREMIUM_E:
+#endif 
+#if defined(PRODUCT_HOME_PREMIUM_N)
                     case PRODUCT_HOME_PREMIUM_N:
+#endif
                         prod_id = "Home Premium Edition";
                         break;
                     case PRODUCT_HOME_BASIC:
+#if defined(PRODUCT_HOME_BASIC_E)
                     case PRODUCT_HOME_BASIC_E:
+#endif 
                     case PRODUCT_HOME_BASIC_N:
                         prod_id = "Home Basic Edition";
                         break;
                     case PRODUCT_HOME_SERVER:
                         prod_id = "Home Server";
                         break;
+#if defined(PRODUCT_HOME_PREMIUM_SERVER)
                     case PRODUCT_HOME_PREMIUM_SERVER:
                         prod_id = "Home Premium Server";
                         break;
+#endif 
+#if defined(PRODUCT_HYPERV)
                     case PRODUCT_HYPERV:
                         prod_id = "Hyper-V";
                         break;
+#endif 
                     case PRODUCT_ENTERPRISE:
+#if defined(PRODUCT_ENTERPRISE_E)
                     case PRODUCT_ENTERPRISE_E:
+#endif 
+#if defined(PRODUCT_ENTERPRISE_N)
                     case PRODUCT_ENTERPRISE_N:
+#endif 
                         prod_id = "Enterprise Edition";
                         break;
                     case PRODUCT_BUSINESS:
                     case PRODUCT_BUSINESS_N:
                         prod_id = "Business Edition";
                         break;
+#if defined(PRODUCT_MEDIUMBUSINESS_SERVER_MANAGEMENT)
                     case PRODUCT_MEDIUMBUSINESS_SERVER_MANAGEMENT:
                         prod_id = "Essential Business Server Management";
                         break;
+#endif
+#if defined(PRODUCT_MEDIUMBUSINESS_SERVER_MESSAGING)
                     case PRODUCT_MEDIUMBUSINESS_SERVER_MESSAGING:
                         prod_id = "Essential Business Server Messaging";
                         break;
+#endif
+#if defined(PRODUCT_MEDIUMBUSINESS_SERVER_SECURITY)
                     case PRODUCT_MEDIUMBUSINESS_SERVER_SECURITY:
                         prod_id = "Essential Business Server Security";
                         break;
+#endif
                     case PRODUCT_STARTER:
+#if defined(PRODUCT_STARTER_E)
                     case PRODUCT_STARTER_E:
+#endif
+#if defined(PRODUCT_STARTER_N)
                     case PRODUCT_STARTER_N:
+#endif
                         prod_id = "Starter Edition";
                         break;
                     case PRODUCT_CLUSTER_SERVER:
                         prod_id = "Cluster Server Edition";
                         break;
+#if defined(PRODUCT_CLUSTER_SERVER_V)
                     case PRODUCT_CLUSTER_SERVER_V:
                         prod_id = "Cluster Server Edition w/o Hyper-V";
                         break;
+#endif
                     case PRODUCT_DATACENTER_SERVER:
                         prod_id = "Datacenter Edition";
                         break;
+#if defined(PRODUCT_DATACENTER_SERVER_V)
                     case PRODUCT_DATACENTER_SERVER_V:
                         prod_id = "Datacenter Edition w/o Hyper-V";
                         break;
+#endif 
+
                     case PRODUCT_DATACENTER_SERVER_CORE:
                         prod_id = "Datacenter Edition (core)";
                         break;
+#if defined(PRODUCT_DATACENTER_SERVER_CORE_V)
                     case PRODUCT_DATACENTER_SERVER_CORE_V:
                         prod_id = "Datacenter Edition w/o Hyper-V (core)";
                         break;
+#endif
                     case PRODUCT_ENTERPRISE_SERVER:
                         prod_id = "Enterprise Edition";
                         break;
+#if defined(PRODUCT_ENTERPRISE_SERVER_V)
                     case PRODUCT_ENTERPRISE_SERVER_V:
                         prod_id = "Enterprise Edition w/o Hyper-V";
                         break;
+#endif
                     case PRODUCT_ENTERPRISE_SERVER_CORE:
                         prod_id = "Enterprise Edition (core)";
                         break;
+#if defined(PRODUCT_ENTERPRISE_SERVER_CORE_V)
                     case PRODUCT_ENTERPRISE_SERVER_CORE_V:
                         prod_id = "Enterprise Edition w/o Hyper-V (core)";
                         break;
+#endif 
                     case PRODUCT_ENTERPRISE_SERVER_IA64:
                         prod_id = "Enterprise Edition for IA64 Systems";
                         break;
                     case PRODUCT_SERVER_FOR_SMALLBUSINESS:
                         prod_id = "Essential Server Solutions";
                         break;
+#if defined(PRODUCT_SERVER_FOR_SMALLBUSINESS_V)
                     case PRODUCT_SERVER_FOR_SMALLBUSINESS_V:
                         prod_id = "Essential Server Solutions w/o Hyper-V";
                         break;
+#endif
+#if defined(PRODUCT_SERVER_FOUNDATION)
                     case PRODUCT_SERVER_FOUNDATION:
                         prod_id = "Server Foundation";
                         break;
+#endif
                     case PRODUCT_SMALLBUSINESS_SERVER:
                         prod_id = "Small Business Server";
                         break;
@@ -1397,15 +1448,19 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
                     case PRODUCT_STANDARD_SERVER:
                         prod_id = "Standard Edition";
                         break;
+#if defined(PRODUCT_STANDARD_SERVER_V)
                     case PRODUCT_STANDARD_SERVER_V:
                         prod_id = "Standard Edition w/o Hyper-V";
                         break;
+#endif
                     case PRODUCT_STANDARD_SERVER_CORE:
                         prod_id = "Standard Edition (core)";
                         break;
+#if defined(PRODUCT_STANDARD_SERVER_CORE_V)
                     case PRODUCT_STANDARD_SERVER_CORE_V:
                         prod_id = "Standard Edition w/o Hyper-V (core)";
                         break;
+#endif 
                     case PRODUCT_STORAGE_ENTERPRISE_SERVER:
                         prod_id = "Storage Server Enterprise";
                         break;
@@ -1418,62 +1473,106 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
                     case PRODUCT_STORAGE_WORKGROUP_SERVER:
                         prod_id = "Storage Server Workgroup";
                         break;
+#if defined(PRODUCT_STORAGE_ENTERPRISE_SERVER_CORE)
                     case PRODUCT_STORAGE_ENTERPRISE_SERVER_CORE:
                         prod_id = "Storage Server Enterprise (core)";
                         break;
+#endif
+#if defined(PRODUCT_STORAGE_EXPRESS_SERVER_CORE)
                     case PRODUCT_STORAGE_EXPRESS_SERVER_CORE:
                         prod_id = "Storage Server Express (core)";
                         break;
+#endif
+#if defined(PRODUCT_STORAGE_STANDARD_SERVER_CORE)
                     case PRODUCT_STORAGE_STANDARD_SERVER_CORE:
                         prod_id = "Storage Server Standard (core)";
                         break;
+#endif
+#if defined(PRODUCT_STORAGE_WORKGROUP_SERVER_CORE)
                     case PRODUCT_STORAGE_WORKGROUP_SERVER_CORE:
                         prod_id = "Storage Server Workgroup (core)";
                         break;
+#endif
+#if defined(PRODUCT_SB_SOLUTION_SERVER) || defined(PRODUCT_SB_SOLUTION_SERVER_EM)
+#if defined(PRODUCT_SB_SOLUTION_SERVER)
                     case PRODUCT_SB_SOLUTION_SERVER:
+#endif
+#if defined(PRODUCT_SB_SOLUTION_SERVER_EM)
                     case PRODUCT_SB_SOLUTION_SERVER_EM:
+#endif
                         prod_id = "Small Business Solution Server";
                         break;
+#endif
+#if defined(PRODUCT_SERVER_FOR_SB_SOLUTIONS) || defined(PRODUCT_SERVER_FOR_SB_SOLUTIONS_EM)
+#if defined(PRODUCT_SERVER_FOR_SB_SOLUTIONS)
                     case PRODUCT_SERVER_FOR_SB_SOLUTIONS:
+#endif
+#if defined(PRODUCT_SERVER_FOR_SB_SOLUTIONS_EM)
                     case PRODUCT_SERVER_FOR_SB_SOLUTIONS_EM:
+#endif 
                         prod_id = "Server for Small Business Solutions";
                         break;
+#endif
+#if defined(PRODUCT_STANDARD_SERVER_SOLUTIONS)
                     case PRODUCT_STANDARD_SERVER_SOLUTIONS:
                         prod_id = "Standard Server Solutions";
                         break;
+#endif
+#if defined(PRODUCT_STANDARD_SERVER_SOLUTIONS_CORE)
                     case PRODUCT_STANDARD_SERVER_SOLUTIONS_CORE:
                         prod_id = "Standard Server Solutions (core)";
                         break;
+#endif
+#if defined(PRODUCT_SOLUTION_EMBEDDEDSERVER)
                     case PRODUCT_SOLUTION_EMBEDDEDSERVER:
                         prod_id = "Embedded Solution Server";
                         break;
+#endif
+#if defined(PRODUCT_SOLUTION_EMBEDDEDSERVER_CORE)
                     case PRODUCT_SOLUTION_EMBEDDEDSERVER_CORE:
                         prod_id = "Embedded Solution Server (core)";
                         break;
+#endif
+#if defined(PRODUCT_SMALLBUSINESS_SERVER_PREMIUM_CORE)
                     case PRODUCT_SMALLBUSINESS_SERVER_PREMIUM_CORE:
                         prod_id = "Small Business Server Premium Edition (core)";
                         break;
+#endif
+#if defined(PRODUCT_ESSENTIALBUSINESS_SERVER_MGMT)
                     case PRODUCT_ESSENTIALBUSINESS_SERVER_MGMT:
                         prod_id = "EBS 2008 Management";
                         break;
+#endif
+#if defined(PRODUCT_ESSENTIALBUSINESS_SERVER_ADDL)
                     case PRODUCT_ESSENTIALBUSINESS_SERVER_ADDL:
                         prod_id = "EBS 2008 Additional";
                         break;
+#endif
+#if defined(PRODUCT_ESSENTIALBUSINESS_SERVER_MGMTSVC)
                     case PRODUCT_ESSENTIALBUSINESS_SERVER_MGMTSVC:
                         prod_id = "EBS 2008 Management Services";
                         break;
+#endif
+#if defined(PRODUCT_ESSENTIALBUSINESS_SERVER_ADDLSVC)
                     case PRODUCT_ESSENTIALBUSINESS_SERVER_ADDLSVC:
                         prod_id = "EBS 2008 Additional Services";
                         break;
+#endif
+#if defined(PRODUCT_EMBEDDED)
                     case PRODUCT_EMBEDDED:
                         prod_id = "Embedded Server";
                         break;
+#endif
+#if defined(PRODUCT_WEB_SERVER)
                     case PRODUCT_WEB_SERVER:
                         prod_id = "Web Server Edition";
                         break;
+#endif
+#if defined(PRODUCT_WEB_SERVER_CORE)
                     case PRODUCT_WEB_SERVER_CORE:
                         prod_id = "Web Server Edition (core)";
                         break;
+#endif
                     case PRODUCT_UNDEFINED:
                         prod_id = "Undefined Product";
                         break;
@@ -1492,8 +1591,10 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
                     psz = "Server 2003 R2";
                 else if ( vi.wSuiteMask & VER_SUITE_STORAGE_SERVER )
                     psz = "Storage Server 2003";
+#if defined(VER_SUITE_WH_SERVER)
                 else if ( vi.wSuiteMask & VER_SUITE_WH_SERVER )
                     psz = "Home Server";
+#endif 
                 else if ( vi.wProductType == VER_NT_WORKSTATION &&
                           si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64 )
                     psz = "XP Professional x64 Edition";
