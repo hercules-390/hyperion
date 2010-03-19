@@ -107,7 +107,7 @@ void *stop_cpus_and_ipl(int *ipltype)
   CPU_BITMAP mask;
 
   panel_command("stopall");
-  logmsg("HHCDN001I Diagnose 0x308 called: System is re-ipled\n");
+  WRITEMSG(HHCDN001I);
   sprintf(iplcmd, "%s %03X", ipltype, sysblk.ipldev);
   do
   {
@@ -118,7 +118,7 @@ void *stop_cpus_and_ipl(int *ipltype)
     {
       if(mask & 1)
       {
-        logmsg("HHCDN002I Checking cpu %d\n", i);
+       WRITEMSG(HHCDN002I, i);
         if(IS_CPU_ONLINE(i) && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED)
           cpustates = sysblk.regs[i]->cpustate;
       }
@@ -127,7 +127,7 @@ void *stop_cpus_and_ipl(int *ipltype)
     RELEASE_INTLOCK(NULL);
     if(cpustates != CPUSTATE_STOPPED)
     {
-      logmsg("HHCDN003I Waiting 1 second for cpu's to stop...\n");
+      WRITEMSG(HHCDN003I);
       SLEEP(1);
     }
   }
@@ -591,8 +591,7 @@ char *ipltype;                          /* "ipl" or "iplc"           */
             ipltype = "ipl";
         diag308_cthread:
             if(create_thread(&tid, DETACHED, stop_cpus_and_ipl, ipltype, "Stop cpus and ipl"))
-                logmsg("HHCDN004E Error starting thread in diagnose 0x308: %s\n",
-                        strerror(errno));
+                WRITEMSG(HHCDN004E, strerror(errno));
             regs->cpustate = CPUSTATE_STOPPING;
             ON_IC_INTERRUPT(regs);
             break;

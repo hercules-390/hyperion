@@ -494,6 +494,12 @@
 #define HHCCT033E "Device(%4.4X) Error: read: %s"
 #define HHCCT034E "Unrecognized/unsupported CTC emulation type(%s)"
 
+/* diagnose.c */
+#define HHCDN001I "Diagnose 0x308 called: System is re-ipled"
+#define HHCDN002I "Checking cpu(%d)"
+#define HHCDN003I "Waiting 1 second for cpu's to stop"
+#define HHCDN004E "Error starting thread in diagnose 0x308: %s"
+
 /* hao.c */
 #define HHCAO001I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCAO002I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
