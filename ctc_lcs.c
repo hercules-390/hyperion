@@ -229,8 +229,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         pLCSBLK = malloc( sizeof( LCSBLK ) );
         if( !pLCSBLK )
         {
-            logmsg( _("HHCLC001E %4.4X unable to allocate LCSBLK\n"),
-                    pDEVBLK->devnum );
+            WRITEMSG(HHCLC001E, pDEVBLK->devnum );
             return -1;
         }
         memset( pLCSBLK, 0, sizeof( LCSBLK ) );
@@ -314,8 +313,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
         if( !pLCSDev->pDEVBLK[0] )
         {
-            logmsg(D_("HHCLC040E %4.4X LCSDEV %4.4X not in configuration\n"),
-                pDEVBLK->group->memdev[0]->devnum, pLCSDev->sAddr );
+            WRITEMSG(HHCLC040E, pDEVBLK->group->memdev[0]->devnum, pLCSDev->sAddr );
             return -1;
         }
 
@@ -338,8 +336,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
             if( !pLCSDev->pDEVBLK[1] )
             {
-                logmsg(D_("HHCLC040E %4.4X LCSDEV %4.4X not in configuration\n"),
-                    pDEVBLK->group->memdev[0]->devnum, pLCSDev->sAddr^1 );
+                WRITEMSG(HHCLC040E, pDEVBLK->group->memdev[0]->devnum, pLCSDev->sAddr^1 );
                 return -1;
             }
 
@@ -375,8 +372,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
                                          &pLCSBLK->Port[pLCSDev->bPort].fd,
                                          pLCSBLK->Port[pLCSDev->bPort].szNetDevName );
 
-            logmsg(_("HHCLC073I %4.4X: TAP device %s opened\n"),
-                      pLCSDev->pDEVBLK[0]->devnum,
+            WRITEMSG(HHCLC073I, pLCSDev->pDEVBLK[0]->devnum,
                       pLCSBLK->Port[pLCSDev->bPort].szNetDevName);
 
 #if defined(OPTION_W32_CTCI)
@@ -391,15 +387,13 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
                 tt32ctl.tt32ctl_devbuffsize = pLCSBLK->iKernBuff;
                 if( TUNTAP_IOCtl( pLCSBLK->Port[pLCSDev->bPort].fd, TT32SDEVBUFF, (char*)&tt32ctl ) != 0  )
                 {
-                    logmsg( _("HHCLC074W TT32SDEVBUFF failed for device %s: %s.\n"),
-                            pLCSBLK->Port[pLCSDev->bPort].szNetDevName, strerror( errno ) );
+                    WRITEMSG(HHCLC074W, pLCSBLK->Port[pLCSDev->bPort].szNetDevName, strerror( errno ) );
                 }
 
                 tt32ctl.tt32ctl_iobuffsize = pLCSBLK->iIOBuff;
                 if( TUNTAP_IOCtl( pLCSBLK->Port[pLCSDev->bPort].fd, TT32SIOBUFF, (char*)&tt32ctl ) != 0  )
                 {
-                    logmsg( _("HHCLC075W TT32SIOBUFF failed for device %s: %s.\n"),
-                            pLCSBLK->Port[pLCSDev->bPort].szNetDevName, strerror( errno ) );
+                    WRITEMSG(HHCLC075W, pLCSBLK->Port[pLCSDev->bPort].szNetDevName, strerror( errno ) );
                 }
             }
 #endif
@@ -886,8 +880,7 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U16   sCount,
                     pDEVBLK->scsw.flag2 & SCSW2_FC_CLEAR )
                 {
                     if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
-                        logmsg( _("HHCLC002I %4.4X: Halt or Clear Recognized\n"),
-                                pDEVBLK->devnum );
+                        WRITEMSG(HHCLC002I, pDEVBLK->devnum );
 
                     *pUnitStat = CSW_CE | CSW_DE;
                     *pResidual = sCount;
@@ -958,8 +951,7 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U16   sCount,
 
         if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
         {
-            logmsg( _("HHCLC003I %4.4X: LCS Read:\n"),
-                    pDEVBLK->devnum );
+            WRITEMSG(HHCLC003I, pDEVBLK->devnum );
             packet_trace( pIOBuf, iLength );
         }
 
@@ -1033,8 +1025,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
             // Trace received command frame...
             if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
             {
-                logmsg( _("HHCLC051I %4.4X: Cmd Packet...\n"),
-                        pDEVBLK->devnum );
+                WRITEMSG(HHCLC051I, pDEVBLK->devnum );
                 packet_trace( (BYTE*)pCmdFrame, iLength );
             }
 
@@ -1049,37 +1040,37 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
             {
             case LCS_CMD_STARTUP:       // Start Host
                 if( pLCSDEV->pLCSBLK->fDebug )
-                    logmsg( _("HHCLC043I %4.4X: Startup\n"),pDEVBLK->devnum);
+                    WRITEMSG(HHCLC043I,pDEVBLK->devnum);
                 LCS_Startup( pLCSDEV, pCmdFrame );
                 break;
 
             case LCS_CMD_SHUTDOWN:      // Shutdown Host
                 if( pLCSDEV->pLCSBLK->fDebug )
-                    logmsg( _("HHCLC044I %4.4X: Shutdown\n"),pDEVBLK->devnum);
+                    WRITEMSG(HHCLC044I,pDEVBLK->devnum);
                 LCS_Shutdown( pLCSDEV, pCmdFrame );
                 break;
 
             case LCS_CMD_STRTLAN:       // Start LAN
                 if( pLCSDEV->pLCSBLK->fDebug )
-                    logmsg( _("HHCLC045I %4.4X: Start LAN\n"),pDEVBLK->devnum);
+                    WRITEMSG(HHCLC045I,pDEVBLK->devnum);
                 LCS_StartLan( pLCSDEV, pCmdFrame );
                 break;
 
             case LCS_CMD_STOPLAN:       // Stop  LAN
                 if( pLCSDEV->pLCSBLK->fDebug )
-                    logmsg( _("HHCLC046I %4.4X: Stop LAN\n"),pDEVBLK->devnum);
+                    WRITEMSG(HHCLC046I,pDEVBLK->devnum);
                 LCS_StopLan( pLCSDEV, pCmdFrame );
                 break;
 
             case LCS_CMD_QIPASSIST:     // Query IP Assists
                 if( pLCSDEV->pLCSBLK->fDebug )
-                    logmsg( _("HHCLC047I %4.4X: Query IP Assists\n"),pDEVBLK->devnum);
+                    WRITEMSG(HHCLC047I,pDEVBLK->devnum);
                 LCS_QueryIPAssists( pLCSDEV, pCmdFrame );
                 break;
 
             case LCS_CMD_LANSTAT:       // LAN Stats
                 if( pLCSDEV->pLCSBLK->fDebug )
-                    logmsg( _("HHCLC048I %4.4X: Statistics\n"),pDEVBLK->devnum);
+                    WRITEMSG(HHCLC048I,pDEVBLK->devnum);
                 LCS_LanStats( pLCSDEV, pCmdFrame );
                 break;
 
@@ -1113,8 +1104,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
             // Trace Ethernet frame before sending to TAP device
             if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
             {
-                logmsg( _("HHCLC004I %4.4X: Sending packet to %s:\n"),
-                        pDEVBLK->devnum, pDEVBLK->filename );
+                WRITEMSG(HHCLC004I, pDEVBLK->devnum, pDEVBLK->filename );
                 packet_trace( (BYTE*)pEthFrame, iEthLen );
             }
 
@@ -1132,8 +1122,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
             break;
 
         default:
-            logmsg( _("HHCLC050E %4.4X: LCS_Write: Unsupported frame type 0x%2.2X\n"),
-                    pDEVBLK->devnum, pDEVBLK->filename );
+            WRITEMSG(HHCLC050E, pDEVBLK->devnum, pDEVBLK->filename );
             ASSERT( FALSE );
             pDEVBLK->sense[0] = SENSE_EC;
             *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
@@ -1149,8 +1138,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
     if( pLCSDEV->fReplyPending )
     {
         if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
-            logmsg( _("HHCLC006I %4.4X Triggering Event.\n"),
-                    pDEVBLK->devnum );
+            WRITEMSG(HHCLC006I, pDEVBLK->devnum );
 
         obtain_lock( &pLCSDEV->EventLock );
         signal_condition( &pLCSDEV->Event );
@@ -1260,9 +1248,7 @@ static void  LCS_Startup( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
     // Make sure it doesn't exceed our compiled maximum
     if (pLCSDEV->iMaxFrameBufferSize > sizeof(pLCSDEV->bFrameBuffer))
     {
-        logmsg( _("HHCLC049W %4.4X: LCS_Startup: Requested frame buffer size of 0x%4.4X "
-                  "larger than compiled size of 0x%4.4X; requested size ignored.\n"),
-                  pLCSDEV->pDEVBLK[1]->devnum,
+        WRITEMSG(HHCLC049W, pLCSDEV->pDEVBLK[1]->devnum,
                   pLCSDEV->iMaxFrameBufferSize,
                   sizeof( pLCSDEV->bFrameBuffer ) );
         pLCSDEV->iMaxFrameBufferSize = sizeof(pLCSDEV->bFrameBuffer);
@@ -1271,9 +1257,7 @@ static void  LCS_Startup( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
     // Make sure it's not smaller than the compiled minimum size
     if (pLCSDEV->iMaxFrameBufferSize < CTC_MIN_FRAME_BUFFER_SIZE)
     {
-        logmsg( _("HHCLC054W %4.4X: LCS_Startup: Requested frame buffer size of 0x%4.4X "
-                  "smaller than compiled minimum size of 0x%4.4X; requested size ignored.\n"),
-                  pLCSDEV->pDEVBLK[1]->devnum,
+        WRITEMSG(HHCLC054W, pLCSDEV->pDEVBLK[1]->devnum,
                   pLCSDEV->iMaxFrameBufferSize,
                   CTC_MIN_FRAME_BUFFER_SIZE );
         pLCSDEV->iMaxFrameBufferSize = sizeof(pLCSDEV->bFrameBuffer);
@@ -1605,8 +1589,7 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 
     if( fd == -1 )
     {
-        logmsg( _("HHCLC007E Error in call to socket: %s.\n"),
-                strerror( HSO_errno ) );
+        WRITEMSG(HHCLC007E, strerror( HSO_errno ) );
         // FIXME: we should probably be returning a non-zero hwReturnCode
         // STORE_HW( pStdCmdReplyFrame->bLCSCmdHdr.hwReturnCode, 0x0001 );
         return;
@@ -1623,8 +1606,7 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 
     if( TUNTAP_IOCtl( fd, SIOCGIFHWADDR, (char*)&ifr ) != 0  )
     {
-        logmsg( _("HHCLC008E ioctl error on device %s: %s.\n"),
-                pLCSPORT->szNetDevName, strerror( errno ) );
+        WRITEMSG(HHCLC008E, pLCSPORT->szNetDevName, strerror( errno ) );
         // FIXME: we should probably be returning a non-zero hwReturnCode
         // STORE_HW( pStdCmdReplyFrame->bLCSCmdHdr.hwReturnCode, 0x0002 );
         return;
@@ -1638,16 +1620,14 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 #endif // defined(SIOCGIFHWADDR)
 
     /* Report what MAC address we will really be using */
-    logmsg( _("HHCLC055I %s using MAC %2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X\n"),
-            pLCSPORT->szNetDevName, *(pIFaceMAC+0),*(pIFaceMAC+1),
+    WRITEMSG(HHCLC055I, pLCSPORT->szNetDevName, *(pIFaceMAC+0),*(pIFaceMAC+1),
                                     *(pIFaceMAC+2),*(pIFaceMAC+3),
                                     *(pIFaceMAC+4),*(pIFaceMAC+5));
 
     /* Issue warning if different from specified value */
     if (memcmp( pPortMAC, pIFaceMAC, IFHWADDRLEN ) != 0)
     {
-        logmsg( _("HHCLC056W %s NOT using MAC %2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X\n"),
-                pLCSPORT->szNetDevName, *(pPortMAC+0),*(pPortMAC+1),
+        WRITEMSG(HHCLC056W, pLCSPORT->szNetDevName, *(pPortMAC+0),*(pPortMAC+1),
                                         *(pPortMAC+2),*(pPortMAC+3),
                                         *(pPortMAC+4),*(pPortMAC+5));
 
@@ -1749,8 +1729,7 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
         {
             if( pLCSPORT->fd < 0 || pLCSPORT->fCloseInProgress )
                 break;
-            logmsg( _("HHCLC042E Port %2.2X: Read error: %s\n"),
-                pLCSPORT->bPort, strerror( errno ) );
+            WRITEMSG(HHCLC042E, pLCSPORT->bPort, strerror( errno ) );
             SLEEP(1);           // (purposeful long delay)
             continue;
         }
@@ -1758,8 +1737,7 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
         if( pLCSPORT->pLCSBLK->fDebug )
         {
             // Trace the frame
-            logmsg( _("HHCLC009I Port %2.2X: Read Buffer:\n"),
-                    pLCSPORT->bPort );
+            WRITEMSG(HHCLC009I, pLCSPORT->bPort );
             packet_trace( szBuff, iLength );
 
             bReported = 0;
@@ -1787,9 +1765,7 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
 
                     if( pLCSPORT->pLCSBLK->fDebug && !bReported )
                     {
-                        logmsg( _("HHCLC010I Port %2.2X: "
-                                  "IPV4 frame for %8.8X\n"),
-                                pLCSPORT->bPort, ntohl(lIPAddress) );
+                        WRITEMSG(HHCLC010I, pLCSPORT->bPort, ntohl(lIPAddress) );
 
                         bReported = 1;
                     }
@@ -1814,9 +1790,7 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
 
                     if( pLCSPORT->pLCSBLK->fDebug && !bReported )
                     {
-                        logmsg( _("HHCLC011I Port %2.2X: "
-                                  "ARP frame for %8.8X\n"),
-                                pLCSPORT->bPort, ntohl(lIPAddress) );
+                        WRITEMSG(HHCLC011I, pLCSPORT->bPort, ntohl(lIPAddress) );
 
                         bReported = 1;
                     }
@@ -1841,10 +1815,9 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
 
                     if( pLCSPORT->pLCSBLK->fDebug && !bReported )
                     {
-                        logmsg
+                        WRITEMSG
                         (
-                            _("HHCLC011I Port %2.2X: RARP frame for "
-                              "%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X\n")
+                            HHCLC076I
 
                             ,pLCSPORT->bPort
                             ,*(pMAC+0)
@@ -1875,8 +1848,7 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
                 {
                     if( pLCSPORT->pLCSBLK->fDebug && !bReported )
                     {
-                        logmsg( _("HHCLC012I Port %2.2X: SNA frame\n"),
-                                pLCSPORT->bPort );
+                        WRITEMSG(HHCLC012I, pLCSPORT->bPort );
 
                         bReported = 1;
                     }
@@ -1905,20 +1877,14 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
                 pMatchingLCSDEV = pPrimaryLCSDEV;
 
                 if( pLCSPORT->pLCSBLK->fDebug )
-                    logmsg( _("HHCLC013I Port %2.2X: "
-                              "No match found - "
-                              "selecting primary %4.4X\n"),
-                            pLCSPORT->bPort, pMatchingLCSDEV->sAddr );
+                    WRITEMSG(HHCLC013I, pLCSPORT->bPort, pMatchingLCSDEV->sAddr );
             }
             else if( pSecondaryLCSDEV && pSecondaryLCSDEV->fStarted )
             {
                 pMatchingLCSDEV = pSecondaryLCSDEV;
 
                 if( pLCSPORT->pLCSBLK->fDebug )
-                    logmsg( _("HHCLC014I Port %2.2X: "
-                              "No match found - "
-                              "selecting secondary %4.4X\n"),
-                            pLCSPORT->bPort, pMatchingLCSDEV->sAddr );
+                    WRITEMSG(HHCLC014I, pLCSPORT->bPort, pMatchingLCSDEV->sAddr );
             }
         }
 
@@ -1926,17 +1892,13 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
         if( !pMatchingLCSDEV )
         {
             if( pLCSPORT->pLCSBLK->fDebug )
-                logmsg( _("HHCLC015I Port %2.2X: "
-                          "No match found - Discarding frame\n"),
-                        pLCSPORT->bPort );
+                WRITEMSG(HHCLC015I, pLCSPORT->bPort );
 
             continue;
         }
 
         if( pLCSPORT->pLCSBLK->fDebug )
-            logmsg( _("HHCLC016I Port %2.2X: "
-                      "Enqueing frame to device %4.4X (%8.8X)\n"),
-                    pLCSPORT->bPort, pMatchingLCSDEV->sAddr,
+            WRITEMSG(HHCLC016I, pLCSPORT->bPort, pMatchingLCSDEV->sAddr,
                     ntohl(pMatchingLCSDEV->lIPAddress) );
 
         // Match was found.
@@ -1948,9 +1910,7 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
             if (EMSGSIZE == errno)
             {
                 if( pLCSPORT->pLCSBLK->fDebug )
-                    logmsg( _("HHCLC041W Port %2.2X: "
-                        "Frame too big; discarded.\n"),
-                        pLCSPORT->bPort );
+                    WRITEMSG(HHCLC041W, pLCSPORT->bPort );
                 break;
             }
             ASSERT( ENOBUFS == errno );
@@ -2209,8 +2169,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
         case 'n':
             if( strlen( optarg ) > sizeof( pDEVBLK->filename ) - 1 )
             {
-                logmsg( _("HHCLC017E %4.4X invalid device name %s\n"),
-                        pDEVBLK->devnum, optarg );
+                WRITEMSG(HHCLC017E, pDEVBLK->devnum, optarg );
                 return -1;
             }
 
@@ -2225,8 +2184,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
             if( iKernBuff * 1024 < MIN_CAPTURE_BUFFSIZE    ||
                 iKernBuff * 1024 > MAX_CAPTURE_BUFFSIZE )
             {
-                logmsg( _("HHCLC052E %4.4X: Invalid kernel buffer size %s\n"),
-                    pDEVBLK->devnum, optarg );
+                WRITEMSG(HHCLC052E, pDEVBLK->devnum, optarg );
                 return -1;
             }
 
@@ -2239,8 +2197,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
             if( iIOBuff * 1024 < MIN_PACKET_BUFFSIZE    ||
                 iIOBuff * 1024 > MAX_PACKET_BUFFSIZE )
             {
-                logmsg( _("HHCLC053E %4.4X: Invalid DLL I/O buffer size %s\n"),
-                    pDEVBLK->devnum, optarg );
+                WRITEMSG(HHCLC053E, pDEVBLK->devnum, optarg );
                 return -1;
             }
 
@@ -2255,8 +2212,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
         case 'm':
             if( ParseMAC( optarg, mac ) != 0 )
             {
-                logmsg( _("HHCLC018E %4.4X invalid MAC address %s\n"),
-                        pDEVBLK->devnum, optarg );
+                WRITEMSG(HHCLC018E, pDEVBLK->devnum, optarg );
                 return -1;
             }
 
@@ -2279,8 +2235,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
 
     if( argc > 1 )
     {
-        logmsg( _("HHCLC019E %4.4X too many arguments in statement.\n"),
-                pDEVBLK->devnum );
+        WRITEMSG(HHCLC019E, pDEVBLK->devnum );
         return -1;
     }
 
@@ -2289,8 +2244,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
     {
         if( inet_aton( *argv, &addr ) == 0 )
         {
-            logmsg( _("HHCLC020E %4.4X invalid IP address %s\n"),
-                    pDEVBLK->devnum, *argv );
+            WRITEMSG(HHCLC020E, pDEVBLK->devnum, *argv );
             return -1;
         }
 
@@ -2344,8 +2298,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
     fp = fopen( pathname, "r" );
     if( !fp )
     {
-        logmsg( _("HHCLC039E Cannot open file %s: %s\n"),
-                pszOATName, strerror( errno ) );
+        WRITEMSG(HHCLC039E, pszOATName, strerror( errno ) );
         return -1;
     }
 
@@ -2402,8 +2355,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
                 argc       != 1    ||
                 sscanf( pszOperand, "%hi%c", &sPort, &c ) != 1 )
             {
-                logmsg( _("HHCLC021E Invalid HWADD statement in %s: %s\n"),
-                        pszOATName, szBuff );
+                WRITEMSG(HHCLC021E, pszOATName, szBuff );
                 return -1;
             }
 
@@ -2411,9 +2363,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
             if( ParseMAC( argv[0], pLCSPORT->MAC_Address ) != 0 )
             {
-                logmsg( _("HHCLC022E Invalid MAC in HWADD statement "
-                          "in %s: %s (%s)\n "),
-                        pszOATName, szBuff, argv[0] );
+                WRITEMSG(HHCLC022E, pszOATName, szBuff, argv[0] );
 
                 memset( pLCSPORT->MAC_Address, 0, sizeof(MAC) );
                 return -1;
@@ -2428,15 +2378,13 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
                 argc       != 2    ||
                 sscanf( pszOperand, "%hi%c", &sPort, &c ) != 1 )
             {
-                logmsg( _("HHCLC023E Invalid ROUTE statement in %s: %s\n"),
-                        pszOATName, szBuff );
+                WRITEMSG(HHCLC023E, pszOATName, szBuff );
                 return -1;
             }
 
             if( inet_aton( argv[0], &addr ) == 0 )
             {
-                logmsg( _("HHCLC024E Invalid net address in ROUTE %s: %s (%s)\n"),
-                        pszOATName, szBuff, argv[0] );
+                WRITEMSG(HHCLC024E, pszOATName, szBuff, argv[0] );
                 return -1;
             }
 
@@ -2445,8 +2393,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
             if( inet_aton( argv[1], &addr ) == 0 )
             {
                 free(pszNetAddr);
-                logmsg( _("HHCLC025E Invalid net mask in ROUTE %s: %s (%s)\n"),
-                        pszOATName, szBuff, argv[1] );
+                WRITEMSG(HHCLC025E, pszOATName, szBuff, argv[1] );
                 return -1;
             }
 
@@ -2477,18 +2424,14 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
         {
             if( !pszKeyword || !pszOperand )
             {
-                logmsg( _("HHCLC026E Error in %s: "
-                          "Missing device number or mode\n"),
-                        pszOATName );
+                WRITEMSG(HHCLC026E, pszOATName );
                 return -1;
             }
 
             if( strlen( pszKeyword ) > 4 ||
                 sscanf( pszKeyword, "%hx%c", &sDevNum, &c ) != 1 )
             {
-                logmsg( _("HHCLC027E Error in %s: %s: "
-                          "Invalid device number\n"),
-                        pszOATName, pszKeyword );
+                WRITESMG(HHCLC027E, pszOATName, pszKeyword );
                 return -1;
             }
 
@@ -2498,17 +2441,13 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
                 if( argc < 1 )
                 {
-                    logmsg( _("HHCLC028E Error in %s: %s:"
-                              "Missing PORT number\n"),
-                            pszOATName, szBuff );
+                    WRITEMSG(HHCLC028E, pszOATName, szBuff );
                     return -1;
                 }
 
                 if( sscanf( argv[0], "%hi%c", &sPort, &c ) != 1 )
                 {
-                    logmsg( _("HHCLC029E Error in %s: %s: "
-                              "Invalid PORT number\n"),
-                            pszOATName, argv[0] );
+                    WRITEMSG(HHCLC029E, pszOATName, argv[0] );
                     return -1;
                 }
 
@@ -2522,9 +2461,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
                         bType = LCSDEV_TYPE_NONE;
                     else
                     {
-                        logmsg( _("HHCLC031E Error in %s: %s: "
-                                  "Invalid entry starting at %s\n"),
-                                pszOATName, szBuff, argv[1] );
+                        WRITEMSG(HHCLC031E, pszOATName, szBuff, argv[1] );
                         return -1;
                     }
 
@@ -2534,9 +2471,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
                         if( inet_aton( pszIPAddress, &addr ) == 0 )
                         {
-                            logmsg( _("HHCLC032E Error in %s: %s: "
-                                      "Invalid IP address (%s)\n"),
-                                    pszOATName, szBuff, pszIPAddress );
+                            WRITEMSG(HHCLC032E, pszOATName, szBuff, pszIPAddress );
                             return -1;
                         }
 
@@ -2550,33 +2485,25 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
                 if( argc < 1 )
                 {
-                    logmsg( _("HHCLC033E Error in %s: %s: "
-                              "Missing PORT number\n"),
-                            pszOATName, szBuff );
+                    WRITEMSG(HHCLC033E, pszOATName, szBuff );
                     return -1;
                 }
 
                 if( sscanf( argv[0], "%hi%c", &sPort, &c ) != 1 )
                 {
-                    logmsg( _("HHCLC034E Error in %s: %s:"
-                              "Invalid PORT number\n"),
-                            pszOATName, argv[0] );
+                    WRITEMSG(HHCLC034E, pszOATName, argv[0] );
                     return -1;
                 }
 
                 if( argc > 1 )
                 {
-                    logmsg( _("HHCLC035E Error in %s: %s: "
-                            "SNA does not accept any arguments\n"),
-                            pszOATName, szBuff );
+                    WRITEMSG(HHCLC035E, pszOATName, szBuff );
                     return -1;
                 }
             }
             else
             {
-                logmsg( _("HHCLC036E Error in %s: %s: "
-                          "Invalid MODE\n"),
-                        pszOATName, pszOperand );
+                WRITEMSG(HHCLC036E, pszOATName, pszOperand );
                 return -1;
             }
 
@@ -2646,8 +2573,7 @@ static char*  ReadOAT( char* pszOATName, FILE* fp, char* pszBuff )
             // Check for I/O error
             if( ferror( fp ) )
             {
-                logmsg( _("HHCLC037E Error reading file %s line %d: %s\n"),
-                        pszOATName, iLine, strerror( errno ) );
+                WRITEMSG(HHCLC037E, pszOATName, iLine, strerror( errno ) );
                 return NULL;
             }
 
@@ -2670,8 +2596,7 @@ static char*  ReadOAT( char* pszOATName, FILE* fp, char* pszBuff )
             // Check that statement does not overflow bufffer
             if( iLen >= 255 )
             {
-                logmsg( _("HHCLC038E File %s line %d is too long\n"),
-                        pszOATName, iLine );
+                WRITEMSG(HHCLC038E, pszOATName, iLine );
                 exit(1);
             }
 
