@@ -906,7 +906,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
                 {
                     /* CP Say this is NOT good */
                     /* Take exit 28 */
-                    logmsg(_("HHCEV004W : Abend condition detected in DISP2 instr\n"));
+                    WRITEMSG(HHCEV004W);
                     UPD_PSW_IA(regs, EVM_L(el+28));
                     return(0);
                 }
@@ -2547,7 +2547,6 @@ int ecpsvm_dodiag(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
     UNREFERENCED(effective_addr2);
     return(1);
 }
-static char *ecpsvm_stat_sep="HHCEV003I +-----------+----------+----------+-------+\n";
 
 static int ecpsvm_sortstats(const void *a,const void *b)
 {
@@ -2559,7 +2558,6 @@ static int ecpsvm_sortstats(const void *a,const void *b)
 
 static void ecpsvm_showstats2(ECPSVM_STAT *ar,size_t count)
 {
-    char *sep=ecpsvm_stat_sep;
     char nname[32];
     int  havedisp=0;
     int  notshown=0;
@@ -2593,7 +2591,7 @@ static void ecpsvm_showstats2(ECPSVM_STAT *ar,size_t count)
             {
                 strcat(nname,"+");
             }
-            logmsg(_("HHCEV001I | %-9s | %8d | %8d |  %3d%% |\n"),
+            WRITEMSG(HHCEV001I,
                     nname,
                     ar[i].call,
                     ar[i].hit,
@@ -2608,34 +2606,27 @@ static void ecpsvm_showstats2(ECPSVM_STAT *ar,size_t count)
     }
     if(havedisp)
     {
-        logmsg(sep);
+        WRITEMSG(HHCEV003I);
     }
-    logmsg(_("HHCEV001I | %-9s | %8d | %8d |  %3d%% |\n"),
+    WRITEMSG(HHCEV001I,
             "Total",
             callt,
             hitt,
             callt ?
                     (hitt*100)/callt :
                     100);
-    logmsg(sep);
+    WRITEMSG(HHCEV003I);
     if(haveunsup)
     {
-        logmsg(_("HHCEV004I * : Unsupported, - : Disabled, %% - Debug\n"));
+        WRITEMSG(HHCEV024I);
     }
     if(notshown)
     {
-        logmsg(_("HHCEV005I %d Entr%s not shown (never invoked)\n"),notshown,notshown==1?"y":"ies");
+        WRITEMSG(HHCEV005I,notshown,notshown==1?"y":"ies");
     }
     if(unsupcc)
     {
-        if(unsupcc==1)
-        {
-                logmsg(_("HHCEV006I 1 call was made to an unsupported function\n"));
-        }
-        else
-        {
-            logmsg(_("HHCEV006I %d calls where made to unsupported functions\n"),unsupcc);
-        }
+        WRITEMSG(HHCEV006I,unsupcc);
     }
     return;
 }
@@ -2644,22 +2635,21 @@ void ecpsvm_showstats(int ac,char **av)
 {
     size_t      asize;
     ECPSVM_STAT *ar;
-    char *sep=ecpsvm_stat_sep;
 
     UNREFERENCED(ac);
     UNREFERENCED(av);
-    logmsg(sep);
-    logmsg(_("HHCEV002I | %-9s | %-8s | %-8s | %-5s |\n"),"VM ASSIST","Calls","Hits","Ratio");
-    logmsg(sep);
+    WRITEMSG(HHCEV003I);
+    WRITEMSG(HHCEV002I,"VM ASSIST","Calls","Hits","Ratio");
+    WRITEMSG(HHCEV003I);
     ar=malloc(sizeof(ecpsvm_sastats));
     memcpy(ar,&ecpsvm_sastats,sizeof(ecpsvm_sastats));
     asize=sizeof(ecpsvm_sastats)/sizeof(ECPSVM_STAT);
     qsort(ar,asize,sizeof(ECPSVM_STAT),ecpsvm_sortstats);
     ecpsvm_showstats2(ar,asize);
     free(ar);
-    logmsg(sep);
-    logmsg(_("HHCEV002I | %-9s | %-8s | %-8s | %-5s |\n"),"CP ASSIST","Calls","Hits","Ratio");
-    logmsg(sep);
+    WRITEMSG(HHCEV003I);
+    WRITEMSG(HHCEV002I,"CP ASSIST","Calls","Hits","Ratio");
+    WRITEMSG(HHCEV003I);
     ar=malloc(sizeof(ecpsvm_cpstats));
     memcpy(ar,&ecpsvm_cpstats,sizeof(ecpsvm_cpstats));
     asize=sizeof(ecpsvm_cpstats)/sizeof(ECPSVM_STAT);
@@ -2713,21 +2703,21 @@ void ecpsvm_enadisaall(char *fclass,ECPSVM_STAT *tbl,size_t count,int onoff,int 
         if(onoff>=0)
         {
             es->enabled=onoff;
-            logmsg(_("HHCEV015I ECPS:VM %s feature %s %s\n"),fclass,es->name,enadisa);
+            WRITEMSG(HHCEV015I,fclass,es->name," ", enadisa);
         }
         if(debug>=0)
         {
             es->debug=debug;
-            logmsg(_("HHCEV015I ECPS:VM %s feature %s Debug %s\n"),fclass,es->name,debugonoff);
+            WRITEMSG(HHCEV015I,fclass,es->name," Debug ", debugonoff);
         }
     }
     if(onoff>=0)
     {
-        logmsg(_("HHCEV016I All ECPS:VM %s features %s\n"),fclass,enadisa);
+        WRITEMSG(HHCEV016I,fclass,"",enadisa);
     }
     if(debug>=0)
     {
-        logmsg(_("HHCEV016I All ECPS:VM %s features Debug %s\n"),fclass,debugonoff);
+        WRITEMSG(HHCEV016I,fclass,"Debug ",debugonoff);
     }
 }
 
@@ -2755,7 +2745,7 @@ void ecpsvm_enable_disable(int ac,char **av,int onoff,int debug)
         if(debug>=0)
         {
             sysblk.ecpsvm.debug=debug;
-            logmsg(_("HHCEV013I ECPS:VM Global Debug %s\n"),debugonoff);
+            WRITEMSG(HHCEV013I,debugonoff);
         }
         return;
     }
@@ -2783,17 +2773,17 @@ void ecpsvm_enable_disable(int ac,char **av,int onoff,int debug)
             if(onoff>=0)
             {
                 es->enabled=onoff;
-                logmsg(_("HHCEV014I ECPS:VM %s feature %s %s\n"),fclass,es->name,enadisa);
+                WRITEMSG(HHCEV014I,fclass,es->name,"",enadisa);
             }
             if(debug>=0)
             {
                 es->debug=onoff;
-                logmsg(_("HHCEV014I ECPS:VM %s feature %s Debug %s\n"),fclass,es->name,debugonoff);
+                WRITEMSG(HHCEV014I,fclass,es->name,"Debug ",debugonoff);
             }
         }
         else
         {
-            logmsg(_("HHCEV014I Unknown ECPS:VM feature %s; Ignored\n"),av[i]);
+            WRITEMSG(HHCEV025I,av[i]);
         }
     }
 }
@@ -2820,24 +2810,24 @@ void ecpsvm_level(int ac,char **av)
     int lvl;
     if(sysblk.ecpsvm.available)
     {
-        logmsg(_("HHCEV016I Current reported ECPS:VM Level is %d\n"),sysblk.ecpsvm.level);
+        WRITEMSG(HHCEV026I,sysblk.ecpsvm.level);
     }
     else
     {
-        logmsg(_("HHCEV016I Current reported ECPS:VM Level is %d\n"),sysblk.ecpsvm.level);
-        logmsg(_("HHCEV017I But ECPS:VM is currently disabled\n"));
+        WRITEMSG(HHCEV026I,sysblk.ecpsvm.level);
+        WRITEMSG(HHCEV017I);
     }
     if(ac>1)
     {
         lvl=atoi(av[1]);
-        logmsg(_("HHCEV016I Level reported to guest program is now %d\n"),lvl);
+        WRITEMSG(HHCEV027I,lvl);
         sysblk.ecpsvm.level=lvl;
     }
     if(sysblk.ecpsvm.level!=20)
     {
-          logmsg(_("HHCEV017W WARNING ! current level (%d) is not supported\n"),sysblk.ecpsvm.level);
-          logmsg(_("HHCEV018W WARNING ! Unpredictable results may occur\n"));
-          logmsg(_("HHCEV019I The microcode support level is 20\n"));
+          WRITEMSG(HHCEV028W,sysblk.ecpsvm.level);
+          WRITEMSG(HHCEV018W);
+          WRITEMSG(HHCEV019I);
     }
 }
 
@@ -2864,7 +2854,7 @@ static void ecpsvm_helpcmdlist(void)
     for(i=0;ecpsvm_cmdtab[i].name;i++)
     {
         ce=&ecpsvm_cmdtab[i];
-        logmsg(_("HHCEV010I : %s : %s\n"),ce->name,ce->expl);
+        WRITEMSG(HHCEV010I,ce->name,ce->expl);
     }
     return;
 }
@@ -2880,11 +2870,11 @@ void ecpsvm_helpcmd(int ac,char **av)
     ce=ecpsvm_getcmdent(av[1]);
     if(ce==NULL)
     {
-        logmsg(_("HHCEV011E Unknown subcommand %s - valid subcommands are :\n"),av[1]);
+        WRITEMSG(HHCEV011E,av[1]);
         ecpsvm_helpcmdlist();
         return;
     }
-    logmsg(_("HHCEV012I : %s : %s"),ce->name,ce->help);
+    WRITEMSG(HHCEV012I,ce->name,ce->help);
     return;
 }
 
@@ -2910,20 +2900,20 @@ ECPSVM_CMDENT *ecpsvm_getcmdent(char *cmd)
 void ecpsvm_command(int ac,char **av)
 {
     ECPSVM_CMDENT *ce;
-    logmsg(_("HHCEV011I ECPS:VM Command processor invoked\n"));
+    WRITEMSG(HHCEV029I);
     if(ac==1)
     {
-        logmsg(_("HHCEV008E NO EVM subcommand. Type \"evm help\" for a list of valid subcommands\n"));
+        WRITEMSG(HHCEV008E);
         return;
     }
     ce=ecpsvm_getcmdent(av[1]);
     if(ce==NULL)
     {
-        logmsg(_("HHCEV008E Unknown EVM subcommand %s\n"),av[1]);
+        WRITEMSG(HHCEV030E,av[1]);
         return;
     }
     ce->fun(ac-1,av+1);
-    logmsg(_("HHCEV011I ECPS:VM Command processor complete\n"));
+    WRITEMSG(HHCEV031I);
 }
 
 #endif /* ifdef FEATURE_ECPSVM */
