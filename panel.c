@@ -2916,7 +2916,7 @@ FinishShutdown:
                         l_len += (int)(strlen(fmt_int)) + 8;  // 8 is the length of "InstCnt="
                         if ( cons_cols >= l_len + 14 + 14 )   // 14 is the length of MIPS(nnnn.nn) and SIOS(nnnnnnn)
                         {
-                            sprintf (ibuf, "InstCnt=%s MIPS(%4.1d.%2.2d) SIOS(%7.1d)", 
+                            sprintf (ibuf, "InstCnt( %s) MIPS(%4.1d.%2.2d) SIOS(%7.1d)", 
                                 fmt_int,
                                 sysblk.mipsrate / 1000000, 
                                (sysblk.mipsrate % 1000000) / 10000,
