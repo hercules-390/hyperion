@@ -2906,17 +2906,17 @@ FinishShutdown:
 #ifdef OPTION_MIPS_COUNTING
                     buf[len++] = ' '; 
                     if ( cons_cols >= (int)( len 
-                                             + 8                // 8 is the length of "InstCnt=" 
+                                             + 9                 // 9 is the length of "InstCnt()" 
                                              + strlen(format_int(INSTCOUNT(regs)))
                                             ) )                  // don't do the work if no space on line
                     { 
                         char *fmt_int = format_int(INSTCOUNT(regs));
                         int l_len = len;
 
-                        l_len += (int)(strlen(fmt_int)) + 8;  // 8 is the length of "InstCnt="
+                        l_len += (int)(strlen(fmt_int)) + 9;  //  9 is the length of "InstCnt()"
                         if ( cons_cols >= l_len + 14 + 14 )   // 14 is the length of MIPS(nnnn.nn) and SIOS(nnnnnnn)
                         {
-                            sprintf (ibuf, "InstCnt( %s) MIPS(%4.1d.%2.2d) SIOS(%7.1d)", 
+                            sprintf (ibuf, "InstCnt(%s) MIPS(%4.1d.%2.2d) SIOS(%7.1d)", 
                                 fmt_int,
                                 sysblk.mipsrate / 1000000, 
                                (sysblk.mipsrate % 1000000) / 10000,
@@ -2924,14 +2924,14 @@ FinishShutdown:
                         }
                         else if ( cons_cols >= l_len + 14 )
                         {
-                            sprintf (ibuf, "InstCnt=%s MIPS(%4.1d.%2.2d)", 
+                            sprintf (ibuf, "InstCnt(%s) MIPS(%4.1d.%2.2d)", 
                                 fmt_int,
                                 sysblk.mipsrate / 1000000, 
                                (sysblk.mipsrate % 1000000) / 10000 );
                         }
                         else 
                         {
-                            sprintf (ibuf, "InstCnt=%s", fmt_int);
+                            sprintf (ibuf, "InstCnt(%s)", fmt_int);
                         }
                         if (len + (int)strlen(ibuf) < cons_cols)
                             len = cons_cols - (int)strlen(ibuf);
