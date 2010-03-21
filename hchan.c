@@ -61,7 +61,7 @@ static int hchan_init_handler ( DEVBLK *dev, int argc, char *argv[] )
     {
         if(argc<1)
         {
-            logmsg("HHCGCH003E %4.4X : Missing Generic Channel method\n",dev->devnum);
+            WRITEMSG(HHCGCH003E,dev->devnum);
             rc=-1;
             break;
         }
@@ -81,15 +81,15 @@ static int hchan_init_handler ( DEVBLK *dev, int argc, char *argv[] )
             rc=hchan_init_int(dev,argc,argv);
             break;
         }
-        logmsg("HHCGCH001E %4.4X : Incorrect Generic Channel method %s\n",dev->devnum,argv[0]);
+        WRITEMSG(HHCGCH001E,dev->devnum,argv[0]);
         rc=-1;
         break;
     }
     if(rc)
     {
-        logmsg("HHCGCH002T %4.4X : Generic channel initialisation failed\n",dev->devnum);
+        WRITEMSG(HHCGCH002T,dev->devnum);
     }
-    logmsg("HHCGCH999W %4.4X : Generic channel is currently in development\n",dev->devnum);
+    WRITEMSG(HHCGCH999W,dev->devnum);
     return(rc);
 }
 

@@ -624,6 +624,12 @@
 #define HHCAO025I "Rule at index(%d) succesfully deleted"
 #define HHCA0026E "Command not added, may cause dead locks"
 
+/* hchan.c */
+#define HHCGCH001E "Device(%4.4X) Incorrect Generic Channel method(%s)"
+#define HHCGCH002T "Device(%4.4X) Generic channel initialisation failed"
+#define HHCGCH003E "Device(%4.4X) Missing Generic Channel method"
+#define HHCGCH999W "Device(%4.4X) Generic channel is currently in development"
+
 /* hdl.c */
 #define HHCHD001E "Registration malloc failed for (%s)"
 #define HHCHD005E "Module(%s) already loaded\n"
