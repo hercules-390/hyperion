@@ -655,6 +655,20 @@
 #define HHCHD952I "Module(%s) cleanup complete"
 #define HHCHD959I "HDL Termination sequence complete"
 
+/* hettape.c */
+#define HHCTA401E "Device(%4.4X) Error opening file(%s) %s(%s)"
+#define HHCTA402E "Device(%4.4X) Error seeking to start of file(%s) %s(%s)"
+#define HHCTA414E "Device(%4.4X) End of file (end of tape) at block(%8.8X) in file(%s)"
+#define HHCTA415E "Device(%4.4X) Error reading data block at block(%8.8X) in file(%s) %s(%s)"
+#define HHCTA416E "Device(%4.4X) Error writing data block at block(%8.8X) in file(%s) %s(%s)"
+#define HHCTA417E "Device(%4.4X) Error writing tape mark at block(%8.8X) in file(%s) %s(%s)"
+#define HHCTA418E "Device(%4.4X) Error forward spacing at block(%8.8X) in file(%s) %s(%s)"
+#define HHCTA420E "Device(%4.4X) Error forward spacing to next file at block(%8.8X) in file(%s) %s(%s)"
+#define HHCTA421E "Device(%4.4X) Error back spacing to previous file at block(%8.8X) in file(%s) %s(%s)"
+#define HHCTA430I "Device(%4.4X) max tape capacity exceeded"
+#define HHCTA431I "Device(%4.4X) max tape capacity enforced"
+#define HHCTA488E "Device(%4.4X) Sync error on file(%s) %s"
+
 /* hostinfo.c */
 #define HHCIN015I "%s"
 
