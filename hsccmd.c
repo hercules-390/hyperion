@@ -941,7 +941,7 @@ int cf_cmd(int argc, char *argv[], char *cmdline)
     {
         if (on < 0)
             logmsg(_("HHCPN152I %s%02X online\n"), 
-                PTYPSTR(sysblk.ptyp[sysblk.pcpu]), sysblk.pcpu);
+                PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         else if (on == 0)
             deconfigure_cpu(sysblk.pcpu);
     }
@@ -949,7 +949,7 @@ int cf_cmd(int argc, char *argv[], char *cmdline)
     {
         if (on < 0)
             logmsg(_("HHCPN153I %s%02X offline\n"), 
-                PTYPSTR(sysblk.ptyp[sysblk.pcpu]), sysblk.pcpu);
+                PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         else if (on > 0)
             configure_cpu(sysblk.pcpu);
     }
@@ -986,14 +986,14 @@ int cfall_cmd(int argc, char *argv[], char *cmdline)
         if (IS_CPU_ONLINE(i))
         {
             if (on < 0)
-                logmsg(_("HHCPN154I %s%02X online\n"), PTYPSTR(sysblk.ptyp[i]), i);
+                logmsg(_("HHCPN154I %s%02X online\n"), PTYPSTR(i), i);
             else if (on == 0)
                 deconfigure_cpu(i);
         }
         else
         {
             if (on < 0)
-                logmsg(_("HHCPN155I %s%02X offline\n"), PTYPSTR(sysblk.ptyp[i]), i);
+                logmsg(_("HHCPN155I %s%02X offline\n"), PTYPSTR(i), i);
             else if (on > 0 && i < MAX_CPU)
                 configure_cpu(i);
         }
@@ -1149,7 +1149,7 @@ char arch370_flag = 0;
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
         logmsg( _("HHCPN160W %s%02X not configured\n"), 
-            PTYPSTR(sysblk.ptyp[sysblk.pcpu]), sysblk.pcpu);
+            PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -2060,7 +2060,7 @@ REGS *regs;
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
         logmsg( _("HHCPN160W %s%02X not configured\n"), 
-            PTYPSTR(sysblk.ptyp[sysblk.pcpu]), sysblk.pcpu);
+            PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -2078,7 +2078,7 @@ REGS *regs;
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
     logmsg (_("HHCCP010I %s%02X store status completed.\n"),
-            PTYPSTR(sysblk.ptyp[regs->cpuad]), regs->cpuad);
+            PTYPSTR(regs->cpuad), regs->cpuad);
 
     return 0;
 }
@@ -2470,7 +2470,7 @@ REGS *regs;
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
         logmsg( _("HHCPN160W %s%02X not configured\n"), 
-            PTYPSTR(sysblk.ptyp[sysblk.pcpu]), sysblk.pcpu);
+            PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
 
@@ -2532,7 +2532,7 @@ REGS *regs;
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
         logmsg( _("HHCPN160W %s%02X not configured\n"), 
-            PTYPSTR(sysblk.ptyp[sysblk.pcpu]), sysblk.pcpu);
+            PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -2562,7 +2562,7 @@ REGS *regs;
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
         logmsg( _("HHCPN160W %s%02X not configured\n"), 
-            PTYPSTR(sysblk.ptyp[sysblk.pcpu]), sysblk.pcpu);
+            PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -2593,7 +2593,7 @@ U64   cr_value;
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
         logmsg( _("HHCPN160W %s%02X not configured\n"), 
-            PTYPSTR(sysblk.ptyp[sysblk.pcpu]), sysblk.pcpu);
+            PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -2639,7 +2639,7 @@ REGS *regs;
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
         logmsg( _("HHCPN160W %s%02X not configured\n"), 
-            PTYPSTR(sysblk.ptyp[sysblk.pcpu]), sysblk.pcpu);
+            PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -2669,7 +2669,7 @@ REGS *regs;
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
         logmsg( _("HHCPN160W %s%02X not configured\n"), 
-            PTYPSTR(sysblk.ptyp[sysblk.pcpu]), sysblk.pcpu);
+            PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -2705,7 +2705,7 @@ int   n, errflag, stopflag=0, modflag=0;
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
         logmsg( _("HHCPN160W %s%02X not configured\n"), 
-            PTYPSTR(sysblk.ptyp[sysblk.pcpu]), sysblk.pcpu);
+            PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -2939,7 +2939,7 @@ int restart_cmd(int argc, char *argv[], char *cmdline)
     {
         RELEASE_INTLOCK(NULL);
         logmsg( _("HHCPN160W %s%02X not configured\n"), 
-            PTYPSTR(sysblk.ptyp[sysblk.pcpu]), sysblk.pcpu );
+            PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
 
@@ -2978,7 +2978,7 @@ REGS *regs;
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
         logmsg( _("HHCPN160W %s%02X not configured\n"), 
-            PTYPSTR(sysblk.ptyp[sysblk.pcpu]), sysblk.pcpu);
+            PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -3007,7 +3007,7 @@ REGS *regs;
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
         logmsg( _("HHCPN160W %s%02X not configured\n"), 
-            PTYPSTR(sysblk.ptyp[sysblk.pcpu]), sysblk.pcpu);
+            PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -3036,7 +3036,7 @@ REGS *regs;
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
         logmsg( _("HHCPN160W %s%02X not configured\n"), 
-            PTYPSTR(sysblk.ptyp[sysblk.pcpu]), sysblk.pcpu);
+            PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -4959,7 +4959,7 @@ REGS *regs;
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
         logmsg( _("HHCPN160W %s%02X not configured\n"), 
-            PTYPSTR(sysblk.ptyp[sysblk.pcpu]), sysblk.pcpu);
+            PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -5109,7 +5109,7 @@ REGS *regs;
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
         logmsg( _("HHCPN160W %s%02X not configured\n"), 
-            PTYPSTR(sysblk.ptyp[sysblk.pcpu]), sysblk.pcpu);
+            PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -5178,7 +5178,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
         logmsg( _("HHCPN160W %s%02X not configured\n"), 
-            PTYPSTR(sysblk.ptyp[sysblk.pcpu]), sysblk.pcpu);
+            PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -5265,105 +5265,105 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
     {
         if (!IS_CPU_ONLINE(i))
         {
-            logmsg(_("HHCPN123I %s%02X: offline\n"), PTYPSTR(sysblk.ptyp[i]), i);
+            logmsg(_("HHCPN123I %s%02X: offline\n"), PTYPSTR(i), i);
             continue;
         }
 
 // /*DEBUG*/logmsg( _("hsccmd.c: %s%02X: Any cpu interrupt %spending\n"),
-// /*DEBUG*/    PTYPSTR(sysblk.ptyp[sysblk.regs[i]->cpuad]), 
-// /*DEBUG*/    sysblk.regs[i]->cpuad, sysblk.regs[i]->cpuint ? "" : _("not ") );
+// /*DEBUG*/    PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, 
+// /*DEBUG*/    sysblk.regs[i]->cpuint ? "" : _("not ") );
 //
         logmsg( _("HHCPN123I %s%02X: CPUint=%8.8X "
                   "(State:%8.8X)&(Mask:%8.8X)\n"),
-            PTYPSTR(sysblk.ptyp[sysblk.regs[i]->cpuad]),
-            sysblk.regs[i]->cpuad, IC_INTERRUPT_CPU(sysblk.regs[i]),
+            PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, 
+            IC_INTERRUPT_CPU(sysblk.regs[i]),
             sysblk.regs[i]->ints_state, sysblk.regs[i]->ints_mask
             );
         logmsg( _("          %s%02X: Interrupt %spending\n"),
-            PTYPSTR(sysblk.ptyp[sysblk.regs[i]->cpuad]), sysblk.regs[i]->cpuad,
+            PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
             IS_IC_INTERRUPT(sysblk.regs[i]) ? "" : _("not ")
             );
         logmsg( _("          %s%02X: I/O interrupt %spending\n"),
-            PTYPSTR(sysblk.ptyp[sysblk.regs[i]->cpuad]), sysblk.regs[i]->cpuad,
+            PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
             IS_IC_IOPENDING                 ? "" : _("not ")
             );
         logmsg( _("          %s%02X: Clock comparator %spending\n"),
-            PTYPSTR(sysblk.ptyp[sysblk.regs[i]->cpuad]), sysblk.regs[i]->cpuad,
+            PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
             IS_IC_CLKC(sysblk.regs[i]) ? "" : _("not ")
             );
         logmsg( _("          %s%02X: CPU timer %spending\n"),
-            PTYPSTR(sysblk.ptyp[sysblk.regs[i]->cpuad]), sysblk.regs[i]->cpuad,
+            PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
             IS_IC_PTIMER(sysblk.regs[i]) ? "" : _("not ")
             );
 #if defined(_FEATURE_INTERVAL_TIMER)
         logmsg( _("          %s%02X: Interval timer %spending\n"),
-            PTYPSTR(sysblk.ptyp[sysblk.regs[i]->cpuad]), sysblk.regs[i]->cpuad,
+            PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
             IS_IC_ITIMER(sysblk.regs[i]) ? "" : _("not ")
             );
 #if defined(_FEATURE_ECPSVM)
         logmsg( _("          %s%02X: ECPS vtimer %spending\n"),
-            PTYPSTR(sysblk.ptyp[sysblk.regs[i]->cpuad]), sysblk.regs[i]->cpuad,
+            PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
             IS_IC_ECPSVTIMER(sysblk.regs[i]) ? "" : _("not ")
             );
 #endif /*defined(_FEATURE_ECPSVM)*/
 #endif /*defined(_FEATURE_INTERVAL_TIMER)*/
         logmsg( _("          %s%02X: External call %spending\n"),
-            PTYPSTR(sysblk.ptyp[sysblk.regs[i]->cpuad]), sysblk.regs[i]->cpuad,
+            PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
             IS_IC_EXTCALL(sysblk.regs[i]) ? "" : _("not ")
             );
         logmsg( _("          %s%02X: Emergency signal %spending\n"),
-            PTYPSTR(sysblk.ptyp[sysblk.regs[i]->cpuad]), sysblk.regs[i]->cpuad,
+            PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
             IS_IC_EMERSIG(sysblk.regs[i]) ? "" : _("not ")
             );
         logmsg( _("          %s%02X: Machine check interrupt %spending\n"),
-            PTYPSTR(sysblk.ptyp[sysblk.regs[i]->cpuad]), sysblk.regs[i]->cpuad,
+            PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
             IS_IC_MCKPENDING(sysblk.regs[i]) ? "" : _("not ")
             );
         logmsg( _("          %s%02X: Service signal %spending\n"),
-            PTYPSTR(sysblk.ptyp[sysblk.regs[i]->cpuad]), sysblk.regs[i]->cpuad,
+            PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
             IS_IC_SERVSIG                    ? "" : _("not ")
             );
         logmsg( _("          %s%02X: Mainlock held: %s\n"),
-            PTYPSTR(sysblk.ptyp[sysblk.regs[i]->cpuad]), sysblk.regs[i]->cpuad,
+            PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
             sysblk.regs[i]->cpuad == sysblk.mainowner ? _("yes") : _("no")
             );
         logmsg( _("          %s%02X: Intlock held: %s\n"),
-            PTYPSTR(sysblk.ptyp[sysblk.regs[i]->cpuad]), sysblk.regs[i]->cpuad,
+            PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
             sysblk.regs[i]->cpuad == sysblk.intowner ? _("yes") : _("no")
             );
         logmsg( _("          %s%02X: Waiting for intlock: %s\n"),
-            PTYPSTR(sysblk.ptyp[sysblk.regs[i]->cpuad]), sysblk.regs[i]->cpuad,
+            PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
             sysblk.regs[i]->intwait && !(sysblk.waiting_mask & CPU_BIT(i)) ? _("yes") : _("no")
             );
         logmsg( _("          %s%02X: lock %sheld\n"),
-            PTYPSTR(sysblk.ptyp[sysblk.regs[i]->cpuad]), sysblk.regs[i]->cpuad,
+            PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
             test_lock(&sysblk.cpulock[i]) ? "" : _("not ")
             );
         if (ARCH_370 == sysblk.arch_mode)
         {
             if (0xFFFF == sysblk.regs[i]->chanset)
                 logmsg( _("          %s%02X: No channelset connected\n"),
-                    PTYPSTR(sysblk.ptyp[sysblk.regs[i]->cpuad]), sysblk.regs[i]->cpuad
+                    PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad
                     );
             else
                 logmsg( _("          %s%02X: Connected to channelset "
                           "%4.4X\n"),
-                    PTYPSTR(sysblk.ptyp[sysblk.regs[i]->cpuad]), sysblk.regs[i]->cpuad, 
+                    PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, 
                     sysblk.regs[i]->chanset
                     );
         }
         logmsg( _("          %s%02X: state %s\n"),
-               PTYPSTR(sysblk.ptyp[sysblk.regs[i]->cpuad]), sysblk.regs[i]->cpuad,
+               PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
                states[sysblk.regs[i]->cpustate]);
         logmsg( _("          %s%02X: instcount %" I64_FMT "d\n"),
-               PTYPSTR(sysblk.ptyp[sysblk.regs[i]->cpuad]), sysblk.regs[i]->cpuad,
+               PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
                (long long)INSTCOUNT(sysblk.regs[i]));
         logmsg( _("          %s%02X: siocount %" I64_FMT "d\n"),
-               PTYPSTR(sysblk.ptyp[sysblk.regs[i]->cpuad]), sysblk.regs[i]->cpuad,
+               PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
                (long long)sysblk.regs[i]->siototal);
         copy_psw(sysblk.regs[i], curpsw);
         logmsg( _("          %s%02X: psw %2.2x%2.2x%2.2x%2.2x %2.2x%2.2x%2.2x%2.2x"),
-               PTYPSTR(sysblk.ptyp[sysblk.regs[i]->cpuad]), sysblk.regs[i]->cpuad,
+               PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
                curpsw[0], curpsw[1], curpsw[2], curpsw[3],
                curpsw[4], curpsw[5], curpsw[6], curpsw[7]);
         if (ARCH_900 == sysblk.arch_mode)
@@ -6492,7 +6492,7 @@ BYTE c;                                 /* Character work area       */
     {
         RELEASE_INTLOCK(NULL);
         logmsg( _("HHCPN160W %s%02X not configured\n"), 
-            PTYPSTR(sysblk.ptyp[sysblk.pcpu]), sysblk.pcpu );
+            PTYPSTR(sysblk.pcpu), sysblk.pcpu );
         return 0;
     }
     regs=sysblk.regs[sysblk.pcpu];
@@ -6598,7 +6598,7 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
         logmsg( _("HHCPN160W %s%02X not configured\n"), 
-            PTYPSTR(sysblk.ptyp[sysblk.pcpu]), sysblk.pcpu);
+            PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -6710,7 +6710,7 @@ DLL_EXPORT int aia_cmd(int argc, char *argv[], char *cmdline)
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
         logmsg( _("HHCPN160W %s%02X not configured\n"), 
-            PTYPSTR(sysblk.ptyp[sysblk.pcpu]), sysblk.pcpu);
+            PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -6763,7 +6763,7 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
         logmsg( _("HHCPN160W %s%02X not configured\n"), 
-            PTYPSTR(sysblk.ptyp[sysblk.pcpu]), sysblk.pcpu);
+            PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];

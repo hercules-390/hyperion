@@ -303,7 +303,7 @@ static void display_regs32(char *hdr,U16 cpuad,U32 *r,int numcpus)
             }
             if(numcpus>1)
             {
-                logmsg("%s%02X: ", PTYPSTR(sysblk.ptyp[cpuad]), cpuad);
+                logmsg("%s%02X: ", PTYPSTR(cpuad), cpuad);
             }
         }
         if(i%4)
@@ -339,7 +339,7 @@ static void display_regs64(char *hdr,U16 cpuad,U64 *r,int numcpus)
             }
             if(numcpus>1)
             {
-                logmsg("%s%02X: ", PTYPSTR(sysblk.ptyp[cpuad]), cpuad);
+                logmsg("%s%02X: ", PTYPSTR(cpuad), cpuad);
             }
         }
         if(i%rpl)
@@ -493,7 +493,7 @@ void display_fregs (REGS *regs)
 char    cpustr[6] = {0};               /* "CPnn " or ""         */
 
     if(sysblk.cpus>1)
-        sprintf(cpustr, "%s%02X: ", PTYPSTR(sysblk.ptyp[regs->cpuad]), regs->cpuad);
+        sprintf(cpustr, "%s%02X: ", PTYPSTR(regs->cpuad), regs->cpuad);
 
     if(regs->CR(0) & CR0_AFP)
         logmsg
@@ -1160,7 +1160,7 @@ REGS   *regs;                           /* Copied regs               */
 
     if ( sysblk.cpus > 1 )
     {
-        n = sprintf ( buf, "%s%02X:  ", PTYPSTR(sysblk.ptyp[regs->cpuad]), regs->cpuad );
+        n = sprintf ( buf, "%s%02X:  ", PTYPSTR(regs->cpuad), regs->cpuad );
     }
     else
     {
@@ -1311,7 +1311,7 @@ REGS   *regs;                           /* Copied regs               */
                                                   ACCTYPE_READ));
         if ( sysblk.cpus > 1 )
         {
-            logmsg ( "%s%02X:  ", PTYPSTR(sysblk.ptyp[regs->cpuad]), regs->cpuad );
+            logmsg ( "%s%02X:  ", PTYPSTR(regs->cpuad), regs->cpuad );
         }
         logmsg ("%s\n", buf);
     }
@@ -1333,7 +1333,7 @@ REGS   *regs;                           /* Copied regs               */
 
         if ( sysblk.cpus > 1 )
         {
-            logmsg ( "%s%02X:  ", PTYPSTR(sysblk.ptyp[regs->cpuad]), regs->cpuad );
+            logmsg ( "%s%02X:  ", PTYPSTR(regs->cpuad), regs->cpuad );
         }
         logmsg ("%s\n", buf);
     }

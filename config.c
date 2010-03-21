@@ -135,7 +135,7 @@ char  thread_name[16];
                         &cpu, thread_name)
        )
     {
-        WRITEMSG(HHCCF040E, PTYPSTR(sysblk.ptyp[cpu]), cpu, strerror(errno));
+        WRITEMSG(HHCCF040E, PTYPSTR(cpu), cpu, strerror(errno));
         return -1;
     }
 

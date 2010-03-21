@@ -629,7 +629,7 @@ S64      dreg;
             {
                 RELEASE_INTLOCK(NULL);
                 logmsg( _("HHCSR114E %s%02X already configured\n" ), 
-                    PTYPSTR(sysblk.ptyp[i]), i);
+                    PTYPSTR(i), i);
                 goto sr_error_exit;
             }
             rc = configure_cpu(i);
@@ -637,7 +637,7 @@ S64      dreg;
             if (rc < 0)
             {
                 logmsg( _("HHCSR115E %s%02X unable to configure online\n"), 
-                    PTYPSTR(sysblk.ptyp[i]), i);
+                    PTYPSTR(i), i);
                 goto sr_error_exit;
             }
             regs = sysblk.regs[i];
@@ -653,7 +653,7 @@ S64      dreg;
             if (len != 8 && len != 16)
             {
                 logmsg( _("HHCSR116E %s%02X invalid psw length (%d)\n"),
-                       PTYPSTR(sysblk.ptyp[regs->cpuad]), regs->cpuad, len);
+                       PTYPSTR(regs->cpuad), regs->cpuad, len);
                 goto sr_error_exit;
             }
             memset(buf, 0, 16);
@@ -681,7 +681,7 @@ S64      dreg;
             if (rc != 0 && memcmp(buf, zeros, len))
             {
                 logmsg( _("HHCSR117E %s%02X error loading psw - rc(%d)\n"),
-                       PTYPSTR(sysblk.ptyp[regs->cpuad]), regs->cpuad, rc);
+                       PTYPSTR(regs->cpuad), regs->cpuad, rc);
                 goto sr_error_exit;
             }
             break;

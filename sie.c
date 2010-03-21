@@ -329,7 +329,7 @@ U64     dreg;
         if (GUESTREGS == NULL)
          {
              logmsg (_("HHCCP079E %s%02X: calloc failed for sie regs: %s\n"),
-                     PTYPSTR(sysblk.ptyp[regs->cpuad]), regs->cpuad, strerror(errno));
+                     PTYPSTR(regs->cpuad), regs->cpuad, strerror(errno));
 #if !defined(NO_SIGABEND_HANDLER)
              signal_thread(sysblk.cputid[regs->cpuad], SIGUSR1);
 #endif

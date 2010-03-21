@@ -5525,11 +5525,11 @@ static char *ordername[] = {
     {
         log_sigp = snprintf ( log_buf, sizeof(log_buf), 
                 "HHCCO005I %s%02X SIGP %-32s (%2.2X) %s%02X, PARM "F_GREG,
-                PTYPSTR(sysblk.ptyp[regs->cpuad]), regs->cpuad,
+                PTYPSTR(regs->cpuad), regs->cpuad,
                 order >= sizeof(ordername) / sizeof(ordername[0]) ?
                         "Unassigned" : ordername[order],
                 order,
-                PTYPSTR(sysblk.ptyp[cpad]), cpad,
+                PTYPSTR(cpad), cpad,
                 parm);
     }
 

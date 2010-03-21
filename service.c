@@ -1821,7 +1821,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         }
 
         if(sysblk.regs[i]->vf->online)
-            logmsg(_("%s%02X: Vector Facility configured offline\n"), PTYPSTR(sysblk.ptyp[i], i );
+            logmsg(_("%s%02X: Vector Facility configured offline\n"), PTYPSTR(i), i );
 
         /* Take the VF out of the configuration */
         sysblk.regs[i]->vf->online = 0;
@@ -1852,7 +1852,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         }
 
         if(!sysblk.regs[i]->vf->online)
-            logmsg(_("%s%02X: Vector Facility configured online\n"), PTYPSTR(sysblk.ptyp[i], i );
+            logmsg(_("%s%02X: Vector Facility configured online\n"), PTYPSTR(i), i );
 
         /* Mark the VF online to the CPU */
         sysblk.regs[i]->vf->online = 1;

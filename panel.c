@@ -1140,7 +1140,7 @@ static void NP_update(REGS *regs)
     {
         set_color (COLOR_WHITE, COLOR_BLUE);
         set_pos (1, 13);
-        sprintf (buf, "   %s%02X:", PTYPSTR(sysblk.ptyp[regs->cpuad]), regs->cpuad);
+        sprintf (buf, "   %s%02X:", PTYPSTR(regs->cpuad), regs->cpuad);
         draw_text (buf);
         NPcpunum_valid = 1;
         NPcpunum = regs->cpuad;
@@ -2874,7 +2874,7 @@ FinishShutdown:
 
                 memset (buf, ' ', cons_cols);
                 len = sprintf ( buf, "%s%02X ", 
-                    PTYPSTR(sysblk.ptyp[sysblk.pcpu]), sysblk.pcpu ) ;
+                    PTYPSTR(sysblk.pcpu), sysblk.pcpu ) ;
                 if (IS_CPU_ONLINE(sysblk.pcpu))
                 {
                     char ibuf[64];

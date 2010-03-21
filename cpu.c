@@ -748,7 +748,7 @@ static char *pgmintname[] = {
 	if (code == PGM_DATA_EXCEPTION)
 	            sprintf(dxcstr, " DXC=%2.2X", regs->dxc);
 	WRITEMSG(HHCCP014I, buf1, buf2, 
-        PTYPSTR(sysblk.ptyp[realregs->cpuad]), realregs->cpuad,
+        PTYPSTR(realregs->cpuad), realregs->cpuad,
                 pgmintname[ (code - 1) & 0x3F], pcode, ilc, dxcstr);
 
         /* Calculate instruction pointer */
@@ -882,8 +882,8 @@ static char *pgmintname[] = {
     if( OPEN_IC_PER(realregs) )
     {
         if( CPU_STEPPING_OR_TRACING(realregs, ilc) )
-            WRITEMSG(HHCCP015I, PTYPSTR(sysblk.ptyp[regs->cpuad]),
-              regs->cpuad, pcode, IS_IC_PER(realregs) >> 16,
+            WRITEMSG(HHCCP015I, PTYPSTR(regs->cpuad), regs->cpuad,
+              pcode, IS_IC_PER(realregs) >> 16,
               (realregs->psw.IA - ilc) & ADDRESS_MAXWRAP(realregs) );
 
         realregs->perc |= OPEN_IC_PER(realregs) >> ((32 - IC_CR9_SHIFT) - 16);
@@ -1081,8 +1081,8 @@ static char *pgmintname[] = {
             {
 		char buf[40];
 
-                WRITEMSG(HHCCP016I, PTYPSTR(sysblk.ptyp[realregs->cpuad]), 
-                         realregs->cpuad, str_psw (realregs, buf));
+                WRITEMSG(HHCCP016I, PTYPSTR(realregs->cpuad), realregs->cpuad,
+                         str_psw (realregs, buf));
                 OBTAIN_INTLOCK(realregs);
                 realregs->cpustate = CPUSTATE_STOPPING;
                 ON_IC_INTERRUPT(realregs);
@@ -1369,13 +1369,13 @@ int   cpu  = *ptr;
 
     /* Set CPU thread priority */
     if (setpriority(PRIO_PROCESS, 0, sysblk.cpuprio))
-        WRITEMSG(HHCCP001W, PTYPSTR(sysblk.ptyp[cpu]), cpu, sysblk.cpuprio, strerror(errno));
+        WRITEMSG(HHCCP001W, PTYPSTR(cpu), cpu, sysblk.cpuprio, strerror(errno));
 
     /* Back to user mode */
     SETMODE(USER);
 
     /* Display thread started message on control panel */
-    WRITEMSG(HHCCP002I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), PTYPSTR(sysblk.ptyp[cpu]), cpu);
+    WRITEMSG(HHCCP002I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), PTYPSTR(cpu), cpu);
 
     /* Execute the program in specified mode */
     do {
@@ -1399,7 +1399,7 @@ int   cpu  = *ptr;
     signal_condition (&sysblk.cpucond);
 
     /* Display thread ended message on control panel */
-    WRITEMSG(HHCCP008I, thread_id(), getpid(),  getpriority(PRIO_PROCESS,0), PTYPSTR(sysblk.ptyp[cpu]), cpu);
+    WRITEMSG(HHCCP008I, thread_id(), getpid(),  getpriority(PRIO_PROCESS,0), PTYPSTR(cpu), cpu);
 
     RELEASE_INTLOCK(NULL);
 
@@ -1638,7 +1638,7 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
         {
             OFF_IC_STORSTAT(regs);
             ARCH_DEP(store_status) (regs, 0);
-            WRITEMSG (HHCCP010I, PTYPSTR(sysblk.ptyp[regs->cpuad]), regs->cpuad);
+            WRITEMSG (HHCCP010I, PTYPSTR(regs->cpuad), regs->cpuad);
             /* ISW 20071102 : Do not return via longjmp here. */
             /*    process_interrupt needs to finish putting the */
             /*    CPU in its manual state                     */
@@ -1705,7 +1705,7 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
         if( IS_IC_DISABLED_WAIT_PSW(regs) )
         {
             char buf[40];
-            WRITEMSG (HHCCP011I, PTYPSTR(sysblk.ptyp[regs->cpuad]), regs->cpuad, str_psw(regs, buf));
+            WRITEMSG (HHCCP011I, PTYPSTR(regs->cpuad), regs->cpuad, str_psw(regs, buf));
             regs->cpustate = CPUSTATE_STOPPING;
             RELEASE_INTLOCK(regs);
             longjmp(regs->progjmp, SIE_NO_INTERCEPT);
@@ -1758,7 +1758,7 @@ REGS    regs;
             regs.guestregs->hostregs = &regs;
         sysblk.regs[cpu] = &regs;
         release_lock(&sysblk.cpulock[cpu]);
-        WRITEMSG (HHCCP007I, PTYPSTR(sysblk.ptyp[cpu]), cpu, get_arch_mode_string(&regs));
+        WRITEMSG (HHCCP007I, PTYPSTR(cpu), cpu, get_arch_mode_string(&regs));
     }
     else
     {
@@ -1767,11 +1767,11 @@ REGS    regs;
         if (cpu_init (cpu, &regs, NULL))
             return NULL;
 
-        WRITEMSG (HHCCP003I, PTYPSTR(sysblk.ptyp[cpu]), cpu, get_arch_mode_string(&regs));
+        WRITEMSG (HHCCP003I, PTYPSTR(cpu), cpu, get_arch_mode_string(&regs));
 
 #ifdef FEATURE_VECTOR_FACILITY
         if (regs->vf->online)
-            WRITEMSG (HHCCP004I, PTYPSTR(sysblk.ptyp[cpu]), cpu);
+            WRITEMSG (HHCCP004I, PTYPSTR(cpu), cpu);
 #endif /*FEATURE_VECTOR_FACILITY*/
     }
 
@@ -1803,7 +1803,7 @@ REGS    regs;
         }
         else
         {
-            WRITEMSG (HHCCP080E, PTYPSTR(sysblk.ptyp[cpu]), cpu, strerror(errno));
+            WRITEMSG (HHCCP080E, PTYPSTR(cpu), cpu, strerror(errno));
             cpu_uninit (cpu, &regs);
         }
         return oldregs;

@@ -668,7 +668,7 @@ void  UpdateCPUStatus ()
 
             "%s%02X (((((((((((((((((((((((( OFFLINE ))))))))))))))))))))))))\n",
 
-            PTYPSTR(sysblk.ptyp[pcpu]) ,pcpu);
+            PTYPSTR(pcpu) ,pcpu);
     }
     else // pTargetCPU_REGS != &sysblk.dummyregs; cpu is online
     {
@@ -686,7 +686,7 @@ void  UpdateCPUStatus ()
     
             "instcount=%" I64_FMT "u\n"
     
-            ,PTYPSTR(sysblk.ptyp[pTargetCPU_REGS->cpuad]), pTargetCPU_REGS->cpuad
+            ,PTYPSTR(pTargetCPU_REGS->cpuad), pTargetCPU_REGS->cpuad
     
             ,psw[0], psw[1], psw[2],  psw[3]
             ,psw[4], psw[5], psw[6],  psw[7]
