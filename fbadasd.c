@@ -96,7 +96,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     /* The first argument is the file name */
     if (argc == 0 || strlen(argv[0]) > sizeof(dev->filename)-1)
     {
-        logmsg (_("HHCDA056E File name missing or invalid\n"));
+        WRITEMSG (HHCDA056E);
         return -1;
     }
 
@@ -113,8 +113,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         rc = shared_fba_init ( dev, argc, argv);
         if (rc < 0)
         {
-            logmsg (_("HHCDA057E %4.4X:File not found or invalid\n"),
-                    dev->devnum);
+            WRITEMSG (HHCDA057E, dev->devnum);
             return -1;
         }
         else
@@ -129,8 +128,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         dev->fd = open (pathname, O_RDONLY|O_BINARY);
         if (dev->fd < 0)
         {
-            logmsg (_("HHCDA058E File %s open error: %s\n"),
-                    dev->filename, strerror(errno));
+            WRITEMSG (HHCDA058E, dev->filename, strerror(errno));
             return -1;
         }
     }
@@ -141,11 +139,9 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     {
         /* Handle read error condition */
         if (rc < 0)
-            logmsg (_("HHCDA059E Read error in file %s: %s\n"),
-                    dev->filename, strerror(errno));
+            WRITEMSG (HHCDA059E, dev->filename, strerror(errno));
         else
-            logmsg (_("HHCDA060E Unexpected end of file in %s\n"),
-                    dev->filename);
+            WRITEMSG (HHCDA060E, dev->filename);
         close (dev->fd);
         dev->fd = -1;
         return -1;
@@ -162,11 +158,9 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         {
             /* Handle read error condition */
             if (rc < 0)
-                logmsg (_("HHCDA061E Read error in file %s: %s\n"),
-                        dev->filename, strerror(errno));
+                WRITEMSG (HHCDA059E, dev->filename, strerror(errno));
             else
-                logmsg (_("HHCDA062E Unexpected end of file in %s\n"),
-                        dev->filename);
+                WRITEMSG (HHCDA060E, dev->filename);
             close (dev->fd);
             dev->fd = -1;
             return -1;
@@ -226,8 +220,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 continue;
             }
 
-            logmsg (_("HHCDA063E parameter %d is invalid: %s\n"),
-                    i + 1, argv[i]);
+            WRITEMSG (HHCDA063E, i + 1, argv[i]);
             return -1;
         }
     }
@@ -239,8 +232,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         rc = fstat (dev->fd, &statbuf);
         if (rc < 0)
         {
-            logmsg (_("HHCDA064E File %s fstat error: %s\n"),
-                    dev->filename, strerror(errno));
+            WRITEMSG (HHCDA064E, dev->filename, strerror(errno));
             close (dev->fd);
             dev->fd = -1;
             return -1;
@@ -251,8 +243,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             rc=ioctl(dev->fd,BLKGETSIZE,&statbuf.st_size);
             if(rc<0)
             {
-                logmsg (_("HHCDA082E File %s IOCTL BLKGETSIZE error: %s\n"),
-                        dev->filename, strerror(errno));
+                WRITEMSG (HHCDA082E, dev->filename, strerror(errno));
                 close (dev->fd);
                 dev->fd = -1;
                 return -1;
@@ -277,9 +268,8 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             if (sscanf(argv[1], "%u%c", &startblk, &c) != 1
              || startblk >= dev->fbanumblk)
             {
-                logmsg (_("HHCDA065E Invalid device origin block number %s\n"),
-                        argv[1]);
-                close (dev->fd);
+                WRITEMSG (HHCDA065E, argv[1]);
+  		close (dev->fd);
                 dev->fd = -1;
                 return -1;
             }
@@ -293,8 +283,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             if (sscanf(argv[2], "%u%c", &numblks, &c) != 1
              || numblks > dev->fbanumblk)
             {
-                logmsg (_("HHCDA066E Invalid device block count %s\n"),
-                        argv[2]);
+                WRITEMSG (HHCDA066E, argv[2]);
                 close (dev->fd);
                 dev->fd = -1;
                 return -1;
@@ -304,8 +293,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     }
     dev->fbaend = (dev->fbaorigin + dev->fbanumblk) * dev->fbablksiz;
 
-    logmsg (_("HHCDA067I %s origin=%lld blks=%d\n"),
-            dev->filename, (long long)dev->fbaorigin, dev->fbanumblk);
+    WRITEMSG (HHCDA067I, dev->filename, (long long)dev->fbaorigin, dev->fbanumblk);
 
     /* Set number of sense bytes */
     dev->numsense = 24;
@@ -314,8 +302,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     dev->fbatab = dasd_lookup (DASD_FBADEV, NULL, dev->devtype, dev->fbanumblk);
     if (dev->fbatab == NULL)
     {
-        logmsg (_("HHCDA068E %4.4X device type %4.4X not found in dasd table\n"),
-                dev->devnum, dev->devtype);
+        WRITEMSG (HHCDA068E, dev->devnum, dev->devtype);
         close (dev->fd);
         dev->fd = -1;
         return -1;
@@ -540,8 +527,7 @@ off_t           offset;                 /* File offsets              */
         if (offset < 0)
         {
             /* Handle seek error condition */
-            logmsg (_("HHCDA069E error writing blkgrp %d: lseek error: %s\n"),
-                    dev->bufcur, strerror(errno));
+            WRITEMSG (HHCDA069E, dev->bufcur, strerror(errno));
             dev->sense[0] = SENSE_EC;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             cache_lock(CACHE_DEVBUF);
@@ -558,8 +544,7 @@ off_t           offset;                 /* File offsets              */
         if (rc < dev->bufupdhi - dev->bufupdlo)
         {
             /* Handle write error condition */
-            logmsg (_("HHCDA070E error writing blkgrp %d: write error: %s\n"),
-                    dev->bufcur, strerror(errno));
+            WRITEMSG (HHCDA070E, dev->bufcur, strerror(errno));
             dev->sense[0] = SENSE_EC;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             cache_lock(CACHE_DEVBUF);
@@ -599,8 +584,7 @@ fba_read_blkgrp_retry:
         cache_setage(CACHE_DEVBUF, i);
         cache_unlock(CACHE_DEVBUF);
 
-        logdevtr (dev, _("HHCDA071I read blkgrp %d cache hit, using cache[%d]\n"),
-                  blkgrp, i);
+        logdevtr (dev, MSG(HHCDA071I, blkgrp, i));
 
         dev->cachehits++;
         dev->cache = i;
@@ -624,16 +608,14 @@ fba_read_blkgrp_retry:
     /* Wait if no available cache entry */
     if (o < 0)
     {
-        logdevtr (dev, _("HHCDA072I read blkgrp %d no available cache entry, waiting\n"),
-                  blkgrp);
+        logdevtr (dev, MSG(HHCDA072I, blkgrp));
         dev->cachewaits++;
         cache_wait(CACHE_DEVBUF);
         goto fba_read_blkgrp_retry;
     }
 
     /* Cache miss */
-    logdevtr (dev, _("HHCDA073I read blkgrp %d cache miss, using cache[%d]\n"),
-              blkgrp, o);
+    logdevtr (dev, MSG(HHCDA073I, blkgrp, o));
 
     dev->cachemisses++;
 
@@ -648,16 +630,14 @@ fba_read_blkgrp_retry:
     offset = (off_t)((S64)blkgrp * FBA_BLKGRP_SIZE);
     len = fba_blkgrp_len (dev, blkgrp);
 
-    logdevtr (dev, _("HHCDA074I read blkgrp %d offset %" I64_FMT "d len %d\n"),
-              blkgrp, (long long)offset, fba_blkgrp_len(dev, blkgrp));
+    logdevtr (dev, MSG(HHCDA074I, blkgrp, (long long)offset, fba_blkgrp_len(dev, blkgrp)));
 
     /* Seek to the block group offset */
     offset = lseek (dev->fd, offset, SEEK_SET);
     if (offset < 0)
     {
         /* Handle seek error condition */
-        logmsg (_("HHCDA075E error reading blkgrp %d: lseek error: %s\n"),
-                blkgrp, strerror(errno));
+        WRITEMSG (HHCDA075E, blkgrp, strerror(errno));
         dev->sense[0] = SENSE_EC;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
         cache_lock(CACHE_DEVBUF);
@@ -671,8 +651,7 @@ fba_read_blkgrp_retry:
     if (rc < len)
     {
         /* Handle read error condition */
-        logmsg (_("HHCDA076E error reading blkgrp %d: read error: %s\n"),
-           blkgrp, rc < 0 ? strerror(errno) : "end of file");
+        WRITEMSG (HHCDA076E, blkgrp, rc < 0 ? strerror(errno) : "end of file");
         dev->sense[0] = SENSE_EC;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
         cache_lock(CACHE_DEVBUF);
@@ -1099,8 +1078,7 @@ int     repcnt;                         /* Replication count         */
                      + dev->fbalcblk - dev->fbaxfirst
                       ) * dev->fbablksiz;
 
-        logdevtr (dev, _("HHCDA077I Positioning to %8.8" I64_FMT "X (%" I64_FMT "u)\n"),
-                 (long long unsigned int)dev->fbarba, (long long unsigned int)dev->fbarba);
+        logdevtr (dev, MSG(HHCDA077I,(long long unsigned int)dev->fbarba, (long long unsigned int)dev->fbarba));
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
@@ -1117,8 +1095,7 @@ int     repcnt;                         /* Replication count         */
         /* Control information length must be at least 16 bytes */
         if (count < 16)
         {
-            logmsg(_("HHCDA078E define extent data too short: %d bytes\n"),
-                    count);
+            WRITEMSG(HHCDA078E, count);
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
@@ -1127,7 +1104,7 @@ int     repcnt;                         /* Replication count         */
         /* Reject if extent previously defined in this CCW chain */
         if (dev->fbaxtdef)
         {
-            logmsg(_("HHCDA079E second define extent in chain\n"));
+            WRITEMSG(HHCDA079E);
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
@@ -1138,8 +1115,7 @@ int     repcnt;                         /* Replication count         */
         if ((dev->fbamask & (FBAMASK_RESV | FBAMASK_CE))
             || (dev->fbamask & FBAMASK_CTL) == FBAMASK_CTL_RESV)
         {
-            logmsg(_("HHCDA080E invalid file mask %2.2X\n"),
-                    dev->fbamask);
+            WRITEMSG(HHCDA080E, dev->fbamask);
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
@@ -1175,10 +1151,7 @@ int     repcnt;                         /* Replication count         */
          || dev->fbaxblkn > (U32)dev->fbanumblk
          || dev->fbaxlast - dev->fbaxfirst >= dev->fbanumblk - dev->fbaxblkn)
         {
-            logmsg(_("HHCDA081E invalid extent: first block %d, last block %d,\n"),
-                    dev->fbaxfirst, dev->fbaxlast);
-            logmsg(_("         numblks %d, device size %d\n"),
-                    dev->fbaxblkn, dev->fbanumblk);
+            WRITEMSG(HHCDA081E, dev->fbaxfirst, dev->fbaxlast, dev->fbaxblkn, dev->fbanumblk);
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
@@ -1528,8 +1501,7 @@ BYTE byte;
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
             if ((off_t)rc != dev->fbaorigin)
             {
-                logmsg(_("HHCDA901E %4.4x FBA origin mismatch: %d, expected %d,\n"),
-                       rc, dev->fbaorigin);
+                WRITEMSG(HHCDA901E, rc, dev->fbaorigin);
                 return -1;
             }
             break;
@@ -1537,8 +1509,7 @@ BYTE byte;
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
             if ((int)rc != dev->fbanumblk)
             {
-                logmsg(_("HHCDA902E %4.4x FBA numblk mismatch: %d, expected %d,\n"),
-                       rc, dev->fbanumblk);
+                WRITEMSG(HHCDA902E, rc, dev->fbanumblk);
                 return -1;
             }
             break;
@@ -1567,8 +1538,7 @@ BYTE byte;
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
             if ((int)rc != dev->fbablksiz)
             {
-                logmsg(_("HHCDA903E %4.4x FBA blksiz mismatch: %d, expected %d,\n"),
-                       rc, dev->fbablksiz);
+                WRITEMSG(HHCDA903E, rc, dev->fbablksiz);
                 return -1;
             }
             break;
