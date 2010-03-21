@@ -775,6 +775,7 @@ noinst_HEADERS = fishhang.h     \
                  getopt.h       \
                  w32mtio.h      \
                  vmd250.h       \
+                 msgenu.h       \
                  $(extra_dynamic_SRC)
 
 cckd: cckd2ckd$(EXEEXT)  \
