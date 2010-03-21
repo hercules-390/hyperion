@@ -534,6 +534,15 @@
 #define HHCEV030E "Unknown EVM subcommand %s"
 #define HHCEV031I "ECPS:VM Command processor complete"
 
+/* external.c */
+#define HHCCP023I "External interrupt: Interrupt key"
+#define HHCCP024I "External interrupt: Clock comparator"
+#define HHCCP025I "External interrupt: CPU timer=%16.16" I64_FMT "X"
+#define HHCCP026I "External interrupt: Interval timer"
+#define HHCCP027I "External interrupt: Service signal %8.8X"
+#define HHCCP028I "External interrupt: Block I/O %s"
+#define HHCCP031I "Device(%4.4X) Processing Block I/O interrupt: code(%4.4X) parm(%16.16X) status(%2.2X) subcode(%2.2X)"
+
 /* hao.c */
 #define HHCAO001I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCAO002I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"

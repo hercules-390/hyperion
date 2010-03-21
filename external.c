@@ -184,7 +184,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
     /* External interrupt if console interrupt key was depressed */
     if ( OPEN_IC_INTKEY(regs) && !SIE_MODE(regs) )
     {
-        logmsg (_("HHCCP023I External interrupt: Interrupt key\n"));
+        WRITEMSG (HHCCP023I);
 
         /* Reset interrupt key pending */
         OFF_IC_INTKEY;
@@ -295,7 +295,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
     {
         if (CPU_STEPPING_OR_TRACING_ALL)
         {
-            logmsg (_("HHCCP024I External interrupt: Clock comparator\n"));
+            WRITEMSG (HHCCP024I);
         }
         ARCH_DEP(external_interrupt) (EXT_CLOCK_COMPARATOR_INTERRUPT, regs);
     }
@@ -306,8 +306,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
     {
         if (CPU_STEPPING_OR_TRACING_ALL)
         {
-            logmsg (_("HHCCP025I External interrupt: CPU timer=%16.16" I64_FMT "X\n"),
-                    (long long)CPU_TIMER(regs) << 8);
+            WRITEMSG (HHCCP025I, (long long)CPU_TIMER(regs) << 8);
         }
         ARCH_DEP(external_interrupt) (EXT_CPU_TIMER_INTERRUPT, regs);
     }
@@ -322,7 +321,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
     {
         if (CPU_STEPPING_OR_TRACING_ALL)
         {
-            logmsg (_("HHCCP026I External interrupt: Interval timer\n"));
+            WRITEMSG (HHCCP026I);
         }
         OFF_IC_ITIMER(regs);
         ARCH_DEP(external_interrupt) (EXT_INTERVAL_TIMER_INTERRUPT, regs);
@@ -351,8 +350,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
 
            if (sysblk.biodev->ccwtrace)
            {
-           logmsg (_("%4.4X:HHCCP031I Processing Block I/O interrupt: "
-                "code=%4.4X parm=%16.16X status=%2.2X subcode=%2.2X\n"),
+           WRITEMSG (HHCCP031I,
                 sysblk.biodev->devnum,
                 sysblk.servcode,
                 sysblk.bioparm,
@@ -372,8 +370,9 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
            
                if (CPU_STEPPING_OR_TRACING_ALL)
                {
-                  logmsg (_("HHCCP028I External interrupt: Block I/O %16.16X\n"),
-                     sysblk.bioparm);
+		  char buf[20];
+		  sprintf (buf, "%16.16X", (unsigned) sysblk.bioparm);
+                  WRITEMSG (HHCCP028I, buf);
                }
 
                /* Set the main storage reference and change bits   */
@@ -409,8 +408,9 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
 
               if (CPU_STEPPING_OR_TRACING_ALL)
               {
-                 logmsg (_("HHCCP028I External interrupt: Block I/O %8.8X\n"),
-                       (U32)sysblk.bioparm);
+		 char buf[20];
+		 sprintf (buf, "%8.8X", (U32) sysblk.bioparm);
+                 WRITEMSG (HHCCP028I, buf);
               }
 
               /* Store Block I/O parameter at PSA+X'80' */
@@ -442,8 +442,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
 
              if (CPU_STEPPING_OR_TRACING_ALL)
              {
-                 logmsg (_("HHCCP027I External interrupt: Service signal %8.8X\n"),
-                    sysblk.servparm);
+                 WRITEMSG (HHCCP027I, sysblk.servparm);
              }
 
              /* Store service signal parameter at PSA+X'80' */
@@ -472,8 +471,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
 
         if (CPU_STEPPING_OR_TRACING_ALL)
         {
-            logmsg (_("HHCCP027I External interrupt: Service signal %8.8X\n"),
-                    sysblk.servparm);
+            WRITEMSG (HHCCP027I, sysblk.servparm);
         }
 
         /* Store service signal parameter at PSA+X'80' */
