@@ -53,8 +53,7 @@ void close_faketape (DEVBLK *dev)
 {
     if(dev->fd>=0)
     {
-        logmsg (_("HHCTA501I %4.4X: FakeTape %s closed\n"),
-                dev->devnum, dev->filename);
+        WRITEMSG (HHCTA501I, dev->devnum, dev->filename);
         close(dev->fd);
     }
     strcpy(dev->filename, TAPE_UNLOADED);
@@ -149,8 +148,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /* Check for successful open */
     if (rc < 0)
     {
-        logmsg (_("HHCTA502E %4.4X: Error opening %s: %s\n"),
-                dev->devnum, dev->filename, strerror(errno));
+        WRITEMSG (HHCTA502E, dev->devnum, dev->filename, strerror(errno));
 
         strcpy(dev->filename, TAPE_UNLOADED);
         build_senseX(TAPE_BSENSE_TAPELOADFAIL,dev,unitstat,code);
@@ -190,9 +188,7 @@ int             xorblkl;                /* XOR check of block lens   */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        logmsg (_("HHCTA503E %4.4X: Error seeking to offset "I64_FMTX" "
-                "in file %s: %s\n"),
-                dev->devnum, blkpos, dev->filename, strerror(errno));
+        WRITEMSG (HHCTA503E, dev->devnum, blkpos, dev->filename, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
@@ -205,9 +201,7 @@ int             xorblkl;                /* XOR check of block lens   */
     /* Handle read error condition */
     if (rc < 0)
     {
-        logmsg (_("HHCTA504E %4.4X: Error reading block header "
-                "at offset "I64_FMTX" in file %s: %s\n"),
-                dev->devnum, blkpos, dev->filename, strerror(errno));
+        WRITEMSG (HHCTA504E, dev->devnum, blkpos, dev->filename, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
@@ -217,9 +211,7 @@ int             xorblkl;                /* XOR check of block lens   */
     /* Handle end of file (uninitialized tape) condition */
     if (rc == 0)
     {
-        logmsg (_("HHCTA505E %4.4X: End of file (end of tape) "
-                "at offset "I64_FMTX" in file %s\n"),
-                dev->devnum, blkpos, dev->filename);
+        WRITEMSG (HHCTA505E, dev->devnum, blkpos, dev->filename);
 
         /* Set unit exception with tape indicate (end of tape) */
         build_senseX(TAPE_BSENSE_EMPTYTAPE,dev,unitstat,code);
@@ -229,9 +221,7 @@ int             xorblkl;                /* XOR check of block lens   */
     /* Handle end of file within block header */
     if (rc < (int)sizeof(FAKETAPE_BLKHDR))
     {
-        logmsg (_("HHCTA506E %4.4X: Unexpected end of file in block header "
-                "at offset "I64_FMTX" in file %s\n"),
-                dev->devnum, blkpos, dev->filename);
+        WRITEMSG (HHCTA506E, dev->devnum, blkpos, dev->filename);
 
         build_senseX(TAPE_BSENSE_BLOCKSHORT,dev,unitstat,code);
         return -1;
@@ -245,9 +235,7 @@ int             xorblkl;                /* XOR check of block lens   */
     /* Verify header integrity using the XOR header field */
     if ( (prvblkl ^ curblkl) != xorblkl )
     {
-        logmsg (_("HHCTA507E %4.4X: Block header damage "
-                "at offset "I64_FMTX" in file %s\n"),
-                dev->devnum, blkpos, dev->filename);
+        WRITEMSG (HHCTA507E, dev->devnum, blkpos, dev->filename);
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
@@ -312,9 +300,7 @@ U16             curblkl;                /* Current block length      */
         /* Handle read error condition */
         if (rc < 0)
         {
-            logmsg (_("HHCTA510E %4.4X: Error reading data block "
-                    "at offset "I64_FMTX" in file %s: %s\n"),
-                    dev->devnum, blkpos, dev->filename, strerror(errno));
+            WRITEMSG (HHCTA510E, dev->devnum, blkpos, dev->filename, strerror(errno));
 
             /* Set unit check with equipment check */
             build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
@@ -324,9 +310,7 @@ U16             curblkl;                /* Current block length      */
         /* Handle end of file within data block */
         if (rc < curblkl)
         {
-            logmsg (_("HHCTA511E %4.4X: Unexpected end of file in data block "
-                    "at offset "I64_FMTX" in file %s\n"),
-                    dev->devnum, blkpos, dev->filename);
+            WRITEMSG (HHCTA511E, dev->devnum, blkpos, dev->filename);
 
             /* Set unit check with data check and partial record */
             build_senseX(TAPE_BSENSE_BLOCKSHORT,dev,unitstat,code);
@@ -374,9 +358,7 @@ char            sblklen[5];             /* work buffer               */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        logmsg (_("HHCTA512E %4.4X: Error seeking to offset "I64_FMTX" "
-                "in file %s: %s\n"),
-                dev->devnum, blkpos, dev->filename, strerror(errno));
+        WRITEMSG (HHCTA512E, dev->devnum, blkpos, dev->filename, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
@@ -399,15 +381,11 @@ char            sblklen[5];             /* work buffer               */
         {
             /* Disk FULL */
             build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
-            logmsg (_("HHCTA513E %4.4X: Media full condition reached "
-                    "at offset "I64_FMTX" in file %s\n"),
-                    dev->devnum, blkpos, dev->filename);
+            WRITEMSG (HHCTA513E, dev->devnum, blkpos, dev->filename);
             return -1;
         }
         /* Handle write error condition */
-        logmsg (_("HHCTA514E %4.4X: Error writing block header "
-                "at offset "I64_FMTX" in file %s: %s\n"),
-                dev->devnum, blkpos, dev->filename, strerror(errno));
+        WRITEMSG (HHCTA514E, dev->devnum, blkpos, dev->filename, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
@@ -452,9 +430,7 @@ U16             prvblkl;                /* Length of previous block  */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        logmsg (_("HHCTA515E %4.4X: Error seeking to offset "I64_FMTX" "
-                "in file %s: %s\n"),
-                dev->devnum, blkpos, dev->filename, strerror(errno));
+        WRITEMSG (HHCTA515E, dev->devnum, blkpos, dev->filename, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
@@ -487,15 +463,11 @@ U16             prvblkl;                /* Length of previous block  */
         {
             /* Disk FULL */
             build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
-            logmsg (_("HHCTA516E %4.4X: Media full condition reached "
-                    "at offset "I64_FMTX" in file %s\n"),
-                    dev->devnum, blkpos, dev->filename);
+            WRITEMSG (HHCTA513E, dev->devnum, blkpos, dev->filename);
             return -1;
         }
         /* Handle write error condition */
-        logmsg (_("HHCTA517E %4.4X: Error writing data block "
-                "at offset "I64_FMTX" in file %s: %s\n"),
-                dev->devnum, blkpos, dev->filename, strerror(errno));
+        WRITEMSG (HHCTA517E, dev->devnum, blkpos, dev->filename, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
@@ -512,9 +484,7 @@ U16             prvblkl;                /* Length of previous block  */
     if (rc != 0)
     {
         /* Handle write error condition */
-        logmsg (_("HHCTA518E %4.4X: Error writing data block "
-                "at offset "I64_FMTX" in file %s: %s\n"),
-                dev->devnum, blkpos, dev->filename, strerror(errno));
+        WRITEMSG (HHCTA517E, dev->devnum, blkpos, dev->filename, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
@@ -559,9 +529,7 @@ U16             prvblkl;                /* Length of previous block  */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        logmsg (_("HHCTA519E %4.4X: Error seeking to offset "I64_FMTX" "
-                "in file %s: %s\n"),
-                dev->devnum, blkpos, dev->filename, strerror(errno));
+        WRITEMSG (HHCTA512E, dev->devnum, blkpos, dev->filename, strerror(errno));
 
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
         return -1;
@@ -595,9 +563,7 @@ U16             prvblkl;                /* Length of previous block  */
     if (rc != 0)
     {
         /* Handle write error condition */
-        logmsg (_("HHCTA520E %4.4X: Error writing tape mark "
-                "at offset "I64_FMTX" in file %s: %s\n"),
-                dev->devnum, blkpos, dev->filename, strerror(errno));
+        WRITEMSG (HHCTA520E, dev->devnum, blkpos, dev->filename, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
@@ -628,8 +594,7 @@ int sync_faketape (DEVBLK *dev, BYTE *unitstat,BYTE code)
     if (fdatasync( dev->fd ) < 0)
     {
         /* Log the error */
-        logmsg (_("HHCTA521E %4.4X: Sync error on file %s: %s\n"),
-            dev->devnum, dev->filename, strerror(errno));
+        WRITEMSG (HHCTA521E, dev->devnum, dev->filename, strerror(errno));
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
         return -1;

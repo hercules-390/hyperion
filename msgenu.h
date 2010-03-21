@@ -543,6 +543,24 @@
 #define HHCCP028I "External interrupt: Block I/O %s"
 #define HHCCP031I "Device(%4.4X) Processing Block I/O interrupt: code(%4.4X) parm(%16.16X) status(%2.2X) subcode(%2.2X)"
 
+/* faketape.c */
+#define HHCTA501I "Device(%4.4X) FakeTape(%s) closed"
+#define HHCTA502E "Device(%4.4X) Error opening file(%s) %s"
+#define HHCTA503E "Device(%4.4X) Error seeking to offset("I64_FMTX")in file(%s) %s"
+#define HHCTA504E "Device(%4.4X) Error reading block header at offset("I64_FMTX") in file(%s) %s"
+#define HHCTA505E "Device(%4.4X) End of file (end of tape) at offset("I64_FMTX") in file(%s)"
+#define HHCTA506E "Device(%4.4X) Unexpected end of file in block header at offset("I64_FMTX") in file(%s)"
+#define HHCTA507E "Device(%4.4X) Block header damage at offset("I64_FMTX") in file(%s)"
+#define HHCTA510E "Device(%4.4X) Error reading data block at offset("I64_FMTX") in file(%s) %s"
+#define HHCTA511E "Device(%4.4X) Unexpected end of file in data block at offset("I64_FMTX") in file(%s)"
+#define HHCTA512E "Device(%4.4X) Error seeking to offset("I64_FMTX") in file(%s) %s"
+#define HHCTA513E "Device(%4.4X) Media full condition reached at offset("I64_FMTX") in file(%s)"
+#define HHCTA514E "Device(%4.4X) Error writing block header at offset("I64_FMTX") in file(%s) %s"
+#define HHCTA515E "Device(%4.4X) Error seeking to offset("I64_FMTX") in file(%s) %s"
+#define HHCTA517E "Device(%4.4X) Error writing data block at offset("I64_FMTX") in file(%s) %s"
+#define HHCTA520E "Device(%4.4X) Error writing tape mark at offset("I64_FMTX") in file(%s) %s"
+#define HHCTA521E "Device(%4.4X) Sync error on file(%s) %s"
+
 /* hao.c */
 #define HHCAO001I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCAO002I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
