@@ -1587,9 +1587,12 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
 
             if ( vi.dwMajorVersion == 5 && vi.dwMinorVersion == 2 )
             {
+#if defined(SM_SERVERR2)
                 if ( GetSystemMetrics (SM_SERVERR2) )
                     psz = "Server 2003 R2";
-                else if ( vi.wSuiteMask & VER_SUITE_STORAGE_SERVER )
+                else
+#endif
+                if ( vi.wSuiteMask & VER_SUITE_STORAGE_SERVER )
                     psz = "Storage Server 2003";
 #if defined(VER_SUITE_WH_SERVER)
                 else if ( vi.wSuiteMask & VER_SUITE_WH_SERVER )
