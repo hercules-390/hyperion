@@ -39,7 +39,9 @@ int call_ ## xxx_cmd ( int argc, char *argv[], char *cmdline )  { \
 
 // Externally defined commands routing functions...
 
+#if defined(OPTION_PTTRACE)
 CALL_EXT_CMD ( ptt_cmd    )
+#endif // OPTION_PTTRACE
 CALL_EXT_CMD ( cache_cmd  )
 CALL_EXT_CMD ( shared_cmd )
 

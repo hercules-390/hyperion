@@ -197,6 +197,8 @@ typedef void*THREAD_FUNC(void*);
 #define signal_thread(tid,signo) \
         ptt_pthread_kill((tid),(signo),PTT_LOC)
 
+#else  // OPTION_PTTRACE
+#define PTT(...)
 #endif // OPTION_PTTRACE
 
 ///////////////////////////////////////////////////////////////////////
