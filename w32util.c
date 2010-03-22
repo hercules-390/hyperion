@@ -1231,7 +1231,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
     OSVERSIONINFOEX   vi;
     BOOL              ext;
     SYSTEM_INFO       si;
-    char             *psz, *prod_id, *prod_proc;
+    char             *psz = "", *prod_id = "", *prod_proc = "";
     DWORD             dw;
     PGNSI             pgnsi;
 #if _MSC_VER >= 1500 // && defined(PRODUCT_ULTIMATE_E)
