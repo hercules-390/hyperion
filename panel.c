@@ -1061,11 +1061,11 @@ static void NP_screen_redraw (REGS *regs)
         {
             sprintf (buf, "%02X%1s ", i, 
                          (  sysblk.ptyp[(i)] == SCCB_PTYP_CP ? " " : 
-		                    sysblk.ptyp[(i)] == SCCB_PTYP_ICF ? "F" : 
-		                    sysblk.ptyp[(i)] == SCCB_PTYP_IFA ? "A" : 
-		                    sysblk.ptyp[(i)] == SCCB_PTYP_IFL ? "L" : 
-		                    sysblk.ptyp[(i)] == SCCB_PTYP_SUP ? "I" : 
-		                    "*") );
+                            sysblk.ptyp[(i)] == SCCB_PTYP_ICF ? "F" : 
+                            sysblk.ptyp[(i)] == SCCB_PTYP_IFA ? "A" : 
+                            sysblk.ptyp[(i)] == SCCB_PTYP_IFL ? "L" : 
+                            sysblk.ptyp[(i)] == SCCB_PTYP_SUP ? "I" : 
+                            "*") );
             set_pos (line++, 1);
             draw_text (buf);
         }
