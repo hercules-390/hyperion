@@ -4550,7 +4550,11 @@ int             gctab[5]= {             /* default gcol parameters   */
             obtain_lock (&cckd->iolock);
             cckd_flush_cache (dev);
             while (cckdblk.fsync && cckd->wrpending)
+            {
+                cckd->iowaiters++;
                 wait_condition (&cckd->iocond, &cckd->iolock);
+                cckd->iowaiters--;
+            }
             release_lock (&cckd->iolock);
 
             /* Sync the file */
