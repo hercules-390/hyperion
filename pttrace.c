@@ -1,4 +1,4 @@
-/* PTTRACE.C    (c) Copyright Greg Smith, 2003-2009                  */
+/* PTTRACE.C    (c) Copyright Greg Smith, 2003-2010                  */
 /*              pthreads trace debugger                              */
 
 // $Id$
@@ -643,7 +643,7 @@ const char dot = '.';
                 "%-12.12s "                   // Trace type (string; 12 chars)
                 PTR_FMTx" "                   // Data value 1
                 PTR_FMTx" "                   // Data value 2
-                "%-14.14s "                   // File name
+                "%-18.18s "                   // File name
                 "%s%c%6.6ld "                 // Time of day (HH:MM:SS.usecs)
                 "%s\n"                        // Numeric result (or empty string)
 
