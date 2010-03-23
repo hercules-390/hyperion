@@ -1171,10 +1171,6 @@
 						Name="Header Files"
 						>
 						<File
-							RelativePath=".\AutoBuildCount.h"
-							>
-						</File>
-						<File
 							RelativePath=".\cache.h"
 							>
 						</File>
@@ -1376,6 +1372,10 @@
 						</File>
 						<File
 							RelativePath=".\memrchr.h"
+							>
+						</File>
+						<File
+							RelativePath=".\msgenu.h"
 							>
 						</File>
 						<File
