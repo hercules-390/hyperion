@@ -1,12 +1,14 @@
-/*----------------------------------------------------------------------------*/
-/* (c) Copyright Roger Bowler and others 1999-2010                            */
-/* Hercules-390 mainframe emulator                                            */
-/*                                                                            */
-/* file: msgenu.h                                                             */
-/*                                                                            */
-/* (c) Copyright Bernard van der Helm 2010                                    */
-/* Main header file for Hercules messages.                                    */
-/*----------------------------------------------------------------------------*/
+/* MSGENU.H     (c) Copyright Bernard van der Helm, 2010             */
+/*              Header file for Hercules messages (US English)       */
+
+/* Message text (c) Copyright Roger Bowler and others, 1999-2010     */
+
+// $Id$ 
+
+/*-------------------------------------------------------------------*/
+/* This file contains the text of all of the messages issued by      */
+/* the various components of the Hercules mainframe emulator.        */
+/*-------------------------------------------------------------------*/
 
 #define MSG(id, ...)      #id " " id "\n", ## __VA_ARGS__
 #define WRITEMSG(id, ...) logmsg(#id " " id "\n", ## __VA_ARGS__)
@@ -423,7 +425,7 @@
 #define HHCLC022E "Invalid MAC in HWADD statement in %s: %s (%s)"
 #define HHCLC023E "Invalid ROUTE statement in %s: %s"
 #define HHCLC024E "Invalid net address in ROUTE %s: %s (%s)"
-#define	HHCLC025E "Invalid net mask in ROUTE %s: %s (%s)"
+#define HHCLC025E "Invalid net mask in ROUTE %s: %s (%s)"
 #define HHCLC026E "Error in %s: Missing device number or mode"
 #define HHCLC027E "Error in %s: %s: Invalid device number"
 #define HHCLC028E "Error in %s: %s:Missing PORT number"
