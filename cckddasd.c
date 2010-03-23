@@ -1,4 +1,4 @@
-/* CCKDDASD.C   (c) Copyright Roger Bowler, 1999-2009                */
+/* CCKDDASD.C   (c) Copyright Roger Bowler, 1999-2010                */
 /*       ESA/390 Compressed CKD Direct Access Storage Device Handler */
 
 // $Id$
@@ -4414,34 +4414,48 @@ int cckd_disable_syncio(DEVBLK *dev)
 /*-------------------------------------------------------------------*/
 void cckd_lock_devchain(int flag)
 {
-//struct timespec tm;
-//struct timeval  now;
-//int             timeout;
-
     obtain_lock(&cckdblk.devlock);
+
     while ((flag && cckdblk.devusers != 0)
         || (!flag && cckdblk.devusers < 0))
     {
-//gettimeofday(&now,NULL);
-//tm.tv_sec = now.tv_sec + 2;
-//tm.tv_nsec = now.tv_usec * 1000;
         cckdblk.devwaiters++;
+#if 0
+        {
+        struct timespec tm;
+        struct timeval  now;
+        int             timeout;
+
+            gettimeofday(&now,NULL);
+            tm.tv_sec = now.tv_sec + 2;
+            tm.tv_nsec = now.tv_usec * 1000;
+            timeout = timed_wait_condition(&cckdblk.devcond, &cckdblk.devlock, &tm);
+            if (timeout) cckd_print_itrace();
+        }
+#else
         wait_condition(&cckdblk.devcond, &cckdblk.devlock);
-//timeout = timed_wait_condition(&cckdblk.devcond, &cckdblk.devlock, &tm);
-//if (timeout) cckd_print_itrace();
+#endif
         cckdblk.devwaiters--;
     }
-    if (flag) cckdblk.devusers--;
-    else cckdblk.devusers++;
+    if (flag) 
+        cckdblk.devusers--;
+    else 
+        cckdblk.devusers++;
+
     release_lock(&cckdblk.devlock);
 }
 void cckd_unlock_devchain()
 {
     obtain_lock(&cckdblk.devlock);
-    if (cckdblk.devusers < 0) cckdblk.devusers++;
-    else cckdblk.devusers--;
+
+    if (cckdblk.devusers < 0) 
+        cckdblk.devusers++;
+    else 
+        cckdblk.devusers--;
+
     if (cckdblk.devusers == 0 && cckdblk.devwaiters)
         signal_condition(&cckdblk.devcond);
+
     release_lock(&cckdblk.devlock);
 }
 

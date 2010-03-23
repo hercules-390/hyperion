@@ -1,4 +1,4 @@
-/* CACHE.C    (c)Copyright Greg Smith, 2002-2009                     */
+/* CACHE.C    (c)Copyright Greg Smith, 2002-2010                     */
 /*            Dynamic cache manager for multi-threaded applications  */
 
 //FIXME ?? Dynamic resizing is disabled
@@ -153,22 +153,25 @@ int cache_unlock(int ix)
 
 int cache_wait(int ix)
 {
-    struct timeval  now;
-    struct timespec tm;
-
     if (cache_check_ix(ix)) return -1;
     if (cacheblk[ix].busy < cacheblk[ix].nbr)
         return 0;
     if (cache_adjust(ix, 1))
         return 0;
-    gettimeofday (&now, NULL);
-    tm.tv_sec = now.tv_sec;
-    tm.tv_nsec = (now.tv_usec + CACHE_WAITTIME) * 1000;
-    tm.tv_sec += tm.tv_nsec / 1000000000;
-    tm.tv_nsec = tm.tv_nsec % 1000000000;
+
     cacheblk[ix].waiters++; cacheblk[ix].waits++;
+
 #if 0
-    timed_wait_condition(&cacheblk[ix].waitcond, &cacheblk[ix].lock, &tm);
+    {
+    struct timeval  now;
+    struct timespec tm;
+        gettimeofday (&now, NULL);
+        tm.tv_sec = now.tv_sec;
+        tm.tv_nsec = (now.tv_usec + CACHE_WAITTIME) * 1000;
+        tm.tv_sec += tm.tv_nsec / 1000000000;
+        tm.tv_nsec = tm.tv_nsec % 1000000000;
+        timed_wait_condition(&cacheblk[ix].waitcond, &cacheblk[ix].lock, &tm);
+    }
 #else
     wait_condition(&cacheblk[ix].waitcond, &cacheblk[ix].lock);
 #endif
