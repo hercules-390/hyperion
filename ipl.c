@@ -203,8 +203,7 @@ BYTE    chanstat;                       /* IPL device channel status */
     dev = find_device_by_devnum (lcss,devnum);
     if (dev == NULL)
     {
-        logmsg (_("HHCCP027E Device %4.4X not in configuration%s\n"),
-                devnum,
+        WRITEMSG (HHCCP027E, devnum,
                 (sysblk.arch_mode == ARCH_370 ?
                   " or not conneceted to channelset" : ""));
         HDC1(debug_cpu_state, regs);
@@ -272,15 +271,16 @@ BYTE    chanstat;                       /* IPL device channel status */
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
     if (unitstat != (CSW_CE | CSW_DE) || chanstat != 0) {
-        logmsg (_("HHCCP029E %s mode IPL failed: CSW status=%2.2X%2.2X\n"
-                  "           Sense="),
-                get_arch_mode_string(regs), unitstat, chanstat);
+	char buf[80];
+	char buf2[5];
+	strcpy(buf, "");
         for (i=0; i < (int)dev->numsense; i++)
         {
-            logmsg ("%2.2X", dev->sense[i]);
-            if ((i & 3) == 3) logmsg(" ");
+            sprintf(buf2, "%2.2X", dev->sense[i]);
+	    strcat(buf, buf2);
+            if ((i & 3) == 3) strcat(buf, " ");
         }
-        logmsg ("\n");
+	WRITEMSG (HHCCP029E, get_arch_mode_string(regs), unitstat, chanstat, buf);
         HDC1(debug_cpu_state, regs);
         return -1;
     }
@@ -325,9 +325,7 @@ int ARCH_DEP(common_load_finish) (REGS *regs)
     /* Load IPL PSW from PSA+X'0' */
     if (ARCH_DEP(load_psw) (regs, regs->psa->iplpsw) != 0)
     {
-        logmsg (_("HHCCP030E %s mode IPL failed: Invalid IPL PSW: "
-                "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n"),
-                get_arch_mode_string(regs),
+        WRITEMSG (HHCCP030E, get_arch_mode_string(regs),
                 regs->psa->iplpsw[0], regs->psa->iplpsw[1],
                 regs->psa->iplpsw[2], regs->psa->iplpsw[3],
                 regs->psa->iplpsw[4], regs->psa->iplpsw[5],

@@ -709,6 +709,11 @@
 #define HHCIN959I "System cleanup complete"
 #define HHCPN995E ".RC file \"%s\" not found."
 
+/* ipl.c */
+#define HHCCP027E "Device(%4.4X) not in configuration%s"
+#define HHCCP029E "Arch mode(%s) IPL failed: CSW status(%2.2X%2.2X) Sense(%s)"
+#define HHCCP030E "Arch mode(%s) IPL failed: Invalid IPL PSW(%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X)"
+
 /* panel.c */
 #define HHCPN001I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCPN002S "Cannot obtain keyboard buffer: (%s)"
