@@ -720,6 +720,13 @@
 #define HHCLG016E "Error opening logfile(%s) %s"
 #define HHCLG017S "Log file(%s) fdopen failed %s"
 
+/* machchk.c */
+#define HHCCP017I "%s%02X: Machine check due to host error(%s)"
+#define HHCCP018I "%s%02X: Check-Stop due to host error: %s"
+#define HHCCP019I "Machine Check code(%16.16" I64_FMT "u)"
+#define HHCCP020E "Signal USR2 received for undetermined device"
+#define HHCCP021E "Signal USR2 received for device(%4.4X)"
+
 /* panel.c */
 #define HHCPN001I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCPN002S "Cannot obtain keyboard buffer: (%s)"

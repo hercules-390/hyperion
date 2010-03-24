@@ -250,8 +250,7 @@ RADR    fsta = 0;
 
     /* Trace the machine check interrupt */
     if (CPU_STEPPING_OR_TRACING(regs, 0))
-        logmsg (_("HHCCP019I Machine Check code=%16.16" I64_FMT "u\n"),
-                  (long long)mcic);
+        WRITEMSG (HHCCP019I, (long long)mcic);
 
     /* Store the external damage code at PSA+244 */
     STORE_FW(psa->xdmgcode, xdmg);
@@ -311,13 +310,11 @@ int i;
         if( dev == NULL)
         {
             if (!sysblk.shutdown)
-                logmsg(_("HHCCP020E signal USR2 received for "
-                         "undetermined device\n"));
+                WRITEMSG(HHCCP020E);
         }
         else
             if(dev->ccwtrace)
-                logmsg(_("HHCCP021E signal USR2 received for device "
-                         "%4.4X\n"),dev->devnum);
+                WRITEMSG(HHCCP021E,dev->devnum);
         return;
     }
 
@@ -340,13 +337,11 @@ int i;
     if(MACHMASK(&regs->psw))
     {
 #if defined(_FEATURE_SIE)
-        logmsg(_("HHCCP017I %s%02X: Machine check due to host error: %s\n"),
-            regs->sie_active ? "IE" : PTYPSTR(regs->cpuad), 
+        WRITEMSG(HHCCP017I, regs->sie_active ? "IE" : PTYPSTR(regs->cpuad), 
             regs->sie_active ? regs->guestregs->cpuad : regs->cpuad,
             strsignal(signo) );
 #else /*!defined(_FEATURE_SIE)*/
-        logmsg(_("HHCCP017I %s%02X: Machine check due to host error: %s\n"),
-            PTYPSTR(regs->cpuad), regs->cpuad, strsignal(signo));
+        WRITEMSG(HHCCP017I, PTYPSTR(regs->cpuad), regs->cpuad, strsignal(signo));
 #endif /*!defined(_FEATURE_SIE)*/
 
         display_inst(
@@ -380,13 +375,11 @@ int i;
     else
     {
 #if defined(_FEATURE_SIE)
-        logmsg(_("HHCCP018I %s%02X: Check-Stop due to host error: %s\n"),
-            regs->sie_active ? "IE" : PTYPSTR(regs->cpuad), 
+        WRITEMSG(HHCCP018I, regs->sie_active ? "IE" : PTYPSTR(regs->cpuad), 
             regs->sie_active ? regs->guestregs->cpuad : regs->cpuad,
             strsignal(signo));
 #else /*!defined(_FEATURE_SIE)*/
-        logmsg(_("HHCCP018I %s%02X: Check-Stop due to host error: %s\n"),
-            PTYPSTR(regs->cpuad), regs->cpuad, strsignal(signo));
+        WRITEMSG(HHCCP018I, PTYPSTR(regs->cpuad), regs->cpuad, strsignal(signo));
 #endif /*!defined(_FEATURE_SIE)*/
         display_inst(
 #if defined(_FEATURE_SIE)
