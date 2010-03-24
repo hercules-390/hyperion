@@ -727,6 +727,28 @@
 #define HHCCP020E "Signal USR2 received for undetermined device"
 #define HHCCP021E "Signal USR2 received for device(%4.4X)"
 
+/* omatape.c */
+#define HHCTA239E "Device(%4.4X) Error opening TDF file(%s) %s"
+#define HHCTA240E "Device(%4.4X) File(%s) fstat error %s"
+#define HHCTA241E "Device(%4.4X) Cannot obtain buffer for TDF file(%s) %s"
+#define HHCTA242E "Device(%4.4X) Error reading TDF file(%s) %s"
+#define HHCTA243E "Device(%4.4X) file(%s) is not a valid TDF file"
+#define HHCTA244E "Device(%4.4X) Cannot obtain buffer for TDF array %s"
+#define HHCTA245E "Device(%4.4X) Filename or format missing in line(%d) of file(%s)"
+#define HHCTA246E "Device(%4.4X) Filename(%s) too long in line(%d) of file(%s)"
+#define HHCTA247E "Device(%4.4X) RECSIZE keyword missing in line(%d) of file(%s)"
+#define HHCTA248E "Device(%4.4X) Invalid record size(%s) in line(%d) of file(%s)"
+#define HHCTA249E "Device(%4.4X) Invalid record format(%s) in line(%d) of file(%s)"
+#define HHCTA251E "Device(%4.4X) Error opening file(%s) %s"
+#define HHCTA252E "Device(%4.4X) Error seeking to offset("I32_FMTX") in file(%s) %s"
+#define HHCTA253E "Device(%4.4X) Error reading block header at offset("I32_FMTX") in file(%s) %s"
+#define HHCTA254E "Device(%4.4X) Unexpected end of file in block header at offset("I32_FMTX") in file(%s)"
+#define HHCTA255E "Device(%4.4X) Invalid block header at offset("I32_FMTX") in file(%s)"
+#define HHCTA256E "Device(%4.4X) Error reading data block at offset("I32_FMTX") in file(%s) %s"
+#define HHCTA257E "Device(%4.4X) Unexpected end of file in data block at offset("I32_FMTX") in file(%s)"
+#define HHCTA263E "Device(%4.4X) Invalid zero length block at offset("I32_FMTX") in file(%s)"
+#define HHCTA264E "Device(%4.4X) Error seeking to end of file(%s) %s"
+
 /* panel.c */
 #define HHCPN001I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCPN002S "Cannot obtain keyboard buffer: (%s)"

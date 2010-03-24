@@ -91,8 +91,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     fd = open (pathname, O_RDONLY | O_BINARY);
     if (fd < 0)
     {
-        logmsg (_("HHCTA239E %4.4X: Error opening TDF file %s: %s\n"),
-                dev->devnum, dev->filename, strerror(errno));
+        WRITEMSG (HHCTA239E, dev->devnum, dev->filename, strerror(errno));
         return -1;
     }
 
@@ -100,8 +99,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     rc = fstat (fd, &statbuf);
     if (rc < 0)
     {
-        logmsg (_("HHCTA240E %4.4X: File %s fstat error: %s\n"),
-                dev->devnum, dev->filename, strerror(errno));
+        WRITEMSG (HHCTA240E, dev->devnum, dev->filename, strerror(errno));
         close (fd);
         return -1;
     }
@@ -111,8 +109,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     tdfbuf = malloc (tdfsize);
     if (tdfbuf == NULL)
     {
-        logmsg (_("HHCTA241E %4.4X: Cannot obtain buffer for TDF file %s: %s\n"),
-                dev->devnum, dev->filename, strerror(errno));
+        WRITEMSG (HHCTA241E, dev->devnum, dev->filename, strerror(errno));
         close (fd);
         return -1;
     }
@@ -121,8 +118,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     rc = read (fd, tdfbuf, tdfsize);
     if (rc < tdfsize)
     {
-        logmsg (_("HHCTA242E %4.4X: Error reading TDF file %s: %s\n"),
-                dev->devnum, dev->filename, strerror(errno));
+        WRITEMSG (HHCTA242E, dev->devnum, dev->filename, strerror(errno));
         free (tdfbuf);
         close (fd);
         return -1;
@@ -134,8 +130,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /* Check that the first record is a TDF header */
     if (memcmp(tdfbuf, "@TDF", 4) != 0)
     {
-        logmsg (_("HHCTA243E %4.4X: %s is not a valid TDF file\n"),
-                dev->devnum, dev->filename);
+        WRITEMSG (HHCTA243E, dev->devnum, dev->filename);
         free (tdfbuf);
         return -1;
     }
@@ -153,8 +148,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     tdftab = (OMATAPE_DESC*)malloc (filecount * sizeof(OMATAPE_DESC));
     if (tdftab == NULL)
     {
-        logmsg (_("HHCTA244E %4.4X: Cannot obtain buffer for TDF array: %s\n"),
-                dev->devnum, strerror(errno));
+        WRITEMSG (HHCTA244E, dev->devnum, strerror(errno));
         free (tdfbuf);
         return -1;
     }
@@ -202,9 +196,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         /* Check for missing fields */
         if (tdffilenm == NULL || tdfformat == NULL)
         {
-            logmsg (_("HHCTA245E %4.4X: Filename or format missing in "
-                    "line %d of file %s\n"),
-                    dev->devnum, stmt, dev->filename);
+            WRITEMSG (HHCTA245E, dev->devnum, stmt, dev->filename);
             free (tdftab);
             free (tdfbuf);
             return -1;
@@ -214,9 +206,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if (pathlen + 1 + strlen(tdffilenm)
                 > sizeof(tdftab[filecount].filename) - 1)
         {
-            logmsg (_("HHCTA246E %4.4X: Filename %s too long in "
-                    "line %d of file %s\n"),
-                    dev->devnum, tdffilenm, stmt, dev->filename);
+            WRITEMSG (HHCTA246E, dev->devnum, tdffilenm, stmt, dev->filename);
             free (tdftab);
             free (tdfbuf);
             return -1;
@@ -266,9 +256,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             if (tdfreckwd == NULL
                 || strcasecmp(tdfreckwd, "RECSIZE") != 0)
             {
-                logmsg (_("HHCTA247E %4.4X: RECSIZE keyword missing in "
-                        "line %d of file %s\n"),
-                        dev->devnum, stmt, dev->filename);
+                WRITEMSG (HHCTA247E, dev->devnum, stmt, dev->filename);
                 free (tdftab);
                 free (tdfbuf);
                 return -1;
@@ -279,9 +267,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 || sscanf(tdfblklen, "%u%c", &blklen, &c) != 1
                 || blklen < 1 || blklen > MAX_BLKLEN)
             {
-                logmsg (_("HHCTA248E %4.4X: Invalid record size %s in "
-                        "line %d of file %s\n"),
-                        dev->devnum, tdfblklen, stmt, dev->filename);
+                WRITEMSG (HHCTA248E, dev->devnum, tdfblklen, stmt, dev->filename);
                 free (tdftab);
                 free (tdfbuf);
                 return -1;
@@ -293,9 +279,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         }
         else
         {
-            logmsg (_("HHCTA249E %4.4X: Invalid record format %s in "
-                    "line %d of file %s\n"),
-                    dev->devnum, tdfformat, stmt, dev->filename);
+            WRITEMSG (HHCTA249E, dev->devnum, tdfformat, stmt, dev->filename);
             free (tdftab);
             free (tdfbuf);
             return -1;
@@ -394,8 +378,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if (fd >= 0)            /* (if open was successful, then it) */
             errno = EOVERFLOW;  /* (must have been a lseek overflow) */
 
-        logmsg (_("HHCTA251E %4.4X: Error opening %s: %s\n"),
-                dev->devnum, omadesc->filename, strerror(errno));
+        WRITEMSG (HHCTA251E, dev->devnum, omadesc->filename, strerror(errno));
 
         if (fd >= 0)
             close(fd);          /* (close the file if it was opened) */
@@ -437,9 +420,7 @@ S32             nxthdro;                /* Offset of next header     */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        logmsg (_("HHCTA252E %4.4X: Error seeking to offset "I32_FMTX" "
-                "in file %s: %s\n"),
-                dev->devnum, blkpos, omadesc->filename, strerror(errno));
+        WRITEMSG (HHCTA252E, dev->devnum, blkpos, omadesc->filename, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
@@ -452,9 +433,7 @@ S32             nxthdro;                /* Offset of next header     */
     /* Handle read error condition */
     if (rc < 0)
     {
-        logmsg (_("HHCTA253E %4.4X: Error reading block header "
-                "at offset "I32_FMTX" in file %s: %s\n"),
-                dev->devnum, blkpos, omadesc->filename,
+        WRITEMSG (HHCTA253E, dev->devnum, blkpos, omadesc->filename,
                 strerror(errno));
 
         /* Set unit check with equipment check */
@@ -465,9 +444,7 @@ S32             nxthdro;                /* Offset of next header     */
     /* Handle end of file within block header */
     if (rc < (int)sizeof(omahdr))
     {
-        logmsg (_("HHCTA254E %4.4X: Unexpected end of file in block header "
-                "at offset "I32_FMTX" in file %s\n"),
-                dev->devnum, blkpos, omadesc->filename);
+        WRITEMSG (HHCTA254E, dev->devnum, blkpos, omadesc->filename);
 
         /* Set unit check with data check and partial record */
         build_senseX(TAPE_BSENSE_BLOCKSHORT,dev,unitstat,code);
@@ -488,9 +465,7 @@ S32             nxthdro;                /* Offset of next header     */
     if (curblkl < -1 || curblkl == 0 || curblkl > MAX_BLKLEN
         || memcmp(omahdr.omaid, "@HDF", 4) != 0)
     {
-        logmsg (_("HHCTA255E %4.4X: Invalid block header "
-                "at offset "I32_FMTX" in file %s\n"),
-                dev->devnum, blkpos, omadesc->filename);
+        WRITEMSG (HHCTA255E, dev->devnum, blkpos, omadesc->filename);
 
         build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
         return -1;
@@ -555,9 +530,7 @@ S32             nxthdro;                /* Offset of next header     */
     /* Handle read error condition */
     if (rc < 0)
     {
-        logmsg (_("HHCTA256E %4.4X: Error reading data block "
-                "at offset "I32_FMTX" in file %s: %s\n"),
-                dev->devnum, blkpos, omadesc->filename,
+        WRITEMSG (HHCTA256E, dev->devnum, blkpos, omadesc->filename,
                 strerror(errno));
 
         /* Set unit check with equipment check */
@@ -568,9 +541,7 @@ S32             nxthdro;                /* Offset of next header     */
     /* Handle end of file within data block */
     if (rc < curblkl)
     {
-        logmsg (_("HHCTA257E %4.4X: Unexpected end of file in data block "
-                "at offset "I32_FMTX" in file %s\n"),
-                dev->devnum, blkpos, omadesc->filename);
+        WRITEMSG(HHCTA257E, dev->devnum, blkpos, omadesc->filename);
 
         /* Set unit check with data check and partial record */
         build_senseX(TAPE_BSENSE_BLOCKSHORT,dev,unitstat,code);
@@ -606,9 +577,7 @@ long            blkpos;                 /* Offset of block in file   */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        logmsg (_("HHCTA258E %4.4X: Error seeking to offset "I32_FMTX" "
-                "in file %s: %s\n"),
-                dev->devnum, blkpos, omadesc->filename, strerror(errno));
+        WRITEMSG (HHCTA252E, dev->devnum, blkpos, omadesc->filename, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
@@ -621,9 +590,7 @@ long            blkpos;                 /* Offset of block in file   */
     /* Handle read error condition */
     if (blklen < 0)
     {
-        logmsg (_("HHCTA259E %4.4X: Error reading data block "
-                "at offset "I32_FMTX" in file %s: %s\n"),
-                dev->devnum, blkpos, omadesc->filename,
+        WRITEMSG (HHCTA256E, dev->devnum, blkpos, omadesc->filename,
                 strerror(errno));
 
         build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
@@ -680,9 +647,7 @@ BYTE            c;                      /* Character work area       */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        logmsg (_("HHCTA260E %4.4X: Error seeking to offset "I32_FMTX" "
-                "in file %s: %s\n"),
-                dev->devnum, blkpos, omadesc->filename, strerror(errno));
+        WRITEMSG (HHCTA252E, dev->devnum, blkpos, omadesc->filename, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
@@ -737,9 +702,7 @@ BYTE            c;                      /* Character work area       */
     /* Handle read error condition */
     if (rc < 0)
     {
-        logmsg (_("HHCTA261E %4.4X: Error reading data block "
-                "at offset "I32_FMTX" in file %s: %s\n"),
-                dev->devnum, blkpos, omadesc->filename,
+        WRITEMSG (HHCTA256E, dev->devnum, blkpos, omadesc->filename,
                 strerror(errno));
 
         build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
@@ -749,9 +712,7 @@ BYTE            c;                      /* Character work area       */
     /* Check for block not terminated by newline */
     if (rc < 1)
     {
-        logmsg (_("HHCTA262E %4.4X: Unexpected end of file in data block "
-                "at offset "I32_FMTX" in file %s\n"),
-                dev->devnum, blkpos, omadesc->filename);
+        WRITEMSG (HHCTA254E, dev->devnum, blkpos, omadesc->filename);
 
         /* Set unit check with data check and partial record */
         build_senseX(TAPE_BSENSE_BLOCKSHORT,dev,unitstat,code);
@@ -761,9 +722,7 @@ BYTE            c;                      /* Character work area       */
     /* Check for invalid zero length block */
     if (pos == 0)
     {
-        logmsg (_("HHCTA263E %4.4X: Invalid zero length block "
-                "at offset "I32_FMTX" in file %s\n"),
-                dev->devnum, blkpos, omadesc->filename);
+        WRITEMSG (HHCTA263E, dev->devnum, blkpos, omadesc->filename);
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_BLOCKSHORT,dev,unitstat,code);
@@ -934,8 +893,7 @@ int             curblkl;                /* Length of current block   */
     {
         /* Handle seek error condition */
         if ( eofpos >= LONG_MAX) errno = EOVERFLOW;
-        logmsg (_("HHCTA264E %4.4X: Error seeking to end of file %s: %s\n"),
-                dev->devnum, omadesc->filename, strerror(errno));
+        WRITEMSG (HHCTA264E, dev->devnum, omadesc->filename, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
@@ -1064,8 +1022,7 @@ S32             nxthdro;                /* Offset of next header     */
     if (pos < 0)
     {
         /* Handle seek error condition */
-        logmsg (_("HHCTA265E %4.4X: Error seeking to end of file %s: %s\n"),
-                dev->devnum, omadesc->filename, strerror(errno));
+        WRITEMSG (HHCTA264E, dev->devnum, omadesc->filename, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
