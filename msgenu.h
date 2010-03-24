@@ -714,6 +714,12 @@
 #define HHCCP029E "Arch mode(%s) IPL failed: CSW status(%2.2X%2.2X) Sense(%s)"
 #define HHCCP030E "Arch mode(%s) IPL failed: Invalid IPL PSW(%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X)"
 
+/* logger.c */
+#define HHCLG014E "Log not active"
+#define HHCLG015I "Log closed"
+#define HHCLG016E "Error opening logfile(%s) %s"
+#define HHCLG017S "Log file(%s) fdopen failed %s"
+
 /* panel.c */
 #define HHCPN001I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCPN002S "Cannot obtain keyboard buffer: (%s)"
