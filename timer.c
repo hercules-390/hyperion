@@ -245,8 +245,6 @@ U64     total_sios;                     /* Total SIO rate            */
                 regs->instcount = 0;
                 regs->prevcount += mipsrate;
                 mipsrate = (mipsrate*1000000 + diff/2) / diff;
-                if (mipsrate > MAX_REPORTED_MIPSRATE)
-                    mipsrate = 0;
                 regs->mipsrate = mipsrate;
                 total_mips += mipsrate;
 
@@ -255,8 +253,6 @@ U64     total_sios;                     /* Total SIO rate            */
                 regs->siocount = 0;
                 regs->siototal += siosrate;
                 siosrate = (siosrate*1000000 + diff/2) / diff;
-                if (siosrate > MAX_REPORTED_SIOSRATE)
-                    siosrate = 0;
                 regs->siosrate = siosrate;
                 total_sios += siosrate;
 

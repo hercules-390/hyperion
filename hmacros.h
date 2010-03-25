@@ -323,9 +323,6 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
 
 #define HI_CPU sysblk.hicpu
 
-#define MAX_REPORTED_MIPSRATE  (250000000) /* instructions / second  */
-#define MAX_REPORTED_SIOSRATE  (10000)     /* SIOs per second        */
-
 /* Instruction count for a CPU */
 #define INSTCOUNT(_regs) \
  ((_regs)->hostregs->prevcount + (_regs)->hostregs->instcount)
