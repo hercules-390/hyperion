@@ -537,20 +537,20 @@ unsigned uptime, weeks, days, hours, mins, secs;
 
     if (weeks)
     {
-        logmsg(_("Hercules has been up for %u week%s, %u day%s, %02u:%02u:%02u.\n"),
+        logmsg(_("HHCPN800I Hercules has been up for %u week%s, %u day%s, %02u:%02u:%02u.\n"),
                     weeks, weeks >  1 ? "s" : "",
                     days,  days  != 1 ? "s" : "",
                     hours, mins, secs);
     }
     else if (days)
     {
-        logmsg(_("Hercules has been up for %u day%s, %02u:%02u:%02u.\n"),
+        logmsg(_("HHCPN801I Hercules has been up for %u day%s, %02u:%02u:%02u.\n"),
                     days, days != 1 ? "s" : "",
                     hours, mins, secs);
     }
     else
     {
-        logmsg(_("Hercules has been up for %02u:%02u:%02u.\n"),
+        logmsg(_("HHCPN802I Hercules has been up for %02u:%02u:%02u.\n"),
                     hours, mins, secs);
     }
     return 0;
@@ -610,7 +610,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
 
     if (strcasecmp(devclass,"PRT"))
     {
-        logmsg( _("HHCPNzzzE Device %d:%4.4X is not a printer device\n"),
+        logmsg( _("HHCPN017E Device %d:%4.4X is not a printer device\n"),
                   lcss, devnum );
         return -1;
     }
@@ -624,7 +624,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
             strcat(buf,wrk);
         }
 
-        logmsg( _("HHCPNzzzI Device %d:%4.4X fcb %s/\n"),
+        logmsg( _("HHCPN320I Device %d:%4.4X fcb %s/\n"),
                   lcss, devnum, buf );
         return 0;
     }
@@ -635,21 +635,21 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
     /* If not 1403 */
     if ( dev->devtype != 0x1403 )
     {
-        logmsg( _("HHCPNzzzE Device %d:%4.4X is not a 1403 device\n"),
+        logmsg( _("HHCPN322E Device %d:%4.4X is not a 1403 device\n"),
                   lcss, devnum );
         return -1;
     }
 
     if ( !dev->stopprt )
     {
-        logmsg( _("HHCPNzzzE Device %d:%4.4X not stopped \n"),
+        logmsg( _("HHCPN323E Device %d:%4.4X not stopped \n"),
                   lcss, devnum );
         return -1;
     }
 
     if (strlen (argv[2]) != 26 ) 
     {
-        logmsg( _("HHCPNzzzE Device %d:%4.4X invalid fcb image ==>%s<==\n"),
+        logmsg( _("HHCPN324E Device %d:%4.4X invalid fcb image ==>%s<==\n"),
                   lcss, devnum, argv[2] );
         return -1;
     }
@@ -657,7 +657,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
     {
         if ( (argv[2][j] < '0') || (argv[2][j] > '9' ) )
         {
-        logmsg( _("HHCPNzzzE Device %d:%4.4X invalid fcb image ==>%s<==\n"),
+        logmsg( _("HHCPN325E Device %d:%4.4X invalid fcb image ==>%s<==\n"),
                   lcss, devnum, argv[2] );
             return -1;
         }
@@ -678,7 +678,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
         sprintf(wrk,"/%02d",dev->fcb[i]);
         strcat(buf,wrk);
     }
-    logmsg( _("HHCPNzzzI Device %d:%4.4X fcb %s/\n"),
+    logmsg( _("HHCPN320I Device %d:%4.4X fcb %s/\n"),
               lcss, devnum, buf );
     return 0;
 
@@ -836,7 +836,7 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
 
         if (strcasecmp(devclass,"PRT"))
         {
-            logmsg( _("HHCPN024E Device %d:%4.4X is not a printer device\n"),
+            logmsg( _("HHCPN017E Device %d:%4.4X is not a printer device\n"),
                       lcss, devnum );
             return -1;
         }
@@ -986,14 +986,14 @@ int cfall_cmd(int argc, char *argv[], char *cmdline)
         if (IS_CPU_ONLINE(i))
         {
             if (on < 0)
-                logmsg(_("HHCPN154I %s%02X online\n"), PTYPSTR(i), i);
+                logmsg(_("HHCPN152I %s%02X online\n"), PTYPSTR(i), i);
             else if (on == 0)
                 deconfigure_cpu(i);
         }
         else
         {
             if (on < 0)
-                logmsg(_("HHCPN155I %s%02X offline\n"), PTYPSTR(i), i);
+                logmsg(_("HHCPN153I %s%02X offline\n"), PTYPSTR(i), i);
             else if (on > 0 && i < MAX_CPU)
                 configure_cpu(i);
         }
@@ -1900,7 +1900,7 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
             }
         }
 
-        logmsg( _("HHCPNXXXI CTC debugging now %s for all CTCI/LCS device groups.\n"),
+        logmsg( _("HHCPN033I CTC debugging now %s for all CTCI/LCS device groups.\n"),
                   onoff ? _("ON") : _("OFF") );
     }
     else
@@ -1943,7 +1943,7 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
             return -1;
         }
 
-        logmsg( _("HHCPNXXXI CTC debugging now %s for %s device %d:%4.4X group.\n"),
+        logmsg( _("HHCPN032I CTC debugging now %s for %s device %d:%4.4X group.\n"),
                   onoff ? _("ON") : _("OFF"),
                   CTC_LCS == dev->ctctype ? "LCS" : "CTCI",
                   lcss, devnum );
@@ -2100,9 +2100,9 @@ char *basedir;
             set_sce_dir(argv[1]);
     else
         if((basedir = get_sce_dir()))
-            logmsg(_("SCLPROOT %s\n"),basedir);
+            logmsg(_("HHCPN820I SCLPROOT %s\n"),basedir);
         else
-            logmsg(_("SCLP DISK I/O Disabled\n"));
+            logmsg(_("HHCPN821I SCLP DISK I/O Disabled\n"));
 
     return 0;
 }
@@ -2124,9 +2124,9 @@ int httproot_cmd(int argc, char *argv[], char *cmdline)
     }
     else
         if(sysblk.httproot)
-            logmsg(_("HHCnnxxxI HTTPROOT %s\n"),sysblk.httproot);
+            logmsg(_("HHCCH830I HTTPROOT %s\n"),sysblk.httproot);
         else
-            logmsg(_("HHCnnxxxI HTTPROOT not specified\n"));
+            logmsg(_("HHCCF831I HTTPROOT not specified\n"));
 
     return 0;
 }
@@ -2153,7 +2153,7 @@ char c;
         }
         else if(sysblk.httpport)
         {
-            logmsg(_("HHCCF040S HTTP server already active\n"));
+            logmsg(_("HHCCF832S HTTP server already active\n"));
             return -1;
         }
         else
@@ -2161,7 +2161,7 @@ char c;
             if (sscanf(argv[1], "%hu%c", &sysblk.httpport, &c) != 1
                 || sysblk.httpport == 0 || (sysblk.httpport < 1024 && sysblk.httpport != 80) )
             {
-                logmsg(_("HHCCF029S Invalid HTTP port number %s\n"), argv[1]);
+                logmsg(_("HHCCF833S Invalid HTTP port number %s\n"), argv[1]);
                 return -1;
             }
             if (argc > 2)
@@ -2170,7 +2170,7 @@ char c;
                     sysblk.httpauth = 1;
                 else if (strcasecmp(argv[2],"noauth"))
                 {
-                    logmsg(_("HHCCF005S Unrecognized argument %s\n"),argv[2]);
+                    logmsg(_("HHCCF834S Unrecognized argument %s\n"),argv[2]);
                     return -1;
                 }
             }
@@ -2191,14 +2191,14 @@ char c;
             if ( create_thread (&sysblk.httptid, DETACHED,
                                 http_server, NULL, "http_server") )
             {
-                logmsg(_("HHCCF041S Cannot create http_server thread: %s\n"),
+                logmsg(_("HHCCF835S Cannot create http_server thread: %s\n"),
                         strerror(errno));
                 return -1;
             }
         }
     }
     else
-        logmsg(_("HHCCF049I HTTPPORT %d\n"),sysblk.httpport);
+        logmsg(_("HHCCF836I HTTPPORT %d\n"),sysblk.httpport);
     return 0;
 }
 
@@ -2219,13 +2219,13 @@ char c;
         if ( sscanf( argv[1], "%d%c", &http_server_kludge_msecs, &c ) != 1
             || http_server_kludge_msecs <= 0 || http_server_kludge_msecs > 50 )
         {
-            logmsg(_("HHCCF066S Invalid HTTP_SERVER_CONNECT_KLUDGE value: %s\n" ),argv[1]);
+            logmsg(_("HHCCF837S Invalid HTTP_SERVER_CONNECT_KLUDGE value: %s\n" ),argv[1]);
             return -1;
         }
         sysblk.http_server_kludge_msecs = http_server_kludge_msecs;
     }
     else
-        logmsg(_("HHCCF042S HTTP_SERVER_CONNECT_KLUDGE value: %s\n" )
+        logmsg(_("HHCCF838S HTTP_SERVER_CONNECT_KLUDGE value: %s\n" )
                 ,sysblk.http_server_kludge_msecs);
     return 0;
 }
@@ -3182,17 +3182,17 @@ REGS *regs;
     rc = device_attention (dev, CSW_ATTN);
 
     switch (rc) {
-        case 0: logmsg(_("HHCPN045I Device %4.4X attention request raised\n"),
-                         devnum);
+        case 0: logmsg(_("HHCPN045I Device %d:%4.4X attention request raised\n"),
+                         lcss, devnum);
                 break;
-        case 1: logmsg(_("HHCPN046E Device %4.4X busy or interrupt pending\n"),
-                         devnum);
+        case 1: logmsg(_("HHCPN046E Device %d:%4.4X busy or interrupt pending\n"),
+                         lcss, devnum);
                 break;
-        case 2: logmsg(_("HHCPN047E Device %4.4X attention request rejected\n"),
-                         devnum);
+        case 2: logmsg(_("HHCPN047E Device %d:%4.4X attention request rejected\n"),
+                         lcss, devnum);
                 break;
-        case 3: logmsg(_("HHCPN048E Device %4.4X subchannel not enabled\n"),
-                         devnum);
+        case 3: logmsg(_("HHCPN048E Device %d:%4.4X subchannel not enabled\n"),
+                         lcss, devnum);
                 break;
     }
 
@@ -3339,7 +3339,7 @@ int i;
             }
         }
     else
-        logmsg(_("HHCCF053I SCHMDOPT %sabled%s\n"),
+        logmsg(_("HHCCF053I SHCMDOPT %sabled%s\n"),
           (sysblk.shcmdopt&SHCMDOPT_DISABLE)?"Dis":"En",
           (sysblk.shcmdopt&SHCMDOPT_NODIAG8)?" NoDiag8":"");
 
@@ -4740,7 +4740,7 @@ int mnttapri_cmd(int argc, char *argv[], char *cmdline)
         }
     }
     else
-        logmsg( _("Tape mount reinit %sallowed\n"),sysblk.nomountedtapereinit?"dis":"");
+        logmsg( _("HHCPN850I Tape mount reinit %sallowed\n"),sysblk.nomountedtapereinit?"dis":"");
 
     return 0;
 }
@@ -4773,7 +4773,7 @@ int ascsimnt_cmd(int argc, char *argv[], char *cmdline)
         }
     }
     else
-        logmsg( _("Auto SCSI mount %d seconds\n"),sysblk.auto_scsi_mount_secs);
+        logmsg( _("HHCPN851I Auto SCSI mount %d seconds\n"),sysblk.auto_scsi_mount_secs);
 
     return 0;
 }
@@ -5549,7 +5549,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
     if (argc > 1 && !strcasecmp(argv[1], "clear"))
     {
         memset(IMAP_FIRST,0,IMAP_SIZE);
-        logmsg( _("HHCPN124I Instruction counts reset to zero.\n") );
+        logmsg( _("HHCPN870I Instruction counts reset to zero.\n") );
         release_lock( &sysblk.icount_lock );
         return 0;
     }
@@ -5562,20 +5562,20 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
       /* Allocate space */
       if(!(opcode1 = malloc(MAX_ICOUNT_INSTR * sizeof(unsigned char))))
       {
-        logmsg("Sorry, not enough memory\n");
+        logmsg("HHCPN871E Sorry, not enough memory\n");
         release_lock( &sysblk.icount_lock );
         return 0;
       }
       if(!(opcode2 = malloc(MAX_ICOUNT_INSTR * sizeof(unsigned char))))
       {
-        logmsg("Sorry, not enough memory\n");
+        logmsg("HHCPN871E Sorry, not enough memory\n");
         free(opcode1);
         release_lock( &sysblk.icount_lock );
         return 0;
       }
       if(!(count = malloc(MAX_ICOUNT_INSTR * sizeof(U64))))
       {
-        logmsg("Sorry, not enough memory\n");
+        logmsg("HHCPN871E Sorry, not enough memory\n");
         free(opcode1);
         free(opcode2);
         release_lock( &sysblk.icount_lock );
@@ -5607,7 +5607,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imap01[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("Sorry, too many instructions\n");
+                  logmsg("HHCPN872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5630,7 +5630,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapa4[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("Sorry, too many instructions\n");
+                  logmsg("HHCPN872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5653,7 +5653,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapa5[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("Sorry, too many instructions\n");
+                  logmsg("HHCPN872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5676,7 +5676,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapa6[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("Sorry, too many instructions\n");
+                  logmsg("HHCPN872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5699,7 +5699,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapa7[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("Sorry, too many instructions\n");
+                  logmsg("HHCPN872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5722,7 +5722,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapb2[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("Sorry, too many instructions\n");
+                  logmsg("HHCPN872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5745,7 +5745,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapb3[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("Sorry, too many instructions\n");
+                  logmsg("HHCPN872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5768,7 +5768,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapb9[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("Sorry, too many instructions\n");
+                  logmsg("HHCPN872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5791,7 +5791,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapc0[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("Sorry, too many instructions\n");
+                  logmsg("HHCPN872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5814,7 +5814,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapc2[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("Sorry, too many instructions\n");
+                  logmsg("HHCPN872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5837,7 +5837,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapc4[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("Sorry, too many instructions\n");
+                  logmsg("HHCPN872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5860,7 +5860,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapc6[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("Sorry, too many instructions\n");
+                  logmsg("HHCPN872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5883,7 +5883,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapc8[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("Sorry, too many instructions\n");
+                  logmsg("HHCPN872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5906,7 +5906,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imape3[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("Sorry, too many instructions\n");
+                  logmsg("HHCPN872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5929,7 +5929,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imape4[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("Sorry, too many instructions\n");
+                  logmsg("HHCPN872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5952,7 +5952,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imape5[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("Sorry, too many instructions\n");
+                  logmsg("HHCPN872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5975,7 +5975,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapeb[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("Sorry, too many instructions\n");
+                  logmsg("HHCPN872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5998,7 +5998,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapec[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("Sorry, too many instructions\n");
+                  logmsg("HHCPN872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -6021,7 +6021,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imaped[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("Sorry, too many instructions\n");
+                  logmsg("HHCPN872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -6042,7 +6042,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
               total += sysblk.imapxx[i1];
               if(i == (MAX_ICOUNT_INSTR-1))
               {
-                logmsg("Sorry, too many instructions\n");
+                logmsg("HHCPN872E Sorry, too many instructions\n");
                 free(opcode1);
                 free(opcode2);
                 free(count);
@@ -6081,7 +6081,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
 #define  ICOUNT_WIDTH  "12"     /* Print field width */
 
       /* Print */
-      logmsg(_("HHCPN125I Sorted instruction count display:\n"));
+      logmsg(_("HHCPN875I Sorted instruction count display:\n"));
       for(i1 = 0; i1 < i; i1++)
       {
         switch(opcode1[i1])
@@ -6195,7 +6195,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
       return 0;
     }
 
-    logmsg(_("HHCPN125I Instruction count display:\n"));
+    logmsg(_("HHCPN876I Instruction count display:\n"));
     for (i1 = 0; i1 < 256; i1++)
     {
         switch (i1)
@@ -6885,10 +6885,10 @@ int count_cmd(int argc, char *argv[], char *cmdline)
     for (i = 0; i < MAX_CPU; i++)
         if (IS_CPU_ONLINE(i))
             instcount += INSTCOUNT(sysblk.regs[i]);
-    logmsg ("  i: %12" I64_FMT "d\n", instcount);
+    logmsg ("HHCPN877I   i: %12" I64_FMT "d\n", instcount);
 
     for (i = 0; i < OPTION_COUNTING; i++)
-        logmsg ("%3d: %12" I64_FMT "d\n", i, sysblk.count[i]);
+        logmsg ("HHCPN878I %3d: %12" I64_FMT "d\n", i, sysblk.count[i]);
 
     return 0;
 }
@@ -6907,7 +6907,7 @@ int ldmod_cmd(int argc, char *argv[], char *cmdline)
 
     if(argc <= 1)
     {
-        logmsg("Usage: %s <module>\n",argv[0]);
+        logmsg("HHCHD104E Usage: %s <module>\n",argv[0]);
         return -1;
     }
 
@@ -6933,7 +6933,7 @@ int rmmod_cmd(int argc, char *argv[], char *cmdline)
 
     if(argc <= 1)
     {
-        logmsg("Usage: %s <module>\n",argv[0]);
+        logmsg("HHCHD105E Usage: %s <module>\n",argv[0]);
         return -1;
     }
 
@@ -6987,7 +6987,7 @@ int modpath_cmd(int argc, char *argv[], char *cmdline)
 
     if(argc <= 1)
     {
-        logmsg("Usage: %s <path>\n",argv[0]);
+        logmsg("HHCHD106E Usage: %s <path>\n",argv[0]);
         return -1;
     }
     else

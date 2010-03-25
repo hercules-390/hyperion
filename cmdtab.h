@@ -23,13 +23,13 @@ COMMAND ( "help",      PANEL,        HelpCommand,
 
 COMMAND ( "?",         PANEL,        HelpCommand,  "alias for help\n", NULL )
 
-COMMAND ( "*",         CONFIG+PANEL, comment_cmd,  "Comment", NULL )
+COMMAND ( "*",         CONFIG+PANEL, comment_cmd,  "comment\n", NULL )
 
-COMMAND ( "#",         CONFIG+PANEL, comment_cmd,  "Comment\n", NULL )
+COMMAND ( "#",         CONFIG+PANEL, comment_cmd,  "comment\n", NULL )
 
-CMDABBR ( "message",1, PANEL,        msg_cmd,      "Display message on console a la VM", NULL )
-CMDABBR ( "msg",1,     PANEL,        msg_cmd,      "Alias for message", NULL )
-COMMAND ( "msgnoh",    PANEL,        msgnoh_cmd,   "Similar to \"message\" but no header\n", NULL )
+CMDABBR ( "message",1, PANEL,        msg_cmd,      "display message on console a la VM", NULL )
+CMDABBR ( "msg",1,     PANEL,        msg_cmd,      "alias for message", NULL )
+COMMAND ( "msgnoh",    PANEL,        msgnoh_cmd,   "similar to \"message\" but no header\n", NULL )
 
 COMMAND ( "hst",       PANEL,        History,
   "history of commands",
@@ -143,17 +143,17 @@ COMMAND ( "ptt",       PANEL+CONFIG, EXT_CMD(ptt_cmd),
     "specifies which events are to be traced. If the last operand is numeric, it\n"
     "sets the size of the trace table and activates the trace.\n"
      "options:\n"
-     "  (no)error   - error trace\n"
      "  (no)control - control trace\n"
-     "  (no)prog    - program interrupt trace\n"
+     "  (no)error   - error trace\n"
      "  (no)inter   - interlock failure trace\n"
+     "  (no)io      - io trace\n"
+     "  (no)lock    - lock trace buffer\n"
+     "  (no)logger  - logger trace\n"
+     "  (no)prog    - program interrupt trace\n"
      "  (no)sie     - sie trace\n"
      "  (no)signal  - signaling trace\n"
-     "  (no)io      - io trace\n"
-     "  (no)timer   - timer trace\n"
      "  (no)threads - thread trace\n"
-     "  (no)logger  - logger trace\n"
-     "  (no)lock    - lock trace buffer\n"
+     "  (no)timer   - timer trace\n"
      "  (no)tod     - timestamp trace entries\n"
      "  (no)wrap    - wrap trace buffer\n"
      "  to=nnn      - trace buffer display timeout\n"
@@ -181,21 +181,21 @@ COMMAND ( "lparname",  PANEL+CONFIG, lparname_cmd, "set LPAR name\n", NULL )
 COMMAND ( "lparnum",   PANEL+CONFIG, lparnum_cmd,  "set LPAR identification number\n", NULL )
 
 #if defined(OPTION_SET_STSI_INFO)
-COMMAND ( "model",     CONFIG,       stsi_model_cmd,"Set STSI model code", NULL )
+COMMAND ( "model",     CONFIG,       stsi_model_cmd,"set STSI model code", NULL )
 
-COMMAND ( "plant",     CONFIG,       stsi_plant_cmd,"Set STSI plant code", NULL )
+COMMAND ( "plant",     CONFIG,       stsi_plant_cmd,"set STSI plant code", NULL )
 
-COMMAND ( "manufacturer",CONFIG,     stsi_mfct_cmd,"Set STSI manufacturer code\n", NULL )
+COMMAND ( "manufacturer",CONFIG,     stsi_mfct_cmd, "set STSI manufacturer code\n", NULL )
 #endif /* defined(OPTION_SET_STSI_INFO) */
 
 COMMAND ( "pgmprdos",  CONFIG,        pgmprdos_cmd,"set LPP license setting\n", NULL )
 
 COMMAND ( "codepage",  CONFIG,        codepage_cmd,"set codepage conversion table\n", NULL )
 
-COMMAND ( "diag8cmd",  CONFIG,        diag8_cmd,   "Set diag8 command option\n", NULL )
+COMMAND ( "diag8cmd",  CONFIG,        diag8_cmd,   "set diag8 command option\n", NULL )
 
 // The shcmdopt config statement should never be a command as it will introduce a possible integrity exposure *JJ
-COMMAND ( "shcmdopt",  CONFIG,        shcmdopt_cmd,"Set diag8 sh option\n", NULL )
+COMMAND ( "shcmdopt",  CONFIG,        shcmdopt_cmd,"set diag8 sh option\n", NULL )
 
 COMMAND ( "legacysenseid",CONFIG,     lsid_cmd,    "set legacysenseid setting\n", NULL )
 
@@ -240,9 +240,9 @@ COMMAND ( "sclproot",  CONFIG+PANEL, sclproot_cmd,
     "If no operand is specified, sclproot displays the current setting.\n")
 
 #if defined(OPTION_HTTP_SERVER)
-COMMAND ( "httproot",  CONFIG,       httproot_cmd, "Set HTTP server root directory", NULL )
+COMMAND ( "httproot",  CONFIG,       httproot_cmd, "set HTTP server root directory", NULL )
 
-COMMAND ( "httpport",  CONFIG,       httpport_cmd, "Set HTTP server port\n", NULL )
+COMMAND ( "httpport",  CONFIG,       httpport_cmd, "set HTTP server port\n", NULL )
 
 #if defined( HTTP_SERVER_CONNECT_KLUDGE )
 COMMAND ( "HTTP_SERVER_CONNECT_KLUDGE", CONFIG, httpskm_cmd, "HTTP_SERVER_CONNECT_KLUDGE", NULL )
@@ -254,14 +254,15 @@ COMMAND ( "psw",       PANEL,        psw_cmd,
     "Format: \"psw [operand ...]\" where 'operand ...' is one or more optional\n"
     "parameters which modify the contents of the Program Status Word:\n\n"
 
-    "  sm=xx                 system mask          (2 hex digits)\n"
-    "  pk=n                  protection key       (decimal 0 to 15)\n"
-    "  cmwp=x                C/M/W/P bits         (one hex digit)\n"
+    "  am=24|31|64           addressing mode\n"
     "  as=pri|sec|ar|home    address-space\n"
     "  cc=n                  condition code       (decimal 0 to 3)\n"
+    "  cmwp=x                C/M/W/P bits         (one hex digit)\n"
+    "  ia=xxx                instruction address  (1 to 16 hex digits)\n"
+    "  sm=xx                 system mask          (2 hex digits)\n"
+    "  pk=n                  protection key       (decimal 0 to 15)\n"
     "  pm=x                  program mask         (one hex digit)\n"
-    "  am=24|31|64           addressing mode\n"
-    "  ia=xxx                instruction address  (1 to 16 hex digits)\n\n"
+    "\n"
 
     "Enter \"psw\" by itself to display the current PSW without altering it.\n" )
 
@@ -354,7 +355,7 @@ COMMAND ( "automount", PANEL+CONFIG, automount_cmd,
 #endif /* OPTION_TAPE_AUTOMOUNT */
 
 #if defined( OPTION_SCSI_TAPE )
-COMMAND ( "auto_scsi_mount", PANEL+CONFIG, ascsimnt_cmd,  "Control SCSI tape mount", NULL )
+COMMAND ( "auto_scsi_mount", PANEL+CONFIG, ascsimnt_cmd,  "control SCSI tape mount", NULL )
 
 COMMAND ( "scsimount", PANEL,        scsimount_cmd,
   "automatic SCSI tape mounts\n",
@@ -588,7 +589,7 @@ COMMAND ( "maxrates",  PANEL,        maxrates_cmd,
 
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
 COMMAND ( "asn_and_lx_reuse", CONFIG, alrf_cmd, "Enable/Disable ASN and LX reuse facility", NULL )
-COMMAND ( "alrf"            , CONFIG, alrf_cmd, "Alias for asn_and_lx_reuse\n", NULL )
+COMMAND ( "alrf"            , CONFIG, alrf_cmd, "alias for asn_and_lx_reuse\n", NULL )
 #endif /* defined(_FEATURE_ASN_AND_LX_REUSE) */
 
 #if defined(FISH_HANG)
@@ -639,21 +640,21 @@ COMMAND ( "ecpsvm",    PANEL,        evm_cmd,
     "Type \"ecpsvm help\" to see a list of available commands\n"          )
 #endif
 
-COMMAND ( "aea",       PANEL,        aea_cmd,       "Display AEA tables", NULL )
-COMMAND ( "aia",       PANEL,        aia_cmd,       "Display AIA fields", NULL )
-COMMAND ( "tlb",       PANEL,        tlb_cmd,       "Display TLB tables\n", NULL )
+COMMAND ( "aea",       PANEL,        aea_cmd,       "display AEA tables", NULL )
+COMMAND ( "aia",       PANEL,        aia_cmd,       "display AIA fields", NULL )
+COMMAND ( "tlb",       PANEL,        tlb_cmd,       "display TLB tables\n", NULL )
 
 #if defined(SIE_DEBUG_PERFMON)
 COMMAND ( "spm",       PANEL,        spm_cmd,       "SIE performance monitor\n", NULL )
 #endif
 #if defined(OPTION_COUNTING)
-COMMAND ( "count",     PANEL,        count_cmd,     "Display/clear overall instruction count\n", NULL )
+COMMAND ( "count",     PANEL,        count_cmd,     "display/clear overall instruction count\n", NULL )
 #endif
-COMMAND ( "sizeof",    PANEL,        sizeof_cmd,    "Display size of structures\n", NULL )
+COMMAND ( "sizeof",    PANEL,        sizeof_cmd,    "display size of structures\n", NULL )
 
-COMMAND ( "suspend",   PANEL,        suspend_cmd,   "Suspend hercules", NULL )
+COMMAND ( "suspend",   PANEL,        suspend_cmd,   "suspend hercules", NULL )
 
-COMMAND ( "resume",    PANEL,        resume_cmd,    "Resume hercules\n", NULL )
+COMMAND ( "resume",    PANEL,        resume_cmd,    "resume hercules\n", NULL )
 
 COMMAND ( "herclogo",  PANEL,        herclogo_cmd,
   "Read a new hercules logo file\n",
@@ -666,7 +667,7 @@ COMMAND ( "traceopt",  CONFIG+PANEL, traceopt_cmd,
     "registers are displayed during instruction tracing and stepping. Entering\n"
     "the command without any argument simply displays the current mode.\n" )
 
-COMMAND ( "symptom",   CONFIG,       traceopt_cmd, "Alias for traceopt\n", NULL )
+COMMAND ( "symptom",   CONFIG,       traceopt_cmd, "alias for traceopt\n", NULL )
 
 COMMAND ( "$zapcmd",   CONFIG,       zapcmd_cmd,   NULL, NULL )     // enable/disable commands and config statements
 
