@@ -1,4 +1,10 @@
 
+
+  #if defined( HAVE_STRUCT_MTGET_MT_GSTAT )
+  #else // !defined( HAVE_STRUCT_MTGET_MT_GSTAT )
+  #endif // defined( HAVE_STRUCT_MTGET_MT_GSTAT )
+
+
                           ---------------------
                            HERCULES TODO IDEAS
                           ---------------------

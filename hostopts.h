@@ -110,7 +110,6 @@
 #define  USE_W32_POOR_MANS_FORK                5
 #define  USE_ANSI_SYSTEM_API_FOR_SH_COMMAND    9
 
-
 //       SET_CONSOLE_CURSOR_SHAPE_METHOD
 
 #define  CURSOR_SHAPE_NOT_SUPPORTED             0
@@ -131,30 +130,26 @@
             HAVE_DECL_SIOCSIFNETMASK
 
   #define OPTION_TUNTAP_SETNETMASK      /* TUNTAP_SetNetMask works   */
-
 #endif
 #if defined(HAVE_DECL_SIOCSIFHWADDR) && \
             HAVE_DECL_SIOCSIFHWADDR
 
   #define OPTION_TUNTAP_SETMACADDR      /* TUNTAP_SetMACAddr works   */
-
 #endif
 #if defined(HAVE_DECL_SIOCADDRT) && defined(HAVE_DECL_SIOCDELRT) && \
             HAVE_DECL_SIOCADDRT  &&         HAVE_DECL_SIOCDELRT
 
   #define OPTION_TUNTAP_DELADD_ROUTES   /* Del/Add Routes    works   */
-
 #endif
 #if defined(HAVE_DECL_SIOCDIFADDR) && \
             HAVE_DECL_SIOCDIFADDR
 
   #define OPTION_TUNTAP_CLRIPADDR       /* TUNTAP_ClrIPAddr works    */
-
 #endif
 
 
 /*-------------------------------------------------------------------*/
-/* Hard-coded Win32-specific features and options...                 */
+/* Hard-coded Windows-specific features and options...               */
 /*-------------------------------------------------------------------*/
 #if defined(WIN32)                      /* "Windows" options         */
 
@@ -165,19 +160,15 @@
   #define  DLL_IMPORT   extern
   #define  DLL_EXPORT
 #endif
-
 #define HTTP_SERVER_CONNECT_KLUDGE
-
 /*  Note:  OPTION_FISHIO  only possible with  OPTION_FTHREADS        */
 #if defined(OPTION_FTHREADS)
   #define OPTION_FISHIO                 /* Use Fish's I/O scheduler  */
 #else
   #undef  OPTION_FISHIO                 /* Use Herc's I/O scheduler  */
 #endif
-
 #define OPTION_W32_CTCI                 /* Fish's TunTap for CTCA's  */
 #undef  TUNTAP_IFF_RUNNING_NEEDED       /* TunTap32 doesn't allow it */
-
 #define OPTION_SCSI_TAPE                /* SCSI tape support         */
 #ifdef _MSVC_
 #define OPTION_SCSI_ERASE_TAPE          /* SUPPORTED!                */
@@ -187,20 +178,17 @@
 #undef  OPTION_SCSI_ERASE_GAP           /* (NOT supported!)          */
 #endif
 #undef  OPTION_FBA_BLKDEVICE            /* (no FBA BLKDEVICE support)*/
-
 #define MAX_DEVICE_THREADS          0   /* (0 == unlimited)          */
 #undef  MIXEDCASE_FILENAMES_ARE_UNIQUE  /* ("Foo" same as "fOo"!!)   */
-
 #define DEFAULT_HERCPRIO    0
 #define DEFAULT_TOD_PRIO  -20
 #define DEFAULT_CPU_PRIO   15
 #define DEFAULT_DEV_PRIO    8
-
 #ifdef _MSVC_
   #define HOW_TO_IMPLEMENT_SH_COMMAND   USE_W32_POOR_MANS_FORK
   #define SET_CONSOLE_CURSOR_SHAPE_METHOD CURSOR_SHAPE_WINDOWS_NATIVE
   #define OPTION_EXTCURS                /* Extended cursor handling  */
-#else
+#else  /* Cygwin or MinGW */
   #define HOW_TO_IMPLEMENT_SH_COMMAND   USE_FORK_API_FOR_SH_COMMAND
   #define SET_CONSOLE_CURSOR_SHAPE_METHOD CURSOR_SHAPE_VIA_SPECIAL_LINUX_ESCAPE
   #undef  OPTION_EXTCURS                /* Normal cursor handling    */
@@ -208,34 +196,30 @@
 
 #define IsEventSet(h)   (WaitForSingleObject(h,0) == WAIT_OBJECT_0)
 
+
 /*-------------------------------------------------------------------*/
 /* Hard-coded Solaris-specific features and options...               */
 /*-------------------------------------------------------------------*/
 #elif defined(__sun__) && defined(__svr4__)
 
 #define __SOLARIS__ 1
-
 /* jbs 10/15/2003 need to define INADDR_NONE if using Solaris 10
    and not Solaris Nevada aka OpenSolaris */
 #if !defined(INADDR_NONE)
   #define INADDR_NONE                   0xffffffffU
 #endif
-
 #undef  OPTION_SCSI_TAPE                /* No SCSI tape support      */
 #undef  OPTION_SCSI_ERASE_TAPE          /* (NOT supported)           */
 #undef  OPTION_SCSI_ERASE_GAP           /* (NOT supported)           */
 #define DLL_IMPORT   extern
 #define DLL_EXPORT
 /* #undef  OPTION_PTTRACE maybe not, after all */
-
 #define MAX_DEVICE_THREADS          0   /* (0 == unlimited)          */
 #define MIXEDCASE_FILENAMES_ARE_UNIQUE  /* ("Foo" and "fOo" unique)  */
-
 #define DEFAULT_HERCPRIO    0
 #define DEFAULT_TOD_PRIO  -20
 #define DEFAULT_CPU_PRIO   15
 #define DEFAULT_DEV_PRIO    8
-
 #define HOW_TO_IMPLEMENT_SH_COMMAND       USE_ANSI_SYSTEM_API_FOR_SH_COMMAND
 #define SET_CONSOLE_CURSOR_SHAPE_METHOD   CURSOR_SHAPE_NOT_SUPPORTED
 #undef  OPTION_EXTCURS                  /* Normal cursor handling    */
@@ -248,22 +232,17 @@
 
 #define DLL_IMPORT   extern
 #define DLL_EXPORT
-
 #define TUNTAP_IFF_RUNNING_NEEDED       /* Needed by tuntap driver?? */
-
 #undef  OPTION_SCSI_TAPE                /* No SCSI tape support      */
 #undef  OPTION_SCSI_ERASE_TAPE          /* (NOT supported)           */
 #undef  OPTION_SCSI_ERASE_GAP           /* (NOT supported)           */
 #undef  OPTION_FBA_BLKDEVICE            /* (no FBA BLKDEVICE support)*/
-
 #define MAX_DEVICE_THREADS          0   /* (0 == unlimited)          */
 #define MIXEDCASE_FILENAMES_ARE_UNIQUE  /* ("Foo" and "fOo" unique)  */
-
 #define DEFAULT_HERCPRIO    0
 #define DEFAULT_TOD_PRIO  -20
 #define DEFAULT_CPU_PRIO   15
 #define DEFAULT_DEV_PRIO    8
-
 #define HOW_TO_IMPLEMENT_SH_COMMAND       USE_ANSI_SYSTEM_API_FOR_SH_COMMAND
 #define SET_CONSOLE_CURSOR_SHAPE_METHOD   CURSOR_SHAPE_NOT_SUPPORTED
 #undef  OPTION_EXTCURS                  /* Normal cursor handling    */
@@ -276,43 +255,34 @@
 
 #define DLL_IMPORT   extern
 #define DLL_EXPORT
-
 #define TUNTAP_IFF_RUNNING_NEEDED       /* Needed by tuntap driver?? */
-
 #undef  OPTION_SCSI_ERASE_TAPE          /* (NOT supported)           */
 #undef  OPTION_SCSI_ERASE_GAP           /* (NOT supported)           */
-
 #define MAX_DEVICE_THREADS          0   /* (0 == unlimited)          */
 #define MIXEDCASE_FILENAMES_ARE_UNIQUE  /* ("Foo" and "fOo" unique)  */
-
 #define DEFAULT_HERCPRIO    0
 #define DEFAULT_TOD_PRIO  -20
 #define DEFAULT_CPU_PRIO   15
 #define DEFAULT_DEV_PRIO    8
-
 #define HOW_TO_IMPLEMENT_SH_COMMAND       USE_ANSI_SYSTEM_API_FOR_SH_COMMAND
 #define SET_CONSOLE_CURSOR_SHAPE_METHOD   CURSOR_SHAPE_NOT_SUPPORTED
 #undef  OPTION_EXTCURS                  /* Normal cursor handling    */
 
 
 /*-------------------------------------------------------------------*/
-/* GNU Linux options...                                              */
+/* Hard-coded GNU Linux-specific features and options...             */
 /*-------------------------------------------------------------------*/
 #elif defined(__gnu_linux__)            /* GNU Linux options         */
 
 #define DLL_IMPORT   extern
 #define DLL_EXPORT
-
 #define TUNTAP_IFF_RUNNING_NEEDED       /* Needed by tuntap driver?? */
-
 #define OPTION_SCSI_TAPE                /* SCSI tape support         */
 #undef  OPTION_SCSI_ERASE_TAPE          /* (NOT supported)           */
 #undef  OPTION_SCSI_ERASE_GAP           /* (NOT supported)           */
 #define OPTION_FBA_BLKDEVICE            /* FBA block device support  */
-
 #define MAX_DEVICE_THREADS          0   /* (0 == unlimited)          */
 #define MIXEDCASE_FILENAMES_ARE_UNIQUE  /* ("Foo" and "fOo" unique)  */
-
 #define DEFAULT_HERCPRIO    0
 #define DEFAULT_TOD_PRIO  -20
 #define DEFAULT_CPU_PRIO   15
@@ -328,6 +298,34 @@
 
 
 /*-------------------------------------------------------------------*/
+/* Hard-coded AIX-specific features and options...      -- bozy      */
+/*-------------------------------------------------------------------*/
+#elif defined(_AIX)                     /* AIX 5.3 options           */
+
+#define SOL_TCP      IPPROTO_TCP        /* (both mean same thing)    */
+#define DLL_IMPORT   extern
+#define DLL_EXPORT
+#undef  TUNTAP_IFF_RUNNING_NEEDED       /* (tuntap support unknown)  */
+#undef  OPTION_SCSI_TAPE                /* (NO SCSI tape support)    */
+#undef  OPTION_SCSI_ERASE_TAPE          /* (NOT supported)           */
+#undef  OPTION_SCSI_ERASE_GAP           /* (NOT supported)           */
+#define OPTION_FBA_BLKDEVICE            /* FBA block device support  */
+#define MAX_DEVICE_THREADS        255   /* (0 == unlimited)          */
+#define MIXEDCASE_FILENAMES_ARE_UNIQUE  /* ("Foo" and "fOo" unique)  */
+#define DEFAULT_HERCPRIO    0
+#define DEFAULT_TOD_PRIO  -20
+#define DEFAULT_CPU_PRIO   15
+#define DEFAULT_DEV_PRIO    8
+#if defined( HAVE_FORK )
+  #define HOW_TO_IMPLEMENT_SH_COMMAND     USE_FORK_API_FOR_SH_COMMAND
+#else
+  #define HOW_TO_IMPLEMENT_SH_COMMAND     USE_ANSI_SYSTEM_API_FOR_SH_COMMAND
+#endif
+#define SET_CONSOLE_CURSOR_SHAPE_METHOD   CURSOR_SHAPE_NOT_SUPPORTED
+#undef  OPTION_EXTCURS                  /* Normal cursor handling    */
+
+
+/*-------------------------------------------------------------------*/
 /* Hard-coded OTHER (DEFAULT) host-specific features and options...  */
 /*-------------------------------------------------------------------*/
 #else                                   /* "Other platform" options  */
@@ -336,21 +334,17 @@
 
 #define DLL_IMPORT   extern             /* (a safe default)          */
 #define DLL_EXPORT
-
-#undef TUNTAP_IFF_RUNNING_NEEDED        /* (tuntap support unknown)  */
+#undef  TUNTAP_IFF_RUNNING_NEEDED       /* (tuntap support unknown)  */
 #undef  OPTION_SCSI_TAPE                /* (NO SCSI tape support)    */
 #undef  OPTION_SCSI_ERASE_TAPE          /* (NOT supported)           */
 #undef  OPTION_SCSI_ERASE_GAP           /* (NOT supported)           */
 #undef  OPTION_FBA_BLKDEVICE            /* (no FBA BLKDEVICE support)*/
-
 #define MAX_DEVICE_THREADS          0   /* (0 == unlimited)          */
 #define MIXEDCASE_FILENAMES_ARE_UNIQUE  /* ("Foo" and "fOo" unique)  */
-
 #define DEFAULT_HERCPRIO    0
 #define DEFAULT_TOD_PRIO  -20
 #define DEFAULT_CPU_PRIO   15
 #define DEFAULT_DEV_PRIO    8
-
 #if defined( HAVE_FORK )
   #define HOW_TO_IMPLEMENT_SH_COMMAND     USE_FORK_API_FOR_SH_COMMAND
 #else

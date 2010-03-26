@@ -658,6 +658,7 @@ EXTRA_DIST = autoconf/config.rpath \
              RELEASE.NOTES         \
              README.MSVC           \
              README.SUN            \
+             README.AIX            \
              _TODO.txt             \
              makefile.msvc         \
              makefile-dllmod.msvc  \

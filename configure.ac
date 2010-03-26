@@ -15,22 +15,169 @@ AM_INIT_AUTOMAKE(hercules,3.07)         # (the version of our software package)
 AM_CONFIG_HEADER(config.h)              # (the file the resulting configure script will produce)
 AM_MAINTAINER_MODE()
 AC_CANONICAL_HOST()                     # (sets $host_cpu, $host_vendor, and $host_os)
+AC_CANONICAL_TARGET()                   # (sets $target_cpu, $target_vendor, and $target_os)
 
 ###############################################################################
 #   Programs section...
 ###############################################################################
 
-#HC_PROG_CC()                           #    ((( DEPRECATED )))
-#
-# CFLAGS *MUST* BE SET 1ST - BEFORE CALL AC_PROG_CC OTHERWISE AUTOCONF TRIES TO IMPOSE
-#        ITS OWN CHOICES...
-# FIXME :
-#        Unfortunatelly, these are gcc flags.. so going to have
-#        to find something better...
-#
-CFLAGS="$CFLAGS -W -Wall"
-
 AC_PROG_CC()                            # (back to using this again)
+
+###############################################################################
+#   OS-specific settings that we can't figure out any other way (yet)
+###############################################################################
+
+case "$target_os" in
+
+    aix*)
+        hc_cv_is_aix=yes
+        hc_cv_is_nix=no
+        hc_cv_is_windows=no
+        hc_cv_is_mingw=no
+        hc_cv_is_apple=no
+        ;;
+    linux*)
+        hc_cv_is_aix=no
+        hc_cv_is_nix=yes
+        hc_cv_is_windows=no
+        hc_cv_is_mingw=no
+        hc_cv_is_apple=no
+        ;;
+    mingw*)
+        hc_cv_is_aix=no
+        hc_cv_is_nix=no
+        hc_cv_is_windows=yes
+        hc_cv_is_mingw=yes
+        hc_cv_is_apple=no
+        ;;
+    cygwin*)
+        hc_cv_is_aix=no
+        hc_cv_is_nix=no
+        hc_cv_is_windows=yes
+        hc_cv_is_mingw=no
+        hc_cv_is_apple=no
+        ;;
+    darwin*)
+        if test $target_vendor = apple; then
+            hc_cv_is_aix=no
+            hc_cv_is_nix=no
+            hc_cv_is_windows=no
+            hc_cv_is_mingw=no
+            hc_cv_is_apple=yes
+        else
+
+            hc_cv_is_aix=no
+            hc_cv_is_nix=no
+            hc_cv_is_windows=no
+            hc_cv_is_mingw=no
+            hc_cv_is_apple=no
+        fi
+        ;;
+    *bsd*)
+        hc_cv_is_aix=no
+        hc_cv_is_nix=yes
+        hc_cv_is_windows=no
+        hc_cv_is_mingw=no
+        hc_cv_is_apple=no
+        ;;
+    *)
+        hc_cv_is_aix=no
+        hc_cv_is_nix=no
+        hc_cv_is_windows=no
+        hc_cv_is_mingw=no
+        hc_cv_is_apple=no
+        ;;
+esac
+
+#------------------------#
+#  Fix CFLAGS if needed  #
+#------------------------#
+
+# Remove "-g" and "-O2" CFLAGS that "AC_PROG_CC" helpfully(?)
+# added for us that we don't want... (since we handle setting
+# the optimization flags ourselves; refer to near the end of
+# configure.ac where "$hc_cv_opt_optimization" is handled).
+
+CFLAGS="`echo $CFLAGS | sed -e 's/-g//'`"
+CFLAGS="`echo $CFLAGS | sed -e 's/-O2//'`"
+
+# Add the "-W -Wall" options to CFLAGS if we're using gcc...
+
+if test "$GCC" = "yes"; then
+  CFLAGS="$CFLAGS -W -Wall"
+fi
+
+#-------------------------------------------------------#
+#  Hard-coded target-operating-system-specific settings #
+#  that we have no other/easy way to figure out...      #
+#-------------------------------------------------------#
+
+if test "$hc_cv_is_nix"        = "yes"; then
+
+    hc_cv_build_hercifc=yes
+    hc_cv_non_unique_gettimeofday=no
+
+elif test "$hc_cv_is_windows"  = "yes"; then
+
+    hc_cv_build_hercifc=no
+    hc_cv_non_unique_gettimeofday=yes
+
+elif test "$hc_cv_is_apple"    = "yes"; then
+
+    hc_cv_build_hercifc=yes
+    hc_cv_non_unique_gettimeofday=no
+
+else
+    hc_cv_build_hercifc=no
+    hc_cv_non_unique_gettimeofday=no
+fi
+
+#----------------------#
+#  AIX-specific stuff  #
+#----------------------#
+
+if test "$hc_cv_is_aix" = "yes"; then
+
+  if test "$target_os" = "$host_os"; then
+
+    # Not cross-compiling (likely case); use same architecture
+    # as that of the actual hardware (CPU) as reported by the
+    # prtconf -c  ==> "CPU Type: 32-bit" or "CPU Type: 64-bit"
+
+    if prtconf -c | grep '64' 1>/dev/null 2>&1
+    then
+      hc_cv_build_aix64=yes
+    else
+      hc_cv_build_aix64=no
+    fi
+  else
+    # Cross-compiling (unlikely case); rely on value of OBJECT_MODE
+    # variable to tell us for which architecture they want to build...
+
+    if echo $OBJECT_MODE | grep '64' 1>/dev/null 2>&1
+    then
+      hc_cv_build_aix64=yes
+    else
+      hc_cv_build_aix64=no
+    fi
+  fi
+  if test "$hc_cv_build_aix64" = "yes"; then
+    if test "$GCC" = "yes"; then
+      CC="$CC -maix64"
+      CXX="$CXX -maix64"
+    else
+      # VisualAge presumed...
+      CC="$CC -q64"
+      CXX="$CXX -q64"
+    fi
+    test "$AR" = "" && AR="ar"
+    test "$NM" = "" && NM="nm"
+    AR="$AR -X64"
+    NM="$NM -X64 -B"
+  fi
+  LDFLAGS="$LDFLAGS -L/usr/local/lib"
+  CPPFLAGS="$CPPFLAGS -I/usr/local/include -D_LARGE_FILES -D_LFS_LARGEFILE -D_LINUX_SOURCE_COMPAT"
+fi
 
 # -----------------------------------------------------------------------------
 #  PROGRAMMING NOTE: The below 'AC_SUBST' macro causes AC_OUTPUT to replace
@@ -84,8 +231,8 @@ AC_LIBTOOL_WIN32_DLL()                  # (we need Win32 support in libtool)
 # -----------------------------------------------------------------------------
 
 AC_DISABLE_STATIC()                     # (forces libtool to build shared
-
                                         #  libraries instead of static ones)
+
 # -----------------------------------------------------------------------------
 #  AC_PROG_LIBTOOL
 #
@@ -191,24 +338,23 @@ AC_PROG_LIBTOOL()                       # (we build libtool for ourselves)
 AC_LIB_LTDL()                           # (we need the ltdl libtool library)
 AC_SUBST([LIBTOOL_DEPS])                # (see PROGRAMMING NOTE above)
 
-
 # -----------------------------------------------------------------------------
 # (See comments in the 'AC_CHECK_LIB' Libraries section further below)
 # -----------------------------------------------------------------------------
 AC_MSG_NOTICE( [(use of lt_dlopen forced by Hercules Dynamic Loader requirement)] )
 hc_cv_have_lt_dlopen=yes
 
+AM_GNU_GETTEXT([external])              # GNU internationalization and localization
+AM_ICONV()                              # GNU internationalization and localization
 
+HC_LD_DISALLOWDUPS()                    # Add linker options to LDFLAGS variable
+                                        # to warn about duplicate libtool symbols,
+                                        # if needed.
 
-AM_GNU_GETTEXT([external])              #
-AM_ICONV
-
-HC_LD_DISALLOWDUPS()                    # (add duplicate symbols option to LDFLAGS)
-
-# -----------------------------------------------------------------------------
+###############################################################################
 #  The following is a "global error" flag used to defer aborting configure
 #  until after ALL errors have been detected/reported.
-# -----------------------------------------------------------------------------
+###############################################################################
 
 hc_error=no
 
@@ -266,99 +412,6 @@ AH_TEMPLATE( [_INTL_REDIRECT_MACROS],   [Define to 1 if non-Intel architecture (
 AH_TEMPLATE( [CCKD_BZIP2],              [Define to enable bzip2 compression in emulated DASDs] )
 AH_TEMPLATE( [HET_BZIP2],               [Define to enable bzip2 compression in emulated tapes] )
 AH_TEMPLATE( [OPTION_CAPABILITIES],     [Define to enable posix draft 1003.1e capabilities] )
-
-###############################################################################
-#   OS-specific settings that we can't figure out any other way (yet)
-###############################################################################
-
-#
-#  Determine what type of host we're building on...
-#
-
-case "$host_os" in
-
-    linux*)
-
-        hc_cv_is_nix=yes
-        hc_cv_is_windows=no
-        hc_cv_is_mingw32=no
-        hc_cv_is_apple=no
-        ;;
-
-    mingw*)
-
-        hc_cv_is_nix=no
-        hc_cv_is_windows=yes
-        hc_cv_is_mingw32=yes
-        hc_cv_is_apple=no
-        ;;
-
-    cygwin*)
-
-        hc_cv_is_nix=no
-        hc_cv_is_windows=yes
-        hc_cv_is_mingw32=no
-        hc_cv_is_apple=no
-        ;;
-
-    darwin*)
-
-        if test $host_vendor = apple; then
-
-            hc_cv_is_nix=no
-            hc_cv_is_windows=no
-            hc_cv_is_mingw32=no
-            hc_cv_is_apple=yes
-
-        else
-
-            hc_cv_is_nix=no
-            hc_cv_is_windows=no
-            hc_cv_is_mingw32=no
-            hc_cv_is_apple=no
-
-        fi
-        ;;
-
-    *bsd*)
-        hc_cv_is_nix=yes
-        hc_cv_is_windows=no
-        hc_cv_is_mingw32=no
-        hc_cv_is_apple=no
-        ;;
-
-    *)
-        hc_cv_is_nix=no
-        hc_cv_is_windows=no
-        hc_cv_is_mingw32=no
-        hc_cv_is_apple=no
-        ;;
-esac
-
-#------------------------------------------------------#
-#  Hard-coded host-operating-system-specific settings  #
-#  that we have no other/easy way to figure out...     #
-#------------------------------------------------------#
-
-if test "$hc_cv_is_nix"        = "yes"; then
-
-    hc_cv_build_hercifc=yes
-    hc_cv_non_unique_gettimeofday=no
-
-elif test "$hc_cv_is_windows"  = "yes"; then
-
-    hc_cv_build_hercifc=no
-    hc_cv_non_unique_gettimeofday=yes
-
-elif test "$hc_cv_is_apple"    = "yes"; then
-
-    hc_cv_build_hercifc=yes
-    hc_cv_non_unique_gettimeofday=no
-
-else
-    hc_cv_build_hercifc=no
-    hc_cv_non_unique_gettimeofday=no
-fi
 
 ###############################################################################
 #   Checks for REQUIRED (non-optional) header files...
@@ -480,7 +533,7 @@ AC_CHECK_HEADERS( sys/ioctl.h,    [hc_cv_have_sys_ioctl_h=yes],    [hc_cv_have_s
 AC_CHECK_HEADERS( sys/mman.h,     [hc_cv_have_sys_mman_h=yes],     [hc_cv_have_sys_mman_h=no]     )
 
 #------------------------------------------------------------------------------
-#  PROGRAMMING NOTE: on *BSD systems sys/param.h must be #included before 
+#  PROGRAMMING NOTE: on *BSD systems sys/param.h must be #included before
 #  sys/mount.h as it contains the #define of NGROUPS.
 
 AC_CHECK_HEADERS( sys/param.h,    [hc_cv_have_sys_param_h=yes],    [hc_cv_have_sys_param_h=no]    )
@@ -789,6 +842,14 @@ AC_CHECK_MEMBERS( [struct timespec.tv_nsec],
     [#include <sys/types.h>]
 )
 
+if test "$hc_cv_have_sys_mtio_h" == "yes"; then
+
+  AC_CHECK_MEMBERS( [struct mtget.mt_gstat],
+                    [hc_cv_have_mtget_mt_gstat=yes  ],
+                    [hc_cv_have_mtget_mt_gstat=no   ],
+                    [#include <sys/mtio.h>] )
+fi
+
 AC_CACHE_SAVE()
 
 ###############################################################################
@@ -841,7 +902,7 @@ else
     #  If there's no way to request the compiler
     #  to not do that, then we can't build Herc.
 
-    case "$host_cpu-$GCC" in
+    case "$target_cpu-$GCC" in
 
         arm*-yes|xscale*-yes|sh*-yes|pxa*-yes)
 
@@ -891,7 +952,7 @@ AC_CACHE_CHECK( [if this is the broken 2.96 version of GCC],
 )
 
 #----------------------------------------------#
-#  Check C99 if flexible arrays are supported  #
+#  Check if C99 flexible arrays are supported  #
 #----------------------------------------------#
 #  The logic to test whether C99 flexible      #
 #  arrays are supported is defined in the      #
@@ -1095,7 +1156,7 @@ fi
 #     ... the -traditional-cpp option has changed.
 #    In Apple GCC 3.1 and earlier Apple GCC compilers,
 #    -traditional-cpp was used to toggle between the
-#    standard GNU GCC preprocessor and Apple's own 
+#    standard GNU GCC preprocessor and Apple's own
 #    preprocessor, "cpp-precomp". The GNU GCC compiler
 #    interpreted -traditional-cpp differently on all
 #    other platforms. Since cpp-precomp has been removed
@@ -1124,8 +1185,8 @@ if test "$GCC" = "yes"; then
 /* If the following gets an error, then the
    "traditional" preprocessor is K&R C type.
    Otherwise if it compiles WITHOUT error
-   the the "traditional" preprocessor is NOT
-   the K&R C type.
+   then the "traditional" preprocessor is
+   NOT the K&R C type.
 */
 #if 1
   #include <stdio.h>  // comment/etc...
@@ -1155,7 +1216,7 @@ AC_MSG_CHECKING( [whether byte-swapping can be done using assembler] )
 # (use our own byteswap assembler routines are i486+ only)
 # use system's byteswap routines if present...
 
-case "$host_cpu" in
+case "$target_cpu" in
 
     i486|i586|i686|i786|x86_64)
 
@@ -1557,7 +1618,7 @@ if test "$hc_cv_build_hercifc" = "yes"; then
    if test "$hc_cv_have_linux_if_tun_h" != "yes"; then
 
       if test "$hc_cv_have_net_if_h" != "yes"; then
-      
+
          AC_MSG_RESULT( [ERROR: Required headers 'linux/if_tun.h' or 'net/if.h' not found] )
          hc_error=yes
       fi
@@ -1683,9 +1744,9 @@ if test "$hc_cv_is_apple"                          = "yes"  &&
     hc_error=yes
 fi
 
-#------------------------------------------------------------------------------
+###############################################################################
 # If any errors have been detected, then abort the configure at this time
-#------------------------------------------------------------------------------
+###############################################################################
 
 if test "$hc_error" != "no"; then
     AC_MSG_ERROR( [Please correct the above error(s) and try again] )
@@ -1746,7 +1807,7 @@ if test "$hc_cv_auto_optimize" = "yes"; then
 
     hc_cv_is_intel_x86_arch=no
 
-    case "$host_cpu-$GCC" in
+    case "$target_cpu-$GCC" in
 
         x86_64-yes)
 
@@ -1758,16 +1819,16 @@ if test "$hc_cv_auto_optimize" = "yes"; then
 
             hc_cv_is_intel_x86_arch=yes
 
-            if test $host_cpu = i786; then
+            if test $target_cpu = i786; then
 
                 hc_cv_intel_cpu_type=pentium4
             else
-                if test $host_cpu           = i686   &&
+                if test $target_cpu        = i686   &&
                    test "hc_cv_is_gcc_2_96" = "yes"; then
 
                     hc_cv_intel_cpu_type=i586
                 else
-                    hc_cv_intel_cpu_type=$host_cpu
+                    hc_cv_intel_cpu_type=$target_cpu
                 fi
             fi
             ;;
@@ -1781,7 +1842,7 @@ if test "$hc_cv_auto_optimize" = "yes"; then
         xscale-yes|arm*-yes)
 
             hc_cv_is_intel_x86_arch=no
-            hc_cv_optimization_flags="$hc_cv_optimization_flags -mcpu=$host_cpu -mtune=$host_cpu -frename-registers"
+            hc_cv_optimization_flags="$hc_cv_optimization_flags -mcpu=$target_cpu -mtune=$target_cpu -frename-registers"
             ;;
     esac
     if test "$hc_cv_is_intel_x86_arch" = "yes"; then
@@ -1944,7 +2005,6 @@ fi
 #  CFLAGS  (compiler flags)                        #
 #--------------------------------------------------#
 
-
 if test "$hc_cv_is_windows"             = "yes"; then
 
     if test "$hc_cv_have_pthread_h"         = "yes" &&
@@ -1976,8 +2036,8 @@ test  "$hc_cv_have_libbz2"         =  "yes"  &&  LIBS="$LIBS -lbz2"
 
 #      ---------------------- MINGW32 ----------------------
 
-test  "$hc_cv_is_mingw32" =  "yes"  &&  LIBS="$LIBS -lmsvcrt"
-test  "$hc_cv_is_mingw32" =  "yes"  &&  LIBS="$LIBS -lws2_32"
+test  "$hc_cv_is_mingw" =  "yes"  &&  LIBS="$LIBS -lmsvcrt"
+test  "$hc_cv_is_mingw" =  "yes"  &&  LIBS="$LIBS -lws2_32"
 
 AC_CACHE_SAVE()
 

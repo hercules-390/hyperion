@@ -1458,6 +1458,10 @@
 					Name="README"
 					>
 					<File
+						RelativePath=".\README.AIX"
+						>
+					</File>
+					<File
 						RelativePath=".\README.COMMADPT"
 						>
 					</File>
