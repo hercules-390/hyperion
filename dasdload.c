@@ -1,4 +1,4 @@
-/* DASDLOAD.C   (c) Copyright Roger Bowler, 1999-2009                */
+/* DASDLOAD.C   (c) Copyright Roger Bowler, 1999-2010                */
 /*              Hercules DASD Utilities: DASD image loader           */
 
 // $Id$
@@ -13,20 +13,6 @@
 /*      Corrections to CVOL initialization logic by Jay Maynard      */
 /*      IEBCOPY native dataset support by Ronen Tzur                 */
 /*-------------------------------------------------------------------*/
-
-// $Log$
-// Revision 1.54  2008/11/04 04:50:46  fish
-// Ensure consistent utility startup
-//
-// Revision 1.53  2007/06/23 00:04:08  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.52  2007/05/24 21:13:27  rbowler
-// Circumvent MSVC optimizer bug in cvol_initialize function
-//
-// Revision 1.51  2006/12/08 09:43:19  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 
@@ -716,7 +702,7 @@ int             keylen;                 /* Key length                */
 int             datalen;                /* Data length               */
 int             maxtrks = 1;            /* Maximum track count       */
 DATABLK        *datablk;                /* -> data block             */
-BYTE            buf[4096];              /* Buffer for data block     */
+BYTE            buf[32768];             /* Buffer for data block     */
 
     /* For 2311 the IPL text will not fit on track 0 record 4,
        so adjust the IPL2 so that it loads from track 1 record 1 */
