@@ -614,7 +614,6 @@ int   i, n, count = 0;
 char  result[32]; // (result is 'int'; if 64-bits, 19 digits or more!)
 char  tbuf[256];
 time_t tt;
-const char dot = '.';
 
     if (pttrace == NULL || pttracen == 0) return count;
     OBTAIN_PTTLOCK;
@@ -639,23 +638,22 @@ const char dot = '.';
 
             logmsg
             (
-                "%8.8"I32_FMT"x "             // Thread id (low 32 bits)
-                "%-12.12s "                   // Trace type (string; 12 chars)
-                PTR_FMTx" "                   // Data value 1
-                PTR_FMTx" "                   // Data value 2
-                "%-18.18s "                   // File name
-                "%s%c%6.6ld "                 // Time of day (HH:MM:SS.usecs)
-                "%s\n"                        // Numeric result (or empty string)
+                "%-18s "                           // File name
+                "%s.%6.6ld "                       // Time of day (HH:MM:SS.usecs)
+                I32_FMTX" "                        // Thread id (low 32 bits)
+                "%-12s "                           // Trace type (string; 12 chars)
+                PTR_FMTx" "                        // Data value 1
+                PTR_FMTx" "                        // Data value 2
+                "%s\n"                             // Numeric result (or empty string)
 
-                ,(U32)(uintptr_t)(pttrace[i].tid) // Thread id (low 32 bits)
-                ,pttrace[i].type              // Trace type (string; 12 chars)
-                ,(uintptr_t)pttrace[i].data1  // Data value 1
-                ,(uintptr_t)pttrace[i].data2  // Data value 2
-                ,pttrace[i].loc               // File name
-                ,tbuf + 11                    // Time of day (HH:MM:SS)
-                ,dot                          // Time of day (decimal point)
-                ,pttrace[i].tv.tv_usec        // Time of day (microseconds)
-                ,result                       // Numeric result (or empty string)
+                ,pttrace[i].loc                    // File name
+                ,tbuf + 11                         // Time of day (HH:MM:SS)
+                ,pttrace[i].tv.tv_usec             // Time of day (usecs)
+                ,(U32)(uintptr_t)(pttrace[i].tid)  // Thread id (low 32 bits)
+                ,pttrace[i].type                   // Trace type (string; 12 chars)
+                ,(uintptr_t)pttrace[i].data1       // Data value 1
+                ,(uintptr_t)pttrace[i].data2       // Data value 2
+                ,result                            // Numeric result (or empty string)
             );
             count++;
         }
