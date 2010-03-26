@@ -699,7 +699,7 @@ DLL_EXPORT int gettimeofday ( struct timeval* pTV, void* pTZ )
            )
     ))
     {
-        pTV->tv_usec = tvPrevRetVal.tv_sec;
+        pTV->tv_sec  = tvPrevRetVal.tv_sec;
         pTV->tv_usec = tvPrevRetVal.tv_usec + 1;
 
         if (unlikely(pTV->tv_usec >= 1000000))
