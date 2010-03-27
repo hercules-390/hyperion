@@ -487,8 +487,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
     if ((flags & CCW_FLAGS_CD) &&
         !(IS_CCW_READ(code) || IS_CCW_RDBACK(code)))
     {
-        logmsg(_("HHCTA072E Data chaining not supported for CCW %2.2X\n"),
-                code);
+        WRITEMSG(HHCTA072E, code);
         build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
         return;
     }
@@ -1607,10 +1606,9 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             int rej = 0;
 
             /* (because i hate typing) */
-#define  HHCTA090E(_file,_reason) \
+#define  _HHCTA090E(_file,_reason) \
             { \
-                logmsg(_("HHCTA090E Auto-mount of file \"%s\" on drive %s%4.4X failed: " \
-                    "%s\n"), _file, lcss, dev->devnum, _reason); \
+                WRITEMSG(HHCTA090E, _file, lcss, dev->devnum, _reason); \
                 build_senseX (TAPE_BSENSE_TAPELOADFAIL, dev, unitstat, code); \
                 release_lock (&dev->lock); \
                 break; \
@@ -1639,7 +1637,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
 
                 /* (fully resolvable path?) */
                 if (realpath( resolve_in, resolve_out ) == NULL)
-                    HHCTA090E( resolve_in, "unresolvable path" );
+                    _HHCTA090E( resolve_in, "unresolvable path" );
 
                 /* Switch to fully resolved path */
                 strlcpy( newfile, resolve_out, sizeof(newfile) );
@@ -1655,11 +1653,11 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
 
             /* Error if "allowable" directory not found... */
             if (!rej)
-                HHCTA090E( newfile, "impermissible directory" );
+                _HHCTA090E( newfile, "impermissible directory" );
 
             /* Verify file exists... */
             if (access( newfile, R_OK ) != 0)
-                HHCTA090E( newfile, "file not found" );
+                _HHCTA090E( newfile, "file not found" );
         }
 
         /* Prevent accidental re-init'ing of an already loaded tape drive */
@@ -1669,9 +1667,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             && strcmp (dev->filename, TAPE_UNLOADED) != 0
         )
         {
-            logmsg(_("HHCTA091E Tape file auto-mount for drive %s%4.4X rejected: "
-                "drive not empty\n"),
-                lcss, dev->devnum);
+            WRITEMSG(HHCTA091E, lcss, dev->devnum);
             build_senseX (TAPE_BSENSE_TAPELOADFAIL, dev, unitstat, code);
             release_lock (&dev->lock);
             break;
@@ -1713,11 +1709,10 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             {
                 /* (an error message explaining the reason for the
                     failure should hopefully already have been issued) */
-                logmsg(_("HHCTA092E Tape file auto-unmount for drive %s%4.4X failed\n"),
-                    lcss, dev->devnum);
+                WRITEMSG(HHCTA092E, lcss, dev->devnum);
             }
             else
-                HHCTA090E( newfile, "file not found" ); // (presumed)
+                _HHCTA090E( newfile, "file not found" ); // (presumed)
 
             /* (the load or unload attempt failed) */
             build_senseX (TAPE_BSENSE_TAPELOADFAIL, dev, unitstat, code);
@@ -1727,11 +1722,9 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             // (success)
 
             if (strcmp( newfile, TAPE_UNLOADED ) == 0)
-                logmsg(_("HHCTA093I Tape file on drive %s%4.4X auto-unmounted\n"),
-                    lcss, dev->devnum);
+                WRITEMSG(HHCTA093I, lcss, dev->devnum);
             else
-                logmsg(_("HHCTA094I Tape file \"%s\" auto-mounted onto drive %s%4.4X\n"),
-                    dev->filename, lcss, dev->devnum);
+                WRITEMSG(HHCTA094I, dev->filename, lcss, dev->devnum);
 
             /* (save new parms for next time) */
             free( dev->argv[0] );
@@ -1869,7 +1862,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
 
         /* Informative message if tracing */
         if ( dev->ccwtrace || dev->ccwstep )
-            logmsg(_("HHCTA081I Locate block 0x%8.8"I32_FMT"X on %s%s%4.4X\n")
+            WRITEMSG(HHCTA081I
                 ,locblock
                 ,TAPEDEVT_SCSITAPE == dev->tapedevt ? (char*)dev->filename : ""
                 ,TAPEDEVT_SCSITAPE == dev->tapedevt ?             " = "    : ""
@@ -3513,8 +3506,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
             strlcpy( dev->tapemsg1, msg1, sizeof(dev->tapemsg1) );
 
             if ( dev->ccwtrace || dev->ccwstep )
-                logmsg(_("HHCTA099I %4.4X: Tape Display \"%s\" Until Unmounted\n"),
-                    dev->devnum, dev->tapemsg1 );
+                WRITEMSG(HHCTA099I, dev->devnum, dev->tapemsg1 );
         }
 
         break;
@@ -3539,8 +3531,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
             strlcpy( dev->tapemsg1, msg1, sizeof(dev->tapemsg1) );
 
             if ( dev->ccwtrace || dev->ccwstep )
-                logmsg(_("HHCTA099I %4.4X: Tape Display \"%s\" Until Mounted\n"),
-                    dev->devnum, dev->tapemsg1 );
+                WRITEMSG(HHCTA099I, dev->devnum, dev->tapemsg1 );
         }
 
         break;
@@ -3592,8 +3583,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
             dev->tapedispflags = TAPEDISPFLG_REQAUTOMNT;
 
             if ( dev->ccwtrace || dev->ccwstep )
-                logmsg(_("HHCTA099I %4.4X: Tape Display \"%s\" Until Unmounted, then \"%s\" Until Mounted\n"),
-                    dev->devnum, dev->tapemsg1, dev->tapemsg2 );
+                WRITEMSG(HHCTA199I, dev->devnum, dev->tapemsg1, dev->tapemsg2 );
         }
         else
         {
@@ -3601,8 +3591,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
             dev->tapedispflags = TAPEDISPFLG_MESSAGE2 | TAPEDISPFLG_REQAUTOMNT;
 
             if ( dev->ccwtrace || dev->ccwstep )
-                logmsg(_("HHCTA099I %4.4X: Tape \"%s\" Until Mounted\n"),
-                    dev->devnum, dev->tapemsg2 );
+                WRITEMSG(HHCTA099I, dev->devnum, dev->tapemsg2 );
         }
 
         break;

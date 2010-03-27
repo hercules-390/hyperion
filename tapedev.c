@@ -832,8 +832,7 @@ int gettapetype_byname (DEVBLK *dev)
         if (rc < 0)
         {
             regerror (rc, &regwrk, errbfr, 1024);
-            logmsg (_("HHCTA001E %4.4X: Unable to determine tape format type for %s: Internal error: Regcomp error %s on index %d\n"),
-                dev->devnum, dev->filename, errbfr, i);
+            WRITEMSG(HHCTA001E, dev->devnum, dev->filename, "regcomp", errbfr, i);
             return -1;
         }
 
@@ -842,8 +841,7 @@ int gettapetype_byname (DEVBLK *dev)
         {
             regerror (rc, &regwrk, errbfr, 1024);
             regfree ( &regwrk );
-            logmsg (_("HHCTA002E %4.4X: Unable to determine tape format type for %s: Internal error: Regexec error %s on index %d\n"),
-                dev->devnum, dev->filename, errbfr, i);
+            WRITEMSG(HHCTA001E, dev->devnum, dev->filename, "regexec", errbfr, i);
             return -1;
         }
 
@@ -1006,8 +1004,7 @@ int gettapetype (DEVBLK *dev, char **short_descr)
     {
         i = DEFAULT_FMTENTRY;
         if (strcmp (dev->filename, TAPE_UNLOADED) != 0)
-            logmsg (_("HHCTA003W %4.4X: Unable to determine tape format type for %s; presuming %s.\n"),
-                 dev->devnum, dev->filename, fmttab[i].short_descr );
+            WRITEMSG(HHCTA003W, dev->devnum, dev->filename, fmttab[i].short_descr );
     }
 
     dev->tapedevt = fmttab[i].fmtcode;
@@ -1016,8 +1013,7 @@ int gettapetype (DEVBLK *dev, char **short_descr)
     *short_descr  = fmttab[i].short_descr;
 
     if (strcmp (dev->filename, TAPE_UNLOADED) != 0)
-        logmsg (_("HHCTA004I %4.4X: %s is a %s\n"),
-            dev->devnum, dev->filename, descr);
+        WRITEMSG(HHCTA004I, dev->devnum, dev->filename, descr);
 
     return 0;   // (success)
 
@@ -1186,8 +1182,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
     }
 #endif
 
-#define  HHCTA078E()  logmsg (_("HHCTA078E %4.4X: option '%s' not valid for %s\n"), \
-                              dev->devnum, argv[i], short_descr)
+#define  _HHCTA078E() WRITEMSG(HHCTA078E, dev->devnum, argv[i], short_descr)
 
     /* Process remaining options */
     rc = 0;
@@ -1197,8 +1192,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         switch (parser (&ptab[0], argv[i], &res))
         {
         case TDPARM_NONE:
-            logmsg (_("HHCTA067E %4.4X: option '%s' unrecognized\n"),
-                dev->devnum, argv[i]);
+            WRITEMSG(HHCTA067E, dev->devnum, argv[i]);
             optrc = -1;
             break;
 
@@ -1208,7 +1202,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                 || TAPEDEVT_FAKETAPE == dev->tapedevt
             )
             {
-                HHCTA078E(); optrc = -1; break;
+                _HHCTA078E(); optrc = -1; break;
             }
             dev->tdparms.compress = FALSE;
             dev->tdparms.chksize = 4096;
@@ -1221,7 +1215,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                 || TAPEDEVT_FAKETAPE == dev->tapedevt
             )
             {
-                HHCTA078E(); optrc = -1; break;
+                _HHCTA078E(); optrc = -1; break;
             }
             dev->tdparms.compress = (res.num ? TRUE : FALSE);
             break;
@@ -1232,12 +1226,11 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                 || TAPEDEVT_FAKETAPE == dev->tapedevt
             )
             {
-                HHCTA078E(); optrc = -1; break;
+                _HHCTA078E(); optrc = -1; break;
             }
             if (res.num < HETMIN_METHOD || res.num > HETMAX_METHOD)
             {
-                logmsg(_("HHCTA068E %4.4X: option '%s': method must be within %u-%u\n"),
-                    dev->devnum, argv[i], HETMIN_METHOD, HETMAX_METHOD);
+                WRITEMSG(HHCTA068E, dev->devnum, argv[i], HETMIN_METHOD, HETMAX_METHOD);
                 optrc = -1;
                 break;
             }
@@ -1250,12 +1243,11 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                 || TAPEDEVT_FAKETAPE == dev->tapedevt
             )
             {
-                HHCTA078E(); optrc = -1; break;
+               _HHCTA078E(); optrc = -1; break;
             }
             if (res.num < HETMIN_LEVEL || res.num > HETMAX_LEVEL)
             {
-                logmsg(_("HHCTA069E %4.4X: option '%s': level must be within %u-%u\n"),
-                    dev->devnum, argv[i], HETMIN_LEVEL, HETMAX_LEVEL);
+                WRITEMSG(HHCTA069E, dev->devnum, argv[i], HETMIN_LEVEL, HETMAX_LEVEL);
                 optrc = -1;
                 break;
             }
@@ -1268,12 +1260,11 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                 || TAPEDEVT_FAKETAPE == dev->tapedevt
             )
             {
-                HHCTA078E(); optrc = -1; break;
+                _HHCTA078E(); optrc = -1; break;
             }
             if (res.num < HETMIN_CHUNKSIZE || res.num > HETMAX_CHUNKSIZE)
             {
-                logmsg (_("HHCTA070E %4.4X: option '%s': chunksize must be within %u-%u\n"),
-                    dev->devnum, argv[i], HETMIN_CHUNKSIZE, HETMAX_CHUNKSIZE);
+                WRITEMSG(HHCTA070E, dev->devnum, argv[i], HETMIN_CHUNKSIZE, HETMAX_CHUNKSIZE);
                 optrc = -1;
                 break;
             }
@@ -1283,7 +1274,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_MAXSIZE:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
-                HHCTA078E(); optrc = -1; break;
+                _HHCTA078E(); optrc = -1; break;
             }
             dev->tdparms.maxsize=res.num;
             break;
@@ -1291,7 +1282,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_MAXSIZEK:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
-                HHCTA078E(); optrc = -1; break;
+                _HHCTA078E(); optrc = -1; break;
             }
             dev->tdparms.maxsize=res.num*1024;
             break;
@@ -1299,7 +1290,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_MAXSIZEM:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
-                HHCTA078E(); optrc = -1; break;
+                _HHCTA078E(); optrc = -1; break;
             }
             dev->tdparms.maxsize=res.num*1024*1024;
             break;
@@ -1311,7 +1302,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_STRICTSIZE:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
-                HHCTA078E(); optrc = -1; break;
+                _HHCTA078E(); optrc = -1; break;
             }
             dev->tdparms.strictsize=res.num;
             break;
@@ -1319,7 +1310,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_READONLY:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
-                HHCTA078E(); optrc = -1; break;
+                _HHCTA078E(); optrc = -1; break;
             }
             dev->tdparms.logical_readonly=(res.num ? 1 : 0 );
             break;
@@ -1328,7 +1319,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_NORING:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
-                HHCTA078E(); optrc = -1; break;
+                _HHCTA078E(); optrc = -1; break;
             }
             dev->tdparms.logical_readonly=1;
             break;
@@ -1337,7 +1328,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_RING:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
-                HHCTA078E(); optrc = -1; break;
+                _HHCTA078E(); optrc = -1; break;
             }
             dev->tdparms.logical_readonly=0;
             break;
@@ -1345,7 +1336,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_DEONIRQ:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
-                HHCTA078E(); optrc = -1; break;
+                _HHCTA078E(); optrc = -1; break;
             }
             dev->tdparms.deonirq=(res.num ? 1 : 0 );
             break;
@@ -1355,7 +1346,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_NOAUTOMOUNT:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
-                HHCTA078E(); optrc = -1; break;
+                _HHCTA078E(); optrc = -1; break;
             }
             dev->noautomount = 1;
             break;
@@ -1367,7 +1358,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_BLKID24:
             if (TAPEDEVT_SCSITAPE != dev->tapedevt)
             {
-                HHCTA078E(); optrc = -1; break;
+                _HHCTA078E(); optrc = -1; break;
             }
             dev->stape_blkid_32 = 0;
             break;
@@ -1375,7 +1366,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_BLKID32:
             if (TAPEDEVT_SCSITAPE != dev->tapedevt)
             {
-                HHCTA078E(); optrc = -1; break;
+                _HHCTA078E(); optrc = -1; break;
             }
             dev->stape_blkid_32 = 1;
             break;
@@ -1383,15 +1374,14 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_NOERG:
             if (TAPEDEVT_SCSITAPE != dev->tapedevt)
             {
-                HHCTA078E(); optrc = -1; break;
+                _HHCTA078E(); optrc = -1; break;
             }
             dev->stape_no_erg = 1;
             break;
 #endif /* defined(OPTION_SCSI_TAPE) */
 
         default:
-            logmsg(_("HHCTA071E %4.4X: option '%s': parse error\n"),
-                dev->devnum, argv[i]);
+            WRITEMSG(HHCTA071E, dev->devnum, argv[i]);
             optrc = -1;
             break;
 
@@ -1400,8 +1390,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         if (optrc < 0)
             rc = -1;
         else
-            logmsg (_("HHCTA066I %4.4X: option '%s' accepted.\n"),
-                dev->devnum, argv[i]);
+            WRITEMSG(HHCTA066I, dev->devnum, argv[i]);
 
     } // end for (i = 1; i < argc; i++)
 
@@ -1582,8 +1571,7 @@ void UpdateDisplay( DEVBLK *dev )
 
         dev->prev_tapemsg = strdup( msgbfr );
 
-        logmsg(_("HHCTA010I %4.4X: Now Displays: %s\n"),
-            dev->devnum, msgbfr );
+        WRITEMSG(HHCTA010I, dev->devnum, msgbfr );
     }
 #if defined(OPTION_SCSI_TAPE)
     else

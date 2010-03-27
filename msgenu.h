@@ -941,6 +941,30 @@
 #define HHCSR204E "File identifier error"
 #define HHCSR999E "Invalid key %8.8x"
 
+/* tapeccws.c */
+#define HHCTA072E "Data chaining not supported for CCW(%2.2X)"
+#define HHCTA081I "Locate block(0x%8.8"I32_FMT"X) on drive(%s%s%4.4X)"
+#define HHCTA090E "Auto-mount of file(%s) on drive(%s%4.4X) failed: %s"
+#define HHCTA091E "Tape file auto-mount for drive(%s%4.4X) rejected: drive not empty"
+#define HHCTA092E "Tape file auto-unmount for drive(%s%4.4X) failed"
+#define HHCTA093I "Tape file on drive(%s%4.4X) auto-unmounted"
+#define HHCTA094I "Tape file(%s) auto-mounted onto drive(%s%4.4X)"
+#define HHCTA099I "Device(%4.4X) Tape Display(%s) until unmounted"
+#define HHCTA199I "Device(%4.4X) Tape Display(%s) until unmounted, then (%s) until mounted"
+
+/* tapedev.c */
+#define HHCTA001E "Device(%4.4X) Unable to determine tape format type for file(%s) Internal error: %s error(%s) on index(%d)"
+#define HHCTA003W "Device(%4.4X) Unable to determine tape format type for file(%s); presuming %s"
+#define HHCTA004I "Device(%4.4X) file(%s) is a %s"
+#define HHCTA010I "Device(%4.4X) display(%s)"
+#define HHCTA066I "Device(%4.4X) option(%s) accepted"
+#define HHCTA067E "Device(%4.4X) option(%s) unrecognized"
+#define HHCTA068E "Device(%4.4X) option(%s) method must be within(%u-%u)"
+#define HHCTA069E "Device(%4.4X) option(%s) level must be within(%u-%u)"
+#define HHCTA070E "Device(%4.4X) option(%s) chunksize must be within(%u-%u)"
+#define HHCTA071E "Device(%4.4X) option(%s) parse error"
+#define HHCTA078E "Device(%4.4X) option(%s) not valid for %s"
+
 /* timer.c */
 #define HHCTT001W "Timer thread set priority(%d) failed: (%s)"
 #define HHCTT002I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
