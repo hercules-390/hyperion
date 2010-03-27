@@ -914,6 +914,7 @@
 #define HHCSR001I "Resuming suspended file(%s) created"
 #define HHCSR010E "Write error(%s)"
 #define HHCSR011E "Read error(%s)"
+#define HHCSR012E "Seek error(%s)"
 #define HHCSR013E "Value error, incorrect length"
 #define HHCSR014E "String error, incorrect length"
 #define HHCSR015E "Error processing file(%s)"

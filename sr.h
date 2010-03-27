@@ -447,27 +447,27 @@
 #else
 #define SR_WRITE_ERROR \
  do { \
-   logmsg(_("HHCSR010E write error: %s\n"), strerror(errno)); \
+   WRITEMSG(HHCSR010E, strerror(errno)); \
    return -1; \
  } while (0)
 #define SR_READ_ERROR \
  do { \
-   logmsg(_("HHCSR011E read error: %s\n"), strerror(errno)); \
+   WRITEMSG(HHCSR011E, strerror(errno)); \
    return -1; \
  } while (0)
 #define SR_SEEK_ERROR \
  do { \
-   logmsg(_("HHCSR012E seek error: %s\n"), strerror(errno)); \
+   WRITEMSG(HHCSR012E, strerror(errno)); \
    return -1; \
  } while (0)
 #define SR_VALUE_ERROR \
  do { \
-   logmsg(_("HHCSR013E value error, incorrect length\n")); \
+   WRITEMSG(HHCSR013E); \
    return -1; \
  } while (0)
 #define SR_STRING_ERROR \
  do { \
-   logmsg(_("HHCSR014E string error, incorrect length\n")); \
+   WRITEMSG(HHCSR014E); \
    return -1; \
  } while (0)
 #endif
