@@ -1517,7 +1517,7 @@ TID             tid;                    /* Readahead thread id       */
     if (!cckdblk.batch)
     {
 	char buf[20];
-        sprintf(buf, "Readahead thread(%d)", ra);
+        sprintf(buf, "readahead thread(%d)", ra);
         WRITEMSG (HHCCD001I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), buf);
     }
 
@@ -1570,7 +1570,7 @@ TID             tid;                    /* Readahead thread id       */
     if (!cckdblk.batch)
     {
         char buf[20];
-        sprintf(buf, "Readahead thread(%d)", ra);
+        sprintf(buf, "readahead thread(%d)", ra);
         WRITEMSG (HHCCD011I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), buf);
     }
     --cckdblk.ras;
@@ -1722,7 +1722,7 @@ BYTE            buf2[65536];            /* Compress buffer           */
     if (!cckdblk.batch)
     {
 	char buf[20];
-	sprintf(buf, "Writer thread(%d)", writer);
+	sprintf(buf, "writer thread(%d)", writer);
 	WRITEMSG (HHCCD002I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), buf);
     }
 
@@ -1846,7 +1846,7 @@ BYTE            buf2[65536];            /* Compress buffer           */
     if (!cckdblk.batch)
     {
 	char buf[20];
-	sprintf(buf, "Writer thread(%d)", writer);
+	sprintf(buf, "writer thread(%d)", writer);
 	WRITEMSG (HHCCD012I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), buf);
     }
     cckdblk.wrs--;
@@ -4494,7 +4494,7 @@ int             gctab[5]= {             /* default gcol parameters   */
 
     if (!cckdblk.batch)
     {
-        WRITEMSG (HHCCD003I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "Garbage collector");
+        WRITEMSG (HHCCD003I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "garbage collector");
     }
 
     while (gcol <= cckdblk.gcmax)
@@ -4602,7 +4602,7 @@ int             gctab[5]= {             /* default gcol parameters   */
     }
 
     if (!cckdblk.batch)
-    WRITEMSG (HHCCD013I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "Garbage collector");
+    WRITEMSG (HHCCD013I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "garbage collector");
 
     cckdblk.gcs--;
     if (!cckdblk.gcs) signal_condition (&cckdblk.termcond);
