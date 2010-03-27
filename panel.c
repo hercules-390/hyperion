@@ -1058,7 +1058,7 @@ static void NP_screen_redraw (REGS *regs)
         line++;
         for (i = 0; i < NPcpugraph_ncpu; i++)
         {
-            sprintf (buf, "%s%02X ", PTYPSTR(sysblk.ptyp[i]), i);
+            sprintf (buf, "%s%02X ", PTYPSTR(i), i);
             set_pos (line++, 1);
             draw_text (buf);
         }
