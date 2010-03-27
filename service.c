@@ -165,21 +165,21 @@ void scp_command (char *command, int priomsg)
     /* Error if disabled for priority messages */
     if (priomsg && !SCLP_RECV_ENABLED(SCCB_EVD_TYPE_PRIOR))
     {
-        logmsg (_("HHCCP036E SCP not receiving priority messages\n"));
+        WRITEMSG (HHCCP036E);
         return;
     }
 
     /* Error if disabled for commands */
     if (!priomsg && !SCLP_RECV_ENABLED(SCCB_EVD_TYPE_OPCMD))
     {
-        logmsg (_("HHCCP037E SCP not receiving commands\n"));
+        WRITEMSG (HHCCP037E);
         return;
     }
 
     /* Error if command string is missing */
     if (strlen(command) < 1)
     {
-        logmsg (_("HHCCP038E No SCP command\n"));
+        WRITEMSG (HHCCP038E);
         return;
     }
 
@@ -341,17 +341,7 @@ U64  syslevel;
     systype[8] = sysname[8] = sysplex[8] = 0;
     FETCH_DW(syslevel,cpi_bk->system_level);
 
-#if 1
-    logmsg(_("HHCCP040I CPI: System Type: %s Name: %s "
-             "Sysplex: %s\n"),
-        systype,sysname,sysplex);
-#else
-    logmsg(_("HHC770I Control Program Information:\n"));
-    logmsg(_("HHC771I System Type  = %s\n",systype));
-    logmsg(_("HHC772I System Name  = %s\n",sysname));
-    logmsg(_("HHC773I Sysplex Name = %s\n",sysplex));
-    logmsg(_("HHC774I System Level = %16.16" I64_FMT "X\n"),syslevel);
-#endif
+    WRITEMSG(HHCCP040I,systype,sysname,sysplex,syslevel);
 
     losc_check(systype);
 
@@ -396,7 +386,7 @@ int signal_quiesce (U16 count, BYTE unit)
     /* Error if disabled for commands */
     if (!SCLP_RECV_ENABLED(SCCB_EVD_TYPE_SIGQ))
     {
-        logmsg (_("HHCCP081E SCP not receiving quiesce signals\n"));
+        WRITEMSG (HHCCP081E);
         return -1;
     }
 
@@ -1171,9 +1161,10 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         if(sysblk.ptyp[regs->cpuad] != SCCB_PTYP_CP)
         {
 #ifdef OPTION_MSGCLR
-            logmsg("<pnl,color(lightred,black)>");
+            WRITECMSG("<pnl,color(lightred,black)>", HHCCP090W);
+#else
+            WRITEMSG(HHCCP090W);
 #endif
-            logmsg("HHCCP090W The configuration has been placed into a system check-stop state because of an incompatible service call\n\n");
             goto docheckstop;
             /*
              * Replace the following 2 lines with
@@ -1696,9 +1687,9 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         {
             if ((servc_cp_recv_mask & SCCB_EVENT_CONS_RECV_MASK) != 0
                 || (servc_cp_send_mask & SCCB_EVENT_CONS_SEND_MASK) != 0)
-                logmsg (_("HHCCP041I SYSCONS interface active\n"));
+                WRITEMSG (HHCCP041I);
             else
-                logmsg (_("HHCCP042I SYSCONS interface inactive\n"));
+                WRITEMSG (HHCCP042I);
         }
 
         /* Set response code X'0020' in SCCB header */
@@ -1821,7 +1812,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         }
 
         if(sysblk.regs[i]->vf->online)
-            logmsg(_("%s%02X: Vector Facility configured offline\n"), PTYPSTR(i), i );
+            WRITEMSG(HHCCP012I, PTYPSTR(i), i );
 
         /* Take the VF out of the configuration */
         sysblk.regs[i]->vf->online = 0;
@@ -1852,7 +1843,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         }
 
         if(!sysblk.regs[i]->vf->online)
-            logmsg(_("%s%02X: Vector Facility configured online\n"), PTYPSTR(i), i );
+            WRITEMSG(HHCCP013I, PTYPSTR(i), i );
 
         /* Mark the VF online to the CPU */
         sysblk.regs[i]->vf->online = 1;
