@@ -882,6 +882,9 @@
 #define HHCSH066E "Invalid or missing keyword(%s)"
 #define HHCSH999E "OPTION_SHARED_DEVICES not defined"
 
+/* sie.c */
+#define HHCCP079E "%s%02X: calloc failed for sie regs: %s"
+
 /* timer.c */
 #define HHCTT001W "Timer thread set priority(%d) failed: (%s)"
 #define HHCTT002I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
