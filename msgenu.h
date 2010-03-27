@@ -754,6 +754,23 @@
 #define HHCPN002S "Cannot obtain keyboard buffer: (%s)"
 #define HHCPN003S "Cannot obtain message buffer: (%s)"
 
+/* printer.c */
+#define HHCPR001E "Device(%4.4X) file name missing or invalid for printer"
+#define HHCPR002E "Printer(%4.4X) Invalid argument(%s)"
+#define HHCPR003E "Device(%4.4X) Error writing to file(%s) %s"
+#define HHCPR004E "Error opening file(%s) %s"
+#define HHCPR005E "Device(%4.4X) initialization error: pipe %s"
+#define HHCPR006E "Device(%4.4X) initialization error: fork %s"
+#define HHCPR007I "Device(%4.4X) Pipe receiver pid(%d) starting"
+#define HHCPR008E "Device(%4.4X) dup2 error: %s"
+#define HHCPR009E "Parameter(%s) #(%d) is invalid"
+#define HHCPR010E "Parameter(%s) #(%d) pos(%d) is invalid"
+#define HHCPR011I "Device(%4.4X) pipe receiver pid(%d) terminating"
+#define HHCPR012E "Device(%4.4X) Unable to execute file(%s) %s"
+#define HHCPR015E "Device(%4.4X) create spthread failed errno(%d) %s"
+#define HHCPR016I "%s (%s) disconnected from device %4.4X (%s)"
+#define HHCPR019E "Printer(%4.4X) Incompatible option(%s) specified"
+
 /* timer.c */
 #define HHCTT001W "Timer thread set priority(%d) failed: (%s)"
 #define HHCTT002I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"

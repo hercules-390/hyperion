@@ -161,8 +161,7 @@ static int onconnect_callback (DEVBLK* dev)
     TID tid;
     if (create_thread( &tid, DETACHED, spthread, dev, NULL ))
     {
-        logmsg(_("HHCPR015E Create spthread failed for %4.4X: errno=%d: %s\n" ),
-            dev->devnum, errno, strerror( errno ) );
+        WRITEMSG(HHCPR015E, dev->devnum, errno, strerror( errno ) );
         return 0;
     }
     return 1;
@@ -253,8 +252,7 @@ static void* spthread (DEVBLK* dev)
     {
         dev->fd = -1;
         close_socket( fd );
-        logmsg (_("HHCPR016I %s (%s) disconnected from device %4.4X (%s)\n"),
-            dev->bs->clientname, dev->bs->clientip, dev->devnum, dev->bs->spec);
+        WRITEMSG (HHCPR016I, dev->bs->clientname, dev->bs->clientip, dev->devnum, dev->bs->spec);
     }
 
     release_lock( &dev->lock );
@@ -281,8 +279,7 @@ static int printer_init_handler (DEVBLK *dev, int argc, char *argv[])
     /* The first argument is the file name */
     if (argc == 0 || strlen(argv[0]) > sizeof(dev->filename)-1)
     {
-        logmsg (_("HHCPR001E File name missing or invalid for printer %4.4X\n"),
-                 dev->devnum);
+        WRITEMSG (HHCPR001E, dev->devnum);
         return -1;
     }
 
@@ -365,16 +362,14 @@ static int printer_init_handler (DEVBLK *dev, int argc, char *argv[])
         {
 			if (strlen (argv[i]) != 30 ) 
 			{
-        		logmsg (_("HHCPR009E parameter %d is invalid: %s\n"),
-                i + 1, argv[i]);
+        		WRITEMSG (HHCPR009E, argv[i], i + 1);
         		return -1;
 			}
 			for ( j = 4 ; j < 30 ; j++ )
 			{
             	if ( (argv[i][j] < '0') || (argv[i][j] > '9' ) )
 	            {
-    	    		logmsg (_("HHCPR010E parameter %d is invalid: %s At %d \n"),
-        	        i + 1, argv[i],j);
+    	    		WRITEMSG (HHCPR010E,argv[i], i + 1, j);
         			return -1;
 				}
 			}
@@ -396,23 +391,20 @@ static int printer_init_handler (DEVBLK *dev, int argc, char *argv[])
             continue;
         }
 
-        logmsg (_("HHCPR002E Invalid argument for printer %4.4X: %s\n"),
-                dev->devnum, argv[i]);
+        WRITEMSG (HHCPR002E, dev->devnum, argv[i]);
         return -1;
     }
 
     /* Check for incompatible options */
     if (sockdev && dev->crlf)
     {
-        logmsg (_("HHCPR019E Incompatible option specified for socket printer %4.4X: 'crlf'\n"),
-                dev->devnum);
+        WRITEMSG (HHCPR019E, dev->devnum, "crlf");
         return -1;
     }
 
     if (sockdev && dev->notrunc)
     {
-        logmsg (_("HHCPR019E Incompatible option specified for socket printer %4.4X: 'noclear'\n"),
-                dev->devnum);
+        WRITEMSG (HHCPR019E, dev->devnum, "noclear");
         return -1;
     }
 
@@ -503,8 +495,7 @@ int             rc;                     /* Return code               */
                     S_IRUSR | S_IWUSR | S_IRGRP);
         if (fd < 0)
         {
-            logmsg (_("HHCPR004E Error opening file %s: %s\n"),
-                    dev->filename, strerror(errno));
+            WRITEMSG (HHCPR004E, dev->filename, strerror(errno));
             return -1;
         }
 
@@ -521,14 +512,12 @@ int             rc;                     /* Return code               */
     pid = w32_poor_mans_fork ( dev->filename+1, &dev->fd );
     if (pid < 0)
     {
-        logmsg (_("HHCPR006E %4.4X device initialization error: fork: %s\n"),
-                dev->devnum, strerror(errno));
+        WRITEMSG (HHCPR006E, dev->devnum, strerror(errno));
         return -1;
     }
 
     /* Log start of child process */
-    logmsg (_("HHCPR007I pipe receiver (pid=%d) starting for %4.4X\n"),
-            pid, dev->devnum);
+    WRITEMSG (HHCPR007I,, dev->devnum, pid);
     dev->ptpcpid = pid;
 
 #else /* !defined( _MSVC_ ) */
@@ -537,8 +526,7 @@ int             rc;                     /* Return code               */
     rc = create_pipe (pipefd);
     if (rc < 0)
     {
-        logmsg (_("HHCPR005E %4.4X device initialization error: pipe: %s\n"),
-                dev->devnum, strerror(errno));
+        WRITEMSG (HHCPR005E, dev->devnum, strerror(errno));
         return -1;
     }
 
@@ -546,8 +534,7 @@ int             rc;                     /* Return code               */
     pid = fork();
     if (pid < 0)
     {
-        logmsg (_("HHCPR006E %4.4X device initialization error: fork: %s\n"),
-                dev->devnum, strerror(errno));
+        WRITEMSG (HHCPR006E, dev->devnum, strerror(errno));
         close_pipe ( pipefd[0] );
         close_pipe ( pipefd[1] );
         return -1;
@@ -557,8 +544,7 @@ int             rc;                     /* Return code               */
     if (pid == 0)
     {
         /* Log start of child process */
-        logmsg (_("HHCPR007I pipe receiver (pid=%d) starting for %4.4X\n"),
-                getpid(), dev->devnum);
+        WRITEMSG (HHCPR007I, getpid(), getpid());
 
         /* Close the write end of the pipe */
         close_pipe ( pipefd[1] );
@@ -569,8 +555,7 @@ int             rc;                     /* Return code               */
             rc = dup2 (pipefd[0], STDIN_FILENO);
             if (rc != STDIN_FILENO)
             {
-                logmsg (_("HHCPR008E %4.4X dup2 error: %s\n"),
-                        dev->devnum, strerror(errno));
+                WRITEMSG (HHCPR008E, dev->devnum, strerror(errno));
                 close_pipe ( pipefd[0] );
                 _exit(127);
             }
@@ -591,14 +576,12 @@ int             rc;                     /* Return code               */
         if (rc == 0)
         {
             /* Log end of child process */
-            logmsg (_("HHCPR011I pipe receiver (pid=%d) terminating for %4.4X\n"),
-                    getpid(), dev->devnum);
+            WRITEMSG (HHCPR011I, dev->devnum, getpid());
         }
         else
         {
             /* Log error */
-            logmsg (_("HHCPR012E %4.4X Unable to execute %s: %s\n"),
-                    dev->devnum, dev->filename+1, strerror(errno));
+            WRITEMSG (HHCPR012E, dev->devnum, dev->filename+1, strerror(errno));
         }
 
         /* The child process terminates using _exit instead of exit
@@ -645,8 +628,7 @@ int             rc;                     /* Return code               */
                 int fd = dev->fd;
                 dev->fd = -1;
                 close_socket( fd );
-                logmsg (_("HHCPR017I %s (%s) disconnected from device %4.4X (%s)\n"),
-                    dev->bs->clientname, dev->bs->clientip, dev->devnum, dev->bs->spec);
+                WRITEMSG (HHCPR016I, dev->bs->clientname, dev->bs->clientip, dev->devnum, dev->bs->spec);
             }
 
             /* Set unit check with intervention required */
@@ -662,8 +644,7 @@ int             rc;                     /* Return code               */
         /* Equipment check if error writing to printer file */
         if (rc < len)
         {
-            logmsg (_("HHCPR003E %4.4X Error writing to %s: %s\n"),
-                    dev->devnum, dev->filename,
+            WRITEMSG (HHCPR003E, dev->devnum, dev->filename,
                     (errno == 0 ? _("incomplete"): strerror(errno)));
             dev->sense[0] = SENSE_EC;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -693,8 +674,7 @@ int fd = dev->fd;
 #else /* defined( _MSVC_ ) */
         close (fd);
         /* Log end of child process */
-        logmsg (_("HHCPR011I pipe receiver (pid=%d) terminating for %4.4X\n"),
-                dev->ptpcpid, dev->devnum);
+        WRITEMSG (HHCPR011I, dev->devnum, dev->ptpcpid);
 #endif /* defined( _MSVC_ ) */
         dev->ptpcpid = 0;
     }
@@ -704,8 +684,7 @@ int fd = dev->fd;
         {
             /* Socket printer */
             close_socket (fd);
-            logmsg (_("HHCPR018I %s (%s) disconnected from device %4.4X (%s)\n"),
-                dev->bs->clientname, dev->bs->clientip, dev->devnum, dev->bs->spec);
+            WRITEMSG (HHCPR016I, dev->bs->clientname, dev->bs->clientip, dev->devnum, dev->bs->spec);
         }
         else
         {
