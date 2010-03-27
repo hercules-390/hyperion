@@ -227,7 +227,7 @@ DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
                     if (pttrace != NULL)
                     {
                         RELEASE_PTTLOCK;
-                        logmsg( _("HHCPT002E Trace is busy\n"));
+                        WRITEMSG(HHCPT002E);
                         return -1;
                     }
                 }
@@ -245,7 +245,7 @@ DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
             }
             else
             {
-                logmsg( _("HHCPT001E Invalid value: %s\n"), argv[0]);
+                WRITEMSG(HHCPT001E, argv[0]);
                 rc = -1;
                 break;
             }
@@ -274,7 +274,7 @@ DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
         if (pttracen)
             rc = ptt_pthread_print();
     
-        logmsg( _("HHCPT003I ptt %s%s%s%s%s%s%s%s%s%s%s %s %s to=%d %d\n"),
+        WRITEMSG(HHCPT003I,
                (pttclass & PTT_CL_INF) ? "control " : "",
                (pttclass & PTT_CL_ERR) ? "error " : "",
                (pttclass & PTT_CL_PGM) ? "prog " : "",

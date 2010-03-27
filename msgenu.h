@@ -771,6 +771,11 @@
 #define HHCPR016I "%s (%s) disconnected from device %4.4X (%s)"
 #define HHCPR019E "Printer(%4.4X) Incompatible option(%s) specified"
 
+/* pttrace.c */
+#define HHCPT001E "Invalid argument(%s)"
+#define HHCPT002E "Trace is busy"
+#define HHCPT003I "Ptt(%s%s%s%s%s%s%s%s%s%s%s %s %s) to(%d %d)"
+
 /* timer.c */
 #define HHCTT001W "Timer thread set priority(%d) failed: (%s)"
 #define HHCTT002I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
