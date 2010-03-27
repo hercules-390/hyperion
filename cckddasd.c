@@ -1502,6 +1502,7 @@ int             trk;                    /* Readahead track           */
 int             ra;                     /* Readahead index           */
 int             r;                      /* Readahead queue index     */
 TID             tid;                    /* Readahead thread id       */
+char            threadname[40];
 
     obtain_lock (&cckdblk.ralock);
     ra = ++cckdblk.ras;
@@ -1516,9 +1517,8 @@ TID             tid;                    /* Readahead thread id       */
 
     if (!cckdblk.batch)
     {
-	char buf[20];
-        sprintf(buf, "readahead thread(%d)", ra);
-        WRITEMSG (HHCCD001I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), buf);
+        sprintf(threadname, "read-ahead thread-%d", ra);
+        WRITEMSG (HHCCD001I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), threadname);
     }
 
     while (ra <= cckdblk.ramax)
@@ -1568,11 +1568,7 @@ TID             tid;                    /* Readahead thread id       */
     }
 
     if (!cckdblk.batch)
-    {
-        char buf[20];
-        sprintf(buf, "readahead thread(%d)", ra);
-        WRITEMSG (HHCCD011I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), buf);
-    }
+        WRITEMSG (HHCCD011I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), threadname);
     --cckdblk.ras;
     if (!cckdblk.ras) signal_condition(&cckdblk.termcond);
     release_lock(&cckdblk.ralock);
@@ -1697,6 +1693,7 @@ TID             tid;                    /* Writer thead id           */
 U32             flag;                   /* Cache flag                */
 static char    *compress[] = {"none", "zlib", "bzip2"};
 BYTE            buf2[65536];            /* Compress buffer           */
+char            threadname[40];
 
     UNREFERENCED(arg);
 
@@ -1721,9 +1718,8 @@ BYTE            buf2[65536];            /* Compress buffer           */
 
     if (!cckdblk.batch)
     {
-	char buf[20];
-	sprintf(buf, "writer thread(%d)", writer);
-	WRITEMSG (HHCCD002I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), buf);
+	sprintf(threadname, "writer thread-%d", writer);
+	WRITEMSG (HHCCD002I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), threadname);
     }
 
     while (writer <= cckdblk.wrmax || cckdblk.wrpending)
@@ -1844,11 +1840,7 @@ BYTE            buf2[65536];            /* Compress buffer           */
     }
 
     if (!cckdblk.batch)
-    {
-	char buf[20];
-	sprintf(buf, "writer thread(%d)", writer);
-	WRITEMSG (HHCCD012I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), buf);
-    }
+	WRITEMSG (HHCCD012I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), threadname);
     cckdblk.wrs--;
     if (cckdblk.wrs == 0) signal_condition(&cckdblk.termcond);
     release_lock(&cckdblk.wrlock);

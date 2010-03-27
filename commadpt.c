@@ -928,7 +928,7 @@ static void *commadpt_thread(void *vca)
     int i;                      /* Ye Old Loop Counter               */
     int eintrcount=0;           /* Number of times EINTR occured in  */
                                 /* a row.. Over 100 : Bail out !     */
-    char buf[40];
+    char threadname[40];
 
     /*---------------------END OF DECLARES---------------------------*/
 
@@ -946,8 +946,8 @@ static void *commadpt_thread(void *vca)
 
     init_signaled=0;
 
-    sprintf(buf, "Device(%4.4X) communication thread");
-    WRITEMSG(HHCCA002I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), buf);
+    sprintf(threadname, "device(%4.4X) communication thread");
+    WRITEMSG(HHCCA002I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), threadname);
 
     pollact=0;  /* Initialise Poll activity flag */
 
@@ -1610,7 +1610,7 @@ static void *commadpt_thread(void *vca)
     /*        lock is released, because back          */
     /*        notification was made while holding     */
     /*        the lock                                */
-    WRITEMSG(HHCCA009I,thread_id(), getpid(), getpriority(PRIO_PROCESS,0), buf);
+    WRITEMSG(HHCCA009I,thread_id(), getpid(), getpriority(PRIO_PROCESS,0), threadname);
     release_lock(&ca->lock);
     return NULL;
 }

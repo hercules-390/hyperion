@@ -542,7 +542,7 @@ static void* hao_thread(void* dummy)
 
   UNREFERENCED(dummy);
 
-  WRITEMSG(HHCAO001I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "Hercules Automatic Operator");
+  WRITEMSG(HHCAO001I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "hercules Automatic Operator");
 
   /* Wait for panel thread to engage */
   while (!sysblk.panel_init && !sysblk.shutdown)
@@ -581,7 +581,7 @@ static void* hao_thread(void* dummy)
     }
   }
 
-  WRITEMSG(HHCAO002I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "Hercules Automatic Operator");
+  WRITEMSG(HHCAO002I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "hercules Automatic Operator");
   return NULL;
 }
 

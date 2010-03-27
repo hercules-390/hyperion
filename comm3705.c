@@ -1326,7 +1326,7 @@ static void *commadpt_thread(void *vca)
     int rc;                     /* return code from various rtns     */
     int ca_shutdown;            /* Thread shutdown internal flag     */
     int init_signaled;          /* Thread initialisation signaled    */
-    char buf[30];               /* string for WRITEMSG               */
+    char threadname[30];        /* string for WRITEMSG               */
 
     /*---------------------END OF DECLARES---------------------------*/
 
@@ -1344,8 +1344,8 @@ static void *commadpt_thread(void *vca)
 
     init_signaled=0;
 
-    sprintf(buf, "3705 device(%4.4X) thread", devnum);
-    WRITEMSG(HHCCA002I,thread_id(), getpid(), getpriority(PRIO_PROCESS,0), buf);
+    sprintf(threadname, "3705 device(%4.4X) thread", devnum);
+    WRITEMSG(HHCCA002I,thread_id(), getpid(), getpriority(PRIO_PROCESS,0), threadname);
 
     for (;;) {
         release_lock(&ca->lock);
@@ -1364,7 +1364,7 @@ static void *commadpt_thread(void *vca)
                 }
     }
 
-    WRITEMSG(HHCCA009I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), buf);
+    WRITEMSG(HHCCA009I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), threadname);
     release_lock(&ca->lock);
     return NULL;
 }

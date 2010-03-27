@@ -1971,7 +1971,7 @@ BYTE                   unitstat;        /* Status after receive data */
     hdl_adsc("console_shutdown",console_shutdown, NULL);
 
     /* Display thread started message on control panel */
-    WRITEMSG(HHCTE001I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "Console connection");
+    WRITEMSG(HHCTE001I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "console connection");
 
     /* Get information about this system */
     init_hostinfo( &cons_hostinfo );
@@ -2296,7 +2296,7 @@ BYTE                   unitstat;        /* Status after receive data */
     close_socket (lsock);
     free(server);
 
-    WRITEMSG(HHCTE004I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "Console connection");
+    WRITEMSG(HHCTE004I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "console connection");
     sysblk.cnsltid = 0;
 
     return NULL;

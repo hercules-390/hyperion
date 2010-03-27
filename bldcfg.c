@@ -1513,7 +1513,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     SETMODE(USER);
 
     /* Display Hercules thread information on control panel */
-    WRITEMSG(HHCCF065I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "Hercules");
+    WRITEMSG(HHCCF065I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "hercules");
 
 #if defined(OPTION_SHARED_DEVICES)
     sysblk.shrdport = shrdport;

@@ -1055,17 +1055,10 @@ static void NP_screen_redraw (REGS *regs)
         NPcpugraph_valid = 0;
         set_pos (line++, 1);
         fill_text ('-', 38);
-        set_pos (line++, 1);
-        draw_text ("CPU");
+        line++;
         for (i = 0; i < NPcpugraph_ncpu; i++)
         {
-            sprintf (buf, "%02X%1s ", i, 
-                         (  sysblk.ptyp[(i)] == SCCB_PTYP_CP ? " " : 
-                            sysblk.ptyp[(i)] == SCCB_PTYP_ICF ? "F" : 
-                            sysblk.ptyp[(i)] == SCCB_PTYP_IFA ? "A" : 
-                            sysblk.ptyp[(i)] == SCCB_PTYP_IFL ? "L" : 
-                            sysblk.ptyp[(i)] == SCCB_PTYP_SUP ? "I" : 
-                            "*") );
+            sprintf (buf, "%s%02X ", PTYPSTR(sysblk.ptyp[i]), i);
             set_pos (line++, 1);
             draw_text (buf);
         }
@@ -1487,7 +1480,7 @@ static void NP_update(REGS *regs)
                 if (!NPcpugraph_valid || NPcpugraphpct[i] != -2.0)
                 {
                     set_color (COLOR_RED, COLOR_BLACK);
-                    set_pos (26+i, 4);
+                    set_pos (26+i, 6);
                     draw_text ("OFFLINE");
                     fill_text (' ', 38);
                     NPcpugraphpct[i] = -2.0;
@@ -1498,7 +1491,7 @@ static void NP_update(REGS *regs)
                 if (!NPcpugraph_valid || NPcpugraphpct[i] != -1.0)
                 {
                     set_color (COLOR_LIGHT_YELLOW, COLOR_BLACK);
-                    set_pos (26+i, 4);
+                    set_pos (26+i, 6);
                     draw_text ("STOPPED");
                     fill_text (' ', 38);
                     NPcpugraphpct[i] = -1.0;
@@ -1512,7 +1505,7 @@ static void NP_update(REGS *regs)
                 else if (n > 34)
                     n = 34;
                 set_color (n > 17 ? COLOR_WHITE : COLOR_LIGHT_GREY, COLOR_BLACK);
-                set_pos (26+i, 4);
+                set_pos (26+i, 6);
                 fill_text ('*', n+3);
                 fill_text (' ', 38);
                 NPcpugraphpct[i] = sysblk.regs[i]->cpupct;
@@ -1829,7 +1822,7 @@ char    buf[1024];                      /* Buffer workarea           */
 
     /* Display thread started message on control panel */
     WRITEMSG (HHCPN001I,
-            thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "Control panel");
+            thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "control panel");
 
     /* Notify logger_thread we're in control */
     sysblk.panel_init = 1;
@@ -2922,7 +2915,7 @@ FinishShutdown:
                         l_len += (int)(strlen(fmt_int)) + 9;  //  9 is the length of "InstCnt()"
                         if ( cons_cols >= l_len + 14 + 14 )   // 14 is the length of MIPS(nnnn.nn) and SIOS(nnnnnnn)
                         {
-                            sprintf (ibuf, "InstCnt(%s) MIPS(%4.1d.%2.2d) SIOS(%7.1d)", 
+                            sprintf (ibuf, "InstCnt( %s) MIPS(%4.1d.%2.2d) SIOS(%7.1d)", 
                                 fmt_int,
                                 sysblk.mipsrate / 1000000, 
                                (sysblk.mipsrate % 1000000) / 10000,
@@ -2930,7 +2923,7 @@ FinishShutdown:
                         }
                         else if ( cons_cols >= l_len + 14 )
                         {
-                            sprintf (ibuf, "InstCnt(%s) MIPS(%4.1d.%2.2d)", 
+                            sprintf (ibuf, "InstCnt( %s) MIPS(%4.1d.%2.2d)", 
                                 fmt_int,
                                 sysblk.mipsrate / 1000000, 
                                (sysblk.mipsrate % 1000000) / 10000 );
