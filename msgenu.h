@@ -776,6 +776,17 @@
 #define HHCPT002E "Trace is busy"
 #define HHCPT003I "Ptt(%s%s%s%s%s%s%s%s%s%s%s %s %s) to(%d %d)"
 
+/* scedasd.c */
+#define HHCSC001E "Load from file(%s) failed: %s"
+#define HHCSC003E "Load from path(%s) failed: %s"
+#define HHCSC011E "set_sce_dir: %s: %s"
+#define HHCSC012E "set_sce_basedir: %s: %s"
+#define HHCSC031E "load_main: %s: %s"
+#define HHCSC032W "load_main: terminated at end of mainstor"
+#define HHCSC041E "File(%s) open error: %s"
+#define HHCSC101E "access error: %s: %s"
+#define HHCSC201E "File(%S) access error: %s"
+
 /* timer.c */
 #define HHCTT001W "Timer thread set priority(%d) failed: (%s)"
 #define HHCTT002I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"

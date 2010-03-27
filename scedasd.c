@@ -40,7 +40,7 @@ char tempdir[MAX_PATH];
     else
         if(!realpath(path,tempdir))
         {
-            logmsg(_("HHCSC011E set_sce_dir: %s: %s\n"),path,strerror(errno));
+            WRITEMSG(HHCSC011E,path,strerror(errno));
             sce_basedir = NULL;
         }
         else
@@ -66,7 +66,7 @@ char tempdir[MAX_PATH];
 
     if(!realpath(path,tempdir))
     {
-        logmsg(_("HHCSC012E set_sce_basedir: %s: %s\n"),path,strerror(errno));
+        WRITEMSG(HHCSC012E,path,strerror(errno));
         sce_basedir = NULL;
         return NULL;
     }
@@ -173,14 +173,14 @@ int     rc = 0;                         /* Return codes (work)       */
     /* Construct and check full pathname */
     if(!check_sce_filepath(fname,filename))
     {
-        logmsg(_("HHCSC001E Load from %s failed: %s\n"),fname,strerror(errno));
+        WRITEMSG(HHCSC001E,fname,strerror(errno));
         return -1;
     }
     
     fp = fopen(filename, "r");
     if(fp == NULL)
     {
-        logmsg(_("HHCSC002E Load from %s failed: %s\n"),fname,strerror(errno));
+        WRITEMSG(HHCSC001E,fname,strerror(errno));
         return -1;
     }
 
@@ -209,7 +209,7 @@ int     rc = 0;                         /* Return codes (work)       */
             /* Construct and check full pathname */
             if(!check_sce_filepath(pathname,filename))
             {
-                logmsg(_("HHCSC003E Load from %s failed: %s\n"),pathname,strerror(errno));
+                WRITEMSG(HHCSC003E,pathname,strerror(errno));
                 return -1;
             }
 
@@ -245,7 +245,7 @@ U32  pagesize;
     if (fd < 0)
     {
         if(errno != ENOENT)
-            logmsg(_("HHCSC031E load_main: %s: %s\n"), fname, strerror(errno));
+            WRITEMSG(HHCSC031E, fname, strerror(errno));
         return fd;
     }
 
@@ -255,7 +255,7 @@ U32  pagesize;
     for( ; ; ) {
         if (pageaddr >= sysblk.mainsize)
         {
-            logmsg(_("HHCSC032W load_main: terminated at end of mainstor\n"));
+            WRITEMSG(HHCSC032W);
             close(fd);
             return rc;
         }
@@ -299,7 +299,7 @@ U64 totwrite = 0;
 #endif
     if (fd < 0)
     {
-        logmsg (_("HHCSC041E %s open error: %s\n"), fname, strerror(errno));
+        WRITEMSG (HHCSC041E, fname, strerror(errno));
         return -1;
     }
 
@@ -398,7 +398,7 @@ U64 totread = 0;
     if (fd < 0)
     {
         if(errno != ENOENT)
-            logmsg (_("HHCSC051E %s open error: %s\n"), fname, strerror(errno));
+            WRITEMSG (HHCSC041E, fname, strerror(errno));
         return -1;
     }
 
@@ -503,7 +503,7 @@ char filename[MAX_PATH];
     if(!check_sce_filepath(image,filename))
     {
         if(errno != ENOENT)
-            logmsg (_("HHCSC101E access error: %s: %s\n"), image, strerror(errno));
+            WRITEMSG (HHCSC101E, image, strerror(errno));
         return FALSE;
     }
 
@@ -533,7 +533,7 @@ char    fname[MAX_PATH];
         if(!check_sce_filepath((char*)scediov_bk->filename,fname))
         {
             if(errno != ENOENT)
-                logmsg (_("HHCSC201E access error: %s: %s\n"), fname, strerror(errno));
+                WRITEMSG (HHCSC201E, fname, strerror(errno));
             return FALSE;
         }
         FETCH_DW(sto,scediov_bk->sto);
@@ -565,7 +565,7 @@ char    fname[MAX_PATH];
         if(!check_sce_filepath((char*)scediov_bk->filename,fname))
         {
             if(errno != ENOENT)
-                logmsg (_("HHCSC202I access error: %s: %s\n"), fname, strerror(errno));
+                WRITEMSG (HHCSC201E, fname, strerror(errno));
 
             /* A file not found error may be expected for a create request */
             if(!(errno == ENOENT && scediov_bk->type == SCCB_SCEDIOV_TYPE_CREATE))
