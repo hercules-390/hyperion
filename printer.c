@@ -517,7 +517,7 @@ int             rc;                     /* Return code               */
     }
 
     /* Log start of child process */
-    WRITEMSG (HHCPR007I,, dev->devnum, pid);
+    WRITEMSG (HHCPR007I, dev->devnum, pid);
     dev->ptpcpid = pid;
 
 #else /* !defined( _MSVC_ ) */
