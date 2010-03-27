@@ -58,7 +58,7 @@ BYTE     psw[16];
 
     if (argc > 2)
     {
-        logmsg( _("HHCSR101E Too many arguments\n"));
+        WRITEMSG(HHCSR101E);
         return -1;
     }
 
@@ -68,7 +68,7 @@ BYTE     psw[16];
     file = SR_OPEN (fn, "wb");
     if (file == NULL)
     {
-        logmsg( _("HHCSR102E %s open error: %s\n"),fn,strerror(errno));
+        WRITEMSG(HHCSR102E,fn,strerror(errno));
         return -1;
     }
 
@@ -112,13 +112,11 @@ BYTE     psw[16];
         dev = sr_active_devices();
         if (dev == NULL) break;
         if (i % 500 == 0)
-            logmsg( _("HHCSR103W Waiting for device %4.4X\n"),
-                    dev->devnum);
+            WRITEMSG(HHCSR103W,dev->devnum);
         usleep (10000);
     }
     if (dev != NULL)
-        logmsg( _("HHCSR104W Device %4.4X still busy, proceeding anyway\n"),
-                dev->devnum);
+        WRITEMSG(HHCSR104W,dev->devnum);
 
     /* Write header */
     SR_WRITE_STRING(file, SR_HDR_ID, SR_ID);
@@ -298,16 +296,16 @@ BYTE     psw[16];
     return 0;
 
 sr_write_error:
-    logmsg(_("HHCSR010E write error: %s\n"), strerror(errno));
+    WRITEMSG(HHCSR010E, strerror(errno));
     goto sr_error_exit;
 sr_value_error:
-    logmsg(_("HHCSR013E value error, incorrect length\n"));
+    WRITEMSG(HHCSR013E);
     goto sr_error_exit;
 sr_string_error:
-    logmsg(_("HHCSR014E string error, incorrect length\n"));
+    WRITEMSG(HHCSR014E);
     goto sr_error_exit;
 sr_error_exit:
-    logmsg(_("HHCSR015E error processing file %s\n"),fn);
+    WRITEMSG(HHCSR015E,fn);
     SR_CLOSE (file);
     return -1;
 }
@@ -336,7 +334,7 @@ S64      dreg;
 
     if (argc > 2)
     {
-        logmsg( _("HHCSR101E Too many arguments\n"));
+        WRITEMSG(HHCSR101E);
         return -1;
     }
 
@@ -352,7 +350,7 @@ S64      dreg;
          && CPUSTATE_STOPPED != sysblk.regs[i]->cpustate)
         {
             RELEASE_INTLOCK(NULL);
-            logmsg( _("HHCSR103E All CPU's must be stopped to resume\n") );
+            WRITEMSG(HHCSR203E);
             return -1;
         }
     RELEASE_INTLOCK(NULL);
@@ -360,7 +358,7 @@ S64      dreg;
     file = SR_OPEN (fn, "rb");
     if (file == NULL)
     {
-        logmsg( _("HHCSR102E %s open error: %s\n"),fn,strerror(errno));
+        WRITEMSG(HHCSR102E,fn,strerror(errno));
         return -1;
     }
 
@@ -369,7 +367,7 @@ S64      dreg;
     if (key == SR_HDR_ID) SR_READ_STRING(file, buf, len);
     if (key != SR_HDR_ID || strcmp(buf, SR_ID))
     {
-        logmsg( _("HHCSR104E File identifier error\n"));
+        WRITEMSG(HHCSR204E);
         goto sr_error_exit;
     }
 
@@ -387,7 +385,7 @@ S64      dreg;
 
         case SR_HDR_DATE:
             SR_READ_STRING(file, buf, len);
-            logmsg( _("HHCSR001I Resuming suspended file created %s"), buf);
+            WRITEMSG(HHCSR001I, buf);
             break;
 
         case SR_SYS_STARTED_MASK:
@@ -431,7 +429,7 @@ S64      dreg;
 #endif
             if (i < 0)
             {
-                logmsg( _("HHCSR105E Archmode %s not supported\n"), buf);
+                WRITEMSG(HHCSR105E, buf);
                 goto sr_error_exit;
             }
             sysblk.arch_mode = i;
@@ -449,7 +447,7 @@ S64      dreg;
             SR_READ_VALUE(file, len, &len, sizeof(len));
             if (len > sysblk.mainsize)
             {
-                logmsg( _("HHCSR106E Mainsize mismatch: %d" "M expected %d" "M\n"),
+                WRITEMSG(HHCSR106E,
                        len / (1024*1024), sysblk.mainsize / (1024*1024));
                 goto sr_error_exit;
             }
@@ -458,7 +456,7 @@ S64      dreg;
         case SR_SYS_MAINSTOR:
             if (len > sysblk.mainsize)
             {
-                logmsg( _("HHCSR107E Mainsize mismatch: %d" "M expected %d" "M\n"),
+                WRITEMSG(HHCSR106E,
                        len / (1024*1024), sysblk.mainsize / (1024*1024));
                 goto sr_error_exit;
             }
@@ -469,7 +467,7 @@ S64      dreg;
             SR_READ_VALUE(file, len, &len, sizeof(len));
             if (len > sysblk.mainsize/STORAGE_KEY_UNITSIZE)
             {
-                logmsg( _("HHCSR108E Storkey size mismatch: %d expected %d\n"),
+                WRITEMSG(HHCSR108E,
                        len, sysblk.mainsize/STORAGE_KEY_UNITSIZE);
                 goto sr_error_exit;
             }
@@ -478,7 +476,7 @@ S64      dreg;
         case SR_SYS_STORKEYS:
             if (len > sysblk.mainsize/STORAGE_KEY_UNITSIZE)
             {
-                logmsg( _("HHCSR109E Storkey size mismatch: %d expected %d\n"),
+                WRITEMSG(HHCSR108E,
                        len, sysblk.mainsize/STORAGE_KEY_UNITSIZE);
                 goto sr_error_exit;
             }
@@ -489,7 +487,7 @@ S64      dreg;
             SR_READ_VALUE(file, len, &len, sizeof(len));
             if (len > sysblk.xpndsize)
             {
-                logmsg( _("HHCSR110E Xpndsize mismatch: %d" "M expected %d" "M\n"),
+                WRITEMSG(HHCSR110E,
                        len / (1024*1024), sysblk.xpndsize / (1024*1024));
                 goto sr_error_exit;
             }
@@ -498,7 +496,7 @@ S64      dreg;
         case SR_SYS_XPNDSTOR:
             if (len > sysblk.xpndsize)
             {
-                logmsg( _("HHCSR111E Xpndsize mismatch: %d" "M expected %d" "M\n"),
+                WRITEMSG(HHCSR110E,
                        len / (1024*1024), sysblk.xpndsize / (1024*1024));
                 goto sr_error_exit;
             }
@@ -620,24 +618,21 @@ S64      dreg;
             SR_READ_VALUE(file, len, &i, sizeof(i));
             if (i >= MAX_CPU_ENGINES)
             {
-                logmsg( _("HHCSR113E %s%02X exceeds max allowed cpu (%02d)\n"),
-                       "CP", i, MAX_CPU_ENGINES-1);
+                WRITEMSG(HHCSR113E, "CP", i, MAX_CPU_ENGINES-1);
                 goto sr_error_exit;
             }
             OBTAIN_INTLOCK(NULL);
             if (IS_CPU_ONLINE(i))
             {
                 RELEASE_INTLOCK(NULL);
-                logmsg( _("HHCSR114E %s%02X already configured\n" ), 
-                    PTYPSTR(i), i);
+                WRITEMSG(HHCSR114E, PTYPSTR(i), i);
                 goto sr_error_exit;
             }
             rc = configure_cpu(i);
             RELEASE_INTLOCK(NULL);
             if (rc < 0)
             {
-                logmsg( _("HHCSR115E %s%02X unable to configure online\n"), 
-                    PTYPSTR(i), i);
+                WRITEMSG(HHCSR115E, PTYPSTR(i), i);
                 goto sr_error_exit;
             }
             regs = sysblk.regs[i];
@@ -652,8 +647,7 @@ S64      dreg;
             if (regs == NULL) goto sr_null_regs_exit;
             if (len != 8 && len != 16)
             {
-                logmsg( _("HHCSR116E %s%02X invalid psw length (%d)\n"),
-                       PTYPSTR(regs->cpuad), regs->cpuad, len);
+                WRITEMSG(HHCSR116E, PTYPSTR(regs->cpuad), regs->cpuad, len);
                 goto sr_error_exit;
             }
             memset(buf, 0, 16);
@@ -680,8 +674,7 @@ S64      dreg;
             } /* switch (regs->arch_mode) */
             if (rc != 0 && memcmp(buf, zeros, len))
             {
-                logmsg( _("HHCSR117E %s%02X error loading psw - rc(%d)\n"),
-                       PTYPSTR(regs->cpuad), regs->cpuad, rc);
+                WRITEMSG(HHCSR117E, PTYPSTR(regs->cpuad), regs->cpuad, rc);
                 goto sr_error_exit;
             }
             break;
@@ -999,14 +992,12 @@ S64      dreg;
             {
                 if (attach_device (lcss, devnum, buf, devargc, devargv))
                 {
-                    logmsg( _("HHCSR118W Device %4.4X initialization failed\n"),
-                            devnum);
+                    WRITEMSG(HHCSR118W, devnum);
                 }
             }
             else if (strcmp(dev->typname, buf))
             {
-                logmsg( _("HHCSR119W Device %4.4X type mismatch; %s expected %s\n"),
-                        devnum, buf, dev->typname);
+                WRITEMSG(HHCSR119W, devnum, buf, dev->typname);
                 dev = NULL;
             }
             for (i = 0; i < devargx; i++)
@@ -1021,8 +1012,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != sizeof(ORB))
             {
-                logmsg( _("HHCSR120E Device %4.4X ORB size mismatch: %d expected %d\n"),
-                        dev->devnum, len, sizeof(ORB));
+                WRITEMSG(HHCSR120E, dev->devnum, "ORB", len, sizeof(ORB));
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->orb, len);
@@ -1032,8 +1022,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != sizeof(PMCW))
             {
-                logmsg( _("HHCSR121E Device %4.4X PMCW size mismatch: %d expected %d\n"),
-                        dev->devnum, len, sizeof(PMCW));
+                WRITEMSG(HHCSR120E, dev->devnum, "PMCW", len, sizeof(PMCW));
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->pmcw, len);
@@ -1043,8 +1032,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != sizeof(SCSW))
             {
-                logmsg( _("HHCSR122E Device %4.4X SCSW size mismatch: %d expected %d\n"),
-                        dev->devnum, len, sizeof(SCSW));
+                WRITEMSG(HHCSR120E, dev->devnum, "SCSW", len, sizeof(SCSW));
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->scsw, len);
@@ -1054,8 +1042,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != sizeof(SCSW))
             {
-                logmsg( _("HHCSR123E Device %4.4X PCI SCSW size mismatch: %d expected %d\n"),
-                        dev->devnum, len, sizeof(SCSW));
+                WRITEMSG(HHCSR120E, dev->devnum, "PCI SCSW", len, sizeof(SCSW));
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->pciscsw, len);
@@ -1065,8 +1052,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != sizeof(SCSW))
             {
-                logmsg( _("HHCSR124E Device %4.4X Attn SCSW size mismatch: %d expected %d\n"),
-                        dev->devnum, len, sizeof(SCSW));
+                WRITEMSG(HHCSR120E, dev->devnum, "ATTN SCSW", len, sizeof(SCSW));
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->attnscsw, len);
@@ -1076,8 +1062,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != 8)
             {
-                logmsg( _("HHCSR125E Device %4.4X CSW size mismatch: %d expected %d\n"),
-                        dev->devnum, len, 8);
+                WRITEMSG(HHCSR120E, dev->devnum, "CSW", len, 8);
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->csw, len);
@@ -1087,8 +1072,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != 8)
             {
-                logmsg( _("HHCSR126E Device %4.4X PCI CSW size mismatch: %d expected %d\n"),
-                        dev->devnum, len, 8);
+                WRITEMSG(HHCSR120E, dev->devnum, "PCI CSW", len, 8);
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->pcicsw, len);
@@ -1098,8 +1082,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != 8)
             {
-                logmsg( _("HHCSR127E Device %4.4X Attn CSW size mismatch: %d expected %d\n"),
-                        dev->devnum, len, 8);
+                WRITEMSG(HHCSR120E, dev->devnum, "ATTN CSW", len, 8);
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->attncsw, len);
@@ -1109,8 +1092,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != sizeof(ESW))
             {
-                logmsg( _("HHCSR128E Device %4.4X ESW size mismatch: %d expected %d\n"),
-                        dev->devnum, len, sizeof(ESW));
+                WRITEMSG(HHCSR120E, dev->devnum, "ESW", len, sizeof(ESW));
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->esw, len);
@@ -1120,8 +1102,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != 32)
             {
-                logmsg( _("HHCSR129E Device %4.4X ECW size mismatch: %d expected %d\n"),
-                        dev->devnum, len, 32);
+                WRITEMSG(HHCSR120E, dev->devnum, "ECW", len, 32);
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->ecw, len);
@@ -1131,8 +1112,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != 32)
             {
-                logmsg( _("HHCSR130E Device %4.4X Sense size mismatch: %d expected %d\n"),
-                        dev->devnum, len, 32);
+                WRITEMSG(HHCSR120E, dev->devnum, "Sense", len, 32);
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->ecw, len);
@@ -1147,8 +1127,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != 11)
             {
-                logmsg( _("HHCSR131E Device %4.4X PGID size mismatch: %d expected %d\n"),
-                        dev->devnum, len, 11);
+                WRITEMSG(HHCSR120E, dev->devnum, "PGID", len, 11);
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->pgid, len);
@@ -1159,8 +1138,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);   
             if (len != 11)   
             {   
-                logmsg( _("HHCSR134E Device %4.4X DRVPWD size mismatch: %d expected %d\n"),   
-                        dev->devnum, len, 11);   
+                WRITEMSG(HHCSR120E, dev->devnum, "DRVPWD", len, 11);   
                 goto sr_error_exit;   
             }   
             SR_READ_BUF(file, &dev->drvpwd, len);   
@@ -1250,8 +1228,7 @@ S64      dreg;
             SR_READ_VALUE(file, len, &hw, sizeof(hw));
             if (hw != dev->devtype)
             {
-                logmsg( _("HHCSR132E Device %4.4X type mismatch: %4.4x expected %4.4x\n"),
-                        dev->devnum, hw, dev->devtype);
+                WRITEMSG(HHCSR132E, dev->devnum, hw, dev->devtype);
                 goto sr_error_exit;
             }
             if (dev->hnd->hresume)
@@ -1264,7 +1241,7 @@ S64      dreg;
         default:
             if ((key & SR_KEY_ID_MASK) != SR_KEY_ID)
             {
-                logmsg( _("HHCSR999E Invalid key %8.8x\n"), key);
+                WRITEMSG(HHCSR999E, key);
                 goto sr_error_exit;
             }
             SR_READ_SKIP(file, len);
@@ -1302,8 +1279,7 @@ S64      dreg;
             } /* switch (sysblk.arch_mode) */
             if (rc != 0)
             {
-                logmsg( _("HHCSR133E %4.4X Unable to resume suspended device: %s\n"),
-                        dev->devnum, strerror(errno));
+                WRITEMSG(HHCSR133E, dev->devnum, strerror(errno));
                 goto sr_error_exit;
             }
         } /* If suspended device */
@@ -1331,7 +1307,7 @@ S64      dreg;
     return 0;
 
 sr_read_error:
-    logmsg(_("HHCSR011E read error: %s\n"), strerror(errno));
+    WRITEMSG(HHCSR011E, strerror(errno));
     goto sr_error_exit;
     /*
 sr_seek_error:
@@ -1339,16 +1315,16 @@ sr_seek_error:
     goto sr_error_exit;
     */
 sr_string_error:
-    logmsg(_("HHCSR014E string error, incorrect length\n"));
+    WRITEMSG(HHCSR014E);
     goto sr_error_exit;
 sr_value_error:
-    logmsg(_("HHCSR001E value error, incorrect length\n"), fn);
+    WRITEMSG(HHCSR013E);
     goto sr_error_exit;
 sr_null_regs_exit:
-    logmsg(_("HHCSR016E CPU key %8.8x found but no active CPU\n"), key);
+    WRITEMSG(HHCSR016E, key);
     goto sr_error_exit;
 sr_error_exit:
-    logmsg(_("HHCSR015E Error processing file %s\n"), fn);
+    WRITEMSG(HHCSR015E, fn);
     SR_CLOSE (file);
     return -1;
 }

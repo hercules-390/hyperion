@@ -308,7 +308,7 @@
 #define HHC1C001A "Enter input for console device(%4.4X)"
 
 /* config.c */
-#define HHCCF040E "Cannot create %s%02X thread: %s"
+#define HHCCF040E "Cannot create processor(%s%02X) thread: %s"
 #define HHCCF041E "Device(%d:%4.4X) already exists"
 #define HHCCF042E "Devtyp(%s) not recognized"
 #define HHCCF043E "Cannot obtain device block: %s"
@@ -351,28 +351,28 @@
 #define HHCTE090E "Device(%4.4X): Malloc() failed for resume buf: (%s)"
 
 /* cpu.c */
-#define HHCCP001W "%s%02X thread set priority(%d) failed: (%s)"
-#define HHCCP002I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s%02X)"
-#define HHCCP003I "%s%02X architecture mode(%s)"
-#define HHCCP004I "%s%02X Vector Facility online"
+#define HHCCP001W "Processor(%s%02X) thread set priority(%d) failed: (%s)"
+#define HHCCP002I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(processor %s%02X)"
+#define HHCCP003I "Processor(%s%02X) architecture mode(%s)"
+#define HHCCP004I "Processor(%s%02X) Vector Facility online"
 #define HHCCP006S "Cannot create timer thread: (%s)"
-#define HHCCP007I "%s%02X architecture mode set to (%s)"
-#define HHCCP008I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s%02X)"
-#define HHCCP010I "%s%02X store status completed"
-#define HHCCP011I "%s%02X disabled wait state(%s)"
+#define HHCCP007I "Processor(%s%02X) architecture mode(%s) set"
+#define HHCCP008I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(processor %s%02X)"
+#define HHCCP010I "Processor(%s%02X) store status completed"
+#define HHCCP011I "Processor(%s%02X) disabled wait state(%s)"
 #define HHCCP014I "%s%s%s%02X: (%s) code(%4.4X) ilc(%d%s)"
-#define HHCCP015I "%s%02X PER event: code(%4.4X) perc(%2.2X) addr(" F_VADR ")"
-#define HHCCP016I "%s%02X: Program interrupt loop: PSW(%s)"
+#define HHCCP015I "Processor(%s%02X) PER event: code(%4.4X) perc(%2.2X) addr(" F_VADR ")"
+#define HHCCP016I "Processor(%s%02X) Program interrupt loop: PSW(%s)"
 #define HHCCP022I "Machine Check code (%16.16" I64_FMT "u)"
 #define HHCCP043I "Wait state PSW loaded: (%s)"
 #define HHCCP044I "I/O interrupt code(%4.4X) CSW(%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X)"
 #define HHCCP045I "I/O interrupt code(%8.8X) parm(%8.8X)"
 #define HHCCP046I "I/O interrupt code(%8.8X0 parm(%8.8X), id(%8.8X)"
-#define HHCCP080E "%s%02X malloc failed for archjmp regs: (%s)"
+#define HHCCP080E "Processor(%s%02X) malloc failed for archjmp regs: (%s)"
 
 /* crypto/dyncrypt.c */
 #define HHCRY001I "Crypto module loaded (c) Copyright Bernard van der Helm, 2003-2010"
-#define HHCRY002I "  Active: %s"
+#define HHCRY002I "Active: %s"
 
 /* ctc_ctci.c */
 #define HHCCT037E "Device(%4.4X) Unable to allocate CTCBLK"
@@ -723,8 +723,8 @@
 #define HHCLG017S "Log file(%s) fdopen failed %s"
 
 /* machchk.c */
-#define HHCCP017I "%s%02X: Machine check due to host error(%s)"
-#define HHCCP018I "%s%02X: Check-Stop due to host error: %s"
+#define HHCCP017I "Processor(%s%02X) Machine check due to host error(%s)"
+#define HHCCP018I "Processor(%s%02X) Check-Stop due to host error: %s"
 #define HHCCP019I "Machine Check code(%16.16" I64_FMT "u)"
 #define HHCCP020E "Signal USR2 received for undetermined device"
 #define HHCCP021E "Signal USR2 received for device(%4.4X)"
@@ -812,13 +812,13 @@
 #define HHCTA389E "Synchronize error on %u:%4.4X=%s; errno=%d: %s"
 
 /* service.c */
-#define HHCCP012I "%s%02X: Vector Facility configured offline"
-#define HHCCP013I "%s%02X: Vector Facility configured online"
+#define HHCCP012I "Processor(%s%02X) Vector Facility configured offline"
+#define HHCCP013I "Processor(%s%02X) Vector Facility configured online"
 #define HHCCP036E "SCP not receiving priority messages"
 #define HHCCP037E "SCP not receiving commands"
 #define HHCCP038E "No SCP command"
 #define HHCCP081E "SCP not receiving quiesce signals"
-#define HHCCP040I "Control program information: type(%s) name(%s) sysplex(%s) level(%16.16"I64_FMT"X)"
+#define HHCCP040I "Control program information type(%s) name(%s) sysplex(%s) level(%16.16"I64_FMT"X)"
 #define HHCCP041I "SYSCONS interface active"
 #define HHCCP042I "SYSCONS interface inactive"
 #define HHCCP090W "The configuration has been placed into a system check-stop state because of an incompatible service call"
@@ -883,7 +883,7 @@
 #define HHCSH999E "OPTION_SHARED_DEVICES not defined"
 
 /* sie.c */ /* BHe should we calloc the sieregs? Why not statical?? */
-#define HHCCP079E "%s%02X: calloc failed for sie regs: %s"
+#define HHCCP079E "Processor(%s%02X) calloc failed for sie regs: %s"
 
 /* sockdev.c */
 #define HHCSD001E "Device(%4.4X) already bound to socket(%s)"
@@ -910,6 +910,36 @@
 #define HHCSD025I "Client(%s) ip(%s) disconnected from device(%4.4X) (%s)"
 #define HHCSD026E "Client(%s) ip(%s) connection to device(%4.4X) (%s) rejected: by onconnect callback"
 
+/* sr.c */
+#define HHCSR001I "Resuming suspended file(%s) created"
+#define HHCSR010E "Write error(%s)"
+#define HHCSR011E "Read error(%s)"
+#define HHCSR013E "Value error, incorrect length"
+#define HHCSR014E "String error, incorrect length"
+#define HHCSR015E "Error processing file(%s)"
+#define HHCSR016E "CPU key(%8.8X) found but no active CPU"
+#define HHCSR101E "Too many arguments"
+#define HHCSR102E "File(%s) open error(%s)"
+#define HHCSR103W "Waiting for device(%4.4X)"
+#define HHCSR104W "Device(%4.4X) still busy, proceeding anyway"
+#define HHCSR105E "Archmode(%s) not supported"
+#define HHCSR106E "Mainsize mismatch: %dM expected %dM"
+#define HHCSR108E "Storkey size mismatch: %d expected %d"
+#define HHCSR110E "Xpndsize mismatch: %dM expected %dM"
+#define HHCSR113E "Processor(%s%02X) exceeds max allowed cpu(%02d)"
+#define HHCSR114E "Processor(%s%02X) already configured"
+#define HHCSR115E "Processor(%s%02X) unable to configure online"
+#define HHCSR116E "Processor(%s%02X) invalid psw length(%d)"
+#define HHCSR117E "Processor(%s%02X) error loading psw - rc(%d)"
+#define HHCSR118W "Device(%4.4X) initialization failed"
+#define HHCSR119W "Device(%4.4X) type mismatch; %s expected %s"
+#define HHCSR120E "Device(%4.4X) %s size mismatch: %d expected %d"
+#define HHCSR132E "Device(%4.4X) type mismatch: %4.4X expected %4.4X"
+#define HHCSR133E "Device(%4.4X) Unable to resume suspended device: %s"
+#define HHCSR203E "All CPU's must be stopped to resume"
+#define HHCSR204E "File identifier error"
+#define HHCSR999E "Invalid key %8.8x"
+
 /* timer.c */
 #define HHCTT001W "Timer thread set priority(%d) failed: (%s)"
 #define HHCTT002I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
@@ -920,4 +950,4 @@
 #define HHCIN011I "%s"
 #define HHCIN012I "Built on (%s) at (%s)"
 #define HHCIN013I "Build information:"
-#define HHCIN014I "  %s"
+#define HHCIN014I "%s"
