@@ -385,8 +385,7 @@ void d250_bio_interrupt(DEVBLK *dev, U64 intparm, BYTE status, BYTE subcode)
    
    if (dev->ccwtrace)
    {
-      logmsg (_("%4.4X:HHCVM023I Triggered Block I/O interrupt: "
-                "code=%4.4X parm=%16.16X status=%2.2X subcode=%2.2X\n"),
+      WRITEMSG (HHCVM023I,
               sysblk.biodev->devnum,
               sysblk.servcode,
               sysblk.bioparm,
@@ -442,7 +441,7 @@ int     cc;                         /* Condition code to return      */
       STORE_FW(&biopl->endblk,(U32)bioenv->endblk);
       if (dev->ccwtrace)
       {
-         logmsg ("%4.4X:HHCVM008I d250_init32 s=%i,o=%i,b=%i,e=%i\n",
+         WRITEMSG (HHCVM008I,
               dev->devnum,
               blksize,
               offset,
@@ -498,7 +497,7 @@ int     cc;                          /* condition code               */
       STORE_DW(&biopl->endblk,bioenv->endblk);
       if (dev->ccwtrace)
       {
-         logmsg ("%4.4X:HHCVM008I d250_init64 s=%i,o=%lli,b=%lli,e=%lli\n",
+         WRITEMSG (HHCVM008I,
               dev->devnum,
               blksize,
               offset,
@@ -546,8 +545,7 @@ struct VMBIOENV *bioenv;  /* -->allocated environement               */
 
    if (dev->ccwtrace)
    {
-      logmsg (_("%4.4X:HHCVM007I d250_init BLKTAB: "
-                "type=%4.4X arch=%i,512=%i,1024=%i,2048=%i,4096=%i\n"),
+      WRITEMSG (HHCVM007I,
               dev->devnum,
               blktab->devt,
               blktab->darch,
@@ -606,7 +604,7 @@ struct VMBIOENV *bioenv;  /* -->allocated environement               */
    
    if (!(bioenv=(struct VMBIOENV *)malloc(sizeof(struct VMBIOENV))))
    {
-      logmsg (_("HHCVM006E VM BLOCK I/O environment malloc failed\n"));
+      WRITEMSG (HHCVM006E);
       *rc = RC_ERROR;  /* Indicate an irrecoverable error occurred */
       *cc = CC_FAILED;
       return NULL;
@@ -715,8 +713,7 @@ void d250_preserve(DEVBLK *dev)
        /* Save the pending sense */
        memcpy(&dev->vmd250env->sense,&dev->sense,sizeof(dev->sense));
        if (dev->ccwtrace)
-       {  logmsg(_("%4.4X:HHCVM012I d250_preserve pending sense preserved\n"),
-              dev->devnum);
+       {  WRITEMSG(HHCVM012I, dev->devnum);
        }
     }
     
@@ -755,8 +752,7 @@ void d250_restore(DEVBLK *dev)
        /* Restore the pending sense */
        memcpy(&dev->sense,&dev->vmd250env->sense,sizeof(dev->sense));
        if (dev->ccwtrace)
-       {  logmsg (_("%4.4X:HHCVM013I d250_restore pending sense restored\n"),
-              dev->devnum);
+       {  WRITEMSG (HHCVM013I, dev->devnum);
        }
     }
     dev->ioactive = DEV_SYS_NONE;
@@ -822,8 +818,7 @@ int       cc;                        /* Condition code to return     */
        free(bioenv);
        if (dev->ccwtrace)
        {
-           logmsg(_("%4.4X:HHCVM022I d250_remove Block I/O environment removed\n"),
-              dev->devnum);
+           WRITEMSG(HHCVM022I, dev->devnum);
        }
        *rc = RC_SUCCESS;
        cc = CC_SUCCESS ; /* Set that the function has succeeded */
@@ -844,8 +839,7 @@ U16  residual;     /* Residual byte count */
     obtain_lock(&dev->lock);
     if (dev->ccwtrace)
     {
-       logmsg(_("%4.4X:HHCVM018I d250_read %d-byte block (rel. to 0): %d\n"),
-                dev->devnum, blksize, pblknum);
+       WRITEMSG(HHCVM018I, dev->devnum, blksize, pblknum);
     }
 
     if (dev->vmd250env->isCKD)
@@ -873,9 +867,7 @@ U16  residual;     /* Residual byte count */
        
        if (dev->ccwtrace)
        {
-          logmsg(_("%4.4X:HHCVM021I d250_read "
-                   "FBA unit status=%2.2X residual=%d\n"),
-                 dev->devnum, unitstat, residual );
+          WRITEMSG(HHCVM021I, dev->devnum, unitstat, residual );
        }
        
        /* Call the I/O end exit */
@@ -911,8 +903,7 @@ U16  residual;     /* Residual byte count */
     obtain_lock(&dev->lock);
     if (dev->ccwtrace)
     {
-       logmsg(_("%4.4X:HHCVM018I d250_write %d-byte block (rel. to 0): %d\n"),
-              dev->devnum, blksize, pblknum);
+       WRITEMSG(HHCVM018I, dev->devnum, blksize, pblknum);
     }
 
     if (!dev->vmd250env)
@@ -944,9 +935,7 @@ U16  residual;     /* Residual byte count */
                            buffer, &unitstat, &residual );
        if (dev->ccwtrace)
        {
-          logmsg(_("%4.4X:HHCVM021I d250_write "
-                   "FBA unit status=%2.2X residual=%d\n"),
-                   dev->devnum, unitstat, residual );
+          WRITEMSG(HHCVM021I, dev->devnum, unitstat, residual );
        }
 
        /* Call the I/O end exit */
@@ -1258,8 +1247,7 @@ IOCTL32 *asyncp;     /* Pointer to async thread's storage */
 
        if (dev->ccwtrace)
        {
-          logmsg(_("%4.4X:HHCVM019I ASYNC BIOEL=%8.8X, "
-                   "Entries=%d, Key=%2.2X, Intp=%8.8X\n"),
+          WRITEMSG(HHCVM019I,
                    dev->devnum,
                    ioctl.listaddr,
                    ioctl.blkcount,
@@ -1274,7 +1262,7 @@ IOCTL32 *asyncp;     /* Pointer to async thread's storage */
        /* Get the storage for the thread's parameters */
        if (!(asyncp=(IOCTL32 *)malloc(sizeof(IOCTL32))))
        {
-          logmsg (_("HHCVM011E VM BLOCK I/O request malloc failed\n"));
+          WRITEMSG (HHCVM011E);
           *rc = RC_ERROR;
           return CC_FAILED;
        }
@@ -1289,8 +1277,7 @@ IOCTL32 *asyncp;     /* Pointer to async thread's storage */
                asyncp, tname)
           )
        {
-          logmsg (_("%4.4X:HHCVM010E Block I/O create_thread error: %s"),
-                  dev->devnum, strerror(errno));
+          WRITEMSG (HHCVM010E, dev->devnum, strerror(errno));
           release_lock (&dev->lock);
           *rc = RC_ERROR;
           return CC_FAILED;
@@ -1305,8 +1292,7 @@ IOCTL32 *asyncp;     /* Pointer to async thread's storage */
        /* Call the 32-bit BIOE request processor */
        if (dev->ccwtrace)
        {
-          logmsg(_("%4.4X:HHCVM019I d250_iorq32 SYNC BIOEL=%8.8X, "
-                   "Entries=%d, Key=%2.2X\n"),
+          WRITEMSG(HHCVM119I,
                    dev->devnum,
                    ioctl.listaddr,
                    ioctl.blkcount,
@@ -1317,9 +1303,7 @@ IOCTL32 *asyncp;     /* Pointer to async thread's storage */
 
        if (dev->ccwtrace)
        {
-          logmsg(_("%4.4X:HHCVM017I d250_iorq32 "
-                    "PSC=%d, succeeded=%d, failed=%d\n"),
-                   dev->devnum,psc,ioctl.goodblks,ioctl.badblks);
+          WRITEMSG(HHCVM017I, dev->devnum,psc,ioctl.goodblks,ioctl.badblks);
        }
 
    }
@@ -1345,8 +1329,7 @@ IOCTL32 *asyncp;     /* Pointer to async thread's storage */
          *rc = RC_REM_PART;
          return CC_PARTIAL;
       default:
-         logmsg (_("HHCVM009E d250_list32 error: PSC=%i\n"),
-                 psc);
+         WRITEMSG (HHCVM009E, psc);
          *rc = RC_ERROR;
          return CC_FAILED;
    }
@@ -1396,8 +1379,7 @@ RADR   bufend;    /* Last byte read or written                 */
    /* of the device by reserving it if shared and locking it   */
    if (ioctl->dev->ccwtrace)
    {
-      logmsg ("%4.4X:HHCVM015I d250_list32 BIOE's=%i A:"
-                  F_RADR " I/O key=%2.2X\n",
+      WRITEMSG (HHCVM015I,
                ioctl->dev->devnum,
                ioctl->blkcount,
                ioctl->listaddr,
@@ -1429,9 +1411,7 @@ RADR   bufend;    /* Last byte read or written                 */
             (bioebeg,bioeend,ACCTYPE_READ,ioctl->key,ioctl->regs);
       if (ioctl->dev->ccwtrace)
       {
-         logmsg(_("%4.4X:HHCVM020I d250_list32 xcode=%4.4X "
-                  "BIOE32=%8.8X-%8.8X FETCH key=%2.2X\n"),
-                  ioctl->dev->devnum,xcode,bioebeg,bioeend,ioctl->key);
+         WRITEMSG(HHCVM020I,ioctl->dev->devnum,xcode,bioebeg,bioeend,ioctl->key);
       }
       if ( xcode )
       {
@@ -1486,9 +1466,7 @@ RADR   bufend;    /* Last byte read or written                 */
       
          if (ioctl->dev->ccwtrace)
          {
-            logmsg (_("%4.4X:HHCVM016I d250_list32 BIOE %8.8X"
-                       ", oper=%2.2X, block=%i"
-                       ", buffer=%8.8X\n"),
+            WRITEMSG (HHCVM016I,
                      ioctl->dev->devnum,
                      bioebeg,
                      bioe.type,
@@ -1508,8 +1486,7 @@ RADR   bufend;    /* Last byte read or written                 */
                   (bufbeg,bufend,ACCTYPE_READ,ioctl->key,ioctl->regs);
             if (ioctl->dev->ccwtrace)
             {
-               logmsg(_("%4.4X:HHCVM020I d250_list32 xcode=%4.4X "
-                       "Rd Buf=%8.8X-%8.8X FETCH key=%2.2X\n"),
+               WRITEMSG(HHCVM120I,
                        ioctl->dev->devnum,xcode,bufbeg,bufend,ioctl->key);
             }
             switch ( xcode )
@@ -1550,8 +1527,7 @@ RADR   bufend;    /* Last byte read or written                 */
                      (bufbeg,bufend,ACCTYPE_WRITE,ioctl->key,ioctl->regs);
                if (ioctl->dev->ccwtrace)
                {
-                  logmsg(_("%4.4X:HHCVM020I d250_list32 xcode=%4.4X "
-                           "Wr Buf=%8.8X-%8.8X STORE key=%2.2X\n"),
+                  WRITEMSG(HHCVM220I,
                            ioctl->dev->devnum,
                            xcode,bufbeg,
                            bufend,
@@ -1609,8 +1585,7 @@ RADR   bufend;    /* Last byte read or written                 */
             (bioebeg+1,bioebeg+1,ACCTYPE_WRITE,ioctl->key,ioctl->regs);
       if (ioctl->dev->ccwtrace)
       {
-         logmsg(_("%4.4X:HHCVM020I d250_list32 xcode=%4.4X "
-                  "Status=%8.8X-%8.8X STORE key=%2.2X\n"),
+         WRITEMSG(HHCVM320I,
                   ioctl->dev->devnum,xcode,bioebeg+1,bioebeg+1,ioctl->key);
       }
 
@@ -1630,8 +1605,7 @@ RADR   bufend;    /* Last byte read or written                 */
      
       if (ioctl->dev->ccwtrace)
       {
-         logmsg (_("%4.4X:HHCVM014I d250_list32 BIOE=%8.8X status=%2.2X\n"),
-                 ioctl->dev->devnum,bioebeg,status); 
+         WRITEMSG (HHCVM014I, ioctl->dev->devnum,bioebeg,status); 
       }
 
       /* Count if this BIOE was a success or failure */
@@ -1880,8 +1854,7 @@ IOCTL64 *asyncp;     /* Pointer to async thread's free standing storage */
 
        if (dev->ccwtrace)
        {
-          logmsg(_("%4.4X:HHCVM019I ASYNC BIOEL=%16.16X, "
-                   "Entries=%d, Key=%2.2X, Intp=%16.16X\n"),
+          WRITEMSG(HHCVM219I,
                    dev->devnum,
                    ioctl.listaddr,
                    ioctl.blkcount,
@@ -1896,7 +1869,7 @@ IOCTL64 *asyncp;     /* Pointer to async thread's free standing storage */
        /* Get the storage for the thread's parameters */
        if (!(asyncp=(IOCTL64 *)malloc(sizeof(IOCTL64))))
        {
-          logmsg (_("HHCVM011E VM BLOCK I/O request malloc failed\n"));
+          WRITEMSG (HHCVM011E);
           *rc = RC_ERROR;
           return CC_FAILED;
        }
@@ -1911,8 +1884,7 @@ IOCTL64 *asyncp;     /* Pointer to async thread's free standing storage */
                asyncp, tname)
           )
        {
-          logmsg (_("%4.4X:HHCVM010E create_thread error: %s"),
-                  dev->devnum, strerror(errno));
+          WRITEMSG (HHCVM110E, dev->devnum, strerror(errno));
           release_lock (&dev->lock);
           *rc = RC_ERROR;
           return CC_FAILED;
@@ -1925,8 +1897,7 @@ IOCTL64 *asyncp;     /* Pointer to async thread's free standing storage */
    {
        if (dev->ccwtrace)
        {
-          logmsg(_("%4.4X:HHCVM019I d250_iorq64 SYNC BIOEL=%16.16X, "
-                   "Entries=%d, Key=%2.2X\n"),
+          WRITEMSG(HHCVM319I,
                    dev->devnum,
                    ioctl.listaddr,
                    ioctl.blkcount,
@@ -1937,9 +1908,7 @@ IOCTL64 *asyncp;     /* Pointer to async thread's free standing storage */
 
        if (dev->ccwtrace)
        {
-          logmsg(_("%4.4X:HHCVM017I d250_iorq64 "
-                   "PSC=%d, succeeded=%d, failed=%d\n"),
-                   dev->devnum,psc,ioctl.goodblks,ioctl.badblks);
+          WRITEMSG(HHCVM117I, dev->devnum,psc,ioctl.goodblks,ioctl.badblks);
        }
    }
    
@@ -1964,8 +1933,7 @@ IOCTL64 *asyncp;     /* Pointer to async thread's free standing storage */
          *rc = RC_REM_PART;
          return CC_PARTIAL;
       default:
-         logmsg (_("HHCVM009E d250_list64 error: PSC=%i\n"),
-                 psc);
+         WRITEMSG (HHCVM109E, psc);
          *rc = RC_ERROR;
          return CC_FAILED;
    } /* end switch(psc) */
@@ -1999,8 +1967,7 @@ RADR   bufend;    /* Last byte read or written                 */
    /* of the device by reserving it if shared and locking it   */
    if (ioctl->dev->ccwtrace)
    {
-      logmsg (_("%4.4X:HHCVM015I d250_list64 BIOE's=%i A:"
-                  F_RADR " I/O key=%2.2X\n"),
+      WRITEMSG (HHCVM115I,
                ioctl->dev->devnum,
                ioctl->blkcount,
                ioctl->listaddr,
@@ -2032,9 +1999,7 @@ RADR   bufend;    /* Last byte read or written                 */
             (bioebeg,bioeend,ACCTYPE_READ,ioctl->key,ioctl->regs);
       if (ioctl->dev->ccwtrace)
       {
-         logmsg(_("%4.4X:HHCVM020I d250_list64 xcode=%4.4X "
-                  "BIOE64=%8.8X-%8.8X FETCH key=%2.2X\n"),
-                  ioctl->dev->devnum,xcode,bioebeg,bioeend,ioctl->key);
+         WRITEMSG(HHCVM420I,ioctl->dev->devnum,xcode,bioebeg,bioeend,ioctl->key);
       }
       if ( xcode )
       {
@@ -2089,9 +2054,7 @@ RADR   bufend;    /* Last byte read or written                 */
       
          if (ioctl->dev->ccwtrace)
          {
-            logmsg (_("%4.4X:HHCVM016I d250_list64 BIOE %16.16X"
-                       ", oper=%2.2X, block=%i"
-                       ", buffer=%16.16X\n"),
+            WRITEMSG (HHCVM116I,
                      ioctl->dev->devnum,
                      bioebeg,
                      bioe.type,
@@ -2111,8 +2074,7 @@ RADR   bufend;    /* Last byte read or written                 */
                   (bufbeg,bufend,ACCTYPE_READ,ioctl->key,ioctl->regs);
             if (ioctl->dev->ccwtrace)
             {
-               logmsg(_("%4.4X:HHCVM020I d250_list64 xcode=%4.4X "
-                       "Rd Buf=%16.16X-%16.16X FETCH key=%2.2X\n"),
+               WRITEMSG(HHCVM520I,
                        ioctl->dev->devnum,xcode,bufbeg,bufend,ioctl->key);
             }
             switch ( xcode )
@@ -2147,8 +2109,7 @@ RADR   bufend;    /* Last byte read or written                 */
                      (bufbeg,bufend,ACCTYPE_WRITE,ioctl->key,ioctl->regs);
                if (ioctl->dev->ccwtrace)
                {
-                  logmsg(_("%4.4X:HHCVM020I d250_list64 xcode=%4.4X "
-                           "Wr Buf=%16.16X-%16.16X STORE key=%2.2X\n"),
+                  WRITEMSG(HHCVM620I,
                            ioctl->dev->devnum,
                            xcode,bufbeg,
                            bufend,
@@ -2197,9 +2158,7 @@ RADR   bufend;    /* Last byte read or written                 */
             (bioebeg+1,bioebeg+1,ACCTYPE_WRITE,ioctl->key,ioctl->regs);
       if (ioctl->dev->ccwtrace)
       {
-         logmsg(_("%4.4X:HHCVM020I d250_list64 xcode=%4.4X "
-                  "Status=%16.16X-%16.16X STORE key=%2.2X\n"),
-                  ioctl->dev->devnum,xcode,bioebeg+1,bioebeg+1,ioctl->key);
+         WRITEMSG(HHCVM720I,ioctl->dev->devnum,xcode,bioebeg+1,bioebeg+1,ioctl->key);
       }
 
       /* If the status byte is store protected, give up on processing any */
@@ -2218,8 +2177,7 @@ RADR   bufend;    /* Last byte read or written                 */
      
       if (ioctl->dev->ccwtrace)
       {
-         logmsg (_("%4.4X:HHCVM014I d250_list64 BIOE=%16.16X status=%2.2X\n"),
-                 ioctl->dev->devnum,bioebeg,status); 
+         WRITEMSG (HHCVM114I,ioctl->dev->devnum,bioebeg,status); 
       }
 
       /* Count if this BIOE was a success or failure */
