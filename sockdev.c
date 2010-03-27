@@ -87,7 +87,7 @@ int unix_socket (char* path)
 {
 #if !defined( HAVE_SYS_UN_H )
     UNREFERENCED(path);
-    logmsg (_("HHCSD024E This build does not support Unix domain sockets.\n") );
+    WRITEMSG (HHCSD024E);
     return -1;
 #else // defined( HAVE_SYS_UN_H )
 
@@ -98,8 +98,7 @@ int unix_socket (char* path)
 
     if (strlen (path) > sizeof(addr.sun_path) - 1)
     {
-        logmsg (_("HHCSD008E Socket pathname \"%s\" exceeds limit of %d\n"),
-            path, (int) sizeof(addr.sun_path) - 1);
+        WRITEMSG (HHCSD008E, path, (int) sizeof(addr.sun_path) - 1);
         return -1;
     }
 
@@ -109,8 +108,7 @@ int unix_socket (char* path)
 
     if (sd == -1)
     {
-        logmsg (_("HHCSD009E Error creating socket for %s: %s\n"),
-            path, strerror(HSO_errno));
+        WRITEMSG (HHCSD009E, path, strerror(HSO_errno));
         return -1;
     }
 
@@ -122,8 +120,7 @@ int unix_socket (char* path)
         || listen (sd, 0) == -1
         )
     {
-        logmsg (_("HHCSD010E Failed to bind or listen on socket %s: %s\n"),
-            path, strerror(HSO_errno));
+        WRITEMSG (HHCSD010E, path, strerror(HSO_errno));
         return -1;
     }
 
@@ -175,8 +172,7 @@ int inet_socket (char* spec)
 
         if (!he)
         {
-            logmsg (_("HHCSD011E Failed to determine IP address from %s\n"),
-                node);
+            WRITEMSG (HHCSD011E, node);
             return -1;
         }
 
@@ -193,8 +189,7 @@ int inet_socket (char* spec)
 
         if (!se)
         {
-            logmsg (_("HHCSD012E Failed to determine port number from %s\n"),
-                service);
+            WRITEMSG (HHCSD012E, service);
             return -1;
         }
 
@@ -205,8 +200,7 @@ int inet_socket (char* spec)
 
     if (sd == -1)
     {
-        logmsg (_("HHCSD013E Error creating socket for %s: %s\n"),
-            spec, strerror(HSO_errno));
+        WRITEMSG (HHCSD009E, spec, strerror(HSO_errno));
         return -1;
     }
 
@@ -217,8 +211,7 @@ int inet_socket (char* spec)
         || listen (sd, 0) == -1
         )
     {
-        logmsg (_("HHCSD014E Failed to bind or listen on socket %s: %s\n"),
-            spec, strerror(HSO_errno));
+        WRITEMSG (HHCSD010E, spec, strerror(HSO_errno));
         return -1;
     }
 
@@ -287,8 +280,7 @@ void socket_device_connection_handler (bind_struct* bs)
 
     if (csock == -1)
     {
-        logmsg (_("HHCSD017E Connect to device %4.4X (%s) failed: %s\n"),
-            dev->devnum, bs->spec, strerror(HSO_errno));
+        WRITEMSG (HHCSD017E, dev->devnum, bs->spec, strerror(HSO_errno));
         return;
     }
 
@@ -321,9 +313,7 @@ void socket_device_connection_handler (bind_struct* bs)
      || (dev->scsw.flag3 & SCSW3_SC_PEND))
     {
         close_socket( csock );
-        logmsg (_("HHCSD015E Client %s (%s) connection to device %4.4X "
-            "(%s) rejected: device busy or interrupt pending\n"),
-            clientname, clientip, dev->devnum, bs->spec);
+        WRITEMSG (HHCSD015E, clientname, clientip, dev->devnum, bs->spec);
         release_lock (&dev->lock);
         return;
     }
@@ -333,9 +323,7 @@ void socket_device_connection_handler (bind_struct* bs)
     if (dev->fd != -1)
     {
         close_socket( csock );
-        logmsg (_("HHCSD016E Client %s (%s) connection to device %4.4X "
-            "(%s) rejected: client %s (%s) still connected\n"),
-            clientname, clientip, dev->devnum, bs->spec,
+        WRITEMSG (HHCSD016E, clientname, clientip, dev->devnum, bs->spec,
             bs->clientname, bs->clientip);
         release_lock (&dev->lock);
         return;
@@ -358,15 +346,12 @@ void socket_device_connection_handler (bind_struct* bs)
         /* Callback says it can't accept it */
         close_socket( dev->fd );
         dev->fd = -1;
-        logmsg (_("HHCSD026E Client %s (%s) connection to device %4.4X "
-            "(%s) rejected: by onconnect callback\n"),
-            clientname, clientip, dev->devnum, bs->spec);
+        WRITEMSG (HHCSD026E, clientname, clientip, dev->devnum, bs->spec);
         release_lock (&dev->lock);
         return;
     }
 
-    logmsg (_("HHCSD018I Client %s (%s) connected to device %4.4X (%s)\n"),
-        clientname, clientip, dev->devnum, bs->spec);
+    WRITEMSG (HHCSD018I, clientname, clientip, dev->devnum, bs->spec);
 
     release_lock (&dev->lock);
     device_attention (dev, CSW_DE);
@@ -420,9 +405,7 @@ void* socket_thread( void* arg )
     UNREFERENCED( arg );
 
     /* Display thread started message on control panel */
-    logmsg (_("HHCSD020I Socketdevice listener thread started: "
-            "tid="TIDPAT", pid=%d\n"),
-            thread_id(), getpid());
+    WRITEMSG (HHCSD020I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "socket device listener");
 
     for (;;)
     {
@@ -448,8 +431,7 @@ void* socket_thread( void* arg )
         if ( rc < 0 )
         {
             if ( HSO_EINTR != select_errno )
-                logmsg( _( "HHCSD021E select failed; errno=%d: %s\n"),
-                    select_errno, strerror( select_errno ) );
+                WRITEMSG( HHCSD021E, select_errno, strerror( select_errno ) );
             continue;
         }
 
@@ -457,7 +439,7 @@ void* socket_thread( void* arg )
         check_socket_devices_for_connections( &sockset );
     }
 
-    logmsg( _( "HHCSD022I Socketdevice listener thread terminated\n" ) );
+    WRITEMSG(HHCSD022I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "socket device listener");
 
     return NULL;
 }
@@ -482,8 +464,7 @@ int bind_device_ex (DEVBLK* dev, char* spec, ONCONNECT fn, void* arg )
     /* Error if device already bound */
     if (dev->bs)
     {
-        logmsg (_("HHCSD001E Device %4.4X already bound to socket %s\n"),
-            dev->devnum, dev->bs->spec);
+        WRITEMSG (HHCSD001E, dev->devnum, dev->bs->spec);
         return 0;   /* (failure) */
     }
 
@@ -492,8 +473,7 @@ int bind_device_ex (DEVBLK* dev, char* spec, ONCONNECT fn, void* arg )
 
     if (!bs)
     {
-        logmsg (_("HHCSD002E bind_device malloc() failed for device %4.4X\n"),
-            dev->devnum);
+        WRITEMSG (HHCSD002E, dev->devnum);
         return 0;   /* (failure) */
     }
 
@@ -504,8 +484,7 @@ int bind_device_ex (DEVBLK* dev, char* spec, ONCONNECT fn, void* arg )
 
     if (!(bs->spec = strdup(spec)))
     {
-        logmsg (_("HHCSD003E bind_device strdup() failed for device %4.4X\n"),
-            dev->devnum);
+        WRITEMSG (HHCSD003E, dev->devnum);
         free (bs);
         return 0;   /* (failure) */
     }
@@ -540,8 +519,7 @@ int bind_device_ex (DEVBLK* dev, char* spec, ONCONNECT fn, void* arg )
         if ( create_thread( &sysblk.socktid, JOINABLE,
                             socket_thread, NULL, "socket_thread" ) )
             {
-                logmsg( _( "HHCSD023E Cannot create socketdevice thread: errno=%d: %s\n" ),
-                        errno, strerror( errno ) );
+                WRITEMSG(HHCSD023E, errno, strerror( errno ) );
                 RemoveListEntry( &bs->bind_link );
                 close_socket(bs->sd);
                 free( bs->spec );
@@ -555,8 +533,7 @@ int bind_device_ex (DEVBLK* dev, char* spec, ONCONNECT fn, void* arg )
 
     release_lock( &bind_lock );
 
-    logmsg (_("HHCSD004I Device %4.4X bound to socket %s\n"),
-        dev->devnum, dev->bs->spec);
+    WRITEMSG (HHCSD004I, dev->devnum, dev->bs->spec);
 
     return 1;   /* (success) */
 }
@@ -575,8 +552,7 @@ int unbind_device_ex (DEVBLK* dev, int forced)
     /* Error if device not bound */
     if (!(bs = dev->bs))
     {
-        logmsg (_("HHCSD005E Device %4.4X not bound to any socket\n"),
-            dev->devnum);
+        WRITEMSG (HHCSD005E, dev->devnum);
         return 0;   /* (failure) */
     }
 
@@ -589,14 +565,12 @@ int unbind_device_ex (DEVBLK* dev, int forced)
             /* Yes. Then do so... */
             close_socket( dev->fd );
             dev->fd = -1;
-            logmsg (_("HHCSD025I Client %s (%s) disconnected from device %4.4X (%s)\n"),
-                dev->bs->clientip, dev->bs->clientname, dev->devnum, dev->bs->spec);
+            WRITEMSG (HHCSD025I, dev->bs->clientip, dev->bs->clientname, dev->devnum, dev->bs->spec);
         }
         else
         {
             /* No. Then fail the request. */
-            logmsg (_("HHCSD006E Client %s (%s) still connected to device %4.4X (%s)\n"),
-                dev->bs->clientip, dev->bs->clientname, dev->devnum, dev->bs->spec);
+            WRITEMSG (HHCSD006E, dev->bs->clientip, dev->bs->clientname, dev->devnum, dev->bs->spec);
             return 0;   /* (failure) */
         }
     }
@@ -608,8 +582,7 @@ int unbind_device_ex (DEVBLK* dev, int forced)
     SIGNAL_SOCKDEV_THREAD();
     release_lock( &bind_lock );
 
-    logmsg (_("HHCSD007I Device %4.4X unbound from socket %s\n"),
-        dev->devnum, bs->spec);
+    WRITEMSG (HHCSD007I,dev->devnum, bs->spec);
 
     if (bs->sd != -1)
         close_socket (bs->sd);

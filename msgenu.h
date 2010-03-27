@@ -882,8 +882,33 @@
 #define HHCSH066E "Invalid or missing keyword(%s)"
 #define HHCSH999E "OPTION_SHARED_DEVICES not defined"
 
-/* sie.c */
+/* sie.c */ /* BHe should we calloc the sieregs? Why not statical?? */
 #define HHCCP079E "%s%02X: calloc failed for sie regs: %s"
+
+/* sockdev.c */
+#define HHCSD001E "Device(%4.4X) already bound to socket(%s)"
+#define HHCSD002E "Device(%4.4X) bind_device malloc() failed"
+#define HHCSD003E "Device(%4.4X) bind_device strdup() failed"
+#define HHCSD004I "Device(%4.4X) bound to socket(%s)"
+#define HHCSD005E "Device(%4.4X) not bound to any socket"
+#define HHCSD006E "Client(%s) ip(%s) still connected to device(%4.4X) (%s)"
+#define HHCSD007I "Device(%4.4X) unbound from socket(%s)"
+#define HHCSD008E "Socket pathname(%s) exceeds limit(%d)"
+#define HHCSD009E "Error creating socket(%s) %s"
+#define HHCSD010E "Failed to bind or listen on socket(%s) %s"
+#define HHCSD011E "Failed to determine IP address from node(%s)"
+#define HHCSD012E "Failed to determine port number from service(%s)"
+#define HHCSD015E "Client(%s) ip(%s) connection to device(%4.4X) (%s) rejected: device busy or interrupt pending"
+#define HHCSD016E "Client(%s) ip(%s) connection to device(%4.4X) (%s) rejected: client(%s) ip(%s) still connected"
+#define HHCSD017E "Connect to device(%4.4X) (%s) failed: %s"
+#define HHCSD018I "Client(%s) ip(%s) connected to device(%4.4X) (%s)"
+#define HHCSD020I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
+#define HHCSD021E "select failed; errno(%d) %s"
+#define HHCSD022I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
+#define HHCSD023E "Cannot create socketdevice thread: errno(%d) %s"
+#define HHCSD024E "This build does not support Unix domain sockets"
+#define HHCSD025I "Client(%s) ip(%s) disconnected from device(%4.4X) (%s)"
+#define HHCSD026E "Client(%s) ip(%s) connection to device(%4.4X) (%s) rejected: by onconnect callback"
 
 /* timer.c */
 #define HHCTT001W "Timer thread set priority(%d) failed: (%s)"
