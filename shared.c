@@ -234,8 +234,7 @@ char    *p, buf[1024];                  /* Work buffer               */
                 continue;
             }
 #endif
-            logmsg (_("HHCSH001S parameter %d is invalid: %s\n"),
-                    i + 1, argv[i]);
+            WRITEMSG (HHCSH001S, i + 1, argv[i]);
             return -1;
         }
     }
@@ -260,8 +259,7 @@ init_retry:
         rc = clientConnect (dev, retry);
         if (rc < 0)
         {
-            logmsg (_("HHCSH002W %4.4X connect pending to %s\n"),
-                    dev->devnum, dev->filename);
+            WRITEMSG (HHCSH002W, dev->devnum, dev->filename);
             if (retry) SLEEP(5);
         }
     } while (retry && rc < 0);
@@ -278,8 +276,7 @@ init_retry:
         goto init_retry;
     else if (rc != 4)
     {
-        logmsg (_("HHCSH003S %4.4X Error retrieving cylinders\n"),
-                dev->devnum);
+        WRITEMSG (HHCSH003S, dev->devnum);
         return -1;
     }
     dev->ckdcyls = fetch_fw (cyls);
@@ -291,8 +288,7 @@ init_retry:
         goto init_retry;
     else if (rc == 0 || rc > (int)sizeof(dev->devchar))
     {
-        logmsg (_("HHCSH004S %4.4X Error retrieving device"
-                  " characteristics\n"), dev->devnum);
+        WRITEMSG (HHCSH004S, dev->devnum);
         return -1;
     }
     dev->numdevchar = rc;
@@ -309,8 +305,7 @@ init_retry:
         dev->devtype = fetch_hw (dev->devchar + 3);
     else if (dev->devtype != fetch_hw (dev->devchar + 3))
     {
-        logmsg (_("HHCSH005S %4.4X Remote device %4.4X is a %4.4X\n"),
-                dev->devnum, dev->rmtnum, fetch_hw (dev->devchar + 3));
+        WRITEMSG (HHCSH005S, dev->devnum, dev->rmtnum, fetch_hw (dev->devchar + 3));
         return -1;
     }
 
@@ -321,8 +316,7 @@ init_retry:
         goto init_retry;
     else if (rc == 0 || rc > (int)sizeof(dev->devid))
     {
-        logmsg (_("HHCSH006S %4.4X Error retrieving device id\n"),
-                dev->devnum);
+        WRITEMSG (HHCSH006S, dev->devnum);
         return -1;
     }
     dev->numdevid = rc;
@@ -338,8 +332,7 @@ init_retry:
     dev->ckdtab = dasd_lookup (DASD_CKDDEV, NULL, dev->devtype, dev->ckdcyls);
     if (dev->ckdtab == NULL)
     {
-        logmsg (_("HHCSH007S %4.4X device type %4.4X not found in dasd table\n"),
-                dev->devnum, dev->devtype);
+        WRITEMSG (HHCSH007S, dev->devnum, dev->devtype);
         return -1;
     }
 
@@ -350,8 +343,7 @@ init_retry:
     dev->ckdcu = dasd_lookup (DASD_CKDCU, cu ? cu : dev->ckdtab->cu, 0, 0);
     if (dev->ckdcu == NULL)
     {
-        logmsg (_("HHCSH008S %4.4X control unit %s not found in dasd table\n"),
-                dev->devnum, cu ? cu : dev->ckdtab->cu);
+        WRITEMSG (HHCSH008S, dev->devnum, cu ? cu : dev->ckdtab->cu);
         return -1;
     }
 
@@ -371,8 +363,7 @@ init_retry:
 
     /* Log the device geometry */
     if (!dev->batch)
-    logmsg (_("HHCSH009I %s cyls=%d heads=%d tracks=%d trklen=%d\n"),
-            dev->filename, dev->ckdcyls,
+    WRITEMSG (HHCSH009I, dev->filename, dev->ckdcyls,
             dev->ckdheads, dev->ckdtrks, dev->ckdtrksz);
 
     dev->connecting = 0;
@@ -482,8 +473,7 @@ char    *p, buf[1024];                  /* Work buffer               */
                 continue;
             }
 #endif
-            logmsg (_("HHCSH010S parameter %d is invalid: %s\n"),
-                    i + 1, argv[i]);
+            WRITEMSG (HHCSH001S, i + 1, argv[i]);
             return -1;
         }
     }
@@ -508,8 +498,7 @@ init_retry:
         rc = clientConnect (dev, retry);
         if (rc < 0)
         {
-            logmsg (_("HHCSH011I %4.4X connect pending to %s\n"),
-                    dev->devnum, dev->filename);
+            WRITEMSG (HHCSH002W, dev->devnum, dev->filename);
             if (retry) SLEEP(5);
         }
     } while (retry && rc < 0);
@@ -523,8 +512,7 @@ init_retry:
         goto init_retry;
     else if (rc != 4)
     {
-        logmsg (_("HHCSH012S %4.4X Error retrieving fba origin\n"),
-                dev->devnum);
+        WRITEMSG (HHCSH012S, dev->devnum);
         return -1;
     }
     dev->fbaorigin = fetch_fw (origin);
@@ -535,8 +523,7 @@ init_retry:
         goto init_retry;
     else if (rc != 4)
     {
-        logmsg (_("HHCSH013S %4.4X Error retrieving fba number blocks\n"),
-                dev->devnum);
+        WRITEMSG (HHCSH013S, dev->devnum);
         return -1;
     }
     dev->fbanumblk = fetch_fw (numblks);
@@ -547,8 +534,7 @@ init_retry:
         goto init_retry;
     else if (rc != 4)
     {
-        logmsg (_("HHCSH014S %4.4X Error retrieving fba block size\n"),
-                dev->devnum);
+        WRITEMSG (HHCSH014S, dev->devnum);
         return -1;
     }
     dev->fbablksiz = fetch_fw (blksiz);
@@ -561,8 +547,7 @@ init_retry:
         goto init_retry;
     else if (rc == 0 || rc > (int)sizeof(dev->devid))
     {
-        logmsg (_("HHCSH015S %4.4X Error retrieving device id\n"),
-                dev->devnum);
+        WRITEMSG (HHCSH006S, dev->devnum);
         return -1;
     }
     dev->numdevid = rc;
@@ -570,8 +555,7 @@ init_retry:
     /* Check the device type */
     if (dev->devtype != fetch_hw (dev->devid + 4))
     {
-        logmsg (_("HHCSH016S %4.4X Remote device %4.4X is a %4.4X\n"),
-                dev->devnum, dev->rmtnum, fetch_hw (dev->devid + 4));
+        WRITEMSG (HHCSH005S, dev->devnum, dev->rmtnum, fetch_hw (dev->devid + 4));
         return -1;
     }
 
@@ -582,8 +566,7 @@ init_retry:
         goto init_retry;
     else if (rc == 0 || rc > (int)sizeof(dev->devchar))
     {
-        logmsg (_("HHCSH017S %4.4X Error retrieving device"
-                  " characteristics\n"), dev->devnum);
+        WRITEMSG (HHCSH004S, dev->devnum);
         return -1;
     }
     dev->numdevchar = rc;
@@ -599,8 +582,7 @@ init_retry:
     dev->fbatab = dasd_lookup (DASD_FBADEV, NULL, dev->devtype, dev->fbanumblk);
     if (dev->fbatab == NULL)
     {
-        logmsg (_("HHCSH018S %4.4X device type %4.4X not found in dasd table\n"),
-                dev->devnum, dev->devtype);
+        WRITEMSG (HHCSH007S, dev->devnum, dev->devtype);
         return -1;
     }
 
@@ -608,8 +590,7 @@ init_retry:
     clientPurge (dev, 0, NULL);
 
     /* Log the device geometry */
-    logmsg (_("HHCSH019I %s origin=%d blks=%d\n"),
-            dev->filename, dev->fbaorigin, dev->fbanumblk);
+    WRITEMSG (HHCSH019I, dev->filename, dev->fbaorigin, dev->fbanumblk);
 
     dev->connecting = 0;
 
@@ -653,8 +634,7 @@ BYTE     buf[SHARED_PURGE_MAX * 4];     /* Purge list                */
                         SHRD_START, 0, &code, NULL);
     if (rc < 0)
     {
-        logmsg(_("HHCSH020E %4.4X error during channel program start\n"),
-               dev->devnum);
+        WRITEMSG(HHCSH020E, dev->devnum);
         clientPurge (dev, 0, NULL);
         dev->cache = dev->bufcur = -1;
         dev->buf = NULL;
@@ -710,8 +690,7 @@ int      rc;                            /* Return code               */
     rc = clientRequest (dev, NULL, 0, SHRD_END, 0, NULL, NULL);
     if (rc < 0)
     {
-        logmsg(_("HHCSH021E %4.4X error during channel program end\n"),
-               dev->devnum);
+        WRITEMSG(HHCSH021E, dev->devnum);
         clientPurge (dev, 0, NULL);
         dev->cache = dev->bufcur = -1;
         dev->buf = NULL;
@@ -815,7 +794,7 @@ read_retry:
     {
         ckd_build_sense (dev, SENSE_EC, 0, 0, FORMAT_1, MESSAGE_0);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        logmsg(_("HHCSH022E %4.4X error reading track %d\n"), dev->devnum, trk);
+        WRITEMSG(HHCSH022E, dev->devnum, trk);
         return -1;
     }
 
@@ -827,8 +806,7 @@ read_retry:
         if (rc < 0 && retries--) goto read_retry;
         ckd_build_sense (dev, SENSE_EC, 0, 0, FORMAT_1, MESSAGE_0);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        logmsg(_("HHCSH023E %4.4X error reading track %d\n"),
-               dev->devnum, trk);
+        WRITEMSG(HHCSH022E, dev->devnum, trk);
         return -1;
     }
 
@@ -1027,8 +1005,7 @@ read_retry:
     {
         dev->sense[0] = SENSE_EC;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        logmsg(_("HHCSH024E %4.4X error reading block group %d\n"),
-               dev->devnum, blkgrp);
+        WRITEMSG(HHCSH024E, dev->devnum, blkgrp);
         return -1;
     }
 
@@ -1040,8 +1017,7 @@ read_retry:
         if (rc < 0 && retries--) goto read_retry;
         dev->sense[0] = SENSE_EC;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        logmsg(_("HHCSH025E %4.4X error reading block group %d\n"),
-               dev->devnum, blkgrp);
+        WRITEMSG(HHCSH024E, dev->devnum, blkgrp);
         return -1;
     }
 
@@ -1128,8 +1104,7 @@ FWORD    usage;                         /* Usage buffer              */
     rc = clientRequest (dev, usage, 4, SHRD_USED, 0, NULL, NULL);
     if (rc != 4)
     {
-        logmsg (_("HHCSH026E %4.4X Error retrieving usage information\n"),
-                dev->devnum);
+        WRITEMSG (HHCSH026E, dev->devnum);
         return -1;
     }
     return fetch_fw (usage);
@@ -1199,8 +1174,7 @@ write_retry:
     rc = clientSend (dev, hdr, dev->buf + dev->bufupdlo, len);
     if (rc < 0)
     {
-        logmsg(_("HHCSH027E %4.4X error writing track %d\n"),
-             dev->devnum, dev->bufcur);
+        WRITEMSG(HHCSH027E, dev->devnum, dev->bufcur);
         dev->bufupdlo = dev->bufupdhi = 0;
         clientPurge (dev, 0, NULL);
         return -1;
@@ -1212,8 +1186,7 @@ write_retry:
     if (rc < 0 || (code & SHRD_ERROR) || (code & SHRD_IOERR))
     {
         if (rc < 0 && retries--) goto write_retry;
-        logmsg(_("HHCSH028E %4.4X remote error writing track %d: "
-         "%2.2X-%2.2X\n"), dev->devnum, dev->bufcur, code, status);
+        WRITEMSG(HHCSH028E, dev->devnum, dev->bufcur, code, status);
         dev->bufupdlo = dev->bufupdhi = 0;
         clientPurge (dev, 0, NULL);
         return -1;
@@ -1297,8 +1270,7 @@ HWORD              comp;                /* Returned compression parm */
 #endif // defined( HAVE_SYS_UN_H )
             if (dev->fd < 0)
             {
-                logmsg (_("HHCSH029E %4.4X socket failed: %s\n"),
-                        dev->devnum, strerror(HSO_errno));
+                WRITEMSG (HHCSH029E, dev->devnum, strerror(HSO_errno));
                 return -1;
             }
 #if defined( HAVE_SYS_UN_H )
@@ -1313,8 +1285,7 @@ HWORD              comp;                /* Returned compression parm */
             dev->fd = dev->ckdfd[0] = socket (AF_INET, SOCK_STREAM, 0);
             if (dev->fd < 0)
             {
-                logmsg (_("HHCSH030E %4.4X socket failed: %s\n"),
-                        dev->devnum, strerror(HSO_errno));
+                WRITEMSG (HHCSH029E, dev->devnum, strerror(HSO_errno));
                 return -1;
             }
             iserver.sin_family      = AF_INET;
@@ -1331,8 +1302,7 @@ HWORD              comp;                /* Returned compression parm */
         if (rc >= 0)
         {
             if (!dev->batch)
-              logmsg(_("HHCSH031I %4.4X Connected to %s\n"),
-                 dev->devnum, dev->filename);
+              WRITEMSG(HHCSH031I, dev->devnum, dev->filename);
 
             /* Request device connection */
             flag = (SHARED_VERSION << 4) | SHARED_RELEASE;
@@ -1365,8 +1335,7 @@ HWORD              comp;                /* Returned compression parm */
 
         }
         else if (!retry)
-            logmsg(_("HHCSH032E %4.4X Connect %s %d: %s\n"),
-               dev->devnum, dev->filename, HSO_errno, strerror(HSO_errno));
+            WRITEMSG(HHCSH032E, dev->devnum, dev->filename, HSO_errno, strerror(HSO_errno));
 
         if (rc < 0 && retry) usleep (20000);
 
@@ -1536,8 +1505,7 @@ retry:
     /* Process return code */
     if (rc < 0)
     {
-        logmsg(_("HHCSH033E %4.4X send error %d for %2.2X-%2.2X: %s\n"),
-               dev->devnum, HSO_errno, cmd, flag, strerror(HSO_errno));
+        WRITEMSG(HHCSH033E, dev->devnum, HSO_errno, cmd, flag, strerror(HSO_errno));
         return -1;
     }
 
@@ -1563,8 +1531,7 @@ int      len;                           /* Response length           */
     /* Return error if not connected */
     if (dev->fd < 0)
     {
-        logmsg(_("HHCSH034E %4.4X Not connected to %s\n"),
-               dev->devnum, dev->filename);
+        WRITEMSG(HHCSH034E, dev->devnum, dev->filename);
         return -1;
     }
 
@@ -1573,8 +1540,7 @@ int      len;                           /* Response length           */
     if (rc < 0)
     {
         if (rc != -ENOTCONN)
-            logmsg(_("HHCSH035E %4.4X recv error %d: %s\n"),
-                   dev->devnum, -rc, strerror(-rc));
+            WRITEMSG(HHCSH035E, dev->devnum, -rc, strerror(-rc));
         return rc;
     }
     SHRD_GET_HDR(hdr, code, status, devnum, id, len);
@@ -1585,8 +1551,7 @@ int      len;                           /* Response length           */
     /* Handle remote logical error */
     if (code & SHRD_ERROR)
     {
-        logmsg(_("HHCSH036E %4.4X Remote error %2.2X-%2.2X: %s\n"),
-               dev->devnum, code, status, buf);
+        WRITEMSG(HHCSH036E, dev->devnum, code, status, buf);
         len = 0;
     }
 
@@ -1691,12 +1656,11 @@ BYTE                    cbuf[65536];    /* Compressed buffer         */
             recvlen = (int)newlen + off;
         else
         {
-            logmsg(_("HHCSH037E uncompress error %d, off %d len %d\n"),
-                   rc, off, len - off);
+            WRITEMSG(HHCSH037E, rc, off, len - off);
             recvlen = -1;
         }
 #else
-        logmsg(_("HHCSH038E data compressed using libz, unsupported\n"));
+        WRITEMSG(HHCSH038E);
         recvlen = -1;
 #endif
     }
@@ -1714,12 +1678,11 @@ BYTE                    cbuf[65536];    /* Compressed buffer         */
             recvlen = (int)newlen + off;
         else
         {
-            logmsg(_("HHCSH039E decompress error %d, off %d len %d\n"),
-                   rc, off, len - off);
+            WRITEMSG(HHCSH037E, rc, off, len - off);
             recvlen = -1;
         }
 #else
-        logmsg(_("HHCSH040E data compressed using bzip2, unsupported\n"));
+        WRITEMSG(HHCSH040E);
         recvlen = -1;
 #endif
     }
@@ -2295,8 +2258,7 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
     /* Process return code */
     if (rc < 0)
     {
-        logmsg(_("HHCSH041E %4.4X send error %d id=%d: %s\n"),
-               dev->devnum, HSO_errno, id, strerror(HSO_errno));
+        WRITEMSG(HHCSH041E, dev->devnum, HSO_errno, id, strerror(HSO_errno));
         dev->shrd[ix]->disconnect = 1;
     }
 
@@ -2334,8 +2296,7 @@ int i;                                  /* Loop index                */
        This is *not* a good situation */
     if (dev->ioactive == id)
     {
-        logmsg(_("HHCSH042W %4.4X busy client being removed id=%d %s\n"),
-               dev->devnum, id, dev->reserved ? "reserved" : "");
+        WRITEMSG(HHCSH042W, dev->devnum, id, dev->reserved ? "reserved" : "");
 
         /* Call the I/O release exit if reserved by this client */
         if (dev->reserved && dev->hnd->release)
@@ -2366,8 +2327,7 @@ int i;                                  /* Loop index                */
             signal_condition (&dev->iocond);
     }
 
-    logmsg(_("HHCSH043I %s disconnected from %4.4X id=%d\n"),
-        dev->shrd[ix]->ipaddr, dev->devnum, id);
+    WRITEMSG(HHCSH043I, dev->shrd[ix]->ipaddr, dev->devnum, id);
 
     /* Release the SHRD block */
     close_socket (dev->shrd[ix]->fd);
@@ -2427,6 +2387,7 @@ struct timeval  wait;                   /* Wait time for select      */
 BYTE            hdr[SHRD_HDR_SIZE + 65536];  /* Header + buffer      */
 BYTE           *buf = hdr + SHRD_HDR_SIZE;   /* Buffer               */
 char           *ipaddr = NULL;          /* IP addr of connected peer */
+char            threadname[40];
 
     csock = *psock;
     free (psock);
@@ -2437,7 +2398,7 @@ char           *ipaddr = NULL;          /* IP addr of connected peer */
     rc = recvData(csock, hdr, buf, 65536, 1);
     if (rc < 0)
     {
-        logmsg(_("HHCSH0474 %s connect failed\n"), ipaddr);
+        WRITEMSG(HHCSH0474, ipaddr);
         close_socket (csock);
         return NULL;
     }
@@ -2515,8 +2476,7 @@ char           *ipaddr = NULL;          /* IP addr of connected peer */
     dev->shrdconn++;
     SHRD_SET_HDR (dev->shrd[ix]->hdr, cmd, flag, devnum, id, len);
 
-    logmsg (_("HHCSH053I %s connected to %4.4X id=%d\n"),
-            ipaddr, devnum, id);
+    WRITEMSG (HHCSH053I, ipaddr, devnum, id);
 
     /* Return if device thread already active */
     if (dev->shrdtid)
@@ -2531,9 +2491,8 @@ char           *ipaddr = NULL;          /* IP addr of connected peer */
     dev->shrdtid = thread_id();
 
     /* This thread will be the shared device thread */
-    logmsg (_("HHCSH045I Shared device %4.4X thread started: "
-            "tid="TIDPAT", pid=%d\n"),
-            dev->devnum, thread_id(), getpid());
+    sprintf(threadname, "shared device(%4.4X)", dev->devnum);
+    WRITEMSG (HHCSH045I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), threadname); 
 
     while (dev->shrdconn)
     {
@@ -2600,7 +2559,7 @@ char           *ipaddr = NULL;          /* IP addr of connected peer */
             if (rc < 0 )
             {
                 if (HSO_errno == HSO_EINTR || HSO_errno == HSO_EBADF) continue;
-                logmsg(_("HHCSH046E select: %s\n"), strerror(HSO_errno));
+                WRITEMSG(HHCSH046E, strerror(HSO_errno));
                 break;
             }
 
@@ -2634,8 +2593,7 @@ char           *ipaddr = NULL;          /* IP addr of connected peer */
             rc = recvData (dev->shrd[ix]->fd, hdr, buf, 65536, 1);
             if (rc < 0)
             {
-                logmsg(_("HHCSH047E %4.4X %s recv error id=%d\n"),
-                    dev->devnum, dev->shrd[ix]->ipaddr, dev->shrd[ix]->id);
+                WRITEMSG(HHCSH047E, dev->devnum, dev->shrd[ix]->ipaddr, dev->shrd[ix]->id);
                 dev->shrd[ix]->disconnect = 1;
                 dev->shrd[ix]->pending = 0;
                 obtain_lock (&dev->lock);
@@ -2665,8 +2623,7 @@ char           *ipaddr = NULL;          /* IP addr of connected peer */
     dev->shrdtid = 0;
     release_lock (&dev->lock);
 
-    logmsg (_("HHCSH048I Shared device %4.4X thread stopping\n"),
-            dev->devnum);
+    WRITEMSG(HHCSH048I,thread_id(), getpid(), getpriority(PRIO_PROCESS,0), threadname);
 
     return NULL;
 
@@ -2728,20 +2685,21 @@ struct sockaddr_un      userver;        /* Unix address structure    */
 int                     optval;         /* Argument for setsockopt   */
 fd_set                  selset;         /* Read bit map for select   */
 TID                     tid;            /* Negotiation thread id     */
+char                    threadname[40];
 
     UNREFERENCED(arg);
 
+    sprintf(threadname, "Shared device server %d.%d", SHARED_VERSION, SHARED_RELEASE);
+
     /* Display thread started message on control panel */
-    logmsg (_("HHCSH049I Shared device %d" "." "%d thread started: "
-            "tid="TIDPAT", pid=%d\n"),
-            SHARED_VERSION, SHARED_RELEASE, thread_id(), getpid());
+    WRITEMSG (HHCSH045I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), threadname);
 
     /* Obtain a internet socket */
     lsock = socket (AF_INET, SOCK_STREAM, 0);
 
     if (lsock < 0)
     {
-        logmsg(_("HHCSH050E inet socket: %s\n"), strerror(HSO_errno));
+        WRITEMSG(HHCSH050E, strerror(HSO_errno));
         return NULL;
     }
 
@@ -2750,7 +2708,7 @@ TID                     tid;            /* Negotiation thread id     */
     usock = socket (AF_UNIX, SOCK_STREAM, 0);
     if (usock < 0)
     {
-        logmsg(_("HHCSH051W unix socket: %s\n"), strerror(HSO_errno));
+        WRITEMSG(HHCSH051W, strerror(HSO_errno));
     }
 #else
     usock = -1;
@@ -2773,14 +2731,13 @@ TID                     tid;            /* Negotiation thread id     */
     {
         rc = bind (lsock, (struct sockaddr *)&server, sizeof(server));
         if (rc == 0 || HSO_errno != HSO_EADDRINUSE) break;
-        logmsg (_("HHCSH052W Waiting for port %u to become free\n"),
-                sysblk.shrdport);
+        WRITEMSG (HHCSH052W, sysblk.shrdport);
         SLEEP(10);
     } /* end while */
 
     if (rc != 0)
     {
-        logmsg(_("HHCSH053E inet bind: %s\n"), strerror(HSO_errno));
+        WRITEMSG(HHCSH053E, strerror(HSO_errno));
         close_socket(lsock); close_socket(usock);
         return NULL;
     }
@@ -2798,7 +2755,7 @@ TID                     tid;            /* Negotiation thread id     */
 
         if (rc < 0)
         {
-            logmsg(_("HHCSH054W unix bind: %s\n"), strerror(errno));
+            WRITEMSG(HHCSH054W, strerror(errno));
             close(usock);
             usock = -1;
         }
@@ -2810,7 +2767,7 @@ TID                     tid;            /* Negotiation thread id     */
 
     if (rc < 0)
     {
-        logmsg(_("HHCSH055E inet listen: %s\n"), strerror(HSO_errno));
+        WRITEMSG(HHCSH055E, strerror(HSO_errno));
         close_socket(lsock); close_socket(usock);
         return NULL;
     }
@@ -2821,7 +2778,7 @@ TID                     tid;            /* Negotiation thread id     */
 
         if (rc < 0)
         {
-            logmsg(_("HHCSH056W unix listen: %s\n"), strerror(HSO_errno));
+            WRITEMSG(HHCSH056W, strerror(HSO_errno));
             close_socket(usock);
             usock = -1;
         }
@@ -2834,8 +2791,7 @@ TID                     tid;            /* Negotiation thread id     */
     else
         hi = lsock + 1;
 
-    logmsg(_("HHCSH057I Waiting for shared device requests on port %u\n"),
-            sysblk.shrdport);
+    WRITEMSG(HHCSH057I, sysblk.shrdport);
 
     /* Handle connection requests and attention interrupts */
     while (!sysblk.shutdown)
@@ -2854,7 +2810,7 @@ TID                     tid;            /* Negotiation thread id     */
         if (rc < 0 )
         {
             if (HSO_errno == HSO_EINTR) continue;
-            logmsg(_("HHCSH058E select: %s\n"), strerror(HSO_errno));
+            WRITEMSG(HHCSH058E, strerror(HSO_errno));
             break;
         }
 
@@ -2872,15 +2828,14 @@ TID                     tid;            /* Negotiation thread id     */
             csock = accept (rsock, NULL, NULL);
             if (csock < 0)
             {
-                logmsg(_("HHCSH059E accept: %s\n"), strerror(HSO_errno));
+                WRITEMSG(HHCSH059E, strerror(HSO_errno));
                 continue;
             }
 
             psock = malloc (sizeof (csock));
             if (psock == NULL)
             {
-                logmsg(_("HHCSH060E malloc size %d: %s\n"),
-                       sizeof(csock), strerror(HSO_errno));
+                WRITEMSG(HHCSH060E, sizeof(csock), strerror(HSO_errno));
                 close_socket (csock);
                 continue;
             }
@@ -2890,8 +2845,7 @@ TID                     tid;            /* Negotiation thread id     */
             if ( create_thread (&tid, DETACHED,
                                 serverConnect, psock, "serverConnect") )
             {
-                logmsg(_("HHCSH061E serverConnect create_thread: %s\n"),
-                        strerror(HSO_errno));
+                WRITEMSG(HHCSH061E, strerror(HSO_errno));
                 close_socket (csock);
             }
 
@@ -2929,7 +2883,7 @@ DLL_EXPORT int shared_cmd(int argc, char *argv[], char *cmdline)
     /* Get keyword and operand */
     if (argc != 2 || strlen(argv[1]) > 255)
     {
-        logmsg (_("HHCSH062E Invalid or missing argument 1\n"));
+        WRITEMSG (HHCSH062E);
         return 0;
     }
     strcpy (buf, argv[1]);
@@ -2938,7 +2892,7 @@ DLL_EXPORT int shared_cmd(int argc, char *argv[], char *cmdline)
 
     if (kw == NULL)
     {
-        logmsg (_("HHCSH063E Invalid or missing keyword 2\n"));
+        WRITEMSG (HHCSH063E);
         return 0;
     }
 
@@ -2956,7 +2910,7 @@ DLL_EXPORT int shared_cmd(int argc, char *argv[], char *cmdline)
         {
             if (sscanf (op, "%d%c", &n, &c) != 1)
             {
-                logmsg (_("HHCSH064E Invalid or missing value %s\n"),op);
+                WRITEMSG (HHCSH064E,op);
                 return 0;
             }
             if (s != NULL)
@@ -2972,8 +2926,7 @@ DLL_EXPORT int shared_cmd(int argc, char *argv[], char *cmdline)
                 s = calloc (sizeof(SHRD_TRACE), n);
                 if (s == NULL)
                 {
-                    logmsg (_("HHCSH065E calloc() size=%d: %s\n"),
-                            sizeof(SHRD_TRACE) * n, strerror(errno));
+                    WRITEMSG (HHCSH065E, sizeof(SHRD_TRACE) * n, strerror(errno));
                     return 0;
                 }
                 sysblk.shrdtracen = n;
@@ -2998,7 +2951,7 @@ DLL_EXPORT int shared_cmd(int argc, char *argv[], char *cmdline)
     }
     else
     {
-        logmsg (_("HHCSH066E Invalid or missing keyword %s\n"), kw);
+        WRITEMSG (HHCSH066E, kw);
         return 0;
     }
     return 0;
@@ -3073,14 +3026,14 @@ int shared_fba_init (DEVBLK *dev, int argc, BYTE *argv[] )
 void *shared_server (void *arg)
 {
  UNREFERENCED(arg);
- logmsg (_("HHCSH999E OPTION_SHARED_DEVICES not defined"));
+ WRITEMSG (HHCSH999E);
  return NULL;
 }
 int shared_cmd(int argc, char *argv[], char *cmdline);
  UNREFERENCED(cmdline);
  UNREFERENCED(argc);
  UNREFERENCED(argv);
- logmsg (_("HHCSH999E OPTION_SHARED_DEVICES not defined"));
+ WRITEMSG (HHCSH999E);
  return 0;
 }
 #endif /*defined(OPTION_SHARED_DEVICES)*/
