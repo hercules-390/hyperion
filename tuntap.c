@@ -136,8 +136,7 @@ static int TUNTAP_SetMode (int fd, struct ifreq *ifr)
         }
         else if (rc == 0)
         {
-            logmsg (_("HHCTU001E %s timeout, possible older version?\n"),
-                    hercifc);
+            WRITEMSG (HHCTU031E, hercifc);
             errno = EPERM;
             rc = -1;
         }
@@ -217,8 +216,7 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
 
     if( uname( &utsbuf ) != 0 )
     {
-        logmsg( _("HHCTU001E Unable to determine operating system type: %s\n"),
-                strerror( errno ) );
+        WRITEMSG(HHCTU001E, strerror( errno ) );
 
         return -1;
     }
@@ -229,8 +227,7 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
 
     if( fd < 0 )
     {
-        logmsg( _("HHCTU002E Error opening TUN/TAP device: %s: %s\n"),
-                pszTUNDevice, strerror( errno ) );
+        WRITEMSG(HHCTU002E, pszTUNDevice, strerror( errno ) );
 
         return -1;
     }
@@ -249,8 +246,7 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
 
         if( TUNTAP_SetMode (fd, &ifr) < 0 )
         {
-            logmsg( _("HHCTU003E Error setting TUN/TAP mode: %s: %s\n"),
-                    pszTUNDevice, strerror( errno ) );
+            WRITEMSG(HHCTU003E, pszTUNDevice, strerror( errno ) );
             return -1;
         }
 
@@ -274,8 +270,7 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
             strncpy( pszNetDevName, ++p, IFNAMSIZ );
         else
         {
-            logmsg( _("HHCTU004E Invalid TUN/TAP device name: %s\n"),
-                    pszTUNDevice );
+            WRITEMSG(HHCTU004E, pszTUNDevice );
             return -1;
         }
     }
@@ -307,8 +302,7 @@ int             TUNTAP_ClrIPAddr( char*   pszNetDevName )
 
     if( !pszNetDevName || !*pszNetDevName )
     {
-        logmsg( _("HHCTU005E Invalid net device name specified: %s\n"),
-                pszNetDevName ? pszNetDevName : "(null pointer)" );
+        WRITEMSG( HHCTU005E, pszNetDevName ? pszNetDevName : "(null pointer)" );
         return -1;
     }
 
@@ -337,8 +331,7 @@ int             TUNTAP_SetIPAddr( char*   pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
-        logmsg( _("HHCTU005E Invalid net device name specified: %s\n"),
-                pszNetDevName ? pszNetDevName : "(null pointer)" );
+        WRITEMSG( HHCTU005E, pszNetDevName ? pszNetDevName : "(null pointer)" );
         return -1;
     }
 
@@ -347,8 +340,7 @@ int             TUNTAP_SetIPAddr( char*   pszNetDevName,
     if( !pszIPAddr  ||
         !inet_aton( pszIPAddr, &sin->sin_addr ) )
     {
-        logmsg( _("HHCTU006E %s: Invalid IP address: %s.\n"),
-                pszNetDevName, !pszIPAddr ? "NULL" : pszIPAddr );
+        WRITEMSG( HHCTU006E, pszNetDevName, !pszIPAddr ? "NULL" : pszIPAddr );
         return -1;
     }
 
@@ -374,8 +366,7 @@ int             TUNTAP_SetDestAddr( char*   pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
-        logmsg( _("HHCTU007E Invalid net device name specified: %s\n"),
-                pszNetDevName ? pszNetDevName : "(null pointer)" );
+        WRITEMSG( HHCTU005E, pszNetDevName ? pszNetDevName : "(null pointer)" );
         return -1;
     }
 
@@ -384,8 +375,7 @@ int             TUNTAP_SetDestAddr( char*   pszNetDevName,
     if( !pszDestAddr  ||
         !inet_aton( pszDestAddr, &sin->sin_addr ) )
     {
-        logmsg( _("HHCTU008E %s: Invalid destination address: %s.\n"),
-                pszNetDevName, !pszDestAddr ? "NULL" : pszDestAddr );
+        WRITEMSG(HHCTU008E, pszNetDevName, !pszDestAddr ? "NULL" : pszDestAddr );
             return -1;
     }
 
@@ -411,8 +401,7 @@ int           TUNTAP_SetNetMask( char*   pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
-        logmsg( _("HHCTU009E Invalid net device name specified: %s\n"),
-                pszNetDevName ? pszNetDevName : "(null pointer)" );
+        WRITEMSG( HHCTU005E, pszNetDevName ? pszNetDevName : "(null pointer)" );
         return -1;
     }
 
@@ -421,8 +410,7 @@ int           TUNTAP_SetNetMask( char*   pszNetDevName,
     if( !pszNetMask  ||
         !inet_aton( pszNetMask, &sin->sin_addr ) )
     {
-        logmsg( _("HHCTU010E %s: Invalid net mask: %s.\n"),
-                pszNetDevName, !pszNetMask ? "NULL" : pszNetMask );
+        WRITEMSG( HHCTU010E, pszNetDevName, !pszNetMask ? "NULL" : pszNetMask );
             return -1;
     }
 
@@ -449,8 +437,7 @@ int             TUNTAP_SetMTU( char*   pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
-        logmsg( _("HHCTU011E Invalid net device name specified: %s\n"),
-                pszNetDevName ? pszNetDevName : "(null pointer)" );
+        WRITEMSG(HHCTU005E, pszNetDevName ? pszNetDevName : "(null pointer)" );
         return -1;
     }
 
@@ -458,8 +445,7 @@ int             TUNTAP_SetMTU( char*   pszNetDevName,
 
     if( !pszMTU  || !*pszMTU )
     {
-        logmsg( _("HHCTU012E %s: Invalid null or empty MTU.\n"),
-                pszNetDevName );
+        WRITEMSG( HHCTU012E, pszNetDevName );
         return -1;
     }
 
@@ -467,8 +453,7 @@ int             TUNTAP_SetMTU( char*   pszNetDevName,
 
     if( iMTU < 46 || iMTU > 65536 )
     {
-        logmsg( _("HHCTU013E %s: Invalid MTU: %s.\n"),
-                pszNetDevName, pszMTU );
+        WRITEMSG( HHCTU013E, pszNetDevName, pszMTU );
         return -1;
     }
 
@@ -496,8 +481,7 @@ int           TUNTAP_SetMACAddr( char*   pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
-        logmsg( _("HHCTU014E Invalid net device name specified: %s\n"),
-                pszNetDevName ? pszNetDevName : "(null pointer)" );
+        WRITEMSG( HHCTU005E, pszNetDevName ? pszNetDevName : "(null pointer)" );
         return -1;
     }
 
@@ -505,8 +489,7 @@ int           TUNTAP_SetMACAddr( char*   pszNetDevName,
 
     if( !pszMACAddr || ParseMAC( pszMACAddr, mac ) != 0 )
     {
-        logmsg( _("HHCTU015E %s: Invalid MAC address: %s.\n"),
-                pszNetDevName, !pszMACAddr ? "NULL" : pszMACAddr );
+        WRITEMSG( HHCTU015E, pszNetDevName, !pszMACAddr ? "NULL" : pszMACAddr );
             return -1;
     }
 
@@ -535,8 +518,7 @@ int             TUNTAP_SetFlags ( char*   pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
-        logmsg( _("HHCTU016E Invalid net device name specified: %s\n"),
-                pszNetDevName ? pszNetDevName : "(null pointer)" );
+        WRITEMSG( HHCTU005E, pszNetDevName ? pszNetDevName : "(null pointer)" );
         return -1;
     }
 
@@ -566,8 +548,7 @@ int      TUNTAP_GetFlags ( char*   pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
-        logmsg( _("HHCTU016E Invalid net device name specified: %s\n"),
-                pszNetDevName ? pszNetDevName : "(null pointer)" );
+        WRITEMSG( HHCTU005E, pszNetDevName ? pszNetDevName : "(null pointer)" );
         return -1;
     }
 
@@ -616,8 +597,7 @@ int           TUNTAP_AddRoute( char*   pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
-        logmsg( _("HHCTU017E Invalid net device name specified: %s\n"),
-                pszNetDevName ? pszNetDevName : "(null pointer)" );
+        WRITEMSG (HHCTU005E, pszNetDevName ? pszNetDevName : "(null pointer)" );
         return -1;
     }
 
@@ -630,8 +610,7 @@ int           TUNTAP_AddRoute( char*   pszNetDevName,
     if( !pszDestAddr  ||
         !inet_aton( pszDestAddr, &sin->sin_addr ) )
     {
-        logmsg( _("HHCTU018E %s: Invalid destiniation address: %s.\n"),
-                pszNetDevName, !pszDestAddr ? "NULL" : pszDestAddr );
+        WRITEMSG( HHCTU008E, pszNetDevName, !pszDestAddr ? "NULL" : pszDestAddr );
         return -1;
     }
 
@@ -642,8 +621,7 @@ int           TUNTAP_AddRoute( char*   pszNetDevName,
     if( !pszNetMask  ||
         !inet_aton( pszNetMask, &sin->sin_addr ) )
     {
-        logmsg( _("HHCTU019E %s: Invalid net mask: %s.\n"),
-                pszNetDevName, !pszNetMask ? "NULL" : pszNetMask );
+        WRITEMSG( HHCTU010E, pszNetDevName, !pszNetMask ? "NULL" : pszNetMask );
         return -1;
     }
 
@@ -655,8 +633,7 @@ int           TUNTAP_AddRoute( char*   pszNetDevName,
     {
         if( !inet_aton( pszGWAddr, &sin->sin_addr ) )
         {
-            logmsg( _("HHCTU020E %s: Invalid gateway address: %s.\n"),
-                    pszNetDevName, pszGWAddr );
+            WRITEMSG(HHCTU020E, pszNetDevName, pszGWAddr );
             return -1;
         }
     }
@@ -684,8 +661,7 @@ int           TUNTAP_DelRoute( char*   pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
-        logmsg( _("HHCTU021E Invalid net device name specified: %s\n"),
-                pszNetDevName ? pszNetDevName : "(null pointer)" );
+        WRITEMSG(HHCTU005E, pszNetDevName ? pszNetDevName : "(null pointer)" );
         return -1;
     }
 
@@ -698,8 +674,7 @@ int           TUNTAP_DelRoute( char*   pszNetDevName,
     if( !pszDestAddr  ||
         !inet_aton( pszDestAddr, &sin->sin_addr ) )
     {
-        logmsg( _("HHCTU022E %s: Invalid destiniation address: %s.\n"),
-                pszNetDevName, !pszDestAddr ? "NULL" : pszDestAddr );
+        WRITEMSG(HHCTU008E, pszNetDevName, !pszDestAddr ? "NULL" : pszDestAddr );
         return -1;
     }
 
@@ -710,8 +685,7 @@ int           TUNTAP_DelRoute( char*   pszNetDevName,
     if( !pszNetMask  ||
         !inet_aton( pszNetMask, &sin->sin_addr ) )
     {
-        logmsg( _("HHCTU023E %s: Invalid net mask: %s.\n"),
-                pszNetDevName, !pszNetMask ? "NULL" : pszNetMask );
+        WRITEMSG( HHCTU010E, pszNetDevName, !pszNetMask ? "NULL" : pszNetMask );
         return -1;
     }
 
@@ -723,8 +697,7 @@ int           TUNTAP_DelRoute( char*   pszNetDevName,
     {
         if( !inet_aton( pszGWAddr, &sin->sin_addr ) )
         {
-            logmsg( _("HHCTU024E %s: Invalid gateway address: %s.\n"),
-                    pszNetDevName, pszGWAddr );
+            WRITEMSG( HHCTU020E, pszNetDevName, pszGWAddr );
             return -1;
         }
     }
@@ -824,8 +797,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
     {
         if( socketpair( AF_UNIX, SOCK_STREAM, 0, ifc_fd ) < 0 )
         {
-            logmsg( _("HHCTU025E Call to socketpair failed: %s\n"),
-                    strerror( errno ) );
+            WRITEMSG( HHCTU025E, strerror( errno ) );
             return -1;
         }
 
@@ -833,16 +805,14 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
         if( !( pszCfgCmd = getenv( "HERCULES_IFC" ) ) )
             pszCfgCmd = HERCIFC_CMD;
 
-        TRACE(_("HHCTU029I Executing '%s' to configure interface\n"),
-            pszCfgCmd);
+        TRACE(MSG(HHCTU029I, pszCfgCmd));
 
         // Fork a process to execute the hercifc
         ifc_pid = fork();
 
         if( ifc_pid < 0 )
         {
-            logmsg( _("HHCTU026E Call to fork failed: %s\n"),
-                    strerror( errno ) );
+            WRITEMSG( HHCTU026E, strerror( errno ) );
             return -1;
         }
 
@@ -865,8 +835,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
             file_limit=rlim.rlim_max;
             file_limit=(file_limit>1024)?1024:file_limit;
 
-            TRACE(_("HHCTU031I Closing %" I64_FMT "d files\n"),
-                (long long)file_limit);
+            TRACE(MSG(HHCTU028I, (long long)file_limit));
 
             for(i=0;(unsigned int)i<file_limit;i++)
             {
@@ -883,8 +852,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
             rc = execlp( pszCfgCmd, pszCfgCmd, NULL );
 
             // The exec function returns only if unsuccessful
-            logmsg( _("HHCTU027E execl error on %s: %s.\n"),
-                    pszCfgCmd, strerror( errno ) );
+            WRITEMSG( HHCTU027E, pszCfgCmd, strerror( errno ) );
 
             exit( 127 );
         }
@@ -896,8 +864,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
     // Populate some common fields
     ctlreq.iType = 1;
 
-    TRACE(_("HHCTU030I IFC_IOCtl called for %s on FDs %d %d\n"),
-        request_name,ifc_fd[0],ifc_fd[1]);
+    TRACE(MSG(HHCTU030I,request_name,ifc_fd[0],ifc_fd[1]));
 
     write( ifc_fd[0], &ctlreq, CTLREQ_SIZE );
 

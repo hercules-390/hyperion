@@ -946,6 +946,27 @@
 #define HHCTT002I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCTT003I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 
+/* tuntap.c */
+#define HHCTU001E "Unable to determine operating system type: %s"
+#define HHCTU002E "Error opening TUN/TAP device(%s) %s"
+#define HHCTU003E "Error setting TUN/TAP mode(%s) %s"
+#define HHCTU004E "TUN/TAP device name(%s) invalid"
+#define HHCTU005E "Net device name(%s) invalid"
+#define HHCTU006E "Net device(%s) ip(%s) invalid"
+#define HHCTU008E "Net device(%s) destination address(%s) invalid"
+#define HHCTU010E "Net device(%s) net mask(%s) invalid"
+#define HHCTU012E "Net device(%s) Invalid null or empty MTU"
+#define HHCTU013E "Net device(%s) MTU(%s) invalid"
+#define HHCTU015E "Net device(%s) MAC address(%s) invalid"
+#define HHCTU020E "Net device(%s) gateway address(%s) invalid"
+#define HHCTU025E "Call to socketpair failed: %s"
+#define HHCTU026E "Call to fork failed: %s"
+#define HHCTU027E "execl error on %s: %s"
+#define HHCTU028I "Closing %" I64_FMT "d files"
+#define HHCTU029I "Executing '%s' to configure interface"
+#define HHCTU030I "IFC_IOCtl called for %s on FDs %d %d"
+#define HHCTU031E "%s timeout, possible older version"
+
 /* version.c */
 #define HHCIN010I "%sversion (%s)"
 #define HHCIN011I "%s"
