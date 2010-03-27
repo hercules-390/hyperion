@@ -787,6 +787,28 @@
 #define HHCSC101E "access error: %s: %s"
 #define HHCSC201E "File(%S) access error: %s"
 
+/* scsitape.c */
+#define HHCTA300I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
+#define HHCTA301I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
+#define HHCTA323I "%s"
+#define HHCTA324E "Error opening %u:%4.4X=%s; errno=%d: %s"
+#define HHCTA330E "Error setting attributes for %u:%4.4X=%s; errno=%d: %s"
+#define HHCTA332E "Error reading data block from %u:%4.4X=%s; errno=%d: %s"
+#define HHCTA333E "Error writing data block to %u:%4.4X=%s; errno=%d: %s"
+#define HHCTA334E "Error writing tapemark to %u:%4.4X=%s; errno=%d: %s"
+#define HHCTA335E "Forward space block error on %u:%4.4X=%s; errno=%d: %s"
+#define HHCTA336E "Backspace block error on %u:%4.4X=%s; errno=%d: %s"
+#define HHCTA337E "Forward space file error on %u:%4.4X=%s; errno=%d: %s"
+#define HHCTA338E "Backspace file error on %u:%4.4X=%s; errno=%d: %s"
+#define HHCTA373E "Error rewinding %u:%4.4X=%s; errno=%d: %s"
+#define HHCTA376E "Error unloading %u:%4.4X=%s; errno=%d: %s"
+#define HHCTA377I "Tape %u:%4.4X unloaded"
+#define HHCTA380E "Erase gap error on %u:%4.4X=%s; errno=%d: %s"
+#define HHCTA381E "Data Security Erase error on %u:%4.4X=%s; errno=%d: %s"
+#define HHCTA382W "ioctl_tape(MTIOCPOS=MTTELL) failed on %4.4X = %s: %s"
+#define HHCTA383W "ioctl_tape(MTIOCTOP=MTSEEK) failed on %4.4X = %s: %s"
+#define HHCTA389E "Synchronize error on %u:%4.4X=%s; errno=%d: %s"
+
 /* timer.c */
 #define HHCTT001W "Timer thread set priority(%d) failed: (%s)"
 #define HHCTT002I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
