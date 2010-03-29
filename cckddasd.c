@@ -8,29 +8,6 @@
 /* count-key-data direct access storage devices.                     */
 /*-------------------------------------------------------------------*/
 
-// $Log$
-// Revision 1.146  2008/11/04 05:56:30  fish
-// Put ensure consistent create_thread ATTR usage change back in
-//
-// Revision 1.145  
-// Back out consistent create_thread ATTR modification
-//
-// Revision 1.144  2008/10/18 09:32:20  fish
-// Ensure consistent create_thread ATTR usage
-//
-// Revision 1.143  2008/01/04 03:35:30  gsmith
-// Fix to sf- command - Thanks Christopher!
-//
-// Revision 1.142  2008/01/04 02:28:51  gsmith
-// sf commands update
-//
-// Revision 1.141  2007/06/23 00:04:03  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.140  2006/12/08 09:43:17  jj
-// Add CVS message log
-//
-
 #include "hstdinc.h"
 
 #define _CCKDDASD_C_
@@ -51,8 +28,8 @@ void    cckddasd_end(DEVBLK *dev);
 
 int     cckd_open (DEVBLK *dev, int sfx, int flags, mode_t mode);
 int     cckd_close (DEVBLK *dev, int sfx);
-int     cckd_read (DEVBLK *dev, int sfx, off_t off, void *buf, size_t len);
-int     cckd_write (DEVBLK *dev, int sfx, off_t off, void *buf, size_t len);
+int     cckd_read (DEVBLK *dev, int sfx, off_t off, void *buf, unsigned int len);
+int     cckd_write (DEVBLK *dev, int sfx, off_t off, void *buf, unsigned int len);
 int     cckd_ftruncate(DEVBLK *dev, int sfx, off_t off);
 void   *cckd_malloc(DEVBLK *dev, char *id, size_t size);
 void   *cckd_calloc(DEVBLK *dev, char *id, size_t n, size_t size);
@@ -333,7 +310,7 @@ int             fdflags;                /* File flags                */
     /* open the shadow files */
     if (cckd_sf_init (dev) < 0)
     {
-        WRITEMSG (HHCCD101E, dev->devnum);
+        WRITEMSG (HHCCD101E, SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
     }
 
@@ -468,7 +445,7 @@ int             trk = 0;                /* Last active track         */
 
     cckd = dev->cckd_ext;
 
-    cckd_trace (dev, "start i/o file[%d] bufcur %d cache[%d]\n",
+    cckd_trace (dev, "start i/o file[%d] bufcur %d cache[%d]",
                 cckd->sfn, dev->bufcur, dev->cache);
 
     /* Reset buffer offsets */
@@ -479,7 +456,7 @@ int             trk = 0;                /* Last active track         */
     obtain_lock(&cckd->iolock);
     if (cckd->merging)
     {
-        cckd_trace (dev, "start i/o waiting for merge%s\n","");
+        cckd_trace (dev, "start i/o waiting for merge%s","");
         while (cckd->merging)
         {
             cckd->iowaiters++;
@@ -540,7 +517,7 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 
     dev->bufupd = 0;
 
-    cckd_trace (dev, "end i/o bufcur %d cache[%d] waiters %d\n",
+    cckd_trace (dev, "end i/o bufcur %d cache[%d] waiters %d",
                 dev->bufcur, dev->cache, cckd->iowaiters);
 
     obtain_lock (&cckd->iolock);
@@ -596,16 +573,16 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     {
         if (err)
         {
-            WRITEMSG (HHCCD130E, dev->devnum, sfx, cckd_sf_name (dev, sfx),
+            WRITEMSG (HHCCD130E, SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, cckd_sf_name (dev, sfx),
                     strerror(errno));
-            cckd_trace (dev, "file[%d] fd[%d] open %s error flags %8.8x mode %8.8x\n",
+            cckd_trace (dev, "file[%d] fd[%d] open %s error flags %8.8x mode %8.8x",
                         sfx, cckd->fd[sfx], cckd_sf_name (dev, sfx), flags, mode);
             cckd_print_itrace ();
         }
         cckd->open[sfx] = CCKD_OPEN_NONE;
     }
 
-    cckd_trace (dev, "file[%d] fd[%d] open %s, flags %8.8x mode %8.8x\n",
+    cckd_trace (dev, "file[%d] fd[%d] open %s, flags %8.8x mode %8.8x",
                 sfx, cckd->fd[sfx], cckd_sf_name (dev, sfx), flags, mode);
 
     return cckd->fd[sfx];
@@ -622,7 +599,7 @@ int             rc = 0;                 /* Return code               */
 
     cckd = dev->cckd_ext;
 
-    cckd_trace (dev, "file[%d] fd[%d] close %s\n",
+    cckd_trace (dev, "file[%d] fd[%d] close %s",
                 sfx, cckd->fd[sfx], cckd_sf_name(dev, sfx));
 
     if (cckd->fd[sfx] >= 0)
@@ -630,7 +607,7 @@ int             rc = 0;                 /* Return code               */
 
     if (rc < 0)
     {
-        WRITEMSG (HHCCD131E, dev->devnum, sfx, strerror(errno));
+        WRITEMSG (HHCCD131E, SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, strerror(errno));
         cckd_print_itrace ();
     }
 
@@ -644,20 +621,20 @@ int             rc = 0;                 /* Return code               */
 /*-------------------------------------------------------------------*/
 /* Read from a cckd file                                             */
 /*-------------------------------------------------------------------*/
-int cckd_read (DEVBLK *dev, int sfx, off_t off, void *buf, size_t len)
+int cckd_read (DEVBLK *dev, int sfx, off_t off, void *buf, unsigned int len)
 {
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             rc;                     /* Return code               */
 
     cckd = dev->cckd_ext;
 
-    cckd_trace (dev, "file[%d] fd[%d] read, off 0x%" I64_FMT "x len %ld\n",
+    cckd_trace (dev, "file[%d] fd[%d] read, off 0x%" I64_FMT "x len %ld",
                 sfx, cckd->fd[sfx], (long long)off, (long)len);
 
     /* Seek to specified offset */
     if (lseek (cckd->fd[sfx], off, SEEK_SET) < 0)
     {
-        WRITEMSG (HHCCD132E, dev->devnum, sfx, (long long)off, strerror(errno));
+        WRITEMSG (HHCCD132E, SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, (long long)off, strerror(errno));
         cckd_print_itrace ();
         return -1;
     }
@@ -667,9 +644,9 @@ int             rc;                     /* Return code               */
     if (rc < (int)len)
     {
         if (rc < 0)
-            WRITEMSG (HHCCD133E, dev->devnum, sfx, (long long)off, strerror(errno));
+            WRITEMSG (HHCCD133E, SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, (long long)off, strerror(errno));
         else
-            WRITEMSG (HHCCD134E, dev->devnum, sfx, (long long)off, rc, len);
+            WRITEMSG (HHCCD134E, SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, (long long)off, rc, len);
         cckd_print_itrace ();
         return -1;
     }
@@ -681,20 +658,20 @@ int             rc;                     /* Return code               */
 /*-------------------------------------------------------------------*/
 /* Write to a cckd file                                              */
 /*-------------------------------------------------------------------*/
-int cckd_write (DEVBLK *dev, int sfx, off_t off, void *buf, size_t len)
+int cckd_write (DEVBLK *dev, int sfx, off_t off, void *buf, unsigned int len)
 {
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             rc = 0;                 /* Return code               */
 
     cckd = dev->cckd_ext;
 
-    cckd_trace (dev, "file[%d] fd[%d] write, off 0x%" I64_FMT "x len %ld\n",
+    cckd_trace (dev, "file[%d] fd[%d] write, off 0x%" I64_FMT "x len %ld",
                 sfx, cckd->fd[sfx], (long long)off, (long)len);
 
     /* Seek to specified offset */
     if (lseek (cckd->fd[sfx], off, SEEK_SET) < 0)
     {
-        WRITEMSG (HHCCD135E, dev->devnum, sfx, (long long)off, strerror(errno));
+        WRITEMSG (HHCCD135E, SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, (long long)off, strerror(errno));
         return -1;
     }
 
@@ -703,9 +680,9 @@ int             rc = 0;                 /* Return code               */
     if (rc < (int)len)
     {
         if (rc < 0)
-            WRITEMSG (HHCCD136E, dev->devnum, sfx, (long long)off, strerror(errno));
+            WRITEMSG (HHCCD136E, SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, (long long)off, strerror(errno));
         else
-            WRITEMSG (HHCCD137E, dev->devnum, sfx, (long long)off, rc, len);
+            WRITEMSG (HHCCD137E, SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, (long long)off, rc, len);
         cckd_print_itrace ();
         return -1;
     }
@@ -723,13 +700,13 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 
     cckd = dev->cckd_ext;
 
-    cckd_trace (dev, "file[%d] fd[%d] ftruncate, off 0x%" I64_FMT "x\n",
+    cckd_trace (dev, "file[%d] fd[%d] ftruncate, off 0x%" I64_FMT "x",
                 sfx, cckd->fd[sfx], (long long)off);
 
     /* Truncate the file */
     if (ftruncate (cckd->fd[sfx], off) < 0)
     {
-        WRITEMSG (HHCCD138E, dev->devnum, sfx, (long long)off, strerror(errno));
+        WRITEMSG (HHCCD138E, SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, (long long)off, strerror(errno));
         cckd_print_itrace ();
         return -1;
     }
@@ -746,11 +723,11 @@ void *cckd_malloc (DEVBLK *dev, char *id, size_t size)
 void           *p;                      /* Pointer                   */
 
     p = malloc (size);
-    cckd_trace (dev, "%s malloc %p len %ld\n", id, p, (long)size);
+    cckd_trace (dev, "%s malloc %p len %ld", id, p, (long)size);
 
     if (p == NULL)
     {
-        WRITEMSG (HHCCD139E, dev ? dev->devnum : 0, size, strerror(errno));
+        WRITEMSG (HHCCD139E, dev ? SSID_TO_LCSS(dev->ssid) : 0, dev ? dev->devnum : 0, size, strerror(errno));
         cckd_print_itrace ();
     }
 
@@ -766,11 +743,11 @@ void *cckd_calloc (DEVBLK *dev, char *id, size_t n, size_t size)
 void           *p;                      /* Pointer                   */
 
     p = calloc (n, size);
-    cckd_trace (dev, "%s calloc %p len %ld\n", id, p, n*(long)size);
+    cckd_trace (dev, "%s calloc %p len %ld", id, p, n*(long)size);
 
     if (p == NULL)
     {
-        WRITEMSG (HHCCD140E, dev ? dev->devnum : 0, (n*size), strerror(errno));
+        WRITEMSG (HHCCD140E, dev ? SSID_TO_LCSS(dev->ssid) : 0, dev ? dev->devnum : 0, (n*size), strerror(errno));
         cckd_print_itrace ();
     }
 
@@ -783,7 +760,7 @@ void           *p;                      /* Pointer                   */
 /*-------------------------------------------------------------------*/
 void *cckd_free (DEVBLK *dev, char *id, void *p)
 {
-    cckd_trace (dev, "%s free %p\n", id, p);
+    cckd_trace (dev, "%s free %p", id, p);
     if (p) free (p);
     return NULL;
 } /* end function cckd_free */
@@ -829,7 +806,7 @@ int             syncio;                 /* Syncio indicator          */
             /* Return if synchronous i/o */
             if (dev->syncio_active)
             {
-                cckd_trace (dev, "read  trk   %d syncio compressed\n", trk);
+                cckd_trace (dev, "read  trk   %d syncio compressed", trk);
                 cckdblk.stats_synciomisses++;
                 dev->syncio_retry = 1;
                 return -1;
@@ -850,7 +827,7 @@ int             syncio;                 /* Syncio indicator          */
             cache_setval (CACHE_DEVBUF, dev->cache, dev->buflen);
             dev->bufsize = cache_getlen (CACHE_DEVBUF, dev->cache);
             dev->bufupd  = 0;
-            cckd_trace (dev, "read  trk   %d uncompressed len %d\n",
+            cckd_trace (dev, "read  trk   %d uncompressed len %d",
                         trk, dev->buflen);
         }
 
@@ -860,7 +837,7 @@ int             syncio;                 /* Syncio indicator          */
         return 0;
     }
 
-    cckd_trace (dev, "read  trk   %d (%s)\n", trk,
+    cckd_trace (dev, "read  trk   %d (%s)", trk,
                 dev->syncio_active ? "synchronous" : "asynchronous");
 
     /* read the new track */
@@ -941,7 +918,7 @@ int             rc;                     /* Return code               */
     /* Copy the data into the buffer */
     if (buf && len > 0) memcpy (dev->buf + off, buf, len);
 
-    cckd_trace (dev, "updt  trk   %d offset %d length %d\n",
+    cckd_trace (dev, "updt  trk   %d offset %d length %d",
                 trk, off, len);
 
     /* Update the cache entry */
@@ -1024,7 +1001,7 @@ int             maxlen;                 /* Size for cache entry      */
             /* Return if synchronous i/o */
             if (dev->syncio_active)
             {
-                cckd_trace (dev, "read blkgrp  %d syncio compressed\n",
+                cckd_trace (dev, "read blkgrp  %d syncio compressed",
                             blkgrp);
                 cckdblk.stats_synciomisses++;
                 dev->syncio_retry = 1;
@@ -1046,7 +1023,7 @@ int             maxlen;                 /* Size for cache entry      */
             cache_setval (CACHE_DEVBUF, dev->cache, dev->buflen);
             dev->bufsize = cache_getlen (CACHE_DEVBUF, dev->cache);
             dev->bufupd  = 0;
-            cckd_trace (dev, "read bkgrp  %d uncompressed len %d\n",
+            cckd_trace (dev, "read bkgrp  %d uncompressed len %d",
                         blkgrp, dev->buflen);
         }
 
@@ -1055,7 +1032,7 @@ int             maxlen;                 /* Size for cache entry      */
         return 0;
     }
 
-    cckd_trace (dev, "read blkgrp  %d (%s)\n", blkgrp,
+    cckd_trace (dev, "read blkgrp  %d (%s)", blkgrp,
                 dev->syncio_active ? "synchronous" : "asynchronous");
 
     /* Read the new blkgrp */
@@ -1193,7 +1170,7 @@ BYTE           *buf;                    /* Read buffer               */
 
     cckd = dev->cckd_ext;
 
-    cckd_trace (dev, "%d rdtrk     %d\n", ra, trk);
+    cckd_trace (dev, "%d rdtrk     %d", ra, trk);
 
     maxlen = cckd->ckddasd ? dev->ckdtrksz
                            : CFBA_BLOCK_SIZE + CKDDASD_TRKHDR_SIZE;
@@ -1230,7 +1207,7 @@ cckd_read_trk_retry:
         {
             if (cache_getflag(CACHE_DEVBUF, fnd) & CCKD_CACHE_IOBUSY)
             {
-                cckd_trace (dev, "%d rdtrk[%d] %d syncio %s\n", ra, fnd, trk,
+                cckd_trace (dev, "%d rdtrk[%d] %d syncio %s", ra, fnd, trk,
                             cache_getflag(CACHE_DEVBUF, fnd) & CCKD_CACHE_READING ?
                             "reading" : "writing");
                 cckdblk.stats_synciomisses++;
@@ -1258,7 +1235,7 @@ cckd_read_trk_retry:
 
         cache_unlock (CACHE_DEVBUF);
 
-        cckd_trace (dev, "%d rdtrk[%d] %d cache hit buf %p:%2.2x%2.2x%2.2x%2.2x%2.2x\n",
+        cckd_trace (dev, "%d rdtrk[%d] %d cache hit buf %p:%2.2x%2.2x%2.2x%2.2x%2.2x",
                     ra, fnd, trk, buf, buf[0], buf[1], buf[2], buf[3], buf[4]);
 
         cckdblk.stats_switches++;  cckd->switches++;
@@ -1268,7 +1245,7 @@ cckd_read_trk_retry:
         while (cache_getflag(CACHE_DEVBUF, fnd) & CCKD_CACHE_IOBUSY)
         {
             cckdblk.stats_iowaits++;
-            cckd_trace (dev, "%d rdtrk[%d] %d waiting for %s\n", ra, fnd, trk,
+            cckd_trace (dev, "%d rdtrk[%d] %d waiting for %s", ra, fnd, trk,
                         cache_getflag(CACHE_DEVBUF, fnd) & CCKD_CACHE_READING ?
                         "read" : "write");
             cache_setflag (CACHE_DEVBUF, fnd, ~0, CCKD_CACHE_IOWAIT);
@@ -1276,7 +1253,7 @@ cckd_read_trk_retry:
             wait_condition (&cckd->iocond, &cckd->iolock);
             cckd->iowaiters--;
             cache_setflag (CACHE_DEVBUF, fnd, ~CCKD_CACHE_IOWAIT, 0);
-            cckd_trace (dev, "%d rdtrk[%d] %d io wait complete\n",
+            cckd_trace (dev, "%d rdtrk[%d] %d io wait complete",
                         ra, fnd, trk);
         }
 
@@ -1295,13 +1272,13 @@ cckd_read_trk_retry:
     {
         cache_unlock(CACHE_DEVBUF);
         release_lock (&cckd->iolock);
-        cckd_trace (dev, "%d rdtrk[%d] %d syncio cache miss\n", ra, lru, trk);
+        cckd_trace (dev, "%d rdtrk[%d] %d syncio cache miss", ra, lru, trk);
         cckdblk.stats_synciomisses++;
         dev->syncio_retry = 1;
         return -1;
     }
 
-    cckd_trace (dev, "%d rdtrk[%d] %d cache miss\n", ra, lru, trk);
+    cckd_trace (dev, "%d rdtrk[%d] %d cache miss", ra, lru, trk);
 
     /* If no cache entry was stolen, then flush all outstanding writes.
        This requires us to release our locks.  cache_wait should be
@@ -1309,7 +1286,7 @@ cckd_read_trk_retry:
        occur very rarely. */
     if (lru < 0) /* No available entry to be stolen */
     {
-        cckd_trace (dev, "%d rdtrk[%d] %d no available cache entry\n",
+        cckd_trace (dev, "%d rdtrk[%d] %d no available cache entry",
                     ra, lru, trk);
         cache_unlock (CACHE_DEVBUF);
         if (!ra) release_lock (&cckd->iolock);
@@ -1329,7 +1306,7 @@ cckd_read_trk_retry:
     CCKD_CACHE_GETKEY(lru, devnum, oldtrk);
     if (devnum != 0)
     {
-        cckd_trace (dev, "%d rdtrk[%d] %d dropping %4.4X:%d from cache\n",
+        cckd_trace (dev, "%d rdtrk[%d] %d dropping %4.4X:%d from cache",
                     ra, lru, trk, devnum, oldtrk);
         if (!(cache_getflag(CACHE_DEVBUF, lru) & CCKD_CACHE_USED))
         {
@@ -1352,7 +1329,7 @@ cckd_read_trk_retry:
                   cckd->ckddasd ? DEVBUF_TYPE_CCKD : DEVBUF_TYPE_CFBA);
     buf = cache_getbuf(CACHE_DEVBUF, lru, maxlen);
 
-    cckd_trace (dev, "%d rdtrk[%d] %d buf %p len %d\n",
+    cckd_trace (dev, "%d rdtrk[%d] %d buf %p len %d",
                 ra, lru, trk, buf, cache_getlen(CACHE_DEVBUF, lru));
 
     cache_unlock (CACHE_DEVBUF);
@@ -1381,7 +1358,7 @@ cckd_read_trk_retry:
 
     /* Wakeup other thread waiting for this read */
     if (cckd->iowaiters && (flag & CCKD_CACHE_IOWAIT))
-    {   cckd_trace (dev, "%d rdtrk[%d] %d signalling read complete\n",
+    {   cckd_trace (dev, "%d rdtrk[%d] %d signalling read complete",
                     ra, lru, trk);
         broadcast_condition (&cckd->iocond);
     }
@@ -1393,7 +1370,7 @@ cckd_read_trk_retry:
         cckdblk.stats_readaheads++; cckd->readaheads++;
     }
 
-    cckd_trace (dev, "%d rdtrk[%d] %d complete buf %p:%2.2x%2.2x%2.2x%2.2x%2.2x\n",
+    cckd_trace (dev, "%d rdtrk[%d] %d complete buf %p:%2.2x%2.2x%2.2x%2.2x%2.2x",
                 ra, lru, trk, buf, buf[0], buf[1], buf[2], buf[3], buf[4]);
 
     if (cache_busy_percent(CACHE_DEVBUF) > 80) cckd_flush_cache_all();
@@ -1620,7 +1597,7 @@ DEVBLK         *dev = data;             /* -> device block           */
         cache_setflag (ix, i, ~CCKD_CACHE_UPDATED, CCKD_CACHE_WRITE);
         ++cckd->wrpending;
         ++cckdblk.wrpending;
-        cckd_trace (dev, "flush file[%d] cache[%d] %4.4X trk %d\n",
+        cckd_trace (dev, "flush file[%d] cache[%d] %4.4X trk %d",
                     cckd->sfn, i, devnum, trk);
     }
     return 0;
@@ -1667,7 +1644,7 @@ DEVBLK         *dev = data;             /* -> device block           */
     if (dev->devnum == devnum)
     {
         cache_release (ix, i, 0);
-        cckd_trace (dev, "purge cache[%d] %4.4X trk %d purged\n",
+        cckd_trace (dev, "purge cache[%d] %4.4X trk %d purged",
                     i, devnum, trk);
     }
     return 0;
@@ -1772,7 +1749,7 @@ char            threadname[40];
              ? cckd->cdevhdr[cckd->sfn].compress_parm
              : cckdblk.compparm;
 
-        cckd_trace (dev, "%d wrtrk[%d] %d len %d buf %p:%2.2x%2.2x%2.2x%2.2x%2.2x\n",
+        cckd_trace (dev, "%d wrtrk[%d] %d len %d buf %p:%2.2x%2.2x%2.2x%2.2x%2.2x",
                     writer, o, trk, len, buf, buf[0], buf[1],buf[2],buf[3],buf[4]);
 
         /* Compress the image if not null */
@@ -1790,11 +1767,11 @@ char            threadname[40];
             }
 
             /* Compress the track image */
-            cckd_trace (dev, "%d wrtrk[%d] %d comp %s parm %d\n",
+            cckd_trace (dev, "%d wrtrk[%d] %d comp %s parm %d",
                         writer, o, trk, compress[comp], parm);
             bufp = (BYTE *)&buf2;
             bufl = cckd_compress(dev, &bufp, buf, len, comp, parm);
-            cckd_trace (dev, "%d wrtrk[%d] %d compressed length %d\n",
+            cckd_trace (dev, "%d wrtrk[%d] %d compressed length %d",
                         writer, o, trk, bufl);
         }
         else
@@ -1827,13 +1804,13 @@ char            threadname[40];
         cache_unlock (CACHE_DEVBUF);
         cckd->wrpending--;
         if (cckd->iowaiters && ((flag & CCKD_CACHE_IOWAIT) || !cckd->wrpending))
-        {   cckd_trace (dev, "writer[%d] cache[%2.2d] %d signalling write complete\n",
+        {   cckd_trace (dev, "writer[%d] cache[%2.2d] %d signalling write complete",
                         writer, o, trk);
             broadcast_condition (&cckd->iocond);
         }
         release_lock(&cckd->iolock);
 
-        cckd_trace (dev, "%d wrtrk[%2.2d] %d complete flags:%8.8x\n",
+        cckd_trace (dev, "%d wrtrk[%2.2d] %d complete flags:%8.8x",
                     writer, o, trk, cache_getflag(CACHE_DEVBUF,o));
 
         obtain_lock(&cckdblk.wrlock);
@@ -1906,22 +1883,22 @@ off_t           fpos;
      || (largest != cckd->cdevhdr[sfx].free_largest)
        )
     {
-        cckd_trace (dev, "cdevhdr[%d] size   %10d used   %10d free   0x%8.8x\n",
+        cckd_trace (dev, "cdevhdr[%d] size   %10d used   %10d free   0x%8.8x",
                     sfx,cckd->cdevhdr[sfx].size,cckd->cdevhdr[sfx].used,
                     cckd->cdevhdr[sfx].free);
-        cckd_trace (dev, "           nbr   %10d total  %10d imbed  %10d largest %10d\n",
+        cckd_trace (dev, "           nbr   %10d total  %10d imbed  %10d largest %10d",
                     cckd->cdevhdr[sfx].free_number,
                     cckd->cdevhdr[sfx].free_total,cckd->cdevhdr[sfx].free_imbed,
                     cckd->cdevhdr[sfx].free_largest);
-        cckd_trace (dev, "free %p nbr %d 1st %d last %d avail %d\n",
+        cckd_trace (dev, "free %p nbr %d 1st %d last %d avail %d",
                     cckd->free,cckd->freenbr,cckd->free1st,
                     cckd->freelast,cckd->freeavail);
-        cckd_trace (dev, "found nbr %d total %ld largest %ld\n",n,(long)total,(long)largest);
+        cckd_trace (dev, "found nbr %d total %ld largest %ld",n,(long)total,(long)largest);
         fpos = cckd->cdevhdr[sfx].free;
         for (n = 0, i = cckd->free1st; i >= 0; i = cckd->free[i].next)
         {
             if (++n > cckd->freenbr) break;
-            cckd_trace (dev, "%4d: [%4d] prev[%4d] next[%4d] pos %8.8" I64_FMT "x len %8d %8.8" I64_FMT "x pend %d\n",
+            cckd_trace (dev, "%4d: [%4d] prev[%4d] next[%4d] pos %8.8" I64_FMT "x len %8d %8.8" I64_FMT "x pend %d",
                         n, i, cckd->free[i].prev, cckd->free[i].next,
                         (long long)fpos, cckd->free[i].len,
                         (long long)fpos + cckd->free[i].len, cckd->free[i].pending);
@@ -1956,7 +1933,7 @@ int             len;                    /* Requested length          */
         len = *size = CCKD_L2TAB_SIZE;
     }
 
-    cckd_trace (dev, "get_space len %d largest %d flags 0x%2.2x\n",
+    cckd_trace (dev, "get_space len %d largest %d flags 0x%2.2x",
                 len, cckd->cdevhdr[sfx].free_largest, flags);
 
     if (len <= CKDDASD_NULLTRK_FMTMAX)
@@ -1977,13 +1954,13 @@ cckd_get_space_atend:
         fpos = (off_t)cckd->cdevhdr[sfx].size;
         if ((long long)(fpos + len) > cckd->maxsize)
         {
-            WRITEMSG (HHCCD102E, dev->devnum, sfx, (cckd->maxsize >> 20) + 1);
+            WRITEMSG (HHCCD102E, SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, (cckd->maxsize >> 20) + 1);
             return -1;
         }
         cckd->cdevhdr[sfx].size += len;
         cckd->cdevhdr[sfx].used += len;
 
-        cckd_trace (dev, "get_space atend 0x%" I64_FMT "x len %d\n",(long long)fpos, len);
+        cckd_trace (dev, "get_space atend 0x%" I64_FMT "x len %d",(long long)fpos, len);
 
         return fpos;
     }
@@ -2065,7 +2042,7 @@ cckd_get_space_atend:
 
     cckd->cdevhdr[sfx].free_imbed += *size - len;
 
-    cckd_trace (dev, "get_space found 0x%" I64_FMT "x len %d size %d\n",
+    cckd_trace (dev, "get_space found 0x%" I64_FMT "x len %d size %d",
                 (long long)fpos, len, *size);
 
     return fpos;
@@ -2090,7 +2067,7 @@ int             fsize = size;           /* Free space size           */
     cckd = dev->cckd_ext;
     sfx = cckd->sfn;
 
-    cckd_trace (dev, "rel_space offset %" I64_FMT "x len %d size %d\n",
+    cckd_trace (dev, "rel_space offset %" I64_FMT "x len %d size %d",
                 (long long)pos, len, size);
 
     if (!cckd->free) cckd_read_fsp (dev);
@@ -2187,7 +2164,7 @@ U32             ppos, pos;              /* Free space offsets        */
     cckd = dev->cckd_ext;
     sfx = cckd->sfn;
 
-    cckd_trace (dev, "flush_space nbr %d\n",cckd->cdevhdr[sfx].free_number);
+    cckd_trace (dev, "flush_space nbr %d",cckd->cdevhdr[sfx].free_number);
 
     /* Make sure the free space chain is built */
     if (!cckd->free) cckd_read_fsp (dev);
@@ -2236,7 +2213,7 @@ U32             ppos, pos;              /* Free space offsets        */
     }
     cckd->freelast = p;
 
-    cckd_trace (dev, "rel_flush_space nbr %d (after merge)\n",
+    cckd_trace (dev, "rel_flush_space nbr %d (after merge)",
                 cckd->cdevhdr[sfx].free_number);
 
     /* If the last free space is at the end of the file then release it */
@@ -2246,7 +2223,7 @@ U32             ppos, pos;              /* Free space offsets        */
         i = p;
         p = cckd->free[i].prev;
 
-        cckd_trace (dev, "file[%d] rel_flush_space atend 0x%" I64_FMT "x len %d\n",
+        cckd_trace (dev, "file[%d] rel_flush_space atend 0x%" I64_FMT "x len %d",
                     sfx, (long long)ppos, cckd->free[i].len);
 
         /* Remove the entry from the chain */
@@ -2299,7 +2276,7 @@ int             sfx;                    /* File index                */
     cckd = dev->cckd_ext;
     sfx = cckd->sfn;
 
-    cckd_trace (dev, "file[%d] read_chdr\n", sfx);
+    cckd_trace (dev, "file[%d] read_chdr", sfx);
 
     memset (&cckd->cdevhdr[sfx], 0, CCKDDASD_DEVHDR_SIZE);
 
@@ -2349,7 +2326,7 @@ int             sfx;                    /* File index                */
     cckd = dev->cckd_ext;
     sfx = cckd->sfn;
 
-    cckd_trace (dev, "file[%d] write_chdr\n", sfx);
+    cckd_trace (dev, "file[%d] write_chdr", sfx);
 
     /* Set version.release.modlvl */
     cckd->cdevhdr[sfx].vrm[0] = CCKD_VERSION;
@@ -2376,7 +2353,7 @@ int             i;                      /* Work integer              */
     cckd = dev->cckd_ext;
     sfx = cckd->sfn;
 
-    cckd_trace (dev, "file[%d] read_l1 offset 0x%"I64_FMT"x\n",
+    cckd_trace (dev, "file[%d] read_l1 offset 0x%"I64_FMT"x",
                 sfx, (U64)CCKD_L1TAB_POS);
 
     /* Free the old level 1 table if it exists */
@@ -2426,7 +2403,7 @@ int             len;                    /* Length of level 1 table   */
     sfx = cckd->sfn;
     len = cckd->cdevhdr[sfx].numl1tab * CCKD_L1ENT_SIZE;
 
-    cckd_trace (dev, "file[%d] write_l1 0x%"I64_FMT"x len %d\n",
+    cckd_trace (dev, "file[%d] write_l1 0x%"I64_FMT"x len %d",
                 sfx, (U64)CCKD_L1TAB_POS, len);
 
     if (cckd_write (dev, sfx, CCKD_L1TAB_POS, cckd->l1[sfx], len) < 0)
@@ -2449,7 +2426,7 @@ off_t           off;                    /* Offset to l1 entry        */
     sfx = cckd->sfn;
     off = (off_t)(CCKD_L1TAB_POS + l1x * CCKD_L1ENT_SIZE);
 
-    cckd_trace (dev, "file[%d] write_l1ent[%d] , 0x%" I64_FMT "x\n",
+    cckd_trace (dev, "file[%d] write_l1ent[%d] , 0x%" I64_FMT "x",
                 sfx, l1x, (long long)off);
 
     if (cckd_write (dev, sfx, off, &cckd->l1[sfx][l1x], CCKD_L1ENT_SIZE) < 0)
@@ -2471,7 +2448,7 @@ CKDDASD_DEVHDR  devhdr;                 /* Device header             */
     cckd = dev->cckd_ext;
     sfx = cckd->sfn;
 
-    cckd_trace (dev, "file[%d] read_init\n", sfx);
+    cckd_trace (dev, "file[%d] read_init", sfx);
 
     /* Read the device header */
     if (cckd_read (dev, sfx, 0, &devhdr, CKDDASD_DEVHDR_SIZE) < 0)
@@ -2485,7 +2462,7 @@ CKDDASD_DEVHDR  devhdr;                 /* Device header             */
     else if (!(sfx && memcmp (&devhdr.devid, "CKD_S370", 8) == 0 && cckd->ckddasd)
           && !(sfx && memcmp (&devhdr.devid, "FBA_S370", 8) == 0 && cckd->fbadasd))
     {
-        WRITEMSG (HHCCD110E, dev->devnum, sfx);
+        WRITEMSG (HHCCD110E, SSID_TO_LCSS(dev->ssid), dev->devnum, sfx);
         return -1;
     }
 
@@ -2514,7 +2491,7 @@ CCKD_FREEBLK    freeblk;                /* First freeblk read        */
     cckd = dev->cckd_ext;
     sfx = cckd->sfn;
 
-    cckd_trace (dev, "file[%d] read_fsp number %d\n",
+    cckd_trace (dev, "file[%d] read_fsp number %d",
                 sfx, cckd->cdevhdr[sfx].free_number);
 
     cckd->free = cckd_free (dev, "free", cckd->free);
@@ -2622,7 +2599,7 @@ CCKD_FREEBLK   *fsp = NULL;             /* -> new format free space  */
     if (cckd->free == NULL)
         return 0;
 
-    cckd_trace (dev, "file[%d] write_fsp number %d\n",
+    cckd_trace (dev, "file[%d] write_fsp number %d",
                 sfx, cckd->cdevhdr[sfx].free_number);
 
     /* get rid of pending free space */
@@ -2713,7 +2690,7 @@ int             nullfmt;                /* Null track format         */
     cckd = dev->cckd_ext;
     nullfmt = cckd->cdevhdr[cckd->sfn].nullfmt;
 
-    cckd_trace (dev, "file[%d] read_l2 %d active %d %d %d\n",
+    cckd_trace (dev, "file[%d] read_l2 %d active %d %d %d",
                 sfx, l1x, cckd->sfx, cckd->l1x, cckd->l2active);
 
     /* Return if table is already active */
@@ -2733,7 +2710,7 @@ int             nullfmt;                /* Null track format         */
     /* check for level 2 cache hit */
     if (fnd >= 0)
     {
-        cckd_trace (dev, "l2[%d,%d] cache[%d] hit\n", sfx, l1x, fnd);
+        cckd_trace (dev, "l2[%d,%d] cache[%d] hit", sfx, l1x, fnd);
         cache_setflag (CACHE_L2, fnd, 0, L2_CACHE_ACTIVE);
         cache_setage (CACHE_L2, fnd);
         cckdblk.stats_l2cachehits++;
@@ -2745,7 +2722,7 @@ int             nullfmt;                /* Null track format         */
         return 1;
     }
 
-    cckd_trace (dev, "l2[%d,%d] cache[%d] miss\n", sfx, l1x, lru);
+    cckd_trace (dev, "l2[%d,%d] cache[%d] miss", sfx, l1x, lru);
 
     /* Steal an entry if all are busy */
     if (lru < 0) lru = cckd_steal_l2();
@@ -2766,12 +2743,12 @@ int             nullfmt;                /* Null track format         */
         if (nullfmt)
             for (i = 0; i < 256; i++)
                 buf[i].len = buf[i].size = nullfmt;
-        cckd_trace (dev, "l2[%d,%d] cache[%d] null fmt[%d]\n", sfx, l1x, lru, nullfmt);
+        cckd_trace (dev, "l2[%d,%d] cache[%d] null fmt[%d]", sfx, l1x, lru, nullfmt);
     }
     else if (cckd->l1[sfx][l1x] == 0xffffffff)
     {
         memset(buf, 0xff, CCKD_L2TAB_SIZE);
-        cckd_trace (dev, "l2[%d,%d] cache[%d] null 0xff\n", sfx, l1x, lru);
+        cckd_trace (dev, "l2[%d,%d] cache[%d] null 0xff", sfx, l1x, lru);
     }
     /* Read the new level 2 table */
     else
@@ -2788,7 +2765,7 @@ int             nullfmt;                /* Null track format         */
         if (cckd->swapend[sfx])
             cckd_swapend_l2 (buf);
 
-        cckd_trace (dev, "file[%d] cache[%d] l2[%d] read offset 0x%" I64_FMT "x\n",
+        cckd_trace (dev, "file[%d] cache[%d] l2[%d] read offset 0x%" I64_FMT "x",
                     sfx, lru, l1x, (long long)cckd->l1[sfx][l1x]);
 
         cckd->l2reads[sfx]++;
@@ -2814,7 +2791,7 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 
     cckd = dev->cckd_ext;
 
-    cckd_trace (dev, "purge_l2%s\n", "");
+    cckd_trace (dev, "purge_l2%s", "");
 
     cache_lock (CACHE_L2);
     cckd->l2active = cckd->sfx = cckd->l1x = -1;
@@ -2833,7 +2810,7 @@ DEVBLK         *dev = data;             /* -> device block           */
     L2_CACHE_GETKEY(i, sfx, devnum, l1x);
     if (dev == NULL || devnum == dev->devnum)
     {
-        cckd_trace (dev, "purge l2cache[%d] %4.4X sfx %d ix %d purged\n",
+        cckd_trace (dev, "purge l2cache[%d] %4.4X sfx %d ix %d purged",
                     i, devnum, sfx, l1x);
         cache_release(ix, i, 0);
     }
@@ -2887,7 +2864,7 @@ int             fix;                    /* Null format type          */
     fix = cckd->cdevhdr[sfx].nullfmt;
     cckd->l2ok = 0;
 
-    cckd_trace (dev, "file[%d] write_l2 %d\n", sfx, l1x);
+    cckd_trace (dev, "file[%d] write_l2 %d", sfx, l1x);
 
     if (sfx < 0 || l1x < 0) return -1;
 
@@ -2939,7 +2916,7 @@ int             sfx,l1x,l2x;            /* Lookup table indices      */
 
     for (sfx = cckd->sfn; sfx >= 0; sfx--)
     {
-        cckd_trace (dev, "file[%d] l2[%d,%d] trk[%d] read_l2ent 0x%x\n",
+        cckd_trace (dev, "file[%d] l2[%d,%d] trk[%d] read_l2ent 0x%x",
                     sfx, l1x, l2x, trk, cckd->l1[sfx][l1x]);
 
         /* Continue if l2 table not in this file */
@@ -2955,7 +2932,7 @@ int             sfx,l1x,l2x;            /* Lookup table indices      */
             break;
     }
 
-    cckd_trace (dev, "file[%d] l2[%d,%d] trk[%d] read_l2ent 0x%x %d %d\n",
+    cckd_trace (dev, "file[%d] l2[%d,%d] trk[%d] read_l2ent 0x%x %d %d",
                 sfx, l1x, l2x, trk, sfx >= 0 ? cckd->l2[l2x].pos : 0,
                 sfx >= 0 ? cckd->l2[l2x].len : 0,
                 sfx >= 0 ? cckd->l2[l2x].size : 0);
@@ -2992,7 +2969,7 @@ off_t           off;                    /* L2 entry offset           */
     /* Copy the new entry if passed */
     if (l2) memcpy (&cckd->l2[l2x], l2, CCKD_L2ENT_SIZE);
 
-    cckd_trace (dev, "file[%d] l2[%d,%d] trk[%d] write_l2ent 0x%x %d %d\n",
+    cckd_trace (dev, "file[%d] l2[%d,%d] trk[%d] write_l2ent 0x%x %d %d",
                 sfx, l1x, l2x, trk,
                 cckd->l2[l2x].pos, cckd->l2[l2x].len, cckd->l2[l2x].size);
 
@@ -3020,7 +2997,7 @@ CCKD_L2ENT      l2;                     /* Level 2 entry             */
 
     cckd = dev->cckd_ext;
 
-    cckd_trace (dev, "trk[%d] read_trkimg\n", trk);
+    cckd_trace (dev, "trk[%d] read_trkimg", trk);
 
     /* Read level 2 entry for the track */
     if ((sfx = cckd_read_l2ent (dev, &l2, trk)) < 0)
@@ -3079,7 +3056,7 @@ int             size;                   /* Size of new track         */
     l1x = trk >> 8;
     l2x = trk & 0xff;
 
-    cckd_trace (dev, "file[%d] trk[%d] write_trkimg len %d buf %p:%2.2x%2.2x%2.2x%2.2x%2.2x\n",
+    cckd_trace (dev, "file[%d] trk[%d] write_trkimg len %d buf %p:%2.2x%2.2x%2.2x%2.2x%2.2x",
                 sfx, trk, len, buf, buf[0], buf[1], buf[2], buf[3], buf[4]);
 
     /* Validate the new track image */
@@ -3094,7 +3071,7 @@ int             size;                   /* Size of new track         */
     oldl2.pos = cckd->l2[l2x].pos;
     oldl2.len = cckd->l2[l2x].len;
     oldl2.size = cckd->l2[l2x].size;
-    cckd_trace (dev, "file[%d] trk[%d] write_trkimg oldl2 0x%x %d %d\n",
+    cckd_trace (dev, "file[%d] trk[%d] write_trkimg oldl2 0x%x %d %d",
                 sfx, trk, oldl2.pos,oldl2.len,oldl2.size);
 
     /* Check if writing a null track */
@@ -3155,7 +3132,7 @@ int             rc=0;                   /* Return code               */
      || cckd->open[cckd->sfn] != CCKD_OPEN_RW)
         return 0;
 
-    cckd_trace (dev, "file[%d] harden\n", cckd->sfn);
+    cckd_trace (dev, "file[%d] harden", cckd->sfn);
 
     /* Write the compressed device header */
     if (cckd_write_chdr (dev) < 0)
@@ -3211,7 +3188,7 @@ int             size;                   /* Track size                */
     if (size > dev->ckdtrksz ||
         memcmp (&buf[size-CKDDASD_RECHDR_SIZE], &eighthexFF, 8) != 0)
     {
-        WRITEMSG (HHCCD121E, dev->devnum, cckd->sfn, buf[0], buf[1], buf[2], buf[3], buf[4]);
+        WRITEMSG (HHCCD121E, SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn, buf[0], buf[1], buf[2], buf[3], buf[4]);
         size = -1;
     }
 
@@ -3315,7 +3292,7 @@ int             len;                    /* Length of null track      */
         len = CFBA_BLOCK_SIZE + CKDDASD_TRKHDR_SIZE;
     }
 
-    cckd_trace (dev, "null_trk %s %d format %d size %d\n",
+    cckd_trace (dev, "null_trk %s %d format %d size %d",
                 cckd->ckddasd ? "trk" : "blkgrp", trk, nullfmt, len);
 
     return len;
@@ -3379,7 +3356,7 @@ static char    *comp[] = {"none", "zlib", "bzip2"};
                 if (buf[0] & ~CCKD_COMPRESS_MASK)
                 {
                     if (cckdblk.bytemsgs++ < 10)
-                        WRITEMSG (HHCCD122E, dev->devnum, cckd->sfn,
+                        WRITEMSG (HHCCD122E, SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn,
                             t, buf[0],buf[1],buf[2],buf[3],buf[4]);
                     buf[0] &= CCKD_COMPRESS_MASK;
                 }
@@ -3400,7 +3377,7 @@ static char    *comp[] = {"none", "zlib", "bzip2"};
             {
                 if (buf[0] & ~CCKD_COMPRESS_MASK)
                 {
-                    WRITEMSG (HHCCD123E, dev->devnum, cckd->sfn,
+                    WRITEMSG (HHCCD123E, SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn,
                             t, buf[0],buf[1],buf[2],buf[3],buf[4]);
                     buf[0] &= CCKD_COMPRESS_MASK;
                 }
@@ -3414,13 +3391,13 @@ static char    *comp[] = {"none", "zlib", "bzip2"};
 
     if (badcomp)
     {
-        WRITEMSG (HHCCD124E, dev->devnum, cckd->sfn,
+        WRITEMSG (HHCCD124E, SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn,
                 cckd->ckddasd ? "trk" : "blk",
                 cckd->ckddasd ? "trk" : "blk", t, comp[buf[0]]);
     }
     else
     {
-        WRITEMSG (HHCCD125E, dev->devnum, cckd->sfn,
+        WRITEMSG (HHCCD125E, SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn,
                 cckd->ckddasd ? "trk" : "blk",
                 cckd->ckddasd ? "trk" : "blk", trk,
                 buf, buf[0], buf[1], buf[2], buf[3], buf[4]);
@@ -3449,7 +3426,7 @@ int             kl,dl;                  /* Key/Data lengths          */
     if (buf == NULL || len < 0) return -1;
 
     cckd_trace (dev, "validating %s %d len %d %2.2x%2.2x%2.2x%2.2x%2.2x "
-                "%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x\n",
+                "%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x",
                 cckd->ckddasd ? "trk" : "blkgrp", trk, len,
                 buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6],
                 buf[7], buf[8], buf[9], buf[10], buf[11], buf[12]);
@@ -3459,7 +3436,7 @@ int             kl,dl;                  /* Key/Data lengths          */
     {
         if (len == CFBA_BLOCK_SIZE + CKDDASD_TRKHDR_SIZE || len == 0)
             return len;
-        cckd_trace (dev, "validation failed: bad length%s\n","");
+        cckd_trace (dev, "validation failed: bad length%s","");
         return -1;
     }
 
@@ -3476,7 +3453,7 @@ int             kl,dl;                  /* Key/Data lengths          */
     if (/* memcmp (cchh, cchh2, 4) != 0 || */ buf[9]  != 0 ||
         buf[10] != 0 || buf[11] != 0 || buf[12] != 8)
     {
-        cckd_trace (dev, "validation failed: bad r0%s\n","");
+        cckd_trace (dev, "validation failed: bad r0%s","");
         return -1;
     }
 
@@ -3499,7 +3476,7 @@ int             kl,dl;                  /* Key/Data lengths          */
             sz + 8 + kl + dl >= vlen)
         {
             cckd_trace (dev, "validation failed: bad r%d "
-                        "%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x\n",
+                        "%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x",
                         r, buf[sz], buf[sz+1], buf[sz+2], buf[sz+3],
                         buf[sz+4], buf[sz+5], buf[sz+6], buf[sz+7]);
              return -1;
@@ -3509,7 +3486,7 @@ int             kl,dl;                  /* Key/Data lengths          */
 
     if ((sz != len && len > 0) || sz > vlen)
     {
-        cckd_trace (dev, "validation failed: no eot%s\n","");
+        cckd_trace (dev, "validation failed: no eot%s","");
         return -1;
     }
 
@@ -3572,8 +3549,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             {
                 if (strcmp (cckd_sf_name(dev, i),cckd_sf_name(dev2, j)) == 0)
                 {
-                    WRITEMSG (HHCCD142E, dev->devnum, i, cckd_sf_name(dev, i),
-                            dev2->devnum, j, cckd_sf_name(dev2, j));
+                    WRITEMSG (HHCCD142E, SSID_TO_LCSS(dev->ssid),  dev->devnum,  i, cckd_sf_name(dev,  i),
+                                         SSID_TO_LCSS(dev2->ssid), dev2->devnum, j, cckd_sf_name(dev2, j));
                     return -1;
                 }
             }
@@ -3615,7 +3592,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if (cckd->open[i] == CCKD_OPEN_RO) continue;
         if (cckd_open (dev, i, O_RDONLY|O_BINARY, 0) < 0)
         {
-            WRITEMSG (HHCCD151E, dev->devnum, i, cckd_sf_name(dev, i), strerror(errno));
+            WRITEMSG (HHCCD151E, SSID_TO_LCSS(dev->ssid), dev->devnum, i, cckd_sf_name(dev, i), strerror(errno));
             return -1;
         }
     }
@@ -3635,21 +3612,21 @@ CKDDASD_DEVHDR  devhdr;                 /* Device header             */
 
     cckd = dev->cckd_ext;
 
-    cckd_trace (dev, "file[%d] sf_new %s\n", cckd->sfn+1,
+    cckd_trace (dev, "file[%d] sf_new %s", cckd->sfn+1,
                 cckd_sf_name(dev, cckd->sfn+1) ?
                 (char *)cckd_sf_name(dev, cckd->sfn+1) : "(none)");
 
     /* Error if no shadow file name */
     if (dev->dasdsfn == NULL)
     {
-        WRITEMSG (HHCCD161E, dev->devnum, cckd->sfn+1);
+        WRITEMSG (HHCCD161E, SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn+1);
         return -1;
     }
 
     /* Error if max number of shadow files exceeded */
     if (cckd->sfn+1 == CCKD_MAX_SF)
     {
-        WRITEMSG (HHCCD162E, dev->devnum, cckd->sfn+1);
+        WRITEMSG (HHCCD162E, SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn+1);
         return -1;
     }
 
@@ -3742,7 +3719,7 @@ int             syncio;                 /* Saved syncio bit          */
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        WRITEMSG (HHCCD160E, dev->devnum);
+        WRITEMSG (HHCCD160E, SSID_TO_LCSS(dev->ssid), dev->devnum);
         return NULL;
     }
 
@@ -3755,7 +3732,7 @@ int             syncio;                 /* Saved syncio bit          */
     {
         dev->syncio = syncio;
         release_lock (&cckd->iolock);
-        WRITEMSG (HHCCD165W, dev->devnum,cckd->sfn);
+        WRITEMSG (HHCCD165W, SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn);
         return NULL;
     }
     cckd->merging = 1;
@@ -3779,7 +3756,7 @@ int             syncio;                 /* Saved syncio bit          */
 
     /* Create a new shadow file */
     if (cckd_sf_new (dev) < 0) {
-        WRITEMSG (HHCCD163E, dev->devnum, cckd->sfn+1);
+        WRITEMSG (HHCCD163E, SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn+1);
         goto cckd_sf_add_exit;
     }
 
@@ -3787,7 +3764,7 @@ int             syncio;                 /* Saved syncio bit          */
     if (cckd->open[cckd->sfn-1] == CCKD_OPEN_RW)
         cckd_open (dev, cckd->sfn-1, O_RDONLY|O_BINARY, 0);
 
-    WRITEMSG (HHCCD164I, dev->devnum, cckd->sfn, cckd_sf_name (dev, cckd->sfn));
+    WRITEMSG (HHCCD164I, SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn, cckd_sf_name (dev, cckd->sfn));
 
 cckd_sf_add_exit:
 
@@ -3823,7 +3800,7 @@ int             l2updated = 0;          /* 1=L2 table was updated    */
 int             i,j;                    /* Loop indexes              */
 int             merge, force;           /* Flags                     */
 off_t           pos;                    /* File offset               */
-size_t          len;                    /* Length to read/write      */
+unsigned int    len;                    /* Length to read/write      */
 int             size;                   /* Image size                */
 int             trk = -1;               /* Track being read/written  */
 CCKD_L2ENT      from_l2[256],           /* Level 2 tables            */
@@ -3853,7 +3830,7 @@ BYTE            buf[65536];             /* Buffer                    */
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        WRITEMSG (HHCCD170E, dev ? dev->devnum : 0);
+        WRITEMSG (HHCCD170E, dev ? SSID_TO_LCSS(dev->ssid) : 0, dev ? dev->devnum : 0);
         return NULL;
     }
 
@@ -3862,7 +3839,7 @@ BYTE            buf[65536];             /* Buffer                    */
     force = cckd->sfforce;
     cckd->sfmerge = cckd->sfforce = 0;
 
-    cckd_trace (dev, "merge starting: %s %s\n",
+    cckd_trace (dev, "merge starting: %s %s",
                 merge ? "merge" : "nomerge", force ? "force" : "");
 
     /* Disable synchronous I/O for the device */
@@ -3874,7 +3851,7 @@ BYTE            buf[65536];             /* Buffer                    */
     {
         dev->syncio = syncio;
         release_lock (&cckd->iolock);
-        WRITEMSG (HHCCD175W, dev->devnum,cckd->sfn);
+        WRITEMSG (HHCCD175W, SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn);
         return NULL;
     }
     cckd->merging = 1;
@@ -3896,7 +3873,7 @@ BYTE            buf[65536];             /* Buffer                    */
     {
         dev->syncio = syncio;
         release_lock (&cckd->filelock);
-        WRITEMSG (HHCCD171E, dev->devnum,cckd->sfn);
+        WRITEMSG (HHCCD171E, SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn);
         cckd->merging = 0;
         return NULL;
     }
@@ -3908,7 +3885,7 @@ BYTE            buf[65536];             /* Buffer                    */
     /* Harden the `from' file */
     if (cckd_harden (dev) < 0)
     {
-        WRITEMSG (HHCCD174E, dev->devnum, from_sfx, from_sfx);
+        WRITEMSG (HHCCD174E, SSID_TO_LCSS(dev->ssid), dev->devnum, from_sfx, from_sfx);
         goto sf_remove_exit;
     }
 
@@ -3922,9 +3899,9 @@ BYTE            buf[65536];             /* Buffer                    */
         cckd_open (dev, to_sfx, O_RDONLY|O_BINARY, 0);
         if (merge)
         {
-            WRITEMSG (HHCCD172E, dev->devnum, from_sfx, to_sfx,
+            WRITEMSG (HHCCD172E, SSID_TO_LCSS(dev->ssid), dev->devnum, from_sfx, to_sfx,
                     to_sfx == 0 && dev->ckdrdonly && !force
-                    ? ", try `force'" : "");
+                    ? ", try 'force'" : "");
             goto sf_remove_exit;
         }
         else
@@ -3937,7 +3914,7 @@ BYTE            buf[65536];             /* Buffer                    */
         if (cckd_chkdsk (dev, 0) < 0)
         {
             cckd->sfn = from_sfx;
-            WRITEMSG (HHCCD173E, dev->devnum, to_sfx, to_sfx);
+            WRITEMSG (HHCCD173E, SSID_TO_LCSS(dev->ssid), dev->devnum, to_sfx, to_sfx);
             goto sf_remove_exit;
         }
     }
@@ -3947,7 +3924,7 @@ BYTE            buf[65536];             /* Buffer                    */
     /* Perform backwards merge */
     if (merge)
     {
-        cckd_trace (dev, "merging to file[%d]\n", to_sfx);
+        cckd_trace (dev, "merging to file[%d]", to_sfx);
 
         /* Make the target file the active file */
         cckd->sfn = to_sfx;
@@ -4079,7 +4056,7 @@ BYTE            buf[65536];             /* Buffer                    */
     /* Add the file back if necessary */
     if (add) rc = cckd_sf_new (dev) ;
 
-    WRITEMSG (HHCCD181I, dev->devnum, from_sfx, merge ? "merged" : add ? "re-added" : "removed");
+    WRITEMSG (HHCCD181I, SSID_TO_LCSS(dev->ssid), dev->devnum, from_sfx, merge ? "merged" : add ? "re-added" : "removed");
 
 sf_remove_exit:
 
@@ -4095,7 +4072,7 @@ sf_remove_exit:
     if (cckd->iowaiters)
         broadcast_condition (&cckd->iocond);
     dev->syncio = syncio;
-    cckd_trace (dev, "merge complete%s\n","");
+    cckd_trace (dev, "merge complete%s","");
     release_lock (&cckd->iolock);
 
     cckd_sf_stats (dev);
@@ -4104,9 +4081,9 @@ sf_remove_exit:
 sf_merge_error:
 
     if (trk < 0)
-        WRITEMSG (HHCCD180E, dev->devnum, from_sfx);
+        WRITEMSG (HHCCD180E, SSID_TO_LCSS(dev->ssid), dev->devnum, from_sfx);
     else
-        WRITEMSG (HHCCD182E, dev->devnum, from_sfx, trk);
+        WRITEMSG (HHCCD182E, SSID_TO_LCSS(dev->ssid), dev->devnum, from_sfx, trk);
 
     if (l2updated && cckd->l1[to_sfx][i] && cckd->l1[to_sfx][i] != 0xffffffff)
     {
@@ -4397,7 +4374,7 @@ int cckd_disable_syncio(DEVBLK *dev)
     }
     dev->syncio = 0;
     release_lock(&dev->lock);
-    cckd_trace (dev, "syncio disabled%s\n","");
+    cckd_trace (dev, "syncio disabled%s","");
     return 1;
 }
 
@@ -4608,13 +4585,13 @@ int cckd_gc_percolate(DEVBLK *dev, unsigned int size)
 {
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             rc;                     /* Return code               */
-size_t          moved = 0;              /* Space moved               */
+unsigned int    moved = 0;              /* Space moved               */
 int             after = 0, a;           /* New space after old       */
 int             sfx;                    /* File index                */
 int             i, j, l;                /* Indexes                   */
 int             flags;                  /* Write trkimg flags        */
 off_t           fpos, upos;             /* File offsets              */
-size_t          flen, ulen, len;        /* Lengths                   */
+unsigned int    flen, ulen, len;        /* Lengths                   */
 int             trk;                    /* Track number              */
 int             l1x,l2x;                /* Table Indexes             */
 CCKD_L2ENT      l2;                     /* Copied level 2 entry      */
@@ -4626,14 +4603,14 @@ BYTE            buf[256*1024];          /* Buffer                    */
     /* Debug */
     if (cckdblk.itracen)
     {
-        cckd_trace (dev, "gcperc size %d 1st 0x%x nbr %d largest %u\n",
+        cckd_trace (dev, "gcperc size %d 1st 0x%x nbr %d largest %u",
                     size, cckd->cdevhdr[cckd->sfn].free,
                     cckd->cdevhdr[cckd->sfn].free_number,
                     cckd->cdevhdr[cckd->sfn].free_largest);
         fpos = (off_t)cckd->cdevhdr[cckd->sfn].free;
         for (i = cckd->free1st; i >= 0; i = cckd->free[i].next)
         {
-            cckd_trace (dev, "gcperc free[%4d]:%8.8x end %8.8x len %10d%cpend %d\n",
+            cckd_trace (dev, "gcperc free[%4d]:%8.8x end %8.8x len %10d%cpend %d",
                         i,(int)fpos,(int)(fpos+cckd->free[i].len),(int)cckd->free[i].len,
                         fpos+(int)cckd->free[i].len == (int)cckd->free[i].pos ?
                                 '*' : ' ',cckd->free[i].pending);
@@ -4735,7 +4712,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
         /* Return if no applicable used space */
         if (ulen == 0)
         {
-            cckd_trace (dev, "gcperc no applicable space, moved %ld\n",(long)moved);
+            cckd_trace (dev, "gcperc no applicable space, moved %ld",(long)moved);
             release_lock (&cckd->filelock);
             return moved;
         }
@@ -4744,7 +4721,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
         if (ulen > flen + 65536) ulen = flen + 65536;
         if (ulen > sizeof(buf))  ulen = sizeof(buf);
 
-        cckd_trace (dev, "gcperc selected space 0x%" I64_FMT "x len %ld\n",
+        cckd_trace (dev, "gcperc selected space 0x%" I64_FMT "x len %ld",
                     (long long)upos, (long)ulen);
 
         if (cckd_read (dev, sfx, upos, buf, ulen) < 0)
@@ -4763,7 +4740,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
                 /* Moving a level 2 table */
                 len = CCKD_L2TAB_SIZE;
                 if (i + len > ulen) break;
-                cckd_trace (dev, "gcperc move l2tab[%d] at pos 0x%" I64_FMT "x len %ld\n",
+                cckd_trace (dev, "gcperc move l2tab[%d] at pos 0x%" I64_FMT "x len %ld",
                             j, (unsigned long long)(upos + i), (long)len);
 
                 /* Make the level 2 table active */
@@ -4791,7 +4768,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
                 len = (int)l2.size;
                 if (i + l2.len > (int)ulen) break;
 
-                cckd_trace (dev, "gcperc move trk %d at pos 0x%" I64_FMT "x len %d\n",
+                cckd_trace (dev, "gcperc move trk %d at pos 0x%" I64_FMT "x len %d",
                             trk, (long long)(upos + i), (int)l2.len);
 
                 /* Relocate the track image somewhere else */
@@ -4812,21 +4789,21 @@ BYTE            buf[256*1024];          /* Buffer                    */
 
     } /* while (moved < size) */
 
-    cckd_trace (dev, "gcperc moved %ld 1st 0x%x nbr %d\n", (long)moved,
+    cckd_trace (dev, "gcperc moved %ld 1st 0x%x nbr %d", (long)moved,
                 cckd->cdevhdr[cckd->sfn].free,cckd->cdevhdr[cckd->sfn].free_number);
     return moved;
 
 cckd_gc_perc_space_error:
 
     WRITEMSG (HHCCD190E,
-            dev->devnum,cckd->sfn,(long long)(upos + i),
+            SSID_TO_LCSS(dev->ssid), dev->devnum,cckd->sfn,(long long)(upos + i),
             buf[i], buf[i+1],buf[i+2], buf[i+3], buf[i+4]);
     cckd->cdevhdr[cckd->sfn].options |= CCKD_SPERRS;
     cckd_print_itrace();
 
 cckd_gc_perc_error:
 
-    cckd_trace (dev, "gcperc exiting due to error, moved %ld\n", (long)moved);
+    cckd_trace (dev, "gcperc exiting due to error, moved %ld", (long)moved);
     release_lock (&cckd->filelock);
     return moved;
 
@@ -4907,7 +4884,7 @@ off_t           pos, fpos;              /* File offsets              */
                 goto cckd_gc_l2_exit;
             if ((trk = cckd_cchh (dev, buf, -1)) < 0)
                 goto cckd_gc_l2_exit;
-            cckd_trace (dev, "gc_l2 relocate trk[%d] offset 0x%x\n", trk, pos);
+            cckd_trace (dev, "gc_l2 relocate trk[%d] offset 0x%x", trk, pos);
             if ((len = cckd_read_trkimg (dev, buf, trk, NULL)) < 0)
                goto cckd_gc_l2_exit;
             if (cckd_write_trkimg (dev, buf, len, trk, CCKD_SIZE_EXACT) < 0)
@@ -4923,7 +4900,7 @@ off_t           pos, fpos;              /* File offsets              */
         /* Find a level 2 table to relocate */
         i = cckd->free1st;
         fpos = (off_t)cckd->cdevhdr[sfx].free;
-        cckd_trace (dev, "gc_l2 first free[%d] pos 0x%x len %d pending %d\n",
+        cckd_trace (dev, "gc_l2 first free[%d] pos 0x%x len %d pending %d",
                     i, (int)fpos, i >= 0 ? (int)cckd->free[i].len : -1,
                     i >= 0 ? cckd->free[i].pending : -1);
         if (i < 0 || fpos >= cckd->l2bounds || cckd->free[i].pending)
@@ -4949,7 +4926,7 @@ off_t           pos, fpos;              /* File offsets              */
 
         if (i < cckd->cdevhdr[sfx].numl1tab)
         {
-            cckd_trace (dev, "gc_l2 relocate l2[%d] pos 0x%x\n",
+            cckd_trace (dev, "gc_l2 relocate l2[%d] pos 0x%x",
                         i, cckd->l1[sfx][i]);
             if (cckd_read_l2 (dev, sfx, i) < 0)
                 goto cckd_gc_l2_exit;
@@ -4963,7 +4940,7 @@ cckd_gc_l2_exit:
     return 0;
 
 cckd_gc_l2_exit_ok:
-    cckd_trace (dev, "gc_l2 ok%s\n", "");
+    cckd_trace (dev, "gc_l2 ok%s", "");
     cckd->l2ok = 1;
     goto cckd_gc_l2_exit;
 }
@@ -5000,7 +4977,7 @@ static char    *compress[] = {"none", "zlib", "bzip2"};
 
     cckd = dev->cckd_ext;
 
-    cckd_trace (dev, "uncompress comp %d len %d maxlen %d trk %d\n",
+    cckd_trace (dev, "uncompress comp %d len %d maxlen %d trk %d",
                 from[0] & CCKD_COMPRESS_MASK, len, maxlen, trk);
 
     /* Extract compression type */
@@ -5088,10 +5065,10 @@ static char    *compress[] = {"none", "zlib", "bzip2"};
 
     /* Unable to uncompress */
     WRITEMSG (HHCCD193E,
-            dev->devnum, cckd->sfn, trk, from[0], from[1], from[2], from[3], from[4]);
+            SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn, trk, from[0], from[1], from[2], from[3], from[4]);
     if (comp & ~cckdblk.comps)
         WRITEMSG (HHCCD194E,
-                dev->devnum, cckd->sfn, compress[comp]);
+                SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn, compress[comp]);
     return NULL;
 }
 
@@ -5114,7 +5091,7 @@ int rc;
     else
         newlen = -1;
 
-    cckd_trace (dev, "uncompress zlib newlen %d rc %d\n",(int)newlen,rc);
+    cckd_trace (dev, "uncompress zlib newlen %d rc %d",(int)newlen,rc);
 
     return (int)newlen;
 #else
@@ -5147,7 +5124,7 @@ int rc;
     else
         newlen = -1;
 
-    cckd_trace (dev, "uncompress bz2 newlen %d rc %d\n",newlen,rc);
+    cckd_trace (dev, "uncompress bz2 newlen %d rc %d",newlen,rc);
 
     return (int)newlen;
 #else
@@ -5259,24 +5236,7 @@ BYTE *buf;
 /*-------------------------------------------------------------------*/
 void cckd_command_help()
 {
-    logmsg ("cckd command parameters:\n"
-             "help\t\tDisplay help message\n"
-             "stats\t\tDisplay cckd statistics\n"
-             "opts\t\tDisplay cckd options\n"
-             "comp=<n>\t\tOverride compression\t\t(-1 .. 2)\n"
-             "compparm=<n>\tOverride compression parm\t\t(-1 .. 9)\n"
-             "ra=<n>\t\tSet number readahead threads\t\t(1 .. 9)\n"
-             "raq=<n>\t\tSet readahead queue size\t\t(0 .. 16)\n"
-             "rat=<n>\t\tSet number tracks to read ahead\t\t(0 .. 16)\n"
-             "wr=<n>\t\tSet number writer threads\t\t(1 .. 9)\n"
-             "gcint=<n>\tSet garbage collector interval (sec)\t(1 .. 60)\n"
-             "gcparm=<n>\tSet garbage collector parameter\t\t(-8 .. 8)\n"
-             "\t\t    (least agressive ... most aggressive)\n"
-             "nostress=<n>\t1=Disable stress writes\n"
-             "freepend=<n>\tSet free pending cycles\t\t\t(-1 .. 4)\n"
-             "fsync=<n>\t1=Enable fsync()\n"
-             "trace=<n>\tSet trace table size\t\t\t(0 .. 200000)\n"
-            );
+    WRITEMSG(HHCCD030I);
 } /* end function cckd_command_help */
 
 /*-------------------------------------------------------------------*/
@@ -5284,15 +5244,14 @@ void cckd_command_help()
 /*-------------------------------------------------------------------*/
 void cckd_command_opts()
 {
-    logmsg ("comp=%d,compparm=%d,ra=%d,raq=%d,rat=%d,"
-             "wr=%d,gcint=%d,gcparm=%d,nostress=%d,\n"
-             "\tfreepend=%d,fsync=%d,trace=%d,linuxnull=%d\n",
+    
+    WRITEMSG(HHCCD031I, 
              cckdblk.comp == 0xff ? -1 : cckdblk.comp,
              cckdblk.compparm, cckdblk.ramax,
              cckdblk.ranbr, cckdblk.readaheads,
              cckdblk.wrmax, cckdblk.gcwait,
              cckdblk.gcparm, cckdblk.nostress, cckdblk.freepend,
-             cckdblk.fsync, cckdblk.itracen, cckdblk.linuxnull);
+             cckdblk.fsync, cckdblk.linuxnull, cckdblk.itracen );
 } /* end function cckd_command_opts */
 
 /*-------------------------------------------------------------------*/
@@ -5300,12 +5259,7 @@ void cckd_command_opts()
 /*-------------------------------------------------------------------*/
 void cckd_command_stats()
 {
-    logmsg("reads....%10" I64_FMT "d Kbytes...%10" I64_FMT "d writes...%10" I64_FMT "d Kbytes...%10" I64_FMT "d\n"
-            "readaheads%9" I64_FMT "d misses...%10" I64_FMT "d syncios..%10" I64_FMT "d misses...%10" I64_FMT "d\n"
-            "switches.%10" I64_FMT "d l2 reads.%10" I64_FMT "d              stress writes...%10" I64_FMT "d\n"
-            "cachehits%10" I64_FMT "d misses...%10" I64_FMT "d l2 hits..%10" I64_FMT "d misses...%10" I64_FMT "d\n"
-            "waits                                   i/o......%10" I64_FMT "d cache....%10" I64_FMT "d\n"
-            "garbage collector   moves....%10" I64_FMT "d Kbytes...%10" I64_FMT "d\n",
+    WRITEMSG(HHCCD040I,
             cckdblk.stats_reads, cckdblk.stats_readbytes >> 10,
             cckdblk.stats_writes, cckdblk.stats_writebytes >> 10,
             cckdblk.stats_readaheads, cckdblk.stats_readaheadmisses,
@@ -5388,7 +5342,7 @@ int   val, opts = 0;
         {
             if (val < -1 || (val & ~cckdblk.comps) || c != '\0')
             {
-                logmsg ("Invalid value for comp=\n");
+                WRITEMSG(HHCCD020E, val, kw);
                 return -1;
             }
             else
@@ -5401,7 +5355,7 @@ int   val, opts = 0;
         {
             if (val < -1 || val > 9 || c != '\0')
             {
-                logmsg ("Invalid value for compparm=\n");
+                WRITEMSG(HHCCD020E, val, kw);
                 return -1;
             }
             else
@@ -5414,7 +5368,7 @@ int   val, opts = 0;
         {
             if (val < CCKD_MIN_RA || val > CCKD_MAX_RA || c != '\0')
             {
-                logmsg ("Invalid value for ra=\n");
+                WRITEMSG(HHCCD020E, val, kw);
                 return -1;
             }
             else
@@ -5427,7 +5381,7 @@ int   val, opts = 0;
         {
             if (val < 0 || val > CCKD_MAX_RA_SIZE || c != '\0')
             {
-                logmsg ("Invalid value for raq=\n");
+                WRITEMSG(HHCCD020E, val, kw);
                 return -1;
             }
             else
@@ -5440,7 +5394,7 @@ int   val, opts = 0;
         {
             if (val < 0 || val > CCKD_MAX_RA_SIZE || c != '\0')
             {
-                logmsg ("Invalid value for rat=\n");
+                WRITEMSG(HHCCD020E, val, kw);
                 return -1;
             }
             else
@@ -5453,7 +5407,7 @@ int   val, opts = 0;
         {
             if (val < CCKD_MIN_WRITER || val > CCKD_MAX_WRITER || c != '\0')
             {
-                logmsg ("Invalid value for wr=\n");
+                WRITEMSG(HHCCD020E, val, kw);
                 return -1;
             }
             else
@@ -5466,7 +5420,7 @@ int   val, opts = 0;
         {
             if (val < 1 || val > 60 || c != '\0')
             {
-                logmsg ("Invalid value for gcint=\n");
+                WRITEMSG(HHCCD020E, val, kw);
                 return -1;
             }
             else
@@ -5479,7 +5433,7 @@ int   val, opts = 0;
         {
             if (val < -8 || val > 8 || c != '\0')
             {
-                logmsg ("Invalid value for gcparm=\n");
+                WRITEMSG(HHCCD020E, val, kw);
                 return -1;
             }
             else
@@ -5492,7 +5446,7 @@ int   val, opts = 0;
         {
             if (val < 0 || val > 1 || c != '\0')
             {
-                logmsg ("Invalid value for nostress=\n");
+                WRITEMSG(HHCCD020E, val, kw);
                 return -1;
             }
             else
@@ -5505,7 +5459,7 @@ int   val, opts = 0;
         {
             if (val < -1 || val > CCKD_MAX_FREEPEND || c != '\0')
             {
-                logmsg ("Invalid value for freepend=\n");
+                WRITEMSG(HHCCD020E, val, kw);
                 return -1;
             }
             else
@@ -5518,7 +5472,7 @@ int   val, opts = 0;
         {
             if (val < 0 || val > 1 || c != '\0')
             {
-                logmsg ("Invalid value for fsync=\n");
+                WRITEMSG(HHCCD020E, val, kw);
                 return -1;
             }
             else
@@ -5531,7 +5485,7 @@ int   val, opts = 0;
         {
             if (val < 0 || val > CCKD_MAX_TRACE || c != '\0')
             {
-                logmsg ("Invalid value for trace=\n");
+                WRITEMSG(HHCCD020E, val, kw);
                 return -1;
             }
             else
@@ -5544,19 +5498,23 @@ int   val, opts = 0;
                     SLEEP (1);
                     cckdblk.itrace = cckdblk.itracep = cckdblk.itracex = NULL;
                     cckdblk.itracen = 0;
-                    cckd_free (NULL, "trace", p);
+                    free (p);
                 }
 
                 /* Get a new trace table */
                 if (val > 0)
                 {
-                    p = cckd_calloc (NULL, "trace", val, sizeof(CCKD_TRACE));
+                    p = calloc (val, sizeof(CCKD_TRACE));
                     if (p)
                     {
                         cckdblk.itracen = val;
                         cckdblk.itracex = p + val;
                         cckdblk.itracep = p;
                         cckdblk.itrace  = p;
+                    }
+                    else
+                    {
+                        WRITEMSG (HHCCD029E, (val*sizeof(CCKD_TRACE)), strerror(errno));
                     }
                 }
                 opts = 1;
@@ -5566,7 +5524,7 @@ int   val, opts = 0;
         {
             if (val < 0 || val > 1 || c != '\0')
             {
-                logmsg ("Invalid value for linuxnull=\n");
+                WRITEMSG(HHCCD020E, val, kw);
                 return -1;
             }
             else
@@ -5601,7 +5559,7 @@ int   val, opts = 0;
         }
         else
         {
-            logmsg ("cckd invalid keyword: %s\n",kw);
+            WRITEMSG(HHCCD021E, kw);
             if (!cmd) return -1;
             cckd_command_help ();
             op = NULL;
@@ -5618,8 +5576,14 @@ int   val, opts = 0;
 DLL_EXPORT void cckd_print_itrace()
 {
 CCKD_TRACE     *i, *p;                  /* Trace table pointers      */
+int             n;                      /* Trace Entries Printed     */
 
-    if (!cckdblk.itrace) return;
+    if (!cckdblk.itrace) 
+    {
+        WRITEMSG (HHCCD909I);
+        return;
+    }
+    n = 0;
     WRITEMSG (HHCCD900I);
     i = cckdblk.itrace;
     cckdblk.itrace = NULL;
@@ -5628,10 +5592,15 @@ CCKD_TRACE     *i, *p;                  /* Trace table pointers      */
     if (p >= cckdblk.itracex) p = i;
     do
     {
-        if (p[0] != '\0')
-            logmsg ("%s", (char *)p);
+        if ( strlen(*p) > 0 )
+        {
+            n++;
+            WRITEMSG(HHCCD901I, (char *)p);
+        }
         if (++p >= cckdblk.itracex) p = i;
     } while (p != cckdblk.itracep);
+    if ( n == 0 )
+        WRITEMSG(HHCCD908I);
     memset (i, 0, cckdblk.itracen * sizeof(CCKD_TRACE));
     cckdblk.itracep = i;
     cckdblk.itrace  = i;
@@ -5673,7 +5642,7 @@ int             l;
         }
         if(bfr)
         {
-            logmsg("%4.4X:%s",dev->devnum,bfr);
+            WRITEMSG(HHCCD902I, SSID_TO_LCSS(dev->ssid), dev->devnum, bfr);
         }
         va_end(vl);
     }
@@ -5697,8 +5666,8 @@ int             l;
 
         if (p)
         {
-            l = sprintf ((char *)p, "%s" "." "%6.6ld %4.4X:",
-                      tbuf+11, tv.tv_usec, dev ? dev->devnum : 0);
+            l = sprintf ((char *)p, "%s" "." "%6.6ld %d:%4.4X> ",
+                tbuf+11, tv.tv_usec, dev ? SSID_TO_LCSS(dev->ssid) : 0, dev ? dev->devnum : 0);
             vsprintf ((char *)p + l, msg, vl);
         }
     }

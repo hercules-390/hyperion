@@ -2713,7 +2713,7 @@ char          msg[4096];
                  n, n < 400 ? 'I' : n < 700 ? 'W' : 'E');
 
     if (sfx >= 0)
-        i += sprintf (msg+i, "%4.4X file[%d]: ", dev->devnum, sfx);
+        i += sprintf (msg+i, "%d:%4.4X file[%d]: ", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx);
     else
     {
         if ((p = strrchr(dev->filename,  '/')) == NULL

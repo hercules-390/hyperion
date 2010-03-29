@@ -2009,13 +2009,13 @@ void *scsi_tapemountmon_thread( void *db )
     char buf[50];
 
     sprintf(buf, "SCSI-Tape(%u:%4.4X) mount monitor", SSID_TO_LCSS(dev->ssid) ,dev->devnum);
-    logmsg
+    WRITEMSG
     (
         HHCTA300I
         ,thread_id()
-	,getpid()
+        ,getpid()
         ,getpriority(PRIO_PROCESS,0)
-	,buf
+        ,buf
     );
 
     while (!shutdown)
@@ -2145,12 +2145,12 @@ void *scsi_tapemountmon_thread( void *db )
         }
     }
 
-    logmsg
+    WRITEMSG
     (
         HHCTA301I
         ,thread_id()
         ,getpid()
-	,getpriority(PRIO_PROCESS,0)
+        ,getpriority(PRIO_PROCESS,0)
         ,buf
     );
 
