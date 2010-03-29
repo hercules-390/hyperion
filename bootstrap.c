@@ -109,6 +109,12 @@ int main(int ac,char *av[])
     EnableMenuItem( GetSystemMenu( FindConsoleHandle(), FALSE ),
                     SC_CLOSE, MF_BYCOMMAND | MF_GRAYED );
 
+  //  if ( ShutdownBlockReasonCreate( FindConsoleHandle(), L"Guest OS might be processing") == 0)
+  //  {
+  //      DWORD dw = GetLastError(); 
+  //      printf( "ShutdownBlockReasonCreate failed %ul\n", dw);
+  //  }
+  
     // If we're being debugged, then let the debugger
     // catch the exception. Otherwise, let our exception
     // handler catch it...
@@ -163,6 +169,9 @@ int main(int ac,char *av[])
     // Each call to "timeBeginPeriod" must be matched with a call to "timeEndPeriod"
 
     timeEndPeriod( 1 );     // (no longer care about accurate time intervals)
+
+    EnableMenuItem( GetSystemMenu( FindConsoleHandle(), FALSE ),
+                SC_CLOSE, MF_BYCOMMAND | MF_ENABLED );
 
     return rc;
 }

@@ -106,7 +106,9 @@ void *stop_cpus_and_ipl(int *ipltype)
   int cpustates;
   CPU_BITMAP mask;
 
+  sysblk.diag8cmd |= DIAG8CMD_RUNNING;               
   panel_command("stopall");
+  sysblk.diag8cmd &= ~DIAG8CMD_RUNNING;
   WRITEMSG(HHCDN001I);
   sprintf(iplcmd, "%s %03X", ipltype, sysblk.ipldev);
   do
@@ -132,7 +134,9 @@ void *stop_cpus_and_ipl(int *ipltype)
     }
   }
   while(cpustates != CPUSTATE_STOPPED);
+  sysblk.diag8cmd |= DIAG8CMD_RUNNING;               
   panel_command(iplcmd);
+  sysblk.diag8cmd &= ~DIAG8CMD_RUNNING;               
   return NULL;
 }
 #endif /*defined(FEATURE_PROGRAM_DIRECTED_REIPL) && !defined(STOP_CPUS_AND_IPL)*/

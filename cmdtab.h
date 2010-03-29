@@ -7,31 +7,34 @@
 // $Id$
 
 
-//          command    type          function      one-line description...
-// COMMAND ("sample"   PANEL,        sample_cmd,   "short help text", "long help text" )
-// COMMAND ("sample2"  PANEL+CONFIG, sample2_cmd,  "short help text", NULL )  // No long help provided
-// COMMAND ("sample3"  CONFIG,       sample3_cmd,  NULL, NULL ) // No help provided at all
-// COMMAND ("sample4"  DISABLED,     sample4_cmd,  NULL, NULL ) // Disabled command - generally debugging only
+//          command    type          group      function      one-line description...
+// COMMAND ("sample"   PANEL,        SYSOPER,   sample_cmd,   "short help text", "long help text" )
+// COMMAND ("sample2"  PANEL+CONFIG, SYSCMDALL, sample2_cmd,  "short help text", NULL )  // No long help provided
+// COMMAND ("sample3"  CONFIG,       SYSCMDALL, sample3_cmd,  NULL, NULL ) // No help provided at all
+// COMMAND ("sample4"  DISABLED,     SYSDEBUG,  sample4_cmd,  NULL, NULL ) // Disabled command - generally debugging only
 
-COMMAND ( "help",      PANEL,        HelpCommand,
+COMMAND ( "help",      PANEL,        SYSCMDALL,        HelpCommand,
   "list all commands / command specific help",
     "Enter \"help cmd\" where cmd is the command you need help\n"
     "with. If the command has additional help text defined for it,\n"
     "it will be displayed. Help text is usually limited to explaining\n"
     "the format of the command and its various required or optional\n"
     "parameters and is not meant to replace reading the documentation.\n" )
+COMMAND ( "?",         PANEL,         SYSCMDALL,        HelpCommand,  "alias for help\n", NULL )
 
-COMMAND ( "?",         PANEL,        HelpCommand,  "alias for help\n", NULL )
+COMMAND ( "cmdlevel",  PANEL+CONFIG,  SYSCMDALL,        CmdLevel,     "Display/Set current command group",
+         "display/set the current command group set(s)\n"
+         "Format: cmdlevel {ALL, MAINT, PROGrammer, OPERator, and/or DEVELoper}\n")
 
-COMMAND ( "*",         CONFIG+PANEL, comment_cmd,  "comment\n", NULL )
+COMMAND ( "*",         PANEL+CONFIG,  SYSCMDALL,        comment_cmd,  "Comment", NULL )
 
-COMMAND ( "#",         CONFIG+PANEL, comment_cmd,  "comment\n", NULL )
+COMMAND ( "#",         PANEL+CONFIG,  SYSCMDALL,        comment_cmd,  "Comment\n", NULL )
 
-CMDABBR ( "message",1, PANEL,        msg_cmd,      "display message on console a la VM", NULL )
-CMDABBR ( "msg",1,     PANEL,        msg_cmd,      "alias for message", NULL )
-COMMAND ( "msgnoh",    PANEL,        msgnoh_cmd,   "similar to \"message\" but no header\n", NULL )
+CMDABBR ( "message",1, PANEL,         SYSCMDALL,          msg_cmd,      "Display message on console a la VM", NULL )
+CMDABBR ( "msg",1,     PANEL,         SYSCMDALL,          msg_cmd,      "Alias for message", NULL )
+COMMAND ( "msgnoh",    PANEL,         SYSCMDALL,          msgnoh_cmd,   "Similar to \"message\" but no header\n", NULL )
 
-COMMAND ( "hst",       PANEL,        History,
+COMMAND ( "hst",       PANEL,         SYSCMDALL,          History,
   "history of commands",
     "Format: \"hst | hst n | hst l\". Command \"hst l\" or \"hst 0\" displays\n"
     "list of last ten commands entered from command line\n"
@@ -40,7 +43,7 @@ COMMAND ( "hst",       PANEL,        History,
     "hst without an argument works exactly as hst -1, it retrieves last command\n" )
 
 #if defined(OPTION_HAO)
-COMMAND ( "hao",       PANEL,        hao_cmd,
+COMMAND ( "hao",       PANEL,         SYSPROG+SYSDEVEL,          hao_cmd,
   "Hercules Automatic Operator",
     "Format: \"hao  tgt <tgt> | cmd <cmd> | list <n> | del <n> | clear \".\n"
     "  hao tgt <tgt> : define target rule (regex pattern) to react on\n"
@@ -50,9 +53,9 @@ COMMAND ( "hao",       PANEL,        hao_cmd,
     "  hao clear     : delete all rules (stops automatic operator)\n" )
 #endif /* defined(OPTION_HAO) */
 
-COMMAND ( "log",       PANEL,        log_cmd,      "direct log output", NULL )
+COMMAND ( "log",       PANEL,         SYSCMDALL,          log_cmd,      "direct log output", NULL )
 
-COMMAND ( "logopt",    PANEL+CONFIG, logopt_cmd,
+COMMAND ( "logopt",    PANEL+CONFIG,  SYSCMDALL,          logopt_cmd,
   "change log options",
     "Format: \"logopt [timestamp | notimestamp]\".   Sets logging options.\n"
     "\"timestamp\" inserts a time stamp in front of each log message.\n"
@@ -61,42 +64,42 @@ COMMAND ( "logopt",    PANEL+CONFIG, logopt_cmd,
     "\"timestamp\" and \"notimestamp\" may be abbreviated as \"time\"\n"
     "and \"notime\" respectively.\n"                                      )
 
-COMMAND ( "uptime",    PANEL,        uptime_cmd,   "display how long Hercules has been running\n", NULL )
-COMMAND ( "version",   PANEL,        version_cmd,  "display version information\n", NULL )
+COMMAND ( "uptime",    PANEL,         SYSCMDALL,          uptime_cmd,   "display how long Hercules has been running\n", NULL )
+COMMAND ( "version",   PANEL,         SYSCMDALL,          version_cmd,  "display version information\n", NULL )
 
-COMMAND ( "quit",      PANEL,        quit_cmd,     "terminate the emulator", NULL )
-COMMAND ( "exit",      PANEL,        quit_cmd,     "(synonym for 'quit')\n", NULL )
+COMMAND ( "quit",      PANEL,         SYSCMDALL,          quit_cmd,     "terminate the emulator", NULL )
+COMMAND ( "exit",      PANEL,         SYSCMDALL,          quit_cmd,     "(synonym for 'quit')\n", NULL )
 
-COMMAND ( "cpu",       PANEL,        cpu_cmd,
+COMMAND ( "cpu",       PANEL,         SYSCMDALL,          cpu_cmd,
   "Define target cpu for panel display and commands\n",
     "Format: \"cpu hh\" where 'hh' is the hexadecimal cpu address of the cpu\n"
     "in your multiprocessor configuration which you wish all panel commands\n"
     "to apply to. For example, entering 'cpu 1F' followed by \"gpr\" will\n"
     "display the general purpose registers for cpu 31 of your configuration.\n" )
 
-COMMAND ( "fcb",     PANEL,        fcb_cmd,
+COMMAND ( "fcb",       PANEL,         SYSCMDALL,          fcb_cmd,
   "display the current FCB (if only the printer is given)\n",
    "Reset the fcb to the standard one \n" 
    "Load a fcb image \n" )
 
-COMMAND ( "start",     PANEL,        start_cmd,
+COMMAND ( "start",     PANEL,         SYSCMDALL,          start_cmd,
   "start CPU (or printer device if argument given)",
     "Entering the 'start' command by itself simply starts a stopped\n"
     "CPU, whereas 'start <devn>' presses the virtual start button on\n"
     "printer device <devn>.\n"                                            )
 
-COMMAND ( "stop",      PANEL,        stop_cmd,
+COMMAND ( "stop",      PANEL,         SYSCMDALL,          stop_cmd,
   "stop CPU (or printer device if argument given)\n",
     "Entering the 'stop' command by itself simply stops a running\n"
     "CPU, whereas 'stop <devn>' presses the virtual stop button on\n"
     "printer device <devn>, usually causing an INTREQ.\n"                 )
 
-COMMAND ( "startall",  PANEL,        startall_cmd, "start all CPU's", NULL )
+COMMAND ( "startall",  PANEL,         SYSCMDALL,          startall_cmd, "start all CPU's", NULL )
 
-COMMAND ( "stopall",   PANEL,        stopall_cmd,  "stop all CPU's\n", NULL )
+COMMAND ( "stopall",   PANEL,         SYSCMDALL,          stopall_cmd,  "stop all CPU's\n", NULL )
 
 #ifdef _FEATURE_CPU_RECONFIG
-COMMAND ( "cf",        PANEL,        cf_cmd,
+COMMAND ( "cf",        PANEL,         SYSCMDALL,          cf_cmd,
   "Configure current CPU online or offline",
     "Configure current CPU online or offline:  Format->  \"cf [on|off]\"\n"
     "Where the 'current' CPU is defined as whatever CPU was defined as\n"
@@ -106,23 +109,23 @@ COMMAND ( "cf",        PANEL,        cf_cmd,
     "Otherwise the current cpu is configured online or offline as specified.\n"
     "Use 'cfall' to configure/display all CPUs online/offline state.\n"   )
 
-COMMAND ( "cfall",     PANEL,        cfall_cmd,    "configure all CPU's online or offline\n", NULL )
+COMMAND ( "cfall",     PANEL,         SYSCMDALL,          cfall_cmd,    "configure all CPU's online or offline\n", NULL )
 #endif
 
 #ifdef _FEATURE_SYSTEM_CONSOLE
-COMMAND ( ".reply",    PANEL,        g_cmd,
+COMMAND ( ".reply",    PANEL,         SYSCMDALL,          g_cmd,
   "scp command",
     "To reply to a system control program (i.e. guest operating system)\n"
     "message that gets issued to the hercules console, prefix the reply\n"
     "with a period.\n"                                                    )
 
-COMMAND ( "!message",  PANEL,        g_cmd,
+COMMAND ( "!message",  PANEL,         SYSCMDALL,          g_cmd,
   "scp priority messsage",
     "To enter a system control program (i.e. guest operating system)\n"
     "priority command on the hercules console, simply prefix the command\n"
     "with an exclamation point '!'.\n"                                    )
 
-COMMAND ( "ssd",       PANEL,        ssd_cmd,
+COMMAND ( "ssd",       PANEL,         SYSCMDALL,          ssd_cmd,
   "signal shutdown\n",
     "The SSD (signal shutdown) command signals an imminent hypervisor shutdown to\n"
     "the guest.  Guests who support this are supposed to perform a shutdown upon\n"
@@ -133,7 +136,7 @@ COMMAND ( "ssd",       PANEL,        ssd_cmd,
 #endif
 
 #ifdef OPTION_PTTRACE
-COMMAND ( "ptt",       PANEL+CONFIG, EXT_CMD(ptt_cmd),
+COMMAND ( "ptt",       PANEL+CONFIG,  SYSMAINT+SYSPROG+SYSDEVEL,   EXT_CMD(ptt_cmd),
   "Set or display internal trace\n",
 
     "Format: \"ptt [options] [nnn]\"\n"
@@ -160,13 +163,13 @@ COMMAND ( "ptt",       PANEL+CONFIG, EXT_CMD(ptt_cmd),
      "  nnn         - trace buffer size\n"                                  )
 #endif
 
-COMMAND ( "i",         PANEL,        i_cmd,        "generate I/O attention interrupt for device", NULL )
+COMMAND ( "i",         PANEL,         SYSCMDALL,          i_cmd,        "generate I/O attention interrupt for device", NULL )
 
-COMMAND ( "ext",       PANEL,        ext_cmd,      "generate external interrupt", NULL )
+COMMAND ( "ext",       PANEL,         SYSCMDALL,          ext_cmd,      "generate external interrupt", NULL )
 
-COMMAND ( "restart",   PANEL,        restart_cmd,  "generate restart interrupt", NULL )
+COMMAND ( "restart",   PANEL,         SYSCMDALL,          restart_cmd,  "generate restart interrupt", NULL )
 
-COMMAND ( "archmode",  PANEL+CONFIG, archmode_cmd,
+COMMAND ( "archmode",  PANEL+CONFIG,  SYSMAINT+SYSPROG+SYSDEVEL,          archmode_cmd,
   "Set architecture mode",
     "Format: \"archmode [S/370 | ESA/390 | z/Arch | ESAME]\". Entering the command\n"
     "without any argument simply displays the current architecture mode. Entering\n"
@@ -174,32 +177,34 @@ COMMAND ( "archmode",  PANEL+CONFIG, archmode_cmd,
     "Note: \"ESAME\" (Enterprise System Architecture, Modal Extensions) is simply a\n"
     "synonym for \"z/Arch\". (they are identical to each other and mean the same thing)\n" )
 
-COMMAND ( "loadparm",  PANEL+CONFIG, loadparm_cmd, "set IPL parameter\n", NULL )
+COMMAND ( "loadparm",  PANEL+CONFIG,  SYSCMDALL,   loadparm_cmd, "set IPL parameter\n", NULL )
 
-COMMAND ( "lparname",  PANEL+CONFIG, lparname_cmd, "set LPAR name\n", NULL )
+COMMAND ( "lparname",  PANEL+CONFIG,  SYSCMDALL,   lparname_cmd, "set LPAR name\n", NULL )
 
-COMMAND ( "lparnum",   PANEL+CONFIG, lparnum_cmd,  "set LPAR identification number\n", NULL )
+COMMAND ( "lparnum",   PANEL+CONFIG,  SYSCMDALL,   lparnum_cmd,  "set LPAR identification number\n", NULL )
+
+COMMAND ( "cpuidfmt",  PANEL+CONFIG,  SYSCMDALL,   cpuidfmt_cmd, "Set format 0/1 STIDP generation\n", NULL )
 
 #if defined(OPTION_SET_STSI_INFO)
-COMMAND ( "model",     CONFIG,       stsi_model_cmd,"set STSI model code", NULL )
+COMMAND ( "model",     CONFIG,        SYSCMDALL,   stsi_model_cmd,"Set STSI model code", NULL )
 
-COMMAND ( "plant",     CONFIG,       stsi_plant_cmd,"set STSI plant code", NULL )
+COMMAND ( "plant",     CONFIG,        SYSCMDALL,   stsi_plant_cmd,"Set STSI plant code", NULL )
 
-COMMAND ( "manufacturer",CONFIG,     stsi_mfct_cmd, "set STSI manufacturer code\n", NULL )
+COMMAND ( "manufacturer",CONFIG,      SYSCMDALL,   stsi_mfct_cmd,"Set STSI manufacturer code\n", NULL )
 #endif /* defined(OPTION_SET_STSI_INFO) */
 
-COMMAND ( "pgmprdos",  CONFIG,        pgmprdos_cmd,"set LPP license setting\n", NULL )
+COMMAND ( "pgmprdos",  CONFIG,        SYSCMDALL,          pgmprdos_cmd, "set LPP license setting\n", NULL )
 
-COMMAND ( "codepage",  CONFIG,        codepage_cmd,"set codepage conversion table\n", NULL )
+COMMAND ( "codepage",  CONFIG,        SYSCMDALL,          codepage_cmd, "set codepage conversion table\n", NULL )
 
-COMMAND ( "diag8cmd",  CONFIG,        diag8_cmd,   "set diag8 command option\n", NULL )
+COMMAND ( "diag8cmd",  CONFIG,        SYSCMDALL,          diag8_cmd,    "Set diag8 command option\n", NULL )
 
 // The shcmdopt config statement should never be a command as it will introduce a possible integrity exposure *JJ
-COMMAND ( "shcmdopt",  CONFIG,        shcmdopt_cmd,"set diag8 sh option\n", NULL )
+COMMAND ( "shcmdopt",  CONFIG,        SYSCMDALL,          shcmdopt_cmd,"Set diag8 sh option\n", NULL )
 
-COMMAND ( "legacysenseid",CONFIG,     lsid_cmd,    "set legacysenseid setting\n", NULL )
+COMMAND ( "legacysenseid",CONFIG,     SYSCMDALL,          lsid_cmd,    "set legacysenseid setting\n", NULL )
 
-COMMAND ( "ipl",       PANEL,         ipl_cmd,
+COMMAND ( "ipl",       PANEL,         SYSCMDALL,          ipl_cmd,
   "IPL Normal from device xxxx",
     "Format: \"ipl nnnn [parm xxxxxxxxxxxxxx]\"\n"
     "Performs the Initial Program Load manual control function. If the first operand\n"
@@ -212,16 +217,16 @@ COMMAND ( "ipl",       PANEL,         ipl_cmd,
     "general purpose registers (4 characters per register for up to 64 bytes).\n"
     "The PARM option behaves similarly to the VM IPL command.\n"          )
 
-COMMAND ( "iplc",      PANEL,        iplc_cmd,
+COMMAND ( "iplc",      PANEL,         SYSCMDALL,          iplc_cmd,
   "IPL Clear from device xxxx",
     "Performs the Load Clear manual control function. See \"ipl\".\n"     )
 
-COMMAND ( "sysreset",  PANEL,        sysr_cmd,
+COMMAND ( "sysreset",  PANEL,         SYSCMDALL,          sysr_cmd,
   "issue SYSTEM Reset manual operation",
     "Performs the System Reset manual control function. A CPU and I/O\n"
     "subsystem reset are performed.\n"                                    )
 
-COMMAND ( "sysclear",  PANEL,        sysc_cmd,
+COMMAND ( "sysclear",  PANEL,         SYSCMDALL,          sysc_cmd,
   "issue SYSTEM Clear Reset manual operation",
     "Performs the System Reset Clear manual control function. Same as\n"
     "the \"sysreset\" command but also clears main storage to 0. Also, registers\n"
@@ -229,9 +234,9 @@ COMMAND ( "sysclear",  PANEL,        sysc_cmd,
     "point, the system is essentially in the same state as it was just after\n"
     "having been started\n"                                               )
 
-COMMAND ( "store",     PANEL,        store_cmd,    "store CPU status at absolute zero\n", NULL )
+COMMAND ( "store",     PANEL,         SYSCMDALL,          store_cmd,    "store CPU status at absolute zero\n", NULL )
 
-COMMAND ( "sclproot",  CONFIG+PANEL, sclproot_cmd,
+COMMAND ( "sclproot",  PANEL+CONFIG,  SYSCMDALL,          sclproot_cmd,
   "set SCLP base directory",
     "Format: \"sclproot [path|NONE]\"\n"
     "Enables SCLP disk I/O for the specified directory path, or disables SCLP disk\n"
@@ -240,105 +245,105 @@ COMMAND ( "sclproot",  CONFIG+PANEL, sclproot_cmd,
     "If no operand is specified, sclproot displays the current setting.\n")
 
 #if defined(OPTION_HTTP_SERVER)
-COMMAND ( "httproot",  CONFIG,       httproot_cmd, "set HTTP server root directory", NULL )
+COMMAND ( "httproot",  CONFIG,        SYSCMDALL,         httproot_cmd, "Set HTTP server root directory", NULL )
 
-COMMAND ( "httpport",  CONFIG,       httpport_cmd, "set HTTP server port\n", NULL )
+COMMAND ( "httpport",  CONFIG,        SYSCMDALL,         httpport_cmd, "Set HTTP server port\n", NULL )
 
 #if defined( HTTP_SERVER_CONNECT_KLUDGE )
-COMMAND ( "HTTP_SERVER_CONNECT_KLUDGE", CONFIG, httpskm_cmd, "HTTP_SERVER_CONNECT_KLUDGE", NULL )
+COMMAND ( "HTTP_SERVER_CONNECT_KLUDGE", CONFIG, SYSCMDALL, httpskm_cmd, "HTTP_SERVER_CONNECT_KLUDGE", NULL )
 #endif // defined( HTTP_SERVER_CONNECT_KLUDGE )
 #endif /*defined(OPTION_HTTP_SERVER)*/
 
-COMMAND ( "psw",       PANEL,        psw_cmd,
+COMMAND ( "psw",       PANEL,         SYSCMDALL-SYSOPER,          psw_cmd,
   "display or alter program status word",
     "Format: \"psw [operand ...]\" where 'operand ...' is one or more optional\n"
     "parameters which modify the contents of the Program Status Word:\n\n"
 
     "  am=24|31|64           addressing mode\n"
-    "  as=pri|sec|ar|home    address-space\n"
+    "  as=ar|home|pri|sec    address-space\n"
     "  cc=n                  condition code       (decimal 0 to 3)\n"
     "  cmwp=x                C/M/W/P bits         (one hex digit)\n"
     "  ia=xxx                instruction address  (1 to 16 hex digits)\n"
-    "  sm=xx                 system mask          (2 hex digits)\n"
     "  pk=n                  protection key       (decimal 0 to 15)\n"
     "  pm=x                  program mask         (one hex digit)\n"
+    "  sm=xx                 system mask          (2 hex digits)\n"
     "\n"
 
     "Enter \"psw\" by itself to display the current PSW without altering it.\n" )
 
-COMMAND ( "gpr",       PANEL,        gpr_cmd,
+COMMAND ( "gpr",       PANEL,         SYSCMDALL-SYSOPER,          gpr_cmd,
   "display or alter general purpose registers",
     "Format: \"gpr [nn=xxxxxxxxxxxxxxxx]\" where 'nn' is the optional register\n"
     "number (0 to 15) and 'xxxxxxxxxxxxxxxx' is the register value in hexadecimal\n"
     "(1-8 hex digits for 32-bit registers or 1-16 hex digits for 64-bit registers).\n"
     "Enter \"gpr\" by itself to display the register values without altering them.\n" )
 
-COMMAND ( "fpr",       PANEL,        fpr_cmd,       "display floating point registers", NULL )
+COMMAND ( "fpr",       PANEL,         SYSCMDALL-SYSOPER,          fpr_cmd,       "display floating point registers", NULL )
 
-COMMAND ( "fpc",       PANEL,        fpc_cmd,       "display floating point control register", NULL )
+COMMAND ( "fpc",       PANEL,         SYSCMDALL-SYSOPER,          fpc_cmd,       "display floating point control register", NULL )
 
-COMMAND ( "cr",        PANEL,        cr_cmd,
+COMMAND ( "cr",        PANEL,         SYSCMDALL-SYSOPER,          cr_cmd,
   "display or alter control registers",
     "Format: \"cr [nn=xxxxxxxxxxxxxxxx]\" where 'nn' is the optional control register\n"
     "number (0 to 15) and 'xxxxxxxxxxxxxxxx' is the control register value in hex\n"
     "(1-8 hex digits for 32-bit registers or 1-16 hex digits for 64-bit registers).\n"
     "Enter \"cr\" by itself to display the control registers without altering them.\n" )
 
-COMMAND ( "ar",        PANEL,        ar_cmd,        "display access registers", NULL )
+COMMAND ( "ar",        PANEL,         SYSCMDALL-SYSOPER,          ar_cmd,        "display access registers", NULL )
 
-COMMAND ( "pr",        PANEL,        pr_cmd,        "display prefix register", NULL )
+COMMAND ( "pr",        PANEL,         SYSCMDALL-SYSOPER,          pr_cmd,        "display prefix register", NULL )
 
-COMMAND ( "timerint",  PANEL+CONFIG, timerint_cmd,"display or set timers update interval", NULL )
+COMMAND ( "timerint",  PANEL+CONFIG,  SYSCMDALL-SYSOPER,          timerint_cmd,  "display or set timers update interval", NULL )
 
-COMMAND ( "clocks",    PANEL,        clocks_cmd,    "display tod clkc and cpu timer", NULL )
+COMMAND ( "clocks",    PANEL,         SYSCMDALL-SYSOPER,          clocks_cmd,    "display tod clkc and cpu timer", NULL )
 
-COMMAND ( "ipending",  PANEL,        ipending_cmd,  "display pending interrupts", NULL )
+COMMAND ( "ipending",  PANEL,         SYSCMDALL-SYSOPER,          ipending_cmd,  "display pending interrupts", NULL )
 
-COMMAND ( "ds",        PANEL,        ds_cmd,        "display subchannel", NULL )
+COMMAND ( "ds",        PANEL,         SYSCMDALL-SYSOPER,          ds_cmd,        "display subchannel", NULL )
 
-COMMAND ( "r",         PANEL,        r_cmd,
+COMMAND ( "r",         PANEL,         SYSCMDALL-SYSOPER,          r_cmd,
   "display or alter real storage",
     "Format: \"r addr[.len]\" or \"r addr-addr\" to display real\n"
     "storage, or \"r addr=value\" to alter real storage, where 'value'\n"
     "is a hex string of up to 32 pairs of digits.\n"                      )
 
-COMMAND ( "v",         PANEL,        v_cmd,
+COMMAND ( "v",         PANEL,         SYSCMDALL-SYSOPER,          v_cmd,
   "display or alter virtual storage",
     "Format: \"v [P|S|H] addr[.len]\" or \"v [P|S|H] addr-addr\" to display virtual\n"
     "storage, or \"v [P|S|H] addr=value\" to alter virtual storage, where 'value'\n"
     "is a hex string of up to 32 pairs of digits. The optional 'P' or 'S' or 'H'\n"
     "will force Primary, Secondary, or Home translation instead of current PSW mode.\n" )
 
-COMMAND ( "u",         PANEL,        u_cmd,         "disassemble storage", NULL )
+COMMAND ( "u",         PANEL,         SYSCMDALL-SYSOPER,          u_cmd,         "disassemble storage", NULL )
 
-COMMAND ( "devtmax",   PANEL+CONFIG, devtmax_cmd,   "display or set max device threads", NULL )
+COMMAND ( "devtmax",   PANEL+CONFIG,  SYSCMDALL-SYSOPER,          devtmax_cmd,   "display or set max device threads", NULL )
 
-COMMAND ( "k",         PANEL,        k_cmd,         "display cckd internal trace\n", NULL )
+COMMAND ( "k",         PANEL,         SYSCMDALL-SYSOPER,          k_cmd,         "display cckd internal trace\n", NULL )
 
-COMMAND ( "attach",    PANEL,        attach_cmd,
+COMMAND ( "attach",    PANEL,         SYSCMDALL,          attach_cmd,
   "configure device",
     "Format: \"attach devn type [arg...]\n"                               )
 
-COMMAND ( "detach",    PANEL,        detach_cmd,    "remove device", NULL )
+COMMAND ( "detach",    PANEL,         SYSCMDALL,          detach_cmd,    "remove device", NULL )
 
-COMMAND ( "define",    PANEL,        define_cmd,
+COMMAND ( "define",    PANEL,         SYSCMDALL,          define_cmd,
   "rename device",
     "Format: \"define olddevn newdevn\"\n"                                )
 
-COMMAND ( "devinit",   PANEL,        devinit_cmd,
+COMMAND ( "devinit",   PANEL,         SYSCMDALL,          devinit_cmd,
   "reinitialize device",
     "Format: \"devinit devn [arg...]\"\n"
     "If no arguments are given then the same arguments are used\n"
     "as were used the last time the device was created/initialized.\n"    )
 
-COMMAND ( "devlist",   PANEL,        devlist_cmd,   "list device or all devices\n", NULL )
+COMMAND ( "devlist",   PANEL,         SYSCMDALL,          devlist_cmd,   "list device or all devices\n", NULL )
 
-COMMAND ( "qd",        PANEL,        qd_cmd,        "query dasd\n", NULL )
+COMMAND ( "qd",        PANEL,         SYSCMDALL-SYSOPER,          qd_cmd,        "query dasd\n", NULL )
 
-COMMAND ( "mounted_tape_reinit", PANEL+CONFIG, mnttapri_cmd,  "Control tape initilisation", NULL )
+COMMAND ( "mounted_tape_reinit", PANEL+CONFIG,  SYSCMDALL-SYSOPER,   mnttapri_cmd,  "Control tape initilisation", NULL )
 
 #if defined( OPTION_TAPE_AUTOMOUNT )
-COMMAND ( "automount", PANEL+CONFIG, automount_cmd,
+COMMAND ( "automount", PANEL+CONFIG,  SYSCMDALL-SYSOPER,          automount_cmd,
   "Show/Update allowable tape automount directories\n",
     "Format: \"automount  { add <dir> | del <dir> | list }\"\n"
     "\n"
@@ -355,9 +360,9 @@ COMMAND ( "automount", PANEL+CONFIG, automount_cmd,
 #endif /* OPTION_TAPE_AUTOMOUNT */
 
 #if defined( OPTION_SCSI_TAPE )
-COMMAND ( "auto_scsi_mount", PANEL+CONFIG, ascsimnt_cmd,  "control SCSI tape mount", NULL )
+COMMAND ( "auto_scsi_mount", PANEL+CONFIG,  SYSCMDALL-SYSOPER,   ascsimnt_cmd,  "Control SCSI tape mount", NULL )
 
-COMMAND ( "scsimount", PANEL,        scsimount_cmd,
+COMMAND ( "scsimount",       PANEL,         SYSCMDALL-SYSOPER,   scsimount_cmd,
   "automatic SCSI tape mounts\n",
     "Format:    \"scsimount  [ no | yes | 0-99 ]\".\n"
     "\n"
@@ -373,23 +378,23 @@ COMMAND ( "scsimount", PANEL,        scsimount_cmd,
     "system). 'yes' is equivalent to specifying a 5 second interval.\n"   )
 #endif /* defined( OPTION_SCSI_TAPE ) */
 
-COMMAND ( "cd",        PANEL,        cd_cmd,        "change directory", NULL )
+COMMAND ( "cd",        PANEL,         SYSCMDALL,          cd_cmd,        "change directory", NULL )
 
-COMMAND ( "pwd",       PANEL,        pwd_cmd,       "print working directory", NULL )
+COMMAND ( "pwd",       PANEL,         SYSCMDALL,          pwd_cmd,       "print working directory", NULL )
 
-COMMAND ( "sh",        PANEL,        sh_cmd,
+COMMAND ( "sh",        PANEL,         SYSCMDALL-SYSOPER,          sh_cmd,
   "shell command\n",
     "Format: \"sh command [args...]\" where 'command' is any valid shell\n"
     "command. The entered command and any arguments are passed as-is to the\n"
     "shell for processing and the results are displayed on the console.\n" )
 
-COMMAND ( "cache",     PANEL,        EXT_CMD(cache_cmd), "cache command", NULL )
+COMMAND ( "cache",     PANEL,         SYSCMDALL-SYSOPER,          EXT_CMD(cache_cmd), "cache command", NULL )
 
-COMMAND ( "cckd",      PANEL+CONFIG, cckd_cmd,       "cckd command", NULL )
+COMMAND ( "cckd",      PANEL+CONFIG,  SYSCMDALL-SYSOPER,          cckd_cmd,       "cckd command", NULL )
 
-COMMAND ( "shrd",      PANEL,        EXT_CMD(shared_cmd), "shrd command", NULL )
+COMMAND ( "shrd",      PANEL,         SYSCMDALL-SYSOPER,          EXT_CMD(shared_cmd), "shrd command", NULL )
 
-COMMAND ( "conkpalv",  PANEL+CONFIG, conkpalv_cmd,
+COMMAND ( "conkpalv",  PANEL+CONFIG,  SYSCMDALL-SYSOPER,          conkpalv_cmd,
   "Display/alter console TCP keep-alive settings",
     "Format: \"conkpalv (idle,intv,count)\" where 'idle', 'intv' and 'count' are the\n"
     "new values for the TCP keep-alive settings for console connections:\n"
@@ -400,7 +405,7 @@ COMMAND ( "conkpalv",  PANEL+CONFIG, conkpalv_cmd,
     "a single comma, no intervening spaces between them, surrounded by parenthesis.\n"
     "The command \"conkpalv\" without any operand displays the current values.\n" )
 
-COMMAND ( "quiet",     PANEL,        quiet_cmd,
+COMMAND ( "quiet",     PANEL,         SYSCMDALL-SYSOPER,          quiet_cmd,
   "Toggle automatic refresh of panel display data\n",
     "'quiet' either disables automatic screen refreshing if it is\n"
     "currently enabled or enables it if it is currently disabled.\n"
@@ -409,7 +414,7 @@ COMMAND ( "quiet",     PANEL,        quiet_cmd,
     "able to scroll the display, etc. Basically all screen updating\n"
     "is disabled. Entering 'quiet' again re-enables screen updating.\n"   )
 
-COMMAND ( "t",         PANEL,        trace_cmd,
+COMMAND ( "t",         PANEL,         SYSCMDALL-SYSOPER,          trace_cmd,
   "instruction trace",
     "Format: \"t addr-addr\" or \"t addr:addr\" or \"t addr.length\"\n"
     "sets the instruction tracing range (which is totally separate from\n"
@@ -420,23 +425,23 @@ COMMAND ( "t",         PANEL,        trace_cmd,
     "Use the t+ command to activate instruction tracing.\n"
     "\"t 0\" eliminates the range (all addresses will be traced).\n"      )
 
-COMMAND ( "t+",        PANEL,        trace_cmd,
+COMMAND ( "t+",        PANEL,         SYSCMDALL-SYSOPER,          trace_cmd,
   "instruction trace on",
     "Format: \"t+\" turns on instruction tracing. A range can be specified\n"
     "as for the \"t\" command, otherwise the existing range is used. If there\n"
     "is no range (or range was specified as 0) then all instructions will be\n"
     "traced.\n"                                                           )
 
-COMMAND ( "t-",        PANEL,        trace_cmd,
+COMMAND ( "t-",        PANEL,         SYSCMDALL-SYSOPER,          trace_cmd,
   "instruction trace off",
     "Format: \"t-\" turns off instruction tracing.\n"                     )
 
-COMMAND ( "t?",        PANEL,        trace_cmd,
+COMMAND ( "t?",        PANEL,         SYSCMDALL-SYSOPER,          trace_cmd,
   "instruction trace query",
     "Format: \"t?\" displays whether instruction tracing is on or off\n"
     "and the range if any.\n"                                             )
 
-COMMAND ( "s",         PANEL,        trace_cmd,
+COMMAND ( "s",         PANEL,         SYSCMDALL-SYSOPER,          trace_cmd,
   "instruction stepping",
     "Format: \"s addr-addr\" or \"s addr:addr\" or \"s addr.length\"\n"
     "sets the instruction stepping and instruction breaking range,\n"
@@ -447,7 +452,7 @@ COMMAND ( "s",         PANEL,        trace_cmd,
     "Use the s+ command to activate instruction stepping.\n"
     "\"s 0\" eliminates the range (all addresses will be stepped).\n"     )
 
-COMMAND ( "s+",        PANEL,        trace_cmd,
+COMMAND ( "s+",        PANEL,         SYSCMDALL-SYSOPER,          trace_cmd,
   "instruction stepping on",
     "Format: \"s+\" turns on instruction stepping. A range can be specified\n"
     "as for the \"s\" command, otherwise the existing range is used. If there\n"
@@ -458,30 +463,30 @@ COMMAND ( "s+",        PANEL,        trace_cmd,
     "to execute the instruction and stop at the next instruction. To turn\n"
     "off instruction stepping and continue execution, enter the \"g\" command.\n" )
 
-COMMAND ( "s-",        PANEL,        trace_cmd,
+COMMAND ( "s-",        PANEL,         SYSCMDALL-SYSOPER,          trace_cmd,
   "instruction stepping off",
     "Format: \"s-\" turns off instruction stepping.\n"                    )
 
-COMMAND ( "s?",        PANEL,        trace_cmd,
+COMMAND ( "s?",        PANEL,         SYSCMDALL-SYSOPER,          trace_cmd,
   "instruction stepping query",
     "Format: \"s?\" displays whether instruction stepping is on or off\n"
     "and the range if any.\n"                                             )
 
-COMMAND ( "b",         PANEL,        trace_cmd,
+COMMAND ( "b",         PANEL,         SYSCMDALL-SYSOPER,          trace_cmd,
   "set breakpoint",
     "Format: \"b addr\" or \"b addr-addr\" where 'addr' is the instruction\n"
     "address or range of addresses where you wish to halt execution. This\n"
     "command is synonymous with the \"s+\" command.\n"                    )
 
-COMMAND ( "b+",        PANEL,        trace_cmd,    "set breakpoint", NULL )
+COMMAND ( "b+",        PANEL,         SYSCMDALL-SYSOPER,          trace_cmd,    "set breakpoint", NULL )
 
-COMMAND ( "b-",        PANEL,        trace_cmd,
+COMMAND ( "b-",        PANEL,         SYSCMDALL-SYSOPER,          trace_cmd,
   "delete breakpoint",
     "Format: \"b-\"  This command is the same as \"s-\"\n"                )
 
-COMMAND ( "g",         PANEL,        g_cmd,        "turn off instruction stepping and start all CPUs\n", NULL )
+COMMAND ( "g",         PANEL,         SYSCMDALL-SYSOPER,          g_cmd,        "turn off instruction stepping and start all CPUs\n", NULL )
 
-COMMAND ( "ostailor",  PANEL+CONFIG, ostailor_cmd,
+COMMAND ( "ostailor",  PANEL+CONFIG,  SYSCMDALL-SYSOPER,          ostailor_cmd,
   "trace program interrupts",
     "Format: \"ostailor quiet | os/390 | z/os | vm | vse | linux | null\". Specifies\n"
     "the intended operating system. The effect is to reduce control panel message\n"
@@ -493,13 +498,13 @@ COMMAND ( "ostailor",  PANEL+CONFIG, ostailor_cmd,
     "SEE ALSO the 'pgmtrace' command which allows you to further fine tune\n"
     "the tracing of program interrupt exceptions.\n"                      )
 
-COMMAND ( "pgmtrace",  PANEL,        pgmtrace_cmd,
+COMMAND ( "pgmtrace",  PANEL,         SYSCMDALL-SYSOPER,          pgmtrace_cmd,
   "trace program interrupts",
     "Format: \"pgmtrace [-]intcode\" where 'intcode' is any valid program\n"
     "interruption code in the range 0x01 to 0x40. Precede the interrupt code\n"
     "with a '-' to stop tracing of that particular program interruption.\n" )
 
-COMMAND ( "savecore",  PANEL,        savecore_cmd,
+COMMAND ( "savecore",  PANEL,         SYSCMDALL-SYSOPER,          savecore_cmd,
   "save a core image to file",
     "Format: \"savecore filename [{start|*}] [{end|*}]\" where 'start' and 'end'\n"
     "define the starting and ending addresss of the range of real storage to be\n"
@@ -507,32 +512,32 @@ COMMAND ( "savecore",  PANEL,        savecore_cmd,
     "(the default) means: \"the first/last byte of the first/last modified page\n"
     "as determined by the storage-key 'changed' bit\".\n"                 )
 
-COMMAND ( "loadcore",  PANEL,        loadcore_cmd,
+COMMAND ( "loadcore",  PANEL,         SYSCMDALL-SYSOPER,          loadcore_cmd,
   "load a core image file",
     "Format: \"loadcore filename [address]\" where 'address' is the storage address\n"
     "of where to begin loading memory. The file 'filename' is presumed to be a pure\n"
     "binary image file previously created via the 'savecore' command. The default for\n"
     "'address' is 0 (begining of storage).\n"                             )
 
-COMMAND ( "loadtext",  PANEL,        loadtext_cmd,
+COMMAND ( "loadtext",  PANEL,         SYSCMDALL-SYSOPER,          loadtext_cmd,
   "load a text deck file\n",
     "Format: \"loadtext filename [address]\". This command is essentially identical\n"
     "to the 'loadcore' command except that it loads a text deck file with \"TXT\"\n"
     "and \"END\" 80 byte records (i.e. an object deck).\n"                )
 
 #if defined(OPTION_DYNAMIC_LOAD)
-COMMAND ( "modpath",   CONFIG,       modpath_cmd,  "set module load path", NULL )
-COMMAND ( "ldmod",     CONFIG+PANEL, ldmod_cmd,    "load a module", NULL )
-COMMAND ( "rmmod",     PANEL,        rmmod_cmd,    "delete a module", NULL )
-COMMAND ( "lsmod",     PANEL,        lsmod_cmd,    "list dynamic modules", NULL )
-COMMAND ( "lsdep",     PANEL,        lsdep_cmd,    "list module dependencies\n", NULL )
+COMMAND ( "modpath",   CONFIG,        SYSCMDALL-SYSOPER,          modpath_cmd,  "set module load path", NULL )
+COMMAND ( "ldmod",     PANEL+CONFIG,  SYSCMDALL-SYSOPER,          ldmod_cmd,    "load a module", NULL )
+COMMAND ( "rmmod",     PANEL,         SYSCMDALL-SYSOPER,          rmmod_cmd,    "delete a module", NULL )
+COMMAND ( "lsmod",     PANEL,         SYSCMDALL-SYSOPER,          lsmod_cmd,    "list dynamic modules", NULL )
+COMMAND ( "lsdep",     PANEL,         SYSCMDALL-SYSOPER,          lsdep_cmd,    "list module dependencies\n", NULL )
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
 
 #ifdef OPTION_IODELAY_KLUDGE
-COMMAND ( "iodelay",   PANEL+CONFIG, iodelay_cmd,   "display or set I/O delay value", NULL )
+COMMAND ( "iodelay",   PANEL+CONFIG,  SYSCMDALL-SYSOPER,          iodelay_cmd,   "display or set I/O delay value", NULL )
 #endif
 
-COMMAND ( "ctc",       PANEL,        ctc_cmd,
+COMMAND ( "ctc",       PANEL,         SYSCMDALL-SYSOPER,          ctc_cmd,
   "Enable/Disable CTC debugging",
     "Format:  \"ctc  debug  { on | off }  [ <devnum> | ALL ]\".\n\n"
     "Enables/disables debug packet tracing for the specified CTCI/LCS\n"
@@ -540,7 +545,7 @@ COMMAND ( "ctc",       PANEL,        ctc_cmd,
     "groups if <devnum> is not specified or specified as 'ALL'.\n"        )
 
 #if defined(OPTION_W32_CTCI)
-COMMAND ( "tt32",      PANEL,        tt32_cmd,
+COMMAND ( "tt32",      PANEL,         SYSCMDALL-SYSOPER,          tt32_cmd,
   "control/query CTCI-W32 functionality",
     "Format:  \"tt32   debug | nodebug | stats <devnum>\".\n"
     "\n"
@@ -548,10 +553,10 @@ COMMAND ( "tt32",      PANEL,        tt32_cmd,
     "or displays TunTap32 stats for the specified CTC device.\n"          )
 #endif
 
-COMMAND ( "toddrag",   PANEL+CONFIG, toddrag_cmd,  "display or set TOD clock drag factor", NULL )
+COMMAND ( "toddrag",   PANEL+CONFIG,  SYSCMDALL-SYSOPER,          toddrag_cmd,  "display or set TOD clock drag factor", NULL )
 
 #ifdef PANEL_REFRESH_RATE
-COMMAND ( "panrate",   PANEL+CONFIG, panrate_cmd,
+COMMAND ( "panrate",   PANEL+CONFIG,  SYSCMDALL,          panrate_cmd,
   "Display or set rate at which console refreshes",
     "Format: \"panrate [nnn | fast | slow]\". Sets or displays the panel refresh rate.\n"
     "panrate nnn sets the refresh rate to nnn milliseconds.\n"
@@ -560,10 +565,10 @@ COMMAND ( "panrate",   PANEL+CONFIG, panrate_cmd,
     "If no operand is specified, panrate displays the current refresh rate.\n")
 #endif
 
-COMMAND ( "pantitle",  CONFIG,       pantitle_cmd, "display or set console title", NULL )
-
+COMMAND ( "pantitle",  CONFIG,        SYSCMDALL,          pantitle_cmd, "display or set console title", NULL )
+ 
 #ifdef OPTION_MSGHLD
-COMMAND ( "msghld",    PANEL,        msghld_cmd,
+COMMAND ( "msghld",    PANEL,         SYSCMDALL,          msghld_cmd,
   "Display or set the timeout of held messages",
     "Format: \"msghld [value | info | clear]\".\n"
     "value: timeout value of held message in seconds\n"
@@ -571,14 +576,14 @@ COMMAND ( "msghld",    PANEL,        msghld_cmd,
     "clear: releases the held messages\n"                                 )
 #endif
 
-COMMAND ( "syncio",    PANEL,        syncio_cmd,    "display syncio devices statistics", NULL )
+COMMAND ( "syncio",    PANEL,         SYSCMDALL-SYSOPER,          syncio_cmd,    "display syncio devices statistics", NULL )
 
 #if defined(OPTION_INSTRUCTION_COUNTING)
-COMMAND ( "icount",    PANEL,        icount_cmd,    "display individual instruction counts", NULL )
+COMMAND ( "icount",    PANEL,         SYSCMDALL-SYSOPER,          icount_cmd,    "display individual instruction counts", NULL )
 #endif
 
 #ifdef OPTION_MIPS_COUNTING
-COMMAND ( "maxrates",  PANEL,        maxrates_cmd,
+COMMAND ( "maxrates",  PANEL,         SYSCMDALL,          maxrates_cmd,
   "display maximum observed MIPS/SIOS rate for the\n"
   "               defined interval or define a new reporting interval\n",
     "Format: \"maxrates [nnnn]\" where 'nnnn' is the desired reporting\n"
@@ -588,12 +593,12 @@ COMMAND ( "maxrates",  PANEL,        maxrates_cmd,
 #endif // OPTION_MIPS_COUNTING
 
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
-COMMAND ( "asn_and_lx_reuse", CONFIG, alrf_cmd, "Enable/Disable ASN and LX reuse facility", NULL )
-COMMAND ( "alrf"            , CONFIG, alrf_cmd, "alias for asn_and_lx_reuse\n", NULL )
+COMMAND ( "asn_and_lx_reuse", CONFIG,        SYSCMDALL-SYSOPER,   alrf_cmd, "Enable/Disable ASN and LX reuse facility", NULL )
+COMMAND ( "alrf"            , CONFIG,        SYSCMDALL-SYSOPER,   alrf_cmd, "Alias for asn_and_lx_reuse\n", NULL )
 #endif /* defined(_FEATURE_ASN_AND_LX_REUSE) */
 
 #if defined(FISH_HANG)
-COMMAND ( "FishHangReport",   PANEL, FishHangReport_cmd,
+COMMAND ( "FishHangReport",   PANEL,         SYSCMDALL-SYSOPER,   FishHangReport_cmd,
   "Display thread/lock/event objects (DEBUG)\n",
     "When built with --enable-fthreads --enable-fishhang, a detailed record of\n"
     "every thread, lock and event that is created is maintained for debugging purposes.\n"
@@ -606,7 +611,7 @@ COMMAND ( "FishHangReport",   PANEL, FishHangReport_cmd,
 #endif
 
 #if defined(OPTION_CONFIG_SYMBOLS)
-COMMAND ( "defsym",    PANEL+CONFIG, defsym_cmd,
+COMMAND ( "defsym",    PANEL+CONFIG,  SYSCMDALL-SYSOPER,          defsym_cmd,
   "Define symbol",
     "Format: \"defsym symbol [value]\". Defines symbol 'symbol' to contain value 'value'.\n"
     "The symbol can then be the object of a substitution for later panel commands.\n"
@@ -616,77 +621,77 @@ COMMAND ( "defsym",    PANEL+CONFIG, defsym_cmd,
     "Enter \"defsym\" by itself to display the values of all defined symbols.\n" )
 #endif
 
-COMMAND ( "script",    PANEL,        script_cmd,
+COMMAND ( "script",    PANEL,         SYSCMDALL-SYSOPER,          script_cmd,
   "Run a sequence of panel commands contained in a file",
     "Format: \"script filename [...filename...]\". Sequentially executes the commands contained\n"
     "within the file -filename-. The script file may also contain \"script\" commands,\n"
     "but the system ensures that no more than 10 levels of script are invoked at any\n"
     "one time (to avoid a recursion loop)\n"                              )
 
-COMMAND ( "cscript",   PANEL,        cscript_cmd,
+COMMAND ( "cscript",   PANEL,         SYSCMDALL-SYSOPER,          cscript_cmd,
   "Cancels a running script thread\n",
     "Format: \"cscript\". This command will cancel the currently running script.\n"
     "if no script is running, no action is taken\n"                       )
 
 #if defined(FEATURE_ECPSVM)
-COMMAND ( "evm",       PANEL,        evm_cmd_1,
+COMMAND ( "evm",       PANEL,         SYSCMDALL-SYSOPER,          evm_cmd_1,
   "ECPS:VM Commands (Deprecated)",
     "Format: \"evm\". This command is deprecated.\n"
     "use \"ecpsvm\" instead\n"                                            )
 
-COMMAND ( "ecpsvm",    PANEL,        evm_cmd,
+COMMAND ( "ecpsvm",    PANEL,         SYSCMDALL-SYSOPER,          evm_cmd,
   "ECPS:VM Commands\n",
     "Format: \"ecpsvm\". This command invokes ECPS:VM Subcommands.\n"
     "Type \"ecpsvm help\" to see a list of available commands\n"          )
 #endif
 
-COMMAND ( "aea",       PANEL,        aea_cmd,       "display AEA tables", NULL )
-COMMAND ( "aia",       PANEL,        aia_cmd,       "display AIA fields", NULL )
-COMMAND ( "tlb",       PANEL,        tlb_cmd,       "display TLB tables\n", NULL )
+COMMAND ( "aea",       PANEL,         SYSCMDALL-SYSOPER,          aea_cmd,       "Display AEA tables", NULL )
+COMMAND ( "aia",       PANEL,         SYSCMDALL-SYSOPER,          aia_cmd,       "Display AIA fields", NULL )
+COMMAND ( "tlb",       PANEL,         SYSCMDALL-SYSOPER,          tlb_cmd,       "Display TLB tables\n", NULL )
 
 #if defined(SIE_DEBUG_PERFMON)
-COMMAND ( "spm",       PANEL,        spm_cmd,       "SIE performance monitor\n", NULL )
+COMMAND ( "spm",       PANEL,         SYSCMDALL-SYSOPER,          spm_cmd,       "SIE performance monitor\n", NULL )
 #endif
 #if defined(OPTION_COUNTING)
-COMMAND ( "count",     PANEL,        count_cmd,     "display/clear overall instruction count\n", NULL )
+COMMAND ( "count",     PANEL,         SYSCMDALL-SYSOPER,          count_cmd,     "Display/clear overall instruction count\n", NULL )
 #endif
-COMMAND ( "sizeof",    PANEL,        sizeof_cmd,    "display size of structures\n", NULL )
+COMMAND ( "sizeof",    PANEL,         SYSCMDALL-SYSOPER-SYSPROG,          sizeof_cmd,    "Display size of structures\n", NULL )
 
-COMMAND ( "suspend",   PANEL,        suspend_cmd,   "suspend hercules", NULL )
+COMMAND ( "suspend",   PANEL,         SYSCMDALL-SYSOPER,          suspend_cmd,   "Suspend hercules", NULL )
 
-COMMAND ( "resume",    PANEL,        resume_cmd,    "resume hercules\n", NULL )
+COMMAND ( "resume",    PANEL,         SYSCMDALL-SYSOPER,          resume_cmd,    "Resume hercules\n", NULL )
 
-COMMAND ( "herclogo",  PANEL,        herclogo_cmd,
+COMMAND ( "herclogo",  PANEL,         SYSCMDALL-SYSOPER,          herclogo_cmd,
   "Read a new hercules logo file\n",
     "Format: \"herclogo [<filename>]\". Load a new logo file for 3270 terminal sessions\n"
     "If no filename is specified, the built-in logo is used instead\n"    )
 
-COMMAND ( "traceopt",  CONFIG+PANEL, traceopt_cmd,
+COMMAND ( "traceopt",  PANEL+CONFIG,  SYSCMDALL-SYSOPER,          traceopt_cmd,
   "Instruction trace display options\n",
     "Format: \"traceopt [regsfirst | noregs | traditional]\". Determines how the\n"
     "registers are displayed during instruction tracing and stepping. Entering\n"
     "the command without any argument simply displays the current mode.\n" )
 
-COMMAND ( "symptom",   CONFIG,       traceopt_cmd, "alias for traceopt\n", NULL )
+COMMAND ( "symptom",   CONFIG,        SYSCMDALL-SYSOPER,          traceopt_cmd, "Alias for traceopt\n", NULL )
 
-COMMAND ( "$zapcmd",   CONFIG,       zapcmd_cmd,   NULL, NULL )     // enable/disable commands and config statements
+COMMAND ( "$zapcmd",   CONFIG,        SYSDEBUG,          zapcmd_cmd,   NULL, NULL )     // enable/disable commands and config statements
 
-COMMAND ( "$test",     DISABLED,     test_cmd,     NULL, NULL )     // enable in config with: $zapcmd $test cmd
+COMMAND ( "$test",     DISABLED,      SYSDEBUG,          test_cmd,     NULL, NULL )     // enable in config with: $zapcmd $test cmd
 
 #ifdef OPTION_CMDTGT
-COMMAND ( "cmdtgt",    PANEL,        cmdtgt_cmd,
+COMMAND ( "cmdtgt",    PANEL,         SYSCMDALL,          cmdtgt_cmd,
   "Specify the command target",
     "Format: \"cmdtgt [herc | scp | pscp | ?]\". Specify the command target.\n" )
 
-COMMAND ( "herc",      PANEL,        herc_cmd,
+COMMAND ( "herc",      PANEL,         SYSCMDALL,          herc_cmd,
   "Hercules command",
     "Format: \"herc [cmd]\". Send hercules cmd in any cmdtgt mode.\n"     )
 
-COMMAND ( "scp",       PANEL,        scp_cmd,
+COMMAND ( "scp",       PANEL,         SYSCMDALL,          scp_cmd,
   "Send scp command",
     "Format: \"scp [cmd]\". Send scp cmd in any cmdtgt mode.\n"           )
 
-COMMAND ( "pscp",      PANEL,        prioscp_cmd,
+COMMAND ( "pscp",      PANEL,         SYSCMDALL,          prioscp_cmd,
   "Send prio message scp command\n",
     "Format: \"pscp [cmd]\". Send priority message cmd to scp in any cmdtgt mode.\n" )
 #endif // OPTION_CMDTGT
@@ -696,13 +701,13 @@ COMMAND ( "pscp",      PANEL,        prioscp_cmd,
 // and there are no forward references to be created
 
 #if !defined(_FW_REF)
-COMMAND ( "sf+dev",    PANEL,        NULL,         "add shadow file", NULL )
+COMMAND ( "sf+dev",    PANEL,         SYSCMDALL-SYSOPER,          NULL,         "add shadow file", NULL )
 
-COMMAND ( "sf-dev",    PANEL,        NULL,         "delete shadow file", NULL )
+COMMAND ( "sf-dev",    PANEL,         SYSCMDALL-SYSOPER,          NULL,         "delete shadow file", NULL )
 
-COMMAND ( "sfc",       PANEL,        NULL,         "compress shadow files", NULL )
+COMMAND ( "sfc",       PANEL,         SYSCMDALL-SYSOPER,          NULL,         "compress shadow files", NULL )
 
-COMMAND ( "sfk",       PANEL,        NULL,
+COMMAND ( "sfk",       PANEL,         SYSCMDALL-SYSOPER,          NULL,
   "Check shadow files",
     "Format: \"sfk{*|xxxx} [n]\". Performs a chkdsk on the active shadow file\n"
     "where xxxx is the device number (*=all cckd devices)\n"
@@ -716,15 +721,15 @@ COMMAND ( "sfk",       PANEL,        NULL,
     "You probably don't want to use `4' unless you have a backup and are\n"
     "prepared to wait a long time.\n"                                     )
 
-COMMAND ( "sfd",       PANEL,        NULL,         "display shadow file stats\n", NULL )
+COMMAND ( "sfd",       PANEL,         SYSCMDALL-SYSOPER,          NULL,         "display shadow file stats\n", NULL )
 
-COMMAND ( "t{+/-}dev", PANEL,        NULL,         "turn CCW tracing on/off", NULL )
+COMMAND ( "t{+/-}dev", PANEL,         SYSCMDALL-SYSOPER,          NULL,         "turn CCW tracing on/off", NULL )
 
-COMMAND ( "s{+/-}dev", PANEL,        NULL,         "turn CCW stepping on/off\n", NULL )
+COMMAND ( "s{+/-}dev", PANEL,         SYSCMDALL-SYSOPER,          NULL,         "turn CCW stepping on/off\n", NULL )
 
 #ifdef OPTION_CKD_KEY_TRACING
-COMMAND ( "t{+/-}CKD", PANEL,        NULL,         "turn CKD_KEY tracing on/off\n", NULL )
+COMMAND ( "t{+/-}CKD", PANEL,         SYSCMDALL-SYSOPER,          NULL,         "turn CKD_KEY tracing on/off\n", NULL )
 #endif
 
-COMMAND ( "f{+/-}adr", PANEL,        NULL,         "mark frames unusable/usable\n", NULL )
+COMMAND ( "f{+/-}adr", PANEL,         SYSCMDALL-SYSOPER,          NULL,         "mark frames unusable/usable\n", NULL )
 #endif /*!defined(_FW_REF)*/

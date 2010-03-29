@@ -388,7 +388,7 @@ struct ZPBLK {
 /* System configuration block                                        */
 /*-------------------------------------------------------------------*/
 struct SYSBLK {
-#define HDL_VERS_SYSBLK   "3.06"        /* Internal Version Number   */
+#define HDL_VERS_SYSBLK   "3.08"        /* Internal Version Number   */
 #define HDL_SIZE_SYSBLK   sizeof(SYSBLK)
         time_t  impltime;               /* TOD system was IMPL'ed    */
         int     arch_mode;              /* Architecturual mode       */
@@ -403,6 +403,7 @@ struct SYSBLK {
         BYTE   *xpndstor;               /* -> Expanded storage       */
         U64     todstart;               /* Time of initialisation    */
         U64     cpuid;                  /* CPU identifier for STIDP  */
+        BYTE    cpuidfmt;               /* STIDP format 0|1          */ 
         TID     impltid;                /* Thread-id for main progr. */
         TID     wdtid;                  /* Thread-id for watchdog    */
         U16     lparnuml;               /* #digits (0-2) in lparnum  */
@@ -469,12 +470,20 @@ struct SYSBLK {
         BYTE    mbk;                    /* Measurement block key     */
         int     mbm;                    /* Measurement block mode    */
         int     mbd;                    /* Device connect time mode  */
-        int     diag8cmd;               /* Allow diagnose 8 commands */
-#define DIAG8CMD_ECHO     0x80          /* Echo command to console   */
+        BYTE    sysgroup;               /* Panel Command grouping    */
+#define SYSGROUP_SYSOPER     0x01     /* computer operator functions */
+#define SYSGROUP_SYSMAINT    0x02     /* Maintenance functions       */
+#define SYSGROUP_SYSPROG     0x04     /* Systems Programmer functions*/
+#define SYSGROUP_SYSDEVEL    0x10     /* Developer functions         */
+#define SYSGROUP_SYSDEBUG    0x80     /* Internal Debug functions    */ 
+#define SYSGROUP_ALL         0xFF
+        BYTE    diag8cmd;               /* Allow diagnose 8 commands */
 #define DIAG8CMD_ENABLE   0x01          /* Enable DIAG8 interface    */
+#define DIAG8CMD_RUNNING  0x40          /* Indicate DIAG8 in process */ 
+#define DIAG8CMD_ECHO     0x80          /* Echo command to console   */
         BYTE    shcmdopt;               /* 'sh'ell command option    */
-#define SHCMDOPT_DISABLE  0x80          /* Globally disable 'sh' cmd */
-#define SHCMDOPT_NODIAG8  0x40          /* Disallow only for DIAG8   */
+#define SHCMDOPT_ENABLE   0x01          /* Globally enable 'sh' cmd  */
+#define SHCMDOPT_DIAG8    0x80          /* Allow DIAG8 'sh' also     */
         int     panrate;                /* Panel refresh rate        */
         int     timerint;               /* microsecs timer interval  */
         char   *pantitle;               /* Alt console panel title   */

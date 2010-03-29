@@ -1124,13 +1124,14 @@ U32     j,k;
                 isspace(*(p+2))) shcmd = 1;
         }
         if ((sysblk.diag8cmd & DIAG8CMD_ENABLE)
-            && (!shcmd || !(sysblk.shcmdopt & (SHCMDOPT_DISABLE | SHCMDOPT_NODIAG8)))
+            && (!shcmd || (sysblk.shcmdopt & (SHCMDOPT_ENABLE + SHCMDOPT_DIAG8)))
         )
         {
             if(sysblk.diag8cmd & DIAG8CMD_ECHO)
                 logmsgp (_("HHCVM001I *%s* panel command issued by guest\n"), bufo);
             if (cmdflags & CMDFLAGS_RESPONSE)
             {
+                sysblk.diag8cmd |= DIAG8CMD_RUNNING;
                 dresp=log_capture(panel_command,bufo);
                 if(dresp!=NULL)
                 {
@@ -1140,10 +1141,13 @@ U32     j,k;
                 {
                     dresp="";
                 }
+                sysblk.diag8cmd &= ~DIAG8CMD_RUNNING;
             }
             else
             {
+                sysblk.diag8cmd |= DIAG8CMD_RUNNING;
                 panel_command(bufo);
+                sysblk.diag8cmd &= ~DIAG8CMD_RUNNING;
                 if(sysblk.diag8cmd & DIAG8CMD_ECHO)
                     logmsgp (_("HHCVM002I *%s* command complete\n"), bufo);
             }

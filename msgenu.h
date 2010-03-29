@@ -127,55 +127,86 @@
 #define HHCCD011I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCCD012I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCCD013I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
+#define HHCCD020E "Invalid value %d for %s="
+#define HHCCD021E "cckd invalid keyword: %s"
+#define HHCCD029E "cckd trace table calloc error, size(%d) %s"
+#define HHCCD030I "cckd command parameters:\n" \
+             "\thelp\t\tDisplay help message\n" \
+             "\tstats\t\tDisplay cckd statistics\n" \
+             "\topts\t\tDisplay cckd options\n" \
+             "\tcomp=<n>\tOverride compression\t\t\t(-1 .. 2)\n" \
+             "\tcompparm=<n>\tOverride compression parm\t\t(-1 .. 9)\n" \
+             "\tra=<n>\t\tSet number readahead threads\t\t(1 .. 9)\n" \
+             "\traq=<n>\t\tSet readahead queue size\t\t(0 .. 16)\n" \
+             "\trat=<n>\t\tSet number tracks to read ahead\t\t(0 .. 16)\n" \
+             "\twr=<n>\t\tSet number writer threads\t\t(1 .. 9)\n" \
+             "\tgcint=<n>\tSet garbage collector interval (sec)\t(1 .. 60)\n" \
+             "\tgcparm=<n>\tSet garbage collector parameter\t\t(-8 .. 8)\n" \
+             "\tgcstart\t\tStart garbage collector\n" \
+             "\tnostress=<n>\t1=Disable stress writes\n" \
+             "\tfreepend=<n>\tSet free pending cycles\t\t\t(-1 .. 4)\n" \
+             "\tfsync=<n>\t1=Enable fsync\n" \
+             "\tlinuxnull=<n>\t1=Check for null linux tracks\n" \
+             "\ttrace=<n>\tSet trace table size\t\t\t(0 .. 200000)"
+#define HHCCD031I "cckd opts: comp=%d,compparm=%d,ra=%d,raq=%d,rat=%d," \
+                  "wr=%d,gcint=%d,gcparm=%d,nostress=%d," \
+                  "freepend=%d,fsync=%d,linuxnull=%d,trace=%d"
+#define HHCCD040I "cckd stats:\n" \
+              "\t  reads....%10" I64_FMT "d Kbytes...%10" I64_FMT "d writes...%10" I64_FMT "d Kbytes...%10" I64_FMT "d\n" \
+              "\t  readaheads%9" I64_FMT "d misses...%10" I64_FMT "d syncios..%10" I64_FMT "d misses...%10" I64_FMT "d\n" \
+              "\t  switches.%10" I64_FMT "d l2 reads.%10" I64_FMT "d strs wrt.%10" I64_FMT "d\n" \
+              "\t  cachehits%10" I64_FMT "d misses...%10" I64_FMT "d l2 hits..%10" I64_FMT "d misses...%10" I64_FMT "d\n" \
+              "\t  waits               i/o......%10" I64_FMT "d cache....%10" I64_FMT "d\n" \
+              "\t  garbage collector   moves....%10" I64_FMT "d Kbytes...%10" I64_FMT "d"
 #define HHCCD092I "%d devices processed"
-#define HHCCD101E "Device(%4.4X) error initializing shadow files"
-#define HHCCD102E "Device(%4.4X) file[%d] get space error, size exceeds %lldM"
-#define HHCCD110E "Device(%4.4X) file[%d] devhdr id error"
-#define HHCCD121E "Device(%4.4X) file[%d] trklen err for %2.2x%2.2x%2.2x%2.2x%2.2x"
-#define HHCCD122E "Device(%4.4X) file[%d] invalid byte 0 trk(%d) buf(%2.2x%2.2x%2.2x%2.2x%2.2x)"
-#define HHCCD123E "Device(%4.4X) file[%d] invalid byte 0 blkgrp(%d) buf(%2.2x%2.2x%2.2x%2.2x%2.2x)"
-#define HHCCD124E "Device(%4.4X) file[%d] invalid %s hdr %s %d: %s compression unsupported"
-#define HHCCD125E "Device(%4.4X) file[%d] invalid %s hdr %s %d buf(%p:%2.2x%2.2x%2.2x%2.2x%2.2x)"
-#define HHCCD130E "Device(%4.4X) file[%d] %s open error: %s"
-#define HHCCD131E "Device(%4.4X) file[%d] close error: %s"
-#define HHCCD132E "Device(%4.4X) file[%d] lseek error, offset 0x%" I64_FMT "x: %s"
-#define HHCCD133E "Device(%4.4X) file[%d] read error, offset 0x%" I64_FMT "x: %s"
-#define HHCCD134E "Device(%4.4X) file[%d] read incomplete, offset 0x%" I64_FMT "x: read %d expected %d"
-#define HHCCD135E "Device(%4.4X) file[%d] lseek error, offset 0x%" I64_FMT "x: %s"
-#define HHCCD136E "Device(%4.4X) file[%d] write error, offset 0x%" I64_FMT "x: %s"
-#define HHCCD137E "Device(%4.4X) file[%d] write incomplete, offset 0x%" I64_FMT "x: wrote %d expected %d"
-#define HHCCD138E "Device(%4.4X) file[%d] ftruncate error, offset 0x%" I64_FMT "x: %s"
-#define HHCCD139E "Device(%4.4X) malloc error, size(%d) %s"
-#define HHCCD140E "Device(%4.4X) calloc error, size(%d) %s"
-#define HHCCD142E "Device(%4.4X) file[%d] shadow file name(%s) collides with %4.4X file[%d] name(%s)"
-#define HHCCD151E "Device(%4.4X) file[%d] error re-opening %s readonly: %s"
-#define HHCCD160E "Device(%4.4X) not a cckd device"
-#define HHCCD161E "Device(%4.4X) file[%d] no shadow file name"
-#define HHCCD162E "Device(%4.4X) file[%d] max shadow files exceeded"
-#define HHCCD163E "Device(%4.4X) file[%d] error adding shadow file"
-#define HHCCD164I "Device(%4.4X) file[%d] %s added"
-#define HHCCD165W "Device(%4.4X) error adding shadow file, sf command busy on device"
-#define HHCCD170E "Device(%4.4X) not a cckd device"
-#define HHCCD171E "Device(%4.4X) file[%d] cannot remove base file"
-#define HHCCD172E "Device(%4.4X) file[%d] not merged, file[%d] cannot be opened read-write%s"
-#define HHCCD173E "Device(%4.4X) file[%d] not merged, file[%d] check failed"
-#define HHCCD174E "Device(%4.4X) file[%d] not merged, file[%d] not hardened"
-#define HHCCD175W "Device(%4.4X) file[%d] merge failed, sf command busy on device"
-#define HHCCD179I "Merging device(%d:%4.4X)"
-#define HHCCD180E "Device(%4.4X) file[%d] not merged, error during merge"
-#define HHCCD181I "Device(%4.4X) shadow file [%d] successfully %s"
-#define HHCCD182E "Device(%4.4X) file[%d] not merged, error processing trk(%d)"
-#define HHCCD190E "Device(%4.4X) file[%d] offset 0x%" I64_FMT "x unknown space(%2.2x%2.2x%2.2x%2.2x%2.2x)"
-#define HHCCD193E "Device(%4.4X) file[%d] uncompress error trk(%d) %2.2x%2.2x%2.2x%2.2x%2.2x"
-#define HHCCD194E "Device(%4.4X) file[%d] %s compression not supported"
-#define HHCCD200I "Compressing device(%d:%4.4X)"
-#define HHCCD201I "Checking device(%d:%4.4X) level(%d)"
-#define HHCCD202W "Device(%4.4X) file[%d] check failed, sf command busy on device"
-#define HHCCD205W "Device(%4.4X) is not a cckd device"
-#define HHCCD206W "Device(%4.4X) file[%d] compress failed, sf command busy on device"
-#define HHCCD207I "Adding device(%d:%4.4X)"
-#define HHCCD208I "Displaying device(%d:%4.4X)"
-#define HHCCD209W "Device(%4.4X) is not a cckd device"
+#define HHCCD101E "Device(%d:%4.4X) error initializing shadow files"
+#define HHCCD102E "Device(%d:%4.4X) file[%d] get space error, size exceeds %lldM"
+#define HHCCD110E "Device(%d:%4.4X) file[%d] devhdr id error"
+#define HHCCD121E "Device(%d:%4.4X) file[%d] trklen err for %2.2x%2.2x%2.2x%2.2x%2.2x"
+#define HHCCD122E "Device(%d:%4.4X) file[%d] invalid byte 0 trk(%d) buf(%2.2x%2.2x%2.2x%2.2x%2.2x)"
+#define HHCCD123E "Device(%d:%4.4X) file[%d] invalid byte 0 blkgrp(%d) buf(%2.2x%2.2x%2.2x%2.2x%2.2x)"
+#define HHCCD124E "Device(%d:%4.4X) file[%d] invalid %s hdr %s %d: %s compression unsupported"
+#define HHCCD125E "Device(%d:%4.4X) file[%d] invalid %s hdr %s %d buf(%p:%2.2x%2.2x%2.2x%2.2x%2.2x)"
+#define HHCCD130E "Device(%d:%4.4X) file[%d] %s open error: %s"
+#define HHCCD131E "Device(%d:%4.4X) file[%d] close error: %s"
+#define HHCCD132E "Device(%d:%4.4X) file[%d] lseek error, offset 0x%" I64_FMT "x: %s"
+#define HHCCD133E "Device(%d:%4.4X) file[%d] read error, offset 0x%" I64_FMT "x: %s"
+#define HHCCD134E "Device(%d:%4.4X) file[%d] read incomplete, offset 0x%" I64_FMT "x: read %d expected %d"
+#define HHCCD135E "Device(%d:%4.4X) file[%d] lseek error, offset 0x%" I64_FMT "x: %s"
+#define HHCCD136E "Device(%d:%4.4X) file[%d] write error, offset 0x%" I64_FMT "x: %s"
+#define HHCCD137E "Device(%d:%4.4X) file[%d] write incomplete, offset 0x%" I64_FMT "x: wrote %d expected %d"
+#define HHCCD138E "Device(%d:%4.4X) file[%d] ftruncate error, offset 0x%" I64_FMT "x: %s"
+#define HHCCD139E "Device(%d:%4.4X) malloc error, size(%d) %s"
+#define HHCCD140E "Device(%d:%4.4X) calloc error, size(%d) %s"
+#define HHCCD142E "Device(%d:%4.4X) file[%d] shadow file name(%s) collides with %d:%4.4X file[%d] name(%s)"
+#define HHCCD151E "Device(%d:%4.4X) file[%d] error re-opening %s readonly: %s"
+#define HHCCD160E "Device(%d:%4.4X) not a cckd device"
+#define HHCCD161E "Device(%d:%4.4X) file[%d] no shadow file name"
+#define HHCCD162E "Device(%d:%4.4X) file[%d] max shadow files exceeded"
+#define HHCCD163E "Device(%d:%4.4X) file[%d] error adding shadow file"
+#define HHCCD164I "Device(%d:%4.4X) file[%d] %s added"
+#define HHCCD165W "Device(%d:%4.4X) error adding shadow file, sf command busy on device"
+#define HHCCD170E "Device(%d:%4.4X) not a cckd device"
+#define HHCCD171E "Device(%d:%4.4X) file[%d] cannot remove base file"
+#define HHCCD172E "Device(%d:%4.4X) file[%d] not merged, file[%d] cannot be opened read-write%s"
+#define HHCCD173E "Device(%d:%4.4X) file[%d] not merged, file[%d] check failed"
+#define HHCCD174E "Device(%d:%4.4X) file[%d] not merged, file[%d] not hardened"
+#define HHCCD175W "Device(%d:%4.4X) file[%d] merge failed, sf command busy on device"
+#define HHCCD179I "Device(%d:%4.4X) merging..."
+#define HHCCD180E "Device(%d:%4.4X) file[%d] not merged, error during merge"
+#define HHCCD181I "Device(%d:%4.4X) shadow file [%d] successfully %s"
+#define HHCCD182E "Device(%d:%4.4X) file[%d] not merged, error processing trk(%d)"
+#define HHCCD190E "Device(%d:%4.4X) file[%d] offset 0x%" I64_FMT "x unknown space(%2.2x%2.2x%2.2x%2.2x%2.2x)"
+#define HHCCD193E "Device(%d:%4.4X) file[%d] uncompress error trk(%d) %2.2x%2.2x%2.2x%2.2x%2.2x"
+#define HHCCD194E "Device(%d:%4.4X) file[%d] %s compression not supported"
+#define HHCCD200I "Device(%d:%4.4X) Compressing..."
+#define HHCCD201I "Device(%d:%4.4X) Checking level(%d)..."
+#define HHCCD202W "Device(%d:%4.4X) file[%d] check failed, sf command busy on device"
+#define HHCCD205W "Device(%d:%4.4X) is not a cckd device"
+#define HHCCD206W "Device(%d:%4.4X) file[%d] compress failed, sf command busy on device"
+#define HHCCD207I "Device(%d:%4.4X) Adding..."
+#define HHCCD208I "Device(%d:%4.4X) Display"
+#define HHCCD209W "Device(%d:%4.4X) is not a cckd device"
 #define HHCCD210I "          size free  nbr st   reads  writes l2reads    hits switches"
 #define HHCCD211I "                                                 readaheads   misses"
 #define HHCCD212I "--------------------------------------------------------------------"
@@ -185,7 +216,11 @@
 #define HHCCD216I "[0] %10" I64_FMT "d %3" I64_FMT "d%% %4d %s %7d %7d %7d"
 #define HHCCD217I "%s"
 #define HHCCD218I "[%d] %10" I64_FMT "d %3" I64_FMT "d%% %4d %s %7d %7d %7d"
-#define HHCCD900I "print_itrace"
+#define HHCCD900I "cckd internal trace"
+#define HHCCD901I "%s"
+#define HHCCD902I "%d:%4.4X> %s"
+#define HHCCD908I "cckd internal trace table is empty"
+#define HHCCD909I "cckd internal trace is off"
 
 /* channel.c */
 #define HHCCP048I "Device(%4.4X) CCW(%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%s)"
@@ -636,7 +671,7 @@
 
 /* hdl.c */
 #define HHCHD001E "Registration malloc failed for (%s)"
-#define HHCHD005E "Module(%s) already loaded\n"
+#define HHCHD005E "Module(%s) already loaded"
 #define HHCHD006S "Cannot allocate memory for DLL descriptor: (%s)"
 #define HHCHD007E "Unable to open DLL(%s): (%s)"
 #define HHCHD008E "Device(%4.4X) bound to (%s)"
@@ -702,9 +737,9 @@
 #define HHCIN008S "DYNGUI.DLL load failed; Hercules terminated."
 #define HHCIN009S "Cannot register SIGTERM handler: %s"
 #define HHCIN010S "Cannot register ConsoleCtrl handler: %s"
-#define HHCIN021I "CLOSE Event received, SHUTDOWN Immediate starting..."
+#define HHCIN021I "%s Event received, SHUTDOWN %sstarting..."
 #define HHCIN022I "Ctrl-C intercepted"
-#define HHCIN023W "CLOSE Event received, SHUTDOWN previously requested..."
+#define HHCIN023W "%s Event received, SHUTDOWN previously requested..."
 #define HHCIN050I "Ctrl-Break intercepted. Interrupt Key depressed simulated."
 #define HHCIN099I "Hercules terminated"
 #define HHCIN950I "Begin system cleanup"

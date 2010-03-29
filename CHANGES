@@ -1,3 +1,6 @@
+29 Mar 2010 Add support for cmdlevel to limit console commands to the requested 
+            command set. Effects only user input commands, not panel, HAO or diagnose.
+            Default works as before.
 26 Mar 2010 Prelimiary AIX support - Alexey Bozrikov, Harold Grovesteen and Fish by Fish
 26 Mar 2010 Improved(?) PTT trace display format - Fish
 23 Mar 2010 Fix cckd fsync=1 shutdown problem - Ivan Warren

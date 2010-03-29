@@ -49,9 +49,9 @@ CALL_EXT_CMD ( shared_cmd )
 /* Create forward references for all commands in the command table   */
 /*-------------------------------------------------------------------*/
 #define _FW_REF
-#define COMMAND(_stmt, _type, _func, _sdesc, _ldesc)        \
+#define COMMAND(_stmt, _type, _group, _func, _sdesc, _ldesc)        \
 int (_func)(int argc, char *argv[], char *cmdline);
-#define CMDABBR(_stmt, _abbr, _type, _func, _sdesc, _ldesc) \
+#define CMDABBR(_stmt, _abbr, _type, _group, _func, _sdesc, _ldesc) \
 int (_func)(int argc, char *argv[], char *cmdline);
 #include "cmdtab.h"
 #undef COMMAND
@@ -66,24 +66,31 @@ typedef struct _CMDTAB
 {
     const char  *statement;        /* statement           */
     const size_t statminlen;       /* min abbreviation    */
-          int   type;              /* statement type      */
+          BYTE    type;            /* statement type      */
 #define DISABLED   0x00            /* disabled statement  */
 #define CONFIG     0x01            /* config statement    */
 #define PANEL      0x02            /* command statement   */
+          BYTE    group;           /* grouping commands   */
+#define SYSOPER    0x01          /* System Operator     */
+#define SYSMAINT   0x02          /* System Maintainer   */
+#define SYSPROG    0x04          /* Systems Programmer  */
+#define SYSDEVEL   0x10          /* System Developer    */
+#define SYSDEBUG   0x80          /* Enable Debugging    */
+#define SYSCMDALL  0xFF          /* Valid in all states */ 
     CMDFUNC    *function;          /* handler function    */
     const char *shortdesc;         /* description         */
     const char *longdesc;          /* detaled description */
 } CMDTAB;
 
-#define COMMAND(_stmt, _type, _func, _sdesc, _ldesc) \
-{ (_stmt),     (0), (_type), (_func), (_sdesc), (_ldesc) },
-#define CMDABBR(_stmt, _abbr, _type, _func, _sdesc, _ldesc) \
-{ (_stmt), (_abbr), (_type), (_func), (_sdesc), (_ldesc) },
+#define COMMAND(_stmt, _type, _group, _func, _sdesc, _ldesc) \
+{ (_stmt),     (0), (_type), (_group), (_func), (_sdesc), (_ldesc) },
+#define CMDABBR(_stmt, _abbr, _type, _group, _func, _sdesc, _ldesc) \
+{ (_stmt), (_abbr), (_type), (_group), (_func), (_sdesc), (_ldesc) },
 
 static CMDTAB cmdtab[] =
 {
 #include "cmdtab.h"
-COMMAND ( NULL, 0, NULL, NULL, NULL ) /* End of table */
+COMMAND ( NULL, 0, 0, NULL, NULL, NULL ) /* End of table */
 };
 
 
@@ -213,7 +220,8 @@ int ProcessPanelCommand (char* pszCmdLine)
     if (cmd_argc)
         for (pCmdTab = cmdtab; pCmdTab->function; pCmdTab++)
         {
-            if(pCmdTab->function && (pCmdTab->type & PANEL))
+            if ( pCmdTab->function && (pCmdTab->type & PANEL) &&
+                 ( (sysblk.diag8cmd & DIAG8CMD_RUNNING) || (pCmdTab->group & sysblk.sysgroup) ) )
             {
                 if (!pCmdTab->statminlen)
                 {
@@ -293,7 +301,9 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
 
         for (pCmdTab = cmdtab; pCmdTab->statement; pCmdTab++)
         {
-            if ( (pCmdTab->type & PANEL) && (pCmdTab->shortdesc))
+            if ( (pCmdTab->type & PANEL) && 
+                 ( (sysblk.diag8cmd & DIAG8CMD_RUNNING) || (pCmdTab->group & sysblk.sysgroup) ) && 
+                 (pCmdTab->shortdesc) )
                 logmsg( _("  %-9.9s    %s \n"), pCmdTab->statement, pCmdTab->shortdesc );
         }
 
@@ -302,7 +312,9 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
     {
         for (pCmdTab = cmdtab; pCmdTab->statement; pCmdTab++)
         {
-            if (!strcasecmp(pCmdTab->statement,argv[1]) && (pCmdTab->type & PANEL) )
+            if ( (pCmdTab->type & PANEL) && 
+                 ( (sysblk.diag8cmd & DIAG8CMD_RUNNING) || (pCmdTab->group & sysblk.sysgroup) ) && 
+                 (!strcasecmp(pCmdTab->statement,argv[1]) ) )
             {
                 logmsg( _("%s: %s\n"),pCmdTab->statement,pCmdTab->shortdesc);
                 if(pCmdTab->longdesc)
@@ -316,8 +328,102 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
     }
     return 0;
 }
-    
 
+/*-------------------------------------------------------------------*/
+/* cmdlevel - display/set the current command level group(s)         */
+/*-------------------------------------------------------------------*/
+int CmdLevel(int argc, char *argv[], char *cmdline)
+{
+    int i;
+
+    UNREFERENCED(cmdline);
+
+ /* Parse CmdLevel operands */
+    if (argc > 1)
+        for(i = 1; i < argc; i++)
+        {
+            if (strcasecmp (argv[i], "all") == 0)
+                sysblk.sysgroup = SYSGROUP_ALL;
+            else
+            if (strcasecmp (argv[i], "+all") == 0)
+                sysblk.sysgroup = SYSGROUP_ALL;
+            else
+            if (strcasecmp (argv[i], "-all") == 0)
+                sysblk.sysgroup &= ~SYSGROUP_ALL;
+            else
+            if ( (strcasecmp (argv[i], "operator") == 0) || (strcasecmp (argv[i], "oper") == 0) )
+                sysblk.sysgroup |= SYSGROUP_SYSOPER;
+            else
+            if ( (strcasecmp (argv[i], "+operator") == 0) || (strcasecmp (argv[i], "+oper") == 0) )
+                sysblk.sysgroup |= SYSGROUP_SYSOPER;
+            else
+            if ( (strcasecmp (argv[i], "-operator") == 0) || (strcasecmp (argv[i], "-oper") == 0) )
+                sysblk.sysgroup &= ~SYSGROUP_SYSOPER;
+            else
+            if ( (strcasecmp (argv[i], "maintenance") == 0) || (strcasecmp (argv[i], "maint") == 0) )
+                sysblk.sysgroup |= SYSGROUP_SYSMAINT;
+            else
+            if ( (strcasecmp (argv[i], "+maintenance") == 0) || (strcasecmp (argv[i], "+maint") == 0) )
+                sysblk.sysgroup |= SYSGROUP_SYSMAINT;
+            else
+            if ( (strcasecmp (argv[i], "-maintenance") == 0) || (strcasecmp (argv[i], "-maint") == 0) )
+                sysblk.sysgroup &= ~SYSGROUP_SYSMAINT;
+            else
+            if ( (strcasecmp (argv[i], "programmer") == 0) || (strcasecmp (argv[i], "prog") == 0) )
+                sysblk.sysgroup |= SYSGROUP_SYSPROG;
+            else
+            if ( (strcasecmp (argv[i], "+programmer") == 0) || (strcasecmp (argv[i], "+prog") == 0) )
+                sysblk.sysgroup |= SYSGROUP_SYSPROG;
+            else
+            if ( (strcasecmp (argv[i], "-programmer") == 0) || (strcasecmp (argv[i], "-prog") == 0) )
+                sysblk.sysgroup &= ~SYSGROUP_SYSPROG;
+            else
+            if ( (strcasecmp (argv[i], "developer") == 0) || (strcasecmp (argv[i], "devel") == 0) )
+                sysblk.sysgroup |= SYSGROUP_SYSDEVEL;
+            else
+            if ( (strcasecmp (argv[i], "+developer") == 0) || (strcasecmp (argv[i], "+devel") == 0) )
+                sysblk.sysgroup |= SYSGROUP_SYSDEVEL;
+            else
+            if ( (strcasecmp (argv[i], "-developer") == 0) || (strcasecmp (argv[i], "-devel") == 0) )
+                sysblk.sysgroup &= ~SYSGROUP_SYSDEVEL;
+            else
+            if ( strcasecmp (argv[i], "debug") == 0) 
+                sysblk.sysgroup |= SYSGROUP_SYSDEBUG;
+            else
+            if ( strcasecmp (argv[i], "+debug") == 0) 
+                sysblk.sysgroup |= SYSGROUP_SYSDEBUG;
+            else
+            if ( strcasecmp (argv[i], "-debug") == 0)
+                sysblk.sysgroup &= ~SYSGROUP_SYSDEBUG;
+            else
+            {
+                logmsg(_("HHCPN853I CMDLEVEL invalid option: %s\n"),
+                  argv[i]);
+                return -1;
+            }
+        }
+
+    if ( sysblk.sysgroup == SYSGROUP_ALL )
+    {
+        logmsg(_("HHCPN854I cmdlevel[%2.2X] is all\n"), sysblk.sysgroup);
+    }
+    else if ( sysblk.sysgroup == 0 )
+    {
+        logmsg(_("HHCPN854I cmdlevel[%2.2X] is none\n"), sysblk.sysgroup);
+    }
+    else
+    {
+        logmsg(_("HHCPN854I cmdlevel[%2.2X] is %s%s%s%s%s\n"), sysblk.sysgroup,
+            (sysblk.sysgroup&SYSGROUP_SYSOPER)?"operator ":"",
+            (sysblk.sysgroup&SYSGROUP_SYSMAINT)?"maintenance ":"",
+            (sysblk.sysgroup&SYSGROUP_SYSPROG)?"programmer ":"",
+            (sysblk.sysgroup&SYSGROUP_SYSDEVEL)?"developer ":"",
+            (sysblk.sysgroup&SYSGROUP_SYSDEBUG)?"debugging ":"");
+    }
+    
+    return 0;
+}
+    
 int scr_recursion_level();
 
 #if defined(OPTION_DYNAMIC_LOAD)

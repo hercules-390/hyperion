@@ -2393,16 +2393,19 @@ int sh_cmd(int argc, char *argv[], char *cmdline)
     char* cmd;
     UNREFERENCED(argc);
     UNREFERENCED(argv);
-    if (sysblk.shcmdopt & SHCMDOPT_DISABLE)
+    if (sysblk.shcmdopt & SHCMDOPT_ENABLE)
+    {
+        cmd = cmdline + 2;
+        while (isspace(*cmd)) cmd++;
+        if (*cmd)
+            return herc_system (cmd);
+        else 
+            return -1;
+    }
+    else 
     {
         logmsg( _("HHCPN180E shell commands are disabled\n"));
-        return -1;
     }
-    cmd = cmdline + 2;
-    while (isspace(*cmd)) cmd++;
-    if (*cmd)
-        return herc_system (cmd);
-
     return -1;
 }
 
@@ -2416,18 +2419,21 @@ int cd_cmd(int argc, char *argv[], char *cmdline)
     char cwd [ MAX_PATH ];
     UNREFERENCED(argc);
     UNREFERENCED(argv);
-    if (sysblk.shcmdopt & SHCMDOPT_DISABLE)
+    if (sysblk.shcmdopt & SHCMDOPT_ENABLE)
+    {
+        path = cmdline + 2;
+        while (isspace(*path)) path++;
+        chdir(path);
+        getcwd( cwd, sizeof(cwd) );
+        logmsg("HHCPN184I %s\n",cwd);
+        HDC1( debug_cd_cmd, cwd );
+        return 0;
+    }
+    else
     {
         logmsg( _("HHCPN180E shell commands are disabled\n"));
-        return -1;
     }
-    path = cmdline + 2;
-    while (isspace(*path)) path++;
-    chdir(path);
-    getcwd( cwd, sizeof(cwd) );
-    logmsg("%s\n",cwd);
-    HDC1( debug_cd_cmd, cwd );
-    return 0;
+    return -1;
 }
 
 
@@ -2439,19 +2445,23 @@ int pwd_cmd(int argc, char *argv[], char *cmdline)
     char cwd [ MAX_PATH ];
     UNREFERENCED(argv);
     UNREFERENCED(cmdline);
-    if (sysblk.shcmdopt & SHCMDOPT_DISABLE)
+
+    if (sysblk.shcmdopt & SHCMDOPT_ENABLE)
+    {
+        if (argc > 1)
+        {
+            logmsg( _("HHCPN163E Invalid format. Command does not support any arguments.\n"));
+            return -1;
+        }
+        getcwd( cwd, sizeof(cwd) );
+        logmsg("HHCPN184I %s\n",cwd);
+        return 0;
+    }
+    else
     {
         logmsg( _("HHCPN180E shell commands are disabled\n"));
-        return -1;
     }
-    if (argc > 1)
-    {
-        logmsg( _("HHCPN163E Invalid format. Command does not support any arguments.\n"));
-        return -1;
-    }
-    getcwd( cwd, sizeof(cwd) );
-    logmsg("%s\n",cwd);
-    return 0;
+    return -1; 
 }
 
 
@@ -3321,16 +3331,16 @@ int i;
         for(i = 1; i < argc; i++)
         {
             if (strcasecmp (argv[i], "enable") == 0)
-                sysblk.shcmdopt &= ~SHCMDOPT_DISABLE;
+                sysblk.shcmdopt |= SHCMDOPT_ENABLE;
             else
             if (strcasecmp (argv[i], "diag8") == 0)
-                sysblk.shcmdopt &= ~SHCMDOPT_NODIAG8;
+                sysblk.shcmdopt |= SHCMDOPT_DIAG8;
             else
             if (strcasecmp (argv[i], "disable") == 0)
-                sysblk.shcmdopt |= SHCMDOPT_DISABLE;
+                sysblk.shcmdopt &= ~SHCMDOPT_ENABLE;
             else
             if (strcasecmp (argv[i], "nodiag8") == 0)
-                sysblk.shcmdopt |= SHCMDOPT_NODIAG8;
+                sysblk.shcmdopt &= ~SHCMDOPT_DIAG8;
             else
             {
                 logmsg(_("HHCCF053I SHCMDOPT invalid option: %s\n"),
@@ -3340,8 +3350,8 @@ int i;
         }
     else
         logmsg(_("HHCCF053I SHCMDOPT %sabled%s\n"),
-          (sysblk.shcmdopt&SHCMDOPT_DISABLE)?"Dis":"En",
-          (sysblk.shcmdopt&SHCMDOPT_NODIAG8)?" NoDiag8":"");
+          (sysblk.shcmdopt&SHCMDOPT_ENABLE)?"En":"Dis",
+          (sysblk.shcmdopt&SHCMDOPT_DIAG8)?"":" NoDiag8");
 
     return 0;
 }
@@ -3506,6 +3516,11 @@ BYTE    c;
           && strlen(argv[1]) >= 1 && strlen(argv[1]) <= 2
           && sscanf(argv[1], "%hx%c", &id, &c) == 1)  
         {
+            if ( strlen(argv[1]) == 2 && id > 0x3f )
+            {
+                logmsg( _("HHCPN061E LPARNUM %02X invalid; must be 00 to 3F (hex)\n"), id); 
+                return -1;
+            }
             sysblk.lparnum = id;
             sysblk.lparnuml = strlen(argv[1]);
         }
@@ -3517,6 +3532,42 @@ BYTE    c;
     }
     else
         logmsg( _("HHCPN060I LPAR number = %"I16_FMT"X\n"), sysblk.lparnum);
+
+    return 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* cpuidfmt command - set or display STIDP format {0|1}              */
+/*-------------------------------------------------------------------*/
+int cpuidfmt_cmd(int argc, char *argv[], char *cmdline)
+{
+U16     id;
+
+    UNREFERENCED(cmdline);
+
+    /* Update LPAR identification number if operand is specified */
+    if (argc > 1)
+    {
+        if (argv[1] != NULL
+          && strlen(argv[1]) == 1 
+          && sscanf(argv[1], "%d", &id) == 1)  
+        {
+            if ( id == 0 || id == 1 )
+                sysblk.cpuidfmt = id;
+            else
+            {
+                logmsg( _("HHCPN156E CPUIDFMT must be either 0 or 1\n"));
+                return -1;
+            }
+        }
+        else
+        {
+            logmsg( _("HHCPN156E CPUIDFMT must be either 0 or 1\n"));
+            return -1;
+        }
+    }
+    else
+        logmsg( _("HHCPN157I CPUIDFMT = %d\n"), sysblk.cpuidfmt);
 
     return 0;
 }

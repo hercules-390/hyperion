@@ -168,8 +168,12 @@ BOOL WINAPI console_ctrl_handler (DWORD signo)
         case CTRL_LOGOFF_EVENT:
             if ( !sysblk.shutdown )  // (system shutdown not initiated)
             {
-                WRITEMSG(HHCIN021I);
-                sysblk.shutimmed = TRUE;
+                WRITEMSG(HHCIN021I, ( signo == CTRL_CLOSE_EVENT ? "CLOSE" : 
+                                      signo == CTRL_SHUTDOWN_EVENT ? "SHUTDOWN" : "LOGOFF" ),
+                                    ( signo == CTRL_CLOSE_EVENT ? "Immediate " : "" ) );
+
+                if ( signo == CTRL_CLOSE_EVENT ) 
+                    sysblk.shutimmed = TRUE;
                 do_shutdown();
 
 //                logmsg("%s(%d): return from shutdown\n", __FILE__, __LINE__ ); /* debug */
@@ -180,7 +184,6 @@ BOOL WINAPI console_ctrl_handler (DWORD signo)
                     {
 //                        logmsg("%s(%d): %d shutdown completed\n",  /* debug */
 //                                __FILE__, __LINE__, i );           /* debug */
-                        sleep(1);
                         break;
                     }
                     else 
@@ -190,15 +193,20 @@ BOOL WINAPI console_ctrl_handler (DWORD signo)
                         sleep(1);
                     }
                 }
-
-                socket_deinit();
+                if ( !sysblk.shutfini ) 
+                {
+                    sysblk.shutimmed = TRUE;
+                    do_shutdown();
+                }
             }
             else
             {
-                WRITEMSG(HHCIN023W);
+                sysblk.shutimmed = TRUE;
+                do_shutdown();
+                WRITEMSG(HHCIN023W, ( signo == CTRL_CLOSE_EVENT ? "CLOSE" : 
+                                      signo == CTRL_SHUTDOWN_EVENT ? "SHUTDOWN" : "LOGOFF" ) );
             }
-            usleep(10000);
-            return FALSE;           
+            return TRUE;           
             break;
         default:
             return FALSE;
@@ -386,6 +394,12 @@ TID     logcbtid;                       /* RC file thread identifier */
 
     /* Clear the system configuration block */
     memset (&sysblk, 0, sizeof(SYSBLK));
+
+    /* set default operator mode to all */
+    sysblk.sysgroup = SYSGROUP_ALL;
+
+    /* set default SHCMDOPT enabled     */
+    sysblk.shcmdopt = SHCMDOPT_ENABLE + SHCMDOPT_DIAG8;
 
     /* Save thread ID of main program */
     sysblk.impltid = thread_id();

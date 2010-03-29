@@ -628,9 +628,13 @@ DLL_EXPORT void hao_message(char *buf)
       /* does this rule match our message? */
       if (regexec(&ao_preg[i], work, 1, &rm, 0) == 0)
       {
+        BYTE sysgroup; 
         /* issue command for this rule */
         WRITEMSG(HHCAO003I, ao_cmd[i]);
+        sysgroup = sysblk.sysgroup;
+        sysblk.sysgroup = SYSGROUP_ALL;
         panel_command(ao_cmd[i]);
+        sysblk.sysgroup = sysgroup;
       }
     }
   }

@@ -650,7 +650,7 @@ static void do_prev_history()
     if (history_prev() != -1)
     {
         strcpy(cmdline, historyCmdLine);
-        cmdlen = strlen(cmdline);
+        cmdlen = (int)strlen(cmdline);
         cmdoff = cmdlen < cmdcols ? cmdlen : 0;
         ADJ_CMDCOL();
     }
@@ -661,7 +661,7 @@ static void do_next_history()
     if (history_next() != -1)
     {
         strcpy(cmdline, historyCmdLine);
-        cmdlen = strlen(cmdline);
+        cmdlen = (int)strlen(cmdline);
         cmdoff = cmdlen < cmdcols ? cmdlen : 0;
         ADJ_CMDCOL();
     }
@@ -780,7 +780,7 @@ static void draw_text (char *text)
     if (cur_cons_row < 1 || cur_cons_row > cons_rows
      || cur_cons_col < 1 || cur_cons_col > cons_cols)
         return;
-    len = strlen(text);
+    len = (int)strlen(text);
     if ((cur_cons_col + len - 1) <= cons_cols)
         fprintf (confp, "%s", text);
     else
@@ -1597,7 +1597,7 @@ static void NP_update(REGS *regs)
         if (strlen(NPprompt1) > 0)
         {
             set_color (COLOR_WHITE, COLOR_BLUE);
-            set_pos (cons_rows, (40 - strlen(NPprompt1)) / 2);
+            set_pos (cons_rows, (40 - (short)strlen(NPprompt1)) / 2);
             draw_text (NPprompt1);
         }
         else if (cons_rows >= 24)
@@ -1804,6 +1804,7 @@ BYTE    prvstate = 0xFF;                /* Previous stopped state    */
 U64     prvicount = 0;                  /* Previous instruction count*/
 #if defined(OPTION_MIPS_COUNTING)
 U64     prvtcount = 0;                  /* Previous total count      */
+U64     totalcount = 0;                 /* sum of all instruction cnt*/
 #endif /*defined(OPTION_MIPS_COUNTING)*/
 int     prvcpupct = 0;                  /* Previous cpu percentage   */
 #if defined(OPTION_SHARED_DEVICES)
@@ -2426,7 +2427,7 @@ char    buf[1024];                      /* Buffer workarea           */
                         redraw_cmd = 1;
                     } else {
                         tab_pressed(cmdline, &cmdoff);
-                        cmdlen = strlen(cmdline);
+                        cmdlen = (int)strlen(cmdline);
                         ADJ_CMDCOL();
                         i++;
                         redraw_cmd = 1;
@@ -2483,7 +2484,7 @@ char    buf[1024];                      /* Buffer workarea           */
                                 redraw_cmd = 1;
                                 if (history_requested == 1) {
                                     strcpy(cmdline, historyCmdLine);
-                                    cmdlen = strlen(cmdline);
+                                    cmdlen = (int)strlen(cmdline);
                                     cmdoff = cmdlen;
                                     ADJ_CMDCOL();
                                     NPDup = 0;
@@ -2903,19 +2904,25 @@ FinishShutdown:
                            SIE_MODE(regs)                     ? 'S' : '.',
                            regs->arch_mode == ARCH_900        ? 'Z' : '.');
 #ifdef OPTION_MIPS_COUNTING
-                    buf[len++] = ' '; 
+                    buf[len++] = ' ';
+                    totalcount = 0;
+                    for ( i = 0; i < MAX_CPU; i++ )
+                    {
+                        if ( IS_CPU_ONLINE(i) )
+                            totalcount += INSTCOUNT(sysblk.regs[i]);
+                    }
                     if ( cons_cols >= (int)( len 
                                              + 9                 // 9 is the length of "InstCnt()" 
-                                             + strlen(format_int(INSTCOUNT(regs)))
+                                             + strlen(format_int(totalcount))
                                             ) )                  // don't do the work if no space on line
                     { 
-                        char *fmt_int = format_int(INSTCOUNT(regs));
+                        char *fmt_int = format_int(totalcount);
                         int l_len = len;
 
                         l_len += (int)(strlen(fmt_int)) + 9;  //  9 is the length of "InstCnt()"
                         if ( cons_cols >= l_len + 14 + 14 )   // 14 is the length of MIPS(nnnn.nn) and SIOS(nnnnnnn)
                         {
-                            sprintf (ibuf, "InstCnt( %s) MIPS(%4.1d.%2.2d) SIOS(%7.1d)", 
+                            sprintf (ibuf, "InstCnt(%s) MIPS(%4.1d.%2.2d) SIOS(%7.1d)", 
                                 fmt_int,
                                 sysblk.mipsrate / 1000000, 
                                (sysblk.mipsrate % 1000000) / 10000,
@@ -2923,7 +2930,7 @@ FinishShutdown:
                         }
                         else if ( cons_cols >= l_len + 14 )
                         {
-                            sprintf (ibuf, "InstCnt( %s) MIPS(%4.1d.%2.2d)", 
+                            sprintf (ibuf, "InstCnt(%s) MIPS(%4.1d.%2.2d)", 
                                 fmt_int,
                                 sysblk.mipsrate / 1000000, 
                                (sysblk.mipsrate % 1000000) / 10000 );
