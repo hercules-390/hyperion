@@ -143,8 +143,7 @@ int  ScheduleIORequest(void* pDevBlk, unsigned short wDevNum, int* pnDevPrio)
 
     if (!pIORequest)
     {
-        logmsg(_("HHCCP084E malloc(DEVIOREQUEST) failed; device=%4.4X, strerror=\"%s\"\n"),
-            wDevNum,strerror(errno));
+        WRITEMSG(HHCCP084E,wDevNum,strerror(errno));
         return 2;
     }
 
@@ -206,7 +205,7 @@ int  ScheduleIORequest(void* pDevBlk, unsigned short wDevNum, int* pnDevPrio)
 
             if (ios_devtmax && ios_devtnbr >= ios_devtmax)  // max threads already created?
             {
-                logmsg(_("HHCCP085W *WARNING* max device threads exceeded.\n"));
+                WRITEMSG(HHCCP085W);
                 ios_devtunavail++;          // (count occurrences)
             }
 
@@ -303,8 +302,7 @@ DEVTHREADPARMS*  CreateDeviceThread(unsigned short wDevNum)
 
     if (!pThreadParms)
     {
-        logmsg(_("HHCCP086E malloc(DEVTHREADPARMS) failed; device=%4.4X, strerror=\"%s\"\n"),
-            wDevNum,strerror(errno));
+        WRITEMSG(HHCCP086E,wDevNum,strerror(errno));
         return NULL;    // (error)
     }
 
@@ -312,8 +310,7 @@ DEVTHREADPARMS*  CreateDeviceThread(unsigned short wDevNum)
 
     if (!pThreadParms->hShutdownEvent)
     {
-        logmsg(_("HHCCP087E CreateEvent(hShutdownEvent) failed; device=%4.4X, strerror=\"%s\"\n"),
-            wDevNum,strerror(errno));
+        WRITEMSG(HHCCP087E,wDevNum,strerror(errno));
         free(pThreadParms);
         return NULL;    // (error)
     }
@@ -322,8 +319,7 @@ DEVTHREADPARMS*  CreateDeviceThread(unsigned short wDevNum)
 
     if (!pThreadParms->hRequestQueuedEvent)
     {
-        logmsg(_("HHCCP088E CreateEvent(hRequestQueuedEvent) failed; device=%4.4X, strerror=\"%s\"\n"),
-            wDevNum,strerror(errno));
+        WRITEMSG(HHCCP088E,wDevNum,strerror(errno));
         MyCloseHandle(pThreadParms->hShutdownEvent);
         free(pThreadParms);
         return NULL;    // (error)
@@ -343,8 +339,7 @@ DEVTHREADPARMS*  CreateDeviceThread(unsigned short wDevNum)
     if (fthread_create(&dwThreadID,NULL,DeviceThread,pThreadParms,"DeviceThread") != 0)
 #endif
     {
-        logmsg(_("HHCCP089E fthread_create(DeviceThread) failed; device=%4.4X, strerror=\"%s\"\n"),
-            wDevNum,strerror(errno));
+        WRITEMSG(HHCCP089E,wDevNum,strerror(errno));
         MyCloseHandle(pThreadParms->hShutdownEvent);
         MyCloseHandle(pThreadParms->hRequestQueuedEvent);
         MyDeleteCriticalSection(&pThreadParms->IORequestListLock);

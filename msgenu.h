@@ -1072,3 +1072,11 @@
 #define HHCVM520I "Device(%4.4X) d250_list64 xcode(%4.4X) Rd Buf(%16.16X-%16.16X) FETCH key(%2.2X)"
 #define HHCVM620I "Device(%4.4X) d250_list64 xcode(%4.4X) Wr Buf(%16.16X-%16.16X) STORE key(%2.2X)"
 #define HHCVM720I "Device(%4.4X) d250_list64 xcode(%4.4X) Status(%16.16X-%16.16X) STORE key(%2.2X)"
+
+/* w32chan.c */
+#define HHCCP084E "malloc(DEVIOREQUEST) failed; device=%4.4X, strerror=\"%s\""
+#define HHCCP085W "*WARNING* max device threads exceeded"
+#define HHCCP086E "malloc(DEVTHREADPARMS) failed; device=%4.4X, strerror=\"%s\""
+#define HHCCP087E "CreateEvent(hShutdownEvent) failed; device=%4.4X, strerror=\"%s\""
+#define HHCCP088E "CreateEvent(hRequestQueuedEvent) failed; device=%4.4X, strerror=\"%s\""
+#define HHCCP089E "fthread_create(DeviceThread) failed; device=%4.4X, strerror=\"%s\""
