@@ -349,7 +349,7 @@ int     i;                              /* (work)                    */
     if (process_script_file(rcname,1) != 0)
         if (ENOENT == errno)
             if (!is_default_rc)
-                WRITEMSG(HHCPN995E, rcname);
+                WRITEMSG(HHCMD995E, rcname);
         // (else error message already issued)
 
     return NULL;

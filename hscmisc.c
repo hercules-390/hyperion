@@ -184,12 +184,16 @@ static void do_shutdown_now()
         release_config();
     }
     logmsg("HHCIN902I Configuration release complete\n");
+    
+    log_wakeup(NULL);
 
     logmsg("HHCIN903I Calling termination routines\n");
     {
         hdl_shut();
     }
     logmsg("HHCIN904I All termination routines complete\n");
+    
+    log_wakeup(NULL);
 
     /*
     logmsg("HHCIN905I Terminating threads\n");
@@ -200,6 +204,11 @@ static void do_shutdown_now()
     */
 
     logmsg("HHCIN909I Hercules shutdown complete\n");
+
+    log_wakeup(NULL);
+    
+    sleep(2);               // give logger time to finish
+
     sysblk.shutfini = 1;    // (shutdown is now complete)
 
     //                     PROGRAMMING NOTE
@@ -629,7 +638,7 @@ BYTE    c;                              /* Character work area       */
                  (h2 >= 'A' && h2 <= 'F') ? h2 - 'A' + 10 : -1;
             if (h1 < 0 || h2 < 0 || n >= 32)
             {
-                logmsg (_("HHCPN143E Invalid value: %s\n"), s);
+                logmsg (_("HHCMD143E Invalid value: %s\n"), s);
                 return -1;
             }
             newval[n++] = (h1 << 4) | h2;
@@ -653,7 +662,7 @@ BYTE    c;                              /* Character work area       */
             /* Ending address or length is specified */
             if (rc != 3 || !(delim == '-' || delim == '.'))
             {
-                logmsg (_("HHCPN144E Invalid operand: %s\n"), operand);
+                logmsg (_("HHCMD144E Invalid operand: %s\n"), operand);
                 return -1;
             }
             eaddr = (delim == '.') ? saddr + opnd2 - 1 : opnd2;
@@ -665,7 +674,7 @@ BYTE    c;                              /* Character work area       */
     /* Check for valid range */
     if (saddr > maxadr || eaddr > maxadr || eaddr < saddr)
     {
-        logmsg (_("HHCPN145E Invalid range: %s\n"), operand);
+        logmsg (_("HHCMD145E Invalid range: %s\n"), operand);
         return -1;
     }
 

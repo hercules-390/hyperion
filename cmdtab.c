@@ -268,7 +268,7 @@ int ProcessPanelCommand (char* pszCmdLine)
     /* Error: unknown/unsupported command... */
     ASSERT( cmd_argv[0] );
 
-    WRITEMSG( HHCPN139E, cmd_argv[0] );
+    WRITEMSG( HHCMD139E, cmd_argv[0] );
 
 ProcessPanelCommandExit:
 
@@ -295,7 +295,7 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
 
     if (argc < 2)
     {
-        WRITEMSG( HHCPN140I, "Command", "Description", "-------", "-----------------------------------------------" );
+        WRITEMSG( HHCMD140I, "Command", "Description", "-------", "-----------------------------------------------" );
 
         /* List standard formatted commands from our routing table... */
 
@@ -323,7 +323,7 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
             }
         }
     
-        WRITEMSG( HHCPN142I, argv[1]);
+        WRITEMSG( HHCMD142I, argv[1]);
         return -1;
     }
     return 0;
@@ -397,7 +397,7 @@ int CmdLevel(int argc, char *argv[], char *cmdline)
                 sysblk.sysgroup &= ~SYSGROUP_SYSDEBUG;
             else
             {
-                logmsg(_("HHCPN853I CMDLEVEL invalid option: %s\n"),
+                logmsg(_("HHCMD853I CMDLEVEL invalid option: %s\n"),
                   argv[i]);
                 return -1;
             }
@@ -405,15 +405,15 @@ int CmdLevel(int argc, char *argv[], char *cmdline)
 
     if ( sysblk.sysgroup == SYSGROUP_ALL )
     {
-        logmsg(_("HHCPN854I cmdlevel[%2.2X] is all\n"), sysblk.sysgroup);
+        logmsg(_("HHCMD854I cmdlevel[%2.2X] is all\n"), sysblk.sysgroup);
     }
     else if ( sysblk.sysgroup == 0 )
     {
-        logmsg(_("HHCPN854I cmdlevel[%2.2X] is none\n"), sysblk.sysgroup);
+        logmsg(_("HHCMD854I cmdlevel[%2.2X] is none\n"), sysblk.sysgroup);
     }
     else
     {
-        logmsg(_("HHCPN854I cmdlevel[%2.2X] is %s%s%s%s%s\n"), sysblk.sysgroup,
+        logmsg(_("HHCMD854I cmdlevel[%2.2X] is %s%s%s%s%s\n"), sysblk.sysgroup,
             (sysblk.sysgroup&SYSGROUP_SYSOPER)?"operator ":"",
             (sysblk.sysgroup&SYSGROUP_SYSMAINT)?"maintenance ":"",
             (sysblk.sysgroup&SYSGROUP_SYSPROG)?"programmer ":"",

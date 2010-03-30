@@ -699,7 +699,7 @@ TID                     httptid;        /* Negotiation thread id     */
         /* Convert to absolute path */
         if (!realpath(sysblk.httproot,absolute_httproot_path))
         {
-            WRITEMSG(HHCCF066E, sysblk.httproot, strerror(errno));
+            WRITEMSG(HHCHT014E, sysblk.httproot, strerror(errno));
             return NULL;
         }
         /* Verify that the absolute path is valid */
@@ -708,7 +708,7 @@ TID                     httptid;        /* Negotiation thread id     */
         // ENOENT = File name or path not found.
         if (access( absolute_httproot_path, R_OK ) != 0)
         {
-            WRITEMSG(HHCCF066E, absolute_httproot_path, strerror(errno));
+            WRITEMSG(HHCHT014E, absolute_httproot_path, strerror(errno));
             return NULL;
         }
         /* Append trailing [back]slash, but only if needed */

@@ -156,13 +156,13 @@ int test_cmd(int argc, char *argv[],char *cmdline)
 /* Issue generic Device not found error message */
 static inline int devnotfound_msg(U16 lcss,U16 devnum)
 {
-    logmsg(_("HHCPN181E Device number %d:%4.4X not found\n"),lcss,devnum);
+    logmsg(_("HHCMD181E Device number %d:%4.4X not found\n"),lcss,devnum);
     return -1;
 }
 /* Issue generic Missing device number message */
 static inline void missing_devnum()
 {
-    logmsg( _("HHCPN031E Missing device number\n") );
+    logmsg( _("HHCMD031E Missing device number\n") );
 }
 
 
@@ -457,7 +457,7 @@ int log_cmd(int argc, char *argv[],char *cmdline)
             log_sethrdcpy(NULL);
     }
     else
-        logmsg(_("HHCPN160E no argument\n"));
+        logmsg(_("HHCMD160E no argument\n"));
 
     return 0;
 }
@@ -472,7 +472,7 @@ int logopt_cmd(int argc, char *argv[],char *cmdline)
 
     if(argc < 2)
     {
-        logmsg(_("HHCPN195I Log options:%s\n"),
+        logmsg(_("HHCMD195I Log options:%s\n"),
                 sysblk.logoptnotime ? " NOTIMESTAMP" : " TIMESTAMP"
                );
     }
@@ -485,18 +485,18 @@ int logopt_cmd(int argc, char *argv[],char *cmdline)
                 strcasecmp(argv[0],"time"     ) == 0)
             {
                 sysblk.logoptnotime = 0;
-                logmsg(_("HHCPN197I Log option set: TIMESTAMP\n"));
+                logmsg(_("HHCMD197I Log option set: TIMESTAMP\n"));
                 continue;
             }
             if (strcasecmp(argv[0],"notimestamp") == 0 ||
                 strcasecmp(argv[0],"notime"     ) == 0)
             {
                 sysblk.logoptnotime = 1;
-                logmsg(_("HHCPN197I Log option set: NOTIMESTAMP\n"));
+                logmsg(_("HHCMD197I Log option set: NOTIMESTAMP\n"));
                 continue;
             }
 
-            logmsg(_("HHCPN196E Invalid logopt value %s\n"), argv[0]);
+            logmsg(_("HHCMD196E Invalid logopt value %s\n"), argv[0]);
         } /* while (argc > 1) */
     }
     return 0;
@@ -537,20 +537,20 @@ unsigned uptime, weeks, days, hours, mins, secs;
 
     if (weeks)
     {
-        logmsg(_("HHCPN800I Hercules has been up for %u week%s, %u day%s, %02u:%02u:%02u.\n"),
+        logmsg(_("HHCMD800I Hercules has been up for %u week%s, %u day%s, %02u:%02u:%02u.\n"),
                     weeks, weeks >  1 ? "s" : "",
                     days,  days  != 1 ? "s" : "",
                     hours, mins, secs);
     }
     else if (days)
     {
-        logmsg(_("HHCPN801I Hercules has been up for %u day%s, %02u:%02u:%02u.\n"),
+        logmsg(_("HHCMD801I Hercules has been up for %u day%s, %02u:%02u:%02u.\n"),
                     days, days != 1 ? "s" : "",
                     hours, mins, secs);
     }
     else
     {
-        logmsg(_("HHCPN802I Hercules has been up for %02u:%02u:%02u.\n"),
+        logmsg(_("HHCMD802I Hercules has been up for %02u:%02u:%02u.\n"),
                     hours, mins, secs);
     }
     return 0;
@@ -590,7 +590,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
 
     if (argc < 2)
     {
-        logmsg( _("HHCPN021E Missing device address\n")) ;
+        logmsg( _("HHCMD021E Missing device address\n")) ;
         return -1 ;
     }
 
@@ -610,7 +610,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
 
     if (strcasecmp(devclass,"PRT"))
     {
-        logmsg( _("HHCPN017E Device %d:%4.4X is not a printer device\n"),
+        logmsg( _("HHCMD017E Device %d:%4.4X is not a printer device\n"),
                   lcss, devnum );
         return -1;
     }
@@ -624,7 +624,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
             strcat(buf,wrk);
         }
 
-        logmsg( _("HHCPN320I Device %d:%4.4X fcb %s/\n"),
+        logmsg( _("HHCMD320I Device %d:%4.4X fcb %s/\n"),
                   lcss, devnum, buf );
         return 0;
     }
@@ -635,21 +635,21 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
     /* If not 1403 */
     if ( dev->devtype != 0x1403 )
     {
-        logmsg( _("HHCPN322E Device %d:%4.4X is not a 1403 device\n"),
+        logmsg( _("HHCMD322E Device %d:%4.4X is not a 1403 device\n"),
                   lcss, devnum );
         return -1;
     }
 
     if ( !dev->stopprt )
     {
-        logmsg( _("HHCPN323E Device %d:%4.4X not stopped \n"),
+        logmsg( _("HHCMD323E Device %d:%4.4X not stopped \n"),
                   lcss, devnum );
         return -1;
     }
 
     if (strlen (argv[2]) != 26 ) 
     {
-        logmsg( _("HHCPN324E Device %d:%4.4X invalid fcb image ==>%s<==\n"),
+        logmsg( _("HHCMD324E Device %d:%4.4X invalid fcb image ==>%s<==\n"),
                   lcss, devnum, argv[2] );
         return -1;
     }
@@ -657,7 +657,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
     {
         if ( (argv[2][j] < '0') || (argv[2][j] > '9' ) )
         {
-        logmsg( _("HHCPN325E Device %d:%4.4X invalid fcb image ==>%s<==\n"),
+        logmsg( _("HHCMD325E Device %d:%4.4X invalid fcb image ==>%s<==\n"),
                   lcss, devnum, argv[2] );
             return -1;
         }
@@ -678,7 +678,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
         sprintf(wrk,"/%02d",dev->fcb[i]);
         strcat(buf,wrk);
     }
-    logmsg( _("HHCPN320I Device %d:%4.4X fcb %s/\n"),
+    logmsg( _("HHCMD320I Device %d:%4.4X fcb %s/\n"),
               lcss, devnum, buf );
     return 0;
 
@@ -732,7 +732,7 @@ int start_cmd(int argc, char *argv[], char *cmdline)
 
         if (strcasecmp(devclass,"PRT"))
         {
-            logmsg( _("HHCPN017E Device %d:%4.4X is not a printer device\n"),
+            logmsg( _("HHCMD017E Device %d:%4.4X is not a printer device\n"),
                       lcss, devnum );
             return -1;
         }
@@ -746,15 +746,15 @@ int start_cmd(int argc, char *argv[], char *cmdline)
         if (rc) dev->stopprt = stopprt;
 
         switch (rc) {
-            case 0: logmsg(_("HHCPN018I Printer %d:%4.4X started\n"), lcss,devnum);
+            case 0: logmsg(_("HHCMD018I Printer %d:%4.4X started\n"), lcss,devnum);
                     break;
-            case 1: logmsg(_("HHCPN019E Printer %d:%4.4X not started: "
+            case 1: logmsg(_("HHCMD019E Printer %d:%4.4X not started: "
                              "busy or interrupt pending\n"), lcss, devnum);
                     break;
-            case 2: logmsg(_("HHCPN020E Printer %d:%4.4X not started: "
+            case 2: logmsg(_("HHCMD020E Printer %d:%4.4X not started: "
                              "attention request rejected\n"), lcss, devnum);
                     break;
-            case 3: logmsg(_("HHCPN021E Printer %d:%4.4X not started: "
+            case 3: logmsg(_("HHCMD021E Printer %d:%4.4X not started: "
                              "subchannel not enabled\n"), lcss, devnum);
                     break;
         }
@@ -836,14 +836,14 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
 
         if (strcasecmp(devclass,"PRT"))
         {
-            logmsg( _("HHCPN017E Device %d:%4.4X is not a printer device\n"),
+            logmsg( _("HHCMD017E Device %d:%4.4X is not a printer device\n"),
                       lcss, devnum );
             return -1;
         }
 
         dev->stopprt = 1;
 
-        logmsg( _("HHCPN025I Printer %d:%4.4X stopped\n"), lcss, devnum );
+        logmsg( _("HHCMD025I Printer %d:%4.4X stopped\n"), lcss, devnum );
     }
 
     return 0;
@@ -940,7 +940,7 @@ int cf_cmd(int argc, char *argv[], char *cmdline)
     if (IS_CPU_ONLINE(sysblk.pcpu))
     {
         if (on < 0)
-            logmsg(_("HHCPN152I %s%02X online\n"), 
+            logmsg(_("HHCMD152I %s%02X online\n"), 
                 PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         else if (on == 0)
             deconfigure_cpu(sysblk.pcpu);
@@ -948,7 +948,7 @@ int cf_cmd(int argc, char *argv[], char *cmdline)
     else
     {
         if (on < 0)
-            logmsg(_("HHCPN153I %s%02X offline\n"), 
+            logmsg(_("HHCMD153I %s%02X offline\n"), 
                 PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         else if (on > 0)
             configure_cpu(sysblk.pcpu);
@@ -986,14 +986,14 @@ int cfall_cmd(int argc, char *argv[], char *cmdline)
         if (IS_CPU_ONLINE(i))
         {
             if (on < 0)
-                logmsg(_("HHCPN152I %s%02X online\n"), PTYPSTR(i), i);
+                logmsg(_("HHCMD152I %s%02X online\n"), PTYPSTR(i), i);
             else if (on == 0)
                 deconfigure_cpu(i);
         }
         else
         {
             if (on < 0)
-                logmsg(_("HHCPN153I %s%02X offline\n"), PTYPSTR(i), i);
+                logmsg(_("HHCMD153I %s%02X offline\n"), PTYPSTR(i), i);
             else if (on > 0 && i < MAX_CPU)
                 configure_cpu(i);
         }
@@ -1019,12 +1019,12 @@ int quiet_cmd(int argc, char *argv[], char *cmdline)
 #ifdef EXTERNALGUI
     if (extgui)
     {
-        logmsg( _("HHCPN026W Ignored. (external GUI active)\n") );
+        logmsg( _("HHCMD026W Ignored. (external GUI active)\n") );
         return 0;
     }
 #endif /*EXTERNALGUI*/
     sysblk.npquiet = !sysblk.npquiet;
-    logmsg( _("HHCPN027I Automatic refresh %s.\n"),
+    logmsg( _("HHCMD027I Automatic refresh %s.\n"),
               sysblk.npquiet ? _("disabled") : _("enabled") );
     return 0;
 }
@@ -1105,7 +1105,7 @@ int timerint_cmd(int argc, char *argv[], char *cmdline)
         }
     }
     else
-        logmsg( _("HHCPN037I Timer update interval = %d microsecond(s)\n"),
+        logmsg( _("HHCMD037I Timer update interval = %d microsecond(s)\n"),
               sysblk.timerint );
 
     return 0;
@@ -1148,7 +1148,7 @@ char arch370_flag = 0;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPN160W %s%02X not configured\n"), 
+        logmsg( _("HHCMD160W %s%02X not configured\n"), 
             PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
@@ -1184,7 +1184,7 @@ char arch370_flag = 0;
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
-    logmsg( _("HHCPN028I tod = %16.16" I64_FMT "X    %s\n"),
+    logmsg( _("HHCMD028I tod = %16.16" I64_FMT "X    %s\n"),
                (tod_now << 8),format_tod(clock_buf,tod_now,TRUE));
 
     logmsg( _("          h/w = %16.16" I64_FMT "X    %s\n"),
@@ -1263,12 +1263,12 @@ int iodelay_cmd(int argc, char *argv[], char *cmdline)
         BYTE    c;                      /* Character work area       */
 
         if (sscanf(argv[1], "%d%c", &iodelay, &c) != 1)
-            logmsg( _("HHCPN029E Invalid I/O delay value: %s\n"), argv[1] );
+            logmsg( _("HHCMD029E Invalid I/O delay value: %s\n"), argv[1] );
         else
             sysblk.iodelay = iodelay;
     }
     else
-        logmsg( _("HHCPN030I I/O delay = %d\n"), sysblk.iodelay );
+        logmsg( _("HHCMD030I I/O delay = %d\n"), sysblk.iodelay );
 
     return 0;
 }
@@ -1288,7 +1288,7 @@ int rc;
 
     if (argc < 2)
     {
-        logmsg(_("HHCPN200E Missing operand; enter 'HELP AUTOMOUNT' for syntax.\n"));
+        logmsg(_("HHCMD200E Missing operand; enter 'HELP AUTOMOUNT' for syntax.\n"));
         return -1;
     }
 
@@ -1298,20 +1298,20 @@ int rc;
 
         if (argc != 2)
         {
-            logmsg(_("HHCPN201E Invalid syntax; enter 'HELP AUTOMOUNT' for help.\n"));
+            logmsg(_("HHCMD201E Invalid syntax; enter 'HELP AUTOMOUNT' for help.\n"));
             return -1;
         }
 
         if (!pTAMDIR)
         {
-            logmsg(_("HHCPN202E Empty list.\n"));
+            logmsg(_("HHCMD202E Empty list.\n"));
             return -1;
         }
 
         // List all entries...
 
         for (; pTAMDIR; pTAMDIR = pTAMDIR->next)
-            logmsg(_("HHCPN203I \"%c%s\"\n")
+            logmsg(_("HHCMD203I \"%c%s\"\n")
                 ,pTAMDIR->rej ? '-' : '+'
                 ,pTAMDIR->dir
                 );
@@ -1331,7 +1331,7 @@ int rc;
 
             if (argc != 2 )
             {
-                logmsg(_("HHCPN204E Invalid syntax; enter 'HELP AUTOMOUNT' for help.\n"));
+                logmsg(_("HHCMD204E Invalid syntax; enter 'HELP AUTOMOUNT' for help.\n"));
                 return -1;
             }
         }
@@ -1341,7 +1341,7 @@ int rc;
 
             if (argc != 3 )
             {
-                logmsg(_("HHCPN204E Invalid syntax; enter 'HELP AUTOMOUNT' for help.\n"));
+                logmsg(_("HHCMD204E Invalid syntax; enter 'HELP AUTOMOUNT' for help.\n"));
                 return -1;
             }
         }
@@ -1358,28 +1358,28 @@ int rc;
         {
             default:     /* (oops!) */
             {
-                logmsg( _("HHCPN205E **LOGIC ERROR** file \"%s\", line %d\n"),
+                logmsg( _("HHCMD205E **LOGIC ERROR** file \"%s\", line %d\n"),
                     __FILE__, __LINE__);
                 return -1;
             }
 
             case 5:     /* ("out of memory") */
             {
-                logmsg( _("HHCPN206E Out of memory!\n"));
+                logmsg( _("HHCMD206E Out of memory!\n"));
                 return -1;
             }
 
             case 1:     /* ("unresolvable path") */
             case 2:     /* ("path inaccessible") */
             {
-                logmsg( _("HHCPN207E Invalid AUTOMOUNT directory: \"%s\": %s\n"),
+                logmsg( _("HHCMD207E Invalid AUTOMOUNT directory: \"%s\": %s\n"),
                        tamdir, strerror(errno));
                 return -1;
             }
 
             case 3:     /* ("conflict w/previous") */
             {
-                logmsg( _("HHCPN208E AUTOMOUNT directory \"%s\""
+                logmsg( _("HHCMD208E AUTOMOUNT directory \"%s\""
                     " conflicts with previous specification\n"),
                     tamdir);
                 return -1;
@@ -1387,7 +1387,7 @@ int rc;
 
             case 4:     /* ("duplicates previous") */
             {
-                logmsg( _("HHCPN209E AUTOMOUNT directory \"%s\""
+                logmsg( _("HHCMD209E AUTOMOUNT directory \"%s\""
                     " duplicates previous specification\n"),
                     tamdir);
                 return -1;
@@ -1395,7 +1395,7 @@ int rc;
 
             case 0:     /* ("success") */
             {
-                logmsg(_("HHCPN210I %s%s AUTOMOUNT directory = \"%s\"\n"),
+                logmsg(_("HHCMD210I %s%s AUTOMOUNT directory = \"%s\"\n"),
                     pTAMDIR->dir == sysblk.defdir ? "Default " : "",
                     pTAMDIR->rej ? "Disallowed" : "Allowed",
                     pTAMDIR->dir);
@@ -1413,7 +1413,7 @@ int rc;
 
                     if (!(pTAMDIR = malloc( sizeof(TAMDIR) )))
                     {
-                        logmsg( _("HHCPN211E Out of memory!\n"));
+                        logmsg( _("HHCMD211E Out of memory!\n"));
                         sysblk.defdir = cwd; /* EMERGENCY! */
                     }
                     else
@@ -1426,7 +1426,7 @@ int rc;
                         sysblk.defdir = pTAMDIR->dir;
                     }
 
-                    logmsg(_("HHCPN212I Default Allowed AUTOMOUNT directory = \"%s\"\n"),
+                    logmsg(_("HHCMD212I Default Allowed AUTOMOUNT directory = \"%s\"\n"),
                         sysblk.defdir);
                 }
 
@@ -1454,7 +1454,7 @@ int rc;
 
             if (argc != 2 )
             {
-                logmsg(_("HHCPN213E Invalid syntax; enter 'HELP AUTOMOUNT' for help.\n"));
+                logmsg(_("HHCMD213E Invalid syntax; enter 'HELP AUTOMOUNT' for help.\n"));
                 return -1;
             }
         }
@@ -1464,7 +1464,7 @@ int rc;
 
             if (argc != 3 )
             {
-                logmsg(_("HHCPN213E Invalid syntax; enter 'HELP AUTOMOUNT' for help.\n"));
+                logmsg(_("HHCMD213E Invalid syntax; enter 'HELP AUTOMOUNT' for help.\n"));
                 return -1;
             }
         }
@@ -1540,7 +1540,7 @@ int rc;
                     // (point back to list begin)
                     pCurrTAMDIR = sysblk.tamdir;
 
-                    logmsg(_("HHCPN214I Ok.%s\n"),
+                    logmsg(_("HHCMD214I Ok.%s\n"),
                         pCurrTAMDIR ? "" : " (list now empty)");
 
                     // Default entry just deleted?
@@ -1577,7 +1577,7 @@ int rc;
 
                                 if (!(pCurrTAMDIR = malloc( sizeof(TAMDIR) )))
                                 {
-                                    logmsg( _("HHCPN215E Out of memory!\n"));
+                                    logmsg( _("HHCMD215E Out of memory!\n"));
                                     sysblk.defdir = cwd; /* EMERGENCY! */
                                 }
                                 else
@@ -1591,7 +1591,7 @@ int rc;
                                 }
                             }
 
-                            logmsg(_("HHCPN216I Default Allowed AUTOMOUNT directory = \"%s\"\n"),
+                            logmsg(_("HHCMD216I Default Allowed AUTOMOUNT directory = \"%s\"\n"),
                                 sysblk.defdir);
                         }
                     }
@@ -1607,13 +1607,13 @@ int rc;
         }
 
         if (sysblk.tamdir == NULL)
-            logmsg(_("HHCPN217E Empty list.\n"));
+            logmsg(_("HHCMD217E Empty list.\n"));
         else
-            logmsg(_("HHCPN218E Entry not found.\n"));
+            logmsg(_("HHCMD218E Entry not found.\n"));
         return -1;
     }
 
-    logmsg(_("HHCPN219E Unsupported function; enter 'HELP AUTOMOUNT' for syntax.\n"));
+    logmsg(_("HHCMD219E Unsupported function; enter 'HELP AUTOMOUNT' for syntax.\n"));
     return 0;
 }
 
@@ -1696,7 +1696,7 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
             {
                 logmsg
                 (
-                    _( "HHCCF068E Invalid value: %s; Enter \"help scsimount\" for help.\n" )
+                    _( "HHCMD068E Invalid value: %s; Enter \"help scsimount\" for help.\n" )
 
                     ,argv[1]
                 );
@@ -1800,7 +1800,7 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
 
             logmsg
             (
-                _("\n%s\nHHCCF069I %s of %s-labeled volume \"%s\" pending for drive %u:%4.4X = %s\n%s\n\n")
+                _("\n%s\nHHCMD069I %s of %s-labeled volume \"%s\" pending for drive %u:%4.4X = %s\n%s\n\n")
 
                 ,eyecatcher
                 ,mountreq ? "Mount" : "Dismount"
@@ -1900,7 +1900,7 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
             }
         }
 
-        logmsg( _("HHCPN033I CTC debugging now %s for all CTCI/LCS device groups.\n"),
+        logmsg( _("HHCMD033I CTC debugging now %s for all CTCI/LCS device groups.\n"),
                   onoff ? _("ON") : _("OFF") );
     }
     else
@@ -1938,12 +1938,12 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
         }
         else
         {
-            logmsg( _("HHCPN034E Device %d:%4.4X is not a CTCI or LCS device\n"),
+            logmsg( _("HHCMD034E Device %d:%4.4X is not a CTCI or LCS device\n"),
                       lcss, devnum );
             return -1;
         }
 
-        logmsg( _("HHCPN032I CTC debugging now %s for %s device %d:%4.4X group.\n"),
+        logmsg( _("HHCMD032I CTC debugging now %s for %s device %d:%4.4X group.\n"),
                   onoff ? _("ON") : _("OFF"),
                   CTC_LCS == dev->ctctype ? "LCS" : "CTCI",
                   lcss, devnum );
@@ -1968,7 +1968,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
 
     if (argc < 2)
     {
-        logmsg( _("HHCPN188E Missing arguments; enter 'help tt32' for help.\n") );
+        logmsg( _("HHCMD188E Missing arguments; enter 'help tt32' for help.\n") );
         rc = -1;
     }
     else if (strcasecmp(argv[1],"stats") == 0)
@@ -1991,7 +1991,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
 
         if (CTC_CTCI != dev->ctctype && CTC_LCS != dev->ctctype)
         {
-            logmsg( _("HHCPN034E Device %d:%4.4X is not a CTCI or LCS device\n"),
+            logmsg( _("HHCMD034E Device %d:%4.4X is not a CTCI or LCS device\n"),
                       lcss, devnum );
             return -1;
         }
@@ -2010,7 +2010,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
         {
             debug_tt32_tracing(1); // 1=ON
             rc = 0;
-            logmsg( _("HHCPN189I TT32 debug tracing messages enabled\n") );
+            logmsg( _("HHCMD189I TT32 debug tracing messages enabled\n") );
         }
         else
         {
@@ -2024,7 +2024,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
         {
             debug_tt32_tracing(0); // 0=OFF
             rc = 0;
-            logmsg( _("HHCPN189I TT32 debug tracing messages disabled\n") );
+            logmsg( _("HHCMD189I TT32 debug tracing messages disabled\n") );
         }
         else
         {
@@ -2034,7 +2034,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
     }
     else
     {
-        logmsg( _("HHCPN187E Invalid argument\n") );
+        logmsg( _("HHCMD187E Invalid argument\n") );
         rc = -1;
     }
 
@@ -2059,7 +2059,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPN160W %s%02X not configured\n"), 
+        logmsg( _("HHCMD160W %s%02X not configured\n"), 
             PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
@@ -2068,7 +2068,7 @@ REGS *regs;
     /* Command is valid only when CPU is stopped */
     if (regs->cpustate != CPUSTATE_STOPPED)
     {
-        logmsg( _("HHCPN035E store status rejected: CPU not stopped\n") );
+        logmsg( _("HHCMD035E store status rejected: CPU not stopped\n") );
         return -1;
     }
 
@@ -2100,9 +2100,9 @@ char *basedir;
             set_sce_dir(argv[1]);
     else
         if((basedir = get_sce_dir()))
-            logmsg(_("HHCPN820I SCLPROOT %s\n"),basedir);
+            logmsg(_("HHCMD820I SCLPROOT %s\n"),basedir);
         else
-            logmsg(_("HHCPN821I SCLP DISK I/O Disabled\n"));
+            logmsg(_("HHCMD821I SCLP DISK I/O Disabled\n"));
 
     return 0;
 }
@@ -2126,7 +2126,7 @@ int httproot_cmd(int argc, char *argv[], char *cmdline)
         if(sysblk.httproot)
             logmsg(_("HHCCH830I HTTPROOT %s\n"),sysblk.httproot);
         else
-            logmsg(_("HHCCF831I HTTPROOT not specified\n"));
+            logmsg(_("HHCMD831I HTTPROOT not specified\n"));
 
     return 0;
 }
@@ -2153,7 +2153,7 @@ char c;
         }
         else if(sysblk.httpport)
         {
-            logmsg(_("HHCCF832S HTTP server already active\n"));
+            logmsg(_("HHCMD832S HTTP server already active\n"));
             return -1;
         }
         else
@@ -2161,7 +2161,7 @@ char c;
             if (sscanf(argv[1], "%hu%c", &sysblk.httpport, &c) != 1
                 || sysblk.httpport == 0 || (sysblk.httpport < 1024 && sysblk.httpport != 80) )
             {
-                logmsg(_("HHCCF833S Invalid HTTP port number %s\n"), argv[1]);
+                logmsg(_("HHCMD833S Invalid HTTP port number %s\n"), argv[1]);
                 return -1;
             }
             if (argc > 2)
@@ -2170,7 +2170,7 @@ char c;
                     sysblk.httpauth = 1;
                 else if (strcasecmp(argv[2],"noauth"))
                 {
-                    logmsg(_("HHCCF834S Unrecognized argument %s\n"),argv[2]);
+                    logmsg(_("HHCMD834S Unrecognized argument %s\n"),argv[2]);
                     return -1;
                 }
             }
@@ -2191,14 +2191,14 @@ char c;
             if ( create_thread (&sysblk.httptid, DETACHED,
                                 http_server, NULL, "http_server") )
             {
-                logmsg(_("HHCCF835S Cannot create http_server thread: %s\n"),
+                logmsg(_("HHCMD835S Cannot create http_server thread: %s\n"),
                         strerror(errno));
                 return -1;
             }
         }
     }
     else
-        logmsg(_("HHCCF836I HTTPPORT %d\n"),sysblk.httpport);
+        logmsg(_("HHCMD836I HTTPPORT %d\n"),sysblk.httpport);
     return 0;
 }
 
@@ -2219,13 +2219,13 @@ char c;
         if ( sscanf( argv[1], "%d%c", &http_server_kludge_msecs, &c ) != 1
             || http_server_kludge_msecs <= 0 || http_server_kludge_msecs > 50 )
         {
-            logmsg(_("HHCCF837S Invalid HTTP_SERVER_CONNECT_KLUDGE value: %s\n" ),argv[1]);
+            logmsg(_("HHCMD837S Invalid HTTP_SERVER_CONNECT_KLUDGE value: %s\n" ),argv[1]);
             return -1;
         }
         sysblk.http_server_kludge_msecs = http_server_kludge_msecs;
     }
     else
-        logmsg(_("HHCCF838S HTTP_SERVER_CONNECT_KLUDGE value: %s\n" )
+        logmsg(_("HHCMD838S HTTP_SERVER_CONNECT_KLUDGE value: %s\n" )
                 ,sysblk.http_server_kludge_msecs);
     return 0;
 }
@@ -2249,14 +2249,14 @@ int alrf_cmd(int argc, char *argv[], char *cmdline)
             if(strcasecmp(argv[1],"disable")==0)
                 sysblk.asnandlxreuse=0;
             else {
-                logmsg(_("HHCCF067S Incorrect keyword %s for the ASN_AND_LX_REUSE statement.\n"),
+                logmsg(_("HHCMD067S Incorrect keyword %s for the ASN_AND_LX_REUSE statement.\n"),
                             argv[1]);
                 return -1;
                 }
         }
     }
     else
-        logmsg(_("HHCCF0028I ASN and LX reuse is %s\n"),sysblk.asnandlxreuse ? "Enabled" : "Disabled");
+        logmsg(_("HHCMD0028I ASN and LX reuse is %s\n"),sysblk.asnandlxreuse ? "Enabled" : "Disabled");
 
     return 0;
 }
@@ -2283,7 +2283,7 @@ int toddrag_cmd(int argc, char *argv[], char *cmdline)
         }
     }
     else
-        logmsg( _("HHCPN036I TOD clock drag factor = %lf\n"), (1.0/(1.0+get_tod_steering())));
+        logmsg( _("HHCMD036I TOD clock drag factor = %lf\n"), (1.0/(1.0+get_tod_steering())));
 
     return 0;
 }
@@ -2316,7 +2316,7 @@ int panrate_cmd(int argc, char *argv[], char *cmdline)
         }
     }
     else
-        logmsg( _("HHCPN037I Panel refresh rate = %d millisecond(s)\n"),
+        logmsg( _("HHCMD037I Panel refresh rate = %d millisecond(s)\n"),
               sysblk.panrate );
 
     return 0;
@@ -2341,7 +2341,7 @@ int pantitle_cmd(int argc, char *argv[], char *cmdline)
         sysblk.pantitle = strdup(argv[1]);
     }
     else
-        logmsg( _("HHCCF100I pantitle = %s\n"),sysblk.pantitle);
+        logmsg( _("HHCMD100I pantitle = %s\n"),sysblk.pantitle);
 
     return 0;
 }
@@ -2358,13 +2358,13 @@ int msghld_cmd(int argc, char *argv[], char *cmdline)
   {
     if(!strcasecmp(argv[1], "info"))
     {
-      logmsg("HHCCF101I Current message held time is %d seconds.\n", sysblk.keep_timeout_secs);
+      logmsg("HHCMD101I Current message held time is %d seconds.\n", sysblk.keep_timeout_secs);
       return(0);
     }
     else if(!strcasecmp(argv[1], "clear"))
     {
       expire_kept_msgs(1);
-      logmsg("HHCCF102I Held messages cleared.\n");
+      logmsg("HHCMD102I Held messages cleared.\n");
       return(0);
     }
     else
@@ -2374,7 +2374,7 @@ int msghld_cmd(int argc, char *argv[], char *cmdline)
       if(sscanf(argv[1], "%d", &new_timeout) && new_timeout >= 0)
       {
         sysblk.keep_timeout_secs = new_timeout;
-        logmsg("HHCCF103I The message held time is set to %d seconds.\n", sysblk.keep_timeout_secs);
+        logmsg("HHCMD103I The message held time is set to %d seconds.\n", sysblk.keep_timeout_secs);
         return(0);
       }
     }
@@ -2404,7 +2404,7 @@ int sh_cmd(int argc, char *argv[], char *cmdline)
     }
     else 
     {
-        logmsg( _("HHCPN180E shell commands are disabled\n"));
+        logmsg( _("HHCMD180E shell commands are disabled\n"));
     }
     return -1;
 }
@@ -2425,13 +2425,13 @@ int cd_cmd(int argc, char *argv[], char *cmdline)
         while (isspace(*path)) path++;
         chdir(path);
         getcwd( cwd, sizeof(cwd) );
-        logmsg("HHCPN184I %s\n",cwd);
+        logmsg("HHCMD184I %s\n",cwd);
         HDC1( debug_cd_cmd, cwd );
         return 0;
     }
     else
     {
-        logmsg( _("HHCPN180E shell commands are disabled\n"));
+        logmsg( _("HHCMD180E shell commands are disabled\n"));
     }
     return -1;
 }
@@ -2450,16 +2450,16 @@ int pwd_cmd(int argc, char *argv[], char *cmdline)
     {
         if (argc > 1)
         {
-            logmsg( _("HHCPN163E Invalid format. Command does not support any arguments.\n"));
+            logmsg( _("HHCMD163E Invalid format. Command does not support any arguments.\n"));
             return -1;
         }
         getcwd( cwd, sizeof(cwd) );
-        logmsg("HHCPN184I %s\n",cwd);
+        logmsg("HHCMD184I %s\n",cwd);
         return 0;
     }
     else
     {
-        logmsg( _("HHCPN180E shell commands are disabled\n"));
+        logmsg( _("HHCMD180E shell commands are disabled\n"));
     }
     return -1; 
 }
@@ -2479,7 +2479,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPN160W %s%02X not configured\n"), 
+        logmsg( _("HHCMD160W %s%02X not configured\n"), 
             PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
@@ -2495,7 +2495,7 @@ REGS *regs;
         if (argc > 2)
         {
             release_lock(&sysblk.cpulock[sysblk.pcpu]);
-            logmsg( _("HHCPN162E Invalid format. Enter \"help gpr\" for help.\n"));
+            logmsg( _("HHCMD162E Invalid format. Enter \"help gpr\" for help.\n"));
             return 0;
         }
 
@@ -2507,7 +2507,7 @@ REGS *regs;
         )
         {
             release_lock(&sysblk.cpulock[sysblk.pcpu]);
-            logmsg( _("HHCPN162E Invalid format. .Enter \"help gpr\" for help.\n"));
+            logmsg( _("HHCMD162E Invalid format. .Enter \"help gpr\" for help.\n"));
             return 0;
         }
 
@@ -2541,7 +2541,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPN160W %s%02X not configured\n"), 
+        logmsg( _("HHCMD160W %s%02X not configured\n"), 
             PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
@@ -2571,7 +2571,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPN160W %s%02X not configured\n"), 
+        logmsg( _("HHCMD160W %s%02X not configured\n"), 
             PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
@@ -2602,7 +2602,7 @@ U64   cr_value;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPN160W %s%02X not configured\n"), 
+        logmsg( _("HHCMD160W %s%02X not configured\n"), 
             PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
@@ -2615,7 +2615,7 @@ U64   cr_value;
             || '=' != equal_sign || cr_num < 0 || cr_num > 15)
         {
             release_lock(&sysblk.cpulock[sysblk.pcpu]);
-            logmsg( _("HHCPN164E Invalid format. .Enter \"help cr\" for help.\n"));
+            logmsg( _("HHCMD164E Invalid format. .Enter \"help cr\" for help.\n"));
             return 0;
         }
         if ( ARCH_900 == regs->arch_mode )
@@ -2648,7 +2648,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPN160W %s%02X not configured\n"), 
+        logmsg( _("HHCMD160W %s%02X not configured\n"), 
             PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
@@ -2678,7 +2678,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPN160W %s%02X not configured\n"), 
+        logmsg( _("HHCMD160W %s%02X not configured\n"), 
             PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
@@ -2714,7 +2714,7 @@ int   n, errflag, stopflag=0, modflag=0;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPN160W %s%02X not configured\n"), 
+        logmsg( _("HHCMD160W %s%02X not configured\n"), 
             PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
@@ -2814,7 +2814,7 @@ int   n, errflag, stopflag=0, modflag=0;
         /* Error message if this operand was invalid */
         if (errflag)
         {
-            logmsg( _("HHCPN165E Invalid operand %s\n"), argv[n]);
+            logmsg( _("HHCMD165E Invalid operand %s\n"), argv[n]);
             stopflag = 1;
         }
     } /* end for(n) */
@@ -2934,13 +2934,13 @@ int restart_cmd(int argc, char *argv[], char *cmdline)
     if (sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_IFA
      || sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_SUP)
     {
-        logmsg(_("HHCPN052E Target CPU %d type %d"
+        logmsg(_("HHCMD052E Target CPU %d type %d"
                 " does not allow ipl nor restart\n"),
                 sysblk.pcpu, sysblk.ptyp[sysblk.pcpu]);
         return -1;
     }
       
-    logmsg( _("HHCPN038I Restart key depressed\n") );
+    logmsg( _("HHCMD038I Restart key depressed\n") );
 
     /* Obtain the interrupt lock */
     OBTAIN_INTLOCK(NULL);
@@ -2948,7 +2948,7 @@ int restart_cmd(int argc, char *argv[], char *cmdline)
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         RELEASE_INTLOCK(NULL);
-        logmsg( _("HHCPN160W %s%02X not configured\n"), 
+        logmsg( _("HHCMD160W %s%02X not configured\n"), 
             PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
@@ -2987,7 +2987,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPN160W %s%02X not configured\n"), 
+        logmsg( _("HHCMD160W %s%02X not configured\n"), 
             PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
@@ -3016,7 +3016,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPN160W %s%02X not configured\n"), 
+        logmsg( _("HHCMD160W %s%02X not configured\n"), 
             PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
@@ -3045,7 +3045,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPN160W %s%02X not configured\n"), 
+        logmsg( _("HHCMD160W %s%02X not configured\n"), 
             PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
@@ -3083,7 +3083,7 @@ char range[256];
 
     if (argc > 2 || (off && argc > 1) || (query && argc > 1))
     {
-        logmsg( _("HHCPN039E Invalid arguments\n") );
+        logmsg( _("HHCMD039E Invalid arguments\n") );
         return -1;
     }
 
@@ -3099,7 +3099,7 @@ char range[256];
         }
         else if (rc != 3 || (c[0] != '-' && c[0] != ':' && c[0] != '.'))
         {
-            logmsg( _("HHCPN039E Invalid arguments\n") );
+            logmsg( _("HHCMD039E Invalid arguments\n") );
             return -1;
         }
         if (c[0] == '.')
@@ -3147,7 +3147,7 @@ char range[256];
     on = (trace && sysblk.insttrace) || (!trace && sysblk.inststep);
 
     /* Display message */
-    logmsg(_("HHCPN040I Instruction %s %s %s\n"),
+    logmsg(_("HHCMD040I Instruction %s %s %s\n"),
            cmdline[0] == 't' ? _("tracing") :
            cmdline[0] == 's' ? _("stepping") : _("break"),
            on ? _("on") : _("off"),
@@ -3192,23 +3192,23 @@ REGS *regs;
     rc = device_attention (dev, CSW_ATTN);
 
     switch (rc) {
-        case 0: logmsg(_("HHCPN045I Device %d:%4.4X attention request raised\n"),
+        case 0: logmsg(_("HHCMD045I Device %d:%4.4X attention request raised\n"),
                          lcss, devnum);
                 break;
-        case 1: logmsg(_("HHCPN046E Device %d:%4.4X busy or interrupt pending\n"),
+        case 1: logmsg(_("HHCMD046E Device %d:%4.4X busy or interrupt pending\n"),
                          lcss, devnum);
                 break;
-        case 2: logmsg(_("HHCPN047E Device %d:%4.4X attention request rejected\n"),
+        case 2: logmsg(_("HHCMD047E Device %d:%4.4X attention request rejected\n"),
                          lcss, devnum);
                 break;
-        case 3: logmsg(_("HHCPN048E Device %d:%4.4X subchannel not enabled\n"),
+        case 3: logmsg(_("HHCMD048E Device %d:%4.4X subchannel not enabled\n"),
                          lcss, devnum);
                 break;
     }
 
     regs = sysblk.regs[sysblk.pcpu];
     if (rc == 3 && IS_CPU_ONLINE(sysblk.pcpu) && CPUSTATE_STOPPED == regs->cpustate)
-        logmsg( _("HHCPN049W Are you sure you didn't mean 'ipl %4.4X' "
+        logmsg( _("HHCMD049W Are you sure you didn't mean 'ipl %4.4X' "
                   "instead?\n"), devnum );
 
     return rc;
@@ -3228,7 +3228,7 @@ int ext_cmd(int argc, char *argv[], char *cmdline)
 
     ON_IC_INTKEY;
 
-    logmsg( _("HHCPN050I Interrupt key depressed\n") );
+    logmsg( _("HHCMD050I Interrupt key depressed\n") );
 
     /* Signal waiting CPUs that an interrupt is pending */
     WAKEUP_CPUS_MASK (sysblk.waiting_mask);
@@ -3265,7 +3265,7 @@ int pgmprdos_cmd(int argc, char *argv[], char *cmdline)
         }
         else
         {
-            logmsg( _("HHCCF028S Invalid program product OS license setting %s\n"),
+            logmsg( _("HHCMD028S Invalid program product OS license setting %s\n"),
                     argv[1]);
         }
     }
@@ -3303,13 +3303,13 @@ int i;
                 sysblk.diag8cmd &= ~(DIAG8CMD_ENABLE | DIAG8CMD_ECHO);
             else
             {
-                logmsg(_("HHCCF052S DIAG8CMD invalid option: %s\n"),argv[i]);
+                logmsg(_("HHCMD052S DIAG8CMD invalid option: %s\n"),argv[i]);
                 return -1;
             }
 
         }
     else
-        logmsg(_("HHCCF054S DIAG8CMD: %sable, %secho\n"),
+        logmsg(_("HHCMD054S DIAG8CMD: %sable, %secho\n"),
             (sysblk.diag8cmd & DIAG8CMD_ENABLE) ? "en" : "dis",
             (sysblk.diag8cmd & DIAG8CMD_ECHO)   ? ""   : "no");
 
@@ -3343,13 +3343,13 @@ int i;
                 sysblk.shcmdopt &= ~SHCMDOPT_DIAG8;
             else
             {
-                logmsg(_("HHCCF053I SHCMDOPT invalid option: %s\n"),
+                logmsg(_("HHCMD053I SHCMDOPT invalid option: %s\n"),
                   argv[i]);
                 return -1;
             }
         }
     else
-        logmsg(_("HHCCF053I SHCMDOPT %sabled%s\n"),
+        logmsg(_("HHCMD053I SHCMDOPT %sabled%s\n"),
           (sysblk.shcmdopt&SHCMDOPT_ENABLE)?"En":"Dis",
           (sysblk.shcmdopt&SHCMDOPT_DIAG8)?"":" NoDiag8");
 
@@ -3381,13 +3381,13 @@ int lsid_cmd(int argc, char *argv[], char *cmdline)
             sysblk.legacysenseid = 0;
         else
         {
-            logmsg(_("HHCCF110E Legacysenseid invalid option: %s\n"),
+            logmsg(_("HHCMD110E Legacysenseid invalid option: %s\n"),
               argv[1]);
             return -1;
         }
     }
     else
-        logmsg(_("HHCCF111I Legacysenseid %sabled\n"),
+        logmsg(_("HHCMD111I Legacysenseid %sabled\n"),
           sysblk.legacysenseid?"En":"Dis");
 
     return 0;
@@ -3430,7 +3430,7 @@ int stsi_model_cmd(int argc, char *argv[], char *cmdline)
         set_model(argc, argv[1], argv[2], argv[3], argv[4]);
     else
     {
-        logmsg( _("HHCCF113E MODEL: no model code\n"));
+        logmsg( _("HHCMD113E MODEL: no model code\n"));
         return -1;
     }
 
@@ -3451,7 +3451,7 @@ int stsi_plant_cmd(int argc, char *argv[], char *cmdline)
         set_plant(argv[1]);
     else
     {
-        logmsg( _("HHCCF114E PLANT: no plant code\n"));
+        logmsg( _("HHCMD114E PLANT: no plant code\n"));
         return -1;
     }
 
@@ -3472,7 +3472,7 @@ int stsi_mfct_cmd(int argc, char *argv[], char *cmdline)
         set_manufacturer(argv[1]);
     else
     {
-        logmsg( _("HHCCF115E MANUFACTURER: no manufacturer code\n"));
+        logmsg( _("HHCMD115E MANUFACTURER: no manufacturer code\n"));
         return -1;
     }
 
@@ -3493,7 +3493,7 @@ int lparname_cmd(int argc, char *argv[], char *cmdline)
     if (argc > 1)
         set_lparname(argv[1]);
     else
-        logmsg( _("HHCPN056I LPAR name = %s\n"),str_lparname());
+        logmsg( _("HHCMD056I LPAR name = %s\n"),str_lparname());
 
     return 0;
 }
@@ -3518,20 +3518,20 @@ BYTE    c;
         {
             if ( strlen(argv[1]) == 2 && id > 0x3f )
             {
-                logmsg( _("HHCPN061E LPARNUM %02X invalid; must be 00 to 3F (hex)\n"), id); 
+                logmsg( _("HHCMD061E LPARNUM %02X invalid; must be 00 to 3F (hex)\n"), id); 
                 return -1;
             }
             sysblk.lparnum = id;
-            sysblk.lparnuml = strlen(argv[1]);
+            sysblk.lparnuml = (U16)strlen(argv[1]);
         }
         else
         {
-            logmsg( _("HHCPN058E LPARNUM must be one or two hex digits\n"));
+            logmsg( _("HHCMD058E LPARNUM must be one or two hex digits\n"));
             return -1;
         }
     }
     else
-        logmsg( _("HHCPN060I LPAR number = %"I16_FMT"X\n"), sysblk.lparnum);
+        logmsg( _("HHCMD060I LPAR number = %"I16_FMT"X\n"), sysblk.lparnum);
 
     return 0;
 }
@@ -3556,18 +3556,18 @@ U16     id;
                 sysblk.cpuidfmt = id;
             else
             {
-                logmsg( _("HHCPN156E CPUIDFMT must be either 0 or 1\n"));
+                logmsg( _("HHCMD156E CPUIDFMT must be either 0 or 1\n"));
                 return -1;
             }
         }
         else
         {
-            logmsg( _("HHCPN156E CPUIDFMT must be either 0 or 1\n"));
+            logmsg( _("HHCMD156E CPUIDFMT must be either 0 or 1\n"));
             return -1;
         }
     }
     else
-        logmsg( _("HHCPN157I CPUIDFMT = %d\n"), sysblk.cpuidfmt);
+        logmsg( _("HHCMD157I CPUIDFMT = %d\n"), sysblk.cpuidfmt);
 
     return 0;
 }
@@ -3585,7 +3585,7 @@ int loadparm_cmd(int argc, char *argv[], char *cmdline)
     if (argc > 1)
         set_loadparm(argv[1]);
     else
-        logmsg( _("HHCPN051I LOADPARM=%s\n"),str_loadparm());
+        logmsg( _("HHCMD051I LOADPARM=%s\n"),str_loadparm());
 
     return 0;
 }
@@ -3608,7 +3608,7 @@ static int reset_cmd(int ac,char *av[],char *cmdline,int clear)
          && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED)
         {
             RELEASE_INTLOCK(NULL);
-            logmsg( _("HHCPN053E System reset/clear rejected: All CPU's must be stopped\n") );
+            logmsg( _("HHCMD053E System reset/clear rejected: All CPU's must be stopped\n") );
             return -1;
         }
 
@@ -3659,7 +3659,7 @@ char *cdev, *clcss;
     if (sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_IFA
      || sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_SUP)
     {
-        logmsg(_("HHCPN052E Target CPU %d type %d"
+        logmsg(_("HHCMD052E Target CPU %d type %d"
                 " does not allow ipl nor restart\n"),
                 sysblk.pcpu, sysblk.ptyp[sysblk.pcpu]);
         return -1;
@@ -3708,7 +3708,7 @@ char *cdev, *clcss;
          && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED)
         {
             RELEASE_INTLOCK(NULL);
-            logmsg( _("HHCPN053E ipl rejected: All CPU's must be stopped\n") );
+            logmsg( _("HHCMD053E ipl rejected: All CPU's must be stopped\n") );
             return -1;
         }
 
@@ -3736,7 +3736,7 @@ char *cdev, *clcss;
         {
             if (sscanf(clcss, "%hd%c", &lcss, &c) != 1)
             {
-                logmsg( _("HHCPN059E LCSS id %s is invalid\n"), clcss );
+                logmsg( _("HHCMD059E LCSS id %s is invalid\n"), clcss );
                 return -1;
             }
         }
@@ -3783,14 +3783,14 @@ BYTE c;                                 /* Character work area       */
 
     if (argc < 2)
     {
-        logmsg( _("HHCPN054E Missing argument\n") );
+        logmsg( _("HHCMD054E Missing argument\n") );
         return -1;
     }
 
     if (sscanf(argv[1], "%x%c", &cpu, &c) != 1
      || cpu < 0 || cpu >= MAX_CPU)
     {
-        logmsg( _("HHCPN055E Target CPU %s is invalid\n"), argv[1] );
+        logmsg( _("HHCMD055E Target CPU %s is invalid\n"), argv[1] );
         return -1;
     }
 
@@ -3878,7 +3878,7 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
 
     if (!(orig_pDevBlkPtrs = malloc(sizeof(DEVBLK*) * MAX_DEVLIST_DEVICES)))
     {
-        logmsg( _("HHCPN146E Work buffer malloc failed: %s\n"),
+        logmsg( _("HHCMD146E Work buffer malloc failed: %s\n"),
             strerror(errno) );
         return -1;
     }
@@ -3966,7 +3966,7 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
 
     if (bTooMany)
     {
-        logmsg( _("HHCPN147W Warning: not all devices shown (max %d)\n"),
+        logmsg( _("HHCMD147W Warning: not all devices shown (max %d)\n"),
             MAX_DEVLIST_DEVICES);
 
         return -1;      // (treat as error)
@@ -4011,7 +4011,7 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
 
     if (!(orig_pDevBlkPtrs = malloc(sizeof(DEVBLK*) * MAX_DEVLIST_DEVICES)))
     {
-        logmsg( _("HHCPN146E Work buffer malloc failed: %s\n"),
+        logmsg( _("HHCMD146E Work buffer malloc failed: %s\n"),
             strerror(errno) );
         return -1;
     }
@@ -4117,7 +4117,7 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
 
     if (bTooMany)
     {
-        logmsg( _("HHCPN147W Warning: not all devices shown (max %d)\n"),
+        logmsg( _("HHCMD147W Warning: not all devices shown (max %d)\n"),
             MAX_DEVLIST_DEVICES);
 
         return -1;      // (treat as error)
@@ -4138,7 +4138,7 @@ int attach_cmd(int argc, char *argv[], char *cmdline)
 
     if (argc < 3)
     {
-        logmsg( _("HHCPN057E Missing argument(s)\n") );
+        logmsg( _("HHCMD057E Missing argument(s)\n") );
         return -1;
     }
     return parse_and_attach_devices(argv[1],argv[2],argc-3,&argv[3]);
@@ -4157,7 +4157,7 @@ int attach_cmd(int argc, char *argv[], char *cmdline)
 
     if (sscanf(cdev, "%hx%c", &devnum, &c) != 1)
     {
-        logmsg( _("HHCPN059E Device number %s is invalid\n"), cdev );
+        logmsg( _("HHCMD059E Device number %s is invalid\n"), cdev );
         return -1;
     }
 
@@ -4165,7 +4165,7 @@ int attach_cmd(int argc, char *argv[], char *cmdline)
     {
         if (sscanf(clcss, "%hd%c", &lcss, &c) != 1)
         {
-            logmsg( _("HHCPN059E LCSS id %s is invalid\n"), clcss );
+            logmsg( _("HHCMD059E LCSS id %s is invalid\n"), clcss );
             return -1;
         }
     }
@@ -4225,7 +4225,7 @@ int rc;
 
     if (argc < 3)
     {
-        logmsg( _("HHCPN062E Missing argument(s)\n") );
+        logmsg( _("HHCMD062E Missing argument(s)\n") );
         return -1;
     }
 
@@ -4241,7 +4241,7 @@ int rc;
     }
     if(lcss!=newlcss)
     {
-        logmsg(_("HHCPN182E Device numbers can only be redefined within the same Logical channel subsystem\n"));
+        logmsg(_("HHCMD182E Device numbers can only be redefined within the same Logical channel subsystem\n"));
         return -1;
     }
 
@@ -4285,14 +4285,14 @@ BYTE    c;                              /* Character work area       */
 
     if (sscanf(argv[1], "%x%c", &rupt_num, &c) != 1)
     {
-        logmsg( _("HHCPN066E Program interrupt number %s is invalid\n"),
+        logmsg( _("HHCMD066E Program interrupt number %s is invalid\n"),
                   argv[1] );
         return -1;
     }
 
     if ((abs_rupt_num = abs(rupt_num)) < 1 || abs_rupt_num > 0x40)
     {
-        logmsg( _("HHCPN067E Program interrupt number out of range (%4.4X)\n"),
+        logmsg( _("HHCMD067E Program interrupt number out of range (%4.4X)\n"),
                   abs_rupt_num );
         return -1;
     }
@@ -4506,7 +4506,7 @@ int syncio_cmd(int argc, char *argv[], char *cmdline)
 
         found = 1;
 
-        logmsg( _("HHCPN072I %4.4X  synchronous: %12" I64_FMT "d "
+        logmsg( _("HHCMD072I %4.4X  synchronous: %12" I64_FMT "d "
                   "asynchronous: %12" I64_FMT "d\n"),
                 dev->devnum, (long long)dev->syncios,
                 (long long)dev->asyncios
@@ -4517,9 +4517,9 @@ int syncio_cmd(int argc, char *argv[], char *cmdline)
     }
 
     if (!found)
-        logmsg( _("HHCPN073I No synchronous I/O devices found\n") );
+        logmsg( _("HHCMD073I No synchronous I/O devices found\n") );
     else
-        logmsg( _("HHCPN074I TOTAL synchronous: %12" I64_FMT "d "
+        logmsg( _("HHCMD074I TOTAL synchronous: %12" I64_FMT "d "
                   "asynchronous: %12" I64_FMT "d  %3" I64_FMT "d%%\n"),
                (long long)syncios, (long long)asyncios,
                (long long)((syncios * 100) / (syncios + asyncios + 1))
@@ -4558,7 +4558,7 @@ int devtmax_cmd(int argc, char *argv[], char *cmdline)
             ios_devtmax = devtmax;
         else
         {
-            logmsg( _("HHCPN075E Invalid max device threads value "
+            logmsg( _("HHCMD075E Invalid max device threads value "
                       "(must be -1 to n)\n") );
             return -1;
         }
@@ -4566,7 +4566,7 @@ int devtmax_cmd(int argc, char *argv[], char *cmdline)
         TrimDeviceThreads();    /* (enforce newly defined threshold) */
     }
     else
-        logmsg( _("HHCPN076I Max device threads: %d, current: %d, most: %d, "
+        logmsg( _("HHCMD076I Max device threads: %d, current: %d, most: %d, "
             "waiting: %d, max exceeded: %d\n"),
             ios_devtmax, ios_devtnbr, ios_devthwm,
             (int)ios_devtwait, ios_devtunavail
@@ -4586,7 +4586,7 @@ int devtmax_cmd(int argc, char *argv[], char *cmdline)
             sysblk.devtmax = devtmax;
         else
         {
-            logmsg( _("HHCPN077E Invalid max device threads value "
+            logmsg( _("HHCMD077E Invalid max device threads value "
                       "(must be -1 to n)\n") );
             return -1;
         }
@@ -4605,7 +4605,7 @@ int devtmax_cmd(int argc, char *argv[], char *cmdline)
         release_lock(&sysblk.ioqlock);
     }
     else
-        logmsg( _("HHCPN078E Max device threads %d current %d most %d "
+        logmsg( _("HHCMD078E Max device threads %d current %d most %d "
             "waiting %d total I/Os queued %d\n"),
             sysblk.devtmax, sysblk.devtnbr, sysblk.devthwm,
             sysblk.devtwait, sysblk.devtunavail
@@ -4637,7 +4637,7 @@ char    c;                              /* work for sscan            */
 
     if (strlen(argv[0]) < 3 || strchr ("+-cdk", argv[0][2]) == NULL)
     {
-        logmsg( _("HHCPN091E Command must be 'sf+', 'sf-', "
+        logmsg( _("HHCMD091E Command must be 'sf+', 'sf-', "
                                 "'sfc', 'sfk' or 'sfd'\n") );
         return -1;
     }
@@ -4666,7 +4666,7 @@ char    c;                              /* work for sscan            */
             /* nothing */
         if (!dev)
         {
-            logmsg( _("HHCPN081E No cckd devices found\n") );
+            logmsg( _("HHCMD081E No cckd devices found\n") );
             return -1;
         }
         dev = NULL;
@@ -4679,7 +4679,7 @@ char    c;                              /* work for sscan            */
             return devnotfound_msg(lcss,devnum);
         if (dev->cckd_ext == NULL)
         {
-            logmsg( _("HHCPN084E Device number %d:%4.4X "
+            logmsg( _("HHCMD084E Device number %d:%4.4X "
                       "is not a cckd device\n"), lcss, devnum );
             return -1;
         }
@@ -4696,7 +4696,7 @@ char    c;                              /* work for sscan            */
             flag = 2;
         else
         {
-            logmsg( _("HHCPN087E Operand must be "
+            logmsg( _("HHCMD087E Operand must be "
                       "`merge', `nomerge' or `force'\n") );
             return -1;
         }
@@ -4708,7 +4708,7 @@ char    c;                              /* work for sscan            */
     {
         if (sscanf(argv[1], "%d%c", &level, &c) != 1 || level < -1 || level > 4)
         {
-            logmsg( _("HHCPN087E Operand must be a number -1 .. 4\n"));
+            logmsg( _("HHCMD087E Operand must be a number -1 .. 4\n"));
             return -1;
         }
         argv++; argc--;
@@ -4717,7 +4717,7 @@ char    c;                              /* work for sscan            */
     /* No other operands allowed */
     if (argc > 1)
     {
-        logmsg( _("HHCPN089E Unexpected operand: %s\n"), argv[1] );
+        logmsg( _("HHCMD089E Unexpected operand: %s\n"), argv[1] );
         return -1;
     }
 
@@ -4786,12 +4786,12 @@ int mnttapri_cmd(int argc, char *argv[], char *cmdline)
             sysblk.nomountedtapereinit = 0;
         else
         {
-            logmsg( _("HHCCF052S %s: %s invalid argument\n"),argv[0],argv[1]);
+            logmsg( _("HHCMD052S %s: %s invalid argument\n"),argv[0],argv[1]);
             return -1;
         }
     }
     else
-        logmsg( _("HHCPN850I Tape mount reinit %sallowed\n"),sysblk.nomountedtapereinit?"dis":"");
+        logmsg( _("HHCMD850I Tape mount reinit %sallowed\n"),sysblk.nomountedtapereinit?"dis":"");
 
     return 0;
 }
@@ -4816,7 +4816,7 @@ int ascsimnt_cmd(int argc, char *argv[], char *cmdline)
             if ( sscanf( argv[1], "%d%c", &secs, &c ) != 1
                 || secs <= 0 || secs > 99 )
             {
-                logmsg( _("HHCCF052S %s: %s invalid argument\n"),argv[0],argv[1]);
+                logmsg( _("HHCMD052S %s: %s invalid argument\n"),argv[0],argv[1]);
                 return -1;
             }
             else
@@ -4824,7 +4824,7 @@ int ascsimnt_cmd(int argc, char *argv[], char *cmdline)
         }
     }
     else
-        logmsg( _("HHCPN851I Auto SCSI mount %d seconds\n"),sysblk.auto_scsi_mount_secs);
+        logmsg( _("HHCMD851I Auto SCSI mount %d seconds\n"),sysblk.auto_scsi_mount_secs);
 
     return 0;
 }
@@ -4848,7 +4848,7 @@ char   **init_argv;
 
     if (argc < 2)
     {
-        logmsg( _("HHCPN093E Missing argument(s)\n") );
+        logmsg( _("HHCMD093E Missing argument(s)\n") );
         return -1;
     }
 
@@ -4873,7 +4873,7 @@ char   **init_argv;
      || (dev->scsw.flag3 & SCSW3_SC_PEND))
     {
         release_lock (&dev->lock);
-        logmsg( _("HHCPN096E Device %d:%4.4X busy or interrupt pending\n"),
+        logmsg( _("HHCMD096E Device %d:%4.4X busy or interrupt pending\n"),
                   lcss, devnum );
         return -1;
     }
@@ -4898,7 +4898,7 @@ char   **init_argv;
             if (dev->tmh->tapeloaded( dev, NULL, 0 ))
             {
                 release_lock (&dev->lock);
-                logmsg(_("HHCPN183E Reinit rejected for drive %u:%4.4X; drive not empty\n"),
+                logmsg(_("HHCMD183E Reinit rejected for drive %u:%4.4X; drive not empty\n"),
                     SSID_TO_LCSS(dev->ssid), dev->devnum);
                 return -1;
             }
@@ -4938,10 +4938,10 @@ char   **init_argv;
     /* Call the device init routine to do the hard work */
     if ((rc = (dev->hnd->init)(dev, init_argc, init_argv)) < 0)
     {
-        logmsg( _("HHCPN097E Initialization failed for device %d:%4.4X\n"),
+        logmsg( _("HHCMD097E Initialization failed for device %d:%4.4X\n"),
                   lcss, devnum );
     } else {
-        logmsg( _("HHCPN098I Device %d:%4.4X initialized\n"), lcss, devnum );
+        logmsg( _("HHCMD098I Device %d:%4.4X initialized\n"), lcss, devnum );
     }
 
     /* Save arguments for next time */
@@ -4998,7 +4998,7 @@ REGS *regs;
 
     if (argc < 2)
     {
-        logmsg( _("HHCPN099E savecore rejected: filename missing\n") );
+        logmsg( _("HHCMD099E savecore rejected: filename missing\n") );
         return -1;
     }
 
@@ -5009,7 +5009,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPN160W %s%02X not configured\n"), 
+        logmsg( _("HHCMD160W %s%02X not configured\n"), 
             PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
@@ -5032,7 +5032,7 @@ REGS *regs;
                                        aaddr >= sysblk.mainsize )
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPN100E savecore: invalid starting address: %s \n"),
+        logmsg( _("HHCMD100E savecore: invalid starting address: %s \n"),
                   loadaddr );
         return -1;
     }
@@ -5050,7 +5050,7 @@ REGS *regs;
         else
         {
             release_lock(&sysblk.cpulock[sysblk.pcpu]);
-            logmsg( _("HHCPN148E savecore: no modified storage found\n") );
+            logmsg( _("HHCMD148E savecore: no modified storage found\n") );
             return -1;
         }
     }
@@ -5058,7 +5058,7 @@ REGS *regs;
                                        aaddr2 >= sysblk.mainsize )
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPN101E savecore: invalid ending address: %s \n"),
+        logmsg( _("HHCMD101E savecore: invalid ending address: %s \n"),
                   loadaddr );
         return -1;
     }
@@ -5067,19 +5067,19 @@ REGS *regs;
     if (CPUSTATE_STOPPED != regs->cpustate)
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPN102E savecore rejected: CPU not stopped\n") );
+        logmsg( _("HHCMD102E savecore rejected: CPU not stopped\n") );
         return -1;
     }
 
     if (aaddr > aaddr2)
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPN103E invalid range: %8.8X-%8.8X\n"), aaddr, aaddr2 );
+        logmsg( _("HHCMD103E invalid range: %8.8X-%8.8X\n"), aaddr, aaddr2 );
         return -1;
     }
 
     /* Save the file from absolute storage */
-    logmsg( _("HHCPN104I Saving locations %8.8X-%8.8X to %s\n"),
+    logmsg( _("HHCMD104I Saving locations %8.8X-%8.8X to %s\n"),
               aaddr, aaddr2, fname );
 
     hostpath(pathname, fname, sizeof(pathname));
@@ -5088,23 +5088,23 @@ REGS *regs;
     {
         int saved_errno = errno;
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPN105E savecore error creating %s: %s\n"),
+        logmsg( _("HHCMD105E savecore error creating %s: %s\n"),
                   fname, strerror(saved_errno) );
         return -1;
     }
 
     if ((len = write(fd, regs->mainstor + aaddr, (aaddr2 - aaddr) + 1)) < 0)
-        logmsg( _("HHCPN106E savecore error writing to %s: %s\n"),
+        logmsg( _("HHCMD106E savecore error writing to %s: %s\n"),
                   fname, strerror(errno) );
     else if((U32)len < (aaddr2 - aaddr) + 1)
-        logmsg( _("HHCPN107E savecore: unable to save %d bytes\n"),
+        logmsg( _("HHCMD107E savecore: unable to save %d bytes\n"),
             ((aaddr2 - aaddr) + 1) - len );
 
     close(fd);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
-    logmsg( _("HHCPN170I savecore command complete.\n"));
+    logmsg( _("HHCMD170I savecore command complete.\n"));
 
     return 0;
 }
@@ -5128,7 +5128,7 @@ REGS *regs;
 
     if (argc < 2)
     {
-        logmsg( _("HHCPN108E loadcore rejected: filename missing\n") );
+        logmsg( _("HHCMD108E loadcore rejected: filename missing\n") );
         return -1;
     }
 
@@ -5137,7 +5137,7 @@ REGS *regs;
 
     if (stat(pathname, &statbuff) < 0)
     {
-        logmsg( _("HHCPN109E Cannot open %s: %s\n"),
+        logmsg( _("HHCMD109E Cannot open %s: %s\n"),
             fname, strerror(errno));
         return -1;
     }
@@ -5149,7 +5149,7 @@ REGS *regs;
 
         if (sscanf(loadaddr, "%x", &aaddr) !=1)
         {
-            logmsg( _("HHCPN110E invalid address: %s \n"), loadaddr );
+            logmsg( _("HHCMD110E invalid address: %s \n"), loadaddr );
             return -1;
         }
     }
@@ -5159,7 +5159,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPN160W %s%02X not configured\n"), 
+        logmsg( _("HHCMD160W %s%02X not configured\n"), 
             PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
@@ -5169,18 +5169,18 @@ REGS *regs;
     if (CPUSTATE_STOPPED != regs->cpustate)
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPN111E loadcore rejected: CPU not stopped\n") );
+        logmsg( _("HHCMD111E loadcore rejected: CPU not stopped\n") );
         return -1;
     }
 
     /* Read the file into absolute storage */
-    logmsg( _("HHCPN112I Loading %s to location %x \n"), fname, aaddr );
+    logmsg( _("HHCMD112I Loading %s to location %x \n"), fname, aaddr );
 
     len = load_main(fname, aaddr);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
-    logmsg( _("HHCPN113I %d bytes read from %s\n"), len, fname );
+    logmsg( _("HHCMD113I %d bytes read from %s\n"), len, fname );
 
     return 0;
 }
@@ -5205,7 +5205,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
 
     if (argc < 2)
     {
-        logmsg( _("HHCPN114E loadtext rejected: filename missing\n") );
+        logmsg( _("HHCMD114E loadtext rejected: filename missing\n") );
         return -1;
     }
 
@@ -5218,7 +5218,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
 
         if (sscanf(loadaddr, "%x", &aaddr) !=1)
         {
-            logmsg( _("HHCPN115E invalid address: %s \n"), loadaddr );
+            logmsg( _("HHCMD115E invalid address: %s \n"), loadaddr );
             return -1;
         }
     }
@@ -5228,7 +5228,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPN160W %s%02X not configured\n"), 
+        logmsg( _("HHCMD160W %s%02X not configured\n"), 
             PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
@@ -5237,7 +5237,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
     if (aaddr > regs->mainlim)
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPN116E Address greater than mainstore size\n") );
+        logmsg( _("HHCMD116E Address greater than mainstore size\n") );
         return -1;
     }
 
@@ -5245,7 +5245,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
     if (CPUSTATE_STOPPED != regs->cpustate)
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPN117E loadtext rejected: CPU not stopped\n") );
+        logmsg( _("HHCMD117E loadtext rejected: CPU not stopped\n") );
         return -1;
     }
 
@@ -5254,7 +5254,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
     if ((fd = open (pathname, O_RDONLY | O_BINARY)) < 0)
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPN118E Cannot open %s: %s\n"),
+        logmsg( _("HHCMD118E Cannot open %s: %s\n"),
             fname, strerror(errno));
         return -1;
     }
@@ -5265,7 +5265,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
         if ((len = read (fd, buf, 80)) < 0)
         {
             release_lock(&sysblk.cpulock[sysblk.pcpu]);
-            logmsg( _("HHCPN119E Cannot read %s: %s\n"),
+            logmsg( _("HHCMD119E Cannot read %s: %s\n"),
                     fname, strerror(errno));
             close (fd);
             return -1;
@@ -5288,7 +5288,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
 
     /* Close file and issue status message */
     close (fd);
-    logmsg( _("HHCPN120I Finished loading TEXT deck file\n") );
+    logmsg( _("HHCMD120I Finished loading TEXT deck file\n") );
     logmsg( _("          Last 'TXT' record had address: %3.3X\n"), n );
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -5316,7 +5316,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
     {
         if (!IS_CPU_ONLINE(i))
         {
-            logmsg(_("HHCPN123I %s%02X: offline\n"), PTYPSTR(i), i);
+            logmsg(_("HHCMD123I %s%02X: offline\n"), PTYPSTR(i), i);
             continue;
         }
 
@@ -5324,7 +5324,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
 // /*DEBUG*/    PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, 
 // /*DEBUG*/    sysblk.regs[i]->cpuint ? "" : _("not ") );
 //
-        logmsg( _("HHCPN123I %s%02X: CPUint=%8.8X "
+        logmsg( _("HHCMD123I %s%02X: CPUint=%8.8X "
                   "(State:%8.8X)&(Mask:%8.8X)\n"),
             PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, 
             IC_INTERRUPT_CPU(sysblk.regs[i]),
@@ -5425,7 +5425,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
 
         if (sysblk.regs[i]->sie_active)
         {
-            logmsg( _("HHCPN123I IE%02X: CPUint=%8.8X "
+            logmsg( _("HHCMD123I IE%02X: CPUint=%8.8X "
                       "(State:%8.8X)&(Mask:%8.8X)\n"),
                 sysblk.regs[i]->guestregs->cpuad, IC_INTERRUPT_CPU(sysblk.regs[i]->guestregs),
                 sysblk.regs[i]->guestregs->ints_state, sysblk.regs[i]->guestregs->ints_mask
@@ -5600,7 +5600,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
     if (argc > 1 && !strcasecmp(argv[1], "clear"))
     {
         memset(IMAP_FIRST,0,IMAP_SIZE);
-        logmsg( _("HHCPN870I Instruction counts reset to zero.\n") );
+        logmsg( _("HHCMD870I Instruction counts reset to zero.\n") );
         release_lock( &sysblk.icount_lock );
         return 0;
     }
@@ -5613,20 +5613,20 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
       /* Allocate space */
       if(!(opcode1 = malloc(MAX_ICOUNT_INSTR * sizeof(unsigned char))))
       {
-        logmsg("HHCPN871E Sorry, not enough memory\n");
+        logmsg("HHCMD871E Sorry, not enough memory\n");
         release_lock( &sysblk.icount_lock );
         return 0;
       }
       if(!(opcode2 = malloc(MAX_ICOUNT_INSTR * sizeof(unsigned char))))
       {
-        logmsg("HHCPN871E Sorry, not enough memory\n");
+        logmsg("HHCMD871E Sorry, not enough memory\n");
         free(opcode1);
         release_lock( &sysblk.icount_lock );
         return 0;
       }
       if(!(count = malloc(MAX_ICOUNT_INSTR * sizeof(U64))))
       {
-        logmsg("HHCPN871E Sorry, not enough memory\n");
+        logmsg("HHCMD871E Sorry, not enough memory\n");
         free(opcode1);
         free(opcode2);
         release_lock( &sysblk.icount_lock );
@@ -5658,7 +5658,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imap01[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("HHCPN872E Sorry, too many instructions\n");
+                  logmsg("HHCMD872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5681,7 +5681,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapa4[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("HHCPN872E Sorry, too many instructions\n");
+                  logmsg("HHCMD872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5704,7 +5704,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapa5[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("HHCPN872E Sorry, too many instructions\n");
+                  logmsg("HHCMD872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5727,7 +5727,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapa6[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("HHCPN872E Sorry, too many instructions\n");
+                  logmsg("HHCMD872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5750,7 +5750,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapa7[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("HHCPN872E Sorry, too many instructions\n");
+                  logmsg("HHCMD872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5773,7 +5773,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapb2[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("HHCPN872E Sorry, too many instructions\n");
+                  logmsg("HHCMD872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5796,7 +5796,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapb3[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("HHCPN872E Sorry, too many instructions\n");
+                  logmsg("HHCMD872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5819,7 +5819,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapb9[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("HHCPN872E Sorry, too many instructions\n");
+                  logmsg("HHCMD872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5842,7 +5842,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapc0[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("HHCPN872E Sorry, too many instructions\n");
+                  logmsg("HHCMD872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5865,7 +5865,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapc2[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("HHCPN872E Sorry, too many instructions\n");
+                  logmsg("HHCMD872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5888,7 +5888,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapc4[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("HHCPN872E Sorry, too many instructions\n");
+                  logmsg("HHCMD872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5911,7 +5911,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapc6[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("HHCPN872E Sorry, too many instructions\n");
+                  logmsg("HHCMD872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5934,7 +5934,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapc8[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("HHCPN872E Sorry, too many instructions\n");
+                  logmsg("HHCMD872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5957,7 +5957,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imape3[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("HHCPN872E Sorry, too many instructions\n");
+                  logmsg("HHCMD872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5980,7 +5980,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imape4[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("HHCPN872E Sorry, too many instructions\n");
+                  logmsg("HHCMD872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -6003,7 +6003,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imape5[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("HHCPN872E Sorry, too many instructions\n");
+                  logmsg("HHCMD872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -6026,7 +6026,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapeb[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("HHCPN872E Sorry, too many instructions\n");
+                  logmsg("HHCMD872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -6049,7 +6049,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapec[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("HHCPN872E Sorry, too many instructions\n");
+                  logmsg("HHCMD872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -6072,7 +6072,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imaped[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  logmsg("HHCPN872E Sorry, too many instructions\n");
+                  logmsg("HHCMD872E Sorry, too many instructions\n");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -6093,7 +6093,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
               total += sysblk.imapxx[i1];
               if(i == (MAX_ICOUNT_INSTR-1))
               {
-                logmsg("HHCPN872E Sorry, too many instructions\n");
+                logmsg("HHCMD872E Sorry, too many instructions\n");
                 free(opcode1);
                 free(opcode2);
                 free(count);
@@ -6132,7 +6132,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
 #define  ICOUNT_WIDTH  "12"     /* Print field width */
 
       /* Print */
-      logmsg(_("HHCPN875I Sorted instruction count display:\n"));
+      logmsg(_("HHCMD875I Sorted instruction count display:\n"));
       for(i1 = 0; i1 < i; i1++)
       {
         switch(opcode1[i1])
@@ -6246,7 +6246,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
       return 0;
     }
 
-    logmsg(_("HHCPN876I Instruction count display:\n"));
+    logmsg(_("HHCMD876I Instruction count display:\n"));
     for (i1 = 0; i1 < 256; i1++)
     {
         switch (i1)
@@ -6401,7 +6401,7 @@ int defsym_cmd(int argc, char *argv[], char *cmdline)
 
     if (argc > 3)
     {
-        logmsg(_("HHCCF060S DEFSYM requires a single value"
+        logmsg(_("HHCMD060S DEFSYM requires a single value"
                 " (use quotes if necessary)\n"));
         return -1;
     }
@@ -6427,7 +6427,7 @@ int archmode_cmd(int argc, char *argv[], char *cmdline)
 
     if (argc < 2)
     {
-        logmsg( _("HHCPN126I Architecture mode = %s\n"),
+        logmsg( _("HHCMD126I Architecture mode = %s\n"),
                   get_arch_mode_string(NULL) );
         return 0;
     }
@@ -6440,7 +6440,7 @@ int archmode_cmd(int argc, char *argv[], char *cmdline)
          && CPUSTATE_STOPPED != sysblk.regs[i]->cpustate)
         {
             RELEASE_INTLOCK(NULL);
-            logmsg( _("HHCPN127E All CPU's must be stopped to change "
+            logmsg( _("HHCMD127E All CPU's must be stopped to change "
                       "architecture\n") );
             return -1;
         }
@@ -6481,7 +6481,7 @@ int archmode_cmd(int argc, char *argv[], char *cmdline)
 #endif
     {
         RELEASE_INTLOCK(NULL);
-        logmsg( _("HHCPN128E Invalid architecture mode %s\n"), argv[1] );
+        logmsg( _("HHCMD128E Invalid architecture mode %s\n"), argv[1] );
         return -1;
     }
     if (sysblk.pcpu >= MAX_CPU)
@@ -6542,7 +6542,7 @@ BYTE c;                                 /* Character work area       */
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         RELEASE_INTLOCK(NULL);
-        logmsg( _("HHCPN160W %s%02X not configured\n"), 
+        logmsg( _("HHCMD160W %s%02X not configured\n"), 
             PTYPSTR(sysblk.pcpu), sysblk.pcpu );
         return 0;
     }
@@ -6556,14 +6556,14 @@ BYTE c;                                 /* Character work area       */
         if (aaddr > regs->mainlim)
         {
             RELEASE_INTLOCK(NULL);
-            logmsg( _("HHCPN130E Invalid frame address %8.8X\n"), aaddr );
+            logmsg( _("HHCMD130E Invalid frame address %8.8X\n"), aaddr );
             return -1;
         }
         STORAGE_KEY(aaddr, regs) &= ~(STORKEY_BADFRM);
         if (!oneorzero)
             STORAGE_KEY(aaddr, regs) |= STORKEY_BADFRM;
         RELEASE_INTLOCK(NULL);
-        logmsg( _("HHCPN131I Frame %8.8X marked %s\n"), aaddr,
+        logmsg( _("HHCMD131I Frame %8.8X marked %s\n"), aaddr,
                 oneorzero ? _("usable") : _("unusable")
             );
         return 0;
@@ -6581,7 +6581,7 @@ BYTE c;                                 /* Character work area       */
                 dev->ckdkeytrace = oneorzero;
         }
         RELEASE_INTLOCK(NULL);
-        logmsg( _("HHCPN134I CKD KEY trace is now %s\n"), onoroff );
+        logmsg( _("HHCMD134I CKD KEY trace is now %s\n"), onoroff );
         return 0;
     }
 
@@ -6604,12 +6604,12 @@ BYTE c;                                 /* Character work area       */
         if (cmd[0] == 't')
         {
             dev->ccwtrace = oneorzero;
-            logmsg( _("HHCPN136I CCW tracing is now %s for device %d:%4.4X\n"),
+            logmsg( _("HHCMD136I CCW tracing is now %s for device %d:%4.4X\n"),
                 onoroff, lcss, devnum
                 );
         } else {
             dev->ccwstep = oneorzero;
-            logmsg( _("HHCPN137I CCW stepping is now %s for device %d:%4.4X\n"),
+            logmsg( _("HHCMD137I CCW stepping is now %s for device %d:%4.4X\n"),
                 onoroff, lcss, devnum
                 );
         }
@@ -6618,7 +6618,7 @@ BYTE c;                                 /* Character work area       */
     }
 
     RELEASE_INTLOCK(NULL);
-    logmsg( _("HHCPN138E Unrecognized +/- command.\n") );
+    logmsg( _("HHCMD138E Unrecognized +/- command.\n") );
     return -1;
 }
 
@@ -6648,7 +6648,7 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPN160W %s%02X not configured\n"), 
+        logmsg( _("HHCMD160W %s%02X not configured\n"), 
             PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
@@ -6760,7 +6760,7 @@ DLL_EXPORT int aia_cmd(int argc, char *argv[], char *cmdline)
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPN160W %s%02X not configured\n"), 
+        logmsg( _("HHCMD160W %s%02X not configured\n"), 
             PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
@@ -6813,7 +6813,7 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPN160W %s%02X not configured\n"), 
+        logmsg( _("HHCMD160W %s%02X not configured\n"), 
             PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return 0;
     }
@@ -6936,10 +6936,10 @@ int count_cmd(int argc, char *argv[], char *cmdline)
     for (i = 0; i < MAX_CPU; i++)
         if (IS_CPU_ONLINE(i))
             instcount += INSTCOUNT(sysblk.regs[i]);
-    logmsg ("HHCPN877I   i: %12" I64_FMT "d\n", instcount);
+    logmsg ("HHCMD877I   i: %12" I64_FMT "d\n", instcount);
 
     for (i = 0; i < OPTION_COUNTING; i++)
-        logmsg ("HHCPN878I %3d: %12" I64_FMT "d\n", i, sysblk.count[i]);
+        logmsg ("HHCMD878I %3d: %12" I64_FMT "d\n", i, sysblk.count[i]);
 
     return 0;
 }
@@ -7061,7 +7061,7 @@ int evm_cmd_1(int argc, char *argv[], char *cmdline)
     UNREFERENCED(argc);
     UNREFERENCED(argv);
 
-    logmsg(_("HHCPN150W evm command is deprecated. Use \"ecpsvm\" instead\n"));
+    logmsg(_("HHCMD150W evm command is deprecated. Use \"ecpsvm\" instead\n"));
     ecpsvm_command(argc,argv);
     return 0;
 }
@@ -7107,22 +7107,22 @@ int sizeof_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(argc);
     UNREFERENCED(argv);
 
-    logmsg(_("HHCPN161I (void *) ..........%7d\n"),sizeof(void *));
-    logmsg(_("HHCPN161I (unsigned int) ....%7d\n"),sizeof(unsigned int));
-    logmsg(_("HHCPN161I (long) ............%7d\n"),sizeof(long));
-    logmsg(_("HHCPN161I (long long) .......%7d\n"),sizeof(long long));
-    logmsg(_("HHCPN161I (size_t) ..........%7d\n"),sizeof(size_t));
-    logmsg(_("HHCPN161I (off_t) ...........%7d\n"),sizeof(off_t));
-    logmsg(_("HHCPN161I SYSBLK ............%7d\n"),sizeof(SYSBLK));
-    logmsg(_("HHCPN161I REGS ..............%7d\n"),sizeof(REGS));
-    logmsg(_("HHCPN161I REGS (copy len) ...%7d\n"),sysblk.regs_copy_len);
-    logmsg(_("HHCPN161I PSW ...............%7d\n"),sizeof(PSW));
-    logmsg(_("HHCPN161I DEVBLK ............%7d\n"),sizeof(DEVBLK));
-    logmsg(_("HHCPN161I TLB entry .........%7d\n"),sizeof(TLB)/TLBN);
-    logmsg(_("HHCPN161I TLB table .........%7d\n"),sizeof(TLB));
-    logmsg(_("HHCPN161I FILENAME_MAX ......%7d\n"),FILENAME_MAX);
-    logmsg(_("HHCPN161I PATH_MAX ..........%7d\n"),PATH_MAX);
-    logmsg(_("HHCPN161I CPU_BITMAP ........%7d\n"),sizeof(CPU_BITMAP));
+    logmsg(_("HHCMD161I (void *) ..........%7d\n"),sizeof(void *));
+    logmsg(_("HHCMD161I (unsigned int) ....%7d\n"),sizeof(unsigned int));
+    logmsg(_("HHCMD161I (long) ............%7d\n"),sizeof(long));
+    logmsg(_("HHCMD161I (long long) .......%7d\n"),sizeof(long long));
+    logmsg(_("HHCMD161I (size_t) ..........%7d\n"),sizeof(size_t));
+    logmsg(_("HHCMD161I (off_t) ...........%7d\n"),sizeof(off_t));
+    logmsg(_("HHCMD161I SYSBLK ............%7d\n"),sizeof(SYSBLK));
+    logmsg(_("HHCMD161I REGS ..............%7d\n"),sizeof(REGS));
+    logmsg(_("HHCMD161I REGS (copy len) ...%7d\n"),sysblk.regs_copy_len);
+    logmsg(_("HHCMD161I PSW ...............%7d\n"),sizeof(PSW));
+    logmsg(_("HHCMD161I DEVBLK ............%7d\n"),sizeof(DEVBLK));
+    logmsg(_("HHCMD161I TLB entry .........%7d\n"),sizeof(TLB)/TLBN);
+    logmsg(_("HHCMD161I TLB table .........%7d\n"),sizeof(TLB));
+    logmsg(_("HHCMD161I FILENAME_MAX ......%7d\n"),FILENAME_MAX);
+    logmsg(_("HHCMD161I PATH_MAX ..........%7d\n"),PATH_MAX);
+    logmsg(_("HHCMD161I CPU_BITMAP ........%7d\n"),sizeof(CPU_BITMAP));
     return 0;
 }
 
@@ -7155,7 +7155,7 @@ int conkpalv_cmd( int argc, char *argv[], char *cmdline )
     cnt  = sysblk.kacnt;
 
     if(argc < 2)
-        logmsg( _("HHCPN190I Keep-alive = (%d,%d,%d)\n"),idle,intv,cnt);
+        logmsg( _("HHCMD190I Keep-alive = (%d,%d,%d)\n"),idle,intv,cnt);
     else
     {
         if (argc == 2 && parse_conkpalv( argv[1], &idle, &intv, &cnt ) == 0)
@@ -7166,7 +7166,7 @@ int conkpalv_cmd( int argc, char *argv[], char *cmdline )
         }
         else
         {
-            logmsg( _("HHCPN192E Invalid format. Enter \"help conkpalv\" for help.\n"));
+            logmsg( _("HHCMD192E Invalid format. Enter \"help conkpalv\" for help.\n"));
             return -1;
         }
     }
@@ -7199,7 +7199,7 @@ int traceopt_cmd(int argc, char *argv[], char *cmdline)
         }
     }
     else
-        logmsg(_("HHCPN162I Hercules instruction trace displayed in %s mode\n"),
+        logmsg(_("HHCMD162I Hercules instruction trace displayed in %s mode\n"),
             sysblk.showregsnone ? _("noregs") :
             sysblk.showregsfirst ? _("regsfirst") :
                             _("traditional"));
@@ -7337,7 +7337,7 @@ int script_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(cmdline);
     if(argc<2)
     {
-        logmsg(_("HHCPN996E The script command requires a filename\n"));
+        logmsg(_("HHCMD996E The script command requires a filename\n"));
         return 1;
     }
     if(scr_tid==0)
@@ -7350,7 +7350,7 @@ int script_cmd(int argc, char *argv[], char *cmdline)
     {
         if(scr_tid!=thread_id())
         {
-            logmsg(_("HHCPN997E Only 1 script may be invoked from the panel at any time\n"));
+            logmsg(_("HHCMD997E Only 1 script may be invoked from the panel at any time\n"));
             return 1;
         }
     }
@@ -7368,7 +7368,7 @@ void script_test_userabort()
 {
         if(scr_uaborted)
         {
-           logmsg(_("HHCPN998E Script aborted : user cancel request\n"));
+           logmsg(_("HHCMD998E Script aborted : user cancel request\n"));
            scr_aborted=1;
         }
 }
@@ -7390,7 +7390,7 @@ char    pathname[MAX_PATH];             /* (work)                    */
     */
     if(scr_recursion>=10)
     {
-        logmsg(_("HHCPN998E Script aborted : Script recursion level exceeded\n"));
+        logmsg(_("HHCMD998E Script aborted : Script recursion level exceeded\n"));
         scr_aborted=1;
         return 0;
     }
@@ -7406,16 +7406,16 @@ char    pathname[MAX_PATH];             /* (work)                    */
         if (!isrcfile)
         {
             if (ENOENT != errno)
-                logmsg(_("HHCPN007E Script file \"%s\" open failed: %s\n"),
+                logmsg(_("HHCMD007E Script file \"%s\" open failed: %s\n"),
                     script_name, strerror(errno));
             else
-                logmsg(_("HHCPN995E Script file \"%s\" not found\n"),
+                logmsg(_("HHCMD995E Script file \"%s\" not found\n"),
                     script_name);
         }
         else /* (this IS the .rc file...) */
         {
             if (ENOENT != errno)
-                logmsg(_("HHCPN007E Script file \"%s\" open failed: %s\n"),
+                logmsg(_("HHCMD007E Script file \"%s\" open failed: %s\n"),
                     script_name, strerror(errno));
         }
 
@@ -7427,7 +7427,7 @@ char    pathname[MAX_PATH];             /* (work)                    */
 
     if(isrcfile)
     {
-        logmsg(_("HHCPN008I Script file processing started using file \"%s\"\n"),
+        logmsg(_("HHCMD008I Script file processing started using file \"%s\"\n"),
            script_name);
     }
 
@@ -7435,7 +7435,7 @@ char    pathname[MAX_PATH];             /* (work)                    */
 
     if (!(scrbuf = malloc (scrbufsize)))
     {
-        logmsg(_("HHCPN009E Script file buffer malloc failed: %s\n"),
+        logmsg(_("HHCMD009E Script file buffer malloc failed: %s\n"),
             strerror(errno));
         fclose(scrfp);
         return 0;
@@ -7468,17 +7468,17 @@ char    pathname[MAX_PATH];             /* (work)                    */
 
             if (scr_pause_amt < 0 || scr_pause_amt > 999)
             {
-                logmsg(_("HHCPN010W Ignoring invalid SCRIPT file pause "
+                logmsg(_("HHCMD010W Ignoring invalid SCRIPT file pause "
                          "statement: %s\n"),
                          scrbuf+5);
                 continue;
             }
 
-            logmsg (_("HHCPN011I Pausing SCRIPT file processing for %d "
+            logmsg (_("HHCMD011I Pausing SCRIPT file processing for %d "
                       "seconds...\n"),
                       scr_pause_amt);
             SLEEP(scr_pause_amt);
-            logmsg (_("HHCPN012I Resuming SCRIPT file processing...\n"));
+            logmsg (_("HHCMD012I Resuming SCRIPT file processing...\n"));
 
             continue;
         }
@@ -7496,17 +7496,17 @@ char    pathname[MAX_PATH];             /* (work)                    */
     }
 
     if (feof(scrfp))
-        logmsg (_("HHCPN013I EOF reached on SCRIPT file. Processing complete.\n"));
+        logmsg (_("HHCMD013I EOF reached on SCRIPT file. Processing complete.\n"));
     else
     {
         if(!scr_aborted)
         {
-           logmsg (_("HHCPN014E I/O error reading SCRIPT file: %s\n"),
+           logmsg (_("HHCMD014E I/O error reading SCRIPT file: %s\n"),
                  strerror(errno));
         }
         else
         {
-           logmsg (_("HHCPN999I Script \"%s\" aborted due to previous conditions\n"),
+           logmsg (_("HHCMD999I Script \"%s\" aborted due to previous conditions\n"),
                script_name);
            scr_uaborted=1;
         }

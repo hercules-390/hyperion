@@ -55,7 +55,7 @@ CPU_BITMAP mask;
             if(os_licensed == PGM_PRD_OS_LICENSED)
             {
                 logmsg(_(
-                KEEPMSG "HHCCF039W PGMPRDOS LICENSED specified.\n"
+                KEEPMSG "HHCLO039W PGMPRDOS LICENSED specified.\n"
                 KEEPMSG "          A licensed program product operating system is running.\n"
                 KEEPMSG "          You are responsible for meeting all conditions of your\n"
                 KEEPMSG "          software licenses.\n"));
@@ -63,7 +63,7 @@ CPU_BITMAP mask;
             else
             {
                 logmsg(_(
-                KEEPMSG "HHCCF079A A licensed program product operating system has been\n"
+                KEEPMSG "HHCLO079A A licensed program product operating system has been\n"
                 KEEPMSG "          detected. All processors have been stopped.\n"));
                 mask = sysblk.started_mask;
                 for (i = 0; mask; i++)

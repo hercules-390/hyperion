@@ -516,7 +516,7 @@ DLL_EXPORT void list_all_symbols(void)
     {
         tok = symbols[i];
         if (tok)
-            logmsg("HHCPN042I %s=%s\n", tok->var, tok->val ? tok->val : "");
+            logmsg("HHCMD042I %s=%s\n", tok->var, tok->val ? tok->val : "");
     }
     return;
 }
