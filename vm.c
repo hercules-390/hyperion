@@ -1128,7 +1128,7 @@ U32     j,k;
         )
         {
             if(sysblk.diag8cmd & DIAG8CMD_ECHO)
-                logmsgp (_("HHCVM001I *%s* panel command issued by guest\n"), bufo);
+                WRITEMSG (HHCVM001I, bufo, "started");
             if (cmdflags & CMDFLAGS_RESPONSE)
             {
                 sysblk.diag8cmd |= DIAG8CMD_RUNNING;
@@ -1149,14 +1149,14 @@ U32     j,k;
                 panel_command(bufo);
                 sysblk.diag8cmd &= ~DIAG8CMD_RUNNING;
                 if(sysblk.diag8cmd & DIAG8CMD_ECHO)
-                    logmsgp (_("HHCVM002I *%s* command complete\n"), bufo);
+                    WRITEMSG (HHCVM001I, bufo, "completed");
             }
         }
         else
         {
             if(sysblk.diag8cmd & DIAG8CMD_ECHO)
             {
-                logmsgp (_("HHCVM005W *%s* panel command issued by guest (but disabled)\n"), bufo);
+                WRITEMSG (HHCVM005W, bufo);
             }
             dresp=_("HHCVM003I Host command processing disabled by configuration statement");
         }

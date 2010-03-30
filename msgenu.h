@@ -1033,6 +1033,10 @@
 #define HHCIN013I "Build information:"
 #define HHCIN014I "%s"
 
+/* vm.c */
+#define HHCVM001I "Panel command *%s* issued by guest %s"
+#define HHCVM005W "Panel command *%s* issued by guest not processed, disabled in configuration"
+
 /* vmd250.c */
 #define HHCVM006E "VM BLOCK I/O environment malloc failed"
 #define HHCVM007I "Device(%4.4X) d250_init BLKTAB: type(%4.4X) arch(%i) 512(%i) 1024(%i) 2048(%i) 4096(%i)"
