@@ -1,4 +1,4 @@
-/* CONFIG.C     (c) Copyright Jan Jaeger, 2000-2009                  */
+/* CONFIG.C     (c) Copyright Jan Jaeger, 2000-2010                  */
 /*              Device configuration functions                       */
 
 // $Id$
@@ -6,51 +6,6 @@
 /*-------------------------------------------------------------------*/
 /* The original configuration builder is now called bldcfg.c         */
 /*-------------------------------------------------------------------*/
-
-// $Log$
-// Revision 1.204  2009/01/15 17:36:43  jj
-// Change http server startup
-//
-// Revision 1.203  2008/11/04 05:56:31  fish
-// Put ensure consistent create_thread ATTR usage change back in
-//
-// Revision 1.202  2008/11/03 15:31:57  rbowler
-// Back out consistent create_thread ATTR modification
-//
-// Revision 1.201  2008/10/18 09:32:20  fish
-// Ensure consistent create_thread ATTR usage
-//
-// Revision 1.200  2008/07/08 05:35:49  fish
-// AUTOMOUNT redesign: support +allowed/-disallowed dirs
-// and create associated 'automount' panel command - Fish
-//
-// Revision 1.199  2007/06/23 00:04:04  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.198  2007/06/22 02:22:50  gsmith
-// revert config_cpu.pat due to problems in testing
-//
-// Revision 1.197  2007/06/20 03:52:19  gsmith
-// configure_cpu now returns when the CPU is fully configured
-//
-// Revision 1.196  2007/06/09 02:10:04  kleonard
-// Skip making CRW pending in S/370 mode
-//
-// Revision 1.195  2007/02/03 18:58:06  gsmith
-// Fix MVT tape CMDREJ error
-//
-// Revision 1.194  2007/01/11 19:54:33  fish
-// Addt'l keep-alive mods: create associated supporting config-file stmt and panel command where individual customer-preferred values can be specified and/or dynamically modified.
-//
-// Revision 1.193  2007/01/02 18:53:33  fish
-// (fix comments only)
-//
-// Revision 1.192  2007/01/02 18:46:16  fish
-// Fix bug in deconfigure_cpu function & tweak power-off diagnose instructions so that they actually work properly now
-//
-// Revision 1.191  2006/12/08 09:43:18  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 
@@ -135,7 +90,7 @@ char  thread_name[16];
                         &cpu, thread_name)
        )
     {
-        WRITEMSG(HHCCF040E, PTYPSTR(cpu), cpu, strerror(errno));
+        WRITEMSG(HHCMD040E, PTYPSTR(cpu), cpu, strerror(errno));
         return -1;
     }
 
@@ -305,7 +260,7 @@ DEVBLK**dvpp;
     {
         if (!(dev = (DEVBLK*)malloc(sizeof(DEVBLK))))
         {
-            WRITEMSG (HHCCF043E, strerror(errno));
+            WRITEMSG (HHCMD043E, strerror(errno));
             return NULL;
         }
         memset (dev, 0, sizeof(DEVBLK));
@@ -420,7 +375,7 @@ int     i;                              /* Loop index                */
     /* Check whether device number has already been defined */
     if (find_device_by_devnum(lcss,devnum) != NULL)
     {
-        WRITEMSG (HHCCF041E, lcss,devnum);
+        WRITEMSG (HHCMD041E, lcss,devnum);
         return 1;
     }
 
@@ -429,7 +384,7 @@ int     i;                              /* Loop index                */
 
     if(!(dev->hnd = hdl_ghnd(type)))
     {
-        WRITEMSG (HHCCF042E, type);
+        WRITEMSG (HHCMD042E, type);
 
         ret_devblk(dev);
 
@@ -457,7 +412,7 @@ int     i;                              /* Loop index                */
 
     if (rc < 0)
     {
-        WRITEMSG (HHCCF044E, devnum);
+        WRITEMSG (HHCMD044E, devnum);
 
         for (i = 0; i < dev->argc; i++)
             if (dev->argv[i])
@@ -478,7 +433,7 @@ int     i;                              /* Loop index                */
         dev->buf = malloc (dev->bufsize);
         if (dev->buf == NULL)
         {
-            WRITEMSG (HHCCF045E, dev->devnum, strerror(errno));
+            WRITEMSG (HHCMD045E, dev->devnum, strerror(errno));
 
             for (i = 0; i < dev->argc; i++)
                 if (dev->argv[i])
@@ -508,7 +463,7 @@ int     i;                              /* Loop index                */
     /*
     if(lcss!=0 && sysblk.arch_mode==ARCH_370)
     {
-        logmsg(_("HHCCF078W %d:%4.4X : Only devices on CSS 0 are usable in S/370 mode\n"),lcss,devnum);
+        logmsg(_("HHCMD078W %d:%4.4X : Only devices on CSS 0 are usable in S/370 mode\n"),lcss,devnum);
     }
     */
 
@@ -608,14 +563,14 @@ int    rc;
 
     if (dev == NULL)
     {
-        WRITEMSG (HHCCF046E, "Subchannel", lcss, subchan);
+        WRITEMSG (HHCMD046E, "Subchannel", lcss, subchan);
         return 1;
     }
 
     rc = detach_devblk( dev );
 
     if(!rc)
-        WRITEMSG (HHCCF047I, "Subchannel", lcss, subchan);
+        WRITEMSG (HHCMD047I, "Subchannel", lcss, subchan);
 
     return rc;
 }
@@ -634,14 +589,14 @@ int    rc;
 
     if (dev == NULL)
     {
-        WRITEMSG (HHCCF046E, "Device", lcss, devnum);
+        WRITEMSG (HHCMD046E, "Device", lcss, devnum);
         return 1;
     }
 
     rc = detach_devblk( dev );
 
     if(!rc)
-        WRITEMSG (HHCCF047I, "Device", lcss, devnum);
+        WRITEMSG (HHCMD047I, "Device", lcss, devnum);
 
     return rc;
 }
@@ -659,14 +614,14 @@ DEVBLK *dev;                            /* -> Device block           */
 
     if (dev == NULL)
     {
-        WRITEMSG (HHCCF048E, lcss, olddevn);
+        WRITEMSG (HHCMD048E, lcss, olddevn);
         return 1;
     }
 
     /* Check that new device number does not already exist */
     if (find_device_by_devnum(lcss, newdevn) != NULL)
     {
-        WRITEMSG (HHCCF049E, lcss, newdevn);
+        WRITEMSG (HHCMD049E, lcss, newdevn);
         return 1;
     }
 
@@ -706,7 +661,7 @@ DEVBLK *dev;                            /* -> Device block           */
         machine_check_crwpend();
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
-//  logmsg (_("HHCCF050I Device %4.4X defined as %4.4X\n"),
+//  logmsg (_("HHCMD050I Device %4.4X defined as %4.4X\n"),
 //          olddevn, newdevn);
 
     return 0;
@@ -964,7 +919,7 @@ parse_lcss(const char *spec,
     {
         if(verbose)
         {
-            WRITEMSG(HHCCF074E);
+            WRITEMSG(HHCMD174E);
         }
         free(wrk);
         return(-1);
@@ -980,7 +935,7 @@ parse_lcss(const char *spec,
     {
         if(verbose)
         {
-            WRITEMSG(HHCCF075E);
+            WRITEMSG(HHCMD175E);
         }
         free(wrk);
         return(-1);
@@ -990,7 +945,7 @@ parse_lcss(const char *spec,
     {
         if(verbose)
         {
-            WRITEMSG(HHCCF076E,lcss);
+            WRITEMSG(HHCMD176E,lcss);
         }
         free(wrk);
         return -1;
@@ -999,7 +954,7 @@ parse_lcss(const char *spec,
     {
         if(verbose)
         {
-            WRITEMSG(HHCCF077E,lcssid,FEATURE_LCSS_MAX-1);
+            WRITEMSG(HHCMD177E,lcssid,FEATURE_LCSS_MAX-1);
         }
         free(wrk);
         return -1;
@@ -1031,7 +986,7 @@ parse_single_devnum__INTERNAL(const char *spec,
     {
         if(verbose)
         {
-            WRITEMSG(HHCCF055E,*strptr);
+            WRITEMSG(HHCMD055E,*strptr);
         }
         free(r);
         return -1;
@@ -1130,7 +1085,7 @@ static size_t parse_devnums(const char *spec,DEVNUMSDESC *dd)
             cuu2=strtoul(&strptr[1],&strptr,16);
             if(*strptr!=0)
             {
-                WRITEMSG(HHCCF053E,*strptr);
+                WRITEMSG(HHCMD059E,*strptr);
                 free(dgrs);
                 free(sc);
                 return(0);
@@ -1141,14 +1096,14 @@ static size_t parse_devnums(const char *spec,DEVNUMSDESC *dd)
             cuu2--;
             if(*strptr!=0)
             {
-                WRITEMSG(HHCCF054E,*strptr);
+                WRITEMSG(HHCMD054E,*strptr);
                 free(dgrs);
                 free(sc);
                 return(0);
             }
             break;
         default:
-            WRITEMSG(HHCCF055E,*strptr);
+            WRITEMSG(HHCMD055E,*strptr);
             free(dgrs);
             free(sc);
             return(0);
@@ -1156,7 +1111,7 @@ static size_t parse_devnums(const char *spec,DEVNUMSDESC *dd)
         /* Check cuu1 <= cuu2 */
         if(cuu1>cuu2)
         {
-            WRITEMSG(HHCCF056E,cuu2,cuu1);
+            WRITEMSG(HHCMD056E,cuu2,cuu1);
             free(dgrs);
             free(sc);
             return(0);
@@ -1179,7 +1134,7 @@ static size_t parse_devnums(const char *spec,DEVNUMSDESC *dd)
         }
         if(badcuu>=0)
         {
-            WRITEMSG(HHCCF057E,badcuu,basechan);
+            WRITEMSG(HHCMD057E,badcuu,basechan);
             free(dgrs);
             free(sc);
             return(0);
@@ -1209,7 +1164,7 @@ static size_t parse_devnums(const char *spec,DEVNUMSDESC *dd)
         }
         if(duplicate)
         {
-            WRITEMSG(HHCCF058E,cuu1,cuu2);
+            WRITEMSG(HHCMD058E,cuu1,cuu2);
             free(dgrs);
             free(sc);
             return(0);

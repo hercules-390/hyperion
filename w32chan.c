@@ -143,7 +143,7 @@ int  ScheduleIORequest(void* pDevBlk, unsigned short wDevNum, int* pnDevPrio)
 
     if (!pIORequest)
     {
-        WRITEMSG(HHCCP084E,wDevNum,strerror(errno));
+        WRITEMSG(HHCWN084E,wDevNum,strerror(errno));
         return 2;
     }
 
@@ -205,7 +205,7 @@ int  ScheduleIORequest(void* pDevBlk, unsigned short wDevNum, int* pnDevPrio)
 
             if (ios_devtmax && ios_devtnbr >= ios_devtmax)  // max threads already created?
             {
-                WRITEMSG(HHCCP085W);
+                WRITEMSG(HHCWN085W, ios_devtmax);
                 ios_devtunavail++;          // (count occurrences)
             }
 
@@ -302,7 +302,7 @@ DEVTHREADPARMS*  CreateDeviceThread(unsigned short wDevNum)
 
     if (!pThreadParms)
     {
-        WRITEMSG(HHCCP086E,wDevNum,strerror(errno));
+        WRITEMSG(HHCWN086E,wDevNum,strerror(errno));
         return NULL;    // (error)
     }
 
@@ -310,7 +310,7 @@ DEVTHREADPARMS*  CreateDeviceThread(unsigned short wDevNum)
 
     if (!pThreadParms->hShutdownEvent)
     {
-        WRITEMSG(HHCCP087E,wDevNum,strerror(errno));
+        WRITEMSG(HHCWN087E,wDevNum,strerror(errno));
         free(pThreadParms);
         return NULL;    // (error)
     }
@@ -319,7 +319,7 @@ DEVTHREADPARMS*  CreateDeviceThread(unsigned short wDevNum)
 
     if (!pThreadParms->hRequestQueuedEvent)
     {
-        WRITEMSG(HHCCP088E,wDevNum,strerror(errno));
+        WRITEMSG(HHCWN088E,wDevNum,strerror(errno));
         MyCloseHandle(pThreadParms->hShutdownEvent);
         free(pThreadParms);
         return NULL;    // (error)
@@ -339,7 +339,7 @@ DEVTHREADPARMS*  CreateDeviceThread(unsigned short wDevNum)
     if (fthread_create(&dwThreadID,NULL,DeviceThread,pThreadParms,"DeviceThread") != 0)
 #endif
     {
-        WRITEMSG(HHCCP089E,wDevNum,strerror(errno));
+        WRITEMSG(HHCWN089E,wDevNum,strerror(errno));
         MyCloseHandle(pThreadParms->hShutdownEvent);
         MyCloseHandle(pThreadParms->hRequestQueuedEvent);
         MyDeleteCriticalSection(&pThreadParms->IORequestListLock);

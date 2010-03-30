@@ -832,7 +832,7 @@ int gettapetype_byname (DEVBLK *dev)
         if (rc < 0)
         {
             regerror (rc, &regwrk, errbfr, 1024);
-            WRITEMSG(HHCTA001E, dev->devnum, dev->filename, "regcomp", errbfr, i);
+            WRITEMSG(HHCTA001E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "regcomp", errbfr, i);
             return -1;
         }
 
@@ -841,7 +841,7 @@ int gettapetype_byname (DEVBLK *dev)
         {
             regerror (rc, &regwrk, errbfr, 1024);
             regfree ( &regwrk );
-            WRITEMSG(HHCTA001E, dev->devnum, dev->filename, "regexec", errbfr, i);
+            WRITEMSG(HHCTA001E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "regexec", errbfr, i);
             return -1;
         }
 
@@ -1004,7 +1004,7 @@ int gettapetype (DEVBLK *dev, char **short_descr)
     {
         i = DEFAULT_FMTENTRY;
         if (strcmp (dev->filename, TAPE_UNLOADED) != 0)
-            WRITEMSG(HHCTA003W, dev->devnum, dev->filename, fmttab[i].short_descr );
+            WRITEMSG(HHCTA003W, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, fmttab[i].short_descr );
     }
 
     dev->tapedevt = fmttab[i].fmtcode;
@@ -1013,7 +1013,7 @@ int gettapetype (DEVBLK *dev, char **short_descr)
     *short_descr  = fmttab[i].short_descr;
 
     if (strcmp (dev->filename, TAPE_UNLOADED) != 0)
-        WRITEMSG(HHCTA004I, dev->devnum, dev->filename, descr);
+        WRITEMSG(HHCTA004I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, descr);
 
     return 0;   // (success)
 
@@ -1182,7 +1182,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
     }
 #endif
 
-#define  _HHCTA078E() WRITEMSG(HHCTA078E, dev->devnum, argv[i], short_descr)
+#define  _HHCTA078E() WRITEMSG(HHCTA078E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], short_descr)
 
     /* Process remaining options */
     rc = 0;
@@ -1192,7 +1192,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         switch (parser (&ptab[0], argv[i], &res))
         {
         case TDPARM_NONE:
-            WRITEMSG(HHCTA067E, dev->devnum, argv[i]);
+            WRITEMSG(HHCTA067E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i]);
             optrc = -1;
             break;
 
@@ -1230,7 +1230,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
             }
             if (res.num < HETMIN_METHOD || res.num > HETMAX_METHOD)
             {
-                WRITEMSG(HHCTA068E, dev->devnum, argv[i], HETMIN_METHOD, HETMAX_METHOD);
+                WRITEMSG(HHCTA068E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], HETMIN_METHOD, HETMAX_METHOD);
                 optrc = -1;
                 break;
             }
@@ -1247,7 +1247,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
             }
             if (res.num < HETMIN_LEVEL || res.num > HETMAX_LEVEL)
             {
-                WRITEMSG(HHCTA069E, dev->devnum, argv[i], HETMIN_LEVEL, HETMAX_LEVEL);
+                WRITEMSG(HHCTA069E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], HETMIN_LEVEL, HETMAX_LEVEL);
                 optrc = -1;
                 break;
             }
@@ -1264,7 +1264,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
             }
             if (res.num < HETMIN_CHUNKSIZE || res.num > HETMAX_CHUNKSIZE)
             {
-                WRITEMSG(HHCTA070E, dev->devnum, argv[i], HETMIN_CHUNKSIZE, HETMAX_CHUNKSIZE);
+                WRITEMSG(HHCTA070E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], HETMIN_CHUNKSIZE, HETMAX_CHUNKSIZE);
                 optrc = -1;
                 break;
             }
@@ -1381,7 +1381,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
 #endif /* defined(OPTION_SCSI_TAPE) */
 
         default:
-            WRITEMSG(HHCTA071E, dev->devnum, argv[i]);
+            WRITEMSG(HHCTA071E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i]);
             optrc = -1;
             break;
 
@@ -1390,7 +1390,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         if (optrc < 0)
             rc = -1;
         else
-            WRITEMSG(HHCTA066I, dev->devnum, argv[i]);
+            WRITEMSG(HHCTA066I, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i]);
 
     } // end for (i = 1; i < argc; i++)
 
@@ -1571,7 +1571,7 @@ void UpdateDisplay( DEVBLK *dev )
 
         dev->prev_tapemsg = strdup( msgbfr );
 
-        WRITEMSG(HHCTA010I, dev->devnum, msgbfr );
+        WRITEMSG(HHCTA010I, SSID_TO_LCSS(dev->ssid), dev->devnum, msgbfr );
     }
 #if defined(OPTION_SCSI_TAPE)
     else

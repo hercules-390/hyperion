@@ -236,7 +236,6 @@ DLL_EXPORT void logdevtr(DEVBLK *dev,char *msg,...)
   #endif
     if(dev->ccwtrace||dev->ccwstep) 
     { 
-        logmsg("%4.4X:",dev->devnum); 
         BFR_VSNPRINTF();
         if(bfr)
             log_write(2,bfr); 
