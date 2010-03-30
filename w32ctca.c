@@ -106,7 +106,7 @@ error:
 
     FreeLibrary( g_tt32_hmoddll );
     g_tt32_hmoddll = NULL;
-    logmsg( "HHCWC120E ** tt32_loaddll: One of the GetProcAddress calls failed\n" );
+    WRITEMSG(HHCWC120E);
     LeaveCriticalSection(&g_tt32_lock);
     return FALSE;
 }
@@ -116,7 +116,7 @@ error:
 
 void __cdecl tt32_output_debug_string( const char* debug_string )
 {
-    logmsg( "HHCWC199D %s", debug_string );
+    WRITEMSG(HHCWC199D, debug_string );
 }
 
 void  enable_tt32_debug_tracing( int enable )
@@ -211,8 +211,7 @@ BOOL tt32_loaddll()
         {
             DWORD dwLastError = GetLastError();
             LeaveCriticalSection(&g_tt32_lock);
-            logmsg("HHCWC121E ** tt32_loaddll: LoadLibraryEx(\"%s\") failed; rc=%ld: %s\n",
-                g_tt32_dllname,dwLastError,strerror(dwLastError));
+            WRITEMSG(HHCWC121E,g_tt32_dllname,dwLastError,strerror(dwLastError));
             return FALSE;
         }
     }
@@ -222,9 +221,7 @@ BOOL tt32_loaddll()
     if (!GetTT32ProcAddrs())
         return FALSE;
 
-    logmsg("HHCWC100I %s version %s initiated\n",
-        g_tt32_dllname,
-        g_tt32_pfn_version_string());
+    WRITEMSG(HHCWC100I,g_tt32_dllname,g_tt32_pfn_version_string());
 
 #if defined(DEBUG) || defined(_DEBUG)
     enable_tt32_debug_tracing(1);   // (enable debug tracing by default for DEBUG builds)
