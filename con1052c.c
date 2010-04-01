@@ -220,7 +220,7 @@ BYTE    c;                              /* Print character           */
         iobuf[len] = '\0';
 
         /* Send the data to the console */
-        logmsg("%s",(char *)iobuf);
+        logmsg("HHCON010I Device(%d:%4.4X): %s", SSID_TO_LCSS(dev->ssid), dev->devnum, (char *)iobuf);
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
@@ -280,7 +280,7 @@ BYTE    c;                              /* Print character           */
     /*---------------------------------------------------------------*/
     /* AUDIBLE ALARM                                                 */
     /*---------------------------------------------------------------*/
-        logmsg("\a");
+        WRITEMSG (HHCON009I, SSID_TO_LCSS(dev->ssid), dev->devnum);
     /*
         *residual = 0;
     */
@@ -377,7 +377,7 @@ int  i;
           && !strncasecmp(cmd,dev->filename,strlen(dev->filename)) )
         {
             input = cmd + strlen(dev->filename);
-            logmsg("%s(%4.4X) %s\n",dev->filename,dev->devnum,
+            WRITEMSG(HHCON008I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
                                      cmd+strlen(dev->filename) );
             for(i = 0; i < dev->bufsize && input[i] != '\0'; i++)
                 dev->buf[i] = isprint(input[i]) ? host_to_guest(input[i]) : SPACE;

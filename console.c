@@ -3,6 +3,11 @@
 
 // $Id$
 
+/*
+    (c) Copyright TurboHercules, SAS 2010 - All Rights Reserved
+        Contains Licensed Materials - Property of TurboHercules, SAS
+ */
+
 /*-------------------------------------------------------------------*/
 /* This module contains device handling functions for console        */
 /* devices for the Hercules ESA/390 emulator.                        */
@@ -952,7 +957,7 @@ int     eor = 0;                        /* 1=End of record received  */
 
     if (rc < 0) {
         if ( HSO_ECONNRESET == HSO_errno )
-            WRITEMSG(HHCTE014I, dev->devnum, dev->devtype, inet_ntoa(dev->ipaddr) );
+            WRITEMSG(HHCTE014I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->devtype, inet_ntoa(dev->ipaddr) );
         else
             TNSERROR("console: DBG023: recv: %s\n", strerror(HSO_errno));
         dev->sense[0] = SENSE_EC;
@@ -961,7 +966,7 @@ int     eor = 0;                        /* 1=End of record received  */
 
     /* If zero bytes were received then client has closed connection */
     if (rc == 0) {
-        WRITEMSG(HHCTE007I, dev->devnum, dev->devtype, inet_ntoa(dev->ipaddr));
+        WRITEMSG(HHCTE007I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->devtype, inet_ntoa(dev->ipaddr));
         dev->sense[0] = SENSE_IR;
         return (CSW_ATTN | CSW_UC | CSW_DE);
     }
@@ -1125,7 +1130,7 @@ BYTE    c;                              /* Character work area       */
 
     /* If zero bytes were received then client has closed connection */
     if (num == 0) {
-        WRITEMSG(HHCTE008I, dev->devnum, inet_ntoa(dev->ipaddr));
+        WRITEMSG(HHCTE008I, SSID_TO_LCSS(dev->ssid), dev->devnum, inet_ntoa(dev->ipaddr));
         dev->sense[0] = SENSE_IR;
         return (CSW_ATTN | CSW_UC);
     }
@@ -1263,6 +1268,72 @@ BYTE    c;                              /* Character work area       */
 
 #define SF_ATTR_MDT         0x01
 
+#if defined(TURBO_HERCULES)
+static char *herclogo[]={
+"@ALIGN NONE",
+"@SBA 0,0",
+"@SF P",
+"TurboHercules Ver :",
+"@SF HP",
+"$(VERSION)",
+"@NL",
+"@SF P",
+"Host Name         :",
+"@SF HP",
+"$(HOSTNAME)",
+"@NL",
+"@SF P",
+"Host OS           :",
+"@SF HP",
+"$(HOSTOS)-$(HOSTOSREL) $(HOSTOSVER)",
+"@NL",
+"@SF P",
+"Host Architecture :",
+"@SF HP",
+"$(HOSTARCH)",
+"@NL",
+"@SF P",
+"Processors        :",
+"@SF HP",
+"$(HOSTNUMCPUS)",
+"@NL",
+"@SF P",
+"Chanl Subsys      :",
+"@SF HP",
+"$(CSS)",
+"@NL",
+"@SF P",
+"Device Number     :",
+"@SF HP",
+"$(CCUU)",
+"@NL",
+"@SF P",
+"Subchannel        :",
+"@SF HP",
+"$(SUBCHAN)",
+"@SF HP",
+"@NL",
+"@NL",
+"TTTTTTTTTTTT        b          ","@SF P","HH        HH                       l           ","@SF HP","@NL",
+"TTTTTTTTTTTT        b          ","@SF P","HH        HH                       l           ","@SF HP","@NL",
+"     TT             b          ","@SF P","HH        HH                       l           ","@SF HP","@NL",
+"     TT             b          ","@SF P","HH        HH                       l           ","@SF HP","@NL",
+"     TT             b          ","@SF P","HHHHHHHHHHHH                       l           ","@SF HP","@NL",   
+"     TT  u   u r rr bbbb   ooo ","@SF P","HHHHHHHHHHHH  ee  r rr  ccc  u   u l  ee   sss ","@SF HP","@NL",
+"     TT  u   u r    b   b o   o","@SF P","HH        HH e  e r    c   c u   u l e  e s   s","@SF HP","@NL",
+"     TT  u   u r    b   b o   o","@SF P","HH        HH eeee r    c     u   u l eeee  ss  ","@SF HP","@NL",
+"     TT  u   u r    b   b o   o","@SF P","HH        HH e    r    c     u   u l e      ss ","@SF HP","@NL",
+"     TT  u   u r    b   b o   o","@SF P","HH        HH e  e r    c   c u   u l e  e s  ss","@SF HP","@NL",
+"     TT   uuu  r    bbbb   ooo ","@SF P","HH        HH  ee  r     ccc   uuu  l  ee   sss ","@SF HP","@NL",
+"@NL",
+"           (c) Copyright Roger Bowler, Jan Jaeger, and others 1999-2010","@NL",
+"           (c) Copyright TurboHercules, SAS 2010 - All Rights Reserved","@NL",
+"            Contains Licensed Materials - Property of TurboHercules, SAS"
+};
+
+#define LOGO_BUFFERSIZE 256;
+#else // !defined(TURBO_HERCULES)
+
 /*
 static char *herclogo[]={
     " HHH          HHH   The S/370, ESA/390 and z/Architecture",
@@ -1341,6 +1412,9 @@ static char *herclogo[]={
 "           Copyright (C) 1999-2010 Roger Bowler, Jan Jaeger, and others"};
 
 #define LOGO_BUFFERSIZE 256;
+
+#endif // defined(TURBO_HERCULES)
+
 
 static char *buffer_addchar(char *b,size_t *l,size_t *al,char c)
 {
@@ -1455,7 +1529,7 @@ static char *build_logo(char **logodata,size_t logosize,size_t *blen)
                 switch(align)
                 {
                     case ALIGN_RIGHT:
-                        ypos=strlen(cline);
+                        ypos=(int)strlen(cline);
                         if(ypos<80)
                         {
                             ypos=80-ypos;
@@ -1466,7 +1540,7 @@ static char *build_logo(char **logodata,size_t logosize,size_t *blen)
                         }
                         break;
                     case ALIGN_CENTER:
-                        ypos=strlen(cline);
+                        ypos=(int)strlen(cline);
                         if(ypos<80)
                         {
                             ypos=(80-ypos)/2;
@@ -1482,7 +1556,7 @@ static char *build_logo(char **logodata,size_t logosize,size_t *blen)
                 bfr=buffer_addsf(bfr,&len,&alen,attr);
                 if(align==ALIGN_NONE)
                 {
-                    ypos+=strlen(cline);
+                    ypos+=(int)strlen(cline);
                     ypos++;
                 }
                 else
@@ -1832,7 +1906,7 @@ char                    *logoout;
 
         if (class != 'P')  /* do not write connection resp on 3287 */
         {
-            rc = send_packet (csock, (BYTE *)buf, len, "CONNECTION RESPONSE");
+            rc = send_packet (csock, (BYTE *)buf, (int)len, "CONNECTION RESPONSE");
         }
 
         /* Close the connection and terminate the thread */
@@ -1847,7 +1921,7 @@ char                    *logoout;
                   SSID_TO_LCSS(dev->ssid), dev->devnum);
     }
 
-    WRITEMSG(HHCTE009I, clientip, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->devtype);
+    WRITEMSG(HHCTE009I, SSID_TO_LCSS(dev->ssid), dev->devnum, clientip, dev->devtype);
 
     /* Send connection message to client */
     if (class != 'K')
@@ -1900,7 +1974,7 @@ char                    *logoout;
 
     if (class != 'P')  /* do not write connection resp on 3287 */
     {
-        rc = send_packet (csock, (BYTE *)logoout, len, "CONNECTION RESPONSE");
+        rc = send_packet (csock, (BYTE *)logoout, (int)len, "CONNECTION RESPONSE");
     }
     if(logobfr)
     {
@@ -2387,7 +2461,7 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
         dev->pmcw.flag5 &= ~PMCW5_V; // Not a regular device
         if (sysblk.sysgdev != NULL)
         {
-            WRITEMSG(HHCTE017E, dev->devnum);
+            WRITEMSG(HHCTE017E, SSID_TO_LCSS(dev->ssid), dev->devnum);
             return -1;
         }
     }
@@ -2428,7 +2502,7 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
         {
             if ((dev->acc_ipaddr = inet_addr(argv[ac])) == (in_addr_t)(-1))
             {
-                WRITEMSG(HHCTE011E, dev->devnum, argv[ac]);
+                WRITEMSG(HHCTE011E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[ac]);
                 return -1;
             }
             else
@@ -2438,7 +2512,7 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
                 {
                     if ((dev->acc_ipmask = inet_addr(argv[ac])) == (in_addr_t)(-1))
                     {
-                        WRITEMSG(HHCTE012E, dev->devnum, argv[ac]);
+                        WRITEMSG(HHCTE012E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[ac]);
                         return -1;
                     }
                     else
@@ -2446,7 +2520,7 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
                         argc--; ac++;
                         if (argc > 0)   // too many args?
                         {
-                            WRITEMSG(HHCTE013E, dev->devnum, argv[ac] );
+                            WRITEMSG(HHCTE013E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[ac] );
                             return -1;
                         }
                     }
@@ -2582,7 +2656,7 @@ loc3270_hsuspend(DEVBLK *dev, void *file)
         len = 0;
     release_lock(&dev->lock);
     if (len)
-        SR_WRITE_BUF(file, SR_DEV_3270_BUF, buf, len);
+        SR_WRITE_BUF(file, SR_DEV_3270_BUF, buf, (int)len);
     return 0;
 }
 
@@ -2603,14 +2677,14 @@ loc3270_hresume(DEVBLK *dev, void *file)
             break;
         case SR_DEV_3270_EWA:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            dev->ewa3270 = rc;
+            dev->ewa3270 = (unsigned int)rc;
             break;
         case SR_DEV_3270_BUF:
             rbuflen = len;
             rbuf = malloc(len);
             if (rbuf == NULL)
             {
-                WRITEMSG(HHCTE090E, dev->devnum, strerror(errno));
+                WRITEMSG(HHCTE090E, SSID_TO_LCSS(dev->ssid), dev->devnum, strerror(errno));
                 return 0;
             }
             SR_READ_BUF(file, rbuf, rbuflen);
@@ -2643,16 +2717,16 @@ loc3270_hresume(DEVBLK *dev, void *file)
         buf[len++] = O3270_IC;
 
         /* Double up any IAC's in the data */
-        len = double_up_iac (buf, len);
+        len = double_up_iac (buf, (int)len);
 
         /* Append telnet EOR marker */
         buf[len++] = IAC;
         buf[len++] = EOR_MARK;
 
         /* Restore the 3270 screen */
-        rc = send_packet(dev->fd, buf, len, "3270 data");
+        rc = send_packet(dev->fd, buf, (int)len, "3270 data");
 
-        dev->pos3270 = pos;
+        dev->pos3270 = (int)pos;
 
         release_lock(&dev->lock);
     }
@@ -2728,7 +2802,7 @@ constty_init_handler ( DEVBLK *dev, int argc, char *argv[] )
         {
             if ((dev->acc_ipaddr = inet_addr(argv[ac])) == (in_addr_t)(-1))
             {
-                WRITEMSG(HHCTE011E, dev->devnum, argv[ac]);
+                WRITEMSG(HHCTE011E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[ac]);
                 return -1;
             }
             else
@@ -2738,7 +2812,7 @@ constty_init_handler ( DEVBLK *dev, int argc, char *argv[] )
                 {
                     if ((dev->acc_ipmask = inet_addr(argv[ac])) == (in_addr_t)(-1))
                     {
-                        WRITEMSG(HHCTE012E, dev->devnum, argv[ac]);
+                        WRITEMSG(HHCTE012E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[ac]);
                         return -1;
                     }
                     else
@@ -2746,7 +2820,7 @@ constty_init_handler ( DEVBLK *dev, int argc, char *argv[] )
                         argc--; ac++;
                         if (argc > 0)   // too many args?
                         {
-                            WRITEMSG(HHCTE013E, dev->devnum, argv[ac] );
+                            WRITEMSG(HHCTE013E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[ac] );
                             return -1;
                         }
                     }
@@ -3550,9 +3624,8 @@ BYTE    stat;                           /* Unit status               */
             if (dev->prompt1052)
             {
                 snprintf ((char *)dev->buf, dev->bufsize,
-                        _("HHCTE006A Enter input for console device %4.4X\n"),
-                        dev->devnum);
-                len = strlen((char *)dev->buf);
+                        MSG(HHCTE006A, SSID_TO_LCSS(dev->ssid), dev->devnum));
+                len = (int)strlen((char *)dev->buf);
                 rc = send_packet (dev->fd, dev->buf, len, NULL);
                 if (rc < 0)
                 {
