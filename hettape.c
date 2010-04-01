@@ -1,4 +1,4 @@
-/* HETTAPE.C    (c) Copyright Roger Bowler, 1999-2009                */
+/* HETTAPE.C    (c) Copyright Roger Bowler, 1999-2010                */
 /*              Hercules Tape Device Handler for HETTAPE             */
 
 /* Original Author: Leland Lucius                                    */
@@ -91,7 +91,7 @@ int             rc;                     /* Return code               */
         het_close (&dev->hetb);
         errno = save_errno;
 
-        WRITEMSG (HHCTA401E, dev->devnum, dev->filename, het_error(rc), strerror(errno));
+        WRITEMSG (HHCTA401E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, het_error(rc), strerror(errno));
 
         strcpy(dev->filename, TAPE_UNLOADED);
         build_senseX(TAPE_BSENSE_TAPELOADFAIL,dev,unitstat,code);
@@ -138,7 +138,7 @@ int rc;
     if (rc < 0)
     {
         /* Handle seek error condition */
-        WRITEMSG (HHCTA402E, dev->devnum, dev->filename, het_error(rc), strerror(errno));
+        WRITEMSG (HHCTA402E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, het_error(rc), strerror(errno));
 
         build_senseX(TAPE_BSENSE_REWINDFAILED,dev,unitstat,code);
         return -1;
@@ -177,14 +177,14 @@ int             rc;                     /* Return code               */
         /* Handle end of file (uninitialized tape) condition */
         if (rc == HETE_EOT)
         {
-            WRITEMSG (HHCTA414E, dev->devnum, dev->hetb->cblk, dev->filename);
+            WRITEMSG (HHCTA414E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->hetb->cblk, dev->filename);
 
             /* Set unit exception with tape indicate (end of tape) */
             build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
             return -1;
         }
 
-        WRITEMSG (HHCTA415E, dev->devnum, dev->hetb->cblk, dev->filename,
+        WRITEMSG (HHCTA415E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->hetb->cblk, dev->filename,
                 het_error(rc), strerror(errno));
 
         /* Set unit check with equipment check */
@@ -224,7 +224,7 @@ off_t           cursize;                /* Current size for size chk */
     if (rc < 0)
     {
         /* Handle write error condition */
-        WRITEMSG (HHCTA416E, dev->devnum, dev->hetb->cblk, dev->filename,
+        WRITEMSG (HHCTA416E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->hetb->cblk, dev->filename,
                 het_error(rc), strerror(errno));
 
         /* Set unit check with equipment check */
@@ -238,10 +238,10 @@ off_t           cursize;                /* Current size for size chk */
         cursize=het_tell(dev->hetb);
         if(cursize>dev->tdparms.maxsize)
         {
-            WRITEMSG (HHCTA430I, dev->devnum);
+            WRITEMSG (HHCTA430I, SSID_TO_LCSS(dev->ssid), dev->devnum);
             if(dev->tdparms.strictsize)
             {
-                WRITEMSG (HHCTA431I, dev->devnum);
+                WRITEMSG (HHCTA431I, SSID_TO_LCSS(dev->ssid), dev->devnum);
                 het_bsb(dev->hetb);
                 cursize=het_tell(dev->hetb);
                 ftruncate( fileno(dev->hetb->fd),cursize);
@@ -274,7 +274,7 @@ int             rc;                     /* Return code               */
     if (rc < 0)
     {
         /* Handle error condition */
-        WRITEMSG (HHCTA417E, dev->devnum, dev->hetb->cblk, dev->filename,
+        WRITEMSG (HHCTA417E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->hetb->cblk, dev->filename,
                 het_error(rc), strerror(errno));
 
         /* Set unit check with equipment check */
@@ -308,7 +308,7 @@ int             rc;                     /* Return code               */
             build_senseX(TAPE_BSENSE_WRITEPROTECT,dev,unitstat,code);
         else
         {
-            WRITEMSG (HHCTA488E, dev->devnum, dev->filename, strerror(errno));
+            WRITEMSG (HHCTA488E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, strerror(errno));
             build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
         }
         return -1;
@@ -344,7 +344,7 @@ int             rc;                     /* Return code               */
             return 0;
         }
 
-        WRITEMSG (HHCTA418E, dev->devnum, dev->hetb->cblk, dev->filename,
+        WRITEMSG (HHCTA418E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->hetb->cblk, dev->filename,
                 het_error(rc), strerror(errno));
 
         /* Set unit check with equipment check */
@@ -397,7 +397,7 @@ int             rc;                     /* Return code               */
             return -1;
         }
 
-        WRITEMSG (HHCTA415E, dev->devnum, dev->hetb->cblk, dev->filename,
+        WRITEMSG (HHCTA415E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->hetb->cblk, dev->filename,
                 het_error(rc), strerror(errno));
 
         /* Set unit check with equipment check */
@@ -427,7 +427,7 @@ int             rc;                     /* Return code               */
     rc = het_fsf (dev->hetb);
     if (rc < 0)
     {
-        WRITEMSG (HHCTA420E, dev->devnum, dev->hetb->cblk, dev->filename,
+        WRITEMSG (HHCTA420E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->hetb->cblk, dev->filename,
                 het_error(rc), strerror(errno));
 
         if(rc==HETE_EOT)
@@ -493,7 +493,7 @@ int             rc;                     /* Return code               */
     rc = het_bsf (dev->hetb);
     if (rc < 0)
     {
-        WRITEMSG (HHCTA421E, dev->devnum, dev->hetb->cblk, dev->filename,
+        WRITEMSG (HHCTA421E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->hetb->cblk, dev->filename,
                 het_error(rc), strerror(errno));
 
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);

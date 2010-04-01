@@ -1,4 +1,4 @@
-/* TAPECCWS.C   (c) Copyright Roger Bowler, 1999-2009                */
+/* TAPECCWS.C   (c) Copyright Roger Bowler, 1999-2010                */
 /*              Hercules Tape Device Handler CCW Processing          */
 
 /* Original Author: Roger Bowler                                     */
@@ -487,7 +487,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
     if ((flags & CCW_FLAGS_CD) &&
         !(IS_CCW_READ(code) || IS_CCW_RDBACK(code)))
     {
-        WRITEMSG(HHCTA072E, code);
+        WRITEMSG(HHCTA072E, SSID_TO_LCSS(dev->ssid), dev->devnum, code);
         build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
         return;
     }
@@ -1538,7 +1538,6 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         int     argc, i;                                     /* work */
         char  **argv;                                        /* work */
         char    newfile [ sizeof(dev->filename) ];           /* work */
-        char    lcss[8];                                     /* work */
 
         /* Command reject if AUTOMOUNT support not enabled */
         if (0
@@ -1589,12 +1588,6 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         if (strcasecmp (newfile, "OFFLINE") == 0)
             strlcpy (newfile, TAPE_UNLOADED, sizeof(newfile));
 
-        /* (messages looks better without LCSS if not needed) */
-        lcss[0] = 0;
-        if (SSID_TO_LCSS(dev->ssid) != 0)
-            snprintf( lcss, sizeof(lcss), "%u:", SSID_TO_LCSS(dev->ssid) );
-        lcss[sizeof(lcss)-1] = 0;
-
         /* Obtain the device lock */
         obtain_lock (&dev->lock);
 
@@ -1608,7 +1601,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             /* (because i hate typing) */
 #define  _HHCTA090E(_file,_reason) \
             { \
-                WRITEMSG(HHCTA090E, _file, lcss, dev->devnum, _reason); \
+                WRITEMSG(HHCTA090E, SSID_TO_LCSS(dev->ssid), dev->devnum, _file, _reason); \
                 build_senseX (TAPE_BSENSE_TAPELOADFAIL, dev, unitstat, code); \
                 release_lock (&dev->lock); \
                 break; \
@@ -1667,7 +1660,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             && strcmp (dev->filename, TAPE_UNLOADED) != 0
         )
         {
-            WRITEMSG(HHCTA091E, lcss, dev->devnum);
+            WRITEMSG(HHCTA091E, SSID_TO_LCSS(dev->ssid), dev->devnum, newfile);
             build_senseX (TAPE_BSENSE_TAPELOADFAIL, dev, unitstat, code);
             release_lock (&dev->lock);
             break;
@@ -1709,7 +1702,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             {
                 /* (an error message explaining the reason for the
                     failure should hopefully already have been issued) */
-                WRITEMSG(HHCTA092E, lcss, dev->devnum);
+                WRITEMSG(HHCTA092E, SSID_TO_LCSS(dev->ssid), dev->devnum, newfile);
             }
             else
                 _HHCTA090E( newfile, "file not found" ); // (presumed)
@@ -1722,9 +1715,9 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             // (success)
 
             if (strcmp( newfile, TAPE_UNLOADED ) == 0)
-                WRITEMSG(HHCTA093I, lcss, dev->devnum);
+                WRITEMSG(HHCTA093I, SSID_TO_LCSS(dev->ssid), dev->devnum, newfile);
             else
-                WRITEMSG(HHCTA094I, dev->filename, lcss, dev->devnum);
+                WRITEMSG(HHCTA094I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
 
             /* (save new parms for next time) */
             free( dev->argv[0] );
@@ -1862,11 +1855,9 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
 
         /* Informative message if tracing */
         if ( dev->ccwtrace || dev->ccwstep )
-            WRITEMSG(HHCTA081I
+            WRITEMSG(HHCTA081I, SSID_TO_LCSS(dev->ssid), dev->devnum
                 ,locblock
                 ,TAPEDEVT_SCSITAPE == dev->tapedevt ? (char*)dev->filename : ""
-                ,TAPEDEVT_SCSITAPE == dev->tapedevt ?             " = "    : ""
-                ,dev->devnum
                 );
 
         /* Update display if needed */
@@ -3506,7 +3497,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
             strlcpy( dev->tapemsg1, msg1, sizeof(dev->tapemsg1) );
 
             if ( dev->ccwtrace || dev->ccwstep )
-                WRITEMSG(HHCTA099I, dev->devnum, dev->tapemsg1 );
+                WRITEMSG(HHCTA099I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->tapemsg1 );
         }
 
         break;
@@ -3531,7 +3522,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
             strlcpy( dev->tapemsg1, msg1, sizeof(dev->tapemsg1) );
 
             if ( dev->ccwtrace || dev->ccwstep )
-                WRITEMSG(HHCTA099I, dev->devnum, dev->tapemsg1 );
+                WRITEMSG(HHCTA099I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->tapemsg1 );
         }
 
         break;
@@ -3583,7 +3574,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
             dev->tapedispflags = TAPEDISPFLG_REQAUTOMNT;
 
             if ( dev->ccwtrace || dev->ccwstep )
-                WRITEMSG(HHCTA199I, dev->devnum, dev->tapemsg1, dev->tapemsg2 );
+                WRITEMSG(HHCTA199I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->tapemsg1, dev->tapemsg2 );
         }
         else
         {
@@ -3591,7 +3582,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
             dev->tapedispflags = TAPEDISPFLG_MESSAGE2 | TAPEDISPFLG_REQAUTOMNT;
 
             if ( dev->ccwtrace || dev->ccwstep )
-                WRITEMSG(HHCTA099I, dev->devnum, dev->tapemsg2 );
+                WRITEMSG(HHCTA099I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->tapemsg2 );
         }
 
         break;
