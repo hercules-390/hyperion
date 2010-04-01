@@ -932,7 +932,7 @@ char                    group[16];      /* Console group             */
 
     if (class != 'P')  /* do not write connection resp on 3287 */
     {
-        rc = send_packet (csock, (BYTE *)buf, (int)len, "CONNECTION RESPONSE");
+        rc = send_packet (csock, (BYTE *)buf, len, "CONNECTION RESPONSE");
     }
     return (class == 'D') ? 1 : 0;   /* return 1 if 3270 */
 } /* end function connect_client */
@@ -1112,7 +1112,7 @@ static void connect_message(int sfd, int na, int flag) {
     char *ipaddr;
     char msgtext[256];
     if (!sfd)
-	    return;
+        return;
     namelen = sizeof(client);
     rc = getpeername (sfd, (struct sockaddr *)&client, &namelen);
     ipaddr = inet_ntoa(client.sin_addr);
@@ -1121,7 +1121,7 @@ static void connect_message(int sfd, int na, int flag) {
     else
         sprintf(msgtext, "%s:%d VTAM CONNECTION TERMINATED", ipaddr, (int)ntohs(client.sin_port));
     logmsg( _("HHCCA301I %s\n"), msgtext);
-    write(sfd, msgtext, (unsigned int)strlen(msgtext));
+    write(sfd, msgtext, strlen(msgtext));
     write(sfd, "\r\n", 2);
 }
 
@@ -1136,91 +1136,91 @@ static void commadpt_read_tty(COMMADPT *ca, BYTE * bfr, int len)
     /* If there is a complete data record already in the buffer
        then discard it before reading more data
        For TTY, allow data to accumulate until CR is received */
-	   if (ca->is_3270) {
+       if (ca->is_3270) {
                if (ca->inpbufl) {
                    ca->rlen3270 = 0;
                    ca->inpbufl = 0;
                }
            }
-	   for (i1 = 0; i1 < len; i1++) {
-		c = (unsigned char) bfr[i1];
-		if (ca->telnet_opt) {
-			ca->telnet_opt = 0;
-		          if(ca->dev->ccwtrace)
+       for (i1 = 0; i1 < len; i1++) {
+        c = (unsigned char) bfr[i1];
+        if (ca->telnet_opt) {
+            ca->telnet_opt = 0;
+                  if(ca->dev->ccwtrace)
                       logmsg(_("HHCCA300D Device(%d:%4.4X): Received TELNET CMD 0x%02x 0x%02x\n"),
-			            SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum,
-				        ca->telnet_cmd, c);
-			bfr3[0] = 0xff;  /* IAC */
-			/* set won't/don't for all received commands */
-			bfr3[1] = (ca->telnet_cmd == 0xfd) ? 0xfc : 0xfe;
-			bfr3[2] = c;
+                        SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum,
+                        ca->telnet_cmd, c);
+            bfr3[0] = 0xff;  /* IAC */
+            /* set won't/don't for all received commands */
+            bfr3[1] = (ca->telnet_cmd == 0xfd) ? 0xfc : 0xfe;
+            bfr3[2] = c;
                           if (ca->sfd > 0) {
                               write_socket(ca->sfd,bfr3,3);
                           }
-		          if(ca->dev->ccwtrace)
-			    logmsg(_("HHCCA300D Device(%d:%4.4X): Sending TELNET CMD 0x%02x 0x%02x\n"),
-			            SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum,
-				        bfr3[1], bfr3[2]);
-			continue;
-		}
-		if (ca->telnet_iac) {
-			ca->telnet_iac = 0;
-		          if(ca->dev->ccwtrace)
-			    logmsg(_("HHCCA300D Device(%d:%4.4X): Received TELNET IAC 0x%02x\n"),
-			            SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum,
-				        c);
-			switch (c) {
-			case 0xFB:  /* TELNET WILL option cmd */
-			case 0xFD:  /* TELNET DO option cmd */
-				ca->telnet_opt = 1;
-				ca->telnet_cmd = c;
-				break;
-			case 0xF4:  /* TELNET interrupt */
-				if (!ca->telnet_int) {
-					ca->telnet_int = 1;
-				}
-				break;
-			case EOR_MARK:
+                  if(ca->dev->ccwtrace)
+                logmsg(_("HHCCA300D Device(%d:%4.4X): Sending TELNET CMD 0x%02x 0x%02x\n"),
+                        SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum,
+                        bfr3[1], bfr3[2]);
+            continue;
+        }
+        if (ca->telnet_iac) {
+            ca->telnet_iac = 0;
+                  if(ca->dev->ccwtrace)
+                logmsg(_("HHCCA300D Device(%d:%4.4X): Received TELNET IAC 0x%02x\n"),
+                        SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum,
+                        c);
+            switch (c) {
+            case 0xFB:  /* TELNET WILL option cmd */
+            case 0xFD:  /* TELNET DO option cmd */
+                ca->telnet_opt = 1;
+                ca->telnet_cmd = c;
+                break;
+            case 0xF4:  /* TELNET interrupt */
+                if (!ca->telnet_int) {
+                    ca->telnet_int = 1;
+                }
+                break;
+            case EOR_MARK:
                                 eor = 1;
-				break;
-			case 0xFF:  /* IAC IAC */
-		                ca->inpbuf[ca->rlen3270++] = 0xFF;
-				break;
-			}
-			continue;
-		}
-		if (c == 0xFF) {  /* TELNET IAC */
-			ca->telnet_iac = 1;
-			continue;
-		} else {
-			ca->telnet_iac = 0;
-		}
-		if (!ca->is_3270) {
-		  if (c == 0x0D) // CR in TTY mode ?
-			  ca->eol_flag = 1;
-		  c = host_to_guest(c);   // translate ASCII to EBCDIC for tty
-		}
-		ca->inpbuf[ca->rlen3270++] = c;
-	    }
+                break;
+            case 0xFF:  /* IAC IAC */
+                        ca->inpbuf[ca->rlen3270++] = 0xFF;
+                break;
+            }
+            continue;
+        }
+        if (c == 0xFF) {  /* TELNET IAC */
+            ca->telnet_iac = 1;
+            continue;
+        } else {
+            ca->telnet_iac = 0;
+        }
+        if (!ca->is_3270) {
+          if (c == 0x0D) // CR in TTY mode ?
+              ca->eol_flag = 1;
+          c = host_to_guest(c);   // translate ASCII to EBCDIC for tty
+        }
+        ca->inpbuf[ca->rlen3270++] = c;
+        }
          /* received data (rlen3270 > 0) is sufficient for 3270,
             but for TTY, eol_flag must also be set */
-	 if ((ca->eol_flag || ca->is_3270) && ca->rlen3270) {
-		ca->eol_flag = 0;
-		if (ca->is_3270) {
+     if ((ca->eol_flag || ca->is_3270) && ca->rlen3270) {
+        ca->eol_flag = 0;
+        if (ca->is_3270) {
                    if (eor) {
-		       ca->inpbufl = remove_iac(ca->inpbuf, ca->rlen3270);
+               ca->inpbufl = remove_iac(ca->inpbuf, ca->rlen3270);
                        ca->rlen3270 = 0; /* for next msg */
                    }
-		} else {
+        } else {
                    ca->inpbufl = ca->rlen3270;
                    ca->rlen3270 = 0; /* for next msg */
-		}
+        }
                    if(ca->dev->ccwtrace)
                        logmsg(_("HHCCA300D Device(%d:%4.4X): posted %d input bytes\n"),
                             SSID_TO_LCSS(ca->dev->ssid), 
                             ca->dev->devnum,
                             ca->inpbufl);
-	 }
+     }
 }
 
 static void *telnet_thread(void *vca) {
@@ -1284,12 +1284,12 @@ static void *telnet_thread(void *vca) {
             } else {
                 ca->is_3270 = 0;
             }
-	    socket_set_blocking_mode(ca->sfd,0);  // set to non-blocking mode
+        socket_set_blocking_mode(ca->sfd,0);  // set to non-blocking mode
             make_sna_requests4(ca, 0, (ca->is_3270) ? 0x02 : 0x01);   // send REQCONT
-	    ca->hangup = 0;
-	    for (;;) {
-		usleep(50000);
-		if (ca->hangup)
+        ca->hangup = 0;
+        for (;;) {
+        usleep(50000);
+        if (ca->hangup)
                     break;
         /* read_socket has changed from 3.04 to 3.06 - we need old way */
 #ifdef _MSVC_
@@ -1297,28 +1297,28 @@ static void *telnet_thread(void *vca) {
 #else
           rc=read(ca->sfd,bfr,256-BUFPD);
 #endif
-		if (rc < 0) {
+        if (rc < 0) {
                     if(0
 #ifndef WIN32
                                 || EAGAIN == errno
 #endif
                                 || HSO_EWOULDBLOCK == HSO_errno
                     ) {
-			    continue;
+                continue;
                     }
-		    break;
+            break;
 //                    make_sna_requests4(ca, 1);   // send REQDISCONT
                     make_sna_requests5(ca);
                 }
-		if (rc == 0) {
+        if (rc == 0) {
 //                    make_sna_requests4(ca, 1);   // send REQDISCONT
                     make_sna_requests5(ca);
                     break;
-		}
+        }
                 commadpt_read_tty(ca,bfr,rc);
             }
-	    close_socket(ca->sfd);
-	    ca->sfd = 0;
+        close_socket(ca->sfd);
+        ca->sfd = 0;
         }
 }
 
@@ -1459,10 +1459,10 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
             switch(pc)
             {
                 case COMMADPT_KW_DEBUG:
-		    if (res.text[0] == 'y' || res.text[0] == 'Y')
-			dev->commadpt->debug_sna = 1;
-		    else
-			dev->commadpt->debug_sna = 0;
+            if (res.text[0] == 'y' || res.text[0] == 'Y')
+            dev->commadpt->debug_sna = 1;
+            else
+            dev->commadpt->debug_sna = 0;
                     break;
                 case COMMADPT_KW_LPORT:
                     rc=commadpt_getport(res.text);
@@ -1665,11 +1665,11 @@ static void format_sna (BYTE * requestp, char * tag, U16 ssid, U16 devnum) {
        if (!memcmp(&requestp[13], R01020B, 3))
           ru_type = "DACTLINK";
        if (!memcmp(&requestp[13], R010211, 3)) {
-	    sprintf(fmtbuf6, "%s[%02x]", "SETCV", requestp[18]);
+        sprintf(fmtbuf6, "%s[%02x]", "SETCV", requestp[18]);
             ru_type = fmtbuf6;
             if ((requestp[10] & 0x80) != 0)
                 ru_type = "SETCV";
-	  }
+      }
        if (!memcmp(&requestp[13], R010280, 3))
           ru_type = "CONTACTED";
        if (!memcmp(&requestp[13], R010281, 3))
@@ -1730,8 +1730,8 @@ static void make_sna_requests2 (COMMADPT *ca) {
         /* do RU */
 
         // FIXME - max. ru_size should be based on BIND settings
-	// A true fix would also require code changes to READ CCW processing
-	// including possibly (gasp) segmenting long PIUs into multiple BTUs
+    // A true fix would also require code changes to READ CCW processing
+    // including possibly (gasp) segmenting long PIUs into multiple BTUs
         ru_size = min(256-(BUFPD+10+3),ca->inpbufl);
         ru_ptr = &respbuf[13];
 
@@ -1751,14 +1751,14 @@ static void make_sna_requests2 (COMMADPT *ca) {
         memcpy(ru_ptr, &ca->inpbuf[bufp], ru_size);
         bufp        += ru_size;
         ca->inpbufl -= ru_size;
-	if (!ca->is_3270) {
+    if (!ca->is_3270) {
             ca->inpbufl = 0;
         }
         if (!ca->inpbufl) {
             respbuf[10] |= 0x01;      /* set last in chain */
-	    if (ca->bindflag) {
+        if (ca->bindflag) {
               respbuf[12] |= 0x20;      /* set CD */
-	    }
+        }
         }
 
         /* set length field in TH */
@@ -1815,7 +1815,7 @@ static void make_sna_requests3 (COMMADPT *ca) {
 }
 
 static void make_sna_requests4 (COMMADPT *ca, int flag, BYTE pu_type) {
-	/* send type flag: 0=REQCONT 1=REQDISCONT */
+    /* send type flag: 0=REQCONT 1=REQDISCONT */
         BYTE    *respbuf;
         BYTE    *ru_ptr;
         int     ru_size;
@@ -1832,8 +1832,8 @@ static void make_sna_requests4 (COMMADPT *ca, int flag, BYTE pu_type) {
         respbuf[1] = 0x00;
         respbuf[2] = ca->sscp_addr0;   // daf
         respbuf[3] = ca->sscp_addr1;
-	// set oaf
-	if (flag == 0) {
+    // set oaf
+    if (flag == 0) {
             respbuf[4] = ca->ncp_addr0;
             respbuf[5] = ca->ncp_addr1;
             make_seq(ca, respbuf);
@@ -1873,7 +1873,7 @@ static void make_sna_requests4 (COMMADPT *ca, int flag, BYTE pu_type) {
             ru_ptr[ru_size++] = 0x02;
             ru_ptr[ru_size++] = 0x1B;
             ru_ptr[ru_size++] = 0x00;
-	}
+    }
         ru_size += 3;   /* for RH */
         respbuf[8] = (unsigned char)(ru_size >> 8) & 0xff;
         respbuf[9] = (unsigned char)(ru_size     ) & 0xff;
@@ -1901,7 +1901,7 @@ static void make_sna_requests5 (COMMADPT *ca) {
         respbuf[3] = ca->sscp_addr1;
         respbuf[4] = ca->ncp_addr0;    // oaf
         respbuf[5] = ca->ncp_addr1;
-	// set seq no.
+    // set seq no.
         make_seq(ca, respbuf);
         /* do RH */
         respbuf[10] = 0x0B;
@@ -2043,8 +2043,8 @@ void make_sna_response (BYTE * requestp, COMMADPT *ca) {
         if ((requestp[10] & 0x08) != 0)
             ru_ptr[ru_size++] = requestp[13];
         if (requestp[13] == 0x11 && requestp[14] == 0x02) {   /* ACTPU (NCP)*/
-	    ca->ncp_addr0 = requestp[2];
-	    ca->ncp_addr1 = requestp[3];
+        ca->ncp_addr0 = requestp[2];
+        ca->ncp_addr1 = requestp[3];
 //            ca->ncp_sscp_seqn = 0;
             ru_ptr[ru_size++] = 0x02;
             if (requestp[2] == 0x40) {  /* DAF subarea field = 8? */
@@ -2072,8 +2072,8 @@ void make_sna_response (BYTE * requestp, COMMADPT *ca) {
         if (requestp[13] == 0x11 && requestp[14] == 0x01) {   /* ACTPU (PU)*/
             ru_ptr[ru_size++] = 0x01;
             /* save daf as our own net addr */
-	    ca->pu_addr0 = requestp[2];
-	    ca->pu_addr1 = requestp[3];
+        ca->pu_addr0 = requestp[2];
+        ca->pu_addr1 = requestp[3];
         }
         if (requestp[13] == 0x01) {   /* 01XXXX Network Services */
             ru_ptr[ru_size++] = requestp[14];
@@ -2082,7 +2082,7 @@ void make_sna_response (BYTE * requestp, COMMADPT *ca) {
         if (!memcmp(&requestp[13], R010219, 3) && ca->sfd > 0) {   /* ANA */
             if (!ca->is_3270) {
               connect_message(ca->sfd, (requestp[20] << 8) + requestp[21], 0);
-	    }
+        }
         }
         if (requestp[13] == 0x0D) {   /* ACTLU */
             /* save daf as our own net addr */
@@ -2098,8 +2098,8 @@ void make_sna_response (BYTE * requestp, COMMADPT *ca) {
         if (requestp[13] == 0x0E || !memcmp(&requestp[13], R01020F, 3)) {  // DACTLU or ABCONN
             if (!ca->is_3270) {
               connect_message(ca->sfd, 0, 1);
-	    }
-	    ca->hangup = 1;
+        }
+        ca->hangup = 1;
         }
         if (requestp[13] == 0x31) {   /* BIND */
             /* save oaf from BIND request */

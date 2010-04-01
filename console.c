@@ -3,11 +3,6 @@
 
 // $Id$
 
-/*
-    (c) Copyright TurboHercules, SAS 2010 - All Rights Reserved
-        Contains Licensed Materials - Property of TurboHercules, SAS
- */
-
 /*-------------------------------------------------------------------*/
 /* This module contains device handling functions for console        */
 /* devices for the Hercules ESA/390 emulator.                        */
@@ -1268,72 +1263,6 @@ BYTE    c;                              /* Character work area       */
 
 #define SF_ATTR_MDT         0x01
 
-#if defined(TURBO_HERCULES)
-static char *herclogo[]={
-"@ALIGN NONE",
-"@SBA 0,0",
-"@SF P",
-"TurboHercules Ver :",
-"@SF HP",
-"$(VERSION)",
-"@NL",
-"@SF P",
-"Host Name         :",
-"@SF HP",
-"$(HOSTNAME)",
-"@NL",
-"@SF P",
-"Host OS           :",
-"@SF HP",
-"$(HOSTOS)-$(HOSTOSREL) $(HOSTOSVER)",
-"@NL",
-"@SF P",
-"Host Architecture :",
-"@SF HP",
-"$(HOSTARCH)",
-"@NL",
-"@SF P",
-"Processors        :",
-"@SF HP",
-"$(HOSTNUMCPUS)",
-"@NL",
-"@SF P",
-"Chanl Subsys      :",
-"@SF HP",
-"$(CSS)",
-"@NL",
-"@SF P",
-"Device Number     :",
-"@SF HP",
-"$(CCUU)",
-"@NL",
-"@SF P",
-"Subchannel        :",
-"@SF HP",
-"$(SUBCHAN)",
-"@SF HP",
-"@NL",
-"@NL",
-"TTTTTTTTTTTT        b          ","@SF P","HH        HH                       l           ","@SF HP","@NL",
-"TTTTTTTTTTTT        b          ","@SF P","HH        HH                       l           ","@SF HP","@NL",
-"     TT             b          ","@SF P","HH        HH                       l           ","@SF HP","@NL",
-"     TT             b          ","@SF P","HH        HH                       l           ","@SF HP","@NL",
-"     TT             b          ","@SF P","HHHHHHHHHHHH                       l           ","@SF HP","@NL",   
-"     TT  u   u r rr bbbb   ooo ","@SF P","HHHHHHHHHHHH  ee  r rr  ccc  u   u l  ee   sss ","@SF HP","@NL",
-"     TT  u   u r    b   b o   o","@SF P","HH        HH e  e r    c   c u   u l e  e s   s","@SF HP","@NL",
-"     TT  u   u r    b   b o   o","@SF P","HH        HH eeee r    c     u   u l eeee  ss  ","@SF HP","@NL",
-"     TT  u   u r    b   b o   o","@SF P","HH        HH e    r    c     u   u l e      ss ","@SF HP","@NL",
-"     TT  u   u r    b   b o   o","@SF P","HH        HH e  e r    c   c u   u l e  e s  ss","@SF HP","@NL",
-"     TT   uuu  r    bbbb   ooo ","@SF P","HH        HH  ee  r     ccc   uuu  l  ee   sss ","@SF HP","@NL",
-"@NL",
-"           (c) Copyright Roger Bowler, Jan Jaeger, and others 1999-2010","@NL",
-"           (c) Copyright TurboHercules, SAS 2010 - All Rights Reserved","@NL",
-"            Contains Licensed Materials - Property of TurboHercules, SAS"
-};
-
-#define LOGO_BUFFERSIZE 256;
-#else // !defined(TURBO_HERCULES)
-
 /*
 static char *herclogo[]={
     " HHH          HHH   The S/370, ESA/390 and z/Architecture",
@@ -1412,9 +1341,6 @@ static char *herclogo[]={
 "           Copyright (C) 1999-2010 Roger Bowler, Jan Jaeger, and others"};
 
 #define LOGO_BUFFERSIZE 256;
-
-#endif // defined(TURBO_HERCULES)
-
 
 static char *buffer_addchar(char *b,size_t *l,size_t *al,char c)
 {
@@ -1529,7 +1455,7 @@ static char *build_logo(char **logodata,size_t logosize,size_t *blen)
                 switch(align)
                 {
                     case ALIGN_RIGHT:
-                        ypos=(int)strlen(cline);
+                        ypos=strlen(cline);
                         if(ypos<80)
                         {
                             ypos=80-ypos;
@@ -1540,7 +1466,7 @@ static char *build_logo(char **logodata,size_t logosize,size_t *blen)
                         }
                         break;
                     case ALIGN_CENTER:
-                        ypos=(int)strlen(cline);
+                        ypos=strlen(cline);
                         if(ypos<80)
                         {
                             ypos=(80-ypos)/2;
@@ -1556,7 +1482,7 @@ static char *build_logo(char **logodata,size_t logosize,size_t *blen)
                 bfr=buffer_addsf(bfr,&len,&alen,attr);
                 if(align==ALIGN_NONE)
                 {
-                    ypos+=(int)strlen(cline);
+                    ypos+=strlen(cline);
                     ypos++;
                 }
                 else
@@ -1906,7 +1832,7 @@ char                    *logoout;
 
         if (class != 'P')  /* do not write connection resp on 3287 */
         {
-            rc = send_packet (csock, (BYTE *)buf, (int)len, "CONNECTION RESPONSE");
+            rc = send_packet (csock, (BYTE *)buf, len, "CONNECTION RESPONSE");
         }
 
         /* Close the connection and terminate the thread */
@@ -1974,7 +1900,7 @@ char                    *logoout;
 
     if (class != 'P')  /* do not write connection resp on 3287 */
     {
-        rc = send_packet (csock, (BYTE *)logoout, (int)len, "CONNECTION RESPONSE");
+        rc = send_packet (csock, (BYTE *)logoout, len, "CONNECTION RESPONSE");
     }
     if(logobfr)
     {
@@ -2656,7 +2582,7 @@ loc3270_hsuspend(DEVBLK *dev, void *file)
         len = 0;
     release_lock(&dev->lock);
     if (len)
-        SR_WRITE_BUF(file, SR_DEV_3270_BUF, buf, (int)len);
+        SR_WRITE_BUF(file, SR_DEV_3270_BUF, buf, len);
     return 0;
 }
 
@@ -2677,7 +2603,7 @@ loc3270_hresume(DEVBLK *dev, void *file)
             break;
         case SR_DEV_3270_EWA:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            dev->ewa3270 = (unsigned int)rc;
+            dev->ewa3270 = rc;
             break;
         case SR_DEV_3270_BUF:
             rbuflen = len;
@@ -2717,16 +2643,16 @@ loc3270_hresume(DEVBLK *dev, void *file)
         buf[len++] = O3270_IC;
 
         /* Double up any IAC's in the data */
-        len = double_up_iac (buf, (int)len);
+        len = double_up_iac (buf, len);
 
         /* Append telnet EOR marker */
         buf[len++] = IAC;
         buf[len++] = EOR_MARK;
 
         /* Restore the 3270 screen */
-        rc = send_packet(dev->fd, buf, (int)len, "3270 data");
+        rc = send_packet(dev->fd, buf, len, "3270 data");
 
-        dev->pos3270 = (int)pos;
+        dev->pos3270 = pos;
 
         release_lock(&dev->lock);
     }
