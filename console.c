@@ -952,7 +952,7 @@ int     eor = 0;                        /* 1=End of record received  */
 
     if (rc < 0) {
         if ( HSO_ECONNRESET == HSO_errno )
-            WRITEMSG(HHCTE014I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->devtype, inet_ntoa(dev->ipaddr) );
+            WRITEMSG(HHCTE014I, SSID_TO_LCSS(dev->ssid), dev->devnum, inet_ntoa(dev->ipaddr), dev->devtype );
         else
             TNSERROR("console: DBG023: recv: %s\n", strerror(HSO_errno));
         dev->sense[0] = SENSE_EC;
