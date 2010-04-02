@@ -1,26 +1,7 @@
-/* CON1052.C    (c)Copyright Jan Jaeger, 2004-2009                   */
+/* CON1052.C    (c)Copyright Jan Jaeger, 2004-2010                   */
 /*              Emulated 1052 on hercules console                    */
 
 // $Id$
-//
-// $Log$
-// Revision 1.14  2007/11/21 22:54:14  fish
-// Use new BEGIN_DEVICE_CLASS_QUERY macro
-//
-// Revision 1.13  2007/06/23 16:13:54  jmaynard
-// Fixing two messages out of internationalization by removing redundant
-// carriage returns.
-//
-// Revision 1.12  2007/06/23 00:04:04  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.11  2006/12/23 00:51:08  ivan
-// Fix logmsg() call in con1052c.c from logmsg(bfr) to logmsg("%s",bfr) to prevent
-// Write CCW data with embedded '%' characters to be interpreted as printf formating orders
-//
-// Revision 1.10  2006/12/08 09:43:18  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 
@@ -213,14 +194,25 @@ BYTE    c;                              /* Print character           */
         /* Perform end of record processing if not data-chaining,
            and append carriage return and newline if required */
         if ((flags & CCW_FLAGS_CD) == 0
-//        && code == 0x09
           && len < BUFLEN_1052)
             iobuf[len++] = '\n';
 
         iobuf[len] = '\0';
 
+        /* process multiline messages */
+        {
+            char    *str = strtok ((char *)iobuf,"\n");
+
+            while (str != NULL)
+            {
+                WRITECMSG ("<pnl,color(green,black)>", HHCON010I, SSID_TO_LCSS(dev->ssid), dev->devnum, str);
+                str = strtok (NULL, "\n");
+            }
+
+        }
+
         /* Send the data to the console */
-        logmsg("HHCON010I Device(%d:%4.4X): %s", SSID_TO_LCSS(dev->ssid), dev->devnum, (char *)iobuf);
+//        WRITECMSG_C ("<pnl,color(green,black)>", HHCON010I, SSID_TO_LCSS(dev->ssid), dev->devnum, (char *)iobuf);
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
@@ -243,7 +235,7 @@ BYTE    c;                              /* Print character           */
         {
             /* Display prompting message on console if allowed */
             if (dev->prompt1052)
-                WRITEMSG (, dev->devnum);
+                WRITECMSG ("<pnl,color(lightyellow,black)>", HHCON001A, SSID_TO_LCSS(dev->ssid), dev->devnum);
 
             obtain_lock(&dev->lock);
             dev->iowaiters++;
@@ -280,7 +272,7 @@ BYTE    c;                              /* Print character           */
     /*---------------------------------------------------------------*/
     /* AUDIBLE ALARM                                                 */
     /*---------------------------------------------------------------*/
-        WRITEMSG (HHCON009I, SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRITECMSG ("<pnl,color(lightred,black)>", HHCON009I, SSID_TO_LCSS(dev->ssid), dev->devnum);
     /*
         *residual = 0;
     */
@@ -377,8 +369,8 @@ int  i;
           && !strncasecmp(cmd,dev->filename,strlen(dev->filename)) )
         {
             input = cmd + strlen(dev->filename);
-            WRITEMSG(HHCON008I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
-                                     cmd+strlen(dev->filename) );
+            WRITECMSG ("<pnl,color(lightyellow,black)>", HHCON008I, SSID_TO_LCSS(dev->ssid), dev->devnum, 
+                        dev->filename, cmd+strlen(dev->filename) );
             for(i = 0; i < dev->bufsize && input[i] != '\0'; i++)
                 dev->buf[i] = isprint(input[i]) ? host_to_guest(input[i]) : SPACE;
             dev->keybdrem = dev->buflen = i;
