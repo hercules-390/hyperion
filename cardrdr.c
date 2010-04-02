@@ -1,4 +1,4 @@
-/* CARDRDR.C    (c) Copyright Roger Bowler, 1999-2009                */
+/* CARDRDR.C    (c) Copyright Roger Bowler, 1999-2010                */
 /*              ESA/390 Card Reader Device Handler                   */
 
 // $Id$
@@ -8,19 +8,6 @@
 /* card reader devices.                                              */
 /*-------------------------------------------------------------------*/
 
-// $Log$
-// Revision 1.47  2007/11/21 22:54:13  fish
-// Use new BEGIN_DEVICE_CLASS_QUERY macro
-//
-// Revision 1.46  2007/06/23 00:04:03  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.45  2006/12/28 16:13:28  fish
-// Fix PR# readers/104: "HHCRD011E Close error... No Error" in 'cardrdr_close_device' function.
-//
-// Revision 1.44  2006/12/08 09:43:17  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 #include "hercules.h"
@@ -92,7 +79,7 @@ int     fc;                             /* File counter              */
 
     if (!dev->more_files)
     {
-        WRITEMSG (HHCRD001E);
+        WRITEMSG (HHCRD001E, SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
     }
 
@@ -190,13 +177,13 @@ int     fc;                             /* File counter              */
 
         if (strlen(argv[i]) > sizeof(dev->filename)-1)
         {
-            WRITEMSG (HHCRD002E,argv[i],(unsigned int)sizeof(dev->filename)-1);
+            WRITEMSG (HHCRD002E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], (unsigned int)sizeof(dev->filename)-1);
             return -1;
         }
 
         if (access(argv[i], R_OK | F_OK) != 0)
         {
-            WRITEMSG (HHCRD003E, argv[i], strerror(errno));
+            WRITEMSG (HHCRD003E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], strerror(errno));
             return -1;
         }
 
@@ -205,7 +192,7 @@ int     fc;                             /* File counter              */
 
         if (!dev->more_files)
         {
-            WRITEMSG (HHCRD004E);
+            WRITEMSG (HHCRD004E, SSID_TO_LCSS(dev->ssid), dev->devnum);
             return -1;
         }
 
@@ -218,7 +205,7 @@ int     fc;                             /* File counter              */
 
     if (dev->ebcdic && dev->ascii)
     {
-        WRITEMSG (HHCRD005E);
+        WRITEMSG (HHCRD005E, SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
     }
 
@@ -226,7 +213,7 @@ int     fc;                             /* File counter              */
     {
         if (fc)
         {
-            WRITEMSG (HHCRD006E);
+            WRITEMSG (HHCRD006E, SSID_TO_LCSS(dev->ssid), dev->devnum);
             return -1;
         }
 
@@ -240,14 +227,14 @@ int     fc;                             /* File counter              */
 
         if (!dev->ebcdic && !dev->ascii)
         {
-            WRITEMSG (HHCRD007I,dev->devnum);
+            WRITEMSG (HHCRD007I, SSID_TO_LCSS(dev->ssid), dev->devnum);
             dev->ascii = 1;
         }
     }
 
     if (dev->multifile && !fc)
     {
-        WRITEMSG (HHCRD008W);
+        WRITEMSG (HHCRD008W, SSID_TO_LCSS(dev->ssid), dev->devnum);
         dev->multifile = 0;
     }
 
@@ -259,7 +246,7 @@ int     fc;                             /* File counter              */
 
         if (strlen(argv[0]) > sizeof(dev->filename)-1)
         {
-            WRITEMSG (HHCRD009E,argv[0],(unsigned int)sizeof(dev->filename)-1);
+            WRITEMSG (HHCRD009E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[0], (unsigned int)sizeof(dev->filename)-1);
             return -1;
         }
 
@@ -272,7 +259,7 @@ int     fc;                             /* File counter              */
             }
             else if (access(argv[0], R_OK | F_OK) != 0)
             {
-                WRITEMSG (HHCRD010E, argv[0], strerror(errno));
+                WRITEMSG (HHCRD010E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[0], strerror(errno));
                 return -1;
             }
         }
@@ -352,7 +339,7 @@ static int cardrdr_close_device ( DEVBLK *dev )
     )
     {
         int errnum = dev->bs ? get_HSO_errno() : errno;
-        WRITEMSG (HHCRD011E, dev->filename, strerror(errnum));
+        WRITEMSG (HHCRD011E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, strerror(errnum));
         dev->fd = -1;
         dev->fh = NULL;
         return -1;
@@ -360,7 +347,7 @@ static int cardrdr_close_device ( DEVBLK *dev )
 
     if (dev->bs && (dev->bs->clientip || dev->bs->clientname))
     {
-        WRITEMSG (HHCRD012I, dev->bs->clientip, dev->bs->clientname, dev->devnum, dev->bs->spec);
+        WRITEMSG (HHCRD012I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bs->clientip, dev->bs->clientname, dev->bs->spec);
     }
 
     dev->fd = -1;
@@ -458,7 +445,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     if (rc < 0)
     {
         /* Handle open failure */
-        WRITEMSG (HHCRD013E, dev->filename, strerror(errno));
+        WRITEMSG (HHCRD013E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, strerror(errno));
 
         /* Set unit check with equipment check */
         dev->sense[0] = SENSE_EC;
@@ -479,7 +466,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         if (len < 0)
         {
             /* Handle read error condition */
-            WRITEMSG (HHCRD014E,dev->filename, strerror(errno));
+            WRITEMSG (HHCRD014E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, strerror(errno));
 
             /* Close the file */
             fclose(dev->fh);
@@ -511,7 +498,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         if (rc < 0)
         {
             /* Handle seek error condition */
-            WRITEMSG (HHCRD015E, dev->filename, strerror(errno));
+            WRITEMSG (HHCRD015E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, strerror(errno));
 
             /* Close the file */
             fclose (dev->fh);
@@ -583,9 +570,9 @@ int     rc;                             /* Return code               */
     if (rc < CARD_SIZE)
     {
         if (rc < 0)
-            WRITEMSG (HHCRD016E, dev->filename, strerror(errno));
+            WRITEMSG (HHCRD016E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, strerror(errno));
         else
-            WRITEMSG (HHCRD017E, dev->filename);
+            WRITEMSG (HHCRD017E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
 
         /* Set unit check with equipment check */
         dev->sense[0] = SENSE_EC;
@@ -657,7 +644,7 @@ BYTE    c = 0;                          /* Input character           */
         /* Handle read error condition */
         if (rc < 0)
         {
-            WRITEMSG (HHCRD018E, dev->filename, strerror(errno));
+            WRITEMSG (HHCRD018E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, strerror(errno));
 
             /* Set unit check with equipment check */
             dev->sense[0] = SENSE_EC;
@@ -684,7 +671,7 @@ BYTE    c = 0;                          /* Input character           */
             /* Ignore excess characters if trunc option specified */
             if (dev->trunc) continue;
 
-            WRITEMSG (HHCRD019E, CARD_SIZE, dev->filename);
+            WRITEMSG (HHCRD019E, SSID_TO_LCSS(dev->ssid), dev->devnum, CARD_SIZE, dev->filename);
 
             /* Set unit check with data check */
             dev->sense[0] = SENSE_DC;

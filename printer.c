@@ -158,7 +158,7 @@ static int onconnect_callback (DEVBLK* dev)
     TID tid;
     if (create_thread( &tid, DETACHED, spthread, dev, NULL ))
     {
-        WRITEMSG(HHCPR015E, dev->devnum, errno, strerror( errno ) );
+        WRITEMSG(HHCPR015E, SSID_TO_LCSS(dev->ssid), dev->devnum, errno, strerror( errno ) );
         return 0;
     }
     return 1;
@@ -179,7 +179,7 @@ static void* spthread (DEVBLK* dev)
         char thread_name[32];
         thread_name[sizeof(thread_name)-1] = 0;
         snprintf( thread_name, sizeof(thread_name)-1,
-            "spthread %4.4X", dev->devnum );
+            "spthread %d:%4.4X", SSID_TO_LCSS(dev->ssid), dev->devnum );
         SET_THREAD_NAME( thread_name );
     }
 
@@ -249,7 +249,7 @@ static void* spthread (DEVBLK* dev)
     {
         dev->fd = -1;
         close_socket( fd );
-        WRITEMSG (HHCPR016I, dev->bs->clientname, dev->bs->clientip, dev->devnum, dev->bs->spec);
+        WRITEMSG (HHCPR016I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bs->clientname, dev->bs->clientip, dev->bs->spec);
     }
 
     release_lock( &dev->lock );
@@ -274,7 +274,7 @@ int     sockdev = 0;                    /* 1 == is socket device     */
     /* The first argument is the file name */
     if (argc == 0 || strlen(argv[0]) > sizeof(dev->filename)-1)
     {
-        WRITEMSG (HHCPR001E, dev->devnum);
+        WRITEMSG (HHCPR001E, SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
     }
 
@@ -356,14 +356,14 @@ int     sockdev = 0;                    /* 1 == is socket device     */
         {
             if (strlen (argv[i]) != 30)
             {
-                WRITEMSG (HHCPR009E, argv[i], i + 1);
+                WRITEMSG (HHCPR009E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], i + 1);
                 return -1;
             }
             for (j = 4 ; j < 30 ; j++)
             {
                 if ((argv[i][j] < '0') || (argv[i][j] > '9'))
                 {
-                    WRITEMSG (HHCPR010E,argv[i], i + 1, j);
+                    WRITEMSG (HHCPR010E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], i + 1, j);
                     return -1;
                 }
             }
@@ -385,20 +385,20 @@ int     sockdev = 0;                    /* 1 == is socket device     */
             continue;
         }
 
-        WRITEMSG (HHCPR002E, dev->devnum, argv[i]);
+        WRITEMSG (HHCPR002E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i]);
         return -1;
     }
 
     /* Check for incompatible options */
     if (sockdev && dev->crlf)
     {
-        WRITEMSG (HHCPR019E, dev->devnum, "crlf");
+        WRITEMSG (HHCPR019E, SSID_TO_LCSS(dev->ssid), dev->devnum, "crlf");
         return -1;
     }
 
     if (sockdev && dev->notrunc)
     {
-        WRITEMSG (HHCPR019E, dev->devnum, "noclear");
+        WRITEMSG (HHCPR019E, SSID_TO_LCSS(dev->ssid), dev->devnum, "noclear");
         return -1;
     }
 
@@ -489,7 +489,7 @@ int             rc;                     /* Return code               */
                     S_IRUSR | S_IWUSR | S_IRGRP);
         if (fd < 0)
         {
-            WRITEMSG (HHCPR004E, dev->filename, strerror(errno));
+            WRITEMSG (HHCPR004E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, strerror(errno));
             return -1;
         }
 
@@ -506,12 +506,12 @@ int             rc;                     /* Return code               */
     pid = w32_poor_mans_fork ( dev->filename+1, &dev->fd );
     if (pid < 0)
     {
-        WRITEMSG (HHCPR006E, dev->devnum, strerror(errno));
+        WRITEMSG (HHCPR006E, SSID_TO_LCSS(dev->ssid), dev->devnum, strerror(errno));
         return -1;
     }
 
     /* Log start of child process */
-    WRITEMSG (HHCPR007I, dev->devnum, pid);
+    WRITEMSG (HHCPR007I, SSID_TO_LCSS(dev->ssid), dev->devnum, pid);
     dev->ptpcpid = pid;
 
 #else /* !defined( _MSVC_ ) */
@@ -520,7 +520,7 @@ int             rc;                     /* Return code               */
     rc = create_pipe (pipefd);
     if (rc < 0)
     {
-        WRITEMSG (HHCPR005E, dev->devnum, strerror(errno));
+        WRITEMSG (HHCPR005E, SSID_TO_LCSS(dev->ssid), dev->devnum, strerror(errno));
         return -1;
     }
 
@@ -528,7 +528,7 @@ int             rc;                     /* Return code               */
     pid = fork();
     if (pid < 0)
     {
-        WRITEMSG (HHCPR006E, dev->devnum, strerror(errno));
+        WRITEMSG (HHCPR006E, SSID_TO_LCSS(dev->ssid), dev->devnum, strerror(errno));
         close_pipe ( pipefd[0] );
         close_pipe ( pipefd[1] );
         return -1;
@@ -538,7 +538,7 @@ int             rc;                     /* Return code               */
     if (pid == 0)
     {
         /* Log start of child process */
-        WRITEMSG (HHCPR007I, getpid(), getpid());
+        WRITEMSG (HHCPR007I, SSID_TO_LCSS(dev->ssid), dev->devnum, getpid(), getpid());
 
         /* Close the write end of the pipe */
         close_pipe ( pipefd[1] );
@@ -549,7 +549,7 @@ int             rc;                     /* Return code               */
             rc = dup2 (pipefd[0], STDIN_FILENO);
             if (rc != STDIN_FILENO)
             {
-                WRITEMSG (HHCPR008E, dev->devnum, strerror(errno));
+                WRITEMSG (HHCPR008E, SSID_TO_LCSS(dev->ssid), dev->devnum, strerror(errno));
                 close_pipe ( pipefd[0] );
                 _exit(127);
             }
@@ -570,12 +570,12 @@ int             rc;                     /* Return code               */
         if (rc == 0)
         {
             /* Log end of child process */
-            WRITEMSG (HHCPR011I, dev->devnum, getpid());
+            WRITEMSG (HHCPR011I, SSID_TO_LCSS(dev->ssid), dev->devnum, getpid());
         }
         else
         {
             /* Log error */
-            WRITEMSG (HHCPR012E, dev->devnum, dev->filename+1, strerror(errno));
+            WRITEMSG (HHCPR012E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename+1, strerror(errno));
         }
 
         /* The child process terminates using _exit instead of exit
@@ -622,7 +622,7 @@ int             rc;                     /* Return code               */
                 int fd = dev->fd;
                 dev->fd = -1;
                 close_socket( fd );
-                WRITEMSG (HHCPR016I, dev->bs->clientname, dev->bs->clientip, dev->devnum, dev->bs->spec);
+                WRITEMSG (HHCPR016I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bs->clientname, dev->bs->clientip, dev->bs->spec);
             }
 
             /* Set unit check with intervention required */
@@ -638,7 +638,7 @@ int             rc;                     /* Return code               */
         /* Equipment check if error writing to printer file */
         if (rc < len)
         {
-            WRITEMSG (HHCPR003E, dev->devnum, dev->filename,
+            WRITEMSG (HHCPR003E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
                     (errno == 0 ? _("incomplete"): strerror(errno)));
             dev->sense[0] = SENSE_EC;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -668,7 +668,7 @@ int fd = dev->fd;
 #else /* defined( _MSVC_ ) */
         close (fd);
         /* Log end of child process */
-        WRITEMSG (HHCPR011I, dev->devnum, dev->ptpcpid);
+        WRITEMSG (HHCPR011I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->ptpcpid);
 #endif /* defined( _MSVC_ ) */
         dev->ptpcpid = 0;
     }
@@ -678,7 +678,7 @@ int fd = dev->fd;
         {
             /* Socket printer */
             close_socket (fd);
-            WRITEMSG (HHCPR016I, dev->bs->clientname, dev->bs->clientip, dev->devnum, dev->bs->spec);
+            WRITEMSG (HHCPR016I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bs->clientname, dev->bs->clientip, dev->bs->spec);
         }
         else
         {
