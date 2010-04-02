@@ -1097,7 +1097,7 @@ struct mtop opblk;
         dev->fenced = 0;
 
         if ( dev->ccwtrace || dev->ccwstep )
-            WRITEMSG (HHCTA377I, SSID_TO_LCSS(dev->ssid), dev->devnum);
+            WRITEMSG (HHCTA377I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
 
         // PR# tape/88: no sense with 'close_scsitape'
         // attempting a rewind if the tape is unloaded!
@@ -1263,8 +1263,10 @@ int readblkid_scsitape ( DEVBLK* dev, BYTE* logical, BYTE* physical )
         {
             if ( dev->ccwtrace || dev->ccwstep )
                 WRITEMSG(HHCTA382W
+                    ,SSID_TO_LCSS(dev->ssid)
                     ,dev->devnum
                     ,dev->filename
+                    ,errno
                     ,strerror(errno)
                     );
         }
@@ -1325,8 +1327,10 @@ int locateblk_scsitape ( DEVBLK* dev, U32 blockid, BYTE *unitstat, BYTE code )
         {
             if ( dev->ccwtrace || dev->ccwstep )
                 WRITEMSG(HHCTA383W
+                    ,SSID_TO_LCSS(dev->ssid)
                     ,dev->devnum
                     ,dev->filename
+                    ,errno
                     ,strerror(errno)
                     );
         }
@@ -1927,7 +1931,7 @@ void int_scsi_status_update( DEVBLK* dev, int mountstat_only ) // (internal call
         (
             buf, sizeof(buf),
 
-            "%u:%4.4X filename=%s (%s), sstat=0x%8.8lX: %s %s"
+            "Device(%d:%4.4X) File(%s) (%s), sstat=0x%8.8lX: %s %s"
 
             ,SSID_TO_LCSS(dev->ssid)
             ,dev->devnum
@@ -2008,7 +2012,7 @@ void *scsi_tapemountmon_thread( void *db )
     int fd, timeout, shutdown = 0;
     char buf[50];
 
-    sprintf(buf, "SCSI-Tape(%u:%4.4X) mount monitor", SSID_TO_LCSS(dev->ssid) ,dev->devnum);
+    sprintf(buf, "Device(%d:%4.4X) SCSI-TAPE mount monitor", SSID_TO_LCSS(dev->ssid) ,dev->devnum);
     WRITEMSG
     (
         HHCTA300I

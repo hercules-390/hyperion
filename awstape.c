@@ -174,7 +174,7 @@ off_t           rcoff;                  /* Return code from lseek()  */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        WRITEMSG (HHCTA103E, SSID_TO_LCSS(dev->ssid), dev->devnum, blkpos, dev->filename, strerror(errno));
+        WRITEMSG (HHCTA103E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,  blkpos, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
@@ -187,7 +187,7 @@ off_t           rcoff;                  /* Return code from lseek()  */
     /* Handle read error condition */
     if (rc < 0)
     {
-        WRITEMSG (HHCTA104E, SSID_TO_LCSS(dev->ssid), dev->devnum, blkpos, dev->filename, strerror(errno));
+        WRITEMSG (HHCTA104E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, blkpos, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
@@ -197,7 +197,7 @@ off_t           rcoff;                  /* Return code from lseek()  */
     /* Handle end of file (uninitialized tape) condition */
     if (rc == 0)
     {
-        WRITEMSG (HHCTA105E, SSID_TO_LCSS(dev->ssid), dev->devnum, blkpos, dev->filename);
+        WRITEMSG (HHCTA105E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, blkpos);
 
         /* Set unit exception with tape indicate (end of tape) */
         build_senseX(TAPE_BSENSE_EMPTYTAPE,dev,unitstat,code);
@@ -207,7 +207,7 @@ off_t           rcoff;                  /* Return code from lseek()  */
     /* Handle end of file within block header */
     if (rc < (int)sizeof(AWSTAPE_BLKHDR))
     {
-        WRITEMSG (HHCTA106E, SSID_TO_LCSS(dev->ssid), dev->devnum, blkpos, dev->filename);
+        WRITEMSG (HHCTA106E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, blkpos);
 
         build_senseX(TAPE_BSENSE_BLOCKSHORT,dev,unitstat,code);
         return -1;
@@ -258,8 +258,8 @@ U16             seglen;                 /* Data length of segment    */
         /* Check that block length will not exceed buffer size */
         if (blklen + seglen > MAX_BLKLEN)
         {
-            WRITEMSG (HHCTA107E, SSID_TO_LCSS(dev->ssid), dev->devnum,
-                    (int)MAX_BLKLEN, blkpos, dev->filename);
+            WRITEMSG (HHCTA107E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                    (int)MAX_BLKLEN, blkpos);
 
             /* Set unit check with data check */
             build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
@@ -270,7 +270,7 @@ U16             seglen;                 /* Data length of segment    */
         if ((awshdr.flags1 & AWSTAPE_FLAG1_TAPEMARK)
             && blklen + seglen > 0)
         {
-            WRITEMSG (HHCTA108E, SSID_TO_LCSS(dev->ssid), dev->devnum, blkpos, dev->filename);
+            WRITEMSG (HHCTA108E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, blkpos);
 
             /* Set unit check with data check */
             build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
@@ -287,7 +287,7 @@ U16             seglen;                 /* Data length of segment    */
         /* Handle read error condition */
         if (rc < 0)
         {
-            WRITEMSG (HHCTA109E, SSID_TO_LCSS(dev->ssid), dev->devnum, blkpos, dev->filename, strerror(errno));
+            WRITEMSG (HHCTA109E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, blkpos, strerror(errno));
 
             /* Set unit check with equipment check */
             build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
@@ -297,7 +297,7 @@ U16             seglen;                 /* Data length of segment    */
         /* Handle end of file within data block */
         if (rc < seglen)
         {
-            WRITEMSG (HHCTA110E, SSID_TO_LCSS(dev->ssid), dev->devnum, blkpos, dev->filename);
+            WRITEMSG (HHCTA110E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, blkpos);
 
             /* Set unit check with data check and partial record */
             build_senseX(TAPE_BSENSE_BLOCKSHORT,dev,unitstat,code);
@@ -367,7 +367,7 @@ U16             prvblkl;                /* Length of previous block  */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        WRITEMSG (HHCTA111E, SSID_TO_LCSS(dev->ssid), dev->devnum, blkpos, dev->filename, strerror(errno));
+        WRITEMSG (HHCTA111E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, blkpos, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
@@ -400,12 +400,12 @@ U16             prvblkl;                /* Length of previous block  */
         {
             /* Disk FULL */
             build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
-            WRITEMSG (HHCTA112E, SSID_TO_LCSS(dev->ssid), dev->devnum, blkpos, dev->filename);
+            WRITEMSG (HHCTA112E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, blkpos);
             return -1;
         }
 
         /* Handle write error condition */
-        WRITEMSG (HHCTA113E, SSID_TO_LCSS(dev->ssid), dev->devnum, blkpos, dev->filename, strerror(errno));
+        WRITEMSG (HHCTA113E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, blkpos, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
@@ -424,12 +424,12 @@ U16             prvblkl;                /* Length of previous block  */
         {
             /* Disk FULL */
             build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
-            WRITEMSG (HHCTA114E, SSID_TO_LCSS(dev->ssid), dev->devnum, blkpos, dev->filename);
+            WRITEMSG (HHCTA114E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, blkpos);
             return -1;
         }
 
         /* Handle write error condition */
-        WRITEMSG (HHCTA115E, SSID_TO_LCSS(dev->ssid), dev->devnum, blkpos, dev->filename, strerror(errno));
+        WRITEMSG (HHCTA115E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, blkpos, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
@@ -445,7 +445,7 @@ U16             prvblkl;                /* Length of previous block  */
     if (rc != 0)
     {
         /* Handle write error condition */
-        WRITEMSG (HHCTA116E, SSID_TO_LCSS(dev->ssid), dev->devnum, blkpos, dev->filename, strerror(errno));
+        WRITEMSG (HHCTA116E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, blkpos, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
@@ -495,7 +495,7 @@ U16             prvblkl;                /* Length of previous block  */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        WRITEMSG (HHCTA117E, SSID_TO_LCSS(dev->ssid), dev->devnum, blkpos, dev->filename, strerror(errno));
+        WRITEMSG (HHCTA117E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, blkpos, strerror(errno));
 
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
         return -1;
@@ -524,7 +524,7 @@ U16             prvblkl;                /* Length of previous block  */
     if (rc < (int)sizeof(awshdr))
     {
         /* Handle write error condition */
-        WRITEMSG (HHCTA118E, SSID_TO_LCSS(dev->ssid), dev->devnum, blkpos, dev->filename, strerror(errno));
+        WRITEMSG (HHCTA118E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, blkpos, strerror(errno));
 
         build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
         return -1;
@@ -543,7 +543,7 @@ U16             prvblkl;                /* Length of previous block  */
     if (rc != 0)
     {
         /* Handle write error condition */
-        WRITEMSG (HHCTA119E, SSID_TO_LCSS(dev->ssid), dev->devnum, blkpos, dev->filename, strerror(errno));
+        WRITEMSG (HHCTA119E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, blkpos, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
