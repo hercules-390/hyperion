@@ -336,6 +336,10 @@
 #define HHCDA054I "Device(%d:%4.4X) Set file mask(%2.2X)"
 #define HHCDA055I "Device(%d:%4.4X) Search key(%s)"
 
+/* cmdtab.c */
+#define HHCMD853I "CMDLEVEL invalid option: %s"
+#define HHCMD854I "cmdlevel[%2.2X] is %s"
+
 /* fbadasd.c */
 #define HHCDA056E "Device(%d:%4.4X) File name missing or invalid"
 #define HHCDA057E "Device(%d:%4.4X) File not found or invalid"

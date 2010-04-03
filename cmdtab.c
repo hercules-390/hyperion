@@ -397,28 +397,29 @@ int CmdLevel(int argc, char *argv[], char *cmdline)
                 sysblk.sysgroup &= ~SYSGROUP_SYSDEBUG;
             else
             {
-                logmsg(_("HHCMD853I CMDLEVEL invalid option: %s\n"),
-                  argv[i]);
+                WRITEMSG(HHCMD853I, argv[i]);
                 return -1;
             }
         }
 
     if ( sysblk.sysgroup == SYSGROUP_ALL )
     {
-        logmsg(_("HHCMD854I cmdlevel[%2.2X] is all\n"), sysblk.sysgroup);
+        WRITEMSG(HHCMD854I, sysblk.sysgroup, "all");
     }
     else if ( sysblk.sysgroup == 0 )
     {
-        logmsg(_("HHCMD854I cmdlevel[%2.2X] is none\n"), sysblk.sysgroup);
+        WRITEMSG(HHCMD854I, sysblk.sysgroup, "none");
     }
     else
     {
-        logmsg(_("HHCMD854I cmdlevel[%2.2X] is %s%s%s%s%s\n"), sysblk.sysgroup,
-            (sysblk.sysgroup&SYSGROUP_SYSOPER)?"operator ":"",
+        char buf[20];
+        sprintf(buf, "%s%s%s%s%s", 
+	    (sysblk.sysgroup&SYSGROUP_SYSOPER)?"operator ":"",
             (sysblk.sysgroup&SYSGROUP_SYSMAINT)?"maintenance ":"",
             (sysblk.sysgroup&SYSGROUP_SYSPROG)?"programmer ":"",
             (sysblk.sysgroup&SYSGROUP_SYSDEVEL)?"developer ":"",
             (sysblk.sysgroup&SYSGROUP_SYSDEBUG)?"debugging ":"");
+        WRITEMSG(HHCMD854I, sysblk.sysgroup, buf);
     }
     
     return 0;
