@@ -61,7 +61,7 @@ static int hchan_init_handler ( DEVBLK *dev, int argc, char *argv[] )
     {
         if(argc<1)
         {
-            WRITEMSG(HHCGCH003E,dev->devnum);
+            WRITEMSG(HHCHC003E,dev->devnum);
             rc=-1;
             break;
         }
@@ -81,15 +81,15 @@ static int hchan_init_handler ( DEVBLK *dev, int argc, char *argv[] )
             rc=hchan_init_int(dev,argc,argv);
             break;
         }
-        WRITEMSG(HHCGCH001E,dev->devnum,argv[0]);
+        WRITEMSG(HHCHC001E,dev->devnum,argv[0]);
         rc=-1;
         break;
     }
     if(rc)
     {
-        WRITEMSG(HHCGCH002T,dev->devnum);
+        WRITEMSG(HHCHC002T,dev->devnum);
     }
-    WRITEMSG(HHCGCH999W,dev->devnum);
+    WRITEMSG(HHCHC999W,dev->devnum);
     return(rc);
 }
 
