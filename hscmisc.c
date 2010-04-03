@@ -172,26 +172,26 @@ static void cancel_wait_sigq()
 */
 static void do_shutdown_now()
 {
-    logmsg("HHCIN900I Begin Hercules shutdown\n");
+    WRITEMSG(HHCIN900I);
 
     ASSERT( !sysblk.shutfini );  // (sanity check)
 
     sysblk.shutfini = 0;  // (shutdown NOT finished yet)
     sysblk.shutdown = 1;  // (system shutdown initiated)
 
-    logmsg("HHCIN901I Releasing configuration\n");
+    WRITEMSG(HHCIN901I);
     {
         release_config();
     }
-    logmsg("HHCIN902I Configuration release complete\n");
+    WRITEMSG(HHCIN902I);
     
     log_wakeup(NULL);
 
-    logmsg("HHCIN903I Calling termination routines\n");
+    WRITEMSG(HHCIN903I);
     {
         hdl_shut();
     }
-    logmsg("HHCIN904I All termination routines complete\n");
+    WRITEMSG(HHCIN904I);
     
     log_wakeup(NULL);
 
@@ -203,7 +203,7 @@ static void do_shutdown_now()
     logmsg("HHCIN906I Threads terminations complete\n");
     */
 
-    logmsg("HHCIN909I Hercules shutdown complete\n");
+    WRITEMSG(HHCIN909I);
 
     log_wakeup(NULL);
     
@@ -255,7 +255,7 @@ static void do_shutdown_now()
 */
 static void do_shutdown_wait()
 {
-    logmsg(_("HHCIN098I Shutdown initiated\n"));
+    WRITEMSG(HHCIN098I);
     wait_sigq_resp();
     do_shutdown_now();
 }
@@ -638,7 +638,7 @@ BYTE    c;                              /* Character work area       */
                  (h2 >= 'A' && h2 <= 'F') ? h2 - 'A' + 10 : -1;
             if (h1 < 0 || h2 < 0 || n >= 32)
             {
-                logmsg (_("HHCMD143E Invalid value: %s\n"), s);
+                WRITEMSG(HHCMD143E, s);
                 return -1;
             }
             newval[n++] = (h1 << 4) | h2;
@@ -662,7 +662,7 @@ BYTE    c;                              /* Character work area       */
             /* Ending address or length is specified */
             if (rc != 3 || !(delim == '-' || delim == '.'))
             {
-                logmsg (_("HHCMD144E Invalid operand: %s\n"), operand);
+                WRITEMSG(HHCMD144E, operand);
                 return -1;
             }
             eaddr = (delim == '.') ? saddr + opnd2 - 1 : opnd2;
@@ -674,7 +674,7 @@ BYTE    c;                              /* Character work area       */
     /* Check for valid range */
     if (saddr > maxadr || eaddr > maxadr || eaddr < saddr)
     {
-        logmsg (_("HHCMD145E Invalid range: %s\n"), operand);
+        WRITEMSG(HHCMD145E, operand);
         return -1;
     }
 
@@ -720,8 +720,7 @@ static REGS  *copy_regs (REGS *regs)
     newregs = malloc(size);
     if (newregs == NULL)
     {
-        logmsg(_("HHCMS001E malloc failed for REGS copy: %s\n"),
-               strerror(errno));
+        WRITEMSG(HHCMS001E, strerror(errno));
         return NULL;
     }
 

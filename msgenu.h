@@ -927,6 +927,19 @@
 #define HHCMD998E "Script aborted : Script recursion level exceeded"
 #define HHCMD999I "Script \"%s\" aborted due to previous conditions"
 
+/* hscmisc.c */
+#define HHCIN098I "Shutdown initiated"
+#define HHCIN900I "Begin Hercules shutdown"
+#define HHCIN901I "Releasing configuration"
+#define HHCIN902I "Configuration release complete"
+#define HHCIN903I "Calling termination routines"
+#define HHCIN904I "All termination routines complete"
+#define HHCIN909I "Hercules shutdown complete"
+#define HHCMD143E "Invalid value: %s"
+#define HHCMD144E "Invalid operand: %s"
+#define HHCMD145E "Invalid range: %s"
+#define HHCMS001E "malloc failed for REGS copy: %s"
+
 /* httpserv.c */
 #define HHCHT001I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCHT002E "Socket error: (%s)"
