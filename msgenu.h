@@ -401,6 +401,7 @@
 #define HHCCA027E "Device(%d:%4.4X) No buffers trying to send SNA request5"
 #define HHCCA028E "Device(%d:%4.4X) No buffers trying to send SNA request"
 #define HHCCA029E "Device(%d:%4.4X) No buffers trying to send SNA response"
+//#define HHCCA300D in comm3705.c and commadpt.c
 
 /* con1052c.c */
 #define HHCON001A "Device(%d:%4.4X) Enter input for console device"
@@ -488,6 +489,7 @@
 #define HHCLC002I "Device(%4.4X) Halt or Clear Recognized"
 #define HHCLC003I "Device(%4.4X) LCS Read"
 #define HHCLC004I "Device(%4.4X) Sending packet to file(%s)"
+#define HHCLC005E "Device(%4.4X) Error writing to file(%s) %s"
 #define HHCLC006I "Device(%4.4X) Triggering Event"
 #define HHCLC007E "Error in call to socket: %s"
 #define HHCLC008E "ioctl error on device(%s) %s"
@@ -617,6 +619,7 @@
 #define HHCEV029I "ECPS:VM Command processor invoked"
 #define HHCEV030E "Unknown EVM subcommand %s"
 #define HHCEV031I "ECPS:VM Command processor complete"
+//#define HHCEV300D in ecpsvm.c
 
 /* external.c */
 #define HHCCP023I "External interrupt: Interrupt key"
@@ -768,6 +771,7 @@
 #define HHCMD053I "SHCMDOPT invalid option: %s"
 #define HHCMD054S "DIAG8CMD: %sable, %secho"
 #define HHCMD056I "LPAR name = %s"
+//#define HHCMD059E in hsccmd.c
 #define HHCMD060I "LPAR number = %"I16_FMT"X"
 #define HHCMD061E "LPARNUM %02X invalid; must be 00 to 3F (hex)"
 #define HHCMD062E "Missing argument(s)"
@@ -812,6 +816,7 @@
 #define HHCMD118E "Cannot open %s: %s"
 #define HHCMD119E "Cannot read %s: %s"
 #define HHCMD120I "Finished loading TEXT deck file, last 'TXT' record had address: %3.3X"
+//#define HHCMD123I in hsccmd.c
 #define HHCMD126I "Architecture mode = %s"
 #define HHCMD127E "All CPU's must be stopped to change architecture"
 #define HHCMD128E "Invalid architecture mode %s"
@@ -870,6 +875,7 @@
 #define HHCMD322E "Device(%d:%4.4X) is not a 1403 device"
 #define HHCMD323E "Device(%d:%4.4X) not stopped"
 #define HHCMD324E "Device(%d:%4.4X) invalid fcb image ==>%s<=="
+//#define HHCMD422I in hscmisc.c
 #define HHCMD423E "Script file buffer malloc failed: %s"
 #define HHCCP424I "Processor %s%02X store status completed"
 #define HHCMD425S "DIAG8CMD invalid option: %s"
@@ -923,6 +929,8 @@
 #define HHCMD870I "Instruction counts reset to zero"
 #define HHCMD871E "Sorry, not enough memory"
 #define HHCMD872E "Sorry, too many instructions"
+//#define HHCMD875I in hsccmd.c
+//#define HHCMD876I in hsccmd.c
 #define HHCMD877I  " i: %12" I64_FMT "d"
 #define HHCMD878I "%3d: %12" I64_FMT "d"
 #define HHCMD994E "Script aborted : user cancel request"

@@ -99,8 +99,8 @@ static int    NPcpunum_valid,
               NPcpugraph_valid;
 
 /* Current CPU states */
-static U16    NPcpunum;
-static int    NPcpupct;
+//static U16    NPcpunum;
+//static int    NPcpupct;
 static int    NPpswmode;
 static int    NPpswzhost;
 static QWORD  NPpsw;

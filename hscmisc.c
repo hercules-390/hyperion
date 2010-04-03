@@ -196,11 +196,11 @@ static void do_shutdown_now()
     log_wakeup(NULL);
 
     /*
-    logmsg("HHCIN905I Terminating threads\n");
+    logmsg("HHCINxxxI Terminating threads\n");
     {
         // (none we really care about at the moment...)
     }
-    logmsg("HHCIN906I Threads terminations complete\n");
+    logmsg("HHCINxxxI Threads terminations complete\n");
     */
 
     WRITEMSG(HHCIN909I);

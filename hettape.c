@@ -112,7 +112,10 @@ int             rc;                     /* Return code               */
 /*-------------------------------------------------------------------*/
 void close_het (DEVBLK *dev)
 {
-    if(dev->hetb->fd >= 0)
+    /* BHE 03/04/2010: This was the statement?? */
+    /* if(dev->hetb->fd >= 0) */
+    /* Caught it after a warning message */
+    if(dev->fd >= 0)
     {
         WRITEMSG (HHCTA401I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
     }

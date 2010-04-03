@@ -1311,7 +1311,7 @@ sr_read_error:
     goto sr_error_exit;
     /*
 sr_seek_error:
-    logmsg(_("HHCSR012E seek error: %s\n"), strerror(errno));
+    logmsg(_("HHCSRxxxE seek error: %s\n"), strerror(errno));
     goto sr_error_exit;
     */
 sr_string_error:

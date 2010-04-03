@@ -3482,7 +3482,7 @@ U16     id;
     {
         if (argv[1] != NULL
           && strlen(argv[1]) == 1 
-          && sscanf(argv[1], "%d", &id) == 1)  
+          && sscanf(argv[1], "%u", &id) == 1)  
         {
             if ( id == 0 || id == 1 )
                 sysblk.cpuidfmt = id;

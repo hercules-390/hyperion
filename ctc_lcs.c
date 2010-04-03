@@ -115,7 +115,7 @@
       { \
         if (!(a)) \
         { \
-          logmsg("HHCxx999W *** Assertion Failed! *** %s(%d); function: %s\n",__FILE__,__LINE__,__FUNCTION__); \
+          logmsg("HHCmmxxxW *** Assertion Failed! *** %s(%d); function: %s\n",__FILE__,__LINE__,__FUNCTION__); \
           if (IsDebuggerPresent()) DebugBreak();   /* (break into debugger) */ \
         } \
       } \
@@ -128,7 +128,7 @@
       { \
         if (!(a)) \
         { \
-          logmsg("HHCxx999W *** Assertion Failed! *** %s(%d)\n",__FILE__,__LINE__); \
+          logmsg("HHCmmxxxW *** Assertion Failed! *** %s(%d)\n",__FILE__,__LINE__); \
         } \
       } \
       while(0)
@@ -1112,7 +1112,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
             if( TUNTAP_Write( pDEVBLK->fd,
                               (BYTE*)pEthFrame, iEthLen ) != iEthLen )
             {
-                logmsg( _("HHCLC005E %4.4X: Error writing to %s: %s\n"),
+                WRITEMSG(HHCLC005E,
                         pDEVBLK->devnum, pDEVBLK->filename,
                         strerror( errno ) );
                 pDEVBLK->sense[0] = SENSE_EC;

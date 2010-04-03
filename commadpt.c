@@ -946,7 +946,7 @@ static void *commadpt_thread(void *vca)
 
     init_signaled=0;
 
-    sprintf(threadname, "device(%4.4X) communication thread");
+    sprintf(threadname, "device(%4.4X) communication thread", devnum);
     WRITEMSG(HHCCA002I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), threadname);
 
     pollact=0;  /* Initialise Poll activity flag */

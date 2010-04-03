@@ -463,7 +463,7 @@ int     i;                              /* Loop index                */
     /*
     if(lcss!=0 && sysblk.arch_mode==ARCH_370)
     {
-        logmsg(_("HHCMD078W %d:%4.4X : Only devices on CSS 0 are usable in S/370 mode\n"),lcss,devnum);
+        logmsg(_("HHCMDxxxW %d:%4.4X : Only devices on CSS 0 are usable in S/370 mode\n"),lcss,devnum);
     }
     */
 
@@ -661,7 +661,7 @@ DEVBLK *dev;                            /* -> Device block           */
         machine_check_crwpend();
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
-//  logmsg (_("HHCMD050I Device %4.4X defined as %4.4X\n"),
+//  logmsg (_("HHCMDxxxI Device %4.4X defined as %4.4X\n"),
 //          olddevn, newdevn);
 
     return 0;
