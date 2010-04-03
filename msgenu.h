@@ -12,12 +12,10 @@
 
 #define MSG(id, ...)      #id " " id "\n", ## __VA_ARGS__
 #define MSG_C(id, ...)      #id " " id "", ## __VA_ARGS__
-#define WRITEMSG(id, ...) logmsg(#id " " id "\n", ## __VA_ARGS__)
-#define WRITEMSG_C(id, ...) logmsg(#id " " id "", ## __VA_ARGS__)
-#define WRITECMSG(c, id, ...) logmsg(c #id " " id "\n", ## __VA_ARGS__)
-#define WRITECMSG_C(c, id, ...) logmsg(c #id " " id "", ## __VA_ARGS__)
-//#define WRITEMSG(id, ...) logmsg("%-10s(%5d) " #id " " id "\n", __FILE__, __LINE__, ## __VA_ARGS__)
-//#define WRITECMSG(c, id, ...) logmsg(c "%-10s(%5d) " #id " " id "\n", __FILE__, __LINE__, ## __VA_ARGS__)
+#define WRITEMSG(id, ...) logmsg(_(#id " " id "\n"), ## __VA_ARGS__)
+#define WRITEMSG_C(id, ...) logmsg(_(#id " " id ""), ## __VA_ARGS__)
+#define WRITECMSG(c, id, ...) do { logmsg(c); logmsg(_(#id " " id "\n"), ## __VA_ARGS__); } while (0) 
+#define WRITECMSG_C(c, id, ...) do { logmsg(c); logmsg(_(#id " " id ""), ## __VA_ARGS__); } while (0)
 
 /* awstape.c */
 #define HHCTA101I "Device(%d:%4.4X) Tape file(%s) Closed; AWS format tape"
