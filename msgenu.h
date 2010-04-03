@@ -940,6 +940,14 @@
 #define HHCMD145E "Invalid range: %s"
 #define HHCMS001E "malloc failed for REGS copy: %s"
 
+/* hscutl.c */
+#define HHCUT001I "SO_KEEPALIVE rc=%d %s"
+#define HHCUT002I "TCP_KEEPALIVE rc=%d %s"
+#define HHCUT003I "TCP_KEEPIDLE rc=%d %s"
+#define HHCUT004I "TCP_KEEPINTVL rc=%d %s"
+#define HHCUT005I "TCP_KEEPCNT rc=%d %s"
+#define HHCMD042I "%s=%s"
+
 /* httpserv.c */
 #define HHCHT001I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCHT002E "Socket error: (%s)"
