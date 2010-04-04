@@ -441,9 +441,12 @@ void *panel_command (void *cmdline)
 
     pCmdLine = cmdline; ASSERT(pCmdLine);
     /* every command will be stored in history list */
-    /* except null commands and script commands */
+    /* except null commands, script commands, scp input and noredisplay */
     if (*pCmdLine != 0 && scr_recursion_level()  == 0)
-        history_add(cmdline);
+    {
+        if (!(*pCmdLine == '.' || *pCmdLine == '!' || *pCmdLine == '-'))
+            history_add(cmdline);
+    }
 
     /* Copy panel command to work area, skipping leading blanks */
 
