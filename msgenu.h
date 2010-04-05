@@ -10,6 +10,60 @@
 /* the various components of the Hercules mainframe emulator.        */
 /*-------------------------------------------------------------------*/
 
+/*-------------------------------------------------------------------
+Message principles:
+-----------------------------------------------------------------------
+HMMMnnnns Text
+
+-----------------------------------------------------------------------
+Prefix principles
+-----------------------------------------------------------------------
+H:    'H' is the standard prefix for all Hercules messages.
+MMM:  Three capital letter module code, related to the module.
+nnnn: Four numeric digit code that unifies the Hercules message.
+s:    The capital letter that denotes the severity.
+' ':  One space character between the message prefix and Text.
+
+-----------------------------------------------------------------------
+Severity principles
+-----------------------------------------------------------------------
+S: Severe error, this could terminate Hercules.
+E: Error, hercules continues.
+W: Warning message.
+I: Informatonal message.
+A: Action, Hercules needs input.
+D: Debug message.
+
+-----------------------------------------------------------------------
+Text principles
+-----------------------------------------------------------------------
+Text: 
+1. The text is written in lower characters and starts with a 
+   capital and does not end with a '.', '!' or something else.
+2. Added strings are rounded with apostrophes to delimiter it from
+   the text and to see the start and endpoint of the string.
+
+Examples:
+"HABC1234I This is a correct message"
+"HBCD2345E This is wrong!"
+"HCDE3456E THIS IS ALSO WRONG"
+"HDEF4567E Do not end with a dot or somehting else!"
+"HEFG5678E This string %s cannot be seen and is therefore wrong", ""
+"HFGH6789E This is a '%s' better example", "much"
+
+-----------------------------------------------------------------------
+Message format principles:
+-----------------------------------------------------------------------
+Device:     "%d:%04X", lcssnum, devnum
+Processor:  "%s%02X", PTYPSTR(procnum), procnum
+32bit reg:  "%08X", r32
+64bit reg:  "%016X", r64
+64bit psw:  "%016X", psw64
+128bit psw: '%016X %016X", psw64h, psw64l
+Regs:       "GR%02d CR%02d AR%02d FP%02d", grnum, crnum, arnum, fpnum
+Strings:    '%s', ""
+---------------------------------------------------------------------*/
+
 #define MSG(id, ...)      #id " " id "\n", ## __VA_ARGS__
 #define MSG_C(id, ...)      #id " " id "", ## __VA_ARGS__
 #define WRITEMSG(id, ...) logmsg(_(#id " " id "\n"), ## __VA_ARGS__)
@@ -451,7 +505,7 @@
 
 /* crypto/dyncrypt.c */
 #define HHCRY001I "Crypto module loaded (c) Copyright Bernard van der Helm, 2003-2010"
-#define HHCRY002I "Active: %s"
+#define HHCRY002I "Activated facility: %s"
 
 /* ctc_ctci.c */
 #define HHCCT037E "Device(%4.4X) Unable to allocate CTCBLK"
