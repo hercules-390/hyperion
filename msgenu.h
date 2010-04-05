@@ -64,6 +64,13 @@ Processor:  "%s%02X", PTYPSTR(procnum), procnum
 128bit psw: '%016X %016X", psw64h, psw64l
 Regs:       "GR%02d CR%02d AR%02d FP%02d", grnum, crnum, arnum, fpnum
 Strings:    '%s', ""
+-----------------------------------------------------------------------
+DEBUG
+-----------------------------------------------------------------------
+If DEBUG is defined, either by #define or configure --enable-debug
+and OPTION_DEBUG_MESSAGES is enabled in featall.h then messages
+will be prefixed by sourcefile.c:lineno: where the message originates
+cpu.c:123:HABC1234I This is a message
 ---------------------------------------------------------------------*/
 
 #define MSG(id, ...)      #id " " id "\n", ## __VA_ARGS__
