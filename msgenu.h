@@ -73,12 +73,13 @@ Strings:    '%s', ""
 #define WRITECMSG(c, id, ...) do { logmsg(c); logmsg(_(#id " " id "\n"), ## __VA_ARGS__); } while (0) 
 #define WRITECMSG_C(c, id, ...) do { logmsg(c); logmsg(_(#id " " id ""), ## __VA_ARGS__); } while (0)
  
-/* awstape.c */ 
+/* awstape.c faketape.c */ 
 #define HHCTA101I "%1d:%04X Tape file '%s': AWS tape closed"
 #define HHCTA107E "%1d:%04X Tape file '%s': block length %d exceeds maximum at offset "I64_FMTX
 #define HHCTA108E "%1d:%04X Tape file '%s': invalid tapemark at offset "I64_FMTX
 #define HHCTA121E "%1d:%04X Tape file '%s': error in function '%s', offset "I64_FMTX": '%s'"
 #define HHCTA122E "%1d:%04X Tape file '%s': error in function '%s': '%s'"
+#define HHCTA507E "%1d:%04X Tape file '%s': block header damage at offset "I64_FMTX
 
 /* bldcfg.c cmdtab.c codepage.c config.c */
 #define HHCMD001S "Error reading file(%s) line(%d): (%s)"
@@ -668,25 +669,6 @@ Strings:    '%s', ""
 #define HHCCP027I "External interrupt: Service signal %8.8X"
 #define HHCCP028I "External interrupt: Block I/O %s"
 #define HHCCP031I "%1d:%04X Processing Block I/O interrupt: code(%4.4X) parm(%16.16X) status(%2.2X) subcode(%2.2X)"
-
-/* faketape.c */
-#define HHCTA501I "%1d:%04X Tape file(%s) Closed; FAKETAPE format tape"
-#define HHCTA502E "%1d:%04X Tape file(%s) Open error: (%s)"
-#define HHCTA503E "%1d:%04X Tape file(%s) Error seeking to offset("I64_FMTX"): (%s)"
-#define HHCTA504E "%1d:%04X Tape file(%s) Error reading block header at offset("I64_FMTX"): (%s)"
-#define HHCTA505E "%1d:%04X Tape file(%s) End of file (end of tape) at offset("I64_FMTX")"
-#define HHCTA506E "%1d:%04X Tape file(%s) Unexpected end of file in block header at offset("I64_FMTX")"
-#define HHCTA507E "%1d:%04X Tape file(%s) Block header damage at offset("I64_FMTX")"
-#define HHCTA508E "%1d:%04X Tape file(%s) Block length exceeds %d at offset("I64_FMTX")"
-#define HHCTA510E "%1d:%04X Tape file(%s) Error reading data block at offset("I64_FMTX"): (%s)"
-#define HHCTA511E "%1d:%04X Tape file(%s) Unexpected end of file in data block at offset("I64_FMTX")"
-#define HHCTA512E "%1d:%04X Tape file(%s) Error seeking to offset("I64_FMTX"): (%s)"
-#define HHCTA513E "%1d:%04X Tape file(%s) Media full condition reached at offset("I64_FMTX") in file(%s)"
-#define HHCTA514E "%1d:%04X Tape file(%s) Error writing block header at offset("I64_FMTX"): (%s)"
-#define HHCTA515E "%1d:%04X Tape file(%s) Error seeking to offset("I64_FMTX"): (%s)"
-#define HHCTA517E "%1d:%04X Tape file(%s) Error writing data block at offset("I64_FMTX"): (%s)"
-#define HHCTA520E "%1d:%04X Tape file(%s) Error writing tape mark at offset("I64_FMTX"): (%s)"
-#define HHCTA521E "%1d:%04X Tape file(%s) Sync error: (%s)"
 
 /* hao.c */
 #define HHCAO001I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"

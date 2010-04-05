@@ -48,7 +48,7 @@ void close_awstape (DEVBLK *dev)
 {
     if(dev->fd>=0)
     {
-        WRITEMSG (HHCTA101I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+        WRITEMSG (HHCTA101I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "AWS");
         close(dev->fd);
     }
     strcpy(dev->filename, TAPE_UNLOADED);
@@ -197,7 +197,7 @@ off_t           rcoff;                  /* Return code from lseek()  */
     /* Handle end of file (uninitialized tape) condition */
     if (rc == 0)
     {
-        WRITEMSG (HHCTA121E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "read()", blkpos, "end of file (uninitialized tape)");
+        WRITEMSG (HHCTA121E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "readhdr_awstape()", blkpos, "end of file (uninitialized tape)");
 
         /* Set unit exception with tape indicate (end of tape) */
         build_senseX(TAPE_BSENSE_EMPTYTAPE,dev,unitstat,code);
@@ -207,7 +207,7 @@ off_t           rcoff;                  /* Return code from lseek()  */
     /* Handle end of file within block header */
     if (rc < (int)sizeof(AWSTAPE_BLKHDR))
     {
-        WRITEMSG (HHCTA121E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "read()", blkpos, "unexpected end of file");
+        WRITEMSG (HHCTA121E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "readhdr_awstape()", blkpos, "unexpected end of file");
 
         build_senseX(TAPE_BSENSE_BLOCKSHORT,dev,unitstat,code);
         return -1;
@@ -297,7 +297,7 @@ U16             seglen;                 /* Data length of segment    */
         /* Handle end of file within data block */
         if (rc < seglen)
         {
-            WRITEMSG (HHCTA121E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "read()", blkpos, "end of file within data block");
+            WRITEMSG (HHCTA121E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "read_awstape()", blkpos, "end of file within data block");
 
             /* Set unit check with data check and partial record */
             build_senseX(TAPE_BSENSE_BLOCKSHORT,dev,unitstat,code);
@@ -396,16 +396,13 @@ U16             prvblkl;                /* Length of previous block  */
     rc = write (dev->fd, &awshdr, sizeof(awshdr));
     if (rc < (int)sizeof(awshdr))
     {
+        WRITEMSG (HHCTA121E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "write()", blkpos, strerror(errno));
         if(errno==ENOSPC)
         {
             /* Disk FULL */
             build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
-            WRITEMSG (HHCTA121E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "write()", blkpos, "media full");
             return -1;
         }
-
-        /* Handle write error condition */
-        WRITEMSG (HHCTA121E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "write()", blkpos, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
@@ -420,16 +417,13 @@ U16             prvblkl;                /* Length of previous block  */
     rc = write (dev->fd, buf, blklen);
     if (rc < blklen)
     {
+        WRITEMSG (HHCTA121E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "write()", blkpos, strerror(errno));
         if(errno==ENOSPC)
         {
             /* Disk FULL */
             build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
-            WRITEMSG (HHCTA121E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "write()", blkpos, "media full");
             return -1;
         }
-
-        /* Handle write error condition */
-        WRITEMSG (HHCTA121E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "write()", blkpos, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
