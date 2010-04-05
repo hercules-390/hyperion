@@ -49,7 +49,7 @@ Examples:
 "HCDE3456E THIS IS ALSO WRONG"
 "HDEF4567E Do not end with a dot or somehting else!"
 "HEFG5678E This string %s cannot be seen and is therefore wrong", ""
-"HFGH6789E This is a '%s' better example", "much"
+"HFGH6789I This is a '%s' better example", "much"
 
 -----------------------------------------------------------------------
 Message format principles:
@@ -57,8 +57,10 @@ Message format principles:
 Device:     "%d:%04X", lcssnum, devnum
 Processor:  "%s%02X", PTYPSTR(procnum), procnum
 32bit reg:  "%08X", r32
-64bit reg:  "%016X", r64
+64bit reg:  "%016X", r64 (in 64bit mode)
+64bit reg:  "--------%08X", r32 (under SIE in 32 bit)
 64bit psw:  "%016X", psw64
+64bit psw:  "%016X ----------------", psw32 (under SIE in 32 bit)
 128bit psw: '%016X %016X", psw64h, psw64l
 Regs:       "GR%02d CR%02d AR%02d FP%02d", grnum, crnum, arnum, fpnum
 Strings:    '%s', ""
