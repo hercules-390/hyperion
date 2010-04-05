@@ -33,8 +33,8 @@
 <TR><TD><A HREF="#3.01">3.01</A></TD><TD>What PC hardware do I need to run Hercules?</TD></TR>
 <TR><TD><A HREF="#3.02">3.02</A></TD><TD>What sort of MIPS rate can I expect?</TD></TR>
 <TR><TD><A HREF="#3.03">3.03</A></TD><TD>What PC software do I need to run Hercules?</TD></TR>
-<TR><TD><A HREF="#3.04">3.04</A></TD><TD>What software do I need to build Hercules?</TD></TR>
-<TR><TD><A HREF="#3.05">3.05</A></TD><TD>Why do I get an unexpected fixed-point divide exception (program check 0009 or abend 0C9) on a CVB instruction?</TD></TR>
+<TR><TD><A HREF="#3.04">3.04</A></TD><TD>What software do I need to build Hercules on Linux and Unix?</TD></TR>
+<TR><TD><A HREF="#3.05">3.05</A></TD><TD>What software do I need to build Hercules on Windows?</TD></TR>
 <TR><TD><A HREF="#3.06">3.06</A></TD><TD>Can Hercules be ported to run on other platforms?</TD></TR>
 <TR><TD>&nbsp;</TD></TR>
 <TR><TD><A HREF="#4.01">4.01</A></TD><TD>How can I create a virtual DASD volume?</TD></TR>
@@ -524,47 +524,36 @@ is <A HREF="http://www.linuxvm.org/">http://www.linuxvm.org/</A>
     as OS/360 or MVS consoles.
 </P>
 <H4><A NAME="3.04">3.04</A>
-    What software do I need to build Hercules?
+    What software do I need to build Hercules on Linux and Unix?
 </H4>
 <P>
     To build Hercules for Linux
     and other Unix-like environments (including Cygwin under Windows),
     you need to use the <a href="http://gcc.gnu.org">gcc</a> compiler,
-    version 2.95, or
     version 3.x or above.
-    <i>Note that gcc version 2.96 is not an official version and is not supported</i>.
     You will also need a full set of GNU development tools, including recent versions
     of autoconf, automake, libiconv, make, perl, sed, and m4.
     Refer to the util/cvslvlck file in the Hercules distribution for details.
-    Note that you will also need a reasonably powerful machine (Pentium 1GHz+)
-    with ample RAM (at least 256Mb) because the compilation process is extremely
-    resource hungry.
 </P>
+<H4><A NAME="3.05">3.05</A>
+    What software do I need to build Hercules on Windows?
+</H4>
 <P>
     To build Hercules for the Windows native environment (without Cygwin),
     you need to use the Microsoft C/C++ compiler (MSVC)
-    version 13.x or later.
-    This compiler is available for download from Microsoft as
-    Visual C++ Toolkit 2003 (Version 13.x) or
-    Microsoft Visual C++ 2005 Express (Version 14.x).
-    You also need the current version of the Microsoft Platform SDK, which is also
+    version 14.x or later.
+    The 32-bit compiler and SDK are packaged as
+    Microsoft Visual C++ 2008 Express (Version 15.x)
     available for download from Microsoft.
+    Although no longer available for download,
+    Microsoft Visual C++ 2005 Express (Version 14.x)
+    may also be used.
     For further information, see Fish's MSVC Hercules Build page at
     <a href="http://www.softdevlabs.com/Hercules/hercules-msvc-build.html">
     http://www.softdevlabs.com/Hercules/hercules-msvc-build.html</a>
-    Alternatively, the Microsoft Visual Studio 7.0 and 8.0 products may be used.
-    In addition, Hercules now also supports building with
-    the Microsoft Visual Studio 9.0 product, or with
-    Microsoft Visual C++ 2008 Express (Version 15.x)
-    available for download from the Microsoft web-site.
-</P>
-<H4><A NAME="3.05">3.05</A>
-    Why do I get an unexpected fixed-point divide exception (program check
-    0009 or abend 0C9) on a CVB instruction?
-</H4>
-<P>
-    You are using an old gcc compiler.
-    See previous question for the required compiler level.
+    Alternatively, the Microsoft Visual Studio 8.0 or 9.0 products may be used.
+    To build Hercules for 64-bit Windows platforms you will need
+    Microsoft Visual Studio 9.0 Professional.
 </P>
 <H4><A NAME="3.06">3.06</A>
     Can Hercules be ported to run on other platforms?
