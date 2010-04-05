@@ -189,7 +189,7 @@ DEVBLK *get_devblk (U16 lcss, U16 devnum);
 void ret_devblk (DEVBLK *dev);
 int  attach_device (U16 lcss, U16 devnum, const char *devtype, int addargc,
         char *addargv[]);
-int  detach_subchan (U16 lcss, U16 subchan);
+int  detach_subchan (U16 lcss, U16 subchan, U16 devnum);
 int  detach_device (U16 lcss, U16 devnum);
 int  define_device (U16 lcss, U16 olddev, U16 newdev);
 CONF_DLL_IMPORT int  group_device(DEVBLK *dev, int members);

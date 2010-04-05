@@ -57,8 +57,13 @@ int     cpu;
 
     /* Detach all devices */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-       if (dev->allocated)
-           detach_subchan(SSID_TO_LCSS(dev->ssid), dev->subchan);
+        if (dev->allocated)
+        {
+            if (sysblk.arch_mode == ARCH_370)
+                detach_device(SSID_TO_LCSS(dev->ssid), dev->devnum);
+            else
+                detach_subchan(SSID_TO_LCSS(dev->ssid), dev->subchan, dev->devnum);
+        }
 
 #if !defined(OPTION_FISHIO)
     /* Terminate device threads */
@@ -463,7 +468,7 @@ int     i;                              /* Loop index                */
     /*
     if(lcss!=0 && sysblk.arch_mode==ARCH_370)
     {
-        logmsg(_("HHCMDxxxW %d:%4.4X : Only devices on CSS 0 are usable in S/370 mode\n"),lcss,devnum);
+        logmsg(_("HHCMD078W %d:%4.4X : Only devices on CSS 0 are usable in S/370 mode\n"),lcss,devnum);
     }
     */
 
@@ -553,24 +558,26 @@ int     i;                              /* Loop index                */
 /*-------------------------------------------------------------------*/
 /* Function to delete a device configuration block by subchannel     */
 /*-------------------------------------------------------------------*/
-int detach_subchan (U16 lcss, U16 subchan)
+int detach_subchan (U16 lcss, U16 subchan, U16 devnum)
 {
 DEVBLK *dev;                            /* -> Device block           */
 int    rc;
-
+char   str[32];
     /* Find the device block */
     dev = find_device_by_subchan ((LCSS_TO_SSID(lcss)<<16)|subchan);
 
+    sprintf(str, "Subchannel(%1d:%04X)", lcss, subchan);
+
     if (dev == NULL)
     {
-        WRITEMSG (HHCMD046E, "Subchannel", lcss, subchan);
+        WRITEMSG (HHCMD046E, lcss, devnum, str);
         return 1;
     }
 
     rc = detach_devblk( dev );
 
     if(!rc)
-        WRITEMSG (HHCMD047I, "Subchannel", lcss, subchan);
+        WRITEMSG (HHCMD047I, lcss, devnum, str);
 
     return rc;
 }
@@ -589,14 +596,14 @@ int    rc;
 
     if (dev == NULL)
     {
-        WRITEMSG (HHCMD046E, "Device", lcss, devnum);
+        WRITEMSG (HHCMD046E, lcss, devnum, "Device");
         return 1;
     }
 
     rc = detach_devblk( dev );
 
     if(!rc)
-        WRITEMSG (HHCMD047I, "Device", lcss, devnum);
+        WRITEMSG (HHCMD047I, lcss, devnum, "Device");
 
     return rc;
 }
@@ -661,7 +668,7 @@ DEVBLK *dev;                            /* -> Device block           */
         machine_check_crwpend();
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
-//  logmsg (_("HHCMDxxxI Device %4.4X defined as %4.4X\n"),
+//  logmsg (_("HHCMD050I Device %4.4X defined as %4.4X\n"),
 //          olddevn, newdevn);
 
     return 0;
