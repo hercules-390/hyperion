@@ -54,7 +54,7 @@ Examples:
 -----------------------------------------------------------------------
 Message format principles:
 -----------------------------------------------------------------------
-Device:     "%d:%04X", lcssnum, devnum
+Device:     "%1d:%04X", lcssnum, devnum
 Processor:  "%s%02X", PTYPSTR(procnum), procnum
 32bit reg:  "%08X", r32
 64bit reg:  "%016X", r64 (in 64bit mode)
@@ -74,8 +74,8 @@ Strings:    '%s', ""
 #define WRITECMSG_C(c, id, ...) do { logmsg(c); logmsg(_(#id " " id ""), ## __VA_ARGS__); } while (0)
  
 /* awstape.c */ 
-#define HHCTA101I "%1d:%04X Tape file '%s': AWS format tape closed"
-#define HHCTA107E "%1d:%04X Tape file '%s': block length %d exceeds at offset "I64_FMTX
+#define HHCTA101I "%1d:%04X Tape file '%s': AWS tape closed"
+#define HHCTA107E "%1d:%04X Tape file '%s': block length %d exceeds maximum at offset "I64_FMTX
 #define HHCTA108E "%1d:%04X Tape file '%s': invalid tapemark at offset "I64_FMTX
 #define HHCTA121E "%1d:%04X Tape file '%s': error in function '%s', offset "I64_FMTX": '%s'"
 #define HHCTA122E "%1d:%04X Tape file '%s': error in function '%s': '%s'"
