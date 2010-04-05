@@ -4450,6 +4450,8 @@ int             gctab[5]= {             /* default gcol parameters   */
                             256};       /* none       0%   -   6.3%  */
 //char *gcstates[] = {"critical","severe","moderate","light","none"};
 
+    gettimeofday (&tv_now, NULL);
+
     obtain_lock (&cckdblk.gclock);
     gcol = ++cckdblk.gcs;
 
