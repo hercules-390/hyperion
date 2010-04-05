@@ -72,28 +72,13 @@ Strings:    '%s', ""
 #define WRITEMSG_C(id, ...) logmsg(_(#id " " id ""), ## __VA_ARGS__)
 #define WRITECMSG(c, id, ...) do { logmsg(c); logmsg(_(#id " " id "\n"), ## __VA_ARGS__); } while (0) 
 #define WRITECMSG_C(c, id, ...) do { logmsg(c); logmsg(_(#id " " id ""), ## __VA_ARGS__); } while (0)
-
-/* awstape.c */
-#define HHCTA101I "%1d:%04X Tape file(%s) Closed; AWS format tape"
-#define HHCTA102E "%1d:%04X Tape file(%s) Open error: (%s)"
-#define HHCTA103E "%1d:%04X Tape file(%s) Error seeking to offset("I64_FMTX"): (%s)"
-#define HHCTA104E "%1d:%04X Tape file(%s) Error reading block header at offset("I64_FMTX"): (%s)"
-#define HHCTA105E "%1d:%04X Tape file(%s) End of file (end of tape) at offset("I64_FMTX")"
-#define HHCTA106E "%1d:%04X Tape file(%s) Unexpected end of file in block header at offset("I64_FMTX")"
-#define HHCTA107E "%1d:%04X Tape file(%s) Block length(%d) exceeds at offset("I64_FMTX")"
-#define HHCTA108E "%1d:%04X Tape file(%s) Invalid tapemark at offset("I64_FMTX")"
-#define HHCTA109E "%1d:%04X Tape file(%s) Error reading data block at offset("I64_FMTX"): (%s)"
-#define HHCTA110E "%1d:%04X Tape file(%s) Unexpected end of file in data block at offset("I64_FMTX")"
-#define HHCTA111E "%1d:%04X Tape file(%s) Error seeking to offset("I64_FMTX"): (%s)"
-#define HHCTA112E "%1d:%04X Tape file(%s) Media full condition reached at offset("I64_FMTX")"
-#define HHCTA113E "%1d:%04X Tape file(%s) Error writing block header at offset("I64_FMTX"): (%s)"
-#define HHCTA114E "%1d:%04X Tape file(%s) Media full condition reached at offset("I64_FMTX")"
-#define HHCTA115E "%1d:%04X Tape file(%s) Error writing data block at offset("I64_FMTX"): (%s)"
-#define HHCTA116E "%1d:%04X Tape file(%s) Error writing data block at offset("I64_FMTX"): (%s)"
-#define HHCTA117E "%1d:%04X Tape file(%s) Error seeking to offset("I64_FMTX"): (%s)"
-#define HHCTA118E "%1d:%04X Tape file(%s) Error writing block header at offset("I64_FMTX"): (%s)"
-#define HHCTA119E "%1d:%04X Tape file(%s) Tape file(%s) Error writing tape mark at offset("I64_FMTX"): (%s)"
-#define HHCTA120E "%1d:%04X Tape file(%s) Sync error: (%s)"
+ 
+/* awstape.c */ 
+#define HHCTA101I "%1d:%04X Tape file '%s': AWS format tape closed"
+#define HHCTA107E "%1d:%04X Tape file '%s': block length %d exceeds at offset "I64_FMTX
+#define HHCTA108E "%1d:%04X Tape file '%s': invalid tapemark at offset "I64_FMTX
+#define HHCTA121E "%1d:%04X Tape file '%s': error in function '%s', offset "I64_FMTX": '%s'"
+#define HHCTA122E "%1d:%04X Tape file '%s': error in function '%s': '%s'"
 
 /* bldcfg.c cmdtab.c codepage.c config.c */
 #define HHCMD001S "Error reading file(%s) line(%d): (%s)"
@@ -507,7 +492,7 @@ Strings:    '%s', ""
 
 /* crypto/dyncrypt.c */
 #define HHCRY001I "Crypto module loaded (c) Copyright Bernard van der Helm, 2003-2010"
-#define HHCRY002I "Activated facility: %s"
+#define HHCRY002I "Activated facility: '%s'"
 
 /* ctc_ctci.c */
 #define HHCCT037E "Device(%4.4X) Unable to allocate CTCBLK"
