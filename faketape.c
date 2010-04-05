@@ -235,7 +235,7 @@ int             xorblkl;                /* XOR check of block lens   */
     /* Verify header integrity using the XOR header field */
     if ( (prvblkl ^ curblkl) != xorblkl )
     {
-        WRITEMSG (HHCTA507E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, blkpos);
+        WRITEMSG (HHCTA121E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "readhdr_faketape()", blkpos, "block header damage");
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);

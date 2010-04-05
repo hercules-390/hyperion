@@ -80,13 +80,17 @@ cpu.c:123:HABC1234I This is a message
 #define WRITECMSG(c, id, ...) do { logmsg(c); logmsg(_(#id " " id "\n"), ## __VA_ARGS__); } while (0) 
 #define WRITECMSG_C(c, id, ...) do { logmsg(c); logmsg(_(#id " " id ""), ## __VA_ARGS__); } while (0)
  
-/* awstape.c faketape.c */ 
-#define HHCTA101I "%1d:%04X Tape file '%s': AWS tape closed"
+/* awstape.c faketape.c omatape.c */ 
+#define HHCTA101I "%1d:%04X Tape file '%s': '%s' tape closed"
 #define HHCTA107E "%1d:%04X Tape file '%s': block length %d exceeds maximum at offset "I64_FMTX
 #define HHCTA108E "%1d:%04X Tape file '%s': invalid tapemark at offset "I64_FMTX
 #define HHCTA121E "%1d:%04X Tape file '%s': error in function '%s', offset "I64_FMTX": '%s'"
 #define HHCTA122E "%1d:%04X Tape file '%s': error in function '%s': '%s'"
-#define HHCTA507E "%1d:%04X Tape file '%s': block header damage at offset "I64_FMTX
+#define HHCTA245E "%1d:%04X Tape file '%s': filename or format missing in line %d"
+#define HHCTA246E "%1d:%04X Tape file '%s': filename '%s' too long in line %d"
+#define HHCTA247E "%1d:%04X Tape file '%s': RECSIZE keyword missing in line %d"
+#define HHCTA248E "%1d:%04X Tape file '%s': invalid record size %d in line %d"
+#define HHCTA249E "%1d:%04X Tape file '%s': invalid record format '%s' in line %d"
 
 /* bldcfg.c cmdtab.c codepage.c config.c */
 #define HHCMD001S "Error reading file(%s) line(%d): (%s)"
@@ -1040,30 +1044,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCCP019I "Machine Check code(%16.16" I64_FMT "u)"
 #define HHCCP020E "Signal USR2 received for undetermined device"
 #define HHCCP021E "Signal USR2 received for device(%4.4X)"
-
-/* omatape.c */
-#define HHCTA232I "%1d:%04X TDF File(%s) Invalid filename: TDF files must be in the TAPES subdirectory"
-#define HHCTA239E "%1d:%04X TDF File(%s) Open error: (%s)"
-#define HHCTA240E "%1d:%04X TDF File(%s) Function fstat() error: (%s)"
-#define HHCTA241E "%1d:%04X TDF File(%s) Cannot obtain buffer for file: (%s)"
-#define HHCTA242E "%1d:%04X TDF File(%s) Error reading file: (%s)"
-#define HHCTA243E "%1d:%04X TDF File(%s) Not a valid TDF file"
-#define HHCTA244E "%1d:%04X TDF File(%s) Cannot obtain buffer for TDF array: (%s)"
-#define HHCTA245E "%1d:%04X TDF File(%s) Line(%d) Filename or format missing"
-#define HHCTA246E "%1d:%04X TDF File(%s) Line(%d) Filename(%s) too long"
-#define HHCTA247E "%1d:%04X TDF File(%s) Line(%d) RECSIZE keyword missing"
-#define HHCTA248E "%1d:%04X TDF File(%s) Line(%d) Invalid record size(%s)"
-#define HHCTA249E "%1d:%04X TDF File(%s) Line(%d) Invalid record format(%s)"
-#define HHCTA250E "%1d:%04X Tape File(%s) Attempt to access beyond end of tape"
-#define HHCTA251E "%1d:%04X Tape File(%s) Open error: (%s)"
-#define HHCTA252E "%1d:%04X Tape File(%s) Error seeking to offset("I32_FMTX"): (%s)"
-#define HHCTA253E "%1d:%04X Tape File(%s) Error reading block header at offset("I32_FMTX"): (%s)"
-#define HHCTA254E "%1d:%04X Tape File(%s) Unexpected end of file in block header at offset("I32_FMTX")"
-#define HHCTA255E "%1d:%04X Tape File(%s) Invalid block header at offset("I32_FMTX")"
-#define HHCTA256E "%1d:%04X Tape File(%s) Error reading data block at offset("I32_FMTX"): (%s)"
-#define HHCTA257E "%1d:%04X Tape File(%s) Unexpected end of file in data block at offset("I32_FMTX")"
-#define HHCTA263E "%1d:%04X Tape File(%s) Invalid zero length block at offset("I32_FMTX")"
-#define HHCTA264E "%1d:%04X Tape File(%s) Error seeking to end of file: (%s)"
 
 /* panel.c */
 #define HHCPN001I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
