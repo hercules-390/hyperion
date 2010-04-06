@@ -1158,7 +1158,10 @@ S32             nxthdro;                /* Offset of next header     */
 void close_omatape2(DEVBLK *dev)
 {
     if (dev->fd >= 0)
+    {
+	WRITEMSG (HHCTA101I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "OMA");
         close (dev->fd);
+    }
     dev->fd=-1;
     if (dev->omadesc != NULL)
     {
