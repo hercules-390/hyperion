@@ -1,4 +1,4 @@
-/* HSCCMD.C     (c) Copyright Roger Bowler, 1999-2009                */
+/* HSCCMD.C     (c) Copyright Roger Bowler, 1999-2010                */
 /*              (c) Copyright "Fish" (David B. Trout), 2002-2009     */
 /*              Execute Hercules System Commands                     */
 /*                                                                   */
@@ -3666,7 +3666,7 @@ char *cdev, *clcss;
         {
             if (sscanf(clcss, "%hd%c", &lcss, &c) != 1)
             {
-                WRITEMSG(HHCMD059E, clcss );
+                WRITEMSG(HHCMD431E, clcss );
                 return -1;
             }
         }
@@ -3861,7 +3861,7 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
         dev->hnd->query( dev, &devclass, sizeof(devnam), devnam );
 
         /* Display the device definition and status */
-        logmsg( "%d:%4.4X %4.4X %s %s%s%s\n",
+        logmsg( "%1d:%04X %4.4X %s %s%s%s\n",
                 SSID_TO_LCSS(dev->ssid),
                 dev->devnum, dev->devtype, devnam,
                 (dev->fd > 2 ? _("open ") : ""),
@@ -3987,9 +3987,9 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
         for (j = 0; j < dev->numdevid; j++)
         {
             if (j == 0)
-                logmsg("%4.4x SNSID 00 ",dev->devnum);
+                logmsg("%1d:%04X SNSID 00 ", SSID_TO_LCSS(dev->ssid), dev->devnum);
             else if (j%16 == 0)
-                logmsg("\n           %2.2x ", j);
+                logmsg("\n             %2.2x ", j);
             if (j%4 == 0)
                 logmsg(" ");
             logmsg("%2.2x", dev->devid[j]);
@@ -4000,9 +4000,9 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
         for (j = 0; j < dev->numdevchar; j++)
         {
             if (j == 0)
-                logmsg("%4.4x RDC   00 ",dev->devnum);
+                logmsg("%1d:%04X RDC   00 ", SSID_TO_LCSS(dev->ssid), dev->devnum);
             else if (j%16 == 0)
-                logmsg("\n           %2.2x ", j);
+                logmsg("\n             %2.2x ", j);
             if (j%4 == 0)
                 logmsg(" ");
             logmsg("%2.2x", dev->devchar[j]);
@@ -4015,9 +4015,9 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
         for (j = 0; j < 256; j++)
         {
             if (j == 0)
-                logmsg("%4.4x RCD   00 ",dev->devnum);
+                logmsg("%1d:%04X RCD   00 ", SSID_TO_LCSS(dev->ssid), dev->devnum);
             else if (j%16 == 0)
-                logmsg(" |%s|\n           %2.2x ", cbuf, j);
+                logmsg(" |%s|\n             %2.2x ", cbuf, j);
             if (j%4 == 0)
                 logmsg(" ");
             logmsg("%2.2x", iobuf[j]);
@@ -4030,9 +4030,9 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
         for (j = 0; j < num; j++)
         {
             if (j == 0)
-                logmsg("%4.4x SNSS  00 ",dev->devnum);
+                logmsg("%1d:%04X SNSS  00 ", SSID_TO_LCSS(dev->ssid), dev->devnum);
             else if (j%16 == 0)
-                logmsg("\n           %2.2x ", j);
+                logmsg("\n             %2.2x ", j);
             if (j%4 == 0)
                 logmsg(" ");
             logmsg("%2.2x", iobuf[j]);
@@ -4786,9 +4786,12 @@ char   **init_argv;
     if (dev->busy || IOPENDING(dev)
      || (dev->scsw.flag3 & SCSW3_SC_PEND))
     {
-        release_lock (&dev->lock);
-        WRITEMSG(HHCMD096E, lcss, devnum );
-        return -1;
+        if (!sysblk.sys_reset)      // is the system in a reset status?
+        {
+            release_lock (&dev->lock);
+            WRITEMSG(HHCMD096E, lcss, devnum );
+            return -1;
+        }
     }
 
     /* Prevent accidental re-init'ing of already loaded tape drives */
@@ -5436,21 +5439,21 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
         else
             sprintf (sysid, "id=%d", dev->ioactive);
         if (dev->busy && !(dev->suspended && dev->ioactive == DEV_SYS_NONE))
-            logmsg( _("          DEV %d:%4.4X: busy %s\n"), SSID_TO_LCSS(dev->ssid), dev->devnum, sysid );
+            logmsg( _("          DEV %1d:%04X: busy %s\n"), SSID_TO_LCSS(dev->ssid), dev->devnum, sysid );
         if (dev->reserved)
-            logmsg( _("          DEV %d:%4.4X: reserved %s\n"), SSID_TO_LCSS(dev->ssid), dev->devnum, sysid );
+            logmsg( _("          DEV %1d:%04X: reserved %s\n"), SSID_TO_LCSS(dev->ssid), dev->devnum, sysid );
         if (dev->suspended)
-            logmsg( _("          DEV %d:%4.4X: suspended\n"), SSID_TO_LCSS(dev->ssid), dev->devnum );
+            logmsg( _("          DEV %1d:%04X: suspended\n"), SSID_TO_LCSS(dev->ssid), dev->devnum );
         if (dev->pending && (dev->pmcw.flag5 & PMCW5_V))
-            logmsg( _("          DEV %d:%4.4X: I/O pending\n"), SSID_TO_LCSS(dev->ssid), dev->devnum );
+            logmsg( _("          DEV %1d:%04X: I/O pending\n"), SSID_TO_LCSS(dev->ssid), dev->devnum );
         if (dev->pcipending && (dev->pmcw.flag5 & PMCW5_V))
-            logmsg( _("          DEV %d:%4.4X: PCI pending\n"), SSID_TO_LCSS(dev->ssid), dev->devnum );
+            logmsg( _("          DEV %1d:%04X: PCI pending\n"), SSID_TO_LCSS(dev->ssid), dev->devnum );
         if (dev->attnpending && (dev->pmcw.flag5 & PMCW5_V))
-            logmsg( _("          DEV %d:%4.4X: Attn pending\n"), SSID_TO_LCSS(dev->ssid), dev->devnum );
+            logmsg( _("          DEV %1d:%04X: Attn pending\n"), SSID_TO_LCSS(dev->ssid), dev->devnum );
         if ((dev->crwpending) && (dev->pmcw.flag5 & PMCW5_V))
-            logmsg( _("          DEV %d:%4.4X: CRW pending\n"), SSID_TO_LCSS(dev->ssid), dev->devnum );
+            logmsg( _("          DEV %1d:%04X: CRW pending\n"), SSID_TO_LCSS(dev->ssid), dev->devnum );
         if (test_lock(&dev->lock) && (dev->pmcw.flag5 & PMCW5_V))
-            logmsg( _("          DEV %d:%4.4X: lock held\n"), SSID_TO_LCSS(dev->ssid), dev->devnum );
+            logmsg( _("          DEV %1d:%04X: lock held\n"), SSID_TO_LCSS(dev->ssid), dev->devnum );
     }
 
     logmsg( _("          I/O interrupt queue: ") );
@@ -5462,7 +5465,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
     for (io = sysblk.iointq; io; io = io->next)
         logmsg
         (
-            _("          DEV %d:%4.4X,%s%s%s%s, pri %d\n")
+            _("          DEV %1d:%04X,%s%s%s%s, pri %d\n")
 
             ,SSID_TO_LCSS(io->dev->ssid)
             ,io->dev->devnum

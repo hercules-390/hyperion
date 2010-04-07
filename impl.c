@@ -1,4 +1,4 @@
-/* IMPL.C       (c) Copyright Roger Bowler, 1999-2009                */
+/* IMPL.C       (c) Copyright Roger Bowler, 1999-2010                */
 /*              Hercules Initialization Module                       */
 
 // $Id$
@@ -10,44 +10,6 @@
 /* control panel which runs under the main thread when in foreground */
 /* mode.                                                             */
 /*-------------------------------------------------------------------*/
-
-// $Log$
-// Revision 1.130  2009/01/15 17:36:44  jj
-// Change http server startup
-//
-// Revision 1.129  2009/01/07 16:00:43  bernard
-// add msghldsec command
-//
-// Revision 1.128  2008/11/04 05:56:31  fish
-// Put ensure consistent create_thread ATTR usage change back in
-//
-// Revision 1.127  2008/11/03 15:31:54  rbowler
-// Back out consistent create_thread ATTR modification
-//
-// Revision 1.126  2008/10/24 13:47:11  fish
-// Fix RC file not processed nor HAO thread engaged if -d daemon mode
-//
-// Revision 1.125  2008/10/18 09:32:21  fish
-// Ensure consistent create_thread ATTR usage
-//
-// Revision 1.124  2007/12/10 23:12:02  gsmith
-// Tweaks to OPTION_MIPS_COUNTING processing
-//
-// Revision 1.123  2007/06/23 00:04:14  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.122  2007/02/27 21:59:32  kleonard
-// PR# misc/87 startup messages fix completion
-//
-// Revision 1.121  2007/01/13 07:29:22  bernard
-// backout ccmask
-//
-// Revision 1.120  2007/01/12 16:43:44  bernard
-// ccmask phase 1
-//
-// Revision 1.119  2006/12/08 09:43:28  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 
@@ -395,8 +357,15 @@ TID     logcbtid;                       /* RC file thread identifier */
     /* Clear the system configuration block */
     memset (&sysblk, 0, sizeof(SYSBLK));
 
+    /* Set program name */
+    if ( argc > 0 || ( ( sysblk.hercules_pgmname = strdup(argv[0]) ) == NULL ) )
+        sysblk.hercules_pgmname = strdup("hercules");
+
     /* set default operator mode to all */
     sysblk.sysgroup = SYSGROUP_ALL;
+
+    /* set default system state to reset */
+    sysblk.sys_reset = TRUE; 
 
     /* set default SHCMDOPT enabled     */
     sysblk.shcmdopt = SHCMDOPT_ENABLE + SHCMDOPT_DIAG8;
@@ -489,10 +458,13 @@ TID     logcbtid;                       /* RC file thread identifier */
         cfgfile = "hercules.cnf";
 
     /* Process the command line options */
-    while ((c = getopt(argc, argv, "f:p:l:db:")) != EOF)
+    while ((c = getopt(argc, argv, "hf:p:l:db:")) != EOF)
     {
 
         switch (c) {
+        case 'h':
+            arg_error = 1;
+            break;
         case 'f':
             cfgfile = optarg;
             break;
@@ -529,12 +501,11 @@ TID     logcbtid;                       /* RC file thread identifier */
     /* Terminate if invalid arguments were detected */
     if (arg_error)
     {
-        logmsg("usage: %s [-f config-filename] [-d] [-b logo-filename]"
 #if defined(OPTION_DYNAMIC_LOAD)
-                " [-p dyn-load-dir] [[-l dynmod-to-load]...]"
+        WRITEMSG (HHCIN999S, sysblk.hercules_pgmname, " [-p dyn-load-dir] [[-l dynmod-to-load]...]");
+#else
+        WRITEMSG (HHCIN999S, sysblk.hercules_pgmname, "");
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
-                " [> logfile]\n",
-                argv[0]);
         delayed_exit(1);
     }
 

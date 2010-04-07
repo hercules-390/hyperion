@@ -1,8 +1,8 @@
-/* IPL.C        (c) Copyright Roger Bowler, 1999-2009                */
+/* IPL.C        (c) Copyright Roger Bowler, 1999-2010                */
 /*              ESA/390 Initial Program Loader                       */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2010      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2010      */
 
 // $Id$
 
@@ -109,6 +109,9 @@ int ARCH_DEP(system_reset) (int cpu, int clear)
     sysblk.topchnge = 0;
 #endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
 
+    /* set default system state to reset */
+    sysblk.sys_reset = TRUE; 
+
     /* ZZ FIXME: we should probably present a machine-check
        if we encounter any errors during the reset (rc != 0) */
     return rc;
@@ -205,7 +208,7 @@ BYTE    chanstat;                       /* IPL device channel status */
     {
         WRITEMSG (HHCCP027E, devnum,
                 (sysblk.arch_mode == ARCH_370 ?
-                  " or not conneceted to channelset" : ""));
+                  " or not connected to channelset" : ""));
         HDC1(debug_cpu_state, regs);
         return -1;
     }
@@ -340,6 +343,9 @@ int ARCH_DEP(common_load_finish) (REGS *regs)
 
     /* The actual IPL (load) is now completed... */
     regs->loadstate = 0;
+
+    /* reset sys_reset flag to indicate a active machine */
+    sysblk.sys_reset = FALSE; 
 
     /* Signal the CPU to retest stopped indicator */
     WAKEUP_CPU (regs);
@@ -560,6 +566,7 @@ int system_reset (int cpu, int clear)
             return s390_system_reset (cpu, clear);
 #endif
     }
+
     return -1;
 }
 
