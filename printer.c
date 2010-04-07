@@ -179,7 +179,7 @@ static void* spthread (DEVBLK* dev)
         char thread_name[32];
         thread_name[sizeof(thread_name)-1] = 0;
         snprintf( thread_name, sizeof(thread_name)-1,
-            "spthread %d:%4.4X", SSID_TO_LCSS(dev->ssid), dev->devnum );
+            "spthread %1d:%04X", SSID_TO_LCSS(dev->ssid), dev->devnum );
         SET_THREAD_NAME( thread_name );
     }
 

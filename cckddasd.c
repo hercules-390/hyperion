@@ -4127,7 +4127,7 @@ int             rc;                     /* Return code               */
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        WRITEMSG (HHCCD205W, dev->devnum);
+        WRITEMSG (HHCCD205W,  SSID_TO_LCSS(dev->ssid), dev->devnum);
         return NULL;
     }
 
@@ -4140,7 +4140,7 @@ int             rc;                     /* Return code               */
     {
         dev->syncio = syncio;
         release_lock (&cckd->iolock);
-        WRITEMSG (HHCCD206W, dev->devnum,cckd->sfn);
+        WRITEMSG (HHCCD206W,  SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn);
         return NULL;
     }
     cckd->merging = 1;
@@ -4214,7 +4214,7 @@ int             level = 2;              /* Check level               */
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        WRITEMSG (HHCCD205W, dev->devnum);
+        WRITEMSG (HHCCD205W,  SSID_TO_LCSS(dev->ssid), dev->devnum);
         return NULL;
     }
 
@@ -4230,7 +4230,7 @@ int             level = 2;              /* Check level               */
     {
         dev->syncio = syncio;
         release_lock (&cckd->iolock);
-        WRITEMSG (HHCCD202W, dev->devnum,cckd->sfn);
+        WRITEMSG (HHCCD202W, SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn);
         return NULL;
     }
     cckd->merging = 1;
@@ -4304,7 +4304,7 @@ int             freenbr=0;              /* Total number free spaces  */
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        WRITEMSG (HHCCD209W, dev->devnum);
+        WRITEMSG (HHCCD205W, SSID_TO_LCSS(dev->ssid), dev->devnum);
         return NULL;
     }
 
@@ -4321,35 +4321,35 @@ int             freenbr=0;              /* Total number free spaces  */
     }
 
     /* header */
-    WRITEMSG (HHCCD210I);
+    WRITEMSG (HHCCD210I, SSID_TO_LCSS(dev->ssid), dev->devnum);
     if (cckd->readaheads || cckd->misses)
-    WRITEMSG (HHCCD211I);
-    WRITEMSG (HHCCD212I);
+    WRITEMSG (HHCCD211I, SSID_TO_LCSS(dev->ssid), dev->devnum);
+    WRITEMSG (HHCCD212I, SSID_TO_LCSS(dev->ssid), dev->devnum);
 
     /* total statistics */
-    WRITEMSG (HHCCD213I,
+    WRITEMSG (HHCCD213I, SSID_TO_LCSS(dev->ssid), dev->devnum,
             size, (free * 100) / size, freenbr,
             cckd->totreads, cckd->totwrites, cckd->totl2reads,
             cckd->cachehits, cckd->switches);
     if (cckd->readaheads || cckd->misses)
-    WRITEMSG (HHCCD214I,
+    WRITEMSG (HHCCD214I, SSID_TO_LCSS(dev->ssid), dev->devnum,
             cckd->readaheads, cckd->misses);
 
     /* base file statistics */
-    WRITEMSG (HHCCD215I, dev->filename);
-    WRITEMSG (HHCCD216I,
+    WRITEMSG (HHCCD215I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+    WRITEMSG (HHCCD216I, SSID_TO_LCSS(dev->ssid), dev->devnum,
             (long long)st.st_size,
             (long long)((long long)((long long)cckd->cdevhdr[0].free_total * 100) / st.st_size),
             cckd->cdevhdr[0].free_number, ost[cckd->open[0]],
             cckd->reads[0], cckd->writes[0], cckd->l2reads[0]);
 
     if (dev->dasdsfn != NULL && CCKD_MAX_SF > 0)
-        WRITEMSG (HHCCD217I, cckd_sf_name(dev, -1));
+        WRITEMSG (HHCCD217I, SSID_TO_LCSS(dev->ssid), dev->devnum, cckd_sf_name(dev, -1));
 
     /* shadow file statistics */
     for (i = 1; i <= cckd->sfn; i++)
     {
-        WRITEMSG (HHCCD218I,
+        WRITEMSG (HHCCD218I, SSID_TO_LCSS(dev->ssid), dev->devnum, 
                 i, (long long)cckd->cdevhdr[i].size,
                 (long long)((long long)((long long)cckd->cdevhdr[i].free_total * 100) / cckd->cdevhdr[i].size),
                 cckd->cdevhdr[i].free_number, ost[cckd->open[i]],
@@ -4797,8 +4797,8 @@ BYTE            buf[256*1024];          /* Buffer                    */
 
 cckd_gc_perc_space_error:
 
-    WRITEMSG (HHCCD190E,
-            SSID_TO_LCSS(dev->ssid), dev->devnum,cckd->sfn,(long long)(upos + i),
+    WRITEMSG (HHCCD190E, SSID_TO_LCSS(dev->ssid), dev->devnum, 
+            cckd->sfn,(long long)(upos + i),
             buf[i], buf[i+1],buf[i+2], buf[i+3], buf[i+4]);
     cckd->cdevhdr[cckd->sfn].options |= CCKD_SPERRS;
     cckd_print_itrace();
@@ -5668,7 +5668,7 @@ int             l;
 
         if (p)
         {
-            l = sprintf ((char *)p, "%s" "." "%6.6ld %d:%4.4X> ",
+            l = sprintf ((char *)p, "%s" "." "%6.6ld %1d:%04X> ",
                 tbuf+11, tv.tv_usec, dev ? SSID_TO_LCSS(dev->ssid) : 0, dev ? dev->devnum : 0);
             vsprintf ((char *)p + l, msg, vl);
         }

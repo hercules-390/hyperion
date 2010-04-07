@@ -1931,7 +1931,7 @@ void int_scsi_status_update( DEVBLK* dev, int mountstat_only ) // (internal call
         (
             buf, sizeof(buf),
 
-            "Device(%d:%4.4X) File(%s) (%s), sstat=0x%8.8lX: %s %s"
+            "Device(%1d:%04X) File(%s) (%s), sstat=0x%8.8lX: %s %s"
 
             ,SSID_TO_LCSS(dev->ssid)
             ,dev->devnum
@@ -2012,7 +2012,7 @@ void *scsi_tapemountmon_thread( void *db )
     int fd, timeout, shutdown = 0;
     char buf[50];
 
-    sprintf(buf, "Device(%d:%4.4X) SCSI-TAPE mount monitor", SSID_TO_LCSS(dev->ssid) ,dev->devnum);
+    sprintf(buf, "Device(%1d:%04X) SCSI-TAPE mount monitor", SSID_TO_LCSS(dev->ssid) ,dev->devnum);
     WRITEMSG
     (
         HHCTA300I

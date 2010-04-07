@@ -78,7 +78,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     if (pathlen < 7
         || strncasecmp(dev->filename+pathlen-7, "/tapes/", 7) != 0)
     {
-        WRITEMSG (HHCTAxxxI, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename+pathlen);
+        WRITEMSG (HHCTA232I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename+pathlen);
         return -1;
     }
     pathlen -= 7;
@@ -89,7 +89,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     fd = open (pathname, O_RDONLY | O_BINARY);
     if (fd < 0)
     {
-        WRITEMSG (HHCTA122E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "open()", strerror(errno));
+        WRITEMSG (HHCTA239E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, strerror(errno));
         return -1;
     }
 
@@ -97,7 +97,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     rc = fstat (fd, &statbuf);
     if (rc < 0)
     {
-        WRITEMSG (HHCTA122E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "fstat()", strerror(errno));
+        WRITEMSG (HHCTA240E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, strerror(errno));
         close (fd);
         return -1;
     }
@@ -107,7 +107,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     tdfbuf = malloc (tdfsize);
     if (tdfbuf == NULL)
     {
-        WRITEMSG (HHCTA122E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "malloc()", strerror(errno));
+        WRITEMSG (HHCTA241E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, strerror(errno));
         close (fd);
         return -1;
     }
@@ -116,7 +116,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     rc = read (fd, tdfbuf, tdfsize);
     if (rc < tdfsize)
     {
-        WRITEMSG (HHCTA122E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "read()", strerror(errno));
+        WRITEMSG (HHCTA242E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, strerror(errno));
         free (tdfbuf);
         close (fd);
         return -1;
@@ -128,7 +128,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /* Check that the first record is a TDF header */
     if (memcmp(tdfbuf, "@TDF", 4) != 0)
     {
-        WRITEMSG (HHCTA122E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "read_omadesc()", "not a valid TDF file");
+        WRITEMSG (HHCTA243E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
         free (tdfbuf);
         return -1;
     }
@@ -146,7 +146,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     tdftab = (OMATAPE_DESC*)malloc (filecount * sizeof(OMATAPE_DESC));
     if (tdftab == NULL)
     {
-        WRITEMSG (HHCTA122E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "malloc()", strerror(errno));
+        WRITEMSG (HHCTA244E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, strerror(errno));
         free (tdfbuf);
         return -1;
     }
@@ -204,7 +204,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if (pathlen + 1 + strlen(tdffilenm)
                 > sizeof(tdftab[filecount].filename) - 1)
         {
-            WRITEMSG (HHCTA246E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, tdffilenm, stmt);
+            WRITEMSG (HHCTA246E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, stmt, tdffilenm);
             free (tdftab);
             free (tdfbuf);
             return -1;
@@ -265,7 +265,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 || sscanf(tdfblklen, "%u%c", &blklen, &c) != 1
                 || blklen < 1 || blklen > MAX_BLKLEN)
             {
-                WRITEMSG (HHCTA248E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, tdfblklen, stmt);
+                WRITEMSG (HHCTA248E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, stmt, tdfblklen);
                 free (tdftab);
                 free (tdfbuf);
                 return -1;
@@ -277,7 +277,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         }
         else
         {
-            WRITEMSG (HHCTA249E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, tdfformat, stmt);
+            WRITEMSG (HHCTA249E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, stmt, tdfformat);
             free (tdftab);
             free (tdfbuf);
             return -1;
@@ -340,7 +340,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 #if 0
     if (dev->curfilen >= dev->omafiles)
     {
-        WRITEMSG (HHCTAxxxE, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+        WRITEMSG (HHCTA250E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
 
         build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
         return -1;
@@ -1159,7 +1159,7 @@ void close_omatape2(DEVBLK *dev)
 {
     if (dev->fd >= 0)
     {
-	WRITEMSG (HHCTA101I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "OMA");
+        WRITEMSG (HHCTA101I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "OMA");
         close (dev->fd);
     }
     dev->fd=-1;

@@ -1,4 +1,4 @@
-/* CONSOLE.C    (c)Copyright Roger Bowler, 1999-2009                 */
+/* CONSOLE.C    (c)Copyright Roger Bowler, 1999-2010                 */
 /*              ESA/390 Console Device Handler                       */
 
 // $Id$
@@ -1843,7 +1843,7 @@ char                    *logoout;
     }
     else
     {
-        snprintf (devmsg, sizeof(devmsg), "Connected to device %d:%4.4X",
+        snprintf (devmsg, sizeof(devmsg), "Connected to device %1d:%04X",
                   SSID_TO_LCSS(dev->ssid), dev->devnum);
     }
 

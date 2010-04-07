@@ -945,10 +945,10 @@ static void logdump(char *txt,DEVBLK *dev,BYTE *bfr,size_t sz)
     {
         return;
     }
-    logmsg(_("HHCCA300D Device(%d:%4.4X): %s\n"),
+    logmsg(_("HHCCA300D Device(%1d:%04X): %s\n"),
             SSID_TO_LCSS(dev->ssid), dev->devnum,
             txt);
-    logmsg(_("HHCCA300D Device(%d:%4.4X): %s : Dump of %d (%x) byte(s)\n"),SSID_TO_LCSS(dev->ssid),dev->devnum,txt,sz,sz);
+    logmsg(_("HHCCA300D Device(%1d:%04X): %s : Dump of %d (%x) byte(s)\n"),SSID_TO_LCSS(dev->ssid),dev->devnum,txt,sz,sz);
     for(i=0;i<sz;i++)
     {
         if(i%16==0)
@@ -957,7 +957,7 @@ static void logdump(char *txt,DEVBLK *dev,BYTE *bfr,size_t sz)
             {
                 logmsg("\n");
             }
-            logmsg(_("HHCCA300D Device(%d:%4.4X): %s : %4.4X:"),SSID_TO_LCSS(dev->ssid),dev->devnum,txt,i);
+            logmsg(_("HHCCA300D Device(%1d:%04X): %s : %4.4X:"),SSID_TO_LCSS(dev->ssid),dev->devnum,txt,i);
         }
         if(i%4==0)
         {
@@ -965,14 +965,14 @@ static void logdump(char *txt,DEVBLK *dev,BYTE *bfr,size_t sz)
         }
         logmsg("%2.2X",bfr[i]);
     }
-    logmsg("\nHHCCA300D Device(%d:%4.4X): ",SSID_TO_LCSS(dev->ssid),dev->devnum);
+    logmsg("\nHHCCA300D Device(%1d:%04X): ",SSID_TO_LCSS(dev->ssid),dev->devnum);
     for(i=0;i<sz;i++)
     {
         if(i%16==0)
         {
             if(i!=0)
             {
-                logmsg("\nHHCCA300D Device(%d:%4.4X): ",SSID_TO_LCSS(dev->ssid),dev->devnum);
+                logmsg("\nHHCCA300D Device(%1d:%04X): ",SSID_TO_LCSS(dev->ssid),dev->devnum);
             }
         }
         logmsg (_("%c"),(bfr[i] & 0x7f) < 0x20 ? '.' : (bfr[i] & 0x7f));
@@ -1036,7 +1036,7 @@ static void commadpt_clean_device(DEVBLK *dev)
         dev->commadpt=NULL;
         if(dev->ccwtrace)
         {
-                logmsg(_("HHCCA300D Device(%d:%4.4X): clean : Control block freed\n"),
+                logmsg(_("HHCCA300D Device(%1d:%04X): clean : Control block freed\n"),
                         SSID_TO_LCSS(dev->ssid),
                         dev->devnum);
         }
@@ -1045,7 +1045,7 @@ static void commadpt_clean_device(DEVBLK *dev)
     {
         if(dev->ccwtrace)
         {
-                logmsg(_("HHCCA300D Device(%d:%4.4X): clean : Control block not freed : not allocated\n"),
+                logmsg(_("HHCCA300D Device(%1d:%04X): clean : Control block not freed : not allocated\n"),
                         SSID_TO_LCSS(dev->ssid),
                         dev->devnum);
         }
@@ -1147,7 +1147,7 @@ static void commadpt_read_tty(COMMADPT *ca, BYTE * bfr, int len)
         if (ca->telnet_opt) {
             ca->telnet_opt = 0;
                   if(ca->dev->ccwtrace)
-                      logmsg(_("HHCCA300D Device(%d:%4.4X): Received TELNET CMD 0x%02x 0x%02x\n"),
+                      logmsg(_("HHCCA300D Device(%1d:%04X): Received TELNET CMD 0x%02x 0x%02x\n"),
                         SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum,
                         ca->telnet_cmd, c);
             bfr3[0] = 0xff;  /* IAC */
@@ -1158,7 +1158,7 @@ static void commadpt_read_tty(COMMADPT *ca, BYTE * bfr, int len)
                               write_socket(ca->sfd,bfr3,3);
                           }
                   if(ca->dev->ccwtrace)
-                logmsg(_("HHCCA300D Device(%d:%4.4X): Sending TELNET CMD 0x%02x 0x%02x\n"),
+                logmsg(_("HHCCA300D Device(%1d:%04X): Sending TELNET CMD 0x%02x 0x%02x\n"),
                         SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum,
                         bfr3[1], bfr3[2]);
             continue;
@@ -1166,7 +1166,7 @@ static void commadpt_read_tty(COMMADPT *ca, BYTE * bfr, int len)
         if (ca->telnet_iac) {
             ca->telnet_iac = 0;
                   if(ca->dev->ccwtrace)
-                logmsg(_("HHCCA300D Device(%d:%4.4X): Received TELNET IAC 0x%02x\n"),
+                logmsg(_("HHCCA300D Device(%1d:%04X): Received TELNET IAC 0x%02x\n"),
                         SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum,
                         c);
             switch (c) {
@@ -1216,7 +1216,7 @@ static void commadpt_read_tty(COMMADPT *ca, BYTE * bfr, int len)
                    ca->rlen3270 = 0; /* for next msg */
         }
                    if(ca->dev->ccwtrace)
-                       logmsg(_("HHCCA300D Device(%d:%4.4X): posted %d input bytes\n"),
+                       logmsg(_("HHCCA300D Device(%1d:%04X): posted %d input bytes\n"),
                             SSID_TO_LCSS(ca->dev->ssid), 
                             ca->dev->devnum,
                             ca->inpbufl);
@@ -1350,7 +1350,7 @@ static void *commadpt_thread(void *vca)
 
     init_signaled=0;
 
-    sprintf(threadname, "3705 device(%d:%4.4X) thread", ca->dev->ssid, devnum);
+    sprintf(threadname, "3705 device(%1d:%04X) thread", ca->dev->ssid, devnum);
     WRITEMSG(HHCCA002I,thread_id(), getpid(), getpriority(PRIO_PROCESS,0), threadname);
 
     for (;;) {
@@ -1366,7 +1366,7 @@ static void *commadpt_thread(void *vca)
                     ca->unack_attn_count++;
                     rc = device_attention(ca->dev, CSW_ATTN);
                     if(ca->dev->ccwtrace)
-                        logmsg(_("HHCCA300D Device(%d:%4.4X): Raised attention rc = %d\n"), 
+                        logmsg(_("HHCCA300D Device(%1d:%04X): Raised attention rc = %d\n"), 
                                 SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, rc);
                 }
     }
@@ -1413,7 +1413,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         dev->devtype=0x3705;
         if(dev->ccwtrace)
         {
-            logmsg(_("HHCCA300D Device(%d:%4.4X): Initialization starting\n"),
+            logmsg(_("HHCCA300D Device(%1d:%04X): Initialization starting\n"),
                 SSID_TO_LCSS(dev->ssid), dev->devnum);
         }
 
@@ -1429,7 +1429,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         }
         if(dev->ccwtrace)
         {
-            logmsg(_("HHCCA300D Device(%d:%4.4X): Initialization : Control block allocated\n"),
+            logmsg(_("HHCCA300D Device(%1d:%04X): Initialization : Control block allocated\n"),
                 SSID_TO_LCSS(dev->ssid), dev->devnum);
         }
         errcnt=0;
@@ -1525,7 +1525,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
 
     /* Set thread-name for debugging purposes */
         snprintf(thread_name2,sizeof(thread_name2),
-            "commadpt %d:%4.4X thread2",dev->ssid,dev->devnum);
+            "commadpt %1d:%04X thread2",dev->ssid,dev->devnum);
         thread_name2[sizeof(thread_name2)-1]=0;
 
         if(create_thread(&dev->commadpt->tthread,&sysblk.detattr,telnet_thread,dev->commadpt,thread_name2))
@@ -1539,7 +1539,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
 
     /* Set thread-name for debugging purposes */
         snprintf(thread_name,sizeof(thread_name),
-            "commadpt %d:%4.4X thread",dev->ssid,dev->devnum);
+            "commadpt %1d:%04X thread",dev->ssid,dev->devnum);
         thread_name[sizeof(thread_name)-1]=0;
 
         if(create_thread(&dev->commadpt->cthread,&sysblk.detattr,commadpt_thread,dev->commadpt,thread_name))
@@ -1574,7 +1574,7 @@ static int commadpt_close_device ( DEVBLK *dev )
 {
     if(dev->ccwtrace)
     {
-        logmsg(_("HHCCA300D Device(%d:%4.4X): Closing down\n"),SSID_TO_LCSS(dev->ssid), dev->devnum);
+        logmsg(_("HHCCA300D Device(%1d:%04X): Closing down\n"),SSID_TO_LCSS(dev->ssid), dev->devnum);
     }
 
     /* Obtain the CA lock */
@@ -1599,7 +1599,7 @@ static int commadpt_close_device ( DEVBLK *dev )
 
     if(dev->ccwtrace)
     {
-        logmsg(_("HHCCA300D Device(%d:%4.4X): Closed down\n"),SSID_TO_LCSS(dev->ssid), dev->devnum);
+        logmsg(_("HHCCA300D Device(%1d:%04X): Closed down\n"),SSID_TO_LCSS(dev->ssid), dev->devnum);
     }
     return 0;
 }
@@ -1690,7 +1690,7 @@ static void format_sna (BYTE * requestp, char * tag, U16 ssid, U16 devnum) {
           ru_type = "DACTCONNIN";
        if ((requestp[10] & 0x08) == 0)
           ru_type = "";
-       sprintf(fmtbuf5, "HHCCA300D Device(%d:%4.4X): %s: %s %s %-6.6s %s\n", 
+       sprintf(fmtbuf5, "HHCCA300D Device(%1d:%04X): %s: %s %s %-6.6s %s\n", 
            SSID_TO_LCSS(ssid), devnum, tag, fmtbuf, fmtbuf2, fmtbuf3, ru_type);
        logmsg(fmtbuf5);
 }
@@ -2147,7 +2147,7 @@ void    *eleptr;
      */
     if(dev->ccwtrace)
     {
-        logmsg(_("HHCCA300D Device(%d:%4.4X): CCW Exec - Entry code = %x\n"),
+        logmsg(_("HHCCA300D Device(%1d:%04X): CCW Exec - Entry code = %x\n"),
             SSID_TO_LCSS(dev->ssid), dev->devnum,code);
     }
     obtain_lock(&dev->commadpt->lock);

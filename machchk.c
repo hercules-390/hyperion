@@ -1,7 +1,7 @@
-/* MACHCHK.C    (c) Copyright Jan Jaeger, 2000-2009                  */
+/* MACHCHK.C    (c) Copyright Jan Jaeger, 2000-2010                  */
 /*              ESA/390 Machine Check Functions                      */
 
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2010      */
 
 // $Id$
 
@@ -18,20 +18,6 @@
 /* includes the machine check, checkstop, and malfunction alert      */
 /* external interrupt as defined in the architecture. - 6/8/01 *JJ   */
 /*-------------------------------------------------------------------*/
-
-// $Log$
-// Revision 1.51  2009/01/15 17:36:44  jj
-// Change http server startup
-//
-// Revision 1.50  2007/06/23 00:04:14  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.49  2007/01/16 01:45:33  gsmith
-// Tweaks to instruction stepping/tracing
-//
-// Revision 1.48  2006/12/08 09:43:28  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 
@@ -314,7 +300,7 @@ int i;
         }
         else
             if(dev->ccwtrace)
-                WRITEMSG(HHCCP021E,dev->devnum);
+                WRITEMSG(HHCCP021E, SSID_TO_LCSS(dev->ssid), dev->devnum);
         return;
     }
 

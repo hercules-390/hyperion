@@ -1,4 +1,4 @@
-/* CCKDUTIL.C   (c) Copyright Roger Bowler, 1999-2009                */
+/* CCKDUTIL.C   (c) Copyright Roger Bowler, 1999-2010                */
 /*       ESA/390 Compressed CKD Common routines                      */
 
 // $Id$
@@ -7,23 +7,6 @@
 /* This module contains functions for compressed CKD devices         */
 /* used by more than 1 main program.                                 */
 /*-------------------------------------------------------------------*/
-
-// $Log$
-// Revision 1.57  2008/09/04 22:03:15  gsmith
-// Fix 64-bit length problem in cdsk_valid_trk - Tony Harminc
-//
-// Revision 1.56  2007/12/01 23:31:57  fish
-// Fix cckdcdsk/cckdcomp/cckdutil no message o/p issue
-//
-// Revision 1.55  2007/08/28 20:22:41  gsmith
-// cckdutil fix for 64-bit - zhackules
-//
-// Revision 1.54  2007/06/23 00:04:03  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.53  2006/12/08 09:43:17  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 
@@ -2713,7 +2696,7 @@ char          msg[4096];
                  n, n < 400 ? 'I' : n < 700 ? 'W' : 'E');
 
     if (sfx >= 0)
-        i += sprintf (msg+i, "%d:%4.4X file[%d]: ", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx);
+        i += sprintf (msg+i, "%1d:%04X File[%d]: ", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx);
     else
     {
         if ((p = strrchr(dev->filename,  '/')) == NULL

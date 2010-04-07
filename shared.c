@@ -1,33 +1,7 @@
-/* SHARED.C     (c)Copyright Greg Smith, 2002-2009                   */
+/* SHARED.C     (c)Copyright Greg Smith, 2002-2010                   */
 /*              Shared Device Server                                 */
 
 // $Id$
-//
-// $Log$
-// Revision 1.41  2009/01/23 13:01:34  bernard
-// copyright notice
-//
-// Revision 1.40  2008/11/04 05:56:31  fish
-// Put ensure consistent create_thread ATTR usage change back in
-//
-// Revision 1.39  2008/11/03 15:31:53  rbowler
-// Back out consistent create_thread ATTR modification
-//
-// Revision 1.38  2008/10/18 09:32:21  fish
-// Ensure consistent create_thread ATTR usage
-//
-// Revision 1.37  2008/03/29 08:36:46  fish
-// More complete/extensive 3490/3590 tape support
-//
-// Revision 1.36  2007/06/23 00:04:15  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.35  2006/12/28 20:32:54  fish
-// Fix "HHCSH043I 0.0.0.0 disconnected from ..."; save clientip in SHRD block at connect and use at disconnect.
-//
-// Revision 1.34  2006/12/08 09:43:30  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 
@@ -259,7 +233,7 @@ init_retry:
         rc = clientConnect (dev, retry);
         if (rc < 0)
         {
-            WRITEMSG (HHCSH002W, dev->devnum, dev->filename);
+            WRITEMSG (HHCSH002W, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
             if (retry) SLEEP(5);
         }
     } while (retry && rc < 0);
@@ -276,7 +250,7 @@ init_retry:
         goto init_retry;
     else if (rc != 4)
     {
-        WRITEMSG (HHCSH003S, dev->devnum);
+        WRITEMSG (HHCSH003S, SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
     }
     dev->ckdcyls = fetch_fw (cyls);
@@ -288,7 +262,7 @@ init_retry:
         goto init_retry;
     else if (rc == 0 || rc > (int)sizeof(dev->devchar))
     {
-        WRITEMSG (HHCSH004S, dev->devnum);
+        WRITEMSG (HHCSH004S, SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
     }
     dev->numdevchar = rc;
@@ -305,7 +279,7 @@ init_retry:
         dev->devtype = fetch_hw (dev->devchar + 3);
     else if (dev->devtype != fetch_hw (dev->devchar + 3))
     {
-        WRITEMSG (HHCSH005S, dev->devnum, dev->rmtnum, fetch_hw (dev->devchar + 3));
+        WRITEMSG (HHCSH005S, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->rmtnum, fetch_hw (dev->devchar + 3));
         return -1;
     }
 
@@ -316,7 +290,7 @@ init_retry:
         goto init_retry;
     else if (rc == 0 || rc > (int)sizeof(dev->devid))
     {
-        WRITEMSG (HHCSH006S, dev->devnum);
+        WRITEMSG (HHCSH006S, SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
     }
     dev->numdevid = rc;
@@ -332,7 +306,7 @@ init_retry:
     dev->ckdtab = dasd_lookup (DASD_CKDDEV, NULL, dev->devtype, dev->ckdcyls);
     if (dev->ckdtab == NULL)
     {
-        WRITEMSG (HHCSH007S, dev->devnum, dev->devtype);
+        WRITEMSG (HHCSH007S, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->devtype);
         return -1;
     }
 
@@ -343,7 +317,7 @@ init_retry:
     dev->ckdcu = dasd_lookup (DASD_CKDCU, cu ? cu : dev->ckdtab->cu, 0, 0);
     if (dev->ckdcu == NULL)
     {
-        WRITEMSG (HHCSH008S, dev->devnum, cu ? cu : dev->ckdtab->cu);
+        WRITEMSG (HHCSH008S, SSID_TO_LCSS(dev->ssid), dev->devnum, cu ? cu : dev->ckdtab->cu);
         return -1;
     }
 
@@ -498,7 +472,7 @@ init_retry:
         rc = clientConnect (dev, retry);
         if (rc < 0)
         {
-            WRITEMSG (HHCSH002W, dev->devnum, dev->filename);
+            WRITEMSG (HHCSH002W, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
             if (retry) SLEEP(5);
         }
     } while (retry && rc < 0);
@@ -512,7 +486,7 @@ init_retry:
         goto init_retry;
     else if (rc != 4)
     {
-        WRITEMSG (HHCSH012S, dev->devnum);
+        WRITEMSG (HHCSH012S, SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
     }
     dev->fbaorigin = fetch_fw (origin);
@@ -523,7 +497,7 @@ init_retry:
         goto init_retry;
     else if (rc != 4)
     {
-        WRITEMSG (HHCSH013S, dev->devnum);
+        WRITEMSG (HHCSH013S, SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
     }
     dev->fbanumblk = fetch_fw (numblks);
@@ -534,7 +508,7 @@ init_retry:
         goto init_retry;
     else if (rc != 4)
     {
-        WRITEMSG (HHCSH014S, dev->devnum);
+        WRITEMSG (HHCSH014S, SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
     }
     dev->fbablksiz = fetch_fw (blksiz);
@@ -547,7 +521,7 @@ init_retry:
         goto init_retry;
     else if (rc == 0 || rc > (int)sizeof(dev->devid))
     {
-        WRITEMSG (HHCSH006S, dev->devnum);
+        WRITEMSG (HHCSH006S, SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
     }
     dev->numdevid = rc;
@@ -555,7 +529,7 @@ init_retry:
     /* Check the device type */
     if (dev->devtype != fetch_hw (dev->devid + 4))
     {
-        WRITEMSG (HHCSH005S, dev->devnum, dev->rmtnum, fetch_hw (dev->devid + 4));
+        WRITEMSG (HHCSH005S, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->rmtnum, fetch_hw (dev->devid + 4));
         return -1;
     }
 
@@ -566,7 +540,7 @@ init_retry:
         goto init_retry;
     else if (rc == 0 || rc > (int)sizeof(dev->devchar))
     {
-        WRITEMSG (HHCSH004S, dev->devnum);
+        WRITEMSG (HHCSH004S, SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
     }
     dev->numdevchar = rc;
@@ -582,7 +556,7 @@ init_retry:
     dev->fbatab = dasd_lookup (DASD_FBADEV, NULL, dev->devtype, dev->fbanumblk);
     if (dev->fbatab == NULL)
     {
-        WRITEMSG (HHCSH007S, dev->devnum, dev->devtype);
+        WRITEMSG (HHCSH007S, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->devtype);
         return -1;
     }
 
@@ -634,7 +608,7 @@ BYTE     buf[SHARED_PURGE_MAX * 4];     /* Purge list                */
                         SHRD_START, 0, &code, NULL);
     if (rc < 0)
     {
-        WRITEMSG(HHCSH020E, dev->devnum);
+        WRITEMSG(HHCSH020E, SSID_TO_LCSS(dev->ssid), dev->devnum);
         clientPurge (dev, 0, NULL);
         dev->cache = dev->bufcur = -1;
         dev->buf = NULL;
@@ -690,7 +664,7 @@ int      rc;                            /* Return code               */
     rc = clientRequest (dev, NULL, 0, SHRD_END, 0, NULL, NULL);
     if (rc < 0)
     {
-        WRITEMSG(HHCSH021E, dev->devnum);
+        WRITEMSG(HHCSH021E, SSID_TO_LCSS(dev->ssid), dev->devnum);
         clientPurge (dev, 0, NULL);
         dev->cache = dev->bufcur = -1;
         dev->buf = NULL;
@@ -794,7 +768,7 @@ read_retry:
     {
         ckd_build_sense (dev, SENSE_EC, 0, 0, FORMAT_1, MESSAGE_0);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        WRITEMSG(HHCSH022E, dev->devnum, trk);
+        WRITEMSG(HHCSH022E, SSID_TO_LCSS(dev->ssid), dev->devnum, trk);
         return -1;
     }
 
@@ -806,7 +780,7 @@ read_retry:
         if (rc < 0 && retries--) goto read_retry;
         ckd_build_sense (dev, SENSE_EC, 0, 0, FORMAT_1, MESSAGE_0);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        WRITEMSG(HHCSH022E, dev->devnum, trk);
+        WRITEMSG(HHCSH022E, SSID_TO_LCSS(dev->ssid), dev->devnum, trk);
         return -1;
     }
 
@@ -1005,7 +979,7 @@ read_retry:
     {
         dev->sense[0] = SENSE_EC;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        WRITEMSG(HHCSH024E, dev->devnum, blkgrp);
+        WRITEMSG(HHCSH024E, SSID_TO_LCSS(dev->ssid), dev->devnum, blkgrp);
         return -1;
     }
 
@@ -1017,7 +991,7 @@ read_retry:
         if (rc < 0 && retries--) goto read_retry;
         dev->sense[0] = SENSE_EC;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        WRITEMSG(HHCSH024E, dev->devnum, blkgrp);
+        WRITEMSG(HHCSH024E, SSID_TO_LCSS(dev->ssid), dev->devnum, blkgrp);
         return -1;
     }
 
@@ -1104,7 +1078,7 @@ FWORD    usage;                         /* Usage buffer              */
     rc = clientRequest (dev, usage, 4, SHRD_USED, 0, NULL, NULL);
     if (rc != 4)
     {
-        WRITEMSG (HHCSH026E, dev->devnum);
+        WRITEMSG (HHCSH026E, SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
     }
     return fetch_fw (usage);
@@ -1174,7 +1148,7 @@ write_retry:
     rc = clientSend (dev, hdr, dev->buf + dev->bufupdlo, len);
     if (rc < 0)
     {
-        WRITEMSG(HHCSH027E, dev->devnum, dev->bufcur);
+        WRITEMSG(HHCSH027E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bufcur);
         dev->bufupdlo = dev->bufupdhi = 0;
         clientPurge (dev, 0, NULL);
         return -1;
@@ -1186,7 +1160,7 @@ write_retry:
     if (rc < 0 || (code & SHRD_ERROR) || (code & SHRD_IOERR))
     {
         if (rc < 0 && retries--) goto write_retry;
-        WRITEMSG(HHCSH028E, dev->devnum, dev->bufcur, code, status);
+        WRITEMSG(HHCSH028E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bufcur, code, status);
         dev->bufupdlo = dev->bufupdhi = 0;
         clientPurge (dev, 0, NULL);
         return -1;
@@ -1270,7 +1244,7 @@ HWORD              comp;                /* Returned compression parm */
 #endif // defined( HAVE_SYS_UN_H )
             if (dev->fd < 0)
             {
-                WRITEMSG (HHCSH029E, dev->devnum, strerror(HSO_errno));
+                WRITEMSG (HHCSH029E, SSID_TO_LCSS(dev->ssid), dev->devnum, strerror(HSO_errno));
                 return -1;
             }
 #if defined( HAVE_SYS_UN_H )
@@ -1285,7 +1259,7 @@ HWORD              comp;                /* Returned compression parm */
             dev->fd = dev->ckdfd[0] = socket (AF_INET, SOCK_STREAM, 0);
             if (dev->fd < 0)
             {
-                WRITEMSG (HHCSH029E, dev->devnum, strerror(HSO_errno));
+                WRITEMSG (HHCSH029E, SSID_TO_LCSS(dev->ssid), dev->devnum, strerror(HSO_errno));
                 return -1;
             }
             iserver.sin_family      = AF_INET;
@@ -1302,7 +1276,7 @@ HWORD              comp;                /* Returned compression parm */
         if (rc >= 0)
         {
             if (!dev->batch)
-              WRITEMSG(HHCSH031I, dev->devnum, dev->filename);
+              WRITEMSG(HHCSH031I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
 
             /* Request device connection */
             flag = (SHARED_VERSION << 4) | SHARED_RELEASE;
@@ -1335,7 +1309,7 @@ HWORD              comp;                /* Returned compression parm */
 
         }
         else if (!retry)
-            WRITEMSG(HHCSH032E, dev->devnum, dev->filename, HSO_errno, strerror(HSO_errno));
+            WRITEMSG(HHCSH032E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, HSO_errno, strerror(HSO_errno));
 
         if (rc < 0 && retry) usleep (20000);
 
@@ -1505,7 +1479,7 @@ retry:
     /* Process return code */
     if (rc < 0)
     {
-        WRITEMSG(HHCSH033E, dev->devnum, HSO_errno, cmd, flag, strerror(HSO_errno));
+        WRITEMSG(HHCSH033E, SSID_TO_LCSS(dev->ssid), dev->devnum, HSO_errno, cmd, flag, strerror(HSO_errno));
         return -1;
     }
 
@@ -1531,7 +1505,7 @@ int      len;                           /* Response length           */
     /* Return error if not connected */
     if (dev->fd < 0)
     {
-        WRITEMSG(HHCSH034E, dev->devnum, dev->filename);
+        WRITEMSG(HHCSH034E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
         return -1;
     }
 
@@ -1540,7 +1514,7 @@ int      len;                           /* Response length           */
     if (rc < 0)
     {
         if (rc != -ENOTCONN)
-            WRITEMSG(HHCSH035E, dev->devnum, -rc, strerror(-rc));
+            WRITEMSG(HHCSH035E, SSID_TO_LCSS(dev->ssid), dev->devnum, -rc, strerror(-rc));
         return rc;
     }
     SHRD_GET_HDR(hdr, code, status, devnum, id, len);
@@ -1551,7 +1525,7 @@ int      len;                           /* Response length           */
     /* Handle remote logical error */
     if (code & SHRD_ERROR)
     {
-        WRITEMSG(HHCSH036E, dev->devnum, code, status, buf);
+        WRITEMSG(HHCSH036E, SSID_TO_LCSS(dev->ssid), dev->devnum, code, status, buf);
         len = 0;
     }
 
@@ -2258,7 +2232,7 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
     /* Process return code */
     if (rc < 0)
     {
-        WRITEMSG(HHCSH041E, dev->devnum, HSO_errno, id, strerror(HSO_errno));
+        WRITEMSG(HHCSH041E, SSID_TO_LCSS(dev->ssid), dev->devnum, HSO_errno, id, strerror(HSO_errno));
         dev->shrd[ix]->disconnect = 1;
     }
 
@@ -2296,7 +2270,7 @@ int i;                                  /* Loop index                */
        This is *not* a good situation */
     if (dev->ioactive == id)
     {
-        WRITEMSG(HHCSH042W, dev->devnum, id, dev->reserved ? "reserved" : "");
+        WRITEMSG(HHCSH042W, SSID_TO_LCSS(dev->ssid), dev->devnum, id, dev->reserved ? "reserved" : "");
 
         /* Call the I/O release exit if reserved by this client */
         if (dev->reserved && dev->hnd->release)
@@ -2327,7 +2301,7 @@ int i;                                  /* Loop index                */
             signal_condition (&dev->iocond);
     }
 
-    WRITEMSG(HHCSH043I, dev->shrd[ix]->ipaddr, dev->devnum, id);
+    WRITEMSG(HHCSH043I, dev->shrd[ix]->ipaddr, SSID_TO_LCSS(dev->ssid), dev->devnum, id);
 
     /* Release the SHRD block */
     close_socket (dev->shrd[ix]->fd);
@@ -2491,7 +2465,7 @@ char            threadname[40];
     dev->shrdtid = thread_id();
 
     /* This thread will be the shared device thread */
-    sprintf(threadname, "shared device(%4.4X)", dev->devnum);
+    sprintf(threadname, "shared device(%1d:%04X)", SSID_TO_LCSS(dev->ssid), dev->devnum);
     WRITEMSG (HHCSH045I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), threadname); 
 
     while (dev->shrdconn)
@@ -2593,7 +2567,7 @@ char            threadname[40];
             rc = recvData (dev->shrd[ix]->fd, hdr, buf, 65536, 1);
             if (rc < 0)
             {
-                WRITEMSG(HHCSH047E, dev->devnum, dev->shrd[ix]->ipaddr, dev->shrd[ix]->id);
+                WRITEMSG(HHCSH047E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->shrd[ix]->ipaddr, dev->shrd[ix]->id);
                 dev->shrd[ix]->disconnect = 1;
                 dev->shrd[ix]->pending = 0;
                 obtain_lock (&dev->lock);

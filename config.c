@@ -265,7 +265,7 @@ DEVBLK**dvpp;
     {
         if (!(dev = (DEVBLK*)malloc(sizeof(DEVBLK))))
         {
-            WRITEMSG (HHCMD043E, strerror(errno));
+            WRITEMSG (HHCMD043E, lcss, devnum, strerror(errno));
             return NULL;
         }
         memset (dev, 0, sizeof(DEVBLK));
@@ -380,16 +380,16 @@ int     i;                              /* Loop index                */
     /* Check whether device number has already been defined */
     if (find_device_by_devnum(lcss,devnum) != NULL)
     {
-        WRITEMSG (HHCMD041E, lcss,devnum);
+        WRITEMSG (HHCMD041E, lcss, devnum);
         return 1;
     }
 
     /* obtain device block */
-    dev = get_devblk(lcss,devnum);
+    dev = get_devblk(lcss, devnum);
 
     if(!(dev->hnd = hdl_ghnd(type)))
     {
-        WRITEMSG (HHCMD042E, type);
+        WRITEMSG (HHCMD042E, lcss, devnum, type);
 
         ret_devblk(dev);
 
@@ -417,7 +417,7 @@ int     i;                              /* Loop index                */
 
     if (rc < 0)
     {
-        WRITEMSG (HHCMD044E, devnum);
+        WRITEMSG (HHCMD044E, lcss, devnum);
 
         for (i = 0; i < dev->argc; i++)
             if (dev->argv[i])
@@ -468,7 +468,7 @@ int     i;                              /* Loop index                */
     /*
     if(lcss!=0 && sysblk.arch_mode==ARCH_370)
     {
-        logmsg(_("HHCMD078W %d:%4.4X : Only devices on CSS 0 are usable in S/370 mode\n"),lcss,devnum);
+        WRITEMSG (HHCMD079W, lcss, devnum);
     }
     */
 

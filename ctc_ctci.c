@@ -4,51 +4,13 @@
 //
 // Copyright    (C) Copyright James A. Pierson, 2002-2009
 //              (C) Copyright "Fish" (David B. Trout), 2002-2009
-//              (C) Copyright Roger Bowler, 2000-2009
+//              (C) Copyright Roger Bowler, 2000-2010
 //
 // linux 2.4 modifications (c) Copyright Fritz Elfert, 2001-2009
 //
 // $Id$
 //
-// $Log$
-// Revision 1.77  2008/11/04 05:56:31  fish
-// Put ensure consistent create_thread ATTR usage change back in
-//
-// Revision 1.76  2008/11/03 15:31:57  rbowler
-// Back out consistent create_thread ATTR modification
-//
-// Revision 1.75  2008/10/18 09:32:21  fish
-// Ensure consistent create_thread ATTR usage
-//
-// Revision 1.74  2008/07/17 07:19:12  fish
-// Fix FCS (Frame Check Sequence) bug in LCS_Write function
-// and other minor bugs.
-//
-// Revision 1.72  2008/07/17 03:30:40  fish
-// CTC/LCS cosmetic-only changes -- part 1
-// (no actual functionality was changed!)
-//
-// Revision 1.71  2008/02/07 00:29:04  rbowler
-// Solaris build support by Jeff Savit
-//
-// Revision 1.70  2008/01/11 21:33:21  fish
-// new 'ctc' command to enable/disable debug option on demand
-//
-// Revision 1.69  2007/11/21 22:54:14  fish
-// Use new BEGIN_DEVICE_CLASS_QUERY macro
-//
-// Revision 1.68  2007/07/29 02:02:44  fish
-// Fix day-1 CTCI/LCS bug found by Vince Weaver [vince@deater.net]
-//
-// Revision 1.67  2007/07/29 00:24:43  fish
-// (comment change only)
-//
-// Revision 1.66  2007/06/23 00:04:05  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.65  2006/12/08 09:43:19  jj
-// Add CVS message log
-//
+
 
 #include "hstdinc.h"
 
@@ -188,7 +150,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
     if( !pWrkCTCBLK )
     {
-        WRITEMSG(HHCCT037E, pDEVBLK->devnum );
+        WRITEMSG(HHCCT037E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
         return -1;
     }
 
@@ -208,7 +170,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
     if( !pDevCTCBLK )
     {
-        WRITEMSG(HHCCT037E, pDEVBLK->devnum );
+        WRITEMSG(HHCCT037E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
         free( pWrkCTCBLK );
         pWrkCTCBLK = NULL;
         return -1;
@@ -264,7 +226,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     }
     else
     {
-        WRITEMSG(HHCCT073I, pDevCTCBLK->pDEVBLK[0]->devnum,
+        WRITEMSG(HHCCT073I, SSID_TO_LCSS(pDevCTCBLK->pDEVBLK[0]->ssid), pDevCTCBLK->pDEVBLK[0]->devnum,
                   pDevCTCBLK->szTUNDevName);
     }
 
@@ -717,7 +679,7 @@ void  CTCI_Read( DEVBLK* pDEVBLK,   U16   sCount,
                     pDEVBLK->scsw.flag2 & SCSW2_FC_CLEAR )
                 {
                     if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
-                        WRITEMSG(HHCCT040I, pDEVBLK->devnum );
+                        WRITEMSG(HHCCT040I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
 
                     *pUnitStat = CSW_CE | CSW_DE;
                     *pResidual = sCount;
@@ -767,7 +729,7 @@ void  CTCI_Read( DEVBLK* pDEVBLK,   U16   sCount,
 
         if( pCTCBLK->fDebug )
         {
-            WRITEMSG(HHCCT041I, pDEVBLK->devnum, iLength );
+            WRITEMSG(HHCCT041I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, iLength );
             packet_trace( pCTCBLK->bFrameBuffer, iLength );
         }
 
@@ -808,7 +770,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
     // Check that CCW count is sufficient to contain block header
     if( sCount < sizeof( CTCIHDR ) )
     {
-        WRITEMSG(HHCCT042E, pDEVBLK->devnum, sCount );
+        WRITEMSG(HHCCT042E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, sCount );
 
         pDEVBLK->sense[0] = SENSE_DC;
         *pUnitStat        = CSW_CE | CSW_DE | CSW_UC;
@@ -836,7 +798,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
         FETCH_FW( iStackCmd, *((FWORD*)&pIOBuf[36]) );
 
         // Display stack command and discard the packet
-        WRITEMSG(HHCCT043I, pDEVBLK->devnum, szStackID, iStackCmd );
+        WRITEMSG(HHCCT043I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, szStackID, iStackCmd );
 
         *pUnitStat = CSW_CE | CSW_DE;
         *pResidual = 0;
@@ -884,7 +846,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
         // Check that the segment is fully contained within the block
         if( iPos + sizeof( CTCISEG ) > sOffset )
         {
-            WRITEMSG(HHCCT044E, pDEVBLK->devnum, iPos );
+            WRITEMSG(HHCCT044E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, iPos );
 
             pDEVBLK->sense[0] = SENSE_DC;
             *pUnitStat        = CSW_CE | CSW_DE | CSW_UC;
@@ -902,7 +864,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
             ( iPos + sSegLen > sOffset           ) ||
             ( iPos + sSegLen > sCount            ) )
         {
-            WRITEMSG(HHCCT045E, pDEVBLK->devnum, sSegLen, iPos );
+            WRITEMSG(HHCCT045E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, sSegLen, iPos );
 
             pDEVBLK->sense[0] = SENSE_DC;
             *pUnitStat        = CSW_CE | CSW_DE | CSW_UC;
@@ -915,7 +877,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
         // Trace the IP packet before sending to TUN device
         if( pCTCBLK->fDebug )
         {
-            WRITEMSG(HHCCT046I, pDEVBLK->devnum, pCTCBLK->szTUNDevName );
+            WRITEMSG(HHCCT046I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pCTCBLK->szTUNDevName );
             packet_trace( pSegment->bData, sDataLen );
         }
 
@@ -924,7 +886,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
 
         if( rc < 0 )
         {
-            WRITEMSG(HHCCT047E, pDEVBLK->devnum, pCTCBLK->szTUNDevName,
+            WRITEMSG(HHCCT047E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pCTCBLK->szTUNDevName,
                     strerror( errno ) );
 
             pDEVBLK->sense[0] = SENSE_EC;
@@ -1002,7 +964,7 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
         // Check for error condition
         if( iLength < 0 )
         {
-            WRITEMSG(HHCCT048E, pDEVBLK->devnum, pCTCBLK->szTUNDevName,
+            WRITEMSG(HHCCT048E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pCTCBLK->szTUNDevName,
                 strerror( errno ) );
             SLEEP(1);           // (purposeful long delay)
             continue;
@@ -1013,7 +975,7 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
 
         if( pCTCBLK->fDebug )
         {
-            WRITEMSG(HHCCT049I, pDEVBLK->devnum, pCTCBLK->szTUNDevName, iLength );
+            WRITEMSG(HHCCT049I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pCTCBLK->szTUNDevName, iLength );
             packet_trace( szBuff, iLength );
         }
 
@@ -1024,7 +986,7 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
             if( EMSGSIZE == errno )     // (if too large for buffer)
             {
                 if( pCTCBLK->fDebug )
-                    WRITEMSG(HHCCT072W, pDEVBLK->devnum );
+                    WRITEMSG(HHCCT072W, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
                 break;                  // (discard it...)
             }
 
@@ -1169,7 +1131,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
     // Check for correct number of arguments
     if( argc < 2 )
     {
-        WRITEMSG(HHCCT056E, pDEVBLK->devnum );
+        WRITEMSG(HHCCT056E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
         return -1;
     }
     // Compatability with old format configuration files needs to be
@@ -1253,7 +1215,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 // Not an IP address, check for valid MAC
                 if( ParseMAC( optarg, mac ) != 0 )
                 {
-                    WRITEMSG(HHCCT050E, pDEVBLK->devnum, optarg );
+                    WRITEMSG(HHCCT050E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, optarg );
                     return -1;
                 }
             }
@@ -1261,7 +1223,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             // This is the file name of the special TUN/TAP character device
             if( strlen( optarg ) > sizeof( pCTCBLK->szTUNCharName ) - 1 )
             {
-                WRITEMSG(HHCCT051E, pDEVBLK->devnum, optarg );
+                WRITEMSG(HHCCT051E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, optarg );
                 return -1;
             }
             strcpy( pCTCBLK->szTUNCharName, optarg );
@@ -1274,7 +1236,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             if( iKernBuff * 1024 < MIN_CAPTURE_BUFFSIZE    ||
                 iKernBuff * 1024 > MAX_CAPTURE_BUFFSIZE )
             {
-                WRITEMSG(HHCCT052E, pDEVBLK->devnum, optarg );
+                WRITEMSG(HHCCT052E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, optarg );
                 return -1;
             }
 
