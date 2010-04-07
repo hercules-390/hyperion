@@ -224,22 +224,20 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         dev->devtype = 0x3380;
 
     /* The first argument is the file name */
-    if (argc == 0 || strlen(argv[0]) > sizeof(dev->filename)-1)
+    if (argc == 0 || strlen(argv[0]) >= sizeof(dev->filename))
     {
         WRITEMSG (HHCDA001E, SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
     }
 
     /* Save the file name in the device block */
-    hostpath(pathname, argv[0], sizeof(pathname));
-    strcpy (dev->filename, pathname);
+    hostpath(dev->filename, argv[0], sizeof(dev->filename));
 
     /* Device is shareable */
     dev->shared = 1;
 
     /* Check for possible remote device */
-    hostpath(pathname, dev->filename, sizeof(pathname));
-    if (stat(pathname, &statbuf) < 0)
+    if (stat(dev->filename, &statbuf) < 0)
     {
         rc = shared_ckd_init ( dev, argc, argv);
         if (rc < 0)
@@ -360,8 +358,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     for (fileseq = 1;;)
     {
         /* Open the CKD image file */
-        hostpath(pathname, dev->filename, sizeof(pathname));
-        dev->fd = open (pathname, dev->ckdrdonly ?
+        dev->fd = open (dev->filename, dev->ckdrdonly ?
                         O_RDONLY|O_BINARY : O_RDWR|O_BINARY);
         if (dev->fd < 0)
         {   /* Try read-only if shadow file present */

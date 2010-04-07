@@ -45,6 +45,8 @@
 int open_het (DEVBLK *dev, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
+char            pathname[MAX_PATH];     /* file path in host format  */
+
 
     /* Check for no tape in drive */
     if (!strcmp (dev->filename, TAPE_UNLOADED))
@@ -54,7 +56,8 @@ int             rc;                     /* Return code               */
     }
 
     /* Open the HET file */
-    rc = het_open (&dev->hetb, dev->filename, dev->tdparms.logical_readonly ? HETOPEN_READONLY : HETOPEN_CREATE );
+    hostpath(pathname, dev->filename, sizeof(pathname));
+    rc = het_open (&dev->hetb, pathname, dev->tdparms.logical_readonly ? HETOPEN_READONLY : HETOPEN_CREATE );
     if (rc >= 0)
     {
         if(dev->hetb->writeprotect)

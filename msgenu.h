@@ -756,6 +756,7 @@ SRV service.c
 #define HHCHD016E "DLL(%s) is duplicate of (%s)"
 #define HHCHD017E "Unload of module(%s) rejected by final section"
 #define HHCHD018I "Loadable module directory is (%s)"
+#define HHCHD019E "Loadable module directory path name length '%d' exceeds maximum of '%d'" 
 #define HHCHD900I "Begin shutdown sequence"
 #define HHCHD901I "Calling (%s)"
 #define HHCHD902I "(%s) complete"

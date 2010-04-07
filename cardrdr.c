@@ -44,6 +44,7 @@ static int cardrdr_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
 int     i;                              /* Array subscript           */
 int     fc;                             /* File counter              */
+char    pathname[MAX_PATH];             /* file path in host format  */
 
     int sockdev = 0;
 
@@ -175,9 +176,9 @@ int     fc;                             /* File counter              */
 
         // add additional file arguments
 
-        if (strlen(argv[i]) > sizeof(dev->filename)-1)
+        if (strlen(argv[i]) >= sizeof(dev->filename))
         {
-            WRITEMSG (HHCRD002E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], (unsigned int)sizeof(dev->filename)-1);
+            WRITEMSG (HHCRD002E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], (unsigned int)sizeof(dev->filename));
             return -1;
         }
 
@@ -186,8 +187,8 @@ int     fc;                             /* File counter              */
             WRITEMSG (HHCRD003E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], strerror(errno));
             return -1;
         }
-
-        dev->more_files[fc++] = strdup(argv[i]);
+        hostpath(pathname, argv[i], sizeof(pathname));
+        dev->more_files[fc++] = strdup(pathname);
         dev->more_files = realloc(dev->more_files, sizeof(char*) * (fc + 1));
 
         if (!dev->more_files)
@@ -244,9 +245,9 @@ int     fc;                             /* File counter              */
     {
         /* Check for valid file name */
 
-        if (strlen(argv[0]) > sizeof(dev->filename)-1)
+        if (strlen(argv[0]) >= sizeof(dev->filename))
         {
-            WRITEMSG (HHCRD009E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[0], (unsigned int)sizeof(dev->filename)-1);
+            WRITEMSG (HHCRD009E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[0], (unsigned int)sizeof(dev->filename));
             return -1;
         }
 
@@ -265,8 +266,7 @@ int     fc;                             /* File counter              */
         }
 
         /* Save the file name in the device block */
-
-        strcpy (dev->filename, argv[0]);
+        hostpath(dev->filename, argv[0], sizeof(dev->filename));
     }
     else
     {
@@ -373,7 +373,7 @@ static int clear_cardrdr ( DEVBLK *dev )
     /* If next file is available, open it */
     if (dev->current_file && *(dev->current_file))
     {
-        strcpy(dev->filename, *(dev->current_file++));
+        hostpath(dev->filename, *(dev->current_file++), sizeof(dev->filename));
     }
     else
     {
@@ -399,7 +399,6 @@ int     rc;                             /* Return code               */
 int     i;                              /* Array subscript           */
 int     len;                            /* Length of data            */
 BYTE    buf[160];                       /* Auto-detection buffer     */
-char    pathname[MAX_PATH];             /* file path in host format  */
 
     *unitstat = 0;
 
@@ -440,8 +439,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     }
 
     /* Open the device file */
-    hostpath(pathname, dev->filename, sizeof(pathname));
-    rc = open (pathname, O_RDONLY | O_BINARY);
+    rc = open (dev->filename, O_RDONLY | O_BINARY);
     if (rc < 0)
     {
         /* Handle open failure */

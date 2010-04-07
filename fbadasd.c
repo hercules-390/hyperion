@@ -74,21 +74,20 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         dev->devtype = DEFAULT_FBA_TYPE;
 
     /* The first argument is the file name */
-    if (argc == 0 || strlen(argv[0]) > sizeof(dev->filename)-1)
+    if (argc == 0 || strlen(argv[0]) >= sizeof(dev->filename))
     {
         WRITEMSG (HHCDA056E, SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
     }
 
     /* Save the file name in the device block */
-    strcpy (dev->filename, argv[0]);
+    hostpath(dev->filename, argv[0], sizeof(dev->filename));
 
     /* Device is shareable */
     dev->shared = 1;
 
     /* Check for possible remote device */
-    hostpath(pathname, dev->filename, sizeof(pathname));
-    if (stat(pathname, &statbuf) < 0)
+    if (stat(dev->filename, &statbuf) < 0)
     {
         rc = shared_fba_init ( dev, argc, argv);
         if (rc < 0)
@@ -101,11 +100,10 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     }
 
     /* Open the device file */
-    hostpath(pathname, dev->filename, sizeof(pathname));
-    dev->fd = open (pathname, O_RDWR|O_BINARY);
+    dev->fd = open (dev->filename, O_RDWR|O_BINARY);
     if (dev->fd < 0)
     {
-        dev->fd = open (pathname, O_RDONLY|O_BINARY);
+        dev->fd = open (dev->filename, O_RDONLY|O_BINARY);
         if (dev->fd < 0)
         {
             WRITEMSG (HHCDA058E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, strerror(errno));

@@ -1,7 +1,7 @@
-/* BLDCFG.C     (c) Copyright Roger Bowler, 1999-2009                */
+/* BLDCFG.C     (c) Copyright Roger Bowler, 1999-2010                */
 /*              ESA/390 Configuration Builder                        */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2010      */
 
 // $Id$
 
@@ -644,7 +644,7 @@ DLL_EXPORT char *config_cnslport = "3270";
 /*-------------------------------------------------------------------*/
 /* Function to build system configuration                            */
 /*-------------------------------------------------------------------*/
-void build_config (char *fname)
+void build_config (char *_fname)
 {
 int     rc;                             /* Return code               */
 int     i;                              /* Array subscript           */
@@ -720,6 +720,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
 #endif
 char    hlogofile[FILENAME_MAX+1] = ""; /* File name from HERCLOGO   */
 char    pathname[MAX_PATH];             /* file path in host format  */
+char    fname[MAX_PATH];                /* normalized filename       */ 
 
     /* Initialize SETMODE and set user authority */
     SETMODE(INIT);
@@ -731,9 +732,10 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 #endif
 
     /* Open the base configuration file */
-    hostpath(pathname, fname, sizeof(pathname));
+    hostpath(fname, _fname, sizeof(fname));
+
     inc_level = 0;
-    inc_fp[inc_level] = fopen (pathname, "r");
+    inc_fp[inc_level] = fopen (fname, "r");
     if (inc_fp[inc_level] == NULL)
     {
         WRITEMSG(HHCMD003S, fname, strerror(errno));
@@ -894,8 +896,9 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 delayed_exit(1);
             }
 
-            WRITEMSG(HHCMD083I, fname, operand, inc_stmtnum[inc_level-1]);
             hostpath(pathname, operand, sizeof(pathname));
+            WRITEMSG(HHCMD083I, fname, pathname, inc_stmtnum[inc_level-1]);
+
             inc_fp[inc_level] = fopen (pathname, "r");
             if (inc_fp[inc_level] == NULL)
             {
@@ -1605,8 +1608,9 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 delayed_exit(1);
             }
 
-            WRITEMSG(HHCMD083I, fname, operand, inc_stmtnum[inc_level-1]);
             hostpath(pathname, operand, sizeof(pathname));
+            WRITEMSG(HHCMD083I, fname, pathname, inc_stmtnum[inc_level-1]);
+
             inc_fp[inc_level] = fopen (pathname, "r");
             if (inc_fp[inc_level] == NULL)
             {

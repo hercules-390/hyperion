@@ -1,4 +1,4 @@
-/* HTTPSERV.C   (c)Copyright Jan Jaeger, 2002-2009                   */
+/* HTTPSERV.C   (c)Copyright Jan Jaeger, 2002-2010                   */
 /*              HTTP Server                                          */
 
 // $Id$
@@ -28,35 +28,6 @@
 /*                                                                   */
 /*                                                                   */
 /*                                           Jan Jaeger - 28/03/2002 */
-
-// $Log$
-// Revision 1.80  2009/01/23 12:51:42  bernard
-// copyright notice
-//
-// Revision 1.79  2009/01/15 17:36:43  jj
-// Change http server startup
-//
-// Revision 1.78  2008/11/04 05:56:31  fish
-// Put ensure consistent create_thread ATTR usage change back in
-//
-// Revision 1.77  2008/11/03 15:31:54  rbowler
-// Back out consistent create_thread ATTR modification
-//
-// Revision 1.76  2008/10/18 09:32:21  fish
-// Ensure consistent create_thread ATTR usage
-//
-// Revision 1.75  2008/05/28 16:39:44  fish
-// (use R_OK constant)
-//
-// Revision 1.74  2007/06/23 00:04:12  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.73  2006/12/31 23:49:00  fish
-// Use "access()" to validate http_server root directory and not "chdir()"!!
-//
-// Revision 1.72  2006/12/08 09:43:28  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 
@@ -344,7 +315,7 @@ static void http_dump_cgi_variables(WEBBLK *webblk)
 {
     CGIVAR *cv;
     for(cv = webblk->cgivar; cv; cv = cv->next)
-        logmsg(_("HHCHTxxxI cgi_var_dump: pointer(%p) name(%s) value(%s) type(%d)\n"),
+        logmsg(_("HHCHT012I cgi_var_dump: pointer(%p) name(%s) value(%s) type(%d)\n"),
           cv, cv->name, cv->value, cv->type);
 }
 #endif
@@ -652,13 +623,14 @@ static void *http_request(int sock)
 
 void *http_server (void *arg)
 {
-int                     rc;             /* Return code               */
-int                     lsock;          /* Socket for listening      */
-int                     csock;          /* Socket for conversation   */
-struct sockaddr_in      server;         /* Server address structure  */
-fd_set                  selset;         /* Read bit map for select   */
-int                     optval;         /* Argument for setsockopt   */
-TID                     httptid;        /* Negotiation thread id     */
+int                 rc;                 /* Return code               */
+int                 lsock;              /* Socket for listening      */
+int                 csock;              /* Socket for conversation   */
+struct sockaddr_in  server;             /* Server address structure  */
+fd_set              selset;             /* Read bit map for select   */
+int                 optval;             /* Argument for setsockopt   */
+TID                 httptid;            /* Negotiation thread id     */
+char                pathname[MAX_PATH]; /* working pathname          */
 
     UNREFERENCED(arg);
 
@@ -717,8 +689,17 @@ TID                     httptid;        /* Negotiation thread id     */
             strlcat(absolute_httproot_path,HTTP_PS,sizeof(absolute_httproot_path));
         /* Save the absolute path */
         free(sysblk.httproot);
-        sysblk.httproot = strdup(absolute_httproot_path);
-        WRITEMSG(HHCHT013I,sysblk.httproot);
+        if (strlen(absolute_httproot_path) > MAX_PATH )
+        {
+            WRITEMSG(HHCHT014E, absolute_httproot_path, "path length too long");
+            return NULL;
+        }
+        else
+        {
+            hostpath(pathname, absolute_httproot_path, sizeof(pathname));
+            sysblk.httproot = strdup(pathname);
+            WRITEMSG(HHCHT013I, sysblk.httproot);
+        }
     }
 
     /* Obtain a socket */

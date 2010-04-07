@@ -272,14 +272,14 @@ int     sockdev = 0;                    /* 1 == is socket device     */
         return -1; // (error msg already issued)
 
     /* The first argument is the file name */
-    if (argc == 0 || strlen(argv[0]) > sizeof(dev->filename)-1)
+    if (argc == 0 || strlen(argv[0]) >= sizeof(dev->filename))
     {
         WRITEMSG (HHCPR001E, SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
     }
 
     /* Save the file name in the device block */
-    strncpy (dev->filename, argv[0], sizeof(dev->filename));
+    hostpath(dev->filename, argv[0], sizeof(dev->filename));
 
     if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
         dev->devtype = 0x3211;
@@ -444,7 +444,7 @@ static void printer_query_device (DEVBLK *dev, char **class,
 {
     BEGIN_DEVICE_CLASS_QUERY( "PRT", dev, class, buflen, buffer );
 
-    snprintf (buffer, buflen, "*printer.c* %s%s%s%s%s%s%s",
+    snprintf (buffer, buflen, "%s%s%s%s%s%s%s",
                  dev->filename,
                 (dev->bs         ? " sockdev"      : ""),
                 (dev->crlf       ? " crlf"         : ""),
@@ -462,7 +462,6 @@ static int
 open_printer (DEVBLK *dev)
 {
 pid_t           pid;                    /* Child process identifier  */
-char            pathname[MAX_PATH];     /* file path in host format  */
 int             open_flags;             /* File open flags           */
 #if !defined( _MSVC_ )
 int             pipefd[2];              /* Pipe descriptors          */
@@ -479,13 +478,12 @@ int             rc;                     /* Return code               */
             return (dev->fd < 0 ? -1 : 0);
 
         /* Normal printer */
-        hostpath(pathname, dev->filename, sizeof(pathname));
         open_flags = O_BINARY | O_WRONLY | O_CREAT /* | O_SYNC */;
         if (dev->notrunc != 1)
         {
             open_flags |= O_TRUNC;
         }
-        fd = open (pathname, open_flags,
+        fd = open (dev->filename, open_flags,
                     S_IRUSR | S_IWUSR | S_IRGRP);
         if (fd < 0)
         {

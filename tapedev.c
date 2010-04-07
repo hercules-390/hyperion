@@ -1,4 +1,4 @@
-/* TAPEDEV.C    (c) Copyright Roger Bowler, 1999-2009                */
+/* TAPEDEV.C    (c) Copyright Roger Bowler, 1999-2010                */
 /*              Hercules Tape Device Handler                         */
 
 /* Original Author: Roger Bowler                                     */
@@ -1123,6 +1123,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         BYTE    str[ 80 ];              /* Parser results            */
     } res;                              /* Parser results            */
 
+
     /* Release the previous OMA descriptor array if allocated */
     if (dev->omadesc != NULL)
     {
@@ -1131,11 +1132,13 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
     }
 
     /* The first argument is the file name */
-    if (argc == 0 || strlen(argv[0]) > sizeof(dev->filename)-1)
+    if (argc == 0 || strlen(argv[0]) >= sizeof(dev->filename))
         strcpy (dev->filename, TAPE_UNLOADED);
     else
+    {
         /* Save the file name in the device block */
-        strcpy (dev->filename, argv[0]);
+        hostpath(dev->filename, argv[0], sizeof(dev->filename));
+    }
 
     /* Determine tape device type... */
     VERIFY( gettapetype( dev, &short_descr ) == 0 );

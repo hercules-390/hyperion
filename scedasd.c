@@ -1,4 +1,4 @@
-/* SCEDASD.C    (c) Copyright Jan Jaeger, 1999-2009                  */
+/* SCEDASD.C    (c) Copyright Jan Jaeger, 1999-2010                  */
 /*              Service Control Element DASD I/O functions           */
 
 // $Id$
@@ -149,8 +149,8 @@ REGS   *regs;                           /* -> Regs                   */
 FILE   *fp;
 char    inputbuff[MAX_PATH];
 char   *inputline;
-char    filename[MAX_PATH];                 /* filename of image file    */
-char    pathname[MAX_PATH];                 /* pathname of image file    */
+char    filename[MAX_PATH];             /* filename of image file    */
+char    pathname[MAX_PATH];             /* pathname of image file    */
 U32     fileaddr;
 int     rc = 0;                         /* Return codes (work)       */
 

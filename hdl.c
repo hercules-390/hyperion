@@ -1,20 +1,7 @@
-/* HDL.C        (c) Copyright Jan Jaeger, 2003-2009                  */
+/* HDL.C        (c) Copyright Jan Jaeger, 2003-2010                  */
 /*              Hercules Dynamic Loader                              */
 
 // $Id$
-//
-// $Log$
-// Revision 1.55  2009/01/14 15:23:20  jj
-// Move modpath logic to hsccmd.c
-//
-// Revision 1.54  2008/11/23 23:29:44  rbowler
-// Fix win64 type conversion warnings in hdl.c
-//
-// Revision 1.53  2007/06/23 00:04:10  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.52  2006/12/08 09:43:25  jj
-// Add CVS message log
 //
 
 #include "hstdinc.h"
@@ -160,6 +147,8 @@ int logger_flag = 0;
                 (loggercall->shdcall) (loggercall->shdarg);
             }
             WRITEMSG(HHCHD902I, loggercall->shdname);
+            free(loggercall);
+
         }
     }
 #endif // defined( _MSVC_ )
@@ -174,12 +163,21 @@ int logger_flag = 0;
  */
 DLL_EXPORT void hdl_setpath(char *path)
 {
+char    pathname[MAX_PATH];         /* pathname conversion */
+
     if(hdl_modpath)
         free(hdl_modpath);
 
-    hdl_modpath = strdup(path);
-
-    WRITEMSG(HHCHD018I,hdl_modpath);
+    if ( strlen(path) > MAX_PATH )
+    {
+        WRITEMSG (HHCHD019E, (int)strlen(path), MAX_PATH);
+    }
+    else
+    {
+        hostpath(pathname, path, sizeof(pathname));
+        hdl_modpath = strdup(pathname);
+        WRITEMSG(HHCHD018I,hdl_modpath);
+    }
 }
 
 

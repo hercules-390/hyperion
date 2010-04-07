@@ -72,6 +72,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     {
         pathlen--;
         if (dev->filename[pathlen-1] == '/') break;
+
     }
 #if 0
     // JCS thinks this is bad

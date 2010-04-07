@@ -50,14 +50,14 @@ static int cardpch_init_handler (DEVBLK *dev, int argc, char *argv[])
 int     i;                              /* Array subscript           */
 
     /* The first argument is the file name */
-    if (argc == 0 || strlen(argv[0]) > sizeof(dev->filename)-1)
+    if (argc == 0 || strlen(argv[0]) >= sizeof(dev->filename))
     {
         WRITEMSG (HHCPU001E);
         return -1;
     }
 
     /* Save the file name in the device block */
-    strcpy (dev->filename, argv[0]);
+    hostpath(dev->filename, argv[0], sizeof(dev->filename));
 
     /* Initialize device dependent fields */
     dev->fd = -1;
@@ -165,7 +165,6 @@ int             i;                      /* Loop counter              */
 int             num;                    /* Number of bytes to move   */
 int             open_flags;             /* File open flags           */
 BYTE            c;                      /* Output character          */
-char            pathname[MAX_PATH];     /* file path in host format  */
 
     UNREFERENCED(prevcode);
     UNREFERENCED(ccwseq);
@@ -173,13 +172,12 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /* Open the device file if necessary */
     if (dev->fd < 0 && !IS_CCW_SENSE(code))
     {
-        hostpath(pathname, dev->filename, sizeof(pathname));
         open_flags = O_WRONLY | O_CREAT /* | O_SYNC */ |  O_BINARY;
         if (dev->notrunc != 1)
         {
             open_flags |= O_TRUNC;
         }
-        rc = open (pathname, open_flags,
+        rc = open (dev->filename, open_flags,
                     S_IRUSR | S_IWUSR | S_IRGRP);
         if (rc < 0)
         {
