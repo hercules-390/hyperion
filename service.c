@@ -165,21 +165,21 @@ void scp_command (char *command, int priomsg)
     /* Error if disabled for priority messages */
     if (priomsg && !SCLP_RECV_ENABLED(SCCB_EVD_TYPE_PRIOR))
     {
-        WRITEMSG (HHCCP036E);
+        WRITEMSG (HSRV0002E, "priority commands");
         return;
     }
 
     /* Error if disabled for commands */
     if (!priomsg && !SCLP_RECV_ENABLED(SCCB_EVD_TYPE_OPCMD))
     {
-        WRITEMSG (HHCCP037E);
+        WRITEMSG (HSRV0002E, "operator commands");
         return;
     }
 
     /* Error if command string is missing */
     if (strlen(command) < 1)
     {
-        WRITEMSG (HHCCP038E);
+        WRITEMSG (HSRV0003E);
         return;
     }
 
@@ -341,7 +341,7 @@ U64  syslevel;
     systype[8] = sysname[8] = sysplex[8] = 0;
     FETCH_DW(syslevel,cpi_bk->system_level);
 
-    WRITEMSG(HHCCP040I,systype,sysname,sysplex,syslevel);
+    WRITEMSG(HSRV0004I,systype,sysname,sysplex,syslevel);
 
     losc_check(systype);
 
@@ -386,7 +386,7 @@ int signal_quiesce (U16 count, BYTE unit)
     /* Error if disabled for commands */
     if (!SCLP_RECV_ENABLED(SCCB_EVD_TYPE_SIGQ))
     {
-        WRITEMSG (HHCCP081E);
+        WRITEMSG (HSRV0002E, "quiesce signals" );
         return -1;
     }
 
@@ -1161,9 +1161,9 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         if(sysblk.ptyp[regs->cpuad] != SCCB_PTYP_CP)
         {
 #ifdef OPTION_MSGCLR
-            WRITECMSG("<pnl,color(lightred,black)>", HHCCP090W);
+            WRITECMSG("<pnl,color(lightred,black)>", HSRV0005W);
 #else
-            WRITEMSG(HHCCP090W);
+            WRITEMSG(HSRV0005W);
 #endif
             goto docheckstop;
             /*
@@ -1484,14 +1484,14 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                         if(evd_hdr->type == SCCB_EVD_TYPE_MSG)
                         {
                           if(mto_bk->presattr[3] == SCCB_MTO_PRATTR3_HIGH)
-                            logmsg("<pnl,color(lightyellow,black),keep>%s\n", message);
+                            WRITECMSG("<pnl,color(lightyellow,black),keep>", HSRV0001I, message);
                           else
-                            logmsg ("<pnl,color(green,black)>%s\n", message);
+                            WRITECMSG("<pnl,color(green,black)>", HSRV0001I, message);
                         }
                         else
-                          logmsg ("<pnl,color(lightred,black),keep>%s\n", message);
+                          WRITECMSG("<pnl,color(lightred,black),keep>", HSRV0001I, message);
 #else
-                        logmsg ("%s\n", message);
+                        WRITEMSG(HSRV0001I, message);
 #endif
                     }
                 }
@@ -1687,9 +1687,9 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         {
             if ((servc_cp_recv_mask & SCCB_EVENT_CONS_RECV_MASK) != 0
                 || (servc_cp_send_mask & SCCB_EVENT_CONS_SEND_MASK) != 0)
-                WRITEMSG (HHCCP041I);
+                WRITEMSG (HSRV0006I, "active");
             else
-                WRITEMSG (HHCCP042I);
+                WRITEMSG (HSRV0006I, "inactive");
         }
 
         /* Set response code X'0020' in SCCB header */
@@ -1812,7 +1812,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         }
 
         if(sysblk.regs[i]->vf->online)
-            WRITEMSG(HHCCP012I, PTYPSTR(i), i );
+            WRITEMSG(HSRV0007I, PTYPSTR(i), i, "offline" );
 
         /* Take the VF out of the configuration */
         sysblk.regs[i]->vf->online = 0;
@@ -1843,7 +1843,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         }
 
         if(!sysblk.regs[i]->vf->online)
-            WRITEMSG(HHCCP013I, PTYPSTR(i), i );
+            WRITEMSG(HSRV0007I, PTYPSTR(i), i, "online" );
 
         /* Mark the VF online to the CPU */
         sysblk.regs[i]->vf->online = 1;
