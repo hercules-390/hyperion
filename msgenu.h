@@ -71,6 +71,9 @@ If DEBUG is defined, either by #define or configure --enable-debug
 and OPTION_DEBUG_MESSAGES is enabled in featall.h then messages
 will be prefixed by sourcefile.c:lineno: where the message originates
 cpu.c:123:HABC1234I This is a message
+-----------------------------------------------------------------------
+Module codes:
+SRV service.c
 ---------------------------------------------------------------------*/
 
 #define MSG(id, ...)      #id " " id "\n", ## __VA_ARGS__
@@ -79,7 +82,16 @@ cpu.c:123:HABC1234I This is a message
 #define WRITEMSG_C(id, ...) logmsg(_(#id " " id ""), ## __VA_ARGS__)
 #define WRITECMSG(c, id, ...) do { logmsg(c); logmsg(_(#id " " id "\n"), ## __VA_ARGS__); } while (0) 
 #define WRITECMSG_C(c, id, ...) do { logmsg(c); logmsg(_(#id " " id ""), ## __VA_ARGS__); } while (0)
- 
+
+/* Hercules messages */
+#define HSRV0001I "'%s'"
+#define HSRV0002E "SCP not receiving '%s'"
+#define HSRV0003E "Empty SCP command issued"
+#define HSRV0004I "Control program information: type '%s', name '%s', sysplex '%s', level %16.16"I64_FMT"X"
+#define HSRV0005W "The configuration has been placed into a system check-stop state because of an incompatible service call"
+#define HSRV0006I "SYSCONS interface '%s'"
+#define HSRV0007I "%s%02X Vector Facility configured '%s'"
+
 /* awstape.c faketape.c omatape.c */ 
 #define HHCTA101I "%1d:%04X Tape file '%s': '%s' tape closed"
 #define HHCTA107E "%1d:%04X Tape file '%s': block length %d exceeds maximum at offset "I64_FMTX
@@ -1116,18 +1128,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCTA382W "%1d:%04X File(%s) ioctl_tape(MTIOCPOS=MTTELL) failed; errno(%d): (%s)"
 #define HHCTA383W "%1d:%04X File(%s) ioctl_tape(MTIOCTOP=MTSEEK) failed; errno(%d): (%s)"
 #define HHCTA389E "%1d:%04X File(%s) Sync error; errno(%d): (%s)"
-
-/* service.c */
-#define HHCCP012I "Processor(%s%02X) Vector Facility configured offline"
-#define HHCCP013I "Processor(%s%02X) Vector Facility configured online"
-#define HHCCP036E "SCP not receiving priority messages"
-#define HHCCP037E "SCP not receiving commands"
-#define HHCCP038E "No SCP command"
-#define HHCCP081E "SCP not receiving quiesce signals"
-#define HHCCP040I "Control program information type(%s) name(%s) sysplex(%s) level(%16.16"I64_FMT"X)"
-#define HHCCP041I "SYSCONS interface active"
-#define HHCCP042I "SYSCONS interface inactive"
-#define HHCCP090W "The configuration has been placed into a system check-stop state because of an incompatible service call"
 
 /* shared.c */
 #define HHCSH001S "Parameter #(%d) is invalid: %s"
