@@ -1545,7 +1545,7 @@ char            threadname[40];
     }
 
     if (!cckdblk.batch)
-        WRITEMSG (HHCCD011I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), threadname);
+        WRITEMSG (HHCCD002I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), threadname);
     --cckdblk.ras;
     if (!cckdblk.ras) signal_condition(&cckdblk.termcond);
     release_lock(&cckdblk.ralock);
@@ -1696,7 +1696,7 @@ char            threadname[40];
     if (!cckdblk.batch)
     {
 	sprintf(threadname, "writer thread-%d", writer);
-	WRITEMSG (HHCCD002I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), threadname);
+	WRITEMSG (HHCCD001I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), threadname);
     }
 
     while (writer <= cckdblk.wrmax || cckdblk.wrpending)
@@ -1817,7 +1817,7 @@ char            threadname[40];
     }
 
     if (!cckdblk.batch)
-	WRITEMSG (HHCCD012I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), threadname);
+	WRITEMSG (HHCCD002I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), threadname);
     cckdblk.wrs--;
     if (cckdblk.wrs == 0) signal_condition(&cckdblk.termcond);
     release_lock(&cckdblk.wrlock);
@@ -4465,7 +4465,7 @@ int             gctab[5]= {             /* default gcol parameters   */
 
     if (!cckdblk.batch)
     {
-        WRITEMSG (HHCCD003I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "garbage collector");
+        WRITEMSG (HHCCD001I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "garbage collector");
     }
 
     while (gcol <= cckdblk.gcmax)
@@ -4573,7 +4573,7 @@ int             gctab[5]= {             /* default gcol parameters   */
     }
 
     if (!cckdblk.batch)
-    WRITEMSG (HHCCD013I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "garbage collector");
+    WRITEMSG (HHCCD002I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "garbage collector");
 
     cckdblk.gcs--;
     if (!cckdblk.gcs) signal_condition (&cckdblk.termcond);

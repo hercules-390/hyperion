@@ -73,6 +73,9 @@ will be prefixed by sourcefile.c:lineno: where the message originates
 cpu.c:123:HABC1234I This is a message
 -----------------------------------------------------------------------
 Module codes:
+CSH cache.c
+RDR cardrdr.c
+PUN cardpch.c
 SRV service.c
 ---------------------------------------------------------------------*/
 
@@ -84,6 +87,32 @@ SRV service.c
 #define WRITECMSG_C(c, id, ...) do { logmsg(c); logmsg(_(#id " " id ""), ## __VA_ARGS__); } while (0)
 
 /* Hercules messages */
+
+/* cache.c */
+#define HCSH0001E "Function '%s' failed; cache '%d' size '%d': '[%02d] %s'"
+#define HCSH0002W "Function '%s' failed; cache '%d' size '%d': '[%02d] %s'"
+#define HCSH0003W "Function '%s' failed; cache '%d' size '%d': '[%02d] %s'\n          Releasing inactive buffer storage"
+
+/* cardpch.c */
+#define HPUN0001E "%1d:%04X File '%s': name too long, maximum length is '%ud'"
+#define HPUN0002E "%1d:%04X Invalid argument: '%s'"
+#define HPUN0003E "%1d:%04X File '%s': %s error: '[%02d] %s'"
+#define HPUN0004E "%1d:%04X File name is missing"
+
+/* cardrdr.c */
+#define HRDR0001E "%1d:%04X Out of memory"
+#define HRDR0002E "%1d:%04X File '%s': name too long, maximum length is '%ud'"
+#define HRDR0003E "%1d:%04X File '%s': %s error: '[%02d] %s'"
+#define HRDR0004E "%1d:%04X Out of memory"
+#define HRDR0005E "%1d:%04X Options 'ascii' and 'ebcdic' are mutually exclusive"
+#define HRDR0006E "%1d:%04X Only one filename (sock_spec) allowed for socket device"
+#define HRDR0007I "%1d:%04X Option 'ascii' is default for socket device"
+#define HRDR0008W "%1d:%04X Option 'multifile' ignored: only one file specified"
+#define HRDR0012I "%1d:%04X IPv4 Address: %s (%s) disconnected from device (%s)"
+#define HRDR0017E "%1d:%04X File '%s': Unexpected end of file"
+#define HRDR0019E "%1d:%04X File '%s': Card image exceeds '%d' bytes"
+
+/* service.c */
 /* SRV0001 is more readable without the quotes */
 #define HSRV0001I "%s"
 #define HSRV0002E "SCP not receiving '%s'"
@@ -93,6 +122,12 @@ SRV service.c
 #define HSRV0006I "SYSCONS interface '%s'"
 #define HSRV0007I "%s%02X Vector Facility configured '%s'"
 
+/*
+ *                                  N E W   M E S S A G E   F O R M A T
+ *=========================================================================================================================================
+ *                                  O L D   M E S S A G E   F O R M A T
+ */
+ 
 /* awstape.c faketape.c omatape.c */ 
 #define HHCTA101I "%1d:%04X Tape file '%s': '%s' tape closed"
 #define HHCTA107E "%1d:%04X Tape file '%s': block length %d exceeds maximum at offset "I64_FMTX
@@ -186,45 +221,12 @@ SRV service.c
 #define HHCMD177E "Logical Channel Subsystem Identification '%d' exceeds maximum of '%d'"
 #define HHCMD900S "Out of memory"
 
-/* cache.c */
-#define HHCCH001E "Function '%s' failed; cache '%d' size '%d': '[%02d] %s'"
-#define HHCCH002W "Function '%s' failed; cache '%d' size '%d': '[%02d] %s'"
-#define HHCCH003W "Function '%s' failed; cache '%d' size '%d': '[%02d] %s'\n          Releasing inactive buffer storage"
 
-/* cardpch.c */
-#define HHCPU004E "Error writing to file(%s): (%s)"
-#define HHCPU001E "File name missing or invalid"
-#define HHCPU002E "Invalid argument: (%s)"
-#define HHCPU003E "Error opening file(%s): (%s)"
 
-/* cardrdr.c */
-#define HHCRD001E "%1d:%04X Out of memory"
-#define HHCRD002E "%1d:%04X File name(%s) too long, max is (%ud)"
-#define HHCRD003E "%1d:%04X Unable to access file(%s): (%s)"
-#define HHCRD004E "%1d:%04X Out of memory"
-#define HHCRD005E "%1d:%04X Specify 'ascii' or 'ebcdic' (or neither) but not both"
-#define HHCRD006E "%1d:%04X Only one filename (sock_spec) allowed for socket device"
-#define HHCRD007I "%1d:%04X Defaulting to 'ascii' for socket device"
-#define HHCRD008W "%1d:%04X 'multifile' option ignored: only one file specified"
-#define HHCRD009E "%1d:%04X File name(%s) too long, max is (%ud)"
-#define HHCRD010E "%1d:%04X Unable to access file(%s): (%s)"
-#define HHCRD011E "%1d:%04X Close error on file(%s): (%s)"
-#define HHCRD012I "%1d:%04X %s (%s) disconnected from device (%s)"
-#define HHCRD013E "%1d:%04X Error opening file(%s): (%s)"
-#define HHCRD014E "%1d:%04X Error reading file(%s): (%s)"
-#define HHCRD015E "%1d:%04X Seek error in file(%s): (%s)"
-#define HHCRD016E "%1d:%04X Error reading file(%s): (%s)"
-#define HHCRD017E "%1d:%04X Unexpected end of file(%s)"
-#define HHCRD018E "%1d:%04X Error reading file(%s): (%s)"
-#define HHCRD019E "%1d:%04X Card image exceeds (%d) bytes in file(%s)"
 
 /* cckddasd.c */
 #define HHCCD001I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
-#define HHCCD002I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
-#define HHCCD003I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
-#define HHCCD011I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
-#define HHCCD012I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
-#define HHCCD013I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
+#define HHCCD002I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCCD020E "Invalid value %d for %s="
 #define HHCCD021E "Invalid cckd keyword: %s"
 #define HHCCD029E "Internal cckd trace table calloc() error, size(%d) %s"

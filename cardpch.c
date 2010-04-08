@@ -33,7 +33,7 @@ int             rc;                 	/* Return code               */
     /* Equipment check if error writing to output file */
     if (rc < len)
     {
-        WRITEMSG (HHCPU004E, dev->filename,
+        WRITEMSG (HPUN0003E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "write()", errno,
                 (errno == 0 ? "incomplete": strerror(errno)));
         dev->sense[0] = SENSE_EC;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -50,9 +50,15 @@ static int cardpch_init_handler (DEVBLK *dev, int argc, char *argv[])
 int     i;                              /* Array subscript           */
 
     /* The first argument is the file name */
-    if (argc == 0 || strlen(argv[0]) >= sizeof(dev->filename))
+    if ( argc == 0 )
     {
-        WRITEMSG (HHCPU001E);
+        WRITEMSG (HPUN0004E, SSID_TO_LCSS(dev->ssid), dev->devnum);
+        return -1;
+    }
+
+    if (strlen(argv[0]) >= sizeof(dev->filename))
+    {
+        WRITEMSG (HPUN0001E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[0], sizeof(dev->filename) - 1);
         return -1;
     }
 
@@ -97,7 +103,7 @@ int     i;                              /* Array subscript           */
             continue;
         }
 
-        WRITEMSG (HHCPU002E, argv[i]);
+        WRITEMSG (HPUN0002E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i]);
         return -1;
     }
 
@@ -182,7 +188,7 @@ BYTE            c;                      /* Output character          */
         if (rc < 0)
         {
             /* Handle open failure */
-            WRITEMSG (HHCPU003E, dev->filename, strerror(errno));
+            WRITEMSG (HPUN0003E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "open()", errno, strerror(errno));
 
             /* Set unit check with intervention required */
             dev->sense[0] = SENSE_IR;
