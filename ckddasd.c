@@ -363,10 +363,10 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if (dev->fd < 0)
         {   /* Try read-only if shadow file present */
             if (!dev->ckdrdonly && dev->dasdsfn != NULL)
-                dev->fd = open (pathname, O_RDONLY|O_BINARY);
+                dev->fd = open (dev->filename, O_RDONLY|O_BINARY);
             if (dev->fd < 0)
             {
-                WRITEMSG (HHCDA005E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, strerror(errno));
+                WRITEMSG (HHCDA005E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, errno, strerror(errno));
                 return -1;
             }
         }
@@ -382,7 +382,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         rc = fstat (dev->fd, &statbuf);
         if (rc < 0)
         {
-            WRITEMSG (HHCDA007E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, strerror(errno));
+            WRITEMSG (HHCDA007E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, errno, strerror(errno));
             return -1;
         }
 
@@ -391,7 +391,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if (rc < (int)CKDDASD_DEVHDR_SIZE)
         {
             if (rc < 0)
-                WRITEMSG (HHCDA008E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, strerror(errno));
+                WRITEMSG (HHCDA008E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, errno, strerror(errno));
             else
                 WRITEMSG (HHCDA009E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
             return -1;
@@ -424,7 +424,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             {
                 if (rc < 0)
                 {
-                    WRITEMSG (HHCDA012E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, strerror(errno));
+                    WRITEMSG (HHCDA008E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, errno, strerror(errno));
                 }
                 else
                 {
@@ -793,7 +793,7 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
         if (offset < 0)
         {
             /* Handle seek error condition */
-            WRITEMSG (HHCDA026E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bufcur, strerror(errno));
+            WRITEMSG (HHCDA026E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bufcur, errno, strerror(errno));
             ckd_build_sense (dev, SENSE_EC, 0, 0,
                             FORMAT_1, MESSAGE_0);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -811,7 +811,7 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
         if (rc < dev->bufupdhi - dev->bufupdlo)
         {
             /* Handle seek error condition */
-            WRITEMSG (HHCDA027E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bufcur, strerror(errno));
+            WRITEMSG (HHCDA027E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bufcur, errno, strerror(errno));
             ckd_build_sense (dev, SENSE_EC, 0, 0,
                             FORMAT_1, MESSAGE_0);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -925,7 +925,7 @@ ckd_read_track_retry:
     if (offset < 0)
     {
         /* Handle seek error condition */
-        WRITEMSG (HHCDA032E, SSID_TO_LCSS(dev->ssid), dev->devnum, trk, strerror(errno));
+        WRITEMSG (HHCDA032E, SSID_TO_LCSS(dev->ssid), dev->devnum, trk, errno, strerror(errno));
         ckd_build_sense (dev, SENSE_EC, 0, 0, FORMAT_1, MESSAGE_0);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
         dev->bufcur = dev->cache = -1;
@@ -941,8 +941,11 @@ ckd_read_track_retry:
         rc = read (dev->fd, dev->buf, dev->ckdtrksz);
         if (rc < dev->ckdtrksz)
         {
+            char    str[85];
+            sprintf (str, "[%02d] %s", errno, strerror(errno));
             /* Handle read error condition */
-            WRITEMSG (HHCDA033E, SSID_TO_LCSS(dev->ssid), dev->devnum, trk, (rc < 0 ? strerror(errno) : "unexpected end of file"));
+            WRITEMSG (HHCDA033E, SSID_TO_LCSS(dev->ssid), dev->devnum, trk,
+                (rc < 0 ? str : "unexpected end of file"));
             ckd_build_sense (dev, SENSE_EC, 0, 0, FORMAT_1, MESSAGE_0);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             dev->bufcur = dev->cache = -1;
