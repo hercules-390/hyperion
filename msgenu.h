@@ -84,7 +84,8 @@ SRV service.c
 #define WRITECMSG_C(c, id, ...) do { logmsg(c); logmsg(_(#id " " id ""), ## __VA_ARGS__); } while (0)
 
 /* Hercules messages */
-#define HSRV0001I "'%s'"
+/* SRV0001 is more readable without the quotes */
+#define HSRV0001I "%s"
 #define HSRV0002E "SCP not receiving '%s'"
 #define HSRV0003E "Empty SCP command issued"
 #define HSRV0004I "Control program information: type '%s', name '%s', sysplex '%s', level %16.16"I64_FMT"X"
@@ -186,12 +187,9 @@ SRV service.c
 #define HHCMD900S "Out of memory"
 
 /* cache.c */
-#define HHCCH001E "Calloc failed cache[%d] size(%d): (%s)"
-#define HHCCH002W "Realloc increase failed cache[%d] size(%d): (%s)"
-#define HHCCH003W "Realloc decrease failed cache[%d] size(%d): (%s)"
-#define HHCCH004W "Buf calloc failed cache[%d] size(%d): (%s)"
-#define HHCCH005W "Releasing inactive buffer space"
-#define HHCCH006E "Unable to calloc buf cache[%d] size(%d): (%s)"
+#define HHCCH001E "Function '%s' failed; cache '%d' size '%d': '[%02d] %s'"
+#define HHCCH002W "Function '%s' failed; cache '%d' size '%d': '[%02d] %s'"
+#define HHCCH003W "Function '%s' failed; cache '%d' size '%d': '[%02d] %s'\n          Releasing inactive buffer storage"
 
 /* cardpch.c */
 #define HHCPU004E "Error writing to file(%s): (%s)"
