@@ -339,6 +339,12 @@ U64  syslevel;
         sysplex[i] = guest_to_host(cpi_bk->sysplex_name[i]);
     }
     systype[8] = sysname[8] = sysplex[8] = 0;
+    for(i = 7; i >= 0 && systype[i] == ' '; i--)
+	    systype[i] = 0;
+    for(i = 7; i >= 0 && sysname[i] == ' '; i--)
+	    sysname[i] = 0;
+    for(i = 7; i >= 0 && sysplex[i] == ' '; i--)
+	    sysplex[i] = 0;
     FETCH_DW(syslevel,cpi_bk->system_level);
 
     WRITEMSG(HSRV0004I,systype,sysname,sysplex,syslevel);
