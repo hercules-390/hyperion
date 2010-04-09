@@ -576,6 +576,12 @@ COMMAND ( "msghld",    PANEL,         SYSCMDALL,          msghld_cmd,
     "clear: releases the held messages\n"                                 )
 #endif
 
+COMMAND ( "msglvl",    PANEL,         SYSCMDALL,          msglvl_cmd,
+  "Display or set the message level",
+  "Format: \"msglvl [value | info]\".\n"
+  "value:  0: normal msgs; 1: including debug info; 2: No msg header\n"
+  "info:   displays the message level\n" )
+
 COMMAND ( "syncio",    PANEL,         SYSCMDALL-SYSOPER,          syncio_cmd,    "display syncio devices statistics", NULL )
 
 #if defined(OPTION_INSTRUCTION_COUNTING)

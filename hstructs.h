@@ -689,6 +689,7 @@ struct SYSBLK {
 #ifdef OPTION_MSGHLD
         int     keep_timeout_secs;      /* Message hold time         */
 #endif
+	int     msglvl;                 /* Message level             */
 
 };
 

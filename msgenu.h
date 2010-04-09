@@ -81,10 +81,8 @@ SRV service.c
 
 #define MSG(id, ...)      #id " " id "\n", ## __VA_ARGS__
 #define MSG_C(id, ...)      #id " " id "", ## __VA_ARGS__
-#define WRITEMSG(id, ...) logmsg(_(#id " " id "\n"), ## __VA_ARGS__)
-#define WRITEMSG_C(id, ...) logmsg(_(#id " " id ""), ## __VA_ARGS__)
-#define WRITECMSG(c, id, ...) do { logmsg(c); logmsg(_(#id " " id "\n"), ## __VA_ARGS__); } while (0) 
-#define WRITECMSG_C(c, id, ...) do { logmsg(c); logmsg(_(#id " " id ""), ## __VA_ARGS__); } while (0)
+#define WRITEMSG(id, ...) writemsg(__FILE__, __LINE__, sysblk.msglvl, "", _(#id " " id "\n"), ## __VA_ARGS__)
+#define WRITECMSG(color, id, ...) writemsg(__FILE__, __LINE__, sysblk.msglvl, color, _(#id " " id "\n"), ## __VA_ARGS__)  
 
 /* Hercules messages */
 
@@ -788,6 +786,7 @@ SRV service.c
 #define HHCMD001W "Ignoring invalid SCRIPT file pause statement: %s"
 #define HHCMD002I "EOF reached on SCRIPT file. Processing complete"
 #define HHCMD003E "I/O error reading SCRIPT file: %s"
+#define HHCMD004I "Message level %d"
 #define HHCMD007E "Script file \"%s\" open failed: %s"
 #define HHCMD008I "Script file processing started using file \"%s\""
 #define HHCMD011I "Pausing SCRIPT file processing for %d seconds..."

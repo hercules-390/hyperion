@@ -150,6 +150,43 @@ DLL_EXPORT void log_close(void)
     return;
 }
 
+DLL_EXPORT void writemsg(char *file, int line, int lvl, char *color, char *msg, ...)
+{
+    char *bfr=NULL;
+    int rc;
+    int siz=1024;
+    va_list vl;
+  #ifdef NEED_LOGMSG_FFLUSH
+    fflush(stdout);  
+  #endif
+    switch(lvl)
+    {
+      case 0:
+	logmsg(color);
+        BFR_VSNPRINTF();
+	break;
+      case 1:
+	logmsg("%s%-10.10s %4d ", color, file, line);
+	BFR_VSNPRINTF();
+	break;
+      case 2:
+	logmsg(color);
+	if(msg[0] == 'H' && msg[9] == ' ')
+  	  msg += 10;
+	BFR_VSNPRINTF();
+	break;
+    }
+    if(bfr)
+        log_write(0,bfr); 
+  #ifdef NEED_LOGMSG_FFLUSH
+    fflush(stdout);  
+  #endif
+    if(bfr)
+    {
+        free(bfr);
+    }
+}
+
 /*-------------------------------------------------------------------*/
 /* Log message: Normal routing (panel or buffer, as appropriate)     */
 /*-------------------------------------------------------------------*/
@@ -174,6 +211,8 @@ DLL_EXPORT void logmsg(char *msg,...)
     }
 }
 
+// BHe I want to remove these functions for simplification
+#if 0
 /*-------------------------------------------------------------------*/
 /* Log message: Panel only (no logmsg routing)                       */
 /*-------------------------------------------------------------------*/
@@ -221,6 +260,7 @@ DLL_EXPORT void logmsgb(char *msg,...)
         free(bfr);
     }
 }
+#endif
 
 /*-------------------------------------------------------------------*/
 /* Log message: Device trace                                         */

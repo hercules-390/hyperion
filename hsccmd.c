@@ -2342,6 +2342,37 @@ int msghld_cmd(int argc, char *argv[], char *cmdline)
 
 
 /*-------------------------------------------------------------------*/
+/* msglvl command - display or set the message level                 */
+/*-------------------------------------------------------------------*/
+int msglvl_cmd(int argc, char *argv[], char *cmdline)
+{
+  UNREFERENCED(cmdline);
+  
+  if(argc == 2)
+  {
+    if(!strcasecmp(argv[1], "info"))
+    {
+      WRITEMSG(HHCMD004I, sysblk.msglvl);
+      return(0);
+    }
+    else
+    {
+      int new_lvl;
+
+      if(sscanf(argv[1], "%d", &new_lvl) && new_lvl >= 0 && new_lvl <= 2)
+      {
+        sysblk.msglvl = new_lvl;
+        WRITEMSG(HHCMD004I, sysblk.msglvl);
+        return(0);
+      }
+    }
+  }
+  logmsg("msglvl: Invalid usage\n");
+  return(0);
+}
+
+
+/*-------------------------------------------------------------------*/
 /* shell command                                                     */
 /*-------------------------------------------------------------------*/
 int sh_cmd(int argc, char *argv[], char *cmdline)
