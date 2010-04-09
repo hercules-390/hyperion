@@ -205,15 +205,11 @@ BYTE    c;                              /* Print character           */
 
             while (str != NULL)
             {
-                logmsg (_("<pnl,color(green,black)>%s\n"), str);     
- //               WRITECMSG ("<pnl,color(green,black)>", HHCON010I, SSID_TO_LCSS(dev->ssid), dev->devnum, str);
+                WRITECMSG ("<pnl,color(green,black)>", HCON0001I, str);
                 str = strtok (NULL, "\n");
             }
 
         }
-
-        /* Send the data to the console */
-//        WRITECMSG_C ("<pnl,color(green,black)>", HHCON010I, SSID_TO_LCSS(dev->ssid), dev->devnum, (char *)iobuf);
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
@@ -236,9 +232,7 @@ BYTE    c;                              /* Print character           */
         {
             /* Display prompting message on console if allowed */
             if (dev->prompt1052)
-                logmsg (_("<pnl,color(lightyellow,black)>Enter input for console device %1d:%04X\n"), SSID_TO_LCSS(dev->ssid), dev->devnum);     
-
- //               WRITECMSG ("<pnl,color(lightyellow,black)>", HHCON001A, SSID_TO_LCSS(dev->ssid), dev->devnum);
+                WRITECMSG ("<pnl,color(lightyellow,black)>", HCON0010A, SSID_TO_LCSS(dev->ssid), dev->devnum);
 
             obtain_lock(&dev->lock);
             dev->iowaiters++;
@@ -275,8 +269,7 @@ BYTE    c;                              /* Print character           */
     /*---------------------------------------------------------------*/
     /* AUDIBLE ALARM                                                 */
     /*---------------------------------------------------------------*/
-        logmsg (_("<pnl,color(lightred,black)>RRRRINGGGG!\a\n"));
-//        WRITECMSG ("<pnl,color(lightred,black)>", HHCON009I, SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRITECMSG ("<pnl,color(lightred,black)>", HCON0009I);
     /*
         *residual = 0;
     */
@@ -373,8 +366,7 @@ int  i;
           && !strncasecmp(cmd,dev->filename,strlen(dev->filename)) )
         {
             input = cmd + strlen(dev->filename);
-            logmsg ( _("<pnl,color(lightyellow,black)>%s %s\n"),
-  //          WRITECMSG ("<pnl,color(lightyellow,black)>", HHCON008I, SSID_TO_LCSS(dev->ssid), dev->devnum, 
+            WRITECMSG ("<pnl,color(lightyellow,black)>", HCON0008I, 
                         dev->filename, cmd+strlen(dev->filename) );
             for(i = 0; i < dev->bufsize && input[i] != '\0'; i++)
                 dev->buf[i] = isprint(input[i]) ? host_to_guest(input[i]) : SPACE;

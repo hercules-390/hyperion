@@ -73,45 +73,24 @@ will be prefixed by sourcefile.c:lineno: where the message originates
 cpu.c:123:HABC1234I This is a message
 -----------------------------------------------------------------------
 Module codes:
+CON con1052.c
 CSH cache.c
 RDR cardrdr.c
 PUN cardpch.c
 SRV service.c
+
+highest message number current: 0013
 ---------------------------------------------------------------------*/
 
 #define MSG(id, ...)      #id " " id "\n", ## __VA_ARGS__
 #define MSG_C(id, ...)      #id " " id "", ## __VA_ARGS__
 #define WRITEMSG(id, ...) writemsg(__FILE__, __LINE__, sysblk.msglvl, "", _(#id " " id "\n"), ## __VA_ARGS__)
+#define WRITEMSG_C(id, ...) writemsg(__FILE__, __LINE__, sysblk.msglvl, "", _(#id " " id ""), ## __VA_ARGS__)
 #define WRITECMSG(color, id, ...) writemsg(__FILE__, __LINE__, sysblk.msglvl, color, _(#id " " id "\n"), ## __VA_ARGS__)  
+#define WRITECMSG_C(color, id, ...) writemsg(__FILE__, __LINE__, sysblk.msglvl, color, _(#id " " id ""), ## __VA_ARGS__)  
 
 /* Hercules messages */
-
-/* cache.c */
-#define HCSH0001E "Function '%s' failed; cache '%d' size '%d': '[%02d] %s'"
-#define HCSH0002W "Function '%s' failed; cache '%d' size '%d': '[%02d] %s'"
-#define HCSH0003W "Function '%s' failed; cache '%d' size '%d': '[%02d] %s'\n          Releasing inactive buffer storage"
-
-/* cardpch.c */
-#define HPUN0001E "%1d:%04X File '%s': name too long, maximum length is '%ud'"
-#define HPUN0002E "%1d:%04X Invalid argument: '%s'"
-#define HPUN0003E "%1d:%04X File '%s': %s error: '[%02d] %s'"
-#define HPUN0004E "%1d:%04X File name is missing"
-
-/* cardrdr.c */
-#define HRDR0001E "%1d:%04X Out of memory"
-#define HRDR0002E "%1d:%04X File '%s': name too long, maximum length is '%ud'"
-#define HRDR0003E "%1d:%04X File '%s': %s error: '[%02d] %s'"
-#define HRDR0004E "%1d:%04X Out of memory"
-#define HRDR0005E "%1d:%04X Options 'ascii' and 'ebcdic' are mutually exclusive"
-#define HRDR0006E "%1d:%04X Only one filename (sock_spec) allowed for socket device"
-#define HRDR0007I "%1d:%04X Option 'ascii' is default for socket device"
-#define HRDR0008W "%1d:%04X Option 'multifile' ignored: only one file specified"
-#define HRDR0012I "%1d:%04X IPv4 Address: %s (%s) disconnected from device (%s)"
-#define HRDR0017E "%1d:%04X File '%s': Unexpected end of file"
-#define HRDR0019E "%1d:%04X File '%s': Card image exceeds '%d' bytes"
-
-/* service.c */
-/* SRV0001 is more readable without the quotes */
+#define HCON0001I "%s"
 #define HSRV0001I "%s"
 #define HSRV0002E "SCP not receiving '%s'"
 #define HSRV0003E "Empty SCP command issued"
@@ -119,6 +98,29 @@ SRV service.c
 #define HSRV0005W "The configuration has been placed into a system check-stop state because of an incompatible service call"
 #define HSRV0006I "SYSCONS interface '%s'"
 #define HSRV0007I "%s%02X Vector Facility configured '%s'"
+#define HCON0008I "File '%s': %s"
+#define HCON0009I "RRR...RING...GGG!\a"
+#define HCON0010A "Enter input for console %1d:%04X"
+#define HCSH0011E "Function '%s' failed; cache '%d' size '%d': '[%02d] %s'"
+#define HCSH0012W "Function '%s' failed; cache '%d' size '%d': '[%02d] %s'"
+#define HCSH0013W "Function '%s' failed; cache '%d' size '%d': '[%02d] %s'\n          Releasing inactive buffer storage"
+#define HPUN0014E "%1d:%04X Invalid argument: '%s'"
+#define HPUN0015E "%1d:%04X File name is missing"
+#define HPUN0016E "%1d:%04X File '%s': name too long, maximum length is '%ud'"
+#define HRDR0016E "%1d:%04X File '%s': name too long, maximum length is '%ud'"
+#define HPUN0017E "%1d:%04X File '%s': %s error: '[%02d] %s'"
+#define HRDR0017E "%1d:%04X File '%s': %s error: '[%02d] %s'"
+#define HRDR0018E "%1d:%04X File '%s': Unexpected end of file"
+#define HRDR0019E "%1d:%04X File '%s': Card image exceeds '%d' bytes"
+// reserve 20-39 for file related
+#define HRDR0040E "%1d:%04X Options 'ascii' and 'ebcdic' are mutually exclusive"
+#define HRDR0041I "%1d:%04X Option 'ascii' is default for socket device"
+#define HRDR0042W "%1d:%04X Option 'multifile' ignored: only one file specified"
+// reserve 43-58 for option related
+#define HRDR0059E "%1d:%04X Only one filename (sock_spec) allowed for socket device"
+#define HRDR0060E "%1d:%04X Out of memory"
+#define HRDR0061I "%1d:%04X IPv4 Address: %s (%s) disconnected from device (%s)"
+
 
 /*
  *                                  N E W   M E S S A G E   F O R M A T
@@ -147,6 +149,20 @@ SRV service.c
 #define HHCTA248E "%1d:%04X TDF File '%s[%d]': invalid record size '%s'"
 #define HHCTA249E "%1d:%04X TDF File '%s[%d]': invalid record format '%s'"
 
+/* hettape.c */
+#define HHCTA401I "%1d:%04X Tape file '%s': Closed; HET format tape"
+#define HHCTA402E "%1d:%04X Tape file '%s': Open error: HETERR(%s): (%s)"
+#define HHCTA403E "%1d:%04X Tape file '%s': Error seeking to start of file: HETERR(%s): (%s)"
+#define HHCTA405E "%1d:%04X Tape file '%s': End of file (end of tape) at block("I32_FMTX")"
+#define HHCTA409E "%1d:%04X Tape file '%s': Error reading data block at block("I32_FMTX"): HETERR(%s): (%s)"
+#define HHCTA416E "%1d:%04X Tape file '%s': Error writing data block at block("I32_FMTX"): HETERR(%s): (%s)"
+#define HHCTA417E "%1d:%04X Tape file '%s': Error writing tape mark at block("I32_FMTX"): HETERR(%s): (%s)"
+#define HHCTA418E "%1d:%04X Tape file '%s': Error forward spacing at block("I32_FMTX"): HETERR(%s): (%s)"
+#define HHCTA419E "%1d:%04X Tape file '%s': Error forward spacing to next file at block("I32_FMTX"): HETERR(%s): (%s)"
+#define HHCTA420E "%1d:%04X Tape file '%s': Sync error: (%s)"
+#define HHCTA421E "%1d:%04X Tape file '%s': Error back spacing to previous file at block("I32_FMTX"): HETERR(%s): (%s)"
+#define HHCTA430I "%1d:%04X Tape file '%s': Maximum tape capacity exceeded"
+#define HHCTA431I "%1d:%04X Tape file '%s': Maximum tape capacity enforced"
 /* bldcfg.c cmdtab.c codepage.c config.c */
 #define HHCMD001S "File '%s[%d]': error reading line: '%s'"
 #define HHCMD002S "File '%s[%d]': line is too long"
@@ -472,11 +488,6 @@ SRV service.c
 #define HHCCA029E "%1d:%04X No buffers trying to send SNA response"
 //#define HHCCA300D in comm3705.c and commadpt.c
 
-/* con1052c.c */
-#define HHCON001A "%1d:%04X Enter input for console device"
-#define HHCON008I "%1d:%04X %s %s"
-#define HHCON009I "%1d:%04X RRRRINGGGG!\a"
-#define HHCON010I "%1d:%04X %s"
 
 /* console.c and comm3705.c */
 #define HHCGI001I "Unable to determine IP address from (%s)"
@@ -764,20 +775,6 @@ SRV service.c
 #define HHCHD952I "Module(%s) cleanup complete"
 #define HHCHD959I "HDL Termination sequence complete"
 
-/* hettape.c */
-#define HHCTA401I "%1d:%04X Tape file(%s) Closed; HET format tape"
-#define HHCTA402E "%1d:%04X Tape file(%s) Open error: HETERR(%s): (%s)"
-#define HHCTA403E "%1d:%04X Tape file(%s) Error seeking to start of file: HETERR(%s): (%s)"
-#define HHCTA405E "%1d:%04X Tape file(%s) End of file (end of tape) at block("I32_FMTX")"
-#define HHCTA409E "%1d:%04X Tape file(%s) Error reading data block at block("I32_FMTX"): HETERR(%s): (%s)"
-#define HHCTA416E "%1d:%04X Tape file(%s) Error writing data block at block("I32_FMTX"): HETERR(%s): (%s)"
-#define HHCTA417E "%1d:%04X Tape file(%s) Error writing tape mark at block("I32_FMTX"): HETERR(%s): (%s)"
-#define HHCTA418E "%1d:%04X Tape file(%s) Error forward spacing at block("I32_FMTX"): HETERR(%s): (%s)"
-#define HHCTA419E "%1d:%04X Tape file(%s) Error forward spacing to next file at block("I32_FMTX"): HETERR(%s): (%s)"
-#define HHCTA420E "%1d:%04X Tape file(%s) Sync error: (%s)"
-#define HHCTA421E "%1d:%04X Tape file(%s) Error back spacing to previous file at block("I32_FMTX"): HETERR(%s): (%s)"
-#define HHCTA430I "%1d:%04X Tape file(%s) Maximum tape capacity exceeded"
-#define HHCTA431I "%1d:%04X Tape file(%s) Maximum tape capacity enforced"
 
 /* hostinfo.c */
 #define HHCIN015I "%s"
