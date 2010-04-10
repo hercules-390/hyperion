@@ -516,7 +516,7 @@ static int cache_resize (int ix, int n)
         /* Increase cache size */
         cache = realloc (cacheblk[ix].cache, (cacheblk[ix].nbr + n) * sizeof(CACHE));
         if (cache == NULL) {
-            WRMSG (H0012, "W", "realloc() increase", ix, (cacheblk[ix].nbr + n) * sizeof(CACHE), errno, strerror(errno));
+            WRMSG (H0011, "W", "realloc() increase", ix, (cacheblk[ix].nbr + n) * sizeof(CACHE), errno, strerror(errno));
             return 0;
         }
         cacheblk[ix].cache = cache;
@@ -534,7 +534,7 @@ static int cache_resize (int ix, int n)
         if (n == 0) return 0;
         cache = realloc (cacheblk[ix].cache, (cacheblk[ix].nbr - n) * sizeof(CACHE));
         if (cache == NULL) {
-            WRMSG (H0012, "W", "realloc() decrease", ix, (cacheblk[ix].nbr - n) * sizeof(CACHE), errno, strerror(errno));
+            WRMSG (H0011, "W", "realloc() decrease", ix, (cacheblk[ix].nbr - n) * sizeof(CACHE), errno, strerror(errno));
             return 0;
         }
         cacheblk[ix].cache = cache;
@@ -550,7 +550,8 @@ static void cache_allocbuf(int ix, int i, int len)
 {
     cacheblk[ix].cache[i].buf = calloc (len, 1);
     if (cacheblk[ix].cache[i].buf == NULL) {
-        WRMSG (H0013, "W", "calloc()", ix, len, errno, strerror(errno));
+        WRMSG (H0011, "W", "calloc()", ix, len, errno, strerror(errno));
+	WRMSG (H0012, "W");
         for (i = 0; i < cacheblk[ix].nbr; i++)
             if (!cache_isbusy(ix, i)) cache_release(ix, i, CACHE_FREEBUF);
         cacheblk[ix].cache[i].buf = calloc (len, 1);
