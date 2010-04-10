@@ -1,4 +1,4 @@
-/* CMDTAB.H     (c) Copyright Roger Bowler, 1999-2009                */
+/* CMDTAB.H     (c) Copyright Roger Bowler, 1999-2010                */
 /*              (c) Copyright "Fish" (David B. Trout), 2002-2009     */
 /*              (c) Copyright Jan Jaeger, 2003-2009                  */
 /*              Defines all Hercules Configuration statements        */
@@ -24,7 +24,15 @@ COMMAND ( "?",         PANEL,         SYSCMDALL,        HelpCommand,  "alias for
 
 COMMAND ( "cmdlevel",  PANEL+CONFIG,  SYSCMDALL,        CmdLevel,     "Display/Set current command group",
          "display/set the current command group set(s)\n"
-         "Format: cmdlevel {ALL, MAINT, PROGrammer, OPERator, and/or DEVELoper}\n")
+         "Format: cmdlevel [{+/-}{ALL, MAINT, PROGrammer, OPERator, and/or DEVELoper}]\n")
+COMMAND ( "cmdlvl",    PANEL+CONFIG,  SYSCMDALL,        CmdLevel,     "alias for cmdlevel\n", NULL )
+
+COMMAND ( "msglevel",    PANEL,         SYSCMDALL,      msglvl_cmd,
+  "Display or set the message level",
+    "Format: \"msglevel [value | info]\".\n"
+    "value:  0: normal msgs; 1: including debug info; 2: No msg header\n"
+    "info:   displays the message level\n" )
+COMMAND ( "msglvl",    PANEL,         SYSCMDALL,        msglvl_cmd,   "alias for msglevel\n", NULL )
 
 COMMAND ( "*",         PANEL+CONFIG,  SYSCMDALL,        comment_cmd,  "Comment", NULL )
 
@@ -575,12 +583,6 @@ COMMAND ( "msghld",    PANEL,         SYSCMDALL,          msghld_cmd,
     "info:  displays the timeout value\n"
     "clear: releases the held messages\n"                                 )
 #endif
-
-COMMAND ( "msglvl",    PANEL,         SYSCMDALL,          msglvl_cmd,
-  "Display or set the message level",
-  "Format: \"msglvl [value | info]\".\n"
-  "value:  0: normal msgs; 1: including debug info; 2: No msg header\n"
-  "info:   displays the message level\n" )
 
 COMMAND ( "syncio",    PANEL,         SYSCMDALL-SYSOPER,          syncio_cmd,    "display syncio devices statistics", NULL )
 
