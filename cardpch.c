@@ -13,6 +13,9 @@
 
 #include "devtype.h"
 
+#undef MOD
+#define MOD "PUN"
+
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
@@ -33,7 +36,7 @@ int             rc;                 	/* Return code               */
     /* Equipment check if error writing to output file */
     if (rc < len)
     {
-        WRITEMSG (HPUN0017E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "write()", errno,
+        WRMSG (H0017, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "write()", errno,
                 (errno == 0 ? "incomplete": strerror(errno)));
         dev->sense[0] = SENSE_EC;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -52,13 +55,13 @@ int     i;                              /* Array subscript           */
     /* The first argument is the file name */
     if ( argc == 0 )
     {
-        WRITEMSG (HPUN0015E, SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (H0015, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
     }
 
     if (strlen(argv[0]) >= sizeof(dev->filename))
     {
-        WRITEMSG (HPUN0016E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[0], sizeof(dev->filename) - 1);
+        WRMSG (H0016, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[0], sizeof(dev->filename) - 1);
         return -1;
     }
 
@@ -103,7 +106,7 @@ int     i;                              /* Array subscript           */
             continue;
         }
 
-        WRITEMSG (HPUN0014E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i]);
+        WRMSG (H0014, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i]);
         return -1;
     }
 
@@ -188,7 +191,7 @@ BYTE            c;                      /* Output character          */
         if (rc < 0)
         {
             /* Handle open failure */
-            WRITEMSG (HPUN0017E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "open()", errno, strerror(errno));
+            WRMSG (H0017, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "open()", errno, strerror(errno));
 
             /* Set unit check with intervention required */
             dev->sense[0] = SENSE_IR;

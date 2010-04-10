@@ -16,6 +16,9 @@
 
 #include "sockdev.h"
 
+#undef MOD
+#define MOD "RDR"
+
 
 #if defined(WIN32) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
  SYSBLK *psysblk;
@@ -80,7 +83,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
     if (!dev->more_files)
     {
-        WRITEMSG (HRDR0060E, SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (H0060, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
     }
 
@@ -178,13 +181,13 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
         if (strlen(argv[i]) >= sizeof(dev->filename))
         {
-            WRITEMSG (HRDR0016E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], (unsigned int)sizeof(dev->filename)-1);
+            WRMSG (H0016, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], (unsigned int)sizeof(dev->filename)-1);
             return -1;
         }
 
         if (access(argv[i], R_OK | F_OK) != 0)
         {
-            WRITEMSG (HRDR0017E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], "access()", errno, strerror(errno));
+            WRMSG (H0017, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], "access()", errno, strerror(errno));
             return -1;
         }
         hostpath(pathname, argv[i], sizeof(pathname));
@@ -193,7 +196,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
         if (!dev->more_files)
         {
-            WRITEMSG (HRDR0060E, SSID_TO_LCSS(dev->ssid), dev->devnum);
+            WRMSG (H0060, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
             return -1;
         }
 
@@ -206,7 +209,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
     if (dev->ebcdic && dev->ascii)
     {
-        WRITEMSG (HRDR0040E, SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (H0040, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
     }
 
@@ -214,7 +217,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     {
         if (fc)
         {
-            WRITEMSG (HRDR0059E, SSID_TO_LCSS(dev->ssid), dev->devnum);
+            WRMSG (H0059, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
             return -1;
         }
 
@@ -228,14 +231,14 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
         if (!dev->ebcdic && !dev->ascii)
         {
-            WRITEMSG (HRDR0041I, SSID_TO_LCSS(dev->ssid), dev->devnum);
+            WRMSG (H0041, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
             dev->ascii = 1;
         }
     }
 
     if (dev->multifile && !fc)
     {
-        WRITEMSG (HRDR0042W, SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (H0042, "W", SSID_TO_LCSS(dev->ssid), dev->devnum);
         dev->multifile = 0;
     }
 
@@ -247,7 +250,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
         if (strlen(argv[0]) >= sizeof(dev->filename))
         {
-            WRITEMSG (HRDR0016E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[0], (unsigned int)sizeof(dev->filename)-1);
+            WRMSG (H0016, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[0], (unsigned int)sizeof(dev->filename)-1);
             return -1;
         }
 
@@ -260,7 +263,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             }
             else if (access(argv[0], R_OK | F_OK) != 0)
             {
-                WRITEMSG (HRDR0017E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[0], "access()", errno, strerror(errno));
+                WRMSG (H0017, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[0], "access()", errno, strerror(errno));
                 return -1;
             }
         }
@@ -339,7 +342,7 @@ static int cardrdr_close_device ( DEVBLK *dev )
     )
     {
         int errnum = dev->bs ? get_HSO_errno() : errno;
-        WRITEMSG (HRDR0017E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "closing", errnum, strerror(errnum));
+        WRMSG (H0017, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "closing", errnum, strerror(errnum));
         dev->fd = -1;
         dev->fh = NULL;
         return -1;
@@ -347,7 +350,7 @@ static int cardrdr_close_device ( DEVBLK *dev )
 
     if (dev->bs && (dev->bs->clientip || dev->bs->clientname))
     {
-        WRITEMSG (HRDR0061I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bs->clientip, dev->bs->clientname, dev->bs->spec);
+        WRMSG (H0061, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bs->clientip, dev->bs->clientname, dev->bs->spec);
     }
 
     dev->fd = -1;
@@ -443,7 +446,7 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
     if (rc < 0)
     {
         /* Handle open failure */
-        WRITEMSG (HRDR0017E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "open()", errno, strerror(errno));
+        WRMSG (H0017, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "open()", errno, strerror(errno));
 
         /* Set unit check with equipment check */
         dev->sense[0] = SENSE_EC;
@@ -464,7 +467,7 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
         if (len < 0)
         {
             /* Handle read error condition */
-            WRITEMSG (HRDR0017E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "fread()", errno, strerror(errno));
+            WRMSG (H0017, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "fread()", errno, strerror(errno));
 
             /* Close the file */
             fclose(dev->fh);
@@ -496,7 +499,7 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
         if (rc < 0)
         {
             /* Handle seek error condition */
-            WRITEMSG (HRDR0017E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "fseek()", errno, strerror(errno));
+            WRMSG (H0017, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "fseek()", errno, strerror(errno));
 
             /* Close the file */
             fclose (dev->fh);
@@ -568,9 +571,9 @@ int     rc;                             /* Return code               */
     if (rc < CARD_SIZE)
     {
         if (rc < 0)
-            WRITEMSG (HRDR0017E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "reading", errno, strerror(errno));
+            WRMSG (H0017, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "reading", errno, strerror(errno));
         else
-            WRITEMSG (HRDR0018E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+            WRMSG (H0018, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
 
         /* Set unit check with equipment check */
         dev->sense[0] = SENSE_EC;
@@ -642,7 +645,7 @@ BYTE    c = 0;                          /* Input character           */
         /* Handle read error condition */
         if (rc < 0)
         {
-            WRITEMSG (HRDR0017E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "reading", errno, strerror(errno));
+            WRMSG (H0017, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "reading", errno, strerror(errno));
 
             /* Set unit check with equipment check */
             dev->sense[0] = SENSE_EC;
@@ -669,7 +672,7 @@ BYTE    c = 0;                          /* Input character           */
             /* Ignore excess characters if trunc option specified */
             if (dev->trunc) continue;
 
-            WRITEMSG (HRDR0019E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, CARD_SIZE);
+            WRMSG (H0019, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, CARD_SIZE);
 
             /* Set unit check with data check */
             dev->sense[0] = SENSE_DC;

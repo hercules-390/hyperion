@@ -13,6 +13,9 @@
 
 #include "sr.h"
 
+#undef MOD
+#define MOD "CON"
+
 #if defined(OPTION_DYNAMIC_LOAD) && defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
  SYSBLK *psysblk;
  #define sysblk (*psysblk)
@@ -205,7 +208,7 @@ BYTE    c;                              /* Print character           */
 
             while (str != NULL)
             {
-                WRITECMSG ("<pnl,color(green,black)>", HCON0001I, str);
+                WRCMSG ("<pnl,color(green,black)>", H0001, "I", str);
                 str = strtok (NULL, "\n");
             }
 
@@ -232,7 +235,7 @@ BYTE    c;                              /* Print character           */
         {
             /* Display prompting message on console if allowed */
             if (dev->prompt1052)
-                WRITECMSG ("<pnl,color(lightyellow,black)>", HCON0010A, SSID_TO_LCSS(dev->ssid), dev->devnum);
+                WRCMSG ("<pnl,color(lightyellow,black)>", H0010, "A", SSID_TO_LCSS(dev->ssid), dev->devnum);
 
             obtain_lock(&dev->lock);
             dev->iowaiters++;
@@ -269,7 +272,7 @@ BYTE    c;                              /* Print character           */
     /*---------------------------------------------------------------*/
     /* AUDIBLE ALARM                                                 */
     /*---------------------------------------------------------------*/
-        WRITECMSG ("<pnl,color(lightred,black)>", HCON0009I);
+        WRCMSG ("<pnl,color(lightred,black)>", H0009, "I");
     /*
         *residual = 0;
     */
@@ -366,7 +369,7 @@ int  i;
           && !strncasecmp(cmd,dev->filename,strlen(dev->filename)) )
         {
             input = cmd + strlen(dev->filename);
-            WRITECMSG ("<pnl,color(lightyellow,black)>", HCON0008I, 
+            WRCMSG ("<pnl,color(lightyellow,black)>", H0008, "I", 
                         dev->filename, cmd+strlen(dev->filename) );
             for(i = 0; i < dev->bufsize && input[i] != '\0'; i++)
                 dev->buf[i] = isprint(input[i]) ? host_to_guest(input[i]) : SPACE;

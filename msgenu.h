@@ -73,7 +73,7 @@ will be prefixed by sourcefile.c:lineno: where the message originates
 cpu.c:123:HABC1234I This is a message
 -----------------------------------------------------------------------
 Module codes:
-CON con1052.c
+CON con1052c.c
 CSH cache.c
 RDR cardrdr.c
 PUN cardpch.c
@@ -82,44 +82,48 @@ SRV service.c
 highest message number current: 0013
 ---------------------------------------------------------------------*/
 
-#define MSG(id, ...)      #id " " id "\n", ## __VA_ARGS__
-#define MSG_C(id, ...)      #id " " id "", ## __VA_ARGS__
-#define WRITEMSG(id, ...) writemsg(__FILE__, __LINE__, sysblk.msglvl, "", _(#id " " id "\n"), ## __VA_ARGS__)
-#define WRITEMSG_C(id, ...) writemsg(__FILE__, __LINE__, sysblk.msglvl, "", _(#id " " id ""), ## __VA_ARGS__)
-#define WRITECMSG(color, id, ...) writemsg(__FILE__, __LINE__, sysblk.msglvl, color, _(#id " " id "\n"), ## __VA_ARGS__)  
+#define MSG(id, ...)                #id " " id "\n", ## __VA_ARGS__
+#define MSG_C(id, ...)              #id " " id "", ## __VA_ARGS__
+#define WRITEMSG(id, ...)           writemsg(__FILE__, __LINE__, sysblk.msglvl, "", _(#id " " id "\n"), ## __VA_ARGS__)
+#define WRITEMSG_C(id, ...)         writemsg(__FILE__, __LINE__, sysblk.msglvl, "", _(#id " " id ""), ## __VA_ARGS__)
+#define WRITECMSG(color, id, ...)   writemsg(__FILE__, __LINE__, sysblk.msglvl, color, _(#id " " id "\n"), ## __VA_ARGS__)  
 #define WRITECMSG_C(color, id, ...) writemsg(__FILE__, __LINE__, sysblk.msglvl, color, _(#id " " id ""), ## __VA_ARGS__)  
 
+#define WRMSG(id, s, ...)           writemsg(__FILE__, __LINE__, sysblk.msglvl, "", _(#id MOD s " " id "\n"), ## __VA_ARGS__)
+#define WRCMSG(color, id, s, ...)   writemsg(__FILE__, __LINE__, sysblk.msglvl, color, _(#id MOD s " " id "\n"), ## __VA_ARGS__)
+
+#undef MOD
+#define MOD "???"
+
 /* Hercules messages */
-#define HCON0001I "%s"
-#define HSRV0001I "%s"
-#define HSRV0002E "SCP not receiving '%s'"
-#define HSRV0003E "Empty SCP command issued"
-#define HSRV0004I "Control program information: type '%s', name '%s', sysplex '%s', level %16.16"I64_FMT"X"
-#define HSRV0005W "The configuration has been placed into a system check-stop state because of an incompatible service call"
-#define HSRV0006I "SYSCONS interface '%s'"
-#define HSRV0007I "%s%02X Vector Facility configured '%s'"
-#define HCON0008I "File '%s': %s"
-#define HCON0009I "RRR...RING...GGG!\a"
-#define HCON0010A "Enter input for console %1d:%04X"
-#define HCSH0011E "Function '%s' failed; cache '%d' size '%d': '[%02d] %s'"
-#define HCSH0012W "Function '%s' failed; cache '%d' size '%d': '[%02d] %s'"
-#define HCSH0013W "Function '%s' failed; cache '%d' size '%d': '[%02d] %s'\n          Releasing inactive buffer storage"
-#define HPUN0014E "%1d:%04X Invalid argument: '%s'"
-#define HPUN0015E "%1d:%04X File name is missing"
-#define HPUN0016E "%1d:%04X File '%s': name too long, maximum length is '%ud'"
-#define HRDR0016E "%1d:%04X File '%s': name too long, maximum length is '%ud'"
-#define HPUN0017E "%1d:%04X File '%s': %s error: '[%02d] %s'"
-#define HRDR0017E "%1d:%04X File '%s': %s error: '[%02d] %s'"
-#define HRDR0018E "%1d:%04X File '%s': Unexpected end of file"
-#define HRDR0019E "%1d:%04X File '%s': Card image exceeds '%d' bytes"
+#define H0001 "%s"
+#define H0002 "SCP not receiving '%s'"
+#define H0003 "Empty SCP command issued"
+#define H0004 "Control program information: type '%s', name '%s', sysplex '%s', level %16.16"I64_FMT"X"
+#define H0005 "The configuration has been placed into a system check-stop state because of an incompatible service call"
+#define H0006 "SYSCONS interface '%s'"
+#define H0007 "%s%02X Vector Facility configured '%s'"
+#define H0008 "File '%s': %s"
+#define H0009 "RRR...RING...GGG!\a"
+#define H0010 "Enter input for console %1d:%04X"
+#define H0011 "Function '%s' failed; cache '%d' size '%d': '[%02d] %s'"
+#define H0012 "Function '%s' failed; cache '%d' size '%d': '[%02d] %s'"
+#define H0013 "Function '%s' failed; cache '%d' size '%d': '[%02d] %s'\n          Releasing inactive buffer storage"
+#define H0014 "%1d:%04X Invalid argument: '%s'"
+#define H0015 "%1d:%04X File name is missing"
+#define H0016 "%1d:%04X File '%s': name too long, maximum length is '%ud'"
+#define H0016 "%1d:%04X File '%s': name too long, maximum length is '%ud'"
+#define H0017 "%1d:%04X File '%s': %s error: '[%02d] %s'"
+#define H0018 "%1d:%04X File '%s': Unexpected end of file"
+#define H0019 "%1d:%04X File '%s': Card image exceeds '%d' bytes"
 // reserve 20-39 for file related
-#define HRDR0040E "%1d:%04X Options 'ascii' and 'ebcdic' are mutually exclusive"
-#define HRDR0041I "%1d:%04X Option 'ascii' is default for socket device"
-#define HRDR0042W "%1d:%04X Option 'multifile' ignored: only one file specified"
-// reserve 43-58 for option related
-#define HRDR0059E "%1d:%04X Only one filename (sock_spec) allowed for socket device"
-#define HRDR0060E "%1d:%04X Out of memory"
-#define HRDR0061I "%1d:%04X IPv4 Address: %s (%s) disconnected from device (%s)"
+#define H0040 "%1d:%04X Options 'ascii' and 'ebcdic' are mutually exclusive"
+#define H0041 "%1d:%04X Option 'ascii' is default for socket device"
+#define H0042 "%1d:%04X Option 'multifile' ignored: only one file specified"
+// reserv 43-58 for option related
+#define H0059 "%1d:%04X Only one filename (sock_spec) allowed for socket device"
+#define H0060 "%1d:%04X Out of memory"
+#define H0061 "%1d:%04X IPv4 Address: %s (%s) disconnected from device (%s)"
 
 
 /*
