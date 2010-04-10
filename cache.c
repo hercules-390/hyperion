@@ -551,7 +551,7 @@ static void cache_allocbuf(int ix, int i, int len)
     cacheblk[ix].cache[i].buf = calloc (len, 1);
     if (cacheblk[ix].cache[i].buf == NULL) {
         WRMSG (H0011, "W", "calloc()", ix, len, errno, strerror(errno));
-	WRMSG (H0012, "W");
+    WRMSG (H0012, "W");
         for (i = 0; i < cacheblk[ix].nbr; i++)
             if (!cache_isbusy(ix, i)) cache_release(ix, i, CACHE_FREEBUF);
         cacheblk[ix].cache[i].buf = calloc (len, 1);

@@ -343,11 +343,11 @@ U64  syslevel;
     }
     systype[8] = sysname[8] = sysplex[8] = 0;
     for(i = 7; i >= 0 && systype[i] == ' '; i--)
-	    systype[i] = 0;
+        systype[i] = 0;
     for(i = 7; i >= 0 && sysname[i] == ' '; i--)
-	    sysname[i] = 0;
+        sysname[i] = 0;
     for(i = 7; i >= 0 && sysplex[i] == ' '; i--)
-	    sysplex[i] = 0;
+        sysplex[i] = 0;
     FETCH_DW(syslevel,cpi_bk->system_level);
 
     WRMSG(H0004, "I",systype,sysname,sysplex,syslevel);
