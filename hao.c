@@ -12,49 +12,6 @@
 /*---------------------------------------------------------------------------*/
 
 // $Id$
-//
-// $Log$
-// Revision 1.15  2008/11/30 09:12:41  bernard
-// End the licensed OS experiment
-//
-// Revision 1.14  2008/11/29 12:26:19  bernard
-// PGMPRDOS implementation within hoa. Not perfect! please provide command
-// hoa clear if you want to violate the PGMPRDOS warning.
-//
-// Revision 1.13  2008/11/04 05:56:31  fish
-// Put ensure consistent create_thread ATTR usage change back in
-//
-// Revision 1.12  2008/11/03 15:31:57  rbowler
-// Back out consistent create_thread ATTR modification
-//
-// Revision 1.11  2008/10/18 09:32:21  fish
-// Ensure consistent create_thread ATTR usage
-//
-// Revision 1.10  2008/08/23 11:55:23  fish
-// Increase max #of rules from 10 to 64
-//
-// Revision 1.9  2008/07/30 15:29:04  bernard
-// Strip herc prefix before checking the message.
-//
-// Revision 1.8  2008/07/30 06:25:27  fish
-// use 'if' statement instead of 'min' macro to fix Linux build error,
-// and remove redundant buffer initialization already done by hao_initialize.
-//
-// Revision 1.7  2008/07/29 05:55:41  fish
-// Fix buffer mgmt bug in hao_thread causing garbage
-//
-// Revision 1.6  2008/07/26 14:39:42  bernard
-// Foutje, bedankt!
-//
-// Revision 1.5  2008/07/26 14:30:17  bernard
-// Reject hao automatic commands. This causes deadlocks.
-//
-// Revision 1.4  2007/06/23 00:04:10  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.3  2006/12/08 09:43:21  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 
@@ -62,6 +19,9 @@
 #define _HENGINE_DLL_
 
 #include "hercules.h"
+
+#undef MOD
+#define MOD "HAO"
 
 #if defined(OPTION_HAO)
 
@@ -190,7 +150,7 @@ DLL_EXPORT void hao_command(char *cmd)
     return;
   }
 
-  WRITEMSG(HHCAO007E);
+  WRMSG(H0070, "E");
 }
 
 /*---------------------------------------------------------------------------*/
@@ -233,7 +193,7 @@ static void hao_tgt(char *arg)
   if(i == HAO_MAXRULE)
   {
     release_lock(&ao_lock);
-    WRITEMSG(HHCAO010E);
+    WRMSG(H0071, "E");
     return;
   }
 
@@ -243,7 +203,7 @@ static void hao_tgt(char *arg)
     if(ao_tgt[j] && !ao_cmd[j])
     {
       release_lock(&ao_lock);
-      WRITEMSG(HHCAO011E);
+      WRMSG(H0072, "E");
       return;
     }
   }
@@ -252,7 +212,7 @@ static void hao_tgt(char *arg)
   if(!strlen(arg))
   {
     release_lock(&ao_lock);
-    WRITEMSG(HHCAO012E);
+    WRMSG(H0073, "E", "target");
     return;
   }
 
@@ -262,7 +222,7 @@ static void hao_tgt(char *arg)
     if(ao_tgt[j] && !strcmp(arg, ao_tgt[j]))
     {
       release_lock(&ao_lock);
-      WRITEMSG(HHCAO013E);
+      WRMSG(H0074, "E");
       return;
     }
   }
@@ -277,7 +237,7 @@ static void hao_tgt(char *arg)
 
     /* place error in work */
     regerror(rc, (const regex_t *) &ao_preg[i], work, HAO_WKLEN);
-    WRITEMSG(HHCAO014E, work);
+    WRMSG(H0075, "E", "regcomp()", work);
     return;
   }
 
@@ -288,7 +248,7 @@ static void hao_tgt(char *arg)
     {
       release_lock(&ao_lock);
       regfree(&ao_preg[i]);
-      WRITEMSG(HHCAO021E, i);
+      WRMSG(H0076, "E", i);
       return;
     }
   }
@@ -301,12 +261,12 @@ static void hao_tgt(char *arg)
   {
     release_lock(&ao_lock);
     regfree(&ao_preg[i]);
-    WRITEMSG(HHCAO015E, strerror(ENOMEM));
+    WRMSG(H0075, "E", "strdup()", strerror(ENOMEM));
     return;
   }
 
   release_lock(&ao_lock);
-  WRITEMSG(HHCAO016I, i);
+  WRMSG(H0077, "I", i);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -331,7 +291,7 @@ static void hao_cmd(char *arg)
   if(i == HAO_MAXRULE)
   {
     release_lock(&ao_lock);
-    WRITEMSG(HHCAO017E);
+    WRMSG(H0078, "E");
     return;
   }
 
@@ -339,7 +299,7 @@ static void hao_cmd(char *arg)
   if(!ao_tgt[i])
   {
     release_lock(&ao_lock);
-    WRITEMSG(HHCAO017E);
+    WRMSG(H0079, "E");
     return;
   }
 
@@ -347,7 +307,7 @@ static void hao_cmd(char *arg)
   if(!strlen(arg))
   {
     release_lock(&ao_lock);
-    WRITEMSG(HHCAO018E);
+    WRMSG(H0073, "E", "command");
     return;
   }
 
@@ -356,7 +316,7 @@ static void hao_cmd(char *arg)
   if(!strcasecmp(&arg[j], "hao") || !strncasecmp(&arg[j], "hao ", 4))
   {
     release_lock(&ao_lock);
-    WRITEMSG(HHCA0026E);
+    WRMSG(H0080, "E");
     return;
   }
 
@@ -366,7 +326,7 @@ static void hao_cmd(char *arg)
     if(ao_tgt[j] && !regexec(&ao_preg[j], arg, 0, NULL, 0))
     {
       release_lock(&ao_lock);
-      WRITEMSG(HHCAO019E, j);
+      WRMSG(H0081, "E", j);
       return;
     }
   }
@@ -378,12 +338,12 @@ static void hao_cmd(char *arg)
   if(!ao_cmd[i])
   {
     release_lock(&ao_lock);
-    WRITEMSG(HHCAO015E, strerror(ENOMEM));
+    WRMSG(H0075, "E", "strdup()", strerror(ENOMEM));
     return;
   }
 
   release_lock(&ao_lock);
-  WRITEMSG(HHCAO020I, i);
+  WRMSG(H0082, "I", i);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -401,14 +361,14 @@ static void hao_del(char *arg)
   rc = sscanf(arg, "%d", &i);
   if(!rc || rc == -1)
   {
-    WRITEMSG(HHCAO023E);
+    WRMSG(H0083, "E");
     return;
   }
 
   /* check if index is valid */
   if(i < 0 || i >= HAO_MAXRULE)
   {
-    WRITEMSG(HHCAO009E, HAO_MAXRULE - 1);
+    WRMSG(H0084, "E", HAO_MAXRULE - 1);
     return;
   }
 
@@ -419,7 +379,7 @@ static void hao_del(char *arg)
   if(!ao_tgt[i])
   {
     release_lock(&ao_lock);
-    WRITEMSG(HHCAO024E, i);
+    WRMSG(H0085, "E", i);
     return;
   }
 
@@ -434,7 +394,7 @@ static void hao_del(char *arg)
   }
 
   release_lock(&ao_lock);
-  WRITEMSG(HHCAO025I, i);
+  WRMSG(H0086, "I", i);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -453,7 +413,7 @@ static void hao_list(char *arg)
   if(!rc || rc == -1)
   {
     /* list all rules */
-    WRITEMSG(HHCAO004I);
+    WRMSG(H0087, "I");
     size = 0;
 
     /* serialize */
@@ -463,27 +423,27 @@ static void hao_list(char *arg)
     {
       if(ao_tgt[i])
       {
-        WRITEMSG(HHCAO005I, i, ao_tgt[i], (ao_cmd[i] ? ao_cmd[i] : "<not specified>"));
+        WRMSG(H0088, "I", i, ao_tgt[i], (ao_cmd[i] ? ao_cmd[i] : "<not specified>"));
         size++;
       }
     }
     release_lock(&ao_lock);
-    WRITEMSG(HHCAO006I, size);
+    WRMSG(H0089, "I", size);
   }
   else
   {
     /* list specific index */
     if(i < 0 || i >= HAO_MAXRULE)
-      WRITEMSG(HHCAO009E, HAO_MAXRULE - 1);
+      WRMSG(H0084, "E", HAO_MAXRULE - 1);
     else
     {
       /* serialize */
       obtain_lock(&ao_lock);
 
       if(!ao_tgt[i])
-        WRITEMSG(HHCAO008E, i);
+        WRMSG(H0090, "E", i);
       else
-        WRITEMSG(HHCAO005I, i, ao_tgt[i], (ao_cmd[i] ? ao_cmd[i] : "not specified"));
+        WRMSG(H0088, "I", i, ao_tgt[i], (ao_cmd[i] ? ao_cmd[i] : "not specified"));
 
       release_lock(&ao_lock);
     }
@@ -521,7 +481,7 @@ static void hao_clear(void)
   }
 
   release_lock(&ao_lock);
-  WRITEMSG(HHCAO022I);
+  WRMSG(H0091, "I");
 }
 
 /*---------------------------------------------------------------------------*/
@@ -542,7 +502,7 @@ static void* hao_thread(void* dummy)
 
   UNREFERENCED(dummy);
 
-  WRITEMSG(HHCAO001I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "Hercules Automatic Operator");
+  WRMSG(H0100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Hercules Automatic Operator");
 
   /* Wait for panel thread to engage */
   while (!sysblk.panel_init && !sysblk.shutdown)
@@ -581,7 +541,7 @@ static void* hao_thread(void* dummy)
     }
   }
 
-  WRITEMSG(HHCAO002I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "Hercules Automatic Operator");
+  WRMSG(H0101, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Hercules Automatic Operator");
   return NULL;
 }
 
@@ -610,7 +570,7 @@ DLL_EXPORT void hao_message(char *buf)
     return;
 
   /* don't react on own commands */
-  if(!strncasecmp(work, "hao", 3))
+  if(!strncasecmp(&work[5], MOD, 3)) 
     return;
 
   /* also from the .rc file */
@@ -630,7 +590,7 @@ DLL_EXPORT void hao_message(char *buf)
       {
         BYTE sysgroup; 
         /* issue command for this rule */
-        WRITEMSG(HHCAO003I, ao_cmd[i]);
+        WRMSG(H0092, "I", ao_cmd[i]);
         sysgroup = sysblk.sysgroup;
         sysblk.sysgroup = SYSGROUP_ALL;
         panel_command(ao_cmd[i]);

@@ -77,6 +77,7 @@ CON con1052c.c
 CSH cache.c
 RDR cardrdr.c
 PUN cardpch.c
+HAO hao.c
 SRV service.c
 
 highest message number current: 0013
@@ -123,6 +124,37 @@ highest message number current: 0013
 #define H0060 "%1d:%04X Out of memory"
 #define H0061 "%1d:%04X IPv4 Address: %s (%s) disconnected from device (%s)"
 
+#define H0070 "Unknown hao command, valid commands are:\n" \
+              "          hao tgt <tgt> : define target rule (pattern) to react on\n" \
+              "          hao cmd <cmd> : define command for previously defined rule\n" \
+              "          hao list <n>  : list all rules/commands or only at index <n>\n" \
+              "          hao del <n>   : delete the rule at index <n>\n" \
+              "          hao clear     : delete all rules (stops automatic operator)"
+#define H0071 "Target not added, table full"
+#define H0072 "Tgt command given, but cmd command expected"
+#define H0073 "Empty '%s' specified"
+#define H0074 "Target not added, duplicate found in table"
+#define H0075 "Error in function '%s': '%s'"
+#define H0076 "Target not added, causes loop with command at index %d"
+#define H0077 "Target placed at index %d"
+#define H0078 "Command not added, table is full"
+#define H0079 "Cmd command given, but tgt command expected"
+#define H0080 "Command not added, may cause dead locks"
+#define H0081 "Command not added; causes loop with target at index %d"
+#define H0082 "Command placed at index %d"
+#define H0083 "Hao del command given without a valid index"
+#define H0084 "Invalid index, index must be between 0 and %d"
+#define H0085 "Rule at index %d not deleted, already empty"
+#define H0086 "Rule at index %d successfully deleted"
+#define H0087 "The defined Automatic Operator rule(s) are:"
+#define H0088 "Index %02d: target '%s' -> command '%s'"
+#define H0089 "%d rule(s) displayed"
+#define H0090 "No rule defined at index %d"
+#define H0091 "All automatic operation rules cleared"
+#define H0092 "Firing command '%s'"
+
+#define H0100 "Thread id "TIDPAT", prio %d, name '%s' started"
+#define H0101 "Thread id "TIDPAT", prio %d, name '%s' ended"
 
 /*
  *                                  N E W   M E S S A G E   F O R M A T
@@ -236,9 +268,6 @@ highest message number current: 0013
 #define HHCMD176E "Non-numeric Logical Channel Subsystem Identification '%s'"
 #define HHCMD177E "Logical Channel Subsystem Identification '%d' exceeds maximum of '%d'"
 #define HHCMD900S "Out of memory"
-
-
-
 
 /* cckddasd.c */
 #define HHCCD001I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
@@ -711,39 +740,6 @@ highest message number current: 0013
 #define HHCCP027I "External interrupt: Service signal %8.8X"
 #define HHCCP028I "External interrupt: Block I/O %s"
 #define HHCCP031I "%1d:%04X Processing Block I/O interrupt: code(%4.4X) parm(%16.16X) status(%2.2X) subcode(%2.2X)"
-
-/* hao.c */
-#define HHCAO001I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
-#define HHCAO002I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
-#define HHCAO003I "Firing command: (%s)"
-#define HHCAO004I "The defined Automatic Operator rule(s) are:"
-#define HHCAO005I "(%02d): (%s) -> (%s)"
-#define HHCAO006I "(%d) rule(s) displayed"
-#define HHCAO007E "Unknown hao command, valid commands are:\n" \
-                  "          hao tgt <tgt> : define target rule (pattern) to react on\n" \
-                  "          hao cmd <cmd> : define command for previously defined rule\n" \
-                  "          hao list <n>  : list all rules/commands or only at index <n>\n" \
-                  "          hao del <n>   : delete the rule at index <n>\n" \
-                  "          hao clear     : delete all rules (stops automatic operator)"
-#define HHCAO008E "No rule defined at index(%d)"
-#define HHCAO009E "Invalid index, index must be between 0 and (%d)"
-#define HHCAO010E "Target not added, table full"
-#define HHCAO011E "Tgt command given, but cmd command expected"
-#define HHCAO012E "Empty target specified"
-#define HHCAO013E "Target not added, duplicate found in table"
-#define HHCAO014E "%s"
-#define HHCAO015E "%s"
-#define HHCAO016I "Target placed at index(%d)"
-#define HHCAO017E "Cmd command given, but tgt command expected"
-#define HHCAO018E "Empty command specified"
-#define HHCAO019E "Command not added; causes loop with target at index(%d)"
-#define HHCAO020I "Command placed at index(%d)"
-#define HHCAO021E "Target not added, causes loop with command at index(%d)"
-#define HHCAO022I "All automatic operation rules cleared"
-#define HHCAO023E "Hao del command given without a valid index"
-#define HHCAO024E "Rule at index(%d) not deleted, already empty"
-#define HHCAO025I "Rule at index(%d) succesfully deleted"
-#define HHCA0026E "Command not added, may cause dead locks"
 
 /* hchan.c */
 #define HHCHC001E "Device(%4.4X) Incorrect Generic Channel method(%s)"
