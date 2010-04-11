@@ -37,9 +37,6 @@
 #include "inline.h"
 #include "sr.h"
 
-#undef MOD
-#define MOD "SRV"
-
 #if !defined(_SERVICE_C)
 
 #define _SERVICE_C
@@ -168,21 +165,21 @@ void scp_command (char *command, int priomsg)
     /* Error if disabled for priority messages */
     if (priomsg && !SCLP_RECV_ENABLED(SCCB_EVD_TYPE_PRIOR))
     {
-        WRMSG (H0002, "E", "priority commands");
+        WRMSG (HHC00002, "E", "priority commands");
         return;
     }
 
     /* Error if disabled for commands */
     if (!priomsg && !SCLP_RECV_ENABLED(SCCB_EVD_TYPE_OPCMD))
     {
-        WRMSG (H0002, "E", "operator commands");
+        WRMSG (HHC00002, "E", "operator commands");
         return;
     }
 
     /* Error if command string is missing */
     if (strlen(command) < 1)
     {
-        WRMSG (H0003, "E");
+        WRMSG (HHC00003, "E");
         return;
     }
 
@@ -350,7 +347,7 @@ U64  syslevel;
         sysplex[i] = 0;
     FETCH_DW(syslevel,cpi_bk->system_level);
 
-    WRMSG(H0004, "I",systype,sysname,sysplex,syslevel);
+    WRMSG(HHC00004, "I",systype,sysname,sysplex,syslevel);
 
     losc_check(systype);
 
@@ -395,7 +392,7 @@ int signal_quiesce (U16 count, BYTE unit)
     /* Error if disabled for commands */
     if (!SCLP_RECV_ENABLED(SCCB_EVD_TYPE_SIGQ))
     {
-        WRMSG (H0002, "E", "quiesce signals" );
+        WRMSG (HHC00002, "E", "quiesce signals" );
         return -1;
     }
 
@@ -1170,9 +1167,9 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         if(sysblk.ptyp[regs->cpuad] != SCCB_PTYP_CP)
         {
 #ifdef OPTION_MSGCLR
-            WRCMSG("<pnl,color(lightred,black)>", H0005, "W");
+            WRCMSG("<pnl,color(lightred,black)>", HHC00005, "W");
 #else
-            WRMSG(H0005, "W");
+            WRMSG(HHC00005, "W");
 #endif
             goto docheckstop;
             /*
@@ -1493,14 +1490,14 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                         if(evd_hdr->type == SCCB_EVD_TYPE_MSG)
                         {
                           if(mto_bk->presattr[3] == SCCB_MTO_PRATTR3_HIGH)
-                            WRCMSG("<pnl,color(lightyellow,black),keep>", H0001, "I", message);
+                            WRCMSG("<pnl,color(lightyellow,black),keep>", HHC00001, "I", message);
                           else
-                            WRCMSG("<pnl,color(green,black)>", H0001, "I", message);
+                            WRCMSG("<pnl,color(green,black)>", HHC00001, "I", message);
                         }
                         else
-                          WRCMSG("<pnl,color(lightred,black),keep>", H0001, "I", message);
+                          WRCMSG("<pnl,color(lightred,black),keep>", HHC00001, "I", message);
 #else
-                        WRMSG(H0001, "I", message);
+                        WRMSG(HHC00001, "I", message);
 #endif
                     }
                 }
@@ -1696,9 +1693,9 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         {
             if ((servc_cp_recv_mask & SCCB_EVENT_CONS_RECV_MASK) != 0
                 || (servc_cp_send_mask & SCCB_EVENT_CONS_SEND_MASK) != 0)
-                WRMSG (H0006, "I", "active");
+                WRMSG (HHC00006, "I", "active");
             else
-                WRMSG (H0006, "I", "inactive");
+                WRMSG (HHC00006, "I", "inactive");
         }
 
         /* Set response code X'0020' in SCCB header */
@@ -1821,7 +1818,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         }
 
         if(sysblk.regs[i]->vf->online)
-            WRMSG(H0007, "I", PTYPSTR(i), i, "offline" );
+            WRMSG(HHC00007, "I", PTYPSTR(i), i, "offline" );
 
         /* Take the VF out of the configuration */
         sysblk.regs[i]->vf->online = 0;
@@ -1852,7 +1849,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         }
 
         if(!sysblk.regs[i]->vf->online)
-            WRMSG(H0007, "I", PTYPSTR(i), i, "online" );
+            WRMSG(HHC00007, "I", PTYPSTR(i), i, "online" );
 
         /* Mark the VF online to the CPU */
         sysblk.regs[i]->vf->online = 1;

@@ -2438,7 +2438,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
         dev->prevcode = 0;
         dev->chained &= ~CCW_FLAGS_CD;
         dev->prev_chained = 0;
-        logdevtr (dev, MSG(HHCCP100I, SSID_TO_LCSS(dev->ssid), dev->devnum, ccwaddr));
+        logdevtr (dev, MSG(HHCCP100I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, ccwaddr));
     }
     else
     {
@@ -2450,7 +2450,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
     if (dev->syncio_active)
     {
         dev->syncios++;
-        logdevtr (dev, MSG(HHCCP101I, SSID_TO_LCSS(dev->ssid), dev->devnum, ccwaddr));
+        logdevtr (dev, MSG(HHCCP101I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, ccwaddr));
     }
 
 #if defined(_FEATURE_IO_ASSIST)

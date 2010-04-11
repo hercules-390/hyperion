@@ -754,7 +754,7 @@ int             i,o,f;                  /* Indexes                   */
 int             active;                 /* 1=Synchronous I/O active  */
 CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
 
-    logdevtr (dev, MSG(HHCDA024I, SSID_TO_LCSS(dev->ssid), dev->devnum, trk, dev->bufcur));
+    logdevtr (dev, MSG(HHCDA024I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, trk, dev->bufcur));
 
     /* Calculate cylinder and head */
     cyl = trk / dev->ckdheads;
@@ -783,7 +783,7 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
             return -1;
         }
 
-        logdevtr (dev, MSG(HHCDA025I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bufcur));
+        logdevtr (dev, MSG(HHCDA025I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bufcur));
 
         dev->bufupd = 0;
 
@@ -852,7 +852,7 @@ ckd_read_track_retry:
         cache_setage(CACHE_DEVBUF, i);
         cache_unlock(CACHE_DEVBUF);
 
-        logdevtr (dev, MSG(HHCDA028I, SSID_TO_LCSS(dev->ssid), dev->devnum, trk, i));
+        logdevtr (dev, MSG(HHCDA028I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, trk, i));
 
         dev->cachehits++;
         dev->cache = i;
@@ -888,14 +888,14 @@ ckd_read_track_retry:
     /* Wait if no available cache entry */
     if (o < 0)
     {
-        logdevtr (dev, MSG(HHCDA029I, SSID_TO_LCSS(dev->ssid), dev->devnum, trk));
+        logdevtr (dev, MSG(HHCDA029I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, trk));
         dev->cachewaits++;
         cache_wait(CACHE_DEVBUF);
         goto ckd_read_track_retry;
     }
 
     /* Cache miss */
-    logdevtr (dev, MSG(HHCDA030I, SSID_TO_LCSS(dev->ssid), dev->devnum, trk, o));
+    logdevtr (dev, MSG(HHCDA030I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, trk, o));
 
     dev->cachemisses++;
 
@@ -917,7 +917,7 @@ ckd_read_track_retry:
 
     dev->syncio_active = active;
 
-    logdevtr (dev, MSG(HHCDA031I, SSID_TO_LCSS(dev->ssid), dev->devnum, trk, f+1, (long long)dev->ckdtrkoff, dev->ckdtrksz));
+    logdevtr (dev, MSG(HHCDA031I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, trk, f+1, (long long)dev->ckdtrkoff, dev->ckdtrksz));
 
     /* Seek to the track image offset */
     offset = (off_t)dev->ckdtrkoff;
@@ -967,7 +967,7 @@ ckd_read_track_retry:
     }
 
     /* Validate the track header */
-    logdevtr (dev, MSG(HHCDA034I, SSID_TO_LCSS(dev->ssid), dev->devnum, trk, dev->buf[0], dev->buf[1], dev->buf[2], dev->buf[3], dev->buf[4]));
+    logdevtr (dev, MSG(HHCDA034I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, trk, dev->buf[0], dev->buf[1], dev->buf[2], dev->buf[3], dev->buf[4]));
     trkhdr = (CKDDASD_TRKHDR *)dev->buf;
     if (trkhdr->bin != 0
       || trkhdr->cyl[0] != (cyl >> 8)
@@ -1489,7 +1489,7 @@ static int ckd_seek ( DEVBLK *dev, int cyl, int head,
 {
 int             rc;                     /* Return code               */
 
-    logdevtr (dev, MSG(HHCDA038I, SSID_TO_LCSS(dev->ssid), dev->devnum, cyl, head));
+    logdevtr (dev, MSG(HHCDA038I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, cyl, head));
 
     /* Read the track image */
     rc = ckd_read_cchh (dev, cyl, head, unitstat);
@@ -1528,7 +1528,7 @@ int             head;                   /* Next head for multitrack  */
     if (dev->ckdlcount == 0 &&
         (dev->ckdfmask & CKDMASK_SKCTL) == CKDMASK_SKCTL_INHSMT)
     {
-        logdevtr (dev, MSG(HHCDA039E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->ckdlcount, dev->ckdfmask));
+        logdevtr (dev, MSG(HHCDA039E, "", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->ckdlcount, dev->ckdfmask));
         if (dev->ckdtrkof)
             ckd_build_sense (dev, 0, SENSE1_FP | SENSE1_IE, 0, 0, 0);
         else
@@ -1558,7 +1558,7 @@ int             head;                   /* Next head for multitrack  */
         head -= dev->ckdheads;
         cyl++;
     }
-    logdevtr (dev, MSG(HHCDA040I, SSID_TO_LCSS(dev->ssid), dev->devnum, cyl, head));
+    logdevtr (dev, MSG(HHCDA040I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, cyl, head));
 
     /* File protect error if next track is outside the
        limits of the device or outside the defined extent */
@@ -1606,7 +1606,7 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
         && code != 0x9D)
         skipr0 = 1;
 
-    logdevtr (dev, MSG(HHCDA041I, SSID_TO_LCSS(dev->ssid), dev->devnum, orient[dev->ckdorient]));
+    logdevtr (dev, MSG(HHCDA041I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, orient[dev->ckdorient]));
 
     /* If orientation is at End-Of_Track then a multi-track advance
        failed previously during synchronous I/O */
@@ -1650,7 +1650,7 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
         dev->ckdcurdl = (rechdr->dlen[0] << 8) + rechdr->dlen[1];
         dev->ckdtrkof = (rechdr->cyl[0] == 0xFF) ? 0 : rechdr->cyl[0] >> 7;
 
-        logdevtr (dev, MSG(HHCDA043I, SSID_TO_LCSS(dev->ssid), dev->devnum, 
+        logdevtr (dev, MSG(HHCDA043I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, 
                 dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec,
                 dev->ckdcurkl, dev->ckdcurdl, dev->ckdtrkof));
 
@@ -1738,7 +1738,7 @@ CKDDASD_RECHDR  rechdr;                 /* CKD record header         */
         if (rc < 0) return rc;
     }
 
-    logdevtr (dev, MSG(HHCDA044I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->ckdcurkl));
+    logdevtr (dev, MSG(HHCDA044I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->ckdcurkl));
 
     /* Read key field */
     if (dev->ckdcurkl > 0)
@@ -1788,7 +1788,7 @@ CKDDASD_RECHDR  rechdr;                 /* Record header             */
     if (dev->ckdorient == CKDORIENT_COUNT)
         dev->bufoff += dev->ckdcurkl;
 
-    logdevtr (dev, MSG(HHCDA045I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->ckdcurdl));
+    logdevtr (dev, MSG(HHCDA045I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->ckdcurdl));
 
     /* Read data field */
     if (dev->ckdcurdl > 0)
@@ -1914,12 +1914,12 @@ int             ckdlen;                 /* Count+key+data length     */
     /* Pad the I/O buffer with zeroes if necessary */
     while (len < ckdlen) buf[len++] = '\0';
 
-    logdevtr (dev, MSG(HHCDA047I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->ckdcurcyl, dev->ckdcurhead, recnum, keylen, datalen));
+    logdevtr (dev, MSG(HHCDA047I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->ckdcurcyl, dev->ckdcurhead, recnum, keylen, datalen));
 
     /* Set track overflow flag if called for */
     if (trk_ovfl)
     {
-        logdevtr (dev, MSG(HHCDA048I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->ckdcurcyl, dev->ckdcurhead, recnum));
+        logdevtr (dev, MSG(HHCDA048I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->ckdcurcyl, dev->ckdcurhead, recnum));
         buf[0] |= 0x80;
     }
 
@@ -1975,7 +1975,7 @@ int             kdlen;                  /* Key+data length           */
     /* Pad the I/O buffer with zeroes if necessary */
     while (len < kdlen) buf[len++] = '\0';
 
-    logdevtr (dev, MSG(HHCDA050I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec,
+    logdevtr (dev, MSG(HHCDA050I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec,
             dev->ckdcurkl, dev->ckdcurdl));
 
     /* Write key and data */
@@ -2017,7 +2017,7 @@ int             rc;                     /* Return code               */
     /* Pad the I/O buffer with zeroes if necessary */
     while (len < dev->ckdcurdl) buf[len++] = '\0';
 
-    logdevtr (dev, MSG(HHCDA052I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec,
+    logdevtr (dev, MSG(HHCDA052I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec,
             dev->ckdcurdl));
 
     /* Write data */
@@ -3394,7 +3394,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* Extract the file mask from the I/O buffer */
         dev->ckdfmask = iobuf[0];
-        logdevtr (dev, MSG(HHCDA054I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->ckdfmask));
+        logdevtr (dev, MSG(HHCDA054I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->ckdfmask));
 
         /* Command reject if file mask is invalid */
         if ((dev->ckdfmask & CKDMASK_RESV) != 0)

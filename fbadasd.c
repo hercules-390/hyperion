@@ -562,7 +562,7 @@ fba_read_blkgrp_retry:
         cache_setage(CACHE_DEVBUF, i);
         cache_unlock(CACHE_DEVBUF);
 
-        logdevtr (dev, MSG(HHCDA071I, SSID_TO_LCSS(dev->ssid), dev->devnum, blkgrp, i));
+        logdevtr (dev, MSG(HHCDA071I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, blkgrp, i));
 
         dev->cachehits++;
         dev->cache = i;
@@ -586,14 +586,14 @@ fba_read_blkgrp_retry:
     /* Wait if no available cache entry */
     if (o < 0)
     {
-        logdevtr (dev, MSG(HHCDA072I, SSID_TO_LCSS(dev->ssid), dev->devnum, blkgrp));
+        logdevtr (dev, MSG(HHCDA072I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, blkgrp));
         dev->cachewaits++;
         cache_wait(CACHE_DEVBUF);
         goto fba_read_blkgrp_retry;
     }
 
     /* Cache miss */
-    logdevtr (dev, MSG(HHCDA073I, SSID_TO_LCSS(dev->ssid), dev->devnum, blkgrp, o));
+    logdevtr (dev, MSG(HHCDA073I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, blkgrp, o));
 
     dev->cachemisses++;
 
@@ -608,7 +608,7 @@ fba_read_blkgrp_retry:
     offset = (off_t)((S64)blkgrp * FBA_BLKGRP_SIZE);
     len = fba_blkgrp_len (dev, blkgrp);
 
-    logdevtr (dev, MSG(HHCDA074I, SSID_TO_LCSS(dev->ssid), dev->devnum, 
+    logdevtr (dev, MSG(HHCDA074I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, 
                         blkgrp, (long long)offset, fba_blkgrp_len(dev, blkgrp)));
 
     /* Seek to the block group offset */
@@ -1057,7 +1057,7 @@ int     repcnt;                         /* Replication count         */
                      + dev->fbalcblk - dev->fbaxfirst
                       ) * dev->fbablksiz;
 
-        logdevtr (dev, MSG(HHCDA077I, SSID_TO_LCSS(dev->ssid), dev->devnum, 
+        logdevtr (dev, MSG(HHCDA077I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, 
                             (long long unsigned int)dev->fbarba, (long long unsigned int)dev->fbarba));
 
         /* Return normal status */

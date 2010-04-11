@@ -805,7 +805,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
         if( !( pszCfgCmd = getenv( "HERCULES_IFC" ) ) )
             pszCfgCmd = HERCIFC_CMD;
 
-        TRACE(MSG(HHCTU029I, pszCfgCmd));
+        TRACE(MSG(HHCTU029I, "", pszCfgCmd));
 
         // Fork a process to execute the hercifc
         ifc_pid = fork();
@@ -835,7 +835,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
             file_limit=rlim.rlim_max;
             file_limit=(file_limit>1024)?1024:file_limit;
 
-            TRACE(MSG(HHCTU028I, (long long)file_limit));
+            TRACE(MSG(HHCTU028I, "", (long long)file_limit));
 
             for(i=0;(unsigned int)i<file_limit;i++)
             {
@@ -864,7 +864,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
     // Populate some common fields
     ctlreq.iType = 1;
 
-    TRACE(MSG(HHCTU030I,request_name,ifc_fd[0],ifc_fd[1]));
+    TRACE(MSG(HHCTU030I,"",request_name,ifc_fd[0],ifc_fd[1]));
 
     write( ifc_fd[0], &ctlreq, CTLREQ_SIZE );
 

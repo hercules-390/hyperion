@@ -587,7 +587,7 @@ int   new_hrdcpyfd;
             logger_hrdcpy = 0;
             logger_hrdcpyfd = 0;
             release_lock(&logger_lock);
-            fprintf(temp_hrdcpy,MSG(HHCLG015I));
+            fprintf(temp_hrdcpy,MSG(HHCLG015I, ""));
             fclose(temp_hrdcpy);
             WRITEMSG(HHCLG015I);
             return;

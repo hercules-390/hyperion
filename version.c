@@ -220,9 +220,9 @@ DLL_EXPORT void display_version_2 (FILE *f, char *prog, const char verbose,int h
 
     if ( f != stdout )
         if(httpfd<0)
-            fprintf (f, MSG(HHCIN010I, prog, VERSION));
+            fprintf (f, MSG(HHCIN010I, "", prog, VERSION));
         else
-            hprintf (httpfd, MSG(HHCIN010I, prog, VERSION));
+            hprintf (httpfd, MSG(HHCIN010I, "", prog, VERSION));
     else
         WRITEMSG (HHCIN010I, prog, VERSION);
 
@@ -230,9 +230,9 @@ DLL_EXPORT void display_version_2 (FILE *f, char *prog, const char verbose,int h
 
     if ( f != stdout )
         if(httpfd<0)
-            fprintf (f, MSG(HHCIN011I, HERCULES_COPYRIGHT));
+            fprintf (f, MSG(HHCIN011I, "", HERCULES_COPYRIGHT));
         else
-            hprintf (httpfd, MSG(HHCIN011I, HERCULES_COPYRIGHT));
+            hprintf (httpfd, MSG(HHCIN011I, "", HERCULES_COPYRIGHT));
     else
         WRITEMSG (HHCIN011I, HERCULES_COPYRIGHT);
 
@@ -243,9 +243,9 @@ DLL_EXPORT void display_version_2 (FILE *f, char *prog, const char verbose,int h
 
         if ( f != stdout )
             if(httpfd<0)
-                fprintf (f, MSG(HHCIN012I, __DATE__, __TIME__));
+                fprintf (f, MSG(HHCIN012I, "", __DATE__, __TIME__));
             else
-                hprintf (httpfd, MSG(HHCIN012I, __DATE__, __TIME__));
+                hprintf (httpfd, MSG(HHCIN012I, "", __DATE__, __TIME__));
         else
             WRITEMSG (HHCIN012I, __DATE__, __TIME__);
 
@@ -253,19 +253,19 @@ DLL_EXPORT void display_version_2 (FILE *f, char *prog, const char verbose,int h
 
         if ( f != stdout )
             if(httpfd<0)
-                fprintf (f, MSG(HHCIN013I));
+                fprintf (f, MSG(HHCIN013I, ""));
             else
-                hprintf (httpfd, MSG(HHCIN013I));
+                hprintf (httpfd, MSG(HHCIN013I, ""));
         else
-            WRITEMSG (HHCIN013I);
+            WRITEMSG (HHCIN013I, "");
 
         if (!(i = get_buildinfo_strings( &ppszBldInfoStr )))
         {
             if ( f != stdout )
                 if(httpfd<0)
-                    fprintf (f, MSG(HHCIN014I, "  (none)"));
+                    fprintf (f, MSG(HHCIN014I, "", "  (none)"));
                 else
-                    hprintf (httpfd, MSG(HHCIN014I, "  (none)"));
+                    hprintf (httpfd, MSG(HHCIN014I, "", "  (none)"));
             else
                 WRITEMSG (HHCIN014I, "  (none)");
         }
@@ -275,9 +275,9 @@ DLL_EXPORT void display_version_2 (FILE *f, char *prog, const char verbose,int h
             {
                 if ( f != stdout )
                     if(httpfd<0)
-                        fprintf (f, MSG(HHCIN014I, *ppszBldInfoStr));
+                        fprintf (f, MSG(HHCIN014I, "", *ppszBldInfoStr));
                     else
-                        hprintf (httpfd, MSG(HHCIN014I, *ppszBldInfoStr));
+                        hprintf (httpfd, MSG(HHCIN014I, "", *ppszBldInfoStr));
                 else
                     WRITEMSG (HHCIN014I, *ppszBldInfoStr);
             }

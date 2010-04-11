@@ -13,16 +13,15 @@
 /*-------------------------------------------------------------------
 Message principles:
 -----------------------------------------------------------------------
-HMMMnnnns Text
+HHCnnnnns Message text
 
 -----------------------------------------------------------------------
 Prefix principles
 -----------------------------------------------------------------------
-H:    'H' is the standard prefix for all Hercules messages.
-MMM:  Three capital letter module code, related to the module.
-nnnn: Four numeric digit code that unifies the Hercules message.
-s:    The capital letter that denotes the severity.
-' ':  One space character between the message prefix and Text.
+HHC:   'HHC' is the standard prefix for all Hercules messages.
+nnnnn: Five numeric digit code that unifies the Hercules message.
+s:     The capital letter that denotes the severity.
+' ':   One space character between the message prefix and Text.
 
 -----------------------------------------------------------------------
 Severity principles
@@ -44,12 +43,12 @@ Text:
    the text and to see the start and endpoint of the string.
 
 Examples:
-"HABC1234I This is a correct message"
-"HBCD2345E This is wrong!"
-"HCDE3456E THIS IS ALSO WRONG"
-"HDEF4567E Do not end with a dot or somehting else!"
-"HEFG5678E This string %s cannot be seen and is therefore wrong", ""
-"HFGH6789I This is a '%s' better example", "much"
+"HHC01234I This is a correct message"
+"HHC12345E This is wrong!"
+"HHC23456E THIS IS ALSO WRONG"
+"HHC34567E Do not end with a dot or somehting else!"
+"HHC45678E This string %s cannot be seen and is therefore wrong", ""
+"HHC56789I This is a '%s' better example", "much"
 
 -----------------------------------------------------------------------
 Message format principles:
@@ -71,89 +70,82 @@ If DEBUG is defined, either by #define or configure --enable-debug
 and OPTION_DEBUG_MESSAGES is enabled in featall.h then messages
 will be prefixed by sourcefile.c:lineno: where the message originates
 cpu.c:123:HABC1234I This is a message
------------------------------------------------------------------------
-Module codes:
-CON con1052c.c
-CSH cache.c
-RDR cardrdr.c
-PUN cardpch.c
-HAO hao.c
-SRV service.c
-
-highest message number current: 0013
 ---------------------------------------------------------------------*/
 
-#define MSG(id, ...)                #id " " id "\n", ## __VA_ARGS__
-#define MSG_C(id, ...)              #id " " id "", ## __VA_ARGS__
+/* These macro's will be deleted when all messages are std */
 #define WRITEMSG(id, ...)           writemsg(__FILE__, __LINE__, sysblk.msglvl, "", _(#id " " id "\n"), ## __VA_ARGS__)
 #define WRITEMSG_C(id, ...)         writemsg(__FILE__, __LINE__, sysblk.msglvl, "", _(#id " " id ""), ## __VA_ARGS__)
-#define WRITECMSG(color, id, ...)   writemsg(__FILE__, __LINE__, sysblk.msglvl, color, _(#id " " id "\n"), ## __VA_ARGS__)  
-#define WRITECMSG_C(color, id, ...) writemsg(__FILE__, __LINE__, sysblk.msglvl, color, _(#id " " id ""), ## __VA_ARGS__)  
+#define WRITECMSG(color, id, ...)   writemsg(__FILE__, __LINE__, sysblk.msglvl, color, _(#id " " id "\n"), ## __VA_ARGS__)
+#define WRITECMSG_C(color, id, ...) writemsg(__FILE__, __LINE__, sysblk.msglvl, color, _(#id " " id ""), ## __VA_ARGS__)
 
-#define WRMSG(id, s, ...)           writemsg(__FILE__, __LINE__, sysblk.msglvl, "", _(#id MOD s " " id "\n"), ## __VA_ARGS__)
-#define WRCMSG(color, id, s, ...)   writemsg(__FILE__, __LINE__, sysblk.msglvl, color, _(#id MOD s " " id "\n"), ## __VA_ARGS__)
-
-#undef MOD
-#define MOD "???"
+/* Use these macro's */
+#define MSG(id, s, ...)             #id s " " id "\n", ## __VA_ARGS__
+#define MSG_C(id, s, ...)           #id s " " id "", ## __VA_ARGS__
+#define WRMSG(id, s, ...)           writemsg(__FILE__, __LINE__, sysblk.msglvl, "", _(#id s " " id "\n"), ## __VA_ARGS__)
+#define WRMSG_C(id, s, ...)         writemsg(__FILE__, __LINE__, sysblk.msglvl, "", _(#id s " " id ""), ## __VA_ARGS__)
+#define WRCMSG(color, id, s, ...)   writemsg(__FILE__, __LINE__, sysblk.msglvl, color, _(#id s " " id "\n"), ## __VA_ARGS__)
+#define WRCMSG_C(color, id, s, ...) writemsg(__FILE__, __LINE__, sysblk.msglvl, color, _(#id s " " id ""), ## __VA_ARGS__)
 
 /* Hercules messages */
-#define H0001 "%s"
-#define H0002 "SCP not receiving '%s'"
-#define H0003 "Empty SCP command issued"
-#define H0004 "Control program information: type '%s', name '%s', sysplex '%s', level %16.16"I64_FMT"X"
-#define H0005 "The configuration has been placed into a system check-stop state because of an incompatible service call"
-#define H0006 "SYSCONS interface '%s'"
-#define H0007 "%s%02X Vector Facility configured '%s'"
-#define H0008 "%s%s"
-#define H0009 "RRR...RING...GGG!\a"
-#define H0010 "Enter input for console %1d:%04X"
-#define H0011 "Function '%s' failed; cache '%d' size '%d': '[%02d] %s'"
-#define H0012 "Releasing inactive buffer storage"
-#define H0014 "%1d:%04X Invalid argument: '%s'"
-#define H0015 "%1d:%04X File name is missing"
-#define H0016 "%1d:%04X File '%s': name too long, maximum length is '%ud'"
-#define H0017 "%1d:%04X File '%s': %s error: '[%02d] %s'"
-#define H0018 "%1d:%04X File '%s': Unexpected end of file"
-#define H0019 "%1d:%04X File '%s': Card image exceeds '%d' bytes"
+#define HHC00001 "%s"
+#define HHC00002 "SCP not receiving '%s'"
+#define HHC00003 "Empty SCP command issued"
+#define HHC00004 "Control program information: type '%s', name '%s', sysplex '%s', level %16.16"I64_FMT"X"
+#define HHC00005 "The configuration has been placed into a system check-stop state because of an incompatible service call"
+#define HHC00006 "SYSCONS interface '%s'"
+#define HHC00007 "%s%02X Vector Facility configured '%s'"
+#define HHC00008 "%s%s"
+#define HHC00009 "RRR...RING...GGG!\a"
+#define HHC00010 "Enter input for console %1d:%04X"
+#define HHC00011 "Function '%s' failed; cache '%d' size '%d': '[%02d] %s'"
+#define HHC00012 "Releasing inactive buffer storage"
+#define HHC00014 "%1d:%04X Invalid argument: '%s'"
+#define HHC00015 "%1d:%04X File name is missing"
+#define HHC00016 "%1d:%04X File '%s': name too long, maximum length is '%ud'"
+#define HHC00017 "%1d:%04X File '%s': %s error: '[%02d] %s'"
+#define HHC00018 "%1d:%04X File '%s': Unexpected end of file"
+#define HHC00019 "%1d:%04X File '%s': Card image exceeds '%d' bytes"
 // reserve 20-39 for file related
-#define H0040 "%1d:%04X Options 'ascii' and 'ebcdic' are mutually exclusive"
-#define H0041 "%1d:%04X Option 'ascii' is default for socket device"
-#define H0042 "%1d:%04X Option 'multifile' ignored: only one file specified"
+#define HHC00040 "%1d:%04X Options 'ascii' and 'ebcdic' are mutually exclusive"
+#define HHC00041 "%1d:%04X Option 'ascii' is default for socket device"
+#define HHC00042 "%1d:%04X Option 'multifile' ignored: only one file specified"
 // reserve 43-58 for option related
-#define H0059 "%1d:%04X Only one filename (sock_spec) allowed for socket device"
-#define H0060 "%1d:%04X Out of memory"
-#define H0061 "%1d:%04X IPv4 Address: %s (%s) disconnected from device (%s)"
+#define HHC00059 "%1d:%04X Only one filename (sock_spec) allowed for socket device"
+#define HHC00060 "%1d:%04X Out of memory"
+#define HHC00061 "%1d:%04X IPv4 Address: %s (%s) disconnected from device (%s)"
 
-#define H0070 "Unknown hao command, valid commands are:\n" \
+// HHC0007xx, HHC0008xx and HHC0009xx reserved for hao.c. (to recognize own messages)
+#define HHC00070 "Unknown hao command, valid commands are:\n" \
               "          hao tgt <tgt> : define target rule (pattern) to react on\n" \
               "          hao cmd <cmd> : define command for previously defined rule\n" \
               "          hao list <n>  : list all rules/commands or only at index <n>\n" \
               "          hao del <n>   : delete the rule at index <n>\n" \
               "          hao clear     : delete all rules (stops automatic operator)"
-#define H0071 "The '%s' was not added because table is full; table size is %02d"
-#define H0072 "The command '%s' given, but the command '%s' was expected"
-#define H0073 "Empty '%s' specified"
-#define H0074 "The target was not added because a duplicate was found in the table at %02d"
-#define H0075 "Error in function '%s': '%s'"
-#define H0076 "The '%s' was not added because it causes a loop with the '%s' at index %02d"
-#define H0077 "The '%s' was placed at index %d"
-#define H0078 "The command was not added because it may cause dead locks"
-#define H0079 "No rule defined at index %02d"
-#define H0080 "All HAO rules are cleared"
-#define H0081 "Performing command '%s'"
-#define H0082 "%d rule(s) displayed"
-#define H0083 "The command 'del' was given without a valid index"
-#define H0084 "Invalid index; index must be between 0 and %02d"
-#define H0085 "Rule at index %d not deleted, already empty"
-#define H0086 "Rule at index %d successfully deleted"
-#define H0087 "The defined Hercules Automatic Operator rule(s) are:"
-#define H0088 "Index %02d: target '%s' -> command '%s'"
-#define H0089 "The are no HAO rules defined"
+#define HHC00071 "The '%s' was not added because table is full; table size is %02d"
+#define HHC00072 "The command '%s' given, but the command '%s' was expected"
+#define HHC00073 "Empty '%s' specified"
+#define HHC00074 "The target was not added because a duplicate was found in the table at %02d"
+#define HHC00075 "Error in function '%s': '%s'"
+#define HHC00076 "The '%s' was not added because it causes a loop with the '%s' at index %02d"
+#define HHC00077 "The '%s' was placed at index %d"
+#define HHC00078 "The command was not added because it may cause dead locks"
+#define HHC00079 "No rule defined at index %02d"
+#define HHC00080 "All HAO rules are cleared"
+#define HHC00081 "Performing command '%s'"
+#define HHC00082 "%d rule(s) displayed"
+#define HHC00083 "The command 'del' was given without a valid index"
+#define HHC00084 "Invalid index; index must be between 0 and %02d"
+#define HHC00085 "Rule at index %d not deleted, already empty"
+#define HHC00086 "Rule at index %d successfully deleted"
+#define HHC00087 "The defined Hercules Automatic Operator rule(s) are:"
+#define HHC00088 "Index %02d: target '%s' -> command '%s'"
+#define HHC00089 "The are no HAO rules defined"
+// reserve 90-99 for hao.c
 
-
-#define H0100 "Thread id "TIDPAT", prio %d, name '%s' started"
-#define H0101 "Thread id "TIDPAT", prio %d, name '%s' ended"
+#define HHC00100 "Thread id "TIDPAT", prio %d, name '%s' started"
+#define HHC00101 "Thread id "TIDPAT", prio %d, name '%s' ended"
 // reserve 102-129 thread related
+
 
 /*
  *                                  N E W   M E S S A G E   F O R M A T

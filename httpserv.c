@@ -76,7 +76,7 @@ DLL_EXPORT int html_include(WEBBLK *webblk, char *filename)
     if (!inclfile)
     {
         WRITEMSG(HHCHT011E,fullname,strerror(errno));
-        hprintf(webblk->sock,MSG(HHCHT011E,filename,strerror(errno)));
+        hprintf(webblk->sock,MSG(HHCHT011E,"",filename,strerror(errno)));
         return FALSE;
     }
 

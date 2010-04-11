@@ -1856,7 +1856,7 @@ char    buf[1024];                      /* Buffer workarea           */
     if (msgbuf == NULL)
     {
         fprintf (stderr,
-                MSG(HHCPN003S, strerror(errno)));
+                MSG(HHCPN003S, "", strerror(errno)));
         return;
     }
 

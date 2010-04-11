@@ -3550,7 +3550,7 @@ BYTE    stat;                           /* Unit status               */
             if (dev->prompt1052)
             {
                 snprintf ((char *)dev->buf, dev->bufsize,
-                        MSG(HHCTE006A, SSID_TO_LCSS(dev->ssid), dev->devnum));
+                        MSG(HHCTE006A, "", SSID_TO_LCSS(dev->ssid), dev->devnum));
                 len = (int)strlen((char *)dev->buf);
                 rc = send_packet (dev->fd, dev->buf, len, NULL);
                 if (rc < 0)
