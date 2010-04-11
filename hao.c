@@ -193,7 +193,7 @@ static void hao_tgt(char *arg)
   if(i == HAO_MAXRULE)
   {
     release_lock(&ao_lock);
-    WRMSG(H0071, "E");
+    WRMSG(H0071, "E", "target", HAO_MAXRULE);
     return;
   }
 
@@ -203,7 +203,7 @@ static void hao_tgt(char *arg)
     if(ao_tgt[j] && !ao_cmd[j])
     {
       release_lock(&ao_lock);
-      WRMSG(H0072, "E");
+      WRMSG(H0072, "E", "tgt", "cmd");
       return;
     }
   }
@@ -222,7 +222,7 @@ static void hao_tgt(char *arg)
     if(ao_tgt[j] && !strcmp(arg, ao_tgt[j]))
     {
       release_lock(&ao_lock);
-      WRMSG(H0074, "E");
+      WRMSG(H0074, "E", j);
       return;
     }
   }
@@ -248,7 +248,7 @@ static void hao_tgt(char *arg)
     {
       release_lock(&ao_lock);
       regfree(&ao_preg[i]);
-      WRMSG(H0076, "E", i);
+      WRMSG(H0076, "E", "target", "command", i);
       return;
     }
   }
@@ -266,7 +266,7 @@ static void hao_tgt(char *arg)
   }
 
   release_lock(&ao_lock);
-  WRMSG(H0077, "I", i);
+  WRMSG(H0077, "I", "target", i);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -291,7 +291,7 @@ static void hao_cmd(char *arg)
   if(i == HAO_MAXRULE)
   {
     release_lock(&ao_lock);
-    WRMSG(H0078, "E");
+    WRMSG(H0071, "E", "command", HAO_MAXRULE);
     return;
   }
 
@@ -299,7 +299,7 @@ static void hao_cmd(char *arg)
   if(!ao_tgt[i])
   {
     release_lock(&ao_lock);
-    WRMSG(H0079, "E");
+    WRMSG(H0072, "E", "cmd", "tgt");
     return;
   }
 
@@ -316,7 +316,7 @@ static void hao_cmd(char *arg)
   if(!strcasecmp(&arg[j], "hao") || !strncasecmp(&arg[j], "hao ", 4))
   {
     release_lock(&ao_lock);
-    WRMSG(H0080, "E");
+    WRMSG(H0078, "E");
     return;
   }
 
@@ -326,7 +326,7 @@ static void hao_cmd(char *arg)
     if(ao_tgt[j] && !regexec(&ao_preg[j], arg, 0, NULL, 0))
     {
       release_lock(&ao_lock);
-      WRMSG(H0081, "E", j);
+      WRMSG(H0076, "E", "command", "target", j);
       return;
     }
   }
@@ -343,7 +343,7 @@ static void hao_cmd(char *arg)
   }
 
   release_lock(&ao_lock);
-  WRMSG(H0082, "I", i);
+  WRMSG(H0077, "I", "command", i);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -428,7 +428,7 @@ static void hao_list(char *arg)
       }
     }
     release_lock(&ao_lock);
-    WRMSG(H0089, "I", size);
+    WRMSG(H0082, "I", size);
   }
   else
   {
@@ -441,7 +441,7 @@ static void hao_list(char *arg)
       obtain_lock(&ao_lock);
 
       if(!ao_tgt[i])
-        WRMSG(H0090, "E", i);
+        WRMSG(H0079, "E", i);
       else
         WRMSG(H0088, "I", i, ao_tgt[i], (ao_cmd[i] ? ao_cmd[i] : "not specified"));
 
@@ -481,7 +481,7 @@ static void hao_clear(void)
   }
 
   release_lock(&ao_lock);
-  WRMSG(H0091, "I");
+  WRMSG(H0080, "I");
 }
 
 /*---------------------------------------------------------------------------*/
@@ -590,7 +590,7 @@ DLL_EXPORT void hao_message(char *buf)
       {
         BYTE sysgroup; 
         /* issue command for this rule */
-        WRMSG(H0092, "I", ao_cmd[i]);
+        WRMSG(H0081, "I", ao_cmd[i]);
         sysgroup = sysblk.sysgroup;
         sysblk.sysgroup = SYSGROUP_ALL;
         panel_command(ao_cmd[i]);

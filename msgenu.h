@@ -104,7 +104,7 @@ highest message number current: 0013
 #define H0005 "The configuration has been placed into a system check-stop state because of an incompatible service call"
 #define H0006 "SYSCONS interface '%s'"
 #define H0007 "%s%02X Vector Facility configured '%s'"
-#define H0008 "File '%s': %s"
+#define H0008 "%s%s"
 #define H0009 "RRR...RING...GGG!\a"
 #define H0010 "Enter input for console %1d:%04X"
 #define H0011 "Function '%s' failed; cache '%d' size '%d': '[%02d] %s'"
@@ -119,7 +119,7 @@ highest message number current: 0013
 #define H0040 "%1d:%04X Options 'ascii' and 'ebcdic' are mutually exclusive"
 #define H0041 "%1d:%04X Option 'ascii' is default for socket device"
 #define H0042 "%1d:%04X Option 'multifile' ignored: only one file specified"
-// reserv 43-58 for option related
+// reserve 43-58 for option related
 #define H0059 "%1d:%04X Only one filename (sock_spec) allowed for socket device"
 #define H0060 "%1d:%04X Out of memory"
 #define H0061 "%1d:%04X IPv4 Address: %s (%s) disconnected from device (%s)"
@@ -130,31 +130,29 @@ highest message number current: 0013
               "          hao list <n>  : list all rules/commands or only at index <n>\n" \
               "          hao del <n>   : delete the rule at index <n>\n" \
               "          hao clear     : delete all rules (stops automatic operator)"
-#define H0071 "Target not added, table full"
-#define H0072 "Tgt command given, but cmd command expected"
+#define H0071 "The '%s' was not added because table is full; table size is %02d"
+#define H0072 "The command '%s' given, but the command '%s' was expected"
 #define H0073 "Empty '%s' specified"
-#define H0074 "Target not added, duplicate found in table"
+#define H0074 "The target was not added because a duplicate was found in the table at %02d"
 #define H0075 "Error in function '%s': '%s'"
-#define H0076 "Target not added, causes loop with command at index %d"
-#define H0077 "Target placed at index %d"
-#define H0078 "Command not added, table is full"
-#define H0079 "Cmd command given, but tgt command expected"
-#define H0080 "Command not added, may cause dead locks"
-#define H0081 "Command not added; causes loop with target at index %d"
-#define H0082 "Command placed at index %d"
-#define H0083 "Hao del command given without a valid index"
-#define H0084 "Invalid index, index must be between 0 and %d"
+#define H0076 "The '%s' was not added because it causes a loop with the '%s' at index %02d"
+#define H0077 "The '%s' was placed at index %d"
+#define H0078 "The command was not added because it may cause dead locks"
+#define H0079 "No rule defined at index %02d"
+#define H0080 "All HAO rules are cleared"
+#define H0081 "Performing command '%s'"
+#define H0082 "%d rule(s) displayed"
+#define H0083 "The command 'del' was given without a valid index"
+#define H0084 "Invalid index; index must be between 0 and %02d"
 #define H0085 "Rule at index %d not deleted, already empty"
 #define H0086 "Rule at index %d successfully deleted"
-#define H0087 "The defined Automatic Operator rule(s) are:"
+#define H0087 "The defined Hercules Automatic Operator rule(s) are:"
 #define H0088 "Index %02d: target '%s' -> command '%s'"
-#define H0089 "%d rule(s) displayed"
-#define H0090 "No rule defined at index %d"
-#define H0091 "All automatic operation rules cleared"
-#define H0092 "Firing command '%s'"
+
 
 #define H0100 "Thread id "TIDPAT", prio %d, name '%s' started"
 #define H0101 "Thread id "TIDPAT", prio %d, name '%s' ended"
+// reserve 102-129 thread related
 
 /*
  *                                  N E W   M E S S A G E   F O R M A T
@@ -1039,6 +1037,9 @@ highest message number current: 0013
 #define HHCIN023W "%s Event received, SHUTDOWN previously requested..."
 #define HHCIN050I "Ctrl-Break intercepted. Interrupt Key depressed simulated"
 #define HHCIN099I "Hercules terminated"
+// HHCIN099I is used with and without logmsg
+
+
 #define HHCIN950I "Begin system cleanup"
 #define HHCIN959I "System cleanup complete"
 #define HHCMD995E ".RC file \"%s\" not found"
