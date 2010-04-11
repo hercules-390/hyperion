@@ -148,6 +148,7 @@ highest message number current: 0013
 #define H0086 "Rule at index %d successfully deleted"
 #define H0087 "The defined Hercules Automatic Operator rule(s) are:"
 #define H0088 "Index %02d: target '%s' -> command '%s'"
+#define H0089 "The are no HAO rules defined"
 
 
 #define H0100 "Thread id "TIDPAT", prio %d, name '%s' started"

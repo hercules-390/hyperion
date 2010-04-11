@@ -413,7 +413,6 @@ static void hao_list(char *arg)
   if(!rc || rc == -1)
   {
     /* list all rules */
-    WRMSG(H0087, "I");
     size = 0;
 
     /* serialize */
@@ -423,12 +422,16 @@ static void hao_list(char *arg)
     {
       if(ao_tgt[i])
       {
+        if (size == 0) WRMSG(H0087, "I");
         WRMSG(H0088, "I", i, ao_tgt[i], (ao_cmd[i] ? ao_cmd[i] : "<not specified>"));
         size++;
       }
     }
     release_lock(&ao_lock);
-    WRMSG(H0082, "I", size);
+    if ( size == 0 )
+        WRMSG(H0089, "I");
+    else
+        WRMSG(H0082, "I", size);
   }
   else
   {
