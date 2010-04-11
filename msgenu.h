@@ -116,11 +116,11 @@ cpu.c:123:HABC1234I This is a message
 
 // HHC0007xx, HHC0008xx and HHC0009xx reserved for hao.c. (to recognize own messages)
 #define HHC00070 "Unknown hao command, valid commands are:\n" \
-              "          hao tgt <tgt> : define target rule (pattern) to react on\n" \
-              "          hao cmd <cmd> : define command for previously defined rule\n" \
-              "          hao list <n>  : list all rules/commands or only at index <n>\n" \
-              "          hao del <n>   : delete the rule at index <n>\n" \
-              "          hao clear     : delete all rules (stops automatic operator)"
+       "          hao tgt <tgt> : define target rule (pattern) to react on\n" \
+       "          hao cmd <cmd> : define command for previously defined rule\n" \
+       "          hao list <n>  : list all rules/commands or only at index <n>\n" \
+       "          hao del <n>   : delete the rule at index <n>\n" \
+       "          hao clear     : delete all rules (stops automatic operator)"
 #define HHC00071 "The '%s' was not added because table is full; table size is %02d"
 #define HHC00072 "The command '%s' given, but the command '%s' was expected"
 #define HHC00073 "Empty '%s' specified"
@@ -145,7 +145,8 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00100 "Thread id "TIDPAT", prio %d, name '%s' started"
 #define HHC00101 "Thread id "TIDPAT", prio %d, name '%s' ended"
 // reserve 102-129 thread related
-
+#define HHC00130 "PGMPRDOS LICENSED specified and a licenced program product operating system is running"
+#define HHC00131 "A licensed program product operating system detected, all processors have been stopped"
 
 /*
  *                                  N E W   M E S S A G E   F O R M A T
