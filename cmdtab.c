@@ -291,7 +291,7 @@ ProcessPanelCommandExit:
 int HelpCommand(int argc, char *argv[], char *cmdline)
 {
     CMDTAB* pCmdTab;
-    int rc = -1;
+    int rc = 1;
 
     UNREFERENCED(cmdline);
 
@@ -325,16 +325,19 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
                 rc = 0;
             }
         }
-        if ( argc == 2 && strlen(argv[1]) == 9 &&
-             ( ( argv[1][0] == 'h' && argv[1][1] == 'h' && argv[1][2] == 'c') ||
-               ( argv[1][0] == 'H' && argv[1][1] == 'H' && argv[1][2] == 'C') ) )
-        { 
-            rc = (HelpMessage(argv[1]));
-        }
-        else
+        if ( rc == 1 )
         {
-            WRITEMSG( HHCMD142I, argv[1]);
-            rc = -1;
+            if ( argc == 2 && strlen(argv[1]) == 9 &&
+                ( ( argv[1][0] == 'h' && argv[1][1] == 'h' && argv[1][2] == 'c') ||
+                  ( argv[1][0] == 'H' && argv[1][1] == 'H' && argv[1][2] == 'C') ) )
+            { 
+                rc = (HelpMessage(argv[1]));
+            }
+            else
+            {
+                WRITEMSG( HHCMD142I, argv[1]);
+                rc = -1;
+            }
         }
     }
     return rc;
