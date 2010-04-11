@@ -136,7 +136,7 @@ static int TUNTAP_SetMode (int fd, struct ifreq *ifr)
         }
         else if (rc == 0)
         {
-            WRITEMSG (HHCTU031E, hercifc);
+            WRMSG (HHC00135, "E", hercifc);
             errno = EPERM;
             rc = -1;
         }
@@ -216,7 +216,7 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
 
     if( uname( &utsbuf ) != 0 )
     {
-        WRITEMSG(HHCTU001E, strerror( errno ) );
+        WRMSG(HHC00136, "E", "uname()", strerror( errno ) );
 
         return -1;
     }
@@ -227,7 +227,7 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
 
     if( fd < 0 )
     {
-        WRITEMSG(HHCTU002E, pszTUNDevice, strerror( errno ) );
+        WRMSG(HHC00137, "E", pszTUNDevice, strerror( errno ) );
 
         return -1;
     }
@@ -246,7 +246,7 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
 
         if( TUNTAP_SetMode (fd, &ifr) < 0 )
         {
-            WRITEMSG(HHCTU003E, pszTUNDevice, strerror( errno ) );
+            WRMSG(HHC00138, "E", pszTUNDevice, strerror( errno ) );
             return -1;
         }
 
@@ -270,7 +270,7 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
             strncpy( pszNetDevName, ++p, IFNAMSIZ );
         else
         {
-            WRITEMSG(HHCTU004E, pszTUNDevice );
+            WRMSG(HHC00139, "E", pszTUNDevice );
             return -1;
         }
     }
@@ -302,7 +302,7 @@ int             TUNTAP_ClrIPAddr( char*   pszNetDevName )
 
     if( !pszNetDevName || !*pszNetDevName )
     {
-        WRITEMSG( HHCTU005E, pszNetDevName ? pszNetDevName : "(null pointer)" );
+        WRMSG( HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
         return -1;
     }
 
@@ -331,7 +331,7 @@ int             TUNTAP_SetIPAddr( char*   pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
-        WRITEMSG( HHCTU005E, pszNetDevName ? pszNetDevName : "(null pointer)" );
+        WRMSG( HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
         return -1;
     }
 
@@ -340,7 +340,7 @@ int             TUNTAP_SetIPAddr( char*   pszNetDevName,
     if( !pszIPAddr  ||
         !inet_aton( pszIPAddr, &sin->sin_addr ) )
     {
-        WRITEMSG( HHCTU006E, pszNetDevName, !pszIPAddr ? "NULL" : pszIPAddr );
+        WRMSG( HHC00141, "E", pszNetDevName, !pszIPAddr ? "NULL" : pszIPAddr );
         return -1;
     }
 
@@ -366,7 +366,7 @@ int             TUNTAP_SetDestAddr( char*   pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
-        WRITEMSG( HHCTU005E, pszNetDevName ? pszNetDevName : "(null pointer)" );
+        WRMSG( HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
         return -1;
     }
 
@@ -375,7 +375,7 @@ int             TUNTAP_SetDestAddr( char*   pszNetDevName,
     if( !pszDestAddr  ||
         !inet_aton( pszDestAddr, &sin->sin_addr ) )
     {
-        WRITEMSG(HHCTU008E, pszNetDevName, !pszDestAddr ? "NULL" : pszDestAddr );
+        WRMSG(HHC00142, "E", pszNetDevName, !pszDestAddr ? "NULL" : pszDestAddr );
             return -1;
     }
 
@@ -401,7 +401,7 @@ int           TUNTAP_SetNetMask( char*   pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
-        WRITEMSG( HHCTU005E, pszNetDevName ? pszNetDevName : "(null pointer)" );
+        WRMSG( HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
         return -1;
     }
 
@@ -410,7 +410,7 @@ int           TUNTAP_SetNetMask( char*   pszNetDevName,
     if( !pszNetMask  ||
         !inet_aton( pszNetMask, &sin->sin_addr ) )
     {
-        WRITEMSG( HHCTU010E, pszNetDevName, !pszNetMask ? "NULL" : pszNetMask );
+        WRMSG( HHC00143, "E", pszNetDevName, !pszNetMask ? "NULL" : pszNetMask );
             return -1;
     }
 
@@ -437,7 +437,7 @@ int             TUNTAP_SetMTU( char*   pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
-        WRITEMSG(HHCTU005E, pszNetDevName ? pszNetDevName : "(null pointer)" );
+        WRMSG(HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
         return -1;
     }
 
@@ -445,7 +445,7 @@ int             TUNTAP_SetMTU( char*   pszNetDevName,
 
     if( !pszMTU  || !*pszMTU )
     {
-        WRITEMSG( HHCTU012E, pszNetDevName );
+        WRMSG( HHC00144, "E", pszNetDevName, pszMTU ? pszMTU : "NULL" );
         return -1;
     }
 
@@ -453,7 +453,7 @@ int             TUNTAP_SetMTU( char*   pszNetDevName,
 
     if( iMTU < 46 || iMTU > 65536 )
     {
-        WRITEMSG( HHCTU013E, pszNetDevName, pszMTU );
+        WRMSG( HHC00144, "E", pszNetDevName, pszMTU );
         return -1;
     }
 
@@ -481,7 +481,7 @@ int           TUNTAP_SetMACAddr( char*   pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
-        WRITEMSG( HHCTU005E, pszNetDevName ? pszNetDevName : "(null pointer)" );
+        WRMSG( HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
         return -1;
     }
 
@@ -489,7 +489,7 @@ int           TUNTAP_SetMACAddr( char*   pszNetDevName,
 
     if( !pszMACAddr || ParseMAC( pszMACAddr, mac ) != 0 )
     {
-        WRITEMSG( HHCTU015E, pszNetDevName, !pszMACAddr ? "NULL" : pszMACAddr );
+        WRMSG( HHC00145, "E", pszNetDevName, pszMACAddr ? pszMACAddr : "NULL" );
             return -1;
     }
 
@@ -518,7 +518,7 @@ int             TUNTAP_SetFlags ( char*   pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
-        WRITEMSG( HHCTU005E, pszNetDevName ? pszNetDevName : "(null pointer)" );
+        WRMSG( HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
         return -1;
     }
 
@@ -548,7 +548,7 @@ int      TUNTAP_GetFlags ( char*   pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
-        WRITEMSG( HHCTU005E, pszNetDevName ? pszNetDevName : "(null pointer)" );
+        WRMSG( HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
         return -1;
     }
 
@@ -597,7 +597,7 @@ int           TUNTAP_AddRoute( char*   pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
-        WRITEMSG (HHCTU005E, pszNetDevName ? pszNetDevName : "(null pointer)" );
+        WRMSG (HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
         return -1;
     }
 
@@ -610,7 +610,7 @@ int           TUNTAP_AddRoute( char*   pszNetDevName,
     if( !pszDestAddr  ||
         !inet_aton( pszDestAddr, &sin->sin_addr ) )
     {
-        WRITEMSG( HHCTU008E, pszNetDevName, !pszDestAddr ? "NULL" : pszDestAddr );
+        WRMSG( HHC00142, "E", pszNetDevName, pszDestAddr ? pszDestAddr : "NULL" );
         return -1;
     }
 
@@ -621,7 +621,7 @@ int           TUNTAP_AddRoute( char*   pszNetDevName,
     if( !pszNetMask  ||
         !inet_aton( pszNetMask, &sin->sin_addr ) )
     {
-        WRITEMSG( HHCTU010E, pszNetDevName, !pszNetMask ? "NULL" : pszNetMask );
+        WRMSG( HHC00143, "E", pszNetDevName, pszNetMask ? pszNetMask : "NULL");
         return -1;
     }
 
@@ -633,7 +633,7 @@ int           TUNTAP_AddRoute( char*   pszNetDevName,
     {
         if( !inet_aton( pszGWAddr, &sin->sin_addr ) )
         {
-            WRITEMSG(HHCTU020E, pszNetDevName, pszGWAddr );
+            WRMSG(HHC00146, "E", pszNetDevName, pszGWAddr );
             return -1;
         }
     }
@@ -661,7 +661,7 @@ int           TUNTAP_DelRoute( char*   pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
-        WRITEMSG(HHCTU005E, pszNetDevName ? pszNetDevName : "(null pointer)" );
+        WRMSG(HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
         return -1;
     }
 
@@ -674,7 +674,7 @@ int           TUNTAP_DelRoute( char*   pszNetDevName,
     if( !pszDestAddr  ||
         !inet_aton( pszDestAddr, &sin->sin_addr ) )
     {
-        WRITEMSG(HHCTU008E, pszNetDevName, !pszDestAddr ? "NULL" : pszDestAddr );
+        WRMSG(HHC00142, "E", pszNetDevName, pszDestAddr ? pszDestAddr : "NULL" );
         return -1;
     }
 
@@ -685,7 +685,7 @@ int           TUNTAP_DelRoute( char*   pszNetDevName,
     if( !pszNetMask  ||
         !inet_aton( pszNetMask, &sin->sin_addr ) )
     {
-        WRITEMSG( HHCTU010E, pszNetDevName, !pszNetMask ? "NULL" : pszNetMask );
+        WRMSG( HHC00143, "E", pszNetDevName, pszNetMask ? pszNetMask : "NULL" );
         return -1;
     }
 
@@ -697,7 +697,7 @@ int           TUNTAP_DelRoute( char*   pszNetDevName,
     {
         if( !inet_aton( pszGWAddr, &sin->sin_addr ) )
         {
-            WRITEMSG( HHCTU020E, pszNetDevName, pszGWAddr );
+            WRMSG( HHC00146, "E", pszNetDevName, pszGWAddr );
             return -1;
         }
     }
@@ -797,7 +797,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
     {
         if( socketpair( AF_UNIX, SOCK_STREAM, 0, ifc_fd ) < 0 )
         {
-            WRITEMSG( HHCTU025E, strerror( errno ) );
+            WRMSG( HHC00136, "E", "socketpair()", strerror( errno ) );
             return -1;
         }
 
@@ -805,14 +805,14 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
         if( !( pszCfgCmd = getenv( "HERCULES_IFC" ) ) )
             pszCfgCmd = HERCIFC_CMD;
 
-        TRACE(MSG(HHCTU029I, "", pszCfgCmd));
+        TRACE(MSG(HHC00147, "I", pszCfgCmd));
 
         // Fork a process to execute the hercifc
         ifc_pid = fork();
 
         if( ifc_pid < 0 )
         {
-            WRITEMSG( HHCTU026E, strerror( errno ) );
+            WRMSG( HHC00136, "E", "fork()", strerror( errno ) );
             return -1;
         }
 
@@ -835,7 +835,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
             file_limit=rlim.rlim_max;
             file_limit=(file_limit>1024)?1024:file_limit;
 
-            TRACE(MSG(HHCTU028I, "", (long long)file_limit));
+            TRACE(MSG(HHC00148, "I", (long long)file_limit));
 
             for(i=0;(unsigned int)i<file_limit;i++)
             {
@@ -852,7 +852,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
             rc = execlp( pszCfgCmd, pszCfgCmd, NULL );
 
             // The exec function returns only if unsuccessful
-            WRITEMSG( HHCTU027E, pszCfgCmd, strerror( errno ) );
+            WRMSG( HHC00136, "E", "execlp()", strerror( errno ) );
 
             exit( 127 );
         }
@@ -864,7 +864,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
     // Populate some common fields
     ctlreq.iType = 1;
 
-    TRACE(MSG(HHCTU030I,"",request_name,ifc_fd[0],ifc_fd[1]));
+    TRACE(MSG(HHC00149,"I",request_name,ifc_fd[0],ifc_fd[1]));
 
     write( ifc_fd[0], &ctlreq, CTLREQ_SIZE );
 

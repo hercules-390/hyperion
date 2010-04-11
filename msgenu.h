@@ -148,6 +148,22 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00130 "PGMPRDOS LICENSED specified and a licenced program product operating system is running"
 #define HHC00131 "A licensed program product operating system detected, all processors have been stopped"
 
+#define HHC00135 "Timeout for module '%s', possible older version"
+#define HHC00136 "Error in function '%s': '%s'"
+#define HHC00137 "Error opening TUN/TAP device '%s': '%s'"
+#define HHC00138 "Error setting TUN/TAP mode '%s': '%s'"
+#define HHC00139 "Invalid TUN/TAP device name '%s'"
+#define HHC00140 "Invalid net device name '%s'"
+#define HHC00141 "Net device '%s': Invalid ip '%s'"
+#define HHC00142 "Net device '%s': Invalid destination address '%s'"
+#define HHC00143 "Net device '%s': Invalid net mask '%s'"
+#define HHC00144 "Net device '%s': Invalid MTU '%s'"
+#define HHC00145 "Net device '%s': Invalid MAC address '%s'"
+#define HHC00146 "Net device '%s': Invalid gateway address '%s'"
+#define HHC00147 "Executing '%s' to configure interface"
+#define HHC00148 "Closing %" I64_FMT "d files"
+#define HHC00149 "IFC_IOCtl called for %s on FDs %d %d"
+
 /*
  *                                  N E W   M E S S A G E   F O R M A T
  *=========================================================================================================================================
@@ -1264,27 +1280,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCTT001W "Timer thread set priority(%d) failed: (%s)"
 #define HHCTT002I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCTT003I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
-
-/* tuntap.c */
-#define HHCTU001E "Unable to determine operating system type: %s"
-#define HHCTU002E "Error opening TUN/TAP device(%s) %s"
-#define HHCTU003E "Error setting TUN/TAP mode(%s) %s"
-#define HHCTU004E "TUN/TAP device name(%s) invalid"
-#define HHCTU005E "Net device name(%s) invalid"
-#define HHCTU006E "Net device(%s) ip(%s) invalid"
-#define HHCTU008E "Net device(%s) destination address(%s) invalid"
-#define HHCTU010E "Net device(%s) net mask(%s) invalid"
-#define HHCTU012E "Net device(%s) Invalid null or empty MTU"
-#define HHCTU013E "Net device(%s) MTU(%s) invalid"
-#define HHCTU015E "Net device(%s) MAC address(%s) invalid"
-#define HHCTU020E "Net device(%s) gateway address(%s) invalid"
-#define HHCTU025E "Call to socketpair failed: %s"
-#define HHCTU026E "Call to fork failed: %s"
-#define HHCTU027E "execl error on %s: %s"
-#define HHCTU028I "Closing %" I64_FMT "d files"
-#define HHCTU029I "Executing '%s' to configure interface"
-#define HHCTU030I "IFC_IOCtl called for %s on FDs %d %d"
-#define HHCTU031E "%s timeout, possible older version"
 
 /* version.c */
 #define HHCIN010I "%sversion (%s)"
