@@ -92,7 +92,8 @@ static CMDTAB cmdtab[] =
 #include "cmdtab.h"
 COMMAND ( NULL, 0, 0, NULL, NULL, NULL ) /* End of table */
 };
-
+/* internal functions */
+int HelpMessage(char *);
 
 /*-------------------------------------------------------------------*/
 /* $zapcmd - internal debug - may cause havoc - use with caution     */
@@ -290,6 +291,7 @@ ProcessPanelCommandExit:
 int HelpCommand(int argc, char *argv[], char *cmdline)
 {
     CMDTAB* pCmdTab;
+    int rc = -1;
 
     UNREFERENCED(cmdline);
 
@@ -306,7 +308,8 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
                  (pCmdTab->shortdesc) )
                 logmsg( _("  %-9.9s    %s \n"), pCmdTab->statement, pCmdTab->shortdesc );
         }
-
+        
+        rc = 0;
     }
     else
     {
@@ -319,16 +322,34 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
                 logmsg( _("%s: %s\n"),pCmdTab->statement,pCmdTab->shortdesc);
                 if(pCmdTab->longdesc)
                     logmsg( _("%s\n"),pCmdTab->longdesc );
-                return 0;
+                rc = 0;
             }
         }
-    
-        WRITEMSG( HHCMD142I, argv[1]);
-        return -1;
+        if ( argc == 2 && strlen(argv[1]) == 9 &&
+             ( ( argv[1][0] == 'h' && argv[1][1] == 'h' && argv[1][2] == 'c') ||
+               ( argv[1][0] == 'H' && argv[1][1] == 'H' && argv[1][2] == 'C') ) )
+        { 
+            rc = (HelpMessage(argv[1]));
+        }
+        else
+        {
+            WRITEMSG( HHCMD142I, argv[1]);
+            rc = -1;
+        }
     }
-    return 0;
+    return rc;
 }
-
+/*-------------------------------------------------------------------*/
+/* HelpMessage - print help text for message hhcnnnnna               */
+/*-------------------------------------------------------------------*/
+int HelpMessage(char *msg)
+{
+    char id[6];
+    int rc = -1;
+    strncpy(id, msg+3, 5);
+    logmsg("NO HELP YET for message number %s!\n", id);
+    return rc;
+}
 /*-------------------------------------------------------------------*/
 /* cmdlevel - display/set the current command level group(s)         */
 /*-------------------------------------------------------------------*/
