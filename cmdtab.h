@@ -29,8 +29,9 @@ COMMAND ( "cmdlvl",    PANEL+CONFIG,  SYSCMDALL,        CmdLevel,     "alias for
 
 COMMAND ( "msglevel",    PANEL,         SYSCMDALL,      msglvl_cmd,
   "Display or set the message level",
-    "Format: \"msglevel [value | info]\".\n"
-    "value:  0: normal msgs; 1: including debug info; 2: No msg header\n"
+    "Format: msglevel [normal | debug | info]\n"
+    "normal: default messages\n"
+    "debug:  messages prefixed with source and linenumber\n"
     "info:   displays the message level\n" )
 COMMAND ( "msglvl",    PANEL,         SYSCMDALL,        msglvl_cmd,   "alias for msglevel\n", NULL )
 

@@ -2352,19 +2352,20 @@ int msglvl_cmd(int argc, char *argv[], char *cmdline)
   {
     if(!strcasecmp(argv[1], "info"))
     {
-      WRITEMSG(HHCMD004I, sysblk.msglvl);
+      WRITEMSG(HHCMD004I, sysblk.msglvl ? "debug" : "normal");
       return(0);
     }
-    else
+    else if(!strcasecmp(argv[1], "normal"))
     {
-      int new_lvl;
-
-      if(sscanf(argv[1], "%d", &new_lvl) && new_lvl >= 0 && new_lvl <= 2)
-      {
-        sysblk.msglvl = new_lvl;
-        WRITEMSG(HHCMD004I, sysblk.msglvl);
-        return(0);
-      }
+      sysblk.msglvl = 0;
+      WRITEMSG(HHCMD004I, "normal");
+      return(0);
+    }
+    else if(!strcasecmp(argv[1], "debug"))
+    {
+      sysblk.msglvl = 1;
+      WRITEMSG(HHCMD004I, "debug");
+      return(0);
     }
   }
   logmsg("msglvl: Invalid usage\n");

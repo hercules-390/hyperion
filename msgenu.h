@@ -787,7 +787,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHCMD001W "Ignoring invalid SCRIPT file pause statement: %s"
 #define HHCMD002I "EOF reached on SCRIPT file. Processing complete"
 #define HHCMD003E "I/O error reading SCRIPT file: %s"
-#define HHCMD004I "Message level %d"
+#define HHCMD004I "Message level %s"
 #define HHCMD007E "Script file \"%s\" open failed: %s"
 #define HHCMD008I "Script file processing started using file \"%s\""
 #define HHCMD011I "Pausing SCRIPT file processing for %d seconds..."

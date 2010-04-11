@@ -161,18 +161,12 @@ DLL_EXPORT void writemsg(char *file, int line, int lvl, char *color, char *msg, 
   #endif
     switch(lvl)
     {
-      case 0:
+      case 0: // normal
 	logmsg(color);
         BFR_VSNPRINTF();
 	break;
-      case 1:
+      case 1: // debug
 	logmsg("%s%-10.10s %4d ", color, file, line);
-	BFR_VSNPRINTF();
-	break;
-      case 2:
-	logmsg(color);
-	if(msg[0] == 'H' && msg[9] == ' ')
-  	  msg += 10;
 	BFR_VSNPRINTF();
 	break;
     }
