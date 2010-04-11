@@ -1777,13 +1777,13 @@ HDL_REGISTER_SECTION;
   HDL_REGISTER(z900_compute_message_authentication_code, z900_compute_message_authentication_code_d);
 #endif /*defined(_900_FEATURE_MESSAGE_SECURITY_ASSIST)*/
 
-  WRITEMSG(HHCRY001I);
-  WRITEMSG(HHCRY002I, "Message Security Assist");
+  WRMSG(HHC00150, "I"); // Copyright notice
+  WRMSG(HHC00151, "I", "Message Security Assist"); // Feature notice
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
-  WRITEMSG(HHCRY002I, "Message Security Assist Extension 1");
+  WRMSG(HHC00151, "I", "Message Security Assist Extension 1"); // Feature notice
 #endif
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
-  WRITEMSG(HHCRY002I, "Message Security Assist Extension 2");
+  WRMSG(HHC00151, "I", "Message Security Assist Extension 2"); // Feature notice
 #endif
 
 }

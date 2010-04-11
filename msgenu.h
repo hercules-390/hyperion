@@ -163,6 +163,8 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00147 "Executing '%s' to configure interface"
 #define HHC00148 "Closing %" I64_FMT "d files"
 #define HHC00149 "IFC_IOCtl called for %s on FDs %d %d"
+#define HHC00150 "Crypto module loaded (c) Copyright Bernard van der Helm, 2003-2010"
+#define HHC00151 "Activated facility: '%s'"
 
 /*
  *                                  N E W   M E S S A G E   F O R M A T
@@ -569,10 +571,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCCP045I "I/O interrupt code(%8.8X) parm(%8.8X)"
 #define HHCCP046I "I/O interrupt code(%8.8X0 parm(%8.8X), id(%8.8X)"
 #define HHCCP080E "Processor(%s%02X) malloc failed for archjmp regs: (%s)"
-
-/* crypto/dyncrypt.c */
-#define HHCRY001I "Crypto module loaded (c) Copyright Bernard van der Helm, 2003-2010"
-#define HHCRY002I "Activated facility: '%s'"
 
 /* ctc_ctci.c */
 #define HHCCT037E "%1d:%04X Unable to allocate CTCBLK"
