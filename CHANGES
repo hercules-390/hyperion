@@ -1,3 +1,4 @@
+11 Apr 2010 Fix SCSI tape dev-attn failure if read-only media is mounted - Fish
 29 Mar 2010 Add support for cmdlevel to limit console commands to the requested 
             command set. Effects only user input commands, not panel, HAO or diagnose.
             Default works as before.

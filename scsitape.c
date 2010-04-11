@@ -182,25 +182,28 @@ struct mtop     opblk;                  /* Area for MTIOCTOP ioctl   */
     dev->blockid = 0;
     dev->fenced = 0;
 
-    /* Set the tape device to process variable length blocks */
+    /* Request that the tape drive write variable length blocks */
 
-    opblk.mt_op = MTSETBLK;
-    opblk.mt_count = 0;
-
-    rc = ioctl_tape (dev->fd, MTIOCTOP, (char*)&opblk);
-
-    if (rc < 0)
+    if (!STS_WR_PROT( dev ))
     {
-        /* Device cannot be used; fail the open */
-        int save_errno = errno;
-        rc = dev->fd;
-        dev->fd = -1;
-        close_tape( rc );
-        errno = save_errno;
-        WRITEMSG (HHCTA330E, SSID_TO_LCSS(dev->ssid), dev->devnum,
-                dev->filename, errno, strerror(errno));
-        build_senseX(TAPE_BSENSE_ITFERROR,dev,unitstat,code);
-        return -1; /* (fatal error) */
+        opblk.mt_op = MTSETBLK;
+        opblk.mt_count = 0;
+
+        rc = ioctl_tape (dev->fd, MTIOCTOP, (char*)&opblk);
+
+        if (rc < 0)
+        {
+            /* Device cannot be used; fail the open */
+            int save_errno = errno;
+            rc = dev->fd;
+            dev->fd = -1;
+            close_tape( rc );
+            errno = save_errno;
+            WRITEMSG (HHCTA330E, SSID_TO_LCSS(dev->ssid), dev->devnum,
+                    dev->filename, errno, strerror(errno));
+            build_senseX(TAPE_BSENSE_ITFERROR,dev,unitstat,code);
+            return -1; /* (fatal error) */
+        }
     }
 
 #if defined( HAVE_DECL_MTEWARN ) && HAVE_DECL_MTEWARN
@@ -212,12 +215,15 @@ struct mtop     opblk;                  /* Area for MTIOCTOP ioctl   */
     // or we won't. Either way there's nothing we can do about it.
     // We did the best we could.
 
-    opblk.mt_op = MTEWARN;
-    opblk.mt_count = dev->eotmargin;
+    if (!STS_WR_PROT( dev ))
+    {
+        opblk.mt_op = MTEWARN;
+        opblk.mt_count = dev->eotmargin;
 
-    ioctl_tape (dev->fd, MTIOCTOP, (char*)&opblk);
+        ioctl_tape (dev->fd, MTIOCTOP, (char*)&opblk);
 
-    // (ignore any error; it either worked or it didn't)
+        // (ignore any error; it either worked or it didn't)
+    }
 
 #endif // defined( HAVE_DECL_MTEWARN ) && HAVE_DECL_MTEWARN
 
