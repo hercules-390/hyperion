@@ -1213,6 +1213,7 @@ int     zone;                           /* Zone number               */
 
     if(zone >= FEATURE_SIE_MAXZONES)
     {
+        PTT(PTT_CL_ERR,"*STZP", regs->GR_L(1), regs->GR_L(2),regs->psw.IA_L);
         regs->psw.cc = 3;
         return;
     }
