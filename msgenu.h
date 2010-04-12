@@ -409,8 +409,8 @@ cpu.c:123:HABC1234I This is a message
 #define HHCCP101I "%1d:%04X synchronous  I/O ccw addr %8.8x"
 
 /* ckddasd.c */
-#define HHCDA001E "%1d:%04X File name missing or invalid"
-#define HHCDA002E "%1d:%04X File '%s' not found or invalid filename length"
+#define HHCDA001E "%1d:%04X File name missing or invalid filename length"
+#define HHCDA002E "%1d:%04X File '%s': open error: not found"
 #define HHCDA003E "%1d:%04X Parameter(%s) number(%d) is invalid"
 #define HHCDA004I "%1d:%04X File '%s': opening as R/O%s"
 #define HHCDA005E "%1d:%04X File '%s': open error: '[%02d] %s'"
