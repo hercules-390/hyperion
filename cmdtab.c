@@ -510,7 +510,7 @@ void *panel_command (void *cmdline)
     /* Changing the target to her in scp mode is done by using herc cmdtgt herc */
     if(!strncasecmp(cmd, "herc ", 5) || !strncasecmp(cmd, "scp ", 4) || !strncasecmp(cmd, "pscp ", 5))
     {
-        if (!noredisp) logmsg("%s\n", cmd);     // Echo command to the control panel
+        if (!noredisp) WRMSG(HHC00013, "I", cmd);     // Echo command to the control panel
         ProcessPanelCommand(cmd);
         return NULL;
     }
@@ -534,7 +534,7 @@ void *panel_command (void *cmdline)
             else
 #endif /*_FEATURE_SYSTEM_CONSOLE*/
             {
-                if (!noredisp) logmsg("%s\n", cmd);     // Echo command to the control panel
+                if (!noredisp) WRMSG(HHC00013, "I", cmd);     // Echo command to the control panel
                 ProcessPanelCommand(cmd);
             }
             break;
@@ -569,7 +569,7 @@ void *panel_command (void *cmdline)
         return NULL;
     }
 #endif /*_FEATURE_SYSTEM_CONSOLE*/
-    if (!noredisp) logmsg("%s\n", cmd);     // Echo command to the control panel
+    if (!noredisp) WRMSG(HHC00013, "I", cmd);     // Echo command to the control panel
     ProcessPanelCommand(cmd);
 #endif // OPTION_CMDTGT
 
