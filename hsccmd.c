@@ -1931,7 +1931,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
 
     if (argc < 2)
     {
-        WRITEMSG(HHCMD188E);
+        WRITEMSG(HHCMD188E, "tt32");
         rc = -1;
     }
     else if (strcasecmp(argv[1],"stats") == 0)
@@ -4002,6 +4002,12 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
                 break;                  // (no more room)
             }
         }
+    }
+
+    if (nDevCount == 0)
+    {
+        WRITEMSG(HHCMD149W);
+        return 0;
     }
 
     // Sort the DEVBLK pointers into ascending sequence by device number.
@@ -7434,4 +7440,80 @@ char    pathname[MAX_PATH];             /* (work)                    */
 
     return 0;
 }
-/* END PATCH ISW20030220 */
+
+/*-------------------------------------------------------------------*/
+/* query command - query ports, dasd, port name                      */
+/*-------------------------------------------------------------------*/
+int query_cmd(int argc, char *argv[], char *cmdline)
+{
+    if (argc < 2)
+    {
+        WRITEMSG(HHCMD188E, "query");
+        return -1;
+    }
+
+    if ( argc >= 2 )
+    {
+        if (strcasecmp(argv[1],"dasd") == 0)
+        {
+            return(qd_cmd( argc-1, &argv[1], cmdline));
+        }
+        else if (strcasecmp(argv[1],"ports") == 0 )
+        {
+            char str[64];
+
+            if (argc != 2)
+            {
+                WRITEMSG(HHCMD188E, "query");
+                return -1;
+            }
+            if ( sysblk.httpport > 0 )
+            {
+                sprintf(str, "on port %-5d", sysblk.httpport);
+                WRMSG(HHC00152, "I", "http", str);
+            }
+            else
+            {   
+                WRMSG(HHC00153, "I", "http");
+            }
+            if ( sysblk.shrdport > 0 )
+            {
+                sprintf(str, "on port %-5d", sysblk.shrdport);
+                WRMSG(HHC00152, "I", "shared_dasd", str);
+            }
+            else
+            {   
+                WRMSG(HHC00153, "I", "shared_dasd");
+            }
+            if (strchr(sysblk.cnslport, ':') == NULL)
+            {
+                sprintf(str, "on port %-5s", sysblk.cnslport);
+            }
+            else
+            {   
+                char *serv;
+                char *host = NULL;
+                char *port = strdup(sysblk.cnslport);
+
+                if ((serv = strchr(port,':')))
+                {
+                    *serv++ = '\0';
+                    if (*port)
+                        host = port;
+                }
+                sprintf(str, "for host %s on port %-5s", host, serv);
+            }
+            WRMSG(HHC00152, "I", "console", str);
+            return 0;
+        }
+        else
+        {
+            WRITEMSG(HHCMD188E, "query");
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+/* HSCCMD.C End-of-text */

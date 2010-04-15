@@ -668,6 +668,7 @@ struct SYSBLK {
             + sizeof(sysblk.imapxx) )
 #endif
 
+        char    *cnslport;              /* console port string       */
         char    *logofile;              /* Fancy 3270 logo box       */
         char    **herclogo;             /* 3270 Logo data            */
         size_t  logolines;              /* Number of lines in logo   */

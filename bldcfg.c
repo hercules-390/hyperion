@@ -981,7 +981,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
             smodel = operand;
             smainsize = addargv[0];
             sxpndsize = addargv[1];
-            config_cnslport = strdup(addargv[2]);
+            sysblk.cnslport = config_cnslport = strdup(addargv[2]);
             snumcpu = addargv[3];
             set_loadparm(addargv[4]);
         }
@@ -1005,7 +1005,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
             }
             else if (strcasecmp (keyword, "cnslport") == 0)
             {
-                config_cnslport = strdup(operand);
+                sysblk.cnslport = config_cnslport = strdup(operand);
             }
             else if (strcasecmp (keyword, "maxcpu") == 0)
             {

@@ -347,7 +347,11 @@ COMMAND ( "devinit",   PANEL,         SYSCMDALL,          devinit_cmd,
 
 COMMAND ( "devlist",   PANEL,         SYSCMDALL,          devlist_cmd,   "list device or all devices\n", NULL )
 
-COMMAND ( "qd",        PANEL,         SYSCMDALL-SYSOPER,          qd_cmd,        "query dasd\n", NULL )
+COMMAND ( "qd",        PANEL,         SYSCMDALL-SYSOPER,  qd_cmd,        "query dasd\n", NULL )
+
+CMDABBR ( "query",1,   PANEL,         SYSCMDALL-SYSOPER,  query_cmd,     "query command\n",
+         "query ports       Show ports in use\n"
+         "query dasd        Show dasd\n" )
 
 COMMAND ( "mounted_tape_reinit", PANEL+CONFIG,  SYSCMDALL-SYSOPER,   mnttapri_cmd,  "Control tape initilisation", NULL )
 

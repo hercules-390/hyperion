@@ -229,7 +229,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         pLCSBLK = malloc( sizeof( LCSBLK ) );
         if( !pLCSBLK )
         {
-            WRITEMSG(HHCLC001E, pDEVBLK->devnum );
+            WRITEMSG(HHCLC001E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
             return -1;
         }
         memset( pLCSBLK, 0, sizeof( LCSBLK ) );
@@ -313,7 +313,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
         if( !pLCSDev->pDEVBLK[0] )
         {
-            WRITEMSG(HHCLC040E, pDEVBLK->group->memdev[0]->devnum, pLCSDev->sAddr );
+            WRITEMSG(HHCLC040E, SSID_TO_LCSS(pDEVBLK->group->memdev[0]->ssid) ,pDEVBLK->group->memdev[0]->devnum, pLCSDev->sAddr );
             return -1;
         }
 
@@ -336,7 +336,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
             if( !pLCSDev->pDEVBLK[1] )
             {
-                WRITEMSG(HHCLC040E, pDEVBLK->group->memdev[0]->devnum, pLCSDev->sAddr^1 );
+                WRITEMSG(HHCLC040E, SSID_TO_LCSS(pDEVBLK->group->memdev[0]->ssid), pDEVBLK->group->memdev[0]->devnum, pLCSDev->sAddr^1 );
                 return -1;
             }
 
@@ -372,7 +372,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
                                          &pLCSBLK->Port[pLCSDev->bPort].fd,
                                          pLCSBLK->Port[pLCSDev->bPort].szNetDevName );
 
-            WRITEMSG(HHCLC073I, pLCSDev->pDEVBLK[0]->devnum,
+            WRITEMSG(HHCLC073I, SSID_TO_LCSS(pLCSDev->pDEVBLK[0]->ssid), pLCSDev->pDEVBLK[0]->devnum,
                       pLCSBLK->Port[pLCSDev->bPort].szNetDevName);
 
 #if defined(OPTION_W32_CTCI)
@@ -880,7 +880,7 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U16   sCount,
                     pDEVBLK->scsw.flag2 & SCSW2_FC_CLEAR )
                 {
                     if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
-                        WRITEMSG(HHCLC002I, pDEVBLK->devnum );
+                        WRITEMSG(HHCLC002I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
 
                     *pUnitStat = CSW_CE | CSW_DE;
                     *pResidual = sCount;
@@ -951,7 +951,7 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U16   sCount,
 
         if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
         {
-            WRITEMSG(HHCLC003I, pDEVBLK->devnum );
+            WRITEMSG(HHCLC003I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
             packet_trace( pIOBuf, iLength );
         }
 
@@ -1025,7 +1025,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
             // Trace received command frame...
             if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
             {
-                WRITEMSG(HHCLC051I, pDEVBLK->devnum );
+                WRITEMSG(HHCLC051I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
                 packet_trace( (BYTE*)pCmdFrame, iLength );
             }
 
@@ -1040,37 +1040,37 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
             {
             case LCS_CMD_STARTUP:       // Start Host
                 if( pLCSDEV->pLCSBLK->fDebug )
-                    WRITEMSG(HHCLC043I,pDEVBLK->devnum);
+                    WRITEMSG(HHCLC043I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum);
                 LCS_Startup( pLCSDEV, pCmdFrame );
                 break;
 
             case LCS_CMD_SHUTDOWN:      // Shutdown Host
                 if( pLCSDEV->pLCSBLK->fDebug )
-                    WRITEMSG(HHCLC044I,pDEVBLK->devnum);
+                    WRITEMSG(HHCLC044I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum);
                 LCS_Shutdown( pLCSDEV, pCmdFrame );
                 break;
 
             case LCS_CMD_STRTLAN:       // Start LAN
                 if( pLCSDEV->pLCSBLK->fDebug )
-                    WRITEMSG(HHCLC045I,pDEVBLK->devnum);
+                    WRITEMSG(HHCLC045I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum);
                 LCS_StartLan( pLCSDEV, pCmdFrame );
                 break;
 
             case LCS_CMD_STOPLAN:       // Stop  LAN
                 if( pLCSDEV->pLCSBLK->fDebug )
-                    WRITEMSG(HHCLC046I,pDEVBLK->devnum);
+                    WRITEMSG(HHCLC046I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum);
                 LCS_StopLan( pLCSDEV, pCmdFrame );
                 break;
 
             case LCS_CMD_QIPASSIST:     // Query IP Assists
                 if( pLCSDEV->pLCSBLK->fDebug )
-                    WRITEMSG(HHCLC047I,pDEVBLK->devnum);
+                    WRITEMSG(HHCLC047I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum);
                 LCS_QueryIPAssists( pLCSDEV, pCmdFrame );
                 break;
 
             case LCS_CMD_LANSTAT:       // LAN Stats
                 if( pLCSDEV->pLCSBLK->fDebug )
-                    WRITEMSG(HHCLC048I,pDEVBLK->devnum);
+                    WRITEMSG(HHCLC048I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum);
                 LCS_LanStats( pLCSDEV, pCmdFrame );
                 break;
 
@@ -1104,7 +1104,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
             // Trace Ethernet frame before sending to TAP device
             if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
             {
-                WRITEMSG(HHCLC004I, pDEVBLK->devnum, pDEVBLK->filename );
+                WRITEMSG(HHCLC004I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->filename );
                 packet_trace( (BYTE*)pEthFrame, iEthLen );
             }
 
@@ -1113,7 +1113,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
                               (BYTE*)pEthFrame, iEthLen ) != iEthLen )
             {
                 WRITEMSG(HHCLC005E,
-                        pDEVBLK->devnum, pDEVBLK->filename,
+                        SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->filename,
                         strerror( errno ) );
                 pDEVBLK->sense[0] = SENSE_EC;
                 *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
@@ -1122,7 +1122,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
             break;
 
         default:
-            WRITEMSG(HHCLC050E, pDEVBLK->devnum, pDEVBLK->filename );
+            WRITEMSG(HHCLC050E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->filename );
             ASSERT( FALSE );
             pDEVBLK->sense[0] = SENSE_EC;
             *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
@@ -1138,7 +1138,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
     if( pLCSDEV->fReplyPending )
     {
         if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
-            WRITEMSG(HHCLC006I, pDEVBLK->devnum );
+            WRITEMSG(HHCLC006I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
 
         obtain_lock( &pLCSDEV->EventLock );
         signal_condition( &pLCSDEV->Event );
@@ -1248,7 +1248,7 @@ static void  LCS_Startup( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
     // Make sure it doesn't exceed our compiled maximum
     if (pLCSDEV->iMaxFrameBufferSize > sizeof(pLCSDEV->bFrameBuffer))
     {
-        WRITEMSG(HHCLC049W, pLCSDEV->pDEVBLK[1]->devnum,
+        WRITEMSG(HHCLC049W, SSID_TO_LCSS(pLCSDEV->pDEVBLK[1]->ssid), pLCSDEV->pDEVBLK[1]->devnum,
                   pLCSDEV->iMaxFrameBufferSize,
                   sizeof( pLCSDEV->bFrameBuffer ) );
         pLCSDEV->iMaxFrameBufferSize = sizeof(pLCSDEV->bFrameBuffer);
@@ -1257,7 +1257,7 @@ static void  LCS_Startup( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
     // Make sure it's not smaller than the compiled minimum size
     if (pLCSDEV->iMaxFrameBufferSize < CTC_MIN_FRAME_BUFFER_SIZE)
     {
-        WRITEMSG(HHCLC054W, pLCSDEV->pDEVBLK[1]->devnum,
+        WRITEMSG(HHCLC054W, SSID_TO_LCSS(pLCSDEV->pDEVBLK[1]->ssid), pLCSDEV->pDEVBLK[1]->devnum,
                   pLCSDEV->iMaxFrameBufferSize,
                   CTC_MIN_FRAME_BUFFER_SIZE );
         pLCSDEV->iMaxFrameBufferSize = sizeof(pLCSDEV->bFrameBuffer);
@@ -2169,7 +2169,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
         case 'n':
             if( strlen( optarg ) > sizeof( pDEVBLK->filename ) - 1 )
             {
-                WRITEMSG(HHCLC017E, pDEVBLK->devnum, optarg );
+                WRITEMSG(HHCLC017E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, optarg );
                 return -1;
             }
 
@@ -2184,7 +2184,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
             if( iKernBuff * 1024 < MIN_CAPTURE_BUFFSIZE    ||
                 iKernBuff * 1024 > MAX_CAPTURE_BUFFSIZE )
             {
-                WRITEMSG(HHCLC052E, pDEVBLK->devnum, optarg );
+                WRITEMSG(HHCLC052E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, optarg );
                 return -1;
             }
 
@@ -2197,7 +2197,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
             if( iIOBuff * 1024 < MIN_PACKET_BUFFSIZE    ||
                 iIOBuff * 1024 > MAX_PACKET_BUFFSIZE )
             {
-                WRITEMSG(HHCLC053E, pDEVBLK->devnum, optarg );
+                WRITEMSG(HHCLC053E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, optarg );
                 return -1;
             }
 
@@ -2212,7 +2212,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
         case 'm':
             if( ParseMAC( optarg, mac ) != 0 )
             {
-                WRITEMSG(HHCLC018E, pDEVBLK->devnum, optarg );
+                WRITEMSG(HHCLC018E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, optarg );
                 return -1;
             }
 
@@ -2235,7 +2235,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
 
     if( argc > 1 )
     {
-        WRITEMSG(HHCLC019E, pDEVBLK->devnum );
+        WRITEMSG(HHCLC019E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
         return -1;
     }
 
@@ -2244,7 +2244,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
     {
         if( inet_aton( *argv, &addr ) == 0 )
         {
-            WRITEMSG(HHCLC020E, pDEVBLK->devnum, *argv );
+            WRITEMSG(HHCLC020E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, *argv );
             return -1;
         }
 
