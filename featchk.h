@@ -406,6 +406,12 @@
  #endif
 #endif /*defined(FEATURE_MESSAGE_SECURITY_ASSIST)*/
 
+#if defined(FEATURE_STORE_FACILITY_LIST_EXTENDED)
+  #if !defined(FEATURE_STORE_FACILITY_LIST)
+    #error STFLE requires STFL (FEATURE_STORE_FACILITY_LIST_EXTENDED requires FEATURE_STORE_FACILITY_LIST)
+  #endif
+#endif
+
 
 #endif /*!defined(FEATALL_CHECKALL)*/
 

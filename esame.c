@@ -5034,7 +5034,10 @@ int     fc, rc = 0;                     /* Function / Reason Code    */
 #endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
 
 
-#if defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390)
+#if defined(FEATURE_STORE_FACILITY_LIST)
+
+#define HAVE_STFL_DATA 1
+
 BYTE ARCH_DEP(stfl_data)[] = {
                  0
 #if defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)
@@ -5353,7 +5356,7 @@ BYTE   *stfl_data;                      /* -> STFL data              */
 } /* end DEF_INST(store_facility_list_extended) */
 #endif /*defined(FEATURE_STORE_FACILITY_LIST_EXTENDED)*/
 
-#endif /*defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390)*/
+#endif /*defined(FEATURE_STORE_FACILITY_LIST) */
 
 
 #if defined(FEATURE_LOAD_REVERSED) && defined(FEATURE_ESAME)
@@ -8181,12 +8184,14 @@ int     n;                              /* Position of leftmost one  */
  #include "esame.c"
 #endif
 
+#if defined(HAVE_STFL_DATA)
 /*-------------------------------------------------------------------*/
 /* Locate STFL data independent of current architecture mode setting */
 /*-------------------------------------------------------------------*/
 /* Note: this function must be here so that all ARCH_DEP(stlf_data)  */
 /*       with correct architecture settings have been defined with   */
 /*       architecture sensitive features                             */
+
 BYTE* get_stfl_data(int mode, int *data_len)
 {
     switch(mode) 
@@ -8205,5 +8210,6 @@ BYTE* get_stfl_data(int mode, int *data_len)
     *data_len=0;
     return NULL;
 }
+#endif /* defined(HAVE_STFL_DATA) */
 
 #endif /*!defined(_GEN_ARCH)*/

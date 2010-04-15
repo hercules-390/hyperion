@@ -845,9 +845,9 @@
 #endif /*!defined(FEATURE_ESAME_N3_ESA390) && !defined(FEATURE_ESAME)*/
 
 
-#if !defined(FEATURE_ESAME_N3_ESA390) && !defined(_900) && !defined(FEATURE_ESAME)
+#if !defined(FEATURE_STORE_FACILITY_LIST)
  UNDEF_INST(store_facility_list);
-#endif /*!defined(FEATURE_ESAME_N3_ESA390) && !defined(_900) && !defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_STORE_FACILITY_LIST) */
 
 
 #if !defined(FEATURE_CANCEL_IO_FACILITY)
