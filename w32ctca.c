@@ -6,17 +6,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 
 // $Id$
-//
-// $Log$
-// Revision 1.26  2007/11/30 14:54:33  jmaynard
-// Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
-//
-// Revision 1.25  2007/06/23 00:04:19  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.24  2006/12/08 09:43:31  jj
-// Add CVS message log
-//
+
 
 #include "hstdinc.h"
 #include "hercules.h"
@@ -106,7 +96,7 @@ error:
 
     FreeLibrary( g_tt32_hmoddll );
     g_tt32_hmoddll = NULL;
-    WRITEMSG(HHCWC120E);
+    WRMSG ( HHC04102, "E" );
     LeaveCriticalSection(&g_tt32_lock);
     return FALSE;
 }
@@ -116,7 +106,7 @@ error:
 
 void __cdecl tt32_output_debug_string( const char* debug_string )
 {
-    WRITEMSG(HHCWC199D, debug_string );
+    WRMSG ( HHC90000, "D", debug_string );
 }
 
 void  enable_tt32_debug_tracing( int enable )
@@ -209,9 +199,11 @@ BOOL tt32_loaddll()
 
         if (!g_tt32_hmoddll)
         {
+            char str[MAX_TT32_DLLNAMELEN + 32];
             DWORD dwLastError = GetLastError();
             LeaveCriticalSection(&g_tt32_lock);
-            WRITEMSG(HHCWC121E,g_tt32_dllname,dwLastError,strerror(dwLastError));
+            sprintf(str, "LoadLibraryEx(%s)", g_tt32_dllname); 
+            WRMSG ( HHC00161, "E", str, (int)dwLastError, strerror(dwLastError) );
             return FALSE;
         }
     }
@@ -221,7 +213,7 @@ BOOL tt32_loaddll()
     if (!GetTT32ProcAddrs())
         return FALSE;
 
-    WRITEMSG(HHCWC100I,g_tt32_dllname,g_tt32_pfn_version_string());
+    WRMSG ( HHC04100, "I", g_tt32_dllname, g_tt32_pfn_version_string() );
 
 #if defined(DEBUG) || defined(_DEBUG)
     enable_tt32_debug_tracing(1);   // (enable debug tracing by default for DEBUG builds)
@@ -337,29 +329,7 @@ int  display_tt32_stats( int fd )
     {
         // New version 3.3 stats
 
-        logmsg
-        (
-            "\nHHCWC110I %s Statistics:\n\n"
-
-            "Size of Kernel Hold Buffer:      %5luK\n"
-            "Size of DLL I/O Buffer:          %5luK\n"
-            "Maximum DLL I/O Bytes Received:  %5luK\n\n"
-
-            "%12" I64_FMT "d  Total Write Calls\n"
-            "%12" I64_FMT "d  Total Write I/Os\n"
-            "%12" I64_FMT "d  Packets To All Zeroes MAC Written\n"
-            "%12" I64_FMT "d  Total Packets Written\n"
-            "%12" I64_FMT "d  Total Bytes Written\n\n"
-
-            "%12" I64_FMT "d  Total Read Calls\n"
-            "%12" I64_FMT "d  Total Read I/Os\n"
-            "%12" I64_FMT "d  Internally Handled ARP Packets\n"
-            "%12" I64_FMT "d  Packets From Ourself\n"
-            "%12" I64_FMT "d  Total Ignored Packets\n"
-            "%12" I64_FMT "d  Packets To All Zeroes MAC Read\n"
-            "%12" I64_FMT "d  Total Packets Read\n"
-            "%12" I64_FMT "d  Total Bytes Read\n\n"
-
+        WRMSG (HHC04101, "I"
             ,g_tt32_dllname
 
             ,(stats.dwKernelBuffSize   + 1023) / 1024
@@ -386,39 +356,27 @@ int  display_tt32_stats( int fd )
     {
         // Old pre version 3.3 stats
 
-        logmsg
-        (
-            "\nHHCWC111I %s Statistics:\n\n"
+        WRMSG (HHC04101, "I"
+            ,g_tt32_dllname
 
-            "Size of Kernel Hold Buffer:      %5luK\n"
-            "Size of DLL I/O Buffer:          %5luK\n"
-            "Maximum DLL I/O Bytes Received:  %5luK\n\n"
-
-            "%12" I64_FMT "d Write Calls\n"
-            "%12" I64_FMT "d Write I/Os\n"
-            "%12" I64_FMT "d Read Calls\n"
-            "%12" I64_FMT "d Read I/Os\n"
-            "%12" I64_FMT "d Packets Read\n"
-            "%12" I64_FMT "d Packets Written\n"
-            "%12" I64_FMT "d Bytes Read\n"
-            "%12" I64_FMT "d Bytes Written\n"
-            "%12" I64_FMT "d Internal Packets\n"
-            "%12" I64_FMT "d Ignored Packets\n\n"
-            ,
-            g_tt32_dllname
             ,(stats.dwKernelBuffSize   + 1023) / 1024
             ,(stats.dwReadBuffSize     + 1023) / 1024
             ,(stats.dwMaxBytesReceived + 1023) / 1024
+
             ,stats.n64WriteCalls
             ,stats.n64WriteIOs
+            ,-1                         // indicate n/a
+            ,stats.n64PacketsWritten
+            ,stats.n64BytesWritten
+
             ,stats.n64ReadCalls
             ,stats.n64ReadIOs
-            ,stats.n64PacketsRead
-            ,stats.n64PacketsWritten
-            ,stats.n64BytesRead
-            ,stats.n64BytesWritten
             ,stats.n64InternalPackets
+            ,-1                         // indicate n/a
             ,stats.n64IgnoredPackets
+            ,-1                         // indicate n/a
+            ,stats.n64PacketsRead
+            ,stats.n64BytesRead
         );
     }
 

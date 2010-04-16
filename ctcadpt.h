@@ -7,27 +7,7 @@
 
 // $Id$
 //
-// $Log$
-// Revision 1.27  2008/08/19 21:36:37  fish
-// Init LCS interface ASAP to fix wrong MAC being used
-//
-// Revision 1.26  2008/07/17 07:19:12  fish
-// Fix FCS (Frame Check Sequence) bug in LCS_Write function
-// and other minor bugs.
-//
-// Revision 1.24  2008/07/17 03:30:40  fish
-// CTC/LCS cosmetic-only changes -- part 1
-// (no actual functionality was changed!)
-//
-// Revision 1.23  2007/06/23 00:04:07  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.22  2007/01/14 07:59:58  fish
-// add some field/struct comments re byte-order (network vs.host)
-//
-// Revision 1.21  2006/12/08 09:43:19  jj
-// Add CVS message log
-//
+
 
 #ifndef __CTCADPT_H_
 #define __CTCADPT_H_
@@ -452,6 +432,7 @@ struct  _LCSPORT
     u_int       fCloseInProgress:1;       // Close in progress
 
     int         fd;                       // TUN/TAP fd
+    HANDLE      handle;                   // NDIS handle
     TID         tid;                      // Read Thread ID
     pid_t       pid;                      // Read Thread pid
     int         icDevices;                // Device count
@@ -481,12 +462,15 @@ struct  _LCSBLK
 {
     // Config line parameters
     char*       pszTUNDevice;             // TUN/TAP char device
+    char*       pszNDISDevice;            // NDIS char device name
+    char*       pszServiceName;           // Service Name for NDIS
     char*       pszOATFilename;           // OAT Filename
     char*       pszIPAddress;             // IP Address
     char*       pszMACAddress;            // MAC Address (string)
     MAC         MAC_Address;              // MAC Address (binary)
 
     u_int       fDebug:1;
+    u_int       passthruStarted:1;        // NDIS passthru services started
 
     int         icDevices;                // Number of devices
     int         iKernBuff;                // Kernel buffer in K bytes.

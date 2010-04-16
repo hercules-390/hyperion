@@ -164,11 +164,44 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00147 "Executing '%s' to configure interface"
 #define HHC00148 "Closing %" I64_FMT "d files"
 #define HHC00149 "IFC_IOCtl called for %s on FDs %d %d"
-#define HHC00150 "Crypto module loaded (c) Copyright Bernard van der Helm, 2003-2010"
+#define HHC00150 "%s module loaded%s"
 #define HHC00151 "Activated facility: '%s'"
 #define HHC00152 "Server '%12s' is listening %s"
 #define HHC00153 "Server '%12s' is inactive"
 #define HHC00160 "SCP %scommand: '%s'"
+#define HHC00161 "Function %s failed: '[%02d] %s'"
+// reserve 002xx for device related
+#define HHC00200 "%1d:%04X Function %s failed: '[%02d] %s'" 
+
+// reserve 04xxx for host os specific component messages
+// reserve 041xx for windows specific component messages (w32xxxx.c)
+#define HHC04100 "%s version %s initiated"
+#define HHC04101 "%s Statistics:\n" \
+       "          \n" \
+       "          Size of Kernel Hold Buffer:      %5luK\n" \
+       "          Size of DLL I/O Buffer:          %5luK\n" \
+       "          Maximum DLL I/O Bytes Received:  %5luK\n" \
+       "          \n" \
+       "          %12" I64_FMT "d  Total Write Calls\n" \
+       "          %12" I64_FMT "d  Total Write I/Os\n" \
+       "          %12" I64_FMT "d  Packets To All Zeroes MAC Written\n" \
+       "          %12" I64_FMT "d  Total Packets Written\n" \
+       "          %12" I64_FMT "d  Total Bytes Written\n" \
+       "          \n" \
+       "          %12" I64_FMT "d  Total Read Calls\n" \
+       "          %12" I64_FMT "d  Total Read I/Os\n" \
+       "          %12" I64_FMT "d  Internally Handled ARP Packets\n" \
+       "          %12" I64_FMT "d  Packets From Ourself\n" \
+       "          %12" I64_FMT "d  Total Ignored Packets\n" \
+       "          %12" I64_FMT "d  Packets To All Zeroes MAC Read\n" \
+       "          %12" I64_FMT "d  Total Packets Read\n" \
+       "          %12" I64_FMT "d  Total Bytes Read\n\n"
+#define HHC04102 "One of the GetProcAddress calls failed" 
+#define HHC04109 "%s"
+#define HHC04110 "Maximum device threads (devtmax) of %d exceeded by %d"
+
+// reserve 90000 messages for debugging
+#define HHC90000 "DBG: %s"
 
 /*
  *                                  N E W   M E S S A G E   F O R M A T
@@ -666,6 +699,8 @@ cpu.c:123:HABC1234I This is a message
 #define HHCLC074W "TT32SDEVBUFF failed for device(%s) %s"
 #define HHCLC075W "TT32SIOBUFF failed for device(%s) %s"
 #define HHCLC076I "Port(%2.2X) RARP frame for %2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X"
+#define HHCLC077E "Error %s: [%04X]:%s"
+#define HHCLC078E "%1d:%04X NDIS open failed"
 
 /* ctcadpt.c */
 #define HHCCT001E "Device(%4.4X) Incorrect number of parameters"
@@ -1332,16 +1367,4 @@ cpu.c:123:HABC1234I This is a message
 #define HHCVM620I "Device(%4.4X) d250_list64 xcode(%4.4X) Wr Buf(%16.16X-%16.16X) STORE key(%2.2X)"
 #define HHCVM720I "Device(%4.4X) d250_list64 xcode(%4.4X) Status(%16.16X-%16.16X) STORE key(%2.2X)"
 
-/* w32chan.c */
-#define HHCWN084E "Device(%4.4X) malloc(DEVIOREQUEST) failed; strerror=\"%s\""
-#define HHCWN085W "Exceeded maximum device threads; devtmax=%d"
-#define HHCWN086E "Device(%4.4X) malloc(DEVTHREADPARMS) failed; strerror=\"%s\""
-#define HHCWN087E "Device(%4.4X) CreateEvent(hShutdownEvent) failed; strerror=\"%s\""
-#define HHCWN088E "Device(%4.4X) CreateEvent(hRequestQueuedEvent) failed; strerror=\"%s\""
-#define HHCWN089E "Device(%4.4X) fthread_create(DeviceThread) failed; strerror=\"%s\""
 
-/* w32ctca.c */
-#define HHCWC100I "%s version %s initiated"
-#define HHCWC120E "** tt32_loaddll: One of the GetProcAddress calls failed" 
-#define HHCWC121E "** tt32_loaddll: LoadLibraryEx(\"%s\") failed; rc=%ld: %s"
-#define HHCWC199D "%s"
