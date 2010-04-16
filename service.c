@@ -183,6 +183,8 @@ void scp_command (char *command, int priomsg)
         return;
     }
 
+    WRMSG(HHC00160, "I", priomsg ? "priority " : "", command);
+
     /* Obtain the interrupt lock */
     OBTAIN_INTLOCK(NULL);
 

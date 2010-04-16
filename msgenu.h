@@ -99,7 +99,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00010 "Enter input for console %1d:%04X"
 #define HHC00011 "Function '%s' failed; cache '%d' size '%d': '[%02d] %s'"
 #define HHC00012 "Releasing inactive buffer storage"
-#define HHC00013 "Entered command: '%s'"
+#define HHC00013 "Panel command: '%s'"
 #define HHC00014 "%1d:%04X Invalid argument: '%s'"
 #define HHC00015 "%1d:%04X File name is missing"
 #define HHC00016 "%1d:%04X File '%s': name too long, maximum length is '%ud'"
@@ -168,6 +168,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00151 "Activated facility: '%s'"
 #define HHC00152 "Server '%12s' is listening %s"
 #define HHC00153 "Server '%12s' is inactive"
+#define HHC00160 "SCP %scommand: '%s'"
 
 /*
  *                                  N E W   M E S S A G E   F O R M A T
