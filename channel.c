@@ -1010,7 +1010,7 @@ int pending = 0;
     }
 
     if (dev->ccwtrace || dev->ccwstep)
-        WRITEMSG (HHCCP057I, SSID_TO_LCSS(dev->ssid), dev->devnum), 0;
+        WRITEMSG (HHCCP057I, SSID_TO_LCSS(dev->ssid), dev->devnum), 0);
 
     /* Return condition code zero */
     return 0;
