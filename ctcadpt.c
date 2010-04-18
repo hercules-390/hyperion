@@ -1363,19 +1363,24 @@ int  ParseMAC( char* pszMACAddr, BYTE* pbMACAddr )
 // Subroutine to trace the contents of a buffer
 //
 
-void  packet_trace( BYTE* pAddr, int iLen )
+void packet_trace( BYTE* pAddr, int iLen )
 {
     int           offset;
     unsigned int  i;
-    unsigned char c = '\0';
-    unsigned char e = '\0';
-    unsigned char print_chars[17];
+    UCHAR           c = '\0';
+    UCHAR           e = '\0';
+    UCHAR           print_ascii[17];
+    UCHAR           print_ebcdic[17];
+    UCHAR           print_line[64];
+    UCHAR           tmp[32];
 
     for( offset = 0; offset < iLen; )
     {
-        memset( print_chars, 0, sizeof( print_chars ) );
+        memset( print_ascii, 0, sizeof( print_ascii ) );
+        memset( print_ebcdic, 0, sizeof( print_ebcdic ) );
+        memset( print_line, 0, sizeof( print_line ) );
 
-        logmsg( "+%4.4X  ", offset );
+        sprintf(print_line, "+%4.4X  ", offset );
 
         for( i = 0; i < 16; i++ )
         {
@@ -1383,28 +1388,29 @@ void  packet_trace( BYTE* pAddr, int iLen )
 
             if( offset < iLen )
             {
-                logmsg("%2.2X", c);
+                sprintf( tmp, "%2.2X", c ); 
+                strcat( print_line, tmp );
 
-                print_chars[i] = '.';
+                print_ebcdic[i] = print_ascii[i] = '.';
                 e = guest_to_host( c );
 
                 if( isprint( e ) )
-                    print_chars[i] = e;
+                    print_ebcdic[i] = e;
                 if( isprint( c ) )
-                    print_chars[i] = c;
+                    print_ascii[i] = c;
             }
             else
             {
-                logmsg( "  " );
+                strcat( print_line, "  " );
             }
 
             offset++;
             if( ( offset & 3 ) == 0 )
             {
-                logmsg( " " );
+                strcat( print_line, " " );
             }
         }
 
-        logmsg( " %s\n", print_chars );
+        logmsg( "%s %s %s\n", print_line, print_ascii, print_ebcdic );
     }
 }
