@@ -60,7 +60,8 @@
             {
                 { "switchkey", NULL },
                 { "numkey", "%d" },
-                { "strkey", "%s" },
+                { "strkey",    PARSER_STR_TYPE },  // *NEVER* use just "%s" !!
+                {NULL,NULL}  // (end of table)
             };
             
             int main( int argc, char *argv[] )
@@ -69,7 +70,7 @@
                 union
                 {
                     int num;
-                    char str[ 80 ];
+                    char str[ MAX_PARSER_STRLEN + 1 ];  // (+1 for null terminator)
                 } res;
 
                 while( --argc )

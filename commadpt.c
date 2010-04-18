@@ -154,23 +154,24 @@ COMMADPT_PEND_TEXT;     /* Defined in commadpt.h                     */
 /* PARSER TABLES                                                 */
 /*---------------------------------------------------------------*/
 static PARSER ptab[]={
-    {"lport","%s"},
-    {"lhost","%s"},
-    {"rport","%s"},
-    {"rhost","%s"},
-    {"dial","%s"},
-    {"rto","%s"},
-    {"pto","%s"},
-    {"eto","%s"},
-    {"switched","%s"},
-    {"lnctl","%s"},
-    {"term","%s"},
-    {"code","%s"},
-    {"uctrans","%s"},
-    {"skip","%s"},
-    {NULL,NULL}
+    { "lport",    PARSER_STR_TYPE },
+    { "lhost",    PARSER_STR_TYPE },
+    { "rport",    PARSER_STR_TYPE },
+    { "rhost",    PARSER_STR_TYPE },
+    { "dial",     PARSER_STR_TYPE },
+    { "rto",      PARSER_STR_TYPE },
+    { "pto",      PARSER_STR_TYPE },
+    { "eto",      PARSER_STR_TYPE },
+    { "switched", PARSER_STR_TYPE },
+    { "lnctl",    PARSER_STR_TYPE },
+    { "term",     PARSER_STR_TYPE },
+    { "code",     PARSER_STR_TYPE },
+    { "uctrans",  PARSER_STR_TYPE },
+    { "skip",     PARSER_STR_TYPE },
+    {NULL,NULL}  /* (end of table) */
 };
 
+/* The following must be in the same sequence as the above 'ptab' table */
 enum {
     COMMADPT_KW_LPORT=1,
     COMMADPT_KW_LHOST,
@@ -1689,7 +1690,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
     int etospec;        /* ETO= Specified */
     union {
         int num;
-        char text[80];
+        char text[MAX_PARSER_STRLEN+1];  /* (+1 for null terminator) */
     } res;
     char bf[4];
         dev->devtype=0x2703;
