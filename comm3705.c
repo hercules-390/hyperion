@@ -258,12 +258,12 @@ packet_trace( BYTE* pAddr, int iLen )
 {
     int           offset;
     unsigned int  i;
-    UCHAR           c = '\0';
-    UCHAR           e = '\0';
-    UCHAR           print_ascii[17];
-    UCHAR           print_ebcdic[17];
-    UCHAR           print_line[64];
-    UCHAR           tmp[32];
+    u_char        c = '\0';
+    u_char        e = '\0';
+    u_char        print_ascii[17];
+    u_char        print_ebcdic[17];
+    u_char        print_line[64];
+    u_char        tmp[32];
 
     for( offset = 0; offset < iLen; )
     {
