@@ -106,15 +106,6 @@ int main(int ac,char *av[])
 
     timeBeginPeriod( 1 );   // (one millisecond time interval accuracy)
 
-    EnableMenuItem( GetSystemMenu( FindConsoleHandle(), FALSE ),
-                    SC_CLOSE, MF_BYCOMMAND | MF_GRAYED );
-
-  //  if ( ShutdownBlockReasonCreate( FindConsoleHandle(), L"Guest OS might be processing") == 0)
-  //  {
-  //      DWORD dw = GetLastError(); 
-  //      printf( "ShutdownBlockReasonCreate failed %ul\n", dw);
-  //  }
-  
     // If we're being debugged, then let the debugger
     // catch the exception. Otherwise, let our exception
     // handler catch it...
@@ -125,6 +116,9 @@ int main(int ac,char *av[])
     }
     else // (not being debugged; use our exception handler)
     {
+        EnableMenuItem( GetSystemMenu( FindConsoleHandle(), FALSE ),
+                        SC_CLOSE, MF_BYCOMMAND | MF_GRAYED );
+
         if (1
             && (g_hDbgHelpDll = LoadLibrary(_T("DbgHelp.dll")))
             && (g_pfnMiniDumpWriteDumpFunc = (MINIDUMPWRITEDUMPFUNC*)

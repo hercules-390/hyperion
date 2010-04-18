@@ -525,10 +525,13 @@ TID     logcbtid;                       /* RC file thread identifier */
 
 #if defined( _MSVC_ )
     /* Register the Window console ctrl handlers */
-    if (SetConsoleCtrlHandler(console_ctrl_handler, TRUE) == FALSE)
+    if (!IsDebuggerPresent())
     {
-        WRITEMSG(HHCIN010S, strerror(errno));
-        delayed_exit(1);
+        if (!SetConsoleCtrlHandler( console_ctrl_handler, TRUE ))
+        {
+            WRITEMSG( HHCIN010S, strerror( errno ));
+            delayed_exit(1);
+        }
     }
 #endif
 
