@@ -700,7 +700,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCLC075W "TT32SIOBUFF failed for device(%s) %s"
 #define HHCLC076I "Port(%2.2X) RARP frame for %2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X"
 #define HHCLC077E "Error %s: [%04X]:%s"
-#define HHCLC078E "%1d:%04X NDIS open failed"
 
 /* ctcadpt.c */
 #define HHCCT001E "Device(%4.4X) Incorrect number of parameters"
