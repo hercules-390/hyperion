@@ -138,11 +138,11 @@ static void do_shutdown_now()
     log_wakeup(NULL);
 
     /*
-    logmsg("HHCINxxxI Terminating threads\n");
+    logmsg("HHCIN905I Terminating threads\n");
     {
         // (none we really care about at the moment...)
     }
-    logmsg("HHCINxxxI Threads terminations complete\n");
+    logmsg("HHCIN906I Threads terminations complete\n");
     */
 
     WRITEMSG(HHCIN909I);
@@ -441,7 +441,7 @@ void display_aregs (REGS *regs)
 /*-------------------------------------------------------------------*/
 void display_fregs (REGS *regs)
 {
-char    cpustr[7] = {0};               /* "CPnn: " or ""         */
+char    cpustr[7] = {0};               /* "CPnn: " or "" */
 
     if(sysblk.cpus>1)
         sprintf(cpustr, "%s%02X: ", PTYPSTR(regs->cpuad), regs->cpuad);
@@ -483,22 +483,57 @@ char    cpustr[7] = {0};               /* "CPnn: " or ""         */
 /*-------------------------------------------------------------------*/
 void display_subchannel (DEVBLK *dev)
 {
-    logmsg ("%4.4X:D/T=%4.4X",
-            dev->devnum, dev->devtype);
+    char devstr[16] = {0};      /* "0:0000 D/T0000" */
+    struct BITS { U8 b7:1; U8 b6:1; U8 b5:1; U8 b4:1; U8 b3:1; U8 b2:1; U8 b1:1; U8 b0:1; };
+    union ByteToBits { struct BITS b; U8 status; } u;
+    
+    sprintf(devstr, "%1d:%04X D/T%04X", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->devtype);
+
     if (ARCH_370 == sysblk.arch_mode)
     {
-        logmsg (" CSW=Flags:%2.2X CCW:%2.2X%2.2X%2.2X "
-                "Stat:%2.2X%2.2X Count:%2.2X%2.2X\n",
+        logmsg ("%s CSW Flags:%2.2X CCW:%2.2X%2.2X%2.2X "
+                "US:%2.2X CS:%2.2X Count:%2.2X%2.2X\n",
+                devstr,
                 dev->csw[0], dev->csw[1], dev->csw[2], dev->csw[3],
                 dev->csw[4], dev->csw[5], dev->csw[6], dev->csw[7]);
-    } else {
-        logmsg (" Subchannel_Number=%4.4X\n", dev->subchan);
-        logmsg ("     PMCW=IntParm:%2.2X%2.2X%2.2X%2.2X Flags:%2.2X%2.2X"
-                " Dev:%2.2X%2.2X"
-                " LPM:%2.2X PNOM:%2.2X LPUM:%2.2X PIM:%2.2X\n"
-                "          MBI:%2.2X%2.2X POM:%2.2X PAM:%2.2X"
-                " CHPIDs:%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X"
-                " Misc:%2.2X%2.2X%2.2X%2.2X\n",
+
+        u.status = (U8)dev->csw[4];
+        logmsg ("    Unit Status    %s%s%s%s%s%s%s%s%s\n", 
+            u.status == 0 ? "is Normal" : "",
+            u.b.b0 ? "Attention " : "",
+            u.b.b1 ? "SM " : "",
+            u.b.b2 ? "CUE " : "",
+            u.b.b3 ? "Busy " : "",
+            u.b.b4 ? "CE " : "",
+            u.b.b5 ? "DE " : "",
+            u.b.b6 ? "UC " : "",
+            u.b.b7 ? "UE " : "");
+
+        u.status = (U8)dev->csw[5];
+        logmsg ("    Channel Status %s%s%s%s%s%s%s%s%s\n", 
+            u.status == 0 ? "is Normal" : "",
+            u.b.b0 ? "PCI " : "",
+            u.b.b1 ? "IL " : "",
+            u.b.b2 ? "PC " : "",
+            u.b.b3 ? "ProtC " : "",
+            u.b.b4 ? "CDC " : "",
+            u.b.b5 ? "CCC " : "",
+            u.b.b6 ? "ICC " : "",
+            u.b.b7 ? "CC " : "");
+
+    } 
+    else 
+    {
+        logmsg ("%s Subchannel Number[%04X]\n"
+                "    Path Management Control Word (PMCW)\n"
+                "  IntParm:%2.2X%2.2X%2.2X%2.2X\n"
+                "    Flags:%2.2X%2.2X        Dev:%2.2X%2.2X\n"
+                "      LPM:%2.2X PNOM:%2.2X LPUM:%2.2X PIM:%2.2X\n"
+                "      MBI:%2.2X%2.2X        POM:%2.2X PAM:%2.2X\n"
+                "   CHPID0:%2.2X    1:%2.2X    2:%2.2X   3:%2.2X\n"
+                "        4:%2.2X    5:%2.2X    6:%2.2X   7:%2.2X\n"
+                "     Misc:%2.2X%2.2X%2.2X%2.2X\n",
+                devstr, dev->subchan,
                 dev->pmcw.intparm[0], dev->pmcw.intparm[1],
                 dev->pmcw.intparm[2], dev->pmcw.intparm[3],
                 dev->pmcw.flag4, dev->pmcw.flag5,
@@ -513,15 +548,40 @@ void display_subchannel (DEVBLK *dev)
                 dev->pmcw.zone, dev->pmcw.flag25,
                 dev->pmcw.flag26, dev->pmcw.flag27);
 
-        logmsg ("     SCSW=Flags:%2.2X%2.2X SCHC:%2.2X%2.2X "
-                "Stat:%2.2X%2.2X Count:%2.2X%2.2X "
-                "CCW:%2.2X%2.2X%2.2X%2.2X\n",
+        logmsg ("    Subchannel Status Word (SCSW)\n"
+                "    Flags:%2.2X%2.2X SCHC:%2.2X%2.2X "
+                    "DS:%2.2X SS:%2.2X Count:%2.2X%2.2X "
+                    "CCW:%2.2X%2.2X%2.2X%2.2X\n",
                 dev->scsw.flag0, dev->scsw.flag1,
                 dev->scsw.flag2, dev->scsw.flag3,
                 dev->scsw.unitstat, dev->scsw.chanstat,
                 dev->scsw.count[0], dev->scsw.count[1],
                 dev->scsw.ccwaddr[0], dev->scsw.ccwaddr[1],
                 dev->scsw.ccwaddr[2], dev->scsw.ccwaddr[3]);
+
+        u.status = (U8)dev->scsw.unitstat;
+        logmsg ("    Device Status     %s%s%s%s%s%s%s%s%s\n", 
+            u.status == 0 ? "is Normal" : "",
+            u.b.b0 ? "Attention " : "",
+            u.b.b1 ? "SM " : "",
+            u.b.b2 ? "CUE " : "",
+            u.b.b3 ? "Busy " : "",
+            u.b.b4 ? "CE " : "",
+            u.b.b5 ? "DE " : "",
+            u.b.b6 ? "UC " : "",
+            u.b.b7 ? "UE " : "");
+        
+        u.status = (U8)dev->scsw.chanstat;
+        logmsg ("    Subchannel Status %s%s%s%s%s%s%s%s%s\n", 
+            u.status == 0 ? "is Normal" : "",
+            u.b.b0 ? "PCI " : "",
+            u.b.b1 ? "IL " : "",
+            u.b.b2 ? "PC " : "",
+            u.b.b3 ? "ProtC " : "",
+            u.b.b4 ? "CDC " : "",
+            u.b.b5 ? "CCC " : "",
+            u.b.b6 ? "ICC " : "",
+            u.b.b7 ? "CC " : "");
     }
 
 } /* end function display_subchannel */
