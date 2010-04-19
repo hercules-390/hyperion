@@ -949,10 +949,10 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U16   sCount,
 
         // Trace the i/o if requested...
 
-        if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
+        if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep || pLCSDEV->pLCSBLK->fDebug )
         {
             WRITEMSG(HHCLC003I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
-            packet_trace( pIOBuf, iLength );
+            packet_trace( pIOBuf, iLength, '<' );
         }
 
         // Reset frame buffer to empty...
@@ -1023,10 +1023,10 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
             pCmdFrame = (PLCSCMDHDR)pLCSHDR;
 
             // Trace received command frame...
-            if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
+            if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep || pLCSDEV->pLCSBLK->fDebug )
             {
                 WRITEMSG(HHCLC051I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
-                packet_trace( (BYTE*)pCmdFrame, iLength );
+                packet_trace( (BYTE*)pCmdFrame, iLength, '<' );
             }
 
             // FIXME: what is this all about? I'm not saying it's wrong,
@@ -1102,10 +1102,10 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
             iEthLen      = iLength - sizeof(LCSETHFRM);
 
             // Trace Ethernet frame before sending to TAP device
-            if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
+            if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep || pLCSDEV->pLCSBLK->fDebug )
             {
                 WRITEMSG(HHCLC004I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->filename );
-                packet_trace( (BYTE*)pEthFrame, iEthLen );
+                packet_trace( (BYTE*)pEthFrame, iEthLen, '<' );
             }
 
             // Write the Ethernet frame to the TAP device
@@ -1738,7 +1738,7 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
         {
             // Trace the frame
             WRITEMSG(HHCLC009I, pLCSPORT->bPort );
-            packet_trace( szBuff, iLength );
+            packet_trace( szBuff, iLength, '>' );
 
             bReported = 0;
         }
@@ -1765,7 +1765,13 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
 
                     if( pLCSPORT->pLCSBLK->fDebug && !bReported )
                     {
-                        WRITEMSG(HHCLC010I, pLCSPORT->bPort, ntohl(lIPAddress) );
+                        union converter { struct { unsigned char a, b, c, d; } b; U32 i; } c;
+                        char  str[32];
+
+                        c.i = ntohl(lIPAddress);
+                        sprintf( str, "%8.08X %d.%d.%d.%d", c.i, c.b.d, c.b.c, c.b.b, c.b.a );
+
+                        WRITEMSG(HHCLC010I, pLCSPORT->bPort, str );
 
                         bReported = 1;
                     }
@@ -1790,7 +1796,13 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
 
                     if( pLCSPORT->pLCSBLK->fDebug && !bReported )
                     {
-                        WRITEMSG(HHCLC011I, pLCSPORT->bPort, ntohl(lIPAddress) );
+                        union converter { struct { unsigned char a, b, c, d; } b; U32 i; } c;
+                        char  str[32];
+
+                        c.i = ntohl(lIPAddress);
+                        sprintf( str, "%8.08X %d.%d.%d.%d", c.i, c.b.d, c.b.c, c.b.b, c.b.a );
+                        
+                        WRITEMSG(HHCLC011I, pLCSPORT->bPort, str );
 
                         bReported = 1;
                     }
@@ -1898,8 +1910,15 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
         }
 
         if( pLCSPORT->pLCSBLK->fDebug )
-            WRITEMSG(HHCLC016I, pLCSPORT->bPort, pMatchingLCSDEV->sAddr,
-                    ntohl(pMatchingLCSDEV->lIPAddress) );
+        {
+            union converter { struct { unsigned char a, b, c, d; } b; U32 i; } c;
+            char  str[32];
+
+            c.i = ntohl(pMatchingLCSDEV->lIPAddress);
+            sprintf( str, "%8.08X %d.%d.%d.%d", c.i, c.b.d, c.b.c, c.b.b, c.b.a );
+
+            WRITEMSG( HHCLC016I, pLCSPORT->bPort, pMatchingLCSDEV->sAddr, str );
+        }
 
         // Match was found.
         // Enqueue frame on buffer, if buffer is full, keep trying

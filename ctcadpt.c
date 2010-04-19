@@ -776,7 +776,7 @@ static void  CTCT_Write( DEVBLK* pDEVBLK,   U16   sCount,
         {
             WRITEMSG(HHCCT018I, pDEVBLK->devnum, pDEVBLK->filename );
             if( pDEVBLK->ccwtrace )
-                packet_trace( pSegment->bData, sDataLen );
+                packet_trace( pSegment->bData, sDataLen, '>' );
         }
 
         // Write the IP packet
@@ -872,7 +872,7 @@ static void  CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
     if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
     {
         WRITEMSG(HHCCT022I, pDEVBLK->devnum, pDEVBLK->filename, iLength );
-        packet_trace( pDEVBLK->buf, iLength );
+        packet_trace( pDEVBLK->buf, iLength, '<' );
     }
 
     // Fix-up Frame pointer
@@ -1363,7 +1363,7 @@ int  ParseMAC( char* pszMACAddr, BYTE* pbMACAddr )
 // Subroutine to trace the contents of a buffer
 //
 
-void packet_trace( BYTE* pAddr, int iLen )
+void packet_trace( BYTE* pAddr, int iLen, BYTE bDir )
 {
     int           offset;
     unsigned int  i;
@@ -1380,7 +1380,7 @@ void packet_trace( BYTE* pAddr, int iLen )
         memset( print_ebcdic, 0, sizeof( print_ebcdic ) );
         memset( print_line, 0, sizeof( print_line ) );
 
-        sprintf(print_line, "+%4.4X  ", offset );
+        sprintf(print_line, "+%4.4X%c ", offset, bDir );
 
         for( i = 0; i < 16; i++ )
         {

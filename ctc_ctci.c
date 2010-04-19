@@ -730,7 +730,7 @@ void  CTCI_Read( DEVBLK* pDEVBLK,   U16   sCount,
         if( pCTCBLK->fDebug )
         {
             WRITEMSG(HHCCT041I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, iLength );
-            packet_trace( pCTCBLK->bFrameBuffer, iLength );
+            packet_trace( pCTCBLK->bFrameBuffer, iLength, '>' );
         }
 
         // Reset frame buffer
@@ -878,7 +878,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
         if( pCTCBLK->fDebug )
         {
             WRITEMSG(HHCCT046I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pCTCBLK->szTUNDevName );
-            packet_trace( pSegment->bData, sDataLen );
+            packet_trace( pSegment->bData, sDataLen, '<' );
         }
 
         // Write the IP packet to the TUN/TAP interface
@@ -976,7 +976,7 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
         if( pCTCBLK->fDebug )
         {
             WRITEMSG(HHCCT049I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pCTCBLK->szTUNDevName, iLength );
-            packet_trace( szBuff, iLength );
+            packet_trace( szBuff, iLength, '>' );
         }
 
         // Enqueue frame on buffer, if buffer is full, keep trying

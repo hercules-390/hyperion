@@ -1,39 +1,12 @@
 /*-------------------------------------------------------------------*/
 /* Hercules Communication Line Driver                                */
-/* (c) 1999-2006 Roger Bowler & Others                               */
+/* (c) 1999-2010 Roger Bowler & Others                               */
 /* Use of this program is governed by the QPL License                */
 /* Original Author : Ivan Warren                                     */
 /* Prime Maintainer : Ivan Warren                                    */
 /*-------------------------------------------------------------------*/
 
 // $Id$
-//
-// $Log$
-// Revision 1.46  2008/11/03 15:31:58  rbowler
-// Back out consistent create_thread ATTR modification
-//
-// Revision 1.45  2008/10/18 09:32:20  fish
-// Ensure consistent create_thread ATTR usage
-//
-// Revision 1.44  2008/03/04 01:10:29  ivan
-// Add LEGACYSENSEID config statement to allow X'E4' Sense ID on devices
-// that originally didn't support it. Defaults to off for compatibility reasons
-//
-// Revision 1.43  2008/02/15 22:51:39  rbowler
-// Move Solaris specific definition of INADDR_NONE to hostopts.h
-//
-// Revision 1.42  2008/02/07 00:29:04  rbowler
-// Solaris build support by Jeff Savit
-//
-// Revision 1.41  2007/12/14 17:48:52  rbowler
-// Enable SENSE ID CCW for 2703,3410,3420
-//
-// Revision 1.40  2007/11/21 22:54:14  fish
-// Use new BEGIN_DEVICE_CLASS_QUERY macro
-//
-// Revision 1.39  2006/12/08 09:43:18  jj
-// Add CVS message log
-//
 
 /* ********************************************************************
 
@@ -948,7 +921,7 @@ static void *commadpt_thread(void *vca)
 
     init_signaled=0;
 
-    sprintf(threadname, "Device(%4.4X) communication thread", devnum);
+    sprintf(threadname, "%1d:%04X communication thread", SSID_TO_LCSS(ca->dev->ssid), devnum);
     WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), threadname);
 
     pollact=0;  /* Initialise Poll activity flag */
@@ -1090,7 +1063,10 @@ static void *commadpt_thread(void *vca)
         seltv=NULL;
         if(ca->dev->ccwtrace)
         {
-                logmsg(_("HHCCA300D %4.4X:cthread - Entry - DevExec = %s\n"),devnum,commadpt_pendccw_text[ca->curpending]);
+            logmsg(_("HHCCA300D %1d:%04X cthread - Entry - DevExec = %s\n"), 
+                            SSID_TO_LCSS(ca->dev->ssid), 
+                            devnum,
+                            commadpt_pendccw_text[ca->curpending]);
         }
         writecont=0;
         switch(ca->curpending)
