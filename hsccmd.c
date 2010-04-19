@@ -6381,7 +6381,11 @@ int archmode_cmd(int argc, char *argv[], char *cmdline)
             return -1;
         }
 #if defined(_370)
-    if (!strcasecmp (argv[1], arch_name[ARCH_370]))
+    if ( 0 
+        || !strcasecmp (argv[1], arch_name[ARCH_370]) 
+        || !strcasecmp (argv[1], "370" )
+        || !strcasecmp (argv[1], "s370" )
+        )
     {
         sysblk.arch_mode = ARCH_370;
         sysblk.maxcpu = sysblk.numcpu;
@@ -6389,7 +6393,11 @@ int archmode_cmd(int argc, char *argv[], char *cmdline)
     else
 #endif
 #if defined(_390)
-    if (!strcasecmp (argv[1], arch_name[ARCH_390]))
+    if ( 0
+        || !strcasecmp (argv[1], arch_name[ARCH_390]) 
+        || !strcasecmp (argv[1], "390" )
+        || !strcasecmp (argv[1], "s390" )
+        )
     {
         sysblk.arch_mode = ARCH_390;
 #if defined(_FEATURE_CPU_RECONFIG)
@@ -6403,6 +6411,8 @@ int archmode_cmd(int argc, char *argv[], char *cmdline)
 #if defined(_900)
     if (0
         || !strcasecmp (argv[1], arch_name[ARCH_900])
+        || !strcasecmp (argv[1], "zarch")
+        || !strcasecmp (argv[1], "z")
         || !strcasecmp (argv[1], "ESAME")
     )
     {
