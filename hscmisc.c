@@ -1,66 +1,8 @@
-/* HSCMISC.C    (c) Copyright Roger Bowler, 1999-2009                */
-/*              (c) Copyright Jan Jaeger, 1999-2009                  */
+/* HSCMISC.C    (c) Copyright Roger Bowler, 1999-2010                */
+/*              (c) Copyright Jan Jaeger, 1999-2010                  */
 /*              Miscellaneous System Command Routines                */
 
 // $Id$
-//
-// $Log$
-// Revision 1.68  2008/11/04 05:56:31  fish
-// Put ensure consistent create_thread ATTR usage change back in
-//
-// Revision 1.67  2008/11/03 15:31:55  rbowler
-// Back out consistent create_thread ATTR modification
-//
-// Revision 1.66  2008/10/18 09:32:21  fish
-// Ensure consistent create_thread ATTR usage
-//
-// Revision 1.65  2008/05/11 22:30:37  rbowler
-// V command should display "dat off" instead of "primary" if addr is real
-//
-// Revision 1.64  2008/04/09 13:53:45  rbowler
-// Operand disassembly for RIL instructions
-//
-// Revision 1.63  2008/04/09 09:09:22  bernard
-// EXRL instruction
-//
-// Revision 1.62  2008/03/07 17:46:42  ptl00
-// Add pri, sec, home options to v command
-//
-// Revision 1.61  2008/02/19 11:49:19  ivan
-// - Move setting of CPU priority after spwaning timer thread
-// - Added support for Posix 1003.1e capabilities
-//
-// Revision 1.60  2007/06/23 00:04:11  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.59  2007/03/17 22:20:46  gsmith
-// Fix hostregs address calculation in copy_regs
-//
-// Revision 1.58  2007/03/16 22:47:10  gsmith
-// Reduce REGS copying by hscmisc.c
-//
-// Revision 1.57  2007/01/07 11:25:33  rbowler
-// Instruction tracing regsfirst and noregs modes
-//
-// Revision 1.56  2007/01/06 09:05:18  gsmith
-// Enable display_inst to display traditionally too
-//
-// Revision 1.55  2006/12/30 18:47:30  fish
-// 1. Display regs BEFORE instr being traced.
-// 2. Fix condition for Control Regs trace
-//
-// Revision 1.54  2006/12/18 14:01:54  rbowler
-// Only show CPU in FPR display if numcpu>1
-//
-// Revision 1.53  2006/12/17 23:03:28  rbowler
-// Display FPR when tracing floating-point instructions
-//
-// Revision 1.52  2006/12/17 21:58:50  rbowler
-// FPR command to display register pairs
-//
-// Revision 1.51  2006/12/08 09:43:26  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 
@@ -499,7 +441,7 @@ void display_aregs (REGS *regs)
 /*-------------------------------------------------------------------*/
 void display_fregs (REGS *regs)
 {
-char    cpustr[6] = {0};               /* "CPnn " or ""         */
+char    cpustr[7] = {0};               /* "CPnn: " or ""         */
 
     if(sysblk.cpus>1)
         sprintf(cpustr, "%s%02X: ", PTYPSTR(regs->cpuad), regs->cpuad);
