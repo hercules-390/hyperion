@@ -432,6 +432,9 @@ struct  _LCSPORT
     u_int       fCloseInProgress:1;       // Close in progress
 
     int         fd;                       // TUN/TAP fd
+#if       defined ( _MSVC_ )
+    HANDLE      handle;                   // NDIS handle
+#endif // defined ( _MSVC_ )
     TID         tid;                      // Read Thread ID
     pid_t       pid;                      // Read Thread pid
     int         icDevices;                // Device count
@@ -461,12 +464,19 @@ struct  _LCSBLK
 {
     // Config line parameters
     char*       pszTUNDevice;             // TUN/TAP char device
+#if       defined ( _MSVC_ )
+    char*       pszNDISDevice;            // NDIS char device name
+    char*       pszServiceName;           // Service Name for NDIS
+#endif // defined ( _MSVC_ )
     char*       pszOATFilename;           // OAT Filename
     char*       pszIPAddress;             // IP Address
     char*       pszMACAddress;            // MAC Address (string)
     MAC         MAC_Address;              // MAC Address (binary)
 
     u_int       fDebug:1;
+#if       defined ( _MSVC_ )
+    u_int       passthruStarted:1;        // NDIS passthru services started
+#endif // defined ( _MSVC_ )
 
     int         icDevices;                // Number of devices
     int         iKernBuff;                // Kernel buffer in K bytes.
