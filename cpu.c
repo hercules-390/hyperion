@@ -1340,6 +1340,7 @@ void *cpu_thread (int *ptr)
 {
 REGS *regs = NULL;
 int   cpu  = *ptr;
+char  cpustr[20];
 
     OBTAIN_INTLOCK(NULL);
 
@@ -1375,7 +1376,8 @@ int   cpu  = *ptr;
     SETMODE(USER);
 
     /* Display thread started message on control panel */
-    WRITEMSG(HHCCP002I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), PTYPSTR(cpu), cpu);
+    sprintf(cpustr, "Processor %s%02X", PTYPSTR(cpu), cpu);
+    WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), cpustr);
 
     /* Execute the program in specified mode */
     do {
@@ -1399,7 +1401,7 @@ int   cpu  = *ptr;
     signal_condition (&sysblk.cpucond);
 
     /* Display thread ended message on control panel */
-    WRITEMSG(HHCCP008I, thread_id(), getpid(),  getpriority(PRIO_PROCESS,0), PTYPSTR(cpu), cpu);
+    WRMSG(HHC00101, "I", thread_id(),  getpriority(PRIO_PROCESS,0), cpustr);
 
     RELEASE_INTLOCK(NULL);
 

@@ -1516,7 +1516,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
     SETMODE(USER);
 
     /* Display Hercules thread information on control panel */
-    WRITEMSG(HHCMD065I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "hercules");
+    WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "hercules");
 
 #if defined(OPTION_SHARED_DEVICES)
     sysblk.shrdport = shrdport;

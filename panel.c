@@ -1823,8 +1823,7 @@ char    buf[1024];                      /* Buffer workarea           */
     SET_THREAD_NAME("panel_display");
 
     /* Display thread started message on control panel */
-    WRITEMSG (HHCPN001I,
-            thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "control panel");
+    WRMSG (HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Control panel");
 
     /* Notify logger_thread we're in control */
     sysblk.panel_init = 1;
@@ -3006,6 +3005,8 @@ FinishShutdown:
         npquiet = sysblk.npquiet;
 
     } /* end while */
+    WRMSG (HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Control panel");
+	
 
     ASSERT( sysblk.shutdown );  // (why else would we be here?!)
 

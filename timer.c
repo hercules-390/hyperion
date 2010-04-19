@@ -196,7 +196,7 @@ U64     total_sios;                     /* Total SIO rate            */
     SETMODE(USER);
 
     /* Display thread started message on control panel */
-    WRITEMSG (HHCTT002I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "timer");
+    WRMSG (HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Timer");
 
 #ifdef OPTION_MIPS_COUNTING
     then = host_tod();
@@ -283,7 +283,7 @@ U64     total_sios;                     /* Total SIO rate            */
 
     } /* end while */
 
-    WRITEMSG (HHCTT003I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "timer");
+    WRMSG (HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Timer");
 
     sysblk.todtid = 0;
 

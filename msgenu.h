@@ -132,7 +132,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00078 "The command was not added because it may cause dead locks"
 #define HHC00079 "No rule defined at index %02d"
 #define HHC00080 "All HAO rules are cleared"
-#define HHC00081 "Performing command '%s'"
+#define HHC00081 "Match at index %02d, performing command '%s'"
 #define HHC00082 "%d rule(s) displayed"
 #define HHC00083 "The command 'del' was given without a valid index"
 #define HHC00084 "Invalid index; index must be between 0 and %02d"
@@ -143,8 +143,8 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00089 "The are no HAO rules defined"
 // reserve 90-99 for hao.c
 
-#define HHC00100 "Thread id "TIDPAT", prio %d, name '%s' started"
-#define HHC00101 "Thread id "TIDPAT", prio %d, name '%s' ended"
+#define HHC00100 "Thread id "TIDPAT", prio %2d, name '%s' started"
+#define HHC00101 "Thread id "TIDPAT", prio %2d, name '%s' ended"
 // reserve 102-129 thread related
 #define HHC00130 "PGMPRDOS LICENSED specified and a licenced program product operating system is running"
 #define HHC00131 "A licensed program product operating system detected, all processors have been stopped"
@@ -291,7 +291,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCMD062W "File '%s[%d]': missing ECPSVM level value, 20 Assumed"
 #define HHCMD063W "File '%s[%d]': specifying ECPSVM level directly is deprecated. Use the 'LEVEL' keyword instead"
 #define HHCMD064W "Hercules set priority '%d' failed: '%s'"
-#define HHCMD065I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCMD070S "File '%s[%d]': invalid year offset: '%s'"
 #define HHCMD072W "SYSEPOCH '%04d' is deprecated, please specify \"SYSEPOCH 1900 '%s%d'\""
 #define HHCMD073W "SYSEPOCH '%04d' is deprecated, please specify \"SYSEPOCH 1960 '%s%d'\""
@@ -317,8 +316,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCMD900S "Out of memory"
 
 /* cckddasd.c */
-#define HHCCD001I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
-#define HHCCD002I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCCD020E "Invalid value %d for %s="
 #define HHCCD021E "Invalid cckd keyword: %s"
 #define HHCCD029E "Internal cckd trace table calloc() error, size(%d) %s"
@@ -536,14 +533,12 @@ cpu.c:123:HABC1234I This is a message
 
 /* comm3705.c and commadpt.c */
 #define HHCCA001I "Client(%s) connected to %4.4X device(%4.4X)"
-#define HHCCA002I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCCA003E "%1d:%04X Cannot obtain socket for incoming calls: %s"
 #define HHCCA004W "%1d:%04X Waiting 5 seconds for port(%d) to become available"
 #define HHCCA005I "%1d:%04X Listening on port(%d) for incoming TCP connections"
 #define HHCCA006T "%1d:%04X Select failed: %s"
 #define HHCCA007W "%1d:%04X Outgoing call failed during %s command: %s"
 #define HHCCA008I "%1d:%04X Incoming Call"
-#define HHCCA009I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCCA010I "%1d:%04X Initialization not performed"
 #define HHCCA011E "%1d:%04X Error parsing %s"
 #define HHCCA012E "%1d:%04X Unrecognized parameter(%s)"
@@ -572,10 +567,8 @@ cpu.c:123:HABC1234I This is a message
 #define HHCGI002I "Unable to determine port number from (%s)"
 #define HHCGI003E "Invalid parameter(%s)"
 
-#define HHCTE001I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCTE002W "Waiting for port(%u) to become free"
 #define HHCTE003I "Waiting for console connection on port(%u)"
-#define HHCTE004I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)" 
 #define HHCTE006A "%1d:%04X Enter console input"
 #define HHCTE005E "Cannot create console thread: (%s)"
 #define HHCTE007I "%1d:%04X Devtype(%4.4X) client(%s) connection closed"
@@ -591,12 +584,10 @@ cpu.c:123:HABC1234I This is a message
 
 /* cpu.c */
 #define HHCCP001W "Processor(%s%02X) thread set priority(%d) failed: (%s)"
-#define HHCCP002I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(processor %s%02X)"
 #define HHCCP003I "Processor(%s%02X) architecture mode(%s)"
 #define HHCCP004I "Processor(%s%02X) Vector Facility online"
 #define HHCCP006S "Cannot create timer thread: (%s)"
 #define HHCCP007I "Processor(%s%02X) architecture mode(%s) set"
-#define HHCCP008I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(processor %s%02X)"
 #define HHCCP010I "Processor(%s%02X) store status completed"
 #define HHCCP011I "Processor(%s%02X) disabled wait state(%s)"
 #define HHCCP014I "%s%s%s%02X: (%s) code(%4.4X) ilc(%d%s)"
@@ -1056,7 +1047,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCMD042I "%s=%s"
 
 /* httpserv.c */
-#define HHCHT001I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCHT002E "Socket error: (%s)"
 #define HHCHT003W "Waiting for port(%u) to become free"
 #define HHCHT004E "Bind error: (%s)"
@@ -1064,7 +1054,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCHT006I "Waiting for HTTP requests on port(%u)"
 #define HHCHT007E "Select error: (%s)"
 #define HHCHT008E "Accept error: (%s)"
-#define HHCHT009I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCHT010E "Http_request create_thread error: (%s)"
 #define HHCHT011E "Html_include: Cannot open file(%s): (%s)"
 #define HHCHT013I "Using HTTPROOT directory (%s)"
@@ -1114,7 +1103,6 @@ cpu.c:123:HABC1234I This is a message
 
 
 /* panel.c */
-#define HHCPN001I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCPN002S "Cannot obtain keyboard buffer: (%s)"
 #define HHCPN003S "Cannot obtain message buffer: (%s)"
 
@@ -1152,8 +1140,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCSC201E "File(%S) access error: %s"
 
 /* scsitape.c */
-#define HHCTA300I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
-#define HHCTA301I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCTA323I "%s"
 #define HHCTA324E "%1d:%04X File(%s) Open error; errno(%d): (%s)"
 #define HHCTA330E "%1d:%04X File(%s) Error setting attributes; errno(%d): (%s)"
@@ -1209,10 +1195,8 @@ cpu.c:123:HABC1234I This is a message
 #define HHCSH043I "%s disconnected from device(%1d:%04X) id(%d)"
 #define HHCSH0474 "Connect to ip(%s) failed"
 #define HHCSH053I "Ip(%s) connected to device(%1d:%04X) id(%d)"
-#define HHCSH045I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCSH046E "Select error: %s"
 #define HHCSH047E "%1d:%04X ip(%s) recv error id(%d)"
-#define HHCSH048I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCSH050E "inet socket: %s"
 #define HHCSH051W "unix socket: %s"
 #define HHCSH052W "Waiting for port(%u) to become free"
@@ -1252,9 +1236,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHCSD016E "Client(%s) ip(%s) connection to device(%4.4X) (%s) rejected: client(%s) ip(%s) still connected"
 #define HHCSD017E "Connect to device(%4.4X) (%s) failed: %s"
 #define HHCSD018I "Client(%s) ip(%s) connected to device(%4.4X) (%s)"
-#define HHCSD020I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCSD021E "select failed; errno(%d) %s"
-#define HHCSD022I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 #define HHCSD023E "Cannot create socketdevice thread: errno(%d) %s"
 #define HHCSD024E "This build does not support Unix domain sockets"
 #define HHCSD025I "Client(%s) ip(%s) disconnected from device(%4.4X) (%s)"
@@ -1317,8 +1299,6 @@ cpu.c:123:HABC1234I This is a message
 
 /* timer.c */
 #define HHCTT001W "Timer thread set priority(%d) failed: (%s)"
-#define HHCTT002I "Thread started tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
-#define HHCTT003I "Thread ended tid(" TIDPAT ") pid(%d) prio(%d) name(%s)"
 
 /* version.c */
 #define HHCIN010I "%sversion (%s)"

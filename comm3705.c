@@ -1370,7 +1370,7 @@ static void *commadpt_thread(void *vca)
     init_signaled=0;
 
     sprintf(threadname, "3705 device(%1d:%04X) thread", ca->dev->ssid, devnum);
-    WRITEMSG(HHCCA002I,thread_id(), getpid(), getpriority(PRIO_PROCESS,0), threadname);
+    WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), threadname);
 
     for (;;) {
         release_lock(&ca->lock);
@@ -1390,7 +1390,7 @@ static void *commadpt_thread(void *vca)
                 }
     }
 
-    WRITEMSG(HHCCA009I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), threadname);
+    WRMSG(HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), threadname);
     release_lock(&ca->lock);
     return NULL;
 }

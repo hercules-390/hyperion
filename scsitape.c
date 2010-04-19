@@ -2019,15 +2019,7 @@ void *scsi_tapemountmon_thread( void *db )
     char buf[50];
 
     sprintf(buf, "Device(%1d:%04X) SCSI-TAPE mount monitor", SSID_TO_LCSS(dev->ssid) ,dev->devnum);
-    WRITEMSG
-    (
-        HHCTA300I
-        ,thread_id()
-        ,getpid()
-        ,getpriority(PRIO_PROCESS,0)
-        ,buf
-    );
-
+    WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), buf);
     while (!shutdown)
     {
         // Open drive if needed...
@@ -2155,14 +2147,7 @@ void *scsi_tapemountmon_thread( void *db )
         }
     }
 
-    WRITEMSG
-    (
-        HHCTA301I
-        ,thread_id()
-        ,getpid()
-        ,getpriority(PRIO_PROCESS,0)
-        ,buf
-    );
+    WRMSG(HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), buf);
 
     // Notify the interested parties that we're done
     // so they can know to start us back up again

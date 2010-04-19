@@ -2465,8 +2465,8 @@ char            threadname[40];
     dev->shrdtid = thread_id();
 
     /* This thread will be the shared device thread */
-    sprintf(threadname, "shared device(%1d:%04X)", SSID_TO_LCSS(dev->ssid), dev->devnum);
-    WRITEMSG (HHCSH045I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), threadname); 
+    sprintf(threadname, "Shared device(%1d:%04X)", SSID_TO_LCSS(dev->ssid), dev->devnum);
+    WRMSG (HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), threadname); 
 
     while (dev->shrdconn)
     {
@@ -2597,7 +2597,7 @@ char            threadname[40];
     dev->shrdtid = 0;
     release_lock (&dev->lock);
 
-    WRITEMSG(HHCSH048I,thread_id(), getpid(), getpriority(PRIO_PROCESS,0), threadname);
+    WRMSG(HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), threadname);
 
     return NULL;
 
@@ -2666,7 +2666,7 @@ char                    threadname[40];
     sprintf(threadname, "Shared device server %d.%d", SHARED_VERSION, SHARED_RELEASE);
 
     /* Display thread started message on control panel */
-    WRITEMSG (HHCSH045I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), threadname);
+    WRMSG (HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), threadname);
 
     /* Obtain a internet socket */
     lsock = socket (AF_INET, SOCK_STREAM, 0);
@@ -2839,6 +2839,8 @@ char                    threadname[40];
 #endif
 
     sysblk.shrdtid = 0;
+
+    WRMSG (HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), threadname);
 
     return NULL;
 

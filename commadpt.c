@@ -948,8 +948,8 @@ static void *commadpt_thread(void *vca)
 
     init_signaled=0;
 
-    sprintf(threadname, "device(%4.4X) communication thread", devnum);
-    WRITEMSG(HHCCA002I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), threadname);
+    sprintf(threadname, "Device(%4.4X) communication thread", devnum);
+    WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), threadname);
 
     pollact=0;  /* Initialise Poll activity flag */
 
@@ -1613,7 +1613,7 @@ static void *commadpt_thread(void *vca)
     /*        lock is released, because back          */
     /*        notification was made while holding     */
     /*        the lock                                */
-    WRITEMSG(HHCCA009I,thread_id(), getpid(), getpriority(PRIO_PROCESS,0), threadname);
+    WRMSG(HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), threadname);
     release_lock(&ca->lock);
     return NULL;
 }

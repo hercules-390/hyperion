@@ -635,7 +635,7 @@ char                pathname[MAX_PATH]; /* working pathname          */
     UNREFERENCED(arg);
 
     /* Display thread started message on control panel */
-    WRITEMSG (HHCHT001I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "HTTP server");
+    WRMSG (HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "HTTP server");
 
     /* If the HTTP root directory is not specified,
        use a reasonable default */
@@ -800,7 +800,7 @@ char                pathname[MAX_PATH]; /* working pathname          */
     close_socket (lsock);
 
     /* Display thread started message on control panel */
-    WRITEMSG(HHCHT009I, thread_id(), getpid(), getpriority(PRIO_PROCESS,0), "HTTP server");
+    WRMSG(HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), "HTTP server");
 
     sysblk.httptid = 0;
 
