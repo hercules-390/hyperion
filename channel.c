@@ -1289,7 +1289,8 @@ void adjust_thread_priority(int *newprio)
     SETMODE(ROOT);
 
     /* Set device thread priority; ignore any errors */
-    setpriority(PRIO_PROCESS, 0, *newprio);
+    if(setpriority(PRIO_PROCESS, 0, *newprio))
+       WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
 
     /* Back to user mode */
     SETMODE(USER);

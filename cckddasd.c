@@ -1692,7 +1692,10 @@ int             rc;
     /* Set writer priority just below cpu priority to mimimize the
        compression effect */
     if(cckdblk.wrprio >= 0)
-        setpriority (PRIO_PROCESS, 0, cckdblk.wrprio);
+    {
+        if(setpriority (PRIO_PROCESS, 0, cckdblk.wrprio))
+	    WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
+    }
 #endif
 
     obtain_lock (&cckdblk.wrlock);

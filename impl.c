@@ -189,7 +189,10 @@ int i;
        such that it will not invalidly detect an
        inoperable cpu */
     if(sysblk.cpuprio >= 0)
-        setpriority(PRIO_PROCESS, 0, sysblk.cpuprio+1);
+    {
+        if(setpriority(PRIO_PROCESS, 0, sysblk.cpuprio+1))
+	   WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
+    }
 
     for (i = 0; i < MAX_CPU_ENGINES; i ++) savecount[i] = -1;
 

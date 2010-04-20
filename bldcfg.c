@@ -1510,7 +1510,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
 
     /* Set Hercules base priority */
     if (setpriority(PRIO_PGRP, 0, hercprio))
-        WRITEMSG(HHCMD064W, hercprio, strerror(errno));
+        WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
 
     /* Back to user mode */
     SETMODE(USER);

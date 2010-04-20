@@ -1372,7 +1372,7 @@ int   rc;
 
     /* Set CPU thread priority */
     if (setpriority(PRIO_PROCESS, 0, sysblk.cpuprio))
-        WRITEMSG(HHCCP001W, PTYPSTR(cpu), cpu, sysblk.cpuprio, strerror(errno));
+        WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
 
     /* Back to user mode */
     SETMODE(USER);

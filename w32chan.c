@@ -365,7 +365,8 @@ void AdjustThreadPriority(int* pCurPrio, int* pNewPrio)
 {
     if (*pCurPrio != *pNewPrio)
     {
-        setpriority(PRIO_PROCESS, 0, *pNewPrio);
+        if(setpriority(PRIO_PROCESS, 0, *pNewPrio))
+	   WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
         *pCurPrio = *pNewPrio;
     }
 }

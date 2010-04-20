@@ -260,7 +260,8 @@ int bytes_read;
     SETMODE(ROOT);
 
     /* Set device thread priority; ignore any errors */
-    setpriority(PRIO_PROCESS, 0, sysblk.devprio);
+    if(setpriority(PRIO_PROCESS, 0, sysblk.devprio))
+       WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
 
     /* Back to user mode */
     SETMODE(USER);

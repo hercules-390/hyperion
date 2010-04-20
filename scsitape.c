@@ -1618,7 +1618,8 @@ void* get_stape_status_thread( void *db )
 
     SETMODE( ROOT );
     {
-        setpriority( PRIO_PROCESS, 0, (sysblk.devprio - 10) );
+        if(setpriority( PRIO_PROCESS, 0, (sysblk.devprio - 10) ))
+		WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
     }
     SETMODE( USER );
 
