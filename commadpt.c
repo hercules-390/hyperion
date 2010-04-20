@@ -2052,9 +2052,10 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         thread_name[sizeof(thread_name)-1]=0;
 
         dev->commadpt->curpending=COMMADPT_PEND_TINIT;
-        if(create_thread(&dev->commadpt->cthread,DETACHED,commadpt_thread,dev->commadpt,thread_name))
+        rc = create_thread(&dev->commadpt->cthread,DETACHED,commadpt_thread,dev->commadpt,thread_name);
+	if(rc)
         {
-            WRITEMSG(HHCCA022E,strerror(errno));
+            WRMSG(HHC00102, "E", strerror(rc));
             release_lock(&dev->commadpt->lock);
             return -1;
         }

@@ -1012,9 +1012,11 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
                 "autoload wait for %4.4X tapemount thread",
                 dev->devnum);
             thread_name[sizeof(thread_name)-1] = 0;
-            create_thread( &dummy_tid, DETACHED,
+            rc = create_thread( &dummy_tid, DETACHED,
                 autoload_wait_for_tapemount_thread,
                 dev, thread_name );
+	    if (rc)
+		WRMSG(HHC00102, "E", strerror(rc));
         }
 
         ReqAutoMount( dev );

@@ -1763,6 +1763,8 @@ void* get_stape_status_thread( void *db )
 static
 void scsi_get_status_fast( DEVBLK* dev )
 {
+    int rc;
+
     if (unlikely( dev->fd < 0 ))    // (has drive been opened yet?)
         return;                     // (cannot proceed until it is)
 
@@ -1779,16 +1781,18 @@ void scsi_get_status_fast( DEVBLK* dev )
 
         VERIFY
         (
-            create_thread
+            (rc = create_thread
             (
                 &dev->stape_getstat_tid,
                 JOINABLE,
                 get_stape_status_thread,
                 dev,
                 "get_stape_status_thread"
-            )
+            ))
             == 0
         );
+	if (rc)
+	    WRMSG(HHC00102, "E", strerror(rc));
     }
 
     // Wake up the status retrieval thread (if needed)...
@@ -1978,6 +1982,7 @@ void create_automount_thread( DEVBLK* dev )
     // kick off the tape mount monitoring thread that
     // will monitor for tape mounts (if it doesn't al-
     // ready still exist)...
+    int rc;
 
     obtain_lock( &dev->stape_getstat_lock );
 
@@ -1990,16 +1995,18 @@ void create_automount_thread( DEVBLK* dev )
     {
         VERIFY
         (
-            create_thread
+            (rc = create_thread
             (
                 &dev->stape_mountmon_tid,
                 DETACHED,
                 scsi_tapemountmon_thread,
                 dev,
                 "scsi_tapemountmon_thread"
-            )
+            ))
             == 0
         );
+	if (rc)
+	    WRMSG(HHC00102, "E", strerror(rc));
     }
 
     release_lock( &dev->stape_getstat_lock );

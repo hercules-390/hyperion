@@ -1547,9 +1547,10 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
             "commadpt %1d:%04X thread2",dev->ssid,dev->devnum);
         thread_name2[sizeof(thread_name2)-1]=0;
 
-        if(create_thread(&dev->commadpt->tthread,&sysblk.detattr,telnet_thread,dev->commadpt,thread_name2))
+        rc = create_thread(&dev->commadpt->tthread,&sysblk.detattr,telnet_thread,dev->commadpt,thread_name2);
+	if(rc)
         {
-            WRITEMSG(HHCCA022E,strerror(errno));
+            WRMSG(HHC00102, "E" ,strerror(rc));
             release_lock(&dev->commadpt->lock);
             return -1;
         }
@@ -1561,9 +1562,10 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
             "commadpt %1d:%04X thread",dev->ssid,dev->devnum);
         thread_name[sizeof(thread_name)-1]=0;
 
-        if(create_thread(&dev->commadpt->cthread,&sysblk.detattr,commadpt_thread,dev->commadpt,thread_name))
+        rc = create_thread(&dev->commadpt->cthread,&sysblk.detattr,commadpt_thread,dev->commadpt,thread_name);
+	if(rc)
         {
-            WRITEMSG(HHCCA022E,strerror(errno));
+            WRMSG(HHC00102, "E", strerror(rc));
             release_lock(&dev->commadpt->lock);
             return -1;
         }

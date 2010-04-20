@@ -1387,6 +1387,7 @@ void cckd_readahead (DEVBLK *dev, int trk)
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             i, r;                   /* Indexes                   */
 TID             tid;                    /* Readahead thread id       */
+int             rc;
 
     cckd = dev->cckd_ext;
 
@@ -1440,7 +1441,11 @@ TID             tid;                    /* Readahead thread id       */
         if (cckdblk.rawaiting)
             signal_condition (&cckdblk.racond);
         else if (cckdblk.ras < cckdblk.ramax)
-            create_thread (&tid, JOINABLE, cckd_ra, NULL, "cckd_ra");
+	{
+            rc = create_thread (&tid, JOINABLE, cckd_ra, NULL, "cckd_ra");
+	    if (rc)
+	        WRMSG(HHC00102, "E", strerror(rc));
+	}
     }
 
     release_lock (&cckdblk.ralock);
@@ -1480,6 +1485,7 @@ int             ra;                     /* Readahead index           */
 int             r;                      /* Readahead queue index     */
 TID             tid;                    /* Readahead thread id       */
 char            threadname[40];
+int             rc;
 
     obtain_lock (&cckdblk.ralock);
     ra = ++cckdblk.ras;
@@ -1529,7 +1535,11 @@ char            threadname[40];
             if (cckdblk.rawaiting)
                 signal_condition (&cckdblk.racond);
             else if (cckdblk.ras < cckdblk.ramax)
-                create_thread (&tid, JOINABLE, cckd_ra, dev, "cckd_ra");
+	    {
+                rc = create_thread (&tid, JOINABLE, cckd_ra, dev, "cckd_ra");
+		if (rc)
+		    WRMSG(HHC00102, "E", strerror(rc));
+	    }
         }
 
         if (!cckd || cckd->stopping || cckd->merging) continue;
@@ -1566,6 +1576,7 @@ TID             tid;                    /* Writer thread id          */
     /* Scan cache for updated cache entries */
     obtain_lock (&cckdblk.wrlock);
     cache_lock (CACHE_DEVBUF);
+    //BHe: rc is never used?
     rc = cache_scan (CACHE_DEVBUF, cckd_flush_cache_scan, dev);
     cache_unlock (CACHE_DEVBUF);
 
@@ -1576,7 +1587,9 @@ TID             tid;                    /* Writer thread id          */
             signal_condition (&cckdblk.wrcond);
         else if (cckdblk.wrs < cckdblk.wrmax)
         {
-            create_thread (&tid, JOINABLE, cckd_writer, NULL, "cckd_writer");
+            rc = create_thread (&tid, JOINABLE, cckd_writer, NULL, "cckd_writer");
+	    if (rc)
+	        WRMSG(HHC00102, "E", strerror(rc));
         }
     }
     release_lock (&cckdblk.wrlock);
@@ -1671,6 +1684,7 @@ U32             flag;                   /* Cache flag                */
 static char    *compress[] = {"none", "zlib", "bzip2"};
 BYTE            buf2[65536];            /* Compress buffer           */
 char            threadname[40];
+int             rc;
 
     UNREFERENCED(arg);
 
@@ -1731,7 +1745,9 @@ char            threadname[40];
                 signal_condition (&cckdblk.wrcond);
             else if (cckdblk.wrs < cckdblk.wrmax)
             {
-                create_thread (&tid, JOINABLE, cckd_writer, NULL, "cckd_writer");
+                rc = create_thread (&tid, JOINABLE, cckd_writer, NULL, "cckd_writer");
+		if (rc)
+                    WRMSG(HHC00102, "E", strerror(rc));
             }
         }
         release_lock (&cckdblk.wrlock);
@@ -1796,7 +1812,11 @@ char            threadname[40];
 
         /* Schedule the garbage collector */
         if (cckdblk.gcs < cckdblk.gcmax)
-            create_thread (&tid, JOINABLE, cckd_gcol, NULL, "cckd_gcol");
+	{
+            rc = create_thread (&tid, JOINABLE, cckd_gcol, NULL, "cckd_gcol");
+	    if (rc)
+                WRMSG(HHC00102, "E", strerror(rc));
+	}
 
         obtain_lock (&cckd->iolock);
         cache_lock (CACHE_DEVBUF);
@@ -5288,6 +5308,7 @@ DLL_EXPORT int cckd_command(char *op, int cmd)
 {
 char  *kw, *p, c = '\0', buf[256];
 int   val, opts = 0;
+int   rc;
 
     /* Display help for null operand */
     if (op == NULL)
@@ -5557,8 +5578,12 @@ int   val, opts = 0;
             }
             cckd_unlock_devchain();
             if (flag && cckdblk.gcs < cckdblk.gcmax)
-                create_thread (&tid, JOINABLE, cckd_gcol, NULL, "cckd_gcol");
-        }
+	    {
+                rc = create_thread (&tid, JOINABLE, cckd_gcol, NULL, "cckd_gcol");
+		if (rc)
+                    WRMSG(HHC00102, "E", strerror(rc));
+    	    }
+	}
         else
         {
             WRITEMSG(HHCCD021E, kw);

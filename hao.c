@@ -60,6 +60,7 @@ static     void* hao_thread(void* dummy);
 DLL_EXPORT int hao_initialize(void)
 {
   int i = 0; 
+  int rc;
 
   initialize_lock(&ao_lock);
 
@@ -78,10 +79,11 @@ DLL_EXPORT int hao_initialize(void)
 
 
   /* Start message monitoring thread */
-  if ( create_thread (&sysblk.haotid, JOINABLE,
-    hao_thread, NULL, "hao_thread") )
+  rc = create_thread (&sysblk.haotid, JOINABLE, hao_thread, NULL, "hao_thread");
+  if(rc)
   {
     i = FALSE;
+    WRMSG(HHC00102, "E", strerror(rc));
   }
   else
     i = TRUE;

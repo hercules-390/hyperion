@@ -212,6 +212,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     PLCSBLK     pLCSBLK;
     PLCSDEV     pLCSDev;
     int         i;
+    int         rc;
 
     struct in_addr  addr;               // Work area for addresses
 
@@ -402,11 +403,12 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             pLCSBLK->Port[pLCSDev->bPort].fUsed    = 1;
             pLCSBLK->Port[pLCSDev->bPort].fCreated = 1;
 
-            create_thread( &pLCSBLK->Port[pLCSDev->bPort].tid,
+            rc = create_thread( &pLCSBLK->Port[pLCSDev->bPort].tid,
                            JOINABLE, LCS_PortThread,
                            &pLCSBLK->Port[pLCSDev->bPort],
                            "LCS_PortThread" );
-
+            if(rc)
+		WRMSG(HHC00102, "E", strerror(rc));
             /* Identify the thread ID with the devices on which they are active */
             pLCSDev->pDEVBLK[0]->tid = pLCSBLK->Port[pLCSDev->bPort].tid;
             if (pLCSDev->pDEVBLK[1])

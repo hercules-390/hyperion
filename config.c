@@ -83,6 +83,7 @@ int     cpu;
 int configure_cpu(int cpu)
 {
 int   i;
+int   rc;
 char  thread_name[16];
 
     if(IS_CPU_ONLINE(cpu))
@@ -91,11 +92,11 @@ char  thread_name[16];
     snprintf(thread_name,sizeof(thread_name),"cpu%d thread",cpu);
     thread_name[sizeof(thread_name)-1]=0;
 
-    if ( create_thread (&sysblk.cputid[cpu], DETACHED, cpu_thread,
-                        &cpu, thread_name)
-       )
+    rc = create_thread (&sysblk.cputid[cpu], DETACHED, cpu_thread,
+                        &cpu, thread_name);
+    if (rc)   
     {
-        WRITEMSG(HHCMD040E, PTYPSTR(cpu), cpu, strerror(errno));
+        WRMSG(HHC00102, "E", strerror(rc));
         return -1;
     }
 

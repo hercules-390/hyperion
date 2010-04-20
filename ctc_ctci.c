@@ -315,7 +315,9 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
     snprintf(thread_name,sizeof(thread_name),"CTCI %4.4X ReadThread",pDEVBLK->devnum);
     thread_name[sizeof(thread_name)-1]=0;
-    create_thread( &pDevCTCBLK->tid, JOINABLE, CTCI_ReadThread, pDevCTCBLK, thread_name );
+    rc = create_thread( &pDevCTCBLK->tid, JOINABLE, CTCI_ReadThread, pDevCTCBLK, thread_name );
+    if(rc)
+       WRMSG(HHC00102, "E", strerror(rc));
 
     pDevCTCBLK->pDEVBLK[0]->tid = pDevCTCBLK->tid;
     pDevCTCBLK->pDEVBLK[1]->tid = pDevCTCBLK->tid;

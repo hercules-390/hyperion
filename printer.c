@@ -156,9 +156,12 @@ static void* spthread (DEVBLK* dev);        /*  (forward reference)  */
 static int onconnect_callback (DEVBLK* dev)
 {
     TID tid;
-    if (create_thread( &tid, DETACHED, spthread, dev, NULL ))
+    int rc;
+
+    rc = create_thread( &tid, DETACHED, spthread, dev, NULL );
+    if(rc)
     {
-        WRITEMSG(HHCPR015E, SSID_TO_LCSS(dev->ssid), dev->devnum, errno, strerror( errno ) );
+        WRMSG( HHC00102, "E", strerror( rc ) );
         return 0;
     }
     return 1;

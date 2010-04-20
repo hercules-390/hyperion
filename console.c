@@ -2166,10 +2166,12 @@ BYTE                   unitstat;        /* Status after receive data */
             }
 
             /* Create a thread to complete the client connection */
-            if ( create_thread (&tidneg, DETACHED,
-                        connect_client, &csock, "connect_client")
-               )
+            rc = create_thread (&tidneg, DETACHED,
+                        connect_client, &csock, "connect_client");
+            if (rc)
             {
+      	        WRMSG(HHC00102, "E", strerror(errno));
+		//BHe: The error is not in errno, but in the return code!
                 TNSERROR("console: DBG030: connect_client create_thread: %s\n",
                         strerror(errno));
                 close_socket (csock);
@@ -2321,12 +2323,12 @@ console_initialise()
 
         if (!sysblk.cnsltid)
         {
-            if ( create_thread (&sysblk.cnsltid, DETACHED,
+            rc = create_thread (&sysblk.cnsltid, DETACHED,
                                 console_connection_handler, NULL,
-                                "console_connection_handler")
-               )
+                                "console_connection_handler");
+            if ( rc )   
             {
-                WRITEMSG(HHCTE005E, strerror(errno));
+                WRMSG(HHC00102, "E", strerror(rc));
                 rc = 1;
             }
         }

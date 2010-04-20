@@ -1279,7 +1279,7 @@ S64      dreg;
             } /* switch (sysblk.arch_mode) */
             if (rc != 0)
             {
-                WRITEMSG(HHCSR133E, dev->devnum, strerror(errno));
+                WRMSG(HHC00102, "E", strerror(rc));
                 goto sr_error_exit;
             }
         } /* If suspended device */

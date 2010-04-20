@@ -783,12 +783,12 @@ char                pathname[MAX_PATH]; /* working pathname          */
             }
 
             /* Create a thread to execute the http request */
-            if ( create_thread (&httptid, DETACHED,
+            rc = create_thread (&httptid, DETACHED,
                                 http_request, (void *)(uintptr_t)csock,
-                                "http_request")
-               )
+                                "http_request");
+            if(rc)
             {
-                WRITEMSG(HHCHT010E, strerror(errno));
+                WRMSG(HHC00102, "E", strerror(rc));
                 close_socket (csock);
             }
 

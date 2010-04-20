@@ -331,6 +331,7 @@ int     msgnum;                         /*                           */
 int     msgcnt;                         /*                           */
 TID     rctid;                          /* RC file thread identifier */
 TID     logcbtid;                       /* RC file thread identifier */
+int     rc;
 
     SET_THREAD_NAME("impl");
 
@@ -597,10 +598,11 @@ TID     logcbtid;                       /* RC file thread identifier */
 
 #if !defined(NO_SIGABEND_HANDLER)
     /* Start the watchdog */
-    if ( create_thread (&sysblk.wdtid, DETACHED,
-                        watchdog_thread, NULL, "watchdog_thread") )
+    rc = create_thread (&sysblk.wdtid, DETACHED,
+                        watchdog_thread, NULL, "watchdog_thread");
+    if (rc)
     {
-        WRITEMSG(HHCIN005S, strerror(errno));
+        WRMSG(HHC00102, "S", strerror(rc));
         delayed_exit(1);
     }
 #endif /*!defined(NO_SIGABEND_HANDLER)*/
@@ -608,12 +610,15 @@ TID     logcbtid;                       /* RC file thread identifier */
 #ifdef OPTION_SHARED_DEVICES
     /* Start the shared server */
     if (sysblk.shrdport)
-        if ( create_thread (&sysblk.shrdtid, DETACHED,
-                            shared_server, NULL, "shared_server") )
+    {
+        rc = create_thread (&sysblk.shrdtid, DETACHED,
+                            shared_server, NULL, "shared_server");
+	if (rc)
         {
-            WRITEMSG(HHCIN006S, strerror(errno));
+            WRMSG(HHC00102, "S", strerror(rc));
             delayed_exit(1);
         }
+    }
 
     /* Retry pending connections */
     {
@@ -622,27 +627,33 @@ TID     logcbtid;                       /* RC file thread identifier */
 
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
             if (dev->connecting)
-                if ( create_thread (&tid, DETACHED,
-                           *dev->hnd->init, dev, "device connecting thread")
-                   )
+	    {
+                rc = create_thread (&tid, DETACHED,
+                           *dev->hnd->init, dev, "device connecting thread");
+                if (rc)
                 {
-                    WRITEMSG(HHCIN007S, dev->devnum, strerror(errno));
+                    WRMSG(HHC00102, "S", strerror(rc));
                     delayed_exit(1);
                 }
+	    }
     }
 #endif
 
     /* Start up the RC file processing thread */
-    create_thread(&rctid,DETACHED,
+    rc = create_thread(&rctid,DETACHED,
                   process_rc_file,NULL,"process_rc_file");
+    if (rc)
+        WRMSG(HHC00102, "S", strerror(rc));
 
     if(log_callback)
     {
         // 'herclin' called us. IT'S in charge. Create its requested
         // logmsg intercept callback function and return back to it.
-        create_thread(&logcbtid,DETACHED,
+        rc = create_thread(&logcbtid,DETACHED,
                       log_do_callback,NULL,"log_do_callback");
-        return(0);
+        if (rc)
+	    WRMSG(HHC00102, "S", strerror(rc));
+	return(0);
     }
 
     //---------------------------------------------------------------

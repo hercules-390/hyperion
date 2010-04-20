@@ -463,6 +463,8 @@ int bytes_read;
 
 DLL_EXPORT void logger_init(void)
 {
+    int rc;
+
     initialize_condition (&logger_cond);
     initialize_lock (&logger_lock);
 
@@ -552,12 +554,11 @@ DLL_EXPORT void logger_init(void)
 
     setvbuf (logger_syslog[LOG_WRITE], NULL, _IONBF, 0);
 
-    if (create_thread (&logger_tid, JOINABLE,
-                       logger_thread, NULL, "logger_thread")
-       )
+    rc = create_thread (&logger_tid, JOINABLE,
+                       logger_thread, NULL, "logger_thread");
+    if (rc)
     {
-        fprintf(stderr, _("HHCLG012E Cannot create logger thread: %s\n"),
-          strerror(errno));
+        fprintf(stderr, MSG(HHC00102, "E", strerror(rc)));
         exit(1);
     }
 

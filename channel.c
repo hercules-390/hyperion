@@ -2300,9 +2300,11 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
         {
             rc = create_thread (&dev->tid, DETACHED,
                         device_thread, NULL, "idle device thread");
-            if (rc != 0 && sysblk.devtnbr == 0)
+	    //BHe: Changed the following if statement
+            //if (rc != 0 && sysblk.devtnbr == 0)
+	    if(rc)
             {
-                WRITEMSG (HHCCP067E, SSID_TO_LCSS(dev->ssid), dev->devnum, strerror(errno));
+                WRMSG (HHC00102, "E", strerror(rc));
                 release_lock (&sysblk.ioqlock);
                 release_lock (&dev->lock);
                 return 2;
@@ -2316,15 +2318,16 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
     else
     {
         char thread_name[32];
+	// BHe: Do we want this for every ccw?
         snprintf(thread_name,sizeof(thread_name),
             "execute %4.4X ccw chain",dev->devnum);
         thread_name[sizeof(thread_name)-1]=0;
 
         /* Execute the CCW chain on a separate thread */
-        if ( create_thread (&dev->tid, DETACHED,
-                    ARCH_DEP(execute_ccw_chain), dev, thread_name) )
+        rc = create_thread (&dev->tid, DETACHED, ARCH_DEP(execute_ccw_chain), dev, thread_name);
+	if (rc)
         {
-            WRITEMSG (HHCCP067E, SSID_TO_LCSS(dev->ssid), dev->devnum, strerror(errno));
+            WRMSG (HHC00102, "E", strerror(rc));
             release_lock (&dev->lock);
             return 2;
         }

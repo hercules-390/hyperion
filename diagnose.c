@@ -588,14 +588,16 @@ U32   code;
 #ifdef FEATURE_PROGRAM_DIRECTED_REIPL
 TID   tid;                              /* Thread identifier         */
 char *ipltype;                          /* "ipl" or "iplc"           */
+int   rc;
         case DIAG308_IPL_CLEAR:
             ipltype = "iplc";
             goto diag308_cthread;
         case DIAG308_IPL_NORMAL:
             ipltype = "ipl";
         diag308_cthread:
-            if(create_thread(&tid, DETACHED, stop_cpus_and_ipl, ipltype, "Stop cpus and ipl"))
-                WRITEMSG(HHCDN004E, strerror(errno));
+            rc = create_thread(&tid, DETACHED, stop_cpus_and_ipl, ipltype, "Stop cpus and ipl");
+	    if(rc)
+                WRMSG(HHC00102, "E", strerror(rc));
             regs->cpustate = CPUSTATE_STOPPING;
             ON_IC_INTERRUPT(regs);
             break;

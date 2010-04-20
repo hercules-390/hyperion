@@ -2816,10 +2816,11 @@ char                    threadname[40];
             *psock = csock;
 
             /* Create a thread to complete the client connection */
-            if ( create_thread (&tid, DETACHED,
-                                serverConnect, psock, "serverConnect") )
+            rc = create_thread (&tid, DETACHED,
+                                serverConnect, psock, "serverConnect");
+	    if(rc)
             {
-                WRITEMSG(HHCSH061E, strerror(HSO_errno));
+                WRMSG(HHC00102, "E", strerror(rc));
                 close_socket (csock);
             }
 

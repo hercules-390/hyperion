@@ -652,6 +652,7 @@ static int ARCH_DEP(scedio_request)(U32 sclp_command, SCCB_EVD_HDR *evd_hdr)
 SCCB_SCEDIO_BK  *scedio_bk = (SCCB_SCEDIO_BK*)(evd_hdr + 1);
 SCCB_SCEDIOV_BK *scediov_bk;
 SCCB_SCEDIOR_BK *scedior_bk;
+int rc;
 
 
 static struct {
@@ -754,10 +755,13 @@ static int scedio_pending;
         }
 
         /* Create the scedio thread */
-        if( create_thread(&scedio_tid, &sysblk.detattr,
-            ARCH_DEP(scedio_thread), &static_scedio_bk, "scedio_thread") )
+        rc = create_thread(&scedio_tid, &sysblk.detattr,
+            ARCH_DEP(scedio_thread), &static_scedio_bk, "scedio_thread");
+	if (rc)
+	{
+	    WRMSG(HHC00102, "E", strerror(rc));
             return -1;
-
+	}
         scedio_pending = 1;
 
     }

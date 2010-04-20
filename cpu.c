@@ -1341,6 +1341,7 @@ void *cpu_thread (int *ptr)
 REGS *regs = NULL;
 int   cpu  = *ptr;
 char  cpustr[20];
+int   rc;
 
     OBTAIN_INTLOCK(NULL);
 
@@ -1357,10 +1358,11 @@ char  cpustr[20];
     /* Start the TOD clock and CPU timer thread */
     if (!sysblk.todtid)
     {
-        if ( create_thread (&sysblk.todtid, DETACHED,
-             timer_update_thread, NULL, "timer_update_thread") )
+        rc = create_thread (&sysblk.todtid, DETACHED,
+             timer_update_thread, NULL, "timer_update_thread");
+        if (rc)	
         {
-            WRITEMSG(HHCCP006S, strerror(errno));
+            WRMSG(HHC00102, "S", strerror(rc));
             RELEASE_INTLOCK(NULL);
             return NULL;
         }

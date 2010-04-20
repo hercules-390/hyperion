@@ -265,7 +265,9 @@ DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
         {
             obtain_lock (&ptttolock);
             ptttotid = 0;
-            create_thread (&ptttotid, NULL, ptt_timeout, NULL, "ptt_timeout");
+            rc = create_thread (&ptttotid, NULL, ptt_timeout, NULL, "ptt_timeout");
+	    if (rc)
+		    WRMSG(HHC00102, "E", strerror(rc));
             release_lock (&ptttolock);
         }
     }

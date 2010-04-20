@@ -454,6 +454,7 @@ int bind_device_ex (DEVBLK* dev, char* spec, ONCONNECT fn, void* arg )
 {
     bind_struct* bs;
     int was_list_empty;
+    int rc;
 
     if (!init_done) init_sockdev();
 
@@ -516,10 +517,11 @@ int bind_device_ex (DEVBLK* dev, char* spec, ONCONNECT fn, void* arg )
 
     if ( was_list_empty )
     {
-        if ( create_thread( &sysblk.socktid, JOINABLE,
-                            socket_thread, NULL, "socket_thread" ) )
+        rc = create_thread( &sysblk.socktid, JOINABLE,
+                            socket_thread, NULL, "socket_thread" );
+	if (rc)
             {
-                WRITEMSG(HHCSD023E, errno, strerror( errno ) );
+                WRMSG(HHC00102, "E", strerror( rc ) );
                 RemoveListEntry( &bs->bind_link );
                 close_socket(bs->sd);
                 free( bs->spec );

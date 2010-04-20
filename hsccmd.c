@@ -2098,6 +2098,7 @@ int httproot_cmd(int argc, char *argv[], char *cmdline)
 int httpport_cmd(int argc, char *argv[], char *cmdline)
 {
 char c;
+int rc;
 
     UNREFERENCED(cmdline);
 
@@ -2148,10 +2149,11 @@ char c;
             }
 
             /* Start the http server connection thread */
-            if ( create_thread (&sysblk.httptid, DETACHED,
-                                http_server, NULL, "http_server") )
-            {
-                WRITEMSG(HHCMD835S, strerror(errno));
+            rc = create_thread (&sysblk.httptid, DETACHED,
+                                http_server, NULL, "http_server");
+	    if(rc)
+	    {
+                WRMSG(HHC00102, "S", strerror(rc));
                 return -1;
             }
         }
@@ -4498,6 +4500,7 @@ void *device_thread(void *arg);
 int devtmax_cmd(int argc, char *argv[], char *cmdline)
 {
     int devtmax = -2;
+    int rc;
 
 #if defined(OPTION_FISHIO)
 
@@ -4553,7 +4556,11 @@ int devtmax_cmd(int argc, char *argv[], char *cmdline)
         /* the IOQ lock is obtained in order to write to sysblk.devtwait */
         obtain_lock(&sysblk.ioqlock);
         if (sysblk.ioq && (!sysblk.devtmax || sysblk.devtnbr < sysblk.devtmax))
-            create_thread(&tid, DETACHED, device_thread, NULL, "idle device thread");
+	{
+            rc = create_thread(&tid, DETACHED, device_thread, NULL, "idle device thread");
+	    if(rc)
+		WRMSG(HHC00102, "E", strerror(rc));
+	}
 
         /* Wakeup threads in case they need to terminate */
         sysblk.devtwait=0;

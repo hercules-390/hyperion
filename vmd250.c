@@ -1185,6 +1185,7 @@ BYTE    psc;              /* List processing status code */
 TID     tid;         /* Asynchronous thread ID */
 char    tname[32];   /* Thread name */
 IOCTL32 *asyncp;     /* Pointer to async thread's storage */
+int     rc2;
 
    /* Clear the reserved BIOPL */
    memset(&bioplx00,0x00,sizeof(BIOPL_IORQ32));
@@ -1273,11 +1274,11 @@ IOCTL32 *asyncp;     /* Pointer to async thread's storage */
        /* Launch the asynchronous request on a separate thread */
        snprintf(tname,sizeof(tname),"d250_async %4.4X",dev->devnum);
        tname[sizeof(tname)-1]=0;
-       if ( create_thread (&tid, DETACHED, ARCH_DEP(d250_async32), 
-               asyncp, tname)
-          )
+       rc2 = create_thread (&tid, DETACHED, ARCH_DEP(d250_async32), 
+               asyncp, tname);
+       if(rc2)
        {
-          WRITEMSG (HHCVM010E, dev->devnum, strerror(errno));
+          WRMSG (HHC00102, "E", strerror(rc2));
           release_lock (&dev->lock);
           *rc = RC_ERROR;
           return CC_FAILED;
@@ -1778,6 +1779,7 @@ BYTE    psc;               /* List processing status code   */
 TID     tid;         /* Asynchronous thread ID */
 char    tname[32];   /* Thread name */
 IOCTL64 *asyncp;     /* Pointer to async thread's free standing storage */
+int     rc2;
 
 #if 0
    logmsg("(d250_iorq64) Entered\n");
@@ -1880,11 +1882,11 @@ IOCTL64 *asyncp;     /* Pointer to async thread's free standing storage */
        /* Launch the asynchronous request on a separate thread */
        snprintf(tname,sizeof(tname),"d250_async %4.4X",dev->devnum);
        tname[sizeof(tname)-1]=0;
-       if ( create_thread (&tid, DETACHED, ARCH_DEP(d250_async64), 
-               asyncp, tname)
-          )
+       rc2 = create_thread (&tid, DETACHED, ARCH_DEP(d250_async64), 
+               asyncp, tname);
+       if(rc2)
        {
-          WRITEMSG (HHCVM110E, dev->devnum, strerror(errno));
+          WRMSG (HHC00102, "E", strerror(rc2));
           release_lock (&dev->lock);
           *rc = RC_ERROR;
           return CC_FAILED;

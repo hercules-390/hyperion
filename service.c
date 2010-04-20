@@ -120,6 +120,8 @@ void sclp_attn_thread(U16 *type)
 
 void sclp_attn_async(U16 type)
 {
+    int rc;
+
     if(!IS_IC_SERVSIG)
         sclp_attention(type);
     else
@@ -128,7 +130,9 @@ void sclp_attn_async(U16 type)
     U16 *typ;
         typ=malloc(sizeof(U16));
         *typ=type;
-        create_thread(&sclp_attn_tid, &sysblk.detattr, sclp_attn_thread, typ, "attn_thread");
+        rc = create_thread(&sclp_attn_tid, &sysblk.detattr, sclp_attn_thread, typ, "attn_thread");
+	if (rc)
+	    WRMSG(HHC00102, "E", strerror(rc));
     }
 }
 
