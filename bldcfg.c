@@ -1516,7 +1516,8 @@ char    fname[MAX_PATH];                /* normalized filename       */
     SETMODE(USER);
 
     /* Display Hercules thread information on control panel */
-    WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "hercules");
+    // Removed this message. build_cfg is not a thread?
+    //WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "hercules");
 
 #if defined(OPTION_SHARED_DEVICES)
     sysblk.shrdport = shrdport;
