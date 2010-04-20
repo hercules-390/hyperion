@@ -1284,9 +1284,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCTA071E "%1d:%04X Option(%s) parse error"
 #define HHCTA078E "%1d:%04X Option(%s) not valid for %s"
 
-/* timer.c */
-#define HHCTT001W "Timer thread set priority(%d) failed: (%s)"
-
 /* version.c */
 #define HHCIN010I "%sversion (%s)"
 #define HHCIN011I "%s"
