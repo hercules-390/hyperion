@@ -1301,7 +1301,9 @@ void adjust_thread_priority(int *newprio)
 /*-------------------------------------------------------------------*/
 void *device_thread (void *arg)
 {
+#ifdef _MSVC_
 char    thread_name[32];
+#endif
 DEVBLK *dev;
 int     current_priority;               /* Current thread priority   */
 
@@ -1320,9 +1322,11 @@ int     current_priority;               /* Current thread priority   */
     {
         while ((dev=sysblk.ioq) != NULL)
         {
+#ifdef _MSVC_		
             snprintf ( thread_name, sizeof(thread_name),
                 "device %4.4X thread", dev->devnum );
             thread_name[sizeof(thread_name)-1]=0;
+#endif
             SET_THREAD_NAME(thread_name);
 
             sysblk.ioq = dev->nextioq;
