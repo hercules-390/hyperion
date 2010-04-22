@@ -173,6 +173,16 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00161 "Function %s failed: '[%02d] %s'"
 // reserve 002xx for device related
 #define HHC00200 "%1d:%04X Function %s failed: '[%02d] %s'" 
+#define HHC00201 "%1d:%04X Tape file '%s', type '%s': tape closed"
+#define HHC00202 "%1d:%04X Tape file '%s', type '%s': block length %d exceeds maximum at offset "I64_FMTX
+#define HHC00203 "%1d:%04X Tape file '%s', type '%s': invalid tapemark at offset "I64_FMTX
+#define HHC00204 "%1d:%04X Tape file '%s', type '%s': error in function '%s', offset "I64_FMTX": '%s'"
+#define HHC00205 "%1d:%04X Tape file '%s', type '%s': error in function '%s': '%s'"
+#define HHC00206 "%1d:%04X Tape file '%s', type '%s': not a valid file"
+#define HHC00207 "%1d:%04X Tape file '%s', type '%s': line %d: '%s'"
+#define HHC00208 "%1d:%04X Tape file '%s', type '%s': maximum tape capacity exceeded"
+#define HHC00209 "%1d:%04X Tape file '%s', type '%s': maximum tape capacity enforced"
+
 
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
@@ -210,41 +220,6 @@ cpu.c:123:HABC1234I This is a message
  *                                  O L D   M E S S A G E   F O R M A T
  */
  
-/* awstape.c faketape.c omatape.c */ 
-#define HHCTA101I "%1d:%04X Tape file '%s': '%s' tape closed"
-#define HHCTA107E "%1d:%04X Tape file '%s': block length %d exceeds maximum at offset "I64_FMTX
-#define HHCTA108E "%1d:%04X Tape file '%s': invalid tapemark at offset "I64_FMTX
-#define HHCTA121E "%1d:%04X Tape file '%s': error in function '%s', offset "I64_FMTX": '%s'"
-#define HHCTA122E "%1d:%04X Tape file '%s': error in function '%s': '%s'"
-
-/* omatape.c - TDF file processing */
-#define HHCTA232I "%1d:%04X TDF File '%s': invalid filename: TDF files must be in the TAPES subdirectory"
-#define HHCTA239E "%1d:%04X TDF File '%s': open error: '%s'"
-#define HHCTA240E "%1d:%04X TDF File '%s': function fstat() error: '%s'"
-#define HHCTA241E "%1d:%04X TDF File '%s': cannot obtain buffer for file: '%s"
-#define HHCTA242E "%1d:%04X TDF File '%s': error reading file: '%s'"
-#define HHCTA243E "%1d:%04X TDF File '%s': not a valid TDF file"
-#define HHCTA244E "%1d:%04X TDF File '%s': cannot obtain buffer for TDF array: '%s'"
-#define HHCTA245E "%1d:%04X TDF File '%s[%d]': filename or format missing"
-#define HHCTA246E "%1d:%04X TDF File '%s[%d]': filename '%s' too long"
-#define HHCTA247E "%1d:%04X TDF File '%s[%d]': RECSIZE keyword missing"
-#define HHCTA248E "%1d:%04X TDF File '%s[%d]': invalid record size '%s'"
-#define HHCTA249E "%1d:%04X TDF File '%s[%d]': invalid record format '%s'"
-
-/* hettape.c */
-#define HHCTA401I "%1d:%04X Tape file '%s': Closed; HET format tape"
-#define HHCTA402E "%1d:%04X Tape file '%s': Open error: HETERR(%s): (%s)"
-#define HHCTA403E "%1d:%04X Tape file '%s': Error seeking to start of file: HETERR(%s): (%s)"
-#define HHCTA405E "%1d:%04X Tape file '%s': End of file (end of tape) at block("I32_FMTX")"
-#define HHCTA409E "%1d:%04X Tape file '%s': Error reading data block at block("I32_FMTX"): HETERR(%s): (%s)"
-#define HHCTA416E "%1d:%04X Tape file '%s': Error writing data block at block("I32_FMTX"): HETERR(%s): (%s)"
-#define HHCTA417E "%1d:%04X Tape file '%s': Error writing tape mark at block("I32_FMTX"): HETERR(%s): (%s)"
-#define HHCTA418E "%1d:%04X Tape file '%s': Error forward spacing at block("I32_FMTX"): HETERR(%s): (%s)"
-#define HHCTA419E "%1d:%04X Tape file '%s': Error forward spacing to next file at block("I32_FMTX"): HETERR(%s): (%s)"
-#define HHCTA420E "%1d:%04X Tape file '%s': Sync error: (%s)"
-#define HHCTA421E "%1d:%04X Tape file '%s': Error back spacing to previous file at block("I32_FMTX"): HETERR(%s): (%s)"
-#define HHCTA430I "%1d:%04X Tape file '%s': Maximum tape capacity exceeded"
-#define HHCTA431I "%1d:%04X Tape file '%s': Maximum tape capacity enforced"
 /* bldcfg.c cmdtab.c codepage.c config.c */
 #define HHCMD001S "File '%s[%d]': error reading line: '%s'"
 #define HHCMD002S "File '%s[%d]': line is too long"

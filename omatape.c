@@ -12,8 +12,6 @@
 /*                                                                   */
 /* The subroutines in this module are called by the general tape     */
 /* device handler (tapedev.c) when the tape format is OMATAPE.       */
-/*                                                                   */
-/* Messages issued by this module are prefixed HHCTA2nn              */
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
@@ -74,12 +72,12 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if (dev->filename[pathlen-1] == '/') break;
 
     }
-#if 0
+#if 0    
     // JCS thinks this is bad
     if (pathlen < 7
         || strncasecmp(dev->filename+pathlen-7, "/tapes/", 7) != 0)
     {
-        WRITEMSG (HHCTA232I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename+pathlen);
+        WRITEMSG ("%1d:%04X TDF File '%s': invalid filename: TDF files must be in the TAPES subdirectory", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename+pathlen, "oma");
         return -1;
     }
     pathlen -= 7;
@@ -90,7 +88,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     fd = open (pathname, O_RDONLY | O_BINARY);
     if (fd < 0)
     {
-        WRITEMSG (HHCTA239E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, strerror(errno));
+        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "oma", "open()", strerror(errno));
         return -1;
     }
 
@@ -98,7 +96,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     rc = fstat (fd, &statbuf);
     if (rc < 0)
     {
-        WRITEMSG (HHCTA240E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, strerror(errno));
+        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "oma", "fstat()", strerror(errno));
         close (fd);
         return -1;
     }
@@ -108,7 +106,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     tdfbuf = malloc (tdfsize);
     if (tdfbuf == NULL)
     {
-        WRITEMSG (HHCTA241E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, strerror(errno));
+        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "oma", "malloc()", strerror(errno));
         close (fd);
         return -1;
     }
@@ -117,7 +115,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     rc = read (fd, tdfbuf, tdfsize);
     if (rc < tdfsize)
     {
-        WRITEMSG (HHCTA242E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, strerror(errno));
+        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "oma", "read()", strerror(errno));
         free (tdfbuf);
         close (fd);
         return -1;
@@ -129,7 +127,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /* Check that the first record is a TDF header */
     if (memcmp(tdfbuf, "@TDF", 4) != 0)
     {
-        WRITEMSG (HHCTA243E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+        WRMSG (HHC00206, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "oma");
         free (tdfbuf);
         return -1;
     }
@@ -147,7 +145,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     tdftab = (OMATAPE_DESC*)malloc (filecount * sizeof(OMATAPE_DESC));
     if (tdftab == NULL)
     {
-        WRITEMSG (HHCTA244E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, strerror(errno));
+        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "oma", "malloc()", strerror(errno));
         free (tdfbuf);
         return -1;
     }
@@ -195,7 +193,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         /* Check for missing fields */
         if (tdffilenm == NULL || tdfformat == NULL)
         {
-            WRITEMSG (HHCTA245E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, stmt);
+            WRMSG (HHC00207, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "oma", stmt, "filename or format missing");
             free (tdftab);
             free (tdfbuf);
             return -1;
@@ -205,7 +203,9 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if (pathlen + 1 + strlen(tdffilenm)
                 > sizeof(tdftab[filecount].filename) - 1)
         {
-            WRITEMSG (HHCTA246E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, stmt, tdffilenm);
+	    char buf[80];
+	    sprintf(buf, "filename '%s' too long", tdffilenm);
+            WRMSG (HHC00207, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "oma", stmt, buf);
             free (tdftab);
             free (tdfbuf);
             return -1;
@@ -255,7 +255,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             if (tdfreckwd == NULL
                 || strcasecmp(tdfreckwd, "RECSIZE") != 0)
             {
-                WRITEMSG (HHCTA247E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, stmt);
+                WRMSG (HHC00207, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "oma", stmt, "keyword RECSIZE missing");
                 free (tdftab);
                 free (tdfbuf);
                 return -1;
@@ -266,7 +266,9 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 || sscanf(tdfblklen, "%u%c", &blklen, &c) != 1
                 || blklen < 1 || blklen > MAX_BLKLEN)
             {
-                WRITEMSG (HHCTA248E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, stmt, tdfblklen);
+		char buf[40];
+		sprintf(buf, "invalid record size '%s'", tdfblklen);
+                WRMSG (HHC00207, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "oma", stmt, buf);
                 free (tdftab);
                 free (tdfbuf);
                 return -1;
@@ -278,7 +280,9 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         }
         else
         {
-            WRITEMSG (HHCTA249E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, stmt, tdfformat);
+	    char buf[40];
+	    sprintf(buf, "invalid record format '%s'", tdfformat);
+            WRMSG (HHC00207, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "oma", stmt, buf);
             free (tdftab);
             free (tdfbuf);
             return -1;
@@ -341,7 +345,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 #if 0
     if (dev->curfilen >= dev->omafiles)
     {
-        WRITEMSG (HHCTA250E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+        WRITEMSG (HHCTAxxxE, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
 
         build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
         return -1;
@@ -376,7 +380,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if (fd >= 0)            /* (if open was successful, then it) */
             errno = EOVERFLOW;  /* (must have been a lseek overflow) */
 
-        WRITEMSG (HHCTA122E, SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "open()", strerror(errno));
+        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "open()", strerror(errno));
 
         if (fd >= 0)
             close(fd);          /* (close the file if it was opened) */
@@ -418,7 +422,7 @@ S32             nxthdro;                /* Offset of next header     */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        WRITEMSG (HHCTA121E, SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "lseek()", blkpos, strerror(errno));
+        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "lseek()", blkpos, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
@@ -431,7 +435,7 @@ S32             nxthdro;                /* Offset of next header     */
     /* Handle read error condition */
     if (rc < 0)
     {
-        WRITEMSG (HHCTA121E, SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "read()", blkpos,
+        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "read()", blkpos,
                 strerror(errno));
 
         /* Set unit check with equipment check */
@@ -442,7 +446,7 @@ S32             nxthdro;                /* Offset of next header     */
     /* Handle end of file within block header */
     if (rc < (int)sizeof(omahdr))
     {
-        WRITEMSG (HHCTA121E, SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "readhdr_omaheaders()", blkpos, "unexpected end of file");
+        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "readhdr_omaheaders()", blkpos, "unexpected end of file");
 
         /* Set unit check with data check and partial record */
         build_senseX(TAPE_BSENSE_BLOCKSHORT,dev,unitstat,code);
@@ -463,7 +467,7 @@ S32             nxthdro;                /* Offset of next header     */
     if (curblkl < -1 || curblkl == 0 || curblkl > MAX_BLKLEN
         || memcmp(omahdr.omaid, "@HDF", 4) != 0)
     {
-        WRITEMSG (HHCTA121E, SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "readhdr_omaheaders()", blkpos, "invalid block header");
+        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "readhdr_omaheaders()", blkpos, "invalid block header");
 
         build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
         return -1;
@@ -528,7 +532,7 @@ S32             nxthdro;                /* Offset of next header     */
     /* Handle read error condition */
     if (rc < 0)
     {
-        WRITEMSG (HHCTA121E, SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "read()", blkpos,
+        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "read()", blkpos,
                 strerror(errno));
 
         /* Set unit check with equipment check */
@@ -539,7 +543,7 @@ S32             nxthdro;                /* Offset of next header     */
     /* Handle end of file within data block */
     if (rc < curblkl)
     {
-        WRITEMSG(HHCTA121E, SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "read_omaheaders()", blkpos, "unexpected end of file");
+        WRMSG(HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "read_omaheaders()", blkpos, "unexpected end of file");
 
         /* Set unit check with data check and partial record */
         build_senseX(TAPE_BSENSE_BLOCKSHORT,dev,unitstat,code);
@@ -575,7 +579,7 @@ long            blkpos;                 /* Offset of block in file   */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        WRITEMSG (HHCTA121E, SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "lseek()", blkpos, strerror(errno));
+        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "lseek()", blkpos, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
@@ -588,7 +592,7 @@ long            blkpos;                 /* Offset of block in file   */
     /* Handle read error condition */
     if (blklen < 0)
     {
-        WRITEMSG (HHCTA121E, SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "read()", blkpos,
+        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "read()", blkpos,
                 strerror(errno));
 
         build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
@@ -645,7 +649,7 @@ BYTE            c;                      /* Character work area       */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        WRITEMSG (HHCTA121E, SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "lseek()", blkpos, strerror(errno));
+        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "lseek()", blkpos, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
@@ -700,7 +704,7 @@ BYTE            c;                      /* Character work area       */
     /* Handle read error condition */
     if (rc < 0)
     {
-        WRITEMSG (HHCTA121E, SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "read()", blkpos,
+        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "read()", blkpos,
                 strerror(errno));
 
         build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
@@ -710,7 +714,7 @@ BYTE            c;                      /* Character work area       */
     /* Check for block not terminated by newline */
     if (rc < 1)
     {
-        WRITEMSG (HHCTA121E, SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "read_omatext()", blkpos, "unexpected end of file");
+        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "read_omatext()", blkpos, "unexpected end of file");
 
         /* Set unit check with data check and partial record */
         build_senseX(TAPE_BSENSE_BLOCKSHORT,dev,unitstat,code);
@@ -720,7 +724,7 @@ BYTE            c;                      /* Character work area       */
     /* Check for invalid zero length block */
     if (pos == 0)
     {
-        WRITEMSG (HHCTA121E, SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "read_omatext()", blkpos, "invalid block header");
+        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "read_omatext()", blkpos, "invalid block header");
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_BLOCKSHORT,dev,unitstat,code);
@@ -891,7 +895,7 @@ int             curblkl;                /* Length of current block   */
     {
         /* Handle seek error condition */
         if ( eofpos >= LONG_MAX) errno = EOVERFLOW;
-        WRITEMSG (HHCTA122E, SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "lseek()", strerror(errno));
+        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "lseek()", strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
@@ -1020,7 +1024,7 @@ S32             nxthdro;                /* Offset of next header     */
     if (pos < 0)
     {
         /* Handle seek error condition */
-        WRITEMSG (HHCTA122E, SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "lseek()", strerror(errno));
+        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "lseek()", strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
@@ -1160,7 +1164,7 @@ void close_omatape2(DEVBLK *dev)
 {
     if (dev->fd >= 0)
     {
-        WRITEMSG (HHCTA101I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "OMA");
+        WRMSG (HHC00201, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "oma");
         close (dev->fd);
     }
     dev->fd=-1;
