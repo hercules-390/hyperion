@@ -287,7 +287,7 @@ U16             seglen;                 /* Data length of segment    */
         /* Handle read error condition */
         if (rc < 0)
         {
-            WRSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "aws", "read()", blkpos, strerror(errno));
+            WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "aws", "read()", blkpos, strerror(errno));
 
             /* Set unit check with equipment check */
             build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
