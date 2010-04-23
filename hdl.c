@@ -33,6 +33,7 @@ extern void *HDL_DEPC;
 extern void *HDL_INIT;
 extern void *HDL_RESO;
 extern void *HDL_DDEV;
+extern void *HDL_DINS;
 extern void *HDL_FINI;
 #endif
 
@@ -49,6 +50,9 @@ static char *hdl_modpath = NULL;
 
 static LOCK   hdl_sdlock;                /* shutdown lock            */
 static HDLSHD *hdl_shdlist;              /* Shutdown call list       */
+
+static void hdl_didf (int, int, char *, void *);
+static void hdl_modify_opcode(int, HDLINS *);
 
 /* Global hdl_device_type_equates */
 
@@ -89,7 +93,7 @@ HDLSHD **tmpcall;
     }
     return -1;
 }
-    
+
 
 /* hdl_shut - call all shutdown call entries in LIFO order
  */
@@ -398,6 +402,22 @@ MODENT *modent;
                 logmsg(" %s",hndent->name);
             logmsg("\n");
         }
+
+        if(dllent->insent)
+        {
+        HDLINS *insent;
+            for(insent = dllent->insent; insent; insent = insent->next)
+            {
+                logmsg(" instruction = %s, opcode = %4.4X",insent->instname,insent->opcode);
+                if(insent->archflags & HDL_INSTARCH_370)
+                    logmsg(", archmode = " _ARCH_370_NAME);
+                if(insent->archflags & HDL_INSTARCH_390)
+                    logmsg(", archmode = " _ARCH_390_NAME);
+                if(insent->archflags & HDL_INSTARCH_900)
+                    logmsg(", archmode = " _ARCH_900_NAME);
+                logmsg("\n");
+            }
+        }
     }
 }
 
@@ -644,11 +664,14 @@ MODENT *modent;
 
     dllent->hdlddev = dlsym(dllent->dll,HDL_DDEV_Q);
 
+    dllent->hdldins = dlsym(dllent->dll,HDL_DINS_Q);
+
     dllent->hdlfini = dlsym(dllent->dll,HDL_FINI_Q);
 
     /* No modules or device types registered yet */
     dllent->modent = NULL;
     dllent->hndent = NULL;
+    dllent->insent = NULL;
 
     obtain_lock(&hdl_lock);
 
@@ -685,6 +708,10 @@ MODENT *modent;
     /* register any device types */
     if(hdl_cdll->hdlddev)
         (hdl_cdll->hdlddev)(&hdl_dvad);
+
+    /* register any new instructions */
+    if(hdl_cdll->hdldins)
+        (hdl_cdll->hdldins)(&hdl_didf);
 
     hdl_cdll = NULL;
 
@@ -745,6 +772,8 @@ HDLPRE *preload;
 
     hdl_cdll->hdlddev = dlsym(hdl_cdll->dll,HDL_DDEV_Q);
 
+    hdl_cdll->hdldins = dlsym(hdl_cdll->dll,HDL_DINS_Q);
+
     hdl_cdll->hdlfini = dlsym(hdl_cdll->dll,HDL_FINI_Q);
 #else
 
@@ -758,12 +787,15 @@ HDLPRE *preload;
 
     hdl_cdll->hdlddev = &HDL_DDEV;
 
+    hdl_cdll->hdldins = &HDL_DINS;
+
     hdl_cdll->hdlfini = &HDL_FINI;
 #endif
 
     /* No modules or device types registered yet */
     hdl_cdll->modent = NULL;
     hdl_cdll->hndent = NULL;
+    hdl_cdll->insent = NULL;
 
     /* No dll's loaded yet */
     hdl_cdll->dllnext = NULL;
@@ -781,6 +813,9 @@ HDLPRE *preload;
 
     if(hdl_cdll->hdlddev)
         (hdl_cdll->hdlddev)(&hdl_dvad);
+
+    if(hdl_cdll->hdldins)
+        (hdl_cdll->hdldins)(&hdl_didf);
 
     release_lock(&hdl_lock);
 
@@ -859,11 +894,14 @@ char *modname;
 
     dllent->hdlddev = dlsym(dllent->dll,HDL_DDEV_Q);
 
+    dllent->hdldins = dlsym(dllent->dll,HDL_DINS_Q);
+
     dllent->hdlfini = dlsym(dllent->dll,HDL_FINI_Q);
 
     /* No modules or device types registered yet */
     dllent->modent = NULL;
     dllent->hndent = NULL;
+    dllent->insent = NULL;
 
     obtain_lock(&hdl_lock);
 
@@ -909,6 +947,10 @@ char *modname;
     if(hdl_cdll->hdlddev)
         (hdl_cdll->hdlddev)(&hdl_dvad);
 
+    /* register any new instructions */
+    if(hdl_cdll->hdldins)
+        (hdl_cdll->hdldins)(&hdl_didf);
+
     hdl_cdll = NULL;
 
     release_lock(&hdl_lock);
@@ -925,6 +967,7 @@ DLLENT **dllent, *tmpdll;
 MODENT *modent, *tmpmod;
 DEVBLK *dev;
 HDLDEV *hnd;
+HDLINS *ins;
 char *modname;
 
     modname = (modname = strrchr(name,'/')) ? modname+1 : name;
@@ -992,6 +1035,16 @@ char *modname;
                 hnd = nexthnd;
             }
 
+            for(ins = tmpdll->insent; ins;)
+            {
+            HDLINS *nextins;
+                hdl_modify_opcode(FALSE, ins);
+                free(ins->instname);
+                nextins = ins->next;
+                free(ins);
+                ins = nextins;
+            }
+
 //          dlclose(tmpdll->dll);
 
             /* free dll resources */
@@ -1022,6 +1075,155 @@ char *modname;
     WRITEMSG(HHCHD009E,modname);
 
     return -1;
+}
+
+
+static void hdl_modify_optab(int insert,zz_func *tabent, HDLINS *instr)
+{
+    if(insert)
+    {
+#if defined(_370)
+        if(instr->archflags & HDL_INSTARCH_370)
+        {
+            instr->original = tabent[ARCH_370];
+            tabent[ARCH_370] = instr->instruction;
+        }
+#endif
+#if defined(_390)
+        if(instr->archflags & HDL_INSTARCH_390)
+        {
+            instr->original = tabent[ARCH_390];
+            tabent[ARCH_390] = instr->instruction;
+        }
+#endif
+#if defined(_900)
+        if(instr->archflags & HDL_INSTARCH_900)
+        {
+            instr->original = tabent[ARCH_900];
+            tabent[ARCH_900] = instr->instruction;
+        }
+#endif
+    }
+    else
+    {
+#if defined(_370)
+        if(instr->archflags & HDL_INSTARCH_370)
+            tabent[ARCH_370] = instr->original; 
+#endif
+#if defined(_900)
+        if(instr->archflags & HDL_INSTARCH_390)
+            tabent[ARCH_390] = instr->original; 
+#endif
+#if defined(_900)
+        if(instr->archflags & HDL_INSTARCH_900)
+            tabent[ARCH_900] = instr->original; 
+#endif
+    }
+}
+
+
+static void hdl_modify_opcode(int insert, HDLINS *instr)
+{
+    switch(instr->opcode & 0xff00)
+    {
+        case 0x0100:
+            hdl_modify_optab(insert,opcode_01xx[instr->opcode & 0xff],instr);
+            break;
+
+#if defined (FEATURE_VECTOR_FACILITY)
+        case 0xA400:
+            hdl_modify_optab(insert,v_opcode_a4xx[instr->opcode & 0xff],instr);
+            table = v_opcode_a4xx;
+            break;
+#endif
+
+        case 0xA500:
+            hdl_modify_optab(insert,opcode_a5xx[instr->opcode & 0x0f],instr);
+            break;
+
+        case 0xA700:
+            hdl_modify_optab(insert,opcode_a7xx[instr->opcode & 0x0f],instr);
+            break;
+
+        case 0xB200:
+            hdl_modify_optab(insert,opcode_b2xx[instr->opcode & 0xff],instr);
+            break;
+
+        case 0xB300:
+            hdl_modify_optab(insert,opcode_b3xx[instr->opcode & 0xff],instr);
+            break;
+
+        case 0xB900:
+            hdl_modify_optab(insert,opcode_b9xx[instr->opcode & 0xff],instr);
+            break;
+
+        case 0xC000:
+            hdl_modify_optab(insert,opcode_c0xx[instr->opcode & 0x0f],instr);
+            break;
+
+        case 0xC200:
+            hdl_modify_optab(insert,opcode_c2xx[instr->opcode & 0x0f],instr);
+            break;
+
+        case 0xC400:
+            hdl_modify_optab(insert,opcode_c4xx[instr->opcode & 0x0f],instr);
+            break;
+
+        case 0xC600:
+            hdl_modify_optab(insert,opcode_c6xx[instr->opcode & 0x0f],instr);
+            break;
+
+        case 0xC800:
+            hdl_modify_optab(insert,opcode_c8xx[instr->opcode & 0x0f],instr);
+            break;
+
+        case 0xE300:
+            hdl_modify_optab(insert,opcode_e3xx[instr->opcode & 0xff],instr);
+            break;
+
+        case 0xE500:
+            hdl_modify_optab(insert,opcode_e5xx[instr->opcode & 0xff],instr);
+            break;
+
+        case 0xE600:
+            hdl_modify_optab(insert,opcode_e6xx[instr->opcode & 0xff],instr);
+            break;
+
+        case 0xEB00:
+            hdl_modify_optab(insert,opcode_ebxx[instr->opcode & 0xff],instr);
+            break;
+
+        case 0xEC00:
+            hdl_modify_optab(insert,opcode_ecxx[instr->opcode & 0xff],instr);
+            break;
+
+        case 0xED00:
+            hdl_modify_optab(insert,opcode_edxx[instr->opcode & 0xff],instr);
+            break;
+
+        default:
+            hdl_modify_optab(insert,opcode_table[instr->opcode >> 8],instr);
+    }
+
+    /* Copy opcodes to shadow tables */
+    copy_opcode_tables();
+
+}
+
+
+/* hdl_didf - Define instruction call */
+static void hdl_didf (int archflags, int opcode, char *name, void *routine)
+{
+HDLINS *newins;
+
+    newins = malloc(sizeof(HDLINS));
+    newins->opcode = opcode > 0xff ? opcode : (opcode << 8) ;
+    newins->archflags = archflags;
+    newins->instname = strdup(name);
+    newins->instruction = routine;
+    newins->next = hdl_cdll->insent;
+    hdl_cdll->insent = newins;
+    hdl_modify_opcode(TRUE, newins);
 }
 
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/

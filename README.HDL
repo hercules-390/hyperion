@@ -317,6 +317,24 @@ HDL_DEVICE_SECTION;
 }
 END_DEVICE_SECTION;
 
+/*  The instruction section registers inserts optional instructions,
+    or modifies existing instructions.
+
+    Instructions are generally defined with DEF_INST(instname) which results 
+    in an external reference of s370_instname, s390_instname and z900_instname.
+    If an instruction is not defined for a certain architecture mode then 
+    UNDEF_INST(instname) must be used for that given architecture mode.
+
+    The instruction section is optional
+*/
+
+HDL_INSTRUCTION_SECTION;
+{
+    HDL_DEFINST(HDL_INSTARCH_370,0xB2FE,new_B2FE_inst_doing_something);
+    HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB2FD,new_B2FD_inst_doing_something_else);
+}
+END_INSTRUCTION_SECTION;
+
 
 /*
     The final section is called once, when the module is unloaded
@@ -626,3 +644,54 @@ HDL_FINAL_SECTION;
 END_FINAL_SECTION;
 
 #endif /*defined(OPTION_HTTP_SERVER)*/
+
+
+
+/* TESTINS.C    Test instruction                                     */
+
+#include "hercules.h"
+
+#include "opcode.h"
+
+/*-------------------------------------------------------------------*/
+/* 0000 BARF  - Barf                                            [RR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(barf)
+{
+int r1, r2;                                     /* register values   */
+
+    RR(inst, regs, r1, r2)
+
+    logmsg("Barf\n");
+
+    ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
+}
+
+
+#if !defined(_GEN_ARCH)
+
+#if defined(_ARCHMODE2)
+ #define  _GEN_ARCH _ARCHMODE2
+ #include "testins.c"
+#endif 
+
+#if defined(_ARCHMODE3)
+ #undef   _GEN_ARCH
+ #define  _GEN_ARCH _ARCHMODE3
+ #include "testins.c"
+#endif 
+
+
+HDL_DEPENDENCY_SECTION;
+{
+
+} END_DEPENDENCY_SECTION;
+
+
+HDL_INSTRUCTION_SECTION;
+{
+    HDL_DEFINST(HDL_INSTARCH_ALL,0x00,barf);
+
+} END_INSTRUCTION_SECTION;
+
+#endif /*!defined(_GEN_ARCH)*/

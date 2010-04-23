@@ -102,6 +102,16 @@ typedef struct _HDLDEV {                /* Device entry              */
 } HDLDEV;
 
 
+typedef struct _HDLINS {                /* Instruction entry         */
+    int  opcode;                        /* Opcode                    */
+    int  archflags;                     /* Architecture flags        */
+    char *instname;                     /* Instruction name          */
+    void *instruction;                  /* Instruction routine       */
+    void *original;                     /* Original instruction      */
+    struct _HDLINS *next;               /* Next entry                */
+} HDLINS;
+
+
 struct _HDLDEP;
 typedef struct _HDLDEP {                /* Dependency entry          */
     char *name;                         /* Dependency name           */
@@ -135,9 +145,11 @@ typedef struct _DLLENT {                /* DLL entry                 */
     int (*hdlreso)(void *);             /* hdl_reso                  */
     int (*hdlinit)(void *);             /* hdl_init                  */
     int (*hdlddev)(void *);             /* hdl_ddev                  */
+    int (*hdldins)(void *);             /* hdl_dins                  */
     int (*hdlfini)();                   /* hdl_fini                  */
     struct _MODENT *modent;             /* First symbol entry        */
     struct _HDLDEV *hndent;             /* First device entry        */
+    struct _HDLINS *insent;             /* First instruction entry   */
     struct _DLLENT *dllnext;            /* Next entry in chain       */
 } DLLENT;
 
@@ -176,6 +188,11 @@ int hdl_load(char *, int);              /* load dll                  */
 #define HDL_LOAD_NOMSG       0x00000008 /* Do not issue not found msg*/
 #define HDL_LOAD_WAS_FORCED  0x00000010 /* Module load was forced    */
 
+#define HDL_INSTARCH_370     0x00000001
+#define HDL_INSTARCH_390     0x00000002
+#define HDL_INSTARCH_900     0x00000004
+#define HDL_INSTARCH_ALL     (HDL_INSTARCH_370|HDL_INSTARCH_390|HDL_INSTARCH_900)
+
 DLL_EXPORT
 int hdl_dele(char *);                   /* Unload dll                */
 DLL_EXPORT
@@ -206,6 +223,7 @@ static void **unresolved _HDL_UNUSED = NULL;
 #define HDL_INIT hdl_init
 #define HDL_FINI hdl_fini
 #define HDL_DDEV hdl_ddev
+#define HDL_DINS hdl_dins
 
 #define HDL_HDTP hdt
 
@@ -214,6 +232,7 @@ static void **unresolved _HDL_UNUSED = NULL;
 #define HDL_INIT_Q STRING_Q(HDL_INIT)
 #define HDL_FINI_Q STRING_Q(HDL_FINI)
 #define HDL_DDEV_Q STRING_Q(HDL_DDEV)
+#define HDL_DINS_Q STRING_Q(HDL_DINS)
 
 #define HDL_HDTP_Q STRING_Q(HDL_HDTP)
 
@@ -261,7 +280,51 @@ DLL_EXPORT void HDL_DDEV(int (*hdl_init_ddev)(char *, void *) _HDL_UNUSED ) \
 }
 
 
-#define HDL_RESOLVER_SECTION                                            \
+#define HDL_INSTRUCTION_SECTION                         \
+DLL_EXPORT void HDL_DINS(int (*hdl_init_dins)(int, int, void *, void *) _HDL_UNUSED ) \
+{
+
+#if defined(_370)
+ #define HDL_370_DEFINST( _arch, _opcode, _instruction)                                  \
+do {                                                                                     \
+  if( (_arch) & HDL_INSTARCH_370 )                                                       \
+    (hdl_init_dins)( _arch, _opcode, STRING_Q(_instruction), &(s370_ ## _instruction) ); \
+} while(0)
+#else
+ #define HDL_370_DEFINST( _arch, _opcode, _instruction)
+#endif
+
+#if defined(_390)
+ #define HDL_390_DEFINST( _arch, _opcode, _instruction)                                  \
+do {                                                                                     \
+  if( (_arch) & HDL_INSTARCH_390 )                                                       \
+    (hdl_init_dins)( _arch, _opcode, STRING_Q(_instruction), &(s390_ ## _instruction) ); \
+} while(0)
+#else
+ #define HDL_390_DEFINST( _arch, _opcode, _instruction)
+#endif
+
+#if defined(_900)
+ #define HDL_900_DEFINST( _arch, _opcode, _instruction)                                  \
+do {                                                                                     \
+  if( (_arch) & HDL_INSTARCH_900 )                                                       \
+    (hdl_init_dins)( _arch, _opcode, STRING_Q(_instruction), &(z900_ ## _instruction) ); \
+} while(0)
+#else
+ #define HDL_900_DEFINST( _arch, _opcode, _instruction)
+#endif
+
+#define HDL_DEFINST( _arch, _opcode, _instruction )                        \
+do {                                                                       \
+    HDL_370_DEFINST(( (_arch) & HDL_INSTARCH_370), _opcode, _instruction); \
+    HDL_390_DEFINST(( (_arch) & HDL_INSTARCH_390), _opcode, _instruction); \
+    HDL_900_DEFINST(( (_arch) & HDL_INSTARCH_900), _opcode, _instruction); \
+} while(0)
+
+#define END_INSTRUCTION_SECTION                              \
+}
+
+#define HDL_RESOLVER_SECTION                                          \
 DLL_EXPORT void HDL_RESO(void *(*hdl_reso_fent)(char *) _HDL_UNUSED ) \
 {
 
