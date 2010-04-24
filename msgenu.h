@@ -184,6 +184,14 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00209 "%1d:%04X Tape file '%s', type '%s': maximum tape capacity enforced"
 #define HHC00210 "%1d:%04X Tape file '%s', type '%s': tape unloaded"
 #define HHC00211 "%s"
+#define HHC00212 "%1d:%04X Data chaining not supported for CCW %2.2X"
+#define HHC00213 "%1d:%04X Tape file '%s' function '%s' failed: '%s'"
+#define HHC00214 "%1d:%04X Tape file '%s' auto-mount rejected: drive not empty"
+#define HHC00215 "%1d:%04X Tape file '%s' auto-mounted"
+#define HHC00216 "%1d:%04X Tape file '%s' auto-unmounted"
+#define HHC00217 "%1d:%04X Tape file '%s' locate block 0x%8.8"I32_FMT"X"
+#define HHC00218 "%1d:%04X Tape Display '%s' until unmounted"
+#define HHC00219 "%1d:%04X Tape Display '%s' until unmounted, then '%s' until mounted"
 
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
@@ -1215,17 +1223,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCSR203E "All CPU's must be stopped to resume"
 #define HHCSR204E "File identifier error"
 #define HHCSR999E "Invalid key %8.8x"
-
-/* tapeccws.c */
-#define HHCTA072E "%1d:%04X Data chaining not supported for CCW(%2.2X)"
-#define HHCTA081I "%1d:%04X Locate block(0x%8.8"I32_FMT"X) on %s"
-#define HHCTA090E "%1d:%04X Tape file(%s) auto-mount failed: (%s)"
-#define HHCTA091E "%1d:%04X Tape file(%s) auto-mount rejected: drive not empty"
-#define HHCTA092E "%1d:%04X Tape file(%s) auto-unmount failed"
-#define HHCTA093I "%1d:%04X Tape file(%s) auto-unmounted"
-#define HHCTA094I "%1d:%04X Tape file(%s) auto-mounted"
-#define HHCTA099I "%1d:%04X Tape Display(%s) until unmounted"
-#define HHCTA199I "%1d:%04X Tape Display(%s) until unmounted, then (%s) until mounted"
 
 /* tapedev.c */
 #define HHCTA001E "%1d:%04X Tape file(%s) - format type is not determinable; Internal error: %s error(%s) on index(%d)"

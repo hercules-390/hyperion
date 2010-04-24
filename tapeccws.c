@@ -487,7 +487,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
     if ((flags & CCW_FLAGS_CD) &&
         !(IS_CCW_READ(code) || IS_CCW_RDBACK(code)))
     {
-        WRITEMSG(HHCTA072E, SSID_TO_LCSS(dev->ssid), dev->devnum, code);
+        WRMSG(HHC00212, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, code);
         build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
         return;
     }
@@ -1600,10 +1600,10 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             int minlen = 0;
             int rej = 0;
 
-            /* (because i hate typing) */
-#define  _HHCTA090E(_file,_reason) \
+            /* (because i hate typing) BHe: Shame on you ;-) */ 
+#define  _HHC00213E(_file,_reason) \
             { \
-                WRITEMSG(HHCTA090E, SSID_TO_LCSS(dev->ssid), dev->devnum, _file, _reason); \
+                WRMSG(HHC00213, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, _file, "auto-mount", _reason); \
                 build_senseX (TAPE_BSENSE_TAPELOADFAIL, dev, unitstat, code); \
                 release_lock (&dev->lock); \
                 break; \
@@ -1632,7 +1632,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
 
                 /* (fully resolvable path?) */
                 if (realpath( resolve_in, resolve_out ) == NULL)
-                    _HHCTA090E( resolve_in, "unresolvable path" );
+                    _HHC00213E( resolve_in, "unresolvable path" );
 
                 /* Switch to fully resolved path */
                 strlcpy( newfile, resolve_out, sizeof(newfile) );
@@ -1648,11 +1648,11 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
 
             /* Error if "allowable" directory not found... */
             if (!rej)
-                _HHCTA090E( newfile, "impermissible directory" );
+                _HHC00213E( newfile, "impermissible directory" );
 
             /* Verify file exists... */
             if (access( newfile, R_OK ) != 0)
-                _HHCTA090E( newfile, "file not found" );
+                _HHC00213E( newfile, "file not found" );
         }
 
         /* Prevent accidental re-init'ing of an already loaded tape drive */
@@ -1662,7 +1662,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             && strcmp (dev->filename, TAPE_UNLOADED) != 0
         )
         {
-            WRITEMSG(HHCTA091E, SSID_TO_LCSS(dev->ssid), dev->devnum, newfile);
+            WRMSG(HHC00214, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, newfile);
             build_senseX (TAPE_BSENSE_TAPELOADFAIL, dev, unitstat, code);
             release_lock (&dev->lock);
             break;
@@ -1704,10 +1704,10 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             {
                 /* (an error message explaining the reason for the
                     failure should hopefully already have been issued) */
-                WRITEMSG(HHCTA092E, SSID_TO_LCSS(dev->ssid), dev->devnum, newfile);
+                WRMSG(HHC00213, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, newfile, "auto-unmount", "see previous message");
             }
             else
-                _HHCTA090E( newfile, "file not found" ); // (presumed)
+                _HHC00213E( newfile, "file not found" ); // (presumed)
 
             /* (the load or unload attempt failed) */
             build_senseX (TAPE_BSENSE_TAPELOADFAIL, dev, unitstat, code);
@@ -1717,9 +1717,9 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             // (success)
 
             if (strcmp( newfile, TAPE_UNLOADED ) == 0)
-                WRITEMSG(HHCTA093I, SSID_TO_LCSS(dev->ssid), dev->devnum, newfile);
+                WRMSG(HHC00216, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, newfile);
             else
-                WRITEMSG(HHCTA094I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+                WRMSG(HHC00215, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
 
             /* (save new parms for next time) */
             free( dev->argv[0] );
@@ -1857,9 +1857,9 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
 
         /* Informative message if tracing */
         if ( dev->ccwtrace || dev->ccwstep )
-            WRITEMSG(HHCTA081I, SSID_TO_LCSS(dev->ssid), dev->devnum
-                ,locblock
+            WRMSG(HHC00217, "I", SSID_TO_LCSS(dev->ssid), dev->devnum
                 ,TAPEDEVT_SCSITAPE == dev->tapedevt ? (char*)dev->filename : ""
+		,locblock
                 );
 
         /* Update display if needed */
@@ -3499,7 +3499,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
             strlcpy( dev->tapemsg1, msg1, sizeof(dev->tapemsg1) );
 
             if ( dev->ccwtrace || dev->ccwstep )
-                WRITEMSG(HHCTA099I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->tapemsg1 );
+                WRMSG(HHC00218, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->tapemsg1 );
         }
 
         break;
@@ -3524,7 +3524,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
             strlcpy( dev->tapemsg1, msg1, sizeof(dev->tapemsg1) );
 
             if ( dev->ccwtrace || dev->ccwstep )
-                WRITEMSG(HHCTA099I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->tapemsg1 );
+                WRMSG(HHC00218, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->tapemsg1 );
         }
 
         break;
@@ -3576,7 +3576,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
             dev->tapedispflags = TAPEDISPFLG_REQAUTOMNT;
 
             if ( dev->ccwtrace || dev->ccwstep )
-                WRITEMSG(HHCTA199I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->tapemsg1, dev->tapemsg2 );
+                WRMSG(HHC00219, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->tapemsg1, dev->tapemsg2 );
         }
         else
         {
@@ -3584,7 +3584,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
             dev->tapedispflags = TAPEDISPFLG_MESSAGE2 | TAPEDISPFLG_REQAUTOMNT;
 
             if ( dev->ccwtrace || dev->ccwstep )
-                WRITEMSG(HHCTA099I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->tapemsg2 );
+                WRMSG(HHC00218, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->tapemsg2 );
         }
 
         break;
