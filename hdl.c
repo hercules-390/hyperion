@@ -10,6 +10,7 @@
 #define _HUTIL_DLL_
 
 #include "hercules.h"
+#include "opcode.h" /* for the opcode tables */
 
 /*
 extern HDLPRE hdl_preload[];
