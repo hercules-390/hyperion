@@ -1104,26 +1104,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCSC101E "access error: %s: %s"
 #define HHCSC201E "File(%S) access error: %s"
 
-/* scsitape.c */
-#define HHCTA323I "%s"
-#define HHCTA324E "%1d:%04X File(%s) Open error; errno(%d): (%s)"
-#define HHCTA330E "%1d:%04X File(%s) Error setting attributes; errno(%d): (%s)"
-#define HHCTA332E "%1d:%04X File(%s) Error reading data block; errno(%d): (%s)"
-#define HHCTA333E "%1d:%04X File(%s) Error writing data block; errno(%d): (%s)"
-#define HHCTA334E "%1d:%04X File(%s) Error writing tapemark; errno(%d): (%s)"
-#define HHCTA335E "%1d:%04X File(%s) Forward space block error; errno(%d): (%s)"
-#define HHCTA336E "%1d:%04X File(%s) Backspace block error; errno(%d): (%s)"
-#define HHCTA337E "%1d:%04X File(%s) Forward space file error; errno(%d): (%s)"
-#define HHCTA338E "%1d:%04X File(%s) Backspace file error; errno(%d): (%s)"
-#define HHCTA373E "%1d:%04X File(%s) Error rewinding; errno(%d): (%s)"
-#define HHCTA376E "%1d:%04X File(%s) Error unloading tape; errno(%d): (%s)"
-#define HHCTA377I "%1d:%04X File(%s) Tape unloaded"
-#define HHCTA380E "%1d:%04X File(%s) Erase gap error; errno(%d): (%s)"
-#define HHCTA381E "%1d:%04X File(%s) Data Security Erase error; errno(%d): (%s)"
-#define HHCTA382W "%1d:%04X File(%s) ioctl_tape(MTIOCPOS=MTTELL) failed; errno(%d): (%s)"
-#define HHCTA383W "%1d:%04X File(%s) ioctl_tape(MTIOCTOP=MTSEEK) failed; errno(%d): (%s)"
-#define HHCTA389E "%1d:%04X File(%s) Sync error; errno(%d): (%s)"
-
 /* shared.c */
 #define HHCSH001S "Parameter #(%d) is invalid: %s"
 #define HHCSH002W "%1d:%04X Connect pending to file(%s)"
