@@ -171,7 +171,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00153 "Server '%12s' is inactive"
 #define HHC00160 "SCP %scommand: '%s'"
 #define HHC00161 "Function %s failed: '[%02d] %s'"
-// reserve 002xx for device related
+// reserve 002xx for tape device related
 #define HHC00200 "%1d:%04X Function %s failed: '[%02d] %s'" 
 #define HHC00201 "%1d:%04X Tape file '%s', type '%s': tape closed"
 #define HHC00202 "%1d:%04X Tape file '%s', type '%s': block length %d exceeds maximum at offset "I64_FMTX
@@ -184,19 +184,19 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00209 "%1d:%04X Tape file '%s', type '%s': maximum tape capacity enforced"
 #define HHC00210 "%1d:%04X Tape file '%s', type '%s': tape unloaded"
 #define HHC00211 "%s"
-#define HHC00212 "%1d:%04X Data chaining not supported for CCW %2.2X"
-#define HHC00213 "%1d:%04X Tape file '%s' function '%s' failed: '%s'"
-#define HHC00214 "%1d:%04X Tape file '%s' auto-mount rejected: drive not empty"
-#define HHC00215 "%1d:%04X Tape file '%s' auto-mounted"
-#define HHC00216 "%1d:%04X Tape file '%s' auto-unmounted"
-#define HHC00217 "%1d:%04X Tape file '%s' locate block 0x%8.8"I32_FMT"X"
-#define HHC00218 "%1d:%04X Tape display '%s' until unmounted"
-#define HHC00219 "%1d:%04X Tape display '%s' until unmounted, then '%s' until mounted"
-#define HHC00220 "%1d:%04X Tape file '%s' format type is not determinable, presumed '%s'"
-#define HHC00221 "%1d:%04X Tape file '%s' format type '%s'"
-#define HHC00222 "%1d:%04X Tape file option '%s' accepted"
-#define HHC00223 "%1d:%04X Tape file option '%s' rejected: '%s'"
-#define HHC00224 "%1d:%04X Tape display '%s'"
+#define HHC00212 "%1d:%04X Tape file '%s', type '%s': data chaining not supported for CCW %2.2X"
+#define HHC00214 "%1d:%04X Tape file '%s', type '%s': auto-mount rejected: drive not empty"
+#define HHC00215 "%1d:%04X Tape file '%s', type '%s': auto-mounted"
+#define HHC00216 "%1d:%04X Tape file '%s', type '%s': auto-unmounted"
+#define HHC00217 "%1d:%04X Tape file '%s', type '%s': locate block 0x%8.8"I32_FMT"X"
+#define HHC00218 "%1d:%04X Tape file '%s', type '%s': display '%s' until unmounted"
+#define HHC00219 "%1d:%04X Tape file '%s', type '%s': display '%s' until unmounted, then '%s' until mounted"
+#define HHC00220 "%1d:%04X Tape file '%s', type '%s': format type is not determinable, presumed '%s'"
+#define HHC00221 "%1d:%04X Tape file '%s', type '%s': format type '%s'"
+#define HHC00222 "%1d:%04X Tape file '%s', type '%s': option '%s' accepted"
+#define HHC00223 "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
+#define HHC00224 "%1d:%04X Tape file '%s', type '%s': display '%s'"
+// reserve 003xx for dasd device related
 
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)

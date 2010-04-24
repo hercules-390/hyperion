@@ -1942,7 +1942,7 @@ void int_scsi_status_update( DEVBLK* dev, int mountstat_only ) // (internal call
         (
             buf, sizeof(buf),
 
-            "%1d:%04X Tape file '%s', type 'scsi' (%s), sstat=0x%8.8lX: %s %s"
+            "%1d:%04X Tape file '%s', type 'scsi' status '%s', sstat 0x%8.8lX: %s %s"
 
             ,SSID_TO_LCSS(dev->ssid)
             ,dev->devnum

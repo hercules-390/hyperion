@@ -168,6 +168,8 @@
 #define TAPEDEVT_HETTAPE        4       /* HET format disk file      */
 #define TAPEDEVT_FAKETAPE       5       /* Flex FakeTape disk format */
 
+#define TTYPSTR(i) (i==1?"aws":i==2?"oma":i==3?"scsi":i==4?"het":i==5?"fake":"unknown")
+
 /*-------------------------------------------------------------------*/
 /* Fish - macros for checking SCSI tape device-independent status    */
 /*-------------------------------------------------------------------*/
