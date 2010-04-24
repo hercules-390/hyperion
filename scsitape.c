@@ -100,8 +100,8 @@ int rc;
     /* Check for successful open */
     if (rc < 0)
     {
-        WRITEMSG (HHCTA324E, SSID_TO_LCSS(dev->ssid), dev->devnum,
-                dev->filename, errno, strerror(errno));
+        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+                dev->filename, "scsi", "open_tape()", strerror(errno));
         sysblk.auto_scsi_mount_secs = 0; // (forced)
         build_senseX(TAPE_BSENSE_ITFERROR,dev,unitstat,code);
         return -1; // (FATAL error; device cannot be opened)
@@ -199,8 +199,8 @@ struct mtop     opblk;                  /* Area for MTIOCTOP ioctl   */
             dev->fd = -1;
             close_tape( rc );
             errno = save_errno;
-            WRITEMSG (HHCTA330E, SSID_TO_LCSS(dev->ssid), dev->devnum,
-                    dev->filename, errno, strerror(errno));
+            WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+                    dev->filename, "scsi", "ioctl_tape(MTSETBLK)", strerror(errno));
             build_senseX(TAPE_BSENSE_ITFERROR,dev,unitstat,code);
             return -1; /* (fatal error) */
         }
@@ -254,8 +254,8 @@ void close_scsitape(DEVBLK *dev)
 
             if ((rc = ioctl_tape ( dev->fd, MTIOCTOP, (char*)&opblk)) != 0)
             {
-                WRITEMSG (HHCTA373E, SSID_TO_LCSS(dev->ssid), dev->devnum,
-                        dev->filename, errno, strerror(errno));
+                WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+                        dev->filename, "scsi", "ioctl_tape(MTREW)", strerror(errno));
             }
         }
 
@@ -319,8 +319,8 @@ int  rc;
 
     /* Handle read error condition */
 
-    WRITEMSG (HHCTA332E, SSID_TO_LCSS(dev->ssid), dev->devnum,
-            dev->filename, errno, strerror(errno));
+    WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+            dev->filename, "scsi", "read_tape()", strerror(errno));
 
     if ( STS_NOT_MOUNTED( dev ) )
         build_senseX(TAPE_BSENSE_TAPEUNLOADED,dev,unitstat,code);
@@ -388,8 +388,8 @@ int  save_errno;
 
     save_errno = errno;
     {
-        WRITEMSG (HHCTA333E, SSID_TO_LCSS(dev->ssid), dev->devnum,
-                dev->filename, errno, strerror(errno));
+        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+                dev->filename, "scsi", "write_tape()", strerror(errno));
 
         int_scsi_status_update( dev, 0 );
     }
@@ -463,8 +463,8 @@ int  rc, save_errno;
 
     save_errno = errno;
     {
-        WRITEMSG (HHCTA334E, SSID_TO_LCSS(dev->ssid), dev->devnum,
-                dev->filename, errno, strerror(errno));
+        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+                dev->filename, "scsi", "write_scsimark()", strerror(errno));
 
         int_scsi_status_update( dev, 0 );
     }
@@ -597,8 +597,8 @@ struct mtop opblk;
 
     save_errno = errno;
     {
-        WRITEMSG (HHCTA389E, SSID_TO_LCSS(dev->ssid), dev->devnum,
-            dev->filename, errno, strerror(errno));
+        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+            dev->filename, "scsi", "ioctl_tape(MTWEOF)", strerror(errno));
 
         int_scsi_status_update( dev, 0 );
     }
@@ -683,8 +683,8 @@ struct mtop opblk;
 
     save_errno = errno;
     {
-        WRITEMSG (HHCTA335E, SSID_TO_LCSS(dev->ssid), dev->devnum,
-                dev->filename, errno, strerror(errno));
+        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+                dev->filename, "scsi", "ioctl_tape(MTFSR)", strerror(errno));
     }
     errno = save_errno;
 
@@ -859,8 +859,8 @@ struct mtget starting_mtget;
     /* Bona fide backspace block i/o error ... */
     save_errno = errno;
     {
-        WRITEMSG (HHCTA336E, SSID_TO_LCSS(dev->ssid), dev->devnum,
-                dev->filename, errno, strerror(errno));
+        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+                dev->filename, "scsi", "ioctl_tape(MTBSR)", strerror(errno));
     }
     errno = save_errno;
 
@@ -919,8 +919,8 @@ struct mtop opblk;
 
     save_errno = errno;
     {
-        WRITEMSG (HHCTA337E, SSID_TO_LCSS(dev->ssid), dev->devnum,
-                dev->filename, errno, strerror(errno));
+        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+                dev->filename, "scsi", "ioctl_tape(MTFSF)", strerror(errno));
     }
     errno = save_errno;
 
@@ -1022,8 +1022,8 @@ struct mtop opblk;
 
     save_errno = errno;
     {
-        WRITEMSG (HHCTA338E, SSID_TO_LCSS(dev->ssid), dev->devnum,
-                dev->filename, errno, strerror(errno));
+        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+                dev->filename, "scsi", "ioctl_tape(MTBSF)", strerror(errno));
     }
     errno = save_errno;
 
@@ -1072,8 +1072,8 @@ struct mtop opblk;
     dev->blockid  = -1;     // (because the rewind failed)
     dev->curfilen = -1;     // (because the rewind failed)
 
-    WRITEMSG (HHCTA373E, SSID_TO_LCSS(dev->ssid), dev->devnum,
-            dev->filename, errno, strerror(errno));
+    WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+            dev->filename, "scsi", "ioctl_tape(MTREW)", strerror(errno));
 
     if ( STS_NOT_MOUNTED( dev ) )
         build_senseX(TAPE_BSENSE_TAPEUNLOADED,dev,unitstat,code);
@@ -1103,7 +1103,7 @@ struct mtop opblk;
         dev->fenced = 0;
 
         if ( dev->ccwtrace || dev->ccwstep )
-            WRITEMSG (HHCTA377I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+            WRMSG (HHC00210, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "scsi");
 
         // PR# tape/88: no sense with 'close_scsitape'
         // attempting a rewind if the tape is unloaded!
@@ -1118,8 +1118,8 @@ struct mtop opblk;
     dev->curfilen = -1; // (because the rewind-unload failed)
     dev->blockid  = -1; // (because the rewind-unload failed)
 
-    WRITEMSG (HHCTA376E, SSID_TO_LCSS(dev->ssid), dev->devnum,
-            dev->filename, errno, strerror( errno ) );
+    WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+            dev->filename, "scsi", "ioctl_tape(MTOFFL)", strerror( errno ) );
 
     if ( STS_NOT_MOUNTED( dev ) )
         build_senseX(TAPE_BSENSE_TAPEUNLOADED,dev,unitstat,code);
@@ -1177,8 +1177,8 @@ int rc;
 
             if ( rc < 0)
             {
-                WRITEMSG (HHCTA380E, SSID_TO_LCSS(dev->ssid), dev->devnum,
-                        dev->filename, errno, strerror(errno));
+                WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+                        dev->filename, "scsi", "ioctl_tape(MTERASE)", strerror(errno));
                 build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
                 return -1;
             }
@@ -1213,8 +1213,8 @@ int dse_scsitape( DEVBLK *dev, BYTE *unitstat, BYTE code )
 
     if ( ioctl_tape( dev->fd, MTIOCTOP, (char*)&opblk ) < 0 )
     {
-        WRITEMSG (HHCTA381E, SSID_TO_LCSS(dev->ssid), dev->devnum,
-                dev->filename, errno, strerror(errno));
+        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+                dev->filename, "scsi", "ioctl_tape(MTERASE)", strerror(errno));
         build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
         return -1;
     }
@@ -1268,11 +1268,11 @@ int readblkid_scsitape ( DEVBLK* dev, BYTE* logical, BYTE* physical )
         int save_errno = errno;
         {
             if ( dev->ccwtrace || dev->ccwstep )
-                WRITEMSG(HHCTA382W
+                WRMSG(HHC00205, "W"
                     ,SSID_TO_LCSS(dev->ssid)
                     ,dev->devnum
                     ,dev->filename
-                    ,errno
+                    ,"scsi", "ioctl_tape(MTTELL)"
                     ,strerror(errno)
                     );
         }
@@ -1332,11 +1332,11 @@ int locateblk_scsitape ( DEVBLK* dev, U32 blockid, BYTE *unitstat, BYTE code )
         int save_errno = errno;
         {
             if ( dev->ccwtrace || dev->ccwstep )
-                WRITEMSG(HHCTA383W
+                WRMSG(HHC00205, "W"
                     ,SSID_TO_LCSS(dev->ssid)
                     ,dev->devnum
                     ,dev->filename
-                    ,errno
+                    ,"scsi", "ioctl_tape(MTSEEK)"
                     ,strerror(errno)
                     );
         }
@@ -1942,7 +1942,7 @@ void int_scsi_status_update( DEVBLK* dev, int mountstat_only ) // (internal call
         (
             buf, sizeof(buf),
 
-            "Device(%1d:%04X) File(%s) (%s), sstat=0x%8.8lX: %s %s"
+            "%1d:%04X Tape file '%s', type 'scsi' (%s), sstat=0x%8.8lX: %s %s"
 
             ,SSID_TO_LCSS(dev->ssid)
             ,dev->devnum
@@ -1963,7 +1963,7 @@ void int_scsi_status_update( DEVBLK* dev, int mountstat_only ) // (internal call
         if ( STS_BOT(dev) )
             dev->eotwarning = 0;
 
-        WRITEMSG (HHCTA323I, buf );
+        WRMSG (HHC00211, "I", buf );
     }
 
 } /* end function int_scsi_status_update */
@@ -2048,8 +2048,8 @@ void *scsi_tapemountmon_thread( void *db )
 
             if (fd < 0)
             {
-                WRITEMSG (HHCTA324E, SSID_TO_LCSS(dev->ssid), dev->devnum,
-                        dev->filename, errno, strerror(errno));
+                WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+                        dev->filename, "scsi", "open_tape()", strerror(errno));
                 sysblk.auto_scsi_mount_secs = 0; // (forced)
                 release_lock( &dev->stape_getstat_lock );
                 shutdown = 1;

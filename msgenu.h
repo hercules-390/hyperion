@@ -145,7 +145,7 @@ cpu.c:123:HABC1234I This is a message
 
 #define HHC00100 "Thread id "TIDPAT", prio %2d, name '%s' started"
 #define HHC00101 "Thread id "TIDPAT", prio %2d, name '%s' ended"
-#define HHC00102 "Error in create_thread: '%s'"
+#define HHC00102 "Error in fucntion 'create_thread()': '%s'"
 // reserve 102-129 thread related
 #define HHC00130 "PGMPRDOS LICENSED specified and a licenced program product operating system is running"
 #define HHC00131 "A licensed program product operating system detected, all processors have been stopped"
@@ -182,7 +182,8 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00207 "%1d:%04X Tape file '%s', type '%s': line %d: '%s'"
 #define HHC00208 "%1d:%04X Tape file '%s', type '%s': maximum tape capacity exceeded"
 #define HHC00209 "%1d:%04X Tape file '%s', type '%s': maximum tape capacity enforced"
-
+#define HHC00210 "%1d:%04X Tape file '%s', type '%s': tape unloaded"
+#define HHC00211 "%s"
 
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
