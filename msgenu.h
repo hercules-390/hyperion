@@ -190,8 +190,13 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00215 "%1d:%04X Tape file '%s' auto-mounted"
 #define HHC00216 "%1d:%04X Tape file '%s' auto-unmounted"
 #define HHC00217 "%1d:%04X Tape file '%s' locate block 0x%8.8"I32_FMT"X"
-#define HHC00218 "%1d:%04X Tape Display '%s' until unmounted"
-#define HHC00219 "%1d:%04X Tape Display '%s' until unmounted, then '%s' until mounted"
+#define HHC00218 "%1d:%04X Tape display '%s' until unmounted"
+#define HHC00219 "%1d:%04X Tape display '%s' until unmounted, then '%s' until mounted"
+#define HHC00220 "%1d:%04X Tape file '%s' format type is not determinable, presumed '%s'"
+#define HHC00221 "%1d:%04X Tape file '%s' format type '%s'"
+#define HHC00222 "%1d:%04X Tape file option '%s' accepted"
+#define HHC00223 "%1d:%04X Tape file option '%s' rejected: '%s'"
+#define HHC00224 "%1d:%04X Tape display '%s'"
 
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
@@ -1223,19 +1228,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCSR203E "All CPU's must be stopped to resume"
 #define HHCSR204E "File identifier error"
 #define HHCSR999E "Invalid key %8.8x"
-
-/* tapedev.c */
-#define HHCTA001E "%1d:%04X Tape file(%s) - format type is not determinable; Internal error: %s error(%s) on index(%d)"
-#define HHCTA003W "%1d:%04X Tape file(%s) - format type is not determinable; %s is presumed"
-#define HHCTA004I "%1d:%04X Tape file(%s) - format type is %s"
-#define HHCTA010I "%1d:%04X Display(%s)"
-#define HHCTA066I "%1d:%04X Option(%s) accepted"
-#define HHCTA067E "%1d:%04X Option(%s) unrecognized"
-#define HHCTA068E "%1d:%04X Option(%s) method must be within(%u-%u)"
-#define HHCTA069E "%1d:%04X Option(%s) level must be within(%u-%u)"
-#define HHCTA070E "%1d:%04X Option(%s) chunksize must be within(%u-%u)"
-#define HHCTA071E "%1d:%04X Option(%s) parse error"
-#define HHCTA078E "%1d:%04X Option(%s) not valid for %s"
 
 /* version.c */
 #define HHCIN010I "%sversion (%s)"

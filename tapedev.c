@@ -832,7 +832,7 @@ int gettapetype_byname (DEVBLK *dev)
         if (rc < 0)
         {
             regerror (rc, &regwrk, errbfr, 1024);
-            WRITEMSG(HHCTA001E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "regcomp", errbfr, i);
+            WRMSG(HHC00213, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "regcomp()", errbfr);
             return -1;
         }
 
@@ -841,7 +841,7 @@ int gettapetype_byname (DEVBLK *dev)
         {
             regerror (rc, &regwrk, errbfr, 1024);
             regfree ( &regwrk );
-            WRITEMSG(HHCTA001E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "regexec", errbfr, i);
+            WRMSG(HHC00213, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "regexec()", errbfr);
             return -1;
         }
 
@@ -1004,7 +1004,7 @@ int gettapetype (DEVBLK *dev, char **short_descr)
     {
         i = DEFAULT_FMTENTRY;
         if (strcmp (dev->filename, TAPE_UNLOADED) != 0)
-            WRITEMSG(HHCTA003W, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, fmttab[i].short_descr );
+            WRMSG(HHC00220, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, fmttab[i].short_descr );
     }
 
     dev->tapedevt = fmttab[i].fmtcode;
@@ -1013,7 +1013,7 @@ int gettapetype (DEVBLK *dev, char **short_descr)
     *short_descr  = fmttab[i].short_descr;
 
     if (strcmp (dev->filename, TAPE_UNLOADED) != 0)
-        WRITEMSG(HHCTA004I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, descr);
+        WRMSG(HHC00221, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, descr);
 
     return 0;   // (success)
 
@@ -1116,6 +1116,7 @@ enum
 int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
 {
     char*       short_descr;            /* Short descr from fmttab   */
+    char        msg[80];
     int         i;                      /* Loop control              */
     int         rc, optrc;              /* various rtns return codes */
     union {                             /* Parser results            */
@@ -1147,6 +1148,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
     ASSERT(dev->tapedevt != TAPEDEVT_UNKNOWN);
     ASSERT(dev->tmh != NULL);
     ASSERT(short_descr != NULL);
+    sprintf(msg, "not valid for %s", short_descr); 
 
     /* Initialize device dependent fields */
     dev->fd                = -1;
@@ -1185,7 +1187,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
     }
 #endif
 
-#define  _HHCTA078E() WRITEMSG(HHCTA078E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], short_descr)
+#define  _HHCTA078E() WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], msg)
 
     /* Process remaining options */
     rc = 0;
@@ -1195,7 +1197,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         switch (parser (&ptab[0], argv[i], &res))
         {
         case TDPARM_NONE:
-            WRITEMSG(HHCTA067E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i]);
+            WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], "unrecognized");
             optrc = -1;
             break;
 
@@ -1233,7 +1235,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
             }
             if (res.num < HETMIN_METHOD || res.num > HETMAX_METHOD)
             {
-                WRITEMSG(HHCTA068E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], HETMIN_METHOD, HETMAX_METHOD);
+                WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], "method out of range");
                 optrc = -1;
                 break;
             }
@@ -1250,7 +1252,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
             }
             if (res.num < HETMIN_LEVEL || res.num > HETMAX_LEVEL)
             {
-                WRITEMSG(HHCTA069E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], HETMIN_LEVEL, HETMAX_LEVEL);
+                WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], "level out of range");
                 optrc = -1;
                 break;
             }
@@ -1267,7 +1269,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
             }
             if (res.num < HETMIN_CHUNKSIZE || res.num > HETMAX_CHUNKSIZE)
             {
-                WRITEMSG(HHCTA070E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], HETMIN_CHUNKSIZE, HETMAX_CHUNKSIZE);
+                WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], "chunksize out of range");
                 optrc = -1;
                 break;
             }
@@ -1384,7 +1386,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
 #endif /* defined(OPTION_SCSI_TAPE) */
 
         default:
-            WRITEMSG(HHCTA071E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i]);
+            WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], "parse error");
             optrc = -1;
             break;
 
@@ -1393,7 +1395,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         if (optrc < 0)
             rc = -1;
         else
-            WRITEMSG(HHCTA066I, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i]);
+            WRITEMSG(HHC00222, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i]);
 
     } // end for (i = 1; i < argc; i++)
 
@@ -1574,7 +1576,7 @@ void UpdateDisplay( DEVBLK *dev )
 
         dev->prev_tapemsg = strdup( msgbfr );
 
-        WRITEMSG(HHCTA010I, SSID_TO_LCSS(dev->ssid), dev->devnum, msgbfr );
+        WRMSG(HHC00224, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, msgbfr );
     }
 #if defined(OPTION_SCSI_TAPE)
     else
