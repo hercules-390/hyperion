@@ -348,6 +348,11 @@ return 0; }
 
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
 
+
+#define PROGRAM_INTERRUPT(_regs, _interruption_code) \
+        ((_regs)->program_interrupt) ((_regs),(_interruption_code))
+
+
 /*********************************************************************/
 
 #endif /* _HDL_H */
