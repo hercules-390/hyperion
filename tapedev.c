@@ -1395,7 +1395,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         if (optrc < 0)
             rc = -1;
         else
-            WRITEMSG(HHC00222, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), argv[i]);
+            WRMSG(HHC00222, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), argv[i]);
 
     } // end for (i = 1; i < argc; i++)
 
