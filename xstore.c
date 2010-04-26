@@ -80,7 +80,7 @@ size_t  xoffs;                          /* Byte offset into xpndstor */
 
     /* Obtain abs address, verify access and set ref/change bits */
     vaddr = (regs->GR(r1) & ADDRESS_MAXWRAP(regs)) & XSTORE_PAGEMASK;
-    maddr = MADDR (vaddr, USE_REAL_ADDR, regs, ACCTYPE_WRITE, 0);
+    maddr = MADDRL (vaddr, 4096, USE_REAL_ADDR, regs, ACCTYPE_WRITE, 0);
 
     /* Copy data from expanded to main */
     memcpy (maddr, sysblk.xpndstor + xoffs, XSTORE_PAGESIZE);
@@ -512,7 +512,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
     {
         /* Obtain absolute address of main storage block,
            check protection, and set reference and change bits */
-        main1 = MADDR (vaddr1, r1, regs, ACCTYPE_WRITE_SKP, akey1);
+        main1 = MADDRL (vaddr1, 4096, r1, regs, ACCTYPE_WRITE_SKP, akey1);
         sk1 = regs->dat.storkey;
     }
 

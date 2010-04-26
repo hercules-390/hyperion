@@ -215,7 +215,7 @@ int     cc = 0;                         /* Condition code            */
      */
 
     /* Translate addresses of leftmost operand bytes */
-    dest1 = MADDR (addr1, b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
+    dest1 = MADDRL (addr1, len+1, b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
     sk1 = regs->dat.storkey;
     source1 = MADDR (addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
 
@@ -978,7 +978,7 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
     m = (0x800 - (effective_addr2 & 0x7ff)) >> 2;
 
     /* Address of operand beginning */
-    p1 = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    p1 = (U32*)MADDRL(effective_addr2, n, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
     /* Get address of next page if boundary crossed */
     if (unlikely (m < n))
@@ -1204,7 +1204,7 @@ BYTE   *bp1;                            /* Unaligned mainstor ptr    */
     m = 0x800 - ((VADR_L)effective_addr2 & 0x7ff);
 
     /* Get address of first page */
-    bp1 = (BYTE*)MADDR(effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    bp1 = (BYTE*)MADDRL(effective_addr2, n, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
     p1 = (U32*)bp1;
 
     if (likely(n <= m))
@@ -1624,7 +1624,7 @@ BYTE   *dest, *dest2 = NULL, *tab, *tab2; /* Mainstor pointers       */
     SS_L(inst, regs, len, b1, addr1, b2, addr2);
 
     /* Get destination pointer */
-    dest = MADDR (addr1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    dest = MADDRL (addr1, len+1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
     /* Get pointer to next page if destination crosses a boundary */
     if (CROSS2K (addr1, len))

@@ -2099,6 +2099,7 @@ static inline int ARCH_DEP(check_sa_per2) (int arn, int acctype, REGS *regs)
 /*      regs    CPU register context                                 */
 /*      acctype Type of access requested: READ, WRITE, or instfetch  */
 /*      akey    Bits 0-3=access key, 4-7=zeroes                      */
+/*      len     Length of data access for PER SA purpose             */
 /* Returns:                                                          */
 /*      Absolute storage address.                                    */
 /*                                                                   */
@@ -2118,8 +2119,9 @@ static inline int ARCH_DEP(check_sa_per2) (int arn, int acctype, REGS *regs)
 /*      or translation exception then a program check is generated   */
 /*      and the function does not return.                            */
 /*-------------------------------------------------------------------*/
-_LOGICAL_C_STATIC BYTE *ARCH_DEP(logical_to_main) (VADR addr, int arn,
-                                    REGS *regs, int acctype, BYTE akey)
+_LOGICAL_C_STATIC BYTE *ARCH_DEP(logical_to_main_l) (VADR addr, int arn,
+                                    REGS *regs, int acctype, BYTE akey,
+                                    size_t len)
 {
 RADR    aaddr;                          /* Absolute address          */
 RADR    apfra;                          /* Abs page frame address    */
@@ -2277,12 +2279,13 @@ int     ix = TLBIX(addr);               /* TLB index                 */
             regs->tlb.acc[ix] = ACC_READ;
             if (arn != USE_REAL_ADDR
 #if defined(FEATURE_PER2)
-             && ( REAL_MODE(&regs->psw) ||
-                   ARCH_DEP(check_sa_per2) (arn, acctype, regs)
-                )
-#endif /*defined(FEATURE_PER2)*/
-             && PER_RANGE_CHECK(addr,regs->CR(10),regs->CR(11))
+            && ( REAL_MODE(&regs->psw) ||
+               ARCH_DEP(check_sa_per2) (arn, acctype, regs)
                )
+#endif /*defined(FEATURE_PER2)*/
+            /* Check the range altered enters the SA PER range */
+            && PER_RANGE_CHECK2(addr,addr+(len-1),regs->CR(10),regs->CR(11))
+            )
                 ON_IC_PER_SA(regs);
         }
 #endif /*defined(FEATURE_PER)*/
@@ -2326,7 +2329,14 @@ vabs_prog_check:
     regs->program_interrupt (regs, regs->dat.xcode);
 
     return NULL; /* prevent warning from compiler */
-} /* end function ARCH_DEP(logical_to_main) */
+} /* end function ARCH_DEP(logical_to_main_l) */
+
+/* Original logical_to_main() for compatiblity purpose */
+_LOGICAL_C_STATIC BYTE *ARCH_DEP(logical_to_main) (VADR addr, int arn,
+                                    REGS *regs, int acctype, BYTE akey)
+{
+    return ARCH_DEP(logical_to_main_l)(addr,arn,regs,acctype,akey,1);
+}
 
 #endif /*!defined(OPTION_NO_INLINE_LOGICAL) || defined(_DAT_C) */
 

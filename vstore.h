@@ -223,17 +223,18 @@ int     len2;                           /* Length to end of page     */
 
     if ( NOCROSS2K(addr,len) )
     {
-        memcpy(MADDR(addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey),
+        memcpy(MADDRL(addr, len+1, arn, regs, ACCTYPE_WRITE, regs->psw.pkey),
                src, len + 1);
         ITIMER_UPDATE(addr,len,regs);
     }
     else
     {
         len2 = 0x800 - (addr & 0x7FF);
-        main1 = MADDR(addr, arn, regs, ACCTYPE_WRITE_SKP,
+        main1 = MADDRL(addr, len2, arn, regs, ACCTYPE_WRITE_SKP,
                       regs->psw.pkey);
         sk = regs->dat.storkey;
-        main2 = MADDR((addr + len2) & ADDRESS_MAXWRAP(regs), arn,
+        main2 = MADDRL((addr + len2) & ADDRESS_MAXWRAP(regs), 
+                      len+1-len2, arn,
                       regs, ACCTYPE_WRITE, regs->psw.pkey);
         *sk |= (STORKEY_REF | STORKEY_CHANGE);
         memcpy (main1, src, len2);
@@ -303,7 +304,7 @@ _VSTORE_C_STATIC void ARCH_DEP(vstore2) (U16 value, VADR addr, int arn,
     if (likely(!((VADR_L)addr & 1) || ((VADR_L)addr & 0x7FF) != 0x7FF))
     {
         BYTE *mn;
-        mn = MADDR (addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        mn = MADDRL (addr, 2, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
         STORE_HW(mn, value);
         ITIMER_UPDATE(addr,2-1,regs);
     }
@@ -333,9 +334,9 @@ int     len;                            /* Length to end of page     */
 BYTE    temp[4];                        /* Copied value              */ 
 
     len = 0x800 - (addr & 0x7FF);
-    main1 = MADDR(addr, arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
+    main1 = MADDRL(addr, len, arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
     sk = regs->dat.storkey;
-    main2 = MADDR((addr + len) & ADDRESS_MAXWRAP(regs), arn, regs,
+    main2 = MADDRL((addr + len) & ADDRESS_MAXWRAP(regs), 4-len, arn, regs,
                   ACCTYPE_WRITE, regs->psw.pkey);
     *sk |= (STORKEY_REF | STORKEY_CHANGE);
     STORE_FW(temp, value);
@@ -352,7 +353,7 @@ _VSTORE_C_STATIC void ARCH_DEP(vstore4) (U32 value, VADR addr, int arn,
     if(likely(!((VADR_L)addr & 0x03)) || (((VADR_L)addr & 0x7ff) <= 0x7fc))
     {
         BYTE *mn;
-        mn = MADDR(addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        mn = MADDRL(addr, 4, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
         STORE_FW(mn, value);
         ITIMER_UPDATE(addr,4-1,regs);
     }
@@ -385,9 +386,9 @@ int     len;                            /* Length to end of page     */
 BYTE    temp[8];                        /* Copied value              */ 
 
     len = 0x800 - (addr & 0x7FF);
-    main1 = MADDR(addr, arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
+    main1 = MADDRL(addr, len, arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
     sk = regs->dat.storkey;
-    main2 = MADDR((addr + len) & ADDRESS_MAXWRAP(regs), arn, regs,
+    main2 = MADDRL((addr + len) & ADDRESS_MAXWRAP(regs), 8-len, arn, regs,
                   ACCTYPE_WRITE, regs->psw.pkey);
     *sk |= (STORKEY_REF | STORKEY_CHANGE);
     STORE_DW(temp, value);
@@ -404,7 +405,7 @@ _VSTORE_C_STATIC void ARCH_DEP(vstore8) (U64 value, VADR addr, int arn,
     {
         /* Most common case : Aligned */
         U64 *mn;
-        mn = (U64*)MADDR(addr,arn,regs,ACCTYPE_WRITE,regs->psw.pkey);
+        mn = (U64*)MADDRL(addr,8,arn,regs,ACCTYPE_WRITE,regs->psw.pkey);
 #if defined(OPTION_SINGLE_CPU_DW) && defined(ASSIST_STORE_DW)
         if (regs->cpubit == regs->sysblk->started_mask)
             *mn = CSWAP64(value);
@@ -423,7 +424,7 @@ _VSTORE_C_STATIC void ARCH_DEP(vstore8) (U64 value, VADR addr, int arn,
         {
             /* Non aligned but not crossing page boundary */
             BYTE *mn;
-            mn = MADDR(addr,arn,regs,ACCTYPE_WRITE,regs->psw.pkey);
+            mn = MADDRL(addr,8,arn,regs,ACCTYPE_WRITE,regs->psw.pkey);
             /* invoking STORE_DW ensures endianness correctness */
             STORE_DW(mn,value);
         }
@@ -933,7 +934,7 @@ int     len2, len3;                     /* Lengths to copy           */
 
     /* Translate addresses of leftmost operand bytes */
     source1 = MADDR (addr2, arn2, regs, ACCTYPE_READ, key2);
-    dest1 = MADDR (addr1, arn1, regs, ACCTYPE_WRITE_SKP, key1);
+    dest1 = MADDRL (addr1, len+1, arn1, regs, ACCTYPE_WRITE_SKP, key1);
     sk1 = regs->dat.storkey;
 
     /* There are several scenarios (in optimal order):
@@ -1072,7 +1073,7 @@ int     len1, len2, len3;               /* Work areas for lengths    */
 
     /* Translate addresses of leftmost operand bytes */
     main2 = MADDR (addr2, space2, regs, ACCTYPE_READ, key2);
-    main1 = MADDR (addr1, space1, regs, ACCTYPE_WRITE, key1);
+    main1 = MADDRL (addr1, len, space1, regs, ACCTYPE_WRITE, key1);
 
     /* Copy the largest chunks which do not cross a 2K
        boundary of either source or destination operand */

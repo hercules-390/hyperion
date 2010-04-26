@@ -414,7 +414,7 @@ int     cc = 0;                         /* Condition code            */
      */
 
     /* Translate addresses of leftmost operand bytes */
-    dest1 = MADDR (addr1, b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
+    dest1 = MADDRL (addr1, len+1, b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
     sk1 = regs->dat.storkey;
     source1 = MADDR (addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
 
@@ -1369,7 +1369,7 @@ U32     old;                            /* old value                 */
     PERFORM_SERIALIZATION (regs);
 
     /* Get mainstor address */
-    main2 = MADDR (addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    main2 = MADDRL (addr2, 4, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
     old = CSWAP32(regs->GR_L(r1));
 
@@ -1431,7 +1431,7 @@ U64     old, new;                       /* old, new values           */
     PERFORM_SERIALIZATION (regs);
 
     /* Get operand absolute address */
-    main2 = MADDR (addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    main2 = MADDRL (addr2, 8, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
     /* Get old, new values */
     old = CSWAP64(((U64)(regs->GR_L(r1)) << 32) | regs->GR_L(r1+1));
@@ -1576,7 +1576,7 @@ BYTE    sc;                             /* Store characteristic      */
     addrp = regs->GR(rp) & 0xFFFFFFFFFFFFFFF0ULL & ADDRESS_MAXWRAP(regs);
 
     /* Obtain main storage address of first operand */
-    main1 = MADDR (addr1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    main1 = MADDRL (addr1, 4, b1, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
     /* Ensure second operand storage is writable */
     ARCH_DEP(validate_operand) (addr2, b2, ln2, ACCTYPE_WRITE_SKP, regs);
@@ -3134,7 +3134,7 @@ int     cc = 0;                         /* Condition code            */
      */
 
     /* Translate addresses of leftmost operand bytes */
-    dest1 = MADDR (addr1, b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
+    dest1 = MADDRL (addr1, len, b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
     sk1 = regs->dat.storkey;
     source1 = MADDR (addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
 
@@ -4000,7 +4000,7 @@ int     orglen1;                        /* Original dest length      */
         {
             source=NULL;
         }
-        dest = MADDR (addr1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        dest = MADDRL (addr1, len1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
     }
     else
     {
@@ -4036,6 +4036,8 @@ int     orglen1;                        /* Original dest length      */
             concpy (regs, dest, source, len);
         }
 
+/* No longer required because it is handled during MADDRL */
+#if 0
         /* Check for storage alteration PER event */
 #if defined(FEATURE_PER)
         if ( EN_IC_PER_SA(regs)
@@ -4047,6 +4049,7 @@ int     orglen1;                        /* Original dest length      */
          && PER_RANGE_CHECK2(addr1, addr1+len, regs->CR(10), regs->CR(11)) )
             ON_IC_PER_SA(regs);
 #endif /*defined(FEATURE_PER)*/
+#endif
 
         /* Adjust lengths and virtual addresses */
         len1 -= len;
@@ -4084,7 +4087,7 @@ int     orglen1;                        /* Original dest length      */
             if (addr1 & 0x7FF)
                 dest += len;
             else
-                dest = MADDR (addr1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+                dest = MADDRL (addr1, len1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
         }
 
     } /* while (len1) */
@@ -4152,7 +4155,7 @@ size_t  dstlen,srclen;                  /* Page wide src/dst lengths */
         return;
     }
 
-    dest = MADDR (addr1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    dest = MADDRL (addr1, len1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
     if(copylen!=0)
     {
         /* here if we need to copy data */
@@ -4221,7 +4224,7 @@ int     i;                              /* Loop counter              */
     ITIMER_SYNC(addr2,len,regs);
 
     /* Translate addresses of leftmost operand bytes */
-    dest1 = MADDR (addr1, arn1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
+    dest1 = MADDRL (addr1, len+1, arn1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
     sk1 = regs->dat.storkey;
     source1 = MADDR (addr2, arn2, regs, ACCTYPE_READ, regs->psw.pkey);
 
@@ -4481,7 +4484,7 @@ int     i;                              /* Loop counter              */
     ITIMER_SYNC(addr2,len,regs);
 
     /* Translate addresses of leftmost operand bytes */
-    dest1 = MADDR (addr1, arn1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
+    dest1 = MADDRL (addr1, len+1, arn1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
     sk1 = regs->dat.storkey;
     source1 = MADDR (addr2, arn2, regs, ACCTYPE_READ, regs->psw.pkey);
 
