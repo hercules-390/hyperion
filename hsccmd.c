@@ -1776,7 +1776,7 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
                 ,dev->filename
                 
             );
-	    logmsg("\n%s\n", eyecatcher);
+        logmsg("\n%s\n", eyecatcher);
         }
         else
         {
@@ -2151,8 +2151,8 @@ int rc;
             /* Start the http server connection thread */
             rc = create_thread (&sysblk.httptid, DETACHED,
                                 http_server, NULL, "http_server");
-	    if(rc)
-	    {
+            if(rc)
+            {
                 WRMSG(HHC00102, "S", strerror(rc));
                 return -1;
             }
@@ -4500,7 +4500,6 @@ void *device_thread(void *arg);
 int devtmax_cmd(int argc, char *argv[], char *cmdline)
 {
     int devtmax = -2;
-    int rc;
 
 #if defined(OPTION_FISHIO)
 
@@ -4556,11 +4555,13 @@ int devtmax_cmd(int argc, char *argv[], char *cmdline)
         /* the IOQ lock is obtained in order to write to sysblk.devtwait */
         obtain_lock(&sysblk.ioqlock);
         if (sysblk.ioq && (!sysblk.devtmax || sysblk.devtnbr < sysblk.devtmax))
-	{
+        {
+            int rc;
+
             rc = create_thread(&tid, DETACHED, device_thread, NULL, "idle device thread");
-	    if(rc)
-		WRMSG(HHC00102, "E", strerror(rc));
-	}
+            if(rc)
+                WRMSG(HHC00102, "E", strerror(rc));
+        }
 
         /* Wakeup threads in case they need to terminate */
         sysblk.devtwait=0;
