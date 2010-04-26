@@ -172,7 +172,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00160 "SCP %scommand: '%s'"
 #define HHC00161 "Function %s failed: '[%02d] %s'"
 // reserve 002xx for tape device related
-#define HHC00200 "%1d:%04X Function %s failed: '[%02d] %s'" 
 #define HHC00201 "%1d:%04X Tape file '%s', type '%s': tape closed"
 #define HHC00202 "%1d:%04X Tape file '%s', type '%s': block length %d exceeds maximum at offset "I64_FMTX
 #define HHC00203 "%1d:%04X Tape file '%s', type '%s': invalid tapemark at offset "I64_FMTX
@@ -224,6 +223,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC04102 "One of the GetProcAddress calls failed" 
 #define HHC04109 "%s"
 #define HHC04110 "Maximum device threads (devtmax) of %d exceeded by %d"
+#define HHC04111 "%1d:%04X Function %s failed: '[%02d] %s'"
 
 // reserve 90000 messages for debugging
 #define HHC90000 "DBG: %s"

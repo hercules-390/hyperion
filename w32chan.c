@@ -143,7 +143,7 @@ int  ScheduleIORequest(void* pDevBlk, unsigned short wDevNum, int* pnDevPrio)
 
     if (!pIORequest)
     {
-        WRMSG ( HHC00200, "E", 0, wDevNum, "malloc(DEVIOREQUEST)", errno, strerror(errno) );
+        WRMSG ( HHC04111, "E", 0, wDevNum, "malloc(DEVIOREQUEST)", errno, strerror(errno) );
         return 2;
     }
 
@@ -302,7 +302,7 @@ DEVTHREADPARMS*  CreateDeviceThread(unsigned short wDevNum)
 
     if (!pThreadParms)
     {
-        WRMSG ( HHC00200, "E", 0, wDevNum, "malloc(DEVTHREADPARMS)", errno, strerror(errno) );
+        WRMSG ( HHC04111, "E", 0, wDevNum, "malloc(DEVTHREADPARMS)", errno, strerror(errno) );
         return NULL;    // (error)
     }
 
@@ -310,7 +310,7 @@ DEVTHREADPARMS*  CreateDeviceThread(unsigned short wDevNum)
 
     if (!pThreadParms->hShutdownEvent)
     {
-        WRMSG ( HHC00200, "E", 0, wDevNum, "CreateEvent(hShutdownEvent)", errno, strerror(errno) );
+        WRMSG ( HHC04111, "E", 0, wDevNum, "CreateEvent(hShutdownEvent)", errno, strerror(errno) );
         free(pThreadParms);
         return NULL;    // (error)
     }
@@ -319,7 +319,7 @@ DEVTHREADPARMS*  CreateDeviceThread(unsigned short wDevNum)
 
     if (!pThreadParms->hRequestQueuedEvent)
     {
-        WRMSG ( HHC00200, "E", 0, wDevNum, "CreateEvent(hRequestQueuedEvent)", errno, strerror(errno) );
+        WRMSG ( HHC04111, "E", 0, wDevNum, "CreateEvent(hRequestQueuedEvent)", errno, strerror(errno) );
         MyCloseHandle(pThreadParms->hShutdownEvent);
         free(pThreadParms);
         return NULL;    // (error)
@@ -339,7 +339,7 @@ DEVTHREADPARMS*  CreateDeviceThread(unsigned short wDevNum)
     if (fthread_create(&dwThreadID,NULL,DeviceThread,pThreadParms,"DeviceThread") != 0)
 #endif
     {
-        WRMSG ( HHC00200, "E", 0, wDevNum, "fthread_create(DeviceThread)", errno, strerror(errno) );
+        WRMSG ( HHC04111, "E", 0, wDevNum, "fthread_create(DeviceThread)", errno, strerror(errno) );
         MyCloseHandle(pThreadParms->hShutdownEvent);
         MyCloseHandle(pThreadParms->hRequestQueuedEvent);
         MyDeleteCriticalSection(&pThreadParms->IORequestListLock);
