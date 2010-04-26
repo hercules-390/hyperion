@@ -226,7 +226,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /* The first argument is the file name */
     if (argc == 0 || strlen(argv[0]) >= sizeof(dev->filename))
     {
-        WRITEMSG (HHCDA001E, SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (HHC00400, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
     }
 
@@ -242,7 +242,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         rc = shared_ckd_init ( dev, argc, argv);
         if (rc < 0)
         {
-            WRITEMSG (HHCDA002E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+            WRMSG (HHC00401, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
             return -1;
         }
         else
@@ -343,7 +343,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             continue;
         }
 
-        WRITEMSG (HHCDA003E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], i + 1);
+        WRMSG (HHC00402, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], i + 1);
         return -1;
     }
 
@@ -353,7 +353,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Open all of the CKD image files which comprise this volume */
     if (dev->ckdrdonly)
-        WRITEMSG (HHCDA004I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+        WRMSG (HHC00403, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
                 dev->ckdfakewr ? " with fake writing" : "");
     for (fileseq = 1;;)
     {
@@ -366,7 +366,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 dev->fd = open (dev->filename, O_RDONLY|O_BINARY);
             if (dev->fd < 0)
             {
-                WRITEMSG (HHCDA005E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, errno, strerror(errno));
+                WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "open()", strerror(errno));
                 return -1;
             }
         }
@@ -374,7 +374,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         /* If shadow file, only one base file is allowed */
         if (fileseq > 1 && dev->dasdsfn != NULL)
         {
-            WRITEMSG (HHCDA006E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+            WRMSG (HHC00405, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
             return -1;
         }
 
@@ -382,7 +382,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         rc = fstat (dev->fd, &statbuf);
         if (rc < 0)
         {
-            WRITEMSG (HHCDA007E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, errno, strerror(errno));
+            WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "fstat()", strerror(errno));
             return -1;
         }
 
@@ -391,9 +391,9 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if (rc < (int)CKDDASD_DEVHDR_SIZE)
         {
             if (rc < 0)
-                WRITEMSG (HHCDA008E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, errno, strerror(errno));
+                WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "read()", strerror(errno));
             else
-                WRITEMSG (HHCDA009E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+                WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "read()", "CKD header incomplete");
             return -1;
         }
 
@@ -402,7 +402,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         {
             if (memcmp(devhdr.devid, "CKD_C370", 8) != 0)
             {
-                WRITEMSG (HHCDA010E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+                WRMSG (HHC00406, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
                 return -1;
             }
             else
@@ -410,7 +410,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 cckd = 1;
                 if (fileseq != 1)
                 {
-                    WRITEMSG (HHCDA011E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+                    WRMSG (HHC00407, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
                     return -1;
                 }
             }
@@ -424,11 +424,11 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             {
                 if (rc < 0)
                 {
-                    WRITEMSG (HHCDA008E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, errno, strerror(errno));
+                    WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "read()", strerror(errno));
                 }
                 else
                 {
-                    WRITEMSG (HHCDA013E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+                    WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "read()", "CCKD header incomplete");
                 }
                 return -1;
             }
@@ -490,13 +490,13 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if (devhdr.fileseq != fileseq
             && !(devhdr.fileseq == 0 && fileseq == 1))
         {
-            WRITEMSG (HHCDA014E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+            WRMSG (HHC00408, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
             return -1;
         }
 
         if (devhdr.fileseq > 0)
         {
-            WRITEMSG (HHCDA015I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, devhdr.fileseq, dev->ckdcyls,
+            WRMSG (HHC00409, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, devhdr.fileseq, dev->ckdcyls,
                     (highcyl > 0 ? highcyl : dev->ckdcyls + cyls - 1));
         }
 
@@ -509,7 +509,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         }
         else if (heads != dev->ckdheads || trksize != dev->ckdtrksz)
         {
-            WRITEMSG (HHCDA016E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, heads, trksize,
+            WRMSG (HHC00410, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, heads, trksize,
                     dev->ckdheads, dev->ckdtrksz);
             return -1;
         }
@@ -520,14 +520,14 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                             != statbuf.st_size
             || (highcyl != 0 && highcyl != dev->ckdcyls + cyls - 1)))
         {
-            WRITEMSG (HHCDA017E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+            WRMSG (HHC00411, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
             return -1;
         }
 
         /* Check for correct high cylinder number */
         if (highcyl != 0 && highcyl != dev->ckdcyls + cyls - 1)
         {
-            WRITEMSG (HHCDA018E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+            WRMSG (HHC00412, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
             return -1;
         }
 
@@ -552,7 +552,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         /* Check that maximum files has not been exceeded */
         if (fileseq > CKD_MAXFILES)
         {
-            WRITEMSG (HHCDA019E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, CKD_MAXFILES);
+            WRMSG (HHC00413, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, CKD_MAXFILES);
             return -1;
         }
 
@@ -562,7 +562,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     *sfxptr = sfxchar;
 
     /* Log the device geometry */
-    WRITEMSG (HHCDA020I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->ckdcyls,
+    WRMSG (HHC00414, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->ckdcyls,
             dev->ckdheads, dev->ckdtrks, dev->ckdtrksz);
 
     /* Set number of sense bytes */
@@ -583,7 +583,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     dev->ckdtab = dasd_lookup (DASD_CKDDEV, NULL, dev->devtype, dev->ckdcyls);
     if (dev->ckdtab == NULL)
     {
-        WRITEMSG (HHCDA021E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->devtype);
+        WRMSG (HHC00415, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->devtype);
         return -1;
     }
 
@@ -591,7 +591,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     dev->ckdcu = dasd_lookup (DASD_CKDCU, cu ? cu : dev->ckdtab->cu, 0, 0);
     if (dev->ckdcu == NULL)
     {
-        WRITEMSG (HHCDA022E, SSID_TO_LCSS(dev->ssid), dev->devnum, cu ? cu : dev->ckdtab->cu);
+        WRMSG (HHC00416, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, cu ? cu : dev->ckdtab->cu);
         return -1;
     }
 
@@ -672,7 +672,7 @@ BYTE    unitstat;                       /* Unit Status               */
     cache_unlock(CACHE_DEVBUF);
 
     if (!dev->batch)
-        WRITEMSG (HHCDA023I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->cachehits, dev->cachemisses,
+        WRMSG (HHC00417, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->cachehits, dev->cachemisses,
                 dev->cachewaits);
 
     /* Close all of the CKD image files */
@@ -754,7 +754,7 @@ int             i,o,f;                  /* Indexes                   */
 int             active;                 /* 1=Synchronous I/O active  */
 CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
 
-    logdevtr (dev, MSG(HHCDA024I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, trk, dev->bufcur));
+    logdevtr (dev, MSG(HHC00424, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, trk, dev->bufcur));
 
     /* Calculate cylinder and head */
     cyl = trk / dev->ckdheads;
@@ -783,7 +783,7 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
             return -1;
         }
 
-        logdevtr (dev, MSG(HHCDA025I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bufcur));
+        logdevtr (dev, MSG(HHC00425, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->bufcur));
 
         dev->bufupd = 0;
 
@@ -793,7 +793,7 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
         if (offset < 0)
         {
             /* Handle seek error condition */
-            WRITEMSG (HHCDA026E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bufcur, errno, strerror(errno));
+            WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "lseek()", strerror(errno));
             ckd_build_sense (dev, SENSE_EC, 0, 0,
                             FORMAT_1, MESSAGE_0);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -810,8 +810,8 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
                     dev->bufupdhi - dev->bufupdlo);
         if (rc < dev->bufupdhi - dev->bufupdlo)
         {
-            /* Handle seek error condition */
-            WRITEMSG (HHCDA027E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bufcur, errno, strerror(errno));
+            /* Handle write error condition */
+            WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "write()", strerror(errno));
             ckd_build_sense (dev, SENSE_EC, 0, 0,
                             FORMAT_1, MESSAGE_0);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -852,7 +852,7 @@ ckd_read_track_retry:
         cache_setage(CACHE_DEVBUF, i);
         cache_unlock(CACHE_DEVBUF);
 
-        logdevtr (dev, MSG(HHCDA028I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, trk, i));
+        logdevtr (dev, MSG(HHC00426, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, trk, i));
 
         dev->cachehits++;
         dev->cache = i;
@@ -888,14 +888,14 @@ ckd_read_track_retry:
     /* Wait if no available cache entry */
     if (o < 0)
     {
-        logdevtr (dev, MSG(HHCDA029I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, trk));
+        logdevtr (dev, MSG(HHC00427, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, trk));
         dev->cachewaits++;
         cache_wait(CACHE_DEVBUF);
         goto ckd_read_track_retry;
     }
 
     /* Cache miss */
-    logdevtr (dev, MSG(HHCDA030I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, trk, o));
+    logdevtr (dev, MSG(HHC00428, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, trk, o));
 
     dev->cachemisses++;
 
@@ -917,7 +917,7 @@ ckd_read_track_retry:
 
     dev->syncio_active = active;
 
-    logdevtr (dev, MSG(HHCDA031I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, trk, f+1, (long long)dev->ckdtrkoff, dev->ckdtrksz));
+    logdevtr (dev, MSG(HHC00429, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, trk, f+1, (long long)dev->ckdtrkoff, dev->ckdtrksz));
 
     /* Seek to the track image offset */
     offset = (off_t)dev->ckdtrkoff;
@@ -925,7 +925,7 @@ ckd_read_track_retry:
     if (offset < 0)
     {
         /* Handle seek error condition */
-        WRITEMSG (HHCDA032E, SSID_TO_LCSS(dev->ssid), dev->devnum, trk, errno, strerror(errno));
+        WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "lseek()", strerror(errno));
         ckd_build_sense (dev, SENSE_EC, 0, 0, FORMAT_1, MESSAGE_0);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
         dev->bufcur = dev->cache = -1;
@@ -941,11 +941,9 @@ ckd_read_track_retry:
         rc = read (dev->fd, dev->buf, dev->ckdtrksz);
         if (rc < dev->ckdtrksz)
         {
-            char    str[85];
-            sprintf (str, "[%02d] %s", errno, strerror(errno));
             /* Handle read error condition */
-            WRITEMSG (HHCDA033E, SSID_TO_LCSS(dev->ssid), dev->devnum, trk,
-                (rc < 0 ? str : "unexpected end of file"));
+            WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                (rc < 0 ? strerror(errno) : "unexpected end of file"));
             ckd_build_sense (dev, SENSE_EC, 0, 0, FORMAT_1, MESSAGE_0);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             dev->bufcur = dev->cache = -1;
@@ -967,7 +965,7 @@ ckd_read_track_retry:
     }
 
     /* Validate the track header */
-    logdevtr (dev, MSG(HHCDA034I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, trk, dev->buf[0], dev->buf[1], dev->buf[2], dev->buf[3], dev->buf[4]));
+    logdevtr (dev, MSG(HHC00430, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, trk, dev->buf[0], dev->buf[1], dev->buf[2], dev->buf[3], dev->buf[4]));
     trkhdr = (CKDDASD_TRKHDR *)dev->buf;
     if (trkhdr->bin != 0
       || trkhdr->cyl[0] != (cyl >> 8)
@@ -975,7 +973,7 @@ ckd_read_track_retry:
       || trkhdr->head[0] != (head >> 8)
       || trkhdr->head[1] != (head & 0xFF))
     {
-        WRITEMSG (HHCDA035E, SSID_TO_LCSS(dev->ssid), dev->devnum, cyl, head,
+        WRMSG (HHC00418, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, cyl, head,
                 trkhdr->bin,trkhdr->cyl[0],trkhdr->cyl[1],trkhdr->head[0],trkhdr->head[1]);
         ckd_build_sense (dev, 0, SENSE1_ITF, 0, 0, 0);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1489,7 +1487,7 @@ static int ckd_seek ( DEVBLK *dev, int cyl, int head,
 {
 int             rc;                     /* Return code               */
 
-    logdevtr (dev, MSG(HHCDA038I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, cyl, head));
+    logdevtr (dev, MSG(HHC00431, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, cyl, head));
 
     /* Read the track image */
     rc = ckd_read_cchh (dev, cyl, head, unitstat);
@@ -1528,7 +1526,7 @@ int             head;                   /* Next head for multitrack  */
     if (dev->ckdlcount == 0 &&
         (dev->ckdfmask & CKDMASK_SKCTL) == CKDMASK_SKCTL_INHSMT)
     {
-        logdevtr (dev, MSG(HHCDA039E, "", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->ckdlcount, dev->ckdfmask));
+        logdevtr (dev, MSG(HHC00432, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->ckdlcount, dev->ckdfmask));
         if (dev->ckdtrkof)
             ckd_build_sense (dev, 0, SENSE1_FP | SENSE1_IE, 0, 0, 0);
         else
@@ -1558,7 +1556,7 @@ int             head;                   /* Next head for multitrack  */
         head -= dev->ckdheads;
         cyl++;
     }
-    logdevtr (dev, MSG(HHCDA040I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, cyl, head));
+    logdevtr (dev, MSG(HHC00433, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, cyl, head));
 
     /* File protect error if next track is outside the
        limits of the device or outside the defined extent */
@@ -1606,7 +1604,7 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
         && code != 0x9D)
         skipr0 = 1;
 
-    logdevtr (dev, MSG(HHCDA041I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, orient[dev->ckdorient]));
+    logdevtr (dev, MSG(HHC00434, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, orient[dev->ckdorient]));
 
     /* If orientation is at End-Of_Track then a multi-track advance
        failed previously during synchronous I/O */
@@ -1629,7 +1627,7 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
         if (dev->bufoff + CKDDASD_RECHDR_SIZE >= dev->bufoffhi)
         {
             /* Handle error condition */
-            WRITEMSG (HHCDA042E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bufoff, dev->bufoffhi);
+            WRMSG (HHC00419, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->bufoff, dev->bufoffhi);
 
             /* Set unit check with equipment check */
             ckd_build_sense (dev, SENSE_EC, 0, 0,
@@ -1650,7 +1648,7 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
         dev->ckdcurdl = (rechdr->dlen[0] << 8) + rechdr->dlen[1];
         dev->ckdtrkof = (rechdr->cyl[0] == 0xFF) ? 0 : rechdr->cyl[0] >> 7;
 
-        logdevtr (dev, MSG(HHCDA043I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, 
+        logdevtr (dev, MSG(HHC00435, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
                 dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec,
                 dev->ckdcurkl, dev->ckdcurdl, dev->ckdtrkof));
 
@@ -1738,7 +1736,7 @@ CKDDASD_RECHDR  rechdr;                 /* CKD record header         */
         if (rc < 0) return rc;
     }
 
-    logdevtr (dev, MSG(HHCDA044I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->ckdcurkl));
+    logdevtr (dev, MSG(HHC00436, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->ckdcurkl));
 
     /* Read key field */
     if (dev->ckdcurkl > 0)
@@ -1746,7 +1744,7 @@ CKDDASD_RECHDR  rechdr;                 /* CKD record header         */
         if (dev->bufoffhi - dev->bufoff < dev->ckdcurkl)
         {
             /* Handle error condition */
-            WRITEMSG (HHCDA046E, SSID_TO_LCSS(dev->ssid), dev->devnum);
+            WRMSG (HHC00419, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->bufoff, dev->bufoffhi);
 
             /* Set unit check with equipment check */
             ckd_build_sense (dev, SENSE_EC, 0, 0,
@@ -1788,7 +1786,7 @@ CKDDASD_RECHDR  rechdr;                 /* Record header             */
     if (dev->ckdorient == CKDORIENT_COUNT)
         dev->bufoff += dev->ckdcurkl;
 
-    logdevtr (dev, MSG(HHCDA045I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->ckdcurdl));
+    logdevtr (dev, MSG(HHC00437, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->ckdcurdl));
 
     /* Read data field */
     if (dev->ckdcurdl > 0)
@@ -1796,7 +1794,7 @@ CKDDASD_RECHDR  rechdr;                 /* Record header             */
         if (dev->bufoff + dev->ckdcurdl >= dev->bufoffhi)
         {
             /* Handle error condition */
-            WRITEMSG (HHCDA046E, SSID_TO_LCSS(dev->ssid), dev->devnum);
+            WRMSG (HHC00419, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bufoff, dev->bufoffhi);
 
             /* Set unit check with equipment check */
             ckd_build_sense (dev, SENSE_EC, 0, 0,
@@ -1914,12 +1912,12 @@ int             ckdlen;                 /* Count+key+data length     */
     /* Pad the I/O buffer with zeroes if necessary */
     while (len < ckdlen) buf[len++] = '\0';
 
-    logdevtr (dev, MSG(HHCDA047I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->ckdcurcyl, dev->ckdcurhead, recnum, keylen, datalen));
+    logdevtr (dev, MSG(HHC00438, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->ckdcurcyl, dev->ckdcurhead, recnum, keylen, datalen));
 
     /* Set track overflow flag if called for */
     if (trk_ovfl)
     {
-        logdevtr (dev, MSG(HHCDA048I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->ckdcurcyl, dev->ckdcurhead, recnum));
+        logdevtr (dev, MSG(HHC00439, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->ckdcurcyl, dev->ckdcurhead, recnum));
         buf[0] |= 0x80;
     }
 
@@ -1962,7 +1960,7 @@ int             kdlen;                  /* Key+data length           */
     /* Unit check if not oriented to count area */
     if (dev->ckdorient != CKDORIENT_COUNT)
     {
-        WRITEMSG (HHCDA049E, SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (HHC00420, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
         ckd_build_sense (dev, SENSE_CR, 0, 0,
                         FORMAT_0, MESSAGE_2);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1975,7 +1973,7 @@ int             kdlen;                  /* Key+data length           */
     /* Pad the I/O buffer with zeroes if necessary */
     while (len < kdlen) buf[len++] = '\0';
 
-    logdevtr (dev, MSG(HHCDA050I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec,
+    logdevtr (dev, MSG(HHC00440, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec,
             dev->ckdcurkl, dev->ckdcurdl));
 
     /* Write key and data */
@@ -2003,7 +2001,7 @@ int             rc;                     /* Return code               */
     if (dev->ckdorient != CKDORIENT_COUNT
         && dev->ckdorient != CKDORIENT_KEY)
     {
-        WRITEMSG (HHCDA051E, SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (HHC00421, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
         ckd_build_sense (dev, SENSE_CR, 0, 0,
                         FORMAT_0, MESSAGE_2);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -2017,7 +2015,7 @@ int             rc;                     /* Return code               */
     /* Pad the I/O buffer with zeroes if necessary */
     while (len < dev->ckdcurdl) buf[len++] = '\0';
 
-    logdevtr (dev, MSG(HHCDA052I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec,
+    logdevtr (dev, MSG(HHC00441, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec,
             dev->ckdcurdl));
 
     /* Write data */
@@ -2075,7 +2073,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         && (code & 0x7F) != 0x16 && (code & 0x7F) != 0x12
         && (code & 0x7F) != 0x0E && (code & 0x7F) != 0x06)
     {
-        WRITEMSG (HHCDA053E, SSID_TO_LCSS(dev->ssid), dev->devnum, code);
+        WRMSG (HHC00422, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, code);
         ckd_build_sense (dev, SENSE_CR, 0, 0,
                         FORMAT_0, MESSAGE_1);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -3394,7 +3392,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* Extract the file mask from the I/O buffer */
         dev->ckdfmask = iobuf[0];
-        logdevtr (dev, MSG(HHCDA054I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->ckdfmask));
+        logdevtr (dev, MSG(HHC00442, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->ckdfmask));
 
         /* Command reject if file mask is invalid */
         if ((dev->ckdfmask & CKDMASK_RESV) != 0)
@@ -3562,7 +3560,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             for (i=0; i < (ssize_t)sizeof(module)-1 && i < num; i++)
                 module[i] = guest_to_host(iobuf[i]);
             module[i] = '\0';
-            WRITEMSG (HHCDA055I, SSID_TO_LCSS(dev->ssid), dev->devnum, module);
+            WRMSG (HHC00423, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, module);
         }
 #endif /*OPTION_CKD_KEY_TRACING*/
 
@@ -4604,13 +4602,14 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 #if 0
                 if (memcmp (&rechdr, cchhr, 4) != 0)
                 {
-                    WRITEMSG (HHCDA036E, SSID_TO_LCSS(dev->ssid), dev->devnum, 
+                    logmsg ("HHCxxxxxE %1d:%04X Error: wrong recordheader: cc hh r=%d %d %d, should be:cc hh r=%d %d %d", 
+                             SSID_TO_LCSS(dev->ssid), dev->devnum, 
                              (rechdr.cyl[0] << 8) | rechdr.cyl[1],
                              (rechdr.head[0] << 8) | rechdr.head[1],
-                              rechdr.rec,
+                             rechdr.rec,
                              (cchhr[0] << 8) | cchhr[1],
                              (cchhr[2] << 8) | cchhr[3],
-                              cchhr[4]);
+                             cchhr[4]);
                     break;
                 }
 #endif
