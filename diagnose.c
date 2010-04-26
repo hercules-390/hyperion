@@ -443,6 +443,43 @@ U32   code;
         break;
 #endif /*FEATURE_EMULATE_VM*/
 
+
+#ifdef FEATURE_PROGRAM_DIRECTED_REIPL
+    case 0x308:
+    /*---------------------------------------------------------------*/
+    /* Diagnose 308: IPL functions                                   */
+    /*---------------------------------------------------------------*/
+        switch(r2) {
+TID   tid;                              /* Thread identifier         */
+char *ipltype;                          /* "ipl" or "iplc"           */
+int   rc;
+        case DIAG308_IPL_CLEAR:
+            ipltype = "iplc";
+            goto diag308_cthread;
+        case DIAG308_IPL_NORMAL:
+            ipltype = "ipl";
+        diag308_cthread:
+            rc = create_thread(&tid, DETACHED, stop_cpus_and_ipl, ipltype, "Stop cpus and ipl");
+	    if(rc)
+                WRMSG(HHC00102, "E", strerror(rc));
+            regs->cpustate = CPUSTATE_STOPPING;
+            ON_IC_INTERRUPT(regs);
+            break;
+        case DIAG308_SET_PARAM:
+            /* INCOMPLETE */
+            regs->GR(1) = DIAG308_RC_OK;
+            break;
+        case DIAG308_STORE_PARAM:
+            /* INCOMPLETE */
+            regs->GR(1) = DIAG308_RC_OK;
+            break;
+        default:
+            ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+        } /* end switch(r2) */
+        break;
+#endif /*FEATURE_PROGRAM_DIRECTED_REIPL*/
+
+
 #ifdef FEATURE_HERCULES_DIAGCALLS
     case 0xF00:
     /*---------------------------------------------------------------*/
@@ -579,41 +616,6 @@ U32   code;
 
 #endif /*FEATURE_HERCULES_DIAGCALLS*/
 
-
-    case 0x308:
-    /*---------------------------------------------------------------*/
-    /* Diagnose 308: IPL functions                                   */
-    /*---------------------------------------------------------------*/
-        switch(r2) {
-#ifdef FEATURE_PROGRAM_DIRECTED_REIPL
-TID   tid;                              /* Thread identifier         */
-char *ipltype;                          /* "ipl" or "iplc"           */
-int   rc;
-        case DIAG308_IPL_CLEAR:
-            ipltype = "iplc";
-            goto diag308_cthread;
-        case DIAG308_IPL_NORMAL:
-            ipltype = "ipl";
-        diag308_cthread:
-            rc = create_thread(&tid, DETACHED, stop_cpus_and_ipl, ipltype, "Stop cpus and ipl");
-	    if(rc)
-                WRMSG(HHC00102, "E", strerror(rc));
-            regs->cpustate = CPUSTATE_STOPPING;
-            ON_IC_INTERRUPT(regs);
-            break;
-        case DIAG308_SET_PARAM:
-            /* INCOMPLETE */
-            regs->GR(1) = DIAG308_RC_OK;
-            break;
-        case DIAG308_STORE_PARAM:
-            /* INCOMPLETE */
-            regs->GR(1) = DIAG308_RC_OK;
-            break;
-#endif /*FEATURE_PROGRAM_DIRECTED_REIPL*/
-        default:
-            ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-        } /* end switch(r2) */
-        break;
 
     default:
     /*---------------------------------------------------------------*/
