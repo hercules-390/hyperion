@@ -574,7 +574,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if (err)
         {
             WRMSG (HHC00301, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, cckd_sf_name (dev, sfx),
-                    strerror(errno));
+                    "open()", strerror(errno));
             cckd_trace (dev, "file[%d] fd[%d] open %s error flags %8.8x mode %8.8x",
                         sfx, cckd->fd[sfx], cckd_sf_name (dev, sfx), flags, mode);
             cckd_print_itrace ();
@@ -607,7 +607,8 @@ int             rc = 0;                 /* Return code               */
 
     if (rc < 0)
     {
-        WRMSG (HHC00302, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, strerror(errno));
+        WRMSG (HHC00301, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, cckd_sf_name (dev, sfx),
+		"close()", strerror(errno));
         cckd_print_itrace ();
     }
 
@@ -634,7 +635,8 @@ int             rc;                     /* Return code               */
     /* Seek to specified offset */
     if (lseek (cckd->fd[sfx], off, SEEK_SET) < 0)
     {
-        WRMSG (HHC00303, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, (long long)off, strerror(errno));
+        WRMSG (HHC00302, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, cckd_sf_name (dev, sfx), 
+		"lseek()", (long long)off, strerror(errno));
         cckd_print_itrace ();
         return -1;
     }
@@ -644,9 +646,15 @@ int             rc;                     /* Return code               */
     if (rc < (int)len)
     {
         if (rc < 0)
-            WRMSG (HHC00304, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, (long long)off, strerror(errno));
+            WRMSG (HHC00302, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, cckd_sf_name (dev, sfx),
+		"read()", (long long)off, strerror(errno));
         else
-            WRMSG (HHC00305, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, (long long)off, rc, len);
+	{
+	    char buf[40];
+            sprintf(buf, "read incomplete: read %d, expected %d", rc, len);
+            WRMSG (HHC00302, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, cckd_sf_name (dev, sfx),
+		"read()", (long long)off, buf);
+	}
         cckd_print_itrace ();
         return -1;
     }
@@ -671,7 +679,8 @@ int             rc = 0;                 /* Return code               */
     /* Seek to specified offset */
     if (lseek (cckd->fd[sfx], off, SEEK_SET) < 0)
     {
-        WRMSG (HHC00306, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, (long long)off, strerror(errno));
+        WRMSG (HHC00302, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, cckd_sf_name (dev, sfx),
+		"lseek()", (long long)off, strerror(errno));
         return -1;
     }
 
@@ -680,9 +689,15 @@ int             rc = 0;                 /* Return code               */
     if (rc < (int)len)
     {
         if (rc < 0)
-            WRMSG (HHC00307, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, (long long)off, strerror(errno));
+            WRMSG (HHC00302, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, cckd_sf_name (dev, sfx),
+		"write()", (long long)off, strerror(errno));
         else
-            WRMSG (HHC00308, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, (long long)off, rc, len);
+	{
+	    char buf[40];
+	    sprintf(buf, "write incomplete: write %d, expected %d", rc, len);
+            WRMSG (HHC00302, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, cckd_sf_name (dev, sfx),
+		"write()", (long long)off, buf);
+	}
         cckd_print_itrace ();
         return -1;
     }
@@ -706,7 +721,8 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
     /* Truncate the file */
     if (ftruncate (cckd->fd[sfx], off) < 0)
     {
-        WRMSG (HHC00309, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, (long long)off, strerror(errno));
+        WRMSG (HHC00302, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, cckd_sf_name (dev, sfx),
+		"ftruncate()", (long long)off, strerror(errno));
         cckd_print_itrace ();
         return -1;
     }
@@ -727,7 +743,9 @@ void           *p;                      /* Pointer                   */
 
     if (p == NULL)
     {
-        WRMSG (HHC00310, "E", dev ? SSID_TO_LCSS(dev->ssid) : 0, dev ? dev->devnum : 0, size, strerror(errno));
+	char buf[40];
+	sprintf(buf, "malloc(%lu)", size);
+        WRMSG (HHC00303, "E", dev ? SSID_TO_LCSS(dev->ssid) : 0, dev ? dev->devnum : 0, buf, strerror(errno));
         cckd_print_itrace ();
     }
 
@@ -747,7 +765,9 @@ void           *p;                      /* Pointer                   */
 
     if (p == NULL)
     {
-        WRMSG (HHC00311, "E", dev ? SSID_TO_LCSS(dev->ssid) : 0, dev ? dev->devnum : 0, (n*size), strerror(errno));
+	char buf[40];
+	sprintf(buf, "calloc(%lu, %lu)", n, size);
+        WRMSG (HHC00303, "E", dev ? SSID_TO_LCSS(dev->ssid) : 0, dev ? dev->devnum : 0, buf, strerror(errno));
         cckd_print_itrace ();
     }
 
@@ -1977,7 +1997,8 @@ cckd_get_space_atend:
         fpos = (off_t)cckd->cdevhdr[sfx].size;
         if ((long long)(fpos + len) > cckd->maxsize)
         {
-            WRMSG (HHC00312, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, (cckd->maxsize >> 20) + 1);
+            WRMSG (HHC00304, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, cckd_sf_name (dev, sfx),
+		(cckd->maxsize >> 20) + 1);
             return -1;
         }
         cckd->cdevhdr[sfx].size += len;
@@ -2485,7 +2506,7 @@ CKDDASD_DEVHDR  devhdr;                 /* Device header             */
     else if (!(sfx && memcmp (&devhdr.devid, "CKD_S370", 8) == 0 && cckd->ckddasd)
           && !(sfx && memcmp (&devhdr.devid, "FBA_S370", 8) == 0 && cckd->fbadasd))
     {
-        WRMSG (HHC00313, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx);
+        WRMSG (HHC00305, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, cckd_sf_name (dev, sfx));
         return -1;
     }
 
@@ -3211,7 +3232,8 @@ int             size;                   /* Track size                */
     if (size > dev->ckdtrksz ||
         memcmp (&buf[size-CKDDASD_RECHDR_SIZE], &eighthexFF, 8) != 0)
     {
-        WRMSG (HHC00314, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn, buf[0], buf[1], buf[2], buf[3], buf[4]);
+        WRMSG (HHC00306, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn, cckd_sf_name (dev, cckd->sfn),
+		buf[0], buf[1], buf[2], buf[3], buf[4]);
         size = -1;
     }
 
@@ -3379,8 +3401,8 @@ static char    *comp[] = {"none", "zlib", "bzip2"};
                 if (buf[0] & ~CCKD_COMPRESS_MASK)
                 {
                     if (cckdblk.bytemsgs++ < 10)
-                        WRMSG (HHC00315, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn,
-                            t, buf[0],buf[1],buf[2],buf[3],buf[4]);
+                        WRMSG (HHC00307, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn,
+                            cckd_sf_name (dev, cckd->sfn), t, buf[0],buf[1],buf[2],buf[3],buf[4]);
                     buf[0] &= CCKD_COMPRESS_MASK;
                 }
             }
@@ -3400,8 +3422,8 @@ static char    *comp[] = {"none", "zlib", "bzip2"};
             {
                 if (buf[0] & ~CCKD_COMPRESS_MASK)
                 {
-                    WRMSG (HHC00316, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn,
-                            t, buf[0],buf[1],buf[2],buf[3],buf[4]);
+                    WRMSG (HHC00308, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn,
+                            cckd_sf_name (dev, cckd->sfn), t, buf[0],buf[1],buf[2],buf[3],buf[4]);
                     buf[0] &= CCKD_COMPRESS_MASK;
                 }
             }
@@ -3414,13 +3436,13 @@ static char    *comp[] = {"none", "zlib", "bzip2"};
 
     if (badcomp)
     {
-        WRMSG (HHC00317, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn,
+        WRMSG (HHC00309, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn, cckd_sf_name (dev, cckd->sfn),
                 cckd->ckddasd ? "trk" : "blk",
                 cckd->ckddasd ? "trk" : "blk", t, comp[buf[0]]);
     }
     else
     {
-        WRMSG (HHC00318, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn,
+        WRMSG (HHC00310, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn, cckd_sf_name (dev, cckd->sfn),
                 cckd->ckddasd ? "trk" : "blk",
                 cckd->ckddasd ? "trk" : "blk", trk,
                 buf, buf[0], buf[1], buf[2], buf[3], buf[4]);
@@ -3572,7 +3594,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             {
                 if (strcmp (cckd_sf_name(dev, i),cckd_sf_name(dev2, j)) == 0)
                 {
-                    WRMSG (HHC00319, "E", SSID_TO_LCSS(dev->ssid),  dev->devnum,  i, cckd_sf_name(dev,  i),
+                    WRMSG (HHC00311, "E", SSID_TO_LCSS(dev->ssid),  dev->devnum,  i, cckd_sf_name(dev,  i),
                                          SSID_TO_LCSS(dev2->ssid), dev2->devnum, j, cckd_sf_name(dev2, j));
                     return -1;
                 }
@@ -3615,7 +3637,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if (cckd->open[i] == CCKD_OPEN_RO) continue;
         if (cckd_open (dev, i, O_RDONLY|O_BINARY, 0) < 0)
         {
-            WRMSG (HHC00320, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, i, cckd_sf_name(dev, i), strerror(errno));
+            WRMSG (HHC00312, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, i, cckd_sf_name(dev, i), strerror(errno));
             return -1;
         }
     }
@@ -3642,14 +3664,14 @@ CKDDASD_DEVHDR  devhdr;                 /* Device header             */
     /* Error if no shadow file name */
     if (dev->dasdsfn == NULL)
     {
-        WRMSG (HHC00321, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn+1);
+        WRMSG (HHC00313, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn+1);
         return -1;
     }
 
     /* Error if max number of shadow files exceeded */
     if (cckd->sfn+1 == CCKD_MAX_SF)
     {
-        WRMSG (HHC00322, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn+1);
+        WRMSG (HHC00314, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn+1, dev->dasdsfn);
         return -1;
     }
 
@@ -3731,18 +3753,18 @@ int             syncio;                 /* Saved syncio bit          */
         for (dev=sysblk.firstdev; dev; dev=dev->nextdev)
             if (dev->cckd_ext)
             {
-                WRMSG (HHC00323, "I", SSID_TO_LCSS(dev->ssid), dev->devnum );
+                WRMSG (HHC00315, "I", SSID_TO_LCSS(dev->ssid), dev->devnum );
                 cckd_sf_add (dev);
                 n++;
             }
-        WRMSG(HHC00324, "I", n );
+        WRMSG(HHC00316, "I", n );
         return NULL;
     }
 
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        WRMSG (HHC00325, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (HHC00317, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
         return NULL;
     }
 
@@ -3755,7 +3777,7 @@ int             syncio;                 /* Saved syncio bit          */
     {
         dev->syncio = syncio;
         release_lock (&cckd->iolock);
-        WRMSG (HHC00326, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn);
+        WRMSG (HHC00318, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn, cckd_sf_name (dev, cckd->sfn));
         return NULL;
     }
     cckd->merging = 1;
@@ -3779,7 +3801,8 @@ int             syncio;                 /* Saved syncio bit          */
 
     /* Create a new shadow file */
     if (cckd_sf_new (dev) < 0) {
-        WRMSG (HHC00327, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn+1);
+        WRMSG (HHC00319, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn+1, 
+		cckd_sf_name(dev, cckd->sfn+1)?cckd_sf_name(dev, cckd->sfn+1):"(null)");
         goto cckd_sf_add_exit;
     }
 
@@ -3787,7 +3810,7 @@ int             syncio;                 /* Saved syncio bit          */
     if (cckd->open[cckd->sfn-1] == CCKD_OPEN_RW)
         cckd_open (dev, cckd->sfn-1, O_RDONLY|O_BINARY, 0);
 
-    WRMSG (HHC00328, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn, cckd_sf_name (dev, cckd->sfn));
+    WRMSG (HHC00320, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn, cckd_sf_name (dev, cckd->sfn));
 
 cckd_sf_add_exit:
 
@@ -3840,20 +3863,20 @@ BYTE            buf[65536];             /* Buffer                    */
         for (dev=sysblk.firstdev; dev; dev=dev->nextdev)
             if ((cckd = dev->cckd_ext))
             {
-                WRMSG(HHC00329, "I", SSID_TO_LCSS(dev->ssid), dev->devnum );
+                WRMSG(HHC00321, "I", SSID_TO_LCSS(dev->ssid), dev->devnum );
                 cckd->sfmerge = merge;
                 cckd->sfforce = force;
                 cckd_sf_remove (dev);
                 n++;
             }
-        WRMSG(HHC00324, "I", n );
+        WRMSG(HHC00316, "I", n );
         return NULL;
     }
 
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        WRMSG (HHC00330, "E", dev ? SSID_TO_LCSS(dev->ssid) : 0, dev ? dev->devnum : 0);
+        WRMSG (HHC00317, "E", dev ? SSID_TO_LCSS(dev->ssid) : 0, dev ? dev->devnum : 0);
         return NULL;
     }
 
@@ -3874,7 +3897,7 @@ BYTE            buf[65536];             /* Buffer                    */
     {
         dev->syncio = syncio;
         release_lock (&cckd->iolock);
-        WRMSG (HHC00331, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn);
+        WRMSG (HHC00322, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn, cckd_sf_name(dev, cckd->sfn));
         return NULL;
     }
     cckd->merging = 1;
@@ -3896,7 +3919,7 @@ BYTE            buf[65536];             /* Buffer                    */
     {
         dev->syncio = syncio;
         release_lock (&cckd->filelock);
-        WRMSG (HHC00332, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn);
+        WRMSG (HHC00323, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn, cckd_sf_name(dev, cckd->sfn));
         cckd->merging = 0;
         return NULL;
     }
@@ -3908,7 +3931,8 @@ BYTE            buf[65536];             /* Buffer                    */
     /* Harden the `from' file */
     if (cckd_harden (dev) < 0)
     {
-        WRMSG (HHC00333, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, from_sfx, from_sfx);
+        WRMSG (HHC00324, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, from_sfx, cckd_sf_name(dev, cckd->sfx),
+		from_sfx, "not hardened", "");
         goto sf_remove_exit;
     }
 
@@ -3922,9 +3946,9 @@ BYTE            buf[65536];             /* Buffer                    */
         cckd_open (dev, to_sfx, O_RDONLY|O_BINARY, 0);
         if (merge)
         {
-            WRMSG (HHC00334, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, from_sfx, to_sfx,
-                    to_sfx == 0 && dev->ckdrdonly && !force
-                    ? ", try 'force'" : "");
+            WRMSG (HHC00324, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, from_sfx, cckd_sf_name(dev, from_sfx),
+		to_sfx, "cannot be opened read-write", 
+		to_sfx == 0 && dev->ckdrdonly && !force ? ", try 'force'" : "");
             goto sf_remove_exit;
         }
         else
@@ -3937,7 +3961,8 @@ BYTE            buf[65536];             /* Buffer                    */
         if (cckd_chkdsk (dev, 0) < 0)
         {
             cckd->sfn = from_sfx;
-            WRMSG (HHC00335, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, to_sfx, to_sfx);
+            WRMSG (HHC00324, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, to_sfx, cckd_sf_name(dev, to_sfx), 
+		to_sfx, "check failed", "");
             goto sf_remove_exit;
         }
     }
@@ -4079,7 +4104,8 @@ BYTE            buf[65536];             /* Buffer                    */
     /* Add the file back if necessary */
     if (add) rc = cckd_sf_new (dev) ;
 
-    WRMSG (HHC00336, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, from_sfx, merge ? "merged" : add ? "re-added" : "removed");
+    WRMSG (HHC00325, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, from_sfx, cckd_sf_name(dev, from_sfx),
+	merge ? "merged" : add ? "re-added" : "removed");
 
 sf_remove_exit:
 
@@ -4104,9 +4130,9 @@ sf_remove_exit:
 sf_merge_error:
 
     if (trk < 0)
-        WRMSG (HHC00337, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, from_sfx);
+        WRMSG (HHC00326, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, from_sfx, cckd_sf_name(dev, from_sfx));
     else
-        WRMSG (HHC00338, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, from_sfx, trk);
+        WRMSG (HHC00327, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, from_sfx, cckd_sf_name(dev, from_sfx), trk);
 
     if (l2updated && cckd->l1[to_sfx][i] && cckd->l1[to_sfx][i] != 0xffffffff)
     {
@@ -4139,18 +4165,18 @@ int             rc;                     /* Return code               */
         for (dev=sysblk.firstdev; dev; dev=dev->nextdev)
             if (dev->cckd_ext)
             {
-                WRMSG( HHC00339, "I", SSID_TO_LCSS(dev->ssid), dev->devnum );
+                WRMSG( HHC00328, "I", SSID_TO_LCSS(dev->ssid), dev->devnum );
                 cckd_sf_comp (dev);
                 n++;
             }
-        WRMSG (HHC00324, "I", n );
+        WRMSG (HHC00316, "I", n );
         return NULL;
     }
 
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        WRMSG (HHC00340, "W",  SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (HHC00317, "W",  SSID_TO_LCSS(dev->ssid), dev->devnum);
         return NULL;
     }
 
@@ -4163,7 +4189,7 @@ int             rc;                     /* Return code               */
     {
         dev->syncio = syncio;
         release_lock (&cckd->iolock);
-        WRMSG (HHC00341, "W",  SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn);
+        WRMSG (HHC00329, "W",  SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn, cckd_sf_name(dev, cckd->sfn));
         return NULL;
     }
     cckd->merging = 1;
@@ -4225,19 +4251,19 @@ int             level = 2;              /* Check level               */
         for (dev=sysblk.firstdev; dev; dev=dev->nextdev)
             if ((cckd = dev->cckd_ext))
             {
-                WRMSG (HHC00342, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, level );
+                WRMSG (HHC00330, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, level );
                 cckd->sflevel = level;
                 cckd_sf_chk (dev);
                 n++;
             }
-        WRMSG(HHC00324, "I", n );
+        WRMSG(HHC00316, "I", n );
         return NULL;
     }
 
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        WRMSG (HHC00340, "W",  SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (HHC00317, "W",  SSID_TO_LCSS(dev->ssid), dev->devnum);
         return NULL;
     }
 
@@ -4253,7 +4279,7 @@ int             level = 2;              /* Check level               */
     {
         dev->syncio = syncio;
         release_lock (&cckd->iolock);
-        WRMSG (HHC00343, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn);
+        WRMSG (HHC00331, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn, cckd_sf_name(dev, cckd->sfn));
         return NULL;
     }
     cckd->merging = 1;
@@ -4316,18 +4342,18 @@ int             freenbr=0;              /* Total number free spaces  */
         for (dev=sysblk.firstdev; dev; dev=dev->nextdev)
             if (dev->cckd_ext)
             {
-                WRMSG( HHC00344, "I", SSID_TO_LCSS(dev->ssid), dev->devnum );
+                WRMSG( HHC00332, "I", SSID_TO_LCSS(dev->ssid), dev->devnum );
                 cckd_sf_stats (dev);
                 n++;
             }
-        WRMSG(HHC00324, "I", n );
+        WRMSG(HHC00316, "I", n );
         return NULL;
     }
 
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        WRMSG (HHC00340, "W", SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (HHC00317, "W", SSID_TO_LCSS(dev->ssid), dev->devnum);
         return NULL;
     }
 
@@ -4344,35 +4370,35 @@ int             freenbr=0;              /* Total number free spaces  */
     }
 
     /* header */
-    WRMSG (HHC00345, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
+    WRMSG (HHC00333, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
     if (cckd->readaheads || cckd->misses)
-    WRMSG (HHC00346, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
-    WRMSG (HHC00347, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
+    WRMSG (HHC00334, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
+    WRMSG (HHC00335, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
 
     /* total statistics */
-    WRMSG (HHC00348, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
+    WRMSG (HHC00336, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
             size, (free * 100) / size, freenbr,
             cckd->totreads, cckd->totwrites, cckd->totl2reads,
             cckd->cachehits, cckd->switches);
     if (cckd->readaheads || cckd->misses)
-    WRMSG (HHC00349, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
+    WRMSG (HHC00337, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
             cckd->readaheads, cckd->misses);
 
     /* base file statistics */
-    WRMSG (HHC00350, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
-    WRMSG (HHC00351, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
+    WRMSG (HHC00338, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+    WRMSG (HHC00339, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
             (long long)st.st_size,
             (long long)((long long)((long long)cckd->cdevhdr[0].free_total * 100) / st.st_size),
             cckd->cdevhdr[0].free_number, ost[cckd->open[0]],
             cckd->reads[0], cckd->writes[0], cckd->l2reads[0]);
 
     if (dev->dasdsfn != NULL && CCKD_MAX_SF > 0)
-        WRMSG (HHC00352, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd_sf_name(dev, -1));
+        WRMSG (HHC00340, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd_sf_name(dev, -1));
 
     /* shadow file statistics */
     for (i = 1; i <= cckd->sfn; i++)
     {
-        WRMSG (HHC00353, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, 
+        WRMSG (HHC00341, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, 
                 i, (long long)cckd->cdevhdr[i].size,
                 (long long)((long long)((long long)cckd->cdevhdr[i].free_total * 100) / cckd->cdevhdr[i].size),
                 cckd->cdevhdr[i].free_number, ost[cckd->open[i]],
@@ -4820,8 +4846,8 @@ BYTE            buf[256*1024];          /* Buffer                    */
 
 cckd_gc_perc_space_error:
 
-    WRMSG (HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, 
-            cckd->sfn,(long long)(upos + i),
+    WRMSG (HHC00342, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, 
+            cckd->sfn,cckd_sf_name(dev, cckd->sfn),(long long)(upos + i),
             buf[i], buf[i+1],buf[i+2], buf[i+3], buf[i+4]);
     cckd->cdevhdr[cckd->sfn].options |= CCKD_SPERRS;
     cckd_print_itrace();
@@ -5089,11 +5115,12 @@ static char    *compress[] = {"none", "zlib", "bzip2"};
     }
 
     /* Unable to uncompress */
-    WRMSG (HHC00355, "E",
-            SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn, trk, from[0], from[1], from[2], from[3], from[4]);
+    WRMSG (HHC00343, "E",
+            SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn, cckd_sf_name(dev, cckd->sfn), trk, 
+	    from[0], from[1], from[2], from[3], from[4]);
     if (comp & ~cckdblk.comps)
-        WRMSG (HHC00356, "E",
-                SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn, compress[comp]);
+        WRMSG (HHC00344, "E",
+                SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn, cckd_sf_name(dev, cckd->sfn), compress[comp]);
     return NULL;
 }
 
@@ -5261,7 +5288,7 @@ BYTE *buf;
 /*-------------------------------------------------------------------*/
 void cckd_command_help()
 {
-    WRMSG(HHC00357, "I");
+    WRMSG(HHC00345, "I");
 } /* end function cckd_command_help */
 
 /*-------------------------------------------------------------------*/
@@ -5270,7 +5297,7 @@ void cckd_command_help()
 void cckd_command_opts()
 {
     
-    WRMSG(HHC00358, "I", 
+    WRMSG(HHC00346, "I", 
              cckdblk.comp == 0xff ? -1 : cckdblk.comp,
              cckdblk.compparm, cckdblk.ramax,
              cckdblk.ranbr, cckdblk.readaheads,
@@ -5284,7 +5311,7 @@ void cckd_command_opts()
 /*-------------------------------------------------------------------*/
 void cckd_command_stats()
 {
-    WRMSG(HHC00359, "I",
+    WRMSG(HHC00347, "I",
             cckdblk.stats_reads, cckdblk.stats_readbytes >> 10,
             cckdblk.stats_writes, cckdblk.stats_writebytes >> 10,
             cckdblk.stats_readaheads, cckdblk.stats_readaheadmisses,
@@ -5368,7 +5395,7 @@ int   rc;
         {
             if (val < -1 || (val & ~cckdblk.comps) || c != '\0')
             {
-                WRMSG(HHC00360, "E", val, kw);
+                WRMSG(HHC00348, "E", val, kw);
                 return -1;
             }
             else
@@ -5381,7 +5408,7 @@ int   rc;
         {
             if (val < -1 || val > 9 || c != '\0')
             {
-                WRMSG(HHC00360, "E", val, kw);
+                WRMSG(HHC00348, "E", val, kw);
                 return -1;
             }
             else
@@ -5394,7 +5421,7 @@ int   rc;
         {
             if (val < CCKD_MIN_RA || val > CCKD_MAX_RA || c != '\0')
             {
-                WRMSG(HHC00360, "E", val, kw);
+                WRMSG(HHC00348, "E", val, kw);
                 return -1;
             }
             else
@@ -5407,7 +5434,7 @@ int   rc;
         {
             if (val < 0 || val > CCKD_MAX_RA_SIZE || c != '\0')
             {
-                WRMSG(HHC00360, "E", val, kw);
+                WRMSG(HHC00348, "E", val, kw);
                 return -1;
             }
             else
@@ -5420,7 +5447,7 @@ int   rc;
         {
             if (val < 0 || val > CCKD_MAX_RA_SIZE || c != '\0')
             {
-                WRMSG(HHC00360, "E", val, kw);
+                WRMSG(HHC00348, "E", val, kw);
                 return -1;
             }
             else
@@ -5433,7 +5460,7 @@ int   rc;
         {
             if (val < CCKD_MIN_WRITER || val > CCKD_MAX_WRITER || c != '\0')
             {
-                WRMSG(HHC00360, "E", val, kw);
+                WRMSG(HHC00348, "E", val, kw);
                 return -1;
             }
             else
@@ -5446,7 +5473,7 @@ int   rc;
         {
             if (val < 1 || val > 60 || c != '\0')
             {
-                WRMSG(HHC00360, "E", val, kw);
+                WRMSG(HHC00348, "E", val, kw);
                 return -1;
             }
             else
@@ -5459,7 +5486,7 @@ int   rc;
         {
             if (val < -8 || val > 8 || c != '\0')
             {
-                WRMSG(HHC00360, "E", val, kw);
+                WRMSG(HHC00348, "E", val, kw);
                 return -1;
             }
             else
@@ -5472,7 +5499,7 @@ int   rc;
         {
             if (val < 0 || val > 1 || c != '\0')
             {
-                WRMSG(HHC00360, "E", val, kw);
+                WRMSG(HHC00348, "E", val, kw);
                 return -1;
             }
             else
@@ -5485,7 +5512,7 @@ int   rc;
         {
             if (val < -1 || val > CCKD_MAX_FREEPEND || c != '\0')
             {
-                WRMSG(HHC00360, "E", val, kw);
+                WRMSG(HHC00348, "E", val, kw);
                 return -1;
             }
             else
@@ -5498,7 +5525,7 @@ int   rc;
         {
             if (val < 0 || val > 1 || c != '\0')
             {
-                WRMSG(HHC00360, "E", val, kw);
+                WRMSG(HHC00348, "E", val, kw);
                 return -1;
             }
             else
@@ -5511,7 +5538,7 @@ int   rc;
         {
             if (val < 0 || val > CCKD_MAX_TRACE || c != '\0')
             {
-                WRMSG(HHC00360, "E", val, kw);
+                WRMSG(HHC00348, "E", val, kw);
                 return -1;
             }
             else
@@ -5540,7 +5567,9 @@ int   rc;
                     }
                     else
                     {
-                        WRMSG (HHC00361, "E", (val*sizeof(CCKD_TRACE)), strerror(errno));
+   	                char buf[40];
+			sprintf(buf, "calloc(%d, %lu)", val, sizeof(CCKD_TRACE));
+                        WRMSG (HHC00303, "E", buf, strerror(errno));
                     }
                 }
                 opts = 1;
@@ -5550,7 +5579,7 @@ int   rc;
         {
             if (val < 0 || val > 1 || c != '\0')
             {
-                WRMSG(HHC00360, "E", val, kw);
+                WRMSG(HHC00348, "E", val, kw);
                 return -1;
             }
             else
@@ -5589,7 +5618,7 @@ int   rc;
 	}
         else
         {
-            WRMSG(HHC00362, "E", kw);
+            WRMSG(HHC00349, "E", kw);
             if (!cmd) return -1;
             cckd_command_help ();
             op = NULL;
