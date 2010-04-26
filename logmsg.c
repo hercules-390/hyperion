@@ -159,6 +159,18 @@ DLL_EXPORT void writemsg(char *file, int line, int lvl, char *color, char *msg, 
   #ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  
   #endif
+    switch(msg[8])
+    {
+      case 'S':
+      case 'E':
+	if(!strlen(color))
+	  color = "<pnl,color(lightred,black),keep>";
+	break;
+      case 'W':
+	if(!strlen(color))
+	  color = "<pnl,color(red,black),keep>";
+        break;
+    }
     switch(lvl)
     {
       case 0: // normal
