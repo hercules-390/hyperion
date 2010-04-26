@@ -449,10 +449,12 @@ U32   code;
     /*---------------------------------------------------------------*/
     /* Diagnose 308: IPL functions                                   */
     /*---------------------------------------------------------------*/
-        switch(r2) {
-TID   tid;                              /* Thread identifier         */
-char *ipltype;                          /* "ipl" or "iplc"           */
-int   rc;
+        switch(r2) 
+        {
+            TID   tid;                              /* Thread identifier         */
+            char *ipltype;                          /* "ipl" or "iplc"           */
+            int   rc;
+
         case DIAG308_IPL_CLEAR:
             ipltype = "iplc";
             goto diag308_cthread;
@@ -460,7 +462,7 @@ int   rc;
             ipltype = "ipl";
         diag308_cthread:
             rc = create_thread(&tid, DETACHED, stop_cpus_and_ipl, ipltype, "Stop cpus and ipl");
-	    if(rc)
+            if(rc)
                 WRMSG(HHC00102, "E", strerror(rc));
             regs->cpustate = CPUSTATE_STOPPING;
             ON_IC_INTERRUPT(regs);
