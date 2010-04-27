@@ -76,7 +76,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     /* The first argument is the file name */
     if (argc == 0 || strlen(argv[0]) >= sizeof(dev->filename))
     {
-        WRITEMSG (HHCDA056E, SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (HHC00500, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
     }
 
@@ -92,7 +92,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         rc = shared_fba_init ( dev, argc, argv);
         if (rc < 0)
         {
-            WRITEMSG (HHCDA057E, SSID_TO_LCSS(dev->ssid), dev->devnum);
+            WRMSG (HHC00501, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
             return -1;
         }
         else
@@ -106,7 +106,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         dev->fd = open (dev->filename, O_RDONLY|O_BINARY);
         if (dev->fd < 0)
         {
-            WRITEMSG (HHCDA058E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, strerror(errno));
+            WRMSG (HHC00502, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "open()", strerror(errno));
             return -1;
         }
     }
@@ -117,9 +117,9 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     {
         /* Handle read error condition */
         if (rc < 0)
-            WRITEMSG (HHCDA059E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, strerror(errno));
+            WRMSG (HHC00502, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "read()", strerror(errno));
         else
-            WRITEMSG (HHCDA060E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+            WRMSG (HHC00502, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "read()", "unexpected end of file");
         close (dev->fd);
         dev->fd = -1;
         return -1;
@@ -136,9 +136,9 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         {
             /* Handle read error condition */
             if (rc < 0)
-                WRITEMSG (HHCDA059E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, strerror(errno));
+                WRMSG (HHC00502, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "read()", strerror(errno));
             else
-                WRITEMSG (HHCDA060E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+                WRMSG (HHC00502, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "read()", "unexpected end of file");
             close (dev->fd);
             dev->fd = -1;
             return -1;
@@ -198,7 +198,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 continue;
             }
 
-            WRITEMSG (HHCDA063E, SSID_TO_LCSS(dev->ssid), dev->devnum, i + 1, argv[i]);
+            WRMSG (HHC00503, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], i + 1);
             return -1;
         }
     }
@@ -210,7 +210,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         rc = fstat (dev->fd, &statbuf);
         if (rc < 0)
         {
-            WRITEMSG (HHCDA064E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, strerror(errno));
+            WRMSG (HHC00502, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "fstat()", strerror(errno));
             close (dev->fd);
             dev->fd = -1;
             return -1;
@@ -221,7 +221,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             rc=ioctl(dev->fd,BLKGETSIZE,&statbuf.st_size);
             if(rc<0)
             {
-                WRITEMSG (HHCDA082E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, strerror(errno));
+                WRMSG (HHC00502, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "ioctl()", strerror(errno));
                 close (dev->fd);
                 dev->fd = -1;
                 return -1;
@@ -229,7 +229,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             dev->fbablksiz = 512;
             dev->fbaorigin = 0;
             dev->fbanumblk = statbuf.st_size;
-            WRITEMSG (HHCDA083I, SSID_TO_LCSS(dev->ssid), dev->devnum);
+            WRMSG (HHC00504, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
         }
         else
 #endif // defined(OPTION_FBA_BLKDEVICE) && defined(BLKGETSIZE)
@@ -246,7 +246,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             if (sscanf(argv[1], "%u%c", &startblk, &c) != 1
              || startblk >= dev->fbanumblk)
             {
-                WRITEMSG (HHCDA065E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[1]);
+                WRMSG (HHC00505, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, argv[1]);
                 close (dev->fd);
                 dev->fd = -1;
                 return -1;
@@ -261,7 +261,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             if (sscanf(argv[2], "%u%c", &numblks, &c) != 1
              || numblks > dev->fbanumblk)
             {
-                WRITEMSG (HHCDA066E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[2]);
+                WRMSG (HHC00506, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, argv[2]);
                 close (dev->fd);
                 dev->fd = -1;
                 return -1;
@@ -271,7 +271,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     }
     dev->fbaend = (dev->fbaorigin + dev->fbanumblk) * dev->fbablksiz;
 
-    WRITEMSG (HHCDA067I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, (long long)dev->fbaorigin, dev->fbanumblk);
+    WRMSG (HHC00507, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, (long long)dev->fbaorigin, dev->fbanumblk);
 
     /* Set number of sense bytes */
     dev->numsense = 24;
@@ -280,7 +280,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     dev->fbatab = dasd_lookup (DASD_FBADEV, NULL, dev->devtype, dev->fbanumblk);
     if (dev->fbatab == NULL)
     {
-        WRITEMSG (HHCDA068E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->devtype);
+        WRMSG (HHC00508, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->devtype);
         close (dev->fd);
         dev->fd = -1;
         return -1;
@@ -505,7 +505,7 @@ off_t           offset;                 /* File offsets              */
         if (offset < 0)
         {
             /* Handle seek error condition */
-            WRITEMSG (HHCDA069E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bufcur, strerror(errno));
+            WRMSG (HHC00502, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "lseek()", strerror(errno));
             dev->sense[0] = SENSE_EC;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             cache_lock(CACHE_DEVBUF);
@@ -522,7 +522,7 @@ off_t           offset;                 /* File offsets              */
         if (rc < dev->bufupdhi - dev->bufupdlo)
         {
             /* Handle write error condition */
-            WRITEMSG (HHCDA070E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bufcur, strerror(errno));
+            WRMSG (HHC00502, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "write()", strerror(errno));
             dev->sense[0] = SENSE_EC;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             cache_lock(CACHE_DEVBUF);
@@ -562,7 +562,7 @@ fba_read_blkgrp_retry:
         cache_setage(CACHE_DEVBUF, i);
         cache_unlock(CACHE_DEVBUF);
 
-        logdevtr (dev, MSG(HHCDA071I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, blkgrp, i));
+        logdevtr (dev, MSG(HHC00516, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, blkgrp, i));
 
         dev->cachehits++;
         dev->cache = i;
@@ -586,14 +586,14 @@ fba_read_blkgrp_retry:
     /* Wait if no available cache entry */
     if (o < 0)
     {
-        logdevtr (dev, MSG(HHCDA072I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, blkgrp));
+        logdevtr (dev, MSG(HHC00517, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, blkgrp));
         dev->cachewaits++;
         cache_wait(CACHE_DEVBUF);
         goto fba_read_blkgrp_retry;
     }
 
     /* Cache miss */
-    logdevtr (dev, MSG(HHCDA073I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, blkgrp, o));
+    logdevtr (dev, MSG(HHC00518, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, blkgrp, o));
 
     dev->cachemisses++;
 
@@ -608,7 +608,7 @@ fba_read_blkgrp_retry:
     offset = (off_t)((S64)blkgrp * FBA_BLKGRP_SIZE);
     len = fba_blkgrp_len (dev, blkgrp);
 
-    logdevtr (dev, MSG(HHCDA074I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, 
+    logdevtr (dev, MSG(HHC00519, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
                         blkgrp, (long long)offset, fba_blkgrp_len(dev, blkgrp)));
 
     /* Seek to the block group offset */
@@ -616,7 +616,7 @@ fba_read_blkgrp_retry:
     if (offset < 0)
     {
         /* Handle seek error condition */
-        WRITEMSG (HHCDA075E, SSID_TO_LCSS(dev->ssid), dev->devnum, blkgrp, strerror(errno));
+        WRMSG (HHC00502, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "lseek()", strerror(errno));
         dev->sense[0] = SENSE_EC;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
         cache_lock(CACHE_DEVBUF);
@@ -630,7 +630,7 @@ fba_read_blkgrp_retry:
     if (rc < len)
     {
         /* Handle read error condition */
-        WRITEMSG (HHCDA076E, SSID_TO_LCSS(dev->ssid), dev->devnum, blkgrp, rc < 0 ? strerror(errno) : "end of file");
+        WRMSG (HHC00502, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "read()", blkgrp, rc < 0 ? strerror(errno) : "unexpected end of file");
         dev->sense[0] = SENSE_EC;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
         cache_lock(CACHE_DEVBUF);
@@ -1057,7 +1057,7 @@ int     repcnt;                         /* Replication count         */
                      + dev->fbalcblk - dev->fbaxfirst
                       ) * dev->fbablksiz;
 
-        logdevtr (dev, MSG(HHCDA077I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, 
+        logdevtr (dev, MSG(HHC00520, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
                             (long long unsigned int)dev->fbarba, (long long unsigned int)dev->fbarba));
 
         /* Return normal status */
@@ -1075,7 +1075,7 @@ int     repcnt;                         /* Replication count         */
         /* Control information length must be at least 16 bytes */
         if (count < 16)
         {
-            WRITEMSG(HHCDA078E, SSID_TO_LCSS(dev->ssid), dev->devnum, count);
+            WRMSG(HHC00509, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, count);
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
@@ -1084,7 +1084,7 @@ int     repcnt;                         /* Replication count         */
         /* Reject if extent previously defined in this CCW chain */
         if (dev->fbaxtdef)
         {
-            WRITEMSG(HHCDA079E, SSID_TO_LCSS(dev->ssid), dev->devnum);
+            WRMSG(HHC00510, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
@@ -1095,7 +1095,7 @@ int     repcnt;                         /* Replication count         */
         if ((dev->fbamask & (FBAMASK_RESV | FBAMASK_CE))
             || (dev->fbamask & FBAMASK_CTL) == FBAMASK_CTL_RESV)
         {
-            WRITEMSG(HHCDA080E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->fbamask);
+            WRMSG(HHC00511, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->fbamask);
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
@@ -1131,7 +1131,7 @@ int     repcnt;                         /* Replication count         */
          || dev->fbaxblkn > (U32)dev->fbanumblk
          || dev->fbaxlast - dev->fbaxfirst >= dev->fbanumblk - dev->fbaxblkn)
         {
-            WRITEMSG(HHCDA081E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->fbaxfirst, dev->fbaxlast, dev->fbaxblkn, dev->fbanumblk);
+            WRMSG(HHC00512, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->fbaxfirst, dev->fbaxlast, dev->fbaxblkn, dev->fbanumblk);
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
@@ -1481,7 +1481,7 @@ BYTE byte;
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
             if ((off_t)rc != dev->fbaorigin)
             {
-                WRITEMSG(HHCDA901E, SSID_TO_LCSS(dev->ssid), dev->devnum, rc, dev->fbaorigin);
+                WRMSG(HHC00513, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, rc, dev->fbaorigin);
                 return -1;
             }
             break;
@@ -1489,7 +1489,7 @@ BYTE byte;
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
             if ((int)rc != dev->fbanumblk)
             {
-                WRITEMSG(HHCDA902E, SSID_TO_LCSS(dev->ssid), dev->devnum, rc, dev->fbanumblk);
+                WRMSG(HHC00514, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, rc, dev->fbanumblk);
                 return -1;
             }
             break;
@@ -1518,7 +1518,7 @@ BYTE byte;
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
             if ((int)rc != dev->fbablksiz)
             {
-                WRITEMSG(HHCDA903E, SSID_TO_LCSS(dev->ssid), dev->devnum, rc, dev->fbablksiz);
+                WRMSG(HHC00515, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, rc, dev->fbablksiz);
                 return -1;
             }
             break;
