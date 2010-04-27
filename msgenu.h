@@ -690,7 +690,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHCLC055I "%s using MAC %2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X"
 #define HHCLC056W "%s NOT using MAC %2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X"
 #define HHCLC057E "%1d:%04X Error: IPv4 address and --mac are mutually exclusive with --oat"
-#define HHCLC073I "%1d:%04X TAP device(%s) opened"
+#define HHCLC073I "%1d:%04X %s device(%s) opened"
 #define HHCLC074W "TT32SDEVBUFF failed for device(%s) %s"
 #define HHCLC075W "TT32SIOBUFF failed for device(%s) %s"
 #define HHCLC076I "Port(%2.2X) RARP frame for %2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X"
