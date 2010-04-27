@@ -433,11 +433,13 @@ int get_color(char *string, short *color)
 /* Valid tokens:                                                     */
 /*  color(fg, bg)   specifies the message's color                    */
 /*  keep            keeps message on screen until removed            */
+/*  nokeep          default - does not keep message                  */
 /*-------------------------------------------------------------------*/
 void colormsg(PANMSG *p)
 {
   int  i = 0;           // current message text index
   int  len;             // length of color-name token
+  BOOL k = FALSE;       // keep | nokeep  ( no error is given, 1st prevails )
 
   if(!strncasecmp(p->msg, "<pnl", 4))
   {
@@ -468,13 +470,30 @@ void colormsg(PANMSG *p)
       else if(!strncasecmp(&p->msg[i], "keep", 4))
       {
 #if defined(OPTION_MSGHLD)
-        p->keep = 1;
-        gettimeofday(&p->expiration, NULL);
-        p->expiration.tv_sec += sysblk.keep_timeout_secs;
+        if ( !k )
+        {
+            p->keep = 1;
+            gettimeofday(&p->expiration, NULL);
+            p->expiration.tv_sec += sysblk.keep_timeout_secs;
+        }
+
 #endif // defined(OPTION_MSGHLD)
         i += 4; // skip keep
+        k = TRUE;
       }
-      else
+      else if(!strncasecmp(&p->msg[i], "nokeep", 6))
+      {
+          if ( !k )
+          {
+              p->keep = 0;
+              p->expiration.tv_sec = 0;
+              p->expiration.tv_usec = 0;
+          }
+
+          i += 6;   // skip nokeep
+          k = TRUE;
+      }
+      else 
         break; // rubbish
     }
     if(p->msg[i] == '>')
