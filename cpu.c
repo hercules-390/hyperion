@@ -435,7 +435,7 @@ int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
     if (WAITSTATE(&regs->psw) && CPU_STEPPING_OR_TRACING_ALL)
     {
 	char buf[40];
-        WRITEMSG(HHCCP043I, str_psw(regs, buf));
+        WRMSG(HHC00800, "I", PTYPSTR(regs->cpuad), regs->cpuad, str_psw(regs, buf));
     }
 
     TEST_SET_AEA_MODE(regs);
@@ -747,8 +747,8 @@ static char *pgmintname[] = {
 #endif /*defined(SIE_DEBUG)*/
 	if (code == PGM_DATA_EXCEPTION)
 	            sprintf(dxcstr, " DXC=%2.2X", regs->dxc);
-	WRITEMSG(HHCCP014I, buf1, buf2, 
-        PTYPSTR(realregs->cpuad), realregs->cpuad,
+	WRMSG(HHC00801, "I",
+        PTYPSTR(realregs->cpuad), realregs->cpuad, buf1, buf2, 
                 pgmintname[ (code - 1) & 0x3F], pcode, ilc, dxcstr);
 
         /* Calculate instruction pointer */
@@ -882,7 +882,7 @@ static char *pgmintname[] = {
     if( OPEN_IC_PER(realregs) )
     {
         if( CPU_STEPPING_OR_TRACING(realregs, ilc) )
-            WRITEMSG(HHCCP015I, PTYPSTR(regs->cpuad), regs->cpuad,
+            WRMSG(HHC00802, "I", PTYPSTR(regs->cpuad), regs->cpuad,
               pcode, IS_IC_PER(realregs) >> 16,
               (realregs->psw.IA - ilc) & ADDRESS_MAXWRAP(realregs) );
 
@@ -1081,7 +1081,7 @@ static char *pgmintname[] = {
             {
 		char buf[40];
 
-                WRITEMSG(HHCCP016I, PTYPSTR(realregs->cpuad), realregs->cpuad,
+                WRMSG(HHC00803, "I", PTYPSTR(realregs->cpuad), realregs->cpuad,
                          str_psw (realregs, buf));
                 OBTAIN_INTLOCK(realregs);
                 realregs->cpustate = CPUSTATE_STOPPING;
@@ -1198,7 +1198,7 @@ DBLWRD  csw;                            /* CSW for S/370 channels    */
 
     /* Trace the I/O interrupt */
     if (CPU_STEPPING_OR_TRACING(regs, 0))
-        WRITEMSG (HHCCP044I,
+        WRMSG (HHC00804, "I", PTYPSTR(regs->cpuad), regs->cpuad,
                 regs->psw.intcode,
                 csw[0], csw[1], csw[2], csw[3],
                 csw[4], csw[5], csw[6], csw[7]);
@@ -1219,9 +1219,9 @@ DBLWRD  csw;                            /* CSW for S/370 channels    */
     /* Trace the I/O interrupt */
     if (CPU_STEPPING_OR_TRACING(regs, 0))
 #if !defined(FEATURE_ESAME) && !defined(_FEATURE_IO_ASSIST)
-        WRITEMSG (HHCCP045I, ioid, ioparm);
+        WRMSG (HHC00805, "I", PTYPSTR(regs->cpuad), regs->cpuad, ioid, ioparm);
 #else /*defined(FEATURE_ESAME)*/
-        WRITEMSG (HHCCP046I, ioid, ioparm, iointid);
+        WRMSG (HHC00806, "I", PTYPSTR(regs->cpuad), regs->cpuad, ioid, ioparm, iointid);
 #endif /*defined(FEATURE_ESAME)*/
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
@@ -1286,7 +1286,7 @@ RADR    fsta;                           /* Failing storage address   */
 
     /* Trace the machine check interrupt */
     if (CPU_STEPPING_OR_TRACING(regs, 0))
-        WRITEMSG (HHCCP022I, (long long)mcic);
+        WRMSG (HHC00807, "I", PTYPSTR(regs->cpuad), regs->cpuad, (long long)mcic);
 
     /* Store the external damage code at PSA+244 */
     STORE_FW(psa->xdmgcode, xdmg);
@@ -1642,7 +1642,7 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
         {
             OFF_IC_STORSTAT(regs);
             ARCH_DEP(store_status) (regs, 0);
-            WRITEMSG (HHCCP010I, PTYPSTR(regs->cpuad), regs->cpuad);
+            WRMSG (HHC00808, "I", PTYPSTR(regs->cpuad), regs->cpuad);
             /* ISW 20071102 : Do not return via longjmp here. */
             /*    process_interrupt needs to finish putting the */
             /*    CPU in its manual state                     */
@@ -1709,7 +1709,7 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
         if( IS_IC_DISABLED_WAIT_PSW(regs) )
         {
             char buf[40];
-            WRITEMSG (HHCCP011I, PTYPSTR(regs->cpuad), regs->cpuad, str_psw(regs, buf));
+            WRMSG (HHC00809, "I", PTYPSTR(regs->cpuad), regs->cpuad, str_psw(regs, buf));
             regs->cpustate = CPUSTATE_STOPPING;
             RELEASE_INTLOCK(regs);
             longjmp(regs->progjmp, SIE_NO_INTERCEPT);
@@ -1762,7 +1762,7 @@ REGS    regs;
             regs.guestregs->hostregs = &regs;
         sysblk.regs[cpu] = &regs;
         release_lock(&sysblk.cpulock[cpu]);
-        WRITEMSG (HHCCP007I, PTYPSTR(cpu), cpu, get_arch_mode_string(&regs));
+        WRMSG (HHC00811, "I", PTYPSTR(cpu), cpu, get_arch_mode_string(&regs));
     }
     else
     {
@@ -1771,11 +1771,11 @@ REGS    regs;
         if (cpu_init (cpu, &regs, NULL))
             return NULL;
 
-        WRITEMSG (HHCCP003I, PTYPSTR(cpu), cpu, get_arch_mode_string(&regs));
+        WRMSG (HHC00811, "I", PTYPSTR(cpu), cpu, get_arch_mode_string(&regs));
 
 #ifdef FEATURE_VECTOR_FACILITY
         if (regs->vf->online)
-            WRITEMSG (HHCCP004I, PTYPSTR(cpu), cpu);
+            WRMSG (HHC00812, "I", PTYPSTR(cpu), cpu);
 #endif /*FEATURE_VECTOR_FACILITY*/
     }
 
@@ -1807,7 +1807,9 @@ REGS    regs;
         }
         else
         {
-            WRITEMSG (HHCCP080E, PTYPSTR(cpu), cpu, strerror(errno));
+	    char buf[40];
+	    sprintf(buf, "malloc(%lu)", sizeof(REGS));
+            WRMSG (HHC00813, "E", PTYPSTR(cpu), cpu, buf, strerror(errno));
             cpu_uninit (cpu, &regs);
         }
         return oldregs;

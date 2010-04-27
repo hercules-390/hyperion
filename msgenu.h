@@ -398,6 +398,21 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00741 "Shared: invalid or missing keyword '%s'"
 #define HHC00742 "Shared: OPTION_SHARED_DEVICES not defined"
 
+// reserve 008xx for processor related messages 
+#define HHC00800 "Processor %s%02X: loaded wait state PSW %s"
+#define HHC00801 "Processor %s%02X: %s%s '%s' code %4.4X  ilc %d%s"
+#define HHC00802 "Processor %s%02X: PER event: code %4.4X perc %2.2X addr "F_VADR
+#define HHC00803 "Processor %s%02X: program interrupt loop PSW %s"
+#define HHC00804 "Processor %s%02X: I/O interrupt code %4.4X CSW %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X"
+#define HHC00805 "Processor %s%02X: I/O interrupt code %8.8X parm %8.8X"
+#define HHC00806 "Processor %s%02X: I/O interrupt code %8.8X parm %8.8X id %8.8X"
+#define HHC00807 "Processor %s%02X: machine check code %16.16"I64_FMT"u"
+#define HHC00808 "Processor %s%02X: store status completed"
+#define HHC00809 "Processor %s%02X: disabled wait state %s"
+#define HHC00811 "Processor %s%02X: architecture mode '%s'"
+#define HHC00812 "Processor %s%02X: vector facility online"
+#define HHC00813 "Processor %s%02X: error in function '%s': '%s'"
+
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
 #define HHC04100 "%s version %s initiated"
@@ -588,22 +603,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCTE017E "%1d:%04X Duplicate SYSG console definition"
 #define HHCTE090E "%1d:%04X Malloc() failed for resume buf: (%s)"
 
-/* cpu.c */
-#define HHCCP001W "Processor(%s%02X) thread set priority(%d) failed: (%s)"
-#define HHCCP003I "Processor(%s%02X) architecture mode(%s)"
-#define HHCCP004I "Processor(%s%02X) Vector Facility online"
-#define HHCCP007I "Processor(%s%02X) architecture mode(%s) set"
-#define HHCCP010I "Processor(%s%02X) store status completed"
-#define HHCCP011I "Processor(%s%02X) disabled wait state(%s)"
-#define HHCCP014I "%s%s%s%02X: (%s) code(%4.4X) ilc(%d%s)"
-#define HHCCP015I "Processor(%s%02X) PER event: code(%4.4X) perc(%2.2X) addr(" F_VADR ")"
-#define HHCCP016I "Processor(%s%02X) Program interrupt loop: PSW(%s)"
-#define HHCCP022I "Machine Check code (%16.16" I64_FMT "u)"
-#define HHCCP043I "Wait state PSW loaded: (%s)"
-#define HHCCP044I "I/O interrupt code(%4.4X) CSW(%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X)"
-#define HHCCP045I "I/O interrupt code(%8.8X) parm(%8.8X)"
-#define HHCCP046I "I/O interrupt code(%8.8X0 parm(%8.8X), id(%8.8X)"
-#define HHCCP080E "Processor(%s%02X) malloc failed for archjmp regs: (%s)"
 
 /* ctc_ctci.c */
 #define HHCCT037E "%1d:%04X Unable to allocate CTCBLK"
