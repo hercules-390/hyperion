@@ -344,6 +344,13 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00518 "%1d:%04X FBA file '%s': read blkgrp %d cache miss, using cache[%d]"
 #define HHC00519 "%1d:%04X FBA file '%s': read blkgrp %d offset %" I64_FMT "d len %d"
 #define HHC00520 "%1d:%04X FBA file '%s': positioning to %8.8" I64_FMT "X %" I64_FMT "u"
+// reserve 006xx for sce dasd device related messages 
+#define HHC00600 "SCE file '%s': error in function '%s': '%s'"
+#define HHC00601 "SCE file '%s': load from file failed: '%s'"
+#define HHC00602 "SCE file '%s': load from path failed: '%s'"
+#define HHC00603 "SCE file '%s': load main terminated at end of mainstor"
+#define HHC00604 "SCE file '%s': access error on image '%s': '%s'"
+#define HHC00605 "SCE file '%s': access error: %s"
 
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
@@ -1073,16 +1080,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCPT002E "Trace is busy"
 #define HHCPT003I "Ptt(%s%s%s%s%s%s%s%s%s%s%s %s %s) to(%d %d)"
 
-/* scedasd.c */
-#define HHCSC001E "Load from file(%s) failed: %s"
-#define HHCSC003E "Load from path(%s) failed: %s"
-#define HHCSC011E "set_sce_dir: %s: %s"
-#define HHCSC012E "set_sce_basedir: %s: %s"
-#define HHCSC031E "load_main: %s: %s"
-#define HHCSC032W "load_main: terminated at end of mainstor"
-#define HHCSC041E "File(%s) open error: %s"
-#define HHCSC101E "access error: %s: %s"
-#define HHCSC201E "File(%S) access error: %s"
 
 /* shared.c */
 #define HHCSH001S "Parameter #(%d) is invalid: %s"

@@ -40,7 +40,7 @@ char tempdir[MAX_PATH];
     else
         if(!realpath(path,tempdir))
         {
-            WRITEMSG(HHCSC011E,path,strerror(errno));
+            WRMSG(HHC00600, "E", path, "realpath()", strerror(errno));
             sce_basedir = NULL;
         }
         else
@@ -66,7 +66,7 @@ char tempdir[MAX_PATH];
 
     if(!realpath(path,tempdir))
     {
-        WRITEMSG(HHCSC012E,path,strerror(errno));
+        WRMSG(HHC00600,"E",path,"realpath()",strerror(errno));
         sce_basedir = NULL;
         return NULL;
     }
@@ -173,14 +173,14 @@ int     rc = 0;                         /* Return codes (work)       */
     /* Construct and check full pathname */
     if(!check_sce_filepath(fname,filename))
     {
-        WRITEMSG(HHCSC001E,fname,strerror(errno));
+        WRMSG(HHC00601,"E",fname,strerror(errno));
         return -1;
     }
     
     fp = fopen(filename, "r");
     if(fp == NULL)
     {
-        WRITEMSG(HHCSC001E,fname,strerror(errno));
+        WRMSG(HHC00600,"E", fname,"fopen()",strerror(errno));
         return -1;
     }
 
@@ -209,7 +209,7 @@ int     rc = 0;                         /* Return codes (work)       */
             /* Construct and check full pathname */
             if(!check_sce_filepath(pathname,filename))
             {
-                WRITEMSG(HHCSC003E,pathname,strerror(errno));
+                WRMSG(HHC00602,"E",pathname,strerror(errno));
                 return -1;
             }
 
@@ -245,7 +245,7 @@ U32  pagesize;
     if (fd < 0)
     {
         if(errno != ENOENT)
-            WRITEMSG(HHCSC031E, fname, strerror(errno));
+            WRMSG(HHC00600,"E",fname,"open()",strerror(errno));
         return fd;
     }
 
@@ -255,7 +255,7 @@ U32  pagesize;
     for( ; ; ) {
         if (pageaddr >= sysblk.mainsize)
         {
-            WRITEMSG(HHCSC032W);
+            WRMSG(HHC00603, "W", fname);
             close(fd);
             return rc;
         }
@@ -299,7 +299,7 @@ U64 totwrite = 0;
 #endif
     if (fd < 0)
     {
-        WRITEMSG (HHCSC041E, fname, strerror(errno));
+        WRMSG (HHC00600, "E", fname, "open()", strerror(errno));
         return -1;
     }
 
@@ -398,7 +398,7 @@ U64 totread = 0;
     if (fd < 0)
     {
         if(errno != ENOENT)
-            WRITEMSG (HHCSC041E, fname, strerror(errno));
+            WRMSG (HHC00600, "E", fname, "open()", strerror(errno));
         return -1;
     }
 
@@ -503,7 +503,7 @@ char filename[MAX_PATH];
     if(!check_sce_filepath(image,filename))
     {
         if(errno != ENOENT)
-            WRITEMSG (HHCSC101E, image, strerror(errno));
+            WRMSG (HHC00604, "E", filename, image, strerror(errno));
         return FALSE;
     }
 
@@ -533,7 +533,7 @@ char    fname[MAX_PATH];
         if(!check_sce_filepath((char*)scediov_bk->filename,fname))
         {
             if(errno != ENOENT)
-                WRITEMSG (HHCSC201E, fname, strerror(errno));
+                WRMSG (HHC00605, "E", fname, strerror(errno));
             return FALSE;
         }
         FETCH_DW(sto,scediov_bk->sto);
@@ -565,7 +565,7 @@ char    fname[MAX_PATH];
         if(!check_sce_filepath((char*)scediov_bk->filename,fname))
         {
             if(errno != ENOENT)
-                WRITEMSG (HHCSC201E, fname, strerror(errno));
+                WRMSG (HHC00605, "E", fname, strerror(errno));
 
             /* A file not found error may be expected for a create request */
             if(!(errno == ENOENT && scediov_bk->type == SCCB_SCEDIOV_TYPE_CREATE))
