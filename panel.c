@@ -439,7 +439,7 @@ void colormsg(PANMSG *p)
 {
   int  i = 0;           // current message text index
   int  len;             // length of color-name token
-  BOOL k = FALSE;       // keep | nokeep  ( no error is given, 1st prevails )
+  int  k = FALSE;       // keep | nokeep  ( no error is given, 1st prevails )
 
   if(!strncasecmp(p->msg, "<pnl", 4))
   {
