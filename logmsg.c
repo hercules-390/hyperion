@@ -162,26 +162,34 @@ DLL_EXPORT void writemsg(char *file, int line, int lvl, char *color, char *msg, 
     switch(msg[8])
     {
       case 'S':
-      case 'E':
-	if(!strlen(color))
-	  color = "<pnl,color(lightred,black),keep>";
-	break;
-      case 'W':
-	if(!strlen(color))
-	  color = "<pnl,color(red,black),keep>";
+        if(!strlen(color))
+            color = "<pnl,color(black,red),keep>";
         break;
+
+      case 'E':
+        if(!strlen(color))
+            color = "<pnl,color(lightred,black),keep>";
+        break;
+
+      case 'W':
+        if(!strlen(color))
+            color = "<pnl,color(lightyellow,black),keep>";
+        break;
+
     }
+
     switch(lvl)
     {
       case 0: // normal
-	logmsg(color);
+        logmsg(color);
         BFR_VSNPRINTF();
-	break;
+        break;
       case 1: // debug
-	logmsg("%s%-10.10s %4d ", color, file, line);
-	BFR_VSNPRINTF();
-	break;
+        logmsg("%s%-10.10s %4d ", color, file, line);
+        BFR_VSNPRINTF();
+        break;
     }
+
     if(bfr)
         log_write(0,bfr); 
   #ifdef NEED_LOGMSG_FFLUSH

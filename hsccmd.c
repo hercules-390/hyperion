@@ -1383,7 +1383,7 @@ int rc;
                     static char cwd[ MAX_PATH ];
 
                     VERIFY( getcwd( cwd, sizeof(cwd) ) != NULL );
-                    rc = strlen( cwd );
+                    rc = (int)strlen( cwd );
                     if (cwd[rc-1] != *PATH_SEP)
                         strlcat (cwd, PATH_SEP, sizeof(cwd));
 
@@ -1395,7 +1395,7 @@ int rc;
                     else
                     {
                         pTAMDIR->dir = strdup (cwd);
-                        pTAMDIR->len = strlen (cwd);
+                        pTAMDIR->len = (int)strlen (cwd);
                         pTAMDIR->rej = 0;
                         pTAMDIR->next = sysblk.tamdir;
                         sysblk.tamdir = pTAMDIR;
@@ -1478,7 +1478,7 @@ int rc;
         if (realpath(tamdir1, workdir) != NULL)
         {
             strlcpy (tamdir1, workdir, MAX_PATH);
-            rc = strlen( tamdir1 );
+            rc = (int)strlen( tamdir1 );
             if (tamdir1[rc-1] != *PATH_SEP)
                 strlcat (tamdir1, PATH_SEP, MAX_PATH);
             tamdir = tamdir1;   // (try tamdir1 first)
@@ -1486,7 +1486,7 @@ int rc;
         else
             tamdir = tamdir2;   // (try only tamdir2)
 
-        rc = strlen( tamdir2 );
+        rc = (int)strlen( tamdir2 );
         if (tamdir2[rc-1] != *PATH_SEP)
             strlcat (tamdir2, PATH_SEP, MAX_PATH);
 
@@ -1545,7 +1545,7 @@ int rc;
                                 static char cwd[ MAX_PATH ] = {0};
 
                                 VERIFY( getcwd( cwd, sizeof(cwd) ) != NULL );
-                                rc = strlen( cwd );
+                                rc = (int)strlen( cwd );
                                 if (cwd[rc-1] != *PATH_SEP)
                                     strlcat (cwd, PATH_SEP, sizeof(cwd));
 
@@ -1557,7 +1557,7 @@ int rc;
                                 else
                                 {
                                     pCurrTAMDIR->dir = strdup (cwd);
-                                    pCurrTAMDIR->len = strlen (cwd);
+                                    pCurrTAMDIR->len = (int)strlen (cwd);
                                     pCurrTAMDIR->rej = 0;
                                     pCurrTAMDIR->next = sysblk.tamdir;
                                     sysblk.tamdir = pCurrTAMDIR;
@@ -1776,7 +1776,7 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
                 ,dev->filename
                 
             );
-        logmsg("\n%s\n", eyecatcher);
+            logmsg("\n%s\n", eyecatcher);
         }
         else
         {
@@ -2311,34 +2311,39 @@ int pantitle_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int msghld_cmd(int argc, char *argv[], char *cmdline)
 {
-  UNREFERENCED(cmdline);
-  if(argc == 2)
-  {
-    if(!strcasecmp(argv[1], "info"))
+    if ( !strcasecmp(cmdline, "kd") ) 
     {
-      WRITEMSG(HHCMD101I, sysblk.keep_timeout_secs);
-      return(0);
-    }
-    else if(!strcasecmp(argv[1], "clear"))
-    {
-      expire_kept_msgs(1);
-      WRITEMSG(HHCMD102I);
-      return(0);
-    }
-    else
-    {
-      int new_timeout;
-
-      if(sscanf(argv[1], "%d", &new_timeout) && new_timeout >= 0)
-      {
-        sysblk.keep_timeout_secs = new_timeout;
-        WRITEMSG(HHCMD103I, sysblk.keep_timeout_secs);
+        expire_kept_msgs(TRUE);
+        WRITEMSG(HHCMD102I);
         return(0);
-      }
     }
-  }
-  logmsg("msghld: Invalid usage\n");
-  return(0);
+    else if(argc == 2)
+    {
+        if(!strcasecmp(argv[1], "info"))
+        {
+            WRITEMSG(HHCMD101I, sysblk.keep_timeout_secs);
+            return(0);
+        }
+        else if(!strcasecmp(argv[1], "clear"))
+        {
+            expire_kept_msgs(TRUE);
+            WRITEMSG(HHCMD102I);
+            return(0);
+        }
+        else
+        {
+            int new_timeout;
+
+            if(sscanf(argv[1], "%d", &new_timeout) && new_timeout >= 0)
+            {
+                sysblk.keep_timeout_secs = new_timeout;
+                WRITEMSG(HHCMD103I, sysblk.keep_timeout_secs);
+                return(0);
+            }
+        }
+    }
+    logmsg("msghld: Invalid usage\n");
+    return(0);
 }
 #endif // OPTION_MSGHLD
 
@@ -7325,7 +7330,7 @@ void script_test_userabort()
 int process_script_file(char *script_name,int isrcfile)
 {
 FILE   *scrfp;                          /* RC file pointer           */
-size_t  scrbufsize = 1024;              /* Size of RC file  buffer   */
+int     scrbufsize = 1024;              /* Size of RC file  buffer   */
 char   *scrbuf = NULL;                  /* RC file input buffer      */
 int     scrlen;                         /* length of RC file record  */
 int     scr_pause_amt = 0;              /* seconds to pause RC file  */
@@ -7396,7 +7401,7 @@ char    pathname[MAX_PATH];             /* (work)                    */
 
         /* Remove trailing whitespace */
 
-        for (scrlen = strlen(scrbuf); scrlen && isspace(scrbuf[scrlen-1]); scrlen--);
+        for (scrlen = (int)strlen(scrbuf); scrlen && isspace(scrbuf[scrlen-1]); scrlen--);
         scrbuf[scrlen] = 0;
 
         /* Remove any # comments on the line before processing */

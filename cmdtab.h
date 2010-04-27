@@ -581,6 +581,8 @@ COMMAND ( "panrate",   PANEL+CONFIG,  SYSCMDALL,          panrate_cmd,
 COMMAND ( "pantitle",  CONFIG,        SYSCMDALL,          pantitle_cmd, "display or set console title", NULL )
  
 #ifdef OPTION_MSGHLD
+COMMAND ( "kd",        PANEL,         SYSCMDALL,          msghld_cmd, "Short form of 'msghld clear'", NULL )
+
 COMMAND ( "msghld",    PANEL,         SYSCMDALL,          msghld_cmd,
   "Display or set the timeout of held messages",
     "Format: \"msghld [value | info | clear]\".\n"
