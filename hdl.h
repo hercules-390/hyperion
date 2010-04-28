@@ -206,7 +206,7 @@ DLL_EXPORT
 void hdl_main();                        /* Main initialization rtn   */
 
 DLL_EXPORT
-void hdl_setpath(char *);               /* Set module path           */
+void hdl_setpath(char *, int);               /* Set module path           */
 
 DLL_EXPORT
 void * hdl_fent(char *);                /* Find entry name           */

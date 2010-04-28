@@ -2411,14 +2411,22 @@ int sh_cmd(int argc, char *argv[], char *cmdline)
 int cd_cmd(int argc, char *argv[], char *cmdline)
 {
     char* path;
+    char* pathname;
     char cwd [ MAX_PATH ];
+
     UNREFERENCED(argc);
     UNREFERENCED(argv);
+
     if (sysblk.shcmdopt & SHCMDOPT_ENABLE)
     {
         path = cmdline + 2;
         while (isspace(*path)) path++;
+#ifdef _MSVC_
+        pathname = strtok(path, "\"");
+        _chdir(pathname);
+#else
         chdir(path);
+#endif
         getcwd( cwd, sizeof(cwd) );
         WRITEMSG(HHCMD184I,cwd);
         HDC1( debug_cd_cmd, cwd );
@@ -6995,7 +7003,7 @@ int modpath_cmd(int argc, char *argv[], char *cmdline)
     }
     else
     {
-        hdl_setpath(strdup(argv[1]));
+        hdl_setpath(argv[1], TRUE);
         return 0;
     }
 }

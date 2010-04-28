@@ -95,7 +95,7 @@ int tab_pressed(char *cmdlinefull, int *cmdoffset) {
   strncpy(part2, cmdlinefull + i + 1, cmdoff - i - 1);
   part2[cmdoff - i - 1] = '\0';
 
-  len = strlen(part2);
+  len = (int)strlen(part2);
   /* 3 characters minimum needed, for ./\0 in path. */
   /* (or 4 chars for MSVC if within quoted string, for \"./\0 - Fish) */
 #ifdef _MSVC_
@@ -112,7 +112,11 @@ int tab_pressed(char *cmdlinefull, int *cmdoffset) {
   *path = '\0';
   filename = part2;
   /* is it pure filename or is there whole path ? */
+#ifdef _MSVC_
+  tmp = strrchr(part2, '\\');
+#else
   tmp = strrchr(part2, '/');
+#endif
 #ifdef _MSVC_
   if (!tmp) tmp = strrchr(part2, '\\');
 #endif
@@ -125,10 +129,13 @@ int tab_pressed(char *cmdlinefull, int *cmdoffset) {
   else {
 #ifdef _MSVC_
     if (within_quoted_string)
-      strcpy(path,"\"./");
+        strcpy(path,"\".\\");
     else
+        strcpy(path,".\\");
+#else
+        strcpy(path,"./");
 #endif
-    strcpy(path,"./");
+
   }
   /* this is used in filter function to include only relevant filenames */
   filterarray = filename;
@@ -158,7 +165,11 @@ int tab_pressed(char *cmdlinefull, int *cmdoffset) {
             namelist[i] = realloc(namelist[i], sizeof(struct dirent)
                                 + strlen(namelist[i]->d_name) + 2);
             if (namelist[i])
+#ifdef _MSVC_
+               strcat(namelist[i]->d_name,"\\");
+#else
                strcat(namelist[i]->d_name,"/");
+#endif
          }
     }
     /* now check, if filenames have something in common, after a cycle buff
@@ -166,8 +177,8 @@ int tab_pressed(char *cmdlinefull, int *cmdoffset) {
     buff = (char*)malloc(strlen(namelist[0]->d_name) + 1); /* first one */
     strcpy(buff, namelist[0]->d_name);
     for (i = 1; i < n; i++) {
-      len1 = strlen(buff);
-      len2 = strlen(namelist[i]->d_name);
+      len1 = (int)strlen(buff);
+      len2 = (int)strlen(namelist[i]->d_name);
       /* check number of characters in shorter one */
       len = len1 > len2 ? len2 : len1;
       for (j = 0; j < len; j++)
@@ -191,7 +202,7 @@ int tab_pressed(char *cmdlinefull, int *cmdoffset) {
       /* construct command line */
       sprintf(result, "%s%s%s", part1, fullfilename, part3);
       /* move cursor */
-      *(cmdoffset) = strlen(part1) + strlen(fullfilename);
+      *(cmdoffset) = (int)(strlen(part1) + strlen(fullfilename));
       strcpy(cmdlinefull, result);
       free(fullfilename);
     }

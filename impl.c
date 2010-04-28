@@ -475,7 +475,7 @@ int     rc;
 #if defined(OPTION_DYNAMIC_LOAD)
         case 'p':
             if(optarg)
-                hdl_setpath(strdup(optarg));
+                hdl_setpath(strdup(optarg), FALSE);
             break;
         case 'l':
             {

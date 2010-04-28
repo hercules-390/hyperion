@@ -182,21 +182,27 @@ int logger_flag = 0;
 
 
 /* hdl_setpath - set path for module load 
+ * If flag is TRUE, then only set new path if not already defined
+ * If flag is FALSE, then always set the new path.
  */
-DLL_EXPORT void hdl_setpath(char *path)
+DLL_EXPORT void hdl_setpath(char *path, int flag)
 {
-#ifdef ZZ_NO_BACKLINK
-char    pathname[MAX_PATH];         /* pathname conversion */
+    char    pathname[MAX_PATH];         /* pathname conversion */
 
-#endif
-    if(hdl_modpath)
-        free(hdl_modpath);
+    if (flag)
+    {
+        if (hdl_modpath)
+        {
+            WRITEMSG (HHCHD020W, hdl_modpath);
+            return;
+        }
+    }
+    else
+    {
+        if(hdl_modpath)
+            free(hdl_modpath);
+    }
 
-#ifndef ZZ_NO_BACKLINK
-    hdl_modpath = strdup(path);
-
-    WRITEMSG(HHCHD018I,hdl_modpath);
-#else
     if ( strlen(path) > MAX_PATH )
     {
         WRITEMSG (HHCHD019E, (int)strlen(path), MAX_PATH);
@@ -205,9 +211,10 @@ char    pathname[MAX_PATH];         /* pathname conversion */
     {
         hostpath(pathname, path, sizeof(pathname));
         hdl_modpath = strdup(pathname);
-        WRITEMSG(HHCHD018I,hdl_modpath);
+        WRITEMSG (HHCHD018I, hdl_modpath);
     }
-#endif
+
+    return;
 }
 
 
@@ -217,14 +224,24 @@ char *fullname;
 void *ret;
 size_t fulllen = 0;
 
-    if(filename && *filename != '/' && *filename != '.')
+    if(filename && 
+#if      defined(_MSVC_)
+           *filename != '\\'
+#else //!defined(_MSVC_) 
+           *filename != '/' 
+#endif// defined(_MSVC_) 
+        && *filename != '.')
     {
         if(hdl_modpath && *hdl_modpath)
         {
             fulllen = strlen(filename) + strlen(hdl_modpath) + 2 + HDL_SUFFIX_LENGTH;
             fullname = malloc(fulllen);
             strlcpy(fullname,hdl_modpath,fulllen);
+#if      defined(_MSVC_)
+            strlcat(fullname,"\\",fulllen);
+#else //!defined(_MSVC_)
             strlcat(fullname,"/",fulllen);
+#endif// defined(_MSVC_)
             strlcat(fullname,filename,fulllen);
 #if defined(HDL_MODULE_SUFFIX)
             strlcat(fullname,HDL_MODULE_SUFFIX,fulllen);
@@ -257,7 +274,13 @@ size_t fulllen = 0;
             free(fullname);
         fulllen=0;
     }
-    if(filename && *filename != '/' && *filename != '.')
+    if(filename && 
+#if      defined(_MSVC_)
+           *filename != '\\'
+#else //!defined(_MSVC_) 
+           *filename != '/' 
+#endif// defined(_MSVC_) 
+           && *filename != '.')
     {
         fulllen = strlen(filename) + 1 + HDL_SUFFIX_LENGTH;
         fullname = malloc(fulllen);
@@ -765,7 +788,7 @@ HDLPRE *preload;
     initialize_lock(&hdl_lock);
     initialize_lock(&hdl_sdlock);
 
-    hdl_setpath(HDL_DEFAULT_PATH);
+    hdl_setpath(HDL_DEFAULT_PATH, TRUE);
 
     dlinit();
 
