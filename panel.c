@@ -203,10 +203,10 @@ static FILE *confp   = NULL;            /* Console file pointer      */
 
 ///////////////////////////////////////////////////////////////////////
 
-#define CMD_PREFIX_STR   "Command ==> " /* Keep same len as below!   */
+#define CMD_PREFIX_STR   "Hercules => " /* Keep same len as below!   */
 #ifdef  OPTION_CMDTGT
 #define CMD_PREFIX_STR1  "SCP ======> " /* Keep same len as above!   */
-#define CMD_PREFIX_STR2  "PrioSCP ==> " /* Keep same len as above!   */
+#define CMD_PREFIX_STR2  "PSCP =====> " /* Keep same len as above!   */
 #endif // OPTION_CMDTGT
 
 #define CMD_PREFIX_LEN  (strlen(CMD_PREFIX_STR))

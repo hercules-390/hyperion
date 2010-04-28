@@ -163,7 +163,7 @@ DLL_EXPORT void writemsg(char *file, int line, int lvl, char *color, char *msg, 
     {
       case 'S':
         if(!strlen(color))
-            color = "<pnl,color(black,red),keep>";
+            color = "<pnl,color(lightred,black),keep>";
         break;
 
       case 'E':
@@ -173,7 +173,7 @@ DLL_EXPORT void writemsg(char *file, int line, int lvl, char *color, char *msg, 
 
       case 'W':
         if(!strlen(color))
-            color = "<pnl,color(lightyellow,black),nokeep>";
+            color = "<pnl,color(red,black),keep>";
         break;
 
     }
