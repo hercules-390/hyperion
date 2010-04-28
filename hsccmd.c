@@ -2,7 +2,7 @@
 /*              (c) Copyright "Fish" (David B. Trout), 2002-2009     */
 /*              Execute Hercules System Commands                     */
 /*                                                                   */
-/*   Released under the Q Public License                             */
+/*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
@@ -7227,9 +7227,9 @@ int scp_cmd(int argc, char *argv[], char *cmdline)
 {
   UNREFERENCED(argv);
   if(argc == 1)
-    scp_command(" ", 0);
+    scp_command(" ", 0, TRUE);          // echo command
   else
-    scp_command(&cmdline[4], 0);
+    scp_command(&cmdline[4], 0, TRUE);  // echo command
   return 0;
 }
 
@@ -7241,9 +7241,9 @@ int prioscp_cmd(int argc, char *argv[], char *cmdline)
 {
   UNREFERENCED(argv);
   if(argc == 1)
-    scp_command(" ", 1);
+    scp_command(" ", 1, TRUE);
   else
-    scp_command(&cmdline[5], 1);
+    scp_command(&cmdline[5], 1, TRUE);
   return 0;
 }
 

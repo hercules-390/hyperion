@@ -1,6 +1,10 @@
-/*-------------------------------------------------------------------*/
-/*  HEXTERNS.H            Hercules function prototypes...            */
-/*-------------------------------------------------------------------*/
+/* HEXTERNS.H   (c) Copyright Roger Bowler, 1999-2010                */
+/*                                                                   */
+/*                    Hercules function prototypes...                */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 //      This header auto-#included by 'hercules.h'...
 //
@@ -322,7 +326,7 @@ void update_TOD_clock (void);
 void *timer_update_thread (void *argp);
 
 /* Functions in module service.c */
-void scp_command (char *command, int priomsg);
+void scp_command (char *command, int priomsg, int echo);
 int can_signal_quiesce ();
 int signal_quiesce (U16 count, BYTE unit);
 void sclp_attention(U16 type);

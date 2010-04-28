@@ -3,6 +3,10 @@
 /*              (c) Copyright Jan Jaeger, 2003-2009                  */
 /*              Defines all Hercules Configuration statements        */
 /*              and panel commands                                   */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 
@@ -27,7 +31,7 @@ COMMAND ( "cmdlevel",  PANEL+CONFIG,  SYSCMDALL,        CmdLevel,     "Display/S
          "Format: cmdlevel [{+/-}{ALL, MAINT, PROGrammer, OPERator, and/or DEVELoper}]\n")
 COMMAND ( "cmdlvl",    PANEL+CONFIG,  SYSCMDALL,        CmdLevel,     "alias for cmdlevel\n", NULL )
 
-COMMAND ( "msglevel",    PANEL,         SYSCMDALL,      msglvl_cmd,
+COMMAND ( "msglevel",  PANEL,         SYSCMDALL,        msglvl_cmd,
   "Display or set the message level",
     "Format: msglevel [normal | debug | info]\n"
     "normal: default messages\n"

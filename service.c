@@ -1,5 +1,9 @@
 /* SERVICE.C    (c) Copyright Roger Bowler, 1999-2010                */
 /*              ESA/390 Service Processor                            */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
@@ -164,7 +168,7 @@ U32 pending;
 /*      command Null-terminated ASCII command string                 */
 /*      priomsg 0=SCP command, 1=SCP priority message                */
 /*-------------------------------------------------------------------*/
-void scp_command (char *command, int priomsg)
+void scp_command (char *command, int priomsg, int echo)
 {
     /* Error if disabled for priority messages */
     if (priomsg && !SCLP_RECV_ENABLED(SCCB_EVD_TYPE_PRIOR))
@@ -187,7 +191,8 @@ void scp_command (char *command, int priomsg)
         return;
     }
 
-    WRMSG(HHC00160, "I", priomsg ? "priority " : "", command);
+    if (echo)
+        WRMSG(HHC00160, "I", priomsg ? "priority " : "", command);
 
     /* Obtain the interrupt lock */
     OBTAIN_INTLOCK(NULL);
@@ -262,10 +267,10 @@ BYTE *event_msg = (BYTE*)(evd_bk+1);
     FETCH_HW(sccb_len, sccb->length);
 
     /* Command length */
-    event_msglen = strlen(servc_scpcmdstr);
+    event_msglen = (int)strlen(servc_scpcmdstr);
 
     /* Calculate required EVD length */
-    evd_len = event_msglen + sizeof(SCCB_EVD_HDR) + sizeof(SCCB_EVD_BK);
+    evd_len = event_msglen + (int)sizeof(SCCB_EVD_HDR) + (int)sizeof(SCCB_EVD_BK);
 
     /* Set response code X'75F0' if SCCB length exceeded */
     if ((evd_len + sizeof(SCCB_HEADER)) > sccb_len)
@@ -1255,13 +1260,13 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         /* Set MPF array count and offset in SCCB */
         STORE_HW(sccbscp->nummpf, MAX_CPU-1);
 #endif /*defined(FEATURE_MPF_INFO)*/
-        offset += sizeof(SCCB_CPU_INFO) * MAX_CPU;
+        offset += (U16)sizeof(SCCB_CPU_INFO) * MAX_CPU;
         STORE_HW(sccbscp->offmpf, offset);
 
         /* Set HSA array count and offset in SCCB */
         STORE_HW(sccbscp->numhsa, 0);
 #if defined(FEATURE_MPF_INFO)
-        offset += sizeof(SCCB_MPF_INFO) * MAX_CPU-1;
+        offset += (U16)sizeof(SCCB_MPF_INFO) * MAX_CPU-1;
 #endif /*defined(FEATURE_MPF_INFO)*/
         STORE_HW(sccbscp->offhsa, offset);
 

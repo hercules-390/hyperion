@@ -1,22 +1,14 @@
-/* CMDTAB.C     (c) Copyright Roger Bowler, 1999-2009                */
+/* CMDTAB.C     (c) Copyright Roger Bowler, 1999-2010                */
 /*              (c) Copyright "Fish" (David B. Trout), 2002-2009     */
 /*              (c) Copyright Jan Jaeger, 2003-2009                  */
 /*              Route all Hercules configuration statements          */
 /*              and panel commands to the appropriate functions      */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
-
-// $Log$
-// Revision 1.3  2009/01/19 12:16:57  rbowler
-// Fix dynamic linkage errors in cmdtab.c for MSVC
-//
-// Revision 1.2  2009/01/18 21:43:59  jj
-// Always display short help info, detailed info only if available
-//
-// Revision 1.1  2009/01/18 20:49:25  jj
-// Rework command table and move to separate source files
-//
-
 
 #include "hstdinc.h"
 
@@ -234,7 +226,7 @@ int ProcessPanelCommand (char* pszCmdLine)
                 }
                 else
                 {
-                    cmdl=MAX(strlen(cmd_argv[0]),pCmdTab->statminlen);
+                    cmdl=(int)MAX(strlen(cmd_argv[0]),pCmdTab->statminlen);
                     if(!strncasecmp(cmd_argv[0],pCmdTab->statement,cmdl))
                     {
                         rc = pCmdTab->function(cmd_argc, (char**)cmd_argv, pszSaveCmdLine);
@@ -529,7 +521,7 @@ void *panel_command (void *cmdline)
                     cmd[1] = ' ';
                     cmd[2] = 0;
                 }
-            scp_command(cmd + 1, cmd[0] == '!');
+            scp_command(cmd + 1, cmd[0] == '!', FALSE); // no echo 
             }
             else
 #endif /*_FEATURE_SYSTEM_CONSOLE*/
@@ -546,7 +538,7 @@ void *panel_command (void *cmdline)
                 cmd[0] = ' ';
                 cmd[1] = 0;
             }
-            scp_command(cmd, 0);
+            scp_command(cmd, 0, TRUE);      // echo command
             break;
         }
         case 2: // cmdtgt pscp
@@ -556,7 +548,7 @@ void *panel_command (void *cmdline)
                 cmd[0] = ' ';
                 cmd[1] = 0;
             }
-            scp_command(cmd, 1);
+            scp_command(cmd, 1, TRUE);      // echo command
             break;
         }
     }
@@ -565,7 +557,7 @@ void *panel_command (void *cmdline)
     if ('.' == cmd[0] || '!' == cmd[0])
     {
         if (!cmd[1]) { cmd[1]=' '; cmd[2]=0; }
-        scp_command (cmd+1, cmd[0] == '!');
+        scp_command (cmd+1, cmd[0] == '!', FALSE);     // don't echo command  
         return NULL;
     }
 #endif /*_FEATURE_SYSTEM_CONSOLE*/
