@@ -1,12 +1,11 @@
-/* LOGMSG.C : ISW 2003 */
-/* logmsg frontend routing */
+/* LOGMSG.C     (c) Copyright Ivan Warren, 2003-2010                 */
+/*               logmsg frontend routing                             */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
-//
-// $Log$
-// Revision 1.18  2006/12/08 09:43:28  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 
@@ -163,17 +162,17 @@ DLL_EXPORT void writemsg(char *file, int line, int lvl, char *color, char *msg, 
     {
       case 'S':
         if(!strlen(color))
-            color = "<pnl,color(lightred,black),keep>";
+            color = "<pnl,color(lightred,white),keep>";
         break;
 
       case 'E':
         if(!strlen(color))
-            color = "<pnl,color(lightred,black),keep>";
+            color = "<pnl,color(lightred,white),keep>";
         break;
 
       case 'W':
         if(!strlen(color))
-            color = "<pnl,color(red,black),keep>";
+            color = "<pnl,color(blue,white),keep>";
         break;
 
     }
