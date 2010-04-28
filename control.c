@@ -5524,7 +5524,7 @@ static char *ordername[] = {
         || !IS_CPU_ONLINE(cpad))
     {
         log_sigp = snprintf ( log_buf, sizeof(log_buf), 
-                "HHCCO005I %s%02X SIGP %-32s (%2.2X) %s%02X, PARM "F_GREG,
+                "%s%02X: SIGP %-32s (%2.2X) %s%02X, PARM "F_GREG,
                 PTYPSTR(regs->cpuad), regs->cpuad,
                 order >= sizeof(ordername) / sizeof(ordername[0]) ?
                         "Unassigned" : ordername[order],
@@ -5541,7 +5541,7 @@ static char *ordername[] = {
     {
         regs->psw.cc = 2;
         if (log_sigp)
-            logmsg("%s: CC 2\n",log_buf);
+            WRMSG(HHC00814, "I", log_buf, 2, "");
         return;
     }
 
@@ -5562,7 +5562,7 @@ static char *ordername[] = {
         release_lock(&sysblk.sigplock);
         regs->psw.cc = 3;
         if (log_sigp)
-            logmsg("%s: CC 3\n",log_buf);
+            WRMSG(HHC00814, "I", log_buf, 3, "");
         return;
     }
 
@@ -5585,7 +5585,7 @@ static char *ordername[] = {
         release_lock(&sysblk.sigplock);
         regs->psw.cc = 2;
         if (log_sigp)
-            logmsg("%s: CC 2\n",log_buf);
+            WRMSG(HHC00814, "I", log_buf, 2, "");
         sched_yield();
         return;
     }
@@ -6152,9 +6152,13 @@ static char *ordername[] = {
     if (log_sigp)
     {
         if (regs->psw.cc == 0)
-            logmsg("%s: CC 0\n",log_buf);
+            WRMSG(HHC00814, "I", log_buf, 0, "");
         else
-            logmsg("%s: CC 1 STATUS %8.8X\n",log_buf, (U32)status);
+	{
+	    char buf[40];
+	    sprintf(buf, " status %8.8X", (U32) status);
+            WRMSG(HHC00814, "I", log_buf, 1, buf);
+	}
     }
 
     /* Perform serialization after completing operation */

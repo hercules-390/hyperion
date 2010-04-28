@@ -412,6 +412,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00811 "Processor %s%02X: architecture mode '%s'"
 #define HHC00812 "Processor %s%02X: vector facility online"
 #define HHC00813 "Processor %s%02X: error in function '%s': '%s'"
+#define HHC00814 "Processor %s: CC %d%s"
 
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
