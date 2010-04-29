@@ -58,6 +58,7 @@ static DLLENT *hdl_cdll;                 /* current dll (hdl_lock)   */
 static HDLDEP *hdl_depend;               /* Version codes in hdlmain */
 
 static char *hdl_modpath = NULL;
+static int   hdl_arg_p = FALSE;
 
 #endif
 
@@ -193,31 +194,39 @@ DLL_EXPORT void hdl_setpath(char *path, int flag)
 {
     char    pathname[MAX_PATH];         /* pathname conversion */
 
+    if ( strlen(path) > MAX_PATH )
+    {
+        WRITEMSG (HHCHD019E, (int)strlen(path), MAX_PATH);
+        return;
+    }
+
+    hostpath(pathname, path, sizeof(pathname));
+
     if (flag)
     {
         if (hdl_modpath)
         {
-            WRITEMSG (HHCHD022W, path); 
-            WRITEMSG (HHCHD020W, hdl_modpath);
-            return;
+            if (!hdl_arg_p)
+            {
+                free(hdl_modpath);
+            }
+            else
+            {
+                WRITEMSG (HHCHD022W, pathname); 
+                WRITEMSG (HHCHD020W, hdl_modpath);
+                return;
+            }
         }
     }
     else
     {
+        hdl_arg_p = TRUE;
         if(hdl_modpath)
             free(hdl_modpath);
     }
 
-    if ( strlen(path) > MAX_PATH )
-    {
-        WRITEMSG (HHCHD019E, (int)strlen(path), MAX_PATH);
-    }
-    else
-    {
-        hostpath(pathname, path, sizeof(pathname));
-        hdl_modpath = strdup(pathname);
-        WRITEMSG (HHCHD018I, hdl_modpath);
-    }
+    hdl_modpath = strdup(pathname);
+    WRITEMSG (HHCHD018I, hdl_modpath);
 
     return;
 }
