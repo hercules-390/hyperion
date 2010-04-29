@@ -206,9 +206,9 @@ BYTE    chanstat;                       /* IPL device channel status */
     dev = find_device_by_devnum (lcss,devnum);
     if (dev == NULL)
     {
-        WRITEMSG (HHCCP027E, devnum,
-                (sysblk.arch_mode == ARCH_370 ?
-                  " or not connected to channelset" : ""));
+        char buf[80];
+        sprintf(buf, "device %4.4X not found", devnum);
+        WRMSG (HHC00828, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu, buf);
         HDC1(debug_cpu_state, regs);
         return -1;
     }
@@ -283,7 +283,10 @@ BYTE    chanstat;                       /* IPL device channel status */
 	    strcat(buf, buf2);
             if ((i & 3) == 3) strcat(buf, " ");
         }
-	WRITEMSG (HHCCP029E, get_arch_mode_string(regs), unitstat, chanstat, buf);
+        char buffer[80];
+        sprintf(buffer, "architecture mode '%s', csw status %2.2X%2.2X, sense %s", get_arch_mode_string(regs), 
+               unitstat, chanstat, buf);
+	WRMSG (HHC00828, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu, buffer);
         HDC1(debug_cpu_state, regs);
         return -1;
     }
@@ -328,11 +331,14 @@ int ARCH_DEP(common_load_finish) (REGS *regs)
     /* Load IPL PSW from PSA+X'0' */
     if (ARCH_DEP(load_psw) (regs, regs->psa->iplpsw) != 0)
     {
-        WRITEMSG (HHCCP030E, get_arch_mode_string(regs),
+        char buf[80];
+        sprintf(buf, "architecture mode '%s', invalid ipl psw %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X", 
+                get_arch_mode_string(regs),
                 regs->psa->iplpsw[0], regs->psa->iplpsw[1],
                 regs->psa->iplpsw[2], regs->psa->iplpsw[3],
                 regs->psa->iplpsw[4], regs->psa->iplpsw[5],
                 regs->psa->iplpsw[6], regs->psa->iplpsw[7]);
+        WRMSG (HHC00828, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu, buf);
         HDC1(debug_cpu_state, regs);
         return -1;
     }

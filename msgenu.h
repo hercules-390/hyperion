@@ -91,7 +91,7 @@ cpu.c:123:HABC1234I This is a message
 
 /* Hercules messages */
 #define HHC00001 "%s"
-#define HHC00002 "SCP not receiving '%s'"
+#define HHC00002 "SCLP console not receiving '%s'"
 #define HHC00003 "Empty SCP command issued"
 #define HHC00004 "Control program identification: type '%s', name '%s', sysplex '%s', level %16.16"I64_FMT"X"
 #define HHC00005 "The configuration has been placed into a system check-stop state because of an incompatible service call"
@@ -428,6 +428,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00825 "USR2 signal received for undetermined device"
 #define HHC00826 "%1d:%04X: USR2 signal received"
 #define HHC00827 "Processor %s%02X: processor %02X type %1d set: '%s'"
+#define HHC00828 "Processor %s%02X: ipl failed: '%s'"
 
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
@@ -1097,11 +1098,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCIN959I "System cleanup complete"
 #define HHCMD995E ".RC file \"%s\" not found"
 #define HHCIN999S "Usage: %s [-f config-filename] [-d] [-b logo-filename]%s [> logfile]"
-
-/* ipl.c */
-#define HHCCP027E "Device(%4.4X) not in configuration%s"
-#define HHCCP029E "Arch mode(%s) IPL failed: CSW status(%2.2X%2.2X) Sense(%s)"
-#define HHCCP030E "Arch mode(%s) IPL failed: Invalid IPL PSW(%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X)"
 
 /* logger.c */
 #define HHCLG014E "Log not active"
