@@ -927,14 +927,14 @@ int cf_cmd(int argc, char *argv[], char *cmdline)
     if (IS_CPU_ONLINE(sysblk.pcpu))
     {
         if (on < 0)
-            WRITEMSG(HHCMD432I, PTYPSTR(sysblk.pcpu), sysblk.pcpu);
+            WRMSG(HHC00815, "I", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
         else if (on == 0)
             deconfigure_cpu(sysblk.pcpu);
     }
     else
     {
         if (on < 0)
-            WRITEMSG(HHCMD153I, PTYPSTR(sysblk.pcpu), sysblk.pcpu);
+            WRMSG(HHC00815, "I", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "offline");
         else if (on > 0)
             configure_cpu(sysblk.pcpu);
     }
@@ -971,14 +971,14 @@ int cfall_cmd(int argc, char *argv[], char *cmdline)
         if (IS_CPU_ONLINE(i))
         {
             if (on < 0)
-                WRITEMSG(HHCMD432I, PTYPSTR(i), i);
+                WRMSG(HHC00815, "I", PTYPSTR(i), i, "online");
             else if (on == 0)
                 deconfigure_cpu(i);
         }
         else
         {
             if (on < 0)
-                WRITEMSG(HHCMD153I, PTYPSTR(i), i);
+                WRMSG(HHC00815, "I", PTYPSTR(i), i, "offline");
             else if (on > 0 && i < MAX_CPU)
                 configure_cpu(i);
         }
@@ -1131,7 +1131,7 @@ char arch370_flag = 0;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRITEMSG(HHCMD160W, PTYPSTR(sysblk.pcpu), sysblk.pcpu);
+        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -2021,7 +2021,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRITEMSG(HHCMD160W, PTYPSTR(sysblk.pcpu), sysblk.pcpu);
+        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -2038,7 +2038,7 @@ REGS *regs;
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
-    WRITEMSG(HHCCP424I, PTYPSTR(regs->cpuad), regs->cpuad);
+    WRMSG(HHC00817, "I", PTYPSTR(regs->cpuad), regs->cpuad);
 
     return 0;
 }
@@ -2482,7 +2482,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRITEMSG(HHCMD160W, PTYPSTR(sysblk.pcpu), sysblk.pcpu);
+        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
         return 0;
     }
 
@@ -2543,7 +2543,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRITEMSG(HHCMD160W, PTYPSTR(sysblk.pcpu), sysblk.pcpu);
+        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -2572,7 +2572,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRITEMSG(HHCMD160W, PTYPSTR(sysblk.pcpu), sysblk.pcpu);
+        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -2602,7 +2602,7 @@ U64   cr_value;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRITEMSG(HHCMD160W, PTYPSTR(sysblk.pcpu), sysblk.pcpu);
+        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -2647,7 +2647,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRITEMSG(HHCMD160W, PTYPSTR(sysblk.pcpu), sysblk.pcpu);
+        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -2676,7 +2676,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRITEMSG(HHCMD160W, PTYPSTR(sysblk.pcpu), sysblk.pcpu);
+        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -2711,7 +2711,7 @@ int   n, errflag, stopflag=0, modflag=0;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRITEMSG(HHCMD160W, PTYPSTR(sysblk.pcpu), sysblk.pcpu);
+        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -2930,7 +2930,7 @@ int restart_cmd(int argc, char *argv[], char *cmdline)
     if (sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_IFA
      || sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_SUP)
     {
-        WRITEMSG(HHCMD052E, PTYPSTR(sysblk.pcpu), sysblk.pcpu);
+        WRMSG(HHC00818, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return -1;
     }
       
@@ -2942,7 +2942,7 @@ int restart_cmd(int argc, char *argv[], char *cmdline)
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         RELEASE_INTLOCK(NULL);
-        WRITEMSG(HHCMD160W, PTYPSTR(sysblk.pcpu), sysblk.pcpu);
+        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
         return 0;
     }
 
@@ -2980,7 +2980,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRITEMSG(HHCMD160W, PTYPSTR(sysblk.pcpu), sysblk.pcpu);
+        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -3008,7 +3008,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRITEMSG(HHCMD160W, PTYPSTR(sysblk.pcpu), sysblk.pcpu);
+        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -3036,7 +3036,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRITEMSG(HHCMD160W, PTYPSTR(sysblk.pcpu), sysblk.pcpu);
+        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -3638,7 +3638,7 @@ char *cdev, *clcss;
     if (sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_IFA
      || sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_SUP)
     {
-        WRITEMSG(HHCMD052E, PTYPSTR(sysblk.pcpu), sysblk.pcpu);
+        WRMSG(HHC00818, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return -1;
     }
 
@@ -4982,7 +4982,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRITEMSG(HHCMD160W, PTYPSTR(sysblk.pcpu), sysblk.pcpu);
+        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -5124,7 +5124,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRITEMSG(HHCMD160W, PTYPSTR(sysblk.pcpu), sysblk.pcpu);
+        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -5192,7 +5192,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRITEMSG(HHCMD160W, PTYPSTR(sysblk.pcpu), sysblk.pcpu);
+        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -5267,6 +5267,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
     char    sysid[12];
     BYTE    curpsw[16];
     char *states[] = { "?(0)", "STARTED", "STOPPING", "STOPPED" };
+    char buf[80];
 
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -5276,7 +5277,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
     {
         if (!IS_CPU_ONLINE(i))
         {
-            WRITEMSG(HHCMD153I, PTYPSTR(i), i);
+            WRMSG(HHC00815, "I", PTYPSTR(i), i, "offline");
             continue;
         }
 
@@ -5284,209 +5285,157 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
 // /*DEBUG*/    PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, 
 // /*DEBUG*/    sysblk.regs[i]->cpuint ? "" : _("not ") );
 //
-        logmsg( _("HHCMD123I %s%02X: CPUint=%8.8X "
-                  "(State:%8.8X)&(Mask:%8.8X)\n"),
-            PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, 
-            IC_INTERRUPT_CPU(sysblk.regs[i]),
-            sysblk.regs[i]->ints_state, sysblk.regs[i]->ints_mask
-            );
-        logmsg( _("          %s%02X: Interrupt %spending\n"),
-            PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
-            IS_IC_INTERRUPT(sysblk.regs[i]) ? "" : _("not ")
-            );
-        logmsg( _("          %s%02X: I/O interrupt %spending\n"),
-            PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
-            IS_IC_IOPENDING                 ? "" : _("not ")
-            );
-        logmsg( _("          %s%02X: Clock comparator %spending\n"),
-            PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
-            IS_IC_CLKC(sysblk.regs[i]) ? "" : _("not ")
-            );
-        logmsg( _("          %s%02X: CPU timer %spending\n"),
-            PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
-            IS_IC_PTIMER(sysblk.regs[i]) ? "" : _("not ")
-            );
+        sprintf(buf, "CPUint=%8.8X (State:%8.8X)&(Mask:%8.8X)", IC_INTERRUPT_CPU(sysblk.regs[i]), 
+		sysblk.regs[i]->ints_state, sysblk.regs[i]->ints_mask);
+	WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
+        sprintf(buf, "interrupt %spending", IS_IC_INTERRUPT(sysblk.regs[i]) ? "" : "not ");
+	WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
+        sprintf(buf, "I/O interrupt %spending", IS_IC_IOPENDING ? "" : "not ");
+	WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
+        sprintf(buf, "clock comparator %spending", IS_IC_CLKC(sysblk.regs[i]) ? "" : "not ");
+	WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
+        sprintf(buf, "CPU timer %spending", IS_IC_PTIMER(sysblk.regs[i]) ? "" : "not ");
+	WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
 #if defined(_FEATURE_INTERVAL_TIMER)
-        logmsg( _("          %s%02X: Interval timer %spending\n"),
-            PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
-            IS_IC_ITIMER(sysblk.regs[i]) ? "" : _("not ")
-            );
+        sprintf(buf, "interval timer %spending", IS_IC_ITIMER(sysblk.regs[i]) ? "" : "not ");
+	WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
 #if defined(_FEATURE_ECPSVM)
-        logmsg( _("          %s%02X: ECPS vtimer %spending\n"),
-            PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
-            IS_IC_ECPSVTIMER(sysblk.regs[i]) ? "" : _("not ")
-            );
+        sprintf(buf, "ECPS vtimer %spending", IS_IC_ECPSVTIMER(sysblk.regs[i]) ? "" : "not ");
+	WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
 #endif /*defined(_FEATURE_ECPSVM)*/
 #endif /*defined(_FEATURE_INTERVAL_TIMER)*/
-        logmsg( _("          %s%02X: External call %spending\n"),
-            PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
-            IS_IC_EXTCALL(sysblk.regs[i]) ? "" : _("not ")
-            );
-        logmsg( _("          %s%02X: Emergency signal %spending\n"),
-            PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
-            IS_IC_EMERSIG(sysblk.regs[i]) ? "" : _("not ")
-            );
-        logmsg( _("          %s%02X: Machine check interrupt %spending\n"),
-            PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
-            IS_IC_MCKPENDING(sysblk.regs[i]) ? "" : _("not ")
-            );
-        logmsg( _("          %s%02X: Service signal %spending\n"),
-            PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
-            IS_IC_SERVSIG                    ? "" : _("not ")
-            );
-        logmsg( _("          %s%02X: Mainlock held: %s\n"),
-            PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
-            sysblk.regs[i]->cpuad == sysblk.mainowner ? _("yes") : _("no")
-            );
-        logmsg( _("          %s%02X: Intlock held: %s\n"),
-            PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
-            sysblk.regs[i]->cpuad == sysblk.intowner ? _("yes") : _("no")
-            );
-        logmsg( _("          %s%02X: Waiting for intlock: %s\n"),
-            PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
-            sysblk.regs[i]->intwait && !(sysblk.waiting_mask & CPU_BIT(i)) ? _("yes") : _("no")
-            );
-        logmsg( _("          %s%02X: lock %sheld\n"),
-            PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
-            test_lock(&sysblk.cpulock[i]) ? "" : _("not ")
-            );
+        sprintf(buf, "external call %spending", IS_IC_EXTCALL(sysblk.regs[i]) ? "" : "not ");
+	WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
+        sprintf(buf, "emergency signal %spending", IS_IC_EMERSIG(sysblk.regs[i]) ? "" : "not ");
+	WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
+        sprintf(buf, "machine check interrupt %spending", IS_IC_MCKPENDING(sysblk.regs[i]) ? "" : "not ");
+	WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
+        sprintf(buf, "service signal %spending", IS_IC_SERVSIG ? "" : "not ");
+	WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
+        sprintf(buf, "mainlock held: %s", sysblk.regs[i]->cpuad == sysblk.mainowner ? "yes" : "no");
+	WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
+        sprintf(buf, "intlock held: %s", sysblk.regs[i]->cpuad == sysblk.intowner ? "yes" : "no");
+	WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
+        sprintf(buf, "waiting for intlock: %s", 
+		sysblk.regs[i]->intwait && !(sysblk.waiting_mask & CPU_BIT(i)) ? "yes" : "no");
+	WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
+        sprintf(buf, "lock %sheld", test_lock(&sysblk.cpulock[i]) ? "" : "not ");
+	WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
         if (ARCH_370 == sysblk.arch_mode)
         {
             if (0xFFFF == sysblk.regs[i]->chanset)
-                logmsg( _("          %s%02X: No channelset connected\n"),
-                    PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad
-                    );
+	    {
+                sprintf(buf, "no channelset connected");
+		WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
+	    }
             else
-                logmsg( _("          %s%02X: Connected to channelset "
-                          "%4.4X\n"),
-                    PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, 
-                    sysblk.regs[i]->chanset
-                    );
+	    {
+                sprintf(buf, "Connected to channelset %4.4X", sysblk.regs[i]->chanset);
+		WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
+	    }
         }
-        logmsg( _("          %s%02X: state %s\n"),
-               PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
-               states[sysblk.regs[i]->cpustate]);
-        logmsg( _("          %s%02X: instcount %" I64_FMT "d\n"),
-               PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
-               (long long)INSTCOUNT(sysblk.regs[i]));
-        logmsg( _("          %s%02X: siocount %" I64_FMT "d\n"),
-               PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
-               (long long)sysblk.regs[i]->siototal);
+        sprintf(buf, "state %s", states[sysblk.regs[i]->cpustate]);
+	WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
+        sprintf(buf, "instcount %" I64_FMT "ld", (long long)INSTCOUNT(sysblk.regs[i]));
+	WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
+        sprintf(buf, "siocount %" I64_FMT "ld", (long long)sysblk.regs[i]->siototal);
+	WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
         copy_psw(sysblk.regs[i], curpsw);
-        logmsg( _("          %s%02X: psw %2.2x%2.2x%2.2x%2.2x %2.2x%2.2x%2.2x%2.2x"),
-               PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
-               curpsw[0], curpsw[1], curpsw[2], curpsw[3],
-               curpsw[4], curpsw[5], curpsw[6], curpsw[7]);
         if (ARCH_900 == sysblk.arch_mode)
-        logmsg( _(" %2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x"),
+	{
+          sprintf(buf, "psw %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",
+               curpsw[0], curpsw[1], curpsw[2], curpsw[3],
+               curpsw[4], curpsw[5], curpsw[6], curpsw[7],
                curpsw[8], curpsw[9], curpsw[10], curpsw[11],
                curpsw[12], curpsw[13], curpsw[14], curpsw[15]);
-        logmsg("\n");
-
+	}
+	else
+	{
+	  sprintf(buf, "psw %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",               
+               curpsw[0], curpsw[1], curpsw[2], curpsw[3],
+               curpsw[4], curpsw[5], curpsw[6], curpsw[7]);
+	}
+	WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
         if (sysblk.regs[i]->sie_active)
         {
-            logmsg( _("HHCMD123I IE%02X: CPUint=%8.8X "
-                      "(State:%8.8X)&(Mask:%8.8X)\n"),
-                sysblk.regs[i]->guestregs->cpuad, IC_INTERRUPT_CPU(sysblk.regs[i]->guestregs),
-                sysblk.regs[i]->guestregs->ints_state, sysblk.regs[i]->guestregs->ints_mask
-                );
-            logmsg( _("          IE%02X: Interrupt %spending\n"),
-                sysblk.regs[i]->guestregs->cpuad,
-                IS_IC_INTERRUPT(sysblk.regs[i]->guestregs) ? "" : _("not ")
-                );
-            logmsg( _("          IE%02X: I/O interrupt %spending\n"),
-                sysblk.regs[i]->guestregs->cpuad,
-                IS_IC_IOPENDING                 ? "" : _("not ")
-                );
-            logmsg( _("          IE%02X: Clock comparator %spending\n"),
-                sysblk.regs[i]->guestregs->cpuad,
-                IS_IC_CLKC(sysblk.regs[i]->guestregs) ? "" : _("not ")
-                );
-            logmsg( _("          IE%02X: CPU timer %spending\n"),
-                sysblk.regs[i]->guestregs->cpuad,
-                IS_IC_PTIMER(sysblk.regs[i]->guestregs) ? "" : _("not ")
-                );
-            logmsg( _("          IE%02X: Interval timer %spending\n"),
-                sysblk.regs[i]->guestregs->cpuad,
-                IS_IC_ITIMER(sysblk.regs[i]->guestregs) ? "" : _("not ")
-                );
-            logmsg( _("          IE%02X: External call %spending\n"),
-                sysblk.regs[i]->guestregs->cpuad,
-                IS_IC_EXTCALL(sysblk.regs[i]->guestregs) ? "" : _("not ")
-                );
-            logmsg( _("          IE%02X: Emergency signal %spending\n"),
-                sysblk.regs[i]->guestregs->cpuad,
-                IS_IC_EMERSIG(sysblk.regs[i]->guestregs) ? "" : _("not ")
-                );
-            logmsg( _("          IE%02X: Machine check interrupt %spending\n"),
-                sysblk.regs[i]->guestregs->cpuad,
-                IS_IC_MCKPENDING(sysblk.regs[i]->guestregs) ? "" : _("not ")
-                );
-            logmsg( _("          IE%02X: Service signal %spending\n"),
-                sysblk.regs[i]->guestregs->cpuad,
-                IS_IC_SERVSIG                    ? "" : _("not ")
-                );
-            logmsg( _("          IE%02X: lock %sheld\n"),
-                sysblk.regs[i]->guestregs->cpuad,
-                test_lock(&sysblk.cpulock[i]) ? "" : _("not ")
-                );
+            sprintf(buf, "CPUint=%8.8X (State:%8.8X)&(Mask:%8.8X)", 
+		    sysblk.regs[i]->guestregs->ints_state, sysblk.regs[i]->guestregs->ints_mask);
+	    WRMSG(HHC00819, "I", "IE", sysblk.regs[i]->cpuad, buf);
+            sprintf(buf, "interrupt %spending", IS_IC_INTERRUPT(sysblk.regs[i]->guestregs) ? "" : "not ");
+            WRMSG(HHC00819, "I", "IE", sysblk.regs[i]->cpuad, buf);
+            sprintf(buf, "I/O interrupt %spending", IS_IC_IOPENDING ? "" : "not ");
+            WRMSG(HHC00819, "I", "IE", sysblk.regs[i]->cpuad, buf);
+            sprintf(buf, "clock comparator %spending", IS_IC_CLKC(sysblk.regs[i]->guestregs) ? "" : "not ");
+            WRMSG(HHC00819, "I", "IE", sysblk.regs[i]->cpuad, buf);
+            sprintf(buf, "CPU timer %spending", IS_IC_PTIMER(sysblk.regs[i]->guestregs) ? "" : "not ");
+            WRMSG(HHC00819, "I", "IE", sysblk.regs[i]->cpuad, buf);
+            sprintf(buf, "interval timer %spending", IS_IC_ITIMER(sysblk.regs[i]->guestregs) ? "" : "not ");
+            WRMSG(HHC00819, "I", "IE", sysblk.regs[i]->cpuad, buf);
+            sprintf(buf, "external call %spending", IS_IC_EXTCALL(sysblk.regs[i]->guestregs) ? "" : "not ");
+            WRMSG(HHC00819, "I", "IE", sysblk.regs[i]->cpuad, buf);
+            sprintf(buf, "emergency signal %spending", IS_IC_EMERSIG(sysblk.regs[i]->guestregs) ? "" : "not ");
+            WRMSG(HHC00819, "I", "IE", sysblk.regs[i]->cpuad, buf);
+            sprintf(buf, "machine check interrupt %spending", 
+                    IS_IC_MCKPENDING(sysblk.regs[i]->guestregs) ? "" : "not ");
+            WRMSG(HHC00819, "I", "IE", sysblk.regs[i]->cpuad, buf);
+            sprintf(buf, "service signal %spending", IS_IC_SERVSIG ? "" : "not ");
+            WRMSG(HHC00819, "I", "IE", sysblk.regs[i]->cpuad, buf);
+            sprintf(buf, "lock %sheld", test_lock(&sysblk.cpulock[i]) ? "" : "not ");
+            WRMSG(HHC00819, "I", "IE", sysblk.regs[i]->cpuad, buf);
             if (ARCH_370 == sysblk.arch_mode)
             {
                 if (0xFFFF == sysblk.regs[i]->guestregs->chanset)
-                    logmsg( _("          IE%02X: No channelset connected\n"),
-                        sysblk.regs[i]->guestregs->cpuad
-                        );
+                {                  
+                    sprintf(buf, "no channelset connected");
+                    WRMSG(HHC00819, "I", "IE", sysblk.regs[i]->cpuad, buf);
+                }
                 else
-                    logmsg( _("          IE%02X: Connected to channelset "
-                              "%4.4X\n"),
-                        sysblk.regs[i]->guestregs->cpuad,sysblk.regs[i]->guestregs->chanset
-                        );
+                {
+                    sprintf(buf, "connected to channelset %4.4X", sysblk.regs[i]->guestregs->chanset);
+                    WRMSG(HHC00819, "I", "IE", sysblk.regs[i]->cpuad, buf);
+                }
             }
-            logmsg( _("          IE%02X: state %s\n"),
-                   sysblk.regs[i]->guestregs->cpuad,states[sysblk.regs[i]->guestregs->cpustate]);
-            logmsg( _("          IE%02X: instcount %" I64_FMT "d\n"),
-                   sysblk.regs[i]->guestregs->cpuad,(long long)sysblk.regs[i]->guestregs->instcount);
-            logmsg( _("          IE%02X: siocount %" I64_FMT "d\n"),
-                   sysblk.regs[i]->guestregs->cpuad,(long long)sysblk.regs[i]->guestregs->siototal);
+            sprintf(buf, "state %s", states[sysblk.regs[i]->guestregs->cpustate]);
+            WRMSG(HHC00819, "I", "IE", sysblk.regs[i]->cpuad, buf);
+            sprintf(buf, "instcount %" I64_FMT "ld", (long long)sysblk.regs[i]->guestregs->instcount);
+            WRMSG(HHC00819, "I", "IE", sysblk.regs[i]->cpuad, buf);
+            sprintf(buf, "siocount %" I64_FMT "ld", (long long)sysblk.regs[i]->guestregs->siototal);
+            WRMSG(HHC00819, "I", "IE", sysblk.regs[i]->cpuad, buf);
             copy_psw(sysblk.regs[i]->guestregs, curpsw);
-            logmsg( _("          IE%02X: psw %2.2x%2.2x%2.2x%2.2x %2.2x%2.2x%2.2x%2.2x"),
-                   sysblk.regs[i]->guestregs->cpuad,
-                   curpsw[0],curpsw[1],curpsw[2],curpsw[3],
-                   curpsw[4],curpsw[5],curpsw[6],curpsw[7]);
-            if (ARCH_900 == sysblk.regs[i]->guestregs->arch_mode)
-            logmsg( _(" %2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x"),
-               curpsw[8],curpsw[9],curpsw[10],curpsw[11],
-               curpsw[12],curpsw[13],curpsw[14],curpsw[15]);
-            logmsg("\n");
+            if (ARCH_900 == sysblk.arch_mode)
+            {
+               sprintf(buf, "psw %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",
+                   curpsw[0], curpsw[1], curpsw[2], curpsw[3],
+                   curpsw[4], curpsw[5], curpsw[6], curpsw[7],
+                   curpsw[8], curpsw[9], curpsw[10], curpsw[11],
+                   curpsw[12], curpsw[13], curpsw[14], curpsw[15]);
+            }
+            else
+            {
+               sprintf(buf, "psw %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",               
+                   curpsw[0], curpsw[1], curpsw[2], curpsw[3],
+                   curpsw[4], curpsw[5], curpsw[6], curpsw[7]);
+            }
+            WRMSG(HHC00819, "I", "IE", sysblk.regs[i]->cpuad, buf);
         }
     }
 
-    logmsg( _("          Config mask "F_CPU_BITMAP
-                " started mask "F_CPU_BITMAP
-                " waiting mask "F_CPU_BITMAP"\n"),
-        sysblk.config_mask, sysblk.started_mask, sysblk.waiting_mask
-        );
-    logmsg( _("          Syncbc mask "F_CPU_BITMAP" %s\n"),
-        sysblk.sync_mask, sysblk.syncing ? _("Sync in progress") : ""
-        );
-    logmsg( _("          Signaling facility %sbusy\n"),
-        test_lock(&sysblk.sigplock) ? "" : _("not ")
-        );
-    logmsg( _("          TOD lock %sheld\n"),
-        test_lock(&sysblk.todlock) ? "" : _("not ")
-        );
-    logmsg( _("          Mainlock %sheld; owner %4.4x\n"),
-        test_lock(&sysblk.mainlock) ? "" : _("not "),
-        sysblk.mainowner
-        );
-    logmsg( _("          Intlock %sheld; owner %4.4x\n"),
-        test_lock(&sysblk.intlock) ? "" : _("not "),
-        sysblk.intowner
-        );
+    sprintf(buf, "config mask "F_CPU_BITMAP" started mask "F_CPU_BITMAP" waiting mask "F_CPU_BITMAP,
+        sysblk.config_mask, sysblk.started_mask, sysblk.waiting_mask);
+    WRMSG(HHC00820, "I", buf);
+    sprintf(buf, "syncbc mask "F_CPU_BITMAP" %s", sysblk.sync_mask, sysblk.syncing ? "sync in progress" : "");
+    WRMSG(HHC00820, "I", buf);
+    sprintf(buf, "signaling facility %sbusy", test_lock(&sysblk.sigplock) ? "" : "not ");
+    WRMSG(HHC00820, "I", buf);
+    sprintf(buf, "TOD lock %sheld", test_lock(&sysblk.todlock) ? "" : "not ");
+    WRMSG(HHC00820, "I", buf);
+    sprintf(buf, "mainlock %sheld; owner %4.4x", test_lock(&sysblk.mainlock) ? "" : "not ", sysblk.mainowner);
+    WRMSG(HHC00820, "I", buf);
+    sprintf(buf, "intlock %sheld; owner %4.4x", test_lock(&sysblk.intlock) ? "" : "not ", sysblk.intowner);
+    WRMSG(HHC00820, "I", buf);
 #if !defined(OPTION_FISHIO)
-    logmsg( _("          Ioq lock %sheld\n"),
-        test_lock(&sysblk.ioqlock) ? "" : _("not ")
-        );
+    sprintf(buf, "ioq lock %sheld", test_lock(&sysblk.ioqlock) ? "" : "not ");
+    WRMSG(HHC00820, "I", buf);
 #endif
 
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
@@ -5498,34 +5447,54 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
         else
             sprintf (sysid, "id=%d", dev->ioactive);
         if (dev->busy && !(dev->suspended && dev->ioactive == DEV_SYS_NONE))
-            logmsg( _("          DEV %1d:%04X: busy %s\n"), SSID_TO_LCSS(dev->ssid), dev->devnum, sysid );
+        {
+            sprintf(buf, "device %1d:%04X: busy %s", SSID_TO_LCSS(dev->ssid), dev->devnum, sysid);
+            WRMSG(HHC00820, "I", buf);
+        }
         if (dev->reserved)
-            logmsg( _("          DEV %1d:%04X: reserved %s\n"), SSID_TO_LCSS(dev->ssid), dev->devnum, sysid );
+        {
+            sprintf(buf, "device %1d:%04X: reserved %s", SSID_TO_LCSS(dev->ssid), dev->devnum, sysid);
+            WRMSG(HHC00820, "I", buf);
+        }
         if (dev->suspended)
-            logmsg( _("          DEV %1d:%04X: suspended\n"), SSID_TO_LCSS(dev->ssid), dev->devnum );
+        {
+            sprintf(buf, "device %1d:%04X: suspended", SSID_TO_LCSS(dev->ssid), dev->devnum);
+            WRMSG(HHC00820, "I", buf);
+        }
         if (dev->pending && (dev->pmcw.flag5 & PMCW5_V))
-            logmsg( _("          DEV %1d:%04X: I/O pending\n"), SSID_TO_LCSS(dev->ssid), dev->devnum );
+        {
+            sprintf(buf, "device %1d:%04X: I/O pending", SSID_TO_LCSS(dev->ssid), dev->devnum);
+            WRMSG(HHC00820, "I", buf);
+        }
         if (dev->pcipending && (dev->pmcw.flag5 & PMCW5_V))
-            logmsg( _("          DEV %1d:%04X: PCI pending\n"), SSID_TO_LCSS(dev->ssid), dev->devnum );
+        {
+            sprintf(buf, "device %1d:%04X: PCI pending", SSID_TO_LCSS(dev->ssid), dev->devnum);
+            WRMSG(HHC00820, "I", buf);
+        }
         if (dev->attnpending && (dev->pmcw.flag5 & PMCW5_V))
-            logmsg( _("          DEV %1d:%04X: Attn pending\n"), SSID_TO_LCSS(dev->ssid), dev->devnum );
+        {
+            sprintf(buf, "device %1d:%04X: Attn pending", SSID_TO_LCSS(dev->ssid), dev->devnum);
+            WRMSG(HHC00820, "I", buf);
+        }
         if ((dev->crwpending) && (dev->pmcw.flag5 & PMCW5_V))
-            logmsg( _("          DEV %1d:%04X: CRW pending\n"), SSID_TO_LCSS(dev->ssid), dev->devnum );
+        {
+            sprintf(buf, "device %1d:%04X: CRW pending", SSID_TO_LCSS(dev->ssid), dev->devnum);
+            WRMSG(HHC00820, "I", buf);
+        }
         if (test_lock(&dev->lock) && (dev->pmcw.flag5 & PMCW5_V))
-            logmsg( _("          DEV %1d:%04X: lock held\n"), SSID_TO_LCSS(dev->ssid), dev->devnum );
+        {
+            sprintf(buf, "device %1d:%04X: lock held", SSID_TO_LCSS(dev->ssid), dev->devnum);
+            WRMSG(HHC00820, "I", buf);
+        }
     }
-
-    logmsg( _("          I/O interrupt queue: ") );
-
     if (!sysblk.iointq)
-        logmsg( _("(NULL)") );
-    logmsg("\n");
+        WRMSG(HHC00820, "I", "I/O interrupt queue: (NULL)");
+    else
+        WRMSG(HHC00820, "I", "I/O interrupt queue:");
 
     for (io = sysblk.iointq; io; io = io->next)
-        logmsg
-        (
-            _("          DEV %1d:%04X,%s%s%s%s, pri %d\n")
-
+    {
+        sprintf(buf, "device %1d:%04X,%s%s%s%s, pri %d"
             ,SSID_TO_LCSS(io->dev->ssid)
             ,io->dev->devnum
 
@@ -5533,9 +5502,10 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
             ,io->pcipending   ? " PCI"     : ""
             ,io->attnpending  ? " ATTN"    : ""
             ,!IOPENDING(io)   ? " unknown" : ""
-
             ,io->priority
         );
+        WRMSG(HHC00820, "I", buf);
+    }
 
     return 0;
 }
@@ -6509,7 +6479,7 @@ BYTE c;                                 /* Character work area       */
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         RELEASE_INTLOCK(NULL);
-        WRITEMSG(HHCMD160W, PTYPSTR(sysblk.pcpu), sysblk.pcpu );
+        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
         return 0;
     }
     regs=sysblk.regs[sysblk.pcpu];
@@ -6611,7 +6581,7 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRITEMSG(HHCMD160W, PTYPSTR(sysblk.pcpu), sysblk.pcpu);
+        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -6722,7 +6692,7 @@ DLL_EXPORT int aia_cmd(int argc, char *argv[], char *cmdline)
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRITEMSG(HHCMD160W, PTYPSTR(sysblk.pcpu), sysblk.pcpu);
+        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -6774,7 +6744,7 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRITEMSG(HHCMD160W, PTYPSTR(sysblk.pcpu), sysblk.pcpu);
+        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];

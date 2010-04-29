@@ -413,6 +413,12 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00812 "Processor %s%02X: vector facility online"
 #define HHC00813 "Processor %s%02X: error in function '%s': '%s'"
 #define HHC00814 "Processor %s: CC %d%s"
+#define HHC00815 "Processor %s%02X: processer '%s'"
+#define HHC00816 "Processor %s%02X: processor is not '%s'"
+#define HHC00817 "Processor %s%02X: store status completed"
+#define HHC00818 "Processor %s%02X: not eligible for ipl nor restart"
+#define HHC00819 "Processor %s%02X: %s"
+#define HHC00820 "%s"
 
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
@@ -856,7 +862,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHCMD049W "Are you sure you didn't mean 'ipl %04X' instead?"
 #define HHCMD050I "Interrupt key depressed"
 #define HHCMD051I "LOADPARM=%s"
-#define HHCMD052E "Processor %s%02X does not allow ipl nor restart"
+
 #define HHCMD053I "SHCMDOPT invalid option: %s"
 #define HHCMD054S "DIAG8CMD: %sable, %secho"
 #define HHCMD056I "LPAR name = %s"
@@ -921,10 +927,10 @@ cpu.c:123:HABC1234I This is a message
 #define HHCMD148E "savecore: no modified storage found"
 #define HHCMD149W "No dasd devices"
 #define HHCMD150W "evm command is deprecated. Use \"ecpsvm\" instead"
-#define HHCMD153I "Processor %s%02X offline"
+
 #define HHCMD156E "CPUIDFMT must be either 0 or 1"
 #define HHCMD157I "CPUIDFMT = %d"
-#define HHCMD160W "Processor %s%02X not configured"
+
 #define HHCMD161I "%s%7d"
 #define HHCMD162E "Invalid format. Enter \"help gpr\" for assistance"
 #define HHCMD163E "Invalid format. Command does not support any arguments"
@@ -968,7 +974,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHCMD324E "%1d:%04X invalid fcb image ==>%s<=="
 //#define HHCMD422I in hscmisc.c
 #define HHCMD423E "Script file buffer malloc failed: %s"
-#define HHCCP424I "Processor %s%02X store status completed"
+
 #define HHCMD425S "DIAG8CMD invalid option: %s"
 #define HHCMD426E "%1d:%04X busy or interrupt pending"
 #define HHCMD427E "%1d:%04X subchannel not enabled"
@@ -976,7 +982,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHCMD429E "Missing argument(s)"
 #define HHCMD430E "LPARNUM must be one or two hex digits"
 #define HHCMD431E "LCSS id %s is invalid"
-#define HHCMD432I "Processor %s%02X online"
+
 #define HHCMD433E "Script file \"%s\" not found"
 #define HHCMD434I "Hercules instruction trace displayed in %s mode"
 #define HHCHD435E "Usage: %s <path>"
