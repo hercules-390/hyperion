@@ -1,7 +1,10 @@
 /* MSGENU.H     (c) Copyright Bernard van der Helm, 2010             */
 /*              Header file for Hercules messages (US English)       */
-
 /* Message text (c) Copyright Roger Bowler and others, 1999-2010     */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$ 
 

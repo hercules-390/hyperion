@@ -135,8 +135,8 @@ void sclp_attn_async(U16 type)
         typ=malloc(sizeof(U16));
         *typ=type;
         rc = create_thread(&sclp_attn_tid, &sysblk.detattr, sclp_attn_thread, typ, "attn_thread");
-	if (rc)
-	    WRMSG(HHC00102, "E", strerror(rc));
+    if (rc)
+        WRMSG(HHC00102, "E", strerror(rc));
     }
 }
 

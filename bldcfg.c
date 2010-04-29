@@ -1,7 +1,10 @@
 /* BLDCFG.C     (c) Copyright Roger Bowler, 1999-2010                */
 /*              ESA/390 Configuration Builder                        */
-
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2010      */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 
@@ -1334,7 +1337,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
                 {
                     sysblk.ptyp[cpu] = ptyp;
                     WRMSG(HHC00827, "I", PTYPSTR(cpu), cpu, cpu, ptyp, styp_values[ptyp]);
-		    cpu++;
+            cpu++;
                 }
                 styp = strtok(NULL,",");
             }
