@@ -92,7 +92,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00003 "Empty SCP command issued"
 #define HHC00004 "Control program identification: type '%s', name '%s', sysplex '%s', level %16.16"I64_FMT"X"
 #define HHC00005 "The configuration has been placed into a system check-stop state because of an incompatible service call"
-#define HHC00006 "SYSCONS interface '%s'"
+#define HHC00006 "SCLP console interface '%s'"
 #define HHC00008 "%s%s"
 #define HHC00009 "RRR...RING...GGG!\a"
 #define HHC00010 "Enter input for console %1d:%04X"
