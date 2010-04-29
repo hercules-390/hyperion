@@ -236,7 +236,12 @@ RADR    fsta = 0;
 
     /* Trace the machine check interrupt */
     if (CPU_STEPPING_OR_TRACING(regs, 0))
-        WRITEMSG (HHCCP019I, (long long)mcic);
+#if defined(_FEATURE_SIE)      
+        WRMSG (HHC00824, "I", regs->sie_active ? "IE" : PTYPSTR(regs->cpuad), 
+            regs->sie_active ? regs->guestregs->cpuad : regs->cpuad, (long long)mcic);
+#else
+        WRMSG (HHC00824, "I", PTYPSTR(regs->cpuad), regs->cpuad, (long long)mcic);
+#endif
 
     /* Store the external damage code at PSA+244 */
     STORE_FW(psa->xdmgcode, xdmg);
@@ -296,11 +301,11 @@ int i;
         if( dev == NULL)
         {
             if (!sysblk.shutdown)
-                WRITEMSG(HHCCP020E);
+                WRMSG(HHC00825, "E");
         }
         else
             if(dev->ccwtrace)
-                WRITEMSG(HHCCP021E, SSID_TO_LCSS(dev->ssid), dev->devnum);
+                WRMSG(HHC00826, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
         return;
     }
 
@@ -323,11 +328,11 @@ int i;
     if(MACHMASK(&regs->psw))
     {
 #if defined(_FEATURE_SIE)
-        WRITEMSG(HHCCP017I, regs->sie_active ? "IE" : PTYPSTR(regs->cpuad), 
+        WRMSG(HHC00822, "I", regs->sie_active ? "IE" : PTYPSTR(regs->cpuad), 
             regs->sie_active ? regs->guestregs->cpuad : regs->cpuad,
             strsignal(signo) );
 #else /*!defined(_FEATURE_SIE)*/
-        WRITEMSG(HHCCP017I, PTYPSTR(regs->cpuad), regs->cpuad, strsignal(signo));
+        WRMSG(HHC00822, "I", PTYPSTR(regs->cpuad), regs->cpuad, strsignal(signo));
 #endif /*!defined(_FEATURE_SIE)*/
 
         display_inst(
@@ -361,11 +366,11 @@ int i;
     else
     {
 #if defined(_FEATURE_SIE)
-        WRITEMSG(HHCCP018I, regs->sie_active ? "IE" : PTYPSTR(regs->cpuad), 
+        WRMSG(HHC00823, "I", regs->sie_active ? "IE" : PTYPSTR(regs->cpuad), 
             regs->sie_active ? regs->guestregs->cpuad : regs->cpuad,
             strsignal(signo));
 #else /*!defined(_FEATURE_SIE)*/
-        WRITEMSG(HHCCP018I, PTYPSTR(regs->cpuad), regs->cpuad, strsignal(signo));
+        WRMSG(HHC00823, "I", PTYPSTR(regs->cpuad), regs->cpuad, strsignal(signo));
 #endif /*!defined(_FEATURE_SIE)*/
         display_inst(
 #if defined(_FEATURE_SIE)

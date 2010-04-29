@@ -1829,7 +1829,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         }
 
         if(sysblk.regs[i]->vf->online)
-            WRMSG(HHC00007, "I", PTYPSTR(i), i, "offline" );
+            WRMSG(HHC00821, "I", PTYPSTR(i), i, "offline" );
 
         /* Take the VF out of the configuration */
         sysblk.regs[i]->vf->online = 0;
@@ -1860,7 +1860,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         }
 
         if(!sysblk.regs[i]->vf->online)
-            WRMSG(HHC00007, "I", PTYPSTR(i), i, "online" );
+            WRMSG(HHC00821, "I", PTYPSTR(i), i, "online" );
 
         /* Mark the VF online to the CPU */
         sysblk.regs[i]->vf->online = 1;

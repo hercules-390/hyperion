@@ -93,7 +93,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00004 "Control program identification: type '%s', name '%s', sysplex '%s', level %16.16"I64_FMT"X"
 #define HHC00005 "The configuration has been placed into a system check-stop state because of an incompatible service call"
 #define HHC00006 "SYSCONS interface '%s'"
-#define HHC00007 "%s%02X Vector Facility configured '%s'"
 #define HHC00008 "%s%s"
 #define HHC00009 "RRR...RING...GGG!\a"
 #define HHC00010 "Enter input for console %1d:%04X"
@@ -419,6 +418,13 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00818 "Processor %s%02X: not eligible for ipl nor restart"
 #define HHC00819 "Processor %s%02X: %s"
 #define HHC00820 "%s"
+#define HHC00821 "%s%02X Vector Facility configured '%s'"
+#define HHC00822 "Processor %s%02X: machine check due to host error: '%s'"
+#define HHC00823 "Processor %s%02X: check-stop due to host error: '%s'"
+#define HHC00824 "Processor %s%02X: machine check code %16.16"I64_FMT"u"
+#define HHC00825 "USR2 signal received for undetermined device"
+#define HHC00826 "%1d:%04X: USR2 signal received"
+
 
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
@@ -1099,14 +1105,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCLG015I "Log closed"
 #define HHCLG016E "Error opening logfile(%s) %s"
 #define HHCLG017S "Log file(%s) fdopen failed %s"
-
-/* machchk.c */
-#define HHCCP017I "Processor(%s%02X) Machine check due to host error(%s)"
-#define HHCCP018I "Processor(%s%02X) Check-Stop due to host error: %s"
-#define HHCCP019I "Machine Check code(%16.16" I64_FMT "u)"
-#define HHCCP020E "Signal USR2 received for undetermined device"
-#define HHCCP021E "Signal USR2 received for device(%1d:%04X)"
-
 
 /* panel.c */
 #define HHCPN002S "Cannot obtain keyboard buffer: (%s)"
