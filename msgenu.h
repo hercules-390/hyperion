@@ -424,7 +424,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00824 "Processor %s%02X: machine check code %16.16"I64_FMT"u"
 #define HHC00825 "USR2 signal received for undetermined device"
 #define HHC00826 "%1d:%04X: USR2 signal received"
-
+#define HHC00827 "Processor %s%02X: processor %02X type %1d set: '%s'"
 
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
@@ -514,7 +514,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHCMD073W "SYSEPOCH '%04d' is deprecated, please specify \"SYSEPOCH 1960 '%s%d'\""
 #define HHCMD074S "File '%s[%d]': invalid engine syntax '%s'"
 #define HHCMD075S "File '%s[%d]': invalid engine type '%s'"
-#define HHCMD077I "Engine '%02d' set to type '%1d' '%s'"
+
 #define HHCMD081I "File '%s': will ignore include errors"
 #define HHCMD082S "File '%s[%d]': maximum nesting level '%d' reached"
 #define HHCMD083I "File '%s': including file '%s' at '%d'"

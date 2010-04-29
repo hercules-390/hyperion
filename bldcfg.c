@@ -1332,8 +1332,9 @@ char    fname[MAX_PATH];                /* normalized filename       */
                 }
                 while (count-- > 0 && cpu < MAX_CPU_ENGINES)
                 {
-                    WRITEMSG(HHCMD077I, cpu, ptyp, styp_values[ptyp]);
-                    sysblk.ptyp[cpu++] = ptyp;
+                    sysblk.ptyp[cpu] = ptyp;
+                    WRMSG(HHC00827, "I", PTYPSTR(cpu), cpu, cpu, ptyp, styp_values[ptyp]);
+		    cpu++;
                 }
                 styp = strtok(NULL,",");
             }
