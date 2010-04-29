@@ -1,8 +1,11 @@
 /* IPL.C        (c) Copyright Roger Bowler, 1999-2010                */
 /*              ESA/390 Initial Program Loader                       */
-
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2010      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2010      */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 
@@ -273,20 +276,24 @@ BYTE    chanstat;                       /* IPL device channel status */
     chanstat = dev->scsw.chanstat;
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
-    if (unitstat != (CSW_CE | CSW_DE) || chanstat != 0) {
-	char buf[80];
-	char buf2[5];
-	strcpy(buf, "");
+    if (unitstat != (CSW_CE | CSW_DE) || chanstat != 0) 
+    {
+        char buf[80];
+        char buf2[5];
+        
+        strcpy(buf, "");
         for (i=0; i < (int)dev->numsense; i++)
         {
             sprintf(buf2, "%2.2X", dev->sense[i]);
-	    strcat(buf, buf2);
+            strcat(buf, buf2);
             if ((i & 3) == 3) strcat(buf, " ");
         }
-        char buffer[80];
-        sprintf(buffer, "architecture mode '%s', csw status %2.2X%2.2X, sense %s", get_arch_mode_string(regs), 
-               unitstat, chanstat, buf);
-	WRMSG (HHC00828, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu, buffer);
+        {
+            char buffer[80];
+            sprintf(buffer, "architecture mode '%s', csw status %2.2X%2.2X, sense %s", get_arch_mode_string(regs), 
+                unitstat, chanstat, buf);
+            WRMSG (HHC00828, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu, buffer);
+        }
         HDC1(debug_cpu_state, regs);
         return -1;
     }
