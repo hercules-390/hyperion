@@ -1,5 +1,9 @@
 /* IMPL.C       (c) Copyright Roger Bowler, 1999-2010                */
 /*              Hercules Initialization Module                       */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 
@@ -335,6 +339,19 @@ int     msgcnt;                         /*                           */
 TID     rctid;                          /* RC file thread identifier */
 TID     logcbtid;                       /* RC file thread identifier */
 int     rc;
+#if defined(EXTERNALGUI)
+int     e_gui = FALSE;                  /* EXTERNALGUI parm          */
+#endif
+
+#if defined(OPTION_DYNAMIC_LOAD)
+#define MAX_DLL_TO_LOAD         50
+char   *dll_load[MAX_DLL_TO_LOAD];      /* Pointers to modnames      */
+int     dll_count;                      /* index into array          */ 
+
+    for ( dll_count = 0; dll_count < MAX_DLL_TO_LOAD; dll_count++ )
+        dll_load[dll_count] = NULL;
+    dll_count = -1;
+#endif
 
     SET_THREAD_NAME("impl");
 
@@ -425,11 +442,6 @@ int     rc;
     */
     display_version (stdout, "Hercules ", TRUE);
 
-#if defined(OPTION_DYNAMIC_LOAD)
-    /* Initialize the hercules dynamic loader */
-    hdl_main();
-#endif /* defined(OPTION_DYNAMIC_LOAD) */
-
 #if defined(ENABLE_NLS)
     setlocale(LC_ALL, "");
     bindtextdomain(PACKAGE, HERC_LOCALEDIR);
@@ -437,21 +449,12 @@ int     rc;
 #endif
 
 #ifdef EXTERNALGUI
-    /* Set GUI flag if specified as final argument */
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
-#if defined(OPTION_DYNAMIC_LOAD)
-        if (hdl_load("dyngui",HDL_LOAD_DEFAULT) != 0)
-        {
-            usleep(10000); /* (give logger thread time to issue
-                               preceding HHCHD007E message) */
-            WRITEMSG(HHCIN008S);
-            delayed_exit(1);
-        }
-#endif /* defined(OPTION_DYNAMIC_LOAD) */
+        e_gui = TRUE;
         argc--;
     }
-#endif /*EXTERNALGUI*/
+#endif 
 
 #if !defined(WIN32) && !defined(HAVE_STRERROR_R)
     strerror_r_init();
@@ -483,7 +486,15 @@ int     rc;
                 for(dllname = strtok_r(optarg,", ",&strtok_str);
                     dllname;
                     dllname = strtok_r(NULL,", ",&strtok_str))
-                    hdl_load(dllname, HDL_LOAD_DEFAULT);
+                {
+                    if (dll_count < MAX_DLL_TO_LOAD - 1)
+                        dll_load[++dll_count] = strdup(dllname);
+                    else
+                    {
+                        WRITEMSG(HHCHD021W, MAX_DLL_TO_LOAD);
+                        break;
+                    }
+                }
             }
             break;
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
@@ -512,6 +523,53 @@ int     rc;
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
         delayed_exit(1);
     }
+#if defined(OPTION_DYNAMIC_LOAD)
+    /* Initialize the hercules dynamic loader */
+    hdl_main();
+
+    /* Load modules requested at startup */
+    if (dll_count >= 0)
+    {
+        int hl_err = FALSE;
+        for ( dll_count = 0; dll_count < MAX_DLL_TO_LOAD; dll_count++ )
+        {
+            if (dll_load[dll_count] != NULL)
+            {
+                if (hdl_load(dll_load[dll_count], HDL_LOAD_DEFAULT) != 0)
+                {
+                    hl_err = TRUE;
+                }
+                free(dll_load[dll_count]);
+            }
+            else
+                break;
+        }
+
+        if (hl_err)
+        {
+            usleep(10000);      // give logger time to issue error message
+            WRITEMSG(HHCIN099S);
+            delayed_exit(1);
+        }
+
+    }
+#endif /* defined(OPTION_DYNAMIC_LOAD) */
+
+#ifdef EXTERNALGUI
+    /* Set GUI flag if specified as final argument */
+    if (e_gui)
+    {
+#if defined(OPTION_DYNAMIC_LOAD)
+        if (hdl_load("dyngui",HDL_LOAD_DEFAULT) != 0)
+        {
+            usleep(10000); /* (give logger thread time to issue
+                               preceding HHCHD007E message) */
+            WRITEMSG(HHCIN008S);
+            delayed_exit(1);
+        }
+#endif /* defined(OPTION_DYNAMIC_LOAD) */
+    }
+#endif /*EXTERNALGUI*/
 
     /* Register the SIGINT handler */
     if ( signal (SIGINT, sigint_handler) == SIG_ERR )

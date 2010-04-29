@@ -1,5 +1,9 @@
 /* HDL.C        (c) Copyright Jan Jaeger, 2003-2010                  */
 /*              Hercules Dynamic Loader                              */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 //
@@ -193,6 +197,7 @@ DLL_EXPORT void hdl_setpath(char *path, int flag)
     {
         if (hdl_modpath)
         {
+            WRITEMSG (HHCHD022W, path); 
             WRITEMSG (HHCHD020W, hdl_modpath);
             return;
         }
@@ -788,7 +793,8 @@ HDLPRE *preload;
     initialize_lock(&hdl_lock);
     initialize_lock(&hdl_sdlock);
 
-    hdl_setpath(HDL_DEFAULT_PATH, TRUE);
+    if ( hdl_modpath == NULL )
+        hdl_setpath(HDL_DEFAULT_PATH, TRUE);
 
     dlinit();
 

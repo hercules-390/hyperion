@@ -821,6 +821,8 @@ cpu.c:123:HABC1234I This is a message
 #define HHCHD018I "Loadable module directory is (%s)"
 #define HHCHD019E "Loadable module directory path name length '%d' exceeds maximum of '%d'" 
 #define HHCHD020W "Loadable module directory remains (%s); taken from startup"
+#define HHCHD021W "Startup parm '-l': maximum loadable modules (%d) exceeded; remainder not loaded"
+#define HHCHD022W "Loadable module directory (%s) is ignored"
 #define HHCHD900I "Begin shutdown sequence"
 #define HHCHD901I "Calling (%s)"
 #define HHCHD902I "(%s) complete"
@@ -1091,6 +1093,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHCIN023W "%s Event received, SHUTDOWN previously requested..."
 #define HHCIN050I "Ctrl-Break intercepted. Interrupt Key depressed simulated"
 #define HHCIN099I "Hercules terminated"
+#define HHCIN099S "Hercules terminating, see previous messages for reason"
 // HHCIN099I is used with and without logmsg
 
 
