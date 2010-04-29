@@ -328,7 +328,9 @@ U64     dreg;
         GUESTREGS = calloc (sizeof(REGS), 1);
         if (GUESTREGS == NULL)
          {
-             WRITEMSG (HHCCP079E, PTYPSTR(regs->cpuad), regs->cpuad, strerror(errno));
+	     char buf[40];
+	     sprintf(buf, "calloc(%lu, %d)", sizeof(REGS), 1);
+             WRMSG (HHC00813, "E", PTYPSTR(regs->cpuad), regs->cpuad, buf, strerror(errno));
 #if !defined(NO_SIGABEND_HANDLER)
              signal_thread(sysblk.cputid[regs->cpuad], SIGUSR1);
 #endif

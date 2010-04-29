@@ -1127,9 +1127,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCPT002E "Trace is busy"
 #define HHCPT003I "Ptt(%s%s%s%s%s%s%s%s%s%s%s %s %s) to(%d %d)"
 
-/* sie.c */ /* BHe should we calloc the sieregs? Why not statical?? */
-#define HHCCP079E "Processor(%s%02X) calloc failed for sie regs: %s"
-
 /* sockdev.c */
 #define HHCSD001E "Device(%4.4X) already bound to socket(%s)"
 #define HHCSD002E "Device(%4.4X) bind_device malloc() failed"
