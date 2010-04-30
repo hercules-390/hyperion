@@ -13,7 +13,7 @@
 #define _HDL_C_
 #define _HUTIL_DLL_
 
-#if !defined(WIN32) && !defined(__FreeBSD__) && !defined(__APPLE__) 
+#if !defined(WIN32) && !defined(__FreeBSD__) && !defined(__APPLE__)
 #define ZZ_NO_BACKLINK
 #endif
 
@@ -44,9 +44,7 @@ extern void *HDL_DEPC;
 extern void *HDL_INIT;
 extern void *HDL_RESO;
 extern void *HDL_DDEV;
-#ifdef ZZ_NO_BACKLINK
 extern void *HDL_DINS;
-#endif
 extern void *HDL_FINI;
 #endif
 
@@ -65,11 +63,11 @@ static int   hdl_arg_p = FALSE;
 static LOCK   hdl_sdlock;                /* shutdown lock            */
 static HDLSHD *hdl_shdlist;              /* Shutdown call list       */
 
-#ifdef ZZ_NO_BACKLINK
 static void hdl_didf (int, int, char *, void *);
+#ifdef ZZ_NO_BACKLINK
 static void hdl_modify_opcode(int, HDLINS *);
-
 #endif
+
 /* Global hdl_device_type_equates */
 
 DLL_EXPORT char *(*hdl_device_type_equates)(const char *);
@@ -109,13 +107,8 @@ HDLSHD **tmpcall;
     }
     return -1;
 }
-#ifndef ZZ_NO_BACKLINK
-    
-#endif
 
-#ifdef ZZ_NO_BACKLINK
 
-#endif
 /* hdl_shut - call all shutdown call entries in LIFO order
  */
 DLL_EXPORT void hdl_shut (void)
@@ -172,10 +165,7 @@ int logger_flag = 0;
                 (loggercall->shdcall) (loggercall->shdarg);
             }
             WRITEMSG(HHCHD902I, loggercall->shdname);
-#ifdef ZZ_NO_BACKLINK
             free(loggercall);
-
-#endif
         }
     }
 #endif // defined( _MSVC_ )
@@ -465,7 +455,6 @@ MODENT *modent;
                 logmsg(" %s",hndent->name);
             logmsg("\n");
         }
-#ifdef ZZ_NO_BACKLINK
 
         if(dllent->insent)
         {
@@ -482,7 +471,6 @@ MODENT *modent;
                 logmsg("\n");
             }
         }
-#endif
     }
 }
 
@@ -729,18 +717,14 @@ MODENT *modent;
 
     dllent->hdlddev = dlsym(dllent->dll,HDL_DDEV_Q);
 
-#ifdef ZZ_NO_BACKLINK
     dllent->hdldins = dlsym(dllent->dll,HDL_DINS_Q);
 
-#endif
     dllent->hdlfini = dlsym(dllent->dll,HDL_FINI_Q);
 
     /* No modules or device types registered yet */
     dllent->modent = NULL;
     dllent->hndent = NULL;
-#ifdef ZZ_NO_BACKLINK
     dllent->insent = NULL;
-#endif
 
     obtain_lock(&hdl_lock);
 
@@ -778,12 +762,10 @@ MODENT *modent;
     if(hdl_cdll->hdlddev)
         (hdl_cdll->hdlddev)(&hdl_dvad);
 
-#ifdef ZZ_NO_BACKLINK
     /* register any new instructions */
     if(hdl_cdll->hdldins)
         (hdl_cdll->hdldins)(&hdl_didf);
 
-#endif
     hdl_cdll = NULL;
 
     release_lock(&hdl_lock);
@@ -844,10 +826,8 @@ HDLPRE *preload;
 
     hdl_cdll->hdlddev = dlsym(hdl_cdll->dll,HDL_DDEV_Q);
 
-#ifdef ZZ_NO_BACKLINK
     hdl_cdll->hdldins = dlsym(hdl_cdll->dll,HDL_DINS_Q);
 
-#endif
     hdl_cdll->hdlfini = dlsym(hdl_cdll->dll,HDL_FINI_Q);
 #else
 
@@ -861,19 +841,15 @@ HDLPRE *preload;
 
     hdl_cdll->hdlddev = &HDL_DDEV;
 
-#ifdef ZZ_NO_BACKLINK
     hdl_cdll->hdldins = &HDL_DINS;
 
-#endif
     hdl_cdll->hdlfini = &HDL_FINI;
 #endif
 
     /* No modules or device types registered yet */
     hdl_cdll->modent = NULL;
     hdl_cdll->hndent = NULL;
-#ifdef ZZ_NO_BACKLINK
     hdl_cdll->insent = NULL;
-#endif
 
     /* No dll's loaded yet */
     hdl_cdll->dllnext = NULL;
@@ -892,11 +868,9 @@ HDLPRE *preload;
     if(hdl_cdll->hdlddev)
         (hdl_cdll->hdlddev)(&hdl_dvad);
 
-#ifdef ZZ_NO_BACKLINK
     if(hdl_cdll->hdldins)
         (hdl_cdll->hdldins)(&hdl_didf);
 
-#endif
     release_lock(&hdl_lock);
 
     /* Register termination exit */
@@ -974,18 +948,14 @@ char *modname;
 
     dllent->hdlddev = dlsym(dllent->dll,HDL_DDEV_Q);
 
-#ifdef ZZ_NO_BACKLINK
     dllent->hdldins = dlsym(dllent->dll,HDL_DINS_Q);
 
-#endif
     dllent->hdlfini = dlsym(dllent->dll,HDL_FINI_Q);
 
     /* No modules or device types registered yet */
     dllent->modent = NULL;
     dllent->hndent = NULL;
-#ifdef ZZ_NO_BACKLINK
     dllent->insent = NULL;
-#endif
 
     obtain_lock(&hdl_lock);
 
@@ -1031,12 +1001,10 @@ char *modname;
     if(hdl_cdll->hdlddev)
         (hdl_cdll->hdlddev)(&hdl_dvad);
 
-#ifdef ZZ_NO_BACKLINK
     /* register any new instructions */
     if(hdl_cdll->hdldins)
         (hdl_cdll->hdldins)(&hdl_didf);
 
-#endif
     hdl_cdll = NULL;
 
     release_lock(&hdl_lock);
@@ -1053,9 +1021,7 @@ DLLENT **dllent, *tmpdll;
 MODENT *modent, *tmpmod;
 DEVBLK *dev;
 HDLDEV *hnd;
-#ifdef ZZ_NO_BACKLINK
 HDLINS *ins;
-#endif
 char *modname;
 
     modname = (modname = strrchr(name,'/')) ? modname+1 : name;
@@ -1123,18 +1089,18 @@ char *modname;
                 hnd = nexthnd;
             }
 
-#ifdef ZZ_NO_BACKLINK
             for(ins = tmpdll->insent; ins;)
             {
             HDLINS *nextins;
+#ifdef ZZ_NO_BACKLINK
                 hdl_modify_opcode(FALSE, ins);
+#endif
                 free(ins->instname);
                 nextins = ins->next;
                 free(ins);
                 ins = nextins;
             }
 
-#endif
 //          dlclose(tmpdll->dll);
 
             /* free dll resources */
@@ -1167,8 +1133,8 @@ char *modname;
     return -1;
 }
 
-#ifdef ZZ_NO_BACKLINK
 
+#ifdef ZZ_NO_BACKLINK
 static void hdl_modify_optab(int insert,zz_func *tabent, HDLINS *instr)
 {
     if(insert)
@@ -1300,6 +1266,7 @@ static void hdl_modify_opcode(int insert, HDLINS *instr)
     copy_opcode_tables();
 
 }
+#endif
 
 
 /* hdl_didf - Define instruction call */
@@ -1314,8 +1281,9 @@ HDLINS *newins;
     newins->instruction = routine;
     newins->next = hdl_cdll->insent;
     hdl_cdll->insent = newins;
+#ifdef ZZ_NO_BACKLINK
     hdl_modify_opcode(TRUE, newins);
+#endif
 }
 
-#endif
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
