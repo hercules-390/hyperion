@@ -190,11 +190,31 @@ static void logger_term(void *arg)
 }
 static void logger_logfile_write( void* pBuff, size_t nBytes )
 {
-    if ( fwrite( pBuff, nBytes, 1, logger_hrdcpy ) != 1 )
+    char* pLeft = pBuff;
+    int   nLeft = nBytes;
+#if defined( OPTION_MSGCLR )
+    /* Remove "<pnl,..." color string if it exists */
+    if (1
+        && nLeft > 5
+        && strncasecmp( pLeft, "<pnl", 4 ) == 0
+        && (pLeft = memchr( pLeft+4, '>', nLeft-4 )) != NULL
+        )
     {
-        fprintf(logger_hrdcpy, _("HHCLG003E Error writing hardcopy log: %s\n"),
-            strerror(errno));
+        pLeft++;
+        nLeft -= (pLeft - pBuff);
     }
+
+#endif // defined( OPTION_MSGCLR )
+    /* (ignore any errors; we did the best we could) */
+    if (nLeft)
+    {      
+        if ( fwrite( pLeft, nLeft, 1, logger_hrdcpy ) != 1 )
+        {
+            fprintf(logger_hrdcpy, _("HHCLG003E Error writing hardcopy log: %s\n"),
+                strerror(errno));
+        }
+    }
+
     if ( sysblk.shutdown )
         fflush ( logger_hrdcpy );
 }
@@ -313,8 +333,8 @@ int bytes_read;
 
 #endif // defined( OPTION_MSGCLR )
                 /* (ignore any errors; we did the best we could) */
-                
-                fwrite( pLeft2, nLeft2, 1, stderr );
+                if (nLeft2)
+                    fwrite( pLeft2, nLeft2, 1, stderr );
             }
         }
 
@@ -341,8 +361,8 @@ int bytes_read;
                 nLeft2 = bytes_read;
             }
 #endif // defined( OPTION_MSGCLR )
-
-            logger_logfile_write( pLeft2, nLeft2 );
+            if (nLeft2)
+                logger_logfile_write( pLeft2, nLeft2 );
         }
 #else // defined( OPTION_TIMESTAMP_LOGFILE )
         {
@@ -387,12 +407,13 @@ int bytes_read;
                         pLeft2 = pLeft;
                         nLeft2 = nLeft;
                     }
-
-                    logger_logfile_write( pLeft2, nLeft2 );
+                    if (nLeft2)
+                        logger_logfile_write( pLeft2, nLeft2 );
                 }
 #else // !defined( OPTION_MSGCLR )
 
-                logger_logfile_write( pLeft, nLeft );
+                if (nLeft)
+                    logger_logfile_write( pLeft, nLeft );
 
 #endif // defined( OPTION_MSGCLR )
 

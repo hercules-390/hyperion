@@ -186,14 +186,16 @@ DLL_EXPORT void writemsg(char *file, int line, int lvl, char *color, char *msg, 
     {
         case 0: // normal
 #if defined( OPTION_MSGCLR )
-            if (strlen(color) > 0)
+            if (strlen(color) > 0 && sysblk.panel_init)
+            {
                 logmsg(color);
+            }
 #endif // defined( OPTION_MSGCLR )
             BFR_VSNPRINTF();
             break;
       case 1: // debug
 #if defined( OPTION_MSGCLR )
-            if (strlen(color) > 0)
+            if (strlen(color) > 0 && sysblk.panel_init)
                 logmsg("%s%-10.10s %4d ", color, file, line);
             else
                 logmsg("%-10.10s %4d ", file, line);

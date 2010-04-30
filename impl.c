@@ -521,7 +521,8 @@ int     dll_count;                      /* index into array          */
 #else
         WRITEMSG (HHCIN999S, sysblk.hercules_pgmname, "");
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
-        delayed_exit(1);
+        delayed_exit(-1);
+        return(1);
     }
 #if defined(OPTION_DYNAMIC_LOAD)
     /* Initialize the hercules dynamic loader */
@@ -549,7 +550,8 @@ int     dll_count;                      /* index into array          */
         {
             usleep(10000);      // give logger time to issue error message
             WRITEMSG(HHCIN099S);
-            delayed_exit(1);
+            delayed_exit(-1);
+            return(1);
         }
 
     }
@@ -565,7 +567,8 @@ int     dll_count;                      /* index into array          */
             usleep(10000); /* (give logger thread time to issue
                                preceding HHCHD007E message) */
             WRITEMSG(HHCIN008S);
-            delayed_exit(1);
+            delayed_exit(-1);
+            return(1);
         }
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
     }
@@ -575,14 +578,16 @@ int     dll_count;                      /* index into array          */
     if ( signal (SIGINT, sigint_handler) == SIG_ERR )
     {
         WRITEMSG(HHCIN001S, strerror(errno));
-        delayed_exit(1);
+        delayed_exit(-1);
+        return(1);
     }
 
     /* Register the SIGTERM handler */
     if ( signal (SIGTERM, sigterm_handler) == SIG_ERR )
     {
         WRITEMSG(HHCIN009S, strerror(errno));
-        delayed_exit(1);
+        delayed_exit(-1);
+        return(1);
     }
 
 #if defined( _MSVC_ )
@@ -592,7 +597,8 @@ int     dll_count;                      /* index into array          */
         if (!SetConsoleCtrlHandler( console_ctrl_handler, TRUE ))
         {
             WRITEMSG( HHCIN010S, strerror( errno ));
-            delayed_exit(1);
+            delayed_exit(-1);
+            return(1);
         }
     }
 #endif
@@ -640,7 +646,8 @@ int     dll_count;                      /* index into array          */
          || sigaction(SIGUSR2, &sa, NULL) )
         {
             WRITEMSG(HHCIN003S, strerror(errno));
-            delayed_exit(1);
+            delayed_exit(-1);
+            return(1);
         }
     }
 #endif /*!defined(NO_SIGABEND_HANDLER)*/
@@ -664,7 +671,8 @@ int     dll_count;                      /* index into array          */
     if (rc)
     {
         WRMSG(HHC00102, "S", strerror(rc));
-        delayed_exit(1);
+        delayed_exit(-1);
+        return(1);
     }
 #endif /*!defined(NO_SIGABEND_HANDLER)*/
 
@@ -677,7 +685,8 @@ int     dll_count;                      /* index into array          */
 	if (rc)
         {
             WRMSG(HHC00102, "S", strerror(rc));
-            delayed_exit(1);
+            delayed_exit(-1);
+            return(1);
         }
     }
 
@@ -694,7 +703,8 @@ int     dll_count;                      /* index into array          */
                 if (rc)
                 {
                     WRMSG(HHC00102, "S", strerror(rc));
-                    delayed_exit(1);
+                    delayed_exit(-1);
+                    return(1);
                 }
 	    }
     }

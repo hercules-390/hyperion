@@ -163,7 +163,9 @@ void delayed_exit (int exit_code)
     fflush(stderr);  
     fflush(stdout);  
     usleep(100000);
-    exit(exit_code);
+    if (exit_code > 0)
+        exit(exit_code);
+    return;
 }
 
 
@@ -303,7 +305,7 @@ DLL_EXPORT int add_tamdir( char *tamdir, TAMDIR **ppTAMDIR )
         return (2); /* ("path inaccessible") */
 
     /* Append trailing path separator if needed */
-    rc = strlen( tamdir );
+    rc = (int)strlen( tamdir );
     if (tamdir[rc-1] != *PATH_SEP)
         strlcat (tamdir, PATH_SEP, MAX_PATH);
 
@@ -328,7 +330,7 @@ DLL_EXPORT int add_tamdir( char *tamdir, TAMDIR **ppTAMDIR )
 
     /* Fill in the new entry... */
     (*ppTAMDIR)->dir = strdup (tamdir);
-    (*ppTAMDIR)->len = strlen (tamdir);
+    (*ppTAMDIR)->len = (int)strlen (tamdir);
     (*ppTAMDIR)->rej = rej;
     (*ppTAMDIR)->next = NULL;
 
@@ -1337,7 +1339,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
                 {
                     sysblk.ptyp[cpu] = ptyp;
                     WRMSG(HHC00827, "I", PTYPSTR(cpu), cpu, cpu, ptyp, styp_values[ptyp]);
-            cpu++;
+                    cpu++;
                 }
                 styp = strtok(NULL,",");
             }
@@ -1496,11 +1498,11 @@ char    fname[MAX_PATH];                /* normalized filename       */
             delayed_exit(1);
         }
         VERIFY( getcwd( cwd, sizeof(cwd) ) != NULL );
-        rc = strlen( cwd );
+        rc = (int)strlen( cwd );
         if (cwd[rc-1] != *PATH_SEP)
             strlcat (cwd, PATH_SEP, sizeof(cwd));
         pNewTAMDIR->dir = strdup (cwd);
-        pNewTAMDIR->len = strlen (cwd);
+        pNewTAMDIR->len = (int)strlen (cwd);
         pNewTAMDIR->rej = 0;
         pNewTAMDIR->next = sysblk.tamdir;
         sysblk.tamdir = pNewTAMDIR;
