@@ -190,8 +190,8 @@ static void logger_term(void *arg)
 }
 static void logger_logfile_write( void* pBuff, size_t nBytes )
 {
-    char* pLeft = pBuff;
-    int   nLeft = nBytes;
+    char* pLeft = (char*)pBuff;
+    int   nLeft = (int)nBytes;
 #if defined( OPTION_MSGCLR )
     /* Remove "<pnl,..." color string if it exists */
     if (1
@@ -201,7 +201,7 @@ static void logger_logfile_write( void* pBuff, size_t nBytes )
         )
     {
         pLeft++;
-        nLeft -= (pLeft - pBuff);
+        nLeft -= (pLeft - (char*)pBuff);
     }
 
 #endif // defined( OPTION_MSGCLR )
