@@ -158,35 +158,50 @@ DLL_EXPORT void writemsg(char *file, int line, int lvl, char *color, char *msg, 
   #ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  
   #endif
-    switch(msg[8])
+
+#if defined( OPTION_MSGCLR )
+    if (!strlen(color))
     {
-      case 'S':
-        if(!strlen(color))
-            color = "<pnl,color(lightred,black),keep>";
-        break;
+        switch(msg[8])
+        {
+            case 'S':
+                color = "<pnl,color(lightred,black),keep>";
+                break;
 
-      case 'E':
-        if(!strlen(color))
-            color = "<pnl,color(lightred,black),keep>";
-        break;
+            case 'E':
+                color = "<pnl,color(lightred,black),keep>";
+                break;
 
-      case 'W':
-        if(!strlen(color))
-            color = "<pnl,color(lightred,black),keep>";
-        break;
-
+            case 'W':
+                color = "<pnl,color(lightred,black),keep>";
+                break;
+            default:
+                color = "";
+                break;
+        }
     }
+#endif // defined( OPTION_MSGCLR )
 
     switch(lvl)
     {
-      case 0: // normal
-        logmsg(color);
-        BFR_VSNPRINTF();
-        break;
+        case 0: // normal
+#if defined( OPTION_MSGCLR )
+            if (strlen(color) > 0)
+                logmsg(color);
+#endif // defined( OPTION_MSGCLR )
+            BFR_VSNPRINTF();
+            break;
       case 1: // debug
-        logmsg("%s%-10.10s %4d ", color, file, line);
-        BFR_VSNPRINTF();
-        break;
+#if defined( OPTION_MSGCLR )
+            if (strlen(color) > 0)
+                logmsg("%s%-10.10s %4d ", color, file, line);
+            else
+                logmsg("%-10.10s %4d ", file, line);
+#else
+            logmsg("%-10.10s %4d ", file, line);
+#endif
+            BFR_VSNPRINTF();
+            break;
     }
 
     if(bfr)
@@ -209,16 +224,18 @@ DLL_EXPORT void logmsg(char *msg,...)
     int rc;
     int siz=1024;
     va_list vl;
-  #ifdef NEED_LOGMSG_FFLUSH
+#ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  
-  #endif
+#endif
     BFR_VSNPRINTF();
-    if(bfr)
-        log_write(0,bfr); 
-  #ifdef NEED_LOGMSG_FFLUSH
+    if ( bfr )
+    {
+        log_write(0,bfr);
+    }
+#ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  
-  #endif
-    if(bfr)
+#endif
+    if ( bfr )
     {
         free(bfr);
     }

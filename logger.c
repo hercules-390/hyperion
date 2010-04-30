@@ -1,5 +1,9 @@
-/* LOGGER.C     (c) Copyright Jan Jaeger, 2003-2009                  */
+/* LOGGER.C     (c) Copyright Jan Jaeger, 2003-2010                  */
 /*              System logger functions                              */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 
@@ -12,35 +16,6 @@
 
 /* Any thread can determine background mode by inspecting stderr     */
 /* for isatty()                                                      */
-
-// $Log$
-// Revision 1.54  2008/11/29 21:28:01  rbowler
-// Fix warnings C4267 because win64 declares send length as int not size_t
-//
-// Revision 1.53  2008/11/04 05:56:31  fish
-// Put ensure consistent create_thread ATTR usage change back in
-//
-// Revision 1.52  2008/11/03 15:31:54  rbowler
-// Back out consistent create_thread ATTR modification
-//
-// Revision 1.51  2008/10/18 09:32:21  fish
-// Ensure consistent create_thread ATTR usage
-//
-// Revision 1.50  2008/08/23 11:58:52  fish
-// Remove "<pnl...>" color string from most logfile hardcopy o/p
-//
-// Revision 1.49  2007/06/23 00:04:14  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.48  2007/02/27 21:59:32  kleonard
-// PR# misc/87 startup messages fix completion
-//
-// Revision 1.47  2007/01/31 00:48:03  kleonard
-// Add logopt config statement and panel command
-//
-// Revision 1.46  2006/12/08 09:43:28  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 
@@ -322,8 +297,24 @@ int bytes_read;
         {
             if (!sysblk.panel_init)
             {
+                char* pLeft2 = logger_buffer + logger_currmsg;
+                int   nLeft2 = bytes_read;
+#if defined( OPTION_MSGCLR )
+            /* Remove "<pnl,..." color string if it exists */
+                if (1
+                    && nLeft2 > 5
+                    && strncasecmp( pLeft2, "<pnl", 4 ) == 0
+                    && (pLeft2 = memchr( pLeft2+4, '>', nLeft2-4 )) != NULL
+                )
+                {
+                    pLeft2++;
+                    nLeft2 -= (pLeft2 - (logger_buffer + logger_currmsg));
+                }
+
+#endif // defined( OPTION_MSGCLR )
                 /* (ignore any errors; we did the best we could) */
-                fwrite( logger_buffer + logger_currmsg, bytes_read, 1, stderr );
+                
+                fwrite( pLeft2, nLeft2, 1, stderr );
             }
         }
 
