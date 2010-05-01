@@ -2895,6 +2895,7 @@ FinishShutdown:
 
             if (redraw_status && !npquiet)
             {
+                char *instcnt;
                 /* Save cursor location */
                 saved_cons_row = cur_cons_row;
                 saved_cons_col = cur_cons_col;
@@ -2912,12 +2913,12 @@ FinishShutdown:
                                         fetch_dw (curpsw+8));
 #if defined(_FEATURE_SIE)
                     else
-            if( SIE_MODE(regs) )
-            {
+                        if( SIE_MODE(regs) )
+                        {
                             for(i = 0;i < 16;i++)
                                 buf[len++] = '-';
                             buf[len++] = ' ';
-            }
+                        }
 #endif /*defined(_FEATURE_SIE)*/
                     len += sprintf (buf+len, "%2d%c%c%c%c%c%c%c%c",
                            regs->psw.amode64                  ? 64 :
@@ -2944,8 +2945,8 @@ FinishShutdown:
                     /* "instcnt <string>; mips nnnn" */
                     /* nnnn can be nnnn or nn.n or n.nn */
                     /* "instcnt <string>; mips nnnn; IO/s nnnnnn" */
-                    char *instcnt = format_int(totalcount);
-                    i = strlen(instcnt) + 8;
+                    instcnt = format_int(totalcount);
+                    i = (int)strlen(instcnt) + 8;
                     if(len + i + 11 + 13 < cons_cols) // instcnt, mips and ios
                     {
                         if(sysblk.mipsrate / 1000000 > 99)
