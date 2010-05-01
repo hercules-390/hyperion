@@ -1056,10 +1056,10 @@ static void NP_screen_redraw (REGS *regs)
     draw_button(COLOR_BLUE,  COLOR_LIGHT_GREY, COLOR_WHITE,  " RS", "T", " "  );
 
 #if defined(OPTION_MIPS_COUNTING)
-    set_pos ((BUTTONS_LINE+1), 4);
+    set_pos ((BUTTONS_LINE+1), 3);
     set_color (COLOR_LIGHT_GREY, COLOR_BLACK);
     draw_text ("MIPS");
-    set_pos ((BUTTONS_LINE+1), 10);
+    set_pos ((BUTTONS_LINE+1), 9);
     draw_text ("SIO/s");
 #endif /*defined(OPTION_MIPS_COUNTING)*/
 
@@ -1477,8 +1477,12 @@ static void NP_update(REGS *regs)
     {
         set_color (COLOR_LIGHT_YELLOW, COLOR_BLACK);
         set_pos (BUTTONS_LINE, 1);
-        sprintf(buf, "%4.1d.%2.2d",
-            sysblk.mipsrate / 1000000, (sysblk.mipsrate % 1000000) / 10000);
+        if(sysblk.mipsrate / 1000000 > 99)
+          sprintf(buf, "%6d", sysblk.mipsrate / 1000000);
+        else if(sysblk.mipsrate / 1000000 > 9)
+          sprintf(buf, "%4d.%1d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 100000);
+        else
+          sprintf(buf, "%3d.%02d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 10000);
         draw_text (buf);
         NPmips = sysblk.mipsrate;
         NPmips_valid = 1;
@@ -1487,7 +1491,7 @@ static void NP_update(REGS *regs)
     {
         set_color (COLOR_LIGHT_YELLOW, COLOR_BLACK);
         set_pos (BUTTONS_LINE, 8);
-        sprintf(buf, "%7d", sysblk.siosrate);
+        sprintf(buf, "%6d", sysblk.siosrate);
         draw_text (buf);
         NPsios = sysblk.siosrate;
         NPsios_valid = 1;
@@ -2934,38 +2938,61 @@ FinishShutdown:
                         if ( IS_CPU_ONLINE(i) )
                             totalcount += INSTCOUNT(sysblk.regs[i]);
                     }
-                    if ( cons_cols >= (int)( len 
-                                             + 9                 // 9 is the length of "InstCnt()" 
-                                             + strlen(format_int(totalcount))
-                                            ) )                  // don't do the work if no space on line
-                    { 
-                        char *fmt_int = format_int(totalcount);
-                        int l_len = len;
-
-                        l_len += (int)(strlen(fmt_int)) + 9;  //  9 is the length of "InstCnt()"
-                        if ( cons_cols >= l_len + 14 + 14 )   // 14 is the length of MIPS(nnnn.nn) and SIOS(nnnnnnn)
+                    /* Bottom line left corner can be when there is space: */
+                    /* "" */
+                    /* "instcnt <string>" */
+                    /* "instcnt <string>; mips nnnn" */
+                    /* nnnn can be nnnn or nn.n or n.nn */
+                    /* "instcnt <string>; mips nnnn; IO/s nnnnnn" */
+                    char *instcnt = format_int(totalcount);
+                    i = strlen(instcnt) + 8;
+                    if(len + i + 11 + 13 < cons_cols) // instcnt, mips and ios
+                    {
+                        if(sysblk.mipsrate / 1000000 > 99)
                         {
-                            sprintf (ibuf, "InstCnt(%s) MIPS(%4.1d.%2.2d) SIOS(%7.1d)", 
-                                fmt_int,
-                                sysblk.mipsrate / 1000000, 
-                               (sysblk.mipsrate % 1000000) / 10000,
-                                sysblk.siosrate );
+                            sprintf(ibuf, "instcnt %s; mips %4d; IO/s %6d", instcnt, 
+                                    sysblk.mipsrate / 1000000, sysblk.siosrate);
                         }
-                        else if ( cons_cols >= l_len + 14 )
+                        else if(sysblk.mipsrate / 1000000 > 9)
                         {
-                            sprintf (ibuf, "InstCnt(%s) MIPS(%4.1d.%2.2d)", 
-                                fmt_int,
-                                sysblk.mipsrate / 1000000, 
-                               (sysblk.mipsrate % 1000000) / 10000 );
+                            sprintf(ibuf, "instcnt %s; mips %2d.%1d; IO/s %6d", 
+                                    instcnt, sysblk.mipsrate / 1000000, 
+                                    sysblk.mipsrate % 1000000 / 100000, sysblk.siosrate);
                         }
                         else 
                         {
-                            sprintf (ibuf, "InstCnt(%s)", fmt_int);
-                        }
-                        if (len + (int)strlen(ibuf) < cons_cols)
-                            len = cons_cols - (int)strlen(ibuf);
-                        strcpy (buf + len, ibuf);
+                            sprintf(ibuf, "instcnt %s; mips %1d.%02d; IO/s %6d", 
+                                    instcnt, sysblk.mipsrate / 1000000, 
+                                    sysblk.mipsrate % 1000000 / 10000, sysblk.siosrate);
+                        }                        
                     }
+                    else if(len + i + 11 < cons_cols) // instcnt and mips
+                    {
+                        if(sysblk.mipsrate / 1000000 > 99)
+                        {
+                            sprintf(ibuf, "instcnt %s; mips %4d", instcnt, sysblk.mipsrate / 1000000);
+                        }
+                        else if(sysblk.mipsrate / 1000000 > 9)
+                        {
+                            sprintf(ibuf, "instcnt %s; mips %2d.%1d", 
+                                    instcnt, sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 100000);
+                        }
+                        else 
+                        {
+                            sprintf(ibuf, "instcnt %s; mips %1d.%02d", 
+                                    instcnt, sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 10000);
+                        }                        
+                    }
+                    else if(len + i < cons_cols) // instcnt
+                    {
+                        sprintf(ibuf, "instcnt %s", instcnt);
+                    }
+                    else
+                       strcpy(ibuf, "");
+                    if (len + (int)strlen(ibuf) < cons_cols)
+                        len = cons_cols - (int)strlen(ibuf);
+                    strcpy (buf + len, ibuf);
+                    
 #endif /* OPTION_MIPS_COUNTING */
                 }
                 else
