@@ -26,7 +26,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Support for disabling of CRT Invalid Parameter Handler...
 
-#if defined( _MSVC_ ) && defined( _MSC_VER ) && ( _MSC_VER >= 1400 )
+#if defined( _MSC_VER ) && ( _MSC_VER >= 1400 )
 
 static void DummyCRTInvalidParameterHandler
 (
@@ -66,7 +66,7 @@ DLL_EXPORT void EnableInvalidParameterHandling()
 #endif
 }
 
-#endif // defined( _MSVC_ ) && defined( _MSC_VER ) && ( _MSC_VER >= 1400 )
+#endif // defined( _MSC_VER ) && ( _MSC_VER >= 1400 )
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1121,12 +1121,7 @@ DLL_EXPORT BYTE *hostpath( BYTE *outpath, const BYTE *inpath, size_t buffsize )
         while (*inpath && --buffsize)
         {
             BYTE c = *inpath++;
-#if      defined(_MSVC_)
-            c = toupper(c);
-            if ( c == '/' ) c = '\\';           
-#else //!defined(_MSVC_)
             if (c == '\\') c = '/';
-#endif //defined(_MSVC_)
             *outpath++ = c;
         }
         *outpath = 0;
