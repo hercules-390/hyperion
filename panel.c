@@ -1477,12 +1477,14 @@ static void NP_update(REGS *regs)
     {
         set_color (COLOR_LIGHT_YELLOW, COLOR_BLACK);
         set_pos (BUTTONS_LINE, 1);
-        if(sysblk.mipsrate / 1000000 > 99)
+	if(sysblk.mipsrate / 1000000 > 999)
           sprintf(buf, "%6d", sysblk.mipsrate / 1000000);
+	else if(sysblk.mipsrate / 1000000 > 99)
+          sprintf(buf, "%4d.%1d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000/ 100000);
         else if(sysblk.mipsrate / 1000000 > 9)
-          sprintf(buf, "%4d.%1d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 100000);
-        else
           sprintf(buf, "%3d.%02d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 10000);
+        else
+          sprintf(buf, "%2d.%03d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 1000);
         draw_text (buf);
         NPmips = sysblk.mipsrate;
         NPmips_valid = 1;
@@ -2942,29 +2944,35 @@ FinishShutdown:
                     /* Bottom line left corner can be when there is space: */
                     /* "" */
                     /* "instcnt <string>" */
-                    /* "instcnt <string>; mips nnnn" */
-                    /* nnnn can be nnnn or nn.n or n.nn */
-                    /* "instcnt <string>; mips nnnn; IO/s nnnnnn" */
+                    /* "instcnt <string>; mips nnnnn" */
+                    /* nnnnn can be nnnnn, nnn.n, nn.nn or n.nnn */
+                    /* "instcnt <string>; mips nnnnn; IO/s nnnnnn" */
                     instcnt = format_int(totalcount);
                     i = (int)strlen(instcnt) + 8;
-                    if(len + i + 11 + 13 < cons_cols) // instcnt, mips and ios
+                    if(len + i + 12 + 13 < cons_cols) // instcnt, mips and ios
                     {
-                        if(sysblk.mipsrate / 1000000 > 99)
+                        if(sysblk.mipsrate / 1000000 > 999)
                         {
-                            sprintf(ibuf, "instcnt %s; mips %4d; IO/s %6d", instcnt, 
+                            sprintf(ibuf, "instcnt %s; mips %5d; IO/s %6d", instcnt, 
                                     sysblk.mipsrate / 1000000, sysblk.siosrate);
                         }
-                        else if(sysblk.mipsrate / 1000000 > 9)
+			else if(sysblk.mipsrate / 1000000 > 99)
                         {
-                            sprintf(ibuf, "instcnt %s; mips %2d.%1d; IO/s %6d", 
+                            sprintf(ibuf, "instcnt %s; mips %3d.%01d; IO/s %6d", 
                                     instcnt, sysblk.mipsrate / 1000000, 
                                     sysblk.mipsrate % 1000000 / 100000, sysblk.siosrate);
                         }
-                        else 
+                        else if(sysblk.mipsrate / 1000000 > 9)
                         {
-                            sprintf(ibuf, "instcnt %s; mips %1d.%02d; IO/s %6d", 
+                            sprintf(ibuf, "instcnt %s; mips %2d.%02d; IO/s %6d", 
                                     instcnt, sysblk.mipsrate / 1000000, 
                                     sysblk.mipsrate % 1000000 / 10000, sysblk.siosrate);
+                        }
+                        else 
+                        {
+                            sprintf(ibuf, "instcnt %s; mips %1d.%03d; IO/s %6d", 
+                                    instcnt, sysblk.mipsrate / 1000000, 
+                                    sysblk.mipsrate % 1000000 / 1000, sysblk.siosrate);
                         }                        
                     }
                     else if(len + i + 11 < cons_cols) // instcnt and mips
