@@ -149,7 +149,7 @@ static void do_shutdown_now()
 
     log_wakeup(NULL);
     
-    sleep(2);               // give logger time to finish
+    usleep(100000);         // give logger time to finish
 
     sysblk.shutfini = 1;    // (shutdown is now complete)
 
