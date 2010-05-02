@@ -1477,9 +1477,9 @@ static void NP_update(REGS *regs)
     {
         set_color (COLOR_LIGHT_YELLOW, COLOR_BLACK);
         set_pos (BUTTONS_LINE, 1);
-	if(sysblk.mipsrate / 1000000 > 999)
+        if(sysblk.mipsrate / 1000000 > 999)
           sprintf(buf, "%6d", sysblk.mipsrate / 1000000);
-	else if(sysblk.mipsrate / 1000000 > 99)
+        else if(sysblk.mipsrate / 1000000 > 99)
           sprintf(buf, "%4d.%1d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000/ 100000);
         else if(sysblk.mipsrate / 1000000 > 9)
           sprintf(buf, "%3d.%02d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 10000);
@@ -2956,7 +2956,7 @@ FinishShutdown:
                             sprintf(ibuf, "instcnt %s; mips %5d; IO/s %6d", instcnt, 
                                     sysblk.mipsrate / 1000000, sysblk.siosrate);
                         }
-			else if(sysblk.mipsrate / 1000000 > 99)
+                        else if(sysblk.mipsrate / 1000000 > 99)
                         {
                             sprintf(ibuf, "instcnt %s; mips %3d.%01d; IO/s %6d", 
                                     instcnt, sysblk.mipsrate / 1000000, 
