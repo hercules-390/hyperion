@@ -1121,7 +1121,11 @@ DLL_EXPORT BYTE *hostpath( BYTE *outpath, const BYTE *inpath, size_t buffsize )
         while (*inpath && --buffsize)
         {
             BYTE c = *inpath++;
+#if      defined(_MSVC_)
+            if ( c == '/' ) c = '\\';
+#else //!defined(_MSVC_)
             if (c == '\\') c = '/';
+#endif //defined(_MSVC_)
             *outpath++ = c;
         }
         *outpath = 0;
