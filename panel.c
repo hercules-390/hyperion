@@ -1115,6 +1115,42 @@ static void NP_screen_redraw (REGS *regs)
     set_pos (cons_rows, cons_cols);
 }
 
+static char *format_int(uint64_t ic)
+{
+    static    char obfr[32];  /* Enough for displaying 2^64-1 */
+    char  grps[7][4]; /* 7 groups of 3 digits */
+    int   maxg=0;
+    int   i;
+
+    strcpy(grps[0],"0");
+    while(ic>0)
+    {
+        int grp;
+        grp=ic%1000;
+        ic/=1000;
+        if(ic==0)
+        {
+            sprintf(grps[maxg],"%u",grp);
+        }
+        else
+        {
+            sprintf(grps[maxg],"%3.3u",grp);
+        }
+        maxg++;
+    }
+    if(maxg) maxg--;
+    obfr[0]=0;
+    for(i=maxg;i>=0;i--)
+    {
+        strcat(obfr,grps[i]);
+        if(i)
+        {
+            strcat(obfr,",");
+        }
+    }
+    return obfr;
+}
+
 /*=NP================================================================*/
 /*  This refreshes the screen with new data every cycle              */
 /*===================================================================*/
@@ -1493,7 +1529,7 @@ static void NP_update(REGS *regs)
     {
         set_color (COLOR_LIGHT_YELLOW, COLOR_BLACK);
         set_pos (BUTTONS_LINE, 8);
-        sprintf(buf, "%6d", sysblk.siosrate);
+        sprintf(buf, "%6.6s", format_int(sysblk.siosrate));
         draw_text (buf);
         NPsios = sysblk.siosrate;
         NPsios_valid = 1;
@@ -1765,42 +1801,6 @@ REGS *copy_regs(int cpu)
 
     release_lock(&sysblk.cpulock[cpu]);
     return regs;
-}
-
-static char *format_int(uint64_t ic)
-{
-    static    char obfr[32];  /* Enough for displaying 2^64-1 */
-    char  grps[7][4]; /* 7 groups of 3 digits */
-    int   maxg=0;
-    int   i;
-
-    strcpy(grps[0],"0");
-    while(ic>0)
-    {
-        int grp;
-        grp=ic%1000;
-        ic/=1000;
-        if(ic==0)
-        {
-            sprintf(grps[maxg],"%u",grp);
-        }
-        else
-        {
-            sprintf(grps[maxg],"%3.3u",grp);
-        }
-        maxg++;
-    }
-    if(maxg) maxg--;
-    obfr[0]=0;
-    for(i=maxg;i>=0;i--)
-    {
-        strcat(obfr,grps[i]);
-        if(i)
-        {
-            strcat(obfr,",");
-        }
-    }
-    return obfr;
 }
 
 
@@ -2897,7 +2897,7 @@ FinishShutdown:
 
             if (redraw_status && !npquiet)
             {
-                char *instcnt;
+                char instcnt[32];
                 /* Save cursor location */
                 saved_cons_row = cur_cons_row;
                 saved_cons_col = cur_cons_col;
@@ -2947,32 +2947,32 @@ FinishShutdown:
                     /* "instcnt <string>; mips nnnnn" */
                     /* nnnnn can be nnnnn, nnn.n, nn.nn or n.nnn */
                     /* "instcnt <string>; mips nnnnn; IO/s nnnnnn" */
-                    instcnt = format_int(totalcount);
+                    strncpy(instcnt, format_int(totalcount), 32);
                     i = (int)strlen(instcnt) + 8;
                     if(len + i + 12 + 13 < cons_cols) // instcnt, mips and ios
                     {
                         if(sysblk.mipsrate / 1000000 > 999)
                         {
-                            sprintf(ibuf, "instcnt %s; mips %5d; IO/s %6d", instcnt, 
-                                    sysblk.mipsrate / 1000000, sysblk.siosrate);
+                            sprintf(ibuf, "instcnt %s; mips %5d; IO/s %6.6s", instcnt, 
+                                    sysblk.mipsrate / 1000000, format_int(sysblk.siosrate));
                         }
                         else if(sysblk.mipsrate / 1000000 > 99)
                         {
-                            sprintf(ibuf, "instcnt %s; mips %3d.%01d; IO/s %6d", 
+                            sprintf(ibuf, "instcnt %s; mips %3d.%01d; IO/s %6.6s", 
                                     instcnt, sysblk.mipsrate / 1000000, 
-                                    sysblk.mipsrate % 1000000 / 100000, sysblk.siosrate);
+                                    sysblk.mipsrate % 1000000 / 100000, format_int(sysblk.siosrate));
                         }
                         else if(sysblk.mipsrate / 1000000 > 9)
                         {
-                            sprintf(ibuf, "instcnt %s; mips %2d.%02d; IO/s %6d", 
+                            sprintf(ibuf, "instcnt %s; mips %2d.%02d; IO/s %6.6s", 
                                     instcnt, sysblk.mipsrate / 1000000, 
-                                    sysblk.mipsrate % 1000000 / 10000, sysblk.siosrate);
+                                    sysblk.mipsrate % 1000000 / 10000, format_int(sysblk.siosrate));
                         }
                         else 
                         {
-                            sprintf(ibuf, "instcnt %s; mips %1d.%03d; IO/s %6d", 
+                            sprintf(ibuf, "instcnt %s; mips %1d.%03d; IO/s %6.6s", 
                                     instcnt, sysblk.mipsrate / 1000000, 
-                                    sysblk.mipsrate % 1000000 / 1000, sysblk.siosrate);
+                                    sysblk.mipsrate % 1000000 / 1000, format_int(sysblk.siosrate));
                         }                        
                     }
                     else if(len + i + 11 < cons_cols) // instcnt and mips

@@ -421,14 +421,14 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00818 "Processor %s%02X: not eligible for ipl nor restart"
 #define HHC00819 "Processor %s%02X: %s"
 #define HHC00820 "%s"
-#define HHC00821 "%s%02X Vector Facility configured '%s'"
+#define HHC00821 "Processor %s%02X: vector facility configured '%s'"
 #define HHC00822 "Processor %s%02X: machine check due to host error: '%s'"
 #define HHC00823 "Processor %s%02X: check-stop due to host error: '%s'"
 #define HHC00824 "Processor %s%02X: machine check code %16.16"I64_FMT"u"
 #define HHC00825 "USR2 signal received for undetermined device"
 #define HHC00826 "%1d:%04X: USR2 signal received"
-#define HHC00827 "Processor %s%02X: processor %02X type %1d set: '%s'"
-#define HHC00828 "Processor %s%02X: ipl failed: '%s'"
+#define HHC00827 "Processor %s%02X: engine %02X type %1d set: '%s'"
+#define HHC00828 "Processor %s%02X: ipl failed: %s"
 
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
