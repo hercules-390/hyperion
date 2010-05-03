@@ -229,7 +229,9 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         pLCSBLK = malloc( sizeof( LCSBLK ) );
         if( !pLCSBLK )
         {
-            WRITEMSG(HHCLC001E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
+            char buf[40];
+            sprintf(buf, "malloc(%lu)", sizeof(LCSBLK));
+            WRMSG(HHC00900, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, buf, strerror(errno) );
             return -1;
         }
         memset( pLCSBLK, 0, sizeof( LCSBLK ) );
@@ -313,7 +315,8 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
         if( !pLCSDev->pDEVBLK[0] )
         {
-            WRITEMSG(HHCLC040E, SSID_TO_LCSS(pDEVBLK->group->memdev[0]->ssid) ,pDEVBLK->group->memdev[0]->devnum, pLCSDev->sAddr );
+            WRMSG(HHC00920, "E", SSID_TO_LCSS(pDEVBLK->group->memdev[0]->ssid) ,
+                  pDEVBLK->group->memdev[0]->devnum, pLCSDev->sAddr );
             return -1;
         }
 
@@ -336,7 +339,8 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
             if( !pLCSDev->pDEVBLK[1] )
             {
-                WRITEMSG(HHCLC040E, SSID_TO_LCSS(pDEVBLK->group->memdev[0]->ssid), pDEVBLK->group->memdev[0]->devnum, pLCSDev->sAddr^1 );
+                WRMSG(HHC00920, "E", SSID_TO_LCSS(pDEVBLK->group->memdev[0]->ssid), 
+                      pDEVBLK->group->memdev[0]->devnum, pLCSDev->sAddr^1 );
                 return -1;
             }
 
@@ -372,8 +376,8 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
                                          &pLCSBLK->Port[pLCSDev->bPort].fd,
                                          pLCSBLK->Port[pLCSDev->bPort].szNetDevName );
 
-            WRITEMSG(HHCLC073I, SSID_TO_LCSS(pLCSDev->pDEVBLK[0]->ssid), pLCSDev->pDEVBLK[0]->devnum, "TAP",
-                      pLCSBLK->Port[pLCSDev->bPort].szNetDevName);
+            WRMSG(HHC00901, "E", SSID_TO_LCSS(pLCSDev->pDEVBLK[0]->ssid), pLCSDev->pDEVBLK[0]->devnum,
+                      pLCSBLK->Port[pLCSDev->bPort].szNetDevName, "TAP");
 
 #if defined(OPTION_W32_CTCI)
 
@@ -387,13 +391,15 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
                 tt32ctl.tt32ctl_devbuffsize = pLCSBLK->iKernBuff;
                 if( TUNTAP_IOCtl( pLCSBLK->Port[pLCSDev->bPort].fd, TT32SDEVBUFF, (char*)&tt32ctl ) != 0  )
                 {
-                    WRITEMSG(HHCLC074W, pLCSBLK->Port[pLCSDev->bPort].szNetDevName, strerror( errno ) );
+                    WRMSG(HHC00902, "W", SSID_TO_LCSS(pLCSDev->pDEVBLK[0]->ssid), pLCSDev->pDEVBLK[0]->devnum,
+                          "TT32SDEVBUFF", pLCSBLK->Port[pLCSDev->bPort].szNetDevName, strerror( errno ) );
                 }
 
                 tt32ctl.tt32ctl_iobuffsize = pLCSBLK->iIOBuff;
                 if( TUNTAP_IOCtl( pLCSBLK->Port[pLCSDev->bPort].fd, TT32SIOBUFF, (char*)&tt32ctl ) != 0  )
                 {
-                    WRITEMSG(HHCLC075W, pLCSBLK->Port[pLCSDev->bPort].szNetDevName, strerror( errno ) );
+                    WRMSG(HHC00902, "W", SSID_TO_LCSS(pLCSDev->pDEVBLK[0]->ssid), pLCSDev->pDEVBLK[0]->devnum,
+                          "TT32SIOBUFF", pLCSBLK->Port[pLCSDev->bPort].szNetDevName, strerror( errno ) );
                 }
             }
 #endif
@@ -881,7 +887,7 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U16   sCount,
                     pDEVBLK->scsw.flag2 & SCSW2_FC_CLEAR )
                 {
                     if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
-                        WRITEMSG(HHCLC002I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
+                        WRMSG(HHC00904, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
 
                     *pUnitStat = CSW_CE | CSW_DE;
                     *pResidual = sCount;
@@ -952,7 +958,7 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U16   sCount,
 
         if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep || pLCSDEV->pLCSBLK->fDebug )
         {
-            WRITEMSG(HHCLC003I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
+            WRMSG(HHC00921, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
             packet_trace( pIOBuf, iLength, '<' );
         }
 
@@ -1026,7 +1032,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
             // Trace received command frame...
             if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep || pLCSDEV->pLCSBLK->fDebug )
             {
-                WRITEMSG(HHCLC051I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
+                WRMSG(HHC00922, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
                 packet_trace( (BYTE*)pCmdFrame, iLength, '<' );
             }
 
@@ -1041,37 +1047,37 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
             {
             case LCS_CMD_STARTUP:       // Start Host
                 if( pLCSDEV->pLCSBLK->fDebug )
-                    WRITEMSG(HHCLC043I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum);
+                    WRMSG(HHC00933, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "startup");
                 LCS_Startup( pLCSDEV, pCmdFrame );
                 break;
 
             case LCS_CMD_SHUTDOWN:      // Shutdown Host
                 if( pLCSDEV->pLCSBLK->fDebug )
-                    WRITEMSG(HHCLC044I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum);
+                    WRMSG(HHC00933, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "shutdown");
                 LCS_Shutdown( pLCSDEV, pCmdFrame );
                 break;
 
             case LCS_CMD_STRTLAN:       // Start LAN
                 if( pLCSDEV->pLCSBLK->fDebug )
-                    WRITEMSG(HHCLC045I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum);
+                    WRMSG(HHC00933, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "start lan");
                 LCS_StartLan( pLCSDEV, pCmdFrame );
                 break;
 
             case LCS_CMD_STOPLAN:       // Stop  LAN
                 if( pLCSDEV->pLCSBLK->fDebug )
-                    WRITEMSG(HHCLC046I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum);
+                    WRMSG(HHC00933, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "stop lan");
                 LCS_StopLan( pLCSDEV, pCmdFrame );
                 break;
 
             case LCS_CMD_QIPASSIST:     // Query IP Assists
                 if( pLCSDEV->pLCSBLK->fDebug )
-                    WRITEMSG(HHCLC047I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum);
+                    WRMSG(HHC00933, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "query IP assist");
                 LCS_QueryIPAssists( pLCSDEV, pCmdFrame );
                 break;
 
             case LCS_CMD_LANSTAT:       // LAN Stats
                 if( pLCSDEV->pLCSBLK->fDebug )
-                    WRITEMSG(HHCLC048I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum);
+                    WRMSG(HHC00933, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "lan statistics");
                 LCS_LanStats( pLCSDEV, pCmdFrame );
                 break;
 
@@ -1105,7 +1111,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
             // Trace Ethernet frame before sending to TAP device
             if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep || pLCSDEV->pLCSBLK->fDebug )
             {
-                WRITEMSG(HHCLC004I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->filename );
+                WRMSG(HHC00934, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->filename );
                 packet_trace( (BYTE*)pEthFrame, iEthLen, '<' );
             }
 
@@ -1113,7 +1119,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
             if( TUNTAP_Write( pDEVBLK->fd,
                               (BYTE*)pEthFrame, iEthLen ) != iEthLen )
             {
-                WRITEMSG(HHCLC005E,
+                WRMSG(HHC00936, "E",
                         SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->filename,
                         strerror( errno ) );
                 pDEVBLK->sense[0] = SENSE_EC;
@@ -1123,7 +1129,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
             break;
 
         default:
-            WRITEMSG(HHCLC050E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->filename );
+            WRMSG(HHC00937, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pLCSHDR->bType );
             ASSERT( FALSE );
             pDEVBLK->sense[0] = SENSE_EC;
             *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
@@ -1139,7 +1145,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
     if( pLCSDEV->fReplyPending )
     {
         if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
-            WRITEMSG(HHCLC006I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
+            WRMSG(HHC00938, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
 
         obtain_lock( &pLCSDEV->EventLock );
         signal_condition( &pLCSDEV->Event );
@@ -1249,7 +1255,7 @@ static void  LCS_Startup( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
     // Make sure it doesn't exceed our compiled maximum
     if (pLCSDEV->iMaxFrameBufferSize > sizeof(pLCSDEV->bFrameBuffer))
     {
-        WRITEMSG(HHCLC049W, SSID_TO_LCSS(pLCSDEV->pDEVBLK[1]->ssid), pLCSDEV->pDEVBLK[1]->devnum,
+        WRMSG(HHC00939, "W", SSID_TO_LCSS(pLCSDEV->pDEVBLK[1]->ssid), pLCSDEV->pDEVBLK[1]->devnum,
                   pLCSDEV->iMaxFrameBufferSize,
                   sizeof( pLCSDEV->bFrameBuffer ) );
         pLCSDEV->iMaxFrameBufferSize = sizeof(pLCSDEV->bFrameBuffer);
@@ -1258,7 +1264,7 @@ static void  LCS_Startup( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
     // Make sure it's not smaller than the compiled minimum size
     if (pLCSDEV->iMaxFrameBufferSize < CTC_MIN_FRAME_BUFFER_SIZE)
     {
-        WRITEMSG(HHCLC054W, SSID_TO_LCSS(pLCSDEV->pDEVBLK[1]->ssid), pLCSDEV->pDEVBLK[1]->devnum,
+        WRMSG(HHC00939, "W", SSID_TO_LCSS(pLCSDEV->pDEVBLK[1]->ssid), pLCSDEV->pDEVBLK[1]->devnum,
                   pLCSDEV->iMaxFrameBufferSize,
                   CTC_MIN_FRAME_BUFFER_SIZE );
         pLCSDEV->iMaxFrameBufferSize = sizeof(pLCSDEV->bFrameBuffer);
@@ -1590,7 +1596,7 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 
     if( fd == -1 )
     {
-        WRITEMSG(HHCLC007E, strerror( HSO_errno ) );
+        WRMSG(HHC00940, "E", "socket()", strerror( HSO_errno ) );
         // FIXME: we should probably be returning a non-zero hwReturnCode
         // STORE_HW( pStdCmdReplyFrame->bLCSCmdHdr.hwReturnCode, 0x0001 );
         return;
@@ -1607,7 +1613,7 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 
     if( TUNTAP_IOCtl( fd, SIOCGIFHWADDR, (char*)&ifr ) != 0  )
     {
-        WRITEMSG(HHCLC008E, pLCSPORT->szNetDevName, strerror( errno ) );
+        WRMSG(HHC00941, "E", "SIOCGIFHWADDR", pLCSPORT->szNetDevName, strerror( errno ) );
         // FIXME: we should probably be returning a non-zero hwReturnCode
         // STORE_HW( pStdCmdReplyFrame->bLCSCmdHdr.hwReturnCode, 0x0002 );
         return;
@@ -1621,14 +1627,14 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 #endif // defined(SIOCGIFHWADDR)
 
     /* Report what MAC address we will really be using */
-    WRITEMSG(HHCLC055I, pLCSPORT->szNetDevName, *(pIFaceMAC+0),*(pIFaceMAC+1),
+    WRMSG(HHC00942, "I", pLCSPORT->szNetDevName, *(pIFaceMAC+0),*(pIFaceMAC+1),
                                     *(pIFaceMAC+2),*(pIFaceMAC+3),
                                     *(pIFaceMAC+4),*(pIFaceMAC+5));
 
     /* Issue warning if different from specified value */
     if (memcmp( pPortMAC, pIFaceMAC, IFHWADDRLEN ) != 0)
     {
-        WRITEMSG(HHCLC056W, pLCSPORT->szNetDevName, *(pPortMAC+0),*(pPortMAC+1),
+        WRMSG(HHC00943, "W", pLCSPORT->szNetDevName, *(pPortMAC+0),*(pPortMAC+1),
                                         *(pPortMAC+2),*(pPortMAC+3),
                                         *(pPortMAC+4),*(pPortMAC+5));
 
@@ -1730,7 +1736,7 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
         {
             if( pLCSPORT->fd < 0 || pLCSPORT->fCloseInProgress )
                 break;
-            WRITEMSG(HHCLC042E, pLCSPORT->bPort, strerror( errno ) );
+            WRMSG(HHC00944, "E", pLCSPORT->bPort, strerror( errno ) );
             SLEEP(1);           // (purposeful long delay)
             continue;
         }
@@ -1738,7 +1744,7 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
         if( pLCSPORT->pLCSBLK->fDebug )
         {
             // Trace the frame
-            WRITEMSG(HHCLC009I, pLCSPORT->bPort );
+            WRMSG(HHC00945, "I", pLCSPORT->bPort );
             packet_trace( szBuff, iLength, '>' );
 
             bReported = 0;
@@ -1772,7 +1778,7 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
                         c.i = ntohl(lIPAddress);
                         sprintf( str, "%8.08X %d.%d.%d.%d", c.i, c.b.d, c.b.c, c.b.b, c.b.a );
 
-                        WRITEMSG(HHCLC010I, pLCSPORT->bPort, str );
+                        WRMSG(HHC00946, "I", pLCSPORT->bPort, str );
 
                         bReported = 1;
                     }
@@ -1803,7 +1809,7 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
                         c.i = ntohl(lIPAddress);
                         sprintf( str, "%8.08X %d.%d.%d.%d", c.i, c.b.d, c.b.c, c.b.b, c.b.a );
                         
-                        WRITEMSG(HHCLC011I, pLCSPORT->bPort, str );
+                        WRMSG(HHC00947, "I", pLCSPORT->bPort, str );
 
                         bReported = 1;
                     }
@@ -1828,9 +1834,9 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
 
                     if( pLCSPORT->pLCSBLK->fDebug && !bReported )
                     {
-                        WRITEMSG
+                        WRMSG
                         (
-                            HHCLC076I
+                            HHC00948, "I"
 
                             ,pLCSPORT->bPort
                             ,*(pMAC+0)
@@ -1861,7 +1867,7 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
                 {
                     if( pLCSPORT->pLCSBLK->fDebug && !bReported )
                     {
-                        WRITEMSG(HHCLC012I, pLCSPORT->bPort );
+                        WRMSG(HHC00949, "I", pLCSPORT->bPort );
 
                         bReported = 1;
                     }
@@ -1890,14 +1896,14 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
                 pMatchingLCSDEV = pPrimaryLCSDEV;
 
                 if( pLCSPORT->pLCSBLK->fDebug )
-                    WRITEMSG(HHCLC013I, pLCSPORT->bPort, pMatchingLCSDEV->sAddr );
+                    WRMSG(HHC00950, "I", pLCSPORT->bPort, "primary", pMatchingLCSDEV->sAddr );
             }
             else if( pSecondaryLCSDEV && pSecondaryLCSDEV->fStarted )
             {
                 pMatchingLCSDEV = pSecondaryLCSDEV;
 
                 if( pLCSPORT->pLCSBLK->fDebug )
-                    WRITEMSG(HHCLC014I, pLCSPORT->bPort, pMatchingLCSDEV->sAddr );
+                    WRMSG(HHC00950, "I", pLCSPORT->bPort, "secondary", pMatchingLCSDEV->sAddr );
             }
         }
 
@@ -1905,7 +1911,7 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
         if( !pMatchingLCSDEV )
         {
             if( pLCSPORT->pLCSBLK->fDebug )
-                WRITEMSG(HHCLC015I, pLCSPORT->bPort );
+                WRMSG(HHC00951, "I", pLCSPORT->bPort );
 
             continue;
         }
@@ -1918,7 +1924,7 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
             c.i = ntohl(pMatchingLCSDEV->lIPAddress);
             sprintf( str, "%8.08X %d.%d.%d.%d", c.i, c.b.d, c.b.c, c.b.b, c.b.a );
 
-            WRITEMSG( HHCLC016I, pLCSPORT->bPort, pMatchingLCSDEV->sAddr, str );
+            WRMSG( HHC00952, "I", pLCSPORT->bPort, pMatchingLCSDEV->sAddr, str );
         }
 
         // Match was found.
@@ -1930,7 +1936,7 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
             if (EMSGSIZE == errno)
             {
                 if( pLCSPORT->pLCSBLK->fDebug )
-                    WRITEMSG(HHCLC041W, pLCSPORT->bPort );
+                    WRMSG(HHC00953, "W", pLCSPORT->bPort );
                 break;
             }
             ASSERT( ENOBUFS == errno );
@@ -2189,7 +2195,8 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
         case 'n':
             if( strlen( optarg ) > sizeof( pDEVBLK->filename ) - 1 )
             {
-                WRITEMSG(HHCLC017E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, optarg );
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
+                      "device name", optarg );
                 return -1;
             }
 
@@ -2204,7 +2211,8 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
             if( iKernBuff * 1024 < MIN_CAPTURE_BUFFSIZE    ||
                 iKernBuff * 1024 > MAX_CAPTURE_BUFFSIZE )
             {
-                WRITEMSG(HHCLC052E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, optarg );
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
+                      "kernel buffer size", optarg );
                 return -1;
             }
 
@@ -2217,7 +2225,8 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
             if( iIOBuff * 1024 < MIN_PACKET_BUFFSIZE    ||
                 iIOBuff * 1024 > MAX_PACKET_BUFFSIZE )
             {
-                WRITEMSG(HHCLC053E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, optarg );
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
+                      "dll i/o buffer size", optarg );
                 return -1;
             }
 
@@ -2232,7 +2241,8 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
         case 'm':
             if( ParseMAC( optarg, mac ) != 0 )
             {
-                WRITEMSG(HHCLC018E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, optarg );
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
+                      "MAC address", optarg );
                 return -1;
             }
 
@@ -2255,7 +2265,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
 
     if( argc > 1 )
     {
-        WRITEMSG(HHCLC019E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
+        WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
         return -1;
     }
 
@@ -2264,7 +2274,8 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
     {
         if( inet_aton( *argv, &addr ) == 0 )
         {
-            WRITEMSG(HHCLC020E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, *argv );
+            WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
+                  "IP address", *argv );
             return -1;
         }
 
@@ -2318,7 +2329,9 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
     fp = fopen( pathname, "r" );
     if( !fp )
     {
-        WRITEMSG(HHCLC039E, pszOATName, strerror( errno ) );
+        char buf[80];
+        sprintf(buf, "fopen(%s, \"r\")", pathname);
+        WRMSG(HHC00940, "E", buf, strerror( errno ) );
         return -1;
     }
 
@@ -2375,7 +2388,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
                 argc       != 1    ||
                 sscanf( pszOperand, "%hi%c", &sPort, &c ) != 1 )
             {
-                WRITEMSG(HHCLC021E, pszOATName, szBuff );
+                WRMSG(HHC00954, "E", "HWADD", pszOATName, szBuff );
                 return -1;
             }
 
@@ -2383,7 +2396,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
             if( ParseMAC( argv[0], pLCSPORT->MAC_Address ) != 0 )
             {
-                WRITEMSG(HHCLC022E, pszOATName, szBuff, argv[0] );
+                WRMSG(HHC00955, "E", "MAC", argv[0], "HWADD", pszOATName, szBuff );
 
                 memset( pLCSPORT->MAC_Address, 0, sizeof(MAC) );
                 return -1;
@@ -2398,13 +2411,13 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
                 argc       != 2    ||
                 sscanf( pszOperand, "%hi%c", &sPort, &c ) != 1 )
             {
-                WRITEMSG(HHCLC023E, pszOATName, szBuff );
+                WRMSG(HHC00954, "E", "ROUTE", pszOATName, szBuff );
                 return -1;
             }
 
             if( inet_aton( argv[0], &addr ) == 0 )
             {
-                WRITEMSG(HHCLC024E, pszOATName, szBuff, argv[0] );
+                WRMSG(HHC00955, "E", "net address", argv[0], "ROUTE", pszOATName, szBuff );
                 return -1;
             }
 
@@ -2413,7 +2426,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
             if( inet_aton( argv[1], &addr ) == 0 )
             {
                 free(pszNetAddr);
-                WRITEMSG(HHCLC025E, pszOATName, szBuff, argv[1] );
+                WRMSG(HHC00955, "E", "netmask", argv[1], "ROUTE", pszOATName, szBuff );
                 return -1;
             }
 
@@ -2444,14 +2457,14 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
         {
             if( !pszKeyword || !pszOperand )
             {
-                WRITEMSG(HHCLC026E, pszOATName );
+                WRMSG(HHC00956, "E", pszOATName );
                 return -1;
             }
 
             if( strlen( pszKeyword ) > 4 ||
                 sscanf( pszKeyword, "%hx%c", &sDevNum, &c ) != 1 )
             {
-                WRITEMSG(HHCLC027E, pszOATName, pszKeyword );
+                WRMSG(HHC00957, "E", pszOATName, "device number", pszKeyword );
                 return -1;
             }
 
@@ -2461,13 +2474,13 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
                 if( argc < 1 )
                 {
-                    WRITEMSG(HHCLC028E, pszOATName, szBuff );
+                    WRMSG(HHC00958, "E", pszOATName, szBuff );
                     return -1;
                 }
 
                 if( sscanf( argv[0], "%hi%c", &sPort, &c ) != 1 )
                 {
-                    WRITEMSG(HHCLC029E, pszOATName, argv[0] );
+                    WRMSG(HHC00957, "E", pszOATName, "port number", argv[0] );
                     return -1;
                 }
 
@@ -2481,7 +2494,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
                         bType = LCSDEV_TYPE_NONE;
                     else
                     {
-                        WRITEMSG(HHCLC031E, pszOATName, szBuff, argv[1] );
+                        WRMSG(HHC00959, "E", pszOATName, szBuff, argv[1] );
                         return -1;
                     }
 
@@ -2491,7 +2504,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
                         if( inet_aton( pszIPAddress, &addr ) == 0 )
                         {
-                            WRITEMSG(HHCLC032E, pszOATName, szBuff, pszIPAddress );
+                            WRMSG(HHC00957, "E", pszOATName, szBuff, "IP address", pszIPAddress );
                             return -1;
                         }
 
@@ -2505,25 +2518,25 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
                 if( argc < 1 )
                 {
-                    WRITEMSG(HHCLC033E, pszOATName, szBuff );
+                    WRMSG(HHC00958, "E", pszOATName, szBuff );
                     return -1;
                 }
 
                 if( sscanf( argv[0], "%hi%c", &sPort, &c ) != 1 )
                 {
-                    WRITEMSG(HHCLC034E, pszOATName, argv[0] );
+                    WRMSG(HHC00957, "E", pszOATName, "port number", argv[0] );
                     return -1;
                 }
 
                 if( argc > 1 )
                 {
-                    WRITEMSG(HHCLC035E, pszOATName, szBuff );
+                    WRMSG(HHC00960, "E", pszOATName, szBuff );
                     return -1;
                 }
             }
             else
             {
-                WRITEMSG(HHCLC036E, pszOATName, pszOperand );
+                WRMSG(HHC00961, "E", pszOATName, pszOperand );
                 return -1;
             }
 
@@ -2593,7 +2606,7 @@ static char*  ReadOAT( char* pszOATName, FILE* fp, char* pszBuff )
             // Check for I/O error
             if( ferror( fp ) )
             {
-                WRITEMSG(HHCLC037E, pszOATName, iLine, strerror( errno ) );
+                WRMSG(HHC00962, "E", pszOATName, iLine, strerror( errno ) );
                 return NULL;
             }
 
@@ -2616,7 +2629,7 @@ static char*  ReadOAT( char* pszOATName, FILE* fp, char* pszBuff )
             // Check that statement does not overflow bufffer
             if( iLen >= 255 )
             {
-                WRITEMSG(HHCLC038E, pszOATName, iLine );
+                WRMSG(HHC00963, "E", pszOATName, iLine );
                 exit(1);
             }
 

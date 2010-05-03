@@ -150,7 +150,9 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
     if( !pWrkCTCBLK )
     {
-        WRITEMSG(HHCCT037E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
+        char buf[40];
+        sprintf(buf, "malloc(%lu)", sizeof(CTCBLK));
+        WRMSG(HHC00900, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, buf, strerror(errno) );
         return -1;
     }
 
@@ -170,7 +172,9 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
     if( !pDevCTCBLK )
     {
-        WRITEMSG(HHCCT037E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
+        char buf[40];
+        sprintf(buf, "malloc(%lu)", sizeof(CTCBLK));
+        WRMSG(HHC00900, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, buf, strerror(errno) );
         free( pWrkCTCBLK );
         pWrkCTCBLK = NULL;
         return -1;
@@ -226,8 +230,8 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     }
     else
     {
-        WRITEMSG(HHCCT073I, SSID_TO_LCSS(pDevCTCBLK->pDEVBLK[0]->ssid), pDevCTCBLK->pDEVBLK[0]->devnum,
-                  pDevCTCBLK->szTUNDevName);
+        WRMSG(HHC00901, "I", SSID_TO_LCSS(pDevCTCBLK->pDEVBLK[0]->ssid), pDevCTCBLK->pDEVBLK[0]->devnum,
+                  pDevCTCBLK->szTUNDevName, "TUN");
     }
 
 #if defined(OPTION_W32_CTCI)
@@ -242,13 +246,15 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         tt32ctl.tt32ctl_devbuffsize = pDevCTCBLK->iKernBuff;
         if( TUNTAP_IOCtl( pDevCTCBLK->fd, TT32SDEVBUFF, (char*)&tt32ctl ) != 0  )
         {
-            WRITEMSG(HHCCT074W, pDevCTCBLK->szTUNDevName, strerror( errno ) );
+            WRMSG(HHC00902, "W", SSID_TO_LCSS(pDevCTCBLK->pDEVBLK[0]->ssid), pDevCTCBLK->pDEVBLK[0]->devnum,
+                  "TT32SDEVBUFF", pDevCTCBLK->szTUNDevName, strerror( errno ) );
         }
 
         tt32ctl.tt32ctl_iobuffsize = pDevCTCBLK->iIOBuff;
         if( TUNTAP_IOCtl( pDevCTCBLK->fd, TT32SIOBUFF, (char*)&tt32ctl ) != 0  )
         {
-            WRITEMSG(HHCCT075W, pDevCTCBLK->szTUNDevName, strerror( errno ) );
+            WRMSG(HHC00902, "W", SSID_TO_LCSS(pDevCTCBLK->pDEVBLK[0]->ssid), pDevCTCBLK->pDEVBLK[0]->devnum,
+                  "TT32SIOBUFF", pDevCTCBLK->szTUNDevName, strerror( errno ) );
         }
     }
 #endif
@@ -681,7 +687,7 @@ void  CTCI_Read( DEVBLK* pDEVBLK,   U16   sCount,
                     pDEVBLK->scsw.flag2 & SCSW2_FC_CLEAR )
                 {
                     if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
-                        WRITEMSG(HHCCT040I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
+                        WRMSG(HHC00904, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
 
                     *pUnitStat = CSW_CE | CSW_DE;
                     *pResidual = sCount;
@@ -731,7 +737,7 @@ void  CTCI_Read( DEVBLK* pDEVBLK,   U16   sCount,
 
         if( pCTCBLK->fDebug )
         {
-            WRITEMSG(HHCCT041I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, iLength );
+            WRMSG(HHC00905, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, iLength );
             packet_trace( pCTCBLK->bFrameBuffer, iLength, '>' );
         }
 
@@ -772,7 +778,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
     // Check that CCW count is sufficient to contain block header
     if( sCount < sizeof( CTCIHDR ) )
     {
-        WRITEMSG(HHCCT042E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, sCount );
+        WRMSG(HHC00906, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, sCount );
 
         pDEVBLK->sense[0] = SENSE_DC;
         *pUnitStat        = CSW_CE | CSW_DE | CSW_UC;
@@ -800,7 +806,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
         FETCH_FW( iStackCmd, *((FWORD*)&pIOBuf[36]) );
 
         // Display stack command and discard the packet
-        WRITEMSG(HHCCT043I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, szStackID, iStackCmd );
+        WRMSG(HHC00907, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, szStackID, iStackCmd );
 
         *pUnitStat = CSW_CE | CSW_DE;
         *pResidual = 0;
@@ -848,7 +854,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
         // Check that the segment is fully contained within the block
         if( iPos + sizeof( CTCISEG ) > sOffset )
         {
-            WRITEMSG(HHCCT044E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, iPos );
+            WRMSG(HHC00908, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, iPos );
 
             pDEVBLK->sense[0] = SENSE_DC;
             *pUnitStat        = CSW_CE | CSW_DE | CSW_UC;
@@ -866,7 +872,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
             ( iPos + sSegLen > sOffset           ) ||
             ( iPos + sSegLen > sCount            ) )
         {
-            WRITEMSG(HHCCT045E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, sSegLen, iPos );
+            WRMSG(HHC00909, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, sSegLen, iPos );
 
             pDEVBLK->sense[0] = SENSE_DC;
             *pUnitStat        = CSW_CE | CSW_DE | CSW_UC;
@@ -879,7 +885,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
         // Trace the IP packet before sending to TUN device
         if( pCTCBLK->fDebug )
         {
-            WRITEMSG(HHCCT046I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pCTCBLK->szTUNDevName );
+            WRMSG(HHC00910, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pCTCBLK->szTUNDevName );
             packet_trace( pSegment->bData, sDataLen, '<' );
         }
 
@@ -888,7 +894,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
 
         if( rc < 0 )
         {
-            WRITEMSG(HHCCT047E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pCTCBLK->szTUNDevName,
+            WRMSG(HHC00911, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pCTCBLK->szTUNDevName,
                     strerror( errno ) );
 
             pDEVBLK->sense[0] = SENSE_EC;
@@ -966,7 +972,7 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
         // Check for error condition
         if( iLength < 0 )
         {
-            WRITEMSG(HHCCT048E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pCTCBLK->szTUNDevName,
+            WRMSG(HHC00912, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pCTCBLK->szTUNDevName,
                 strerror( errno ) );
             SLEEP(1);           // (purposeful long delay)
             continue;
@@ -977,7 +983,7 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
 
         if( pCTCBLK->fDebug )
         {
-            WRITEMSG(HHCCT049I, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pCTCBLK->szTUNDevName, iLength );
+            WRMSG(HHC00913, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, iLength, pCTCBLK->szTUNDevName );
             packet_trace( szBuff, iLength, '>' );
         }
 
@@ -988,7 +994,7 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
             if( EMSGSIZE == errno )     // (if too large for buffer)
             {
                 if( pCTCBLK->fDebug )
-                    WRITEMSG(HHCCT072W, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
+                    WRMSG(HHC00914, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
                 break;                  // (discard it...)
             }
 
@@ -1133,7 +1139,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
     // Check for correct number of arguments
     if( argc < 2 )
     {
-        WRITEMSG(HHCCT056E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
+        WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
         return -1;
     }
     // Compatability with old format configuration files needs to be
@@ -1217,7 +1223,8 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 // Not an IP address, check for valid MAC
                 if( ParseMAC( optarg, mac ) != 0 )
                 {
-                    WRITEMSG(HHCCT050E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, optarg );
+                    WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
+                          "adapter address", optarg );
                     return -1;
                 }
             }
@@ -1225,7 +1232,8 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             // This is the file name of the special TUN/TAP character device
             if( strlen( optarg ) > sizeof( pCTCBLK->szTUNCharName ) - 1 )
             {
-                WRITEMSG(HHCCT051E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, optarg );
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
+                      "device name", optarg );
                 return -1;
             }
             strcpy( pCTCBLK->szTUNCharName, optarg );
@@ -1238,7 +1246,8 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             if( iKernBuff * 1024 < MIN_CAPTURE_BUFFSIZE    ||
                 iKernBuff * 1024 > MAX_CAPTURE_BUFFSIZE )
             {
-                WRITEMSG(HHCCT052E, SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, optarg );
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
+                      "kernel buffer size", optarg );
                 return -1;
             }
 
@@ -1251,7 +1260,8 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             if( iIOBuff * 1024 < MIN_PACKET_BUFFSIZE    ||
                 iIOBuff * 1024 > MAX_PACKET_BUFFSIZE )
             {
-                WRITEMSG(HHCCT053E, pDEVBLK->devnum, optarg );
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
+                      "dll i/o buffer size", optarg );
                 return -1;
             }
 
@@ -1264,7 +1274,8 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
 
             if( iMTU < 46 || iMTU > 65536 )
             {
-                WRITEMSG(HHCCT054E, pDEVBLK->devnum, optarg );
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
+                      "MTU size", optarg );
                 return -1;
             }
 
@@ -1274,7 +1285,8 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         case 's':     // Netmask of point-to-point link
             if( inet_aton( optarg, &addr ) == 0 )
             {
-                WRITEMSG(HHCCT055E, pDEVBLK->devnum, optarg );
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
+                      "netmask", optarg );
                 return -1;
             }
 
@@ -1284,7 +1296,8 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         case 'm':
             if( ParseMAC( optarg, mac ) != 0 )
             {
-                WRITEMSG(HHCCT057E, pDEVBLK->devnum, optarg );
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
+                      "MAC address", optarg );
                 return -1;
             }
 
@@ -1310,7 +1323,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
     // Check for correct number of arguments
     if( argc == 0 )
     {
-        WRITEMSG(HHCCT056E, pDEVBLK->devnum );
+        WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
         return -1;
     }
 
@@ -1319,14 +1332,15 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         // New format has 2 and only 2 parameters (Though several options).
         if( argc != 2 )
         {
-            WRITEMSG(HHCCT056E, pDEVBLK->devnum );
+            WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
             return -1;
         }
 
         // Guest IP Address
         if( inet_aton( *argv, &addr ) == 0 )
         {
-            WRITEMSG(HHCCT058E, pDEVBLK->devnum, *argv );
+            WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
+                  "IP address", *argv );
             return -1;
         }
 
@@ -1337,7 +1351,8 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         // Driver IP Address
         if( inet_aton( *argv, &addr ) == 0 )
         {
-            WRITEMSG(HHCCT058E, pDEVBLK->devnum, *argv );
+            WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
+                  "IP address", *argv );
             return -1;
         }
 
@@ -1352,7 +1367,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         // Old format has 5 and only 5 arguments
         if( argc != 5 )
         {
-            WRITEMSG(HHCCT056E, pDEVBLK->devnum );
+            WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
             return -1;
         }
 
@@ -1360,7 +1375,8 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         if( **argv != '/' ||
             strlen( *argv ) > sizeof( pCTCBLK->szTUNCharName ) - 1 )
         {
-            WRITEMSG(HHCCT061E, pDEVBLK->devnum, *argv );
+            WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
+                  "device name", *argv );
             return -1;
         }
 
@@ -1373,7 +1389,8 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
 
         if( iMTU < 46 || iMTU > 65536 )
         {
-            WRITEMSG(HHCCT062E, pDEVBLK->devnum, *argv );
+            WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
+                  "MTU size", *argv );
             return -1;
         }
 
@@ -1383,7 +1400,8 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         // Guest IP Address
         if( inet_aton( *argv, &addr ) == 0 )
         {
-            WRITEMSG(HHCCT058E, pDEVBLK->devnum, *argv );
+            WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
+                  "IP address", *argv );
             return -1;
         }
 
@@ -1394,7 +1412,8 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         // Driver IP Address
         if( inet_aton( *argv, &addr ) == 0 )
         {
-            WRITEMSG(HHCCT058E, pDEVBLK->devnum, *argv );
+            WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
+                  "IP address", *argv );
             return -1;
         }
 
@@ -1405,7 +1424,8 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         // Netmask
         if( inet_aton( *argv, &addr ) == 0 )
         {
-            WRITEMSG(HHCCT055E, pDEVBLK->devnum, *argv );
+            WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
+                  "netmask", *argv );
             return -1;
         }
 
@@ -1415,7 +1435,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
 
         if( argc > 0 )
         {
-            WRITEMSG(HHCCT056E, pDEVBLK->devnum );
+            WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
             return -1;
         }
 #else // defined( OPTION_W32_CTCI )
@@ -1432,7 +1452,8 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 // Guest IP Address
                 if( inet_aton( *argv, &addr ) == 0 )
                 {
-                    WRITEMSG(HHCCT058E, pDEVBLK->devnum, *argv );
+                    WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
+                          "IP address", *argv );
                     return -1;
                 }
 
@@ -1446,7 +1467,8 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                     // Not an IP address, check for valid MAC
                     if( ParseMAC( *argv, mac ) != 0 )
                     {
-                        WRITEMSG(HHCCT057E, pDEVBLK->devnum, *argv );
+                        WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
+                              "MAC address", *argv );
                         return -1;
                     }
                 }
@@ -1477,7 +1499,8 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 if( iKernBuff * 1024 < MIN_CAPTURE_BUFFSIZE ||
                     iKernBuff * 1024 > MAX_CAPTURE_BUFFSIZE )
                 {
-                    WRITEMSG(HHCCT052E, pDEVBLK->devnum, *argv );
+                    WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
+                          "kernel buffer size", *argv );
                     return -1;
                 }
 
@@ -1493,7 +1516,8 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 if( iIOBuff * 1024 < MIN_PACKET_BUFFSIZE ||
                     iIOBuff * 1024 > MAX_PACKET_BUFFSIZE )
                 {
-                    WRITEMSG(HHCCT053E, pDEVBLK->devnum, *argv );
+                    WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
+                          "dll i/o buffer size", *argv );
                     return -1;
                 }
 
@@ -1503,7 +1527,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 continue;
 
             default:
-                WRITEMSG(HHCCT056E, pDEVBLK->devnum );
+                WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
                 return -1;
             }
         }
