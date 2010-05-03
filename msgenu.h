@@ -447,7 +447,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00913 "%1d:%04X CTC: received %d bytes size packet from device '%s'"
 #define HHC00914 "%1d:%04X CTC: packet frame too big, dropped"
 #define HHC00915 "%1d:%04X CTC: incorrect number of parameters"
-#define HHC00916 "%1d:%04X CTC: option '%s' value '%s' invalid or incorrect"
+#define HHC00916 "%1d:%04X CTC: option '%s' value '%s' invalid"
 
 /* ctc_lcs.c */
 #define HHC00920 "%1d:%04X CTC: lcs device %04X not in configuration"
@@ -492,6 +492,30 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00974 "%1d:%04X CTC: incorrect client or config error: config file '%s' connecting client '%s'"
 #define HHC00975 "%1d:%04X CTC: invalid '%s' length: %d < %d"
 #define HHC00976 "%1d:%04X CTC: EOF on read, CTC network down"
+
+// reserve 010xx for communication adapter specific component messages
+/* comm3705.c and commadpt.c */
+#define HHC01000 "%1d:%04X CA: error in function '%s': '%s'"
+#define HHC01001 "%1d:%04X CA: connect out to %s:%d failed during initial status: '%s'"
+#define HHC01002 "%1d:%04X CA: cannot obtain socket for incoming calls: '%s'"
+#define HHC01003 "%1d:%04X CA: waiting 5 seconds for port %d to become available"
+#define HHC01004 "%1d:%04X CA: listening on port %d for incoming TCP connections"
+#define HHC01005 "%1d:%04X CA: outgoing call failed during '%s' command: '%s'"
+#define HHC01006 "%1d:%04X CA: incoming call"
+#define HHC01007 "%1d:%04X CA: option '%s' value '%s' invalid"
+#define HHC01008 "%1d:%04X CA: missing parameter: DIAL(%s) and '%s' not specified"
+#define HHC01009 "%1d:%04X CA: conflicting parameter: DIAL(%s) and %s=%s specified"
+#define HHC01010 "%1d:%04X CA: RPORT parameter ignored"
+#define HHC01011 "%1d:%04X CA: initialization not performed"
+#define HHC01012 "%1d:%04X CA: error parsing '%s'"
+#define HHC01013 "%1d:%04X CA: incorrect switched/dial specification '%s': defaulting to DIAL=OUT"
+#define HHC01014 "%1d:%04X CA: initialization failed due to previous errors"
+#define HHC01015 "%1d:%04X CA: BSC communication thread did not initialize"
+#define HHC01016 "CA: unable to determine '%s' from '%s'"
+#define HHC01017 "CA: invalid parameter '%s'"
+#define HHC01018 "%1d:%04X CA: client '%s' connected to %4.4X device"
+#define HHC01019 "%1d:%04X CA: unrecognized parameter '%s'"
+#define HHC01020 "%1d:%04X CA: no buffers trying to send '%s'"
 
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
@@ -634,39 +658,10 @@ cpu.c:123:HABC1234I This is a message
 #define HHCMD853I "CMDLEVEL invalid option: %s"
 #define HHCMD854I "cmdlevel[%2.2X] is %s"
 
-/* comm3705.c and commadpt.c */
-#define HHCCA001I "Client(%s) connected to %4.4X device(%4.4X)"
-#define HHCCA003E "%1d:%04X Cannot obtain socket for incoming calls: %s"
-#define HHCCA004W "%1d:%04X Waiting 5 seconds for port(%d) to become available"
-#define HHCCA005I "%1d:%04X Listening on port(%d) for incoming TCP connections"
-#define HHCCA006T "%1d:%04X Select failed: %s"
-#define HHCCA007W "%1d:%04X Outgoing call failed during %s command: %s"
-#define HHCCA008I "%1d:%04X Incoming Call"
-#define HHCCA010I "%1d:%04X Initialization not performed"
-#define HHCCA011E "%1d:%04X Error parsing %s"
-#define HHCCA012E "%1d:%04X Unrecognized parameter(%s)"
-#define HHCCA013E "%1d:%04X Incorrect %s specification %s"
-#define HHCCA014E "%1d:%04X Incorrect switched/dial specification(%s): defaulting to DIAL=OUT"
-#define HHCCA015E "%1d:%04X Missing parameter: DIAL(%s) and %s not specified"
-#define HHCCA016W "%1d:%04X Conflicting parameter: DIAL(%s) and %s=%s specified"
-#define HHCCA017I "%1d:%04X RPORT parameter ignored"
-#define HHCCA018E "%1d:%04X Bind failed: %s"
-#define HHCCA019E "%1d:%04X BSC comm thread did not initialize"
-#define HHCCA020E "%1d:%04X Memory allocation failure for main control block"
-#define HHCCA021I "%1d:%04X Initialization failed due to previous errors"
-#define HHCCA023I "%1d:%04X Connect out to %s:%d failed during initial status: %s"
-#define HHCCA024E "%1d:%04X No buffers trying to send SNA request2"
-#define HHCCA025E "%1d:%04X No buffers trying to send SNA request3"
-#define HHCCA026E "%1d:%04X No buffers trying to send SNA request4"
-#define HHCCA027E "%1d:%04X No buffers trying to send SNA request5"
-#define HHCCA028E "%1d:%04X No buffers trying to send SNA request"
-#define HHCCA029E "%1d:%04X No buffers trying to send SNA response"
-//#define HHCCA300D in comm3705.c and commadpt.c
-
 /* console.c and comm3705.c */
-#define HHCGI001I "Unable to determine IP address from (%s)"
-#define HHCGI002I "Unable to determine port number from (%s)"
-#define HHCGI003E "Invalid parameter(%s)"
+
+//#define HHCGI002I "CA: unable to determine port number from '%s'"
+
 #define HHCTE002W "Waiting for port(%u) to become free"
 #define HHCTE003I "Waiting for console connection on port(%u)"
 #define HHCTE006A "%1d:%04X Enter console input"

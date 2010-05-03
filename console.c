@@ -405,7 +405,7 @@ struct sockaddr_in *sin;
 
         if(!hostent)
         {
-            WRITEMSG(HHCGI001I, host);
+            WRMSG(HHC01016, "I", "IP address", host);
             free(sin);
             return NULL;
         }
@@ -425,7 +425,7 @@ struct sockaddr_in *sin;
 
             if(!servent)
             {
-                WRITEMSG(HHCGI002I, host);
+                WRMSG(HHC01016, "I", "port number", host);
                 free(sin);
                 return NULL;
             }
@@ -438,7 +438,7 @@ struct sockaddr_in *sin;
     }
     else
     {
-        WRITEMSG(HHCGI003E, host_serv);
+        WRMSG(HHC01017, "E", host_serv);
         free(sin);
         return NULL;
     }

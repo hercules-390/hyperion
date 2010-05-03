@@ -467,7 +467,9 @@ static int commadpt_alloc_device(DEVBLK *dev)
     dev->commadpt=malloc(sizeof(COMMADPT));
     if(dev->commadpt==NULL)
     {
-        WRITEMSG(HHCCA020E,SSID_TO_LCSS(dev->ssid),dev->devnum);
+        char buf[40];
+        sprintf(buf, "malloc(%lu)", sizeof(COMMADPT));
+        WRMSG(HHC01000, "E",SSID_TO_LCSS(dev->ssid),dev->devnum, buf, strerror(errno));
         return -1;
     }
     memset(dev->commadpt,0,sizeof(COMMADPT));
@@ -547,7 +549,7 @@ static int commadpt_connout(COMMADPT *ca)
         {
             strerror_r(HSO_errno,wbfr,256);
             intmp.s_addr=ca->rhost;
-            WRITEMSG(HHCCA023I,
+            WRMSG(HHC01001, "I",
                     SSID_TO_LCSS(ca->dev->ssid),
                     ca->devnum,
                     inet_ntoa(intmp),
@@ -934,7 +936,7 @@ static void *commadpt_thread(void *vca)
         ca->lfd=socket(AF_INET,SOCK_STREAM,0);
         if(!socket_is_socket(ca->lfd))
         {
-            WRITEMSG(HHCCA003E,SSID_TO_LCSS(ca->dev->ssid),devnum,strerror(HSO_errno));
+            WRMSG(HHC01002, "E",SSID_TO_LCSS(ca->dev->ssid),devnum,strerror(HSO_errno));
             ca->have_cthread=0;
             release_lock(&ca->lock);
             return NULL;
@@ -959,7 +961,7 @@ static void *commadpt_thread(void *vca)
             {
                 if(HSO_errno==HSO_EADDRINUSE)
                 {
-                    WRITEMSG(HHCCA004W,SSID_TO_LCSS(ca->dev->ssid),devnum,ca->lport);
+                    WRMSG(HHC01003, "W",SSID_TO_LCSS(ca->dev->ssid),devnum,ca->lport);
                     /*
                      * Check for a shutdown condition on entry
                      */
@@ -1010,7 +1012,7 @@ static void *commadpt_thread(void *vca)
                 }
                 else
                 {
-                    WRITEMSG(HHCCA018E,SSID_TO_LCSS(ca->dev->ssid),devnum,strerror(HSO_errno));
+                    WRMSG(HHC01000, "E",SSID_TO_LCSS(ca->dev->ssid),devnum,"bind()",strerror(HSO_errno));
                     ca_shutdown=1;
                     break;
                 }
@@ -1024,7 +1026,7 @@ static void *commadpt_thread(void *vca)
         if(!ca_shutdown)
         {
             listen(ca->lfd,10);
-            WRITEMSG(HHCCA005I,
+            WRMSG(HHC01004, "I",
                     SSID_TO_LCSS(ca->dev->ssid),
                     devnum,
                     ca->lport);
@@ -1368,7 +1370,7 @@ static void *commadpt_thread(void *vca)
                 }
                 continue;
             }
-            WRITEMSG(HHCCA006T,SSID_TO_LCSS(ca->dev->ssid),devnum,strerror(HSO_errno));
+            WRMSG(HHC01000, "E",SSID_TO_LCSS(ca->dev->ssid),devnum,"select()",strerror(HSO_errno));
             break;
         }
         eintrcount=0;
@@ -1493,7 +1495,7 @@ static void *commadpt_thread(void *vca)
                     }
                     else
                     {
-                        WRITEMSG(HHCCA007W,SSID_TO_LCSS(ca->dev->ssid),devnum,commadpt_pendccw_text[ca->curpending],strerror(soerr));
+                        WRMSG(HHC01005, "W",SSID_TO_LCSS(ca->dev->ssid),devnum,commadpt_pendccw_text[ca->curpending],strerror(soerr));
                         if(ca->curpending==COMMADPT_PEND_ENABLE)
                         {
                             /* Ensure top of the loop doesn't restart a new call */
@@ -1523,7 +1525,7 @@ static void *commadpt_thread(void *vca)
         {
             if(FD_ISSET(ca->lfd,&rfd))
             {
-                WRITEMSG(HHCCA008I,SSID_TO_LCSS(ca->dev->ssid),devnum);
+                WRMSG(HHC01006, "I",SSID_TO_LCSS(ca->dev->ssid),devnum);
                 tempfd=accept(ca->lfd,NULL,0);
                 if(tempfd<0)
                 {
@@ -1640,16 +1642,16 @@ static void    commadpt_halt(DEVBLK *dev)
 /* that is issued on multiple situations              */
 static void msg013e(DEVBLK *dev,char *kw,char *kv)
 {
-        WRITEMSG(HHCCA013E,SSID_TO_LCSS(dev->ssid),dev->devnum,kw,kv);
+        WRMSG(HHC01007, "E",SSID_TO_LCSS(dev->ssid),dev->devnum,kw,kv);
 }
 static void msg015e(DEVBLK *dev,char *dialt,char *kw)
 {
-        WRITEMSG(HHCCA015E,SSID_TO_LCSS(dev->ssid),dev->devnum,dialt,kw);
+        WRMSG(HHC01008, "E",SSID_TO_LCSS(dev->ssid),dev->devnum,dialt,kw);
 }
 static void msg016w017i(DEVBLK *dev,char *dialt,char *kw,char *kv)
 {
-        WRITEMSG(HHCCA016W,SSID_TO_LCSS(dev->ssid),dev->devnum,dialt,kw,kv);
-        WRITEMSG(HHCCA017I,SSID_TO_LCSS(dev->ssid),dev->devnum);
+        WRMSG(HHC01009, "W",SSID_TO_LCSS(dev->ssid),dev->devnum,dialt,kw,kv);
+        WRMSG(HHC01010, "I",SSID_TO_LCSS(dev->ssid),dev->devnum);
 }
 /*-------------------------------------------------------------------*/
 /* Device Initialisation                                             */
@@ -1680,7 +1682,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         rc=commadpt_alloc_device(dev);
         if(rc<0)
         {
-                WRITEMSG(HHCCA010I,SSID_TO_LCSS(dev->ssid),dev->devnum);
+                WRMSG(HHC01011, "I",SSID_TO_LCSS(dev->ssid),dev->devnum);
             return(-1);
         }
         if(dev->ccwtrace)
@@ -1714,13 +1716,13 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
             pc=parser(ptab,argv[i],&res);
             if(pc<0)
             {
-                WRITEMSG(HHCCA011E,SSID_TO_LCSS(dev->ssid),dev->devnum,argv[i]);
+                WRMSG(HHC01012, "E",SSID_TO_LCSS(dev->ssid),dev->devnum,argv[i]);
                 errcnt++;
                 continue;
             }
             if(pc==0)
             {
-                WRITEMSG(HHCCA012E,SSID_TO_LCSS(dev->ssid),dev->devnum,argv[i]);
+                WRMSG(HHC01012, "E",SSID_TO_LCSS(dev->ssid),dev->devnum,argv[i]);
                 errcnt++;
                 continue;
             }
@@ -1867,7 +1869,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
                         dev->commadpt->dialout=1;
                         break;
                     }
-                    WRITEMSG(HHCCA014E,SSID_TO_LCSS(dev->ssid),dev->devnum,res.text);
+                    WRMSG(HHC01013, "E",SSID_TO_LCSS(dev->ssid),dev->devnum,res.text);
                     dev->commadpt->dialin=0;
                     dev->commadpt->dialout=0;
                     break;
@@ -1986,7 +1988,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         }
         if(errcnt>0)
         {
-            WRITEMSG(HHCCA021I,SSID_TO_LCSS(dev->ssid),dev->devnum);
+            WRMSG(HHC01014, "I",SSID_TO_LCSS(dev->ssid),dev->devnum);
             return -1;
         }
         in_temp.s_addr=dev->commadpt->lhost;
@@ -2062,7 +2064,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         commadpt_wait(dev);
         if(dev->commadpt->curpending!=COMMADPT_PEND_IDLE)
         {
-            WRITEMSG(HHCCA019E,SSID_TO_LCSS(dev->ssid),dev->devnum);
+            WRMSG(HHC01015, "E",SSID_TO_LCSS(dev->ssid),dev->devnum);
             /* Release the CA lock */
             release_lock(&dev->commadpt->lock);
             return -1;

@@ -339,7 +339,7 @@ struct sockaddr_in *sin;
 
         if(!hostent)
         {
-            WRITEMSG(HHCGI001I, host);
+            WRMSG(HHC01016, "I", "IP address", host);
             free(sin);
             return NULL;
         }
@@ -359,7 +359,7 @@ struct sockaddr_in *sin;
 
             if(!servent)
             {
-                WRITEMSG(HHCGI002I, host);
+                WRMSG(HHC01016, "I", "port number", host);
                 free(sin);
                 return NULL;
             }
@@ -372,7 +372,7 @@ struct sockaddr_in *sin;
     }
     else
     {
-        WRITEMSG(HHCGI003E, host_serv);
+        WRMSG(HHC01017, "E", host_serv);
         free(sin);
         return NULL;
     }
@@ -912,7 +912,7 @@ char                    group[16];      /* Console group             */
                   0);
     }
 
-    WRITEMSG(HHCCA001I, clientip, 0x3270, 0);
+    WRMSG(HHC01018, "I", 0, 0, clientip, 0x3270);
 
     /* Send connection message to client */
     if (class != 'K')
@@ -1080,7 +1080,9 @@ static int commadpt_alloc_device(DEVBLK *dev)
     dev->commadpt=malloc(sizeof(COMMADPT));
     if(dev->commadpt==NULL)
     {
-        WRITEMSG(HHCCA020E, SSID_TO_LCSS(dev->ssid), dev->devnum);
+        char buf[40];
+        sprintf(buf, "malloc(%lu)", sizeof(COMMADPT));
+        WRMSG(HHC01000, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, buf, strerror(errno));
         return -1;
     }
     memset(dev->commadpt,0,sizeof(COMMADPT));
@@ -1259,7 +1261,7 @@ static void *telnet_thread(void *vca) {
         ca->lfd=socket(AF_INET,SOCK_STREAM,0);
         if(!socket_is_socket(ca->lfd))
         {
-            WRITEMSG(HHCCA003E,SSID_TO_LCSS(ca->dev->ssid),devnum,strerror(HSO_errno));
+            WRMSG(HHC01002, "E",SSID_TO_LCSS(ca->dev->ssid),devnum,strerror(HSO_errno));
             ca->have_cthread=0;
             release_lock(&ca->lock);
             return NULL;
@@ -1279,7 +1281,7 @@ static void *telnet_thread(void *vca) {
             rc=bind(ca->lfd,(struct sockaddr *)&sin,sizeof(sin));
             if(rc<0)
             {
-                    WRITEMSG(HHCCA018E,SSID_TO_LCSS(ca->dev->ssid),devnum,strerror(HSO_errno));
+                    WRMSG(HHC01000, "E",SSID_TO_LCSS(ca->dev->ssid),devnum,"bind()",strerror(HSO_errno));
                     ca_shutdown=1;
                     break;
             }
@@ -1292,7 +1294,7 @@ static void *telnet_thread(void *vca) {
         if(!ca_shutdown)
         {
             listen(ca->lfd,10);
-            WRITEMSG(HHCCA005I, SSID_TO_LCSS(ca->dev->ssid), devnum, ca->lport);
+            WRMSG(HHC01004, "I", SSID_TO_LCSS(ca->dev->ssid), devnum, ca->lport);
         }
         for (;;) {
             ca->sfd = 0;
@@ -1351,7 +1353,7 @@ static void *commadpt_thread(void *vca)
     int rc;                     /* return code from various rtns     */
     int ca_shutdown;            /* Thread shutdown internal flag     */
     int init_signaled;          /* Thread initialisation signaled    */
-    char threadname[30];        /* string for WRITEMSG               */
+    char threadname[30];        /* string for WRMSG               */
 
     /*---------------------END OF DECLARES---------------------------*/
 
@@ -1410,7 +1412,7 @@ static void    commadpt_halt(DEVBLK *dev)
 /* that is issued on multiple situations              */
 static void msg013e(DEVBLK *dev,char *kw,char *kv)
 {
-        WRITEMSG(HHCCA013E, SSID_TO_LCSS(dev->ssid), dev->devnum,kw,kv);
+        WRMSG(HHC01007, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,kw,kv);
 }
 /*-------------------------------------------------------------------*/
 /* Device Initialisation                                             */
@@ -1443,7 +1445,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         rc=commadpt_alloc_device(dev);
         if(rc<0)
         {
-                WRITEMSG(HHCCA010I, SSID_TO_LCSS(dev->ssid), dev->devnum);
+                WRMSG(HHC01011, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
             return(-1);
         }
         if(dev->ccwtrace)
@@ -1465,13 +1467,13 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
             pc=parser(ptab,argv[i],&res);
             if(pc<0)
             {
-                WRITEMSG(HHCCA011E,SSID_TO_LCSS(dev->ssid), dev->devnum,argv[i]);
+                WRMSG(HHC01012, "E",SSID_TO_LCSS(dev->ssid), dev->devnum,argv[i]);
                 errcnt++;
                 continue;
             }
             if(pc==0)
             {
-                WRITEMSG(HHCCA012E,SSID_TO_LCSS(dev->ssid), dev->devnum,argv[i]);
+                WRMSG(HHC01019, "E",SSID_TO_LCSS(dev->ssid), dev->devnum,argv[i]);
                 errcnt++;
                 continue;
             }
@@ -1512,7 +1514,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         }
         if(errcnt>0)
         {
-            WRITEMSG(HHCCA021I,dev->devnum);
+            WRMSG(HHC01014, "I",SSID_TO_LCSS(dev->ssid),dev->devnum);
             return -1;
         }
         in_temp.s_addr=dev->commadpt->lhost;
@@ -1725,7 +1727,7 @@ static void make_sna_requests2 (COMMADPT *ca) {
     while (ca->inpbufl > 0) {
         eleptr = get_bufpool(&ca->freeq);
         if (!eleptr)  {
-                WRITEMSG(HHCCA024E, SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum);   
+                WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA request2"); 
                 return;
         }
         respbuf = 4 + (BYTE*)eleptr;
@@ -1799,7 +1801,7 @@ static void make_sna_requests3 (COMMADPT *ca) {
         if (!ca->telnet_int) return;
         eleptr = get_bufpool(&ca->freeq);
         if (!eleptr)  {
-                WRITEMSG(HHCCA025E, SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum); 
+                WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA request3"); 
                 return;
         }
         respbuf = 4 + (BYTE*)eleptr;
@@ -1843,7 +1845,7 @@ static void make_sna_requests4 (COMMADPT *ca, int flag, BYTE pu_type) {
         void    *eleptr;
         eleptr = get_bufpool(&ca->freeq);
         if (!eleptr)  {
-                WRITEMSG(HHCCA026E, SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum); 
+                WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA request4"); 
                 return;
         }
         respbuf = 4 + (BYTE*)eleptr;
@@ -1910,7 +1912,7 @@ static void make_sna_requests5 (COMMADPT *ca) {
         void    *eleptr;
         eleptr = get_bufpool(&ca->freeq);
         if (!eleptr)  {
-                WRITEMSG(HHCCA027E, SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum); 
+                WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA request5"); 
                 return;
         }
         respbuf = 4 + (BYTE*)eleptr;
@@ -1955,7 +1957,7 @@ void make_sna_requests (BYTE * requestp, COMMADPT *ca) {
         if (memcmp(&requestp[13], R010201, 3)) return;   // we only want to process CONTACT
         eleptr = get_bufpool(&ca->freeq);
         if (!eleptr)  {
-                WRITEMSG(HHCCA028E, SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum); 
+                WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA request"); 
                 return;
         }
         respbuf = 4 + (BYTE*)eleptr;
@@ -2036,7 +2038,7 @@ void make_sna_response (BYTE * requestp, COMMADPT *ca) {
 
         eleptr = get_bufpool(&ca->freeq);
         if (!eleptr)  {
-                WRITEMSG(HHCCA029E, SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum);
+                WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA response");
                 return;
         }
         respbuf = 4 + (BYTE*)eleptr;
