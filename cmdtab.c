@@ -460,8 +460,16 @@ void *panel_command (void *cmdline)
     /* except null commands, script commands, scp input and noredisplay */
     if (*pCmdLine != 0 && scr_recursion_level()  == 0)
     {
-        if (!(*pCmdLine == '.' || *pCmdLine == '!' || *pCmdLine == '-'))
-            history_add(cmdline);
+        if (!(*pCmdLine == '-'))
+        {
+            if (*pCmdLine == '.' || *pCmdLine == '!')
+            {
+                if (sysblk.scpecho)
+                    history_add(cmdline);
+            }
+            else
+                history_add(cmdline);
+        }
     }
 
     /* Copy panel command to work area, skipping leading blanks */
@@ -521,7 +529,7 @@ void *panel_command (void *cmdline)
                     cmd[1] = ' ';
                     cmd[2] = 0;
                 }
-            scp_command(cmd + 1, cmd[0] == '!', FALSE); // no echo 
+                scp_command(cmd + 1, cmd[0] == '!', sysblk.scpecho ? TRUE: FALSE);
             }
             else
 #endif /*_FEATURE_SYSTEM_CONSOLE*/
@@ -557,7 +565,7 @@ void *panel_command (void *cmdline)
     if ('.' == cmd[0] || '!' == cmd[0])
     {
         if (!cmd[1]) { cmd[1]=' '; cmd[2]=0; }
-        scp_command (cmd+1, cmd[0] == '!', FALSE);     // don't echo command  
+        scp_command (cmd+1, cmd[0] == '!', sysblk.scpecho ? TRUE: FALSE);  
         return NULL;
     }
 #endif /*_FEATURE_SYSTEM_CONSOLE*/

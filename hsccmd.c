@@ -6839,6 +6839,27 @@ int ssd_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
+/*-------------------------------------------------------------------*/
+/* scpecho - toggle echo of '.' and '!' replys/responses to hardcopy */
+/*           and console.                                            */
+/*-------------------------------------------------------------------*/
+int scpecho_cmd(int argc, char *argv[], char *cmdline)
+{
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+    UNREFERENCED(cmdline);
+
+    if (sysblk.scpecho)
+    {
+        sysblk.scpecho = FALSE;
+    }
+    else
+    {
+        sysblk.scpecho = TRUE;
+    }
+    WRITEMSG(HHCMD860I, (sysblk.scpecho ? "" : "not ") );
+    return 0;
+}
 #endif
 
 

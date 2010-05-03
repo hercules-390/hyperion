@@ -961,6 +961,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHCMD838S "HTTP_SERVER_CONNECT_KLUDGE value: %s"
 #define HHCMD850I "Tape mount reinit %sallowed"
 #define HHCMD851I "Auto SCSI mount %d seconds"
+#define HHCMD860I "SCP '.' and PRIORITY SCP '!' input is %sechoed to hercules console"
 #define HHCMD870I "Instruction counts reset to zero"
 #define HHCMD871E "Sorry, not enough memory"
 #define HHCMD872E "Sorry, too many instructions"
