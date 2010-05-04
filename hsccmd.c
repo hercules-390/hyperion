@@ -1264,6 +1264,7 @@ int iodelay_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int automount_cmd(int argc, char *argv[], char *cmdline)
 {
+char pathname[MAX_PATH];
 int rc;
 
     UNREFERENCED(cmdline);
@@ -1331,7 +1332,9 @@ int rc;
 
         // Add the requested entry...
 
-        strlcpy (tamdir, argv2, sizeof(tamdir));
+        hostpath(pathname, argv2, MAX_PATH);
+        strlcpy (tamdir, pathname, MAX_PATH);
+
         rc = add_tamdir( tamdir, &pTAMDIR );
 
         // Did that work?
@@ -1489,6 +1492,9 @@ int rc;
         rc = (int)strlen( tamdir2 );
         if (tamdir2[rc-1] != *PATH_SEP)
             strlcat (tamdir2, PATH_SEP, MAX_PATH);
+
+        hostpath(pathname, tamdir2, MAX_PATH);
+        strlcpy (tamdir2, pathname, MAX_PATH);
 
         // Find entry to be deleted...
 
@@ -7360,14 +7366,14 @@ char    pathname[MAX_PATH];             /* (work)                    */
         if (!isrcfile)
         {
             if (ENOENT != errno)
-                WRITEMSG(HHCMD007E, script_name, strerror(errno));
+                WRITEMSG(HHCMD007E, pathname, strerror(errno));
             else
-                WRITEMSG(HHCMD433E, script_name);
+                WRITEMSG(HHCMD433E, pathname);
         }
         else /* (this IS the .rc file...) */
         {
             if (ENOENT != errno)
-                WRITEMSG(HHCMD007E, script_name, strerror(errno));
+                WRITEMSG(HHCMD007E, pathname, strerror(errno));
         }
 
         errno = save_errno;
@@ -7378,7 +7384,7 @@ char    pathname[MAX_PATH];             /* (work)                    */
 
     if(isrcfile)
     {
-        WRITEMSG(HHCMD008I, script_name);
+        WRITEMSG(HHCMD008I, pathname);
     }
 
     /* Obtain storage for the SCRIPT file buffer */
@@ -7450,7 +7456,7 @@ char    pathname[MAX_PATH];             /* (work)                    */
         }
         else
         {
-           WRITEMSG (HHCMD999I, script_name);
+           WRITEMSG (HHCMD999I, pathname);
            scr_uaborted=1;
         }
     }

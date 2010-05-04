@@ -269,6 +269,7 @@ char   *rcname;                         /* hercules.rc name pointer  */
 int     is_default_rc  = 0;             /* 1 == default name used    */
 int     numcpu         = 0;             /* #of ONLINE & STOPPED CPUs */
 int     i;                              /* (work)                    */
+char    pathname[MAX_PATH];             /* (work)                    */
 
     UNREFERENCED(dummy);
 
@@ -306,6 +307,8 @@ int     i;                              /* (work)                    */
         is_default_rc = 1;
     }
 
+    hostpath(pathname, rcname, sizeof(pathname));
+
 #if defined(OPTION_HAO)
     /* Initialize the Hercules Automatic Operator */
 
@@ -315,10 +318,10 @@ int     i;                              /* (work)                    */
 
     /* Run the script processor for this file */
 
-    if (process_script_file(rcname,1) != 0)
+    if (process_script_file(pathname,1) != 0)
         if (ENOENT == errno)
             if (!is_default_rc)
-                WRITEMSG(HHCMD995E, rcname);
+                WRITEMSG(HHCMD995E, pathname);
         // (else error message already issued)
 
     return NULL;

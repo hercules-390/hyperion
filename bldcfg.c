@@ -271,6 +271,7 @@ int off;
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int add_tamdir( char *tamdir, TAMDIR **ppTAMDIR )
 {
+    char pathname[MAX_PATH];
     int  rc, rej = 0;
     char dirwrk[ MAX_PATH ] = {0};
 
@@ -299,6 +300,9 @@ DLL_EXPORT int add_tamdir( char *tamdir, TAMDIR **ppTAMDIR )
     if (!realpath( tamdir, dirwrk ))
         return (1); /* ("unresolvable path") */
     strlcpy (tamdir, dirwrk, MAX_PATH);
+
+    hostpath(pathname, tamdir, MAX_PATH);
+    strlcpy (tamdir, pathname, MAX_PATH);
 
     /* Verify that the path is valid */
     if (access( tamdir, R_OK | W_OK ) != 0)

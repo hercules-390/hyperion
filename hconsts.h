@@ -26,13 +26,7 @@
   #endif
 #endif
 
-#ifndef     PATH_SEP
-  #ifdef     _MSVC_
-    #define PATH_SEP          "\\"
-  #else
-    #define PATH_SEP          "/"
-  #endif
-#endif
+#define PATH_SEP            "/"
 
 #if defined( _MSVC_ )
 
