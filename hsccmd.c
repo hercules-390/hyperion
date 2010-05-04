@@ -1952,7 +1952,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
             return -1;
         }
 
-        if (CTC_CTCI != dev->ctctype && CTC_LCS != dev->ctctype)
+        if (CTC_CTCI != dev->ctctype && CTC_LCS != dev->ctctype || (strcmp(dev->typname, "8232") == 0) )
         {
             WRITEMSG(HHCMD034E, lcss, devnum );
             return -1;
@@ -2074,13 +2074,16 @@ char *basedir;
 /*-------------------------------------------------------------------*/
 int httproot_cmd(int argc, char *argv[], char *cmdline)
 {
+char pathname[MAX_PATH];
+
     UNREFERENCED(cmdline);
 
     if (argc > 1)
     {
         if (sysblk.httproot)
             free(sysblk.httproot);
-        sysblk.httproot = strdup(argv[1]);
+        hostpath(pathname, argv[1], sizeof(pathname));
+        sysblk.httproot = strdup(pathname);
     }
     else
         if(sysblk.httproot)
