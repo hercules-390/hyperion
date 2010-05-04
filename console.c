@@ -896,7 +896,8 @@ int     eor = 0;                        /* 1=End of record received  */
 
     if (rc < 0) {
         if ( HSO_ECONNRESET == HSO_errno )
-            WRITEMSG(HHCTE014I, SSID_TO_LCSS(dev->ssid), dev->devnum, inet_ntoa(dev->ipaddr), dev->devtype );
+            WRMSG(HHC01021, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, inet_ntoa(dev->ipaddr), dev->devtype,
+                  "connection reset");
         else
             TNSERROR("console: DBG023: recv: %s\n", strerror(HSO_errno));
         dev->sense[0] = SENSE_EC;
@@ -905,7 +906,8 @@ int     eor = 0;                        /* 1=End of record received  */
 
     /* If zero bytes were received then client has closed connection */
     if (rc == 0) {
-        WRITEMSG(HHCTE007I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->devtype, inet_ntoa(dev->ipaddr));
+        WRMSG(HHC01021, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, inet_ntoa(dev->ipaddr), dev->devtype,
+              "connection closed");
         dev->sense[0] = SENSE_IR;
         return (CSW_ATTN | CSW_UC | CSW_DE);
     }
@@ -1069,7 +1071,7 @@ BYTE    c;                              /* Character work area       */
 
     /* If zero bytes were received then client has closed connection */
     if (num == 0) {
-        WRITEMSG(HHCTE008I, SSID_TO_LCSS(dev->ssid), dev->devnum, inet_ntoa(dev->ipaddr));
+        WRMSG(HHC01022, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, inet_ntoa(dev->ipaddr));
         dev->sense[0] = SENSE_IR;
         return (CSW_ATTN | CSW_UC);
     }
@@ -1699,18 +1701,16 @@ char                    *logoout;
     (
         hostmsg, sizeof(hostmsg),
 
-        "running on %s (%s-%s.%s %s %s)"
+        MSG(HHC01031, "I"
 
         ,cons_hostinfo.nodename
         ,cons_hostinfo.sysname
         ,cons_hostinfo.release
         ,cons_hostinfo.version
         ,cons_hostinfo.machine
-        ,num_procs
+        ,num_procs)
     );
-    snprintf (conmsg, sizeof(conmsg),
-                "Hercules version %s built on %s %s",
-                VERSION, __DATE__, __TIME__);
+    snprintf (conmsg, sizeof(conmsg), MSG(HHC01027, "I", VERSION, __DATE__, __TIME__));
 
     /* Reject the connection if no available console device */
     if (dev == NULL)
@@ -1720,22 +1720,23 @@ char                    *logoout;
         {
             if(!group[0])
             {
-                snprintf (rejmsg, sizeof(rejmsg),
-                        "Connection rejected, no available %s device",
+                snprintf (rejmsg, sizeof(rejmsg), MSG(HHC01028, "E", 
+                        (class=='D' ? "3270" : (class=='P' ? "3287" : "1052 or 3215"))));
+                WRMSG(HHC01028, "E", 
                         (class=='D' ? "3270" : (class=='P' ? "3287" : "1052 or 3215")));
             }
             else
             {
-                snprintf (rejmsg, sizeof(rejmsg),
-                        "Connection rejected, no available %s devices in the %s group",
+                snprintf (rejmsg, sizeof(rejmsg), MSG(HHC01029, "E",
+                        (class=='D' ? "3270" : (class=='P' ? "3287" : "1052 or 3215")),group));
+                WRMSG(HHC01029, "E",
                         (class=='D' ? "3270" : (class=='P' ? "3287" : "1052 or 3215")),group);
             }
         }
         else
         {
-            snprintf (rejmsg, sizeof(rejmsg),
-                    "Connection rejected, device %4.4X unavailable",
-                    devnum);
+            snprintf (rejmsg, sizeof(rejmsg), MSG(HHC01030, "I", devnum));
+            WRMSG(HHC01030, "I", devnum);
         }
 
         TNSDEBUG1( "DBG019: %s\n", rejmsg);
@@ -1787,11 +1788,11 @@ char                    *logoout;
     }
     else
     {
-        snprintf (devmsg, sizeof(devmsg), "Connected to device %1d:%04X",
-                  SSID_TO_LCSS(dev->ssid), dev->devnum);
+        snprintf (devmsg, sizeof(devmsg), MSG(HHC01021, "I",
+                  SSID_TO_LCSS(dev->ssid), dev->devnum, clientip, dev->devtype, "connected"));
     }
 
-    WRITEMSG(HHCTE009I, SSID_TO_LCSS(dev->ssid), dev->devnum, clientip, dev->devtype);
+    WRMSG(HHC01021, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, clientip, dev->devtype, "connected");
 
     /* Send connection message to client */
     if (class != 'K')
@@ -1937,7 +1938,7 @@ BYTE                   unitstat;        /* Status after receive data */
     /* Prepare the sockaddr structure for the bind */
     if(!( server = get_inet_socket(config_cnslport) ))
     {
-        WRITEMSG(HHCTE010E, config_cnslport);
+        WRMSG(HHC01007, "E", "CNSLPORT", config_cnslport);
         return NULL;
     }
 
@@ -1948,7 +1949,7 @@ BYTE                   unitstat;        /* Status after receive data */
 
         if (rc == 0 || HSO_errno != HSO_EADDRINUSE) break;
 
-        WRITEMSG(HHCTE002W, ntohs(server->sin_port));
+        WRMSG(HHC01023, "W", ntohs(server->sin_port));
         SLEEP(10);
     }
     while (console_cnslcnt);
@@ -1966,7 +1967,7 @@ BYTE                   unitstat;        /* Status after receive data */
         return NULL;
     }
 
-    WRITEMSG(HHCTE003I, ntohs(server->sin_port));
+    WRMSG(HHC01024, "I", ntohs(server->sin_port));
 
     /* Handle connection requests and attention interrupts */
     for (;;)
@@ -2333,7 +2334,7 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
         dev->pmcw.flag5 &= ~PMCW5_V; // Not a regular device
         if (sysblk.sysgdev != NULL)
         {
-            WRITEMSG(HHCTE017E, SSID_TO_LCSS(dev->ssid), dev->devnum);
+            WRMSG(HHC01025, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
             return -1;
         }
     }
@@ -2374,7 +2375,7 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
         {
             if ((dev->acc_ipaddr = inet_addr(argv[ac])) == (in_addr_t)(-1))
             {
-                WRITEMSG(HHCTE011E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[ac]);
+                WRMSG(HHC01007, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "IP address", argv[ac]);
                 return -1;
             }
             else
@@ -2384,7 +2385,7 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
                 {
                     if ((dev->acc_ipmask = inet_addr(argv[ac])) == (in_addr_t)(-1))
                     {
-                        WRITEMSG(HHCTE012E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[ac]);
+                        WRMSG(HHC01007, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "mask value", argv[ac]);
                         return -1;
                     }
                     else
@@ -2392,7 +2393,7 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
                         argc--; ac++;
                         if (argc > 0)   // too many args?
                         {
-                            WRITEMSG(HHCTE013E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[ac] );
+                            WRMSG(HHC01019, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[ac] );
                             return -1;
                         }
                     }
@@ -2556,7 +2557,9 @@ loc3270_hresume(DEVBLK *dev, void *file)
             rbuf = malloc(len);
             if (rbuf == NULL)
             {
-                WRITEMSG(HHCTE090E, SSID_TO_LCSS(dev->ssid), dev->devnum, strerror(errno));
+                char buf[40];
+                sprintf(buf,"malloc(%lu)", len);
+                WRMSG(HHC01000, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, buf, strerror(errno));
                 return 0;
             }
             SR_READ_BUF(file, rbuf, rbuflen);
@@ -2674,7 +2677,7 @@ constty_init_handler ( DEVBLK *dev, int argc, char *argv[] )
         {
             if ((dev->acc_ipaddr = inet_addr(argv[ac])) == (in_addr_t)(-1))
             {
-                WRITEMSG(HHCTE011E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[ac]);
+                WRMSG(HHC01007, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "IP address", argv[ac]);
                 return -1;
             }
             else
@@ -2684,7 +2687,7 @@ constty_init_handler ( DEVBLK *dev, int argc, char *argv[] )
                 {
                     if ((dev->acc_ipmask = inet_addr(argv[ac])) == (in_addr_t)(-1))
                     {
-                        WRITEMSG(HHCTE012E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[ac]);
+                        WRMSG(HHC01007, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "mask value", argv[ac]);
                         return -1;
                     }
                     else
@@ -2692,7 +2695,7 @@ constty_init_handler ( DEVBLK *dev, int argc, char *argv[] )
                         argc--; ac++;
                         if (argc > 0)   // too many args?
                         {
-                            WRITEMSG(HHCTE013E, SSID_TO_LCSS(dev->ssid), dev->devnum, argv[ac] );
+                            WRMSG(HHC01019, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[ac] );
                             return -1;
                         }
                     }
@@ -3496,7 +3499,7 @@ BYTE    stat;                           /* Unit status               */
             if (dev->prompt1052)
             {
                 snprintf ((char *)dev->buf, dev->bufsize,
-                        MSG(HHCTE006A, "", SSID_TO_LCSS(dev->ssid), dev->devnum));
+                        MSG(HHC01026, "A", SSID_TO_LCSS(dev->ssid), dev->devnum));
                 len = (int)strlen((char *)dev->buf);
                 rc = send_packet (dev->fd, dev->buf, len, NULL);
                 if (rc < 0)

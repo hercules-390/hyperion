@@ -500,7 +500,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00982 "Error %s: [%04X]:%s"
 
 // reserve 010xx for communication adapter specific component messages
-/* comm3705.c and commadpt.c */
+/* comm3705.c and commadpt.c console.c */
 #define HHC01000 "%1d:%04X CA: error in function '%s': '%s'"
 #define HHC01001 "%1d:%04X CA: connect out to %s:%d failed during initial status: '%s'"
 #define HHC01002 "%1d:%04X CA: cannot obtain socket for incoming calls: '%s'"
@@ -522,6 +522,17 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01018 "%1d:%04X CA: client '%s' connected to %4.4X device"
 #define HHC01019 "%1d:%04X CA: unrecognized parameter '%s'"
 #define HHC01020 "%1d:%04X CA: no buffers trying to send '%s'"
+#define HHC01021 "%1d:%04X CA: client '%s' devtype %4.4X: '%s'"
+#define HHC01022 "%1d:%04X CA: connection closed by client '%s'"
+#define HHC01023 "Waiting for port %u to become free for console connections"
+#define HHC01024 "Waiting for console connections on port %u"
+#define HHC01025 "%1d:%04X CA: duplicate SYSG console definition"
+#define HHC01026 "%1d:%04X CA: enter console input"
+#define HHC01027 "Hercules version %s, built on %s %s"
+#define HHC01028 "Connection rejected, no available %s device"
+#define HHC01029 "Connection rejected, no available %s device in the %s group"
+#define HHC01030 "Connection rejected, device %04X unavailable"
+#define HHC01031 "Running on %s (%s-%s.%s %s %s)"
 
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
@@ -664,24 +675,6 @@ cpu.c:123:HABC1234I This is a message
 /* cmdtab.c */
 #define HHCMD853I "CMDLEVEL invalid option: %s"
 #define HHCMD854I "cmdlevel[%2.2X] is %s"
-
-/* console.c and comm3705.c */
-
-//#define HHCGI002I "CA: unable to determine port number from '%s'"
-
-#define HHCTE002W "Waiting for port(%u) to become free"
-#define HHCTE003I "Waiting for console connection on port(%u)"
-#define HHCTE006A "%1d:%04X Enter console input"
-#define HHCTE007I "%1d:%04X Devtype(%4.4X) client(%s) connection closed"
-#define HHCTE008I "%1d:%04X Connection closed by client(%s)"
-#define HHCTE009I "%1d:%04X Client(%s) devtype(%4.4X): connected"
-#define HHCTE010E "CNSLPORT statement invalid: (%s)"
-#define HHCTE011E "%1d:%04X Invalid IP address: (%s)"
-#define HHCTE012E "%1d:%04X Invalid mask value: (%s)"
-#define HHCTE013E "%1d:%04X Extraneous argument(s): (%s)..."
-#define HHCTE014I "%1d:%04X Client(%s) devtype(%4.4X): connection reset"
-#define HHCTE017E "%1d:%04X Duplicate SYSG console definition"
-#define HHCTE090E "%1d:%04X Malloc() failed for resume buf: (%s)"
 
 /* diagnose.c */
 #define HHCDN001I "Diagnose 0x308 called: System is re-ipled"
