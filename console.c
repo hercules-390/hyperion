@@ -1,5 +1,9 @@
 /* CONSOLE.C    (c)Copyright Roger Bowler, 1999-2010                 */
 /*              ESA/390 Console Device Handler                       */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 
@@ -51,66 +55,6 @@
 /* Ignore "Negotiate About Window Size" client option (for now) so   */
 /* WinNT version of telnet works. -- Greg Price (implemted by Fish)  */
 /*-------------------------------------------------------------------*/
-
-// $Log$
-// Revision 1.104  2009/01/02 19:21:50  jj
-// DVD-RAM IPL
-// RAMSAVE
-// SYSG Integrated 3270 console fixes
-//
-// Revision 1.103  2008/12/30 15:40:01  rbowler
-// Allow $(LPARNAME) in herclogo file
-//
-// Revision 1.102  2008/12/29 13:02:38  rbowler
-// herclogo symbol $(ccuu) should display lower case device number
-//
-// Revision 1.101  2008/12/29 12:55:12  rbowler
-// Duplicate SYSG console definition message issued incorrectly
-//
-// Revision 1.100  2008/12/28 21:05:08  rbowler
-// Integrated 3270 (SYSG) console attn/read commands
-//
-// Revision 1.99  2008/12/28 15:30:09  jj
-// SYSG and SYSA mods
-//
-// Revision 1.98  2008/12/27 23:34:37  rbowler
-// Integrated 3270 (SYSG) console send command
-//
-// Revision 1.97  2008/11/04 05:56:31  fish
-// Put ensure consistent create_thread ATTR usage change back in
-//
-// Revision 1.96  2008/11/03 15:31:57  rbowler
-// Back out consistent create_thread ATTR modification
-//
-// Revision 1.95  2008/10/18 09:32:20  fish
-// Ensure consistent create_thread ATTR usage
-//
-// Revision 1.94  2007/11/21 22:54:14  fish
-// Use new BEGIN_DEVICE_CLASS_QUERY macro
-//
-// Revision 1.93  2007/06/23 16:13:54  jmaynard
-// Fixing two messages out of internationalization by removing redundant
-// carriage returns.
-//
-// Revision 1.92  2007/06/23 00:04:04  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.91  2007/01/11 19:54:33  fish
-// Addt'l keep-alive mods: create associated supporting config-file stmt and panel command where individual customer-preferred values can be specified and/or dynamically modified.
-//
-// Revision 1.90  2007/01/10 15:35:49  rbowler
-// Consoles cannot connect after rev 1.88
-//
-// Revision 1.89  2007/01/10 15:12:11  rbowler
-// Console keepalive for Unix
-//
-// Revision 1.88  2007/01/10 09:32:39  fish
-// Enable connection keep-alive to try and detect 3270 clients that
-// have died (MSVC only right now; don't know how to do it on *nix)
-//
-// Revision 1.87  2006/12/08 09:43:18  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 #include "hercules.h"

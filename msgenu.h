@@ -493,6 +493,11 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00975 "%1d:%04X CTC: invalid '%s' length: %d < %d"
 #define HHC00976 "%1d:%04X CTC: EOF on read, CTC network down"
 
+/* ndis_lcs.c */
+#define HHC00980 "%1d:%04X NDIS Error: IPv4 address and --mac are mutually exclusive with --oat"
+#define HHC00981 "%1d:%04X NDIS open failed"
+#define HHC00982 "Error %s: [%04X]:%s"
+
 // reserve 010xx for communication adapter specific component messages
 /* comm3705.c and commadpt.c */
 #define HHC01000 "%1d:%04X CA: error in function '%s': '%s'"
@@ -547,6 +552,7 @@ cpu.c:123:HABC1234I This is a message
 
 // reserve 90000 messages for debugging
 #define HHC90000 "DBG: %s"
+#define HHC90001 " *** Assertion Failed! *** %s(%d); function: %s"
 
 /*
  *                                  N E W   M E S S A G E   F O R M A T
@@ -789,7 +795,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHCMD031E "Missing device number"
 #define HHCMD032I "CTC debugging now %s for %s device %1d:%04X group"
 #define HHCMD033I "CTC debugging now %s for all CTCI/LCS device groups"
-#define HHCMD034E "%1d:%04X is not a CTCI or LCS"
+#define HHCMD034E "%1d:%04X is not a supported CTCI or LCS"
 #define HHCMD035E "store status rejected: CPU not stopped"
 #define HHCMD036I "TOD clock drag factor = %lf"
 #define HHCMD037I "Timer update interval = %d microsecond(s)"

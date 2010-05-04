@@ -1,3 +1,13 @@
+/* COMMADPT.C   (c) Copyright Roger Bowler & Others, 2002-2010       */
+/*              (c) Copyright, MHP, 2007-2008 (see below)            */
+/*              Hercules Communication Line Driver                   */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* Hercules Communication Line Driver                                */
 /* (c) 1999-2010 Roger Bowler & Others                               */
@@ -6,7 +16,6 @@
 /* Prime Maintainer : Ivan Warren                                    */
 /*-------------------------------------------------------------------*/
 
-// $Id$
 
 /* ********************************************************************
 

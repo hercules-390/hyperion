@@ -1,3 +1,13 @@
+/* CTC_LCS.C    (c) Copyright James A. Pierson, 2002-2009            */
+/*              (c) Copyright "Fish" (David B. Trout), 2002-2009     */
+/*              Hercules LAN Channel Station Support                 */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
+// $Id$
+
 // ====================================================================
 //           Hercules LAN Channel Station Support
 // ====================================================================
@@ -5,75 +15,8 @@
 // Copyright (C) 2002-2009 by James A. Pierson    (original author)
 // Copyright (C) 2002-2009 by David B. Trout      (current maintainer)
 //
-// $Id$
 //
-// $Log$
-// Revision 1.81  2008/12/23 14:01:22  rbowler
-// Allow symbol substitution in OAT files
-//
-// Revision 1.80  2008/12/22 14:14:03  rbowler
-// Correct typographical error in message HHCLC032E
-//
-// Revision 1.79  2008/11/04 05:56:31  fish
-// Put ensure consistent create_thread ATTR usage change back in
-//
-// Revision 1.78  2008/11/03 15:31:57  rbowler
-// Back out consistent create_thread ATTR modification
-//
-// Revision 1.77  2008/10/18 09:32:21  fish
-// Ensure consistent create_thread ATTR usage
-//
-// Revision 1.76  2008/08/19 21:36:37  fish
-// Init LCS interface ASAP to fix wrong MAC being used
-//
-// Revision 1.75  2008/08/15 04:40:49  fish
-// Trace LCS Command Frame packets as they are received,
-// ensure iMaxFrameBufferSize greater than minimum allowed.
-//
-// Revision 1.74  2008/07/17 07:42:15  fish
-// (extremely minor comment change only)
-//
-// Revision 1.73  2008/07/17 07:19:12  fish
-// Fix FCS (Frame Check Sequence) bug in LCS_Write function
-// and other minor bugs.
-//
-// Revision 1.71  2008/07/17 03:30:40  fish
-// CTC/LCS cosmetic-only changes -- part 1
-// (no actual functionality was changed!)
-//
-// Revision 1.70  2008/05/22 18:27:25  fish
-// Fix read timeout bug in LCS logic
-//
-// Revision 1.69  2008/02/07 00:29:04  rbowler
-// Solaris build support by Jeff Savit
-//
-// Revision 1.68  2008/01/11 21:33:21  fish
-// new 'ctc' command to enable/disable debug option on demand
-//
-// Revision 1.67  2007/11/21 22:54:14  fish
-// Use new BEGIN_DEVICE_CLASS_QUERY macro
-//
-// Revision 1.66  2007/08/17 00:59:40  fish
-// Backout 28 Jul fix for LCS (fix was only meant for CTCI)
-//
-// Revision 1.65  2007/07/29 02:02:44  fish
-// Fix day-1 CTCI/LCS bug found by Vince Weaver [vince@deater.net]
-//
-// Revision 1.64  2007/06/23 00:04:05  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.63  2007/02/25 15:05:46  fish
-// Fix crash in LCS close if devinit of incomplete group
-//
-// Revision 1.62  2007/01/14 22:17:35  rbowler
-// Correct compile error introduced by rev 1.61
-//
-// Revision 1.61  2007/01/14 08:03:30  fish
-// correct minor (benign(?)) bug in LCS_QueryIPAssists, fix HHCLC011I and related deug msgs in LCS_PortThread to display IP address in correct byte-order.
-//
-// Revision 1.60  2006/12/08 09:43:19  jj
-// Add CVS message log
-//
+
 
 #include "hstdinc.h"
 

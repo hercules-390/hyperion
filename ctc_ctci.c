@@ -1,15 +1,15 @@
-// ====================================================================
-// Hercules IP Channel-to-Channel Support (CTCI)
-// ====================================================================
-//
-// Copyright    (C) Copyright James A. Pierson, 2002-2009
-//              (C) Copyright "Fish" (David B. Trout), 2002-2009
-//              (C) Copyright Roger Bowler, 2000-2010
-//
-// linux 2.4 modifications (c) Copyright Fritz Elfert, 2001-2009
-//
+/* CTC_CTCI.C   (c) Copyright Roger Bowler, 2000-2010                */
+/*              (c) Copyright James A. Pierson, 2002-2009            */
+/*              (c) Copyright "Fish" (David B. Trout), 2002-2009     */
+/*              (c) Copyright Fritz Elfert, 2001-2009                */
+/*              Hercules IP Channel-to-Channel Support (CTCI)        */
+/*                                                                   */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
 // $Id$
-//
 
 
 #include "hstdinc.h"

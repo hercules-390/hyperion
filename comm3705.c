@@ -1,3 +1,12 @@
+/* COMM3705.C   (c) Copyright MHP, 2007 (see below)                  */
+/*              Hercules 3705 communications controller              */
+/*              running NCP                                          */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
+// $Id: comm3705.c 5925 2010-05-03 14:34:25Z bernard $
 
 /***********************************************************************/
 /*                                                                     */
