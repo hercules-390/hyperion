@@ -215,6 +215,8 @@ DLL_EXPORT void writemsg(char *file, int line, int lvl, char *color, char *msg, 
     {
         free(bfr);
     }
+    if(!lvl && (msg[8] == 'S' || msg[8] == 'E' || msg[8] == 'W'))
+        logmsg("HHC00007I " HHC00007 "\n", file, line);
 }
 
 /*-------------------------------------------------------------------*/
