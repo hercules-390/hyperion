@@ -1,3 +1,12 @@
+/* W32UTIL.C    (c) Copyright "Fish" (David B. Trout), 2005-2010     */
+/*              Windows porting functions                            */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
+// $Id$
+
 //////////////////////////////////////////////////////////////////////////////////////////
 //   w32util.c        Windows porting functions
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -12,7 +21,6 @@
 //
 //////////////////////////////////////////////////////////////////////////////////////////
 
-// $Id$
 
 #include "hstdinc.h"
 
@@ -1121,7 +1129,11 @@ DLL_EXPORT BYTE *hostpath( BYTE *outpath, const BYTE *inpath, size_t buffsize )
         while (*inpath && --buffsize)
         {
             BYTE c = *inpath++;
+#if      defined(OPTION_WINDOWS_HOST_FILENAMES)
+            if ( c == '/' ) c = '\\';
+#else //!defined(OPTION_WINDOWS_HOST_FILENAMES)
             if (c == '\\') c = '/';
+#endif //defined(OPTION_WINDOWS_HOST_FILENAMES)
             *outpath++ = c;
         }
         *outpath = 0;
@@ -1221,6 +1233,10 @@ DLL_EXPORT int expand_environ_vars( const char* inbuff, char* outbuff, DWORD out
 // Initialize Hercules HOSTINFO structure
 // see: http://msdn.microsoft.com/en-us/library/ms724429(VS.85).aspx
 //   for more information
+// Programming note: WinNT.h will need to be visited when new releases
+//                   of Windows appear. (P. Gorlinsky 2010)
+// Support added for virtually of the existing Windows variations
+// This is based upon information in the Windows V7.0 SDK
 
 typedef void (WINAPI *PGNSI)(LPSYSTEM_INFO);
 typedef BOOL (WINAPI *PGPI)(DWORD, DWORD, DWORD, DWORD, PDWORD);

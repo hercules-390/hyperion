@@ -58,6 +58,10 @@
 #define OPTION_MSGCLR                   /* Colored messages          */
 #define OPTION_MSGHLD                   /* Sticky messages           */
 
+#undef  OPTION_WINDOWS_HOST_FILENAMES   /* Format files for display  */
+                                        /* in native host format     */
+                                        /* slashes
+
 #if defined(OPTION_MSGHLD) && !defined(OPTION_MSGCLR)
   #error OPTION_MSGHLD requires OPTION_MSGCLR
 #endif // defined(OPTION_MSGHLD) && !defined(OPTION_MSGCLR)
