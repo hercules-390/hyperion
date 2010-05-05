@@ -1,18 +1,11 @@
+/* FILLFNAM.C   (c) Copyright Roger Bowler, 1999-2010                */
+/*              filename completion functions                        */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
 // $Id$
-//
-// $Log$
-// Revision 1.11  2008/02/18 22:57:08  rbowler
-// Disable filename completion for Solaris 2.9 due to missing scandir function
-//
-// Revision 1.10  2006/12/31 17:52:50  gsmith
-// 31 Dec 2006 Fix typo in line 1 of fillfnam.c
-//
-// Revision 1.9  2006/12/31 11:31:21  fish
-// Fix cmdline tabbed filename-completion for MSVC
-//
-// Revision 1.8  2006/12/08 09:43:21  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 #include "hercules.h"
