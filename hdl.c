@@ -183,6 +183,7 @@ int logger_flag = 0;
 DLL_EXPORT void hdl_setpath(char *path, int flag)
 {
     char    pathname[MAX_PATH];         /* pathname conversion */
+    int     def = FALSE;
 
     if ( strlen(path) > MAX_PATH )
     {
@@ -207,6 +208,8 @@ DLL_EXPORT void hdl_setpath(char *path, int flag)
                 return;
             }
         }
+        else
+            def = TRUE;
     }
     else
     {
@@ -216,7 +219,7 @@ DLL_EXPORT void hdl_setpath(char *path, int flag)
     }
 
     hdl_modpath = strdup(pathname);
-    WRITEMSG (HHCHD018I, hdl_modpath);
+    WRITEMSG (HHCHD018I, def ? "Default l":"L", hdl_modpath);
 
     return;
 }

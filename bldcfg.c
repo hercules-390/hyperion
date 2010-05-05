@@ -238,7 +238,7 @@ int off;
         /* Initial power-on reset for expanded storage */
         xstorage_clear();
 #else /*!_FEATURE_EXPANDED_STORAGE*/
-        WRITEMSG(HHCMD034W);
+        WRITEMSG(HHCMD034I);
 #endif /*!_FEATURE_EXPANDED_STORAGE*/
     } /* end if(sysblk.xpndsize) */
 }
@@ -1300,7 +1300,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
                 delayed_exit(1);
             }
 #else /*!_FEATURE_VECTOR_FACILITY*/
-            WRITEMSG(HHCMD020W);
+            WRITEMSG(HHCMD020I);
 #endif /*!_FEATURE_VECTOR_FACILITY*/
         }
         sysblk.numvec = numvec;
