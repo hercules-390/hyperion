@@ -391,6 +391,7 @@ struct SYSBLK {
 #define HDL_VERS_SYSBLK   "3.08"        /* Internal Version Number   */
 #define HDL_SIZE_SYSBLK   sizeof(SYSBLK)
         char   *hercules_pgmname;       /* Starting program name     */ 
+        char   *hercules_pgmpath;       /* Starting pgm path name    */
         time_t  impltime;               /* TOD system was IMPL'ed    */
         int     arch_mode;              /* Architecturual mode       */
                                         /* 0 == S/370   (ARCH_370)   */

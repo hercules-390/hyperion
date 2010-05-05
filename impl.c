@@ -382,8 +382,42 @@ int     dll_count;                      /* index into array          */
     memset (&sysblk, 0, sizeof(SYSBLK));
 
     /* Set program name */
-    if ( argc > 0 || ( ( sysblk.hercules_pgmname = strdup(argv[0]) ) == NULL ) )
-        sysblk.hercules_pgmname = strdup("hercules");
+    if ( argc > 0 )
+    {
+        if ( strlen(argv[0]) == 0 )
+        {
+            sysblk.hercules_pgmname = strdup("hercules");
+            sysblk.hercules_pgmpath = strdup("");
+        }
+        else
+        {
+#if defined( _MSVC_ )
+            char path[MAX_PATH];
+            char drive[_MAX_DRIVE];
+            char dir[_MAX_DIR];
+            char fname[_MAX_FNAME];
+            char ext[_MAX_EXT];
+
+            GetModuleFileName( NULL, path, MAX_PATH );
+            _splitpath( path, drive, dir, fname, ext ); // C4996
+
+            if ( dir[strlen(dir) - 1] == '\\' )
+                dir[strlen(dir) - 1] = '\0';
+
+            sysblk.hercules_pgmname = strdup(strcat(fname, ext));
+            sysblk.hercules_pgmpath = strdup(strcat(strcpy(path,drive), dir));
+
+#else
+            sysblk.hercules_pgmname = strdup(basename(argv[0]));
+            sysblk.hercules_pgmpath = strdup(dirname(argv[0]));
+#endif
+        }
+    }
+    else
+    {
+            sysblk.hercules_pgmname = strdup("hercules");
+            sysblk.hercules_pgmpath = strdup("");
+    }
 
     /* set default operator mode to all */
     sysblk.sysgroup = SYSGROUP_ALL;

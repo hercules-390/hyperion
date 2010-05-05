@@ -785,7 +785,12 @@ HDLPRE *preload;
     initialize_lock(&hdl_sdlock);
 
     if ( hdl_modpath == NULL )
-        hdl_setpath(HDL_DEFAULT_PATH, TRUE);
+    {
+        if ( strlen( sysblk.hercules_pgmpath ) == 0 )
+            hdl_setpath(HDL_DEFAULT_PATH, TRUE);
+        else
+            hdl_setpath(sysblk.hercules_pgmpath, TRUE);
+    }
 
     dlinit();
 
