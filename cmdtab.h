@@ -126,7 +126,7 @@ COMMAND ( "cfall",     PANEL,         SYSCMDALL,          cfall_cmd,    "configu
 #endif
 
 #ifdef _FEATURE_SYSTEM_CONSOLE
-COMMAND ( "scpecho",   PANEL,         SYSCMDALL,          scpecho_cmd,  
+COMMAND ( "scpecho",   PANEL+CONFIG,  SYSCMDALL,          scpecho_cmd,  
   "Toggle on/off echo to console and history of scp replys",
     "scpecho toggles the '.' (scp) and '!' (priority scp) replys and responses\n"
     "to the hercules console. The default is off. This is to manage passwords\n"
