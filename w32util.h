@@ -1,3 +1,10 @@
+/* W32UTIL.H    (c) Copyright "Fish" (David B. Trout), 2005-2009     */
+/*              Windows porting functions                            */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
 //////////////////////////////////////////////////////////////////////////////////////////
 //   w32util.h        Windows porting functions
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -6,30 +13,6 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 
 // $Id$
-//
-// $Log$
-// Revision 1.13  2008/11/23 22:27:43  rbowler
-// Fix win64 type conversion warnings in w32util.c
-//
-// Revision 1.12  2007/11/30 14:54:34  jmaynard
-// Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
-//
-// Revision 1.11  2007/08/04 19:04:34  fish
-// gethostid
-//
-// Revision 1.10  2007/06/23 00:04:19  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.9  2007/01/10 15:12:12  rbowler
-// Console keepalive for Unix
-//
-// Revision 1.8  2007/01/10 09:32:39  fish
-// Enable connection keep-alive to try and detect 3270 clients that
-// have died (MSVC only right now; don't know how to do it on *nix)
-//
-// Revision 1.7  2006/12/08 09:43:34  jj
-// Add CVS message log
-//
 
 #ifndef _W32UTIL_H
 #define _W32UTIL_H
@@ -233,6 +216,10 @@ W32_DLL_IMPORT pid_t  w32_poor_mans_fork ( char*  pszCommandLine, int* pnWriteTo
 W32_DLL_IMPORT void   w32_set_thread_name( TID tid, char* name );
 
 //////////////////////////////////////////////////////////////////////////////////////////
+
+// Windows implementation of basename and dirname functions
+W32_DLL_IMPORT char*  w32_basename( char* path );
+W32_DLL_IMPORT char*  w32_dirname( char* path );
 
 #endif // defined(_MSVC_)
 

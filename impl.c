@@ -397,26 +397,15 @@ int     dll_count;                      /* index into array          */
         {
             char path[MAX_PATH];
 #if defined( _MSVC_ )
-            char drive[_MAX_DRIVE];
-            char dir[_MAX_DIR];
-            char fname[_MAX_FNAME];
-            char ext[_MAX_EXT];
-
             GetModuleFileName( NULL, path, MAX_PATH );
-            _splitpath( path, drive, dir, fname, ext ); // C4996
-
-            if ( dir[strlen(dir) - 1] == '\\' )
-                dir[strlen(dir) - 1] = '\0';
-
-            sysblk.hercules_pgmname = strdup(strcat(fname, ext));
-            sysblk.hercules_pgmpath = strdup(strcat(strcpy(path,drive), dir));
-
 #else
             strcpy(path,argv[0]);
-            sysblk.hercules_pgmname = strdup(basename(path));
-            strcpy(path,argv[0]);
-            sysblk.hercules_pgmpath = strdup(dirname(path));
 #endif
+            sysblk.hercules_pgmname = strdup(basename(path));
+#if !defined( _MSVC_ )
+            strcpy(path,argv[0]);
+#endif
+            sysblk.hercules_pgmpath = strdup(dirname(path));
         }
     }
     else

@@ -3368,5 +3368,56 @@ DLL_EXPORT void w32_set_thread_name( TID tid, char* name )
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
+static char _basename[MAX_PATH];
+
+// Windows implementation of basename and dirname functions
+DLL_EXPORT char*  w32_basename( char* path )
+/*
+
+    This is not a complete implementation of basename, but should work for windows
+
+*/
+{
+    char fname[_MAX_FNAME];
+    char ext[_MAX_EXT];
+
+    memset( _basename, '\0', strlen( _basename ) );        // zero for security reasons
+    _splitpath( path, NULL, NULL, fname, ext ); // C4996
+    
+    strcat( strcpy( _basename, fname ), ext);
+    return( _basename );
+}
+
+static char _dirname[MAX_PATH];
+
+DLL_EXPORT char*  w32_dirname( char* path )
+/*
+    This is not a complete dirname implementation, but should be ok for windows.
+
+*/
+{
+    char drive[_MAX_DRIVE];
+    char dir[_MAX_DIR];
+    char *t;
+#if      defined(OPTION_WINDOWS_HOST_FILENAMES)
+    char *h = "\\";
+#else
+    char *h = "/";
+#endif
+
+    memset( _dirname, '\0', strlen( _dirname ) );          // zero for security reasons
+    _splitpath( path, drive, dir, NULL, NULL ); // C4996
+
+    /* Remove trailing slashes */
+    t = dir + strlen(dir) -1;
+    for ( ; (*t == *h && t > dir) ; t--) *t = '\0';
+
+    strcat(strcpy(_dirname,drive), dir);
+
+    if ( strlen( _dirname ) == 0 || path == NULL )
+        strcpy( _dirname, "." );
+    
+    return( _dirname );
+}
 
 #endif // defined( _MSVC_ )

@@ -1,13 +1,17 @@
-/*-------------------------------------------------------------------*/
-/*  HMACROS.H             Hercules macros...                         */
-/*-------------------------------------------------------------------*/
+/* HMACROS.H    (c) Copyright Roger Bowler, 1999-2010                */
+/*               Hercules macros...                                  */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
+// $Id$
 
 //      This header auto-#included by 'hercules.h'...
 //
 //      The <config.h> header and other required headers are
 //      presumed to have already been #included ahead of it...
 
-// $Id$
 
 #ifndef _HMACROS_H
 #define _HMACROS_H
@@ -72,6 +76,8 @@
   #define  fwrite               w32_fwrite
   #define  fprintf              w32_fprintf
   #define  fclose               w32_fclose
+  #define  basename             w32_basename
+  #define  dirname              w32_dirname
 #endif
 
 #ifdef _MSVC_
