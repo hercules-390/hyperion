@@ -391,8 +391,8 @@ int     dll_count;                      /* index into array          */
         }
         else
         {
-#if defined( _MSVC_ )
             char path[MAX_PATH];
+#if defined( _MSVC_ )
             char drive[_MAX_DRIVE];
             char dir[_MAX_DIR];
             char fname[_MAX_FNAME];
@@ -408,8 +408,10 @@ int     dll_count;                      /* index into array          */
             sysblk.hercules_pgmpath = strdup(strcat(strcpy(path,drive), dir));
 
 #else
-            sysblk.hercules_pgmname = strdup(basename(argv[0]));
-            sysblk.hercules_pgmpath = strdup(dirname(argv[0]));
+            strcpy(path,argv[0]);
+            sysblk.hercules_pgmname = strdup(basename(path));
+            strcpy(path,argv[0]);
+            sysblk.hercules_pgmpath = strdup(dirname(path));
 #endif
         }
     }

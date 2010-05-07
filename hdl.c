@@ -789,7 +789,7 @@ HDLPRE *preload;
 
     if ( hdl_modpath == NULL )
     {
-        if ( strlen( sysblk.hercules_pgmpath ) == 0 )
+        if ( sysblk.hercules_pgmpath == NULL || strlen( sysblk.hercules_pgmpath ) == 0 )
             hdl_setpath(HDL_DEFAULT_PATH, TRUE);
         else
             hdl_setpath(sysblk.hercules_pgmpath, TRUE);
