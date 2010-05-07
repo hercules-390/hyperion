@@ -27,6 +27,10 @@
 #include "hostinfo.h"
 #include "history.h"
 
+#if !defined(_MSVC_)
+#include "libgen.h"
+#endif
+
 /* (delayed_exit function defined in config.c) */
 extern void delayed_exit (int exit_code);
 
