@@ -1,3 +1,16 @@
+08 May 2010 HERCULES_LIB is introduced as an environment variable for LOADABLE  
+            MODULES DIRECTORY.
+            Default library after processing startup arguments is:
+            1) -p highest priority
+            2) HERCULES_LIB is 2nd priority
+            3) MODULESDIR define is 3rd priority
+            4) Final Default is determined by attempting to use path where startup program
+               was found and if it is not resolved the "hercules" is used.   - Paul G.
+07 May 2010 Changes to selecting default Loadable Modules Directory. - Paul G.
+            The default directory selection has been change to use the directory
+            that hercules was started from if define MODULESDIR was not set.
+            Unless no path is available, then hercules will be used. 
+07 May 2010 Functions basename() and dirname() are required and use the libdef.h header. (not windows)
 11 Apr 2010 Fix SCSI tape dev-attn failure if read-only media is mounted - Fish
 29 Mar 2010 Add support for cmdlevel to limit console commands to the requested 
             command set. Effects only user input commands, not panel, HAO or diagnose.
