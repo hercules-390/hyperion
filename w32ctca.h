@@ -25,12 +25,6 @@
 #define MAX_TT32_DLLNAMELEN  (512)
 #define DEF_TT32_DLLNAME     TUNTAP32_DLLNAME   // (from tt32api.h)
 
-#ifndef MODULESDIR
-    #define TT32_DEFAULT_PATH "."
-#else
-    #define TT32_DEFAULT_PATH MODULESDIR    
-#endif
-
 extern char   g_tt32_dllname   [MAX_TT32_DLLNAMELEN];
 
 extern void tt32_init

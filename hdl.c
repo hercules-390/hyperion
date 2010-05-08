@@ -177,18 +177,24 @@ int logger_flag = 0;
 
 
 /* hdl_setpath - set path for module load 
+ * If path is NULL, then return the current path
+ * If path length is greater than MAX_PATH, send message and return NULL 
+ *     indicating an error has occurred.
  * If flag is TRUE, then only set new path if not already defined
  * If flag is FALSE, then always set the new path.
  */
-DLL_EXPORT void hdl_setpath(char *path, int flag)
+DLL_EXPORT char *hdl_setpath(char *path, int flag)
 {
     char    pathname[MAX_PATH];         /* pathname conversion */
     int     def = FALSE;
 
+    if (path == NULL)
+        return hdl_modpath;             /* return module path to caller */
+
     if ( strlen(path) > MAX_PATH )
     {
         WRITEMSG (HHCHD019E, (int)strlen(path), MAX_PATH);
-        return;
+        return NULL;
     }
 
     hostpath(pathname, path, sizeof(pathname));
@@ -205,7 +211,7 @@ DLL_EXPORT void hdl_setpath(char *path, int flag)
             {
                 WRITEMSG (HHCHD022W, pathname); 
                 WRITEMSG (HHCHD020W, hdl_modpath);
-                return;
+                return hdl_modpath;
             }
         }
         else
@@ -221,7 +227,7 @@ DLL_EXPORT void hdl_setpath(char *path, int flag)
     hdl_modpath = strdup(pathname);
     WRITEMSG (HHCHD018I, def ? "Default l":"L", hdl_modpath);
 
-    return;
+    return hdl_modpath;
 }
 
 

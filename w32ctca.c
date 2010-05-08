@@ -166,32 +166,8 @@ BOOL tt32_loaddll()
     else
     {
         // It's not a path, so make it one, using loadable module path
-        char pathname[MAX_PATH];
-        char *def;
 
-        hostpath( pathname, TT32_DEFAULT_PATH, sizeof( pathname ) );
-
-        if (!(def = getenv("HERCULES_LIB")))
-        {
-            if ( sysblk.hercules_pgmpath == NULL || strlen( sysblk.hercules_pgmpath ) == 0 )
-            {
-                strlcpy( tt32_dllname_in_buff, pathname, sizeof(tt32_dllname_in_buff) );
-            } 
-            else
-            {
-#if !defined (MODULESDIR)
-                strlcpy( tt32_dllname_in_buff, sysblk.hercules_pgmpath, sizeof(tt32_dllname_in_buff) );
-#else
-                strlcpy( tt32_dllname_in_buff, pathname, sizeof(tt32_dllname_in_buff) );
-#endif
-            }
-        }
-        else
-        {
-            hostpath(pathname, def, sizeof(pathname));
-            strlcpy( tt32_dllname_in_buff, pathname, sizeof(tt32_dllname_in_buff) );
-        }
-
+        strlcpy( tt32_dllname_in_buff, hdl_setpath(NULL,TRUE), sizeof(tt32_dllname_in_buff) );
         strlcat( tt32_dllname_in_buff,     "/"   , sizeof(tt32_dllname_in_buff) );
         strlcat( tt32_dllname_in_buff, pszDLLName, sizeof(tt32_dllname_in_buff) );
     }
