@@ -1,12 +1,18 @@
+/* W32CTCA.C    (c) Copyright "Fish" (David B. Trout), 2005-2010     */
+/*    CTCI-W32 (Channel to Channel link to Win32 TCP/IP stack)       */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
+// $Id$
+
 ////////////////////////////////////////////////////////////////////////////////////
 //    w32ctca.c    CTCI-W32 (Channel to Channel link to Win32 TCP/IP stack)
 ////////////////////////////////////////////////////////////////////////////////////
 // (c) Copyright "Fish" (David B. Trout), 2002-2009. Released under the Q Public License
 // (http://www.hercules-390.org/herclic.html) as modifications to Hercules.
 ////////////////////////////////////////////////////////////////////////////////////
-
-// $Id$
-
 
 #include "hstdinc.h"
 #include "hercules.h"
@@ -159,8 +165,33 @@ BOOL tt32_loaddll()
     }
     else
     {
-        // It's not a path, so make it one...
-        strlcpy( tt32_dllname_in_buff, MODULESDIR, sizeof(tt32_dllname_in_buff) );
+        // It's not a path, so make it one, using loadable module path
+        char pathname[MAX_PATH];
+        char *def;
+
+        hostpath( pathname, TT32_DEFAULT_PATH, sizeof( pathname ) );
+
+        if (!(def = getenv("HERCULES_LIB")))
+        {
+            if ( sysblk.hercules_pgmpath == NULL || strlen( sysblk.hercules_pgmpath ) == 0 )
+            {
+                strlcpy( tt32_dllname_in_buff, pathname, sizeof(tt32_dllname_in_buff) );
+            } 
+            else
+            {
+#if !defined (MODULESDIR)
+                strlcpy( tt32_dllname_in_buff, sysblk.hercules_pgmpath, sizeof(tt32_dllname_in_buff) );
+#else
+                strlcpy( tt32_dllname_in_buff, pathname, sizeof(tt32_dllname_in_buff) );
+#endif
+            }
+        }
+        else
+        {
+            hostpath(pathname, def, sizeof(pathname));
+            strlcpy( tt32_dllname_in_buff, pathname, sizeof(tt32_dllname_in_buff) );
+        }
+
         strlcat( tt32_dllname_in_buff,     "/"   , sizeof(tt32_dllname_in_buff) );
         strlcat( tt32_dllname_in_buff, pszDLLName, sizeof(tt32_dllname_in_buff) );
     }

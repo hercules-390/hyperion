@@ -789,14 +789,31 @@ HDLPRE *preload;
 
     if ( hdl_modpath == NULL )
     {
-        if ( sysblk.hercules_pgmpath == NULL || strlen( sysblk.hercules_pgmpath ) == 0 )
-            hdl_setpath(HDL_DEFAULT_PATH, TRUE);
-        else    
-#if defined (MODULESDIR)
-            hdl_setpath(sysblk.hercules_pgmpath, TRUE);
+        char *def;
+        char pathname[MAX_PATH];
+
+        if (!(def = getenv("HERCULES_LIB")))
+        {
+            if ( sysblk.hercules_pgmpath == NULL || strlen( sysblk.hercules_pgmpath ) == 0 )
+            {
+                hostpath(pathname, HDL_DEFAULT_PATH, sizeof(pathname));
+                hdl_setpath(pathname, TRUE);
+            }
+            else
+            {
+#if !defined (MODULESDIR)
+                hdl_setpath(sysblk.hercules_pgmpath, TRUE);
 #else
-            hdl_setpath(HDL_DEFAULT_PATH, TRUE);
+                hostpath(pathname, HDL_DEFAULT_PATH, sizeof(pathname));
+                hdl_setpath(pathname, TRUE);
 #endif
+            }
+        }
+        else
+        {   
+            hostpath(pathname, def, sizeof(pathname));
+            hdl_setpath(pathname, TRUE);
+        }
     }
 
     dlinit();
