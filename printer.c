@@ -139,7 +139,7 @@ do { \
             if (*unitstat != 0) return; \
             dev->currline = 1 ; \
         } \
-        for ( ; dev->currline <= dev->destline ; dev->currline++ ) \
+        for ( ; dev->currline < dev->destline ; dev->currline++ ) \
         { \
             write_buffer (dev, "\n", 1, unitstat); \
             if (*unitstat != 0) return; \
@@ -355,7 +355,7 @@ int     sockdev = 0;                    /* 1 == is socket device     */
             continue;
         }
 
-        if (memcmp("fcb=", argv[i], 4) == 0)
+        if (strncasecmp("fcb=", argv[i], 4) == 0)
         {
             if (strlen (argv[i]) != 30)
             {
@@ -904,16 +904,12 @@ char            hex[3];                 /* for hex conversion        */
         {
             /* i index to the DATA */
             for (i = 0; i < 13; dev->fcb[i++] = 0);
-            line = 0;
-            for (i = 1 ; i < count; i++)
+            for (i=1, line=1; i < count && !(iobuf[i] & 0x10); i++, line++)
             {
-                line++;
-                if (iobuf[i] & 0x10) break;
-                if (iobuf[i] != 0x00)
-                {
-                    if (iobuf[i] == 0x01) line = 1;
-                    dev->fcb[iobuf[i]] = line;
-                }
+                if (!(chan = iobuf[i])) continue;
+                if (chan == 1) line = 1;
+                if (chan > 12) chan = 12;
+                dev->fcb[chan] = line;
             }
         }
         /* Return normal status */
