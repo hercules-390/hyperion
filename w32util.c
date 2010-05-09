@@ -3381,10 +3381,14 @@ DLL_EXPORT char*  w32_basename( char* path )
     char fname[_MAX_FNAME];
     char ext[_MAX_EXT];
 
-    memset( _basename, '\0', strlen( _basename ) );        // zero for security reasons
+    memset( _basename, '\0', MAX_PATH );        // zero for security reasons
     _splitpath( path, NULL, NULL, fname, ext ); // C4996
     
     strcat( strcpy( _basename, fname ), ext);
+
+    if ( strlen( _basename ) == 0 || path == NULL ) 
+        strcpy( _basename, "." );
+
     return( _basename );
 }
 
@@ -3405,7 +3409,7 @@ DLL_EXPORT char*  w32_dirname( char* path )
     char *h = "/";
 #endif
 
-    memset( _dirname, '\0', strlen( _dirname ) );          // zero for security reasons
+    memset( _dirname, '\0', MAX_PATH );          // zero for security reasons
     _splitpath( path, drive, dir, NULL, NULL ); // C4996
 
     /* Remove trailing slashes */
