@@ -1,14 +1,10 @@
 /*---------------------------------------------------------------------------*/
 /* file: hao.c                                                               */
 /*                                                                           */
-/* Implementation of the automatic operator withing the Hercules z/Series    */
-/* emulator. This implementation couldn't be done without the advise of      */
-/* Jan Jaeger, who always has an answer to any question. Thanks for the      */
-/* regex advice!                                                             */
+/* Implementation of the automatic operator withing the Hercules emulator.   */
 /*                                                                           */
-/*                            (c) Copyright Bernard van der Helm, 2002-2009  */
+/*                            (c) Copyright Bernard van der Helm, 2002-2010  */
 /*                            Noordwijkerhout, The Netherlands.              */
-/*                                                                           */
 /*---------------------------------------------------------------------------*/
 
 // $Id$
@@ -76,7 +72,6 @@ DLL_EXPORT int hao_initialize(void)
 
   /* initialize message buffer */
   memset(ao_msgbuf, 0, sizeof(ao_msgbuf));
-
 
   /* Start message monitoring thread */
   rc = create_thread (&sysblk.haotid, JOINABLE, hao_thread, NULL, "hao_thread");
@@ -421,13 +416,14 @@ static void hao_list(char *arg)
     {
       if(ao_tgt[i])
       {
-        if (size == 0) WRMSG(HHC00087, "I");
-        WRMSG(HHC00088, "I", i, ao_tgt[i], (ao_cmd[i] ? ao_cmd[i] : "<not specified>"));
+        if(!size) 
+          WRMSG(HHC00087, "I");
+        WRMSG(HHC00088, "I", i, ao_tgt[i], (ao_cmd[i] ? ao_cmd[i] : "not specified"));
         size++;
       }
     }
     release_lock(&ao_lock);
-    if ( size == 0 )
+    if(!size)
         WRMSG(HHC00089, "I");
     else
         WRMSG(HHC00082, "I", size);
@@ -507,24 +503,26 @@ static void* hao_thread(void* dummy)
   WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Hercules Automatic Operator");
 
   /* Wait for panel thread to engage */
-  while (!sysblk.panel_init && !sysblk.shutdown)
+  while(!sysblk.panel_init && !sysblk.shutdown)
     usleep( 10 * 1000 );
 
   /* Do until shutdown */
-  while (!sysblk.shutdown && msgamt >= 0)
+  while(!sysblk.shutdown && msgamt >= 0)
   {
     /* wait for message data */
-    if ((msgamt = log_read(&msgbuf, &msgidx, LOG_BLOCK)) > 0 )
+    msgamt = log_read(&msgbuf, &msgidx, LOG_BLOCK);
+    if(msgamt > 0)
     {
       /* append to existing data */
-      if (msgamt > (int)((sizeof(ao_msgbuf) - 1) - bufamt) )
-          msgamt = (int)((sizeof(ao_msgbuf) - 1) - bufamt);
+      if(msgamt > (int)((sizeof(ao_msgbuf) - 1) - bufamt))
+        msgamt = (int)((sizeof(ao_msgbuf) - 1) - bufamt);
       strncpy( &ao_msgbuf[bufamt], msgbuf, msgamt );
       ao_msgbuf[bufamt += msgamt] = 0;
       msgbuf = ao_msgbuf;
 
       /* process only complete messages */
-      while (NULL != (msgend = strchr(msgbuf,'\n')))
+      msgend = strchr(msgbuf,'\n');
+      while(msgend)
       {
         /* null terminate message */
         svchar = *(msgend+1);
@@ -536,6 +534,7 @@ static void* hao_thread(void* dummy)
         /* restore destroyed byte */
         *(msgend+1) = svchar;
         msgbuf = msgend+1;
+        msgend = strchr(msgbuf,'\n');
       }
 
       /* shift message buffer */
@@ -584,7 +583,7 @@ DLL_EXPORT void hao_message(char *buf)
     if(ao_tgt[i] && ao_cmd[i])  /* complete rule defined in this slot? */
     {
       /* does this rule match our message? */
-      if (regexec(&ao_preg[i], work, 1, &rm, 0) == 0)
+      if(!regexec(&ao_preg[i], work, 1, &rm, 0))
       {
         BYTE sysgroup; 
         /* issue command for this rule */

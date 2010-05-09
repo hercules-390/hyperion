@@ -2,23 +2,6 @@
 /*              Socketdevice support                                 */
 
 // $Id$
-//
-// $Log$
-// Revision 1.29  2008/11/04 05:56:31  fish
-// Put ensure consistent create_thread ATTR usage change back in
-//
-// Revision 1.28  2008/11/03 15:31:53  rbowler
-// Back out consistent create_thread ATTR modification
-//
-// Revision 1.27  2008/10/18 09:32:21  fish
-// Ensure consistent create_thread ATTR usage
-//
-// Revision 1.26  2007/06/23 00:04:15  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.25  2006/12/08 09:43:30  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 
@@ -87,7 +70,7 @@ int unix_socket (char* path)
 {
 #if !defined( HAVE_SYS_UN_H )
     UNREFERENCED(path);
-    WRITEMSG (HHCSD024E);
+    WRMSG (HHC01032, "E");
     return -1;
 #else // defined( HAVE_SYS_UN_H )
 
@@ -98,7 +81,7 @@ int unix_socket (char* path)
 
     if (strlen (path) > sizeof(addr.sun_path) - 1)
     {
-        WRITEMSG (HHCSD008E, path, (int) sizeof(addr.sun_path) - 1);
+        WRMSG (HHC01033, "E", path, (int) sizeof(addr.sun_path) - 1);
         return -1;
     }
 
@@ -108,7 +91,7 @@ int unix_socket (char* path)
 
     if (sd == -1)
     {
-        WRITEMSG (HHCSD009E, path, strerror(HSO_errno));
+        WRMSG (HHC01034, "E", "socket()", strerror(HSO_errno));
         return -1;
     }
 
@@ -120,7 +103,7 @@ int unix_socket (char* path)
         || listen (sd, 0) == -1
         )
     {
-        WRITEMSG (HHCSD010E, path, strerror(HSO_errno));
+        WRMSG (HHC01034, "E", "bind()", strerror(HSO_errno));
         return -1;
     }
 
@@ -172,7 +155,7 @@ int inet_socket (char* spec)
 
         if (!he)
         {
-            WRITEMSG (HHCSD011E, node);
+            WRMSG (HHC01035, "E", node);
             return -1;
         }
 
@@ -189,7 +172,7 @@ int inet_socket (char* spec)
 
         if (!se)
         {
-            WRITEMSG (HHCSD012E, service);
+            WRMSG (HHC01036, "E", service);
             return -1;
         }
 
@@ -200,7 +183,7 @@ int inet_socket (char* spec)
 
     if (sd == -1)
     {
-        WRITEMSG (HHCSD009E, spec, strerror(HSO_errno));
+        WRMSG (HHC01034, "E", "socket()", strerror(HSO_errno));
         return -1;
     }
 
@@ -211,7 +194,7 @@ int inet_socket (char* spec)
         || listen (sd, 0) == -1
         )
     {
-        WRITEMSG (HHCSD010E, spec, strerror(HSO_errno));
+        WRMSG (HHC01034, "E", "bind()", strerror(HSO_errno));
         return -1;
     }
 
@@ -280,7 +263,7 @@ void socket_device_connection_handler (bind_struct* bs)
 
     if (csock == -1)
     {
-        WRITEMSG (HHCSD017E, dev->devnum, bs->spec, strerror(HSO_errno));
+        WRMSG (HHC01000, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "accept()", strerror(HSO_errno));
         return;
     }
 
@@ -313,7 +296,7 @@ void socket_device_connection_handler (bind_struct* bs)
      || (dev->scsw.flag3 & SCSW3_SC_PEND))
     {
         close_socket( csock );
-        WRITEMSG (HHCSD015E, clientname, clientip, dev->devnum, bs->spec);
+        WRMSG (HHC01037, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, clientname, clientip, bs->spec);
         release_lock (&dev->lock);
         return;
     }
@@ -323,7 +306,7 @@ void socket_device_connection_handler (bind_struct* bs)
     if (dev->fd != -1)
     {
         close_socket( csock );
-        WRITEMSG (HHCSD016E, clientname, clientip, dev->devnum, bs->spec,
+        WRMSG (HHC01038, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, clientname, clientip, bs->spec,
             bs->clientname, bs->clientip);
         release_lock (&dev->lock);
         return;
@@ -346,12 +329,12 @@ void socket_device_connection_handler (bind_struct* bs)
         /* Callback says it can't accept it */
         close_socket( dev->fd );
         dev->fd = -1;
-        WRITEMSG (HHCSD026E, clientname, clientip, dev->devnum, bs->spec);
+        WRMSG (HHC01039, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, clientname, clientip, bs->spec);
         release_lock (&dev->lock);
         return;
     }
 
-    WRITEMSG (HHCSD018I, clientname, clientip, dev->devnum, bs->spec);
+    WRMSG (HHC01040, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, clientname, clientip, bs->spec);
 
     release_lock (&dev->lock);
     device_attention (dev, CSW_DE);
@@ -431,7 +414,7 @@ void* socket_thread( void* arg )
         if ( rc < 0 )
         {
             if ( HSO_EINTR != select_errno )
-                WRITEMSG( HHCSD021E, select_errno, strerror( select_errno ) );
+                WRMSG( HHC01034, "E", "select()", strerror( select_errno ) );
             continue;
         }
 
@@ -465,7 +448,7 @@ int bind_device_ex (DEVBLK* dev, char* spec, ONCONNECT fn, void* arg )
     /* Error if device already bound */
     if (dev->bs)
     {
-        WRITEMSG (HHCSD001E, dev->devnum, dev->bs->spec);
+        WRMSG (HHC01041, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bs->spec);
         return 0;   /* (failure) */
     }
 
@@ -474,7 +457,9 @@ int bind_device_ex (DEVBLK* dev, char* spec, ONCONNECT fn, void* arg )
 
     if (!bs)
     {
-        WRITEMSG (HHCSD002E, dev->devnum);
+        char buf[40];
+        sprintf(buf, "malloc(%lu)", sizeof(bind_struct));
+        WRMSG (HHC01000, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, buf, strerror(errno));
         return 0;   /* (failure) */
     }
 
@@ -485,7 +470,7 @@ int bind_device_ex (DEVBLK* dev, char* spec, ONCONNECT fn, void* arg )
 
     if (!(bs->spec = strdup(spec)))
     {
-        WRITEMSG (HHCSD003E, dev->devnum);
+        WRMSG (HHC01000, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "strdup()");
         free (bs);
         return 0;   /* (failure) */
     }
@@ -535,7 +520,7 @@ int bind_device_ex (DEVBLK* dev, char* spec, ONCONNECT fn, void* arg )
 
     release_lock( &bind_lock );
 
-    WRITEMSG (HHCSD004I, dev->devnum, dev->bs->spec);
+    WRMSG (HHC01042, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bs->spec);
 
     return 1;   /* (success) */
 }
@@ -554,7 +539,7 @@ int unbind_device_ex (DEVBLK* dev, int forced)
     /* Error if device not bound */
     if (!(bs = dev->bs))
     {
-        WRITEMSG (HHCSD005E, dev->devnum);
+        WRMSG (HHC01043, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
         return 0;   /* (failure) */
     }
 
@@ -567,12 +552,14 @@ int unbind_device_ex (DEVBLK* dev, int forced)
             /* Yes. Then do so... */
             close_socket( dev->fd );
             dev->fd = -1;
-            WRITEMSG (HHCSD025I, dev->bs->clientip, dev->bs->clientname, dev->devnum, dev->bs->spec);
+            WRMSG (HHC01044, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bs->clientip, 
+                   dev->bs->clientname, dev->bs->spec);
         }
         else
         {
             /* No. Then fail the request. */
-            WRITEMSG (HHCSD006E, dev->bs->clientip, dev->bs->clientname, dev->devnum, dev->bs->spec);
+            WRMSG (HHC01045, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bs->clientip, 
+                   dev->bs->clientname, dev->bs->spec);
             return 0;   /* (failure) */
         }
     }
@@ -584,7 +571,7 @@ int unbind_device_ex (DEVBLK* dev, int forced)
     SIGNAL_SOCKDEV_THREAD();
     release_lock( &bind_lock );
 
-    WRITEMSG (HHCSD007I,dev->devnum, bs->spec);
+    WRMSG (HHC01046, "I",SSID_TO_LCSS(dev->ssid), dev->devnum, bs->spec);
 
     if (bs->sd != -1)
         close_socket (bs->sd);
