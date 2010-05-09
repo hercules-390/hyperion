@@ -50,7 +50,7 @@ extern int logger_syslogfd[2];
 
 /* Logging functions in logmsg.c */
 LOG_DLL_IMPORT void logmsg(char *,...);
-LOG_DLL_IMPORT void writemsg(char *file, int line, int lvl, char *color, char *msg, ...);
+LOG_DLL_IMPORT void writemsg(char *file, int line, char *function, int lvl, char *color, char *msg, ...);
 
 // BHe I want to remove these functions for simplification
 //LOG_DLL_IMPORT void logmsgp(char *,...);

@@ -149,7 +149,7 @@ DLL_EXPORT void log_close(void)
     return;
 }
 
-DLL_EXPORT void writemsg(char *file, int line, int lvl, char *color, char *msg, ...)
+DLL_EXPORT void writemsg(char *file, int line, char* function, int lvl, char *color, char *msg, ...)
 {
     char pathname[MAX_PATH];
     char *bfr=NULL;
@@ -219,7 +219,7 @@ DLL_EXPORT void writemsg(char *file, int line, int lvl, char *color, char *msg, 
         free(bfr);
     }
     if(!lvl && (msg[8] == 'S' || msg[8] == 'E' || msg[8] == 'W'))
-        logmsg("HHC00007I " HHC00007 "\n", pathname, line);
+        logmsg("HHC00007I " HHC00007 "\n", function, pathname, line);
 }
 
 /*-------------------------------------------------------------------*/

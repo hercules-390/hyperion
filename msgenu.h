@@ -75,19 +75,24 @@ will be prefixed by sourcefile.c:lineno: where the message originates
 cpu.c:123:HABC1234I This is a message
 ---------------------------------------------------------------------*/
 
+// I'm not sure if this is needed, but __FUNCTION__ wasn't part of the standard until C99
+#if !defined(__FUNCTION__)
+#define __FUNCTION__ "UNDEF"
+#endif
+
 /* These macro's will be deleted when all messages are std */
-#define WRITEMSG(id, ...)           writemsg(__FILE__, __LINE__, sysblk.msglvl, "", _(#id " " id "\n"), ## __VA_ARGS__)
-#define WRITEMSG_C(id, ...)         writemsg(__FILE__, __LINE__, sysblk.msglvl, "", _(#id " " id ""), ## __VA_ARGS__)
-#define WRITECMSG(color, id, ...)   writemsg(__FILE__, __LINE__, sysblk.msglvl, color, _(#id " " id "\n"), ## __VA_ARGS__)
-#define WRITECMSG_C(color, id, ...) writemsg(__FILE__, __LINE__, sysblk.msglvl, color, _(#id " " id ""), ## __VA_ARGS__)
+#define WRITEMSG(id, ...)           writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, "", _(#id " " id "\n"), ## __VA_ARGS__)
+#define WRITEMSG_C(id, ...)         writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, "", _(#id " " id ""), ## __VA_ARGS__)
+#define WRITECMSG(color, id, ...)   writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, color, _(#id " " id "\n"), ## __VA_ARGS__)
+#define WRITECMSG_C(color, id, ...) writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, color, _(#id " " id ""), ## __VA_ARGS__)
 
 /* Use these macro's */
 #define MSG(id, s, ...)             #id s " " id "\n", ## __VA_ARGS__
 #define MSG_C(id, s, ...)           #id s " " id "", ## __VA_ARGS__
-#define WRMSG(id, s, ...)           writemsg(__FILE__, __LINE__, sysblk.msglvl, "", _(#id s " " id "\n"), ## __VA_ARGS__)
-#define WRMSG_C(id, s, ...)         writemsg(__FILE__, __LINE__, sysblk.msglvl, "", _(#id s " " id ""), ## __VA_ARGS__)
-#define WRCMSG(color, id, s, ...)   writemsg(__FILE__, __LINE__, sysblk.msglvl, color, _(#id s " " id "\n"), ## __VA_ARGS__)
-#define WRCMSG_C(color, id, s, ...) writemsg(__FILE__, __LINE__, sysblk.msglvl, color, _(#id s " " id ""), ## __VA_ARGS__)
+#define WRMSG(id, s, ...)           writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, "", _(#id s " " id "\n"), ## __VA_ARGS__)
+#define WRMSG_C(id, s, ...)         writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, "", _(#id s " " id ""), ## __VA_ARGS__)
+#define WRCMSG(color, id, s, ...)   writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, color, _(#id s " " id "\n"), ## __VA_ARGS__)
+#define WRCMSG_C(color, id, s, ...) writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, color, _(#id s " " id ""), ## __VA_ARGS__)
 
 /* Hercules messages */
 #define HHC00001 "%s"
@@ -96,7 +101,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00004 "Control program identification: type '%s', name '%s', sysplex '%s', level %16.16"I64_FMT"X"
 #define HHC00005 "The configuration has been placed into a system check-stop state because of an incompatible service call"
 #define HHC00006 "SCLP console interface '%s'"
-#define HHC00007 "Previous message origin: source '%s', line %d" 
+#define HHC00007 "Previous message origin was function '%s()' from '%s:%04d'" 
 #define HHC00008 "%s%s"
 #define HHC00009 "RRR...RING...GGG!\a"
 #define HHC00010 "Enter input for console %1d:%04X"
