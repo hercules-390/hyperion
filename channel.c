@@ -101,7 +101,7 @@ static void display_ccw (DEVBLK *dev, BYTE ccw[], U32 addr)
 BYTE    area[64];                       /* Data display area         */
 
     format_iobuf_data (addr, area, dev);
-    WRITEMSG (HHCCP048I, SSID_TO_LCSS(dev->ssid), dev->devnum,
+    WRMSG (HHC01315, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
             ccw[0], ccw[1], ccw[2], ccw[3],
             ccw[4], ccw[5], ccw[6], ccw[7], area);
 
@@ -112,7 +112,7 @@ BYTE    area[64];                       /* Data display area         */
 /*-------------------------------------------------------------------*/
 static void display_csw (DEVBLK *dev, BYTE csw[])
 {
-    WRITEMSG (HHCCP049I, SSID_TO_LCSS(dev->ssid), dev->devnum,
+    WRMSG (HHC01316, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
             csw[4], csw[5], csw[6], csw[7],
             csw[1], csw[2], csw[3]);
 
@@ -123,7 +123,7 @@ static void display_csw (DEVBLK *dev, BYTE csw[])
 /*-------------------------------------------------------------------*/
 static void display_scsw (DEVBLK *dev, SCSW scsw)
 {
-    WRITEMSG (HHCCP050I, SSID_TO_LCSS(dev->ssid), dev->devnum,
+    WRMSG (HHC01317, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
             scsw.flag0, scsw.flag1, scsw.flag2, scsw.flag3,
             scsw.unitstat, scsw.chanstat,
             scsw.count[0], scsw.count[1],
@@ -239,7 +239,7 @@ IOINT *ioint=NULL;
     UNREFERENCED(ibyte);
 
     if (dev->ccwtrace || dev->ccwstep)
-        WRITEMSG (HHCCP051I, SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (HHC01318, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
 
     obtain_lock (&dev->lock);
 
@@ -299,7 +299,7 @@ IOINT *ioint=NULL;
                 memcpy (psa->csw, dev->csw, 8);
                 if (dev->ccwtrace)
                 {
-                    WRITEMSG (HHCCP052I, SSID_TO_LCSS(dev->ssid), dev->devnum);
+                    WRMSG (HHC01319, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
                     display_csw (dev, dev->csw);
                 }
             }
@@ -340,7 +340,7 @@ int      pending = 0;                   /* New interrupt pending     */
     UNREFERENCED(ibyte);
 
     if (dev->ccwtrace || dev->ccwstep)
-        WRITEMSG (HHCCP053I, SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (HHC01329, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
 
     obtain_lock (&dev->lock);
 
@@ -394,7 +394,7 @@ int      pending = 0;                   /* New interrupt pending     */
             memcpy (psa->csw, dev->csw, 8);
             if (dev->ccwtrace)
             {
-                WRITEMSG (HHCCP054I, SSID_TO_LCSS(dev->ssid), dev->devnum);
+                WRMSG (HHC01330, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
                 display_csw (dev, dev->csw);
             }
         }
@@ -778,7 +778,7 @@ int pending = 0;
     UNREFERENCED(regs);
 
     if (dev->ccwtrace || dev->ccwstep)
-        WRITEMSG (HHCCP055I, SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (HHC01330, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
 
     obtain_lock (&dev->lock);
 
@@ -883,7 +883,7 @@ int pending = 0;
     UNREFERENCED(regs);
 
     if (dev->ccwtrace || dev->ccwstep)
-        WRITEMSG (HHCCP056I, SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (HHC01332, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
 
     obtain_lock (&dev->lock);
 
@@ -905,7 +905,7 @@ int pending = 0;
                     (SCSW3_SC_ALERT | SCSW3_SC_PRI | SCSW3_SC_SEC))))
     {
         if (dev->ccwtrace || dev->ccwstep)
-            WRITEMSG (HHCCP057I, SSID_TO_LCSS(dev->ssid), dev->devnum, 1);
+            WRMSG (HHC01300, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, 1);
         release_lock (&dev->lock);
         return 1;
     }
@@ -915,7 +915,7 @@ int pending = 0;
     if (dev->scsw.flag2 & (SCSW2_AC_HALT | SCSW2_AC_CLEAR))
     {
         if (dev->ccwtrace || dev->ccwstep)
-            WRITEMSG (HHCCP057I, SSID_TO_LCSS(dev->ssid), dev->devnum, 2);
+            WRMSG (HHC01300, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, 2);
         release_lock (&dev->lock);
         return 2;
     }
@@ -1010,7 +1010,7 @@ int pending = 0;
     }
 
     if (dev->ccwtrace || dev->ccwstep)
-        WRITEMSG (HHCCP057I, SSID_TO_LCSS(dev->ssid), dev->devnum, 0);
+        WRMSG (HHC01300, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, 0);
 
     /* Return condition code zero */
     return 0;
@@ -1048,7 +1048,7 @@ int resume_subchan (REGS *regs, DEVBLK *dev)
     if (dev->scsw.flag3 & SCSW3_SC_PEND)
     {
         if (dev->ccwtrace || dev->ccwstep)
-            WRITEMSG (HHCCP060I, SSID_TO_LCSS(dev->ssid), dev->devnum, 1);
+            WRMSG (HHC01333, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, 1);
         release_lock (&dev->lock);
         return 1;
     }
@@ -1061,7 +1061,7 @@ int resume_subchan (REGS *regs, DEVBLK *dev)
         || (dev->scsw.flag0 & SCSW0_S) == 0)
     {
         if (dev->ccwtrace || dev->ccwstep)
-            WRITEMSG (HHCCP060I, SSID_TO_LCSS(dev->ssid), dev->devnum, 2);
+            WRMSG (HHC01333, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, 2);
         release_lock (&dev->lock);
         return 2;
     }
@@ -1083,7 +1083,7 @@ int resume_subchan (REGS *regs, DEVBLK *dev)
     release_lock (&dev->lock);
 
     if (dev->ccwtrace || dev->ccwstep)
-        WRITEMSG (HHCCP060I, SSID_TO_LCSS(dev->ssid), dev->devnum, 0);
+        WRMSG (HHC01300, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, 0);
 
     /* Return condition code zero */
     return 0;
@@ -1856,7 +1856,7 @@ BYTE    midawflg;                       /* MIDAW flags            @MW*/
             if (dev->ccwtrace || dev->ccwstep)
             {
                 format_iobuf_data (midawdat, area, dev);
-                WRITEMSG (HHCCP078I, SSID_TO_LCSS(dev->ssid), dev->devnum, midawflg, midawlen, (U64)midawdat, area);                  
+                WRMSG (HHC01301, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, midawflg, midawlen, (U64)midawdat, area);                  
             }
 
             /* Decrement remaining count */
@@ -1951,11 +1951,11 @@ BYTE    midawflg;                       /* MIDAW flags            @MW*/
                 format_iobuf_data (idadata, area, dev);
                 if (idawfmt == 1)                              /*@IWZ*/
                 {                                              /*@IWZ*/
-                    WRITEMSG (HHCCP063I, SSID_TO_LCSS(dev->ssid), dev->devnum, (U32)idadata, idalen, area); /*@IWZ*/
+                    WRMSG (HHC01302, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, (U32)idadata, idalen, area); /*@IWZ*/
                 } 
                 else 
                 {                                       /*@IWZ*/
-                    WRITEMSG (HHCCP064I, SSID_TO_LCSS(dev->ssid), dev->devnum, (U64)idadata, idalen, area); /*@IWZ*/
+                    WRMSG (HHC01303, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, (U64)idadata, idalen, area); /*@IWZ*/
                 }
             }
 
@@ -2068,7 +2068,7 @@ DLL_EXPORT int ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat)
             release_lock (&dev->lock);
 
             if (dev->ccwtrace || dev->ccwstep)
-                WRITEMSG (HHCCP065I, SSID_TO_LCSS(dev->ssid), dev->devnum);
+                WRMSG (HHC01304, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
 
             return 0;
         }
@@ -2079,7 +2079,7 @@ DLL_EXPORT int ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat)
     }
 
     if (dev->ccwtrace || dev->ccwstep)
-        WRITEMSG (HHCCP066I, SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (HHC01305, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
 
 #ifdef FEATURE_S370_CHANNEL
     /* Set CSW for attention interrupt */
@@ -2446,7 +2446,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
         dev->prevcode = 0;
         dev->chained &= ~CCW_FLAGS_CD;
         dev->prev_chained = 0;
-        logdevtr (dev, MSG(HHCCP100I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, ccwaddr));
+        logdevtr (dev, MSG(HHC01334, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, ccwaddr));
     }
     else
     {
@@ -2458,7 +2458,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
     if (dev->syncio_active)
     {
         dev->syncios++;
-        logdevtr (dev, MSG(HHCCP101I, "", SSID_TO_LCSS(dev->ssid), dev->devnum, ccwaddr));
+        logdevtr (dev, MSG(HHC01335, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, ccwaddr));
     }
 
 #if defined(_FEATURE_IO_ASSIST)
@@ -2524,7 +2524,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
         RELEASE_INTLOCK(devregs(dev));
 
         if (dev->ccwtrace || dev->ccwstep || tracethis)
-            WRITEMSG (HHCCP069I, SSID_TO_LCSS(dev->ssid), dev->devnum);
+            WRMSG (HHC01306, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
     }
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
@@ -2565,7 +2565,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             RELEASE_INTLOCK(devregs(dev));
 
             if (dev->ccwtrace || dev->ccwstep || tracethis)
-                WRITEMSG (HHCCP070I, SSID_TO_LCSS(dev->ssid), dev->devnum);
+                WRMSG (HHC01307, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
 
             return NULL;
         } /* end attention processing */
@@ -2635,7 +2635,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             RELEASE_INTLOCK(devregs(dev));
 
             if (dev->ccwtrace || dev->ccwstep || tracethis)
-                WRITEMSG (HHCCP071I, SSID_TO_LCSS(dev->ssid), dev->devnum);
+                WRMSG (HHC01308, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
 
             return NULL;
         } /* end perform clear subchannel */
@@ -2694,7 +2694,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             RELEASE_INTLOCK(devregs(dev));
 
             if (dev->ccwtrace || dev->ccwstep || tracethis)
-                WRITEMSG (HHCCP072I, SSID_TO_LCSS(dev->ssid), dev->devnum);
+                WRMSG (HHC01309, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
 
             return NULL;
         } /* end perform halt subchannel */
@@ -2874,7 +2874,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
                 dev->suspended = 1;
 
                 if (dev->ccwtrace || dev->ccwstep || tracethis)
-                    WRITEMSG (HHCCP073I, SSID_TO_LCSS(dev->ssid), dev->devnum);
+                    WRMSG (HHC01310, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
 
 // FIXME: Not a very elegant way to fix the suspend/resume problem
                 dev->ccwaddr = ccwaddr;
@@ -2931,7 +2931,7 @@ resume_suspend:
                 dev->busy = 1;
 
                 if (dev->ccwtrace || dev->ccwstep || tracethis)
-                    WRITEMSG (HHCCP074I, SSID_TO_LCSS(dev->ssid), dev->devnum);
+                    WRMSG (HHC01311, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
 
                 /* Reset the suspended status in the SCSW */
                 dev->scsw.flag3 &= ~SCSW3_AC_SUSP;
@@ -3144,12 +3144,12 @@ resume_suspend:
                 area[0] = '\0';
 
             /* Display status and residual byte count */
-            WRITEMSG (HHCCP075I, SSID_TO_LCSS(dev->ssid), dev->devnum, unitstat, chanstat, residual, area);
+            WRMSG (HHC01312, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, unitstat, chanstat, residual, area);
 
             /* Display sense bytes if unit check is indicated */
             if (unitstat & CSW_UC)
             {
-                WRITEMSG (HHCCP076I, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->sense[0], dev->sense[1],
+                WRMSG (HHC01313, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->sense[0], dev->sense[1],
                         dev->sense[2], dev->sense[3], dev->sense[4],
                         dev->sense[5], dev->sense[6], dev->sense[7],
                         dev->sense[8], dev->sense[9], dev->sense[10],
@@ -3160,7 +3160,7 @@ resume_suspend:
                         dev->sense[23]);
                 if (dev->sense[0] != 0 || dev->sense[1] != 0)
                 {
-                    WRITEMSG (HHCCP077I, SSID_TO_LCSS(dev->ssid), dev->devnum,
+                    WRMSG (HHC01314, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
                             (dev->sense[0] & SENSE_CR) ? "CMDREJ " : "",
                             (dev->sense[0] & SENSE_IR) ? "INTREQ " : "",
                             (dev->sense[0] & SENSE_BOC) ? "BOC " : "",
