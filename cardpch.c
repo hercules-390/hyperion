@@ -33,7 +33,7 @@ int             rc;                 	/* Return code               */
     /* Equipment check if error writing to output file */
     if (rc < len)
     {
-        WRMSG (HHC00017, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "write()", errno,
+        WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "write()", 
                 (errno == 0 ? "incomplete": strerror(errno)));
         dev->sense[0] = SENSE_EC;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -52,13 +52,13 @@ int     i;                              /* Array subscript           */
     /* The first argument is the file name */
     if ( argc == 0 )
     {
-        WRMSG (HHC00015, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (HHC01208, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
     }
 
     if (strlen(argv[0]) >= sizeof(dev->filename))
     {
-        WRMSG (HHC00016, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[0], sizeof(dev->filename) - 1);
+        WRMSG (HHC01201, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[0], sizeof(dev->filename) - 1);
         return -1;
     }
 
@@ -103,7 +103,7 @@ int     i;                              /* Array subscript           */
             continue;
         }
 
-        WRMSG (HHC00014, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i]);
+        WRMSG (HHC01209, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], i+1);
         return -1;
     }
 
@@ -188,7 +188,7 @@ BYTE            c;                      /* Output character          */
         if (rc < 0)
         {
             /* Handle open failure */
-            WRMSG (HHC00017, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "open()", errno, strerror(errno));
+            WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "open()", strerror(errno));
 
             /* Set unit check with intervention required */
             dev->sense[0] = SENSE_IR;

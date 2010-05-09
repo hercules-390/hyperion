@@ -79,7 +79,9 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
     if (!dev->more_files)
     {
-        WRMSG (HHC00060, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
+        char buf[40];
+        sprintf(buf, "malloc(%lu)", sizeof(char) * (fc + 1));
+        WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, buf, strerror(errno));
         return -1;
     }
 
@@ -177,13 +179,13 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
         if (strlen(argv[i]) >= sizeof(dev->filename))
         {
-            WRMSG (HHC00016, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], (unsigned int)sizeof(dev->filename)-1);
+            WRMSG (HHC01201, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], (unsigned int)sizeof(dev->filename)-1);
             return -1;
         }
 
         if (access(argv[i], R_OK | F_OK) != 0)
         {
-            WRMSG (HHC00017, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], "access()", errno, strerror(errno));
+            WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "access()", strerror(errno));
             return -1;
         }
         hostpath(pathname, argv[i], sizeof(pathname));
@@ -192,7 +194,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
         if (!dev->more_files)
         {
-            WRMSG (HHC00060, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
+            WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "strdup()", strerror(errno));
             return -1;
         }
 
@@ -205,7 +207,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
     if (dev->ebcdic && dev->ascii)
     {
-        WRMSG (HHC00040, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (HHC01202, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
     }
 
@@ -213,7 +215,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     {
         if (fc)
         {
-            WRMSG (HHC00059, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
+            WRMSG (HHC01203, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
             return -1;
         }
 
@@ -227,14 +229,14 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
         if (!dev->ebcdic && !dev->ascii)
         {
-            WRMSG (HHC00041, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
+            WRMSG (HHC01204, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
             dev->ascii = 1;
         }
     }
 
     if (dev->multifile && !fc)
     {
-        WRMSG (HHC00042, "W", SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (HHC01205, "W", SSID_TO_LCSS(dev->ssid), dev->devnum);
         dev->multifile = 0;
     }
 
@@ -246,7 +248,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
         if (strlen(argv[0]) >= sizeof(dev->filename))
         {
-            WRMSG (HHC00016, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[0], (unsigned int)sizeof(dev->filename)-1);
+            WRMSG (HHC01201, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[0], (unsigned int)sizeof(dev->filename)-1);
             return -1;
         }
 
@@ -259,7 +261,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             }
             else if (access(argv[0], R_OK | F_OK) != 0)
             {
-                WRMSG (HHC00017, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[0], "access()", errno, strerror(errno));
+                WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "access()", strerror(errno));
                 return -1;
             }
         }
@@ -338,7 +340,7 @@ static int cardrdr_close_device ( DEVBLK *dev )
     )
     {
         int errnum = dev->bs ? get_HSO_errno() : errno;
-        WRMSG (HHC00017, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "closing", errnum, strerror(errnum));
+        WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "close_socket() or fclose()", strerror(errnum));
         dev->fd = -1;
         dev->fh = NULL;
         return -1;
@@ -346,7 +348,7 @@ static int cardrdr_close_device ( DEVBLK *dev )
 
     if (dev->bs && (dev->bs->clientip || dev->bs->clientname))
     {
-        WRMSG (HHC00061, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bs->clientip, dev->bs->clientname, dev->bs->spec);
+        WRMSG (HHC01206, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bs->clientname, dev->bs->clientip, dev->bs->spec);
     }
 
     dev->fd = -1;
@@ -442,7 +444,7 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
     if (rc < 0)
     {
         /* Handle open failure */
-        WRMSG (HHC00017, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "open()", errno, strerror(errno));
+        WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "open()", strerror(errno));
 
         /* Set unit check with equipment check */
         dev->sense[0] = SENSE_EC;
@@ -463,7 +465,7 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
         if (len < 0)
         {
             /* Handle read error condition */
-            WRMSG (HHC00017, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "fread()", errno, strerror(errno));
+            WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "fread()", strerror(errno));
 
             /* Close the file */
             fclose(dev->fh);
@@ -495,7 +497,7 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
         if (rc < 0)
         {
             /* Handle seek error condition */
-            WRMSG (HHC00017, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "fseek()", errno, strerror(errno));
+            WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "fseek()", strerror(errno));
 
             /* Close the file */
             fclose (dev->fh);
@@ -567,9 +569,11 @@ int     rc;                             /* Return code               */
     if (rc < CARD_SIZE)
     {
         if (rc < 0)
-            WRMSG (HHC00017, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "reading", errno, strerror(errno));
+            WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,  
+                   "read_socket() or fread()", strerror(errno));
         else
-            WRMSG (HHC00018, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+            WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, 
+                   "read_socket() or fread()", "unexpected end of file");
 
         /* Set unit check with equipment check */
         dev->sense[0] = SENSE_EC;
@@ -641,7 +645,8 @@ BYTE    c = 0;                          /* Input character           */
         /* Handle read error condition */
         if (rc < 0)
         {
-            WRMSG (HHC00017, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "reading", errno, strerror(errno));
+            WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, 
+                   "read_socket() or getc()", strerror(errno));
 
             /* Set unit check with equipment check */
             dev->sense[0] = SENSE_EC;
@@ -668,7 +673,7 @@ BYTE    c = 0;                          /* Input character           */
             /* Ignore excess characters if trunc option specified */
             if (dev->trunc) continue;
 
-            WRMSG (HHC00019, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, CARD_SIZE);
+            WRMSG (HHC01207, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, CARD_SIZE);
 
             /* Set unit check with data check */
             dev->sense[0] = SENSE_DC;

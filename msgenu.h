@@ -103,20 +103,10 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00011 "Function '%s' failed; cache '%d' size '%d': '[%02d] %s'"
 #define HHC00012 "Releasing inactive buffer storage"
 #define HHC00013 "Herc command: '%s'"
-#define HHC00014 "%1d:%04X Invalid argument: '%s'"
-#define HHC00015 "%1d:%04X File name is missing"
-#define HHC00016 "%1d:%04X File '%s': name too long, maximum length is '%ud'"
-#define HHC00017 "%1d:%04X File '%s': %s error: '[%02d] %s'"
-#define HHC00018 "%1d:%04X File '%s': Unexpected end of file"
-#define HHC00019 "%1d:%04X File '%s': Card image exceeds '%d' bytes"
+
 // reserve 20-39 for file related
-#define HHC00040 "%1d:%04X Options 'ascii' and 'ebcdic' are mutually exclusive"
-#define HHC00041 "%1d:%04X Option 'ascii' is default for socket device"
-#define HHC00042 "%1d:%04X Option 'multifile' ignored: only one file specified"
+
 // reserve 43-58 for option related
-#define HHC00059 "%1d:%04X Only one filename (sock_spec) allowed for socket device"
-#define HHC00060 "%1d:%04X Out of memory"
-#define HHC00061 "%1d:%04X IPv4 Address: %s (%s) disconnected from device (%s)"
 
 // HHC0007xx, HHC0008xx and HHC0009xx reserved for hao.c. (to recognize own messages)
 #define HHC00070 "Unknown hao command, valid commands are:\n" \
@@ -533,25 +523,24 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01029 "Connection rejected, no available %s device in the %s group"
 #define HHC01030 "Connection rejected, device %04X unavailable"
 #define HHC01031 "Running on %s (%s-%s.%s %s %s)"
-#define HHC01032 "CA: This hercules build does not support unix domain sockets"
-#define HHC01033 "CA: Error: socket pathname '%s' exceeds limit %d"
-#define HHC01034 "CA: Error in function '%s': '%s'"
-#define HHC01035 "CA: Failed to determine IP address from node '%s'"
-#define HHC01036 "CA: Failed to determine port number from service '%s'"
-#define HHC01037 "%1d:%04X CA: Client '%s', ip '%s' connection to device '%s' rejected: device busy or interrupt pending"
-#define HHC01038 "%1d:%04X CA: Client '%s', ip '%s' connection to device '%s' rejected: client '%s' ip '%s' still connected"
-#define HHC01039 "%1d:%04X CA: Client '%s', ip '%s' connection to device '%s' rejected: by onconnect callback"
-#define HHC01040 "%1d:%04X CA: Client '%s', ip '%s' connected to device '%s'"
-#define HHC01041 "%1d:%04X CA: Error: device already bound to socket '%s'"
-#define HHC01042 "%1d:%04X CA: Device bound to socket '%s'"
+#define HHC01032 "CA: this hercules build does not support unix domain sockets"
+#define HHC01033 "CA: error: socket pathname '%s' exceeds limit %d"
+#define HHC01034 "CA: error in function '%s': '%s'"
+#define HHC01035 "CA: failed to determine IP address from node '%s'"
+#define HHC01036 "CA: failed to determine port number from service '%s'"
+#define HHC01037 "%1d:%04X CA: client '%s', ip '%s' connection to device '%s' rejected: device busy or interrupt pending"
+#define HHC01038 "%1d:%04X CA: client '%s', ip '%s' connection to device '%s' rejected: client '%s' ip '%s' still connected"
+#define HHC01039 "%1d:%04X CA: client '%s', ip '%s' connection to device '%s' rejected: by onconnect callback"
+#define HHC01040 "%1d:%04X CA: client '%s', ip '%s' connected to device '%s'"
+#define HHC01041 "%1d:%04X CA: error: device already bound to socket '%s'"
+#define HHC01042 "%1d:%04X CA: device bound to socket '%s'"
 #define HHC01043 "%1d:%04X CA: device not bound to any socket"
-#define HHC01044 "%1d:%04X CA: Client '%s', ip '%s' disconnected from device '%s'"
-#define HHC01045 "%1d:%04X CA: Client '%s', ip '%s' still connected to device '%s'"
-#define HHC01046 "%1d:%04X CA: Device unbound from socket '%s'"
-
+#define HHC01044 "%1d:%04X CA: client '%s', ip '%s' disconnected from device '%s'"
+#define HHC01045 "%1d:%04X CA: client '%s', ip '%s' still connected to device '%s'"
+#define HHC01046 "%1d:%04X CA: device unbound from socket '%s'"
 
 // reserve 011xx for printer specific component messages
-#define HHC01100 "%1d:%04X Printer: Client '%s', ip '%s' disconnected from device '%s'"
+#define HHC01100 "%1d:%04X Printer: client '%s', ip '%s' disconnected from device '%s'"
 #define HHC01101 "%1d:%04X Printer: file name missing or invalid"
 #define HHC01102 "%1d:%04X Printer: parameter '%s' in argument %d is invalid"
 #define HHC01103 "%1d:%04X Printer: parameter '%s' in argument %d at position %d is invalid"
@@ -560,6 +549,18 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01106 "%1d:%04X Printer: pipe receiver with pid %d starting"
 #define HHC01107 "%1d:%04X Printer: pipe receiver with pid %d terminating"
 #define HHC01108 "%1d:%04X Printer: unable to execute file '%s': '%s'"
+
+// reserve 012xx for card devices
+#define HHC01200 "%1d:%04X Card: error in function '%s': '%s'"
+#define HHC01201 "%1d:%04X Card: filename '%s' too long, maximum length is %ud"
+#define HHC01202 "%1d:%04X Card: options 'ascii' and 'ebcdic' are mutually exclusive"
+#define HHC01203 "%1d:%04X Card: only one filename (sock_spec) allowed for socket device"
+#define HHC01204 "%1d:%04X Card: option 'ascii' is default for socket device"
+#define HHC01205 "%1d:%04X Card: option 'multifile' ignored: only one file specified"
+#define HHC01206 "%1d:%04X Card: client '%s', ip '%s' disconnected from device '%s'"
+#define HHC01207 "%1d:%04X Card: file '%s': card image exceeds maximum %d bytes"
+#define HHC01208 "%1d:%04X Card: filename is missing"
+#define HHC01209 "%1d:%04X Card: parameter '%s' in argument %d is invalid"
 
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
