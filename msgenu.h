@@ -549,6 +549,18 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01045 "%1d:%04X CA: Client '%s', ip '%s' still connected to device '%s'"
 #define HHC01046 "%1d:%04X CA: Device unbound from socket '%s'"
 
+
+// reserve 011xx for printer specific component messages
+#define HHC01100 "%1d:%04X Printer: Client '%s', ip '%s' disconnected from device '%s'"
+#define HHC01101 "%1d:%04X Printer: file name missing or invalid"
+#define HHC01102 "%1d:%04X Printer: parameter '%s' in argument %d is invalid"
+#define HHC01103 "%1d:%04X Printer: parameter '%s' in argument %d at position %d is invalid"
+#define HHC01104 "%1d:%04X Printer: option '%s' is incompatible"
+#define HHC01105 "%1d:%04X Printer: error in function '%s': '%s'"
+#define HHC01106 "%1d:%04X Printer: pipe receiver with pid %d starting"
+#define HHC01107 "%1d:%04X Printer: pipe receiver with pid %d terminating"
+#define HHC01108 "%1d:%04X Printer: unable to execute file '%s': '%s'"
+
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
 #define HHC04100 "%s version %s initiated"
@@ -774,7 +786,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCHD951I "Calling module(%s) cleanup routine"
 #define HHCHD952I "Module(%s) cleanup complete"
 #define HHCHD959I "HDL Termination sequence complete"
-
 
 /* hostinfo.c */
 #define HHCIN015I "%s"
@@ -1039,7 +1050,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCIN099S "Hercules terminating, see previous messages for reason"
 // HHCIN099I is used with and without logmsg
 
-
 #define HHCIN950I "Begin system cleanup"
 #define HHCIN959I "System cleanup complete"
 #define HHCMD995E ".RC file \"%s\" not found"
@@ -1054,22 +1064,6 @@ cpu.c:123:HABC1234I This is a message
 /* panel.c */
 #define HHCPN002S "Cannot obtain keyboard buffer: (%s)"
 #define HHCPN003S "Cannot obtain message buffer: (%s)"
-
-/* printer.c */
-#define HHCPR001E "%1d:%04X File name missing or invalid for printer"
-#define HHCPR002E "%1d:%04X Printer(%4.4X) Invalid argument(%s)"
-#define HHCPR003E "%1d:%04X Error writing to file(%s) (%s)"
-#define HHCPR004E "%1d:%04X Error opening file(%s) (%s)"
-#define HHCPR005E "%1d:%04X Initialization error: pipe %s"
-#define HHCPR006E "%1d:%04X Initialization error: fork %s"
-#define HHCPR007I "%1d:%04X Pipe receiver pid(%d) starting"
-#define HHCPR008E "%1d:%04X dup2 error: %s"
-#define HHCPR009E "%1d:%04X Parameter(%s) #(%d) is invalid"
-#define HHCPR010E "%1d:%04X Parameter(%s) #(%d) pos(%d) is invalid"
-#define HHCPR011I "%1d:%04X pipe receiver pid(%d) terminating"
-#define HHCPR012E "%1d:%04X Unable to execute file(%s) (%s)"
-#define HHCPR016I "%1d:%04X %s (%s) disconnected from device (%s)"
-#define HHCPR019E "%1d:%04X Incompatible option(%s) specified"
 
 /* pttrace.c */
 #define HHCPT001E "Invalid argument(%s)"
