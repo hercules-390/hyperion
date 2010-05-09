@@ -1,3 +1,12 @@
+/* HAO.C        (c) Copyright Bernard van der Helm, 2002-2010        */
+/*             Hercules Automatic Operator Implementation            */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
+// $Id$
+
 /*---------------------------------------------------------------------------*/
 /* file: hao.c                                                               */
 /*                                                                           */
@@ -7,7 +16,7 @@
 /*                            Noordwijkerhout, The Netherlands.              */
 /*---------------------------------------------------------------------------*/
 
-// $Id$
+
 
 #include "hstdinc.h"
 

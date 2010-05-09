@@ -1,10 +1,13 @@
-/* SOCKDEV.C    (c) Copyright Hercules development, 2003-2009        */
-/*              Socketdevice support                                 */
+/* SOCKET.C     (c) Copyright Roger Bowler, 1999-2010                */
+/*              Hercules Socketdevice Handler                        */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 
 #include "hstdinc.h"
-
 #include "hercules.h"
 
 #include "opcode.h"

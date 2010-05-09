@@ -1,5 +1,9 @@
 /* CARDRDR.C    (c) Copyright Roger Bowler, 1999-2010                */
 /*              ESA/390 Card Reader Device Handler                   */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 
@@ -13,7 +17,6 @@
 #include "hercules.h"
 
 #include "devtype.h"
-
 #include "sockdev.h"
 
 #if defined(WIN32) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
