@@ -151,16 +151,15 @@ DLL_EXPORT void log_close(void)
 
 DLL_EXPORT void writemsg(const char *file, int line, const char* function, int lvl, char *color, char *msg, ...)
 {
-    char pathname[MAX_PATH];
     char *bfr=NULL;
     int rc;
     int siz=1024;
     va_list vl;
+
+    obtain_lock(&sysblk.msglock);
   #ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  
   #endif
-
-    hostpath(pathname, file, sizeof(pathname));
 
 #if defined( OPTION_MSGCLR )
     if (!strlen(color))
@@ -199,27 +198,27 @@ DLL_EXPORT void writemsg(const char *file, int line, const char* function, int l
       case 1: // debug
 #if defined( OPTION_MSGCLR )
             if (strlen(color) > 0 && sysblk.panel_init)
-                logmsg("%s%-10.10s %4d ", color, pathname, line);
+                logmsg("%s%-10.10s %4d ", color, file, line);
             else
-                logmsg("%-10.10s %4d ", pathname, line);
+                logmsg("%-10.10s %4d ", file, line);
 #else
-            logmsg("%-10.10s %4d ", pathname, line);
+            logmsg("%-10.10s %4d ", file, line);
 #endif
             BFR_VSNPRINTF();
             break;
     }
 
     if(bfr)
-        log_write(0,bfr); 
-  #ifdef NEED_LOGMSG_FFLUSH
-    fflush(stdout);  
-  #endif
-    if(bfr)
     {
+        log_write(0,bfr); 
         free(bfr);
     }
     if(!lvl && (msg[8] == 'S' || msg[8] == 'E' || msg[8] == 'W'))
-        logmsg("HHC00007I " HHC00007 "\n", function, pathname, line);
+        logmsg("HHC00007I " HHC00007 "\n", function, file, line);
+  #ifdef NEED_LOGMSG_FFLUSH
+    fflush(stdout);  
+  #endif
+    release_lock(&sysblk.msglock);
 }
 
 /*-------------------------------------------------------------------*/

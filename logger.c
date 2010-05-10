@@ -480,6 +480,7 @@ DLL_EXPORT void logger_init(void)
 
     initialize_condition (&logger_cond);
     initialize_lock (&logger_lock);
+    initialize_lock (&sysblk.msglock);
 
     obtain_lock(&logger_lock);
 
