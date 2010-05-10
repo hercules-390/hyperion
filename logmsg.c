@@ -149,7 +149,7 @@ DLL_EXPORT void log_close(void)
     return;
 }
 
-DLL_EXPORT void writemsg(char *file, int line, char* function, int lvl, char *color, char *msg, ...)
+DLL_EXPORT void writemsg(const char *file, int line, const char* function, int lvl, char *color, char *msg, ...)
 {
     char pathname[MAX_PATH];
     char *bfr=NULL;

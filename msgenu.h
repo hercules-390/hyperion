@@ -76,8 +76,12 @@ cpu.c:123:HABC1234I This is a message
 ---------------------------------------------------------------------*/
 
 // I'm not sure if this is needed, but __FUNCTION__ wasn't part of the standard until C99
-#if !defined(__FUNCTION__)
-#define __FUNCTION__ "UNDEF"
+#if __STDC_VERSION__ < 199901L
+#if __GNUC__ >= 2
+#define __func__ __FUNCTION__
+#else
+#define __func__ "<unknown>"
+#endif
 #endif
 
 /* These macro's will be deleted when all messages are std */
