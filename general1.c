@@ -1,9 +1,11 @@
-/* GENERAL1.C   (c) Copyright Roger Bowler, 1994-2009                */
-/*              ESA/390 CPU Emulator                                 */
-/*              Instructions A-M                                     */
+/* GENERAL1.C   (c) Copyright Roger Bowler, 1994-2010                */
+/*              Hercules CPU Emulator - Instructions A-M             */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
-/*              (c) Copyright Peter Kuschnerus, 1999-2009 (UPT & CFC)*/
-
+/* UPT & CFC                (c) Copyright Peter Kuschnerus, 1999-2009*/
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 
@@ -31,131 +33,7 @@
 /*      Clear TEA on data exception - Peter Kuschnerus           v209*/
 /*-------------------------------------------------------------------*/
 
-// $Log$
-// Revision 1.178  2009/02/07 22:54:06  ivan
-// Define MIN() macro for MVCLE use in case it isn't defined
-//
-// Revision 1.177  2009/02/07 22:49:38  ivan
-// Use concpy in MVCL to maintain Concurrent Block Update Consistency
-// Use concpy in MVCLE to maintain Concurrent Block Update Consistency
-// Enhance performances for MVCLE
-//
-// Revision 1.176  2009/02/04 18:09:39  ivan
-// Temporary fixes for 'potentially uninitialized variables' by GCC.
-// To me, it's bogus. Look for MVCL in general1.c & zmoncode in cpu.c
-// and read FIXME.
-//
-// Revision 1.175  2009/02/04 12:22:37  ivan
-// Fix issue with unaligned LM/STM when running on a host architecture that
-// enforces alignment
-//
-// Revision 1.174  2009/01/31 21:37:50  rbowler
-// Adopt general coding style - No functional changes
-//
-// Revision 1.173  2009/01/31 17:49:17  ivan
-// Ensure proper nullification of MVCL if an access exception occurs during the 1st unit of operation
-//
-// Revision 1.172  2009/01/23 11:55:54  bernard
-// copyright notice
-//
-// Revision 1.171  2009/01/11 20:28:33  ivan
-// Remove dead code
-//
-// Revision 1.170  2008/12/24 07:50:16  ivan
-// CSST Fix - Parm 2 alignement check error
-//
-// Revision 1.169  2008/12/23 13:44:57  ivan
-// CSST Facility 2 fix
-//
-// Revision 1.168  2008/12/22 00:29:10  ivan
-// Implement February 2008 z/Arch Compare And Swap And Store Facility 2
-// Update FAQ to reflect change
-// update FAQ to also indicate z/Arch DAT Enhancement is implemented
-//
-// Revision 1.167  2008/10/07 22:24:35  gsmith
-// Fix zero ilc problem after branch trace
-//
-// Revision 1.166  2008/05/06 22:15:42  rbowler
-// Fix warning: operation on `p1' may be undefined
-//
-// Revision 1.165  2008/04/11 14:28:44  bernard
-// Integrate regs->exrl into base Hercules code.
-//
-// Revision 1.164  2008/04/09 12:01:35  rbowler
-// Correct target instruction address for EXRL
-//
-// Revision 1.163  2008/04/09 07:38:09  bernard
-// Allign to Rogers terminal ;-)
-//
-// Revision 1.162  2008/04/09 07:15:14  bernard
-// Comment Roger
-//
-// Revision 1.161  2008/04/09 07:05:19  bernard
-// EXRL has format C6x0, not C6. Thanks Roger!
-//
-// Revision 1.160  2008/04/09 05:38:57  bernard
-// Instruction fetching error, now fetched with PSW_IA macro.
-//
-// Revision 1.159  2008/04/08 18:33:41  bernard
-// Error in EXRL
-//
-// Revision 1.158  2008/04/08 17:13:26  bernard
-// Added execute relative long instruction
-//
-// Revision 1.157  2008/03/05 00:34:44  ptl00
-// Fix CFC operand size fetch
-//
-// Revision 1.156  2008/03/04 00:52:32  ptl00
-// Fix BSM/BASSM mode switch trace
-//
-// Revision 1.155  2008/02/28 22:07:09  ptl00
-// Fix mode switch trace
-//
-// Revision 1.154  2008/02/15 21:20:00  ptl00
-// Fix EX to SS ops so that ILC is 4 on PER rupts
-//
-// Revision 1.153  2007/11/30 15:14:14  rbowler
-// Permit String-Instruction facility to be activated in S/370 mode
-//
-// Revision 1.152  2007/08/07 19:47:59  ivan
-// Fix a couple of gcc-4.2 warnings
-//
-// Revision 1.151  2007/06/23 00:04:10  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.150  2007/05/26 21:23:19  rbowler
-// Eliminate uninitialised variable warnings in CSST
-//
-// Revision 1.149  2007/05/26 14:23:55  rbowler
-// CSST instruction
-//
-// Revision 1.148  2007/01/13 07:21:11  bernard
-// backout ccmask
-//
-// Revision 1.147  2007/01/12 15:23:41  bernard
-// ccmaks phase 1
-//
-// Revision 1.146  2007/01/09 05:10:19  gsmith
-// Tweaks to lm/stm
-//
-// Revision 1.145  2007/01/04 23:12:04  gsmith
-// remove thunk calls for program_interrupt
-//
-// Revision 1.144  2006/12/31 21:16:32  gsmith
-// 2006 Dec 31 really back out mainlockx.pat
-//
-// Revision 1.143  2006/12/20 09:09:40  jj
-// Fix bogus log entries
-//
-// Revision 1.142  2006/12/20 04:26:19  gsmith
-// 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
-//
-// Revision 1.141  2006/12/20 04:22:00  gsmith
-// 2006 Dec 19 Backout mainlockx.pat - possible SMP problems - Greg Smith
-//
-// Revision 1.140  2006/12/08 09:43:21  jj
-// Add CVS message log
-//
+
 
 #include "hstdinc.h"
 

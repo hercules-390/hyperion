@@ -1,13 +1,15 @@
-/* GENERAL2.C   (c) Copyright Roger Bowler, 1994-2009                */
-/*              ESA/390 CPU Emulator                                 */
-/*              Instructions N-Z                                     */
+/* GENERAL2.C   (c) Copyright Roger Bowler, 1994-2010                */
+/*              Hercules CPU Emulator - Instructions N-Z             */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
-// $Id$
-
-/*              (c) Copyright Peter Kuschnerus, 1999-2009 (UPT & CFC)*/
-
+/* UPT & CFC                (c) Copyright Peter Kuschnerus, 1999-2009*/
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
+
+// $Id$
 
 /*-------------------------------------------------------------------*/
 /* This module implements all general instructions of the            */

@@ -1,5 +1,9 @@
-/* GENERAL3.C   (c) Copyright Roger Bowler, 2009                     */
-/*              Additional General Instructions                      */
+/* GENERAL3.C   (c) Copyright Roger Bowler, 1994-2010                */
+/*         Hercules CPU Emulator - Additional General Instructions   */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 
@@ -9,74 +13,7 @@
 /* SA22-7832-06 z/Architecture Principles of Operation               */
 /*-------------------------------------------------------------------*/
 
-// $Log$
-// Revision 1.22  2008/05/12 16:08:29  rbowler
-// ECAG correction
-//
-// Revision 1.21  2008/03/30 00:07:58  rbowler
-// Incorrect bit selection again for RNSBG,RISBG,ROSBG,RXSBG
-//
-// Revision 1.20  2008/03/28 23:03:54  rbowler
-// Correct relative address calculation for RIL-format instructions
-//
-// Revision 1.19  2008/03/23 08:00:40  rbowler
-// Fix incorrect bit selection for RNSBG,RISBG,ROSBG,RXSBG
-//
-// Revision 1.18  2008/03/12 18:23:55  jj
-// Fix store operation of ASI, AGSI, ALSI and AGLSI
-//
-// Revision 1.17  2008/03/08 23:08:32  rbowler
-// Add STHRL,STRL,STGRL instructions
-//
-// Revision 1.16  2008/03/08 22:54:25  rbowler
-// Add LHRL,LGHRL,LLHRL,LLGHRL,LLGFRL,LRL,LGRL,LGFRL instructions
-//
-// Revision 1.15  2008/03/08 22:28:04  rbowler
-// Add CHRL,CGHRL,CLRL,CLGRL,CLGFRL,CLHRL,CLGHRL,
-// CRL,CGRL,CGFRL instructions
-//
-// Revision 1.14  2008/03/05 16:36:51  rbowler
-// Add RNSBG,RISBG,ROSBG,RXSBG instructions
-//
-// Revision 1.13  2008/03/05 12:04:23  rbowler
-// Add CRJ,CGRJ,CIJ,CGIJ,CLRJ,CLGRJ,CLIJ,CLGIJ instructions
-//
-// Revision 1.12  2008/03/04 17:09:14  rbowler
-// Add CRT,CGRT,CIT,CGIT,CLRT,CLGRT,CLFIT,CLGIT instructions
-//
-// Revision 1.11  2008/03/04 15:42:50  rbowler
-// Add CRB,CGRB,CIB,CGIB,CLRB,CLGRB,CLIB,CLGIB instructions
-//
-// Revision 1.10  2008/03/04 14:40:28  rbowler
-// Add CLFHSI,CLHHSI,CLGHSI instructions
-//
-// Revision 1.9  2008/03/04 14:23:00  rbowler
-// Add CHHSI,CGHSI,CHSI,CGH instructions
-//
-// Revision 1.8  2008/03/03 23:22:43  rbowler
-// Add LTGF instruction
-//
-// Revision 1.7  2008/03/03 22:43:43  rbowler
-// Add MVHI,MVHHI,MVGHI instructions
-//
-// Revision 1.6  2008/03/03 00:21:45  rbowler
-// Add ECAG,LAEY,PFD,PFDRL instructions
-//
-// Revision 1.5  2008/03/02 23:29:49  rbowler
-// Add MFY,MHY,MSFI,MSGFI instructions
-//
-// Revision 1.4  2008/03/01 23:07:06  rbowler
-// Add ALSI,ALGSI instructions
-//
-// Revision 1.3  2008/03/01 22:49:31  rbowler
-// ASI,AGSI treat I2 operand as 8-bit signed integer
-//
-// Revision 1.2  2008/03/01 22:41:51  rbowler
-// Add ASI,AGSI instructions
-//
-// Revision 1.1  2008/03/01 14:19:29  rbowler
-// Add new module general3.c for general-instructions-extension facility
-//
+
 
 #include "hstdinc.h"
 

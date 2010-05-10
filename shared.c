@@ -1,5 +1,9 @@
 /* SHARED.C     (c)Copyright Greg Smith, 2002-2010                   */
 /*              Shared Device Server                                 */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 
