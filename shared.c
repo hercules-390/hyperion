@@ -1634,7 +1634,7 @@ BYTE                    cbuf[65536];    /* Compressed buffer         */
             recvlen = -1;
         }
 #else
-        WRMSG(HHC00728, "E". "libz");
+        WRMSG(HHC00728, "E", "libz");
         recvlen = -1;
 #endif
     }
