@@ -1,18 +1,11 @@
-/* CODEPAGE.C   (c) Copyright Jan Jaeger, 1999-2009                  */
+/* CODEPAGE.C   (c) Copyright Jan Jaeger, 1999-2010                  */
 /*              Code Page conversion                                 */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
-//
-// $Log$
-// Revision 1.25  2008/01/14 17:25:16  rbowler
-// Additional ISO-8859-1 to European EBCDIC codepages
-//
-// Revision 1.24  2007/06/23 00:04:04  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.23  2006/12/08 09:43:18  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 

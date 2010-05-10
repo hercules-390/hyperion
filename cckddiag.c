@@ -1,5 +1,10 @@
-/* CCKDDIAG.C   (c) Copyright Roger Bowler, 1999-2009                */
+/* CCKDDIAG.C   (c) Copyright Roger Bowler, 1999-2010                */
 /*       CCKD diagnostic tool                                        */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
 /* 2003-02-07 James M. Morrison initial implementation               */
 /* portions borrowed from cckdcdsk & other CCKD code                 */
 
@@ -8,22 +13,6 @@
 /*-------------------------------------------------------------------*/
 /* Diagnostic tool to display various CCKD data                      */
 /*-------------------------------------------------------------------*/
-
-// $Log$
-// Revision 1.28  2008/11/04 04:50:45  fish
-// Ensure consistent utility startup
-//
-// Revision 1.27  2008/06/22 05:54:30  fish
-// Fix print-formatting issue (mostly in tape modules)
-// that can sometimes, in certain circumstances,
-// cause herc to crash.  (%8.8lx --> I32_FMTX, etc)
-//
-// Revision 1.26  2007/06/23 00:04:03  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.25  2006/12/08 09:43:17  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 
@@ -137,7 +126,7 @@ int readpos(
             int fd,               /* opened CCKD image file          */
             void *buf,            /* buffer of size len              */
             off_t offset,         /* offset into CCKD image to read  */
-            size_t len            /* length of data to read          */
+            unsigned int len      /* length of data to read          */
             ) {
     if (debug) 
         fprintf(stdout, "\nREADPOS seeking %d (0x%8.8X)\n", 
@@ -182,7 +171,7 @@ int decomptrk(
 int             rc;                     /* Return code               */
 BYTE           *bufp;                   /* Buffer pointer            */
 #endif
-size_t          bufl;                   /* Buffer length             */
+unsigned int    bufl;                   /* Buffer length             */
 #ifdef CCKD_BZIP2
 unsigned int    ubufl;                  /* when size_t != unsigned int */
 #endif

@@ -1,5 +1,9 @@
-/* COMMADPT.H   (c)Copyright Ivan Warren, 2003-2009                  */
+/* COMMADPT.H   (c)Copyright Ivan Warren, 2003-2010                  */
 /*              Structure definitions for 2703 line driver           */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 

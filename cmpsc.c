@@ -1,3 +1,10 @@
+/* CMPSC.C      (c) Bernard van der Helm, 2000-2010                  */
+/*              S/390 compression call instruction                   */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
 /*----------------------------------------------------------------------------*/
 /* file: cmpsc.c                                                              */
 /*                                                                            */

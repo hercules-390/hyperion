@@ -1,9 +1,13 @@
 /* CACHE.C    (c)Copyright Greg Smith, 2002-2010                     */
 /*            Dynamic cache manager for multi-threaded applications  */
-
-//FIXME ?? Dynamic resizing is disabled
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
+
+//FIXME ?? Dynamic resizing is disabled
 
 #include "hstdinc.h"
 
@@ -548,7 +552,7 @@ static void cache_allocbuf(int ix, int i, int len)
     cacheblk[ix].cache[i].buf = calloc (len, 1);
     if (cacheblk[ix].cache[i].buf == NULL) {
         WRMSG (HHC00011, "W", "calloc()", ix, len, errno, strerror(errno));
-    WRMSG (HHC00012, "W");
+        WRMSG (HHC00012, "W");
         for (i = 0; i < cacheblk[ix].nbr; i++)
             if (!cache_isbusy(ix, i)) cache_release(ix, i, CACHE_FREEBUF);
         cacheblk[ix].cache[i].buf = calloc (len, 1);

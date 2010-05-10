@@ -1,5 +1,9 @@
 /* CON1052.C    (c)Copyright Jan Jaeger, 2004-2010                   */
 /*              Emulated 1052 on hercules console                    */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 

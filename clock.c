@@ -1,25 +1,15 @@
-/* CLOCK.C      (c) Copyright Jan Jaeger, 2000-2009                  */
+/* CLOCK.C      (c) Copyright Jan Jaeger, 2000-2010                  */
 /*              TOD Clock functions                                  */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 
 /* The emulated hardware clock is based on the host clock, adjusted  */
 /* by means of an offset and a steering rate.                        */
 
-// $Log$
-// Revision 1.43  2008/08/22 04:43:50  fish
-// Fix TOD clock race condition identified by Fred
-// Feucht -- by Marcin Cieslak [saper@system.pl]
-//
-// Revision 1.42  2007/11/21 22:55:49  fish
-// (untab)
-//
-// Revision 1.41  2007/06/23 00:04:04  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.40  2006/12/08 09:43:18  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 

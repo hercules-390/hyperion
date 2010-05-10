@@ -1,5 +1,9 @@
 /* CGIBIN.C     (c)Copyright Jan Jaeger, 2002-2010                   */
 /*              HTTP cgi-bin routines                                */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 

@@ -1,3 +1,11 @@
+/* CONSPAWN.C   (c) "Fish" (David B. Trout), 2005-2006               */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* CONSPAWN.C   (c) "Fish" (David B. Trout), 2005-2006               */
 /*       This program is spawned by Hercules as a result of          */
@@ -11,20 +19,14 @@
 /*       invoking this program.                                      */
 /*-------------------------------------------------------------------*/
 
-// $Id$
-//
-// $Log$
-// Revision 1.3  2006/12/08 09:43:18  jj
-// Add CVS message log
-//
-
 #include "hstdinc.h"
 
 #define PGMNAME  "conspawn"
 
 int main(int argc, char* argv[])
 {
-    int i, k, rc;
+    int i, rc;
+	size_t k;
     char* p;
 
 #ifdef _MSVC_
