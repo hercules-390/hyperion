@@ -3283,6 +3283,7 @@ BYTE   *ip;                             /* -> executed instruction   */
     regs->ip -= ILC(regs->exinst[0]);
 
     EXECUTE_INSTRUCTION (regs->exinst, regs);
+    regs->instcount++;
 
     /* Leave execflag on if pending PER so ILC will reflect EX */
     if (!OPEN_IC_PER(regs))
@@ -3352,6 +3353,7 @@ BYTE   *ip;                             /* -> executed instruction   */
     regs->ip -= ILC(regs->exinst[0]);
 
     EXECUTE_INSTRUCTION (regs->exinst, regs);
+    regs->instcount++;
 
     /* Leave execflag on if pending PER so ILC will reflect EXRL */
     if (!OPEN_IC_PER(regs))
