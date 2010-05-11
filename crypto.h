@@ -1,15 +1,11 @@
-/* CRYPTO.H     (c) Copyright Jan Jaeger, 2000-2009                  */
+/* CRYPTO.H     (c) Copyright Jan Jaeger, 2000-2010                  */
 /*              Cryptographic instructions                           */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
-//
-// $Log$
-// Revision 1.11  2007/06/23 00:04:05  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.10  2006/12/08 09:43:19  jj
-// Add CVS message log
-//
 
 #if defined(_FEATURE_MESSAGE_SECURITY_ASSIST)
 
