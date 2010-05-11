@@ -5343,9 +5343,9 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
         }
         sprintf(buf, "state %s", states[sysblk.regs[i]->cpustate]);
         WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
-        sprintf(buf, "instcount %" I64_FMT "d", (long long)INSTCOUNT(sysblk.regs[i]));
+        sprintf(buf, "instcount %" I64_FMT "ld", (long long)INSTCOUNT(sysblk.regs[i]));
         WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
-        sprintf(buf, "siocount %" I64_FMT "d", (long long)sysblk.regs[i]->siototal);
+        sprintf(buf, "siocount %" I64_FMT "ld", (long long)sysblk.regs[i]->siototal);
         WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
         copy_psw(sysblk.regs[i], curpsw);
         if (ARCH_900 == sysblk.arch_mode)
@@ -5404,9 +5404,9 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
             }
             sprintf(buf, "state %s", states[sysblk.regs[i]->guestregs->cpustate]);
             WRMSG(HHC00819, "I", "IE", sysblk.regs[i]->cpuad, buf);
-            sprintf(buf, "instcount %" I64_FMT "d", (long long)sysblk.regs[i]->guestregs->instcount);
+            sprintf(buf, "instcount %" I64_FMT "ld", (long long)sysblk.regs[i]->guestregs->instcount);
             WRMSG(HHC00819, "I", "IE", sysblk.regs[i]->cpuad, buf);
-            sprintf(buf, "siocount %" I64_FMT "d", (long long)sysblk.regs[i]->guestregs->siototal);
+            sprintf(buf, "siocount %" I64_FMT "ld", (long long)sysblk.regs[i]->guestregs->siototal);
             WRMSG(HHC00819, "I", "IE", sysblk.regs[i]->cpuad, buf);
             copy_psw(sysblk.regs[i]->guestregs, curpsw);
             if (ARCH_900 == sysblk.arch_mode)
