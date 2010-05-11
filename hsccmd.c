@@ -5274,7 +5274,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
     char    sysid[12];
     BYTE    curpsw[16];
     char *states[] = { "?(0)", "STARTED", "STOPPING", "STOPPED" };
-    char buf[80];
+    char buf[256];
 
     UNREFERENCED(argc);
     UNREFERENCED(argv);
