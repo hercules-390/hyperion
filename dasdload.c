@@ -1937,7 +1937,11 @@ BYTE           *fieldptr[MAXNUM];       /* Array of field pointers   */
             memset (tudsnam, 0, sizeof(tudsnam));
             for (i = 0; i < tunum; i++)
             {
+#if defined( _MSVC_ )
+                len = (int)strlen(tudsnam);
+#else
                 len = strlen(tudsnam);
+#endif
                 if (i > 0 && len < (int)(sizeof(tudsnam) - 1))
                     tudsnam[len++] = '.';
                 make_asciiz (tudsnam + len, sizeof(tudsnam) - len,
@@ -3739,7 +3743,11 @@ static int      stmtno = 0;             /* Statement number          */
             return +1;
 
         /* Check that end of statement has been read */
+#if defined( _MSVC_ )
+        stmtlen = (int)strlen(stmt);
+#else
         stmtlen = strlen(stmt);
+#endif
         if (stmtlen == 0 || stmt[stmtlen-1] != '\n')
         {
             XMERRF ("HHCDL020E Line too long in %s line %d\n",

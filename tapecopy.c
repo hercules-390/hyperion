@@ -415,7 +415,11 @@ int write_aws_disk (int diskfd, void *buf, size_t len)
     bytes_written += rc;
 
     /* Write data block to output file */
+#if defined( _MSVC_ )
+    rc = write (diskfd, buf, (u_int)len);
+#else
     rc = write (diskfd, buf, len);
+#endif
     if (rc < (int)len)
     {
         printf (_("HHCTC014E Error writing data block to %s: rc=%d, errno=%d: %s\n"),
