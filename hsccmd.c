@@ -1213,7 +1213,7 @@ char arch370_flag = 0;
                    (vepoch_now << 8),vepoch_sign,
                    format_tod(clock_buf,vepoch_now_abs,FALSE));
 
-        ( _("         vckc = %16.16" I64_FMT "X    %s\n"),
+        logmsg( _("         vckc = %16.16" I64_FMT "X    %s\n"),
                    (vclkc_now << 8),format_tod(clock_buf,vclkc_now,TRUE));
 
         logmsg( _("         vcpt = %16.16" I64_FMT "X\n"),vcpt_now << 8);
@@ -5365,7 +5365,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
         WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
         if (sysblk.regs[i]->sie_active)
         {
-            sprintf(buf, "CPUint=%8.8X (State:%8.8X)&(Mask:%8.8X)", 
+            sprintf(buf, "CPUint=%8.8X (State:%8.8X)&(Mask:%8.8X)", IC_INTERRUPT_CPU(sysblk.regs[i]),
             sysblk.regs[i]->guestregs->ints_state, sysblk.regs[i]->guestregs->ints_mask);
             WRMSG(HHC00819, "I", "IE", sysblk.regs[i]->cpuad, buf);
             sprintf(buf, "interrupt %spending", IS_IC_INTERRUPT(sysblk.regs[i]->guestregs) ? "" : "not ");
