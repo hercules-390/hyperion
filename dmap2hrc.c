@@ -81,7 +81,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Display the program identification message */
     display_version (stderr,
-                     "P/390 DEVMAP to Hercules conversion program\n", FALSE);
+                     "P/390 DEVMAP to Hercules conversion program", FALSE);
 
     /* The only argument is the DEVMAP file name */
     if (argc == 2 && argv[1] != NULL)

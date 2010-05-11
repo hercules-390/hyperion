@@ -98,7 +98,7 @@ argexit ( int code, char *m )
     default:
 
         display_version (stderr,
-                     "Hercules DASD image file creation program\n", FALSE);
+                     "Hercules DASD image file creation program", FALSE);
 
         fprintf (stderr,
 

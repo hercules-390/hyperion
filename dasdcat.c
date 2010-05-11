@@ -309,7 +309,7 @@ int main(int argc, char **argv)
  INITIALIZE_UTILITY("dasdcat");
 
  /* Display program info message */
- display_version (stderr, "Hercules DASD cat program ", FALSE);
+ display_version (stderr, "Hercules DASD cat program", FALSE);
 
  if (argc < 2) {
  fprintf(stderr, "Usage: dasdcat [-i dasd_image [sf=shadow-file-name] dsname...]...\n");

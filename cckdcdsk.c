@@ -57,7 +57,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
                        break;
             case 'v':  if (argv[0][2] != '\0') return syntax ();
                        display_version
-                         (stderr, "Hercules cckd chkdsk program ", FALSE);
+                         (stderr, "Hercules cckd chkdsk program", FALSE);
                        return 0;
             default:   return syntax ();
         }

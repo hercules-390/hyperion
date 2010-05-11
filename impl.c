@@ -114,7 +114,7 @@ BOOL WINAPI console_ctrl_handler (DWORD signo)
     switch ( signo )
     {
         case CTRL_BREAK_EVENT:
-            WRITEMSG (HHCIN050I);
+            WRMSG (HHC01400, "I");
 
             OBTAIN_INTLOCK(NULL);
 
@@ -129,7 +129,7 @@ BOOL WINAPI console_ctrl_handler (DWORD signo)
             return TRUE;
             break;
         case CTRL_C_EVENT:
-            WRITEMSG(HHCIN022I);
+            WRMSG(HHC01401, "I");
             SetConsoleCtrlHandler(console_ctrl_handler, TRUE);  // reset handler
             return TRUE;
             break;
@@ -138,9 +138,9 @@ BOOL WINAPI console_ctrl_handler (DWORD signo)
         case CTRL_LOGOFF_EVENT:
             if ( !sysblk.shutdown )  // (system shutdown not initiated)
             {
-                WRITEMSG(HHCIN021I, ( signo == CTRL_CLOSE_EVENT ? "CLOSE" : 
-                                      signo == CTRL_SHUTDOWN_EVENT ? "SHUTDOWN" : "LOGOFF" ),
-                                    ( signo == CTRL_CLOSE_EVENT ? "Immediate " : "" ) );
+                WRMSG(HHC01402, "I", ( signo == CTRL_CLOSE_EVENT ? "close" : 
+                                      signo == CTRL_SHUTDOWN_EVENT ? "shutdown" : "logoff" ),
+                                    ( signo == CTRL_CLOSE_EVENT ? "immediate " : "" ) );
 
                 if ( signo == CTRL_CLOSE_EVENT ) 
                     sysblk.shutimmed = TRUE;
@@ -173,8 +173,8 @@ BOOL WINAPI console_ctrl_handler (DWORD signo)
             {
                 sysblk.shutimmed = TRUE;
                 do_shutdown();
-                WRITEMSG(HHCIN023W, ( signo == CTRL_CLOSE_EVENT ? "CLOSE" : 
-                                      signo == CTRL_SHUTDOWN_EVENT ? "SHUTDOWN" : "LOGOFF" ) );
+                WRMSG(HHC01403, "W", ( signo == CTRL_CLOSE_EVENT ? "close" : 
+                                      signo == CTRL_SHUTDOWN_EVENT ? "shutdown" : "logoff" ) );
             }
             return TRUE;           
             break;
@@ -317,7 +317,7 @@ char    pathname[MAX_PATH];             /* (work)                    */
     /* Initialize the Hercules Automatic Operator */
 
     if ( !hao_initialize() )
-        WRITEMSG(HHCIN004S, strerror(errno));
+        WRMSG(HHC01404, "S");
 #endif /* defined(OPTION_HAO) */
 
     /* Run the script processor for this file */
@@ -325,7 +325,7 @@ char    pathname[MAX_PATH];             /* (work)                    */
     if (process_script_file(pathname,1) != 0)
         if (ENOENT == errno)
             if (!is_default_rc)
-                WRITEMSG(HHCMD995E, pathname);
+                WRMSG(HHC01405, "E", pathname);
         // (else error message already issued)
 
     return NULL;
@@ -472,7 +472,7 @@ int     dll_count;                      /* index into array          */
        cepted and handled by the logger facility thereby allowing the
        panel thread or external gui to "see" it and thus display it.
     */
-    display_version (stdout, "Hercules ", TRUE);
+    display_version (stdout, "Hercules", TRUE);
 
 #if defined(ENABLE_NLS)
     setlocale(LC_ALL, "");
@@ -523,7 +523,7 @@ int     dll_count;                      /* index into array          */
                         dll_load[++dll_count] = strdup(dllname);
                     else
                     {
-                        WRITEMSG(HHCHD021W, MAX_DLL_TO_LOAD);
+                        WRMSG(HHC01406, "W", MAX_DLL_TO_LOAD);
                         break;
                     }
                 }
@@ -549,9 +549,9 @@ int     dll_count;                      /* index into array          */
     if (arg_error)
     {
 #if defined(OPTION_DYNAMIC_LOAD)
-        WRITEMSG (HHCIN999S, sysblk.hercules_pgmname, " [-p dyn-load-dir] [[-l dynmod-to-load]...]");
+        WRMSG (HHC01407, "S", sysblk.hercules_pgmname, " [-p dyn-load-dir] [[-l dynmod-to-load]...]");
 #else
-        WRITEMSG (HHCIN999S, sysblk.hercules_pgmname, "");
+        WRMSG (HHC01407, "S", sysblk.hercules_pgmname, "");
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
         delayed_exit(-1);
         return(1);
@@ -581,7 +581,7 @@ int     dll_count;                      /* index into array          */
         if (hl_err)
         {
             usleep(10000);      // give logger time to issue error message
-            WRITEMSG(HHCIN099S);
+            WRMSG(HHC01408, "S");
             delayed_exit(-1);
             return(1);
         }
@@ -598,7 +598,7 @@ int     dll_count;                      /* index into array          */
         {
             usleep(10000); /* (give logger thread time to issue
                                preceding HHCHD007E message) */
-            WRITEMSG(HHCIN008S);
+            WRMSG(HHC01409, "S");
             delayed_exit(-1);
             return(1);
         }
@@ -609,7 +609,7 @@ int     dll_count;                      /* index into array          */
     /* Register the SIGINT handler */
     if ( signal (SIGINT, sigint_handler) == SIG_ERR )
     {
-        WRITEMSG(HHCIN001S, strerror(errno));
+        WRMSG(HHC01410, "S", "SIGINT", strerror(errno));
         delayed_exit(-1);
         return(1);
     }
@@ -617,7 +617,7 @@ int     dll_count;                      /* index into array          */
     /* Register the SIGTERM handler */
     if ( signal (SIGTERM, sigterm_handler) == SIG_ERR )
     {
-        WRITEMSG(HHCIN009S, strerror(errno));
+        WRMSG(HHC01410, "S", "SIGTERM", strerror(errno));
         delayed_exit(-1);
         return(1);
     }
@@ -628,7 +628,7 @@ int     dll_count;                      /* index into array          */
     {
         if (!SetConsoleCtrlHandler( console_ctrl_handler, TRUE ))
         {
-            WRITEMSG( HHCIN010S, strerror( errno ));
+            WRMSG( HHC01410, "S", "Console-ctrl", strerror( errno ));
             delayed_exit(-1);
             return(1);
         }
@@ -640,7 +640,7 @@ int     dll_count;                      /* index into array          */
        Broken Pipe error if the printer driver writes to a closed pipe */
     if ( signal (SIGPIPE, SIG_IGN) == SIG_ERR )
     {
-        WRITEMSG(HHCIN002E, strerror(errno));
+        WRMSG(HHC01411, "E", strerror(errno));
     }
 #endif
 
@@ -677,7 +677,7 @@ int     dll_count;                      /* index into array          */
          || sigaction(SIGUSR1, &sa, NULL)
          || sigaction(SIGUSR2, &sa, NULL) )
         {
-            WRITEMSG(HHCIN003S, strerror(errno));
+            WRMSG(HHC01410, "S", "SIGILL/FPE/SEGV/BUS/USR", strerror(errno));
             delayed_exit(-1);
             return(1);
         }
@@ -801,7 +801,7 @@ int     dll_count;                      /* index into array          */
 #ifdef DEBUG
     fprintf(stdout, _("IMPL EXIT\n"));
 #endif
-    fprintf(stdout, _("HHCIN099I "HHCIN099I"\n"));
+    fprintf(stdout, MSG(HHC01412, "I"));
     fflush(stdout);
     usleep(10000);
     return 0;
@@ -813,7 +813,6 @@ int     dll_count;                      /* index into array          */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void system_cleanup (void)
 {
-//  WRITEMSG(HHCIN950I);
     /*
         Currently only called by hdlmain,c's HDL_FINAL_SECTION
         after the main 'hercules' module has been unloaded, but
@@ -823,5 +822,4 @@ DLL_EXPORT void system_cleanup (void)
         function currently doesn't do anything yet. Once it DOES
         something, they should be uncommented.
     */
-//  WRITEMSG(HHCIN959I);
 }

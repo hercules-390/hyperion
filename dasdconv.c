@@ -848,7 +848,7 @@ int             lfs = 0;                /* 1 = Build large file      */
 
     /* Display the program identification message */
     display_version (stderr,
-                     "Hercules DASD CKD image conversion program\n",
+                     "Hercules DASD CKD image conversion program",
                      FALSE);
 
     /* Process the options in the argument list */

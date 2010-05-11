@@ -4387,7 +4387,7 @@ char            pathname[MAX_PATH];     /* cfname in host path format*/
 
     /* Display the program identification message */
     display_version (stderr,
-                     "Hercules DASD loader program ", FALSE);
+                     "Hercules DASD loader program", FALSE);
 
     /* Process optional arguments */
     for ( ; argc > 1 && argv[1][0] == '-'; argv++, argc--)

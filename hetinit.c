@@ -89,7 +89,7 @@ main( int argc, char *argv[] )
     o_volser = NULL;
 
     /* Display the program identification message */
-    display_version (stderr, "Hercules HET IEHINITT program ", FALSE);
+    display_version (stderr, "Hercules HET IEHINITT program", FALSE);
 
     while( TRUE )
     {

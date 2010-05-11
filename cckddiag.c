@@ -425,7 +425,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         switch(argv[0][1]) {
             case 'v':  if (argv[0][2] != '\0') return syntax ();
                        display_version (stdout, 
-                              "Hercules CCKD diagnostic program\n", FALSE);
+                              "Hercules CCKD diagnostic program", FALSE);
                        return 0;
             case 'd':  if (argv[0][2] != '\0') return syntax ();
                        cmd_devhdr = 1;

@@ -249,7 +249,7 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
     INITIALIZE_UTILITY("dasdpdsu");
 
     /* Display the program identification message */
-    display_version (stderr, "Hercules PDS unload program ", FALSE);
+    display_version (stderr, "Hercules PDS unload program", FALSE);
 
     /* Check the number of arguments */
     if (argc < 3 || argc > 5)

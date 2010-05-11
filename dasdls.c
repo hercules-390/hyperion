@@ -132,7 +132,7 @@ int main(int argc, char **argv)
     INITIALIZE_UTILITY("dasdls");
 
     /* Display program info message */
-    display_version (stderr, "Hercules DASD list program ", FALSE);
+    display_version (stderr, "Hercules DASD list program", FALSE);
 
     if (argc < 2) {
         fprintf(stderr, "Usage: dasdls dasd_image [sf=shadow-file-name]...\n");

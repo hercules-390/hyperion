@@ -601,6 +601,38 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01334 "%1d:%04X CH: asynchronous I/O ccw addr %8.8x"
 #define HHC01335 "%1d:%04X CH: synchronous  I/O ccw addr %8.8x"
 
+// reserve 014xx for initialization and shutdown
+/* impl.c */
+#define HHC01400 "Ctrl-break intercepted: interrupt key depressed simulated"
+#define HHC01401 "Ctrl-c intercepted"
+#define HHC01402 "'%s' event received: shutdown %sstarting..."
+#define HHC01403 "'%s' event received, shutdown previously requested..."
+#define HHC01404 "Cannot create the 'Hercules Automatic Operator' thread"
+#define HHC01405 "Run commands file '%s' not found"
+#define HHC01406 "Startup parm '-l': maximum loadable modules %d exceeded; remainder not loaded"
+#define HHC01407 "Usage: %s [-f config-filename] [-d] [-b logo-filename]%s [> logfile]"
+#define HHC01408 "Hercules terminating, see previous messages for reason"
+#define HHC01409 "Load of 'dyngui.dll' failed, hercules terminated"
+#define HHC01410 "Cannot register '%s' handler: %s"
+#define HHC01411 "Cannot suppress SIGPIPE signal: %s"
+#define HHC01412 "Hercules terminated"
+
+/* version.c */
+#define HHC01413 "%s version %s"
+#define HHC01414 "%s"
+#define HHC01415 "Built on %s at %s"
+#define HHC01416 "Build information:"
+#define HHC01417 "%s"
+
+/* hscmisc.c */
+#define HHC01420 "Begin Hercules shutdown"
+#define HHC01421 "Releasing configuration"
+#define HHC01422 "Configuration release complete"
+#define HHC01423 "Calling termination routines"
+#define HHC01424 "All termination routines complete"
+#define HHC01425 "Hercules shutdown complete"
+#define HHC01426 "Shutdown initiated"
+
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
 #define HHC04100 "%s version %s initiated"
@@ -785,7 +817,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHCHD018I "%soadable module directory is '%s'"
 #define HHCHD019E "Loadable module directory path name length '%d' exceeds maximum of '%d'" 
 #define HHCHD020W "Loadable module directory remains '%s'; taken from startup"
-#define HHCHD021W "Startup parm '-l': maximum loadable modules (%d) exceeded; remainder not loaded"
+
 #define HHCHD022W "Change request of loadable module directory to '%s' is ignored"
 #define HHCHD900I "Begin shutdown sequence"
 #define HHCHD901I "Calling (%s)"
@@ -797,8 +829,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCHD952I "Module(%s) cleanup complete"
 #define HHCHD959I "HDL Termination sequence complete"
 
-/* hostinfo.c */
-#define HHCIN015I "%s"
 
 /* hsccmd.c */
 #define HHCMD001W "Ignoring invalid SCRIPT file pause statement: %s"
@@ -1011,19 +1041,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCMD998E "Script aborted : Script recursion level exceeded"
 #define HHCMD999I "Script \"%s\" aborted due to previous conditions"
 
-/* hscmisc.c */
-#define HHCIN098I "Shutdown initiated"
-#define HHCIN900I "Begin Hercules shutdown"
-#define HHCIN901I "Releasing configuration"
-#define HHCIN902I "Configuration release complete"
-#define HHCIN903I "Calling termination routines"
-#define HHCIN904I "All termination routines complete"
-#define HHCIN909I "Hercules shutdown complete"
-#define HHCMD143E "Invalid value: %s"
-#define HHCMD144E "Invalid operand: %s"
-#define HHCMD145E "Invalid range: %s"
-#define HHCMS001E "malloc failed for REGS copy: %s"
-
 /* hscutl.c */
 #define HHCUT001I "SO_KEEPALIVE rc=%d %s"
 #define HHCUT002I "TCP_KEEPALIVE rc=%d %s"
@@ -1044,26 +1061,10 @@ cpu.c:123:HABC1234I This is a message
 #define HHCHT013I "Using HTTPROOT directory (%s)"
 #define HHCHT014E "Invalid HTTPROOT: (%s): (%s)"
 
-/* impl.c */
-#define HHCIN001S "Cannot register SIGINT handler: %s"
-#define HHCIN002E "Cannot suppress SIGPIPE signal: %s"
-#define HHCIN003S "Cannot register SIGILL/FPE/SEGV/BUS/USR handler: %s"
-#define HHCIN004S "Cannot create HAO thread: %s"
-#define HHCIN008S "DYNGUI.DLL load failed; Hercules terminated"
-#define HHCIN009S "Cannot register SIGTERM handler: %s"
-#define HHCIN010S "Cannot register ConsoleCtrl handler: %s"
-#define HHCIN021I "%s Event received, SHUTDOWN %sstarting..."
-#define HHCIN022I "Ctrl-C intercepted"
-#define HHCIN023W "%s Event received, SHUTDOWN previously requested..."
-#define HHCIN050I "Ctrl-Break intercepted. Interrupt Key depressed simulated"
-#define HHCIN099I "Hercules terminated"
-#define HHCIN099S "Hercules terminating, see previous messages for reason"
-// HHCIN099I is used with and without logmsg
-
-#define HHCIN950I "Begin system cleanup"
-#define HHCIN959I "System cleanup complete"
-#define HHCMD995E ".RC file \"%s\" not found"
-#define HHCIN999S "Usage: %s [-f config-filename] [-d] [-b logo-filename]%s [> logfile]"
+/* hscmisc.c */
+#define HHCMD143E "Invalid value: %s"
+#define HHCMD144E "Invalid operand: %s"
+#define HHCMD145E "Invalid range: %s"
 
 /* logger.c */
 #define HHCLG014E "Log not active"
@@ -1111,13 +1112,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCSR203E "All CPU's must be stopped to resume"
 #define HHCSR204E "File identifier error"
 #define HHCSR999E "Invalid key %8.8x"
-
-/* version.c */
-#define HHCIN010I "%sversion (%s)"
-#define HHCIN011I "%s"
-#define HHCIN012I "Built on (%s) at (%s)"
-#define HHCIN013I "Build information:"
-#define HHCIN014I "%s"
 
 /* vm.c */
 #define HHCVM001I "Panel command *%s* issued by guest %s"

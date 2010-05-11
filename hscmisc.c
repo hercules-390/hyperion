@@ -114,26 +114,26 @@ static void cancel_wait_sigq()
 */
 static void do_shutdown_now()
 {
-    WRITEMSG(HHCIN900I);
+    WRMSG(HHC01420, "I");
 
     ASSERT( !sysblk.shutfini );  // (sanity check)
 
     sysblk.shutfini = 0;  // (shutdown NOT finished yet)
     sysblk.shutdown = 1;  // (system shutdown initiated)
 
-    WRITEMSG(HHCIN901I);
+    WRMSG(HHC01421, "I");
     {
         release_config();
     }
-    WRITEMSG(HHCIN902I);
+    WRMSG(HHC01422, "I");
     
     log_wakeup(NULL);
 
-    WRITEMSG(HHCIN903I);
+    WRMSG(HHC01423, "I");
     {
         hdl_shut();
     }
-    WRITEMSG(HHCIN904I);
+    WRMSG(HHC01424, "I");
     
     log_wakeup(NULL);
 
@@ -145,7 +145,7 @@ static void do_shutdown_now()
     logmsg("HHCIN906I Threads terminations complete\n");
     */
 
-    WRITEMSG(HHCIN909I);
+    WRMSG(HHC01425, "I");
 
     log_wakeup(NULL);
     
@@ -197,7 +197,7 @@ static void do_shutdown_now()
 */
 static void do_shutdown_wait()
 {
-    WRITEMSG(HHCIN098I);
+    WRMSG(HHC01426, "I");
     wait_sigq_resp();
     do_shutdown_now();
 }
@@ -722,7 +722,9 @@ static REGS  *copy_regs (REGS *regs)
     newregs = malloc(size);
     if (newregs == NULL)
     {
-        WRITEMSG(HHCMS001E, strerror(errno));
+        char buf[40];
+        sprintf(buf,"malloc(%lu)", size);
+        WRMSG(HHC00075, "E", buf, strerror(errno));
         return NULL;
     }
 

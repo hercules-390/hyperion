@@ -84,7 +84,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     INITIALIZE_UTILITY("tapesplt");
 
     /* Display the program identification message */
-    display_version (stderr, "Hercules tape split program ", FALSE);
+    display_version (stderr, "Hercules tape split program", FALSE);
 
     /* The only argument is the tape image file name */
     if (argc > 3 && argv[1] != NULL)

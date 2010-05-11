@@ -564,7 +564,7 @@ int version_cmd(int argc, char *argv[],char *cmdline)
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
     UNREFERENCED(argv);
-    display_version (stdout, "Hercules ", TRUE);
+    display_version (stdout, "Hercules", TRUE);
     return 0;
 }
 

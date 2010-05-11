@@ -111,7 +111,7 @@ char            pgmpath[MAX_PATH];      /* prog path in host format  */
         if (argv[0][0] != '-') break;
         if (strcmp(argv[0], "-v") == 0)
         {
-             snprintf (msgbuf, 512, _("Hercules %s copy program "), pgm);
+             snprintf (msgbuf, 512, _("Hercules %s copy program"), pgm);
              display_version (stderr, msgbuf, FALSE);
              return 0;
         }

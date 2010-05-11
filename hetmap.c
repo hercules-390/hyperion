@@ -215,7 +215,7 @@ main( int argc, char *argv[] )
     INITIALIZE_UTILITY(pgm);
 
     /* Display the program identification message */
-    display_version (stderr, "Hercules HET and AWS tape map program ", FALSE);
+    display_version (stderr, "Hercules HET and AWS tape map program", FALSE);
 
     if (! (opts & O_TAPEMAP_INVOKED) )
     {

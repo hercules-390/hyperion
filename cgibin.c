@@ -1090,7 +1090,7 @@ void cgibin_debug_version_info(WEBBLK *webblk)
 
     hprintf(webblk->sock,"<h1>Hercules Version Information</h1>\n"
                           "<pre>\n");
-    display_version_2(NULL,"Hercules HTTP Server ", TRUE,webblk->sock);
+    display_version_2(NULL,"Hercules HTTP Server", TRUE,webblk->sock);
     hprintf(webblk->sock,"</pre>\n");
 
     html_footer(webblk);

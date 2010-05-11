@@ -503,7 +503,7 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
     INITIALIZE_UTILITY("tapecopy");
 
    /* Display the program identification message */
-    display_version (stderr, "Hercules tape copy program ", FALSE);
+    display_version (stderr, "Hercules tape copy program", FALSE);
 
     /* The first argument is the input file name
        (either AWS disk file or SCSI tape device)
