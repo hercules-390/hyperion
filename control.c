@@ -3345,8 +3345,8 @@ int     rc;                             /* return code from load_psw */
     newregs.tlbID = 1;
 
     /* Set the breaking event address register in the copy */
-    SET_BEAR_REG(&newregs, newregs.ip - (newregs.execflag ?
-                                        newregs.exrl ? 6 : 4 : 2));
+    SET_BEAR_REG(&newregs, newregs.ip - (!newregs.execflag ? 2 :
+                                        newregs.exrl ? 6 : 4));
 
     /* Save the primary ASN (CR4) and primary STD (CR1) */
     oldpasn = regs->CR_LHL(4);

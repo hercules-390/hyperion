@@ -587,7 +587,7 @@ static char *pgmintname[] = {
     {
         /* This can happen if BALR, BASR, BASSM or BSM
            program checks during trace */
-        ilc = realregs->execflag ? realregs->exrl ? 6 : 4 : 2;
+        ilc = !realregs->execflag ? 2 : realregs->exrl ? 6 : 4;
         realregs->ip += ilc;
         realregs->psw.IA += ilc;
         realregs->psw.ilc = ilc;
@@ -595,13 +595,13 @@ static char *pgmintname[] = {
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
     if(realregs->sie_active)
     {
-        sie_ilc = realregs->guestregs->psw.zeroilc
-                ? 0 : REAL_ILC(realregs->guestregs);
+        sie_ilc = realregs->guestregs->psw.zeroilc ? 0 :
+                REAL_ILC(realregs->guestregs);
         if (realregs->guestregs->psw.ilc == 0
          && !realregs->guestregs->psw.zeroilc)
         {
-            sie_ilc = realregs->guestregs->execflag ?
-                      realregs->guestregs->exrl ? 6 : 4 : 2;
+            sie_ilc = !realregs->guestregs->execflag ? 2 : 
+                    realregs->guestregs->exrl ? 6 : 4;
             realregs->guestregs->psw.ilc = sie_ilc;
         }
     }

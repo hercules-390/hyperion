@@ -372,7 +372,7 @@ int  i;
 
     /* Set the Breaking Event Address Register */
     SET_BEAR_REG(regs, regs->ip - 
-      (trap_is_trap4 ? 4 : regs->execflag ? regs->exrl ? 6 : 4 : 2));
+      (trap_is_trap4 ? 4 : !regs->execflag ? 2 : regs->exrl ? 6 : 4));
     regs->psw.amode = 1;
     regs->psw.AMASK = AMASK31;
     UPD_PSW_IA(regs, trap_ia);
