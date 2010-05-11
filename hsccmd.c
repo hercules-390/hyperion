@@ -1200,14 +1200,14 @@ char arch370_flag = 0;
         logmsg( _("         vtod = %16.16" I64_FMT "X    %s\n"),
                    (vtod_now << 8),format_tod(clock_buf,vtod_now,TRUE));
 
-        if (epoch_now < 0) {
-            epoch_now_abs = -(epoch_now);
-            epoch_sign = '-';
+        if (vepoch_now < 0) {
+            vepoch_now_abs = -(vepoch_now);
+            vepoch_sign = '-';
         }
         else
         {
-            epoch_now_abs = epoch_now;
-            epoch_sign = ' ';
+            vepoch_now_abs = vepoch_now;
+            vepoch_sign = ' ';
         }
         logmsg( _("         voff = %16.16" I64_FMT "X   %c%s\n"),
                    (vepoch_now << 8),vepoch_sign,
@@ -2420,7 +2420,6 @@ int sh_cmd(int argc, char *argv[], char *cmdline)
 int cd_cmd(int argc, char *argv[], char *cmdline)
 {
     char* path;
-    char* pathname;
     char cwd [ MAX_PATH ];
 
     UNREFERENCED(argc);
@@ -2431,8 +2430,7 @@ int cd_cmd(int argc, char *argv[], char *cmdline)
         path = cmdline + 2;
         while (isspace(*path)) path++;
 #ifdef _MSVC_
-        pathname = strtok(path, "\"");
-        _chdir(pathname);
+        _chdir( strtok( path, "\"" ) );
 #else
         chdir(path);
 #endif
@@ -3529,7 +3527,7 @@ BYTE    c;
 /*-------------------------------------------------------------------*/
 int cpuidfmt_cmd(int argc, char *argv[], char *cmdline)
 {
-U16     id;
+u_int     id;
 
     UNREFERENCED(cmdline);
 
@@ -3541,7 +3539,7 @@ U16     id;
           && sscanf(argv[1], "%u", &id) == 1)  
         {
             if ( id == 0 || id == 1 )
-                sysblk.cpuidfmt = id;
+                sysblk.cpuidfmt = (U16)id;
             else
             {
                 WRITEMSG(HHCMD156E);
@@ -5345,9 +5343,9 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
         }
         sprintf(buf, "state %s", states[sysblk.regs[i]->cpustate]);
         WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
-        sprintf(buf, "instcount %" I64_FMT "ld", (long long)INSTCOUNT(sysblk.regs[i]));
+        sprintf(buf, "instcount %" I64_FMT "d", (long long)INSTCOUNT(sysblk.regs[i]));
         WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
-        sprintf(buf, "siocount %" I64_FMT "ld", (long long)sysblk.regs[i]->siototal);
+        sprintf(buf, "siocount %" I64_FMT "d", (long long)sysblk.regs[i]->siototal);
         WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
         copy_psw(sysblk.regs[i], curpsw);
         if (ARCH_900 == sysblk.arch_mode)
@@ -5406,9 +5404,9 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
             }
             sprintf(buf, "state %s", states[sysblk.regs[i]->guestregs->cpustate]);
             WRMSG(HHC00819, "I", "IE", sysblk.regs[i]->cpuad, buf);
-            sprintf(buf, "instcount %" I64_FMT "ld", (long long)sysblk.regs[i]->guestregs->instcount);
+            sprintf(buf, "instcount %" I64_FMT "d", (long long)sysblk.regs[i]->guestregs->instcount);
             WRMSG(HHC00819, "I", "IE", sysblk.regs[i]->cpuad, buf);
-            sprintf(buf, "siocount %" I64_FMT "ld", (long long)sysblk.regs[i]->guestregs->siototal);
+            sprintf(buf, "siocount %" I64_FMT "d", (long long)sysblk.regs[i]->guestregs->siototal);
             WRMSG(HHC00819, "I", "IE", sysblk.regs[i]->cpuad, buf);
             copy_psw(sysblk.regs[i]->guestregs, curpsw);
             if (ARCH_900 == sysblk.arch_mode)
