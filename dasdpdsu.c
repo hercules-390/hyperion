@@ -1,5 +1,9 @@
-/* DASDPDSU.C   (c) Copyright Roger Bowler, 1999-2009                */
+/* DASDPDSU.C   (c) Copyright Roger Bowler, 1999-2010                */
 /*              Hercules DASD Utilities: PDS unloader                */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 

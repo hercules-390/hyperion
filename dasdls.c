@@ -1,20 +1,19 @@
+/* DASDLS.C    (c) Copyright Roger Bowler, 1999-2010                 */
+/*              Hercules DASD Utilities: DASD image loader           */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
+// $Id$
+
 /*
  * dasdls
  *
  * Copyright 2000-2009 by Malcolm Beattie
  * Based on code copyright by Roger Bowler, 1999-2009
  *
- * $Id$
  *
- * $Log$
- * Revision 1.27  2008/11/04 04:50:46  fish
- * Ensure consistent utility startup
- *
- * Revision 1.26  2007/06/23 00:04:08  ivan
- * Update copyright notices to include current year (2007)
- *
- * Revision 1.25  2006/12/08 09:43:19  jj
- * Add CVS message log
  *
  */
 

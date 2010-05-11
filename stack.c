@@ -1,5 +1,9 @@
-/* STACK.C      (c) Copyright Roger Bowler, 1999-2009                */
+/* STACK.C      (c) Copyright Roger Bowler, 1999-2010                */
 /*              ESA/390 Linkage Stack Operations                     */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
@@ -24,41 +28,6 @@
 /* ASN-and-LX-reuse facility                  June 2004 Roger Bowler */
 /*-------------------------------------------------------------------*/
 
-// $Log$
-// Revision 1.89  2008/04/11 14:29:28  bernard
-// Integrate regs->exrl into base Hercules code.
-//
-// Revision 1.88  2008/04/09 07:38:58  bernard
-// Allign to Rogers terminal ;-)
-//
-// Revision 1.87  2008/04/08 17:15:10  bernard
-// Added execute relative long instruction
-//
-// Revision 1.86  2008/03/01 00:00:34  ptl00
-// Fix TRAP in z/Arch mode
-//
-// Revision 1.85  2008/02/12 18:23:39  jj
-// 1. SPKA was missing protection check (PIC04) because
-//    AIA regs were not purged.
-//
-// 2. BASR with branch trace and PIC16, the pgm old was pointing
-//    2 bytes before the BASR.
-//
-// 3. TBEDR , TBDR using R1 as source, should be R2.
-//
-// 4. PR with page crossing stack (1st page invalid) and PSW real
-//    in stack, missed the PIC 11. Fixed by invoking abs_stck_addr
-//    for previous stack entry descriptor before doing the load_psw.
-//
-// Revision 1.84  2007/06/23 00:04:16  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.83  2006/12/20 04:26:20  gsmith
-// 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
-//
-// Revision 1.82  2006/12/08 09:43:30  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 

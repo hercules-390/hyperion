@@ -1,5 +1,9 @@
-/* DASDISUP.C   (c) Copyright Roger Bowler, 1999-2009                */
+/* DASDISUP.C   (c) Copyright Roger Bowler, 1999-2010                */
 /*              Hercules DASD Utilities: IEHIOSUP                    */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 
@@ -13,16 +17,6 @@
 /* where: ckdfile is the name of the CKD image file                  */
 /*-------------------------------------------------------------------*/
 
-// $Log$
-// Revision 1.31  2008/11/04 04:50:46  fish
-// Ensure consistent utility startup
-//
-// Revision 1.30  2007/06/23 00:04:08  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.29  2006/12/08 09:43:19  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 

@@ -1,3 +1,12 @@
+/* HETMAP.C     (c) Copyright Leland Lucius, 2000-2009               */
+/*         Displays information about a Hercules Emulated Tape       */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */   
+
+// $Id$
+
 /*
 || ----------------------------------------------------------------------------
 ||
@@ -8,11 +17,6 @@
 ||
 || ----------------------------------------------------------------------------
 */
-
-// $Id$
-//
-// 2009/10/12 KL - Add TAPEMAP format output
-//
 
 #include "hstdinc.h"
 

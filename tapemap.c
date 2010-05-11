@@ -1,5 +1,9 @@
-/* TAPEMAP.C   (c) Copyright Jay Maynard, 2000-2009                  */
+/* TAPEMAP.C   (c) Copyright Jay Maynard, 2000-2010                  */
 /*              Map AWSTAPE format tape image                        */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 
@@ -7,17 +11,6 @@
 /* This program reads an AWSTAPE format tape image file and produces */
 /* a map of the tape, printing any standard label records it finds.  */
 /*-------------------------------------------------------------------*/
-
-// $Log$
-// Revision 1.27  2008/11/04 04:50:46  fish
-// Ensure consistent utility startup
-//
-// Revision 1.26  2007/06/23 00:04:18  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.25  2006/12/08 09:43:31  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 

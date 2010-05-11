@@ -1,22 +1,18 @@
+/* HERCVER.RC   (c) Copyright "Fish" (David B. Trout), 2009          */
+/*      Defines the Windows resources to be linked into the product  */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
+// $Id$
+
 /////////////////////////////////////////////////////////////////////////////////////////
 // HercVer.rc  --  defines the Windows resources to be linked into the product
 //                 (c) Copyright "Fish" (David B. Trout), 2009
 //                 Released under the Q Public License as modifications to Hercules.
 //                 (http://www.hercules-390.org/herclic.html)
 /////////////////////////////////////////////////////////////////////////////////////////
-
-// $Id$
-//
-// $Log$
-// Revision 1.7  2008/05/17 13:45:07  ivan
-// Update (c) info in hercver.rc
-//
-// Revision 1.6  2007/11/30 14:54:32  jmaynard
-// Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
-//
-// Revision 1.5  2006/12/08 09:55:11  jj
-// Add CVS message log
-//
 
 #ifdef APSTUDIO_INVOKED
   #error This file is not editable by Microsoft Visual C++

@@ -1,3 +1,12 @@
+/* HETGET.C     (c) Copyright Leland Lucius, 2000-2009               */
+/*              Extract files from an HET file                       */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
+// $Id$
+
 /*
 || ----------------------------------------------------------------------------
 ||
@@ -8,19 +17,6 @@
 ||
 || ----------------------------------------------------------------------------
 */
-
-// $Id$
-//
-// $Log$
-// Revision 1.26  2008/11/04 04:50:46  fish
-// Ensure consistent utility startup
-//
-// Revision 1.25  2007/06/23 00:04:10  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.24  2006/12/08 09:43:26  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 
