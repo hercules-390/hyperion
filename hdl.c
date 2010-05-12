@@ -120,7 +120,7 @@ HDLSHD *loggercall;
 int logger_flag = 0;
 #endif // defined( _MSVC_ )
 
-    WRITEMSG(HHCHD900I);
+    WRMSG(HHC01500, "I");
 
     obtain_lock (&hdl_sdlock);
 
@@ -138,11 +138,11 @@ int logger_flag = 0;
         else
 #endif // defined( _MSVC_ )
         {
-            WRITEMSG(HHCHD901I,shdent->shdname);
+            WRMSG(HHC01501, "I", shdent->shdname);
             {
                 (shdent->shdcall) (shdent->shdarg);
             }
-            WRITEMSG(HHCHD902I,shdent->shdname);
+            WRMSG(HHC01502, "I", shdent->shdname);
         }   
         /* Remove shutdown call entry to ensure it is called once */
         hdl_shdlist = shdent->next;
@@ -157,20 +157,20 @@ int logger_flag = 0;
             /* shutdown of logger is skipped in a Windows Environment 
              * because we still have messages to write to the log file 
              */
-            WRITEMSG(HHCHD903I, loggercall->shdname); 
+            WRMSG(HHC01503, "I", loggercall->shdname); 
         else
         {
-            WRITEMSG(HHCHD901I, loggercall->shdname);
+            WRMSG(HHC01501, "I", loggercall->shdname);
             {
                 (loggercall->shdcall) (loggercall->shdarg);
             }
-            WRITEMSG(HHCHD902I, loggercall->shdname);
+            WRMSG(HHC01502, "I", loggercall->shdname);
             free(loggercall);
         }
     }
 #endif // defined( _MSVC_ )
 
-    WRITEMSG(HHCHD909I);
+    WRMSG(HHC01504, "I");
 }
 
 #if defined(OPTION_DYNAMIC_LOAD)
@@ -193,7 +193,7 @@ DLL_EXPORT char *hdl_setpath(char *path, int flag)
 
     if ( strlen(path) > MAX_PATH )
     {
-        WRITEMSG (HHCHD019E, (int)strlen(path), MAX_PATH);
+        WRMSG (HHC01505, "E", (int)strlen(path), MAX_PATH);
         return NULL;
     }
 
@@ -209,8 +209,8 @@ DLL_EXPORT char *hdl_setpath(char *path, int flag)
             }
             else
             {
-                WRITEMSG (HHCHD022W, pathname); 
-                WRITEMSG (HHCHD020W, hdl_modpath);
+                WRMSG (HHC01506, "W", pathname); 
+                WRMSG (HHC01507, "W", hdl_modpath);
                 return hdl_modpath;
             }
         }
@@ -225,7 +225,7 @@ DLL_EXPORT char *hdl_setpath(char *path, int flag)
     }
 
     hdl_modpath = strdup(pathname);
-    WRITEMSG (HHCHD018I, def ? "Default l":"L", hdl_modpath);
+    WRMSG (HHC01508, "I", hdl_modpath);
 
     return hdl_modpath;
 }
@@ -532,13 +532,13 @@ HDLDEP *depent;
     {
         if(strcmp(version,depent->version))
         {
-            WRITEMSG(HHCHD010I,name,version,depent->version);
+            WRMSG(HHC01509, "I",name, version, depent->version);
             return -1;
         }
 
         if(size != depent->size)
         {
-            WRITEMSG(HHCHD011I,name,size,depent->size);
+            WRMSG(HHC01510, "I", name, size, depent->size);
             return -1;
         }
     }
@@ -579,7 +579,9 @@ void *fep;
         {
             if(!(modent = malloc(sizeof(MODENT))))
             {
-                WRITEMSG(HHCHD001E,name);
+                char buf[40];
+                sprintf(buf, "malloc(%lu)", sizeof(MODENT));
+                WRMSG(HHC01511, "E", buf, strerror(errno));
                 return NULL;
             }
 
@@ -673,22 +675,22 @@ static void hdl_term (void *unused _HDL_UNUSED)
 {
 DLLENT *dllent;
 
-    WRITEMSG(HHCHD950I);
+    WRMSG(HHC01512, "I");
 
     /* Call all final routines, in reverse load order */
     for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
     {
         if(dllent->hdlfini)
         {
-            WRITEMSG(HHCHD951I,dllent->name);
+            WRMSG(HHC01513, "I", dllent->name);
             {
                 (dllent->hdlfini)();
             }
-            WRITEMSG(HHCHD952I,dllent->name);
+            WRMSG(HHC01514, "I", dllent->name);
         }
     }
 
-    WRITEMSG(HHCHD959I);
+    WRMSG(HHC01515, "I");
 }
 
 
@@ -706,7 +708,7 @@ MODENT *modent;
 
     if(!(dllent->dll = (void*)GetModuleHandle( NULL ) ));
     {
-        WRITEMSG(HHCHD007E,dllent->name,dlerror());
+        WRMSG(HHC01516, "E", dllent->name, dlerror());
         free(dllent);
         return -1;
     }
@@ -715,7 +717,7 @@ MODENT *modent;
 
     if(!(dllent->hdldepc = dlsym(dllent->dll,HDL_DEPC_Q)))
     {
-        WRITEMSG(HHCHD013E,dllent->name, dlerror());
+        WRMSG(HHC01517, "E", dllent->name, dlerror());
         free(dllent);
         return -1;
     }
@@ -741,7 +743,7 @@ MODENT *modent;
     {
         if((dllent->hdldepc)(&hdl_dchk))
         {
-            WRITEMSG(HHCHD014E,dllent->name);
+            WRMSG(HHC01518, "E", dllent->name);
         }
     }
 
@@ -826,8 +828,9 @@ HDLPRE *preload;
 
     if(!(hdl_cdll = hdl_dll = malloc(sizeof(DLLENT))))
     {
-        fprintf(stderr, _("HHCHD002E cannot allocate memory for DLL descriptor: %s\n"),
-          strerror(errno));
+        char buf[40];
+        sprintf(buf, "malloc(%lu)", sizeof(DLLENT));
+        fprintf(stderr, MSG(HHC01511, "E", buf, strerror(errno)));
         exit(1);
     }
 
@@ -841,8 +844,7 @@ HDLPRE *preload;
 
     if(!(hdl_cdll->dll = hdl_dlopen(NULL, RTLD_NOW )))
     {
-        fprintf(stderr, _("HHCHD003E unable to open hercules as DLL: %s\n"),
-          dlerror());
+        fprintf(stderr, MSG(HHC01516, "E", "hercules", dlerror()));
         exit(1);
     }
 
@@ -850,8 +852,7 @@ HDLPRE *preload;
 
     if(!(hdl_cdll->hdldepc = dlsym(hdl_cdll->dll,HDL_DEPC_Q)))
     {
-        fprintf(stderr, _("HHCHD012E No dependency section in %s: %s\n"),
-          hdl_cdll->name, dlerror());
+        fprintf(stderr, MSG(HHC01517, "E", hdl_cdll->name, dlerror()));
         exit(1);
     }
 
@@ -934,14 +935,16 @@ char *modname;
     {
         if(strfilenamecmp(modname,dllent->name) == 0)
         {
-            WRITEMSG(HHCHD005E,dllent->name);
+            WRMSG(HHC01519, "E", dllent->name);
             return -1;
         }
     }
 
     if(!(dllent = malloc(sizeof(DLLENT))))
     {
-        WRITEMSG(HHCHD006S,strerror(errno));
+        char buf[40];
+        sprintf(buf, "malloc(%lu)", sizeof(DLLENT));
+        WRMSG(HHC01511, "S", buf, strerror(errno));
         return -1;
     }
 
@@ -950,7 +953,7 @@ char *modname;
     if(!(dllent->dll = hdl_dlopen(name, RTLD_NOW)))
     {
         if(!(flags & HDL_LOAD_NOMSG))
-            WRITEMSG(HHCHD007E,name,dlerror());
+            WRMSG(HHC01516, "E", name, dlerror());
         free(dllent);
         return -1;
     }
@@ -959,7 +962,7 @@ char *modname;
 
     if(!(dllent->hdldepc = dlsym(dllent->dll,HDL_DEPC_Q)))
     {
-        WRITEMSG(HHCHD013E,dllent->name, dlerror());
+        WRMSG(HHC01517, "E", dllent->name, dlerror());
         dlclose(dllent->dll);
         free(dllent);
         return -1;
@@ -969,7 +972,7 @@ char *modname;
     {
         if(tmpdll->hdldepc == dllent->hdldepc)
         {
-            WRITEMSG(HHCHD016E,dllent->name, tmpdll->name);
+            WRMSG(HHC01520, "E", dllent->name, tmpdll->name);
             dlclose(dllent->dll);
             free(dllent);
             return -1;
@@ -998,7 +1001,7 @@ char *modname;
     {
         if((dllent->hdldepc)(&hdl_dchk))
         {
-            WRITEMSG(HHCHD014E,dllent->name);
+            WRMSG(HHC01518, "E", dllent->name);
             if(!(flags & HDL_LOAD_FORCE))
             {
                 dlclose(dllent->dll);
@@ -1069,7 +1072,7 @@ char *modname;
         {
             if((*dllent)->flags & (HDL_LOAD_MAIN | HDL_LOAD_NOUNLOAD))
             {
-                WRITEMSG(HHCHD015E,(*dllent)->name);
+                WRMSG(HHC01521, "E", (*dllent)->name);
                 release_lock(&hdl_lock);
                 return -1;
             }
@@ -1079,7 +1082,7 @@ char *modname;
                     for(hnd = (*dllent)->hndent; hnd; hnd = hnd->next)
                         if(hnd->hnd == dev->hnd)
                         {
-                            WRITEMSG(HHCHD008E,dev->devnum,(*dllent)->name);
+                            WRMSG(HHC01522, "E",(*dllent)->name, SSID_TO_LCSS(dev->ssid), dev->devnum);
                             release_lock(&hdl_lock);
                             return -1;
                         }
@@ -1091,7 +1094,7 @@ char *modname;
                 
                 if((rc = ((*dllent)->hdlfini)()))
                 {
-                    WRITEMSG(HHCHD017E,(*dllent)->name);
+                    WRMSG(HHC01523, "E", (*dllent)->name);
                     release_lock(&hdl_lock);
                     return rc;
                 }
@@ -1163,7 +1166,7 @@ char *modname;
 
     release_lock(&hdl_lock);
 
-    WRITEMSG(HHCHD009E,modname);
+    WRMSG(HHC01524, "E", modname);
 
     return -1;
 }

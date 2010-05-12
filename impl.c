@@ -597,7 +597,7 @@ int     dll_count;                      /* index into array          */
         if (hdl_load("dyngui",HDL_LOAD_DEFAULT) != 0)
         {
             usleep(10000); /* (give logger thread time to issue
-                               preceding HHCHD007E message) */
+                               preceding HHC01516E message) */
             WRMSG(HHC01409, "S");
             delayed_exit(-1);
             return(1);

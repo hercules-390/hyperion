@@ -6917,15 +6917,15 @@ int ldmod_cmd(int argc, char *argv[], char *cmdline)
 
     if(argc <= 1)
     {
-        WRITEMSG(HHCHD440E,argv[0]);
+        WRMSG(HHC01525,"E",argv[0]);
         return -1;
     }
 
     for(i = 1; i < argc; i++)
     {
-        WRITEMSG(HHCHD438I,argv[i]);
+        WRMSG(HHC01526,"I",argv[i]);
         if(!hdl_load(argv[i], 0))
-            WRITEMSG(HHCHD439I,argv[i]);
+            WRMSG(HHC01527,"I",argv[i]);
     }
 
     return 0;
@@ -6943,15 +6943,15 @@ int rmmod_cmd(int argc, char *argv[], char *cmdline)
 
     if(argc <= 1)
     {
-        WRITEMSG(HHCHD440E,argv[0]);
+        WRMSG(HHC01525,"E",argv[0]);
         return -1;
     }
 
     for(i = 1; i < argc; i++)
     {
-        WRITEMSG(HHCHD437I,argv[i]);
+        WRMSG(HHC01528,"I",argv[i]);
         if(!hdl_dele(argv[i]))
-            WRITEMSG(HHCHD436I,argv[i]);
+            WRMSG(HHC01529,"I",argv[i]);
     }
 
     return 0;
@@ -6997,7 +6997,7 @@ int modpath_cmd(int argc, char *argv[], char *cmdline)
 
     if(argc <= 1)
     {
-        WRITEMSG(HHCHD435E,argv[0]);
+        WRMSG(HHC01530,"E",argv[0]);
         return -1;
     }
     else

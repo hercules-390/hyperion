@@ -633,6 +633,40 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01425 "Hercules shutdown complete"
 #define HHC01426 "Shutdown initiated"
 
+// reserve 015xx for Hercules dynamic loader      
+/* hdl.c */
+#define HHC01500 "HDL: begin shutdown sequence"
+#define HHC01501 "HDL: calling '%s'"
+#define HHC01502 "HDL: calling '%s' complete"
+#define HHC01503 "HDL: calling '%s' skipped during windows shutdown immediate"
+#define HHC01504 "HDL: shutdown sequence complete"
+#define HHC01505 "HDL: path name length %d exceeds maximum of %d"
+#define HHC01506 "HDL: change request of directory to '%s' is ignored"
+#define HHC01507 "HDL: directory remains '%s'; taken from startup"
+#define HHC01508 "HDL: loadable module directory is '%s'"
+#define HHC01509 "HDL: dependency check failed for '%s', version '%s' expected '%s'"
+#define HHC01510 "HDL: dependency check failed for '%s', size %d expected %d"
+#define HHC01511 "HDL: error in function '%s': '%s'"
+#define HHC01512 "HDL: begin termination sequence"
+#define HHC01513 "HDL: calling module cleanup routine '%s'"
+#define HHC01514 "HDL: module cleanup routine '%s' complete"
+#define HHC01515 "HDL: termination sequence complete"
+#define HHC01516 "HDL: unable to open dll '%s': '%s'"
+#define HHC01517 "HDL: no dependency section in '%s': '%s'"
+#define HHC01518 "HDL: dependency check failed for module '%s'"
+#define HHC01519 "HDL: module '%s' already loaded"
+#define HHC01520 "HDL: dll '%s' is duplicate of '%s'"
+#define HHC01521 "HDL: unloading of module '%s' not allowed"
+#define HHC01522 "HDL: module '%s' bound to device %1d:%04X"
+#define HHC01523 "HDL: unload of module '%s' rejected by final section"
+#define HHC01524 "HDL: module '%s' not found"
+#define HHC01525 "HDL: usage: %s <module>"
+#define HHC01526 "HDL: loading module '%s'..."
+#define HHC01527 "HDL: module '%s' loaded"
+#define HHC01528 "HDL: unloading module '%s'..."
+#define HHC01529 "HDL: module '%s' unloaded"
+#define HHC01530 "HDL: usage: %s <path>"
+
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
 #define HHC04100 "%s version %s initiated"
@@ -800,36 +834,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCHC003E "Device(%4.4X) Missing Generic Channel method"
 #define HHCHC999W "Device(%4.4X) Generic channel is currently in development"
 
-/* hdl.c */
-#define HHCHD001E "Registration malloc failed for (%s)"
-#define HHCHD005E "Module(%s) already loaded"
-#define HHCHD006S "Cannot allocate memory for DLL descriptor: (%s)"
-#define HHCHD007E "Unable to open DLL(%s): (%s)"
-#define HHCHD008E "Device(%4.4X) bound to (%s)"
-#define HHCHD009E "Module(%s) not found"
-#define HHCHD010I "Dependency check failed for (%s), version(%s) expected(%s)"
-#define HHCHD011I "Dependency check failed for (%s), size(%d) expected(%d)"
-#define HHCHD013E "No dependency section in (%s): (%s)"
-#define HHCHD014E "Dependency check failed for module(%s)"
-#define HHCHD015E "Unloading of module(%s) not allowed"
-#define HHCHD016E "DLL(%s) is duplicate of (%s)"
-#define HHCHD017E "Unload of module(%s) rejected by final section"
-#define HHCHD018I "%soadable module directory is '%s'"
-#define HHCHD019E "Loadable module directory path name length '%d' exceeds maximum of '%d'" 
-#define HHCHD020W "Loadable module directory remains '%s'; taken from startup"
-
-#define HHCHD022W "Change request of loadable module directory to '%s' is ignored"
-#define HHCHD900I "Begin shutdown sequence"
-#define HHCHD901I "Calling (%s)"
-#define HHCHD902I "(%s) complete"
-#define HHCHD903I "(%s) skipped during Windows SHUTDOWN immediate"
-#define HHCHD909I "Shutdown sequence complete"
-#define HHCHD950I "Begin HDL termination sequence"
-#define HHCHD951I "Calling module(%s) cleanup routine"
-#define HHCHD952I "Module(%s) cleanup complete"
-#define HHCHD959I "HDL Termination sequence complete"
-
-
 /* hsccmd.c */
 #define HHCMD001W "Ignoring invalid SCRIPT file pause statement: %s"
 #define HHCMD002I "EOF reached on SCRIPT file. Processing complete"
@@ -990,12 +994,6 @@ cpu.c:123:HABC1234I This is a message
 
 #define HHCMD433E "Script file \"%s\" not found"
 #define HHCMD434I "Hercules instruction trace displayed in %s mode"
-#define HHCHD435E "Usage: %s <path>"
-#define HHCHD436I "Module %s unloaded"
-#define HHCHD437I "Unloading %s ..."
-#define HHCHD438I "Loading %s ..."
-#define HHCHD439I "Module %s loaded"
-#define HHCHD440E "Usage: %s <module>"
 #define HHCMD441S "DEFSYM requires a single value (use quotes if necessary)"
 #define HHCMD442E "invalid address: %s"
 #define HHCMD443E "loadtext rejected: filename missing"
@@ -1071,10 +1069,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCLG015I "Log closed"
 #define HHCLG016E "Error opening logfile(%s) %s"
 #define HHCLG017S "Log file(%s) fdopen failed %s"
-
-/* panel.c */
-#define HHCPN002S "Cannot obtain keyboard buffer: (%s)"
-#define HHCPN003S "Cannot obtain message buffer: (%s)"
 
 /* pttrace.c */
 #define HHCPT001E "Invalid argument(%s)"

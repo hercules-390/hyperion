@@ -1875,7 +1875,9 @@ char    buf[1024];                      /* Buffer workarea           */
     /* Obtain storage for the keyboard buffer */
     if (!(kbbuf = malloc (kbbufsize)))
     {
-        WRITEMSG(HHCPN002S, strerror(errno));
+        char buf[40];
+        sprintf(buf, "malloc(%lu)", kbbufsize);
+        WRMSG(HHC00075, "S", buf, strerror(errno));
         return;
     }
 
@@ -1883,8 +1885,10 @@ char    buf[1024];                      /* Buffer workarea           */
     msgbuf = malloc (MAX_MSGS * sizeof(PANMSG));
     if (msgbuf == NULL)
     {
+        char buf[40];
+        sprintf(buf, "malloc(%lu)", MAX_MSGS * sizeof(PANMSG));
         fprintf (stderr,
-                MSG(HHCPN003S, "", strerror(errno)));
+                MSG(HHC00075, "S", buf, strerror(errno)));
         return;
     }
 
