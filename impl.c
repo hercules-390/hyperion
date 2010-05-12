@@ -380,8 +380,6 @@ int     dll_count;                      /* index into array          */
        hdl_shut will ensure entries are only called once */
     atexit(hdl_shut);
 
-    set_codepage(NULL);
-
     /* Clear the system configuration block */
     memset (&sysblk, 0, sizeof(SYSBLK));
 
@@ -458,6 +456,11 @@ int     dll_count;                      /* index into array          */
        being redirected to the logger facility.
     */
     logger_init();
+
+    /*
+       Setup the initial codepage
+    */
+    set_codepage(NULL);
 
     /* Now display the version information again after logger_init
        has been called so that either the panel display thread or the

@@ -819,9 +819,14 @@ size_t nibytes, nobytes;
 
 DLL_EXPORT void set_codepage(char *name)
 {
+    int dflt = FALSE;
+
     if(name == NULL)
+    {
+        dflt = TRUE;
         if(!(name = getenv("HERCULES_CP")))
              name = "default";
+    }
 
     for(codepage_conv = cpconv; 
         codepage_conv->name && strcasecmp(codepage_conv->name,name);
@@ -829,8 +834,9 @@ DLL_EXPORT void set_codepage(char *name)
 
     if(codepage_conv->name)
     {
-#if 1
-        WRITEMSG(HHCMD152I, "internal", name);
+#if TRUE
+        if (!dflt)
+            WRITEMSG(HHCMD152I, "internal", name);
 #endif
     }
     else
@@ -838,13 +844,17 @@ DLL_EXPORT void set_codepage(char *name)
 #if defined(HAVE_ICONV)
         if(!set_iconv_cp(name))
         {
-#if 1
-            WRITEMSG(HHCMD152I, "external", name);
+#if TRUE
+            if (!dflt)
+                WRITEMSG(HHCMD152I, "external", name);
 #endif
         }
         else
 #endif /*defined(HAVE_ICONV)*/
-            WRITEMSG (HHCMD151E, name);
+        {
+            if (!dflt)
+                WRITEMSG (HHCMD151E, name);
+        }
     }
 }
 
