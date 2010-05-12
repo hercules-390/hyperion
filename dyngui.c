@@ -212,10 +212,10 @@ void ReadInputData ( int nTimeoutMillsecs )
 
         // A bona fide error occurred; abort...
 
-        WRITEMSG
+        WRMSG
         (
-            HHCDG003S
-
+            HHC01511, "S"
+            ,"select()"
             ,strerror(HSO_errno)
         );
 
@@ -250,10 +250,10 @@ void ReadInputData ( int nTimeoutMillsecs )
 
         // A bona fide error occurred; abort...
 
-        WRITEMSG
+        WRMSG
         (
-            HHCDG004S 
-
+            HHC01511, "S" 
+            ,"read()"
             ,strerror(errno)
         );
 
@@ -1581,10 +1581,10 @@ void  UpdateDeviceStatus ()
 
         if (0 != szQueryDeviceBuff[MAX_DEVICEQUERY_LEN])    // (buffer overflow?)
         {
-            WRITEMSG
+            WRMSG
             (
-                HHCDG005E
-
+                HHC01540, "E"
+                ,SSID_TO_LCSS(pDEVBLK->ssid)
                 ,pDEVBLK->devnum
 
             );
@@ -1683,10 +1683,10 @@ void  NewUpdateDevStats ()
 
         if (0 != szQueryDeviceBuff[MAX_DEVICEQUERY_LEN])    // (buffer overflow?)
         {
-            WRITEMSG
+            WRMSG
             (
-                HHCDG005E 
-
+                HHC01540, "E" 
+                ,SSID_TO_LCSS(pDEVBLK->ssid)
                 ,pDEVBLK->devnum
 
             );
@@ -1900,10 +1900,10 @@ static char *DisQuietCmd[] = { "$zapcmd", "quiet", "NoCmd" };
 
     if ( !bDoneProcessing )
     {
-        WRITEMSG(HHCDG001I);
+        WRMSG(HHC01541,"I");
         Initialize();               // (allocate buffers, etc)
         ProcessingLoop();           // (primary processing loop)
-        WRITEMSG(HHCDG002I);
+        WRMSG(HHC01542,"I");
         Cleanup();                  // (de-allocate resources)
     }
 }

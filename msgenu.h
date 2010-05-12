@@ -673,6 +673,11 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01529 "HDL: module '%s' unloaded"
 #define HHC01530 "HDL: usage: %s <path>"
 
+/* dynguic. */
+#define HHC01540 "HDL: query buffer overflow for device %1d:%04X"
+#define HHC01541 "HDL: dyngui.dll initiated"
+#define HHC01542 "HDL: dyngui.dll terminated"
+
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
 #define HHC04100 "%s version %s initiated"
@@ -789,13 +794,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCDN001I "Diagnose 0x308 called: System is re-ipled"
 #define HHCDN002I "Checking cpu(%d)"
 #define HHCDN003I "Waiting 1 second for cpu's to stop"
-
-/* dynguic. */
-#define HHCDG001I "Dyngui.dll initiated"
-#define HHCDG002I "Dyngui.dll terminated"
-#define HHCDG003S "Select failed on input stream: %s"
-#define HHCDG004S "Read failed on input stream: %s"
-#define HHCDG005E "Device(%4.4X) query buffer overflow"
 
 /* ecpsvm.c */
 #define HHCEV001I "| %-9s | %8d | %8d |  %3d%% |"
