@@ -61,7 +61,7 @@ static int hchan_init_handler ( DEVBLK *dev, int argc, char *argv[] )
     {
         if(argc<1)
         {
-            WRITEMSG(HHCHC003E,dev->devnum);
+            WRMSG(HHC01350,"E",SSID_TO_LCSS(dev->ssid),dev->devnum);
             rc=-1;
             break;
         }
@@ -81,15 +81,15 @@ static int hchan_init_handler ( DEVBLK *dev, int argc, char *argv[] )
             rc=hchan_init_int(dev,argc,argv);
             break;
         }
-        WRITEMSG(HHCHC001E,dev->devnum,argv[0]);
+        WRMSG(HHC01351,"E",SSID_TO_LCSS(dev->ssid),dev->devnum,argv[0]);
         rc=-1;
         break;
     }
     if(rc)
     {
-        WRITEMSG(HHCHC002T,dev->devnum);
+        WRMSG(HHC01352,"T",SSID_TO_LCSS(dev->ssid),dev->devnum);
     }
-    WRITEMSG(HHCHC999W,dev->devnum);
+    WRMSG(HHC01353,"W",SSID_TO_LCSS(dev->ssid),dev->devnum);
     return(rc);
 }
 

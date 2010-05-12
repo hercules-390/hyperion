@@ -601,6 +601,12 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01334 "%1d:%04X CH: asynchronous I/O ccw addr %8.8x"
 #define HHC01335 "%1d:%04X CH: synchronous  I/O ccw addr %8.8x"
 
+/* hchan.c */
+#define HHC01350 "%1d:%04X CH: missing generic channel method"
+#define HHC01351 "%1d:%04X CH: incorrect generic channel method '%s'"
+#define HHC01352 "%1d:%04X CH: generic channel initialisation failed"
+#define HHC01353 "%1d:%04X CH: generic channel is currently in development"
+
 // reserve 014xx for initialization and shutdown
 /* impl.c */
 #define HHC01400 "Ctrl-break intercepted: interrupt key depressed simulated"
@@ -827,12 +833,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCCP027I "External interrupt: Service signal %8.8X"
 #define HHCCP028I "External interrupt: Block I/O %s"
 #define HHCCP031I "%1d:%04X Processing Block I/O interrupt: code(%4.4X) parm(%16.16X) status(%2.2X) subcode(%2.2X)"
-
-/* hchan.c */
-#define HHCHC001E "Device(%4.4X) Incorrect Generic Channel method(%s)"
-#define HHCHC002T "Device(%4.4X) Generic channel initialisation failed"
-#define HHCHC003E "Device(%4.4X) Missing Generic Channel method"
-#define HHCHC999W "Device(%4.4X) Generic channel is currently in development"
 
 /* hsccmd.c */
 #define HHCMD001W "Ignoring invalid SCRIPT file pause statement: %s"
