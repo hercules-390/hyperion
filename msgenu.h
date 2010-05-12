@@ -430,6 +430,15 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00827 "Processor %s%02X: engine %02X type %1d set: '%s'"
 #define HHC00828 "Processor %s%02X: ipl failed: %s"
 
+/* external.c */
+#define HHC00840 "External interrupt: interrupt key"
+#define HHC00841 "External interrupt: clock comparator"
+#define HHC00842 "External interrupt: CPU timer=%16.16" I64_FMT "X"
+#define HHC00843 "External interrupt: interval timer"
+#define HHC00844 "%1d:%04X: processing block I/O interrupt: code %4.4X parm %16.16X status %2.2X subcode %2.2X"
+#define HHC00845 "External interrupt: block I/O %s"
+#define HHC00846 "External interrupt: service signal %8.8X"
+
 // reserve 009xx for ctc related messages 
 /*ctc_ctci.c*/
 #define HHC00900 "%1d:%04X CTC: error in function '%s': '%s'"
@@ -822,15 +831,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCEV030E "Unknown EVM subcommand %s"
 #define HHCEV031I "ECPS:VM Command processor complete"
 //#define HHCEV300D in ecpsvm.c
-
-/* external.c */
-#define HHCCP023I "External interrupt: Interrupt key"
-#define HHCCP024I "External interrupt: Clock comparator"
-#define HHCCP025I "External interrupt: CPU timer=%16.16" I64_FMT "X"
-#define HHCCP026I "External interrupt: Interval timer"
-#define HHCCP027I "External interrupt: Service signal %8.8X"
-#define HHCCP028I "External interrupt: Block I/O %s"
-#define HHCCP031I "%1d:%04X Processing Block I/O interrupt: code(%4.4X) parm(%16.16X) status(%2.2X) subcode(%2.2X)"
 
 /* hsccmd.c */
 #define HHCMD001W "Ignoring invalid SCRIPT file pause statement: %s"

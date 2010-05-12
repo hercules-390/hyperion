@@ -167,7 +167,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
     /* External interrupt if console interrupt key was depressed */
     if ( OPEN_IC_INTKEY(regs) && !SIE_MODE(regs) )
     {
-        WRITEMSG (HHCCP023I);
+        WRMSG (HHC00840, "I");
 
         /* Reset interrupt key pending */
         OFF_IC_INTKEY;
@@ -278,7 +278,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
     {
         if (CPU_STEPPING_OR_TRACING_ALL)
         {
-            WRITEMSG (HHCCP024I);
+            WRMSG (HHC00841, "I");
         }
         ARCH_DEP(external_interrupt) (EXT_CLOCK_COMPARATOR_INTERRUPT, regs);
     }
@@ -289,7 +289,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
     {
         if (CPU_STEPPING_OR_TRACING_ALL)
         {
-            WRITEMSG (HHCCP025I, (long long)CPU_TIMER(regs) << 8);
+            WRMSG (HHC00842, "I", (long long)CPU_TIMER(regs) << 8);
         }
         ARCH_DEP(external_interrupt) (EXT_CPU_TIMER_INTERRUPT, regs);
     }
@@ -304,7 +304,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
     {
         if (CPU_STEPPING_OR_TRACING_ALL)
         {
-            WRITEMSG (HHCCP026I);
+            WRMSG (HHC00843, "I");
         }
         OFF_IC_ITIMER(regs);
         ARCH_DEP(external_interrupt) (EXT_INTERVAL_TIMER_INTERRUPT, regs);
@@ -333,7 +333,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
 
            if (sysblk.biodev->ccwtrace)
            {
-           WRITEMSG (HHCCP031I,
+           WRMSG (HHC00844, "I",
                 SSID_TO_LCSS(sysblk.biodev->ssid),
                 sysblk.biodev->devnum,
                 sysblk.servcode,
@@ -356,7 +356,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
                {
 		  char buf[20];
 		  sprintf (buf, "%16.16X", (unsigned) sysblk.bioparm);
-                  WRITEMSG (HHCCP028I, buf);
+                  WRMSG (HHC00845,"I", buf);
                }
 
                /* Set the main storage reference and change bits   */
@@ -394,7 +394,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
               {
 		 char buf[20];
 		 sprintf (buf, "%8.8X", (U32) sysblk.bioparm);
-                 WRITEMSG (HHCCP028I, buf);
+                 WRMSG (HHC00845,"I", buf);
               }
 
               /* Store Block I/O parameter at PSA+X'80' */
@@ -426,7 +426,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
 
              if (CPU_STEPPING_OR_TRACING_ALL)
              {
-                 WRITEMSG (HHCCP027I, sysblk.servparm);
+                 WRMSG (HHC00846,"I", sysblk.servparm);
              }
 
              /* Store service signal parameter at PSA+X'80' */
@@ -455,7 +455,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
 
         if (CPU_STEPPING_OR_TRACING_ALL)
         {
-            WRITEMSG (HHCCP027I, sysblk.servparm);
+            WRMSG (HHC00846,"I", sysblk.servparm);
         }
 
         /* Store service signal parameter at PSA+X'80' */
