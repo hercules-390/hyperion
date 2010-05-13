@@ -4442,8 +4442,11 @@ void cckd_lock_devchain(int flag)
         || (!flag && cckdblk.devusers < 0))
     {
         cckdblk.devwaiters++;
-#if 0
+#if FALSE
         {
+#if defined( OPTION_WTHREADS )
+            timeout = timed_wait_condition(&cckdblk.devcond, &cckdblk.devlock, 2000);
+#else
         struct timespec tm;
         struct timeval  now;
         int             timeout;
@@ -4452,6 +4455,7 @@ void cckd_lock_devchain(int flag)
             tm.tv_sec = now.tv_sec + 2;
             tm.tv_nsec = now.tv_usec * 1000;
             timeout = timed_wait_condition(&cckdblk.devcond, &cckdblk.devlock, &tm);
+#endif
             if (timeout) cckd_print_itrace();
         }
 #else
@@ -4493,7 +4497,9 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 long long       size, fsiz;             /* File size, free size      */
 struct timeval  tv_now;                 /* Time-of-day (as timeval)  */
 time_t          tt_now;                 /* Time-of-day (as time_t)   */
+#if !defined( OPTION_WTHREADS )
 struct timespec tm;                     /* Time-of-day to wait       */
+#endif
 int             gc;                     /* Garbage collection state  */
 int             gctab[5]= {             /* default gcol parameters   */
                            4096,        /* critical  50%   - 100%    */
@@ -4501,7 +4507,6 @@ int             gctab[5]= {             /* default gcol parameters   */
                            1024,        /* moderate  12.5% -  25%    */
                             512,        /* light      6.3% -  12.5%  */
                             256};       /* none       0%   -   6.3%  */
-//char *gcstates[] = {"critical","severe","moderate","light","none"};
 
     gettimeofday (&tv_now, NULL);
 
@@ -4616,13 +4621,23 @@ int             gctab[5]= {             /* default gcol parameters   */
         cckd_unlock_devchain();
 
         /* wait a bit */
+
+        // Get the time of day again for the file sync check above
         gettimeofday (&tv_now, NULL);
-        tm.tv_sec = tv_now.tv_sec + cckdblk.gcwait;
-        tm.tv_nsec = tv_now.tv_usec * 1000;
         tt_now = tv_now.tv_sec + ((tv_now.tv_usec + 500000)/1000000);
         cckd_trace (dev, "gcol wait %d seconds at %s",
                     cckdblk.gcwait, ctime (&tt_now));
+
+#if defined( OPTION_WTHREADS )
+// Use a relative time value 
+        timed_wait_condition (&cckdblk.gccond, &cckdblk.gclock, cckdblk.gcwait * 1000);
+
+#else
+        tm.tv_sec = tv_now.tv_sec + cckdblk.gcwait;
+        tm.tv_nsec = tv_now.tv_usec * 1000;
         timed_wait_condition (&cckdblk.gccond, &cckdblk.gclock, &tm);
+#endif
+
     }
 
     if (!cckdblk.batch)

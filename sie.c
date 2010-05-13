@@ -1040,8 +1040,13 @@ int ARCH_DEP(run_sie) (REGS *regs)
 #endif
                             sysblk.waiting_mask |= regs->cpubit;
                             sysblk.intowner = LOCK_OWNER_NONE;
+#if defined( OPTION_WTHREADS )
                             timed_wait_condition
-                                 (&regs->intcond, &sysblk.intlock, &waittime);
+                                 ( &regs->intcond, &sysblk.intlock, 3 );
+#else
+                            timed_wait_condition
+                                 ( &regs->intcond, &sysblk.intlock, &waittime );
+#endif
                             while (sysblk.syncing)
                                  wait_condition (&sysblk.sync_bc_cond, &sysblk.intlock);
                             sysblk.intowner = regs->cpuad;

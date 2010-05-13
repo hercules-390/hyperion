@@ -161,12 +161,37 @@
   #define  DLL_EXPORT
 #endif
 #define HTTP_SERVER_CONNECT_KLUDGE
+
+#if defined( OPTION_WTHREADS ) && ( _WIN32_WINNT < _WIN32_WINNT_WIN2K )
+    #pragma message( MSVC_MESSAGE_LINENUM "OPTION_WTHREADS specified on unsupported version of Windows; Using FTHREADS" )
+    #undef OPTION_WTHREADS
+    #define OPTION_FTHREADS
+#endif
+
+#if defined( OPTION_WTHREADS )
+    #undef OPTION_FTHREADS
+    #undef OPTION_FISHIO                  /* User Herc's I/O Scheduler */
+    #undef OPTION_PTTRACE
+#endif // defined( OPTION_WTHREADS ) 
+
 /*  Note:  OPTION_FISHIO  only possible with  OPTION_FTHREADS        */
 #if defined(OPTION_FTHREADS)
   #define OPTION_FISHIO                 /* Use Fish's I/O scheduler  */
 #else
   #undef  OPTION_FISHIO                 /* Use Herc's I/O scheduler  */
 #endif
+
+#if defined( OPTION_FTHREADS ) && defined( OPTION_WTHREADS )
+    #pragma message( MSVC_MESSAGE_LINENUM "error: Both FTHREADS and WTHREADS requested" )
+    #error Either OPTION_FTHREADS or OPTION_WTHREADS must be specified, not both
+#endif
+
+#if !defined( OPTION_FTHREADS ) && !defined( OPTION_WTHREADS )
+    #pragma message( MSVC_MESSAGE_LINENUM "error: Neither FTHREADS or WTHREADS specified" )
+    #error Either OPTION_FTHREADS or OPTION_WTHREADS must be specified
+#endif
+
+
 #define OPTION_W32_CTCI                 /* Fish's TunTap for CTCA's  */
 #undef  TUNTAP_IFF_RUNNING_NEEDED       /* TunTap32 doesn't allow it */
 #define OPTION_SCSI_TAPE                /* SCSI tape support         */

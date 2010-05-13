@@ -1,5 +1,9 @@
-/* FEATALL.H    (c) Copyright Jan Jaeger, 2000-2009                  */
+/* FEATALL.H    (c) Copyright Jan Jaeger, 2000-2010                  */
 /*              Architecture-dependent macro definitions             */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 
@@ -46,9 +50,15 @@
                                            of inter-thread signaling */
 #define OPTION_TIMESTAMP_LOGFILE        /* Hardcopy logfile HH:MM:SS */
 #define OPTION_IPLPARM                  /* IPL PARM a la VM          */
+
+#define OPTION WTHREADS
+
 #ifndef FISH_HANG
+#ifndef OPTION_WTHREADS
 #define OPTION_PTTRACE                  /* Pthreads tracing          */
 #endif
+#endif
+
 //#define OPTION_DEBUG_MESSAGES         /* Prefix msgs with filename
 //                                         and line# if DEBUG build  */
 #define OPTION_SET_STSI_INFO            /* Set STSI info in cfg file */

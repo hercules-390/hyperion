@@ -664,20 +664,33 @@ void  CTCI_Read( DEVBLK* pDEVBLK,   U16   sCount,
 
         if( !pCTCBLK->fDataPending )
         {
-            struct timespec waittime;
-            struct timeval  now;
-
             release_lock( &pCTCBLK->Lock );
 
-            gettimeofday( &now, NULL );
-
-            waittime.tv_sec  = now.tv_sec  + CTC_READ_TIMEOUT_SECS;
-            waittime.tv_nsec = now.tv_usec * 1000;
-
+#if defined( OPTION_WTHREADS )
+// Use a straight relative wait rather than the calculated wait of the POSIX
+// based threading.
             obtain_lock( &pCTCBLK->EventLock );
             rc = timed_wait_condition( &pCTCBLK->Event,
                                        &pCTCBLK->EventLock,
-                                       &waittime );
+                                       CTC_READ_TIMEOUT_SECS * 1000 );
+
+#else //!defined( OPTION_WTHREADS )
+            {
+                struct timespec waittime;
+                struct timeval  now;
+
+                gettimeofday( &now, NULL );
+
+                waittime.tv_sec  = now.tv_sec  + CTC_READ_TIMEOUT_SECS;
+                waittime.tv_nsec = now.tv_usec * 1000;
+
+                obtain_lock( &pCTCBLK->EventLock );
+                rc = timed_wait_condition( &pCTCBLK->Event,
+                                           &pCTCBLK->EventLock,
+                                           &waittime );
+            }
+#endif // defined( OPTION_WTHREADS)
+
             release_lock( &pCTCBLK->EventLock );
 
             if( rc == ETIMEDOUT || rc == EINTR )

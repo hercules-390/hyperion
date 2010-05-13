@@ -801,23 +801,36 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U16   sCount,
 
         if( !( pLCSDEV->fDataPending || pLCSDEV->fReplyPending ) )
         {
-            struct timespec waittime;
-            struct timeval  now;
-
             release_lock( &pLCSDEV->Lock );
 
-            // Wait 5 seconds then check for channel conditions
-
-            gettimeofday( &now, NULL );
-
-            waittime.tv_sec  = now.tv_sec  + CTC_READ_TIMEOUT_SECS;
-            waittime.tv_nsec = now.tv_usec * 1000;
+#if defined( OPTION_WTHREADS )
+// Use a straight relative wait rather than the calculated wait of the POSIX
+// based threading.
 
             obtain_lock( &pLCSDEV->EventLock );
 
             rc = timed_wait_condition( &pLCSDEV->Event,
                                        &pLCSDEV->EventLock,
-                                       &waittime );
+                                       CTC_READ_TIMEOUT_SECS * 1000 );
+
+#else //!defined( OPTION_WTHREADS )
+            // Wait 5 seconds then check for channel conditions
+            {
+                struct timespec waittime;
+                struct timeval  now;
+
+                gettimeofday( &now, NULL );
+
+                waittime.tv_sec  = now.tv_sec  + CTC_READ_TIMEOUT_SECS;
+                waittime.tv_nsec = now.tv_usec * 1000;
+
+                obtain_lock( &pLCSDEV->EventLock );
+
+                rc = timed_wait_condition( &pLCSDEV->Event,
+                                           &pLCSDEV->EventLock,
+                                           &waittime );
+            }
+#endif // defined( OPTION_WTHREADS)
 
             release_lock( &pLCSDEV->EventLock );
 

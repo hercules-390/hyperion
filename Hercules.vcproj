@@ -63,26 +63,6 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Debug|Itanium"
-			OutputDirectory="./msvc.debug.IA64.bin"
-			IntermediateDirectory="./msvc.debug.IA64.bin"
-			ConfigurationType="0"
-			>
-			<Tool
-				Name="VCNMakeTool"
-				BuildCommandLine="makefile.bat DEBUG-IA64 makefile.msvc 32"
-				ReBuildCommandLine="makefile.bat DEBUG-IA64 makefile.msvc 32 -a"
-				CleanCommandLine="makefile.bat DEBUG-IA64 makefile.msvc 32 clean"
-				Output="$(OutDir)"
-				PreprocessorDefinitions="WIN32;_WIN64;_DEBUG;_MSVC_;CPU=IA64;HOST_ARCH=IA64;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY"
-				IncludeSearchPath=""
-				ForcedIncludes=""
-				AssemblySearchPath=""
-				ForcedUsingAssemblies=""
-				CompileAsManaged=""
-			/>
-		</Configuration>
-		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="./msvc.dllmod.bin"
 			IntermediateDirectory="./msvc.dllmod.obj"
@@ -115,26 +95,6 @@
 				CleanCommandLine="makefile.bat RETAIL-X64 makefile.msvc 32 clean"
 				Output="$(OutDir)"
 				PreprocessorDefinitions="WIN32;_WIN64;NDEBUG;_MSVC_;CPU=AMD64;HOST_ARCH=AMD64;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY"
-				IncludeSearchPath=""
-				ForcedIncludes=""
-				AssemblySearchPath=""
-				ForcedUsingAssemblies=""
-				CompileAsManaged=""
-			/>
-		</Configuration>
-		<Configuration
-			Name="Release|Itanium"
-			OutputDirectory="./msvc.IA64.bin"
-			IntermediateDirectory="./msvc.IA64.bin"
-			ConfigurationType="0"
-			>
-			<Tool
-				Name="VCNMakeTool"
-				BuildCommandLine="makefile.bat RETAIL-IA64 makefile.msvc 32"
-				ReBuildCommandLine="makefile.bat RETAIL-IA64 makefile.msvc 32 -a"
-				CleanCommandLine="makefile.bat RETAIL-IA64 makefile.msvc 32 clean"
-				Output="$(OutDir)"
-				PreprocessorDefinitions="WIN32;_WIN64;NDEBUG;_MSVC_;CPU=IA64;HOST_ARCH=IA64;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY"
 				IncludeSearchPath=""
 				ForcedIncludes=""
 				AssemblySearchPath=""
@@ -183,25 +143,6 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Debug-All|Itanium"
-			ConfigurationType="0"
-			BuildLogFile="$(SolutionDir)$(ConfigurationName) BuildLog.htm"
-			>
-			<Tool
-				Name="VCNMakeTool"
-				BuildCommandLine="makefile.bat DEBUG-ALL makefile.msvc 32 &quot;$(SolutionDir)&quot;"
-				ReBuildCommandLine="makefile.bat DEBUG-ALL makefile.msvc 32 -a &quot;$(SolutionDir)&quot;"
-				CleanCommandLine="makefile.bat DEBUG-ALL makefile.msvc 32 clean &quot;$(SolutionDir)&quot;"
-				Output="$(OutDir)"
-				PreprocessorDefinitions="WIN32;_WIN64;_DEBUG;_MSVC_;CPU=IA64;HOST_ARCH=IA64;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY"
-				IncludeSearchPath=""
-				ForcedIncludes=""
-				AssemblySearchPath=""
-				ForcedUsingAssemblies=""
-				CompileAsManaged=""
-			/>
-		</Configuration>
-		<Configuration
 			Name="Release-All|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
@@ -242,25 +183,6 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Release-All|Itanium"
-			ConfigurationType="0"
-			BuildLogFile="$(SolutionDir)$(ConfigurationName) BuildLog.htm"
-			>
-			<Tool
-				Name="VCNMakeTool"
-				BuildCommandLine="makefile.bat RETAIL-ALL makefile.msvc 32 &quot;$(SolutionDir)&quot;"
-				ReBuildCommandLine="makefile.bat RETAIL-ALL makefile.msvc 32 -a &quot;$(SolutionDir)&quot;"
-				CleanCommandLine="makefile.bat RETAIL-ALL makefile.msvc 32 clean &quot;$(SolutionDir)&quot;"
-				Output="$(OutDir)"
-				PreprocessorDefinitions="WIN32;_WIN64;NDEBUG;_MSVC_;CPU=IA64;HOST_ARCH=IA64;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY"
-				IncludeSearchPath=""
-				ForcedIncludes=""
-				AssemblySearchPath=""
-				ForcedUsingAssemblies=""
-				CompileAsManaged=""
-			/>
-		</Configuration>
-		<Configuration
 			Name="All-All|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
@@ -293,6 +215,84 @@
 				CleanCommandLine="makefile.bat ALL-ALL makefile.msvc 32 clean &quot;$(SolutionDir)&quot;"
 				Output="$(OutDir)"
 				PreprocessorDefinitions="WIN32;_WIN64;_MSVC_;CPU=AMD64;HOST_ARCH=AMD64;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug|Itanium"
+			OutputDirectory="./msvc.debug.IA64.bin"
+			IntermediateDirectory="./msvc.debug.IA64.bin"
+			ConfigurationType="0"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="makefile.bat DEBUG-IA64 makefile.msvc 32"
+				ReBuildCommandLine="makefile.bat DEBUG-IA64 makefile.msvc 32 -a"
+				CleanCommandLine="makefile.bat DEBUG-IA64 makefile.msvc 32 clean"
+				Output="$(OutDir)"
+				PreprocessorDefinitions="WIN32;_WIN64;_DEBUG;_MSVC_;CPU=IA64;HOST_ARCH=IA64;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|Itanium"
+			OutputDirectory="./msvc.IA64.bin"
+			IntermediateDirectory="./msvc.IA64.bin"
+			ConfigurationType="0"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="makefile.bat RETAIL-IA64 makefile.msvc 32"
+				ReBuildCommandLine="makefile.bat RETAIL-IA64 makefile.msvc 32 -a"
+				CleanCommandLine="makefile.bat RETAIL-IA64 makefile.msvc 32 clean"
+				Output="$(OutDir)"
+				PreprocessorDefinitions="WIN32;_WIN64;NDEBUG;_MSVC_;CPU=IA64;HOST_ARCH=IA64;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug-All|Itanium"
+			ConfigurationType="0"
+			BuildLogFile="$(SolutionDir)$(ConfigurationName) BuildLog.htm"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="makefile.bat DEBUG-ALL makefile.msvc 32 &quot;$(SolutionDir)&quot;"
+				ReBuildCommandLine="makefile.bat DEBUG-ALL makefile.msvc 32 -a &quot;$(SolutionDir)&quot;"
+				CleanCommandLine="makefile.bat DEBUG-ALL makefile.msvc 32 clean &quot;$(SolutionDir)&quot;"
+				Output="$(OutDir)"
+				PreprocessorDefinitions="WIN32;_WIN64;_DEBUG;_MSVC_;CPU=IA64;HOST_ARCH=IA64;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release-All|Itanium"
+			ConfigurationType="0"
+			BuildLogFile="$(SolutionDir)$(ConfigurationName) BuildLog.htm"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="makefile.bat RETAIL-ALL makefile.msvc 32 &quot;$(SolutionDir)&quot;"
+				ReBuildCommandLine="makefile.bat RETAIL-ALL makefile.msvc 32 -a &quot;$(SolutionDir)&quot;"
+				CleanCommandLine="makefile.bat RETAIL-ALL makefile.msvc 32 clean &quot;$(SolutionDir)&quot;"
+				Output="$(OutDir)"
+				PreprocessorDefinitions="WIN32;_WIN64;NDEBUG;_MSVC_;CPU=IA64;HOST_ARCH=IA64;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY"
 				IncludeSearchPath=""
 				ForcedIncludes=""
 				AssemblySearchPath=""
@@ -1163,6 +1163,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\wthreads.c"
+							>
+						</File>
+						<File
 							RelativePath=".\xstore.c"
 							>
 						</File>
@@ -1416,6 +1420,10 @@
 						</File>
 						<File
 							RelativePath=".\w32util.h"
+							>
+						</File>
+						<File
+							RelativePath=".\wthreads.h"
 							>
 						</File>
 					</Filter>

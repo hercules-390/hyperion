@@ -70,6 +70,7 @@ hutil_OBJ = \
     $(O)pttrace.obj  \
     $(O)version.obj  \
     $(O)hsocket.obj  \
+    $(O)wthreads.obj \
     $(O)w32util.obj
 
 !IFNDEF NOCRYPTO

@@ -158,7 +158,6 @@ void delayed_exit (int exit_code)
     fflush(stderr);  
     fflush(stdout);  
     usleep(100000);
-//  hdl_shut();
     do_shutdown();
     fflush(stderr);  
     fflush(stdout);  
@@ -748,7 +747,10 @@ char    fname[MAX_PATH];                /* normalized filename       */
     if (inc_fp[inc_level] == NULL)
     {
         WRITEMSG(HHCMD003S, fname, strerror(errno));
-        delayed_exit(1);
+        fflush(stderr);  
+        fflush(stdout);  
+        usleep(100000);
+        exit(1);
     }
     inc_stmtnum[inc_level] = 0;
 

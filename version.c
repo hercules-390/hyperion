@@ -74,9 +74,20 @@ static const char *build_info[] = {
   #endif
 #endif
 
-#if defined(OPTION_FTHREADS)
-    "Using fthreads instead of pthreads",
+#if defined( OPTION_FTHREADS )
+    "Using fthreads Threading Model",
+#else
+    #if defined( OPTION_WTHREADS )
+        "Using Windows Native Threading Model",
+    #else
+        "Using POSIX threads Threading Model",
+    #endif
 #endif
+
+#if defined( OPTION_FISHIO)
+    "Using FishIO",
+#endif
+
 #if defined(OPTION_DYNAMIC_LOAD)
     "Dynamic loading support",
 #else

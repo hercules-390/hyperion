@@ -166,7 +166,11 @@ typedef int             mode_t;
 #define OPTION_CONFIG_SYMBOLS
 #define OPTION_ENHANCED_CONFIG_SYMBOLS
 #define OPTION_ENHANCED_CONFIG_INCLUDE
-#define OPTION_FTHREADS
+
+#if !( defined( OPTION_FTHREADS ) || defined( OPTION_WTHREADS ) )
+#define OPTION_FTHREADS 
+#endif
+
 #define HAVE_STRSIGNAL
 #define EXTERNALGUI
 #define NO_SETUID
@@ -203,7 +207,8 @@ typedef int             mode_t;
 
 #if defined(HAVE_PCRE)
   // (earlier packages failed to define this so we must do so ourselves)
-  #define  PCRE_DATA_SCOPE  extern __declspec(dllimport)
+  #define  PCRE_DATA_SCOPE  
+      // extern __declspec(dllimport)
   #include PCRE_INCNAME                 // (passed by makefile)
   #define  OPTION_HAO                   // Hercules Automatic Operator
 #endif

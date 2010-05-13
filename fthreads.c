@@ -1,25 +1,16 @@
-////////////////////////////////////////////////////////////////////////////////////
-//         fthreads.c           Fish's WIN32 version of pthreads
+/*  FTHREADS.C  (c) Copyright "Fish" (David B. Trout), 2001-2009     */
+/*              Fish's WIN32 version of pthreads                     */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
 ////////////////////////////////////////////////////////////////////////////////////
 // (c) Copyright "Fish" (David B. Trout), 2001-2009. Released under the Q Public License
 // (http://www.hercules-390.org/herclic.html) as modifications to Hercules.
 ////////////////////////////////////////////////////////////////////////////////////
 
 // $Id$
-//
-// $Log$
-// Revision 1.30  2007/11/30 14:54:32  jmaynard
-// Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
-//
-// Revision 1.29  2007/06/23 00:04:10  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.28  2007/01/10 09:29:45  fish
-// Fix thread naming that was inadvertently broken by my 12/28 fishhang change that introduced use of _beginthreadex
-//
-// Revision 1.27  2006/12/08 09:43:21  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 
@@ -27,9 +18,9 @@
 #define _HUTIL_DLL_
 
 #include "hercules.h"
-#include "fthreads.h"
 
 #if defined(OPTION_FTHREADS)
+#include "fthreads.h"
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Private internal fthreads structures...

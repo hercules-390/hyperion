@@ -157,6 +157,7 @@ DLL_EXPORT void writemsg(const char *file, int line, const char* function, int l
     va_list vl;
 
     obtain_lock(&sysblk.msglock);
+
   #ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  
   #endif
