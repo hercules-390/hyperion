@@ -185,7 +185,9 @@ int off;
 
     if (sysblk.mainstor == NULL)
     {
-        WRITEMSG(HHCMD031S, mainsize, strerror(errno));
+        char buf[40];
+        sprintf(buf, "malloc(%lu)", sysblk.mainsize + 8192);
+        WRMSG(HHC01430, "S", buf, strerror(errno));
         delayed_exit(1);
     }
 
@@ -202,7 +204,9 @@ int off;
     }
     if (sysblk.storkeys == NULL)
     {
-        WRITEMSG(HHCMD032S, strerror(errno));
+        char buf[40];
+        sprintf(buf, "malloc(%lu)", sysblk.mainsize / STORAGE_KEY_UNITSIZE);
+        WRMSG(HHC01430, "S", buf, strerror(errno));
         delayed_exit(1);
     }
 
@@ -231,13 +235,15 @@ int off;
             sysblk.xpndstor = malloc((size_t)sysblk.xpndsize * XSTORE_PAGESIZE);
         if (sysblk.xpndstor == NULL)
         {
-            WRITEMSG(HHCMD033S, xpndsize, strerror(errno));
+            char buf[40];
+            sprintf(buf, "malloc(%lu)", (unsigned long)sysblk.xpndsize * XSTORE_PAGESIZE);
+            WRMSG(HHC01430, "S", buf, strerror(errno));
             delayed_exit(1);
         }
         /* Initial power-on reset for expanded storage */
         xstorage_clear();
 #else /*!_FEATURE_EXPANDED_STORAGE*/
-        WRITEMSG(HHCMD034I);
+        WRMSG(HHC01431, "I");
 #endif /*!_FEATURE_EXPANDED_STORAGE*/
     } /* end if(sysblk.xpndsize) */
 }
@@ -406,7 +412,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
             /* Check for I/O error */
             if (ferror(fp))
             {
-                WRITEMSG(HHCMD001S, fname, inc_stmtnum[inc_level], strerror(errno));
+                WRMSG(HHC01432, "S", inc_stmtnum[inc_level], fname, "fgetc()", strerror(errno));
                 delayed_exit(1);
             }
 
@@ -428,7 +434,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
             /* Check that statement does not overflow buffer */
             if (stmtlen >= (int)(sizeof(buf) - 1))
             {
-                WRITEMSG(HHCMD002S,fname, inc_stmtnum[inc_level]);
+                WRMSG(HHC01433, "S", inc_stmtnum[inc_level], fname);
                 delayed_exit(1);
             }
 
@@ -491,7 +497,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
                             /* Check that statement does not overflow buffer */
                             if (stmtlen+strlen(inc_envvar) >= sizeof(buf) - 1)
                             {
-                                WRITEMSG(HHCMD002S, fname, inc_stmtnum[inc_level]);
+                                WRMSG(HHC01433, "S", inc_stmtnum[inc_level], fname);
                                 delayed_exit(1);
                             }
 
@@ -576,7 +582,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
         {
             if(strlen(buf1)>=sizeof(buf))
             {
-                WRITEMSG(HHCMD002S, fname, inc_stmtnum[inc_level]);
+                WRMSG(HHC01433, "S", inc_stmtnum[inc_level], fname);
                 free(buf1);
                 delayed_exit(1);
             }
@@ -746,7 +752,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
     inc_fp[inc_level] = fopen (fname, "r");
     if (inc_fp[inc_level] == NULL)
     {
-        WRITEMSG(HHCMD003S, fname, strerror(errno));
+        WRMSG(HHC01432, "S", 1, fname, "fopen()", strerror(errno));
         fflush(stderr);  
         fflush(stdout);  
         usleep(100000);
@@ -882,7 +888,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
         }
         if (inc_level < 0)
         {
-            WRITEMSG(HHCMD004S, fname);
+            WRMSG(HHC01434, "S", fname);
             delayed_exit(1);
         }
 
@@ -891,7 +897,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
         {
             if  (strcasecmp (operand, "include_errors") == 0) 
             {              
-                WRITEMSG(HHCMD081I, fname);
+                WRMSG(HHC01435, "I", fname);
                 inc_ignore_errors = 1 ;
             }
 
@@ -903,12 +909,12 @@ char    fname[MAX_PATH];                /* normalized filename       */
         {              
             if (++inc_level >= MAX_INC_LEVEL)
             {
-                WRITEMSG(HHCMD082S, fname, inc_stmtnum[inc_level-1], MAX_INC_LEVEL);
+                WRMSG(HHC01436, "S", inc_stmtnum[inc_level-1], fname, MAX_INC_LEVEL);
                 delayed_exit(1);
             }
 
             hostpath(pathname, operand, sizeof(pathname));
-            WRITEMSG(HHCMD083I, fname, pathname, inc_stmtnum[inc_level-1]);
+            WRMSG(HHC01437, "I", inc_stmtnum[inc_level-1], fname, pathname);
 
             inc_fp[inc_level] = fopen (pathname, "r");
             if (inc_fp[inc_level] == NULL)
@@ -916,12 +922,12 @@ char    fname[MAX_PATH];                /* normalized filename       */
                 inc_level--;
                 if ( inc_ignore_errors == 1 ) 
                 {
-                    WRITEMSG(HHCMD084W, fname, operand, strerror(errno));
+                    WRMSG(HHC01438, "W", fname, operand, strerror(errno));
                     continue ;
                 }
                 else 
                 {
-                    WRITEMSG(HHCMD085S, fname, operand, strerror(errno));
+                    WRMSG(HHC01439, "S", fname, operand, strerror(errno));
                     delayed_exit(1);
                 }
             }
@@ -1073,7 +1079,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
             }
             else if (strcasecmp (keyword, "logofile") == 0)
             {
-                WRITEMSG(HHCMD061W, fname, inc_stmtnum[inc_level], "LOGOFILE", "HERCLOGO");
+                WRMSG(HHC01440, "W", inc_stmtnum[inc_level], fname, "LOGOFILE", "HERCLOGO");
                 slogofile=operand;
             }
             else if (strcasecmp (keyword, "herclogo") == 0)
@@ -1087,7 +1093,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
                 secpsvmlevel=operand;
                 secpsvmlvl=addargv[0];
                 ecpsvmac=addargc;
-                WRITEMSG(HHCMD061W, fname, inc_stmtnum[inc_level], "ECPS:VM", "ECPSVM");
+                WRMSG(HHC01440, "W", inc_stmtnum[inc_level], fname, "ECPS:VM", "ECPSVM");
                 addargc=0;
             }
             else if(strcasecmp(keyword, "ecpsvm") == 0)
@@ -1108,7 +1114,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
 
             else
             {
-                WRITEMSG(HHCMD008E, fname, inc_stmtnum[inc_level], keyword);
+                WRMSG(HHC01441, "E", inc_stmtnum[inc_level], fname, keyword);
                 operand = "";
                 addargc = 0;
             }
@@ -1116,7 +1122,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
             /* Check for one and only one operand */
             if (operand == NULL || addargc != 0)
             {
-                WRITEMSG(HHCMD009E, fname, inc_stmtnum[inc_level]);
+                WRMSG(HHC01442, "E", inc_stmtnum[inc_level], fname);
             }
 
         } /* end else (not old-style CPU statement) */
@@ -1128,7 +1134,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
                 || sscanf(sversion, "%hx%c", &version, &c) != 1
                 || version>255)
             {
-                WRITEMSG(HHCMD012S, fname, inc_stmtnum[inc_level], sversion, "version code");
+                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, sversion, "CPU version code");
                 delayed_exit(1);
             }
             dfltver = 0;
@@ -1140,7 +1146,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
             if (strlen(sserial) != 6
                 || sscanf(sserial, "%x%c", &serial, &c) != 1)
             {
-                WRITEMSG(HHCMD051S, fname, inc_stmtnum[inc_level], sserial);
+                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, sserial, "serial number");
                 delayed_exit(1);
             }
         }
@@ -1151,7 +1157,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
             if (strlen(smodel) != 4
                 || sscanf(smodel, "%hx%c", &model, &c) != 1)
             {
-                WRITEMSG(HHCMD012S, fname, inc_stmtnum[inc_level], smodel, "model");
+                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, smodel, "CPU model");
                 delayed_exit(1);
             }
         }
@@ -1164,7 +1170,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
              || (mainsize > 4095 && sizeof(sysblk.mainsize) < 8)
              || (mainsize > 4095 && sizeof(size_t) < 8))
             {
-                WRITEMSG(HHCMD013S, fname, inc_stmtnum[inc_level], smainsize);
+                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, smainsize, "main storage size");
                 delayed_exit(1);
             }
         }
@@ -1176,7 +1182,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
                 || xpndsize > (0x100000000ULL / XSTORE_PAGESIZE) - 1
                 || (xpndsize > 4095 && sizeof(size_t) < 8))
             {
-                WRITEMSG(HHCMD014S, fname, inc_stmtnum[inc_level], sxpndsize);
+                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, sxpndsize, "expanded storage size");
                 delayed_exit(1);
             }
         }
@@ -1185,14 +1191,14 @@ char    fname[MAX_PATH];                /* normalized filename       */
         if (shercprio != NULL)
             if (sscanf(shercprio, "%d%c", &hercprio, &c) != 1)
             {
-                WRITEMSG(HHCMD016S, fname, inc_stmtnum[inc_level], "Hercules process group", shercprio);
+                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, shercprio, "Hercules process group thread priority");
                 delayed_exit(1);
             }
 
 #if !defined(NO_SETUID)
         if(sysblk.suid != 0 && hercprio < 0)
         {
-            WRITEMSG(HHCMD017W, "Hercules process group");
+            WRMSG(HHC01444, "W", "Hercules process group thread priority");
             hercprio = 0;               /* Set priority to Normal     */
         }
 #endif /*!defined(NO_SETUID)*/
@@ -1203,14 +1209,14 @@ char    fname[MAX_PATH];                /* normalized filename       */
         if (stodprio != NULL)
             if (sscanf(stodprio, "%d%c", &todprio, &c) != 1)
             {
-                WRITEMSG(HHCMD016S, fname, inc_stmtnum[inc_level], "TOD clock", stodprio);
+                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, stodprio, "TOD clock thread priority");
                 delayed_exit(1);
             }
 
 #if !defined(NO_SETUID)
         if(sysblk.suid != 0 && todprio < 0)
         {
-            WRITEMSG(HHCMD017W, "TOD clock");
+            WRMSG(HHC01444, "W", "TOD clock thread priority");
             todprio = 0;                /* Set priority to Normal     */
         }
 #endif /*!defined(NO_SETUID)*/
@@ -1221,14 +1227,14 @@ char    fname[MAX_PATH];                /* normalized filename       */
         if (scpuprio != NULL)
             if (sscanf(scpuprio, "%d%c", &cpuprio, &c) != 1)
             {
-                WRITEMSG(HHCMD016S, fname, inc_stmtnum[inc_level], "CPU", scpuprio);
+                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, scpuprio, "CPU thread priority");
                 delayed_exit(1);
             }
 
 #if !defined(NO_SETUID)
         if(sysblk.suid != 0 && cpuprio < 0)
         {
-            WRITEMSG(HHCMD017W, "CPU");
+            WRMSG(HHC01444, "W", "CPU thread priority");
             cpuprio = 0;                /* Set priority to Normal     */
         }
 #endif /*!defined(NO_SETUID)*/
@@ -1239,32 +1245,33 @@ char    fname[MAX_PATH];                /* normalized filename       */
         if (sdevprio != NULL)
             if (sscanf(sdevprio, "%d%c", &devprio, &c) != 1)
             {
-                WRITEMSG(HHCMD016S, fname, inc_stmtnum[inc_level], "device", sdevprio);
+                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, sdevprio, "device thread priority");
                 delayed_exit(1);
             }
 
 #if !defined(NO_SETUID)
         if(sysblk.suid != 0 && devprio < 0)
-            WRITEMSG(HHCMD017W, "device");
+            WRMSG(HHC01444, "W", "device thread priority");
 #endif /*!defined(NO_SETUID)*/
 
         sysblk.devprio = devprio;
-
+#if 0
+        /* BHe: twice the same statement?? */
         /* Parse Device thread priority operand */
         if (sdevprio != NULL)
             if (sscanf(sdevprio, "%d%c", &devprio, &c) != 1)
             {
-                WRITEMSG(HHCMD016S, fname, inc_stmtnum[inc_level], "device", sdevprio);
+                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, sdevprio, "device thread priority");
                 delayed_exit(1);
             }
 
 #if !defined(NO_SETUID)
         if(sysblk.suid != 0 && devprio < 0)
-            WRITEMSG(HHCMD017W, "device");
+            WRMSG(HHC01444, "W", "device thread priority");
 #endif /*!defined(NO_SETUID)*/
 
         sysblk.devprio = devprio;
-
+#endif
         /* Parse maximum number of CPUs operand */
         if (smaxcpu != NULL)
         {
@@ -1285,7 +1292,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
             if (sscanf(snumcpu, "%hu%c", &numcpu, &c) != 1
                 || numcpu > MAX_CPU_ENGINES)
             {
-                WRITEMSG(HHCMD018S, fname, inc_stmtnum[inc_level], snumcpu);
+                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, snumcpu, "number of CPUs");
                 delayed_exit(1);
             }
         }
@@ -1298,11 +1305,11 @@ char    fname[MAX_PATH];                /* normalized filename       */
             if (sscanf(snumvec, "%hu%c", &numvec, &c) != 1
                 || numvec > MAX_CPU_ENGINES)
             {
-                WRITEMSG(HHCMD019S, fname, inc_stmtnum[inc_level], snumvec);
+                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, snumvec, "number of VFs");
                 delayed_exit(1);
             }
 #else /*!_FEATURE_VECTOR_FACILITY*/
-            WRITEMSG(HHCMD020I);
+            WRMSG(HHC01445, "I");
 #endif /*!_FEATURE_VECTOR_FACILITY*/
         }
         sysblk.numvec = numvec;
@@ -1320,7 +1327,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
                     if (sscanf(styp, "%d%c", &count, &c) != 2
                         || c != '*' || count < 1)
                     {
-                        WRITEMSG(HHCMD074S, fname, inc_stmtnum[inc_level], styp);
+                        WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, styp, "engine syntax");
                         delayed_exit(1);
                         break;
                     }
@@ -1337,7 +1344,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
                 else if (strcasecmp(styp,"ip") == 0)
                     ptyp = SCCB_PTYP_SUP;
                 else {
-                    WRITEMSG(HHCMD075S, fname, inc_stmtnum[inc_level], styp);
+                    WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, styp, "engine type");
                     delayed_exit(1);
                     break;
                 }
@@ -1358,7 +1365,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
                 || sscanf(ssysepoch, "%d%c", &sysepoch, &c) != 1
                 || sysepoch <= 1800 || sysepoch >= 2100)
             {
-                WRITEMSG(HHCMD022S, fname, inc_stmtnum[inc_level], ssysepoch);
+                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, ssysepoch, "system epoch");
                 delayed_exit(1);
             }
         }
@@ -1369,7 +1376,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
             if (sscanf(syroffset, "%d%c", &yroffset, &c) != 1
                 || (yroffset < -142) || (yroffset > 142))
             {
-                WRITEMSG(HHCMD070S, fname, inc_stmtnum[inc_level], syroffset);
+                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, syroffset, "year offset");
                 delayed_exit(1);
             }
         }
@@ -1381,7 +1388,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
                 || sscanf(stzoffset, "%d%c", &tzoffset, &c) != 1
                 || (tzoffset < -2359) || (tzoffset > 2359))
             {
-                WRITEMSG(HHCMD023S, fname, inc_stmtnum[inc_level], stzoffset);
+                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, stzoffset, "time zone offset");
                 delayed_exit(1);
             }
         }
@@ -1418,14 +1425,14 @@ char    fname[MAX_PATH];                /* normalized filename       */
                     ecpsvmavail=1;
                     if(ecpsvmac==0)
                     {
-                        WRITEMSG(HHCMD062W, fname, inc_stmtnum[inc_level]);
+                        WRMSG(HHC01446, "W", inc_stmtnum[inc_level], fname, "", "ECPSVM level", "20");
                         ecpsvmavail=1;
                         ecpsvmlevel=20;
                         break;
                     }
                     if (sscanf(secpsvmlvl, "%d%c", &ecpsvmlevel, &c) != 1)
                     {
-                        WRITEMSG(HHCMD052W, fname, inc_stmtnum[inc_level], secpsvmlevel);
+                        WRMSG(HHC01446, "W", inc_stmtnum[inc_level], fname, secpsvmlevel, "ECPSVM level", "20");
                         ecpsvmavail=1;
                         ecpsvmlevel=20;
                         break;
@@ -1435,14 +1442,14 @@ char    fname[MAX_PATH];                /* normalized filename       */
                 ecpsvmavail=1;
                 if (sscanf(secpsvmlevel, "%d%c", &ecpsvmlevel, &c) != 1)
                 {
-                    WRITEMSG(HHCMD053W, fname, inc_stmtnum[inc_level], secpsvmlevel);
+                    WRMSG(HHC01446, "W", inc_stmtnum[inc_level], fname, secpsvmlevel, "ECPSVM level", "no");
                     ecpsvmavail=0;
                     ecpsvmlevel=0;
                     break;
                 }
                 else
                 {
-                    WRITEMSG(HHCMD063W, fname, inc_stmtnum[inc_level]);
+                    WRMSG(HHC01440, "W", inc_stmtnum[inc_level], fname, "ECPSVM level directly", "LEVEL");
                     break;
                 }
                 break;
@@ -1459,7 +1466,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
             if (sscanf(sshrdport, "%hu%c", &shrdport, &c) != 1
                 || shrdport < 1024 )
             {
-                WRITEMSG(HHCMD029S, fname, inc_stmtnum[inc_level], sshrdport);
+                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, sshrdport, "SHRDPORT");
                 delayed_exit(1);
             }
         }
@@ -1500,7 +1507,9 @@ char    fname[MAX_PATH];                /* normalized filename       */
         TAMDIR *pNewTAMDIR = malloc( sizeof(TAMDIR) );
         if (!pNewTAMDIR)
         {
-            WRITEMSG(HHCMD900S);
+            char buf[40];
+            sprintf(buf, "malloc(%lu)", sizeof(TAMDIR));
+            WRMSG(HHC01430, "S", buf, strerror(errno));
             delayed_exit(1);
         }
         VERIFY( getcwd( cwd, sizeof(cwd) ) != NULL );
@@ -1513,7 +1522,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
         pNewTAMDIR->next = sysblk.tamdir;
         sysblk.tamdir = pNewTAMDIR;
         sysblk.defdir = pNewTAMDIR->dir;
-        WRITEMSG(HHCMD090I, sysblk.defdir);
+        WRMSG(HHC01447, "I", sysblk.defdir);
     }
 #endif /* OPTION_TAPE_AUTOMOUNT */
 
@@ -1555,13 +1564,8 @@ char    fname[MAX_PATH];                /* normalized filename       */
      * microseconds offset to 0000 GMT, 1 January 1900 */
 
     if(sysepoch != 1900 && sysepoch != 1960)
-    {
-        if(sysepoch < 1960)
-            WRITEMSG(HHCMD072W, sysepoch, 1900-sysepoch > 0 ? "+" : "", 1900-sysepoch);
-        else
-            WRITEMSG(HHCMD073W, sysepoch, 1960-sysepoch > 0 ? "+" : "", 1960-sysepoch);
-    }
-
+        WRMSG(HHC01440, "W", inc_stmtnum[inc_level], fname, "SYSEPOCH <value>", "SYSEPOCH 1900/1960 +/- <value>");
+ 
     if(sysepoch == 1960 || sysepoch == 1988)
         ly1960 = TOD_DAY;
     else
@@ -1591,7 +1595,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
 
         if (sdevnum == NULL || sdevtype == NULL)
         {
-            WRITEMSG(HHCMD035S, fname, inc_stmtnum[inc_level]);
+            WRMSG(HHC01448, "S", inc_stmtnum[inc_level], fname);
             delayed_exit(1);
         }
         /* Parse devnum */
@@ -1599,7 +1603,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
 
         if(rc==-2)
         {
-            WRITEMSG(HHCMD036S, fname, inc_stmtnum[inc_level], sdevnum);
+            WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, sdevnum, "device number specification");
             delayed_exit(1);
         }
 
@@ -1617,12 +1621,12 @@ char    fname[MAX_PATH];                /* normalized filename       */
 
             if (++inc_level >= MAX_INC_LEVEL)
             {
-                WRITEMSG(HHCMD082S, fname, inc_stmtnum[inc_level-1], MAX_INC_LEVEL);
+                WRMSG(HHC01436, "S", inc_stmtnum[inc_level-1], fname, MAX_INC_LEVEL);
                 delayed_exit(1);
             }
 
             hostpath(pathname, operand, sizeof(pathname));
-            WRITEMSG(HHCMD083I, fname, pathname, inc_stmtnum[inc_level-1]);
+            WRMSG(HHC01437, "I", inc_stmtnum[inc_level-1], fname, pathname);
 
             inc_fp[inc_level] = fopen (pathname, "r");
             if (inc_fp[inc_level] == NULL)
@@ -1630,12 +1634,12 @@ char    fname[MAX_PATH];                /* normalized filename       */
                 inc_level--;
                 if ( inc_ignore_errors == 1 ) 
                 {
-                    WRITEMSG(HHCMD084W, fname, operand, strerror(errno));
+                    WRMSG(HHC01438, "W", fname, operand, strerror(errno));
                     continue ;
                 }
                 else 
                 {
-                    WRITEMSG(HHCMD085S, fname, operand, strerror(errno));
+                    WRMSG(HHC01439, "S", fname, operand, strerror(errno));
                     delayed_exit(1);
                 }
             }
@@ -1720,7 +1724,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
 
     /* Check that numcpu does not exceed maxcpu */
     if (sysblk.numcpu > sysblk.maxcpu) {
-        WRITEMSG(HHCMD086S, fname, sysblk.numcpu, sysblk.maxcpu);
+        WRMSG(HHC01449, "S", fname, sysblk.numcpu, sysblk.maxcpu);
         delayed_exit(1);
     }
 
