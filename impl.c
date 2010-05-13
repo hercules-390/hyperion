@@ -556,7 +556,9 @@ int     dll_count;                      /* index into array          */
 #else
         WRMSG (HHC01407, "S", sysblk.hercules_pgmname, "");
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
-        delayed_exit(-1);
+        fflush(stderr);  
+        fflush(stdout);  
+        usleep(100000);
         return(1);
     }
 #if defined(OPTION_DYNAMIC_LOAD)
