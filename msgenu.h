@@ -670,6 +670,23 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01448 "Config file[%d] '%s': missing device number or device type"
 #define HHC01449 "Config file '%s': NUMCPU %d must not exceed MAXCPU %d"
 
+/* config.c */
+#define HHC01460 "%1d:%04X: error in function '%s': '%s'"
+#define HHC01461 "%1d:%04X: device already exists"
+#define HHC01462 "%1d:%04X: devtype '%s' not recognized"
+#define HHC01463 "%1d:%04X: device initialization failed"
+//#define HHC014xx "%1d:%04X: only devices on CSS 0 are usable in S/370 mode"
+#define HHC01464 "%1d:%04X: %s does not exist"
+#define HHC01465 "%1d:%04X: %s detached"
+#define HHC01466 "Unspecified error occured while parsing 'Logical Channel Subsystem Identification'"
+#define HHC01467 "No more than 1 'Logical Channel Subsystem Identification' may be specified"
+#define HHC01468 "Non-numeric 'Logical Channel Subsystem Identification' '%s'"
+#define HHC01469 "'Logical Channel Subsystem Identification' %d exceeds maximum of %d"
+#define HHC01470 "Incorrect '%s' near character '%c'"
+#define HHC01471 "Incorrect device address range '%04X < %04X'"
+#define HHC01472 "%1d:%04X is on wrong channel, 1st device defined on channel %02X"
+#define HHC01473 "Some or all devices in %04X-%04X duplicate already defined devices"
+
 // reserve 015xx for Hercules dynamic loader      
 /* hdl.c */
 #define HHC01500 "HDL: begin shutdown sequence"
@@ -747,33 +764,13 @@ cpu.c:123:HABC1234I This is a message
  *                                  O L D   M E S S A G E   F O R M A T
  */
  
-/* bldcfg.c cmdtab.c codepage.c config.c */
-#define HHCMD041E "%1d:%04X: device already exists"
-#define HHCMD042E "%1d:%04X: devtype '%s' not recognized"
-#define HHCMD043E "%1d:%04X: cannot obtain device block, function malloc() failed: '%s'"
-#define HHCMD044E "%1d:%04X: device initialization failed"
-#define HHCMD045E "%1d:%04X: cannot obtain buffer for device: '%s'"
-#define HHCMD046E "%1d:%04X: %s does not exist"
-#define HHCMD047I "%1d:%04X: %s detached"
-#define HHCMD048E "%1d:%04X: device does not exist"
-#define HHCMD049E "%1d:%04X: device already exists"
-#define HHCMD054E "Incorrect device count near character(%c)"
-#define HHCMD055E "Incorrect device address specification near character(%c)"
-#define HHCMD056E "Incorrect device address range(%04X < %04X)"
-#define HHCMD057E "%1d:%04X is on wrong channel (1st device defined on channel(%02X))"
-#define HHCMD058E "Some or all devices in %04X-%04X duplicate devices already defined"
-#define HHCMD059E "Incorrect second device number in device range near character(%c)"
+/* cmdtab.c codepage.c c */
 #define HHCMD064W "Hercules set priority '%d' failed: '%s'"
-
 #define HHCMD139E "Unknown herc command: '%s', enter 'HELP' for a list of valid commands"
 #define HHCMD140I "Valid panel commands are\n  %-9.9s    %s \n  %-9.9s    %s "
 #define HHCMD142I "No HELP available. Unknown Hercules command: '%s'"
 #define HHCMD151E "Codepage conversion table '%s' is not defined"
 #define HHCMD152I "Using '%s' codepage conversion table '%s'"
-#define HHCMD174E "Unspecified error occured while parsing Logical Channel Subsystem Identification"
-#define HHCMD175E "No more than 1 Logical Channel Subsystem Identification may be specified"
-#define HHCMD176E "Non-numeric Logical Channel Subsystem Identification '%s'"
-#define HHCMD177E "Logical Channel Subsystem Identification '%d' exceeds maximum of '%d'"
 
 /* cmdtab.c */
 #define HHCMD853I "CMDLEVEL invalid option: %s"
@@ -867,7 +864,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHCMD075E "Invalid max device threads value (must be -1 to n)"
 #define HHCMD076I "Max device threads: %d, current: %d, most: %d, waiting: %d, max exceeded: %d"
 #define HHCMD078E "Max device threads %d current %d most %d waiting %d total I/Os queued %d"
-#define HHCMD079W "%1d:%04X Only devices on CSS 0 are usable in S/370 mode"
+
 #define HHCMD081E "No cckd devices found"
 #define HHCMD084E "%1d:%04X is not a cckd device"
 #define HHCMD087E "Operand must be `merge', `nomerge' or `force'"

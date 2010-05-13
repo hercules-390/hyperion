@@ -270,7 +270,9 @@ DEVBLK**dvpp;
     {
         if (!(dev = (DEVBLK*)malloc(sizeof(DEVBLK))))
         {
-            WRITEMSG (HHCMD043E, lcss, devnum, strerror(errno));
+            char buf[40];
+            sprintf(buf, "malloc(%lu)", sizeof(DEVBLK));
+            WRMSG (HHC01460, "E", lcss, devnum, buf, strerror(errno));
             return NULL;
         }
         memset (dev, 0, sizeof(DEVBLK));
@@ -385,7 +387,7 @@ int     i;                              /* Loop index                */
     /* Check whether device number has already been defined */
     if (find_device_by_devnum(lcss,devnum) != NULL)
     {
-        WRITEMSG (HHCMD041E, lcss, devnum);
+        WRMSG (HHC01461, "E", lcss, devnum);
         return 1;
     }
 
@@ -394,7 +396,7 @@ int     i;                              /* Loop index                */
 
     if(!(dev->hnd = hdl_ghnd(type)))
     {
-        WRITEMSG (HHCMD042E, lcss, devnum, type);
+        WRMSG (HHC01462, "E", lcss, devnum, type);
 
         ret_devblk(dev);
 
@@ -422,7 +424,7 @@ int     i;                              /* Loop index                */
 
     if (rc < 0)
     {
-        WRITEMSG (HHCMD044E, lcss, devnum);
+        WRMSG (HHC01463, "E", lcss, devnum);
 
         for (i = 0; i < dev->argc; i++)
             if (dev->argv[i])
@@ -443,7 +445,9 @@ int     i;                              /* Loop index                */
         dev->buf = malloc (dev->bufsize);
         if (dev->buf == NULL)
         {
-            WRITEMSG (HHCMD045E, dev->devnum, strerror(errno));
+            char buf[40];
+            sprintf(buf, "malloc(%lu)", (unsigned long) dev->bufsize);
+            WRMSG (HHC01460, "E", lcss, dev->devnum, buf, strerror(errno));
 
             for (i = 0; i < dev->argc; i++)
                 if (dev->argv[i])
@@ -473,7 +477,7 @@ int     i;                              /* Loop index                */
     /*
     if(lcss!=0 && sysblk.arch_mode==ARCH_370)
     {
-        WRITEMSG (HHCMD079W, lcss, devnum);
+        WRMSG (HHC014xx, "W", lcss, devnum);
     }
     */
 
@@ -571,18 +575,18 @@ char   str[32];
     /* Find the device block */
     dev = find_device_by_subchan ((LCSS_TO_SSID(lcss)<<16)|subchan);
 
-    sprintf(str, "Subchannel(%1d:%04X)", lcss, subchan);
+    sprintf(str, "subchannel %1d:%04X", lcss, subchan);
 
     if (dev == NULL)
     {
-        WRITEMSG (HHCMD046E, lcss, devnum, str);
+        WRMSG (HHC01464, "E", lcss, devnum, str);
         return 1;
     }
 
     rc = detach_devblk( dev );
 
     if(!rc)
-        WRITEMSG (HHCMD047I, lcss, devnum, str);
+        WRMSG (HHC01465, "I", lcss, devnum, str);
 
     return rc;
 }
@@ -601,14 +605,14 @@ int    rc;
 
     if (dev == NULL)
     {
-        WRITEMSG (HHCMD046E, lcss, devnum, "Device");
+        WRMSG (HHC01464, "E", lcss, devnum, "device");
         return 1;
     }
 
     rc = detach_devblk( dev );
 
     if(!rc)
-        WRITEMSG (HHCMD047I, lcss, devnum, "Device");
+        WRMSG (HHC01465, "I", lcss, devnum, "device");
 
     return rc;
 }
@@ -626,14 +630,14 @@ DEVBLK *dev;                            /* -> Device block           */
 
     if (dev == NULL)
     {
-        WRITEMSG (HHCMD048E, lcss, olddevn);
+        WRMSG (HHC01464, "E", lcss, olddevn, "device");
         return 1;
     }
 
     /* Check that new device number does not already exist */
     if (find_device_by_devnum(lcss, newdevn) != NULL)
     {
-        WRITEMSG (HHCMD049E, lcss, newdevn);
+        WRMSG (HHC01461, "E", lcss, newdevn);
         return 1;
     }
 
@@ -931,7 +935,7 @@ parse_lcss(const char *spec,
     {
         if(verbose)
         {
-            WRITEMSG(HHCMD174E);
+            WRMSG(HHC01466, "E");
         }
         free(wrk);
         return(-1);
@@ -947,7 +951,7 @@ parse_lcss(const char *spec,
     {
         if(verbose)
         {
-            WRITEMSG(HHCMD175E);
+            WRMSG(HHC01467, "E");
         }
         free(wrk);
         return(-1);
@@ -957,7 +961,7 @@ parse_lcss(const char *spec,
     {
         if(verbose)
         {
-            WRITEMSG(HHCMD176E,lcss);
+            WRMSG(HHC01468, "E",lcss);
         }
         free(wrk);
         return -1;
@@ -966,7 +970,7 @@ parse_lcss(const char *spec,
     {
         if(verbose)
         {
-            WRITEMSG(HHCMD177E,lcssid,FEATURE_LCSS_MAX-1);
+            WRMSG(HHC01469, "E",lcssid,FEATURE_LCSS_MAX-1);
         }
         free(wrk);
         return -1;
@@ -998,7 +1002,7 @@ parse_single_devnum__INTERNAL(const char *spec,
     {
         if(verbose)
         {
-            WRITEMSG(HHCMD055E,*strptr);
+            WRMSG(HHC01470,"E","device address specification",*strptr);
         }
         free(r);
         return -1;
@@ -1097,7 +1101,7 @@ static size_t parse_devnums(const char *spec,DEVNUMSDESC *dd)
             cuu2=strtoul(&strptr[1],&strptr,16);
             if(*strptr!=0)
             {
-                WRITEMSG(HHCMD059E,*strptr);
+                WRMSG(HHC01470, "E","second device number in device range",*strptr);
                 free(dgrs);
                 free(sc);
                 return(0);
@@ -1108,14 +1112,14 @@ static size_t parse_devnums(const char *spec,DEVNUMSDESC *dd)
             cuu2--;
             if(*strptr!=0)
             {
-                WRITEMSG(HHCMD054E,*strptr);
+                WRMSG(HHC01470,"E","device count",*strptr);
                 free(dgrs);
                 free(sc);
                 return(0);
             }
             break;
         default:
-            WRITEMSG(HHCMD055E,*strptr);
+            WRMSG(HHC01470,"E","incorrect device specification",*strptr);
             free(dgrs);
             free(sc);
             return(0);
@@ -1123,7 +1127,7 @@ static size_t parse_devnums(const char *spec,DEVNUMSDESC *dd)
         /* Check cuu1 <= cuu2 */
         if(cuu1>cuu2)
         {
-            WRITEMSG(HHCMD056E,cuu2,cuu1);
+            WRMSG(HHC01471,"E",cuu2,cuu1);
             free(dgrs);
             free(sc);
             return(0);
@@ -1146,7 +1150,7 @@ static size_t parse_devnums(const char *spec,DEVNUMSDESC *dd)
         }
         if(badcuu>=0)
         {
-            WRITEMSG(HHCMD057E,badcuu,basechan);
+            WRMSG(HHC01472,"E",badcuu,basechan);
             free(dgrs);
             free(sc);
             return(0);
@@ -1176,7 +1180,7 @@ static size_t parse_devnums(const char *spec,DEVNUMSDESC *dd)
         }
         if(duplicate)
         {
-            WRITEMSG(HHCMD058E,cuu1,cuu2);
+            WRMSG(HHC01473,"E",cuu1,cuu2);
             free(dgrs);
             free(sc);
             return(0);
