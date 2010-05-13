@@ -966,7 +966,7 @@ parse_lcss(const char *spec,
         free(wrk);
         return -1;
     }
-    if(lcssid>FEATURE_LCSS_MAX)
+    if(lcssid>=FEATURE_LCSS_MAX)
     {
         if(verbose)
         {
