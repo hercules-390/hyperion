@@ -261,7 +261,7 @@ int ProcessPanelCommand (char* pszCmdLine)
     /* Error: unknown/unsupported command... */
     ASSERT( cmd_argv[0] );
 
-    WRITEMSG( HHCMD139E, cmd_argv[0] );
+    WRMSG( HHC01600, "E", cmd_argv[0] );
 
 ProcessPanelCommandExit:
 
@@ -289,7 +289,9 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
 
     if (argc < 2)
     {
-        WRITEMSG( HHCMD140I, "Command", "Description", "-------", "-----------------------------------------------" );
+        WRMSG( HHC01601, "I" );
+        WRMSG( HHC01602, "I", "Command", "Description" );
+        WRMSG( HHC01602, "I", "-------", "-----------------------------------------------" );
 
         /* List standard formatted commands from our routing table... */
 
@@ -298,7 +300,7 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
             if ( (pCmdTab->type & PANEL) && 
                  ( (sysblk.diag8cmd & DIAG8CMD_RUNNING) || (pCmdTab->group & sysblk.sysgroup) ) && 
                  (pCmdTab->shortdesc) )
-                logmsg( _("  %-9.9s    %s \n"), pCmdTab->statement, pCmdTab->shortdesc );
+                WRMSG( HHC01602, "I", pCmdTab->statement, pCmdTab->shortdesc );
         }
         
         rc = 0;
@@ -311,9 +313,25 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
                  ( (sysblk.diag8cmd & DIAG8CMD_RUNNING) || (pCmdTab->group & sysblk.sysgroup) ) && 
                  (!strcasecmp(pCmdTab->statement,argv[1]) ) )
             {
-                logmsg( _("%s: %s\n"),pCmdTab->statement,pCmdTab->shortdesc);
+                WRMSG( HHC01602, "I", "Command", "Description" );
+                WRMSG( HHC01602, "I", "-------", "-----------------------------------------------" );
+                WRMSG( HHC01602, "I",pCmdTab->statement,pCmdTab->shortdesc);
                 if(pCmdTab->longdesc)
-                    logmsg( _("%s\n"),pCmdTab->longdesc );
+                {
+                  char buf[80];
+                  int i = 0; 
+                  int j;
+		  WRMSG ( HHC01603, "I", "Long description:");
+                  while(pCmdTab->longdesc[i])
+                  {
+                    for(j = 0; pCmdTab->longdesc[i] && pCmdTab->longdesc[i] != '\n'; i++, j++)
+                      buf[j] = pCmdTab->longdesc[i];
+                    buf[j] = 0;
+                    if(pCmdTab->longdesc[i] == '\n')
+                      i++;
+                    WRMSG( HHC01603, "I", buf );
+                  }
+                }
                 rc = 0;
             }
         }
@@ -327,7 +345,7 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
             }
             else
             {
-                WRITEMSG( HHCMD142I, argv[1]);
+                WRMSG( HHC01604, "I", argv[1]);
                 rc = -1;
             }
         }
@@ -413,18 +431,18 @@ int CmdLevel(int argc, char *argv[], char *cmdline)
                 sysblk.sysgroup &= ~SYSGROUP_SYSDEBUG;
             else
             {
-                WRITEMSG(HHCMD853I, argv[i]);
+                WRMSG(HHC01605,"E", argv[i]);
                 return -1;
             }
         }
 
     if ( sysblk.sysgroup == SYSGROUP_ALL )
     {
-        WRITEMSG(HHCMD854I, sysblk.sysgroup, "all");
+        WRMSG(HHC01606, "I", sysblk.sysgroup, "all");
     }
     else if ( sysblk.sysgroup == 0 )
     {
-        WRITEMSG(HHCMD854I, sysblk.sysgroup, "none");
+        WRMSG(HHC01606, "I", sysblk.sysgroup, "none");
     }
     else
     {
@@ -435,7 +453,7 @@ int CmdLevel(int argc, char *argv[], char *cmdline)
             (sysblk.sysgroup&SYSGROUP_SYSPROG)?"programmer ":"",
             (sysblk.sysgroup&SYSGROUP_SYSDEVEL)?"developer ":"",
             (sysblk.sysgroup&SYSGROUP_SYSDEBUG)?"debugging ":"");
-        WRITEMSG(HHCMD854I, sysblk.sysgroup, buf);
+        WRMSG(HHC01605, "I", sysblk.sysgroup, buf);
     }
     
     return 0;

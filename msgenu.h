@@ -726,6 +726,15 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01541 "HDL: dyngui.dll initiated"
 #define HHC01542 "HDL: dyngui.dll terminated"
 
+// reserve 016xx for panel communication
+#define HHC01600 "Unknown herc command '%s', enter 'help' for a list of valid commands"
+#define HHC01601 "Valid panel commands are:"
+#define HHC01602 "%-9.9s    %s"
+#define HHC01603 "%s"
+#define HHC01604 "Unknown herc command '%s', no help available"
+#define HHC01605 "Invalid 'cmdlevel' option: '%s'"
+#define HHC01606 "cmdlevel[%2.2X] is '%s'"
+
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
 #define HHC04100 "%s version %s initiated"
@@ -764,17 +773,9 @@ cpu.c:123:HABC1234I This is a message
  *                                  O L D   M E S S A G E   F O R M A T
  */
  
-/* cmdtab.c codepage.c c */
-#define HHCMD064W "Hercules set priority '%d' failed: '%s'"
-#define HHCMD139E "Unknown herc command: '%s', enter 'HELP' for a list of valid commands"
-#define HHCMD140I "Valid panel commands are\n  %-9.9s    %s \n  %-9.9s    %s "
-#define HHCMD142I "No HELP available. Unknown Hercules command: '%s'"
+/* codepage.c c */
 #define HHCMD151E "Codepage conversion table '%s' is not defined"
 #define HHCMD152I "Using '%s' codepage conversion table '%s'"
-
-/* cmdtab.c */
-#define HHCMD853I "CMDLEVEL invalid option: %s"
-#define HHCMD854I "cmdlevel[%2.2X] is %s"
 
 /* diagnose.c */
 #define HHCDN001I "Diagnose 0x308 called: System is re-ipled"
