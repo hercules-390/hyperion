@@ -75,8 +75,8 @@ DLL_EXPORT int html_include(WEBBLK *webblk, char *filename)
 
     if (!inclfile)
     {
-        WRITEMSG(HHCHT011E,fullname,strerror(errno));
-        hprintf(webblk->sock,MSG(HHCHT011E,"",filename,strerror(errno)));
+        WRMSG(HHC01800,"E","fopen()",strerror(errno));
+        hprintf(webblk->sock,MSG(HHC01800,"E","fopen()",strerror(errno)));
         return FALSE;
     }
 
@@ -671,7 +671,7 @@ char                pathname[MAX_PATH]; /* working pathname          */
         /* Convert to absolute path */
         if (!realpath(sysblk.httproot,absolute_httproot_path))
         {
-            WRITEMSG(HHCHT014E, sysblk.httproot, strerror(errno));
+            WRMSG(HHC01801, "E", sysblk.httproot, strerror(errno));
             return NULL;
         }
         /* Verify that the absolute path is valid */
@@ -680,7 +680,7 @@ char                pathname[MAX_PATH]; /* working pathname          */
         // ENOENT = File name or path not found.
         if (access( absolute_httproot_path, R_OK ) != 0)
         {
-            WRITEMSG(HHCHT014E, absolute_httproot_path, strerror(errno));
+            WRMSG(HHC01801, "E", absolute_httproot_path, strerror(errno));
             return NULL;
         }
         /* Append trailing [back]slash, but only if needed */
@@ -691,14 +691,14 @@ char                pathname[MAX_PATH]; /* working pathname          */
         free(sysblk.httproot);
         if (strlen(absolute_httproot_path) > MAX_PATH )
         {
-            WRITEMSG(HHCHT014E, absolute_httproot_path, "path length too long");
+            WRMSG(HHC01801, "E", absolute_httproot_path, "path length too long");
             return NULL;
         }
         else
         {
             hostpath(pathname, absolute_httproot_path, sizeof(pathname));
             sysblk.httproot = strdup(pathname);
-            WRITEMSG(HHCHT013I, sysblk.httproot);
+            WRMSG(HHC01802, "I", sysblk.httproot);
         }
     }
 
@@ -707,7 +707,7 @@ char                pathname[MAX_PATH]; /* working pathname          */
 
     if (lsock < 0)
     {
-        WRITEMSG(HHCHT002E, strerror(HSO_errno));
+        WRMSG(HHC01800,"E", "socket()", strerror(HSO_errno));
         return NULL;
     }
 
@@ -730,13 +730,13 @@ char                pathname[MAX_PATH]; /* working pathname          */
 
         if (rc == 0 || HSO_errno != HSO_EADDRINUSE) break;
 
-        WRITEMSG(HHCHT003W, sysblk.httpport);
+        WRMSG(HHC01804, "W", "bind()", sysblk.httpport);
         SLEEP(10);
     } /* end while */
 
     if (rc != 0)
     {
-        WRITEMSG(HHCHT004E, strerror(HSO_errno));
+        WRMSG(HHC01800,"E", "bind()", strerror(HSO_errno));
         return NULL;
     }
 
@@ -745,11 +745,11 @@ char                pathname[MAX_PATH]; /* working pathname          */
 
     if (rc < 0)
     {
-        WRITEMSG(HHCHT005E, strerror(HSO_errno));
+        WRMSG(HHC01800,"E", "listen()", strerror(HSO_errno));
         return NULL;
     }
 
-    WRITEMSG(HHCHT006I, sysblk.httpport);
+    WRMSG(HHC01803, "I", sysblk.httpport);
 
     /* Handle http requests */
     while (sysblk.httpport) {
@@ -766,7 +766,7 @@ char                pathname[MAX_PATH]; /* working pathname          */
         if (rc < 0 )
         {
             if (HSO_errno == HSO_EINTR) continue;
-            WRITEMSG(HHCHT007E, strerror(HSO_errno));
+            WRMSG(HHC01800, "E", "select()", strerror(HSO_errno));
             break;
         }
 
@@ -778,7 +778,7 @@ char                pathname[MAX_PATH]; /* working pathname          */
 
             if (csock < 0)
             {
-                WRITEMSG(HHCHT008E, strerror(HSO_errno));
+                WRMSG(HHC01800, "E", "accept()", strerror(HSO_errno));
                 continue;
             }
 

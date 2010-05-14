@@ -772,6 +772,13 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01722 "ECPS:VM Command processor complete"
 //#define HHCEV300D in ecpsvm.c
 
+// reserve 018xx for http server
+#define HHC01800 "HTTP server: error in function '%s': '%s'"
+#define HHC01801 "Invalid HTTPROOT: '%s': '%s'"
+#define HHC01802 "Using HTTPROOT directory '%s'"
+#define HHC01803 "Waiting for HTTP requests on port %u"
+#define HHC01804 "Waiting for port %u to become free for HTTP requests"
+
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
 #define HHC04100 "%s version %s initiated"
@@ -1021,18 +1028,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCUT004I "TCP_KEEPINTVL rc=%d %s"
 #define HHCUT005I "TCP_KEEPCNT rc=%d %s"
 #define HHCMD042I "%s=%s"
-
-/* httpserv.c */
-#define HHCHT002E "Socket error: (%s)"
-#define HHCHT003W "Waiting for port(%u) to become free"
-#define HHCHT004E "Bind error: (%s)"
-#define HHCHT005E "Listen error: (%s)"
-#define HHCHT006I "Waiting for HTTP requests on port(%u)"
-#define HHCHT007E "Select error: (%s)"
-#define HHCHT008E "Accept error: (%s)"
-#define HHCHT011E "Html_include: Cannot open file(%s): (%s)"
-#define HHCHT013I "Using HTTPROOT directory (%s)"
-#define HHCHT014E "Invalid HTTPROOT: (%s): (%s)"
 
 /* hscmisc.c */
 #define HHCMD143E "Invalid value: %s"
