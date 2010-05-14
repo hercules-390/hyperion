@@ -2093,8 +2093,21 @@ DLL_EXPORT int w32_socket( int af, int type, int protocol )
 
 DLL_EXPORT int socket_is_socket( int sfd )
 {
-    u_long dummy;
-    return WSAHtonl( (SOCKET) sfd, 666, &dummy ) == 0 ? 1 : 0;
+    DWORD       optVal;
+    int         optLen = sizeof(optVal);
+    u_long      dummy       = -1;
+
+    if (sfd >= 0 && sfd <=2) return FALSE; // handle stdin, stdout, stderr first
+
+    if ( getsockopt( (SOCKET)sfd, SOL_SOCKET, SO_TYPE, (char*)&optVal, &optLen ) != SOCKET_ERROR )
+    {
+        return WSAHtonl( (SOCKET)sfd, 666, &dummy ) == 0 ? TRUE : FALSE;
+    }
+    else
+    {
+        if ( WSAGetLastError() == WSAENOTSOCK ) return FALSE;
+        else return TRUE;
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

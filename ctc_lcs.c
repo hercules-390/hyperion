@@ -1693,8 +1693,7 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
             if( pLCSPORT->fd < 0 || pLCSPORT->fCloseInProgress )
                 break;
             WRMSG(HHC00944, "E", pLCSPORT->bPort, strerror( errno ) );
-            SLEEP(1);           // (purposeful long delay)
-            continue;
+            break;
         }
 
         if( pLCSPORT->pLCSBLK->fDebug )
@@ -1955,7 +1954,7 @@ static int  LCS_EnqueueEthFrame( PLCSDEV pLCSDEV, BYTE   bPort,
     PLCSETHFRM  pLCSEthFrame;
 
     // Will frame NEVER fit into buffer??
-    if( iSize > MAX_LCS_ETH_FRAME_SIZE( pLCSDEV ) )
+    if( iSize > MAX_LCS_ETH_FRAME_SIZE( pLCSDEV ) || iSize > 9000 )
     {
         errno = EMSGSIZE;   // Message too long
         return -1;          // (-1==failure)

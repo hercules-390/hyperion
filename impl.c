@@ -432,11 +432,36 @@ int     dll_count;                      /* index into array          */
     sysblk.keep_timeout_secs = 120;
 #endif
 
+    
+    /* Initialize locks, conditions, and attributes */
+    initialize_lock (&sysblk.todlock);
+    initialize_lock (&sysblk.mainlock);
+    sysblk.mainowner = LOCK_OWNER_NONE;
+    initialize_lock (&sysblk.intlock);
+    initialize_lock (&sysblk.iointqlk);
+    sysblk.intowner = LOCK_OWNER_NONE;
+    initialize_lock (&sysblk.sigplock);
+
     /* Initialize thread creation attributes so all of hercules
        can use them at any time when they need to create_thread
     */
     initialize_detach_attr (DETACHED);
     initialize_join_attr   (JOINABLE);
+
+    initialize_condition (&sysblk.cpucond);
+    {
+        int i;
+        for (i = 0; i < MAX_CPU_ENGINES; i++)
+            initialize_lock (&sysblk.cpulock[i]);
+    }
+    initialize_condition (&sysblk.sync_cond);
+    initialize_condition (&sysblk.sync_bc_cond);
+
+#if defined(OPTION_INSTRUCTION_COUNTING)
+    initialize_lock (&sysblk.icount_lock);
+#endif
+
+
 
     /* Copy length for regs */
     sysblk.regs_copy_len = (int)((uintptr_t)&sysblk.dummyregs.regs_copy_end

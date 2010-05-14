@@ -987,8 +987,7 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
         {
             WRMSG(HHC00912, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pCTCBLK->szTUNDevName,
                 strerror( errno ) );
-            SLEEP(1);           // (purposeful long delay)
-            continue;
+            break;
         }
 
         if( iLength == 0 )      // (probably EINTR; ignore)
@@ -1050,7 +1049,7 @@ static int  CTCI_EnqueueIPFrame( DEVBLK* pDEVBLK,
     PCTCBLK  pCTCBLK = (PCTCBLK)pDEVBLK->dev_data;
 
     // Will frame NEVER fit into buffer??
-    if( iSize > MAX_CTCI_FRAME_SIZE( pCTCBLK ) )
+    if( iSize > MAX_CTCI_FRAME_SIZE( pCTCBLK ) || iSize > 9000 )
     {
         errno = EMSGSIZE;   // Message too long
         return -1;          // (-1==failure)

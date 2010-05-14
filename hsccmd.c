@@ -4589,7 +4589,7 @@ int devtmax_cmd(int argc, char *argv[], char *cmdline)
         release_lock(&sysblk.ioqlock);
     }
     else
-        WRITEMSG(HHCMD078E,
+        WRITEMSG(HHCMD078I,
             sysblk.devtmax, sysblk.devtnbr, sysblk.devthwm,
             sysblk.devtwait, sysblk.devtunavail
         );

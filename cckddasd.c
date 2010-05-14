@@ -234,6 +234,8 @@ int cckddasd_term ()
         wait_condition (&cckdblk.termcond, &cckdblk.ralock);
     }
     release_lock (&cckdblk.ralock);
+    destroy_lock (&cckdblk.ralock);
+    destroy_condition (&cckdblk.racond);
 
     /* Terminate the garbage collection threads */
     obtain_lock (&cckdblk.gclock);
@@ -244,6 +246,8 @@ int cckddasd_term ()
         wait_condition (&cckdblk.termcond, &cckdblk.gclock);
     }
     release_lock (&cckdblk.gclock);
+    destroy_lock (&cckdblk.gclock);
+    destroy_condition (&cckdblk.gccond);
 
     /* Terminate the writer threads */
     obtain_lock (&cckdblk.wrlock);
@@ -254,6 +258,13 @@ int cckddasd_term ()
         wait_condition (&cckdblk.termcond, &cckdblk.wrlock);
     }
     release_lock (&cckdblk.wrlock);
+    destroy_lock (&cckdblk.wrlock);
+    destroy_condition (&cckdblk.wrcond);
+
+    destroy_lock (&cckdblk.devlock);
+
+    destroy_condition (&cckdblk.devcond);
+    destroy_condition (&cckdblk.termcond);
 
     memset(&cckdblk, 0, sizeof(CCKDBLK));
 
@@ -786,7 +797,7 @@ void *cckd_free (DEVBLK *dev, char *id, void *p)
 {
     cckd_trace (dev, "%s free %p", id, p);
     if (p) free (p);
-    return NULL;
+    return (void*)NULL;
 } /* end function cckd_free */
 
 /*-------------------------------------------------------------------*/

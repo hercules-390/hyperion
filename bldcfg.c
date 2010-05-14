@@ -811,25 +811,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
     sysblk.panrate = PANEL_REFRESH_RATE_SLOW;
 #endif
 
-    /* Initialize locks, conditions, and attributes */
-    initialize_lock (&sysblk.todlock);
-    initialize_lock (&sysblk.mainlock);
-    sysblk.mainowner = LOCK_OWNER_NONE;
-    initialize_lock (&sysblk.intlock);
-    initialize_lock (&sysblk.iointqlk);
-    sysblk.intowner = LOCK_OWNER_NONE;
-    initialize_lock (&sysblk.sigplock);
-//  initialize_detach_attr (&sysblk.detattr);   // (moved to impl.c)
-//  initialize_join_attr   (&sysblk.joinattr);  // (moved to impl.c)
-    initialize_condition (&sysblk.cpucond);
-    for (i = 0; i < MAX_CPU_ENGINES; i++)
-        initialize_lock (&sysblk.cpulock[i]);
-    initialize_condition (&sysblk.sync_cond);
-    initialize_condition (&sysblk.sync_bc_cond);
-#if defined(OPTION_INSTRUCTION_COUNTING)
-    initialize_lock (&sysblk.icount_lock);
-#endif
-
 #ifdef OPTION_PTTRACE
     ptt_trace_init (0, 1);
 #endif

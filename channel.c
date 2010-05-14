@@ -2370,7 +2370,7 @@ U16     count;                          /* CCW byte count            */
 BYTE   *ccw;                            /* CCW pointer               */
 BYTE    unitstat;                       /* Unit status               */
 BYTE    chanstat;                       /* Channel status            */
-U16     residual;                       /* Residual byte count       */
+U16     residual = 0;                   /* Residual byte count       */
 BYTE    more;                           /* 1=Count exhausted         */
 BYTE    tic = 0;                        /* Previous CCW was a TIC    */
 BYTE    chain = 1;                      /* 1=Chain to next CCW       */
