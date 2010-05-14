@@ -745,6 +745,33 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01605 "Invalid 'cmdlevel' option: '%s'"
 #define HHC01606 "cmdlevel[%2.2X] is '%s'"
 
+/* ecpsvm.c */
+// reserve 017xx for ecps:vm support
+#define HHC01700 "Abend condition detected in DISP2 instruction"
+#define HHC01701 "| %-9s | %8d | %8d |  %3d%% |"
+#define HHC01702 "+-----------+----------+----------+-------+"
+#define HHC01703 "* : Unsupported, - : Disabled, %% - Debug"
+#define HHC01704 "%d entry/entries not shown and never invoked"
+#define HHC01705 "%d call(s), was/where made to unsupported functions"
+#define HHC01706 "| %-9s | %-8s | %-8s | %-5s |"
+#define HHC01707 "ECPS:VM %s feature %s%s%s"
+#define HHC01708 "All ECPS:VM %s features %s%s"
+#define HHC01709 "ECPS:VM global debug %s"
+#define HHC01710 "ECPS:VM %s feature %s %s%s"
+#define HHC01711 "Unknown ECPS:VM feature %s; ignored"
+#define HHC01712 "Current reported ECPS:VM level is %d"
+#define HHC01713 "But ECPS:VM is currently disabled"
+#define HHC01714 "Level reported to guest program is now %d"
+#define HHC01715 "ECP:VM level %d is not supported, unpredictable results may occur"
+#define HHC01716 "The microcode support level is 20"
+#define HHC01717 "%s: %s"
+#define HHC01718 "Unknown subcommand %s, valid subcommands are :"
+#define HHC01719 "ECPS:VM Command processor invoked"
+#define HHC01720 "NO EVM subcommand. Type \"evm help\" for a list of valid subcommands"
+#define HHC01721 "Unknown EVM subcommand '%s'"
+#define HHC01722 "ECPS:VM Command processor complete"
+//#define HHCEV300D in ecpsvm.c
+
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
 #define HHC04100 "%s version %s initiated"
@@ -782,34 +809,6 @@ cpu.c:123:HABC1234I This is a message
  *=========================================================================================================================================
  *                                  O L D   M E S S A G E   F O R M A T
  */
- 
-/* ecpsvm.c */
-#define HHCEV001I "| %-9s | %8d | %8d |  %3d%% |"
-#define HHCEV002I "| %-9s | %-8s | %-8s | %-5s |"
-#define HHCEV003I "+-----------+----------+----------+-------+"
-#define HHCEV004W "Abend condition detected in DISP2 instr"
-#define HHCEV005I "%d Entr%s not shown (never invoked)"
-#define HHCEV006I "%d call(s) was/where made to unsupported functions"
-#define HHCEV008E "NO EVM subcommand. Type \"evm help\" for a list of valid subcommands"
-#define HHCEV010I "%s : %s"
-#define HHCEV011E "Unknown subcommand %s - valid subcommands are :"
-#define HHCEV012I "%s : %s"
-#define HHCEV013I "ECPS:VM Global Debug %s"
-#define HHCEV014I "ECPS:VM %s feature %s %s%s"
-#define HHCEV015I "ECPS:VM %s feature %s%s%s"
-#define HHCEV016I "All ECPS:VM %s features %s%s"
-#define HHCEV017I "But ECPS:VM is currently disabled"
-#define HHCEV018W "WARNING ! Unpredictable results may occur"
-#define HHCEV019I "The microcode support level is 20"
-#define HHCEV024I "* : Unsupported, - : Disabled, %% - Debug"
-#define HHCEV025I "Unknown ECPS:VM feature %s; Ignored"
-#define HHCEV026I "Current reported ECPS:VM Level is %d"
-#define HHCEV027I "Level reported to guest program is now %d"
-#define HHCEV028W "WARNING ! current level (%d) is not supported"
-#define HHCEV029I "ECPS:VM Command processor invoked"
-#define HHCEV030E "Unknown EVM subcommand %s"
-#define HHCEV031I "ECPS:VM Command processor complete"
-//#define HHCEV300D in ecpsvm.c
 
 /* hsccmd.c */
 #define HHCMD001W "Ignoring invalid SCRIPT file pause statement: %s"

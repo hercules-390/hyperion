@@ -906,7 +906,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
                 {
                     /* CP Say this is NOT good */
                     /* Take exit 28 */
-                    WRITEMSG(HHCEV004W);
+                    WRMSG(HHC01700,"W");
                     UPD_PSW_IA(regs, EVM_L(el+28));
                     return(0);
                 }
@@ -2591,7 +2591,7 @@ static void ecpsvm_showstats2(ECPSVM_STAT *ar,size_t count)
             {
                 strcat(nname,"+");
             }
-            WRITEMSG(HHCEV001I,
+            WRMSG(HHC01701,"I",
                     nname,
                     ar[i].call,
                     ar[i].hit,
@@ -2606,27 +2606,27 @@ static void ecpsvm_showstats2(ECPSVM_STAT *ar,size_t count)
     }
     if(havedisp)
     {
-        WRITEMSG(HHCEV003I);
+        WRMSG(HHC01702,"I");
     }
-    WRITEMSG(HHCEV001I,
+    WRMSG(HHC01701,"I",
             "Total",
             callt,
             hitt,
             callt ?
                     (hitt*100)/callt :
                     100);
-    WRITEMSG(HHCEV003I);
+    WRMSG(HHC01702,"I");
     if(haveunsup)
     {
-        WRITEMSG(HHCEV024I);
+        WRMSG(HHC01703,"I");
     }
     if(notshown)
     {
-        WRITEMSG(HHCEV005I,notshown,notshown==1?"y":"ies");
+        WRMSG(HHC01704,"I",notshown);
     }
     if(unsupcc)
     {
-        WRITEMSG(HHCEV006I,unsupcc);
+        WRMSG(HHC01705,"I",unsupcc);
     }
     return;
 }
@@ -2638,18 +2638,18 @@ void ecpsvm_showstats(int ac,char **av)
 
     UNREFERENCED(ac);
     UNREFERENCED(av);
-    WRITEMSG(HHCEV003I);
-    WRITEMSG(HHCEV002I,"VM ASSIST","Calls","Hits","Ratio");
-    WRITEMSG(HHCEV003I);
+    WRMSG(HHC01702,"I");
+    WRMSG(HHC01706,"I","VM ASSIST","Calls","Hits","Ratio");
+    WRMSG(HHC01702,"I");
     ar=malloc(sizeof(ecpsvm_sastats));
     memcpy(ar,&ecpsvm_sastats,sizeof(ecpsvm_sastats));
     asize=sizeof(ecpsvm_sastats)/sizeof(ECPSVM_STAT);
     qsort(ar,asize,sizeof(ECPSVM_STAT),ecpsvm_sortstats);
     ecpsvm_showstats2(ar,asize);
     free(ar);
-    WRITEMSG(HHCEV003I);
-    WRITEMSG(HHCEV002I,"CP ASSIST","Calls","Hits","Ratio");
-    WRITEMSG(HHCEV003I);
+    WRMSG(HHC01702,"I");
+    WRMSG(HHC01706,"I","CP ASSIST","Calls","Hits","Ratio");
+    WRMSG(HHC01702,"I");
     ar=malloc(sizeof(ecpsvm_cpstats));
     memcpy(ar,&ecpsvm_cpstats,sizeof(ecpsvm_cpstats));
     asize=sizeof(ecpsvm_cpstats)/sizeof(ECPSVM_STAT);
@@ -2703,21 +2703,21 @@ void ecpsvm_enadisaall(char *fclass,ECPSVM_STAT *tbl,size_t count,int onoff,int 
         if(onoff>=0)
         {
             es->enabled=onoff;
-            WRITEMSG(HHCEV015I,fclass,es->name," ", enadisa);
+            WRMSG(HHC01707,"I",fclass,es->name," ", enadisa);
         }
         if(debug>=0)
         {
             es->debug=debug;
-            WRITEMSG(HHCEV015I,fclass,es->name," Debug ", debugonoff);
+            WRMSG(HHC01707,"I",fclass,es->name," Debug ", debugonoff);
         }
     }
     if(onoff>=0)
     {
-        WRITEMSG(HHCEV016I,fclass,"",enadisa);
+        WRMSG(HHC01708,"I",fclass,"",enadisa);
     }
     if(debug>=0)
     {
-        WRITEMSG(HHCEV016I,fclass,"Debug ",debugonoff);
+        WRMSG(HHC01708,"I",fclass,"Debug ",debugonoff);
     }
 }
 
@@ -2745,7 +2745,7 @@ void ecpsvm_enable_disable(int ac,char **av,int onoff,int debug)
         if(debug>=0)
         {
             sysblk.ecpsvm.debug=debug;
-            WRITEMSG(HHCEV013I,debugonoff);
+            WRMSG(HHC01709,"I",debugonoff);
         }
         return;
     }
@@ -2773,17 +2773,17 @@ void ecpsvm_enable_disable(int ac,char **av,int onoff,int debug)
             if(onoff>=0)
             {
                 es->enabled=onoff;
-                WRITEMSG(HHCEV014I,fclass,es->name,"",enadisa);
+                WRMSG(HHC01710,"I",fclass,es->name,"",enadisa);
             }
             if(debug>=0)
             {
                 es->debug=onoff;
-                WRITEMSG(HHCEV014I,fclass,es->name,"Debug ",debugonoff);
+                WRMSG(HHC01710,"I",fclass,es->name,"Debug ",debugonoff);
             }
         }
         else
         {
-            WRITEMSG(HHCEV025I,av[i]);
+            WRMSG(HHC01711,"I",av[i]);
         }
     }
 }
@@ -2810,24 +2810,23 @@ void ecpsvm_level(int ac,char **av)
     int lvl;
     if(sysblk.ecpsvm.available)
     {
-        WRITEMSG(HHCEV026I,sysblk.ecpsvm.level);
+        WRMSG(HHC01712,"I",sysblk.ecpsvm.level);
     }
     else
     {
-        WRITEMSG(HHCEV026I,sysblk.ecpsvm.level);
-        WRITEMSG(HHCEV017I);
+        WRMSG(HHC01712,"I",sysblk.ecpsvm.level);
+        WRMSG(HHC01713,"I");
     }
     if(ac>1)
     {
         lvl=atoi(av[1]);
-        WRITEMSG(HHCEV027I,lvl);
+        WRMSG(HHC01714,"I",lvl);
         sysblk.ecpsvm.level=lvl;
     }
     if(sysblk.ecpsvm.level!=20)
     {
-          WRITEMSG(HHCEV028W,sysblk.ecpsvm.level);
-          WRITEMSG(HHCEV018W);
-          WRITEMSG(HHCEV019I);
+          WRMSG(HHC01715,"W",sysblk.ecpsvm.level);
+          WRMSG(HHC01716,"I");
     }
 }
 
@@ -2854,7 +2853,7 @@ static void ecpsvm_helpcmdlist(void)
     for(i=0;ecpsvm_cmdtab[i].name;i++)
     {
         ce=&ecpsvm_cmdtab[i];
-        WRITEMSG(HHCEV010I,ce->name,ce->expl);
+        WRMSG(HHC01717,"I",ce->name,ce->expl);
     }
     return;
 }
@@ -2870,11 +2869,11 @@ void ecpsvm_helpcmd(int ac,char **av)
     ce=ecpsvm_getcmdent(av[1]);
     if(ce==NULL)
     {
-        WRITEMSG(HHCEV011E,av[1]);
+        WRMSG(HHC01718,"E",av[1]);
         ecpsvm_helpcmdlist();
         return;
     }
-    WRITEMSG(HHCEV012I,ce->name,ce->help);
+    WRMSG(HHC01717,"I",ce->name,ce->help);
     return;
 }
 
@@ -2900,20 +2899,20 @@ ECPSVM_CMDENT *ecpsvm_getcmdent(char *cmd)
 void ecpsvm_command(int ac,char **av)
 {
     ECPSVM_CMDENT *ce;
-    WRITEMSG(HHCEV029I);
+    WRMSG(HHC01719,"I");
     if(ac==1)
     {
-        WRITEMSG(HHCEV008E);
+        WRMSG(HHC01720,"E");
         return;
     }
     ce=ecpsvm_getcmdent(av[1]);
     if(ce==NULL)
     {
-        WRITEMSG(HHCEV030E,av[1]);
+        WRMSG(HHC01721,"E",av[1]);
         return;
     }
     ce->fun(ac-1,av+1);
-    WRITEMSG(HHCEV031I);
+    WRMSG(HHC01722,"I");
 }
 
 #endif /* ifdef FEATURE_ECPSVM */
