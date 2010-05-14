@@ -430,6 +430,11 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00827 "Processor %s%02X: engine %02X type %1d set: '%s'"
 #define HHC00828 "Processor %s%02X: ipl failed: %s"
 
+/* diagnose.c */
+#define HHC00835 "Diagnose 0x308 called: System is re-ipled"
+#define HHC00836 "Checking processor %s%02X"
+#define HHC00837 "Waiting 1 second for cpu's to stop"
+
 /* external.c */
 #define HHC00840 "External interrupt: interrupt key"
 #define HHC00841 "External interrupt: clock comparator"
@@ -687,6 +692,11 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01472 "%1d:%04X is on wrong channel, 1st device defined on channel %02X"
 #define HHC01473 "Some or all devices in %04X-%04X duplicate already defined devices"
 
+/* codepage.c c */
+#define HHC01474 "Using '%s' codepage conversion table '%s'"
+#define HHC01475 "Codepage conversion table '%s' is not defined"
+
+
 // reserve 015xx for Hercules dynamic loader      
 /* hdl.c */
 #define HHC01500 "HDL: begin shutdown sequence"
@@ -773,15 +783,6 @@ cpu.c:123:HABC1234I This is a message
  *                                  O L D   M E S S A G E   F O R M A T
  */
  
-/* codepage.c c */
-#define HHCMD151E "Codepage conversion table '%s' is not defined"
-#define HHCMD152I "Using '%s' codepage conversion table '%s'"
-
-/* diagnose.c */
-#define HHCDN001I "Diagnose 0x308 called: System is re-ipled"
-#define HHCDN002I "Checking cpu(%d)"
-#define HHCDN003I "Waiting 1 second for cpu's to stop"
-
 /* ecpsvm.c */
 #define HHCEV001I "| %-9s | %8d | %8d |  %3d%% |"
 #define HHCEV002I "| %-9s | %-8s | %-8s | %-5s |"
@@ -912,7 +913,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCMD148E "savecore: no modified storage found"
 #define HHCMD149W "No dasd devices"
 #define HHCMD150W "evm command is deprecated. Use \"ecpsvm\" instead"
-
 #define HHCMD156E "CPUIDFMT must be either 0 or 1"
 #define HHCMD157I "CPUIDFMT = %d"
 

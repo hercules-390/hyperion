@@ -836,7 +836,7 @@ DLL_EXPORT void set_codepage(char *name)
     {
 #if TRUE
         if (!dflt)
-            WRITEMSG(HHCMD152I, "internal", name);
+            WRMSG(HHC01474, "I", "internal", name);
 #endif
     }
     else
@@ -846,14 +846,14 @@ DLL_EXPORT void set_codepage(char *name)
         {
 #if TRUE
             if (!dflt)
-                WRITEMSG(HHCMD152I, "external", name);
+                WRMSG(HHC01474, "I", "external", name);
 #endif
         }
         else
 #endif /*defined(HAVE_ICONV)*/
         {
             if (!dflt)
-                WRITEMSG (HHCMD151E, name);
+                WRMSG (HHC01475, "E", name);
         }
     }
 }

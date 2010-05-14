@@ -109,7 +109,7 @@ void *stop_cpus_and_ipl(int *ipltype)
   sysblk.diag8cmd |= DIAG8CMD_RUNNING;               
   panel_command("stopall");
   sysblk.diag8cmd &= ~DIAG8CMD_RUNNING;
-  WRITEMSG(HHCDN001I);
+  WRMSG(HHC00835, "I");
   sprintf(iplcmd, "%s %03X", ipltype, sysblk.ipldev);
   do
   {
@@ -120,7 +120,7 @@ void *stop_cpus_and_ipl(int *ipltype)
     {
       if(mask & 1)
       {
-       WRITEMSG(HHCDN002I, i);
+       WRMSG(HHC00836, "I", PTYPSTR(i), i);
         if(IS_CPU_ONLINE(i) && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED)
           cpustates = sysblk.regs[i]->cpustate;
       }
@@ -129,7 +129,7 @@ void *stop_cpus_and_ipl(int *ipltype)
     RELEASE_INTLOCK(NULL);
     if(cpustates != CPUSTATE_STOPPED)
     {
-      WRITEMSG(HHCDN003I);
+      WRMSG(HHC00837, "I");
       SLEEP(1);
     }
   }
