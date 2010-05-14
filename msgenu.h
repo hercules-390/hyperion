@@ -864,7 +864,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHCMD074I "TOTAL synchronous: %12" I64_FMT "d asynchronous: %12" I64_FMT "d  %3" I64_FMT "d%%"
 #define HHCMD075E "Invalid max device threads value (must be -1 to n)"
 #define HHCMD076I "Max device threads: %d, current: %d, most: %d, waiting: %d, max exceeded: %d"
-#define HHCMD078E "Max device threads %d current %d most %d waiting %d total I/Os queued %d"
+#define HHCMD078I "Max device threads %d current %d most %d waiting %d total I/Os queued %d"
 
 #define HHCMD081E "No cckd devices found"
 #define HHCMD084E "%1d:%04X is not a cckd device"
