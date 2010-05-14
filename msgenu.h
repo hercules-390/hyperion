@@ -430,11 +430,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00827 "Processor %s%02X: engine %02X type %1d set: '%s'"
 #define HHC00828 "Processor %s%02X: ipl failed: %s"
 
-/* diagnose.c */
-#define HHC00835 "Diagnose 0x308 called: System is re-ipled"
-#define HHC00836 "Checking processor %s%02X"
-#define HHC00837 "Waiting 1 second for cpu's to stop"
-
 /* external.c */
 #define HHC00840 "External interrupt: interrupt key"
 #define HHC00841 "External interrupt: clock comparator"
@@ -738,7 +733,6 @@ cpu.c:123:HABC1234I This is a message
 
 // reserve 016xx for panel communication
 #define HHC01600 "Unknown herc command '%s', enter 'help' for a list of valid commands"
-#define HHC01601 "Valid panel commands are:"
 #define HHC01602 "%-9.9s    %s"
 #define HHC01603 "%s"
 #define HHC01604 "Unknown herc command '%s', no help available"
@@ -778,6 +772,45 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01802 "Using HTTPROOT directory '%s'"
 #define HHC01803 "Waiting for HTTP requests on port %u"
 #define HHC01804 "Waiting for port %u to become free for HTTP requests"
+
+// reserve 019xx for diagnose calls
+/* diagnose.c */
+#define HHC01900 "Diagnose 0x308 called: System is re-ipled"
+#define HHC01901 "Checking processor %s%02X"
+#define HHC01902 "Waiting 1 second for cpu's to stop"
+
+/* vmd250.c */
+#define HHC01905 "%04X triggered block I/O interrupt: code %4.4X parm %16.16X status %2.2X subcode %2.2X"
+#define HHC01906 "%04X d250_init32 s %i o %i b %i e %i"
+#define HHC01907 "%04X d250_init BLKTAB: type %4.4X arch %i 512 %i 1024 %i 2048 %i 4096 %i"
+#define HHC01908 "Error in function '%s': '%s'"
+#define HHC01909 "%04X d250_preserve pending sense preserved"
+#define HHC01920 "%04X d250_restore pending sense restored"
+#define HHC01921 "%04X d250_remove block I/O environment removed"
+#define HHC01922 "%04X d250_read %d-byte block (rel. to 0): %d"
+#define HHC01923 "%04X d250_read FBA unit status %2.2X residual %d"
+#define HHC01924 "%04X async biopl %8.8X entries %d key %2.2X intp %8.8X"
+#define HHC01925 "%04X d250_iorq32 sync bioel %8.8X entries %d key %2.2X"
+#define HHC01926 "%04X d250_iorq32 psc %d succeeded %d failed %d"
+#define HHC01927 "d250_list32 error: psc %i"
+#define HHC01928 "%04X d250_list32 bios %i addr "F_RADR" I/O key %2.2X"
+#define HHC01929 "%04X d250_list32 xcode %4.4X bioe32 %8.8X-%8.8X fetch key %2.2X"
+#define HHC01930 "%04X d250_list32 bioe %8.8X oper %2.2X block %i buffer %8.8X"
+#define HHC01931 "%04X d250_list32 xcode %4.4X rdbuf %8.8X-%8.8X fetch key %2.2X"
+#define HHC01932 "%04X d250_list32 xcode %4.4X wrbuf %8.8X-%8.8X store key %2.2X"
+#define HHC01933 "%04X d250_list32 xcode %4.4X status %8.8X-%8.8X  store key %2.2X"
+#define HHC01934 "%04X d250_list32 bioe %8.8X status %2.2X"
+#define HHC01935 "%04X async bioel %16.16X entries %d key %2.2X intp %16.16X"
+#define HHC01936 "%04X d250_iorq64 sync bioel %16.16X entries %d key %2.2X"
+#define HHC01937 "%04X d250_iorq64 psc %d succeeded %d failed %d"
+#define HHC01938 "d250_list64 error: psc %i"
+#define HHC01939 "%04X d250_list64 bioes %i addr "F_RADR" I/O key %2.2X"
+#define HHC01940 "%04X d250_list64 xcode %4.4X bioe64 %8.8X-%8.8X fetch key %2.2X"
+#define HHC01941 "%04X d250_list64 bioe %16.16X oper %2.2X block %i buffer %16.16X"
+#define HHC01942 "%04X d250_list64 xcode %4.4X readbuf %16.16X-%16.16X fetch key %2.2X"
+#define HHC01943 "%04X d250_list64 xcode %4.4X writebuf %16.16X-%16.16X  store key %2.2X"
+#define HHC01944 "%04X d250_list64 xcode %4.4X status %16.16X-%16.16X store key %2.2X"
+#define HHC01945 "%04X d250_list64 bioe %16.16X status %2.2X"
 
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
@@ -1079,39 +1112,4 @@ cpu.c:123:HABC1234I This is a message
 /* vm.c */
 #define HHCVM001I "Panel command *%s* issued by guest %s"
 #define HHCVM005W "Panel command *%s* issued by guest not processed, disabled in configuration"
-
-/* vmd250.c */
-#define HHCVM006E "VM BLOCK I/O environment malloc failed"
-#define HHCVM007I "Device(%4.4X) d250_init BLKTAB: type(%4.4X) arch(%i) 512(%i) 1024(%i) 2048(%i) 4096(%i)"
-#define HHCVM008I "Device(%4.4X) d250_init32 s(%i) o(%i) b(%i) e(%i)"
-#define HHCVM009E "d250_list32 error: PSC(%i)"
-#define HHCVM011E "VM BLOCK I/O request malloc failed"
-#define HHCVM012I "Device(%4.4X) d250_preserve pending sense preserved"
-#define HHCVM013I "Device(%4.4X) d250_restore pending sense restored"
-#define HHCVM014I "Device(%4.4X) d250_list32 BIOE(%8.8X) status(%2.2X)"
-#define HHCVM015I "Device(%4.4X) d250_list32 BIOEs(%i) A("F_RADR") I/O key(%2.2X)"
-#define HHCVM016I "Device(%4.4X) d250_list32 BIOE(%8.8X) oper(%2.2X) block(%i) buffer(%8.8X)"
-#define HHCVM017I "Device(%4.4X) d250_iorq32 PSC(%d) succeeded(%d) failed(%d)"
-#define HHCVM018I "Device(%4.4X) d250_read %d-byte block (rel. to 0): %d"
-#define HHCVM019I "Device(%4.4X) ASYNC BIOEL(%8.8X) Entries(%d) Key(%2.2X) Intp(%8.8X)"
-#define HHCVM020I "Device(%4.4X) d250_list32 xcode(%4.4X) BIOE32(%8.8X-%8.8X) FETCH key(%2.2X)"
-#define HHCVM021I "Device(%4.4X) d250_read FBA unit status(%2.2X) residual(%d)"
-#define HHCVM022I "Device(%4.4X) d250_remove Block I/O environment removed"
-#define HHCVM023I "Device(%4.4X) Triggered Block I/O interrupt: code(%4.4X) parm(%16.16X) status(%2.2X) subcode(%2.2X)"
-#define HHCVM109E "d250_list64 error: PSC(%i)"
-#define HHCVM114I "Device(%4.4X) d250_list64 BIOE(%16.16X) status(%2.2X)"
-#define HHCVM115I "Device(%4.4X) d250_list64 BIOEs(%i) A("F_RADR" I/O key(%2.2X)"
-#define HHCVM116I "Device(%4.4X) d250_list64 BIOE(%16.16X) oper(%2.2X) block(%i) buffer(%16.16X)"
-#define HHCVM117I "Device(%4.4X) d250_iorq64 PSC(%d) succeeded(%d) failed(%d)"
-#define HHCVM119I "Device(%4.4X) d250_iorq32 SYNC BIOEL(%8.8X) Entries(%d) Key(%2.2X)"
-#define HHCVM120I "Device(%4.4X) d250_list32 xcode(%4.4X) Rd Buf(%8.8X-%8.8X) FETCH key(%2.2X)"
-#define HHCVM219I "Device(%4.4X) ASYNC BIOEL(%16.16X) Entries(%d) Key(%2.2X) Intp(%16.16X)"
-#define HHCVM220I "Device(%4.4X) d250_list32 xcode(%4.4X) Wr Buf(%8.8X-%8.8X) STORE key(%2.2X)"
-#define HHCVM319I "Device(%4.4X) d250_iorq64 SYNC BIOEL(%16.16X) Entries9%d) Key(%2.2X)"
-#define HHCVM320I "Device(%4.4X) d250_list32 xcode(%4.4X) Status(%8.8X-%8.8X) STORE key(%2.2X)"
-#define HHCVM420I "Device(%4.4X) d250_list64 xcode(%4.4X) BIOE64(%8.8X-%8.8X) FETCH key(%2.2X)"
-#define HHCVM520I "Device(%4.4X) d250_list64 xcode(%4.4X) Rd Buf(%16.16X-%16.16X) FETCH key(%2.2X)"
-#define HHCVM620I "Device(%4.4X) d250_list64 xcode(%4.4X) Wr Buf(%16.16X-%16.16X) STORE key(%2.2X)"
-#define HHCVM720I "Device(%4.4X) d250_list64 xcode(%4.4X) Status(%16.16X-%16.16X) STORE key(%2.2X)"
-
 

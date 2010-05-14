@@ -289,7 +289,6 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
 
     if (argc < 2)
     {
-        WRMSG( HHC01601, "I" );
         WRMSG( HHC01602, "I", "Command", "Description" );
         WRMSG( HHC01602, "I", "-------", "-----------------------------------------------" );
 

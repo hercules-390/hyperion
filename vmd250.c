@@ -385,7 +385,7 @@ void d250_bio_interrupt(DEVBLK *dev, U64 intparm, BYTE status, BYTE subcode)
    
    if (dev->ccwtrace)
    {
-      WRITEMSG (HHCVM023I,
+      WRMSG (HHC01905, "I",
               sysblk.biodev->devnum,
               sysblk.servcode,
               sysblk.bioparm,
@@ -441,7 +441,7 @@ int     cc;                         /* Condition code to return      */
       STORE_FW(&biopl->endblk,(U32)bioenv->endblk);
       if (dev->ccwtrace)
       {
-         WRITEMSG (HHCVM008I,
+         WRMSG (HHC01906, "I",
               dev->devnum,
               blksize,
               offset,
@@ -497,7 +497,7 @@ int     cc;                          /* condition code               */
       STORE_DW(&biopl->endblk,bioenv->endblk);
       if (dev->ccwtrace)
       {
-         WRITEMSG (HHCVM008I,
+         WRMSG (HHC01906, "I",
               dev->devnum,
               blksize,
               offset,
@@ -545,7 +545,7 @@ struct VMBIOENV *bioenv;  /* -->allocated environement               */
 
    if (dev->ccwtrace)
    {
-      WRITEMSG (HHCVM007I,
+      WRMSG (HHC01907, "I",
               dev->devnum,
               blktab->devt,
               blktab->darch,
@@ -604,7 +604,9 @@ struct VMBIOENV *bioenv;  /* -->allocated environement               */
    
    if (!(bioenv=(struct VMBIOENV *)malloc(sizeof(struct VMBIOENV))))
    {
-      WRITEMSG (HHCVM006E);
+      char buf[40];
+      sprintf(buf, "malloc(%lu)",sizeof(struct VMBIOENV));
+      WRMSG (HHC01908, "E", buf, strerror(errno));
       *rc = RC_ERROR;  /* Indicate an irrecoverable error occurred */
       *cc = CC_FAILED;
       return NULL;
@@ -713,7 +715,7 @@ void d250_preserve(DEVBLK *dev)
        /* Save the pending sense */
        memcpy(&dev->vmd250env->sense,&dev->sense,sizeof(dev->sense));
        if (dev->ccwtrace)
-       {  WRITEMSG(HHCVM012I, dev->devnum);
+       {  WRMSG(HHC01909, "I", dev->devnum);
        }
     }
     
@@ -752,7 +754,7 @@ void d250_restore(DEVBLK *dev)
        /* Restore the pending sense */
        memcpy(&dev->sense,&dev->vmd250env->sense,sizeof(dev->sense));
        if (dev->ccwtrace)
-       {  WRITEMSG (HHCVM013I, dev->devnum);
+       {  WRMSG (HHC01920, "I", dev->devnum);
        }
     }
     dev->ioactive = DEV_SYS_NONE;
@@ -818,7 +820,7 @@ int       cc;                        /* Condition code to return     */
        free(bioenv);
        if (dev->ccwtrace)
        {
-           WRITEMSG(HHCVM022I, dev->devnum);
+           WRMSG(HHC01921, "I", dev->devnum);
        }
        *rc = RC_SUCCESS;
        cc = CC_SUCCESS ; /* Set that the function has succeeded */
@@ -839,7 +841,7 @@ U16  residual;     /* Residual byte count */
     obtain_lock(&dev->lock);
     if (dev->ccwtrace)
     {
-       WRITEMSG(HHCVM018I, dev->devnum, blksize, pblknum);
+       WRMSG(HHC01922, "I", dev->devnum, blksize, pblknum);
     }
 
     if (dev->vmd250env->isCKD)
@@ -867,7 +869,7 @@ U16  residual;     /* Residual byte count */
        
        if (dev->ccwtrace)
        {
-          WRITEMSG(HHCVM021I, dev->devnum, unitstat, residual );
+          WRMSG(HHC01923, "I", dev->devnum, unitstat, residual );
        }
        
        /* Call the I/O end exit */
@@ -903,7 +905,7 @@ U16  residual;     /* Residual byte count */
     obtain_lock(&dev->lock);
     if (dev->ccwtrace)
     {
-       WRITEMSG(HHCVM018I, dev->devnum, blksize, pblknum);
+       WRMSG(HHC01922, "I", dev->devnum, blksize, pblknum);
     }
 
     if (!dev->vmd250env)
@@ -935,7 +937,7 @@ U16  residual;     /* Residual byte count */
                            buffer, &unitstat, &residual );
        if (dev->ccwtrace)
        {
-          WRITEMSG(HHCVM021I, dev->devnum, unitstat, residual );
+          WRMSG(HHC01923, "I", dev->devnum, unitstat, residual );
        }
 
        /* Call the I/O end exit */
@@ -1248,7 +1250,7 @@ int     rc2;
 
        if (dev->ccwtrace)
        {
-          WRITEMSG(HHCVM019I,
+          WRMSG(HHC01924, "I",
                    dev->devnum,
                    ioctl.listaddr,
                    ioctl.blkcount,
@@ -1263,7 +1265,9 @@ int     rc2;
        /* Get the storage for the thread's parameters */
        if (!(asyncp=(IOCTL32 *)malloc(sizeof(IOCTL32))))
        {
-          WRITEMSG (HHCVM011E);
+          char buf[40];
+          sprintf(buf, "malloc(%lu)", sizeof(IOCTL32));
+          WRMSG (HHC01908, "E", buf, strerror(errno));
           *rc = RC_ERROR;
           return CC_FAILED;
        }
@@ -1293,7 +1297,7 @@ int     rc2;
        /* Call the 32-bit BIOE request processor */
        if (dev->ccwtrace)
        {
-          WRITEMSG(HHCVM119I,
+          WRMSG(HHC01925, "I",
                    dev->devnum,
                    ioctl.listaddr,
                    ioctl.blkcount,
@@ -1304,7 +1308,7 @@ int     rc2;
 
        if (dev->ccwtrace)
        {
-          WRITEMSG(HHCVM017I, dev->devnum,psc,ioctl.goodblks,ioctl.badblks);
+          WRMSG(HHC01926, "I", dev->devnum,psc,ioctl.goodblks,ioctl.badblks);
        }
 
    }
@@ -1330,7 +1334,7 @@ int     rc2;
          *rc = RC_REM_PART;
          return CC_PARTIAL;
       default:
-         WRITEMSG (HHCVM009E, psc);
+         WRMSG (HHC01927, "I", psc);
          *rc = RC_ERROR;
          return CC_FAILED;
    }
@@ -1380,7 +1384,7 @@ RADR   bufend;    /* Last byte read or written                 */
    /* of the device by reserving it if shared and locking it   */
    if (ioctl->dev->ccwtrace)
    {
-      WRITEMSG (HHCVM015I,
+      WRMSG (HHC01928, "I",
                ioctl->dev->devnum,
                ioctl->blkcount,
                ioctl->listaddr,
@@ -1412,7 +1416,7 @@ RADR   bufend;    /* Last byte read or written                 */
             (bioebeg,bioeend,ACCTYPE_READ,ioctl->key,ioctl->regs);
       if (ioctl->dev->ccwtrace)
       {
-         WRITEMSG(HHCVM020I,ioctl->dev->devnum,xcode,bioebeg,bioeend,ioctl->key);
+         WRMSG(HHC01929,"I",ioctl->dev->devnum,xcode,bioebeg,bioeend,ioctl->key);
       }
       if ( xcode )
       {
@@ -1467,7 +1471,7 @@ RADR   bufend;    /* Last byte read or written                 */
       
          if (ioctl->dev->ccwtrace)
          {
-            WRITEMSG (HHCVM016I,
+            WRMSG (HHC01930, "I",
                      ioctl->dev->devnum,
                      bioebeg,
                      bioe.type,
@@ -1487,7 +1491,7 @@ RADR   bufend;    /* Last byte read or written                 */
                   (bufbeg,bufend,ACCTYPE_READ,ioctl->key,ioctl->regs);
             if (ioctl->dev->ccwtrace)
             {
-               WRITEMSG(HHCVM120I,
+               WRMSG(HHC01931, "I",
                        ioctl->dev->devnum,xcode,bufbeg,bufend,ioctl->key);
             }
             switch ( xcode )
@@ -1528,7 +1532,7 @@ RADR   bufend;    /* Last byte read or written                 */
                      (bufbeg,bufend,ACCTYPE_WRITE,ioctl->key,ioctl->regs);
                if (ioctl->dev->ccwtrace)
                {
-                  WRITEMSG(HHCVM220I,
+                  WRMSG(HHC01932, "I",
                            ioctl->dev->devnum,
                            xcode,bufbeg,
                            bufend,
@@ -1586,7 +1590,7 @@ RADR   bufend;    /* Last byte read or written                 */
             (bioebeg+1,bioebeg+1,ACCTYPE_WRITE,ioctl->key,ioctl->regs);
       if (ioctl->dev->ccwtrace)
       {
-         WRITEMSG(HHCVM320I,
+         WRMSG(HHC01933, "I",
                   ioctl->dev->devnum,xcode,bioebeg+1,bioebeg+1,ioctl->key);
       }
 
@@ -1606,7 +1610,7 @@ RADR   bufend;    /* Last byte read or written                 */
      
       if (ioctl->dev->ccwtrace)
       {
-         WRITEMSG (HHCVM014I, ioctl->dev->devnum,bioebeg,status); 
+         WRMSG (HHC01934, "I", ioctl->dev->devnum,bioebeg,status); 
       }
 
       /* Count if this BIOE was a success or failure */
@@ -1856,7 +1860,7 @@ int     rc2;
 
        if (dev->ccwtrace)
        {
-          WRITEMSG(HHCVM219I,
+          WRMSG(HHC01935, "I",
                    dev->devnum,
                    ioctl.listaddr,
                    ioctl.blkcount,
@@ -1871,7 +1875,9 @@ int     rc2;
        /* Get the storage for the thread's parameters */
        if (!(asyncp=(IOCTL64 *)malloc(sizeof(IOCTL64))))
        {
-          WRITEMSG (HHCVM011E);
+          char buf[40];
+          sprintf(buf, "malloc(%lu)", sizeof(IOCTL64));
+          WRMSG (HHC01908, "E", buf, strerror(errno));
           *rc = RC_ERROR;
           return CC_FAILED;
        }
@@ -1899,7 +1905,7 @@ int     rc2;
    {
        if (dev->ccwtrace)
        {
-          WRITEMSG(HHCVM319I,
+          WRMSG(HHC01936, "I",
                    dev->devnum,
                    ioctl.listaddr,
                    ioctl.blkcount,
@@ -1910,7 +1916,7 @@ int     rc2;
 
        if (dev->ccwtrace)
        {
-          WRITEMSG(HHCVM117I, dev->devnum,psc,ioctl.goodblks,ioctl.badblks);
+          WRMSG(HHC01937, "I", dev->devnum,psc,ioctl.goodblks,ioctl.badblks);
        }
    }
    
@@ -1935,7 +1941,7 @@ int     rc2;
          *rc = RC_REM_PART;
          return CC_PARTIAL;
       default:
-         WRITEMSG (HHCVM109E, psc);
+         WRMSG (HHC01938, "E", psc);
          *rc = RC_ERROR;
          return CC_FAILED;
    } /* end switch(psc) */
@@ -1969,7 +1975,7 @@ RADR   bufend;    /* Last byte read or written                 */
    /* of the device by reserving it if shared and locking it   */
    if (ioctl->dev->ccwtrace)
    {
-      WRITEMSG (HHCVM115I,
+      WRMSG (HHC01939, "I",
                ioctl->dev->devnum,
                ioctl->blkcount,
                ioctl->listaddr,
@@ -2001,7 +2007,7 @@ RADR   bufend;    /* Last byte read or written                 */
             (bioebeg,bioeend,ACCTYPE_READ,ioctl->key,ioctl->regs);
       if (ioctl->dev->ccwtrace)
       {
-         WRITEMSG(HHCVM420I,ioctl->dev->devnum,xcode,bioebeg,bioeend,ioctl->key);
+         WRMSG(HHC01940, "I",ioctl->dev->devnum,xcode,bioebeg,bioeend,ioctl->key);
       }
       if ( xcode )
       {
@@ -2056,7 +2062,7 @@ RADR   bufend;    /* Last byte read or written                 */
       
          if (ioctl->dev->ccwtrace)
          {
-            WRITEMSG (HHCVM116I,
+            WRMSG (HHC01941, "I",
                      ioctl->dev->devnum,
                      bioebeg,
                      bioe.type,
@@ -2076,7 +2082,7 @@ RADR   bufend;    /* Last byte read or written                 */
                   (bufbeg,bufend,ACCTYPE_READ,ioctl->key,ioctl->regs);
             if (ioctl->dev->ccwtrace)
             {
-               WRITEMSG(HHCVM520I,
+               WRMSG(HHC01942,"I",
                        ioctl->dev->devnum,xcode,bufbeg,bufend,ioctl->key);
             }
             switch ( xcode )
@@ -2111,7 +2117,7 @@ RADR   bufend;    /* Last byte read or written                 */
                      (bufbeg,bufend,ACCTYPE_WRITE,ioctl->key,ioctl->regs);
                if (ioctl->dev->ccwtrace)
                {
-                  WRITEMSG(HHCVM620I,
+                  WRMSG(HHC01943, "I",
                            ioctl->dev->devnum,
                            xcode,bufbeg,
                            bufend,
@@ -2160,7 +2166,7 @@ RADR   bufend;    /* Last byte read or written                 */
             (bioebeg+1,bioebeg+1,ACCTYPE_WRITE,ioctl->key,ioctl->regs);
       if (ioctl->dev->ccwtrace)
       {
-         WRITEMSG(HHCVM720I,ioctl->dev->devnum,xcode,bioebeg+1,bioebeg+1,ioctl->key);
+         WRMSG(HHC01944,"I",ioctl->dev->devnum,xcode,bioebeg+1,bioebeg+1,ioctl->key);
       }
 
       /* If the status byte is store protected, give up on processing any */
@@ -2179,7 +2185,7 @@ RADR   bufend;    /* Last byte read or written                 */
      
       if (ioctl->dev->ccwtrace)
       {
-         WRITEMSG (HHCVM114I,ioctl->dev->devnum,bioebeg,status); 
+         WRMSG (HHC01945,"I",ioctl->dev->devnum,bioebeg,status); 
       }
 
       /* Count if this BIOE was a success or failure */
