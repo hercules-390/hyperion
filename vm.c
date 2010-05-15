@@ -1128,7 +1128,7 @@ U32     j,k;
         )
         {
             if(sysblk.diag8cmd & DIAG8CMD_ECHO)
-                WRITEMSG (HHCVM001I, bufo, "started");
+                WRMSG (HHC01950, "I", bufo, "started");
             if (cmdflags & CMDFLAGS_RESPONSE)
             {
                 sysblk.diag8cmd |= DIAG8CMD_RUNNING;
@@ -1149,14 +1149,14 @@ U32     j,k;
                 panel_command(bufo);
                 sysblk.diag8cmd &= ~DIAG8CMD_RUNNING;
                 if(sysblk.diag8cmd & DIAG8CMD_ECHO)
-                    WRITEMSG (HHCVM001I, bufo, "completed");
+                    WRMSG (HHC01950, "I", bufo, "completed");
             }
         }
         else
         {
             if(sysblk.diag8cmd & DIAG8CMD_ECHO)
             {
-                WRITEMSG (HHCVM005W, bufo);
+                WRMSG (HHC01951, "W", bufo);
             }
             dresp=_("HHCVM003I Host command processing disabled by configuration statement");
         }

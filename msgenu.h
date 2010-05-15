@@ -812,6 +812,10 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01944 "%04X d250_list64 xcode %4.4X status %16.16X-%16.16X store key %2.2X"
 #define HHC01945 "%04X d250_list64 bioe %16.16X status %2.2X"
 
+/* vm.c */
+#define HHC01950 "Panel command '%s' issued by guest %s"
+#define HHC01951 "Panel command '%s' issued by guest not processed, disabled in configuration"
+
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
 #define HHC04100 "%s version %s initiated"
@@ -887,7 +891,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCMD049W "Are you sure you didn't mean 'ipl %04X' instead?"
 #define HHCMD050I "Interrupt key depressed"
 #define HHCMD051I "LOADPARM=%s"
-
 #define HHCMD053I "SHCMDOPT invalid option: %s"
 #define HHCMD054S "DIAG8CMD: %sable, %secho"
 #define HHCMD056I "LPAR name = %s"
@@ -905,7 +908,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCMD075E "Invalid max device threads value (must be -1 to n)"
 #define HHCMD076I "Max device threads: %d, current: %d, most: %d, waiting: %d, max exceeded: %d"
 #define HHCMD078I "Max device threads %d current %d most %d waiting %d total I/Os queued %d"
-
 #define HHCMD081E "No cckd devices found"
 #define HHCMD084E "%1d:%04X is not a cckd device"
 #define HHCMD087E "Operand must be `merge', `nomerge' or `force'"
@@ -954,7 +956,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCMD150W "evm command is deprecated. Use \"ecpsvm\" instead"
 #define HHCMD156E "CPUIDFMT must be either 0 or 1"
 #define HHCMD157I "CPUIDFMT = %d"
-
 #define HHCMD161I "%s%7d"
 #define HHCMD162E "Invalid format. Enter \"help gpr\" for assistance"
 #define HHCMD163E "Invalid format. Command does not support any arguments"
@@ -998,7 +999,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCMD324E "%1d:%04X invalid fcb image ==>%s<=="
 //#define HHCMD422I in hscmisc.c
 #define HHCMD423E "Script file buffer malloc failed: %s"
-
 #define HHCMD425S "DIAG8CMD invalid option: %s"
 #define HHCMD426E "%1d:%04X busy or interrupt pending"
 #define HHCMD427E "%1d:%04X subchannel not enabled"
@@ -1006,7 +1006,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCMD429E "Missing argument(s)"
 #define HHCMD430E "LPARNUM must be one or two hex digits"
 #define HHCMD431E "LCSS id %s is invalid"
-
 #define HHCMD433E "Script file \"%s\" not found"
 #define HHCMD434I "Hercules instruction trace displayed in %s mode"
 #define HHCMD441S "DEFSYM requires a single value (use quotes if necessary)"
@@ -1108,8 +1107,3 @@ cpu.c:123:HABC1234I This is a message
 #define HHCSR203E "All CPU's must be stopped to resume"
 #define HHCSR204E "File identifier error"
 #define HHCSR999E "Invalid key %8.8x"
-
-/* vm.c */
-#define HHCVM001I "Panel command *%s* issued by guest %s"
-#define HHCVM005W "Panel command *%s* issued by guest not processed, disabled in configuration"
-
