@@ -70,7 +70,8 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         dev->fd = open (dev->filename, O_RDWR|O_BINARY);
         if (dev->fd < 0)
         {
-            cckdumsg (dev, 700, "open error: %s\n", strerror(errno));
+            fprintf(stdout, MSG(HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                    "open()", strerror(errno)));
             continue;
         }
 
@@ -79,22 +80,21 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         {
             if (lseek (dev->fd, CCKD_DEVHDR_POS, SEEK_SET) < 0)
             {
-                cckdumsg (dev, 702, "lseek error offset 0x%" I64_FMT "x: %s\n",
-                          (long long)CCKD_DEVHDR_POS, strerror(errno));
+                fprintf(stdout, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                        "lseek()", (long unsigned)CCKD_DEVHDR_POS, strerror(errno)));
                 close (dev->fd);
                 continue;
             }
             if ((rc = read (dev->fd, &cdevhdr, CCKD_DEVHDR_SIZE)) < CCKD_DEVHDR_SIZE)
             {
-                cckdumsg (dev, 703, "read error rc=%d offset 0x%" I64_FMT "x len %d: %s\n",
-                          rc, (long long)CCKD_DEVHDR_POS, CCKD_DEVHDR_SIZE,
-                          rc < 0 ? strerror(errno) : "incomplete");
+                fprintf(stdout, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                        "read()", (long unsigned)CCKD_DEVHDR_POS, rc < 0 ? strerror(errno) : "incomplete"));
                 close (dev->fd);
                 continue;
             }
             if (cdevhdr.options & CCKD_OPENED)
             {
-                cckdumsg (dev, 707, "OPENED bit is on, use -f\n");
+                fprintf(stdout, MSG(HHC00352, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename));
                 close (dev->fd);
                 continue;
             }
@@ -103,7 +103,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         /* call chkdsk */
         if (cckd_chkdsk (dev, level) < 0)
         {
-            cckdumsg (dev, 708, "chkdsk errors\n");
+            fprintf(stdout, MSG(HHC00353, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename));           
             close (dev->fd);
             continue;
         }

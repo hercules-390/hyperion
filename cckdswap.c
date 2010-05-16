@@ -71,16 +71,16 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         dev->fd = open (dev->filename, O_RDWR|O_BINARY);
         if (dev->fd < 0)
         {
-            cckdumsg (dev, 700, "open error: %s\n", strerror(errno));
+            fprintf(stdout, MSG(HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                    "open()", strerror(errno)));
             continue;
         }
 
         /* read the CKD device header */
         if ((rc = read (dev->fd, &devhdr, CKDDASD_DEVHDR_SIZE)) < CKDDASD_DEVHDR_SIZE)
         {
-            cckdumsg (dev, 703, "read error rc=%d offset 0x%" I64_FMT "x len %d: %s\n",
-                      rc, (long long)0, CKDDASD_DEVHDR_SIZE,
-                      rc < 0 ? strerror(errno) : "incomplete");
+            fprintf(stdout, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                    "read()", (long unsigned)0, rc < 0 ? strerror(errno) : "incomplete"));
             close (dev->fd);
             continue;
         }
@@ -89,7 +89,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
          && memcmp(devhdr.devid, "FBA_C370", 8) != 0
          && memcmp(devhdr.devid, "FBA_S370", 8) != 0)
         {
-            cckdumsg (dev, 999, "not a compressed dasd file\n");
+            fprintf(stdout, MSG(HHC00356, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename));
             close (dev->fd);
             continue;
         }
@@ -97,9 +97,8 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         /* read the compressed CKD device header */
         if ((rc = read (dev->fd, &cdevhdr, CCKD_DEVHDR_SIZE)) < CCKD_DEVHDR_SIZE)
         {
-            cckdumsg (dev, 703, "read error rc=%d offset 0x%" I64_FMT "x len %d: %s\n",
-                      rc, (long long)CCKD_DEVHDR_POS, CCKD_DEVHDR_SIZE,
-                      rc < 0 ? strerror(errno) : "incomplete");
+            fprintf(stdout, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                    "read()", (long unsigned)CCKD_DEVHDR_POS, rc < 0 ? strerror(errno) : "incomplete"));
             close (dev->fd);
             continue;
         }
@@ -107,7 +106,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         /* Check the OPENED bit */
         if (!force && (cdevhdr.options & CCKD_OPENED))
         {
-            cckdumsg (dev, 707, "OPENED bit is on, use -f\n");
+            fprintf(stdout, MSG(HHC00352, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename));
             close (dev->fd);
             continue;
         }
@@ -118,7 +117,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         /* call chkdsk */
         if (cckd_chkdsk (dev, level) < 0)
         {
-            cckdumsg (dev, 708, "chkdsk errors\n");
+            fprintf(stdout, MSG(HHC00353, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename));
             close (dev->fd);
             continue;
         }
@@ -126,16 +125,15 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         /* re-read the compressed CKD device header */
         if (lseek (dev->fd, CCKD_DEVHDR_POS, SEEK_SET) < 0)
         {
-            cckdumsg (dev, 702, "lseek error offset 0x%" I64_FMT "x: %s\n",
-                      (long long)CCKD_DEVHDR_POS, strerror(errno));
+            fprintf(stdout, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                    "lseek()", (long unsigned)CCKD_DEVHDR_POS, strerror(errno)));
             close (dev->fd);
             continue;
         }
         if ((rc = read (dev->fd, &cdevhdr, CCKD_DEVHDR_SIZE)) < CCKD_DEVHDR_SIZE)
         {
-            cckdumsg (dev, 703, "read error rc=%d offset 0x%" I64_FMT "x len %d: %s\n",
-                      rc, (long long)CCKD_DEVHDR_POS, CCKD_DEVHDR_SIZE,
-                      rc < 0 ? strerror(errno) : "incomplete");
+            fprintf(stdout, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                    "read()", (long unsigned)CCKD_DEVHDR_POS, rc < 0 ? strerror(errno) : "incomplete"));
             close (dev->fd);
             continue;
         }
@@ -143,10 +141,11 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         /* swap the byte order of the file if chkdsk didn't do it for us */
         if (bigend == (cdevhdr.options & CCKD_BIGENDIAN))
         {
-            cckdumsg (dev, 101, "converting to %s\n",
-                      bigend ? "litle-endian" : "big-endian");
+            fprintf(stdout, MSG(HHC00357, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                    cckd_endian() ? "big-endian" : "little-endian"));
             if (cckd_swapend (dev) < 0)
-                cckdumsg (dev, 910, "error during swap\n");
+                fprintf(stdout, MSG(HHC00378, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename));
+
         }
 
         close (dev->fd);
