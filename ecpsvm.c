@@ -1,3 +1,10 @@
+/*ECPSVM.C      (c) Copyright Roger Bowler, 2000-2010                */
+/*              Hercules ECPS:VM Support                             */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
 /***********************************************************/
 /* HERCULES ECPS:VM Support                                */
 /* (c) Copyright 2003-2009 Roger Bowler and Others         */
@@ -51,23 +58,6 @@
 /* +-----+-------+----------------------------------------+*/
 /*                                                         */
 /***********************************************************/
-
-// $Log$
-// Revision 1.68  2007/06/23 00:04:09  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.67  2007/01/13 07:18:14  bernard
-// backout ccmask
-//
-// Revision 1.66  2007/01/12 15:22:37  bernard
-// ccmask phase 1
-//
-// Revision 1.65  2006/12/31 17:53:48  gsmith
-// 2006 Dec 31 Update ecpsvm.c for new psw IA scheme
-//
-// Revision 1.64  2006/12/08 09:43:20  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 

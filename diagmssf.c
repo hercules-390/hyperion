@@ -1,5 +1,9 @@
-/* DIAGMSSF.C   (c) Copyright Jan Jaeger, 1999-2009                  */
+/* DIAGMSSF.C   (c) Copyright Jan Jaeger, 1999-2010                  */
 /*              ESA/390 Diagnose Functions                           */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 
@@ -12,30 +16,6 @@
 /*                                             04/12/1999 Jan Jaeger */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 /*-------------------------------------------------------------------*/
-
-// $Log$
-// Revision 1.47  2008/12/23 11:07:43  ivan
-// Indicate CPU engine types in DIAG 204 CPU part structure array
-//
-// Revision 1.46  2008/12/21 21:25:59  ivan
-// Fix spelling
-//
-// Revision 1.45  2008/12/21 05:46:47  ivan
-// Fill diag 224 table with all the engine names
-//
-// Revision 1.44  2008/11/24 14:52:21  jj
-// Add PTYP=IFL
-// Change SCPINFO processing to check on ptyp for IFL specifics
-//
-// Revision 1.43  2007/06/23 00:04:08  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.42  2007/01/14 23:14:12  rbowler
-// Fix signed/unsigned mismatch in 370-only build
-//
-// Revision 1.41  2006/12/08 09:43:20  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 

@@ -1,5 +1,9 @@
-/* SR.H         (c)Copyright Greg Smith, 2004-2009                   */
+/* SR.H         (c)Copyright Greg Smith, 2004-2010                   */
 /*              Suspend/Resume a Hercules session                    */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 

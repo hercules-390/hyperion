@@ -1,5 +1,9 @@
-/* DASDTAB.C    (c) Copyright Roger Bowler, 1999-2009                */
+/* DASDTAB.C    (c) Copyright Roger Bowler, 1999-2010                */
 /*              Hercules Supported DASD definitions                  */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 
@@ -13,38 +17,6 @@
 /* device capacity page at: http://www.sdisw.com/dasd_capacity.html  */
 /* (used with permission)                                            */
 /*-------------------------------------------------------------------*/
-
-// $Log$
-// Revision 1.40  2008/11/02 21:45:07  rbowler
-// Correction to dasdtab entries for 3375 and 3380
-//
-// Revision 1.39  2008/10/27 15:10:32  rbowler
-// Revert to 3990 as default control unit for 3390 devices
-//
-// Revision 1.38  2008/02/13 00:30:22  gsmith
-// Fix 3880 SNSID length (thanks De!)
-//
-// Revision 1.37  2007/06/23 00:04:08  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.36  2007/06/20 04:09:54  gsmith
-// make 3990-6 default control unit for 3390 devices
-//
-// Revision 1.35  2007/06/07 19:15:05  kleonard
-// Document circumvention for DSF X'0A' command reject
-//
-// Revision 1.34  2007/05/04 19:28:38  kleonard
-// Circumvent command reject for DSF X'0A' command
-//
-// Revision 1.33  2007/03/06 22:54:19  gsmith
-// Fix ckd RDC response
-//
-// Revision 1.32  2007/02/15 00:10:04  gsmith
-// Fix ckd RCD, SNSS, SNSID responses
-//
-// Revision 1.31  2006/12/08 09:43:20  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 

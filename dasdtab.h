@@ -1,5 +1,9 @@
-/* DASDTAB.H    (c) Copyright Roger Bowler, 1999-2009                */
+/* DASDTAB.H    (c) Copyright Roger Bowler, 1999-2010                */
 /*              DASD table structures                                */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 
@@ -9,19 +13,6 @@
 /* It also contains function prototypes for the DASD table utilities.*/
 /*-------------------------------------------------------------------*/
 
-// $Log$
-// Revision 1.14  2007/06/23 00:04:08  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.13  2007/03/06 22:54:19  gsmith
-// Fix ckd RDC response
-//
-// Revision 1.12  2007/02/15 00:10:04  gsmith
-// Fix ckd RCD, SNSS, SNSID responses
-//
-// Revision 1.11  2006/12/08 09:43:20  jj
-// Add CVS message log
-//
 
 #if !defined(_DASDTAB_H)
 #define _DASDTAB_H

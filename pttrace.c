@@ -1,5 +1,9 @@
 /* PTTRACE.C    (c) Copyright Greg Smith, 2003-2010                  */
 /*              pthreads trace debugger                              */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 

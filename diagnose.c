@@ -1,5 +1,9 @@
-/* DIAGNOSE.C   (c) Copyright Roger Bowler, 2000-2009                */
+/* DIAGNOSE.C   (c) Copyright Roger Bowler, 2000-2010                */
 /*              ESA/390 Diagnose Functions                           */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 

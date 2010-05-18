@@ -1,5 +1,9 @@
-/* DFP.C        (c) Copyright Roger Bowler, 2007-2009                */
+/* DFP.C        (c) Copyright Roger Bowler, 2007-2010                */
 /*              Decimal Floating Point instructions                  */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 
@@ -8,41 +12,6 @@
 /* and the Floating Point Support Enhancement Facility instructions  */
 /* described in the z/Architecture Principles of Operation manual.   */
 /*-------------------------------------------------------------------*/
-
-// $Log$
-// Revision 1.70  2008/11/23 11:18:50  rbowler
-// Fix signed/unsigned mismatch caused by previous fix
-//
-// Revision 1.69  2008/11/23 11:11:54  rbowler
-// Fix warning C4267 conversion from 'size_t' to 'int' in win64
-//
-// Revision 1.68  2008/11/23 11:06:04  rbowler
-// Cosmetic: remove extraneous trailing blanks from dfp.c
-//
-// Revision 1.67  2007/11/23 12:28:07  rbowler
-// Correct CPSDR when R1 and R3 are same register (2nd attempt)
-//
-// Revision 1.66  2007/11/15 22:11:26  rbowler
-// Correct CPSDR when R1 and R3 are same register
-//
-// Revision 1.65  2007/06/23 00:04:08  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.64  2007/04/25 12:33:20  rbowler
-// Move SRNMT to Floating-point-support-enhancement facility
-//
-// Revision 1.63  2007/04/25 12:10:27  rbowler
-// Move LFAS,SFASR to IEEE-exception-simulation facility
-//
-// Revision 1.62  2007/03/13 01:52:42  gsmith
-// Fix unsigned char (BYTE) vs char warnings for decNumberFromString
-//
-// Revision 1.61  2007/01/30 16:43:28  rbowler
-// Activate Decimal Floating Point Facility
-//
-// Revision 1.10  2006/12/08 09:43:20  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 

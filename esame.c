@@ -1,5 +1,9 @@
 /* ESAME.C      (c) Copyright Jan Jaeger, 2000-2010                  */
 /*              ESAME (z/Architecture) instructions                  */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 
@@ -18,104 +22,6 @@
 /*      DAT enhancement facility - Roger Bowler              July2004*/
 /*      Extended immediate facility - Roger Bowler            Aug2005*/
 /*-------------------------------------------------------------------*/
-
-// $Log$
-// Revision 1.204  2009/01/23 11:53:18  bernard
-// copyright notice
-//
-// Revision 1.203  2009/01/15 17:27:02  rbowler
-// STFLE bit settings for CPU Measurement Facility
-//
-// Revision 1.202  2008/05/06 22:15:42  rbowler
-// Fix warning: operation on `p1' may be undefined
-//
-// Revision 1.201  2008/04/11 14:28:29  bernard
-// Integrate regs->exrl into base Hercules code.
-//
-// Revision 1.200  2008/04/09 07:36:51  bernard
-// Allign to Rogers terminal ;-)
-//
-// Revision 1.199  2008/04/08 23:57:15  rbowler
-// Fix '#' : invalid character : possibly the result of a macro expansion
-//
-// Revision 1.198  2008/04/08 17:12:47  bernard
-// Added execute relative long instruction
-//
-// Revision 1.197  2008/03/16 00:04:37  rbowler
-// Replace ACC_ARMODE by USE_ARMODE for LPTEA
-//
-// Revision 1.196  2008/03/06 16:10:35  rbowler
-// Remove extraneous trailing blanks (cosmetic change only)
-//
-// Revision 1.195  2008/03/01 12:19:04  rbowler
-// Rename new features to include the word facility
-//
-// Revision 1.194  2008/02/28 22:05:10  ptl00
-// Fix RP for z/arch and mode switch trace
-//
-// Revision 1.193  2008/02/28 10:11:50  rbowler
-// STFL bit settings for new features in zPOP-06
-//
-// Revision 1.192  2008/02/15 21:17:55  ptl00
-// Add pic13 check to RP
-//
-// Revision 1.191  2007/11/17 21:57:52  rbowler
-// Correct comments on two #endif statements
-//
-// Revision 1.190  2007/11/15 21:34:01  rbowler
-// EPSW correction in accord with ESA/390 POP ninth edition
-//
-// Revision 1.189  2007/06/23 00:04:09  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.188  2007/04/27 10:50:40  rbowler
-// STFL bit 27 for MVCOS
-//
-// Revision 1.187  2007/04/25 15:23:49  rbowler
-// Standardize comment format in ECTG
-//
-// Revision 1.186  2007/04/25 14:46:35  rbowler
-// Rename RSS instruction format as SSF
-//
-// Revision 1.185  2007/04/24 16:34:41  rbowler
-// Define feature macros and STFL bit settings for new features in zPOP-05
-//
-// Revision 1.184  2007/03/21 21:35:11  gsmith
-// Fix LPTEA to use variable acctype for translate_addr() call
-//
-// Revision 1.183  2007/03/20 22:23:33  gsmith
-// Redefine ACC_ and ACCTYPE_ macros
-//
-// Revision 1.182  2007/03/10 06:27:43  gsmith
-// machdep.h updates
-//
-// Revision 1.181  2007/01/13 07:18:59  bernard
-// backout ccmask
-//
-// Revision 1.180  2007/01/12 15:23:13  bernard
-// ccmask phase 1
-//
-// Revision 1.179  2007/01/09 05:10:19  gsmith
-// Tweaks to lm/stm
-//
-// Revision 1.178  2007/01/04 23:12:04  gsmith
-// remove thunk calls for program_interrupt
-//
-// Revision 1.177  2006/12/31 21:16:32  gsmith
-// 2006 Dec 31 really back out mainlockx.pat
-//
-// Revision 1.176  2006/12/20 09:09:40  jj
-// Fix bogus log entries
-//
-// Revision 1.175  2006/12/20 04:26:19  gsmith
-// 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
-//
-// Revision 1.174  2006/12/20 04:22:00  gsmith
-// 2006 Dec 19 Backout mainlockx.pat - possible SMP problems - Greg Smith
-//
-// Revision 1.173  2006/12/08 09:43:20  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 
