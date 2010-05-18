@@ -5,11 +5,6 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-////////////////////////////////////////////////////////////////////////////////////
-// (c) Copyright "Fish" (David B. Trout), 2001-2009. Released under the Q Public License
-// (http://www.hercules-390.org/herclic.html) as modifications to Hercules.
-////////////////////////////////////////////////////////////////////////////////////
-
 // $Id$
 
 #include "hstdinc.h"

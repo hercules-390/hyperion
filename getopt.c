@@ -1,6 +1,15 @@
-/*      $NetBSD: getopt_long.c,v 1.15 2002/01/31 22:43:40 tv Exp $      */
+/*  GETOPT.C    (c) Copyright Roger Bowler, 1999-2010                */
+/*              NetBSD getopt parsing function                       */
+/*              Additional Copyright notices below                   */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+/*   The above notice applies only to the Hercules Project changes.  */
 
 // $Id$
+
+/*      $NetBSD: getopt_long.c,v 1.15 2002/01/31 22:43:40 tv Exp $      */
 
 /*-
  * Copyright (c) 2000 The NetBSD Foundation, Inc.
@@ -37,11 +46,6 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-
-// $Log$
-// Revision 1.3  2006/12/08 09:43:21  jj
-// Add CVS message log
-//
 
 #define _GETOPT_C_
 #define _HUTIL_DLL_

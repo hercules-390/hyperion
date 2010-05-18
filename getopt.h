@@ -1,3 +1,12 @@
+/*  GETOPT.H    (c) Copyright Roger Bowler, 1999-2010                */
+/*              NetBSD getopt parsing function                       */
+/*              Additional Copyright notices below                   */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+/*   The above notice applies only to the Hercules Project changes.  */
+
 /*
  * Copyright (c) 1987, 1993, 1994, 1996
  *  The Regents of the University of California.  All rights reserved.

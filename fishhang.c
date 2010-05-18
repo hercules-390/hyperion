@@ -1,28 +1,11 @@
-////////////////////////////////////////////////////////////////////////////////////
-//         fishhang.c           verify/debug proper Hercules LOCK handling...
-////////////////////////////////////////////////////////////////////////////////////
-// (c) Copyright "Fish" (David B. Trout), 2002-2009. Released under the Q Public License
-// (http://www.hercules-390.org/herclic.html) as modifications to Hercules.
-////////////////////////////////////////////////////////////////////////////////////
+/* FISHHANG.C   (c) Copyright "Fish" (David B. Trout), 2002-2009     */
+/*              Hercules verify/debug proper LOCK handling...        */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
-//
-// $Log$
-// Revision 1.19  2007/11/30 14:54:32  jmaynard
-// Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
-//
-// Revision 1.18  2007/06/23 00:04:09  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.17  2006/12/31 12:25:26  fish
-// Fix "undefined reference to _beginthreadex" issue for non-MSVC (i.e. Cygwin) builds.
-//
-// Revision 1.16  2006/12/28 15:49:34  fish
-// Use _beginthreadex/_endthreadex instead of CreateThread/ExitThread in continuing effort to try and resolve our still existing long-standing 'errno' issue...
-//
-// Revision 1.15  2006/12/08 09:43:21  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 

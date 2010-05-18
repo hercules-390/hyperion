@@ -1,5 +1,9 @@
-/* FLOAT.C      (c) Copyright Peter Kuschnerus, 2000-2009            */
+/* FLOAT.C      (c) Copyright Peter Kuschnerus, 2000-2010            */
 /*              ESA/390 Hex Floatingpoint Instructions               */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 
@@ -30,41 +34,6 @@
 /* Convert 64fixed to float family CEGR,CDGR,CXGR  BvdHelm  28/01/06 */
 /* Completed the family CGER, CGDR and CGXR        BvdHelm  04/11/06 */
 /*-------------------------------------------------------------------*/
-
-// $Log$
-// Revision 1.56  2008/05/04 14:14:03  rbowler
-// Fix CGXR to handle values exceeding 2G
-//
-// Revision 1.55  2008/05/04 10:01:48  rbowler
-// Fix CGDR to handle values exceeding 2G
-//
-// Revision 1.54  2008/04/27 22:34:23  rbowler
-// CGER result incorrect when expo=70
-//
-// Revision 1.53  2008/04/25 21:35:02  rbowler
-// CGER result incorrect for values over 2G
-//
-// Revision 1.52  2008/04/22 17:41:21  rbowler
-// Correction to CXGR instruction
-//
-// Revision 1.51  2008/04/21 20:26:27  rbowler
-// CEGR result incorrect if source exceeds 6 digits
-//
-// Revision 1.50  2008/04/20 21:53:50  rbowler
-// CDGR result incorrect if source exceeds 14 digits
-//
-// Revision 1.49  2007/06/23 00:04:09  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.48  2007/01/13 07:19:55  bernard
-// backout ccmask
-//
-// Revision 1.47  2007/01/12 15:23:26  bernard
-// ccmask phase 1
-//
-// Revision 1.46  2006/12/08 09:43:21  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 
