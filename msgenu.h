@@ -891,6 +891,11 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02020 "SR: value error, incorrect length"
 #define HHC02021 "SR: string error, incorrect length"
 
+// reserve 021xx for logger.c
+#define HHC02100 "Logger: log not active"
+#define HHC02101 "Logger: log closed"
+#define HHC02102 "Logger: error in function '%s': '%s'"
+
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
 #define HHC04100 "%s version %s initiated"
@@ -1140,12 +1145,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHCMD143E "Invalid value: %s"
 #define HHCMD144E "Invalid operand: %s"
 #define HHCMD145E "Invalid range: %s"
-
-/* logger.c */
-#define HHCLG014E "Log not active"
-#define HHCLG015I "Log closed"
-#define HHCLG016E "Error opening logfile(%s) %s"
-#define HHCLG017S "Log file(%s) fdopen failed %s"
 
 /* pttrace.c */
 #define HHCPT001E "Invalid argument(%s)"

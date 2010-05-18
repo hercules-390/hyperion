@@ -593,7 +593,7 @@ int   new_hrdcpyfd;
     {
         if(!logger_hrdcpy)
         {
-            WRITEMSG(HHCLG014E);
+            WRMSG(HHC02100, "E");
             return;
         }
         else
@@ -602,9 +602,9 @@ int   new_hrdcpyfd;
             logger_hrdcpy = 0;
             logger_hrdcpyfd = 0;
             release_lock(&logger_lock);
-            fprintf(temp_hrdcpy,MSG(HHCLG015I, ""));
+            fprintf(temp_hrdcpy,MSG(HHC02101, "I"));
             fclose(temp_hrdcpy);
-            WRITEMSG(HHCLG015I);
+            WRMSG(HHC02101, "I");
             return;
         }
     }
@@ -618,14 +618,14 @@ int   new_hrdcpyfd;
                             S_IRUSR  | S_IWUSR | S_IRGRP);
         if(new_hrdcpyfd < 0)
         {
-            WRITEMSG(HHCLG016E,filename,strerror(errno));
+            WRMSG(HHC02102, "E","open()",strerror(errno));
             return;
         }
         else
         {
             if(!(new_hrdcpy = fdopen(new_hrdcpyfd,"w")))
             {
-                WRITEMSG(HHCLG017S, filename, strerror(errno));
+                WRMSG(HHC02102,"S", "fdopen()", strerror(errno));
                 return;
             }
             else
