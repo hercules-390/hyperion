@@ -227,7 +227,7 @@ DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
                     if (pttrace != NULL)
                     {
                         RELEASE_PTTLOCK;
-                        WRITEMSG(HHCPT002E);
+                        WRMSG(HHC90010, "E");
                         return -1;
                     }
                 }
@@ -245,7 +245,7 @@ DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
             }
             else
             {
-                WRITEMSG(HHCPT001E, argv[0]);
+                WRMSG(HHC90011, "E", argv[0]);
                 rc = -1;
                 break;
             }
@@ -276,7 +276,7 @@ DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
         if (pttracen)
             rc = ptt_pthread_print();
     
-        WRITEMSG(HHCPT003I,
+        WRMSG(HHC90012, "I",
                (pttclass & PTT_CL_INF) ? "control " : "",
                (pttclass & PTT_CL_ERR) ? "error " : "",
                (pttclass & PTT_CL_PGM) ? "prog " : "",

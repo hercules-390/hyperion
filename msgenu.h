@@ -928,6 +928,11 @@ cpu.c:123:HABC1234I This is a message
 #define HHC90000 "DBG: %s"
 #define HHC90001 " *** Assertion Failed! *** %s(%d); function: %s"
 
+/* pttrace.c */
+#define HHC90010 "Pttrace: trace is busy"
+#define HHC90011 "Pttrace: invalid argument '%s'"
+#define HHC90012 "Pttrace: %s%s%s%s%s%s%s%s%s%s%s %s %s to %d %d"
+
 /*
  *                                  N E W   M E S S A G E   F O R M A T
  *=========================================================================================================================================
@@ -1146,7 +1151,3 @@ cpu.c:123:HABC1234I This is a message
 #define HHCMD144E "Invalid operand: %s"
 #define HHCMD145E "Invalid range: %s"
 
-/* pttrace.c */
-#define HHCPT001E "Invalid argument(%s)"
-#define HHCPT002E "Trace is busy"
-#define HHCPT003I "Ptt(%s%s%s%s%s%s%s%s%s%s%s %s %s) to(%d %d)"
