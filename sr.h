@@ -447,27 +447,27 @@
 #else
 #define SR_WRITE_ERROR \
  do { \
-   WRITEMSG(HHCSR010E, strerror(errno)); \
+   WRMSG(HHC02001, "E", "write()", strerror(errno)); \
    return -1; \
  } while (0)
 #define SR_READ_ERROR \
  do { \
-   WRITEMSG(HHCSR011E, strerror(errno)); \
+   WRMSG(HHC02001, "E", "read()", strerror(errno)); \
    return -1; \
  } while (0)
 #define SR_SEEK_ERROR \
  do { \
-   WRITEMSG(HHCSR012E, strerror(errno)); \
+   WRITEMSG(HHC02001, "E", "lseek()", strerror(errno)); \
    return -1; \
  } while (0)
 #define SR_VALUE_ERROR \
  do { \
-   WRITEMSG(HHCSR013E); \
+   WRMSG(HHC02020, "E"); \
    return -1; \
  } while (0)
 #define SR_STRING_ERROR \
  do { \
-   WRITEMSG(HHCSR014E); \
+   WRMSG(HHC02021, "E"); \
    return -1; \
  } while (0)
 #endif

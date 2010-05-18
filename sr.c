@@ -58,7 +58,7 @@ BYTE     psw[16];
 
     if (argc > 2)
     {
-        WRITEMSG(HHCSR101E);
+        WRMSG(HHC02000, "E");
         return -1;
     }
 
@@ -68,7 +68,7 @@ BYTE     psw[16];
     file = SR_OPEN (fn, "wb");
     if (file == NULL)
     {
-        WRITEMSG(HHCSR102E,fn,strerror(errno));
+        WRMSG(HHC02001, "E","open()",strerror(errno));
         return -1;
     }
 
@@ -112,11 +112,11 @@ BYTE     psw[16];
         dev = sr_active_devices();
         if (dev == NULL) break;
         if (i % 500 == 0)
-            WRITEMSG(HHCSR103W,dev->devnum);
+            WRMSG(HHC02002, "W", dev->devnum);
         usleep (10000);
     }
     if (dev != NULL)
-        WRITEMSG(HHCSR104W,dev->devnum);
+        WRMSG(HHC02003, "W",dev->devnum);
 
     /* Write header */
     SR_WRITE_STRING(file, SR_HDR_ID, SR_ID);
@@ -296,16 +296,16 @@ BYTE     psw[16];
     return 0;
 
 sr_write_error:
-    WRITEMSG(HHCSR010E, strerror(errno));
+    WRMSG(HHC02001, "E", "write()", strerror(errno));
     goto sr_error_exit;
 sr_value_error:
-    WRITEMSG(HHCSR013E);
+    WRMSG(HHC02020, "E");
     goto sr_error_exit;
 sr_string_error:
-    WRITEMSG(HHCSR014E);
+    WRMSG(HHC02021, "E");
     goto sr_error_exit;
 sr_error_exit:
-    WRITEMSG(HHCSR015E,fn);
+    WRMSG(HHC02004, "E", fn);
     SR_CLOSE (file);
     return -1;
 }
@@ -334,7 +334,7 @@ S64      dreg;
 
     if (argc > 2)
     {
-        WRITEMSG(HHCSR101E);
+        WRMSG(HHC02000, "E");
         return -1;
     }
 
@@ -350,7 +350,7 @@ S64      dreg;
          && CPUSTATE_STOPPED != sysblk.regs[i]->cpustate)
         {
             RELEASE_INTLOCK(NULL);
-            WRITEMSG(HHCSR203E);
+            WRMSG(HHC02005, "E");
             return -1;
         }
     RELEASE_INTLOCK(NULL);
@@ -358,7 +358,7 @@ S64      dreg;
     file = SR_OPEN (fn, "rb");
     if (file == NULL)
     {
-        WRITEMSG(HHCSR102E,fn,strerror(errno));
+        WRMSG(HHC02001, "E", "open()",strerror(errno));
         return -1;
     }
 
@@ -367,7 +367,7 @@ S64      dreg;
     if (key == SR_HDR_ID) SR_READ_STRING(file, buf, len);
     if (key != SR_HDR_ID || strcmp(buf, SR_ID))
     {
-        WRITEMSG(HHCSR204E);
+        WRMSG(HHC02006, "E");
         goto sr_error_exit;
     }
 
@@ -385,7 +385,7 @@ S64      dreg;
 
         case SR_HDR_DATE:
             SR_READ_STRING(file, buf, len);
-            WRITEMSG(HHCSR001I, buf);
+            WRMSG(HHC02007, "I", buf);
             break;
 
         case SR_SYS_STARTED_MASK:
@@ -429,7 +429,7 @@ S64      dreg;
 #endif
             if (i < 0)
             {
-                WRITEMSG(HHCSR105E, buf);
+                WRMSG(HHC02008, "E", buf);
                 goto sr_error_exit;
             }
             sysblk.arch_mode = i;
@@ -447,8 +447,11 @@ S64      dreg;
             SR_READ_VALUE(file, len, &len, sizeof(len));
             if (len > sysblk.mainsize)
             {
-                WRITEMSG(HHCSR106E,
-                       len / (1024*1024), sysblk.mainsize / (1024*1024));
+                char buf1[20];
+                char buf2[20];
+                sprintf(buf1, "%dM", len / (1024*1024));
+                sprintf(buf2, "%dM", (int)sysblk.mainsize / (1024*1024));
+                WRMSG(HHC02009, "E", "mainsize", buf1, buf2);
                 goto sr_error_exit;
             }
             break;
@@ -456,8 +459,11 @@ S64      dreg;
         case SR_SYS_MAINSTOR:
             if (len > sysblk.mainsize)
             {
-                WRITEMSG(HHCSR106E,
-                       len / (1024*1024), sysblk.mainsize / (1024*1024));
+                char buf1[20];
+                char buf2[20];
+                sprintf(buf1, "%dM", len / (1024*1024));
+                sprintf(buf2, "%dM", (int)sysblk.mainsize / (1024*1024));
+                WRMSG(HHC02009, "E", "mainsize", buf1, buf2);              
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, sysblk.mainstor, len);
@@ -467,8 +473,11 @@ S64      dreg;
             SR_READ_VALUE(file, len, &len, sizeof(len));
             if (len > sysblk.mainsize/STORAGE_KEY_UNITSIZE)
             {
-                WRITEMSG(HHCSR108E,
-                       len, sysblk.mainsize/STORAGE_KEY_UNITSIZE);
+                char buf1[20];
+                char buf2[20];
+                sprintf(buf1, "%d", len);
+                sprintf(buf2, "%d", (int)sysblk.mainsize/STORAGE_KEY_UNITSIZE);
+                WRMSG(HHC02009, "E", "storkey size", buf1, buf2);              
                 goto sr_error_exit;
             }
             break;
@@ -476,8 +485,11 @@ S64      dreg;
         case SR_SYS_STORKEYS:
             if (len > sysblk.mainsize/STORAGE_KEY_UNITSIZE)
             {
-                WRITEMSG(HHCSR108E,
-                       len, sysblk.mainsize/STORAGE_KEY_UNITSIZE);
+                char buf1[20];
+                char buf2[20];
+                sprintf(buf1, "%d", len);
+                sprintf(buf2, "%d", (int)sysblk.mainsize/STORAGE_KEY_UNITSIZE);
+                WRMSG(HHC02009, "E", "storkey size", buf1, buf2);              
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, sysblk.storkeys, len);
@@ -487,8 +499,11 @@ S64      dreg;
             SR_READ_VALUE(file, len, &len, sizeof(len));
             if (len > sysblk.xpndsize)
             {
-                WRITEMSG(HHCSR110E,
-                       len / (1024*1024), sysblk.xpndsize / (1024*1024));
+                char buf1[20];
+                char buf2[20];
+                sprintf(buf1, "%dM", len / (1024*1024));
+                sprintf(buf2, "%dM", sysblk.xpndsize / (1024*1024));
+                WRMSG(HHC02009, "E", "expand size", buf1, buf2);              
                 goto sr_error_exit;
             }
             break;
@@ -496,8 +511,11 @@ S64      dreg;
         case SR_SYS_XPNDSTOR:
             if (len > sysblk.xpndsize)
             {
-                WRITEMSG(HHCSR110E,
-                       len / (1024*1024), sysblk.xpndsize / (1024*1024));
+                char buf1[20];
+                char buf2[20];
+                sprintf(buf1, "%dM", len / (1024*1024));
+                sprintf(buf2, "%dM", sysblk.xpndsize / (1024*1024));
+                WRMSG(HHC02009, "E", "expand size", buf1, buf2);              
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, sysblk.xpndstor, len);
@@ -618,21 +636,21 @@ S64      dreg;
             SR_READ_VALUE(file, len, &i, sizeof(i));
             if (i >= MAX_CPU_ENGINES)
             {
-                WRITEMSG(HHCSR113E, "CP", i, MAX_CPU_ENGINES-1);
+                WRMSG(HHC02010, "E", i, MAX_CPU_ENGINES-1);
                 goto sr_error_exit;
             }
             OBTAIN_INTLOCK(NULL);
             if (IS_CPU_ONLINE(i))
             {
                 RELEASE_INTLOCK(NULL);
-                WRITEMSG(HHCSR114E, PTYPSTR(i), i);
+                WRMSG(HHC02011, "E", PTYPSTR(i), i);
                 goto sr_error_exit;
             }
             rc = configure_cpu(i);
             RELEASE_INTLOCK(NULL);
             if (rc < 0)
             {
-                WRITEMSG(HHCSR115E, PTYPSTR(i), i);
+                WRMSG(HHC02012, "E", PTYPSTR(i), i);
                 goto sr_error_exit;
             }
             regs = sysblk.regs[i];
@@ -647,7 +665,7 @@ S64      dreg;
             if (regs == NULL) goto sr_null_regs_exit;
             if (len != 8 && len != 16)
             {
-                WRITEMSG(HHCSR116E, PTYPSTR(regs->cpuad), regs->cpuad, len);
+                WRMSG(HHC02013, "E", PTYPSTR(regs->cpuad), regs->cpuad, len);
                 goto sr_error_exit;
             }
             memset(buf, 0, 16);
@@ -674,7 +692,7 @@ S64      dreg;
             } /* switch (regs->arch_mode) */
             if (rc != 0 && memcmp(buf, zeros, len))
             {
-                WRITEMSG(HHCSR117E, PTYPSTR(regs->cpuad), regs->cpuad, rc);
+                WRMSG(HHC02014, "E", PTYPSTR(regs->cpuad), regs->cpuad, rc);
                 goto sr_error_exit;
             }
             break;
@@ -992,12 +1010,12 @@ S64      dreg;
             {
                 if (attach_device (lcss, devnum, buf, devargc, devargv))
                 {
-                    WRITEMSG(HHCSR118W, devnum);
+                    WRMSG(HHC02015, "E", devnum);
                 }
             }
             else if (strcmp(dev->typname, buf))
             {
-                WRITEMSG(HHCSR119W, devnum, buf, dev->typname);
+                WRMSG(HHC02016, "W", devnum, buf, dev->typname);
                 dev = NULL;
             }
             for (i = 0; i < devargx; i++)
@@ -1012,7 +1030,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != sizeof(ORB))
             {
-                WRITEMSG(HHCSR120E, dev->devnum, "ORB", len, sizeof(ORB));
+                WRMSG(HHC02017, "E", dev->devnum, "ORB", len, sizeof(ORB));
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->orb, len);
@@ -1022,7 +1040,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != sizeof(PMCW))
             {
-                WRITEMSG(HHCSR120E, dev->devnum, "PMCW", len, sizeof(PMCW));
+                WRMSG(HHC02017, "E", dev->devnum, "PMCW", len, sizeof(PMCW));
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->pmcw, len);
@@ -1032,7 +1050,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != sizeof(SCSW))
             {
-                WRITEMSG(HHCSR120E, dev->devnum, "SCSW", len, sizeof(SCSW));
+                WRMSG(HHC02017, "E", dev->devnum, "SCSW", len, sizeof(SCSW));
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->scsw, len);
@@ -1042,7 +1060,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != sizeof(SCSW))
             {
-                WRITEMSG(HHCSR120E, dev->devnum, "PCI SCSW", len, sizeof(SCSW));
+                WRMSG(HHC02017, "E", dev->devnum, "PCI SCSW", len, sizeof(SCSW));
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->pciscsw, len);
@@ -1052,7 +1070,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != sizeof(SCSW))
             {
-                WRITEMSG(HHCSR120E, dev->devnum, "ATTN SCSW", len, sizeof(SCSW));
+                WRMSG(HHC02017, "E", dev->devnum, "ATTN SCSW", len, sizeof(SCSW));
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->attnscsw, len);
@@ -1062,7 +1080,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != 8)
             {
-                WRITEMSG(HHCSR120E, dev->devnum, "CSW", len, 8);
+                WRMSG(HHC02017, "E", dev->devnum, "CSW", len, 8);
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->csw, len);
@@ -1072,7 +1090,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != 8)
             {
-                WRITEMSG(HHCSR120E, dev->devnum, "PCI CSW", len, 8);
+                WRMSG(HHC02017, "E", dev->devnum, "PCI CSW", len, 8);
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->pcicsw, len);
@@ -1082,7 +1100,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != 8)
             {
-                WRITEMSG(HHCSR120E, dev->devnum, "ATTN CSW", len, 8);
+                WRMSG(HHC02017, "E", dev->devnum, "ATTN CSW", len, 8);
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->attncsw, len);
@@ -1092,7 +1110,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != sizeof(ESW))
             {
-                WRITEMSG(HHCSR120E, dev->devnum, "ESW", len, sizeof(ESW));
+                WRMSG(HHC02017, "E", dev->devnum, "ESW", len, sizeof(ESW));
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->esw, len);
@@ -1102,7 +1120,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != 32)
             {
-                WRITEMSG(HHCSR120E, dev->devnum, "ECW", len, 32);
+                WRMSG(HHC02017, "E", dev->devnum, "ECW", len, 32);
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->ecw, len);
@@ -1112,7 +1130,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != 32)
             {
-                WRITEMSG(HHCSR120E, dev->devnum, "Sense", len, 32);
+                WRMSG(HHC02017, "E", dev->devnum, "Sense", len, 32);
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->ecw, len);
@@ -1127,7 +1145,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != 11)
             {
-                WRITEMSG(HHCSR120E, dev->devnum, "PGID", len, 11);
+                WRMSG(HHC02017, "E", dev->devnum, "PGID", len, 11);
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->pgid, len);
@@ -1138,7 +1156,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);   
             if (len != 11)   
             {   
-                WRITEMSG(HHCSR120E, dev->devnum, "DRVPWD", len, 11);   
+                WRMSG(HHC02017, "E", dev->devnum, "DRVPWD", len, 11);   
                 goto sr_error_exit;   
             }   
             SR_READ_BUF(file, &dev->drvpwd, len);   
@@ -1228,7 +1246,11 @@ S64      dreg;
             SR_READ_VALUE(file, len, &hw, sizeof(hw));
             if (hw != dev->devtype)
             {
-                WRITEMSG(HHCSR132E, dev->devnum, hw, dev->devtype);
+                char buf1[20];
+                char buf2[20];
+                sprintf(buf1, "%04X", hw);
+                sprintf(buf2, "%04X", dev->devtype);
+                WRMSG(HHC02016, "E", dev->devnum, buf1, buf2);
                 goto sr_error_exit;
             }
             if (dev->hnd->hresume)
@@ -1241,7 +1263,7 @@ S64      dreg;
         default:
             if ((key & SR_KEY_ID_MASK) != SR_KEY_ID)
             {
-                WRITEMSG(HHCSR999E, key);
+                WRMSG(HHC02018, "E", key);
                 goto sr_error_exit;
             }
             SR_READ_SKIP(file, len);
@@ -1307,24 +1329,24 @@ S64      dreg;
     return 0;
 
 sr_read_error:
-    WRITEMSG(HHCSR011E, strerror(errno));
+    WRMSG(HHC02001, "E", "read()", strerror(errno));
     goto sr_error_exit;
-    /*
+/*
 sr_seek_error:
-    logmsg(_("HHCSRxxxE seek error: %s\n"), strerror(errno));
+    WRMSG(HHC02001, "E", "lseek()", strerror(errno));
     goto sr_error_exit;
     */
 sr_string_error:
-    WRITEMSG(HHCSR014E);
+    WRMSG(HHC02021, "E");
     goto sr_error_exit;
 sr_value_error:
-    WRITEMSG(HHCSR013E);
+    WRMSG(HHC02020, "E");
     goto sr_error_exit;
 sr_null_regs_exit:
-    WRITEMSG(HHCSR016E, key);
+    WRMSG(HHC02019, "E", key);
     goto sr_error_exit;
 sr_error_exit:
-    WRITEMSG(HHCSR015E, fn);
+    WRMSG(HHC02004, "E", fn);
     SR_CLOSE (file);
     return -1;
 }
