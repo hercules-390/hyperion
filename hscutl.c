@@ -497,7 +497,7 @@ DLL_EXPORT void list_all_symbols(void)
     {
         tok = symbols[i];
         if (tok)
-            WRITEMSG(HHCMD042I, tok->var, tok->val ? tok->val : "");
+            WRMSG(HHC02203, "I", tok->var, tok->val ? tok->val : "");
     }
     return;
 }
@@ -695,16 +695,16 @@ void socket_keepalive( int sfd, int idle_time, int probe_interval,
 {
     int rc, optval = 1;
     rc = setsockopt(sfd, SOL_SOCKET, SO_KEEPALIVE, &optval, sizeof(optval));
-    if (rc) WRITEMSG(HHCUT001I, rc, strerror(errno));
+    if (rc) WRMSG(HHC02219, "E", "setsockopt(SO_KEEPALIVE)", strerror(errno));
 
   #if defined(TCP_KEEPALIVE)
     optval = idle_time;
     rc = setsockopt(sfd, IPPROTO_TCP, TCP_KEEPALIVE, &optval, sizeof(optval)); 
-    if (rc) WRITEMSG(HHCUT002I, rc, strerror(errno));
+    if (rc) WRMSG(HHC02219, "E", "setsockopt(TCP_KEEPALIVE)", strerror(errno));
   #elif defined(TCP_KEEPIDLE)
     optval = idle_time;
     rc = setsockopt(sfd, SOL_TCP, TCP_KEEPIDLE, &optval, sizeof(optval)); 
-    if (rc) WRITEMSG(HHCUT003I, rc, strerror(errno));
+    if (rc) WRMSG(HHC02219, "E", "setsockopt(TCP_KEEPIDLE)", strerror(errno));
   #else
     UNREFERENCED(idle_time);
   #endif
@@ -712,7 +712,7 @@ void socket_keepalive( int sfd, int idle_time, int probe_interval,
   #if defined(TCP_KEEPINTVL)
     optval = probe_interval;
     rc = setsockopt(sfd, SOL_TCP, TCP_KEEPINTVL, &optval, sizeof(optval)); 
-    if (rc) WRITEMSG(HHCUT004I, rc, strerror(errno));
+    if (rc) WRMSG(HHC02219, "E", "setsockopt(TCP_KEEPALIVE)", strerror(errno));
   #else
     UNREFERENCED(probe_interval);
   #endif
@@ -720,7 +720,7 @@ void socket_keepalive( int sfd, int idle_time, int probe_interval,
   #if defined(TCP_KEEPCNT)
     optval = probe_count;
     rc = setsockopt(sfd, SOL_TCP, TCP_KEEPCNT, &optval, sizeof(optval)); 
-    if (rc) WRITEMSG(HHCUT005I, rc, strerror(errno));
+    if (rc) WRMSG(HHC02219, "E", "setsockopt(TCPKEEPCNT)", strerror(errno));
   #else
     UNREFERENCED(probe_count);
   #endif

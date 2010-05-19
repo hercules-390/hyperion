@@ -644,7 +644,7 @@ BYTE    c;                              /* Character work area       */
                  (h2 >= 'A' && h2 <= 'F') ? h2 - 'A' + 10 : -1;
             if (h1 < 0 || h2 < 0 || n >= 32)
             {
-                WRITEMSG(HHCMD143E, s);
+                WRMSG(HHC02205, "E", s, "");
                 return -1;
             }
             newval[n++] = (h1 << 4) | h2;
@@ -668,7 +668,7 @@ BYTE    c;                              /* Character work area       */
             /* Ending address or length is specified */
             if (rc != 3 || !(delim == '-' || delim == '.'))
             {
-                WRITEMSG(HHCMD144E, operand);
+                WRMSG(HHC02205, "E", operand, "");
                 return -1;
             }
             eaddr = (delim == '.') ? saddr + opnd2 - 1 : opnd2;
@@ -680,7 +680,7 @@ BYTE    c;                              /* Character work area       */
     /* Check for valid range */
     if (saddr > maxadr || eaddr > maxadr || eaddr < saddr)
     {
-        WRITEMSG(HHCMD145E, operand);
+        WRMSG(HHC02205, "E", operand, ": invalid range");
         return -1;
     }
 

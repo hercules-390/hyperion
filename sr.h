@@ -461,7 +461,7 @@
  } while (0)
 #define SR_SEEK_ERROR \
  do { \
-   WRITEMSG(HHC02001, "E", "lseek()", strerror(errno)); \
+   WRMSG(HHC02001, "E", "lseek()", strerror(errno)); \
    return -1; \
  } while (0)
 #define SR_VALUE_ERROR \

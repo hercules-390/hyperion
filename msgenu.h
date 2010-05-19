@@ -84,12 +84,6 @@ cpu.c:123:HABC1234I This is a message
 #endif
 #endif
 
-/* These macro's will be deleted when all messages are std */
-#define WRITEMSG(id, ...)           writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, "", _(#id " " id "\n"), ## __VA_ARGS__)
-#define WRITEMSG_C(id, ...)         writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, "", _(#id " " id ""), ## __VA_ARGS__)
-#define WRITECMSG(color, id, ...)   writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, color, _(#id " " id "\n"), ## __VA_ARGS__)
-#define WRITECMSG_C(color, id, ...) writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, color, _(#id " " id ""), ## __VA_ARGS__)
-
 /* Use these macro's */
 #define MSG(id, s, ...)             #id s " " id "\n", ## __VA_ARGS__
 #define MSG_C(id, s, ...)           #id s " " id "", ## __VA_ARGS__
@@ -1000,23 +994,3 @@ cpu.c:123:HABC1234I This is a message
 #define HHC90010 "Pttrace: trace is busy"
 #define HHC90011 "Pttrace: invalid argument '%s'"
 #define HHC90012 "Pttrace: %s%s%s%s%s%s%s%s%s%s%s %s %s to %d %d"
-
-/*
- *                                  N E W   M E S S A G E   F O R M A T
- *=========================================================================================================================================
- *                                  O L D   M E S S A G E   F O R M A T
- */
-
-/* hscutl.c */
-#define HHCUT001I "SO_KEEPALIVE rc=%d %s"
-#define HHCUT002I "TCP_KEEPALIVE rc=%d %s"
-#define HHCUT003I "TCP_KEEPIDLE rc=%d %s"
-#define HHCUT004I "TCP_KEEPINTVL rc=%d %s"
-#define HHCUT005I "TCP_KEEPCNT rc=%d %s"
-#define HHCMD042I "%s=%s"
-
-/* hscmisc.c */
-#define HHCMD143E "Invalid value: %s"
-#define HHCMD144E "Invalid operand: %s"
-#define HHCMD145E "Invalid range: %s"
-
