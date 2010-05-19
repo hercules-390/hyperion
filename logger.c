@@ -164,7 +164,7 @@ static void logger_term(void *arg)
 
     if(logger_active)
     {
-        char* term_msg = _("HHCLG014I logger thread terminating\n");
+        char* term_msg = MSG(HHC02103, "I");
         size_t term_msg_len = strlen(term_msg);
 
         obtain_lock(&logger_lock);
@@ -210,8 +210,8 @@ static void logger_logfile_write( void* pBuff, size_t nBytes )
     {      
         if ( fwrite( pLeft, nLeft, 1, logger_hrdcpy ) != 1 )
         {
-            fprintf(logger_hrdcpy, _("HHCLG003E Error writing hardcopy log: %s\n"),
-                strerror(errno));
+            fprintf(logger_hrdcpy, MSG(HHC02102, "E", "fwrite()",
+                strerror(errno)));
         }
     }
 
@@ -266,7 +266,7 @@ int bytes_read;
     if(dup2(logger_syslogfd[LOG_WRITE],STDOUT_FILENO) == -1)
     {
         if(logger_hrdcpy)
-            fprintf(logger_hrdcpy, _("HHCLG001E Error redirecting stdout: %s\n"), strerror(errno));
+            fprintf(logger_hrdcpy, MSG(HHC02102, "E", "dup2()", strerror(errno)));
         exit(1);
     }
 #endif /* !defined( _MSVC_ ) */
@@ -305,8 +305,7 @@ int bytes_read;
                 continue;
 
             if(logger_hrdcpy)
-                fprintf(logger_hrdcpy, _("HHCLG002E Error reading syslog pipe: %s\n"),
-                  strerror(read_pipe_errno));
+                fprintf(logger_hrdcpy, MSG(HHC02102, "E", "read_pipe()", strerror(read_pipe_errno)));
             bytes_read = 0;
         }
 
@@ -454,7 +453,7 @@ int bytes_read;
     /* Write final message to hardcopy file */
     if (logger_hrdcpy)
     {
-        char* term_msg = _("HHCLG014I logger thread terminating\n");
+        char* term_msg = MSG(HHC02103, "I");
         size_t term_msg_len = strlen(term_msg);
 #ifdef OPTION_TIMESTAMP_LOGFILE
         if (!sysblk.logoptnotime) logger_logfile_timestamp();
@@ -499,8 +498,7 @@ DLL_EXPORT void logger_init(void)
             logger_hrdcpyfd = dup(STDOUT_FILENO);
             if(dup2(STDERR_FILENO,STDOUT_FILENO) == -1)
             {
-                fprintf(stderr, _("HHCLG004E Error duplicating stderr: %s\n"),
-                strerror(errno));
+                fprintf(stderr, MSG(HHC02102, "E", "dup2()", strerror(errno)));
                 exit(1);
             }
         }
@@ -511,8 +509,7 @@ DLL_EXPORT void logger_init(void)
                 logger_hrdcpyfd = dup(STDOUT_FILENO);
                 if(dup2(STDERR_FILENO,STDOUT_FILENO) == -1)
                 {
-                    fprintf(stderr, _("HHCLG004E Error duplicating stderr: %s\n"),
-                    strerror(errno));
+                    fprintf(stderr, MSG(HHC02102, "E", "dup2()", strerror(errno)));
                     exit(1);
                 }
             }
@@ -521,8 +518,7 @@ DLL_EXPORT void logger_init(void)
                 logger_hrdcpyfd = dup(STDERR_FILENO);
                 if(dup2(STDOUT_FILENO,STDERR_FILENO) == -1)
                 {
-                    fprintf(stderr, _("HHCLG005E Error duplicating stdout: %s\n"),
-                    strerror(errno));
+                    fprintf(stderr, MSG(HHC02102, "E", "dup2()", strerror(errno)));
                     exit(1);
                 }
             }
@@ -531,15 +527,13 @@ DLL_EXPORT void logger_init(void)
         if(logger_hrdcpyfd == -1)
         {
             logger_hrdcpyfd = 0;
-            fprintf(stderr, _("HHCLG006E Duplicate error redirecting hardcopy log: %s\n"),
-            strerror(errno));
+            fprintf(stderr, MSG(HHC02102, "E", "dup()", strerror(errno)));
         }
 
         if(logger_hrdcpyfd)
         {
             if(!(logger_hrdcpy = fdopen(logger_hrdcpyfd,"w")))
-            fprintf(stderr, _("HHCLG007S Hardcopy log fdopen failed: %s\n"),
-            strerror(errno));
+            fprintf(stderr, MSG(HHC02102, "E", "fdopen()", strerror(errno)));
         }
 
         if(logger_hrdcpy)
@@ -554,15 +548,15 @@ DLL_EXPORT void logger_init(void)
 
     if(!(logger_buffer = malloc(logger_bufsize)))
     {
-        fprintf(stderr, _("HHCLG008S logbuffer malloc failed: %s\n"),
-          strerror(errno));
+        char buf[40];
+        sprintf(buf, "malloc(%d)", logger_bufsize);
+        fprintf(stderr, MSG(HHC02102, "S", buf, strerror(errno)));
         exit(1);
     }
 
     if(create_pipe(logger_syslogfd))
     {
-        fprintf(stderr, _("HHCLG009S Syslog message pipe creation failed: %s\n"),
-          strerror(errno));
+        fprintf(stderr, MSG(HHC02102, "E", "create_pipe()", strerror(errno)));
         exit(1);  /* Hercules running without syslog */
     }
 
@@ -639,8 +633,7 @@ int   new_hrdcpyfd;
 
                 if(temp_hrdcpy)
                 {
-                    fprintf(temp_hrdcpy,_("HHCLG018I log switched to %s\n"),
-                      filename);
+                    fprintf(temp_hrdcpy, MSG(HHC02104, "I", filename));
                     fclose(temp_hrdcpy);
                 }
             }

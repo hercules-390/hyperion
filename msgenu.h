@@ -889,6 +889,8 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02100 "Logger: log not active"
 #define HHC02101 "Logger: log closed"
 #define HHC02102 "Logger: error in function '%s': '%s'"
+#define HHC02103 "Logger: logger thread terminating"
+#define HHC02104 "Logger: log switched to '%s'"
 
 // reserve 022xx for command processing */
 #define HHC02200 "%1d:%04X device not found"
