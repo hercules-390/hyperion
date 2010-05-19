@@ -156,13 +156,13 @@ int test_cmd(int argc, char *argv[],char *cmdline)
 /* Issue generic Device not found error message */
 static inline int devnotfound_msg(U16 lcss,U16 devnum)
 {
-    WRITEMSG(HHCMD181E,lcss,devnum);
+    WRMSG(HHC02200,"E",lcss,devnum);
     return -1;
 }
 /* Issue generic Missing device number message */
 static inline void missing_devnum()
 {
-    WRITEMSG(HHCMD031E);
+    WRMSG(HHC02201,"E");
 }
 
 
@@ -457,7 +457,7 @@ int log_cmd(int argc, char *argv[],char *cmdline)
             log_sethrdcpy(NULL);
     }
     else
-        WRITEMSG(HHCMD166E);
+        WRMSG(HHC02202,"E");
 
     return 0;
 }
@@ -472,7 +472,7 @@ int logopt_cmd(int argc, char *argv[],char *cmdline)
 
     if(argc < 2)
     {
-        WRITEMSG( HHCMD195I, 
+        WRMSG( HHC02203, "I", "log option",
             sysblk.logoptnotime ? "NOTIMESTAMP" : "TIMESTAMP" );
     }
     else
@@ -484,18 +484,18 @@ int logopt_cmd(int argc, char *argv[],char *cmdline)
                 strcasecmp(argv[0],"time"     ) == 0)
             {
                 sysblk.logoptnotime = 0;
-                WRITEMSG(HHCMD197I, "TIMESTAMP");
+                WRMSG(HHC02204, "I", "log option", "TIMESTAMP");
                 continue;
             }
             if (strcasecmp(argv[0],"notimestamp") == 0 ||
                 strcasecmp(argv[0],"notime"     ) == 0)
             {
                 sysblk.logoptnotime = 1;
-                WRITEMSG(HHCMD197I, "NOTIMESTAMP");
+                WRMSG(HHC02204, "I", "log option", "NOTIMESTAMP");
                 continue;
             }
 
-            WRITEMSG(HHCMD196E, argv[0]);
+            WRMSG(HHC02205, "E", argv[0], "");
         } /* while (argc > 1) */
     }
     return 0;
@@ -536,20 +536,20 @@ unsigned uptime, weeks, days, hours, mins, secs;
 
     if (weeks)
     {
-        WRITEMSG(HHCMD800I,
+        WRMSG(HHC02206, "I",
                     weeks, weeks >  1 ? "s" : "",
                     days,  days  != 1 ? "s" : "",
                     hours, mins, secs);
     }
     else if (days)
     {
-        WRITEMSG(HHCMD801I,
+        WRMSG(HHC02207, "I",
                     days, days != 1 ? "s" : "",
                     hours, mins, secs);
     }
     else
     {
-        WRITEMSG(HHCMD802I,
+        WRMSG(HHC02208, "I",
                     hours, mins, secs);
     }
     return 0;
@@ -589,7 +589,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
 
     if (argc < 2)
     {
-        WRITEMSG(HHCMD021E) ;
+        WRMSG(HHC02201, "E") ;
         return -1 ;
     }
 
@@ -609,7 +609,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
 
     if (strcasecmp(devclass,"PRT"))
     {
-        WRITEMSG(HHCMD017E, lcss, devnum );
+        WRMSG(HHC02209, "E", lcss, devnum, "printer" );
         return -1;
     }
 
@@ -622,7 +622,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
             strcat(buf,wrk);
         }
 
-        WRITEMSG(HHCMD320I, lcss, devnum, buf );
+        WRMSG(HHC02210, "I", lcss, devnum, buf );
         return 0;
     }
 
@@ -632,26 +632,26 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
     /* If not 1403 */
     if ( dev->devtype != 0x1403 )
     {
-        WRITEMSG(HHCMD322E, lcss, devnum );
+        WRMSG(HHC02209, "E", lcss, devnum, "1403" );
         return -1;
     }
 
     if ( !dev->stopprt )
     {
-        WRITEMSG(HHCMD323E, lcss, devnum );
+        WRMSG(HHC02211, "E", lcss, devnum );
         return -1;
     }
 
     if (strlen (argv[2]) != 26 ) 
     {
-        WRITEMSG(HHCMD324E, lcss, devnum, argv[2] );
+        WRMSG(HHC02205, "E", argv[2], "" );
         return -1;
     }
     for ( j = 0 ; j < 26 ; j++ )
     {
         if ( (argv[2][j] < '0') || (argv[2][j] > '9' ) )
         {
-        WRITEMSG(HHCMD324E, lcss, devnum, argv[2] );
+        WRMSG(HHC02205, "E", argv[2], "" );
             return -1;
         }
     }
@@ -671,7 +671,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
         sprintf(wrk,"/%02d",dev->fcb[i]);
         strcat(buf,wrk);
     }
-    WRITEMSG(HHCMD320I, lcss, devnum, buf );
+    WRMSG(HHC02210, "I", lcss, devnum, buf );
     return 0;
 
 }
@@ -724,7 +724,7 @@ int start_cmd(int argc, char *argv[], char *cmdline)
 
         if (strcasecmp(devclass,"PRT"))
         {
-            WRITEMSG(HHCMD017E, lcss, devnum );
+            WRMSG(HHC02209, "E", lcss, devnum, "printer" );
             return -1;
         }
 
@@ -737,13 +737,13 @@ int start_cmd(int argc, char *argv[], char *cmdline)
         if (rc) dev->stopprt = stopprt;
 
         switch (rc) {
-            case 0: WRITEMSG(HHCMD018I, lcss,devnum);
+            case 0: WRMSG(HHC02208, "I", lcss,devnum);
                     break;
-            case 1: WRITEMSG(HHCMD019E, lcss, devnum, "busy or interrupt pending");
+            case 1: WRMSG(HHC02213, "E", lcss, devnum, ": busy or interrupt pending");
                     break;
-            case 2: WRITEMSG(HHCMD019E, lcss, devnum, "attention request rejected");
+            case 2: WRMSG(HHC02213, "E", lcss, devnum, ": attention request rejected");
                     break;
-            case 3: WRITEMSG(HHCMD019E, lcss, devnum, "subchannel not enabled");
+            case 3: WRMSG(HHC02213, "E", lcss, devnum, ": subchannel not enabled");
                     break;
         }
 
@@ -824,13 +824,13 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
 
         if (strcasecmp(devclass,"PRT"))
         {
-            WRITEMSG(HHCMD017E, lcss, devnum );
+            WRMSG(HHC02209, "E", lcss, devnum, "printer" );
             return -1;
         }
 
         dev->stopprt = 1;
 
-        WRITEMSG(HHCMD025I, lcss, devnum );
+        WRMSG(HHC02214, "I", lcss, devnum );
     }
 
     return 0;
@@ -1004,12 +1004,12 @@ int quiet_cmd(int argc, char *argv[], char *cmdline)
 #ifdef EXTERNALGUI
     if (extgui)
     {
-        WRITEMSG(HHCMD026W);
+        WRMSG(HHC02215, "W");
         return 0;
     }
 #endif /*EXTERNALGUI*/
     sysblk.npquiet = !sysblk.npquiet;
-    WRITEMSG(HHCMD027I, sysblk.npquiet ? _("disabled") : _("enabled") );
+    WRMSG(HHC02203, "I", "automatic refresh", sysblk.npquiet ? _("disabled") : _("enabled") );
     return 0;
 }
 
@@ -1089,7 +1089,7 @@ int timerint_cmd(int argc, char *argv[], char *cmdline)
         }
     }
     else
-        WRITEMSG(HHCMD037I, sysblk.timerint );
+        WRMSG(HHC02203, "I", "timer update interval", sysblk.timerint );
 
     return 0;
 }
@@ -1245,12 +1245,12 @@ int iodelay_cmd(int argc, char *argv[], char *cmdline)
         BYTE    c;                      /* Character work area       */
 
         if (sscanf(argv[1], "%d%c", &iodelay, &c) != 1)
-            WRITEMSG(HHCMD029E, argv[1] );
+            WRMSG(HHC02205, "E", argv[1], "" );
         else
             sysblk.iodelay = iodelay;
     }
     else
-        WRITEMSG(HHCMD030I, sysblk.iodelay );
+        WRMSG(HHC02204, "I", "I/O delay", sysblk.iodelay );
 
     return 0;
 }
@@ -1271,7 +1271,7 @@ int rc;
 
     if (argc < 2)
     {
-        WRITEMSG(HHCMD200E);
+        WRMSG(HHC02202, "E");
         return -1;
     }
 
@@ -1281,20 +1281,20 @@ int rc;
 
         if (argc != 2)
         {
-            WRITEMSG(HHCMD200E);
+            WRMSG(HHC02202, "E");
             return -1;
         }
 
         if (!pTAMDIR)
         {
-            WRITEMSG(HHCMD202E);
+            WRMSG(HHC02216, "E");
             return -1;
         }
 
         // List all entries...
 
         for (; pTAMDIR; pTAMDIR = pTAMDIR->next)
-            WRITEMSG(HHCMD203I
+            WRMSG(HHC02217, "I"
                 ,pTAMDIR->rej ? '-' : '+'
                 ,pTAMDIR->dir
                 );
@@ -1314,7 +1314,7 @@ int rc;
 
             if (argc != 2 )
             {
-                WRITEMSG(HHCMD200E);
+                WRMSG(HHC02202, "E");
                 return -1;
             }
         }
@@ -1324,7 +1324,7 @@ int rc;
 
             if (argc != 3 )
             {
-                WRITEMSG(HHCMD200E);
+                WRMSG(HHC02202, "E");
                 return -1;
             }
         }
@@ -1343,41 +1343,41 @@ int rc;
         {
             default:     /* (oops!) */
             {
-                WRITEMSG(HHCMD205E, __FILE__, __LINE__);
+                WRMSG(HHC02218, "E");
                 return -1;
             }
 
             case 5:     /* ("out of memory") */
             {
-                WRITEMSG(HHCMD206E);
+                WRMSG(HHC02219, "E", "malloc()", strerror(ENOMEM));
                 return -1;
             }
 
             case 1:     /* ("unresolvable path") */
             case 2:     /* ("path inaccessible") */
             {
-                WRITEMSG(HHCMD207E, tamdir, strerror(errno));
+                WRMSG(HHC02205, "E", tamdir, "");
                 return -1;
             }
 
             case 3:     /* ("conflict w/previous") */
             {
-                WRITEMSG(HHCMD208E,tamdir);
+                WRMSG(HHC02205, "E", tamdir, ": 'conflicts with previous specification'");
                 return -1;
             }
 
             case 4:     /* ("duplicates previous") */
             {
-                WRITEMSG(HHCMD209E, tamdir);
+                WRMSG(HHC02205, "E", tamdir, ": 'duplicates previous specification'");
                 return -1;
             }
 
             case 0:     /* ("success") */
             {
-                WRITEMSG(HHCMD210I,
-                    pTAMDIR->dir == sysblk.defdir ? "Default " : "",
-                    pTAMDIR->rej ? "Disallowed" : "Allowed",
-                    pTAMDIR->dir);
+                char buf[80];
+                sprintf(buf, "%s%s automount directory", pTAMDIR->dir == sysblk.defdir ? "default " : "",
+                    pTAMDIR->rej ? "disallowed" : "allowed");
+                WRMSG(HHC02203, "I", buf, pTAMDIR->dir);
 
                 /* Define default AUTOMOUNT directory if needed */
 
@@ -1392,7 +1392,9 @@ int rc;
 
                     if (!(pTAMDIR = malloc( sizeof(TAMDIR) )))
                     {
-                        WRITEMSG(HHCMD211E);
+                        char buf[40];
+                        sprintf(buf, "malloc(%lu)", sizeof(TAMDIR));
+                        WRMSG(HHC02219, "E", buf, strerror(ENOMEM));
                         sysblk.defdir = cwd; /* EMERGENCY! */
                     }
                     else
@@ -1405,7 +1407,7 @@ int rc;
                         sysblk.defdir = pTAMDIR->dir;
                     }
 
-                    WRITEMSG(HHCMD212I, sysblk.defdir);
+                    WRMSG(HHC02203, "default automount directory", sysblk.defdir);
                 }
 
                 return 0;
@@ -1432,7 +1434,7 @@ int rc;
 
             if (argc != 2 )
             {
-                WRITEMSG(HHCMD200E);
+                WRMSG(HHC02202, "E");
                 return -1;
             }
         }
@@ -1442,7 +1444,7 @@ int rc;
 
             if (argc != 3 )
             {
-                WRITEMSG(HHCMD200E);
+                WRMSG(HHC02202, "E");
                 return -1;
             }
         }
@@ -1521,7 +1523,7 @@ int rc;
                     // (point back to list begin)
                     pCurrTAMDIR = sysblk.tamdir;
 
-                    WRITEMSG(HHCMD214I, pCurrTAMDIR ? "" : " (list now empty)");
+                    WRMSG(HHC02220, "I", pCurrTAMDIR ? "" : ", list now empty");
 
                     // Default entry just deleted?
 
@@ -1557,7 +1559,9 @@ int rc;
 
                                 if (!(pCurrTAMDIR = malloc( sizeof(TAMDIR) )))
                                 {
-                                    WRITEMSG(HHCMD215E);
+                                    char buf[40];
+                                    sprintf(buf, "malloc(%lu)", sizeof(TAMDIR));
+                                    WRMSG(HHC02219, "E", buf, strerror(ENOMEM));
                                     sysblk.defdir = cwd; /* EMERGENCY! */
                                 }
                                 else
@@ -1571,7 +1575,7 @@ int rc;
                                 }
                             }
 
-                            WRITEMSG(HHCMD216I, sysblk.defdir);
+                            WRMSG(HHC02203, "I", "default automount directory", sysblk.defdir);
                         }
                     }
 
@@ -1586,13 +1590,13 @@ int rc;
         }
 
         if (sysblk.tamdir == NULL)
-            WRITEMSG(HHCMD217E);
+            WRMSG(HHC02216, "E");
         else
-            WRITEMSG(HHCMD218E);
+            WRMSG(HHC02221, "E");
         return -1;
     }
 
-    WRITEMSG(HHCMD219E);
+    WRMSG(HHC02222, "E");
     return 0;
 }
 
@@ -1673,7 +1677,7 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
             if ( sscanf( argv[1], "%d%c", &auto_scsi_mount_secs, &c ) != 1
                 || auto_scsi_mount_secs < 0 || auto_scsi_mount_secs > 99 )
             {
-                WRITEMSG (HHCMD068E, argv[1]);
+                WRMSG (HHC02205, "E", argv[1], "");
                 return 0;
             }
             sysblk.auto_scsi_mount_secs = auto_scsi_mount_secs;
@@ -1773,7 +1777,7 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
             }
 
             logmsg("\n%s\n", eyecatcher);
-            WRITEMSG(HHCMD069I                
+            WRMSG(HHC02223, "I"                
                 ,mountreq ? "Mount" : "Dismount"
                 ,label_type
                 ,volname
@@ -1872,7 +1876,7 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
             }
         }
 
-        WRITEMSG(HHCMD033I, onoff ? _("ON") : _("OFF") );
+        WRMSG(HHC02204, "I", "CTC debugging for all CTCI/LCS device groups", onoff ? "on" : "off");
     }
     else
     {
@@ -1909,13 +1913,17 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
         }
         else
         {
-            WRITEMSG(HHCMD034E, lcss, devnum );
+            WRMSG(HHC02209, "E", lcss, devnum, "supported CTCI or LSC" );
             return -1;
         }
 
-        WRITEMSG(HHCMD032I, onoff ? _("ON") : _("OFF"),
+        {
+          char buf[80];
+          sprintf(buf, "CTC debugging for %s device %1d:%04X group",
                   CTC_LCS == dev->ctctype ? "LCS" : "CTCI",
                   lcss, devnum );
+          WRMSG(HHC02204, "I", buf, onoff ? "on" : "off");
+        }
     }
 
     return 0;
@@ -1937,7 +1945,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
 
     if (argc < 2)
     {
-        WRITEMSG(HHCMD188E, "tt32");
+        WRMSG(HHC02202, "E");
         rc = -1;
     }
     else if (strcasecmp(argv[1],"stats") == 0)
@@ -1960,7 +1968,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
 
         if (CTC_CTCI != dev->ctctype && CTC_LCS != dev->ctctype || (strcmp(dev->typname, "8232") == 0) )
         {
-            WRITEMSG(HHCMD034E, lcss, devnum );
+            WRMSG(HHC02209, "E", lcss, devnum, "supported CTCI or LCS" );
             return -1;
         }
 
@@ -1978,7 +1986,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
         {
             debug_tt32_tracing(1); // 1=ON
             rc = 0;
-            WRITEMSG(HHCMD189I, "enabled");
+            WRMSG(HHC02204, "I", "TT32 debug tracing messages", "enabled");
         }
         else
         {
@@ -1992,7 +2000,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
         {
             debug_tt32_tracing(0); // 0=OFF
             rc = 0;
-            WRITEMSG(HHCMD189I, "disabled");
+            WRMSG(HHC02204, "I", "TT32 debug tracing messages", "disabled");
         }
         else
         {
@@ -2002,7 +2010,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
     }
     else
     {
-        WRITEMSG(HHCMD187E);
+        WRMSG(HHC02205, "E", argv[1], "");
         rc = -1;
     }
 
@@ -2035,7 +2043,7 @@ REGS *regs;
     /* Command is valid only when CPU is stopped */
     if (regs->cpustate != CPUSTATE_STOPPED)
     {
-        WRITEMSG(HHCMD035E);
+        WRMSG(HHC02224, "E");
         return -1;
     }
 
@@ -2066,9 +2074,9 @@ char *basedir;
             set_sce_dir(argv[1]);
     else
         if((basedir = get_sce_dir()))
-            WRITEMSG(HHCMD820I,basedir);
+            WRMSG(HHC02204, "I","SCLPROOT",basedir);
         else
-            WRITEMSG(HHCMD821I);
+            WRMSG(HHC02204, "I", "SCLP disk I/O", "disabled");
 
     return 0;
 }
@@ -2092,10 +2100,7 @@ char pathname[MAX_PATH];
         sysblk.httproot = strdup(pathname);
     }
     else
-        if(sysblk.httproot)
-            WRITEMSG(HHCMD830I,sysblk.httproot);
-        else
-            WRITEMSG(HHCMD831I);
+        WRMSG(HHC02204, "I", "HTTPROOT", sysblk.httproot ? sysblk.httproot : "<not specified>");
 
     return 0;
 }
@@ -2123,7 +2128,7 @@ int rc;
         }
         else if(sysblk.httpport)
         {
-            WRITEMSG(HHCMD832S);
+            WRMSG(HHC02225, "S");
             return -1;
         }
         else
@@ -2131,7 +2136,7 @@ int rc;
             if (sscanf(argv[1], "%hu%c", &sysblk.httpport, &c) != 1
                 || sysblk.httpport == 0 || (sysblk.httpport < 1024 && sysblk.httpport != 80) )
             {
-                WRITEMSG(HHCMD833S, argv[1]);
+                WRMSG(HHC02205, "S", argv[1], "");
                 return -1;
             }
             if (argc > 2)
@@ -2140,7 +2145,7 @@ int rc;
                     sysblk.httpauth = 1;
                 else if (strcasecmp(argv[2],"noauth"))
                 {
-                    WRITEMSG(HHCMD834S,argv[2]);
+                    WRMSG(HHC02205, "S",argv[2], "");
                     return -1;
                 }
             }
@@ -2168,7 +2173,11 @@ int rc;
         }
     }
     else
-        WRITEMSG(HHCMD836I,sysblk.httpport);
+    {
+        char buf[40];
+        sprintf(buf, "%d", sysblk.httpport);
+        WRMSG(HHC02204, "I", "HTTPPORT", buf);
+    }
     return 0;
 }
 
@@ -2189,13 +2198,13 @@ char c;
         if ( sscanf( argv[1], "%d%c", &http_server_kludge_msecs, &c ) != 1
             || http_server_kludge_msecs <= 0 || http_server_kludge_msecs > 50 )
         {
-            WRITEMSG(HHCMD837S,argv[1]);
+            WRMSG(HHC02205, "S",argv[1], "");
             return -1;
         }
         sysblk.http_server_kludge_msecs = http_server_kludge_msecs;
     }
     else
-        WRITEMSG(HHCMD838S,sysblk.http_server_kludge_msecs);
+        WRMSG(HHC02204,"I","HTTP_SERVER_CONNECT_KLUDGE",sysblk.http_server_kludge_msecs);
     return 0;
 }
 #endif // defined( HTTP_SERVER_CONNECT_KLUDGE )
@@ -2218,13 +2227,13 @@ int alrf_cmd(int argc, char *argv[], char *cmdline)
             if(strcasecmp(argv[1],"disable")==0)
                 sysblk.asnandlxreuse=0;
             else {
-                WRITEMSG(HHCMD067S, argv[1]);
+                WRMSG(HHC02205, "S", argv[1], "");
                 return -1;
                 }
         }
     }
     else
-        WRITEMSG(HHCMD028I,sysblk.asnandlxreuse ? "Enabled" : "Disabled");
+        WRMSG(HHC02204,"I","ASN and LX reuse",sysblk.asnandlxreuse ? "enabled" : "disabled");
 
     return 0;
 }
@@ -2251,8 +2260,11 @@ int toddrag_cmd(int argc, char *argv[], char *cmdline)
         }
     }
     else
-        WRITEMSG(HHCMD036I, (1.0/(1.0+get_tod_steering())));
-
+    {
+        char buf[20];
+        sprintf(buf,"%lf",(1.0/(1.0+get_tod_steering())));
+        WRMSG(HHC02204, "I", "TOD clock drag factor", buf);
+    }
     return 0;
 }
 
@@ -2284,8 +2296,11 @@ int panrate_cmd(int argc, char *argv[], char *cmdline)
         }
     }
     else
-        WRITEMSG(HHCMD016I,sysblk.panrate );
-
+    {
+        char buf[20];
+        sprintf(buf, "%d", sysblk.panrate);
+        WRMSG(HHC02204, "I", "panel refresh rate", buf );
+    }
     return 0;
 }
 
@@ -2308,7 +2323,7 @@ int pantitle_cmd(int argc, char *argv[], char *cmdline)
         sysblk.pantitle = strdup(argv[1]);
     }
     else
-        WRITEMSG(HHCMD100I,sysblk.pantitle);
+        WRMSG(HHC02204, "I", "pantitle", sysblk.pantitle);
 
     return 0;
 }
@@ -2323,20 +2338,22 @@ int msghld_cmd(int argc, char *argv[], char *cmdline)
     if ( !strcasecmp(cmdline, "kd") ) 
     {
         expire_kept_msgs(TRUE);
-        WRITEMSG(HHCMD102I);
+        WRMSG(HHC02226, "I");
         return(0);
     }
     else if(argc == 2)
     {
         if(!strcasecmp(argv[1], "info"))
         {
-            WRITEMSG(HHCMD101I, sysblk.keep_timeout_secs);
+            char buf[40];
+            sprintf(buf, "%d seconds", sysblk.keep_timeout_secs);
+            WRMSG(HHC02203, "I", "message held time", buf);
             return(0);
         }
         else if(!strcasecmp(argv[1], "clear"))
         {
             expire_kept_msgs(TRUE);
-            WRITEMSG(HHCMD102I);
+            WRMSG(HHC02226, "I");
             return(0);
         }
         else
@@ -2346,12 +2363,19 @@ int msghld_cmd(int argc, char *argv[], char *cmdline)
             if(sscanf(argv[1], "%d", &new_timeout) && new_timeout >= 0)
             {
                 sysblk.keep_timeout_secs = new_timeout;
-                WRITEMSG(HHCMD103I, sysblk.keep_timeout_secs);
+                char buf[40];
+                sprintf(buf, "%d seconds", sysblk.keep_timeout_secs);
+                WRMSG(HHC02204, "I", "message held time", buf);
+                return(0);
+            }
+            else
+            {
+                WRMSG(HHC02205, "E", argv[1], "");
                 return(0);
             }
         }
     }
-    logmsg("msghld: Invalid usage\n");
+    WRMSG(HHC02202, "E");
     return(0);
 }
 #endif // OPTION_MSGHLD
@@ -2368,23 +2392,28 @@ int msglvl_cmd(int argc, char *argv[], char *cmdline)
   {
     if(!strcasecmp(argv[1], "info"))
     {
-      WRITEMSG(HHCMD004I, sysblk.msglvl ? "debug" : "normal");
+      WRMSG(HHC02203, "I", "message level", sysblk.msglvl ? "debug" : "normal");
       return(0);
     }
     else if(!strcasecmp(argv[1], "normal"))
     {
       sysblk.msglvl = 0;
-      WRITEMSG(HHCMD004I, "normal");
+      WRMSG(HHC02204, "I", "message level", "normal");
       return(0);
     }
     else if(!strcasecmp(argv[1], "debug"))
     {
       sysblk.msglvl = 1;
-      WRITEMSG(HHCMD004I, "debug");
+      WRMSG(HHC02204, "I", "message level", "debug");
+      return(0);
+    }
+    else
+    {
+      WRMSG(HHC02205, "E", argv[1], "");
       return(0);
     }
   }
-  logmsg("msglvl: Invalid usage\n");
+  logmsg(HHC02202, "E");
   return(0);
 }
 
@@ -2408,7 +2437,7 @@ int sh_cmd(int argc, char *argv[], char *cmdline)
     }
     else 
     {
-        WRITEMSG(HHCMD180E);
+        WRMSG(HHC02227, "E");
     }
     return -1;
 }
@@ -2435,13 +2464,13 @@ int cd_cmd(int argc, char *argv[], char *cmdline)
         chdir(path);
 #endif
         getcwd( cwd, sizeof(cwd) );
-        WRITEMSG(HHCMD184I,cwd);
+        WRMSG( HHC02204, "I", "working directory", cwd );
         HDC1( debug_cd_cmd, cwd );
         return 0;
     }
     else
     {
-        WRITEMSG(HHCMD180E);
+        WRMSG(HHC02227, "E");
     }
     return -1;
 }
@@ -2460,16 +2489,16 @@ int pwd_cmd(int argc, char *argv[], char *cmdline)
     {
         if (argc > 1)
         {
-            WRITEMSG(HHCMD163E);
+            WRMSG(HHC02205, "E", argv[1], ", command does not support arguments");
             return -1;
         }
         getcwd( cwd, sizeof(cwd) );
-        WRITEMSG(HHCMD184I,cwd);
+        WRMSG( HHC02204, "I", "working directory", cwd );
         return 0;
     }
     else
     {
-        WRITEMSG(HHCMD180E);
+        WRMSG(HHC02227, "E");
     }
     return -1; 
 }
@@ -2504,7 +2533,7 @@ REGS *regs;
         if (argc > 2)
         {
             release_lock(&sysblk.cpulock[sysblk.pcpu]);
-            WRITEMSG(HHCMD162E);
+            WRMSG(HHC02205, "E", argv[1], "");
             return 0;
         }
 
@@ -2516,7 +2545,7 @@ REGS *regs;
         )
         {
             release_lock(&sysblk.cpulock[sysblk.pcpu]);
-            WRITEMSG(HHCMD162E);
+            WRMSG(HHC02205, "E", argv[1], "");
             return 0;
         }
 
@@ -2621,7 +2650,7 @@ U64   cr_value;
             || '=' != equal_sign || cr_num < 0 || cr_num > 15)
         {
             release_lock(&sysblk.cpulock[sysblk.pcpu]);
-            WRITEMSG(HHCMD164E);
+            WRMSG(HHC02205, "E", argv[1], "");
             return 0;
         }
         if ( ARCH_900 == regs->arch_mode )
@@ -2817,7 +2846,7 @@ int   n, errflag, stopflag=0, modflag=0;
         /* Error message if this operand was invalid */
         if (errflag)
         {
-            WRITEMSG(HHCMD165E, argv[n]);
+            WRMSG(HHC02205, "E", argv[n], "");
             stopflag = 1;
         }
     } /* end for(n) */
@@ -2941,7 +2970,7 @@ int restart_cmd(int argc, char *argv[], char *cmdline)
         return -1;
     }
       
-    WRITEMSG(HHCMD038I);
+    WRMSG(HHC02228, "I", "restart");
 
     /* Obtain the interrupt lock */
     OBTAIN_INTLOCK(NULL);
@@ -3080,7 +3109,7 @@ char range[256];
 
     if (argc > 2 || (off && argc > 1) || (query && argc > 1))
     {
-        WRITEMSG(HHCMD039E);
+        WRMSG(HHC02205, "E", argv[1], "");
         return -1;
     }
 
@@ -3096,7 +3125,7 @@ char range[256];
         }
         else if (rc != 3 || (c[0] != '-' && c[0] != ':' && c[0] != '.'))
         {
-            WRITEMSG(HHCMD039E);
+            WRMSG(HHC02205, "E", argv[1], "");
             return -1;
         }
         if (c[0] == '.')
@@ -3144,7 +3173,8 @@ char range[256];
     on = (trace && sysblk.insttrace) || (!trace && sysblk.inststep);
 
     /* Display message */
-    WRITEMSG(HHCMD040I,
+    
+    WRMSG(HHC02229, "I",
            cmdline[0] == 't' ? _("tracing") :
            cmdline[0] == 's' ? _("stepping") : _("break"),
            on ? _("on") : _("off"),
@@ -3189,19 +3219,19 @@ REGS *regs;
     rc = device_attention (dev, CSW_ATTN);
 
     switch (rc) {
-        case 0: WRITEMSG(HHCMD045I, lcss, devnum);
+        case 0: WRMSG(HHC02230, "I", lcss, devnum);
                 break;
-        case 1: WRITEMSG(HHCMD426E, lcss, devnum);
+        case 1: WRMSG(HHC02231, "E", lcss, devnum);
                 break;
-        case 2: WRITEMSG(HHCMD047E, lcss, devnum);
+        case 2: WRMSG(HHC02232, "E", lcss, devnum);
                 break;
-        case 3: WRITEMSG(HHCMD427E, lcss, devnum);
+        case 3: WRMSG(HHC02233, "E", lcss, devnum);
                 break;
     }
 
     regs = sysblk.regs[sysblk.pcpu];
     if (rc == 3 && IS_CPU_ONLINE(sysblk.pcpu) && CPUSTATE_STOPPED == regs->cpustate)
-        WRITEMSG(HHCMD049W, devnum );
+        WRMSG(HHC02234, "W", devnum );
 
     return rc;
 }
@@ -3220,7 +3250,7 @@ int ext_cmd(int argc, char *argv[], char *cmdline)
 
     ON_IC_INTKEY;
 
-    WRITEMSG(HHCMD050I);
+    WRMSG(HHC02228, "I", "interrupt");
 
     /* Signal waiting CPUs that an interrupt is pending */
     WAKEUP_CPUS_MASK (sysblk.waiting_mask);
@@ -3257,7 +3287,7 @@ int pgmprdos_cmd(int argc, char *argv[], char *cmdline)
         }
         else
         {
-            WRITEMSG(HHCMD015S, argv[1]);
+            WRMSG(HHC02205, "S", argv[1], "");
         }
     }
     else
@@ -3294,15 +3324,19 @@ int i;
                 sysblk.diag8cmd &= ~(DIAG8CMD_ENABLE | DIAG8CMD_ECHO);
             else
             {
-                WRITEMSG(HHCMD425S,argv[i]);
+                WRMSG(HHC02205, "S",argv[i]);
                 return -1;
             }
 
         }
     else
-        WRITEMSG(HHCMD054S, (sysblk.diag8cmd & DIAG8CMD_ENABLE) ? "en" : "dis",
-            (sysblk.diag8cmd & DIAG8CMD_ECHO)   ? ""   : "no");
-
+    {
+        char buf[40];
+        sprintf(buf, "%sable, %secho",(sysblk.diag8cmd & DIAG8CMD_ENABLE) ? "en" : "dis",
+            (sysblk.diag8cmd & DIAG8CMD_ECHO)   ? ""   : "no ");
+        
+        WRMSG(HHC02203, "I", "DIAG8CMD", buf);
+    }
     return 0;
 }
 
@@ -3333,14 +3367,17 @@ int i;
                 sysblk.shcmdopt &= ~SHCMDOPT_DIAG8;
             else
             {
-                WRITEMSG(HHCMD053I, argv[i]);
+                WRMSG(HHC02205, "E", argv[i], "");
                 return -1;
             }
         }
     else
-        WRITEMSG(HHCMD013I, (sysblk.shcmdopt&SHCMDOPT_ENABLE)?"En":"Dis",
+    {
+        char buf[40];
+        sprintf(buf, "%sabled%s", (sysblk.shcmdopt&SHCMDOPT_ENABLE)?"En":"Dis",
           (sysblk.shcmdopt&SHCMDOPT_DIAG8)?"":" NoDiag8");
-
+        WRMSG(HHC02203, "I", "SHCMDOPT", buf); 
+    }
     return 0;
 }
 
@@ -3369,12 +3406,12 @@ int lsid_cmd(int argc, char *argv[], char *cmdline)
             sysblk.legacysenseid = 0;
         else
         {
-            WRITEMSG(HHCMD110E,argv[1]);
+            WRMSG(HHC02205, "E",argv[1],"");
             return -1;
         }
     }
     else
-        WRITEMSG(HHCMD111I, sysblk.legacysenseid?"En":"Dis");
+        WRMSG(HHC02203, "I", "legacysenseid", sysblk.legacysenseid?"enabled":"disabled");
 
     return 0;
 }
@@ -3416,7 +3453,7 @@ int stsi_model_cmd(int argc, char *argv[], char *cmdline)
         set_model(argc, argv[1], argv[2], argv[3], argv[4]);
     else
     {
-        WRITEMSG(HHCMD113E);
+        WRMSG(HHC02202, "E");
         return -1;
     }
 
@@ -3437,7 +3474,7 @@ int stsi_plant_cmd(int argc, char *argv[], char *cmdline)
         set_plant(argv[1]);
     else
     {
-        WRITEMSG(HHCMD114E);
+        WRMSG(HHC02202, "E");
         return -1;
     }
 
@@ -3458,7 +3495,7 @@ int stsi_mfct_cmd(int argc, char *argv[], char *cmdline)
         set_manufacturer(argv[1]);
     else
     {
-        WRITEMSG(HHCMD115E);
+        WRMSG(HHC02202, "E");
         return -1;
     }
 
@@ -3479,7 +3516,7 @@ int lparname_cmd(int argc, char *argv[], char *cmdline)
     if (argc > 1)
         set_lparname(argv[1]);
     else
-        WRITEMSG(HHCMD056I,str_lparname());
+        WRMSG(HHC02203, "I", "lparname", str_lparname());
 
     return 0;
 }
@@ -3504,7 +3541,7 @@ BYTE    c;
         {
             if ( strlen(argv[1]) == 2 && id > 0x3f )
             {
-                WRITEMSG(HHCMD061E, id); 
+                WRMSG(HHC02205,"E", id, ": must be within 00 to 3F (hex)"); 
                 return -1;
             }
             sysblk.lparnum = id;
@@ -3512,13 +3549,16 @@ BYTE    c;
         }
         else
         {
-            WRITEMSG(HHCMD431E);
+            WRMSG(HHC02202, "E");
             return -1;
         }
     }
     else
-        WRITEMSG(HHCMD060I, sysblk.lparnum);
-
+    {
+        char buf[20];
+        sprintf(buf, "%02X", sysblk.lparnum);
+        WRMSG(HHC02203, "I", "lparnum", buf);
+    }
     return 0;
 }
 
@@ -3542,19 +3582,22 @@ u_int     id;
                 sysblk.cpuidfmt = (U16)id;
             else
             {
-                WRITEMSG(HHCMD156E);
+                WRMSG(HHC02205, "E", argv[1], "must be either 0 or 1");
                 return -1;
             }
         }
         else
         {
-            WRITEMSG(HHCMD156E);
+            WRMSG(HHC02205, "E", argv[1], "");
             return -1;
         }
     }
     else
-        WRITEMSG(HHCMD157I, sysblk.cpuidfmt);
-
+    {
+        char buf[40];
+        sprintf(buf, "%d", sysblk.cpuidfmt);
+        WRMSG(HHC02203, "I", "CPUIDFMT", buf); 
+    }
     return 0;
 }
 
@@ -3571,11 +3614,10 @@ int loadparm_cmd(int argc, char *argv[], char *cmdline)
     if (argc > 1)
         set_loadparm(argv[1]);
     else
-        WRITEMSG(HHCMD051I,str_loadparm());
+        WRMSG(HHC02203, "I", "loadparm", str_loadparm());
 
     return 0;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* system reset/system reset clear function                          */
@@ -3594,7 +3636,7 @@ static int reset_cmd(int ac,char *av[],char *cmdline,int clear)
          && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED)
         {
             RELEASE_INTLOCK(NULL);
-            WRITEMSG(HHCMD453E);
+            WRMSG(HHC02235, "E");
             return -1;
         }
 
@@ -3692,7 +3734,7 @@ char *cdev, *clcss;
          && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED)
         {
             RELEASE_INTLOCK(NULL);
-            WRITEMSG(HHCMD452E);
+            WRMSG(HHC02236, "E");
             return -1;
         }
 
@@ -3720,7 +3762,7 @@ char *cdev, *clcss;
         {
             if (sscanf(clcss, "%hd%c", &lcss, &c) != 1)
             {
-                WRITEMSG(HHCMD431E, clcss );
+                WRMSG(HHC02205, "E", clcss, ": LCSS id is invalid" );
                 return -1;
             }
         }
@@ -3767,14 +3809,14 @@ BYTE c;                                 /* Character work area       */
 
     if (argc < 2)
     {
-        WRITEMSG(HHCMD454E);
+        WRMSG(HHC02202, "E");
         return -1;
     }
 
     if (sscanf(argv[1], "%x%c", &cpu, &c) != 1
      || cpu < 0 || cpu >= MAX_CPU)
     {
-        WRITEMSG(HHCMD428E, argv[1] );
+        WRMSG(HHC02205, "E", argv[1], ": target processor is invalid" );
         return -1;
     }
 
@@ -3862,7 +3904,9 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
 
     if (!(orig_pDevBlkPtrs = malloc(sizeof(DEVBLK*) * MAX_DEVLIST_DEVICES)))
     {
-        WRITEMSG(HHCMD146E, strerror(errno) );
+        char buf[40];
+        sprintf(buf, "malloc(%lu)", sizeof(DEVBLK*) * MAX_DEVLIST_DEVICES);
+        WRMSG(HHC02219, "E", buf, strerror(errno) );
         return -1;
     }
 
@@ -3949,7 +3993,7 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
 
     if (bTooMany)
     {
-        WRITEMSG(HHCMD147W, MAX_DEVLIST_DEVICES);
+        WRMSG(HHC02237, "W", MAX_DEVLIST_DEVICES);
 
         return -1;      // (treat as error)
     }
@@ -3993,7 +4037,9 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
 
     if (!(orig_pDevBlkPtrs = malloc(sizeof(DEVBLK*) * MAX_DEVLIST_DEVICES)))
     {
-        WRITEMSG(HHCMD146E, strerror(errno) );
+        char buf[40];
+        sprintf(buf, "malloc(%lu)", sizeof(DEVBLK*) * MAX_DEVLIST_DEVICES);
+        WRMSG(HHC02219, "E", buf, strerror(errno) );
         return -1;
     }
 
@@ -4028,7 +4074,7 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
 
     if (nDevCount == 0)
     {
-        WRITEMSG(HHCMD149W);
+        WRMSG(HHC02216, "W");
         return 0;
     }
 
@@ -4104,7 +4150,7 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
 
     if (bTooMany)
     {
-        WRITEMSG(HHCMD147W,MAX_DEVLIST_DEVICES);
+        WRMSG(HHC02237, "W",MAX_DEVLIST_DEVICES);
 
         return -1;      // (treat as error)
     }
@@ -4124,7 +4170,7 @@ int attach_cmd(int argc, char *argv[], char *cmdline)
 
     if (argc < 3)
     {
-        WRITEMSG(HHCMD429E);
+        WRMSG(HHC02202, "E");
         return -1;
     }
     return parse_and_attach_devices(argv[1],argv[2],argc-3,&argv[3]);
@@ -4211,7 +4257,7 @@ int rc;
 
     if (argc < 3)
     {
-        WRITEMSG(HHCMD062E);
+        WRMSG(HHC02202, "E");
         return -1;
     }
 
@@ -4227,7 +4273,7 @@ int rc;
     }
     if(lcss!=newlcss)
     {
-        WRITEMSG(HHCMD182E);
+        WRMSG(HHC02238, "E");
         return -1;
     }
 
@@ -4271,13 +4317,13 @@ BYTE    c;                              /* Character work area       */
 
     if (sscanf(argv[1], "%x%c", &rupt_num, &c) != 1)
     {
-        WRITEMSG(HHCMD066E, argv[1] );
+        WRMSG(HHC02205, "E", argv[1], ": program interrupt number is invalid" );
         return -1;
     }
 
     if ((abs_rupt_num = abs(rupt_num)) < 1 || abs_rupt_num > 0x40)
     {
-        WRITEMSG(HHCMD467E, abs_rupt_num );
+        WRMSG(HHC02205, "E", argv[1], ": program interrupt number is out of range" );
         return -1;
     }
 
@@ -4490,7 +4536,7 @@ int syncio_cmd(int argc, char *argv[], char *cmdline)
 
         found = 1;
 
-        WRITEMSG(HHCMD072I, dev->devnum, (long long)dev->syncios,
+        WRMSG(HHC02239, "I", dev->devnum, (long long)dev->syncios,
                 (long long)dev->asyncios
             );
 
@@ -4499,9 +4545,9 @@ int syncio_cmd(int argc, char *argv[], char *cmdline)
     }
 
     if (!found)
-        WRITEMSG(HHCMD073I);
+        WRMSG(HHC02216, "I");
     else
-        WRITEMSG(HHCMD074I,
+        WRMSG(HHC02240, "I",
                (long long)syncios, (long long)asyncios,
                (long long)((syncios * 100) / (syncios + asyncios + 1))
             );
@@ -4539,14 +4585,14 @@ int devtmax_cmd(int argc, char *argv[], char *cmdline)
             ios_devtmax = devtmax;
         else
         {
-            WRITEMSG(HHCMD075E);
+            WRMSG(HHC02205, "E", argv[1], ": must be -1 to n");
             return -1;
         }
 
         TrimDeviceThreads();    /* (enforce newly defined threshold) */
     }
     else
-        WRITEMSG(HHCMD076I,
+        WRMSG(HHC02241, "I",
             ios_devtmax, ios_devtnbr, ios_devthwm,
             (int)ios_devtwait, ios_devtunavail
         );
@@ -4565,7 +4611,7 @@ int devtmax_cmd(int argc, char *argv[], char *cmdline)
             sysblk.devtmax = devtmax;
         else
         {
-            WRITEMSG(HHCMD075E);
+            WRMSG(HHC02205, "E", argv[1], ": must be -1 to n");
             return -1;
         }
 
@@ -4589,7 +4635,7 @@ int devtmax_cmd(int argc, char *argv[], char *cmdline)
         release_lock(&sysblk.ioqlock);
     }
     else
-        WRITEMSG(HHCMD078I,
+        WRMSG(HHC02242, "I",
             sysblk.devtmax, sysblk.devtnbr, sysblk.devthwm,
             sysblk.devtwait, sysblk.devtunavail
         );
@@ -4620,7 +4666,7 @@ char    c;                              /* work for sscan            */
 
     if (strlen(argv[0]) < 3 || strchr ("+-cdk", argv[0][2]) == NULL)
     {
-        WRITEMSG(HHCMD091E);
+        WRMSG(HHC02205, "E", argv[0], ": must be 'sf+', 'sf-', 'sfc', 'sfk' or 'sfd'");
         return -1;
     }
 
@@ -4648,7 +4694,7 @@ char    c;                              /* work for sscan            */
             /* nothing */
         if (!dev)
         {
-            WRITEMSG(HHCMD081E);
+            WRMSG(HHC02216, "E");
             return -1;
         }
         dev = NULL;
@@ -4661,7 +4707,7 @@ char    c;                              /* work for sscan            */
             return devnotfound_msg(lcss,devnum);
         if (dev->cckd_ext == NULL)
         {
-            WRITEMSG(HHCMD084E, lcss, devnum );
+            WRMSG(HHC02209, "E", lcss, devnum, "cckd device" );
             return -1;
         }
     }
@@ -4677,7 +4723,7 @@ char    c;                              /* work for sscan            */
             flag = 2;
         else
         {
-            WRITEMSG(HHCMD087E);
+            WRMSG(HHC02205, "E", argv[1], ": operand must be `merge', `nomerge' or `force'");
             return -1;
         }
         argv++; argc--;
@@ -4688,7 +4734,7 @@ char    c;                              /* work for sscan            */
     {
         if (sscanf(argv[1], "%d%c", &level, &c) != 1 || level < -1 || level > 4)
         {
-            WRITEMSG(HHCMD088E);
+              WRMSG(HHC02205, "E", argv[1], ": operand must be a number -1 .. 4");
             return -1;
         }
         argv++; argc--;
@@ -4697,7 +4743,7 @@ char    c;                              /* work for sscan            */
     /* No other operands allowed */
     if (argc > 1)
     {
-        WRITEMSG(HHCMD089E, argv[1] );
+        WRMSG(HHC02205, "E", argv[1], "" );
         return -1;
     }
 
@@ -4766,12 +4812,12 @@ int mnttapri_cmd(int argc, char *argv[], char *cmdline)
             sysblk.nomountedtapereinit = 0;
         else
         {
-            WRITEMSG(HHCMD451S,argv[0],argv[1]);
+            WRMSG(HHC02205, "E", argv[1], "");
             return -1;
         }
     }
     else
-        WRITEMSG(HHCMD850I,sysblk.nomountedtapereinit?"dis":"");
+        WRMSG(HHC02203, "I","tape mount reinit", sysblk.nomountedtapereinit?"disallowed":"allowed");
 
     return 0;
 }
@@ -4796,7 +4842,7 @@ int ascsimnt_cmd(int argc, char *argv[], char *cmdline)
             if ( sscanf( argv[1], "%d%c", &secs, &c ) != 1
                 || secs <= 0 || secs > 99 )
             {
-                WRITEMSG(HHCMD451S,argv[0],argv[1]);
+                WRMSG(HHC02205, "S",argv[1],"");
                 return -1;
             }
             else
@@ -4804,8 +4850,11 @@ int ascsimnt_cmd(int argc, char *argv[], char *cmdline)
         }
     }
     else
-        WRITEMSG(HHCMD851I,sysblk.auto_scsi_mount_secs);
-
+    { 
+        char buf[20];
+        sprintf(buf, "%d seconds", sysblk.auto_scsi_mount_secs);
+        WRMSG(HHC02203, "I","auto SCSI mount", buf);
+    }
     return 0;
 }
 #endif /*defined( OPTION_SCSI_TAPE )*/
@@ -4828,7 +4877,7 @@ char   **init_argv;
 
     if (argc < 2)
     {
-        WRITEMSG(HHCMD093E);
+        WRMSG(HHC02202,"E");
         return -1;
     }
 
@@ -4855,7 +4904,7 @@ char   **init_argv;
         if (!sysblk.sys_reset)      // is the system in a reset status?
         {
             release_lock (&dev->lock);
-            WRITEMSG(HHCMD096E, lcss, devnum );
+            WRMSG(HHC02231, "E", lcss, devnum );
             return -1;
         }
     }
@@ -4880,7 +4929,7 @@ char   **init_argv;
             if (dev->tmh->tapeloaded( dev, NULL, 0 ))
             {
                 release_lock (&dev->lock);
-                WRITEMSG(HHCMD183E, SSID_TO_LCSS(dev->ssid), dev->devnum);
+                WRMSG(HHC02243, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
                 return -1;
             }
         }
@@ -4919,9 +4968,9 @@ char   **init_argv;
     /* Call the device init routine to do the hard work */
     if ((rc = (dev->hnd->init)(dev, init_argc, init_argv)) < 0)
     {
-        WRITEMSG(HHCMD497E,lcss, devnum );
+        WRMSG(HHC02244,"E",lcss, devnum );
     } else {
-        WRITEMSG(HHCMD098I, lcss, devnum );
+        WRMSG(HHC02245, "I", lcss, devnum );
     }
 
     /* Save arguments for next time */
@@ -4978,7 +5027,7 @@ REGS *regs;
 
     if (argc < 2)
     {
-        WRITEMSG(HHCMD099E);
+        WRMSG(HHC02202,"E");
         return -1;
     }
 
@@ -5011,7 +5060,7 @@ REGS *regs;
                                        aaddr >= sysblk.mainsize )
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRITEMSG(HHCMD450E, loadaddr );
+        WRMSG(HHC02205, "E", loadaddr, ": invalid starting address" );
         return -1;
     }
 
@@ -5028,7 +5077,7 @@ REGS *regs;
         else
         {
             release_lock(&sysblk.cpulock[sysblk.pcpu]);
-            WRITEMSG(HHCMD148E);
+            WRMSG(HHC02246, "E");
             return -1;
         }
     }
@@ -5036,7 +5085,7 @@ REGS *regs;
                                        aaddr2 >= sysblk.mainsize )
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRITEMSG(HHCMD449E, loadaddr );
+        WRMSG(HHC02205, "E", loadaddr, ": invalid ending address" );
         return -1;
     }
 
@@ -5044,19 +5093,21 @@ REGS *regs;
     if (CPUSTATE_STOPPED != regs->cpustate)
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRITEMSG(HHCMD448E);
+        WRMSG(HHC02247, "E");
         return -1;
     }
 
     if (aaddr > aaddr2)
     {
+        char buf[40];
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRITEMSG(HHCMD447E, aaddr, aaddr2 );
+        sprintf(buf, "%08X-%08X", aaddr, aaddr2);
+        WRMSG(HHC02205, "W", buf, ": invalid range" );
         return -1;
     }
 
     /* Save the file from absolute storage */
-    WRITEMSG(HHCMD104I, aaddr, aaddr2, fname );
+    WRMSG(HHC02248, "I", aaddr, aaddr2, fname );
 
     hostpath(pathname, fname, sizeof(pathname));
 
@@ -5064,20 +5115,20 @@ REGS *regs;
     {
         int saved_errno = errno;
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRITEMSG(HHCMD105E, fname, strerror(saved_errno) );
+        WRMSG(HHC02219, "E", "open()", strerror(saved_errno) );
         return -1;
     }
 
     if ((len = write(fd, regs->mainstor + aaddr, (aaddr2 - aaddr) + 1)) < 0)
-        WRITEMSG(HHCMD106E, fname, strerror(errno) );
+        WRMSG(HHC02219, "E", "write()", strerror(errno) );
     else if((U32)len < (aaddr2 - aaddr) + 1)
-        WRITEMSG(HHCMD107E, ((aaddr2 - aaddr) + 1) - len );
+        WRMSG(HHC02219, "E", "write()", "incomplete" );
 
     close(fd);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
-    WRITEMSG(HHCMD170I);
+    WRMSG(HHC02249, "I");
 
     return 0;
 }
@@ -5101,7 +5152,7 @@ REGS *regs;
 
     if (argc < 2)
     {
-        WRITEMSG(HHCMD108E);
+        WRMSG(HHC02202, "E");
         return -1;
     }
 
@@ -5110,7 +5161,7 @@ REGS *regs;
 
     if (stat(pathname, &statbuff) < 0)
     {
-        WRITEMSG(HHCMD109E, fname, strerror(errno));
+        WRMSG(HHC02219, "E", "stat()", strerror(errno));
         return -1;
     }
 
@@ -5121,7 +5172,7 @@ REGS *regs;
 
         if (sscanf(loadaddr, "%x", &aaddr) !=1)
         {
-            WRITEMSG(HHCMD446E, loadaddr );
+            WRMSG(HHC02205, "E", loadaddr, ": invallid address" );
             return -1;
         }
     }
@@ -5140,18 +5191,18 @@ REGS *regs;
     if (CPUSTATE_STOPPED != regs->cpustate)
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRITEMSG(HHCMD445E);
+        WRMSG(HHC02247, "E");
         return -1;
     }
 
     /* Read the file into absolute storage */
-    WRITEMSG(HHCMD112I, fname, aaddr );
+    WRMSG(HHC02250, "I", fname, aaddr );
 
     len = load_main(fname, aaddr);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
-    WRITEMSG(HHCMD444I, len, fname );
+    WRMSG(HHC02249, "I");
 
     return 0;
 }
@@ -5176,7 +5227,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
 
     if (argc < 2)
     {
-        WRITEMSG(HHCMD443E);
+        WRMSG(HHC02202, "E");
         return -1;
     }
 
@@ -5189,7 +5240,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
 
         if (sscanf(loadaddr, "%x", &aaddr) !=1)
         {
-            WRITEMSG(HHCMD442E, loadaddr );
+            WRMSG(HHC02205, "E", loadaddr, "invalid address" );
             return -1;
         }
     }
@@ -5207,7 +5258,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
     if (aaddr > regs->mainlim)
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRITEMSG(HHCMD116E);
+        WRMSG(HHC02251, "E");
         return -1;
     }
 
@@ -5215,7 +5266,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
     if (CPUSTATE_STOPPED != regs->cpustate)
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRITEMSG(HHCMD117E);
+        WRMSG(HHC02247, "E");
         return -1;
     }
 
@@ -5224,7 +5275,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
     if ((fd = open (pathname, O_RDONLY | O_BINARY)) < 0)
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRITEMSG(HHCMD118E, fname, strerror(errno));
+        WRMSG(HHC02219,"E", "open()", strerror(errno));
         return -1;
     }
 
@@ -5234,7 +5285,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
         if ((len = read (fd, buf, 80)) < 0)
         {
             release_lock(&sysblk.cpulock[sysblk.pcpu]);
-            WRITEMSG(HHCMD119E, fname, strerror(errno));
+            WRMSG(HHC02219,"E", "read()", strerror(errno));
             close (fd);
             return -1;
         }
@@ -5256,7 +5307,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
 
     /* Close file and issue status message */
     close (fd);
-    WRITEMSG(HHCMD120I, n );
+    WRMSG(HHC02249, "I" );
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
     return 0;
@@ -5344,9 +5395,9 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
         sprintf(buf, "state %s", states[sysblk.regs[i]->cpustate]);
         WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
 
-        sprintf(buf, "instcount %" I64_FMT "d", (long long)INSTCOUNT(sysblk.regs[i]));
+        sprintf(buf, "instcount %" I64_FMT "d", (long unsigned)INSTCOUNT(sysblk.regs[i]));
         WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
-        sprintf(buf, "siocount %" I64_FMT "d", (long long)sysblk.regs[i]->siototal);
+        sprintf(buf, "siocount %" I64_FMT "d", (long unsigned)sysblk.regs[i]->siototal);
         WRMSG(HHC00819, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf);
         copy_psw(sysblk.regs[i], curpsw);
         if (ARCH_900 == sysblk.arch_mode)
@@ -5405,9 +5456,9 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
             }
             sprintf(buf, "state %s", states[sysblk.regs[i]->guestregs->cpustate]);
             WRMSG(HHC00819, "I", "IE", sysblk.regs[i]->cpuad, buf);
-            sprintf(buf, "instcount %" I64_FMT "d", (long long)sysblk.regs[i]->guestregs->instcount);
+            sprintf(buf, "instcount %" I64_FMT "d", (long unsigned)sysblk.regs[i]->guestregs->instcount);
             WRMSG(HHC00819, "I", "IE", sysblk.regs[i]->cpuad, buf);
-            sprintf(buf, "siocount %" I64_FMT "d", (long long)sysblk.regs[i]->guestregs->siototal);
+            sprintf(buf, "siocount %" I64_FMT "d", (long unsigned)sysblk.regs[i]->guestregs->siototal);
             WRMSG(HHC00819, "I", "IE", sysblk.regs[i]->cpuad, buf);
             copy_psw(sysblk.regs[i]->guestregs, curpsw);
             if (ARCH_900 == sysblk.arch_mode)
@@ -5538,7 +5589,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
     if (argc > 1 && !strcasecmp(argv[1], "clear"))
     {
         memset(IMAP_FIRST,0,IMAP_SIZE);
-        WRITEMSG(HHCMD870I);
+        WRMSG(HHC02204, "I", "instruction counts", "zero");
         release_lock( &sysblk.icount_lock );
         return 0;
     }
@@ -5551,20 +5602,26 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
       /* Allocate space */
       if(!(opcode1 = malloc(MAX_ICOUNT_INSTR * sizeof(unsigned char))))
       {
-        WRITEMSG(HHCMD871E);
+        char buf[40];
+        sprintf(buf, "malloc(%lu)", MAX_ICOUNT_INSTR * sizeof(unsigned char))));
+        WRMSG(HHC02219, "E", buf, strerror(errno));
         release_lock( &sysblk.icount_lock );
         return 0;
       }
       if(!(opcode2 = malloc(MAX_ICOUNT_INSTR * sizeof(unsigned char))))
       {
-        WRITEMSG(HHCMD871E);
+        char buf[40];
+        sprintf(buf, "malloc(%lu)", MAX_ICOUNT_INSTR * sizeof(unsigned char))));
+        WRMSG(HHC02219, "E", buf, strerror(errno));
         free(opcode1);
         release_lock( &sysblk.icount_lock );
         return 0;
       }
       if(!(count = malloc(MAX_ICOUNT_INSTR * sizeof(U64))))
       {
-        WRITEMSG(HHCMD871E);
+        char buf[40];
+        sprintf(buf, "malloc(%lu)", MAX_ICOUNT_INSTR * sizeof(U64))));
+        WRMSG(HHC02219, "E", buf, strerror(errno));
         free(opcode1);
         free(opcode2);
         release_lock( &sysblk.icount_lock );
@@ -5596,7 +5653,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imap01[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  WRITEMSG(HHCMD872E);
+                  WRMSG(HHC02252, "E");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5619,7 +5676,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapa4[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  WRITEMSG(HHCMD872E);
+                  WRMSG(HHC02252, "E");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5642,7 +5699,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapa5[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  WRITEMSG(HHCMD872E);
+                  WRMSG(HHC02252, "E");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5665,7 +5722,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapa6[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  WRITEMSG(HHCMD872E);
+                  WRMSG(HHC02252, "E");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5688,7 +5745,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapa7[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  WRITEMSG(HHCMD872E);
+                  WRMSG(HHC02252, "E");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5711,7 +5768,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapb2[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  WRITEMSG(HHCMD872E);
+                  WRMSG(HHC02252, "E");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5734,7 +5791,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapb3[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  WRITEMSG(HHCMD872E);
+                  WRMSG(HHC02252, "E");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5757,7 +5814,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapb9[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  WRITEMSG(HHCMD872E);
+                  WRMSG(HHC02252, "E");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5780,7 +5837,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapc0[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  WRITEMSG(HHCMD872E);
+                  WRMSG(HHC02252, "E");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5803,7 +5860,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapc2[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  WRITEMSG(HHCMD872E);
+                  WRMSG(HHC02252, "E");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5826,7 +5883,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapc4[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  WRITEMSG(HHCMD872E);
+                  WRMSG(HHC02252,"E");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5849,7 +5906,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapc6[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  WRITEMSG(HHCMD872E);
+                  WRMSG(HHC02252,"E");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5872,7 +5929,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapc8[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  WRITEMSG(HHCMD872E);
+                  WRMSG(HHC02252, "E");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5895,7 +5952,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imape3[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  WRITEMSG(HHCMD872E);
+                  WRMSG(HHC02252,"E");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5918,7 +5975,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imape4[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  WRITEMSG(HHCMD872E);
+                  WRMSG(HHC02252,"E");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5941,7 +5998,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imape5[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  WRITEMSG(HHCMD872E);
+                  WRMSG(HHC02252,"E");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5964,7 +6021,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapeb[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  WRITEMSG(HHCMD872E);
+                  WRMSG(HHC02252,"E");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -5987,7 +6044,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imapec[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  WRITEMSG(HHCMD872E);
+                  WRMSG(HHC02252,"E");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -6010,7 +6067,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 total += sysblk.imaped[i2];
                 if(i == (MAX_ICOUNT_INSTR-1))
                 {
-                  WRITEMSG(HHCMD872E);
+                  WRMSG(HHC02252,"E");
                   free(opcode1);
                   free(opcode2);
                   free(count);
@@ -6031,7 +6088,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
               total += sysblk.imapxx[i1];
               if(i == (MAX_ICOUNT_INSTR-1))
               {
-                WRITEMSG(HHCMD872E);
+                WRMSG(HHC02252,"E");
                 free(opcode1);
                 free(opcode2);
                 free(count);
@@ -6339,7 +6396,7 @@ int defsym_cmd(int argc, char *argv[], char *cmdline)
 
     if (argc > 3)
     {
-        WRITEMSG(HHCMD441S);
+        WRMSG(HHC02205, "E", argv[2], ": DEFSYM requires a single value (use quotes if necessary)");
         return -1;
     }
 
@@ -6364,7 +6421,7 @@ int archmode_cmd(int argc, char *argv[], char *cmdline)
 
     if (argc < 2)
     {
-        WRITEMSG(HHCMD126I, get_arch_mode_string(NULL) );
+        WRMSG(HHC02203, "I", "archmode", get_arch_mode_string(NULL) );
         return 0;
     }
 
@@ -6376,7 +6433,7 @@ int archmode_cmd(int argc, char *argv[], char *cmdline)
          && CPUSTATE_STOPPED != sysblk.regs[i]->cpustate)
         {
             RELEASE_INTLOCK(NULL);
-            WRITEMSG(HHCMD127E);
+            WRMSG(HHC02253, "E");
             return -1;
         }
 #if defined(_370)
@@ -6426,7 +6483,7 @@ int archmode_cmd(int argc, char *argv[], char *cmdline)
 #endif
     {
         RELEASE_INTLOCK(NULL);
-        WRITEMSG(HHCMD128E, argv[1] );
+        WRMSG(HHC02205, "E", argv[1], "" );
         return -1;
     }
     if (sysblk.pcpu >= MAX_CPU)
@@ -6497,18 +6554,20 @@ BYTE c;                                 /* Character work area       */
 
     if ((cmd[0] == 'f') && sscanf(cmd+2, "%x%c", &aaddr, &c) == 1)
     {
+        char buf[20];
         if (aaddr > regs->mainlim)
         {
             RELEASE_INTLOCK(NULL);
-            WRITEMSG(HHCMD130E, aaddr );
+            sprintf(buf, "%08X", aaddr);
+            WRMSG(HHC02205, "E", buf, "" );
             return -1;
         }
         STORAGE_KEY(aaddr, regs) &= ~(STORKEY_BADFRM);
         if (!oneorzero)
             STORAGE_KEY(aaddr, regs) |= STORKEY_BADFRM;
         RELEASE_INTLOCK(NULL);
-        WRITEMSG(HHCMD131I, oneorzero ? _("usable") : _("unusable")
-            );
+        sprintf(buf, "frame %08X", aaddr);        
+        WRMSG(HHC02204, "I", buf, oneorzero ? "usable" : "unusable");
         return 0;
     }
 
@@ -6524,7 +6583,7 @@ BYTE c;                                 /* Character work area       */
                 dev->ckdkeytrace = oneorzero;
         }
         RELEASE_INTLOCK(NULL);
-        WRITEMSG(HHCMD134I, onoroff );
+        WRMSG(HHC02204, "I", "CKD key trace", onoroff );
         return 0;
     }
 
@@ -6546,20 +6605,23 @@ BYTE c;                                 /* Character work area       */
 
         if (cmd[0] == 't')
         {
+            char buf[40];
             dev->ccwtrace = oneorzero;
-            WRITEMSG(HHCMD136I, onoroff, lcss, devnum
-                );
+            sprintf(buf, "CCW trace for %1d:%04X", lcss, devnum);
+            WRMSG(HHC02204, "I", buf, onoroff);
         } else {
+            char buf[40];
+            dev->ccwtrace = oneorzero;
+            sprintf(buf, "CCW step for %1d:%04X", lcss, devnum);
             dev->ccwstep = oneorzero;
-            WRITEMSG(HHCMD137I, onoroff, lcss, devnum
-                );
+            WRMSG(HHC02204, "I", buf, onoroff);
         }
         RELEASE_INTLOCK(NULL);
         return 0;
     }
 
     RELEASE_INTLOCK(NULL);
-    WRITEMSG(HHCMD138E);
+    WRMSG(HHC02205, "E", cmd);
     return -1;
 }
 
@@ -6865,7 +6927,7 @@ int scpecho_cmd(int argc, char *argv[], char *cmdline)
     {
         sysblk.scpecho = TRUE;
     }
-    WRITEMSG(HHCMD860I, (sysblk.scpecho ? "" : "not ") );
+    WRMSG(HHC02204, "I", "SCP, PSCP echo", (sysblk.scpecho ? "on" : "off") );
     return 0;
 }
 #endif
@@ -6895,10 +6957,10 @@ int count_cmd(int argc, char *argv[], char *cmdline)
     for (i = 0; i < MAX_CPU; i++)
         if (IS_CPU_ONLINE(i))
             instcount += INSTCOUNT(sysblk.regs[i]);
-    WRITEMSG(HHCMD877I, instcount);
+    WRMSG(HHC02254, "I", instcount);
 
     for (i = 0; i < OPTION_COUNTING; i++)
-        WRITEMSG(HHCMD878I, i, sysblk.count[i]);
+        WRMSG(HHC02255, "I", i, sysblk.count[i]);
 
     return 0;
 }
@@ -7020,7 +7082,7 @@ int evm_cmd_1(int argc, char *argv[], char *cmdline)
     UNREFERENCED(argc);
     UNREFERENCED(argv);
 
-    WRITEMSG(HHCMD150W);
+    WRMSG(HHC02256, "W");
     ecpsvm_command(argc,argv);
     return 0;
 }
@@ -7066,22 +7128,22 @@ int sizeof_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(argc);
     UNREFERENCED(argv);
 
-    WRITEMSG(HHCMD161I, "(void *) ..........",sizeof(void *));
-    WRITEMSG(HHCMD161I, "(unsigned int) ....",sizeof(unsigned int));
-    WRITEMSG(HHCMD161I, "(long) ............",sizeof(long));
-    WRITEMSG(HHCMD161I, "(long long) .......",sizeof(long long));
-    WRITEMSG(HHCMD161I, "(size_t) ..........",sizeof(size_t));
-    WRITEMSG(HHCMD161I, "(off_t) ...........",sizeof(off_t));
-    WRITEMSG(HHCMD161I, "SYSBLK ............",sizeof(SYSBLK));
-    WRITEMSG(HHCMD161I, "REGS ..............",sizeof(REGS));
-    WRITEMSG(HHCMD161I, "REGS (copy len) ...",sysblk.regs_copy_len);
-    WRITEMSG(HHCMD161I, "PSW ...............",sizeof(PSW));
-    WRITEMSG(HHCMD161I, "DEVBLK ............",sizeof(DEVBLK));
-    WRITEMSG(HHCMD161I, "TLB entry .........",sizeof(TLB)/TLBN);
-    WRITEMSG(HHCMD161I, "TLB table .........",sizeof(TLB));
-    WRITEMSG(HHCMD161I, "FILENAME_MAX ......",FILENAME_MAX);
-    WRITEMSG(HHCMD161I, "PATH_MAX ..........",PATH_MAX);
-    WRITEMSG(HHCMD161I, "CPU_BITMAP ........",sizeof(CPU_BITMAP));
+    WRMSG(HHC02257, "I", "(void *) ..........",sizeof(void *));
+    WRMSG(HHC02257, "I", "(unsigned int) ....",sizeof(unsigned int));
+    WRMSG(HHC02257, "I", "(long) ............",sizeof(long));
+    WRMSG(HHC02257, "I", "(long long) .......",sizeof(long long));
+    WRMSG(HHC02257, "I", "(size_t) ..........",sizeof(size_t));
+    WRMSG(HHC02257, "I", "(off_t) ...........",sizeof(off_t));
+    WRMSG(HHC02257, "I", "SYSBLK ............",sizeof(SYSBLK));
+    WRMSG(HHC02257, "I", "REGS ..............",sizeof(REGS));
+    WRMSG(HHC02257, "I", "REGS (copy len) ...",sysblk.regs_copy_len);
+    WRMSG(HHC02257, "I", "PSW ...............",sizeof(PSW));
+    WRMSG(HHC02257, "I", "DEVBLK ............",sizeof(DEVBLK));
+    WRMSG(HHC02257, "I", "TLB entry .........",sizeof(TLB)/TLBN);
+    WRMSG(HHC02257, "I", "TLB table .........",sizeof(TLB));
+    WRMSG(HHC02257, "I", "FILENAME_MAX ......",FILENAME_MAX);
+    WRMSG(HHC02257, "I", "PATH_MAX ..........",PATH_MAX);
+    WRMSG(HHC02257, "I", "CPU_BITMAP ........",sizeof(CPU_BITMAP));
     return 0;
 }
 
@@ -7114,7 +7176,11 @@ int conkpalv_cmd( int argc, char *argv[], char *cmdline )
     cnt  = sysblk.kacnt;
 
     if(argc < 2)
-        WRITEMSG(HHCMD190I,idle,intv,cnt);
+    {
+        char buf[40];
+        sprintf(buf, "(%d,%d,%d)",idle,intv,cnt);
+        WRMSG(HHC02203, "I", "Keep-alive", buf);
+    }
     else
     {
         if (argc == 2 && parse_conkpalv( argv[1], &idle, &intv, &cnt ) == 0)
@@ -7125,7 +7191,7 @@ int conkpalv_cmd( int argc, char *argv[], char *cmdline )
         }
         else
         {
-            WRITEMSG(HHCMD192E);
+            WRMSG(HHC02205, "E", argv[2]);
             return -1;
         }
     }
@@ -7158,10 +7224,9 @@ int traceopt_cmd(int argc, char *argv[], char *cmdline)
         }
     }
     else
-        WRITEMSG(HHCMD434I,
-            sysblk.showregsnone ? _("noregs") :
-            sysblk.showregsfirst ? _("regsfirst") :
-                            _("traditional"));
+        WRMSG(HHC02203, "I", "Hercules inst trace displayed", 
+            sysblk.showregsnone ? "noregs mode" :
+            sysblk.showregsfirst ? "regsfirst mode" : "traditional mode");
     return 0;
 }
 
@@ -7296,7 +7361,7 @@ int script_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(cmdline);
     if(argc<2)
     {
-        WRITEMSG(HHCMD996E);
+        WRMSG(HHC02202, "E");
         return 1;
     }
     if(scr_tid==0)
@@ -7309,7 +7374,7 @@ int script_cmd(int argc, char *argv[], char *cmdline)
     {
         if(scr_tid!=thread_id())
         {
-            WRITEMSG(HHCMD997E);
+            WRMSG(HHC02258, "E");
             return 1;
         }
     }
@@ -7327,7 +7392,7 @@ void script_test_userabort()
 {
         if(scr_uaborted)
         {
-           WRITEMSG(HHCMD994E);
+           WRMSG(HHC02259, "E", "user cancel request");
            scr_aborted=1;
         }
 }
@@ -7349,7 +7414,7 @@ char    pathname[MAX_PATH];             /* (work)                    */
     */
     if(scr_recursion>=10)
     {
-        WRITEMSG(HHCMD998E);
+        WRMSG(HHC02259, "E", "script recursion level exceeded");
         scr_aborted=1;
         return 0;
     }
@@ -7362,19 +7427,7 @@ char    pathname[MAX_PATH];             /* (work)                    */
     {
         int save_errno = errno;
 
-        if (!isrcfile)
-        {
-            if (ENOENT != errno)
-                WRITEMSG(HHCMD007E, pathname, strerror(errno));
-            else
-                WRITEMSG(HHCMD433E, pathname);
-        }
-        else /* (this IS the .rc file...) */
-        {
-            if (ENOENT != errno)
-                WRITEMSG(HHCMD007E, pathname, strerror(errno));
-        }
-
+        WRMSG(HHC02219, "E", "fopen()", strerror(errno));
         errno = save_errno;
         return -1;
     }
@@ -7383,14 +7436,16 @@ char    pathname[MAX_PATH];             /* (work)                    */
 
     if(isrcfile)
     {
-        WRITEMSG(HHCMD008I, pathname);
+        WRMSG(HHC02260, "I", pathname);
     }
 
     /* Obtain storage for the SCRIPT file buffer */
 
     if (!(scrbuf = malloc (scrbufsize)))
     {
-        WRITEMSG(HHCMD423E, strerror(errno));
+        char buf[40];
+        sprintf(buf, "malloc(%d)", scrbufsize);
+        WRMSG(HHC02219, "E", buf, strerror(errno));
         fclose(scrfp);
         return 0;
     }
@@ -7422,13 +7477,13 @@ char    pathname[MAX_PATH];             /* (work)                    */
 
             if (scr_pause_amt < 0 || scr_pause_amt > 999)
             {
-                WRITEMSG(HHCMD001W,scrbuf+5);
+                WRMSG(HHC02261, "W",scrbuf+5);
                 continue;
             }
 
-            WRITEMSG(HHCMD011I,scr_pause_amt);
+            WRMSG(HHC02262, "I",scr_pause_amt);
             SLEEP(scr_pause_amt);
-            WRITEMSG(HHCMD012I);
+            WRMSG(HHC02263, "I");
 
             continue;
         }
@@ -7446,16 +7501,16 @@ char    pathname[MAX_PATH];             /* (work)                    */
     }
 
     if (feof(scrfp))
-        WRITEMSG(HHCMD002I);
+        WRMSG(HHC02264, "I");
     else
     {
         if(!scr_aborted)
         {
-           WRITEMSG (HHCMD003E, strerror(errno));
+           WRMSG (HHC02219,"E", "read()",strerror(errno));
         }
         else
         {
-           WRITEMSG (HHCMD999I, pathname);
+           WRMSG (HHC02265, "I", pathname);
            scr_uaborted=1;
         }
     }
@@ -7478,7 +7533,7 @@ int query_cmd(int argc, char *argv[], char *cmdline)
 {
     if (argc < 2)
     {
-        WRITEMSG(HHCMD188E, "query");
+        WRMSG(HHC02202, "E");
         return -1;
     }
 
@@ -7494,7 +7549,7 @@ int query_cmd(int argc, char *argv[], char *cmdline)
 
             if (argc != 2)
             {
-                WRITEMSG(HHCMD188E, "query");
+                WRMSG(HHC02202, "E");
                 return -1;
             }
             if ( sysblk.httpport > 0 )
@@ -7538,7 +7593,7 @@ int query_cmd(int argc, char *argv[], char *cmdline)
         }
         else
         {
-            WRITEMSG(HHCMD188E, "query");
+            WRMSG(HHC02202, "E", "query");
             return -1;
         }
     }
