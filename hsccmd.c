@@ -2489,7 +2489,7 @@ int pwd_cmd(int argc, char *argv[], char *cmdline)
     {
         if (argc > 1)
         {
-            WRMSG(HHC02205, "E", argv[1], ", command does not support arguments");
+            WRMSG(HHC02205, "E", argv[1], ": command does not support arguments");
             return -1;
         }
         getcwd( cwd, sizeof(cwd) );
@@ -3324,7 +3324,7 @@ int i;
                 sysblk.diag8cmd &= ~(DIAG8CMD_ENABLE | DIAG8CMD_ECHO);
             else
             {
-                WRMSG(HHC02205, "S",argv[i]);
+                WRMSG(HHC02205, "S",argv[i], "");
                 return -1;
             }
 
@@ -3582,7 +3582,7 @@ u_int     id;
                 sysblk.cpuidfmt = (U16)id;
             else
             {
-                WRMSG(HHC02205, "E", argv[1], "must be either 0 or 1");
+                WRMSG(HHC02205, "E", argv[1], ": must be either 0 or 1");
                 return -1;
             }
         }
@@ -5240,7 +5240,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
 
         if (sscanf(loadaddr, "%x", &aaddr) !=1)
         {
-            WRMSG(HHC02205, "E", loadaddr, "invalid address" );
+            WRMSG(HHC02205, "E", loadaddr, ": invalid address" );
             return -1;
         }
     }
@@ -6621,7 +6621,7 @@ BYTE c;                                 /* Character work area       */
     }
 
     RELEASE_INTLOCK(NULL);
-    WRMSG(HHC02205, "E", cmd);
+    WRMSG(HHC02205, "E", cmd, "");
     return -1;
 }
 
@@ -7191,7 +7191,7 @@ int conkpalv_cmd( int argc, char *argv[], char *cmdline )
         }
         else
         {
-            WRMSG(HHC02205, "E", argv[2]);
+            WRMSG(HHC02205, "E", argv[2], "");
             return -1;
         }
     }
