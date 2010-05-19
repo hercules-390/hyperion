@@ -2362,8 +2362,8 @@ int msghld_cmd(int argc, char *argv[], char *cmdline)
 
             if(sscanf(argv[1], "%d", &new_timeout) && new_timeout >= 0)
             {
-                sysblk.keep_timeout_secs = new_timeout;
                 char buf[40];
+                sysblk.keep_timeout_secs = new_timeout;
                 sprintf(buf, "%d seconds", sysblk.keep_timeout_secs);
                 WRMSG(HHC02204, "I", "message held time", buf);
                 return(0);
