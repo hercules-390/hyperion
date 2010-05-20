@@ -1,3 +1,12 @@
+/* MEMRCHR.H    (c) Copyright Roger Bowler, 2006-2010                */
+/*              Hercules Right to Left memory scan                   */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
+// $Id$
+
 /************************************************************************/
 /*                                                                      */
 /*      memrchr -- Right to Left memory scan                            */
@@ -7,10 +16,6 @@
 /*      the byte if found, or NULL if not found.                        */
 /*                                                                      */
 /************************************************************************/
-
-// $Id$
-//
-// $Log$
 
 #ifndef MEMRCHR_H
 #define MEMRCHR_H

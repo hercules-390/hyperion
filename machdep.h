@@ -1,5 +1,9 @@
 /* MACHDEP.H    (c) Copyright Greg Smith, 2001-2010                  */
 /*              Hercules machine specific code                       */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 

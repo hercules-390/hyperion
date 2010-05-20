@@ -1,5 +1,9 @@
-/* INLINE.H     (c) Copyright Jan Jaeger, 2000-2009                  */
+/* INLINE.H     (c) Copyright Jan Jaeger, 1999-2010                  */
 /*              Inline function definitions                          */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 
@@ -11,23 +15,6 @@
 /* ESAME low-address protection          v208d Roger Bowler 20/01/01 */
 /* ESAME subspace replacement            v208e Roger Bowler 27/01/01 */
 /* Multiply/Divide Logical instructions         Vic Cross 13/02/2001 */
-
-// $Log$
-// Revision 1.49  2007/06/23 00:04:14  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.48  2007/03/20 22:28:52  gsmith
-// Use non-concurrent load for fetch_doubleword_absolute on 32bit hosts
-//
-// Revision 1.47  2007/03/07 15:36:56  ivan
-// Fix explicit store protection check for SIE'd guests
-//
-// Revision 1.46  2007/01/04 23:12:04  gsmith
-// remove thunk calls for program_interrupt
-//
-// Revision 1.45  2006/12/08 09:43:28  jj
-// Add CVS message log
-//
 
 // #define INLINE_STORE_FETCH_ADDR_CHECK
 

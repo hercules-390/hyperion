@@ -1,30 +1,12 @@
-/* IEEE-W32.H   (c) Copyright Greg Smith, 2002-2009                  */
+/* IEEE-W32.H  (c) Copyright Greg Smith, 2002-2009                   */
 /*              Hercules IEEE floating point definitions for Windows */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
-//
-// $Log$
-// Revision 1.13  2008/12/16 16:22:54  rbowler
-// Eliminate unknown pragma warning in ieee-w32.h for VC++ Toolkit 2003
-//
-// Revision 1.12  2008/12/12 23:50:47  rbowler
-// Alternate non-asm routines in ieee-w32.h for win64
-//
-// Revision 1.11  2008/04/16 14:58:57  rbowler
-// Modify style of inline assembler to conform with machdep.h
-//
-// Revision 1.10  2008/04/16 14:26:21  rbowler
-// Add rint function for MSVC
-//
-// Revision 1.9  2008/04/15 21:30:03  rbowler
-// BFP rounding mode support
-//
-// Revision 1.8  2008/02/07 00:25:42  rbowler
-// Add a standard file identification header
-//
-// Revision 1.7  2006/12/08 09:43:28  jj
-// Add CVS message log
-//
+
 
 #ifndef _IEEE_W32_H
 #define _IEEE_W32_H

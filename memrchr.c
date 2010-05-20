@@ -1,12 +1,11 @@
-/************************************************************************/
-/*                                                                      */
-/*       memrchr          Right to Left memory scan                     */
-/*                                                                      */
-/************************************************************************/
+/* MEMRCHR.C    (c) Copyright Roger Bowler, 2006-2010                */
+/*              Hercules Right to Left memory scan                   */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
-//
-// $Log$
 
 #include "hstdinc.h"
 

@@ -1,12 +1,11 @@
-///////////////////////////////////////////////////////////////////////////////////////////
-//
-//          linklist.h          linked-list macros
-//
-///////////////////////////////////////////////////////////////////////////////////////////
+/* LINKLIST.H   (c) Copyright Roger Bowler, 2006-2010                */
+/*              linked-list macros                                   */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
-//
-// $Log$
 
 #ifndef _LLIST_
 #define _LLIST_

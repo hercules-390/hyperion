@@ -1,3 +1,12 @@
+/* IEEE.C      (c) Copyright Willem Konynenberg, 2001-2009           */
+/*              Hercules Binary (IEEE) Floating Point Instructions   */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
+// $Id$
+
 /*
  * Hercules System/370, ESA/390, z/Architecture emulator
  * ieee.c
@@ -59,41 +68,6 @@
  * actually only 80-bits, so the conversion from extended format to native
  * long double format will cause loss of precision and range.
  */
-
-// $Log$
-// Revision 1.84  2008/04/18 12:13:59  rbowler
-// Fix incorrect results from THDER,THDR instructions
-//
-// Revision 1.83  2008/04/16 19:57:55  rbowler
-// Fix condition code in LCEBR,LCDBR,LCXBR instructions
-//
-// Revision 1.82  2008/04/16 14:09:42  rbowler
-// Correct ieee to use BFP rounding mode not DFP rounding mode
-//
-// Revision 1.81  2008/04/15 21:30:03  rbowler
-// BFP rounding mode support
-//
-// Revision 1.80  2008/02/12 18:23:39  jj
-// TBEDR , TBDR using R1 as source, should be R2.
-//
-// Revision 1.79  2008/02/07 00:29:04  rbowler
-// Solaris build support by Jeff Savit
-//
-// Revision 1.78  2007/06/23 00:04:13  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.77  2007/01/13 07:22:32  bernard
-// backout ccmask
-//
-// Revision 1.76  2007/01/12 15:24:07  bernard
-// ccmask phase 1
-//
-// Revision 1.75  2007/01/04 23:12:04  gsmith
-// remove thunk calls for program_interrupt
-//
-// Revision 1.74  2006/12/08 09:43:28  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 

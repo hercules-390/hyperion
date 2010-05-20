@@ -1,3 +1,14 @@
+/* LTDL.C       (c) Copyright Roger Bowler, 2006-2010                */
+/*              Hercules system independent dlopen wrapper           */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+/* This notice applies only to the portions modified by the Hercules */
+/* Project                                                           */
+
+// $Id$
+
 /* ltdl.c -- system independent dlopen wrapper
    Copyright (C) 1998, 1999, 2000 Free Software Foundation, Inc.
    Originally by Thomas Tanner <tanner@ffii.org>
