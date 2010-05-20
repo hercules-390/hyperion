@@ -629,7 +629,7 @@ het_read_header( HETB *hetb )
     /*
     || Read in a headers worth of data
     */
-    rc = fread( &hetb->chdr, sizeof( HETHDR ), 1, hetb->fd );
+    rc = (int)fread( &hetb->chdr, sizeof( HETHDR ), 1, hetb->fd );
     if( rc != 1 )
     {
         /*
@@ -863,7 +863,7 @@ het_read( HETB *hetb, void *sbuf )
         /*
         || Finally read in the chunk data
         */
-        rc = fread( tptr, 1, slen, hetb->fd );
+        rc = (int)fread( tptr, 1, slen, hetb->fd );
         if( rc != (int)slen )
         {
             if( feof( hetb->fd ) )
@@ -1121,7 +1121,7 @@ het_write_header( HETB *hetb, int len, int flags1, int flags2 )
     /*
     || Write it out
     */
-    rc = fwrite( &hetb->chdr, sizeof( HETHDR ), 1, hetb->fd );
+    rc = (int)fwrite( &hetb->chdr, sizeof( HETHDR ), 1, hetb->fd );
     if( rc != 1 )
     {
         return( HETE_ERROR );
@@ -1331,7 +1331,7 @@ het_write( HETB *hetb, void *sbuf, int slen )
         /*
         || Write the block
         */
-        rc = fwrite( sbuf, 1, tlen, hetb->fd );
+        rc = (int)fwrite( sbuf, 1, tlen, hetb->fd );
         if( rc != (int)tlen )
         {
             return( HETE_ERROR );

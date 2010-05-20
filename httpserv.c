@@ -86,7 +86,7 @@ DLL_EXPORT int html_include(WEBBLK *webblk, char *filename)
 
     while (!feof(inclfile))
     {
-        ret = fread(buffer, 1, sizeof(buffer), inclfile);
+        ret = (int)fread(buffer, 1, sizeof(buffer), inclfile);
         if (ret <= 0) break;
         hwrite(webblk->sock,buffer, ret);
     }
@@ -688,7 +688,7 @@ char                pathname[MAX_PATH]; /* working pathname          */
             return NULL;
         }
         /* Append trailing [back]slash, but only if needed */
-        rc = strlen(absolute_httproot_path);
+        rc = (int)strlen(absolute_httproot_path);
         if (absolute_httproot_path[rc-1] != *HTTP_PS)
             strlcat(absolute_httproot_path,HTTP_PS,sizeof(absolute_httproot_path));
         /* Save the absolute path */

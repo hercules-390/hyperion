@@ -343,7 +343,7 @@ void translate_keystroke( char kbbuf[], int* pkblen )
 
             } // end switch( ch2 )
 
-            *pkblen = strlen( kbbuf );      // inform caller #of chars
+            *pkblen = (int)strlen( kbbuf );      // inform caller #of chars
             break;
 
         } // end case: 0x00, 0xE0
