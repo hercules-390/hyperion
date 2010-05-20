@@ -2877,7 +2877,7 @@ ECPSVM_CMDENT *ecpsvm_getcmdent(char *cmd)
         ce=&ecpsvm_cmdtab[i];
         if(strlen(cmd)<=strlen(ce->name) && strlen(cmd)>=(size_t)ce->abbrev)
         {
-            clen=strlen(cmd);
+            clen=(int)strlen(cmd);
             if(strncasecmp(cmd,ce->name,clen)==0)
             {
                 return(ce);

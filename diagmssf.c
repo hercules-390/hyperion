@@ -352,7 +352,7 @@ DEVBLK            *dev;                /* Device block pointer       */
 
             /* Set HSA array count and offset in SPCCB */
             STORE_HW(spccbconfig->tothsa,0);
-            offset += sizeof(SPCCB_CPU_INFO) * MAX_CPU;
+            offset += (U16)(sizeof(SPCCB_CPU_INFO) * MAX_CPU);
             STORE_HW(spccbconfig->offhsa,offset);
 
             /* Move IPL load parameter to SPCCB */

@@ -517,9 +517,9 @@
 #define SR_WRITE_STRING(_file, _key, _s) \
 do { \
   size_t _rc; \
-  if (strlen((_s)) + 1 > SR_MAX_STRING_LENGTH) SR_STRING_ERROR; \
-  SR_WRITE_HDR((_file), (_key), strlen((_s)) + 1); \
-  _rc = SR_WRITE((_s), 1, strlen((_s)) + 1, (_file)); \
+  if ((int)strlen((_s)) + 1 > SR_MAX_STRING_LENGTH) SR_STRING_ERROR; \
+  SR_WRITE_HDR((_file), (_key), (int)strlen((_s)) + 1); \
+  _rc = (size_t)SR_WRITE((_s), 1, (int)strlen((_s)) + 1, (_file)); \
   if (_rc != strlen((_s)) + 1) SR_WRITE_ERROR; \
 } while (0);
 
