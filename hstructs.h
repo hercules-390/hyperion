@@ -701,6 +701,7 @@ struct SYSBLK {
 	LOCK    msglock;                /* lock for writemsg         */
 	int     msglvl;                 /* Message level             */
     time_t  shutquittime;           /* Quit requested time       */
+    time_t  SSD_time;                /* SSD requested time        */
 
 };
 

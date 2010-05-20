@@ -396,7 +396,7 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
     time( &end );
     if ( difftime( end, sysblk.shutquittime ) > 60 )
     {
-        WRMSG( HHC02266, "A" );
+        WRMSG( HHC02266, "A", "QUIT", "quit" );
         time( &sysblk.shutquittime );
     }
     else
@@ -6911,11 +6911,20 @@ int spm_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int ssd_cmd(int argc, char *argv[], char *cmdline)
 {
+    time_t  end;
+
     UNREFERENCED(argc);
     UNREFERENCED(argv);
     UNREFERENCED(cmdline);
-
-    signal_quiesce(0, 0);
+    
+    time( &end );
+    if ( difftime( end, sysblk.shutquittime ) > 60 )
+    {
+        WRMSG( HHC02266, "A", "Signal a Shutdown", "ssd" );
+        time( &sysblk.SSD_time );
+    }
+    else
+        signal_quiesce(0, 0);
 
     return 0;
 }

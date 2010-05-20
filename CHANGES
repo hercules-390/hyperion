@@ -1,4 +1,4 @@
-20 May 2010 QUIT requires 2nd QUIT within 60 seconds.
+20 May 2010 QUIT and SSD require 2nd command within 60 seconds.
 12 May 2010 Addition of a native Windows Threading Model (wthreads) enabled with
             OPTION_WTHREADS. Requires WIN2K and later. Disables PTTRACE.
 08 May 2010 HERCULES_LIB is introduced as an environment variable for LOADABLE  
