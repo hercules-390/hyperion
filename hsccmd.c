@@ -7427,7 +7427,19 @@ char    pathname[MAX_PATH];             /* (work)                    */
     {
         int save_errno = errno;
 
-        WRMSG(HHC02219, "E", "fopen()", strerror(errno));
+        if (!isrcfile)
+        {
+            if (ENOENT != errno)
+                WRMSG(HHC02219, "E", "fopen()", strerror(errno));
+            else
+                WRMSG(HHC01405, "E", pathname);
+        }
+        else /* (this IS the .rc file...) */
+        {
+            if (ENOENT != errno)
+                WRMSG(HHC02219, "E", "fopen()", strerror(errno));
+        }
+
         errno = save_errno;
         return -1;
     }
