@@ -959,6 +959,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02263 "Resuming script file processing..."
 #define HHC02264 "Script file processing complete"
 #define HHC02265 "Script file '%s' aborted due to previous conditions"
+#define HHC02266 "Are you sure you want to QUIT? (Reply 'quit' again within 60 seconds)"
 
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
@@ -996,3 +997,9 @@ cpu.c:123:HABC1234I This is a message
 #define HHC90010 "Pttrace: trace is busy"
 #define HHC90011 "Pttrace: invalid argument '%s'"
 #define HHC90012 "Pttrace: %s%s%s%s%s%s%s%s%s%s%s %s %s to %d %d"
+
+/* ctc/lcs/ndis */
+
+#define HHC90900 "DBG: CTC: %s device port %2.2X: %s"
+#define HHC90901 "DBG: CTC: %s: %s"
+

@@ -700,6 +700,7 @@ struct SYSBLK {
 #endif
 	LOCK    msglock;                /* lock for writemsg         */
 	int     msglvl;                 /* Message level             */
+    time_t  shutquittime;           /* Quit requested time       */
 
 };
 

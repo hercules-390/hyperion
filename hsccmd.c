@@ -387,10 +387,20 @@ int comment_cmd(int argc, char *argv[],char *cmdline)
 /*-------------------------------------------------------------------*/
 int quit_cmd(int argc, char *argv[],char *cmdline)
 {
+    time_t  end;
+
     UNREFERENCED(argc);
     UNREFERENCED(argv);
     UNREFERENCED(cmdline);
-    do_shutdown();
+
+    time( &end );
+    if ( difftime( end, sysblk.shutquittime ) > 60 )
+    {
+        WRMSG( HHC02266, "A" );
+        time( &sysblk.shutquittime );
+    }
+    else
+        do_shutdown();
     return 0;   /* (make compiler happy) */
 }
 
