@@ -1,39 +1,11 @@
-//////////////////////////////////////////////////////////////////////////////////////////
-//   hconsole.c        Hercules hardware console (panel) support functions
-//////////////////////////////////////////////////////////////////////////////////////////
-// (c) Copyright "Fish" (David B. Trout), 2005-2009. Released under the Q Public License
-// (http://www.hercules-390.org/herclic.html) as modifications to Hercules.
-//////////////////////////////////////////////////////////////////////////////////////////
+/* HCONSOLE.C   (c) Copyright "Fish" (David B. Trout), 2005-2009     */
+/*          Hercules hardware console (panel) support functions      */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
-//
-// $Log$
-// Revision 1.16  2008/09/02 06:08:09  fish
-// ALT_RIGHTARROW and ALT_LEFTARROW
-//
-// Revision 1.15  2008/08/29 10:22:08  fish
-// Lay groundwork for eventual extended cursor handling
-//
-// Revision 1.14  2008/08/23 11:57:19  fish
-// Also set console OUTPUT buffer mode for
-// MSVC builds in order to fix line-wrap issue.
-//
-// Revision 1.13  2008/07/10 18:31:33  fish
-// 1) Add support for Ctrl+Home and Ctrl+End extended control sequences, and
-// 2)  ignore other unsupported extended control sequences.
-//
-// Revision 1.12  2008/07/08 13:48:40  fish
-// Ctrl + uparrow / downarrow ==> scroll up/down one line
-//
-// Revision 1.11  2007/11/30 14:54:32  jmaynard
-// Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
-//
-// Revision 1.10  2007/06/23 00:04:10  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.9  2006/12/08 09:43:21  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 

@@ -1,8 +1,13 @@
+/* HSCUTL2.C   (c) Copyright Mark L. Gaubatz and others, 2003-2006   */
+/*              Host-specific functions for Hercules                 */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
 /**********************************************************************/
 /*                                                                    */
 /*  HSCUTL2.C                                                         */
-/*                                                                    */
-/*  (c) 2003-2006 Mark L. Gaubatz and others                          */
 /*                                                                    */
 /*  Implementation of functions used in Hercules that may be missing  */
 /*  on some platform ports.                                           */
@@ -12,21 +17,12 @@
 /*  include some header files that conflict with definitions in some  */
 /*  Hercules header files.                                            */
 /*                                                                    */
-/*  Released under the Q Public License                               */
-/*  (http://www.hercules-390.org/herclic.html)                        */
-/*  as modifications to Hercules.                                     */
-/*                                                                    */
 /*  This file is portion of the HERCULES S/370, S/390 and             */
 /*  z/Architecture emulator.                                          */
 /*                                                                    */
 /**********************************************************************/
 
 // $Id$
-//
-// $Log$
-// Revision 1.10  2006/12/08 09:43:26  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 

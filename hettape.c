@@ -1,5 +1,9 @@
 /* HETTAPE.C    (c) Copyright Roger Bowler, 1999-2010                */
 /*              Hercules Tape Device Handler for HETTAPE             */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 /* Original Author: Leland Lucius                                    */
 /* Prime Maintainer: Ivan Warren                                     */

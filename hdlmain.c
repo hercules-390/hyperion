@@ -1,24 +1,12 @@
 /* HDLMAIN.C    (c) Copyright Jan Jaeger, 2003-2010                  */
 /*              Hercules Dynamic Loader                              */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
-//
-// $Log$
-// Revision 1.51  2008/12/24 15:42:13  jj
-// Add debug entry point for sclp event masks
-//
-// Revision 1.50  2008/12/22 13:10:21  jj
-// Add sclp debug entry points
-//
-// Revision 1.49  2008/02/12 08:42:15  fish
-// dyngui tweaks: new def devlist fmt, new debug_cd_cmd hook
-//
-// Revision 1.48  2007/06/23 00:04:10  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.47  2006/12/08 09:43:25  jj
-// Add CVS message log
-//
+
 
 #include "hstdinc.h"
 

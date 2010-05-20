@@ -1,35 +1,11 @@
-//////////////////////////////////////////////////////////////////////////////////////////
-//   hconsole.h        Hercules hardware console (panel) support functions
-//////////////////////////////////////////////////////////////////////////////////////////
-// (c) Copyright "Fish" (David B. Trout), 2009. Released under the Q Public License
-// (http://www.hercules-390.org/herclic.html) as modifications to Hercules.
-//////////////////////////////////////////////////////////////////////////////////////////
+/* HCONSOLE.H   (c) Copyright "Fish" (David B. Trout), 2009          */
+/*          Hercules hardware console (panel) support functions      */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
-//
-// $Log$
-// Revision 1.13  2008/09/02 06:08:09  fish
-// ALT_RIGHTARROW and ALT_LEFTARROW
-//
-// Revision 1.12  2008/08/29 10:22:08  fish
-// Lay groundwork for eventual extended cursor handling
-//
-// Revision 1.11  2008/07/10 18:31:33  fish
-// 1) Add support for Ctrl+Home and Ctrl+End extended control sequences, and
-// 2)  ignore other unsupported extended control sequences.
-//
-// Revision 1.10  2008/07/08 13:48:40  fish
-// Ctrl + uparrow / downarrow ==> scroll up/down one line
-//
-// Revision 1.9  2007/11/30 14:54:32  jmaynard
-// Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
-//
-// Revision 1.8  2007/06/23 00:04:10  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.7  2006/12/08 09:43:25  jj
-// Add CVS message log
-//
 
 #ifndef _HCONSOLE_H
 #define _HCONSOLE_H

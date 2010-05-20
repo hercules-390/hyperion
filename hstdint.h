@@ -1,16 +1,11 @@
-/* HSTDINT.H    (c)Copyright Roger Bowler, 2009                      */
+/* HSTDINT.H    (c)Copyright Roger Bowler, 2006-2010                 */
 /*              Hercules standard integer definitions                */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
-//
-// $Log$
-// Revision 1.2  2007/06/23 00:04:11  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.1  2006/12/10 23:18:32  rbowler
-// Modify decContext.h to include hstdint.h instead of stdint.h
-//
-//
 
 /*-------------------------------------------------------------------*/
 /* The purpose of this file is to define the following typedefs:     */

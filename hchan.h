@@ -1,6 +1,12 @@
+/* HCHAN.H       (c) Copyright Ivan Warren, 2004-2010                */
+/* Based on work (c)Roger Bowler, Jan Jaeger & Others 1999-2010      */
+/*              Generic channel device handler                       */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
 // $Id$
-//
-// $Log$
 
 #ifndef __HCHAN_H__
 #define __HCHAN_H__

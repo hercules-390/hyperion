@@ -1,5 +1,9 @@
 /* HTTPSERV.C   (c)Copyright Jan Jaeger, 2002-2010                   */
-/*              HTTP Server                                          */
+/*              Hercules HTTP Server for Console Ops                 */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 

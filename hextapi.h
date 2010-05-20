@@ -1,3 +1,10 @@
+/* HEXTAPI.H   (c) Copyright Roger Bowler & Others, 2005-2009        */
+/*             Definition of Hercules External (public) APIs         */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
 /********************************************************/
 /* HEXTAPI.H : Definition of Hercules External (public) */
 /*             APIs                                     */
@@ -8,14 +15,7 @@
 /********************************************************/
 
 // $Id$
-//
-// $Log$
-// Revision 1.5  2007/06/23 00:04:11  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.4  2006/12/08 09:43:26  jj
-// Add CVS message log
-//
+
 
 #ifndef _HEXTAPI_H_
 #define _HEXTAPI_H_

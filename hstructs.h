@@ -1,12 +1,16 @@
 /* HSTRUCTS.H   (c) Copyright Roger Bowler, 1999-2010                */
 /*              Hercules Structure Definitions                       */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
+// $Id$
 
 //      This header auto-#included by 'hercules.h'...
 //
 //      The <config.h> header and other required headers are
 //      presumed to have already been #included ahead of it...
-
-// $Id$
 
 #ifndef _HSTRUCTS_H
 #define _HSTRUCTS_H

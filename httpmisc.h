@@ -1,15 +1,12 @@
-/* HTTPMISC.C   (c)Copyright Jan Jaeger, 2002-2009                   */
-/*              HTTP Server                                          */
+/* HTTPMISC.H   (c) Copyright Jan Jaeger, 2002-2010                  */
+/*              Hercules HTTP Server for Console Ops                 */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
-//
-// $Log$
-// Revision 1.26  2007/06/23 00:04:12  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.25  2006/12/08 09:43:28  jj
-// Add CVS message log
-//
+
 
 #ifndef _HTTPMISC_H
 #define _HTTPMISC_H

@@ -1,18 +1,14 @@
 /* HSOCKET.H    (c) Copyright Roger Bowler, 2005-2009                */
 /*              Equates for socket functions                         */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 /*  This header file contains equates for the socket functions       */
 /*  and constants whose values differ between Unix and Winsock       */
 
 // $Id$
-//
-// $Log$
-// Revision 1.10  2007/06/23 00:04:11  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.9  2006/12/08 09:43:27  jj
-// Add CVS message log
-//
 
 #if !defined(_HSOCKET_H)
 #define _HSOCKET_H

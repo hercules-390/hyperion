@@ -1,20 +1,17 @@
-/* BYTESWAP.H  Little <> Big Endian conversion - Jan Jaeger          */
+/* HBYTESWP.H   (c) Copyright Roger Bowler, 2010                     */
+/*              Hercules Little <> Big Endian conversion             */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 /* These definitions are only nessesary when running on older        */
 /* versions of linux that do not have /usr/include/byteswap.h        */
 /* compile option -DNO_ASM_BYTESWAP will expand 'C' code             */
-/* otherwise Intel (486+) assember will be generated                 */
+/* otherwise Intel (486+) assember will be generated  (Jan Jaeger)   */
 
 // $Id$
-//
-// $Log$
-// Revision 1.11  2009/01/07 18:00:13  jmaynard
-// Added x86_64 assembler swap assists for those systems that don't have
-// byteswap.h in the library.
-//
-// Revision 1.10  2006/12/08 09:43:21  jj
-// Add CVS message log
-//
+
 
 #ifndef _BYTESWAP_H
 #define _BYTESWAP_H

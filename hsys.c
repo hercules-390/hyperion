@@ -1,18 +1,12 @@
+/* HSYS.H       (c) Copyright Roger Bowler, 1999-2010                */
+/*              Hercules hsys Header                                 */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
 // $Id$
-//
-// $Log$
-// Revision 1.9  2008/12/24 15:42:14  jj
-// Add debug entry point for sclp event masks
-//
-// Revision 1.8  2008/12/22 13:10:22  jj
-// Add sclp debug entry points
-//
-// Revision 1.7  2008/02/12 08:42:15  fish
-// dyngui tweaks: new def devlist fmt, new debug_cd_cmd hook
-//
-// Revision 1.6  2006/12/08 09:43:28  jj
-// Add CVS message log
-//
+
 
 #include "hstdinc.h"
 

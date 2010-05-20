@@ -1,5 +1,9 @@
 /* HERCWIND.H   (c) Copyright Roger Bowler, 2005-2009                */
 /*              MSVC Environment Specific Definitions                */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 /*-------------------------------------------------------------------*/
 /* Header file containing additional data structures and function    */
@@ -7,32 +11,7 @@
 /*-------------------------------------------------------------------*/
 
 // $Id$
-//
-// $Log$
-// Revision 1.19  2008/06/22 05:54:30  fish
-// Fix print-formatting issue (mostly in tape modules)
-// that can sometimes, in certain circumstances,
-// cause herc to crash.  (%8.8lx --> I32_FMTX, etc)
-//
-// Revision 1.18  2008/05/28 16:37:48  fish
-// #define PATH_MAX  from _MAX_PATH if available
-//
-// Revision 1.17  2008/03/25 11:41:31  fish
-// SCSI TAPE MODS part 1: groundwork: non-functional changes:
-// rename some functions, comments, general restructuring, etc.
-// New source modules awstape.c, omatape.c, hettape.c and
-// tapeccws.c added, but not yet used (all will be used in a future
-// commit though when tapedev.c code is eventually split)
-//
-// Revision 1.16  2008/02/19 17:18:36  rbowler
-// Missing u_int8_t causes crypto compile errors on Solaris
-//
-// Revision 1.15  2007/06/23 00:04:10  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.14  2006/12/08 09:43:26  jj
-// Add CVS message log
-//
+
 
 #if !defined(_HERCWIND_H)
 #define _HERCWIND_H

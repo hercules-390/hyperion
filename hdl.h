@@ -1,17 +1,12 @@
-/*********************************************************************/
-/* HDL.H        (c) Copyright Jan Jaeger, 2003-2009                  */
+/* HDL.H        (c) Copyright Jan Jaeger, 2003-2010                  */
 /*              Hercules Dynamic Loader                              */
-/*********************************************************************/
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
-//
-// $Log$
-// Revision 1.34  2007/06/23 00:04:10  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.33  2006/12/08 09:43:25  jj
-// Add CVS message log
-//
+
 
 #ifndef _HDL_H
 #define _HDL_H

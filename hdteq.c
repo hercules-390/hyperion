@@ -1,18 +1,11 @@
-/* HDTEQ.C      (c) Copyright Jan Jaeger, 2003-2009                  */
+/* HDTEQ.C      (c) Copyright Jan Jaeger, 2003-2010                  */
 /*              Hercules Dynamic Loader                              */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
-//
-// $Log$
-// Revision 1.16  2008/12/28 15:30:09  jj
-// SYSG and SYSA mods
-//
-// Revision 1.15  2007/06/23 00:04:10  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.14  2006/12/08 09:43:25  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 

@@ -6,7 +6,6 @@
 /*   Hercules.                                                       */
 
 // $Id$
-//
 
 #include "hstdinc.h"
 
