@@ -6918,7 +6918,7 @@ int ssd_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(cmdline);
     
     time( &end );
-    if ( difftime( end, sysblk.shutquittime ) > 60 )
+    if ( difftime( end, sysblk.SSD_time ) > 60 )
     {
         WRMSG( HHC02266, "A", "Signal a Shutdown", "ssd" );
         time( &sysblk.SSD_time );
