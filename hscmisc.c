@@ -902,6 +902,7 @@ BYTE    inst[6];                        /* Storage alteration value  */
 BYTE    opcode;
 U16     xcode;
 char    type;
+char    buf[80];
 
     /* Set limit for address range */
   #if defined(FEATURE_ESAME)
@@ -979,7 +980,8 @@ char    type;
         }
         else
             logmsg("         ");
-        DISASM_INSTRUCTION(inst);
+        DISASM_INSTRUCTION(inst, buf);
+	logmsg("%s", buf);
         saddr += ilc;
     } /* end for(i) */
 
@@ -1215,8 +1217,8 @@ REGS   *regs;                           /* Copied regs               */
     if (ilc > 2) n += sprintf (buf+n, "%2.2X%2.2X", inst[2], inst[3]);
     if (ilc > 4) n += sprintf (buf+n, "%2.2X%2.2X", inst[4], inst[5]);
     logmsg ("%s %s", buf,(ilc<4) ? "        " : (ilc<6) ? "    " : "");
-    DISASM_INSTRUCTION(inst);
-
+    DISASM_INSTRUCTION(inst, buf);
+    logmsg("%s", buf);
 
 #ifdef DISPLAY_INSTRUCTION_OPERANDS
 

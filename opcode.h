@@ -171,12 +171,12 @@ OPC_DLL_IMPORT zz_func opcode_ecxx[][GEN_MAXARCH];
 OPC_DLL_IMPORT zz_func opcode_edxx[][GEN_MAXARCH];
 
 
-#define DISASM_INSTRUCTION(_inst) \
-    disasm_table((_inst), 0)
+#define DISASM_INSTRUCTION(_inst, p) \
+    disasm_table((_inst), 0, p)
 
-typedef void (*func) ();
+typedef int (*func) ();
 
-extern void disasm_table (BYTE inst[], char mnemonic[]);
+extern int disasm_table (BYTE inst[], char mnemonic[], char *p);
 
 
 #if defined(OPTION_INSTRUCTION_COUNTING)

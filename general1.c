@@ -3208,8 +3208,8 @@ BYTE   *ip;                             /* -> executed instruction   */
         if (ilc > 2) n += sprintf (buf+n, "%2.2X%2.2X", ip[2], ip[3]);
         if (ilc > 4) n += sprintf (buf+n, "%2.2X%2.2X", ip[4], ip[5]);
         logmsg ("%s %s", buf,(ilc<4) ? "        " : (ilc<6) ? "    " : "");
-        DISASM_INSTRUCTION(ip);
-        logmsg ("\n");
+        DISASM_INSTRUCTION(ip,buf);
+        logmsg ("%s\n", buf);
     }
 #endif
 
