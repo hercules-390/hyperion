@@ -4042,12 +4042,12 @@ size_t  dstlen,srclen;                  /* Page wide src/dst lengths */
         BYTE *source;
         /* get source frame and copy concurrently */
         source = MADDR (addr2, r3, regs, ACCTYPE_READ, regs->psw.pkey);
-        concpy(regs,dest,source,copylen);
+        concpy(regs,dest,source,(int)copylen);
         /* Adjust operands */
-        addr2+=copylen;
-        len2-=copylen;
-        addr1+=copylen;
-        len1-=copylen;
+        addr2+=(int)copylen;
+        len2-=(int)copylen;
+        addr1+=(int)copylen;
+        len1-=(int)copylen;
 
         /* Adjust length & pointers for this cycle */
         dest+=copylen;
@@ -4060,8 +4060,8 @@ size_t  dstlen,srclen;                  /* Page wide src/dst lengths */
         memset(dest,pad,dstlen);
 
         /* Adjust destination operands */
-        addr1+=dstlen;
-        len1-=dstlen;
+        addr1+=(int)dstlen;
+        len1-=(int)dstlen;
     }
 
     /* Update the registers */
