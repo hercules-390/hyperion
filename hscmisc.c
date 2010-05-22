@@ -1186,9 +1186,9 @@ REGS   *regs;                           /* Copied regs               */
     copy_psw (regs, qword);
 
     if ( sysblk.cpus > 1 )
-        n += sprintf (buf + n, "%s%02X:  ", PTYPSTR(regs->cpuad), regs->cpuad);
+        n += sprintf (buf + n, "%s%02X: ", PTYPSTR(regs->cpuad), regs->cpuad);
     n += sprintf (buf + n,
-                "PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X ",
+                "PSW=%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X ",
                 qword[0], qword[1], qword[2], qword[3],
                 qword[4], qword[5], qword[6], qword[7]);
   #if defined(FEATURE_ESAME)
@@ -1332,7 +1332,7 @@ REGS   *regs;                           /* Copied regs               */
                                                   ACCTYPE_READ));
         if ( sysblk.cpus > 1 )
         {
-            n += sprintf(buf + n, "%s%02X:  ", PTYPSTR(regs->cpuad), regs->cpuad );
+            n += sprintf(buf + n, "%s%02X: ", PTYPSTR(regs->cpuad), regs->cpuad );
         }
         n += sprintf(buf+n,"%s\n", buf2);
     }
@@ -1354,7 +1354,7 @@ REGS   *regs;                           /* Copied regs               */
 
         if ( sysblk.cpus > 1 )
         {
-            n += sprintf(buf + n, "%s%02X:  ", PTYPSTR(regs->cpuad), regs->cpuad );
+            n += sprintf(buf + n, "%s%02X: ", PTYPSTR(regs->cpuad), regs->cpuad );
         }
         n += sprintf(buf + n, "%s\n", buf2);
     }
