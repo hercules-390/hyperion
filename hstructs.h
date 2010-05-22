@@ -906,6 +906,9 @@ struct DEVBLK {                         /* Device configuration block*/
         U64     syncios;                /* Number synchronous I/Os   */
         U64     asyncios;               /* Number asynchronous I/Os  */
 
+        /*  Execute Channel Pgm Counts */
+        U64     excps;                  /* Number of channel pgms Ex */
+
         /*  Device dependent data (generic)                          */
         void    *dev_data;
 
