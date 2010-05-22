@@ -628,6 +628,16 @@ int ecpsvm_do_disp1(REGS *regs,VADR dl,VADR el)
     return(0);
 }
 
+void display_regs_cregs(REGS *regs)
+{
+  char buf[256];
+  int len;
+
+  len = display_regs(regs, buf);
+  display_cregs(regs, buf + len);
+  logmsg("%s", buf);
+}
+
 /* DISP2 Core */
 int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
 {
@@ -1088,8 +1098,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         SET_PSW_IA(regs);
         /* Dispatch..... */
         DEBUG_CPASSISTX(DISP2,logmsg(_("HHCPEV300D : DISP2 - Next Instruction : %2.2X\n"),ARCH_DEP(vfetchb)(regs->psw.IA,USE_PRIMARY_SPACE,regs)));
-        DEBUG_CPASSISTX(DISP2,display_regs(regs));
-        DEBUG_CPASSISTX(DISP2,display_cregs(regs));
+	DEBUG_CPASSISTX(DISP2,display_regs_cregs(regs));
         return(2);      /* OK - Perform INTCHECK */
     }
     /* Nothing else to do - wait state */

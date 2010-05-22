@@ -2520,6 +2520,7 @@ int pwd_cmd(int argc, char *argv[], char *cmdline)
 int gpr_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
+char buf[256];
 
     UNREFERENCED(cmdline);
 
@@ -2565,7 +2566,8 @@ REGS *regs;
             regs->GR_L(reg_num) = (U32) reg_value;
     }
 
-    display_regs (regs);
+    display_regs (regs, buf);
+    logmsg("%s", buf);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -2579,6 +2581,7 @@ REGS *regs;
 int fpr_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
+char buf[256];
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -2594,7 +2597,8 @@ REGS *regs;
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    display_fregs (regs);
+    display_fregs (regs, buf);
+    logmsg("%s", buf);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -2640,6 +2644,7 @@ REGS *regs;
 int   cr_num;
 BYTE  equal_sign, c;
 U64   cr_value;
+char buf[256];
 
     UNREFERENCED(cmdline);
 
@@ -2669,7 +2674,8 @@ U64   cr_value;
             regs->CR_G(cr_num) = (U32)cr_value;
     }
 
-    display_cregs (regs);
+    display_cregs (regs, buf);
+    logmsg("%s", buf);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -2683,6 +2689,7 @@ U64   cr_value;
 int ar_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
+char buf[256];
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -2698,8 +2705,9 @@ REGS *regs;
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    display_aregs (regs);
-
+    display_aregs (regs, buf);
+    logmsg("%s", buf);
+    
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
     return 0;
@@ -4499,6 +4507,7 @@ DEVBLK*  dev;
 U16      devnum;
 U16      lcss;
 int rc;
+char buf[512];
 
     UNREFERENCED(cmdline);
 
@@ -4521,7 +4530,8 @@ int rc;
         return -1;
     }
 
-    display_subchannel (dev);
+    display_subchannel (dev, buf);
+    logmsg("%s", buf);
 
     return 0;
 }
