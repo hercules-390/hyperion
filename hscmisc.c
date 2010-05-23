@@ -496,7 +496,7 @@ int len;
 /*-------------------------------------------------------------------*/
 int display_subchannel (DEVBLK *dev, char *buf, char *hdr)
 {
-    char devstr[16] = {0};      /* "0:0000 D/T0000" */
+    char devstr[64] = {0};      /* "0:0000 D/T0000" */
     struct BITS { U8 b7:1; U8 b6:1; U8 b5:1; U8 b4:1; U8 b3:1; U8 b2:1; U8 b1:1; U8 b0:1; };
     union ByteToBits { struct BITS b; U8 status; } u;
     int len = 0;
@@ -547,8 +547,9 @@ int display_subchannel (DEVBLK *dev, char *buf, char *hdr)
                 "%s   CHPID0:%2.2X    1:%2.2X    2:%2.2X   3:%2.2X\n"
                 "%s        4:%2.2X    5:%2.2X    6:%2.2X   7:%2.2X\n"
                 "%s     Misc:%2.2X%2.2X%2.2X%2.2X\n",
-                devstr, dev->subchan, hdr,
-                hdr, dev->pmcw.intparm[0], dev->pmcw.intparm[1],
+                devstr, dev->subchan, 
+                hdr, 
+		hdr, dev->pmcw.intparm[0], dev->pmcw.intparm[1],
                 dev->pmcw.intparm[2], dev->pmcw.intparm[3],
                 hdr, dev->pmcw.flag4, dev->pmcw.flag5,
                 dev->pmcw.devnum[0], dev->pmcw.devnum[1],
@@ -563,10 +564,10 @@ int display_subchannel (DEVBLK *dev, char *buf, char *hdr)
                 dev->pmcw.flag26, dev->pmcw.flag27);
 
         len+=sprintf(buf+len,"%s    Subchannel Status Word (SCSW)\n"
-                "    Flags:%2.2X%2.2X SCHC:%2.2X%2.2X "
+                "%s    Flags:%2.2X%2.2X SCHC:%2.2X%2.2X "
                     "DS:%2.2X SS:%2.2X Count:%2.2X%2.2X "
                     "CCW:%2.2X%2.2X%2.2X%2.2X\n",
-                hdr, dev->scsw.flag0, dev->scsw.flag1,
+                hdr, hdr, dev->scsw.flag0, dev->scsw.flag1,
                 dev->scsw.flag2, dev->scsw.flag3,
                 dev->scsw.unitstat, dev->scsw.chanstat,
                 dev->scsw.count[0], dev->scsw.count[1],

@@ -4507,7 +4507,7 @@ DEVBLK*  dev;
 U16      devnum;
 U16      lcss;
 int rc;
-char buf[512];
+char buf[1024];
 
     UNREFERENCED(cmdline);
 
@@ -4530,8 +4530,8 @@ char buf[512];
         return -1;
     }
 
-    display_subchannel (dev, buf, "");
-    logmsg("%s", buf);
+    display_subchannel (dev, buf, "HHC02268I ");
+    writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, "", "%s", buf);
 
     return 0;
 }
