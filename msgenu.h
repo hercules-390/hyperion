@@ -959,7 +959,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02263 "Resuming script file processing..."
 #define HHC02264 "Script file processing complete"
 #define HHC02265 "Script file '%s' aborted due to previous conditions"
-#define HHC02266 "Are you sure you want to %s? (Reply '%s' again within 60 seconds)"
+#define HHC02266 "Reenter command '%s' again within 60 seconds to execute"
 //efine HHC02267 "%s" /* Used for instruction tracing */
 //efine HHC02268 "%s" /* Used for ds command */
 
