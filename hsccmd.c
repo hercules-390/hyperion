@@ -2566,7 +2566,7 @@ char buf[256];
             regs->GR_L(reg_num) = (U32) reg_value;
     }
 
-    display_regs (regs, buf);
+    display_regs (regs, buf, "");
     logmsg("%s", buf);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
@@ -2597,7 +2597,7 @@ char buf[256];
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    display_fregs (regs, buf);
+    display_fregs (regs, buf, "");
     logmsg("%s", buf);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
@@ -2674,7 +2674,7 @@ char buf[256];
             regs->CR_G(cr_num) = (U32)cr_value;
     }
 
-    display_cregs (regs, buf);
+    display_cregs (regs, buf, "");
     logmsg("%s", buf);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
@@ -2705,7 +2705,7 @@ char buf[256];
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    display_aregs (regs, buf);
+    display_aregs (regs, buf, "");
     logmsg("%s", buf);
     
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
@@ -4530,7 +4530,7 @@ char buf[512];
         return -1;
     }
 
-    display_subchannel (dev, buf);
+    display_subchannel (dev, buf, "");
     logmsg("%s", buf);
 
     return 0;

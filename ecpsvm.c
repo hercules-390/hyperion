@@ -633,8 +633,8 @@ void display_regs_cregs(REGS *regs)
   char buf[256];
   int len;
 
-  len = display_regs(regs, buf);
-  display_cregs(regs, buf + len);
+  len = display_regs(regs, buf, "");
+  display_cregs(regs, buf + len, "");
   logmsg("%s", buf);
 }
 

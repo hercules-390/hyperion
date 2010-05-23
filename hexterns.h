@@ -396,11 +396,11 @@ CCDU_DLL_IMPORT void    cckdumsg (DEVBLK *, int, char *, ...);
 /* Functions in module hscmisc.c */
 int herc_system (char* command);
 void do_shutdown();
-int display_regs (REGS *regs, char *buf);
-int display_fregs (REGS *regs, char *buf);
-int display_cregs (REGS *regs, char *buf);
-int display_aregs (REGS *regs, char *buf);
-int display_subchannel (DEVBLK *dev, char *buf);
+int display_regs (REGS *regs, char *buf, char *hdr);
+int display_fregs (REGS *regs, char *buf, char *hdr);
+int display_cregs (REGS *regs, char *buf, char *hdr);
+int display_aregs (REGS *regs, char *buf, char *hdr);
+int display_subchannel (DEVBLK *dev, char *buf, char *hdr);
 void get_connected_client (DEVBLK* dev, char** pclientip, char** pclientname);
 void alter_display_real (char *opnd, REGS *regs);
 void alter_display_virt (char *opnd, REGS *regs);

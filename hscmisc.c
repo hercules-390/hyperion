@@ -245,7 +245,7 @@ TID tid;
 /* display_cregs and display_aregs                                   */
 /* Ivan Warren 2005/11/07                                            */
 /*-------------------------------------------------------------------*/
-static int display_regs32(char *hdr,U16 cpuad,U32 *r,int numcpus, char *buf)
+static int display_regs32(char *hdr,U16 cpuad,U32 *r,int numcpus, char *buf, char *msghdr)
 {
     int i;
     int len=0;
@@ -257,6 +257,7 @@ static int display_regs32(char *hdr,U16 cpuad,U32 *r,int numcpus, char *buf)
             {
                 len+=sprintf(buf+len,"\n");
             }
+            len+=sprintf(buf+len,msghdr);
             if(numcpus>1)
             {
                 len+=sprintf(buf+len,"%s%02X: ", PTYPSTR(cpuad), cpuad);
@@ -274,7 +275,7 @@ static int display_regs32(char *hdr,U16 cpuad,U32 *r,int numcpus, char *buf)
 
 #if defined(_900)
 
-static int display_regs64(char *hdr,U16 cpuad,U64 *r,int numcpus, char *buf)
+static int display_regs64(char *hdr,U16 cpuad,U64 *r,int numcpus, char *buf, char *msghdr)
 {
     int i;
     int rpl;
@@ -295,6 +296,7 @@ static int display_regs64(char *hdr,U16 cpuad,U64 *r,int numcpus, char *buf)
             {
                 len+=sprintf(buf+len,"\n");
             }
+            len+=sprintf(buf+len,msghdr);
             if(numcpus>1)
             {
                 len+=sprintf(buf+len,"%s%02X: ", PTYPSTR(cpuad), cpuad);
@@ -315,7 +317,7 @@ static int display_regs64(char *hdr,U16 cpuad,U64 *r,int numcpus, char *buf)
 /*-------------------------------------------------------------------*/
 /* Display registers for the instruction display                     */
 /*-------------------------------------------------------------------*/
-int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf)
+int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, char *hdr)
 {
     int len=0;
     
@@ -326,21 +328,21 @@ int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf)
                 || (inst[1] >= 0xE1 && inst[1] <= 0xFE)
            )))
     {
-        len += display_regs (regs, buf + len);
+        len += display_regs (regs, buf + len, hdr);
         if (sysblk.showregsfirst) len += sprintf(buf + len, "\n");
     }
 
     /* Display control registers if appropriate */
     if (!REAL_MODE(&regs->psw) || opcode == 0xB2)
     {
-        len += display_cregs (regs, buf + len);
+        len += display_cregs (regs, buf + len, hdr);
         if (sysblk.showregsfirst) len += sprintf(buf + len, "\n");
     }
 
     /* Display access registers if appropriate */
     if (!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
     {
-        len += display_aregs (regs, buf + len);
+        len += display_aregs (regs, buf + len, hdr);
         if (sysblk.showregsfirst) len += sprintf(buf + len, "\n");
     }
 
@@ -354,7 +356,7 @@ int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf)
         || (opcode == 0xB2 && inst[1] == 0x45) /*SQER*/
        )
     {
-        len += display_fregs (regs, buf + len);
+        len += display_fregs (regs, buf + len, hdr);
         if (sysblk.showregsfirst) len += sprintf(buf + len, "\n");
     }
     return(len);
@@ -363,7 +365,7 @@ int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf)
 /*-------------------------------------------------------------------*/
 /* Display general purpose registers                                 */
 /*-------------------------------------------------------------------*/
-int display_regs (REGS *regs, char *buf)
+int display_regs (REGS *regs, char *buf, char *hdr)
 {
     int i;
     U32 gprs[16];
@@ -379,7 +381,7 @@ int display_regs (REGS *regs, char *buf)
         {
             gprs[i]=regs->GR_L(i);
         }
-        return(display_regs32("GR",regs->cpuad,gprs,sysblk.cpus, buf));
+        return(display_regs32("GR",regs->cpuad,gprs,sysblk.cpus,buf,hdr));
 #if defined(_900)
     }
     else
@@ -388,7 +390,7 @@ int display_regs (REGS *regs, char *buf)
         {
             ggprs[i]=regs->GR_G(i);
         }
-        return(display_regs64("R",regs->cpuad,ggprs,sysblk.cpus, buf));
+        return(display_regs64("R",regs->cpuad,ggprs,sysblk.cpus,buf,hdr));
     }
 #endif
 
@@ -398,7 +400,7 @@ int display_regs (REGS *regs, char *buf)
 /*-------------------------------------------------------------------*/
 /* Display control registers                                         */
 /*-------------------------------------------------------------------*/
-int display_cregs (REGS *regs, char *buf)
+int display_cregs (REGS *regs, char *buf, char *hdr)
 {
     int i;
     U32 crs[16];
@@ -414,7 +416,7 @@ int display_cregs (REGS *regs, char *buf)
         {
             crs[i]=regs->CR_L(i);
         }
-        return(display_regs32("CR",regs->cpuad,crs,sysblk.cpus, buf));
+        return(display_regs32("CR",regs->cpuad,crs,sysblk.cpus,buf,hdr));
 #if defined(_900)
     }
     else
@@ -423,7 +425,7 @@ int display_cregs (REGS *regs, char *buf)
         {
             gcrs[i]=regs->CR_G(i);
         }
-        return(display_regs64("C",regs->cpuad,gcrs,sysblk.cpus, buf));
+        return(display_regs64("C",regs->cpuad,gcrs,sysblk.cpus,buf,hdr));
     }
 #endif
 
@@ -433,7 +435,7 @@ int display_cregs (REGS *regs, char *buf)
 /*-------------------------------------------------------------------*/
 /* Display access registers                                          */
 /*-------------------------------------------------------------------*/
-int display_aregs (REGS *regs, char *buf)
+int display_aregs (REGS *regs, char *buf, char *hdr)
 {
     int i;
     U32 ars[16];
@@ -442,7 +444,7 @@ int display_aregs (REGS *regs, char *buf)
     {
         ars[i]=regs->AR(i);
     }
-    return(display_regs32("AR",regs->cpuad,ars,sysblk.cpus, buf));
+    return(display_regs32("AR",regs->cpuad,ars,sysblk.cpus,buf,hdr));
 
 } /* end function display_aregs */
 
@@ -450,15 +452,17 @@ int display_aregs (REGS *regs, char *buf)
 /*-------------------------------------------------------------------*/
 /* Display floating point registers                                  */
 /*-------------------------------------------------------------------*/
-int display_fregs (REGS *regs, char *buf)
+int display_fregs (REGS *regs, char *buf, char *hdr)
 {
 char cpustr[7] = {0};               /* "CPnn: " or "" */
+int len;
 
+    len=sprintf(buf,hdr);
     if(sysblk.cpus>1)
         sprintf(cpustr, "%s%02X: ", PTYPSTR(regs->cpuad), regs->cpuad);
 
     if(regs->CR(0) & CR0_AFP)
-        return(sprintf(buf,
+        return(len+sprintf(buf,
             "%sFPR0=%8.8X %8.8X  FPR2=%8.8X %8.8X\n"
             "%sFPR1=%8.8X %8.8X  FPR3=%8.8X %8.8X\n"
             "%sFPR4=%8.8X %8.8X  FPR6=%8.8X %8.8X\n"
@@ -477,7 +481,7 @@ char cpustr[7] = {0};               /* "CPnn: " or "" */
             ,cpustr, regs->fpr[26], regs->fpr[27], regs->fpr[30], regs->fpr[31]
         ));
     else
-        return(sprintf(buf,
+        return(len+sprintf(buf,
             "%sFPR0=%8.8X %8.8X  FPR2=%8.8X %8.8X\n"
             "%sFPR4=%8.8X %8.8X  FPR6=%8.8X %8.8X\n"
             ,cpustr, regs->fpr[0], regs->fpr[1], regs->fpr[2], regs->fpr[3]
@@ -490,14 +494,14 @@ char cpustr[7] = {0};               /* "CPnn: " or "" */
 /*-------------------------------------------------------------------*/
 /* Display subchannel                                                */
 /*-------------------------------------------------------------------*/
-int display_subchannel (DEVBLK *dev, char *buf)
+int display_subchannel (DEVBLK *dev, char *buf, char *hdr)
 {
     char devstr[16] = {0};      /* "0:0000 D/T0000" */
     struct BITS { U8 b7:1; U8 b6:1; U8 b5:1; U8 b4:1; U8 b3:1; U8 b2:1; U8 b1:1; U8 b0:1; };
     union ByteToBits { struct BITS b; U8 status; } u;
     int len = 0;
     
-    sprintf(devstr, "%1d:%04X D/T%04X", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->devtype);
+    sprintf(devstr, "%s%1d:%04X D/T%04X", hdr, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->devtype);
 
     if (ARCH_370 == sysblk.arch_mode)
     {
@@ -508,7 +512,7 @@ int display_subchannel (DEVBLK *dev, char *buf)
                 dev->csw[4], dev->csw[5], dev->csw[6], dev->csw[7]);
 
         u.status = (U8)dev->csw[4];
-        len+=sprintf(buf+len,"    Unit Status    %s%s%s%s%s%s%s%s%s\n", 
+        len+=sprintf(buf+len,"%s    Unit Status    %s%s%s%s%s%s%s%s%s\n", hdr,
             u.status == 0 ? "is Normal" : "",
             u.b.b0 ? "Attention " : "",
             u.b.b1 ? "SM " : "",
@@ -520,7 +524,7 @@ int display_subchannel (DEVBLK *dev, char *buf)
             u.b.b7 ? "UE " : "");
 
         u.status = (U8)dev->csw[5];
-        len+=sprintf(buf+len,"    Channel Status %s%s%s%s%s%s%s%s%s\n", 
+        len+=sprintf(buf+len,"%s    Channel Status %s%s%s%s%s%s%s%s%s\n", hdr,
             u.status == 0 ? "is Normal" : "",
             u.b.b0 ? "PCI " : "",
             u.b.b1 ? "IL " : "",
@@ -535,34 +539,34 @@ int display_subchannel (DEVBLK *dev, char *buf)
     else 
     {
         len+=sprintf(buf+len,"%s Subchannel Number[%04X]\n"
-                "    Path Management Control Word (PMCW)\n"
-                "  IntParm:%2.2X%2.2X%2.2X%2.2X\n"
-                "    Flags:%2.2X%2.2X        Dev:%2.2X%2.2X\n"
-                "      LPM:%2.2X PNOM:%2.2X LPUM:%2.2X PIM:%2.2X\n"
-                "      MBI:%2.2X%2.2X        POM:%2.2X PAM:%2.2X\n"
-                "   CHPID0:%2.2X    1:%2.2X    2:%2.2X   3:%2.2X\n"
-                "        4:%2.2X    5:%2.2X    6:%2.2X   7:%2.2X\n"
-                "     Misc:%2.2X%2.2X%2.2X%2.2X\n",
-                devstr, dev->subchan,
-                dev->pmcw.intparm[0], dev->pmcw.intparm[1],
+                "%s    Path Management Control Word (PMCW)\n"
+                "%s  IntParm:%2.2X%2.2X%2.2X%2.2X\n"
+                "%s    Flags:%2.2X%2.2X        Dev:%2.2X%2.2X\n"
+                "%s      LPM:%2.2X PNOM:%2.2X LPUM:%2.2X PIM:%2.2X\n"
+                "%s      MBI:%2.2X%2.2X        POM:%2.2X PAM:%2.2X\n"
+                "%s   CHPID0:%2.2X    1:%2.2X    2:%2.2X   3:%2.2X\n"
+                "%s        4:%2.2X    5:%2.2X    6:%2.2X   7:%2.2X\n"
+                "%s     Misc:%2.2X%2.2X%2.2X%2.2X\n",
+                devstr, dev->subchan, hdr,
+                hdr, dev->pmcw.intparm[0], dev->pmcw.intparm[1],
                 dev->pmcw.intparm[2], dev->pmcw.intparm[3],
-                dev->pmcw.flag4, dev->pmcw.flag5,
+                hdr, dev->pmcw.flag4, dev->pmcw.flag5,
                 dev->pmcw.devnum[0], dev->pmcw.devnum[1],
-                dev->pmcw.lpm, dev->pmcw.pnom, dev->pmcw.lpum, dev->pmcw.pim,
-                dev->pmcw.mbi[0], dev->pmcw.mbi[1],
+                hdr, dev->pmcw.lpm, dev->pmcw.pnom, dev->pmcw.lpum, dev->pmcw.pim,
+                hdr, dev->pmcw.mbi[0], dev->pmcw.mbi[1],
                 dev->pmcw.pom, dev->pmcw.pam,
-                dev->pmcw.chpid[0], dev->pmcw.chpid[1],
+                hdr, dev->pmcw.chpid[0], dev->pmcw.chpid[1],
                 dev->pmcw.chpid[2], dev->pmcw.chpid[3],
-                dev->pmcw.chpid[4], dev->pmcw.chpid[5],
+                hdr, dev->pmcw.chpid[4], dev->pmcw.chpid[5],
                 dev->pmcw.chpid[6], dev->pmcw.chpid[7],
-                dev->pmcw.zone, dev->pmcw.flag25,
+                hdr,dev->pmcw.zone, dev->pmcw.flag25,
                 dev->pmcw.flag26, dev->pmcw.flag27);
 
-        len+=sprintf(buf+len,"    Subchannel Status Word (SCSW)\n"
+        len+=sprintf(buf+len,"%s    Subchannel Status Word (SCSW)\n"
                 "    Flags:%2.2X%2.2X SCHC:%2.2X%2.2X "
                     "DS:%2.2X SS:%2.2X Count:%2.2X%2.2X "
                     "CCW:%2.2X%2.2X%2.2X%2.2X\n",
-                dev->scsw.flag0, dev->scsw.flag1,
+                hdr, dev->scsw.flag0, dev->scsw.flag1,
                 dev->scsw.flag2, dev->scsw.flag3,
                 dev->scsw.unitstat, dev->scsw.chanstat,
                 dev->scsw.count[0], dev->scsw.count[1],
@@ -570,8 +574,8 @@ int display_subchannel (DEVBLK *dev, char *buf)
                 dev->scsw.ccwaddr[2], dev->scsw.ccwaddr[3]);
 
         u.status = (U8)dev->scsw.unitstat;
-        len+=sprintf(buf+len,"    Device Status     %s%s%s%s%s%s%s%s%s\n", 
-            u.status == 0 ? "is Normal" : "",
+        len+=sprintf(buf+len,"%s    Device Status     %s%s%s%s%s%s%s%s%s\n", 
+            hdr, u.status == 0 ? "is Normal" : "",
             u.b.b0 ? "Attention " : "",
             u.b.b1 ? "SM " : "",
             u.b.b2 ? "CUE " : "",
@@ -582,8 +586,8 @@ int display_subchannel (DEVBLK *dev, char *buf)
             u.b.b7 ? "UE " : "");
         
         u.status = (U8)dev->scsw.chanstat;
-        len+=sprintf(buf+len,"    Subchannel Status %s%s%s%s%s%s%s%s%s\n", 
-            u.status == 0 ? "is Normal" : "",
+        len+=sprintf(buf+len,"%s    Subchannel Status %s%s%s%s%s%s%s%s%s\n", 
+            hdr, u.status == 0 ? "is Normal" : "",
             u.b.b0 ? "PCI " : "",
             u.b.b1 ? "IL " : "",
             u.b.b2 ? "PC " : "",
@@ -816,7 +820,7 @@ int icode;
 /* Returns number of characters placed in display buffer             */
 /*-------------------------------------------------------------------*/
 static int ARCH_DEP(display_real) (REGS *regs, RADR raddr, char *buf,
-                                    int draflag)
+                                    int draflag, char *hdr)
 {
 RADR    aaddr;                          /* Absolute storage address  */
 int     i, j;                           /* Loop counters             */
@@ -829,10 +833,11 @@ BYTE    c;                              /* Character work area       */
     if(ITIMER_ACCESS(raddr,16))
         ARCH_DEP(store_int_timer)(regs);
 #endif
-    
+
+    n = sprintf(buf, hdr);
     if (draflag)
     {
-        n = sprintf (buf, "R:"F_RADR":", raddr);
+        n += sprintf (buf+n, "R:"F_RADR":", raddr);
     }
 
     aaddr = APPLY_PREFIXING (raddr, regs->PX);
@@ -869,20 +874,20 @@ BYTE    c;                              /* Character work area       */
 /* Returns number of characters placed in display buffer             */
 /*-------------------------------------------------------------------*/
 static int ARCH_DEP(display_virt) (REGS *regs, VADR vaddr, char *buf,
-                                    int ar, int acctype)
+                                    int ar, int acctype, char *hdr)
 {
 RADR    raddr;                          /* Real address              */
 int     n;                              /* Number of bytes in buffer */
 int     stid;                           /* Segment table indication  */
 U16     xcode;                          /* Exception code            */
 
-    n = sprintf (buf, "%c:"F_VADR":", ar == USE_REAL_ADDR ? 'R' : 'V',
-                             vaddr);
+    n = sprintf (buf, "%s%c:"F_VADR":", hdr, 
+                 ar == USE_REAL_ADDR ? 'R' : 'V', vaddr);
     xcode = ARCH_DEP(virt_to_abs) (&raddr, &stid,
                                     vaddr, ar, regs, acctype);
     if (xcode == 0)
     {
-        n += ARCH_DEP(display_real) (regs, raddr, buf+n, 0);
+        n += ARCH_DEP(display_real) (regs, raddr, buf+n, 0, "");
     }
     else
         n += sprintf (buf+n," Translation exception %4.4hX",xcode);
@@ -1037,7 +1042,7 @@ char    buf[100];                       /* Message buffer            */
     /* Display real storage */
     for (i = 0; i < 999 && raddr <= eaddr; i++)
     {
-        ARCH_DEP(display_real) (regs, raddr, buf, 1);
+        ARCH_DEP(display_real) (regs, raddr, buf, 1, "");
         logmsg ("%s\n", buf);
         raddr += 16;
     } /* end for(i) */
@@ -1135,7 +1140,7 @@ char    buf[100];                       /* Message buffer            */
                 n += sprintf (buf+n, " R:"F_RADR, raddr);
             logmsg ("%s\n", buf);
         }
-        ARCH_DEP(display_virt) (regs, vaddr, buf, arn, ACCTYPE_LRA);
+        ARCH_DEP(display_virt) (regs, vaddr, buf, arn, ACCTYPE_LRA, "");
         logmsg ("%s\n", buf);
         vaddr += 16;
     } /* end for(i) */
@@ -1160,7 +1165,7 @@ char    buf2[256];
 int     n;                              /* Number of bytes in buffer */
 REGS   *regs;                           /* Copied regs               */
 
-    n = 0;
+    n = sprintf(buf,"HHC02267I ");
     if (iregs->ghostregs)
         regs = iregs;
     else if ((regs = copy_regs(iregs)) == NULL)
@@ -1202,7 +1207,7 @@ REGS   *regs;                           /* Copied regs               */
     if (inst == NULL)
     {
         n += sprintf(buf + n, "Instruction fetch error\n");
-        n += display_regs (regs, buf + n);
+        n += display_regs (regs, buf + n, "HHC02267I ");
         if (!iregs->ghostregs) free(regs);
 	writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, "", "%s", buf);
         return;
@@ -1214,7 +1219,7 @@ REGS   *regs;                           /* Copied regs               */
 
     /* Show registers associated with the instruction */
     if (sysblk.showregsfirst)
-        n += display_inst_regs (regs, inst, opcode, buf + n);
+        n += display_inst_regs (regs, inst, opcode, buf + n, "HHC02267I ");
 
     /* Display the instruction */
     n += sprintf (buf + n, "INST=%2.2X%2.2X", inst[0], inst[1]);
@@ -1320,7 +1325,7 @@ REGS   *regs;                           /* Copied regs               */
     {
         if(REAL_MODE(&regs->psw))
             ARCH_DEP(display_virt) (regs, addr1, buf2, USE_REAL_ADDR,
-                                                ACCTYPE_READ);
+                                                ACCTYPE_READ, "");
         else
             ARCH_DEP(display_virt) (regs, addr1, buf2, b1,
                                 (opcode == 0x44 
@@ -1329,7 +1334,8 @@ REGS   *regs;                           /* Copied regs               */
 #endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
                                                 ? ACCTYPE_INSTFETCH :
                                  opcode == 0xB1 ? ACCTYPE_LRA :
-                                                  ACCTYPE_READ));
+                                                  ACCTYPE_READ),"");
+        n += sprintf(buf+n, "HHC02267I ");
         if ( sysblk.cpus > 1 )
         {
             n += sprintf(buf + n, "%s%02X: ", PTYPSTR(regs->cpuad), regs->cpuad );
@@ -1347,11 +1353,12 @@ REGS   *regs;                           /* Copied regs               */
             || (opcode == 0xB9 && inst[1] == 0x05) /*LURAG*/
             || (opcode == 0xB9 && inst[1] == 0x25))) /*STURG*/
             ARCH_DEP(display_virt) (regs, addr2, buf2, USE_REAL_ADDR,
-                                                ACCTYPE_READ);
+                                                ACCTYPE_READ, "HHC02267I ");
         else
             ARCH_DEP(display_virt) (regs, addr2, buf2, b2,
-                                        ACCTYPE_READ);
+                                        ACCTYPE_READ, "HHC02267I ");
 
+        n += sprintf(buf+n, "HHC02267I ");
         if ( sysblk.cpus > 1 )
         {
             n += sprintf(buf + n, "%s%02X: ", PTYPSTR(regs->cpuad), regs->cpuad );
@@ -1363,7 +1370,7 @@ REGS   *regs;                           /* Copied regs               */
 
     /* Show registers associated with the instruction */
     if (!sysblk.showregsfirst && !sysblk.showregsnone)
-        n += display_inst_regs (regs, inst, opcode, buf + n);
+        n += display_inst_regs (regs, inst, opcode, buf + n, "HHC02267I ");
 
     if (!iregs->ghostregs)
         free (regs);

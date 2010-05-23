@@ -960,6 +960,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02264 "Script file processing complete"
 #define HHC02265 "Script file '%s' aborted due to previous conditions"
 #define HHC02266 "Are you sure you want to %s? (Reply '%s' again within 60 seconds)"
+#define HHC02267 "%s"
 
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
