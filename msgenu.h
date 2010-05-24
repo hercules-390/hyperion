@@ -962,13 +962,23 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02266 "Reenter command '%s' again within 60 seconds to execute"
 //efine HHC02267 "%s" /* Used for instruction tracing */
 //efine HHC02268 "%s" /* Used for ds command */
-//efine HHC02269 "%s" /* Used for gr command */
-//efine HHC02270 "%s" /* Used for fpr command */
-//efine HHC02271 "%s" /* Used for cr command */
-//efine HHC02272 "%s" /* Used for ar command */
+#define HHC02269 "%s" 
+#define HHC02270 "%s" 
+#define HHC02271 "%s"
+#define HHC02272 "%s"
 #define HHC02272 "%s"
 #define HHC02273 "Index %2d: '%s'"
 #define HHC02274 "%s"
+#define HHC02275 "%s"
+#define HHC02276 "Floating point control register: %08"I32_FMT"X"
+#define HHC02277 "Prefix register: %s"
+#define HHC02278 "%s"
+#define HHC02279 "%s"
+#define HHC02280 "%s"
+#define HHC02281 "%s"
+#define HHC02282 "%s"
+#define HHC02283 "%s"
+#define HHC02284 "%s"
 
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)

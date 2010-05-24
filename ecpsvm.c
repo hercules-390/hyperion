@@ -294,11 +294,11 @@ struct _ECPSVM_SASTATS
     DEBUG_SASSISTX(_instname,logmsg(_("HHCEV300D : SASSIST "#_instname" CR6= %8.8X\n"),CR6)); \
     DEBUG_SASSISTX(_instname,logmsg(_("HHCEV300D : SASSIST "#_instname" MICVTMR= %8.8X\n"),micblok.MICVTMR)); \
     DEBUG_SASSISTX(_instname,logmsg(_("HHCEV300D : SASSIST "#_instname" Real "))); \
-    DEBUG_SASSISTX(_instname,display_psw(regs)); \
+    DEBUG_SASSISTX(_instname,display_psw2(regs)); \
     /* Load the Virtual PSW in a temporary REGS structure */ \
     INITPSEUDOREGS(vpregs); \
     ARCH_DEP(load_psw) (&vpregs,vpswa_p); \
-    DEBUG_SASSISTX(_instname,display_psw(&vpregs)); \
+    DEBUG_SASSISTX(_instname,display_psw2(&vpregs)); \
 
 
 
@@ -636,6 +636,13 @@ void display_regs_cregs(REGS *regs)
   len = display_regs(regs, buf, "");
   display_cregs(regs, buf + len, "");
   logmsg("%s", buf);
+}
+
+void display_psw2(REGS *regs)
+{
+  char buf[32];
+  display_psw(regs,buf+sprintf(buf,"PSW="));
+  logmsg("%s\n", buf);
 }
 
 /* DISP2 Core */
@@ -1083,13 +1090,13 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         work_p=MADDR(RUNPSW,USE_REAL_ADDR,regs,ACCTYPE_WRITE,0); \
         ARCH_DEP(store_psw) (&rregs,work_p);
         DEBUG_CPASSISTX(DISP2,logmsg("DISP2 : Entry Real "));
-        DEBUG_CPASSISTX(DISP2,display_psw(regs));
+        DEBUG_CPASSISTX(DISP2,display_psw2(regs));
         ARCH_DEP(load_psw) (regs,work_p);
         DEBUG_CPASSISTX(DISP2,logmsg("DISP2 : VMB @ %6.6X Now being dispatched\n",vmb));
         DEBUG_CPASSISTX(DISP2,logmsg("DISP2 : Real "));
-        DEBUG_CPASSISTX(DISP2,display_psw(regs));
+        DEBUG_CPASSISTX(DISP2,display_psw2(regs));
         DEBUG_CPASSISTX(DISP2,logmsg("DISP2 : Virtual "));
-        DEBUG_CPASSISTX(DISP2,display_psw(&wregs));
+        DEBUG_CPASSISTX(DISP2,display_psw2(&wregs));
         /* TEST */
         ARCH_DEP(purge_tlb)(regs);
         SET_IC_MASK(regs);
@@ -2171,9 +2178,9 @@ int     ecpsvm_dossm(REGS *regs,int b2,VADR effective_addr2)
     ARCH_DEP(store_psw) (&npregs,vpswa_p);
     DEBUG_SASSISTX(SSM,logmsg("HHCEV300D : SASSIST SSM Complete : new SM = %2.2X\n",reqmask));
     DEBUG_SASSISTX(LPSW,logmsg("HHCEV300D : SASSIST SSM New VIRT "));
-    DEBUG_SASSISTX(LPSW,display_psw(&npregs));
+    DEBUG_SASSISTX(LPSW,display_psw2(&npregs));
     DEBUG_SASSISTX(LPSW,logmsg("HHCEV300D : SASSIST SSM New REAL "));
-    DEBUG_SASSISTX(LPSW,display_psw(regs));
+    DEBUG_SASSISTX(LPSW,display_psw2(regs));
     SASSIST_HIT(SSM);
     return(0);
 }
@@ -2203,7 +2210,7 @@ int     ecpsvm_dosvc(REGS *regs,int svccode)
     INITPSEUDOREGS(newr);
     ARCH_DEP(load_psw) (&newr, (BYTE *)&psa->svcnew);   /* Ref bit set above */
     DEBUG_SASSISTX(SVC,logmsg("HHCEV300D : SASSIST SVC NEW VIRT "));
-    DEBUG_SASSISTX(SVC,display_psw(&newr));
+    DEBUG_SASSISTX(SVC,display_psw2(&newr));
     /* Get some stuff from the REAL Running PSW to put in OLD SVC PSW */
     SET_PSW_IA(regs);
     UPD_PSW_IA(&vpregs, regs->psw.IA);            /* Instruction Address */
@@ -2212,7 +2219,7 @@ int     ecpsvm_dosvc(REGS *regs,int svccode)
     vpregs.psw.progmask=regs->psw.progmask;       /* Program Mask        */
     vpregs.psw.intcode=svccode;                   /* SVC Interrupt code  */
     DEBUG_SASSISTX(SVC,logmsg("HHCEV300D : SASSIST SVC OLD VIRT "));
-    DEBUG_SASSISTX(SVC,display_psw(&vpregs));
+    DEBUG_SASSISTX(SVC,display_psw2(&vpregs));
 
     if(ecpsvm_check_pswtrans(regs,&micblok,micpend,&vpregs,&newr))       /* Check PSW transition capability */
     {
@@ -2285,9 +2292,9 @@ int ecpsvm_dolpsw(REGS *regs,int b2,VADR e2)
                         /* Set ref bit in address pointed by MICBLOK */
     ARCH_DEP(store_psw) (&nregs,vpswa_p);
     DEBUG_SASSISTX(LPSW,logmsg("HHCEV300D : SASSIST LPSW New VIRT "));
-    DEBUG_SASSISTX(LPSW,display_psw(&nregs));
+    DEBUG_SASSISTX(LPSW,display_psw2(&nregs));
     DEBUG_SASSISTX(LPSW,logmsg("HHCEV300D : SASSIST LPSW New REAL "));
-    DEBUG_SASSISTX(LPSW,display_psw(regs));
+    DEBUG_SASSISTX(LPSW,display_psw2(regs));
     SASSIST_HIT(LPSW);
     return(0);
 }
@@ -2297,7 +2304,7 @@ int     ecpsvm_virttmr_ext(REGS *regs)
 {
     DEBUG_SASSISTX(VTIMER,logmsg("HHCEV300D : SASSIST VTIMER Checking if we can IRPT\n"));
     DEBUG_SASSISTX(VTIMER,logmsg("HHCEV300D : SASSIST VTIMER Virtual"));
-    DEBUG_SASSISTX(VTIMER,display_psw(regs));
+    DEBUG_SASSISTX(VTIMER,display_psw2(regs));
     if(IS_IC_ECPSVTIMER(regs))
     {
         DEBUG_SASSISTX(VTIMER,logmsg("HHCEV300D : SASSIST VTIMER Not pending\n"));

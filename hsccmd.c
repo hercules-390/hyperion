@@ -1655,6 +1655,7 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
     char     volname[7];
     BYTE     mountreq, unmountreq;
     char*    label_type;
+    char     buf[64];
     // Unused..
     // int      old_auto_scsi_mount_secs = sysblk.auto_scsi_mount_secs;
     UNREFERENCED(cmdline);
@@ -1683,10 +1684,13 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
     }
 
     if ( sysblk.auto_scsi_mount_secs )
-        logmsg( _("SCSI auto-mount queries = every %d seconds (when needed)\n"),
+    {
+        sprintf(buf, "SCSI auto-mount queries are done every %d seconds",
             sysblk.auto_scsi_mount_secs );
+        WRMSG(HHC02275, "I", buf);
+    }
     else
-        logmsg( _("SCSI auto-mount queries are disabled.\n") );
+        WRMSG(HHC02275, "I", "SCSI auto-mount queries are disabled");
 
     // Scan the device list looking for all SCSI tape devices
     // with either an active scsi mount thread and/or an out-
@@ -1699,15 +1703,14 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
 
         try_scsi_refresh( dev );    // (see comments in function)
 
-        logmsg
-        (
-            _("SCSI auto-mount thread %s active for drive %u:%4.4X = %s.\n")
-
+        sprintf(buf,
+            "SCSI auto-mount thread %s active for drive %u:%4.4X = %s.\n"
             ,dev->stape_mountmon_tid ? "IS" : "is NOT"
             ,SSID_TO_LCSS(dev->ssid)
             ,dev->devnum
             ,dev->filename
         );
+        WRMSG(HHC02275, "I", buf);
 
         if (!dev->tdparms.displayfeat)
             continue;
@@ -1788,8 +1791,9 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
         }
         else
         {
-            logmsg( _("No mount/dismount requests pending for drive %u:%4.4X = %s.\n"),
+            sprintf(buf, "No mount/dismount requests pending for drive %u:%4.4X = %s.\n",
                 SSID_TO_LCSS(dev->ssid),dev->devnum, dev->filename );
+            WRMSG(HHC02275, "I", buf);
         }
     }
 
@@ -1974,7 +1978,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
             rc = debug_tt32_stats (dev->fd);
         else
         {
-            logmsg( _("(error)\n") );
+            WRMSG(HHC02219, "E", "debug_tt32_stats()", "function itself is NULL");
             rc = -1;
         }
     }
@@ -1988,7 +1992,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
         }
         else
         {
-            logmsg( _("(error)\n") );
+            WRMSG(HHC02219, "E", "debug_tt32_tracing()", "function itself is NULL");
             rc = -1;
         }
     }
@@ -2002,7 +2006,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
         }
         else
         {
-            logmsg( _("(error)\n") );
+            WRMSG(HHC02219, "E", "debug_tt32_tracing()", "function itself is NULL");
             rc = -1;
         }
     }
@@ -2411,7 +2415,7 @@ int msglvl_cmd(int argc, char *argv[], char *cmdline)
       return(0);
     }
   }
-  logmsg(HHC02202, "E");
+  WRMSG(HHC02202, "E");
   return(0);
 }
 
@@ -2555,6 +2559,7 @@ char buf[512];
     }
 
     display_regs (regs, buf, "HHC02269I ");
+    WRMSG(HHC02269, "I", "General purpose registers");
     writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, "", "%s", buf);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
@@ -2586,6 +2591,7 @@ char buf[128];
     regs = sysblk.regs[sysblk.pcpu];
 
     display_fregs (regs, buf, "HHC02270I ");
+    WRMSG(HHC02270, "I", "Floating point registers");
     writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, "", "%s", buf);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
@@ -2615,7 +2621,7 @@ REGS *regs;
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    logmsg( "FPC=%8.8"I32_FMT"X\n", regs->fpc );
+    WRMSG(HHC02276, "I", regs->fpc);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -2663,6 +2669,7 @@ char buf[512];
     }
 
     display_cregs (regs, buf, "HHC02271I ");
+    WRMSG(HHC02271, "I", "Control registers");
     writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, "", "%s", buf);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
@@ -2694,6 +2701,7 @@ char buf[384];
     regs = sysblk.regs[sysblk.pcpu];
 
     display_aregs (regs, buf, "HHC02272I ");
+    WRMSG(HHC02272, "I", "Access registers");
     writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, "", "%s", buf);
     
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
@@ -2712,6 +2720,7 @@ REGS *regs;
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
     UNREFERENCED(argv);
+    char buf[32];
 
     obtain_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -2724,9 +2733,10 @@ REGS *regs;
     regs = sysblk.regs[sysblk.pcpu];
 
     if(regs->arch_mode == ARCH_900)
-        logmsg( "Prefix=%16.16" I64_FMT "X\n", (long long)regs->PX_G );
+        sprintf(buf,"%16.16"I64_FMT"X", (long unsigned)regs->PX_G);
     else
-        logmsg( "Prefix=%8.8X\n", regs->PX_L );
+        sprintf(buf,"%08X", regs->PX_L);
+    WRMSG(HHC02277, "I", buf);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -2745,6 +2755,7 @@ U64   newia=0;
 int   newam=0, newas=0, newcc=0, newcmwp=0, newpk=0, newpm=0, newsm=0;
 int   updia=0, updas=0, updcc=0, updcmwp=0, updpk=0, updpm=0, updsm=0;
 int   n, errflag, stopflag=0, modflag=0;
+char  buf[64];
 
     UNREFERENCED(cmdline);
 
@@ -2934,8 +2945,11 @@ int   n, errflag, stopflag=0, modflag=0;
         regs->aie = NULL;
     }
 
+    display_psw(regs, buf + sprintf(buf, "Program status word: "));
+    WRMSG(HHC02278, "I", buf);
+
     /* Display the PSW field by field */
-    logmsg("psw sm=%2.2X pk=%d cmwp=%X as=%s cc=%d pm=%X am=%s ia=%"I64_FMT"X\n",
+    sprintf(buf,"sm=%2.2X pk=%d cmwp=%X as=%s cc=%d pm=%X am=%s ia=%"I64_FMT"X",
         regs->psw.sysmask,
         regs->psw.pkey >> 4,
         regs->psw.states,
@@ -2949,9 +2963,7 @@ int   n, errflag, stopflag=0, modflag=0;
             regs->psw.amode == 1 && regs->psw.amode64 == 0 ? "31" :
             regs->psw.amode == 1 && regs->psw.amode64 == 1 ? "64" : "???"),
         regs->psw.IA_G);
-
-    /* Display the PSW */
-    display_psw (regs);
+    WRMSG(HHC02278, "I", buf);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -3436,7 +3448,7 @@ int codepage_cmd(int argc, char *argv[], char *cmdline)
         set_codepage(argv[1]);
     else
     {
-        logmsg( _("Usage %s <codepage>\n"),argv[0]);
+        WRMSG(HHC02202, "E");
         return -1;
     }
 
@@ -3875,6 +3887,7 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
     U16      ssid=0;
     U16      devnum;
     int      single_devnum = 0;
+    char     buf[64];
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -3965,13 +3978,14 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
         dev->hnd->query( dev, &devclass, sizeof(devnam), devnam );
 
         /* Display the device definition and status */
-        logmsg( "%1d:%04X %4.4X %s %s%s%s\n",
+        sprintf(buf, "%1d:%04X %4.4X %s %s%s%s",
                 SSID_TO_LCSS(dev->ssid),
                 dev->devnum, dev->devtype, devnam,
                 (dev->fd > 2 ? _("open ") : ""),
                 (dev->busy ? _("busy ") : ""),
                 (IOPENDING(dev) ? _("pending ") : "")
             );
+        WRMSG(HHC02279, "I", buf);
 
         if (dev->bs)
         {
@@ -3981,13 +3995,14 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
 
             if (clientip)
             {
-                logmsg( _("     (client %s (%s) connected)\n"),
+                sprintf(buf,"     (client %s (%s) connected)",
                     clientip, clientname
                     );
+                WRMSG(HHC02279, "I", buf);
             }
             else
             {
-                logmsg( _("     (no one currently connected)\n") );
+                WRMSG(HHC02279, "I", "     (no one currently connected)");
             }
 
             if (clientip)   free(clientip);
@@ -4024,6 +4039,8 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
     int      single_devnum = 0;
     BYTE     iobuf[256];
     BYTE     cbuf[17];
+    char     buf[128];
+    int      len=0;
 
     UNREFERENCED(cmdline);
 
@@ -4099,27 +4116,33 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
         for (j = 0; j < dev->numdevid; j++)
         {
             if (j == 0)
-                logmsg("%1d:%04X SNSID 00 ", SSID_TO_LCSS(dev->ssid), dev->devnum);
+                len = sprintf(buf, "%1d:%04X SNSID 00 ", SSID_TO_LCSS(dev->ssid), dev->devnum);
             else if (j%16 == 0)
-                logmsg("\n             %2.2x ", j);
+            {
+                WRMSG(HHC02280, "I", buf);
+                len = sprintf(buf, "             %2.2X ", (int) j);
+            }
             if (j%4 == 0)
-                logmsg(" ");
-            logmsg("%2.2x", dev->devid[j]);
+                len += sprintf(buf + len, " ");
+            len += sprintf(buf + len, "%2.2X", dev->devid[j]);
         }
-        logmsg("\n");
+        WRMSG(HHC02280, "I", buf);
 
         /* Display device characteristics */
         for (j = 0; j < dev->numdevchar; j++)
         {
             if (j == 0)
-                logmsg("%1d:%04X RDC   00 ", SSID_TO_LCSS(dev->ssid), dev->devnum);
+                len = sprintf(buf, "%1d:%04X RDC   00 ", SSID_TO_LCSS(dev->ssid), dev->devnum);
             else if (j%16 == 0)
-                logmsg("\n             %2.2x ", j);
+            {
+                WRMSG(HHC02280, "I", buf);
+                len = sprintf(buf, "             %2.2X ", (int) j);
+            }
             if (j%4 == 0)
-                logmsg(" ");
-            logmsg("%2.2x", dev->devchar[j]);
+                len += sprintf(buf + len, " ");
+            len += sprintf(buf + len, "%2.2X", dev->devchar[j]);
         }
-        logmsg("\n");
+        WRMSG(HHC02280, "I", buf);
 
         /* Display configuration data */
         dasd_build_ckd_config_data (dev, iobuf, 256);
@@ -4127,29 +4150,37 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
         for (j = 0; j < 256; j++)
         {
             if (j == 0)
-                logmsg("%1d:%04X RCD   00 ", SSID_TO_LCSS(dev->ssid), dev->devnum);
+                len = sprintf(buf, "%1d:%04X RCD   00 ", SSID_TO_LCSS(dev->ssid), dev->devnum);
             else if (j%16 == 0)
-                logmsg(" |%s|\n             %2.2x ", cbuf, j);
+            {
+                len += sprintf(buf + len, " |%s|", cbuf);
+                WRMSG(HHC02280, "I", buf);
+                len = sprintf(buf, "             %2.2X ", (int) j);
+            }
             if (j%4 == 0)
-                logmsg(" ");
-            logmsg("%2.2x", iobuf[j]);
+                len += sprintf(buf + len, " ");
+            len += sprintf(buf + len, "%2.2X", iobuf[j]);
             cbuf[j%16] = isprint(guest_to_host(iobuf[j])) ? guest_to_host(iobuf[j]) : '.';
         }
-        logmsg(" |%s|\n", cbuf);
+        len += sprintf(buf + len, " |%s|", cbuf);
+        WRMSG(HHC02280, "I", buf);
 
         /* Display subsystem status */
         num = dasd_build_ckd_subsys_status(dev, iobuf, 44);
         for (j = 0; j < num; j++)
         {
             if (j == 0)
-                logmsg("%1d:%04X SNSS  00 ", SSID_TO_LCSS(dev->ssid), dev->devnum);
+                len = sprintf(buf, "%1d:%04X SNSS  00 ", SSID_TO_LCSS(dev->ssid), dev->devnum);
             else if (j%16 == 0)
-                logmsg("\n             %2.2x ", j);
+            {
+                WRMSG(HHC02280, "I", buf);
+                len = sprintf(buf, "             %2.2X ", (int) j);
+            }
             if (j%4 == 0)
-                logmsg(" ");
-            logmsg("%2.2x", iobuf[j]);
+                len += sprintf(buf + len, " ");
+            len += sprintf(buf + len, "%2.2X", iobuf[j]);
         }
-        logmsg("\n");
+        WRMSG(HHC02280, "I", buf);
     }
 
     free ( orig_pDevBlkPtrs );
@@ -4300,23 +4331,19 @@ BYTE    c;                              /* Character work area       */
     if (argc < 2)
     {
         if (sysblk.pgminttr == 0xFFFFFFFFFFFFFFFFULL)
-            logmsg("pgmtrace == all\n");
+            WRMSG(HHC02281, "I", "pgmtrace == all");
         else if (sysblk.pgminttr == 0)
-            logmsg("pgmtrace == none\n");
+            WRMSG(HHC02281, "I" "pgmtrace == none");
         else
         {
             char flags[64+1]; int i;
             for (i=0; i < 64; i++)
                 flags[i] = (sysblk.pgminttr & (1ULL << i)) ? ' ' : '*';
             flags[64] = 0;
-            logmsg
-            (
-                " * = Tracing suppressed; otherwise tracing enabled\n"
-                " 0000000000000001111111111111111222222222222222233333333333333334\n"
-                " 123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0\n"
-                " %s\n"
-                ,flags
-            );
+            WRMSG(HHC02281, "I", "* = Tracing suppressed; otherwise tracing enabled");
+            WRMSG(HHC02281, "I", "0000000000000001111111111111111222222222222222233333333333333334");
+            WRMSG(HHC02281, "I", "123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0");
+            WRMSG(HHC02281, "I", flags);
         }
         return 0;
     }
@@ -4362,7 +4389,7 @@ int ostailor_cmd(int argc, char *argv[], char *cmdline)
         if (sysblk.pgminttr == OS_OPENSOLARIS ) sostailor = "OpenSolaris";
         if (sysblk.pgminttr == 0xFFFFFFFFFFFFFFFFULL) sostailor = "NULL";
         if (sysblk.pgminttr == 0                    ) sostailor = "QUIET";
-        logmsg( _("OSTAILOR %s\n"),sostailor);
+        WRMSG(HHC02204, "OSTAILOR",sostailor);
         return 0;
     }
     if (strcasecmp (argv[1], "OS/390") == 0)
@@ -4465,8 +4492,7 @@ int ostailor_cmd(int argc, char *argv[], char *cmdline)
         sysblk.pgminttr = 0;
         return 0;
     }
-    logmsg( _("Unknown OS tailor specification %s\n"),
-                argv[1] );
+    WRMSG(HHC02205, "E", argv[1], ": unknown OS tailor specification");
     return -1;
 }
 
@@ -6649,6 +6675,8 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
 {
     int     i;                          /* Index                     */
     REGS   *regs;
+    char   buf[128];
+    int    len;
 
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -6664,88 +6692,100 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    logmsg ("aea mode   %s\n",aea_mode_str(regs->aea_mode));
+    sprintf(buf, "aea mode   %s", aea_mode_str(regs->aea_mode));
+    WRMSG(HHC02282, "I", buf);
 
-    logmsg ("aea ar    ");
+    len = sprintf(buf, "aea ar    ");
     for (i = 16; i < 21; i++)
          if(regs->aea_ar[i] > 0)
-            logmsg(" %2.2x",regs->aea_ar[i]);
+            len += sprintf(buf + len, " %2.2X",regs->aea_ar[i]);
         else
-            logmsg(" %2d",regs->aea_ar[i]);
+            len += sprintf(buf + len, " %2d",regs->aea_ar[i]);
     for (i = 0; i < 16; i++)
          if(regs->aea_ar[i] > 0)
-            logmsg(" %2.2x",regs->aea_ar[i]);
+            len += sprintf(buf + len, " %2.2X",regs->aea_ar[i]);
         else
-            logmsg(" %2d",regs->aea_ar[i]);
-    logmsg ("\n");
+            len += sprintf(buf + len, " %2d",regs->aea_ar[i]);
+    WRMSG(HHC02282, "I", buf);
 
-    logmsg ("aea common            ");
+    len = sprintf(buf, "aea common            ");
     if(regs->aea_common[32] > 0)
-        logmsg(" %2.2x",regs->aea_common[32]);
+        len += sprintf(buf + len, " %2.2X",regs->aea_common[32]);
     else
-        logmsg(" %2d",regs->aea_common[32]);    
+        len += sprintf(buf + len, " %2d",regs->aea_common[32]);
     for (i = 0; i < 16; i++)
         if(regs->aea_common[i] > 0)
-            logmsg(" %2.2x",regs->aea_common[i]);
+            len += sprintf(buf + len, " %2.2X",regs->aea_common[i]);
         else
-            logmsg(" %2d",regs->aea_common[i]);
-    logmsg ("\n");
+            len += sprintf(buf + len, " %2d",regs->aea_common[i]);
+    WRMSG(HHC02282, "I", buf);
 
-    logmsg ("aea cr[1]  %16.16" I64_FMT "x\n    cr[7]  %16.16" I64_FMT "x\n"
-            "    cr[13] %16.16" I64_FMT "x\n",
-            regs->CR_G(1),regs->CR_G(7),regs->CR_G(13));
-
-    logmsg ("    cr[r]  %16.16" I64_FMT "x\n",
-            regs->CR_G(CR_ASD_REAL));
+    sprintf(buf, "aea cr[1]  %16.16" I64_FMT "X", regs->CR_G(1));
+    WRMSG(HHC02282, "I", buf);
+    sprintf(buf, "    cr[7]  %16.16" I64_FMT "X", regs->CR_G(7));
+    WRMSG(HHC02282, "I", buf);
+    sprintf(buf, "    cr[13] %16.16" I64_FMT "X", regs->CR_G(13));
+    WRMSG(HHC02282, "I", buf);
+    sprintf(buf, "    cr[r]  %16.16" I64_FMT "X", regs->CR_G(CR_ASD_REAL));
+    WRMSG(HHC02282, "I", buf);
 
     for(i = 0; i < 16; i++)
         if(regs->aea_ar[i] > 15)
-            logmsg ("    alb[%d] %16.16" I64_FMT "x\n",
+        {
+            sprintf(buf, "    alb[%d] %16.16" I64_FMT "X", i,
                     regs->cr[CR_ALB_OFFSET + i]);
+            WRMSG(HHC02282, "I", buf);
+        }
 
     if (regs->sie_active)
     {
         regs = regs->guestregs;
 
-        logmsg ("aea SIE\n");
-        logmsg ("aea mode   %s\n",aea_mode_str(regs->aea_mode));
+        WRMSG(HHC02282, "I", "aea SIE");
+        sprintf(buf, "aea mode   %s",aea_mode_str(regs->aea_mode));
+        WRMSG(HHC02282, "I", buf);
 
-        logmsg ("aea ar    ");
+        len = sprintf(buf, "aea ar    ");
         for (i = 16; i < 21; i++)
             if(regs->aea_ar[i] > 0)
-                logmsg(" %2.2x",regs->aea_ar[i]);
+                len += sprintf(buf + len, " %2.2X",regs->aea_ar[i]);
             else
-                logmsg(" %2d",regs->aea_ar[i]);
+                len += sprintf(buf + len, " %2d",regs->aea_ar[i]);
         for (i = 0; i < 16; i++)
             if(regs->aea_ar[i] > 0)
-                logmsg(" %2.2x",regs->aea_ar[i]);
+                len += sprintf(buf + len, " %2.2X",regs->aea_ar[i]);
             else
-                logmsg(" %2d",regs->aea_ar[i]);
-        logmsg ("\n");
+                len += sprintf(buf + len, " %2d",regs->aea_ar[i]);
+        WRMSG(HHC02282, "I", buf);
 
-        logmsg ("aea common            ");
+        len = sprintf(buf, "aea common            ");
         if(regs->aea_common[32] > 0)
-            logmsg(" %2.2x",regs->aea_common[32]);
+            len += sprintf(buf + len, " %2.2X",regs->aea_common[32]);
         else
-            logmsg(" %2d",regs->aea_common[32]);
+            len += sprintf(buf + len, " %2d",regs->aea_common[32]);
         for (i = 0; i < 16; i++)
         if(regs->aea_common[i] > 0)
-            logmsg(" %2.2x",regs->aea_common[i]);
+            len += sprintf(buf + len, " %2.2X",regs->aea_common[i]);
         else
-            logmsg(" %2d",regs->aea_common[i]);
-        logmsg ("\n");
+            len += sprintf(buf + len, " %2d",regs->aea_common[i]);
+        WRMSG(HHC02282, "I", buf);
 
-        logmsg ("aea cr[1]  %16.16" I64_FMT "x\n    cr[7]  %16.16" I64_FMT "x\n"
-                "    cr[13] %16.16" I64_FMT "x\n",
-                regs->CR_G(1),regs->CR_G(7),regs->CR_G(13));
-
-        logmsg ("    cr[r]  %16.16" I64_FMT "x\n",
-                regs->CR_G(CR_ASD_REAL));
+        sprintf(buf, "aea cr[1]  %16.16" I64_FMT "X", regs->CR_G(1));
+        WRMSG(HHC02282, "I", buf);
+        sprintf(buf, "    cr[7]  %16.16" I64_FMT "X", regs->CR_G(7));
+        WRMSG(HHC02282, "I", buf);
+        sprintf(buf, "    cr[13] %16.16" I64_FMT "X", regs->CR_G(13));
+        WRMSG(HHC02282, "I", buf);
+        sprintf(buf, "    cr[r]  %16.16" I64_FMT "X", regs->CR_G(CR_ASD_REAL));
+        WRMSG(HHC02282, "I", buf);
 
         for(i = 0; i < 16; i++)
             if(regs->aea_ar[i] > 15)
-                logmsg ("    alb[%d] %16.16" I64_FMT "x\n",
+            {
+                sprintf(buf, "    alb[%d] %16.16" I64_FMT "X", i,
                         regs->cr[CR_ALB_OFFSET + i]);
+                WRMSG(HHC02282, "I", buf);
+            }
     }
 
     release_lock (&sysblk.cpulock[sysblk.pcpu]);
@@ -6760,6 +6800,7 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
 DLL_EXPORT int aia_cmd(int argc, char *argv[], char *cmdline)
 {
     REGS   *regs;
+    char buf[128];
 
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -6775,15 +6816,16 @@ DLL_EXPORT int aia_cmd(int argc, char *argv[], char *cmdline)
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    logmsg ("AIV %16.16" I64_FMT "x aip %p ip %p aie %p aim %p\n",
+    sprintf(buf, "AIV %16.16" I64_FMT "x aip %p ip %p aie %p aim %p",
             regs->aiv,regs->aip,regs->ip,regs->aie,(BYTE *)regs->aim);
+    WRMSG(HHC02283, "I", buf);
 
     if (regs->sie_active)
     {
         regs = regs->guestregs;
-        logmsg ("SIE:\n");
-        logmsg ("AIV %16.16" I64_FMT "x aip %p ip %p aie %p\n",
+        sprintf(buf + sprintf(buf, "SIE: "), "AIV %16.16" I64_FMT "x aip %p ip %p aie %p",
             regs->aiv,regs->aip,regs->ip,regs->aie);
+        WRMSG(HHC02283, "I", buf);
     }
 
     release_lock (&sysblk.cpulock[sysblk.pcpu]);
@@ -6812,6 +6854,8 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
     U64     pagemask;                   /* Page mask                 */
     int     matches = 0;                /* Number aeID matches       */
     REGS   *regs;
+    char    buf[128];
+
 
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -6832,11 +6876,12 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
                regs->arch_mode == ARCH_390 ? 0x7FC00000 :
                                      0xFFFFFFFFFFC00000ULL;
 
-    logmsg ("tlbID 0x%6.6x mainstor %p\n",regs->tlbID,regs->mainstor);
-    logmsg ("  ix              asd            vaddr              pte   id c p r w ky       main\n");
+    sprintf(buf, "tlbID 0x%6.6X mainstor %p",regs->tlbID,regs->mainstor);
+    WRMSG(HHC02284, "I", buf);
+    WRMSG(HHC02284, "I", "  ix              asd            vaddr              pte   id c p r w ky     main");
     for (i = 0; i < TLBN; i++)
     {
-        logmsg("%s%3.3x %16.16" I64_FMT "x %16.16" I64_FMT "x %16.16" I64_FMT "x %4.4x %1d %1d %1d %1d %2.2x %8.8x\n",
+        sprintf(buf, "%s%3.3X %16.16" I64_FMT "X %16.16" I64_FMT "X %16.16" I64_FMT "X %4.4X %1d %1d %1d %1d %2.2X %8.8X",
          ((regs->tlb.TLB_VADDR_G(i) & bytemask) == regs->tlbID ? "*" : " "),
          i,regs->tlb.TLB_ASD_G(i),
          ((regs->tlb.TLB_VADDR_G(i) & pagemask) | (i << shift)),
@@ -6848,8 +6893,10 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
                   ((regs->tlb.TLB_VADDR_G(i) & pagemask) | (i << shift)))
                   - regs->mainstor);
         matches += ((regs->tlb.TLB_VADDR(i) & bytemask) == regs->tlbID);
+       WRMSG(HHC02284, "I", buf);
     }
-    logmsg("%d tlbID matches\n", matches);
+    sprintf(buf, "%d tlbID matches", matches);
+    WRMSG(HHC02284, "I", buf);
 
     if (regs->sie_active)
     {
@@ -6860,11 +6907,12 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
                    regs->arch_mode == ARCH_390 ? 0x7FC00000 :
                                          0xFFFFFFFFFFC00000ULL;
 
-        logmsg ("\nSIE: tlbID 0x%4.4x mainstor %p\n",regs->tlbID,regs->mainstor);
-        logmsg ("  ix              asd            vaddr              pte   id c p r w ky       main\n");
+        sprintf(buf, "SIE: tlbID 0x%4.4x mainstor %p",regs->tlbID,regs->mainstor);
+        WRMSG(HHC02284, "I", buf);
+        WRMSG(HHC02284, "I", "  ix              asd            vaddr              pte   id c p r w ky       main");
         for (i = matches = 0; i < TLBN; i++)
         {
-            logmsg("%s%3.3x %16.16" I64_FMT "x %16.16" I64_FMT "x %16.16" I64_FMT "x %4.4x %1d %1d %1d %1d %2.2x %p\n",
+            sprintf(buf, "%s%3.3X %16.16" I64_FMT "X %16.16" I64_FMT "X %16.16" I64_FMT "X %4.4X %1d %1d %1d %1d %2.2X %8.8X",
              ((regs->tlb.TLB_VADDR_G(i) & bytemask) == regs->tlbID ? "*" : " "),
              i,regs->tlb.TLB_ASD_G(i),
              ((regs->tlb.TLB_VADDR_G(i) & pagemask) | (i << shift)),
@@ -6876,8 +6924,10 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
                      ((regs->tlb.TLB_VADDR_G(i) & pagemask) | (i << shift)))
                     - regs->mainstor);
             matches += ((regs->tlb.TLB_VADDR(i) & bytemask) == regs->tlbID);
+           WRMSG(HHC02284, "I", buf);
         }
-        logmsg("SIE: %d tlbID matches\n", matches);
+        sprintf(buf, "SIE: %d tlbID matches", matches);
+        WRMSG(HHC02284, "I", buf);
     }
 
     release_lock (&sysblk.cpulock[sysblk.pcpu]);

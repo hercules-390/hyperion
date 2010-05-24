@@ -438,7 +438,7 @@ int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
     /* Check for wait state PSW */
     if (WAITSTATE(&regs->psw) && CPU_STEPPING_OR_TRACING_ALL)
     {
-	char buf[40];
+        char buf[40];
         WRMSG(HHC00800, "I", PTYPSTR(regs->cpuad), regs->cpuad, str_psw(regs, buf));
     }
 
@@ -749,9 +749,9 @@ static char *pgmintname[] = {
        strcpy(buf2, MSTRING(_GEN_ARCH));
        strcat(buf2, " ");
 #endif /*defined(SIE_DEBUG)*/
-	if (code == PGM_DATA_EXCEPTION)
-	            sprintf(dxcstr, " DXC=%2.2X", regs->dxc);
-	WRMSG(HHC00801, "I",
+       if (code == PGM_DATA_EXCEPTION)
+           sprintf(dxcstr, " DXC=%2.2X", regs->dxc);
+       WRMSG(HHC00801, "I",
         PTYPSTR(realregs->cpuad), realregs->cpuad, buf1, buf2, 
                 pgmintname[ (code - 1) & 0x3F], pcode, ilc, dxcstr);
 
@@ -1083,7 +1083,7 @@ static char *pgmintname[] = {
             else
 #endif /*defined(_FEATURE_SIE)*/
             {
-		char buf[40];
+                char buf[40];
 
                 WRMSG(HHC00803, "I", PTYPSTR(realregs->cpuad), realregs->cpuad,
                          str_psw (realregs, buf));
@@ -1364,7 +1364,7 @@ int   rc;
     {
         rc = create_thread (&sysblk.todtid, DETACHED,
              timer_update_thread, NULL, "timer_update_thread");
-        if (rc)	
+        if (rc)
         {
             WRMSG(HHC00102, "S", strerror(rc));
             RELEASE_INTLOCK(NULL);
@@ -1811,8 +1811,8 @@ REGS    regs;
         }
         else
         {
-	    char buf[40];
-	    sprintf(buf, "malloc(%lu)", sizeof(REGS));
+            char buf[40];
+            sprintf(buf, "malloc(%lu)", sizeof(REGS));
             WRMSG (HHC00813, "E", PTYPSTR(cpu), cpu, buf, strerror(errno));
             cpu_uninit (cpu, &regs);
         }
@@ -2057,7 +2057,7 @@ REGS cregs;
 /*-------------------------------------------------------------------*/
 /* Display program status word                                       */
 /*-------------------------------------------------------------------*/
-void display_psw (REGS *regs)
+int display_psw (REGS *regs, char *buf)
 {
 QWORD   qword;                            /* quadword work area      */
 
@@ -2066,19 +2066,19 @@ QWORD   qword;                            /* quadword work area      */
     if( regs->arch_mode != ARCH_900 )
     {
         copy_psw (regs, qword);
-        logmsg (_("PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n"),
+        return(sprintf(buf, "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",
                 qword[0], qword[1], qword[2], qword[3],
-                qword[4], qword[5], qword[6], qword[7]);
+                qword[4], qword[5], qword[6], qword[7]));
     }
     else
     {
         copy_psw (regs, qword);
-        logmsg (_("PSW=%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X "
-                "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X\n"),
+        return(sprintf(buf,"%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X "
+                "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",
                 qword[0], qword[1], qword[2], qword[3],
                 qword[4], qword[5], qword[6], qword[7],
                 qword[8], qword[9], qword[10], qword[11],
-                qword[12], qword[13], qword[14], qword[15]);
+                qword[12], qword[13], qword[14], qword[15]));
     }
 
 } /* end function display_psw */

@@ -2682,7 +2682,7 @@ CPU_DLL_IMPORT void (ATTR_REGPARM(2) s390_program_interrupt) (REGS *regs, int co
 CPU_DLL_IMPORT void (ATTR_REGPARM(2) ARCH_DEP(program_interrupt)) (REGS *regs, int code);
 void *cpu_thread (int *cpu);
 DLL_EXPORT void copy_psw (REGS *regs, BYTE *addr);
-void display_psw (REGS *regs);
+int display_psw (REGS *regs, char *buf);
 char *str_psw (REGS *regs, char *buf);
 
 
