@@ -175,8 +175,8 @@ static inline void missing_devnum()
 /*-------------------------------------------------------------------*/
 int maxrates_cmd(int argc, char *argv[],char *cmdline)
 {
-    UNREFERENCED(cmdline);
     char buf[128];
+    UNREFERENCED(cmdline);
 
     if (argc > 1)
     {
