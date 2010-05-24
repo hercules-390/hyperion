@@ -962,6 +962,10 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02266 "Reenter command '%s' again within 60 seconds to execute"
 //efine HHC02267 "%s" /* Used for instruction tracing */
 //efine HHC02268 "%s" /* Used for ds command */
+//efine HHC02269 "%s" /* Used for gr command */
+//efine HHC02270 "%s" /* Used for fpr command */
+//efine HHC02271 "%s" /* Used for cr command */
+//efine HHC02272 "%s" /* Used for ar command */
 
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)

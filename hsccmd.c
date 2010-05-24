@@ -2520,7 +2520,7 @@ int pwd_cmd(int argc, char *argv[], char *cmdline)
 int gpr_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
-char buf[256];
+char buf[512];
 
     UNREFERENCED(cmdline);
 
@@ -2566,8 +2566,8 @@ char buf[256];
             regs->GR_L(reg_num) = (U32) reg_value;
     }
 
-    display_regs (regs, buf, "");
-    logmsg("%s", buf);
+    display_regs (regs, buf, "HHC02269I ");
+    writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, "", "%s", buf);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -2581,7 +2581,7 @@ char buf[256];
 int fpr_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
-char buf[256];
+char buf[128];
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -2597,8 +2597,8 @@ char buf[256];
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    display_fregs (regs, buf, "");
-    logmsg("%s", buf);
+    display_fregs (regs, buf, "HHC02270I ");
+    writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, "", "%s", buf);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -2644,7 +2644,7 @@ REGS *regs;
 int   cr_num;
 BYTE  equal_sign, c;
 U64   cr_value;
-char buf[256];
+char buf[512];
 
     UNREFERENCED(cmdline);
 
@@ -2674,8 +2674,8 @@ char buf[256];
             regs->CR_G(cr_num) = (U32)cr_value;
     }
 
-    display_cregs (regs, buf, "");
-    logmsg("%s", buf);
+    display_cregs (regs, buf, "HHC02271I ");
+    writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, "", "%s", buf);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -2689,7 +2689,7 @@ char buf[256];
 int ar_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
-char buf[256];
+char buf[384];
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -2705,8 +2705,8 @@ char buf[256];
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    display_aregs (regs, buf, "");
-    logmsg("%s", buf);
+    display_aregs (regs, buf, "HHC02272I ");
+    writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, "", "%s", buf);
     
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
