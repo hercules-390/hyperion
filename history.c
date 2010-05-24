@@ -102,7 +102,7 @@ int history_show() {
   HISTORY *tmp;
   tmp = history_lines;
   while (tmp != NULL) {
-    logmsg("%4d %s\n", tmp->number, tmp->cmdline);
+    WRMSG(HHC02273, "I", tmp->number, tmp->cmdline);
     tmp = tmp->next;
   }
   return(0);
