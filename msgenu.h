@@ -968,6 +968,7 @@ cpu.c:123:HABC1234I This is a message
 //efine HHC02272 "%s" /* Used for ar command */
 #define HHC02272 "%s"
 #define HHC02273 "Index %2d: '%s'"
+#define HHC02274 "%s"
 
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)

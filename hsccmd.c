@@ -1108,6 +1108,7 @@ char sie_flag = 0;
 U32 itimer = 0;
 char itimer_formatted[20];
 char arch370_flag = 0;
+char buf[64];
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -1153,11 +1154,13 @@ char arch370_flag = 0;
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
-    logmsg( _("HHCMD028I tod = %16.16" I64_FMT "X    %s\n"),
+    sprintf(buf,"tod = %16.16" I64_FMT "X    %s",
                (tod_now << 8),format_tod(clock_buf,tod_now,TRUE));
+    WRMSG(HHC02274, "I", buf);
 
-    logmsg( _("          h/w = %16.16" I64_FMT "X    %s\n"),
+    sprintf(buf, "h/w = %16.16" I64_FMT "X    %s",
                (hw_now << 8),format_tod(clock_buf,hw_now,TRUE));
+    WRMSG(HHC02274, "I", buf);
 
     if (epoch_now < 0) {
         epoch_now_abs = -(epoch_now);
@@ -1168,24 +1171,28 @@ char arch370_flag = 0;
         epoch_now_abs = epoch_now;
         epoch_sign = ' ';
     }
-    logmsg( _("          off = %16.16" I64_FMT "X   %c%s\n"),
+    sprintf(buf, "off = %16.16" I64_FMT "X   %c%s",
                (epoch_now << 8),epoch_sign,
                format_tod(clock_buf,epoch_now_abs,FALSE));
+    WRMSG(HHC02274, "I", buf);
 
-    logmsg( _("          ckc = %16.16" I64_FMT "X    %s\n"),
+    sprintf(buf, "ckc = %16.16" I64_FMT "X    %s",
                (clkc_now << 8),format_tod(clock_buf,clkc_now,TRUE));
+    WRMSG(HHC02274, "I", buf);
 
     if (regs->cpustate != CPUSTATE_STOPPED)
-        logmsg( _("          cpt = %16.16" I64_FMT "X\n"), cpt_now << 8);
+        sprintf(buf, "cpt = %16.16" I64_FMT "X", cpt_now << 8);
     else
-        logmsg( _("          cpt = not decrementing\n"));
+        sprintf(buf, "cpt = not decrementing");
+    WRMSG(HHC02274, "I", buf);
 
 #if defined(_FEATURE_SIE)
     if(sie_flag)
     {
 
-        logmsg( _("         vtod = %16.16" I64_FMT "X    %s\n"),
+        sprintf(buf, "vtod = %16.16" I64_FMT "X    %s",
                    (vtod_now << 8),format_tod(clock_buf,vtod_now,TRUE));
+        WRMSG(HHC02274, "I", buf);
 
         if (vepoch_now < 0) {
             vepoch_now_abs = -(vepoch_now);
@@ -1196,21 +1203,25 @@ char arch370_flag = 0;
             vepoch_now_abs = vepoch_now;
             vepoch_sign = ' ';
         }
-        logmsg( _("         voff = %16.16" I64_FMT "X   %c%s\n"),
+        sprintf(buf, "voff = %16.16" I64_FMT "X   %c%s",
                    (vepoch_now << 8),vepoch_sign,
                    format_tod(clock_buf,vepoch_now_abs,FALSE));
+        WRMSG(HHC02274, "I", buf);
 
-        logmsg( _("         vckc = %16.16" I64_FMT "X    %s\n"),
+        sprintf(buf,"vckc = %16.16" I64_FMT "X    %s",
                    (vclkc_now << 8),format_tod(clock_buf,vclkc_now,TRUE));
+        WRMSG(HHC02274, "I", buf);
 
-        logmsg( _("         vcpt = %16.16" I64_FMT "X\n"),vcpt_now << 8);
+        sprintf(buf, "vcpt = %16.16" I64_FMT "X",vcpt_now << 8);
+        WRMSG(HHC02274, "I", buf);
     }
 #endif
 
     if (arch370_flag)
     {
-        logmsg( _("          itm = %8.8" I32_FMT "X                     %s\n"),
+        sprintf(buf, "itm = %8.8" I32_FMT "X                     %s",
                    itimer, itimer_formatted );
+        WRMSG(HHC02274, "I", buf);
     }
 
     return 0;
