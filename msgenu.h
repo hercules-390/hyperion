@@ -966,6 +966,7 @@ cpu.c:123:HABC1234I This is a message
 //efine HHC02270 "%s" /* Used for fpr command */
 //efine HHC02271 "%s" /* Used for cr command */
 //efine HHC02272 "%s" /* Used for ar command */
+#define HHC02272 "%s"
 
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)

@@ -176,13 +176,14 @@ static inline void missing_devnum()
 int maxrates_cmd(int argc, char *argv[],char *cmdline)
 {
     UNREFERENCED(cmdline);
+    char buf[128];
 
     if (argc > 1)
     {
         int bError = FALSE;
         if (argc > 2)
         {
-            logmsg( _("Improper command format") );
+            WRMSG(HHC02205, "E", argv[2], "");
             bError = TRUE;
         }
         else
@@ -191,17 +192,17 @@ int maxrates_cmd(int argc, char *argv[],char *cmdline)
             BYTE  c;
             if ( sscanf( argv[1], "%d%c", &interval, &c ) != 1 || interval < 1 )
             {
-                logmsg( _("\"%s\": invalid maxrates interval"), argv[1] );
+                WRMSG(HHC02205, "E", argv[1], ": invalid maxrates interval" );
                 bError = TRUE;
             }
             else
             {
+		char buf[20];
+		sprintf(buf, "%d minutes", interval);
                 maxrates_rpt_intvl = interval;
-                logmsg( _("Maxrates interval set to %d minutes.\n"), maxrates_rpt_intvl );
+                WRMSG(HHC02204, "I", "maxrates", buf );
             }
         }
-        if (bError)
-            logmsg( _("; enter \"help maxrates\" for help.\n") );
     }
     else
     {
@@ -213,55 +214,31 @@ int maxrates_cmd(int argc, char *argv[],char *cmdline)
         current_time = time( NULL );
 
         pszPrevIntervalStartDateTime = strdup( ctime( &prev_int_start_time ) );
+        pszPrevIntervalStartDateTime[strlen(pszPrevIntervalStartDateTime) - 1] = 0;
         pszCurrIntervalStartDateTime = strdup( ctime( &curr_int_start_time ) );
+        pszCurrIntervalStartDateTime[strlen(pszCurrIntervalStartDateTime) - 1] = 0;
         pszCurrentDateTime           = strdup( ctime(    &current_time     ) );
+        pszCurrentDateTime[strlen(pszCurrentDateTime) - 1] = 0;
 
-        logmsg
-        (
-            "Highest observed MIPS/SIOS rates:\n\n"
-
-            "  From: %s"
-            "  To:   %s\n"
-
-            ,pszPrevIntervalStartDateTime
-            ,pszCurrIntervalStartDateTime
-        );
-
-        logmsg
-        (
-            "        MIPS: %2.1d.%2.2d\n"
-            "        SIOS: %d\n\n"
-
-            ,prev_high_mips_rate / 1000000
-            ,prev_high_mips_rate % 1000000
-            ,prev_high_sios_rate
-        );
-
-        logmsg
-        (
-            "  From: %s"
-            "  To:   %s\n"
-
-            ,pszCurrIntervalStartDateTime
-            ,pszCurrentDateTime
-        );
-
-        logmsg
-        (
-            "        MIPS: %2.1d.%2.2d\n"
-            "        SIOS: %d\n\n"
-
-            ,curr_high_mips_rate / 1000000
-            ,curr_high_mips_rate % 1000000
-            ,curr_high_sios_rate
-        );
-
-        logmsg
-        (
-            "Current interval = %d minutes.\n"
-
-            ,maxrates_rpt_intvl
-        );
+        WRMSG(HHC02272, "I", "Highest observed MIPS/SIOS rates:");
+        sprintf(buf, "From %s to %s", pszPrevIntervalStartDateTime, 
+                     pszCurrIntervalStartDateTime);
+	WRMSG(HHC02272, "I", buf);
+        sprintf(buf, "MIPS: %d.%02d", prev_high_mips_rate / 1000000,
+                     prev_high_mips_rate % 1000000);
+	WRMSG(HHC02272, "I", buf);
+        sprintf(buf, "SIOS: %d", prev_high_sios_rate);
+	WRMSG(HHC02272, "I", buf);
+        sprintf(buf, "From %s to %s", pszCurrIntervalStartDateTime,
+                     pszCurrentDateTime);
+	WRMSG(HHC02272, "I", buf);
+        sprintf(buf, "MIPS: %d.%02d", curr_high_mips_rate / 1000000,
+                     curr_high_mips_rate % 1000000);
+	WRMSG(HHC02272, "I", buf);
+        sprintf(buf, "SIOS: %d", curr_high_sios_rate);
+	WRMSG(HHC02272, "I", buf);
+        sprintf(buf, "Current interval is %d minutes", maxrates_rpt_intvl);
+	WRMSG(HHC02272, "I", buf);
 
         free( pszPrevIntervalStartDateTime );
         free( pszCurrIntervalStartDateTime );
