@@ -8,19 +8,6 @@
 #  Set NODEBUG flag appropriately before !INCLUDEing <win32.mak>
 #  and attempt to determine the Visual Studio compiler version
 #
-#
-#                           CHANGE HISTORY
-# $Log$
-# Revision 1.3  2009/02/01 18:11:02  rbowler
-# Eliminate extraneous trailing blanks (cosmetic change only)
-#
-# Revision 1.2  2008/01/31 22:32:36  rbowler
-# Move MSVC compiler level determination to CONFIG.msvc
-#
-#
-# DD/MM/YY Description
-# 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
-#
 # ***************************************************************************
 
 # Use environment variables to determine the Visual Studio compiler level
@@ -31,12 +18,8 @@ vsversion=9
 !ELSEIFDEF VS80COMNTOOLS
 !MESSAGE Makefile will assume VS8 or VS2005Express (MSVC version 14)
 vsversion=8
-!ELSEIFDEF VS70COMNTOOLS
-!MESSAGE Makefile will assume VS7 (MSVC version 13)
-vsversion=7
 !ELSE
-!MESSAGE Makefile will assume VC++ Toolkit 2003 (MSVC version 13)
-vsversion=7
+!ERROR This build requires Visual Studio 8 (or VS2005Express) or later
 !ENDIF
 
 # Use environment variables to determine the target processor type

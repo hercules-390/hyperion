@@ -9,31 +9,6 @@
 #  whether a normal retail release or debugging version of the product is
 #  being built...  (also sets preprocessor #defines too, as appropriate)
 #
-#
-#                           CHANGE HISTORY
-# $Log$
-# Revision 1.7  2009/02/08 15:07:20  rbowler
-# Eliminate superfluous trailing blanks (cosmetic change only)
-#
-# Revision 1.6  2009/02/05 23:43:09  rbowler
-# Reduce warning level from W4 to W3 for win64
-#
-# Revision 1.5  2009/02/05 23:22:18  rbowler
-# C1189: cannot use 32-bit time_t (_USE_32BIT_TIME_T) with _WIN64
-#
-# Revision 1.4  2008/01/31 22:32:36  rbowler
-# Move MSVC compiler level determination to CONFIG.msvc
-#
-# Revision 1.3  2008/01/23 17:59:28  rbowler
-# Modify detection of MSVC level in makefile
-#
-# Revision 1.2  2008/01/23 00:47:40  rbowler
-# Modifications for VS9 C++ 2008 Express by Charlie Brint
-#
-# DD/MM/YY Description
-#
-# 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
-#
 # ***************************************************************************
 
 # -------------------------------------------------
@@ -52,34 +27,11 @@ MAPFILE = /map:$(MAPDIR)\$(@B).map
 # RETAIL: full optimization
 # -------------------------------
 
-# Fish: Not sure how to check within a makefile for which version
-# of the compiler is going to be used so for now, we'll hard code
-# the test for VS 7.0's compiler (version 13.00) which still supports
-# the /QIfist option (whereas the newer VS 8.0 compiler (vers 14.00)
-# kicks out the warning: "D9035 option 'QIfist' has been deprecated
-# and will be removed in a future release"). Their documentation
-# says to use the new /fp option instead.
-# rbowler: Compiler version check (vsversion) is now in CONFIG.msvc
-
-!IF $(vsversion) < 8
-
-cflags = $(cflags) /QIfist
-
-# PROGRAMMING NOTE: we're purposely discarding win32.mak's $(cdebug) settings
-# and replacing them with our own by leaving "$(cdebug)" out of the statement
-
-cdebug  = /O2 /D NDEBUG
-ldebug = $(ldebug)
-
-!ELSE # vsversion >= 8
-
 # PROGRAMMING NOTE: we're purposely discarding win32.mak's $(cdebug) settings
 # and replacing them with our own by leaving "$(cdebug)" out of the statement
 
 cdebug = /O2 /GL /D NDEBUG
 ldebug = $(ldebug) /LTCG
-
-!ENDIF
 
 # Create .PDB (Program Database) files for debugging for 'Release' builds too!
 # (so we can easily analyze "MiniDump" crash dumps should Herc ever crash)
