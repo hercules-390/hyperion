@@ -1044,8 +1044,8 @@ char    buf[100];                       /* Message buffer            */
     /* Display real storage */
     for (i = 0; i < 999 && raddr <= eaddr; i++)
     {
-        ARCH_DEP(display_real) (regs, raddr, buf, 1, "");
-        logmsg ("%s\n", buf);
+        ARCH_DEP(display_real) (regs, raddr, buf, 1, "HHC02290I ");
+        writemsg(__FILE__,__LINE__,__FUNCTION__,sysblk.msglvl,"","%s\n", buf);
         raddr += 16;
     } /* end for(i) */
 
@@ -1140,10 +1140,10 @@ char    buf[100];                       /* Message buffer            */
                 n += sprintf (buf+n, "(AR%2.2d)", arn);
             if (xcode == 0)
                 n += sprintf (buf+n, " R:"F_RADR, raddr);
-            logmsg ("%s\n", buf);
+            WRMSG(HHC02291, "I", buf);
         }
         ARCH_DEP(display_virt) (regs, vaddr, buf, arn, ACCTYPE_LRA, "");
-        logmsg ("%s\n", buf);
+        WRMSG(HHC02291, "I", buf);
         vaddr += 16;
     } /* end for(i) */
 
