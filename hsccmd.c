@@ -7304,9 +7304,14 @@ int traceopt_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int cmdtgt_cmd(int argc, char *argv[], char *cmdline)
 {
-  int print = 1;
-
   UNREFERENCED(cmdline);
+
+  if(argc == 1)
+  {
+    WRMSG(HHC02202, "I");
+    return 0;
+  }
+
   if(argc == 2)
   {
     if(!strcasecmp(argv[1], "herc"))
@@ -7318,35 +7323,36 @@ int cmdtgt_cmd(int argc, char *argv[], char *cmdline)
     else if(!strcasecmp(argv[1], "?"))
       ;
     else
-      print = 0;
-  }
-  else
-    print = 0;
-
-  if(print)
-  {
-    switch(sysblk.cmdtgt)
     {
-      case 0:
-      {
-        logmsg("cmdtgt: Commands are sent to hercules\n");
-        break;
-      }
-      case 1:
-      {
-        logmsg("cmdtgt: Commands are sent to scp\n");
-        break;
-      }
-      case 2:
-      {
-        logmsg("cmdtgt: Commands are sent as priority messages to scp\n");
-        break;
-      }
+      WRMSG(HHC02205, "I", argv[1], "");
+      return 0;
     }
   }
-  else
-    logmsg("cmdtgt: Use cmdtgt [herc | scp | pscp | ?]\n");
 
+  if(argc > 2)
+  {
+    WRMSG(HHC02205, "I", argv[2], "");
+    return 0;
+  }
+
+  switch(sysblk.cmdtgt)
+  {
+    case 0:
+    {
+      WRMSG(HHC02288, "I", "herc");
+      break;
+    }
+    case 1:
+    {
+      WRMSG(HHC02288, "I", "scp");
+      break;
+    }
+    case 2:
+    {
+      WRMSG(HHC02288, "I", "pscp");
+      break;
+    }
+  }
   return 0;
 }
 

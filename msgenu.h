@@ -1001,6 +1001,11 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02282 "%s"
 #define HHC02283 "%s"
 #define HHC02284 "%s"
+#define HHC02285 "Counted %5u '%s' events"
+#define HHC02286 "Average instructions / SIE invocation: %5u"
+#define HHC02287 "No SIE performance data"
+#define HHC02288 "Commands are sent to '%s'"
+#define HHC02289 "%s"
 
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)

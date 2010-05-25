@@ -142,11 +142,11 @@ static void do_shutdown_now()
     log_wakeup(NULL);
 
     /*
-    logmsg("HHCIN905I Terminating threads\n");
+    logmsg("Terminating threads\n");
     {
         // (none we really care about at the moment...)
     }
-    logmsg("HHCIN906I Threads terminations complete\n");
+    logmsg("Threads terminations complete\n");
     */
 
     WRMSG(HHC01425, "I");
@@ -187,7 +187,7 @@ static void do_shutdown_now()
 #ifdef DEBUG
         fprintf(stdout, _("DO_SHUTDOWN_NOW EXIT\n"));
 #endif
-        fprintf(stdout, _("HHCIN099I Hercules terminated\n"));
+        fprintf(stdout, MSG(HHC01412, "I"));
         fflush(stdout);
         exit(0);
     }
@@ -956,7 +956,8 @@ char    buf[80];
         {
             if((xcode = ARCH_DEP(virt_to_abs) (&raddr, &stid, saddr, 0, regs, ACCTYPE_INSTFETCH) ))
             {
-                logmsg(_("Storage not accessible code = %4.4X\n"), xcode);
+                sprintf(buf, "Storage not accessible code = %4.4X", xcode);
+                WRMSG(HHC02289, "I", buf);
                 return;
             }
         }
@@ -964,7 +965,7 @@ char    buf[80];
         aaddr = APPLY_PREFIXING (raddr, regs->PX);
         if (aaddr > regs->mainlim)
         {
-            logmsg(_("Addressing exception\n"));
+            WRMSG(HHC02289, "I", "Addressing exception");
             return;
         }
 
@@ -973,28 +974,28 @@ char    buf[80];
 
         if (aaddr + ilc > regs->mainlim)
         {
-            logmsg(_("Addressing exception\n"));
+            WRMSG(HHC02289, "I", "Addressing exception\n");
             return;
         }
 
         memcpy(inst, regs->mainstor + aaddr, ilc);
-        logmsg("%c" F_RADR ": %2.2X%2.2X",
+        len = sprintf(buf, "%c" F_RADR ": %2.2X%2.2X",
           stid == TEA_ST_PRIMARY ? 'P' :
           stid == TEA_ST_HOME ? 'H' :
           stid == TEA_ST_SECNDRY ? 'S' : 'R',
           raddr, inst[0], inst[1]);
         if(ilc > 2)
         {
-            logmsg("%2.2X%2.2X", inst[2], inst[3]);
+            len += sprintf(buf + len, "%2.2X%2.2X", inst[2], inst[3]);
             if(ilc > 4)
-                logmsg("%2.2X%2.2X ", inst[4], inst[5]);
+                len += sprintf(buf + len, "%2.2X%2.2X ", inst[4], inst[5]);
             else
-                logmsg("     ");
+                len += sprintf(buf + len, "     ");
         }
         else
-            logmsg("         ");
-        DISASM_INSTRUCTION(inst, buf);
-	logmsg("%s", buf);
+            len += sprintf(buf + len, "         ");
+        DISASM_INSTRUCTION(inst, buf + len);
+        WRMSG(HHC02289, "I", buf);
         saddr += ilc;
     } /* end for(i) */
 
@@ -1228,6 +1229,7 @@ REGS   *regs;                           /* Copied regs               */
     if (ilc > 4) n += sprintf (buf + n, "%2.2X%2.2X", inst[4], inst[5]);
     n += sprintf (buf + n, " %s", (ilc<4) ? "        " : (ilc<6) ? "    " : "");
     n += DISASM_INSTRUCTION(inst, buf + n);
+    n += sprintf (buf + n, "\n");
 
 #ifdef DISPLAY_INSTRUCTION_OPERANDS
 

@@ -187,14 +187,14 @@ static char *dbg_name[] = {
         int i;
         for(i = 0; i < 0x61; i++)
             if(sie_perfmon[i])
-                logmsg("%9u: %s\n",sie_perfmon[i],dbg_name[i]);
-        logmsg("%9u: Average instructions/SIE invocation\n",
+                WRMSG(HHC02285, "I" ,sie_perfmon[i],dbg_name[i]);
+        WRMSG(HHC02286, "I", 
             (sie_perfmon[SIE_PERF_EXEC+SIE_PERF_MAXNEG] +
              sie_perfmon[SIE_PERF_EXEC_U+SIE_PERF_MAXNEG]*7) /
             sie_perfmon[SIE_PERF_ENTER+SIE_PERF_MAXNEG]);
     }
     else
-        logmsg("No SIE performance data\n");
+        WRMSG(HHC02287, "I");
 }
 #else
 #define SIE_PERFMON(_code)
