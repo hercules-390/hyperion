@@ -1008,6 +1008,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02289 "%s"
 #define HHC02290 "%s"
 #define HHC02291 "%s"
+#define HHC02292 "%s"
 
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)

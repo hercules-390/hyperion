@@ -5615,6 +5615,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
     unsigned char *opcode2;
     U64 *count;
     U64 total;
+    char buf[100];
 
     UNREFERENCED(cmdline);
 
@@ -5637,7 +5638,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
       if(!(opcode1 = malloc(MAX_ICOUNT_INSTR * sizeof(unsigned char))))
       {
         char buf[40];
-        sprintf(buf, "malloc(%lu)", MAX_ICOUNT_INSTR * sizeof(unsigned char))));
+        sprintf(buf, "malloc(%lu)", MAX_ICOUNT_INSTR * sizeof(unsigned char));
         WRMSG(HHC02219, "E", buf, strerror(errno));
         release_lock( &sysblk.icount_lock );
         return 0;
@@ -5645,7 +5646,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
       if(!(opcode2 = malloc(MAX_ICOUNT_INSTR * sizeof(unsigned char))))
       {
         char buf[40];
-        sprintf(buf, "malloc(%lu)", MAX_ICOUNT_INSTR * sizeof(unsigned char))));
+        sprintf(buf, "malloc(%lu)", MAX_ICOUNT_INSTR * sizeof(unsigned char));
         WRMSG(HHC02219, "E", buf, strerror(errno));
         free(opcode1);
         release_lock( &sysblk.icount_lock );
@@ -5654,7 +5655,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
       if(!(count = malloc(MAX_ICOUNT_INSTR * sizeof(U64))))
       {
         char buf[40];
-        sprintf(buf, "malloc(%lu)", MAX_ICOUNT_INSTR * sizeof(U64))));
+        sprintf(buf, "malloc(%lu)", MAX_ICOUNT_INSTR * sizeof(U64));
         WRMSG(HHC02219, "E", buf, strerror(errno));
         free(opcode1);
         free(opcode2);
@@ -6161,109 +6162,129 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
 #define  ICOUNT_WIDTH  "12"     /* Print field width */
 
       /* Print */
-      logmsg(_("HHCMD875I Sorted instruction count display:\n"));
+      WRMSG(HHC02292, "I", "Sorted instruction count display:");
       for(i1 = 0; i1 < i; i1++)
       {
         switch(opcode1[i1])
         {
           case 0x01:
           {
-            logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            sprintf(buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xA4:
           {
-            logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            sprintf(buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xA5:
           {
-            logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            sprintf(buf, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xA6:
           {
-            logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            sprintf(buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xA7:
           {
-            logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            sprintf(buf, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xB2:
           {
-            logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            sprintf(buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xB3:
           {
-            logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            sprintf(buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xB9:
           {
-            logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            sprintf(buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xC0:
           {
-            logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            sprintf(buf, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xC2:
           {
-            logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            sprintf(buf, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xC4:
           {
-            logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            sprintf(buf, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xC6:
           {
-            logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            sprintf(buf, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xC8:
           {
-            logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            sprintf(buf, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xE3:
           {
-            logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            sprintf(buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xE4:
           {
-            logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            sprintf(buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xE5:
           {
-            logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            sprintf(buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xEB:
           {
-            logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            sprintf(buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xEC:
           {
-            logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            sprintf(buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xED:
           {
-            logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            sprintf(buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            WRMSG(HHC02292, "I", buf);
             break;
           }
           default:
           {
-            logmsg("          INST=%2.2X  \tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\t(%2d%%)\n", opcode1[i1], count[i1], (int) (count[i1] * 100 / total));
+            sprintf(buf, "Inst '%2.2X'   count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], count[i1], (int) (count[i1] * 100 / total));
+            WRMSG(HHC02292, "I", buf);
             break;
           }
         }
@@ -6275,7 +6296,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
       return 0;
     }
 
-    logmsg(_("HHCMD876I Instruction count display:\n"));
+    WRMSG(HHC02292, "I", "Instruction count display:");
     for (i1 = 0; i1 < 256; i1++)
     {
         switch (i1)
@@ -6283,121 +6304,181 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
             case 0x01:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imap01[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
+                    {
+                        sprintf(buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imap01[i2]);
+                        WRMSG(HHC02292, "I", buf);
+                    }
                 break;
             case 0xA4:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapa4[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
+                    {
+                        sprintf(buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imapa4[i2]);
+                        WRMSG(HHC02292, "I", buf);
+                    }
                 break;
             case 0xA5:
                 for(i2 = 0; i2 < 16; i2++)
                     if(sysblk.imapa5[i2])
-                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
+                    {
+                        sprintf(buf, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imapa5[i2]);
+                        WRMSG(HHC02292, "I", buf);
+                    }
                 break;
             case 0xA6:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapa6[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
+                    {
+                        sprintf(buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imapa6[i2]);
+                        WRMSG(HHC02292, "I", buf);
+                    }
                 break;
             case 0xA7:
                 for(i2 = 0; i2 < 16; i2++)
                     if(sysblk.imapa7[i2])
-                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
+                    {
+                        sprintf(buf, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imapa7[i2]);
+                        WRMSG(HHC02292, "I", buf);
+                    }
                 break;
             case 0xB2:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapb2[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
+                    {
+                        sprintf(buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imapb2[i2]);
+                        WRMSG(HHC02292, "I", buf);
+                    }
                 break;
             case 0xB3:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapb3[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
+                    {
+                        sprintf(buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imapb3[i2]);
+                        WRMSG(HHC02292, "I", buf);
+                    }
                 break;
             case 0xB9:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapb9[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
+                    {
+                        sprintf(buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imapb9[i2]);
+                        WRMSG(HHC02292, "I", buf);
+                    }
                 break;
             case 0xC0:
                 for(i2 = 0; i2 < 16; i2++)
                     if(sysblk.imapc0[i2])
-                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
+                    {
+                        sprintf(buf, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imapc0[i2]);
+                        WRMSG(HHC02292, "I", buf);
+                    }
                 break;
             case 0xC2:                                                      /*@Z9*/
                 for(i2 = 0; i2 < 16; i2++)                                  /*@Z9*/
                     if(sysblk.imapc2[i2])                                   /*@Z9*/
-                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",  /*@Z9*/
+                    {
+                        sprintf(buf, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u",  /*@Z9*/
                             i1, i2, sysblk.imapc2[i2]);                     /*@Z9*/
+                        WRMSG(HHC02292, "I", buf);
+                    }
                 break;                                                      /*@Z9*/
             case 0xC4:
                 for(i2 = 0; i2 < 16; i2++)
                     if(sysblk.imapc4[i2])
-                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
+                    {
+                        sprintf(buf, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imapc4[i2]);
+                        WRMSG(HHC02292, "I", buf);
+                    }
                 break;
             case 0xC6:
                 for(i2 = 0; i2 < 16; i2++)
                     if(sysblk.imapc6[i2])
-                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
+                    {
+                        sprintf(buf, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imapc6[i2]);
+                        WRMSG(HHC02292, "I", buf);
+                    }
                 break;
             case 0xC8:
                 for(i2 = 0; i2 < 16; i2++)
                     if(sysblk.imapc8[i2])
-                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
+                    {
+                        sprintf(buf, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imapc8[i2]);
+                        WRMSG(HHC02292, "I", buf);
+                    }
                 break;
             case 0xE3:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imape3[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
+                    {
+                        sprintf(buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imape3[i2]);
+                        WRMSG(HHC02292, "I", buf);
+                    }
                 break;
             case 0xE4:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imape4[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
+                    {
+                        sprintf(buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imape4[i2]);
+                        WRMSG(HHC02292, "I", buf);
+                    }
                 break;
             case 0xE5:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imape5[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
+                    {
+                        sprintf(buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imape5[i2]);
+                        WRMSG(HHC02292, "I", buf);
+                    }
                 break;
             case 0xEB:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapeb[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
+                    {
+                        sprintf(buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imapeb[i2]);
+                        WRMSG(HHC02292, "I", buf);
+                    }
                 break;
             case 0xEC:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapec[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
+                    {
+                        sprintf(buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imapec[i2]);
+                        WRMSG(HHC02292, "I", buf);
+                    }
                 break;
             case 0xED:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imaped[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
+                    {
+                        sprintf(buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imaped[i2]);
+                        WRMSG(HHC02292, "I", buf);
+                    }
                 break;
             default:
                 if(sysblk.imapxx[i1])
-                    logmsg("          INST=%2.2X  \tCOUNT=%" ICOUNT_WIDTH I64_FMT "u\n",
+                {
+                    sprintf(buf, "Inst '%2.2X'   count %" ICOUNT_WIDTH I64_FMT "u",
                         i1, sysblk.imapxx[i1]);
+                    WRMSG(HHC02292, "I", buf);
+                }
                 break;
         }
     }

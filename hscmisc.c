@@ -265,7 +265,7 @@ static int display_regs32(char *hdr,U16 cpuad,U32 *r,int numcpus, char *buf, cha
         }
         if(i%4)
         {
-            len+=sprintf(buf+len,"  ");
+            len+=sprintf(buf+len," ");
         }
         len+=sprintf(buf+len,"%s%2.2d=%8.8"I32_FMT"X",hdr,i,r[i]);
     }
@@ -454,23 +454,22 @@ int display_aregs (REGS *regs, char *buf, char *hdr)
 /*-------------------------------------------------------------------*/
 int display_fregs (REGS *regs, char *buf, char *hdr)
 {
-char cpustr[7] = {0};               /* "CPnn: " or "" */
-int len;
+char cpustr[32] = "";               
 
-    len=sprintf(buf,hdr);
+    sprintf(cpustr, hdr);
     if(sysblk.cpus>1)
-        sprintf(cpustr, "%s%02X: ", PTYPSTR(regs->cpuad), regs->cpuad);
+        sprintf(cpustr, "%s%s%02X: ", hdr, PTYPSTR(regs->cpuad), regs->cpuad);
 
     if(regs->CR(0) & CR0_AFP)
-        return(len+sprintf(buf,
-            "%sFPR0=%8.8X %8.8X  FPR2=%8.8X %8.8X\n"
-            "%sFPR1=%8.8X %8.8X  FPR3=%8.8X %8.8X\n"
-            "%sFPR4=%8.8X %8.8X  FPR6=%8.8X %8.8X\n"
-            "%sFPR5=%8.8X %8.8X  FPR7=%8.8X %8.8X\n"
-            "%sFPR8=%8.8X %8.8X  FP10=%8.8X %8.8X\n"
-            "%sFPR9=%8.8X %8.8X  FP11=%8.8X %8.8X\n"
-            "%sFP12=%8.8X %8.8X  FP14=%8.8X %8.8X\n"
-            "%sFP13=%8.8X %8.8X  FP15=%8.8X %8.8X\n"
+        return(sprintf(buf,
+            "%sFPR0=%8.8X%8.8X FPR2=%8.8X%8.8X\n"
+            "%sFPR1=%8.8X%8.8X FPR3=%8.8X%8.8X\n"
+            "%sFPR4=%8.8X%8.8X FPR6=%8.8X%8.8X\n"
+            "%sFPR5=%8.8X%8.8X FPR7=%8.8X%8.8X\n"
+            "%sFPR8=%8.8X%8.8X FP10=%8.8X%8.8X\n"
+            "%sFPR9=%8.8X%8.8X FP11=%8.8X%8.8X\n"
+            "%sFP12=%8.8X%8.8X FP14=%8.8X%8.8X\n"
+            "%sFP13=%8.8X%8.8X FP15=%8.8X%8.8X\n"
             ,cpustr, regs->fpr[0],  regs->fpr[1],  regs->fpr[4],  regs->fpr[5]
             ,cpustr, regs->fpr[2],  regs->fpr[3],  regs->fpr[6],  regs->fpr[7]
             ,cpustr, regs->fpr[8],  regs->fpr[9],  regs->fpr[12], regs->fpr[13]
@@ -481,9 +480,9 @@ int len;
             ,cpustr, regs->fpr[26], regs->fpr[27], regs->fpr[30], regs->fpr[31]
         ));
     else
-        return(len+sprintf(buf,
-            "%sFPR0=%8.8X %8.8X  FPR2=%8.8X %8.8X\n"
-            "%sFPR4=%8.8X %8.8X  FPR6=%8.8X %8.8X\n"
+        return(sprintf(buf,
+            "%sFPR0=%8.8X%8.8X FPR2=%8.8X%8.8X\n"
+            "%sFPR4=%8.8X%8.8X FPR6=%8.8X%8.8X\n"
             ,cpustr, regs->fpr[0], regs->fpr[1], regs->fpr[2], regs->fpr[3]
             ,cpustr, regs->fpr[4], regs->fpr[5], regs->fpr[6], regs->fpr[7]
         ));
@@ -1356,10 +1355,10 @@ REGS   *regs;                           /* Copied regs               */
             || (opcode == 0xB9 && inst[1] == 0x05) /*LURAG*/
             || (opcode == 0xB9 && inst[1] == 0x25))) /*STURG*/
             ARCH_DEP(display_virt) (regs, addr2, buf2, USE_REAL_ADDR,
-                                                ACCTYPE_READ, "HHC02267I ");
+                                                ACCTYPE_READ, "");
         else
             ARCH_DEP(display_virt) (regs, addr2, buf2, b2,
-                                        ACCTYPE_READ, "HHC02267I ");
+                                        ACCTYPE_READ, "");
 
         n += sprintf(buf+n, "HHC02267I ");
         if ( sysblk.cpus > 1 )

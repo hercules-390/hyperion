@@ -248,7 +248,7 @@ int used; \
     if(!used) \
     { \
     obtain_lock( &sysblk.icount_lock ); \
-    logmsg("First use: "); \
+    WRMSG(HHC02292, "I", "First use"); \
     ARCH_DEP(display_inst) ((_regs), (_inst)); \
     release_lock( &sysblk.icount_lock ); \
     } \
