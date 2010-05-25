@@ -250,8 +250,6 @@ static  HOST_INFO  cons_hostinfo;       /* Host info for this system */
   #define TNSDEBUG3      logmsg
 #endif
 
-#define TNSERROR        logmsg
-
 #define BUFLEN_3270     65536           /* 3270 Send/Receive buffer  */
 #define BUFLEN_1052     150             /* 1052 Send/Receive buffer  */
 
@@ -512,7 +510,7 @@ int     rc;                             /* Return code               */
     rc = send (csock, buf, len, 0);
 
     if (rc < 0) {
-        TNSERROR("console: DBG021: send: %s\n", strerror(HSO_errno));
+        WRMSG(HHC01034, "E", "send()", strerror(HSO_errno));
         return -1;
     } /* end if(rc) */
 
@@ -549,7 +547,7 @@ int     rcvlen=0;                       /* Length of data received   */
         rc = recv (csock, buf + rcvlen, reqlen - rcvlen, 0);
 
         if (rc < 0) {
-            TNSERROR("console: DBG022: recv: %s\n", strerror(HSO_errno));
+            WRMSG(HHC01034, "E", "recv()", strerror(HSO_errno));
             return -1;
         }
 
