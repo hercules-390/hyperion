@@ -1,6 +1,7 @@
 /* CMDTAB.H     (c) Copyright Roger Bowler, 1999-2010                */
 /*              (c) Copyright "Fish" (David B. Trout), 2002-2009     */
 /*              (c) Copyright Jan Jaeger, 2003-2009                  */
+/*              (c) Copyright TurboHercules, SAS 2010                */
 /*              Defines all Hercules Configuration statements        */
 /*              and panel commands                                   */
 /*                                                                   */
@@ -17,7 +18,7 @@
 // COMMAND ("sample3"  CONFIG,       SYSCMDALL, sample3_cmd,  NULL, NULL ) // No help provided at all
 // COMMAND ("sample4"  DISABLED,     SYSDEBUG,  sample4_cmd,  NULL, NULL ) // Disabled command - generally debugging only
 
-COMMAND("help",      PANEL,         SYSCMDALL,          HelpCommand, 
+COMMAND("help",      PANEL,         SYSNONE,            HelpCommand, 
   "list all commands / command specific help",
     "Enter \"help cmd\" where cmd is the command you need help\n"
     "with. If the command has additional help text defined for it,\n"
@@ -25,51 +26,51 @@ COMMAND("help",      PANEL,         SYSCMDALL,          HelpCommand,
     "the format of the command and its various required or optional\n"
     "parameters and is not meant to replace reading the documentation.\n")
     
-COMMAND("?",         PANEL,         SYSCMDALL,          HelpCommand,  
+COMMAND("?",         PANEL,         SYSNONE,            HelpCommand,  
   "alias for help", 
     NULL)
 
-COMMAND("cmdlevel",  PANEL+CONFIG,  SYSCMDALL,          CmdLevel,     
+COMMAND("cmdlevel",  PANEL+CONFIG,  SYSNONE,            CmdLevel,     
   "Display/Set current command group",
     "display/set the current command group set(s)\n"
     "Format: cmdlevel [{+/-}{ALL, MAINT, PROGrammer, OPERator, and/or DEVELoper}]\n")
     
-COMMAND("cmdlvl",    PANEL+CONFIG,  SYSCMDALL,          CmdLevel,     
+COMMAND("cmdlvl",    PANEL+CONFIG,  SYSNONE,            CmdLevel,     
   "alias for cmdlevel", 
     NULL)
 
-COMMAND("msglevel",  PANEL,         SYSCMDALL,          msglvl_cmd,   
+COMMAND("msglevel",  PANEL,         SYSNONE,            msglvl_cmd,   
   "Display or set the message level",
     "Format: msglevel [normal | debug | info]\n"
     "normal: default messages\n"
     "debug:  messages prefixed with source and linenumber\n"
     "info:   displays the message level\n")
     
-COMMAND("msglvl",    PANEL,         SYSCMDALL,          msglvl_cmd,   
+COMMAND("msglvl",    PANEL,         SYSNONE,            msglvl_cmd,   
   "alias for msglevel", 
     NULL)
 
-COMMAND("*",         PANEL+CONFIG,  SYSCMDALL,          comment_cmd,  
+COMMAND("*",         PANEL+CONFIG,  SYSNONE,            comment_cmd,  
   "Comment", 
     NULL)
 
-COMMAND("#",         PANEL+CONFIG,  SYSCMDALL,          comment_cmd,  
+COMMAND("#",         PANEL+CONFIG,  SYSNONE,            comment_cmd,  
   "Comment", 
     NULL)
 
-CMDABBR("message",1, PANEL,         SYSCMDALL,          msg_cmd,      
+CMDABBR("message",1, PANEL,         SYSNONE,            msg_cmd,      
   "Display message on console a la VM", 
     NULL)
     
-CMDABBR("msg",1,     PANEL,         SYSCMDALL,          msg_cmd,      
+CMDABBR("msg",1,     PANEL,         SYSNONE,            msg_cmd,      
   "Alias for message", 
     NULL)
     
-COMMAND("msgnoh",    PANEL,         SYSCMDALL,          msgnoh_cmd,   
+COMMAND("msgnoh",    PANEL,         SYSNONE,            msgnoh_cmd,   
   "Similar to \"message\" but no header", 
     NULL)
 
-COMMAND("hst",       PANEL,         SYSCMDALL,          History,      
+COMMAND("hst",       PANEL,         SYSNONE,            History,      
   "history of commands",
     "Format: \"hst | hst n | hst l\". Command \"hst l\" or \"hst 0\" displays\n"
     "list of last ten commands entered from command line\n"
@@ -105,15 +106,15 @@ COMMAND("uptime",    PANEL,         SYSCMDALL,          uptime_cmd,
   "display how long Hercules has been running", 
     NULL)
     
-COMMAND("version",   PANEL,         SYSCMDALL,          version_cmd,  
+COMMAND("version",   PANEL,         SYSNONE,            version_cmd,  
   "display version information", 
     NULL)
 
-COMMAND("quit",      PANEL,         SYSCMDALL,          quit_cmd,     
+COMMAND("quit",      PANEL,         SYSNONE,            quit_cmd,     
   "terminate the emulator", 
     NULL)
     
-COMMAND("exit",      PANEL,         SYSCMDALL,          quit_cmd,     
+COMMAND("exit",      PANEL,         SYSNONE,            quit_cmd,     
   "(synonym for 'quit')", 
     NULL)
 
@@ -195,7 +196,7 @@ COMMAND("ssd",       PANEL,         SYSCMDALL,          ssd_cmd,
 #endif
 
 #ifdef OPTION_PTTRACE
-COMMAND("ptt",       PANEL+CONFIG,  SYSMAINT+SYSPROG+SYSDEVEL, EXT_CMD(ptt_cmd),
+COMMAND("ptt",       PANEL+CONFIG,  SYSCMDALL-SYSOPER, EXT_CMD(ptt_cmd),
   "Set or display internal trace",
     "Format: \"ptt [options] [nnn]\"\n"
     "When specified with no operands, the ptt command displays the trace options\n"
@@ -233,7 +234,7 @@ COMMAND("restart",   PANEL,         SYSCMDALL,          restart_cmd,
   "generate restart interrupt", 
     NULL)
 
-COMMAND("archmode",  PANEL+CONFIG,  SYSMAINT+SYSPROG+SYSDEVEL, archmode_cmd,
+COMMAND("archmode",  PANEL+CONFIG,  SYSCMDALL-SYSOPER, archmode_cmd,
   "Set architecture mode",
     "Format: \"archmode [S/370 | ESA/390 | z/Arch | ESAME]\". Entering the command\n"
     "without any argument simply displays the current architecture mode. Entering\n"

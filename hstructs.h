@@ -1,4 +1,5 @@
 /* HSTRUCTS.H   (c) Copyright Roger Bowler, 1999-2010                */
+/*              (c) Copyright TurboHercules, SAS 2010                */
 /*              Hercules Structure Definitions                       */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -480,8 +481,11 @@ struct SYSBLK {
 #define SYSGROUP_SYSOPER     0x01     /* computer operator functions */
 #define SYSGROUP_SYSMAINT    0x02     /* Maintenance functions       */
 #define SYSGROUP_SYSPROG     0x04     /* Systems Programmer functions*/
-#define SYSGROUP_SYSDEVEL    0x10     /* Developer functions         */
-#define SYSGROUP_SYSDEBUG    0x80     /* Internal Debug functions    */ 
+#define SYSGROUP_SYS0x08     0x08     /* Unused                      */
+#define SYSGROUP_SYS0x10     0x10     /* Developer functions         */
+#define SYSGROUP_SYSDEVEL    0x20     /* Unused                      */
+#define SYSGROUP_SYSDEBUG    0x40     /* Internal Debug functions    */ 
+#define SYSGROUP_SYSNONE     0x80     /* Command works always        */
 #define SYSGROUP_ALL         0xFF
         BYTE    diag8cmd;               /* Allow diagnose 8 commands */
 #define DIAG8CMD_ENABLE   0x01          /* Enable DIAG8 interface    */

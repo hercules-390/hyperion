@@ -958,7 +958,7 @@ char                    group[16];      /* Console group             */
 
     if (class != 'P')  /* do not write connection resp on 3287 */
     {
-        rc = send_packet (csock, (BYTE *)buf, len, "CONNECTION RESPONSE");
+        rc = send_packet (csock, (BYTE *)buf, (int)len, "CONNECTION RESPONSE");
     }
     return (class == 'D') ? 1 : 0;   /* return 1 if 3270 */
 } /* end function connect_client */
@@ -1149,7 +1149,7 @@ static void connect_message(int sfd, int na, int flag) {
     else
         sprintf(msgtext, "%s:%d VTAM CONNECTION TERMINATED", ipaddr, (int)ntohs(client.sin_port));
     logmsg( _("HHCCA301I %s\n"), msgtext);
-    write(sfd, msgtext, strlen(msgtext));
+    write(sfd, msgtext, (u_int)strlen(msgtext));
     write(sfd, "\r\n", 2);
 }
 

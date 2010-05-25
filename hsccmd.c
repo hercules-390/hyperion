@@ -1,5 +1,6 @@
 /* HSCCMD.C     (c) Copyright Roger Bowler, 1999-2010                */
 /*              (c) Copyright "Fish" (David B. Trout), 2002-2009     */
+/*              (c) Copyright TurboHercules, SAS 2010                */
 /*              Execute Hercules System Commands                     */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

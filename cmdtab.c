@@ -66,9 +66,10 @@ typedef struct _CMDTAB
 #define SYSOPER    0x01          /* System Operator     */
 #define SYSMAINT   0x02          /* System Maintainer   */
 #define SYSPROG    0x04          /* Systems Programmer  */
-#define SYSDEVEL   0x10          /* System Developer    */
-#define SYSDEBUG   0x80          /* Enable Debugging    */
-#define SYSCMDALL  0xFF          /* Valid in all states */ 
+#define SYSDEVEL   0x20          /* System Developer    */
+#define SYSDEBUG   0x40          /* Enable Debugging    */
+#define SYSNONE    0x80          /* Enable for any lvls */
+#define SYSCMDALL  ( SYSOPER + SYSMAINT + SYSPROG + SYSDEVEL + SYSDEBUG ) /* Valid in all states */ 
     CMDFUNC    *function;          /* handler function    */
     const char *shortdesc;         /* description         */
     const char *longdesc;          /* detaled description */
@@ -382,7 +383,7 @@ int CmdLevel(int argc, char *argv[], char *cmdline)
                 sysblk.sysgroup = SYSGROUP_ALL;
             else
             if (strcasecmp (argv[i], "-all") == 0)
-                sysblk.sysgroup &= ~SYSGROUP_ALL;
+                sysblk.sysgroup = SYSGROUP_SYSNONE;
             else
             if ( (strcasecmp (argv[i], "operator") == 0) || (strcasecmp (argv[i], "oper") == 0) )
                 sysblk.sysgroup |= SYSGROUP_SYSOPER;
@@ -439,20 +440,20 @@ int CmdLevel(int argc, char *argv[], char *cmdline)
     {
         WRMSG(HHC01606, "I", sysblk.sysgroup, "all");
     }
-    else if ( sysblk.sysgroup == 0 )
+    else if ( sysblk.sysgroup == SYSGROUP_SYSNONE )
     {
         WRMSG(HHC01606, "I", sysblk.sysgroup, "none");
     }
     else
     {
-        char buf[20];
+        char buf[128];
         sprintf(buf, "%s%s%s%s%s", 
 	    (sysblk.sysgroup&SYSGROUP_SYSOPER)?"operator ":"",
             (sysblk.sysgroup&SYSGROUP_SYSMAINT)?"maintenance ":"",
             (sysblk.sysgroup&SYSGROUP_SYSPROG)?"programmer ":"",
             (sysblk.sysgroup&SYSGROUP_SYSDEVEL)?"developer ":"",
             (sysblk.sysgroup&SYSGROUP_SYSDEBUG)?"debugging ":"");
-        WRMSG(HHC01605, "I", sysblk.sysgroup, buf);
+        WRMSG(HHC01606, "I", sysblk.sysgroup, buf);
     }
     
     return 0;
