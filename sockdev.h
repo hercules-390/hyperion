@@ -1,15 +1,11 @@
-/* SOCKDEV.H    (c) Copyright Hercules development, 2003-2009        */
+/* SOCKDEV.H    (c) Copyright Roger Bowler, 1999-2010                */
 /*              SocketDevice support                                 */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
-//
-// $Log$
-// Revision 1.9  2007/06/23 00:04:16  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.8  2006/12/08 09:43:30  jj
-// Add CVS message log
-//
 
 #include "htypes.h"         // need Herc's struct typedefs
 

@@ -1,3 +1,10 @@
+/* TT32API.H (c)Copyright Software Development Laboratories, 2002-2008 */
+/*              TunTap32 DLL exported functions interface            */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
 // Copyright (c) 2002-2008, Software Development Laboratories, "Fish" (David B. Trout)
 /////////////////////////////////////////////////////////////////////////////////////////
 //

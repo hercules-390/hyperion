@@ -2716,11 +2716,11 @@ char buf[384];
 int pr_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
+char buf[32];
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
     UNREFERENCED(argv);
-    char buf[32];
 
     obtain_lock(&sysblk.cpulock[sysblk.pcpu]);
 

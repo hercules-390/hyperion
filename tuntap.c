@@ -1,10 +1,13 @@
-// ====================================================================
-// Hercules - TUN/TAP Abstraction Layer
-// ====================================================================
-//
-// Copyright (C) 2002-2009 by James A. Pierson
-//           (C) 2002-2009 by "Fish" (David B. Trout)
-//
+/* TUNTAP.C    (C) Copyright James A. Pierson, 2002-2009             */
+/*             (c) Copyright "Fish" (David B. Trout), 2002-2009      */
+/*              Hercules - TUN/TAP Abstraction Layer                 */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
+// $Id$
+
 // TUN/TAP implementations differ among platforms. Linux and FreeBSD
 // offer much the same functionality but with differing semantics.
 // Windows does not have TUN/TAP but thanks to "Fish" (David B. Trout)
@@ -13,19 +16,6 @@
 //
 // This abstraction layer is an attempt to create a common API set
 // that works on all platforms with (hopefully) equal results.
-//
-
-// $Id$
-//
-// $Log$
-// Revision 1.46  2008/02/07 00:29:04  rbowler
-// Solaris build support by Jeff Savit
-//
-// Revision 1.45  2007/06/23 00:04:19  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.44  2006/12/08 09:43:31  jj
-// Add CVS message log
 //
 
 #include "hstdinc.h"

@@ -1,22 +1,13 @@
-/* TIMER.C   */
+/* TIMER.C      (c) Copyright Roger Bowler, 1999-2010                */
+/*              Timer support functions                              */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 
 // $Id$
-//
-// $Log$
-// Revision 1.67  2007/12/10 23:12:02  gsmith
-// Tweaks to OPTION_MIPS_COUNTING processing
-//
-// Revision 1.66  2007/09/05 00:24:18  gsmith
-// Use integer arithmetic calculating cpupct
-//
-// Revision 1.65  2007/06/23 00:04:18  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.64  2006/12/08 09:43:31  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 

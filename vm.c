@@ -1,9 +1,13 @@
-/* VM.C         (c) Copyright Roger Bowler, 2000-2009                */
+/* VM.C         (c) Copyright Roger Bowler, 2000-2010                */
 /*              ESA/390 VM Diagnose calls and IUCV instruction       */
-
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
+
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
 
 /*-------------------------------------------------------------------*/
 /* This module implements miscellaneous diagnose functions           */

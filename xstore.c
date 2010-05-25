@@ -1,12 +1,16 @@
 /* XSTORE.C     (c) Copyright Jan Jaeger, 1999-2009                  */
 /*              Expanded storage related instructions                */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 
-/* MVPG moved from cpu.c to xstore.c   05/07/00 Jan Jaeger */
-
 // $Id$
+
+/* MVPG moved from cpu.c to xstore.c   05/07/00 Jan Jaeger */
 
 /*-------------------------------------------------------------------*/
 /* This module implements the expanded storage instructions          */

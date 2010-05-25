@@ -1,13 +1,9 @@
-/*
-|| ----------------------------------------------------------------------------
-||
-|| SLLIB.C      (c) Copyright Leland Lucius, 2000-2009
-||              Released under terms of the Q Public License.
-||
-|| Library for managing Standard Label tapes.
-||
-|| ----------------------------------------------------------------------------
-*/
+/* SLLIB.C      (c) Copyright Leland Lucius, 2000-2009               */
+/*             Library for managing Standard Label tapes.            */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 

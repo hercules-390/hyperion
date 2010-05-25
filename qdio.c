@@ -1,23 +1,13 @@
-/* QDIO.C       (c) Copyright Jan Jaeger, 2003-2009                  */
+/* QDIO.C       (c) Copyright Jan Jaeger, 2003-2010                  */
 /*              Queued Direct Input Output                           */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 
 /*      This module contains the Signal Adapter instruction          */
-
-// $Log$
-// Revision 1.23  2007/06/23 00:04:15  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.22  2007/01/13 07:24:14  bernard
-// backout ccmask
-//
-// Revision 1.21  2007/01/12 15:24:33  bernard
-// ccmask phase 1
-//
-// Revision 1.20  2006/12/08 09:43:29  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 

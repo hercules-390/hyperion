@@ -1,5 +1,9 @@
-/* TAPEDEV.H    (c) Copyright Ivan Warren and others, 2003-2009      */
+/* TAPEDEV.H    (c) Copyright Ivan Warren and others, 2003-2010      */
 /*              Tape Device Handler Structure Definitions            */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 /*-------------------------------------------------------------------*/
 /* This header file contains tape related structures and defines     */

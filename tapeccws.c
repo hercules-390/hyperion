@@ -1,9 +1,9 @@
 /* TAPECCWS.C   (c) Copyright Roger Bowler, 1999-2010                */
 /*              Hercules Tape Device Handler CCW Processing          */
-
-/* Original Author: Roger Bowler                                     */
-/* Prime Maintainer: Ivan Warren                                     */
-/* Secondary Maintainer: "Fish" (David B. Trout)                     */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 
@@ -13,7 +13,6 @@
 /* The subroutines in this module are called by the general tape     */
 /* device handler (tapedev.c) when the tape format is AWSTAPE.       */
 /*                                                                   */
-/* Messages issued by this module are prefixed HHCTA0nn              */
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/

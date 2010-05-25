@@ -1,10 +1,12 @@
 /* SIE.C        (c) Copyright Jan Jaeger, 1999-2010                  */
 /*              Interpretive Execution                               */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
+
+// $Id$
 
 /*      This module contains the SIE instruction as                  */
 /*      described in IBM S/370 Extended Architecture                 */
@@ -14,7 +16,6 @@
 /*      Principles of Operation, SC24-5594-02 and SC24-5965-00       */
 
 
-// $Id$
 
 
 #include "hstdinc.h"

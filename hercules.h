@@ -1,29 +1,14 @@
-/* HERCULES.H   (c) Copyright Roger Bowler, 1999-2009                */
+/* HERCULES.H   (c) Copyright Roger Bowler, 1999-2010                */
 /*              Hercules Header Files                                */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 
 // $Id$
-//
-// $Log$
-// Revision 1.303  2009/01/02 19:21:51  jj
-// DVD-RAM IPL
-// RAMSAVE
-// SYSG Integrated 3270 console fixes
-//
-// Revision 1.302  2008/05/22 21:34:22  fish
-// Attempt to fix my *nix SCSI tape BSR over tapemark bug identified by Bob Schneider [bschneider@pingdata.net]
-//
-// Revision 1.301  2007/12/11 15:01:06  rbowler
-// Fix undefined gettimeofday in clock.h rev 1.27 (MSVC)
-//
-// Revision 1.300  2007/06/23 00:04:10  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.299  2006/12/08 09:43:25  jj
-// Add CVS message log
-//
 
 #ifdef HAVE_CONFIG_H
   #include <config.h> // Hercules build configuration options/settings

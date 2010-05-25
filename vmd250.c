@@ -1,5 +1,11 @@
 /* VMD250.C     (c) Copyright Harold Grovesteen, 2009                */
 /*              z/VM 5.4 DIAGNOSE code X'250'                        */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
+// $Id$
 
 /*-------------------------------------------------------------------*/
 /* This module implements DIAGNOSE code X'250'                       */
@@ -7,8 +13,6 @@
 /*-------------------------------------------------------------------*/
 /* Hercules extends the use to System/370 with 4K pages and 2K pages */
 /* with recommended constraints                                      */
-
-// $Id$
 
 /* Unconditional log messages generated */
 /* HHCVM006E - Could not allocate storage for Block I/O environment   */
