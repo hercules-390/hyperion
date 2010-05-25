@@ -72,6 +72,9 @@ con1052_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
     int ac=0;
 
+    /* reset excp count */
+    dev->excps = 0;
+
     /* Integrated console is always connected */
     dev->connected = 1;
 
@@ -130,9 +133,10 @@ con1052_query_device (DEVBLK *dev, char **class,
     BEGIN_DEVICE_CLASS_QUERY( "CON", dev, class, buflen, buffer );
 
     snprintf(buffer, buflen,
-        "*syscons cmdpref(%s)%s",
+        "*syscons cmdpref(%s)%s EXCPs[%" I64_FMT "u]",
         dev->filename,
-        !dev->prompt1052 ? " noprompt" : "");
+        !dev->prompt1052 ? " noprompt" : "",
+        dev->excps );
 
 } /* end function con1052_query_device */
 
@@ -164,6 +168,8 @@ BYTE    c;                              /* Print character           */
     UNREFERENCED(chained);
     UNREFERENCED(prevcode);
     UNREFERENCED(ccwseq);
+
+    dev->excps++;
 
     /* Unit check with intervention required if no client connected */
     if (dev->connected == 0 && !IS_CCW_SENSE(code))

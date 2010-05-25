@@ -234,6 +234,9 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         return -1;
     }
 
+    /* reset excps count */
+    dev->excps = 0;
+
     /* Save the file name in the device block */
     hostpath(dev->filename, argv[0], sizeof(dev->filename));
 
@@ -635,9 +638,10 @@ void ckddasd_query_device (DEVBLK *dev, char **class,
 {
     BEGIN_DEVICE_CLASS_QUERY( "DASD", dev, class, buflen, buffer );
 
-    snprintf (buffer, buflen, "%s [%d cyls]",
+    snprintf (buffer, buflen, "%s [%d cyls] EXCPs[%" I64_FMT "u]",
             dev->filename,
-            dev->ckdcyls);
+            dev->ckdcyls,
+            dev->excps);
 
 } /* end function ckddasd_query_device */
 
@@ -2056,6 +2060,9 @@ BYTE            cchhr[5];               /* Search argument           */
 BYTE            sector;                 /* Sector number             */
 BYTE            key[256];               /* Key for search operations */
 BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
+
+    /* update excps count */
+    dev->excps++;
 
     /* If this is a data-chained READ, then return any data remaining
        in the buffer which was not used by the previous CCW */

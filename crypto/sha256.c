@@ -1,7 +1,14 @@
-/* $OpenBSD: sha2.c,v 1.6 2004/05/03 02:57:36 millert Exp $ */
-/* modified for use with dyncrypt */
+/* SHA256.C     (c) Bernard van der Helm, 2003-2010                  */
+/*              z/Architecture crypto instructions                   */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
+
+/* $OpenBSD: sha2.c,v 1.6 2004/05/03 02:57:36 millert Exp $ */
+/* modified for use with dyncrypt */
 
 /*
  * FILE: sha2.c
@@ -37,10 +44,6 @@
  * $From: sha2.c,v 1.1 2001/11/08 00:01:51 adg Exp adg $
  */
 
-// $Log$
-// Revision 1.9  2006/12/08 09:43:35  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 

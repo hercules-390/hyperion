@@ -276,6 +276,9 @@ int     i,j;                            /* Array subscript           */
 int     chan;
 char    wrk[3];                         /* for atoi conversion       */
 int     sockdev = 0;                    /* 1 == is socket device     */
+
+    dev->excps = 0;
+    
     /* Forcibly disconnect anyone already currently connected */
     if (dev->bs && !unbind_device_ex(dev,1))
         return -1; // (error msg already issued)
@@ -453,14 +456,15 @@ static void printer_query_device (DEVBLK *dev, char **class,
 {
     BEGIN_DEVICE_CLASS_QUERY( "PRT", dev, class, buflen, buffer );
 
-    snprintf (buffer, buflen, "%s%s%s%s%s%s%s",
+    snprintf (buffer, buflen, "%s%s%s%s%s%s%s EXCPs[%" I64_FMT "u]",
                  dev->filename,
                 (dev->bs         ? " sockdev"      : ""),
                 (dev->crlf       ? " crlf"         : ""),
                 (dev->notrunc    ? " noclear"      : ""),
                 (dev->rawcc      ? " rawcc"        : ""),
                 (dev->nofcbcheck ? " nofcbcheck"   : " fcbcheck"),
-                (dev->stopprt    ? " (stopped)"    : ""));
+                (dev->stopprt    ? " (stopped)"    : ""),
+                dev->excps );
 
 } /* end function printer_query_device */
 
@@ -712,6 +716,8 @@ char           *nls = "\n\n\n";         /* -> new lines              */
 BYTE            c;                      /* Print character           */
 char            hex[3];                 /* for hex conversion        */
 
+    dev->excps++;
+
     /* Reset flags at start of CCW chain */
     if (chained == 0)
     {
@@ -754,7 +760,7 @@ char            hex[3];                 /* for hex conversion        */
             write_buffer(dev, hex, 2, unitstat);
             if (*unitstat != 0) return;
             eor = (dev->crlf) ? "\r\n" : "\n";
-            write_buffer(dev, eor, strlen(eor), unitstat);
+            write_buffer(dev, eor, (int)strlen(eor), unitstat);
             if (*unitstat != 0) return;
             *unitstat = CSW_CE | CSW_DE;
             return;
@@ -785,7 +791,7 @@ char            hex[3];                 /* for hex conversion        */
             write_buffer (dev, hex, 2, unitstat);
             if (*unitstat != 0) return;
             eor = (dev->crlf) ? "\r\n" : "\n";
-            write_buffer (dev, eor, strlen(eor), unitstat);
+            write_buffer (dev, eor, (int)strlen(eor), unitstat);
             if (*unitstat != 0) return;
             *unitstat = CSW_CE | CSW_DE;
             return;
@@ -862,7 +868,7 @@ char            hex[3];                 /* for hex conversion        */
             if (*unitstat != 0) return;
             WRITE_LINE();
             eor = (dev->crlf) ? "\r\n" : "\n";
-            write_buffer(dev, eor, strlen(eor), unitstat);
+            write_buffer(dev, eor, (int)strlen(eor), unitstat);
             if (*unitstat != 0) return;
             *unitstat = CSW_CE | CSW_DE;
             return;
@@ -903,7 +909,7 @@ char            hex[3];                 /* for hex conversion        */
             write_buffer(dev, (char *)dev->buf, i*2, unitstat);
             if (*unitstat != 0) return;
             eor = (dev->crlf) ? "\r\n" : "\n";
-            write_buffer(dev, eor, strlen(eor), unitstat);
+            write_buffer(dev, eor, (int)strlen(eor), unitstat);
             if (*unitstat != 0) return;
         }
         else

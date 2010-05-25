@@ -77,6 +77,9 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     if (!dev->typname || !sscanf(dev->typname,"%hx",&(dev->devtype)))
         dev->devtype = DEFAULT_FBA_TYPE;
 
+    /* reset excps count */
+    dev->excps = 0;
+
     /* The first argument is the file name */
     if (argc == 0 || strlen(argv[0]) >= sizeof(dev->filename))
     {
@@ -319,9 +322,10 @@ void fbadasd_query_device (DEVBLK *dev, char **class,
 
     BEGIN_DEVICE_CLASS_QUERY( "DASD", dev, class, buflen, buffer );
 
-    snprintf (buffer, buflen, "%s [%lld,%d]",
+    snprintf (buffer, buflen, "%s [%lld,%d] EXCPs[%" I64_FMT "u]",
             dev->filename,
-            (long long)dev->fbaorigin, dev->fbanumblk);
+            (long long)dev->fbaorigin, dev->fbanumblk,
+            dev->excps);
 
 } /* end function fbadasd_query_device */
 
@@ -765,6 +769,9 @@ int     num;                            /* Number of bytes to move   */
 BYTE    hexzeroes[512];                 /* Bytes for zero fill       */
 int     rem;                            /* Byte count for zero fill  */
 int     repcnt;                         /* Replication count         */
+    
+    /* increment excp count */
+    dev->excps++;
 
     /* Reset extent flag at start of CCW chain */
     if (chained == 0)

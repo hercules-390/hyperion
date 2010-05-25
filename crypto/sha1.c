@@ -1,7 +1,14 @@
-/* $OpenBSD: sha1.c,v 1.5 2004/04/28 20:39:35 hshoexer Exp $ */
-/* modified for use with dyncrypt */
+/* SHA1.C       (c) Bernard van der Helm, 2003-2010                  */
+/*              z/Architecture crypto instructions                   */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
+
+/* $OpenBSD: sha1.c,v 1.5 2004/04/28 20:39:35 hshoexer Exp $ */
+/* modified for use with dyncrypt */
 
 /*
  * SHA-1 in C
@@ -19,7 +26,6 @@
 
 /* #define SHA1HANDSOFF */ /* Copies data before messing with it. */
 
-// $Log$
 
 #include "hstdinc.h"
 #include "sha1.h"

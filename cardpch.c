@@ -77,6 +77,8 @@ int     i;                              /* Array subscript           */
     dev->cardrem = CARD_LENGTH;
     dev->notrunc = 0;
 
+    dev->excps = 0;
+
     if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
         dev->devtype = 0x3525;
 
@@ -142,11 +144,12 @@ static void cardpch_query_device (DEVBLK *dev, char **class,
 
     BEGIN_DEVICE_CLASS_QUERY( "PCH", dev, class, buflen, buffer );
 
-    snprintf (buffer, buflen, "%s%s%s%s",
+    snprintf (buffer, buflen, "%s%s%s%s EXCPs[%" I64_FMT "u]",
                 dev->filename,
                 (dev->ascii ? " ascii" : " ebcdic"),
                 ((dev->ascii && dev->crlf) ? " crlf" : ""),
-                (dev->notrunc ? " notrunc" : ""));
+                (dev->notrunc ? " notrunc" : ""),
+                dev->excps );
 
 } /* end function cardpch_query_device */
 
@@ -178,6 +181,8 @@ BYTE            c;                      /* Output character          */
 
     UNREFERENCED(prevcode);
     UNREFERENCED(ccwseq);
+
+    dev->excps++;
 
     /* Open the device file if necessary */
     if (dev->fd < 0 && !IS_CCW_SENSE(code))

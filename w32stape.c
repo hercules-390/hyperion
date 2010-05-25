@@ -1,9 +1,12 @@
-////////////////////////////////////////////////////////////////////////////////////
-// W32STAPE.C   --   Hercules Win32 SCSI Tape handling module
-//
-// (c) Copyright "Fish" (David B. Trout), 2005-2009. Released under
-// the Q Public License (http://www.hercules-390.org/herclic.html)
-// as modifications to Hercules.
+/* W32STAPE.C   (c) Copyright "Fish" (David B. Trout), 2005-2009     */
+/*               Hercules Win32 SCSI Tape handling module            */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
+// $Id$
+
 ////////////////////////////////////////////////////////////////////////////////////
 //
 //  This module contains only WIN32 support for SCSI tapes.
@@ -13,34 +16,6 @@
 //  'NO_ERROR' == 0 and 'INVALID_HANDLE_VALUE' == -1.
 //
 ////////////////////////////////////////////////////////////////////////////////////
-
-// $Id$
-//
-// $Log$
-// Revision 1.19  2009/01/23 13:17:44  bernard
-// copyright notice
-//
-// Revision 1.18  2008/03/31 06:36:49  fish
-// (untab)
-//
-// Revision 1.17  2008/03/30 02:51:34  fish
-// Fix SCSI tape EOV (end of volume) processing
-//
-// Revision 1.16  2007/11/30 14:54:33  jmaynard
-// Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
-//
-// Revision 1.15  2007/07/24 22:36:33  fish
-// Fix tape Synchronize CCW (x'43') to do actual commit
-//
-// Revision 1.14  2007/07/24 21:57:29  fish
-// Fix Win32 SCSI tape "Locate" and "ReadBlockId" SNAFU
-//
-// Revision 1.13  2007/06/23 00:04:19  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.12  2006/12/08 09:43:33  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 

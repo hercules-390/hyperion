@@ -1,15 +1,21 @@
+/* DYNCRYPT.C   (c) Bernard van der Helm, 2003-2010                  */
+/*              z/Architecture crypto instructions                   */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
+// $Id$
+
 /*----------------------------------------------------------------------------*/
-/* file: dyncrypt.c                                                           */
 /*                                                                            */
 /* Implementation of the z/Architecture crypto instructions described in      */
 /* SA22-7832-04: z/Architecture Principles of Operation within the Hercules   */
 /* z/Architecture emulator.                                                   */
 /*                                                                            */
-/*                              (c) Copyright Bernard van der Helm, 2003-2010 */
+/*                              Bernard van der Helm,                         */
 /*                              Noordwijkerhout, The Netherlands.             */
 /*----------------------------------------------------------------------------*/
-
-// $Id$
 
 #include "hstdinc.h"
 

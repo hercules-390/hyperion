@@ -1439,6 +1439,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         char text[80];
     } res;
         dev->devtype=0x3705;
+        dev->excps = 0;
         if(dev->ccwtrace)
         {
             logmsg(_("HHCCA300D Device(%1d:%04X): Initialization starting\n"),
@@ -1593,7 +1594,8 @@ static void commadpt_query_device (DEVBLK *dev, char **class,
                 int buflen, char *buffer)
 {
     *class = "LINE";
-    snprintf(buffer,buflen,"Read count=%d, Write count=%d", dev->commadpt->read_ccw_count, dev->commadpt->write_ccw_count);
+    snprintf(buffer,buflen,"Read count=%d, Write count=%d EXCPs[%" I64_FMT "u]", 
+        dev->commadpt->read_ccw_count, dev->commadpt->write_ccw_count, dev->excps );
 }
 
 /*-------------------------------------------------------------------*/
@@ -2167,11 +2169,16 @@ U32 num;                        /* Work : Actual CCW transfer count             
 BYTE    *piudata;
 int     piusize;
 void    *eleptr;
+    
     UNREFERENCED(flags);
     UNREFERENCED(chained);
     UNREFERENCED(prevcode);
     UNREFERENCED(ccwseq);
+    
+    dev->excps++;
+
     *residual = 0;
+
     /*
      * Obtain the COMMADPT lock
      */

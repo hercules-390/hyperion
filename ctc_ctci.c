@@ -140,6 +140,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 #endif /* defined( TUNTAP_IFF_RUNNING_NEEDED ) */
 
     pDEVBLK->devtype = 0x3088;
+    pDEVBLK->excps = 0;
 
     // CTC is a group device
     if(!group_device(pDEVBLK, CTC_DEVICES_IN_GROUP))
@@ -353,6 +354,8 @@ void  CTCI_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
     UNREFERENCED( bChained  );
     UNREFERENCED( bPrevCode );
     UNREFERENCED( iCCWSeq   );
+
+    pDEVBLK->excps++;
 
     // Intervention required if the device file is not open
     if( pDEVBLK->fd < 0 &&
@@ -619,11 +622,12 @@ void  CTCI_Query( DEVBLK* pDEVBLK, char** ppszClass,
         return;
     }
 
-    snprintf( pBuffer, iBufLen, "CTCI %s/%s (%s)%s",
+    snprintf( pBuffer, iBufLen, "CTCI %s/%s (%s)%s EXCPs[%" I64_FMT "u]",
               pCTCBLK->szGuestIPAddr,
               pCTCBLK->szDriveIPAddr,
               pCTCBLK->szTUNDevName,
-              pCTCBLK->fDebug ? " -d" : "" );
+              pCTCBLK->fDebug ? " -d" : "",
+              pDEVBLK->excps );
 }
 
 // -------------------------------------------------------------------
@@ -741,7 +745,7 @@ void  CTCI_Read( DEVBLK* pDEVBLK,   U16   sCount,
         else
         {
             *pMore      = 0;
-            *pResidual -= iLength;
+            *pResidual -= (U16)iLength;
         }
 
         *pUnitStat = CSW_CE | CSW_DE;
@@ -751,7 +755,7 @@ void  CTCI_Read( DEVBLK* pDEVBLK,   U16   sCount,
         if( pCTCBLK->fDebug )
         {
             WRMSG(HHC00905, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, iLength );
-            packet_trace( pCTCBLK->bFrameBuffer, iLength, '>' );
+            packet_trace( pCTCBLK->bFrameBuffer, (int)iLength, '>' );
         }
 
         // Reset frame buffer
@@ -1082,14 +1086,14 @@ static int  CTCI_EnqueueIPFrame( DEVBLK* pDEVBLK,
     memset( pSegment, 0, iSize + sizeof( CTCISEG ) );
 
     // Increment offset
-    pCTCBLK->iFrameOffset += sizeof( CTCISEG ) + iSize;
+    pCTCBLK->iFrameOffset += (U16)(sizeof( CTCISEG ) + iSize);
 
     // Update next frame offset
     STORE_HW( pFrame->hwOffset,
               pCTCBLK->iFrameOffset + sizeof( CTCIHDR ) );
 
     // Store segment length
-    STORE_HW( pSegment->hwLength, sizeof( CTCISEG ) + iSize );
+    STORE_HW( pSegment->hwLength, (U16)(sizeof( CTCISEG ) + iSize) );
 
     // Store Frame type
     STORE_HW( pSegment->hwType, ETH_TYPE_IP );

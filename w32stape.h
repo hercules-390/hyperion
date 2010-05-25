@@ -1,28 +1,18 @@
-////////////////////////////////////////////////////////////////////////////////////
-// W32STAPE.H   --   Hercules Win32 SCSI Tape handling module
-//
-// (c) Copyright "Fish" (David B. Trout), 2005-2009. Released under
-// the Q Public License (http://www.hercules-390.org/herclic.html)
-// as modifications to Hercules.
+/* W32STAPE.H   (c) Copyright "Fish" (David B. Trout), 2005-2009     */
+/*               Hercules Win32 SCSI Tape handling module            */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
+// $Id$
+
 ////////////////////////////////////////////////////////////////////////////////////
 //
 //  This module contains only MSVC support for SCSI tapes.
 //  Primary SCSI Tape support is in module 'scsitape.c'...
 //
 ////////////////////////////////////////////////////////////////////////////////////
-
-// $Id$
-//
-// $Log$
-// Revision 1.8  2007/11/30 14:54:34  jmaynard
-// Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
-//
-// Revision 1.7  2007/06/23 00:04:19  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.6  2006/12/08 09:43:34  jj
-// Add CVS message log
-//
 
 #ifndef _W32STAPE_H_
 #define _W32STAPE_H_

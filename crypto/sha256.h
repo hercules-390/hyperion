@@ -1,7 +1,14 @@
-/* $OpenBSD: sha2.h,v 1.2 2004/04/28 23:11:57 millert Exp $ */
-/* modified for use with dyncrypt */
+/* SHA256.H     (c) Bernard van der Helm, 2003-2010                  */
+/*              z/Architecture crypto instructions                   */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
+
+/* $OpenBSD: sha2.h,v 1.2 2004/04/28 23:11:57 millert Exp $ */
+/* modified for use with dyncrypt */
 
 /*
  * FILE:        sha2.h
@@ -37,7 +44,6 @@
  * $From: sha2.h,v 1.1 2001/11/08 00:02:01 adg Exp adg $
  */
 
-// $Log$
 
 #ifndef _SHA2_H
 #define _SHA2_H

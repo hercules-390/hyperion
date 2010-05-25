@@ -1401,7 +1401,7 @@ static char *build_logo(char **logodata,size_t logosize,size_t *blen)
                 switch(align)
                 {
                     case ALIGN_RIGHT:
-                        ypos=strlen(cline);
+                        ypos=(int)strlen(cline);
                         if(ypos<80)
                         {
                             ypos=80-ypos;
@@ -1412,7 +1412,7 @@ static char *build_logo(char **logodata,size_t logosize,size_t *blen)
                         }
                         break;
                     case ALIGN_CENTER:
-                        ypos=strlen(cline);
+                        ypos=(int)strlen(cline);
                         if(ypos<80)
                         {
                             ypos=(80-ypos)/2;
@@ -1428,7 +1428,7 @@ static char *build_logo(char **logodata,size_t logosize,size_t *blen)
                 bfr=buffer_addsf(bfr,&len,&alen,attr);
                 if(align==ALIGN_NONE)
                 {
-                    ypos+=strlen(cline);
+                    ypos+=(int)strlen(cline);
                     ypos++;
                 }
                 else
@@ -1777,7 +1777,7 @@ char                    *logoout;
 
         if (class != 'P')  /* do not write connection resp on 3287 */
         {
-            rc = send_packet (csock, (BYTE *)buf, len, "CONNECTION RESPONSE");
+            rc = send_packet (csock, (BYTE *)buf, (int)len, "CONNECTION RESPONSE");
         }
 
         /* Close the connection and terminate the thread */
@@ -1845,7 +1845,7 @@ char                    *logoout;
 
     if (class != 'P')  /* do not write connection resp on 3287 */
     {
-        rc = send_packet (csock, (BYTE *)logoout, len, "CONNECTION RESPONSE");
+        rc = send_packet (csock, (BYTE *)logoout, (int)len, "CONNECTION RESPONSE");
     }
     if(logobfr)
     {
@@ -2115,8 +2115,8 @@ BYTE                   unitstat;        /* Status after receive data */
                         connect_client, &csock, "connect_client");
             if (rc)
             {
-      	        WRMSG(HHC00102, "E", strerror(errno));
-		//BHe: The error is not in errno, but in the return code!
+                WRMSG(HHC00102, "E", strerror(errno));
+                //BHe: The error is not in errno, but in the return code!
                 TNSERROR("console: DBG030: connect_client create_thread: %s\n",
                         strerror(errno));
                 close_socket (csock);
@@ -2312,6 +2312,9 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
     int ac = 0;
 
+    /* reset excp count */
+    dev->excps = 0;
+
     /* Indicate that this is a console device */
     dev->console = 1;
 
@@ -2424,12 +2427,12 @@ static void
 loc3270_query_device (DEVBLK *dev, char **class,
                 int buflen, char *buffer)
 {
-    BEGIN_DEVICE_CLASS_QUERY( "DSP", dev, class, buflen, buffer );
+    BEGIN_DEVICE_CLASS_QUERY( "GRAF", dev, class, buflen, buffer );
 
     if (dev->connected)
     {
-        snprintf (buffer, buflen, "%s",
-            inet_ntoa(dev->ipaddr));
+        snprintf (buffer, buflen, "%s EXCPs[%" I64_FMT "u]",
+            inet_ntoa(dev->ipaddr), dev->excps );
     }
     else
     {
@@ -2460,18 +2463,19 @@ loc3270_query_device (DEVBLK *dev, char **class,
         if (dev->filename[0])
         {
             snprintf(buffer, buflen,
-                "GROUP=%s%s%s",
-                dev->filename, acc[0] ? " " : "", acc);
+                "GROUP=%s%s%s EXCPs[%" I64_FMT "u]",
+                dev->filename, acc[0] ? " " : "", acc, dev->excps );
         }
         else
         {
             if (acc[0])
             {
                 snprintf(buffer, buflen,
-                    "* %s", acc);
+                    "* %s EXCPs[%" I64_FMT "u]", acc, dev->excps );
             }
             else
-                buffer[0] = 0;
+                snprintf(buffer, buflen,
+                    "* EXCPs[%" I64_FMT "u]", dev->excps );
         }
     }
 
@@ -2529,7 +2533,7 @@ loc3270_hsuspend(DEVBLK *dev, void *file)
         len = 0;
     release_lock(&dev->lock);
     if (len)
-        SR_WRITE_BUF(file, SR_DEV_3270_BUF, buf, len);
+        SR_WRITE_BUF(file, SR_DEV_3270_BUF, buf, (int)len);
     return 0;
 }
 
@@ -2550,7 +2554,7 @@ loc3270_hresume(DEVBLK *dev, void *file)
             break;
         case SR_DEV_3270_EWA:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            dev->ewa3270 = rc;
+            dev->ewa3270 = (u_int)rc;
             break;
         case SR_DEV_3270_BUF:
             rbuflen = len;
@@ -2592,16 +2596,16 @@ loc3270_hresume(DEVBLK *dev, void *file)
         buf[len++] = O3270_IC;
 
         /* Double up any IAC's in the data */
-        len = double_up_iac (buf, len);
+        len = double_up_iac (buf, (int)len);
 
         /* Append telnet EOR marker */
         buf[len++] = IAC;
         buf[len++] = EOR_MARK;
 
         /* Restore the 3270 screen */
-        rc = send_packet(dev->fd, buf, len, "3270 data");
+        rc = send_packet(dev->fd, buf, (int)len, "3270 data");
 
-        dev->pos3270 = pos;
+        dev->pos3270 = (int)pos;
 
         release_lock(&dev->lock);
     }
@@ -2619,6 +2623,9 @@ static int
 constty_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
     int ac=0;
+
+    /* reset excp count */
+    dev->excps = 0;
 
     /* Indicate that this is a console device */
     dev->console = 1;
@@ -2721,9 +2728,10 @@ constty_query_device (DEVBLK *dev, char **class,
 
     if (dev->connected)
     {
-        snprintf (buffer, buflen, "%s%s",
+        snprintf (buffer, buflen, "%s%s EXCPs[%" I64_FMT "u]",
             inet_ntoa(dev->ipaddr),
-            dev->prompt1052 ? "" : " noprompt");
+            dev->prompt1052 ? "" : " noprompt",
+            dev->excps );
     }
     else
     {
@@ -2754,10 +2762,11 @@ constty_query_device (DEVBLK *dev, char **class,
         if (dev->filename[0])
         {
             snprintf(buffer, buflen,
-                "GROUP=%s%s%s%s",
+                "GROUP=%s%s%s%s EXCPs[%" I64_FMT "u]",
                 dev->filename,
                 !dev->prompt1052 ? " noprompt" : "",
-                acc[0] ? " " : "", acc);
+                acc[0] ? " " : "", acc,
+                dev->excps );
         }
         else
         {
@@ -2765,7 +2774,7 @@ constty_query_device (DEVBLK *dev, char **class,
             {
                 if (!dev->prompt1052)
                     snprintf(buffer, buflen,
-                        "noprompt %s", acc);
+                        "noprompt %s EXCPs[%" I64_FMT "u]", acc, dev->excps );
                 else
                     snprintf(buffer, buflen,
                         "* %s", acc);
@@ -2773,9 +2782,9 @@ constty_query_device (DEVBLK *dev, char **class,
             else
             {
                 if (!dev->prompt1052)
-                    strlcpy(buffer,"noprompt",buflen);
+                    snprintf( buffer, buflen, "noprompt EXCPs[%" I64_FMT "u]", dev->excps );
                 else
-                    buffer[0] = 0;
+                    snprintf( buffer, buflen, "EXCPs[%" I64_FMT "u]", dev->excps );
             }
         }
     }
@@ -2988,6 +2997,8 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
 
     UNREFERENCED(prevcode);
     UNREFERENCED(ccwseq);
+
+    dev->excps++;
 
     /* Clear the current screen position at start of CCW chain */
     if (!chained)
@@ -3417,6 +3428,8 @@ BYTE    stat;                           /* Unit status               */
     UNREFERENCED(chained);
     UNREFERENCED(prevcode);
     UNREFERENCED(ccwseq);
+
+    dev->excps++;
 
     /* Unit check with intervention required if no client connected */
     if (dev->connected == 0 && !IS_CCW_SENSE(code))

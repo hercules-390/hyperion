@@ -1,6 +1,12 @@
+/* DES.H        (c) Bernard van der Helm, 2003-2010                  */
+/*              z/Architecture crypto instructions                   */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
 // $Id$
-//
-// $Log$
+
 
 #ifndef _DES_H
 #define _DES_H

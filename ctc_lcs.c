@@ -160,6 +160,8 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
     pDEVBLK->devtype = 0x3088;
 
+    pDEVBLK->excps   = 0;
+
     // Return when an existing group has been joined but is still incomplete
     if(!group_device(pDEVBLK, 0) && pDEVBLK->group)
         return 0;
@@ -765,12 +767,13 @@ void  LCS_Query( DEVBLK* pDEVBLK, char** ppszClass,
         return;
     }
 
-    snprintf( pBuffer, iBufLen, "LCS Port %2.2X %s%s (%s)%s",
+    snprintf( pBuffer, iBufLen, "LCS Port %2.2X %s%s (%s)%s EXCPs[%" I64_FMT "u]",
               pLCSDEV->bPort,
               pLCSDEV->bMode == LCSDEV_MODE_IP ? "IP" : "SNA",
               sType[pLCSDEV->bType],
               pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort].szNetDevName,
-              pLCSDEV->pLCSBLK->fDebug ? " -d" : "" );
+              pLCSDEV->pLCSBLK->fDebug ? " -d" : "",
+              ( pDEVBLK->devnum & 1 ) == 0 ? pLCSDEV->pDEVBLK[0]->excps : pLCSDEV->pDEVBLK[1]->excps );
 }
 
 // ====================================================================
@@ -903,7 +906,7 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U16   sCount,
         else
         {
             *pMore      = 0;
-            *pResidual -= iLength;
+            *pResidual -= (U16)iLength;
         }
 
         *pUnitStat = CSW_CE | CSW_DE;
@@ -915,7 +918,7 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U16   sCount,
         if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep || pLCSDEV->pLCSBLK->fDebug )
         {
             WRMSG(HHC00921, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
-            packet_trace( pIOBuf, iLength, '<' );
+            packet_trace( pIOBuf, (int)iLength, '<' );
         }
 
         // Reset frame buffer to empty...
@@ -1665,6 +1668,14 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
                 && !pLCSPORT->fStarted
             )
             {
+#if defined( OPTION_WTHREADS )
+                timed_wait_condition
+                (
+                    &pLCSPORT->Event,       // ptr to condition to wait on
+                    &pLCSPORT->EventLock,   // ptr to controlling lock (must be held!)
+                    250                     // max #of milliseconds to wait
+                );
+#else
                 timed_wait_condition_relative_usecs
                 (
                     &pLCSPORT->Event,       // ptr to condition to wait on
@@ -1672,6 +1683,7 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
                     250*1000,               // max #of microseconds to wait
                     NULL                    // [OPTIONAL] ptr to tod value (may be NULL)
                 );
+#endif
             }
         }
         release_lock( &pLCSPORT->EventLock );
@@ -1979,7 +1991,7 @@ static int  LCS_EnqueueEthFrame( PLCSDEV pLCSDEV, BYTE   bPort,
                                  pLCSDEV->iFrameOffset );
 
     // Increment offset to NEXT available slot (after ours)
-    pLCSDEV->iFrameOffset += sizeof(LCSETHFRM) + iSize;
+    pLCSDEV->iFrameOffset += (U16)(sizeof(LCSETHFRM) + iSize);
 
     // Plug updated offset to next frame into our frame header
     STORE_HW( pLCSEthFrame->bLCSHdr.hwOffset, pLCSDEV->iFrameOffset );
@@ -2029,7 +2041,7 @@ static void*  LCS_InitReplyFrame( PLCSDEV pLCSDEV,
                                    pLCSDEV->iFrameOffset );
 
     // Increment buffer offset to NEXT next-available-slot...
-    pLCSDEV->iFrameOffset += iSize;
+    pLCSDEV->iFrameOffset += (U16)iSize;
 
     // Initialize our Reply LCS Command Frame...
     memset( pReplyCmdFrame, 0, iSize );

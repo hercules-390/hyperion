@@ -511,6 +511,9 @@ DEVINITTAB*     pDevInitTab;
     autoload_close(dev);
     dev->tdparms.displayfeat=0;
 
+    /* reset excps count */
+    dev->excps = 0;
+
     /* Determine the control unit type and model number */
     /* Support for 3490/3422/3430/8809/9347, etc.. */
     if (!sscanf( dev->typname, "%hx", &dev->devtype ))
@@ -1481,10 +1484,11 @@ void tapedev_query_device ( DEVBLK *dev, char **class,
             if ( dev->stape_no_erg ) strlcat( devparms, " --no-erg", sizeof(devparms) );
         }
 #endif
-        snprintf(buffer, buflen, "%s%s%s",
+        snprintf(buffer, buflen, "%s%s%s EXCPs[%" I64_FMT "u]",
             devparms,
             dev->tdparms.displayfeat ? ", Display: " : "",
-            dev->tdparms.displayfeat ?    dispmsg    : "");
+            dev->tdparms.displayfeat ?    dispmsg    : "",
+            dev->excps );
     }
     else // (filename was specified)
     {
@@ -1532,25 +1536,27 @@ void tapedev_query_device ( DEVBLK *dev, char **class,
         {
             // Not a SCSI tape,  -or-  mounted SCSI tape...
 
-            snprintf (buffer, buflen, "%s%s %s%s%s",
+            snprintf (buffer, buflen, "%s%s %s%s%s EXCPs[%" I64_FMT "u]",
 
                 devparms, (dev->readonly ? " ro" : ""),
 
                 tapepos,
                 dev->tdparms.displayfeat ? "Display: " : "",
-                dev->tdparms.displayfeat ?  dispmsg    : "");
+                dev->tdparms.displayfeat ?  dispmsg    : "",
+                dev->excps );
         }
         else /* ( TAPEDEVT_SCSITAPE == dev->tapedevt && STS_NOT_MOUNTED(dev) ) */
         {
             // UNmounted SCSI tape...
 
-            snprintf (buffer, buflen, "%s%s (%sNOTAPE)%s%s",
+            snprintf (buffer, buflen, "%s%s (%sNOTAPE)%s%s EXCPs[%" I64_FMT "u]",
 
                 devparms, (dev->readonly ? " ro" : ""),
 
                 dev->fd < 0              ?   "closed; "  : "",
                 dev->tdparms.displayfeat ? ", Display: " : "",
-                dev->tdparms.displayfeat ?    dispmsg    : ""  );
+                dev->tdparms.displayfeat ?    dispmsg    : "",
+                dev->excps );
         }
     }
 

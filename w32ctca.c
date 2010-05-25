@@ -1,4 +1,4 @@
-/* W32CTCA.C    (c) Copyright "Fish" (David B. Trout), 2005-2010     */
+/* W32CTCA.C    (c) Copyright "Fish" (David B. Trout), 2002-2009     */
 /*    CTCI-W32 (Channel to Channel link to Win32 TCP/IP stack)       */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -6,13 +6,6 @@
 /*   Hercules.                                                       */
 
 // $Id$
-
-////////////////////////////////////////////////////////////////////////////////////
-//    w32ctca.c    CTCI-W32 (Channel to Channel link to Win32 TCP/IP stack)
-////////////////////////////////////////////////////////////////////////////////////
-// (c) Copyright "Fish" (David B. Trout), 2002-2009. Released under the Q Public License
-// (http://www.hercules-390.org/herclic.html) as modifications to Hercules.
-////////////////////////////////////////////////////////////////////////////////////
 
 #include "hstdinc.h"
 #include "hercules.h"

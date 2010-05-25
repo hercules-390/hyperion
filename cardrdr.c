@@ -71,6 +71,8 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     dev->cardrem = 0;
     dev->autopad = 0;
 
+    dev->excps = 0;
+
     if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
         dev->devtype = 0x2501;
 
@@ -318,7 +320,7 @@ static void cardrdr_query_device (DEVBLK *dev, char **class,
 {
     BEGIN_DEVICE_CLASS_QUERY( "RDR", dev, class, buflen, buffer );
 
-    snprintf (buffer, buflen, "%s%s%s%s%s%s%s%s",
+    snprintf (buffer, buflen, "%s%s%s%s%s%s%s%s EXCPs[%" I64_FMT "u]",
         ((dev->filename[0] == '\0') ? "*"          : (char *)dev->filename),
         (dev->bs ?                    " sockdev"   : ""),
         (dev->multifile ?             " multifile" : ""),
@@ -326,7 +328,8 @@ static void cardrdr_query_device (DEVBLK *dev, char **class,
         (dev->ebcdic ?                " ebcdic"    : ""),
         (dev->autopad ?               " autopad"   : ""),
         ((dev->ascii && dev->trunc) ? " trunc"     : ""),
-        (dev->rdreof ?                " eof"       : " intrq"));
+        (dev->rdreof ?                " eof"       : " intrq"),
+        dev->excps );
 
 } /* end function cardrdr_query_device */
 
@@ -464,7 +467,7 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
     if (dev->ebcdic == 0 && dev->ascii == 0)
     {
         /* Read first 160 bytes of file into the buffer */
-        len = fread(buf, 1, sizeof(buf), dev->fh);
+        len = (int)fread(buf, 1, sizeof(buf), dev->fh);
         if (len < 0)
         {
             /* Handle read error condition */
@@ -531,7 +534,7 @@ int     rc;                             /* Return code               */
     if (dev->bs)
         rc = read_socket( dev->fd, dev->buf, CARD_SIZE );
     else
-        rc = fread(dev->buf, 1, CARD_SIZE, dev->fh);
+        rc = (int)fread(dev->buf, 1, CARD_SIZE, dev->fh);
 
     if ((rc > 0) && (rc < CARD_SIZE) && dev->autopad)
     {
@@ -706,6 +709,8 @@ int     num;                            /* Number of bytes to move   */
     UNREFERENCED(flags);
     UNREFERENCED(prevcode);
     UNREFERENCED(ccwseq);
+
+    dev->excps++;
 
     /* Open the device file if necessary */
     if ( !IS_CCW_SENSE(code) &&

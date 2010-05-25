@@ -1,9 +1,16 @@
+/* DES.C        (c) Bernard van der Helm, 2003-2010                  */
+/*              z/Architecture crypto instructions                   */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
+// $Id$
+
 /* des.c - implementation of DES
  * http://www.tartarus.org/~simon-anonsvn/viewcvs.cgi/putty/
  * modified for use with dyncrypt
  */
-
-// $Id$
 
 /*
  * PuTTY is copyright 1997-2005 Simon Tatham.

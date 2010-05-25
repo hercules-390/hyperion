@@ -1,7 +1,14 @@
-/* $OpenBSD: rijndael.c,v 1.18 2005/05/25 05:47:53 markus Exp $ */
-/* modified for use by dyncrypt */
+/* AES.C        (c) Bernard van der Helm, 2003-2010                  */
+/*              z/Architecture crypto instructions                   */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
+
+/* $OpenBSD: rijndael.c,v 1.18 2005/05/25 05:47:53 markus Exp $ */
+/* modified for use by dyncrypt */
 
 /**
  * rijndael-alg-fst.c

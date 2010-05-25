@@ -1,22 +1,11 @@
-////////////////////////////////////////////////////////////////////////////////////
-//         w32chan.h           Fish's new i/o scheduling logic
-////////////////////////////////////////////////////////////////////////////////////
-// (c) Copyright "Fish" (David B. Trout), 2001-2009. Released under the Q Public License
-// (http://www.hercules-390.org/herclic.html) as modifications to Hercules.
-////////////////////////////////////////////////////////////////////////////////////
+/* W32CHAN.H    (c) Copyright "Fish" (David B. Trout), 2001-2009     */
+/*              Fish's new i/o scheduling logic                      */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
-//
-// $Log$
-// Revision 1.15  2007/11/30 14:54:33  jmaynard
-// Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
-//
-// Revision 1.14  2007/06/23 00:04:19  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.13  2006/12/08 09:43:31  jj
-// Add CVS message log
-//
 
 #ifndef _W32CHANN_H_
 #define _W32CHANN_H_

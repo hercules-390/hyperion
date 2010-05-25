@@ -162,6 +162,8 @@ int  CTCX_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 {
     pDEVBLK->devtype = 0x3088;
 
+    pDEVBLK->excps = 0;
+
     // The first argument is the device emulation type
     if( argc < 1 )
     {
@@ -192,7 +194,7 @@ void  CTCX_Query( DEVBLK* pDEVBLK,
 {
     BEGIN_DEVICE_CLASS_QUERY( "CTCA", pDEVBLK, ppszClass, iBufLen, pBuffer );
 
-    snprintf( pBuffer, iBufLen, "%s", pDEVBLK->filename );
+    snprintf( pBuffer, iBufLen, "%s EXCPs[%" I64_FMT "u]", pDEVBLK->filename, pDEVBLK->excps );
 }
 
 // -------------------------------------------------------------------
@@ -233,6 +235,8 @@ void  CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
     UNREFERENCED( bChained  );
     UNREFERENCED( bPrevCode );
     UNREFERENCED( iCCWSeq   );
+
+    pDEVBLK->excps++;
 
     // Intervention required if the device file is not open
     if( pDEVBLK->fd < 0 &&
@@ -477,6 +481,8 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
     char           address[20]="";     // temp space for IP address
 
     dev->devtype = 0x3088;
+
+    dev->excps = 0;
 
     dev->ctctype = CTC_CTCT;
 
@@ -899,10 +905,10 @@ static void  CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
 
     // Update next frame offset
     STORE_HW( pFrame->hwOffset, 
-              iLength + sizeof( CTCIHDR ) + sizeof( CTCISEG ) );
+              (U16)(iLength + sizeof( CTCIHDR ) + sizeof( CTCISEG )) );
 
     // Store segment length
-    STORE_HW( pSegment->hwLength, iLength + sizeof( CTCISEG ) );
+    STORE_HW( pSegment->hwLength, (U16)(iLength + sizeof( CTCISEG )) );
 
     // Store Frame type
     STORE_HW( pSegment->hwType, ETH_TYPE_IP );
@@ -1050,7 +1056,7 @@ char *ipaddress;
      * up correctly.  I don't feel like implementing a complete login
      * scripting facility here...
      */
-    write(dev->fd, ipaddress, strlen(ipaddress));
+    write(dev->fd, ipaddress, (u_int)strlen(ipaddress));
     write(dev->fd, "\n", 1);
     return 0;
 }
@@ -1063,6 +1069,8 @@ int rc;
 U16 lcss;
 
     dev->devtype = 0x3088;
+
+    dev->excps = 0;
 
     /* parameters for network CTC are:
      *    devnum of the other CTC device of the pair
