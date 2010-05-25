@@ -551,6 +551,28 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00980 "%1d:%04X NDIS Error: IPv4 address and --mac are mutually exclusive with --oat"
 #define HHC00981 "%1d:%04X NDIS open failed"
 #define HHC00982 "Error %s: [%04X]:%s"
+#define HHC00988 "NDIS RB Statistics for Port %d\n" \
+       "          \n" \
+       "          Ringbuffer size    = %d bytes\n" \
+       "          Numbers of slots   = %d\n" \
+       "          \n" \
+       "          Packet Read Count  = %d\n" \
+       "                 Write Count = %d\n" \
+       "          \n" \
+       "          Bytes Read         = %d\n" \
+       "                Written      = %d\n" \
+       "          \nLast Error: '%s'"
+#define HHC00989 "NDIS Statistics for Port %d\n" \
+       "          \n" \
+       "          Reads:  Cnt    %12" I64_FMT "d\n" \
+       "                  Busy   %12" I64_FMT "d\n" \
+       "                  Wait   %12" I64_FMT "d\n" \
+       "                  Errors %12" I64_FMT "d\n" \
+       "          \n" \
+       "          Writes: Cnt    %12" I64_FMT "d\n" \
+       "                  Busy   %12" I64_FMT "d\n" \
+       "                  Wait   %12" I64_FMT "d\n" \
+       "                  Errors %12" I64_FMT "d"
 
 // reserve 010xx for communication adapter specific component messages
 /* comm3705.c and commadpt.c console.c */

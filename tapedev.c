@@ -2083,7 +2083,7 @@ void autoload_init(DEVBLK *dev,int ac,char **av)
     }
     while((rec=fgets(bfr,4096,aldf)))
     {
-        for(i=(strlen(rec)-1);isspace(rec[i]) && i>=0;i--)
+        for(i=((int)strlen(rec)-1);isspace(rec[i]) && i>=0;i--)
         {
             rec[i]=0;
         }

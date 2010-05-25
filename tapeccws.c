@@ -3222,7 +3222,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             int  i;   // (work)
 
             /* Calculate residual byte count */
-            RESIDUAL_CALC (strlen(dev->filename));
+            RESIDUAL_CALC ((int)strlen(dev->filename));
 
             /* Copy device filename to guest storage */
             for (i=0; i < num; i++)

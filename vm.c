@@ -1177,7 +1177,7 @@ U32     j,k;
                 strlcpy (resp, dresp, sizeof(resp));
                 dresp=resp;
         }
-        resplen = strlen(dresp);
+        resplen = (U32)strlen(dresp);
         for (i = 0; i < resplen; i++)
             dresp[i] = host_to_guest(dresp[i]);
 
