@@ -3887,7 +3887,7 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
     U16      ssid=0;
     U16      devnum;
     int      single_devnum = 0;
-    char     buf[64];
+    char     buf[256];
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
