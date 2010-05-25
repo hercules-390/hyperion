@@ -4570,7 +4570,7 @@ int syncio_cmd(int argc, char *argv[], char *cmdline)
 
         found = 1;
 
-        WRMSG(HHC02239, "I", dev->devnum, (long long)dev->syncios,
+        WRMSG(HHC02239, "I",  SSID_TO_LCSS(dev->ssid), dev->devnum, (long long)dev->syncios,
                 (long long)dev->asyncios
             );
 
