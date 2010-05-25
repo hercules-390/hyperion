@@ -530,7 +530,7 @@ DEVINITTAB*     pDevInitTab;
 
     if (pDevInitTab->devtype == 0xFFFF)         /* (entry not found?) */
     {
-        logmsg ( _("Unsupported device type specified %4.4x\n"), dev->devtype );
+        WRMSG(HHC00225, "E", dev->devtype );
 
         pDevInitTab++;                          /* (default entry; s/b same as 0x3420) */
         pDevInitTab->devtype = dev->devtype;    /* (don't know what else to do really) */
@@ -1795,25 +1795,13 @@ void ReqAutoMount( DEVBLK *dev )
 
         if ( unmountreq )
         {
-            if ( scratch )
-                logmsg(_("AutoMount: %s%s scratch tape being auto-unloaded on %4.4X = %s\n"),
-                    ascii ? "ASCII " : "",lbltype,
-                    dev->devnum, dev->filename);
-            else
-                logmsg(_("AutoMount: %s%s tape volume \"%s\" being auto-unloaded on %4.4X = %s\n"),
-                    ascii ? "ASCII " : "",lbltype,
-                    volser, dev->devnum, dev->filename);
+            WRMSG(HHC00226, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
+                            TTYPSTR(dev->tapedevt), lbltype, scratch ? "<scratch>" : volser);
         }
         if ( mountreq )
         {
-            if ( scratch )
-                logmsg(_("AutoMount: %s%s scratch tape being auto-loaded on %4.4X = %s\n"),
-                    ascii ? "ASCII " : "",lbltype,
-                    dev->devnum, dev->filename);
-            else
-                logmsg(_("AutoMount: %s%s tape volume \"%s\" being auto-loaded on %4.4X = %s\n"),
-                    ascii ? "ASCII " : "",lbltype,
-                    volser, dev->devnum, dev->filename);
+            WRMSG(HHC00227, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                            TTYPSTR(dev->tapedevt), lbltype, scratch ? "<scratch>" : volser);
         }
     }
 
@@ -2071,7 +2059,7 @@ void autoload_init(DEVBLK *dev,int ac,char **av)
     {
         return;
     }
-    logmsg(_("TAPE: Autoloader file request fn=%s\n"),&av[0][1]);
+    WRMSG(HHC00228, "I", &av[0][1]);
     hostpath(pathname, &av[0][1], sizeof(pathname));
     if(!(aldf=fopen(pathname,"r")))
     {
@@ -2185,7 +2173,7 @@ void autoload_clean_entry(DEVBLK *dev,int ix)
 /*-------------------------------------------------------------------*/
 void autoload_global_parms(DEVBLK *dev,char *par)
 {
-    logmsg(_("TAPE Autoloader - Adding global parm %s\n"),par);
+    WRMSG(HHC00229, "I", "global parm", par);
     if(dev->al_argv==NULL)
     {
         dev->al_argv=malloc(sizeof(char *)*256);
@@ -2207,7 +2195,7 @@ void autoload_tape_entry(DEVBLK *dev,char *fn,char **strtokw)
 {
     char *p;
     TAPEAUTOLOADENTRY tae;
-    logmsg(_("TAPE Autoloader: Adding tape entry %s\n"),fn);
+    WRMSG(HHC00229, "I", "tape entry", fn);
     memset(&tae,0,sizeof(tae));
     tae.filename=malloc(strlen(fn)+sizeof(char)+1);
     strcpy(tae.filename,fn);

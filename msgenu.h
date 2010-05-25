@@ -191,6 +191,11 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00222 "%1d:%04X Tape file '%s', type '%s': option '%s' accepted"
 #define HHC00223 "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
 #define HHC00224 "%1d:%04X Tape file '%s', type '%s': display '%s'"
+#define HHC00225 "Unsupported tape device type '%04X' specified"
+#define HHC00226 "%1d:%04X Tape file '%s', type '%s': '%s' tape volume '%s' being auto unloaded"
+#define HHC00227 "%1d:%04X Tape file '%s', type '%s': '%s' tape volume '%s' being auto loaded"
+#define HHC00228 "Tape autoloader: file request fn '%s'"
+#define HHC00229 "Tape autoloader: adding '%s' value '%s'"
 
 // reserve 003xx for compressed dasd device related
 #define HHC00300 "%1d:%04X CCKD file: error initializing shadow files"
