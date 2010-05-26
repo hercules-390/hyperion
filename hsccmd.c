@@ -306,23 +306,27 @@ int message_cmd(int argc,char *argv[], char *cmdline,int withhdr)
         {
             time(&mytime);
             mytm=localtime(&mytime);
-            logmsg(
+            writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, 
 #if defined(OPTION_MSGCLR)
-                "<pnl,color(white,black)>"
+                     "<pnl,color(white,black)>",
+#else
+                     "",
 #endif
-                " %2.2u:%2.2u:%2.2u  * MSG FROM HERCULES: %s\n",
-                    mytm->tm_hour,
-                    mytm->tm_min,
-                    mytm->tm_sec,
-                    msgtxt);
+                     " %2.2u:%2.2u:%2.2u  * MSG FROM HERCULES: %s\n",
+                     mytm->tm_hour,
+                     mytm->tm_min,
+                     mytm->tm_sec,
+                     msgtxt);
         }
         else
         {
-                logmsg(
+            writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl,
 #if defined(OPTION_MSGCLR)
-                "<pnl,color(white,black)>"
+                     "<pnl,color(white,black)>",
+#else
+                     "",
 #endif
-                "%s\n",msgtxt);
+                     "%s\n",msgtxt);
         }
     }
     return 0;
