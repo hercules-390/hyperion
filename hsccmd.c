@@ -2575,7 +2575,7 @@ char buf[512];
 int fpr_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
-char buf[128];
+char buf[512];
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
