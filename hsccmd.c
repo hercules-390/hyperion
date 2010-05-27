@@ -37,6 +37,13 @@
 #include "dasdtab.h"
 #include "ctcadpt.h"
 
+#define  ONE_KILOBYTE	((unsigned int)(1024))				/* 2^10	(16^2)  * 4  */
+#define  HALF_MEGABYTE	((unsigned int)(512 * 1024))			/* 2^19 (16^4)  * 8  */
+#define  ONE_MEGABYTE	((unsigned long long)(1024 * 1024))		/* 2^20 (16^5)       */
+#define  ONE_GIGABYTE	(ONE_MEGABYTE * (unsigned long long)(1024))	/* 2^30	(16^7)  * 4  */
+#define  ONE_TERABYTE	(ONE_GIGABYTE * (unsigned long long)(1024))	/* 2^40	(16^10)      */
+#define  ONE_PETABYTE	(ONE_TERABYTE * (unsigned long long)(1024))	/* 2^50	(16^12) * 4  */
+#define  ONE_EXABYTE	(ONE_PETABYTE * (unsigned long long)(1024))	/* 2^60	(16^15)	     */
 
 // (forward references, etc)
 
@@ -7698,7 +7705,7 @@ char    pathname[MAX_PATH];             /* (work)                    */
 }
 
 /*-------------------------------------------------------------------*/
-/* query command - query ports, dasd, port name                      */
+/* query command - query ports, dasd, port name and more             */
 /*-------------------------------------------------------------------*/
 int query_cmd(int argc, char *argv[], char *cmdline)
 {
@@ -7761,6 +7768,102 @@ int query_cmd(int argc, char *argv[], char *cmdline)
             }
             WRMSG(HHC00152, "I", "console", str);
             return 0;
+        }
+        else if (strcasecmp(argv[1],"stor") == 0 )
+        {   
+            char buf[64];
+            U64  xpndsize = (U64)(sysblk.xpndsize) << 12;
+            
+            if ( sysblk.mainsize >= ONE_EXABYTE )
+            {
+                sprintf( buf, "%" I64_FMT "d EBytes", sysblk.mainsize >> 60 );
+            }
+            else if ( sysblk.mainsize >= ONE_PETABYTE )
+            {
+                sprintf( buf, "%" I64_FMT "d PBytes", sysblk.mainsize >> 50 );
+            }
+            else if ( sysblk.mainsize >= ONE_TERABYTE )
+            {
+                sprintf( buf, "%" I64_FMT "d TBytes", sysblk.mainsize >> 40 );
+            }
+            else if ( sysblk.mainsize >= ONE_GIGABYTE )
+            {
+                sprintf( buf, "%" I64_FMT "d GBytes", sysblk.mainsize >> 30 );
+            }
+            else 
+            {
+                sprintf( buf, "%" I64_FMT "d MBytes", sysblk.mainsize >> 20 );
+            }
+
+            WRMSG( HHC00154, "I", "main", buf );
+
+            if ( xpndsize >= ONE_EXABYTE )
+            {
+                sprintf( buf, "%" I64_FMT "d EBytes", xpndsize >> 60 );
+            }
+            else if ( xpndsize >= ONE_PETABYTE )
+            {
+                sprintf( buf, "%" I64_FMT "d PBytes", xpndsize >> 50 );
+            }
+            else if ( xpndsize >= ONE_TERABYTE )
+            {
+                sprintf( buf, "%" I64_FMT "d TBytes", xpndsize >> 40 );
+            }
+            else if ( xpndsize >= ONE_GIGABYTE )
+            {
+                sprintf( buf, "%" I64_FMT "d GBytes", xpndsize >> 30 );
+            }
+            else 
+            {
+                sprintf( buf, "%" I64_FMT "d MBytes", xpndsize >> 20 );
+            }
+            WRMSG( HHC00154, "I", "xpnd", buf );
+        }
+        else if (strcasecmp(argv[1],"cpuid") == 0 )
+        {
+            WRMSG( HHC00155, "I", sysblk.cpuid );
+            WRMSG( HHC00156, "I", ((sysblk.cpuid & 0x00000000FFFF0000ULL) >> 16),
+                                  str_model(), str_manufacturer(), str_plant(),
+                                  ((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32) );
+        }
+        else if (strcasecmp(argv[1],"proc") == 0 )
+        {
+            
+#ifdef    _FEATURE_VECTOR_FACILITY
+            WRMSG( HHC00157, "I",   sysblk.numcpu, sysblk.numvec, sysblk.maxcpu );
+#else  /*!_FEATURE_VECTOR_FACILITY*/
+            WRMSG( HHC00157, "I",   sysblk.numcpu,             0, sysblk.maxcpu );
+#endif /* _FEATURE_VECTOR_FACILITY*/
+                                    
+            {
+                int i, j;
+                char buf[1024];
+                char cpu[32];
+                int cpupct = 0;
+                
+                buf[0] = '\0';
+                for ( i = j = 0; i < MAX_CPU; i++ )
+                {
+                    if ( IS_CPU_ONLINE(i) )
+                    {
+                        if ( j == 0 )
+                            sprintf(cpu, "%s%02X - %03d%%        ", PTYPSTR(i), i, sysblk.regs[i]->cpupct );
+                        else
+                            ( ( j & 1 ) == 0 ? sprintf(cpu, "HHC00159I %s%02X - %03d%%        ", PTYPSTR(i), i, sysblk.regs[i]->cpupct ) :
+                                               sprintf(cpu, "%s%02X - %03d%%\n",       PTYPSTR(i), i, sysblk.regs[i]->cpupct ) ); 
+                        j++;
+                        strcat(buf, cpu);
+                        cpupct += sysblk.regs[i]->cpupct;
+                    }
+                }
+                sprintf(cpu, "Avgproc-%03d%% %02d", cpupct / j, j );
+                WRMSG(HHC00159, "I", cpu);
+                WRMSG(HHC00159, "I", buf);
+            }
+        }
+        else if (strcasecmp(argv[1],"lpar") == 0 )
+        {
+            WRMSG( HHC00158, "I", sysblk.lparnum, str_lparname() );
         }
         else
         {

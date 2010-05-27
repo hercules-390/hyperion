@@ -155,6 +155,23 @@ void get_manufacturer(BYTE *dest)
     memcpy(dest, manufact, sizeof(manufact));
 }
 
+LOADPARM_DLL_IMPORT
+char *str_manufacturer()
+{
+    static char ret_manufacturer[sizeof(manufact)+1];
+    int i;
+
+    ret_manufacturer[sizeof(manufact)] = '\0';
+    for(i = sizeof(manufact) - 1; i >= 0; i--)
+    {
+        ret_manufacturer[i] = guest_to_host((int)manufact[i]);
+
+        if(isspace(ret_manufacturer[i]) && !ret_manufacturer[i+1])
+            ret_manufacturer[i] = '\0';
+    }
+
+    return ret_manufacturer;
+}
 
 /*-------------------------------------------------------------------*/
 /* MANUFACTURING PLANT NAME                                          */
@@ -182,6 +199,23 @@ void get_plant(BYTE *dest)
     memcpy(dest, plant, sizeof(plant));
 }
 
+LOADPARM_DLL_IMPORT
+char *str_plant()
+{
+    static char ret_plant[sizeof(plant)+1];
+    int i;
+
+    ret_plant[sizeof(plant)] = '\0';
+    for(i = sizeof(plant) - 1; i >= 0; i--)
+    {
+        ret_plant[i] = guest_to_host((int)plant[i]);
+
+        if(isspace(ret_plant[i]) && !ret_plant[i+1])
+            ret_plant[i] = '\0';
+    }
+
+    return ret_plant;
+}
 
 /*-------------------------------------------------------------------*/
 /* MODEL IDENTIFICATION                                              */
@@ -205,6 +239,24 @@ void set_model(int argc, char *m1, char *m2, char *m3, char *m4)
         copy_stringz_to_ebcdic(modelperm, sizeof(modelperm), m3);
     if (argc > 4 && m4 != NULL)
         copy_stringz_to_ebcdic(modeltemp, sizeof(modeltemp), m4);
+}
+
+LOADPARM_DLL_IMPORT
+char *str_model()
+{
+    static char ret_model[sizeof(model)+1];
+    int i;
+
+    ret_model[sizeof(model)] = '\0';
+    for(i = sizeof(model) - 1; i >= 0; i--)
+    {
+        ret_model[i] = guest_to_host((int)model[i]);
+
+        if(isspace(ret_model[i]) && !ret_model[i+1])
+            ret_model[i] = '\0';
+    }
+
+    return ret_model;
 }
 
 void get_model(BYTE *dest)

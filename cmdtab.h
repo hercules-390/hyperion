@@ -467,7 +467,11 @@ COMMAND("qd",        PANEL,         SYSCMDALL-SYSOPER,  qd_cmd,
 CMDABBR("query",1,   PANEL,         SYSCMDALL-SYSOPER,  query_cmd,     
   "query command",
     "query ports       Show ports in use\n"
-    "query dasd        Show dasd\n")
+    "query dasd        Show dasd\n"
+    "query stor        Show mainsize, xpndsize values\n"
+    "query cpuid       Show default cpuid\n" 
+    "query proc        Show processor utilization\n"
+    "query lpar        Show lpar number and name\n" )
 
 COMMAND("mounted_tape_reinit", PANEL+CONFIG, SYSCMDALL-SYSOPER, mnttapri_cmd,  
   "Control tape initilisation", 

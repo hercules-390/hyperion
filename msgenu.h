@@ -166,6 +166,12 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00151 "Activated facility: '%s'"
 #define HHC00152 "Server '%12s' is listening %s"
 #define HHC00153 "Server '%12s' is inactive"
+#define HHC00154 "%ssize is %s"
+#define HHC00155 "CPUID = "I64_FMTX""
+#define HHC00156 "CPI   = %4.4X.%s.%s.%s.%16.16X"
+#define HHC00157 "NumCPU = %02d, NumVEC = %02d, MaxCPU = %02d"
+#define HHC00158 "LPARNAME[%2.2X] = %s"
+#define HHC00159 "%s"
 #define HHC00160 "SCP %scommand: '%s'"
 #define HHC00161 "Function %s failed: '[%02d] %s'"
 // reserve 002xx for tape device related
