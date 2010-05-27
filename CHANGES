@@ -1,3 +1,4 @@
+26 May 2010 QUERY command and enhancements. See QUERY HELP for assistance
 25 May 2010 Add EXCP counts to all devices
 20 May 2010 QUIT and SSD require 2nd command within 60 seconds.
 12 May 2010 Addition of a native Windows Threading Model (wthreads) enabled with
