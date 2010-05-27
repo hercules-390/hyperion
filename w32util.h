@@ -211,8 +211,8 @@ W32_DLL_IMPORT void   w32_set_thread_name( TID tid, char* name );
 //////////////////////////////////////////////////////////////////////////////////////////
 
 // Windows implementation of basename and dirname functions
-W32_DLL_IMPORT char*  w32_basename( char* path );
-W32_DLL_IMPORT char*  w32_dirname( char* path );
+W32_DLL_IMPORT char*  w32_basename( const char* path );
+W32_DLL_IMPORT char*  w32_dirname( const char* path );
 
 #endif // defined(_MSVC_)
 

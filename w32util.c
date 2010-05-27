@@ -3379,7 +3379,7 @@ DLL_EXPORT void w32_set_thread_name( TID tid, char* name )
 static char _basename[MAX_PATH];
 
 // Windows implementation of basename and dirname functions
-DLL_EXPORT char*  w32_basename( char* path )
+DLL_EXPORT char*  w32_basename( const char* path )
 /*
 
     This is not a complete implementation of basename, but should work for windows
@@ -3402,7 +3402,7 @@ DLL_EXPORT char*  w32_basename( char* path )
 
 static char _dirname[MAX_PATH];
 
-DLL_EXPORT char*  w32_dirname( char* path )
+DLL_EXPORT char*  w32_dirname( const char* path )
 /*
     This is not a complete dirname implementation, but should be ok for windows.
 
