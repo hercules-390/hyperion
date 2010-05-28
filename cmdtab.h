@@ -110,6 +110,10 @@ COMMAND("version",   PANEL,         SYSNONE,            version_cmd,
   "display version information", 
     NULL)
 
+COMMAND("qquit",     PANEL,         SYSCMDALL-SYSOPER,  quit_cmd,     
+    NULL, 
+    NULL)
+    
 COMMAND("quit",      PANEL,         SYSNONE,            quit_cmd,     
   "terminate the emulator", 
     NULL)
