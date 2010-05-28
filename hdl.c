@@ -424,15 +424,18 @@ DLL_EXPORT void hdl_list (int flags)
 {
 DLLENT *dllent;
 MODENT *modent;
+char buf[256];
+int len;
 
+    len = 0;
     for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
     {
-        logmsg("dll type = %s",(dllent->flags & HDL_LOAD_MAIN) ? "main" : "load");
-        logmsg(", name = %s",dllent->name);
+        len += sprintf(buf + len, "dll type = %s",(dllent->flags & HDL_LOAD_MAIN) ? "main" : "load");
+        len += sprintf(buf + len, ", name = %s",dllent->name);
 
         if (dllent->flags & (HDL_LOAD_NOUNLOAD | HDL_LOAD_WAS_FORCED))
         {
-            logmsg(", flags = (%s%s%s)"
+            len += sprintf(buf + len, ", flags = (%s%s%s)"
                 ,(dllent->flags & HDL_LOAD_NOUNLOAD)   ? "nounload" : ""
                 ,(dllent->flags & HDL_LOAD_NOUNLOAD) &&
                  (dllent->flags & HDL_LOAD_WAS_FORCED) ? ", "       : ""
@@ -440,28 +443,33 @@ MODENT *modent;
                 );
         }
 
-        logmsg("\n");
+        WRMSG(HHC01531, "I", buf);
+        len = 0;
 
         for(modent = dllent->modent; modent; modent = modent->modnext)
             if((flags & HDL_LIST_ALL) 
               || !((dllent->flags & HDL_LOAD_MAIN) && !modent->fep))
             {
-                logmsg(" symbol = %s",modent->name);
-//              logmsg(", ep = %p",modent->fep);
+                len += sprintf(buf + len, " symbol = %s",modent->name);
+//              len += sprintf(buf + len, ", ep = %p",modent->fep);
                 if(modent->fep)
-                    logmsg(", loadcount = %d",modent->count);
+                    len += sprintf(buf + len, ", loadcount = %d",modent->count);
                 else
-                    logmsg(", unresolved");
-                logmsg(", owner = %s\n",dllent->name);
+                    len += sprintf(buf + len, ", unresolved");
+                sprintf(buf + len, ", owner = %s",dllent->name);
+                WRMSG(HHC01531, "I", buf);
+                len = 0;
             }
 
         if(dllent->hndent)
         {
         HDLDEV *hndent;
-            logmsg(" devtype =");
+            len += sprintf(buf + len, " devtype =");
             for(hndent = dllent->hndent; hndent; hndent = hndent->next)
-                logmsg(" %s",hndent->name);
-            logmsg("\n");
+                len += sprintf(buf + len, " %s",hndent->name);
+        WRMSG(HHC01531, "I", buf);
+        len = 0;
+
         }
 
         if(dllent->insent)
@@ -469,14 +477,15 @@ MODENT *modent;
         HDLINS *insent;
             for(insent = dllent->insent; insent; insent = insent->next)
             {
-                logmsg(" instruction = %s, opcode = %4.4X",insent->instname,insent->opcode);
+                len += sprintf(buf + len, " instruction = %s, opcode = %4.4X",insent->instname,insent->opcode);
                 if(insent->archflags & HDL_INSTARCH_370)
-                    logmsg(", archmode = " _ARCH_370_NAME);
+                    len += sprintf(buf + len, ", archmode = " _ARCH_370_NAME);
                 if(insent->archflags & HDL_INSTARCH_390)
-                    logmsg(", archmode = " _ARCH_390_NAME);
+                    len += sprintf(buf + len, ", archmode = " _ARCH_390_NAME);
                 if(insent->archflags & HDL_INSTARCH_900)
-                    logmsg(", archmode = " _ARCH_900_NAME);
-                logmsg("\n");
+                    len += sprintf(buf + len, ", archmode = " _ARCH_900_NAME);
+                WRMSG(HHC01531, "I", buf);
+                len = 0;
             }
         }
     }
@@ -488,12 +497,16 @@ MODENT *modent;
 DLL_EXPORT void hdl_dlst (void)
 {
 HDLDEP *depent;
+char buf[128];
 
     for(depent = hdl_depend;
       depent;
       depent = depent->next)
-        logmsg("dependency(%s) version(%s) size(%d)\n",
+    {
+        sprintf(buf, "dependency(%s) version(%s) size(%d)\n",
           depent->name,depent->version,depent->size);
+        WRMSG(HHC01531, "I", buf);
+    }
 }
 
 

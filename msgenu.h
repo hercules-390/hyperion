@@ -129,7 +129,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00078 "The command was not added because it may cause dead locks"
 #define HHC00079 "No rule defined at index %02d"
 #define HHC00080 "All HAO rules are cleared"
-#define HHC00081 "Match at index %02d, performing command '%s'"
+#define HHC00081 "Match at index %02d, executing command '%s'"
 #define HHC00082 "%d rule(s) displayed"
 #define HHC00083 "The command 'del' was given without a valid index"
 #define HHC00084 "Invalid index; index must be between 0 and %02d"
@@ -804,6 +804,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01528 "HDL: unloading module '%s'..."
 #define HHC01529 "HDL: module '%s' unloaded"
 #define HHC01530 "HDL: usage: %s <path>"
+#define HHC01531 "%s" 
 
 /* dynguic. */
 #define HHC01540 "HDL: query buffer overflow for device %1d:%04X"
