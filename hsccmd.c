@@ -7874,9 +7874,10 @@ int query_cmd(int argc, char *argv[], char *cmdline)
                         cpupct += sysblk.regs[i]->cpupct;
                     }
                 }
+                if ( ( j & 1 ) == 1 ) strcat( buf, "\n" );
                 sprintf(cpu, "HHC00159I - Started          : Stopping\n");
                 strcat(buf, cpu);
-                sprintf(cpu, "HHC00159I * Stopped\n");
+                sprintf(cpu, "HHC00159I * Stopped");
                 strcat(buf, cpu);
                 sprintf(cpu, "Avgproc-%03d%% %02d", cpupct / j, j );
                 WRMSG(HHC00159, "I", cpu);
