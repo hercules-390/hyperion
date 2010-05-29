@@ -3575,7 +3575,9 @@ BYTE    c;
         {
             if ( strlen(argv[1]) == 2 && id > 0x3f )
             {
-                WRMSG(HHC02205,"E", id, ": must be within 00 to 3F (hex)"); 
+                char buf[8];
+                sprintf(buf, "%02X", id);
+                WRMSG(HHC02205,"E", buf, ": must be within 00 to 3F (hex)"); 
                 return -1;
             }
             sysblk.lparnum = id;

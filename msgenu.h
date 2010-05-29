@@ -514,6 +514,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00914 "%1d:%04X CTC: packet frame too big, dropped"
 #define HHC00915 "%1d:%04X CTC: incorrect number of parameters"
 #define HHC00916 "%1d:%04X CTC: option '%s' value '%s' invalid"
+#define HHC00917 "%1d:%04X CTC: default value '%s' is used for option '%s'"
 
 /* ctc_lcs.c */
 #define HHC00920 "%1d:%04X CTC: lcs device %04X not in configuration"
