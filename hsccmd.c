@@ -7851,15 +7851,31 @@ int query_cmd(int argc, char *argv[], char *cmdline)
                     if ( IS_CPU_ONLINE(i) )
                     {
                         if ( j == 0 )
-                            sprintf(cpu, "%s%02X - %03d%%        ", PTYPSTR(i), i, sysblk.regs[i]->cpupct );
+                            sprintf(cpu, "%s%02X %c %03d%%        ", 
+                                         PTYPSTR(i), i, 
+                                         ( sysblk.regs[i]->cpustate == CPUSTATE_STARTED ) ? '-' : 
+                                             ( sysblk.regs[i]->cpustate == CPUSTATE_STOPPING ) ? ':' : '*', 
+                                         sysblk.regs[i]->cpupct );
                         else
-                            ( ( j & 1 ) == 0 ? sprintf(cpu, "HHC00159I %s%02X - %03d%%        ", PTYPSTR(i), i, sysblk.regs[i]->cpupct ) :
-                                               sprintf(cpu, "%s%02X - %03d%%\n",       PTYPSTR(i), i, sysblk.regs[i]->cpupct ) ); 
+                            ( ( j & 1 ) == 0 ? sprintf(cpu, "HHC00159I %s%02X %c %03d%%        ", 
+                                                            PTYPSTR(i), i, 
+                                                            ( sysblk.regs[i]->cpustate == CPUSTATE_STARTED ) ? '-' : 
+                                                                 ( sysblk.regs[i]->cpustate == CPUSTATE_STOPPING ) ? ':' : '*', 
+                                                            sysblk.regs[i]->cpupct ) :
+                                               sprintf(cpu, "%s%02X %c %03d%%\n",       
+                                                            PTYPSTR(i), i, 
+                                                            ( sysblk.regs[i]->cpustate == CPUSTATE_STARTED ) ? '-' : 
+                                                                ( sysblk.regs[i]->cpustate == CPUSTATE_STOPPING ) ? ':' : '*', 
+                                                            sysblk.regs[i]->cpupct ) ); 
                         j++;
                         strcat(buf, cpu);
                         cpupct += sysblk.regs[i]->cpupct;
                     }
                 }
+                sprintf(cpu, "HHC00159I - Started          : Stopping\n");
+                strcat(buf, cpu);
+                sprintf(cpu, "HHC00159I * Stopped\n");
+                strcat(buf, cpu);
                 sprintf(cpu, "Avgproc-%03d%% %02d", cpupct / j, j );
                 WRMSG(HHC00159, "I", cpu);
                 WRMSG(HHC00159, "I", buf);
