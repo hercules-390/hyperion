@@ -118,8 +118,8 @@ static void cancel_wait_sigq()
 */
 static void do_shutdown_now()
 {
+    sysblk.panel_init = 0; //Prevent writing message color string 
     WRMSG(HHC01420, "I");
-    sysblk.panel_init = 0; // Prevent colored messages
 
     ASSERT( !sysblk.shutfini );  // (sanity check)
 
