@@ -7842,7 +7842,7 @@ int query_cmd(int argc, char *argv[], char *cmdline)
             {
                 int i, j;
                 char buf[1024];
-                char cpu[32];
+                char cpu[64];
                 int cpupct = 0;
                 
                 buf[0] = '\0';
