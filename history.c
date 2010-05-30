@@ -141,14 +141,17 @@ int history_remove() {
 
 int history_relative_line(int x) {
   HISTORY *tmp = history_lines_end;
+  char buf[80];
 
   if (-x > HISTORY_MAX) {
-    logmsg("History limited to last %d commands\n", HISTORY_MAX);
+    sprintf(buf, "History limited to last %d commands", HISTORY_MAX);
+    WRMSG(HHC02293, "I", buf);
     return (-1);
   }
 
   if (-x > history_count) {
-    logmsg("only %d commands in history\n", history_count);
+    sprintf(buf, "Only %d commands in history", history_count);
+    WRMSG(HHC02293, "I", buf);
     return (-1);
   }
 
@@ -164,16 +167,18 @@ int history_relative_line(int x) {
 int history_absolute_line(int x) {
   HISTORY *tmp = history_lines_end;
   int lowlimit;
+  char buf[80];
 
   if (history_count == 0) {
-    logmsg("history empty\n");
+    WRMSG(HHC02293, "I", "History empty");
     return -1;
   }
 
   lowlimit = history_count - HISTORY_MAX;
 
   if (x > history_count || x <= lowlimit) {
-    logmsg("only commands %d-%d are in history\n", lowlimit<0? 1 : lowlimit + 1, history_count);
+    sprintf(buf, "Only commands %d-%d are in history", lowlimit<0? 1 : lowlimit + 1, history_count);
+    WRMSG(HHC02293, "I", buf);
     return (-1);
   }
 
