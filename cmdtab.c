@@ -337,9 +337,9 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
         }
         if ( rc == 1 )
         {
-            if ( argc == 2 && strlen(argv[1]) == 9 &&
-                ( ( argv[1][0] == 'h' && argv[1][1] == 'h' && argv[1][2] == 'c') ||
-                  ( argv[1][0] == 'H' && argv[1][1] == 'H' && argv[1][2] == 'C') ) )
+            /* detect hercules message HHCnnnnn or HHCnnnnns */
+            if ( argc == 2 && ( strlen(argv[1]) == 8 || strlen(argv[1]) == 9 ) &&
+                 ( !strncasecmp(argv[1], "HHC", 3)))
             { 
                 rc = (HelpMessage(argv[1]));
             }
@@ -352,17 +352,22 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
     }
     return rc;
 }
+
 /*-------------------------------------------------------------------*/
 /* HelpMessage - print help text for message hhcnnnnna               */
 /*-------------------------------------------------------------------*/
 int HelpMessage(char *msg)
 {
-    char id[6];
-    int rc = -1;
-    strncpy(id, msg+3, 5);
-    logmsg("NO HELP YET for message number %s!\n", id);
-    return rc;
+    char id[9];
+
+    strcpy(id, "HHC");
+    strncpy(&id[3], &msg[3], 5);
+    id[8] = 0;
+
+    WRMSG(HHC01607, "I", id);
+    return(-1);
 }
+
 /*-------------------------------------------------------------------*/
 /* cmdlevel - display/set the current command level group(s)         */
 /*-------------------------------------------------------------------*/
