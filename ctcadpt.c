@@ -1432,6 +1432,6 @@ void packet_trace( BYTE* pAddr, int iLen, BYTE bDir )
             }
         }
 
-        logmsg( "%s %s %s\n", print_line, print_ascii, print_ebcdic );
+        WRMSG(HHC00964, "I", print_line, print_ascii, print_ebcdic );
     }
 }

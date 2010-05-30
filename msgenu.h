@@ -551,6 +551,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00961 "CTC: error in file '%s': '%s': invalid mode"
 #define HHC00962 "CTC: error in file '%s': reading line %d: '%s'"
 #define HHC00963 "CTC: error in file '%s': line %d is too long"
+#define HHC00964 "CTC: packet trace: %s %s %s"
 
 /*ctcadpt.c */
 #define HHC00970 "%1d:%04X CTC: unrecognized emulation type '%s'"
