@@ -627,9 +627,8 @@ BYTE            skey1, skey2;           /* Storage keys of first and
 
         if (dev->ccwtrace || dev->ccwstep)
         {
-            logmsg ("%4.4X:Diagnose X\'0A4\':%s "
-                    "blk=%8.8X adr=%8.8X len=%8.8X\n",
-                    dev->devnum,
+            WRMSG(HHC01952, "I", 
+                    SSID_TO_LCSS(dev->ssid), dev->devnum,
                     (ioparm.type == HCPSBIOP_WRITE ? "WRITE" : "READ"),
                     blknum, absadr, blksize);
         }

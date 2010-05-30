@@ -896,6 +896,7 @@ cpu.c:123:HABC1234I This is a message
 /* vm.c */
 #define HHC01950 "Panel command '%s' issued by guest %s"
 #define HHC01951 "Panel command '%s' issued by guest not processed, disabled in configuration"
+#define HHC01952 "%1d:%04X:Diagnose X\'0A4\':%s blk=%8.8X adr=%8.8X len=%8.8X"
 
 // reserve 020xx for sr.c 
 #define HHC02000 "SR: too many arguments"
