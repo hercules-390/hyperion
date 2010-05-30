@@ -2629,7 +2629,7 @@ va_list         vl;
             msg, vl);
     if (dt)
     {
-        logmsg (s+14);
+        WRMSG(HHC00743, "I", s+14);
     }
     if (sysblk.shrdtrace)
     {
@@ -2925,7 +2925,7 @@ DLL_EXPORT int shared_cmd(int argc, char *argv[], char *cmdline)
         i = p;
         SLEEP(1);
         do {
-            if (i[0] != '\0') logmsg ("%s",(char *)i);
+            if (i[0] != '\0') WRMSG(HHC00743, "I", (char *)i);
             if (++i >= x) i = s;
         } while (i != p);
         memset (s, 0, n * sizeof(SHRD_TRACE));
