@@ -454,7 +454,9 @@ static BYTE     supvr_inhibit  = 0;     /* Supvr-Inhibit mode active */
 static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
 
     UNREFERENCED(ccwseq);
-
+    
+    dev->excps++;
+    
     /* Reset flags at start of CCW chain */
     if (dev->ccwseq == 0)
     {
