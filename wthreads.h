@@ -24,6 +24,7 @@
 #define WT_DLL_IMPORT DLL_EXPORT
 #endif
 
+#if defined(OPTION_WTHREADS)
 ////////////////////////////////////////////////////////////////////////////////////
 // Use Windows threading calls directly.
 // Differences:
@@ -233,4 +234,6 @@ int  winthread_cond_destroy
 (
     CONDITION_VARIABLE*  pWIN_COND_VAR          // Pointer to condition variable
 );
+#endif // OPTION_WTHREADS
+
 #endif // _WTHREADS_H_
