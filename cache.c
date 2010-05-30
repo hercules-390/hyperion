@@ -342,45 +342,62 @@ int cache_release(int ix, int i, int flag)
 DLL_EXPORT int cache_cmd(int argc, char *argv[], char *cmdline)
 {
     int ix, i;
+    char buf[80];
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
     UNREFERENCED(argv);
 
     for (ix = 0; ix < CACHE_MAX_INDEX; ix++) {
-        if (cacheblk[ix].magic != CACHE_MAGIC) {
-            logmsg ("cache[%d] ....... not created\n", ix);
+        if (cacheblk[ix].magic != CACHE_MAGIC) {          
+            sprintf(buf, "Cache[%d] ....... not created", ix);
+            WRMSG(HHC02294, "I", buf);
             continue;
         }
-        logmsg ("\n"
-                "cache............ %10d\n"
-                "nbr ............. %10d\n"
-                "busy ............ %10d\n"
-                "busy%% ........... %10d\n"
-                "empty ........... %10d\n"
-                "waiters ......... %10d\n"
-                "waits ........... %10d\n"
-                "buf size ........ %10" I64_FMT "d\n"
-                "hits ............ %10" I64_FMT "d\n"
-                "fast hits ....... %10" I64_FMT "d\n"
-                "misses .......... %10" I64_FMT "d\n"
-                "hit%% ............ %10d\n"
-                "age ............. %10" I64_FMT "d\n"
-                "last adjusted ... %s"
-                "last wait ....... %s"
-                "adjustments ..... %10d\n",
-          ix, cacheblk[ix].nbr, cacheblk[ix].busy, cache_busy_percent(ix),
-          cacheblk[ix].empty, cacheblk[ix].waiters, cacheblk[ix].waits,
-          cacheblk[ix].size, cacheblk[ix].hits, cacheblk[ix].fasthits,
-          cacheblk[ix].misses, cache_hit_percent(ix), cacheblk[ix].age,
-          ctime(&cacheblk[ix].atime), ctime(&cacheblk[ix].wtime),
-          cacheblk[ix].adjusts);
+        sprintf(buf, "Cache............ %10d", ix);
+        WRMSG(HHC02294, "I", buf);
+        sprintf(buf, "nbr ............. %10d", cacheblk[ix].nbr);
+        WRMSG(HHC02294, "I", buf);
+        sprintf(buf, "busy ............ %10d", cacheblk[ix].busy);
+        WRMSG(HHC02294, "I", buf);
+        sprintf(buf, "busy%% ........... %10d",cache_busy_percent(ix));
+        WRMSG(HHC02294, "I", buf);
+        sprintf(buf, "empty ........... %10d", cacheblk[ix].empty);
+        WRMSG(HHC02294, "I", buf);
+        sprintf(buf, "waiters ......... %10d", cacheblk[ix].waiters);
+        WRMSG(HHC02294, "I", buf);
+        sprintf(buf, "waits ........... %10d", cacheblk[ix].waits);
+        WRMSG(HHC02294, "I", buf);
+        sprintf(buf, "buf size ........ %10" I64_FMT "ld", cacheblk[ix].size);
+        WRMSG(HHC02294, "I", buf);
+        sprintf(buf, "hits ............ %10" I64_FMT "ld", cacheblk[ix].hits);
+        WRMSG(HHC02294, "I", buf);
+        sprintf(buf, "fast hits ....... %10" I64_FMT "ld", cacheblk[ix].fasthits);
+        WRMSG(HHC02294, "I", buf);
+        sprintf(buf, "misses .......... %10" I64_FMT "ld", cacheblk[ix].misses);
+        WRMSG(HHC02294, "I", buf);
+        sprintf(buf, "hit%% ............ %10d", cache_hit_percent(ix));
+        WRMSG(HHC02294, "I", buf);
+        sprintf(buf, "age ............. %10" I64_FMT "d", cacheblk[ix].age);
+        WRMSG(HHC02294, "I", buf);
+        sprintf(buf, "last adjusted ... %s", ctime(&cacheblk[ix].atime));
+        buf[strlen(buf) - 1] = 0;
+        WRMSG(HHC02294, "I", buf);
+        sprintf(buf, "last wait ....... %s", ctime(&cacheblk[ix].wtime));
+        buf[strlen(buf) - 1] = 0;
+        WRMSG(HHC02294, "I", buf);
+        sprintf(buf, "adjustments ..... %10d", cacheblk[ix].adjusts);
+        WRMSG(HHC02294, "I", buf);
+
         if (argc > 1)
           for (i = 0; i < cacheblk[ix].nbr; i++)
-            logmsg ("[%4d] %16.16" I64_FMT "x %8.8x %10p %6d %10" I64_FMT "d\n",
+          {
+            sprintf(buf, "[%4d] %16.16" I64_FMT "x %8.8x %10p %6d %10" I64_FMT "d",
               i, cacheblk[ix].cache[i].key, cacheblk[ix].cache[i].flag,
               cacheblk[ix].cache[i].buf, cacheblk[ix].cache[i].len,
               cacheblk[ix].cache[i].age);
+            WRMSG(HHC02294, "I", buf);
+          }
     }
     return 0;
 }

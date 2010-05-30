@@ -1027,6 +1027,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02291 "%s"
 #define HHC02292 "%s"
 #define HHC02293 "%s"
+#define HHC02294 "%s"
 
 // reserve 023xx for ieee.c
 #define HHC02300 "Function '%s': unexpectedly converting to '%s'"
