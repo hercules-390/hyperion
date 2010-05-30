@@ -520,11 +520,11 @@ void ebfpston(struct ebfp *op)
 
     switch (ebfpclassify(op)) {
     case FP_NAN:
-        logmsg(_("ebfpston: unexpectedly converting a NaN\n"));
+        WRMSG(HHC02300, "E", "ebfpston", "NaN");
         op->v = sqrt(-1);
         break;
     case FP_INFINITE:
-        logmsg(_("ebfpston: unexpectedly converting an Infinite\n"));
+        WRMSG(HHC02300, "E", "ebfpston", "Infinite");
         if (op->sign) {
             op->v = log(0);
         } else {
@@ -579,11 +579,11 @@ void lbfpston(struct lbfp *op)
 
     switch (lbfpclassify(op)) {
     case FP_NAN:
-        logmsg(_("lbfpston: unexpectedly converting a NaN\n"));
+        WRMSG(HHC02300, "E", "lbfpston", "NaN");
         op->v = sqrt(-1);
         break;
     case FP_INFINITE:
-        logmsg(_("lbfpston: unexpectedly converting an Infinite\n"));
+        WRMSG(HHC02300, "E", "lbfpston", "Infinite");
         if (op->sign) {
             op->v = log(0);
         } else {
@@ -632,11 +632,11 @@ void sbfpston(struct sbfp *op)
 
     switch (sbfpclassify(op)) {
     case FP_NAN:
-        logmsg(_("sbfpston: unexpectedly converting a NaN\n"));
+        WRMSG(HHC02300, "E", "sbfpston", "NaN");
         op->v = sqrt(-1);
         break;
     case FP_INFINITE:
-        logmsg(_("sbfpston: unexpectedly converting an Infinite\n"));
+        WRMSG(HHC02300, "E", "sbfpston", "Infinite");
         if (op->sign) {
             op->v = log(0);
         } else {
@@ -2182,7 +2182,7 @@ DEF_INST(convert_bfp_ext_to_fix32_reg)
         if (regs->fpc & FPC_MASK_IMX) {
             pgm_check = ieee_exception(FE_INEXACT, regs);
             if (pgm_check) {
-                ebfpston(&op2);logmsg("INEXACT\n");
+                ebfpston(&op2);WRMSG(HHC02301, "E");
                 regs->program_interrupt(regs, pgm_check);
             }
         }
@@ -2247,7 +2247,7 @@ DEF_INST(convert_bfp_long_to_fix32_reg)
         if (regs->fpc & FPC_MASK_IMX) {
             pgm_check = ieee_exception(FE_INEXACT, regs);
             if (pgm_check) {
-                lbfpston(&op2);logmsg("INEXACT\n");
+                lbfpston(&op2);WRMSG(HHC02301, "E");
                 regs->program_interrupt(regs, pgm_check);
             }
         }
@@ -2378,7 +2378,7 @@ DEF_INST(convert_bfp_ext_to_fix64_reg)
         if (regs->fpc & FPC_MASK_IMX) {
             pgm_check = ieee_exception(FE_INEXACT, regs);
             if (pgm_check) {
-                ebfpston(&op2);logmsg("INEXACT\n");
+                ebfpston(&op2);WRMSG(HHC02301, "E");
                 regs->program_interrupt(regs, pgm_check);
             }
         }
@@ -2445,7 +2445,7 @@ DEF_INST(convert_bfp_long_to_fix64_reg)
         if (regs->fpc & FPC_MASK_IMX) {
             pgm_check = ieee_exception(FE_INEXACT, regs);
             if (pgm_check) {
-                lbfpston(&op2);logmsg("INEXACT\n");
+                lbfpston(&op2);WRMSG(HHC02301, "E");
                 regs->program_interrupt(regs, pgm_check);
             }
         }

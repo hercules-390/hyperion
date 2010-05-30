@@ -1027,6 +1027,10 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02292 "%s"
 #define HHC02293 "%s"
 
+// reserve 023xx for ieee.c
+#define HHC02300 "Function '%s': unexpectedly converting to '%s'"
+#define HHC02301 "Inexact"
+
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
 #define HHC04100 "%s version %s initiated"
