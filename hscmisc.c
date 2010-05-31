@@ -1162,8 +1162,8 @@ int     ilc;                            /* Instruction length        */
 int     b1=-1, b2=-1, x1;               /* Register numbers          */
 VADR    addr1 = 0, addr2 = 0;           /* Operand addresses         */
 #endif /*DISPLAY_INSTRUCTION_OPERANDS*/
-char    buf[1024];                      /* Message buffer            */
-char    buf2[256];
+char    buf[2048];                      /* Message buffer            */
+char    buf2[512];
 int     n;                              /* Number of bytes in buffer */
 REGS   *regs;                           /* Copied regs               */
 
