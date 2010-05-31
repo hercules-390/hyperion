@@ -290,7 +290,7 @@ BYTE    chanstat;                       /* IPL device channel status */
             if ((i & 3) == 3) strcat(buf, " ");
         }
         {
-            char buffer[80];
+            char buffer[256];
             sprintf(buffer, "architecture mode '%s', csw status %2.2X%2.2X, sense %s", get_arch_mode_string(regs), 
                 unitstat, chanstat, buf);
             WRMSG (HHC00828, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu, buffer);
