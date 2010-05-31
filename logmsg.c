@@ -217,7 +217,14 @@ DLL_EXPORT void writemsg(const char *file, int line, const char* function, int l
     }
     if(!lvl && (msg[8] == 'S' || msg[8] == 'E' || msg[8] == 'W'))
     {
+#if defined( _MSVC_ )
         logmsg("HHC00007I " HHC00007 "\n", function, basename(file), line);
+#else
+        char *fn;
+        fn = strdup( file );
+        logmsg("HHC00007I " HHC00007 "\n", function, basename(fn), line);
+        free( fn );
+#endif
     }
   #ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  
