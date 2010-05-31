@@ -294,6 +294,7 @@ BYTE    chanstat;                       /* IPL device channel status */
             sprintf(buffer, "architecture mode '%s', csw status %2.2X%2.2X, sense %s", get_arch_mode_string(regs), 
                 unitstat, chanstat, buf);
             WRMSG (HHC00828, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu, buffer);
+            WRMSG (HHC00829, "I");
         }
         HDC1(debug_cpu_state, regs);
         return -1;
