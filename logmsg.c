@@ -219,11 +219,10 @@ DLL_EXPORT void writemsg(const char *file, int line, const char* function, int l
     {
 #if defined( _MSVC_ )
         logmsg("HHC00007I " HHC00007 "\n", function, basename(file), line);
+#elif defined( __APPLE__ )
+        logmsg("HHC00007I " HHC00007 "\n", function, file, line);
 #else
-        char *fn;
-        fn = strdup( file );
-        logmsg("HHC00007I " HHC00007 "\n", function, basename(fn), line);
-        free( fn );
+        logmsg("HHC00007I " HHC00007 "\n", function, file, line);
 #endif
     }
   #ifdef NEED_LOGMSG_FFLUSH
