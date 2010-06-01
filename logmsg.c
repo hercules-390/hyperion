@@ -217,13 +217,11 @@ DLL_EXPORT void writemsg(const char *file, int line, const char* function, int l
     }
     if(!lvl && (msg[8] == 'S' || msg[8] == 'E' || msg[8] == 'W'))
     {
-#if defined( _MSVC_ )
-        logmsg("HHC00007I " HHC00007 "\n", function, basename(file), line);
-#elif defined( __APPLE__ )
-        logmsg("HHC00007I " HHC00007 "\n", function, file, line);
-#else
-        logmsg("HHC00007I " HHC00007 "\n", function, file, line);
-#endif
+        /* __FILENAME__ resolves differently for the various OS environments */
+        /* we are only interested in the filename and ext.                   */
+        char *fn = strdup( file );
+        logmsg("HHC00007I " HHC00007 "\n", function, basename(fn), line);
+        free( fn );
     }
   #ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  

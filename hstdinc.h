@@ -52,6 +52,8 @@
   #include <tlhelp32.h>
   #include <dbghelp.h>
   #include <crtdbg.h>
+#else
+  #include <libgen.h>
 #endif
 
 #include <stdio.h>
