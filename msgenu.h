@@ -100,7 +100,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00004 "Control program identification: type '%s', name '%s', sysplex '%s', level %16.16"I64_FMT"X"
 #define HHC00005 "The configuration has been placed into a system check-stop state because of an incompatible service call"
 #define HHC00006 "SCLP console interface '%s'"
-#define HHC00007 "Previous message fired from function '%s()' in '%s' line %d" 
+#define HHC00007 "Previous message from function '%s()' in '%s' line %d" 
 #define HHC00008 "%s%s"
 #define HHC00009 "RRR...RING...GGG!\a"
 #define HHC00010 "Enter input for console %1d:%04X"
@@ -164,16 +164,10 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00149 "IFC_IOCtl called for %s on FDs %d %d"
 #define HHC00150 "%s module loaded%s"
 #define HHC00151 "Activated facility: '%s'"
-#define HHC00152 "Server '%12s' is listening %s"
-#define HHC00153 "Server '%12s' is inactive"
-#define HHC00154 "%ssize is %s"
-#define HHC00155 "CPUID  = "I64_FMTX""
-#define HHC00156 "CPC SI = %4.4X.%s.%s.%s.%16.16X"
-#define HHC00157 "NumCPU = %02d, NumVEC = %02d, MaxCPU = %02d"
-#define HHC00158 "LPARNAME[%2.2X] = %s"
-#define HHC00159 "%s"
+// 00152 - 00159 unused
 #define HHC00160 "SCP %scommand: '%s'"
 #define HHC00161 "Function %s failed: '[%02d] %s'"
+
 // reserve 002xx for tape device related
 #define HHC00201 "%1d:%04X Tape file '%s', type '%s': tape closed"
 #define HHC00202 "%1d:%04X Tape file '%s', type '%s': block length %d exceeds maximum at offset "I64_FMTX
@@ -185,7 +179,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00208 "%1d:%04X Tape file '%s', type '%s': maximum tape capacity exceeded"
 #define HHC00209 "%1d:%04X Tape file '%s', type '%s': maximum tape capacity enforced"
 #define HHC00210 "%1d:%04X Tape file '%s', type '%s': tape unloaded"
-#define HHC00211 "%s"
+#define HHC00211 "%1d:%04X Tape file '%s', type 'scsi' status '%s', sstat 0x%8.8lX: %s %s%s%s%s%s%s%s"
 #define HHC00212 "%1d:%04X Tape file '%s', type '%s': data chaining not supported for CCW %2.2X"
 #define HHC00214 "%1d:%04X Tape file '%s', type '%s': auto-mount rejected: drive not empty"
 #define HHC00215 "%1d:%04X Tape file '%s', type '%s': auto-mounted"
@@ -701,7 +695,7 @@ cpu.c:123:HABC1234I This is a message
 
 // reserve 014xx for initialization and shutdown
 /* impl.c */
-#define HHC01400 "Ctrl-break intercepted: interrupt key depressed simulated"
+#define HHC01400 "Ctrl-break intercepted: interrupt key pressed simulated"
 #define HHC01401 "Ctrl-c intercepted"
 #define HHC01402 "'%s' event received: shutdown %sstarting..."
 #define HHC01403 "'%s' event received, shutdown previously requested..."
@@ -808,9 +802,12 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01528 "HDL: unloading module '%s'..."
 #define HHC01529 "HDL: module '%s' unloaded"
 #define HHC01530 "HDL: usage: %s <path>"
-#define HHC01531 "%s" 
+#define HHC01531 "HDL: dll type = %s, name = %s, flags = (%s, %s)"
+#define HHC01532 "HDL:  symbol = %s, loadcount = %d%s, owner = %s"
+#define HHC01533 "HDL:  devtype(s) =%s"
+#define HHC01534 "HDL:  instruction = %s, opcode = %4.4X"
 
-/* dynguic. */
+/* dyngui.c */
 #define HHC01540 "HDL: query buffer overflow for device %1d:%04X"
 #define HHC01541 "HDL: dyngui.dll initiated"
 #define HHC01542 "HDL: dyngui.dll terminated"
@@ -962,7 +959,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02225 "HTTP server already active"
 #define HHC02226 "Held messages cleared"
 #define HHC02227 "Shell commands are disabled"
-#define HHC02228 "Key '%s' depressed"
+#define HHC02228 "Key '%s' pressed"
 #define HHC02229 "Instruction %s %s %s"
 #define HHC02230 "%1d:%04X attention request raised"
 #define HHC02231 "%1d:%04X busy or interrupt pending"
@@ -985,7 +982,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02248 "Saving locations %08X-%08X to file '%s'"
 #define HHC02249 "Operation complete"
 #define HHC02250 "Loading file '%s' to location %x"
-#define HHC02251 "Address greater than mainstore size"
+#define HHC02251 "Address exceeds main storage size"
 #define HHC02252 "Sorry, too many instructions"
 #define HHC02253 "All CPU's must be stopped to change architecture"
 #define HHC02254 " i: %12" I64_FMT "d"
@@ -1013,7 +1010,8 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02275 "%s"
 #define HHC02276 "Floating point control register: %08"I32_FMT"X"
 #define HHC02277 "Prefix register: %s"
-#define HHC02278 "%s"
+#define HHC02278 "Program status word: %s\n" \
+       "          sm=%2.2X pk=%d cmwp=%X as=%s cc=%d pm=%X am=%s ia=%"I64_FMT"X" 
 #define HHC02279 "%s"
 #define HHC02280 "%s"
 #define HHC02281 "%s"
@@ -1062,6 +1060,19 @@ cpu.c:123:HABC1234I This is a message
 #define HHC04109 "%s"
 #define HHC04110 "Maximum device threads (devtmax) of %d exceeded by %d"
 #define HHC04111 "%1d:%04X Function %s failed: '[%02d] %s'"
+
+// reserve 17000 messages for QUERY functions
+#define HHC17000 "Missing or invalid argument(s)"
+#define HHC17001 "Server '%12s' is listening %s"
+#define HHC17002 "Server '%12s' is inactive"
+#define HHC17003 "%-8s storage is %sBytes '%ssize' "
+#define HHC17004 "CPUID  = "I64_FMTX""
+#define HHC17005 "CPC SI = %4.4X.%s.%s.%s.%16.16X"
+#define HHC17006 "LPARNAME[%2.2X] = %s"
+#define HHC17007 "NumCPU = %02d, NumVEC = %02d, MaxCPU = %02d"
+#define HHC17008 "Avgproc  %03d%% %02d; MIPS[%4d.%02d]; SIOS[%6d]"
+#define HHC17009 "PROC %s%02X %c %03d%%; MIPS[%4d.%02d]; SIOS[%6d]"
+#define HHC17010 " - Started        : Stopping        * Stopped"
 
 // reserve 90000 messages for debugging
 #define HHC90000 "DBG: %s"

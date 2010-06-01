@@ -1938,34 +1938,24 @@ void int_scsi_status_update( DEVBLK* dev, int mountstat_only ) // (internal call
     /* Display tape status if tracing is active */
     if (unlikely( dev->ccwtrace || dev->ccwstep ))
     {
-        char  buf[256];
-
-        snprintf
-        (
-            buf, sizeof(buf),
-
-            "%1d:%04X Tape file '%s', type 'scsi' status '%s', sstat 0x%8.8lX: %s %s"
-
-            ,SSID_TO_LCSS(dev->ssid)
-            ,dev->devnum
-            ,( (dev->filename[0]) ? (dev->filename) : ("(undefined)") )
-            ,( (dev->fd   <   0 ) ?   ("closed")    : (          "opened"  ) )
-            ,dev->sstat
-            ,STS_ONLINE(dev)      ? "ON-LINE" : "OFF-LINE"
-            ,STS_NOT_MOUNTED(dev) ? "NO-TAPE" : "READY"
-        );
-
-        if ( STS_TAPEMARK(dev) ) strlcat ( buf, " TAPE-MARK"    , sizeof(buf) );
-        if ( STS_EOF     (dev) ) strlcat ( buf, " END-OF-FILE"  , sizeof(buf) );
-        if ( STS_BOT     (dev) ) strlcat ( buf, " LOAD-POINT"   , sizeof(buf) );
-        if ( STS_EOT     (dev) ) strlcat ( buf, " END-OF-TAPE"  , sizeof(buf) );
-        if ( STS_EOD     (dev) ) strlcat ( buf, " END-OF-DATA"  , sizeof(buf) );
-        if ( STS_WR_PROT (dev) ) strlcat ( buf, " WRITE-PROTECT", sizeof(buf) );
+        WRMSG (HHC00211, "I"
+                ,SSID_TO_LCSS(dev->ssid)
+                ,dev->devnum
+                ,( (dev->filename[0]) ? (dev->filename)  : ("(undefined)") )
+                ,( (dev->fd   <   0 ) ? ("closed")       : ("opened") )
+                ,dev->sstat
+                ,STS_ONLINE(dev)      ? "ON-LINE"        : "OFF-LINE"
+                ,STS_NOT_MOUNTED(dev) ? "NO-TAPE"        : "READY"
+                ,STS_TAPEMARK(dev)    ? " TAPE-MARK"     : ""
+                ,STS_EOF     (dev)    ? " END-OF-FILE"   : ""
+                ,STS_BOT     (dev)    ? " LOAD-POINT"    : ""
+                ,STS_EOT     (dev)    ? " END-OF-TAPE"   : ""
+                ,STS_EOD     (dev)    ? " END-OF-DATA"   : ""
+                ,STS_WR_PROT (dev)    ? " WRITE-PROTECT" : ""
+                );
 
         if ( STS_BOT(dev) )
             dev->eotwarning = 0;
-
-        WRMSG (HHC00211, "I", buf );
     }
 
 } /* end function int_scsi_status_update */

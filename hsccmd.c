@@ -2961,11 +2961,10 @@ char  buf[64];
         regs->aie = NULL;
     }
 
-    display_psw(regs, buf + sprintf(buf, "Program status word: "));
-    WRMSG(HHC02278, "I", buf);
-
-    /* Display the PSW field by field */
-    sprintf(buf,"sm=%2.2X pk=%d cmwp=%X as=%s cc=%d pm=%X am=%s ia=%"I64_FMT"X",
+    /* Display the PSW and PSW field by field */
+    display_psw( regs, buf );
+    WRMSG( HHC02278, "I",
+        buf,
         regs->psw.sysmask,
         regs->psw.pkey >> 4,
         regs->psw.states,
@@ -2979,7 +2978,6 @@ char  buf[64];
             regs->psw.amode == 1 && regs->psw.amode64 == 0 ? "31" :
             regs->psw.amode == 1 && regs->psw.amode64 == 1 ? "64" : "???"),
         regs->psw.IA_G);
-    WRMSG(HHC02278, "I", buf);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -7717,7 +7715,7 @@ int query_cmd(int argc, char *argv[], char *cmdline)
 {
     if (argc < 2)
     {
-        WRMSG(HHC02202, "E");
+        WRMSG( HHC17000, "E" );
         return -1;
     }
 
@@ -7733,26 +7731,26 @@ int query_cmd(int argc, char *argv[], char *cmdline)
 
             if (argc != 2)
             {
-                WRMSG(HHC02202, "E");
+                WRMSG( HHC17000, "E" );
                 return -1;
             }
             if ( sysblk.httpport > 0 )
             {
                 sprintf(str, "on port %-5d", sysblk.httpport);
-                WRMSG(HHC00152, "I", "http", str);
+                WRMSG( HHC17001, "I", "http", str);
             }
             else
             {   
-                WRMSG(HHC00153, "I", "http");
+                WRMSG( HHC17002, "I", "http");
             }
             if ( sysblk.shrdport > 0 )
             {
                 sprintf(str, "on port %-5d", sysblk.shrdport);
-                WRMSG(HHC00152, "I", "shared_dasd", str);
+                WRMSG( HHC17001, "I", "shared_dasd", str);
             }
             else
             {   
-                WRMSG(HHC00153, "I", "shared_dasd");
+                WRMSG( HHC17002, "I", "shared_dasd");
             }
             if (strchr(sysblk.cnslport, ':') == NULL)
             {
@@ -7772,7 +7770,7 @@ int query_cmd(int argc, char *argv[], char *cmdline)
                 }
                 sprintf(str, "for host %s on port %-5s", host, serv);
             }
-            WRMSG(HHC00152, "I", "console", str);
+            WRMSG( HHC17001, "I", "console", str);
             return 0;
         }
         else if (strcasecmp(argv[1],"stor") == 0 )
@@ -7782,53 +7780,53 @@ int query_cmd(int argc, char *argv[], char *cmdline)
             
             if ( sysblk.mainsize >= ONE_EXABYTE )
             {
-                sprintf( buf, "%" I64_FMT "d EBytes", sysblk.mainsize >> 60 );
+                sprintf( buf, "%" I64_FMT "d E", sysblk.mainsize >> 60 );
             }
             else if ( sysblk.mainsize >= ONE_PETABYTE )
             {
-                sprintf( buf, "%" I64_FMT "d PBytes", sysblk.mainsize >> 50 );
+                sprintf( buf, "%" I64_FMT "d P", sysblk.mainsize >> 50 );
             }
             else if ( sysblk.mainsize >= ONE_TERABYTE )
             {
-                sprintf( buf, "%" I64_FMT "d TBytes", sysblk.mainsize >> 40 );
+                sprintf( buf, "%" I64_FMT "d T", sysblk.mainsize >> 40 );
             }
             else if ( sysblk.mainsize >= ONE_GIGABYTE )
             {
-                sprintf( buf, "%" I64_FMT "d GBytes", sysblk.mainsize >> 30 );
+                sprintf( buf, "%" I64_FMT "d G", sysblk.mainsize >> 30 );
             }
             else 
             {
-                sprintf( buf, "%" I64_FMT "d MBytes", sysblk.mainsize >> 20 );
+                sprintf( buf, "%" I64_FMT "d M", sysblk.mainsize >> 20 );
             }
 
-            WRMSG( HHC00154, "I", "main", buf );
+            WRMSG( HHC17003, "I", "MAIN", buf, "main" );
 
             if ( xpndsize >= ONE_EXABYTE )
             {
-                sprintf( buf, "%" I64_FMT "d EBytes", xpndsize >> 60 );
+                sprintf( buf, "%" I64_FMT "d E", xpndsize >> 60 );
             }
             else if ( xpndsize >= ONE_PETABYTE )
             {
-                sprintf( buf, "%" I64_FMT "d PBytes", xpndsize >> 50 );
+                sprintf( buf, "%" I64_FMT "d P", xpndsize >> 50 );
             }
             else if ( xpndsize >= ONE_TERABYTE )
             {
-                sprintf( buf, "%" I64_FMT "d TBytes", xpndsize >> 40 );
+                sprintf( buf, "%" I64_FMT "d T", xpndsize >> 40 );
             }
             else if ( xpndsize >= ONE_GIGABYTE )
             {
-                sprintf( buf, "%" I64_FMT "d GBytes", xpndsize >> 30 );
+                sprintf( buf, "%" I64_FMT "d G", xpndsize >> 30 );
             }
             else 
             {
-                sprintf( buf, "%" I64_FMT "d MBytes", xpndsize >> 20 );
+                sprintf( buf, "%" I64_FMT "d M", xpndsize >> 20 );
             }
-            WRMSG( HHC00154, "I", "xpnd", buf );
+            WRMSG( HHC17003, "I", "EXPANDED", buf, "xpnd" );
         }
         else if (strcasecmp(argv[1],"cpuid") == 0 )
         {
-            WRMSG( HHC00155, "I", sysblk.cpuid );
-            WRMSG( HHC00156, "I", ((sysblk.cpuid & 0x00000000FFFF0000ULL) >> 16),
+            WRMSG( HHC17004, "I", sysblk.cpuid );
+            WRMSG( HHC17005, "I", ((sysblk.cpuid & 0x00000000FFFF0000ULL) >> 16),
                                   str_model(), str_manufacturer(), str_plant(),
                                   ((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32) );
         }
@@ -7836,61 +7834,51 @@ int query_cmd(int argc, char *argv[], char *cmdline)
         {
             
 #ifdef    _FEATURE_VECTOR_FACILITY
-            WRMSG( HHC00157, "I",   sysblk.numcpu, sysblk.numvec, sysblk.maxcpu );
+            WRMSG( HHC17007, "I",   sysblk.numcpu, sysblk.numvec, sysblk.maxcpu );
 #else  /*!_FEATURE_VECTOR_FACILITY*/
-            WRMSG( HHC00157, "I",   sysblk.numcpu,             0, sysblk.maxcpu );
+            WRMSG( HHC17007, "I",   sysblk.numcpu,             0, sysblk.maxcpu );
 #endif /* _FEATURE_VECTOR_FACILITY*/
                                     
             {
                 int i, j;
-                char buf[1024];
-                char cpu[64];
                 int cpupct = 0;
                 
-                buf[0] = '\0';
                 for ( i = j = 0; i < MAX_CPU; i++ )
                 {
-                    if ( IS_CPU_ONLINE(i) )
+                    if ( IS_CPU_ONLINE(i) && sysblk.regs[i]->cpustate == CPUSTATE_STARTED )
                     {
-                        if ( j == 0 )
-                            sprintf(cpu, "%s%02X %c %03d%%        ", 
-                                         PTYPSTR(i), i, 
-                                         ( sysblk.regs[i]->cpustate == CPUSTATE_STARTED ) ? '-' : 
-                                             ( sysblk.regs[i]->cpustate == CPUSTATE_STOPPING ) ? ':' : '*', 
-                                         sysblk.regs[i]->cpupct );
-                        else
-                            ( ( j & 1 ) == 0 ? sprintf(cpu, "HHC00159I %s%02X %c %03d%%        ", 
-                                                            PTYPSTR(i), i, 
-                                                            ( sysblk.regs[i]->cpustate == CPUSTATE_STARTED ) ? '-' : 
-                                                                 ( sysblk.regs[i]->cpustate == CPUSTATE_STOPPING ) ? ':' : '*', 
-                                                            sysblk.regs[i]->cpupct ) :
-                                               sprintf(cpu, "%s%02X %c %03d%%\n",       
-                                                            PTYPSTR(i), i, 
-                                                            ( sysblk.regs[i]->cpustate == CPUSTATE_STARTED ) ? '-' : 
-                                                                ( sysblk.regs[i]->cpustate == CPUSTATE_STOPPING ) ? ':' : '*', 
-                                                            sysblk.regs[i]->cpupct ) ); 
                         j++;
-                        strcat(buf, cpu);
                         cpupct += sysblk.regs[i]->cpupct;
                     }
                 }
-                if ( ( j & 1 ) == 1 ) strcat( buf, "\n" );
-                sprintf(cpu, "HHC00159I - Started          : Stopping\n");
-                strcat(buf, cpu);
-                sprintf(cpu, "HHC00159I * Stopped");
-                strcat(buf, cpu);
-                sprintf(cpu, "Avgproc-%03d%% %02d", cpupct / j, j );
-                WRMSG(HHC00159, "I", cpu);
-                WRMSG(HHC00159, "I", buf);
+
+                WRMSG( HHC17008, "I", ( j == 0 ? 0 : ( cpupct / j ) ), j, 
+                                      sysblk.mipsrate / 1000000, ( sysblk.mipsrate % 1000000 ) / 10000, 
+                                      sysblk.siosrate );
+
+                for ( i = 0; i < MAX_CPU; i++ )
+                {
+                    if ( IS_CPU_ONLINE(i) )
+                    {
+                        WRMSG( HHC17009, "I", PTYPSTR(i), i, 
+                                ( sysblk.regs[i]->cpustate == CPUSTATE_STARTED ) ? '-' : 
+                                  ( sysblk.regs[i]->cpustate == CPUSTATE_STOPPING ) ? ':' : '*', 
+                                sysblk.regs[i]->cpupct,
+                                sysblk.regs[i]->mipsrate / 1000000, ( sysblk.regs[i]->mipsrate % 1000000 ) / 10000,
+                                sysblk.regs[i]->siosrate );
+                    }
+                }
+
+                WRMSG( HHC17010, "I" );
             }
         }
         else if (strcasecmp(argv[1],"lpar") == 0 )
         {
-            WRMSG( HHC00158, "I", sysblk.lparnum, str_lparname() );
+            WRMSG( HHC17006, "I", sysblk.lparnum, str_lparname() );
         }
         else
         {
-            WRMSG(HHC02202, "E", "query");
+            WRMSG( HHC17000, "E" );
             return -1;
         }
     }

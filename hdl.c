@@ -430,45 +430,30 @@ int len;
     len = 0;
     for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
     {
-        len += sprintf(buf + len, "dll type = %s",(dllent->flags & HDL_LOAD_MAIN) ? "main" : "load");
-        len += sprintf(buf + len, ", name = %s",dllent->name);
-
-        if (dllent->flags & (HDL_LOAD_NOUNLOAD | HDL_LOAD_WAS_FORCED))
-        {
-            len += sprintf(buf + len, ", flags = (%s%s%s)"
-                ,(dllent->flags & HDL_LOAD_NOUNLOAD)   ? "nounload" : ""
-                ,(dllent->flags & HDL_LOAD_NOUNLOAD) &&
-                 (dllent->flags & HDL_LOAD_WAS_FORCED) ? ", "       : ""
-                ,(dllent->flags & HDL_LOAD_WAS_FORCED) ? "forced"   : ""
-                );
-        }
-
-        WRMSG(HHC01531, "I", buf);
-        len = 0;
+        WRMSG( HHC01531, "I"
+            ,(dllent->flags & HDL_LOAD_MAIN)       ? "main"     : "load"
+            ,dllent->name
+            ,(dllent->flags & HDL_LOAD_NOUNLOAD)   ? "not unloadable" : "unloadable"
+            ,(dllent->flags & HDL_LOAD_WAS_FORCED) ? "forced"   : "not forced" );
 
         for(modent = dllent->modent; modent; modent = modent->modnext)
             if((flags & HDL_LIST_ALL) 
               || !((dllent->flags & HDL_LOAD_MAIN) && !modent->fep))
             {
-                len += sprintf(buf + len, " symbol = %s",modent->name);
-//              len += sprintf(buf + len, ", ep = %p",modent->fep);
-                if(modent->fep)
-                    len += sprintf(buf + len, ", loadcount = %d",modent->count);
-                else
-                    len += sprintf(buf + len, ", unresolved");
-                sprintf(buf + len, ", owner = %s",dllent->name);
-                WRMSG(HHC01531, "I", buf);
-                len = 0;
+                WRMSG( HHC01532, "I"
+                    ,modent->name
+                    ,modent->count
+                    ,modent->fep ? "" : ", unresolved"
+                    ,dllent->name );
             }
 
         if(dllent->hndent)
         {
         HDLDEV *hndent;
-            len += sprintf(buf + len, " devtype =");
+            len = 0;
             for(hndent = dllent->hndent; hndent; hndent = hndent->next)
                 len += sprintf(buf + len, " %s",hndent->name);
-        WRMSG(HHC01531, "I", buf);
-        len = 0;
+            WRMSG(HHC01533, "I", buf);
 
         }
 
@@ -477,15 +462,18 @@ int len;
         HDLINS *insent;
             for(insent = dllent->insent; insent; insent = insent->next)
             {
-                len += sprintf(buf + len, " instruction = %s, opcode = %4.4X",insent->instname,insent->opcode);
+                len = 0;
                 if(insent->archflags & HDL_INSTARCH_370)
                     len += sprintf(buf + len, ", archmode = " _ARCH_370_NAME);
                 if(insent->archflags & HDL_INSTARCH_390)
                     len += sprintf(buf + len, ", archmode = " _ARCH_390_NAME);
                 if(insent->archflags & HDL_INSTARCH_900)
                     len += sprintf(buf + len, ", archmode = " _ARCH_900_NAME);
-                WRMSG(HHC01531, "I", buf);
-                len = 0;
+
+                WRMSG( HHC01534, "I"
+                    ,insent->instname
+                    ,insent->opcode
+                    ,buf );
             }
         }
     }
