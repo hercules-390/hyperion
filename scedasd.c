@@ -50,11 +50,11 @@ char tempdir[MAX_PATH];
         else
         {
             hostpath(realdir, tempdir, sizeof(realdir));
-#if       defined(_MSVC_)
+#if       defined(OPTION_WINDOWS_HOST_FILENAMES)
             strlcat(realdir,"\\",sizeof(realdir));
-#else  //!defined(_MSVC_)
+#else  //!defined(OPTION_WINDOWS_HOST_FILENAMES)
             strlcat(realdir,"/",sizeof(realdir));
-#endif // defined(_MSVC_)
+#endif // defined(OPTION_WINDOWS_HOST_FILENAMES)
             sce_basedir = strdup(realdir);
         }
 }
@@ -80,19 +80,19 @@ char tempdir[MAX_PATH];
     }
     hostpath(realdir, tempdir, sizeof(realdir));
 
-#if       defined(_MSVC_)
+#if       defined(OPTION_WINDOWS_HOST_FILENAMES)
     if((basedir = strrchr(realdir,'\\')))
-#else  //!defined(_MSVC_)
+#else  //!defined(OPTION_WINDOWS_HOST_FILENAMES)
     if((basedir = strrchr(realdir,'/')))
-#endif // defined(_MSVC_)
+#endif // defined(OPTION_WINDOWS_HOST_FILENAMES)
     {
         *(++basedir) = '\0';
         sce_basedir = strdup(realdir);
-#if       defined(_MSVC_)
+#if       defined(OPTION_WINDOWS_HOST_FILENAMES)
         return (basedir = strrchr(path,'\\')) ? ++basedir : path;
-#else  //!defined(_MSVC_)
+#else  //!defined(OPTION_WINDOWS_HOST_FILENAMES)
         return (basedir = strrchr(path,'/')) ? ++basedir : path;
-#endif // defined(_MSVC_)
+#endif // defined(OPTION_WINDOWS_HOST_FILENAMES)
 
     }
     else
