@@ -5444,8 +5444,8 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
         }
         WRMSG( HHC00866, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, 
                               states[sysblk.regs[i]->cpustate] );
-        WRMSG( HHC00867, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, (long unsigned)INSTCOUNT(sysblk.regs[i]));
-        WRMSG( HHC00868, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, (long unsigned)sysblk.regs[i]->siototal);
+        WRMSG( HHC00867, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, INSTCOUNT(sysblk.regs[i]));
+        WRMSG( HHC00868, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, sysblk.regs[i]->siototal);
         copy_psw(sysblk.regs[i], curpsw);
         if (ARCH_900 == sysblk.arch_mode)
         {
@@ -5493,8 +5493,8 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
                 WRMSG( HHC00865, "I", "IE", sysblk.regs[i]->cpuad, buf );
             }
             WRMSG( HHC00866, "I", "IE", sysblk.regs[i]->cpuad, states[sysblk.regs[i]->guestregs->cpustate]);
-            WRMSG( HHC00867, "I", "IE", sysblk.regs[i]->cpuad, (long unsigned)sysblk.regs[i]->guestregs->instcount); 
-            WRMSG( HHC00868, "I", "IE", sysblk.regs[i]->cpuad, (long unsigned)sysblk.regs[i]->guestregs->siototal);
+            WRMSG( HHC00867, "I", "IE", sysblk.regs[i]->cpuad, sysblk.regs[i]->guestregs->instcount); 
+            WRMSG( HHC00868, "I", "IE", sysblk.regs[i]->cpuad, sysblk.regs[i]->guestregs->siototal);
             copy_psw(sysblk.regs[i]->guestregs, curpsw);
             if (ARCH_900 == sysblk.arch_mode)
             {
