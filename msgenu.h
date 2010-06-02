@@ -471,8 +471,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00816 "Processor %s%02X: processor is not '%s'"
 #define HHC00817 "Processor %s%02X: store status completed"
 #define HHC00818 "Processor %s%02X: not eligible for ipl nor restart"
-#define HHC00819 "Processor %s%02X: %s"
-#define HHC00820 "%s"
+
 #define HHC00821 "Processor %s%02X: vector facility configured '%s'"
 #define HHC00822 "Processor %s%02X: machine check due to host error: '%s'"
 #define HHC00823 "Processor %s%02X: check-stop due to host error: '%s'"
@@ -493,11 +492,11 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00846 "External interrupt: service signal %8.8X"
 
 #define HHC00850 "Processor %s%02X: CPUint=%8.8X (State:%8.8X)&(Mask:%8.8X)"
-#define HHC00851 "Processor %s%02X: Interrupt %spending"
+#define HHC00851 "Processor %s%02X: interrupt %spending"
 #define HHC00852 "Processor %s%02X: I/O interrupt %spending"
-#define HHC00853 "Processor %s%02X: Clock comparator %spending"
+#define HHC00853 "Processor %s%02X: clock comparator %spending"
 #define HHC00854 "Processor %s%02X: CPU timer %spending"
-#define HHC00855 "Processor %s%02X: Interval timer %spending"
+#define HHC00855 "Processor %s%02X: interval timer %spending"
 #define HHC00856 "Processor %s%02X: ECPS vtimer %spending"
 #define HHC00857 "Processor %s%02X: external call %spending"
 #define HHC00858 "Processor %s%02X: emergency signal %spending"
@@ -507,7 +506,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00862 "Processor %s%02X: intlock held: %s"
 #define HHC00863 "Processor %s%02X: waiting for intlock: %s"
 #define HHC00864 "Processor %s%02X: lock %sheld"
-#define HHC00865 "Processor %s%02X: Connected to channelset %s"
+#define HHC00865 "Processor %s%02X: connected to channelset %s"
 #define HHC00866 "Processor %s%02X: state %s"
 #define HHC00867 "Processor %s%02X: instcount %" I64_FMT "d"
 #define HHC00868 "Processor %s%02X: siocount %" I64_FMT "d"
@@ -519,6 +518,10 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00874 "mainlock %sheld; owner %4.4x"
 #define HHC00875 "intlock %sheld; owner %4.4x"
 #define HHC00876 "ioq lock %sheld"
+
+#define HHC00880 "device %1d:%04X: status %s"
+#define HHC00881 "I/O interrupt queue:%s" 
+#define HHC00882 "device %1d:%04X: %s%s%s%s, pri %d" 
 
 // reserve 009xx for ctc related messages 
 /*ctc_ctci.c*/

@@ -5533,63 +5533,52 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
             sprintf (sysid, "id=%d", dev->ioactive);
         if (dev->busy && !(dev->suspended && dev->ioactive == DEV_SYS_NONE))
         {
-            sprintf(buf, "device %1d:%04X: busy %s", SSID_TO_LCSS(dev->ssid), dev->devnum, sysid);
-            WRMSG(HHC00820, "I", buf);
+            sprintf(buf, "busy %s", sysid);
+            WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, buf);
         }
         if (dev->reserved)
         {
-            sprintf(buf, "device %1d:%04X: reserved %s", SSID_TO_LCSS(dev->ssid), dev->devnum, sysid);
-            WRMSG(HHC00820, "I", buf);
+            sprintf(buf, "reserved %s", sysid);
+            WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, buf);
         }
         if (dev->suspended)
         {
-            sprintf(buf, "device %1d:%04X: suspended", SSID_TO_LCSS(dev->ssid), dev->devnum);
-            WRMSG(HHC00820, "I", buf);
+            WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "suspended" );
         }
         if (dev->pending && (dev->pmcw.flag5 & PMCW5_V))
         {
-            sprintf(buf, "device %1d:%04X: I/O pending", SSID_TO_LCSS(dev->ssid), dev->devnum);
-            WRMSG(HHC00820, "I", buf);
+            WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "I/O pending" );
         }
         if (dev->pcipending && (dev->pmcw.flag5 & PMCW5_V))
         {
-            sprintf(buf, "device %1d:%04X: PCI pending", SSID_TO_LCSS(dev->ssid), dev->devnum);
-            WRMSG(HHC00820, "I", buf);
+            WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "PCI pending" );
         }
         if (dev->attnpending && (dev->pmcw.flag5 & PMCW5_V))
         {
-            sprintf(buf, "device %1d:%04X: Attn pending", SSID_TO_LCSS(dev->ssid), dev->devnum);
-            WRMSG(HHC00820, "I", buf);
+            WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "Attn pending" );
         }
         if ((dev->crwpending) && (dev->pmcw.flag5 & PMCW5_V))
         {
-            sprintf(buf, "device %1d:%04X: CRW pending", SSID_TO_LCSS(dev->ssid), dev->devnum);
-            WRMSG(HHC00820, "I", buf);
+            WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "CRW pending" );
         }
         if (test_lock(&dev->lock) && (dev->pmcw.flag5 & PMCW5_V))
         {
-            sprintf(buf, "device %1d:%04X: lock held", SSID_TO_LCSS(dev->ssid), dev->devnum);
-            WRMSG(HHC00820, "I", buf);
+            WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "lock held" );
         }
     }
     if (!sysblk.iointq)
-        WRMSG(HHC00820, "I", "I/O interrupt queue: (NULL)");
+        WRMSG( HHC00881, "I", " (NULL)");
     else
-        WRMSG(HHC00820, "I", "I/O interrupt queue:");
+        WRMSG( HHC00881, "I", "");
 
     for (io = sysblk.iointq; io; io = io->next)
     {
-        sprintf(buf, "device %1d:%04X,%s%s%s%s, pri %d"
-            ,SSID_TO_LCSS(io->dev->ssid)
-            ,io->dev->devnum
-
-            ,io->pending      ? " normal"  : ""
-            ,io->pcipending   ? " PCI"     : ""
-            ,io->attnpending  ? " ATTN"    : ""
-            ,!IOPENDING(io)   ? " unknown" : ""
-            ,io->priority
-        );
-        WRMSG(HHC00820, "I", buf);
+        WRMSG( HHC00882, "I", SSID_TO_LCSS(io->dev->ssid), io->dev->devnum
+                ,io->pending      ? " normal"  : ""
+                ,io->pcipending   ? " PCI"     : ""
+                ,io->attnpending  ? " ATTN"    : ""
+                ,!IOPENDING(io)   ? " unknown" : ""
+                ,io->priority );
     }
 
     return 0;
