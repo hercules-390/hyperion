@@ -930,14 +930,14 @@ int cf_cmd(int argc, char *argv[], char *cmdline)
     if (IS_CPU_ONLINE(sysblk.pcpu))
     {
         if (on < 0)
-            WRMSG(HHC00815, "I", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
+            WRMSG(HHC00819, "I", PTYPSTR(sysblk.pcpu), sysblk.pcpu );
         else if (on == 0)
             deconfigure_cpu(sysblk.pcpu);
     }
     else
     {
         if (on < 0)
-            WRMSG(HHC00815, "I", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "offline");
+            WRMSG(HHC00820, "I", PTYPSTR(sysblk.pcpu), sysblk.pcpu );
         else if (on > 0)
             configure_cpu(sysblk.pcpu);
     }
@@ -974,14 +974,14 @@ int cfall_cmd(int argc, char *argv[], char *cmdline)
         if (IS_CPU_ONLINE(i))
         {
             if (on < 0)
-                WRMSG(HHC00815, "I", PTYPSTR(i), i, "online");
+                WRMSG(HHC00819, "I", PTYPSTR(i), i );
             else if (on == 0)
                 deconfigure_cpu(i);
         }
         else
         {
             if (on < 0)
-                WRMSG(HHC00815, "I", PTYPSTR(i), i, "offline");
+                WRMSG(HHC00820, "I", PTYPSTR(i), i );
             else if (on > 0 && i < MAX_CPU)
                 configure_cpu(i);
         }
@@ -5372,6 +5372,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
     DEVBLK *dev;                        /* -> Device block           */
     IOINT  *io;                         /* -> I/O interrupt entry    */
     unsigned i;
+    int first, last;
     char    sysid[12];
     BYTE    curpsw[16];
     char *states[] = { "?(0)", "STARTED", "STOPPING", "STOPPED" };
@@ -5381,12 +5382,26 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(argv);
     UNREFERENCED(cmdline);
 
+    first = last = -1;
+
     for (i = 0; i < MAX_CPU_ENGINES; i++)
     {
         if (!IS_CPU_ONLINE(i))
         {
-            WRMSG(HHC00815, "I", PTYPSTR(i), i, "offline");
+            if ( first == -1 )
+                first = last = i;
+            else
+                last++;
             continue;
+        }
+
+        if ( first > 0 )
+        {
+            if ( first == last )
+                WRMSG( HHC00820, "I", PTYPSTR(first), first );
+            else
+                WRMSG( HHC00815, "I", PTYPSTR(first), first, PTYPSTR(last), last );
+            first = last = -1;
         }
 
 // /*DEBUG*/logmsg( _("hsccmd.c: %s%02X: Any cpu interrupt %spending\n"),
@@ -5513,6 +5528,15 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
             WRMSG(HHC00869, "I", "IE", sysblk.regs[i]->cpuad, buf);
         }
     }
+        
+    if ( first > 0 )
+    {
+        if ( first == last )
+            WRMSG( HHC00820, "I", PTYPSTR(first), first );
+        else
+            WRMSG( HHC00815, "I", PTYPSTR(first), first, PTYPSTR(last), last );
+    }
+    
     WRMSG( HHC00870, "I", sysblk.config_mask, sysblk.started_mask, sysblk.waiting_mask );
     WRMSG( HHC00871, "I", sysblk.sync_mask, sysblk.syncing ? "sync in progress" : "" );
     WRMSG( HHC00872, "I", test_lock(&sysblk.sigplock) ? "" : "not ");
