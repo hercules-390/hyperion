@@ -5597,8 +5597,8 @@ int   rc;
                     }
                     else
                     {
-   	                char buf[40];
-			sprintf(buf, "calloc(%d, %lu)", val, sizeof(CCKD_TRACE));
+                        char buf[40];
+                        sprintf(buf, "calloc(%d, %lu)", val, sizeof(CCKD_TRACE));
                         WRMSG (HHC00303, "E", buf, strerror(errno));
                     }
                 }
@@ -5640,12 +5640,12 @@ int   rc;
             }
             cckd_unlock_devchain();
             if (flag && cckdblk.gcs < cckdblk.gcmax)
-	    {
+            {
                 rc = create_thread (&tid, JOINABLE, cckd_gcol, NULL, "cckd_gcol");
-		if (rc)
+                if (rc)
                     WRMSG(HHC00102, "E", strerror(rc));
-    	    }
-	}
+            }
+        }
         else
         {
             WRMSG(HHC00349, "E", kw);

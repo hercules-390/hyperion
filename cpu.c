@@ -730,6 +730,8 @@ static char *pgmintname[] = {
         || sysblk.pgminttr & ((U64)1 << ((code - 1) & 0x3F))))
     {
      BYTE *ip;
+     char buf1[10] = "";
+     char buf2[32] = "";
 #if defined(OPTION_FOOTPRINT_BUFFER)
         if(!(sysblk.insttrace || sysblk.inststep))
             for(n = sysblk.footprptr[realregs->cpuad] + 1 ;
@@ -739,8 +741,6 @@ static char *pgmintname[] = {
                         (&sysblk.footprregs[realregs->cpuad][n],
                         sysblk.footprregs[realregs->cpuad][n].inst);
 #endif /*defined(OPTION_FOOTPRINT_BUFFER)*/
-        char buf1[10] = "";
-        char buf2[10] = "";
 #if defined(_FEATURE_SIE)
         if (SIE_MODE(realregs))
           strcpy(buf1, "SIE: ");
@@ -1083,7 +1083,7 @@ static char *pgmintname[] = {
             else
 #endif /*defined(_FEATURE_SIE)*/
             {
-                char buf[40];
+                char buf[64];
 
                 WRMSG(HHC00803, "I", PTYPSTR(realregs->cpuad), realregs->cpuad,
                          str_psw (realregs, buf));
