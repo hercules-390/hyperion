@@ -7080,6 +7080,27 @@ int scpecho_cmd(int argc, char *argv[], char *cmdline)
     WRMSG(HHC02204, "I", "SCP, PSCP echo", (sysblk.scpecho ? "on" : "off") );
     return 0;
 }
+/*-------------------------------------------------------------------*/
+/* scpimply - toggle passing non-hercules commands to the scp        */
+/*           if scp has enabled scp commands.                        */
+/*-------------------------------------------------------------------*/
+int scpimply_cmd(int argc, char *argv[], char *cmdline)
+{
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+    UNREFERENCED(cmdline);
+
+    if (sysblk.scpimply)
+    {
+        sysblk.scpimply = FALSE;
+    }
+    else
+    {
+        sysblk.scpimply = TRUE;
+    }
+    WRMSG(HHC02204, "I", "scpimpy", (sysblk.scpimply ? "on" : "off") );
+    return 0;
+}
 #endif
 
 

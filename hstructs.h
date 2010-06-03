@@ -543,6 +543,7 @@ struct SYSBLK {
                 npquiet:1,              /* New Panel quiet indicator */
 #if defined(_FEATURE_SYSTEM_CONSOLE)
                 scpecho:1,              /* scp echo mode indicator   */
+                scpimply:1,             /* scp imply mode indicator  */
 #endif
                 sigintreq:1,            /* 1 = SIGINT request pending*/
                 insttrace:1,            /* 1 = Instruction trace     */

@@ -386,6 +386,20 @@ int can_signal_quiesce()
     return SCLP_RECV_ENABLED(SCCB_EVD_TYPE_SIGQ);
 }
 
+/*-------------------------------------------------------------------*/
+/* Test whether SCP is enabled to receive Operator Commands          */
+/*                                                                   */
+/* This function tests whether the SCP is willing to receive         */
+/* an operator command via the SCLP_READ_EVENT_DATA service call.    */
+/*                                                                   */
+/* Return code:                                                      */
+/*      Zero = SCP not receiving Operator Commands                   */
+/*      Non-zero = SCP ready to receive Operator Commands            */
+/*-------------------------------------------------------------------*/
+int can_send_command()
+{
+    return SCLP_RECV_ENABLED(SCCB_EVD_TYPE_OPCMD);
+}
 
 /*-------------------------------------------------------------------*/
 /* Send QUIESCE signal to SCP                                        */

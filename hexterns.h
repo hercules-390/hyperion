@@ -330,6 +330,7 @@ void *timer_update_thread (void *argp);
 /* Functions in module service.c */
 void scp_command (char *command, int priomsg, int echo);
 int can_signal_quiesce ();
+int can_send_command ();
 int signal_quiesce (U16 count, BYTE unit);
 void sclp_attention(U16 type);
 void sclp_reset();

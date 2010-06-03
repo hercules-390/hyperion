@@ -1,3 +1,5 @@
+03 Jun 2010 'scpimply' command and function added. 'Unknown' commands are passed to the
+            scp for processing, if the scp has enabled scp operator commands.
 03 Jun 2010 MAXCPU is reset to NUMCPU if NUMCPU exceeds MAXCPU; Warning message issued.
 03 Jun 2010 QQUIT added for cmdlevels above SYSOPER. (Quick QUIT)
 26 May 2010 QUERY command and enhancements. See QUERY HELP for assistance

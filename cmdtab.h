@@ -171,6 +171,12 @@ COMMAND("cfall",     PANEL,         SYSCMDALL,          cfall_cmd,
 #endif
 
 #ifdef _FEATURE_SYSTEM_CONSOLE
+COMMAND("scpimply",   PANEL+CONFIG,  SYSCMDALL,          scpimply_cmd,  
+  "Toggle on/off passing non-hercules commands to the scp",
+    "scpimply toggles passing non-hercules commands to the scp if the scp has enabled\n"
+    "receipt of scp commands. The default is off. If on, 'invalid' hercules\n"
+    "commands are passed to the scp.\n")
+
 COMMAND("scpecho",   PANEL+CONFIG,  SYSCMDALL,          scpecho_cmd,  
   "Toggle on/off echo to console and history of scp replys",
     "scpecho toggles the '.' (scp) and '!' (priority scp) replys and responses\n"

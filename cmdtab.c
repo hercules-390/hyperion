@@ -262,7 +262,10 @@ int ProcessPanelCommand (char* pszCmdLine)
     /* Error: unknown/unsupported command... */
     ASSERT( cmd_argv[0] );
 
-    WRMSG( HHC01600, "E", cmd_argv[0] );
+    if ( sysblk.scpimply && can_send_command() )
+        scp_command(pszSaveCmdLine, FALSE, sysblk.scpecho ? TRUE : FALSE);
+    else
+        WRMSG( HHC01600, "E", cmd_argv[0] );
 
 ProcessPanelCommandExit:
 
