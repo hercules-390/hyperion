@@ -5597,8 +5597,8 @@ int   rc;
                     }
                     else
                     {
-   	                char buf[40];
-			snprintf(buf, 40, "calloc(%d, %lu)", val, sizeof(CCKD_TRACE));
+                        char buf[40];
+                        snprintf(buf, 40, "calloc(%d, %lu)", val, sizeof(CCKD_TRACE));
                         WRMSG (HHC00303, "E", buf, strerror(errno));
                     }
                 }

@@ -767,7 +767,11 @@ char    fname[MAX_PATH];                /* normalized filename       */
     xpndsize = 0;
     maxcpu = 0;
     numcpu = 0;
+#ifdef    _FEATURE_VECTOR_FACILITY
     numvec = MAX_CPU_ENGINES;
+#else  //!_FEATURE_VECTOR_FACILITY
+    numvec = 0;
+#endif // _FEATURE_VECTOR_FACILITY
     sysepoch = 1900;
     yroffset = 0;
     tzoffset = 0;
@@ -1699,14 +1703,16 @@ char    fname[MAX_PATH];                /* normalized filename       */
 #endif /*_FEATURE_CPU_RECONFIG*/
 
     /* Set maximum number of CPUs to specified value */
-    if (maxcpu > 0) {
+    if (maxcpu > 0) 
+    {
         sysblk.maxcpu = maxcpu;
     }
 
     /* Check that numcpu does not exceed maxcpu */
-    if (sysblk.numcpu > sysblk.maxcpu) {
-        WRMSG(HHC01449, "S", fname, sysblk.numcpu, sysblk.maxcpu);
-        delayed_exit(1);
+    if (sysblk.numcpu > sysblk.maxcpu) 
+    {
+        sysblk.maxcpu = sysblk.numcpu;
+        WRMSG(HHC01449, "W", fname, sysblk.numcpu, sysblk.maxcpu);
     }
 
     /* Start the CPUs */

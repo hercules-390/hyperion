@@ -95,11 +95,11 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         int save_errno = errno;
         het_close (&dev->hetb);
         errno = save_errno;
-		{
-			char buf[128];
-			snprintf(buf, 128, "Het error '%s': '%s'", het_error(rc), strerror(errno));
-			WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "het", "het_open()", buf);
-		}
+        {
+            char buf[128];
+            snprintf(buf, 128, "Het error '%s': '%s'", het_error(rc), strerror(errno));
+            WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "het", "het_open()", buf);
+        }
 
         strcpy(dev->filename, TAPE_UNLOADED);
         build_senseX(TAPE_BSENSE_TAPELOADFAIL,dev,unitstat,code);
@@ -152,8 +152,8 @@ int rc;
     if (rc < 0)
     {
         /* Handle seek error condition */
-	char buf[128];
-	sinprintf(buf, 128, "Het error '%s': '%s'", het_error(rc), strerror(errno));
+        char buf[128];
+        sinprintf(buf, 128, "Het error '%s': '%s'", het_error(rc), strerror(errno));
         WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "het", "het_rewind()", buf);
 
         build_senseX(TAPE_BSENSE_REWINDFAILED,dev,unitstat,code);
@@ -199,11 +199,11 @@ int             rc;                     /* Return code               */
             build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
             return -1;
         }
-		{
-			char buf[128];
-			snprintf(buf, 128, "Het error '%s': '%s'", het_error(rc), strerror(errno));
-			WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "het", "het_read()", dev->hetb->cblk, buf);
-		}
+        {
+            char buf[128];
+            snprintf(buf, 128, "Het error '%s': '%s'", het_error(rc), strerror(errno));
+            WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "het", "het_read()", dev->hetb->cblk, buf);
+        }
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
         return -1;
@@ -241,7 +241,7 @@ off_t           cursize;                /* Current size for size chk */
     if (rc < 0)
     {
         /* Handle write error condition */
-	char buf[128];
+        char buf[128];
         snprintf(buf, 128, "Het error '%s': '%s'", het_error(rc), strerror(errno));
         WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "het", "het_write()", dev->hetb->cblk, buf);
 
@@ -292,7 +292,7 @@ int             rc;                     /* Return code               */
     if (rc < 0)
     {
         /* Handle error condition */
-	char buf[128];
+        char buf[128];
         snprintf(buf, 128, "Het error '%s': '%s'", het_error(rc), strerror(errno));
         WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "het", "het_tapemark()", dev->hetb->cblk, buf);
 
@@ -362,11 +362,11 @@ int             rc;                     /* Return code               */
             dev->curfilen++;
             return 0;
         }
-		{
-			char buf[128];
-			snprintf(buf, 128, "Het error '%s': '%s'", het_error(rc), strerror(errno));
-			WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "het", "het_fsb()", dev->hetb->cblk, buf);
-		}
+        {
+            char buf[128];
+            snprintf(buf, 128, "Het error '%s': '%s'", het_error(rc), strerror(errno));
+            WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "het", "het_fsb()", dev->hetb->cblk, buf);
+        }
         /* Set unit check with equipment check */
         if(rc==HETE_EOT)
         {
@@ -416,12 +416,12 @@ int             rc;                     /* Return code               */
             build_senseX(TAPE_BSENSE_LOADPTERR,dev,unitstat,code);
             return -1;
         }
-		{
-			char buf[128];
-			snprintf(buf, 128, "Het error '%s': '%s'", het_error(rc), strerror(errno));
-			WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
-				"het", "het_bsb()", dev->hetb->cblk, buf);
-		}
+        {
+            char buf[128];
+            snprintf(buf, 128, "Het error '%s': '%s'", het_error(rc), strerror(errno));
+            WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
+                   "het", "het_bsb()", dev->hetb->cblk, buf);
+        }
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
         return -1;
@@ -449,8 +449,8 @@ int             rc;                     /* Return code               */
     rc = het_fsf (dev->hetb);
     if (rc < 0)
     {
-	char buf[128];
-	snprintf(buf, 128, "Het error '%s': '%s'", het_error(rc), strerror(errno));
+        char buf[128];
+        snprintf(buf, 128, "Het error '%s': '%s'", het_error(rc), strerror(errno));
         WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "het", "het_fsf()", dev->hetb->cblk, buf);
 
         if(rc==HETE_EOT)
@@ -516,8 +516,8 @@ int             rc;                     /* Return code               */
     rc = het_bsf (dev->hetb);
     if (rc < 0)
     {
-	char buf[128];
-	snprintf(buf, 128, "Het error '%s': '%s'", het_error(rc), strerror(errno));
+        char buf[128];
+        snprintf(buf, 128, "Het error '%s': '%s'", het_error(rc), strerror(errno));
         WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "het", "het_bsf()", dev->hetb->cblk, buf);
 
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);

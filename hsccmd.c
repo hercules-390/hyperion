@@ -5554,43 +5554,37 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
             sprintf (sysid, "id=%d", dev->ioactive);
         if (dev->busy && !(dev->suspended && dev->ioactive == DEV_SYS_NONE))
         {
-            snprintf(buf, 256, "device %1d:%04X: busy %s", SSID_TO_LCSS(dev->ssid), dev->devnum, sysid);
-            WRMSG(HHC00820, "I", buf);
+            sprintf(buf, "busy %s", sysid);
+            WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, buf);
         }
         if (dev->reserved)
         {
-            snprintf(buf, 256, "device %1d:%04X: reserved %s", SSID_TO_LCSS(dev->ssid), dev->devnum, sysid);
-            WRMSG(HHC00820, "I", buf);
+            sprintf(buf, "reserved %s", sysid);
+            WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, buf);
         }
         if (dev->suspended)
         {
-            snprintf(buf, 256, "device %1d:%04X: suspended", SSID_TO_LCSS(dev->ssid), dev->devnum);
-            WRMSG(HHC00820, "I", buf);
+            WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "suspended" );
         }
         if (dev->pending && (dev->pmcw.flag5 & PMCW5_V))
         {
-            snprintf(buf, 256, "device %1d:%04X: I/O pending", SSID_TO_LCSS(dev->ssid), dev->devnum);
-            WRMSG(HHC00820, "I", buf);
+            WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "I/O pending" );
         }
         if (dev->pcipending && (dev->pmcw.flag5 & PMCW5_V))
         {
-            snprintf(buf, 256, "device %1d:%04X: PCI pending", SSID_TO_LCSS(dev->ssid), dev->devnum);
-            WRMSG(HHC00820, "I", buf);
+            WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "PCI pending" );
         }
         if (dev->attnpending && (dev->pmcw.flag5 & PMCW5_V))
         {
-            snprintf(buf, 256, "device %1d:%04X: Attn pending", SSID_TO_LCSS(dev->ssid), dev->devnum);
-            WRMSG(HHC00820, "I", buf);
+            WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "Attn pending" );
         }
         if ((dev->crwpending) && (dev->pmcw.flag5 & PMCW5_V))
         {
-            snprintf(buf, 256, "device %1d:%04X: CRW pending", SSID_TO_LCSS(dev->ssid), dev->devnum);
-            WRMSG(HHC00820, "I", buf);
+            WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "CRW pending" );
         }
         if (test_lock(&dev->lock) && (dev->pmcw.flag5 & PMCW5_V))
         {
-            snprintf(buf, 256, "device %1d:%04X: lock held", SSID_TO_LCSS(dev->ssid), dev->devnum);
-            WRMSG(HHC00820, "I", buf);
+            WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "lock held" );
         }
     }
     if (!sysblk.iointq)
@@ -5600,17 +5594,12 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
 
     for (io = sysblk.iointq; io; io = io->next)
     {
-        snprintf(buf, 256, "device %1d:%04X,%s%s%s%s, pri %d"
-            ,SSID_TO_LCSS(io->dev->ssid)
-            ,io->dev->devnum
-
-            ,io->pending      ? " normal"  : ""
-            ,io->pcipending   ? " PCI"     : ""
-            ,io->attnpending  ? " ATTN"    : ""
-            ,!IOPENDING(io)   ? " unknown" : ""
-            ,io->priority
-        );
-        WRMSG(HHC00820, "I", buf);
+        WRMSG( HHC00882, "I", SSID_TO_LCSS(io->dev->ssid), io->dev->devnum
+                ,io->pending      ? " normal"  : ""
+                ,io->pcipending   ? " PCI"     : ""
+                ,io->attnpending  ? " ATTN"    : ""
+                ,!IOPENDING(io)   ? " unknown" : ""
+                ,io->priority );
     }
 
     return 0;
@@ -7789,11 +7778,11 @@ int query_cmd(int argc, char *argv[], char *cmdline)
             }
             else if ( sysblk.mainsize >= ONE_GIGABYTE )
             {
-                snprintf( buf, 64, "%" I64_FMT "d G", sysblk.mainsize >> 30 );
+                snprintf( buf, 64, "%3.3" I64_FMT "d G", sysblk.mainsize >> 30 );
             }
             else 
             {
-                snprintf( buf, 64, "%" I64_FMT "d M", sysblk.mainsize >> 20 );
+                snprintf( buf, 64, "%3.3" I64_FMT "d M", sysblk.mainsize >> 20 );
             }
 
             WRMSG( HHC17003, "I", "MAIN", buf, "main" );
@@ -7812,11 +7801,11 @@ int query_cmd(int argc, char *argv[], char *cmdline)
             }
             else if ( xpndsize >= ONE_GIGABYTE )
             {
-                snprintf( buf, 64, "%" I64_FMT "d G", xpndsize >> 30 );
+                snprintf( buf, 64, "%3.3" I64_FMT "d G", xpndsize >> 30 );
             }
             else 
             {
-                snprintf( buf, 64, "%" I64_FMT "d M", xpndsize >> 20 );
+                snprintf( buf, 64, "%3.3" I64_FMT "d M", xpndsize >> 20 );
             }
             WRMSG( HHC17003, "I", "EXPANDED", buf, "xpnd" );
         }

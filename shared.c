@@ -2813,8 +2813,8 @@ char                    threadname[40];
             psock = malloc (sizeof (csock));
             if (psock == NULL)
             {
-	        char buf[40];
-		snprintf(buf, 40, "malloc(%lu)", sizeof(csock));
+                char buf[40];
+                snprintf(buf, 40, "malloc(%lu)", sizeof(csock));
                 WRMSG(HHC00735, "E", buf, strerror(HSO_errno));
                 close_socket (csock);
                 continue;
@@ -2909,8 +2909,8 @@ DLL_EXPORT int shared_cmd(int argc, char *argv[], char *cmdline)
                 s = calloc (sizeof(SHRD_TRACE), n);
                 if (s == NULL)
                 {
-		    char buf[40];
-		    snprintf(buf, 40, "calloc(%lu, %d)", sizeof(SHRD_TRACE), n);
+                    char buf[40];
+                    snprintf(buf, 40, "calloc(%lu, %d)", sizeof(SHRD_TRACE), n);
                     WRMSG (HHC00735, "E", buf, strerror(errno));
                     return 0;
                 }

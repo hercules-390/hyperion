@@ -453,7 +453,7 @@ int CmdLevel(int argc, char *argv[], char *cmdline)
     {
         char buf[128];
         snprintf(buf, 128, "%s%s%s%s%s", 
-	    (sysblk.sysgroup&SYSGROUP_SYSOPER)?"operator ":"",
+            (sysblk.sysgroup&SYSGROUP_SYSOPER)?"operator ":"",
             (sysblk.sysgroup&SYSGROUP_SYSMAINT)?"maintenance ":"",
             (sysblk.sysgroup&SYSGROUP_SYSPROG)?"programmer ":"",
             (sysblk.sysgroup&SYSGROUP_SYSDEVEL)?"developer ":"",

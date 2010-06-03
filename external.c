@@ -358,8 +358,8 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
            
                if (CPU_STEPPING_OR_TRACING_ALL)
                {
-		  char buf[40];
-		  snprintf (buf, 40, "%16.16X", (unsigned) sysblk.bioparm);
+                  char buf[40];
+                  snprintf (buf, 40, "%16.16X", (unsigned) sysblk.bioparm);
                   WRMSG (HHC00845,"I", buf);
                }
 
@@ -396,8 +396,8 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
 
               if (CPU_STEPPING_OR_TRACING_ALL)
               {
-		 char buf[40];
-		 snprintf (buf, 40, "%8.8X", (U32) sysblk.bioparm);
+                 char buf[40];
+                 snprintf (buf, 40, "%8.8X", (U32) sysblk.bioparm);
                  WRMSG (HHC00845,"I", buf);
               }
 

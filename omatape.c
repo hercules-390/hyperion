@@ -207,8 +207,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if (pathlen + 1 + strlen(tdffilenm)
                 > sizeof(tdftab[filecount].filename) - 1)
         {
-	    char buf[80];
-	    snprintf(buf, 80, "filename '%s' too long", tdffilenm);
+            char buf[80];
+            snprintf(buf, 80, "filename '%s' too long", tdffilenm);
             WRMSG (HHC00207, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "oma", stmt, buf);
             free (tdftab);
             free (tdfbuf);
@@ -270,8 +270,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 || sscanf(tdfblklen, "%u%c", &blklen, &c) != 1
                 || blklen < 1 || blklen > MAX_BLKLEN)
             {
-		char buf[40];
-		snprintf(buf, 40, "invalid record size '%s'", tdfblklen);
+                char buf[40];
+                snprintf(buf, 40, "invalid record size '%s'", tdfblklen);
                 WRMSG (HHC00207, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "oma", stmt, buf);
                 free (tdftab);
                 free (tdfbuf);
@@ -284,8 +284,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         }
         else
         {
-	    char buf[40];
-	    snprintf(buf, 40, "invalid record format '%s'", tdfformat);
+            char buf[40];
+            snprintf(buf, 40, "invalid record format '%s'", tdfformat);
             WRMSG (HHC00207, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "oma", stmt, buf);
             free (tdftab);
             free (tdfbuf);
