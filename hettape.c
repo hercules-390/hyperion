@@ -153,7 +153,7 @@ int rc;
     {
         /* Handle seek error condition */
         char buf[128];
-        sinprintf(buf, 128, "Het error '%s': '%s'", het_error(rc), strerror(errno));
+        snprintf(buf, 128, "Het error '%s': '%s'", het_error(rc), strerror(errno));
         WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "het", "het_rewind()", buf);
 
         build_senseX(TAPE_BSENSE_REWINDFAILED,dev,unitstat,code);
