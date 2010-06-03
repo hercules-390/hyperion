@@ -659,7 +659,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
 
     // for cosmetics, since we are successfully connected or serving,
     // fill in some details for the panel.
-    sprintf( dev->filename, "%s:%s", remaddr, remotep );
+    snprintf( dev->filename, PATH_MAX + 1, "%s:%s", remaddr, remotep );
 
     return 0;
 }
@@ -965,7 +965,7 @@ static void*  CTCT_ListenThread( void* argp )
                          (struct sockaddr *)&parm.addr,
                          &servlen );
 
-        sprintf( str, "%s:%d",
+        snprintf( str, 80, "%s:%d",
                  inet_ntoa( parm.addr.sin_addr ),
                  ntohs( parm.addr.sin_port ) );
 
@@ -1401,7 +1401,7 @@ void packet_trace( BYTE* pAddr, int iLen, BYTE bDir )
         memset( print_ebcdic, 0, sizeof( print_ebcdic ) );
         memset( print_line, 0, sizeof( print_line ) );
 
-        sprintf(print_line, "+%4.4X%c ", offset, bDir );
+        snprintf(print_line, 64, "+%4.4X%c ", offset, bDir );
 
         for( i = 0; i < 16; i++ )
         {
@@ -1409,7 +1409,7 @@ void packet_trace( BYTE* pAddr, int iLen, BYTE bDir )
 
             if( offset < iLen )
             {
-                sprintf( tmp, "%2.2X", c ); 
+                snprintf( tmp, 32, "%2.2X", c ); 
                 strcat( print_line, tmp );
 
                 print_ebcdic[i] = print_ascii[i] = '.';

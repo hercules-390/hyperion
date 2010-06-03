@@ -529,7 +529,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     if (cif == NULL)
     {
         char buf[40];
-        sprintf(buf, "calloc(%lu)", sizeof(CIFBLK));
+        snprintf(buf, 40, "calloc(%lu)", sizeof(CIFBLK));
         fprintf (stderr, MSG(HHC00404, "E", SSID_TO_LCSS(cif->devblk.ssid), cif->devblk.devnum, fname,
                              buf, strerror(errno)));
         return NULL;
@@ -759,7 +759,7 @@ int             argc=0;                 /*  device open              */
     if (cif == NULL)
     {
         char buf[40];
-        sprintf(buf, "calloc(%lu)", sizeof(CIFBLK));
+        snprintf(buf, 40, "calloc(%lu)", sizeof(CIFBLK));
         fprintf (stderr, MSG(HHC00404, "E", SSID_TO_LCSS(cif->devblk.ssid), cif->devblk.devnum, fname,
                 buf, strerror(errno)));
         return NULL;
@@ -1264,7 +1264,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if (l1 == NULL)
         {
             char buf[40];
-            sprintf(buf, "calloc(%lu)", cdevhdr.numl1tab * CCKD_L1ENT_SIZE);
+            snprintf(buf, 40, "calloc(%lu)", cdevhdr.numl1tab * CCKD_L1ENT_SIZE);
             fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname, buf, strerror(errno)));
             return -1;
         }
@@ -1728,7 +1728,7 @@ U32             trksize;                /* DASD image track length   */
     if (buf == NULL)
     {
         char buf[40];
-        sprintf(buf, "malloc(%u)", trksize);
+        snprintf(buf, 40, "malloc(%u)", trksize);
         fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname,
                 buf, strerror(errno)));
         return -1;
@@ -1852,7 +1852,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     if (buf == NULL)
     {
         char buf[40];
-        sprintf(buf, "malloc(%u)", sectsz);
+        snprintf(buf, 40, "malloc(%u)", sectsz);
         fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname,
                 buf, strerror(errno)));
         return -1;

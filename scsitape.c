@@ -2016,9 +2016,9 @@ void *scsi_tapemountmon_thread( void *db )
     BYTE tape_was_mounted=0;
     DEVBLK* dev = db;
     int fd, timeout, shutdown = 0;
-    char buf[50];
+    char buf[64];
 
-    sprintf(buf, "Device(%1d:%04X) SCSI-TAPE mount monitor", SSID_TO_LCSS(dev->ssid) ,dev->devnum);
+    snprintf(buf, 64,"Device(%1d:%04X) SCSI-TAPE mount monitor", SSID_TO_LCSS(dev->ssid) ,dev->devnum);
     WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), buf);
     while (!shutdown)
     {

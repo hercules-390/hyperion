@@ -477,7 +477,7 @@ static int commadpt_alloc_device(DEVBLK *dev)
     if(dev->commadpt==NULL)
     {
         char buf[40];
-        sprintf(buf, "malloc(%lu)", sizeof(COMMADPT));
+        snprintf(buf, 40, "malloc(%lu)", sizeof(COMMADPT));
         WRMSG(HHC01000, "E",SSID_TO_LCSS(dev->ssid),dev->devnum, buf, strerror(errno));
         return -1;
     }
@@ -955,7 +955,7 @@ static void *commadpt_thread(void *vca)
 
     init_signaled=0;
 
-    sprintf(threadname, "%1d:%04X communication thread", SSID_TO_LCSS(ca->dev->ssid), devnum);
+    snprintf(threadname, 40, "%1d:%04X communication thread", SSID_TO_LCSS(ca->dev->ssid), devnum);
     WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), threadname);
 
     pollact=0;  /* Initialise Poll activity flag */

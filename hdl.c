@@ -427,7 +427,6 @@ MODENT *modent;
 char buf[256];
 int len;
 
-    len = 0;
     for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
     {
         WRMSG( HHC01531, "I"
@@ -485,16 +484,11 @@ int len;
 DLL_EXPORT void hdl_dlst (void)
 {
 HDLDEP *depent;
-char buf[128];
 
     for(depent = hdl_depend;
       depent;
       depent = depent->next)
-    {
-        sprintf(buf, "dependency(%s) version(%s) size(%d)\n",
-          depent->name,depent->version,depent->size);
-        WRMSG(HHC01531, "I", buf);
-    }
+        WRMSG(HHC01535,"I",depent->name,depent->version,depent->size);
 }
 
 
@@ -580,7 +574,7 @@ void *fep;
             if(!(modent = malloc(sizeof(MODENT))))
             {
                 char buf[40];
-                sprintf(buf, "malloc(%lu)", sizeof(MODENT));
+                snprintf(buf, 40, "malloc(%lu)", sizeof(MODENT));
                 WRMSG(HHC01511, "E", buf, strerror(errno));
                 return NULL;
             }
@@ -829,7 +823,7 @@ HDLPRE *preload;
     if(!(hdl_cdll = hdl_dll = malloc(sizeof(DLLENT))))
     {
         char buf[40];
-        sprintf(buf, "malloc(%lu)", sizeof(DLLENT));
+        snprintf(buf, 40, "malloc(%lu)", sizeof(DLLENT));
         fprintf(stderr, MSG(HHC01511, "E", buf, strerror(errno)));
         exit(1);
     }
@@ -943,7 +937,7 @@ char *modname;
     if(!(dllent = malloc(sizeof(DLLENT))))
     {
         char buf[40];
-        sprintf(buf, "malloc(%lu)", sizeof(DLLENT));
+        snprintf(buf, 40, "malloc(%lu)", sizeof(DLLENT));
         WRMSG(HHC01511, "S", buf, strerror(errno));
         return -1;
     }

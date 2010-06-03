@@ -144,13 +144,13 @@ int history_relative_line(int x) {
   char buf[80];
 
   if (-x > HISTORY_MAX) {
-    sprintf(buf, "History limited to last %d commands", HISTORY_MAX);
+    snprintf(buf, 80, "History limited to last %d commands", HISTORY_MAX);
     WRMSG(HHC02293, "I", buf);
     return (-1);
   }
 
   if (-x > history_count) {
-    sprintf(buf, "Only %d commands in history", history_count);
+    snprintf(buf, 80, "Only %d commands in history", history_count);
     WRMSG(HHC02293, "I", buf);
     return (-1);
   }
@@ -177,7 +177,7 @@ int history_absolute_line(int x) {
   lowlimit = history_count - HISTORY_MAX;
 
   if (x > history_count || x <= lowlimit) {
-    sprintf(buf, "Only commands %d-%d are in history", lowlimit<0? 1 : lowlimit + 1, history_count);
+    snprintf(buf, 80, "Only commands %d-%d are in history", lowlimit<0? 1 : lowlimit + 1, history_count);
     WRMSG(HHC02293, "I", buf);
     return (-1);
   }

@@ -175,7 +175,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         if( !pLCSBLK )
         {
             char buf[40];
-            sprintf(buf, "malloc(%lu)", sizeof(LCSBLK));
+            snprintf(buf, 40, "malloc(%lu)", sizeof(LCSBLK));
             WRMSG(HHC00900, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, buf, strerror(errno) );
             return -1;
         }
@@ -1740,10 +1740,10 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
                     if( pLCSPORT->pLCSBLK->fDebug && !bReported )
                     {
                         union converter { struct { unsigned char a, b, c, d; } b; U32 i; } c;
-                        char  str[32];
+                        char  str[40];
 
                         c.i = ntohl(lIPAddress);
-                        sprintf( str, "%8.08X %d.%d.%d.%d", c.i, c.b.d, c.b.c, c.b.b, c.b.a );
+                        snprintf( str, 40, "%8.08X %d.%d.%d.%d", c.i, c.b.d, c.b.c, c.b.b, c.b.a );
 
                         WRMSG(HHC00946, "I", pLCSPORT->bPort, str );
 
@@ -1771,10 +1771,10 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
                     if( pLCSPORT->pLCSBLK->fDebug && !bReported )
                     {
                         union converter { struct { unsigned char a, b, c, d; } b; U32 i; } c;
-                        char  str[32];
+                        char  str[40];
 
                         c.i = ntohl(lIPAddress);
-                        sprintf( str, "%8.08X %d.%d.%d.%d", c.i, c.b.d, c.b.c, c.b.b, c.b.a );
+                        snprintf( str, 40, "%8.08X %d.%d.%d.%d", c.i, c.b.d, c.b.c, c.b.b, c.b.a );
                         
                         WRMSG(HHC00947, "I", pLCSPORT->bPort, str );
 
@@ -1886,10 +1886,10 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
         if( pLCSPORT->pLCSBLK->fDebug )
         {
             union converter { struct { unsigned char a, b, c, d; } b; U32 i; } c;
-            char  str[32];
+            char  str[40];
 
             c.i = ntohl(pMatchingLCSDEV->lIPAddress);
-            sprintf( str, "%8.08X %d.%d.%d.%d", c.i, c.b.d, c.b.c, c.b.b, c.b.a );
+            snprintf( str, 40, "%8.08X %d.%d.%d.%d", c.i, c.b.d, c.b.c, c.b.b, c.b.a );
 
             WRMSG( HHC00952, "I", pLCSPORT->bPort, pMatchingLCSDEV->sAddr, str );
         }
@@ -2297,7 +2297,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
     if( !fp )
     {
         char buf[80];
-        sprintf(buf, "fopen(%s, \"r\")", pathname);
+        snprintf(buf, 80, "fopen(%s, \"r\")", pathname);
         WRMSG(HHC00940, "E", buf, strerror( errno ) );
         return -1;
     }

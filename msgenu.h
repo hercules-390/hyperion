@@ -838,6 +838,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01532 "HDL:  symbol = %s, loadcount = %d%s, owner = %s"
 #define HHC01533 "HDL:  devtype(s) =%s"
 #define HHC01534 "HDL:  instruction = %s, opcode = %4.4X"
+#define HHC01535 "HDL: dependency '%s' version '%s' size %d"
 
 /* dyngui.c */
 #define HHC01540 "HDL: query buffer overflow for device %1d:%04X"

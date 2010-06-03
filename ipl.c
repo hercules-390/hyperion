@@ -211,7 +211,7 @@ BYTE    chanstat;                       /* IPL device channel status */
     if (dev == NULL)
     {
         char buf[80];
-        sprintf(buf, "device %4.4X not found", devnum);
+        snprintf(buf, 80, "device %4.4X not found", devnum);
         WRMSG (HHC00828, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu, buf);
         HDC1(debug_cpu_state, regs);
         return -1;
@@ -280,18 +280,18 @@ BYTE    chanstat;                       /* IPL device channel status */
     if (unitstat != (CSW_CE | CSW_DE) || chanstat != 0) 
     {
         char buf[80];
-        char buf2[5];
+        char buf2[16];
         
         strcpy(buf, "");
         for (i=0; i < (int)dev->numsense; i++)
         {
-            sprintf(buf2, "%2.2X", dev->sense[i]);
+            snprintf(buf2, 16, "%2.2X", dev->sense[i]);
             strcat(buf, buf2);
             if ((i & 3) == 3) strcat(buf, " ");
         }
         {
             char buffer[256];
-            sprintf(buffer, "architecture mode '%s', csw status %2.2X%2.2X, sense %s", get_arch_mode_string(regs), 
+            snprintf(buffer, 256, "architecture mode '%s', csw status %2.2X%2.2X, sense %s", get_arch_mode_string(regs), 
                 unitstat, chanstat, buf);
             WRMSG (HHC00828, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu, buffer);
             WRMSG (HHC00829, "I");
@@ -341,7 +341,7 @@ int ARCH_DEP(common_load_finish) (REGS *regs)
     if (ARCH_DEP(load_psw) (regs, regs->psa->iplpsw) != 0)
     {
         char buf[80];
-        sprintf(buf, "architecture mode '%s', invalid ipl psw %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X", 
+        snprintf(buf, 80, "architecture mode '%s', invalid ipl psw %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X", 
                 get_arch_mode_string(regs),
                 regs->psa->iplpsw[0], regs->psa->iplpsw[1],
                 regs->psa->iplpsw[2], regs->psa->iplpsw[3],

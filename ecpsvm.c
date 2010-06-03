@@ -640,8 +640,9 @@ void display_regs_cregs(REGS *regs)
 
 void display_psw2(REGS *regs)
 {
-  char buf[32];
-  display_psw(regs,buf+sprintf(buf,"PSW="));
+  char buf[80];
+  sprintf(buf, "PSW=");
+  display_psw(regs,buf+4);
   logmsg("%s\n", buf);
 }
 

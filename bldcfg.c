@@ -186,7 +186,7 @@ int off;
     if (sysblk.mainstor == NULL)
     {
         char buf[40];
-        sprintf(buf, "malloc(%lu)", sysblk.mainsize + 8192);
+        snprintf(buf, 40, "malloc(%lu)", sysblk.mainsize + 8192);
         WRMSG(HHC01430, "S", buf, strerror(errno));
         delayed_exit(1);
     }
@@ -205,7 +205,7 @@ int off;
     if (sysblk.storkeys == NULL)
     {
         char buf[40];
-        sprintf(buf, "malloc(%lu)", sysblk.mainsize / STORAGE_KEY_UNITSIZE);
+        snprintf(buf, 40, "malloc(%lu)", sysblk.mainsize / STORAGE_KEY_UNITSIZE);
         WRMSG(HHC01430, "S", buf, strerror(errno));
         delayed_exit(1);
     }
@@ -236,7 +236,7 @@ int off;
         if (sysblk.xpndstor == NULL)
         {
             char buf[40];
-            sprintf(buf, "malloc(%lu)", (unsigned long)sysblk.xpndsize * XSTORE_PAGESIZE);
+            snprintf(buf, 40, "malloc(%lu)", (unsigned long)sysblk.xpndsize * XSTORE_PAGESIZE);
             WRMSG(HHC01430, "S", buf, strerror(errno));
             delayed_exit(1);
         }
@@ -1489,7 +1489,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
         if (!pNewTAMDIR)
         {
             char buf[40];
-            sprintf(buf, "malloc(%lu)", sizeof(TAMDIR));
+            snprintf(buf, 40, "malloc(%lu)", sizeof(TAMDIR));
             WRMSG(HHC01430, "S", buf, strerror(errno));
             delayed_exit(1);
         }

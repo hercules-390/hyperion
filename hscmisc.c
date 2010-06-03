@@ -457,9 +457,10 @@ int display_fregs (REGS *regs, char *buf, char *hdr)
 {
 char cpustr[32] = "";               
 
-    sprintf(cpustr, hdr);
     if(sysblk.cpus>1)
-        sprintf(cpustr, "%s%s%02X: ", hdr, PTYPSTR(regs->cpuad), regs->cpuad);
+        snprintf(cpustr, 32, "%s%s%02X: ", hdr, PTYPSTR(regs->cpuad), regs->cpuad);
+    else
+        snprintf(cpustr, 32, hdr);
 
     if(regs->CR(0) & CR0_AFP)
         return(sprintf(buf,
@@ -501,7 +502,7 @@ int display_subchannel (DEVBLK *dev, char *buf, char *hdr)
     union ByteToBits { struct BITS b; U8 status; } u;
     int len = 0;
     
-    sprintf(devstr, "%s%1d:%04X D/T%04X", hdr, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->devtype);
+    snprintf(devstr, 64, "%s%1d:%04X D/T%04X", hdr, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->devtype);
 
     if (ARCH_370 == sysblk.arch_mode)
     {
@@ -739,7 +740,7 @@ static REGS  *copy_regs (REGS *regs)
     if (newregs == NULL)
     {
         char buf[40];
-        sprintf(buf,"malloc(%lu)", size);
+        snprintf(buf, 40, "malloc(%lu)", size);
         WRMSG(HHC00075, "E", buf, strerror(errno));
         return NULL;
     }
@@ -956,7 +957,7 @@ char    buf[80];
         {
             if((xcode = ARCH_DEP(virt_to_abs) (&raddr, &stid, saddr, 0, regs, ACCTYPE_INSTFETCH) ))
             {
-                sprintf(buf, "Storage not accessible code = %4.4X", xcode);
+                snprintf(buf, 80, "Storage not accessible code = %4.4X", xcode);
                 WRMSG(HHC02289, "I", buf);
                 return;
             }

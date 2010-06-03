@@ -2469,7 +2469,7 @@ char            threadname[40];
     dev->shrdtid = thread_id();
 
     /* This thread will be the shared device thread */
-    sprintf(threadname, "Shared device(%1d:%04X)", SSID_TO_LCSS(dev->ssid), dev->devnum);
+    snprintf(threadname, 40, "Shared device(%1d:%04X)", SSID_TO_LCSS(dev->ssid), dev->devnum);
     WRMSG (HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), threadname); 
 
     while (dev->shrdconn)
@@ -2667,7 +2667,7 @@ char                    threadname[40];
 
     UNREFERENCED(arg);
 
-    sprintf(threadname, "Shared device server %d.%d", SHARED_VERSION, SHARED_RELEASE);
+    snprintf(threadname, 40, "Shared device server %d.%d", SHARED_VERSION, SHARED_RELEASE);
 
     /* Display thread started message on control panel */
     WRMSG (HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), threadname);
@@ -2814,7 +2814,7 @@ char                    threadname[40];
             if (psock == NULL)
             {
 	        char buf[40];
-		sprintf(buf, "malloc(%lu)", sizeof(csock));
+		snprintf(buf, 40, "malloc(%lu)", sizeof(csock));
                 WRMSG(HHC00735, "E", buf, strerror(HSO_errno));
                 close_socket (csock);
                 continue;
@@ -2910,7 +2910,7 @@ DLL_EXPORT int shared_cmd(int argc, char *argv[], char *cmdline)
                 if (s == NULL)
                 {
 		    char buf[40];
-		    sprintf(buf, "calloc(%lu, %d)", sizeof(SHRD_TRACE), n);
+		    snprintf(buf, 40, "calloc(%lu, %d)", sizeof(SHRD_TRACE), n);
                     WRMSG (HHC00735, "E", buf, strerror(errno));
                     return 0;
                 }

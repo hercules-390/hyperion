@@ -2562,7 +2562,7 @@ loc3270_hresume(DEVBLK *dev, void *file)
             if (rbuf == NULL)
             {
                 char buf[40];
-                sprintf(buf,"malloc(%lu)", len);
+                snprintf(buf, 40, "malloc(%lu)", len);
                 WRMSG(HHC01000, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, buf, strerror(errno));
                 return 0;
             }

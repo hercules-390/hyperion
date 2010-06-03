@@ -1088,7 +1088,7 @@ static int commadpt_alloc_device(DEVBLK *dev)
     if(dev->commadpt==NULL)
     {
         char buf[40];
-        sprintf(buf, "malloc(%lu)", sizeof(COMMADPT));
+        snprintf(buf, 40, "malloc(%lu)", sizeof(COMMADPT));
         WRMSG(HHC01000, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, buf, strerror(errno));
         return -1;
     }
@@ -1360,7 +1360,7 @@ static void *commadpt_thread(void *vca)
     int rc;                     /* return code from various rtns     */
     int ca_shutdown;            /* Thread shutdown internal flag     */
     int init_signaled;          /* Thread initialisation signaled    */
-    char threadname[30];        /* string for WRMSG               */
+    char threadname[40];        /* string for WRMSG               */
 
     /*---------------------END OF DECLARES---------------------------*/
 
@@ -1378,7 +1378,7 @@ static void *commadpt_thread(void *vca)
 
     init_signaled=0;
 
-    sprintf(threadname, "3705 device(%1d:%04X) thread", ca->dev->ssid, devnum);
+    snprintf(threadname, 40, "3705 device(%1d:%04X) thread", ca->dev->ssid, devnum);
     WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), threadname);
 
     for (;;) {

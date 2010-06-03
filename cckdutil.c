@@ -234,7 +234,7 @@ cswp_write_error:
 cswp_malloc_error:
     {
         char buf[40];
-        sprintf(buf, "malloc(%d)", len);
+        snprintf(buf, 40, "malloc(%d)", len);
         if(dev->batch)
             fprintf(stdout, MSG(HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
                     buf, strerror(errno)));
@@ -882,7 +882,7 @@ comp_write_error:
 comp_malloc_error:
     {
         char buf[40];
-        sprintf(buf, "malloc(%d)", len);
+        snprintf(buf, 40, "malloc(%d)", len);
         if(dev->batch)
             fprintf(stdout, MSG(HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
                     buf, strerror(errno)));
@@ -894,7 +894,7 @@ comp_malloc_error:
 comp_calloc_error:
     {
         char buf[40];
-        sprintf(buf, "calloc(%d)", n * len);
+        snprintf(buf, 40, "calloc(%d)", n * len);
         if(dev->batch)
             fprintf(stdout, MSG(HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
                     buf, strerror(errno)));
@@ -2702,7 +2702,7 @@ cdsk_write_error:
 cdsk_malloc_error:
     {
         char buf[40];
-        sprintf(buf, "malloc(%d)", len);
+        snprintf(buf, 40, "malloc(%d)", len);
         if(dev->batch)
             fprintf(stdout, MSG(HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
                     buf, strerror(errno)));
@@ -2715,7 +2715,7 @@ cdsk_malloc_error:
 cdsk_calloc_error:
     {
         char buf[40];
-        sprintf(buf, "calloc(%d)", n * len);
+        snprintf(buf, 40, "calloc(%d)", n * len);
         if(dev->batch)
             fprintf(stdout, MSG(HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
                     buf, strerror(errno)));

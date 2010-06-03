@@ -1876,7 +1876,7 @@ char    buf[1024];                      /* Buffer workarea           */
     if (!(kbbuf = malloc (kbbufsize)))
     {
         char buf[40];
-        sprintf(buf, "malloc(%lu)", kbbufsize);
+        snprintf(buf, 40, "malloc(%lu)", kbbufsize);
         WRMSG(HHC00075, "S", buf, strerror(errno));
         return;
     }
@@ -1886,7 +1886,7 @@ char    buf[1024];                      /* Buffer workarea           */
     if (msgbuf == NULL)
     {
         char buf[40];
-        sprintf(buf, "malloc(%lu)", MAX_MSGS * sizeof(PANMSG));
+        snprintf(buf, 40, "malloc(%lu)", MAX_MSGS * sizeof(PANMSG));
         fprintf (stderr,
                 MSG(HHC00075, "S", buf, strerror(errno)));
         return;

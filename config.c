@@ -271,7 +271,7 @@ DEVBLK**dvpp;
         if (!(dev = (DEVBLK*)malloc(sizeof(DEVBLK))))
         {
             char buf[40];
-            sprintf(buf, "malloc(%lu)", sizeof(DEVBLK));
+            snprintf(buf, 40, "malloc(%lu)", sizeof(DEVBLK));
             WRMSG (HHC01460, "E", lcss, devnum, buf, strerror(errno));
             return NULL;
         }
@@ -446,7 +446,7 @@ int     i;                              /* Loop index                */
         if (dev->buf == NULL)
         {
             char buf[40];
-            sprintf(buf, "malloc(%lu)", (unsigned long) dev->bufsize);
+            snprintf(buf, 40, "malloc(%lu)", (unsigned long) dev->bufsize);
             WRMSG (HHC01460, "E", lcss, dev->devnum, buf, strerror(errno));
 
             for (i = 0; i < dev->argc; i++)
@@ -571,11 +571,11 @@ int detach_subchan (U16 lcss, U16 subchan, U16 devnum)
 {
 DEVBLK *dev;                            /* -> Device block           */
 int    rc;
-char   str[32];
+char   str[40];
     /* Find the device block */
     dev = find_device_by_subchan ((LCSS_TO_SSID(lcss)<<16)|subchan);
 
-    sprintf(str, "subchannel %1d:%04X", lcss, subchan);
+    snprintf(str, 40, "subchannel %1d:%04X", lcss, subchan);
 
     if (dev == NULL)
     {

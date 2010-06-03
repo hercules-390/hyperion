@@ -152,7 +152,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     if( !pWrkCTCBLK )
     {
         char buf[40];
-        sprintf(buf, "malloc(%lu)", sizeof(CTCBLK));
+        snprintf(buf, 40, "malloc(%lu)", sizeof(CTCBLK));
         WRMSG(HHC00900, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, buf, strerror(errno) );
         return -1;
     }
@@ -174,7 +174,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     if( !pDevCTCBLK )
     {
         char buf[40];
-        sprintf(buf, "malloc(%lu)", sizeof(CTCBLK));
+        snprintf(buf, 40, "malloc(%lu)", sizeof(CTCBLK));
         WRMSG(HHC00900, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, buf, strerror(errno) );
         free( pWrkCTCBLK );
         pWrkCTCBLK = NULL;

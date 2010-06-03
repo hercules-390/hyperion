@@ -1344,7 +1344,7 @@ void *cpu_thread (int *ptr)
 {
 REGS *regs = NULL;
 int   cpu  = *ptr;
-char  cpustr[20];
+char  cpustr[40];
 int   rc;
 
     OBTAIN_INTLOCK(NULL);
@@ -1382,7 +1382,7 @@ int   rc;
     SETMODE(USER);
 
     /* Display thread started message on control panel */
-    sprintf(cpustr, "Processor %s%02X", PTYPSTR(cpu), cpu);
+    snprintf(cpustr, 40, "Processor %s%02X", PTYPSTR(cpu), cpu);
     WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), cpustr);
 
     /* Execute the program in specified mode */
@@ -1812,7 +1812,7 @@ REGS    regs;
         else
         {
             char buf[40];
-            sprintf(buf, "malloc(%lu)", sizeof(REGS));
+            snprintf(buf, 40, "malloc(%lu)", sizeof(REGS));
             WRMSG (HHC00813, "E", PTYPSTR(cpu), cpu, buf, strerror(errno));
             cpu_uninit (cpu, &regs);
         }
