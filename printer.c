@@ -71,7 +71,8 @@ static BYTE printer_immed_commands[256]=
 int line;
 int coun;
 int chan;
-int FCB_MASK[] = {66,1,7,13,19,25,31,37,43,61,49,55,61} ;
+int FCBMASK[] = {66,1,7,13,19,25,31,37,43,63,49,55,61} ;
+int havechan;
 
 #define WRITE_LINE() \
 do { \
@@ -81,6 +82,15 @@ do { \
         dev->bufoff = 0; \
         dev->bufres = BUFF_SIZE; \
     } /* end if(!data-chained) */ \
+    if ( dev->index > 1 ) \
+    { \
+        for (i = 1; i < dev->index; i++) \
+        { \
+            dev->buf[dev->bufoff] = SPACE ; \
+            dev->bufoff++; \
+            dev->bufres--; \
+        } /* end for(i) */ \
+    } /* end if ( dev->index > 1 )  */ \
     /* Calculate number of bytes to write and set residual count */ \
     num = (count < dev->bufres) ? count : dev->bufres; \
     *residual = count - num; \
@@ -112,12 +122,34 @@ do { \
     /* Return normal status */ \
 } while(0)
 
-//  printf("At  chan ... MC %02x, Ch %02d, Curr %02d, Dest %02d\n", code,chan,dev->currline,dev->destline);
 #define SKIP_TO_CHAN() \
 do { \
-    chan = ( code - 128 ) / 8 ; \
-    /* test for good channel */ \
-    if ( dev->fcb[chan] == 0 ) \
+    havechan = 0; \
+    for ( i = 0; i <= dev->lpp; i++ ) \
+    { \
+        line = 1 + ( dev->currline + i ) - dev->lpp * ( ( dev->currline + i ) / dev->lpp ) ; \
+        if ( dev->fcb[line] != chan )  \
+            continue ; \
+        havechan = 1 ; \
+        dev->destline = line ; \
+        break ; \
+    } \
+    if ( havechan == 1 ) \
+    { \
+        if ( dev->destline <= dev->currline ) \
+        { \
+            write_buffer (dev, "\f", 1, unitstat); \
+            if (*unitstat != 0) return ; \
+            dev->currline = 1 ; \
+        } \
+        for ( ; dev->currline < dev->destline ; dev->currline++ ) \
+        { \
+            write_buffer (dev, "\n", 1, unitstat); \
+            if (*unitstat != 0) return; \
+        } \
+        *unitstat = CSW_CE | CSW_DE; \
+        return ; \
+    } \
     /* channel not found */ \
     { \
         if ( dev->nofcbcheck ) \
@@ -135,25 +167,37 @@ do { \
             return; \
         } \
     } \
-    else \
-    { \
-        dev->destline = dev->fcb[chan]; \
-        if ( ( chan == 1 ) || ( dev->destline < dev->currline ) ) \
-        { \
-            write_buffer (dev, "\f", 1, unitstat); \
-            if (*unitstat != 0) return; \
-            dev->currline = 1 ; \
-        } \
-        for ( ; dev->currline < dev->destline ; dev->currline++ ) \
-        { \
-            write_buffer (dev, "\n", 1, unitstat); \
-            if (*unitstat != 0) return; \
-        } \
-    } \
 } while (0)
 
-
 static void* spthread (DEVBLK* dev);        /*  (forward reference)  */
+
+/*-------------------------------------------------------------------*/
+/* Dump the FCB info                                                 */
+/*-------------------------------------------------------------------*/
+static void fcb_dump(DEVBLK* dev, char *buf, unsigned int buflen)
+{
+    int i;
+    char wrk[16];
+    char sep[1];
+    sep[0] = '=';
+    snprintf(buf, buflen, "LOADED lpi=%d index=%d lpp=%d fcb", dev->lpi, dev->index, dev->lpp );
+    for (i = 1; i <= dev->lpp; i++)
+    {
+        if (dev->fcb[i] != 0)
+        {
+            MSGBUF( wrk, "%c%d:%d",sep[0], i, dev->fcb[i]);
+            sep[0] = ',' ;
+            if (strlen(buf) + strlen(wrk) >= buflen - 4)
+            {
+                /* Too long, truncate it */
+                strcat(buf, ",...");
+                return;
+            }
+            strcat(buf, wrk);
+        }
+    }
+    return;
+}
 
 /*-------------------------------------------------------------------*/
 /* Sockdev "OnConnection" callback function                          */
@@ -272,10 +316,10 @@ static void* spthread (DEVBLK* dev)
 /*-------------------------------------------------------------------*/
 static int printer_init_handler (DEVBLK *dev, int argc, char *argv[])
 {
-int     i,j;                            /* Array subscript           */
-int     chan;
-char    wrk[3];                         /* for atoi conversion       */
-int     sockdev = 0;                    /* 1 == is socket device     */
+int   iarg,i,j;                        /* some Array subscripts      */
+char *ptr;
+char *nxt;
+int   sockdev = 0;                     /* 1 == is socket device     */
 
     dev->excps = 0;
     
@@ -298,32 +342,42 @@ int     sockdev = 0;                    /* 1 == is socket device     */
 
     /* Initialize device dependent fields */
     dev->fd = -1;
-//  dev->printpos = 0;
-//  dev->printrem = LINE_LENGTH;
     dev->diaggate = 0;
     dev->fold = 0;
     dev->crlf = 0;
     dev->stopprt = 0;
     dev->notrunc = 0;
+    dev->ispiped = (dev->filename[0] == '|');
+
 
     /* initialize the new fields for FCB+ support */
     dev->fcbsupp = 1;
     dev->rawcc = 0;
     dev->nofcbcheck = 0;
-//  dev->usenoopcc  = 0;
     dev->ccpend = 0;
+    
     dev->prevline = 1;
     dev->currline = 1;
     dev->destline = 1;
 
-    for (i = 0; i < 13; i++) dev->fcb[i] = FCB_MASK[i];
-
-    dev->ispiped = (dev->filename[0] == '|');
+    dev->optbrowse = 1;
+    
+    dev->lpi = 6;
+    dev->index = 0;
+    dev->ffchan = 1;	
+    for (i = 0; i < FCBSIZE; i++)  dev->fcb[i] = 0;
+    for (i = 1; i <= 12; i++ ) 
+    {
+        if ( FCBMASK[i] != 0 )
+            dev->fcb[FCBMASK[i]] = i;
+    }
+    dev->lpp = FCBMASK[0] ;
+    dev->fcbisdef = 0 ;
 
     /* Process the driver arguments */
-    for (i = 1; i < argc; i++)
+    for (iarg = 1; iarg < argc; iarg++)
     {
-        if (strcasecmp(argv[i], "crlf") == 0)
+        if (strcasecmp(argv[iarg], "crlf") == 0)
         {
             dev->crlf = 1;
             continue;
@@ -334,83 +388,204 @@ int     sockdev = 0;                    /* 1 == is socket device     */
            The file name is the socket_spec (host:port)
            to listen for connections on.
         */
-        if (!dev->ispiped && strcasecmp(argv[i], "sockdev") == 0)
+        if (!dev->ispiped && strcasecmp(argv[iarg], "sockdev") == 0)
         {
             sockdev = 1;
             continue;
         }
 
-        if (strcasecmp(argv[i], "noclear") == 0)
+        if (strcasecmp(argv[iarg], "noclear") == 0)
         {
             dev->notrunc = 1;
             continue;
         }
 
-        if (strcasecmp(argv[i], "rawcc") == 0)
+        if (strcasecmp(argv[iarg], "rawcc") == 0)
         {
             dev->rawcc = 1;
+            dev->optbrowse = 0;
             continue;
         }
 
-        if (strcasecmp(argv[i], "nofcbcheck") == 0)
+        if (strcasecmp(argv[iarg], "nofcbcheck") == 0)
         {
             dev->nofcbcheck = 1;
             continue;
         }
 
-        if (strcasecmp(argv[i], "fcbcheck") == 0)
+        if (strcasecmp(argv[iarg], "fcbcheck") == 0)
         {
             dev->nofcbcheck = 0;
             continue;
         }
 
-        if (strncasecmp("fcb=", argv[i], 4) == 0)
+        if (strcasecmp(argv[iarg], "optbrowse") == 0)
         {
-            if (strlen (argv[i]) != 30)
-            {
-                WRMSG (HHC01102, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], i + 1);
-                return -1;
-            }
-            for (j = 4 ; j < 30 ; j++)
-            {
-                if ((argv[i][j] < '0') || (argv[i][j] > '9'))
-                {
-                    WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], i + 1, j);
-                    return -1;
-                }
-            }
-
-            /* build the fcb image */
-            chan = 0;
-            for (j = 4; j < 30; j += 2)
-            {
-                wrk[0] = argv[i][j];
-                wrk[1] = argv[i][j+1];
-                wrk[2] = '\0';
-                dev->fcb[chan] = atoi(wrk);
-                chan++;
-            }
-//          printf("FCB ");
-//          for (chan = 0; chan < 13; printf("/%02d",dev->FCB[chan++]));
-//          printf("/\n");
-
+            dev->optbrowse = 1;
             continue;
         }
 
-        WRMSG (HHC01102, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], i + 1);
+        if (strcasecmp(argv[iarg], "optprint") == 0)
+        {
+            dev->optbrowse = 0;
+            continue;
+        }
+
+        if (strncasecmp("lpi=", argv[iarg], 4) == 0)
+        {
+            ptr = argv[iarg]+4;
+            errno = 0;
+            dev->lpi = (int) strtoul(ptr,&nxt,10) ;
+            if (errno != 0 || nxt == ptr || *nxt != 0 || ( dev->lpi != 6 && dev->lpi != 8 ) )
+            {
+                j = ptr - argv[iarg] ;
+                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
+                return -1;
+            }
+            continue;
+        }
+
+        if (strncasecmp("index=", argv[iarg], 6) == 0)
+        {
+            if (dev->devtype != 0x3211 )
+            {
+                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, 1);
+                return -1;
+            }
+            ptr = argv[iarg]+6;
+            errno = 0;
+            dev->index = (int) strtoul(ptr,&nxt,10) ;
+            if (errno != 0 || nxt == ptr || *nxt != 0 || ( dev->index < 0 || dev->index > 15) )
+            {
+                j = ptr - argv[iarg] ;
+                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
+                return -1;
+            }
+            continue;
+        }
+
+        if (strncasecmp("lpp=", argv[iarg], 4) == 0)
+        {
+            ptr = argv[iarg]+4;
+            errno = 0;
+            dev->lpp = (int) strtoul(ptr,&nxt,10) ;
+            if (errno != 0 || nxt == ptr || *nxt != 0 ||dev->lpp > FCBSIZE)
+            {
+                j = ptr - argv[iarg] ;
+                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
+                return -1;
+            }
+            continue;
+        }
+#if 0
+        if (strncasecmp("ffchan=", argv[iarg], 7) == 0)
+        {
+            ptr = argv[iarg]+7;
+            errno = 0;
+            dev->ffchan = (int) strtoul(ptr,&nxt,10) ;
+            if (errno != 0 || nxt == ptr || *nxt != 0 ||  dev->ffchan < 1 || dev->ffchan > 12)
+            {
+                j = ptr - argv[iarg] ;
+                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
+                return -1;
+            }
+            continue ;
+        }
+#endif
+
+        if (strncasecmp("fcb=", argv[iarg], 4) == 0)
+        {
+            for (line = 0 ; line <= FCBSIZE; line++)  dev->fcb[line] = 0;
+            /* check for simple mode */
+            if	( strstr(argv[iarg],":") )	
+            {
+                /* ':" found  ==> new mode */			
+                ptr = argv[iarg]+4;
+                while (*ptr)
+                {
+                    errno = 0;
+                    line = (int) strtoul(ptr,&nxt,10) ;
+                    if (errno != 0 || *nxt != ':' || nxt == ptr || line > dev->lpp || dev->fcb[line] != 0 )
+                    {
+                        j = ptr - argv[iarg] ;
+                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
+                        return -1;
+                    }
+
+                    ptr = nxt + 1 ;
+                    errno = 0;
+                    chan = (int) strtoul(ptr,&nxt,10) ;
+                    if (errno != 0 || (*nxt != ',' && *nxt != 0) || nxt == ptr || chan < 1 || chan > 12 )
+                    {
+                        j = ptr - argv[iarg] ;
+                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
+                        return -1;
+                    }
+                    dev->fcb[line] = chan;
+                    if ( nxt == 0 ) 
+                        break ;
+                    ptr = nxt + 1; 
+                }
+
+            }
+            else
+            {
+                /* ':" NOT found  ==> old mode */
+                ptr = argv[iarg]+4;
+                chan = 0;
+                while (*ptr)
+                {
+                    errno = 0;
+                    line = (int) strtoul(ptr,&nxt,10) ;
+                    if (errno != 0 || (*nxt != ',' && *nxt != 0) || nxt == ptr || line > dev->lpp || dev->fcb[line] != 0 )
+                    {
+                        j = ptr - argv[iarg] ;
+                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
+                        return -1;
+                    }
+                    chan += 1;
+                    if ( chan > 12 ) 
+                    {
+                        j = ptr - argv[iarg] ;
+                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
+                        return -1;
+                    }
+                    dev->fcb[line] = chan;
+                    if ( nxt == 0 ) 
+                        break ;
+                    ptr = nxt + 1; 
+                }
+                if ( chan != 12 ) 
+                {
+                    j = 5 ;
+                    WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
+                    return -1;
+                }
+            }
+                
+            continue;  
+        }
+
+        WRMSG (HHC01102, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1);
         return -1;
     }
 
     /* Check for incompatible options */
+    if (dev->rawcc && dev->optbrowse)
+    {
+        WRMSG (HHC01104, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "rawcc/optbrowse");
+        return -1;
+    }
+
     if (sockdev && dev->crlf)
     {
-        WRMSG (HHC01104, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "crlf");
+        WRMSG (HHC01104, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "sockdev/crlf");
         return -1;
     }
 
     if (sockdev && dev->notrunc)
     {
-        WRMSG (HHC01104, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "noclear");
+        WRMSG (HHC01104, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "sockdev/noclear");
         return -1;
     }
 
@@ -461,8 +636,8 @@ static void printer_query_device (DEVBLK *dev, char **class,
                 (dev->bs         ? " sockdev"      : ""),
                 (dev->crlf       ? " crlf"         : ""),
                 (dev->notrunc    ? " noclear"      : ""),
-                (dev->rawcc      ? " rawcc"        : ""),
-                (dev->nofcbcheck ? " nofcbcheck"   : " fcbcheck"),
+                (dev->rawcc      ? " rawcc"        : dev->optbrowse  ? " brwse"    : " print"),
+                (dev->nofcbcheck ? " nofcbck"   : " fcbck"),
                 (dev->stopprt    ? " (stopped)"    : ""),
                 dev->excps );
 
@@ -715,6 +890,7 @@ char           *eor;                    /* -> end of record string   */
 char           *nls = "\n\n\n";         /* -> new lines              */
 BYTE            c;                      /* Print character           */
 char            hex[3];                 /* for hex conversion        */
+char            wbuf[150];
 
     dev->excps++;
 
@@ -745,109 +921,13 @@ char            hex[3];                 /* for hex conversion        */
     }
 
     /* Process depending on CCW opcode */
-//  printf("ctlchar(%02x) count(%d)\n",code,count);
+
     switch (code) {
-    case 0x03: /* No Operation                   */
-        *unitstat = CSW_CE | CSW_DE;
-        break;
 
-    case 0x0B: /* Space 1 Line  Immediate        */
-    case 0x13: /* Space 2 Lines Immediate        */
-    case 0x1B: /* Space 3 Lines Immediate        */
-        if (dev->rawcc)
-        {
-            sprintf(hex,"%02x",code);
-            write_buffer(dev, hex, 2, unitstat);
-            if (*unitstat != 0) return;
-            eor = (dev->crlf) ? "\r\n" : "\n";
-            write_buffer(dev, eor, (int)strlen(eor), unitstat);
-            if (*unitstat != 0) return;
-            *unitstat = CSW_CE | CSW_DE;
-            return;
-        }
-        dev->ccpend = 0;
-        coun = code / 8;
-        dev->currline += coun;
-        write_buffer(dev, nls, coun, unitstat);
-        if (*unitstat != 0) return;
-        *unitstat = CSW_CE | CSW_DE;
-        return;
-
-    case 0x8B: /* Skip to Channel 1 Immediate    */
-    case 0x93: /* Skip to Channel 2 Immediate    */
-    case 0x9B: /* Skip to Channel 3 Immediate    */
-    case 0xA3: /* Skip to Channel 4 Immediate    */
-    case 0xAB: /* Skip to Channel 5 Immediate    */
-    case 0xB3: /* Skip to Channel 6 Immediate    */
-    case 0xBB: /* Skip to Channel 7 Immediate    */
-    case 0xC3: /* Skip to Channel 8 Immediate    */
-    case 0xCB: /* Skip to Channel 9 Immediate    */
-    case 0xD3: /* Skip to Channel 10 Immediate   */
-    case 0xDB: /* Skip to Channel 11 Immediate   */
-    case 0xE3: /* Skip to Channel 12 Immediate   */
-        if (dev->rawcc)
-        {
-            sprintf(hex,"%02x",code);
-            write_buffer (dev, hex, 2, unitstat);
-            if (*unitstat != 0) return;
-            eor = (dev->crlf) ? "\r\n" : "\n";
-            write_buffer (dev, eor, (int)strlen(eor), unitstat);
-            if (*unitstat != 0) return;
-            *unitstat = CSW_CE | CSW_DE;
-            return;
-        }
-        if (dev->ccpend)
-        {
-            write_buffer(dev, "\n", 1, unitstat);
-            if (*unitstat != 0) return;
-            dev->ccpend = 0;
-            dev->currline++;
-        }
-        SKIP_TO_CHAN();
-        *unitstat = CSW_CE | CSW_DE;
-        return;
-
-    case 0x01: /* Write Without Spacing           */
-    case 0x09: /* Write and Space 1 Line          */
-    case 0x11: /* Write and Space 2 Lines         */
-    case 0x19: /* Write and Space 3 Lines         */
-        if (dev->rawcc)
-        {
-            sprintf(hex,"%02x",code);
-            write_buffer(dev, hex, 2, unitstat);
-            if (*unitstat != 0) return;
-            WRITE_LINE();
-            write_buffer(dev, "\n", 1, unitstat);
-            if (*unitstat != 0) return;
-            *unitstat = CSW_CE | CSW_DE;
-            return;
-        }
-
-        if (((chained & CCW_FLAGS_CD) == 0) && dev->ccpend)
-        {
-            write_buffer(dev, "\n", 1, unitstat);
-            if (*unitstat != 0) return;
-            dev->ccpend = 0;
-            dev->currline++;
-        }
-        WRITE_LINE();
-        if (code == 0x01)
-        {
-            /* for a write no space set the cc pending indicator */
-            /* and return */
-            dev->ccpend = 1;
-            *unitstat = CSW_CE | CSW_DE;
-            return;
-        }
-        if ((flags & CCW_FLAGS_CD) == 0)
-        {
-            coun = code / 8;
-            dev->currline += coun;
-            write_buffer(dev, nls, coun, unitstat);
-            if (*unitstat != 0) return;
-        }
-        *unitstat = CSW_CE | CSW_DE;
-        return;
+    case 0x01: /* Write     No Space             */
+    case 0x09: /* Write and Space 1 Line         */
+    case 0x11: /* Write and Space 2 Lines        */
+    case 0x19: /* Write and Space 3 Lines        */
 
     case 0x89: /* Write and Skip to Channel 1    */
     case 0x91: /* Write and Skip to Channel 2    */
@@ -867,29 +947,134 @@ char            hex[3];                 /* for hex conversion        */
             write_buffer(dev, hex, 2, unitstat);
             if (*unitstat != 0) return;
             WRITE_LINE();
-            eor = (dev->crlf) ? "\r\n" : "\n";
-            write_buffer(dev, eor, (int)strlen(eor), unitstat);
-            if (*unitstat != 0) return;
-            *unitstat = CSW_CE | CSW_DE;
+            write_buffer(dev, "\n", 1, unitstat);
+            if (*unitstat == 0)
+                *unitstat = CSW_CE | CSW_DE;
             return;
         }
-        if (((chained & CCW_FLAGS_CD) == 0) && dev->ccpend)
+
+        if ( dev->optbrowse && dev->ccpend && ((chained & CCW_FLAGS_CD) == 0) )
         {
+            dev->ccpend = 0;
+            /* dev->currline++; */
             write_buffer(dev, "\n", 1, unitstat);
             if (*unitstat != 0) return;
-            dev->currline++;
-            dev->ccpend = 0;
         }
         WRITE_LINE();
         if ((flags & CCW_FLAGS_CD) == 0)
         {
-            write_buffer(dev, "\n", 1, unitstat);
-            if (*unitstat != 0) return;
-            dev->currline++;
-            SKIP_TO_CHAN();
+            if    ( code <= 0x80 ) /* line control */  
+            {
+                coun = code / 8 ;	
+                if	( coun == 0 ) 
+                {
+                    if ( dev->optbrowse )	
+                    {
+                        dev->ccpend = 1;
+                        *unitstat = 0;
+                    }
+                    else
+                        write_buffer(dev, "\r", 1, unitstat);
+                    if (*unitstat == 0)  
+                        *unitstat = CSW_CE | CSW_DE;
+                    return;			
+                }
+
+                dev->ccpend = 0 ;
+                dev->currline += coun;
+                write_buffer(dev, nls, coun, unitstat);
+                if (*unitstat == 0)  
+                    *unitstat = CSW_CE | CSW_DE;
+                return;
+            }
+            else  /*code >  0x80*/ /* chan control */         
+            {	
+                /*
+                if ( dev->optbrowse )
+                {
+                    dev->currline++;
+                    write_buffer(dev, "\n", 1, unitstat);
+                    if (*unitstat != 0) return;
+                }
+                */
+                chan = ( code - 128 ) / 8 ;
+                if ( chan == 1 ) 
+                {
+                    write_buffer(dev, "\r", 1, unitstat);
+                    if (*unitstat != 0)  
+                        return;
+                }
+                SKIP_TO_CHAN();
+                if (*unitstat == 0)  
+                    *unitstat = CSW_CE | CSW_DE;
+                return;
+            }
+
         }
         *unitstat = CSW_CE | CSW_DE;
         return;
+
+    case 0x03: /* No Operation                   */
+        *unitstat = CSW_CE | CSW_DE;
+        break;
+
+    case 0x0B: /*           Space 1 Line         */
+    case 0x13: /*           Space 2 Lines        */
+    case 0x1B: /*           Space 3 Lines        */
+
+    case 0x8B: /*           Skip to Channel 1    */
+    case 0x93: /*           Skip to Channel 2    */
+    case 0x9B: /*           Skip to Channel 3    */
+    case 0xA3: /*           Skip to Channel 4    */
+    case 0xAB: /*           Skip to Channel 5    */
+    case 0xB3: /*           Skip to Channel 6    */
+    case 0xBB: /*           Skip to Channel 7    */
+    case 0xC3: /*           Skip to Channel 8    */
+    case 0xCB: /*           Skip to Channel 9    */
+    case 0xD3: /*           Skip to Channel 10   */
+    case 0xDB: /*           Skip to Channel 11   */
+    case 0xE3: /*           Skip to Channel 12   */
+        if (dev->rawcc)
+        {
+            sprintf(hex,"%02x",code);
+            write_buffer(dev, hex, 2, unitstat);
+            if (*unitstat != 0) return;
+            eor = (dev->crlf) ? "\r\n" : "\n";
+            write_buffer(dev, eor, strlen(eor), unitstat);
+            if (*unitstat == 0)  
+                *unitstat = CSW_CE | CSW_DE;
+            return;
+        }
+
+        if    ( code <= 0x80 ) /* line control */  
+        {
+            coun = code / 8 ;	
+            dev->ccpend = 0 ;
+            dev->currline += coun;
+            write_buffer(dev, nls, coun, unitstat);
+            if (*unitstat == 0)  
+                *unitstat = CSW_CE | CSW_DE;
+            return;
+        }
+        else  /*code >  0x80*/ /* chan control */         
+        {
+            /*
+            if ( dev->optbrowse && dev->ccpend)
+            {
+                coun = 1 ;
+                dev->ccpend = 0 ;
+                dev->currline += coun;
+                write_buffer(dev, nls, coun, unitstat);
+                if (*unitstat != 0) return;
+            }
+            */
+            chan = ( code - 128 ) / 8 ;  
+            SKIP_TO_CHAN();
+            if (*unitstat == 0)  
+                *unitstat = CSW_CE | CSW_DE;
+            return;
+        }
+        break ;
 
     case 0x63:
     /*---------------------------------------------------------------*/
@@ -914,21 +1099,64 @@ char            hex[3];                 /* for hex conversion        */
         }
         else
         {
-            /* i index to the DATA */
-            for (i = 0; i < 13; dev->fcb[i++] = 0);
-            for (i=1, line=1; i < count && !(iobuf[i] & 0x10); i++, line++)
+            int i = 0; 
+            int j = 1;
+            int more = 1 ;
+            for (i = 0; i <= FCBSIZE; i++) dev->fcb[i] = 0;
+
+            dev->lpi = 6;
+            dev->index = 0;
+            if (iobuf[0] & 0xc0)
             {
-                if (!(chan = iobuf[i])) continue;
-                if (chan == 1) line = 1;
-                if (chan > 12) chan = 12;
-                dev->fcb[chan] = line;
+                /* First byte is a print position index */
+                if ((iobuf[0] & 0xc0) == 0x80)
+                    /* Indexing right */
+                    dev->index = iobuf[0] & 0x1f;
+                else
+                    /* Indexing left */
+                    dev->index = - (iobuf[0] & 0x1f);
+                i = 1;
             }
+
+            for ( ; i < count && j <= FCBSIZE && more ; i++, j++)
+            {
+                dev->fcb[i] = iobuf[i] & 0x0f;
+                if (dev->fcb[j] > 12)
+                {
+                    *residual = count - i;
+                    *unitstat = CSW_CE | CSW_DE | CSW_UC;
+                    dev->sense[0] = SENSE_CC;
+                    return;
+                }
+
+                if (iobuf[i] & 0x10)
+                {
+                    /* Flag bit is on */
+                    if (j == 1)
+                        /* Flag bit in first byte means eight lines per inch */
+                        dev->lpi = 8;
+                    else
+                        more = 0;
+                }
+            }
+            if (more)
+            {
+                /* No flag in last byte or too many bytes */
+                *residual = count - i;
+                *unitstat = CSW_CE | CSW_DE | CSW_UC;
+                dev->sense[0] = SENSE_CC;
+                return;
+            }
+            *residual = count - i;
+            dev->lpp = j - 1;
+
+            fcb_dump(dev, wbuf, 150);
+            WRMSG(HHC02210, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, wbuf );
         }
         /* Return normal status */
         *residual = 0;
         *unitstat = CSW_CE | CSW_DE;
         break;
-
 
     case 0x06:
     /*---------------------------------------------------------------*/

@@ -703,10 +703,10 @@ struct SYSBLK {
 #ifdef OPTION_MSGHLD
         int     keep_timeout_secs;      /* Message hold time         */
 #endif
-	LOCK    msglock;                /* lock for writemsg         */
-	int     msglvl;                 /* Message level             */
-    time_t  shutquittime;           /* Quit requested time       */
-    time_t  SSD_time;                /* SSD requested time        */
+        LOCK    msglock;                /* lock for writemsg         */
+        int     msglvl;                 /* Message level             */
+        time_t  shutquittime;           /* Quit requested time       */
+        time_t  SSD_time;                /* SSD requested time        */
 
 };
 
@@ -1012,8 +1012,16 @@ struct DEVBLK {                         /* Device configuration block*/
         u_int   nofcbcheck:1;           /* ignore FCB errors         */
         u_int   ccpend:1;               /* cc process pending        */
 
-        int     fcb[13] ;               /* FCB loaded thru loadfcb   */
-        int     stdfcb[13] ;            /* FCB hardcoded RSFI        */
+        int     optbrowse;              /* optimize for browse  1    */
+                                        /* optimize for print   0    */
+
+        int     lpi;                    /* lines per inch 6/8        */  
+        int     index;                  /* 3211 indexing             */  
+        int     lpp;                    /* lines per page            */
+        int     ffchan ;                /* ff when skip here         */  
+#define FCBSIZE 256         
+        int     fcb[FCBSIZE+1];         /* FCB image                 */
+        int     fcbisdef;               /* FCB is default            */
 
         int     prevline;               /* previous line number      */
         int     currline;               /* curr line number          */

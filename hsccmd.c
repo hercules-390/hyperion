@@ -50,12 +50,12 @@
 #define MAX_DEVLIST_DEVICES  1024
 
 #if defined(FEATURE_ECPSVM)
-extern void ecpsvm_command(int argc,char **argv);
+extern void ecpsvm_command( int argc, char **argv );
 #endif
-int ProcessPanelCommand (char*);
-int process_script_file(char *,int);
+int ProcessPanelCommand ( char * );
+int process_script_file ( char *, int );
 
-
+static void fcb_dump( DEVBLK*, char *, unsigned int );
 /* $test_cmd - do something or other */
 
 #ifdef _MSVC_ 
@@ -581,9 +581,17 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
     char*    devclass;
     int      rc;
 
-    int      i,j,chan;
-    char     buf[80];
-    char     wrk[8];
+    int      iarg,jarg;
+    int      chan;
+    int      line;
+    
+    char     wbuf[150];
+    int      wlpi;
+    int      windex;
+    int      wlpp;
+    int      wffchan;
+    int      wfcb[FCBSIZE+1];
+    char     *ptr, *nxt;
 
     UNREFERENCED(cmdline);
 
@@ -617,25 +625,9 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
 
     if ( argc == 2 ) 
     {
-        buf[0]='\0';
-        for ( i = 0; i < 13; i++)
-        {
-            sprintf(wrk,"/%02d",dev->fcb[i]);
-            strcat(buf,wrk);
-        }
-
-        WRMSG(HHC02210, "I", lcss, devnum, buf );
+        fcb_dump(dev, wbuf, sizeof(wbuf));
+        WRMSG(HHC02210, "I", lcss, devnum, wbuf );
         return 0;
-    }
-
-    if ( argc != 3 ) 
-        return -1; 
-
-    /* If not 1403 */
-    if ( dev->devtype != 0x1403 )
-    {
-        WRMSG(HHC02209, "E", lcss, devnum, "1403" );
-        return -1;
     }
 
     if ( !dev->stopprt )
@@ -644,40 +636,189 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
         return -1;
     }
 
-    if (strlen (argv[2]) != 26 ) 
+    wlpi = dev->lpi;
+    wlpp = dev->lpp;
+    wffchan = dev->ffchan;
+    for (line = 0; line <= FCBSIZE; line++)
+        wfcb[line] = dev->fcb[line];
+
+    for (iarg = 2; iarg < argc; iarg++)
     {
-        WRMSG(HHC02205, "E", argv[2], "" );
+        if (strncasecmp("lpi=", argv[iarg], 4) == 0)
+        {
+            ptr = argv[iarg]+4;
+            errno = 0;
+            wlpi = (int) strtoul(ptr,&nxt,10) ;
+            if (errno != 0 || nxt == ptr || *nxt != 0 || ( wlpi != 6 && wlpi != 8 && wlpi != 10) )
+            {
+                jarg = ptr - argv[iarg] ;
+                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, jarg);
+                return -1;
+            }
+            continue;
+        }
+
+        if (strncasecmp("index=", argv[iarg], 6) == 0)
+        {
+            if (0x3211 != dev->devtype )
+            {
+                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, 1);
+                return -1;
+            }
+            ptr = argv[iarg]+6;
+            errno = 0;
+            windex = (int) strtoul(ptr,&nxt,10) ;
+            if (errno != 0 || nxt == ptr || *nxt != 0 || ( windex < 0 || windex > 15) )
+            {
+                jarg = ptr - argv[iarg] ;
+                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, jarg);
+                return -1;
+            }
+            continue;
+        }
+        
+        if (strncasecmp("lpp=", argv[iarg], 4) == 0)
+        {
+            ptr = argv[iarg]+4;
+            errno = 0;
+            wlpp = (int) strtoul(ptr,&nxt,10) ;
+            if (errno != 0 || nxt == ptr || *nxt != 0 ||wlpp > FCBSIZE)
+            {
+                jarg = ptr - argv[iarg] ;
+                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, jarg);
+                return -1;
+            }
+            continue;
+        }
+#if 0
+        if (strncasecmp("ffchan=", argv[iarg], 7) == 0)
+        {
+            ptr = argv[iarg]+7;
+            errno = 0;
+            wffchan = (int) strtoul(ptr,&nxt,10) ;
+            if (errno != 0 || nxt == ptr || *nxt != 0 ||  wffchan < 1 || wffchan > 12)
+            {
+                jarg = ptr - argv[iarg] ;
+                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, jarg);
+                return -1;
+            }
+            continue ;
+        }
+#endif
+        if (strncasecmp("fcb=", argv[iarg], 4) == 0)
+        {
+            for (line = 0 ; line <= FCBSIZE; line++)  wfcb[line] = 0;
+            /* check for simple mode */
+            if	( strstr(argv[iarg],":") )	
+            {
+                /* ':" found  ==> new mode */			
+                ptr = argv[iarg]+4;
+                while (*ptr)
+                {
+                    errno = 0;
+                    line = (int) strtoul(ptr,&nxt,10) ;
+                    if (errno != 0 || *nxt != ':' || nxt == ptr || line > wlpp || wfcb[line] != 0 )
+                    {
+                        jarg = ptr - argv[iarg] ;
+                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, jarg);
+                        return -1;
+                    }
+
+                    ptr = nxt + 1 ;
+                    errno = 0;
+                    chan = (int) strtoul(ptr,&nxt,10) ;
+                    if (errno != 0 || (*nxt != ',' && *nxt != 0) || nxt == ptr || chan < 1 || chan > 12 )
+                    {
+                        jarg = ptr - argv[iarg] ;
+                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, jarg);
+                        return -1;
+                    }
+                    wfcb[line] = chan;
+                    if ( nxt == 0 ) 
+                        break ;
+                    ptr = nxt + 1; 
+                }
+
+            }
+            else
+            {
+                /* ':" NOT found  ==> old mode */
+                ptr = argv[iarg]+4;
+                chan = 0;
+                while (*ptr)
+                {
+                    errno = 0;
+                    line = (int) strtoul(ptr,&nxt,10) ;
+                    if (errno != 0 || (*nxt != ',' && *nxt != 0) || nxt == ptr || line > wlpp || wfcb[line] != 0 )
+                    {
+                        jarg = ptr - argv[iarg] ;
+                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, jarg);
+                        return -1;
+                    }
+                    chan += 1;
+                    if ( chan > 12 ) 
+                    {
+                        jarg = ptr - argv[iarg] ;
+                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, jarg);
+                        return -1;
+                    }
+                    wfcb[line] = chan;
+                    if ( nxt == 0 ) 
+                        break ;
+                    ptr = nxt + 1; 
+                }
+                if ( chan != 12 ) 
+                {
+                    jarg = 5 ;
+                    WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, jarg);
+                    return -1;
+                }
+            }
+                
+            continue;  
+        }
+
+        WRMSG (HHC01102, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1);
         return -1;
     }
-    for ( j = 0 ; j < 26 ; j++ )
+
+    /* It's all ok, copy it to the dev block */
+    dev->lpi = wlpi;
+    dev->index = windex ;
+    dev->lpp = wlpp;
+    dev->ffchan = wffchan;
+    for (line = 0; line <= FCBSIZE; line++)
+        dev->fcb[line] = wfcb[line];
+
+    fcb_dump(dev, wbuf, sizeof(wbuf));
+    WRMSG(HHC02210, "I", lcss, devnum, wbuf );
+    return 0;
+}
+
+static void fcb_dump(DEVBLK* dev, char *buf, unsigned int buflen)
+{
+    int i;
+    char wrk[16];
+    char sep[1];
+    sep[0] = '=';
+    snprintf( buf, buflen, "lpi=%d index=%d lpp=%d fcb", dev->lpi, dev->index, dev->lpp );
+    for (i = 1; i <= dev->lpp; i++)
     {
-        if ( (argv[2][j] < '0') || (argv[2][j] > '9' ) )
+        if (dev->fcb[i] != 0)
         {
-        WRMSG(HHC02205, "E", argv[2], "" );
-            return -1;
+            MSGBUF( wrk, "%c%d:%d",sep[0], i, dev->fcb[i]);
+            sep[0] = ',' ;
+            if (strlen(buf) + strlen(wrk) >= buflen - 4)
+            {
+                /* Too long, truncate it */
+                strcat(buf, ",...");
+                return;
+            }
+            strcat(buf, wrk);
         }
     }
-    /* build the fcb image */
-    chan = 0 ;
-    for ( j = 0 ; j < 26 ; j += 2  )
-    {
-        wrk[0] = argv[2][j] ;
-        wrk[1] = argv[2][j+1] ;
-        wrk[2] = '\0' ;
-        dev->fcb[chan] = atoi(wrk);
-        chan++;
-    }
-    buf[0]='\0';
-    for ( i = 0; i < 13; i++)
-    {
-        sprintf(wrk,"/%02d",dev->fcb[i]);
-        strcat(buf,wrk);
-    }
-    WRMSG(HHC02210, "I", lcss, devnum, buf );
-    return 0;
-
+    return;
 }
- 
 
 /*-------------------------------------------------------------------*/
 /* start command - start CPU (or printer device if argument given)   */
@@ -4129,7 +4270,7 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
         for (j = 0; j < dev->numdevid; j++)
         {
             if (j == 0)
-                len = sprintf(buf, "%1d:%04X SNSID 00 ", SSID_TO_LCSS(dev->ssid), dev->devnum);
+                len = MSGBUF( buf, "%1d:%04X SNSID 00 ", SSID_TO_LCSS(dev->ssid), dev->devnum);
             else if (j%16 == 0)
             {
                 WRMSG(HHC02280, "I", buf);
@@ -4145,7 +4286,7 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
         for (j = 0; j < dev->numdevchar; j++)
         {
             if (j == 0)
-                len = sprintf(buf, "%1d:%04X RDC   00 ", SSID_TO_LCSS(dev->ssid), dev->devnum);
+                len = MSGBUF( buf, "%1d:%04X RDC   00 ", SSID_TO_LCSS(dev->ssid), dev->devnum);
             else if (j%16 == 0)
             {
                 WRMSG(HHC02280, "I", buf);

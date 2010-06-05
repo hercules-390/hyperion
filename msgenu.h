@@ -975,7 +975,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02207 "Uptime %u day%s, %02u:%02u:%02u"
 #define HHC02208 "Uptime %02u:%02u:%02u"
 #define HHC02209 "%1d:%04X device is not a '%s'"
-#define HHC02210 "%1d:%04X fcb %s/"
+#define HHC02210 "%1d:%04X %s"
 #define HHC02211 "%1d:%04X device not stopped"
 #define HHC02212 "%1d:%04X device started"
 #define HHC02213 "%1d:%04X device not started%s"
