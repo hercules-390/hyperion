@@ -378,7 +378,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     if (itrkbuf == NULL)
     {
         char buf[40];
-        snprintf( MSGBUF(buf), "malloc(%u)", itrklen);
+        MSGBUF( buf, "malloc(%u)", itrklen);
         fprintf (stderr, MSG(HHC02412, "E", buf, strerror(errno)));
         EXIT(3);
     }
@@ -729,7 +729,7 @@ U32             trksize;                /* AWSCKD image track length */
     if (obuf == NULL)
     {
         char buf[40];
-        snprintf( MSGBUF(buf), "malloc(%u)", trksize);
+        MSGBUF( buf, "malloc(%u)", trksize);
         fprintf (stderr, MSG(HHC02412, "E", buf, strerror(errno)));
         EXIT(6);
     }
