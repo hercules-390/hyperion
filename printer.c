@@ -1040,7 +1040,7 @@ char            wbuf[150];
             write_buffer(dev, hex, 2, unitstat);
             if (*unitstat != 0) return;
             eor = (dev->crlf) ? "\r\n" : "\n";
-            write_buffer(dev, eor, strlen(eor), unitstat);
+            write_buffer(dev, eor, (int)strlen(eor), unitstat);
             if (*unitstat == 0)  
                 *unitstat = CSW_CE | CSW_DE;
             return;
