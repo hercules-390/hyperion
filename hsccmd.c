@@ -205,7 +205,7 @@ int maxrates_cmd(int argc, char *argv[],char *cmdline)
             }
             else
             {
-                snprintf(buf, 128, "%d minutes", interval);
+                snprintf( BUF(buf), "%d minutes", interval);
                 maxrates_rpt_intvl = interval;
                 WRMSG(HHC02204, "I", "maxrates", buf );
             }
@@ -228,23 +228,23 @@ int maxrates_cmd(int argc, char *argv[],char *cmdline)
         pszCurrentDateTime[strlen(pszCurrentDateTime) - 1] = 0;
 
         WRMSG(HHC02272, "I", "Highest observed MIPS/SIOS rates:");
-        snprintf(buf, 128, "From %s to %s", pszPrevIntervalStartDateTime, 
+        snprintf( BUF(buf), "From %s to %s", pszPrevIntervalStartDateTime, 
                      pszCurrIntervalStartDateTime);
         WRMSG(HHC02272, "I", buf);
-        snprintf(buf, 128, "MIPS: %d.%02d", prev_high_mips_rate / 1000000,
+        snprintf( BUF(buf), "MIPS: %d.%02d", prev_high_mips_rate / 1000000,
                      prev_high_mips_rate % 1000000);
         WRMSG(HHC02272, "I", buf);
-        snprintf(buf, 128, "SIOS: %d", prev_high_sios_rate);
+        snprintf( BUF(buf), "SIOS: %d", prev_high_sios_rate);
         WRMSG(HHC02272, "I", buf);
-        snprintf(buf, 128, "From %s to %s", pszCurrIntervalStartDateTime,
+        snprintf( BUF(buf), "From %s to %s", pszCurrIntervalStartDateTime,
                      pszCurrentDateTime);
         WRMSG(HHC02272, "I", buf);
-        snprintf(buf, 128, "MIPS: %d.%02d", curr_high_mips_rate / 1000000,
+        snprintf( BUF(buf), "MIPS: %d.%02d", curr_high_mips_rate / 1000000,
                      curr_high_mips_rate % 1000000);
         WRMSG(HHC02272, "I", buf);
-        snprintf(buf, 128, "SIOS: %d", curr_high_sios_rate);
+        snprintf( BUF(buf), "SIOS: %d", curr_high_sios_rate);
         WRMSG(HHC02272, "I", buf);
-        snprintf(buf, 128, "Current interval is %d minutes", maxrates_rpt_intvl);
+        snprintf( BUF(buf), "Current interval is %d minutes", maxrates_rpt_intvl);
         WRMSG(HHC02272, "I", buf);
 
         free( pszPrevIntervalStartDateTime );
@@ -1169,11 +1169,11 @@ char buf[64];
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
-    snprintf(buf, 64, "tod = %16.16" I64_FMT "X    %s",
+    snprintf( BUF(buf), "tod = %16.16" I64_FMT "X    %s",
                (tod_now << 8),format_tod(clock_buf,tod_now,TRUE));
     WRMSG(HHC02274, "I", buf);
 
-    snprintf(buf, 64, "h/w = %16.16" I64_FMT "X    %s",
+    snprintf( BUF(buf), "h/w = %16.16" I64_FMT "X    %s",
                (hw_now << 8),format_tod(clock_buf,hw_now,TRUE));
     WRMSG(HHC02274, "I", buf);
 
@@ -1186,26 +1186,26 @@ char buf[64];
         epoch_now_abs = epoch_now;
         epoch_sign = ' ';
     }
-    snprintf(buf, 64, "off = %16.16" I64_FMT "X   %c%s",
+    snprintf( BUF(buf), "off = %16.16" I64_FMT "X   %c%s",
                (epoch_now << 8),epoch_sign,
                format_tod(clock_buf,epoch_now_abs,FALSE));
     WRMSG(HHC02274, "I", buf);
 
-    snprintf(buf, 64, "ckc = %16.16" I64_FMT "X    %s",
+    snprintf( BUF(buf), "ckc = %16.16" I64_FMT "X    %s",
                (clkc_now << 8),format_tod(clock_buf,clkc_now,TRUE));
     WRMSG(HHC02274, "I", buf);
 
     if (regs->cpustate != CPUSTATE_STOPPED)
-        snprintf(buf, 64, "cpt = %16.16" I64_FMT "X", cpt_now << 8);
+        snprintf( BUF(buf), "cpt = %16.16" I64_FMT "X", cpt_now << 8);
     else
-        snprintf(buf, 64, "cpt = not decrementing");
+        snprintf( BUF(buf), "cpt = not decrementing");
     WRMSG(HHC02274, "I", buf);
 
 #if defined(_FEATURE_SIE)
     if(sie_flag)
     {
 
-        snprintf(buf, 64, "vtod = %16.16" I64_FMT "X    %s",
+        snprintf( BUF(buf), "vtod = %16.16" I64_FMT "X    %s",
                    (vtod_now << 8),format_tod(clock_buf,vtod_now,TRUE));
         WRMSG(HHC02274, "I", buf);
 
@@ -1218,23 +1218,23 @@ char buf[64];
             vepoch_now_abs = vepoch_now;
             vepoch_sign = ' ';
         }
-        snprintf(buf, 64, "voff = %16.16" I64_FMT "X   %c%s",
+        snprintf( BUF(buf), "voff = %16.16" I64_FMT "X   %c%s",
                    (vepoch_now << 8),vepoch_sign,
                    format_tod(clock_buf,vepoch_now_abs,FALSE));
         WRMSG(HHC02274, "I", buf);
 
-        snprintf(buf, 64, "vckc = %16.16" I64_FMT "X    %s",
+        snprintf( BUF(buf), "vckc = %16.16" I64_FMT "X    %s",
                    (vclkc_now << 8),format_tod(clock_buf,vclkc_now,TRUE));
         WRMSG(HHC02274, "I", buf);
 
-        snprintf(buf, 64, "vcpt = %16.16" I64_FMT "X",vcpt_now << 8);
+        snprintf( BUF(buf), "vcpt = %16.16" I64_FMT "X",vcpt_now << 8);
         WRMSG(HHC02274, "I", buf);
     }
 #endif
 
     if (arch370_flag)
     {
-        snprintf(buf, 64, "itm = %8.8" I32_FMT "X                     %s",
+        snprintf( BUF(buf), "itm = %8.8" I32_FMT "X                     %s",
                    itimer, itimer_formatted );
         WRMSG(HHC02274, "I", buf);
     }
@@ -1388,7 +1388,7 @@ int rc;
             case 0:     /* ("success") */
             {
                 char buf[80];
-                snprintf(buf, 80, "%s%s automount directory", pTAMDIR->dir == sysblk.defdir ? "default " : "",
+                snprintf( BUF(buf), "%s%s automount directory", pTAMDIR->dir == sysblk.defdir ? "default " : "",
                     pTAMDIR->rej ? "disallowed" : "allowed");
                 WRMSG(HHC02203, "I", buf, pTAMDIR->dir);
 
@@ -1406,7 +1406,7 @@ int rc;
                     if (!(pTAMDIR = malloc( sizeof(TAMDIR) )))
                     {
                         char buf[40];
-                        snprintf(buf, 40, "malloc(%lu)", sizeof(TAMDIR));
+                        snprintf( BUF(buf), "malloc(%lu)", sizeof(TAMDIR));
                         WRMSG(HHC02219, "E", buf, strerror(ENOMEM));
                         sysblk.defdir = cwd; /* EMERGENCY! */
                     }
@@ -1573,7 +1573,7 @@ int rc;
                                 if (!(pCurrTAMDIR = malloc( sizeof(TAMDIR) )))
                                 {
                                     char buf[40];
-                                    snprintf(buf, 40, "malloc(%lu)", sizeof(TAMDIR));
+                                    snprintf( BUF(buf), "malloc(%lu)", sizeof(TAMDIR));
                                     WRMSG(HHC02219, "E", buf, strerror(ENOMEM));
                                     sysblk.defdir = cwd; /* EMERGENCY! */
                                 }
@@ -1700,7 +1700,7 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
 
     if ( sysblk.auto_scsi_mount_secs )
     {
-        snprintf(buf, 128, "SCSI auto-mount queries are done every %d seconds",
+        snprintf( BUF(buf), "SCSI auto-mount queries are done every %d seconds",
             sysblk.auto_scsi_mount_secs );
         WRMSG(HHC02275, "I", buf);
     }
@@ -1718,7 +1718,7 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
 
         try_scsi_refresh( dev );    // (see comments in function)
 
-        snprintf(buf, 128,
+        snprintf( BUF(buf),
             "SCSI auto-mount thread %s active for drive %u:%4.4X = %s.\n"
             ,dev->stape_mountmon_tid ? "IS" : "is NOT"
             ,SSID_TO_LCSS(dev->ssid)
@@ -1806,7 +1806,7 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
         }
         else
         {
-            snprintf(buf, 128, "No mount/dismount requests pending for drive %u:%4.4X = %s.\n",
+            snprintf( BUF(buf), "No mount/dismount requests pending for drive %u:%4.4X = %s.\n",
                 SSID_TO_LCSS(dev->ssid),dev->devnum, dev->filename );
             WRMSG(HHC02275, "I", buf);
         }
@@ -1936,7 +1936,7 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
 
         {
           char buf[128];
-          snprintf(buf, 128, "CTC debugging for %s device %1d:%04X group",
+          snprintf( BUF(buf), "CTC debugging for %s device %1d:%04X group",
                   CTC_LCS == dev->ctctype ? "LCS" : "CTCI",
                   lcss, devnum );
           WRMSG(HHC02204, "I", buf, onoff ? "on" : "off");
@@ -2192,7 +2192,7 @@ int rc;
     else
     {
         char buf[40];
-        snprintf(buf, 40, "%d", sysblk.httpport);
+        snprintf( BUF(buf), "%d", sysblk.httpport);
         WRMSG(HHC02204, "I", "HTTPPORT", buf);
     }
     return 0;
@@ -2279,7 +2279,7 @@ int toddrag_cmd(int argc, char *argv[], char *cmdline)
     else
     {
         char buf[20];
-        snprintf(buf, 20, "%lf",(1.0/(1.0+get_tod_steering())));
+        snprintf( BUF(buf), "%lf",(1.0/(1.0+get_tod_steering())));
         WRMSG(HHC02204, "I", "TOD clock drag factor", buf);
     }
     return 0;
@@ -2315,7 +2315,7 @@ int panrate_cmd(int argc, char *argv[], char *cmdline)
     else
     {
         char buf[20];
-        snprintf(buf, 20, "%d", sysblk.panrate);
+        snprintf( BUF(buf), "%d", sysblk.panrate);
         WRMSG(HHC02204, "I", "panel refresh rate", buf );
     }
     return 0;
@@ -2363,7 +2363,7 @@ int msghld_cmd(int argc, char *argv[], char *cmdline)
         if(!strcasecmp(argv[1], "info"))
         {
             char buf[40];
-            snprintf(buf, 40, "%d seconds", sysblk.keep_timeout_secs);
+            snprintf( BUF(buf), "%d seconds", sysblk.keep_timeout_secs);
             WRMSG(HHC02203, "I", "message held time", buf);
             return(0);
         }
@@ -2381,7 +2381,7 @@ int msghld_cmd(int argc, char *argv[], char *cmdline)
             {
                 char buf[40];
                 sysblk.keep_timeout_secs = new_timeout;
-                snprintf(buf, 40, "%d seconds", sysblk.keep_timeout_secs);
+                snprintf( BUF(buf), "%d seconds", sysblk.keep_timeout_secs);
                 WRMSG(HHC02204, "I", "message held time", buf);
                 return(0);
             }
@@ -2748,9 +2748,9 @@ char buf[32];
     regs = sysblk.regs[sysblk.pcpu];
 
     if(regs->arch_mode == ARCH_900)
-        snprintf(buf, 32, "%16.16"I64_FMT"X", (long unsigned)regs->PX_G);
+        snprintf( BUF(buf), "%16.16"I64_FMT"X", (long unsigned)regs->PX_G);
     else
-        snprintf(buf, 32, "%08X", regs->PX_L);
+        snprintf( BUF(buf), "%08X", regs->PX_L);
     WRMSG(HHC02277, "I", buf);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
@@ -3363,7 +3363,7 @@ int i;
     else
     {
         char buf[40];
-        snprintf(buf, 40, "%sable, %secho",(sysblk.diag8cmd & DIAG8CMD_ENABLE) ? "en" : "dis",
+        snprintf( BUF(buf), "%sable, %secho",(sysblk.diag8cmd & DIAG8CMD_ENABLE) ? "en" : "dis",
             (sysblk.diag8cmd & DIAG8CMD_ECHO)   ? ""   : "no ");
         
         WRMSG(HHC02203, "I", "DIAG8CMD", buf);
@@ -3405,7 +3405,7 @@ int i;
     else
     {
         char buf[40];
-        snprintf(buf, 40, "%sabled%s", (sysblk.shcmdopt&SHCMDOPT_ENABLE)?"En":"Dis",
+        snprintf( BUF(buf), "%sabled%s", (sysblk.shcmdopt&SHCMDOPT_ENABLE)?"En":"Dis",
           (sysblk.shcmdopt&SHCMDOPT_DIAG8)?"":" NoDiag8");
         WRMSG(HHC02203, "I", "SHCMDOPT", buf); 
     }
@@ -3573,7 +3573,7 @@ BYTE    c;
             if ( strlen(argv[1]) == 2 && id > 0x3f )
             {
                 char buf[8];
-                snprintf(buf, 8, "%02X", id);
+                snprintf( BUF(buf), "%02X", id);
                 WRMSG(HHC02205,"E", buf, ": must be within 00 to 3F (hex)"); 
                 return -1;
             }
@@ -3589,7 +3589,7 @@ BYTE    c;
     else
     {
         char buf[20];
-        snprintf(buf, 20,"%02X", sysblk.lparnum);
+        snprintf( BUF(buf),"%02X", sysblk.lparnum);
         WRMSG(HHC02203, "I", "lparnum", buf);
     }
     return 0;
@@ -3628,7 +3628,7 @@ u_int     id;
     else
     {
         char buf[40];
-        snprintf(buf, 40, "%d", sysblk.cpuidfmt);
+        snprintf( BUF(buf), "%d", sysblk.cpuidfmt);
         WRMSG(HHC02203, "I", "CPUIDFMT", buf); 
     }
     return 0;
@@ -3938,7 +3938,7 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
 
     if (!(orig_pDevBlkPtrs = malloc(sizeof(DEVBLK*) * MAX_DEVLIST_DEVICES)))
     {
-        snprintf(buf, 256, "malloc(%lu)", sizeof(DEVBLK*) * MAX_DEVLIST_DEVICES);
+        snprintf( BUF(buf), "malloc(%lu)", sizeof(DEVBLK*) * MAX_DEVLIST_DEVICES);
         WRMSG(HHC02219, "E", buf, strerror(errno) );
         return -1;
     }
@@ -3992,7 +3992,7 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
         dev->hnd->query( dev, &devclass, sizeof(devnam), devnam );
 
         /* Display the device definition and status */
-        snprintf(buf, 256, "%1d:%04X %4.4X %s %s%s%s",
+        snprintf( BUF(buf), "%1d:%04X %4.4X %s %s%s%s",
                 SSID_TO_LCSS(dev->ssid),
                 dev->devnum, dev->devtype, devnam,
                 (dev->fd > 2 ? _("open ") : ""),
@@ -4009,7 +4009,7 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
 
             if (clientip)
             {
-                snprintf(buf, 256, "     (client %s (%s) connected)",
+                snprintf( BUF(buf), "     (client %s (%s) connected)",
                     clientip, clientname
                     );
                 WRMSG(HHC02279, "I", buf);
@@ -4074,7 +4074,7 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
 
     if (!(orig_pDevBlkPtrs = malloc(sizeof(DEVBLK*) * MAX_DEVLIST_DEVICES)))
     {
-        snprintf(buf, 128, "malloc(%lu)", sizeof(DEVBLK*) * MAX_DEVLIST_DEVICES);
+        snprintf( BUF(buf), "malloc(%lu)", sizeof(DEVBLK*) * MAX_DEVLIST_DEVICES);
         WRMSG(HHC02219, "E", buf, strerror(errno) );
         return -1;
     }
@@ -4899,7 +4899,7 @@ int ascsimnt_cmd(int argc, char *argv[], char *cmdline)
     else
     { 
         char buf[20];
-        snprintf(buf, 20, "%d seconds", sysblk.auto_scsi_mount_secs);
+        snprintf( BUF(buf), "%d seconds", sysblk.auto_scsi_mount_secs);
         WRMSG(HHC02203, "I","auto SCSI mount", buf);
     }
     return 0;
@@ -5148,7 +5148,7 @@ REGS *regs;
     {
         char buf[40];
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        snprintf(buf, 40, "%08X-%08X", aaddr, aaddr2);
+        snprintf( BUF(buf), "%08X-%08X", aaddr, aaddr2);
         WRMSG(HHC02205, "W", buf, ": invalid range" );
         return -1;
     }
@@ -5446,11 +5446,11 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
         {
             if (0xFFFF == sysblk.regs[i]->chanset)
             {
-                snprintf(buf, 256, "none");
+                snprintf( BUF(buf), "none");
             }
             else
             {
-                snprintf(buf, 256, "%4.4X", sysblk.regs[i]->chanset);
+                snprintf( BUF(buf), "%4.4X", sysblk.regs[i]->chanset);
             }
             WRMSG( HHC00865, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf );
         }
@@ -5461,7 +5461,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
         copy_psw(sysblk.regs[i], curpsw);
         if (ARCH_900 == sysblk.arch_mode)
         {
-            snprintf(buf, 256, "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",
+            snprintf( BUF(buf), "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",
                 curpsw[0], curpsw[1], curpsw[2], curpsw[3],
                 curpsw[4], curpsw[5], curpsw[6], curpsw[7],
                 curpsw[8], curpsw[9], curpsw[10], curpsw[11],
@@ -5469,7 +5469,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
         }
         else
         {
-            snprintf(buf, 256, "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",               
+            snprintf( BUF(buf), "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",               
                 curpsw[0], curpsw[1], curpsw[2], curpsw[3],
                 curpsw[4], curpsw[5], curpsw[6], curpsw[7]);
         }
@@ -5496,11 +5496,11 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
             {
                 if (0xFFFF == sysblk.regs[i]->guestregs->chanset)
                 {                  
-                    snprintf(buf, 256, "none");
+                    snprintf( BUF(buf), "none");
                 }
                 else
                 {
-                    snprintf(buf, 256, "%4.4X", sysblk.regs[i]->guestregs->chanset);
+                    snprintf( BUF(buf), "%4.4X", sysblk.regs[i]->guestregs->chanset);
                 }
                 WRMSG( HHC00865, "I", "IE", sysblk.regs[i]->cpuad, buf );
             }
@@ -5510,7 +5510,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
             copy_psw(sysblk.regs[i]->guestregs, curpsw);
             if (ARCH_900 == sysblk.arch_mode)
             {
-               snprintf(buf, 256, "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",
+               snprintf( BUF(buf), "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",
                    curpsw[0], curpsw[1], curpsw[2], curpsw[3],
                    curpsw[4], curpsw[5], curpsw[6], curpsw[7],
                    curpsw[8], curpsw[9], curpsw[10], curpsw[11],
@@ -5518,7 +5518,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
             }
             else
             {
-               snprintf(buf, 256, "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",               
+               snprintf( BUF(buf), "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",               
                    curpsw[0], curpsw[1], curpsw[2], curpsw[3],
                    curpsw[4], curpsw[5], curpsw[6], curpsw[7]);
             }
@@ -5640,7 +5640,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
       if(!(opcode1 = malloc(MAX_ICOUNT_INSTR * sizeof(unsigned char))))
       {
         char buf[40];
-        snprintf(buf, 40, "malloc(%lu)", MAX_ICOUNT_INSTR * sizeof(unsigned char));
+        snprintf( BUF(buf), "malloc(%lu)", MAX_ICOUNT_INSTR * sizeof(unsigned char));
         WRMSG(HHC02219, "E", buf, strerror(errno));
         release_lock( &sysblk.icount_lock );
         return 0;
@@ -5648,7 +5648,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
       if(!(opcode2 = malloc(MAX_ICOUNT_INSTR * sizeof(unsigned char))))
       {
         char buf[40];
-        snprintf(buf, 40, "malloc(%lu)", MAX_ICOUNT_INSTR * sizeof(unsigned char));
+        snprintf( BUF(buf), "malloc(%lu)", MAX_ICOUNT_INSTR * sizeof(unsigned char));
         WRMSG(HHC02219, "E", buf, strerror(errno));
         free(opcode1);
         release_lock( &sysblk.icount_lock );
@@ -5657,7 +5657,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
       if(!(count = malloc(MAX_ICOUNT_INSTR * sizeof(U64))))
       {
         char buf[40];
-        snprintf(buf, 40, "malloc(%lu)", MAX_ICOUNT_INSTR * sizeof(U64));
+        snprintf( BUF(buf), "malloc(%lu)", MAX_ICOUNT_INSTR * sizeof(U64));
         WRMSG(HHC02219, "E", buf, strerror(errno));
         free(opcode1);
         free(opcode2);
@@ -6171,121 +6171,121 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
         {
           case 0x01:
           {
-            snprintf(buf, 128, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            snprintf( BUF(buf), "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xA4:
           {
-            snprintf(buf, 128, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            snprintf( BUF(buf), "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xA5:
           {
-            snprintf(buf, 128, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            snprintf( BUF(buf), "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xA6:
           {
-            snprintf(buf, 128, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            snprintf( BUF(buf), "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xA7:
           {
-            snprintf(buf, 128, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            snprintf( BUF(buf), "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xB2:
           {
-            snprintf(buf, 128, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            snprintf( BUF(buf), "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xB3:
           {
-            snprintf(buf, 128, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            snprintf( BUF(buf), "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xB9:
           {
-            snprintf(buf, 128, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            snprintf( BUF(buf), "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xC0:
           {
-            snprintf(buf, 128, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            snprintf( BUF(buf), "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xC2:
           {
-            snprintf(buf, 128, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            snprintf( BUF(buf), "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xC4:
           {
-            snprintf(buf, 128, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            snprintf( BUF(buf), "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xC6:
           {
-            snprintf(buf, 128, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            snprintf( BUF(buf), "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xC8:
           {
-            snprintf(buf, 128, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            snprintf( BUF(buf), "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xE3:
           {
-            snprintf(buf, 128, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            snprintf( BUF(buf), "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xE4:
           {
-            snprintf(buf, 128, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            snprintf( BUF(buf), "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xE5:
           {
-            snprintf(buf, 128, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            snprintf( BUF(buf), "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xEB:
           {
-            snprintf(buf, 128, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            snprintf( BUF(buf), "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xEC:
           {
-            snprintf(buf, 128, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            snprintf( BUF(buf), "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             WRMSG(HHC02292, "I", buf);
             break;
           }
           case 0xED:
           {
-            snprintf(buf, 128, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            snprintf( BUF(buf), "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             WRMSG(HHC02292, "I", buf);
             break;
           }
           default:
           {
-            snprintf(buf, 128, "Inst '%2.2X'   count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], count[i1], (int) (count[i1] * 100 / total));
+            snprintf( BUF(buf), "Inst '%2.2X'   count %" ICOUNT_WIDTH I64_FMT "u (%2d%%)", opcode1[i1], count[i1], (int) (count[i1] * 100 / total));
             WRMSG(HHC02292, "I", buf);
             break;
           }
@@ -6307,7 +6307,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imap01[i2])
                     {
-                        snprintf(buf, 128, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
+                        snprintf( BUF(buf), "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imap01[i2]);
                         WRMSG(HHC02292, "I", buf);
                     }
@@ -6316,7 +6316,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapa4[i2])
                     {
-                        snprintf(buf, 128, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
+                        snprintf( BUF(buf), "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imapa4[i2]);
                         WRMSG(HHC02292, "I", buf);
                     }
@@ -6325,7 +6325,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 for(i2 = 0; i2 < 16; i2++)
                     if(sysblk.imapa5[i2])
                     {
-                        snprintf(buf, 128, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u",
+                        snprintf( BUF(buf), "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imapa5[i2]);
                         WRMSG(HHC02292, "I", buf);
                     }
@@ -6334,7 +6334,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapa6[i2])
                     {
-                        snprintf(buf, 128, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
+                        snprintf( BUF(buf), "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imapa6[i2]);
                         WRMSG(HHC02292, "I", buf);
                     }
@@ -6343,7 +6343,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 for(i2 = 0; i2 < 16; i2++)
                     if(sysblk.imapa7[i2])
                     {
-                        snprintf(buf, 128, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u",
+                        snprintf( BUF(buf), "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imapa7[i2]);
                         WRMSG(HHC02292, "I", buf);
                     }
@@ -6352,7 +6352,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapb2[i2])
                     {
-                        snprintf(buf, 128, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
+                        snprintf( BUF(buf), "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imapb2[i2]);
                         WRMSG(HHC02292, "I", buf);
                     }
@@ -6361,7 +6361,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapb3[i2])
                     {
-                        snprintf(buf, 128, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
+                        snprintf( BUF(buf), "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imapb3[i2]);
                         WRMSG(HHC02292, "I", buf);
                     }
@@ -6370,7 +6370,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapb9[i2])
                     {
-                        snprintf(buf, 128, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
+                        snprintf( BUF(buf), "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imapb9[i2]);
                         WRMSG(HHC02292, "I", buf);
                     }
@@ -6379,7 +6379,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 for(i2 = 0; i2 < 16; i2++)
                     if(sysblk.imapc0[i2])
                     {
-                        snprintf(buf, 128, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u",
+                        snprintf( BUF(buf), "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imapc0[i2]);
                         WRMSG(HHC02292, "I", buf);
                     }
@@ -6388,7 +6388,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 for(i2 = 0; i2 < 16; i2++)                                  /*@Z9*/
                     if(sysblk.imapc2[i2])                                   /*@Z9*/
                     {
-                        snprintf(buf, 128, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u",  /*@Z9*/
+                        snprintf( BUF(buf), "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u",  /*@Z9*/
                             i1, i2, sysblk.imapc2[i2]);                     /*@Z9*/
                         WRMSG(HHC02292, "I", buf);
                     }
@@ -6397,7 +6397,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 for(i2 = 0; i2 < 16; i2++)
                     if(sysblk.imapc4[i2])
                     {
-                        snprintf(buf, 128, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u",
+                        snprintf( BUF(buf), "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imapc4[i2]);
                         WRMSG(HHC02292, "I", buf);
                     }
@@ -6406,7 +6406,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 for(i2 = 0; i2 < 16; i2++)
                     if(sysblk.imapc6[i2])
                     {
-                        snprintf(buf, 128, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u",
+                        snprintf( BUF(buf), "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imapc6[i2]);
                         WRMSG(HHC02292, "I", buf);
                     }
@@ -6415,7 +6415,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 for(i2 = 0; i2 < 16; i2++)
                     if(sysblk.imapc8[i2])
                     {
-                        snprintf(buf, 128, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u",
+                        snprintf( BUF(buf), "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imapc8[i2]);
                         WRMSG(HHC02292, "I", buf);
                     }
@@ -6424,7 +6424,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imape3[i2])
                     {
-                        snprintf(buf, 128, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
+                        snprintf( BUF(buf), "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imape3[i2]);
                         WRMSG(HHC02292, "I", buf);
                     }
@@ -6433,7 +6433,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imape4[i2])
                     {
-                        snprintf(buf, 128, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
+                        snprintf( BUF(buf), "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imape4[i2]);
                         WRMSG(HHC02292, "I", buf);
                     }
@@ -6442,7 +6442,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imape5[i2])
                     {
-                        snprintf(buf, 128, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
+                        snprintf( BUF(buf), "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imape5[i2]);
                         WRMSG(HHC02292, "I", buf);
                     }
@@ -6451,7 +6451,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapeb[i2])
                     {
-                        snprintf(buf, 128, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
+                        snprintf( BUF(buf), "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imapeb[i2]);
                         WRMSG(HHC02292, "I", buf);
                     }
@@ -6460,7 +6460,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapec[i2])
                     {
-                        snprintf(buf, 128, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
+                        snprintf( BUF(buf), "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imapec[i2]);
                         WRMSG(HHC02292, "I", buf);
                     }
@@ -6469,7 +6469,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imaped[i2])
                     {
-                        snprintf(buf, 128, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
+                        snprintf( BUF(buf), "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH I64_FMT "u",
                             i1, i2, sysblk.imaped[i2]);
                         WRMSG(HHC02292, "I", buf);
                     }
@@ -6477,7 +6477,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
             default:
                 if(sysblk.imapxx[i1])
                 {
-                    snprintf(buf, 128, "Inst '%2.2X'   count %" ICOUNT_WIDTH I64_FMT "u",
+                    snprintf( BUF(buf), "Inst '%2.2X'   count %" ICOUNT_WIDTH I64_FMT "u",
                         i1, sysblk.imapxx[i1]);
                     WRMSG(HHC02292, "I", buf);
                 }
@@ -6675,7 +6675,7 @@ BYTE c;                                 /* Character work area       */
         if (aaddr > regs->mainlim)
         {
             RELEASE_INTLOCK(NULL);
-            snprintf(buf, 20, "%08X", aaddr);
+            snprintf( BUF(buf), "%08X", aaddr);
             WRMSG(HHC02205, "E", buf, "" );
             return -1;
         }
@@ -6683,7 +6683,7 @@ BYTE c;                                 /* Character work area       */
         if (!oneorzero)
             STORAGE_KEY(aaddr, regs) |= STORKEY_BADFRM;
         RELEASE_INTLOCK(NULL);
-        snprintf(buf, 20, "frame %08X", aaddr);        
+        snprintf( BUF(buf), "frame %08X", aaddr);        
         WRMSG(HHC02204, "I", buf, oneorzero ? "usable" : "unusable");
         return 0;
     }
@@ -6724,12 +6724,12 @@ BYTE c;                                 /* Character work area       */
         {
             char buf[40];
             dev->ccwtrace = oneorzero;
-            snprintf(buf, 40, "CCW trace for %1d:%04X", lcss, devnum);
+            snprintf( BUF(buf), "CCW trace for %1d:%04X", lcss, devnum);
             WRMSG(HHC02204, "I", buf, onoroff);
         } else {
             char buf[40];
             dev->ccwtrace = oneorzero;
-            snprintf(buf, 40, "CCW step for %1d:%04X", lcss, devnum);
+            snprintf( BUF(buf), "CCW step for %1d:%04X", lcss, devnum);
             dev->ccwstep = oneorzero;
             WRMSG(HHC02204, "I", buf, onoroff);
         }
@@ -6775,7 +6775,7 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    snprintf(buf, 128, "aea mode   %s", aea_mode_str(regs->aea_mode));
+    snprintf( BUF(buf), "aea mode   %s", aea_mode_str(regs->aea_mode));
     WRMSG(HHC02282, "I", buf);
 
     len = sprintf(buf, "aea ar    ");
@@ -6803,19 +6803,19 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
             len += sprintf(buf + len, " %2d",regs->aea_common[i]);
     WRMSG(HHC02282, "I", buf);
 
-    snprintf(buf, 128, "aea cr[1]  %16.16" I64_FMT "X", regs->CR_G(1));
+    snprintf( BUF(buf), "aea cr[1]  %16.16" I64_FMT "X", regs->CR_G(1));
     WRMSG(HHC02282, "I", buf);
-    snprintf(buf, 128, "    cr[7]  %16.16" I64_FMT "X", regs->CR_G(7));
+    snprintf( BUF(buf), "    cr[7]  %16.16" I64_FMT "X", regs->CR_G(7));
     WRMSG(HHC02282, "I", buf);
-    snprintf(buf, 128, "    cr[13] %16.16" I64_FMT "X", regs->CR_G(13));
+    snprintf( BUF(buf), "    cr[13] %16.16" I64_FMT "X", regs->CR_G(13));
     WRMSG(HHC02282, "I", buf);
-    snprintf(buf, 128, "    cr[r]  %16.16" I64_FMT "X", regs->CR_G(CR_ASD_REAL));
+    snprintf( BUF(buf), "    cr[r]  %16.16" I64_FMT "X", regs->CR_G(CR_ASD_REAL));
     WRMSG(HHC02282, "I", buf);
 
     for(i = 0; i < 16; i++)
         if(regs->aea_ar[i] > 15)
         {
-            snprintf(buf, 128, "    alb[%d] %16.16" I64_FMT "X", i,
+            snprintf( BUF(buf), "    alb[%d] %16.16" I64_FMT "X", i,
                     regs->cr[CR_ALB_OFFSET + i]);
             WRMSG(HHC02282, "I", buf);
         }
@@ -6825,7 +6825,7 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
         regs = regs->guestregs;
 
         WRMSG(HHC02282, "I", "aea SIE");
-        snprintf(buf, 128, "aea mode   %s",aea_mode_str(regs->aea_mode));
+        snprintf( BUF(buf), "aea mode   %s",aea_mode_str(regs->aea_mode));
         WRMSG(HHC02282, "I", buf);
 
         len = sprintf(buf, "aea ar    ");
@@ -6853,19 +6853,19 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
             len += sprintf(buf + len, " %2d",regs->aea_common[i]);
         WRMSG(HHC02282, "I", buf);
 
-        snprintf(buf, 128, "aea cr[1]  %16.16" I64_FMT "X", regs->CR_G(1));
+        snprintf( BUF(buf), "aea cr[1]  %16.16" I64_FMT "X", regs->CR_G(1));
         WRMSG(HHC02282, "I", buf);
-        snprintf(buf, 128, "    cr[7]  %16.16" I64_FMT "X", regs->CR_G(7));
+        snprintf( BUF(buf), "    cr[7]  %16.16" I64_FMT "X", regs->CR_G(7));
         WRMSG(HHC02282, "I", buf);
-        snprintf(buf, 128, "    cr[13] %16.16" I64_FMT "X", regs->CR_G(13));
+        snprintf( BUF(buf), "    cr[13] %16.16" I64_FMT "X", regs->CR_G(13));
         WRMSG(HHC02282, "I", buf);
-        snprintf(buf, 128, "    cr[r]  %16.16" I64_FMT "X", regs->CR_G(CR_ASD_REAL));
+        snprintf( BUF(buf), "    cr[r]  %16.16" I64_FMT "X", regs->CR_G(CR_ASD_REAL));
         WRMSG(HHC02282, "I", buf);
 
         for(i = 0; i < 16; i++)
             if(regs->aea_ar[i] > 15)
             {
-                snprintf(buf, 128, "    alb[%d] %16.16" I64_FMT "X", i,
+                snprintf( BUF(buf), "    alb[%d] %16.16" I64_FMT "X", i,
                         regs->cr[CR_ALB_OFFSET + i]);
                 WRMSG(HHC02282, "I", buf);
             }
@@ -6899,7 +6899,7 @@ DLL_EXPORT int aia_cmd(int argc, char *argv[], char *cmdline)
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    snprintf(buf, 128, "AIV %16.16" I64_FMT "x aip %p ip %p aie %p aim %p",
+    snprintf( BUF(buf), "AIV %16.16" I64_FMT "x aip %p ip %p aie %p aim %p",
             regs->aiv,regs->aip,regs->ip,regs->aie,(BYTE *)regs->aim);
     WRMSG(HHC02283, "I", buf);
 
@@ -6959,12 +6959,12 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
                regs->arch_mode == ARCH_390 ? 0x7FC00000 :
                                      0xFFFFFFFFFFC00000ULL;
 
-    snprintf(buf, 128, "tlbID 0x%6.6X mainstor %p",regs->tlbID,regs->mainstor);
+    snprintf( BUF(buf), "tlbID 0x%6.6X mainstor %p",regs->tlbID,regs->mainstor);
     WRMSG(HHC02284, "I", buf);
     WRMSG(HHC02284, "I", "  ix              asd            vaddr              pte   id c p r w ky     main");
     for (i = 0; i < TLBN; i++)
     {
-        snprintf(buf, 128, "%s%3.3X %16.16" I64_FMT "X %16.16" I64_FMT "X %16.16" I64_FMT "X %4.4X %1d %1d %1d %1d %2.2X %8.8X",
+        snprintf( BUF(buf), "%s%3.3X %16.16" I64_FMT "X %16.16" I64_FMT "X %16.16" I64_FMT "X %4.4X %1d %1d %1d %1d %2.2X %8.8X",
          ((regs->tlb.TLB_VADDR_G(i) & bytemask) == regs->tlbID ? "*" : " "),
          i,regs->tlb.TLB_ASD_G(i),
          ((regs->tlb.TLB_VADDR_G(i) & pagemask) | (i << shift)),
@@ -6978,7 +6978,7 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
         matches += ((regs->tlb.TLB_VADDR(i) & bytemask) == regs->tlbID);
        WRMSG(HHC02284, "I", buf);
     }
-    snprintf(buf, 128, "%d tlbID matches", matches);
+    snprintf( BUF(buf), "%d tlbID matches", matches);
     WRMSG(HHC02284, "I", buf);
 
     if (regs->sie_active)
@@ -6990,12 +6990,12 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
                    regs->arch_mode == ARCH_390 ? 0x7FC00000 :
                                          0xFFFFFFFFFFC00000ULL;
 
-        snprintf(buf, 128, "SIE: tlbID 0x%4.4x mainstor %p",regs->tlbID,regs->mainstor);
+        snprintf( BUF(buf), "SIE: tlbID 0x%4.4x mainstor %p",regs->tlbID,regs->mainstor);
         WRMSG(HHC02284, "I", buf);
         WRMSG(HHC02284, "I", "  ix              asd            vaddr              pte   id c p r w ky       main");
         for (i = matches = 0; i < TLBN; i++)
         {
-            snprintf(buf, 128, "%s%3.3X %16.16" I64_FMT "X %16.16" I64_FMT "X %16.16" I64_FMT "X %4.4X %1d %1d %1d %1d %2.2X %8.8X",
+            snprintf( BUF(buf), "%s%3.3X %16.16" I64_FMT "X %16.16" I64_FMT "X %16.16" I64_FMT "X %4.4X %1d %1d %1d %1d %2.2X %8.8X",
              ((regs->tlb.TLB_VADDR_G(i) & bytemask) == regs->tlbID ? "*" : " "),
              i,regs->tlb.TLB_ASD_G(i),
              ((regs->tlb.TLB_VADDR_G(i) & pagemask) | (i << shift)),
@@ -7009,7 +7009,7 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
             matches += ((regs->tlb.TLB_VADDR(i) & bytemask) == regs->tlbID);
            WRMSG(HHC02284, "I", buf);
         }
-        snprintf(buf, 128, "SIE: %d tlbID matches", matches);
+        snprintf( BUF(buf), "SIE: %d tlbID matches", matches);
         WRMSG(HHC02284, "I", buf);
     }
 
@@ -7349,7 +7349,7 @@ int conkpalv_cmd( int argc, char *argv[], char *cmdline )
     if(argc < 2)
     {
         char buf[40];
-        snprintf(buf, 40, "(%d,%d,%d)",idle,intv,cnt);
+        snprintf( BUF(buf), "(%d,%d,%d)",idle,intv,cnt);
         WRMSG(HHC02203, "I", "Keep-alive", buf);
     }
     else
@@ -7633,7 +7633,7 @@ char    pathname[MAX_PATH];             /* (work)                    */
     if (!(scrbuf = malloc (scrbufsize)))
     {
         char buf[40];
-        snprintf(buf, 40, "malloc(%d)", scrbufsize);
+        snprintf( BUF(buf), "malloc(%d)", scrbufsize);
         WRMSG(HHC02219, "E", buf, strerror(errno));
         fclose(scrfp);
         return 0;
@@ -7734,7 +7734,7 @@ int query_cmd(int argc, char *argv[], char *cmdline)
         }
         else if (strcasecmp(argv[1],"ports") == 0 )
         {
-            char str[64];
+            char buf[64];
 
             if (argc != 2)
             {
@@ -7743,8 +7743,8 @@ int query_cmd(int argc, char *argv[], char *cmdline)
             }
             if ( sysblk.httpport > 0 )
             {
-                snprintf(str, 64, "on port %-5d", sysblk.httpport);
-                WRMSG( HHC17001, "I", "http", str);
+                snprintf( BUF(buf), "on port %-5d", sysblk.httpport);
+                WRMSG( HHC17001, "I", "http", buf);
             }
             else
             {   
@@ -7752,8 +7752,8 @@ int query_cmd(int argc, char *argv[], char *cmdline)
             }
             if ( sysblk.shrdport > 0 )
             {
-                snprintf(str, 64, "on port %-5d", sysblk.shrdport);
-                WRMSG( HHC17001, "I", "shared_dasd", str);
+                snprintf( BUF(buf), "on port %-5d", sysblk.shrdport);
+                WRMSG( HHC17001, "I", "shared_dasd", buf);
             }
             else
             {   
@@ -7761,7 +7761,7 @@ int query_cmd(int argc, char *argv[], char *cmdline)
             }
             if (strchr(sysblk.cnslport, ':') == NULL)
             {
-                snprintf(str, 64, "on port %-5s", sysblk.cnslport);
+                snprintf( BUF(buf), "on port %-5s", sysblk.cnslport);
             }
             else
             {   
@@ -7775,9 +7775,9 @@ int query_cmd(int argc, char *argv[], char *cmdline)
                     if (*port)
                         host = port;
                 }
-                snprintf(str, 64, "for host %s on port %-5s", host, serv);
+                snprintf( BUF(buf), "for host %s on port %-5s", host, serv);
             }
-            WRMSG( HHC17001, "I", "console", str);
+            WRMSG( HHC17001, "I", "console", buf);
             return 0;
         }
         else if (strcasecmp(argv[1],"stor") == 0 )
@@ -7787,46 +7787,46 @@ int query_cmd(int argc, char *argv[], char *cmdline)
             
             if ( sysblk.mainsize >= ONE_EXABYTE )
             {
-                snprintf( buf, 64, "%" I64_FMT "d E", sysblk.mainsize >> 60 );
+                snprintf( BUF(buf), "%" I64_FMT "d E", sysblk.mainsize >> 60 );
             }
             else if ( sysblk.mainsize >= ONE_PETABYTE )
             {
-                snprintf( buf, 64, "%" I64_FMT "d P", sysblk.mainsize >> 50 );
+                snprintf( BUF(buf), "%" I64_FMT "d P", sysblk.mainsize >> 50 );
             }
             else if ( sysblk.mainsize >= ONE_TERABYTE )
             {
-                snprintf( buf, 64, "%" I64_FMT "d T", sysblk.mainsize >> 40 );
+                snprintf( BUF(buf), "%" I64_FMT "d T", sysblk.mainsize >> 40 );
             }
             else if ( sysblk.mainsize >= ONE_GIGABYTE )
             {
-                snprintf( buf, 64, "%3.3" I64_FMT "d G", sysblk.mainsize >> 30 );
+                snprintf( BUF(buf), "%3.3" I64_FMT "d G", sysblk.mainsize >> 30 );
             }
             else 
             {
-                snprintf( buf, 64, "%3.3" I64_FMT "d M", sysblk.mainsize >> 20 );
+                snprintf( BUF(buf), "%3.3" I64_FMT "d M", sysblk.mainsize >> 20 );
             }
 
             WRMSG( HHC17003, "I", "MAIN", buf, "main" );
 
             if ( xpndsize >= ONE_EXABYTE )
             {
-                snprintf( buf, 64, "%" I64_FMT "d E", xpndsize >> 60 );
+                snprintf( BUF(buf), "%" I64_FMT "d E", xpndsize >> 60 );
             }
             else if ( xpndsize >= ONE_PETABYTE )
             {
-                snprintf( buf, 64, "%" I64_FMT "d P", xpndsize >> 50 );
+                snprintf( BUF(buf), "%" I64_FMT "d P", xpndsize >> 50 );
             }
             else if ( xpndsize >= ONE_TERABYTE )
             {
-                snprintf( buf, 64, "%" I64_FMT "d T", xpndsize >> 40 );
+                snprintf( BUF(buf), "%" I64_FMT "d T", xpndsize >> 40 );
             }
             else if ( xpndsize >= ONE_GIGABYTE )
             {
-                snprintf( buf, 64, "%3.3" I64_FMT "d G", xpndsize >> 30 );
+                snprintf( BUF(buf), "%3.3" I64_FMT "d G", xpndsize >> 30 );
             }
             else 
             {
-                snprintf( buf, 64, "%3.3" I64_FMT "d M", xpndsize >> 20 );
+                snprintf( BUF(buf), "%3.3" I64_FMT "d M", xpndsize >> 20 );
             }
             WRMSG( HHC17003, "I", "EXPANDED", buf, "xpnd" );
         }

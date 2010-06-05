@@ -86,6 +86,7 @@ cpu.c:123:HABC1234I This is a message
 #endif
 
 /* Use these macro's */
+#define BUF(buf)                    buf, sizeof(buf)
 #define MSG(id, s, ...)             #id s " " id "\n", ## __VA_ARGS__
 #define MSG_C(id, s, ...)           #id s " " id "", ## __VA_ARGS__
 #define WRMSG(id, s, ...)           writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, "", _(#id s " " id "\n"), ## __VA_ARGS__)
