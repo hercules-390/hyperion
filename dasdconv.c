@@ -128,14 +128,12 @@ int     len = 0;                        /* Number of bytes read      */
         rc = IFREAD (ifd, buf + len, reqlen - len);
         if (rc == 0) break;
         if (rc < 0)
-        {
-            fprintf (stderr, MSG(HHC02412, "E", 
+        {            
 #if defined(HAVE_LIBZ)                                 
-                                 "gzread()",
+            fprintf (stderr, MSG(HHC02412, "E", "gzread()", strerror(errno)));
 #else
-                                 "read()",
+            fprintf (stderr, MSG(HHC02412, "E", "read()", strerror(errno)));
 #endif
-                                 strerror(errno)));
             EXIT(3);
         }
         len += rc;
@@ -143,13 +141,11 @@ int     len = 0;                        /* Number of bytes read      */
 
     if (len < reqlen)
     {
-        fprintf (stderr, MSG(HHC02412, "E", 
 #if defined(HAVE_LIBZ)                                 
-                                 "gzread()",
+        fprintf (stderr, MSG(HHC02412, "E", "gzread()", "unexpected end of file"));
 #else
-                                 "read()",
+        fprintf (stderr, MSG(HHC02412, "E", "read()", "unexpected end of file"));
 #endif
-                                 "unexpected end of file"));
         EXIT(3);
     }
 
@@ -382,7 +378,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     if (itrkbuf == NULL)
     {
         char buf[40];
-        snprintf(BUF(buf), "malloc(%u)", itrklen);
+        snprintf( MSGBUF(buf), "malloc(%u)", itrklen);
         fprintf (stderr, MSG(HHC02412, "E", buf, strerror(errno)));
         EXIT(3);
     }
@@ -733,7 +729,7 @@ U32             trksize;                /* AWSCKD image track length */
     if (obuf == NULL)
     {
         char buf[40];
-        snprintf(BUF(buf), "malloc(%u)", trksize);
+        snprintf( MSGBUF(buf), "malloc(%u)", trksize);
         fprintf (stderr, MSG(HHC02412, "E", buf, strerror(errno)));
         EXIT(6);
     }
