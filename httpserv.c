@@ -734,7 +734,7 @@ char                pathname[MAX_PATH]; /* working pathname          */
 
         if (rc == 0 || HSO_errno != HSO_EADDRINUSE) break;
 
-        WRMSG(HHC01804, "W", "bind()", sysblk.httpport);
+        WRMSG(HHC01804, "W", sysblk.httpport);
         SLEEP(10);
     } /* end while */
 
