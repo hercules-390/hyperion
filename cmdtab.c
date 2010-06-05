@@ -183,9 +183,7 @@ int ProcessPanelCommand (char* pszCmdLine)
     /* Perform variable substitution */
     /* First, set some 'dynamic' symbols to their own values */
     set_symbol("CUU","$(CUU)");
-    set_symbol("cuu","$(cuu)");
     set_symbol("CCUU","$(CCUU)");
-    set_symbol("ccuu","$(ccuu)");
     cl=resolve_symbol_string(pszCmdLine);
 #else
     cl=pszCmdLine;

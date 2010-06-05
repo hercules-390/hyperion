@@ -1810,16 +1810,12 @@ char                    *logoout;
         set_symbol("LPARNAME",str_lparname());
         snprintf(conmsg,sizeof(conmsg),"%3.3X",dev->devnum);
         set_symbol("CUU",conmsg);
-        snprintf(conmsg,sizeof(conmsg),"%3.3x",dev->devnum);
-        set_symbol("cuu",conmsg);
         snprintf(conmsg,sizeof(conmsg),"%4.4X",dev->devnum);
   #if defined(_FEATURE_INTEGRATED_3270_CONSOLE)
         if (dev == sysblk.sysgdev)
            strncpy(conmsg,"SYSG",sizeof(conmsg));
   #endif /*defined(_FEATURE_INTEGRATED_3270_CONSOLE)*/
         set_symbol("CCUU",conmsg);
-        snprintf(conmsg,sizeof(conmsg),"%4.4x",dev->devnum);
-        set_symbol("ccuu",conmsg);
         snprintf(conmsg,sizeof(conmsg),"%d",SSID_TO_LCSS(dev->ssid));
         set_symbol("CSS",conmsg);
         snprintf(conmsg,sizeof(conmsg),"%4.4X",dev->subchan);

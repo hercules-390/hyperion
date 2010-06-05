@@ -572,9 +572,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
         /* First, set some 'dynamic' symbols to their own values */
 
         set_symbol("CUU","$(CUU)");
-        set_symbol("cuu","$(cuu)");
         set_symbol("CCUU","$(CCUU)");
-        set_symbol("ccuu","$(ccuu)");
 
         buf1=resolve_symbol_string(buf);
 

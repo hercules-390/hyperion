@@ -286,7 +286,7 @@ static SYMBOL_TOKEN *get_symbol_token(const char *sym,int alloc)
         {
             continue;
         }
-        if(strcmp(symbols[i]->var,sym)==0)
+        if(strcasecmp(symbols[i]->var,sym)==0)
         {
             return(symbols[i]);
         }

@@ -1233,10 +1233,6 @@ parse_and_attach_devices(const char *sdevnum,
             {
 #if defined(OPTION_CONFIG_SYMBOLS)
                char wrkbfr[16];
-               snprintf(wrkbfr,sizeof(wrkbfr),"%3.3x",devnum);
-               set_symbol("cuu",wrkbfr);
-               snprintf(wrkbfr,sizeof(wrkbfr),"%4.4x",devnum);
-               set_symbol("ccuu",wrkbfr);
                snprintf(wrkbfr,sizeof(wrkbfr),"%3.3X",devnum);
                set_symbol("CUU",wrkbfr);
                snprintf(wrkbfr,sizeof(wrkbfr),"%4.4X",devnum);

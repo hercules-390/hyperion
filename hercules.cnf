@@ -105,6 +105,7 @@
   001F    3270
 #         The following statements are examples. Some of them require
 #         user tailoring before being used.
+0120 3380 dasd.$(CuU)
 # 0580    3420    ickdsf.ipl
 # 0120    3380    mvsv5r.120
 # 0121    3380    mvsv5d.121
