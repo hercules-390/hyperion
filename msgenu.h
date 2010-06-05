@@ -1067,6 +1067,39 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02300 "Function '%s': unexpectedly converting to '%s'"
 #define HHC02301 "Inexact"
 
+// reserve 024xx for dasd* utilities
+//dasdcat.c
+#define HHC02400 "Directory block byte count is invalid"
+#define HHC02401 "Non-PDS-members not yet supported"
+#define HHC02402 "Unknown option '%s' value '%s'"
+#define HHC02403 "Failed opening image '%s'"
+#define HHC02404 "Can't make 80 column card images from block length %d"
+#define HHC02405 "Usage: dasdcat [-i dasd_image [sf=shadow-file-name] dsname...]...\n" \
+       "          dsname can (currently must) be pdsname/spec\n" \
+       "          spec is memname[:flags], * (all) or ? (list)\n" \
+       "          flags can include (c)ard images, (a)scii"
+//dasdconv.c
+#define HHC02410 "Usage: dasdconv [options] infile outfile\n" \
+       "          infile:  name of input HDR-30 CKD image file ('-' means stdin)\n" \
+       "          outfile: name of AWSCKD image file to be created\n" \
+       "          options:\n" \
+       "            -r     replace existing output file\n" \
+       "            -q     suppress progress messages"
+#define HHC02411 "  -lfs   build one large output file"
+#define HHC02412 "Error in function '%s': '%s'"
+#define HHC02413 "Dasdconv is compiled without compress support and input is compressed"
+#define HHC02414 "Input file is already in CKD format, use dasdcopy"
+#define HHC02415 "Unknown devicetype %04X at offset 00000000 in input file"
+#define HHC02416 "Unknown device type %04X"
+#define HHC02417 "Invalid track header at offset %08X"
+#define HHC02418 "Expected cyl %04X, head %04X, found cyl %04X, head %04X"
+#define HHC02419 "Invalid record header (rc %d) at ofst %04X in trk at cyl %04X hd %04X at ofst %08X in file '%s'"
+#define HHC02420 "%u cylinders succesfully written to file '%s'"
+#define HHC02421 "Cylinder count %u is outside range %u-%u"
+#define HHC02422 "Converting %04X volume '%s': %u cyls, %u trks/cyl, %u bytes/trk"
+#define HHC02423 "DASD conversion completed"
+
+
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
 #define HHC04100 "%s version %s initiated"

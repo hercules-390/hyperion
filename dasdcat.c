@@ -42,7 +42,7 @@ int do_cat_cards(BYTE *buf, int len, unsigned long optflags)
 {
  if (len % 80 != 0) {
  fprintf(stderr,
- _("HHCDT002E Can't make 80 column card images from block length %d\n"), len);
+ MSG(HHC02404, "E", len));
  return -1;
  }
 
@@ -118,7 +118,7 @@ int process_dirblk(CIFBLK *cif, int noext, DSXTENT extent[], BYTE *dirblk,
  /* Load number of bytes in directory block */
  dirrem = (dirblk[0] << 8) | dirblk[1];
  if (dirrem < 2 || dirrem > 256) {
- fprintf(stderr, _("HHCDT003E Directory block byte count is invalid\n"));
+ fprintf(stderr, MSG(HHC02400, "E"));
  return -1;
  }
 
@@ -220,7 +220,7 @@ int do_cat_nonpds(CIFBLK *cif, DSXTENT *extent, int noext,
  UNREFERENCED(extent);
  UNREFERENCED(noext);
  UNREFERENCED(optflags);
- fprintf(stderr, _("HHCDT004E non-PDS-members not yet supported\n"));
+ fprintf(stderr, MSG(HHC02401, "E"));
  return -1;
 }
 
@@ -252,7 +252,12 @@ int do_cat(CIFBLK *cif, char *file)
  else if (*p == 's')
  optflags |= OPT_SEQNO;
  else
- fprintf(stderr, _("HHCDT005E unknown dataset name option: '%c'\n"), *p);
+ {
+ char buf[2];
+ buf[0] = *p;
+ buf[1] = 0;
+ fprintf(stderr, MSG(HHC02402, "E", "dataset name", buf));
+ }
  }
  }
 
@@ -311,10 +316,7 @@ int main(int argc, char **argv)
  display_version (stderr, "Hercules DASD cat program", FALSE);
 
  if (argc < 2) {
- fprintf(stderr, "Usage: dasdcat [-i dasd_image [sf=shadow-file-name] dsname...]...\n");
- fprintf(stderr, " dsname can (currently must) be pdsname/spec\n");
- fprintf(stderr, " spec is memname[:flags], * (all) or ? (list)\n");
- fprintf(stderr, " flags can include (c)ard images, (a)scii\n");
+ fprintf(stderr, MSG(HHC02405, "I"));
  exit(2);
  }
 
@@ -341,7 +343,7 @@ int main(int argc, char **argv)
          }
          cif = open_ckd_image(fn, sfn, O_RDONLY | O_BINARY, 0);
          if (!cif)
-             fprintf(stderr, _("HHCDT001E failed to open image %s\n"), *argv);
+             fprintf(stderr, MSG(HHC02403, "E", *argv));
      }
      else
      {
