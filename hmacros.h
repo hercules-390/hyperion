@@ -627,6 +627,7 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
     INITIALIZE_NLS(); \
     INITIALIZE_EXTERNAL_GUI(); \
     memset (&sysblk, 0, sizeof(SYSBLK)); \
+    initialize_lock (&sysblk.msglock); \
     initialize_detach_attr (DETACHED); \
     initialize_join_attr   (JOINABLE); \
     set_codepage(NULL); \
