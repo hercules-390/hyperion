@@ -3249,8 +3249,8 @@ resume_suspend:
     {
         dev->scsw.flag1 |= SCSW1_E;
         dev->esw.erw0 |= ERW0_S;
-        dev->esw.erw1 = (dev->numsense < (int)sizeof(dev->ecw)) ?
-                        dev->numsense : sizeof(dev->ecw);
+        dev->esw.erw1 = (BYTE)((dev->numsense < (int)sizeof(dev->ecw)) ?
+                        dev->numsense : (int)sizeof(dev->ecw));
         memcpy (dev->ecw, dev->sense, dev->esw.erw1 & ERW1_SCNT);
         memset (dev->sense, 0, sizeof(dev->sense));
         dev->sns_pending = 0;
