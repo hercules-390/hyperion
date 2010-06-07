@@ -169,13 +169,7 @@ DLL_EXPORT void writemsg(const char *file, int line, const char* function, int l
         switch(msg[8])
         {
             case 'S':
-                color = "<pnl,color(lightred,black),keep>";
-                break;
-
             case 'E':
-                color = "<pnl,color(lightred,black),keep>";
-                break;
-
             case 'W':
                 color = "<pnl,color(lightred,black),keep>";
                 break;
@@ -197,7 +191,7 @@ DLL_EXPORT void writemsg(const char *file, int line, const char* function, int l
 #endif // defined( OPTION_MSGCLR )
             BFR_VSNPRINTF();
             break;
-      case 1: // debug
+        case 1: // debug
 #if defined( OPTION_MSGCLR )
             if (strlen(color) > 0 && sysblk.panel_init)
                 logmsg("%s%-10.10s %4d ", color, file, line);
@@ -220,12 +214,14 @@ DLL_EXPORT void writemsg(const char *file, int line, const char* function, int l
         /* __FILENAME__ resolves differently for the various OS environments */
         /* we are only interested in the filename and ext.                   */
         char *fn = strdup( file );
-        logmsg("HHC00007I " HHC00007 "\n", function, basename(fn), line);
+        logmsg("HHC00007" "I" " " HHC00007 "\n", function, basename(fn), line);
         free( fn );
     }
+
   #ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  
   #endif
+
     release_lock(&sysblk.msglock);
 }
 

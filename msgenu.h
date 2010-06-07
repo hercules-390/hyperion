@@ -1177,7 +1177,32 @@ cpu.c:123:HABC1234I This is a message
        "%s" \
        "                   even if it exceeds 2G in size\n" \
        "            -o type  output file type (CKD, CCKD, FBA, CFBA)"
-
+//dasdinit.c
+#define HHC02445 "Invalid, unsupported or missing '%s': '%s'"
+#define HHC02446 "Invalid number of arrguments"
+#define HHC02447 "Option '-linux' is only supported fo device type 3390"
+#define HHC02448 "Usage: dasdinit [-options] filename devtype[-model] [volser] [size]\n" \
+       "          Builds an empty dasd image file\n" \
+       "          options:\n" \
+       "            -v     display version info and help\n" \
+       "%s" \
+       "%s" \
+       "            -0     build compressed dasd image file with no compression\n" \
+       "%s" \
+       "            -a     build dasd image file that includes alternate cylinders\n" \
+       "                   (option ignored if size is manually specified)\n" \
+       "            -r     build 'raw' dasd image file  (no VOL1 or IPL track)\n" \
+       "            -linux  null track images will look like linux dasdfmt'ed images\n" \
+       "                   (3390 device type only)\n\n" \
+       "            filename  name of dasd image file to be created\n" \
+       "            devtype  CKD: 2305, 2311, 2314, 3330, 3340, 3350, 3375, 3380, 3390, 9345\n" \
+       "                   FBA: 0671, 3310, 3370, 9313, 9332, 9335, 9336\n" \
+       "            model  device model (implies size) (opt)\n" \
+       "            volser  volume serial number (1-6 characters)\n" \
+       "                   (specified only if '-r' option not used)\n" \
+       "            size   number of CKD cylinders or 512-byte FBA sectors\n" \
+       "                   (required if model not specified else optional)"
+#define HHC02449 "DASD operation failed"
 
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)

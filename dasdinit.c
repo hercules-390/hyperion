@@ -74,77 +74,50 @@ argexit ( int code, char *m )
 
     switch (code) {
     case 0:
-        fprintf (stderr, "Invalid or unsupported option: %s\n",
-                 m ? m : "(null)");
+        fprintf (stderr, MSG(HHC02445, "E", "option",
+                 m ? m : "(null)"));
         break;
     case 1:
-        fprintf (stderr, "Invalid or missing filename: %s\n",
-                 m ? m : "(null)");
+        fprintf (stderr, MSG(HHC02445, "E", "filename",
+                 m ? m : "(null)"));
         break;
     case 2:
-        fprintf (stderr, "Invalid or missing device type: %s\n",
-                 m ? m : "(null)");
+        fprintf (stderr, MSG(HHC02445, "E", "device type",
+                 m ? m : "(null)"));
         break;
     case 3:
-        fprintf (stderr, "Invalid or missing volser: %s\n",
-                 m ? m : "(null)");
+        fprintf (stderr, MSG(HHC02445, "E", "volser",
+                 m ? m : "(null)"));
         break;
     case 4:
-        fprintf (stderr, "Invalid or missing size: %s\n",
-                 m ? m : "(null)");
+        fprintf (stderr, MSG(HHC02445, "E", "size",
+                 m ? m : "(null)"));
         break;
     case 5:
-        fprintf (stderr, "Invalid number of arguments\n");
+        fprintf (stderr, MSG(HHC02446, "E"));
         break;
     case 6:
-        fprintf (stderr, "`-linux' only supported for device type 3390\n");
+        fprintf (stderr, MSG(HHC02447, "E"));
         break;
     default:
 
         display_version (stderr,
                      "Hercules DASD image file creation program", FALSE);
 
-        fprintf (stderr,
-
-"Builds an empty dasd image file:\n\n"
-
-"  dasdinit [-options] filename devtype[-model] [volser] [size]\n\n"
-
-"where:\n\n"
-
-"  -v         display version info and help\n"
+        fprintf (stderr, MSG(HHC02448, "I", 
 #ifdef HAVE_LIBZ
-"  -z         build compressed dasd image file using zlib\n"
+"            -z     build compressed dasd image file using zlib\n",
+#else
+"",
 #endif
 #ifdef CCKD_BZIP2
-"  -bz2       build compressed dasd image file using bzip2\n"
+"            -bz2   build compressed dasd image file using bzip2\n",
+#else
+"",
 #endif
-"  -0         build compressed dasd image file with no compression\n"
-);
-        if (sizeof(off_t) > 4) fprintf(stderr,
-"  -lfs       build a large (uncompressed) dasd file (if supported)\n"
-);
-        fprintf(stderr,
-"  -a         build dasd image file that includes alternate cylinders\n"
-"             (option ignored if size is manually specified)\n"
-"  -r         build 'raw' dasd image file  (no VOL1 or IPL track)\n"
-"  -linux     null track images will look like linux dasdfmt'ed images\n"
-"             (3390 device type only)\n\n"
 
-"  filename   name of dasd image file to be created\n\n"
-
-"  devtype    CKD: 2305, 2311, 2314, 3330, 3340, 3350, 3375, 3380, 3390, 9345\n"
-"             FBA: 0671, 3310, 3370, 9313, 9332, 9335, 9336\n\n"
-
-"  model      device model (implies size) (opt)\n\n"
-
-"  volser     volume serial number (1-6 characters)\n"
-"             (specified only if '-r' option not used)\n\n"
-
-"  size       number of CKD cylinders or 512-byte FBA sectors\n"
-"             (required if model not specified else optional)\n"
-
-);
+        (sizeof(off_t) > 4) ? 
+"            -lfs   build a large (uncompressed) dasd file (if supported)\n" : ""));
         break;
     }
     exit(code);
@@ -296,11 +269,9 @@ int     rc;                             /* Return code               */
     /* Display completion message */
     if (rc == 0)
     {
-        fprintf (stderr, _("HHCDI001I DASD initialization successfully "
-                "completed.\n"));
+        fprintf (stderr, MSG(HHC02423, "I"));
     } else {
-        fprintf (stderr, _("HHCDI002I DASD initialization unsuccessful"
-                "\n"));
+        fprintf (stderr, MSG(HHC02449, "I"));
     }
 
     return rc;
