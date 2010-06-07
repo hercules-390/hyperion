@@ -1290,9 +1290,13 @@ void adjust_thread_priority(int *newprio)
     /* Set root mode in order to set priority */
     SETMODE(ROOT);
 
+#if 0 // BHe: Design must be different than current
     /* Set device thread priority; ignore any errors */
     if(setpriority(PRIO_PROCESS, 0, *newprio))
        WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
+#else
+    setpriority(PRIO_PROCESS, 0, *newprio);
+#endif
 
     /* Back to user mode */
     SETMODE(USER);

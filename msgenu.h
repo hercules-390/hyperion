@@ -1072,7 +1072,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02400 "Directory block byte count is invalid"
 #define HHC02401 "Non-PDS-members not yet supported"
 #define HHC02402 "Unknown option '%s' value '%s'"
-#define HHC02403 "Failed opening image '%s'"
+#define HHC02403 "Failed opening '%s'"
 #define HHC02404 "Can't make 80 column card images from block length %d"
 #define HHC02405 "Usage: dasdcat [-i dasd_image [sf=shadow-file-name] dsname...]...\n" \
        "          dsname can (currently must) be pdsname/spec\n" \
@@ -1097,7 +1097,86 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02420 "%u cylinders succesfully written to file '%s'"
 #define HHC02421 "Cylinder count %u is outside range %u-%u"
 #define HHC02422 "Converting %04X volume '%s': %u cyls, %u trks/cyl, %u bytes/trk"
-#define HHC02423 "DASD conversion completed"
+#define HHC02423 "DASD operation completed"
+//dasdcopy.c
+#define HHC02430 "CKD lookup failed: device type %4.4X cyls %d"
+#define HHC02431 "FBA lookup failed: blks %d"
+#define HHC02432 "Failed creating '%s'"
+#define HHC02433 "Read error on file '%s': %s %d stat=%2.2X, null %s substituted"
+#define HHC02434 "Write error on file '%s': %s %d stat=%2.2X"
+#define HHC02435 "Usage: ckd2cckd [-options] ifile ofile\n" \
+       "          Copy a ckd dasd file to a compressed ckd dasd file\n" \
+       "            ifile  input ckd dasd file\n" \
+       "            ofile  output compressed ckd dasd file\n" \
+       "          options:\n" \
+       "            -v     display program version and quit\n" \
+       "            -h     display this help and quit\n" \
+       "            -q     quiet mode, don't display status\n" \
+       "            -r     replace the output file if it exists\n" \
+       "%s" \
+       "%s" \
+       "            -0     don't compress track images\n" \
+       "            -cyls n  size of output file\n" \
+       "            -a     output file will have alt cyls"
+#define HHC02436 "Usage: cckd2ckd [-options] ifile [sf=sfile] ofile\n" \
+       "          Copy a compressed ckd file to a ckd file\n" \
+       "            ifile  input compressed ckd dasd file\n" \
+       "            sfile  input compressed ckd shadow file\n" \
+       "                   (optional)\n" \
+       "            ofile  output ckd dasd file\n" \
+       "          options:\n" \
+       "            -v     display program version and quit\n" \
+       "            -h     display this help and quit\n" \
+       "            -q     quiet mode, don't display status\n" \
+       "            -r     replace the output file if it exists\n" \
+       "%s" \
+       "            -cyls n size of output file\n" \
+       "            -a     output file will have alt cyls"
+#define HHC02437 "Usage: fba2cfba [-options] ifile ofile\n" \
+       "          Copy a fba dasd file to a compressed fba dasd file\n" \
+       "            ifile  input fba dasd file\n" \
+       "            ofile  output compressed fba dasd file\n" \
+       "          options:\n" \
+       "            -v     display program version and quit\n" \
+       "            -h     display this help and quit\n" \
+       "            -q     quiet mode, don't display status\n" \
+       "            -r     replace the output file if it exists\n" \
+       "%s" \
+       "%s" \
+       "            -0     don't compress track images\n" \
+       "            -blks n size of output file"
+#define HHC02438 "Usage: cfba2fba [-options] ifile [sf=sfile] ofile\n" \
+       "          Copy a compressed fba file to a fba file\n" \
+       "            ifile  input compressed fba dasd file\n" \
+       "            sfile  input compressed fba shadow file\n" \
+       "                   (optional)\n" \
+       "            ofile  output fba dasd file\n" \
+       "          options:\n" \
+       "            -v     display program version and quit\n" \
+       "            -h     display this help and quit\n" \
+       "            -q     quiet mode, don't display status\n" \
+       "            -r     replace the output file if it exists\n" \
+       "%s" \
+       "            -blks n  size of output file"
+#define HHC02439 "Usage: %s [-options] ifile [sf=sfile] ofile\n" \
+       "          Copy a dasd file to another dasd file\n" \
+       "            ifile  input dasd file\n" \
+       "            sfile  input shadow file [optional]\n" \
+       "            ofile  output dasd file\n" \
+       "          options:\n" \
+       "            -v     display program version and quit\n" \
+       "            -h     display this help and quit\n" \
+       "            -q     quiet mode, don't display status\n" \
+       "            -r     replace the output file if it exists\n" \
+       "%s" \
+       "%s" \
+       "            -0     don't compress output\n" \
+       "            -blks n  size of output fba file\n" \
+       "            -cyls n  size of output ckd file\n" \
+       "            -a     output ckd file will have alt cyls\n" \
+       "%s" \
+       "                   even if it exceeds 2G in size\n" \
+       "            -o type  output file type (CKD, CCKD, FBA, CFBA)"
 
 
 // reserve 04xxx for host os specific component messages

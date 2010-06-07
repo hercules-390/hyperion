@@ -200,15 +200,13 @@ char            pgmpath[MAX_PATH];      /* prog path in host format  */
         fd = open (pathname, O_RDONLY|O_BINARY);
         if (fd < 0)
         {
-            fprintf (stderr, _("HHCDC001E %s: %s open error: %s\n"),
-                     pgm, ifile, strerror(errno));
+            fprintf (stderr, MSG(HHC02412, "E", "open()", strerror(errno)));
             return -1;
         }
         rc = read (fd, buf, 8);
         if (rc < 8)
         {
-            fprintf (stderr, _("HHCDC002E %s: %s read error: %s\n"),
-                     pgm, ifile, strerror(errno));
+            fprintf (stderr, MSG(HHC02412, "E", "read()", strerror(errno)));
             return -1;
         }
         if (memcmp(buf, "CKD_P370", 8) == 0)
@@ -270,7 +268,7 @@ char            pgmpath[MAX_PATH];      /* prog path in host format  */
         icif = open_fba_image (ifile, sfile, O_RDONLY|O_BINARY, 0);
     if (icif == NULL)
     {
-        fprintf (stderr, _("HHCDC003E %s: %s open failed\n"), pgm, ifile);
+        fprintf (stderr, MSG(HHC02403, "E", ifile));
         return -1;
     }
     idev = &icif->devblk;
@@ -284,9 +282,8 @@ char            pgmpath[MAX_PATH];      /* prog path in host format  */
         ckd = dasd_lookup (DASD_CKDDEV, NULL, idev->devtype, cyls);
         if (ckd == NULL)
         {
-            fprintf (stderr, _("HHCDC004E %s: ckd lookup failed for %4.4X "
-                     "cyls %d\n"),
-                     pgm, idev->devtype, cyls);
+            fprintf (stderr, MSG(HHC02430, "E",
+                     idev->devtype, cyls));
             close_image_file (icif);
             return -1;
         }
@@ -304,8 +301,7 @@ char            pgmpath[MAX_PATH];      /* prog path in host format  */
         fba = dasd_lookup (DASD_FBADEV, NULL, idev->devtype, blks);
         if (fba == NULL)
         {
-            fprintf (stderr, _("HHCDC005E %s: fba lookup failed, blks %d\n"),
-                     pgm, blks);
+            fprintf (stderr, MSG(HHC02431, "E", blks));
             close_image_file (icif);
             return -1;
         }
@@ -325,7 +321,7 @@ char            pgmpath[MAX_PATH];      /* prog path in host format  */
                         blks, "", comp, lfs, 1+r, 0);
     if (rc < 0)
     {
-        fprintf (stderr, _("HHCDC006E %s: %s create failed\n"), pgm, ofile);
+        fprintf (stderr, MSG(HHC02432, "E", ofile));
         close_image_file (icif);
         return -1;
     }
@@ -337,7 +333,7 @@ char            pgmpath[MAX_PATH];      /* prog path in host format  */
         ocif = open_fba_image (ofile, NULL, O_RDWR|O_BINARY, 1);
     if (ocif == NULL)
     {
-        fprintf (stderr, _("HHCDC007E %s: %s open failed\n"), pgm, ofile);
+        fprintf (stderr, MSG(HHC02403, "E", ofile));
         close_image_file (icif);
         return -1;
     }
@@ -374,10 +370,9 @@ char            pgmpath[MAX_PATH];      /* prog path in host format  */
         }
         if (rc < 0)
         {
-            fprintf (stderr, _("HHCDC008E %s: %s read error %s %d "
-                               "stat=%2.2X, null %s substituted\n"),
-                     pgm, ifile, ckddasd ? "track" : "block", i, unitstat,
-                     ckddasd ? "track" : "block");
+            fprintf (stderr, MSG(HHC02433, "E",
+                     ifile, ckddasd ? "track" : "block", i, unitstat,
+                     ckddasd ? "track" : "block"));
             if (ckddasd)
                 nulltrk(idev->buf, i, idev->ckdheads, nullfmt);
             else
@@ -413,9 +408,8 @@ char            pgmpath[MAX_PATH];      /* prog path in host format  */
         }
         if (rc < 0)
         {
-            fprintf (stderr, _("HHCDC009E %s: %s write error %s %d "
-                               "stat=%2.2X\n"),
-                     pgm, ofile, ckddasd ? "track" : "block", i, unitstat);
+            fprintf (stderr, MSG(HHC02434, "E",
+                     ofile, ckddasd ? "track" : "block", i, unitstat));
             close_image_file(icif); close_image_file(ocif);
             return -1;
         }
@@ -426,7 +420,7 @@ char            pgmpath[MAX_PATH];      /* prog path in host format  */
 
     close_image_file(icif); close_image_file(ocif);
     if (!quiet) printf (_("\r"));
-    printf (_("HHCDC010I %s successfully completed.\n"), pgm);
+    printf (MSG(HHC02423, "I"));
     return 0;
 }
 
@@ -512,160 +506,52 @@ int syntax (char *pgm)
 {
     char usage[8192];
 
+    display_version (stderr, pgm, FALSE);
     if (strcmp(pgm, "ckd2cckd") == 0)
-        snprintf(usage,8192,_(
-            "usage:  ckd2cckd [-options] ifile ofile\n"
-            "\n"
-            "     copy a ckd dasd file to a compressed ckd dasd file\n"
-            "\n"
-            "     ifile        --   input ckd dasd file\n"
-            "     ofile        --   output compressed ckd dasd file\n"
-            "\n"
-            "   options:\n"
-            "     -v                display program version and quit\n"
-            "     -h                display this help and quit\n"
-            "     -q                quiet mode, don't display status\n"
-            "     -r                replace the output file if it exists\n"
-            "%s"
-            "%s"
-            "     -0                don't compress track images\n"
-            "     -cyls  n          size of output file\n"
-            "     -a                output file will have alt cyls\n"
-            ),
+        snprintf(usage,8192,MSG(HHC02435, "I", 
 #ifdef CCKD_COMPRESS_ZLIB
-            _(
-            "     -z                compress using zlib [default]\n"
-            ),
+            "            -z     compress using zlib [default]\n",
 #else
             "",
 #endif
 #ifdef CCKD_COMPRESS_BZIP2
-            _(
-            "     -bz2              compress using bzip2\n"
-            )
+            "            -bz2   compress using bzip2\n"
 #else
             ""
 #endif
-            );
+            ));
     else if (strcmp(pgm, "cckd2ckd") == 0)
-        snprintf(usage,8192,_(
-            "usage:  cckd2ckd [-options] ifile [sf=sfile] ofile\n"
-            "\n"
-            "     copy a compressed ckd file to a ckd file\n"
-            "\n"
-            "     ifile        --   input compressed ckd dasd file\n"
-            "     sfile        --   input compressed ckd shadow file\n"
-            "                       (optional)\n"
-            "     ofile        --   output ckd dasd file\n"
-            "\n"
-            "   options:\n"
-            "     -v                display program version and quit\n"
-            "     -h                display this help and quit\n"
-            "     -q                quiet mode, don't display status\n"
-            "     -r                replace the output file if it exists\n"
-            "%s"
-            "     -cyls  n          size of output file\n"
-            "     -a                output file will have alt cyls\n"
-            ),
-            (sizeof(off_t) > 4) ? _( "     -lfs              create single large output file\n" ) : ( "" )
-            );
+        snprintf(usage,8192,MSG(HHC02436, "I", 
+            (sizeof(off_t) > 4) ? "            -lfs   create single large output file\n" : ""));
     else if (strcmp(pgm, "fba2cfba") == 0)
-        snprintf(usage,8192,_(
-            "usage:  fba2cfba [-options] ifile ofile\n"
-            "\n"
-            "     copy a fba dasd file to a compressed fba dasd file\n"
-            "\n"
-            "     ifile        --   input fba dasd file\n"
-            "     ofile        --   output compressed fba dasd file\n"
-            "\n"
-            "   options:\n"
-            "     -v                display program version and quit\n"
-            "     -h                display this help and quit\n"
-            "     -q                quiet mode, don't display status\n"
-            "     -r                replace the output file if it exists\n"
-            "%s"
-            "%s"
-            "     -0                don't compress track images\n"
-            "     -blks  n          size of output file\n"
-            ),
+        snprintf(usage,8192,MSG(HHC02437, "I",
 #ifdef CCKD_COMPRESS_ZLIB
-            _(
-            "     -z                compress using zlib [default]\n"
-            ),
+            "            -z     compress using zlib [default]\n",
 #else
             "",
 #endif
 #ifdef CCKD_COMPRESS_BZIP2
-            _(
-            "     -bz2              compress using bzip2\n"
-            )
+            "            -bz2   compress using bzip2\n"
 #else
             ""
 #endif
-            );
+            ));
     else if (strcmp(pgm, "cfba2fba") == 0)
-        snprintf(usage,8192,_(
-            "usage:  cfba2fba [-options] ifile [sf=sfile] ofile\n"
-            "\n"
-            "     copy a compressed fba file to a fba file\n"
-            "\n"
-            "     ifile        --   input compressed fba dasd file\n"
-            "     sfile        --   input compressed fba shadow file\n"
-            "                       (optional)\n"
-            "     ofile        --   output fba dasd file\n"
-            "\n"
-            "   options:\n"
-            "     -v                display program version and quit\n"
-            "     -h                display this help and quit\n"
-            "     -q                quiet mode, don't display status\n"
-            "     -r                replace the output file if it exists\n"
-            "%s"
-            "     -blks  n          size of output file\n"
-            ),
-            (sizeof(off_t) > 4) ? _( "     -lfs              create single large output file\n" ) : ( "" )
-            );
+        snprintf(usage,8192,MSG(HHC02438, "I", 
+            (sizeof(off_t) > 4) ? "            -lfs   create single large output file\n" : ""));
     else
-        snprintf(usage,8192,_(
-            "usage:  %s [-options] ifile [sf=sfile] ofile\n"
-            "\n"
-            "     copy a dasd file to another dasd file\n"
-            "\n"
-            "     ifile        --   input dasd file\n"
-            "     sfile        --   input shadow file [optional]\n"
-            "     ofile        --   output dasd file\n"
-            "\n"
-            "   options:\n"
-            "     -v                display program version and quit\n"
-            "     -h                display this help and quit\n"
-            "     -q                quiet mode, don't display status\n"
-            "     -r                replace the output file if it exists\n"
-            "%s"
-            "%s"
-            "     -0                don't compress output\n"
-            "     -blks  n          size of output fba file\n"
-            "     -cyls  n          size of output ckd file\n"
-            "     -a                output ckd file will have alt cyls\n"
-            "%s"
-            "                       even if it exceeds 2G in size\n"
-            "     -o     type       output file type (CKD, CCKD, FBA, CFBA)\n"
-            ),
-            pgm,
+        snprintf(usage,8192,MSG(HHC02439, "I", pgm,
 #ifdef CCKD_COMPRESS_ZLIB
-            _(
-            "     -z                compress using zlib [default]\n"
-            ),
+            "            -z     compress using zlib [default]\n",
 #else
             "",
 #endif
 #ifdef CCKD_COMPRESS_BZIP2
-            _(
-            "     -bz2              compress output using bzip2\n"
-            )
+            "            -bz2   compress output using bzip2\n",
 #else
-            ""
+            "",
 #endif
-            ,(sizeof(off_t) > 4) ? _( "     -lfs              output ckd file will be a single file\n" ) : ( "" )
-            );
+            (sizeof(off_t) > 4) ? "            -lfs   output ckd file will be a single file\n" : ""));
     printf (usage);
     return -1;
 } /* end function syntax */
