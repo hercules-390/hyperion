@@ -505,53 +505,34 @@ BYTE           *pos;                    /* -> Next position in buffer*/
 int syntax (char *pgm)
 {
     char usage[8192];
+    char buflfs[64];
+#ifdef CCKD_COMPRESS_ZLIB
+    char *bufz = "            -z     compress using zlib [default]\n";
+#else
+    char *bufz = "";
+#endif
+#ifdef CCKD_COMPRESS_BZIP2
+    char *bufbz = "            -bz2   compress using bzip2\n";
+#else
+    char *bufbz = "";
+#endif
+
+    strncpy( buflfs, 
+            (sizeof(off_t) > 4) ? 
+                "            -lfs   create single large output file\n" : "",
+            sizeof( buflfs));
 
     display_version (stderr, pgm, FALSE);
     if (strcmp(pgm, "ckd2cckd") == 0)
-        snprintf(usage,8192,MSG(HHC02435, "I", 
-#ifdef CCKD_COMPRESS_ZLIB
-            "            -z     compress using zlib [default]\n",
-#else
-            "",
-#endif
-#ifdef CCKD_COMPRESS_BZIP2
-            "            -bz2   compress using bzip2\n"
-#else
-            ""
-#endif
-            ));
+        MSGBUF( usage ,MSG( HHC02435, "I", bufz, bufbz ) );
     else if (strcmp(pgm, "cckd2ckd") == 0)
-        snprintf(usage,8192,MSG(HHC02436, "I", 
-            (sizeof(off_t) > 4) ? "            -lfs   create single large output file\n" : ""));
+        MSGBUF( usage ,MSG( HHC02436, "I", buflfs ) );
     else if (strcmp(pgm, "fba2cfba") == 0)
-        snprintf(usage,8192,MSG(HHC02437, "I",
-#ifdef CCKD_COMPRESS_ZLIB
-            "            -z     compress using zlib [default]\n",
-#else
-            "",
-#endif
-#ifdef CCKD_COMPRESS_BZIP2
-            "            -bz2   compress using bzip2\n"
-#else
-            ""
-#endif
-            ));
+        MSGBUF( usage ,MSG( HHC02437, "I", bufz, bufbz ) );
     else if (strcmp(pgm, "cfba2fba") == 0)
-        snprintf(usage,8192,MSG(HHC02438, "I", 
-            (sizeof(off_t) > 4) ? "            -lfs   create single large output file\n" : ""));
+        MSGBUF( usage ,MSG( HHC02438, "I", buflfs ) );
     else
-        snprintf(usage,8192,MSG(HHC02439, "I", pgm,
-#ifdef CCKD_COMPRESS_ZLIB
-            "            -z     compress using zlib [default]\n",
-#else
-            "",
-#endif
-#ifdef CCKD_COMPRESS_BZIP2
-            "            -bz2   compress output using bzip2\n",
-#else
-            "",
-#endif
-            (sizeof(off_t) > 4) ? "            -lfs   output ckd file will be a single file\n" : ""));
+        MSGBUF( usage ,MSG( HHC02439, "I", pgm, bufz, bufbz, buflfs ) );
     printf (usage);
     return -1;
 } /* end function syntax */
