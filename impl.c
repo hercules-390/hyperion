@@ -412,6 +412,12 @@ int     dll_count;                      /* index into array          */
     /* set default operator mode to all */
     sysblk.sysgroup = SYSGROUP_ALL;
 
+    /* set default for scpecho to FALSE */
+    sysblk.scpecho = FALSE;
+
+    /* set fault for scpimply to FALSE */
+    sysblk.scpimply = FALSE;
+
     /* set default system state to reset */
     sysblk.sys_reset = TRUE; 
 

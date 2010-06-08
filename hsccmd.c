@@ -7239,7 +7239,7 @@ int scpimply_cmd(int argc, char *argv[], char *cmdline)
     {
         sysblk.scpimply = TRUE;
     }
-    WRMSG(HHC02204, "I", "scpimpy", (sysblk.scpimply ? "on" : "off") );
+    WRMSG(HHC02204, "I", "scpimply", (sysblk.scpimply ? "on" : "off") );
     return 0;
 }
 #endif
