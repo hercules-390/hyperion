@@ -103,21 +103,25 @@ argexit ( int code, char *m )
 
         display_version (stderr,
                      "Hercules DASD image file creation program", FALSE);
-
-        fprintf (stderr, MSG(HHC02448, "I", 
+        {
 #ifdef HAVE_LIBZ
-"            -z     build compressed dasd image file using zlib\n",
+         char *bufz = "            -z     build compressed dasd image file using zlib\n";
 #else
-"",
+         char *bufz = "";
 #endif
 #ifdef CCKD_BZIP2
-"            -bz2   build compressed dasd image file using bzip2\n",
+         char *bufbz = "            -bz2   build compressed dasd image file using bzip2\n";
 #else
-"",
+         char *bufbz = "";
 #endif
+         char  buflfs[80];
 
-        (sizeof(off_t) > 4) ? 
-"            -lfs   build a large (uncompressed) dasd file (if supported)\n" : ""));
+            strncpy( buflfs,
+                    (sizeof(off_t) > 4) ? 
+                    "            -lfs   build a large (uncompressed) dasd file (if supported)\n" : "",
+                    sizeof( buflfs ) );
+            fprintf( stderr, MSG( HHC02448, "I", bufz, bufbz, buflfs ) ); 
+        }
         break;
     }
     exit(code);
