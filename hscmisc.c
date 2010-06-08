@@ -118,26 +118,25 @@ static void cancel_wait_sigq()
 */
 static void do_shutdown_now()
 {
-    sysblk.panel_init = 0; //Prevent writing message color string 
     WRMSG(HHC01420, "I");
 
     ASSERT( !sysblk.shutfini );  // (sanity check)
 
-    sysblk.shutfini = 0;  // (shutdown NOT finished yet)
-    sysblk.shutdown = 1;  // (system shutdown initiated)
+    sysblk.shutfini = FALSE;  // (shutdown NOT finished yet)
+    sysblk.shutdown = TRUE;  // (system shutdown initiated)
 
     WRMSG(HHC01421, "I");
-    {
-        release_config();
-    }
+
+    release_config();
+
     WRMSG(HHC01422, "I");
     
     log_wakeup(NULL);
 
     WRMSG(HHC01423, "I");
-    {
-        hdl_shut();
-    }
+
+    hdl_shut();
+
     WRMSG(HHC01424, "I");
     
     log_wakeup(NULL);
@@ -152,11 +151,13 @@ static void do_shutdown_now()
 
     WRMSG(HHC01425, "I");
 
+    sysblk.panel_init = FALSE;  //Prevent writing message color string 
+
     log_wakeup(NULL);
     
     usleep(100000);         // give logger time to finish
 
-    sysblk.shutfini = 1;    // (shutdown is now complete)
+    sysblk.shutfini = TRUE;    // (shutdown is now complete)
 
     //                     PROGRAMMING NOTE
 
