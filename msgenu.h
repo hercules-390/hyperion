@@ -1063,6 +1063,8 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02293 "%s"
 #define HHC02294 "%s"
 
+#define HHC02299 "Too many arguments. Type 'help %s' for assistance."
+
 // reserve 023xx for ieee.c
 #define HHC02300 "Function '%s': unexpectedly converting to '%s'"
 #define HHC02301 "Inexact"

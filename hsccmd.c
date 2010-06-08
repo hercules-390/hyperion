@@ -7201,44 +7201,61 @@ int ssd_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 /*-------------------------------------------------------------------*/
-/* scpecho - toggle echo of '.' and '!' replys/responses to hardcopy */
+/* scpecho - enable echo of '.' and '!' replys/responses to hardcopy */
 /*           and console.                                            */
 /*-------------------------------------------------------------------*/
 int scpecho_cmd(int argc, char *argv[], char *cmdline)
 {
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
     UNREFERENCED(cmdline);
 
-    if (sysblk.scpecho)
+    if ( argc == 2 )
     {
-        sysblk.scpecho = FALSE;
+        if ( !strcasecmp( argv[1], "on" ) )
+            sysblk.scpecho = TRUE;
+        else if ( !strcasecmp( argv[1], "off" ) )
+            sysblk.scpecho = FALSE;
+        else
+        {
+            WRMSG( HHC02205, "E", argv[1], "" );
+            return 0;
+        }
     }
-    else
+    else if ( argc > 2 )
     {
-        sysblk.scpecho = TRUE;
+        WRMSG( HHC02299, "E", argv[0] );
+        return 0;
     }
+
     WRMSG(HHC02204, "I", "SCP, PSCP echo", (sysblk.scpecho ? "on" : "off") );
+
     return 0;
 }
 /*-------------------------------------------------------------------*/
-/* scpimply - toggle passing non-hercules commands to the scp        */
+/* scpimply - enable/disable non-hercules commands to the scp        */
 /*           if scp has enabled scp commands.                        */
 /*-------------------------------------------------------------------*/
 int scpimply_cmd(int argc, char *argv[], char *cmdline)
 {
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
     UNREFERENCED(cmdline);
+    
+    if ( argc == 2 )
+    {
+        if ( !strcasecmp( argv[1], "on" ) )
+            sysblk.scpimply = TRUE;
+        else if ( !strcasecmp( argv[1], "off" ) )
+            sysblk.scpimply = FALSE;
+        else
+        {
+            WRMSG( HHC02205, "E", argv[1], "" );
+            return 0;
+        }
+    }
+    else if ( argc > 2 )
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        return 0;
+    }
 
-    if (sysblk.scpimply)
-    {
-        sysblk.scpimply = FALSE;
-    }
-    else
-    {
-        sysblk.scpimply = TRUE;
-    }
     WRMSG(HHC02204, "I", "scpimply", (sysblk.scpimply ? "on" : "off") );
     return 0;
 }
