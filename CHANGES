@@ -1,3 +1,4 @@
+08 Jun 2010 'scpimply' and 'scpecho' use ON/OFF now instead of being a toggle.
 03 Jun 2010 'scpimply' command and function added. 'Unknown' commands are passed to the
             scp for processing, if the scp has enabled scp operator commands.
 03 Jun 2010 MAXCPU is reset to NUMCPU if NUMCPU exceeds MAXCPU; Warning message issued.
