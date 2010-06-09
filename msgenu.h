@@ -1205,6 +1205,21 @@ cpu.c:123:HABC1234I This is a message
        "            size   number of CKD cylinders or 512-byte FBA sectors\n" \
        "                   (required if model not specified else optional)"
 #define HHC02449 "DASD operation failed"
+#define HHC02450 "Member '%s' type '%s' skipped"
+#define HHC02451 "Too many members"
+#define HHC02452 "Member '%s' has TTR count zero"
+#define HHC02453 "Member '%s' is not a single text record"
+#define HHC02454 "Member '%s' size %04X exeeds limit 07F8"
+#define HHC02455 "Member '%s' size %04X is not a multiple of 8"
+#define HHC02456 "Member '%s' has invalid TTR %04X%02X"
+#define HHC02457 "Member '%s' text record TTR %04X%02X CCHHR %04X%04X%02X in progress"
+#define HHC02458 "Member '%s' error reading TTR %04X%02X"
+#define HHC02459 "Member '%s' TTR %04X%02X text record length %X is invalid"
+#define HHC02460 "Member '%s' TTR %04X%02X text record length %X does not match %X in directory"
+#define HHC02461 "Member '%s' TTR %04X%02X XCTL table improperly terminated"
+#define HHC02462 "Member '%s' '%s' TTRL %02X%02X%02X%02X: %s"
+#define HHC02463 "Usage: dasdisup ckdfile [sf=shadow-file-name]"
+#define HHC02464 "End of directory, %d members selected"
 
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
