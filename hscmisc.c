@@ -22,6 +22,7 @@
 #include "devtype.h"
 #include "opcode.h"
 #include "inline.h"
+#include "hconsole.h"
 
 #define  DISPLAY_INSTRUCTION_OPERANDS
 
@@ -126,6 +127,7 @@ static void do_shutdown_now()
 
     obtain_lock(&sysblk.msglock);
     sysblk.shutdown = TRUE;  // (system shutdown initiated)
+    set_screen_color(stdout, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
     release_lock(&sysblk.msglock);
 
     WRMSG(HHC01421, "I");
