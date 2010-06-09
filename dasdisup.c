@@ -394,7 +394,6 @@ BYTE            svcnum[3];              /* SVC number (EBCDIC)       */
 BYTE            prefix[3];              /* IGG/IFG prefix (EBCDIC)   */
 BYTE            refname[8];             /* Referred name (EBCDIC)    */
 char            refnama[9];             /* Referred name (ASCIIZ)    */
-char            buf[128];
 
     /* Extract the member name */
     make_asciiz (memnama, sizeof(memnama), memp->memname, 8);
@@ -525,7 +524,7 @@ char            buf[128];
         if (i == nmem)
         {
             char buf[80];
-            snprintf(buf, 80, " member '%s' not found", refnama);
+            MSGBUF( buf, " member '%s' not found", refnama);
             
             /* Display XCTL table entry */
             fprintf (stdout, MSG(HHC02462, "I", memnama, refnama,
@@ -561,7 +560,7 @@ char            buf[128];
 
         {
           char buf[80];
-          snprintf (buf, 80, " replaced by TTRL=%02X%02X%02X%02X %s",
+          MSGBUF( buf, " replaced by TTRL=%02X%02X%02X%02X %s",
                 blkptr[xctloff+2], blkptr[xctloff+3],
                 blkptr[xctloff+4], blkptr[xctloff+5],
                 (warn ? "****" : ""));
@@ -628,7 +627,7 @@ int             nmem = 0;               /* Number of array entries   */
     if (memtab == NULL)
     {
         char buf[80];
-        snprintf(buf, 80, "malloc %lu", sizeof(MEMINFO) * MAX_MEMBERS);
+        MSGBUF( buf, "malloc %lu", sizeof(MEMINFO) * MAX_MEMBERS);
         fprintf (stdout, MSG(HHC02412, "E", buf, strerror(errno)));
         return -1;
     }
