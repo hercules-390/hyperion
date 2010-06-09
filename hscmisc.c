@@ -123,15 +123,16 @@ static void do_shutdown_now()
     ASSERT( !sysblk.shutfini );  // (sanity check)
 
     sysblk.shutfini = FALSE;  // (shutdown NOT finished yet)
+
+    obtain_lock(&sysblk.msglock);
     sysblk.shutdown = TRUE;  // (system shutdown initiated)
+    release_lock(&sysblk.msglock);
 
     WRMSG(HHC01421, "I");
 
     release_config();
 
     WRMSG(HHC01422, "I");
-    
-    log_wakeup(NULL);
 
     WRMSG(HHC01423, "I");
 
@@ -139,8 +140,6 @@ static void do_shutdown_now()
 
     WRMSG(HHC01424, "I");
     
-    log_wakeup(NULL);
-
     /*
     logmsg("Terminating threads\n");
     {
@@ -150,12 +149,6 @@ static void do_shutdown_now()
     */
 
     WRMSG(HHC01425, "I");
-
-    sysblk.panel_init = FALSE;  //Prevent writing message color string 
-
-    log_wakeup(NULL);
-    
-    usleep(100000);         // give logger time to finish
 
     sysblk.shutfini = TRUE;    // (shutdown is now complete)
 
