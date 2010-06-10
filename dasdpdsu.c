@@ -38,11 +38,199 @@
 #include "hercules.h"
 #include "dasdblks.h"
 
+#define UTILITY_NAME    "dasdpdsu"
+
+static int process_member( CIFBLK *, int, DSXTENT *, char *, BYTE * );
+static int process_dirblk( CIFBLK *, int, DSXTENT *, BYTE * );
+
 /*-------------------------------------------------------------------*/
 /* Static data areas                                                 */
 /*-------------------------------------------------------------------*/
 static BYTE asciiflag = 0;              /* 1=Translate to ASCII      */
 static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
+
+/*-------------------------------------------------------------------*/
+/* DASDPDSU main entry point                                         */
+/*-------------------------------------------------------------------*/
+int main (int argc, char *argv[])
+{
+char           *pgmname;                /* prog name in host format  */
+char           *pgm;                    /* less any extension (.ext) */
+char           *pgmpath;                /* prog path in host format  */
+char            msgbuf[512];            /* message build work area   */
+int             rc;                     /* Return code               */
+int             i=0;                    /* Arument index             */
+int             len;                    /* Record length             */
+int             cyl;                    /* Cylinder number           */
+int             head;                   /* Head number               */
+int             rec;                    /* Record number             */
+int             trk;                    /* Relative track number     */
+char           *fname;                  /* -> CKD image file name    */
+char           *sfname=NULL;            /* -> CKD shadow file name   */
+char            dsnama[45];             /* Dataset name (ASCIIZ)     */
+int             noext;                  /* Number of extents         */
+DSXTENT         extent[16];             /* Extent descriptor array   */
+BYTE           *blkptr;                 /* -> PDS directory block    */
+BYTE            dirblk[256];            /* Copy of directory block   */
+CIFBLK         *cif;                    /* CKD image file descriptor */
+
+    /* Set program name */
+    if ( argc > 0 )
+    {
+        if ( strlen(argv[0]) == 0 )
+        {
+            pgmname = strdup( UTILITY_NAME );
+            pgmpath = strdup( "" );
+        }
+        else
+        {
+            char path[MAX_PATH];
+#if defined( _MSVC_ )
+            GetModuleFileName( NULL, path, MAX_PATH );
+#else
+            strncpy( path, argv[0], sizeof( path ) );
+#endif
+            pgmname = strdup(basename(path));
+#if !defined( _MSVC_ )
+            strncpy( path, argv[0], sizeof(path) );
+#endif
+            pgmpath = strdup( dirname( path  ));
+        }
+    }
+    else
+    {
+            pgmname = strdup( UTILITY_NAME );
+            pgmpath = strdup( "" );
+    }
+
+    pgm = strtok( strdup(pgmname), ".");
+    INITIALIZE_UTILITY( pgmname );
+
+    /* Display the program identification message */
+    MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "PDS unload" ) );
+    display_version (stderr, msgbuf+10, FALSE);
+
+    /* Check the number of arguments */
+    if (argc < 3 || argc > 5)
+    {
+        fprintf( stderr, MSG( HHC02463, "I", pgm, " pdsname [ascii]" ) );
+        return -1;
+    }
+
+    /* The first argument is the name of the CKD image file */
+    fname = argv[1];
+
+    /* The next argument may be the shadow file name */
+    if (!memcmp (argv[2], "sf=", 3))
+    {
+        sfname = argv[2];
+        i = 1;
+    }
+
+    /* The second argument is the dataset name */
+    memset (dsnama, 0, sizeof(dsnama));
+    strncpy (dsnama, argv[2|+i], sizeof(dsnama)-1);
+    string_to_upper (dsnama);
+
+    /* The third argument is an optional keyword */
+    if (argc > 3+i && argv[3+i] != NULL)
+    {
+        if (strcasecmp(argv[3+i], "ascii") == 0)
+            asciiflag = 1;
+        else
+        {
+            fprintf( stderr, MSG( HHC02465, "E", argv[3+i] ) );
+            fprintf( stderr, MSG( HHC02463, "I", argv[0], " pdsname [ascii]" ) );
+            return -1;
+        }
+    }
+
+    /* Open the CKD image file */
+    cif = open_ckd_image (fname, sfname, O_RDONLY|O_BINARY, 0);
+    if (cif == NULL) return -1;
+
+    /* Build the extent array for the requested dataset */
+    rc = build_extent_array (cif, dsnama, extent, &noext);
+    if (rc < 0) return -1;
+
+#ifdef EXTERNALGUI
+    /* Calculate ending relative track */
+    if (extgui)
+    {
+        int bcyl;  /* Extent begin cylinder     */
+        int btrk;  /* Extent begin head         */
+        int ecyl;  /* Extent end cylinder       */
+        int etrk;  /* Extent end head           */
+        int trks;  /* total tracks in dataset   */
+        int i;     /* loop control              */
+
+        for (i = 0, trks = 0; i < noext; i++)
+        {
+            bcyl = (extent[i].xtbcyl[0] << 8) | extent[i].xtbcyl[1];
+            btrk = (extent[i].xtbtrk[0] << 8) | extent[i].xtbtrk[1];
+            ecyl = (extent[i].xtecyl[0] << 8) | extent[i].xtecyl[1];
+            etrk = (extent[i].xtetrk[0] << 8) | extent[i].xtetrk[1];
+
+            trks += (((ecyl * cif->heads) + etrk) - ((bcyl * cif->heads) + btrk)) + 1;
+        }
+
+        fprintf(stderr,"ETRK=%d\n",trks-1);
+    }
+#endif /*EXTERNALGUI*/
+
+    /* Point to the start of the directory */
+    trk = 0;
+    rec = 1;
+
+    /* Read the directory */
+    while (1)
+    {
+#ifdef EXTERNALGUI
+        if (extgui) fprintf(stderr,"CTRK=%d\n",trk);
+#endif /*EXTERNALGUI*/
+
+        /* Convert relative track to cylinder and head */
+        rc = convert_tt (trk, noext, extent, cif->heads, &cyl, &head);
+        if (rc < 0) return -1;
+
+        /* Read a directory block */
+        fprintf (stderr, MSG( HHC02466, "I", cyl, head, rec ) );
+
+        rc = read_block (cif, cyl, head, rec,
+                        NULL, NULL, &blkptr, &len);
+        if (rc < 0) return -1;
+
+        /* Move to next track if block not found */
+        if (rc > 0)
+        {
+            trk++;
+            rec = 1;
+            continue;
+        }
+
+        /* Exit at end of directory */
+        if (len == 0) break;
+
+        /* Copy the directory block */
+        memcpy (dirblk, blkptr, sizeof(dirblk));
+
+        /* Process each member in the directory block */
+        rc = process_dirblk (cif, noext, extent, dirblk);
+        if (rc < 0) return -1;
+        if (rc > 0) break;
+
+        /* Point to the next directory block */
+        rec++;
+
+    } /* end while */
+
+    fprintf (stderr, MSG( HHC02467, "I" ) );
+
+    /* Close the CKD image file and exit */
+    rc = close_ckd_image (cif);
+    return rc;
+
+} /* end function main */
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to process a member                                    */
@@ -222,150 +410,3 @@ char            memname[9];             /* Member name (ASCIIZ)      */
     return 0;
 } /* end function process_dirblk */
 
-/*-------------------------------------------------------------------*/
-/* DASDPDSU main entry point                                         */
-/*-------------------------------------------------------------------*/
-int main (int argc, char *argv[])
-{
-int             rc;                     /* Return code               */
-int             i=0;                    /* Arument index             */
-int             len;                    /* Record length             */
-int             cyl;                    /* Cylinder number           */
-int             head;                   /* Head number               */
-int             rec;                    /* Record number             */
-int             trk;                    /* Relative track number     */
-char           *fname;                  /* -> CKD image file name    */
-char           *sfname=NULL;            /* -> CKD shadow file name   */
-char            dsnama[45];             /* Dataset name (ASCIIZ)     */
-int             noext;                  /* Number of extents         */
-DSXTENT         extent[16];             /* Extent descriptor array   */
-BYTE           *blkptr;                 /* -> PDS directory block    */
-BYTE            dirblk[256];            /* Copy of directory block   */
-CIFBLK         *cif;                    /* CKD image file descriptor */
-
-    INITIALIZE_UTILITY("dasdpdsu");
-
-    /* Display the program identification message */
-    display_version (stderr, "Hercules PDS unload program", FALSE);
-
-    /* Check the number of arguments */
-    if (argc < 3 || argc > 5)
-    {
-        fprintf( stderr, MSG( HHC02463, "I", argv[0], " pdsname [ascii]" ) );
-        return -1;
-    }
-
-    /* The first argument is the name of the CKD image file */
-    fname = argv[1];
-
-    /* The next argument may be the shadow file name */
-    if (!memcmp (argv[2], "sf=", 3))
-    {
-        sfname = argv[2];
-        i = 1;
-    }
-
-    /* The second argument is the dataset name */
-    memset (dsnama, 0, sizeof(dsnama));
-    strncpy (dsnama, argv[2|+i], sizeof(dsnama)-1);
-    string_to_upper (dsnama);
-
-    /* The third argument is an optional keyword */
-    if (argc > 3+i && argv[3+i] != NULL)
-    {
-        if (strcasecmp(argv[3+i], "ascii") == 0)
-            asciiflag = 1;
-        else
-        {
-            fprintf( stderr, MSG( HHC02465, "E", argv[3+i] ) );
-            fprintf( stderr, MSG( HHC02463, "I", argv[0], " pdsname [ascii]" ) );
-            return -1;
-        }
-    }
-
-    /* Open the CKD image file */
-    cif = open_ckd_image (fname, sfname, O_RDONLY|O_BINARY, 0);
-    if (cif == NULL) return -1;
-
-    /* Build the extent array for the requested dataset */
-    rc = build_extent_array (cif, dsnama, extent, &noext);
-    if (rc < 0) return -1;
-
-#ifdef EXTERNALGUI
-    /* Calculate ending relative track */
-    if (extgui)
-    {
-        int bcyl;  /* Extent begin cylinder     */
-        int btrk;  /* Extent begin head         */
-        int ecyl;  /* Extent end cylinder       */
-        int etrk;  /* Extent end head           */
-        int trks;  /* total tracks in dataset   */
-        int i;     /* loop control              */
-
-        for (i = 0, trks = 0; i < noext; i++)
-        {
-            bcyl = (extent[i].xtbcyl[0] << 8) | extent[i].xtbcyl[1];
-            btrk = (extent[i].xtbtrk[0] << 8) | extent[i].xtbtrk[1];
-            ecyl = (extent[i].xtecyl[0] << 8) | extent[i].xtecyl[1];
-            etrk = (extent[i].xtetrk[0] << 8) | extent[i].xtetrk[1];
-
-            trks += (((ecyl * cif->heads) + etrk) - ((bcyl * cif->heads) + btrk)) + 1;
-        }
-
-        fprintf(stderr,"ETRK=%d\n",trks-1);
-    }
-#endif /*EXTERNALGUI*/
-
-    /* Point to the start of the directory */
-    trk = 0;
-    rec = 1;
-
-    /* Read the directory */
-    while (1)
-    {
-#ifdef EXTERNALGUI
-        if (extgui) fprintf(stderr,"CTRK=%d\n",trk);
-#endif /*EXTERNALGUI*/
-
-        /* Convert relative track to cylinder and head */
-        rc = convert_tt (trk, noext, extent, cif->heads, &cyl, &head);
-        if (rc < 0) return -1;
-
-        /* Read a directory block */
-        fprintf (stderr, MSG( HHC02466, "I", cyl, head, rec ) );
-
-        rc = read_block (cif, cyl, head, rec,
-                        NULL, NULL, &blkptr, &len);
-        if (rc < 0) return -1;
-
-        /* Move to next track if block not found */
-        if (rc > 0)
-        {
-            trk++;
-            rec = 1;
-            continue;
-        }
-
-        /* Exit at end of directory */
-        if (len == 0) break;
-
-        /* Copy the directory block */
-        memcpy (dirblk, blkptr, sizeof(dirblk));
-
-        /* Process each member in the directory block */
-        rc = process_dirblk (cif, noext, extent, dirblk);
-        if (rc < 0) return -1;
-        if (rc > 0) break;
-
-        /* Point to the next directory block */
-        rec++;
-
-    } /* end while */
-
-    fprintf (stderr, MSG( HHC02467, "I" ) );
-
-    /* Close the CKD image file and exit */
-    rc = close_ckd_image (cif);
-    return rc;
-
-} /* end function main */

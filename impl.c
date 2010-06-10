@@ -394,11 +394,11 @@ int     dll_count;                      /* index into array          */
 #if defined( _MSVC_ )
             GetModuleFileName( NULL, path, MAX_PATH );
 #else
-            strcpy(path,argv[0]);
+            strncpy(path,argv[0],sizeof(path)-1);
 #endif
             sysblk.hercules_pgmname = strdup(basename(path));
 #if !defined( _MSVC_ )
-            strcpy(path,argv[0]);
+            strncpy(path,argv[0],sizeof(path)-1);
 #endif
             sysblk.hercules_pgmpath = strdup(dirname(path));
         }
@@ -579,10 +579,13 @@ int     dll_count;                      /* index into array          */
     /* Terminate if invalid arguments were detected */
     if (arg_error)
     {
+        char pgm[MAX_PATH];
+        strncpy(pgm, sysblk.hercules_pgmname, sizeof(pgm));
+
 #if defined(OPTION_DYNAMIC_LOAD)
-        WRMSG (HHC01407, "S", sysblk.hercules_pgmname, " [-p dyn-load-dir] [[-l dynmod-to-load]...]");
+        WRMSG (HHC01407, "S", strtok(pgm,"."), " [-p dyn-load-dir] [[-l dynmod-to-load]...]");
 #else
-        WRMSG (HHC01407, "S", sysblk.hercules_pgmname, "");
+        WRMSG (HHC01407, "S", strtok(pgm,"."), "");
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
         fflush(stderr);  
         fflush(stdout);  

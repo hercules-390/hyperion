@@ -34,6 +34,8 @@
 #include "devtype.h"
 #include "opcode.h"
 
+#define UTILITY_NAME    "dasdcopy"
+
 #define FBA_BLKGRP_SIZE  (120 * 512)    /* Size of block group       */
 #define FBA_BLKS_PER_GRP        120     /* Blocks per group          */
 
@@ -54,7 +56,9 @@ int nulltrk(BYTE *, int, int, int);
 /*-------------------------------------------------------------------*/
 int main (int argc, char *argv[])
 {
-char           *pgm;                    /* -> Program name           */
+char           *pgmname;                /* prog name in host format  */
+char           *pgm;                    /* less any extension (.ext) */
+char           *pgmpath;                /* prog path in host format  */
 int             ckddasd=-1;             /* 1=CKD  0=FBA              */
 int             rc;                     /* Return code               */
 int             quiet=0;                /* 1=Don't display status    */
@@ -78,32 +82,55 @@ char            msgbuf[512];            /* Message buffer            */
 size_t          fba_bytes_remaining=0;  /* FBA bytes to be copied    */
 int             nullfmt = CKDDASD_NULLTRK_FMT0; /* Null track format */
 char            pathname[MAX_PATH];     /* file path in host format  */
-char            pgmpath[MAX_PATH];      /* prog path in host format  */
 
-    INITIALIZE_UTILITY("dasdcopy");
+    /* Set program name */
+    if ( argc > 0 )
+    {
+        if ( strlen(argv[0]) == 0 )
+        {
+            pgmname = strdup( UTILITY_NAME );
+            pgmpath = strdup( "" );
+        }
+        else
+        {
+            char path[MAX_PATH];
+#if defined( _MSVC_ )
+            GetModuleFileName( NULL, path, MAX_PATH );
+#else
+            strncpy( path, argv[0], sizeof( path ) );
+#endif
+            pgmname = strdup(basename(path));
+#if !defined( _MSVC_ )
+            strncpy( path, argv[0], sizeof(path) );
+#endif
+            pgmpath = strdup( dirname( path  ));
+        }
+    }
+    else
+    {
+            pgmname = strdup( UTILITY_NAME );
+            pgmpath = strdup( "" );
+    }
 
-    /* Figure out processing based on the program name */
-    hostpath(pgmpath, argv[0], sizeof(pgmpath));
-    pgm = strrchr (pgmpath, '/');
-    if (pgm) pgm++;
-    else pgm = argv[0];
-    strtok (pgm, ".");
-    if (strcmp(pgm, "ckd2cckd") == 0)
+    pgm = strtok( strdup(pgmname), ".");
+    INITIALIZE_UTILITY( pgm );
+
+    if (strcasecmp(pgm, "ckd2cckd") == 0)
     {
         in = CKD;
         out = CCKD;
     }
-    else if (strcmp(pgm, "cckd2ckd") == 0)
+    else if (strcasecmp(pgm, "cckd2ckd") == 0)
     {
         in = CCKD;
         out = CKD;
     }
-    else if (strcmp(pgm, "fba2cfba") == 0)
+    else if (strcasecmp(pgm, "fba2cfba") == 0)
     {
         in = FBA;
         out = CFBA;
     }
-    else if (strcmp(pgm, "cfba2fba") == 0)
+    else if (strcasecmp(pgm, "cfba2fba") == 0)
     {
         in = CFBA;
         out = FBA;
@@ -115,9 +142,9 @@ char            pgmpath[MAX_PATH];      /* prog path in host format  */
         if (argv[0][0] != '-') break;
         if (strcmp(argv[0], "-v") == 0)
         {
-             MSGBUF( msgbuf, _("Hercules %s copy program"), pgm);
-             display_version (stderr, msgbuf, FALSE);
-             return 0;
+            MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "DASD copy/convert" ) );
+            display_version (stderr, msgbuf+10, FALSE);
+            return 0;
         }
         else if (strcmp(argv[0], "-h") == 0)
         {
@@ -251,12 +278,12 @@ char            pgmpath[MAX_PATH];      /* prog path in host format  */
     /* Perform sanity checks on the options */
     if ((in & CKDMASK) && !(out & CKDMASK)) return syntax(pgm);
     if ((in & FBAMASK) && !(out & FBAMASK)) return syntax(pgm);
-    if (sfile && !(in & COMPMASK)) return syntax(pgm);
-    if (comp != 255 && !(out & COMPMASK)) return syntax(pgm);
-    if (lfs && (out & COMPMASK)) return syntax(pgm);
-    if (cyls >= 0 && !(in & CKDMASK)) return syntax(pgm);
-    if (blks >= 0 && !(in & FBAMASK)) return syntax(pgm);
-    if (!(in & CKDMASK) && alt) return syntax(pgm);
+    if (sfile && !(in & COMPMASK))          return syntax(pgm);
+    if (comp != 255 && !(out & COMPMASK))   return syntax(pgm);
+    if (lfs && (out & COMPMASK))            return syntax(pgm);
+    if (cyls >= 0 && !(in & CKDMASK))       return syntax(pgm);
+    if (blks >= 0 && !(in & FBAMASK))       return syntax(pgm);
+    if (!(in & CKDMASK) && alt)             return syntax(pgm);
 
     /* Set the type of processing (ckd or fba) */
     ckddasd = (in & CKDMASK);
@@ -521,15 +548,16 @@ int syntax (char *pgm)
             (sizeof(off_t) > 4) ? 
                 "            -lfs   create single large output file\n" : "",
             sizeof( buflfs));
+    MSGBUF( usage, MSG_C( HHC02499, "I", pgm, "DASD copy/convert" ) );
+    display_version (stderr, usage+10, FALSE);
 
-    display_version (stderr, pgm, FALSE);
-    if (strcmp(pgm, "ckd2cckd") == 0)
+    if (strcasecmp(pgm, "ckd2cckd") == 0)
         MSGBUF( usage ,MSG( HHC02435, "I", bufz, bufbz ) );
-    else if (strcmp(pgm, "cckd2ckd") == 0)
+    else if (strcasecmp(pgm, "cckd2ckd") == 0)
         MSGBUF( usage ,MSG( HHC02436, "I", buflfs ) );
-    else if (strcmp(pgm, "fba2cfba") == 0)
+    else if (strcasecmp(pgm, "fba2cfba") == 0)
         MSGBUF( usage ,MSG( HHC02437, "I", bufz, bufbz ) );
-    else if (strcmp(pgm, "cfba2fba") == 0)
+    else if (strcasecmp(pgm, "cfba2fba") == 0)
         MSGBUF( usage ,MSG( HHC02438, "I", buflfs ) );
     else
         MSGBUF( usage ,MSG( HHC02439, "I", pgm, bufz, bufbz, buflfs ) );

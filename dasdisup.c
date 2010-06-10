@@ -23,6 +23,9 @@
 #include "hercules.h"
 #include "dasdblks.h"
 
+#define UTILITY_NAME    "dasdisup"
+
+
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
@@ -83,7 +86,171 @@ static char *secondload[] = {
 
 static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 
-#if 0
+static int process_dirblk( CIFBLK *cif, int noext, DSXTENT extent[],
+                           BYTE *dirblk, MEMINFO memtab[], int *nmem );
+static int resolve_xctltab( CIFBLK *cif, int noext, DSXTENT extent[],
+                            MEMINFO *memp, MEMINFO memtab[], int nmem );
+static int process_member( CIFBLK *cif, int noext, DSXTENT extent[],
+                           BYTE *memname, BYTE *ttr);
+
+/*-------------------------------------------------------------------*/
+/* DASDISUP main entry point                                         */
+/*-------------------------------------------------------------------*/
+int main (int argc, char *argv[])
+{
+char           *pgmname;                /* prog name in host format  */
+char           *pgm;                    /* less any extension (.ext) */
+char           *pgmpath;                /* prog path in host format  */
+char            msgbuf[512];            /* message build work area   */
+int             rc;                     /* Return code               */
+int             i;                      /* Array subscript           */
+int             len;                    /* Record length             */
+int             cyl;                    /* Cylinder number           */
+int             head;                   /* Head number               */
+int             rec;                    /* Record number             */
+int             trk;                    /* Relative track number     */
+char           *fname;                  /* -> CKD image file name    */
+char           *sfname;                 /* -> CKD shadow file name   */
+int             noext;                  /* Number of extents         */
+DSXTENT         extent[16];             /* Extent descriptor array   */
+BYTE           *blkptr;                 /* -> PDS directory block    */
+CIFBLK         *cif;                    /* CKD image file descriptor */
+MEMINFO        *memtab;                 /* -> Member info array      */
+int             nmem = 0;               /* Number of array entries   */
+
+
+    /* Set program name */
+    if ( argc > 0 )
+    {
+        if ( strlen(argv[0]) == 0 )
+        {
+            pgmname = strdup( UTILITY_NAME );
+            pgmpath = strdup( "" );
+        }
+        else
+        {
+            char path[MAX_PATH];
+#if defined( _MSVC_ )
+            GetModuleFileName( NULL, path, MAX_PATH );
+#else
+            strncpy( path, argv[0], sizeof( path ) - 1 );
+#endif
+            pgmname = strdup(basename(path));
+#if !defined( _MSVC_ )
+            strncpy( path, argv[0], sizeof(path) - 1 );
+#endif
+            pgmpath = strdup( dirname( path  ));
+        }
+    }
+    else
+    {
+            pgmname = strdup( UTILITY_NAME );
+            pgmpath = strdup( "" );
+    }
+
+    pgm = strtok( strdup(pgmname), ".");
+    INITIALIZE_UTILITY( pgm );
+
+    /* Display the program identification message */
+    
+    MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "IEHIOSUP" ) );
+    display_version( stderr, msgbuf+10, FALSE );
+
+    /* Check the number of arguments */
+    if (argc < 2 || argc > 3)
+    {
+        fprintf (stderr, MSG(HHC02463, "I", pgm, "" ));
+        return -1;
+    }
+
+    /* The first argument is the name of the CKD image file */
+    fname = argv[1];
+
+    /* The next argument, if there, is the name of the shadow file */
+    if (argc > 2) sfname = argv[2];
+    else sfname = NULL;
+
+    /* Obtain storage for the member information array */
+    memtab = (MEMINFO*) malloc (sizeof(MEMINFO) * MAX_MEMBERS);
+    if (memtab == NULL)
+    {
+        char buf[80];
+        MSGBUF( buf, "malloc %lu", sizeof(MEMINFO) * MAX_MEMBERS);
+        fprintf (stdout, MSG(HHC02412, "E", buf, strerror(errno)));
+        return -1;
+    }
+
+    /* Open the CKD image file */
+    cif = open_ckd_image (fname, sfname, O_RDWR|O_BINARY, 0);
+    if (cif == NULL) return -1;
+
+    /* Build the extent array for the SVCLIB dataset */
+    rc = build_extent_array (cif, "SYS1.SVCLIB", extent, &noext);
+    if (rc < 0) return -1;
+
+    /* Point to the start of the directory */
+    trk = 0;
+    rec = 1;
+
+    /* Read the directory */
+    while (1)
+    {
+        /* Convert relative track to cylinder and head */
+        rc = convert_tt (trk, noext, extent, cif->heads, &cyl, &head);
+        if (rc < 0) return -1;
+
+        /* Read a directory block */
+        rc = read_block (cif, cyl, head, rec,
+                        NULL, NULL, &blkptr, &len);
+        if (rc < 0) return -1;
+
+        /* Move to next track if block not found */
+        if (rc > 0)
+        {
+            trk++;
+            rec = 1;
+            continue;
+        }
+
+        /* Exit at end of directory */
+        if (len == 0) break;
+
+        /* Extract information for each member in directory block */
+        rc = process_dirblk (cif, noext, extent, blkptr,
+                            memtab, &nmem);
+        if (rc < 0) return -1;
+        if (rc > 0) break;
+
+        /* Point to the next directory block */
+        rec++;
+
+    } /* end while */
+
+    fprintf (stdout, MSG(HHC02464, "I", nmem));
+
+#ifdef EXTERNALGUI
+    if (extgui) fprintf (stderr,"NMEM=%d\n",nmem);
+#endif /*EXTERNALGUI*/
+
+    /* Read each member and resolve the embedded TTRs */
+    for (i = 0; i < nmem; i++)
+    {
+#ifdef EXTERNALGUI
+        if (extgui) fprintf (stderr,"MEM=%d\n",i);
+#endif /*EXTERNALGUI*/
+        rc = resolve_xctltab (cif, noext, extent, memtab+i,
+                                memtab, nmem);
+
+    } /* end for(i) */
+
+    /* Close the CKD image file and exit */
+    rc = close_ckd_image (cif);
+    free (memtab);
+    return rc;
+
+} /* end function main */
+
+#if FALSE
 /*-------------------------------------------------------------------*/
 /* Subroutine to process a member                                    */
 /* Input:                                                            */
@@ -581,123 +748,4 @@ char            refnama[9];             /* Referred name (ASCIIZ)    */
     return 0;
 } /* end function resolve_xctltab */
 
-/*-------------------------------------------------------------------*/
-/* DASDISUP main entry point                                         */
-/*-------------------------------------------------------------------*/
-int main (int argc, char *argv[])
-{
-int             rc;                     /* Return code               */
-int             i;                      /* Array subscript           */
-int             len;                    /* Record length             */
-int             cyl;                    /* Cylinder number           */
-int             head;                   /* Head number               */
-int             rec;                    /* Record number             */
-int             trk;                    /* Relative track number     */
-char           *fname;                  /* -> CKD image file name    */
-char           *sfname;                 /* -> CKD shadow file name   */
-int             noext;                  /* Number of extents         */
-DSXTENT         extent[16];             /* Extent descriptor array   */
-BYTE           *blkptr;                 /* -> PDS directory block    */
-CIFBLK         *cif;                    /* CKD image file descriptor */
-MEMINFO        *memtab;                 /* -> Member info array      */
-int             nmem = 0;               /* Number of array entries   */
 
-    INITIALIZE_UTILITY("dasdisup");
-
-    /* Display the program identification message */
-    display_version (stderr,
-                     "Hercules IEHIOSUP program", FALSE);
-
-    /* Check the number of arguments */
-    if (argc < 2 || argc > 3)
-    {
-        fprintf (stderr, MSG(HHC02463, "I", argv[0], "" ));
-        return -1;
-    }
-
-    /* The first argument is the name of the CKD image file */
-    fname = argv[1];
-
-    /* The next argument, if there, is the name of the shadow file */
-    if (argc > 2) sfname = argv[2];
-    else sfname = NULL;
-
-    /* Obtain storage for the member information array */
-    memtab = (MEMINFO*) malloc (sizeof(MEMINFO) * MAX_MEMBERS);
-    if (memtab == NULL)
-    {
-        char buf[80];
-        MSGBUF( buf, "malloc %lu", sizeof(MEMINFO) * MAX_MEMBERS);
-        fprintf (stdout, MSG(HHC02412, "E", buf, strerror(errno)));
-        return -1;
-    }
-
-    /* Open the CKD image file */
-    cif = open_ckd_image (fname, sfname, O_RDWR|O_BINARY, 0);
-    if (cif == NULL) return -1;
-
-    /* Build the extent array for the SVCLIB dataset */
-    rc = build_extent_array (cif, "SYS1.SVCLIB", extent, &noext);
-    if (rc < 0) return -1;
-
-    /* Point to the start of the directory */
-    trk = 0;
-    rec = 1;
-
-    /* Read the directory */
-    while (1)
-    {
-        /* Convert relative track to cylinder and head */
-        rc = convert_tt (trk, noext, extent, cif->heads, &cyl, &head);
-        if (rc < 0) return -1;
-
-        /* Read a directory block */
-        rc = read_block (cif, cyl, head, rec,
-                        NULL, NULL, &blkptr, &len);
-        if (rc < 0) return -1;
-
-        /* Move to next track if block not found */
-        if (rc > 0)
-        {
-            trk++;
-            rec = 1;
-            continue;
-        }
-
-        /* Exit at end of directory */
-        if (len == 0) break;
-
-        /* Extract information for each member in directory block */
-        rc = process_dirblk (cif, noext, extent, blkptr,
-                            memtab, &nmem);
-        if (rc < 0) return -1;
-        if (rc > 0) break;
-
-        /* Point to the next directory block */
-        rec++;
-
-    } /* end while */
-
-    fprintf (stdout, MSG(HHC02464, "I", nmem));
-
-#ifdef EXTERNALGUI
-    if (extgui) fprintf (stderr,"NMEM=%d\n",nmem);
-#endif /*EXTERNALGUI*/
-
-    /* Read each member and resolve the embedded TTRs */
-    for (i = 0; i < nmem; i++)
-    {
-#ifdef EXTERNALGUI
-        if (extgui) fprintf (stderr,"MEM=%d\n",i);
-#endif /*EXTERNALGUI*/
-        rc = resolve_xctltab (cif, noext, extent, memtab+i,
-                                memtab, nmem);
-
-    } /* end for(i) */
-
-    /* Close the CKD image file and exit */
-    rc = close_ckd_image (cif);
-    free (memtab);
-    return rc;
-
-} /* end function main */

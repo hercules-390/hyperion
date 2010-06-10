@@ -1227,6 +1227,8 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02469 "Member '%s' TTR %04X%02X"
 #define HHC02470 "Invalid block length %d at CCHHR %04X%04X%02X"
 
+#define HHC02499 "Hercules utility '%s' - %s;"
+
 
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
