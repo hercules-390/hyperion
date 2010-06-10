@@ -37,6 +37,8 @@
 #include "dasdblks.h"
 #include "opcode.h"
 
+#define UTILITY_NAME    "dasdconv"
+
 /*-------------------------------------------------------------------*/
 /* Definition of HDR-30 CKD image headers                            */
 /*-------------------------------------------------------------------*/
@@ -59,7 +61,7 @@ typedef struct _H30CKD_RECHDR {         /* Record header             */
 
 #define H30CKD_TRKHDR_SIZE      ((ssize_t)sizeof(H30CKD_TRKHDR))
 #define H30CKD_RECHDR_SIZE      ((ssize_t)sizeof(H30CKD_RECHDR))
-
+#define EXIT(rc)                delayed_exit(rc)   /* (use this macro to exit)   */
 /*-------------------------------------------------------------------*/
 /* Static data areas                                                 */
 /*-------------------------------------------------------------------*/
@@ -82,6 +84,146 @@ BYTE ckd_ident[] = {0x43, 0x4B, 0x44, 0x5F}; /* CKD_ in ASCII */
   #define IFCLOS        close
 #endif /*!defined(HAVE_LIBZ)*/
 
+void        delayed_exit    (int exit_code);
+static void argexit         ( int code );
+static void read_input_data (IFD ifd, char *ifname, BYTE *buf, int reqlen, U32 offset);
+static int  find_input_record (BYTE *buf, BYTE **ppbuf, int *plen,
+                BYTE *pkl, BYTE **pkp, U16 *pdl, BYTE **pdp,
+                U32 *pcc, U32 *phh, BYTE *prn);
+static IFD open_input_image (char *ifname, U16 *devt, U32 *vcyls,
+                U32 *itrkl, BYTE **itrkb, BYTE *volser);
+static void convert_ckd_file (IFD ifd, char *ifname, int itrklen, BYTE *itrkbuf,
+                int repl, int quiet,
+                char *ofname, int fseqn, U16 devtype, U32 heads,
+                U32 trksize, BYTE *obuf, U32 start, U32 end,
+                U32 volcyls, BYTE *volser);
+static void convert_ckd (int lfs, IFD ifd, char *ifname, int itrklen,
+            BYTE *itrkbuf, int repl, int quiet,
+            char *ofname, U16 devtype, U32 heads,
+            U32 maxdlen, U32 volcyls, BYTE *volser);
+/*-------------------------------------------------------------------*/
+/* DASDCONV program main entry point                                 */
+/*-------------------------------------------------------------------*/
+int main ( int argc, char *argv[] )
+{
+char           *pgmname;                /* prog name in host format  */
+char           *pgm;                    /* less any extension (.ext) */
+char           *pgmpath;                /* prog path in host format  */
+char            msgbuf[512];            /* message build work area   */
+IFD             ifd;                    /* Input file descriptor     */
+int             repl = 0;               /* 1=replace existing file   */
+int             quiet = 0;              /* 1=suppress progress msgs  */
+BYTE           *itrkbuf;                /* -> Input track buffer     */
+U32             itrklen;                /* Input track length        */
+U32             volcyls;                /* Total cylinders on volume */
+U32             heads = 0;              /* Number of tracks/cylinder */
+U32             maxdlen = 0;            /* Maximum R1 data length    */
+U16             devtype;                /* Device type               */
+char            ifname[256];            /* Input file name           */
+char            ofname[256];            /* Output file name          */
+BYTE            volser[7];              /* Volume serial (ASCIIZ)    */
+int             lfs = 0;                /* 1 = Build large file      */
+    /* Set program name */
+    if ( argc > 0 )
+    {
+        if ( strlen(argv[0]) == 0 )
+        {
+            pgmname = strdup( UTILITY_NAME );
+            pgmpath = strdup( "" );
+        }
+        else
+        {
+            char path[MAX_PATH];
+#if defined( _MSVC_ )
+            GetModuleFileName( NULL, path, MAX_PATH );
+#else
+            strncpy( path, argv[0], sizeof( path ) );
+#endif
+            pgmname = strdup(basename(path));
+#if !defined( _MSVC_ )
+            strncpy( path, argv[0], sizeof(path) );
+#endif
+            pgmpath = strdup( dirname( path  ));
+        }
+    }
+    else
+    {
+            pgmname = strdup( UTILITY_NAME );
+            pgmpath = strdup( "" );
+    }
+
+    pgm = strtok( strdup(pgmname), ".");
+    INITIALIZE_UTILITY( pgm );
+
+    /* Display the program identification message */
+    MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "DASD CKD image conversion" ) );
+    display_version (stderr, msgbuf+10, FALSE);
+
+    /* Process the options in the argument list */
+    for (; argc > 1; argc--, argv++)
+    {
+        if (strcmp(argv[1], "-") == 0) break;
+        if (argv[1][0] != '-') break;
+        if (strcmp(argv[1], "-r") == 0)
+            repl = 1;
+        else if (strcmp(argv[1], "-q") == 0)
+            quiet = 1;
+        else
+        if (sizeof(off_t) > 4 && strcmp(argv[1], "-lfs") == 0)
+            lfs = 1;
+        else
+            argexit(5);
+    }
+    if (argc != 3)
+        argexit(5);
+
+    /* The first argument is the input file name */
+    if (argv[1] == NULL || strlen(argv[1]) == 0
+        || strlen(argv[1]) > sizeof(ifname)-1)
+        argexit(1);
+    strcpy (ifname, argv[1]);
+
+    /* The second argument is the output file name */
+    if (argv[2] == NULL || strlen(argv[2]) == 0
+        || strlen(argv[2]) > sizeof(ofname)-1)
+        argexit(2);
+    strcpy (ofname, argv[2]);
+
+    /* Read the first track of the input file, and determine
+       the device type and size from the track header */
+    ifd = open_input_image (ifname, &devtype, &volcyls,
+                &itrklen, &itrkbuf, volser);
+
+    /* Use the device type to determine track characteristics */
+    switch (devtype) {
+    case 0x2314: heads = 20; maxdlen = 7294; break;
+    case 0x3330: heads = 19; maxdlen = 13030; break;
+    case 0x3340: heads = 12; maxdlen = 8368; break;
+    case 0x3350: heads = 30; maxdlen = 19069; break;
+    case 0x3375: heads = 12; maxdlen = 35616; break;
+    case 0x3380: heads = 15; maxdlen = 47476; break;
+    case 0x3390: heads = 15; maxdlen = 56664; break;
+    case 0x9345: heads = 15; maxdlen = 46456; break;
+    default:
+        fprintf (stderr, MSG(HHC02416, "E", devtype));
+        EXIT(3);
+    } /* end switch(devtype) */
+
+    /* Create the device */
+    convert_ckd (lfs, ifd, ifname, itrklen, itrkbuf, repl, quiet,
+                ofname, devtype, heads, maxdlen, volcyls, volser);
+
+    /* Release the input buffer and close the input file */
+    free (itrkbuf);
+    IFCLOS (ifd);
+     
+    /* Display completion message */
+    fprintf (stderr, MSG(HHC02423, "I"));
+
+    return 0;
+
+} /* end function main */
+
 /*-------------------------------------------------------------------*/
 /* Subroutine to exit the program                                    */
 /*-------------------------------------------------------------------*/
@@ -92,7 +234,7 @@ void delayed_exit (int exit_code)
     usleep(100000);
     exit(exit_code);
 }
-#define  EXIT(rc)   delayed_exit(rc)   /* (use this macro to exit)   */
+
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to display command syntax and exit                     */
@@ -794,94 +936,4 @@ U32             trksize;                /* AWSCKD image track length */
 
 } /* end function convert_ckd */
 
-/*-------------------------------------------------------------------*/
-/* DASDCONV program main entry point                                 */
-/*-------------------------------------------------------------------*/
-int main ( int argc, char *argv[] )
-{
-IFD             ifd;                    /* Input file descriptor     */
-int             repl = 0;               /* 1=replace existing file   */
-int             quiet = 0;              /* 1=suppress progress msgs  */
-BYTE           *itrkbuf;                /* -> Input track buffer     */
-U32             itrklen;                /* Input track length        */
-U32             volcyls;                /* Total cylinders on volume */
-U32             heads = 0;              /* Number of tracks/cylinder */
-U32             maxdlen = 0;            /* Maximum R1 data length    */
-U16             devtype;                /* Device type               */
-char            ifname[256];            /* Input file name           */
-char            ofname[256];            /* Output file name          */
-BYTE            volser[7];              /* Volume serial (ASCIIZ)    */
-int             lfs = 0;                /* 1 = Build large file      */
-
-    INITIALIZE_UTILITY("dasdconv");
-
-    /* Display the program identification message */
-    display_version (stderr,
-                     "Hercules DASD CKD image conversion program",
-                     FALSE);
-
-    /* Process the options in the argument list */
-    for (; argc > 1; argc--, argv++)
-    {
-        if (strcmp(argv[1], "-") == 0) break;
-        if (argv[1][0] != '-') break;
-        if (strcmp(argv[1], "-r") == 0)
-            repl = 1;
-        else if (strcmp(argv[1], "-q") == 0)
-            quiet = 1;
-        else
-        if (sizeof(off_t) > 4 && strcmp(argv[1], "-lfs") == 0)
-            lfs = 1;
-        else
-            argexit(5);
-    }
-    if (argc != 3)
-        argexit(5);
-
-    /* The first argument is the input file name */
-    if (argv[1] == NULL || strlen(argv[1]) == 0
-        || strlen(argv[1]) > sizeof(ifname)-1)
-        argexit(1);
-    strcpy (ifname, argv[1]);
-
-    /* The second argument is the output file name */
-    if (argv[2] == NULL || strlen(argv[2]) == 0
-        || strlen(argv[2]) > sizeof(ofname)-1)
-        argexit(2);
-    strcpy (ofname, argv[2]);
-
-    /* Read the first track of the input file, and determine
-       the device type and size from the track header */
-    ifd = open_input_image (ifname, &devtype, &volcyls,
-                &itrklen, &itrkbuf, volser);
-
-    /* Use the device type to determine track characteristics */
-    switch (devtype) {
-    case 0x2314: heads = 20; maxdlen = 7294; break;
-    case 0x3330: heads = 19; maxdlen = 13030; break;
-    case 0x3340: heads = 12; maxdlen = 8368; break;
-    case 0x3350: heads = 30; maxdlen = 19069; break;
-    case 0x3375: heads = 12; maxdlen = 35616; break;
-    case 0x3380: heads = 15; maxdlen = 47476; break;
-    case 0x3390: heads = 15; maxdlen = 56664; break;
-    case 0x9345: heads = 15; maxdlen = 46456; break;
-    default:
-        fprintf (stderr, MSG(HHC02416, "E", devtype));
-        EXIT(3);
-    } /* end switch(devtype) */
-
-    /* Create the device */
-    convert_ckd (lfs, ifd, ifname, itrklen, itrkbuf, repl, quiet,
-                ofname, devtype, heads, maxdlen, volcyls, volser);
-
-    /* Release the input buffer and close the input file */
-    free (itrkbuf);
-    IFCLOS (ifd);
-     
-    /* Display completion message */
-    fprintf (stderr, MSG(HHC02423, "I"));
-
-    return 0;
-
-} /* end function main */
 
