@@ -83,9 +83,7 @@ char            pathname[MAX_PATH];     /* ofname in host format     */
     ofp = fopen (pathname, (asciiflag? "w" : "wb"));
     if (ofp == NULL)
     {
-        fprintf (stderr,
-                "Cannot open %s: %s\n",
-                ofname, strerror(errno));
+        fprintf (stderr, MSG( HHC02468, "E", ofname, "fopen", strerror(errno) ) );
         return -1;
     }
 
@@ -93,9 +91,7 @@ char            pathname[MAX_PATH];     /* ofname in host format     */
     trk = (ttr[0] << 8) | ttr[1];
     rec = ttr[2];
 
-    fprintf (stderr,
-            "Member %s TTR=%4.4X%2.2X\n",
-            memname, trk, rec);
+    fprintf (stderr, MSG( HHC02469, "I", memname, trk, rec ) );
 
     /* Read the member */
     while (1)
@@ -126,9 +122,7 @@ char            pathname[MAX_PATH];     /* ofname in host format     */
         /* Check length of data block */
         if (len % 80 != 0)
         {
-            fprintf (stderr,
-                    "Bad block length %d at cyl %d head %d rec %d\n",
-                    len, cyl, head, rec);
+            fprintf (stderr, MSG( HHC02470, "E", len, cyl, head, rec ) );
             return -1;
         }
 
@@ -147,9 +141,8 @@ char            pathname[MAX_PATH];     /* ofname in host format     */
 
             if (ferror(ofp))
             {
-                fprintf (stderr,
-                        "Error writing %s: %s\n",
-                        ofname, strerror(errno));
+                fprintf (stderr, MSG( HHC02468, "I", 
+                                      ofname, "fwrite", strerror(errno) ) );
                 return -1;
             }
         } /* end for(offset) */
@@ -191,7 +184,7 @@ char            memname[9];             /* Member name (ASCIIZ)      */
     dirrem = (dirptr[0] << 8) | dirptr[1];
     if (dirrem < 2 || dirrem > 256)
     {
-        fprintf (stderr, "Directory block byte count is invalid\n");
+        fprintf (stderr, MSG( HHC02400, "E" ) );
         return -1;
     }
 
@@ -258,9 +251,7 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
     /* Check the number of arguments */
     if (argc < 3 || argc > 5)
     {
-        fprintf (stderr,
-                "Usage: %s ckdfile [sf=shadow-file-name] pdsname [ascii]\n",
-                argv[0]);
+        fprintf( stderr, MSG( HHC02463, "I", argv[0], " pdsname [ascii]" ) );
         return -1;
     }
 
@@ -286,9 +277,8 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
             asciiflag = 1;
         else
         {
-            fprintf (stderr,
-                    "Keyword %s is not recognized\n",
-                    argv[3+i]);
+            fprintf( stderr, MSG( HHC02465, "E", argv[3+i] ) );
+            fprintf( stderr, MSG( HHC02463, "I", argv[0], " pdsname [ascii]" ) );
             return -1;
         }
     }
@@ -342,9 +332,7 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
         if (rc < 0) return -1;
 
         /* Read a directory block */
-        fprintf (stderr,
-                "Reading directory block at cyl %d head %d rec %d\n",
-                cyl, head, rec);
+        fprintf (stderr, MSG( HHC02466, "I", cyl, head, rec ) );
 
         rc = read_block (cif, cyl, head, rec,
                         NULL, NULL, &blkptr, &len);
@@ -374,8 +362,7 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
 
     } /* end while */
 
-    fprintf (stderr,
-            "End of directory\n");
+    fprintf (stderr, MSG( HHC02467, "I" ) );
 
     /* Close the CKD image file and exit */
     rc = close_ckd_image (cif);

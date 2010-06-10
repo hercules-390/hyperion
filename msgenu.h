@@ -1091,7 +1091,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02412 "Error in function '%s': '%s'"
 #define HHC02413 "Dasdconv is compiled without compress support and input is compressed"
 #define HHC02414 "Input file is already in CKD format, use dasdcopy"
-#define HHC02415 "Unknown devicetype %04X at offset 00000000 in input file"
+#define HHC02415 "Unknown device type %04X at offset 00000000 in input file"
 #define HHC02416 "Unknown device type %04X"
 #define HHC02417 "Invalid track header at offset %08X"
 #define HHC02418 "Expected cyl %04X, head %04X, found cyl %04X, head %04X"
@@ -1181,7 +1181,7 @@ cpu.c:123:HABC1234I This is a message
        "            -o type  output file type (CKD, CCKD, FBA, CFBA)"
 //dasdinit.c
 #define HHC02445 "Invalid, unsupported or missing '%s': '%s'"
-#define HHC02446 "Invalid number of arrguments"
+#define HHC02446 "Invalid number of arguments"
 #define HHC02447 "Option '-linux' is only supported fo device type 3390"
 #define HHC02448 "Usage: dasdinit [-options] filename devtype[-model] [volser] [size]\n" \
        "          Builds an empty dasd image file\n" \
@@ -1209,7 +1209,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02451 "Too many members"
 #define HHC02452 "Member '%s' has TTR count zero"
 #define HHC02453 "Member '%s' is not a single text record"
-#define HHC02454 "Member '%s' size %04X exeeds limit 07F8"
+#define HHC02454 "Member '%s' size %04X exceeds limit 07F8"
 #define HHC02455 "Member '%s' size %04X is not a multiple of 8"
 #define HHC02456 "Member '%s' has invalid TTR %04X%02X"
 #define HHC02457 "Member '%s' text record TTR %04X%02X CCHHR %04X%04X%02X in progress"
@@ -1218,8 +1218,15 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02460 "Member '%s' TTR %04X%02X text record length %X does not match %X in directory"
 #define HHC02461 "Member '%s' TTR %04X%02X XCTL table improperly terminated"
 #define HHC02462 "Member '%s' '%s' TTRL %02X%02X%02X%02X: %s"
-#define HHC02463 "Usage: dasdisup ckdfile [sf=shadow-file-name]"
+#define HHC02463 "Usage: %s ckdfile [sf=shadow-file-name]%s"
 #define HHC02464 "End of directory, %d members selected"
+#define HHC02465 "Invalid argument: '%s'"
+#define HHC02466 "Reading directory block at CCHHR %04X%04X%02X"
+#define HHC02467 "End of directory"
+#define HHC02468 "File '%s'; %s error: '%s'"
+#define HHC02469 "Member '%s' TTR %04X%02X"
+#define HHC02470 "Invalid block length %d at CCHHR %04X%04X%02X"
+
 
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)

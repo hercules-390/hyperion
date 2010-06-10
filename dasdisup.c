@@ -611,7 +611,7 @@ int             nmem = 0;               /* Number of array entries   */
     /* Check the number of arguments */
     if (argc < 2 || argc > 3)
     {
-        fprintf (stdout, MSG(HHC02463, "I"));
+        fprintf (stderr, MSG(HHC02463, "I", argv[0], "" ));
         return -1;
     }
 
