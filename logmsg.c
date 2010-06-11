@@ -184,7 +184,7 @@ DLL_EXPORT void writemsg(const char *file, int line, const char* function, int l
     {
         case 0: // normal
 #if defined( OPTION_MSGCLR )
-            if (strlen(color) > 0 && !sysblk.shutdown)
+            if (strlen(color) > 0 && !sysblk.shutdown && sysblk.panel_init)
             {
                 logmsg(color);
             }
@@ -193,7 +193,7 @@ DLL_EXPORT void writemsg(const char *file, int line, const char* function, int l
             break;
         case 1: // debug
 #if defined( OPTION_MSGCLR )
-            if (strlen(color) > 0 && !sysblk.shutdown)
+            if (strlen(color) > 0 && !sysblk.shutdown && sysblk.panel_init)
                 logmsg("%s%-10.10s %4d ", color, file, line);
             else
                 logmsg("%-10.10s %4d ", file, line);
