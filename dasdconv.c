@@ -85,7 +85,7 @@ BYTE ckd_ident[] = {0x43, 0x4B, 0x44, 0x5F}; /* CKD_ in ASCII */
 #endif /*!defined(HAVE_LIBZ)*/
 
 void        delayed_exit    (int exit_code);
-static void argexit         ( int code );
+static void argexit         ( int code, char *pgm );
 static void read_input_data (IFD ifd, char *ifname, BYTE *buf, int reqlen, U32 offset);
 static int  find_input_record (BYTE *buf, BYTE **ppbuf, int *plen,
                 BYTE *pkl, BYTE **pkp, U16 *pdl, BYTE **pdp,
@@ -172,21 +172,21 @@ int             lfs = 0;                /* 1 = Build large file      */
         if (sizeof(off_t) > 4 && strcmp(argv[1], "-lfs") == 0)
             lfs = 1;
         else
-            argexit(5);
+            argexit(5, pgm);
     }
     if (argc != 3)
-        argexit(5);
+        argexit(5, pgm);
 
     /* The first argument is the input file name */
     if (argv[1] == NULL || strlen(argv[1]) == 0
         || strlen(argv[1]) > sizeof(ifname)-1)
-        argexit(1);
+        argexit(1, pgm);
     strcpy (ifname, argv[1]);
 
     /* The second argument is the output file name */
     if (argv[2] == NULL || strlen(argv[2]) == 0
         || strlen(argv[2]) > sizeof(ofname)-1)
-        argexit(2);
+        argexit(2, pgm);
     strcpy (ofname, argv[2]);
 
     /* Read the first track of the input file, and determine
@@ -240,10 +240,14 @@ void delayed_exit (int exit_code)
 /* Subroutine to display command syntax and exit                     */
 /*-------------------------------------------------------------------*/
 static void
-argexit ( int code )
+argexit ( int code, char *pgm )
 {
-    fprintf (stderr, MSG(HHC02410, "I"));
-    if (sizeof(off_t) > 4) fprintf(stderr, MSG(HHC02411, "I"));
+    if (sizeof(off_t) > 4) 
+        fprintf( stderr, MSG(HHC02410, "I", pgm,
+                "\n            -lfs   build one large output file"));
+    else
+        fprintf( stderr, MSG(HHC02410, "I", pgm, "" ));
+
     EXIT(code);
 } /* end function argexit */
 

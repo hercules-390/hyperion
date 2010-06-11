@@ -1076,32 +1076,46 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02402 "Unknown option '%s' value '%s'"
 #define HHC02403 "Failed opening '%s'"
 #define HHC02404 "Can't make 80 column card images from block length %d"
-#define HHC02405 "Usage: dasdcat [-i dasd_image [sf=shadow-file-name] dsname...]...\n" \
+#define HHC02405 "Usage: %s [-i dasd_image [sf=shadow-file-name] dsname...]...\n" \
        "          dsname can (currently must) be pdsname/spec\n" \
        "          spec is memname[:flags], * (all) or ? (list)\n" \
        "          flags can include (c)ard images, (a)scii"
 //dasdconv.c
-#define HHC02410 "Usage: dasdconv [options] infile outfile\n" \
+#define HHC02410 "Usage: %s [options] infile outfile\n" \
        "          infile:  name of input HDR-30 CKD image file ('-' means stdin)\n" \
        "          outfile: name of AWSCKD image file to be created\n" \
        "          options:\n" \
        "            -r     replace existing output file\n" \
-       "            -q     suppress progress messages"
-#define HHC02411 "  -lfs   build one large output file"
+       "            -q     suppress progress messages%s"
+
+#define HHC02411 "Usage: %s [-v] [-f] [-level] [-ro] file1 [file2 ...]\n" \
+       "          options:\n" \
+       "            -v      display version and exit\n" \
+       "\n" \
+       "            -f      force check even if OPENED bit is on\n" \
+       "\n" \
+       "        level is a digit 0 - 4:\n" \
+       "            -0  --  minimal checking (hdr, chdr, l1tab, l2tabs)\n" \
+       "            -1  --  normal  checking (hdr, chdr, l1tab, l2tabs, free spaces)\n" \
+       "            -2  --  extra   checking (hdr, chdr, l1tab, l2tabs, free spaces, trkhdrs)\n" \
+       "            -3  --  maximal checking (hdr, chdr, l1tab, l2tabs, free spaces, trkimgs)\n" \
+       "            -4  --  recover everything without using meta-data\n" \
+       "\n" \
+       "            -ro     open file readonly, no repairs"
 #define HHC02412 "Error in function '%s': '%s'"
 #define HHC02413 "Dasdconv is compiled without compress support and input is compressed"
 #define HHC02414 "Input file is already in CKD format, use dasdcopy"
 #define HHC02415 "Unknown device type %04X at offset 00000000 in input file"
 #define HHC02416 "Unknown device type %04X"
 #define HHC02417 "Invalid track header at offset %08X"
-#define HHC02418 "Expected cyl %04X, head %04X, found cyl %04X, head %04X"
-#define HHC02419 "Invalid record header (rc %d) at ofst %04X in trk at cyl %04X hd %04X at ofst %08X in file '%s'"
+#define HHC02418 "Expected CCHH %04X%04X, found CCHH %04X%04X"
+#define HHC02419 "Invalid record header (rc %d) at ofst %04X in trk at CCHH %04X%04X at ofst %08X in file '%s'"
 #define HHC02420 "%u cylinders succesfully written to file '%s'"
 #define HHC02421 "Cylinder count %u is outside range %u-%u"
 #define HHC02422 "Converting %04X volume '%s': %u cyls, %u trks/cyl, %u bytes/trk"
 #define HHC02423 "DASD operation completed"
 //dasdcopy.c
-#define HHC02430 "CKD lookup failed: device type %4.4X cyls %d"
+#define HHC02430 "CKD lookup failed: device type %04X cyls %d"
 #define HHC02431 "FBA lookup failed: blks %d"
 #define HHC02432 "Failed creating '%s'"
 #define HHC02433 "Read error on file '%s': %s %d stat=%2.2X, null %s substituted"
@@ -1226,6 +1240,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02468 "File '%s'; %s error: '%s'"
 #define HHC02469 "Member '%s' TTR %04X%02X"
 #define HHC02470 "Invalid block length %d at CCHHR %04X%04X%02X"
+#define HHC02471 "%s record not found"
 
 #define HHC02499 "Hercules utility '%s' - %s;"
 

@@ -18,11 +18,90 @@
  */
 
 #include "hstdinc.h"
-
 #include "hercules.h"
 #include "dasdblks.h"
 
+#define UTILITY_NAME    "dasdls"
+
+/* function prototypes */
+int end_of_track        (BYTE *p);
+int list_contents       (CIFBLK *cif, char *volser, DSXTENT *extent);
+int do_ls_cif           (CIFBLK *cif);
+int do_ls               (char *file, char *sfile);
+
 static int needsep = 0;         /* Write newline separator next time */
+
+int main(int argc, char **argv)
+{
+char           *pgmname;                /* prog name in host format  */
+char           *pgm;                    /* less any extension (.ext) */
+char           *pgmpath;                /* prog path in host format  */
+char            msgbuf[512];            /* message build work area   */
+int             rc = 0;
+char           *fn, *sfn;
+
+    /* Set program name */
+    if ( argc > 0 )
+    {
+        if ( strlen(argv[0]) == 0 )
+        {
+            pgmname = strdup( UTILITY_NAME );
+            pgmpath = strdup( "" );
+        }
+        else
+        {
+            char path[MAX_PATH];
+#if defined( _MSVC_ )
+            GetModuleFileName( NULL, path, MAX_PATH );
+#else
+            strncpy( path, argv[0], sizeof( path ) );
+#endif
+            pgmname = strdup(basename(path));
+#if !defined( _MSVC_ )
+            strncpy( path, argv[0], sizeof(path) );
+#endif
+            pgmpath = strdup( dirname( path  ));
+        }
+    }
+    else
+    {
+            pgmname = strdup( UTILITY_NAME );
+            pgmpath = strdup( "" );
+    }
+
+    pgm = strtok( strdup(pgmname), ".");
+    INITIALIZE_UTILITY( pgmname );
+
+    /* Display the program identification message */
+    MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "DASD list program" ) );
+    display_version (stderr, msgbuf+10, FALSE);
+
+    if (argc < 2) 
+    {
+        fprintf( stderr, MSG( HHC02463, "I", pgm, "" ) );
+        exit(2);
+    }
+
+    /*
+     * If your version of Hercules doesn't have support in its
+     * dasdutil.c for turning off verbose messages, then remove
+     * the following line but you'll have to live with chatty
+     * progress output on stdout.
+     */
+    set_verbose_util(0);
+
+    while (*++argv)
+    {
+        fn = *argv;
+        if (*(argv+1) && strlen (*(argv+1)) > 3 && !memcmp(*(argv+1), "sf=", 3))
+            sfn = *++argv;
+        else sfn = NULL;
+        if (do_ls(fn, sfn))
+            rc = 1;
+    }
+
+    return rc;
+}
 
 int end_of_track(BYTE *p)
 {
@@ -94,8 +173,9 @@ int do_ls_cif(CIFBLK *cif)
     rc = read_block(cif, 0, 0, 3, 0, 0, &vol1data, &len);
     if (rc < 0)
         return -1;
-    if (rc > 0) {
-        fprintf(stderr, "VOL1 record not found\n");
+    if (rc > 0) 
+    {
+        fprintf( stderr, MSG( HHC02471, "E", "VOL1" ) );
         return -1;
     }
 
@@ -107,8 +187,9 @@ int do_ls_cif(CIFBLK *cif)
     rc = read_block(cif, cyl, head, rec, (void *)&f4dscb, &len, 0, 0);
     if (rc < 0)
         return -1;
-    if (rc > 0) {
-        fprintf(stderr, "F4DSCB record not found\n");
+    if (rc > 0) 
+    {
+        fprintf( stderr, MSG( HHC02471, "E", "Format 4 DSCB" ) );
         return -1;
     }
     return list_contents(cif, volser, &f4dscb->ds4vtoce);
@@ -122,40 +203,3 @@ int do_ls(char *file, char *sfile)
         return -1;
     return 0;
 }
-
-int main(int argc, char **argv)
-{
-    int rc = 0;
-    char *fn, *sfn;
-
-    INITIALIZE_UTILITY("dasdls");
-
-    /* Display program info message */
-    display_version (stderr, "Hercules DASD list program", FALSE);
-
-    if (argc < 2) {
-        fprintf(stderr, "Usage: dasdls dasd_image [sf=shadow-file-name]...\n");
-        exit(2);
-    }
-
-    /*
-     * If your version of Hercules doesn't have support in its
-     * dasdutil.c for turning off verbose messages, then remove
-     * the following line but you'll have to live with chatty
-     * progress output on stdout.
-     */
-    set_verbose_util(0);
-
-    while (*++argv)
-    {
-        fn = *argv;
-        if (*(argv+1) && strlen (*(argv+1)) > 3 && !memcmp(*(argv+1), "sf=", 3))
-            sfn = *++argv;
-        else sfn = NULL;
-        if (do_ls(fn, sfn))
-            rc = 1;
-    }
-
-    return rc;
-}
-
