@@ -692,6 +692,7 @@ EXTRA_DIST = autoconf/config.rpath \
              build_pch.c           \
              conspawn.c            \
              getopt.c              \
+             wthreads.c            \
              herclogo.txt          \
              hercules.ico
 
@@ -777,6 +778,7 @@ noinst_HEADERS = fishhang.h     \
                  w32mtio.h      \
                  vmd250.h       \
                  msgenu.h       \
+                 wthreads.h     \
                  $(extra_dynamic_SRC)
 
 cckd: cckd2ckd$(EXEEXT)  \
