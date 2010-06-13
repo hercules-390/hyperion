@@ -113,6 +113,7 @@ cpu.c:123:HABC1234I This is a message
 
 // reserve 43-58 for option related
 
+#define HHC00069 "Guest is not quiesced; there are %d CPUs active"
 // HHC0007xx, HHC0008xx and HHC0009xx reserved for hao.c. (to recognize own messages)
 #define HHC00070 "Unknown hao command, valid commands are:\n" \
        "          hao tgt <tgt> : define target rule (pattern) to react on\n" \
@@ -1031,7 +1032,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02263 "Resuming script file processing..."
 #define HHC02264 "Script file processing complete"
 #define HHC02265 "Script file '%s' aborted due to previous conditions"
-#define HHC02266 "Reenter command '%s' again within 60 seconds to execute"
+#define HHC02266 "Reenter command '%s' again within %d seconds to execute"
 //efine HHC02267 "%s" /* Used for instruction tracing */
 //efine HHC02268 "%s" /* Used for ds command */
 #define HHC02269 "%s" 

@@ -1,3 +1,8 @@
+13 Jun 2010 'EXCPs' tag has been changed to 'IO'.
+13 Jun 2010 'QUIT' will now only ask for 2nd quit if any processor is active.
+            New message added indicating that the machine is not quiesced.
+13 Jun 2010 The 60 seconds for QUIT and SSD has been replaced by #define 
+            QUITTIME_PERIOD and is now defaulted to 10 seconds.
 08 Jun 2010 'scpimply' and 'scpecho' use ON/OFF now instead of being a toggle.
 03 Jun 2010 'scpimply' command and function added. 'Unknown' commands are passed to the
             scp for processing, if the scp has enabled scp operator commands.

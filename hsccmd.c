@@ -384,11 +384,26 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
         do_shutdown();
     else
     {
-        time( &end );
-        if ( difftime( end, sysblk.shutquittime ) > 60 )
+        int i;
+        int j;
+
+        for ( i = 0, j = 0; i < MAX_CPU; i++ )
         {
-            WRMSG( HHC02266, "A", "quit" );
-            time( &sysblk.shutquittime );
+            if ( IS_CPU_ONLINE(i) && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED )
+            {
+                j++;
+            }
+        }
+        
+        if ( j > 0 )
+        {
+            time( &end );
+            if ( difftime( end, sysblk.shutquittime ) > QUITTIME_PERIOD )
+            {
+                WRMSG( HHC00069, "I", j );
+                WRMSG( HHC02266, "A", "quit", QUITTIME_PERIOD );
+                time( &sysblk.shutquittime );
+            }
         }
         else
             do_shutdown();
@@ -7190,9 +7205,9 @@ int ssd_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(cmdline);
     
     time( &end );
-    if ( difftime( end, sysblk.SSD_time ) > 60 )
+    if ( difftime( end, sysblk.SSD_time ) > QUITTIME_PERIOD )
     {
-        WRMSG( HHC02266, "A", "ssd" );
+        WRMSG( HHC02266, "A", "ssd", QUITTIME_PERIOD );
         time( &sysblk.SSD_time );
     }
     else
