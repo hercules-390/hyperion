@@ -1059,8 +1059,8 @@ static void NP_screen_redraw (REGS *regs)
     set_pos ((BUTTONS_LINE+1), 3);
     set_color (COLOR_LIGHT_GREY, COLOR_BLACK);
     draw_text ("MIPS");
-    set_pos ((BUTTONS_LINE+1), 9);
-    draw_text ("SIO/s");
+    set_pos ((BUTTONS_LINE+1), 10);
+    draw_text ("IO/s");
 #endif /*defined(OPTION_MIPS_COUNTING)*/
 
     set_pos ((BUTTONS_LINE+2), 2);

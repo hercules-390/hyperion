@@ -133,7 +133,7 @@ con1052_query_device (DEVBLK *dev, char **class,
     BEGIN_DEVICE_CLASS_QUERY( "CON", dev, class, buflen, buffer );
 
     snprintf(buffer, buflen,
-        "*syscons cmdpref(%s)%s EXCPs[%" I64_FMT "u]",
+        "*syscons cmdpref(%s)%s IO[%" I64_FMT "u]",
         dev->filename,
         !dev->prompt1052 ? " noprompt" : "",
         dev->excps );

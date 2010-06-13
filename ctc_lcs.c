@@ -767,7 +767,7 @@ void  LCS_Query( DEVBLK* pDEVBLK, char** ppszClass,
         return;
     }
 
-    snprintf( pBuffer, iBufLen, "LCS Port %2.2X %s%s (%s)%s EXCPs[%" I64_FMT "u]",
+    snprintf( pBuffer, iBufLen, "LCS Port %2.2X %s%s (%s)%s IO[%" I64_FMT "u]",
               pLCSDEV->bPort,
               pLCSDEV->bMode == LCSDEV_MODE_IP ? "IP" : "SNA",
               sType[pLCSDEV->bType],

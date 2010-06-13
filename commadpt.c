@@ -2149,7 +2149,7 @@ static void commadpt_query_device (DEVBLK *dev, char **class,
 {
     BEGIN_DEVICE_CLASS_QUERY( "LINE", dev, class, buflen, buffer );
 
-    snprintf(buffer,buflen,"%s STA=%s CN=%s, EIB=%s OP=%s EXCPs[%" I64_FMT "u]",
+    snprintf(buffer,buflen,"%s STA=%s CN=%s, EIB=%s OP=%s IO[%" I64_FMT "u]",
             commadpt_lnctl_names[dev->commadpt->lnctl],
             dev->commadpt->enabled?"ENA":"DISA",
             dev->commadpt->connect?"YES":"NO",

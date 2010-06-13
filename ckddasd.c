@@ -638,7 +638,7 @@ void ckddasd_query_device (DEVBLK *dev, char **class,
 {
     BEGIN_DEVICE_CLASS_QUERY( "DASD", dev, class, buflen, buffer );
 
-    snprintf (buffer, buflen, "%s [%d cyls] EXCPs[%" I64_FMT "u]",
+    snprintf (buffer, buflen, "%s [%d cyls] IO[%" I64_FMT "u]",
             dev->filename,
             dev->ckdcyls,
             dev->excps);

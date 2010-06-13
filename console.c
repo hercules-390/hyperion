@@ -2427,7 +2427,7 @@ loc3270_query_device (DEVBLK *dev, char **class,
 
     if (dev->connected)
     {
-        snprintf (buffer, buflen, "%s EXCPs[%" I64_FMT "u]",
+        snprintf (buffer, buflen, "%s IO[%" I64_FMT "u]",
             inet_ntoa(dev->ipaddr), dev->excps );
     }
     else
@@ -2459,7 +2459,7 @@ loc3270_query_device (DEVBLK *dev, char **class,
         if (dev->filename[0])
         {
             snprintf(buffer, buflen,
-                "GROUP=%s%s%s EXCPs[%" I64_FMT "u]",
+                "GROUP=%s%s%s IO[%" I64_FMT "u]",
                 dev->filename, acc[0] ? " " : "", acc, dev->excps );
         }
         else
@@ -2467,11 +2467,11 @@ loc3270_query_device (DEVBLK *dev, char **class,
             if (acc[0])
             {
                 snprintf(buffer, buflen,
-                    "* %s EXCPs[%" I64_FMT "u]", acc, dev->excps );
+                    "* %s IO[%" I64_FMT "u]", acc, dev->excps );
             }
             else
                 snprintf(buffer, buflen,
-                    "* EXCPs[%" I64_FMT "u]", dev->excps );
+                    "* IO[%" I64_FMT "u]", dev->excps );
         }
     }
 
@@ -2724,7 +2724,7 @@ constty_query_device (DEVBLK *dev, char **class,
 
     if (dev->connected)
     {
-        snprintf (buffer, buflen, "%s%s EXCPs[%" I64_FMT "u]",
+        snprintf (buffer, buflen, "%s%s IO[%" I64_FMT "u]",
             inet_ntoa(dev->ipaddr),
             dev->prompt1052 ? "" : " noprompt",
             dev->excps );
@@ -2758,7 +2758,7 @@ constty_query_device (DEVBLK *dev, char **class,
         if (dev->filename[0])
         {
             snprintf(buffer, buflen,
-                "GROUP=%s%s%s%s EXCPs[%" I64_FMT "u]",
+                "GROUP=%s%s%s%s IO[%" I64_FMT "u]",
                 dev->filename,
                 !dev->prompt1052 ? " noprompt" : "",
                 acc[0] ? " " : "", acc,
@@ -2770,7 +2770,7 @@ constty_query_device (DEVBLK *dev, char **class,
             {
                 if (!dev->prompt1052)
                     snprintf(buffer, buflen,
-                        "noprompt %s EXCPs[%" I64_FMT "u]", acc, dev->excps );
+                        "noprompt %s IO[%" I64_FMT "u]", acc, dev->excps );
                 else
                     snprintf(buffer, buflen,
                         "* %s", acc);
@@ -2778,9 +2778,9 @@ constty_query_device (DEVBLK *dev, char **class,
             else
             {
                 if (!dev->prompt1052)
-                    snprintf( buffer, buflen, "noprompt EXCPs[%" I64_FMT "u]", dev->excps );
+                    snprintf( buffer, buflen, "noprompt IO[%" I64_FMT "u]", dev->excps );
                 else
-                    snprintf( buffer, buflen, "EXCPs[%" I64_FMT "u]", dev->excps );
+                    snprintf( buffer, buflen, "IO[%" I64_FMT "u]", dev->excps );
             }
         }
     }

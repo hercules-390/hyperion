@@ -1484,7 +1484,7 @@ void tapedev_query_device ( DEVBLK *dev, char **class,
             if ( dev->stape_no_erg ) strlcat( devparms, " --no-erg", sizeof(devparms) );
         }
 #endif
-        snprintf(buffer, buflen, "%s%s%s EXCPs[%" I64_FMT "u]",
+        snprintf(buffer, buflen, "%s%s%s IO[%" I64_FMT "u]",
             devparms,
             dev->tdparms.displayfeat ? ", Display: " : "",
             dev->tdparms.displayfeat ?    dispmsg    : "",
@@ -1536,7 +1536,7 @@ void tapedev_query_device ( DEVBLK *dev, char **class,
         {
             // Not a SCSI tape,  -or-  mounted SCSI tape...
 
-            snprintf (buffer, buflen, "%s%s %s%s%s EXCPs[%" I64_FMT "u]",
+            snprintf (buffer, buflen, "%s%s %s%s%s IO[%" I64_FMT "u]",
 
                 devparms, (dev->readonly ? " ro" : ""),
 
@@ -1549,7 +1549,7 @@ void tapedev_query_device ( DEVBLK *dev, char **class,
         {
             // UNmounted SCSI tape...
 
-            snprintf (buffer, buflen, "%s%s (%sNOTAPE)%s%s EXCPs[%" I64_FMT "u]",
+            snprintf (buffer, buflen, "%s%s (%sNOTAPE)%s%s IO[%" I64_FMT "u]",
 
                 devparms, (dev->readonly ? " ro" : ""),
 

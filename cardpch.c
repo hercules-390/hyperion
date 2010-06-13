@@ -144,7 +144,7 @@ static void cardpch_query_device (DEVBLK *dev, char **class,
 
     BEGIN_DEVICE_CLASS_QUERY( "PCH", dev, class, buflen, buffer );
 
-    snprintf (buffer, buflen, "%s%s%s%s EXCPs[%" I64_FMT "u]",
+    snprintf (buffer, buflen, "%s%s%s%s IO[%" I64_FMT "u]",
                 dev->filename,
                 (dev->ascii ? " ascii" : " ebcdic"),
                 ((dev->ascii && dev->crlf) ? " crlf" : ""),
