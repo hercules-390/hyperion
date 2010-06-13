@@ -2423,7 +2423,7 @@ static void
 loc3270_query_device (DEVBLK *dev, char **class,
                 int buflen, char *buffer)
 {
-    BEGIN_DEVICE_CLASS_QUERY( "GRAF", dev, class, buflen, buffer );
+    BEGIN_DEVICE_CLASS_QUERY( "DSP", dev, class, buflen, buffer );
 
     if (dev->connected)
     {
