@@ -375,7 +375,7 @@ void showf1(    FILE            *fmsg,
     fprintf(fmsg, MSG(HHC02485, "I", dsn, volser, volseq ));
     fprintf(fmsg, MSG(HHC02486, "I", txtcredt, txtexpdt ));
     fprintf(fmsg, MSG(HHC02487, "I", txtdsorg, txtrecfm, lrecl, blksize ));
-    fprintf(fmsg, MSG(HHC02487, "I", txtsyscd ));
+    fprintf(fmsg, MSG(HHC02488, "I", txtsyscd ));
 
     if (verbose > 1) 
     {
@@ -554,7 +554,7 @@ int fbcopy(     FILE            *fout,
         if (verbose > 2)
         {
             MSGBUF( msgbuf, "fbcopy reading track %5.5d/x'%04X' "
-                "record %d/x'%X' CCHHR[%04X04X02X]",
+                "record %d/x'%X' CCHHR[%04X%04X%02X]",
                  trk, trk, rec, rec, cyl, head, rec);
             fprintf(stderr, MSG(HHC90000, "D", msgbuf));
         }
@@ -713,7 +713,7 @@ void makext(
 // showhelp - display syntax help
 //----------------------------------------------------------------------------------
 
-void showhelp(pgm) {
+void showhelp(char *pgm) {
 
     fprintf(stderr, (expert) ?
         "Usage: dasdseq [-debug] [-expert] [-ascii] image [sf=shadow] [attr] filespec\n"
