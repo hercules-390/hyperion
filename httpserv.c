@@ -338,6 +338,8 @@ DLL_EXPORT char *http_variable(WEBBLK *webblk, char *name, int type)
 static void http_verify_path(WEBBLK *webblk, char *path)
 {
     char resolved_path[HTTP_PATH_LENGTH];
+    char pathname[HTTP_PATH_LENGTH];
+
 #if 0
     int i;
 
@@ -346,16 +348,17 @@ static void http_verify_path(WEBBLK *webblk, char *path)
             http_error(webblk, "404 File Not Found","",
                                "Illegal character in filename");
 #endif
-
     if (!realpath( path, resolved_path ))
         http_error(webblk, "404 File Not Found","",
                            "Invalid pathname");
+
+    hostpath(pathname, resolved_path, sizeof(pathname));
 
     // The following verifies the specified file does not lie
     // outside the specified httproot (Note: sysblk.httproot
     // was previously resolved to an absolute path by config.c)
 
-    if (strncmp( sysblk.httproot, resolved_path, strlen(sysblk.httproot)))
+    if (strncmp( sysblk.httproot, pathname, strlen(sysblk.httproot)))
         http_error(webblk, "404 File Not Found","",
                            "Invalid pathname");
 }
