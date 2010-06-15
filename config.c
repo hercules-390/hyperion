@@ -677,8 +677,7 @@ DEVBLK *dev;                            /* -> Device block           */
         machine_check_crwpend();
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
-//  logmsg (_("HHCMD050I Device %4.4X defined as %4.4X\n"),
-//          olddevn, newdevn);
+//    WRMSG (HHC01459, "I", lcss, olddevn, lcss, newdevn);
 
     return 0;
 } /* end function define_device */

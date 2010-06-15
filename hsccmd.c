@@ -4395,7 +4395,8 @@ int attach_cmd(int argc, char *argv[], char *cmdline)
 
     if (sscanf(cdev, "%hx%c", &devnum, &c) != 1)
     {
-        logmsg( _("HHCMD059E Device number %s is invalid\n"), cdev );
+        WRMSG( HHC00000, "E", cdev );
+  //      logmsg( _("HHC00000E Device number %s is invalid\n"), cdev );
         return -1;
     }
 
@@ -4403,7 +4404,8 @@ int attach_cmd(int argc, char *argv[], char *cmdline)
     {
         if (sscanf(clcss, "%hd%c", &lcss, &c) != 1)
         {
-            logmsg( _("HHCMD059E LCSS id %s is invalid\n"), clcss );
+            WRMSG( HHC00000, "E", clcss );
+  //          logmsg( _("HHC00000E LCSS id %s is invalid\n"), clcss );
             return -1;
         }
     }
@@ -8020,8 +8022,9 @@ int query_cmd(int argc, char *argv[], char *cmdline)
 #endif /* _FEATURE_VECTOR_FACILITY*/
                                     
             {
-                int i, j;
+                int i, j, k;
                 int cpupct = 0;
+                U32 mipsrate = 0;
                 
                 for ( i = j = 0; i < MAX_CPU; i++ )
                 {
@@ -8035,6 +8038,26 @@ int query_cmd(int argc, char *argv[], char *cmdline)
                 WRMSG( HHC17008, "I", ( j == 0 ? 0 : ( cpupct / j ) ), j, 
                                       sysblk.mipsrate / 1000000, ( sysblk.mipsrate % 1000000 ) / 10000, 
                                       sysblk.siosrate );
+
+//#if defined( OPTION_PROC_CAPPING )
+                cpupct = 0;
+                for ( i = k = 0; i < MAX_CPU; i++ )
+                {
+                    if ( IS_CPU_ONLINE(i) && 
+                        sysblk.ptyp[i] == SCCB_PTYP_CP &&
+                        sysblk.regs[i]->cpustate == CPUSTATE_STARTED )
+                    {
+                        k++;
+                        cpupct += sysblk.regs[i]->cpupct;
+                        mipsrate += sysblk.regs[i]->mipsrate;
+                    }
+                }
+                
+                if ( k > 0 && k != j )
+                    WRMSG( HHC17011, "I", ( k == 0 ? 0 : ( cpupct / k ) ), k, 
+                                            mipsrate / 1000000, 
+                                          ( mipsrate % 1000000 ) / 10000 ); 
+//#endif   //  OPTION_PROC_CAPPING
 
                 for ( i = 0; i < MAX_CPU; i++ )
                 {

@@ -246,19 +246,19 @@ struct _ECPSVM_SASTATS
     } \
     if(!sysblk.ecpsvm.available) \
     { \
-          DEBUG_SASSISTX(_instname,logmsg(_("HHCEV300D : SASSIST "#_instname" ECPS:VM Disabled in configuration\n"))); \
+          DEBUG_SASSISTX(_instname,logmsg(_("HHC90000D DBG: SASSIST "#_instname" ECPS:VM Disabled in configuration\n"))); \
           return(1); \
     } \
     if(!ecpsvm_sastats._instname.enabled) \
     { \
-          DEBUG_SASSISTX(_instname,logmsg(_("HHCEV300D : SASSIST "#_instname" ECPS:VM Disabled by command\n"))); \
+          DEBUG_SASSISTX(_instname,logmsg(_("HHC90000D DBG: SASSIST "#_instname" ECPS:VM Disabled by command\n"))); \
           return(1); \
     } \
     CR6=regs->CR_L(6); \
     regs->ecps_vtmrpt = NULL; /* Assume vtimer off until validated */ \
     if(!(CR6 & ECPSVM_CR6_VMASSIST)) \
     { \
-        DEBUG_SASSISTX(_instname,logmsg(_("HHCEV300D : EVMA Disabled by guest\n"))); \
+        DEBUG_SASSISTX(_instname,logmsg(_("HHC90000D DBG: EVMA Disabled by guest\n"))); \
         return(1); \
     } \
     /* Increment call now (don't count early misses) */ \
@@ -268,7 +268,7 @@ struct _ECPSVM_SASTATS
     /* Then set ref bit by calling LOG_TO_ABS */ \
     if((amicblok & 0x007ff) > 0x7e0) \
     { \
-        DEBUG_SASSISTX(_instname,logmsg(_("HHCEV300D : SASSIST "#_instname" Micblok @ %6.6X crosses page frame\n"),amicblok)); \
+        DEBUG_SASSISTX(_instname,logmsg(_("HHC90000D DBG: SASSIST "#_instname" Micblok @ %6.6X crosses page frame\n"),amicblok)); \
         return(1); \
     } \
     /* Load the micblok copy */ \
@@ -290,10 +290,10 @@ struct _ECPSVM_SASTATS
     } \
     /* Set ref bit on page where Virtual PSW is stored */ \
     vpswa_p=MADDR(vpswa,USE_REAL_ADDR,regs,ACCTYPE_READ,0); \
-    DEBUG_SASSISTX(_instname,logmsg(_("HHCEV300D : SASSIST "#_instname" VPSWA= %8.8X Virtual "),vpswa)); \
-    DEBUG_SASSISTX(_instname,logmsg(_("HHCEV300D : SASSIST "#_instname" CR6= %8.8X\n"),CR6)); \
-    DEBUG_SASSISTX(_instname,logmsg(_("HHCEV300D : SASSIST "#_instname" MICVTMR= %8.8X\n"),micblok.MICVTMR)); \
-    DEBUG_SASSISTX(_instname,logmsg(_("HHCEV300D : SASSIST "#_instname" Real "))); \
+    DEBUG_SASSISTX(_instname,logmsg(_("HHC90000D DBG: SASSIST "#_instname" VPSWA= %8.8X Virtual "),vpswa)); \
+    DEBUG_SASSISTX(_instname,logmsg(_("HHC90000D DBG: SASSIST "#_instname" CR6= %8.8X\n"),CR6)); \
+    DEBUG_SASSISTX(_instname,logmsg(_("HHC90000D DBG: SASSIST "#_instname" MICVTMR= %8.8X\n"),micblok.MICVTMR)); \
+    DEBUG_SASSISTX(_instname,logmsg(_("HHC90000D DBG: SASSIST "#_instname" Real "))); \
     DEBUG_SASSISTX(_instname,display_psw2(regs)); \
     /* Load the Virtual PSW in a temporary REGS structure */ \
     INITPSEUDOREGS(vpregs); \
@@ -311,13 +311,13 @@ VADR    effective_addr1, \
      SIE_INTERCEPT(regs); \
      if(!sysblk.ecpsvm.available) \
      { \
-          DEBUG_CPASSISTX(_inst,logmsg(_("HHCEV300D : CPASSTS "#_inst" ECPS:VM Disabled in configuration "))); \
+          DEBUG_CPASSISTX(_inst,logmsg(_("HHC90000D DBG: CPASSTS "#_inst" ECPS:VM Disabled in configuration "))); \
           ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION); \
      } \
      PRIV_CHECK(regs); /* No problem state please */ \
      if(!ecpsvm_cpstats._inst.enabled) \
      { \
-          DEBUG_CPASSISTX(_inst,logmsg(_("HHCEV300D : CPASSTS "#_inst" Disabled by command"))); \
+          DEBUG_CPASSISTX(_inst,logmsg(_("HHC90000D DBG: CPASSTS "#_inst" Disabled by command"))); \
           return; \
      } \
      if(!(regs->CR_L(6) & 0x02000000)) \
@@ -325,7 +325,7 @@ VADR    effective_addr1, \
         return; \
      } \
      ecpsvm_cpstats._inst.call++; \
-    DEBUG_CPASSISTX(_inst,logmsg(_("HHCEV300D : "#_inst" called\n")));
+    DEBUG_CPASSISTX(_inst,logmsg(_("HHC90000D DBG: "#_inst" called\n")));
 
 
 /* DISPx Utility macros */
@@ -394,10 +394,10 @@ static void ecpsvm_lockpage1(REGS *regs,RADR cortab,RADR pg)
     U32  lockcount;
     RADR cortbl;
 
-    DEBUG_CPASSISTX(LCKPG,logmsg(_("HHCEV300D : LKPG coreptr = "F_RADR" Frame = "F_RADR"\n"),cortab,pg));
+    DEBUG_CPASSISTX(LCKPG,logmsg(_("HHC90000D DBG: LKPG coreptr = "F_RADR" Frame = "F_RADR"\n"),cortab,pg));
     cortbl=EVM_L(cortab);
     corte=cortbl+((pg & 0xfff000)>>8);
-    DEBUG_CPASSISTX(LCKPG,logmsg(_("HHCEV300D : LKPG corete = %6.6X\n"),corte));
+    DEBUG_CPASSISTX(LCKPG,logmsg(_("HHC90000D DBG: LKPG corete = %6.6X\n"),corte));
     corcode=EVM_IC(corte+8);
     if(corcode & 0x80)
     {
@@ -411,7 +411,7 @@ static void ecpsvm_lockpage1(REGS *regs,RADR cortab,RADR pg)
         EVM_STC(corcode,corte+8);
     }
     EVM_ST(lockcount,corte+4);
-    DEBUG_CPASSISTX(LCKPG,logmsg(_("HHCEV300D : LKPG Page locked. Count = %6.6X\n"),lockcount));
+    DEBUG_CPASSISTX(LCKPG,logmsg(_("HHC90000D DBG: LKPG Page locked. Count = %6.6X\n"),lockcount));
     return;
 }
 /* E602 LCKPG Instruction */
@@ -428,7 +428,7 @@ DEF_INST(ecpsvm_lock_page)
     ptr_pl=effective_addr1;
     pg=effective_addr2;
 
-    DEBUG_CPASSISTX(LCKPG,logmsg(_("HHCEV300D : LKPG PAGE=%6.6X, PTRPL=%6.6X\n"),pg,ptr_pl));
+    DEBUG_CPASSISTX(LCKPG,logmsg(_("HHC90000D DBG: LKPG PAGE=%6.6X, PTRPL=%6.6X\n"),pg,ptr_pl));
 
     ecpsvm_lockpage1(regs,ptr_pl,pg);
     regs->psw.cc=0;
@@ -455,13 +455,13 @@ DEF_INST(ecpsvm_unlock_page)
     ptr_pl=effective_addr1;
     pg=effective_addr2;
 
-    DEBUG_CPASSISTX(ULKPG,logmsg(_("HHCEV300D : ULKPG PAGE=%6.6X, PTRPL=%6.6X\n"),pg,ptr_pl));
+    DEBUG_CPASSISTX(ULKPG,logmsg(_("HHC90000D DBG: ULKPG PAGE=%6.6X, PTRPL=%6.6X\n"),pg,ptr_pl));
 
     corsz=EVM_L(ptr_pl);
     cortbl=EVM_L(ptr_pl+4);
     if((pg+4095)>corsz)
     {
-        DEBUG_CPASSISTX(ULKPG,logmsg(_("HHCEV300D : ULKPG Page beyond core size of %6.6X\n"),corsz));
+        DEBUG_CPASSISTX(ULKPG,logmsg(_("HHC90000D DBG: ULKPG Page beyond core size of %6.6X\n"),corsz));
         return;
     }
     corte=cortbl+((pg & 0xfff000)>>8);
@@ -473,18 +473,18 @@ DEF_INST(ecpsvm_unlock_page)
     }
     else
     {
-        DEBUG_CPASSISTX(ULKPG,logmsg(_("HHCEV300D : ULKPG Attempting to unlock page that is not locked\n")));
+        DEBUG_CPASSISTX(ULKPG,logmsg(_("HHC90000D DBG: ULKPG Attempting to unlock page that is not locked\n")));
         return;
     }
     if(lockcount==0)
     {
         corcode &= ~(0x80|0x02);
         EVM_STC(corcode,corte+8);
-        DEBUG_CPASSISTX(ULKPG,logmsg(_("HHCEV300D : ULKPG now unlocked\n")));
+        DEBUG_CPASSISTX(ULKPG,logmsg(_("HHC90000D DBG: ULKPG now unlocked\n")));
     }
     else
     {
-        DEBUG_CPASSISTX(ULKPG,logmsg(_("HHCEV300D : ULKPG Page still locked. Count = %6.6X\n"),lockcount));
+        DEBUG_CPASSISTX(ULKPG,logmsg(_("HHC90000D DBG: ULKPG Page still locked. Count = %6.6X\n"),lockcount));
     }
     EVM_ST(lockcount,corte+4);
     CPASSIST_HIT(ULKPG);
@@ -520,7 +520,7 @@ DEF_INST(ecpsvm_locate_vblock)
     vchix=EVM_LH(vchtbl+((vdev & 0xf00)>>7));   /* Get Index */
     if(vchix & 0x8000)
     {
-        DEBUG_CPASSISTX(SCNVU,logmsg(_("HHCEV300D SCNVU Virtual Device %4.4X has no VCHAN block\n"),vdev));
+        DEBUG_CPASSISTX(SCNVU,logmsg(_("HHC90000D DBG: SCNVU Virtual Device %4.4X has no VCHAN block\n"),vdev));
         return;
     }
     vch=EVM_L(effective_addr2)+vchix;
@@ -528,7 +528,7 @@ DEF_INST(ecpsvm_locate_vblock)
     vcuix=EVM_LH(vch+8+((vdev & 0xf0)>>3));
     if(vcuix & 0x8000)
     {
-        DEBUG_CPASSISTX(SCNVU,logmsg(_("HHCEV300D SCNVU Virtual Device %4.4X has no VCU block\n"),vdev));
+        DEBUG_CPASSISTX(SCNVU,logmsg(_("HHC90000D DBG: SCNVU Virtual Device %4.4X has no VCU block\n"),vdev));
         return;
     }
     vcu=EVM_L(effective_addr2+4)+vcuix;
@@ -536,11 +536,11 @@ DEF_INST(ecpsvm_locate_vblock)
     vdvix=EVM_LH(vcu+8+((vdev & 0xf)<<1));
     if(vdvix & 0x8000)
     {
-        DEBUG_CPASSISTX(SCNVU,logmsg(_("HHCEV300D SCNVU Virtual Device %4.4X has no VDEV block\n"),vdev));
+        DEBUG_CPASSISTX(SCNVU,logmsg(_("HHC90000D DBG: SCNVU Virtual Device %4.4X has no VDEV block\n"),vdev));
         return;
     }
     vdv=EVM_L(effective_addr2+8)+vdvix;
-    DEBUG_CPASSISTX(SCNVU,logmsg(_("HHCEV300D SCNVU %4.4X : VCH = %8.8X, VCU = %8.8X, VDEV = %8.8X\n"),
+    DEBUG_CPASSISTX(SCNVU,logmsg(_("HHC90000D DBG: SCNVU %4.4X : VCH = %8.8X, VCU = %8.8X, VDEV = %8.8X\n"),
                 vdev,
                 vch,
                 vcu,
@@ -1105,7 +1105,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         SET_AEA_COMMON(regs);
         SET_PSW_IA(regs);
         /* Dispatch..... */
-        DEBUG_CPASSISTX(DISP2,logmsg(_("HHCPEV300D : DISP2 - Next Instruction : %2.2X\n"),ARCH_DEP(vfetchb)(regs->psw.IA,USE_PRIMARY_SPACE,regs)));
+        DEBUG_CPASSISTX(DISP2,logmsg(_("HHC90000D DBG : DISP2 - Next Instruction : %2.2X\n"),ARCH_DEP(vfetchb)(regs->psw.IA,USE_PRIMARY_SPACE,regs)));
         DEBUG_CPASSISTX(DISP2,display_regs_cregs(regs));
         return(2);      /* OK - Perform INTCHECK */
     }
@@ -1167,7 +1167,7 @@ static int ecpsvm_tranbrng(REGS *regs,VADR cortabad,VADR pgadd,RADR *raddr)
     cc=ecpsvm_int_lra(regs,pgadd,raddr);
     if(cc!=0)
     {
-        DEBUG_CPASSISTX(TRBRG,logmsg(_("HHCEV300D : Tranbring : LRA cc = %d\n"),cc));
+        DEBUG_CPASSISTX(TRBRG,logmsg(_("HHC90000D DBG: Tranbring : LRA cc = %d\n"),cc));
         return(1);
     }
     /* Get the core table entry from the Real address */
@@ -1176,25 +1176,25 @@ static int ecpsvm_tranbrng(REGS *regs,VADR cortabad,VADR pgadd,RADR *raddr)
     corcode=EVM_IC(cortab+8);
     if(!(corcode & 0x08))
     {
-        DEBUG_CPASSISTX(TRBRG,logmsg(_("HHCEV300D : Page not shared - OK %d\n"),cc));
+        DEBUG_CPASSISTX(TRBRG,logmsg(_("HHC90000D DBG: Page not shared - OK %d\n"),cc));
         return(0);      /* Page is NOT shared.. All OK */
     }
 #if defined(FEATURE_2K_STORAGE_KEYS)
     pg1=(*raddr & 0xfff000);
     pg2=pg1+0x800;
-    DEBUG_CPASSISTX(TRBRG,logmsg(_("HHCEV300D : Checking 2K Storage keys @"F_RADR" & "F_RADR"\n"),pg1,pg2));
+    DEBUG_CPASSISTX(TRBRG,logmsg(_("HHC90000D DBG: Checking 2K Storage keys @"F_RADR" & "F_RADR"\n"),pg1,pg2));
     if((STORAGE_KEY(pg1,regs) & STORKEY_CHANGE) ||
             (STORAGE_KEY(pg2,regs) & STORKEY_CHANGE))
     {
 #else
-    DEBUG_CPASSISTX(TRBRG,logmsg(_("HHCEV300D : Checking 4K Storage keys @"F_RADR"\n"),*raddr));
+    DEBUG_CPASSISTX(TRBRG,logmsg(_("HHC90000D DBG: Checking 4K Storage keys @"F_RADR"\n"),*raddr));
     if(STORAGE_KEY(*raddr,regs) & STORKEY_CHANGE)
     {
 #endif
-        DEBUG_CPASSISTX(TRBRG,logmsg(_("HHCEV300D : Page shared and changed\n")));
+        DEBUG_CPASSISTX(TRBRG,logmsg(_("HHC90000D DBG: Page shared and changed\n")));
         return(1);      /* Page shared AND changed */
     }
-    DEBUG_CPASSISTX(TRBRG,logmsg(_("HHCEV300D : Page shared but not changed\n")));
+    DEBUG_CPASSISTX(TRBRG,logmsg(_("HHC90000D DBG: Page shared but not changed\n")));
     return(0);  /* All done */
 }
 /* TRBRG : Translate a page address */
@@ -1213,11 +1213,11 @@ DEF_INST(ecpsvm_tpage)
     int rc;
     RADR raddr;
     ECPSVM_PROLOG(TRBRG);
-    DEBUG_CPASSISTX(TRBRG,logmsg(_("HHCEV300D : TRANBRNG\n")));
+    DEBUG_CPASSISTX(TRBRG,logmsg(_("HHC90000D DBG: TRANBRNG\n")));
     rc=ecpsvm_tranbrng(regs,effective_addr1,regs->GR_L(1),&raddr);
     if(rc)
     {
-        DEBUG_CPASSISTX(TRBRG,logmsg(_("HHCEV300D : TRANBRNG - Back to CP\n")));
+        DEBUG_CPASSISTX(TRBRG,logmsg(_("HHC90000D DBG: TRANBRNG - Back to CP\n")));
         return; /* Something not right : NO OP */
     }
     regs->psw.cc=0;
@@ -1235,11 +1235,11 @@ DEF_INST(ecpsvm_tpage_lock)
     int rc;
     RADR raddr;
     ECPSVM_PROLOG(TRLOK);
-    DEBUG_CPASSISTX(TRLOK,logmsg(_("HHCEV300D : TRANLOCK\n")));
+    DEBUG_CPASSISTX(TRLOK,logmsg(_("HHC90000D DBG: TRANLOCK\n")));
     rc=ecpsvm_tranbrng(regs,effective_addr1,regs->GR_L(1),&raddr);
     if(rc)
     {
-        DEBUG_CPASSISTX(TRLOK,logmsg(_("HHCEV300D : TRANLOCK - Back to CP\n")));
+        DEBUG_CPASSISTX(TRLOK,logmsg(_("HHC90000D DBG: TRANLOCK - Back to CP\n")));
         return; /* Something not right : NO OP */
     }
     /*
@@ -1752,7 +1752,7 @@ DEF_INST(ecpsvm_locate_rblock)
     /* And the DMKRIO tables addresses */
     arioct=effective_addr2;
 
-    DEBUG_CPASSISTX(SCNRU,logmsg(_("HHCEV300D : ECPS:VM SCNRU called; RDEV=%4.4X ARIOCT=%6.6X\n"),effective_addr1,arioct));
+    DEBUG_CPASSISTX(SCNRU,logmsg(_("HHC90000D DBG: ECPS:VM SCNRU called; RDEV=%4.4X ARIOCT=%6.6X\n"),effective_addr1,arioct));
 
     /* Get the Channel Index Table */
     rchixtbl= EVM_L(effective_addr2);
@@ -1760,12 +1760,12 @@ DEF_INST(ecpsvm_locate_rblock)
     /* Obtain the RCH offset */
     chix=EVM_LH(rchixtbl+((rdev & 0xf00) >> 7));
 
-    DEBUG_CPASSISTX(SCNRU,logmsg(_("HHCEV300D : ECPS:VM SCNRU : RCH IX = %x\n"),chix));
+    DEBUG_CPASSISTX(SCNRU,logmsg(_("HHC90000D DBG: ECPS:VM SCNRU : RCH IX = %x\n"),chix));
 
     /* Check if Bit 0 set (no RCH) */
     if(chix & 0x8000)
     {
-        // logmsg(_("HHCEV300D : ECPS:VM SCNRU : NO CHANNEL\n"));
+        // logmsg(_("HHC90000D DBG: ECPS:VM SCNRU : NO CHANNEL\n"));
         /*
         regs->GR_L(6)=~0;
         regs->GR_L(7)=~0;
@@ -1791,7 +1791,7 @@ DEF_INST(ecpsvm_locate_rblock)
         cuix=EVM_LH(rchblk+0x20+((rdev & 0xf0)>>2));
         if(cuix & 0x8000)
         {
-            // logmsg(_("HHCEV300D : ECPS:VM SCNRU : NO CONTROL UNIT\n"));
+            // logmsg(_("HHC90000D DBG: ECPS:VM SCNRU : NO CONTROL UNIT\n"));
             /*
             regs->GR_L(6)=rchblk;
             regs->GR_L(7)=~0;
@@ -1802,7 +1802,7 @@ DEF_INST(ecpsvm_locate_rblock)
             return;
         }
     }
-    DEBUG_CPASSISTX(SCNRU,logmsg(_("HHCEV300D : ECPS:VM SCNRU : RCU IX = %x\n"),cuix));
+    DEBUG_CPASSISTX(SCNRU,logmsg(_("HHC90000D DBG: ECPS:VM SCNRU : RCU IX = %x\n"),cuix));
     rcutbl=EVM_L(arioct+8);
     rcublk=rcutbl+cuix;
     dvix=EVM_LH(rcublk+0x28+((rdev & 0x00f)<<1));
@@ -1812,7 +1812,7 @@ DEF_INST(ecpsvm_locate_rblock)
     }
     if(dvix & 0x8000)
     {
-        // logmsg(_("HHCEV300D : ECPS:VM SCNRU : NO RDEVBLOK\n"));
+        // logmsg(_("HHC90000D DBG: ECPS:VM SCNRU : NO RDEVBLOK\n"));
         /*
         regs->GR_L(6)=rchblk;
         regs->GR_L(7)=rcublk;
@@ -1822,11 +1822,11 @@ DEF_INST(ecpsvm_locate_rblock)
         */
         return;
     }
-    DEBUG_CPASSISTX(SCNRU,logmsg(_("HHCEV300D : ECPS:VM SCNRU : RDV IX = %x\n"),dvix));
+    DEBUG_CPASSISTX(SCNRU,logmsg(_("HHC90000D DBG: ECPS:VM SCNRU : RDV IX = %x\n"),dvix));
     dvix<<=3;
     rdvtbl=EVM_L(arioct+12);
     rdvblk=rdvtbl+dvix;
-    DEBUG_CPASSISTX(SCNRU,logmsg(_("HHCEV300D : ECPS:VM SCNRU : RCH = %6.6X, RCU = %6.6X, RDV = %6.6X\n"),rchblk,rcublk,rdvblk));
+    DEBUG_CPASSISTX(SCNRU,logmsg(_("HHC90000D DBG: ECPS:VM SCNRU : RCH = %6.6X, RCU = %6.6X, RDV = %6.6X\n"),rchblk,rcublk,rdvblk));
     regs->GR_L(6)=rchblk;
     regs->GR_L(7)=rcublk;
     regs->GR_L(8)=rdvblk;
@@ -1870,7 +1870,7 @@ DEF_INST(ecpsvm_store_level)
 {
     ECPSVM_PROLOG(STEVL);
     EVM_ST(sysblk.ecpsvm.level,effective_addr1);
-    DEBUG_CPASSISTX(STEVL,logmsg(_("HHCEV300D : ECPS:VM STORE LEVEL %d called\n"),sysblk.ecpsvm.level));
+    DEBUG_CPASSISTX(STEVL,logmsg(_("HHC90000D DBG: ECPS:VM STORE LEVEL %d called\n"),sysblk.ecpsvm.level));
     CPASSIST_HIT(STEVL);
 }
 /* LCSPG : Locate Changed Shared Page */
@@ -1910,27 +1910,27 @@ DEF_INST(ecpsvm_extended_freex)
     numdw=regs->GR_L(0);
     spixtbl=effective_addr2;
     maxsztbl=effective_addr1;
-    DEBUG_CPASSISTX(FREEX,logmsg(_("HHCEV300D : ECPS:VM FREEX DW = %4.4X\n"),numdw));
+    DEBUG_CPASSISTX(FREEX,logmsg(_("HHC90000D DBG: ECPS:VM FREEX DW = %4.4X\n"),numdw));
     if(numdw==0)
     {
         return;
     }
-    DEBUG_CPASSISTX(FREEX,logmsg(_("HHCEV300D : MAXSIZE ADDR = %6.6X, SUBPOOL INDEX TABLE = %6.6X\n"),maxsztbl,spixtbl));
+    DEBUG_CPASSISTX(FREEX,logmsg(_("HHC90000D DBG: MAXSIZE ADDR = %6.6X, SUBPOOL INDEX TABLE = %6.6X\n"),maxsztbl,spixtbl));
     /* E1 = @ of MAXSIZE (maximum # of DW allocatable by FREEX from subpools) */
     /*      followed by subpool pointers                                      */
     /* E2 = @ of subpool indices                                              */
     maxdw=EVM_L(maxsztbl);
     if(regs->GR_L(0)>maxdw)
     {
-        DEBUG_CPASSISTX(FREEX,logmsg(_("HHCEV300D : FREEX request beyond subpool capacity\n")));
+        DEBUG_CPASSISTX(FREEX,logmsg(_("HHC90000D DBG: FREEX request beyond subpool capacity\n")));
         return;
     }
     /* Fetch subpool index */
     spix=EVM_IC(spixtbl+numdw);
-    DEBUG_CPASSISTX(FREEX,logmsg(_("HHCEV300D : Subpool index = %X\n"),spix));
+    DEBUG_CPASSISTX(FREEX,logmsg(_("HHC90000D DBG: Subpool index = %X\n"),spix));
     /* Fetch value */
     freeblock=EVM_L(maxsztbl+4+spix);
-    DEBUG_CPASSISTX(FREEX,logmsg(_("HHCEV300D : Value in subpool table = %6.6X\n"),freeblock));
+    DEBUG_CPASSISTX(FREEX,logmsg(_("HHC90000D DBG: Value in subpool table = %6.6X\n"),freeblock));
     if(freeblock==0)
     {
         /* Can't fullfill request here */
@@ -1938,7 +1938,7 @@ DEF_INST(ecpsvm_extended_freex)
     }
     nextblk=EVM_L(freeblock);
     EVM_ST(nextblk,maxsztbl+4+spix);
-    DEBUG_CPASSISTX(FREEX,logmsg(_("HHCEV300D : New Value in subpool table = %6.6X\n"),nextblk));
+    DEBUG_CPASSISTX(FREEX,logmsg(_("HHC90000D DBG: New Value in subpool table = %6.6X\n"),nextblk));
     regs->GR_L(1)=freeblock;
     regs->psw.cc=0;
     BR14;
@@ -1968,35 +1968,35 @@ int ecpsvm_do_fretx(REGS *regs,VADR block,U16 numdw,VADR maxsztbl,VADR fretl)
     U32 cortbe; /* Core table Page entry for fretted block */
     U32 prevblk;
     BYTE spix;
-    DEBUG_CPASSISTX(FRETX,logmsg(_("HHCEV300D : X fretx called AREA=%6.6X, DW=%4.4X\n"),regs->GR_L(1),regs->GR_L(0)));
+    DEBUG_CPASSISTX(FRETX,logmsg(_("HHC90000D DBG: X fretx called AREA=%6.6X, DW=%4.4X\n"),regs->GR_L(1),regs->GR_L(0)));
     if(numdw==0)
     {
-        DEBUG_CPASSISTX(FRETX,logmsg(_("HHCEV300D : ECPS:VM Cannot FRETX : DWORDS = 0\n")));
+        DEBUG_CPASSISTX(FRETX,logmsg(_("HHC90000D DBG: ECPS:VM Cannot FRETX : DWORDS = 0\n")));
         return(1);
     }
     maxdw=EVM_L(maxsztbl);
     if(numdw>maxdw)
     {
-        DEBUG_CPASSISTX(FRETX,logmsg(_("HHCEV300D : ECPS:VM Cannot FRETX : DWORDS = %d > MAXDW %d\n"),numdw,maxdw));
+        DEBUG_CPASSISTX(FRETX,logmsg(_("HHC90000D DBG: ECPS:VM Cannot FRETX : DWORDS = %d > MAXDW %d\n"),numdw,maxdw));
         return(1);
     }
     cortbl=EVM_L(fretl);
     cortbe=cortbl+((block & 0xfff000)>>8);
     if(EVM_L(cortbe)!=EVM_L(fretl+4))
     {
-        DEBUG_CPASSISTX(FRETX,logmsg(_("HHCEV300D : ECPS:VM Cannot FRETX : Area not in Core Free area\n")));
+        DEBUG_CPASSISTX(FRETX,logmsg(_("HHC90000D DBG: ECPS:VM Cannot FRETX : Area not in Core Free area\n")));
         return(1);
     }
     if(EVM_IC(cortbe+8)!=0x02)
     {
-        DEBUG_CPASSISTX(FRETX,logmsg(_("HHCEV300D : ECPS:VM Cannot FRETX : Area flag != 0x02\n")));
+        DEBUG_CPASSISTX(FRETX,logmsg(_("HHC90000D DBG: ECPS:VM Cannot FRETX : Area flag != 0x02\n")));
         return(1);
     }
     spix=EVM_IC(fretl+11+numdw);
     prevblk=EVM_L(maxsztbl+4+spix);
     if(prevblk==block)
     {
-        DEBUG_CPASSISTX(FRETX,logmsg(_("HHCEV300D : ECPS:VM Cannot FRETX : fretted block already on subpool chain\n")));
+        DEBUG_CPASSISTX(FRETX,logmsg(_("HHC90000D DBG: ECPS:VM Cannot FRETX : fretted block already on subpool chain\n")));
         return(1);
     }
     EVM_ST(block,maxsztbl+4+spix);
@@ -2066,7 +2066,7 @@ int     ecpsvm_check_pswtrans(REGS *regs,ECPSVM_MICBLOK *micblok, BYTE micpend, 
     /* Check for a switch from BC->EC or EC->BC */
     if(ECMODE(&oldr->psw)!=ECMODE(&newr->psw))
     {
-        DEBUG_SASSISTX(LPSW,logmsg(_("HHCEV300D : New and Old PSW have a EC/BC transition\n")));
+        DEBUG_SASSISTX(LPSW,logmsg(_("HHC90000D DBG: New and Old PSW have a EC/BC transition\n")));
         return(1);
     }
     /* Check if PER or DAT is being changed */
@@ -2074,7 +2074,7 @@ int     ecpsvm_check_pswtrans(REGS *regs,ECPSVM_MICBLOK *micblok, BYTE micpend, 
     {
         if((newr->psw.sysmask & 0x44) != (oldr->psw.sysmask & 0x44))
         {
-            DEBUG_SASSISTX(LPSW,logmsg(_("HHCEV300D : New PSW Enables DAT or PER\n")));
+            DEBUG_SASSISTX(LPSW,logmsg(_("HHC90000D DBG: New PSW Enables DAT or PER\n")));
             return(1);
         }
     }
@@ -2085,7 +2085,7 @@ int     ecpsvm_check_pswtrans(REGS *regs,ECPSVM_MICBLOK *micblok, BYTE micpend, 
         {
             if(((~oldr->psw.sysmask) & 0x03) & newr->psw.sysmask)
             {
-                DEBUG_SASSISTX(LPSW,logmsg(_("HHCEV300D : New PSW Enables interrupts and MICPEND (EC)\n")));
+                DEBUG_SASSISTX(LPSW,logmsg(_("HHC90000D DBG: New PSW Enables interrupts and MICPEND (EC)\n")));
                 return(1);
             }
         }
@@ -2093,27 +2093,27 @@ int     ecpsvm_check_pswtrans(REGS *regs,ECPSVM_MICBLOK *micblok, BYTE micpend, 
         {
             if(~oldr->psw.sysmask & newr->psw.sysmask)
             {
-                DEBUG_SASSISTX(LPSW,logmsg(_("HHCEV300D : New PSW Enables interrupts and MICPEND (BC)\n")));
+                DEBUG_SASSISTX(LPSW,logmsg(_("HHC90000D DBG: New PSW Enables interrupts and MICPEND (BC)\n")));
                 return(1);
             }
         }
     }
     if(WAITSTATE(&newr->psw))
     {
-        DEBUG_SASSISTX(LPSW,logmsg(_("HHCEV300D : New PSW is a WAIT PSW\n")));
+        DEBUG_SASSISTX(LPSW,logmsg(_("HHC90000D DBG: New PSW is a WAIT PSW\n")));
         return(1);
     }
     if(ECMODE(&newr->psw))
     {
         if(newr->psw.sysmask & 0xb8)
         {
-            DEBUG_SASSISTX(LPSW,logmsg(_("HHCEV300D : New PSW sysmask incorrect\n")));
+            DEBUG_SASSISTX(LPSW,logmsg(_("HHC90000D DBG: New PSW sysmask incorrect\n")));
             return(1);
         }
     }
     if(newr->psw.IA & 0x01)
     {
-        DEBUG_SASSISTX(LPSW,logmsg(_("HHCEV300D : New PSW has ODD IA\n")));
+        DEBUG_SASSISTX(LPSW,logmsg(_("HHC90000D DBG: New PSW has ODD IA\n")));
         return(1);
     }
     return(0);
@@ -2131,13 +2131,13 @@ int     ecpsvm_dossm(REGS *regs,int b2,VADR effective_addr2)
     /* Reject if V PSW is in problem state */
     if(CR6 & ECPSVM_CR6_VIRTPROB)
     {
-        DEBUG_SASSISTX(SSM,logmsg("HHCEV300D : SASSIST SSM reject : V PB State\n"));
+        DEBUG_SASSISTX(SSM,logmsg("HHC90000D DBG: SASSIST SSM reject : V PB State\n"));
         return(1);
     }
     /*
     if(!(micevma & MICSTSM))
     {
-        DEBUG_SASSISTX(SSM,logmsg("HHCEV300D : SASSIST SSM reject : SSM Disabled in MICEVMA; EVMA=%2.2X\n",micevma));
+        DEBUG_SASSISTX(SSM,logmsg("HHC90000D DBG: SASSIST SSM reject : SSM Disabled in MICEVMA; EVMA=%2.2X\n",micevma));
         return(1);
     }
     */
@@ -2148,7 +2148,7 @@ int     ecpsvm_dossm(REGS *regs,int b2,VADR effective_addr2)
     /* Reject if V CR0 specifies SSM Suppression */
     if(creg0 & 0x40000000)
     {
-        DEBUG_SASSISTX(SSM,logmsg("HHCEV300D : SASSIST SSM reject : V SSM Suppr\n"));
+        DEBUG_SASSISTX(SSM,logmsg("HHC90000D DBG: SASSIST SSM reject : V SSM Suppr\n"));
         return(1);
     }
     /* Load the requested SSM Mask */
@@ -2165,7 +2165,7 @@ int     ecpsvm_dossm(REGS *regs,int b2,VADR effective_addr2)
 
     if(ecpsvm_check_pswtrans(regs,&micblok,micpend,&vpregs,&npregs))       /* Check PSW transition capability */
     {
-        DEBUG_SASSISTX(SSM,logmsg("HHCEV300D : SASSIST SSM Reject : New PSW too complex\n"));
+        DEBUG_SASSISTX(SSM,logmsg("HHC90000D DBG: SASSIST SSM Reject : New PSW too complex\n"));
         return(1); /* Something in the NEW PSW we can't handle.. let CP do it */
     }
 
@@ -2177,10 +2177,10 @@ int     ecpsvm_dossm(REGS *regs,int b2,VADR effective_addr2)
     MADDR(vpswa,USE_REAL_ADDR,regs,ACCTYPE_WRITE,0);
     /* store the new PSW */
     ARCH_DEP(store_psw) (&npregs,vpswa_p);
-    DEBUG_SASSISTX(SSM,logmsg("HHCEV300D : SASSIST SSM Complete : new SM = %2.2X\n",reqmask));
-    DEBUG_SASSISTX(LPSW,logmsg("HHCEV300D : SASSIST SSM New VIRT "));
+    DEBUG_SASSISTX(SSM,logmsg("HHC90000D DBG: SASSIST SSM Complete : new SM = %2.2X\n",reqmask));
+    DEBUG_SASSISTX(LPSW,logmsg("HHC90000D DBG: SASSIST SSM New VIRT "));
     DEBUG_SASSISTX(LPSW,display_psw2(&npregs));
-    DEBUG_SASSISTX(LPSW,logmsg("HHCEV300D : SASSIST SSM New REAL "));
+    DEBUG_SASSISTX(LPSW,logmsg("HHC90000D DBG: SASSIST SSM New REAL "));
     DEBUG_SASSISTX(LPSW,display_psw2(regs));
     SASSIST_HIT(SSM);
     return(0);
@@ -2195,12 +2195,12 @@ int     ecpsvm_dosvc(REGS *regs,int svccode)
 
     if(svccode==76)     /* NEVER trap SVC 76 */
     {
-        DEBUG_SASSISTX(SVC,logmsg("HHCEV300D : SASSIST SVC Reject : SVC 76\n"));
+        DEBUG_SASSISTX(SVC,logmsg("HHC90000D DBG: SASSIST SVC Reject : SVC 76\n"));
         return(1);
     }
     if(CR6 & ECPSVM_CR6_SVCINHIB)
     {
-        DEBUG_SASSISTX(SVC,logmsg("HHCEV300D : SASSIST SVC Reject : SVC Assist Inhibit\n"));
+        DEBUG_SASSISTX(SVC,logmsg("HHC90000D DBG: SASSIST SVC Reject : SVC Assist Inhibit\n"));
         return(1);      /* SVC SASSIST INHIBIT ON */
     }
     /* Get what the NEW PSW should be */
@@ -2210,7 +2210,7 @@ int     ecpsvm_dosvc(REGS *regs,int svccode)
                                                                                          /* Also sets reference bit     */
     INITPSEUDOREGS(newr);
     ARCH_DEP(load_psw) (&newr, (BYTE *)&psa->svcnew);   /* Ref bit set above */
-    DEBUG_SASSISTX(SVC,logmsg("HHCEV300D : SASSIST SVC NEW VIRT "));
+    DEBUG_SASSISTX(SVC,logmsg("HHC90000D DBG: SASSIST SVC NEW VIRT "));
     DEBUG_SASSISTX(SVC,display_psw2(&newr));
     /* Get some stuff from the REAL Running PSW to put in OLD SVC PSW */
     SET_PSW_IA(regs);
@@ -2219,12 +2219,12 @@ int     ecpsvm_dosvc(REGS *regs,int svccode)
     vpregs.psw.pkey=regs->psw.pkey;               /* Protection Key      */
     vpregs.psw.progmask=regs->psw.progmask;       /* Program Mask        */
     vpregs.psw.intcode=svccode;                   /* SVC Interrupt code  */
-    DEBUG_SASSISTX(SVC,logmsg("HHCEV300D : SASSIST SVC OLD VIRT "));
+    DEBUG_SASSISTX(SVC,logmsg("HHC90000D DBG: SASSIST SVC OLD VIRT "));
     DEBUG_SASSISTX(SVC,display_psw2(&vpregs));
 
     if(ecpsvm_check_pswtrans(regs,&micblok,micpend,&vpregs,&newr))       /* Check PSW transition capability */
     {
-        DEBUG_SASSISTX(SVC,logmsg("HHCEV300D : SASSIST SVC Reject : Cannot make transition to new PSW\n"));
+        DEBUG_SASSISTX(SVC,logmsg("HHC90000D DBG: SASSIST SVC Reject : Cannot make transition to new PSW\n"));
         return(1); /* Something in the NEW PSW we can't handle.. let CP do it */
     }
     /* Store the OLD SVC PSW */
@@ -2250,7 +2250,7 @@ int     ecpsvm_dosvc(REGS *regs,int svccode)
      * Now store the new PSW in the area pointed by the MICBLOK
      */
     ARCH_DEP(store_psw) (&newr,vpswa_p);
-    DEBUG_SASSISTX(SVC,logmsg("HHCEV300D : SASSIST SVC Done\n"));
+    DEBUG_SASSISTX(SVC,logmsg("HHC90000D DBG: SASSIST SVC Done\n"));
     SASSIST_HIT(SVC);
     return(0);
 }
@@ -2264,18 +2264,18 @@ int ecpsvm_dolpsw(REGS *regs,int b2,VADR e2)
     /* Reject if V PSW is in problem state */
     if(CR6 & ECPSVM_CR6_VIRTPROB)
     {
-        DEBUG_SASSISTX(LPSW,logmsg("HHCEV300D : SASSIST LPSW reject : V PB State\n"));
+        DEBUG_SASSISTX(LPSW,logmsg("HHC90000D DBG: SASSIST LPSW reject : V PB State\n"));
         return(1);
     }
     /* Reject if MICEVMA says not to do LPSW sim */
     if(!(micevma & MICLPSW))
     {
-        DEBUG_SASSISTX(LPSW,logmsg("HHCEV300D : SASSIST LPSW reject : LPSW disabled in MICEVMA\n"));
+        DEBUG_SASSISTX(LPSW,logmsg("HHC90000D DBG: SASSIST LPSW reject : LPSW disabled in MICEVMA\n"));
         return(1);
     }
     if(e2&0x03)
     {
-        DEBUG_SASSISTX(LPSW,logmsg("HHCEV300D : SASSIST LPSW %6.6X - Alignement error\n",e2));
+        DEBUG_SASSISTX(LPSW,logmsg("HHC90000D DBG: SASSIST LPSW %6.6X - Alignement error\n",e2));
         return(1);
 
     }
@@ -2284,7 +2284,7 @@ int ecpsvm_dolpsw(REGS *regs,int b2,VADR e2)
     ARCH_DEP(load_psw) (&nregs,nlpsw);
     if(ecpsvm_check_pswtrans(regs,&micblok,micpend,&vpregs,&nregs))
     {
-        DEBUG_SASSISTX(LPSW,logmsg("HHCEV300D : SASSIST LPSW Rejected - Cannot make PSW transition\n"));
+        DEBUG_SASSISTX(LPSW,logmsg("HHC90000D DBG: SASSIST LPSW Rejected - Cannot make PSW transition\n"));
         return(1);
 
     }
@@ -2292,9 +2292,9 @@ int ecpsvm_dolpsw(REGS *regs,int b2,VADR e2)
     MADDR(vpswa,USE_REAL_ADDR,regs,ACCTYPE_WRITE,0);
                         /* Set ref bit in address pointed by MICBLOK */
     ARCH_DEP(store_psw) (&nregs,vpswa_p);
-    DEBUG_SASSISTX(LPSW,logmsg("HHCEV300D : SASSIST LPSW New VIRT "));
+    DEBUG_SASSISTX(LPSW,logmsg("HHC90000D DBG: SASSIST LPSW New VIRT "));
     DEBUG_SASSISTX(LPSW,display_psw2(&nregs));
-    DEBUG_SASSISTX(LPSW,logmsg("HHCEV300D : SASSIST LPSW New REAL "));
+    DEBUG_SASSISTX(LPSW,logmsg("HHC90000D DBG: SASSIST LPSW New REAL "));
     DEBUG_SASSISTX(LPSW,display_psw2(regs));
     SASSIST_HIT(LPSW);
     return(0);
@@ -2303,30 +2303,30 @@ int ecpsvm_dolpsw(REGS *regs,int b2,VADR e2)
 
 int     ecpsvm_virttmr_ext(REGS *regs)
 {
-    DEBUG_SASSISTX(VTIMER,logmsg("HHCEV300D : SASSIST VTIMER Checking if we can IRPT\n"));
-    DEBUG_SASSISTX(VTIMER,logmsg("HHCEV300D : SASSIST VTIMER Virtual"));
+    DEBUG_SASSISTX(VTIMER,logmsg("HHC90000D DBG: SASSIST VTIMER Checking if we can IRPT\n"));
+    DEBUG_SASSISTX(VTIMER,logmsg("HHC90000D DBG: SASSIST VTIMER Virtual"));
     DEBUG_SASSISTX(VTIMER,display_psw2(regs));
     if(IS_IC_ECPSVTIMER(regs))
     {
-        DEBUG_SASSISTX(VTIMER,logmsg("HHCEV300D : SASSIST VTIMER Not pending\n"));
+        DEBUG_SASSISTX(VTIMER,logmsg("HHC90000D DBG: SASSIST VTIMER Not pending\n"));
         return(1);
     }
     if(!PROBSTATE(&regs->psw))
     {
-        DEBUG_SASSISTX(VTIMER,logmsg("HHCEV300D : SASSIST VTIMER Not dispatching a VM\n"));
+        DEBUG_SASSISTX(VTIMER,logmsg("HHC90000D DBG: SASSIST VTIMER Not dispatching a VM\n"));
         return(1);
     }
     if(!(regs->psw.sysmask & PSW_EXTMASK))
     {
-        DEBUG_SASSISTX(VTIMER,logmsg("HHCEV300D : SASSIST VTIMER Test int : Not enabled for EXT\n"));
+        DEBUG_SASSISTX(VTIMER,logmsg("HHC90000D DBG: SASSIST VTIMER Test int : Not enabled for EXT\n"));
         return(1);
     }
     if(!(regs->CR_L(6) & ECPSVM_CR6_VIRTTIMR))
     {
-        DEBUG_SASSISTX(VTIMER,logmsg("HHCEV300D : SASSIST VTIMER Test int : Not enabled for VTIMER\n"));
+        DEBUG_SASSISTX(VTIMER,logmsg("HHC90000D DBG: SASSIST VTIMER Test int : Not enabled for VTIMER\n"));
         return(1);
     }
-    DEBUG_SASSISTX(VTIMER,logmsg("HHCEV300D : SASSIST VTIMER Please, do\n"));
+    DEBUG_SASSISTX(VTIMER,logmsg("HHC90000D DBG: SASSIST VTIMER Please, do\n"));
     return(0);
 }
 
@@ -2380,7 +2380,7 @@ int ecpsvm_dolctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
 
     if(effective_addr2 & 0x03)
     {
-        DEBUG_SASSISTX(LCTL,logmsg("HHCEV300D : SASSIST LCTL Reject : Not aligned\n"));
+        DEBUG_SASSISTX(LCTL,logmsg("HHC90000D DBG: SASSIST LCTL Reject : Not aligned\n"));
         return(1);
     }
 
@@ -2389,7 +2389,7 @@ int ecpsvm_dolctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
 
     if((!(B_VMPSTAT & VMV370R)) && ((r1!=r3) || (r1!=0)))
     {
-        DEBUG_SASSISTX(LCTL,logmsg("HHCEV300D : SASSIST LCTL Reject : BC Mode VM & LCTL != 0,0\n"));
+        DEBUG_SASSISTX(LCTL,logmsg("HHC90000D DBG: SASSIST LCTL Reject : BC Mode VM & LCTL != 0,0\n"));
         return(1);
     }
     /* Determine the range of CRs to be loaded */
@@ -2432,7 +2432,7 @@ int ecpsvm_dolctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
     }
     /* Source safely loaded into "crs" array */
     /* Load the CRS - exit from loop if it's not possible */
-    DEBUG_SASSISTX(LCTL,logmsg("HHCEV300D : SASSIST LCTL %d,%d : Modifying %d cregs\n",r1,r3,numcrs));
+    DEBUG_SASSISTX(LCTL,logmsg("HHC90000D DBG: SASSIST LCTL %d,%d : Modifying %d cregs\n",r1,r3,numcrs));
     for(j=r1,i=0;i<numcrs;i++,j++)
     {
         if(j>15)
@@ -2445,7 +2445,7 @@ int ecpsvm_dolctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
                 /* Check 1st 2 bytes of CR0 - No change allowed */
                 if((ocrs[0] & 0xffff0000) != (crs[0] & 0xffff0000))
                 {
-                    DEBUG_SASSISTX(LCTL,logmsg("HHCEV300D : SASSIST LCTL Reject : CR0 High changed\n"));
+                    DEBUG_SASSISTX(LCTL,logmsg("HHC90000D DBG: SASSIST LCTL Reject : CR0 High changed\n"));
                     return 1;
                 }
                 /* Not allowed if : NEW mask is being enabled AND MICPEND AND PSW has EXT enabled */
@@ -2455,7 +2455,7 @@ int ecpsvm_dolctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
                     {
                         if((~(ocrs[0] & 0xffff)) & (crs[0] & 0xffff))
                         {
-                            DEBUG_SASSISTX(LCTL,logmsg("HHCEV300D : SASSIST LCTL Reject : CR0 EXTSM Enables new EXTS\n"));
+                            DEBUG_SASSISTX(LCTL,logmsg("HHC90000D DBG: SASSIST LCTL Reject : CR0 EXTSM Enables new EXTS\n"));
                             return 1;
                         }
                     }
@@ -2465,7 +2465,7 @@ int ecpsvm_dolctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
             case 1:
                 if(ocrs[1] != crs[1])
                 {
-                    DEBUG_SASSISTX(LCTL,logmsg("HHCEV300D : SASSIST LCTL Reject : CR1 Updates shadow table\n"));
+                    DEBUG_SASSISTX(LCTL,logmsg("HHC90000D DBG: SASSIST LCTL Reject : CR1 Updates shadow table\n"));
                     return 1;
                 }
                 break;
@@ -2477,7 +2477,7 @@ int ecpsvm_dolctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
                     {
                         if(micpend & 0x80)
                         {
-                            DEBUG_SASSISTX(LCTL,logmsg("HHCEV300D : SASSIST LCTL Reject : CR2 IOCSM Enables I/O Ints\n"));
+                            DEBUG_SASSISTX(LCTL,logmsg("HHC90000D DBG: SASSIST LCTL Reject : CR2 IOCSM Enables I/O Ints\n"));
                             return(1);
                         }
                     }
@@ -2495,12 +2495,12 @@ int ecpsvm_dolctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
                 ocrs[j]=crs[j];
                 break;
             case 8: /* Monitor Calls */
-                DEBUG_SASSISTX(LCTL,logmsg("HHCEV300D : SASSIST LCTL Reject : MC CR8 Update\n"));
+                DEBUG_SASSISTX(LCTL,logmsg("HHC90000D DBG: SASSIST LCTL Reject : MC CR8 Update\n"));
                 return(1);
             case 9: /* PER Control Regs */
             case 10:
             case 11:
-                DEBUG_SASSISTX(LCTL,logmsg("HHCEV300D : SASSIST LCTL Reject : PER CR%d Update\n",j));
+                DEBUG_SASSISTX(LCTL,logmsg("HHC90000D DBG: SASSIST LCTL Reject : PER CR%d Update\n",j));
                 return(1);
             case 12:
             case 13: /* 12-13 : Unused */
@@ -2533,7 +2533,7 @@ int ecpsvm_dolctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
     ecb_p=MADDR(F_ECBLOK+(j*4),USE_REAL_ADDR,regs,ACCTYPE_WRITE,0);
     store_fw(ecb_p,ocrs[j]);
     }
-    DEBUG_SASSISTX(LCTL,logmsg("HHCEV300D : SASSIST LCTL %d,%d Done\n",r1,r3));
+    DEBUG_SASSISTX(LCTL,logmsg("HHC90000D DBG: SASSIST LCTL %d,%d Done\n",r1,r3));
     SASSIST_HIT(LCTL);
     return 0;
 }

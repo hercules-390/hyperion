@@ -1067,6 +1067,7 @@ char    resp[256];                      /* Response buffer (ASCIIZ)  */
 char    *dresp;                         /* Default response (ASCIIZ) */
 int     freeresp;                       /* Flag to free resp bfr     */
 U32     j,k;
+char    msgbuf[512];                    /* Message work area         */
 
     /* Obtain command address from R1 register */
     cmdaddr = regs->GR_L(r1);
@@ -1161,10 +1162,12 @@ U32     j,k;
             {
                 WRMSG (HHC01951, "W", bufo);
             }
-            dresp=_("HHCVM003I Host command processing disabled by configuration statement");
+            MSGBUF(msgbuf, HHC01953, "E");
+            dresp = msgbuf;
         }
 #else
-            dresp=_("HHCVM004E Host command processing not included in engine build");
+            MSGBUF(msgbuf, HHC01954, "E");
+            dresp = msgbuf;
 #endif
     }
 

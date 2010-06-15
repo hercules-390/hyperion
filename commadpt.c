@@ -289,13 +289,13 @@ static void logdump(char *txt,DEVBLK *dev,BYTE *bfr,size_t sz)
     {
         return;
     }
-    logmsg(_("HHCCA300D %4.4X:%s : Status = TEXT=%s, TRANS=%s, TWS=%s\n"),
+    logmsg(_("HHC90000D DBG: %4.4X:%s : Status = TEXT=%s, TRANS=%s, TWS=%s\n"),
             dev->devnum,
             txt,
             dev->commadpt->in_textmode?"YES":"NO",
             dev->commadpt->in_xparmode?"YES":"NO",
             dev->commadpt->xparwwait?"YES":"NO");
-    logmsg(_("HHCCA300D %4.4X:%s : Dump of %d (%x) byte(s)\n"),dev->devnum,txt,sz,sz);
+    logmsg(_("HHC90000D DBG: %4.4X:%s : Dump of %d (%x) byte(s)\n"),dev->devnum,txt,sz,sz);
     for( i=0; i<sz; i++ )
     {
         if( i%16 == 0 )
@@ -304,7 +304,7 @@ static void logdump(char *txt,DEVBLK *dev,BYTE *bfr,size_t sz)
             {
                 logmsg("\n");
             }
-            logmsg(_("HHCCA300D %4.4X:%s : %4.4X:"),dev->devnum,txt,i);
+            logmsg(_("HHC90000D DBG: %4.4X:%s : %4.4X:"),dev->devnum,txt,i);
         }
         if( i%4 == 0 )
         {
@@ -454,7 +454,7 @@ static void commadpt_clean_device(DEVBLK *dev)
         dev->commadpt=NULL;
         if(dev->ccwtrace)
         {
-            logmsg(_("HHCCA300D %4.4X:clean : Control block freed\n"),
+            logmsg(_("HHC90000D DBG: %4.4X:clean : Control block freed\n"),
                 dev->devnum);
         }
     }
@@ -462,7 +462,7 @@ static void commadpt_clean_device(DEVBLK *dev)
     {
         if(dev->ccwtrace)
         {
-            logmsg(_("HHCCA300D %4.4X:clean : Control block not freed : not allocated\n"),dev->devnum);
+            logmsg(_("HHC90000D DBG: %4.4X:clean : Control block not freed : not allocated\n"),dev->devnum);
         }
     }
     return;
@@ -601,7 +601,7 @@ static int     commadpt_initiate_userdial(COMMADPT *ca)
             /* EON MUST be last data byte */
             if(ca->dev->ccwtrace)
             {
-                logmsg(_("HHCCA300D %4.4x : Found data beyond EON\n"),ca->devnum);
+                logmsg(_("HHC90000D DBG: %4.4x : Found data beyond EON\n"),ca->devnum);
             }
             incdata=1;
             break;
@@ -616,8 +616,8 @@ static int     commadpt_initiate_userdial(COMMADPT *ca)
                         incdata=1;
                         if(ca->dev->ccwtrace)
                         {
-                            logmsg(_("HHCCA300D %4.4x : Found incorrect IP address section at position %d\n"),ca->devnum,dotcount+1);
-                            logmsg(_("HHCCA300D %4.4x : %d greater than 255\n"),ca->devnum,cur);
+                            logmsg(_("HHC90000D DBG: %4.4x : Found incorrect IP address section at position %d\n"),ca->devnum,dotcount+1);
+                            logmsg(_("HHC90000D DBG: %4.4x : %d greater than 255\n"),ca->devnum,cur);
                         }
                         break;
                     }
@@ -631,7 +631,7 @@ static int     commadpt_initiate_userdial(COMMADPT *ca)
                     incdata=1;
                     if(ca->dev->ccwtrace)
                     {
-                        logmsg(_("HHCCA300D %4.4x : Too many separators in dial data\n"),ca->devnum);
+                        logmsg(_("HHC90000D DBG: %4.4x : Too many separators in dial data\n"),ca->devnum);
                     }
                     break;
                 }
@@ -648,7 +648,7 @@ static int     commadpt_initiate_userdial(COMMADPT *ca)
                 incdata=1;
                 if(ca->dev->ccwtrace)
                 {
-                    logmsg(_("HHCCA300D %4.4x : Incorrect dial data byte %2.2x\n"),ca->devnum,ca->dialdata[i]);
+                    logmsg(_("HHC90000D DBG: %4.4x : Incorrect dial data byte %2.2x\n"),ca->devnum,ca->dialdata[i]);
                 }
                 break;
             default:
@@ -669,7 +669,7 @@ static int     commadpt_initiate_userdial(COMMADPT *ca)
     {
         if(ca->dev->ccwtrace)
         {
-            logmsg(_("HHCCA300D %4.4x : Not enough separators (only %d found) in dial data\n"),ca->devnum,dotcount);
+            logmsg(_("HHC90000D DBG: %4.4x : Not enough separators (only %d found) in dial data\n"),ca->devnum,dotcount);
         }
         return -1;
     }
@@ -677,7 +677,7 @@ static int     commadpt_initiate_userdial(COMMADPT *ca)
     {
         if(ca->dev->ccwtrace)
         {
-            logmsg(_("HHCCA300D %4.4x : Destination TCP port %d exceeds maximum of 65535\n"),ca->devnum,cur);
+            logmsg(_("HHC90000D DBG: %4.4x : Destination TCP port %d exceeds maximum of 65535\n"),ca->devnum,cur);
         }
         return -1;
     }
@@ -745,7 +745,7 @@ static void commadpt_read_tty(COMMADPT *ca, BYTE * bfr, int len)
             {
                 ca->telnet_opt = 0;
                 if(ca->dev->ccwtrace)
-                    logmsg(_("HHCCA300D %4.4X: Received TELNET CMD 0x%02x 0x%02x\n"),
+                    logmsg(_("HHC90000D DBG: %4.4X: Received TELNET CMD 0x%02x 0x%02x\n"),
                             ca->dev->devnum,
                             ca->telnet_cmd, c);
                 bfr3[0] = 0xff;  /* IAC */
@@ -753,7 +753,7 @@ static void commadpt_read_tty(COMMADPT *ca, BYTE * bfr, int len)
                 bfr3[1] = (ca->telnet_cmd == 0xfd) ? 0xfc : 0xfe;
                 bfr3[2] = c;
                 if(ca->dev->ccwtrace)
-                    logmsg(_("HHCCA300D %4.4X: Sending TELNET CMD 0x%02x 0x%02x\n"),
+                    logmsg(_("HHC90000D DBG: %4.4X: Sending TELNET CMD 0x%02x 0x%02x\n"),
                             ca->dev->devnum,
                             bfr3[1], bfr3[2]);
                 commadpt_ring_pushbfr(&ca->outbfr,bfr3,3);
@@ -763,7 +763,7 @@ static void commadpt_read_tty(COMMADPT *ca, BYTE * bfr, int len)
             {
                 ca->telnet_iac = 0;
                 if(ca->dev->ccwtrace)
-                    logmsg(_("HHCCA300D %4.4X: Received TELNET IAC 0x%02x\n"),
+                    logmsg(_("HHC90000D DBG: %4.4X: Received TELNET IAC 0x%02x\n"),
                             ca->dev->devnum,
                             c);
                 switch (c) 
@@ -1097,7 +1097,7 @@ static void *commadpt_thread(void *vca)
         seltv=NULL;
         if(ca->dev->ccwtrace)
         {
-            logmsg(_("HHCCA300D %1d:%04X cthread - Entry - DevExec = %s\n"), 
+            logmsg(_("HHC90000D DBG: %1d:%04X cthread - Entry - DevExec = %s\n"), 
                             SSID_TO_LCSS(ca->dev->ssid), 
                             devnum,
                             commadpt_pendccw_text[ca->curpending]);
@@ -1165,7 +1165,7 @@ static void *commadpt_thread(void *vca)
                     {
                         if(ca->dev->ccwtrace)
                         {
-                            logmsg(_("HHCCA300D %4.4X:Poll Command abort - Poll address >7 Bytes\n"),devnum);
+                            logmsg(_("HHC90000D DBG: %4.4X:Poll Command abort - Poll address >7 Bytes\n"),devnum);
                         }
                         ca->badpoll=1;
                         ca->curpending=COMMADPT_PEND_IDLE;
@@ -1193,7 +1193,7 @@ static void *commadpt_thread(void *vca)
                         b=commadpt_ring_pop(&ca->outbfr);
                         if(ca->dev->ccwtrace)
                         {
-                                logmsg(_("HHCCA300D %4.4X:Writing 1 byte in socket : %2.2X\n"),ca->devnum,b);
+                                logmsg(_("HHC90000D DBG: %4.4X:Writing 1 byte in socket : %2.2X\n"),ca->devnum,b);
                         }
                         rc=write_socket(ca->sfd,&b,1);
                         if(rc!=1)
@@ -1380,13 +1380,13 @@ static void *commadpt_thread(void *vca)
 
         if(ca->dev->ccwtrace)
         {
-                logmsg(_("HHCCA300D %4.4X:cthread - Select IN maxfd = %d / Devexec = %s\n"),devnum,maxfd,commadpt_pendccw_text[ca->curpending]);
+                logmsg(_("HHC90000D DBG: %4.4X:cthread - Select IN maxfd = %d / Devexec = %s\n"),devnum,maxfd,commadpt_pendccw_text[ca->curpending]);
         }
         rc=select(maxfd,&rfd,&wfd,&xfd,seltv);
 
         if(ca->dev->ccwtrace)
         {
-                logmsg(_("HHCCA300D %4.4X:cthread - Select OUT rc=%d\n"),devnum,rc);
+                logmsg(_("HHC90000D DBG: %4.4X:cthread - Select OUT rc=%d\n"),devnum,rc);
         }
         /* Get the CA lock back */
         obtain_lock(&ca->lock);
@@ -1413,7 +1413,7 @@ static void *commadpt_thread(void *vca)
             pollact=0;  /* Poll not active */
             if(ca->dev->ccwtrace)
             {
-                logmsg(_("HHCCA300D %4.4X:cthread - Select TIME OUT\n"),devnum);
+                logmsg(_("HHC90000D DBG: %4.4X:cthread - Select TIME OUT\n"),devnum);
             }
             /* Reset Call issued flag */
             ca->callissued=0;
@@ -1431,7 +1431,7 @@ static void *commadpt_thread(void *vca)
             {
                 if(ca->dev->ccwtrace)
                 {
-                        logmsg(_("HHCCA300D %4.4X:cthread - IPC Pipe closed\n"),devnum);
+                        logmsg(_("HHC90000D DBG: %4.4X:cthread - IPC Pipe closed\n"),devnum);
                 }
                 /* Pipe closed : terminate thread & release CA */
                 ca_shutdown=1;
@@ -1439,7 +1439,7 @@ static void *commadpt_thread(void *vca)
             }
             if(ca->dev->ccwtrace)
             {
-                logmsg(_("HHCCA300D %4.4X:cthread - IPC Pipe Data ; code = %d\n"),devnum,pipecom);
+                logmsg(_("HHC90000D DBG: %4.4X:cthread - IPC Pipe Data ; code = %d\n"),devnum,pipecom);
             }
             switch(pipecom)
             {
@@ -1471,7 +1471,7 @@ static void *commadpt_thread(void *vca)
                 dopoll=0;
                 if(ca->dev->ccwtrace)
                 {
-                        logmsg(_("HHCCA300D %4.4X:cthread - inbound socket data\n"),devnum);
+                        logmsg(_("HHC90000D DBG: %4.4X:cthread - inbound socket data\n"),devnum);
                 }
                 if(pollact && IS_BSC_LNCTL(ca))
                 {
@@ -1513,7 +1513,7 @@ static void *commadpt_thread(void *vca)
             {
                 if(ca->dev->ccwtrace)
                 {
-                        logmsg(_("HHCCA300D %4.4X:cthread - socket write available\n"),devnum);
+                        logmsg(_("HHC90000D DBG: %4.4X:cthread - socket write available\n"),devnum);
                 }
                 switch(ca->curpending)
                 {
@@ -1711,7 +1711,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         dev->devtype=0x2703;
         if(dev->ccwtrace)
         {
-                logmsg(_("HHCCA300D %4.4X:Initialisation starting\n"),dev->devnum);
+                logmsg(_("HHC90000D DBG: %4.4X:Initialisation starting\n"),dev->devnum);
         }
 
         rc=commadpt_alloc_device(dev);
@@ -1722,7 +1722,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         }
         if(dev->ccwtrace)
         {
-                logmsg(_("HHCCA300D %4.4X:Initialisation : Control block allocated\n"),dev->devnum);
+                logmsg(_("HHC90000D DBG: %4.4X:Initialisation : Control block allocated\n"),dev->devnum);
         }
         errcnt=0;
         /*
@@ -2166,7 +2166,7 @@ static int commadpt_close_device ( DEVBLK *dev )
 {
     if(dev->ccwtrace)
     {
-        logmsg(_("HHCCA300D %4.4X:Closing down\n"),dev->devnum);
+        logmsg(_("HHC90000D DBG: %4.4X:Closing down\n"),dev->devnum);
     }
 
     /* Terminate current I/O thread if necessary */
@@ -2198,7 +2198,7 @@ static int commadpt_close_device ( DEVBLK *dev )
 
     if(dev->ccwtrace)
     {
-        logmsg(_("HHCCA300D %4.4X:Closed down\n"),dev->devnum);
+        logmsg(_("HHC90000D DBG: %4.4X:Closed down\n"),dev->devnum);
     }
     return 0;
 }
@@ -2230,7 +2230,7 @@ BYTE    gotdle;                 /* Write routine DLE marker */
      */
     if(dev->ccwtrace)
     {
-        logmsg(_("HHCCA300D %4.4X:CCW Exec - Entry code = %x\n"),dev->devnum,code);
+        logmsg(_("HHC90000D DBG: %4.4X:CCW Exec - Entry code = %x\n"),dev->devnum,code);
     }
     obtain_lock(&dev->commadpt->lock);
     switch (code) 
@@ -2358,7 +2358,7 @@ BYTE    gotdle;                 /* Write routine DLE marker */
             *unitstat=CSW_CE|CSW_DE;
             if(dev->ccwtrace)
             {
-                logmsg(_("HHCCA300D %4.4X Set Mode : %s\n"),dev->devnum,iobuf[0]&0x40 ? "EIB":"NO EIB");
+                logmsg(_("HHC90000D DBG: %4.4X Set Mode : %s\n"),dev->devnum,iobuf[0]&0x40 ? "EIB":"NO EIB");
             }
             dev->commadpt->eibmode=(iobuf[0]&0x40)?1:0;
             break;

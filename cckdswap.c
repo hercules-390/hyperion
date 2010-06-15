@@ -15,14 +15,20 @@
 
 #include "hercules.h"
 
+#define UTILITY_NAME    "cckdswap"
+
 /*-------------------------------------------------------------------*/
 /* Swap the `endianess' of  cckd file                                */
 /*-------------------------------------------------------------------*/
 
-int syntax ();
+int syntax (char *pgm);
 
 int main ( int argc, char *argv[])
 {
+char           *pgmname;                /* prog name in host format  */
+char           *pgm;                    /* less any extension (.ext) */
+char           *pgmpath;                /* prog path in host format  */
+char            msgbuf[512];            /* message build work area   */
 CKDDASD_DEVHDR  devhdr;                 /* CKD device header         */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
 int             level = 0;              /* Chkdsk level              */
@@ -33,7 +39,40 @@ int             bigend;                 /* 1=big-endian file         */
 DEVBLK          devblk;                 /* DEVBLK                    */
 DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
 
-    INITIALIZE_UTILITY("cckdswap");
+    /* Set program name */
+    if ( argc > 0 )
+    {
+        if ( strlen(argv[0]) == 0 )
+        {
+            pgmname = strdup( UTILITY_NAME );
+            pgmpath = strdup( "" );
+        }
+        else
+        {
+            char path[MAX_PATH];
+#if defined( _MSVC_ )
+            GetModuleFileName( NULL, path, MAX_PATH );
+#else
+            strncpy( path, argv[0], sizeof( path ) );
+#endif
+            pgmname = strdup(basename(path));
+#if !defined( _MSVC_ )
+            strncpy( path, argv[0], sizeof(path) );
+#endif
+            pgmpath = strdup( dirname( path  ));
+        }
+    }
+    else
+    {
+            pgmname = strdup( UTILITY_NAME );
+            pgmpath = strdup( "" );
+    }
+
+    pgm = strtok( strdup(pgmname), ".");
+    INITIALIZE_UTILITY( pgmname );
+    /* Display the program identification message */
+    MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "Swap 'endianess' of a cckd file" ) );
+    display_version (stderr, msgbuf+10, FALSE);
 
     /* parse the arguments */
     for (argc--, argv++ ; argc > 0 ; argc--, argv++)
@@ -45,21 +84,19 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
             case '0':
             case '1':
             case '2':
-            case '3':  if (argv[0][2] != '\0') return syntax ();
+            case '3':  if (argv[0][2] != '\0') return syntax (pgm);
                        level = (argv[0][1] & 0xf);
                        break;
-            case 'f':  if (argv[0][2] != '\0') return syntax ();
+            case 'f':  if (argv[0][2] != '\0') return syntax (pgm);
                        force = 1;
                        break;
-            case 'v':  if (argv[0][2] != '\0') return syntax ();
-                       display_version 
-                         (stderr, "Hercules cckd swap program", FALSE);
+            case 'v':  if (argv[0][2] != '\0') return syntax (pgm);
                        return 0;
-            default:   return syntax ();
+            default:   return syntax (pgm);
         }
     }
 
-    if (argc < 1) return syntax ();
+    if (argc < 1) return syntax (pgm);
 
     for (i = 0; i < argc; i++)
     {
@@ -154,20 +191,8 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
     return 0;
 } /* end main */
 
-int syntax ()
+int syntax (char *pgm)
 {
-    fprintf (stderr, "\ncckdswap [-v] [-f] file1 [file2 ... ]\n"
-                "\n"
-                "          -v      display version and exit\n"
-                "\n"
-                "          -f      force check even if OPENED bit is on\n"
-                "\n"
-                "        chkdsk level is a digit 0 - 3:\n"
-                "          -0  --  minimal checking\n"
-                "          -1  --  normal  checking\n"
-                "          -2  --  intermediate checking\n"
-                "          -3  --  maximal checking\n"
-                "         default  0\n"
-                "\n");
+    fprintf (stderr, MSG( HHC02495, "I", pgm ) );
     return -1;
 } /* end function syntax */

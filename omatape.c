@@ -349,7 +349,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 #if 0
     if (dev->curfilen >= dev->omafiles)
     {
-        WRITEMSG (HHCTAxxxE, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+        WRITEMSG (HHC00000E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
 
         build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
         return -1;

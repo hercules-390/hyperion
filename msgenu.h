@@ -108,6 +108,8 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00011 "Function '%s' failed; cache '%d' size '%d': '[%02d] %s'"
 #define HHC00012 "Releasing inactive buffer storage"
 #define HHC00013 "Herc command: '%s'"
+#define HHC00014 "select: %s"
+#define HHC00015 "keyboard read: %s"
 
 // reserve 20-39 for file related
 
@@ -667,6 +669,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01044 "%1d:%04X CA: client '%s', ip '%s' disconnected from device '%s'"
 #define HHC01045 "%1d:%04X CA: client '%s', ip '%s' still connected to device '%s'"
 #define HHC01046 "%1d:%04X CA: device unbound from socket '%s'"
+#define HHC01047 "CA: connect message sent: '%s'"
 
 // reserve 011xx for printer specific component messages
 #define HHC01100 "%1d:%04X Printer: client '%s', ip '%s' disconnected from device '%s'"
@@ -782,6 +785,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01449 "Config file '%s': NUMCPU %d exceeds MAXCPU %d; MAXCPU set to NUMCPU"
 
 /* config.c */
+#define HHC01459 "Device %1d:%04X defined as %1d:%04X"
 #define HHC01460 "%1d:%04X error in function '%s': '%s'"
 #define HHC01461 "%1d:%04X device already exists"
 #define HHC01462 "%1d:%04X devtype '%s' not recognized"
@@ -881,7 +885,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01720 "NO EVM subcommand. Type \"evm help\" for a list of valid subcommands"
 #define HHC01721 "Unknown EVM subcommand '%s'"
 #define HHC01722 "ECPS:VM Command processor complete"
-//#define HHCEV300D in ecpsvm.c
 
 // reserve 018xx for http server
 #define HHC01800 "HTTP server: error in function '%s': '%s'"
@@ -933,6 +936,9 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01950 "Panel command '%s' issued by guest %s"
 #define HHC01951 "Panel command '%s' issued by guest not processed, disabled in configuration"
 #define HHC01952 "%1d:%04X:Diagnose X\'0A4\':%s blk=%8.8X adr=%8.8X len=%8.8X"
+#define HHC01953 "Host command processing disabled by configuration statement"
+#define HHC01954 "Host command processing not included in engine build"
+
 
 // reserve 020xx for sr.c 
 #define HHC02000 "SR: too many arguments"
@@ -1039,7 +1045,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02270 "%s" 
 #define HHC02271 "%s"
 #define HHC02272 "%s"
-#define HHC02272 "%s"
 #define HHC02273 "Index %2d: '%s'"
 #define HHC02274 "%s"
 #define HHC02275 "%s"
@@ -1063,6 +1068,9 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02292 "%s"
 #define HHC02293 "%s"
 #define HHC02294 "%s"
+#define HHC02295 "CP group capping rate is %d MIPS"
+#define HHC02296 "Capping rate for each non-CP CPU is %d MIPS"
+#define HHC02297 "MIP capping is not enabled"
 
 #define HHC02299 "Too many arguments. Type 'help %s' for assistance."
 
@@ -1265,7 +1273,18 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02492 "Option '%s' specified"
 #define HHC02493 "Filename '%s' specified for %s"
 #define HHC02494 "Requested number of extents '%d' exceeds maximum '%d'; utility ends"
-
+#define HHC02495 "Usage: %s [-v] [-f] [-n] file1 [file2 ...]\n" \
+       "\n" \
+       "          -v      display version and exit\n" \
+       "\n" \
+       "          -f      force check even if OPENED bit is on\n" \
+       "\n" \
+       "          -n      chkdsk level 'n' is a digit 0 - 3:\n" \
+       "              -0  --  minimal checking\n" \
+       "              -1  --  normal  checking\n" \
+       "              -2  --  intermediate checking\n" \
+       "              -3  --  maximal checking\n" \
+       "                  default  -0"
 
 #define HHC02499 "Hercules utility '%s' - %s;"
 
@@ -1310,6 +1329,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC17008 "Avgproc  %03d%% %02d; MIPS[%4d.%02d]; SIOS[%6d]"
 #define HHC17009 "PROC %s%02X %c %03d%%; MIPS[%4d.%02d]; SIOS[%6d]"
 #define HHC17010 " - Started        : Stopping        * Stopped"
+#define HHC17011 "Avg CP   %03d%% %02d; MIPS[%4d.%02d];"
 
 // reserve 90000 messages for debugging
 #define HHC90000 "DBG: %s"

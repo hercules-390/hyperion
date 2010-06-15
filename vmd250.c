@@ -15,26 +15,26 @@
 /* with recommended constraints                                      */
 
 /* Unconditional log messages generated */
-/* HHCVM006E - Could not allocate storage for Block I/O environment   */
-/* HHCVM009E - Invalid list processor status code returned            */
-/* HHCVM010E - Error creating asynchronous thread                     */
-/* HHCVM011E - Could not allocate storage for asynchronous I/O request*/
+/*  - Could not allocate storage for Block I/O environment   */
+/*  - Invalid list processor status code returned            */
+/*  - Error creating asynchronous thread                     */
+/*  - Could not allocate storage for asynchronous I/O request*/
 
 /* Conditional log messages when device tracing is enabled */
-/* HHCVM007I - BLKTAB information used when device tracing is enabled */
-/* HHCVM008I - Established environment when device tracing is enabled */
-/* HHCVM012I - Block I/O owns device                                  */
-/* HHCVM013I - Block I/O returned device                              */
-/* HHCVM014I - BIOE status returned                                   */
-/* HHCVM015I - List processor parameters                              */
-/* HHCVM016I - BIOE operation being performed                         */
-/* HHCVM017I - List processor status code                             */
-/* HHCVM018I - Read/Write I/O operation                               */
-/* HHCVM019I - Syncronous or asynchronous request information         */
-/* HHCVM020I - Address checking results                               */
-/* HHCVM021I - Device driver results                                  */
-/* HHCVM022I - Block I/O environment removed                          */
-/* HHCVM023I - Triggered Block I/O interrupt                          */
+/*  - BLKTAB information used when device tracing is enabled */
+/*  - Established environment when device tracing is enabled */
+/*  - Block I/O owns device                                  */
+/*  - Block I/O returned device                              */
+/*  - BIOE status returned                                   */
+/*  - List processor parameters                              */
+/*  - BIOE operation being performed                         */
+/*  - List processor status code                             */
+/*  - Read/Write I/O operation                               */
+/*  - Syncronous or asynchronous request information         */
+/*  - Address checking results                               */
+/*  - Device driver results                                  */
+/*  - Block I/O environment removed                          */
+/*  - Triggered Block I/O interrupt                          */
 
 
 /* The following structure exists between the different functions     */

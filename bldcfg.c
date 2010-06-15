@@ -1262,9 +1262,8 @@ char    fname[MAX_PATH];                /* normalized filename       */
                 || maxcpu < 1
                 || maxcpu > MAX_CPU_ENGINES)
             {
-                fprintf(stderr, _("HHCMD021S Error in %s line %d: "
-                        "Invalid maximum number of CPUs %s\n"),
-                        fname, inc_stmtnum[inc_level], smaxcpu);
+                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, 
+                                smaxcpu, "maximum number of CPUs");
                 delayed_exit(1);
             }
         }
@@ -1275,7 +1274,8 @@ char    fname[MAX_PATH];                /* normalized filename       */
             if (sscanf(snumcpu, "%hu%c", &numcpu, &c) != 1
                 || numcpu > MAX_CPU_ENGINES)
             {
-                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, snumcpu, "number of CPUs");
+                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, 
+                                snumcpu, "number of CPUs");
                 delayed_exit(1);
             }
         }

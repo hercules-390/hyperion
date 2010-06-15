@@ -1847,7 +1847,7 @@ void  Initialize ()
     if (!(pszInputBuff = (char *) malloc( nInputBuffSize )))
     {
         fprintf(stderr,
-            _("HHCDG006S malloc pszInputBuff failed: %s\n")
+            _("HHC90000D DBG: malloc() pszInputBuff failed: %s\n")
             ,strerror(errno));
         exit(0);
     }
@@ -1860,7 +1860,7 @@ void  Initialize ()
     if (!(pszCommandBuff = (char *) malloc( nCommandBuffSize )))
     {
         fprintf(stderr,
-            _("HHCDG007S malloc pszCommandBuff failed: %s\n")
+            _("HHC90000D DBG: malloc() pszCommandBuff failed: %s\n")
             ,strerror(errno));
         exit(0);
     }

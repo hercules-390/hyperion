@@ -1810,7 +1810,7 @@ static DWORD WINAPI ReadStdInW32Thread( LPVOID lpParameter )
 
             logmsg
             (
-                _("HHCDG008W ReadFile(hStdIn) failed! dwLastError=%d (0x%08.8X): %s\n")
+                _("HHC90000D DBG: ReadFile(hStdIn) failed! dwLastError=%d (0x%08.8X): %s\n")
 
                 ,dwLastError
                 ,dwLastError
@@ -2433,7 +2433,7 @@ DLL_EXPORT int w32_select
 
         if ( !pTimeVal )
         {
-            logmsg( "** Win32 porting error: invalid call to 'w32_select' from %s(%d): NULL args\n",
+            logmsg( "HHC90000D DBG: ** Win32 porting error: invalid call to 'w32_select' from %s(%d): NULL args\n",
                 pszSourceFile, nLineNumber );
             errno = EINVAL;
             return -1;
@@ -2467,7 +2467,7 @@ DLL_EXPORT int w32_select
         || ( bNonSocketFound && ( bSocketFound    || bExceptSetSocketFound    ) )
     )
     {
-        logmsg( "** Win32 porting error: invalid call to 'w32_select' from %s(%d): mixed set(s)\n",
+        logmsg( "HHC90000D DBG: ** Win32 porting error: invalid call to 'w32_select' from %s(%d): mixed set(s)\n",
             pszSourceFile, nLineNumber );
         errno = EBADF;
         return -1;
@@ -2475,7 +2475,7 @@ DLL_EXPORT int w32_select
 
     if ( bExceptSetNonSocketFound )
     {
-        logmsg( "** Win32 porting error: invalid call to 'w32_select' from %s(%d): non-socket except set\n",
+        logmsg( "HHC90000D DBG: ** Win32 porting error: invalid call to 'w32_select' from %s(%d): non-socket except set\n",
             pszSourceFile, nLineNumber );
         errno = EBADF;
         return -1;

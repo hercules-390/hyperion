@@ -1973,9 +1973,7 @@ char    buf[1024];                      /* Buffer workarea           */
         if (rc < 0 )
         {
             if (errno == EINTR) continue;
-            fprintf (stderr,
-                    _("HHCPN004E select: %s\n"),
-                    strerror(errno));
+            fprintf (stderr, MSG(HHC00014, "E", strerror(errno) ) );
             break;
         }
 
@@ -1989,9 +1987,7 @@ char    buf[1024];                      /* Buffer workarea           */
 
             if (kblen < 0)
             {
-                fprintf (stderr,
-                        _("HHCPN005E keyboard read: %s\n"),
-                        strerror(errno));
+                fprintf (stderr, MSG(HHC00015, "E", strerror(errno) ) );
                 break;
             }
 
