@@ -1,3 +1,11 @@
+15 Jun 2010 'QUIT' processing has changed. The 'cmdlevel' is defaulting to
+            operator, maintenance and programmer. If 'quit' is entered and
+            developer is not enabled then 'quit' will check for any active
+            cpu. If an active cpu is found, a message is presented indicating
+            that the system is running. A second message is then presented
+            asking for confirmation by entering a 2nd 'quit' command. 
+            If 'cmdlevel +developer' has been entered, then 'quit' stops
+            hercules immediately. 'qquit' has been removed.
 13 Jun 2010 'EXCPs' tag has been changed to 'IO'.
 13 Jun 2010 'QUIT' will now only ask for 2nd quit if any processor is active.
             New message added indicating that the machine is not quiesced.

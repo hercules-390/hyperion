@@ -409,8 +409,15 @@ int     dll_count;                      /* index into array          */
             sysblk.hercules_pgmpath = strdup("");
     }
 
-    /* set default operator mode to all */
+    /* set default operations mode */
+#if defined (OPTION_HERCULES_DEVELOPER)
     sysblk.sysgroup = SYSGROUP_ALL;
+#else //    !OPTION_HERCULES_DEVELOPER
+    sysblk.sysgroup =   SYSGROUP_SYSNONE  +
+                        SYSGROUP_SYSOPER  +
+                        SYSGROUP_SYSMAINT +
+                        SYSGROUP_SYSPROG;
+#endif//     OPTION_HERCULES_DEVELOPER
 
     /* set default for scpecho to FALSE */
     sysblk.scpecho = FALSE;

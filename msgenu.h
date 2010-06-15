@@ -115,7 +115,7 @@ cpu.c:123:HABC1234I This is a message
 
 // reserve 43-58 for option related
 
-#define HHC00069 "Guest is not quiesced; there are %d CPUs active"
+#define HHC00069 "System is not quiesced; there %s %d CPU%s active"
 // HHC0007xx, HHC0008xx and HHC0009xx reserved for hao.c. (to recognize own messages)
 #define HHC00070 "Unknown hao command, valid commands are:\n" \
        "          hao tgt <tgt> : define target rule (pattern) to react on\n" \

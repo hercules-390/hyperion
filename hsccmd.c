@@ -380,8 +380,11 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
     UNREFERENCED(argc);
     UNREFERENCED(cmdline);
 
-    if (strcasecmp(argv[0],"qquit") == 0)
+    if ( ( (sysblk.sysgroup & SYSGROUP_SYSDEVEL) || 
+           (sysblk.sysgroup & SYSGROUP_SYSDEBUG) ) )
+    {
         do_shutdown();
+    }
     else
     {
         int i;
@@ -400,15 +403,20 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
             time( &end );
             if ( difftime( end, sysblk.shutquittime ) > QUITTIME_PERIOD )
             {
-                WRMSG( HHC00069, "I", j );
+                WRMSG( HHC00069, "I", j > 1 ? "are" : "is",
+                    j, j > 1 ? "s" : "" );
                 WRMSG( HHC02266, "A", "quit", QUITTIME_PERIOD );
                 time( &sysblk.shutquittime );
             }
             else
+            {
                 do_shutdown();
+            }
         }
         else
+        {
             do_shutdown();
+        }
     }
     return 0;   /* (make compiler happy) */
 }
