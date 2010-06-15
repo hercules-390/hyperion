@@ -112,7 +112,12 @@ COMMAND("version",   PANEL,         SYSNONE,            version_cmd,
 
 COMMAND("quit",      PANEL,         SYSNONE,            quit_cmd,     
   "terminate the emulator", 
-    NULL)
+  "Format: \"quit\". Terminates the emulator. The \"quit\" command will first\n"
+    "                check that all online CPUs are stopped. If any CPU is not\n"
+    "                in a stopped state, a message is displayed indicating the\n"
+    "                number of CPUs running. A second message follows that\n"
+    "                prompts for confirmation by entering a second \"quit\"\n"
+    "                command to start termination of the emulator.")
     
 COMMAND("exit",      PANEL,         SYSNONE,            quit_cmd,     
   "(synonym for 'quit')", 
@@ -904,6 +909,15 @@ COMMAND("pscp",      PANEL,         SYSCMDALL,          prioscp_cmd,
     "Format: \"pscp [cmd]\". Send priority message cmd to scp in any cmdtgt mode.\n")
 #endif // OPTION_CMDTGT
 
+#if defined( OPTION_PROC_CAPPING )
+COMMAND("maxmips",  PANEL+CONFIG,   SYSCMDALL-SYSOPER-SYSPROG,  maxmips_cmd,
+  "Cap MIP rate of processor",
+  "Format: \"maxmips [nn] [zz]\". nn is the combined CP max rate. zz is the\n"
+  "         maximum for each of the non-CP type CPUs. zz can only be specified if\n"
+  "         nn is specified. If neither is specified, then the current values are\n"
+  "         displayed.")
+#endif  // ( OPTION_PROC_CAPPING ) 
+ 
 // The actual command table ends here, the next entries are just for help
 // as the associated command are processed as part of commandline parsing
 // and there are no forward references to be created

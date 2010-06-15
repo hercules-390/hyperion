@@ -257,6 +257,50 @@ int maxrates_cmd(int argc, char *argv[],char *cmdline)
 
 #endif // OPTION_MIPS_COUNTING
 
+#if defined( OPTION_PROC_CAPPING )
+/*-------------------------------------------------------------------*/
+/* message command - Display a line of text at the console           */
+/*-------------------------------------------------------------------*/
+int message_cmd(int argc,char *argv[], char *cmdline)
+{
+    int nn;                                 /* value for CP capping      */
+    int zz;                                 /* value for non-CP capping  */
+
+    UNREFERENCED(cmdline);
+
+    if (argc < 2)
+    {
+        continue;                           // display values
+    }
+
+    if (argc >= 2)
+    {
+        nn = atoi(argv[1]);
+        sysblk.maxmips_cp = nn;
+    }
+
+    if (argc == 3)
+    {
+        zz = atoi(argv[2]);
+        sysblk.maxmips_other = zz;
+    }
+
+    if (argc > 3)
+    {
+        WRMSG(HHC02299, "E", argv[0]);
+        return -1;
+    }
+        
+    if (nn > 0)
+        WRMSG(HHC02295, "I", nn);
+    if (zz > 0)
+        WRMSG(HHC02296, "I", zz);
+    if (nn == 0 and zz == 0)
+        WRMSG(HHC02297, "I");
+
+    return 0;
+}
+#endif //  ( OPTION_PROC_CAPPING )
 
 /*-------------------------------------------------------------------*/
 /* message command - Display a line of text at the console           */
@@ -377,8 +421,13 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
 {
     time_t  end;
 
-    UNREFERENCED(argc);
     UNREFERENCED(cmdline);
+
+    if (argc > 1)
+    {
+        WRMSG(HHC02205, "E", argv[1], "");
+        return(0);
+    }
 
     if ( ( (sysblk.sysgroup & SYSGROUP_SYSDEVEL) || 
            (sysblk.sysgroup & SYSGROUP_SYSDEBUG) ) )
@@ -405,7 +454,7 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
             {
                 WRMSG( HHC00069, "I", j > 1 ? "are" : "is",
                     j, j > 1 ? "s" : "" );
-                WRMSG( HHC02266, "A", "quit", QUITTIME_PERIOD );
+                WRMSG( HHC02266, "A", argv[0], QUITTIME_PERIOD );
                 time( &sysblk.shutquittime );
             }
             else
