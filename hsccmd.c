@@ -404,6 +404,8 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
                 WRMSG( HHC02266, "A", "quit", QUITTIME_PERIOD );
                 time( &sysblk.shutquittime );
             }
+            else
+                do_shutdown();
         }
         else
             do_shutdown();
