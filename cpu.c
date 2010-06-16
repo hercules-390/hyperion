@@ -1343,104 +1343,104 @@ static REGS *(* run_cpu[GEN_MAXARCH]) (int cpu, REGS *oldregs) =
 /*-------------------------------------------------------------------*/
 void *proc_cap_thread(int *p)
 {
-  int i;
-  int inc = 0;
-  unsigned sleep = 0;
+int i;
+int inc = 0;
+unsigned sleep = 0;
 //int print = 0;
 
-  UNREFERENCED(p);
-  WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Processor capping monitor");
-  for(i = 0; i < sysblk.maxcpu; i++)
-  {
-    if(sysblk.ptyp[i] == SCCB_PTYP_CP)
-      break;
-  }
-  if(i == sysblk.maxcpu)
-  {
-    sysblk.capping = 0;
-    WRMSG(HHC00831, "E");
-    WRMSG(HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Processor capping monitor");
-    return(NULL);
-  }
-  for(i = 0; i < sysblk.maxcpu; i++)
-  {
-    if(sysblk.ptyp[i] != SCCB_PTYP_CP)
+    UNREFERENCED(p);
+    WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Processor capping monitor");
+    for(i = 0; i < sysblk.maxcpu; i++)
     {
-       WRMSG(HHC00830, "W");
-       break;
-    }
-  }
-  WRMSG(HHC00832, "I", sysblk.capping / 1000000);
-  while(1)
-  {
-    usleep(sleep);
-    if(!sysblk.mipsrate)
-    {
-      inc = 0;
-      sleep = 500000;
-    }
-    else if(sysblk.mipsrate > sysblk.capping)
-    {
-      if(sysblk.mipsrate - sysblk.capping > (sysblk.capping))
-      {
-         inc = 10;
-	 sleep = 5000;
-      }
-      else if(sysblk.mipsrate - sysblk.capping > (sysblk.capping / 10))
-      {
-         inc = 5;
-	 sleep = 25000;
-      }
-      else if(sysblk.mipsrate - sysblk.capping > (sysblk.capping / 100))
-      {
-	 inc = 1;
-	 sleep = 250000;
-      }
-    }
-    else 
-    {
-      if(sysblk.capping - sysblk.mipsrate > (sysblk.capping))
-      {
-        inc = -10;
-	sleep = 5000;
-      }
-      else if(sysblk.capping - sysblk.mipsrate > (sysblk.capping / 10))
-      {
-        inc = -5;
-	sleep = 25000;
-      }
-      else if(sysblk.capping - sysblk.mipsrate > (sysblk.capping / 100))
-      {
-	inc = -1;
-	sleep = 250000;
-      }
-    }
-    if(inc)
-    {
-      for(i = 0; i < sysblk.maxcpu; i++)
-      {
         if(sysblk.ptyp[i] == SCCB_PTYP_CP)
-        {
-          if(inc > 0)
-            sysblk.caploop[i] += inc;
-	  else if(sysblk.caploop[i] >= (unsigned) -inc)
-            sysblk.caploop[i] += inc;
-        }
-      }
+        break;
     }
-#if 0
-    print += sleep;
-    if(print >= 1000000)
+    if(i == sysblk.maxcpu)
     {
-      for(i = 0; i < sysblk.maxcpu; i++)
-	logmsg("loop %d %d: %d\n", sysblk.capping, i, sysblk.caploop[i]);
-      print = 0;
+        sysblk.capping = 0;
+        WRMSG(HHC00831, "E");
+        WRMSG(HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Processor capping monitor");
+        return(NULL);
     }
+    for(i = 0; i < sysblk.maxcpu; i++)
+    {
+        if(sysblk.ptyp[i] != SCCB_PTYP_CP)
+        {
+            WRMSG(HHC00830, "W");
+            break;
+        }
+    }
+    WRMSG(HHC00832, "I", sysblk.capping / 1000000);
+    while(1)
+    {
+        usleep(sleep);
+        if(!sysblk.mipsrate)
+        {
+            inc = 0;
+            sleep = 500000;
+        }
+        else if(sysblk.mipsrate > sysblk.capping)
+        {
+            if(sysblk.mipsrate - sysblk.capping > (sysblk.capping))
+            {
+                inc = 10;
+                sleep = 5000;
+            }
+            else if(sysblk.mipsrate - sysblk.capping > (sysblk.capping / 10))
+            {
+                inc = 5;
+                sleep = 25000;
+            }
+            else if(sysblk.mipsrate - sysblk.capping > (sysblk.capping / 100))
+            {
+                inc = 1;
+                sleep = 250000;
+            }
+        }
+        else 
+        {
+            if(sysblk.capping - sysblk.mipsrate > (sysblk.capping))
+            {
+                inc = -10;
+                sleep = 5000;
+            }
+            else if(sysblk.capping - sysblk.mipsrate > (sysblk.capping / 10))
+            {
+                inc = -5;
+                sleep = 25000;
+            }
+            else if(sysblk.capping - sysblk.mipsrate > (sysblk.capping / 100))
+            {
+                inc = -1;
+                sleep = 250000;
+            }
+        }
+        if(inc)
+        {
+            for(i = 0; i < sysblk.maxcpu; i++)
+            {
+                if(sysblk.ptyp[i] == SCCB_PTYP_CP)
+                {
+                    if(inc > 0)
+                        sysblk.caploop[i] += inc;
+                    else if(sysblk.caploop[i] >= (unsigned) -inc)
+                        sysblk.caploop[i] += inc;
+                }
+            }
+        }
+#if 0
+        print += sleep;
+        if(print >= 1000000)
+        {
+            for(i = 0; i < sysblk.maxcpu; i++)
+            logmsg("loop %d %d: %d\n", sysblk.capping, i, sysblk.caploop[i]);
+            print = 0;
+        }
 #endif
-  }
-  return(NULL);  
+    }
+    return(NULL);  
 }
-#endif
+#endif // OPTION_CAPPING
 
 /*-------------------------------------------------------------------*/
 /* CPU instruction execution thread                                  */
@@ -1487,7 +1487,7 @@ int   rc;
     SETMODE(USER);
 
     /* Display thread started message on control panel */
-    snprintf(cpustr, 40, "Processor %s%02X", PTYPSTR(cpu), cpu);
+    MSGBUF( cpustr, "Processor %s%02X", PTYPSTR( cpu ), cpu );
     WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), cpustr);
 
     /* Execute the program in specified mode */
@@ -1952,24 +1952,24 @@ REGS    regs;
 /*          case. The goto (very bad as Dijkstra teached me) doesn't */
 /*          bother the compiler.                                     */
 /*-------------------------------------------------------------------*/
-	    { 
-	      unsigned i;
+            { 
+            unsigned i;
 
-	      if(sysblk.capping)
-	      {
-                i = 1;
-		goto loop;
-	      }
-	      goto execute;
+                if(sysblk.capping)
+                {
+                    i = 1;
+                    goto loop;
+                }
+                goto execute;
 loop:;
-              if(i > sysblk.caploop[cpu])
-		goto execute;
-	      i++;
-	      if(i < sysblk.caploop[cpu])
-	        goto loop;
+                if(i > sysblk.caploop[cpu])
+                    goto execute;
+                i++;
+                if(i < sysblk.caploop[cpu])
+                    goto loop;
 execute:;
-	}
-#endif		
+            }
+#endif	// OPTION_CAPPING	
             UNROLLED_EXECUTE(&regs);
             UNROLLED_EXECUTE(&regs);
             UNROLLED_EXECUTE(&regs);

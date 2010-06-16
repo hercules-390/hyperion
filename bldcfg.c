@@ -1086,23 +1086,37 @@ char    fname[MAX_PATH];                /* normalized filename       */
                 ecpsvmac=addargc;
                 addargc=0;
             }
+#else
+            else if (strcasecmp (keyword, "ecps:vm") == 0 || strcasecmp(keyword, "ecpsvm") == 0)
+            {
+                WRMSG( HHC01450, "W", inc_stmtnum[inc_level], fname, keyword, "FEATURE_ECPSVM" ); 
+            }
 #endif /*defined(_FEATURE_ECPSVM)*/
 
-#if defined(OPTION_SHARED_DEVICES)
             else if (strcasecmp (keyword, "shrdport") == 0)
+#if defined(OPTION_SHARED_DEVICES)
             {
                 sshrdport = operand;
             }
+#else
+            {
+                WRMSG( HHC01450, "W", inc_stmtnum[inc_level], fname, keyword, "OPTION_SHARED_DEVICES" ); 
+            }
 #endif /*defined(OPTION_SHARED_DEVICES)*/
 
+
+            else if (strcasecmp (keyword, "capping") == 0)
 #ifdef OPTION_CAPPING
-	    else if (strcasecmp (keyword, "capping") == 0)
-	    {
+            {
                 if(sscanf(operand, "%u", &sysblk.capping) != 1)
-		  WRMSG(HHC00833, "E", operand);
-		sysblk.capping *= 1000000;
+                    WRMSG(HHC00833, "E", operand);
+                sysblk.capping *= 1000000;
             }
-#endif
+#else
+            {
+                WRMSG( HHC01450, "W", inc_stmtnum[inc_level], fname, keyword, "OPTION_CAPPING" ); 
+            }
+#endif  // OPTION_CAPPING
             else
             {
                 WRMSG(HHC01441, "E", inc_stmtnum[inc_level], fname, keyword);
@@ -1728,7 +1742,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
 #ifdef OPTION_CAPPING
     if(sysblk.capping)
     {
-	TID tid;
+    TID tid;
         rc = create_thread(&tid, DETACHED, proc_cap_thread, &i, "Capping monitor");
         if (rc)
         {
@@ -1736,7 +1750,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
             return -1;
         }
     }
-#endif    
+#endif  // OPTION_CAPPING  
     RELEASE_INTLOCK(NULL);
 
 } /* end function build_config */

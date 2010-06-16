@@ -8069,7 +8069,6 @@ int query_cmd(int argc, char *argv[], char *cmdline)
                                       sysblk.mipsrate / 1000000, ( sysblk.mipsrate % 1000000 ) / 10000, 
                                       sysblk.siosrate );
 
-//#if defined( OPTION_PROC_CAPPING )
                 cpupct = 0;
                 for ( i = k = 0; i < MAX_CPU; i++ )
                 {
@@ -8087,7 +8086,6 @@ int query_cmd(int argc, char *argv[], char *cmdline)
                     WRMSG( HHC17011, "I", ( k == 0 ? 0 : ( cpupct / k ) ), k, 
                                             mipsrate / 1000000, 
                                           ( mipsrate % 1000000 ) / 10000 ); 
-//#endif   //  OPTION_PROC_CAPPING
 
                 for ( i = 0; i < MAX_CPU; i++ )
                 {

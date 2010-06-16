@@ -241,7 +241,7 @@ U64     total_sios;                     /* Total SIO rate            */
 #ifdef OPTION_CAPPING
                 if (!sysblk.capping || sysblk.capping && sysblk.ptyp[i] == SCCB_PTYP_CP)
 #endif
-                  total_mips += mipsrate;
+                    total_mips += mipsrate;
 
                 /* Calculate SIOs per second */
                 siosrate = regs->siocount;

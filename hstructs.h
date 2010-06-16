@@ -434,8 +434,8 @@ struct SYSBLK {
         TID     todtid;                 /* Thread-id for TOD update  */
         REGS   *regs[MAX_CPU_ENGINES+1];   /* Registers for each CPU */
 #ifdef OPTION_CAPPING
-	unsigned capping;               /* #mips capping value       */
-	unsigned caploop[MAX_CPU_ENGINES]; /* Processor cap loop counter*/
+        unsigned capping;               /* #mips capping value       */
+        unsigned caploop[MAX_CPU_ENGINES]; /* Processor cap loop counter*/
 #endif
 #if defined(_FEATURE_VECTOR_FACILITY)
         VFREGS  vf[MAX_CPU_ENGINES];    /* Vector Facility           */
