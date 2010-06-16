@@ -1957,7 +1957,7 @@ REGS    regs;
 
 	      if(sysblk.capping)
 	      {
-                i = 0;
+                i = 1;
 		goto loop;
 	      }
 	      goto execute;
