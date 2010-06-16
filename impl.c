@@ -419,6 +419,9 @@ int     dll_count;                      /* index into array          */
                         SYSGROUP_SYSPROG;
 #endif//     OPTION_HERCULES_DEVELOPER
 
+    /* set default quit timeout value (also ssd) */
+    sysblk.quitmout = QUITTIME_PERIOD;
+
     /* set default for scpecho to FALSE */
     sysblk.scpecho = FALSE;
 

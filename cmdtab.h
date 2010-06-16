@@ -482,7 +482,12 @@ CMDABBR("query",1,   PANEL,         SYSCMDALL-SYSOPER,  query_cmd,
     "query stor        Show mainsize, xpndsize values\n"
     "query cpuid       Show default cpuid\n" 
     "query proc        Show processor utilization\n"
-    "query lpar        Show lpar number and name\n" )
+    "query lpar        Show lpar number and name\n" 
+    "query quitmout    Show quit timeout value\n")
+
+COMMAND("set",      PANEL+CONFIG,   SYSCMDALL,          set_cmd,     
+  "set command",
+    "set quitmout n    Set quit timeout value (1 - 60)\n" )
 
 COMMAND("mounted_tape_reinit", PANEL+CONFIG, SYSCMDALL-SYSOPER, mnttapri_cmd,  
   "Control tape initilisation", 
@@ -909,15 +914,6 @@ COMMAND("pscp",      PANEL,         SYSCMDALL,          prioscp_cmd,
     "Format: \"pscp [cmd]\". Send priority message cmd to scp in any cmdtgt mode.\n")
 #endif // OPTION_CMDTGT
 
-#if defined( OPTION_PROC_CAPPING )
-COMMAND("maxmips",  PANEL+CONFIG,   SYSCMDALL-SYSOPER-SYSPROG,  maxmips_cmd,
-  "Cap MIP rate of processor",
-  "Format: \"maxmips [nn] [zz]\". nn is the combined CP max rate. zz is the\n"
-  "         maximum for each of the non-CP type CPUs. zz can only be specified if\n"
-  "         nn is specified. If neither is specified, then the current values are\n"
-  "         displayed.")
-#endif  // ( OPTION_PROC_CAPPING ) 
- 
 // The actual command table ends here, the next entries are just for help
 // as the associated command are processed as part of commandline parsing
 // and there are no forward references to be created

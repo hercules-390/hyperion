@@ -385,8 +385,10 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
         return(0);
     }
 
-    if ( ( (sysblk.sysgroup & SYSGROUP_SYSDEVEL) || 
-           (sysblk.sysgroup & SYSGROUP_SYSDEBUG) ) )
+    if ( (sysblk.sysgroup & SYSGROUP_SYSDEVEL) || 
+         (sysblk.sysgroup & SYSGROUP_SYSDEBUG) || 
+         (sysblk.quitmout == 0)
+       )
     {
         do_shutdown();
     }
@@ -406,11 +408,11 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
         if ( j > 0 )
         {
             time( &end );
-            if ( difftime( end, sysblk.shutquittime ) > QUITTIME_PERIOD )
+            if ( difftime( end, sysblk.shutquittime ) > sysblk.quitmout )
             {
                 WRMSG( HHC00069, "I", j > 1 ? "are" : "is",
                     j, j > 1 ? "s" : "" );
-                WRMSG( HHC02266, "A", argv[0], QUITTIME_PERIOD );
+                WRMSG( HHC02266, "A", argv[0], sysblk.quitmout );
                 time( &sysblk.shutquittime );
             }
             else
@@ -7218,13 +7220,14 @@ int ssd_cmd(int argc, char *argv[], char *cmdline)
     time_t  end;
 
     UNREFERENCED(argc);
-    UNREFERENCED(argv);
     UNREFERENCED(cmdline);
     
+    if (sysblk.quitmout == 0) signal_quiesce(0,0);
+
     time( &end );
-    if ( difftime( end, sysblk.SSD_time ) > QUITTIME_PERIOD )
+    if ( difftime( end, sysblk.SSD_time ) > sysblk.quitmout )
     {
-        WRMSG( HHC02266, "A", "ssd", QUITTIME_PERIOD );
+        WRMSG( HHC02266, "A", argv[0], sysblk.quitmout );
         time( &sysblk.SSD_time );
     }
     else
@@ -7922,7 +7925,10 @@ int query_cmd(int argc, char *argv[], char *cmdline)
         {
             return(qd_cmd( argc-1, &argv[1], cmdline));
         }
-        else if (strcasecmp(argv[1],"ports") == 0 )
+        else if ( strlen( argv[1] ) >= 4 && 
+                  strlen( argv[1] ) <= 5 && 
+                  !strncasecmp( argv[1], "ports", strlen( argv[1] ) )
+                ) 
         {
             char buf[64];
 
@@ -7970,7 +7976,10 @@ int query_cmd(int argc, char *argv[], char *cmdline)
             WRMSG( HHC17001, "I", "console", buf);
             return 0;
         }
-        else if (strcasecmp(argv[1],"stor") == 0 )
+        else if ( strlen( argv[1] ) >= 4 && 
+                  strlen( argv[1] ) <= 7 && 
+                  !strncasecmp( argv[1], "storage", strlen( argv[1] ) )
+                )  
         {   
             char buf[64];
             U64  xpndsize = (U64)(sysblk.xpndsize) << 12;
@@ -8020,14 +8029,20 @@ int query_cmd(int argc, char *argv[], char *cmdline)
             }
             WRMSG( HHC17003, "I", "EXPANDED", buf, "xpnd" );
         }
-        else if (strcasecmp(argv[1],"cpuid") == 0 )
+        else if ( strlen( argv[1] ) >= 4 && 
+                  strlen( argv[1] ) <= 5 && 
+                  !strncasecmp( argv[1], "cpuid", strlen( argv[1] ) )
+                )  
         {
             WRMSG( HHC17004, "I", sysblk.cpuid );
             WRMSG( HHC17005, "I", ((sysblk.cpuid & 0x00000000FFFF0000ULL) >> 16),
                                   str_model(), str_manufacturer(), str_plant(),
                                   ((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32) );
         }
-        else if (strcasecmp(argv[1],"proc") == 0 )
+        else if ( strlen( argv[1] ) >= 4  && 
+                  strlen( argv[1] ) <= 10 && 
+                  !strncasecmp( argv[1], "processors", strlen( argv[1] ) )
+                ) 
         {
             
 #ifdef    _FEATURE_VECTOR_FACILITY
@@ -8093,6 +8108,70 @@ int query_cmd(int argc, char *argv[], char *cmdline)
         else if (strcasecmp(argv[1],"lpar") == 0 )
         {
             WRMSG( HHC17006, "I", sysblk.lparnum, str_lparname() );
+        }
+        else if ( strlen( argv[1] ) >= 4 && 
+                  strlen( argv[1] ) <= 8 && 
+                  !strncasecmp( argv[1], "quitmout", strlen( argv[1] ) )
+                )
+        {
+            WRMSG( HHC17100, "I", sysblk.quitmout );
+        }
+        else
+        {
+            WRMSG( HHC17000, "E" );
+            return -1;
+        }
+    }
+
+    return 0;
+}
+/*-------------------------------------------------------------------*/
+/* set command - quit timeout value                                  */
+/*-------------------------------------------------------------------*/
+int set_cmd(int argc, char *argv[], char *cmdline)
+{
+    if (argc < 2)
+    {
+        WRMSG( HHC17000, "E" );
+        return -1;
+    }
+
+    if ( argc > 2 )
+    {
+        if ( strlen( argv[1] ) >= 4 && 
+             strlen( argv[1] ) <= 8 && 
+             !strncasecmp( argv[1], "quitmout", strlen( argv[1] ) )
+           )
+        {
+            if ( argc == 3)
+            {
+                int tm = 0; BYTE c;
+
+                if (1
+                    && sscanf(argv[2], "%d%c", &tm, &c) == 1
+                    && ( 
+                        ( ( sysblk.sysgroup & (SYSGROUP_ALL - SYSGROUP_SYSOPER - SYSGROUP_SYSNONE) ) && tm >= 0 ) 
+                        || 
+                        ( ( sysblk.sysgroup & SYSGROUP_SYSOPER ) && tm >= 2 ) 
+                       )
+                    && tm <= 60
+                   )
+                {
+                    sysblk.quitmout = tm;
+                    WRMSG( HHC17100, "I", tm );
+                    return 0;
+                }
+                else 
+                {
+                    WRMSG( HHC17000, "E" );
+                    return -1;
+                }
+            }
+            else
+            {
+                WRMSG( HHC17000, "E" );
+                return -1;
+            }
         }
         else
         {

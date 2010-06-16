@@ -1317,7 +1317,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC04110 "Maximum device threads (devtmax) of %d exceeded by %d"
 #define HHC04111 "%1d:%04X Function %s failed: '[%02d] %s'"
 
-// reserve 17000 messages for QUERY functions
+// reserve 17000 messages for QUERY and SET functions
 #define HHC17000 "Missing or invalid argument(s)"
 #define HHC17001 "Server '%12s' is listening %s"
 #define HHC17002 "Server '%12s' is inactive"
@@ -1330,6 +1330,10 @@ cpu.c:123:HABC1234I This is a message
 #define HHC17009 "PROC %s%02X %c %03d%%; MIPS[%4d.%02d]; SIOS[%6d]"
 #define HHC17010 " - Started        : Stopping        * Stopped"
 #define HHC17011 "Avg CP   %03d%% %02d; MIPS[%4d.%02d];"
+
+#define HHC17100 "Timeout value for 'quit' and 'ssd' is '%d' seconds"
+
+
 
 // reserve 90000 messages for debugging
 #define HHC90000 "DBG: %s"
