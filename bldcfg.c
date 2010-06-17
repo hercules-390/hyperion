@@ -1104,19 +1104,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
             }
 #endif /*defined(OPTION_SHARED_DEVICES)*/
 
-
-            else if (strcasecmp (keyword, "capping") == 0)
-#ifdef OPTION_CAPPING
-            {
-                if(sscanf(operand, "%u", &sysblk.capping) != 1)
-                    WRMSG(HHC00833, "E", operand);
-                sysblk.capping *= 1000000;
-            }
-#else
-            {
-                WRMSG( HHC01450, "W", inc_stmtnum[inc_level], fname, keyword, "OPTION_CAPPING" ); 
-            }
-#endif  // OPTION_CAPPING
             else
             {
                 WRMSG(HHC01441, "E", inc_stmtnum[inc_level], fname, keyword);
@@ -1739,18 +1726,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
     OBTAIN_INTLOCK(NULL);
     for(i = 0; i < numcpu; i++)
         configure_cpu(i);
-#ifdef OPTION_CAPPING
-    if(sysblk.capping)
-    {
-    TID tid;
-        rc = create_thread(&tid, DETACHED, proc_cap_thread, &i, "Capping monitor");
-        if (rc)
-        {
-            WRMSG(HHC00102, "E", strerror(rc));
-            return -1;
-        }
-    }
-#endif  // OPTION_CAPPING  
     RELEASE_INTLOCK(NULL);
 
 } /* end function build_config */

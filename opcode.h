@@ -2681,9 +2681,6 @@ CPU_DLL_IMPORT void (ATTR_REGPARM(2) s390_program_interrupt) (REGS *regs, int co
 #endif /*!defined(_FEATURE_ZSIE)*/
 CPU_DLL_IMPORT void (ATTR_REGPARM(2) ARCH_DEP(program_interrupt)) (REGS *regs, int code);
 void *cpu_thread (int *cpu);
-#ifdef OPTION_CAPPING
-void *proc_cap_thread(int *cpu);
-#endif
 DLL_EXPORT void copy_psw (REGS *regs, BYTE *addr);
 int display_psw (REGS *regs, char *buf);
 char *str_psw (REGS *regs, char *buf);
