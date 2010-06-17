@@ -669,6 +669,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
     }
 
     wlpi = dev->lpi;
+    windex = dev->index;
     wlpp = dev->lpp;
     wffchan = dev->ffchan;
     for (line = 0; line <= FCBSIZE; line++)
