@@ -236,7 +236,7 @@ int main(int argc, char **argv)
 
     fout = fopen(pathname, (tran_ascii) ? "wb" : "w");
     if (fout == NULL) {
-        fprintf (stderr, MSG( HHC02468, "E", argdsn, "fopen", strerror(errno) ) );
+        fprintf (stderr, MSG( HHC02468, "E", argdsn, "fopen()", strerror(errno) ) );
         close_ckd_image(cif);
         exit(22);
     }
