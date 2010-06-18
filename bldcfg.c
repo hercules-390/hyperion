@@ -691,7 +691,7 @@ int    ecpsvmac;                        /* -> ECPS:VM add'l arg cnt  */
 char   *sshrdport;                      /* -> Shared device port nbr */
 #endif /*defined(OPTION_SHARED_DEVICES)*/
 char   *squitmout;                      /* -> quit timeout value     */
-U16     quitmout;                       /* quit timeout value        */
+int     quitmout;                       /* quit timeout value        */
 U16     version = 0x00;                 /* CPU version code          */
 int     dfltver = 1;                    /* Default version code      */
 U32     serial;                         /* CPU serial number         */
