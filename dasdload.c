@@ -1,4 +1,5 @@
 /* DASDLOAD.C   (c) Copyright Roger Bowler, 1999-2010                */
+/*              (c) Copyright TurboHercules, SAS 2010                */
 /*              Hercules DASD Utilities: DASD image loader           */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -16,12 +17,15 @@
 /* Additional credits:                                               */
 /*      Corrections to CVOL initialization logic by Jay Maynard      */
 /*      IEBCOPY native dataset support by Ronen Tzur                 */
+/*      Standardized Messages by P. Gorlinsky                        */
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
 
 #include "hercules.h"
 #include "dasdblks.h"
+
+#define UTILITY_NAME    "dasdload"
 
 /*-------------------------------------------------------------------*/
 /* Internal table sizes                                              */
@@ -131,29 +135,29 @@ int  infolvl = 1;
 /* Subroutine to display command syntax and exit                     */
 /*-------------------------------------------------------------------*/
 static void
-argexit ( int code )
+argexit ( int code, char *pgm )
 {
-    fprintf (stderr,
-            "dasdload creates a DASD image file from a list "
-            "of TSO XMIT files\n"
-            "Syntax:\tdasdload [options] ctlfile outfile [msglevel]\n"
-            "where:\tctlfile  = name of input control file\n"
-            "\toutfile  = name of DASD image file to be created\n"
-            "\tmsglevel = Value 0-5 controls output verbosity\n"
-            "\noptions:\n"
-            "\t-0:   no compression (default)\n"
-            "\t-a:   output disk will include alternate cylinders\n"
+    char usage[512];
+    char buflfs[64];
 #ifdef CCKD_COMPRESS_ZLIB
-            "\t-z:   compress using zlib\n"
+    char *bufz =  "            -z     compress using zlib [default]\n";
+#else
+    char *bufz = "";
 #endif
 #ifdef CCKD_COMPRESS_BZIP2
-            "\t-bz2: compress using bzip2\n"
+    char *bufbz = "            -bz2   compress using bzip2\n";
+#else
+    char *bufbz = "";
 #endif
-            );
-    if (sizeof(off_t) > 4)
-        fprintf (stderr,
-            "\t-lfs: create single large output file\n"
-            );
+
+    strncpy( buflfs, 
+            (sizeof(off_t) > 4) ? 
+                  "            -lfs   create single large output file\n" : "",
+            sizeof( buflfs));
+
+    MSGBUF( usage ,MSG( HHC02496, "I", pgm, bufz, bufbz, buflfs ) );
+    fprintf( stderr, "%s", usage );
+
     exit(code);
 } /* end function argexit */
 
@@ -343,8 +347,7 @@ int     track;                          /* Relative track number     */
     /* Error if track was not found in extent table */
     if (i == numext)
     {
-        XMERRF ("HHCDL033E CCHH=%4.4X%4.4X not found in extent table\n",
-                cyl, head);
+        XMERRF ( MSG( HHC02505, "E", cyl, head ) );
         return -1;
     }
 
@@ -382,8 +385,7 @@ char            pathname[MAX_PATH];     /* iplfnm in host path format*/
     tfd = open (pathname, O_RDONLY|O_BINARY);
     if (tfd < 0)
     {
-        XMERRF ("HHCDL034E Cannot open %s: %s\n",
-                iplfnm, strerror(errno));
+        XMERRF ( MSG( HHC02506, "E", "open", iplfnm, strerror( errno ) ) );
         return -1;
     }
 
@@ -394,8 +396,7 @@ char            pathname[MAX_PATH];     /* iplfnm in host path format*/
         rc = read (tfd, objrec, 80);
         if (rc < 80)
         {
-            XMERRF ("HHCDL035E Cannot read %s: %s\n",
-                    iplfnm, strerror(errno));
+            XMERRF ( MSG( HHC02506, "E", "read", iplfnm, strerror( errno ) ) );
             close (tfd);
             return -1;
         }
@@ -403,8 +404,7 @@ char            pathname[MAX_PATH];     /* iplfnm in host path format*/
         /* Column 1 of each object card must contain X'02' */
         if (objrec[0] != 0x02)
         {
-            XMERRF ("HHCDL036E %s is not a valid object file\n",
-                    iplfnm);
+            XMERRF ( MSG( HHC02507, "E", iplfnm ) );
             close (tfd);
             return -1;
         }
@@ -423,14 +423,12 @@ char            pathname[MAX_PATH];     /* iplfnm in host path format*/
         /* Load the byte count from TXT card columns 11-12 */
         txtlen = (objrec[10] << 8) | objrec[11];
 
-        XMINFF (5, "HHCDL037I IPL text address=%6.6X length=%4.4X\n",
-                txtadr, txtlen);
+        XMINFF (5, MSG( HHC02522, "I", txtadr, txtlen ) );
 
         /* Check that the byte count is valid */
         if (txtlen > 56)
         {
-            XMERRF ("HHCDL038E TXT record in %s has invalid count %d\n",
-                    iplfnm, txtlen);
+            XMERRF ( MSG( HHC02508, "E", iplfnm, txtlen ) );
             close (tfd);
             return -1;
         }
@@ -438,8 +436,7 @@ char            pathname[MAX_PATH];     /* iplfnm in host path format*/
         /* Check that the text falls within the buffer */
         if (txtadr + txtlen > buflen)
         {
-            XMERRF ("HHCDL039E IPL text in %s exceeds %d bytes\n",
-                    iplfnm, buflen);
+            XMERRF ( MSG( HHC02509, "E", iplfnm, buflen ) );
             close (tfd);
             return -1;
         }
@@ -620,19 +617,15 @@ CKDDASD_RECHDR *rechdr;                 /* -> Record header          */
     /* Error if record will not even fit on an empty track */
     if (cc > 0)
     {
-        XMERRF ("HHCDL040E Input record CCHHR=%2.2X%2.2X%2.2X%2.2X%2.2X "
-                "exceeds output device track size\n",
-                blk->cyl[0], blk->cyl[1],
-                blk->head[0], blk->head[1], blk->rec);
+        XMERRF ( MSG( HHC02510, "E", blk->cyl[0], blk->cyl[1],
+                blk->head[0], blk->head[1], blk->rec ) );
         return -1;
     }
 
     /* Determine whether end of extent has been reached */
     if (*reltrk >= maxtrk)
     {
-        XMERRF ("HHCDL041E Dataset exceeds extent size: reltrk=%d, "
-                "maxtrk=%d\n",
-                *reltrk, maxtrk);
+        XMERRF ( MSG( HHC02511, "E", *reltrk, maxtrk ) );
         return -1;
     }
 
@@ -643,13 +636,10 @@ CKDDASD_RECHDR *rechdr;                 /* -> Record header          */
     }
 
     /* Double check that record will not exceed virtual track size */
-    if (*usedv + CKDDASD_RECHDR_SIZE + keylen + datalen + 8
-        > trklen)
+    if (*usedv + CKDDASD_RECHDR_SIZE + keylen + datalen + 8 > trklen)
     {
-        XMERRF ("HHCDL042E Input record CCHHR=%2.2X%2.2X%2.2X%2.2X%2.2X "
-                "exceeds virtual device track size\n",
-                blk->cyl[0], blk->cyl[1],
-                blk->head[0], blk->head[1], blk->rec);
+        XMERRF ( MSG( HHC02512, "E", blk->cyl[0], blk->cyl[1],
+                blk->head[0], blk->head[1], blk->rec ) );
         return -1;
     }
 
@@ -855,8 +845,7 @@ CKDDASD_RECHDR  rechdr;                 /* Record header             */
     rc = read_track (cif, cyl, head);
     if (rc < 0)
     {
-        XMERRF ("HHCDL043E %s cyl %d head %d read error\n",
-                ofname, cyl, head);
+        XMERRF ( MSG( HHC02513, "E", ofname, cyl, cyl, head, head ) );
         return -1;
     }
 
@@ -871,11 +860,9 @@ CKDDASD_RECHDR  rechdr;                 /* Record header             */
         || trkhdr.head[0] != (head >> 8)
         || trkhdr.head[1] != (head & 0xFF))
     {
-        XMERRF ("HHCDL044E %s cyl %d head %d invalid track header "
-                "%2.2X%2.2X%2.2X%2.2X%2.2X\n",
-                ofname, cyl, head,
-                trkhdr.bin, trkhdr.cyl[0], trkhdr.cyl[1],
-                trkhdr.head[0], trkhdr.head[1]);
+        XMERRF ( MSG( HHC02514, "E", ofname, cyl, cyl, head, head, 
+                                     trkhdr.bin, trkhdr.cyl[0], trkhdr.cyl[1],
+                                     trkhdr.head[0], trkhdr.head[1] ) );
         return -1;
     }
 
@@ -889,8 +876,7 @@ CKDDASD_RECHDR  rechdr;                 /* Record header             */
         /* Check for end of track */
         if (memcmp(&rechdr, eighthexFF, 8) == 0)
         {
-            XMERRF ("HHCDL045E %s cyl %d head %d rec %d record not found\n",
-                    ofname, cyl, head, rec);
+            XMERRF ( MSG( HHC02515, "E", ofname, cyl, cyl, head, head, rec, rec ) );
             return -1;
         }
 
@@ -910,9 +896,7 @@ CKDDASD_RECHDR  rechdr;                 /* Record header             */
     /* Check for attempt to change key length or data length */
     if (keylen != klen || datalen != dlen)
     {
-        XMERRF ("HHCDL046E Cannot update cyl %d head %d rec %d: "
-                "Unmatched KL/DL\n",
-                cyl, head, rec);
+        XMERRF ( MSG( HHC02516, "E", ofname, cyl, cyl, head, head, rec, rec ) );
         return -1;
     }
 
@@ -924,13 +908,11 @@ CKDDASD_RECHDR  rechdr;                 /* Record header             */
     rc = read_track (cif, curcyl, curhead);
     if (rc < 0)
     {
-        XMERRF ("HHCDL047E %s cyl %d head %d read error\n",
-                ofname, curcyl, curhead);
+        XMERRF ( MSG( HHC02513, "E", ofname, curcyl, curcyl, curhead, curhead ) );
         return -1;
     }
 
-    XMINFF (4, "HHCDL048I Updating cyl %u head %u rec %d kl %d dl %d\n",
-                cyl, head, rec, keylen, datalen);
+    XMINFF (4, MSG( HHC02523, "I", cyl, cyl, head, head, rec, rec, keylen, datalen ) );
 
     return 0;
 } /* end function update_block */
@@ -986,16 +968,14 @@ time_t          timeval;                /* Current time value        */
     datablk = (DATABLK*)malloc(blklen);
     if (datablk == NULL)
     {
-        XMERRF ("HHCDL049E Cannot obtain storage for DSCB: %s\n",
-                strerror(errno));
+        XMERRF ( MSG( HHC02517, "E", "Format 1 ", strerror(errno) ) );
         return -1;
     }
 
     /* Check that there is room in the DSCB pointer array */
     if (dscbnum >= MAXDSCB)
     {
-        XMERRF ("HHCDL050E DSCB count exceeds %d, increase MAXDSCB\n",
-                MAXDSCB);
+        XMERRF ( MSG( HHC02518, "E", MAXDSCB ) );
         return -1;
     }
 
@@ -1110,16 +1090,14 @@ int             tolfact;                /* Device tolerance          */
     datablk = (DATABLK*)malloc(blklen);
     if (datablk == NULL)
     {
-        XMERRF ("HHCDL051E Cannot obtain storage for DSCB: %s\n",
-                strerror(errno));
+        XMERRF ( MSG( HHC02517, "E", "Format 4 ", strerror(errno) ) );
         return -1;
     }
 
     /* Check that there is room in the DSCB pointer array */
     if (dscbnum >= MAXDSCB)
     {
-        XMERRF ("HHCDL052E DSCB count exceeds %d, increase MAXDSCB\n",
-                MAXDSCB);
+        XMERRF ( MSG( HHC02518, "E", MAXDSCB ) );
         return -1;
     }
 
@@ -1187,16 +1165,14 @@ int             blklen;                 /* Size of data block        */
     datablk = (DATABLK*)malloc(blklen);
     if (datablk == NULL)
     {
-        XMERRF ("HHCDL053E Cannot obtain storage for DSCB: %s\n",
-                strerror(errno));
+        XMERRF ( MSG( HHC02517, "E", "Format 5 ", strerror(errno) ) );
         return -1;
     }
 
     /* Check that there is room in the DSCB pointer array */
     if (dscbnum >= MAXDSCB)
     {
-        XMERRF ("HHCDL054E DSCB count exceeds %d, increase MAXDSCB\n",
-                MAXDSCB);
+        XMERRF ( MSG( HHC02518, "E", MAXDSCB ) );
         return -1;
     }
 
@@ -1308,8 +1284,7 @@ char            dsnama[45];             /* Dataset name (ASCIIZ)     */
     /* Check that VTOC extent size is sufficient */
     if (numtrks < mintrks)
     {
-        XMERRF ("HHCDL055E VTOC too small, %d track%s required\n",
-                mintrks, (mintrks == 1 ? "" : "s"));
+        XMERRF ( MSG( HHC02519, "E", mintrks, mintrks == 1 ? "" : "s" ) );
         return -1;
     }
 
@@ -1317,8 +1292,7 @@ char            dsnama[45];             /* Dataset name (ASCIIZ)     */
     rc = read_track (cif, outcyl, outhead);
     if (rc < 0)
     {
-        XMERRF ("HHCDL056E Error reading VTOC cyl %d head %d\n",
-                outcyl, outhead);
+        XMERRF ( MSG( HHC02530, "E", "VTOC", outcyl, outcyl, outhead, outhead ) );
         return -1;
     }
 
@@ -1343,8 +1317,7 @@ char            dsnama[45];             /* Dataset name (ASCIIZ)     */
     volvtoc[3] = outhead & 0xFF;
     volvtoc[4] = 1;
 
-    XMINFF (1, "HHCDL057I VTOC starts at cyl %d head %d and is %d track%s\n",
-            outcyl, outhead, numtrks, (numtrks == 1 ? "" : "s"));
+    XMINFF (1, MSG( HHC02524, "I", outcyl, outcyl, outhead, outhead, numtrks, numtrks == 1 ? "" : "s" ) );
 
     /* Calculate the number of format 0 DSCBs required to
        fill out the unused space at the end of the VTOC */
@@ -1423,11 +1396,9 @@ char            dsnama[45];             /* Dataset name (ASCIIZ)     */
                     &outtrk, &outcyl, &outhead, &outrec);
         if (rc < 0) return -1;
 
-        XMINFF (4, "HHCDL058I Format %d DSCB CCHHR=%4.4X%4.4X%2.2X "
-                "(TTR=%4.4X%2.2X) %s\n",
-                datablk->kdarea[0] == 0x04 ? 4 :
-                datablk->kdarea[0] == 0x05 ? 5 : 1,
-                outcyl, outhead, outrec, outtrk, outrec, dsnama);
+        XMINFF (4, MSG( HHC02525, "I", datablk->kdarea[0] == 0x04 ? 4 :
+                                       datablk->kdarea[0] == 0x05 ? 5 : 1,
+                                       outcyl, outhead, outrec, outtrk, outrec, dsnama ) );
         if (infolvl >= 5) data_dump (datablk, 152);
 
     } /* end for(i) */
@@ -1444,9 +1415,7 @@ char            dsnama[45];             /* Dataset name (ASCIIZ)     */
                     &outtrk, &outcyl, &outhead, &outrec);
         if (rc < 0) return -1;
 
-        XMINFF (4, "HHCDL059I Format 0 DSCB CCHHR=%4.4X%4.4X%2.2X "
-                "(TTR=%4.4X%2.2X)\n",
-                outcyl, outhead, outrec, outtrk, outrec);
+        XMINFF (4,  MSG( HHC02525, "I", 0, outcyl, outhead, outrec, outtrk, outrec, "" ) );
 
     } /* end for(i) */
 
@@ -1462,8 +1431,7 @@ char            dsnama[45];             /* Dataset name (ASCIIZ)     */
         rc = read_track (cif, curcyl, curhead);
         if (rc < 0)
         {
-            XMERRF ("HHCDL060E Error reading track cyl %d head %d\n",
-                    curcyl, curhead);
+            XMERRF ( MSG( HHC02530, "E", "track", curcyl, curcyl, curhead, curhead ) );
             return -1;
         }
     }
@@ -1554,7 +1522,7 @@ char    hex[17];                        /* Character work areas      */
     /* Error if remaining length is insufficient for header */
     if (bufrem < 4)
     {
-        XMERR ("HHCDL061E Incomplete text unit\n");
+        XMERR ( MSG( HHC02531, "E" ) ); 
         return -1;
     }
 
@@ -1566,14 +1534,13 @@ char    hex[17];                        /* Character work areas      */
     name = tu_name(key);
 
     /* Print the text unit name and field count */
-    XMINFF (4, "HHCDL062I \t+%4.4X %-8.8s %4.4X %4.4X ",
-            bufpos, name, key, num);
+    XMINFF (4, MSG_C( HHC02526, "I", bufpos, name, key, num ) );
 
     /* Error if number of fields exceeds maximum */
     if (num > maxnum)
     {
         XMINF (4, "\n");
-        XMERR ("HHCDL063E Too many fields in text unit\n");
+        XMERR ( MSG( HHC02532, "E" ) );
         return -1;
     }
 
@@ -1588,7 +1555,7 @@ char    hex[17];                        /* Character work areas      */
         if (bufrem < 2)
         {
             XMINF (4, "\n");
-            XMERR ("HHCDL064E Incomplete text unit\n");
+            XMERR ( MSG( HHC02531, "E" ) ); 
             return -1;
         }
 
@@ -1601,13 +1568,13 @@ char    hex[17];                        /* Character work areas      */
         if (bufrem < len)
         {
             XMINF (4, "\n");
-            XMERR ("HHCDL065E Incomplete text unit\n");
+            XMERR ( MSG( HHC02531, "E" ) );
             return -1;
         }
 
         /* Print field length and data */
         if (field > 0) XMINF (4, "\n\t\t\t\t ");
-        XMINFF (4, "%4.4X ", len);
+        XMINFF (4, "%04X ", len);
         memset (hex, '\0', sizeof(hex));
         memset (chars, '\0', sizeof(chars));
         for (i = 0, j = 0; i < len; i++, j++)
@@ -1674,18 +1641,14 @@ BYTE            seghdr[2];              /* Segment length and flags  */
         rc = read (xfd, seghdr, 2);
         if (rc < 2)
         {
-            XMERRF ("HHCDL066E %s read error: %s\n",
-                    xfname,
-                    (rc < 0 ? strerror(errno) :
-                    "Unexpected end of file"));
+            XMERRF ( MSG( HHC02533, "E", xfname, rc < 0 ? strerror(errno) : "Unexpected end of file" ) );
             return -1;
         }
 
         /* Check for valid segment header */
         if (seghdr[0] < 2 || (seghdr[1] & 0x1F) != 0)
         {
-            XMERRF ("HHCDL067E %s invalid segment header: %2.2X%2.2X\n",
-                    xfname, seghdr[0], seghdr[1]);
+            XMERRF ( MSG( HHC02534, "E", xfname, seghdr[0], seghdr[1] ) );
             return -1;
         }
 
@@ -1695,8 +1658,7 @@ BYTE            seghdr[2];              /* Segment length and flags  */
             /* Check that first segment indicator is set */
             if ((seghdr[1] & 0x80) == 0)
             {
-                XMERRF ("HHCDL068E %s first segment indicator expected\n",
-                        xfname);
+                XMERRF ( MSG( HHC02535, "E", xfname ) );
                 return -1;
             }
 
@@ -1710,16 +1672,14 @@ BYTE            seghdr[2];              /* Segment length and flags  */
             /* Check that first segment indicator is not set */
             if (seghdr[1] & 0x80)
             {
-                XMERRF ("HHCDL069E %s first segment indicator not expected\n",
-                        xfname);
+                XMERRF ( MSG( HHC02536, "E", xfname ) );
                 return -1;
             }
 
             /* Check if ctlrec indicator matches first segment */
             if ((seghdr[1] & 0x20) != ctlind)
             {
-                XMERRF ("HHCDL070E %s control record indicator mismatch\n",
-                        xfname);
+                XMERRF ( MSG( HHC02537, "E", xfname ) );
                 return -1;
             }
         }
@@ -1729,10 +1689,7 @@ BYTE            seghdr[2];              /* Segment length and flags  */
         rc = read (xfd, xbuf + xreclen, seglen);
         if (rc < seglen)
         {
-            XMERRF ("HHCDL071E %s read error: %s\n",
-                    xfname,
-                    (rc < 0 ? strerror(errno) :
-                    "Unexpected end of file"));
+            XMERRF ( MSG( HHC02533, "E", xfname, rc < 0 ? strerror(errno) : "Unexpected end of file" ) );
             return -1;
         }
 
@@ -1773,10 +1730,7 @@ DATABLK        *datablk;                /* Data block                */
        xreclen = read(xfd, xbuf, 56);   /* read COPYR1 plus some extras */
        if (xreclen < 56)
         {
-            XMERRF ("HHCDL072E %s read error: %s\n",
-                    xfname,
-                    (xreclen < 0 ? strerror(errno) :
-                    "Unexpected end of file"));
+            XMERRF ( MSG( HHC02533, "E", xfname, xreclen < 0 ? strerror(errno) : "Unexpected end of file" ) );
             return -1;
         }
      }
@@ -1785,10 +1739,7 @@ DATABLK        *datablk;                /* Data block                */
        xreclen = read(xfd, xbuf, sizeof(COPYR2));  /* read COPYR2 */
        if (xreclen < (int)sizeof(COPYR2))
         {
-            XMERRF ("HHCDL073E %s read error: %s\n",
-                    xfname,
-                    (xreclen < 0 ? strerror(errno) :
-                    "Unexpected end of file"));
+            XMERRF ( MSG( HHC02533, "E", xfname, xreclen < 0 ? strerror(errno) : "Unexpected end of file" ) );
             return -1;
         }
      }
@@ -1799,10 +1750,7 @@ DATABLK        *datablk;                /* Data block                */
           return 0;
        if (rc < 12)
         {
-            XMERRF ("HHCDL074E %s read error: %s\n",
-                    xfname,
-                    (rc < 0 ? strerror(errno) :
-                    "Unexpected end of file"));
+            XMERRF ( MSG( HHC02533, "E", xfname, rc < 0 ? strerror(errno) : "Unexpected end of file" ) );
             return -1;
         }
        datablk = (DATABLK *)xbuf;
@@ -1811,10 +1759,7 @@ DATABLK        *datablk;                /* Data block                */
        rc = read(xfd, xbuf + 12, xreclen);  /* read kdarea of DATABLK */
        if (rc < xreclen)
         {
-            XMERRF ("HHCDL075E %s read error: %s\n",
-                    xfname,
-                    (rc < 0 ? strerror(errno) :
-                    "Unexpected end of file"));
+            XMERRF ( MSG( HHC02533, "E", xfname, rc < 0 ? strerror(errno) : "Unexpected end of file" ) );
             return -1;
         }
        xreclen += 12;                   /* also count the header */
@@ -1874,7 +1819,7 @@ BYTE           *fieldptr[MAXNUM];       /* Array of field pointers   */
     /* Extract the file number which follows the record name */
     filenum = (xbuf[6] << 24) | (xbuf[7] << 16)
             | (xbuf[8] << 8) | xbuf[9];
-    XMINFF (4, "HHCDL076I File number: %d\n", filenum);
+    XMINFF (4, MSG( HHC02527, "I", filenum ) );
 
     /* Point to the first text unit */
     bufpos = 10;
@@ -1898,8 +1843,7 @@ BYTE           *fieldptr[MAXNUM];       /* Array of field pointers   */
                 MAXNUM, fieldlen, fieldptr);
         if (rc < 0)
         {
-            XMERRF ("HHCDL077E Invalid text unit at offset %4.4X\n",
-                    bufpos + 2);
+            XMERRF ( MSG( HHC02538, "E", bufpos + 2 ) );
             return -1;
         }
         bufpos += rc;
@@ -1953,12 +1897,9 @@ BYTE           *fieldptr[MAXNUM];       /* Array of field pointers   */
     /* Return the dataset values if this is the IEBCOPY record */
     if (strcmp(tuutiln, "IEBCOPY") == 0)
     {
-        XMINFF (2, "HHCDL078I File %u: DSNAME=%s\n",
-                filenum, tudsnam);
-        XMINFF (2, "HHCDL079I DSORG=%s RECFM=%s "
-                "LRECL=%d BLKSIZE=%d KEYLEN=%d DIRBLKS=%d\n",
-                dsorg_name(tudsorg), recfm_name(turecfm),
-                tulrecl, tublksz, tukeyln, tudirct);
+        XMINFF (2, MSG( HHC02528, "I", filenum, tudsnam ) );
+        XMINFF (2, MSG( HHC02529, "I", dsorg_name(tudsorg), recfm_name(turecfm),
+                                       tulrecl, tublksz, tukeyln, tudirct ) );
         *filen = filenum;
         *dsorg = tudsorg[0];
         *recfm = turecfm[0];
@@ -2003,8 +1944,7 @@ BYTE           *fieldptr[MAXNUM];       /* Array of field pointers   */
                 MAXNUM, fieldlen, fieldptr);
         if (rc < 0)
         {
-            XMERRF ("HHCDL080E Invalid text unit at offset %4.4X\n",
-                    bufpos + 2);
+            XMERRF ( MSG( HHC02538, "E", bufpos + 2 ) );
             return -1;
         }
 
@@ -2039,14 +1979,14 @@ U16     heads;                          /* Number of tracks/cylinder */
     if (xreclen != sizeof(COPYR1)
         && xreclen != sizeof(COPYR1) - 4)
     {
-        XMERR ("HHCDL081E COPYR1 record length is invalid\n");
+        XMERR ( MSG( HHC02539, "E", 1 ) );
         return -1;
     }
 
     /* Check that COPYR1 header identifier is correct */
     if (memcmp(copyr1->hdrid, COPYR1_HDRID, 3) != 0)
     {
-        XMERR ("HHCDL082E COPYR1 header identifier not correct\n");
+        XMERR ( MSG( HHC02540, "E", 1 ) );
         return -1;
     }
 
@@ -2054,7 +1994,7 @@ U16     heads;                          /* Number of tracks/cylinder */
     if ((copyr1->uldfmt & COPYR1_ULD_FORMAT)
             != COPYR1_ULD_FORMAT_OLD)
     {
-        XMERR ("HHCDL083E COPYR1 unload format is unsupported\n");
+        XMERR ( MSG( HHC02541, "E", 1 ) );
         return -1;
     }
 
@@ -2063,23 +2003,20 @@ U16     heads;                          /* Number of tracks/cylinder */
     keylen = copyr1->ds1keyl;
 
     /* Display original dataset information */
-    XMINFF (2, "HHCDL084I Original dataset: "
-            "DSORG=%s RECFM=%s LRECL=%d BLKSIZE=%d KEYLEN=%d\n",
+    XMINFF (2, MSG( HHC02550, "I",
             dsorg_name(copyr1->ds1dsorg),
             recfm_name(&copyr1->ds1recfm),
-            lrecl, blksize, keylen);
+            lrecl, blksize, keylen ) );
 
-    XMINFF (2, "HHCDL085I Dataset was unloaded from device type "
-            "%2.2X%2.2X%2.2X%2.2X (%s)\n",
+    XMINFF (2, MSG( HHC02551, "I",
             copyr1->ucbtype[0], copyr1->ucbtype[1],
             copyr1->ucbtype[2], copyr1->ucbtype[3],
-            dasd_name(copyr1->ucbtype));
+            dasd_name(copyr1->ucbtype) ) );
 
     cyls = (copyr1->cyls[0] << 8) | copyr1->cyls[1];
     heads = (copyr1->heads[0] << 8) | copyr1->heads[1];
 
-    XMINFF (2, "HHCDL086I Original device has %d cyls and %d heads\n",
-            cyls, heads);
+    XMINFF (2, MSG( HHC02552, "I", cyls, cyls, heads, heads ) );
 
     return heads;
 } /* end function process_copyr1 */
@@ -2106,7 +2043,7 @@ int     i;                              /* Array subscript           */
     /* Check COPYR2 record for correct length */
     if (xreclen != sizeof(COPYR2))
     {
-        XMERR ("HHCDL087I COPYR2 record length is invalid\n");
+        XMERR ( MSG( HHC02539, "E", 2 ) );
         return -1;
     }
 
@@ -2114,7 +2051,7 @@ int     i;                              /* Array subscript           */
     numext = copyr2->debbasic[0];
     if (numext < 1 || numext > 16)
     {
-        XMERRF ("HHCDL088I Invalid number of extents %d\n", numext);
+        XMERRF ( MSG( HHC02542, "E", numext ) );
         return -1;
     }
 
@@ -2132,10 +2069,9 @@ int     i;                              /* Array subscript           */
         xarray[i].ntrk = (copyr2->debxtent[i][14] << 8)
                         | copyr2->debxtent[i][15];
 
-        XMINFF (4, "HHCDL089I Extent %d: Begin CCHH=%4.4X%4.4X "
-                "End CCHH=%4.4X%4.4X Tracks=%4.4X\n",
-                i, xarray[i].bcyl, xarray[i].btrk,
-                xarray[i].ecyl, xarray[i].etrk, xarray[i].ntrk);
+        XMINFF (4, MSG( HHC02553, "I", i, xarray[i].bcyl, xarray[i].btrk,
+                                          xarray[i].ecyl, xarray[i].etrk, 
+                                          xarray[i].ntrk, xarray[i].ntrk ) );
 
     } /* end for(i) */
 
@@ -2184,14 +2120,14 @@ char            hex[49];                /* Character work areas      */
     /* Check for end of directory */
     if (blklen == 12 && memcmp(xbuf, twelvehex00, 12) == 0)
     {
-        XMINF (3, "HHCDL090I End of directory\n");
+        XMINF (3, MSG( HHC02554, "I" ) ); 
         return 1;
     }
 
     /* Check directory block record for correct length */
     if (blklen != 276)
     {
-        XMERR ("HHCDL091E Directory block record length is invalid\n");
+        XMERR ( MSG( HHC02543, "E" ) );
         return -1;
     }
 
@@ -2199,8 +2135,8 @@ char            hex[49];                /* Character work areas      */
     blkp = (DATABLK*)malloc(blklen);
     if (blkp == NULL)
     {
-        XMERRF ("HHCDL092E Cannot obtain storage for directory block: %s\n",
-                strerror(errno));
+
+        XMERRF ( MSG( HHC02544, "E", "a directory block", "malloc()", strerror( errno ) ) );
         return -1;
     }
 
@@ -2210,9 +2146,7 @@ char            hex[49];                /* Character work areas      */
     /* Check that there is room in the directory block pointer array */
     if (dirblkn >= MAXDBLK)
     {
-        XMERRF ("HHCDL093E Number of directory blocks exceeds %d, "
-                "increase MAXDBLK\n",
-                MAXDBLK);
+        XMERRF ( MSG( HHC02545, "E", MAXDBLK ) );
         return -1;
     }
 
@@ -2231,7 +2165,7 @@ char            hex[49];                /* Character work areas      */
     dirrem = (dirptr[0] << 8) | dirptr[1];
     if (dirrem < 2 || dirrem > 256)
     {
-        XMERR ("HHCDL094E Directory block byte count is invalid\n");
+        XMERR (MSG( HHC02546, "E" ) );
         return -1;
     }
 
@@ -2256,11 +2190,9 @@ char            hex[49];                /* Character work areas      */
         make_asciiz (memname, sizeof(memname), dirent->pds2name, 8);
 
         /* Display the directory entry */
-        XMINFF (3, "HHCDL095I %s %-8.8s TTR=%2.2X%2.2X%2.2X ",
-                (dirent->pds2indc & PDS2INDC_ALIAS) ?
-                        " Alias" : "Member",
-                memname, dirent->pds2ttrp[0],
-                dirent->pds2ttrp[1], dirent->pds2ttrp[2]);
+        XMINFF (3, MSG_C( HHC02555, "I", (dirent->pds2indc & PDS2INDC_ALIAS) ? " Alias" : "Member",
+                                        memname, dirent->pds2ttrp[0],
+                                        dirent->pds2ttrp[1], dirent->pds2ttrp[2] ) );
 
         /* Load the user data halfword count */
         k = dirent->pds2indc & PDS2INDC_LUSR;
@@ -2325,19 +2257,16 @@ int             i;                      /* Array subscript           */
     {
         if (memcmp(ttrptr, ttrtab[i].origttr, 3) == 0)
         {
-            XMINFF (4, "HHCDL096I Member %s TTR=%2.2X%2.2X%2.2X "
-                    "replaced by TTR=%2.2X%2.2X%2.2X\n",
-                    memname, ttrptr[0], ttrptr[1], ttrptr[2],
+            XMINFF (4, MSG( HHC02556, "I", memname, ttrptr[0], ttrptr[1], ttrptr[2],
                     ttrtab[i].outpttr[0], ttrtab[i].outpttr[1],
-                    ttrtab[i].outpttr[2]);
+                    ttrtab[i].outpttr[2] ) );
             memcpy (ttrptr, ttrtab[i].outpttr, 3);
             return 0;
         }
     }
 
     /* Return error if TTR not found in conversion table */
-    XMERRF ("HHCDL097E Member %s TTR=%2.2X%2.2X%2.2X not found in dataset\n",
-            memname, ttrptr[0], ttrptr[1], ttrptr[2]);
+    XMERRF ( MSG( HHC02556, "I", memname, ttrptr[0], ttrptr[1], ttrptr[2] ) );
     return -1;
 
 } /* end function replace_ttr */
@@ -2398,9 +2327,7 @@ BYTE            notelist[1024];         /* Note list                 */
     cyl = (dsstart + trk) / heads;
     head = (dsstart + trk) % heads;
 
-    XMINFF (4, "HHCDL098I Updating note list for member %s "
-            "at TTR=%4.4X%2.2X CCHHR=%4.4X%4.4X%2.2X\n",
-            memname, trk, rec, cyl, head, rec);
+    XMINFF (4, MSG( HHC02558, "I", memname, trk, rec, cyl, head, rec ) );
 
     /* Save the current position in the output file */
     curcyl = cif->curcyl;
@@ -2410,8 +2337,7 @@ BYTE            notelist[1024];         /* Note list                 */
     rc = read_track (cif, cyl, head);
     if (rc < 0)
     {
-        XMERRF ("HHCDL099E %s cyl %d head %d read error\n",
-                ofname, cyl, head);
+        XMERRF ( MSG( HHC02547, "E", ofname, cyl, cyl, head, head ) );
         return -1;
     }
 
@@ -2426,11 +2352,9 @@ BYTE            notelist[1024];         /* Note list                 */
         || trkhdr.head[0] != (head >> 8)
         || trkhdr.head[1] != (head & 0xFF))
     {
-        XMERRF ("HHCDL100E %s cyl %d head %d invalid track header "
-                "%2.2X%2.2X%2.2X%2.2X%2.2X\n",
-                ofname, cyl, head,
-                trkhdr.bin, trkhdr.cyl[0], trkhdr.cyl[1],
-                trkhdr.head[0], trkhdr.head[1]);
+        XMERRF ( MSG( HHC02548, "E", ofname, cyl, cyl, head, head,
+                                     trkhdr.bin, trkhdr.cyl[0], trkhdr.cyl[1],
+                                     trkhdr.head[0], trkhdr.head[1] ) );
         return -1;
     }
 
@@ -2444,9 +2368,7 @@ BYTE            notelist[1024];         /* Note list                 */
         /* Check for end of track */
         if (memcmp(&rechdr, eighthexFF, 8) == 0)
         {
-            XMERRF ("HHCDL101E %s cyl %d head %d rec %d "
-                    "note list record not found\n",
-                    ofname, cyl, head, rec);
+            XMERRF ( MSG( HHC02549, "E", ofname, cyl, cyl, head, head, rec, rec ) );
             return -1;
         }
 
@@ -2466,9 +2388,7 @@ BYTE            notelist[1024];         /* Note list                 */
     /* Check that the data length is sufficient */
     if (dlen < nllen)
     {
-        XMERRF ("HHCDL102E Member %s note list at cyl %d head %d rec %d "
-                "dlen %d is too short for %d TTRs",
-                memname, cyl, head, rec, dlen, numnl);
+        XMERRF ( MSG( HHC02559, "E", memname, cyl, cyl, head, head, rec, rec, dlen, numnl ) );
         return -1;
     }
 
@@ -2495,13 +2415,11 @@ BYTE            notelist[1024];         /* Note list                 */
     rc = read_track (cif, curcyl, curhead);
     if (rc < 0)
     {
-        XMERRF ("HHCDL103E %s track read error cyl %d head %d\n",
-                ofname, curcyl, curhead);
+        XMERRF ( MSG( HHC02547, "E", ofname, curcyl, curcyl, curhead, curhead ) );
         return -1;
     }
 
-    XMINFF (4, "HHCDL104I Updating cyl %u head %u rec %d kl %d dl %d\n",
-                cyl, head, rec, klen, dlen);
+    XMINFF (4, MSG( HHC02523, "I", cyl, cyl, head, head, rec, rec, klen, dlen ) );
 
     return 0;
 } /* end function update_note_list */
@@ -2547,7 +2465,7 @@ char            memname[9];             /* Member name (ASCIIZ)      */
     dirrem = (dirptr[0] << 8) | dirptr[1];
     if (dirrem < 2 || dirrem > 256)
     {
-        XMERR ("HHCDL105E Directory block byte count is invalid\n");
+        XMERR ( MSG( HHC02546, "E" ) );
         return -1;
     }
 
@@ -2694,8 +2612,7 @@ char            pathname[MAX_PATH];     /* xfname in host path format*/
     xfd = open (pathname, O_RDONLY|O_BINARY);
     if (xfd < 0)
     {
-        XMERRF ("HHCDL106E Cannot open %s: %s\n",
-                xfname, strerror(errno));
+        XMERRF ( MSG( HHC02468, "E", xfname, "open()", strerror( errno ) ) );
         return -1;
     }
 
@@ -2703,8 +2620,7 @@ char            pathname[MAX_PATH];     /* xfname in host path format*/
     xbuf = malloc (65536);
     if (xbuf == NULL)
     {
-        XMERRF ("HHCDL107E Cannot obtain input buffer: %s\n",
-                strerror(errno));
+        XMERRF ( MSG( HHC02544, "E", "input buffer", "malloc()", strerror(errno) ) );
         close (xfd);
         return -1;
     }
@@ -2713,8 +2629,7 @@ char            pathname[MAX_PATH];     /* xfname in host path format*/
     dirblka = (DATABLK**)malloc (sizeof(DATABLK*) * MAXDBLK);
     if (dirblka == NULL)
     {
-        XMERRF ("HHCDL108E Cannot obtain storage for directory block array: %s\n",
-                strerror(errno));
+        XMERRF ( MSG( HHC02544, "E", "directory block array", "malloc()", strerror(errno) ) );
         free (xbuf);
         close (xfd);
         return -1;
@@ -2724,8 +2639,7 @@ char            pathname[MAX_PATH];     /* xfname in host path format*/
     ttrtab = (TTRCONV*)malloc (sizeof(TTRCONV) * MAXTTR);
     if (ttrtab == NULL)
     {
-        XMERRF ("HHCDL109E Cannot obtain storage for TTR table: %s\n",
-                strerror(errno));
+        XMERRF ( MSG( HHC02544, "E", "TTR table", "malloc()", strerror(errno) ) );
         free (xbuf);
         free (dirblka);
         close (xfd);
@@ -2736,7 +2650,7 @@ char            pathname[MAX_PATH];     /* xfname in host path format*/
     dsstart = (outcyl * heads) + outhead;
 
     /* Display the file information message */
-    XMINFF (1, "HHCDL110I Processing file %s\n", xfname);
+    XMINFF (1, MSG( HHC02560, "I", xfname ) );
 
     /* Read each logical record */
     while (1)
@@ -2758,8 +2672,7 @@ char            pathname[MAX_PATH];     /* xfname in host path format*/
         {
             /* Extract the control record name */
             make_asciiz (xrecname, sizeof(xrecname), xbuf, 6);
-            XMINFF (4, "HHCDL111I Control record: %s length %d\n",
-                        xrecname, xreclen);
+            XMINFF (4, MSG( HHC02561, "I", xrecname, xreclen ) );
 
             /* Exit if control record is a trailer record */
             if (strcmp(xrecname, "INMR06") == 0)
@@ -2784,9 +2697,7 @@ char            pathname[MAX_PATH];     /* xfname in host path format*/
             {
                 datafiln++;
                 datarecn = 0;
-                XMINFF (4, "HHCDL112I File number: %d %s\n", datafiln,
-                    (datafiln == copyfiln) ? "(selected)"
-                                           : "(not selected)");
+                XMINFF (4, MSG( HHC02562, "I", datafiln, datafiln == copyfiln ? "(selected)" : "(not selected)" ) );
             }
 
             /* Loop to get next record */
@@ -2796,7 +2707,7 @@ char            pathname[MAX_PATH];     /* xfname in host path format*/
 
         /* Process data records */
         datarecn++;
-        XMINFF (4, "HHCDL113I Data record: length %d\n", xreclen);
+        XMINFF (4, MSG( HHC02563, "I", xreclen ) );
         if (infolvl >= 5) data_dump (xbuf, xreclen);
 
         /* If this is not the IEBCOPY file then ignore data record */
@@ -2857,21 +2768,14 @@ char            pathname[MAX_PATH];     /* xfname in host path format*/
                         &outtrk, &outcyl, &outhead, &outrec);
             if (rc < 0)
             {
-                XMERRF ("HHCDL114E write error: input record "
-                        "CCHHR=%4.4X%4.4X%2.2X "
-                        "(TTR=%4.4X%2.2X) KL=%d DL=%d\n",
+                XMERRF ( MSG( HHC02570, "E", ofname, "write_block()", 
                         blkcyl, blkhead, blkrec,
-                        blktrk, blkrec, keylen, datalen);
+                        blktrk, blkrec, keylen, datalen ) );
                 return -1;
             }
 
-            XMINFF (4, "HHCDL115I CCHHR=%4.4X%4.4X%2.2X "
-                        "(TTR=%4.4X%2.2X) KL=%d DL=%d "
-                        "-> CCHHR=%4.4X%4.4X%2.2X "
-                        "(TTR=%4.4X%2.2X)\n",
-                        blkcyl, blkhead, blkrec,
-                        blktrk, blkrec, keylen, datalen,
-                        outcyl, outhead, outrec, outtrk, outrec);
+            XMINFF (4, MSG( HHC02564, "I", blkcyl, blkhead, blkrec, blktrk, blkrec, keylen, datalen,
+                                           outcyl, outhead, outrec, outtrk, outrec ) );
 
             /* Process directory block or member block */
             if (enddir == 0)
@@ -2890,9 +2794,7 @@ char            pathname[MAX_PATH];     /* xfname in host path format*/
                 /* Check that TTR conversion table is not full */
                 if (numttr >= MAXTTR)
                 {
-                    XMERRF ("HHCDL116E TTR count exceeds %d, "
-                            "increase MAXTTR\n",
-                            MAXTTR);
+                    XMERRF ( MSG( HHC02571, "E", MAXTTR ) );
                     return -1;
                 }
 
@@ -2917,8 +2819,7 @@ char            pathname[MAX_PATH];     /* xfname in host path format*/
     /* Check for unsupported xmit utility */
     if (method == METHOD_XMIT && copyfiln == 0)
     {
-        XMERRF ("HHCDL130W WARNING -- XMIT file utility is not IEBCOPY;"
-                " file %s not loaded\n", xfname);
+        XMERRF ( MSG( HHC02572, "W", xfname ) );
     }
 
     /* Return the last record number and track balance */
@@ -3124,9 +3025,10 @@ static char    *sys1name[NUM_SYS1_DATASETS] =
                 &outtrk, &outcyl, &outhead, &outrec);
     if (rc < 0) return -1;
 
-    XMINFF (4, "HHCDL117I Catalog block at cyl %d head %d rec %d\n",
-            outcyl, outhead, outrec);
-    if (infolvl >= 5) data_dump (datablk.kdarea, keylen + datalen);
+    XMINFF (4, MSG( HHC02565, "I", outcyl, outcyl, outhead, outhead, outrec, outrec ) );
+    
+    if (infolvl >= 5) 
+        data_dump (datablk.kdarea, keylen + datalen);
 
     /* Count number of blocks written */
     totblks--;
@@ -3233,8 +3135,8 @@ static char    *sys1name[NUM_SYS1_DATASETS] =
                 &outtrk, &outcyl, &outhead, &outrec);
     if (rc < 0) return -1;
 
-    XMINFF (4, "HHCDL118I Catalog block at cyl %d head %d rec %d\n",
-            outcyl, outhead, outrec);
+    XMINFF (4, MSG( HHC02565, "I", outcyl, outcyl, outhead, outhead, outrec, outrec ) );
+
     if (infolvl >= 5) data_dump (datablk.kdarea, keylen + datalen);
 
     /* Count number of blocks written */
@@ -3253,9 +3155,9 @@ static char    *sys1name[NUM_SYS1_DATASETS] =
                     &outusedv, &outusedr, &outtrkbr,
                     &outtrk, &outcyl, &outhead, &outrec);
         if (rc < 0) return -1;
+        
+        XMINFF (4, MSG( HHC02565, "I", outcyl, outcyl, outhead, outhead, outrec, outrec ) );
 
-        XMINFF (4, "HHCDL119I Catalog block at cyl %d head %d rec %d\n",
-                outcyl, outhead, outrec);
         if (infolvl >= 5) data_dump (datablk.kdarea, keylen + datalen);
 
         /* Count number of blocks written */
@@ -3409,8 +3311,8 @@ DATABLK         datablk;                /* Data block                */
                 &outtrk, &outcyl, &outhead, &outrec);
     if (rc < 0) return -1;
 
-    XMINFF (3, "HHCDL120I DIP complete at cyl %d head %d rec %d\n",
-            outcyl, outhead, outrec);
+    XMINFF (3, MSG( HHC02566, "I", outcyl, outcyl, outhead, outhead, outrec, outrec ) );
+
     if (infolvl >= 5) data_dump (diphdr, sizeof(DIPHDR));
 
     /* Return the last record number and track balance */
@@ -3480,12 +3382,12 @@ char            pathname[MAX_PATH];     /* sfname in host path format*/
     /* Perform some checks */
     if (!(dsorg & DSORG_PS) && !(dsorg & DSORG_DA))
     {
-        XMERRF ("HHCDL121E SEQ dsorg must be PS or DA: dsorg=0x%2.2x\n",dsorg);
+        XMERRF ( MSG( HHC02573, "E", sfname, dsorg ) );
         return -1;
     }
     if (recfm != RECFM_FORMAT_F && recfm != (RECFM_FORMAT_F|RECFM_BLOCKED))
     {
-        XMERRF ("HHCDL122E SEQ recfm must be F or FB: recfm=0x%2.2x\n",recfm);
+        XMERRF ( MSG( HHC02574, "E", sfname, recfm ) );
         return -1;
     }
     if (blksz == 0) blksz = lrecl;
@@ -3493,13 +3395,12 @@ char            pathname[MAX_PATH];     /* sfname in host path format*/
     if (lrecl == 0 || blksz % lrecl != 0
      || (blksz != lrecl && recfm == RECFM_FORMAT_F))
     {
-        XMERRF ("HHCDL123E SEQ invalid lrecl or blksz: lrecl=%d blksz=%d\n",
-                lrecl,blksz);
+        XMERRF ( MSG( HHC02575, "E", sfname, lrecl, blksz ) );
         return -1;
     }
     if (keyln > 0 && blksz > lrecl)
     {
-        XMERR ("HHCDL124E SEQ keyln must be 0 for blocked files\n");
+        XMERR ( MSG( HHC02576, "E", sfname, keyln ) );
         return -1;
     }
 
@@ -3508,8 +3409,7 @@ char            pathname[MAX_PATH];     /* sfname in host path format*/
     sfd = open (pathname, O_RDONLY|O_BINARY);
     if (sfd < 0)
     {
-        XMERRF ("HHCDL125E Cannot open %s: %s\n",
-                sfname, strerror(errno));
+        XMERRF ( MSG( HHC02468, "E", sfname, "open()", strerror(errno) ) );
         return -1;
     }
 
@@ -3517,8 +3417,7 @@ char            pathname[MAX_PATH];     /* sfname in host path format*/
     rc = fstat(sfd, &st);
     if (rc < 0)
     {
-        XMERRF ("HHCDL126E Cannot stat %s: %s\n",
-                sfname, strerror(errno));
+        XMERRF ( MSG( HHC02468, "E", sfname, "fstat()", strerror(errno) ) );
         close (sfd);
         return -1;
     }
@@ -3528,8 +3427,7 @@ char            pathname[MAX_PATH];     /* sfname in host path format*/
     rc = read_track (cif, *nxtcyl, *nxthead);
     if (rc < 0)
     {
-        XMERRF ("HHCDL127E %s cyl %d head %d read error\n",
-                ofname, *nxtcyl, *nxthead);
+        XMERRF ( MSG( HHC02547, "E", ofname, *nxtcyl, *nxtcyl, *nxthead, *nxthead ) );
         close (sfd);
         return -1;
     }
@@ -3540,8 +3438,7 @@ char            pathname[MAX_PATH];     /* sfname in host path format*/
         rc = read (sfd, &datablk.kdarea, blksz < size ? blksz : size);
         if (rc < (blksz < size ? blksz : size))
         {
-            XMERRF ("HHCDL128E %s read error: %s\n",
-                    sfname, strerror(errno));
+            XMERRF ( MSG( HHC02468, "E", sfname, "read()", strerror(errno) ) );
             close (sfd);
             return -1;
         }
@@ -3726,10 +3623,12 @@ static int      stmtno = 0;             /* Statement number          */
         {
             /* Return code +1 if end of control file */
             if (feof(cfp)) return +1;
-
-            /* Return code -1 if control file input error */
-            XMERRF ("HHCDL019E Cannot read %s line %d: %s\n",
-                    cfname, stmtno, strerror(errno));
+            {
+                char msgbuf[64];
+                MSGBUF( msgbuf, "line[%d] fgets()", stmtno );
+                /* Return code -1 if control file input error */
+                XMERRF ( MSG( HHC02468, "E", cfname, msgbuf, strerror( errno ) ) );
+            }
             return -1;
         }
 
@@ -3750,8 +3649,7 @@ static int      stmtno = 0;             /* Statement number          */
 #endif
         if (stmtlen == 0 || stmt[stmtlen-1] != '\n')
         {
-            XMERRF ("HHCDL020E Line too long in %s line %d\n",
-                    cfname, stmtno);
+            XMERRF ( MSG( HHC02577, "E", cfname, stmtno ) );
             return -1;
         }
 
@@ -3765,7 +3663,7 @@ static int      stmtno = 0;             /* Statement number          */
         stmt[stmtlen] = '\0';
 
         /* Print the input statement */
-        XMINFF (0, "--------- %s\n", stmt);
+        XMINFF (0, MSG( HHC02567, "I", cfname, stmtno, stmt ) );
 
         /* Ignore comment statements */
         if (stmtlen == 0 || stmt[0] == '#' || stmt[0] == '*')
@@ -3856,7 +3754,10 @@ BYTE            c;                      /* Character work area       */
     /* Check that all mandatory fields are present */
     if (pdsnam == NULL || pimeth == NULL)
     {
-        XMERR ("HHCDL021E DSNAME or initialization method missing\n");
+        if (pdsnam == NULL)
+            XMERR ( MSG(HHC02578, "E", "DSNAME" ) );
+        if (pimeth == NULL) 
+            XMERR ( MSG(HHC02578, "E", "Initialization method" ) );
         return -1;
     }
 
@@ -3894,7 +3795,7 @@ BYTE            c;                      /* Character work area       */
         *method = METHOD_SEQ;
     else
     {
-        XMERRF ("HHCDL022E Invalid initialization method: %s\n", pimeth);
+        XMERRF ( MSG( HHC02579, "E", pimeth ) );
         return -1;
     }
 
@@ -3904,7 +3805,7 @@ BYTE            c;                      /* Character work area       */
         pifile = strtok (NULL, " \t");
         if (pifile == NULL)
         {
-            XMERR ("HHCDL023E Initialization file name missing\n");
+            XMERR ( MSG( HHC02580, "E" ) );
             return -1;
         }
         *ifptr = pifile;
@@ -3921,8 +3822,7 @@ BYTE            c;                      /* Character work area       */
         *units = 'T';
     else
     {
-        XMERRF ("HHCDL024E Invalid allocation units: %s\n",
-                punits);
+        XMERRF ( MSG( HHC02581, "E", punits ) );
         return -1;
     }
 
@@ -3932,8 +3832,7 @@ BYTE            c;                      /* Character work area       */
 
     if (sscanf(psppri, "%u%c", sppri, &c) != 1)
     {
-        XMERRF ("HHCDL025E Invalid primary space: %s\n",
-                psppri);
+        XMERRF ( MSG( HHC02582, "E", "Primary", psppri, punits ) );
         return -1;
     }
 
@@ -3943,8 +3842,7 @@ BYTE            c;                      /* Character work area       */
 
     if (sscanf(pspsec, "%u%c", spsec, &c) != 1)
     {
-        XMERRF ("HHCDL026E Invalid secondary space: %s\n",
-                pspsec);
+        XMERRF ( MSG( HHC02582, "E", "Secondary", pspsec, punits ) );
         return -1;
     }
 
@@ -3954,8 +3852,7 @@ BYTE            c;                      /* Character work area       */
 
     if (sscanf(pspdir, "%u%c", spdir, &c) != 1)
     {
-        XMERRF ("HHCDL027E Invalid directory space: %s\n",
-                pspsec);
+        XMERRF ( MSG( HHC02583, "E", pspdir ) );
         return -1;
     }
 
@@ -3974,8 +3871,7 @@ BYTE            c;                      /* Character work area       */
         *dsorg = DSORG_PO;
     else
     {
-        XMERRF ("HHCDL028E Invalid dataset organization: %s\n",
-                pdsorg);
+        XMERRF ( MSG( HHC02584, "E", pdsorg ) );
         return -1;
     }
 
@@ -4000,8 +3896,7 @@ BYTE            c;                      /* Character work area       */
         *recfm = RECFM_FORMAT_U;
     else
     {
-        XMERRF ("HHCDL029E Invalid record format: %s\n",
-                precfm);
+        XMERRF ( MSG( HHC02585, "E", precfm ) );
         return -1;
     }
 
@@ -4012,8 +3907,7 @@ BYTE            c;                      /* Character work area       */
     if (sscanf(plrecl, "%u%c", lrecl, &c) != 1
         || *lrecl > MAX_DATALEN)
     {
-        XMERRF ("HHCDL030E Invalid logical record length: %s\n",
-                plrecl);
+        XMERRF ( MSG( HHC02586, "E", plrecl ) );
         return -1;
     }
 
@@ -4024,8 +3918,7 @@ BYTE            c;                      /* Character work area       */
     if (sscanf(pblksz, "%u%c", blksz, &c) != 1
         || *blksz > MAX_DATALEN)
     {
-        XMERRF ("HHCDL031E Invalid block size: %s\n",
-                pblksz);
+        XMERRF ( MSG( HHC02587, "E", pblksz ) );
         return -1;
     }
 
@@ -4036,8 +3929,7 @@ BYTE            c;                      /* Character work area       */
     if (sscanf(pkeyln, "%u%c", keyln, &c) != 1
         || *keyln > 255)
     {
-        XMERRF ("HHCDL032E Invalid key length: %s\n",
-                pkeyln);
+        XMERRF ( MSG( HHC02588, "E", pkeyln ) );
         return -1;
     }
 
@@ -4110,8 +4002,7 @@ int             fsflag = 0;             /* 1=Free space message sent */
     dscbtab = (DATABLK**)malloc (sizeof(DATABLK*) * MAXDSCB);
     if (dscbtab == NULL)
     {
-        XMERRF ("HHCDL010E Cannot obtain storage for DSCB pointer array: %s\n",
-                strerror(errno));
+        XMERRF ( MSG( HHC02544, "E", "DSCB pointer array", "malloc()", strerror(errno) ) );
         return -1;
     }
 
@@ -4143,8 +4034,7 @@ int             fsflag = 0;             /* 1=Free space message sent */
         /* Exit if error in control file */
         if (rc < 0)
         {
-            XMERRF ("HHCDL011E Invalid statement in %s line %d\n",
-                    cfname, stmtno);
+            XMERRF ( MSG( HHC02569, "E", cfname, stmtno ) );
             return -1;
         }
 
@@ -4161,8 +4051,7 @@ int             fsflag = 0;             /* 1=Free space message sent */
 
         } /* end while */
 
-        XMINFF (1, "HHCDL012I Creating dataset %s at cyl %d head %d\n",
-                dsname, outcyl, outhead);
+        XMINFF (1, MSG( HHC02568, "I", dsname, outcyl, outcyl, outhead, outhead ) );
         bcyl = outcyl;
         bhead = outhead;
 
@@ -4265,8 +4154,7 @@ int             fsflag = 0;             /* 1=Free space message sent */
         } /* end while(tracks) */
 
         /* Print number of tracks written to dataset */
-        XMINFF (2, "HHCDL013I Dataset %s contains %d track%s\n",
-                dsname, tracks, (tracks == 1 ? "" : "s"));
+        XMINFF (2, MSG( HHC02589, "I", dsname, tracks, (tracks == 1 ? "" : "s") ) );
 
         /* Calculate end of extent cylinder and head */
         ecyl = (outhead > 0 ? outcyl : outcyl - 1);
@@ -4298,8 +4186,7 @@ int             fsflag = 0;             /* 1=Free space message sent */
         /* Issue free space information message */
         if (fsflag == 0)
         {
-            XMINFF (1, "HHCDL014I Free space starts at cyl %d head %d\n",
-                    outcyl, outhead);
+            XMINFF (1, MSG( HHC02568, "I", "****FREE SPACE****", outcyl, outcyl, outhead, outhead ) );
             fsflag = 1;
         }
 
@@ -4322,12 +4209,10 @@ int             fsflag = 0;             /* 1=Free space message sent */
 
     if (outcyl > reqcyls && reqcyls != 0)
     {
-        XMINFF (0, "HHCDL015W Volume exceeds %d cylinders\n",
-                reqcyls);
+        XMINFF (0, MSG( HHC02590, "W", reqcyls ) );
     }
 
-    XMINFF (0, "HHCDL016I Total of %d cylinders written to %s\n",
-            outcyl, ofname);
+    XMINFF (0, MSG( HHC02591, "I", ofname, outcyl ) );
 
     /* Update the VTOC pointer in the volume label */
     offset = CKDDASD_TRKHDR_SIZE + CKDDASD_RECHDR_SIZE + 8
@@ -4335,14 +4220,12 @@ int             fsflag = 0;             /* 1=Free space message sent */
            + CKDDASD_RECHDR_SIZE + IPL2_KEYLEN + IPL2_DATALEN
            + CKDDASD_RECHDR_SIZE + VOL1_KEYLEN + 11;
 
-    XMINFF (5, "HHCDL017I Updating VTOC pointer %2.2X%2.2X%2.2X%2.2X%2.2X\n",
-            volvtoc[0], volvtoc[1], volvtoc[2], volvtoc[3],
-            volvtoc[4]);
+    XMINFF (5, MSG( HHC02592, "I", volvtoc[0], volvtoc[1], volvtoc[2], volvtoc[3], volvtoc[4] ) );
 
     rc = read_track (cif, 0, 0);
     if (rc < 0)
     {
-        XMERR ("HHCDL018E Cannot read VOL1 record\n");
+        XMERR ( MSG( HHC02593, "E" ) );
         return -1;
     }
 
@@ -4365,6 +4248,10 @@ int             fsflag = 0;             /* 1=Free space message sent */
 /*-------------------------------------------------------------------*/
 int main (int argc, char *argv[])
 {
+char           *pgmname;                /* prog name in host format  */
+char           *pgm;                    /* less any extension (.ext) */
+char           *pgmpath;                /* prog path in host format  */
+char            msgbuf[512];            /* message build work area   */
 int             rc = 0;                 /* Return code               */
 char           *cfname;                 /* -> Control file name      */
 char           *ofname;                 /* -> Output file name       */
@@ -4395,11 +4282,41 @@ int             altcylflag = 0;         /* Alternate cylinders flag  */
 int             lfs = 0;                /* 1 = Large file            */
 char            pathname[MAX_PATH];     /* cfname in host path format*/
 
-    INITIALIZE_UTILITY("dasdload");
+    /* Set program name */
+    if ( argc > 0 )
+    {
+        if ( strlen(argv[0]) == 0 )
+        {
+            pgmname = strdup( UTILITY_NAME );
+            pgmpath = strdup( "" );
+        }
+        else
+        {
+            char path[MAX_PATH];
+#if defined( _MSVC_ )
+            GetModuleFileName( NULL, path, MAX_PATH );
+#else
+            strncpy( path, argv[0], sizeof( path ) );
+#endif
+            pgmname = strdup(basename(path));
+#if !defined( _MSVC_ )
+            strncpy( path, argv[0], sizeof(path) );
+#endif
+            pgmpath = strdup( dirname( path  ));
+        }
+    }
+    else
+    {
+            pgmname = strdup( UTILITY_NAME );
+            pgmpath = strdup( "" );
+    }
+
+    pgm = strtok( strdup(pgmname), ".");
+    INITIALIZE_UTILITY( pgmname );
 
     /* Display the program identification message */
-    display_version (stderr,
-                     "Hercules DASD loader program", FALSE);
+    MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "Build DASD from TSO XMIT files" ) );
+    display_version (stderr, msgbuf+10, FALSE);
 
     /* Process optional arguments */
     for ( ; argc > 1 && argv[1][0] == '-'; argv++, argc--)
@@ -4418,29 +4335,29 @@ char            pathname[MAX_PATH];     /* cfname in host path format*/
             altcylflag = 1;
         else if (strcmp("lfs", &argv[1][1]) == 0 && sizeof(off_t) > 4)
             lfs = 1;
-        else argexit(0);
+        else argexit(0, pgm);
     }
 
     /* Check the number of arguments */
     if (argc < 3 || argc > 4)
-        argexit(4);
+        argexit(4, pgm);
 
     /* The first argument is the control file name */
     cfname = argv[1];
     if (argv[1] == NULL || strlen(argv[1]) == 0)
-        argexit(1);
+        argexit(1, pgm);
 
     /* The second argument is the DASD image file name */
     ofname = argv[2];
     if (argv[2] == NULL || strlen(argv[2]) == 0)
-        argexit(2);
+        argexit(2, pgm);
 
     /* The optional third argument is the message level */
     if (argc > 3 && argv[3] != NULL)
     {
         if (sscanf(argv[3], "%u%c", &infolvl, &c) != 1
             || infolvl > 5)
-            argexit(3);
+            argexit(3, pgm);
     }
 
     /* Open the control file */
@@ -4448,8 +4365,7 @@ char            pathname[MAX_PATH];     /* cfname in host path format*/
     cfp = fopen (pathname, "r");
     if (cfp == NULL)
     {
-        XMERRF ("HHCDL001E Cannot open %s: %s\n",
-                cfname, strerror(errno));
+        XMERRF ( MSG( HHC02468, "E", cfname, "fopen()", strerror( errno ) ) );
         return -1;
     }
 
@@ -4460,8 +4376,7 @@ char            pathname[MAX_PATH];     /* cfname in host path format*/
     /* Error if end of file */
     if (rc > 0)
     {
-        XMERRF ("HHCDL002E Volume serial statement missing from %s\n",
-                cfname);
+        XMERRF ( MSG( HHC02500, "E", cfname ) );
         return -1;
     }
 
@@ -4474,8 +4389,7 @@ char            pathname[MAX_PATH];     /* cfname in host path format*/
     /* Validate the volume serial number */
     if (volser == NULL || strlen(volser) == 0 || strlen(volser) > 6)
     {
-        XMERRF ("HHCDL003E Volume serial %s in %s line %d is not valid\n",
-                volser, cfname, stmtno);
+        XMERRF ( MSG( HHC02501, "E", volser, cfname, stmtno ) );
         return -1;
     }
     string_to_upper (volser);
@@ -4484,8 +4398,7 @@ char            pathname[MAX_PATH];     /* cfname in host path format*/
     ckd = dasd_lookup (DASD_CKDDEV, sdevtp, 0, 0);
     if (ckd == NULL)
     {
-        XMERRF ("HHCDL004E Device type %s in %s line %d is not recognized\n",
-                sdevtp, cfname, stmtno);
+        XMERRF ( MSG( HHC02502, "E", sdevtp, cfname, stmtno ) ); 
         return -1;
     }
     devtype = ckd->devt;
@@ -4505,9 +4418,7 @@ char            pathname[MAX_PATH];     /* cfname in host path format*/
         /* Validate the requested device size in cylinders */
         if (sscanf(sdevsz, "%u%c", &reqcyls, &c) != 1)
         {
-            XMERRF ("HHCDL005E %s in %s line %d is not a valid cylinder "
-                    "count\n",
-                    sdevsz, cfname, stmtno);
+            XMERRF ( MSG( HHC02503, "E", sdevsz, cfname, stmtno ) );
             return -1;
         }
     }
@@ -4522,9 +4433,7 @@ char            pathname[MAX_PATH];     /* cfname in host path format*/
     outtrklv = ROUND_UP(outtrklv,512);
 
     /* Display progress message */
-    XMINFF (0, "HHCDL006I Creating %4.4X volume %s: "
-            "%u trks/cyl, %u bytes/track\n",
-            devtype, volser, outheads, outtrklv);
+    XMINFF (0, MSG( HHC02520, "I", devtype, volser, outheads, outtrklv ) );
 
     /* Create the output file */
 #ifdef EXTERNALGUI
@@ -4534,7 +4443,7 @@ char            pathname[MAX_PATH];     /* cfname in host path format*/
                      volser, comp, lfs, 0, 0, 0);
     if (rc < 0)
     {
-        XMERRF ("HHCDL007E Cannot create %s\n", ofname);
+        XMERRF ( MSG( HHC02504, "E", ofname, "create_ckd()" ) );
         return -1;
     }
 
@@ -4542,12 +4451,12 @@ char            pathname[MAX_PATH];     /* cfname in host path format*/
     cif = open_ckd_image (ofname, NULL, O_RDWR | O_BINARY, 0);
     if (!cif)
     {
-        XMERRF ("HHCDL008E Cannot open %s\n", ofname);
+        XMERRF ( MSG( HHC02504, "E", ofname, "open_ckd_image()" ) );
         return -1;
     }
 
     /* Display progress message */
-    XMINFF (0, "HHCDL009I Loading %4.4X volume %s\n", devtype, volser);
+    XMINFF (0, MSG( HHC02521, "I", devtype, volser ) );
 
     /* Write track zero to the DASD image file */
     rc = write_track_zero (cif, ofname, volser, devtype,
