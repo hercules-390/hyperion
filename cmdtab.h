@@ -487,7 +487,7 @@ CMDABBR("query",1,   PANEL,         SYSCMDALL-SYSOPER,  query_cmd,
 
 COMMAND("set",      PANEL+CONFIG,   SYSCMDALL,          set_cmd,     
   "set command",
-    "set quitmout n    Set quit timeout value (1 - 60)\n" )
+    "set quitmout n    Set quit timeout value (2 - 60)\n" )
 
 COMMAND("mounted_tape_reinit", PANEL+CONFIG, SYSCMDALL-SYSOPER, mnttapri_cmd,  
   "Control tape initilisation", 

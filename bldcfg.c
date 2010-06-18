@@ -690,6 +690,8 @@ int    ecpsvmac;                        /* -> ECPS:VM add'l arg cnt  */
 #if defined(OPTION_SHARED_DEVICES)
 char   *sshrdport;                      /* -> Shared device port nbr */
 #endif /*defined(OPTION_SHARED_DEVICES)*/
+char   *squitmout;                      /* -> quit timeout value     */
+U16     quitmout;                       /* quit timeout value        */
 U16     version = 0x00;                 /* CPU version code          */
 int     dfltver = 1;                    /* Default version code      */
 U32     serial;                         /* CPU serial number         */
@@ -973,6 +975,8 @@ char    fname[MAX_PATH];                /* normalized filename       */
         sshrdport = NULL;
 #endif /*defined(OPTION_SHARED_DEVICES)*/
 
+        squitmout = NULL;
+
         /* Check for old-style CPU statement */
         if (scount == 0 && addargc == 5 && strlen(keyword) == 6
             && sscanf(keyword, "%x%c", &rc, &c) == 1)
@@ -1103,7 +1107,10 @@ char    fname[MAX_PATH];                /* normalized filename       */
                 WRMSG( HHC01450, "W", inc_stmtnum[inc_level], fname, keyword, "OPTION_SHARED_DEVICES" ); 
             }
 #endif /*defined(OPTION_SHARED_DEVICES)*/
-
+            else if (strcasecmp (keyword, "quitmout") == 0)
+            {
+                squitmout = operand;
+            }
             else
             {
                 WRMSG(HHC01441, "E", inc_stmtnum[inc_level], fname, keyword);
@@ -1385,6 +1392,16 @@ char    fname[MAX_PATH];                /* normalized filename       */
             }
         }
 
+        /* Parse quitmout operand */
+        if (squitmout != NULL)
+        {
+            if ( sscanf(squitmout, "%d%c", &quitmout, &c) != 1
+                || (quitmout > 60) )
+            {
+                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, squitmout, "quit timeout value");
+                delayed_exit(1);
+            }
+        }
 
         /* Parse terminal logo option */
         if (slogofile != NULL)
@@ -1571,6 +1588,9 @@ char    fname[MAX_PATH];                /* normalized filename       */
 
     /* Set the timezone offset */
     adjust_tod_epoch((tzoffset/100*3600+(tzoffset%100)*60)*16000000LL);
+
+    /* Set the quitmout value */
+    sysblk.quitmout = quitmout;
 
     /* Gabor Hoffer (performance option) */
     copy_opcode_tables();
