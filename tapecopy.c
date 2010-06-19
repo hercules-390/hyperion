@@ -16,6 +16,7 @@
 /* If no disk file name is supplied, then the program simply         */
 /* prints a summary of the tape files and blocksizes.                */
 /*-------------------------------------------------------------------*/
+#define UTILITY_NAME    "tapecopy"
 
 #include "hstdinc.h"
 
@@ -32,7 +33,7 @@ int main (int argc, char *argv[])
 {
     UNREFERENCED(argc);
     UNREFERENCED(argv);
-    printf( _("HHCTC017E SCSI tape not supported with this build\n") );
+    printf( MSG( HHC02700, "I" ) );
     return 0;
 }
 #else
@@ -125,7 +126,7 @@ char           *filenameout;            /* -> Output AWS file name   */
 void delayed_exit (int exit_code)
 {
     if (RC_SUCCESS != exit_code)
-        printf( _( "HHCTC000I Abnormal termination\n" ) );
+        printf( MSG( HHC02701, "E" ) );
 
     /* Delay exiting is to give the system
      * time to display the error message. */
@@ -139,21 +140,22 @@ void delayed_exit (int exit_code)
 /*-------------------------------------------------------------------*/
 static void print_status (char *devname, long stat)
 {
-    printf (_("HHCTC015I %s status: %8.8lX"), devname, stat);
+    char msgbuf[256];
 
-    if (GMT_EOF    ( stat )) printf (" EOF"    );
-    if (GMT_BOT    ( stat )) printf (" BOT"    );
-    if (GMT_EOT    ( stat )) printf (" EOT"    );
-    if (GMT_SM     ( stat )) printf (" SETMARK");
-    if (GMT_EOD    ( stat )) printf (" EOD"    );
-    if (GMT_WR_PROT( stat )) printf (" WRPROT" );
-    if (GMT_ONLINE ( stat )) printf (" ONLINE" );
-    if (GMT_D_6250 ( stat )) printf (" 6250"   );
-    if (GMT_D_1600 ( stat )) printf (" 1600"   );
-    if (GMT_D_800  ( stat )) printf (" 800"    );
-    if (GMT_DR_OPEN( stat )) printf (" NOTAPE" );
+    MSGBUF( msgbuf, MSG( HHC02702, "I", devname, stat, 
+        (GMT_EOF    ( stat )) ? " EOF" : "",
+        (GMT_BOT    ( stat )) ? " BOT" : "",
+        (GMT_EOT    ( stat )) ? " EOT" : "",
+        (GMT_SM     ( stat )) ? " SETMARK" : "",
+        (GMT_EOD    ( stat )) ? " EOD" : "",
+        (GMT_WR_PROT( stat )) ? " WRPROT" : "",
+        (GMT_ONLINE ( stat )) ? " ONLINE" : "",
+        (GMT_D_6250 ( stat )) ? " 6250" : "",
+        (GMT_D_1600 ( stat )) ? " 1600" : "",
+        (GMT_D_800  ( stat )) ? " 800" : "",
+        (GMT_DR_OPEN( stat )) ? " NOTAPE" : "" ) );
 
-    printf ("\n");
+    printf ("%s", msgbuf);
 
 } /* end function print_status */
 
@@ -259,8 +261,7 @@ int rc;                                 /* Return code               */
         )
             return +1;
 
-        printf (_("HHCTC016E Error reading status of %s: rc=%d, errno=%d: %s\n"),
-                devname, rc, errno, strerror(errno));
+        printf ( MSG( HHC02703, "E", devname, rc, errno, strerror(errno) ) );
         return -1;
     }
 
@@ -288,12 +289,11 @@ int read_scsi_tape (int devfd, void *buf, size_t bufsize, struct mtget* mtget)
         rc = obtain_status (devnamein, devfd, mtget);
         if (rc == +1)
         {
-            printf (_("HHCTC011I End of tape.\n"));
+            printf ( MSG( HHC02704, "I" ) );
             errno = save_errno;
             return(-1);
         }
-        printf (_("HHCTC008E Error reading %s: errno=%d: %s\n"),
-            devnamein, errno, strerror(errno));
+        printf ( MSG( HHC02705, "E", devnamein, errno, strerror(errno) ) );
         EXIT( RC_ERROR_READING_DATA );
     }
 
@@ -318,13 +318,12 @@ int read_aws_disk (int diskfd, void *buf, size_t bufsize)
         rc = read (diskfd, &awshdr, sizeof(AWSTAPE_BLKHDR));
         if (rc == 0)
         {
-            printf (_("HHCTC018I End of AWSTAPE input file.\n"));
+            printf ( MSG( HHC02706, "I", filenamein, "AWSTAPE" ) ); 
             return (-1);
         }
         if (rc < (int)sizeof(AWSTAPE_BLKHDR))
         {
-            printf (_("HHCTC019E Error reading AWSTAPE header from %s: rc=%d, errno=%d: %s\n"),
-                   filenamein, rc, errno, strerror(errno));
+            printf ( MSG( HHC02707, "E", filenamein, "AWSTAPE", rc, errno, strerror(errno) ) );
             EXIT( RC_ERROR_READING_AWS_HEADER );
         } /* end if(rc) */
 
@@ -339,8 +338,7 @@ int read_aws_disk (int diskfd, void *buf, size_t bufsize)
         /* Check maximum block length */
         if ((count_read + blksize) > bufsize)
         {
-            printf (_("HHCTC020E AWSTAPE block too large on %s: block size=%d, maximum=%d\n"),
-                   filenamein, count_read+blksize, (int)bufsize);
+            printf ( MSG( HHC02708, "E", filenamein, "AWSTAPE", count_read+blksize, (int)bufsize) );
             EXIT( RC_ERROR_AWSTAPE_BLOCK_TOO_LARGE );
         } /* end if(count) */
 
@@ -348,8 +346,7 @@ int read_aws_disk (int diskfd, void *buf, size_t bufsize)
         rc = read (diskfd, bufptr, blksize);
         if (rc < (int)blksize)
         {
-            printf (_("HHCTC021E Error reading data block from %s: rc=%d, errno=%d: %s\n"),
-                   filenamein, rc, errno, strerror(errno));
+            printf ( MSG( HHC02709, "E", filenamein, "AWSTAPE", rc, errno, strerror(errno) ) );
             EXIT( RC_ERROR_READING_DATA );
         } /* end if(rc) */
 
@@ -373,8 +370,7 @@ int write_scsi_tape (int devfd, void *buf, size_t len)
     rc = write_tape (devfd, buf, len);
     if (rc < (int)len)
     {
-        printf (_("HHCTC022E Error writing data block to %s: rc=%d, errno=%d: %s\n"),
-               devnameout, rc, errno, strerror(errno));
+        printf ( MSG( HHC02710, "E", devnameout, rc, errno, strerror(errno) ) );
         EXIT( RC_ERROR_WRITING_DATA );
     } /* end if(rc) */
 
@@ -407,8 +403,7 @@ int write_aws_disk (int diskfd, void *buf, size_t len)
     rc = write (diskfd, &awshdr, sizeof(AWSTAPE_BLKHDR));
     if (rc < (int)sizeof(AWSTAPE_BLKHDR))
     {
-        printf (_("HHCTC013E Error writing AWSTAPE header on %s: rc=%d, errno=%d: %s\n"),
-               filenameout, rc, errno, strerror(errno));
+        printf ( MSG( HHC02711, "E", filenameout, "AWSTAPE", rc, errno, strerror(errno) ) );
         EXIT( RC_ERROR_WRITING_OUTPUT_AWS_HEADER_BLOCK );
     } /* end if(rc) */
 
@@ -422,8 +417,7 @@ int write_aws_disk (int diskfd, void *buf, size_t len)
 #endif
     if (rc < (int)len)
     {
-        printf (_("HHCTC014E Error writing data block to %s: rc=%d, errno=%d: %s\n"),
-               filenameout, rc, errno, strerror(errno));
+        printf ( MSG( HHC02712, "E", filenameout, "AWSTAPE", rc, errno, strerror(errno) ) );
         EXIT( RC_ERROR_WRITING_DATA );
     } /* end if(rc) */
 
@@ -445,8 +439,7 @@ int write_tapemark_scsi_tape (int devfd)
     rc = ioctl_tape (devfd, MTIOCTOP, (char*)&opblk);
     if (rc < 0)
     {
-        printf (_("HHCTC023E Error writing tapemark on %s: rc=%d, errno=%d: %s\n"),
-                devnameout, rc, errno, strerror(errno));
+        printf ( MSG( HHC02713, "E", devnameout, rc, errno, strerror(errno) ) );
         EXIT( RC_ERROR_WRITING_TAPEMARK );
     }
     return(rc);
@@ -473,8 +466,7 @@ int write_tapemark_aws_disk (int diskfd)
     rc = write (diskfd, &awshdr, sizeof(AWSTAPE_BLKHDR));
     if (rc < (int)sizeof(AWSTAPE_BLKHDR))
     {
-        printf (_("HHCTC010E Error writing tapemark on %s: rc=%d, errno=%d, %s\n"),
-                  filenameout, rc, errno, strerror(errno));
+        printf ( MSG( HHC02714, "E", filenameout, "AWSTAPE", rc, errno, strerror(errno) ) );
        EXIT( RC_ERROR_WRITING_TAPEMARK );
     } /* end if(rc) */
 
@@ -487,6 +479,10 @@ int write_tapemark_aws_disk (int diskfd)
 /*-------------------------------------------------------------------*/
 int main (int argc, char *argv[])
 {
+char           *pgmname;                /* prog name in host format  */
+char           *pgm;                    /* less any extension (.ext) */
+char           *pgmpath;                /* prog path in host format  */
+char            msgbuf[512];            /* message build work area   */
 int             rc;                     /* Return code               */
 int             i;                      /* Array subscript           */
 int             devfd;                  /* Tape file descriptor      */
@@ -508,10 +504,41 @@ struct mtpos    mtpos;                  /* Area for MTIOCPOS ioctl   */
 int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
 #endif /*defined(EXTERNALGUI)*/
 
-    INITIALIZE_UTILITY("tapecopy");
+    /* Set program name */
+    if ( argc > 0 )
+    {
+        if ( strlen(argv[0]) == 0 )
+        {
+            pgmname = strdup( UTILITY_NAME );
+            pgmpath = strdup( "" );
+        }
+        else
+        {
+            char path[MAX_PATH];
+#if defined( _MSVC_ )
+            GetModuleFileName( NULL, path, MAX_PATH );
+#else
+            strncpy( path, argv[0], sizeof( path ) );
+#endif
+            pgmname = strdup(basename(path));
+#if !defined( _MSVC_ )
+            strncpy( path, argv[0], sizeof(path) );
+#endif
+            pgmpath = strdup( dirname( path  ));
+        }
+    }
+    else
+    {
+            pgmname = strdup( UTILITY_NAME );
+            pgmpath = strdup( "" );
+    }
 
-   /* Display the program identification message */
-    display_version (stderr, "Hercules tape copy program", FALSE);
+    pgm = strtok( strdup(pgmname), ".");
+    INITIALIZE_UTILITY( pgmname );
+
+    /* Display the program identification message */
+    MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "tape copy" ) );
+    display_version (stderr, msgbuf+10, FALSE);
 
     /* The first argument is the input file name
        (either AWS disk file or SCSI tape device)
@@ -582,8 +609,7 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
     }
     if (devfd < 0)
     {
-        printf (_("HHCTC001E Error opening %s: errno=%d: %s\n"),
-                (devnamein ? devnamein : devnameout), errno, strerror(errno));
+        printf ( MSG( HHC02715, "E", (devnamein ? devnamein : devnameout), errno, strerror(errno) ) );
         EXIT( RC_ERROR_OPENING_SCSI_DEVICE );
     }
 
@@ -595,8 +621,7 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
     rc = ioctl_tape (devfd, MTIOCTOP, (char*)&opblk);
     if (rc < 0)
     {
-        printf (_("HHCTC005E Error setting attributes for %s: rc=%d, errno=%d: %s\n"),
-                (devnamein ? devnamein : devnameout), rc, errno, strerror(errno));
+        printf ( MSG( HHC02716, "E", (devnamein ? devnamein : devnameout), rc, errno, strerror(errno) ) );
         EXIT( RC_ERROR_SETTING_SCSI_VARBLK_PROCESSING );
     }
 
@@ -608,8 +633,7 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
     rc = ioctl_tape (devfd, MTIOCTOP, (char*)&opblk);
     if (rc < 0)
     {
-        printf (_("HHCTC006E Error rewinding %s: rc=%d, errno=%d: %s\n"),
-                (devnamein ? devnamein : devnameout), rc, errno, strerror(errno));
+        printf ( MSG( HHC02717, "E", (devnamein ? devnamein : devnameout), rc, errno, strerror(errno) ) );
         EXIT( RC_ERROR_REWINDING_SCSI );
     }
 
@@ -624,12 +648,16 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
     for (i = 0; tapeinfo[i].t_type != 0
                 && tapeinfo[i].t_type != mtget.mt_type; i++);
 
-    if (tapeinfo[i].t_name)
-        printf (_("HHCTC003I %s device type: %s\n"),
-            (devnamein ? devnamein : devnameout), tapeinfo[i].t_name);
-    else
-        printf (_("HHCTC003I %s device type: 0x%lX\n"),
-            (devnamein ? devnamein : devnameout), mtget.mt_type);
+    {
+        char msgbuf[64];
+
+        if (tapeinfo[i].t_name)
+            MSGBUF( msgbuf, ": %s", tapeinfo[i].t_name); 
+        else
+            MSGBUF( msgbuf, " code: 0x%lX", mtget.mt_type); 
+
+        printf ( MSG( HHC02718, "I", (devnamein ? devnamein : devnameout), msgbuf ) );
+    }
 
     density = (mtget.mt_dsreg & MT_ST_DENSITY_MASK)
                 >> MT_ST_DENSITY_SHIFT;
@@ -637,12 +665,16 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
     for (i = 0; densinfo[i].t_type != 0
                 && densinfo[i].t_type != density; i++);
 
-    if (densinfo[i].t_name)
-        printf (_("HHCTC004I %s tape density: %s\n"),
-                (devnamein ? devnamein : devnameout), densinfo[i].t_name);
-    else
-        printf (_("HHCTC004I %s tape density code: 0x%lX\n"),
-            (devnamein ? devnamein : devnameout), density);
+    {
+        char msgbuf[64];
+
+        if (densinfo[i].t_name)
+            MSGBUF( msgbuf, ": %s", densinfo[i].t_name );
+        else
+            MSGBUF( msgbuf, " code: 0x%lX", density );
+
+        printf ( MSG( HHC02719, "I", (devnamein ? devnamein : devnameout), msgbuf ) );
+    }
 
     if (mtget.mt_gstat != 0)
         print_status ((devnamein ? devnamein : devnameout), mtget.mt_gstat);
@@ -661,9 +693,7 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
     }
     if (diskfd < 0)
     {
-        printf (_("HHCTC007E Error opening %s: errno=%d: %s\n"),
-                (filenamein ? filenamein : filenameout),
-                errno, strerror(errno));
+        printf ( MSG( HHC02720, "E", (filenamein ? filenamein : filenameout), errno, strerror(errno) ) );
         EXIT( RC_ERROR_OPENING_AWS_FILE );
     }
 
@@ -760,10 +790,7 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
             {
                 ASSERT( file_bytes ); // (sanity check)
 
-                printf (_("HHCTC009I File %u: Blocks=%u, Bytes=%"I64_FMT"d, Block size min=%u, "
-                        "max=%u, avg=%u\n"),
-                        fileno, blkcount, file_bytes, minblksz, maxblksz,
-                        (int)file_bytes/blkcount);
+                printf ( MSG( HHC02721, "I", fileno, blkcount, file_bytes, minblksz, maxblksz, (int)file_bytes/blkcount ) );
             }
             else
             {
@@ -808,7 +835,7 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
             for (i=0; i < 80; i++)
                 labelrec[i] = guest_to_host(buf[i]);
             labelrec[i] = '\0';
-            printf (_("HHCTC012I %s\n"), labelrec);
+            printf ( MSG( HHC02722, "I", labelrec ) );
         }
         else
         {
@@ -817,8 +844,8 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
 #if defined(EXTERNALGUI)
             if ( !extgui )
 #endif
-                printf( _("File %u: Block %u\r"),
-                    fileno, blkcount );
+                printf( MSG_C( HHC02723, "I", fileno, blkcount ) );
+                printf("\r");
         }
 
         /* Write block to output file */
@@ -836,23 +863,14 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
 
     printf
     (
-        _(
-            "HHCTC000I Successful completion;\n"
-            "          Bytes read: %"I64_FMT"d (%3.1f MB), Blocks=%u, avg=%u\n"
-         )
+        MSG( HHC02724, "I" 
         ,           bytes_read
         ,(double) ( bytes_read    + HALF_MEGABYTE ) / (double) ONE_MEGABYTE
         ,totalblks
         ,totalblks ? (int)bytes_read/totalblks : -1
-    );
-
-    printf
-    (
-        _(
-            "          Bytes written: %"I64_FMT"d (%3.1f MB)\n"
-         )
         ,           bytes_written
         ,(double) ( bytes_written + HALF_MEGABYTE ) / (double) ONE_MEGABYTE
+        )
     );
     close (diskfd);
 
@@ -865,8 +883,7 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
 
     if (rc < 0)
     {
-        printf (_("HHCTC006E Error rewinding %s: rc=%d, errno=%d: %s\n"),
-                (devnamein ? devnamein : devnameout), rc, errno, strerror(errno));
+        printf ( MSG( HHC02717, "E", (devnamein ? devnamein : devnameout), rc, errno, strerror(errno) ) );
         EXIT( RC_ERROR_REWINDING_SCSI );
     }
 

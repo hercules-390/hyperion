@@ -13,6 +13,7 @@
 /*-------------------------------------------------------------------*/
 /* Diagnostic tool to display various CCKD data                      */
 /*-------------------------------------------------------------------*/
+#define UTILITY_NAME    "cckddiag"
 
 #include "hstdinc.h"
 
@@ -49,26 +50,9 @@ static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 /*-------------------------------------------------------------------*/
 /* print syntax                                                      */
 /*-------------------------------------------------------------------*/
-int syntax()
+int syntax(char *pgm)
 {
-    fprintf (stdout, "\n" 
-        "cckddiag [options] file-name\n"
-        "Valid options are one or more of the following:\n"
-        "  -v        display version and exit\n"
-        "  -d        display DEVHDR\n"
-        "  -c        display CDEVHDR\n"
-        "  -1        display L1TAB (numeric one)\n"
-        "  -g        enable debug output\n"
-        "CKD track related options:\n"
-        "  -a cc hh  display absolute CCHH data\n"
-        "  -r tt     display relative TT data\n"
-        "  -2        display L2TAB related to -a or -r\n"
-        "  -t        display track data\n"
-        "  -x        hex display track key/data\n"
-        "Offset option:\n"
-        "  -o oo ll  hex display data at offset oo of length ll\n"
-        "Further information: man 1 cckddiag\n"
-        );
+    fprintf (stderr, MSG( HHC02600, "I", pgm ) );
     return -1;
 }
 
@@ -80,10 +64,10 @@ void snap(char *msg, void *data, int len) {
 int    x;
 
     if (msg != NULL) 
-        fprintf(stdout, "%s\n", msg);
+        fprintf(stderr, "%s\n", msg);
     data_dump(data, len);
     if (pausesnap) {
-        fprintf(stdout, "Press enter to continue\n");
+        fprintf(stderr, MSG( HHC02601, "I" ) );
         x = getc(stdin);
     }
 }
@@ -107,13 +91,11 @@ void *makbuf(int len, char *label) {
 
     p = malloc(len);
     if (p == NULL) {
-        fprintf(stdout, "malloc %s of length %d failed\n", 
-                label, len);
+        fprintf(stderr, MSG(HHC02602, "E", label, len, "malloc()" ) );
         clean();
         exit(4);
     }
-    if (debug) fprintf(stdout, "\n"
-               "MAKBUF malloc %s buffer of %d bytes at %p\n", 
+    if (debug) fprintf(stderr, "\nHHC90000D DBG: MAKBUF() malloc %s buffer of %d bytes at %p\n", 
                label, len, p);
     return p;
 }
@@ -129,21 +111,19 @@ int readpos(
             unsigned int len      /* length of data to read          */
             ) {
     if (debug) 
-        fprintf(stdout, "\nREADPOS seeking %d (0x%8.8X)\n", 
+        fprintf(stderr, "\nHHC90000D DBG: READPOS seeking %d (0x%8.8X)\n", 
                         (int)offset, (unsigned int)offset);
     if (lseek(fd, offset, SEEK_SET) < 0) {
-        fprintf(stdout, _("lseek to pos 0x%8.8x error: %s\n"),
-                        (unsigned int) offset, strerror(errno));
+        fprintf(stderr, MSG( HHC02603, "E", "READPOS", (unsigned int) offset, strerror(errno) ) );
         clean();
         exit (1);
     }
     if (debug) 
-        fprintf(stdout, 
-                "READPOS reading buf addr "PTR_FMTx" length %"SIZE_T_FMT"d (0x"SIZE_T_FMTX")\n",
+        fprintf(stderr, 
+                "HHC90000D DBG: READPOS reading buf addr "PTR_FMTx" length %"SIZE_T_FMT"d (0x"SIZE_T_FMTX")\n",
                 (uintptr_t)buf, len, len);
     if (read(fd, buf, len) < (ssize_t)len) {
-        fprintf(stdout, _("cckddiag: read error: %s\n"),
-                        strerror(errno));
+        fprintf(stderr, MSG( HHC02604, "E", "READPOS", strerror(errno) ) );
         clean();
         exit (2);
     }
@@ -256,10 +236,7 @@ BYTE    *past;
     r  = rh->rec;
     kl = rh->klen;
     dl = (rh->dlen[0] << 8) | (rh->dlen[1]);
-    fprintf(stdout, "\n"
-            "Track %d COUNT "
-            "CC=%d HH=%d R=%d KL=%d DL=%d\n",
-            trk, cc, hh, r, kl, dl);
+    fprintf(stderr, MSG( HHC02605, "I", trk, cc, cc, hh, hh, r, r, kl, dl ) );
     past = (BYTE *)rh + sizeof(CKDDASD_RECHDR);
     return past;
 }
@@ -270,9 +247,7 @@ BYTE    *past;
 BYTE *show_ckd_key(CKDDASD_RECHDR *rh, BYTE *buf, int trk, int xop) {
 
     if (rh->klen && xop) {
-        fprintf(stdout, 
-                "\nTrack %d R%d KEY (%d bytes)\n", 
-                trk, rh->rec, rh->klen);
+        fprintf(stderr, MSG( HHC02606, "I", trk, rh->rec, rh->rec, rh->klen ) );
         data_dump(buf, rh->klen);
     }
     return (BYTE *)buf + rh->klen;          /* skip past KEY field */
@@ -286,9 +261,7 @@ int     dl;
 
     dl = (rh->dlen[0] << 8) | (rh->dlen[1]);
     if (dl && xop) {
-        fprintf(stdout, 
-                "\nTrack %d R%d DATA (%d bytes)\n", 
-                trk, rh->rec, dl);
+        fprintf(stderr, MSG( HHC02607, "I", trk, rh->rec, rh->rec, dl ) );
         data_dump(buf, dl);
     }
     return buf + dl;                        /* skip past DATA field */
@@ -311,7 +284,7 @@ BYTE            *bufp;
 int             len;
 
     if (debug) 
-       snap("\nSHOWTRK Compressed track header and data", buf, imglen);
+       snap("\nHHC90000D DBG: SHOWTRK Compressed track header and data", buf, imglen);
     len = decomptrk(
               (BYTE *)buf,        /* input buffer address            */
               imglen,             /* input buffer length             */
@@ -322,12 +295,12 @@ int             len;
               msg                 /* addr of message buffer          */
               );
     if (debug) 
-       snap("\nSHOWTRK Decompressed track header and data", buf2, len);
+       snap("\nHHC90000D DBG: SHOWTRK Decompressed track header and data", buf2, len);
     bufp = &buf2[sizeof(CKDDASD_TRKHDR)];
     while (bufp < &buf2[sizeof(buf2)]) {
         rh = (CKDDASD_RECHDR *)bufp;
         if (memcmp((BYTE *)rh, &eighthexFF, 8) == 0) {
-            fprintf(stdout, "\nEnd of Track\n");
+            fprintf(stderr, MSG( HHC02608, "I" ) );
             break;
         }
         bufp = show_ckd_count(rh, trk);
@@ -358,15 +331,15 @@ char               *p;
             for (v = 0; isxdigit(*s); ++s) 
                 v = (v << 4) + xv[strchr(xd, *s) - xd];
             if (debug) 
-                fprintf(stdout, 
-                        "OFFTIFY string %s hex %8.8" I64_FMT "X decimal %" I64_FMT "d\n",
+                fprintf(stderr, 
+                        "HHC90000D DBG: OFFTIFY string %s hex %8.8" I64_FMT "X decimal %" I64_FMT "d\n",
                         p, (U64)v, (U64)v);
             return v;
         } else {                                 /* decimal input */
             v = (off_t) atoll(s);
             if (debug) 
-                fprintf(stdout, 
-                        "OFFTIFY string %s decimal %" I64_FMT "X %" I64_FMT "d\n", 
+                fprintf(stderr, 
+                        "HHC90000D DBG: OFFTIFY string %s decimal %" I64_FMT "X %" I64_FMT "d\n", 
                         p, (U64)v, (U64)v);
             return v;
         }
@@ -377,6 +350,10 @@ char               *p;
 /*-------------------------------------------------------------------*/
 int main (int argc, char *argv[])
 {
+char           *pgmname;                /* prog name in host format  */
+char           *pgm;                    /* less any extension (.ext) */
+char           *pgmpath;                /* prog path in host format  */
+char            msgbuf[512];            /* message build work area   */
 int             cckd_diag_rc = 0;       /* Program return code       */
 char           *fn;                     /* File name                 */
 
@@ -414,7 +391,41 @@ off_t           trkhdroff=0;            /* offset to assoc. trk hdr  */
 int             imglen=0;               /* track length              */
 char            pathname[MAX_PATH];     /* file path in host format  */
 
-    INITIALIZE_UTILITY("cckddiag");
+    /* Set program name */
+    if ( argc > 0 )
+    {
+        if ( strlen(argv[0]) == 0 )
+        {
+            pgmname = strdup( UTILITY_NAME );
+            pgmpath = strdup( "" );
+        }
+        else
+        {
+            char path[MAX_PATH];
+#if defined( _MSVC_ )
+            GetModuleFileName( NULL, path, MAX_PATH );
+#else
+            strncpy( path, argv[0], sizeof( path ) );
+#endif
+            pgmname = strdup(basename(path));
+#if !defined( _MSVC_ )
+            strncpy( path, argv[0], sizeof(path) );
+#endif
+            pgmpath = strdup( dirname( path  ));
+        }
+    }
+    else
+    {
+            pgmname = strdup( UTILITY_NAME );
+            pgmpath = strdup( "" );
+    }
+
+    pgm = strtok( strdup(pgmname), ".");
+    INITIALIZE_UTILITY( pgmname );
+
+    /* Display the program identification message */
+    MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "CCKD diagnostic program" ) );
+    display_version (stderr, msgbuf+10, FALSE);
 
     /* parse the arguments */
     argc--; 
@@ -423,35 +434,33 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if(**argv != '-') break;
 
         switch(argv[0][1]) {
-            case 'v':  if (argv[0][2] != '\0') return syntax ();
-                       display_version (stdout, 
-                              "Hercules CCKD diagnostic program", FALSE);
+            case 'v':  if (argv[0][2] != '\0') return syntax (pgm);
                        return 0;
-            case 'd':  if (argv[0][2] != '\0') return syntax ();
+            case 'd':  if (argv[0][2] != '\0') return syntax (pgm);
                        cmd_devhdr = 1;
                        break;
-            case 'c':  if (argv[0][2] != '\0') return syntax ();
+            case 'c':  if (argv[0][2] != '\0') return syntax (pgm);
                        cmd_cdevhdr = 1;
                        break;
-            case '1':  if (argv[0][2] != '\0') return syntax ();
+            case '1':  if (argv[0][2] != '\0') return syntax (pgm);
                        cmd_l1tab = 1;
                        break;
-            case '2':  if (argv[0][2] != '\0') return syntax ();
+            case '2':  if (argv[0][2] != '\0') return syntax (pgm);
                        cmd_l2tab = 1;
                        break;
-            case 'a':  if (argv[0][2] != '\0') return syntax ();
+            case 'a':  if (argv[0][2] != '\0') return syntax (pgm);
                        cmd_cchh = 1;
                        argc--; argv++;
                        op_cc = offtify(*argv);
                        argc--; argv++;
                        op_hh = offtify(*argv);
                        break;
-            case 'r':  if (argv[0][2] != '\0') return syntax ();
+            case 'r':  if (argv[0][2] != '\0') return syntax (pgm);
                        cmd_tt = 1;
                        argc--; argv++;
                        op_tt = offtify(*argv);
                        break;
-            case 'o':  if (argv[0][2] != '\0') return syntax ();
+            case 'o':  if (argv[0][2] != '\0') return syntax (pgm);
                        cmd_offset = 1;
                        argc--;
                        argv++;
@@ -460,29 +469,29 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                        argv++;
                        op_length = offtify(*argv);
                        break;
-            case 't':  if (argv[0][2] != '\0') return syntax ();
+            case 't':  if (argv[0][2] != '\0') return syntax (pgm);
                        cmd_trkdata = 1;
                        break;
-            case 'x':  if (argv[0][2] != '\0') return syntax ();
+            case 'x':  if (argv[0][2] != '\0') return syntax (pgm);
                        cmd_hexdump = 1;
                        cmd_trkdata = 1;
                        break;
-            case 'g':  if (argv[0][2] != '\0') return syntax ();
+            case 'g':  if (argv[0][2] != '\0') return syntax (pgm);
                        debug = 1;
                        break;
-            default:   return syntax ();
+            default:   return syntax (pgm);
         }
         argc--;
         argv++;
     }
-    if (argc != 1) return syntax ();
+    if (argc != 1) return syntax (pgm);
     fn = argv[0];
 
     /* open the file */
     hostpath(pathname, fn, sizeof(pathname));
     fd = open(pathname, O_RDONLY | O_BINARY);
     if (fd < 0) {
-        fprintf(stdout,
+        fprintf(stderr,
                 _("cckddiag: error opening file %s: %s\n"),
                 fn, strerror(errno));
         return -1;
@@ -493,7 +502,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /*---------------------------------------------------------------*/
     readpos(fd, &devhdr, 0, sizeof(devhdr));
     if (cmd_devhdr) {
-        fprintf(stdout, "\nDEVHDR - %"SIZE_T_FMT"d (decimal) bytes:\n", 
+        fprintf(stderr, "\nDEVHDR - %"SIZE_T_FMT"d (decimal) bytes:\n", 
                 sizeof(devhdr));
         data_dump(&devhdr, sizeof(devhdr));
     }
@@ -506,7 +515,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         ckddasd = 1;
         ckd = dasd_lookup(DASD_CKDDEV, NULL, devhdr.devtype, 0);
         if (ckd == NULL) {
-            fprintf(stdout, 
+            fprintf(stderr, 
                     "DASD table entry not found for devtype 0x%2.2X\n",
                     devhdr.devtype);
             clean();
@@ -519,7 +528,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         ckddasd = 0;
         fba = dasd_lookup(DASD_FBADEV, NULL, devhdr.devtype, 0);
         if (fba == NULL) {
-            fprintf(stdout, 
+            fprintf(stderr, 
                     "DASD table entry not found for "
                     "devtype 0x%2.2X\n",
                     DEFAULT_FBA_TYPE);
@@ -528,7 +537,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         }
     }
     else {
-        fprintf(stdout, "incorrect header id\n");
+        fprintf(stderr, "incorrect header id\n");
         clean();
         return -1;
     }
@@ -542,8 +551,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
               | ((U32)(devhdr.heads[1]) << 8)
               | (U32)(devhdr.heads[0]);
         if (debug) 
-            fprintf(stdout, 
-                "\n%s device has %d heads/cylinder\n", 
+            fprintf(stderr, 
+                "\nHHC90000D DBG: %s device has %d heads/cylinder\n", 
                 ckd->name, heads);
     } else {
         blks  = 0;
@@ -560,7 +569,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /*---------------------------------------------------------------*/
     readpos(fd, &cdevhdr, CKDDASD_DEVHDR_SIZE, sizeof(cdevhdr));
     if (cmd_cdevhdr) {
-        fprintf(stdout, "\nCDEVHDR - %"SIZE_T_FMT"d (decimal) bytes:\n",
+        fprintf(stderr, "\nCDEVHDR - %"SIZE_T_FMT"d (decimal) bytes:\n",
                 sizeof(cdevhdr));
         data_dump(&cdevhdr, sizeof(cdevhdr));
     }
@@ -583,7 +592,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     readpos(fd, l1, CCKD_L1TAB_POS, n * CCKD_L1ENT_SIZE);
     /* L1TAB itself is not adjusted for endian-ness                  */
     if (cmd_l1tab) {
-        fprintf(stdout, "\nL1TAB - %"SIZE_T_FMT"d (0x"SIZE_T_FMTX") bytes:\n",
+        fprintf(stderr, "\nL1TAB - %"SIZE_T_FMT"d (0x"SIZE_T_FMTX") bytes:\n",
                 (n * CCKD_L1ENT_SIZE), (n * CCKD_L1ENT_SIZE));
         data_dump(l1, n * CCKD_L1ENT_SIZE);
     }
@@ -594,7 +603,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     if (cmd_offset) {
         bulk = makbuf(op_length, "BULK");
         readpos(fd, bulk, op_offset, op_length);
-        fprintf(stdout, 
+        fprintf(stderr, 
             "\nIMAGE OFFSET %d (0x%8.8X) "
             "of length %d (0x%8.8X) bytes:\n",
             op_offset, op_offset, op_length, op_length);
@@ -607,7 +616,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /* FBA isn't supported here because I don't know much about FBA  */
     /*---------------------------------------------------------------*/
     if ( (!ckddasd) && ((cmd_cchh) || (cmd_tt)) ) {
-        fprintf(stdout, "CCHH/reltrk not supported for FBA\n");
+        fprintf(stderr, "CCHH/reltrk not supported for FBA\n");
         clean();
         exit(3);
     }
@@ -633,7 +642,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /* display CKD CCHH or relative track data                       */
     /*---------------------------------------------------------------*/
     if ((cmd_cchh) || (cmd_tt)) {
-        fprintf(stdout, 
+        fprintf(stderr, 
                 "CC %d HH %d = reltrk %d; " 
                 "L1 index = %d, L2 index = %d\n"
                 "L1 index %d = L2TAB offset %d (0x%8.8X)\n",
@@ -644,12 +653,12 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         readpos(fd, l2, l2taboff, 
                 cdevhdr.numl2tab * sizeof(CCKD_L2ENT));
         if (cmd_l2tab) {
-            fprintf(stdout, 
+            fprintf(stderr, 
                    "\nL2TAB - %"SIZE_T_FMT"d (decimal) bytes\n", 
                    (cdevhdr.numl2tab * sizeof(CCKD_L2ENT)));
             data_dump(l2, (cdevhdr.numl2tab * sizeof(CCKD_L2ENT)) );
         }
-        fprintf(stdout, "\nL2 index %d = L2TAB entry %"SIZE_T_FMT"d bytes\n",
+        fprintf(stderr, "\nL2 index %d = L2TAB entry %"SIZE_T_FMT"d bytes\n",
                l2ndx, sizeof(CCKD_L2ENT) );
         data_dump(&l2[l2ndx], sizeof(CCKD_L2ENT) );
         trkhdroff = l2[l2ndx].pos;
@@ -658,12 +667,12 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             cckd_swapend4((char *)&trkhdroff);
             cckd_swapend4((char *)&imglen);
         }
-        fprintf(stdout, "\nTRKHDR offset %d (0x%8.8X); "
+        fprintf(stderr, "\nTRKHDR offset %d (0x%8.8X); "
                 "length %d (0x%4.4X)\n", 
                 (int)trkhdroff, (int)trkhdroff, imglen, imglen);
         tbuf = makbuf(imglen, "TRKHDR+DATA");
         readpos(fd, tbuf, trkhdroff, imglen);
-        fprintf(stdout, "\nTRKHDR track %d\n", trk);
+        fprintf(stderr, "\nTRKHDR track %d\n", trk);
         data_dump(tbuf, sizeof(CKDDASD_TRKHDR) );
         if (cmd_trkdata) showtrk(tbuf, imglen, trk, cmd_hexdump);
         free(l2); free(tbuf);
@@ -671,7 +680,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     /* Close file, exit */
-    fprintf(stdout, "\n");
+    fprintf(stderr, "\n");
     clean();
     return cckd_diag_rc;
 }

@@ -1401,7 +1401,60 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02592 "VTOC pointer [%02X%02X%02X%02X%02X] updated"
 #define HHC02593 "VOL1 record not readable or locatable"
 
+// reserve 026xx for utilites
+#define HHC02600 "Usage: %s [options] file-name\n" \
+       "\n" \
+       "          -v      display version and exit\n" \
+       "          -d      display DEVHDR and exit\n" \
+       "          -c      display CDEVHDR and exit\n" \
+       "          -1      display L1TAB (numeric one)\n" \
+       "          -g      enable debug output\n" \
+       "\n" \
+       "           CKD track related options:\n" \
+       "           -a cc hh  display absolute CCHH data\n" \
+       "           -r tt     display relative TT data\n" \
+       "           -2        display L2TAB related to -a or -r\n" \
+       "           -t        display track data\n" \
+       "           -x        hex display track key/data\n" \
+       "\n" \
+       "           Offset option:\n" \
+       "           -o oo ll  hex display data at offset oo of length ll" 
+#define HHC02601 "Press enter to continue"
+#define HHC02602 "From '%s': Storage allocation of size '%d' using '%s' failed"
+#define HHC02603 "In '%s': lseek() to pos 0x%08x error: '%s'"
+#define HHC02604 "In '%s': read() error: '%s'"
+#define HHC02605 "Track %d COUNT cyl[%04X/%d] head[%04X/%d] rec[%02X/%d] kl[%d] dl[%d]"
+#define HHC02606 "Track %d rec[%02X/%d] kl[%d]"
+#define HHC02607 "Track %d rec[%02X/%d] dl[%d]"
+#define HHC02608 "End of track"
 
+#define HHC02700 "SCSI tapes are not supported with this build"
+#define HHC02701 "Abnormal termination"
+#define HHC02702 "Tape '%s': Status %8.8lX%s%s%s%s%s%s%s%s%s%s%s"
+#define HHC02703 "Tape '%s': Error reading status: rc=%d, errno=%d: %s"
+#define HHC02704 "End of tape"
+#define HHC02705 "Tape '%s': Error reading tape: errno=%d: %s"
+#define HHC02706 "File '%s': End of %s input"
+#define HHC02707 "File '%s': Error reading %s header: rc=%d, errno=%d: %s"
+#define HHC02708 "File '%s': Block too large for %s tape: block size=%d, maximum=%d"
+#define HHC02709 "File '%s': Error reading %s data block: rc=%d, errno=%d: %s"
+#define HHC02710 "Tape '%s': Error writing data block: rc=%d, errno=%d: %s"
+#define HHC02711 "File '%s': Error writing %s header: rc=%d, errno=%d: %s"
+#define HHC02712 "File '%s': Error writing %s data block: rc=%d, errno=%d: %s"
+#define HHC02713 "Tape '%s': Error writing tapemark: rc=%d, errno=%d: %s"
+#define HHC02714 "File '%s': Error writing %s tapemark: rc=%d, errno=%d: %s"
+#define HHC02715 "Tape '%s': Error opening: errno=%d: %s"
+#define HHC02716 "Tape '%s': Error setting attributes: rc=%d, errno=%d: %s"
+#define HHC02717 "Tape '%s': Error rewinding: rc=%d, errno=%d: %s"
+#define HHC02718 "Tape '%s': Device type%s"
+#define HHC02719 "Tape '%s': Device density%s"
+#define HHC02720 "File '%s': Error opening: errno=%d: %s"
+#define HHC02721 "File No. %u: Blocks=%u, Bytes=%"I64_FMT"d, Block size min=%u, max=%u, avg=%u"
+#define HHC02722 "Tape Label: %s"
+#define HHC02723 "File No. %u: Block %u"
+#define HHC02724 "Successful completion\n" \
+       "          Bytes read:    %"I64_FMT"d (%3.1f MB), Blocks=%u, avg=%u\n" \
+       "          Bytes written: %"I64_FMT"d (%3.1f MB)"
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
 #define HHC04100 "%s version %s initiated"
