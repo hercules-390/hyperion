@@ -117,7 +117,8 @@ COMMAND("quit",      PANEL,         SYSNONE,            quit_cmd,
     "                in a stopped state, a message is displayed indicating the\n"
     "                number of CPUs running. A second message follows that\n"
     "                prompts for confirmation by entering a second \"quit\"\n"
-    "                command to start termination of the emulator.")
+    "                command to start termination of the emulator.\n"
+    "                \"quit now\" will terminate hercules immediately.\n")
     
 COMMAND("exit",      PANEL,         SYSNONE,            quit_cmd,     
   "(synonym for 'quit')", 
@@ -203,7 +204,8 @@ COMMAND("ssd",       PANEL,         SYSCMDALL,          ssd_cmd,
     "receiving this request.\n"
     "An implicit ssd command is given on a hercules \"quit\" command if the guest\n"
     "supports ssd.  In that case hercules shutdown will be delayed until the guest\n"
-    "has shutdown or a 2nd quit command is given.\n")
+    "has shutdown or a 2nd quit command is given.\n"
+    "\"ssd now\" will signal the guest immediately, without asking for confirmation.\n")
 #endif
 
 #ifdef OPTION_PTTRACE

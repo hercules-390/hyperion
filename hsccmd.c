@@ -379,13 +379,15 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
 
     UNREFERENCED(cmdline);
 
-    if (argc > 1)
+    if ((argc > 2) ||
+        (argc > 1 && strcasecmp(argv[1],"now")))
     {
-        WRMSG(HHC02205, "E", argv[1], "");
+        WRMSG(HHC02205, "E", argv[argc-1], "");
         return(0);
     }
 
-    if ( (sysblk.sysgroup & SYSGROUP_SYSDEVEL) || 
+    if ( (argc > 1) ||
+         (sysblk.sysgroup & SYSGROUP_SYSDEVEL) || 
          (sysblk.sysgroup & SYSGROUP_SYSDEBUG) || 
          (sysblk.quitmout == 0)
        )
@@ -7220,20 +7222,32 @@ int ssd_cmd(int argc, char *argv[], char *cmdline)
 {
     time_t  end;
 
-    UNREFERENCED(argc);
     UNREFERENCED(cmdline);
-    
-    if (sysblk.quitmout == 0) signal_quiesce(0,0);
 
-    time( &end );
-    if ( difftime( end, sysblk.SSD_time ) > sysblk.quitmout )
+    if ((argc > 2) ||
+        (argc > 1 && strcasecmp(argv[1],"now")))
     {
-        WRMSG( HHC02266, "A", argv[0], sysblk.quitmout );
-        time( &sysblk.SSD_time );
+        WRMSG(HHC02205, "E", argv[argc-1], "");
+        return(0);
+    }
+
+    if ( (argc > 1) ||
+         (sysblk.quitmout == 0)
+       )
+    {
+        signal_quiesce(0,0);
     }
     else
-        signal_quiesce(0, 0);
-
+    {
+        time( &end );
+        if ( difftime( end, sysblk.SSD_time ) > sysblk.quitmout )
+        {
+            WRMSG( HHC02266, "A", argv[0], sysblk.quitmout );
+            time( &sysblk.SSD_time );
+        }
+        else
+            signal_quiesce(0, 0);
+    }
     return 0;
 }
 /*-------------------------------------------------------------------*/
