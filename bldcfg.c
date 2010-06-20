@@ -690,8 +690,12 @@ int    ecpsvmac;                        /* -> ECPS:VM add'l arg cnt  */
 #if defined(OPTION_SHARED_DEVICES)
 char   *sshrdport;                      /* -> Shared device port nbr */
 #endif /*defined(OPTION_SHARED_DEVICES)*/
+
+#if       defined( OPTION_SHUTDOWN_CONFIRMATION )
 char   *squitmout;                      /* -> quit timeout value     */
 int     quitmout = QUITTIME_PERIOD;     /* quit timeout value        */
+#endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
+
 U16     version = 0x00;                 /* CPU version code          */
 int     dfltver = 1;                    /* Default version code      */
 U32     serial;                         /* CPU serial number         */
@@ -975,7 +979,9 @@ char    fname[MAX_PATH];                /* normalized filename       */
         sshrdport = NULL;
 #endif /*defined(OPTION_SHARED_DEVICES)*/
 
+#if       defined( OPTION_SHUTDOWN_CONFIRMATION )
         squitmout = NULL;
+#endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
 
         /* Check for old-style CPU statement */
         if (scount == 0 && addargc == 5 && strlen(keyword) == 6
@@ -1107,10 +1113,18 @@ char    fname[MAX_PATH];                /* normalized filename       */
                 WRMSG( HHC01450, "W", inc_stmtnum[inc_level], fname, keyword, "OPTION_SHARED_DEVICES" ); 
             }
 #endif /*defined(OPTION_SHARED_DEVICES)*/
+
             else if (strcasecmp (keyword, "quitmout") == 0)
+#if       defined( OPTION_SHUTDOWN_CONFIRMATION )
             {
                 squitmout = operand;
             }
+#else  //!defined( OPTION_SHUTDOWN_CONFIRMATION )
+            {
+                WRMSG( HHC01450, "W", inc_stmtnum[inc_level], fname, keyword, "OPTION_SHUTDOWN_CONFIRMATION" ); 
+            }
+#endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
+
             else
             {
                 WRMSG(HHC01441, "E", inc_stmtnum[inc_level], fname, keyword);
@@ -1392,6 +1406,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
             }
         }
 
+#if       defined( OPTION_SHUTDOWN_CONFIRMATION )
         /* Parse quitmout operand */
         if (squitmout != NULL)
         {
@@ -1402,6 +1417,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
                 delayed_exit(1);
             }
         }
+#endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
 
         /* Parse terminal logo option */
         if (slogofile != NULL)
@@ -1589,8 +1605,10 @@ char    fname[MAX_PATH];                /* normalized filename       */
     /* Set the timezone offset */
     adjust_tod_epoch((tzoffset/100*3600+(tzoffset%100)*60)*16000000LL);
 
+#if       defined( OPTION_SHUTDOWN_CONFIRMATION )
     /* Set the quitmout value */
     sysblk.quitmout = quitmout;
+#endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
 
     /* Gabor Hoffer (performance option) */
     copy_opcode_tables();

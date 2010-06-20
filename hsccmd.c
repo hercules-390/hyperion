@@ -375,7 +375,8 @@ int comment_cmd(int argc, char *argv[],char *cmdline)
 /*-------------------------------------------------------------------*/
 int quit_cmd(int argc, char *argv[],char *cmdline)
 {
-    time_t  end;
+#if       defined( OPTION_SHUTDOWN_CONFIRMATION )
+        time_t  end;
 
     UNREFERENCED(cmdline);
 
@@ -427,6 +428,12 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
             do_shutdown();
         }
     }
+#else  //!defined( OPTION_SHUTDOWN_CONFIRMATION )
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+    UNREFERENCED(cmdline);
+    do_shutdown();
+#endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
     return 0;   /* (make compiler happy) */
 }
 
@@ -1269,7 +1276,7 @@ int timerint_cmd(int argc, char *argv[], char *cmdline)
     else
     {
         char buf[25];
-	snprintf(buf, sizeof(buf), "%d", sysblk.timerint);
+        MSGBUF( buf, "%d", sysblk.timerint);
         WRMSG(HHC02203, "I", "timer update interval", buf );
     }
 
@@ -7224,6 +7231,8 @@ int spm_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int ssd_cmd(int argc, char *argv[], char *cmdline)
 {
+#if       defined( OPTION_SHUTDOWN_CONFIRMATION )
+   
     time_t  end;
 
     UNREFERENCED(cmdline);
@@ -7252,6 +7261,10 @@ int ssd_cmd(int argc, char *argv[], char *cmdline)
         else
             signal_quiesce(0, 0);
     }
+#else  //!defined( OPTION_SHUTDOWN_CONFIRMATION )
+    signal_quiesce(0, 0);
+#endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
+
     return 0;
 }
 /*-------------------------------------------------------------------*/
@@ -8126,6 +8139,7 @@ int query_cmd(int argc, char *argv[], char *cmdline)
         {
             WRMSG( HHC17006, "I", sysblk.lparnum, str_lparname() );
         }
+#if       defined( OPTION_SHUTDOWN_CONFIRMATION )
         else if ( strlen( argv[1] ) >= 4 && 
                   strlen( argv[1] ) <= 8 && 
                   !strncasecmp( argv[1], "quitmout", strlen( argv[1] ) )
@@ -8133,6 +8147,8 @@ int query_cmd(int argc, char *argv[], char *cmdline)
         {
             WRMSG( HHC17100, "I", sysblk.quitmout );
         }
+#endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
+
         else
         {
             WRMSG( HHC17000, "E" );
@@ -8155,6 +8171,7 @@ int set_cmd(int argc, char *argv[], char *cmdline)
 
     if ( argc > 2 )
     {
+#if       defined( OPTION_SHUTDOWN_CONFIRMATION )
         if ( strlen( argv[1] ) >= 4 && 
              strlen( argv[1] ) <= 8 && 
              !strncasecmp( argv[1], "quitmout", strlen( argv[1] ) )
@@ -8191,6 +8208,7 @@ int set_cmd(int argc, char *argv[], char *cmdline)
             }
         }
         else
+#endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
         {
             WRMSG( HHC17000, "E" );
             return -1;

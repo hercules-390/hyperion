@@ -705,10 +705,12 @@ struct SYSBLK {
 #endif
         LOCK    msglock;                /* lock for writemsg         */
         int     msglvl;                 /* Message level             */
+#if       defined( OPTION_SHUTDOWN_CONFIRMATION )
 #define QUITTIME_PERIOD     10
         int     quitmout;               /* Current timeout value     */
         time_t  shutquittime;           /* Quit requested time       */
         time_t  SSD_time;               /* SSD requested time        */
+#endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
 
 };
 
