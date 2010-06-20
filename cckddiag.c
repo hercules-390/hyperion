@@ -13,7 +13,6 @@
 /*-------------------------------------------------------------------*/
 /* Diagnostic tool to display various CCKD data                      */
 /*-------------------------------------------------------------------*/
-#define UTILITY_NAME    "cckddiag"
 
 #include "hstdinc.h"
 
@@ -21,6 +20,8 @@
 
 #include "hercules.h"
 #include "dasdblks.h"                   /* data_dump                 */
+
+#define UTILITY_NAME    "cckddiag"
 
 typedef struct _CKD_RECSTAT {     /* CKD DASD record stats           */
         int    cc;                /* CC cylinder # (relative zero)   */

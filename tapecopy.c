@@ -16,13 +16,14 @@
 /* If no disk file name is supplied, then the program simply         */
 /* prints a summary of the tape files and blocksizes.                */
 /*-------------------------------------------------------------------*/
-#define UTILITY_NAME    "tapecopy"
 
 #include "hstdinc.h"
 
 #include "hercules.h"
 #include "tapedev.h"
 #include "scsitape.h"
+
+#define UTILITY_NAME    "tapecopy"
 
 /*-------------------------------------------------------------------*/
 /* (if no SCSI tape support generated, do nothing)                   */
