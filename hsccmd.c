@@ -1267,7 +1267,11 @@ int timerint_cmd(int argc, char *argv[], char *cmdline)
         }
     }
     else
-        WRMSG(HHC02203, "I", "timer update interval", sysblk.timerint );
+    {
+        char buf[25];
+	snprintf(buf, sizeof(buf), "%d", sysblk.timerint);
+        WRMSG(HHC02203, "I", "timer update interval", buf );
+    }
 
     return 0;
 }
