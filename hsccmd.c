@@ -381,17 +381,18 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
     UNREFERENCED(cmdline);
 
     if ((argc > 2) ||
-        (argc > 1 && strcasecmp(argv[1],"now")))
+        (argc > 1 && strcasecmp(argv[1],"force")))
     {
         WRMSG(HHC02205, "E", argv[argc-1], "");
         return(0);
     }
 
-    if ( (argc > 1) ||
-         (sysblk.sysgroup & SYSGROUP_SYSDEVEL) || 
-         (sysblk.sysgroup & SYSGROUP_SYSDEBUG) || 
-         (sysblk.quitmout == 0)
-       )
+    if ( argc > 1 )
+    {
+        sysblk.shutimmed = TRUE;
+    }
+
+    if ( sysblk.quitmout == 0 )
     {
         do_shutdown();
     }
@@ -432,6 +433,18 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
     UNREFERENCED(argc);
     UNREFERENCED(argv);
     UNREFERENCED(cmdline);
+    
+    if ((argc > 2) ||
+        (argc > 1 && strcasecmp(argv[1],"force")))
+    {
+        WRMSG(HHC02205, "E", argv[argc-1], "");
+        return(0);
+    }
+
+    if (argc > 1)
+    {
+        sysblk.shutimmed = TRUE;
+    }
     do_shutdown();
 #endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
     return 0;   /* (make compiler happy) */

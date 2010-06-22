@@ -212,12 +212,10 @@ static void do_shutdown_wait()
 void do_shutdown()
 {
 TID tid;
-#if defined(_MSVC_)
     if ( sysblk.shutimmed ) 
         do_shutdown_now();                   
     else
     {
-#endif // defined(_MSVC_)
         if(is_wait_sigq_pending())
             cancel_wait_sigq();
         else
@@ -226,9 +224,7 @@ TID tid;
                               NULL, "do_shutdown_wait");
             else
                 do_shutdown_now();
-#if defined(_MSVC_)
     }
-#endif // defined(_MSVC_)
 }
 /*-------------------------------------------------------------------*/
 /* The following 2 routines display an array of 32/64 registers      */

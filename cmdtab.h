@@ -110,22 +110,38 @@ COMMAND("version",   PANEL,         SYSNONE,            version_cmd,
   "display version information", 
     NULL)
 
+#if defined (OPTION_SHUTDOWN_CONFIRMATION)
 COMMAND("quit",      PANEL,         SYSNONE,            quit_cmd,     
   "terminate the emulator", 
-  "Format: \"quit\". Terminates the emulator. The \"quit\" command will first\n"
-    "                check that all online CPUs are stopped. If any CPU is not\n"
-    "                in a stopped state, a message is displayed indicating the\n"
-    "                number of CPUs running. A second message follows that\n"
-    "                prompts for confirmation by entering a second \"quit\"\n"
-    "                command to start termination of the emulator.\n"
-    "                \"quit now\" will terminate hercules immediately.\n")
-    
+  "Format: \"quit [force]\"  Terminates the emulator. The \"quit\"\n" 
+    "                        command will first check that all online\n"
+    "                        CPUs are stopped. If any CPU is not in a\n"
+    "                        stopped state, a message is displayed\n" 
+    "                        indicating the number of CPUs running. A\n"
+    "                        second message follows that prompts for\n"
+    "                        confirmation by entering a second \"quit\"\n"
+    "                        command to start termination of the\n" 
+    "                        emulator.\n"
+    "              force     This option will terminate hercules\n"
+    "                        immediately.\n")
+#else
+COMMAND("quit",      PANEL,         SYSNONE,            quit_cmd,     
+  "terminate the emulator", 
+  "Format: \"quit [force]\"  Terminates the emulator. If the guest OS\n" 
+    "                        has enabled Signal Shutdown, then a\n" 
+    "                        signal shutdown request is sent to the\n"
+    "                        guest OS and termination will begin\n" 
+    "                        after guest OS has shutdown.\n"   
+    "              force     This option will terminate the emulator\n"
+    "                        immediately.\n" )
+   
+#endif
 COMMAND("exit",      PANEL,         SYSNONE,            quit_cmd,     
   "(synonym for 'quit')", 
     NULL)
 
 COMMAND("cpu",       PANEL,         SYSCMDALL,          cpu_cmd,      
-  "Define target cpu for panel display and commands",
+  "define target cpu for panel display and commands",
     "Format: \"cpu hh\" where 'hh' is the hexadecimal cpu address of the cpu\n"
     "in your multiprocessor configuration which you wish all panel commands\n"
     "to apply to. For example, entering 'cpu 1F' followed by \"gpr\" will\n"
