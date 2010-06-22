@@ -50,6 +50,7 @@
                                            of inter-thread signaling */
 #define OPTION_TIMESTAMP_LOGFILE        /* Hardcopy logfile HH:MM:SS */
 #define OPTION_IPLPARM                  /* IPL PARM a la VM          */
+#define OPTION_CAPPING                  /* Enable capping cnf stmnt  */
 #ifndef FISH_HANG
 #ifndef OPTION_WTHREADS
 #define OPTION_PTTRACE                  /* Pthreads tracing          */

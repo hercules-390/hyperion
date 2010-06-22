@@ -32,6 +32,7 @@
   NUMCPU    1                   # Number of CPUs
 # NUMVEC    1                   # Number of Vector Processors
   MAXCPU    8                   # Maximum number of CPUs
+  CAPPING   0                   # Capping of CPs in MIPS, 0 = off
   ARCHMODE  ESA/390             # Architecture mode S/370, ESA/390 or z/Arch
   ALRF      DISABLE             # ASN-and-LX-Reuse facility
   ECPSVM    NO                  # VM Assist : NO or Level (20 recommended)

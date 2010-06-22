@@ -433,6 +433,13 @@ struct SYSBLK {
         LOCK    todlock;                /* TOD clock update lock     */
         TID     todtid;                 /* Thread-id for TOD update  */
         REGS   *regs[MAX_CPU_ENGINES+1];   /* Registers for each CPU */
+#ifdef OPTION_CAPPING
+        int     capactive;              /* Indicator CP capping on   */
+        LOCK    caplock[MAX_CPU_ENGINES]; /* CP capping locks        */
+        int     caplocked[MAX_CPU_ENGINES]; /* Indication locked     */
+        TID     captid;                 /* TID capping manager       */
+        U64     capvalue;               /* Capping value in mips     */
+#endif // OPTION_CAPPING
 #if defined(_FEATURE_VECTOR_FACILITY)
         VFREGS  vf[MAX_CPU_ENGINES];    /* Vector Facility           */
 #endif /*defined(_FEATURE_VECTOR_FACILITY)*/

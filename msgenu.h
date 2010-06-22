@@ -527,6 +527,8 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00874 "mainlock %sheld; owner %4.4x"
 #define HHC00875 "intlock %sheld; owner %4.4x"
 #define HHC00876 "ioq lock %sheld"
+#define HHC00877 "Central processors are capped at %u MIPS"
+#define HHC00878 "No central processors found, capping disabled"
 
 #define HHC00880 "device %1d:%04X: status %s"
 #define HHC00881 "I/O interrupt queue:%s" 

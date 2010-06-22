@@ -1562,6 +1562,15 @@ void *cpu_uninit (int cpu, REGS *regs)
 /*-------------------------------------------------------------------*/
 void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
 {
+#ifdef OPTION_CAPPING
+    if(sysblk.caplocked[regs->cpuad])
+    {
+      obtain_lock(&sysblk.caplock[regs->cpuad]);
+      /* Greg must be proud of me */
+      release_lock(&sysblk.caplock[regs->cpuad]);
+    }
+#endif // OPTION_CAPPING
+
     /* Process PER program interrupts */
     if( OPEN_IC_PER(regs) )
         regs->program_interrupt (regs, PGM_PER_EVENT);

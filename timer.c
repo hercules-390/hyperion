@@ -281,3 +281,129 @@ U64     total_sios;                     /* Total SIO rate            */
     return NULL;
 
 } /* end function timer_update_thread */
+
+#ifdef OPTION_CAPPING
+void *capping_manager_thread (void *p)
+{
+  U64 allowed;
+  U64 diff;
+  int i;
+  U64 instcnt;
+  U64 now;
+  U64 prevcnt;
+  U64 then;
+
+  UNREFERENCED(p);
+
+  /* Display thread started message on control panel */
+  WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Capping manager");
+  WRMSG(HHC00877, "I", sysblk.capvalue);
+
+  /* Check if we have CP engines */
+  for(i = 0; i < MAX_CPU_ENGINES; i++)
+  {
+    if(sysblk.ptyp[i] == SCCB_PTYP_CP)
+      break;
+  }
+  if(i == MAX_CPU_ENGINES || sysblk.ptyp[i] != SCCB_PTYP_CP)
+  {
+    WRMSG(HHC00878, "E");
+    WRMSG(HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Capping manager");
+    return(NULL);
+  }
+
+  /* Initialize interrupt wait locks */
+  for(i = 0; i < MAX_CPU_ENGINES; i++)
+    initialize_lock(&sysblk.caplock[i]);
+
+  /* Lets get started */
+  now = host_tod();
+  prevcnt = 0;
+
+  /* Check as long as we have CPs */
+  while(sysblk.cpus)
+  {
+    then = now;
+
+    /* Sleep for 1/100 of a second */
+    usleep(10000);
+    now = host_tod();
+    diff = now - then;
+    instcnt = 0;
+
+    /* Count the number of executed instructions */
+    for(i = 0; i < MAX_CPU_ENGINES; i++)
+    {
+      if(IS_CPU_ONLINE(i) && sysblk.ptyp[i] == SCCB_PTYP_CP)
+      {
+        obtain_lock(&sysblk.cpulock[i]);
+        instcnt += sysblk.regs[i]->prevcount + sysblk.regs[i]->instcount;
+        release_lock(&sysblk.cpulock[i]);
+      }
+    }
+
+    /* Check on CP reset */
+    if(prevcnt > instcnt)
+      prevcnt = instcnt;
+
+    /* Are the CPs capped? */
+    if(sysblk.capactive)
+    {
+      /* Add the allowed amount of executed instructions */
+      allowed += sysblk.capvalue * diff;
+
+      /* Did we wait long enough? */
+      if(allowed >= instcnt - prevcnt)
+      {
+        /* Wakeup the capped CPs */
+        sysblk.capactive = 0;
+        for(i = 0; i < MAX_CPU_ENGINES; i++)
+        {
+          if(sysblk.caplocked[i])
+          {
+            release_lock(&sysblk.caplock[i]);
+            sysblk.caplocked[i] = 0;
+          }
+        }
+
+        /* We waited too long */
+        prevcnt += allowed;
+      }
+      else
+      {
+        /* I do not know why, but do not delete these lines! */
+        for(i = 0; i < MAX_CPU_ENGINES; i++)
+        {
+          if(sysblk.caplocked[i])
+            ON_IC_INTERRUPT(sysblk.regs[i]);
+        }
+      }
+    }
+    else
+    {
+      /* Calculate the allowed amount of executed instructions */
+      allowed = sysblk.capvalue * diff;
+
+      /* Did we execute more instructions than allowed? */
+      if(instcnt - prevcnt > allowed)
+      {
+        /* Cap the CPs */
+        sysblk.capactive = 1;
+        for(i = 0; i < MAX_CPU_ENGINES; i++)
+        {
+          if(IS_CPU_ONLINE(i) && sysblk.ptyp[i] == SCCB_PTYP_CP && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED)
+          {
+            obtain_lock(&sysblk.caplock[i]);
+            sysblk.caplocked[i] = 1;
+            ON_IC_INTERRUPT(sysblk.regs[i]);
+          }
+        }
+      }
+      else
+        prevcnt = instcnt;
+    }
+  }
+  WRMSG(HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Capping manager");
+  return(NULL);
+}
+#endif // OPTION_CAPPING

@@ -1115,16 +1115,29 @@ char    fname[MAX_PATH];                /* normalized filename       */
 #endif /*defined(OPTION_SHARED_DEVICES)*/
 
             else if (strcasecmp (keyword, "quitmout") == 0)
-#if       defined( OPTION_SHUTDOWN_CONFIRMATION )
+#if defined( OPTION_SHUTDOWN_CONFIRMATION )
             {
                 squitmout = operand;
             }
-#else  //!defined( OPTION_SHUTDOWN_CONFIRMATION )
+#else
             {
-                WRMSG( HHC01450, "W", inc_stmtnum[inc_level], fname, keyword, "OPTION_SHUTDOWN_CONFIRMATION" ); 
+                WRMSG( HHC01450, "W", inc_stmtnum[inc_level], fname, keyword, "OPTION_SHUTDOWN_CONFORMATION" );
             }
-#endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
-
+#endif
+            else if (strcasecmp (keyword, "capping") == 0)
+#ifdef OPTION_CAPPING
+            {
+                unsigned u;
+                if (sscanf (operand, "%u", &u) != 1)
+                    WRMSG(HHC01443, "E", inc_stmtnum[inc_level], fname, operand, "capping value");		
+                else
+                    sysblk.capvalue = u;
+            }
+#else
+            {
+                WRMSG( HHC01450, "W", inc_stmtnum[inc_level], fname, keyword, "OPTION_CAPPING" );
+            }
+#endif // OPTION_CAPPING
             else
             {
                 WRMSG(HHC01441, "E", inc_stmtnum[inc_level], fname, keyword);
@@ -1765,6 +1778,15 @@ char    fname[MAX_PATH];                /* normalized filename       */
     for(i = 0; i < numcpu; i++)
         configure_cpu(i);
     RELEASE_INTLOCK(NULL);
+
+#ifdef OPTION_CAPPING
+    if(sysblk.capvalue)
+    {
+      rc = create_thread(&sysblk.captid, DETACHED, capping_manager_thread, NULL, "Capping manager");
+      if(rc)
+        WRMSG(HHC00102, "S", strerror(rc));
+    }
+#endif // OPTION_CAPPING
 
 } /* end function build_config */
 
