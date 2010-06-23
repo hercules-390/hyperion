@@ -283,15 +283,26 @@ U64     total_sios;                     /* Total SIO rate            */
 } /* end function timer_update_thread */
 
 #ifdef OPTION_CAPPING
+/*-------------------------------------------------------------------*/
+/* Capping manager thread                                            */
+/*                                                                   */
+/* This function runs as a separate thread. It is started when a     */
+/* value is given on the CAPPING statement within the config file.   */
+/* It checks every 1/100 second if there are too many CP             */
+/* instructions executed. In that case the CPs are stopped. Then     */
+/* the manager counts if the CPs are stopped long enough before      */
+/* waking them up. Capping does only apply to CP, not specialty      */
+/* engines. Those engines are untouched by the capping manager.      */
+/*-------------------------------------------------------------------*/
 void *capping_manager_thread (void *p)
 {
-  U64 allowed;
-  U64 diff;
-  int i;
-  U64 instcnt;
-  U64 now;
-  U64 prevcnt;
-  U64 then;
+  U64 allowed;               /* Max allowed insts during interval    */
+  U64 diff;                  /* Time passed during interval          */
+  int i;                     /* cpu index                            */
+  U64 instcnt;               /* Number of CP insts executed          */
+  U64 now;                   /* Current time                         */
+  U64 prevcnt;               /* Inst CP count on previous interval   */
+  U64 then;                  /* Previous interval time               */
 
   UNREFERENCED(p);
 
