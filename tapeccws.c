@@ -3918,7 +3918,12 @@ int sns4mat = 0x20;
         dev->sense[3] = 0x43; /* ERA 43 = Int Req */
         break;
     case TAPE_BSENSE_RUN_SUCCESS:        /* Not an error */
-        *unitstat = CSW_CE|CSW_DE;
+        /* NOT an error, But according to GA32-0219-02 2.1.2.2
+           Rewind Unload always ends with with DE+UC on secondary status */
+        /* FIXME! */
+        /* Note that Initial status & Secondary statuses are merged here */
+        /* when they should be presented separatly */
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
         dev->sense[0] = SENSE_IR;
         dev->sense[3] = 0x2B;
         sns4mat = 0x21;
