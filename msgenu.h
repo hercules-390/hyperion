@@ -1457,6 +1457,16 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02724 "Successful completion\n" \
        "          Bytes read:    %"I64_FMT"d (%3.1f MB), Blocks=%u, avg=%u\n" \
        "          Bytes written: %"I64_FMT"d (%3.1f MB)"
+#define HHC02725 "Usage: %s infilename outfilename count [...]"
+#define HHC02726 "Usage: %s filename"
+
+#define HHC02740 "File '%s': writing output file"
+#define HHC02741 "File '%s': Error, incomplete %s header"
+#define HHC02742 "File '%s': Error, incomplete final data block: expected %d bytes, read %d"
+#define HHC02743 "File '%s': Error, %s header block without data"
+
+
+
 // reserve 04xxx for host os specific component messages
 // reserve 041xx for windows specific component messages (w32xxxx.c)
 #define HHC04100 "%s version %s initiated"

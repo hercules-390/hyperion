@@ -15,6 +15,7 @@
 #include "hstdinc.h"
 
 #include "hercules.h"
+#define UTILITY_NAME    "tapemap"
 
 /*-------------------------------------------------------------------*/
 /* Structure definition for AWSTAPE block header                     */
@@ -53,6 +54,10 @@ long  prevpos = 0;
 /*-------------------------------------------------------------------*/
 int main (int argc, char *argv[])
 {
+char           *pgmname;                /* prog name in host format  */
+char           *pgm;                    /* less any extension (.ext) */
+char           *pgmpath;                /* prog path in host format  */
+char            msgbuf[512];            /* message build work area   */
 int             i;                      /* Array subscript           */
 int             len;                    /* Block length              */
 int             prevlen;                /* Previous block length     */
@@ -63,15 +68,47 @@ int             blkcount;               /* Block count               */
 int             curblkl;                /* Current block length      */
 int             minblksz;               /* Minimum block size        */
 int             maxblksz;               /* Maximum block size        */
+int64_t         file_bytes;             /* File byte count           */
 BYTE            labelrec[81];           /* Standard label (ASCIIZ)   */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
 char            pathname[MAX_PATH];     /* file path in host format  */
 
-    INITIALIZE_UTILITY("tapemap");
+    /* Set program name */
+    if ( argc > 0 )
+    {
+        if ( strlen(argv[0]) == 0 )
+        {
+            pgmname = strdup( UTILITY_NAME );
+            pgmpath = strdup( "" );
+        }
+        else
+        {
+            char path[MAX_PATH];
+#if defined( _MSVC_ )
+            GetModuleFileName( NULL, path, MAX_PATH );
+#else
+            strncpy( path, argv[0], sizeof( path ) );
+#endif
+            pgmname = strdup(basename(path));
+#if !defined( _MSVC_ )
+            strncpy( path, argv[0], sizeof(path) );
+#endif
+            pgmpath = strdup( dirname( path  ));
+        }
+    }
+    else
+    {
+            pgmname = strdup( UTILITY_NAME );
+            pgmpath = strdup( "" );
+    }
+
+    pgm = strtok( strdup(pgmname), ".");
+    INITIALIZE_UTILITY( pgmname );
 
     /* Display the program identification message */
-    display_version (stderr, "Hercules tape map program", FALSE);
-
+    MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "tape map" ) );
+    display_version (stderr, msgbuf+10, FALSE);
+    
     /* The only argument is the tape image file name */
     if (argc == 2 && argv[1] != NULL)
     {
@@ -79,7 +116,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
     else
     {
-        printf ("Usage: tapemap filename\n");
+        printf ( MSG( HHC02726, "I", pgm ) );
         exit (1);
     }
 
@@ -88,8 +125,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     infd = open (pathname, O_RDONLY | O_BINARY);
     if (infd < 0)
     {
-        printf ("tapemap: Error opening %s: %s\n",
-                filename, strerror(errno));
+        printf( MSG( HHC02715, "E", filename, errno, strerror(errno) ) );
         exit (2);
     }
 
@@ -98,6 +134,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     blkcount = 0;
     minblksz = 0;
     maxblksz = 0;
+    file_bytes = 0;
     len = 0;
 
     while (1)
@@ -123,23 +160,21 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 #endif /*EXTERNALGUI*/
         if (len < 0)
         {
-            printf ("tapemap: error reading header block from %s: %s\n",
-                    filename, strerror(errno));
+            printf( MSG( HHC02707, "E", filename, "AWSTAPE", len, errno, strerror(errno) ) );
             exit (3);
         }
 
         /* Did we finish too soon? */
         if ((len > 0) && (len < (int)sizeof(AWSTAPE_BLKHDR)))
         {
-            printf ("tapemap: incomplete block header on %s\n",
-                    filename);
+            printf( MSG( HHC02741, "E", filename, "AWSTAPE" ) );
             exit(4);
         }
         
         /* Check for end of tape. */
         if (len == 0)
         {
-            printf ("End of tape.\n");
+            printf( MSG( HHC02704, "I" ) );
             break;
         }
         
@@ -150,14 +185,14 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if ((awshdr.flags1 & AWSTAPE_FLAG1_TAPEMARK) != 0)
         {
             /* Print summary of current file */
-            printf ("File %u: Blocks=%u, block size min=%u, max=%u\n",
-                    fileno, blkcount, minblksz, maxblksz);
+            printf( MSG( HHC02721, "I", fileno, blkcount, file_bytes, minblksz, maxblksz, (int)file_bytes/blkcount ) );
 
             /* Reset counters for next file */
             fileno++;
             minblksz = 0;
             maxblksz = 0;
             blkcount = 0;
+            file_bytes = 0;
 
         }
         else /* if(tapemark) */
@@ -167,6 +202,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             curblkl = awshdr.curblkl[0] + (awshdr.curblkl[1] << 8);
             if (curblkl > maxblksz) maxblksz = curblkl;
             if (minblksz == 0 || curblkl < minblksz) minblksz = curblkl;
+            
+            file_bytes += curblkl;
 
             /* Read the data block. */
             len = read (infd, buf, curblkl);
@@ -175,25 +212,21 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 #endif /*EXTERNALGUI*/
             if (len < 0)
             {
-                printf ("tapemap: error reading data block from %s: %s\n",
-                        filename, strerror(errno));
+                printf ( MSG( HHC02709, "E", filename, "AWSTAPE", len, errno, strerror(errno) ) );
                 exit (5);
             }
 
             /* Did we finish too soon? */
             if ((len > 0) && (len < curblkl))
             {
-                printf ("tapemap: incomplete final data block on %s, "
-                        "expected %d bytes, got %d\n",
-                        filename, curblkl, len);
+                printf (MSG( HHC02742, "E", filename, curblkl, len ) );
                 exit(6);
             }
         
             /* Check for end of tape */
             if (len == 0)
             {
-                printf ("tapemap: header block with no data on %s\n",
-                        filename);
+                printf ( MSG( HHC02743, "E", filename, "AWSTAPE" ) );
                 exit(7);
             }
         
@@ -207,7 +240,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 for (i=0; i < 80; i++)
                     labelrec[i] = guest_to_host(buf[i]);
                 labelrec[i] = '\0';
-                printf ("%s\n", labelrec);
+                printf ( MSG( HHC02722, "I", labelrec ) );
             }
             
         } /* end if(tapemark) */

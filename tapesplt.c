@@ -17,6 +17,8 @@
 
 #include "hercules.h"
 
+#define UTILITY_NAME    "tapesplt"
+
 /*-------------------------------------------------------------------*/
 /* Structure definition for AWSTAPE block header                     */
 /*-------------------------------------------------------------------*/
@@ -54,6 +56,10 @@ long  prevpos = 0;
 /*-------------------------------------------------------------------*/
 int main (int argc, char *argv[])
 {
+char           *pgmname;                /* prog name in host format  */
+char           *pgm;                    /* less any extension (.ext) */
+char           *pgmpath;                /* prog path in host format  */
+char            msgbuf[512];            /* message build work area   */
 int             rc;                     /* Return code               */
 int             i;                      /* Array subscript           */
 int             len;                    /* Block length              */
@@ -67,17 +73,48 @@ int             blkcount;               /* Block count               */
 int             curblkl;                /* Current block length      */
 int             minblksz;               /* Minimum block size        */
 int             maxblksz;               /* Maximum block size        */
+int64_t         file_bytes;             /* File byte count           */
 int             outfilenum;             /* Current out file# in argv */
 int             outfilecount;           /* Current # files copied    */
 int             files2copy;             /* Current # files to copy   */
 BYTE            labelrec[81];           /* Standard label (ASCIIZ)   */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
 char            pathname[MAX_PATH];     /* file path in host format  */
+    /* Set program name */
+    if ( argc > 0 )
+    {
+        if ( strlen(argv[0]) == 0 )
+        {
+            pgmname = strdup( UTILITY_NAME );
+            pgmpath = strdup( "" );
+        }
+        else
+        {
+            char path[MAX_PATH];
+#if defined( _MSVC_ )
+            GetModuleFileName( NULL, path, MAX_PATH );
+#else
+            strncpy( path, argv[0], sizeof( path ) );
+#endif
+            pgmname = strdup(basename(path));
+#if !defined( _MSVC_ )
+            strncpy( path, argv[0], sizeof(path) );
+#endif
+            pgmpath = strdup( dirname( path  ));
+        }
+    }
+    else
+    {
+            pgmname = strdup( UTILITY_NAME );
+            pgmpath = strdup( "" );
+    }
 
-    INITIALIZE_UTILITY("tapesplt");
+    pgm = strtok( strdup(pgmname), ".");
+    INITIALIZE_UTILITY( pgmname );
 
     /* Display the program identification message */
-    display_version (stderr, "Hercules tape split program", FALSE);
+    MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "tape split" ) );
+    display_version (stderr, msgbuf+10, FALSE);
 
     /* The only argument is the tape image file name */
     if (argc > 3 && argv[1] != NULL)
@@ -86,7 +123,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
     else
     {
-        printf ("Usage: tapesplt infilename outfilename count [...]\n");
+        printf( MSG( HHC02725, "I", pgm ) );
         exit (1);
     }
 
@@ -95,8 +132,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     infd = open (pathname, O_RDONLY | O_BINARY);
     if (infd < 0)
     {
-        printf ("tapesplt: error opening input file %s: %s\n",
-                infilename, strerror(errno));
+        printf( MSG( HHC02715, "E", infilename, errno, strerror(errno) ) );
         exit (2);
     }
 
@@ -105,20 +141,20 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     blkcount = 0;
     minblksz = 0;
     maxblksz = 0;
+    file_bytes = 0;
     len = 0;
 
     for (outfilenum = 2; outfilenum < argc; outfilenum += 2)
     {
         outfilename = argv[outfilenum];
-        printf ("Writing output file %s.\n", outfilename);
+        printf ( MSG( HHC02740, "I", outfilename ) );
         hostpath(pathname, outfilename, sizeof(pathname));
         outfd = open (pathname, O_WRONLY | O_CREAT | O_BINARY,
                         S_IRUSR | S_IWUSR | S_IRGRP);
 
         if (outfd < 0)
         {
-            printf ("tapesplt: error opening output file %s: %s\n",
-                    outfilename, strerror(errno));
+            printf ( MSG (HHC02715, "E", outfilename, errno, strerror(errno) ) );
             exit (3);
         }
         
@@ -143,16 +179,14 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             len = read (infd, buf, sizeof(AWSTAPE_BLKHDR));
             if (len < 0)
             {
-                printf ("tapesplt: error reading header block from %s: %s\n",
-                        infilename, strerror(errno));
+                printf( MSG( HHC02707, "E", infilename, "AWSTAPE", len, errno, strerror(errno) ) );
                 exit (4);
             }
 
             /* Did we finish too soon? */
             if ((len > 0) && (len < (int)sizeof(AWSTAPE_BLKHDR)))
             {
-                printf ("tapesplt: incomplete block header on %s\n",
-                        infilename);
+                printf( MSG( HHC02741, "E", infilename, "AWSTAPE" ) );
                 exit(5);
             }
 
@@ -172,7 +206,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             /* Check for end of tape. */
             if (len == 0)
             {
-                printf ("End of input tape.\n");
+                printf( MSG( HHC02704, "I" ) ); 
                 break;
             }
 
@@ -180,8 +214,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             rc = write(outfd, buf, sizeof(AWSTAPE_BLKHDR));
             if (rc < (int)sizeof(AWSTAPE_BLKHDR))
             {
-                printf ("tapesplt: error writing block header to %s: %s\n",
-                        outfilename, strerror(errno));
+                printf( MSG( HHC02711, "E", outfilename, "AWSTAPE", rc, errno, strerror(errno) ) );
                 exit(6);
             }
 
@@ -192,14 +225,14 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             if ((awshdr.flags1 & AWSTAPE_FLAG1_TAPEMARK) != 0)
             {
                 /* Print summary of current file */
-                printf ("File %u: Blocks=%u, block size min=%u, max=%u\n",
-                        fileno, blkcount, minblksz, maxblksz);
+                printf( MSG( HHC02721, "I", fileno, blkcount, file_bytes, minblksz, maxblksz, (int)file_bytes/blkcount ) );
 
                 /* Reset counters for next file */
                 fileno++;
                 minblksz = 0;
                 maxblksz = 0;
                 blkcount = 0;
+                file_bytes = 0;
                 
                 /* Count the file we just copied. */
                 outfilecount++;
@@ -213,29 +246,27 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 if (curblkl > maxblksz) maxblksz = curblkl;
                 if (minblksz == 0 || curblkl < minblksz) minblksz = curblkl;
 
+                file_bytes += curblkl;
+
                 /* Read the data block. */
                 len = read (infd, buf, curblkl);
                 if (len < 0)
                 {
-                    printf ("tapesplt: error reading data block from %s: %s\n",
-                            infilename, strerror(errno));
+                    printf ( MSG( HHC02709, "E", infilename, "AWSTAPE", rc, errno, strerror(errno) ) );
                     exit (7);
                 }
 
                 /* Did we finish too soon? */
                 if ((len > 0) && (len < curblkl))
                 {
-                    printf ("tapesplt: incomplete final data block on %s: "
-                            "expected %d bytes, got %d\n",
-                            infilename, curblkl, len);
+                    printf (MSG( HHC02742, "E", infilename, curblkl, len ) );
                     exit(8);
                 }
 
                 /* Check for end of tape */
                 if (len == 0)
                 {
-                    printf ("tapesplt: header block with no data on %s\n",
-                            infilename);
+                    printf ( MSG( HHC02743, "E", infilename, "AWSTAPE" ) );
                     exit(9);
                 }
 
@@ -256,8 +287,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 rc = write(outfd, buf, len);
                 if (rc < len)
                 {
-                    printf ("tapesplt: error writing data block to %s: %s\n",
-                            outfilename, strerror(errno));
+                    printf ( MSG( HHC02712, "E", outfilename, "AWSTAPE", rc, errno, strerror(errno) ) );
                     exit(10);
                 }
 
@@ -271,7 +301,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                     for (i=0; i < 80; i++)
                         labelrec[i] = guest_to_host(buf[i]);
                     labelrec[i] = '\0';
-                    printf ("%s\n", labelrec);
+                    printf ( MSG( HHC02722, "I", labelrec ) );
                 }
 
             } /* end if(tapemark) */
