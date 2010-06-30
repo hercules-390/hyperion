@@ -2100,7 +2100,8 @@ DLL_EXPORT int socket_is_socket( int sfd )
     }
     else
     {
-        if ( WSAGetLastError() == WSAENOTSOCK ) return FALSE;
+        int rc = WSAGetLastError();
+        if ( rc == WSAENOTSOCK || rc == WSANOTINITIALISED ) return FALSE;
         else return TRUE;
     }
 }
