@@ -2296,9 +2296,9 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
     fp = fopen( pathname, "r" );
     if( !fp )
     {
-        char buf[80];
-        snprintf(buf, 80, "fopen(%s, \"r\")", pathname);
-        WRMSG(HHC00940, "E", buf, strerror( errno ) );
+        char msgbuf[MAX_PATH+80];
+        MSGBUF( msgbuf, "fopen(%s, \"r\")", pathname);
+        WRMSG(HHC00940, "E", msgbuf, strerror( errno ) );
         return -1;
     }
 
