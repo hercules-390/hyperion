@@ -199,7 +199,7 @@ het_open( HETB **hetb, char *filename, int flags )
         */
         omode = "rb";
         thetb->writeprotect = TRUE;
-        fd = open( pathname, O_RDONLY | O_BINARY, S_IRUSR | S_IWUSR | S_IRGRP );
+        fd = open( pathname, O_RDONLY | O_BINARY, S_IRUSR | S_IRGRP );
     }
 
     /*
