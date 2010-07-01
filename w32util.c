@@ -1,4 +1,5 @@
 /* W32UTIL.C    (c) Copyright "Fish" (David B. Trout), 2005-2010     */
+/*              (c) Copyright TurboHercules, SAS 2010                */
 /*              Windows porting functions                            */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -2085,6 +2086,7 @@ DLL_EXPORT int w32_socket( int af, int type, int protocol )
 //////////////////////////////////////////////////////////////////////////////////////////
 // Determine whether a file descriptor is a socket or not...
 // (returns 1==true if it's a socket, 0==false otherwise)
+// false is also returned if WSA is not initialized
 
 DLL_EXPORT int socket_is_socket( int sfd )
 {

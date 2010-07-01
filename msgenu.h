@@ -1457,14 +1457,30 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02724 "Successful completion\n" \
        "          Bytes read:    %"I64_FMT"d (%3.1f MB), Blocks=%u, avg=%u\n" \
        "          Bytes written: %"I64_FMT"d (%3.1f MB)"
-#define HHC02725 "Usage: %s infilename outfilename count [...]"
+#define HHC02725 "Usage: %s infilename outfilename"
 #define HHC02726 "Usage: %s filename"
+#define HHC02727 "Usage: %s [-f n] infilename outfilename"
+#define HHC02728 "Usage: %s [options] hetfile outfile fileno [recfm lrecl blksize]\n" \
+       "\n" \
+       "            fileno  range 1 to 9999; default 1\n" \
+       "\n" \
+       "            Options:\n" \
+       "                -a  convert to ASCII (implies -u)\n" \
+       "                -h  display usage summary\n" \
+       "                -n  file is an NL (or BLP like) tape\n" \
+       "                -u  unblock (removes BDWs and RDWs if RECFM=V)\n" \
+       "                -s  strip trailing blanks (requires -a)"
 
 #define HHC02740 "File '%s': writing output file"
 #define HHC02741 "File '%s': Error, incomplete %s header"
 #define HHC02742 "File '%s': Error, incomplete final data block: expected %d bytes, read %d"
 #define HHC02743 "File '%s': Error, %s header block without data"
 
+#define HHC02750 "DCB attributes required for NL tape"
+#define HHC02751 "Valid record formats are:"
+#define HHC02752 "%s"
+#define HHC02753 "% label missing"
+#define HHC02754 "File Info:  DSN=%-17.17s"
 
 
 // reserve 04xxx for host os specific component messages

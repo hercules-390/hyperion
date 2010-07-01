@@ -1,4 +1,5 @@
 /* HETGET.C     (c) Copyright Leland Lucius, 2000-2009               */
+/*              (c) Copyright TurboHercules, SAS 2010                */
 /*              Extract files from an HET file                       */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -24,6 +25,8 @@
 #include "hetlib.h"
 #include "sllib.h"
 #include "herc_getopt.h"
+
+#define UTILITY_NAME    "hetget"
 
 /*
 || Local volatile data
@@ -52,19 +55,6 @@ opts =
     0,
     0,
 };
-
-/*
-|| Local constant data
-*/
-static const char help[] =
-    "%s - Extract files from an HET file\n\n"
-    "Usage: %s [options] hetfile outfile fileno [recfm lrecl blksize]\n\n"
-    "Options:\n"
-    "  -a  convert to ASCII (implies -u)\n"
-    "  -h  display usage summary\n"
-    "  -n  file is an NL (or BLP like) tape\n"
-    "  -u  unblock (removes BDWs and RDWs if RECFM=V)\n"
-    "  -s  strip trailing blanks (requires -a)\n";
 
 /*
 || Valid record formats
@@ -392,7 +382,7 @@ get_sl( HETB *hetb, SLLABEL *lab )
     }
     else
     {
-        printf( "%s while reading block\n", het_error( rc ) );
+        printf( MSG( HHC00075, "E", "het_read()", het_error( rc ) ) );
     }
 
     return( -1 );
@@ -431,9 +421,9 @@ getfile( HETB *hetb, FILE *outf )
             rc = het_fsf( hetb );
             if( rc < 0 )
             {
-                printf( "%s while positioning to file #%d\n",
-                    het_error( rc ),
-                    opts.fileno );
+                char msgbuf[128];
+                MSGBUF( msgbuf, "het_fsf() while positioning to file '%d'", opts.fileno ); 
+                printf( MSG( HHC00075, "E", msgbuf, het_error( rc ) ) );
                 return( rc );
             }
         }
@@ -446,7 +436,7 @@ getfile( HETB *hetb, FILE *outf )
         rc = get_sl( hetb, &lab );
         if( rc < 0 || !sl_isvol( &lab, 1 ) )
         {
-            printf( "Expected VOL1 label\n" );
+            printf( MSG( HHC02753, "E", "VOL1" ) );
             return( -1 );
         }
 
@@ -466,9 +456,9 @@ getfile( HETB *hetb, FILE *outf )
             rc = het_fsf( hetb );
             if( rc < 0 )
             {
-                printf( "%s while positioning to file #%d\n",
-                    het_error( rc ),
-                    opts.fileno );
+                char msgbuf[128];
+                MSGBUF( msgbuf, "het_fsf() while positioning to file '%d'", opts.fileno ); 
+                printf( MSG( HHC00075, "E", msgbuf, het_error( rc ) ) );
                 return( rc );
             }
         }
@@ -479,7 +469,7 @@ getfile( HETB *hetb, FILE *outf )
         rc = get_sl( hetb, &lab );
         if( rc < 0 || !sl_ishdr( &lab, 1 ) )
         {
-            printf( "Expected HDR1 label\n" );
+            printf( MSG( HHC02753, "E", "HDR1" ) );
             return( -1 );
         }
 
@@ -487,7 +477,7 @@ getfile( HETB *hetb, FILE *outf )
         || Make the label more managable
         */
         sl_fmtlab( &fmt, &lab );
-        printf("File Info:\n  DSN=%-17.17s\n", fmt.slds1.dsid ); 
+        printf( MSG( HHC02754, "E", fmt.slds1.dsid ) ); 
     
         /*
         || Get the HDR2 label.
@@ -495,7 +485,7 @@ getfile( HETB *hetb, FILE *outf )
         rc = get_sl( hetb, &lab );
         if( rc < 0 || !sl_ishdr( &lab, 2 ) )
         {
-            printf( "Expected HDR2 label\n" );
+            printf( MSG( HHC02753, "E", "HDR2" ) );
             return( -1 );
         }
     
@@ -510,8 +500,7 @@ getfile( HETB *hetb, FILE *outf )
         rc = het_fsf( hetb );
         if( rc < 0 )
         {
-            printf( "%s while spacing to start of data\n",
-                het_error( rc ) );
+            printf( MSG( HHC00075, "E", "het_fsf()", het_error( rc ) ) );
             return( rc );
         }
     }
@@ -620,7 +609,7 @@ getfile( HETB *hetb, FILE *outf )
 void
 usage( char *name )
 {
-    printf( help, name, name );
+    printf( MSG( HHC02728, "I", name ) );
 }
 
 /*
@@ -629,15 +618,51 @@ usage( char *name )
 int
 main( int argc, char *argv[] )
 {
-    HETB *hetb;
-    FILE *outf;
-    int rc;
-    int i;
+    char           *pgmname;                /* prog name in host format  */
+    char           *pgm;                    /* less any extension (.ext) */
+    char           *pgmpath;                /* prog path in host format  */
+    char            msgbuf[512];            /* message build work area   */
+    HETB           *hetb;
+    FILE           *outf;
+    int             rc;
+    int             i;
+    char            pathname[MAX_PATH];
 
-    INITIALIZE_UTILITY("hetget");
+    /* Set program name */
+    if ( argc > 0 )
+    {
+        if ( strlen(argv[0]) == 0 )
+        {
+            pgmname = strdup( UTILITY_NAME );
+            pgmpath = strdup( "" );
+        }
+        else
+        {
+            char path[MAX_PATH];
+#if defined( _MSVC_ )
+            GetModuleFileName( NULL, path, MAX_PATH );
+#else
+            strncpy( path, argv[0], sizeof( path ) );
+#endif
+            pgmname = strdup(basename(path));
+#if !defined( _MSVC_ )
+            strncpy( path, argv[0], sizeof(path) );
+#endif
+            pgmpath = strdup( dirname( path  ));
+        }
+    }
+    else
+    {
+            pgmname = strdup( UTILITY_NAME );
+            pgmpath = strdup( "" );
+    }
+
+    pgm = strtok( strdup(pgmname), ".");
+    INITIALIZE_UTILITY( pgmname );
 
     /* Display the program identification message */
-    display_version (stderr, "Hercules HET extract files program", FALSE);
+    MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "Extract Files from HET" ) );
+    display_version (stderr, msgbuf+10, FALSE);
 
     /*
     || Process option switches
@@ -657,7 +682,7 @@ main( int argc, char *argv[] )
             break;
 
             case 'h':
-                usage( argv[ 0 ] );
+                usage( pgm );
                 exit( 1 );
             break;
 
@@ -674,7 +699,7 @@ main( int argc, char *argv[] )
             break;
 
             default:
-                usage( argv[ 0 ] );
+                usage( pgm );
                 exit( 1 );
             break;
         }
@@ -688,19 +713,27 @@ main( int argc, char *argv[] )
     /*
     || We must have at least the first 3 parms
     */
-    if( argc < 3 )
+    if(argc < 3)
     {
-        printf( "Must specify input tape, output file, and file #\n" );
-        printf( "Use -h option for more help\n" );
+        if ( argc > 1 )
+            printf ( MSG( HHC02446, "E" ) );
+        usage( pgm );
         exit( 1 );
     }
 
-    opts.ifile = argv[ optind ];
-    opts.ofile = argv[ optind + 1 ];
+    hostpath( pathname, argv[ optind ], sizeof(pathname) );
+    opts.ifile = strdup( pathname );
+
+    hostpath( pathname, argv[ optind + 1 ], sizeof(pathname) );
+    opts.ofile = strdup( pathname );
+
     opts.fileno = atoi( argv[ optind + 2 ] );
+
     if( opts.fileno == 0 || opts.fileno > 9999 )
     {
-        printf( "File number must be within 1-9999\n" );
+        char msgbuf[20];
+        MSGBUF( msgbuf, "%d", opts.fileno );
+        printf( MSG( HHC02205, "E", msgbuf, "; file number must be within the range of 1 to 9999" ) );
         exit( 1 );
     }
 
@@ -711,7 +744,7 @@ main( int argc, char *argv[] )
     {
         if( argc != 6 )
         {
-            printf( "DCB attributes required for NL tapes\n" );
+            printf( MSG( HHC02750, "E" ) );
             exit( 1 );
         }
     }
@@ -726,7 +759,7 @@ main( int argc, char *argv[] )
         */
         if( argc != 6 )
         {
-            usage( argv[ 0 ] );
+            usage( pgm );
             exit( 1 );
         }
 
@@ -748,18 +781,32 @@ main( int argc, char *argv[] )
         */
         if( opts.recfm == 0)
         {
+            char msgbuf[512] = "";
+            char msgbuf2[64] = "";
+            char msgbuf3[16] = "";
+            char msgbuf4[128] = "";
+
             /*
             || Dump out the valid RECFMs
             */
-            printf( "Valid record formats are:\n" );
+            MSGBUF( msgbuf, MSG( HHC02751, "I" ) );
             for( i = 0 ; i < (int)VALFMCNT ; i++ )
             {
-                printf( "  %-4.4s", valfm[ i ].recfm );
+                MSGBUF( msgbuf3, "  %-4.4s", valfm[ i ].recfm );
+
                 if( ( ( i + 1 ) % 3 ) == 0 )
                 {
-                    printf( "\n" );
+                    strcat( msgbuf2, msgbuf3 );
+                    MSGBUF( msgbuf4, MSG( HHC02752, "I", msgbuf2 ) );
+                    strcat( msgbuf, msgbuf4 );
+                    msgbuf2[0] = 0;
+                }
+                else
+                {
+                    strcat( msgbuf2, msgbuf3 );
                 }
             }
+            printf( "%s", msgbuf );
             exit( 1 );
         }
 
@@ -774,7 +821,7 @@ main( int argc, char *argv[] )
         opts.blksize = atoi( argv[ optind + 5 ] );
         if( opts.blksize == 0 )
         {
-            printf( "Block size can't be zero\n" );
+            printf( MSG( HHC02205, "E", "0", "; block size can't be zero" ) );
             exit( 1 );
         }
     }
@@ -782,7 +829,7 @@ main( int argc, char *argv[] )
     /*
     || Open the tape file
     */
-    rc = het_open( &hetb, opts.ifile, 0 );
+    rc = het_open( &hetb, opts.ifile, HETOPEN_READONLY );
     if( rc >= 0 )
     {
         /*
@@ -794,9 +841,7 @@ main( int argc, char *argv[] )
             /*
             || Open the output file
             */
-            char pathname[MAX_PATH];
-            hostpath(pathname, opts.ofile, sizeof(pathname));
-            outf = fopen( pathname, "wb" );
+            outf = fopen( opts.ofile, "wb" );
             if( outf != NULL )
             {
                 /*
@@ -818,7 +863,7 @@ main( int argc, char *argv[] )
     }
     else
     {
-        printf( "het_open() returned %s\n", het_error( rc ) );
+        printf( MSG( HHC00075, "E", "het_open()", het_error( rc ) ) );
     }
 
     /*
