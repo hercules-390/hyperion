@@ -1470,17 +1470,44 @@ cpu.c:123:HABC1234I This is a message
        "                -n  file is an NL (or BLP like) tape\n" \
        "                -u  unblock (removes BDWs and RDWs if RECFM=V)\n" \
        "                -s  strip trailing blanks (requires -a)"
+#define HHC02729 "Usage: %s [options] filename [volser] [owner]\n" \
+       "\n" \
+       "            Options:\n" \
+       "                -d  disable compression\n" \
+       "                -h  display usage summary\n" \
+       "                -i  create an IEHINITT formatted tape (default: on)\n" \
+       "                -n  create an NL tape"
+#define HHC02730 "Usage: %s [options] source [dest]\n" \
+       "\n" \
+       "            Options:\n" \
+       "                -1   compress fast\n" \
+       "                     ...\n" \
+       "                -9   compress best\n" \
+       "%s" \
+       "                -c n set chunk size to \"n\"\n" \
+       "                -d   decompress source tape\n" \
+       "                -h   display usage summary\n" \
+       "                -r   rechucnk\n" \
+       "                -s   strict AWSTAPE specification (chunksize=4096,no compression)\n" \
+       "                -v   verbose (debug) information\n" \
+       "                -z   use ZLIB compression\n"
 
 #define HHC02740 "File '%s': writing output file"
 #define HHC02741 "File '%s': Error, incomplete %s header"
 #define HHC02742 "File '%s': Error, incomplete final data block: expected %d bytes, read %d"
 #define HHC02743 "File '%s': Error, %s header block without data"
+#define HHC02744 "File '%s': Error renaming file to '%s' - manual intervention required" 
+#define HHC02745 "File '%s': Error removing file - manual intervention required"
 
 #define HHC02750 "DCB attributes required for NL tape"
 #define HHC02751 "Valid record formats are:"
 #define HHC02752 "%s"
 #define HHC02753 "% label missing"
 #define HHC02754 "File Info:  DSN=%-17.17s"
+#define HHC02755 "HET: Setting option '%s' to %s"
+#define HHC02756 "HET: HETLIB reported error %s files; %s"
+#define HHC02757 "HET: %s"
+
 
 
 // reserve 04xxx for host os specific component messages

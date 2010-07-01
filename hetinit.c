@@ -25,17 +25,7 @@
 #include "sllib.h"
 #include "herc_getopt.h"
 
-/*
-|| Local constant data
-*/
-static const char help[] =
-    "%s - Initialize a tape\n\n"
-    "Usage: %s [options] filename [volser] [owner]\n\n"
-    "Options:\n"
-    "  -d  disable compression\n"
-    "  -h  display usage summary\n"
-    "  -i  create an IEHINITT formatted tape (default: on)\n"
-    "  -n  create an NL tape\n";
+#define UTILITY_NAME    "hetinit"
 
 /*
 || Prints usage information
@@ -43,7 +33,7 @@ static const char help[] =
 static void
 usage( char *name )
 {
-    printf( help, name, name );
+    printf( MSG( HHC02729, "I", name ) );
 }
 
 /*
@@ -63,29 +53,64 @@ int i;
 int
 main( int argc, char *argv[] )
 {
-    int rc;
-    SLLABEL lab;
-    HETB *hetb;
-    int o_iehinitt;
-    int o_nl;
-    int o_compress;
-    char *o_filename;
-    char *o_owner;
-    char *o_volser;
+    char           *pgmname;                /* prog name in host format  */
+    char           *pgm;                    /* less any extension (.ext) */
+    char           *pgmpath;                /* prog path in host format  */
+    char            msgbuf[512];            /* message build work area   */
+    int             rc;
+    SLLABEL         lab;
+    HETB           *hetb;
+    int             o_iehinitt;
+    int             o_nl;
+    int             o_compress;
+    char           *o_filename;
+    char           *o_owner;
+    char           *o_volser;
 
-    INITIALIZE_UTILITY("hetinit");
+
+    /* Set program name */
+    if ( argc > 0 )
+    {
+        if ( strlen(argv[0]) == 0 )
+        {
+            pgmname = strdup( UTILITY_NAME );
+            pgmpath = strdup( "" );
+        }
+        else
+        {
+            char path[MAX_PATH];
+#if defined( _MSVC_ )
+            GetModuleFileName( NULL, path, MAX_PATH );
+#else
+            strncpy( path, argv[0], sizeof( path ) );
+#endif
+            pgmname = strdup(basename(path));
+#if !defined( _MSVC_ )
+            strncpy( path, argv[0], sizeof(path) );
+#endif
+            pgmpath = strdup( dirname( path  ));
+        }
+    }
+    else
+    {
+            pgmname = strdup( UTILITY_NAME );
+            pgmpath = strdup( "" );
+    }
+
+    pgm = strtok( strdup(pgmname), ".");
+    INITIALIZE_UTILITY( pgmname );
+
+    /* Display the program identification message */
+    MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "HET IEHINITT " ) );
+    display_version (stderr, msgbuf+10, FALSE);
 
     hetb = NULL;
-
     o_filename = NULL;
     o_iehinitt = TRUE;
     o_nl = FALSE;
     o_compress = TRUE;
     o_owner = NULL;
     o_volser = NULL;
-
-    /* Display the program identification message */
-    display_version (stderr, "Hercules HET IEHINITT program", FALSE);
 
     while( TRUE )
     {
@@ -102,7 +127,7 @@ main( int argc, char *argv[] )
             break;
 
             case 'h':
-                usage( argv[ 0 ] );
+                usage( pgm );
                 goto exit;
             break;
 
@@ -117,7 +142,7 @@ main( int argc, char *argv[] )
             break;
 
             default:
-                usage( argv[ 0 ] );
+                usage( pgm );
                 goto exit;
             break;
         }
@@ -127,9 +152,10 @@ main( int argc, char *argv[] )
 
     if( argc < 1 )
     {
-        usage( argv[ 0 ] );
+        usage( pgm );
         goto exit;
     }
+
     o_filename = argv[ optind ];
 
     if( o_iehinitt )
@@ -145,7 +171,7 @@ main( int argc, char *argv[] )
         }
         else
         {
-            usage( argv[ 0 ] );
+            usage( pgm );
             goto exit;
         }
     }
@@ -154,7 +180,7 @@ main( int argc, char *argv[] )
     {
         if( argc != 1 )
         {
-            usage( argv[ 0 ] );
+            usage( pgm );
             goto exit;
         }
     }
@@ -168,14 +194,14 @@ main( int argc, char *argv[] )
     rc = het_open( &hetb, o_filename, HETOPEN_CREATE );
     if( rc < 0 )
     {
-        printf( "het_open() returned %d\n", rc );
+        printf( MSG( HHC00075, "E", "het_open()", het_error( rc ) ) );
         goto exit;
     }
 
     rc = het_cntl( hetb, HETCNTL_SET | HETCNTL_COMPRESS, o_compress );
     if( rc < 0 )
     {
-        printf( "het_cntl() returned %d\n", rc );
+        printf( MSG( HHC00075, "E", "het_cntl()", het_error( rc ) ) );
         goto exit;
     }
 
@@ -184,28 +210,28 @@ main( int argc, char *argv[] )
         rc = sl_vol1( &lab, o_volser, o_owner );
         if( rc < 0 )
         {
-            printf( "%s\n", sl_error(rc) );
+            printf( MSG( HHC00075, "E", "sl_vol1()", sl_error( rc ) ) );
             goto exit;
         }
 
         rc = het_write( hetb, &lab, sizeof( lab ) );
         if( rc < 0 )
         {
-            printf( "het_write() for VOL1 returned %d\n", rc );
+            printf( MSG( HHC00075, "E", "het_write() for VOL1", het_error( rc ) ) );
             goto exit;
         }
 
         rc = sl_hdr1( &lab, SL_INITDSN, NULL, 0, 0, NULL, 0 );
         if( rc < 0 )
         {
-            printf( "%s\n", sl_error(rc) );
+            printf( MSG( HHC00075, "E", "sl_hdr1()", sl_error( rc ) ) );
             goto exit;
         }
 
         rc = het_write( hetb, &lab, sizeof( lab ) );
         if( rc < 0 )
         {
-            printf( "het_write() for HDR1 returned %d\n", rc );
+            printf( MSG( HHC00075, "E", "het_write() for HDR1", het_error( rc ) ) );
             goto exit;
         }
 
@@ -215,7 +241,7 @@ main( int argc, char *argv[] )
         rc = het_tapemark( hetb );
         if( rc < 0 )
         {
-            printf( "het_tapemark() returned %d\n", rc );
+            printf( MSG( HHC00075, "E", "het_tapemark()", het_error( rc ) ) );
             goto exit;
         }
     }
@@ -223,7 +249,7 @@ main( int argc, char *argv[] )
     rc = het_tapemark( hetb );
     if( rc < 0 )
     {
-        printf( "het_tapemark() returned %d\n", rc );
+        printf( MSG( HHC00075, "E", "het_tapemark()", het_error( rc ) ) );
         goto exit;
     }
 

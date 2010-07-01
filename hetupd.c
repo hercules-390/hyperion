@@ -1,4 +1,5 @@
 /* HETUPD.C     (c) Copyright Leland Lucius, 2000-2009               */
+/*              (c) Copyright TurboHercules, SAS 2010                */
 /*                 Update/Copy Hercules Emulated Tape                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -27,6 +28,7 @@
 #include "sllib.h"
 #include "herc_getopt.h"
 
+#define UTILITY_NAME    "hetupd"
 /*
 || Local volatile data
 */
@@ -41,6 +43,7 @@ static char *o_dname    = NULL;
 static int dorename     = FALSE;
 static HETB *s_hetb     = NULL;
 static HETB *d_hetb     = NULL;
+
 #ifdef EXTERNALGUI
 /* Previous reported file position */
 static off_t prevpos = 0;
@@ -49,33 +52,17 @@ static off_t prevpos = 0;
 #endif /*EXTERNALGUI*/
 
 /*
-|| Local constant data
-*/
-static const char help[] =
-    "%s - Updates the compression of a Hercules Emulated Tape file.\n\n"
-    "Usage: %s [options] source [dest]\n\n"
-    "Options:\n"
-    "  -1   compress fast\n"
-    "           ...\n"
-    "  -9   compress best\n"
-#if defined( HET_BZIP2 )
-    "  -b   use BZLIB compression\n"
-#endif /* defined( HET_BZIP2 ) */
-    "  -c n set chunk size to \"n\"\n"
-    "  -d   decompress source tape\n"
-    "  -h   display usage summary\n"
-    "  -r   rechucnk\n"
-    "  -s   strict AWSTAPE specification (chunksize=4096,no compression)\n"
-    "  -v   verbose information\n"
-    "  -z   use ZLIB compression\n";
-
-/*
 || Prints usage information
 */
 static void
 usage( char *name )
 {
-    printf( help, name, name );
+#ifdef  HET_BZIP2
+    char *bufbz = "                -b   use BZLIB compression\n";
+#else
+    char *bufbz = "";
+#endif
+    printf( MSG( HHC02730, "I", name, bufbz ) );
 }
 
 /*
@@ -101,15 +88,23 @@ closetapes( int rc )
     {
         if( rc >= 0 )
         {
-            rc = rename( o_dname, o_sname );
+            rc = remove( o_sname );
+            if ( rc < 0 )
+            {
+                printf ( MSG( HHC02745, "I", o_sname ) );
+            }
+            else
+            {
+                rc = rename( o_dname, o_sname );
+                if ( rc < 0 )
+                    printf ( MSG( HHC02744, "I", o_dname, o_sname ) );
+            }
         }
         else
         {
             rc = remove( o_dname );
-        }
-        if( rc == -1 )
-        {
-            printf( "Error renaming files - manual checks required\n");
+            if ( rc < 0 )
+                printf ( MSG( HHC02745, "I", o_dname ) );
         }
     }
 
@@ -152,7 +147,7 @@ copytape( void )
             rc = het_tapemark( d_hetb );
             if( rc < 0 )
             {
-                printf( "Error writing tapemark - rc: %d\n", rc );
+                printf( MSG( HHC00075, "E", "het_tapemark()", het_error( rc ) ) );
                 break;
             }
             continue;
@@ -160,14 +155,14 @@ copytape( void )
 
         if( rc < 0 )
         {
-            printf( "het_read() returned %d\n", rc );
+            printf( MSG( HHC00075, "E", "het_read()", het_error( rc ) ) );
             break;
         }
 
         rc = het_write( d_hetb, buf, rc );
         if( rc < 0 )
         {
-            printf( "het_write() returned %d\n", rc );
+            printf( MSG( HHC00075, "E", "het_write()", het_error( rc ) ) );
             break;
         }
     }
@@ -183,71 +178,109 @@ opentapes( void )
 {
     int rc;
 
-    rc = het_open( &s_hetb, o_sname, 0 );
+    rc = het_open( &s_hetb, o_sname, HETOPEN_READONLY );
     if( rc < 0 )
     {
+        if ( o_verbose )
+            printf( MSG( HHC02720, "E", o_sname, rc, het_error( rc ) ) );
         goto exit;
     }
 
     rc = het_open( &d_hetb, o_dname, HETOPEN_CREATE );
     if( rc < 0 )
     {
+        if ( o_verbose )
+            printf( MSG( HHC02720, "E", o_dname, rc, het_error( rc ) ) );
         goto exit;
     }
+
+    if ( o_verbose )
+        printf( MSG( HHC02755, "I", "decompress", yesno( o_decompress ) ) );
 
     rc = het_cntl( s_hetb, HETCNTL_SET | HETCNTL_DECOMPRESS, o_decompress );
     if( rc < 0 )
     {
+        if ( o_verbose )
+            printf( MSG( HHC00075, "E", "het_cntl()", het_error( rc ) ) );
         goto exit;
     }
+
+    if ( o_verbose )
+        printf( MSG( HHC02755, "I", "compress", yesno( o_compress ) ) );
 
     rc = het_cntl( d_hetb, HETCNTL_SET | HETCNTL_COMPRESS, o_compress );
     if( rc < 0 )
     {
+        if ( o_verbose )
+            printf( MSG( HHC00075, "E", "het_cntl()", het_error( rc ) ) );
         goto exit;
+    }
+
+    if ( o_verbose )
+    {
+        char msgbuf[16];
+        MSGBUF( msgbuf, "%d", o_method );
+        printf( MSG( HHC02755, "I", "method", msgbuf ) );
     }
 
     rc = het_cntl( d_hetb, HETCNTL_SET | HETCNTL_METHOD, o_method );
     if( rc < 0 )
     {
+        if ( o_verbose )
+            printf( MSG( HHC00075, "E", "het_cntl()", het_error( rc ) ) );
         goto exit;
+    }
+
+    if ( o_verbose )
+    {
+        char msgbuf[16];
+        MSGBUF( msgbuf, "%d", o_level );
+        printf( MSG( HHC02755, "I", "level", msgbuf ) );
     }
 
     rc = het_cntl( d_hetb, HETCNTL_SET | HETCNTL_LEVEL, o_level );
     if( rc < 0 )
     {
+        if ( o_verbose )
+            printf( MSG( HHC00075, "E", "het_cntl()", het_error( rc ) ) );
         goto exit;
+    }
+
+    if ( o_verbose )
+    {
+        char msgbuf[16];
+        MSGBUF( msgbuf, "%d", o_chunksize );
+        printf( MSG( HHC02755, "I", "chunksize", msgbuf ) );
     }
 
     rc = het_cntl( d_hetb, HETCNTL_SET | HETCNTL_CHUNKSIZE, o_chunksize );
     if( rc < 0 )
     {
+        if ( o_verbose )
+            printf( MSG( HHC00075, "E", "het_cntl()", het_error( rc ) ) );
         goto exit;
     }
 
     if( o_verbose )
     {
-        printf( "Source             : %s\n",
-            o_sname );
-        printf( "Destination        : %s\n",
-            o_dname );
-        printf( "Decompress source  : %s\n",
-            yesno( het_cntl( s_hetb, HETCNTL_DECOMPRESS, 0 ) ) );
-        printf( "Compress dest      : %s\n",
-            yesno( het_cntl( d_hetb, HETCNTL_COMPRESS, 0 ) ) );
-        printf( "Compression method : %d\n",
-            het_cntl( d_hetb, HETCNTL_METHOD, 0 ) );
-        printf( "Compression level  : %d\n",
-            het_cntl( d_hetb, HETCNTL_LEVEL, 0 ) );
+        char msgbuf[128];
+
+        MSGBUF( msgbuf, "Source             : %s", o_sname );
+        printf( MSG( HHC02757, "I", msgbuf ) );
+        MSGBUF( msgbuf, "Destination        : %s", o_dname );
+        printf( MSG( HHC02757, "I", msgbuf ) );
+        MSGBUF( msgbuf, "Decompress source  : %s", yesno( het_cntl( s_hetb, HETCNTL_DECOMPRESS, 0 ) ) );
+        printf( MSG( HHC02757, "I", msgbuf ) );
+        MSGBUF( msgbuf, "Compress dest      : %s", yesno( het_cntl( d_hetb, HETCNTL_COMPRESS, 0 ) ) );
+        printf( MSG( HHC02757, "I", msgbuf ) );
+        MSGBUF( msgbuf, "Compression method : %d", het_cntl( d_hetb, HETCNTL_METHOD, 0 ) );
+        printf( MSG( HHC02757, "I", msgbuf ) );
+        MSGBUF( msgbuf, "Compression level  : %d", het_cntl( d_hetb, HETCNTL_LEVEL, 0 ) );
+        printf( MSG( HHC02757, "I", msgbuf ) );
+
     }
 
 exit:
-
-    if( rc < 0 )
-    {
-        het_close( &d_hetb );
-        het_close( &s_hetb );
-    }
 
     return( rc );
 }
@@ -258,18 +291,53 @@ exit:
 int
 main( int argc, char *argv[] )
 {
-    char toname[ PATH_MAX ];
-    HETB *s_hetb;
-    HETB *d_hetb;
-    int rc;
+    char           *pgmname;                /* prog name in host format  */
+    char           *pgm;                    /* less any extension (.ext) */
+    char           *pgmpath;                /* prog path in host format  */
+    char            msgbuf[512];            /* message build work area   */
+    char            toname[ MAX_PATH ];
+    HETB           *s_hetb;
+    HETB           *d_hetb;
+    int             rc;
 
-    INITIALIZE_UTILITY("hetupd");
+    /* Set program name */
+    if ( argc > 0 )
+    {
+        if ( strlen(argv[0]) == 0 )
+        {
+            pgmname = strdup( UTILITY_NAME );
+            pgmpath = strdup( "" );
+        }
+        else
+        {
+            char path[MAX_PATH];
+#if defined( _MSVC_ )
+            GetModuleFileName( NULL, path, MAX_PATH );
+#else
+            strncpy( path, argv[0], sizeof( path ) );
+#endif
+            pgmname = strdup(basename(path));
+#if !defined( _MSVC_ )
+            strncpy( path, argv[0], sizeof(path) );
+#endif
+            pgmpath = strdup( dirname( path  ));
+        }
+    }
+    else
+    {
+            pgmname = strdup( UTILITY_NAME );
+            pgmpath = strdup( "" );
+    }
+
+    pgm = strtok( strdup(pgmname), ".");
+    INITIALIZE_UTILITY( pgmname );
+
+    /* Display the program identification message */
+    MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "HET Copy/Update" ) );
+    display_version (stderr, msgbuf+10, FALSE);
 
     s_hetb = NULL;
     d_hetb = NULL;
-
-    /* Display the program identification message */
-    display_version (stderr, "Hercules HET copy/update program", FALSE);
 
     while( TRUE )
     {
@@ -309,7 +377,7 @@ main( int argc, char *argv[] )
             break;
 
             case 'h':                               /* Print usage          */
-                usage( argv[ 0 ] );
+                usage( pgm );
                 exit( 1 );
             break;
 
@@ -335,7 +403,7 @@ main( int argc, char *argv[] )
             break;
 
             default:                                /* Print usage          */
-                usage( argv[ 0 ] );
+                usage( pgm );
                 exit( 1 );
             break;
         }
@@ -356,7 +424,7 @@ main( int argc, char *argv[] )
         break;
 
         default:
-            usage( argv[ 0 ] );
+            usage( pgm );
             exit( 1 );
         break;
     }
@@ -365,19 +433,15 @@ main( int argc, char *argv[] )
     rc = opentapes();
     if( rc < 0 )
     {
-        printf( "Error opening files - HETLIB rc: %d\n%s\n",
-            rc,
-            het_error( rc ) );
-        exit( 1 );
+        printf( MSG( HHC02756, "E", "opening", het_error( rc ) ) );
     }
-
-    rc = copytape();
-    if( rc < 0 )
+    else
     {
-        printf( "Error copying files - HETLIB rc: %d\n%s\n",
-            rc,
-            het_error( rc ) );
-        exit( 1 );
+        rc = copytape();
+        if( rc < 0 )
+        {
+            printf( MSG( HHC02756, "E", "copying", het_error( rc ) ) );
+        }
     }
 
     closetapes( rc );
