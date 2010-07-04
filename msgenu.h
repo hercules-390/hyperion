@@ -1487,7 +1487,7 @@ cpu.c:123:HABC1234I This is a message
        "                -c n set chunk size to \"n\"\n" \
        "                -d   decompress source tape\n" \
        "                -h   display usage summary\n" \
-       "                -r   rechucnk\n" \
+       "                -r   rechunk\n" \
        "                -s   strict AWSTAPE specification (chunksize=4096,no compression)\n" \
        "                -v   verbose (debug) information\n" \
        "                -z   use ZLIB compression\n"
