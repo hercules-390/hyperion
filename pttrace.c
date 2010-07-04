@@ -307,6 +307,7 @@ void *ptt_timeout()
     struct timeval  now;
     struct timespec tm;
 
+    WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0),"PTT timeout timer");
     obtain_lock (&ptttolock);
     gettimeofday (&now, NULL);
     tm.tv_sec = now.tv_sec + pttto;
@@ -319,6 +320,7 @@ void *ptt_timeout()
         ptttotid = 0;
     }
     release_lock (&ptttolock);
+    WRMSG(HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), "PTT timeout timer");
     return NULL;
 }
 
@@ -332,10 +334,19 @@ DLL_EXPORT int ptt_pthread_mutex_init(LOCK *mutex, pthread_mutexattr_t *attr, ch
 DLL_EXPORT int ptt_pthread_mutex_lock(LOCK *mutex, char *loc)
 {
 int result;
+U64 s;
 
     PTTRACE ("lock before", mutex, NULL, loc, PTT_MAGIC);
-    result = pthread_mutex_lock(mutex);
-    PTTRACE ("lock after", mutex, NULL, loc, result);
+    result = pthread_mutex_trylock(mutex);
+    if(result)
+    {
+        s = host_tod();
+        result = pthread_mutex_lock(mutex);
+        s = host_tod() - s;
+    }
+    else
+        s = 0;
+    PTTRACE ("lock after", mutex, s, loc, result);
     return result;
 }
 
