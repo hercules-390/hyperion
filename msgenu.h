@@ -302,7 +302,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00372 "%1d:%04X CCKD file '%s': %s[%d] recovered offset 0x%" I64_FMT "X len %d"
 #define HHC00373 "%1d:%04X CCKD file '%s': %d %s images recovered"
 #define HHC00374 "%1d:%04X CCKD file '%s': not enough file space for recovery"
-#define HHC00375 "%1d:%04X CCKD file '%s': revovery not completed: '%s'"
+#define HHC00375 "%1d:%04X CCKD file '%s': recovery not completed: '%s'"
 #define HHC00376 "%1d:%04X CCKD file '%s': free space not rebuilt, file opened read-only"
 #define HHC00377 "%1d:%04X CCKD file '%s': free space rebuilt"
 #define HHC00378 "%1d:%04X CCKD file '%s': error during swap"
