@@ -1162,11 +1162,11 @@ char    msgbuf[512];                    /* Message work area         */
             {
                 WRMSG (HHC01951, "W", bufo);
             }
-            MSGBUF(msgbuf, HHC01953, "E");
+            MSGBUF(msgbuf, MSG(HHC01953, "E"));
             dresp = msgbuf;
         }
 #else
-            MSGBUF(msgbuf, HHC01954, "E");
+            MSGBUF(msgbuf, MSG(HHC01954, "E"));
             dresp = msgbuf;
 #endif
     }
