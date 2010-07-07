@@ -277,7 +277,7 @@ int             xorblkl;                /* XOR check of block lens   */
 /* If error, return value is < 0                                     */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int 
-fet_read ( FETB *fetb, BYTE *buf )
+fet_read ( FETB *fetb, void *buf )
 {
 int             rc;                     /* Return code               */
 off_t           blkpos;                 /* Offset of block header    */
@@ -390,7 +390,7 @@ char            sblklen[5];             /* work buffer               */
 /* If error, return value is < 0                                     */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int 
-fet_write( FETB *fetb, BYTE *buf, U16 blklen )
+fet_write( FETB *fetb, void *buf, U16 blklen )
 {
 int             rc;                     /* Return code               */
 off_t           rcoff;                  /* Return code from lseek()  */
