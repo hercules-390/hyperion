@@ -7018,7 +7018,7 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
         if(regs->aea_ar[i] > 15)
         {
             MSGBUF( buf, "    alb[%d] %16.16" I64_FMT "X", i,
-                    regs->cr[CR_ALB_OFFSET + i]);
+                    regs->CR_G(CR_ALB_OFFSET + i));
             WRMSG(HHC02282, "I", buf);
         }
 
@@ -7068,7 +7068,7 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
             if(regs->aea_ar[i] > 15)
             {
                 MSGBUF( buf, "    alb[%d] %16.16" I64_FMT "X", i,
-                        regs->cr[CR_ALB_OFFSET + i]);
+                        regs->CR_G(CR_ALB_OFFSET + i));
                 WRMSG(HHC02282, "I", buf);
             }
     }
@@ -7275,6 +7275,9 @@ int ssd_cmd(int argc, char *argv[], char *cmdline)
             signal_quiesce(0, 0);
     }
 #else  //!defined( OPTION_SHUTDOWN_CONFIRMATION )
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+    UNREFERENCED(cmdline);    
     signal_quiesce(0, 0);
 #endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
 
@@ -8176,6 +8179,8 @@ int query_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int set_cmd(int argc, char *argv[], char *cmdline)
 {
+    UNREFERENCED(argv);
+    UNREFERENCED(cmdline);
     if (argc < 2)
     {
         WRMSG( HHC17000, "E" );
