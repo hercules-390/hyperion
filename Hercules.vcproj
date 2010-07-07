@@ -730,6 +730,10 @@
 								>
 							</File>
 							<File
+								RelativePath=".\ftlib.h"
+								>
+							</File>
+							<File
 								RelativePath=".\scsitape.h"
 								>
 							</File>
@@ -763,6 +767,10 @@
 							</File>
 							<File
 								RelativePath=".\hetlib.c"
+								>
+							</File>
+							<File
+								RelativePath=".\ftlib.c"
 								>
 							</File>
 							<File

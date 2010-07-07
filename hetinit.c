@@ -1,4 +1,5 @@
 /* HETINIT.C    (c) Copyright Leland Lucius, 2000-2009               */
+/*              (c) Copyright TurboHercules, SAS 2010                */
 /*           Creates IEHINITT or NL format Hercules Emulated Tapes   */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -22,6 +23,7 @@
 
 #include "hercules.h"
 #include "hetlib.h"
+#include "ftlib.h"
 #include "sllib.h"
 #include "herc_getopt.h"
 
@@ -59,10 +61,12 @@ main( int argc, char *argv[] )
     char            msgbuf[512];            /* message build work area   */
     int             rc;
     SLLABEL         lab;
-    HETB           *hetb;
+    HETB           *hetb;                   /* used for aws and het tapes*/
+    FETB           *fetb;                   /* used for faketapes        */
     int             o_iehinitt;
     int             o_nl;
     int             o_compress;
+    int             o_faketape;
     char           *o_filename;
     char           *o_owner;
     char           *o_volser;
@@ -105,7 +109,9 @@ main( int argc, char *argv[] )
     display_version (stderr, msgbuf+10, FALSE);
 
     hetb = NULL;
+    fetb = NULL;
     o_filename = NULL;
+    o_faketape = FALSE;
     o_iehinitt = TRUE;
     o_nl = FALSE;
     o_compress = TRUE;
@@ -158,6 +164,11 @@ main( int argc, char *argv[] )
 
     o_filename = argv[ optind ];
 
+    if ( ( rc = (int)strlen( o_filename ) ) > 4 && ( rc = strcasecmp( &o_filename[rc-4], ".fkt" ) ) == 0 )
+    {
+        o_faketape = TRUE;
+    }
+
     if( o_iehinitt )
     {
         if( argc == 2 )
@@ -191,18 +202,31 @@ main( int argc, char *argv[] )
     if( o_owner )
         het_string_to_upper( o_owner );
 
-    rc = het_open( &hetb, o_filename, HETOPEN_CREATE );
-    if( rc < 0 )
+    if ( o_faketape )  
     {
-        printf( MSG( HHC00075, "E", "het_open()", het_error( rc ) ) );
-        goto exit;
-    }
+        rc = fet_open( &fetb, o_filename, FETOPEN_CREATE );
+        if ( rc < 0 )
+        {
+            printf( MSG( HHC00075, "E", "fet_open()", fet_error( rc ) ) );
+            goto exit;
+        }
 
-    rc = het_cntl( hetb, HETCNTL_SET | HETCNTL_COMPRESS, o_compress );
-    if( rc < 0 )
+    }
+    else
     {
-        printf( MSG( HHC00075, "E", "het_cntl()", het_error( rc ) ) );
-        goto exit;
+        rc = het_open( &hetb, o_filename, HETOPEN_CREATE );
+        if( rc < 0 )
+        {
+            printf( MSG( HHC00075, "E", "het_open()", het_error( rc ) ) );
+            goto exit;
+        }
+   
+        rc = het_cntl( hetb, HETCNTL_SET | HETCNTL_COMPRESS, o_compress );
+        if( rc < 0 )
+        {
+            printf( MSG( HHC00075, "E", "het_cntl()", het_error( rc ) ) );
+            goto exit;
+        }
     }
 
     if( o_iehinitt )
@@ -214,10 +238,16 @@ main( int argc, char *argv[] )
             goto exit;
         }
 
-        rc = het_write( hetb, &lab, sizeof( lab ) );
+        if ( o_faketape )
+            rc = fet_write( fetb, &lab, (U16)sizeof( lab ) );
+        else
+            rc = het_write( hetb, &lab, sizeof( lab ) );
         if( rc < 0 )
         {
-            printf( MSG( HHC00075, "E", "het_write() for VOL1", het_error( rc ) ) );
+            if ( o_faketape )
+                printf( MSG( HHC00075, "E", "fet_write() for VOL1", fet_error( rc ) ) );
+            else
+                printf( MSG( HHC00075, "E", "het_write() for VOL1", het_error( rc ) ) );
             goto exit;
         }
 
@@ -227,34 +257,55 @@ main( int argc, char *argv[] )
             printf( MSG( HHC00075, "E", "sl_hdr1()", sl_error( rc ) ) );
             goto exit;
         }
-
-        rc = het_write( hetb, &lab, sizeof( lab ) );
+        
+        if ( o_faketape )  
+            rc = fet_write( fetb, &lab, (U16)sizeof(lab) );
+        else
+            rc = het_write( hetb, &lab, sizeof( lab ) );
         if( rc < 0 )
         {
-            printf( MSG( HHC00075, "E", "het_write() for HDR1", het_error( rc ) ) );
+            if ( o_faketape )
+                printf( MSG( HHC00075, "E", "fet_write() for HDR1", fet_error( rc ) ) );
+            else
+                printf( MSG( HHC00075, "E", "het_write() for HDR1", het_error( rc ) ) );
             goto exit;
         }
 
     }
     else if( o_nl )
     {
-        rc = het_tapemark( hetb );
+        if ( o_faketape )  
+            rc = fet_tapemark( fetb );
+        else
+            rc = het_tapemark( hetb );
         if( rc < 0 )
         {
-            printf( MSG( HHC00075, "E", "het_tapemark()", het_error( rc ) ) );
+            if ( o_faketape )
+                printf( MSG( HHC00075, "E", "fet_tapemark()", fet_error( rc ) ) );
+            else
+                printf( MSG( HHC00075, "E", "het_tapemark()", het_error( rc ) ) );
             goto exit;
         }
     }
 
-    rc = het_tapemark( hetb );
+    if ( o_faketape )  
+        rc = fet_tapemark( fetb );
+    else
+        rc = het_tapemark( hetb );
     if( rc < 0 )
     {
-        printf( MSG( HHC00075, "E", "het_tapemark()", het_error( rc ) ) );
+        if ( o_faketape )
+            printf( MSG( HHC00075, "E", "fet_tapemark()", fet_error( rc ) ) );
+        else
+            printf( MSG( HHC00075, "E", "het_tapemark()", het_error( rc ) ) );
         goto exit;
     }
 
 exit:
-    het_close( &hetb );
+    if ( o_faketape)
+        fet_close( &fetb );
+    else
+        het_close( &hetb );
 
     return( rc < 0 );
 }

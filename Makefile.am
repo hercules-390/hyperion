@@ -143,6 +143,7 @@ dyndev_SRC         = commadpt.c  \
                      tapeccws.c  \
                      sllib.c     \
                      hetlib.c    \
+		     ftlib.c     \
                      awstape.c   \
                      faketape.c  \
                      hettape.c   \
@@ -335,6 +336,7 @@ endif
 #
 
   libherct_la_SOURCES = sllib.c  \
+			ftlib.c  \
                         hetlib.c
 
   libherct_la_LDFLAGS = $(LIB_LD_FLAGS)
@@ -719,6 +721,7 @@ noinst_HEADERS = fishhang.h     \
                  hbyteswp.h     \
                  dasdblks.h     \
                  hetlib.h       \
+		 ftlib.h	\
                  version.h      \
                  parser.h       \
                  dasdtab.h      \

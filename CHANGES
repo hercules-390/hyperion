@@ -1,3 +1,5 @@
+06 Jul 2010 Add FTLIB.C FakeTape library; add support in hetmap and hetinit for 
+            FAKETAPE.
 22 Jun 2010 CAPPING feature. Capping can be set in hercules.cnf with the keyword
             CAPPING and a number, representing the maximum MIPS for CPs. Capping
             does not apply to specialty engines.

@@ -173,6 +173,8 @@ typedef struct _hetb
 #define HETE_NOMEM              -20     /* Insufficient memory              */
 #define HETE_BADHDR             -21     /* Couldn't read block header       */
 #define HETE_BADCOMPRESS        -22     /* Inconsistent compression flags   */
+#define HETE_BADBLOCK           -23     // unused
+#define HETE_BADLOC             -24     // unused
 
 /*
 || Public functions

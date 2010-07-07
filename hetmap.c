@@ -24,6 +24,7 @@
 
 #include "hercules.h"
 #include "hetlib.h"
+#include "ftlib.h"
 #include "sllib.h"
 #include "herc_getopt.h"
 
@@ -189,7 +190,7 @@ static SInt32	Print_Block_Data        ( SInt32 );
 */
 static const char sep[] = "---------------------\n";
 static const char help_hetmap[] =
-    "%s - Print a map of an HET or AWS tape file\n\n"
+    "%s - Print a map of an AWS, HET or FakeTape tape file\n\n"
     "Usage: %s [options] filename\n\n"
     "Options:\n"
     "  -a  print all label and file information (default: on)\n"
@@ -200,7 +201,7 @@ static const char help_hetmap[] =
     "  -s  print dump of each data file (SLANAL format) (default: off)\n"
     "  -t  print TAPEMAP-compatible format output (default: off)\n";
 static const char help_tapemap[] =
-    "%s - Print a map of an HET or AWS tape file\n\n"
+    "%s - Print a map of an AWS, HET or FakeTape tape file\n\n"
     "Usage: %s filename\n\n";
 
 #ifdef EXTERNALGUI
@@ -228,6 +229,9 @@ main( int argc, char *argv[] )
 {
     Boolean	lProcStdLbl	= FALSE;
     HETB *hetb;
+    FETB *fetb;
+    char *i_filename;
+    int   i_faketape = FALSE;
     SInt32  rc;
     SInt32  fileno;
     SInt32  i;
@@ -240,7 +244,7 @@ main( int argc, char *argv[] )
     U32  totblocks;
     U32  totubytes;
     U32  totcbytes;
-    U32  opts;
+    U32  opts = 0;
     SInt32  lResidue	= max_bytes_dsply;	/* amount of space left to print */ 
     char pgmpath[MAX_PATH];
     char *pgm;
@@ -284,7 +288,7 @@ main( int argc, char *argv[] )
     INITIALIZE_UTILITY(pgm);
 
     /* Display the program identification message */
-    display_version (stderr, "Hercules HET and AWS tape map program", FALSE);
+    display_version (stderr, "Hercules AWS, HET and FakeTape tape map program", FALSE);
 
     if (! (opts & O_TAPEMAP_INVOKED) )
     {
@@ -295,45 +299,36 @@ main( int argc, char *argv[] )
         {
             rc = getopt( argc, argv, "adfhlst" );
             if( rc == -1 )
-            {
                 break;
-            }
 
             switch( rc )
             {
                 case 'a':
                     opts = O_ALL;
-                break;
-
+                    break;
                 case 'd':
                     opts = O_DATASETS;
-                break;
-
+                    break;
                 case 'f':
                     opts = O_FILES;
-                break;
-
+                    break;
                 case 'h':
                     Print_Usage( pgm );
                     exit( 1 );
-                break;
-
+                    break;
                 case 'l':
                     opts = O_LABELS;
-                break;
-
+                    break;
                 case 's':
                     opts = O_SLANAL_OUT;
                     break;
-                    
                 case 't':
                     opts = O_TAPEMAP_OUTPUT;
-                break;
-
+                    break;
                 default:
                     Print_Usage( pgm );
                     exit( 1 );
-                break;
+                    break;
             }
         }
 
@@ -352,11 +347,29 @@ main( int argc, char *argv[] )
         printf( "%-20.20s: %s\n", "Filename", argv[ optind ] );
     }
 
-    rc = het_open( &hetb, argv[ optind ], 0 );
+    i_filename = argv[ optind ];
+
+    if ( ( rc = (int)strlen( i_filename ) ) > 4 && ( rc = strcasecmp( &i_filename[rc-4], ".fkt" ) ) == 0 )
+    {
+        i_faketape = TRUE;
+    }
+
+    if ( i_faketape )
+        rc = fet_open( &fetb, i_filename, FETOPEN_READONLY );
+    else
+        rc = het_open( &hetb, i_filename, HETOPEN_READONLY );
     if( rc < 0 )
     {
-        printf( "het_open() returned %d\n", rc );
-        het_close( &hetb );
+        if ( i_faketape )
+        {
+            printf( "fet_open() returned %d\n", rc );
+            fet_close( &fetb );
+        }
+        else
+        {
+            printf( "het_open() returned %d\n", rc );
+            het_close( &hetb );
+        }
         exit( 1 );
     }
 
@@ -381,8 +394,12 @@ main( int argc, char *argv[] )
 #ifdef EXTERNALGUI
         if( extgui )
         {
+            off_t curpos;
             /* Report progress every nnnK */
-            off_t curpos = ftell( hetb->fd );
+            if ( i_faketape )
+                curpos = ftell( fetb->fd );
+            else
+                curpos = ftell( hetb->fd );
             if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
             {
                 prevpos = curpos;
@@ -391,8 +408,13 @@ main( int argc, char *argv[] )
         }
 #endif /*EXTERNALGUI*/
 
-        rc = het_read( hetb, gBuffer );
-        if( rc == HETE_EOT )
+        if ( i_faketape)
+        {
+            rc = fet_read( fetb, gBuffer );
+        }
+        else
+            rc = het_read( hetb, gBuffer );
+        if( rc == HETE_EOT )                    // FETE and HETE enums are the same
         {
             if( opts & O_TAPEMAP_OUTPUT )
             {
@@ -400,7 +422,7 @@ main( int argc, char *argv[] )
             }
             break;
         }
-
+        
         if( rc == HETE_TAPEMARK )
         {
             fileno += 1;
@@ -420,10 +442,13 @@ main( int argc, char *argv[] )
                 printf( "%-20.20s: %d\n", "Blocks", gBlkCount );
                 printf( "%-20.20s: %d\n", "Min Blocksize", uminsz );
                 printf( "%-20.20s: %d\n", "Max Blocksize", umaxsz );
-                printf( "%-20.20s: %d\n", "Uncompressed bytes", ubytes );
-                printf( "%-20.20s: %d\n", "Min Blocksize-Comp", cminsz );
-                printf( "%-20.20s: %d\n", "Max Blocksize-Comp", cmaxsz );
-                printf( "%-20.20s: %d\n", "Compressed bytes", cbytes );
+                if ( !i_faketape )
+                {
+                    printf( "%-20.20s: %d\n", "Uncompressed bytes", ubytes );
+                    printf( "%-20.20s: %d\n", "Min Blocksize-Comp", cminsz );
+                    printf( "%-20.20s: %d\n", "Max Blocksize-Comp", cmaxsz );
+                    printf( "%-20.20s: %d\n", "Compressed bytes", cbytes );
+                }
             }
 
             totblocks += gBlkCount;
@@ -445,18 +470,24 @@ main( int argc, char *argv[] )
 
         if( rc < 0 )
         {
-            printf( "het_read() returned %d\n", rc );
+            if ( i_faketape )
+                printf( "fet_read() returned %d\n", rc );
+            else
+                printf( "het_read() returned %d\n", rc );
             break;
         }
 
         gBlkCount += 1;
-        ubytes += hetb->ublksize;
-        cbytes += hetb->cblksize;
+        if ( !i_faketape )
+        {
+            ubytes += hetb->ublksize;
+            cbytes += hetb->cblksize;
 
-        if( uminsz == 0 || hetb->ublksize < uminsz ) uminsz = hetb->ublksize;
-        if( hetb->ublksize > umaxsz ) umaxsz = hetb->ublksize;
-        if( cminsz == 0 || hetb->cblksize < cminsz ) cminsz = hetb->cblksize;
-        if( hetb->cblksize > cmaxsz ) cmaxsz = hetb->cblksize;
+            if( uminsz == 0 || hetb->ublksize < uminsz ) uminsz = hetb->ublksize;
+            if( hetb->ublksize > umaxsz ) umaxsz = hetb->ublksize;
+            if( cminsz == 0 || hetb->cblksize < cminsz ) cminsz = hetb->cblksize;
+            if( hetb->cblksize > cmaxsz ) cmaxsz = hetb->cblksize;
+        }
 
         if ( rc >= 80 )
         {
@@ -541,12 +572,18 @@ main( int argc, char *argv[] )
         printf( "%-20.20s:\n", "Summary" );
         printf( "%-20.20s: %d\n", "Files", fileno );
         printf( "%-20.20s: %d\n", "Blocks", totblocks );
-        printf( "%-20.20s: %d\n", "Uncompressed bytes", totubytes );
-        printf( "%-20.20s: %d\n", "Compressed bytes", totcbytes );
-        printf( "%-20.20s: %d\n", "Reduction", totubytes - totcbytes );
+        if ( !i_faketape )
+        {
+            printf( "%-20.20s: %d\n", "Uncompressed bytes", totubytes );
+            printf( "%-20.20s: %d\n", "Compressed bytes", totcbytes );
+            printf( "%-20.20s: %d\n", "Reduction", totubytes - totcbytes );
+        }
     }
 
-    het_close( &hetb );
+    if ( i_faketape )
+        fet_close( &fetb );
+    else
+        fet_close( &fetb );
 
     return 0;
 }

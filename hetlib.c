@@ -30,7 +30,7 @@
 #undef HETDEBUGW
 
 /*
-|| Local constant data
+|| Local constant data  NOTE: Keep in sync with ftlib.c
 */
 static const char *het_errstr[] =
 {
@@ -57,6 +57,8 @@ static const char *het_errstr[] =
     "Insufficient memory",
     "Couldn't read block header",
     "Inconsistent compression flags",
+    "Block is short",
+    "Location error",
     "Invalid error code",
 };
 #define HET_ERRSTR_MAX ( sizeof( het_errstr) / sizeof( het_errstr[ 0 ] ) )

@@ -52,6 +52,7 @@ hdasd_OBJ = \
 
 htape_OBJ = \
     $(O)hetlib.obj   \
+    $(O)ftlib.obj    \
     $(O)sllib.obj    \
     $(O)w32stape.obj
 

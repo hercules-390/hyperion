@@ -183,10 +183,10 @@ dasdcopy_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
 hetget_OBJ   = hetget.o hetlib.o sllib.o hostinfo.o version.o  logmsg.o \
                codepage.o pttrace.o hsys.o
 
-hetinit_OBJ  = hetinit.o hetlib.o sllib.o hostinfo.o version.o  logmsg.o \
+hetinit_OBJ  = hetinit.o hetlib.o ftlib.o sllib.o hostinfo.o version.o  logmsg.o \
                codepage.o pttrace.o hsys.o
 
-hetmap_OBJ   = hetmap.o hetlib.o sllib.o hostinfo.o version.o  logmsg.o \
+hetmap_OBJ   = hetmap.o hetlib.o ftlib.o sllib.o hostinfo.o version.o  logmsg.o \
                codepage.o pttrace.o hsys.o
 
 hetupd_OBJ   = hetupd.o hetlib.o sllib.o codepage.o hostinfo.o version.o  logmsg.o pttrace.o hsys.o
@@ -199,7 +199,7 @@ HEADERS  = codepage.h commadpt.h cpuint.h ctcadpt.h dasdblks.h \
            dasdtab.h dat.h devtype.h esa390.h feat370.h feat390.h \
            feat900.h featall.h featchk.h feature.h fishhang.h \
            fthreads.h wthreads.h hbyteswp.h hercifc.h hercnls.h hercules.h \
-           hetlib.h hostinfo.h httpmisc.h htypes.h ieee-w32.h \
+           hetlib.h ftlib.h hostinfo.h httpmisc.h htypes.h ieee-w32.h \
            inline.h linklist.h logger.h machdep.h opcode.h chsc.h \
            parser.h sllib.h tapedev.h tt32api.h tuntap.h version.h \
            vstore.h w32chan.h w32ctca.h shared.h hdl.h crypto.h \
