@@ -1401,7 +1401,7 @@ void packet_trace( BYTE* pAddr, int iLen, BYTE bDir )
         memset( print_ebcdic, 0, sizeof( print_ebcdic ) );
         memset( print_line, 0, sizeof( print_line ) );
 
-        snprintf(print_line, 64, "+%4.4X%c ", offset, bDir );
+        snprintf((char *) print_line, 64, "+%4.4X%c ", offset, bDir );
 
         for( i = 0; i < 16; i++ )
         {
@@ -1409,8 +1409,8 @@ void packet_trace( BYTE* pAddr, int iLen, BYTE bDir )
 
             if( offset < iLen )
             {
-                snprintf( tmp, 32, "%2.2X", c ); 
-                strcat( print_line, tmp );
+                snprintf((char *) tmp, 32, "%2.2X", c ); 
+                strcat((char *) print_line, (char *) tmp );
 
                 print_ebcdic[i] = print_ascii[i] = '.';
                 e = guest_to_host( c );
@@ -1422,13 +1422,13 @@ void packet_trace( BYTE* pAddr, int iLen, BYTE bDir )
             }
             else
             {
-                strcat( print_line, "  " );
+                strcat((char *) print_line, "  " );
             }
 
             offset++;
             if( ( offset & 3 ) == 0 )
             {
-                strcat( print_line, " " );
+                strcat((char *) print_line, " " );
             }
         }
 
