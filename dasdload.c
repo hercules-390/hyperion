@@ -2266,7 +2266,7 @@ int             i;                      /* Array subscript           */
     }
 
     /* Return error if TTR not found in conversion table */
-    XMERRF ( MSG( HHC02556, "I", memname, ttrptr[0], ttrptr[1], ttrptr[2] ) );
+    XMERRF ( MSG( HHC02557, "I", memname, ttrptr[0], ttrptr[1], ttrptr[2] ) );
     return -1;
 
 } /* end function replace_ttr */

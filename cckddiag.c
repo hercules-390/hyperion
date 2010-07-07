@@ -121,8 +121,8 @@ int readpos(
     }
     if (debug) 
         fprintf(stderr, 
-                "HHC90000D DBG: READPOS reading buf addr "PTR_FMTx" length %"SIZE_T_FMT"d (0x"SIZE_T_FMTX")\n",
-                (uintptr_t)buf, len, len);
+                "HHC90000D DBG: READPOS reading buf addr %p length %"SIZE_T_FMT"d (0x"SIZE_T_FMTX")\n",
+                buf, (long unsigned) len, (long unsigned) len);
     if (read(fd, buf, len) < (ssize_t)len) {
         fprintf(stderr, MSG( HHC02604, "E", "READPOS", strerror(errno) ) );
         clean();
