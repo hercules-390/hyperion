@@ -25,6 +25,7 @@
 
 #include "hercules.h"
 #include "hetlib.h"
+#include "ftlib.h"
 #include "sllib.h"
 #include "herc_getopt.h"
 
@@ -41,8 +42,12 @@ static int o_verbose    = FALSE;
 static char *o_sname    = NULL;
 static char *o_dname    = NULL;
 static int dorename     = FALSE;
+static int i_faketape   = FALSE;
+static int o_faketape   = FALSE;
 static HETB *s_hetb     = NULL;
+static FETB *s_fetb     = NULL;
 static HETB *d_hetb     = NULL;
+static FETB *d_fetb     = NULL;
 
 #ifdef EXTERNALGUI
 /* Previous reported file position */
@@ -81,8 +86,11 @@ static void
 closetapes( int rc )
 {
 
-    het_close( &d_hetb );
-    het_close( &s_hetb );
+    if ( d_hetb != NULL ) het_close( &d_hetb );
+    if ( s_hetb != NULL ) het_close( &s_hetb );
+
+    if ( d_fetb != NULL ) fet_close( &d_fetb );
+    if ( s_fetb != NULL ) fet_close( &s_fetb );
 
     if( dorename )
     {
@@ -125,8 +133,12 @@ copytape( void )
 #ifdef EXTERNALGUI
         if( extgui )
         {
+            off_t curpos;
             /* Report progress every nnnK */
-            off_t curpos = ftell( s_hetb->fd );
+            if ( i_faketape )
+                curpos = ftell( s_fetb->fd );
+            else
+                curpos = ftell( s_hetb->fd );
             if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
             {
                 prevpos = curpos;
@@ -135,8 +147,11 @@ copytape( void )
         }
 #endif /*EXTERNALGUI*/
 
-        rc = het_read( s_hetb, buf );
-        if( rc == HETE_EOT )
+        if ( i_faketape )
+            rc = fet_read( s_fetb, buf );
+        else
+            rc = het_read( s_hetb, buf );
+        if( rc == HETE_EOT )                // FAKETAPE and HETTAPE share codes
         {
             rc = 0;
             break;
@@ -144,10 +159,16 @@ copytape( void )
 
         if( rc == HETE_TAPEMARK )
         {
-            rc = het_tapemark( d_hetb );
+            if ( o_faketape )
+                rc = fet_tapemark( d_fetb );
+            else
+                rc = het_tapemark( d_hetb );
             if( rc < 0 )
             {
-                printf( MSG( HHC00075, "E", "het_tapemark()", het_error( rc ) ) );
+                if ( o_faketape )
+                    printf( MSG( HHC00075, "E", "fet_tapemark()", fet_error( rc ) ) );
+                else
+                    printf( MSG( HHC00075, "E", "het_tapemark()", het_error( rc ) ) );
                 break;
             }
             continue;
@@ -155,14 +176,23 @@ copytape( void )
 
         if( rc < 0 )
         {
-            printf( MSG( HHC00075, "E", "het_read()", het_error( rc ) ) );
+            if ( i_faketape )
+                printf( MSG( HHC00075, "E", "fet_read()", fet_error( rc ) ) );
+            else
+                printf( MSG( HHC00075, "E", "het_read()", het_error( rc ) ) );
             break;
         }
 
-        rc = het_write( d_hetb, buf, rc );
+        if ( o_faketape )
+            rc = fet_write( d_fetb, buf, rc );
+        else
+            rc = het_write( d_hetb, buf, rc );
         if( rc < 0 )
         {
-            printf( MSG( HHC00075, "E", "het_write()", het_error( rc ) ) );
+            if ( o_faketape )
+                printf( MSG( HHC00075, "E", "fet_write()", fet_error( rc ) ) );
+            else
+                printf( MSG( HHC00075, "E", "het_write()", het_error( rc ) ) );
             break;
         }
     }
@@ -178,7 +208,16 @@ opentapes( void )
 {
     int rc;
 
-    rc = het_open( &s_hetb, o_sname, HETOPEN_READONLY );
+    if ( ( rc = (int)strlen( o_sname ) ) > 4 && 
+        ( rc = strcasecmp( &o_sname[rc-4], ".fkt" ) ) == 0 )
+    {
+        i_faketape = TRUE;
+    }
+
+    if ( i_faketape )
+        rc = fet_open( &s_fetb, o_sname, FETOPEN_READONLY );
+    else
+        rc = het_open( &s_hetb, o_sname, HETOPEN_READONLY );
     if( rc < 0 )
     {
         if ( o_verbose )
@@ -186,7 +225,16 @@ opentapes( void )
         goto exit;
     }
 
-    rc = het_open( &d_hetb, o_dname, HETOPEN_CREATE );
+    if ( ( rc = (int)strlen( o_dname ) ) > 4 && 
+        ( rc = strcasecmp( &o_dname[rc-4], ".fkt" ) ) == 0 )
+    {
+        o_faketape = TRUE;
+    }
+    
+    if ( o_faketape )
+        rc = fet_open( &d_fetb, o_dname, FETOPEN_CREATE );
+    else
+        rc = het_open( &d_hetb, o_dname, HETOPEN_CREATE );
     if( rc < 0 )
     {
         if ( o_verbose )
@@ -194,71 +242,77 @@ opentapes( void )
         goto exit;
     }
 
-    if ( o_verbose )
-        printf( MSG( HHC02755, "I", "decompress", yesno( o_decompress ) ) );
-
-    rc = het_cntl( s_hetb, HETCNTL_SET | HETCNTL_DECOMPRESS, o_decompress );
-    if( rc < 0 )
+    if ( !i_faketape )
     {
         if ( o_verbose )
-            printf( MSG( HHC00075, "E", "het_cntl()", het_error( rc ) ) );
-        goto exit;
+            printf( MSG( HHC02755, "I", "decompress", yesno( o_decompress ) ) );
+
+        rc = het_cntl( s_hetb, HETCNTL_SET | HETCNTL_DECOMPRESS, o_decompress );
+        if( rc < 0 )
+        {
+            if ( o_verbose )
+                printf( MSG( HHC00075, "E", "het_cntl()", het_error( rc ) ) );
+            goto exit;
+        }
     }
 
-    if ( o_verbose )
+    if ( !o_faketape )
+    {
+        if ( o_verbose )
         printf( MSG( HHC02755, "I", "compress", yesno( o_compress ) ) );
 
-    rc = het_cntl( d_hetb, HETCNTL_SET | HETCNTL_COMPRESS, o_compress );
-    if( rc < 0 )
-    {
+        rc = het_cntl( d_hetb, HETCNTL_SET | HETCNTL_COMPRESS, o_compress );
+        if( rc < 0 )
+        {
+            if ( o_verbose )
+                printf( MSG( HHC00075, "E", "het_cntl()", het_error( rc ) ) );
+            goto exit;
+        }
+
         if ( o_verbose )
-            printf( MSG( HHC00075, "E", "het_cntl()", het_error( rc ) ) );
-        goto exit;
-    }
+        {
+            char msgbuf[16];
+            MSGBUF( msgbuf, "%d", o_method );
+            printf( MSG( HHC02755, "I", "method", msgbuf ) );
+        }
 
-    if ( o_verbose )
-    {
-        char msgbuf[16];
-        MSGBUF( msgbuf, "%d", o_method );
-        printf( MSG( HHC02755, "I", "method", msgbuf ) );
-    }
+        rc = het_cntl( d_hetb, HETCNTL_SET | HETCNTL_METHOD, o_method );
+        if( rc < 0 )
+        {
+            if ( o_verbose )
+                printf( MSG( HHC00075, "E", "het_cntl()", het_error( rc ) ) );
+            goto exit;
+        }
 
-    rc = het_cntl( d_hetb, HETCNTL_SET | HETCNTL_METHOD, o_method );
-    if( rc < 0 )
-    {
         if ( o_verbose )
-            printf( MSG( HHC00075, "E", "het_cntl()", het_error( rc ) ) );
-        goto exit;
-    }
+        {
+            char msgbuf[16];
+            MSGBUF( msgbuf, "%d", o_level );
+            printf( MSG( HHC02755, "I", "level", msgbuf ) );
+        }
 
-    if ( o_verbose )
-    {
-        char msgbuf[16];
-        MSGBUF( msgbuf, "%d", o_level );
-        printf( MSG( HHC02755, "I", "level", msgbuf ) );
-    }
+        rc = het_cntl( d_hetb, HETCNTL_SET | HETCNTL_LEVEL, o_level );
+        if( rc < 0 )
+        {
+            if ( o_verbose )
+                printf( MSG( HHC00075, "E", "het_cntl()", het_error( rc ) ) );
+            goto exit;
+        }
 
-    rc = het_cntl( d_hetb, HETCNTL_SET | HETCNTL_LEVEL, o_level );
-    if( rc < 0 )
-    {
         if ( o_verbose )
-            printf( MSG( HHC00075, "E", "het_cntl()", het_error( rc ) ) );
-        goto exit;
-    }
+        {
+            char msgbuf[16];
+            MSGBUF( msgbuf, "%d", o_chunksize );
+            printf( MSG( HHC02755, "I", "chunksize", msgbuf ) );
+        }
 
-    if ( o_verbose )
-    {
-        char msgbuf[16];
-        MSGBUF( msgbuf, "%d", o_chunksize );
-        printf( MSG( HHC02755, "I", "chunksize", msgbuf ) );
-    }
-
-    rc = het_cntl( d_hetb, HETCNTL_SET | HETCNTL_CHUNKSIZE, o_chunksize );
-    if( rc < 0 )
-    {
-        if ( o_verbose )
-            printf( MSG( HHC00075, "E", "het_cntl()", het_error( rc ) ) );
-        goto exit;
+        rc = het_cntl( d_hetb, HETCNTL_SET | HETCNTL_CHUNKSIZE, o_chunksize );
+        if( rc < 0 )
+        {
+            if ( o_verbose )
+                printf( MSG( HHC00075, "E", "het_cntl()", het_error( rc ) ) );
+            goto exit;
+        }
     }
 
     if( o_verbose )
@@ -269,15 +323,20 @@ opentapes( void )
         printf( MSG( HHC02757, "I", msgbuf ) );
         MSGBUF( msgbuf, "Destination        : %s", o_dname );
         printf( MSG( HHC02757, "I", msgbuf ) );
-        MSGBUF( msgbuf, "Decompress source  : %s", yesno( het_cntl( s_hetb, HETCNTL_DECOMPRESS, 0 ) ) );
-        printf( MSG( HHC02757, "I", msgbuf ) );
-        MSGBUF( msgbuf, "Compress dest      : %s", yesno( het_cntl( d_hetb, HETCNTL_COMPRESS, 0 ) ) );
-        printf( MSG( HHC02757, "I", msgbuf ) );
-        MSGBUF( msgbuf, "Compression method : %d", het_cntl( d_hetb, HETCNTL_METHOD, 0 ) );
-        printf( MSG( HHC02757, "I", msgbuf ) );
-        MSGBUF( msgbuf, "Compression level  : %d", het_cntl( d_hetb, HETCNTL_LEVEL, 0 ) );
-        printf( MSG( HHC02757, "I", msgbuf ) );
-
+        if ( !i_faketape )
+        {
+            MSGBUF( msgbuf, "Decompress source  : %s", yesno( het_cntl( s_hetb, HETCNTL_DECOMPRESS, 0 ) ) );
+            printf( MSG( HHC02757, "I", msgbuf ) );
+        }
+        if ( !o_faketape )
+        {
+            MSGBUF( msgbuf, "Compress dest      : %s", yesno( het_cntl( d_hetb, HETCNTL_COMPRESS, 0 ) ) );
+            printf( MSG( HHC02757, "I", msgbuf ) );
+            MSGBUF( msgbuf, "Compression method : %d", het_cntl( d_hetb, HETCNTL_METHOD, 0 ) );
+            printf( MSG( HHC02757, "I", msgbuf ) );
+            MSGBUF( msgbuf, "Compression level  : %d", het_cntl( d_hetb, HETCNTL_LEVEL, 0 ) );
+            printf( MSG( HHC02757, "I", msgbuf ) );
+        }
     }
 
 exit:
@@ -296,8 +355,6 @@ main( int argc, char *argv[] )
     char           *pgmpath;                /* prog path in host format  */
     char            msgbuf[512];            /* message build work area   */
     char            toname[ MAX_PATH ];
-    HETB           *s_hetb;
-    HETB           *d_hetb;
     int             rc;
 
     /* Set program name */
@@ -335,9 +392,6 @@ main( int argc, char *argv[] )
     /* Display the program identification message */
     MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "HET Copy/Update" ) );
     display_version (stderr, msgbuf+10, FALSE);
-
-    s_hetb = NULL;
-    d_hetb = NULL;
 
     while( TRUE )
     {

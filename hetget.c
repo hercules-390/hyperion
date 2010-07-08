@@ -14,7 +14,7 @@
 || HETGET.C     (c) Copyright Leland Lucius, 2000-2009
 ||              Released under terms of the Q Public License.
 ||
-|| Extract files from an HET file
+|| Extract files from a AWS, HET or FAKETAPE file
 ||
 || ----------------------------------------------------------------------------
 */
@@ -23,6 +23,7 @@
 
 #include "hercules.h"
 #include "hetlib.h"
+#include "ftlib.h"
 #include "sllib.h"
 #include "herc_getopt.h"
 
@@ -39,6 +40,9 @@ struct
 {
     char *ifile;
     char *ofile;
+    HETB *hetb;
+    FETB *fetb;
+    int faketape;
     int fileno;
     int lrecl;
     int blksize;
@@ -49,6 +53,7 @@ opts =
 {
     NULL,
     NULL,
+    FALSE,
     0,
     0,
     0,
@@ -257,14 +262,17 @@ rdw_length( const unsigned char *ptr )
 || Retrieves a block from the tape file and resets variables
 */
 int
-getblock( HETB *hetb )
+getblock( )
 {
     int rc;
 
     /*
     || Read a block from the tape
     */
-    rc = het_read( hetb, blkptr );
+    if ( opts.faketape )
+        rc = fet_read( opts.fetb, blkptr );
+    else
+        rc = het_read( opts.hetb, blkptr );
     if( rc < 0 )
     {
         return( rc );
@@ -282,7 +290,7 @@ getblock( HETB *hetb )
 || Retrieve logical records from the tape - doesn't handle SPANNED records
 */
 int
-getrecord( HETB *hetb )
+getrecord( )
 {
     int rc;
     
@@ -302,7 +310,7 @@ getrecord( HETB *hetb )
         /*
         || Go get another block
         */
-        rc = getblock( hetb );
+        rc = getblock( );
         if( rc < 0 )
         {
             return( rc );
@@ -362,14 +370,17 @@ getrecord( HETB *hetb )
 || Retrieve and validate a standard label
 */
 int
-get_sl( HETB *hetb, SLLABEL *lab )
+get_sl( SLLABEL *lab )
 {
     int rc;
     
     /*
     || Read a block
     */
-    rc = het_read( hetb, blkptr );
+    if ( opts.faketape )
+        rc = fet_read( opts.fetb, blkptr );
+    else
+        rc = het_read( opts.hetb, blkptr );
     if( rc >= 0 )
     {
         /*
@@ -382,7 +393,10 @@ get_sl( HETB *hetb, SLLABEL *lab )
     }
     else
     {
-        printf( MSG( HHC00075, "E", "het_read()", het_error( rc ) ) );
+        if ( opts.faketape )
+            printf( MSG( HHC00075, "E", "fet_read()", fet_error( rc ) ) );
+        else
+            printf( MSG( HHC00075, "E", "het_read()", het_error( rc ) ) );
     }
 
     return( -1 );
@@ -392,7 +406,7 @@ get_sl( HETB *hetb, SLLABEL *lab )
 || Extract the file from the tape
 */
 int
-getfile( HETB *hetb, FILE *outf )
+getfile( FILE *outf )
 {
     SLFMT fmt;
     SLLABEL lab;
@@ -418,11 +432,16 @@ getfile( HETB *hetb, FILE *outf )
             /*
             || Forward space to beginning of next file
             */
-            rc = het_fsf( hetb );
+            if ( opts.faketape )
+                rc = fet_fsf ( opts.fetb );
+            else
+                rc = het_fsf( opts.hetb );
             if( rc < 0 )
             {
                 char msgbuf[128];
-                MSGBUF( msgbuf, "het_fsf() while positioning to file '%d'", opts.fileno ); 
+                MSGBUF( msgbuf, "%set_fsf() while positioning to file '%d'", 
+                    opts.faketape ? "f" : "h",
+                    opts.fileno ); 
                 printf( MSG( HHC00075, "E", msgbuf, het_error( rc ) ) );
                 return( rc );
             }
@@ -433,7 +452,7 @@ getfile( HETB *hetb, FILE *outf )
         /*
         || First block should be a VOL1 record
         */
-        rc = get_sl( hetb, &lab );
+        rc = get_sl( &lab );
         if( rc < 0 || !sl_isvol( &lab, 1 ) )
         {
             printf( MSG( HHC02753, "E", "VOL1" ) );
@@ -453,11 +472,16 @@ getfile( HETB *hetb, FILE *outf )
             /*
             || Forward space to beginning of next file
             */
-            rc = het_fsf( hetb );
+            if ( opts.faketape )
+                rc = fet_fsf ( opts.fetb );
+            else
+                rc = het_fsf( opts.hetb );
             if( rc < 0 )
             {
                 char msgbuf[128];
-                MSGBUF( msgbuf, "het_fsf() while positioning to file '%d'", opts.fileno ); 
+                MSGBUF( msgbuf, "%set_fsf() while positioning to file '%d'", 
+                    opts.faketape ? "f" : "h",
+                    opts.fileno ); 
                 printf( MSG( HHC00075, "E", msgbuf, het_error( rc ) ) );
                 return( rc );
             }
@@ -466,7 +490,7 @@ getfile( HETB *hetb, FILE *outf )
         /*
         || Get the HDR1 label.
         */
-        rc = get_sl( hetb, &lab );
+        rc = get_sl( &lab );
         if( rc < 0 || !sl_ishdr( &lab, 1 ) )
         {
             printf( MSG( HHC02753, "E", "HDR1" ) );
@@ -482,7 +506,7 @@ getfile( HETB *hetb, FILE *outf )
         /*
         || Get the HDR2 label.
         */
-        rc = get_sl( hetb, &lab );
+        rc = get_sl( &lab );
         if( rc < 0 || !sl_ishdr( &lab, 2 ) )
         {
             printf( MSG( HHC02753, "E", "HDR2" ) );
@@ -497,10 +521,16 @@ getfile( HETB *hetb, FILE *outf )
         /*
         || Hop over the tapemark
         */
-        rc = het_fsf( hetb );
+        if ( opts.faketape )
+            rc = fet_fsf( opts.fetb );
+        else
+            rc = het_fsf( opts.hetb );
         if( rc < 0 )
         {
-            printf( MSG( HHC00075, "E", "het_fsf()", het_error( rc ) ) );
+            if ( opts.faketape )
+                printf( MSG( HHC00075, "E", "fet_fsf()", fet_error( rc ) ) );
+            else
+                printf( MSG( HHC00075, "E", "het_fsf()", het_error( rc ) ) );
             return( rc );
         }
     }
@@ -513,13 +543,17 @@ getfile( HETB *hetb, FILE *outf )
         /*
         || Get a record
         */
-        while( ( rc = getrecord( hetb ) ) >= 0 )
+        while( ( rc = getrecord( ) ) >= 0 )
         {
 #ifdef EXTERNALGUI
             if( extgui )
             {
+                off_t curpos;
                 /* Report progress every nnnK */
-                off_t curpos = ftell( hetb->fd );
+                if ( opts.faketape )
+                    curpos = ftell( opts.fetb->fd ); 
+                else
+                    curpos = ftell( opts.hetb->fd );
                 if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
                 {
                     prevpos = curpos;
@@ -579,13 +613,17 @@ getfile( HETB *hetb, FILE *outf )
         /*
         || Get a record
         */
-        while( ( rc = getblock( hetb ) ) >= 0 )
+        while( ( rc = getblock( ) ) >= 0 )
         {
 #ifdef EXTERNALGUI
             if( extgui )
             {
+                off_t curpos;
                 /* Report progress every nnnK */
-                off_t curpos = ftell( hetb->fd );
+                if ( opts.faketape )
+                    curpos = ftell( opts.fetb->fd );
+                else
+                    curpos = ftell( opts.hetb->fd );
                 if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
                 {
                     prevpos = curpos;
@@ -622,7 +660,6 @@ main( int argc, char *argv[] )
     char           *pgm;                    /* less any extension (.ext) */
     char           *pgmpath;                /* prog path in host format  */
     char            msgbuf[512];            /* message build work area   */
-    HETB           *hetb;
     FILE           *outf;
     int             rc;
     int             i;
@@ -661,7 +698,7 @@ main( int argc, char *argv[] )
     INITIALIZE_UTILITY( pgmname );
 
     /* Display the program identification message */
-    MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "Extract Files from HET" ) );
+    MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "Extract Files from AWS, HET or FAKETAPE" ) );
     display_version (stderr, msgbuf+10, FALSE);
 
     /*
@@ -723,6 +760,12 @@ main( int argc, char *argv[] )
 
     hostpath( pathname, argv[ optind ], sizeof(pathname) );
     opts.ifile = strdup( pathname );
+    if ( ( rc = (int)strlen( opts.ifile ) ) > 4 
+      && ( rc = strcasecmp( &opts.ifile[rc-4], ".fkt" ) ) == 0 )
+    {
+        opts.faketape = TRUE;
+    }
+
 
     hostpath( pathname, argv[ optind + 1 ], sizeof(pathname) );
     opts.ofile = strdup( pathname );
@@ -829,7 +872,10 @@ main( int argc, char *argv[] )
     /*
     || Open the tape file
     */
-    rc = het_open( &hetb, opts.ifile, HETOPEN_READONLY );
+    if ( opts.faketape )
+        rc = fet_open( &opts.fetb, opts.ifile, FETOPEN_READONLY );
+    else
+        rc = het_open( &opts.hetb, opts.ifile, HETOPEN_READONLY );
     if( rc >= 0 )
     {
         /*
@@ -847,7 +893,7 @@ main( int argc, char *argv[] )
                 /*
                 || Go extract the file from the tape
                 */
-                rc = getfile( hetb, outf );
+                rc = getfile( outf );
 
                 /*
                 || Close the output file
@@ -863,13 +909,19 @@ main( int argc, char *argv[] )
     }
     else
     {
-        printf( MSG( HHC00075, "E", "het_open()", het_error( rc ) ) );
+        if ( opts.faketape )
+            printf( MSG( HHC00075, "E", "fet_open()", fet_error( rc ) ) );
+        else
+            printf( MSG( HHC00075, "E", "het_open()", het_error( rc ) ) );
     }
 
     /*
     || Close the tape file
     */
-    het_close( &hetb );
+    if ( opts.faketape )
+        fet_close( &opts.fetb );
+    else
+        het_close( &opts.hetb );
 
     return 0;
 }

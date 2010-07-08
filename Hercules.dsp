@@ -643,6 +643,14 @@ SOURCE=.\fthreads.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\ftlib.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\ftlib.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\general1.c
 # End Source File
 # Begin Source File

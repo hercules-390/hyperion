@@ -1,3 +1,4 @@
+08 Jul 2010 Add FAKETAPE support in hetupd and hetget. (autogen.sh and ./configure rerun required)
 06 Jul 2010 Add FTLIB.C FakeTape library; add support in hetmap and hetinit for 
             FAKETAPE.
 22 Jun 2010 CAPPING feature. Capping can be set in hercules.cnf with the keyword

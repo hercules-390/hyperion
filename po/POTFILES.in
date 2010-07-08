@@ -47,6 +47,7 @@ fbadasd.c
 fishhang.c
 float.c
 fthreads.c
+ftlib.c
 general1.c
 general2.c
 hdl.c

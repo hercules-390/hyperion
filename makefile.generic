@@ -180,7 +180,7 @@ dasdcopy_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o cache.o \
                shared.o logmsg.o hsys.o pttrace.o
 
-hetget_OBJ   = hetget.o hetlib.o sllib.o hostinfo.o version.o  logmsg.o \
+hetget_OBJ   = hetget.o hetlib.o ftlib.o sllib.o hostinfo.o version.o  logmsg.o \
                codepage.o pttrace.o hsys.o
 
 hetinit_OBJ  = hetinit.o hetlib.o ftlib.o sllib.o hostinfo.o version.o  logmsg.o \
@@ -189,7 +189,7 @@ hetinit_OBJ  = hetinit.o hetlib.o ftlib.o sllib.o hostinfo.o version.o  logmsg.o
 hetmap_OBJ   = hetmap.o hetlib.o ftlib.o sllib.o hostinfo.o version.o  logmsg.o \
                codepage.o pttrace.o hsys.o
 
-hetupd_OBJ   = hetupd.o hetlib.o sllib.o codepage.o hostinfo.o version.o  logmsg.o pttrace.o hsys.o
+hetupd_OBJ   = hetupd.o hetlib.o ftlib.o sllib.o codepage.o hostinfo.o version.o  logmsg.o pttrace.o hsys.o
 
 dmap2hrc_OBJ = dmap2hrc.o hostinfo.o version.o  logmsg.o pttrace.o hsys.o
 
