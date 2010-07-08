@@ -550,7 +550,7 @@ DLL_EXPORT void logger_init(void)
     {
         char buf[40];
         sprintf(buf, "malloc(%d)", logger_bufsize);
-        fprintf(stderr, MSG(HHC02102, "S", buf, strerror(errno)));
+        fprintf(stderr, MSG(HHC02102, "E", buf, strerror(errno)));
         exit(1);
     }
 
@@ -619,7 +619,7 @@ int   new_hrdcpyfd;
         {
             if(!(new_hrdcpy = fdopen(new_hrdcpyfd,"w")))
             {
-                WRMSG(HHC02102,"S", "fdopen()", strerror(errno));
+                WRMSG(HHC02102,"E", "fdopen()", strerror(errno));
                 return;
             }
             else

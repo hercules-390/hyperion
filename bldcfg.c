@@ -1119,11 +1119,11 @@ char    fname[MAX_PATH];                /* normalized filename       */
             {
                 squitmout = operand;
             }
-#else
+#else  //!defined( OPTION_SHUTDOWN_CONFIRMATION )
             {
                 WRMSG( HHC01450, "W", inc_stmtnum[inc_level], fname, keyword, "OPTION_SHUTDOWN_CONFORMATION" );
             }
-#endif
+#endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
             else if (strcasecmp (keyword, "capping") == 0)
 #ifdef OPTION_CAPPING
             {
@@ -1784,7 +1784,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
     {
       rc = create_thread(&sysblk.captid, DETACHED, capping_manager_thread, NULL, "Capping manager");
       if(rc)
-        WRMSG(HHC00102, "S", strerror(rc));
+        WRMSG(HHC00102, "E", strerror(rc));
     }
 #endif // OPTION_CAPPING
 

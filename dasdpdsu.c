@@ -329,7 +329,7 @@ char            pathname[MAX_PATH];     /* ofname in host format     */
 
             if (ferror(ofp))
             {
-                fprintf (stderr, MSG( HHC02468, "I", 
+                fprintf (stderr, MSG( HHC02468, "E", 
                                       ofname, "fwrite", strerror(errno) ) );
                 return -1;
             }

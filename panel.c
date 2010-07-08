@@ -1894,7 +1894,7 @@ char    buf[1024];                      /* Buffer workarea           */
     {
         char buf[40];
         snprintf(buf, 40, "malloc(%lu)", kbbufsize);
-        WRMSG(HHC00075, "S", buf, strerror(errno));
+        WRMSG(HHC00075, "E", buf, strerror(errno));
         return;
     }
 
@@ -1905,7 +1905,7 @@ char    buf[1024];                      /* Buffer workarea           */
         char buf[40];
         snprintf(buf, 40, "malloc(%lu)", MAX_MSGS * sizeof(PANMSG));
         fprintf (stderr,
-                MSG(HHC00075, "S", buf, strerror(errno)));
+                MSG(HHC00075, "E", buf, strerror(errno)));
         return;
     }
 

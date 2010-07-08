@@ -750,7 +750,7 @@ int     dll_count;                      /* index into array          */
                         watchdog_thread, NULL, "watchdog_thread");
     if (rc)
     {
-        WRMSG(HHC00102, "S", strerror(rc));
+        WRMSG(HHC00102, "E", strerror(rc));
         delayed_exit(-1);
         return(1);
     }
@@ -764,7 +764,7 @@ int     dll_count;                      /* index into array          */
                             shared_server, NULL, "shared_server");
 	if (rc)
         {
-            WRMSG(HHC00102, "S", strerror(rc));
+            WRMSG(HHC00102, "E", strerror(rc));
             delayed_exit(-1);
             return(1);
         }
@@ -782,7 +782,7 @@ int     dll_count;                      /* index into array          */
                            *dev->hnd->init, dev, "device connecting thread");
                 if (rc)
                 {
-                    WRMSG(HHC00102, "S", strerror(rc));
+                    WRMSG(HHC00102, "E", strerror(rc));
                     delayed_exit(-1);
                     return(1);
                 }
@@ -794,7 +794,7 @@ int     dll_count;                      /* index into array          */
     rc = create_thread(&rctid,DETACHED,
                   process_rc_file,NULL,"process_rc_file");
     if (rc)
-        WRMSG(HHC00102, "S", strerror(rc));
+        WRMSG(HHC00102, "E", strerror(rc));
 
     if(log_callback)
     {
@@ -803,7 +803,7 @@ int     dll_count;                      /* index into array          */
         rc = create_thread(&logcbtid,DETACHED,
                       log_do_callback,NULL,"log_do_callback");
         if (rc)
-	    WRMSG(HHC00102, "S", strerror(rc));
+	    WRMSG(HHC00102, "E", strerror(rc));
 	return(0);
     }
 

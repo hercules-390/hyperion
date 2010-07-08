@@ -2384,7 +2384,7 @@ int rc;
                                 http_server, NULL, "http_server");
             if(rc)
             {
-                WRMSG(HHC00102, "S", strerror(rc));
+                WRMSG(HHC00102, "E", strerror(rc));
                 return -1;
             }
         }

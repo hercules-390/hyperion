@@ -1367,7 +1367,7 @@ int   rc;
              timer_update_thread, NULL, "timer_update_thread");
         if (rc)
         {
-            WRMSG(HHC00102, "S", strerror(rc));
+            WRMSG(HHC00102, "E", strerror(rc));
             RELEASE_INTLOCK(NULL);
             return NULL;
         }
