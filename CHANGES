@@ -1,3 +1,6 @@
+09 Jul 2010 Add DIR/LS commands as appropriate. Add "mt" command for Mag tape control. 
+            Command mt supports rew, fsf, bsf, fsr, bsr, asf and wtm sub functions.
+            Type "help mt" for more information.
 08 Jul 2010 Add FAKETAPE support in hetupd and hetget. (autogen.sh and ./configure rerun required)
 06 Jul 2010 Add FTLIB.C FakeTape library; add support in hetmap and hetinit for 
             FAKETAPE.

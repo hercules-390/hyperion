@@ -1022,7 +1022,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02240 "Total synchronous: %13" I64_FMT "d asynchronous: %12" I64_FMT "d  %3" I64_FMT "d%%"
 #define HHC02241 "Max device threads: %d, current: %d, most: %d, waiting: %d, max exceeded: %d"
 #define HHC02242 "Max device threads: %d, current: %d, most: %d, waiting: %d, total I/Os queued: %d"
-#define HHC02243 "Reinit rejected for drive %1d:%04X: drive not empty"
+#define HHC02243 "%1d:%04X reinit rejected; drive not empty"
 #define HHC02244 "%1d:%04X device initialization failed"
 #define HHC02245 "%1d:%04X device initialized"
 #define HHC02246 "Savecore: no modified storage found"
@@ -1078,7 +1078,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02295 "CP group capping rate is %d MIPS"
 #define HHC02296 "Capping rate for each non-CP CPU is %d MIPS"
 #define HHC02297 "MIP capping is not enabled"
-
+#define HHC02298 "%1d:%04X drive is empty"
 #define HHC02299 "Too many arguments. Type 'help %s' for assistance."
 
 // reserve 023xx for ieee.c
@@ -1508,6 +1508,11 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02756 "HET: HETLIB reported error %s files; %s"
 #define HHC02757 "HET: %s"
 
+#define HHC02800 "%1d:%04X %s complete"
+#define HHC02801 "%1d:%04X %s failed; %s"
+#define HHC02802 "%1d:%04X Current file number %d"
+#define HHC02803 "%1d:%04X Current block number %d"
+#define HHC02804 "%1d:%04X File protect enabled"
 
 
 // reserve 04xxx for host os specific component messages

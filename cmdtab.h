@@ -147,11 +147,6 @@ COMMAND("cpu",       PANEL,         SYSCMDALL,          cpu_cmd,
     "to apply to. For example, entering 'cpu 1F' followed by \"gpr\" will\n"
     "display the general purpose registers for cpu 31 of your configuration.\n")
 
-COMMAND("fcb",       PANEL,         SYSCMDALL,          fcb_cmd,      
-  "display the current FCB (if only the printer is given)",
-   "Reset the fcb to the standard one \n" 
-   "Load a fcb image \n")
-
 COMMAND("start",     PANEL,         SYSCMDALL,          start_cmd,    
   "start CPU (or printer device if argument given)",
     "Entering the 'start' command by itself simply starts a stopped\n"
@@ -493,7 +488,12 @@ COMMAND("qd",        PANEL,         SYSCMDALL-SYSOPER,  qd_cmd,
   "query dasd", 
     NULL )
 
-CMDABBR("query",1,   PANEL,         SYSCMDALL-SYSOPER,  query_cmd,     
+COMMAND("fcb",       PANEL,         SYSCMDALL,          fcb_cmd,      
+  "display the current FCB (if only the printer is given)",
+   "Reset the fcb to the standard one \n" 
+   "Load a fcb image \n")
+
+CMDABBR("query",1,   PANEL,         SYSCMDALL,          query_cmd,     
   "query command",
     "query ports       Show ports in use\n"
     "query dasd        Show dasd\n"
@@ -549,6 +549,20 @@ COMMAND("scsimount",       PANEL,   SYSCMDALL-SYSOPER,  scsimount_cmd,
     "system). 'yes' is equivalent to specifying a 5 second interval.\n")
 #endif /* defined( OPTION_SCSI_TAPE ) */
 
+COMMAND("mt",          PANEL,      SYSCMDALL,          mt_cmd,
+  "control magnetic tape operation",
+  "Format:     \"mt device operation [ 0-9999 ]\".\n"
+  "  Operations below can be used on a valid tape device. The device\n"
+  "  must not have any I/O operation in process or pending.\n"
+  "     operation   description\n"
+  "       rew       rewind tape to the beginning\n"
+  "       asf n     position tape at 'n' file  (default = 1)\n"
+  "       fsf n     forward space 'n' files    (default = 1)\n"
+  "       bsf n     backward space 'n' files   (default = 1)\n"
+  "       fsr n     forward space 'n' records  (default = 1)\n"
+  "       bsr n     backward space 'n' records (default = 1)\n"
+  "       wtm n     write 'n' tapemarks        (default = 1)\n")
+
 COMMAND("cd",        PANEL,         SYSCMDALL,          cd_cmd,        
   "change directory", 
     NULL)
@@ -557,6 +571,15 @@ COMMAND("pwd",       PANEL,         SYSCMDALL,          pwd_cmd,
   "print working directory", 
     NULL)
 
+#if defined( _MSVC_ )
+COMMAND("dir",       PANEL,         SYSCMDALL,          dir_cmd,       
+  "displays a list of files and subdirectories in a directory", 
+    NULL)
+#else
+COMMAND("ls",        PANEL,         SYSCMDALL,          ls_cmd,       
+  "list directory contents", 
+    NULL)
+#endif
 COMMAND("sh",        PANEL,         SYSCMDALL-SYSOPER,  sh_cmd,
   "shell command",
     "Format: \"sh command [args...]\" where 'command' is any valid shell\n"

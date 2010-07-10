@@ -2659,6 +2659,33 @@ int sh_cmd(int argc, char *argv[], char *cmdline)
     return -1;
 }
 
+/*-------------------------------------------------------------------*/
+/* dir and ls command                                                */
+/*-------------------------------------------------------------------*/
+#if defined ( _MSVC_ )
+int dir_cmd(int argc, char *argv[], char *cmdline)
+#else
+int ls_cmd(int argc, char *argv[], char *cmdline)
+#endif
+{
+    char* cmd;
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+    if (sysblk.shcmdopt & SHCMDOPT_ENABLE)
+    {
+        cmd = cmdline;
+        if (*cmd)
+            return herc_system (cmd);
+        else 
+            return -1;
+    }
+    else 
+    {
+        WRMSG(HHC02227, "E");
+    }
+    return -1;
+}
+
 
 /*-------------------------------------------------------------------*/
 /* change directory command                                          */
@@ -5108,6 +5135,242 @@ int ascsimnt_cmd(int argc, char *argv[], char *cmdline)
 }
 #endif /*defined( OPTION_SCSI_TAPE )*/
 
+
+/*-------------------------------------------------------------------*/
+/* mt command - magnetic tape commands                              */
+/*-------------------------------------------------------------------*/
+int mt_cmd(int argc, char *argv[], char *cmdline)
+{
+DEVBLK*  dev;
+U16      devnum;
+U16      lcss;
+int      rc, msg = TRUE;
+int      count = 1;
+char*    devclass;
+BYTE     unitstat, code = 0;
+
+
+    UNREFERENCED(cmdline);
+
+    if (argc < 3)
+    {
+        WRMSG(HHC02202,"E");
+        return -1;
+    }
+
+    if (argc > 4)
+    {
+        WRMSG(HHC02299,"E", argv[0]);
+        return -1;
+    }
+    if ( !( (strcasecmp(argv[2],"rew") == 0) ||
+            (strcasecmp(argv[2],"fsf") == 0) ||
+            (strcasecmp(argv[2],"bsf") == 0) ||
+            (strcasecmp(argv[2],"fsr") == 0) ||
+            (strcasecmp(argv[2],"bsr") == 0) ||
+            (strcasecmp(argv[2],"asf") == 0) ||
+            (strcasecmp(argv[2],"wtm") == 0) 
+          )
+       )
+    {
+        WRMSG( HHC02205, "E", argv[2], ". Type 'help mt' for assistance.");
+        return -1;
+    }
+
+    if ( argc == 4  && !(strcasecmp(argv[2],"rew") == 0) )
+    {
+        for (rc = 0; rc < (int)strlen(argv[3]); rc++)
+        { 
+            if ( !isdigit(argv[3][rc]) )
+            { 
+                WRMSG( HHC02205, "E", argv[3], "; not in range of 1-9999");
+                return -1;
+            }
+        }
+        sscanf(argv[3],"%d", &count);
+        if ( count < 1 || count > 9999 )
+        { 
+            WRMSG( HHC02205, "E", argv[3], "; not in range of 1-9999");
+            return -1;
+        }
+    }
+
+    rc = parse_single_devnum( argv[1], &lcss, &devnum );
+
+    if ( rc < 0)
+    {
+        return -1;
+    }
+
+
+    if (!(dev = find_device_by_devnum (lcss, devnum)))
+    {
+        devnotfound_msg(lcss,devnum);
+        return -1;
+    }
+
+    /* Obtain the device lock */
+    obtain_lock (&dev->lock);
+
+    /* Reject if device is busy or interrupt pending */
+    if ( dev->busy || IOPENDING(dev) || (dev->scsw.flag3 & SCSW3_SC_PEND))
+    {
+        if (!sysblk.sys_reset)      // is the system in a reset status?
+        {
+            release_lock (&dev->lock);
+            WRMSG(HHC02231, "E", lcss, devnum );
+            return -1;
+        }
+    }
+
+    ASSERT( dev->hnd && dev->hnd->query );
+    dev->hnd->query( dev, &devclass, 0, NULL );
+
+    if ( strcmp(devclass,"TAPE") != 0 )
+    {
+        release_lock (&dev->lock);
+        WRMSG(HHC02209, "E", lcss, devnum, "TAPE" );
+        return -1;
+
+    }
+    
+    ASSERT( dev->tmh && dev->tmh->tapeloaded );
+    if ( !dev->tmh->tapeloaded( dev, NULL, 0 ) )
+    {
+        release_lock (&dev->lock);
+        WRMSG(HHC02298, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
+        return -1;
+    }
+    
+    if (strcasecmp(argv[2],"rew") == 0)
+    {
+        if (argc > 3)
+        {
+            WRMSG(HHC02299,"E", argv[0]);
+            msg = FALSE;
+        }
+        else
+        {
+            rc = dev->tmh->rewind( dev, &unitstat, code);
+  
+            if ( rc == 0 )
+            {
+                dev->eotwarning = 0;
+            }
+        }
+    }
+    else if (strcasecmp(argv[2],"fsf") == 0)
+    {
+        for ( ; count >= 1; count-- )
+        {
+            rc = dev->tmh->fsf( dev, &unitstat, code);
+  
+            if ( rc < 0 )
+            {
+                break;
+            }
+        }
+    }
+    else if (strcasecmp(argv[2],"bsf") == 0)
+    {
+        for ( ; count >= 1; count-- )
+        {
+            rc = dev->tmh->bsf( dev, &unitstat, code);
+  
+            if ( rc < 0 )
+            {
+                break;
+            }
+        }
+    }
+    else if (strcasecmp(argv[2],"fsr") == 0)
+    {
+        for ( ; count >= 1; count-- )
+        {
+            rc = dev->tmh->fsb( dev, &unitstat, code);
+  
+            if ( rc <= 0 )
+            {
+                break;
+            }
+        }
+    }
+    else if (strcasecmp(argv[2],"bsr") == 0)
+    {
+        for ( ; count >= 1; count-- )
+        {
+            rc = dev->tmh->bsb( dev, &unitstat, code);
+  
+            if ( rc < 0 )
+            {
+                break;
+            }
+        }
+    }
+    else if (strcasecmp(argv[2],"asf") == 0)
+    {
+        rc = dev->tmh->rewind( dev, &unitstat, code);
+        if ( rc == 0 )
+        {
+            for ( ; count > 1; count-- )
+            {
+                rc = dev->tmh->fsf( dev, &unitstat, code);
+  
+                if ( rc < 0 )
+                {
+                    break;
+                }
+            }
+        }
+    }
+    else if (strcasecmp(argv[2],"wtm") == 0)
+    {
+        if ( dev->readonly || dev->tdparms.logical_readonly )
+        {
+            WRMSG( HHC02804, "E", SSID_TO_LCSS(dev->ssid), dev->devnum );
+            msg = FALSE;
+        }
+        else
+        {
+            for ( ; count >= 1; count-- )
+            {
+                rc = dev->tmh->wtm( dev, &unitstat, code);
+  
+                if ( rc >= 0 )
+                {
+                    dev->curfilen++;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            dev->tmh->sync( dev, &unitstat, code );
+        }
+    }
+
+    if ( msg )
+    {
+        if ( rc >= 0 )
+        {
+            WRMSG( HHC02800, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[2] );
+        }
+        else
+        {
+            char msgbuf[32];
+            MSGBUF( msgbuf, "rc = %d", rc );
+            WRMSG( HHC02801, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[2], msgbuf );
+        }
+    }
+
+    release_lock (&dev->lock);
+
+    WRMSG( HHC02802, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->curfilen );
+    WRMSG( HHC02803, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->blockid  );
+
+    return 0;
+}
 
 /*-------------------------------------------------------------------*/
 /* devinit command - assign/open a file for a configured device      */
