@@ -551,7 +551,7 @@ COMMAND("scsimount",       PANEL,   SYSCMDALL-SYSOPER,  scsimount_cmd,
 
 COMMAND("mt",          PANEL,      SYSCMDALL,          mt_cmd,
   "control magnetic tape operation",
-  "Format:     \"mt device operation [ 0-9999 ]\".\n"
+  "Format:     \"mt device operation [ 1-9999 ]\".\n"
   "  Operations below can be used on a valid tape device. The device\n"
   "  must not have any I/O operation in process or pending.\n"
   "     operation   description\n"
