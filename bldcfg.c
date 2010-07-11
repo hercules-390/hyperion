@@ -991,7 +991,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
             smodel = operand;
             smainsize = addargv[0];
             sxpndsize = addargv[1];
-            sysblk.cnslport = config_cnslport = strdup(addargv[2]);
+            config_cnslport = strdup(addargv[2]);
             snumcpu = addargv[3];
             set_loadparm(addargv[4]);
         }
@@ -1015,7 +1015,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
             }
             else if (strcasecmp (keyword, "cnslport") == 0)
             {
-                sysblk.cnslport = config_cnslport = strdup(operand);
+                config_cnslport = strdup(operand);
             }
             else if (strcasecmp (keyword, "maxcpu") == 0)
             {
@@ -1573,6 +1573,9 @@ char    fname[MAX_PATH];                /* normalized filename       */
 
     /* Back to user mode */
     SETMODE(USER);
+
+    /* set console port */
+    sysblk.cnslport = config_cnslport;
 
     /* Display Hercules thread information on control panel */
     // Removed this message. build_cfg is not a thread?
