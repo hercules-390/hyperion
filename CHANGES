@@ -1,3 +1,4 @@
+12 Jul 2010 Add lock on configuration file to prevent duplicate disk/tape files from being opened.
 11 Jul 2010 Add checks for a valid CNSLPORT. If 1st char of port is numeric all must be numeric 
             and in the range of 0-65535. If the first char is not numeric, no checks are made.
 09 Jul 2010 Add DIR/LS commands as appropriate. Add "mt" command for Mag tape control. 

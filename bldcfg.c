@@ -664,7 +664,6 @@ int     scount;                         /* Statement counter         */
 int     cpu;                            /* CPU number                */
 int     count;                          /* Counter                   */
 FILE   *inc_fp[MAX_INC_LEVEL];          /* Configuration file pointer*/
-
 char   *sserial;                        /* -> CPU serial string      */
 char   *smodel;                         /* -> CPU model string       */
 char   *sversion;                       /* -> CPU version string     */
@@ -763,6 +762,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
         usleep(100000);
         exit(1);
     }
+
     inc_stmtnum[inc_level] = 0;
 
     /* Set the default system parameter values */
@@ -1788,7 +1788,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
     /* close configuration file */
     rc = fclose(inc_fp[inc_level]);
 #endif // !defined( OPTION_ENHANCED_CONFIG_INCLUDE )
-
+    
     /* Now configure storage.  We do this after processing the device
      * statements so the fork()ed hercifc process won't require as much
      * virtual storage.  We will need to update all the devices too.

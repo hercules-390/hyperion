@@ -829,6 +829,8 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01450 "Config file[%d] '%s': '%s' not supported in this build; see option '%s'"
 #define HHC01451 "Invalid value '%s' specified for CNSLPORT"
 #define HHC01452 "Default port '%s' being used for CNSLPORT"
+#define HHC01453 "Config file '%s': lock failure:'%s'; multiple instances restricted"
+#define HHC01454 "Config file '%s': error in function '%s': '%s'"
 
 /* config.c */
 #define HHC01459 "Device %1d:%04X defined as %1d:%04X"

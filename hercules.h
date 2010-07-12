@@ -131,6 +131,7 @@
 #include "hsocket.h"
 #ifdef _MSVC_
   #include "w32mtio.h"    // 'mtio.h' needed by hstructs.h
+  #include "sys/locking.h"
 #endif // _MSVC_
 #include "hstructs.h"     // (Hercules-wide structures)
 #include "hexterns.h"     // (Hercules-wide extern function prototypes)

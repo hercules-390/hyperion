@@ -27,7 +27,6 @@
 #include "hostinfo.h"
 #include "history.h"
 
-
 /* (delayed_exit function defined in config.c) */
 extern void delayed_exit (int exit_code);
 
@@ -335,6 +334,11 @@ char    pathname[MAX_PATH];             /* (work)                    */
 DLL_EXPORT int impl(int argc, char *argv[])
 {
 char   *cfgfile;                        /* -> Configuration filename */
+int     fd_cfg = -1;                    /* fd for config file        */
+char    pathname[MAX_PATH];             /* work area for filenames   */
+#if !defined ( _MSVC_ )
+struct  flock  fl_cfg;                  /* file lock for conf file   */  
+#endif
 int     c;                              /* Work area for getopt      */
 int     arg_error = 0;                  /* 1=Invalid arguments       */
 char   *msgbuf;                         /*                           */
@@ -735,8 +739,69 @@ int     dll_count;                      /* index into array          */
     }
 #endif /*!defined(NO_SIGABEND_HANDLER)*/
 
+    /* attempt to get lock on config file */
+    hostpath(pathname, cfgfile, sizeof(pathname));
+    if ( ( fd_cfg = open( pathname, O_RDONLY, S_IRUSR | S_IRGRP ) ) < 0 )
+    {
+        if ( errno == EACCES )
+        {
+            WRMSG( HHC01453, "S", cfgfile, strerror( errno ) );
+            delayed_exit(-1);
+            return(1);
+        }
+    }
+    else
+    {
+        if ( lseek(fd_cfg, 0L, 2) < 0 )
+        {
+            if ( errno == EACCES )
+            {
+                WRMSG( HHC01453, "S", cfgfile, strerror( errno ) );
+                delayed_exit(-1);
+                return(1);
+            }
+        }
+        close( fd_cfg );
+    }
+
+    /* File was not lock, therefore we can proceed */
+
     /* Build system configuration */
     build_config (cfgfile);
+
+    if ( ( fd_cfg = open( pathname, O_RDONLY, S_IRUSR | S_IRGRP ) ) < 0 )
+    {
+        WRMSG( HHC01432, "S", pathname, "open()", strerror( errno ) );
+        delayed_exit(-1);
+        return(1);
+    }
+    else
+    {
+#if defined( _MSVC_ )
+        if( ( rc = _locking( fd_cfg, _LK_NBRLCK, 1L ) ) < 0 )
+        {
+            int rc = errno;
+            WRMSG( HHC01454, "S", pathname, "_locking()", strerror( errno ) );
+            delayed_exit(-1);
+            return(1);
+        }
+#else
+        fl_cfg.l_type = F_RDLCK;
+        fl_cfg.l_whence = SEEK_SET;
+        fl_cfg.l_start = 0;
+        fl_cfg.l_len = 1;
+        
+        if ( fcntl(fd_cfg, F_SETLK, &fl_cfg) == -1 ) 
+        {
+            if (errno == EACCES || errno == EAGAIN) 
+            {
+                WRMSG( HHC01432, "S", pathname, "fcntl()", strerror( errno ) );
+                delayed_exit(-1);
+                return(1);
+            }
+        }
+#endif
+    }
 
     /* System initialisation time */
     sysblk.todstart = hw_clock() << 8;
@@ -765,7 +830,7 @@ int     dll_count;                      /* index into array          */
     {
         rc = create_thread (&sysblk.shrdtid, DETACHED,
                             shared_server, NULL, "shared_server");
-	if (rc)
+        if (rc)
         {
             WRMSG(HHC00102, "E", strerror(rc));
             delayed_exit(-1);
@@ -780,7 +845,7 @@ int     dll_count;                      /* index into array          */
 
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
             if (dev->connecting)
-	    {
+            {
                 rc = create_thread (&tid, DETACHED,
                            *dev->hnd->init, dev, "device connecting thread");
                 if (rc)
@@ -789,7 +854,7 @@ int     dll_count;                      /* index into array          */
                     delayed_exit(-1);
                     return(1);
                 }
-	    }
+            }
     }
 #endif
 
@@ -806,8 +871,8 @@ int     dll_count;                      /* index into array          */
         rc = create_thread(&logcbtid,DETACHED,
                       log_do_callback,NULL,"log_do_callback");
         if (rc)
-	    WRMSG(HHC00102, "E", strerror(rc));
-	return(0);
+            WRMSG(HHC00102, "E", strerror(rc));
+        return(0);
     }
 
     //---------------------------------------------------------------
@@ -839,6 +904,8 @@ int     dll_count;                      /* index into array          */
     //  -----------------------------------------------------
     //      *** Hercules has been shutdown (PAST tense) ***
     //  -----------------------------------------------------
+    
+    close( fd_cfg );            // release config file lock
 
     ASSERT( sysblk.shutdown );  // (why else would we be here?!)
 
