@@ -682,6 +682,7 @@ char   *stodprio;                       /* -> Timer thread priority  */
 char   *scpuprio;                       /* -> CPU thread priority    */
 char   *sdevprio;                       /* -> Device thread priority */
 char   *slogofile;                      /* -> 3270 logo file         */
+char   *scnslport;                      /* -> console port           */
 #if defined(_FEATURE_ECPSVM)
 char   *secpsvmlevel;                   /* -> ECPS:VM Keyword        */
 char   *secpsvmlvl;                     /* -> ECPS:VM level (or 'no')*/
@@ -803,6 +804,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
     sysblk.kaidle = KEEPALIVE_IDLE_TIME;
     sysblk.kaintv = KEEPALIVE_PROBE_INTERVAL;
     sysblk.kacnt  = KEEPALIVE_PROBE_COUNT;
+    scnslport = strdup(config_cnslport);
 #if defined(_FEATURE_ECPSVM)
     ecpsvmavail = 0;
     ecpsvmlevel = 20;
@@ -991,7 +993,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
             smodel = operand;
             smainsize = addargv[0];
             sxpndsize = addargv[1];
-            config_cnslport = strdup(addargv[2]);
+            scnslport = strdup(addargv[2]);
             snumcpu = addargv[3];
             set_loadparm(addargv[4]);
         }
@@ -1015,7 +1017,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
             }
             else if (strcasecmp (keyword, "cnslport") == 0)
             {
-                config_cnslport = strdup(operand);
+                scnslport = strdup(operand);
             }
             else if (strcasecmp (keyword, "maxcpu") == 0)
             {
@@ -1575,7 +1577,70 @@ char    fname[MAX_PATH];                /* normalized filename       */
     SETMODE(USER);
 
     /* set console port */
-    sysblk.cnslport = config_cnslport;
+    if (strchr(scnslport, ':') == NULL)
+    {
+        if ( isdigit(scnslport[0]) )
+        {
+            int i;
+            for ( i = 0; i<strlen(scnslport); i++ )
+            {
+                if ( !isdigit(scnslport[i]) )
+                {
+                    WRMSG( HHC01451, "E", scnslport );
+                    free(scnslport);
+                    scnslport = strdup(config_cnslport);
+                    WRMSG( HHC01452, "W", scnslport );
+                    break;
+                }
+            }
+        }
+    }
+    else
+    {   
+        char *serv;
+        char *host = NULL;
+        char *port = strdup( scnslport );
+        char msgbuf[512];
+
+        msgbuf[0] = '\0';
+
+        if ((serv = strchr(port,':')))
+        {
+            *serv++ = '\0';
+            if (*port)
+            {
+                strcpy(msgbuf, port);
+                strcat(msgbuf, ":");
+            }
+
+        }
+        if ( isdigit( serv[0]) )
+        {
+            char *p;
+            int i;
+
+            p = strdup(serv);
+
+            for ( i = 0; i<strlen(p); i++ )
+            {
+                if ( !isdigit(p[i]) )
+                {
+                    WRMSG( HHC01451, "E", p );
+                    free(p);
+                    p = strdup(config_cnslport);
+                    WRMSG( HHC01452, "W", p );
+                    break;
+                }
+            }
+            strcat(msgbuf,p);
+            free(p);
+        }
+        free( port );
+        free(scnslport);
+        scnslport = strdup(msgbuf);
+    }
+
+    sysblk.cnslport = scnslport;
 
     /* Display Hercules thread information on control panel */
     // Removed this message. build_cfg is not a thread?

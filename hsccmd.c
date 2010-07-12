@@ -37,13 +37,17 @@
 #include "dasdtab.h"
 #include "ctcadpt.h"
 
-#define  ONE_KILOBYTE	((unsigned int)(1024))				/* 2^10	(16^2)  * 4  */
-#define  HALF_MEGABYTE	((unsigned int)(512 * 1024))			/* 2^19 (16^4)  * 8  */
-#define  ONE_MEGABYTE	((unsigned long long)(1024 * 1024))		/* 2^20 (16^5)       */
-#define  ONE_GIGABYTE	(ONE_MEGABYTE * (unsigned long long)(1024))	/* 2^30	(16^7)  * 4  */
-#define  ONE_TERABYTE	(ONE_GIGABYTE * (unsigned long long)(1024))	/* 2^40	(16^10)      */
-#define  ONE_PETABYTE	(ONE_TERABYTE * (unsigned long long)(1024))	/* 2^50	(16^12) * 4  */
-#define  ONE_EXABYTE	(ONE_PETABYTE * (unsigned long long)(1024))	/* 2^60	(16^15)	     */
+#define  ONE_KILOBYTE	((unsigned int)(1024))                      /* 2^10	(16^2)  * 4  */
+#define  HALF_MEGABYTE	((unsigned int)(512 * 1024))                /* 2^19 (16^4)  * 8  */
+#define  ONE_MEGABYTE	((unsigned long long)(1024 * 1024))         /* 2^20 (16^5)       */
+#define  ONE_GIGABYTE	(ONE_MEGABYTE * (unsigned long long)(1024)) /* 2^30	(16^7)  * 4  */
+#define  ONE_TERABYTE	(ONE_GIGABYTE * (unsigned long long)(1024)) /* 2^40	(16^10)      */
+#define  ONE_PETABYTE	(ONE_TERABYTE * (unsigned long long)(1024)) /* 2^50	(16^12) * 4  */
+#define  ONE_EXABYTE	(ONE_PETABYTE * (unsigned long long)(1024)) /* 2^60	(16^15)	     */
+
+#define  CMD(str,cmd,min) ( strlen( str ) >= min && \
+                            strlen( str ) <= strlen(#cmd) && \
+                            !strncasecmp( str, #cmd, strlen( str ) ) )
 
 // (forward references, etc)
 
@@ -130,22 +134,22 @@ int test_cmd(int argc, char *argv[],char *cmdline)
 
     if (argc > 1)
     {
-        if (strncasecmp(argv[1],   "p=",2) == 0) test_p = atoi( &argv[1][2] );
-        if (strncasecmp(argv[1],   "n=",2) == 0) test_n = atoi( &argv[1][2] );
+        if ( CMD(argv[1],p=,2) ) test_p = atoi( &argv[1][2] );
+        if ( CMD(argv[1],n=,2) ) test_n = atoi( &argv[1][2] );
         if (argv[1][0] == '&') test_t = 1;
     }
 
     if (argc > 2)
     {
-        if (strncasecmp(argv[2],   "p=",2) == 0) test_p = atoi( &argv[2][2] );
-        if (strncasecmp(argv[2],   "n=",2) == 0) test_n = atoi( &argv[2][2] );
+        if ( CMD(argv[2],p=,2) ) test_p = atoi( &argv[2][2] );
+        if ( CMD(argv[2],n=,2) ) test_n = atoi( &argv[2][2] );
         if (argv[2][0] == '&') test_t = 1;
     }
 
     if (argc > 3)
     {
-        if (strncasecmp(argv[3],   "p=",2) == 0) test_p = atoi( &argv[3][2] );
-        if (strncasecmp(argv[3],   "n=",2) == 0) test_n = atoi( &argv[3][2] );
+        if ( CMD(argv[3],p=,2) ) test_p = atoi( &argv[3][2] );
+        if ( CMD(argv[3],n=,2) ) test_n = atoi( &argv[3][2] );
         if (argv[3][0] == '&') test_t = 1;
     }
 
@@ -271,7 +275,7 @@ int message_cmd(int argc,char *argv[], char *cmdline,int withhdr)
     toskip=3;
     if(argc>2)
     {
-        if(strcasecmp(argv[2],"AT")==0)
+        if( CMD(argv[2],AT,2) )
         {
             toskip=5;
         }
@@ -536,15 +540,13 @@ int logopt_cmd(int argc, char *argv[],char *cmdline)
         while (argc > 1)
         {
             argv++; argc--;
-            if (strcasecmp(argv[0],"timestamp") == 0 ||
-                strcasecmp(argv[0],"time"     ) == 0)
+            if ( CMD(argv[0],timestamp,4) ) 
             {
                 sysblk.logoptnotime = 0;
                 WRMSG(HHC02204, "I", "log option", "TIMESTAMP");
                 continue;
             }
-            if (strcasecmp(argv[0],"notimestamp") == 0 ||
-                strcasecmp(argv[0],"notime"     ) == 0)
+            if ( CMD(argv[0],notimestamp,6) )
             {
                 sysblk.logoptnotime = 1;
                 WRMSG(HHC02204, "I", "log option", "NOTIMESTAMP");
@@ -4729,7 +4731,7 @@ int ostailor_cmd(int argc, char *argv[], char *cmdline)
         sysblk.pgminttr = 0xFFFFFFFFFFFFFFFFULL;
         return 0;
     }
-    if (strcasecmp (argv[1], "QUIET") == 0)
+    if ( CMD(argv[1],QUIET,5) )
     {
         sysblk.pgminttr = 0;
         return 0;
@@ -4991,11 +4993,11 @@ char    c;                              /* work for sscan            */
     /* For `sf-' the operand can be `nomerge', `merge' or `force' */
     if (action == '-' && argc > 1)
     {
-        if (strcmp(argv[1], "nomerge") == 0)
+        if ( CMD(argv[1],nomerge,5) )
             flag = 0;
-        else if (strcmp(argv[1], "merge") == 0)
+        else if ( CMD(argv[1],merge,3) )
             flag = 1;
-        else if (strcmp(argv[1], "force") == 0)
+        else if ( CMD(argv[1],force,5) )
             flag = 2;
         else
         {
@@ -5082,9 +5084,9 @@ int mnttapri_cmd(int argc, char *argv[], char *cmdline)
 
     if(argc > 1)
     {
-        if ( !strcasecmp( argv[1], "disallow" ) )
+        if ( CMD(argv[1],disallow,4) )
             sysblk.nomountedtapereinit = 1;
-        else if ( !strcasecmp( argv[1], "allow" ) )
+        else if ( CMD(argv[1],allow,3) )
             sysblk.nomountedtapereinit = 0;
         else
         {
@@ -5108,9 +5110,9 @@ int ascsimnt_cmd(int argc, char *argv[], char *cmdline)
 
     if(argc > 1)
     {
-        if ( !strcasecmp( argv[1], "no" ) )
+        if ( CMD(argv[1],no,2) )
             sysblk.auto_scsi_mount_secs = 0;
-        else if ( !strcasecmp( argv[1], "yes" ) )
+        else if ( CMD(argv[1],yes,3) )
             sysblk.auto_scsi_mount_secs = DEFAULT_AUTO_SCSI_MOUNT_SECS;
         else
         {
@@ -7556,9 +7558,9 @@ int scpecho_cmd(int argc, char *argv[], char *cmdline)
 
     if ( argc == 2 )
     {
-        if ( !strcasecmp( argv[1], "on" ) )
+        if ( CMD(argv[1],on,2)  )
             sysblk.scpecho = TRUE;
-        else if ( !strcasecmp( argv[1], "off" ) )
+        else if ( CMD(argv[1],off,3) )
             sysblk.scpecho = FALSE;
         else
         {
@@ -7586,9 +7588,9 @@ int scpimply_cmd(int argc, char *argv[], char *cmdline)
     
     if ( argc == 2 )
     {
-        if ( !strcasecmp( argv[1], "on" ) )
+        if ( CMD(argv[1],on,2) )
             sysblk.scpimply = TRUE;
-        else if ( !strcasecmp( argv[1], "off" ) )
+        else if ( CMD(argv[1],off,3) )
             sysblk.scpimply = FALSE;
         else
         {
@@ -7882,17 +7884,17 @@ int traceopt_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(cmdline);
     if (argc > 1)
     {
-        if (strcasecmp(argv[1], "traditional") == 0)
+        if ( CMD(argv[1],traditional,4) )
         {
             sysblk.showregsfirst = 0;
             sysblk.showregsnone = 0;
         }
-        if (strcasecmp(argv[1], "regsfirst") == 0)
+        if ( CMD(argv[1],regsfirst,4) )
         {
             sysblk.showregsfirst = 1;
             sysblk.showregsnone = 0;
         }
-        if (strcasecmp(argv[1], "noregs") == 0)
+        if ( CMD(argv[1],noregs,4) )
         {
             sysblk.showregsfirst = 0;
             sysblk.showregsnone = 1;
@@ -8236,10 +8238,7 @@ int query_cmd(int argc, char *argv[], char *cmdline)
         {
             return(qd_cmd( argc-1, &argv[1], cmdline));
         }
-        else if ( strlen( argv[1] ) >= 4 && 
-                  strlen( argv[1] ) <= 5 && 
-                  !strncasecmp( argv[1], "ports", strlen( argv[1] ) )
-                ) 
+        else if ( CMD(argv[1],ports,4) )
         {
             char buf[64];
 
@@ -8283,14 +8282,12 @@ int query_cmd(int argc, char *argv[], char *cmdline)
                         host = port;
                 }
                 MSGBUF( buf, "for host %s on port %-5s", host, serv);
+                free( port );
             }
             WRMSG( HHC17001, "I", "console", buf);
             return 0;
         }
-        else if ( strlen( argv[1] ) >= 4 && 
-                  strlen( argv[1] ) <= 7 && 
-                  !strncasecmp( argv[1], "storage", strlen( argv[1] ) )
-                )  
+        else if ( CMD(argv[1],storage,4) )
         {   
             char buf[64];
             U64  xpndsize = (U64)(sysblk.xpndsize) << 12;
@@ -8340,20 +8337,14 @@ int query_cmd(int argc, char *argv[], char *cmdline)
             }
             WRMSG( HHC17003, "I", "EXPANDED", buf, "xpnd" );
         }
-        else if ( strlen( argv[1] ) >= 4 && 
-                  strlen( argv[1] ) <= 5 && 
-                  !strncasecmp( argv[1], "cpuid", strlen( argv[1] ) )
-                )  
+        else if ( CMD(argv[1],cpuid,4) )
         {
             WRMSG( HHC17004, "I", sysblk.cpuid );
             WRMSG( HHC17005, "I", ((sysblk.cpuid & 0x00000000FFFF0000ULL) >> 16),
                                   str_model(), str_manufacturer(), str_plant(),
                                   ((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32) );
         }
-        else if ( strlen( argv[1] ) >= 4  && 
-                  strlen( argv[1] ) <= 10 && 
-                  !strncasecmp( argv[1], "processors", strlen( argv[1] ) )
-                ) 
+        else if ( CMD(argv[1],processors,4) )
         {
             
 #ifdef    _FEATURE_VECTOR_FACILITY
@@ -8414,20 +8405,27 @@ int query_cmd(int argc, char *argv[], char *cmdline)
                 WRMSG( HHC17010, "I" );
             }
         }
-        else if (strcasecmp(argv[1],"lpar") == 0 )
+        else if ( CMD(argv[1],lpar,4) )
         {
             WRMSG( HHC17006, "I", sysblk.lparnum, str_lparname() );
         }
 #if       defined( OPTION_SHUTDOWN_CONFIRMATION )
-        else if ( strlen( argv[1] ) >= 4 && 
-                  strlen( argv[1] ) <= 8 && 
-                  !strncasecmp( argv[1], "quitmout", strlen( argv[1] ) )
-                )
+        else if ( CMD(argv[1],quitmout,4) )
         {
             WRMSG( HHC17100, "I", sysblk.quitmout );
         }
 #endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
-
+        else if ( CMD(argv[1],emsg,4) )
+        {
+            if ( sysblk.emsg & EMSG_TS )
+                WRMSG( HHC17012, "I", "timestamp" );
+            else if ( sysblk.emsg & EMSG_TEXT )
+                WRMSG( HHC17012, "I", "text" );
+            else if ( sysblk.emsg & EMSG_ON )
+                WRMSG( HHC17012, "I", "on" );
+            else 
+                WRMSG( HHC17012, "I", "off" );
+        }
         else
         {
             WRMSG( HHC17000, "E" );
@@ -8452,11 +8450,47 @@ int set_cmd(int argc, char *argv[], char *cmdline)
 
     if ( argc > 2 )
     {
+        if ( CMD(argv[1],emsg,4) )
+        {
+            if ( argc == 3 )
+            {
+                if ( CMD(argv[2],on,2) )
+                {
+                    sysblk.emsg |= EMSG_ON;
+                    sysblk.emsg &= ~EMSG_TEXT;
+                    sysblk.emsg &= ~EMSG_TS;
+                }
+                else if ( CMD(argv[2],off,3) )
+                {
+                    sysblk.emsg &= ~EMSG_ON;
+                    sysblk.emsg &= ~EMSG_TEXT;
+                    sysblk.emsg &= ~EMSG_TS;
+                }
+                else if ( CMD(argv[2],text,4) )
+                {
+                    sysblk.emsg |= EMSG_TEXT + EMSG_ON;
+                    sysblk.emsg &= ~EMSG_TS;
+                }
+                else if ( CMD(argv[2],timestamp,4) )
+                {
+                    sysblk.emsg |= EMSG_TS + EMSG_ON;
+                    sysblk.emsg &= ~EMSG_TEXT;
+                }
+                else 
+                {
+                    WRMSG( HHC17000, "E" );
+                    return -1;
+                }
+            }
+            else
+            {
+                WRMSG( HHC17000, "E" );
+                return -1;
+            }
+        }
+        else
 #if       defined( OPTION_SHUTDOWN_CONFIRMATION )
-        if ( strlen( argv[1] ) >= 4 && 
-             strlen( argv[1] ) <= 8 && 
-             !strncasecmp( argv[1], "quitmout", strlen( argv[1] ) )
-           )
+        if ( CMD(argv[1],quitmout,4) )
         {
             if ( argc == 3)
             {

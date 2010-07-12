@@ -419,6 +419,9 @@ int     dll_count;                      /* index into array          */
                         SYSGROUP_SYSPROG;
 #endif//     OPTION_HERCULES_DEVELOPER
 
+    /* set default error message display (emsg) */
+    sysblk.emsg = EMSG_ON;
+
 #if       defined( OPTION_SHUTDOWN_CONFIRMATION )
     /* set default quit timeout value (also ssd) */
     sysblk.quitmout = QUITTIME_PERIOD;

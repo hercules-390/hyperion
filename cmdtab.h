@@ -495,16 +495,22 @@ COMMAND("fcb",       PANEL,         SYSCMDALL,          fcb_cmd,
 
 CMDABBR("query",1,   PANEL,         SYSCMDALL,          query_cmd,     
   "query command",
-    "query ports       Show ports in use\n"
-    "query dasd        Show dasd\n"
-    "query stor        Show mainsize, xpndsize values\n"
     "query cpuid       Show default cpuid\n" 
-    "query proc        Show processor utilization\n"
+    "query emsg        Show emsg selection\n"
+    "query dasd        Show dasd\n"
     "query lpar        Show lpar number and name\n" 
-    "query quitmout    Show quit timeout value\n")
+    "query ports       Show ports in use\n"
+    "query proc        Show processor utilization\n"
+    "query quitmout    Show quit timeout value\n"
+    "query stor        Show mainsize, xpndsize values\n" )
 
 COMMAND("set",      PANEL+CONFIG,   SYSCMDALL,          set_cmd,     
   "set command",
+    "set emsg [on | off | text | timestamp ]\n"
+    "    on         normal message display\n"
+    "    off        scp messages only are displayed\n"
+    "    text       text of message is displayed\n"
+    "    timestamp  same as 'on' with timestamp added\n"
     "set quitmout n    Set quit timeout value (2 - 60)\n" )
 
 COMMAND("mounted_tape_reinit", PANEL+CONFIG, SYSCMDALL-SYSOPER, mnttapri_cmd,  

@@ -321,23 +321,28 @@ BYTE print_chars[17];
 
 
 #if 1
-struct sockaddr_in * get_inet_socket(char *host_serv)
+struct sockaddr_in * get_inet_socket(const char *host_serv)
 {
 char *host = NULL;
 char *serv;
 struct sockaddr_in *sin;
+char *h_serv;
+    h_serv = strdup(host_serv);
 
-    if((serv = strchr(host_serv,':')))
+    if((serv = strchr(h_serv,':')))
     {
         *serv++ = '\0';
-        if(*host_serv)
-            host = host_serv;
+        if(*h_serv)
+            host = h_serv;
     }
     else
-        serv = host_serv;
+        serv = h_serv;
 
     if(!(sin = malloc(sizeof(struct sockaddr_in))))
+    {
+        free(h_serv);
         return sin;
+    }
 
     sin->sin_family = AF_INET;
 
@@ -350,6 +355,7 @@ struct sockaddr_in *sin;
         if(!hostent)
         {
             WRMSG(HHC01016, "I", "IP address", host);
+            free(h_serv);
             free(sin);
             return NULL;
         }
@@ -370,6 +376,7 @@ struct sockaddr_in *sin;
             if(!servent)
             {
                 WRMSG(HHC01016, "I", "port number", host);
+                free(h_serv);
                 free(sin);
                 return NULL;
             }
@@ -383,10 +390,12 @@ struct sockaddr_in *sin;
     else
     {
         WRMSG(HHC01017, "E", host_serv);
+        free(h_serv);
         free(sin);
         return NULL;
     }
-
+    
+    free(h_serv);
     return sin;
 
 }
@@ -1932,9 +1941,9 @@ BYTE                   unitstat;        /* Status after receive data */
                 (GETSET_SOCKOPT_T*)&optval, sizeof(optval));
 
     /* Prepare the sockaddr structure for the bind */
-    if(!( server = get_inet_socket(config_cnslport) ))
+    if(!( server = get_inet_socket(sysblk.cnslport) ))
     {
-        WRMSG(HHC01007, "E", "CNSLPORT", config_cnslport);
+        WRMSG(HHC01007, "E", "CNSLPORT", sysblk.cnslport);
         return NULL;
     }
 

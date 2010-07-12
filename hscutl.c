@@ -433,8 +433,7 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
     if(!strchr(text,SYMBOL_QUAL_1) || !strchr(text,SYMBOL_QUAL_2))
     {
         /* Malloc anyway - the caller will free() */
-        resstr=malloc(strlen(text)+1);
-        strcpy(resstr,text);
+        resstr = strdup( text );
         return(resstr);
     }
     q1=0;
@@ -483,8 +482,7 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
     if(!resstr)
     {
         /* Malloc anyway - the caller will free() */
-        resstr=malloc(strlen(text)+1);
-        strcpy(resstr,text);
+        resstr = strdup( text );
     }
     return(resstr);
 }
