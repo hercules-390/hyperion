@@ -186,7 +186,7 @@ int off;
     if (sysblk.mainstor == NULL)
     {
         char buf[40];
-        snprintf(buf, 40, "malloc(%lu)", sysblk.mainsize + 8192);
+        snprintf(buf, 40, "malloc(%" I64_FMT "d)", sysblk.mainsize + 8192);
         WRMSG(HHC01430, "S", buf, strerror(errno));
         delayed_exit(1);
     }
@@ -205,7 +205,7 @@ int off;
     if (sysblk.storkeys == NULL)
     {
         char buf[40];
-        snprintf(buf, 40, "malloc(%lu)", sysblk.mainsize / STORAGE_KEY_UNITSIZE);
+        snprintf(buf, 40, "malloc(%" I64_FMT "d)", sysblk.mainsize / STORAGE_KEY_UNITSIZE);
         WRMSG(HHC01430, "S", buf, strerror(errno));
         delayed_exit(1);
     }
@@ -1582,7 +1582,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
         if ( isdigit(scnslport[0]) )
         {
             int i;
-            for ( i = 0; i<strlen(scnslport); i++ )
+            for ( i = 0; i < (int)strlen(scnslport); i++ )
             {
                 if ( !isdigit(scnslport[i]) )
                 {
@@ -1629,7 +1629,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
 
             p = strdup(serv);
 
-            for ( i = 0; i<strlen(p); i++ )
+            for ( i = 0; i < (int)strlen(p); i++ )
             {
                 if ( !isdigit(p[i]) )
                 {
