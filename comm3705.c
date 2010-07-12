@@ -966,44 +966,50 @@ char                    group[16];      /* Console group             */
 
 static void logdump(char *txt,DEVBLK *dev,BYTE *bfr,size_t sz)
 {
+    char buf[128];
+    char byte[5];
     size_t i;
     if(!dev->ccwtrace)
     {
         return;
     }
-    logmsg(_("HHC90000D DBG: %1d:%04X: %s\n"),
-            SSID_TO_LCSS(dev->ssid), dev->devnum,
-            txt);
-    logmsg(_("HHC90000D DBG: %1d:%04X: %s : Dump of %d (%x) byte(s)\n"),SSID_TO_LCSS(dev->ssid),dev->devnum,txt,sz,sz);
+    WRMSG(HHC01048,"D",SSID_TO_LCSS(dev->ssid),dev->devnum,txt);
+    WRMSG(HHC01049,"D",SSID_TO_LCSS(dev->ssid),dev->devnum,txt,sz,sz);
+    buf[0] = 0;
     for(i=0;i<sz;i++)
     {
         if(i%16==0)
         {
             if(i!=0)
             {
-                logmsg("\n");
+                WRMSG(HHC01050,"D",SSID_TO_LCSS(dev->ssid),dev->devnum,txt,buf);
+                buf[0] = 0;
             }
-            logmsg(_("HHC90000D DBG: %1d:%04X: %s : %4.4X:"),SSID_TO_LCSS(dev->ssid),dev->devnum,txt,i);
+            MSGBUF(buf, ": %04X:", (unsigned) i);
         }
-        if(i%4==0)
+        if(i%4==0 && i)
         {
-            logmsg(" ");
+            strncat(buf, " ", sizeof(buf));
         }
-        logmsg("%2.2X",bfr[i]);
+        MSGBUF(byte, "%02X", bfr[i]);
+        strncat(buf, byte, sizeof(buf));
     }
-    logmsg("\nHHC90000D DBG: %1d:%04X: ",SSID_TO_LCSS(dev->ssid),dev->devnum);
+    WRMSG(HHC01050,"D",SSID_TO_LCSS(dev->ssid),dev->devnum,txt,buf);
+    buf[0] = 0;
     for(i=0;i<sz;i++)
     {
         if(i%16==0)
         {
             if(i!=0)
             {
-                logmsg("\nHHC90000D DBG: %1d:%04X: ",SSID_TO_LCSS(dev->ssid),dev->devnum);
+                WRMSG(HHC01051,"D",SSID_TO_LCSS(dev->ssid),dev->devnum,buf);
+                buf[0] = 0;
             }
         }
-        logmsg (_("%c"),(bfr[i] & 0x7f) < 0x20 ? '.' : (bfr[i] & 0x7f));
+        MSGBUF(byte, "%c",(bfr[i] & 0x7f) < 0x20 ? '.' : (bfr[i] & 0x7f));
+        strncat(buf, byte, sizeof(buf));
     }
-    logmsg("\n");
+    WRMSG(HHC01051,"D",SSID_TO_LCSS(dev->ssid),dev->devnum,buf);
 }
 
 static void put_bufpool(void ** anchor, BYTE * ele) {
@@ -1062,18 +1068,18 @@ static void commadpt_clean_device(DEVBLK *dev)
         dev->commadpt=NULL;
         if(dev->ccwtrace)
         {
-                logmsg(_("HHC90000D DBG: %1d:%04X: clean : Control block freed\n"),
+                WRMSG(HHC01052,"D",
                         SSID_TO_LCSS(dev->ssid),
-                        dev->devnum);
+                        dev->devnum,"control block freed");
         }
     }
     else
     {
         if(dev->ccwtrace)
         {
-                logmsg(_("HHC90000D DBG: %1d:%04X: clean : Control block not freed : not allocated\n"),
+                WRMSG(HHC01052,"D",
                         SSID_TO_LCSS(dev->ssid),
-                        dev->devnum);
+                        dev->devnum,"control block not freed: not allocated");
         }
     }
     return;
@@ -1177,7 +1183,7 @@ static void commadpt_read_tty(COMMADPT *ca, BYTE * bfr, int len)
         if (ca->telnet_opt) {
             ca->telnet_opt = 0;
                   if(ca->dev->ccwtrace)
-                      logmsg(_("HHC90000D DBG: %1d:%04X: Received TELNET CMD 0x%02x 0x%02x\n"),
+                      WRMSG(HHC01053,"D",
                         SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum,
                         ca->telnet_cmd, c);
             bfr3[0] = 0xff;  /* IAC */
@@ -1188,7 +1194,7 @@ static void commadpt_read_tty(COMMADPT *ca, BYTE * bfr, int len)
                               write_socket(ca->sfd,bfr3,3);
                           }
                   if(ca->dev->ccwtrace)
-                logmsg(_("HHC90000D DBG: %1d:%04X: Sending TELNET CMD 0x%02x 0x%02x\n"),
+                WRMSG(HHC01054,"D",
                         SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum,
                         bfr3[1], bfr3[2]);
             continue;
@@ -1196,7 +1202,7 @@ static void commadpt_read_tty(COMMADPT *ca, BYTE * bfr, int len)
         if (ca->telnet_iac) {
             ca->telnet_iac = 0;
                   if(ca->dev->ccwtrace)
-                logmsg(_("HHC90000D DBG: %1d:%04X: Received TELNET IAC 0x%02x\n"),
+                WRMSG(HHC01055, "D",
                         SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum,
                         c);
             switch (c) {
@@ -1246,7 +1252,7 @@ static void commadpt_read_tty(COMMADPT *ca, BYTE * bfr, int len)
                    ca->rlen3270 = 0; /* for next msg */
         }
                    if(ca->dev->ccwtrace)
-                       logmsg(_("HHC90000D DBG: %1d:%04X: posted %d input bytes\n"),
+                       WRMSG(HHC01056, "D",
                             SSID_TO_LCSS(ca->dev->ssid), 
                             ca->dev->devnum,
                             ca->inpbufl);
@@ -1396,7 +1402,7 @@ static void *commadpt_thread(void *vca)
                     ca->unack_attn_count++;
                     rc = device_attention(ca->dev, CSW_ATTN);
                     if(ca->dev->ccwtrace)
-                        logmsg(_("HHC90000D DBG: %1d:%04X: Raised attention rc = %d\n"), 
+                        WRMSG(HHC01057, "D", 
                                 SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, rc);
                 }
     }
@@ -1444,7 +1450,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         dev->excps = 0;
         if(dev->ccwtrace)
         {
-            logmsg(_("HHC90000D DBG: %1d:%04X: Initialization starting\n"),
+            WRMSG(HHC01058,"D",
                 SSID_TO_LCSS(dev->ssid), dev->devnum);
         }
 
@@ -1460,7 +1466,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         }
         if(dev->ccwtrace)
         {
-            logmsg(_("HHC90000D DBG: %1d:%04X: Initialization : Control block allocated\n"),
+            WRMSG(HHC01059,"D",
                 SSID_TO_LCSS(dev->ssid), dev->devnum);
         }
         errcnt=0;
@@ -1608,7 +1614,7 @@ static int commadpt_close_device ( DEVBLK *dev )
 {
     if(dev->ccwtrace)
     {
-        logmsg(_("HHC90000D DBG: %1d:%04X: Closing down\n"),SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG(HHC01060,"D",SSID_TO_LCSS(dev->ssid), dev->devnum);
     }
 
     /* Obtain the CA lock */
@@ -1633,7 +1639,7 @@ static int commadpt_close_device ( DEVBLK *dev )
 
     if(dev->ccwtrace)
     {
-        logmsg(_("HHC90000D DBG: %1d:%04X: Closed down\n"),SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG(HHC01061,"D",SSID_TO_LCSS(dev->ssid), dev->devnum);
     }
     return 0;
 }
@@ -1653,7 +1659,7 @@ static void format_sna (BYTE * requestp, char * tag, U16 ssid, U16 devnum) {
        char     fmtbuf2[32];
        char     fmtbuf3[32];
        char     fmtbuf4[32];
-       char     fmtbuf5[256];
+//     char     fmtbuf5[256];
        char     fmtbuf6[32];
        char     *ru_type="";
        int      len;
@@ -1724,9 +1730,8 @@ static void format_sna (BYTE * requestp, char * tag, U16 ssid, U16 devnum) {
           ru_type = "DACTCONNIN";
        if ((requestp[10] & 0x08) == 0)
           ru_type = "";
-       sprintf(fmtbuf5, "HHC90000D DBG: %1d:%04X: %s: %s %s %-6.6s %s\n", 
+       WRMSG(HHC01062,"D", 
            SSID_TO_LCSS(ssid), devnum, tag, fmtbuf, fmtbuf2, fmtbuf3, ru_type);
-       logmsg(fmtbuf5);
 }
 
 static void make_sna_requests2 (COMMADPT *ca) {
@@ -2186,7 +2191,7 @@ void    *eleptr;
      */
     if(dev->ccwtrace)
     {
-        logmsg(_("HHC90000D DBG: %1d:%04X: CCW Exec - Entry code = %x\n"),
+        WRMSG(HHC01063,"D",
             SSID_TO_LCSS(dev->ssid), dev->devnum,code);
     }
     obtain_lock(&dev->commadpt->lock);
