@@ -1593,6 +1593,14 @@ char    fname[MAX_PATH];                /* normalized filename       */
                     break;
                 }
             }
+            i = atoi ( scnslport );
+            if (i < 0 || i > 65535)
+            {
+                WRMSG( HHC01451, "E", scnslport );
+                free(scnslport);
+                scnslport = strdup(config_cnslport);
+                WRMSG( HHC01452, "W", scnslport );
+            }
         }
     }
     else
@@ -1632,6 +1640,16 @@ char    fname[MAX_PATH];                /* normalized filename       */
                     break;
                 }
             }
+            
+            i = atoi ( p );
+            if (i < 0 || i > 65535)
+            {
+                WRMSG( HHC01451, "E", p );
+                free( p );
+                p = strdup(config_cnslport);
+                WRMSG( HHC01452, "W", p );
+            }
+
             strcat(msgbuf,p);
             free(p);
         }
