@@ -782,7 +782,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01404 "Cannot create the 'Hercules Automatic Operator' thread"
 #define HHC01405 "Run commands file '%s' not found"
 #define HHC01406 "Startup parm '-l': maximum loadable modules %d exceeded; remainder not loaded"
-#define HHC01407 "Usage: %s [-f config-filename] [-d] [-b logo-filename]%s [> logfile]"
+#define HHC01407 "Usage: %s [-f config-filename] [-d] [-b logo-filename] [-s sym=val]%s [> logfile]"
 #define HHC01408 "Hercules terminating, see previous messages for reason"
 #define HHC01409 "Load of 'dyngui.dll' failed, hercules terminated"
 #define HHC01410 "Cannot register '%s' handler: %s"
@@ -795,6 +795,8 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01415 "Built on %s at %s"
 #define HHC01416 "Build information:"
 #define HHC01417 "%s"
+
+#define HHC01419 "Symbol and/or Value is invalid; ignored"
 
 /* hscmisc.c */
 #define HHC01420 "Begin Hercules shutdown"

@@ -1,3 +1,5 @@
+13 Jul 2010 New startup option (-s) to define symbols at startup. Format: '-s sym=Value' 
+            This can be done recursively. 
 12 Jul 2010 Add lock on configuration file to prevent duplicate disk/tape files from being opened.
 11 Jul 2010 Add checks for a valid CNSLPORT. If 1st char of port is numeric all must be numeric 
             and in the range of 0-65535. If the first char is not numeric, no checks are made.

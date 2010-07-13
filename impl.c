@@ -547,7 +547,7 @@ int     dll_count;                      /* index into array          */
         cfgfile = "hercules.cnf";
 
     /* Process the command line options */
-    while ((c = getopt(argc, argv, "hf:p:l:db:")) != EOF)
+    while ((c = getopt(argc, argv, "hf:p:l:db:s:")) != EOF)
     {
 
         switch (c) {
@@ -557,6 +557,34 @@ int     dll_count;                      /* index into array          */
         case 'f':
             cfgfile = optarg;
             break;
+#if defined(OPTION_CONFIG_SYMBOLS)  
+        case 's':
+            {
+            char *sym        = NULL;
+            char *value      = NULL;
+            char *strtok_str = NULL;
+                if ( strlen( optarg ) >= 3 )
+                {
+                    sym   = strtok_r( optarg, "=", &strtok_str);
+                    value = strtok_r( NULL,   "=", &strtok_str);
+                    if ( sym != NULL && value != NULL )
+                    {
+                    int j;
+                        for( j = 0; j < (int)strlen( sym ); j++ )
+                            if ( islower( sym[j] ) )
+                            {
+                                sym[j] = toupper( sym[j] );
+                            }
+                        set_symbol(sym, value);
+                    }
+                    else
+                        WRMSG(HHC01419, "E" );
+                }
+                else
+                    WRMSG(HHC01419, "E");
+            }
+            break;
+#endif
 #if defined(OPTION_DYNAMIC_LOAD)
         case 'p':
             if(optarg)
