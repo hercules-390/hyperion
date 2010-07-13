@@ -739,6 +739,7 @@ int     dll_count;                      /* index into array          */
     }
 #endif /*!defined(NO_SIGABEND_HANDLER)*/
 
+#if FALSE
     /* attempt to get lock on config file */
     hostpath(pathname, cfgfile, sizeof(pathname));
     if ( ( fd_cfg = open( pathname, O_RDONLY, S_IRUSR | S_IRGRP ) ) < 0 )
@@ -765,10 +766,10 @@ int     dll_count;                      /* index into array          */
     }
 
     /* File was not lock, therefore we can proceed */
-
+#endif
     /* Build system configuration */
     build_config (cfgfile);
-
+#if FALSE
     if ( ( fd_cfg = open( pathname, O_RDONLY, S_IRUSR | S_IRGRP ) ) < 0 )
     {
         WRMSG( HHC01432, "S", pathname, "open()", strerror( errno ) );
@@ -802,7 +803,7 @@ int     dll_count;                      /* index into array          */
         }
 #endif
     }
-
+#endif
     /* System initialisation time */
     sysblk.todstart = hw_clock() << 8;
 
