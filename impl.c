@@ -739,9 +739,9 @@ int     dll_count;                      /* index into array          */
     }
 #endif /*!defined(NO_SIGABEND_HANDLER)*/
 
-#if FALSE
     /* attempt to get lock on config file */
     hostpath(pathname, cfgfile, sizeof(pathname));
+#if FALSE
     if ( ( fd_cfg = open( pathname, O_RDONLY, S_IRUSR | S_IRGRP ) ) < 0 )
     {
         if ( errno == EACCES )
