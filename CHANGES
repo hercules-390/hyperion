@@ -1,3 +1,4 @@
+14 Jul 2010 Enhance devlist to display a single class of devices.
 13 Jul 2010 New startup option (-s) to define symbols at startup. Format: '-s sym=Value' 
             This can be done recursively. 
 12 Jul 2010 Add lock on configuration file to prevent duplicate disk/tape files from being opened.

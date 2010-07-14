@@ -4123,25 +4123,48 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
     DEVBLK*  dev;
     char*    devclass;
     char     devnam[1024];
+    char     devtype[5] = "";
     DEVBLK** pDevBlkPtr;
     DEVBLK** orig_pDevBlkPtrs;
-    size_t   nDevCount, i;
-    int      bTooMany = 0;
+    size_t   nDevCount, i, cnt;
+    int      bTooMany = FALSE;
     U16      lcss;
     U16      ssid=0;
     U16      devnum;
-    int      single_devnum = 0;
+    int      single_devnum = FALSE;
     char     buf[256];
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
     UNREFERENCED(argv);
 
-    if (argc >= 2)
+    if ( argc == 2 && ( strlen(argv[1]) > 2 && strlen(argv[1]) < 5 ))
     {
-        single_devnum = 1;
+        if ( CMD(argv[1],CON, 3) ||
+             CMD(argv[1],DSP, 3) ||
+             CMD(argv[1],PRT, 3) ||
+             CMD(argv[1],RDR, 3) ||
+             CMD(argv[1],PCH, 3) ||
+             CMD(argv[1],DASD,4) ||
+             CMD(argv[1],TAPE,4) ||
+             CMD(argv[1],CTCA,4) ||
+             CMD(argv[1],LINE,4) ||
+             CMD(argv[1],QETH,4) 
+           )
+        {
+            int i;
+            strcpy( devtype, argv[1] );
+            for ( i = 0; i < strlen( devtype ); i++ )
+                if ( isalpha( devtype[i] ) )
+                    devtype[i] = toupper( devtype[i] );
+        }
+    }
 
-        if (parse_single_devnum(argv[1], &lcss, &devnum) < 0)
+    if ( argc >= 2 && ( strlen( devtype ) == 0 ) )
+    {
+        single_devnum = TRUE;
+
+        if ( parse_single_devnum( argv[1], &lcss, &devnum ) < 0 )
         {
             // (error message already issued)
             return -1;
@@ -4193,7 +4216,7 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
             }
             else
             {
-                bTooMany = 1;           // (no more room)
+                bTooMany = TRUE;        // (no more room)
                 break;                  // (no more room)
             }
         }
@@ -4207,6 +4230,8 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
 
     // Now use our sorted array of DEVBLK pointers
     // to display our sorted list of devices...
+    
+    cnt = 0;
 
     for (i = nDevCount, pDevBlkPtr = orig_pDevBlkPtrs; i; --i, pDevBlkPtr++)
     {
@@ -4220,36 +4245,42 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
 #endif
         dev->hnd->query( dev, &devclass, sizeof(devnam), devnam );
 
-        /* Display the device definition and status */
-        MSGBUF( buf, "%1d:%04X %4.4X %s %s%s%s",
-                SSID_TO_LCSS(dev->ssid),
-                dev->devnum, dev->devtype, devnam,
-                (dev->fd > 2 ? _("open ") : ""),
-                (dev->busy ? _("busy ") : ""),
-                (IOPENDING(dev) ? _("pending ") : "")
-            );
-        WRMSG(HHC02279, "I", buf);
-
-        if (dev->bs)
+        if ( strlen( devtype ) == 0 || 
+             ( strlen( devtype ) > 0 && strcmp(devclass,devtype) == 0 )
+           )
         {
-            char *clientip, *clientname;
+            cnt++;
+            /* Display the device definition and status */
+            MSGBUF( buf, "%1d:%04X %4.4X %s %s%s%s",
+                    SSID_TO_LCSS(dev->ssid),
+                    dev->devnum, dev->devtype, devnam,
+                    (dev->fd > 2 ? _("open ") : ""),
+                    (dev->busy ? _("busy ") : ""),
+                    (IOPENDING(dev) ? _("pending ") : "")
+                  );
+            WRMSG(HHC02279, "I", buf);
 
-            get_connected_client(dev,&clientip,&clientname);
-
-            if (clientip)
+            if (dev->bs)
             {
-                MSGBUF( buf, "     (client %s (%s) connected)",
-                    clientip, clientname
-                    );
-                WRMSG(HHC02279, "I", buf);
-            }
-            else
-            {
-                WRMSG(HHC02279, "I", "     (no one currently connected)");
-            }
+                char *clientip, *clientname;
 
-            if (clientip)   free(clientip);
-            if (clientname) free(clientname);
+                get_connected_client(dev,&clientip,&clientname);
+
+                if (clientip)
+                {
+                    MSGBUF( buf, "     (client %s (%s) connected)",
+                            clientip, clientname
+                          );
+                    WRMSG(HHC02279, "I", buf);
+                }
+                else
+                {
+                    WRMSG(HHC02279, "I", "     (no one currently connected)");
+                }
+
+                if (clientip)   free(clientip);
+                if (clientname) free(clientname);
+            }
         }
     }
 
@@ -4260,6 +4291,12 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
         WRMSG(HHC02237, "W", MAX_DEVLIST_DEVICES);
 
         return -1;      // (treat as error)
+    }
+
+    if ( cnt == 0 )
+    {
+        WRMSG(HHC02216, "W" );
+        return -1;
     }
 
     return 0;
@@ -8234,11 +8271,7 @@ int query_cmd(int argc, char *argv[], char *cmdline)
 
     if ( argc >= 2 )
     {
-        if (strcasecmp(argv[1],"dasd") == 0)
-        {
-            return(qd_cmd( argc-1, &argv[1], cmdline));
-        }
-        else if ( CMD(argv[1],ports,4) )
+        if ( CMD(argv[1],ports,4) )
         {
             char buf[64];
 
@@ -8410,7 +8443,7 @@ int query_cmd(int argc, char *argv[], char *cmdline)
             WRMSG( HHC17006, "I", sysblk.lparnum, str_lparname() );
         }
 #if       defined( OPTION_SHUTDOWN_CONFIRMATION )
-        else if ( CMD(argv[1],quitmout,4) )
+        else if ( CMD(argv[1],quitmout,4 ) )
         {
             WRMSG( HHC17100, "I", sysblk.quitmout );
         }

@@ -481,8 +481,13 @@ COMMAND("devinit",   PANEL,         SYSCMDALL,          devinit_cmd,
     "as were used the last time the device was created/initialized.\n")
 
 COMMAND("devlist",   PANEL,         SYSCMDALL,          devlist_cmd,   
-  "list device or all devices", 
-    NULL)
+  "list device, device class, or all devices", 
+    "Format: \"devlist [devn | devc]\"\n"
+    "    devn       is a single device address\n"
+    "    devc       is a single device class. Device classes are CON,\n"
+    "               CTCA, DASD, DSP, LINE, PCH, PRT, QETH, RDR, and TAPE.\n"
+    "\n"
+    "If no arguments are given then all devices will be listed.\n" )
 
 COMMAND("qd",        PANEL,         SYSCMDALL-SYSOPER,  qd_cmd,        
   "query dasd", 
