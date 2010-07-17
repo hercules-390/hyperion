@@ -1,3 +1,5 @@
+17 Jul 2010 Add two additional default symbols MODPATH and MODNAME representing the 
+            pathname and the module name of the startup program.
 16 Jul 2010 Begin Function Keys (PF1-12) Support. PF1 defaults to HELP.
             Use DEFSYM command to set PF keys. DEFSYM PF01 HELP . You must include the ZERO
             as part of the name of the first 9 function keys. PF01-PF12.
