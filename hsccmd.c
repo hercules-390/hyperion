@@ -8404,24 +8404,29 @@ int query_cmd(int argc, char *argv[], char *cmdline)
                                       sysblk.mipsrate / 1000000, ( sysblk.mipsrate % 1000000 ) / 10000, 
                                       sysblk.siosrate );
 
-                cpupct = 0;
-                for ( i = k = 0; i < MAX_CPU; i++ )
-                {
-                    if ( IS_CPU_ONLINE(i) && 
-                        sysblk.ptyp[i] == SCCB_PTYP_CP &&
-                        sysblk.regs[i]->cpustate == CPUSTATE_STARTED )
-                    {
-                        k++;
-                        cpupct += sysblk.regs[i]->cpupct;
-                        mipsrate += sysblk.regs[i]->mipsrate;
-                    }
-                }
-                
-                if ( k > 0 && k != j )
-                    WRMSG( HHC17011, "I", ( k == 0 ? 0 : ( cpupct / k ) ), k, 
-                                            mipsrate / 1000000, 
-                                          ( mipsrate % 1000000 ) / 10000 ); 
+#if defined(OPTION_CAPPING)
 
+                if ( sysblk.capvalue > 0 )
+                {
+                    cpupct = 0;
+                    for ( i = k = 0; i < MAX_CPU; i++ )
+                    {
+                        if ( IS_CPU_ONLINE(i) &&
+                            sysblk.ptyp[i] == SCCB_PTYP_CP &&
+                            sysblk.regs[i]->cpustate == CPUSTATE_STARTED )
+                        {
+                            k++;
+                            cpupct += sysblk.regs[i]->cpupct;
+                            mipsrate += sysblk.regs[i]->mipsrate;
+                        }
+                    }
+                
+                    if ( k > 0 && k != j )
+                        WRMSG( HHC17011, "I", ( k == 0 ? 0 : ( cpupct / k ) ), k, 
+                                            mipsrate / 1000000, 
+                                          ( mipsrate % 1000000 ) / 10000 );
+                }
+#endif
                 for ( i = 0; i < MAX_CPU; i++ )
                 {
                     if ( IS_CPU_ONLINE(i) )
