@@ -413,6 +413,9 @@ int     dll_count;                      /* index into array          */
             sysblk.hercules_pgmpath = strdup("");
     }
 
+    set_symbol("MODNAME", sysblk.hercules_pgmname);
+    set_symbol("MODPATH", sysblk.hercules_pgmpath);
+
     /* set default operations mode */
 #if defined (OPTION_HERCULES_DEVELOPER)
     sysblk.sysgroup = SYSGROUP_ALL;
