@@ -541,6 +541,21 @@ int     dll_count;                      /* index into array          */
 #if !defined(WIN32) && !defined(HAVE_STRERROR_R)
     strerror_r_init();
 #endif
+    /* Set Function Key Defaults */
+    {
+        short i;
+        char buf[32];
+        char pf[5];
+
+        set_symbol("PF01", "help");
+
+        for ( i = 2; i <= 12; i++ )
+        {
+            MSGBUF(pf, "PF%02d", i );
+            MSGBUF(buf, "* PF%02d UNDEFINED", i );
+            set_symbol(pf, buf);
+        }
+    }
 
     /* Get name of configuration file or default to hercules.cnf */
     if(!(cfgfile = getenv("HERCULES_CNF")))
@@ -769,7 +784,7 @@ int     dll_count;                      /* index into array          */
 
     /* attempt to get lock on config file */
     hostpath(pathname, cfgfile, sizeof(pathname));
-#if FALSE
+#if TRUE
     if ( ( fd_cfg = open( pathname, O_RDONLY, S_IRUSR | S_IRGRP ) ) < 0 )
     {
         if ( errno == EACCES )
@@ -797,7 +812,7 @@ int     dll_count;                      /* index into array          */
 #endif
     /* Build system configuration */
     build_config (cfgfile);
-#if FALSE
+#if TRUE
     if ( ( fd_cfg = open( pathname, O_RDONLY, S_IRUSR | S_IRGRP ) ) < 0 )
     {
         WRMSG( HHC01432, "S", pathname, "open()", strerror( errno ) );

@@ -1,5 +1,6 @@
-16 Jul 2010 Begin Function Keys (PF1-12) Support. Hardcoded PF1 = HELP, PF12="Q PROC" 
-            for testing purposes only.
+16 Jul 2010 Begin Function Keys (PF1-12) Support. PF1 defaults to HELP.
+            Use DEFSYM command to set PF keys. DEFSYM PF01 HELP . You must include the ZERO
+            as part of the name of the first 9 function keys. PF01-PF12.
 14 Jul 2010 Enhance devlist to display a single class of devices.
 13 Jul 2010 New startup option (-s) to define symbols at startup. Format: '-s sym=Value' 
             This can be done recursively. 
