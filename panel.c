@@ -1,4 +1,5 @@
 /* PANEL.C      (c) Copyright Roger Bowler, 1999-2010                */
+/*              (c) Copyright TurboHercules, SAS 2010                */
 /*              Hercules Control Panel Commands                      */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -2253,6 +2254,20 @@ char    buf[1024];                      /* Buffer workarea           */
             /* Process characters in the keyboard buffer */
             for (i = 0; i < kblen; )
             {
+                /* Test for PF1 */
+                if (strcmp(kbbuf+i, KBD_PF1) == 0) 
+                {
+                    do_panel_command("herc help");
+                    break;
+                }
+
+                /* Test for PF12 */
+                if (strcmp(kbbuf+i, KBD_PF12) == 0) 
+                {
+                    do_panel_command("herc q proc");
+                    break;
+                }
+
                 /* Test for HOME */
                 if (strcmp(kbbuf+i, KBD_HOME) == 0) {
                     if (NPDup == 1 || !is_cursor_on_cmdline() || cmdlen) {
@@ -2264,7 +2279,7 @@ char    buf[1024];                      /* Buffer workarea           */
                     }
                     break;
                 }
-
+                
                 /* Test for END */
                 if (strcmp(kbbuf+i, KBD_END) == 0) {
                     if (NPDup == 1 || !is_cursor_on_cmdline() || cmdlen) {

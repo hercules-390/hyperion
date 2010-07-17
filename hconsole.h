@@ -1,4 +1,5 @@
 /* HCONSOLE.H   (c) Copyright "Fish" (David B. Trout), 2009          */
+/*              (c) Copyright TurboHercules, SAS 2010                */
 /*          Hercules hardware console (panel) support functions      */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -44,6 +45,21 @@
 #define KBD_DOWN_ARROW2         "\x1BOB"
 #define KBD_RIGHT_ARROW2        "\x1BOC"
 #define KBD_LEFT_ARROW2         "\x1BOD"
+
+#define KBD_PF1                 "\x1B""1"
+#define KBD_PF2                 "\x1B""2"
+#define KBD_PF3                 "\x1B""3"
+#define KBD_PF4                 "\x1B""4"
+
+#define KBD_PF5                 "\x1B""5"
+#define KBD_PF6                 "\x1B""6"
+#define KBD_PF7                 "\x1B""7"
+#define KBD_PF8                 "\x1B""8"
+
+#define KBD_PF9                 "\x1B""9"
+#define KBD_PF10                "\x1B""0"
+#define KBD_PF11                "\x1B""!"
+#define KBD_PF12                "\x1B""@"
 
 // Does anyone know what the actual escape sequence that
 // gets generated actually is on Linux for "Alt+UpArrow"

@@ -1,3 +1,5 @@
+16 Jul 2010 Begin Function Keys (PF1-12) Support. Hardcoded PF1 = HELP, PF12="Q PROC" 
+            for testing purposes only.
 14 Jul 2010 Enhance devlist to display a single class of devices.
 13 Jul 2010 New startup option (-s) to define symbols at startup. Format: '-s sym=Value' 
             This can be done recursively. 

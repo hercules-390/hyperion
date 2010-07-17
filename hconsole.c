@@ -1,4 +1,5 @@
 /* HCONSOLE.C   (c) Copyright "Fish" (David B. Trout), 2005-2009     */
+/*              (c) Copyright TurboHercules, SAS 2010                */
 /*          Hercules hardware console (panel) support functions      */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -324,6 +325,21 @@ void translate_keystroke( char kbbuf[], int* pkblen )
                 case 0xA0: strcpy( kbbuf, KBD_ALT_DOWN_ARROW  ); break;
                 case 0x9D: strcpy( kbbuf, KBD_ALT_RIGHT_ARROW ); break;
                 case 0x9B: strcpy( kbbuf, KBD_ALT_LEFT_ARROW  ); break;
+
+                case 0x3b: strcpy( kbbuf, KBD_PF1             ); break;
+                case 0x3c: strcpy( kbbuf, KBD_PF2             ); break;
+                case 0x3d: strcpy( kbbuf, KBD_PF3             ); break;
+                case 0x3e: strcpy( kbbuf, KBD_PF4             ); break;
+
+                case 0x3f: strcpy( kbbuf, KBD_PF5             ); break;
+                case 0x40: strcpy( kbbuf, KBD_PF6             ); break;
+                case 0x41: strcpy( kbbuf, KBD_PF7             ); break;
+                case 0x42: strcpy( kbbuf, KBD_PF8             ); break;
+
+                case 0x43: strcpy( kbbuf, KBD_PF9             ); break;
+                case 0x44: strcpy( kbbuf, KBD_PF10            ); break;
+                case 0x85: strcpy( kbbuf, KBD_PF11            ); break;
+                case 0x86: strcpy( kbbuf, KBD_PF12            ); break;
 
                 default:
                 {
