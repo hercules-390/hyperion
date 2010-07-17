@@ -7433,14 +7433,14 @@ DLL_EXPORT int aia_cmd(int argc, char *argv[], char *cmdline)
     regs = sysblk.regs[sysblk.pcpu];
 
     MSGBUF( buf, "AIV %16.16" I64_FMT "x aip %p ip %p aie %p aim %p",
-            regs->AIV,regs->aip,regs->ip,regs->aie,(BYTE *)regs->aim);
+            regs->AIV_G,regs->aip,regs->ip,regs->aie,(BYTE *)regs->aim);
     WRMSG(HHC02283, "I", buf);
 
     if (regs->sie_active)
     { 
         regs = regs->guestregs;
         sprintf(buf + sprintf(buf, "SIE: "), "AIV %16.16" I64_FMT "x aip %p ip %p aie %p",
-            regs->AIV,regs->aip,regs->ip,regs->aie);
+            regs->AIV_G,regs->aip,regs->ip,regs->aie);
         WRMSG(HHC02283, "I", buf);
     }
 

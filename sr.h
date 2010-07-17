@@ -529,7 +529,7 @@ do { \
   if ((_len)) { \
     SR_WRITE_HDR((_file), (_key), (_len)); \
     _rc = SR_WRITE((_buf), 1, (_len), (_file)); \
-    if ((int)_rc != (_len)) SR_WRITE_ERROR; \
+    if ((int)_rc != (int)(_len)) SR_WRITE_ERROR; \
   } else \
     SR_WRITE_HDR((_file), (_key), 0); \
 } while (0)

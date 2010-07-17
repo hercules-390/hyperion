@@ -306,6 +306,8 @@ void *capping_manager_thread (void *p)
 
   UNREFERENCED(p);
 
+  allowed = 0;
+
   /* Display thread started message on control panel */
   WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Capping manager");
   WRMSG(HHC00877, "I", sysblk.capvalue);
