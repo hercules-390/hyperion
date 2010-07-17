@@ -147,6 +147,12 @@ U16 req_len, rsp_len;
                                    | 0x40  /* Adapter Interruption Facility */
                                    ;
 
+#if 0
+    chsc_rsp10->general_char[1][3] = 0
+                                   | 0x80  /* AIF Time Delay Disablement fac*/
+                                   ;
+#endif
+
     chsc_rsp10->chsc_char[3][1] = 0
                                 | 0x10 /* Set Channel Subsystem Char */
                                 | 0x08 /* Fast CHSCs */
