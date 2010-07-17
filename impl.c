@@ -784,7 +784,7 @@ int     dll_count;                      /* index into array          */
 
     /* attempt to get lock on config file */
     hostpath(pathname, cfgfile, sizeof(pathname));
-#if TRUE
+#if FALSE
     if ( ( fd_cfg = open( pathname, O_RDONLY, S_IRUSR | S_IRGRP ) ) < 0 )
     {
         if ( errno == EACCES )
@@ -812,7 +812,7 @@ int     dll_count;                      /* index into array          */
 #endif
     /* Build system configuration */
     build_config (cfgfile);
-#if TRUE
+#if FALSE
     if ( ( fd_cfg = open( pathname, O_RDONLY, S_IRUSR | S_IRGRP ) ) < 0 )
     {
         WRMSG( HHC01432, "S", pathname, "open()", strerror( errno ) );
