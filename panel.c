@@ -2254,113 +2254,24 @@ char    buf[1024];                      /* Buffer workarea           */
             /* Process characters in the keyboard buffer */
             for (i = 0; i < kblen; )
             {
-                /* Test for PF1 */
-                if (strcmp(kbbuf+i, KBD_PF1) == 0) 
+                /* Test for PF key */
+                if ( strlen(kbbuf+i) == 4 && kbbuf[i] == '\x1b' && kbbuf[i+1] == ')' ) /* this is a PF Key */ 
                 {
-                    char *pf = (char*)get_symbol("PF01");
-                    if ( pf == NULL )
-                        pf = "herc * PF01 UNDEFINED";
-                    do_panel_command( pf );
-                    break;
-                }
-                /* Test for PF2 */
-                if (strcmp(kbbuf+i, KBD_PF2) == 0) 
-                {
-                    char *pf = (char*)get_symbol("PF02");
-                    if ( pf == NULL )
-                        pf = "herc * PF02 UNDEFINED";
-                    do_panel_command( pf );
-                    break;
-                }
-                /* Test for PF3 */
-                if (strcmp(kbbuf+i, KBD_PF3) == 0) 
-                {
-                    char *pf = (char*)get_symbol("PF03");
-                    if ( pf == NULL )
-                        pf = "herc * PF03 UNDEFINED";
-                    do_panel_command( pf );
-                    break;
-                }
-                /* Test for PF4 */
-                if (strcmp(kbbuf+i, KBD_PF4) == 0) 
-                {
-                    char *pf = (char*)get_symbol("PF04");
-                    if ( pf == NULL )
-                        pf = "herc * PF04 UNDEFINED";
-                    do_panel_command( pf );
-                    break;
-                }
-                /* Test for PF5 */
-                if (strcmp(kbbuf+i, KBD_PF5) == 0) 
-                {
-                    char *pf = (char*)get_symbol("PF05");
-                    if ( pf == NULL )
-                        pf = "herc * PF05 UNDEFINED";
-                    do_panel_command( pf );
-                    break;
-                }
-                /* Test for PF6 */
-                if (strcmp(kbbuf+i, KBD_PF6) == 0) 
-                {
-                    char *pf = (char*)get_symbol("PF06");
-                    if ( pf == NULL )
-                        pf = "herc * PF06 UNDEFINED";
-                    do_panel_command( pf );
-                    break;
-                }
-                /* Test for PF7 */
-                if (strcmp(kbbuf+i, KBD_PF7) == 0) 
-                {
-                    char *pf = (char*)get_symbol("PF07");
-                    if ( pf == NULL )
-                        pf = "herc * PF07 UNDEFINED";
-                    do_panel_command( pf );
-                    break;
-                }
-                /* Test for PF8 */
-                if (strcmp(kbbuf+i, KBD_PF8) == 0) 
-                {
-                    char *pf = (char*)get_symbol("PF08");
-                    if ( pf == NULL )
-                        pf = "herc * PF08 UNDEFINED";
-                    do_panel_command( pf );
-                    break;
-                }
-                /* Test for PF9 */
-                if (strcmp(kbbuf+i, KBD_PF9) == 0) 
-                {
-                    char *pf = (char*)get_symbol("PF09");
-                    if ( pf == NULL )
-                        pf = "herc * PF09 UNDEFINED";
-                    do_panel_command( pf );
-                    break;
-                }
-                /* Test for PF10 */
-                if (strcmp(kbbuf+i, KBD_PF10) == 0) 
-                {
-                    char *pf = (char*)get_symbol("PF10");
-                    if ( pf == NULL )
-                        pf = "herc * PF10 UNDEFINED";
-                    do_panel_command( pf );
-                    break;
-                }
-                /* Test for PF11 */
-                if (strcmp(kbbuf+i, KBD_PF11) == 0) 
-                {
-                    char *pf = (char*)get_symbol("PF11");
-                    if ( pf == NULL )
-                        pf = "herc * PF11 UNDEFINED";
-                    do_panel_command( pf );
-                    break;
-                }
+                    char szPF[5];
+                    char *pf;
 
-                /* Test for PF12 */
-                if (strcmp(kbbuf+i, KBD_PF12) == 0) 
-                {
-                    char *pf = (char*)get_symbol("PF12");
+                    MSGBUF( szPF, "PF%s", kbbuf+2 );
+                    szPF[4] = '\0';
+                    pf = (char*)get_symbol(szPF);
                     if ( pf == NULL )
-                        pf = "herc * PF12 UNDEFINED";
+                    {
+                        char msgbuf[32];
+                        MSGBUF( msgbuf, "herc * %s UNDEFINED", szPF );
+                        pf = &msgbuf;
+                    }
                     do_panel_command( pf );
+                    redraw_cmd = 1;
+                    redraw_msgs = 1;
                     break;
                 }
 

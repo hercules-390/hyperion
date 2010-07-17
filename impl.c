@@ -546,20 +546,14 @@ int     dll_count;                      /* index into array          */
 #if !defined(WIN32) && !defined(HAVE_STRERROR_R)
     strerror_r_init();
 #endif
+
     /* Set Function Key Defaults */
     {
-        short i;
-        char buf[32];
-        char pf[5];
-
         set_symbol("PF01", "herc help");
-
-        for ( i = 2; i <= 12; i++ )
-        {
-            MSGBUF(pf, "PF%02d", i );
-            MSGBUF(buf, "herc * PF%02d UNDEFINED", i );
-            set_symbol(pf, buf);
-        }
+        set_symbol("PF12", "herc cmdtgt herc");
+        set_symbol("PF24", "herc cmdtgt scp");
+        set_symbol("PF36", "herc cmdtgt pscp");
+        set_symbol("PF48", "herc q proc");
     }
 
     /* Get name of configuration file or default to hercules.cnf */

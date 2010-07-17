@@ -341,6 +341,51 @@ void translate_keystroke( char kbbuf[], int* pkblen )
                 case 0x85: strcpy( kbbuf, KBD_PF11            ); break;
                 case 0x86: strcpy( kbbuf, KBD_PF12            ); break;
 
+                case 0x54: strcpy( kbbuf, KBD_PF13            ); break;
+                case 0x55: strcpy( kbbuf, KBD_PF14            ); break;
+                case 0x56: strcpy( kbbuf, KBD_PF15            ); break;
+                case 0x57: strcpy( kbbuf, KBD_PF16            ); break;
+
+                case 0x58: strcpy( kbbuf, KBD_PF17            ); break;
+                case 0x59: strcpy( kbbuf, KBD_PF18            ); break;
+                case 0x5a: strcpy( kbbuf, KBD_PF19            ); break;
+                case 0x5b: strcpy( kbbuf, KBD_PF20            ); break;
+
+                case 0x5c: strcpy( kbbuf, KBD_PF21            ); break;
+                case 0x5d: strcpy( kbbuf, KBD_PF22            ); break;
+                case 0x87: strcpy( kbbuf, KBD_PF23            ); break;
+                case 0x88: strcpy( kbbuf, KBD_PF24            ); break;
+
+                case 0x5e: strcpy( kbbuf, KBD_PF25            ); break;
+                case 0x5f: strcpy( kbbuf, KBD_PF26            ); break;
+                case 0x60: strcpy( kbbuf, KBD_PF27            ); break;
+                case 0x61: strcpy( kbbuf, KBD_PF28            ); break;
+
+                case 0x62: strcpy( kbbuf, KBD_PF29            ); break;
+                case 0x63: strcpy( kbbuf, KBD_PF30            ); break;
+                case 0x64: strcpy( kbbuf, KBD_PF31            ); break;
+                case 0x65: strcpy( kbbuf, KBD_PF32            ); break;
+
+                case 0x66: strcpy( kbbuf, KBD_PF33            ); break;
+                case 0x67: strcpy( kbbuf, KBD_PF34            ); break;
+                case 0x89: strcpy( kbbuf, KBD_PF35            ); break;
+                case 0x8a: strcpy( kbbuf, KBD_PF36            ); break;
+
+                case 0x68: strcpy( kbbuf, KBD_PF37            ); break;
+                case 0x69: strcpy( kbbuf, KBD_PF38            ); break;
+                case 0x6a: strcpy( kbbuf, KBD_PF39            ); break;
+                case 0x6b: strcpy( kbbuf, KBD_PF40            ); break;
+
+                case 0x6c: strcpy( kbbuf, KBD_PF41            ); break;
+                case 0x6d: strcpy( kbbuf, KBD_PF42            ); break;
+                case 0x6e: strcpy( kbbuf, KBD_PF43            ); break;
+                case 0x6f: strcpy( kbbuf, KBD_PF44            ); break;
+
+                case 0x70: strcpy( kbbuf, KBD_PF45            ); break;
+                case 0x71: strcpy( kbbuf, KBD_PF46            ); break;
+                case 0x8b: strcpy( kbbuf, KBD_PF47            ); break;
+                case 0x8c: strcpy( kbbuf, KBD_PF48            ); break;
+
                 default:
                 {
 #if 0

@@ -46,20 +46,65 @@
 #define KBD_RIGHT_ARROW2        "\x1BOC"
 #define KBD_LEFT_ARROW2         "\x1BOD"
 
-#define KBD_PF1                 "\x1B""1"
-#define KBD_PF2                 "\x1B""2"
-#define KBD_PF3                 "\x1B""3"
-#define KBD_PF4                 "\x1B""4"
+#define KBD_PF1                 "\x1B"")01"
+#define KBD_PF2                 "\x1B"")02"
+#define KBD_PF3                 "\x1B"")03"
+#define KBD_PF4                 "\x1B"")04"
 
-#define KBD_PF5                 "\x1B""5"
-#define KBD_PF6                 "\x1B""6"
-#define KBD_PF7                 "\x1B""7"
-#define KBD_PF8                 "\x1B""8"
+#define KBD_PF5                 "\x1B"")05"
+#define KBD_PF6                 "\x1B"")06"
+#define KBD_PF7                 "\x1B"")07"
+#define KBD_PF8                 "\x1B"")08"
 
-#define KBD_PF9                 "\x1B""9"
-#define KBD_PF10                "\x1B""0"
-#define KBD_PF11                "\x1B""!"
-#define KBD_PF12                "\x1B""@"
+#define KBD_PF9                 "\x1B"")09"
+#define KBD_PF10                "\x1B"")10"
+#define KBD_PF11                "\x1B"")11"
+#define KBD_PF12                "\x1B"")12"
+    
+#define KBD_PF13                "\x1B"")13"
+#define KBD_PF14                "\x1B"")14"
+#define KBD_PF15                "\x1B"")15"
+#define KBD_PF16                "\x1B"")16"
+
+#define KBD_PF17                "\x1B"")17"
+#define KBD_PF18                "\x1B"")18"
+#define KBD_PF19                "\x1B"")19"
+#define KBD_PF20                "\x1B"")20"
+
+#define KBD_PF21                "\x1B"")21"
+#define KBD_PF22                "\x1B"")22"
+#define KBD_PF23                "\x1B"")23"
+#define KBD_PF24                "\x1B"")24"
+
+#define KBD_PF25                "\x1B"")25"
+#define KBD_PF26                "\x1B"")26"
+#define KBD_PF27                "\x1B"")27"
+#define KBD_PF28                "\x1B"")28"
+
+#define KBD_PF29                "\x1B"")29"
+#define KBD_PF30                "\x1B"")30"
+#define KBD_PF31                "\x1B"")31"
+#define KBD_PF32                "\x1B"")32"
+
+#define KBD_PF33                "\x1B"")33"
+#define KBD_PF34                "\x1B"")34"
+#define KBD_PF35                "\x1B"")35"
+#define KBD_PF36                "\x1B"")36"
+
+#define KBD_PF37                "\x1B"")37"
+#define KBD_PF38                "\x1B"")38"
+#define KBD_PF39                "\x1B"")39"
+#define KBD_PF40                "\x1B"")40"
+
+#define KBD_PF41                "\x1B"")41"
+#define KBD_PF42                "\x1B"")42"
+#define KBD_PF43                "\x1B"")43"
+#define KBD_PF44                "\x1B"")44"
+
+#define KBD_PF45                "\x1B"")45"
+#define KBD_PF46                "\x1B"")46"
+#define KBD_PF47                "\x1B"")47"
+#define KBD_PF48                "\x1B"")48"
 
 // Does anyone know what the actual escape sequence that
 // gets generated actually is on Linux for "Alt+UpArrow"
