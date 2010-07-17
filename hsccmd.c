@@ -2496,6 +2496,8 @@ int toddrag_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int panrate_cmd(int argc, char *argv[], char *cmdline)
 {
+    char msgbuf[16];
+
     UNREFERENCED(cmdline);
 
     if (argc > 1)
@@ -2507,19 +2509,46 @@ int panrate_cmd(int argc, char *argv[], char *cmdline)
         else
         {
             int trate = 0;
+            int rc;
 
-            sscanf(argv[1],"%d", &trate);
+            rc = sscanf(argv[1],"%d", &trate);
 
-            if (trate >= (1000 / CLK_TCK) && trate < 5001)
+            if (rc > 0 && trate >= (1000 / CLK_TCK) && trate < 5001)
                 sysblk.panrate = trate;
+            else
+            {
+                char buf[20];
+                char buf2[64];
+
+                if ( rc == 0 )
+                {
+                    MSGBUF( buf, "%s", argv[1] );
+                    MSGBUF( buf2, "; not numeric value" );
+                }
+                else
+                {
+                    MSGBUF( buf, "%d", trate );
+                    MSGBUF( buf2, "; not within range %d to 5000 inclusive", (1000/CLK_TCK) );
+                }
+
+                WRMSG( HHC02205, "E", buf, buf2 );
+                return -1;
+            }
         }
     }
-    else
+    else if ( argc > 2 )
     {
-        char buf[20];
-        MSGBUF( buf, "%d", sysblk.panrate);
-        WRMSG(HHC02204, "I", "panel refresh rate", buf );
+        WRMSG( HHC02299, "E", argv[0] );
+        return -1;
     }
+
+    if ( argc == 2 )
+        MSGBUF( msgbuf, "%s", argv[1] );
+    else
+        MSGBUF( msgbuf, "%d", sysblk.panrate );
+
+    WRMSG(HHC02204, "I", "panel refresh rate", msgbuf );
+
     return 0;
 }
 
@@ -3685,7 +3714,7 @@ int codepage_cmd(int argc, char *argv[], char *cmdline)
 
     UNREFERENCED(cmdline);
 
-    /* Update LPAR name if operand is specified */
+    /* Update codepage if operand is specified */
     if (argc > 1)
         set_codepage(argv[1]);
     else
