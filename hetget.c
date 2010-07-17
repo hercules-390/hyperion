@@ -53,6 +53,8 @@ opts =
 {
     NULL,
     NULL,
+    NULL,
+    NULL,
     FALSE,
     0,
     0,

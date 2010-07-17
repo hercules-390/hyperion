@@ -716,10 +716,10 @@ void makext(
 void showhelp(char *pgm) {
 
     fprintf(stderr, (expert) ?
-        "Usage: dasdseq [-debug] [-expert] [-ascii] image [sf=shadow] [attr] filespec\n"
+        "Usage: %s [-debug] [-expert] [-ascii] image [sf=shadow] [attr] filespec\n"
         "  -debug    optional - Enables debug mode, additional debug help appears\n"
         :
-        "Usage: dasdseq [-expert] [-ascii] image [sf=shadow] filespec\n");
+        "Usage: %s [-expert] [-ascii] image [sf=shadow] filespec\n", pgm );
     fprintf(stderr,
         "  -expert   optional - Additional help describes expert operands\n"
         "  -ascii    optional - translate output file to ascii, trim trailing blanks\n"

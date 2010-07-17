@@ -2528,7 +2528,7 @@ int panrate_cmd(int argc, char *argv[], char *cmdline)
                 else
                 {
                     MSGBUF( buf, "%d", trate );
-                    MSGBUF( buf2, "; not within range %d to 5000 inclusive", (1000/CLK_TCK) );
+                    MSGBUF( buf2, "; not within range %d to 5000 inclusive", (1000/(int)CLK_TCK) );
                 }
 
                 WRMSG( HHC02205, "E", buf, buf2 );
@@ -7433,14 +7433,14 @@ DLL_EXPORT int aia_cmd(int argc, char *argv[], char *cmdline)
     regs = sysblk.regs[sysblk.pcpu];
 
     MSGBUF( buf, "AIV %16.16" I64_FMT "x aip %p ip %p aie %p aim %p",
-            regs->aiv,regs->aip,regs->ip,regs->aie,(BYTE *)regs->aim);
+            regs->AIV,regs->aip,regs->ip,regs->aie,(BYTE *)regs->aim);
     WRMSG(HHC02283, "I", buf);
 
     if (regs->sie_active)
-    {
+    { 
         regs = regs->guestregs;
         sprintf(buf + sprintf(buf, "SIE: "), "AIV %16.16" I64_FMT "x aip %p ip %p aie %p",
-            regs->aiv,regs->aip,regs->ip,regs->aie);
+            regs->AIV,regs->aip,regs->ip,regs->aie);
         WRMSG(HHC02283, "I", buf);
     }
 
@@ -7506,7 +7506,7 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
          (regs->tlb.acc[i] & ACC_READ) != 0,(regs->tlb.acc[i] & ACC_WRITE) != 0,
          regs->tlb.skey[i],
          MAINADDR(regs->tlb.main[i],
-                  ((regs->tlb.TLB_VADDR_G(i) & pagemask) | (i << shift)))
+                  ((regs->tlb.TLB_VADDR_G(i) & pagemask) | (unsigned int)(i << shift)))
                   - regs->mainstor);
         matches += ((regs->tlb.TLB_VADDR(i) & bytemask) == regs->tlbID);
        WRMSG(HHC02284, "I", buf);
@@ -7537,7 +7537,7 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
              (regs->tlb.acc[i] & ACC_READ) != 0,(regs->tlb.acc[i] & ACC_WRITE) != 0,
              regs->tlb.skey[i],
              MAINADDR(regs->tlb.main[i],
-                     ((regs->tlb.TLB_VADDR_G(i) & pagemask) | (i << shift)))
+                     ((regs->tlb.TLB_VADDR_G(i) & pagemask) | (unsigned int)(i << shift)))
                     - regs->mainstor);
             matches += ((regs->tlb.TLB_VADDR(i) & bytemask) == regs->tlbID);
            WRMSG(HHC02284, "I", buf);
@@ -8292,6 +8292,8 @@ char    pathname[MAX_PATH];             /* (work)                    */
 /*-------------------------------------------------------------------*/
 int query_cmd(int argc, char *argv[], char *cmdline)
 {
+    UNREFERENCED(cmdline);
+
     if (argc < 2)
     {
         WRMSG( HHC17000, "E" );

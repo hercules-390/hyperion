@@ -1606,7 +1606,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
     else
     {   
         char *serv;
-        char *host = NULL;
         char *port = strdup( scnslport );
         char msgbuf[512];
 

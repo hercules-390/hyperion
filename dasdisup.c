@@ -90,8 +90,11 @@ static int process_dirblk( CIFBLK *cif, int noext, DSXTENT extent[],
                            BYTE *dirblk, MEMINFO memtab[], int *nmem );
 static int resolve_xctltab( CIFBLK *cif, int noext, DSXTENT extent[],
                             MEMINFO *memp, MEMINFO memtab[], int nmem );
+// See Below
+#if FALSE
 static int process_member( CIFBLK *cif, int noext, DSXTENT extent[],
                            BYTE *memname, BYTE *ttr);
+#endif
 
 /*-------------------------------------------------------------------*/
 /* DASDISUP main entry point                                         */

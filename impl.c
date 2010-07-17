@@ -336,8 +336,10 @@ DLL_EXPORT int impl(int argc, char *argv[])
 char   *cfgfile;                        /* -> Configuration filename */
 int     fd_cfg = -1;                    /* fd for config file        */
 char    pathname[MAX_PATH];             /* work area for filenames   */
+#if FALSE
 #if !defined ( _MSVC_ )
 struct  flock  fl_cfg;                  /* file lock for conf file   */  
+#endif
 #endif
 int     c;                              /* Work area for getopt      */
 int     arg_error = 0;                  /* 1=Invalid arguments       */
