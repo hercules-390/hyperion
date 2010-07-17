@@ -502,12 +502,12 @@ CMDABBR("query",1,   PANEL,         SYSCMDALL,          query_cmd,
   "query command",
     "query cpuid       Show default cpuid\n" 
     "query emsg        Show emsg selection\n"
-    "query dasd        Show dasd\n"
     "query lpar        Show lpar number and name\n" 
     "query ports       Show ports in use\n"
-    "query proc        Show processor utilization\n"
+    "query processors  Show processor utilization\n"
     "query quitmout    Show quit timeout value\n"
-    "query stor        Show mainsize, xpndsize values\n" )
+    "query storage     Show mainsize, xpndsize values\n" 
+    "     *Operands may be abbreviated to 4 characters\n" )
 
 COMMAND("set",      PANEL+CONFIG,   SYSCMDALL,          set_cmd,     
   "set command",
