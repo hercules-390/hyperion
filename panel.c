@@ -2257,278 +2257,110 @@ char    buf[1024];                      /* Buffer workarea           */
                 /* Test for PF1 */
                 if (strcmp(kbbuf+i, KBD_PF1) == 0) 
                 {
-                    char *pf;
-                    char *cmdbuf;
-
-                    pf = (char*)get_symbol("PF01");
-
+                    char *pf = (char*)get_symbol("PF01");
                     if ( pf == NULL )
-                        pf = "* PF01 UNDEFINED";
-
-                    cmdbuf = malloc( strlen(pf) + 6);
-                    if (cmdbuf == NULL)
-                        do_panel_command("herc * PF01 Failure in malloc()");
-                    else
-                    {
-                        strcpy(cmdbuf,"herc ");
-                        strcat(cmdbuf, pf);
-                        do_panel_command( cmdbuf );
-                        free(cmdbuf);
-                    }
+                        pf = "herc * PF01 UNDEFINED";
+                    do_panel_command( pf );
                     break;
                 }
                 /* Test for PF2 */
                 if (strcmp(kbbuf+i, KBD_PF2) == 0) 
                 {
-                    char *pf;
-                    char *cmdbuf;
-
-                    pf = (char*)get_symbol("PF02");
-
+                    char *pf = (char*)get_symbol("PF02");
                     if ( pf == NULL )
-                        pf = "* PF02 UNDEFINED";
-
-                    cmdbuf = malloc( strlen(pf) + 6);
-                    if (cmdbuf == NULL)
-                        do_panel_command("herc * PF02 Failure in malloc()");
-                    else
-                    {
-                        strcpy(cmdbuf, "herc ");
-                        strcat(cmdbuf, pf);
-                        do_panel_command( cmdbuf );
-                        free(cmdbuf);
-                    }
+                        pf = "herc * PF02 UNDEFINED";
+                    do_panel_command( pf );
                     break;
                 }
                 /* Test for PF3 */
                 if (strcmp(kbbuf+i, KBD_PF3) == 0) 
                 {
-                    char *pf;
-                    char *cmdbuf;
-
-                    pf = (char*)get_symbol("PF03");
-
+                    char *pf = (char*)get_symbol("PF03");
                     if ( pf == NULL )
-                        pf = "* PF03 UNDEFINED";
-
-                    cmdbuf = malloc( strlen(pf) + 6);
-                    if (cmdbuf == NULL)
-                        do_panel_command("herc * PF03 Failure in malloc()");
-                    else
-                    {
-                        strcpy(cmdbuf, "herc ");
-                        strcat(cmdbuf, pf);
-                        do_panel_command( cmdbuf );
-                        free(cmdbuf);
-                    }
+                        pf = "herc * PF03 UNDEFINED";
+                    do_panel_command( pf );
                     break;
                 }
                 /* Test for PF4 */
                 if (strcmp(kbbuf+i, KBD_PF4) == 0) 
                 {
-                    char *pf;
-                    char *cmdbuf;
-
-                    pf = (char*)get_symbol("PF04");
-
+                    char *pf = (char*)get_symbol("PF04");
                     if ( pf == NULL )
-                        pf = "* PF04 UNDEFINED";
-
-                    cmdbuf = malloc( strlen(pf) + 6);
-                    if (cmdbuf == NULL)
-                        do_panel_command("herc * PF04 Failure in malloc()");
-                    else
-                    {
-                        strcpy(cmdbuf, "herc ");
-                        strcat(cmdbuf, pf);
-                        do_panel_command( cmdbuf );
-                        free(cmdbuf);
-                    }
+                        pf = "herc * PF04 UNDEFINED";
+                    do_panel_command( pf );
                     break;
                 }
                 /* Test for PF5 */
                 if (strcmp(kbbuf+i, KBD_PF5) == 0) 
                 {
-                    char *pf;
-                    char *cmdbuf;
-
-                    pf = (char*)get_symbol("PF05");
-
+                    char *pf = (char*)get_symbol("PF05");
                     if ( pf == NULL )
-                        pf = "* PF05 UNDEFINED";
-
-                    cmdbuf = malloc( strlen(pf) + 6);
-                    if (cmdbuf == NULL)
-                        do_panel_command("herc * PF05 Failure in malloc()");
-                    else
-                    {
-                        strcpy(cmdbuf, "herc ");
-                        strcat(cmdbuf, pf);
-                        do_panel_command( cmdbuf );
-                        free(cmdbuf);
-                    }
+                        pf = "herc * PF05 UNDEFINED";
+                    do_panel_command( pf );
                     break;
                 }
                 /* Test for PF6 */
                 if (strcmp(kbbuf+i, KBD_PF6) == 0) 
                 {
-                    char *pf;
-                    char *cmdbuf;
-
-                    pf = (char*)get_symbol("PF06");
-
+                    char *pf = (char*)get_symbol("PF06");
                     if ( pf == NULL )
-                        pf = "* PF06 UNDEFINED";
-
-                    cmdbuf = malloc( strlen(pf) + 6);
-                    if (cmdbuf == NULL)
-                        do_panel_command("herc * PF06 Failure in malloc()");
-                    else
-                    {
-                        strcpy(cmdbuf, "herc ");
-                        strcat(cmdbuf, pf);
-                        do_panel_command( cmdbuf );
-                        free(cmdbuf);
-                    }
+                        pf = "herc * PF06 UNDEFINED";
+                    do_panel_command( pf );
                     break;
                 }
                 /* Test for PF7 */
                 if (strcmp(kbbuf+i, KBD_PF7) == 0) 
                 {
-                    char *pf;
-                    char *cmdbuf;
-
-                    pf = (char*)get_symbol("PF07");
-
+                    char *pf = (char*)get_symbol("PF07");
                     if ( pf == NULL )
-                        pf = "* PF07 UNDEFINED";
-
-                    cmdbuf = malloc( strlen(pf) + 6);
-                    if (cmdbuf == NULL)
-                        do_panel_command("herc * PF07 Failure in malloc()");
-                    else
-                    {
-                        strcpy(cmdbuf, "herc ");
-                        strcat(cmdbuf, pf);
-                        do_panel_command( cmdbuf );
-                        free(cmdbuf);
-                    }
+                        pf = "herc * PF07 UNDEFINED";
+                    do_panel_command( pf );
                     break;
                 }
                 /* Test for PF8 */
                 if (strcmp(kbbuf+i, KBD_PF8) == 0) 
                 {
-                    char *pf;
-                    char *cmdbuf;
-
-                    pf = (char*)get_symbol("PF08");
-
+                    char *pf = (char*)get_symbol("PF08");
                     if ( pf == NULL )
-                        pf = "* PF08 UNDEFINED";
-
-                    cmdbuf = malloc( strlen(pf) + 6);
-                    if (cmdbuf == NULL)
-                        do_panel_command("herc * PF08 Failure in malloc()");
-                    else
-                    {
-                        strcpy(cmdbuf, "herc ");
-                        strcat(cmdbuf, pf);
-                        do_panel_command( cmdbuf );
-                        free(cmdbuf);
-                    }
+                        pf = "herc * PF08 UNDEFINED";
+                    do_panel_command( pf );
                     break;
                 }
                 /* Test for PF9 */
                 if (strcmp(kbbuf+i, KBD_PF9) == 0) 
                 {
-                    char *pf;
-                    char *cmdbuf;
-
-                    pf = (char*)get_symbol("PF09");
-
+                    char *pf = (char*)get_symbol("PF09");
                     if ( pf == NULL )
-                        pf = "* PF09 UNDEFINED";
-
-                    cmdbuf = malloc( strlen(pf) + 6);
-                    if (cmdbuf == NULL)
-                        do_panel_command("herc * PF09 Failure in malloc()");
-                    else
-                    {
-                        strcpy(cmdbuf, "herc ");
-                        strcat(cmdbuf, pf);
-                        do_panel_command( cmdbuf );
-                        free(cmdbuf);
-                    }
+                        pf = "herc * PF09 UNDEFINED";
+                    do_panel_command( pf );
                     break;
                 }
                 /* Test for PF10 */
                 if (strcmp(kbbuf+i, KBD_PF10) == 0) 
                 {
-                    char *pf;
-                    char *cmdbuf;
-
-                    pf = (char*)get_symbol("PF10");
-
+                    char *pf = (char*)get_symbol("PF10");
                     if ( pf == NULL )
-                        pf = "* PF10 UNDEFINED";
-
-                    cmdbuf = malloc( strlen(pf) + 6);
-                    if (cmdbuf == NULL)
-                        do_panel_command("herc * PF10 Failure in malloc()");
-                    else
-                    {
-                        strcpy(cmdbuf, "herc ");
-                        strcat(cmdbuf, pf);
-                        do_panel_command( cmdbuf );
-                        free(cmdbuf);
-                    }
+                        pf = "herc * PF10 UNDEFINED";
+                    do_panel_command( pf );
                     break;
                 }
                 /* Test for PF11 */
                 if (strcmp(kbbuf+i, KBD_PF11) == 0) 
                 {
-                    char *pf;
-                    char *cmdbuf;
-
-                    pf = (char*)get_symbol("PF11");
-
+                    char *pf = (char*)get_symbol("PF11");
                     if ( pf == NULL )
-                        pf = "* PF11 UNDEFINED";
-
-                    cmdbuf = malloc( strlen(pf) + 6);
-                    if (cmdbuf == NULL)
-                        do_panel_command("herc * PF11 Failure in malloc()");
-                    else
-                    {
-                        strcpy(cmdbuf, "herc ");
-                        strcat(cmdbuf, pf);
-                        do_panel_command( cmdbuf );
-                        free(cmdbuf);
-                    }
+                        pf = "herc * PF11 UNDEFINED";
+                    do_panel_command( pf );
                     break;
                 }
 
                 /* Test for PF12 */
                 if (strcmp(kbbuf+i, KBD_PF12) == 0) 
                 {
-                    char *pf;
-                    char *cmdbuf;
-
-                    pf = (char*)get_symbol("PF12");
-
+                    char *pf = (char*)get_symbol("PF12");
                     if ( pf == NULL )
-                        pf = "* PF12 UNDEFINED";
-
-                    cmdbuf = malloc( strlen(pf) + 6);
-                    if (cmdbuf == NULL)
-                        do_panel_command("herc * PF12 Failure in malloc()");
-                    else
-                    {
-                        strcpy(cmdbuf, "herc ");
-                        strcat(cmdbuf, pf);
-                        do_panel_command( cmdbuf );
-                        free(cmdbuf);
-                    }
+                        pf = "herc * PF12 UNDEFINED";
+                    do_panel_command( pf );
                     break;
                 }
 

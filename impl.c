@@ -547,12 +547,12 @@ int     dll_count;                      /* index into array          */
         char buf[32];
         char pf[5];
 
-        set_symbol("PF01", "help");
+        set_symbol("PF01", "herc help");
 
         for ( i = 2; i <= 12; i++ )
         {
             MSGBUF(pf, "PF%02d", i );
-            MSGBUF(buf, "* PF%02d UNDEFINED", i );
+            MSGBUF(buf, "herc * PF%02d UNDEFINED", i );
             set_symbol(pf, buf);
         }
     }
