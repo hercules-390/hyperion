@@ -2258,6 +2258,7 @@ char    buf[1024];                      /* Buffer workarea           */
                 if ( strlen(kbbuf+i) == 4 && kbbuf[i] == '\x1b' && kbbuf[i+1] == ')' ) /* this is a PF Key */ 
                 {
                     char szPF[5];
+                    char msgbuf[32];
                     char *pf;
 
                     MSGBUF( szPF, "PF%s", kbbuf+2 );
@@ -2265,9 +2266,8 @@ char    buf[1024];                      /* Buffer workarea           */
                     pf = (char*)get_symbol(szPF);
                     if ( pf == NULL )
                     {
-                        char msgbuf[32];
                         MSGBUF( msgbuf, "herc * %s UNDEFINED", szPF );
-                        pf = &msgbuf;
+                        pf = msgbuf;
                     }
                     do_panel_command( pf );
                     redraw_cmd = 1;
