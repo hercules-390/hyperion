@@ -500,6 +500,28 @@ DLL_EXPORT void list_all_symbols(void)
     return;
 }
 
+/* (called by "Q PF" panel command) */
+DLL_EXPORT void list_PF_symbols(void)
+{
+    SYMBOL_TOKEN* tok; 
+    int i,j;
+
+    for ( i=0; i < symbol_count; i++ )
+    {
+        tok = symbols[i];
+        if (tok)
+        {
+            if (tok->var[0] == 'P' && tok->var[1] == 'F')
+            { 
+                j = atoi(tok->var+2);
+                if ( j > 0 && j <= 48 )
+                    WRMSG(HHC02203, "I", tok->var, tok->val ? tok->val : "");
+            }
+        }
+    }
+    return;
+}
+
 DLL_EXPORT void kill_all_symbols(void)
 {
     SYMBOL_TOKEN        *tok;

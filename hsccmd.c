@@ -8484,6 +8484,12 @@ int query_cmd(int argc, char *argv[], char *cmdline)
             WRMSG( HHC17100, "I", sysblk.quitmout );
         }
 #endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
+#if       defined( OPTION_CONFIG_SYMBOLS )
+        else if ( CMD(argv[1],PFKEYS,2 ) )
+        {
+            list_PF_symbols();
+        }
+#endif // defined( OPTION_CONFIG_SYMBOLS )
         else if ( CMD(argv[1],emsg,4) )
         {
             if ( sysblk.emsg & EMSG_TS )

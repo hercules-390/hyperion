@@ -100,6 +100,7 @@
   HUT_DLL_IMPORT char *resolve_symbol_string(const char *);
   HUT_DLL_IMPORT void kill_all_symbols(void);
   HUT_DLL_IMPORT void list_all_symbols(void);
+  HUT_DLL_IMPORT void list_PF_symbols(void);
 #endif
 
 #ifdef _MSVC_

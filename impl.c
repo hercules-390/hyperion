@@ -415,8 +415,10 @@ int     dll_count;                      /* index into array          */
             sysblk.hercules_pgmpath = strdup("");
     }
 
+#if       defined( OPTION_CONFIG_SYMBOLS )
     set_symbol("MODNAME", sysblk.hercules_pgmname);
     set_symbol("MODPATH", sysblk.hercules_pgmpath);
+#endif
 
     /* set default operations mode */
 #if defined (OPTION_HERCULES_DEVELOPER)
@@ -547,6 +549,7 @@ int     dll_count;                      /* index into array          */
     strerror_r_init();
 #endif
 
+#if       defined( OPTION_CONFIG_SYMBOLS )
     /* Set Function Key Defaults */
     {
         set_symbol("PF01", "herc help");
@@ -555,6 +558,7 @@ int     dll_count;                      /* index into array          */
         set_symbol("PF36", "herc cmdtgt pscp");
         set_symbol("PF48", "herc q proc");
     }
+#endif
 
     /* Get name of configuration file or default to hercules.cnf */
     if(!(cfgfile = getenv("HERCULES_CNF")))

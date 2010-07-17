@@ -502,7 +502,8 @@ CMDABBR("query",1,   PANEL,         SYSCMDALL,          query_cmd,
   "query command",
     "query cpuid       Show default cpuid\n" 
     "query emsg        Show emsg selection\n"
-    "query lpar        Show lpar number and name\n" 
+    "query lpar        Show lpar number and name\n"
+    "query pfkeys      Show the current PF Key settings\n"
     "query ports       Show ports in use\n"
     "query processors  Show processor utilization\n"
     "query quitmout    Show quit timeout value\n"
