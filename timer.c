@@ -318,7 +318,7 @@ void *capping_manager_thread (void *p)
     if(sysblk.ptyp[i] == SCCB_PTYP_CP)
       break;
   }
-  if(i == MAX_CPU_ENGINES || sysblk.ptyp[i] != SCCB_PTYP_CP)
+  if(i == MAX_CPU_ENGINES)
   {
     WRMSG(HHC00878, "E");
     WRMSG(HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Capping manager");
