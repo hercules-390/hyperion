@@ -2260,16 +2260,103 @@ char    buf[1024];                      /* Buffer workarea           */
                     char szPF[5];
                     char msgbuf[32];
                     char *pf;
+                    char *psz_PF;
+                    int i;
 
                     MSGBUF( szPF, "PF%s", kbbuf+2 );
                     szPF[4] = '\0';
                     pf = (char*)get_symbol(szPF);
                     if ( pf == NULL )
                     {
-                        MSGBUF( msgbuf, "herc * %s UNDEFINED", szPF );
+                        MSGBUF( msgbuf, "DELAY herc * %s UNDEFINED", szPF );
                         pf = msgbuf;
                     }
-                    do_panel_command( pf );
+
+                    psz_PF = strdup(pf);
+
+                    /* test for 1st of IMMED, DELAY or SUBST */
+                    for ( i = 0; i < strlen(psz_PF); i++ )
+                        if ( psz_PF[i] != ' ' ) break;
+
+                    if ( !strncasecmp( psz_PF+i, "IMMED", 5 ) )
+                    {
+                        for ( i += 5; i < strlen(psz_PF); i++ )
+                            if ( psz_PF[i] != ' ' ) break;
+                        do_panel_command( psz_PF+i );
+                    }
+                    else if ( !strncasecmp( psz_PF+i, "DELAY", 5 ) )
+                    {
+                        for ( i += 5; i < strlen(psz_PF); i++ )
+                            if ( psz_PF[i] != ' ' ) break;
+                        strcpy( cmdline, psz_PF+i );
+                        cmdlen = (int)strlen(cmdline);
+                        cmdoff = cmdlen < cmdcols ? cmdlen : 0;
+                        ADJ_CMDCOL();
+                    }
+                    else if ( !strncasecmp( psz_PF+i, "SUBST", 5 ) )
+                    {
+                        char *cmd_tok;
+                        char *pt1;
+                        char *pt2;
+
+                        for ( i += 5; i < strlen(psz_PF); i++ )
+                            if ( psz_PF[i] != ' ' ) break;
+
+                        cmdlen = (int)strlen(cmdline);
+
+                        if ( cmdlen == 0 )
+                        {
+                            strcpy( cmdline, psz_PF+i );
+                            cmdlen = (int)strlen(cmdline);
+                            cmdoff = cmdlen < cmdcols ? cmdlen : 0;
+                            ADJ_CMDCOL();
+                        }
+                        else
+                        {
+                            cmd_tok = strtok( cmdline, " " );
+
+                            if ( cmd_tok != NULL )
+                            {
+                                pt1 = psz_PF+i;
+                                pt2 = strstr(pt1, "&1");
+                                if ( pt2 == NULL )
+                                {
+                                    strcpy( cmdline, psz_PF+i );
+                                    cmdlen = (int)strlen(cmdline);
+                                    cmdoff = cmdlen < cmdcols ? cmdlen : 0;
+                                    ADJ_CMDCOL();
+                                }
+                                else
+                                {
+                                    char *new_PF;
+                                    new_PF = calloc(strlen(psz_PF+i) + strlen(cmd_tok),1);
+                                    if (new_PF == NULL)
+                                    {
+                                        strcpy( cmdline, psz_PF+i );
+                                        cmdlen = (int)strlen(cmdline);
+                                        cmdoff = cmdlen < cmdcols ? cmdlen : 0;
+                                        ADJ_CMDCOL();
+                                    }
+                                    else
+                                    {
+                                        strncpy(new_PF, pt1, (size_t)(pt2-pt1));
+                                        strcat(new_PF,cmd_tok);
+                                        strcat(new_PF,pt2+2);
+                                        strcpy( cmdline, new_PF );
+                                        free(new_PF);
+                                        cmdlen = (int)strlen(cmdline);
+                                        cmdoff = cmdlen < cmdcols ? cmdlen : 0;
+                                        ADJ_CMDCOL();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else /* this is the same as IMMED */
+                    {
+                        do_panel_command( psz_PF );
+                    }
+                    free(psz_PF);
                     redraw_cmd = 1;
                     redraw_msgs = 1;
                     break;

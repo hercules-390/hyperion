@@ -1,3 +1,20 @@
+17 Jul 2010 PF Key support enhancement: DELAY, IMMED and SUBST 
+            Specified as the first token of the string:
+                DELAY retrieves the string onto the command line
+                IMMED executes the string and a command
+                SUBST takes the first token (will be enhanced) and substitues it for &1
+                      in the PFKEY string
+
+            For example:
+            DEFSYM PF02 "SUBST herc help &1"
+            
+            Type QUERY on the command line and press PF02.
+            The string "herc help query" will be built on the command line. Press enter to execute.
+
+            DELAY is the present default for SUBST; IMMED and DELAY will be added as options.
+
+
+
 17 Jul 2010 Add two additional default symbols MODPATH and MODNAME representing the 
             pathname and the module name of the startup program.
 16 Jul 2010 Begin Function Keys (PF1-12) Support. PF1 defaults to HELP.
