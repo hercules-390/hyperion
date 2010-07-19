@@ -1270,7 +1270,7 @@ int readblkid_scsitape ( DEVBLK* dev, BYTE* logical, BYTE* physical )
         int save_errno = errno;
         {
             if ( dev->ccwtrace || dev->ccwstep )
-                WRMSG(HHC00205, "W"
+                WRMSG(HHC90205, "D"
                     ,SSID_TO_LCSS(dev->ssid)
                     ,dev->devnum
                     ,dev->filename

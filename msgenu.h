@@ -835,12 +835,12 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01454 "Config file '%s': error in function '%s': '%s'"
 
 /* config.c */
+#define HHC01458 "%1d:%04X: only devices on CSS 0 are usable in S/370 mode"
 #define HHC01459 "Device %1d:%04X defined as %1d:%04X"
 #define HHC01460 "%1d:%04X error in function '%s': '%s'"
 #define HHC01461 "%1d:%04X device already exists"
 #define HHC01462 "%1d:%04X devtype '%s' not recognized"
 #define HHC01463 "%1d:%04X device initialization failed"
-//#define HHC014xx "%1d:%04X: only devices on CSS 0 are usable in S/370 mode"
 #define HHC01464 "%1d:%04X %s does not exist"
 #define HHC01465 "%1d:%04X %s detached"
 #define HHC01466 "Unspecified error occured while parsing 'Logical Channel Subsystem Identification'"
@@ -1253,6 +1253,7 @@ cpu.c:123:HABC1234I This is a message
        "                   even if it exceeds 2G in size\n" \
        "            -o type  output file type (CKD, CCKD, FBA, CFBA)"
 //dasdinit.c
+#define HHC02444 "Member '%s' is not a single text record"
 #define HHC02445 "Invalid, unsupported or missing '%s': '%s'"
 #define HHC02446 "Invalid number of arguments"
 #define HHC02447 "Option '-linux' is only supported fo device type 3390"
@@ -1613,6 +1614,9 @@ cpu.c:123:HABC1234I This is a message
 #define HHC90010 "Pttrace: trace is busy"
 #define HHC90011 "Pttrace: invalid argument '%s'"
 #define HHC90012 "Pttrace: %s%s%s%s%s%s%s%s%s%s%s %s %s to %d %d"
+
+/* from scsitape.c trace */
+#define HHC90205 "%1d:%04X Tape file '%s', type '%s': error in function '%s': '%s'"
 
 /* ctc/lcs/ndis */
 

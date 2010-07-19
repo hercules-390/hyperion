@@ -938,7 +938,7 @@ char *modname;
     {
         char buf[40];
         snprintf(buf, 40, "malloc(%lu)", sizeof(DLLENT));
-        WRMSG(HHC01511, "S", buf, strerror(errno));
+        WRMSG(HHC01511, "E", buf, strerror(errno));
         return -1;
     }
 

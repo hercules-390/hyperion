@@ -477,7 +477,7 @@ int     i;                              /* Loop index                */
     /*
     if(lcss!=0 && sysblk.arch_mode==ARCH_370)
     {
-        WRMSG (HHC014xx, "W", lcss, devnum);
+        WRMSG (HHC01458, "W", lcss, devnum);
     }
     */
 

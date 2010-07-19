@@ -587,7 +587,7 @@ char            refnama[9];             /* Referred name (ASCIIZ)    */
     /* Error if member is not a single text record */
     if (memp->multitxt)
     {
-        fprintf (stdout, MSG(HHC02453, "E", memnama));
+        fprintf (stdout, MSG(HHC02444, "E", memnama));
         return -1;
     }
 
