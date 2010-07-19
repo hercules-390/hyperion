@@ -2262,7 +2262,7 @@ char    buf[1024];                      /* Buffer workarea           */
                     char msgbuf[32];
                     char *pf;
                     char *psz_PF;
-                    int i;
+                    int j;
 
                     MSGBUF( szPF, "PF%s", kbbuf+2 );
                     szPF[4] = '\0';
@@ -2281,11 +2281,11 @@ char    buf[1024];                      /* Buffer workarea           */
                      !strcmp(kbbuf+i, KBD_PF17)|| !strcmp(kbbuf+i, KBD_PF18 ) ||
                      !strcmp(kbbuf+i, KBD_PF19)|| !strcmp(kbbuf+i, KBD_PF20 ) )
                 {
-                    char szPF[5];
+                    char *szPF;
                     char msgbuf[32];
                     char *pf;
                     char *psz_PF;
-                    int i;
+                    int j;
 
                     if      ( !strcmp(kbbuf+i, KBD_PF1) || !strcmp(kbbuf+i, KBD_PF1_a) ) szPF = "PF01";
                     else if ( !strcmp(kbbuf+i, KBD_PF2) || !strcmp(kbbuf+i, KBD_PF2_a) ) szPF = "PF02";
@@ -2323,45 +2323,45 @@ char    buf[1024];                      /* Buffer workarea           */
                     psz_PF = strdup(pf);
 
                     /* test for 1st of IMMED, DELAY or SUBST */
-                    for ( i = 0; i < strlen(psz_PF); i++ )
-                        if ( psz_PF[i] != ' ' ) break;
+                    for ( j = 0; j < (int)strlen(psz_PF); j++ )
+                        if ( psz_PF[j] != ' ' ) break;
 
-                    if ( !strncasecmp( psz_PF+i, "IMMED ", 6 ) )
+                    if ( !strncasecmp( psz_PF+j, "IMMED ", 6 ) )
                     {
-                        for ( i += 5; i < strlen(psz_PF); i++ )
-                            if ( psz_PF[i] != ' ' ) break;
-                        do_panel_command( psz_PF+i );
+                        for ( j += 5; j < (int)strlen(psz_PF); j++ )
+                            if ( psz_PF[j] != ' ' ) break;
+                        do_panel_command( psz_PF+j );
                     }
-                    else if ( !strncasecmp( psz_PF+i, "DELAY ", 6 ) )
+                    else if ( !strncasecmp( psz_PF+j, "DELAY ", 6 ) )
                     {
-                        for ( i += 5; i < strlen(psz_PF); i++ )
-                            if ( psz_PF[i] != ' ' ) break;
-                        strcpy( cmdline, psz_PF+i );
+                        for ( j += 5; j < (int)strlen(psz_PF); j++ )
+                            if ( psz_PF[j] != ' ' ) break;
+                        strcpy( cmdline, psz_PF+j );
                         cmdlen = (int)strlen(cmdline);
                         cmdoff = cmdlen < cmdcols ? cmdlen : 0;
                         ADJ_CMDCOL();
                     }
-                    else if ( !strncasecmp( psz_PF+i, "SUBST ", 6 ) )
+                    else if ( !strncasecmp( psz_PF+j, "SUBST ", 6 ) )
                     {
-                        BOOL  isdelay = TRUE;
+                        int  isdelay = TRUE;
                         char *cmd_tok[11] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
                         int   ncmd_tok = 0;
                         char *pt1;
 
-                        for ( i += 5; i < strlen(psz_PF); i++ )
-                            if ( psz_PF[i] != ' ' ) break;
+                        for ( j += 5; j < strlen(psz_PF); j++ )
+                            if ( psz_PF[j] != ' ' ) break;
 
-                        if ( !strncasecmp( psz_PF+i, "IMMED ", 6 ) )
+                        if ( !strncasecmp( psz_PF+j, "IMMED ", 6 ) )
                         {
                             isdelay = FALSE;
-                            for ( i += 5; i < strlen(psz_PF); i++ )
-                                if ( psz_PF[i] != ' ' ) break;
+                            for ( j += 5; j < (int)strlen(psz_PF); j++ )
+                                if ( psz_PF[j] != ' ' ) break;
 
                         }
-                        else if ( !strncasecmp( psz_PF+i, "DELAY ", 6 ) )
+                        else if ( !strncasecmp( psz_PF+j, "DELAY ", 6 ) )
                         {
-                            for ( i += 5; i < strlen(psz_PF); i++ )
-                                if ( psz_PF[i] != ' ' ) break;
+                            for ( j += 5; j < (int)strlen(psz_PF); j++ )
+                                if ( psz_PF[j] != ' ' ) break;
                         }
 
                         if ( ( cmdlen = (int)strlen(cmdline) ) > 0 )
@@ -2374,13 +2374,13 @@ char    buf[1024];                      /* Buffer workarea           */
                         {
                             if ( isdelay )
                             {
-                                strcpy( cmdline, psz_PF+i );
+                                strcpy( cmdline, psz_PF+j );
                                 cmdlen = (int)strlen(cmdline);
                                 cmdoff = cmdlen < cmdcols ? cmdlen : 0;
                                 ADJ_CMDCOL();
                             }
                             else
-                                do_panel_command( psz_PF+i );
+                                do_panel_command( psz_PF+j );
                         }
                         else
                         {
@@ -2391,7 +2391,7 @@ char    buf[1024];                      /* Buffer workarea           */
 
                             memset(psz_cmdline, 0, sizeof(psz_cmdline));
 
-                            pt1 = psz_PF+i;
+                            pt1 = psz_PF+j;
                             
                             for ( idx = 0; idx <= ((int)strlen(pt1) - 1); idx++ )
                             {
