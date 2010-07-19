@@ -553,10 +553,6 @@ int     dll_count;                      /* index into array          */
     /* Set Function Key Defaults */
     {
         set_symbol("PF01", "herc help");
-        set_symbol("PF12", "herc cmdtgt herc");
-        set_symbol("PF24", "herc cmdtgt scp");
-        set_symbol("PF36", "herc cmdtgt pscp");
-        set_symbol("PF48", "herc q proc");
     }
 #endif
 

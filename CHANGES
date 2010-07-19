@@ -1,19 +1,40 @@
-17 Jul 2010 PF Key support enhancement: DELAY, IMMED and SUBST 
-            Specified as the first token of the string:
-                DELAY retrieves the string onto the command line
-                IMMED executes the string and a command
-                SUBST takes the first token (will be enhanced) and substitues it for &1
-                      in the PFKEY string
+19 Jul 2010 PF Key support enhancement.
+            DEFSYM PFnn -
 
-            For example:
-            DEFSYM PF02 "SUBST herc help &1"
+                                         .-DELAY-.
+            >>--DEFSYM--PFnn--.-------.--+-------+--.-------------.-><
+                              '-SUBST-'  '-IMMED-'  ' <-pfdata-<  '
+                                      
+            Operands
+            PFnn
+                identifies the PF Key you are defining; the operand nn is a 
+                number from 01 to 48.
+
+            SUBST
+                indicates that the PF data might contain substitution place holders.
+
+                The place holder is identified by an ampersand (&) followed by a decimal
+                number from 0 to 9. 
+
+                If two ampersands ('&&') are detected, then a single ampersand is substituted.
+
+            DELAY
+            IMMED
+                indicates when the PF is processed. If you specify DELAY, then PF data is displayed
+                on the command line when you press the PF key. The data may then be modified if 
+                necessary. Press the 'RETURN' key to process. If you specify IMMED, then PF data is
+                processed when you press the PK key.
+
+            pfdata
+                defines the command that you want processed.
+             
+              For example:
+            DEFSYM PF02 "SUBST herc help &0"
             
             Type QUERY on the command line and press PF02.
-            The string "herc help query" will be built on the command line. Press enter to execute.
+            The string "herc help query" will be built on the command line. Press RETURN to execute.
 
-            DELAY is the present default for SUBST; IMMED and DELAY will be added as options.
-
-
+            Windows has PF1 - PF48; Other PF1-20; Other implementations depend on an xterm terminal type.
 
 17 Jul 2010 Add two additional default symbols MODPATH and MODNAME representing the 
             pathname and the module name of the startup program.

@@ -2254,7 +2254,8 @@ char    buf[1024];                      /* Buffer workarea           */
             /* Process characters in the keyboard buffer */
             for (i = 0; i < kblen; )
             {
-                /* Test for PF key */
+#if defined ( _MSVC_ )
+                /* Test for PF key  Windows */
                 if ( strlen(kbbuf+i) == 4 && kbbuf[i] == '\x1b' && kbbuf[i+1] == ')' ) /* this is a PF Key */ 
                 {
                     char szPF[5];
@@ -2265,7 +2266,54 @@ char    buf[1024];                      /* Buffer workarea           */
 
                     MSGBUF( szPF, "PF%s", kbbuf+2 );
                     szPF[4] = '\0';
+
+#else   // ! _MSVC_
+                if ( !strcmp(kbbuf+i, KBD_PF1) || !strcmp(kbbuf+i, KBD_PF1_a) ||
+                     !strcmp(kbbuf+i, KBD_PF2) || !strcmp(kbbuf+i, KBD_PF2_a) ||
+                     !strcmp(kbbuf+i, KBD_PF3) || !strcmp(kbbuf+i, KBD_PF3_a) ||
+                     !strcmp(kbbuf+i, KBD_PF4) || !strcmp(kbbuf+i, KBD_PF4_a) ||
+                     !strcmp(kbbuf+i, KBD_PF5) || !strcmp(kbbuf+i, KBD_PF6  ) ||
+                     !strcmp(kbbuf+i, KBD_PF7) || !strcmp(kbbuf+i, KBD_PF8  ) ||
+                     !strcmp(kbbuf+i, KBD_PF9) || !strcmp(kbbuf+i, KBD_PF10 ) ||
+                     !strcmp(kbbuf+i, KBD_PF11)|| !strcmp(kbbuf+i, KBD_PF12 ) ||
+                     !strcmp(kbbuf+i, KBD_PF13)|| !strcmp(kbbuf+i, KBD_PF14 ) ||
+                     !strcmp(kbbuf+i, KBD_PF15)|| !strcmp(kbbuf+i, KBD_PF16 ) ||
+                     !strcmp(kbbuf+i, KBD_PF17)|| !strcmp(kbbuf+i, KBD_PF18 ) ||
+                     !strcmp(kbbuf+i, KBD_PF19)|| !strcmp(kbbuf+i, KBD_PF20 ) )
+                {
+                    char szPF[5];
+                    char msgbuf[32];
+                    char *pf;
+                    char *psz_PF;
+                    int i;
+
+                    if      ( !strcmp(kbbuf+i, KBD_PF1) || !strcmp(kbbuf+i, KBD_PF1_a) ) szPF = "PF01";
+                    else if ( !strcmp(kbbuf+i, KBD_PF2) || !strcmp(kbbuf+i, KBD_PF2_a) ) szPF = "PF02";
+                    else if ( !strcmp(kbbuf+i, KBD_PF3) || !strcmp(kbbuf+i, KBD_PF3_a) ) szPF = "PF03";
+                    else if ( !strcmp(kbbuf+i, KBD_PF4) || !strcmp(kbbuf+i, KBD_PF4_a) ) szPF = "PF04";
+                    else if ( !strcmp(kbbuf+i, KBD_PF5)                                ) szPF = "PF05";
+                    else if ( !strcmp(kbbuf+i, KBD_PF6)                                ) szPF = "PF06";
+                    else if ( !strcmp(kbbuf+i, KBD_PF7)                                ) szPF = "PF07";
+                    else if ( !strcmp(kbbuf+i, KBD_PF8)                                ) szPF = "PF08";
+                    else if ( !strcmp(kbbuf+i, KBD_PF9)                                ) szPF = "PF09";
+                    else if ( !strcmp(kbbuf+i, KBD_PF10)                               ) szPF = "PF10";
+                    else if ( !strcmp(kbbuf+i, KBD_PF11)                               ) szPF = "PF11";
+                    else if ( !strcmp(kbbuf+i, KBD_PF12)                               ) szPF = "PF12";
+                    else if ( !strcmp(kbbuf+i, KBD_PF13)                               ) szPF = "PF13";
+                    else if ( !strcmp(kbbuf+i, KBD_PF14)                               ) szPF = "PF14";
+                    else if ( !strcmp(kbbuf+i, KBD_PF15)                               ) szPF = "PF15";
+                    else if ( !strcmp(kbbuf+i, KBD_PF16)                               ) szPF = "PF16";
+                    else if ( !strcmp(kbbuf+i, KBD_PF17)                               ) szPF = "PF17";
+                    else if ( !strcmp(kbbuf+i, KBD_PF18)                               ) szPF = "PF18";
+                    else if ( !strcmp(kbbuf+i, KBD_PF19)                               ) szPF = "PF19";
+                    else if ( !strcmp(kbbuf+i, KBD_PF20)                               ) szPF = "PF20";
+#endif
+#if    defined ( OPTION_CONFIG_SYMBOLS )
                     pf = (char*)get_symbol(szPF);
+#else  // !OPTION_CONFIG_SYMBOLS 
+                    pf = NULL;
+#endif //  OPTION_CONFIG_SYMBOLS
+
                     if ( pf == NULL )
                     {
                         MSGBUF( msgbuf, "DELAY herc * %s UNDEFINED", szPF );

@@ -46,6 +46,7 @@
 #define KBD_RIGHT_ARROW2        "\x1BOC"
 #define KBD_LEFT_ARROW2         "\x1BOD"
 
+#if defined( _MSVC_ )
 #define KBD_PF1                 "\x1B"")01"
 #define KBD_PF2                 "\x1B"")02"
 #define KBD_PF3                 "\x1B"")03"
@@ -105,6 +106,37 @@
 #define KBD_PF46                "\x1B"")46"
 #define KBD_PF47                "\x1B"")47"
 #define KBD_PF48                "\x1B"")48"
+#else
+#define KBD_PF1                 "\x1B""OP"
+#define KBD_PF1_a               "\x1B""[11~"
+#define KBD_PF2                 "\x1B""OQ"
+#define KBD_PF2_a               "\x1B""[12~"
+#define KBD_PF3                 "\x1B""OR"
+#define KBD_PF3_a               "\x1B""[13~"
+#define KBD_PF4                 "\x1B""OS"
+#define KBD_PF4_a               "\x1B""[14~"
+
+#define KBD_PF5                 "\x1B""[15~"
+#define KBD_PF6                 "\x1B""[17~"
+#define KBD_PF7                 "\x1B""[18~"
+#define KBD_PF8                 "\x1B""[19~"
+
+#define KBD_PF9                 "\x1B""[20~"
+#define KBD_PF10                "\x1B""[21~"
+#define KBD_PF11                "\x1B""[23~"
+#define KBD_PF12                "\x1B""[24~"
+
+#define KBD_PF13                "\x1B""[25~"
+#define KBD_PF14                "\x1B""[26~"
+#define KBD_PF15                "\x1B""[28~"
+#define KBD_PF16                "\x1B""[29~"
+
+#define KBD_PF17                "\x1B""[31~"
+#define KBD_PF18                "\x1B""[32~"
+#define KBD_PF19                "\x1B""[33~"
+#define KBD_PF20                "\x1B""[34~"
+
+#endif
 
 // Does anyone know what the actual escape sequence that
 // gets generated actually is on Linux for "Alt+UpArrow"
