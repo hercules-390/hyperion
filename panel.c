@@ -2278,13 +2278,13 @@ char    buf[1024];                      /* Buffer workarea           */
                     for ( i = 0; i < strlen(psz_PF); i++ )
                         if ( psz_PF[i] != ' ' ) break;
 
-                    if ( !strncasecmp( psz_PF+i, "IMMED", 5 ) )
+                    if ( !strncasecmp( psz_PF+i, "IMMED ", 6 ) )
                     {
                         for ( i += 5; i < strlen(psz_PF); i++ )
                             if ( psz_PF[i] != ' ' ) break;
                         do_panel_command( psz_PF+i );
                     }
-                    else if ( !strncasecmp( psz_PF+i, "DELAY", 5 ) )
+                    else if ( !strncasecmp( psz_PF+i, "DELAY ", 6 ) )
                     {
                         for ( i += 5; i < strlen(psz_PF); i++ )
                             if ( psz_PF[i] != ' ' ) break;
@@ -2293,63 +2293,100 @@ char    buf[1024];                      /* Buffer workarea           */
                         cmdoff = cmdlen < cmdcols ? cmdlen : 0;
                         ADJ_CMDCOL();
                     }
-                    else if ( !strncasecmp( psz_PF+i, "SUBST", 5 ) )
+                    else if ( !strncasecmp( psz_PF+i, "SUBST ", 6 ) )
                     {
-                        char *cmd_tok;
+                        BOOL  isdelay = TRUE;
+                        char *cmd_tok[11] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+                        int   ncmd_tok = 0;
                         char *pt1;
-                        char *pt2;
 
                         for ( i += 5; i < strlen(psz_PF); i++ )
                             if ( psz_PF[i] != ' ' ) break;
 
-                        cmdlen = (int)strlen(cmdline);
-
-                        if ( cmdlen == 0 )
+                        if ( !strncasecmp( psz_PF+i, "IMMED ", 6 ) )
                         {
-                            strcpy( cmdline, psz_PF+i );
-                            cmdlen = (int)strlen(cmdline);
-                            cmdoff = cmdlen < cmdcols ? cmdlen : 0;
-                            ADJ_CMDCOL();
+                            isdelay = FALSE;
+                            for ( i += 5; i < strlen(psz_PF); i++ )
+                                if ( psz_PF[i] != ' ' ) break;
+
+                        }
+                        else if ( !strncasecmp( psz_PF+i, "DELAY ", 6 ) )
+                        {
+                            for ( i += 5; i < strlen(psz_PF); i++ )
+                                if ( psz_PF[i] != ' ' ) break;
+                        }
+
+                        if ( ( cmdlen = (int)strlen(cmdline) ) > 0 )
+                        {
+                            for ( cmd_tok[ncmd_tok] = strtok( cmdline, " " ); cmd_tok[ncmd_tok] != NULL; )
+                                cmd_tok[++ncmd_tok] = strtok( NULL, " " );
+                        }
+
+                        if ( cmdlen == 0 || ncmd_tok == 0 )
+                        {
+                            if ( isdelay )
+                            {
+                                strcpy( cmdline, psz_PF+i );
+                                cmdlen = (int)strlen(cmdline);
+                                cmdoff = cmdlen < cmdcols ? cmdlen : 0;
+                                ADJ_CMDCOL();
+                            }
+                            else
+                                do_panel_command( psz_PF+i );
                         }
                         else
                         {
-                            cmd_tok = strtok( cmdline, " " );
+                            int     ctok = 0;
+                            int     odx  = 0;
+                            int     idx  = 0;
+                            char    psz_cmdline[sizeof(cmdline)];
 
-                            if ( cmd_tok != NULL )
+                            memset(psz_cmdline, 0, sizeof(psz_cmdline));
+
+                            pt1 = psz_PF+i;
+                            
+                            for ( idx = 0; idx <= ((int)strlen(pt1) - 1); idx++ )
                             {
-                                pt1 = psz_PF+i;
-                                pt2 = strstr(pt1, "&1");
-                                if ( pt2 == NULL )
+                                if ( pt1[idx] != '&' )
                                 {
-                                    strcpy( cmdline, psz_PF+i );
-                                    cmdlen = (int)strlen(cmdline);
-                                    cmdoff = cmdlen < cmdcols ? cmdlen : 0;
-                                    ADJ_CMDCOL();
+                                    psz_cmdline[odx++] = pt1[idx];
                                 }
                                 else
                                 {
-                                    char *new_PF;
-                                    new_PF = calloc(strlen(psz_PF+i) + strlen(cmd_tok),1);
-                                    if (new_PF == NULL)
+                                    if ( pt1[idx+1] == '&' )
                                     {
-                                        strcpy( cmdline, psz_PF+i );
-                                        cmdlen = (int)strlen(cmdline);
-                                        cmdoff = cmdlen < cmdcols ? cmdlen : 0;
-                                        ADJ_CMDCOL();
+                                        idx++;
+                                        psz_cmdline[odx++] = pt1[idx];
                                     }
-                                    else
+                                    else if ( !isdigit( pt1[idx+1] ) )
                                     {
-                                        strncpy(new_PF, pt1, (size_t)(pt2-pt1));
-                                        strcat(new_PF,cmd_tok);
-                                        strcat(new_PF,pt2+2);
-                                        strcpy( cmdline, new_PF );
-                                        free(new_PF);
-                                        cmdlen = (int)strlen(cmdline);
-                                        cmdoff = cmdlen < cmdcols ? cmdlen : 0;
-                                        ADJ_CMDCOL();
+                                        psz_cmdline[odx++] = pt1[idx];
+                                    }
+                                    else 
+                                    {
+                                        idx++;
+                                        ctok = (int)pt1[idx] - '0';
+                                        if ( ctok < 0 || ctok > 9 ) ctok = 10;
+                                        if ( cmd_tok[ctok] != NULL && strlen( cmd_tok[ctok] ) > 0 )
+                                        {
+                                            strncpy(&psz_cmdline[odx], cmd_tok[ctok], strlen( cmd_tok[ctok] ) );
+                                            odx += (int)strlen( cmd_tok[ctok] );
+                                        }
+                                        else
+                                            psz_cmdline[odx++] = ' ';
                                     }
                                 }
                             }
+
+                            if ( isdelay )
+                            {
+                                strcpy( cmdline, psz_cmdline );
+                                cmdlen = (int)strlen(cmdline);
+                                cmdoff = cmdlen < cmdcols ? cmdlen : 0;
+                                ADJ_CMDCOL();
+                            }
+                            else
+                                do_panel_command( psz_cmdline );
                         }
                     }
                     else /* this is the same as IMMED */

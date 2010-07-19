@@ -511,8 +511,12 @@ DLL_EXPORT void list_PF_symbols(void)
         tok = symbols[i];
         if (tok)
         {
-            if (tok->var[0] == 'P' && tok->var[1] == 'F')
+            if ( (tok->var[0] == 'P' && tok->var[1] == 'F') ||
+                 (tok->var[0] == 'p' && tok->var[1] == 'f') )
             { 
+                tok->var[0] = 'P'; 
+                tok->var[1] = 'F';
+
                 j = atoi(tok->var+2);
                 if ( j > 0 && j <= 48 )
                     WRMSG(HHC02203, "I", tok->var, tok->val ? tok->val : "");
