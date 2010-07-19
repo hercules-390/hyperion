@@ -319,19 +319,25 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
                 WRMSG( HHC01602, "I",pCmdTab->statement,pCmdTab->shortdesc);
                 if(pCmdTab->longdesc)
                 {
-                  char buf[80];
-                  int i = 0; 
-                  int j;
-		  WRMSG ( HHC01603, "I", "Long description:");
-                  while(pCmdTab->longdesc[i])
-                  {
-                    for(j = 0; pCmdTab->longdesc[i] && pCmdTab->longdesc[i] != '\n'; i++, j++)
-                      buf[j] = pCmdTab->longdesc[i];
-                    buf[j] = 0;
-                    if(pCmdTab->longdesc[i] == '\n')
-                      i++;
-                    WRMSG( HHC01603, "I", buf );
-                  }
+                    char buf[257];
+                    int i = 0; 
+                    int j;
+
+		            WRMSG ( HHC01603, "I", "Long description:");
+                    while(pCmdTab->longdesc[i])
+                    {
+                        for(j = 0; j < sizeof(buf)      && 
+                                   pCmdTab->longdesc[i] && 
+                                   pCmdTab->longdesc[i] != '\n'; i++, j++)
+                        {
+                            buf[j] = pCmdTab->longdesc[i];
+                        }
+
+                        buf[j] = '\0';
+                        if(pCmdTab->longdesc[i] == '\n')
+                            i++;
+                        WRMSG( HHC01603, "I", buf );
+                    }
                 }
                 rc = 0;
             }
