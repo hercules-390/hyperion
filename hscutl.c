@@ -491,37 +491,12 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
 DLL_EXPORT void list_all_symbols(void)
 {
     SYMBOL_TOKEN* tok; int i;
-    for ( i=0; i < symbol_count; i++ )
-    {
-        tok = symbols[i];
-        if (tok)
-            WRMSG(HHC02203, "I", tok->var, tok->val ? tok->val : "");
-    }
-    return;
-}
-
-/* (called by "Q PF" panel command) */
-DLL_EXPORT void list_PF_symbols(void)
-{
-    SYMBOL_TOKEN* tok; 
-    int i,j;
 
     for ( i=0; i < symbol_count; i++ )
     {
         tok = symbols[i];
         if (tok)
-        {
-            if ( (tok->var[0] == 'P' && tok->var[1] == 'F') ||
-                 (tok->var[0] == 'p' && tok->var[1] == 'f') )
-            { 
-                tok->var[0] = 'P'; 
-                tok->var[1] = 'F';
-
-                j = atoi(tok->var+2);
-                if ( j > 0 && j <= 48 )
-                    WRMSG(HHC02203, "I", tok->var, tok->val ? tok->val : "");
-            }
-        }
+            WRMSG(HHC02199, "I", tok->var, tok->val ? tok->val : "");
     }
     return;
 }

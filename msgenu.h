@@ -1023,6 +1023,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02103 "Logger: logger thread terminating"
 #define HHC02104 "Logger: log switched to '%s'"
 
+#define HHC02199 "Symbol %-12s '%s'"
 // reserve 022xx for command processing */
 #define HHC02200 "%1d:%04X device not found"
 #define HHC02201 "Device number missing"
@@ -1605,6 +1606,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC17012 "EMSG = %s"
 
 #define HHC17100 "Timeout value for 'quit' and 'ssd' is '%d' seconds"
+#define HHC17199 "%.4s '%s'"
 
 
 

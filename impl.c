@@ -552,7 +552,7 @@ int     dll_count;                      /* index into array          */
 #if       defined( OPTION_CONFIG_SYMBOLS )
     /* Set Function Key Defaults */
     {
-        set_symbol("PF01", "herc help");
+        set_symbol("PF01", "SUBST IMMED herc help &0");
     }
 #endif
 

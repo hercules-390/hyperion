@@ -7042,7 +7042,20 @@ int defsym_cmd(int argc, char *argv[], char *cmdline)
     }
 
     /* point to symbol name */
-    sym = argv[1];
+    sym = strdup(argv[1]);
+
+    if ( sym == NULL )
+    {
+        WRMSG(HHC02219, "E", "strdup()", strerror( errno ) ); 
+        return -1;
+    }
+
+    /* store Symbol names in UC */
+    { 
+        int i;
+        for ( i = 0; sym[i] != '\0'; i++ )
+            sym[i] = toupper( sym[i] );
+    }
 
     if (argc > 3)
     {
@@ -7055,6 +7068,7 @@ int defsym_cmd(int argc, char *argv[], char *cmdline)
 
     /* define the symbol */
     set_symbol(sym,value);
+    free(sym);
     return 0;
 }
 #endif // defined(OPTION_CONFIG_SYMBOLS)
@@ -8487,7 +8501,26 @@ int query_cmd(int argc, char *argv[], char *cmdline)
 #if       defined( OPTION_CONFIG_SYMBOLS )
         else if ( CMD(argv[1],PFKEYS,2 ) )
         {
-            list_PF_symbols();
+            int     i;
+            char    szPF[5];
+            char   *pszVAL;
+
+#if defined ( _MSVC_ )
+            for ( i = 1; i <= 48; i++ )
+#else
+            for ( i = 1; i <= 20; i++ )
+#endif
+            {
+                MSGBUF( szPF, "PF%02d", i );
+                szPF[4] = '\0';
+
+                pszVAL = (char*)get_symbol(szPF);
+                
+                if ( pszVAL == NULL )
+                    pszVAL = "UNDEFINED";
+
+                WRMSG( HHC17199, "I", szPF, pszVAL );
+            }
         }
 #endif // defined( OPTION_CONFIG_SYMBOLS )
         else if ( CMD(argv[1],emsg,4) )
