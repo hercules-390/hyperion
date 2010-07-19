@@ -326,7 +326,7 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
 		            WRMSG ( HHC01603, "I", "Long description:");
                     while(pCmdTab->longdesc[i])
                     {
-                        for(j = 0; j < sizeof(buf)      && 
+                        for(j = 0; j < (int)sizeof(buf)      && 
                                    pCmdTab->longdesc[i] && 
                                    pCmdTab->longdesc[i] != '\n'; i++, j++)
                         {
