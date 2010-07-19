@@ -2307,6 +2307,7 @@ char    buf[1024];                      /* Buffer workarea           */
                     else if ( !strcmp(kbbuf+i, KBD_PF18)                               ) szPF = "PF18";
                     else if ( !strcmp(kbbuf+i, KBD_PF19)                               ) szPF = "PF19";
                     else if ( !strcmp(kbbuf+i, KBD_PF20)                               ) szPF = "PF20";
+                    else szPF = NULL;
 #endif
 #if    defined ( OPTION_CONFIG_SYMBOLS )
                     pf = (char*)get_symbol(szPF);
@@ -2348,7 +2349,7 @@ char    buf[1024];                      /* Buffer workarea           */
                         int   ncmd_tok = 0;
                         char *pt1;
 
-                        for ( j += 5; j < strlen(psz_PF); j++ )
+                        for ( j += 5; j < (int)strlen(psz_PF); j++ )
                             if ( psz_PF[j] != ' ' ) break;
 
                         if ( !strncasecmp( psz_PF+j, "IMMED ", 6 ) )
