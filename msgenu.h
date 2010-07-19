@@ -356,6 +356,8 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00440 "%1d:%04X CKD file '%s': updating cyl %d head %d record %d kl %d dl %d"
 #define HHC00441 "%1d:%04X CKD file '%s': ipdating cyl %d head %d record %d dl %d"
 #define HHC00442 "%1d:%04X CKD file '%s': set file mask %02X"
+#define HHC00443 "%1d:%04X Error: wrong recordheader: cc hh r=%d %d %d, should be:cc hh r=%d %d %d"
+
 /* dasdutil.c */
 #define HHC00445 "%1d:%04X CKD file '%s': updating cyl %d head %d"
 #define HHC00446 "%1d:%04X CKD file '%s': write track error: stat %2.2X"

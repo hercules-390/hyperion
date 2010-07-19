@@ -4613,14 +4613,14 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 #if 0
                 if (memcmp (&rechdr, cchhr, 4) != 0)
                 {
-                    logmsg ("HHCxxxxxE %1d:%04X Error: wrong recordheader: cc hh r=%d %d %d, should be:cc hh r=%d %d %d", 
-                             SSID_TO_LCSS(dev->ssid), dev->devnum, 
-                             (rechdr.cyl[0] << 8) | rechdr.cyl[1],
-                             (rechdr.head[0] << 8) | rechdr.head[1],
-                             rechdr.rec,
-                             (cchhr[0] << 8) | cchhr[1],
-                             (cchhr[2] << 8) | cchhr[3],
-                             cchhr[4]);
+                    WRMSG( HHC00443, "E", 
+                           SSID_TO_LCSS(dev->ssid), dev->devnum, 
+                           (rechdr.cyl[0] << 8) | rechdr.cyl[1],
+                           (rechdr.head[0] << 8) | rechdr.head[1],
+                           rechdr.rec,
+                           (cchhr[0] << 8) | cchhr[1],
+                           (cchhr[2] << 8) | cchhr[3],
+                           cchhr[4]);
                     break;
                 }
 #endif
