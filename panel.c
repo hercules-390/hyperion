@@ -1858,6 +1858,7 @@ int     prvcpupct = 0;                  /* Previous cpu percentage   */
 #if defined(OPTION_SHARED_DEVICES)
 U32     prvscount = 0;                  /* Previous shrdcount        */
 #endif // defined(OPTION_SHARED_DEVICES)
+int     prvpcpu = 0;                    /* Previous pcpu             */
 char    readbuf[MSG_SIZE];              /* Message read buffer       */
 int     readoff = 0;                    /* Number of bytes in readbuf*/
 BYTE    c;                              /* Character work area       */
@@ -3094,6 +3095,11 @@ FinishShutdown:
                 cur_cons_col = saved_cons_col;
             } /* end if(redraw_cmd) */
 
+	    if (sysblk.pcpu != prvpcpu)
+            {
+                redraw_status = 1;
+                prvpcpu = sysblk.pcpu;
+            }
             if (redraw_status && !npquiet)
             {
                 char instcnt[32];
@@ -3210,7 +3216,7 @@ FinishShutdown:
                 }
                 buf[cons_cols] = '\0';
                 set_pos (cons_rows, 1);
-                set_color (COLOR_LIGHT_YELLOW, COLOR_RED);
+                set_color (COLOR_WHITE, COLOR_BLUE);
                 draw_text (buf);
 
                 /* restore cursor location */
