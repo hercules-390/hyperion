@@ -3410,15 +3410,25 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
 /*-------------------------------------------------------------------*/
 static TAMDIR* findtamdir( int rej, int minlen, const char* pszDir )
 {
-    TAMDIR *pTAMDIR = sysblk.tamdir;    /* always search entire list */
+    char    szDIR[MAX_PATH + 1];
+    char    szTAMDIR[MAX_PATH + 1];
+    TAMDIR *pTAMDIR;
+
+    hostpath(szDIR, pszDir, sizeof(szDIR));
+
+    pTAMDIR = sysblk.tamdir;    /* always search entire list */
+
     do
+    {
+        hostpath(szTAMDIR, pTAMDIR->dir, sizeof(szTAMDIR));
         if (1
             && pTAMDIR->rej == rej
             && pTAMDIR->len > minlen
-            && strnfilenamecmp( pszDir, pTAMDIR->dir, pTAMDIR->len ) == 0
+            && strnfilenamecmp( szDIR, szTAMDIR, pTAMDIR->len ) == 0
         )
             return pTAMDIR;
-    while ((pTAMDIR = pTAMDIR->next) != NULL);
+    }
+        while ((pTAMDIR = pTAMDIR->next) != NULL);
     return NULL;
 }
 #endif // defined( OPTION_TAPE_AUTOMOUNT )
