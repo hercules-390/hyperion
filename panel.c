@@ -2371,19 +2371,6 @@ char    buf[1024];                      /* Buffer workarea           */
                                 cmd_tok[++ncmd_tok] = strtok( NULL, " " );
                         }
 
-                        if ( cmdlen == 0 || ncmd_tok == 0 )
-                        {
-                            if ( isdelay )
-                            {
-                                strcpy( cmdline, psz_PF+j );
-                                cmdlen = (int)strlen(cmdline);
-                                cmdoff = cmdlen < cmdcols ? cmdlen : 0;
-                                ADJ_CMDCOL();
-                            }
-                            else
-                                do_panel_command( psz_PF+j );
-                        }
-                        else
                         {
                             int     ctok = 0;
                             int     odx  = 0;
