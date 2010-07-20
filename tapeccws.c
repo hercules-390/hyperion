@@ -1636,7 +1636,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
                     _HHC00205E( resolve_in, "unresolvable path" );
 
                 /* Switch to fully resolved path */
-                strlcpy( newfile, resolve_out, sizeof(newfile) );
+                hostpath( newfile, resolve_out, sizeof(newfile) );
             }
 
             /* Verify file is in an allowable directory... */
