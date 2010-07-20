@@ -313,7 +313,7 @@ COMMAND("shcmdopt",  CONFIG,        SYSCMDALL,          shcmdopt_cmd,
   "Set diag8 sh option", 
     NULL)
 
-COMMAND("legacysenseid",CONFIG,     SYSCMDALL,          lsid_cmd,    
+CMDABBR("legacysenseid",9,CONFIG,   SYSCMDALL,          lsid_cmd,    
   "set legacysenseid setting", 
     NULL)
 
@@ -519,7 +519,7 @@ COMMAND("set",      PANEL+CONFIG,   SYSCMDALL,          set_cmd,
     "    timestamp  same as 'on' with timestamp added\n"
     "set quitmout n    Set quit timeout value (2 - 60)\n" )
 
-COMMAND("mounted_tape_reinit", PANEL+CONFIG, SYSCMDALL-SYSOPER, mnttapri_cmd,  
+CMDABBR("mounted_tape_reinit",9, PANEL+CONFIG, SYSCMDALL-SYSOPER, mnttapri_cmd,  
   "Control tape initilisation", 
     NULL)
 
