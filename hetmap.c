@@ -73,7 +73,7 @@ typedef unsigned char                   Boolean;
 #ifdef max_bytes_dsply
 #undef max_bytes_dsply
 #endif
-#define max_bytes_dsply 1024
+#define max_bytes_dsply 65536
 /*      ^------- maximum number of bytes from prtbuf to convert anything > 4
  *
  */
@@ -583,7 +583,7 @@ main( int argc, char *argv[] )
     if ( i_faketape )
         fet_close( &fetb );
     else
-        fet_close( &fetb );
+        het_close( &hetb );
 
     return 0;
 }
