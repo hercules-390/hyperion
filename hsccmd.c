@@ -4699,7 +4699,7 @@ int ostailor_cmd(int argc, char *argv[], char *cmdline)
         if (sysblk.pgminttr == OS_OPENSOLARIS ) sostailor = "OpenSolaris";
         if (sysblk.pgminttr == 0xFFFFFFFFFFFFFFFFULL) sostailor = "NULL";
         if (sysblk.pgminttr == 0                    ) sostailor = "QUIET";
-        WRMSG(HHC02204, "OSTAILOR",sostailor);
+        WRMSG(HHC02204, "I", "OSTAILOR",sostailor);
         return 0;
     }
     if (strcasecmp (argv[1], "OS/390") == 0)
