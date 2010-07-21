@@ -1265,7 +1265,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   struct ec ec;                        /* Expand cache                        */
   int i;
   U16 is;                              /* Index symbol                        */
-  U16 iss[8];                          /* Index symbols                       */
+  U16 iss[8] = { 0, 0, 0, 0, 0, 0, 0, 0 }; /* Index symbols                   */
   GREG vaddr;                          /* Virtual address                     */
 
   /* Initialize values */

@@ -7519,9 +7519,9 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
          regs->tlb.common[i],regs->tlb.protect[i],
          (regs->tlb.acc[i] & ACC_READ) != 0,(regs->tlb.acc[i] & ACC_WRITE) != 0,
          regs->tlb.skey[i],
-         MAINADDR(regs->tlb.main[i],
+         (unsigned int)(MAINADDR(regs->tlb.main[i],
                   ((regs->tlb.TLB_VADDR_G(i) & pagemask) | (unsigned int)(i << shift)))
-                  - regs->mainstor);
+                  - regs->mainstor));
         matches += ((regs->tlb.TLB_VADDR(i) & bytemask) == regs->tlbID);
        WRMSG(HHC02284, "I", buf);
     }
@@ -7550,9 +7550,9 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
              regs->tlb.common[i],regs->tlb.protect[i],
              (regs->tlb.acc[i] & ACC_READ) != 0,(regs->tlb.acc[i] & ACC_WRITE) != 0,
              regs->tlb.skey[i],
-             MAINADDR(regs->tlb.main[i],
+             (unsigned int) (MAINADDR(regs->tlb.main[i],
                      ((regs->tlb.TLB_VADDR_G(i) & pagemask) | (unsigned int)(i << shift)))
-                    - regs->mainstor);
+                    - regs->mainstor));
             matches += ((regs->tlb.TLB_VADDR(i) & bytemask) == regs->tlbID);
            WRMSG(HHC02284, "I", buf);
         }

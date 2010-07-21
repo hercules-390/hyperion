@@ -346,7 +346,7 @@ U64 s;
     }
     else
         s = 0;
-    PTTRACE ("lock after", mutex, s, loc, result);
+    PTTRACE ("lock after", mutex, (void *) s, loc, result);
     return result;
 }
 

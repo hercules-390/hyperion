@@ -4930,7 +4930,7 @@ int     pgm_check;
 DEF_INST(squareroot_float_long_reg)
 {
 int     r1, r2;                         /* Values of R fields        */
-LONG_FLOAT sq_fl;
+LONG_FLOAT sq_fl = { 0, 0, 0 };
 LONG_FLOAT fl;
 
     RRE(inst, regs, r1, r2);
@@ -6925,7 +6925,7 @@ DEF_INST(squareroot_float_long)
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-LONG_FLOAT sq_fl;
+LONG_FLOAT sq_fl = { 0, 0, 0 };
 LONG_FLOAT fl;
 
     RXE(inst, regs, r1, b2, effective_addr2);
