@@ -42,20 +42,20 @@
 /* int    rc; to contain final size       */
 /******************************************/
 
-#define  BFR_VSNPRINTF()                  \
-    bfr=malloc(siz);                      \
-    rc=-1;                                \
-    while(bfr&&rc<0)                      \
-    {                                     \
-        va_start(vl,msg);                 \
-        rc=vsnprintf(bfr,siz,msg,vl);     \
-        va_end(vl);                       \
-        if(rc>=0 && rc<siz)               \
-            break;                        \
-        rc=-1;                            \
-        siz+=BFR_CHUNKSIZE;               \
-        bfr=realloc(bfr,siz);             \
-    }
+#define  BFR_VSNPRINTF()                      \
+        bfr=malloc(siz);                      \
+        rc=-1;                                \
+        while(bfr&&rc<0)                      \
+        {                                     \
+            va_start(vl,msg);                 \
+            rc=vsnprintf(bfr,siz,msg,vl);     \
+            va_end(vl);                       \
+            if(rc>=0 && rc<siz)               \
+                break;                        \
+            rc=-1;                            \
+            siz+=BFR_CHUNKSIZE;               \
+            bfr=realloc(bfr,siz);             \
+        }
 
 static LOCK log_route_lock;
 
@@ -152,9 +152,9 @@ DLL_EXPORT void log_close(void)
 
 DLL_EXPORT void writemsg(const char *file, int line, const char* function, int lvl, char *color, char *msg, ...)
 {
-    char *bfr=NULL;
-    int rc;
-    int siz=1024;
+    char   *bfr     =   NULL;
+    int     rc      =   1;
+    int     siz     =   1024;
     va_list vl;
 
     obtain_lock(&sysblk.msglock);
@@ -192,6 +192,7 @@ DLL_EXPORT void writemsg(const char *file, int line, const char* function, int l
             BFR_VSNPRINTF();
             break;
         case 1: // debug
+
 #if defined( OPTION_MSGCLR )
             if (strlen(color) > 0 && !sysblk.shutdown && sysblk.panel_init)
                 logmsg("%s%-10.10s %4d ", color, file, line);
@@ -206,7 +207,10 @@ DLL_EXPORT void writemsg(const char *file, int line, const char* function, int l
 
     if(bfr)
     {
-        log_write(0,bfr); 
+        if ( !strncmp(bfr, "HHC", 3) && strlen(bfr) > 10 )
+            log_write( 0, ( sysblk.emsg & EMSG_TEXT ) ? &bfr[10] : bfr );
+        else
+            log_write( 0, bfr );
         free(bfr);
     }
     if(!lvl && (msg[8] == 'S' || msg[8] == 'E' || msg[8] == 'W'))
@@ -230,17 +234,21 @@ DLL_EXPORT void writemsg(const char *file, int line, const char* function, int l
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void logmsg(char *msg,...)
 {
-    char *bfr=NULL;
-    int rc;
-    int siz=1024;
+    char   *bfr =   NULL;
+    int     rc;
+    int     siz =   1024;
     va_list vl;
+
 #ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  
 #endif
     BFR_VSNPRINTF();
     if ( bfr )
     {
-        log_write(0,bfr);
+        if ( !strncmp(bfr, "HHC", 3) && strlen(bfr) > 10 )
+            log_write( 0, ( sysblk.emsg & EMSG_TEXT ) ? &bfr[10] : bfr );
+        else
+            log_write( 0, bfr );
     }
 #ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  
@@ -259,6 +267,7 @@ DLL_EXPORT void logmsg(char *msg,...)
 DLL_EXPORT void logmsgp(char *msg,...)
 {
     char *bfr=NULL;
+    char *ptr;
     int rc;
     int siz=1024;
     va_list vl;
@@ -267,7 +276,12 @@ DLL_EXPORT void logmsgp(char *msg,...)
   #endif
     BFR_VSNPRINTF();
     if(bfr)
-        log_write(1,bfr); 
+    {
+        if ( !strncmp(bfr, "HHC", 3) && strlen(bfr) > 10 )
+            log_write( 1, ( sysblk.emsg & EMSG_TEXT ) ? &bfr[10] : bfr );
+        else
+            log_write( 1, bfr );
+    }
   #ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  
   #endif
@@ -283,6 +297,7 @@ DLL_EXPORT void logmsgp(char *msg,...)
 DLL_EXPORT void logmsgb(char *msg,...)
 {
     char *bfr=NULL;
+    char *ptr;
     int rc;
     int siz=1024;
     va_list vl;
@@ -291,7 +306,12 @@ DLL_EXPORT void logmsgb(char *msg,...)
   #endif
     BFR_VSNPRINTF();
     if(bfr)
-        log_write(2,bfr); 
+    {
+        if ( !strncmp(bfr, "HHC", 3) && strlen(bfr) > 10 )
+            log_write( 2, ( sysblk.emsg & EMSG_TEXT ) ? &bfr[10] : bfr );
+        else
+            log_write( 2, bfr );
+    }
   #ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  
   #endif
@@ -307,9 +327,9 @@ DLL_EXPORT void logmsgb(char *msg,...)
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void logdevtr(DEVBLK *dev,char *msg,...)
 {
-    char *bfr=NULL;
-    int rc;
-    int siz=1024;
+    char    *bfr=NULL;
+    int     rc;
+    int     siz=1024;
     va_list vl;
   #ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  
@@ -318,7 +338,12 @@ DLL_EXPORT void logdevtr(DEVBLK *dev,char *msg,...)
     { 
         BFR_VSNPRINTF();
         if(bfr)
-            log_write(2,bfr); 
+        {
+            if ( !strncmp(bfr, "HHC", 3) && strlen(bfr) > 10 )
+                log_write( 2, ( sysblk.emsg & EMSG_TEXT ) ? &bfr[10] : bfr );
+            else
+                log_write( 2, bfr );
+        }
     } 
   #ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  
@@ -332,13 +357,38 @@ DLL_EXPORT void logdevtr(DEVBLK *dev,char *msg,...)
 /* panel : 0 - No, 1 - Only, 2 - Also */
 DLL_EXPORT void log_write(int panel,char *msg)
 {
-
 /* (log_write function proper starts here) */
-    int slot;
+    int     slot;
+    char   *ptr;
+    char   *pszMSG;
+
+    ptr = malloc( (strlen(msg) + 1 + 20) );
+    if ( ptr == NULL ) 
+        pszMSG = msg;
+    else 
+    {   
+        if ( sysblk.emsg & EMSG_TS && strncasecmp( msg, "<pnl", 4 ) )
+        {
+            struct timeval  now;
+            time_t          tt;
+            char            hhmmss[10];
+
+            gettimeofday( &now, NULL ); tt = now.tv_sec;
+            strlcpy( hhmmss, ctime(&tt)+11, sizeof(hhmmss) );
+        
+            strcpy(ptr,hhmmss);
+            strcat(ptr,msg);
+            pszMSG = ptr;
+        }
+        else
+            pszMSG = msg;
+    }
+
     log_route_init();
     if(panel==1)
     {
-        write_pipe( logger_syslogfd[LOG_WRITE], msg, strlen(msg) );
+        write_pipe( logger_syslogfd[LOG_WRITE], pszMSG, strlen(pszMSG) );
+        if ( ptr != NULL ) free(ptr);
         return;
     }
     obtain_lock(&log_route_lock);
@@ -346,10 +396,16 @@ DLL_EXPORT void log_write(int panel,char *msg)
     release_lock(&log_route_lock);
     if(slot<0 || panel>0)
     {
-        write_pipe( logger_syslogfd[LOG_WRITE], msg, strlen(msg) );
+        write_pipe( logger_syslogfd[LOG_WRITE], pszMSG, strlen(pszMSG) );
         if(slot<0)
+        {
+            if ( ptr != NULL ) free(ptr);
             return;
+        }
     }
+
+    if ( ptr != NULL ) free(ptr);
+
     log_routes[slot].w(log_routes[slot].u,msg);
     return;
 }
