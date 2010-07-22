@@ -713,7 +713,12 @@ struct SYSBLK {
         BYTE    emsg;                   /* error message display ctrl*/
 #define EMSG_ON     0x01
 #define EMSG_TEXT   0x02
-#define EMSG_TS     0x04                
+#define EMSG_TS     0x04
+#define EMSG_GUEST  0x08
+#define EMSG_INFO   0x10
+#define EMSG_WARN   0x20
+#define EMSG_ERROR  0x40
+#define EMSG_SEVERE 0x80
 
 #if       defined( OPTION_SHUTDOWN_CONFIRMATION )
 #define QUITTIME_PERIOD     10

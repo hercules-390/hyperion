@@ -454,6 +454,47 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
     return 0;   /* (make compiler happy) */
 }
 
+#if       defined( OPTION_SHUTDOWN_CONFIRMATION )
+/*-------------------------------------------------------------------*/
+/* quitmout command                                                  */
+/*-------------------------------------------------------------------*/
+int quitmout_cmd(int argc, char *argv[],char *cmdline)
+{     
+    UNREFERENCED(cmdline);
+
+    if ( argc == 2)
+    {
+        int tm = 0; BYTE c;
+
+        if (1
+            && sscanf(argv[1], "%d%c", &tm, &c) == 1
+            && ( 
+                 ( ( sysblk.sysgroup & (SYSGROUP_ALL - SYSGROUP_SYSOPER - SYSGROUP_SYSNONE) ) && tm >= 0 ) 
+                || 
+                 ( ( sysblk.sysgroup & SYSGROUP_SYSOPER ) && tm >= 2 ) 
+               )
+            && tm <= 60
+           )
+        {
+            sysblk.quitmout = tm;
+        }
+        else 
+        {
+            WRMSG( HHC17000, "E" );
+            return -1;
+        }
+    }
+    else if (argc < 1 || argc > 2)
+    {
+        WRMSG( HHC17000, "E" );
+        return -1;
+    }
+     
+    WRMSG( HHC17100, "I", sysblk.quitmout );
+   
+    return 0;
+}
+#endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
 
 /*-------------------------------------------------------------------*/
 /* history command                                                   */
@@ -8302,342 +8343,332 @@ char    pathname[MAX_PATH];             /* (work)                    */
 }
 
 /*-------------------------------------------------------------------*/
-/* query command - query ports, dasd, port name and more             */
+/* emsg command                                                      */
 /*-------------------------------------------------------------------*/
-int query_cmd(int argc, char *argv[], char *cmdline)
-{
+int emsg_cmd(int argc, char *argv[], char *cmdline)
+{ 
     UNREFERENCED(cmdline);
 
-    if (argc < 2)
+    if ( argc == 2 )
     {
-        WRMSG( HHC17000, "E" );
-        return -1;
-    }
-
-    if ( argc >= 2 )
-    {
-        if ( CMD(argv[1],ports,4) )
+        if ( CMD(argv[1],on,2) )
         {
-            char buf[64];
-
-            if (argc != 2)
-            {
-                WRMSG( HHC17000, "E" );
-                return -1;
-            }
-            if ( sysblk.httpport > 0 )
-            {
-                MSGBUF( buf, "on port %-5d", sysblk.httpport);
-                WRMSG( HHC17001, "I", "http", buf);
-            }
-            else
-            {   
-                WRMSG( HHC17002, "I", "http");
-            }
-            if ( sysblk.shrdport > 0 )
-            {
-                MSGBUF( buf, "on port %-5d", sysblk.shrdport);
-                WRMSG( HHC17001, "I", "shared_dasd", buf);
-            }
-            else
-            {   
-                WRMSG( HHC17002, "I", "shared_dasd");
-            }
-            if (strchr(sysblk.cnslport, ':') == NULL)
-            {
-                MSGBUF( buf, "on port %-5s", sysblk.cnslport);
-            }
-            else
-            {   
-                char *serv;
-                char *host = NULL;
-                char *port = strdup(sysblk.cnslport);
-
-                if ((serv = strchr(port,':')))
-                {
-                    *serv++ = '\0';
-                    if (*port)
-                        host = port;
-                }
-                MSGBUF( buf, "for host %s on port %-5s", host, serv);
-                free( port );
-            }
-            WRMSG( HHC17001, "I", "console", buf);
-            return 0;
+            sysblk.emsg |= EMSG_ON;
+            sysblk.emsg &= ~EMSG_TEXT;
+            sysblk.emsg &= ~EMSG_TS;
         }
-        else if ( CMD(argv[1],storage,4) )
-        {   
-            char buf[64];
-            U64  xpndsize = (U64)(sysblk.xpndsize) << 12;
-            
-            if ( sysblk.mainsize >= ONE_EXABYTE )
-            {
-                MSGBUF( buf, "%" I64_FMT "d E", sysblk.mainsize >> 60 );
-            }
-            else if ( sysblk.mainsize >= ONE_PETABYTE )
-            {
-                MSGBUF( buf, "%" I64_FMT "d P", sysblk.mainsize >> 50 );
-            }
-            else if ( sysblk.mainsize >= ONE_TERABYTE )
-            {
-                MSGBUF( buf, "%" I64_FMT "d T", sysblk.mainsize >> 40 );
-            }
-            else if ( sysblk.mainsize >= ONE_GIGABYTE )
-            {
-                MSGBUF( buf, "%3.3" I64_FMT "d G", sysblk.mainsize >> 30 );
-            }
-            else 
-            {
-                MSGBUF( buf, "%3.3" I64_FMT "d M", sysblk.mainsize >> 20 );
-            }
-
-            WRMSG( HHC17003, "I", "MAIN", buf, "main" );
-
-            if ( xpndsize >= ONE_EXABYTE )
-            {
-                MSGBUF( buf, "%" I64_FMT "d E", xpndsize >> 60 );
-            }
-            else if ( xpndsize >= ONE_PETABYTE )
-            {
-                MSGBUF( buf, "%" I64_FMT "d P", xpndsize >> 50 );
-            }
-            else if ( xpndsize >= ONE_TERABYTE )
-            {
-                MSGBUF( buf, "%" I64_FMT "d T", xpndsize >> 40 );
-            }
-            else if ( xpndsize >= ONE_GIGABYTE )
-            {
-                MSGBUF( buf, "%3.3" I64_FMT "d G", xpndsize >> 30 );
-            }
-            else 
-            {
-                MSGBUF( buf, "%3.3" I64_FMT "d M", xpndsize >> 20 );
-            }
-            WRMSG( HHC17003, "I", "EXPANDED", buf, "xpnd" );
-        }
-        else if ( CMD(argv[1],cpuid,4) )
+        else if ( CMD(argv[1],off,3) )
         {
-            WRMSG( HHC17004, "I", sysblk.cpuid );
-            WRMSG( HHC17005, "I", ((sysblk.cpuid & 0x00000000FFFF0000ULL) >> 16),
-                                  str_model(), str_manufacturer(), str_plant(),
-                                  ((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32) );
+            sysblk.emsg &= ~EMSG_ON;
+            sysblk.emsg &= ~EMSG_TEXT;
+            sysblk.emsg &= ~EMSG_TS;
         }
-        else if ( CMD(argv[1],processors,4) )
+        else if ( CMD(argv[1],text,4) )
         {
-            
-#ifdef    _FEATURE_VECTOR_FACILITY
-            WRMSG( HHC17007, "I",   sysblk.numcpu, sysblk.numvec, sysblk.maxcpu );
-#else  /*!_FEATURE_VECTOR_FACILITY*/
-            WRMSG( HHC17007, "I",   sysblk.numcpu,             0, sysblk.maxcpu );
-#endif /* _FEATURE_VECTOR_FACILITY*/
-                                    
-            {
-                int i, j, k;
-                int cpupct = 0;
-                U32 mipsrate = 0;
-                
-                for ( i = j = 0; i < MAX_CPU; i++ )
-                {
-                    if ( IS_CPU_ONLINE(i) && sysblk.regs[i]->cpustate == CPUSTATE_STARTED )
-                    {
-                        j++;
-                        cpupct += sysblk.regs[i]->cpupct;
-                    }
-                }
-
-                WRMSG( HHC17008, "I", ( j == 0 ? 0 : ( cpupct / j ) ), j, 
-                                      sysblk.mipsrate / 1000000, ( sysblk.mipsrate % 1000000 ) / 10000, 
-                                      sysblk.siosrate );
-
-#if defined(OPTION_CAPPING)
-
-                if ( sysblk.capvalue > 0 )
-                {
-                    cpupct = 0;
-                    for ( i = k = 0; i < MAX_CPU; i++ )
-                    {
-                        if ( IS_CPU_ONLINE(i) &&
-                            sysblk.ptyp[i] == SCCB_PTYP_CP &&
-                            sysblk.regs[i]->cpustate == CPUSTATE_STARTED )
-                        {
-                            k++;
-                            cpupct += sysblk.regs[i]->cpupct;
-                            mipsrate += sysblk.regs[i]->mipsrate;
-                        }
-                    }
-                
-                    if ( k > 0 && k != j )
-                        WRMSG( HHC17011, "I", ( k == 0 ? 0 : ( cpupct / k ) ), k, 
-                                            mipsrate / 1000000, 
-                                          ( mipsrate % 1000000 ) / 10000 );
-                }
-#endif
-                for ( i = 0; i < MAX_CPU; i++ )
-                {
-                    if ( IS_CPU_ONLINE(i) )
-                    {
-                        WRMSG( HHC17009, "I", PTYPSTR(i), i, 
-                                ( sysblk.regs[i]->cpustate == CPUSTATE_STARTED ) ? '-' : 
-                                  ( sysblk.regs[i]->cpustate == CPUSTATE_STOPPING ) ? ':' : '*', 
-                                sysblk.regs[i]->cpupct,
-                                sysblk.regs[i]->mipsrate / 1000000, ( sysblk.regs[i]->mipsrate % 1000000 ) / 10000,
-                                sysblk.regs[i]->siosrate );
-                    }
-                }
-
-                WRMSG( HHC17010, "I" );
-            }
+            sysblk.emsg |= EMSG_TEXT + EMSG_ON;
+            sysblk.emsg &= ~EMSG_TS;
         }
-        else if ( CMD(argv[1],lpar,4) )
+        else if ( CMD(argv[1],timestamp,4) )
         {
-            WRMSG( HHC17006, "I", sysblk.lparnum, str_lparname() );
+            sysblk.emsg |= EMSG_TS + EMSG_ON;
+            sysblk.emsg &= ~EMSG_TEXT;
         }
-#if       defined( OPTION_SHUTDOWN_CONFIRMATION )
-        else if ( CMD(argv[1],quitmout,4 ) )
-        {
-            WRMSG( HHC17100, "I", sysblk.quitmout );
-        }
-#endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
-#if       defined( OPTION_CONFIG_SYMBOLS )
-        else if ( CMD(argv[1],PFKEYS,2 ) )
-        {
-            int     i;
-            char    szPF[5];
-            char   *pszVAL;
-
-#if defined ( _MSVC_ )
-            for ( i = 1; i <= 48; i++ )
-#else
-            for ( i = 1; i <= 20; i++ )
-#endif
-            {
-                MSGBUF( szPF, "PF%02d", i );
-                szPF[4] = '\0';
-
-                pszVAL = (char*)get_symbol(szPF);
-                
-                if ( pszVAL == NULL )
-                    pszVAL = "UNDEFINED";
-
-                WRMSG( HHC17199, "I", szPF, pszVAL );
-            }
-        }
-#endif // defined( OPTION_CONFIG_SYMBOLS )
-        else if ( CMD(argv[1],emsg,4) )
-        {
-            if ( sysblk.emsg & EMSG_TS )
-                WRMSG( HHC17012, "I", "timestamp" );
-            else if ( sysblk.emsg & EMSG_TEXT )
-                WRMSG( HHC17012, "I", "text" );
-            else if ( sysblk.emsg & EMSG_ON )
-                WRMSG( HHC17012, "I", "on" );
-            else 
-                WRMSG( HHC17012, "I", "off" );
-        }
-        else
+        else 
         {
             WRMSG( HHC17000, "E" );
             return -1;
         }
     }
+    else if( argc < 1 || argc > 2 )
+    {
+        WRMSG( HHC17000, "E" );
+        return -1;
+    }
+
+    if ( sysblk.emsg & EMSG_TS )
+        WRMSG( HHC17012, "I", "timestamp" );
+    else if ( sysblk.emsg & EMSG_TEXT )
+        WRMSG( HHC17012, "I", "text" );
+    else if ( sysblk.emsg & EMSG_ON )
+        WRMSG( HHC17012, "I", "on" );
+    else 
+        WRMSG( HHC17012, "I", "off" );
 
     return 0;
 }
 /*-------------------------------------------------------------------*/
-/* set command - quit timeout value                                  */
+/* qcpuid command                                                    */
 /*-------------------------------------------------------------------*/
-int set_cmd(int argc, char *argv[], char *cmdline)
-{
-    UNREFERENCED(argv);
+int qcpuid_cmd(int argc, char *argv[], char *cmdline)
+{ 
     UNREFERENCED(cmdline);
-    if (argc < 2)
+    UNREFERENCED(argv);
+
+    if (argc != 1)
     {
         WRMSG( HHC17000, "E" );
         return -1;
     }
 
-    if ( argc > 2 )
-    {
-        if ( CMD(argv[1],emsg,4) )
-        {
-            if ( argc == 3 )
-            {
-                if ( CMD(argv[2],on,2) )
-                {
-                    sysblk.emsg |= EMSG_ON;
-                    sysblk.emsg &= ~EMSG_TEXT;
-                    sysblk.emsg &= ~EMSG_TS;
-                }
-                else if ( CMD(argv[2],off,3) )
-                {
-                    sysblk.emsg &= ~EMSG_ON;
-                    sysblk.emsg &= ~EMSG_TEXT;
-                    sysblk.emsg &= ~EMSG_TS;
-                }
-                else if ( CMD(argv[2],text,4) )
-                {
-                    sysblk.emsg |= EMSG_TEXT + EMSG_ON;
-                    sysblk.emsg &= ~EMSG_TS;
-                }
-                else if ( CMD(argv[2],timestamp,4) )
-                {
-                    sysblk.emsg |= EMSG_TS + EMSG_ON;
-                    sysblk.emsg &= ~EMSG_TEXT;
-                }
-                else 
-                {
-                    WRMSG( HHC17000, "E" );
-                    return -1;
-                }
-            }
-            else
-            {
-                WRMSG( HHC17000, "E" );
-                return -1;
-            }
-        }
-        else
-#if       defined( OPTION_SHUTDOWN_CONFIRMATION )
-        if ( CMD(argv[1],quitmout,4) )
-        {
-            if ( argc == 3)
-            {
-                int tm = 0; BYTE c;
+    WRMSG( HHC17004, "I", sysblk.cpuid );
+    WRMSG( HHC17005, "I", ((sysblk.cpuid & 0x00000000FFFF0000ULL) >> 16),
+                           str_model(), str_manufacturer(), str_plant(),
+                           ((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32) );
+    return 0;    
+}
+/*-------------------------------------------------------------------*/
+/* qlpar command                                                     */
+/*-------------------------------------------------------------------*/
+int qlpar_cmd(int argc, char *argv[], char *cmdline)
+{
 
-                if (1
-                    && sscanf(argv[2], "%d%c", &tm, &c) == 1
-                    && ( 
-                        ( ( sysblk.sysgroup & (SYSGROUP_ALL - SYSGROUP_SYSOPER - SYSGROUP_SYSNONE) ) && tm >= 0 ) 
-                        || 
-                        ( ( sysblk.sysgroup & SYSGROUP_SYSOPER ) && tm >= 2 ) 
-                       )
-                    && tm <= 60
-                   )
-                {
-                    sysblk.quitmout = tm;
-                    WRMSG( HHC17100, "I", tm );
-                    return 0;
-                }
-                else 
-                {
-                    WRMSG( HHC17000, "E" );
-                    return -1;
-                }
-            }
-            else
-            {
-                WRMSG( HHC17000, "E" );
-                return -1;
-            }
-        }
-        else
-#endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
+    UNREFERENCED(cmdline);
+    UNREFERENCED(argv);
+
+    if (argc != 1)
+    {
+        WRMSG( HHC17000, "E" );
+        return -1;
+    }
+   
+    WRMSG( HHC17006, "I", sysblk.lparnum, str_lparname() );
+    return 0;
+}
+
+#if       defined( OPTION_CONFIG_SYMBOLS )
+/*-------------------------------------------------------------------*/
+/* qpfkeys command                                                   */
+/*-------------------------------------------------------------------*/
+int qpfkeys_cmd(int argc, char *argv[], char *cmdline)
+{
+    int     i;
+    char    szPF[5];
+    char   *pszVAL;
+
+    UNREFERENCED(cmdline);
+    UNREFERENCED(argv);
+
+    if (argc != 1)
+    {
+        WRMSG( HHC17000, "E" );
+        return -1;
+    }
+#if defined ( _MSVC_ )
+    for ( i = 1; i <= 48; i++ )
+#else
+    for ( i = 1; i <= 20; i++ )
+#endif
+    {
+        MSGBUF( szPF, "PF%02d", i );
+        szPF[4] = '\0';
+
+        pszVAL = (char*)get_symbol(szPF);
+                
+        if ( pszVAL == NULL )
+            pszVAL = "UNDEFINED";
+
+        WRMSG( HHC17199, "I", szPF, pszVAL );
+    }
+
+    return 0;
+}
+#endif // defined( OPTION_CONFIG_SYMBOLS )
+
+/*-------------------------------------------------------------------*/
+/* qports command                                                    */
+/*-------------------------------------------------------------------*/
+int qports_cmd(int argc, char *argv[], char *cmdline)
+{
+    char buf[64];
+
+    UNREFERENCED(cmdline);
+    UNREFERENCED(argv);
+
+    if (argc != 1)
+    {
+        WRMSG( HHC17000, "E" );
+        return -1;
+    }
+    if ( sysblk.httpport > 0 )
+    {
+        MSGBUF( buf, "on port %-5d", sysblk.httpport);
+        WRMSG( HHC17001, "I", "http", buf);
+    }
+    else
+    {   
+        WRMSG( HHC17002, "I", "http");
+    }
+    if ( sysblk.shrdport > 0 )
+    {
+        MSGBUF( buf, "on port %-5d", sysblk.shrdport);
+        WRMSG( HHC17001, "I", "shared_dasd", buf);
+    }
+    else
+    {   
+        WRMSG( HHC17002, "I", "shared_dasd");
+    }
+    if (strchr(sysblk.cnslport, ':') == NULL)
+    {
+        MSGBUF( buf, "on port %-5s", sysblk.cnslport);
+    }
+    else
+    {   
+        char *serv;
+        char *host = NULL;
+        char *port = strdup(sysblk.cnslport);
+
+        if ((serv = strchr(port,':')))
         {
-            WRMSG( HHC17000, "E" );
-            return -1;
+            *serv++ = '\0';
+            if (*port)
+                host = port;
+        }
+        MSGBUF( buf, "for host %s on port %-5s", host, serv);
+        free( port );
+    }
+    WRMSG( HHC17001, "I", "console", buf);
+    return 0;
+}
+/*-------------------------------------------------------------------*/
+/* qproc command                                                     */
+/*-------------------------------------------------------------------*/
+int qproc_cmd(int argc, char *argv[], char *cmdline)
+{   
+    int i, j, k;
+    int cpupct = 0;
+    U32 mipsrate = 0;
+ 
+    UNREFERENCED(cmdline);
+    UNREFERENCED(argv);
+
+    if (argc != 1)
+    {
+        WRMSG( HHC17000, "E" );
+        return -1;
+    } 
+                
+#ifdef    _FEATURE_VECTOR_FACILITY
+    WRMSG( HHC17007, "I",   sysblk.numcpu, sysblk.numvec, sysblk.maxcpu );
+#else  /*!_FEATURE_VECTOR_FACILITY*/
+    WRMSG( HHC17007, "I",   sysblk.numcpu,             0, sysblk.maxcpu );
+#endif /* _FEATURE_VECTOR_FACILITY*/
+               
+    for ( i = j = 0; i < MAX_CPU; i++ )
+    {
+        if ( IS_CPU_ONLINE(i) && sysblk.regs[i]->cpustate == CPUSTATE_STARTED )
+        {
+            j++;
+            cpupct += sysblk.regs[i]->cpupct;
         }
     }
 
+    WRMSG( HHC17008, "I", ( j == 0 ? 0 : ( cpupct / j ) ), j, 
+                    sysblk.mipsrate / 1000000, ( sysblk.mipsrate % 1000000 ) / 10000, 
+                    sysblk.siosrate );
+
+#if defined(OPTION_CAPPING)
+
+    if ( sysblk.capvalue > 0 )
+    {
+        cpupct = 0;
+        for ( i = k = 0; i < MAX_CPU; i++ )
+        {
+            if ( IS_CPU_ONLINE(i) &&
+                 sysblk.ptyp[i] == SCCB_PTYP_CP &&
+                 sysblk.regs[i]->cpustate == CPUSTATE_STARTED )
+            {
+                k++;
+                cpupct += sysblk.regs[i]->cpupct;
+                mipsrate += sysblk.regs[i]->mipsrate;
+            }
+        }
+
+        if ( k > 0 && k != j )
+            WRMSG( HHC17011, "I", ( k == 0 ? 0 : ( cpupct / k ) ), k, 
+                                  mipsrate / 1000000, 
+                                ( mipsrate % 1000000 ) / 10000 );
+    }
+#endif
+    for ( i = 0; i < MAX_CPU; i++ )
+    {
+        if ( IS_CPU_ONLINE(i) )
+        {
+            WRMSG( HHC17009, "I", PTYPSTR(i), i, 
+                                ( sysblk.regs[i]->cpustate == CPUSTATE_STARTED ) ? '-' : 
+                                ( sysblk.regs[i]->cpustate == CPUSTATE_STOPPING ) ? ':' : '*', 
+                                  sysblk.regs[i]->cpupct,
+                                  sysblk.regs[i]->mipsrate / 1000000, 
+                                ( sysblk.regs[i]->mipsrate % 1000000 ) / 10000,
+                                  sysblk.regs[i]->siosrate );
+        }
+    }
+
+    WRMSG( HHC17010, "I" );
+
+    return 0;
+}
+/*-------------------------------------------------------------------*/
+/* qstor command                                                     */
+/*-------------------------------------------------------------------*/
+int qstor_cmd(int argc, char *argv[], char *cmdline)
+{
+    char buf[64];
+    U64  xpndsize = (U64)(sysblk.xpndsize) << 12;
+
+    UNREFERENCED(cmdline);
+    UNREFERENCED(argv);
+
+    if (argc != 1)
+    {
+        WRMSG( HHC17000, "E" );
+        return -1;
+    } 
+
+    if ( sysblk.mainsize >= ONE_EXABYTE )
+    {
+        MSGBUF( buf, "%" I64_FMT "d E", sysblk.mainsize >> 60 );
+    }
+    else if ( sysblk.mainsize >= ONE_PETABYTE )
+    {
+        MSGBUF( buf, "%" I64_FMT "d P", sysblk.mainsize >> 50 );
+    }
+    else if ( sysblk.mainsize >= ONE_TERABYTE )
+    {
+        MSGBUF( buf, "%" I64_FMT "d T", sysblk.mainsize >> 40 );
+    }
+    else if ( sysblk.mainsize >= ONE_GIGABYTE )
+    {
+        MSGBUF( buf, "%3.3" I64_FMT "d G", sysblk.mainsize >> 30 );
+    }
+    else 
+    {
+        MSGBUF( buf, "%3.3" I64_FMT "d M", sysblk.mainsize >> 20 );
+    }
+
+    WRMSG( HHC17003, "I", "MAIN", buf, "main" );
+
+    if ( xpndsize >= ONE_EXABYTE )
+    {
+        MSGBUF( buf, "%" I64_FMT "d E", xpndsize >> 60 );
+    }
+    else if ( xpndsize >= ONE_PETABYTE )
+    {
+        MSGBUF( buf, "%" I64_FMT "d P", xpndsize >> 50 );
+    }
+    else if ( xpndsize >= ONE_TERABYTE )
+    {
+        MSGBUF( buf, "%" I64_FMT "d T", xpndsize >> 40 );
+    }
+    else if ( xpndsize >= ONE_GIGABYTE )
+    {
+        MSGBUF( buf, "%3.3" I64_FMT "d G", xpndsize >> 30 );
+    }
+    else 
+    {
+        MSGBUF( buf, "%3.3" I64_FMT "d M", xpndsize >> 20 );
+    }
+    WRMSG( HHC17003, "I", "EXPANDED", buf, "xpnd" );
+    
     return 0;
 }
 

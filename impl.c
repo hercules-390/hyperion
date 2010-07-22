@@ -336,7 +336,7 @@ DLL_EXPORT int impl(int argc, char *argv[])
 char   *cfgfile;                        /* -> Configuration filename */
 int     fd_cfg = -1;                    /* fd for config file        */
 char    pathname[MAX_PATH];             /* work area for filenames   */
-#if FALSE
+#if defined ( OPTION_LOCK_CONFIG_FILE )
 #if !defined ( _MSVC_ )
 struct  flock  fl_cfg;                  /* file lock for conf file   */  
 #endif
@@ -553,6 +553,8 @@ int     dll_count;                      /* index into array          */
     /* Set Function Key Defaults */
     {
         set_symbol("PF01", "SUBST IMMED herc help &0");
+        set_symbol("PF11", "IMMED herc devlist TAPE");
+        set_symbol("PF10", "SUBST DELAY herc devinit &*");
     }
 #endif
 
@@ -783,7 +785,8 @@ int     dll_count;                      /* index into array          */
 
     /* attempt to get lock on config file */
     hostpath(pathname, cfgfile, sizeof(pathname));
-#if FALSE
+
+#if defined( OPTION_LOCK_CONFIG_FILE )
     if ( ( fd_cfg = open( pathname, O_RDONLY, S_IRUSR | S_IRGRP ) ) < 0 )
     {
         if ( errno == EACCES )
@@ -808,10 +811,12 @@ int     dll_count;                      /* index into array          */
     }
 
     /* File was not lock, therefore we can proceed */
-#endif
+#endif // OPTION_LOCK_CONFIG_FILE
+
     /* Build system configuration */
     build_config (cfgfile);
-#if FALSE
+
+#if defined( OPTION_LOCK_CONFIG_FILE )
     if ( ( fd_cfg = open( pathname, O_RDONLY, S_IRUSR | S_IRGRP ) ) < 0 )
     {
         WRMSG( HHC01432, "S", pathname, "open()", strerror( errno ) );
@@ -845,7 +850,7 @@ int     dll_count;                      /* index into array          */
         }
 #endif
     }
-#endif
+#endif // OPTION_LOCK_CONFIG_FILE
     /* System initialisation time */
     sysblk.todstart = hw_clock() << 8;
 
@@ -947,8 +952,10 @@ int     dll_count;                      /* index into array          */
     //  -----------------------------------------------------
     //      *** Hercules has been shutdown (PAST tense) ***
     //  -----------------------------------------------------
-    
+
+#if defined( OPTION_LOCK_CONFIG_FILE )
     close( fd_cfg );            // release config file lock
+#endif //    OPTION_LOCK_CONFIG_FILE
 
     ASSERT( sysblk.shutdown );  // (why else would we be here?!)
 
@@ -958,9 +965,6 @@ int     dll_count;                      /* index into array          */
 #ifdef _MSVC_
     SetConsoleCtrlHandler(console_ctrl_handler, FALSE);
     socket_deinit();
-#endif
-#ifdef DEBUG
-    fprintf(stdout, _("IMPL EXIT\n"));
 #endif
     fprintf(stdout, MSG(HHC01412, "I"));
     fflush(stdout);

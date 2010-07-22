@@ -71,6 +71,8 @@
                                            slashes                   */
 #undef  OPTION_SHUTDOWN_CONFIRMATION    /* Confirm quit and ssd cmds */
 
+#undef  OPTION_LOCK_CONFIG_FILE         /* Keep Configuration file 
+                                           locked during execution   */
 
 #if defined(OPTION_MSGHLD) && !defined(OPTION_MSGCLR)
   #error OPTION_MSGHLD requires OPTION_MSGCLR

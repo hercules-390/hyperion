@@ -50,6 +50,14 @@ COMMAND("msglvl",    PANEL,         SYSNONE,            msglvl_cmd,
   "alias for msglevel", 
     NULL)
 
+COMMAND("emsg",      PANEL,         SYSNONE,            emsg_cmd,
+  "Display/Set current Error Message display",
+  "Format: emsg [ on | off | text | time ]\n"
+  "  on    Normal message display\n"
+  "  off   No messages are displayed\n"
+  "  text  Text portion of message is display\n"
+  "  time  Timestamp is prefixed to message\n" )
+
 COMMAND("*",         PANEL+CONFIG,  SYSNONE,            comment_cmd,  
   "Comment", 
     NULL)
@@ -124,6 +132,14 @@ COMMAND("quit",      PANEL,         SYSNONE,            quit_cmd,
     "                        emulator.\n"
     "              force     This option will terminate hercules\n"
     "                        immediately.\n")
+
+COMMAND("quitmout",  PANEL,         SYSNONE,            quitmout_cmd,
+  "Set/Display the quit timeout value",
+  "Format: \"quitmount [n]\" Sets or displays the elasped time that\n"
+    "                        a confirming quit/ssd command must be\n"
+    "                        entered.\n"
+    "               n        This is a value between 2 and 60,\n"
+    "                        representing seconds.\n")
 #else
 COMMAND("quit",      PANEL,         SYSNONE,            quit_cmd,     
   "terminate the emulator", 
@@ -498,26 +514,31 @@ COMMAND("fcb",       PANEL,         SYSCMDALL,          fcb_cmd,
    "Reset the fcb to the standard one \n" 
    "Load a fcb image \n")
 
-CMDABBR("query",1,   PANEL,         SYSCMDALL,          query_cmd,     
-  "query command",
-    "query cpuid       Show default cpuid\n" 
-    "query emsg        Show emsg selection\n"
-    "query lpar        Show lpar number and name\n"
-    "query pfkeys      Show the current PF Key settings\n"
-    "query ports       Show ports in use\n"
-    "query processors  Show processor utilization\n"
-    "query quitmout    Show quit timeout value\n"
-    "query storage     Show mainsize, xpndsize values\n" 
-    "     *Operands may be abbreviated to 4 characters\n" )
+CMDABBR("qcpuid",5,  PANEL,         SYSCMDALL,          qcpuid_cmd,
+  "query cpuid",
+  "Display default cpuid\n")
 
-COMMAND("set",      PANEL+CONFIG,   SYSCMDALL,          set_cmd,     
-  "set command",
-    "set emsg [on | off | text | timestamp ]\n"
-    "    on         normal message display\n"
-    "    off        scp messages only are displayed\n"
-    "    text       text of message is displayed\n"
-    "    timestamp  same as 'on' with timestamp added\n"
-    "set quitmout n    Set quit timeout value (2 - 60)\n" )
+CMDABBR("qlpar",5,   PANEL,         SYSCMDALL,          qlpar_cmd,
+  "query ports",
+  "Display TCP/IP ports in use\n")
+
+#if        defined( OPTION_CONFIG_SYMBOLS )
+CMDABBR("qpfkeys",3, PANEL,         SYSCMDALL,          qpfkeys_cmd,
+  "query pf keys",
+  "Display the current PF Key settings\n")
+#endif  // defined( OPTION_CONFIG_SYMBOLS )
+
+CMDABBR("qports",5,  PANEL,         SYSCMDALL,          qports_cmd,
+  "query ports",
+  "Display TCP/IP ports in use\n")
+
+CMDABBR("qproc",5,   PANEL,         SYSCMDALL,          qproc_cmd,
+  "query ports",
+  "Display TCP/IP ports in use\n")
+
+CMDABBR("qstor",5,   PANEL,         SYSCMDALL,          qstor_cmd,
+  "query storage",
+  "Display main and expanded storage values\n")
 
 CMDABBR("mounted_tape_reinit",9, PANEL+CONFIG, SYSCMDALL-SYSOPER, mnttapri_cmd,  
   "Control tape initilisation", 
