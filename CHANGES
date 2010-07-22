@@ -1,3 +1,38 @@
+21 Jul 2010 QUERY and SET have been changed to individual commands:
+
+            These have been replaced with individual commands:
+
+            qstor
+            qcpuid
+            qproc
+            qports
+            qlpar
+            qpfkeys
+
+            emsg [ on | off | text | time ]
+
+            quitmout [n]
+
+
+21 Jul 2010 PF KEY support enhancement. New variable '&*'. '&*' represents all of the remaining tokens
+            beyond the last subtitution variable used. This is a recursive implementation. A single space
+            is added between each token. Token can be enclosed in paired single or double quotes. Quotes
+            are included as part of the token string.
+
+            New variable '&$' represents the data remaining on the line past token number 9. Token '&*' 
+            does include the data from the '&$' token.
+
+            For example:
+            DEFSYM PF02 "SUBST DELAY herc devinit &0 &*" 
+
+            Typing >580 "HET_TAPE.HET" RO 
+            and pressing PF2 would place 
+                   herc devinit 580 "HET_TAPE.HET" RO 
+            on the command line.
+
+            It is possible to use '&*' more than once as with any substitution place holder. 
+            If the command line had X Y Z A B C on it and the PF string was herc devinit &0 &* &1 &* &2
+            the result would be herc devinit X Y Z A B C Y Z A B C Z 
 19 Jul 2010 PF Key support enhancement.
             DEFSYM PFnn -
 

@@ -2368,21 +2368,58 @@ char    buf[1024];                      /* Buffer workarea           */
 
                         if ( ( cmdlen = (int)strlen(cmdline) ) > 0 )
                         {
-                            for ( cmd_tok[ncmd_tok] = strtok( cmdline, " " ); cmd_tok[ncmd_tok] != NULL; )
-                                cmd_tok[++ncmd_tok] = strtok( NULL, " " );
+                            char    psz_cmdline[sizeof(cmdline)];
+                            char   *p = cmdline;
+                            
+                            while (*p && ncmd_tok < 10 )
+                            {
+                                while (*p && isspace(*p)) p++; if (!*p) break; // find start of arg
+
+                                if (*p == '#') break; // stop on comments
+
+                                cmd_tok[ncmd_tok] = p; ++ncmd_tok; // count new arg
+
+                                while ( *p && !isspace(*p) && 
+                                        *p != '\"' && *p != '\'' ) p++; if (!*p) break; // find end of arg
+
+                                if (*p == '\"' || *p == '\'')
+                                {
+                                    char delim = *p;
+                                    
+                                    while (*++p && *p != delim); if (!*p) break; // find end of quoted string
+
+                                    p++; if (!*p) break;                    // found end of args
+
+                                    if ( *p != ' ')
+                                    {
+                                        strcpy(psz_cmdline, p);
+                                        *p = ' ';                       // insert a space
+                                        strcpy(p+1, psz_cmdline);
+                                        psz_cmdline[0] = 0;
+                                    }
+                                }
+                                                            
+                                *p++ = 0; // mark end of arg
+                            }
+                            
+                            ncmd_tok--;
+
+                            /* token 10 represents the rest of the line */  
+                            if ( ncmd_tok == 9 && strlen(p) > 0 )
+                                cmd_tok[++ncmd_tok] = p;
                         }
 
                         {
-                            int     ctok = 0;
+                            int     ctok = -1;
                             int     odx  = 0;
                             int     idx  = 0;
-                            char    psz_cmdline[sizeof(cmdline)];
+                            char    psz_cmdline[(sizeof(cmdline) * 11)];
 
                             memset(psz_cmdline, 0, sizeof(psz_cmdline));
 
                             pt1 = psz_PF+j;
                             
-                            for ( idx = 0; idx <= ((int)strlen(pt1) - 1); idx++ )
+                            for ( idx = 0; idx < (int)strlen(pt1); idx++ )
                             {
                                 if ( pt1[idx] != '&' )
                                 {
@@ -2395,15 +2432,43 @@ char    buf[1024];                      /* Buffer workarea           */
                                         idx++;
                                         psz_cmdline[odx++] = pt1[idx];
                                     }
-                                    else if ( !isdigit( pt1[idx+1] ) )
+                                    else if ( pt1[idx+1] == '*' )
+                                    {
+                                        idx++;
+
+                                        if ( ctok < 9 )
+                                        {
+                                            int first = TRUE;
+
+                                            for( ctok++; ctok <= 10; ctok++ )
+                                            {
+                                                if ( cmd_tok[ctok] != NULL )
+                                                {
+                                                    if ( first ) 
+                                                        first = FALSE;
+                                                    else
+                                                        psz_cmdline[odx++] = ' ';         // add one space
+                                                    strcpy( &psz_cmdline[odx], cmd_tok[ctok] );
+                                                    odx += (int)strlen(cmd_tok[ctok]);
+
+                                                }
+                                            }
+                                        }
+                                    }
+                                    else if ( !isdigit( pt1[idx+1] ) && ( pt1[idx+1] != '$' ) )
                                     {
                                         psz_cmdline[odx++] = pt1[idx];
                                     }
                                     else 
                                     {
                                         idx++;
-                                        ctok = (int)pt1[idx] - '0';
-                                        if ( ctok < 0 || ctok > 9 ) ctok = 10;
+                                        if ( pt1[idx] == '$' ) 
+                                            ctok = 10;
+                                        else
+                                        {
+                                            ctok = (int)pt1[idx] - '0';
+                                            if ( ctok < 0 || ctok > 9 ) ctok = 10;
+                                        }
                                         if ( cmd_tok[ctok] != NULL && strlen( cmd_tok[ctok] ) > 0 )
                                         {
                                             strncpy(&psz_cmdline[odx], cmd_tok[ctok], strlen( cmd_tok[ctok] ) );
@@ -2413,11 +2478,18 @@ char    buf[1024];                      /* Buffer workarea           */
                                             psz_cmdline[odx++] = ' ';
                                     }
                                 }
+
+                                if ( odx > (int)sizeof(cmdline) ) 
+                                {
+                                    WRMSG(HHC01608, "W", ((int)sizeof(cmdline) - 1) );
+                                    break;
+                                }
                             }
 
                             if ( isdelay )
                             {
-                                strcpy( cmdline, psz_cmdline );
+                                strncpy( cmdline, psz_cmdline, sizeof(cmdline) );
+                                cmdline[sizeof(cmdline) - 1] = 0;   
                                 cmdlen = (int)strlen(cmdline);
                                 cmdoff = cmdlen < cmdcols ? cmdlen : 0;
                                 ADJ_CMDCOL();
@@ -3095,7 +3167,7 @@ FinishShutdown:
                 cur_cons_col = saved_cons_col;
             } /* end if(redraw_cmd) */
 
-	    if (sysblk.pcpu != prvpcpu)
+            if (sysblk.pcpu != prvpcpu)
             {
                 redraw_status = 1;
                 prvpcpu = sysblk.pcpu;
