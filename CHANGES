@@ -1,3 +1,5 @@
+22 Jul 2010 Add code page mapping 1252/1140 - Kevin Leonard
+
 21 Jul 2010 QUERY and SET have been changed to individual commands:
 
             These have been replaced with individual commands:
@@ -88,6 +90,7 @@
 09 Jul 2010 Add DIR/LS commands as appropriate. Add "mt" command for Mag tape control. 
             Command mt supports rew, fsf, bsf, fsr, bsr, asf and wtm sub functions.
             Type "help mt" for more information.
+08 Jul 2010 Add code page mappings 819/037, 819/037v2, 1252/037, 1252/037v2 - Kevin Leonard
 08 Jul 2010 Add FAKETAPE support in hetupd and hetget. (autogen.sh and ./configure rerun required)
 06 Jul 2010 Add FTLIB.C FakeTape library; add support in hetmap and hetinit for 
             FAKETAPE.
