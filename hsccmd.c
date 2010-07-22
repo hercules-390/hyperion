@@ -8442,7 +8442,7 @@ int qlpar_cmd(int argc, char *argv[], char *cmdline)
 int qpfkeys_cmd(int argc, char *argv[], char *cmdline)
 {
     int     i;
-    char    szPF[5];
+    char    szPF[6];
     char   *pszVAL;
 
     UNREFERENCED(cmdline);
