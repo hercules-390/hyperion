@@ -73,7 +73,7 @@ typedef unsigned char                   Boolean;
 #ifdef max_bytes_dsply
 #undef max_bytes_dsply
 #endif
-#define max_bytes_dsply 65536
+#define max_bytes_dsply 1024
 /*      ^------- maximum number of bytes from prtbuf to convert anything > 4
  *
  */
