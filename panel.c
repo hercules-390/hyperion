@@ -3288,7 +3288,7 @@ FinishShutdown:
                 }
                 buf[cons_cols] = '\0';
                 set_pos (cons_rows, 1);
-                set_color (COLOR_WHITE, COLOR_BLUE);
+                set_color (COLOR_LIGHT_YELLOW, COLOR_RED);
                 draw_text (buf);
 
                 /* restore cursor location */
