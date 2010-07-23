@@ -2259,7 +2259,7 @@ char    buf[1024];                      /* Buffer workarea           */
                 /* Test for PF key  Windows */
                 if ( strlen(kbbuf+i) == 4 && kbbuf[i] == '\x1b' && kbbuf[i+1] == ')' ) /* this is a PF Key */ 
                 {
-                    char szPF[5];
+                    char szPF[6];
                     char msgbuf[32];
                     char *pf;
                     char *psz_PF;
