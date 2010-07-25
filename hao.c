@@ -578,6 +578,8 @@ DLL_EXPORT void hao_message(char *buf)
   /* don't react on own commands */
   if(!strncasecmp(work, "HHC0007", 7) || !strncasecmp(work, "HHC0008", 7) || !strncasecmp(work, "HHC0009", 7))
     return;
+  if(strcasestr(work, "HHC00013I") && (strcasestr(work, "'hao ") || strcasecmp(work, "herc hao ")))
+    return;
 
   /* also from the .rc file */
   if(!strncasecmp(work, "> hao", 5))
@@ -595,6 +597,7 @@ DLL_EXPORT void hao_message(char *buf)
       if(!regexec(&ao_preg[i], work, 1, &rm, 0))
       {
         BYTE sysgroup; 
+
         /* issue command for this rule */
         WRMSG(HHC00081, "I", i, ao_cmd[i]);
         sysgroup = sysblk.sysgroup;
