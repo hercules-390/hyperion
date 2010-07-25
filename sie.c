@@ -235,7 +235,7 @@ int     b2;                             /* Values of R fields        */
 RADR    effective_addr2;                /* address of state desc.    */
 int     n;                              /* Loop counter              */
 U16     lhcpu;                          /* Last Host CPU address     */
-int     icode = 0;                      /* Interception code         */
+volatile int icode;                     /* Interception code         */
 U64     dreg;
 
     S(inst, regs, b2, effective_addr2);
