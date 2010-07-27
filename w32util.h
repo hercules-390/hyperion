@@ -214,6 +214,8 @@ W32_DLL_IMPORT void   w32_set_thread_name( TID tid, char* name );
 W32_DLL_IMPORT char*  w32_basename( const char* path );
 W32_DLL_IMPORT char*  w32_dirname( const char* path );
 
+W32_DLL_IMPORT char*  w32_strcasestr( const char* haystack, const char* needle );
+
 #endif // defined(_MSVC_)
 
 //////////////////////////////////////////////////////////////////////////////////////////

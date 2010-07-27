@@ -78,6 +78,9 @@
   #define  fclose               w32_fclose
   #define  basename             w32_basename
   #define  dirname              w32_dirname
+#ifndef strcasestr
+  #define  strcasestr           w32_strcasestr 
+#endif
 #endif
 
 #ifdef _MSVC_

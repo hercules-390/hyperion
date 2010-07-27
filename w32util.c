@@ -3434,5 +3434,31 @@ DLL_EXPORT char*  w32_dirname( const char* path )
     
     return( _dirname );
 }
-
+DLL_EXPORT char*  w32_strcasestr( const char* haystack, const char* needle )
+{
+    int i = -1;
+    
+    while ( haystack[++i] != '\0' ) 
+    {
+        if ( tolower( haystack[i] ) == tolower( needle[0] ) ) 
+        {  
+            int j=i, k=0, match=0;  
+            while ( tolower( haystack[++j] ) == tolower( needle[++k] ) ) 
+            {  
+                match=1;  
+                // Catch case when they match at the end  
+                if ( haystack[j] == '\0' && needle[k] == '\0' ) 
+                {  
+                    return (char*)&haystack[i];  
+                }  
+            }  
+            // Catch normal case  
+            if ( match && needle[k] == '\0' )
+            {  
+                return (char*)&haystack[i];  
+            }  
+        }  
+    }  
+    return NULL;  
+}
 #endif // defined( _MSVC_ )

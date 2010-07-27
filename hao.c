@@ -169,7 +169,7 @@ static void hao_cpstrp(char *dest, char *src)
   for(i = 0; src[i] == ' '; i++);
   strncpy(dest, &src[i], HAO_WKLEN);
   dest[HAO_WKLEN-1] = 0;
-  for(i = strlen(dest); i && dest[i - 1] == ' '; i--);
+  for(i = (int)strlen(dest); i && dest[i - 1] == ' '; i--);
   dest[i] = 0;
 }
 
