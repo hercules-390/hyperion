@@ -201,6 +201,11 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00227 "%1d:%04X Tape file '%s', type '%s': '%s' tape volume '%s' being auto loaded"
 #define HHC00228 "Tape autoloader: file request fn '%s'"
 #define HHC00229 "Tape autoloader: adding '%s' value '%s'"
+#define HHC00230 "%1d:%04X Tape file '%s', '%s' volume '%s': not loaded; file not found" 
+#define HHC00231 "%1d:%04X Tape file '%s', '%s' volume '%s': not loaded; manual mount pending" 
+#define HHC00232 "%1d:%04X Tape file '%s', '%s' volume '%s': not loaded; duplicate file found" 
+#define HHC00233 "%1d:%04X Tape file '%s', '%s' volume '%s': not loaded; rename failed" 
+#define HHC00234 "%1d:%04X Tape file '%s', '%s' volume '%s': not loaded; not enough space on volume" 
 
 // reserve 003xx for compressed dasd device related
 #define HHC00300 "%1d:%04X CCKD file: error initializing shadow files"
@@ -1605,6 +1610,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC17010 " - Started        : Stopping        * Stopped"
 #define HHC17011 "Avg CP   %03d%% %02d; MIPS[%4d.%02d];"
 #define HHC17012 "EMSG = %s"
+#define HHC17013 "Process ID = %d"
 
 #define HHC17100 "Timeout value for 'quit' and 'ssd' is '%d' seconds"
 #define HHC17199 "%.4s '%s'"
@@ -1622,6 +1628,9 @@ cpu.c:123:HABC1234I This is a message
 
 /* from scsitape.c trace */
 #define HHC90205 "%1d:%04X Tape file '%s', type '%s': error in function '%s': '%s'"
+
+/* tapeccws tapedev */
+#define HHC93480 "%1d:%04X TDSPSTAT[%02X] msg1[%-8s] msg2[%-8s] msg[%-8s] mnt[%s] unmnt[%s] TDSPFLAG[%02X]"
 
 /* ctc/lcs/ndis */
 

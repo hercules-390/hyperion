@@ -397,6 +397,7 @@ struct SYSBLK {
 #define HDL_SIZE_SYSBLK   sizeof(SYSBLK)
         char   *hercules_pgmname;       /* Starting program name     */ 
         char   *hercules_pgmpath;       /* Starting pgm path name    */
+        pid_t   hercules_pid;           /* Process Id of Hercules    */
         time_t  impltime;               /* TOD system was IMPL'ed    */
         int     arch_mode;              /* Architecturual mode       */
                                         /* 0 == S/370   (ARCH_370)   */
@@ -719,6 +720,8 @@ struct SYSBLK {
 #define EMSG_WARN   0x20
 #define EMSG_ERROR  0x40
 #define EMSG_SEVERE 0x80
+
+        LOCK    mntlock;                /* tape mount lock          */
 
 #if       defined( OPTION_SHUTDOWN_CONFIRMATION )
 #define QUITTIME_PERIOD     10
@@ -1133,6 +1136,8 @@ struct DEVBLK {                         /* Device configuration block*/
 
         /* 3480/3490/3590 Message display */
 
+        TID     tape_mountmon_tid;      /* Thread ID for async mnts  */
+        char   *tapemsg;                /* tape volser               */
         char    tapemsg1[9];            /* 1st Host Message          */
         char    tapemsg2[9];            /* 2nd Host Message          */
         char    tapesysmsg[32];         /*     Unit Message     (SYS)*/

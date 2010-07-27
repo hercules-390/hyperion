@@ -450,6 +450,9 @@ int     dll_count;                      /* index into array          */
     /* set default SHCMDOPT enabled     */
     sysblk.shcmdopt = SHCMDOPT_ENABLE + SHCMDOPT_DIAG8;
 
+    /* Save process ID */
+    sysblk.hercules_pid = getpid();
+
     /* Save thread ID of main program */
     sysblk.impltid = thread_id();
 
@@ -470,6 +473,7 @@ int     dll_count;                      /* index into array          */
     initialize_lock (&sysblk.iointqlk);
     sysblk.intowner = LOCK_OWNER_NONE;
     initialize_lock (&sysblk.sigplock);
+    initialize_lock (&sysblk.mntlock);
 
     /* Initialize thread creation attributes so all of hercules
        can use them at any time when they need to create_thread

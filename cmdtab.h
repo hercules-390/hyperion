@@ -528,6 +528,10 @@ CMDABBR("qpfkeys",3, PANEL,         SYSCMDALL,          qpfkeys_cmd,
   "Display the current PF Key settings\n")
 #endif  // defined( OPTION_CONFIG_SYMBOLS )
 
+CMDABBR("qpid",4,    PANEL,         SYSCMDALL,          qpid_cmd,
+  "query PID",
+  "Display Process ID of Hercules\n")
+
 CMDABBR("qports",5,  PANEL,         SYSCMDALL,          qports_cmd,
   "query ports",
   "Display TCP/IP ports in use\n")

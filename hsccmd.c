@@ -5518,6 +5518,19 @@ char   **init_argv;
     /* Obtain the device lock */
     obtain_lock (&dev->lock);
 
+    /* wait up to 5 seconds for the busy to go away */
+    {
+        int i = 1000;
+        while ( i-- > 0 && ( dev->busy        || 
+                             IOPENDING(dev)   ||
+                             (dev->scsw.flag3 & SCSW3_SC_PEND) ) )
+        {
+            release_lock(&dev->lock);
+            usleep(5000);
+            obtain_lock(&dev->lock);
+        }
+    }
+
     /* Reject if device is busy or interrupt pending */
     if (dev->busy || IOPENDING(dev)
      || (dev->scsw.flag3 & SCSW3_SC_PEND))
@@ -8473,6 +8486,26 @@ int qpfkeys_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 #endif // defined( OPTION_CONFIG_SYMBOLS )
+
+/*-------------------------------------------------------------------*/
+/* qpid command                                                      */
+/*-------------------------------------------------------------------*/
+int qpid_cmd(int argc, char *argv[], char *cmdline)
+{
+    UNREFERENCED(cmdline);
+    UNREFERENCED(argv);
+    UNREFERENCED(argc);
+
+    if (argc != 1)
+    {
+        WRMSG( HHC17000, "E" );
+        return -1;
+    }
+    
+    WRMSG( HHC17013, "I", sysblk.hercules_pid );
+
+    return 0;
+}
 
 /*-------------------------------------------------------------------*/
 /* qports command                                                    */
