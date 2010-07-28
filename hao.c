@@ -578,7 +578,7 @@ DLL_EXPORT void hao_message(char *buf)
   /* don't react on own commands */
   if(!strncasecmp(work, "HHC0007", 7) || !strncasecmp(work, "HHC0008", 7) || !strncasecmp(work, "HHC0009", 7))
     return;
-  if(strcasestr(work, "HHC00013I") && (strcasestr(work, "'hao ") || strcasecmp(work, "herc hao ")))
+  if(strcasestr(work, "HHC00013I") && (strcasestr(work, "'hao ") || strcasestr(work, "herc hao ")))
     return;
 
   /* also from the .rc file */
