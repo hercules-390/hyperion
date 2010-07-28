@@ -70,10 +70,10 @@ typedef unsigned char                   Boolean;
 /*      ^------- number of bytes to convert on each line; multiples of 4 only
  *
  */
-#ifdef max_bytes_dsply
-#undef max_bytes_dsply
+#ifdef dmax_bytes_dsply
+#undef dmax_bytes_dsply
 #endif
-#define max_bytes_dsply 1024
+#define dmax_bytes_dsply 1024
 /*      ^------- maximum number of bytes from prtbuf to convert anything > 4
  *
  */
@@ -194,6 +194,7 @@ static const char help_hetmap[] =
     "Usage: %s [options] filename\n\n"
     "Options:\n"
     "  -a  print all label and file information (default: on)\n"
+    "  -bn print 'n' bytes per file; -b implies -s\n"
     "  -d  print only dataset information (default: off)\n"
     "  -f  print only file information (default: off)\n"
     "  -h  display usage summary\n"
@@ -220,6 +221,7 @@ static UInt32	gBlkCount	= 0;	/* Block count					*/
 static UInt32	gPrevBlkCnt	= 0;	/* Block count		            */
 static SInt32	gLength		= 0;	/* Block length					*/
 static SInt32	gLenPrtd	= 0;	/* amount of data print for cur */
+static SInt32   max_bytes_dsply = dmax_bytes_dsply;
 
 /*
 || Standard main
@@ -297,7 +299,7 @@ main( int argc, char *argv[] )
 
         while( TRUE )
         {
-            rc = getopt( argc, argv, "adfhlst" );
+            rc = getopt( argc, argv, "ab:dfhlst" );
             if( rc == -1 )
                 break;
 
@@ -305,6 +307,17 @@ main( int argc, char *argv[] )
             {
                 case 'a':
                     opts = O_ALL;
+                    break;
+                case 'b':
+                    max_bytes_dsply = atoi( optarg );
+                    if ( max_bytes_dsply < 256 ) max_bytes_dsply = 256;
+                    else
+                    {
+                        int i;
+                        i = max_bytes_dsply % 4;
+                        max_bytes_dsply += (4-i);
+                    }
+                    opts = O_SLANAL_OUT;
                     break;
                 case 'd':
                     opts = O_DATASETS;
