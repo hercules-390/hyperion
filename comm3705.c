@@ -389,6 +389,7 @@ struct sockaddr_in *sin;
 }
 
 #endif
+#if FALSE
 /*-------------------------------------------------------------------*/
 /* SUBROUTINE TO REMOVE ANY IAC SEQUENCES FROM THE DATA STREAM       */
 /* Returns the new length after deleting IAC commands                */
@@ -443,7 +444,7 @@ int     m, n, c;
     return n;
 
 } /* end function remove_iac */
-
+#endif
 
 /*-------------------------------------------------------------------*/
 /* SUBROUTINE TO DOUBLE UP ANY IAC BYTES IN THE DATA STREAM          */
@@ -1240,19 +1241,24 @@ static void commadpt_read_tty(COMMADPT *ca, BYTE * bfr, int len)
         }
          /* received data (rlen3270 > 0) is sufficient for 3270,
             but for TTY, eol_flag must also be set */
-     if ((ca->eol_flag || ca->is_3270) && ca->rlen3270) {
+     if ((ca->eol_flag || ca->is_3270) && ca->rlen3270) 
+     {
         ca->eol_flag = 0;
-        if (ca->is_3270) {
-                   if (eor) {
-               ca->inpbufl = remove_iac(ca->inpbuf, ca->rlen3270);
-                       ca->rlen3270 = 0; /* for next msg */
-                   }
-        } else {
-                   ca->inpbufl = ca->rlen3270;
-                   ca->rlen3270 = 0; /* for next msg */
+        if (ca->is_3270) 
+        {
+           if (eor) 
+           {
+              ca->inpbufl = ca->rlen3270;
+              ca->rlen3270 = 0; /* for next msg */
+           }
+        } 
+        else 
+        {
+           ca->inpbufl = ca->rlen3270;
+           ca->rlen3270 = 0; /* for next msg */
         }
-                   if(ca->dev->ccwtrace)
-                       WRMSG(HHC01056, "D",
+        if(ca->dev->ccwtrace)
+           WRMSG(HHC01056, "D",
                             SSID_TO_LCSS(ca->dev->ssid), 
                             ca->dev->devnum,
                             ca->inpbufl);
