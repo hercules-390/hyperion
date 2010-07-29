@@ -6,7 +6,7 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id: comm3705.c 5925 2010-05-03 14:34:25Z bernard $
+// $Id: comm3705.c 6234 2010-07-28 13:57:14Z bernard $
 
 /***********************************************************************/
 /*                                                                     */
