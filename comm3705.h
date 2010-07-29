@@ -6,7 +6,7 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id: comm3705.h 5925 2010-05-03 14:34:25Z bernard $
+// $Id$
 
 #ifndef __COMM3705_H__
 #define __COMM3705_H__
