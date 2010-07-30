@@ -1619,7 +1619,7 @@ cpu.c:123:HABC1234I This is a message
 
 // reserve 90000 messages for debugging
 #define HHC90000 "DBG: %s"
-#define HHC90001 " *** Assertion Failed! *** %s(%d); function: %s"
+#define HHC90001 " *** Assertion Failed! *** %s(%d); function: %s()"
 
 /* pttrace.c */
 #define HHC90010 "Pttrace: trace is busy"

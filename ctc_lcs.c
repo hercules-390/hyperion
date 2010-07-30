@@ -58,7 +58,7 @@
       { \
         if (!(a)) \
         { \
-          logmsg("HHCmmxxxW *** Assertion Failed! *** %s(%d); function: %s\n",__FILE__,__LINE__,__FUNCTION__); \
+          WRMSG(HHC90001, "W", __FILE__, __LINE__, __FUNCTION__); \
           if (IsDebuggerPresent()) DebugBreak();   /* (break into debugger) */ \
         } \
       } \
@@ -71,7 +71,7 @@
       { \
         if (!(a)) \
         { \
-          logmsg("HHCmmxxxW *** Assertion Failed! *** %s(%d)\n",__FILE__,__LINE__); \
+          WRMSG(HHC90001, "W", __FILE__, __LINE__, __FUNCTION__); \
         } \
       } \
       while(0)
