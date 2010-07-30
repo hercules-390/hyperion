@@ -1029,6 +1029,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02103 "Logger: logger thread terminating"
 #define HHC02104 "Logger: log switched to '%s'"
 
+#define HHC02198 "Device attached"
 #define HHC02199 "Symbol %-12s '%s'"
 // reserve 022xx for command processing */
 #define HHC02200 "%1d:%04X device not found"

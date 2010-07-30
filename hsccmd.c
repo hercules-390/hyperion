@@ -4553,55 +4553,17 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
 int attach_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
+    int rc;
 
     if (argc < 3)
     {
         WRMSG(HHC02202, "E");
         return -1;
     }
-    return parse_and_attach_devices(argv[1],argv[2],argc-3,&argv[3]);
-
-#if 0
-    if((cdev = strchr(argv[1],':')))
-    {
-        clcss = argv[1];
-        *cdev++ = '\0';
-    }
-    else
-    {
-        clcss = NULL;
-        cdev = argv[1];
-    }
-
-    if (sscanf(cdev, "%hx%c", &devnum, &c) != 1)
-    {
-        WRMSG( HHC00000, "E", cdev );
-  //      logmsg( _("HHC00000E Device number %s is invalid\n"), cdev );
-        return -1;
-    }
-
-    if(clcss)
-    {
-        if (sscanf(clcss, "%hd%c", &lcss, &c) != 1)
-        {
-            WRMSG( HHC00000, "E", clcss );
-  //          logmsg( _("HHC00000E LCSS id %s is invalid\n"), clcss );
-            return -1;
-        }
-    }
-    else
-        lcss = 0;
-
-#if 0 /* JAP - Breaks the whole idea behind devtype.c */
-    if (sscanf(argv[2], "%hx%c", &dummy_devtype, &c) != 1)
-    {
-        logmsg( _("Device type %s is invalid\n"), argv[2] );
-        return -1;
-    }
-#endif
-
-    return  attach_device (lcss, devnum, argv[2], argc-3, &argv[3]);
-#endif
+    rc = parse_and_attach_devices(argv[1],argv[2],argc-3,&argv[3]);
+    if(rc)
+        WRMSG(HHC02198, "I");
+    return rc;
 }
 
 
