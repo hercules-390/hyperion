@@ -2639,7 +2639,7 @@ DEF_INST(cipher_message_with_counter_d)
   {
     case 0: /* Query */
     {
-      BYTE parameter_block[16] = KMO_BITS;
+      BYTE parameter_block[16] = KMCTR_BITS;
 
       /* Store the parameter block */
       ARCH_DEP(vstorec)(parameter_block, 15, GR_A(1, regs), 1, regs);
