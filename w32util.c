@@ -1801,6 +1801,7 @@ static DWORD WINAPI ReadStdInW32Thread( LPVOID lpParameter )
 
         if ( !ReadFile( hStdIn, &chStdIn, 1, &dwBytesRead, NULL ) )
         {
+            char  buf[512];
             char  szErrMsg[256];
             DWORD dwLastError = GetLastError();
 
@@ -1809,15 +1810,14 @@ static DWORD WINAPI ReadStdInW32Thread( LPVOID lpParameter )
 
             w32_w32errmsg( dwLastError, szErrMsg, sizeof(szErrMsg) );
 
-            logmsg
+            MSGBUF
             (
-                _("HHC90000D DBG: ReadFile(hStdIn) failed! dwLastError=%d (0x%08.8X): %s\n")
-
+                 buf, "ReadFile(hStdIn) failed! dwLastError=%d (0x%08.8X): %s"
                 ,dwLastError
                 ,dwLastError
                 ,szErrMsg
             );
-
+            WRMSG(HHC90000, "D", buf);
             continue;
         }
 
@@ -2436,8 +2436,10 @@ DLL_EXPORT int w32_select
 
         if ( !pTimeVal )
         {
-            logmsg( "HHC90000D DBG: ** Win32 porting error: invalid call to 'w32_select' from %s(%d): NULL args\n",
+            char buf[256];
+            MSGBUF(buf, "** Win32 porting error: invalid call to 'w32_select' from %s(%d): NULL args",
                 pszSourceFile, nLineNumber );
+            WRMSG(HHC90000, "D", buf);
             errno = EINVAL;
             return -1;
         }
@@ -2470,16 +2472,20 @@ DLL_EXPORT int w32_select
         || ( bNonSocketFound && ( bSocketFound    || bExceptSetSocketFound    ) )
     )
     {
-        logmsg( "HHC90000D DBG: ** Win32 porting error: invalid call to 'w32_select' from %s(%d): mixed set(s)\n",
+        char buf[256];
+        MSGBUF(buf, "** Win32 porting error: invalid call to 'w32_select' from %s(%d): mixed set(s)",
             pszSourceFile, nLineNumber );
+        WRMSG(HHC90000, "D", buf);
         errno = EBADF;
         return -1;
     }
 
     if ( bExceptSetNonSocketFound )
     {
-        logmsg( "HHC90000D DBG: ** Win32 porting error: invalid call to 'w32_select' from %s(%d): non-socket except set\n",
+        char buf[256];
+        MSGBUF(buf, "** Win32 porting error: invalid call to 'w32_select' from %s(%d): non-socket except set",
             pszSourceFile, nLineNumber );
+        WRMSG(HHC90000, "D", buf);
         errno = EBADF;
         return -1;
     }
