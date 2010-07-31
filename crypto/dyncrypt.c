@@ -1958,7 +1958,7 @@ static void ARCH_DEP(kmctr_dea)(int r1, int r2, REGS *regs)
     LOGBYTE("output:", message_block, 8);
 #endif
 
-    /* Incerease OCV */
+    /* Increase OCV */
     carry = 1;
     for(i = 7; i != -1; i--)
     {
@@ -1967,6 +1967,11 @@ static void ARCH_DEP(kmctr_dea)(int r1, int r2, REGS *regs)
         carry = 1;
       else
         carry = 0;
+    } 
+    if(carry)
+    {
+      for(i = 0; i < 8; i++)
+        ocv[i] = 0;
     }
 
     /* Store the output chaining value */
@@ -2073,7 +2078,7 @@ static void ARCH_DEP(kmctr_aes)(int r1, int r2, REGS *regs)
     LOGBYTE("output:", message_block, 16);
 #endif
 
-    /* Incerease OCV */
+    /* Increase OCV */
     carry = 1;
     for(i = 15; i != -1; i--)
     {
@@ -2082,6 +2087,11 @@ static void ARCH_DEP(kmctr_aes)(int r1, int r2, REGS *regs)
         carry = 1;
       else
         carry = 0;
+    }
+    if(carry)
+    {
+      for(i = 0; i < 16; i++)
+        ovc[i] = 0;
     }
 
     /* Store the output chaining value */
