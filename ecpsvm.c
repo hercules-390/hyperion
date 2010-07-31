@@ -228,6 +228,7 @@ struct _ECPSVM_SASTATS
 
 #define SASSIST_PROLOG( _instname) \
     VADR amicblok; \
+    char buf[256]; \
     VADR vpswa; \
     BYTE *vpswa_p; \
     REGS vpregs; \
@@ -246,19 +247,19 @@ struct _ECPSVM_SASTATS
     } \
     if(!sysblk.ecpsvm.available) \
     { \
-          DEBUG_SASSISTX(_instname,logmsg(_("HHC90000D DBG: SASSIST "#_instname" ECPS:VM Disabled in configuration\n"))); \
+          DEBUG_SASSISTX(_instname,WRMSG(HHC90000, "D", "SASSIST "#_instname" ECPS:VM Disabled in configuration")); \
           return(1); \
     } \
     if(!ecpsvm_sastats._instname.enabled) \
     { \
-          DEBUG_SASSISTX(_instname,logmsg(_("HHC90000D DBG: SASSIST "#_instname" ECPS:VM Disabled by command\n"))); \
+          DEBUG_SASSISTX(_instname,WRMSG(HHC90000, "D", "SASSIST "#_instname" ECPS:VM Disabled by command")); \
           return(1); \
     } \
     CR6=regs->CR_L(6); \
     regs->ecps_vtmrpt = NULL; /* Assume vtimer off until validated */ \
     if(!(CR6 & ECPSVM_CR6_VMASSIST)) \
     { \
-        DEBUG_SASSISTX(_instname,logmsg(_("HHC90000D DBG: EVMA Disabled by guest\n"))); \
+        DEBUG_SASSISTX(_instname,WRMSG(HHC90000, "D", "EVMA Disabled by guest")); \
         return(1); \
     } \
     /* Increment call now (don't count early misses) */ \
@@ -268,7 +269,8 @@ struct _ECPSVM_SASTATS
     /* Then set ref bit by calling LOG_TO_ABS */ \
     if((amicblok & 0x007ff) > 0x7e0) \
     { \
-        DEBUG_SASSISTX(_instname,logmsg(_("HHC90000D DBG: SASSIST "#_instname" Micblok @ %6.6X crosses page frame\n"),amicblok)); \
+        MSGBUF(buf, "SASSIST "#_instname" Micblok @ %6.6X crosses page frame",amicblok); \
+        DEBUG_SASSISTX(_instname,WRMSG(HHC90000, "D", buf)); \
         return(1); \
     } \
     /* Load the micblok copy */ \
@@ -290,16 +292,20 @@ struct _ECPSVM_SASTATS
     } \
     /* Set ref bit on page where Virtual PSW is stored */ \
     vpswa_p=MADDR(vpswa,USE_REAL_ADDR,regs,ACCTYPE_READ,0); \
-    DEBUG_SASSISTX(_instname,logmsg(_("HHC90000D DBG: SASSIST "#_instname" VPSWA= %8.8X Virtual "),vpswa)); \
-    DEBUG_SASSISTX(_instname,logmsg(_("HHC90000D DBG: SASSIST "#_instname" CR6= %8.8X\n"),CR6)); \
-    DEBUG_SASSISTX(_instname,logmsg(_("HHC90000D DBG: SASSIST "#_instname" MICVTMR= %8.8X\n"),micblok.MICVTMR)); \
-    DEBUG_SASSISTX(_instname,logmsg(_("HHC90000D DBG: SASSIST "#_instname" Real "))); \
-    DEBUG_SASSISTX(_instname,display_psw2(regs)); \
+    MSGBUF(buf, "SASSIST "#_instname" VPSWA= %8.8X Virtual",vpswa); \
+    DEBUG_SASSISTX(_instname,WRMSG(HHC90000, "D", buf)); \
+    MSGBUF(buf, "SASSIST "#_instname" CR6= %8.8X",CR6); \
+    DEBUG_SASSISTX(_instname,WRMSG(HHC90000, "D", buf)); \
+    MSGBUF(buf, "SASSIST "#_instname" MICVTMR= %8.8X",micblok.MICVTMR); \
+    DEBUG_SASSISTX(_instname,WRMSG(HHC90000, "D", buf)); \
+    MSGBUF(buf, "SASSIST "#_instname" Real PSW="); \
+    display_psw(regs, &buf[strlen(buf)]); \
     /* Load the Virtual PSW in a temporary REGS structure */ \
     INITPSEUDOREGS(vpregs); \
     ARCH_DEP(load_psw) (&vpregs,vpswa_p); \
-    DEBUG_SASSISTX(_instname,display_psw2(&vpregs)); \
-
+    strcat(buf, " PSW="); \
+    display_psw(&vpregs, &buf[strlen(buf)]); \
+    DEBUG_SASSISTX(_instname,WRMSG(HHC90000, "D", buf)); \
 
 
 #define ECPSVM_PROLOG(_inst) \
@@ -311,13 +317,13 @@ VADR    effective_addr1, \
      SIE_INTERCEPT(regs); \
      if(!sysblk.ecpsvm.available) \
      { \
-          DEBUG_CPASSISTX(_inst,logmsg(_("HHC90000D DBG: CPASSTS "#_inst" ECPS:VM Disabled in configuration "))); \
+          DEBUG_CPASSISTX(_inst,WRMSG(HHC90000, "D", "CPASSTS "#_inst" ECPS:VM Disabled in configuration")); \
           ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION); \
      } \
      PRIV_CHECK(regs); /* No problem state please */ \
      if(!ecpsvm_cpstats._inst.enabled) \
      { \
-          DEBUG_CPASSISTX(_inst,logmsg(_("HHC90000D DBG: CPASSTS "#_inst" Disabled by command"))); \
+          DEBUG_CPASSISTX(_inst,WRMSG(HHC90000, "D", "CPASSTS "#_inst" Disabled by command")); \
           return; \
      } \
      if(!(regs->CR_L(6) & 0x02000000)) \
@@ -325,7 +331,7 @@ VADR    effective_addr1, \
         return; \
      } \
      ecpsvm_cpstats._inst.call++; \
-    DEBUG_CPASSISTX(_inst,logmsg(_("HHC90000D DBG: "#_inst" called\n")));
+     DEBUG_CPASSISTX(_inst,WRMSG(HHC90000, "D", #_inst" called"));
 
 
 /* DISPx Utility macros */
@@ -389,15 +395,18 @@ DEF_INST(ecpsvm_basic_fretx)
 /* Lockpage common code (LCKPG/TRLOK) */
 static void ecpsvm_lockpage1(REGS *regs,RADR cortab,RADR pg)
 {
+    char buf[256];
     BYTE corcode;
     VADR corte;
     U32  lockcount;
     RADR cortbl;
 
-    DEBUG_CPASSISTX(LCKPG,logmsg(_("HHC90000D DBG: LKPG coreptr = "F_RADR" Frame = "F_RADR"\n"),cortab,pg));
+    MSGBUF(buf, "LKPG coreptr = "F_RADR" Frame = "F_RADR,cortab,pg);
+    DEBUG_CPASSISTX(LCKPG,WRMSG(HHC90000, "D", buf));
     cortbl=EVM_L(cortab);
     corte=cortbl+((pg & 0xfff000)>>8);
-    DEBUG_CPASSISTX(LCKPG,logmsg(_("HHC90000D DBG: LKPG corete = %6.6X\n"),corte));
+    MSGBUF(buf, "LKPG corete = %6.6X",corte);
+    DEBUG_CPASSISTX(LCKPG,WRMSG(HHC90000, "D", buf));
     corcode=EVM_IC(corte+8);
     if(corcode & 0x80)
     {
@@ -411,7 +420,8 @@ static void ecpsvm_lockpage1(REGS *regs,RADR cortab,RADR pg)
         EVM_STC(corcode,corte+8);
     }
     EVM_ST(lockcount,corte+4);
-    DEBUG_CPASSISTX(LCKPG,logmsg(_("HHC90000D DBG: LKPG Page locked. Count = %6.6X\n"),lockcount));
+    MSGBUF(buf, "LKPG Page locked. Count = %6.6X",lockcount);
+    DEBUG_CPASSISTX(LCKPG,WRMSG(HHC90000, "D", buf));
     return;
 }
 /* E602 LCKPG Instruction */
@@ -420,6 +430,7 @@ static void ecpsvm_lockpage1(REGS *regs,RADR cortab,RADR pg)
 /* 2nd Operand : Page address to be locked */
 DEF_INST(ecpsvm_lock_page)
 {
+    char buf[256];
     VADR ptr_pl;
     VADR pg;
 
@@ -428,7 +439,8 @@ DEF_INST(ecpsvm_lock_page)
     ptr_pl=effective_addr1;
     pg=effective_addr2;
 
-    DEBUG_CPASSISTX(LCKPG,logmsg(_("HHC90000D DBG: LKPG PAGE=%6.6X, PTRPL=%6.6X\n"),pg,ptr_pl));
+    MSGBUF(buf, "LKPG PAGE=%6.6X, PTRPL=%6.6X",pg,ptr_pl);
+    DEBUG_CPASSISTX(LCKPG,WRMSG(HHC90000, "D", buf));
 
     ecpsvm_lockpage1(regs,ptr_pl,pg);
     regs->psw.cc=0;
@@ -442,6 +454,7 @@ DEF_INST(ecpsvm_lock_page)
 /* 2nd Operand : Page address to be unlocked */
 DEF_INST(ecpsvm_unlock_page)
 {
+    char buf[256];
     VADR ptr_pl;
     VADR pg;
     VADR corsz;
@@ -455,13 +468,15 @@ DEF_INST(ecpsvm_unlock_page)
     ptr_pl=effective_addr1;
     pg=effective_addr2;
 
-    DEBUG_CPASSISTX(ULKPG,logmsg(_("HHC90000D DBG: ULKPG PAGE=%6.6X, PTRPL=%6.6X\n"),pg,ptr_pl));
+    MSGBUF(buf, "ULKPG PAGE=%6.6X, PTRPL=%6.6X",pg,ptr_pl);
+    DEBUG_CPASSISTX(ULKPG,WRMSG(HHC90000, "D", buf));
 
     corsz=EVM_L(ptr_pl);
     cortbl=EVM_L(ptr_pl+4);
     if((pg+4095)>corsz)
     {
-        DEBUG_CPASSISTX(ULKPG,logmsg(_("HHC90000D DBG: ULKPG Page beyond core size of %6.6X\n"),corsz));
+        MSGBUF(buf, "ULKPG Page beyond core size of %6.6X",corsz);
+        DEBUG_CPASSISTX(ULKPG,WRMSG(HHC90000, "D", buf));
         return;
     }
     corte=cortbl+((pg & 0xfff000)>>8);
@@ -473,18 +488,19 @@ DEF_INST(ecpsvm_unlock_page)
     }
     else
     {
-        DEBUG_CPASSISTX(ULKPG,logmsg(_("HHC90000D DBG: ULKPG Attempting to unlock page that is not locked\n")));
+        DEBUG_CPASSISTX(ULKPG,WRMSG(HHC90000, "D", "ULKPG Attempting to unlock page that is not locked"));
         return;
     }
     if(lockcount==0)
     {
         corcode &= ~(0x80|0x02);
         EVM_STC(corcode,corte+8);
-        DEBUG_CPASSISTX(ULKPG,logmsg(_("HHC90000D DBG: ULKPG now unlocked\n")));
+        DEBUG_CPASSISTX(ULKPG,WRMSG(HHC90000, "D", "ULKPG now unlocked"));
     }
     else
     {
-        DEBUG_CPASSISTX(ULKPG,logmsg(_("HHC90000D DBG: ULKPG Page still locked. Count = %6.6X\n"),lockcount));
+        MSGBUF(buf, "ULKPG Page still locked. Count = %6.6X",lockcount);
+        DEBUG_CPASSISTX(ULKPG,WRMSG(HHC90000, "D", buf));
     }
     EVM_ST(lockcount,corte+4);
     CPASSIST_HIT(ULKPG);
@@ -504,6 +520,7 @@ DEF_INST(ecpsvm_free_ccwstor)
 /* SCNVU : Scan for Virtual Device blocks */
 DEF_INST(ecpsvm_locate_vblock)
 {
+    char buf[256];
     U32  vdev;
     U32  vchix;
     U32  vcuix;
@@ -520,7 +537,8 @@ DEF_INST(ecpsvm_locate_vblock)
     vchix=EVM_LH(vchtbl+((vdev & 0xf00)>>7));   /* Get Index */
     if(vchix & 0x8000)
     {
-        DEBUG_CPASSISTX(SCNVU,logmsg(_("HHC90000D DBG: SCNVU Virtual Device %4.4X has no VCHAN block\n"),vdev));
+        MSGBUF(buf, "SCNVU Virtual Device %4.4X has no VCHAN block",vdev);
+        DEBUG_CPASSISTX(SCNVU,WRMSG(HHC90000, "D", buf));
         return;
     }
     vch=EVM_L(effective_addr2)+vchix;
@@ -528,7 +546,8 @@ DEF_INST(ecpsvm_locate_vblock)
     vcuix=EVM_LH(vch+8+((vdev & 0xf0)>>3));
     if(vcuix & 0x8000)
     {
-        DEBUG_CPASSISTX(SCNVU,logmsg(_("HHC90000D DBG: SCNVU Virtual Device %4.4X has no VCU block\n"),vdev));
+        MSGBUF(buf,"SCNVU Virtual Device %4.4X has no VCU block",vdev);
+        DEBUG_CPASSISTX(SCNVU,WRMSG(HHC90000, "D", buf));
         return;
     }
     vcu=EVM_L(effective_addr2+4)+vcuix;
@@ -536,15 +555,17 @@ DEF_INST(ecpsvm_locate_vblock)
     vdvix=EVM_LH(vcu+8+((vdev & 0xf)<<1));
     if(vdvix & 0x8000)
     {
-        DEBUG_CPASSISTX(SCNVU,logmsg(_("HHC90000D DBG: SCNVU Virtual Device %4.4X has no VDEV block\n"),vdev));
+        MSGBUF(buf, "SCNVU Virtual Device %4.4X has no VDEV block",vdev);
+        DEBUG_CPASSISTX(SCNVU,WRMSG(HHC90000, "D", buf));
         return;
     }
     vdv=EVM_L(effective_addr2+8)+vdvix;
-    DEBUG_CPASSISTX(SCNVU,logmsg(_("HHC90000D DBG: SCNVU %4.4X : VCH = %8.8X, VCU = %8.8X, VDEV = %8.8X\n"),
+    MSGBUF(buf, "SCNVU %4.4X : VCH = %8.8X, VCU = %8.8X, VDEV = %8.8X",
                 vdev,
                 vch,
                 vcu,
-                vdv));
+                vdv);
+    DEBUG_CPASSISTX(SCNVU,WRMSG(HHC90000, "D", buf));
     regs->GR_L(6)=vch;
     regs->GR_L(7)=vcu;
     regs->GR_L(8)=vdv;
@@ -560,6 +581,7 @@ DEF_INST(ecpsvm_locate_vblock)
 /* rc : 2 - Invoke DISP2 */
 int ecpsvm_do_disp1(REGS *regs,VADR dl,VADR el)
 {
+    char buf[256];
     VADR vmb;
     U32 F_VMFLGS;       /* Aggregate for quick test */
     U32 F_SCHMASK;      /* Flags to test */
@@ -572,31 +594,33 @@ int ecpsvm_do_disp1(REGS *regs,VADR dl,VADR el)
     BYTE B_VMRSTAT;
 
     vmb=regs->GR_L(11);
-    DEBUG_CPASSISTX(DISP1,logmsg("DISP1 Data list = %6.6X VM=%6.6X\n",dl,vmb));
+    MSGBUF(buf, "DISP1 Data list = %6.6X VM=%6.6X",dl,vmb);
+    DEBUG_CPASSISTX(DISP1,WRMSG(HHC90000, "D", buf));
     F_VMFLGS=EVM_L(vmb+VMRSTAT);
     F_SCHMASK=EVM_L(dl+64);
     F_SCHMON=EVM_L(dl+68);
     if((F_VMFLGS & F_SCHMASK) == F_SCHMON)
     {
-        DEBUG_CPASSISTX(DISP1,logmsg("DISP1 Quick Check complete\n"));
+        DEBUG_CPASSISTX(DISP1,WRMSG(HHC90000, "D", "DISP1 Quick Check complete"));
         return(2);
     }
     else
     {
-        DEBUG_CPASSISTX(DISP1,logmsg("DISP1 Quick Check failed : %8.8X != %8.8X\n",(F_VMFLGS & F_SCHMASK),F_SCHMON));
+        MSGBUF(buf, "DISP1 Quick Check failed : %8.8X != %8.8X",(F_VMFLGS & F_SCHMASK),F_SCHMON);
+        DEBUG_CPASSISTX(DISP1,WRMSG(HHC90000, "D", buf));
     }
 
     F_ASYSVM=EVM_L(ASYSVM);
     if(vmb==F_ASYSVM)
     {
-        DEBUG_CPASSISTX(DISP1,logmsg("DISP1 VMB is SYSTEM VMBLOCK\n"));
+        DEBUG_CPASSISTX(DISP1,WRMSG(HHC90000, "D", "DISP1 VMB is SYSTEM VMBLOCK"));
         return(2);
     }
     SCHDL=EVM_L(el+4);
     B_VMOSTAT=EVM_IC(vmb+VMOSTAT);
     if(!(B_VMOSTAT & VMKILL))
     {
-        DEBUG_CPASSISTX(DISP1,logmsg("DISP1 Call SCHEDULE because VMKILL not set\n"));
+        DEBUG_CPASSISTX(DISP1,WRMSG(HHC90000, "D", "DISP1 Call SCHEDULE because VMKILL not set"));
         UPD_PSW_IA(regs, SCHDL);
         return(0);
     }
@@ -605,7 +629,7 @@ int ecpsvm_do_disp1(REGS *regs,VADR dl,VADR el)
     {
         if(B_VMOSTAT & VMCF)
         {
-            DEBUG_CPASSISTX(DISP1,logmsg("DISP1 Call SCHEDULE because VMKILL & VMCF & !VMCFREAD set\n"));
+            DEBUG_CPASSISTX(DISP1,WRMSG(HHC90000, "D", "DISP1 Call SCHEDULE because VMKILL & VMCF & !VMCFREAD set"));
             UPD_PSW_IA(regs, SCHDL);
             return(0);
         }
@@ -618,37 +642,20 @@ int ecpsvm_do_disp1(REGS *regs,VADR dl,VADR el)
     B_VMRSTAT=EVM_IC(vmb+VMRSTAT);
     if(B_VMRSTAT & VMLOGOFF)
     {
-        DEBUG_CPASSISTX(DISP1,logmsg("DISP1 Continue because already logging off\n"));
+        DEBUG_CPASSISTX(DISP1,WRMSG(HHC90000, "D", "DISP1 Continue because already logging off"));
         return(2);
     }
     B_VMRSTAT |= VMLOGOFF;
     EVM_STC(B_VMRSTAT,vmb+VMRSTAT);
     UPD_PSW_IA(regs, EVM_L(el+0));
-    DEBUG_CPASSISTX(DISP1,logmsg("DISP1 : Call USOFF\n"));
+    DEBUG_CPASSISTX(DISP1,WRMSG(HHC90000, "D", "DISP1 : Call USOFF"));
     return(0);
-}
-
-void display_regs_cregs(REGS *regs)
-{
-  char buf[256];
-  int len;
-
-  len = display_regs(regs, buf, "");
-  display_cregs(regs, buf + len, "");
-  logmsg("%s", buf);
-}
-
-void display_psw2(REGS *regs)
-{
-  char buf[80];
-  sprintf(buf, "PSW=");
-  display_psw(regs,buf+4);
-  logmsg("%s\n", buf);
 }
 
 /* DISP2 Core */
 int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
 {
+    char buf[1024];
     VADR vmb;   /* Current VMBLOK */
     VADR svmb;  /* ASYSVM */
     VADR runu;  /* RUNUSER */
@@ -676,18 +683,19 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
     BYTE *work_p;
 
     vmb=regs->GR_L(11);
-    DEBUG_CPASSISTX(DISP2,logmsg("DISP2 Data list=%6.6X VM=%6.6X\n",dl,vmb));
+    MSGBUF(buf,"DISP2 Data list=%6.6X VM=%6.6X",dl,vmb);
+    DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
     CHARGE_STOP(vmb);
     if(EVM_IC(XTENDLOCK) == XTENDLOCKSET)
     {
-        DEBUG_CPASSISTX(DISP2,logmsg("DISP2 Exit 8 : System extending\n"));
+        DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", "DISP2 Exit 8 : System extending"));
         /* System in Extend process */
         UPD_PSW_IA(regs, EVM_L(el+8));
         return(0);
     }
     if(EVM_IC(APSTAT2) & CPMCHLK)
     {
-        DEBUG_CPASSISTX(DISP2,logmsg("DISP2 Exit 8 : MCH Recovery\n"));
+        DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", "DISP2 Exit 8 : MCH Recovery"));
         /* Machine Check recovery in progress */
         UPD_PSW_IA(regs, EVM_L(el+8));
         return(0);
@@ -697,7 +705,8 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
     F_TRQB=EVM_L(dl+8);
     if(F_TRQB!=dl)
     {
-        DEBUG_CPASSISTX(DISP2,logmsg("DISP2 TRQ/IOB @ %6.6X Exit being routed\n",F_TRQB));
+        MSGBUF(buf, "DISP2 TRQ/IOB @ %6.6X Exit being routed",F_TRQB);
+        DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
         /* We have a TRQ/IOB */
         /* Update stack */
         F=EVM_L(F_TRQB+8);
@@ -718,14 +727,16 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         regs->GR_L(11)=vmb;
         regs->GR_L(12)=EVM_L(F_TRQB+0x1C);
         UPD_PSW_IA(regs, regs->GR_L(12));
-        DEBUG_CPASSISTX(DISP2,logmsg("DISP2 TRQ/IOB @ %6.6X IA = %6.6X\n",F_TRQB,regs->GR_L(12)));
+        MSGBUF(buf, "DISP2 TRQ/IOB @ %6.6X IA = %6.6X",F_TRQB,regs->GR_L(12));
+        DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
         return(0);
     }
     /* Check CPEX BLOCK for dispatch */
     F_CPEXB=EVM_L(dl+0);
     if(F_CPEXB!=dl)
     {
-        DEBUG_CPASSISTX(DISP2,logmsg("DISP2 CPEXBLOK Exit being routed CPEX=%6.6X\n",F_CPEXB));
+        MSGBUF(buf, "DISP2 CPEXBLOK Exit being routed CPEX=%6.6X",F_CPEXB);
+        DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
         /* We have a CPEXBLOCK */
         /* Update stack */
         F=EVM_L(F_CPEXB+0);
@@ -746,7 +757,8 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         F_CPEXADD=EVM_L(F_CPEXB+0x0C);
         if(ecpsvm_do_fretx(regs,F_CPEXB,10,EVM_L(dl+28),EVM_L(dl+32))!=0)
         {
-            DEBUG_CPASSISTX(DISP2,logmsg("DISP2 CPEXBLOK CPEX=%6.6X Fret Failed\n",F_CPEXB));
+            MSGBUF(buf, "DISP2 CPEXBLOK CPEX=%6.6X Fret Failed",F_CPEXB);
+            DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
             regs->GR_L(0)=10;
             regs->GR_L(1)=F_CPEXB;
             for(i=2;i<12;i++)
@@ -771,57 +783,65 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         }
         regs->GR_L(15)=F_CPEXADD;
         UPD_PSW_IA(regs, F_CPEXADD);
-        DEBUG_CPASSISTX(DISP2,logmsg("DISP2 CPEXBLOK CPEX=%6.6X IA=%6.6X\n",F_CPEXB,F_CPEXADD));
+        MSGBUF(buf, "DISP2 CPEXBLOK CPEX=%6.6X IA=%6.6X",F_CPEXB,F_CPEXADD);
+        DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
         return(0);  /* CPEXBLOCK Branch taken */
     }
     /* Check for a USER run */
     /* AT DMKDSP - DONE */
     if(EVM_IC(CPSTAT2) & CPSHRLK)
     {
-        DEBUG_CPASSISTX(DISP2,logmsg("DISP2 Exit 24 : CPSHRLK Set in CPSTAT2\n"));
+        DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", "DISP2 Exit 24 : CPSHRLK Set in CPSTAT2"));
         UPD_PSW_IA(regs, EVM_L(el+24));  /* IDLEECPS */
         return(0);
     }
     /* Scan Scheduler IN-Q */
-    DEBUG_CPASSISTX(DISP2,logmsg("DISP2 : Scanning Scheduler IN-Queue\n"));
+    DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", "DISP2 : Scanning Scheduler IN-Queue"));
     FW1=EVM_L(dl+24);
     for(vmb=EVM_L(FW1);vmb!=FW1;vmb=EVM_L(vmb))
     {
         if(!(EVM_IC(vmb+VMDSTAT) & VMRUN))
         {
-            DEBUG_CPASSISTX(DISP2,logmsg("DISP2 : VMB @ %6.6X Not eligible : VMRUN not set\n",vmb));
+            MSGBUF(buf, "DISP2 : VMB @ %6.6X Not eligible : VMRUN not set",vmb);
+            DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
             continue;
         }
         if(EVM_IC(vmb+VMRSTAT) & VMCPWAIT)
         {
-            DEBUG_CPASSISTX(DISP2,logmsg("DISP2 : VMB @ %6.6X Not eligible : VMCPWAIT set\n",vmb));
+            MSGBUF(buf, "DISP2 : VMB @ %6.6X Not eligible : VMCPWAIT set",vmb);
+            DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
             continue;
         }
         if(EVM_IC(vmb+VMNOECPS))
         {
-            DEBUG_CPASSISTX(DISP2,logmsg("DISP2 : Exit 20 : VMB @ %6.6X Has VMNOECPS Set to %2.2X\n",vmb,EVM_IC(vmb+VMNOECPS)));
+            MSGBUF(buf, "DISP2 : Exit 20 : VMB @ %6.6X Has VMNOECPS Set to %2.2X",vmb,EVM_IC(vmb+VMNOECPS));
+            DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
             regs->GR_L(1)=vmb;
             regs->GR_L(11)=EVM_L(ASYSVM);
             UPD_PSW_IA(regs, EVM_L(el+20));  /* FREELOCK */
             return(0);
         }
-        DEBUG_CPASSISTX(DISP2,logmsg("DISP2 : VMB @ %6.6X Will now be dispatched\n",vmb));
+        MSGBUF(buf, "DISP2 : VMB @ %6.6X Will now be dispatched",vmb);
+        DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
         runu=EVM_L(RUNUSER);
         F_QUANTUM=EVM_L(QUANTUM);
         if(vmb!=runu)
         {
             /* User switching */
             /* DMKDSP - FNDUSRD */
-            DEBUG_CPASSISTX(DISP2,logmsg("DISP2 : User switch from %6.6X to %6.6X\n",runu,vmb));
+            MSGBUF(buf, "DISP2 : User switch from %6.6X to %6.6X",runu,vmb);
+            DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
             runu=EVM_L(RUNUSER);
             EVM_STC(EVM_IC(runu+VMDSTAT) & ~VMDSP,runu+VMDSTAT);
             lastu=EVM_L(LASTUSER);
-            DEBUG_CPASSISTX(DISP2,logmsg("DISP2 : RUNU=%6.6X, LASTU=%6.6X\n",runu,lastu));
+            MSGBUF(buf, "DISP2 : RUNU=%6.6X, LASTU=%6.6X",runu,lastu);
+            DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
             if(lastu!=svmb && lastu!=vmb)
             {
                 if(EVM_IC(lastu+VMOSTAT) & VMSHR)       /* Running shared sys */
                 {
-                    DEBUG_CPASSISTX(DISP2,logmsg("DISP2 : Exit 16 : LASTU=%6.6X has shared sys & LCSHPG not impl\n",lastu));
+                    MSGBUF(buf, "DISP2 : Exit 16 : LASTU=%6.6X has shared sys & LCSHPG not impl",lastu);
+                    DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
                     CHARGE_START(lastu);
                     /* LCSHRPG not implemented yet */
                     regs->GR_L(10)=vmb;
@@ -834,7 +854,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         }
         if(vmb!=runu || (vmb==runu && (F_QUANTUM & 0x80000000)))
         {
-            DEBUG_CPASSISTX(DISP2,logmsg("DISP2 : Restarting Time Slice\n"));
+            DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", "DISP2 : Restarting Time Slice"));
             F_QUANTUM=EVM_L(dl+16);
             if(EVM_IC(vmb+VMQLEVEL) & VMCOMP)
             {
@@ -906,7 +926,8 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         /* ECMODE VM ? */
         if(B_VMPSTAT & VMV370R)
         {
-            DEBUG_CPASSISTX(DISP2,logmsg("DISP2 : VMB @ %6.6X has ECMODE ON\n",vmb));
+            MSGBUF(buf, "DISP2 : VMB @ %6.6X has ECMODE ON",vmb);
+            DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
             /* Is this an ECMODE PSW Machine ? */
             if(B_VMESTAT & VMEXTCM)
             {
@@ -931,7 +952,8 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         /* Invalidate Shadow Tables if necessary */
         if(B_VMESTAT & (VMINVPAG | VMSHADT))
         {
-            DEBUG_CPASSISTX(DISP2,logmsg("DISP2 : VMB @ %6.6X Refusing to simulate DMKVATAB\n",vmb));
+            MSGBUF(buf, "DISP2 : VMB @ %6.6X Refusing to simulate DMKVATAB",vmb);
+            DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
             /* Really looks like DMKVATAB is a huge thing to simulate */
             /* My belief is that the assist can't handle this one     */
             /* Return to caller as a NO-OP on this one                */
@@ -1026,7 +1048,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         /* Update PER Control */
         if(EVM_IC(vmb+VMTRCTL) & VMTRPER)
         {
-            DEBUG_CPASSISTX(DISP2,logmsg("DISP2 : PER ON\n"));
+            DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", "DISP2 : PER ON"));
             FW1=EVM_L(vmb+VMTREXT);
             regs->CR_L( 9)=EVM_L(FW1+0x1C);
             regs->CR_L(10)=EVM_L(FW1+0x20);
@@ -1064,7 +1086,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         /* Issue PTLB if necessary */
         if(EVM_IC(APSTAT2) & CPPTLBR)
         {
-            DEBUG_CPASSISTX(DISP2,logmsg("DISP2 : Purging TLB\n"));
+            DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", "DISP2 : Purging TLB"));
             ARCH_DEP(purge_tlb)(regs);
             EVM_STC(EVM_IC(APSTAT2) & ~CPPTLBR,APSTAT2);
         }
@@ -1090,27 +1112,34 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         EVM_ST(NCR1,RUNCR1);
         work_p=MADDR(RUNPSW,USE_REAL_ADDR,regs,ACCTYPE_WRITE,0); \
         ARCH_DEP(store_psw) (&rregs,work_p);
-        DEBUG_CPASSISTX(DISP2,logmsg("DISP2 : Entry Real "));
-        DEBUG_CPASSISTX(DISP2,display_psw2(regs));
+        MSGBUF(buf, "DISP2 : Entry Real PSW=");
+        display_psw(regs, &buf[strlen(buf)]);
+	DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
         ARCH_DEP(load_psw) (regs,work_p);
-        DEBUG_CPASSISTX(DISP2,logmsg("DISP2 : VMB @ %6.6X Now being dispatched\n",vmb));
-        DEBUG_CPASSISTX(DISP2,logmsg("DISP2 : Real "));
-        DEBUG_CPASSISTX(DISP2,display_psw2(regs));
-        DEBUG_CPASSISTX(DISP2,logmsg("DISP2 : Virtual "));
-        DEBUG_CPASSISTX(DISP2,display_psw2(&wregs));
-        /* TEST */
+        MSGBUF(buf, "DISP2 : VMB @ %6.6X Now being dispatched",vmb);
+	DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
+        MSGBUF(buf, "DISP2 : Real PSW=");
+        display_psw(regs, &buf[strlen(buf)]);
+        DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
+        MSGBUF(buf, "DISP2 : Virtual PSW=");
+        display_psw(&wregs, &buf[strlen(buf)]);
+        DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
+	/* TEST */
         ARCH_DEP(purge_tlb)(regs);
         SET_IC_MASK(regs);
         SET_AEA_MODE(regs);
         SET_AEA_COMMON(regs);
         SET_PSW_IA(regs);
         /* Dispatch..... */
-        DEBUG_CPASSISTX(DISP2,logmsg(_("HHC90000D DBG : DISP2 - Next Instruction : %2.2X\n"),ARCH_DEP(vfetchb)(regs->psw.IA,USE_PRIMARY_SPACE,regs)));
-        DEBUG_CPASSISTX(DISP2,display_regs_cregs(regs));
+        MSGBUF(buf, "DISP2 - Next Instruction : %2.2X\n",ARCH_DEP(vfetchb)(regs->psw.IA,USE_PRIMARY_SPACE,regs));
+	display_regs(regs, &buf[strlen(buf)], "HHC90000D ");
+        strcat(buf, "\n");
+	display_cregs(regs, &buf[strlen(buf)], "HHC90000D ");
+        DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
         return(2);      /* OK - Perform INTCHECK */
     }
     /* Nothing else to do - wait state */
-    DEBUG_CPASSISTX(DISP2,logmsg("DISP2 : Nothing to dispatch - IDLEECPS\n"));
+    DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", "DISP2 : Nothing to dispatch - IDLEECPS"));
     UPD_PSW_IA(regs, EVM_L(el+24));      /* IDLEECPS */
     return(0);
 }
@@ -1158,6 +1187,7 @@ static int ecpsvm_int_lra(REGS *regs,VADR pgadd,RADR *raddr)
 /* TRANBRNG/TRANLOCK Common code */
 static int ecpsvm_tranbrng(REGS *regs,VADR cortabad,VADR pgadd,RADR *raddr)
 {
+    char buf[256];
     int cc;
     int corcode;
 #if defined(FEATURE_2K_STORAGE_KEYS)
@@ -1167,7 +1197,8 @@ static int ecpsvm_tranbrng(REGS *regs,VADR cortabad,VADR pgadd,RADR *raddr)
     cc=ecpsvm_int_lra(regs,pgadd,raddr);
     if(cc!=0)
     {
-        DEBUG_CPASSISTX(TRBRG,logmsg(_("HHC90000D DBG: Tranbring : LRA cc = %d\n"),cc));
+        MSGBUF(buf, "Tranbring : LRA cc = %d",cc);
+        DEBUG_CPASSISTX(TRBRG,WRMSG(HHC90000, "D", buf));
         return(1);
     }
     /* Get the core table entry from the Real address */
@@ -1176,25 +1207,28 @@ static int ecpsvm_tranbrng(REGS *regs,VADR cortabad,VADR pgadd,RADR *raddr)
     corcode=EVM_IC(cortab+8);
     if(!(corcode & 0x08))
     {
-        DEBUG_CPASSISTX(TRBRG,logmsg(_("HHC90000D DBG: Page not shared - OK %d\n"),cc));
+        MSGBUF(buf, "Page not shared - OK %d",cc);
+        DEBUG_CPASSISTX(TRBRG,WRMSG(HHC90000, "D", buf));
         return(0);      /* Page is NOT shared.. All OK */
     }
 #if defined(FEATURE_2K_STORAGE_KEYS)
     pg1=(*raddr & 0xfff000);
     pg2=pg1+0x800;
-    DEBUG_CPASSISTX(TRBRG,logmsg(_("HHC90000D DBG: Checking 2K Storage keys @"F_RADR" & "F_RADR"\n"),pg1,pg2));
+    MSGBUF(buf, "Checking 2K Storage keys @"F_RADR" & "F_RADR"",pg1,pg2);
+    DEBUG_CPASSISTX(TRBRG,WRMSG(HHC90000, "D", buf));
     if((STORAGE_KEY(pg1,regs) & STORKEY_CHANGE) ||
             (STORAGE_KEY(pg2,regs) & STORKEY_CHANGE))
     {
 #else
-    DEBUG_CPASSISTX(TRBRG,logmsg(_("HHC90000D DBG: Checking 4K Storage keys @"F_RADR"\n"),*raddr));
+    MSGBUF(buf, "Checking 4K Storage keys @"F_RADR,*raddr);
+    DEBUG_CPASSISTX(TRBRG,WRMSG(HHC90000, "D", buf));
     if(STORAGE_KEY(*raddr,regs) & STORKEY_CHANGE)
     {
 #endif
-        DEBUG_CPASSISTX(TRBRG,logmsg(_("HHC90000D DBG: Page shared and changed\n")));
+        DEBUG_CPASSISTX(TRBRG,WRMSG(HHC90000, "D", "Page shared and changed"));
         return(1);      /* Page shared AND changed */
     }
-    DEBUG_CPASSISTX(TRBRG,logmsg(_("HHC90000D DBG: Page shared but not changed\n")));
+    DEBUG_CPASSISTX(TRBRG,WRMSG(HHC90000, "D", "Page shared but not changed"));
     return(0);  /* All done */
 }
 /* TRBRG : Translate a page address */
@@ -1213,11 +1247,11 @@ DEF_INST(ecpsvm_tpage)
     int rc;
     RADR raddr;
     ECPSVM_PROLOG(TRBRG);
-    DEBUG_CPASSISTX(TRBRG,logmsg(_("HHC90000D DBG: TRANBRNG\n")));
+    DEBUG_CPASSISTX(TRBRG,WRMSG(HHC90000, "D", "TRANBRNG"));
     rc=ecpsvm_tranbrng(regs,effective_addr1,regs->GR_L(1),&raddr);
     if(rc)
     {
-        DEBUG_CPASSISTX(TRBRG,logmsg(_("HHC90000D DBG: TRANBRNG - Back to CP\n")));
+        DEBUG_CPASSISTX(TRBRG,WRMSG(HHC90000, "D", "TRANBRNG - Back to CP"));
         return; /* Something not right : NO OP */
     }
     regs->psw.cc=0;
@@ -1235,11 +1269,11 @@ DEF_INST(ecpsvm_tpage_lock)
     int rc;
     RADR raddr;
     ECPSVM_PROLOG(TRLOK);
-    DEBUG_CPASSISTX(TRLOK,logmsg(_("HHC90000D DBG: TRANLOCK\n")));
+    DEBUG_CPASSISTX(TRLOK,WRMSG(HHC90000, "D", "TRANLOCK"));
     rc=ecpsvm_tranbrng(regs,effective_addr1,regs->GR_L(1),&raddr);
     if(rc)
     {
-        DEBUG_CPASSISTX(TRLOK,logmsg(_("HHC90000D DBG: TRANLOCK - Back to CP\n")));
+        DEBUG_CPASSISTX(TRLOK,WRMSG(HHC90000, "D", "TRANLOCK - Back to CP"));
         return; /* Something not right : NO OP */
     }
     /*
@@ -1274,27 +1308,33 @@ DEF_INST(ecpsvm_decode_first_ccw)
 
 static int ecpsvm_disp_incprobt(REGS *regs,VADR vmb)
 {
+    char buf[256];
     U64 tspent;
     U64 DW_VMTMOUTQ;
     U64 DW_PROBSTRT;
     U64 DW_PROBTIME;
 
-    DEBUG_CPASSISTX(DISP0,logmsg("INCPROBT Entry : VMBLOK @ %8.8X\n",vmb));
+    MSGBUF(buf, "INCPROBT Entry : VMBLOK @ %8.8X",vmb);
+    DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", buf));
     DW_VMTMOUTQ=EVM_LD(vmb+VMTMOUTQ);
     DW_PROBSTRT=EVM_LD(PROBSTRT);
-    DEBUG_CPASSISTX(DISP0,logmsg("INCPROBT Entry : VMTMOUTQ = %16.16" I64_FMT "x\n",DW_VMTMOUTQ));
-    DEBUG_CPASSISTX(DISP0,logmsg("INCPROBT Entry : PROBSTRT = %16.16" I64_FMT "x\n",DW_PROBSTRT));
+    MSGBUF(buf, "INCPROBT Entry : VMTMOUTQ = %16.16" I64_FMT "x",DW_VMTMOUTQ);
+    DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", buf));
+    MSGBUF(buf, "INCPROBT Entry : PROBSTRT = %16.16" I64_FMT "x",DW_PROBSTRT);
+    DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", buf));
     if(DW_VMTMOUTQ==DW_PROBSTRT)
     {
-        DEBUG_CPASSISTX(DISP0,logmsg("INCPROBT Already performed"));
+        DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", "INCPROBT Already performed"));
         return(2);      /* continue */
     }
     tspent=DW_PROBSTRT-DW_VMTMOUTQ;
-    DEBUG_CPASSISTX(DISP0,logmsg("INCPROBT TSPENT = %16.16" I64_FMT "x\n",tspent));
+    MSGBUF(buf, "INCPROBT TSPENT = %16.16" I64_FMT "x",tspent);
+    DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", buf));
     DW_PROBTIME=EVM_LD(PROBTIME);
     DW_PROBTIME-=tspent;
     EVM_STD(DW_PROBTIME,PROBTIME);
-    DEBUG_CPASSISTX(DISP0,logmsg("INCPROBT NEW PROBTIME = %16.16" I64_FMT "x\n",DW_PROBTIME));
+    MSGBUF(buf, "INCPROBT NEW PROBTIME = %16.16" I64_FMT "x",DW_PROBTIME);
+    DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", buf));
     return(2);
 }
 
@@ -1304,6 +1344,7 @@ RUNTIME
 
 static int ecpsvm_disp_runtime(REGS *regs,VADR *vmb_p,VADR dlist,VADR exitlist)
 {
+    char buf[256];
     U64 DW_VMTTIME;
     U64 DW_VMTMINQ;
     BYTE B_VMDSTAT;
@@ -1320,14 +1361,16 @@ static int ecpsvm_disp_runtime(REGS *regs,VADR *vmb_p,VADR dlist,VADR exitlist)
     VADR runu;
 
     vmb=*vmb_p;
-    DEBUG_CPASSISTX(DISP0,logmsg("RUNTIME Entry : VMBLOK @ %8.8X\n",vmb));
+    MSGBUF(buf, "RUNTIME Entry : VMBLOK @ %8.8X",vmb);
+    DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", buf));
     runu=EVM_L(RUNUSER);
     /* BAL RUNTIME Processing */
     EVM_STC(CPEX+CPSUPER,CPSTATUS);
     CHARGE_STOP(vmb);
     if(vmb!=runu)
     {
-        DEBUG_CPASSISTX(DISP0,logmsg("RUNTIME Switching to RUNUSER VMBLOK @ %8.8X\n",runu));
+        MSGBUF(buf, "RUNTIME Switching to RUNUSER VMBLOK @ %8.8X",runu);
+        DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", buf));
         CHARGE_SWITCH(vmb,runu);    /* Charge RUNUSER */
         F_ITIMER=EVM_L(QUANTUMR);
         *vmb_p=vmb;
@@ -1336,7 +1379,8 @@ static int ecpsvm_disp_runtime(REGS *regs,VADR *vmb_p,VADR dlist,VADR exitlist)
     {
         F_ITIMER=EVM_L(INTTIMER);
     }
-    DEBUG_CPASSISTX(DISP0,logmsg("RUNTIME : VMBLOK @ %8.8X\n",vmb));
+    MSGBUF(buf, "RUNTIME : VMBLOK @ %8.8X",vmb);
+    DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", buf));
     /* vmb is now RUNUSER */
     /* Check if time slice is over */
     if(F_ITIMER & 0x80000000)
@@ -1364,14 +1408,14 @@ static int ecpsvm_disp_runtime(REGS *regs,VADR *vmb_p,VADR dlist,VADR exitlist)
     B_VMMCR6=EVM_IC(vmb+VMMCR6);
     if(B_VMMCR6 & 0x01)      /* Virtual Timer Flag */
     {
-        DEBUG_CPASSISTX(DISP0,logmsg("RUNTIME : Complete - VTIMER Assist active\n"));
+        DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", "RUNTIME : Complete - VTIMER Assist active"));
         return(2);      /* End of "RUNTIME" here */
     }
     /* Check SET TIMER ON or SET TIMER REAL */
     B_VMTLEVEL=EVM_IC(vmb+VMTLEVEL);
     if(!(B_VMTLEVEL & (VMTON | VMRON)))
     {
-        DEBUG_CPASSISTX(DISP0,logmsg("RUNTIME : Complete - SET TIMER OFF\n"));
+        DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", "RUNTIME : Complete - SET TIMER OFF"));
         return(2);
     }
     /* Update virtual interval timer */
@@ -1380,7 +1424,7 @@ static int ecpsvm_disp_runtime(REGS *regs,VADR *vmb_p,VADR dlist,VADR exitlist)
     if(F_QUANTUM & 0x80000000)
     {
         /* Abend condition detected during virtual time update - exit at +32 */
-        DEBUG_CPASSISTX(DISP0,logmsg("RUNTIME : Bad ITIMER - Taking Exist #32\n"));
+        DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", "RUNTIME : Bad ITIMER - Taking Exist #32"));
         UPD_PSW_IA(regs, EVM_L(exitlist+32));
         return(0);
     }
@@ -1409,11 +1453,11 @@ static int ecpsvm_disp_runtime(REGS *regs,VADR *vmb_p,VADR dlist,VADR exitlist)
         regs->GR_L(9)=EVM_L(dlist+4);
         regs->GR_L(11)=vmb;
         UPD_PSW_IA(regs, EVM_L(exitlist+8));
-        DEBUG_CPASSISTX(DISP0,logmsg("RUNTIME : Complete - Taking exit #8\n"));
+        DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", "RUNTIME : Complete - Taking exit #8"));
         return(0);
     }
     /* Return - Continue DISP0 Processing */
-    DEBUG_CPASSISTX(DISP0,logmsg("RUNTIME : Complete - ITIMER Updated\n"));
+    DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", "RUNTIME : Complete - ITIMER Updated"));
     return(2);
 }
 
@@ -1421,6 +1465,7 @@ static int ecpsvm_disp_runtime(REGS *regs,VADR *vmb_p,VADR dlist,VADR exitlist)
 /*         R11 : User to dispatch                                   */
 DEF_INST(ecpsvm_dispatch_main)
 {
+    char buf[256];
     VADR dlist;
     VADR elist;
     VADR vmb;
@@ -1456,7 +1501,7 @@ DEF_INST(ecpsvm_dispatch_main)
     B_CPSTATUS=EVM_IC(CPSTATUS);
     if((B_CPSTATUS & CPRUN))
     {
-        DEBUG_CPASSISTX(DISP0,logmsg("DISP0 : CPRUN On\n"));
+        DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", "DISP0 : CPRUN On"));
         switch(ecpsvm_disp_runtime(regs,&vmb,dlist,elist))
         {
             case 0: /* Exit taken - success */
@@ -1473,11 +1518,11 @@ DEF_INST(ecpsvm_dispatch_main)
         /* Check if I/O Old PSW has tranlation on */
         if(regs->mainstor[0x38] & 0x04)
         {
-            DEBUG_CPASSISTX(DISP0,logmsg("DISP0 : I/O Old as XLATE on\n"));
+            DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", "DISP0 : I/O Old as XLATE on"));
             /* Yes - I/O Interrupt while running a USER */
             if(B_VMDSTAT & VMDSP)
             {
-                DEBUG_CPASSISTX(DISP0,logmsg("DISP0 : VMDSP on in VMBLOK - Clean status (Exit #36)\n"));
+                DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", "DISP0 : VMDSP on in VMBLOK - Clean status (Exit #36)"));
                 /* Clean status - Do exit 36 */
                 regs->GR_L(11)=vmb;
                 UPD_PSW_IA(regs, EVM_L(elist+36));
@@ -1489,11 +1534,11 @@ DEF_INST(ecpsvm_dispatch_main)
     }
     else
     {
-        DEBUG_CPASSISTX(DISP0,logmsg("DISP0 : CPRUN Off\n"));
+        DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", "DISP0 : CPRUN Off"));
         /* Check if was in Wait State */
         if(B_CPSTATUS & CPWAIT)
         {
-            DEBUG_CPASSISTX(DISP0,logmsg("DISP0 : CPWAIT On : Exit #4\n"));
+            DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", "DISP0 : CPWAIT On : Exit #4"));
             /* Take exit #4 : Coming out of wait state */
             /* DMKDSPC3 */
             /* No need to update R11 */
@@ -1505,11 +1550,13 @@ DEF_INST(ecpsvm_dispatch_main)
     }
     /* VMB is now either original GPR11 or RUNUSER */
     /* DMKDSP - UNSTACK */
-    DEBUG_CPASSISTX(DISP0,logmsg("DISP0 : At UNSTACK : VMBLOK = %8.8X\n",vmb));
+    MSGBUF(buf, "DISP0 : At UNSTACK : VMBLOK = %8.8X",vmb);
+    DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", buf));
     B_VMRSTAT=EVM_IC(vmb+VMRSTAT);
     if(B_VMRSTAT & VMCPWAIT)
     {
-        DEBUG_CPASSISTX(DISP0,logmsg("DISP0 : VMRSTAT VMCPWAIT On (%2.2X) - Taking exit #12\n",B_VMRSTAT));
+        MSGBUF(buf, "DISP0 : VMRSTAT VMCPWAIT On (%2.2X) - Taking exit #12",B_VMRSTAT);
+        DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", buf));
         /* Take Exit 12 */
         regs->GR_L(11)=vmb;
         UPD_PSW_IA(regs, EVM_L(elist+12));
@@ -1521,7 +1568,7 @@ DEF_INST(ecpsvm_dispatch_main)
     B_VMPEND=EVM_IC(vmb+VMPEND);
     if(B_VMPEND & (VMPERPND | VMPGPND))
     {
-        DEBUG_CPASSISTX(DISP0,logmsg("DISP0 : PER/PPF Pending - Taking exit #16\n"));
+        DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", "DISP0 : PER/PPF Pending - Taking exit #16"));
         /* Take Exit 16 */
         regs->GR_L(11)=vmb;
         UPD_PSW_IA(regs, EVM_L(elist+16));
@@ -1534,34 +1581,38 @@ DEF_INST(ecpsvm_dispatch_main)
     F_VMPSWHI=EVM_L(vmb+VMPSW);     /* Load top of virt PSW - Will need it */
     B_VMPSTAT=EVM_IC(vmb+VMPSTAT);   /* Will need VMPSTAT for I/O ints too */
     F_VMPXINT=EVM_L(vmb+VMPXINT);
-    DEBUG_CPASSISTX(DISP0,logmsg("DISP0 : Checking for EXT; Base VMPXINT=%8.8X\n",F_VMPXINT));
+    MSGBUF(buf, "DISP0 : Checking for EXT; Base VMPXINT=%8.8X",F_VMPXINT);
+    DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", buf));
     /* This is DMKDSP - CKEXT */
     if(F_VMPXINT!=0)
     {
-        DEBUG_CPASSISTX(DISP0,logmsg("DISP0 : VPSW HI = %8.8X\n",F_VMPSWHI));
+        MSGBUF(buf, "DISP0 : VPSW HI = %8.8X",F_VMPSWHI);
+        DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", buf));
         OXINT=vmb+VMPXINT;
         /* Check if Virtual PSW enabled for Externals */
         /* (works in both BC & EC modes) */
         if(F_VMPSWHI & 0x01000000)
         {
-            DEBUG_CPASSISTX(DISP0,logmsg("DISP0 : PSW Enabled for EXT\n"));
+            DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", "DISP0 : PSW Enabled for EXT"));
             /* Use VMVCR0 or CR0 in ECBLOK */
             F_VMVCR0=EVM_L(vmb+VMVCR0);     /* CR0 or ECBLOK Address */
             if(B_VMPSTAT & VMV370R) /* SET ECMODE ON ?? */
             {
                 F_VMVCR0=EVM_L(F_VMVCR0+0); /* EXTCR0 at disp +0 in ECBLOK */
             }
-            DEBUG_CPASSISTX(DISP0,logmsg("DISP0 : CR0 = %8.8X\n",F_VMVCR0));
+            MSGBUF(buf, "DISP0 : CR0 = %8.8X",F_VMVCR0);
+            DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", buf));
             /* scan the XINTBLOKS for a mask match */
             /* Save OXINT in the loop for exit 20  */
             for(;F_VMPXINT;OXINT=F_VMPXINT,F_VMPXINT=EVM_L(F_VMPXINT))      /* XINTNEXT @ +0 in XINTBLOK */
             {
                 H_XINTMASK=EVM_LH(F_VMPXINT+10);    /* Get interrupt subclass in XINTBLOK */
-                DEBUG_CPASSISTX(DISP0,logmsg("DISP0 : XINTMASK =  %4.4X\n",H_XINTMASK));
+                MSGBUF(buf, "DISP0 : XINTMASK =  %4.4X\n",H_XINTMASK);
+                DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", buf));
                 H_XINTMASK &= F_VMVCR0;
                 if(H_XINTMASK)           /* Check against CR0 (External subclass mask) */
                 {
-                    DEBUG_CPASSISTX(DISP0,logmsg("DISP0 : EXT Hit - Taking exit #20\n"));
+                    DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", "DISP0 : EXT Hit - Taking exit #20"));
                     /* Enabled for this external */
                     /* Take exit 20 */
                     regs->GR_L(4)=H_XINTMASK;            /* Enabled subclass bits */
@@ -1583,7 +1634,8 @@ DEF_INST(ecpsvm_dispatch_main)
 
     /* Load PIM */
     F_VMIOINT=EVM_LH(vmb+VMIOINT);
-    DEBUG_CPASSISTX(DISP0,logmsg("DISP0 : Checking for I/O; VMIOINT=%8.8X\n",F_VMIOINT));
+    MSGBUF(buf, "DISP0 : Checking for I/O; VMIOINT=%8.8X",F_VMIOINT);
+    DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", buf));
     if(F_VMIOINT!=0)        /* If anything in the pipe */
     {
         F_VMIOINT <<=16;    /* Put IOINT mask in bits 0-15 */
@@ -1624,7 +1676,7 @@ DEF_INST(ecpsvm_dispatch_main)
             F_VMIOINT&=iomask;
             if(F_VMIOINT)
             {
-                DEBUG_CPASSISTX(DISP0,logmsg("DISP0 : I/O Hit - Taking exit #24\n"));
+                DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", "DISP0 : I/O Hit - Taking exit #24"));
                 /* Take Exit 24 */
                 regs->GR_L(7)=F_VMIOINT;
                 regs->GR_L(11)=vmb;
@@ -1642,7 +1694,7 @@ DEF_INST(ecpsvm_dispatch_main)
     EVM_STC(B_VMRSTAT,vmb+VMRSTAT);
     if(F_VMPSWHI & 0x00020000)
     {
-        DEBUG_CPASSISTX(DISP0,logmsg("DISP0 : VWAIT - Taking exit #28\n"));
+        DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", "DISP0 : VWAIT - Taking exit #28"));
         /* Take exit 28  */
         regs->GR_L(11)=vmb;
         UPD_PSW_IA(regs, EVM_L(elist+28));   /* Exit +28 */
@@ -1651,7 +1703,7 @@ DEF_INST(ecpsvm_dispatch_main)
         return;
     }
     /* Take exit 0 (DISPATCH) */
-    DEBUG_CPASSISTX(DISP0,logmsg("DISP0 : DISPATCH - Taking exit #0\n"));
+    DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", "DISP0 : DISPATCH - Taking exit #0"));
     regs->GR_L(11)=vmb;
     UPD_PSW_IA(regs, EVM_L(elist+0));   /* Exit +0 */
     CPASSIST_HIT(DISP0);
@@ -1731,6 +1783,7 @@ DEF_INST(ecpsvm_dispatch_main)
 /******************************************************/
 DEF_INST(ecpsvm_locate_rblock)
 {
+    char buf[256];
     U32 chix;           /* offset of RCH in RCH Array */
     U32 cuix;           /* Offset of RCU in RCU Array */
     U32 dvix;           /* Offset of RDV in RDV Array */
@@ -1752,7 +1805,8 @@ DEF_INST(ecpsvm_locate_rblock)
     /* And the DMKRIO tables addresses */
     arioct=effective_addr2;
 
-    DEBUG_CPASSISTX(SCNRU,logmsg(_("HHC90000D DBG: ECPS:VM SCNRU called; RDEV=%4.4X ARIOCT=%6.6X\n"),effective_addr1,arioct));
+    MSGBUF(buf, "ECPS:VM SCNRU called; RDEV=%4.4X ARIOCT=%6.6X",effective_addr1,arioct);
+    DEBUG_CPASSISTX(SCNRU,WRMSG(HHC90000, "D", buf));
 
     /* Get the Channel Index Table */
     rchixtbl= EVM_L(effective_addr2);
@@ -1760,12 +1814,13 @@ DEF_INST(ecpsvm_locate_rblock)
     /* Obtain the RCH offset */
     chix=EVM_LH(rchixtbl+((rdev & 0xf00) >> 7));
 
-    DEBUG_CPASSISTX(SCNRU,logmsg(_("HHC90000D DBG: ECPS:VM SCNRU : RCH IX = %x\n"),chix));
+    MSGBUF(buf, "ECPS:VM SCNRU : RCH IX = %x",chix);
+    DEBUG_CPASSISTX(SCNRU,WRMSG(HHC90000, "D", buf));
 
     /* Check if Bit 0 set (no RCH) */
     if(chix & 0x8000)
     {
-        // logmsg(_("HHC90000D DBG: ECPS:VM SCNRU : NO CHANNEL\n"));
+        // WRMSG(HHC90000, "D", "ECPS:VM SCNRU : NO CHANNEL");
         /*
         regs->GR_L(6)=~0;
         regs->GR_L(7)=~0;
@@ -1791,7 +1846,7 @@ DEF_INST(ecpsvm_locate_rblock)
         cuix=EVM_LH(rchblk+0x20+((rdev & 0xf0)>>2));
         if(cuix & 0x8000)
         {
-            // logmsg(_("HHC90000D DBG: ECPS:VM SCNRU : NO CONTROL UNIT\n"));
+            // WRMSG(HHC90000, "D", "ECPS:VM SCNRU : NO CONTROL UNIT");
             /*
             regs->GR_L(6)=rchblk;
             regs->GR_L(7)=~0;
@@ -1802,7 +1857,8 @@ DEF_INST(ecpsvm_locate_rblock)
             return;
         }
     }
-    DEBUG_CPASSISTX(SCNRU,logmsg(_("HHC90000D DBG: ECPS:VM SCNRU : RCU IX = %x\n"),cuix));
+    MSGBUF(buf, "ECPS:VM SCNRU : RCU IX = %x",cuix);
+    DEBUG_CPASSISTX(SCNRU,WRMSG(HHC90000, "D", buf));
     rcutbl=EVM_L(arioct+8);
     rcublk=rcutbl+cuix;
     dvix=EVM_LH(rcublk+0x28+((rdev & 0x00f)<<1));
@@ -1812,7 +1868,7 @@ DEF_INST(ecpsvm_locate_rblock)
     }
     if(dvix & 0x8000)
     {
-        // logmsg(_("HHC90000D DBG: ECPS:VM SCNRU : NO RDEVBLOK\n"));
+        // WRMSG(HHC90000, "D", "ECPS:VM SCNRU : NO RDEVBLOK");
         /*
         regs->GR_L(6)=rchblk;
         regs->GR_L(7)=rcublk;
@@ -1822,11 +1878,13 @@ DEF_INST(ecpsvm_locate_rblock)
         */
         return;
     }
-    DEBUG_CPASSISTX(SCNRU,logmsg(_("HHC90000D DBG: ECPS:VM SCNRU : RDV IX = %x\n"),dvix));
+    MSGBUF(buf, "ECPS:VM SCNRU : RDV IX = %x",dvix);
+    DEBUG_CPASSISTX(SCNRU,WRMSG(HHC90000, "D", buf));
     dvix<<=3;
     rdvtbl=EVM_L(arioct+12);
     rdvblk=rdvtbl+dvix;
-    DEBUG_CPASSISTX(SCNRU,logmsg(_("HHC90000D DBG: ECPS:VM SCNRU : RCH = %6.6X, RCU = %6.6X, RDV = %6.6X\n"),rchblk,rcublk,rdvblk));
+    MSGBUF(buf, "ECPS:VM SCNRU : RCH = %6.6X, RCU = %6.6X, RDV = %6.6X",rchblk,rcublk,rdvblk);
+    DEBUG_CPASSISTX(SCNRU,WRMSG(HHC90000, "D", buf));
     regs->GR_L(6)=rchblk;
     regs->GR_L(7)=rcublk;
     regs->GR_L(8)=rdvblk;
@@ -1868,9 +1926,12 @@ DEF_INST(ecpsvm_disp2)
 /* 2nd operand : ignored */
 DEF_INST(ecpsvm_store_level)
 {
+    char buf[256];
+
     ECPSVM_PROLOG(STEVL);
     EVM_ST(sysblk.ecpsvm.level,effective_addr1);
-    DEBUG_CPASSISTX(STEVL,logmsg(_("HHC90000D DBG: ECPS:VM STORE LEVEL %d called\n"),sysblk.ecpsvm.level));
+    MSGBUF(buf, "ECPS:VM STORE LEVEL %d called",sysblk.ecpsvm.level);
+    DEBUG_CPASSISTX(STEVL,WRMSG(HHC90000, "D", buf));
     CPASSIST_HIT(STEVL);
 }
 /* LCSPG : Locate Changed Shared Page */
@@ -1899,6 +1960,7 @@ DEF_INST(ecpsvm_loc_chgshrpg)
 /*************************************************************/
 DEF_INST(ecpsvm_extended_freex)
 {
+    char buf[256];
     U32 maxdw;
     U32 numdw;
     U32 maxsztbl;
@@ -1910,27 +1972,31 @@ DEF_INST(ecpsvm_extended_freex)
     numdw=regs->GR_L(0);
     spixtbl=effective_addr2;
     maxsztbl=effective_addr1;
-    DEBUG_CPASSISTX(FREEX,logmsg(_("HHC90000D DBG: ECPS:VM FREEX DW = %4.4X\n"),numdw));
+    MSGBUF(buf, "ECPS:VM FREEX DW = %4.4X",numdw);
+    DEBUG_CPASSISTX(FREEX,WRMSG(HHC90000, "D", buf));
     if(numdw==0)
     {
         return;
     }
-    DEBUG_CPASSISTX(FREEX,logmsg(_("HHC90000D DBG: MAXSIZE ADDR = %6.6X, SUBPOOL INDEX TABLE = %6.6X\n"),maxsztbl,spixtbl));
+    MSGBUF(buf, "MAXSIZE ADDR = %6.6X, SUBPOOL INDEX TABLE = %6.6X",maxsztbl,spixtbl);
+    DEBUG_CPASSISTX(FREEX,WRMSG(HHC90000, "D", buf));
     /* E1 = @ of MAXSIZE (maximum # of DW allocatable by FREEX from subpools) */
     /*      followed by subpool pointers                                      */
     /* E2 = @ of subpool indices                                              */
     maxdw=EVM_L(maxsztbl);
     if(regs->GR_L(0)>maxdw)
     {
-        DEBUG_CPASSISTX(FREEX,logmsg(_("HHC90000D DBG: FREEX request beyond subpool capacity\n")));
+        DEBUG_CPASSISTX(FREEX,WRMSG(HHC90000, "D", "FREEX request beyond subpool capacity"));
         return;
     }
     /* Fetch subpool index */
     spix=EVM_IC(spixtbl+numdw);
-    DEBUG_CPASSISTX(FREEX,logmsg(_("HHC90000D DBG: Subpool index = %X\n"),spix));
+    MSGBUF(buf, "Subpool index = %X",spix);
+    DEBUG_CPASSISTX(FREEX,WRMSG(HHC90000, "D", buf));
     /* Fetch value */
     freeblock=EVM_L(maxsztbl+4+spix);
-    DEBUG_CPASSISTX(FREEX,logmsg(_("HHC90000D DBG: Value in subpool table = %6.6X\n"),freeblock));
+    MSGBUF(buf, "Value in subpool table = %6.6X",freeblock);
+    DEBUG_CPASSISTX(FREEX,WRMSG(HHC90000, "D", buf));
     if(freeblock==0)
     {
         /* Can't fullfill request here */
@@ -1938,7 +2004,8 @@ DEF_INST(ecpsvm_extended_freex)
     }
     nextblk=EVM_L(freeblock);
     EVM_ST(nextblk,maxsztbl+4+spix);
-    DEBUG_CPASSISTX(FREEX,logmsg(_("HHC90000D DBG: New Value in subpool table = %6.6X\n"),nextblk));
+    MSGBUF(buf, "New Value in subpool table = %6.6X",nextblk);
+    DEBUG_CPASSISTX(FREEX,WRMSG(HHC90000, "D", buf));
     regs->GR_L(1)=freeblock;
     regs->psw.cc=0;
     BR14;
@@ -1963,40 +2030,43 @@ DEF_INST(ecpsvm_extended_freex)
 /*************************************************************/
 int ecpsvm_do_fretx(REGS *regs,VADR block,U16 numdw,VADR maxsztbl,VADR fretl)
 {
+    char buf[256];
     U32 cortbl;
     U32 maxdw;
     U32 cortbe; /* Core table Page entry for fretted block */
     U32 prevblk;
     BYTE spix;
-    DEBUG_CPASSISTX(FRETX,logmsg(_("HHC90000D DBG: X fretx called AREA=%6.6X, DW=%4.4X\n"),regs->GR_L(1),regs->GR_L(0)));
+    MSGBUF(buf, "X fretx called AREA=%6.6X, DW=%4.4X",regs->GR_L(1),regs->GR_L(0));
+    DEBUG_CPASSISTX(FRETX,WRMSG(HHC90000, "D", buf));
     if(numdw==0)
     {
-        DEBUG_CPASSISTX(FRETX,logmsg(_("HHC90000D DBG: ECPS:VM Cannot FRETX : DWORDS = 0\n")));
+        DEBUG_CPASSISTX(FRETX,WRMSG(HHC90000, "D", "ECPS:VM Cannot FRETX : DWORDS = 0"));
         return(1);
     }
     maxdw=EVM_L(maxsztbl);
     if(numdw>maxdw)
     {
-        DEBUG_CPASSISTX(FRETX,logmsg(_("HHC90000D DBG: ECPS:VM Cannot FRETX : DWORDS = %d > MAXDW %d\n"),numdw,maxdw));
+        MSGBUF(buf, "ECPS:VM Cannot FRETX : DWORDS = %d > MAXDW %d",numdw,maxdw);
+        DEBUG_CPASSISTX(FRETX,WRMSG(HHC90000, "D", buf));
         return(1);
     }
     cortbl=EVM_L(fretl);
     cortbe=cortbl+((block & 0xfff000)>>8);
     if(EVM_L(cortbe)!=EVM_L(fretl+4))
     {
-        DEBUG_CPASSISTX(FRETX,logmsg(_("HHC90000D DBG: ECPS:VM Cannot FRETX : Area not in Core Free area\n")));
+        DEBUG_CPASSISTX(FRETX,WRMSG(HHC90000, "D", "ECPS:VM Cannot FRETX : Area not in Core Free area"));
         return(1);
     }
     if(EVM_IC(cortbe+8)!=0x02)
     {
-        DEBUG_CPASSISTX(FRETX,logmsg(_("HHC90000D DBG: ECPS:VM Cannot FRETX : Area flag != 0x02\n")));
+        DEBUG_CPASSISTX(FRETX,WRMSG(HHC90000, "D", "ECPS:VM Cannot FRETX : Area flag != 0x02"));
         return(1);
     }
     spix=EVM_IC(fretl+11+numdw);
     prevblk=EVM_L(maxsztbl+4+spix);
     if(prevblk==block)
     {
-        DEBUG_CPASSISTX(FRETX,logmsg(_("HHC90000D DBG: ECPS:VM Cannot FRETX : fretted block already on subpool chain\n")));
+        DEBUG_CPASSISTX(FRETX,WRMSG(HHC90000, "D", "ECPS:VM Cannot FRETX : fretted block already on subpool chain"));
         return(1);
     }
     EVM_ST(block,maxsztbl+4+spix);
@@ -2066,7 +2136,7 @@ int     ecpsvm_check_pswtrans(REGS *regs,ECPSVM_MICBLOK *micblok, BYTE micpend, 
     /* Check for a switch from BC->EC or EC->BC */
     if(ECMODE(&oldr->psw)!=ECMODE(&newr->psw))
     {
-        DEBUG_SASSISTX(LPSW,logmsg(_("HHC90000D DBG: New and Old PSW have a EC/BC transition\n")));
+        DEBUG_SASSISTX(LPSW,WRMSG(HHC90000, "D", "New and Old PSW have a EC/BC transition"));
         return(1);
     }
     /* Check if PER or DAT is being changed */
@@ -2074,7 +2144,7 @@ int     ecpsvm_check_pswtrans(REGS *regs,ECPSVM_MICBLOK *micblok, BYTE micpend, 
     {
         if((newr->psw.sysmask & 0x44) != (oldr->psw.sysmask & 0x44))
         {
-            DEBUG_SASSISTX(LPSW,logmsg(_("HHC90000D DBG: New PSW Enables DAT or PER\n")));
+            DEBUG_SASSISTX(LPSW,WRMSG(HHC90000, "D", "New PSW Enables DAT or PER"));
             return(1);
         }
     }
@@ -2085,7 +2155,7 @@ int     ecpsvm_check_pswtrans(REGS *regs,ECPSVM_MICBLOK *micblok, BYTE micpend, 
         {
             if(((~oldr->psw.sysmask) & 0x03) & newr->psw.sysmask)
             {
-                DEBUG_SASSISTX(LPSW,logmsg(_("HHC90000D DBG: New PSW Enables interrupts and MICPEND (EC)\n")));
+                DEBUG_SASSISTX(LPSW,WRMSG(HHC90000, "D", "New PSW Enables interrupts and MICPEND (EC)"));
                 return(1);
             }
         }
@@ -2093,33 +2163,34 @@ int     ecpsvm_check_pswtrans(REGS *regs,ECPSVM_MICBLOK *micblok, BYTE micpend, 
         {
             if(~oldr->psw.sysmask & newr->psw.sysmask)
             {
-                DEBUG_SASSISTX(LPSW,logmsg(_("HHC90000D DBG: New PSW Enables interrupts and MICPEND (BC)\n")));
+                DEBUG_SASSISTX(LPSW,WRMSG(HHC90000, "D","New PSW Enables interrupts and MICPEND (BC)"));
                 return(1);
             }
         }
     }
     if(WAITSTATE(&newr->psw))
     {
-        DEBUG_SASSISTX(LPSW,logmsg(_("HHC90000D DBG: New PSW is a WAIT PSW\n")));
+        DEBUG_SASSISTX(LPSW,WRMSG(HHC90000, "D", "New PSW is a WAIT PSW"));
         return(1);
     }
     if(ECMODE(&newr->psw))
     {
         if(newr->psw.sysmask & 0xb8)
         {
-            DEBUG_SASSISTX(LPSW,logmsg(_("HHC90000D DBG: New PSW sysmask incorrect\n")));
+            DEBUG_SASSISTX(LPSW,WRMSG(HHC90000, "D", "New PSW sysmask incorrect"));
             return(1);
         }
     }
     if(newr->psw.IA & 0x01)
     {
-        DEBUG_SASSISTX(LPSW,logmsg(_("HHC90000D DBG: New PSW has ODD IA\n")));
+        DEBUG_SASSISTX(LPSW,WRMSG(HHC90000, "D", "New PSW has ODD IA"));
         return(1);
     }
     return(0);
 }
 int     ecpsvm_dossm(REGS *regs,int b2,VADR effective_addr2)
 {
+    char buf2[256];
     BYTE  reqmask;
     BYTE *cregs;
     U32   creg0;
@@ -2131,13 +2202,14 @@ int     ecpsvm_dossm(REGS *regs,int b2,VADR effective_addr2)
     /* Reject if V PSW is in problem state */
     if(CR6 & ECPSVM_CR6_VIRTPROB)
     {
-        DEBUG_SASSISTX(SSM,logmsg("HHC90000D DBG: SASSIST SSM reject : V PB State\n"));
+        DEBUG_SASSISTX(SSM,WRMSG(HHC90000, "D", "SASSIST SSM reject : V PB State"));
         return(1);
     }
     /*
     if(!(micevma & MICSTSM))
     {
-        DEBUG_SASSISTX(SSM,logmsg("HHC90000D DBG: SASSIST SSM reject : SSM Disabled in MICEVMA; EVMA=%2.2X\n",micevma));
+        MSGBUF(buf2, "SASSIST SSM reject : SSM Disabled in MICEVMA; EVMA=%2.2X",micevma);
+        DEBUG_SASSISTX(SSM,WRMSG(HHC90000, "D", buf2));
         return(1);
     }
     */
@@ -2148,7 +2220,7 @@ int     ecpsvm_dossm(REGS *regs,int b2,VADR effective_addr2)
     /* Reject if V CR0 specifies SSM Suppression */
     if(creg0 & 0x40000000)
     {
-        DEBUG_SASSISTX(SSM,logmsg("HHC90000D DBG: SASSIST SSM reject : V SSM Suppr\n"));
+        DEBUG_SASSISTX(SSM,WRMSG(HHC90000, "D", "SASSIST SSM reject : V SSM Suppr"));
         return(1);
     }
     /* Load the requested SSM Mask */
@@ -2165,7 +2237,7 @@ int     ecpsvm_dossm(REGS *regs,int b2,VADR effective_addr2)
 
     if(ecpsvm_check_pswtrans(regs,&micblok,micpend,&vpregs,&npregs))       /* Check PSW transition capability */
     {
-        DEBUG_SASSISTX(SSM,logmsg("HHC90000D DBG: SASSIST SSM Reject : New PSW too complex\n"));
+        DEBUG_SASSISTX(SSM,WRMSG(HHC90000, "D", "SASSIST SSM Reject : New PSW too complex"));
         return(1); /* Something in the NEW PSW we can't handle.. let CP do it */
     }
 
@@ -2177,11 +2249,14 @@ int     ecpsvm_dossm(REGS *regs,int b2,VADR effective_addr2)
     MADDR(vpswa,USE_REAL_ADDR,regs,ACCTYPE_WRITE,0);
     /* store the new PSW */
     ARCH_DEP(store_psw) (&npregs,vpswa_p);
-    DEBUG_SASSISTX(SSM,logmsg("HHC90000D DBG: SASSIST SSM Complete : new SM = %2.2X\n",reqmask));
-    DEBUG_SASSISTX(LPSW,logmsg("HHC90000D DBG: SASSIST SSM New VIRT "));
-    DEBUG_SASSISTX(LPSW,display_psw2(&npregs));
-    DEBUG_SASSISTX(LPSW,logmsg("HHC90000D DBG: SASSIST SSM New REAL "));
-    DEBUG_SASSISTX(LPSW,display_psw2(regs));
+    MSGBUF(buf2, "SASSIST SSM Complete : new SM = %2.2X",reqmask);
+    DEBUG_SASSISTX(SSM,WRMSG(HHC90000, "D", buf2));
+    MSGBUF(buf2, "SASSIST SSM New VIRT ");
+    display_psw(&npregs, &buf2[strlen(buf2)]);
+    DEBUG_SASSISTX(LPSW,WRMSG(HHC90000, "D", buf2));
+    MSGBUF(buf2, "SASSIST SSM New REAL ");
+    display_psw(regs, &buf2[strlen(buf2)]);
+    DEBUG_SASSISTX(LPSW,WRMSG(HHC90000, "D", buf2));
     SASSIST_HIT(SSM);
     return(0);
 }
@@ -2195,12 +2270,12 @@ int     ecpsvm_dosvc(REGS *regs,int svccode)
 
     if(svccode==76)     /* NEVER trap SVC 76 */
     {
-        DEBUG_SASSISTX(SVC,logmsg("HHC90000D DBG: SASSIST SVC Reject : SVC 76\n"));
+        DEBUG_SASSISTX(SVC,WRMSG(HHC90000, "D", "SASSIST SVC Reject : SVC 76"));
         return(1);
     }
     if(CR6 & ECPSVM_CR6_SVCINHIB)
     {
-        DEBUG_SASSISTX(SVC,logmsg("HHC90000D DBG: SASSIST SVC Reject : SVC Assist Inhibit\n"));
+        DEBUG_SASSISTX(SVC,WRMSG(HHC90000, "D", "SASSIST SVC Reject : SVC Assist Inhibit"));
         return(1);      /* SVC SASSIST INHIBIT ON */
     }
     /* Get what the NEW PSW should be */
@@ -2210,8 +2285,9 @@ int     ecpsvm_dosvc(REGS *regs,int svccode)
                                                                                          /* Also sets reference bit     */
     INITPSEUDOREGS(newr);
     ARCH_DEP(load_psw) (&newr, (BYTE *)&psa->svcnew);   /* Ref bit set above */
-    DEBUG_SASSISTX(SVC,logmsg("HHC90000D DBG: SASSIST SVC NEW VIRT "));
-    DEBUG_SASSISTX(SVC,display_psw2(&newr));
+    MSGBUF(buf, "SASSIST SVC NEW VIRT ");
+    display_psw(&newr, &buf[strlen(buf)]);
+    DEBUG_SASSISTX(SVC,WRMSG(HHC90000, "D", buf));
     /* Get some stuff from the REAL Running PSW to put in OLD SVC PSW */
     SET_PSW_IA(regs);
     UPD_PSW_IA(&vpregs, regs->psw.IA);            /* Instruction Address */
@@ -2219,12 +2295,12 @@ int     ecpsvm_dosvc(REGS *regs,int svccode)
     vpregs.psw.pkey=regs->psw.pkey;               /* Protection Key      */
     vpregs.psw.progmask=regs->psw.progmask;       /* Program Mask        */
     vpregs.psw.intcode=svccode;                   /* SVC Interrupt code  */
-    DEBUG_SASSISTX(SVC,logmsg("HHC90000D DBG: SASSIST SVC OLD VIRT "));
-    DEBUG_SASSISTX(SVC,display_psw2(&vpregs));
-
+    MSGBUF(buf, "SASSIST SVC OLD VIRT ");
+    display_psw(&vpregs, &buf[strlen(buf)]);
+    DEBUG_SASSISTX(SVC,WRMSG(HHC90000, "D", buf));
     if(ecpsvm_check_pswtrans(regs,&micblok,micpend,&vpregs,&newr))       /* Check PSW transition capability */
     {
-        DEBUG_SASSISTX(SVC,logmsg("HHC90000D DBG: SASSIST SVC Reject : Cannot make transition to new PSW\n"));
+        DEBUG_SASSISTX(SVC,WRMSG(HHC90000, "D", "SASSIST SVC Reject : Cannot make transition to new PSW"));
         return(1); /* Something in the NEW PSW we can't handle.. let CP do it */
     }
     /* Store the OLD SVC PSW */
@@ -2250,7 +2326,7 @@ int     ecpsvm_dosvc(REGS *regs,int svccode)
      * Now store the new PSW in the area pointed by the MICBLOK
      */
     ARCH_DEP(store_psw) (&newr,vpswa_p);
-    DEBUG_SASSISTX(SVC,logmsg("HHC90000D DBG: SASSIST SVC Done\n"));
+    DEBUG_SASSISTX(SVC,WRMSG(HHC90000, "D", "SASSIST SVC Done"));
     SASSIST_HIT(SVC);
     return(0);
 }
@@ -2264,18 +2340,19 @@ int ecpsvm_dolpsw(REGS *regs,int b2,VADR e2)
     /* Reject if V PSW is in problem state */
     if(CR6 & ECPSVM_CR6_VIRTPROB)
     {
-        DEBUG_SASSISTX(LPSW,logmsg("HHC90000D DBG: SASSIST LPSW reject : V PB State\n"));
+        DEBUG_SASSISTX(LPSW,WRMSG(HHC90000, "D", "SASSIST LPSW reject : V PB State"));
         return(1);
     }
     /* Reject if MICEVMA says not to do LPSW sim */
     if(!(micevma & MICLPSW))
     {
-        DEBUG_SASSISTX(LPSW,logmsg("HHC90000D DBG: SASSIST LPSW reject : LPSW disabled in MICEVMA\n"));
+        DEBUG_SASSISTX(LPSW,WRMSG(HHC90000, "D", "SASSIST LPSW reject : LPSW disabled in MICEVMA"));
         return(1);
     }
     if(e2&0x03)
     {
-        DEBUG_SASSISTX(LPSW,logmsg("HHC90000D DBG: SASSIST LPSW %6.6X - Alignement error\n",e2));
+        MSGBUF(buf, "SASSIST LPSW %6.6X - Alignement error",e2);
+        DEBUG_SASSISTX(LPSW,WRMSG(HHC90000, "D", buf));
         return(1);
 
     }
@@ -2284,7 +2361,7 @@ int ecpsvm_dolpsw(REGS *regs,int b2,VADR e2)
     ARCH_DEP(load_psw) (&nregs,nlpsw);
     if(ecpsvm_check_pswtrans(regs,&micblok,micpend,&vpregs,&nregs))
     {
-        DEBUG_SASSISTX(LPSW,logmsg("HHC90000D DBG: SASSIST LPSW Rejected - Cannot make PSW transition\n"));
+        DEBUG_SASSISTX(LPSW,WRMSG(HHC90000, "D", "SASSIST LPSW Rejected - Cannot make PSW transition"));
         return(1);
 
     }
@@ -2292,10 +2369,12 @@ int ecpsvm_dolpsw(REGS *regs,int b2,VADR e2)
     MADDR(vpswa,USE_REAL_ADDR,regs,ACCTYPE_WRITE,0);
                         /* Set ref bit in address pointed by MICBLOK */
     ARCH_DEP(store_psw) (&nregs,vpswa_p);
-    DEBUG_SASSISTX(LPSW,logmsg("HHC90000D DBG: SASSIST LPSW New VIRT "));
-    DEBUG_SASSISTX(LPSW,display_psw2(&nregs));
-    DEBUG_SASSISTX(LPSW,logmsg("HHC90000D DBG: SASSIST LPSW New REAL "));
-    DEBUG_SASSISTX(LPSW,display_psw2(regs));
+    MSGBUF(buf, "SASSIST LPSW New VIRT ");
+    display_psw(&nregs, &buf[strlen(buf)]);
+    DEBUG_SASSISTX(LPSW,WRMSG(HHC90000, "D", buf));
+    MSGBUF(buf, "SASSIST LPSW New REAL ");
+    display_psw(regs, &buf[strlen(buf)]);
+    DEBUG_SASSISTX(LPSW,WRMSG(HHC90000, "D", buf));
     SASSIST_HIT(LPSW);
     return(0);
 }
@@ -2303,30 +2382,33 @@ int ecpsvm_dolpsw(REGS *regs,int b2,VADR e2)
 
 int     ecpsvm_virttmr_ext(REGS *regs)
 {
-    DEBUG_SASSISTX(VTIMER,logmsg("HHC90000D DBG: SASSIST VTIMER Checking if we can IRPT\n"));
-    DEBUG_SASSISTX(VTIMER,logmsg("HHC90000D DBG: SASSIST VTIMER Virtual"));
-    DEBUG_SASSISTX(VTIMER,display_psw2(regs));
+    char buf[256];
+
+    DEBUG_SASSISTX(VTIMER,WRMSG(HHC90000, "D", "SASSIST VTIMER Checking if we can IRPT"));
+    MSGBUF(buf, "SASSIST VTIMER Virtual");
+    display_psw(regs, &buf[strlen(buf)]);
+    DEBUG_SASSISTX(VTIMER,WRMSG(HHC90000, "D", buf));
     if(IS_IC_ECPSVTIMER(regs))
     {
-        DEBUG_SASSISTX(VTIMER,logmsg("HHC90000D DBG: SASSIST VTIMER Not pending\n"));
+        DEBUG_SASSISTX(VTIMER,WRMSG(HHC90000, "D", "SASSIST VTIMER Not pending"));
         return(1);
     }
     if(!PROBSTATE(&regs->psw))
     {
-        DEBUG_SASSISTX(VTIMER,logmsg("HHC90000D DBG: SASSIST VTIMER Not dispatching a VM\n"));
+        DEBUG_SASSISTX(VTIMER,WRMSG(HHC90000, "D", "SASSIST VTIMER Not dispatching a VM"));
         return(1);
     }
     if(!(regs->psw.sysmask & PSW_EXTMASK))
     {
-        DEBUG_SASSISTX(VTIMER,logmsg("HHC90000D DBG: SASSIST VTIMER Test int : Not enabled for EXT\n"));
+        DEBUG_SASSISTX(VTIMER,WRMSG(HHC90000, "D", "SASSIST VTIMER Test int : Not enabled for EXT"));
         return(1);
     }
     if(!(regs->CR_L(6) & ECPSVM_CR6_VIRTTIMR))
     {
-        DEBUG_SASSISTX(VTIMER,logmsg("HHC90000D DBG: SASSIST VTIMER Test int : Not enabled for VTIMER\n"));
+        DEBUG_SASSISTX(VTIMER,WRMSG(HHC90000, "D", "SASSIST VTIMER Test int : Not enabled for VTIMER"));
         return(1);
     }
-    DEBUG_SASSISTX(VTIMER,logmsg("HHC90000D DBG: SASSIST VTIMER Please, do\n"));
+    DEBUG_SASSISTX(VTIMER,WRMSG(HHC90000, "D", "SASSIST VTIMER Please, do"));
     return(0);
 }
 
@@ -2380,7 +2462,7 @@ int ecpsvm_dolctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
 
     if(effective_addr2 & 0x03)
     {
-        DEBUG_SASSISTX(LCTL,logmsg("HHC90000D DBG: SASSIST LCTL Reject : Not aligned\n"));
+        DEBUG_SASSISTX(LCTL,WRMSG(HHC90000, "D", "SASSIST LCTL Reject : Not aligned"));
         return(1);
     }
 
@@ -2389,7 +2471,7 @@ int ecpsvm_dolctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
 
     if((!(B_VMPSTAT & VMV370R)) && ((r1!=r3) || (r1!=0)))
     {
-        DEBUG_SASSISTX(LCTL,logmsg("HHC90000D DBG: SASSIST LCTL Reject : BC Mode VM & LCTL != 0,0\n"));
+        DEBUG_SASSISTX(LCTL,WRMSG(HHC90000, "D", "SASSIST LCTL Reject : BC Mode VM & LCTL != 0,0"));
         return(1);
     }
     /* Determine the range of CRs to be loaded */
@@ -2432,7 +2514,8 @@ int ecpsvm_dolctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
     }
     /* Source safely loaded into "crs" array */
     /* Load the CRS - exit from loop if it's not possible */
-    DEBUG_SASSISTX(LCTL,logmsg("HHC90000D DBG: SASSIST LCTL %d,%d : Modifying %d cregs\n",r1,r3,numcrs));
+    MSGBUF(buf, "SASSIST LCTL %d,%d : Modifying %d cregs",r1,r3,numcrs);
+    DEBUG_SASSISTX(LCTL,WRMSG(HHC90000, "D", buf));
     for(j=r1,i=0;i<numcrs;i++,j++)
     {
         if(j>15)
@@ -2445,7 +2528,7 @@ int ecpsvm_dolctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
                 /* Check 1st 2 bytes of CR0 - No change allowed */
                 if((ocrs[0] & 0xffff0000) != (crs[0] & 0xffff0000))
                 {
-                    DEBUG_SASSISTX(LCTL,logmsg("HHC90000D DBG: SASSIST LCTL Reject : CR0 High changed\n"));
+                    DEBUG_SASSISTX(LCTL,WRMSG(HHC90000, "D", "SASSIST LCTL Reject : CR0 High changed"));
                     return 1;
                 }
                 /* Not allowed if : NEW mask is being enabled AND MICPEND AND PSW has EXT enabled */
@@ -2455,7 +2538,7 @@ int ecpsvm_dolctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
                     {
                         if((~(ocrs[0] & 0xffff)) & (crs[0] & 0xffff))
                         {
-                            DEBUG_SASSISTX(LCTL,logmsg("HHC90000D DBG: SASSIST LCTL Reject : CR0 EXTSM Enables new EXTS\n"));
+                            DEBUG_SASSISTX(LCTL,WRMSG(HHC90000, "D", "SASSIST LCTL Reject : CR0 EXTSM Enables new EXTS"));
                             return 1;
                         }
                     }
@@ -2465,7 +2548,7 @@ int ecpsvm_dolctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
             case 1:
                 if(ocrs[1] != crs[1])
                 {
-                    DEBUG_SASSISTX(LCTL,logmsg("HHC90000D DBG: SASSIST LCTL Reject : CR1 Updates shadow table\n"));
+                    DEBUG_SASSISTX(LCTL,WRMSG(HHC90000, "D", "SASSIST LCTL Reject : CR1 Updates shadow table"));
                     return 1;
                 }
                 break;
@@ -2477,7 +2560,7 @@ int ecpsvm_dolctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
                     {
                         if(micpend & 0x80)
                         {
-                            DEBUG_SASSISTX(LCTL,logmsg("HHC90000D DBG: SASSIST LCTL Reject : CR2 IOCSM Enables I/O Ints\n"));
+                            DEBUG_SASSISTX(LCTL,WRMSG(HHC90000, "D", "SASSIST LCTL Reject : CR2 IOCSM Enables I/O Ints"));
                             return(1);
                         }
                     }
@@ -2495,12 +2578,13 @@ int ecpsvm_dolctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
                 ocrs[j]=crs[j];
                 break;
             case 8: /* Monitor Calls */
-                DEBUG_SASSISTX(LCTL,logmsg("HHC90000D DBG: SASSIST LCTL Reject : MC CR8 Update\n"));
+                DEBUG_SASSISTX(LCTL,WRMSG(HHC90000, "D", "SASSIST LCTL Reject : MC CR8 Update"));
                 return(1);
             case 9: /* PER Control Regs */
             case 10:
             case 11:
-                DEBUG_SASSISTX(LCTL,logmsg("HHC90000D DBG: SASSIST LCTL Reject : PER CR%d Update\n",j));
+                MSGBUF(buf, "SASSIST LCTL Reject : PER CR%d Update",j);
+                DEBUG_SASSISTX(LCTL,WRMSG(HHC90000, "D", buf));
                 return(1);
             case 12:
             case 13: /* 12-13 : Unused */
@@ -2533,7 +2617,8 @@ int ecpsvm_dolctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
     ecb_p=MADDR(F_ECBLOK+(j*4),USE_REAL_ADDR,regs,ACCTYPE_WRITE,0);
     store_fw(ecb_p,ocrs[j]);
     }
-    DEBUG_SASSISTX(LCTL,logmsg("HHC90000D DBG: SASSIST LCTL %d,%d Done\n",r1,r3));
+    MSGBUF(buf, "SASSIST LCTL %d,%d Done",r1,r3);
+    DEBUG_SASSISTX(LCTL,WRMSG(HHC90000, "D", buf));
     SASSIST_HIT(LCTL);
     return 0;
 }
