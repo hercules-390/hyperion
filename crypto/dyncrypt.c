@@ -1849,7 +1849,6 @@ static void ARCH_DEP(kmo_dea)(int r1, int r2, REGS *regs)
   int fc;
   int i;
   BYTE message_block[8];
-  int modifier_bit;
   BYTE ocv[8];
   BYTE parameter_block[32];
   int parameter_blocklen;
@@ -1923,7 +1922,6 @@ static void ARCH_DEP(kmo_dea)(int r1, int r2, REGS *regs)
   }
 
   /* Try to process the CPU-determined amount of data */
-  modifier_bit = GR0_m(regs);
   r1_is_not_r2 = r1 != r2;
   for(crypted = 0; crypted < PROCESS_MAX; crypted += 8)
   {
@@ -2017,7 +2015,6 @@ static void ARCH_DEP(kmo_aes)(int r1, int r2, REGS *regs)
   int fc;
   int i;
   BYTE message_block[16];
-  int modifier_bit;
   BYTE ocv[16];
   BYTE parameter_block[48];
   int parameter_blocklen;
@@ -2053,7 +2050,6 @@ static void ARCH_DEP(kmo_aes)(int r1, int r2, REGS *regs)
   aes_set_key(&context, &parameter_block[16], 64 * (fc + 1));
 
   /* Try to process the CPU-determined amount of data */
-  modifier_bit = GR0_m(regs);
   r1_is_not_r2 = r1 != r2;
   for(crypted = 0; crypted < PROCESS_MAX; crypted += 16)
   {
