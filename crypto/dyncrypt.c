@@ -1509,7 +1509,7 @@ static void ARCH_DEP(kmc_prng)(int r1, int r2, REGS *regs)
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
 /*----------------------------------------------------------------------------*/
-/* B9?? Cipher message with CFB (KMF) FC 1, 2 and 3                           */
+/* B9?? Cipher message with cipher feedback (KMF) FC 1, 2 and 3               */
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(kmf_dea)(int r1, int r2, REGS *regs)
 {
@@ -1712,7 +1712,7 @@ static void ARCH_DEP(kmf_dea)(int r1, int r2, REGS *regs)
 }
 
 /*----------------------------------------------------------------------------*/
-/* B9?? Cipher message with CFB (KMF) FC 18, 19 and 20                        */
+/* B9?? Cipher message with cipher feedback (KMF) FC 18, 19 and 20            */
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(kmf_aes)(int r1, int r2, REGS *regs)
 {
@@ -1960,19 +1960,14 @@ static void ARCH_DEP(kmctr_dea)(int r1, int r2, REGS *regs)
 
     /* Increase OCV */
     carry = 1;
-    for(i = 7; i != -1; i--)
+    for(i = 0; i < 8; i--)
     {
-      ocv[i] += carry;
-      if(!ocv[i])
+      ocv[7 - i] += carry;
+      if(!ocv[7 - i])
         carry = 1;
       else
         carry = 0;
     } 
-    if(carry)
-    {
-      for(i = 0; i < 8; i++)
-        ocv[i] = 0;
-    }
 
     /* Store the output chaining value */
     ARCH_DEP(vstorec)(ocv, 7, GR_A(1, regs), 1, regs);
@@ -2080,18 +2075,13 @@ static void ARCH_DEP(kmctr_aes)(int r1, int r2, REGS *regs)
 
     /* Increase OCV */
     carry = 1;
-    for(i = 15; i != -1; i--)
+    for(i = 0; i < 16; i--)
     {
-      ocv[i] += carry;
-      if(!ocv[i])
+      ocv[15 - i] += carry;
+      if(!ocv[15 - i])
         carry = 1;
       else
         carry = 0;
-    }
-    if(carry)
-    {
-      for(i = 0; i < 16; i++)
-        ovc[i] = 0;
     }
 
     /* Store the output chaining value */
@@ -2129,7 +2119,7 @@ static void ARCH_DEP(kmctr_aes)(int r1, int r2, REGS *regs)
 }
 
 /*----------------------------------------------------------------------------*/
-/* B9?? Cipher message with OFB (KMO) FC 1, 2 and 3                           */
+/* B9?? Cipher message with output feedback (KMO) FC 1, 2 and 3               */
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(kmo_dea)(int r1, int r2, REGS *regs)
 {
@@ -2293,7 +2283,7 @@ static void ARCH_DEP(kmo_dea)(int r1, int r2, REGS *regs)
 }
 
 /*----------------------------------------------------------------------------*/
-/* B9?? Cipher message with OFB (KMO) FC 18, 19 and 20                        */
+/* B9?? Cipher message with output feedback (KMO) FC 18, 19 and 20            */
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(kmo_aes)(int r1, int r2, REGS *regs)
 {
@@ -2682,9 +2672,9 @@ DEF_INST(cipher_message_with_counter_d)
 }
 
 /*----------------------------------------------------------------------------*/
-/* B9?? KMF   - Cipher message with CFB                                 [RRE] */
+/* B9?? KMF   - Cipher message with cipher feedback                     [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(cipher_message_with_CFB_d)
+DEF_INST(cipher_message_with_cipher_feedback_d)
 {
   int r1;
   int r2;
@@ -2692,7 +2682,7 @@ DEF_INST(cipher_message_with_CFB_d)
   RRE(inst, regs, r1, r2);
 
 #ifdef OPTION_KMF_DEBUG
-  logmsg("KMF: cipher message with CFB\n");
+  logmsg("KMF: cipher message with cipher feedback\n");
   logmsg("  r1        : GR%02d\n", r1);
   logmsg("    address : " F_VADR "\n", regs->GR(r1));
   logmsg("  r2        : GR%02d\n", r2);
@@ -2745,9 +2735,9 @@ DEF_INST(cipher_message_with_CFB_d)
 }
 
 /*----------------------------------------------------------------------------*/
-/* B9?? KMO   - Cipher message with OFB                                 [RRE] */
+/* B9?? KMO   - Cipher message with output feedback                     [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(cipher_message_with_OFB_d)
+DEF_INST(cipher_message_with_output_feedback_d)
 {
   int r1;
   int r2;
@@ -2755,7 +2745,7 @@ DEF_INST(cipher_message_with_OFB_d)
   RRE(inst, regs, r1, r2);
 
 #ifdef OPTION_KMO_DEBUG
-  logmsg("KMO: cipher message with OFB\n");
+  logmsg("KMO: cipher message with output feedback\n");
   logmsg("  r1        : GR%02d\n", r1);
   logmsg("    address : " F_VADR "\n", regs->GR(r1));
   logmsg("  r2        : GR%02d\n", r2);
