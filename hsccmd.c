@@ -4552,8 +4552,9 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int attach_cmd(int argc, char *argv[], char *cmdline)
 {
-    UNREFERENCED(cmdline);
     int rc;
+
+    UNREFERENCED(cmdline);
 
     if (argc < 3)
     {
