@@ -833,6 +833,74 @@ U16   i2;                               /* 16-bit operand values     */
 } /* end DEF_INST(branch_relative_on_condition) */
 #endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
 
+#if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
+/*-------------------------------------------------------------------*/
+/* A774 BRC   - Branch Relative Not Equal                       [RI] */
+/*-------------------------------------------------------------------*/
+DEF_INST(branch_relative_not_equal)
+{
+U16   i2;                               /* 16-bit operand values     */
+
+    /* Branch if cc is non-zero */
+    if (regs->psw.cc != 0)
+    {
+        i2 = fetch_fw(inst) & 0xFFFF;
+        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
+    }
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_relative_not_equal) */
+#else
+DEF_INST(branch_relative_not_equal)
+{
+    ARCH_DEP(operation_exception)(inst,regs);
+}
+#endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
+
+#if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
+/*-------------------------------------------------------------------*/
+/* A784 BRC   - Branch Relative Equal                           [RI] */
+/*-------------------------------------------------------------------*/
+DEF_INST(branch_relative_equal)
+{
+U16   i2;                               /* 16-bit operand values     */
+
+    /* Branch if cc is non-zero */
+    if (regs->psw.cc == 0)
+    {
+        i2 = fetch_fw(inst) & 0xFFFF;
+        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
+    }
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_relative_not_equal) */
+#else
+DEF_INST(branch_relative_equal)
+{
+    ARCH_DEP(operation_exception)(inst,regs);
+}
+#endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
+
+#if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
+/*-------------------------------------------------------------------*/
+/* A7F4 BRC   - Branch Relative Unconditional                   [RI] */
+/*-------------------------------------------------------------------*/
+DEF_INST(branch_relative_unconditional)
+{
+U16   i2;                               /* 16-bit operand values     */
+
+    i2 = fetch_fw(inst) & 0xFFFF;
+    SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
+
+} /* end DEF_INST(branch_relative_unconditional) */
+#else
+DEF_INST(branch_relative_unconditional)
+{
+    ARCH_DEP(operation_exception)(inst,regs);
+}
+#endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
 
 #if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
 /*-------------------------------------------------------------------*/
