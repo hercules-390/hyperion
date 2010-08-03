@@ -3144,9 +3144,11 @@ DEF_INST(branch_on_count);
 DEF_INST(branch_on_index_high);
 DEF_INST(branch_on_index_low_or_equal);
 DEF_INST(branch_relative_on_condition);
+#if 0
 DEF_INST(branch_relative_not_equal);
 DEF_INST(branch_relative_equal);
 DEF_INST(branch_relative_unconditional);
+#endif
 DEF_INST(branch_relative_and_save);
 DEF_INST(branch_relative_on_count);
 DEF_INST(branch_relative_on_index_high);

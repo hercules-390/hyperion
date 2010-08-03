@@ -833,6 +833,7 @@ U16   i2;                               /* 16-bit operand values     */
 } /* end DEF_INST(branch_relative_on_condition) */
 #endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
 
+#if 0
 #if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
 /*-------------------------------------------------------------------*/
 /* A774 BRC   - Branch Relative Not Equal                       [RI] */
@@ -901,7 +902,7 @@ DEF_INST(branch_relative_unconditional)
     ARCH_DEP(operation_exception)(inst,regs);
 }
 #endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
-
+#endif
 #if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
 /*-------------------------------------------------------------------*/
 /* A7x5 BRAS  - Branch Relative And Save                        [RI] */

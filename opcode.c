@@ -2090,6 +2090,7 @@ int i;
 #endif
     }
 
+#if 0
     /* optimization for branch relative */
 #if defined(_370)
     s370_opcode_a7xx [0x74]  = s370_branch_relative_not_equal;
@@ -2105,6 +2106,7 @@ int i;
     z900_opcode_a7xx [0x74]  = z900_branch_relative_not_equal;
     z900_opcode_a7xx [0x84]  = z900_branch_relative_equal;
     z900_opcode_a7xx [0xf4]  = z900_branch_relative_unconditional;
+#endif
 #endif
 
 }
