@@ -1,3 +1,5 @@
+04 Aug 2010 Display maxrates when interval expires. Paul Gorlinsky
+
 22 Jul 2010 Add code page mapping 1252/1140 - Kevin Leonard
 
 21 Jul 2010 QUERY and SET have been changed to individual commands:
