@@ -438,6 +438,9 @@ int     dll_count;                      /* index into array          */
     sysblk.quitmout = QUITTIME_PERIOD;
 #endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
 
+    /* Default command separator to off (NULL) */
+    sysblk.cmdsep = NULL;
+
     /* set default for scpecho to FALSE */
     sysblk.scpecho = FALSE;
 

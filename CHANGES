@@ -1,3 +1,9 @@
+05 Aug 2010 CMDSEP function added. Default is off. The characters 
+            '.', '!' and '-' are invalid. Setting the character to a '#'
+            could have unexpected results if the command line attempted to
+            include a trailing comment.        Paul Gorlinsky
+            Type 'help cmdsep' for a description of the command.
+
 04 Aug 2010 Display maxrates when interval expires. Paul Gorlinsky
 
 22 Jul 2010 Add code page mapping 1252/1140 - Kevin Leonard

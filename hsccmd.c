@@ -7599,6 +7599,55 @@ int spm_cmd(int argc, char *argv[], char *cmdline)
 }
 #endif
 
+/*-------------------------------------------------------------------*/
+/* cmdsep                                                            */
+/*-------------------------------------------------------------------*/
+int cmdsep_cmd(int argc, char *argv[], char *cmdline)
+{
+    UNREFERENCED(cmdline);
+
+    if ( argc == 1 )
+    {
+        if ( sysblk.cmdsep == NULL )
+            WRMSG( HHC02203, "I", "cmdsep", "Not set" );
+        else
+            WRMSG( HHC02203, "I", "cmdsep", sysblk.cmdsep );
+    }
+    else if ( argc == 2 && CMD(argv[1],off,3) )
+    {
+        if ( sysblk.cmdsep != NULL )
+        {
+            free( sysblk.cmdsep );
+            sysblk.cmdsep = NULL;
+        }
+        WRMSG( HHC02204, "I", "cmdsep", "off" );
+    }
+    else if ( argc == 2 && strlen( argv[1] ) == 1 )
+    {
+        if ( !strcmp(argv[1], "-") || !strcmp(argv[1], ".") || !strcmp(argv[1], "!") ) 
+            WRMSG( HHC02205, "E", argv[1], "; '.', '-', and '!' are invalid characters" );
+        else
+        {
+            if ( sysblk.cmdsep != NULL )
+            {
+                free(sysblk.cmdsep);
+                sysblk.cmdsep = NULL;
+            }
+            sysblk.cmdsep = strdup(argv[1]);
+            WRMSG( HHC02204, "I", "cmdsep", sysblk.cmdsep );
+        }
+    }
+    else if ( argc > 2 )
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+    }
+    else
+    {
+        WRMSG( HHC02205, "E", argv[1], ", must be a single character" );
+    }
+
+    return 0;
+}
 
 #if defined(_FEATURE_SYSTEM_CONSOLE)
 /*-------------------------------------------------------------------*/
@@ -7636,7 +7685,7 @@ int ssd_cmd(int argc, char *argv[], char *cmdline)
         else
             signal_quiesce(0, 0);
     }
-#else  //!defined( OPTION_SHUTDOWN_CONFIRMATION )
+#else  // !defined( OPTION_SHUTDOWN_CONFIRMATION )
     UNREFERENCED(argc);
     UNREFERENCED(argv);
     UNREFERENCED(cmdline);    
@@ -7645,6 +7694,8 @@ int ssd_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
+
+
 /*-------------------------------------------------------------------*/
 /* scpecho - enable echo of '.' and '!' replys/responses to hardcopy */
 /*           and console.                                            */

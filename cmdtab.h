@@ -39,6 +39,17 @@ COMMAND("cmdlvl",    PANEL+CONFIG,  SYSNONE,            CmdLevel,
   "alias for cmdlevel", 
     NULL)
 
+COMMAND("cmdsep",    PANEL,         SYSNONE,            cmdsep_cmd,
+  "Display/Set current command line separator",
+    "display/set the current command line separator for multiple\n"
+    "commands on a single line\n"
+    "Format: cmdsep [c | off ]\n"
+    "        c       a single character used for command separation\n"
+    "                must not be '.', '!', or '-'\n"
+    "                Although it maybe '#', this could have an affect\n"
+    "                processing command lines that contain comments\n"
+    "        off     disables command separation\n")
+
 COMMAND("msglevel",  PANEL,         SYSNONE,            msglvl_cmd,   
   "Display or set the message level",
     "Format: msglevel [normal | debug | info]\n"

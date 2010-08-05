@@ -485,6 +485,7 @@ struct SYSBLK {
         BYTE    mbk;                    /* Measurement block key     */
         int     mbm;                    /* Measurement block mode    */
         int     mbd;                    /* Device connect time mode  */
+        char   *cmdsep;                 /* Single Char cmd Sep       */
         BYTE    sysgroup;               /* Panel Command grouping    */
 #define SYSGROUP_SYSOPER     0x01     /* computer operator functions */
 #define SYSGROUP_SYSMAINT    0x02     /* Maintenance functions       */

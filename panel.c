@@ -666,10 +666,30 @@ static void scroll_to_bottom_screen( int doexpire )
 
 static void do_panel_command( void* cmd )
 {
+    char *cmdsep;
     if (!is_currline_visible())
         scroll_to_bottom_screen( 1 );
     strlcpy( cmdline, cmd, sizeof(cmdline) );
-    panel_command( cmdline );
+    if ( sysblk.cmdsep != NULL && 
+         strlen(sysblk.cmdsep) == 1 && 
+         strstr(cmdline, sysblk.cmdsep) != NULL )
+    {
+        char *command;
+        
+        command = strdup(cmdline);
+
+        cmdsep = strtok(cmdline, sysblk.cmdsep);
+        while ( cmdsep != NULL )
+        {
+            panel_command( cmdsep );
+            cmdsep = strtok(NULL, sysblk.cmdsep);
+        }
+
+        history_add( command );
+        free(command);
+    }
+    else
+        panel_command( cmdline );
     cmdline[0] = '\0';
     cmdlen = 0;
     cmdoff = 0;
@@ -1767,7 +1787,7 @@ DLL_EXPORT void update_maxrates_hwm()       // (update high-water-mark values)
 
     if ( elapsed_secs >= ( maxrates_rpt_intvl * 60 ) )
     {
-        do_panel_command("-maxrates");
+        do_panel_command("-herc maxrates");
 
         prev_high_mips_rate = curr_high_mips_rate;
         prev_high_sios_rate = curr_high_sios_rate;
