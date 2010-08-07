@@ -161,6 +161,7 @@ OPC_DLL_IMPORT zz_func opcode_c2xx[][GEN_MAXARCH];                      /*@Z9*/
 OPC_DLL_IMPORT zz_func opcode_c4xx[][GEN_MAXARCH];                      /*208*/
 OPC_DLL_IMPORT zz_func opcode_c6xx[][GEN_MAXARCH];                      /*208*/
 OPC_DLL_IMPORT zz_func opcode_c8xx[][GEN_MAXARCH];
+OPC_DLL_IMPORT zz_func opcode_ccxx[][GEN_MAXARCH];                      /*810*/
 OPC_DLL_IMPORT zz_func opcode_e3xx[][GEN_MAXARCH];
 OPC_DLL_IMPORT zz_func opcode_e4xx[256][GEN_MAXARCH];
 extern         zz_func v_opcode_e4xx[][GEN_MAXARCH];

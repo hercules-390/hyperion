@@ -1162,6 +1162,13 @@ DEF_INST(execute_c8xx)
 }
 #endif /*defined(FEATURE_ESAME)*/
 
+#if defined(FEATURE_ESAME)                                      /*810*/
+DEF_INST(execute_ccxx)                                          /*810*/
+{                                                               /*810*/
+    regs->ARCH_DEP(opcode_ccxx)[inst[1]](inst, regs);           /*810*/
+}                                                               /*810*/
+#endif /*defined(FEATURE_ESAME)*/                               /*810*/
+
 #if defined(FEATURE_VECTOR_FACILITY)
 
 DEF_INST(execute_a4xx)
@@ -1240,6 +1247,7 @@ DISASM_ROUTE(c2xx,[1] & 0x0F)                                   /*@Z9*/
 DISASM_ROUTE(c4xx,[1] & 0x0F)                                   /*208*/
 DISASM_ROUTE(c6xx,[1] & 0x0F)                                   /*208*/
 DISASM_ROUTE(c8xx,[1] & 0x0F)
+DISASM_ROUTE(ccxx,[1] & 0x0F)                                   /*810*/
 DISASM_ROUTE(e3xx,[5])
 DISASM_ROUTE(e5xx,[1])
 DISASM_ROUTE(e6xx,[1])
@@ -2046,6 +2054,7 @@ static zz_func z900_opcode_c2xx[256];                           /*@Z9*/
 static zz_func z900_opcode_c4xx[256];                           /*208*/
 static zz_func z900_opcode_c6xx[256];                           /*208*/
 static zz_func z900_opcode_c8xx[256];
+static zz_func z900_opcode_ccxx[256];                           /*810*/
 static zz_func z900_opcode_e3xx[256];
 static zz_func z900_opcode_e5xx[256];
 static zz_func z900_opcode_ebxx[256];
@@ -2114,6 +2123,7 @@ int i;
         z900_opcode_c4xx [i] = opcode_c4xx [i&0x0F][ARCH_900];  /*208*/
         z900_opcode_c6xx [i] = opcode_c6xx [i&0x0F][ARCH_900];  /*208*/
         z900_opcode_c8xx [i] = opcode_c8xx [i&0x0F][ARCH_900];
+        z900_opcode_ccxx [i] = opcode_ccxx [i&0x0F][ARCH_900];  /*810*/
         z900_opcode_e3xx [i] = opcode_e3xx [i][ARCH_900];
         z900_opcode_e5xx [i] = opcode_e5xx [i][ARCH_900];
         z900_opcode_ebxx [i] = opcode_ebxx [i][ARCH_900];
@@ -2249,6 +2259,7 @@ void set_opcode_pointers(REGS *regs)
     regs->z900_opcode_c4xx = z900_opcode_c4xx;                  /*208*/
     regs->z900_opcode_c6xx = z900_opcode_c6xx;                  /*208*/
     regs->z900_opcode_c8xx = z900_opcode_c8xx;
+    regs->z900_opcode_ccxx = z900_opcode_ccxx;                  /*810*/
     regs->z900_opcode_e5xx = z900_opcode_e5xx;
     regs->z900_opcode_ecxx = z900_opcode_ecxx;
     regs->z900_opcode_edxx = z900_opcode_edxx;
@@ -2460,7 +2471,7 @@ DLL_EXPORT zz_func opcode_table[256][GEN_MAXARCH] = {
  /*C9*/   GENx___x___x___ ,
  /*CA*/   GENx___x___x___ ,
  /*CB*/   GENx___x___x___ ,
- /*CC*/   GENx___x___x___ ,
+ /*CC*/   GENx___x___x900 (execute_ccxx,ccxx,""),               /*810*/
  /*CD*/   GENx___x___x___ ,
  /*CE*/   GENx___x___x___ ,
  /*CF*/   GENx___x___x___ ,

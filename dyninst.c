@@ -39,6 +39,7 @@
  #define opcode_c4xx  opcode_c4xx_r                             /*208*/
  #define opcode_c6xx  opcode_c6xx_r                             /*208*/
  #define opcode_c8xx  opcode_c8xx_r
+ #define opcode_ccxx  opcode_ccxx_r                             /*810*/
  #define opcode_e3xx  opcode_e3xx_r
  #define opcode_e5xx  opcode_e5xx_r
  #define opcode_e6xx  opcode_e6xx_r
@@ -64,6 +65,7 @@
  #undef opcode_c4xx                                             /*208*/
  #undef opcode_c6xx                                             /*208*/
  #undef opcode_c8xx
+ #undef opcode_ccxx                                             /*810*/
  #undef opcode_e3xx
  #undef opcode_e5xx
  #undef opcode_e6xx
@@ -104,6 +106,7 @@ static zz_func save_c2xx[16][GEN_MAXARCH];                      /*@Z9*/
 static zz_func save_c4xx[16][GEN_MAXARCH];                      /*208*/
 static zz_func save_c6xx[16][GEN_MAXARCH];                      /*208*/
 static zz_func save_c8xx[16][GEN_MAXARCH];
+static zz_func save_ccxx[16][GEN_MAXARCH];                      /*810*/
 static zz_func save_e3xx[256][GEN_MAXARCH];
 static zz_func save_e5xx[256][GEN_MAXARCH];
 static zz_func save_e6xx[256][GEN_MAXARCH];
@@ -129,6 +132,7 @@ static zz_func save_edxx[256][GEN_MAXARCH];
   static void * opcode_c4xx;                                    /*208*/
   static void * opcode_c6xx;                                    /*208*/
   static void * opcode_c8xx;
+  static void * opcode_ccxx;                                    /*810*/
   static void * opcode_e3xx;
   static void * opcode_e5xx;
   static void * opcode_e6xx;
@@ -167,6 +171,7 @@ static void opcode_save()
     memcpy(save_c4xx,opcode_c4xx,sizeof(save_c4xx));            /*208*/
     memcpy(save_c6xx,opcode_c6xx,sizeof(save_c6xx));            /*208*/
     memcpy(save_c8xx,opcode_c8xx,sizeof(save_c8xx));
+    memcpy(save_ccxx,opcode_ccxx,sizeof(save_ccxx));            /*810*/
     memcpy(save_e3xx,opcode_e3xx,sizeof(save_e3xx));
     memcpy(save_e5xx,opcode_e5xx,sizeof(save_e5xx));
     memcpy(save_e6xx,opcode_e6xx,sizeof(save_e6xx));
@@ -193,6 +198,7 @@ static void opcode_restore()
     memcpy(opcode_c4xx,save_c4xx,sizeof(save_c4xx));            /*208*/
     memcpy(opcode_c6xx,save_c6xx,sizeof(save_c6xx));            /*208*/
     memcpy(opcode_c8xx,save_c8xx,sizeof(save_c8xx));
+    memcpy(opcode_ccxx,save_ccxx,sizeof(save_ccxx));            /*810*/
     memcpy(opcode_e3xx,save_e3xx,sizeof(save_e3xx));
     memcpy(opcode_e5xx,save_e5xx,sizeof(save_e5xx));
     memcpy(opcode_e6xx,save_e6xx,sizeof(save_e6xx));
@@ -332,6 +338,7 @@ int opcode, extop;
         HDL_RESOLVE(opcode_c4xx);                               /*208*/
         HDL_RESOLVE(opcode_c6xx);                               /*208*/
         HDL_RESOLVE(opcode_c8xx);
+        HDL_RESOLVE(opcode_ccxx);                               /*810*/
         HDL_RESOLVE(opcode_e3xx);
         HDL_RESOLVE(opcode_e5xx);
         HDL_RESOLVE(opcode_e6xx);
@@ -411,6 +418,11 @@ int opcode, extop;
                 for(extop = 0; extop < 16; extop++)
                     assign_extop1(opcode, extop, opcode_c8xx, save_c8xx);
                 break;
+
+            case 0xCC:                                                     /*810*/
+                for(extop = 0; extop < 16; extop++)                        /*810*/
+                    assign_extop1(opcode, extop, opcode_ccxx, save_ccxx);  /*810*/
+                break;                                                     /*810*/
 
             case 0xE3:
                 for(extop = 0; extop < 256; extop++)

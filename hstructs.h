@@ -348,6 +348,7 @@ struct REGS {                           /* Processor registers       */
                *z900_opcode_c4xx,                               /*208*/
                *z900_opcode_c6xx,                               /*208*/
                *z900_opcode_c8xx,
+               *z900_opcode_ccxx,                               /*810*/
                *z900_opcode_e5xx,
                *z900_opcode_ecxx,
                *z900_opcode_edxx;

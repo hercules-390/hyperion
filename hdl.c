@@ -1266,6 +1266,10 @@ static void hdl_modify_opcode(int insert, HDLINS *instr)
             hdl_modify_optab(insert,opcode_c8xx[instr->opcode & 0x0f],instr);
             break;
 
+        case 0xCC00:                                                              /*810*/
+            hdl_modify_optab(insert,opcode_ccxx[instr->opcode & 0x0f],instr);     /*810*/
+            break;                                                                /*810*/
+
         case 0xE300:
             hdl_modify_optab(insert,opcode_e3xx[instr->opcode & 0xff],instr);
             break;
