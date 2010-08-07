@@ -368,6 +368,21 @@
  UNDEF_INST(subtract_logical_high_high_low_register)            /*810*/
 #endif /*!defined(FEATURE_HIGH_WORD_FACILITY)*/                 /*810*/
 
+#if !defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)               /*810*/
+ UNDEF_INST(load_and_add)                                       /*810*/
+ UNDEF_INST(load_and_add_long)                                  /*810*/
+ UNDEF_INST(load_and_add_logical)                               /*810*/
+ UNDEF_INST(load_and_add_logical_long)                          /*810*/
+ UNDEF_INST(load_and_and)                                       /*810*/
+ UNDEF_INST(load_and_and_long)                                  /*810*/
+ UNDEF_INST(load_and_exclusive_or)                              /*810*/
+ UNDEF_INST(load_and_exclusive_or_long)                         /*810*/
+ UNDEF_INST(load_and_or)                                        /*810*/
+ UNDEF_INST(load_and_or_long)                                   /*810*/
+ UNDEF_INST(load_pair_disjoint)                                 /*810*/
+ UNDEF_INST(load_pair_disjoint_long)                            /*810*/
+#endif /*!defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)*/        /*810*/
+
 #if !defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY)          /*810*/
  UNDEF_INST(load_on_condition_register)                         /*810*/
  UNDEF_INST(load_on_condition_long_register)                    /*810*/
@@ -1958,6 +1973,21 @@ int r3,b1,d1,b2,d2;
     DISASM_SET_NAME;
     DISASM_PRINT_OPERANDS
         "%d(%d),%d(%d),%d",d1,b1,d2,b2,r3);
+    DISASM_LOGMSG;
+}
+
+int disasm_SSF_RSS (BYTE inst[], char mnemonic[], char *p)              /*810*/
+{
+DISASM_COMMON_VARS;
+int r3,b1,d1,b2,d2;
+    r3 = inst[1] >> 4;
+    b1 = inst[2] >> 4;
+    d1 = (inst[2] & 0x0F) << 8 | inst[3];
+    b2 = inst[4] >> 4;
+    d2 = (inst[4] & 0x0F) << 8 | inst[5];
+    DISASM_SET_NAME;
+    DISASM_PRINT_OPERANDS
+        "%d,%d(%d),%d(%d)",r3,d1,b1,d2,b2);
     DISASM_LOGMSG;
 }
 
@@ -3972,8 +4002,8 @@ DLL_EXPORT zz_func opcode_c8xx[16][GEN_MAXARCH] = {
  /*C8x1*/ GENx___x___x900 (extract_cpu_time,SSF,"ECTG"),
  /*C8x2*/ GENx___x___x900 (compare_and_swap_and_store,SSF,"CSST"),
  /*C8x3*/ GENx___x___x___ ,
- /*C8x4*/ GENx___x___x___ ,
- /*C8x5*/ GENx___x___x___ ,
+ /*C8x4*/ GENx37Xx390x900 (load_pair_disjoint,SSF_RSS,"LPD"),                      /*810*/
+ /*C8x5*/ GENx___x___x900 (load_pair_disjoint_long,SSF_RSS,"LPDG"),                /*810*/
  /*C8x6*/ GENx___x___x___ ,
  /*C8x7*/ GENx___x___x___ ,
  /*C8x8*/ GENx___x___x___ ,
@@ -5017,13 +5047,13 @@ DLL_EXPORT zz_func opcode_ebxx[256][GEN_MAXARCH] = {
  /*EBE1*/ GENx___x___x___ ,
  /*EBE2*/ GENx___x___x900 (load_on_condition_long,RSY_M3,"LOCG"),                  /*810*/
  /*EBE3*/ GENx___x___x900 (store_on_condition_long,RSY_M3,"LOCG"),                 /*810*/
- /*EBE4*/ GENx___x___x___ ,
+ /*EBE4*/ GENx___x___x900 (load_and_and_long,RSY,"LANG"),                          /*810*/
  /*EBE5*/ GENx___x___x___ ,
- /*EBE6*/ GENx___x___x___ ,
- /*EBE7*/ GENx___x___x___ ,
- /*EBE8*/ GENx___x___x___ ,
+ /*EBE6*/ GENx___x___x900 (load_and_or_long,RSY,"LAOG"),                           /*810*/
+ /*EBE7*/ GENx___x___x900 (load_and_exclusive_or_long,RSY,"LAXG"),                 /*810*/
+ /*EBE8*/ GENx___x___x900 (load_and_add_long,RSY,"LAAG"),                          /*810*/
  /*EBE9*/ GENx___x___x___ ,
- /*EBEA*/ GENx___x___x___ ,
+ /*EBEA*/ GENx___x___x900 (load_and_add_logical_long,RSY,"LAALG"),                 /*810*/
  /*EBEB*/ GENx___x___x___ ,
  /*EBEC*/ GENx___x___x___ ,
  /*EBED*/ GENx___x___x___ ,
@@ -5033,13 +5063,13 @@ DLL_EXPORT zz_func opcode_ebxx[256][GEN_MAXARCH] = {
  /*EBF1*/ GENx___x___x___ ,
  /*EBF2*/ GENx37Xx390x900 (load_on_condition,RSY_M3,"LOC"),                        /*810*/
  /*EBF3*/ GENx37Xx390x900 (store_on_condition,RSY_M3,"LOC"),                       /*810*/
- /*EBF4*/ GENx___x___x___ ,
+ /*EBF4*/ GENx37Xx390x900 (load_and_and,RSY,"LAN"),                                /*810*/
  /*EBF5*/ GENx___x___x___ ,
- /*EBF6*/ GENx___x___x___ ,
- /*EBF7*/ GENx___x___x___ ,
- /*EBF8*/ GENx___x___x___ ,
+ /*EBF6*/ GENx37Xx390x900 (load_and_or,RSY,"LAO"),                                 /*810*/
+ /*EBF7*/ GENx37Xx390x900 (load_and_exclusive_or,RSY,"LAX"),                       /*810*/
+ /*EBF8*/ GENx37Xx390x900 (load_and_add,RSY,"LAA"),                                /*810*/
  /*EBF9*/ GENx___x___x___ ,
- /*EBFA*/ GENx___x___x___ ,
+ /*EBFA*/ GENx37Xx390x900 (load_and_add_logical,RSY,"LAAL"),                       /*810*/
  /*EBFB*/ GENx___x___x___ ,
  /*EBFC*/ GENx___x___x___ ,
  /*EBFD*/ GENx___x___x___ ,
