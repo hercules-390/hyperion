@@ -64,4 +64,5 @@ EXECUTABLES = \
     $(X)hetupd.exe   \
     $(X)tapecopy.exe \
     $(X)tapemap.exe  \
-    $(X)tapesplt.exe
+    $(X)tapesplt.exe \
+    $(X)vmfplc2.exe

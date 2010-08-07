@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hercules 2.16\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-06-12 13:22+0200\n"
+"POT-Creation-Date: 2010-08-07 15:10+0200\n"
 "PO-Revision-Date: 2002-05-10 16:16+0200\n"
 "Last-Translator: Jan Jaeger <jj@septa.nl>\n"
 "Language-Team: none <test@li.org>\n"
@@ -14,182 +14,12 @@ msgstr ""
 "Content-Type: text/plain; charset=ISO-8859-1\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: cckddiag.c:135
-#, c-format
-msgid "lseek to pos 0x%8.8x error: %s\n"
-msgstr ""
-
-#: cckddiag.c:145
-#, c-format
-msgid "cckddiag: read error: %s\n"
-msgstr ""
-
-#: cckddiag.c:486
+#: cckddiag.c:496
 #, c-format
 msgid "cckddiag: error opening file %s: %s\n"
 msgstr ""
 
-#: commadpt.c:292
-#, c-format
-msgid "HHCCA300D %4.4X:%s : Status = TEXT=%s, TRANS=%s, TWS=%s\n"
-msgstr ""
-
-#: commadpt.c:298
-#, c-format
-msgid "HHCCA300D %4.4X:%s : Dump of %d (%x) byte(s)\n"
-msgstr ""
-
-#: commadpt.c:307
-#, c-format
-msgid "HHCCA300D %4.4X:%s : %4.4X:"
-msgstr ""
-
-#: commadpt.c:457
-#, c-format
-msgid "HHCCA300D %4.4X:clean : Control block freed\n"
-msgstr ""
-
-#: commadpt.c:465
-#, c-format
-msgid "HHCCA300D %4.4X:clean : Control block not freed : not allocated\n"
-msgstr ""
-
-#: commadpt.c:604
-#, c-format
-msgid "HHCCA300D %4.4x : Found data beyond EON\n"
-msgstr ""
-
-#: commadpt.c:619
-#, c-format
-msgid "HHCCA300D %4.4x : Found incorrect IP address section at position %d\n"
-msgstr ""
-
-#: commadpt.c:620
-#, c-format
-msgid "HHCCA300D %4.4x : %d greater than 255\n"
-msgstr ""
-
-#: commadpt.c:634
-#, c-format
-msgid "HHCCA300D %4.4x : Too many separators in dial data\n"
-msgstr ""
-
-#: commadpt.c:651
-#, c-format
-msgid "HHCCA300D %4.4x : Incorrect dial data byte %2.2x\n"
-msgstr ""
-
-#: commadpt.c:672
-#, c-format
-msgid "HHCCA300D %4.4x : Not enough separators (only %d found) in dial data\n"
-msgstr ""
-
-#: commadpt.c:680
-#, c-format
-msgid "HHCCA300D %4.4x : Destination TCP port %d exceeds maximum of 65535\n"
-msgstr ""
-
-#: commadpt.c:701
-#, c-format
-msgid "%s\n"
-msgstr ""
-
-#: commadpt.c:748
-#, c-format
-msgid "HHCCA300D %4.4X: Received TELNET CMD 0x%02x 0x%02x\n"
-msgstr ""
-
-#: commadpt.c:756
-#, c-format
-msgid "HHCCA300D %4.4X: Sending TELNET CMD 0x%02x 0x%02x\n"
-msgstr ""
-
-#: commadpt.c:766
-#, c-format
-msgid "HHCCA300D %4.4X: Received TELNET IAC 0x%02x\n"
-msgstr ""
-
-#: commadpt.c:1100
-#, c-format
-msgid "HHCCA300D %1d:%04X cthread - Entry - DevExec = %s\n"
-msgstr ""
-
-#: commadpt.c:1168
-#, c-format
-msgid "HHCCA300D %4.4X:Poll Command abort - Poll address >7 Bytes\n"
-msgstr ""
-
-#: commadpt.c:1196
-#, c-format
-msgid "HHCCA300D %4.4X:Writing 1 byte in socket : %2.2X\n"
-msgstr ""
-
-#: commadpt.c:1383
-#, c-format
-msgid "HHCCA300D %4.4X:cthread - Select IN maxfd = %d / Devexec = %s\n"
-msgstr ""
-
-#: commadpt.c:1389
-#, c-format
-msgid "HHCCA300D %4.4X:cthread - Select OUT rc=%d\n"
-msgstr ""
-
-#: commadpt.c:1416
-#, c-format
-msgid "HHCCA300D %4.4X:cthread - Select TIME OUT\n"
-msgstr ""
-
-#: commadpt.c:1434
-#, c-format
-msgid "HHCCA300D %4.4X:cthread - IPC Pipe closed\n"
-msgstr ""
-
-#: commadpt.c:1442
-#, c-format
-msgid "HHCCA300D %4.4X:cthread - IPC Pipe Data ; code = %d\n"
-msgstr ""
-
-#: commadpt.c:1474
-#, c-format
-msgid "HHCCA300D %4.4X:cthread - inbound socket data\n"
-msgstr ""
-
-#: commadpt.c:1516
-#, c-format
-msgid "HHCCA300D %4.4X:cthread - socket write available\n"
-msgstr ""
-
-#: commadpt.c:1714
-#, c-format
-msgid "HHCCA300D %4.4X:Initialisation starting\n"
-msgstr ""
-
-#: commadpt.c:1725
-#, c-format
-msgid "HHCCA300D %4.4X:Initialisation : Control block allocated\n"
-msgstr ""
-
-#: commadpt.c:2169
-#, c-format
-msgid "HHCCA300D %4.4X:Closing down\n"
-msgstr ""
-
-#: commadpt.c:2201
-#, c-format
-msgid "HHCCA300D %4.4X:Closed down\n"
-msgstr ""
-
-#: commadpt.c:2233
-#, c-format
-msgid "HHCCA300D %4.4X:CCW Exec - Entry code = %x\n"
-msgstr ""
-
-#: commadpt.c:2361
-#, c-format
-msgid "HHCCA300D %4.4X Set Mode : %s\n"
-msgstr ""
-
-#: console.c:2293
+#: console.c:2302
 msgid "** BUG! console_remove() error! **\n"
 msgstr ""
 
@@ -215,252 +45,12 @@ msgstr ""
 
 #: dyngui.c:1850
 #, c-format
-msgid "HHCDG006S malloc pszInputBuff failed: %s\n"
+msgid "HHC90000D DBG: malloc() pszInputBuff failed: %s\n"
 msgstr ""
 
 #: dyngui.c:1863
 #, c-format
-msgid "HHCDG007S malloc pszCommandBuff failed: %s\n"
-msgstr ""
-
-#: ecpsvm.c:249 ecpsvm.c:254 ecpsvm.c:271 ecpsvm.c:293 ecpsvm.c:294
-#: ecpsvm.c:295 ecpsvm.c:296
-msgid "HHCEV300D : SASSIST "
-msgstr ""
-
-#: ecpsvm.c:261
-msgid "HHCEV300D : EVMA Disabled by guest\n"
-msgstr ""
-
-#: ecpsvm.c:314 ecpsvm.c:320
-msgid "HHCEV300D : CPASSTS "
-msgstr ""
-
-#: ecpsvm.c:328
-msgid "HHCEV300D : "
-msgstr ""
-
-#: ecpsvm.c:397
-msgid "HHCEV300D : LKPG coreptr = "
-msgstr ""
-
-#: ecpsvm.c:400
-#, c-format
-msgid "HHCEV300D : LKPG corete = %6.6X\n"
-msgstr ""
-
-#: ecpsvm.c:414
-#, c-format
-msgid "HHCEV300D : LKPG Page locked. Count = %6.6X\n"
-msgstr ""
-
-#: ecpsvm.c:431
-#, c-format
-msgid "HHCEV300D : LKPG PAGE=%6.6X, PTRPL=%6.6X\n"
-msgstr ""
-
-#: ecpsvm.c:458
-#, c-format
-msgid "HHCEV300D : ULKPG PAGE=%6.6X, PTRPL=%6.6X\n"
-msgstr ""
-
-#: ecpsvm.c:464
-#, c-format
-msgid "HHCEV300D : ULKPG Page beyond core size of %6.6X\n"
-msgstr ""
-
-#: ecpsvm.c:476
-msgid "HHCEV300D : ULKPG Attempting to unlock page that is not locked\n"
-msgstr ""
-
-#: ecpsvm.c:483
-msgid "HHCEV300D : ULKPG now unlocked\n"
-msgstr ""
-
-#: ecpsvm.c:487
-#, c-format
-msgid "HHCEV300D : ULKPG Page still locked. Count = %6.6X\n"
-msgstr ""
-
-#: ecpsvm.c:523
-#, c-format
-msgid "HHCEV300D SCNVU Virtual Device %4.4X has no VCHAN block\n"
-msgstr ""
-
-#: ecpsvm.c:531
-#, c-format
-msgid "HHCEV300D SCNVU Virtual Device %4.4X has no VCU block\n"
-msgstr ""
-
-#: ecpsvm.c:539
-#, c-format
-msgid "HHCEV300D SCNVU Virtual Device %4.4X has no VDEV block\n"
-msgstr ""
-
-#: ecpsvm.c:543
-#, c-format
-msgid "HHCEV300D SCNVU %4.4X : VCH = %8.8X, VCU = %8.8X, VDEV = %8.8X\n"
-msgstr ""
-
-#: ecpsvm.c:1108
-#, c-format
-msgid "HHCPEV300D : DISP2 - Next Instruction : %2.2X\n"
-msgstr ""
-
-#: ecpsvm.c:1170
-#, c-format
-msgid "HHCEV300D : Tranbring : LRA cc = %d\n"
-msgstr ""
-
-#: ecpsvm.c:1179
-#, c-format
-msgid "HHCEV300D : Page not shared - OK %d\n"
-msgstr ""
-
-#: ecpsvm.c:1185
-msgid "HHCEV300D : Checking 2K Storage keys @"
-msgstr ""
-
-#: ecpsvm.c:1190
-msgid "HHCEV300D : Checking 4K Storage keys @"
-msgstr ""
-
-#: ecpsvm.c:1194
-msgid "HHCEV300D : Page shared and changed\n"
-msgstr ""
-
-#: ecpsvm.c:1197
-msgid "HHCEV300D : Page shared but not changed\n"
-msgstr ""
-
-#: ecpsvm.c:1216
-msgid "HHCEV300D : TRANBRNG\n"
-msgstr ""
-
-#: ecpsvm.c:1220
-msgid "HHCEV300D : TRANBRNG - Back to CP\n"
-msgstr ""
-
-#: ecpsvm.c:1238
-msgid "HHCEV300D : TRANLOCK\n"
-msgstr ""
-
-#: ecpsvm.c:1242
-msgid "HHCEV300D : TRANLOCK - Back to CP\n"
-msgstr ""
-
-#: ecpsvm.c:1755
-#, c-format
-msgid "HHCEV300D : ECPS:VM SCNRU called; RDEV=%4.4X ARIOCT=%6.6X\n"
-msgstr ""
-
-#: ecpsvm.c:1763
-#, c-format
-msgid "HHCEV300D : ECPS:VM SCNRU : RCH IX = %x\n"
-msgstr ""
-
-#: ecpsvm.c:1805
-#, c-format
-msgid "HHCEV300D : ECPS:VM SCNRU : RCU IX = %x\n"
-msgstr ""
-
-#: ecpsvm.c:1825
-#, c-format
-msgid "HHCEV300D : ECPS:VM SCNRU : RDV IX = %x\n"
-msgstr ""
-
-#: ecpsvm.c:1829
-#, c-format
-msgid "HHCEV300D : ECPS:VM SCNRU : RCH = %6.6X, RCU = %6.6X, RDV = %6.6X\n"
-msgstr ""
-
-#: ecpsvm.c:1873
-#, c-format
-msgid "HHCEV300D : ECPS:VM STORE LEVEL %d called\n"
-msgstr ""
-
-#: ecpsvm.c:1913
-#, c-format
-msgid "HHCEV300D : ECPS:VM FREEX DW = %4.4X\n"
-msgstr ""
-
-#: ecpsvm.c:1918
-#, c-format
-msgid "HHCEV300D : MAXSIZE ADDR = %6.6X, SUBPOOL INDEX TABLE = %6.6X\n"
-msgstr ""
-
-#: ecpsvm.c:1925
-msgid "HHCEV300D : FREEX request beyond subpool capacity\n"
-msgstr ""
-
-#: ecpsvm.c:1930
-#, c-format
-msgid "HHCEV300D : Subpool index = %X\n"
-msgstr ""
-
-#: ecpsvm.c:1933
-#, c-format
-msgid "HHCEV300D : Value in subpool table = %6.6X\n"
-msgstr ""
-
-#: ecpsvm.c:1941
-#, c-format
-msgid "HHCEV300D : New Value in subpool table = %6.6X\n"
-msgstr ""
-
-#: ecpsvm.c:1971
-#, c-format
-msgid "HHCEV300D : X fretx called AREA=%6.6X, DW=%4.4X\n"
-msgstr ""
-
-#: ecpsvm.c:1974
-msgid "HHCEV300D : ECPS:VM Cannot FRETX : DWORDS = 0\n"
-msgstr ""
-
-#: ecpsvm.c:1980
-#, c-format
-msgid "HHCEV300D : ECPS:VM Cannot FRETX : DWORDS = %d > MAXDW %d\n"
-msgstr ""
-
-#: ecpsvm.c:1987
-msgid "HHCEV300D : ECPS:VM Cannot FRETX : Area not in Core Free area\n"
-msgstr ""
-
-#: ecpsvm.c:1992
-msgid "HHCEV300D : ECPS:VM Cannot FRETX : Area flag != 0x02\n"
-msgstr ""
-
-#: ecpsvm.c:1999
-msgid ""
-"HHCEV300D : ECPS:VM Cannot FRETX : fretted block already on subpool chain\n"
-msgstr ""
-
-#: ecpsvm.c:2069
-msgid "HHCEV300D : New and Old PSW have a EC/BC transition\n"
-msgstr ""
-
-#: ecpsvm.c:2077
-msgid "HHCEV300D : New PSW Enables DAT or PER\n"
-msgstr ""
-
-#: ecpsvm.c:2088
-msgid "HHCEV300D : New PSW Enables interrupts and MICPEND (EC)\n"
-msgstr ""
-
-#: ecpsvm.c:2096
-msgid "HHCEV300D : New PSW Enables interrupts and MICPEND (BC)\n"
-msgstr ""
-
-#: ecpsvm.c:2103
-msgid "HHCEV300D : New PSW is a WAIT PSW\n"
-msgstr ""
-
-#: ecpsvm.c:2110
-msgid "HHCEV300D : New PSW sysmask incorrect\n"
-msgstr ""
-
-#: ecpsvm.c:2116
-msgid "HHCEV300D : New PSW has ODD IA\n"
+msgid "HHC90000D DBG: malloc() pszCommandBuff failed: %s\n"
 msgstr ""
 
 #: external.c:381
@@ -503,7 +93,7 @@ msgstr ""
 msgid "Resl Frac: %16.16llX %16.16llX\n"
 msgstr ""
 
-#: general1.c:3865
+#: general1.c:3934
 msgid "MVCL destructive overlap: "
 msgstr ""
 
@@ -547,60 +137,45 @@ msgstr "HHCDC001E %1$s:Fout %3$s bij openen bestand \"%2$s\"\n"
 msgid "Running on %s %s-%s.%s %s%s"
 msgstr "Draaiend op %s %s%s %s %s\n"
 
-#: hsccmd.c:1155
+#: hsccmd.c:1253
 msgid "disabled"
 msgstr ""
 
-#: hsccmd.c:1155
+#: hsccmd.c:1253
 msgid "enabled"
 msgstr ""
 
-#: hsccmd.c:3350
+#: hsccmd.c:3508
 msgid "tracing"
 msgstr ""
 
-#: hsccmd.c:3351
+#: hsccmd.c:3509
 msgid "stepping"
 msgstr ""
 
-#: hsccmd.c:3351
+#: hsccmd.c:3509
 msgid "break"
 msgstr ""
 
-#: hsccmd.c:3352 hsccmd.c:6794
+#: hsccmd.c:3510 hsccmd.c:7217
 msgid "on"
 msgstr ""
 
-#: hsccmd.c:3352 hsccmd.c:6797
+#: hsccmd.c:3510 hsccmd.c:7220
 msgid "off"
 msgstr ""
 
-#: hsccmd.c:4139
+#: hsccmd.c:4327
 msgid "open "
 msgstr ""
 
-#: hsccmd.c:4140
+#: hsccmd.c:4328
 msgid "busy "
 msgstr ""
 
-#: hsccmd.c:4141
+#: hsccmd.c:4329
 msgid "pending "
 msgstr ""
-
-#: hsccmd.c:4383
-#, fuzzy, c-format
-msgid "HHCMD059E Device number %s is invalid\n"
-msgstr "HHCPN043E Apparaat nummer %s is ongeldig\n"
-
-#: hsccmd.c:4391
-#, fuzzy, c-format
-msgid "HHCMD059E LCSS id %s is invalid\n"
-msgstr "HHCPN043E Apparaat nummer %s is ongeldig\n"
-
-#: hsccmd.c:4401
-#, fuzzy, c-format
-msgid "Device type %s is invalid\n"
-msgstr "HHCPN043E Apparaat nummer %s is ongeldig\n"
 
 #: hscmisc.c:185
 #, c-format
@@ -610,21 +185,6 @@ msgstr ""
 #: httpserv.c:322
 #, c-format
 msgid "cgi_var_dump: pointer(%p) name(%s) value(%s) type(%d)\n"
-msgstr ""
-
-#: impl.c:838
-#, c-format
-msgid "IMPL EXIT\n"
-msgstr ""
-
-#: panel.c:1977
-#, c-format
-msgid "HHCPN004E select: %s\n"
-msgstr ""
-
-#: panel.c:1993
-#, c-format
-msgid "HHCPN005E keyboard read: %s\n"
 msgstr ""
 
 #: sie.c:271
@@ -728,22 +288,7 @@ msgid ""
 "loaded from V:"
 msgstr ""
 
-#: tapecopy.c:35
-#, c-format
-msgid "HHCTC017E SCSI tape not supported with this build\n"
-msgstr ""
-
-#: tapecopy.c:128
-#, c-format
-msgid "HHCTC000I Abnormal termination\n"
-msgstr ""
-
-#: tapecopy.c:142
-#, c-format
-msgid "HHCTC015I %s status: %8.8lX"
-msgstr ""
-
-#: tapecopy.c:167
+#: tapecopy.c:170
 #, c-format
 msgid ""
 "\n"
@@ -801,142 +346,83 @@ msgid ""
 "\n"
 msgstr ""
 
-#: tapecopy.c:262
-#, fuzzy, c-format
-msgid "HHCTC016E Error reading status of %s: rc=%d, errno=%d: %s\n"
-msgstr "HHCTC016E Fout %2$s bij lezen van bestand \"%1$s\"\n"
-
-#: tapecopy.c:291
-#, fuzzy, c-format
-msgid "HHCTC011I End of tape.\n"
-msgstr "HHCDL090I Einde van directory\n"
-
-#: tapecopy.c:295
-#, fuzzy, c-format
-msgid "HHCTC008E Error reading %s: errno=%d: %s\n"
-msgstr "HHCTC002E Fout %2$s bij lezen van bestand \"%1$s\"\n"
-
-#: tapecopy.c:321
-#, fuzzy, c-format
-msgid "HHCTC018I End of AWSTAPE input file.\n"
-msgstr "HHCDL090I Einde van directory\n"
-
-#: tapecopy.c:326
-#, fuzzy, c-format
-msgid "HHCTC019E Error reading AWSTAPE header from %s: rc=%d, errno=%d: %s\n"
-msgstr "HHCTC016E Fout %2$s bij lezen van bestand \"%1$s\"\n"
-
-#: tapecopy.c:342
-#, c-format
-msgid "HHCTC020E AWSTAPE block too large on %s: block size=%d, maximum=%d\n"
-msgstr ""
-
-#: tapecopy.c:351
-#, fuzzy, c-format
-msgid "HHCTC021E Error reading data block from %s: rc=%d, errno=%d: %s\n"
-msgstr "HHCTC016E Fout %2$s bij lezen van bestand \"%1$s\"\n"
-
-#: tapecopy.c:376
-#, fuzzy, c-format
-msgid "HHCTC022E Error writing data block to %s: rc=%d, errno=%d: %s\n"
-msgstr "HHCTC010E Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
-
-#: tapecopy.c:410
-#, fuzzy, c-format
-msgid "HHCTC013E Error writing AWSTAPE header on %s: rc=%d, errno=%d: %s\n"
-msgstr "HHCTC013I Fout %2$s bij lezen van bestand \"%1$s\"\n"
-
-#: tapecopy.c:425
-#, fuzzy, c-format
-msgid "HHCTC014E Error writing data block to %s: rc=%d, errno=%d: %s\n"
-msgstr "HHCTC014I Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
-
-#: tapecopy.c:448
-#, fuzzy, c-format
-msgid "HHCTC023E Error writing tapemark on %s: rc=%d, errno=%d: %s\n"
-msgstr "HHCTC013I Fout %2$s bij lezen van bestand \"%1$s\"\n"
-
-#: tapecopy.c:476
-#, fuzzy, c-format
-msgid "HHCTC010E Error writing tapemark on %s: rc=%d, errno=%d, %s\n"
-msgstr "HHCTC010E Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
-
-#: tapecopy.c:585
-#, fuzzy, c-format
-msgid "HHCTC001E Error opening %s: errno=%d: %s\n"
-msgstr "HHCTC001E Fout %2$s bij openen bestand \"%1$s\"\n"
-
-#: tapecopy.c:598
-#, fuzzy, c-format
-msgid "HHCTC005E Error setting attributes for %s: rc=%d, errno=%d: %s\n"
-msgstr "HHCTC002E Fout %2$s bij lezen van bestand \"%1$s\"\n"
-
-#: tapecopy.c:611 tapecopy.c:868
-#, fuzzy, c-format
-msgid "HHCTC006E Error rewinding %s: rc=%d, errno=%d: %s\n"
-msgstr "HHCTC010E Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
-
-#: tapecopy.c:628
-#, c-format
-msgid "HHCTC003I %s device type: %s\n"
-msgstr ""
-
-#: tapecopy.c:631
-#, c-format
-msgid "HHCTC003I %s device type: 0x%lX\n"
-msgstr ""
-
-#: tapecopy.c:641
-#, c-format
-msgid "HHCTC004I %s tape density: %s\n"
-msgstr ""
-
-#: tapecopy.c:644
-#, c-format
-msgid "HHCTC004I %s tape density code: 0x%lX\n"
-msgstr ""
-
-#: tapecopy.c:664
-#, fuzzy, c-format
-msgid "HHCTC007E Error opening %s: errno=%d: %s\n"
-msgstr "HHCTC001E Fout %2$s bij openen bestand \"%1$s\"\n"
-
-#: tapecopy.c:763
-msgid "HHCTC009I File %u: Blocks=%u, Bytes=%"
-msgstr ""
-
-#: tapecopy.c:776
+#: tapecopy.c:804
 #, c-format
 msgid "          (tapemark)\n"
 msgstr ""
 
-#: tapecopy.c:811
-#, c-format
-msgid "HHCTC012I %s\n"
-msgstr ""
+#, fuzzy
+#~ msgid "HHCMD059E Device number %s is invalid\n"
+#~ msgstr "HHCPN043E Apparaat nummer %s is ongeldig\n"
 
-#: tapecopy.c:820
-#, c-format
-msgid "File %u: Block %u\r"
-msgstr ""
+#, fuzzy
+#~ msgid "HHCMD059E LCSS id %s is invalid\n"
+#~ msgstr "HHCPN043E Apparaat nummer %s is ongeldig\n"
 
-#: tapecopy.c:840
-msgid ""
-"HHCTC000I Successful completion;\n"
-"          Bytes read: %"
-msgstr ""
+#, fuzzy
+#~ msgid "Device type %s is invalid\n"
+#~ msgstr "HHCPN043E Apparaat nummer %s is ongeldig\n"
 
-#: tapecopy.c:852
-msgid "          Bytes written: %"
-msgstr ""
+#, fuzzy
+#~ msgid "HHCTC016E Error reading status of %s: rc=%d, errno=%d: %s\n"
+#~ msgstr "HHCTC016E Fout %2$s bij lezen van bestand \"%1$s\"\n"
 
-#: vm.c:1164
-msgid "HHCVM003I Host command processing disabled by configuration statement"
-msgstr ""
+#, fuzzy
+#~ msgid "HHCTC011I End of tape.\n"
+#~ msgstr "HHCDL090I Einde van directory\n"
 
-#: vm.c:1167
-msgid "HHCVM004E Host command processing not included in engine build"
-msgstr ""
+#, fuzzy
+#~ msgid "HHCTC008E Error reading %s: errno=%d: %s\n"
+#~ msgstr "HHCTC002E Fout %2$s bij lezen van bestand \"%1$s\"\n"
+
+#, fuzzy
+#~ msgid "HHCTC018I End of AWSTAPE input file.\n"
+#~ msgstr "HHCDL090I Einde van directory\n"
+
+#, fuzzy
+#~ msgid ""
+#~ "HHCTC019E Error reading AWSTAPE header from %s: rc=%d, errno=%d: %s\n"
+#~ msgstr "HHCTC016E Fout %2$s bij lezen van bestand \"%1$s\"\n"
+
+#, fuzzy
+#~ msgid "HHCTC021E Error reading data block from %s: rc=%d, errno=%d: %s\n"
+#~ msgstr "HHCTC016E Fout %2$s bij lezen van bestand \"%1$s\"\n"
+
+#, fuzzy
+#~ msgid "HHCTC022E Error writing data block to %s: rc=%d, errno=%d: %s\n"
+#~ msgstr "HHCTC010E Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
+
+#, fuzzy
+#~ msgid "HHCTC013E Error writing AWSTAPE header on %s: rc=%d, errno=%d: %s\n"
+#~ msgstr "HHCTC013I Fout %2$s bij lezen van bestand \"%1$s\"\n"
+
+#, fuzzy
+#~ msgid "HHCTC014E Error writing data block to %s: rc=%d, errno=%d: %s\n"
+#~ msgstr "HHCTC014I Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
+
+#, fuzzy
+#~ msgid "HHCTC023E Error writing tapemark on %s: rc=%d, errno=%d: %s\n"
+#~ msgstr "HHCTC013I Fout %2$s bij lezen van bestand \"%1$s\"\n"
+
+#, fuzzy
+#~ msgid "HHCTC010E Error writing tapemark on %s: rc=%d, errno=%d, %s\n"
+#~ msgstr "HHCTC010E Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
+
+#, fuzzy
+#~ msgid "HHCTC001E Error opening %s: errno=%d: %s\n"
+#~ msgstr "HHCTC001E Fout %2$s bij openen bestand \"%1$s\"\n"
+
+#, fuzzy
+#~ msgid "HHCTC005E Error setting attributes for %s: rc=%d, errno=%d: %s\n"
+#~ msgstr "HHCTC002E Fout %2$s bij lezen van bestand \"%1$s\"\n"
+
+#, fuzzy
+#~ msgid "HHCTC006E Error rewinding %s: rc=%d, errno=%d: %s\n"
+#~ msgstr "HHCTC010E Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
+
+#, fuzzy
+#~ msgid "HHCTC007E Error opening %s: errno=%d: %s\n"
+#~ msgstr "HHCTC001E Fout %2$s bij openen bestand \"%1$s\"\n"
 
 #, fuzzy
 #~ msgid "HHCCH001E calloc failed cache[%d] size %d: %s\n"

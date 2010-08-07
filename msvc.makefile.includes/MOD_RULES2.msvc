@@ -173,6 +173,8 @@ $(X)tapemap.exe:  $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)her
 
 $(X)tapesplt.exe: $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
 
+$(X)vmfplc2.exe: $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+
 # NOTE: to be safe, since this member contains build rules, we need to
 # make sure there's always a blank line following the last build rule
 # in the member so that nmake doesn't complain or otherwise treat the
