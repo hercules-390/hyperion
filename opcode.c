@@ -392,6 +392,31 @@
  UNDEF_INST(store_on_condition_long)                            /*810*/
 #endif /*!defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY)*/   /*810*/
 
+#if !defined(FEATURE_DISTINCT_OPERANDS_FACILITY)                /*810*/
+ UNDEF_INST(add_distinct_register)                              /*810*/
+ UNDEF_INST(add_distinct_long_register)                         /*810*/
+ UNDEF_INST(add_distinct_halfword_immediate)                    /*810*/
+ UNDEF_INST(add_distinct_long_halfword_immediate)               /*810*/
+ UNDEF_INST(add_logical_distinct_register)                      /*810*/
+ UNDEF_INST(add_logical_distinct_long_register)                 /*810*/
+ UNDEF_INST(add_logical_distinct_signed_halfword_immediate)     /*810*/
+ UNDEF_INST(add_logical_distinct_long_signed_halfword_immediate)/*810*/
+ UNDEF_INST(and_distinct_register)                              /*810*/
+ UNDEF_INST(and_distinct_long_register)                         /*810*/
+ UNDEF_INST(exclusive_or_distinct_register)                     /*810*/
+ UNDEF_INST(exclusive_or_distinct_long_register)                /*810*/
+ UNDEF_INST(or_distinct_register)                               /*810*/
+ UNDEF_INST(or_distinct_long_register)                          /*810*/
+ UNDEF_INST(shift_left_single_distinct)                         /*810*/
+ UNDEF_INST(shift_left_single_logical_distinct)                 /*810*/
+ UNDEF_INST(shift_right_single_distinct)                        /*810*/
+ UNDEF_INST(shift_right_single_logical_distinct)                /*810*/
+ UNDEF_INST(subtract_distinct_register)                         /*810*/
+ UNDEF_INST(subtract_distinct_long_register)                    /*810*/
+ UNDEF_INST(subtract_logical_distinct_register)                 /*810*/
+ UNDEF_INST(subtract_logical_distinct_long_register)            /*810*/
+#endif /*!defined(FEATURE_DISTINCT_OPERANDS_FACILITY)*/         /*810*/
+
 #if !defined(FEATURE_POPULATION_COUNT_FACILITY)                 /*810*/
  UNDEF_INST(population_count)                                   /*810*/
 #endif /*!defined(FEATURE_POPULATION_COUNT_FACILITY)*/          /*810*/
@@ -1670,6 +1695,19 @@ int r1,r3,i2;
     DISASM_SET_NAME;
     DISASM_PRINT_OPERANDS
         "%d,%d,*%+d",r1,r3,i2*2);
+    DISASM_LOGMSG;
+}
+
+int disasm_RIE_RRI (BYTE inst[], char mnemonic[], char *p)              /*810*/
+{
+DISASM_COMMON_VARS;
+int r1,r3,i2;
+    r1 = inst[1] >> 4;
+    r3 = inst[1] & 0x0F;
+    i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
+    DISASM_SET_NAME;
+    DISASM_PRINT_OPERANDS
+        "%d,%d,%d",r1,r3,i2);
     DISASM_LOGMSG;
 }
 
@@ -3896,14 +3934,14 @@ DLL_EXPORT zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B9E1*/ GENx___x___x900 (population_count,RRE,"POPCNT"),                         /*810*/
  /*B9E2*/ GENx___x___x900 (load_on_condition_long_register,RRF_M3,"LOCGR"),        /*810*/
  /*B9E3*/ GENx___x___x___ ,
- /*B9E4*/ GENx___x___x___ ,
+ /*B9E4*/ GENx___x___x900 (and_distinct_long_register,RRR,"NGRK"),                 /*810*/
  /*B9E5*/ GENx___x___x___ ,
- /*B9E6*/ GENx___x___x___ ,
- /*B9E7*/ GENx___x___x___ ,
- /*B9E8*/ GENx___x___x___ ,
- /*B9E9*/ GENx___x___x___ ,
- /*B9EA*/ GENx___x___x___ ,
- /*B9EB*/ GENx___x___x___ ,
+ /*B9E6*/ GENx___x___x900 (or_distinct_long_register,RRR,"OGRK"),                  /*810*/
+ /*B9E7*/ GENx___x___x900 (exclusive_or_distinct_long_register,RRR,"XGRK"),        /*810*/
+ /*B9E8*/ GENx___x___x900 (add_distinct_long_register,RRR,"AGRK"),                 /*810*/
+ /*B9E9*/ GENx___x___x900 (subtract_distinct_long_register,RRR,"SGRK"),            /*810*/
+ /*B9EA*/ GENx___x___x900 (add_logical_distinct_long_register,RRR,"ALGRK"),        /*810*/
+ /*B9EB*/ GENx___x___x900 (subtract_logical_distinct_long_register,RRR,"SLGRK"),   /*810*/
  /*B9EC*/ GENx___x___x___ ,
  /*B9ED*/ GENx___x___x___ ,
  /*B9EE*/ GENx___x___x___ ,
@@ -3912,14 +3950,14 @@ DLL_EXPORT zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B9F1*/ GENx___x___x___ ,
  /*B9F2*/ GENx37Xx390x900 (load_on_condition_register,RRF_M3,"LOCR"),              /*810*/
  /*B9F3*/ GENx___x___x___ ,
- /*B9F4*/ GENx___x___x___ ,
+ /*B9F4*/ GENx37Xx390x900 (and_distinct_register,RRR,"NRK"),                       /*810*/
  /*B9F5*/ GENx___x___x___ ,
- /*B9F6*/ GENx___x___x___ ,
- /*B9F7*/ GENx___x___x___ ,
- /*B9F8*/ GENx___x___x___ ,
- /*B9F9*/ GENx___x___x___ ,
- /*B9FA*/ GENx___x___x___ ,
- /*B9FB*/ GENx___x___x___ ,
+ /*B9F6*/ GENx37Xx390x900 (or_distinct_register,RRR,"ORK"),                        /*810*/
+ /*B9F7*/ GENx37Xx390x900 (exclusive_or_distinct_register,RRR,"XRK"),              /*810*/
+ /*B9F8*/ GENx37Xx390x900 (add_distinct_register,RRR,"ARK"),                       /*810*/
+ /*B9F9*/ GENx37Xx390x900 (subtract_distinct_register,RRR,"SRK"),                  /*810*/
+ /*B9FA*/ GENx37Xx390x900 (add_logical_distinct_register,RRR,"ALRK"),              /*810*/
+ /*B9FB*/ GENx37Xx390x900 (subtract_logical_distinct_register,RRR,"SLRK"),         /*810*/
  /*B9FC*/ GENx___x___x___ ,
  /*B9FD*/ GENx___x___x___ ,
  /*B9FE*/ GENx___x___x___ ,
@@ -5043,10 +5081,10 @@ DLL_EXPORT zz_func opcode_ebxx[256][GEN_MAXARCH] = {
  /*EBD9*/ GENx___x___x___ ,
  /*EBDA*/ GENx___x___x___ ,
  /*EBDB*/ GENx___x___x___ ,
- /*EBDC*/ GENx___x___x___ ,
- /*EBDD*/ GENx___x___x___ ,
- /*EBDE*/ GENx___x___x___ ,
- /*EBDF*/ GENx___x___x___ ,
+ /*EBDC*/ GENx37Xx390x900 (shift_right_single_distinct,RSY,"SRAK"),                /*810*/
+ /*EBDD*/ GENx37Xx390x900 (shift_left_single_distinct,RSY,"SLAK"),                 /*810*/
+ /*EBDE*/ GENx37Xx390x900 (shift_right_single_logical_distinct,RSY,"SRLK"),        /*810*/
+ /*EBDF*/ GENx37Xx390x900 (shift_left_single_logical_distinct,RSY,"SLLK"),         /*810*/
  /*EBE0*/ GENx___x___x___ ,
  /*EBE1*/ GENx___x___x___ ,
  /*EBE2*/ GENx___x___x900 (load_on_condition_long,RSY_M3,"LOCG"),                  /*810*/
@@ -5301,10 +5339,10 @@ DLL_EXPORT zz_func opcode_ecxx[256][GEN_MAXARCH] = {
  /*ECD5*/ GENx___x___x___ ,
  /*ECD6*/ GENx___x___x___ ,
  /*ECD7*/ GENx___x___x___ ,
- /*ECD8*/ GENx___x___x___ ,
- /*ECD9*/ GENx___x___x___ ,
- /*ECDA*/ GENx___x___x___ ,
- /*ECDB*/ GENx___x___x___ ,
+ /*ECD8*/ GENx37Xx390x900 (add_distinct_halfword_immediate,RIE_RRI,"AHIK"),        /*810*/
+ /*ECD9*/ GENx___x___x900 (add_distinct_long_halfword_immediate,RIE_RRI,"AGHIK"),  /*810*/
+ /*ECDA*/ GENx37Xx390x900 (add_logical_distinct_signed_halfword_immediate,RIE_RRI,"ALHSIK"), /*810*/
+ /*ECDB*/ GENx___x___x900 (add_logical_distinct_long_signed_halfword_immediate,RIE_RRI,"AGLHSIK"), /*810*/
  /*ECDC*/ GENx___x___x___ ,
  /*ECDD*/ GENx___x___x___ ,
  /*ECDE*/ GENx___x___x___ ,
