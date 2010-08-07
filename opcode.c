@@ -392,6 +392,10 @@
  UNDEF_INST(store_on_condition_long)                            /*810*/
 #endif /*!defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY)*/   /*810*/
 
+#if !defined(FEATURE_POPULATION_COUNT_FACILITY)                 /*810*/
+ UNDEF_INST(population_count)                                   /*810*/
+#endif /*!defined(FEATURE_POPULATION_COUNT_FACILITY)*/          /*810*/
+
 #if !defined(FEATURE_VECTOR_FACILITY)
  UNDEF_INST(execute_a4xx)
  #if !defined(FEATURE_ESAME) && !defined(FEATURE_ESAME_N3_ESA390)
@@ -3889,7 +3893,7 @@ DLL_EXPORT zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B9DE*/ GENx___x___x___ ,
  /*B9DF*/ GENx___x___x900 (compare_logical_high_low_register,RRE,"CLHLR"),         /*810*/
  /*B9E0*/ GENx___x___x___ ,
- /*B9E1*/ GENx___x___x___ ,
+ /*B9E1*/ GENx___x___x900 (population_count,RRE,"POPCNT"),                         /*810*/
  /*B9E2*/ GENx___x___x900 (load_on_condition_long_register,RRF_M3,"LOCGR"),        /*810*/
  /*B9E3*/ GENx___x___x___ ,
  /*B9E4*/ GENx___x___x___ ,
