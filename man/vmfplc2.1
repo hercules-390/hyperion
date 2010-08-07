@@ -1,0 +1,91 @@
+.TH vmfplc2.1 "2010-08-07"
+.SH NAME
+\fBvmfplc2\fP - Hercules VMFPLC2 (VM) formatted tape utility
+
+.SH SYNOPSIS
+\fBvmfplc2\fP dump <control file> <output tape file>
+.br
+\fBvmfplc2\fP scan <input tape file>
+.br
+\fBvmfplc2\fP load <input tape file>
+
+.SH DESCRIPTION
+Hercules command to manipulate (create and read) VMFPLC2 formatted tapes
+for VM/370 use.
+
+.SH OPTIONS
+the vmfplc2 utility requires a function (dump, scan or load) followed by
+the names of files to process.
+
+.SH Functions
+
+.SS dump
+The dump function allows creating a VMFPLC2 formatted tape.
+.SS scan
+The scan function allows listing the contents of a VMFPLC2 formatted tape.
+.SS load
+The load function allows importing the contents of a VMFPLC2 formatted tape
+unto the system.
+
+.SH Control File
+The control file allows the DUMP function to determine what files to dump
+and how they should be interpreted on VM.
+
+Each line has the following format :
+.br
+<fn> <ft> <fm> <recfm> <lrecl> <type> <host file>
+
+.SS <fn>
+Is the 1 to 8 character that represents the file name. The file name can
+be specified as lower case, but will be translated to upper case to follow
+CMS conventions. Characters allowed are [A-Z], [0-9], $ (Dollar), # (Pound),
+@ (At), + (Plus), - (Hyphen), : (Colon) and _ (Underscore).
+
+.SS <ft>
+Is the 1 to 8 character that represents the file type. The file type can
+be specified as lower case, but will be translated to upper case to follow
+CMS conventions. Characters allowed are [A-Z], [0-9], $ (Dollar), # (Pound),
+@ (At), + (Plus), - (Hyphen), : (Colon) and _ (Underscore).
+
+.SS <fm>
+Is the 1 to 2 character that represents the file mode. The 1st character is a
+letter from A to Z and represents the "original" file mode when scanned on
+VM/370 (it does not force the file to be loaded on a certain disk). The second
+character is a digit from 0 to 6. The file mode number indicates specific behavior
+for the file under CMS.
+
+.SS <recfm>
+Indicates the record format, and should be F (for Fixed) or V (for Variable).
+
+.SS <lrecl>
+Indicate the logical record length. This should only be specified for RECFM F
+files.
+
+.SS <type>
+Indicates how the file is processed before being written to tape. The value can
+either be B (Binary), T (Textual) or S (Structured).
+.SS Binary
+The file is not translated. For RECFM F files, the file is cut into records of
+the size of the Logical Record length specified. For RECFM V files, the file is
+cut into records of 65535 bytes except for the last record which has a length
+of the remainder of the file.
+.SS Textual
+The file is translated from ASCII to EBCDIC and the trailing line termination
+character is removed. For RECFM F files, the record may be truncated or padded
+with EBCDIC X'40' characters (White space). For RECFM V files, each record
+represents the length of the line up to 65535 characters.
+.SS Structured
+The file contains structured information which indicates the 16 bit length of each
+record in Big endian format. For RECFM F files, the record may be truncated or padded.
+For RECFM V files, the records are stored as is.
+
+.SS <tape file>
+The tape file is created or read as an HET (Hercules Emulated Tape) format. The DUMP
+function creates a file, while the SCAN and LOAD functions only read the file.
+
+.SH "SEE ALSO"
+.TP
+http://www.hercules-390.org/ the Hercules emulator homepage.
+
+.SH HISTORY
+2010-08-07 originally written by Ivan S. Warren
