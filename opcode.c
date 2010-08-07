@@ -368,6 +368,15 @@
  UNDEF_INST(subtract_logical_high_high_low_register)            /*810*/
 #endif /*!defined(FEATURE_HIGH_WORD_FACILITY)*/                 /*810*/
 
+#if !defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY)          /*810*/
+ UNDEF_INST(load_on_condition_register)                         /*810*/
+ UNDEF_INST(load_on_condition_long_register)                    /*810*/
+ UNDEF_INST(load_on_condition)                                  /*810*/
+ UNDEF_INST(load_on_condition_long)                             /*810*/
+ UNDEF_INST(store_on_condition)                                 /*810*/
+ UNDEF_INST(store_on_condition_long)                            /*810*/
+#endif /*!defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY)*/   /*810*/
+
 #if !defined(FEATURE_VECTOR_FACILITY)
  UNDEF_INST(execute_a4xx)
  #if !defined(FEATURE_ESAME) && !defined(FEATURE_ESAME_N3_ESA390)
@@ -1565,6 +1574,20 @@ int r1,r3,b2,d2;
     DISASM_SET_NAME;
     DISASM_PRINT_OPERANDS
         "%d,%d,%d(%d)",r1,r3,d2,b2);
+    DISASM_LOGMSG;
+}
+
+int disasm_RSY_M3 (BYTE inst[], char mnemonic[], char *p)               /*810*/
+{
+DISASM_COMMON_VARS;
+int r1,b2,d2,m3;
+    r1 = inst[1] >> 4;
+    m3 = inst[1] & 0x0F;
+    b2 = inst[2] >> 4;
+    d2 = (((S8)inst[4]) << 12) | (inst[2] & 0x0F) << 8 | inst[3];
+    DISASM_SET_NAME;
+    DISASM_PRINT_OPERANDS
+        "%d,%d(%d),%d",r1,d2,b2,m3);
     DISASM_LOGMSG;
 }
 
@@ -3837,7 +3860,7 @@ DLL_EXPORT zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B9DF*/ GENx___x___x900 (compare_logical_high_low_register,RRE,"CLHLR"),         /*810*/
  /*B9E0*/ GENx___x___x___ ,
  /*B9E1*/ GENx___x___x___ ,
- /*B9E2*/ GENx___x___x___ ,
+ /*B9E2*/ GENx___x___x900 (load_on_condition_long_register,RRF_M3,"LOCGR"),        /*810*/
  /*B9E3*/ GENx___x___x___ ,
  /*B9E4*/ GENx___x___x___ ,
  /*B9E5*/ GENx___x___x___ ,
@@ -3853,7 +3876,7 @@ DLL_EXPORT zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B9EF*/ GENx___x___x___ ,
  /*B9F0*/ GENx___x___x___ ,
  /*B9F1*/ GENx___x___x___ ,
- /*B9F2*/ GENx___x___x___ ,
+ /*B9F2*/ GENx37Xx390x900 (load_on_condition_register,RRF_M3,"LOCR"),              /*810*/
  /*B9F3*/ GENx___x___x___ ,
  /*B9F4*/ GENx___x___x___ ,
  /*B9F5*/ GENx___x___x___ ,
@@ -4992,8 +5015,8 @@ DLL_EXPORT zz_func opcode_ebxx[256][GEN_MAXARCH] = {
  /*EBDF*/ GENx___x___x___ ,
  /*EBE0*/ GENx___x___x___ ,
  /*EBE1*/ GENx___x___x___ ,
- /*EBE2*/ GENx___x___x___ ,
- /*EBEB*/ GENx___x___x___ ,
+ /*EBE2*/ GENx___x___x900 (load_on_condition_long,RSY_M3,"LOCG"),                  /*810*/
+ /*EBE3*/ GENx___x___x900 (store_on_condition_long,RSY_M3,"LOCG"),                 /*810*/
  /*EBE4*/ GENx___x___x___ ,
  /*EBE5*/ GENx___x___x___ ,
  /*EBE6*/ GENx___x___x___ ,
@@ -5008,8 +5031,8 @@ DLL_EXPORT zz_func opcode_ebxx[256][GEN_MAXARCH] = {
  /*EBEF*/ GENx___x___x___ ,
  /*EBF0*/ GENx___x___x___ ,
  /*EBF1*/ GENx___x___x___ ,
- /*EBF2*/ GENx___x___x___ ,
- /*EBF3*/ GENx___x___x___ ,
+ /*EBF2*/ GENx37Xx390x900 (load_on_condition,RSY_M3,"LOC"),                        /*810*/
+ /*EBF3*/ GENx37Xx390x900 (store_on_condition,RSY_M3,"LOC"),                       /*810*/
  /*EBF4*/ GENx___x___x___ ,
  /*EBF5*/ GENx___x___x___ ,
  /*EBF6*/ GENx___x___x___ ,
