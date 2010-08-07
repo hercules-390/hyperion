@@ -13,8 +13,18 @@
 #include "sllib.h"
 #include "herc_getopt.h"
 
+/* The blocksize of 4000 is the block size expected by VMFPLC2 */
 #define TAPE_BLOCKSIZE	4000
+/* The last data record must have a modulo of 800 */
 #define TAPE_BLKSIZE_MODULO	800
+/* NOTE : The tape blocks will always be 5 more to account */
+/*        for record headers                               */
+
+
+/* The File Status Table (as expected by VMFPLC2) */
+/* The "Basic" version is the FST for VM/370      */
+/* while the EDF extention is for support of VM   */
+/* version starting with BSEPP.                   */
 
 struct FST
 {
@@ -46,11 +56,15 @@ struct FST
 /* Global length MUST be 72 */
 };
 
+/* The FST tape record (with VMFPLC2 header) */
 struct FST_BLOCK
 {
 	unsigned char hdr[5];
 	struct FST fst;
 };
+
+/* This structure contains processing options */
+/* and some runtime status information        */
 
 struct options
 {
@@ -66,6 +80,9 @@ struct options
         HETB    *hetfd;
 };
 
+
+/* Generic 'usage' routine in case of incorrect */
+/* invocation.                                  */
 int	usage(char *cmd)
 {
 	char	*bcmd;
@@ -77,6 +94,7 @@ int	usage(char *cmd)
 	return 0;
 }
 
+/* Parse the command line */
 int	parse_parms(int ac,char **av,struct options *opts)
 {
 	opts->cmd=basename(av[0]);
@@ -138,9 +156,13 @@ int	parse_parms(int ac,char **av,struct options *opts)
 	return 0;
 }
 
+/* Valid character for CMS file names and file types */
 static	char	*validchars="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$#@+-:_";
+/* Valid CMS file mode numbers */
 static  char	*validfmnum="0123456";
 
+
+/* This function validates a CMS File Name or File Type */
 int	validate_fnft(char *s)
 {
 	int	i,j,found;
@@ -159,6 +181,7 @@ int	validate_fnft(char *s)
 	return 0;
 }
 
+/* Validate a CMS FN FT FM construct */
 char	*validate_cmsfile(char *fn,char *ft,char *fm)
 {
 	int	i;
@@ -209,6 +232,7 @@ char	*validate_cmsfile(char *fn,char *ft,char *fm)
 	return NULL;
 }
 
+/* Utility routine to translate a C string to upper case */
 void	str_toupper(char *s)
 {
 	int	i;
@@ -218,6 +242,11 @@ void	str_toupper(char *s)
 	}
 }
 
+/*****************************************************/
+/* Tape management structures and functions          */
+/*****************************************************/
+
+/* the TAPE_BLOCK structure represents a single tape block */
 struct	TAPE_BLOCK
 {
 	unsigned char	*data;
@@ -225,28 +254,32 @@ struct	TAPE_BLOCK
 	struct TAPE_BLOCK *next;
 };
 
+/* The TAPE_BLOCKS structure represents a collection of tape blocks */
 struct	TAPE_BLOCKS
 {
-	unsigned char *hdr;
-	size_t	hdrsz;
-	size_t	blksz;
+	unsigned char *hdr;     /* Header to append to every record */
+	size_t	hdrsz;          /* Size of header */
+	size_t	blksz;          /* Maximum block size */
         size_t  blk_modulo;     /* Must be a multiple of this */
-	struct TAPE_BLOCK *first;
-	struct TAPE_BLOCK *current;
+	struct TAPE_BLOCK *first;       /* First block in chain */
+	struct TAPE_BLOCK *current;     /* Working block */
 };
 
+/* Write a single tape mark */
 int     write_tape_mark(struct options *opts)
 {
         het_tapemark(opts->hetfd);
         return 0;
 }
 
+/* Write a block of data to tape */
 int	write_tape_block_data(struct options *opts,unsigned char *bfr,int sz)
 {
         het_write(opts->hetfd,bfr,sz);
         return 0;
 }
 
+/* Write a TAPE_BLOCK and adjust the block size to a modulo (without counting the header */
 int	write_tape_block(struct options *opts,struct TAPE_BLOCK *tb,size_t mod,size_t hdrsz)
 {
         size_t  sz;
@@ -260,6 +293,7 @@ int	write_tape_block(struct options *opts,struct TAPE_BLOCK *tb,size_t mod,size_
 	return write_tape_block_data(opts,tb->data,sz);
 }
 
+/* Write a collection of blocks to tape */
 int	write_tape_blocks(struct options *opts,struct TAPE_BLOCKS *tbs)
 {
 	int	rc;
@@ -273,7 +307,8 @@ int	write_tape_blocks(struct options *opts,struct TAPE_BLOCKS *tbs)
 	}
 	return rc;
 }
-	
+
+/* Initialize a collection of tape blocks */
 struct TAPE_BLOCKS *init_blocks(size_t blksz,size_t modulo,unsigned char *hdr,int hdrsz)
 {
 	struct TAPE_BLOCKS *tbs;
@@ -287,7 +322,8 @@ struct TAPE_BLOCKS *init_blocks(size_t blksz,size_t modulo,unsigned char *hdr,in
 	return tbs;
 }
 
-/*
+#if 0
+/* DEBUGGING FUNCTION */
 static void	hexdump(unsigned char *bfr,int sz)
 {
 	int i;
@@ -306,8 +342,9 @@ static void	hexdump(unsigned char *bfr,int sz)
 	}
 	if(i%16) printf("\n");
 }
-*/
+#endif
 
+/* Add a chunk of data to a collection of tape blocks */
 void	append_data(struct TAPE_BLOCKS *tbs,unsigned char *bfr,size_t sz)
 {
 	int	dsz;
@@ -348,6 +385,7 @@ void	append_data(struct TAPE_BLOCKS *tbs,unsigned char *bfr,size_t sz)
 	}
 }
 
+/* Release a collection of tape blocks */
 void	free_blocks(struct TAPE_BLOCKS *tbs)
 {
 	struct TAPE_BLOCK *tb,*ntb;
@@ -362,11 +400,16 @@ void	free_blocks(struct TAPE_BLOCKS *tbs)
 	free(tbs);
 }
 
+/*****************************************************/
+/* File records management structures & functions    */
+/*****************************************************/
+
+/* The RECS strucure represents a file with its */
+/* collection of tape blocks                    */
 struct	RECS
 {
 	size_t	bc;
 	size_t	bts;
-	off_t	cur_offset;
 	struct TAPE_BLOCKS *blocks;
 	char	recfm;
 	int	reclen;
@@ -375,6 +418,7 @@ struct	RECS
 };
 
 
+/* Initialize a new RECS structure */
 struct RECS *initrecs(char recfm,int recl,unsigned char *hdr,int hdrsz)
 {
 	struct RECS *recs;
@@ -387,6 +431,8 @@ struct RECS *initrecs(char recfm,int recl,unsigned char *hdr,int hdrsz)
 	return recs;
 }
 
+/* Add 1 (recfm V) or multiple (recfm F) records to a RECS structure */
+/* and to the related tape block collection ù                        */
 void addrecs(struct RECS *recs,unsigned char *bfr,int sz)
 {
 	unsigned char	recd[2];
@@ -406,6 +452,12 @@ void addrecs(struct RECS *recs,unsigned char *bfr,int sz)
 			break;
 	}
 }
+
+/* Close a RECS structure. The RECS structue is released and the collection */
+/* of tape block is returned for subsequent writing                         */
+/* For empty files, a dummy record is created since CMS does not support    */
+/* empty files.                                                             */
+/* The last record of a RECFM F file is also padded if necessary            */
 
 struct TAPE_BLOCKS *flushrecs(struct RECS *recs,int *recl,int *recc,size_t *filesz,unsigned char pad)
 {
@@ -445,9 +497,12 @@ struct TAPE_BLOCKS *flushrecs(struct RECS *recs,int *recl,int *recc,size_t *file
 	return blks;
 }
 
+/* PLCD (VMFPLC2 Data block) record header */
 static unsigned char plcd_hdr[5]={0x02,0xd7,0xd3,0xc3,0xc4};
+/* PLCH (VMFPLC2 Header block) record header */
 static unsigned char plch_hdr[5]={0x02,0xd7,0xd3,0xc3,0xc8};
 
+/* Load a binary file for DUMP function */
 struct TAPE_BLOCKS *load_binary_file(char *infile,char recfm,int *recl,int *recc,size_t *filesz)
 {
 	int	rsz;
@@ -474,16 +529,19 @@ struct TAPE_BLOCKS *load_binary_file(char *infile,char recfm,int *recl,int *recc
 	return flushrecs(recs,recl,recc,filesz,0x40);
 }
 
+/* Load a textual file for DUMP function */
 struct TAPE_BLOCKS *load_text_file(char *infile,char recfm,int *recl,int *recc,size_t *filesz)
 {
 	return NULL;
 }
 
+/* Load a structured file for DUMP function */
 struct TAPE_BLOCKS *load_structured_file(char *infile,char recfm,int *recl,int *recc,size_t *filesz)
 {
 	return NULL;
 }
 
+/* Load file for DUMP function */
 struct TAPE_BLOCKS *load_file(char *infile,char *filefmt,char recfm,int *recl,int *recc,size_t *filesz)
 {
 	struct TAPE_BLOCKS *blks;
@@ -505,6 +563,7 @@ struct TAPE_BLOCKS *load_file(char *infile,char *filefmt,char recfm,int *recl,in
 	return blks;
 }
 
+/* Utility function to perform ascii to ebcdic translation on a string */
 void host_to_guest_str(unsigned char *d,char *s)
 {
 	int	i;
@@ -514,12 +573,14 @@ void host_to_guest_str(unsigned char *d,char *s)
 	}
 }
 
+/* Convert a value to 16 bit Big Endian format */
 void	big_endian_16(unsigned char *d,int s)
 {
 	d[0]=(s>>8) & 0xff;
 	d[1]=s&0xff;
 }
 
+/* Convert a value to 32 bit Big Endian format */
 void	big_endian_32(unsigned char *d,int s)
 {
 	d[0]=(s>>24) & 0xff;
@@ -528,11 +589,13 @@ void	big_endian_32(unsigned char *d,int s)
 	d[3]=s&0xff;
 }
 
+/* Convert a single byte decimal value to DCB (Decimal Coded Binary) format */
 unsigned char to_dcb(int v)
 {
         return((v/10)*16+v%10);
 }
 
+/* Create the VMFPLC2 Header record */
 struct FST_BLOCK *format_fst(char *fn,char *ft,char *fm,char recfm,int lrecl,int reccount,int filesz,time_t dt)
 {
         int     numfull;
@@ -595,6 +658,7 @@ struct FST_BLOCK *format_fst(char *fn,char *ft,char *fm,char recfm,int lrecl,int
 	return  fstb;
 }
 
+/* Process a control file entry */
 int	process_entry(struct options *opts,char *orec,int recno)
 {
 	int	ignore;
@@ -744,6 +808,7 @@ int	process_entry(struct options *opts,char *orec,int recno)
 	return 0;
 }
 
+/* Process the DUMP control file */
 int	process_procfile(struct options *opts)
 {
 	int	rc;
@@ -779,6 +844,7 @@ int	process_procfile(struct options *opts)
 	return errcount?1:0;
 }
 
+/* Open the tape file for output */
 int     open_tapefile(struct options *opts,int w)
 {
         int     rc;
@@ -795,6 +861,7 @@ int     open_tapefile(struct options *opts,int w)
         return 0;
 }
 
+/* Perform vmfplc2 DUMP operation */
 int	dodump(struct options *opts)
 {
 	int	rc;
@@ -803,17 +870,22 @@ int	dodump(struct options *opts)
 	rc=process_procfile(opts);
 	return rc;
 }
+
+/* Perform vmfplc2 LOAD operation */
 int	doload(struct options *opts)
 {
 	printf("LOAD function not implemented yet\n");
 	return 0;
 }
+
+/* Perform vmfplc2 SCAN operation */
 int	doscan(struct options *opts)
 {
 	printf("SCAN function not implemented yet\n");
 	return 0;
 }
 
+/* Main routine */
 int main(int ac,char **av)
 {
 	int	rc;
