@@ -2518,10 +2518,10 @@ DLL_EXPORT zz_func opcode_table[256][GEN_MAXARCH] = {
  /*99*/   GENx___x390x900 (trace,RS,"TRACE"),
  /*9A*/   GENx___x390x900 (load_access_multiple,RS,"LAM"),
  /*9B*/   GENx___x390x900 (store_access_multiple,RS,"STAM"),
- /*9C*/   GENx370x___x___ (start_io,S,"SIO"),
- /*9D*/   GENx370x___x___ (test_io,S,"TIO"),
- /*9E*/   GENx370x___x___ (halt_io,S,"HIO"),
- /*9F*/   GENx370x___x___ (test_channel,S,"TCH"),
+ /*9C*/   GENx370x390x900 (start_io,S,"SIO"),
+ /*9D*/   GENx370x390x900 (test_io,S,"TIO"),
+ /*9E*/   GENx370x390x900 (halt_io,S,"HIO"),
+ /*9F*/   GENx370x390x900 (test_channel,S,"TCH"),
  /*A0*/   GENx___x___x___ ,
  /*A1*/   GENx___x___x___ ,
  /*A2*/   GENx___x___x___ ,
@@ -3183,10 +3183,10 @@ DLL_EXPORT zz_func opcode_a7xx[16][GEN_MAXARCH] = {
 
 
 DLL_EXPORT zz_func opcode_b2xx[256][GEN_MAXARCH] = {
- /*B200*/ GENx370x___x___ (connect_channel_set,S,"CONCS"),
- /*B201*/ GENx370x___x___ (disconnect_channel_set,S,"DISCS"),
+ /*B200*/ GENx370x390x900 (connect_channel_set,S,"CONCS"),
+ /*B201*/ GENx370x390x900 (disconnect_channel_set,S,"DISCS"),
  /*B202*/ GENx370x390x900 (store_cpu_id,S,"STIDP"),
- /*B203*/ GENx370x___x___ (store_channel_id,S,"STIDC"),
+ /*B203*/ GENx370x390x900 (store_channel_id,S,"STIDC"),
  /*B204*/ GENx370x390x900 (set_clock,S,"SCK"),
  /*B205*/ GENx370x390x900 (store_clock,S,"STCK"),
  /*B206*/ GENx370x390x900 (set_clock_comparator,S,"SCKC"),

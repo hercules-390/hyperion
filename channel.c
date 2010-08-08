@@ -3363,7 +3363,7 @@ int     i;                              /* Interruption subclass     */
 
         /* If I/O mask is enabled, test channel masks in CR2 */
         if (i > 31) i = 31;
-        if ((regs->CR(2) & (0x80000000 >> i)) == 0)
+        if ((CHANNEL_MASKS(regs) & (0x80000000 >> i)) == 0)
             return
 #if defined(_FEATURE_IO_ASSIST)
                    SIE_MODE(regs) ? SIE_INTERCEPT_IOINTP :

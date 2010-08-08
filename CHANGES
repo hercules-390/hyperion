@@ -1,3 +1,6 @@
+08 Aug 2010 Allow when building to replace the ESA/390 or z/Architecture
+            channel subsystem with S/370 channel I/O.  See README.IOARCH.
+            Harold Grovesteen
 08 Aug 2010 Load/Store-on-Condition Facility - Roger Bowler
 05 Aug 2010 CMDSEP function added. Default is off. The characters 
             '.', '!' and '-' are invalid. Setting the character to a '#'

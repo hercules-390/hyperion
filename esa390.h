@@ -728,7 +728,10 @@ typedef struct _PSA_900 {               /* Prefixed storage area     */
 /*0000*/ DBLWRD iplpsw;                 /* IPL PSW                   */
 /*0008*/ DBLWRD iplccw1;                /* IPL CCW1                  */
 /*0010*/ DBLWRD iplccw2;                /* IPL CCW2                  */
-/*0018*/ BYTE   resv0018[104];          /* Reserved                  */
+/*0018*/ BYTE   resv0018a[40];          /* Reserved                  */
+/*0040*/ DBLWRD csw;                    /* Channel status word (S370)*/
+/*0048*/ FWORD  caw;                    /* Channel address word(S370)*/
+/*004C*/ BYTE   resv0018b[52];          /* Reserved                  */
 /*0080*/ FWORD  extparm;                /* External interrupt param  */
 /*0084*/ HWORD  extcpad;                /* External interrupt CPU#   */
 /*0086*/ HWORD  extint;                 /* External interrupt code   */
@@ -1712,7 +1715,8 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 /*068*/ FWORD  resv068f;
 /*06C*/ HWORD  todpfh;                  /* TOD pf high half          */
 /*06E*/ HWORD  todpf;                   /* TOD programmable field    */
-/*070*/ FWORD  resv070f;
+/*070*/ HWORD  tch_ctl;                 /* Test Channel control      */
+/*072*/ HWORD  resv72h;
 /*074*/ BYTE   zone;                    /* Zone Number               */
 /*075*/ BYTE   resv075;
 /*076*/ BYTE   tschds;                  /* TSCH device status        */

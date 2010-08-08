@@ -110,6 +110,7 @@
 #undef TLBID_BYTEMASK
 #undef ASD_PRIVATE
 #undef PER_SB
+#undef CHANNEL_MASKS
 
 #if __GEN_ARCH == 370
 
@@ -208,6 +209,7 @@ s370_ ## _name
 #define TLBID_PAGEMASK  0x00E00000
 #define TLBID_BYTEMASK  0x001FFFFF
 #define ASD_PRIVATE   SEGTAB_370_CMN
+#define CHANNEL_MASKS(_regs) ((_regs)->CR(2))
 
 #elif __GEN_ARCH == 390
 
@@ -315,6 +317,11 @@ s390_ ## _name
 #define TLBID_PAGEMASK  0x7FC00000
 #define TLBID_BYTEMASK  0x003FFFFF
 #define ASD_PRIVATE   STD_PRIVATE
+#ifdef FEATURE_ACCESS_REGISTERS
+ #define CHANNEL_MASKS(_regs) 0xFFFFFFFF
+#else
+ #define CHANNEL_MASKS(_regs) ((_regs)->CR(2))
+#endif /* FEATURE_ACCESS_REGISTERS */
 
 #elif __GEN_ARCH == 900
 
@@ -440,6 +447,11 @@ z900_ ## _name
 #define TLBID_PAGEMASK  0xFFFFFFFFFFC00000ULL
 #define TLBID_BYTEMASK  0x00000000003FFFFFULL
 #define ASD_PRIVATE   (ASCE_P|ASCE_R)
+#ifdef FEATURE_ACCESS_REGISTERS
+ #define CHANNEL_MASKS(_regs) 0xFFFFFFFF
+#else
+ #define CHANNEL_MASKS(_regs) ((_regs) -> CR(2))
+#endif /* FEATURE_ACCESS_REGISTERS */
 
 #else
 

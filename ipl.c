@@ -467,10 +467,10 @@ int ARCH_DEP(initial_cpu_reset) (REGS *regs)
     /* Initialize external interrupt masks in control register 0 */
     regs->CR(0) = CR0_XM_ITIMER | CR0_XM_INTKEY | CR0_XM_EXTSIG;
 
-#ifdef FEATURE_S370_CHANNEL
+#if defined(FEATURE_S370_CHANNEL) && !defined(FEATURE_ACCESS_REGISTERS)
     /* For S/370 initialize the channel masks in CR2 */
     regs->CR(2) = 0xFFFFFFFF;
-#endif /*FEATURE_S370_CHANNEL*/
+#endif /* defined(FEATURE_S370_CHANNEL) && !defined(FEATURE_ACCESS_REGISTERS) */
 
     regs->chanset = 
 #if defined(FEATURE_CHANNEL_SWITCHING)
