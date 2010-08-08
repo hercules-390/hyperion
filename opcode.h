@@ -3344,6 +3344,12 @@ DEF_INST(rotate_then_or_selected_bits_long_reg);                /*208*/
 DEF_INST(store_halfword_relative_long);                         /*208*/
 DEF_INST(store_relative_long);                                  /*208*/
 DEF_INST(store_relative_long_long);                             /*208*/
+DEF_INST(load_on_condition_register);                           /*810*/
+DEF_INST(load_on_condition_long_register);                      /*810*/
+DEF_INST(load_on_condition);                                    /*810*/
+DEF_INST(load_on_condition_long);                               /*810*/
+DEF_INST(store_on_condition);                                   /*810*/
+DEF_INST(store_on_condition_long);                              /*810*/
 
 
 /* Instructions in io.c */

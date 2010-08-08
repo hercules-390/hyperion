@@ -1,3 +1,4 @@
+08 Aug 2010 Load/Store-on-Condition Facility - Roger Bowler
 05 Aug 2010 CMDSEP function added. Default is off. The characters 
             '.', '!' and '-' are invalid. Setting the character to a '#'
             could have unexpected results if the command line attempted to

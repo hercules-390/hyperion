@@ -1864,8 +1864,145 @@ VADR    addr2;                          /* Relative operand address  */
 
 } /* end DEF_INST(store_relative_long_long) */
 
-
 #endif /*defined(FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY)*/
+
+
+#if defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY)           /*810*/
+
+/*-------------------------------------------------------------------*/
+/* B9F2 LOCR  - Load on Condition Register                     [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_on_condition_register)                            /*810*/
+{
+int     r1, r2;                         /* Values of R fields        */
+int     m3;                             /* Value of M field          */
+
+    RRF_M(inst, regs, r1, r2, m3);
+
+    /* Test M3 mask bit corresponding to condition code */
+    if (m3 & (0x80 >> regs->psw.cc))
+    {
+        /* Copy R2 register bits 32-63 to R1 register */
+        regs->GR_L(r1) = regs->GR_L(r2);
+    }
+
+} /* end DEF_INST(load_on_condition_register) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* B9E2 LOCGR - Load on Condition Long Register                [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_on_condition_long_register)                       /*810*/
+{
+int     r1, r2;                         /* Values of R fields        */
+int     m3;                             /* Value of M field          */
+
+    RRF_M(inst, regs, r1, r2, m3);
+
+    /* Test M3 mask bit corresponding to condition code */
+    if (m3 & (0x80 >> regs->psw.cc))
+    {
+        /* Copy R2 register bits 0-63 to R1 register */
+        regs->GR_G(r1) = regs->GR_G(r2);
+    }
+
+} /* end DEF_INST(load_on_condition_long_register) */
+#endif /*defined(FEATURE_ESAME)*/
+
+
+/*-------------------------------------------------------------------*/
+/* EBF2 LOC   - Load on Condition                              [RSY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_on_condition)                                     /*810*/
+{
+int     r1;                             /* Value of R field          */
+int     m3;                             /* Value of M field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RSY(inst, regs, r1, m3, b2, effective_addr2);
+
+    /* Test M3 mask bit corresponding to condition code */
+    if (m3 & (0x80 >> regs->psw.cc))
+    {
+        /* Load R1 register bits 32-63 from second operand */
+        regs->GR_L(r1) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+    }
+
+} /* end DEF_INST(load_on_condition) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* EBE2 LOCG  - Load on Condition Long                         [RSY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_on_condition_long)                                /*810*/
+{
+int     r1;                             /* Value of R field          */
+int     m3;                             /* Value of M field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RSY(inst, regs, r1, m3, b2, effective_addr2);
+
+    /* Test M3 mask bit corresponding to condition code */
+    if (m3 & (0x80 >> regs->psw.cc))
+    {
+        /* Load R1 register bits 0-63 from second operand */
+        regs->GR_G(r1) = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
+    }
+
+} /* end DEF_INST(load_on_condition_long) */
+#endif /*defined(FEATURE_ESAME)*/
+
+
+/*-------------------------------------------------------------------*/
+/* EBF3 STOC  - Store on Condition                             [RSY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_on_condition)                                    /*810*/
+{
+int     r1;                             /* Value of R field          */
+int     m3;                             /* Value of M field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RSY(inst, regs, r1, m3, b2, effective_addr2);
+
+    /* Test M3 mask bit corresponding to condition code */
+    if (m3 & (0x80 >> regs->psw.cc))
+    {
+        /* Store R1 register bits 32-63 at operand address */
+        ARCH_DEP(vstore4) ( regs->GR_L(r1), effective_addr2, b2, regs );
+    }
+
+} /* end DEF_INST(store_on_condition) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* EBE3 STOCG - Store on Condition Long                        [RSY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_on_condition_long)                               /*810*/
+{
+int     r1;                             /* Value of R field          */
+int     m3;                             /* Value of M field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RSY(inst, regs, r1, m3, b2, effective_addr2);
+
+    /* Test M3 mask bit corresponding to condition code */
+    if (m3 & (0x80 >> regs->psw.cc))
+    {
+        /* Store R1 register bits 0-63 at operand address */
+        ARCH_DEP(vstore8) ( regs->GR_G(r1), effective_addr2, b2, regs );
+    }
+
+} /* end DEF_INST(store_on_condition_long) */
+#endif /*defined(FEATURE_ESAME)*/
+
+#endif /*defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY)*/    /*810*/
 
 
 #if !defined(_GEN_ARCH)

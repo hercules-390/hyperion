@@ -5088,7 +5088,7 @@ DLL_EXPORT zz_func opcode_ebxx[256][GEN_MAXARCH] = {
  /*EBE0*/ GENx___x___x___ ,
  /*EBE1*/ GENx___x___x___ ,
  /*EBE2*/ GENx___x___x900 (load_on_condition_long,RSY_M3,"LOCG"),                  /*810*/
- /*EBE3*/ GENx___x___x900 (store_on_condition_long,RSY_M3,"LOCG"),                 /*810*/
+ /*EBE3*/ GENx___x___x900 (store_on_condition_long,RSY_M3,"STOCG"),                /*810*/
  /*EBE4*/ GENx___x___x900 (load_and_and_long,RSY,"LANG"),                          /*810*/
  /*EBE5*/ GENx___x___x___ ,
  /*EBE6*/ GENx___x___x900 (load_and_or_long,RSY,"LAOG"),                           /*810*/
@@ -5104,7 +5104,7 @@ DLL_EXPORT zz_func opcode_ebxx[256][GEN_MAXARCH] = {
  /*EBF0*/ GENx___x___x___ ,
  /*EBF1*/ GENx___x___x___ ,
  /*EBF2*/ GENx37Xx390x900 (load_on_condition,RSY_M3,"LOC"),                        /*810*/
- /*EBF3*/ GENx37Xx390x900 (store_on_condition,RSY_M3,"LOC"),                       /*810*/
+ /*EBF3*/ GENx37Xx390x900 (store_on_condition,RSY_M3,"STOC"),                      /*810*/
  /*EBF4*/ GENx37Xx390x900 (load_and_and,RSY,"LAN"),                                /*810*/
  /*EBF5*/ GENx___x___x___ ,
  /*EBF6*/ GENx37Xx390x900 (load_and_or,RSY,"LAO"),                                 /*810*/
