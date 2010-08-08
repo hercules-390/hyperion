@@ -77,11 +77,22 @@ represents the length of the line up to 65535 characters.
 .SS Structured
 The file contains structured information which indicates the 16 bit length of each
 record in Big endian format. For RECFM F files, the record may be truncated or padded.
-For RECFM V files, the records are stored as is.
+For RECFM V files, the records are cut into records of the length specified in the
+record structure information fields.
 
 .SS <tape file>
 The tape file is created or read as an HET (Hercules Emulated Tape) format. The DUMP
 function creates a file, while the SCAN and LOAD functions only read the file.
+
+.SH Examples
+The following creates a VMFPLC2 formatted tape named "out.het" which contains a single
+file named "foo.text" which can then be read as "FOO TEXT" on the guest system :
+.SS Control file
+File name "list" :
+.br
+FOO TEXT A1 F 80 B foo.text
+.SS Command
+vmfplc2 dump list out.het
 
 .SH "SEE ALSO"
 .TP
