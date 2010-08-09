@@ -1,4 +1,4 @@
-/* VMFPLC2.C  (c) Copyright Ivan S. Warre, 2010                      */
+/* VMFPLC2.C  (c) Copyright Ivan S. Warren 2010                      */
 /*            Utility to create VMFPLC2 formatted tapes              */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
