@@ -5,6 +5,8 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
+// $Id: vmfplc2.c 6148 2010-06-27 02:36:31Z pgorlinsky $
+
 #include "hstdinc.h"
 
 #include "hercules.h"
