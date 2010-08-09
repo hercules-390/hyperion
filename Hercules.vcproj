@@ -427,6 +427,10 @@
 					RelativePath=".\tapesplt.c"
 					>
 				</File>
+				<File
+					RelativePath=".\vmfplc2.c"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="Hercules"
@@ -726,11 +730,11 @@
 							Name="Header Files"
 							>
 							<File
-								RelativePath=".\hetlib.h"
+								RelativePath=".\ftlib.h"
 								>
 							</File>
 							<File
-								RelativePath=".\ftlib.h"
+								RelativePath=".\hetlib.h"
 								>
 							</File>
 							<File
@@ -766,11 +770,11 @@
 								>
 							</File>
 							<File
-								RelativePath=".\hetlib.c"
+								RelativePath=".\ftlib.c"
 								>
 							</File>
 							<File
-								RelativePath=".\ftlib.c"
+								RelativePath=".\hetlib.c"
 								>
 							</File>
 							<File
