@@ -3366,10 +3366,10 @@ DEF_INST(exclusive_or_distinct_register);                       /*810*/
 DEF_INST(exclusive_or_distinct_long_register);                  /*810*/
 DEF_INST(or_distinct_register);                                 /*810*/
 DEF_INST(or_distinct_long_register);                            /*810*/
-DEF_INST(shift_left_single_distinct);                           /*810*/
-DEF_INST(shift_left_single_logical_distinct);                   /*810*/
 DEF_INST(shift_right_single_distinct);                          /*810*/
+DEF_INST(shift_left_single_distinct);                           /*810*/
 DEF_INST(shift_right_single_logical_distinct);                  /*810*/
+DEF_INST(shift_left_single_logical_distinct);                   /*810*/
 DEF_INST(subtract_distinct_register);                           /*810*/
 DEF_INST(subtract_distinct_long_register);                      /*810*/
 DEF_INST(subtract_logical_distinct_register);                   /*810*/

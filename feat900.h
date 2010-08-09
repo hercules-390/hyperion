@@ -43,7 +43,7 @@
 #define FEATURE_DAT_ENHANCEMENT
 #define FEATURE_DAT_ENHANCEMENT_FACILITY_2                      /*@Z9*/
 #define FEATURE_DECIMAL_FLOATING_POINT                          /*DFP*/
-//#define FEATURE_DISTINCT_OPERANDS_FACILITY                      /*810*/
+#define FEATURE_DISTINCT_OPERANDS_FACILITY                      /*810*/
 #define FEATURE_DUAL_ADDRESS_SPACE
 #define FEATURE_EMULATE_VM
 //#define FEATURE_ENHANCED_DAT_FACILITY                           /*208*/

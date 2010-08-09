@@ -2052,14 +2052,50 @@ int     r1, r2, r3;                     /* Values of R fields        */
 #endif /*defined(FEATURE_ESAME)*/
 
 
+/*-------------------------------------------------------------------*/
+/* ECD8 AHIK  - Add Distinct Halfword Immediate                [RIE] */
+/*-------------------------------------------------------------------*/
 DEF_INST(add_distinct_halfword_immediate)                       /*810*/
 {
+int     r1, r3;                         /* Values of R fields        */
+U16     i2;                             /* 16-bit immediate operand  */
+
+    RIE(inst, regs, r1, r3, i2);
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc = add_signed (&(regs->GR_L(r1)),
+                                 (S16)i2,
+                                 regs->GR_L(r3));
+
+    /* Program check if fixed-point overflow */
+    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+        regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+
 } /* end DEF_INST(add_distinct_halfword_immediate) */
 
 
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* ECD9 AGHIK - Add Distinct Long Halfword Immediate           [RIE] */
+/*-------------------------------------------------------------------*/
 DEF_INST(add_distinct_long_halfword_immediate)                  /*810*/
 {
+int     r1, r3;                         /* Values of R fields        */
+U16     i2;                             /* 16-bit immediate operand  */
+
+    RIE(inst, regs, r1, r3, i2);
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc = add_signed_long(&(regs->GR_G(r1)),
+                                     (S16)i2,
+                                     regs->GR_G(r3));
+
+    /* Program check if fixed-point overflow */
+    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+        regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+
 } /* end DEF_INST(add_distinct_long_halfword_immediate) */
+#endif /*defined(FEATURE_ESAME)*/
 
 
 /*-------------------------------------------------------------------*/
@@ -2098,14 +2134,42 @@ int     r1, r2, r3;                     /* Values of R fields        */
 #endif /*defined(FEATURE_ESAME)*/
 
 
+/*-------------------------------------------------------------------*/
+/* ECDA ALHSIK - Add Logical Distinct with Signed Halfword Imm [RIE] */
+/*-------------------------------------------------------------------*/
 DEF_INST(add_logical_distinct_signed_halfword_immediate)        /*810*/
 {
+int     r1, r3;                         /* Values of R fields        */
+U16     i2;                             /* 16-bit immediate operand  */
+
+    RIE(inst, regs, r1, r3, i2);
+
+    /* Add operands and set condition code */
+    regs->psw.cc = (S16)i2 < 0 ?
+        sub_logical (&(regs->GR_L(r1)), regs->GR_L(r3), (S32)(-(S16)i2)) :
+        add_logical (&(regs->GR_L(r1)), regs->GR_L(r3), (S32)(S16)i2);
+
 } /* end DEF_INST(add_logical_distinct_signed_halfword_immediate) */
 
 
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* ECDB ALGHSIK - Add Logical Distinct Long with Signed Hw Imm [RIE] */
+/*-------------------------------------------------------------------*/
 DEF_INST(add_logical_distinct_long_signed_halfword_immediate)   /*810*/
 {
+int     r1, r3;                         /* Values of R fields        */
+U16     i2;                             /* 16-bit immediate operand  */
+
+    RIE(inst, regs, r1, r3, i2);
+
+    /* Add operands and set condition code */
+    regs->psw.cc = (S16)i2 < 0 ?
+        sub_logical_long (&(regs->GR_G(r1)), regs->GR_G(r3), (S64)(-(S16)i2)) :
+        add_logical_long (&(regs->GR_G(r1)), regs->GR_G(r3), (S64)(S16)i2);
+
 } /* end DEF_INST(add_logical_distinct_long_signed_halfword_immediate) */
+#endif /*defined(FEATURE_ESAME)*/
 
 
 /*-------------------------------------------------------------------*/
@@ -2222,24 +2286,131 @@ int     r1, r2, r3;                     /* Values of R fields        */
 #endif /*defined(FEATURE_ESAME)*/
 
 
-DEF_INST(shift_left_single_distinct)                            /*810*/
-{
-} /* end DEF_INST(shift_left_single_distinct) */
-
-
-DEF_INST(shift_left_single_logical_distinct)                    /*810*/
-{
-} /* end DEF_INST(shift_left_single_logical_distinct) */
-
-
+/*-------------------------------------------------------------------*/
+/* EBDC SRAK  - Shift Right Single Distinct                    [RSY] */
+/*-------------------------------------------------------------------*/
 DEF_INST(shift_right_single_distinct)                           /*810*/
 {
+int     r1, r3;                         /* Register numbers          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* Integer work area         */
+
+    RSY0(inst, regs, r1, r3, b2, effective_addr2);
+
+    /* Use rightmost six bits of operand address as shift count */
+    n = effective_addr2 & 0x3F;
+
+    /* Shift signed value of the R3 register, result in R1 register */
+    regs->GR_L(r1) = n > 30 ?
+                    ((S32)regs->GR_L(r3) < 0 ? -1 : 0) :
+                    (S32)regs->GR_L(r3) >> n;
+
+    /* Set the condition code */
+    regs->psw.cc = ((S32)regs->GR_L(r1) > 0) ? 2 :
+                   (((S32)regs->GR_L(r1) < 0) ? 1 : 0);
+
 } /* end DEF_INST(shift_right_single_distinct) */
 
 
+/*-------------------------------------------------------------------*/
+/* EBDD SLAK  - Shift Left Single Distinct                     [RSY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(shift_left_single_distinct)                            /*810*/
+{
+int     r1, r3;                         /* Register numbers          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n, n1, n2;                      /* 32-bit operand values     */
+U32     i, j;                           /* Integer work areas        */
+
+    RSY(inst, regs, r1, r3, b2, effective_addr2);
+
+    /* Use rightmost six bits of operand address as shift count */
+    n = effective_addr2 & 0x3F;
+
+    /* Fast path if no possible overflow */
+    if (regs->GR_L(r3) < 0x10000 && n < 16)
+    {
+        regs->GR_L(r1) = regs->GR_L(r3) << n;
+        regs->psw.cc = regs->GR_L(r1) ? 2 : 0;
+        return;
+    }
+
+    /* Load the numeric and sign portions from the R3 register */
+    n1 = regs->GR_L(r3) & 0x7FFFFFFF;
+    n2 = regs->GR_L(r3) & 0x80000000;
+
+    /* Shift the numeric portion left n positions */
+    for (i = 0, j = 0; i < n; i++)
+    {
+        /* Shift bits 1-31 left one bit position */
+        n1 <<= 1;
+
+        /* Overflow if bit shifted out is unlike the sign bit */
+        if ((n1 & 0x80000000) != n2)
+            j = 1;
+    }
+
+    /* Load the updated value into the R1 register */
+    regs->GR_L(r1) = (n1 & 0x7FFFFFFF) | n2;
+
+    /* Condition code 3 and program check if overflow occurred */
+    if (j)
+    {
+        regs->psw.cc = 3;
+        if ( FOMASK(&regs->psw) )
+            regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+        return;
+    }
+
+    /* Set the condition code */
+    regs->psw.cc = (S32)regs->GR_L(r1) > 0 ? 2 :
+                   (S32)regs->GR_L(r1) < 0 ? 1 : 0;
+
+} /* end DEF_INST(shift_left_single_distinct) */
+
+
+/*-------------------------------------------------------------------*/
+/* EBDE SRLK  - Shift Right Single Logical Distinct            [RSY] */
+/*-------------------------------------------------------------------*/
 DEF_INST(shift_right_single_logical_distinct)                   /*810*/
 {
+int     r1, r3;                         /* Register numbers          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* Integer work area         */
+
+    RSY0(inst, regs, r1, r3, b2, effective_addr2);
+
+    /* Use rightmost six bits of operand address as shift count */
+    n = effective_addr2 & 0x3F;
+
+    /* Shift the R3 register and place the result in the R1 register */
+    regs->GR_L(r1) = n > 31 ? 0 : regs->GR_L(r3) >> n;
+
 } /* end DEF_INST(shift_right_single_logical_distinct) */
+
+
+/*-------------------------------------------------------------------*/
+/* EBDF SLLK  - Shift Left Single Logical Distinct             [RSY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(shift_left_single_logical_distinct)                    /*810*/
+{
+int     r1, r3;                         /* Register numbers          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* Integer work area         */
+
+    RSY0(inst, regs, r1, r3, b2, effective_addr2);
+
+    /* Use rightmost six bits of operand address as shift count */
+    n = effective_addr2 & 0x3F;
+
+    /* Shift the R3 register and place the result in the R1 register */
+    regs->GR_L(r1) = n > 31 ? 0 : regs->GR_L(r3) << n;
+
+} /* end DEF_INST(shift_left_single_logical_distinct) */
 
 
 /*-------------------------------------------------------------------*/
