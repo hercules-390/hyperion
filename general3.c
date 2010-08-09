@@ -2005,6 +2005,326 @@ VADR    effective_addr2;                /* Effective address         */
 #endif /*defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY)*/    /*810*/
 
 
+#if defined(FEATURE_DISTINCT_OPERANDS_FACILITY)                 /*810*/
+
+/*-------------------------------------------------------------------*/
+/* B9F8 ARK   - Add Distinct Register                          [RRR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_distinct_register)                                 /*810*/
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR(inst, regs, r1, r2, r3);
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc =
+            add_signed (&(regs->GR_L(r1)),
+                    regs->GR_L(r2),
+                    regs->GR_L(r3));
+
+    /* Program check if fixed-point overflow */
+    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+        regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+
+} /* end DEF_INST(add_distinct_register) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* B9E8 AGRK  - Add Distinct Long Register                     [RRR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_distinct_long_register)                            /*810*/
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR(inst, regs, r1, r2, r3);
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc = add_signed_long(&(regs->GR_G(r1)),
+                                     regs->GR_G(r2),
+                                     regs->GR_G(r3));
+
+    /* Program check if fixed-point overflow */
+    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+        regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+
+} /* end DEF_INST(add_distinct_long_register) */
+#endif /*defined(FEATURE_ESAME)*/
+
+
+DEF_INST(add_distinct_halfword_immediate)                       /*810*/
+{
+} /* end DEF_INST(add_distinct_halfword_immediate) */
+
+
+DEF_INST(add_distinct_long_halfword_immediate)                  /*810*/
+{
+} /* end DEF_INST(add_distinct_long_halfword_immediate) */
+
+
+/*-------------------------------------------------------------------*/
+/* B9FA ALRK  - Add Logical Distinct Register                  [RRR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_logical_distinct_register)                         /*810*/
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR(inst, regs, r1, r2, r3);
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc = add_logical (&(regs->GR_L(r1)),
+                                  regs->GR_L(r2),
+                                  regs->GR_L(r3));
+
+} /* end DEF_INST(add_logical_distinct_register) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* B9EA ALGRK - Add Logical Distinct Long Register             [RRR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_logical_distinct_long_register)                    /*810*/
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR(inst, regs, r1, r2, r3);
+
+    /* Add unsigned operands and set condition code */
+    regs->psw.cc = add_logical_long(&(regs->GR_G(r1)),
+                                      regs->GR_G(r2),
+                                      regs->GR_G(r3));
+
+} /* end DEF_INST(add_logical_distinct_long_register) */
+#endif /*defined(FEATURE_ESAME)*/
+
+
+DEF_INST(add_logical_distinct_signed_halfword_immediate)        /*810*/
+{
+} /* end DEF_INST(add_logical_distinct_signed_halfword_immediate) */
+
+
+DEF_INST(add_logical_distinct_long_signed_halfword_immediate)   /*810*/
+{
+} /* end DEF_INST(add_logical_distinct_long_signed_halfword_immediate) */
+
+
+/*-------------------------------------------------------------------*/
+/* B9F4 NRK   - And Distinct Register                          [RRR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(and_distinct_register)                                 /*810*/
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR(inst, regs, r1, r2, r3);
+
+    /* AND second and third operands and put result in first operand */
+    regs->GR_L(r1) = regs->GR_L(r2) & regs->GR_L(r3);
+
+    /* Set condition code 1 if result is non-zero, otherwise 0 */
+    regs->psw.cc = (regs->GR_L(r1)) ? 1 : 0;
+
+} /* end DEF_INST(and_distinct_register) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* B9E4 NGRK  - And Distinct Long Register                     [RRR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(and_distinct_long_register)                            /*810*/
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR(inst, regs, r1, r2, r3);
+
+    /* AND second and third operands and put result in first operand */
+    regs->GR_G(r1) = regs->GR_G(r2) & regs->GR_G(r3);
+
+    /* Set condition code 1 if result is non-zero, otherwise 0 */
+    regs->psw.cc = (regs->GR_G(r1)) ? 1 : 0;
+
+} /* end DEF_INST(and_distinct_long_register) */
+#endif /*defined(FEATURE_ESAME)*/
+
+
+/*-------------------------------------------------------------------*/
+/* B9F7 XRK   - Exclusive Or Distinct Register                 [RRR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(exclusive_or_distinct_register)                        /*810*/
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR(inst, regs, r1, r2, r3);
+
+    /* XOR second and third operands and put result in first operand */
+    regs->GR_L(r1) = regs->GR_L(r2) ^ regs->GR_L(r3);
+
+    /* Set condition code 1 if result is non-zero, otherwise 0 */
+    regs->psw.cc = (regs->GR_L(r1)) ? 1 : 0;
+
+} /* end DEF_INST(exclusive_or_distinct_register) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* B9E7 XGRK  - Exclusive Or Distinct Long Register            [RRR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(exclusive_or_distinct_long_register)                   /*810*/
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR(inst, regs, r1, r2, r3);
+
+    /* XOR second and third operands and put result in first operand */
+    regs->GR_G(r1) = regs->GR_G(r2) ^ regs->GR_G(r3);
+
+    /* Set condition code 1 if result is non-zero, otherwise 0 */
+    regs->psw.cc = (regs->GR_G(r1)) ? 1 : 0;
+
+} /* end DEF_INST(exclusive_or_distinct_long_register) */
+#endif /*defined(FEATURE_ESAME)*/
+
+
+/*-------------------------------------------------------------------*/
+/* B9F6 ORK   - Or Distinct Register                           [RRR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(or_distinct_register)                                  /*810*/
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR(inst, regs, r1, r2, r3);
+
+    /* OR second and third operands and put result in first operand */
+    regs->GR_L(r1) = regs->GR_L(r2) | regs->GR_L(r3);
+
+    /* Set condition code 1 if result is non-zero, otherwise 0 */
+    regs->psw.cc = (regs->GR_L(r1)) ? 1 : 0;
+
+} /* end DEF_INST(or_distinct_register) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* B9E6 OGRK  - Or Distinct Long Register                      [RRR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(or_distinct_long_register)                             /*810*/
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR(inst, regs, r1, r2, r3);
+
+    /* OR second and third operands and put result in first operand */
+    regs->GR_G(r1) = regs->GR_G(r2) | regs->GR_G(r3);
+
+    /* Set condition code 1 if result is non-zero, otherwise 0 */
+    regs->psw.cc = (regs->GR_G(r1)) ? 1 : 0;
+
+} /* end DEF_INST(or_distinct_long_register) */
+#endif /*defined(FEATURE_ESAME)*/
+
+
+DEF_INST(shift_left_single_distinct)                            /*810*/
+{
+} /* end DEF_INST(shift_left_single_distinct) */
+
+
+DEF_INST(shift_left_single_logical_distinct)                    /*810*/
+{
+} /* end DEF_INST(shift_left_single_logical_distinct) */
+
+
+DEF_INST(shift_right_single_distinct)                           /*810*/
+{
+} /* end DEF_INST(shift_right_single_distinct) */
+
+
+DEF_INST(shift_right_single_logical_distinct)                   /*810*/
+{
+} /* end DEF_INST(shift_right_single_logical_distinct) */
+
+
+/*-------------------------------------------------------------------*/
+/* B9F9 SRK   - Subtract Distinct Register                     [RRR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(subtract_distinct_register)                            /*810*/
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR(inst, regs, r1, r2, r3);
+
+    /* Subtract signed operands and set condition code */
+    regs->psw.cc =
+            sub_signed (&(regs->GR_L(r1)),
+                    regs->GR_L(r2),
+                    regs->GR_L(r3));
+
+    /* Program check if fixed-point overflow */
+    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+        regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+
+} /* end DEF_INST(subtract_distinct_register) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* B9E9 SGRK  - Subtract Distinct Long Register                [RRR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(subtract_distinct_long_register)                       /*810*/
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR(inst, regs, r1, r2, r3);
+
+    /* Subtract signed operands and set condition code */
+    regs->psw.cc = sub_signed_long(&(regs->GR_G(r1)),
+                                     regs->GR_G(r2),
+                                     regs->GR_G(r3));
+
+    /* Program check if fixed-point overflow */
+    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+        regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+
+} /* end DEF_INST(subtract_distinct_long_register) */
+#endif /*defined(FEATURE_ESAME)*/
+
+
+/*-------------------------------------------------------------------*/
+/* B9FB SLRK  - Subtract Logical Distinct Register             [RRR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(subtract_logical_distinct_register)                    /*810*/
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR(inst, regs, r1, r2, r3);
+
+    /* Subtract unsigned operands and set condition code */
+    regs->psw.cc = sub_logical (&(regs->GR_L(r1)),
+                                  regs->GR_L(r2),
+                                  regs->GR_L(r3));
+
+} /* end DEF_INST(subtract_logical_distinct_register) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* B9EB SLGRK - Subtract Logical Distinct Long Register        [RRR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(subtract_logical_distinct_long_register)               /*810*/
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR(inst, regs, r1, r2, r3);
+
+    /* Subtract unsigned operands and set condition code */
+    regs->psw.cc = sub_logical_long(&(regs->GR_G(r1)),
+                                      regs->GR_G(r2),
+                                      regs->GR_G(r3));
+
+} /* end DEF_INST(subtract_logical_distinct_long_register) */
+#endif /*defined(FEATURE_ESAME)*/
+
+#endif /*defined(FEATURE_DISTINCT_OPERANDS_FACILITY)*/          /*810*/
+
+
 #if !defined(_GEN_ARCH)
 
 #if defined(_ARCHMODE2)

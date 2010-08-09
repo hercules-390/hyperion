@@ -3344,12 +3344,36 @@ DEF_INST(rotate_then_or_selected_bits_long_reg);                /*208*/
 DEF_INST(store_halfword_relative_long);                         /*208*/
 DEF_INST(store_relative_long);                                  /*208*/
 DEF_INST(store_relative_long_long);                             /*208*/
+
 DEF_INST(load_on_condition_register);                           /*810*/
 DEF_INST(load_on_condition_long_register);                      /*810*/
 DEF_INST(load_on_condition);                                    /*810*/
 DEF_INST(load_on_condition_long);                               /*810*/
 DEF_INST(store_on_condition);                                   /*810*/
 DEF_INST(store_on_condition_long);                              /*810*/
+
+DEF_INST(add_distinct_register);                                /*810*/
+DEF_INST(add_distinct_long_register);                           /*810*/
+DEF_INST(add_distinct_halfword_immediate);                      /*810*/
+DEF_INST(add_distinct_long_halfword_immediate);                 /*810*/
+DEF_INST(add_logical_distinct_register);                        /*810*/
+DEF_INST(add_logical_distinct_long_register);                   /*810*/
+DEF_INST(add_logical_distinct_signed_halfword_immediate);       /*810*/
+DEF_INST(add_logical_distinct_long_signed_halfword_immediate);  /*810*/
+DEF_INST(and_distinct_register);                                /*810*/
+DEF_INST(and_distinct_long_register);                           /*810*/
+DEF_INST(exclusive_or_distinct_register);                       /*810*/
+DEF_INST(exclusive_or_distinct_long_register);                  /*810*/
+DEF_INST(or_distinct_register);                                 /*810*/
+DEF_INST(or_distinct_long_register);                            /*810*/
+DEF_INST(shift_left_single_distinct);                           /*810*/
+DEF_INST(shift_left_single_logical_distinct);                   /*810*/
+DEF_INST(shift_right_single_distinct);                          /*810*/
+DEF_INST(shift_right_single_logical_distinct);                  /*810*/
+DEF_INST(subtract_distinct_register);                           /*810*/
+DEF_INST(subtract_distinct_long_register);                      /*810*/
+DEF_INST(subtract_logical_distinct_register);                   /*810*/
+DEF_INST(subtract_logical_distinct_long_register);              /*810*/
 
 
 /* Instructions in io.c */
