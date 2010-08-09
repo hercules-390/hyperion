@@ -13,6 +13,9 @@
 #include "sllib.h"
 #include "herc_getopt.h"
 
+#define UTILITY_NAME    "vmfplc2"
+
+
 /* The blocksize of 4000 is the block size expected by VMFPLC2 */
 #define TAPE_BLOCKSIZE	4000
 /* The last data record must have a modulo of 800 */
@@ -906,12 +909,52 @@ int doscan(struct options *opts)
 }
 
 /* Main routine */
-int main(int ac,char **av)
+int main(int argc,char **argv)
 {
-    int     rc;
-    struct options opts;
+    int             rc;
+    struct options  opts;
+    char           *pgmname;                /* prog name in host format  */
+    char           *pgm;                    /* less any extension (.ext) */
+    char           *pgmpath;                /* prog path in host format  */
+    char            msgbuf[512];            /* message build work area   */
+    /* Set program name */
+    if ( argc > 0 )
+    {
+        if ( strlen(argv[0]) == 0 )
+        {
+            pgmname = strdup( UTILITY_NAME );
+            pgmpath = strdup( "" );
+        }
+        else
+        {
+            char path[MAX_PATH];
+#if defined( _MSVC_ )
+            GetModuleFileName( NULL, path, MAX_PATH );
+#else
+            strncpy( path, argv[0], sizeof( path ) );
+#endif
+            pgmname = strdup(basename(path));
+#if !defined( _MSVC_ )
+            strncpy( path, argv[0], sizeof(path) );
+#endif
+            pgmpath = strdup( dirname( path  ));
+        }
+    }
+    else
+    {
+            pgmname = strdup( UTILITY_NAME );
+            pgmpath = strdup( "" );
+    }
 
-    if(parse_parms(ac,av,&opts)!=0)
+    pgm = strtok( strdup(pgmname), ".");
+    INITIALIZE_UTILITY( pgmname );
+
+    /* Display the program identification message */
+    MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "VM/CMS VMFPLC2 Utility" ) );
+    display_version (stderr, msgbuf+10, FALSE);
+
+
+    if(parse_parms(argc,argv,&opts)!=0)
     {
         return 1;
     }
