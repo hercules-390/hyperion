@@ -58,7 +58,7 @@
 
 -------------------------------------------------------------------------------
 
-  Support multiple command-line commands (i.e. cmdsep character).
+  Support multiple command-line commands (i.e. cmdsep character). (COMPLETED)
 
 -------------------------------------------------------------------------------
 
@@ -132,7 +132,8 @@
 
   Add 'auto' option to MAXRATES command, to have it also issue
   the command automatically at the end of the interval (so you
-  can monitor the rate).
+  can monitor the rate). (COMPLETED - MAXRATES are displayed when interval
+  expires)
 
 -------------------------------------------------------------------------------
 
