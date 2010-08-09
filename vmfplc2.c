@@ -290,7 +290,7 @@ int	write_tape_block(struct options *opts,struct TAPE_BLOCK *tb,size_t mod,size_
         }
         sz*=mod;
         sz+=hdrsz;
-	return write_tape_block_data(opts,tb->data,sz);
+	return write_tape_block_data(opts,tb->data,(int)sz);
 }
 
 /* Write a collection of blocks to tape */
@@ -377,7 +377,7 @@ void	append_data(struct TAPE_BLOCKS *tbs,unsigned char *bfr,size_t sz)
 		{
 			tb=tbs->current;
 		}
-		dsz=MIN(sz,(tbs->blksz+tbs->hdrsz)-tb->sz);
+		dsz=(int)MIN(sz,(tbs->blksz+tbs->hdrsz)-tb->sz);
 		memcpy(&tb->data[tb->sz],&bfr[of],dsz);
 		tb->sz+=dsz;
 		sz-=dsz;
@@ -487,7 +487,7 @@ struct TAPE_BLOCKS *flushrecs(struct RECS *recs,int *recl,int *recc,size_t *file
 			free(padbfr);
 
 		}
-		recs->reccount=recs->filesz/recs->reclen;
+		recs->reccount=(int)recs->filesz/recs->reclen;
 	}
 	*recc=recs->reccount;
 	*recl=recs->reclen;
@@ -521,7 +521,7 @@ struct TAPE_BLOCKS *load_binary_file(char *infile,char recfm,int *recl,int *recc
 	}
 
 	recs=initrecs(recfm,*recl,plcd_hdr,5);
-	while((rsz=fread(bfr,1,maxsize,ifile))!=0)
+	while((rsz=(int)fread(bfr,1,maxsize,ifile))!=0)
 	{
 		addrecs(recs,bfr,rsz);
 	}
@@ -791,7 +791,7 @@ int	process_entry(struct options *opts,char *orec,int recno)
 		return 1;
 	}
         stat(infile,&stt);
-	fstb=format_fst(fn,ft,fm,recfm[0],reclen,reccount,filesz,stt.st_mtime);
+	fstb=format_fst(fn,ft,fm,recfm[0],reclen,reccount,(int)filesz,stt.st_mtime);
 	if(fstb==NULL)
 	{
 		free(rec);
