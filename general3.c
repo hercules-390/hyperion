@@ -1258,7 +1258,7 @@ int     ai, li, ti;                     /* Operand address subfields */
         return;
     }
 
-    /* If AI=2 (total cache size) is requested for cache level 0 
+    /* If AI=2 (total cache size) is requested for cache level 0
        set register r1 to indicate a fictitious total cache size */
     if (ai == 2 && li == 0)
     {
