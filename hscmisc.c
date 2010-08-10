@@ -542,7 +542,7 @@ int display_subchannel (DEVBLK *dev, char *buf, char *hdr)
                 "%s     Misc:%2.2X%2.2X%2.2X%2.2X\n",
                 devstr, dev->subchan, 
                 hdr, 
-		hdr, dev->pmcw.intparm[0], dev->pmcw.intparm[1],
+                hdr, dev->pmcw.intparm[0], dev->pmcw.intparm[1],
                 dev->pmcw.intparm[2], dev->pmcw.intparm[3],
                 hdr, dev->pmcw.flag4, dev->pmcw.flag5,
                 dev->pmcw.devnum[0], dev->pmcw.devnum[1],
@@ -1160,7 +1160,14 @@ char    buf2[512];
 int     n;                              /* Number of bytes in buffer */
 REGS   *regs;                           /* Copied regs               */
 
-    n = sprintf(buf,"HHC02267I ");
+    if ( sysblk.emsg & EMSG_TEXT )
+    {
+        n = 0;
+        buf[0] = '\0';
+    }
+    else
+        n = sprintf(buf,"HHC02267I ");
+
     if (iregs->ghostregs)
         regs = iregs;
     else if ((regs = copy_regs(iregs)) == NULL)
@@ -1202,9 +1209,14 @@ REGS   *regs;                           /* Copied regs               */
     if (inst == NULL)
     {
         n += sprintf(buf + n, "Instruction fetch error\n");
-        n += display_regs (regs, buf + n, "HHC02267I ");
+
+        if ( sysblk.emsg & EMSG_TEXT )
+            n += display_regs (regs, buf + n, "");
+        else
+            n += display_regs (regs, buf + n, "HHC02267I ");
+
         if (!iregs->ghostregs) free(regs);
-	writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, "", "%s", buf);
+        writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, "", "%s", buf);
         return;
     }
 
@@ -1214,7 +1226,12 @@ REGS   *regs;                           /* Copied regs               */
 
     /* Show registers associated with the instruction */
     if (sysblk.showregsfirst)
-        n += display_inst_regs (regs, inst, opcode, buf + n, "HHC02267I ");
+    {
+        if ( sysblk.emsg & EMSG_TEXT )
+            n += display_inst_regs (regs, inst, opcode, buf + n, "");
+        else
+            n += display_inst_regs (regs, inst, opcode, buf + n, "HHC02267I ");
+    }
 
     /* Display the instruction */
     n += sprintf (buf + n, "INST=%2.2X%2.2X", inst[0], inst[1]);
@@ -1331,7 +1348,9 @@ REGS   *regs;                           /* Copied regs               */
                                                 ? ACCTYPE_INSTFETCH :
                                  opcode == 0xB1 ? ACCTYPE_LRA :
                                                   ACCTYPE_READ),"");
-        n += sprintf(buf+n, "HHC02267I ");
+        if ( !(sysblk.emsg & EMSG_TEXT) )
+            n += sprintf(buf+n, "HHC02267I ");
+
         if ( sysblk.cpus > 1 )
         {
             n += sprintf(buf + n, "%s%02X: ", PTYPSTR(regs->cpuad), regs->cpuad );
@@ -1354,7 +1373,9 @@ REGS   *regs;                           /* Copied regs               */
             ARCH_DEP(display_virt) (regs, addr2, buf2, b2,
                                         ACCTYPE_READ, "");
 
-        n += sprintf(buf+n, "HHC02267I ");
+        if ( !(sysblk.emsg & EMSG_TEXT) )
+            n += sprintf(buf+n, "HHC02267I ");
+        
         if ( sysblk.cpus > 1 )
         {
             n += sprintf(buf + n, "%s%02X: ", PTYPSTR(regs->cpuad), regs->cpuad );
@@ -1366,7 +1387,12 @@ REGS   *regs;                           /* Copied regs               */
 
     /* Show registers associated with the instruction */
     if (!sysblk.showregsfirst && !sysblk.showregsnone)
-        n += display_inst_regs (regs, inst, opcode, buf + n, "HHC02267I ");
+    {
+        if ( sysblk.emsg & EMSG_TEXT )
+            n += display_inst_regs (regs, inst, opcode, buf + n, "");
+        else
+            n += display_inst_regs (regs, inst, opcode, buf + n, "HHC02267I ");
+    }
 
     if (!iregs->ghostregs)
         free (regs);
