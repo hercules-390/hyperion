@@ -1039,6 +1039,30 @@ size_t nibytes, nobytes;
 }
 #endif /*defined(HAVE_ICONV)*/
 
+DLL_EXPORT void query_codepages(void)
+{
+#if defined(HAVE_ICONV)
+    return;
+#else
+    int i;
+    WRMSG( HHC01477, "I" );
+    for ( i = 0; cpconv[i].name; i++ )
+    {
+        WRMSG( HHC01478, "I", cpconv[i].name ); 
+    }
+    return;
+#endif
+}
+
+DLL_EXPORT char * query_codepage(void)
+{
+
+#if defined(HAVE_ICONV)
+    return NULL;
+#else
+    return codepage_conv->name;
+#endif
+}
 
 DLL_EXPORT void set_codepage(char *name)
 {

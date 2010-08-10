@@ -3752,19 +3752,35 @@ int lsid_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int codepage_cmd(int argc, char *argv[], char *cmdline)
 {
+    char   *cp;
+    int     rc = 0;
 
     UNREFERENCED(cmdline);
 
-    /* Update codepage if operand is specified */
-    if (argc > 1)
-        set_codepage(argv[1]);
-    else
+    if (argc == 2)
     {
-        WRMSG(HHC02202, "E");
-        return -1;
+        /* Update codepage if operand is specified */
+        set_codepage(argv[1]);
+    }
+    else if ( argc == 1 )
+    {
+        cp = query_codepage();
+        if ( cp == NULL )
+        {
+            WRMSG( HHC01476, "I", "(NULL)" );
+        }
+        else
+        {
+            WRMSG( HHC01476, "I", cp );
+        }
+    }
+    else 
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        rc = -1;
     }
 
-    return 0;
+    return rc;
 }
 
 
@@ -8455,6 +8471,26 @@ int emsg_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
+
+/*-------------------------------------------------------------------*/
+/* qcodepage command                                                 */
+/*-------------------------------------------------------------------*/
+int qcodepage_cmd(int argc, char *argv[], char *cmdline)
+{ 
+    UNREFERENCED(cmdline);
+    UNREFERENCED(argv);
+
+    if (argc != 1)
+    {
+        WRMSG( HHC17000, "E" );
+        return -1;
+    }
+
+    query_codepages();
+
+    return 0;    
+}
+
 /*-------------------------------------------------------------------*/
 /* qcpuid command                                                    */
 /*-------------------------------------------------------------------*/

@@ -324,12 +324,15 @@ COMMAND("manufacturer",CONFIG,      SYSCMDALL,          stsi_mfct_cmd,
 #endif /* defined(OPTION_SET_STSI_INFO) */
 
 COMMAND("pgmprdos",  CONFIG,        SYSCMDALL,          pgmprdos_cmd, 
-  "set LPP license setting", 
+  "Set LPP license setting", 
     NULL)
 
-COMMAND("codepage",  CONFIG,        SYSCMDALL,          codepage_cmd, 
-  "set codepage conversion table", 
-    NULL)
+COMMAND("codepage",  PANEL+CONFIG,  SYSCMDALL,          codepage_cmd, 
+  "Set/display codepage conversion table", 
+    "Format: \"codepage [cp]\"\n"
+    "If no operand is specified, the current codepage is displayed.\n"
+    "If 'cp' is specified, then codepage is set to the specified page if the page\n"
+    "is valid. Type 'qcodepages' for a list of valid 'cp' operands.\n")
 
 COMMAND("diag8cmd",  CONFIG,        SYSCMDALL,          diag8_cmd,    
   "Set diag8 command option", 
@@ -341,7 +344,7 @@ COMMAND("shcmdopt",  CONFIG,        SYSCMDALL,          shcmdopt_cmd,
     NULL)
 
 CMDABBR("legacysenseid",9,CONFIG,   SYSCMDALL,          lsid_cmd,    
-  "set legacysenseid setting", 
+  "Set legacysenseid setting", 
     NULL)
 
 COMMAND("ipl",       PANEL,         SYSCMDALL,          ipl_cmd,
@@ -524,6 +527,10 @@ COMMAND("fcb",       PANEL,         SYSCMDALL,          fcb_cmd,
   "display the current FCB (if only the printer is given)",
    "Reset the fcb to the standard one \n" 
    "Load a fcb image \n")
+
+CMDABBR("qcodepages",5,PANEL,       SYSCMDALL,          qcodepage_cmd,
+  "query list of valid codepages",
+  "Display codepages currently available for selection\n")
 
 CMDABBR("qcpuid",5,  PANEL,         SYSCMDALL,          qcpuid_cmd,
   "query cpuid",

@@ -862,7 +862,9 @@ cpu.c:123:HABC1234I This is a message
 /* codepage.c c */
 #define HHC01474 "Using '%s' codepage conversion table '%s'"
 #define HHC01475 "Codepage conversion table '%s' is not defined"
-
+#define HHC01476 "Codepage is '%s'"
+#define HHC01477 "Valid codepage conversion tables are:"
+#define HHC01478 "      %s"
 
 // reserve 015xx for Hercules dynamic loader      
 /* hdl.c */
