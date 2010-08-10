@@ -3452,6 +3452,8 @@ DEF_INST(subtract_distinct_long_register);                      /*810*/
 DEF_INST(subtract_logical_distinct_register);                   /*810*/
 DEF_INST(subtract_logical_distinct_long_register);              /*810*/
 
+DEF_INST(population_count);                                     /*810*/
+
 
 /* Instructions in io.c */
 DEF_INST(clear_subchannel);

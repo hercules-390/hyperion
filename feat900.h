@@ -104,7 +104,7 @@
 #define FEATURE_PER2
 #define FEATURE_PER3                                            /*@Z9*/
 //#define FEATURE_PFPO                                            /*407*/
-//#define FEATURE_POPULATION_COUNT_FACILITY                       /*810*/
+#define FEATURE_POPULATION_COUNT_FACILITY                       /*810*/
 #define FEATURE_PRIVATE_SPACE
 //#define FEATURE_PROGRAM_DIRECTED_REIPL /*DIAG308 incomplete*/  /*@Z9*/
 #define FEATURE_PROTECTION_INTERCEPTION_CONTROL

@@ -71,6 +71,7 @@ EXTRA_DIST =        \
     maer.txt        \
     mvcos.txt       \
     mxtr.txt        \
+    popcnt.txt      \
     prtest.txt      \
     rnsbg.txt       \
     rrdtr.txt       \

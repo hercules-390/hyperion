@@ -2496,6 +2496,36 @@ int     r1, r2, r3;                     /* Values of R fields        */
 #endif /*defined(FEATURE_DISTINCT_OPERANDS_FACILITY)*/          /*810*/
 
 
+#if defined(FEATURE_POPULATION_COUNT_FACILITY)                  /*810*/
+/*-------------------------------------------------------------------*/
+/* B9E1 POPCNT - Population Count                              [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(population_count)                                      /*810*/
+{
+int     r1, r2;                         /* Values of R fields        */
+int     i;                              /* Loop counter              */
+U64     n;                              /* Contents of R2 register   */
+U64     result;                         /* Result counter            */
+U64     mask = 0x0101010101010101ULL;   /* Bit mask                  */
+
+    RRE0(inst, regs, r1, r2);
+
+    /* Load the value to be counted from the R2 register */
+    n = regs->GR_G(r2);
+
+    /* Count the number of 1 bits in each byte */
+    for (i = 0, result = 0; i < 8; i++) {
+        result += n & mask;
+        n >>= 1;
+    }
+
+    /* Load the result into the R1 register */
+    regs->GR_G(r1) = result;
+
+} /* end DEF_INST(population_count) */
+#endif /*defined(FEATURE_POPULATION_COUNT_FACILITY)*/           /*810*/
+
+
 #if !defined(_GEN_ARCH)
 
 #if defined(_ARCHMODE2)
