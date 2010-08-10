@@ -1448,7 +1448,7 @@ char operands[64]
 
 #define DISASM_LOGMSG \
     operands[sizeof(operands)-1]=0; \
-    return sprintf(p, "%-6.6s%-19s    %s",mnemonic,operands,name)
+    return sprintf(p, "%-5s %-19s    %s",mnemonic,operands,name)
 
 int disasm_none (BYTE inst[], char mnemonic[], char *p)
 {
