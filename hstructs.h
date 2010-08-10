@@ -266,6 +266,7 @@ struct REGS {                           /* Processor registers       */
      /* ------------------------------------------------------------ */
 
      /* Opcode table pointers                                        */
+        FUNC    *current_opcode_table;
 
         FUNC    s370_opcode_table[256];
         FUNC   *s370_opcode_a4xx,
@@ -295,6 +296,37 @@ struct REGS {                           /* Processor registers       */
                *s370_opcode_e6xx,
                *s370_opcode_ecxx,                               /*@N3*/
                *s370_opcode_edxx;
+
+#if defined(OPTION_370_EXTENSION)
+        FUNC    s37X_opcode_table[256];
+        FUNC   *s37X_opcode_a4xx,
+               *s37X_opcode_a5xx,
+               *s37X_opcode_a6xx,
+ #if defined(MULTI_BYTE_ASSIST)
+                s37X_opcode_a7xx[256],
+                s37X_opcode_b2xx[256],
+                s37X_opcode_b9xx[256],
+                s37X_opcode_c0xx[256],                          /*@N3*/
+                s37X_opcode_e3xx[256],                          /*@N3*/
+                s37X_opcode_ebxx[256],
+ #else
+               *s37X_opcode_a7xx,
+               *s37X_opcode_b2xx,
+               *s37X_opcode_b9xx,
+               *s37X_opcode_c0xx,                               /*@N3*/
+               *s37X_opcode_e3xx,                               /*@N3*/
+               *s37X_opcode_ebxx,
+ #endif
+               *s37X_opcode_b3xx,                               /*FPE*/
+               *s37X_opcode_c2xx,                               /*208*/
+               *s37X_opcode_c4xx,                               /*208*/
+               *s37X_opcode_c6xx,                               /*208*/
+               *s37X_opcode_e4xx,
+               *s37X_opcode_e5xx,
+               *s37X_opcode_e6xx,
+               *s37X_opcode_ecxx,                               /*@N3*/
+               *s37X_opcode_edxx;
+#endif /* defined(OPTION_370_EXTENSION) */
 
         FUNC    s390_opcode_table[256];
         FUNC   *s390_opcode_01xx,
@@ -592,6 +624,16 @@ struct SYSBLK {
         } ecpsvm;                       /* ECPS:VM structure         */
 //
 #endif
+        unsigned int                    /* Runtime Architectural
+                                           extensions                */
+#if defined(OPTION_370_EXTENSION)
+                ext_370_enable:1,       /* enable backport to S/370
+                                           of compatible S/390 &
+                                           z/Arch instructions       */
+
+#endif /* defined(OPTION_370_EXTENSION) */
+                ext_dummy_enable:1;     /* for compiler sanity       */
+
         U64     pgminttr;               /* Program int trace mask    */
         int     pcpu;                   /* Tgt CPU panel cmd & displ */
         int     hercprio;               /* Hercules process priority */

@@ -1,3 +1,4 @@
+09 Aug 2010 runtime ctl of select S/390 & z insts in S/370 mode - Ivan Warren
 09 Aug 2010 Distinct-Operands Facility - Roger Bowler
 08 Aug 2010 Allow when building to replace the ESA/390 or z/Architecture
             channel subsystem with S/370 channel I/O.  See README.IOARCH.

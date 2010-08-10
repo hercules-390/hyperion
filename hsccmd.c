@@ -7582,6 +7582,38 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
+#if defined(OPTION_370_EXTENSION)
+/*-------------------------------------------------------------------*/
+/* s37x - S/370 Extension                                            */
+/*-------------------------------------------------------------------*/
+int s37x_cmd(int argc, char *argv[], char *cmdline)
+{
+    char    buf[128];
+
+    UNREFERENCED(cmdline);
+    if(argc<2)
+    {
+        MSGBUF( buf, "%s", sysblk.ext_370_enable?"enabled":"disabled");
+        WRMSG(HHC18001, "I", buf);
+        return 0;
+    }
+    if(CMD(argv[1],enable,3))
+    {
+        sysblk.ext_370_enable=1;
+        WRMSG(HHC18002, "I");
+        return 0;
+    }
+    if(CMD(argv[1],disable,4))
+    {
+        sysblk.ext_370_enable=0;
+        WRMSG(HHC18003, "I");
+        return 0;
+    }
+    WRMSG(HHC02205, "E", argv[1], ": should be enable or disable");
+
+    return 0;
+}
+#endif
 
 #if defined(SIE_DEBUG_PERFMON)
 /*-------------------------------------------------------------------*/

@@ -690,6 +690,9 @@ int    ecpsvmac;                        /* -> ECPS:VM add'l arg cnt  */
 #if defined(OPTION_SHARED_DEVICES)
 char   *sshrdport;                      /* -> Shared device port nbr */
 #endif /*defined(OPTION_SHARED_DEVICES)*/
+#if defined(OPTION_370_EXTENSION)
+char   *s370_ext;                       /* -> S/370 Backprt extns    */
+#endif
 
 #if       defined( OPTION_SHUTDOWN_CONFIRMATION )
 char   *squitmout;                      /* -> quit timeout value     */
@@ -724,6 +727,9 @@ int     devtmax;                        /* Max number device threads */
 int     ecpsvmavail;                    /* ECPS:VM Available flag    */
 int     ecpsvmlevel;                    /* ECPS:VM declared level    */
 #endif /*defined(_FEATURE_ECPSVM)*/
+#if defined(OPTION_370_EXTENSION)
+int     s37x=0;                         /* S/370 Backport extns flag */
+#endif
 BYTE    c;                              /* Work area for sscanf      */
 char   *styp;                           /* -> Engine type string     */
 char   *styp_values[] = {"CP","CF","AP","IL","??","IP"}; /* type values */
@@ -976,6 +982,9 @@ char    fname[MAX_PATH];                /* normalized filename       */
         secpsvmlvl = NULL;
         ecpsvmac = 0;
 #endif /*defined(_FEATURE_ECPSVM)*/
+#if defined(OPTION_370_EXTENSION)
+        s370_ext = NULL;
+#endif
 
 #if defined(OPTION_SHARED_DEVICES)
         sshrdport = NULL;
@@ -1115,6 +1124,17 @@ char    fname[MAX_PATH];                /* normalized filename       */
                 WRMSG( HHC01450, "W", inc_stmtnum[inc_level], fname, keyword, "OPTION_SHARED_DEVICES" ); 
             }
 #endif /*defined(OPTION_SHARED_DEVICES)*/
+            else if(strcasecmp (keyword, "s37x") == 0)
+#if defined(OPTION_370_EXTENSION)
+            {
+                s370_ext = operand;
+            }
+#else
+            {
+                WRMSG( HHC01450, "W", inc_stmtnum[inc_level], fname, keyword, "OPTION_370_EXTENSION" ); 
+            }
+#endif /* defined(OPTION_370_EXTENSION) */
+
 
             else if (strcasecmp (keyword, "quitmout") == 0)
 #if defined( OPTION_SHUTDOWN_CONFIRMATION )
@@ -1511,6 +1531,26 @@ char    fname[MAX_PATH];                /* normalized filename       */
             }
         }
 #endif /*defined(OPTION_SHARED_DEVICES)*/
+#if defined(OPTION_370_EXTENSION)
+        s37x=0;
+        if(s370_ext != NULL)
+        {
+            do
+            {
+                if(strcasecmp(s370_ext,"enable")==0)
+                {
+                    s37x=1;
+                    break;
+                }
+                if(strcasecmp(s370_ext,"disable")==0)
+                {
+                    s37x=0;
+                    break;
+                }
+                WRMSG(HHC01446, "W", inc_stmtnum[inc_level], fname, s370_ext, "S37X", "disable");
+            } while(0);
+        }
+#endif
 
     } /* end for(scount) (end of configuration file statement loop) */
 
@@ -1707,6 +1747,9 @@ char    fname[MAX_PATH];                /* normalized filename       */
     /* Set the quitmout value */
     sysblk.quitmout = quitmout;
 #endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
+#if defined(OPTION_370_EXTENSION)
+    sysblk.ext_370_enable = s37x;
+#endif
 
     /* Gabor Hoffer (performance option) */
     copy_opcode_tables();

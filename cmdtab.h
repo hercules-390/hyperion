@@ -949,6 +949,11 @@ COMMAND("spm",       PANEL,         SYSCMDALL-SYSOPER,  spm_cmd,
   "SIE performance monitor", 
     NULL)
 #endif
+#if defined(OPTION_370_EXTENSION)
+COMMAND("s37x",      PANEL,         SYSCMDALL-SYSOPER,  s37x_cmd,
+  "S/370 Extension", 
+    NULL)
+#endif
 #if defined(OPTION_COUNTING)
 COMMAND("count",     PANEL,         SYSCMDALL-SYSOPER,  count_cmd,     
   "Display/clear overall instruction count", 

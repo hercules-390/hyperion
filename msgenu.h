@@ -1616,7 +1616,10 @@ cpu.c:123:HABC1234I This is a message
 #define HHC17100 "Timeout value for 'quit' and 'ssd' is '%d' seconds"
 #define HHC17199 "%.4s '%s'"
 
-
+// 18000 for S/370 Extensions
+#define HHC18001 "S/370 Extensions are '%s'"
+#define HHC18002 "S/370 Extensions are now enabled"
+#define HHC18003 "S/370 Extensions are now disabled"
 
 // reserve 90000 messages for debugging
 #define HHC90000 "DBG: %s"
@@ -1637,4 +1640,3 @@ cpu.c:123:HABC1234I This is a message
 
 #define HHC90900 "DBG: CTC: %s device port %2.2X: %s"
 #define HHC90901 "DBG: CTC: %s: %s"
-

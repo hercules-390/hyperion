@@ -1837,6 +1837,19 @@ REGS    regs;
     /* Set `execflag' to 0 in case EXecuted instruction did a longjmp() */
     regs.execflag = 0;
 
+#if defined(OPTION_370_EXTENSION) && ARCH_MODE==ARCH_370
+    if(sysblk.ext_370_enable)
+    {
+        regs.current_opcode_table=regs.s37X_opcode_table;
+    }
+    else
+    {
+        regs.current_opcode_table=regs.ARCH_DEP(opcode_table);
+    }
+#else
+    regs.current_opcode_table=regs.ARCH_DEP(opcode_table);
+#endif /* defined(OPTION_370_EXTENSION) && ARCH_MODE==ARCH_370 */
+
     do {
         if (INTERRUPT_PENDING(&regs))
             ARCH_DEP(process_interrupt)(&regs);

@@ -37,8 +37,11 @@
 
 #if defined(_370)
  #define _GEN370(_name) &s370_ ## _name,
+ #define _GEN37X(_name) &s370_ ## _name,
+ #define _GEN37XX(_name) &s37X_ ## _name,
 #else
  #define _GEN370(_name)
+ #define _GEN37X(_name)
 #endif
 
 #if defined(_390)
@@ -59,6 +62,7 @@
     _GEN370(operation_exception) \
     _GEN390(operation_exception) \
     _GEN900(operation_exception) \
+    _GEN37X(operation_exception) \
         (void*)&disasm_none, \
         (void*)&"?????" "\0" "?" \
     }
@@ -68,6 +72,7 @@
     _GEN370(_name) \
     _GEN390(operation_exception) \
     _GEN900(operation_exception) \
+    _GEN37X(_name) \
         (void*)&disasm_ ## _format, \
         (void*)& _mnemonic "\0" #_name \
     }
@@ -77,6 +82,7 @@
     _GEN370(operation_exception) \
     _GEN390(_name) \
     _GEN900(operation_exception) \
+    _GEN37X(operation_exception) \
         (void*)&disasm_ ## _format, \
         (void*)& _mnemonic "\0" #_name \
     }
@@ -86,6 +92,7 @@
     _GEN370(_name) \
     _GEN390(_name) \
     _GEN900(operation_exception) \
+    _GEN37X(_name) \
         (void*)&disasm_ ## _format, \
         (void*)& _mnemonic "\0" #_name \
     }
@@ -95,6 +102,7 @@
     _GEN370(operation_exception) \
     _GEN390(operation_exception) \
     _GEN900(_name) \
+    _GEN37X(operation_exception) \
         (void*)&disasm_ ## _format, \
         (void*)& _mnemonic "\0" #_name \
     }
@@ -104,6 +112,7 @@
     _GEN370(_name) \
     _GEN390(operation_exception) \
     _GEN900(_name) \
+    _GEN37X(_name) \
         (void*)&disasm_ ## _format, \
         (void*)& _mnemonic "\0" #_name \
     }
@@ -113,6 +122,7 @@
     _GEN370(operation_exception) \
     _GEN390(_name) \
     _GEN900(_name) \
+    _GEN37X(operation_exception) \
         (void*)&disasm_ ## _format, \
         (void*)& _mnemonic "\0" #_name \
     }
@@ -122,6 +132,7 @@
     _GEN370(_name) \
     _GEN390(_name) \
     _GEN900(_name) \
+    _GEN37X(_name) \
         (void*)&disasm_ ## _format, \
         (void*)& _mnemonic "\0" #_name \
     }
@@ -129,9 +140,75 @@
 /* The following variants of the opcode table definition macros
    specify 37X (370 EXTENSIONS) instead of 370 to indicate that
    they are ESA/390 and ESAME instructions back-ported to S/370 */
+
+#if defined(OPTION_370_EXTENSION)
+#define GENx37Xx390x___(_name,_format,_mnemonic) \
+    { \
+    _GEN370(operation_exception) \
+    _GEN390(_name) \
+    _GEN900(operation_exception) \
+    _GEN37X(_name) \
+        (void*)&disasm_ ## _format, \
+        (void*)& _mnemonic "\0" #_name \
+    }
+
+#define GENx37Xx___x900(_name,_format,_mnemonic) \
+    { \
+    _GEN370(operation_exception) \
+    _GEN390(operation_exception) \
+    _GEN900(_name) \
+    _GEN37X(_name) \
+        (void*)&disasm_ ## _format, \
+        (void*)& _mnemonic "\0" #_name \
+    }
+
+#define GENx37Xx390x900(_name,_format,_mnemonic) \
+    { \
+    _GEN370(operation_exception) \
+    _GEN390(_name) \
+    _GEN900(_name) \
+    _GEN37X(_name) \
+        (void*)&disasm_ ## _format, \
+        (void*)& _mnemonic "\0" #_name \
+    }
+#define GENx37Xx390x___X(_name,_format,_mnemonic) \
+    { \
+    _GEN370(operation_exception) \
+    _GEN390(_name) \
+    _GEN900(operation_exception) \
+    _GEN37XX(_name) \
+        (void*)&disasm_ ## _format, \
+        (void*)& _mnemonic "\0" #_name \
+    }
+
+#define GENx37Xx___x900X(_name,_format,_mnemonic) \
+    { \
+    _GEN370(operation_exception) \
+    _GEN390(operation_exception) \
+    _GEN900(_name) \
+    _GEN37XX(_name) \
+        (void*)&disasm_ ## _format, \
+        (void*)& _mnemonic "\0" #_name \
+    }
+
+#define GENx37Xx390x900X(_name,_format,_mnemonic) \
+    { \
+    _GEN370(operation_exception) \
+    _GEN390(_name) \
+    _GEN900(_name) \
+    _GEN37XX(_name) \
+        (void*)&disasm_ ## _format, \
+        (void*)& _mnemonic "\0" #_name \
+    }
+
+#else
 #define GENx37Xx390x___ GENx370x390x___
 #define GENx37Xx___x900 GENx370x___x900
 #define GENx37Xx390x900 GENx370x390x900
+#define GENx37Xx390x___X GENx370x390x___
+#define GENx37Xx___x900X GENx370x___x900
+#define GENx37Xx390x900X GENx370x390x900
+#endif /* defined(OPTION_370_EXTENSION) */
 
 
 typedef void (ATTR_REGPARM(2) *zz_func) (BYTE inst[], REGS *regs);
@@ -386,7 +463,7 @@ do { \
 do { \
     FOOTPRINT ((_regs)); \
     COUNT_INST ((_ip), (_regs)); \
-    (_regs)->ARCH_DEP(opcode_table)[_ip[0]]((_ip), (_regs)); \
+    (_regs)->current_opcode_table[_ip[0]]((_ip), (_regs)); \
 } while(0)
 
 #define UNROLLED_EXECUTE(_regs) \

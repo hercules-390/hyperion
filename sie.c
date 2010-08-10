@@ -1074,6 +1074,18 @@ int ARCH_DEP(run_sie) (REGS *regs)
                     break;
 
                 ip = INSTRUCTION_FETCH(GUESTREGS, 0);
+#if defined(OPTION_370_EXTENSION) && ARCH_MODE==ARCH_370
+    if(sysblk.ext_370_enable)
+    {
+        GUESTREGS->current_opcode_table=GUESTREGS->s37X_opcode_table;
+    }
+    else
+    {
+        GUESTREGS->current_opcode_table=GUESTREGS->ARCH_DEP(opcode_table);
+    }
+    #else
+    GUESTREGS->current_opcode_table=GUESTREGS->ARCH_DEP(opcode_table);
+#endif /* defined(OPTION_370_EXTENSION) && ARCH_MODE==ARCH_370 */
 
 #if defined(SIE_DEBUG)
                 /* Display the instruction */

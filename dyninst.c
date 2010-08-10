@@ -149,8 +149,12 @@ static char *prefix[] = {
     "s390_dyninst_opcode_",
 #endif
 #if defined(_900)
-    "z900_dyninst_opcode_"
+    "z900_dyninst_opcode_",
 #endif
+#if defined(OPTION_370_EXTENTION)
+    "s370_dyninst_opcode_",
+#endif
+    NULL
     };
 
 
