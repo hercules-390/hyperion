@@ -555,12 +555,22 @@ struct TAPE_BLOCKS *load_binary_file(char *infile,char recfm,int *recl,int *recc
 /* Load a textual file for DUMP function */
 struct TAPE_BLOCKS *load_text_file(char *infile,char recfm,int *recl,int *recc,size_t *filesz)
 {
+    UNREFERENCED(infile);
+    UNREFERENCED(recfm);
+    UNREFERENCED(recl);
+    UNREFERENCED(recc);
+    UNREFERENCED(filesz);
     return NULL;
 }
 
 /* Load a structured file for DUMP function */
 struct TAPE_BLOCKS *load_structured_file(char *infile,char recfm,int *recl,int *recc,size_t *filesz)
 {
+    UNREFERENCED(infile);
+    UNREFERENCED(recfm);
+    UNREFERENCED(recl);
+    UNREFERENCED(recc);
+    UNREFERENCED(filesz);
     return NULL;
 }
 
@@ -899,6 +909,7 @@ int dodump(struct options *opts)
 /* Perform vmfplc2 LOAD operation */
 int doload(struct options *opts)
 {
+    UNREFERENCED(opts);
     printf("LOAD function not implemented yet\n");
     return 0;
 }
@@ -906,6 +917,7 @@ int doload(struct options *opts)
 /* Perform vmfplc2 SCAN operation */
 int doscan(struct options *opts)
 {
+    UNREFERENCED(opts);
     printf("SCAN function not implemented yet\n");
     return 0;
 }
