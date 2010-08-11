@@ -34,16 +34,21 @@
 #define FEATURE_ECPSVM
 #define FEATURE_VM_BLOCKIO
 
-/* The instructions for the following features will be made */
-/* available unconditionally if OPTION_370_EXTENSION is NOT */
-/* defined. If OPTION_370_EXTENSION is defined, then the    */
-/* instructions pertaining to the following features        */
-/* will only be made available if they are made available   */
-/* at runtime                                               */
+/* The following section defines the ESA/390 and
+   z/Architecture defined features (and their related
+   instructions) that are compatible and backported to
+   the S/370 architecture. Those features are also controled
+   by a runtime extension (S37X statement and panel command)
+   and are disabled by default. If it is needed to have
+   those features available unconditionally, the following
+   #if preprocessor statement should be commented out and
+   the OPTION_370_EXTENSION macro in featall.h should be 
+   removed or commented out as well. It is still possible
+   to comment out individual features if necessary. */
 
-/* The following ESA/390 features can be retrofitted to S/370 and
-   may be activated if desired by uncommenting the appropriate
-   define statements below and performing a complete rebuild */
+#if defined(OPTION_370_EXTENSION)
+
+/* ESA/390 backported features */
 #define FEATURE_BASIC_FP_EXTENSIONS
 #define FEATURE_BINARY_FLOATING_POINT
 #define FEATURE_CHECKSUM_INSTRUCTION
@@ -58,9 +63,7 @@
 #define FEATURE_SQUARE_ROOT
 #define FEATURE_STRING_INSTRUCTION
 
-/* The following ESAME features can be retrofitted to S/370 and
-   may be activated if desired by uncommenting the appropriate
-   define statements below and performing a complete rebuild */
+/* z/Architecture  backported features */
 #define FEATURE_ESAME_N3_ESA390
 #define FEATURE_ETF2_ENHANCEMENT
 #define FEATURE_ETF3_ENHANCEMENT
@@ -74,8 +77,7 @@
 #define FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
 #define FEATURE_PARSING_ENHANCEMENT_FACILITY
 
-/* End of features which instructions are */
-/* controlled by OPTION_370_EXTENSION     */
+#endif /* defined(OPTION_370_EXTENSION) */
 
 #endif /*defined(OPTION_370_MODE)*/
 /* end of FEAT370.H */
