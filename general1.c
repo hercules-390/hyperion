@@ -12,7 +12,7 @@
 // $Id$
 
 /*-------------------------------------------------------------------*/
-/* This module implements all general instructions of the            */
+/* This module implements general instructions A-M of the            */
 /* S/370 and ESA/390 architectures, as described in the manuals      */
 /* GA22-7000-03 System/370 Principles of Operation                   */
 /* SA22-7201-06 ESA/390 Principles of Operation                      */
@@ -32,8 +32,6 @@
 /*      Modifications for Interpretive Execution (SIE) by Jan Jaeger */
 /*      Clear TEA on data exception - Peter Kuschnerus           v209*/
 /*-------------------------------------------------------------------*/
-
-
 
 #include "hstdinc.h"
 
@@ -622,7 +620,7 @@ VADR    newia;                          /* New instruction address   */
     if((regs->CR(12) & CR12_MTRACE) && (r2 != 0) && (regs->psw.amode64 != (newia & 1)))
     {
         INST_UPDATE_PSW(regs, 2, 0);
-        regs->psw.ilc = 2; 
+        regs->psw.ilc = 2;
         regs->CR(12) = ARCH_DEP(trace_ms) (0, 0, regs);
     }
      #endif /*defined(FEATURE_ESAME)*/
@@ -927,7 +925,7 @@ U16     i2;                             /* 16-bit operand values     */
         regs->GR_L(r1) = PSW_IA24(regs, 4);
 
     SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
- 
+
 } /* end DEF_INST(branch_relative_and_save) */
 #endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
 
@@ -1443,7 +1441,7 @@ VADR    addr1, addr2;                   /* Effective addresses       */
 VADR    addrp;                          /* Parameter list address    */
 BYTE   *main1;                          /* Mainstor address of op1   */
 int     ln2;                            /* Second operand length - 1 */
-U64     old16l=0, old16h=0, 
+U64     old16l=0, old16h=0,
         new16l=0, new16h=0;             /* swap values for cmpxchg16 */
 U64     old8=0, new8=0;                 /* Swap values for cmpxchg8  */
 U32     old4=0, new4=0;                 /* Swap values for cmpxchg4  */
@@ -1462,7 +1460,7 @@ BYTE    sc;                             /* Store characteristic      */
 
     /* Extract store characteristic from register 0 bits 48-55 */
     sc = regs->GR_LHLCH(0);
-     
+
     /* Program check if function code is not 0 or 1 */
     if (fc > MAX_CSST_FC)
         regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
@@ -1470,10 +1468,10 @@ BYTE    sc;                             /* Store characteristic      */
     /* Program check if store characteristic is not 0, 1, 2, or 3 */
     if (sc > MAX_CSST_SC)
         regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
-         
+
     /* Calculate length minus 1 of second operand */
     ln2 = (1 << sc) - 1;
-     
+
     /* Program check if first operand is not on correct boundary */
     switch(fc)
     {
@@ -1489,7 +1487,7 @@ BYTE    sc;                             /* Store characteristic      */
             break;
 #endif
     }
-         
+
 #if defined(FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY_2)
     if(r3 & 1)
     {
@@ -1515,7 +1513,7 @@ BYTE    sc;                             /* Store characteristic      */
             break;
 #endif
     }
-         
+
     /* Perform serialization before starting operation */
     PERFORM_SERIALIZATION (regs);
 
@@ -3283,7 +3281,7 @@ BYTE   *ip;                             /* -> executed instruction   */
 #endif
 
     /* Program check if recursive execute */
-    if ( regs->exinst[0] == 0x44 || 
+    if ( regs->exinst[0] == 0x44 ||
          (regs->exinst[0] == 0xc6 && !(regs->exinst[1] & 0x0f)) )
         regs->program_interrupt (regs, PGM_EXECUTE_EXCEPTION);
 
@@ -4138,7 +4136,7 @@ size_t  dstlen,srclen;                  /* Page wide src/dst lengths */
     SET_GR_A(r1+1, regs,len1);
     SET_GR_A(r3, regs,addr2);
     SET_GR_A(r3+1, regs,len2);
-    /* if len1 != 0 then set CC to 3 to indicate 
+    /* if len1 != 0 then set CC to 3 to indicate
        we have reached end of CPU dependent length */
     if(len1>0) cc=3;
 

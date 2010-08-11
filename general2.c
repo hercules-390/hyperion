@@ -12,7 +12,7 @@
 // $Id$
 
 /*-------------------------------------------------------------------*/
-/* This module implements all general instructions of the            */
+/* This module implements general instructions N-Z of the            */
 /* S/370 and ESA/390 architectures, as described in the manuals      */
 /* GA22-7000-03 System/370 Principles of Operation                   */
 /* SA22-7201-06 ESA/390 Principles of Operation                      */
@@ -32,77 +32,6 @@
 /*      Modifications for Interpretive Execution (SIE) by Jan Jaeger */
 /*      Clear TEA on data exception - Peter Kuschnerus           v209*/
 /*-------------------------------------------------------------------*/
-
-// $Log$
-// Revision 1.127  2009/01/23 11:56:02  bernard
-// copyright notice
-//
-// Revision 1.126  2008/03/28 13:36:25  rbowler
-// Fix incorrect registers when cc=1 for TRTE,TRTRE
-//
-// Revision 1.125  2008/03/27 16:45:17  rbowler
-// TRTE and TRTRE incorrectly return cc=3
-//
-// Revision 1.124  2008/03/06 16:10:35  rbowler
-// Remove extraneous trailing blanks (cosmetic change only)
-//
-// Revision 1.123  2008/03/01 15:15:41  bernard
-// Removed the silly control-M characters
-//
-// Revision 1.122  2008/03/01 12:19:04  rbowler
-// Rename new features to include the word facility
-//
-// Revision 1.121  2008/03/01 07:51:00  bernard
-// TRTE, TRTRE: Checking for a_bit and ch>255 is double. Removed the a_bit.
-//
-// Revision 1.120  2008/02/29 16:25:13  bernard
-// Added Parsing Enhancement Facility
-//
-// Revision 1.119  2008/02/15 21:21:18  ptl00
-// Fix STCKE so that byte 0 is cleared
-//
-// Revision 1.118  2008/01/24 00:59:03  gsmith
-// Fix and optimize TR instruction
-//
-// Revision 1.117  2007/12/30 17:48:21  bernard
-// Anoter UTF xlate error
-//
-// Revision 1.116  2007/12/30 09:09:51  bernard
-// Some errors in UTF translation
-//
-// Revision 1.115  2007/11/30 15:14:14  rbowler
-// Permit String-Instruction facility to be activated in S/370 mode
-//
-// Revision 1.114  2007/06/23 00:04:10  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.113  2007/01/13 07:21:48  bernard
-// backout ccmask
-//
-// Revision 1.112  2007/01/12 15:23:51  bernard
-// ccmask phase 1
-//
-// Revision 1.111  2007/01/09 05:10:19  gsmith
-// Tweaks to lm/stm
-//
-// Revision 1.110  2007/01/04 23:12:04  gsmith
-// remove thunk calls for program_interrupt
-//
-// Revision 1.109  2006/12/31 21:16:32  gsmith
-// 2006 Dec 31 really back out mainlockx.pat
-//
-// Revision 1.108  2006/12/20 09:09:40  jj
-// Fix bogus log entries
-//
-// Revision 1.107  2006/12/20 04:26:20  gsmith
-// 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
-//
-// Revision 1.106  2006/12/20 04:22:00  gsmith
-// 2006 Dec 19 Backout mainlockx.pat - possible SMP problems - Greg Smith
-//
-// Revision 1.105  2006/12/08 09:43:21  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 
