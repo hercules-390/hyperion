@@ -13,8 +13,6 @@
 /* SA22-7832-06 z/Architecture Principles of Operation               */
 /*-------------------------------------------------------------------*/
 
-
-
 #include "hstdinc.h"
 
 #if !defined(_HENGINE_DLL_)
@@ -2031,14 +2029,151 @@ U32     i2;                             /* 32-bit operand value      */
 } /* end DEF_INST(branch_relative_on_count_high) */
 
 
-//DEF_INST(compare_high_fullword)                                 /*810*/
-//DEF_INST(compare_high_high_register)                            /*810*/
-//DEF_INST(compare_high_immediate)                                /*810*/
-//DEF_INST(compare_high_low_register)                             /*810*/
-//DEF_INST(compare_logical_high_fullword)                         /*810*/
-//DEF_INST(compare_logical_high_high_register)                    /*810*/
-//DEF_INST(compare_logical_high_immediate)                        /*810*/
-//DEF_INST(compare_logical_high_low_register)                     /*810*/
+/*-------------------------------------------------------------------*/
+/* B9CD CHHR  - Compare High High Register                     [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_high_high_register)                            /*810*/
+{
+int     r1, r2;                         /* Values of R fields        */
+
+    RRE(inst, regs, r1, r2);
+
+    /* Compare signed operands and set condition code */
+    regs->psw.cc =
+                (S32)regs->GR_H(r1) < (S32)regs->GR_H(r2) ? 1 :
+                (S32)regs->GR_H(r1) > (S32)regs->GR_H(r2) ? 2 : 0;
+
+} /* DEF_INST(compare_high_high_register) */
+
+
+/*-------------------------------------------------------------------*/
+/* B9DD CHLR  - Compare High Low Register                      [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_high_low_register)                             /*810*/
+{
+int     r1, r2;                         /* Values of R fields        */
+
+    RRE(inst, regs, r1, r2);
+
+    /* Compare signed operands and set condition code */
+    regs->psw.cc =
+                (S32)regs->GR_H(r1) < (S32)regs->GR_L(r2) ? 1 :
+                (S32)regs->GR_H(r1) > (S32)regs->GR_L(r2) ? 2 : 0;
+
+} /* DEF_INST(compare_high_low_register) */
+
+
+/*-------------------------------------------------------------------*/
+/* E3CD CHF   - Compare High Fullword                          [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_high_fullword)                                 /*810*/
+{
+int     r1;                             /* Values of R fields        */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RXY(inst, regs, r1, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Compare signed operands and set condition code */
+    regs->psw.cc =
+            (S32)regs->GR_H(r1) < (S32)n ? 1 :
+            (S32)regs->GR_H(r1) > (S32)n ? 2 : 0;
+
+} /* DEF_INST(compare_high_fullword) */
+
+
+/*-------------------------------------------------------------------*/
+/* CCxD CIH   - Compare High Immediate                         [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_high_immediate)                                /*810*/
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* 32-bit operand value      */
+
+    RIL0(inst, regs, r1, opcd, i2);
+
+    /* Compare signed operands and set condition code */
+    regs->psw.cc = (S32)regs->GR_H(r1) < (S32)i2 ? 1 :
+                   (S32)regs->GR_H(r1) > (S32)i2 ? 2 : 0;
+
+} /* end DEF_INST(compare_high_immediate) */
+
+
+/*-------------------------------------------------------------------*/
+/* B9CF CLHHR - Compare Logical High High Register             [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_high_high_register)                    /*810*/
+{
+int     r1, r2;                         /* Values of R fields        */
+
+    RRE0(inst, regs, r1, r2);
+
+    /* Compare unsigned operands and set condition code */
+    regs->psw.cc = regs->GR_H(r1) < regs->GR_H(r2) ? 1 :
+                   regs->GR_H(r1) > regs->GR_H(r2) ? 2 : 0;
+
+} /* end DEF_INST(compare_logical_high_high_register) */
+
+
+/*-------------------------------------------------------------------*/
+/* B9DF CLHLR - Compare Logical High Low Register              [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_high_low_register)                     /*810*/
+{
+int     r1, r2;                         /* Values of R fields        */
+
+    RRE0(inst, regs, r1, r2);
+
+    /* Compare unsigned operands and set condition code */
+    regs->psw.cc = regs->GR_H(r1) < regs->GR_L(r2) ? 1 :
+                   regs->GR_H(r1) > regs->GR_L(r2) ? 2 : 0;
+
+} /* end DEF_INST(compare_logical_high_low_register) */
+
+
+/*-------------------------------------------------------------------*/
+/* E3CF CLHF  - Compare Logical High Fullword                  [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_high_fullword)                         /*810*/
+{
+int     r1;                             /* Values of R fields        */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RXY(inst, regs, r1, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Compare unsigned operands and set condition code */
+    regs->psw.cc = regs->GR_H(r1) < n ? 1 :
+                   regs->GR_H(r1) > n ? 2 : 0;
+
+} /* end DEF_INST(compare_logical_high_fullword) */
+
+
+/*-------------------------------------------------------------------*/
+/* CCxF CLIH  - Compare Logical High Immediate                 [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_high_immediate)                        /*810*/
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* 32-bit operand value      */
+
+    RIL0(inst, regs, r1, opcd, i2);
+
+    /* Compare unsigned operands and set condition code */
+    regs->psw.cc = regs->GR_H(r1) < i2 ? 1 :
+                   regs->GR_H(r1) > i2 ? 2 : 0;
+
+} /* end DEF_INST(compare_logical_high_immediate) */
 
 
 /*-------------------------------------------------------------------*/
