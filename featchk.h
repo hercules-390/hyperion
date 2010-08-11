@@ -204,7 +204,7 @@
  #define ARCH_900 -1
 #endif
 
-#if defined(_370) && !defined(OPTION_370_EXTENSION)
+#if !defined(_370) && defined(OPTION_370_EXTENSION)
  #error OPTION_370_MODE must be enabled for OPTION_370_EXTENSION
 #endif
 

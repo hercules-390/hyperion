@@ -2229,6 +2229,7 @@ static zz_func s370_opcode_e6xx[256];
 static zz_func s370_opcode_ebxx[256];
 static zz_func s370_opcode_ecxx[256];                           /*@N3*/
 
+#if defined(OPTION_370_EXTENSION)
 DLL_EXPORT zz_func s37X_opcode_table[256];
 static zz_func s37X_opcode_a4xx[256];
 static zz_func s37X_opcode_a5xx[256];
@@ -2247,6 +2248,7 @@ static zz_func s37X_opcode_e5xx[256];
 static zz_func s37X_opcode_e6xx[256];
 static zz_func s37X_opcode_ebxx[256];
 static zz_func s37X_opcode_ecxx[256];                           /*@N3*/
+#endif /* defined(OPTION_370_EXTENSION) */
 
 zz_func s390_opcode_table[256];
 static zz_func s390_opcode_01xx[256];
@@ -2783,7 +2785,7 @@ DLL_EXPORT zz_func opcode_table[256][GEN_MAXARCH] = {
  /*E2*/   GENx37Xx390x900 (unpack_unicode,SS_L,"UNPKU"),
  /*E3*/   GENx37Xx390x900X(execute_e3xx,e3xx,""),
  /*E4*/   GENx370x390x___ (execute_e4xx,e4xx,""),
- /*E5*/   GENx370x390x900 (execute_e5xx,e5xx,""),
+ /*E5*/   GENx370x390x900X(execute_e5xx,e5xx,""),
  /*E6*/   GENx370x___x___ (execute_e6xx,e6xx,""),
  /*E7*/   GENx___x___x___ ,
  /*E8*/   GENx370x390x900 (move_inverse,SS_L,"MVCIN"),
