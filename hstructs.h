@@ -118,6 +118,7 @@ struct REGS {                           /* Processor registers       */
 #define GR_H(_r) gr[(_r)].F.H.F          /* Fullword bits 0-31       */
 #define GR_HHH(_r) gr[(_r)].F.H.H.H.H    /* Halfword bits 0-15       */
 #define GR_HHL(_r) gr[(_r)].F.H.H.L.H    /* Halfword low, bits 16-31 */
+#define GR_HHLCL(_r) gr[(_r)].F.H.H.L.B.L   /* Character, bits 24-31 */
 #define GR_L(_r) gr[(_r)].F.L.F          /* Fullword low, bits 32-63 */
 #define GR_LHH(_r) gr[(_r)].F.L.H.H.H    /* Halfword bits 32-47      */
 #define GR_LHL(_r) gr[(_r)].F.L.H.L.H    /* Halfword low, bits 48-63 */

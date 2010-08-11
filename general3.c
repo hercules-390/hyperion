@@ -2011,7 +2011,26 @@ U32     i2;                             /* 32-bit operand value      */
 } /* end DEF_INST(add_logical_with_signed_immediate_high_n) */
 
 
-//DEF_INST(branch_relative_on_count_high)                         /*810*/
+/*-------------------------------------------------------------------*/
+/* CCx6 BRCTH - Branch Relative on Count High                  [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(branch_relative_on_count_high)                         /*810*/
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* 32-bit operand value      */
+
+    RIL_B(inst, regs, r1, opcd, i2);
+
+    /* Subtract 1 from the R1 operand and branch if non-zero */
+    if ( --(regs->GR_H(r1)) )
+        SUCCESSFUL_RELATIVE_BRANCH(regs, 2LL*(S32)i2, 4);
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_relative_on_count_high) */
+
+
 //DEF_INST(compare_high_fullword)                                 /*810*/
 //DEF_INST(compare_high_high_register)                            /*810*/
 //DEF_INST(compare_high_immediate)                                /*810*/
@@ -2020,20 +2039,223 @@ U32     i2;                             /* 32-bit operand value      */
 //DEF_INST(compare_logical_high_high_register)                    /*810*/
 //DEF_INST(compare_logical_high_immediate)                        /*810*/
 //DEF_INST(compare_logical_high_low_register)                     /*810*/
-//DEF_INST(load_byte_high)                                        /*810*/
-//DEF_INST(load_fullword_high)                                    /*810*/
-//DEF_INST(load_halfword_high)                                    /*810*/
-//DEF_INST(load_logical_character_high)                           /*810*/
-//DEF_INST(load_logical_halfword_high)                            /*810*/
+
+
+/*-------------------------------------------------------------------*/
+/* E3C0 LBH   - Load Byte High                                 [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_byte_high)                                        /*810*/
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXY(inst, regs, r1, b2, effective_addr2);
+
+    /* Load sign-extended byte from operand address */
+    regs->GR_H(r1) = (S8)ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+
+} /* end DEF_INST(load_byte_high) */
+
+
+/*-------------------------------------------------------------------*/
+/* E3CA LFH   - Load Fullword High                             [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_fullword_high)                                    /*810*/
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXY(inst, regs, r1, b2, effective_addr2);
+
+    /* Load R1 register bits 0-31 from second operand */
+
+    regs->GR_H(r1) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+} /* end DEF_INST(load_fullword_high) */
+
+
+/*-------------------------------------------------------------------*/
+/* E3C4 LHH   - Load Halfword High                             [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_halfword_high)                                    /*810*/
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXY(inst, regs, r1, b2, effective_addr2);
+
+    /* Load sign-extended halfword from operand address */
+    regs->GR_H(r1) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+
+} /* end DEF_INST(load_halfword_high) */
+
+
+/*-------------------------------------------------------------------*/
+/* E3C2 LLCH  - Load Logical Character High                    [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_logical_character_high)                           /*810*/
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXY(inst, regs, r1, b2, effective_addr2);
+
+    /* Load byte into R1 register bits 24-31 and clear bits 0-23 */
+    regs->GR_H(r1) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+
+} /* end DEF_INST(load_logical_character_high) */
+
+
+/*-------------------------------------------------------------------*/
+/* E3C6 LLHH  - Load Logical Halfword High                     [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_logical_halfword_high)                            /*810*/
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXY(inst, regs, r1, b2, effective_addr2);
+
+    /* Load halfword into R1 register bits 16-31 and clear bits 0-15 */
+    regs->GR_H(r1) = ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+
+} /* end DEF_INST(load_logical_halfword_high) */
+
+
 //DEF_INST(rotate_then_insert_selected_bits_high_long_reg)        /*810*/
 //DEF_INST(rotate_then_insert_selected_bits_low_long_reg)         /*810*/
-//DEF_INST(store_character_high)                                  /*810*/
-//DEF_INST(store_fullword_high)                                   /*810*/
-//DEF_INST(store_halfword_high)                                   /*810*/
-//DEF_INST(subtract_high_high_high_register)                      /*810*/
-//DEF_INST(subtract_high_high_low_register)                       /*810*/
-//DEF_INST(subtract_logical_high_high_high_register)              /*810*/
-//DEF_INST(subtract_logical_high_high_low_register)               /*810*/
+
+
+/*-------------------------------------------------------------------*/
+/* E3C3 STCH  - Store Character High                           [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_character_high)                                  /*810*/
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXY(inst, regs, r1, b2, effective_addr2);
+
+    /* Store bits 24-31 of R1 register at operand address */
+    ARCH_DEP(vstoreb) ( regs->GR_HHLCL(r1), effective_addr2, b2, regs );
+
+} /* end DEF_INST(store_character_high) */
+
+
+/*-------------------------------------------------------------------*/
+/* E3CB STFH  - Store Fullword High                            [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_fullword_high)                                   /*810*/
+{
+int     r1;                             /* Values of R fields        */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXY(inst, regs, r1, b2, effective_addr2);
+
+    /* Store bits 0-31 of R1 register at operand address */
+    ARCH_DEP(vstore4) ( regs->GR_H(r1), effective_addr2, b2, regs );
+
+} /* end DEF_INST(store_fullword_high) */
+
+
+/*-------------------------------------------------------------------*/
+/* E3C7 STHH  - Store Halfword High                            [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_halfword_high)                                   /*810*/
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXY(inst, regs, r1, b2, effective_addr2);
+
+    /* Store bits 16-31 of R1 register at operand address */
+    ARCH_DEP(vstore2) ( regs->GR_HHL(r1), effective_addr2, b2, regs );
+
+} /* end DEF_INST(store_halfword_high) */
+
+
+/*-------------------------------------------------------------------*/
+/* B9C9 SHHHR - Subtract High High High Register               [RRR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(subtract_high_high_high_register)                      /*810*/
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR(inst, regs, r1, r2, r3);
+
+    /* Subtract signed operands and set condition code */
+    regs->psw.cc = sub_signed (&(regs->GR_H(r1)),
+                                 regs->GR_H(r2),
+                                 regs->GR_H(r3));
+
+    /* Program check if fixed-point overflow */
+    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+        regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+
+} /* end DEF_INST(subtract_high_high_high_register) */
+
+
+/*-------------------------------------------------------------------*/
+/* B9D9 SHHLR - Subtract High High Low Register                [RRR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(subtract_high_high_low_register)                       /*810*/
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR(inst, regs, r1, r2, r3);
+
+    /* Subtract signed operands and set condition code */
+    regs->psw.cc = sub_signed (&(regs->GR_H(r1)),
+                                 regs->GR_H(r2),
+                                 regs->GR_L(r3));
+
+    /* Program check if fixed-point overflow */
+    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+        regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+
+} /* end DEF_INST(subtract_high_high_low_register) */
+
+
+/*-------------------------------------------------------------------*/
+/* B9CB SLHHHR - Subtract Logical High High High Register      [RRR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(subtract_logical_high_high_high_register)              /*810*/
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR(inst, regs, r1, r2, r3);
+
+    /* Subtract unsigned operands and set condition code */
+    regs->psw.cc = sub_logical (&(regs->GR_H(r1)),
+                                  regs->GR_H(r2),
+                                  regs->GR_H(r3));
+
+} /* end DEF_INST(subtract_logical_high_high_high_register) */
+
+
+/*-------------------------------------------------------------------*/
+/* B9DB SLHHLR - Subtract Logical High High Low Register       [RRR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(subtract_logical_high_high_low_register)               /*810*/
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR(inst, regs, r1, r2, r3);
+
+    /* Subtract unsigned operands and set condition code */
+    regs->psw.cc = sub_logical (&(regs->GR_H(r1)),
+                                  regs->GR_H(r2),
+                                  regs->GR_L(r3));
+
+} /* end DEF_INST(subtract_logical_high_high_low_register) */
 
 #endif /*defined(FEATURE_HIGH_WORD_FACILITY)*/                  /*810*/
 
