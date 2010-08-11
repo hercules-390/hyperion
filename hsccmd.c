@@ -4031,6 +4031,13 @@ U16  lcss;
 U16  devnum;
 char *cdev, *clcss;
 
+#if defined(OPTION_IPLPARM)
+char save_loadparm[16];
+int  rest_loadparm = FALSE;
+
+    save_loadparm[0] = '\0';
+#endif
+
     /* Check that target processor type allows IPL */
     if (sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_IFA
      || sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_SUP)
@@ -4049,9 +4056,16 @@ char *cdev, *clcss;
 #define MAXPARMSTRING   sizeof(sysblk.iplparmstring)
     sysblk.haveiplparm=0;
     maxb=0;
-    if(argc>2)
+    if( argc > 2 )
     {
-        if(strcasecmp(argv[2],"parm")==0)
+        if ( CMD( argv[2], loadparm, 4) )
+        {
+            strcpy( save_loadparm, str_loadparm() );
+            rest_loadparm = TRUE;
+            if ( argc == 4 )
+                set_loadparm(argv[3]);
+        }
+        else if ( CMD(argv[2], parm, 4) )
         {
             memset(sysblk.iplparmstring,0,MAXPARMSTRING);
             sysblk.haveiplparm=1;
@@ -4083,6 +4097,7 @@ char *cdev, *clcss;
         {
             RELEASE_INTLOCK(NULL);
             WRMSG(HHC02236, "E");
+            if ( rest_loadparm ) set_loadparm( save_loadparm );
             return -1;
         }
 
@@ -4111,6 +4126,7 @@ char *cdev, *clcss;
             if (sscanf(clcss, "%hd%c", &lcss, &c) != 1)
             {
                 WRMSG(HHC02205, "E", clcss, ": LCSS id is invalid" );
+                if ( rest_loadparm ) set_loadparm( save_loadparm );
                 return -1;
             }
         }
