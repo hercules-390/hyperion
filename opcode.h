@@ -1280,13 +1280,18 @@ do { \
 
 /* RRR register to register with register */
 #undef RRR
+#undef RRR0
 
 #if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RRR)
  #define RRR(_inst, _regs, _r1, _r2, _r3) \
          RRR_DECODER(_inst, _regs, _r1, _r2, _r3, 4, 4)
+ #define RRR0(_inst, _regs, _r1, _r2, _r3) \
+         RRR_DECODER(_inst, _regs, _r1, _r2, _r3, 4, 0)
 #else
  #define RRR(_inst, _regs, _r1, _r2, _r3) \
          RRR_DECODER_TEST(_inst, _regs, _r1, _r2, _r3, 4, 4)
+ #define RRR0(_inst, _regs, _r1, _r2, _r3) \
+         RRR_DECODER_TEST(_inst, _regs, _r1, _r2, _r3, 4, 0)
 #endif
 
 #define RRR_DECODER(_inst, _regs, _r1, _r2, _r3, _len, _ilc) \
