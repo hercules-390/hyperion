@@ -582,7 +582,7 @@ struct TAPE_BLOCKS *load_text_file(char *infile,char recfm,int *recl,int *recc,s
     recs=initrecs(recfm,*recl,plcd_hdr,5);
     while((rec=fgets(bfr,sizeof(bfr),ifile))!=NULL)
     {
-        rsz=strlen(rec)-1;
+        rsz=(int)strlen(rec)-1;
         if(recfm=='F')
         {
             if(rsz<(*recl)) 
