@@ -72,7 +72,7 @@
 #define FEATURE_HFP_EXTENSIONS
 #define FEATURE_HFP_MULTIPLY_ADD_SUBTRACT
 #define FEATURE_HFP_UNNORMALIZED_EXTENSION                      /*@Z9*/
-//#define FEATURE_HIGH_WORD_FACILITY                              /*810*/
+#define FEATURE_HIGH_WORD_FACILITY                              /*810*/
 #define FEATURE_HYPERVISOR
 #define FEATURE_IEEE_EXCEPTION_SIMULATION                       /*407*/
 #define FEATURE_IMMEDIATE_AND_RELATIVE

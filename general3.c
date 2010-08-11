@@ -1681,11 +1681,14 @@ VADR    addr2;                          /* Relative operand address  */
 
 } /* end DEF_INST(prefetch_data_relative_long) */
 
+#endif /*defined(FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY)*/
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY) \
+ || defined(FEATURE_HIGH_WORD_FACILITY)                         /*810*/
 /*-------------------------------------------------------------------*/
 /* Rotate Then Perform Operation On Selected Bits Long Register      */
 /* Subroutine is called by RNSBG,RISBG,ROSBG,RXSBG instructions      */
+/* and also by the RISBHG,RISBLG instructions */                /*810*/
 /*-------------------------------------------------------------------*/
 DEF_INST(rotate_then_xxx_selected_bits_long_reg)
 {
@@ -1708,7 +1711,15 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
     start = i3 & 0x3F;
     end = i4 & 0x3F;
     n = i5 & 0x3F;
-    if (opcode == 0x55)
+    if ((opcode & 0xFC) == 0x50 /*Low*/ ) {                     /*810*/
+        start |= 0x20;                                          /*810*/
+        end |= 0x20;                                            /*810*/
+    }                                                           /*810*/
+    if ((opcode & 0xFC) == 0x5C /*High*/ ) {                    /*810*/
+        start &= 0x1F;                                          /*810*/
+        end &= 0x1F;                                            /*810*/
+    }                                                           /*810*/
+    if ((opcode & 0x03) == 0x01 /*Insert*/ )                    /*810*/
         z_bit = i4 >> 7;
     else
         t_bit = i3 >> 7;
@@ -1739,7 +1750,9 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
     case 0x54: /* And */
         resu &= rota;
         break;
+    case 0x51: /* Insert Low */                                 /*810*/
     case 0x55: /* Insert */
+    case 0x5D: /* Insert High */                                /*810*/
         resu = rota;
         break;
     case 0x56: /* Or */
@@ -1750,8 +1763,8 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
         break;
     } /* end switch(opcode) */
 
-    /* Except RISBG set condition code according to result bits */
-    if (opcode != 0x55)
+    /* And/Or/Xor set condition code according to result bits*/ /*810*/
+    if ((opcode & 0x03) != 0x01 /*Insert*/ )                    /*810*/
         regs->psw.cc = (resu == 0) ? 0 : 1;
 
     /* Insert result bits into R1 register */
@@ -1759,6 +1772,10 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
     {
         if (z_bit == 0)
             regs->GR_G(r1) = (regs->GR_G(r1) & ~mask) | resu;
+        else if ((opcode & 0xFC) == 0x50 /*Low*/ )              /*810*/
+            regs->GR_L(r1) = (U32)resu;                         /*810*/
+        else if ((opcode & 0xFC) == 0x5C /*High*/ )             /*810*/
+            regs->GR_H(r1) = (U32)(resu >> 32);                 /*810*/
         else
             regs->GR_G(r1) = resu;
     } /* end if(t_bit==0) */
@@ -1769,9 +1786,15 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
                 (S64)regs->GR_G(r1) < 0 ? 1 :
                 (S64)regs->GR_G(r1) > 0 ? 2 : 0;
 
+    /* For RISBHG,RISBLG the condition code remains unchanged*/ /*810*/
+
 } /* end DEF_INST(rotate_then_xxx_selected_bits_long_reg) */
+#endif /*defined(FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY)*/
+       /*|| defined(FEATURE_HIGH_WORD_FACILITY)*/               /*810*/
 
+#if defined(FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY)
 
+#if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
 /* EC54 RNSBG - Rotate Then And Selected Bits                  [RIE] */
 /*-------------------------------------------------------------------*/
@@ -2259,8 +2282,22 @@ VADR    effective_addr2;                /* Effective address         */
 } /* end DEF_INST(load_logical_halfword_high) */
 
 
-//DEF_INST(rotate_then_insert_selected_bits_high_long_reg)        /*810*/
-//DEF_INST(rotate_then_insert_selected_bits_low_long_reg)         /*810*/
+/*-------------------------------------------------------------------*/
+/* EC5D RISBHG - Rotate Then Insert Selected Bits High         [RIE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(rotate_then_insert_selected_bits_high_long_reg)        /*810*/
+{
+    ARCH_DEP(rotate_then_xxx_selected_bits_long_reg) (inst, regs);
+} /* end DEF_INST(rotate_then_insert_selected_bits_high_long_reg) */
+
+
+/*-------------------------------------------------------------------*/
+/* EC51 RISBLG - Rotate Then Insert Selected Bits Low          [RIE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(rotate_then_insert_selected_bits_low_long_reg)         /*810*/
+{
+    ARCH_DEP(rotate_then_xxx_selected_bits_long_reg) (inst, regs);
+} /* end DEF_INST(rotate_then_insert_selected_bits_low_long_reg) */
 
 
 /*-------------------------------------------------------------------*/
