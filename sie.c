@@ -945,6 +945,7 @@ int ARCH_DEP(run_sie) (REGS *regs)
     int   icode;    /* SIE longjmp intercept code      */
     BYTE  oldv;     /* siebk->v change check reference */
     BYTE *ip;       /* instruction pointer             */
+    FUNC *current_opcode_table;
 
     SIE_PERFMON(SIE_PERF_RUNSIE);
 
@@ -1086,6 +1087,7 @@ int ARCH_DEP(run_sie) (REGS *regs)
     #else
     GUESTREGS->current_opcode_table=GUESTREGS->ARCH_DEP(opcode_table);
 #endif /* defined(OPTION_370_EXTENSION) && ARCH_MODE==ARCH_370 */
+    current_opcode_table=GUESTREGS->current_opcode_table;
 
 #if defined(SIE_DEBUG)
                 /* Display the instruction */
@@ -1095,27 +1097,27 @@ int ARCH_DEP(run_sie) (REGS *regs)
 
                 SIE_PERFMON(SIE_PERF_EXEC);
                 GUESTREGS->instcount = 1;
-                EXECUTE_INSTRUCTION(ip, GUESTREGS);
+                EXECUTE_INSTRUCTION(current_opcode_table, ip, GUESTREGS);
 
                 do
                 {
                     SIE_PERFMON(SIE_PERF_EXEC_U);
 
-                    UNROLLED_EXECUTE(GUESTREGS);
-                    UNROLLED_EXECUTE(GUESTREGS);
-                    UNROLLED_EXECUTE(GUESTREGS);
-                    UNROLLED_EXECUTE(GUESTREGS);
-                    UNROLLED_EXECUTE(GUESTREGS);
-                    UNROLLED_EXECUTE(GUESTREGS);
+                    UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
+                    UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
+                    UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
+                    UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
+                    UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
+                    UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
 
                     GUESTREGS->instcount += 12;
 
-                    UNROLLED_EXECUTE(GUESTREGS);
-                    UNROLLED_EXECUTE(GUESTREGS);
-                    UNROLLED_EXECUTE(GUESTREGS);
-                    UNROLLED_EXECUTE(GUESTREGS);
-                    UNROLLED_EXECUTE(GUESTREGS);
-                    UNROLLED_EXECUTE(GUESTREGS);
+                    UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
+                    UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
+                    UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
+                    UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
+                    UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
+                    UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
 
                 } while( likely(!SIE_I_HOST(regs)
                                 && GUESTREGS->siebk->v==oldv

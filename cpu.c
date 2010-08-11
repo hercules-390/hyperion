@@ -1766,6 +1766,7 @@ REGS *ARCH_DEP(run_cpu) (int cpu, REGS *oldregs)
 {
 BYTE   *ip;
 REGS    regs;
+FUNC    *current_opcode_table;
 
     if (oldregs)
     {
@@ -1828,15 +1829,6 @@ REGS    regs;
         }
         return oldregs;
     }
-
-    RELEASE_INTLOCK(&regs);
-
-    /* Establish longjmp destination for program check */
-    setjmp(regs.progjmp);
-
-    /* Set `execflag' to 0 in case EXecuted instruction did a longjmp() */
-    regs.execflag = 0;
-
 #if defined(OPTION_370_EXTENSION) && ARCH_MODE==ARCH_370
     if(sysblk.ext_370_enable)
     {
@@ -1849,6 +1841,15 @@ REGS    regs;
 #else
     regs.current_opcode_table=regs.ARCH_DEP(opcode_table);
 #endif /* defined(OPTION_370_EXTENSION) && ARCH_MODE==ARCH_370 */
+    current_opcode_table=regs.current_opcode_table;
+
+    RELEASE_INTLOCK(&regs);
+
+    /* Establish longjmp destination for program check */
+    setjmp(regs.progjmp);
+
+    /* Set `execflag' to 0 in case EXecuted instruction did a longjmp() */
+    regs.execflag = 0;
 
     do {
         if (INTERRUPT_PENDING(&regs))
@@ -1856,24 +1857,24 @@ REGS    regs;
 
         ip = INSTRUCTION_FETCH(&regs, 0);
         regs.instcount++;
-        EXECUTE_INSTRUCTION(ip, &regs);
+        EXECUTE_INSTRUCTION(current_opcode_table, ip, &regs);
 
         do {
-            UNROLLED_EXECUTE(&regs);
-            UNROLLED_EXECUTE(&regs);
-            UNROLLED_EXECUTE(&regs);
-            UNROLLED_EXECUTE(&regs);
-            UNROLLED_EXECUTE(&regs);
-            UNROLLED_EXECUTE(&regs);
+            UNROLLED_EXECUTE(current_opcode_table, &regs);
+            UNROLLED_EXECUTE(current_opcode_table, &regs);
+            UNROLLED_EXECUTE(current_opcode_table, &regs);
+            UNROLLED_EXECUTE(current_opcode_table, &regs);
+            UNROLLED_EXECUTE(current_opcode_table, &regs);
+            UNROLLED_EXECUTE(current_opcode_table, &regs);
 
             regs.instcount += 12;
 
-            UNROLLED_EXECUTE(&regs);
-            UNROLLED_EXECUTE(&regs);
-            UNROLLED_EXECUTE(&regs);
-            UNROLLED_EXECUTE(&regs);
-            UNROLLED_EXECUTE(&regs);
-            UNROLLED_EXECUTE(&regs);
+            UNROLLED_EXECUTE(current_opcode_table, &regs);
+            UNROLLED_EXECUTE(current_opcode_table, &regs);
+            UNROLLED_EXECUTE(current_opcode_table, &regs);
+            UNROLLED_EXECUTE(current_opcode_table, &regs);
+            UNROLLED_EXECUTE(current_opcode_table, &regs);
+            UNROLLED_EXECUTE(current_opcode_table, &regs);
         } while (!INTERRUPT_PENDING(&regs));
     } while (1);
 

@@ -459,16 +459,16 @@ do { \
 
 /* Instruction execution */
 
-#define EXECUTE_INSTRUCTION(_ip, _regs) \
+#define EXECUTE_INSTRUCTION(_oct, _ip, _regs) \
 do { \
     FOOTPRINT ((_regs)); \
     COUNT_INST ((_ip), (_regs)); \
-    (_regs)->current_opcode_table[_ip[0]]((_ip), (_regs)); \
+    (_oct)[_ip[0]]((_ip), (_regs)); \
 } while(0)
 
-#define UNROLLED_EXECUTE(_regs) \
+#define UNROLLED_EXECUTE(_oct, _regs) \
  if ((_regs)->ip >= (_regs)->aie) break; \
- EXECUTE_INSTRUCTION((_regs)->ip, (_regs))
+ EXECUTE_INSTRUCTION((_oct), (_regs)->ip, (_regs))
 
 /* Branching */
 

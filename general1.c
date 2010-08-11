@@ -3227,7 +3227,7 @@ BYTE   *ip;                             /* -> executed instruction   */
     regs->exrl = 0;
     regs->ip -= ILC(regs->exinst[0]);
 
-    EXECUTE_INSTRUCTION (regs->exinst, regs);
+    EXECUTE_INSTRUCTION (regs->current_opcode_table,regs->exinst, regs);
     regs->instcount++;
 
     /* Leave execflag on if pending PER so ILC will reflect EX */
@@ -3297,7 +3297,7 @@ BYTE   *ip;                             /* -> executed instruction   */
     regs->exrl = 1;
     regs->ip -= ILC(regs->exinst[0]);
 
-    EXECUTE_INSTRUCTION (regs->exinst, regs);
+    EXECUTE_INSTRUCTION (regs->current_opcode_table,regs->exinst, regs);
     regs->instcount++;
 
     /* Leave execflag on if pending PER so ILC will reflect EXRL */
