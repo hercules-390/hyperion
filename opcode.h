@@ -3422,6 +3422,37 @@ DEF_INST(store_halfword_relative_long);                         /*208*/
 DEF_INST(store_relative_long);                                  /*208*/
 DEF_INST(store_relative_long_long);                             /*208*/
 
+DEF_INST(add_high_high_high_register);                          /*810*/
+DEF_INST(add_high_high_low_register);                           /*810*/
+DEF_INST(add_high_immediate);                                   /*810*/
+DEF_INST(add_logical_high_high_high_register);                  /*810*/
+DEF_INST(add_logical_high_high_low_register);                   /*810*/
+DEF_INST(add_logical_with_signed_immediate_high);               /*810*/
+DEF_INST(add_logical_with_signed_immediate_high_n);             /*810*/
+DEF_INST(branch_relative_on_count_high);                        /*810*/
+DEF_INST(compare_high_fullword);                                /*810*/
+DEF_INST(compare_high_high_register);                           /*810*/
+DEF_INST(compare_high_immediate);                               /*810*/
+DEF_INST(compare_high_low_register);                            /*810*/
+DEF_INST(compare_logical_high_fullword);                        /*810*/
+DEF_INST(compare_logical_high_high_register);                   /*810*/
+DEF_INST(compare_logical_high_immediate);                       /*810*/
+DEF_INST(compare_logical_high_low_register);                    /*810*/
+DEF_INST(load_byte_high);                                       /*810*/
+DEF_INST(load_fullword_high);                                   /*810*/
+DEF_INST(load_halfword_high);                                   /*810*/
+DEF_INST(load_logical_character_high);                          /*810*/
+DEF_INST(load_logical_halfword_high);                           /*810*/
+DEF_INST(rotate_then_insert_selected_bits_high_long_reg);       /*810*/
+DEF_INST(rotate_then_insert_selected_bits_low_long_reg);        /*810*/
+DEF_INST(store_character_high);                                 /*810*/
+DEF_INST(store_fullword_high);                                  /*810*/
+DEF_INST(store_halfword_high);                                  /*810*/
+DEF_INST(subtract_high_high_high_register);                     /*810*/
+DEF_INST(subtract_high_high_low_register);                      /*810*/
+DEF_INST(subtract_logical_high_high_high_register);             /*810*/
+DEF_INST(subtract_logical_high_high_low_register);              /*810*/
+
 DEF_INST(load_on_condition_register);                           /*810*/
 DEF_INST(load_on_condition_long_register);                      /*810*/
 DEF_INST(load_on_condition);                                    /*810*/

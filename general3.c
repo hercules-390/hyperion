@@ -1867,6 +1867,177 @@ VADR    addr2;                          /* Relative operand address  */
 #endif /*defined(FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY)*/
 
 
+#if defined(FEATURE_HIGH_WORD_FACILITY)                         /*810*/
+
+/*-------------------------------------------------------------------*/
+/* B9C8 AHHHR - Add High High High Register                    [RRR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_high_high_high_register)                           /*810*/
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR(inst, regs, r1, r2, r3);
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc =
+            add_signed (&(regs->GR_H(r1)),
+                    regs->GR_H(r2),
+                    regs->GR_H(r3));
+
+    /* Program check if fixed-point overflow */
+    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+        regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+
+} /* end DEF_INST(add_high_high_high_register) */
+
+
+/*-------------------------------------------------------------------*/
+/* B9D8 AHHLR - Add High High Low Register                     [RRR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_high_high_low_register)                            /*810*/
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR(inst, regs, r1, r2, r3);
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc =
+            add_signed (&(regs->GR_H(r1)),
+                    regs->GR_H(r2),
+                    regs->GR_L(r3));
+
+    /* Program check if fixed-point overflow */
+    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+        regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+
+} /* end DEF_INST(add_high_high_low_register) */
+
+/*-------------------------------------------------------------------*/
+/* CCx8 AIH   - Add High Immediate                             [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_high_immediate)                                    /*810*/
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* 32-bit operand value      */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc = add_signed (&(regs->GR_H(r1)),
+                                regs->GR_H(r1),
+                                (S32)i2);
+
+    /* Program check if fixed-point overflow */
+    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+        regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+
+} /* end DEF_INST(add_high_immediate) */
+
+
+/*-------------------------------------------------------------------*/
+/* B9CA ALHHHR - Add Logical High High High Register           [RRR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_logical_high_high_high_register)                   /*810*/
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR(inst, regs, r1, r2, r3);
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc =
+            add_logical (&(regs->GR_H(r1)),
+                    regs->GR_H(r2),
+                    regs->GR_H(r3));
+
+} /* end DEF_INST(add_logical_high_high_high_register) */
+
+
+/*-------------------------------------------------------------------*/
+/* B9DA ALHHLR - Add Logical High High Low Register            [RRR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_logical_high_high_low_register)                    /*810*/
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR(inst, regs, r1, r2, r3);
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc =
+            add_logical (&(regs->GR_H(r1)),
+                    regs->GR_H(r2),
+                    regs->GR_L(r3));
+
+} /* end DEF_INST(add_logical_high_high_low_register) */
+
+
+/*-------------------------------------------------------------------*/
+/* CCxA ALSIH - Add Logical with Signed Immediate High         [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_logical_with_signed_immediate_high)                /*810*/
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* 32-bit operand value      */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Add operands and set condition code */
+    regs->psw.cc = (S32)i2 < 0 ?
+        sub_logical (&(regs->GR_H(r1)), regs->GR_H(r1), -(S32)i2) :
+        add_logical (&(regs->GR_H(r1)), regs->GR_H(r1), i2);
+
+} /* end DEF_INST(add_logical_with_signed_immediate_high) */
+
+
+/*-------------------------------------------------------------------*/
+/* CCxB ALSIHN - Add Logical with Signed Immediate High No CC  [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_logical_with_signed_immediate_high_n)              /*810*/
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* 32-bit operand value      */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Add operands without setting condition code */
+    if ((S32)i2 < 0) {
+        sub_logical (&(regs->GR_H(r1)), regs->GR_H(r1), -(S32)i2);
+    } else {
+        add_logical (&(regs->GR_H(r1)), regs->GR_H(r1), i2);
+    }
+
+} /* end DEF_INST(add_logical_with_signed_immediate_high_n) */
+
+
+//DEF_INST(branch_relative_on_count_high)                         /*810*/
+//DEF_INST(compare_high_fullword)                                 /*810*/
+//DEF_INST(compare_high_high_register)                            /*810*/
+//DEF_INST(compare_high_immediate)                                /*810*/
+//DEF_INST(compare_high_low_register)                             /*810*/
+//DEF_INST(compare_logical_high_fullword)                         /*810*/
+//DEF_INST(compare_logical_high_high_register)                    /*810*/
+//DEF_INST(compare_logical_high_immediate)                        /*810*/
+//DEF_INST(compare_logical_high_low_register)                     /*810*/
+//DEF_INST(load_byte_high)                                        /*810*/
+//DEF_INST(load_fullword_high)                                    /*810*/
+//DEF_INST(load_halfword_high)                                    /*810*/
+//DEF_INST(load_logical_character_high)                           /*810*/
+//DEF_INST(load_logical_halfword_high)                            /*810*/
+//DEF_INST(rotate_then_insert_selected_bits_high_long_reg)        /*810*/
+//DEF_INST(rotate_then_insert_selected_bits_low_long_reg)         /*810*/
+//DEF_INST(store_character_high)                                  /*810*/
+//DEF_INST(store_fullword_high)                                   /*810*/
+//DEF_INST(store_halfword_high)                                   /*810*/
+//DEF_INST(subtract_high_high_high_register)                      /*810*/
+//DEF_INST(subtract_high_high_low_register)                       /*810*/
+//DEF_INST(subtract_logical_high_high_high_register)              /*810*/
+//DEF_INST(subtract_logical_high_high_low_register)               /*810*/
+
+#endif /*defined(FEATURE_HIGH_WORD_FACILITY)*/                  /*810*/
+
+
 #if defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY)           /*810*/
 
 /*-------------------------------------------------------------------*/
