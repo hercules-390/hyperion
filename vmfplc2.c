@@ -85,6 +85,16 @@ struct options
     HETB    *hetfd;
 };
 
+/* Utility function to perform ascii to ebcdic translation on a string */
+void host_to_guest_str(unsigned char *d,char *s)
+{
+    int i;
+
+    for(i=0;s[i];i++)
+    {
+        d[i]=host_to_guest(s[i]);
+    }
+}
 
 /* Generic 'usage' routine in case of incorrect */
 /* invocation.                                  */
@@ -455,8 +465,8 @@ void addrecs(struct RECS *recs,unsigned char *bfr,int sz)
     switch(recs->recfm)
     {
         case 'V':
-            recd[0]=sz&0xff;
-            recd[1]=(sz>>8)&0xff;
+            recd[1]=sz&0xff;
+            recd[0]=(sz>>8)&0xff;
             append_data(recs->blocks,recd,2);
             append_data(recs->blocks,bfr,sz);
             recs->reccount++;
@@ -555,12 +565,38 @@ struct TAPE_BLOCKS *load_binary_file(char *infile,char recfm,int *recl,int *recc
 /* Load a textual file for DUMP function */
 struct TAPE_BLOCKS *load_text_file(char *infile,char recfm,int *recl,int *recc,size_t *filesz)
 {
-    UNREFERENCED(infile);
-    UNREFERENCED(recfm);
-    UNREFERENCED(recl);
-    UNREFERENCED(recc);
-    UNREFERENCED(filesz);
-    return NULL;
+    int     rsz;
+    FILE    *ifile;
+    char    bfr[65536];
+    unsigned char    bfr2[65536];
+    struct  RECS *recs;
+    char    *rec;
+
+    ifile=fopen(infile,"r");
+    if(ifile==NULL)
+    {
+        perror(infile);
+        return NULL;
+    }
+
+    recs=initrecs(recfm,*recl,plcd_hdr,5);
+    while((rec=fgets(bfr,sizeof(bfr),ifile))!=NULL)
+    {
+        rsz=strlen(rec)-1;
+        if(recfm=='F')
+        {
+            if(rsz<(*recl)) 
+            {
+                memset(&rec[rsz],' ',(*recl)-rsz);
+            }
+            rsz=(*recl);
+        }
+        rec[rsz]=0;
+        host_to_guest_str(bfr2,rec);
+        addrecs(recs,bfr2,rsz);
+    }
+    fclose(ifile);
+    return flushrecs(recs,recl,recc,filesz,0x40);
 }
 
 /* Load a structured file for DUMP function */
@@ -596,16 +632,6 @@ struct TAPE_BLOCKS *load_file(char *infile,char *filefmt,char recfm,int *recl,in
     return blks;
 }
 
-/* Utility function to perform ascii to ebcdic translation on a string */
-void host_to_guest_str(unsigned char *d,char *s)
-{
-    int i;
-
-    for(i=0;s[i];i++)
-    {
-        d[i]=host_to_guest(s[i]);
-    }
-}
 
 /* Convert a value to 16 bit Big Endian format */
 void big_endian_16(unsigned char *d,int s)
