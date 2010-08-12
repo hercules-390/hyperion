@@ -877,7 +877,7 @@ COMMAND("icount",    PANEL,         SYSCMDALL-SYSOPER,  icount_cmd,
 
 #ifdef OPTION_MIPS_COUNTING
 COMMAND("maxrates",  PANEL,         SYSCMDALL,          maxrates_cmd,
-  "Display maximum observed MIPS/SIOS rate for the defined interval or define a new reporting interval",
+  "Display maximum MIPS/SIOS rate or set a new reporting interval",
     "Format: \"maxrates [nnnn]\" where 'nnnn' is the desired reporting\n"
     "interval in minutes. Acceptable values are from 1 to 1440. The default\n"
     "is 1440 minutes (one day). Entering \"maxrates\" by itself displays\n"
