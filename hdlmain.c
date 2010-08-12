@@ -146,7 +146,22 @@ HDL_RESOLVER_SECTION;
     HDL_RESOLVE( z900_compute_message_digest              );
     HDL_RESOLVE( z900_compute_message_authentication_code );
 #endif /*defined(_900_FEATURE_MESSAGE_SECURITY_ASSIST)*/
-
+#if defined(_390) && defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3)
+    HDL_RESOLVE( s390_perform_cryptographic_key_management_operation );
+#endif
+#if defined(_900) && defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3)
+    HDL_RESOLVE( z900_perform_cryptographic_key_management_operation );
+#endif
+#if defined(_390) && defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4)
+    HDL_RESOLVE( s390_cipher_message_with_cipher_feedback );
+    HDL_RESOLVE( s390_cipher_message_with_counter         );
+    HDL_RESOLVE( s390_cipher_message_with_output_feedback );
+#endif
+#if defined(_390) && defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4)
+    HDL_RESOLVE( z900_cipher_message_with_cipher_feedback );
+    HDL_RESOLVE( z900_cipher_message_with_counter         );
+    HDL_RESOLVE( z900_cipher_message_with_output_feedback );
+#endif
 }
 END_RESOLVER_SECTION
 
