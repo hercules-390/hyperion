@@ -100,11 +100,11 @@
   #endif
 #endif
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
+#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
   #define KMCTR_BITS    { 0xf0, 0x00, 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
   #define KMF_BITS      { 0xf0, 0x00, 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
   #define KMO_BITS      { 0xf0, 0x00, 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-#endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
+#endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4 */
 
 
 /*----------------------------------------------------------------------------*/
@@ -1507,7 +1507,298 @@ static void ARCH_DEP(kmc_prng)(int r1, int r2, REGS *regs)
 }
 #endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
+#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
+/*----------------------------------------------------------------------------*/
+/* B9?? Cipher message with counter (KMCTR) FC 1, 2 and 3                     */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(kmctr_dea)(int r1, int r2, REGS *regs)
+{
+  int carry;
+  des_context context1;
+  des_context context2;
+  des_context context3;
+  int crypted;
+  int fc;
+  int i;
+  BYTE message_block[8];
+  BYTE ocv[8];
+  BYTE parameter_block[32];
+  int parameter_blocklen;
+  int r1_is_not_r2;
+
+  /* Check special conditions */
+  if(unlikely(GR_A(r2 + 1, regs) % 8))
+    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+  /* Return with cc 0 on zero length */
+  if(unlikely(!GR_A(r2 + 1, regs)))
+  {
+    regs->psw.cc = 0;
+    return;
+  }
+
+  /* Initialize values */
+  fc = GR0_fc(regs);
+  parameter_blocklen = fc * 8 + 8;
+
+  /* Test writeability output chaining value */
+  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 7, ACCTYPE_WRITE, regs);
+
+  /* Fetch the parameter block */
+  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+
+#ifdef OPTION_KMCTR_DEBUG
+  switch(fc)
+  {
+    case 1: /* dea */
+      LOGBYTE("icv   :", parameter_block, 8);
+      LOGBYTE("k     :", &parameter_block[8], 8);
+      break;
+
+    case 2: /* tdea-128 */
+      LOGBYTE("icv   :", parameter_block, 8);
+      LOGBYTE("k1    :", &parameter_block[8], 8);
+      LOGBYTE("k2    :", &parameter_block[16], 8);
+      break;
+
+    case 3: /* tdea-192 */
+      LOGBYTE("icv   :", parameter_block, 8);
+      LOGBYTE("k1    :", &parameter_block[8], 8);
+      LOGBYTE("k2    :", &parameter_block[16], 8);
+      LOGBYTE("k3    :", &parameter_block[24], 8);
+      break;
+  }
+#endif
+
+  /* Set the cryptographic key */
+  switch(fc)
+  {
+    case 1: /* dea */
+      des_set_key(&context1, &parameter_block[8]);
+      break;
+
+    case 2: /* tdea-128 */
+      des_set_key(&context1, &parameter_block[8]);
+      des_set_key(&context2, &parameter_block[16]);
+      break;
+
+    case 3: /* tdea-192 */
+      des_set_key(&context1, &parameter_block[8]);
+      des_set_key(&context2, &parameter_block[16]);
+      des_set_key(&context3, &parameter_block[24]);
+      break;
+  }
+
+  /* Try to process the CPU-determined amount of data */
+  r1_is_not_r2 = r1 != r2;
+  for(crypted = 0; crypted < PROCESS_MAX; crypted += 8)
+  {
+    /* Fetch a block of data */
+    ARCH_DEP(vfetchc)(message_block, 7, GR_A(r2, regs), r2, regs);
+
+#ifdef OPTION_KMCTR_DEBUG
+    LOGBYTE("input :", message_block, 8);
+#endif
+
+    /* Do the job */
+    switch(fc)
+    {
+      case 1: /* dea */
+        /* Encrypt, save and XOR */
+        des_encrypt(&context1, parameter_block, parameter_block);
+        memcpy(ocv, message_block, 8);
+        for(i = 0; i < 8; i++)
+          message_block[i] ^= parameter_block[i];
+        break;
+
+      case 2: /* tdea-128 */
+        /* Encrypt, save and XOR */
+        des_encrypt(&context1, parameter_block, parameter_block);
+        des_decrypt(&context2, parameter_block, parameter_block);
+        des_encrypt(&context1, parameter_block, parameter_block);
+        memcpy(ocv, message_block, 8);
+        for(i = 0 ; i < 8; i++)
+            message_block[i] ^= parameter_block[i];
+        break;
+
+      case 3: /* tdea-192 */
+        /* Encrypt, save and XOR */
+        des_encrypt(&context1, parameter_block, parameter_block);
+        des_decrypt(&context2, parameter_block, parameter_block);
+        des_encrypt(&context3, parameter_block, parameter_block);
+        memcpy(ocv, message_block, 8);
+        for(i = 0; i < 8; i++)
+          message_block[i] ^= parameter_block[i];
+        break;
+    }
+
+    /* Store the output */
+    ARCH_DEP(vstorec)(message_block, 7, GR_A(r1, regs), r1, regs);
+
+#ifdef OPTION_KMCTR_DEBUG
+    LOGBYTE("output:", message_block, 8);
+#endif
+
+    /* Increase OCV */
+    carry = 1;
+    for(i = 0; i < 8; i--)
+    {
+      ocv[7 - i] += carry;
+      if(!ocv[7 - i])
+        carry = 1;
+      else
+        carry = 0;
+    } 
+
+    /* Store the output chaining value */
+    ARCH_DEP(vstorec)(ocv, 7, GR_A(1, regs), 1, regs);
+
+#ifdef OPTION_KMCTR_DEBUG
+    LOGBYTE("ocv   :", ocv, 8);
+#endif
+
+    /* Update the registers */
+    SET_GR_A(r1, regs, GR_A(r1, regs) + 8);
+    if(likely(r1_is_not_r2))
+      SET_GR_A(r2, regs, GR_A(r2, regs) + 8);
+    SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - 8);
+
+#ifdef OPTION_KMCTR_DEBUG
+    logmsg("  GR%02d  : " F_GREG "\n", r1, (regs)->GR(r1));
+    logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
+    logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
+#endif
+
+    /* check for end of data */
+    if(unlikely(!GR_A(r2 + 1, regs)))
+    {
+      regs->psw.cc = 0;
+      return;
+    }
+
+    /* Set cv for next 8 bytes */
+    memcpy(parameter_block, ocv, 8);
+  }
+
+  /* CPU-determined amount of data processed */
+  regs->psw.cc = 3;
+}
+
+/*----------------------------------------------------------------------------*/
+/* B9?? Cipher message with counter (KMCTR) FC 18, 19 and 20                  */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(kmctr_aes)(int r1, int r2, REGS *regs)
+{
+  int carry;
+  aes_context context;
+  int crypted;
+  int fc;
+  int i;
+  BYTE message_block[16];
+  BYTE ocv[16];
+  BYTE parameter_block[48];
+  int parameter_blocklen;
+  int r1_is_not_r2;
+
+  /* Check special conditions */
+  if(unlikely(GR_A(r2 + 1, regs) % 16))
+    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+  /* Return with cc 0 on zero length */
+  if(unlikely(!GR_A(r2 + 1, regs)))
+  {
+    regs->psw.cc = 0;
+    return;
+  }
+
+  /* Initialize values */
+  fc = GR0_fc(regs) - 17;
+  parameter_blocklen = fc * 8 + 24;
+
+  /* Test writeability output chaining value */
+  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 15, ACCTYPE_WRITE, regs);
+
+  /* Fetch the parameter block */
+  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+
+#ifdef OPTION_KMCTR_DEBUG
+  LOGBYTE("icv   :", parameter_block, 16);
+  LOGBYTE("k     :", &parameter_block[16], parameter_blocklen - 16);
+#endif
+
+  /* Set the cryptographic key */
+  aes_set_key(&context, &parameter_block[16], 64 * (fc + 1));
+
+  /* Try to process the CPU-determined amount of data */
+  r1_is_not_r2 = r1 != r2;
+  for(crypted = 0; crypted < PROCESS_MAX; crypted += 16)
+  {
+    /* Fetch a block of data */
+    ARCH_DEP(vfetchc)(message_block, 15, GR_A(r2, regs), r2, regs);
+
+#ifdef OPTION_KMCTR_DEBUG
+    LOGBYTE("input :", message_block, 16);
+#endif
+
+    /* Do the job */
+    /* Encrypt, save and XOR */
+    aes_encrypt(&context, parameter_block, parameter_block);
+    memcpy(ocv, message_block, 16);
+    for(i = 0; i < 16; i++)
+      message_block[i] ^= parameter_block[i];
+
+    /* Store the output */
+    ARCH_DEP(vstorec)(message_block, 15, GR_A(r1, regs), r1, regs);
+
+#ifdef OPTION_KMCTR_DEBUG
+    LOGBYTE("output:", message_block, 16);
+#endif
+
+    /* Increase OCV */
+    carry = 1;
+    for(i = 0; i < 16; i--)
+    {
+      ocv[15 - i] += carry;
+      if(!ocv[15 - i])
+        carry = 1;
+      else
+        carry = 0;
+    }
+
+    /* Store the output chaining value */
+    ARCH_DEP(vstorec)(ocv, 15, GR_A(1, regs), 1, regs);
+
+#ifdef OPTION_KMCTR_DEBUG
+    LOGBYTE("ocv   :", ocv, 16);
+#endif
+
+    /* Update the registers */
+    SET_GR_A(r1, regs, GR_A(r1, regs) + 16);
+    if(likely(r1_is_not_r2))
+      SET_GR_A(r2, regs, GR_A(r2, regs) + 16);
+    SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - 16);
+
+#ifdef OPTION_KMCTR_DEBUG
+    logmsg("  GR%02d  : " F_GREG "\n", r1, (regs)->GR(r1));
+    logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
+    logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
+#endif
+
+    /* check for end of data */
+    if(unlikely(!GR_A(r2 + 1, regs)))
+    {
+      regs->psw.cc = 0;
+      return;
+    }
+
+    /* Set cv for next 16 bytes */
+    memcpy(parameter_block, ocv, 16);
+  }
+
+  /* CPU-determined amount of data processed */
+  regs->psw.cc = 3;
+}
+
 /*----------------------------------------------------------------------------*/
 /* B9?? Cipher message with cipher feedback (KMF) FC 1, 2 and 3               */
 /*----------------------------------------------------------------------------*/
@@ -1828,297 +2119,6 @@ static void ARCH_DEP(kmf_aes)(int r1, int r2, REGS *regs)
 }
 
 /*----------------------------------------------------------------------------*/
-/* B9?? Cipher message with counter (KMCTR) FC 1, 2 and 3                     */
-/*----------------------------------------------------------------------------*/
-static void ARCH_DEP(kmctr_dea)(int r1, int r2, REGS *regs)
-{
-  int carry;
-  des_context context1;
-  des_context context2;
-  des_context context3;
-  int crypted;
-  int fc;
-  int i;
-  BYTE message_block[8];
-  BYTE ocv[8];
-  BYTE parameter_block[32];
-  int parameter_blocklen;
-  int r1_is_not_r2;
-
-  /* Check special conditions */
-  if(unlikely(GR_A(r2 + 1, regs) % 8))
-    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-
-  /* Return with cc 0 on zero length */
-  if(unlikely(!GR_A(r2 + 1, regs)))
-  {
-    regs->psw.cc = 0;
-    return;
-  }
-
-  /* Initialize values */
-  fc = GR0_fc(regs);
-  parameter_blocklen = fc * 8 + 8;
-
-  /* Test writeability output chaining value */
-  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 7, ACCTYPE_WRITE, regs);
-
-  /* Fetch the parameter block */
-  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
-
-#ifdef OPTION_KMCTR_DEBUG
-  switch(fc)
-  {
-    case 1: /* dea */
-      LOGBYTE("icv   :", parameter_block, 8);
-      LOGBYTE("k     :", &parameter_block[8], 8);
-      break;
-
-    case 2: /* tdea-128 */
-      LOGBYTE("icv   :", parameter_block, 8);
-      LOGBYTE("k1    :", &parameter_block[8], 8);
-      LOGBYTE("k2    :", &parameter_block[16], 8);
-      break;
-
-    case 3: /* tdea-192 */
-      LOGBYTE("icv   :", parameter_block, 8);
-      LOGBYTE("k1    :", &parameter_block[8], 8);
-      LOGBYTE("k2    :", &parameter_block[16], 8);
-      LOGBYTE("k3    :", &parameter_block[24], 8);
-      break;
-  }
-#endif
-
-  /* Set the cryptographic key */
-  switch(fc)
-  {
-    case 1: /* dea */
-      des_set_key(&context1, &parameter_block[8]);
-      break;
-
-    case 2: /* tdea-128 */
-      des_set_key(&context1, &parameter_block[8]);
-      des_set_key(&context2, &parameter_block[16]);
-      break;
-
-    case 3: /* tdea-192 */
-      des_set_key(&context1, &parameter_block[8]);
-      des_set_key(&context2, &parameter_block[16]);
-      des_set_key(&context3, &parameter_block[24]);
-      break;
-  }
-
-  /* Try to process the CPU-determined amount of data */
-  r1_is_not_r2 = r1 != r2;
-  for(crypted = 0; crypted < PROCESS_MAX; crypted += 8)
-  {
-    /* Fetch a block of data */
-    ARCH_DEP(vfetchc)(message_block, 7, GR_A(r2, regs), r2, regs);
-
-#ifdef OPTION_KMCTR_DEBUG
-    LOGBYTE("input :", message_block, 8);
-#endif
-
-    /* Do the job */
-    switch(fc)
-    {
-      case 1: /* dea */
-        /* Encrypt, save and XOR */
-        des_encrypt(&context1, parameter_block, parameter_block);
-        memcpy(ocv, message_block, 8);
-        for(i = 0; i < 8; i++)
-          message_block[i] ^= parameter_block[i];
-        break;
-
-      case 2: /* tdea-128 */
-        /* Encrypt, save and XOR */
-        des_encrypt(&context1, parameter_block, parameter_block);
-        des_decrypt(&context2, parameter_block, parameter_block);
-        des_encrypt(&context1, parameter_block, parameter_block);
-        memcpy(ocv, message_block, 8);
-        for(i = 0 ; i < 8; i++)
-            message_block[i] ^= parameter_block[i];
-        break;
-
-      case 3: /* tdea-192 */
-        /* Encrypt, save and XOR */
-        des_encrypt(&context1, parameter_block, parameter_block);
-        des_decrypt(&context2, parameter_block, parameter_block);
-        des_encrypt(&context3, parameter_block, parameter_block);
-        memcpy(ocv, message_block, 8);
-        for(i = 0; i < 8; i++)
-          message_block[i] ^= parameter_block[i];
-        break;
-    }
-
-    /* Store the output */
-    ARCH_DEP(vstorec)(message_block, 7, GR_A(r1, regs), r1, regs);
-
-#ifdef OPTION_KMCTR_DEBUG
-    LOGBYTE("output:", message_block, 8);
-#endif
-
-    /* Increase OCV */
-    carry = 1;
-    for(i = 0; i < 8; i--)
-    {
-      ocv[7 - i] += carry;
-      if(!ocv[7 - i])
-        carry = 1;
-      else
-        carry = 0;
-    } 
-
-    /* Store the output chaining value */
-    ARCH_DEP(vstorec)(ocv, 7, GR_A(1, regs), 1, regs);
-
-#ifdef OPTION_KMCTR_DEBUG
-    LOGBYTE("ocv   :", ocv, 8);
-#endif
-
-    /* Update the registers */
-    SET_GR_A(r1, regs, GR_A(r1, regs) + 8);
-    if(likely(r1_is_not_r2))
-      SET_GR_A(r2, regs, GR_A(r2, regs) + 8);
-    SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - 8);
-
-#ifdef OPTION_KMCTR_DEBUG
-    logmsg("  GR%02d  : " F_GREG "\n", r1, (regs)->GR(r1));
-    logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
-    logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
-#endif
-
-    /* check for end of data */
-    if(unlikely(!GR_A(r2 + 1, regs)))
-    {
-      regs->psw.cc = 0;
-      return;
-    }
-
-    /* Set cv for next 8 bytes */
-    memcpy(parameter_block, ocv, 8);
-  }
-
-  /* CPU-determined amount of data processed */
-  regs->psw.cc = 3;
-}
-
-/*----------------------------------------------------------------------------*/
-/* B9?? Cipher message with counter (KMCTR) FC 18, 19 and 20                  */
-/*----------------------------------------------------------------------------*/
-static void ARCH_DEP(kmctr_aes)(int r1, int r2, REGS *regs)
-{
-  int carry;
-  aes_context context;
-  int crypted;
-  int fc;
-  int i;
-  BYTE message_block[16];
-  BYTE ocv[16];
-  BYTE parameter_block[48];
-  int parameter_blocklen;
-  int r1_is_not_r2;
-
-  /* Check special conditions */
-  if(unlikely(GR_A(r2 + 1, regs) % 16))
-    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-
-  /* Return with cc 0 on zero length */
-  if(unlikely(!GR_A(r2 + 1, regs)))
-  {
-    regs->psw.cc = 0;
-    return;
-  }
-
-  /* Initialize values */
-  fc = GR0_fc(regs) - 17;
-  parameter_blocklen = fc * 8 + 24;
-
-  /* Test writeability output chaining value */
-  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 15, ACCTYPE_WRITE, regs);
-
-  /* Fetch the parameter block */
-  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
-
-#ifdef OPTION_KMCTR_DEBUG
-  LOGBYTE("icv   :", parameter_block, 16);
-  LOGBYTE("k     :", &parameter_block[16], parameter_blocklen - 16);
-#endif
-
-  /* Set the cryptographic key */
-  aes_set_key(&context, &parameter_block[16], 64 * (fc + 1));
-
-  /* Try to process the CPU-determined amount of data */
-  r1_is_not_r2 = r1 != r2;
-  for(crypted = 0; crypted < PROCESS_MAX; crypted += 16)
-  {
-    /* Fetch a block of data */
-    ARCH_DEP(vfetchc)(message_block, 15, GR_A(r2, regs), r2, regs);
-
-#ifdef OPTION_KMCTR_DEBUG
-    LOGBYTE("input :", message_block, 16);
-#endif
-
-    /* Do the job */
-    /* Encrypt, save and XOR */
-    aes_encrypt(&context, parameter_block, parameter_block);
-    memcpy(ocv, message_block, 16);
-    for(i = 0; i < 16; i++)
-      message_block[i] ^= parameter_block[i];
-
-    /* Store the output */
-    ARCH_DEP(vstorec)(message_block, 15, GR_A(r1, regs), r1, regs);
-
-#ifdef OPTION_KMCTR_DEBUG
-    LOGBYTE("output:", message_block, 16);
-#endif
-
-    /* Increase OCV */
-    carry = 1;
-    for(i = 0; i < 16; i--)
-    {
-      ocv[15 - i] += carry;
-      if(!ocv[15 - i])
-        carry = 1;
-      else
-        carry = 0;
-    }
-
-    /* Store the output chaining value */
-    ARCH_DEP(vstorec)(ocv, 15, GR_A(1, regs), 1, regs);
-
-#ifdef OPTION_KMCTR_DEBUG
-    LOGBYTE("ocv   :", ocv, 16);
-#endif
-
-    /* Update the registers */
-    SET_GR_A(r1, regs, GR_A(r1, regs) + 16);
-    if(likely(r1_is_not_r2))
-      SET_GR_A(r2, regs, GR_A(r2, regs) + 16);
-    SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - 16);
-
-#ifdef OPTION_KMCTR_DEBUG
-    logmsg("  GR%02d  : " F_GREG "\n", r1, (regs)->GR(r1));
-    logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
-    logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
-#endif
-
-    /* check for end of data */
-    if(unlikely(!GR_A(r2 + 1, regs)))
-    {
-      regs->psw.cc = 0;
-      return;
-    }
-
-    /* Set cv for next 16 bytes */
-    memcpy(parameter_block, ocv, 16);
-  }
-
-  /* CPU-determined amount of data processed */
-  regs->psw.cc = 3;
-}
-
-/*----------------------------------------------------------------------------*/
 /* B9?? Cipher message with output feedback (KMO) FC 1, 2 and 3               */
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(kmo_dea)(int r1, int r2, REGS *regs)
@@ -2384,7 +2384,7 @@ static void ARCH_DEP(kmo_aes)(int r1, int r2, REGS *regs)
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
 }
-#endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
+#endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4 */
 
 /*----------------------------------------------------------------------------*/
 /* B93E/B93F KIMD/KLMD  - Compute intermediate/last message digest      [RRE] */
@@ -2608,7 +2608,7 @@ DEF_INST(cipher_message_with_chaining_d)
   }
 }
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
+#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
 /*----------------------------------------------------------------------------*/
 /* B9?? KMCTR - Cipher message with counter                             [RRE] */
 /*----------------------------------------------------------------------------*/
@@ -2795,7 +2795,7 @@ DEF_INST(cipher_message_with_output_feedback_d)
       break;
   }
 }
-#endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
+#endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4 */
 
 #endif /*defined(FEATURE_MESSAGE_SECURITY_ASSIST)*/
 
