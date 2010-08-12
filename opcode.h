@@ -3510,6 +3510,19 @@ DEF_INST(subtract_high_high_low_register);                      /*810*/
 DEF_INST(subtract_logical_high_high_high_register);             /*810*/
 DEF_INST(subtract_logical_high_high_low_register);              /*810*/
 
+DEF_INST(load_and_add);                                         /*810*/
+DEF_INST(load_and_add_long);                                    /*810*/
+DEF_INST(load_and_add_logical);                                 /*810*/
+DEF_INST(load_and_add_logical_long);                            /*810*/
+DEF_INST(load_and_and);                                         /*810*/
+DEF_INST(load_and_and_long);                                    /*810*/
+DEF_INST(load_and_exclusive_or);                                /*810*/
+DEF_INST(load_and_exclusive_or_long);                           /*810*/
+DEF_INST(load_and_or);                                          /*810*/
+DEF_INST(load_and_or_long);                                     /*810*/
+DEF_INST(load_pair_disjoint);                                   /*810*/
+DEF_INST(load_pair_disjoint_long);                              /*810*/
+
 DEF_INST(load_on_condition_register);                           /*810*/
 DEF_INST(load_on_condition_long_register);                      /*810*/
 DEF_INST(load_on_condition);                                    /*810*/

@@ -2429,6 +2429,260 @@ int     r1, r2, r3;                     /* Values of R fields        */
 #endif /*defined(FEATURE_HIGH_WORD_FACILITY)*/                  /*810*/
 
 
+#if defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)                /*810*/
+
+/*-------------------------------------------------------------------*/
+/* Load and Perform Interlocked Access Operation                     */
+/* Subroutine called by LAA,LAAL,LAN,LAX,LAO instructions            */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_and_perform_interlocked_access)                   /*810*/
+{
+int     r1, r3;                         /* Register numbers          */
+int     b2;                             /* Base of effective addr    */
+VADR    addr2;                          /* Effective address         */
+BYTE    *m2;                            /* Mainstor address          */
+U32     v2, v3;                         /* Operand values            */
+U32     result;                         /* Result value              */
+U32     old, new;                       /* Values for cmpxchg4       */
+int     cc;                             /* Condition code            */
+int     rc;                             /* Return code               */
+BYTE    opcode;                         /* 2nd byte of opcode        */
+
+    RSY(inst, regs, r1, r3, b2, addr2);
+
+    /* Extract second byte of instruction opcode */
+    opcode = inst[5];
+
+    /* Obtain third operand value from R3 register */
+    v3 = regs->GR_L(r3);
+
+    /* Get mainstor address of storage operand */
+    m2 = MADDRL (addr2, 4, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+
+    do {
+        /* Load storage operand value from operand address */
+        v2 = ARCH_DEP(vfetch4) ( addr2, b2, regs );
+
+        switch (opcode) {
+        case 0xF4: /* Load and And */
+            /* AND operand values and set condition code */
+            result = v2 & v3;
+            cc = result ? 1 : 0;
+            break;
+        case 0xF6: /* Load and Or */
+            /* OR operand values and set condition code */
+            result = v2 | v3;
+            cc = result ? 1 : 0;
+            break;
+        case 0xF7: /* Load and Exclusive Or */
+            /* XOR operand values and set condition code */
+            result = v2 ^ v3;
+            cc = result ? 1 : 0;
+            break;
+        case 0xF8: /* Load and Add */
+            /* Add signed operands and set condition code */
+            cc = add_signed (&result, v2, v3);
+            break;
+        case 0xFA: /* Load and Add Logical */
+            /* Add unsigned operands and set condition code */
+            cc = add_logical (&result, v2, v3);
+            break;
+        } /* end switch(opcode) */
+
+        /* Interlocked exchange to storage location */
+        old = CSWAP32(v2);
+        new = CSWAP32(result);
+        rc = cmpxchg4 (&old, new, m2);
+
+    } while (rc != 0);
+
+    /* Load original storage operand value into R1 register */
+    regs->GR_L(r1) = v2;
+
+    /* Set condition code in PSW */
+    regs->psw.cc = cc;
+
+} /* end DEF_INST(load_and_perform_interlocked_access) */
+
+/*-------------------------------------------------------------------*/
+/* Load and Perform Interlocked Access Operation Long                */
+/* Subroutine called by LAAG,LAALG,LANG,LAXG,LAOG instructions       */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_and_perform_interlocked_access_long)              /*810*/
+{
+int     r1, r3;                         /* Register numbers          */
+int     b2;                             /* Base of effective addr    */
+VADR    addr2;                          /* Effective address         */
+BYTE    *m2;                            /* Mainstor address          */
+U64     v2, v3;                         /* Operand values            */
+U64     result;                         /* Result value              */
+U64     old, new;                       /* Values for cmpxchg4       */
+int     cc;                             /* Condition code            */
+int     rc;                             /* Return code               */
+BYTE    opcode;                         /* 2nd byte of opcode        */
+
+    RSY(inst, regs, r1, r3, b2, addr2);
+
+    /* Extract second byte of instruction opcode */
+    opcode = inst[5];
+
+    /* Obtain third operand value from R3 register */
+    v3 = regs->GR_G(r3);
+
+    /* Get mainstor address of storage operand */
+    m2 = MADDRL (addr2, 8, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+
+    do {
+        /* Load storage operand value from operand address */
+        v2 = ARCH_DEP(vfetch8) ( addr2, b2, regs );
+
+        switch (opcode) {
+        case 0xE4: /* Load and And Long */
+            /* AND operand values and set condition code */
+            result = v2 & v3;
+            cc = result ? 1 : 0;
+            break;
+        case 0xE6: /* Load and Or Long */
+            /* OR operand values and set condition code */
+            result = v2 | v3;
+            cc = result ? 1 : 0;
+            break;
+        case 0xE7: /* Load and Exclusive Or Long */
+            /* XOR operand values and set condition code */
+            result = v2 ^ v3;
+            cc = result ? 1 : 0;
+            break;
+        case 0xE8: /* Load and Add Long */
+            /* Add signed operands and set condition code */
+            cc = add_signed_long (&result, v2, v3);
+            break;
+        case 0xEA: /* Load and Add Logical Long */
+            /* Add unsigned operands and set condition code */
+            cc = add_logical_long (&result, v2, v3);
+            break;
+        } /* end switch(opcode) */
+
+        /* Interlocked exchange to storage location */
+        old = CSWAP64(v2);
+        new = CSWAP64(result);
+        rc = cmpxchg8 (&old, new, m2);
+
+    } while (rc != 0);
+
+    /* Load original storage operand value into R1 register */
+    regs->GR_G(r1) = v2;
+
+    /* Set condition code in PSW */
+    regs->psw.cc = cc;
+
+} /* end DEF_INST(load_and_perform_interlocked_access_long) */
+
+
+/*-------------------------------------------------------------------*/
+/* EBF8 LAA   - Load and Add                                   [RSY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_and_add)                                          /*810*/
+{
+    ARCH_DEP(load_and_perform_interlocked_access) (inst, regs);
+
+    /* Program check if fixed-point overflow */
+    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+        regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+
+} /* end DEF_INST(load_and_add) */
+
+
+/*-------------------------------------------------------------------*/
+/* EBE8 LAAG  - Load and Add Long                              [RSY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_and_add_long)                                     /*810*/
+{
+    ARCH_DEP(load_and_perform_interlocked_access_long) (inst, regs);
+
+    /* Program check if fixed-point overflow */
+    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+        regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+
+} /* end DEF_INST(load_and_add_long) */
+
+
+/*-------------------------------------------------------------------*/
+/* EBFA LAAL  - Load and Add Logical                           [RSY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_and_add_logical)                                  /*810*/
+{
+    ARCH_DEP(load_and_perform_interlocked_access) (inst, regs);
+} /* end DEF_INST(load_and_add_logical) */
+
+
+/*-------------------------------------------------------------------*/
+/* EBEA LAALG - Load and Add Logical Long                      [RSY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_and_add_logical_long)                             /*810*/
+{
+    ARCH_DEP(load_and_perform_interlocked_access_long) (inst, regs);
+} /* end DEF_INST(load_and_add_logical_long) */
+
+
+/*-------------------------------------------------------------------*/
+/* EBF4 LAN   - Load and And                                   [RSY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_and_and)                                          /*810*/
+{
+    ARCH_DEP(load_and_perform_interlocked_access) (inst, regs);
+} /* end DEF_INST(load_and_and) */
+
+
+/*-------------------------------------------------------------------*/
+/* EBE4 LANG  - Load and And Long                              [RSY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_and_and_long)                                     /*810*/
+{
+    ARCH_DEP(load_and_perform_interlocked_access_long) (inst, regs);
+} /* end DEF_INST(load_and_and_long) */
+
+
+/*-------------------------------------------------------------------*/
+/* EBF7 LAX   - Load and Exclusive Or                          [RSY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_and_exclusive_or)                                 /*810*/
+{
+    ARCH_DEP(load_and_perform_interlocked_access) (inst, regs);
+} /* end DEF_INST(load_and_exclusive_or) */
+
+
+/*-------------------------------------------------------------------*/
+/* EBE7 LAXG  - Load and Exclusive Or Long                     [RSY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_and_exclusive_or_long)                            /*810*/
+{
+    ARCH_DEP(load_and_perform_interlocked_access_long) (inst, regs);
+} /* end DEF_INST(load_and_exclusive_or_long) */
+
+
+/*-------------------------------------------------------------------*/
+/* EBF6 LAO   - Load and Or                                    [RSY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_and_or)                                           /*810*/
+{
+    ARCH_DEP(load_and_perform_interlocked_access) (inst, regs);
+} /* end DEF_INST(load_and_or) */
+
+
+/*-------------------------------------------------------------------*/
+/* EBE6 LAOG  - Load and Or Long                               [RSY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_and_or_long)                                      /*810*/
+{
+    ARCH_DEP(load_and_perform_interlocked_access_long) (inst, regs);
+} /* end DEF_INST(load_and_or_long) */
+
+
+//DEF_INST(load_pair_disjoint)                                    /*810*/
+//DEF_INST(load_pair_disjoint_long)                               /*810*/
+#endif /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)*/         /*810*/
+
+
 #if defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY)           /*810*/
 
 /*-------------------------------------------------------------------*/
