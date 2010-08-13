@@ -186,35 +186,6 @@
    for any 2nd level table that has at least 1 GENx37X
    entry */
 
-#define GENx37Xx390x___X(_name,_format,_mnemonic) \
-    { \
-    _GEN370(operation_exception) \
-    _GEN390(_name) \
-    _GEN900(operation_exception) \
-    _GEN37XX(_name) \
-        (void*)&disasm_ ## _format, \
-        (void*)& _mnemonic "\0" #_name \
-    }
-
-#define GENx37Xx___x900X(_name,_format,_mnemonic) \
-    { \
-    _GEN370(operation_exception) \
-    _GEN390(operation_exception) \
-    _GEN900(_name) \
-    _GEN37XX(_name) \
-        (void*)&disasm_ ## _format, \
-        (void*)& _mnemonic "\0" #_name \
-    }
-
-#define GENx37Xx390x900X(_name,_format,_mnemonic) \
-    { \
-    _GEN370(operation_exception) \
-    _GEN390(_name) \
-    _GEN900(_name) \
-    _GEN37XX(_name) \
-        (void*)&disasm_ ## _format, \
-        (void*)& _mnemonic "\0" #_name \
-    }
 #define GENx370x390x___X(_name,_format,_mnemonic) \
     { \
     _GEN370(_name) \
@@ -304,6 +275,10 @@ OPC_DLL_IMPORT zz_func opcode_edxx[][GEN_MAXARCH];
 typedef int (*func) ();
 
 extern int disasm_table (BYTE inst[], char mnemonic[], char *p);
+
+OPC_DLL_IMPORT  zz_func s370_opcode_replace_instruction(zz_func newfun,int code1,int code2);
+// OPC_DLL_IMPORT  zz_func s390_opcode_replace_instruction(zz_func newfun,int code1,int code2);
+// OPC_DLL_IMPORT  zz_func z900_opcode_replace_instruction(zz_func newfun,int code1,int code2);
 
 
 #if defined(OPTION_INSTRUCTION_COUNTING)
@@ -3003,6 +2978,10 @@ DEF_INST(execute_b2xx);
 DEF_INST(execute_b3xx);
 DEF_INST(execute_b9xx);
 DEF_INST(execute_c0xx);
+DEF_INST(execute_c2xx);
+DEF_INST(execute_c4xx);
+DEF_INST(execute_c6xx);
+DEF_INST(execute_c8xx);
 DEF_INST(execute_e3xx);
 DEF_INST(execute_e4xx);
 DEF_INST(execute_e5xx);

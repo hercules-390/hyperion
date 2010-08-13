@@ -130,6 +130,7 @@ endif
 
 dynamic_SRC        = dyngui.c   \
                      dyninst.c  \
+                     s37x.c     \
                      hdteq.c
 
 dyndev_SRC         = commadpt.c  \
@@ -218,6 +219,7 @@ endif
 
   HERCMODS = dyngui.la   \
              dyninst.la  \
+             s37x.la     \
              hdteq.la    \
              hdt1403.la  \
              hdt2703.la  \
@@ -271,6 +273,10 @@ if OPTION_DYNAMIC_LOAD
   dyninst_la_SOURCES = dyninst.c
   dyninst_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
   dyninst_la_LIBADD  = $(DYNMOD_LD_ADD)
+
+  s37x_la_SOURCES    = s37x.c
+  s37x_la_LDFLAGS    = $(DYNMOD_LD_FLAGS)
+  s37x_la_LIBADD     = $(DYNMOD_LD_ADD)
 
   hdteq_la_SOURCES   = hdteq.c
   hdteq_la_LDFLAGS   = $(DYNMOD_LD_FLAGS)
@@ -483,6 +489,7 @@ else
   HLDFLAGS = -dlopen self         \
              -dlopen dyngui.la    \
              -dlopen dyninst.la   \
+             -dlopen s37x.la      \
              -dlopen hdteq.la     \
              -dlopen hdt1403.la   \
              -dlopen hdt3420.la   \
@@ -497,6 +504,7 @@ else
 
   HDEPS    = dyngui.la    \
              dyninst.la   \
+             s37x.la      \
              hdteq.la     \
              hdt1403.la   \
              hdt3420.la   \

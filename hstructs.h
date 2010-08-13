@@ -269,8 +269,9 @@ struct REGS {                           /* Processor registers       */
      /* Opcode table pointers                                        */
         FUNC    *current_opcode_table;
 
-        FUNC    s370_opcode_table[256];
-        FUNC   *s370_opcode_a4xx,
+        FUNC   *s370_opcode_table,
+               *s370_opcode_01xx,
+               *s370_opcode_a4xx,
                *s370_opcode_a5xx,
                *s370_opcode_a6xx,
  #if defined(MULTI_BYTE_ASSIST)
@@ -292,6 +293,8 @@ struct REGS {                           /* Processor registers       */
                *s370_opcode_c2xx,                               /*208*/
                *s370_opcode_c4xx,                               /*208*/
                *s370_opcode_c6xx,                               /*208*/
+               *s370_opcode_c8xx,                               /*810*/
+               *s370_opcode_ccxx,                               /*810*/
                *s370_opcode_e4xx,
                *s370_opcode_e5xx,
                *s370_opcode_e6xx,
@@ -299,8 +302,8 @@ struct REGS {                           /* Processor registers       */
                *s370_opcode_edxx;
 
 #if defined(OPTION_370_EXTENSION)
-        FUNC    s37X_opcode_table[256];
-        FUNC   *s37X_opcode_a4xx,
+        FUNC   *s37X_opcode_table,
+               *s37X_opcode_a4xx,
                *s37X_opcode_a5xx,
                *s37X_opcode_a6xx,
  #if defined(MULTI_BYTE_ASSIST)
@@ -322,6 +325,8 @@ struct REGS {                           /* Processor registers       */
                *s37X_opcode_c2xx,                               /*208*/
                *s37X_opcode_c4xx,                               /*208*/
                *s37X_opcode_c6xx,                               /*208*/
+               *s37X_opcode_c8xx,                               /*810*/
+               *s37X_opcode_ccxx,                               /*810*/
                *s37X_opcode_e4xx,
                *s37X_opcode_e5xx,
                *s37X_opcode_e6xx,
@@ -329,8 +334,8 @@ struct REGS {                           /* Processor registers       */
                *s37X_opcode_edxx;
 #endif /* defined(OPTION_370_EXTENSION) */
 
-        FUNC    s390_opcode_table[256];
-        FUNC   *s390_opcode_01xx,
+        FUNC   *s390_opcode_table,
+               *s390_opcode_01xx,
                *s390_opcode_a4xx,
                *s390_opcode_a5xx,
                *s390_opcode_a6xx,
@@ -353,14 +358,18 @@ struct REGS {                           /* Processor registers       */
                *s390_opcode_c2xx,
                *s390_opcode_c4xx,                               /*208*/
                *s390_opcode_c6xx,                               /*208*/
+               *s390_opcode_c8xx,                               /*810*/
+               *s390_opcode_ccxx,                               /*810*/
                *s390_opcode_e4xx,
                *s390_opcode_e5xx,
+               *s390_opcode_e6xx,
                *s390_opcode_ecxx,
                *s390_opcode_edxx;
 
-        FUNC    z900_opcode_table[256];
-        FUNC   *z900_opcode_01xx,
+        FUNC   *z900_opcode_table,
+               *z900_opcode_01xx,
                *z900_opcode_a5xx,
+               *z900_opcode_e6xx,
  #if defined(MULTI_BYTE_ASSIST)
                 z900_opcode_a7xx[256],
                 z900_opcode_b2xx[256],

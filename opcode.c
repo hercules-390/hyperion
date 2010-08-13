@@ -22,7 +22,6 @@
 
 #include "feature.h"
 
-
 #if !defined(_GEN_ARCH)
 
 #if defined(_ARCHMODE3)
@@ -39,11 +38,9 @@
 
 #endif /*!defined(_GEN_ARCH)*/
 
-
 #include "hercules.h"
 
 #include "opcode.h"
-
 
 #define UNDEF_INST(_x) \
         DEF_INST(_x) { ARCH_DEP(operation_exception) \
@@ -370,17 +367,19 @@
 
 #if !defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)               /*810*/
  UNDEF_INST(load_and_add)                                       /*810*/
- UNDEF_INST(load_and_add_long)                                  /*810*/
  UNDEF_INST(load_and_add_logical)                               /*810*/
- UNDEF_INST(load_and_add_logical_long)                          /*810*/
  UNDEF_INST(load_and_and)                                       /*810*/
- UNDEF_INST(load_and_and_long)                                  /*810*/
  UNDEF_INST(load_and_exclusive_or)                              /*810*/
- UNDEF_INST(load_and_exclusive_or_long)                         /*810*/
  UNDEF_INST(load_and_or)                                        /*810*/
- UNDEF_INST(load_and_or_long)                                   /*810*/
  UNDEF_INST(load_pair_disjoint)                                 /*810*/
+#if !defined(FEATURE_INTERLOCKED_ACCESS_FACILITY) || !defined(FEATURE_ESAME)
+ UNDEF_INST(load_and_add_logical_long)                          /*810*/
+ UNDEF_INST(load_and_add_long)                                  /*810*/
+ UNDEF_INST(load_and_and_long)                                  /*810*/
+ UNDEF_INST(load_and_exclusive_or_long)                         /*810*/
+ UNDEF_INST(load_and_or_long)                                   /*810*/
  UNDEF_INST(load_pair_disjoint_long)                            /*810*/
+#endif
 #endif /*!defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)*/        /*810*/
 
 #if !defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY)          /*810*/
@@ -423,9 +422,11 @@
 
 #if !defined(FEATURE_VECTOR_FACILITY)
  UNDEF_INST(execute_a4xx)
+#if 0
  #if !defined(FEATURE_ESAME) && !defined(FEATURE_ESAME_N3_ESA390)
   UNDEF_INST(execute_a5xx)
  #endif /*!defined(FEATURE_ESAME) && !defined(FEATURE_ESAME_N3_ESA390)*/
+#endif
 
  UNDEF_INST(execute_a6xx)
  UNDEF_INST(execute_e4xx)
@@ -459,6 +460,7 @@
 #endif /*!defined(FEATURE_VECTOR_FACILITY)*/
 
 
+#if 0
 #if !defined(FEATURE_ESAME) && !defined(FEATURE_ESAME_N3_ESA390)
  UNDEF_INST(execute_e3xx)
  UNDEF_INST(execute_ecxx)
@@ -474,6 +476,7 @@
  UNDEF_INST(execute_b3xx)
  UNDEF_INST(execute_edxx)
 #endif /*!defined(FEATURE_BASIC_FP_EXTENSIONS)*/
+#endif
 
 
 #if !defined(FEATURE_HEXADECIMAL_FLOATING_POINT)
@@ -1107,12 +1110,10 @@
    as the called routine has the same arguments, and the routine
    exits immediately after the call.                             *JJ */
 
-#if ARCH_MODE != ARCH_370
 DEF_INST(execute_01xx)
 {
     regs->ARCH_DEP(opcode_01xx)[inst[1]](inst, regs);
 }
-#endif
 
 
 DEF_INST(execute_a7xx)
@@ -1163,7 +1164,6 @@ DEF_INST_37X(execute_ebxx)
 #endif
 
 
-#if defined(FEATURE_BASIC_FP_EXTENSIONS)
 DEF_INST(execute_b3xx)
 {
     regs->ARCH_DEP(opcode_b3xx)[inst[1]](inst, regs);
@@ -1183,7 +1183,6 @@ DEF_INST_37X(execute_edxx)
     regs->s37X_opcode_edxx[inst[1]](inst, regs);
 }
 #endif
-#endif /*defined(FEATURE_BASIC_FP_EXTENSIONS)*/
 
 
 DEF_INST(execute_e5xx)
@@ -1197,20 +1196,17 @@ DEF_INST_37X(execute_e5xx)
 }
 #endif
 
-#if ARCH_MODE == ARCH_370
 DEF_INST(execute_e6xx)
 {
     regs->ARCH_DEP(opcode_e6xx)[inst[1]](inst, regs);
 }
-#if defined(OPTION_370_EXTENSION)
+#if ARCH_MODE==ARCH_370 && defined(OPTION_370_EXTENSION)
 DEF_INST_37X(execute_e6xx)
 {
     regs->s37X_opcode_e6xx[inst[1]](inst, regs);
 }
 #endif
-#endif
 
-#if defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390)
 DEF_INST(execute_a5xx)
 {
     regs->ARCH_DEP(opcode_a5xx)[inst[1]](inst, regs);
@@ -1269,8 +1265,6 @@ DEF_INST_37X(execute_c2xx)
     regs->s37X_opcode_c2xx[inst[1]](inst, regs);
 }
 #endif
-#endif /*defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390)*/
-
 
 DEF_INST(execute_c4xx)                                          /*208*/
 {                                                               /*208*/
@@ -1296,19 +1290,15 @@ DEF_INST_37X(execute_c6xx)
 #endif
 
 
-#if defined(FEATURE_ESAME)
 DEF_INST(execute_c8xx)
 {
     regs->ARCH_DEP(opcode_c8xx)[inst[1]](inst, regs);
 }
-#endif /*defined(FEATURE_ESAME)*/
 
-#if defined(FEATURE_ESAME)                                      /*810*/
 DEF_INST(execute_ccxx)                                          /*810*/
 {                                                               /*810*/
     regs->ARCH_DEP(opcode_ccxx)[inst[1]](inst, regs);           /*810*/
 }                                                               /*810*/
-#endif /*defined(FEATURE_ESAME)*/                               /*810*/
 
 #if defined(FEATURE_VECTOR_FACILITY)
 
@@ -1358,7 +1348,6 @@ DEF_INST_37X(execute_e4xx)
     regs->s37X_opcode_e4xx[inst[1]](inst, regs);
 }
 #endif
-
 #endif /*defined(FEATURE_VECTOR_FACILITY)*/
 
 
@@ -1384,8 +1373,6 @@ DEF_INST(dummy_instruction)
 //  logmsg(_("Dummy instruction: ")); ARCH_DEP(display_inst) (regs, inst);
     INST_UPDATE_PSW (regs, ILC(inst[0]), ILC(inst[0]));
 }
-
-
 #if !defined(_GEN_ARCH)
 
 #define DISASM_ROUTE(_table,_route) \
@@ -2211,6 +2198,7 @@ int d2,b2;
 
 /* Gabor Hoffer (performance option) */
 DLL_EXPORT zz_func s370_opcode_table[256];
+static zz_func s370_opcode_01xx[256];
 static zz_func s370_opcode_a4xx[256];
 static zz_func s370_opcode_a5xx[256];
 static zz_func s370_opcode_a6xx[256];
@@ -2222,15 +2210,19 @@ static zz_func s370_opcode_c0xx[256];                           /*@N3*/
 static zz_func s370_opcode_c2xx[256];                           /*208*/
 static zz_func s370_opcode_c4xx[256];                           /*208*/
 static zz_func s370_opcode_c6xx[256];                           /*208*/
+static zz_func s370_opcode_c8xx[256];
+static zz_func s370_opcode_ccxx[256];
 static zz_func s370_opcode_e3xx[256];                           /*@N3*/
 static zz_func s370_opcode_e4xx[256];
 static zz_func s370_opcode_e5xx[256];
 static zz_func s370_opcode_e6xx[256];
 static zz_func s370_opcode_ebxx[256];
 static zz_func s370_opcode_ecxx[256];                           /*@N3*/
+static zz_func s370_opcode_edxx[256];                           /*@N3*/
 
 #if defined(OPTION_370_EXTENSION)
 DLL_EXPORT zz_func s37X_opcode_table[256];
+static zz_func s37X_opcode_01xx[256];
 static zz_func s37X_opcode_a4xx[256];
 static zz_func s37X_opcode_a5xx[256];
 static zz_func s37X_opcode_a6xx[256];
@@ -2242,12 +2234,15 @@ static zz_func s37X_opcode_c0xx[256];                           /*@N3*/
 static zz_func s37X_opcode_c2xx[256];                           /*208*/
 static zz_func s37X_opcode_c4xx[256];                           /*208*/
 static zz_func s37X_opcode_c6xx[256];                           /*208*/
+static zz_func s37X_opcode_c8xx[256];                           /*208*/
+static zz_func s37X_opcode_ccxx[256];                           /*208*/
 static zz_func s37X_opcode_e3xx[256];                           /*@N3*/
 static zz_func s37X_opcode_e4xx[256];
 static zz_func s37X_opcode_e5xx[256];
 static zz_func s37X_opcode_e6xx[256];
 static zz_func s37X_opcode_ebxx[256];
 static zz_func s37X_opcode_ecxx[256];                           /*@N3*/
+static zz_func s37X_opcode_edxx[256];                           /*@N3*/
 #endif /* defined(OPTION_370_EXTENSION) */
 
 zz_func s390_opcode_table[256];
@@ -2263,9 +2258,12 @@ static zz_func s390_opcode_c0xx[256];
 static zz_func s390_opcode_c2xx[256];                           /*@Z9*/
 static zz_func s390_opcode_c4xx[256];                           /*208*/
 static zz_func s390_opcode_c6xx[256];                           /*208*/
+static zz_func s390_opcode_c8xx[256];                           /*208*/
+static zz_func s390_opcode_ccxx[256];                           /*208*/
 static zz_func s390_opcode_e3xx[256];
 static zz_func s390_opcode_e4xx[256];
 static zz_func s390_opcode_e5xx[256];
+static zz_func s390_opcode_e6xx[256];
 static zz_func s390_opcode_ebxx[256];
 static zz_func s390_opcode_ecxx[256];
 static zz_func s390_opcode_edxx[256];
@@ -2285,13 +2283,79 @@ static zz_func z900_opcode_c8xx[256];
 static zz_func z900_opcode_ccxx[256];                           /*810*/
 static zz_func z900_opcode_e3xx[256];
 static zz_func z900_opcode_e5xx[256];
+static zz_func z900_opcode_e6xx[256];
 static zz_func z900_opcode_ebxx[256];
 static zz_func z900_opcode_ecxx[256];
 static zz_func z900_opcode_edxx[256];
 
+/* FIXME ! Can't use ARCH_DEP() to reference 
+   stuff generate inside ifndef(_GEN_ARCH) in
+   opcode.c (because the auto inclusion is done
+   at the start...) */
+
+#define _REP_FUNC_256(_code) \
+    case 0x ## _code: \
+        oldfun=s370_opcode_ ## _code ## xx[code2]; \
+        s370_opcode_ ## _code ## xx[code2]=newfunc; \
+        return oldfun;
+
+#define _REP_FUNC_16(_code) \
+    case 0x ## _code: \
+        if(code2 > 15) return NULL; \
+        oldfun=s370_opcode_ ## _code ## xx[code2]; \
+        for(i=0;i<16;i++) \
+        { \
+            s370_opcode_ ## _code ## xx[i*16+code2]=newfunc; \
+        } \
+        return oldfun; \
+
+DLL_EXPORT  zz_func s370_opcode_replace_instruction(zz_func newfunc,int code1,int code2)
+{
+    zz_func oldfun;
+    int i;
+    if(code1>255) return NULL;
+    if(code2<0)
+    {
+        oldfun=s370_opcode_table[code1];
+        s370_opcode_table[code1]=newfunc;
+        return oldfun;
+    }
+    if(code2>255) return NULL;
+    switch(code1)
+    {
+        _REP_FUNC_256(01)
+        _REP_FUNC_256(a4)
+        _REP_FUNC_256(a5)
+        _REP_FUNC_256(a6)
+        _REP_FUNC_16(a7)
+        _REP_FUNC_256(b2)
+        _REP_FUNC_256(b3)
+        _REP_FUNC_256(b9)
+        _REP_FUNC_16(c0)
+        _REP_FUNC_16(c2)
+        _REP_FUNC_16(c4)
+        _REP_FUNC_16(c6)
+        _REP_FUNC_16(c8)
+        _REP_FUNC_16(cc)
+        _REP_FUNC_256(e3)
+        _REP_FUNC_256(e4)
+        _REP_FUNC_256(e5)
+        _REP_FUNC_256(e6)
+        _REP_FUNC_256(eb)
+        _REP_FUNC_256(ec)
+        _REP_FUNC_256(ed)
+        default:
+            return NULL;
+    }
+}
+
+#undef _REP_FUNC_256
+#undef _REP_FUNC_16
+
 DLL_EXPORT void copy_opcode_tables()
 {
 int i;
+    logmsg("Copying opcode table\n");
 
     for (i = 0; i < 256; i++)
     {
@@ -2308,15 +2372,19 @@ int i;
         s370_opcode_c2xx [i] = opcode_c2xx [i&0x0F][ARCH_370];  /*208*/
         s370_opcode_c4xx [i] = opcode_c4xx [i&0x0F][ARCH_370];  /*208*/
         s370_opcode_c6xx [i] = opcode_c6xx [i&0x0F][ARCH_370];  /*208*/
+        s370_opcode_c8xx [i] = opcode_c8xx [i&0x0F][ARCH_370];  /*208*/
+        s370_opcode_ccxx [i] = opcode_ccxx [i&0x0F][ARCH_370];  /*208*/
         s370_opcode_e3xx [i] = opcode_e3xx [i][ARCH_370];       /*@N3*/
         s370_opcode_e4xx [i] = v_opcode_e4xx [i][ARCH_370];
         s370_opcode_e5xx [i] = opcode_e5xx [i][ARCH_370];
         s370_opcode_e6xx [i] = opcode_e6xx [i][ARCH_370];
         s370_opcode_ebxx [i] = opcode_ebxx [i][ARCH_370];
         s370_opcode_ecxx [i] = opcode_ecxx [i][ARCH_370];       /*@N3*/
+        s370_opcode_edxx [i] = opcode_edxx [i][ARCH_370];       /*@N3*/
 
 #if defined(OPTION_370_EXTENSION)
         s37X_opcode_table[i] = opcode_table[i][GEN_ARCHCOUNT+ARCH_370];
+        s37X_opcode_01xx [i] = opcode_01xx [i&0x0F][GEN_ARCHCOUNT+ARCH_370];
         s37X_opcode_a4xx [i] = v_opcode_a4xx [i][GEN_ARCHCOUNT+ARCH_370];
         s37X_opcode_a5xx [i] = v_opcode_a5xx [i][GEN_ARCHCOUNT+ARCH_370];
         s37X_opcode_a6xx [i] = v_opcode_a6xx [i][GEN_ARCHCOUNT+ARCH_370];
@@ -2328,12 +2396,15 @@ int i;
         s37X_opcode_c2xx [i] = opcode_c2xx [i&0x0F][GEN_ARCHCOUNT+ARCH_370];  /*208*/
         s37X_opcode_c4xx [i] = opcode_c4xx [i&0x0F][GEN_ARCHCOUNT+ARCH_370];  /*208*/
         s37X_opcode_c6xx [i] = opcode_c6xx [i&0x0F][GEN_ARCHCOUNT+ARCH_370];  /*208*/
+        s37X_opcode_c8xx [i] = opcode_c8xx [i&0x0F][GEN_ARCHCOUNT+ARCH_370];  /*208*/
+        s37X_opcode_ccxx [i] = opcode_ccxx [i&0x0F][GEN_ARCHCOUNT+ARCH_370];  /*208*/
         s37X_opcode_e3xx [i] = opcode_e3xx [i][GEN_ARCHCOUNT+ARCH_370];       /*@N3*/
         s37X_opcode_e4xx [i] = v_opcode_e4xx [i][GEN_ARCHCOUNT+ARCH_370];
         s37X_opcode_e5xx [i] = opcode_e5xx [i][GEN_ARCHCOUNT+ARCH_370];
         s37X_opcode_e6xx [i] = opcode_e6xx [i][GEN_ARCHCOUNT+ARCH_370];
         s37X_opcode_ebxx [i] = opcode_ebxx [i][GEN_ARCHCOUNT+ARCH_370];
         s37X_opcode_ecxx [i] = opcode_ecxx [i][GEN_ARCHCOUNT+ARCH_370];       /*@N3*/
+        s37X_opcode_edxx [i] = opcode_edxx [i][GEN_ARCHCOUNT+ARCH_370];       /*@N3*/
 #endif /* defined(OPTION_370_EXTENSION) */
 
 #endif
@@ -2352,9 +2423,12 @@ int i;
         s390_opcode_c2xx [i] = opcode_c2xx [i&0x0F][ARCH_390];  /*@Z9*/
         s390_opcode_c4xx [i] = opcode_c4xx [i&0x0F][ARCH_390];  /*208*/
         s390_opcode_c6xx [i] = opcode_c6xx [i&0x0F][ARCH_390];  /*208*/
+        s390_opcode_c8xx [i] = opcode_c8xx [i&0x0F][ARCH_390];  /*208*/
+        s390_opcode_ccxx [i] = opcode_ccxx [i&0x0F][ARCH_390];  /*208*/
         s390_opcode_e3xx [i] = opcode_e3xx [i][ARCH_390];
         s390_opcode_e4xx [i] = v_opcode_e4xx [i][ARCH_390];
         s390_opcode_e5xx [i] = opcode_e5xx [i][ARCH_390];
+        s390_opcode_e6xx [i] = opcode_e6xx [i][ARCH_390];
         s390_opcode_ebxx [i] = opcode_ebxx [i][ARCH_390];
         s390_opcode_ecxx [i] = opcode_ecxx [i][ARCH_390];
         s390_opcode_edxx [i] = opcode_edxx [i][ARCH_390];
@@ -2376,6 +2450,7 @@ int i;
         z900_opcode_ccxx [i] = opcode_ccxx [i&0x0F][ARCH_900];  /*810*/
         z900_opcode_e3xx [i] = opcode_e3xx [i][ARCH_900];
         z900_opcode_e5xx [i] = opcode_e5xx [i][ARCH_900];
+        z900_opcode_e6xx [i] = opcode_e6xx [i][ARCH_900];
         z900_opcode_ebxx [i] = opcode_ebxx [i][ARCH_900];
         z900_opcode_ecxx [i] = opcode_ecxx [i][ARCH_900];
         z900_opcode_edxx [i] = opcode_edxx [i][ARCH_900];
@@ -2406,8 +2481,7 @@ int i;
 void set_opcode_pointers(REGS *regs)
 {
 #if defined(_370)
-    memcpy(regs->s370_opcode_table, s370_opcode_table,
-           sizeof(s370_opcode_table));
+    regs->s370_opcode_table = s370_opcode_table;
     regs->s370_opcode_a4xx = s370_opcode_a4xx;
     regs->s370_opcode_a5xx = s370_opcode_a5xx;
     regs->s370_opcode_a6xx = s370_opcode_a6xx;
@@ -2442,8 +2516,7 @@ void set_opcode_pointers(REGS *regs)
     regs->s370_opcode_ecxx = s370_opcode_ecxx;                  /*@N3*/
 
 #if defined(OPTION_370_EXTENSION)
-    memcpy(regs->s37X_opcode_table, s37X_opcode_table,
-           sizeof(s37X_opcode_table));
+    regs->s37X_opcode_table = s37X_opcode_table;
     regs->s37X_opcode_a4xx = s37X_opcode_a4xx;
     regs->s37X_opcode_a5xx = s37X_opcode_a5xx;
     regs->s37X_opcode_a6xx = s37X_opcode_a6xx;
@@ -2481,8 +2554,7 @@ void set_opcode_pointers(REGS *regs)
 #endif
 
 #if defined(_390)
-    memcpy(regs->s390_opcode_table, s390_opcode_table,
-           sizeof(s390_opcode_table));
+    regs->s390_opcode_table = s390_opcode_table;
     regs->s390_opcode_01xx = s390_opcode_01xx;
     regs->s390_opcode_a4xx = s390_opcode_a4xx;
     regs->s390_opcode_a5xx = s390_opcode_a5xx;
@@ -2518,8 +2590,7 @@ void set_opcode_pointers(REGS *regs)
     regs->s390_opcode_edxx = s390_opcode_edxx;
 #endif
 #if defined(_900)
-    memcpy(regs->z900_opcode_table, z900_opcode_table,
-           sizeof(z900_opcode_table));
+    regs->z900_opcode_table = z900_opcode_table;
     regs->z900_opcode_01xx = z900_opcode_01xx;
     regs->z900_opcode_a5xx = z900_opcode_a5xx;
  #if defined(MULTI_BYTE_ASSIST)
@@ -2557,7 +2628,7 @@ void set_opcode_pointers(REGS *regs)
 
 DLL_EXPORT zz_func opcode_table[256][GEN_MAXARCH] = {
  /*00*/   GENx___x___x___ ,
- /*01*/   GENx___x390x900 (execute_01xx,01xx,""),
+ /*01*/   GENx370x390x900 (execute_01xx,01xx,""),
  /*02*/   GENx___x___x___ ,
  /*03*/   GENx___x___x___ ,
  /*04*/   GENx370x390x900 (set_program_mask,RR_R1,"SPM"),
@@ -2720,10 +2791,10 @@ DLL_EXPORT zz_func opcode_table[256][GEN_MAXARCH] = {
  /*A1*/   GENx___x___x___ ,
  /*A2*/   GENx___x___x___ ,
  /*A3*/   GENx___x___x___ ,
- /*A4*/   GENx370x390x___ (execute_a4xx,a4xx,""),
+ /*A4*/   GENx370x390x900 (execute_a4xx,a4xx,""),
  /*A5*/   GENx370x390x900 (execute_a5xx,a5xx,""),
- /*A6*/   GENx370x390x___ (execute_a6xx,a6xx,""),
- /*A7*/   GENx37Xx390x900X(execute_a7xx,a7xx,""),
+ /*A6*/   GENx370x390x900 (execute_a6xx,a6xx,""),
+ /*A7*/   GENx370x390x900X(execute_a7xx,a7xx,""),
  /*A8*/   GENx370x390x900 (move_long_extended,RS,"MVCLE"),
  /*A9*/   GENx370x390x900 (compare_logical_long_extended,RS,"CLCLE"),
  /*AA*/   GENx___x___x___ ,
@@ -2735,32 +2806,32 @@ DLL_EXPORT zz_func opcode_table[256][GEN_MAXARCH] = {
  /*B0*/   GENx___x___x___ ,
  /*B1*/   GENx370x390x900 (load_real_address,RX,"LRA"),
  /*B2*/   GENx370x390x900 (execute_b2xx,b2xx,""),
- /*B3*/   GENx37Xx390x900X(execute_b3xx,b3xx,""),
+ /*B3*/   GENx370x390x900X(execute_b3xx,b3xx,""),
  /*B4*/   GENx___x___x___ ,
  /*B5*/   GENx___x___x___ ,
  /*B6*/   GENx370x390x900 (store_control,RS,"STCTL"),
  /*B7*/   GENx370x390x900 (load_control,RS,"LCTL"),
  /*B8*/   GENx___x___x___ ,
- /*B9*/   GENx37Xx390x900X(execute_b9xx,b9xx,""),
+ /*B9*/   GENx370x390x900X(execute_b9xx,b9xx,""),
  /*BA*/   GENx370x390x900 (compare_and_swap,RS,"CS"),
  /*BB*/   GENx370x390x900 (compare_double_and_swap,RS,"CDS"),
  /*BC*/   GENx___x___x___ ,
  /*BD*/   GENx370x390x900 (compare_logical_characters_under_mask,RS,"CLM"),
  /*BE*/   GENx370x390x900 (store_characters_under_mask,RS,"STCM"),
  /*BF*/   GENx370x390x900 (insert_characters_under_mask,RS,"ICM"),
- /*C0*/   GENx37Xx390x900X(execute_c0xx,c0xx,""),
+ /*C0*/   GENx370x390x900X(execute_c0xx,c0xx,""),
  /*C1*/   GENx___x___x___ ,
- /*C2*/   GENx37Xx390x900X(execute_c2xx,c2xx,""),               /*@Z9*/
+ /*C2*/   GENx370x390x900X(execute_c2xx,c2xx,""),               /*@Z9*/
  /*C3*/   GENx___x___x___ ,
- /*C4*/   GENx37Xx390x900X(execute_c4xx,c4xx,""),               /*208*/
+ /*C4*/   GENx370x390x900X(execute_c4xx,c4xx,""),               /*208*/
  /*C5*/   GENx___x___x___ ,
- /*C6*/   GENx37Xx390x900X(execute_c6xx,c6xx,""),               /*208*/
+ /*C6*/   GENx370x390x900X(execute_c6xx,c6xx,""),               /*208*/
  /*C7*/   GENx___x___x___ ,
- /*C8*/   GENx___x___x900 (execute_c8xx,c8xx,""),
+ /*C8*/   GENx370x390x900 (execute_c8xx,c8xx,""),
  /*C9*/   GENx___x___x___ ,
  /*CA*/   GENx___x___x___ ,
  /*CB*/   GENx___x___x___ ,
- /*CC*/   GENx___x___x900 (execute_ccxx,ccxx,""),               /*810*/
+ /*CC*/   GENx370x390x900 (execute_ccxx,ccxx,""),               /*810*/
  /*CD*/   GENx___x___x___ ,
  /*CE*/   GENx___x___x___ ,
  /*CF*/   GENx___x___x___ ,
@@ -2783,17 +2854,17 @@ DLL_EXPORT zz_func opcode_table[256][GEN_MAXARCH] = {
  /*E0*/   GENx___x___x___ ,
  /*E1*/   GENx37Xx390x900 (pack_unicode,SS_L2,"PKU"),
  /*E2*/   GENx37Xx390x900 (unpack_unicode,SS_L,"UNPKU"),
- /*E3*/   GENx37Xx390x900X(execute_e3xx,e3xx,""),
- /*E4*/   GENx370x390x___ (execute_e4xx,e4xx,""),
+ /*E3*/   GENx370x390x900X(execute_e3xx,e3xx,""),
+ /*E4*/   GENx370x390x900 (execute_e4xx,e4xx,""),
  /*E5*/   GENx370x390x900X(execute_e5xx,e5xx,""),
- /*E6*/   GENx370x___x___ (execute_e6xx,e6xx,""),
+ /*E6*/   GENx370x390x900 (execute_e6xx,e6xx,""),
  /*E7*/   GENx___x___x___ ,
  /*E8*/   GENx370x390x900 (move_inverse,SS_L,"MVCIN"),
  /*E9*/   GENx37Xx390x900 (pack_ascii,SS_L2,"PKA"),
  /*EA*/   GENx37Xx390x900 (unpack_ascii,SS_L,"UNPKA"),
- /*EB*/   GENx37Xx390x900X(execute_ebxx,ebxx,""),
- /*EC*/   GENx37Xx390x900X(execute_ecxx,ecxx,""),
- /*ED*/   GENx37Xx390x900X(execute_edxx,edxx,""),
+ /*EB*/   GENx370x390x900X(execute_ebxx,ebxx,""),
+ /*EC*/   GENx370x390x900X(execute_ecxx,ecxx,""),
+ /*ED*/   GENx370x390x900X(execute_edxx,edxx,""),
  /*EE*/   GENx___x390x900 (perform_locked_operation,SS_RSRS,"PLO"),
  /*EF*/   GENx___x___x900 (load_multiple_disjoint,SS_R,"LMD"),
  /*F0*/   GENx370x390x900 (shift_and_round_decimal,SS_I,"SRP"),

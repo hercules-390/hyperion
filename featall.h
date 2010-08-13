@@ -29,7 +29,8 @@
 #undef  OPTION_NO_INLINE_LOGICAL        /* Performance option        */
 #undef  OPTION_NO_INLINE_VSTORE         /* Performance option        */
 #undef  OPTION_NO_INLINE_IFETCH         /* Performance option        */
-#define OPTION_MULTI_BYTE_ASSIST        /* Performance option        */
+/* ISW : FIXME - PROBLEM WITH DYNAMIC INSTRUCTION MODIFICATIONS */
+#undef  OPTION_MULTI_BYTE_ASSIST        /* Performance option        */
 #define OPTION_SINGLE_CPU_DW            /* Performance option (ia32) */
 #define OPTION_FAST_DEVLOOKUP           /* Fast devnum/subchan lookup*/
 #define OPTION_IODELAY_KLUDGE           /* IODELAY kludge for linux  */
