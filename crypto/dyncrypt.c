@@ -2754,6 +2754,18 @@ DEF_INST(cipher_message_with_counter_d)
       ARCH_DEP(kmctr_aes)(r1, r2, regs);
       break;
 
+    case ??: /* encrypted dea */
+    case ??: /* encrypted tdea-128 */
+    case ??: /* encrypted tdea-192 */
+      ARCH_DEP(kmctr_encrypted_dea)(r1, r2, regs);
+      break;
+
+    case ??: /* encrypted aes-128 */
+    case ??: /* encrypted aes-192 */
+    case ??: /* encrypted aes-256 */
+      ARCH_DEP(kmctr_encrypted_aes)(r1, r2, regs);
+      break;
+
     default:
       ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
@@ -2815,6 +2827,18 @@ DEF_INST(cipher_message_with_cipher_feedback_d)
     case 19: /* aes-192 */
     case 20: /* aes-256 */
       ARCH_DEP(kmf_aes)(r1, r2, regs);
+      break;
+
+    case ??: /* encrypted dea */
+    case ??: /* encrypted tdea-128 */
+    case ??: /* encrypted tdea-192 */
+      ARCH_DEP(kmf_encrypted_dea)(r1, r2, regs);
+      break;
+
+    case ??: /* encrypted aes-128 */
+    case ??: /* encrypted aes-192 */
+    case ??: /* encrypted aes-256 */
+      ARCH_DEP(kmf_encrypted_aes)(r1, r2, regs);
       break;
 
     default:
@@ -2879,9 +2903,21 @@ DEF_INST(cipher_message_with_output_feedback_d)
       ARCH_DEP(kmo_aes)(r1, r2, regs);
       break;
 
-    default:
-      ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+    case ??: /* encrypted dea */
+    case ??: /* encrypted tdea-128 */
+    case ??: /* encrypted tdea-192 */
+      ARCH_DEP(kmo_encrypted_dea)(r1, r2, regs);
       break;
+
+    case ??: /* encrypted aes-128 */
+    case ??: /* encrypted aes-192 */
+    case ??: /* encrypted aes-256 */
+      ARCH_DEP(kmo_encrypted_aes)(r1, r2, regs);
+      break;
+
+   default:
+     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+     break;
   }
 }
 
