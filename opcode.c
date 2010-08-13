@@ -2355,7 +2355,6 @@ DLL_EXPORT  zz_func s370_opcode_replace_instruction(zz_func newfunc,int code1,in
 DLL_EXPORT void copy_opcode_tables()
 {
 int i;
-    logmsg("Copying opcode table\n");
 
     for (i = 0; i < 256; i++)
     {
