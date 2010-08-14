@@ -2720,13 +2720,11 @@ DEF_INST(cipher_message_d)
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
     case ??: /* encrypted dea */
-    case ??: /* encrypted tdea-128 */
     case ??: /* encrypted tdea-192 */
       ARCH_DEP(km_xts_dea)(r1, r2, regs);
       break;
 
     case ??: /* encrypted aes-128 */
-    case ??: /* encrypted aes-192 */
     case ??: /* encrypted aes-256 */
       ARCH_DEP(km_xts_encrypted_aes)(r1, r2, regs);
       break;
@@ -3183,12 +3181,6 @@ DEF_INST(perform_cryptographic_computation_d)
       ARCH_DEP(pcc_aes)(r1, r2, regs);
       break;
 
-    case ??: /* aes-128 */
-    case ??: /* aes-192 */
-    case ??: /* aes-256 */
-      ARCH_DEP(pcc_xts_aes)(r1, r2, regs);
-      break;
-      
     case ??: /* encrypted dea */
     case ??: /* encrypted tdea-128 */
     case ??: /* encrypted tdea-192 */
@@ -3201,7 +3193,17 @@ DEF_INST(perform_cryptographic_computation_d)
       ARCH_DEP(pcc_encrypted_aes)(r1, r2, regs);
       break;
 
- 
+    case ??: /* aes-128 */
+    case ??: /* aes-256 */
+      ARCH_DEP(pcc_xts_aes)(r1, r2, regs);
+      break;
+
+    case ??: /* aes-128 */
+    case ??: /* aes-256 */
+      ARCH_DEP(pcc_xts_encrypted_aes)(r1, r2, regs);
+      break;
+
+
     default:
       ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
