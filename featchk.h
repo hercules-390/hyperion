@@ -204,19 +204,6 @@
  #define ARCH_900 -1
 #endif
 
-#if !defined(_370) && defined(OPTION_370_EXTENSION)
- #error OPTION_370_MODE must be enabled for OPTION_370_EXTENSION
-#endif
-
-/* If more extension to current architectures are */
-/* needed, this should go here                    */
-
-#if defined(OPTION_370_EXTENSION)
-#define ARCH_EXTENSIONS        1
-#else
-#define ARCH_EXTENSIONS        0
-#endif /* defined(OPTION_370_EXTENSION) */
-
 /* Change this if more entries in the opcode tables */
 /* are needed for disassembly                       */
 #define INSTRUCTION_DECODE_ENTRIES      2
@@ -232,7 +219,7 @@
 /* FIXME : GEN_MAXARCH is misnamed */
 /*        Should be something like */
 /*        OPCODE_TABLE_ENTRY_SIZE  */
-#define GEN_MAXARCH     GEN_ARCHCOUNT+ARCH_EXTENSIONS+INSTRUCTION_DECODE_ENTRIES
+#define GEN_MAXARCH     GEN_ARCHCOUNT+INSTRUCTION_DECODE_ENTRIES
 
 #if defined(_900) && !defined(_390)
  #error OPTION_390_MODE must be enabled for OPTION_900_MODE

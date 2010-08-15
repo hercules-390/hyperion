@@ -48,6 +48,9 @@
 #include "inline.h"
 #include "clock.h"
 
+#undef DEF_INST_EXPORT
+#define DEF_INST_EXPORT DLL_EXPORT
+
 
 /*-------------------------------------------------------------------*/
 /* 1A   AR    - Add Register                                    [RR] */
@@ -3227,7 +3230,7 @@ BYTE   *ip;                             /* -> executed instruction   */
     regs->exrl = 0;
     regs->ip -= ILC(regs->exinst[0]);
 
-    EXECUTE_INSTRUCTION (regs->current_opcode_table,regs->exinst, regs);
+    EXECUTE_INSTRUCTION (regs->ARCH_DEP(opcode_table),regs->exinst, regs);
     regs->instcount++;
 
     /* Leave execflag on if pending PER so ILC will reflect EX */
@@ -3297,7 +3300,7 @@ BYTE   *ip;                             /* -> executed instruction   */
     regs->exrl = 1;
     regs->ip -= ILC(regs->exinst[0]);
 
-    EXECUTE_INSTRUCTION (regs->current_opcode_table,regs->exinst, regs);
+    EXECUTE_INSTRUCTION (regs->ARCH_DEP(opcode_table),regs->exinst, regs);
     regs->instcount++;
 
     /* Leave execflag on if pending PER so ILC will reflect EXRL */

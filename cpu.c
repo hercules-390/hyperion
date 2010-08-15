@@ -1829,19 +1829,8 @@ FUNC    *current_opcode_table;
         }
         return oldregs;
     }
-#if defined(OPTION_370_EXTENSION) && ARCH_MODE==ARCH_370
-    if(sysblk.ext_370_enable)
-    {
-        regs.current_opcode_table=regs.s37X_opcode_table;
-    }
-    else
-    {
-        regs.current_opcode_table=regs.ARCH_DEP(opcode_table);
-    }
-#else
-    regs.current_opcode_table=regs.ARCH_DEP(opcode_table);
-#endif /* defined(OPTION_370_EXTENSION) && ARCH_MODE==ARCH_370 */
-    current_opcode_table=regs.current_opcode_table;
+
+    current_opcode_table=regs.ARCH_DEP(opcode_table);
 
     RELEASE_INTLOCK(&regs);
 

@@ -119,11 +119,6 @@
 #define DEF_INST(_name) \
 void (ATTR_REGPARM(2) s370_ ## _name) (BYTE inst[], REGS *regs)
 
-/* Quirk for S370 Extension (because it's not really an architecture) */
-#define DEF_INST_37X(_name) \
-void (ATTR_REGPARM(2) s37X_ ## _name) (BYTE inst[], REGS *regs)
-
-
 #define ARCH_DEP(_name) \
 s370_ ## _name
 

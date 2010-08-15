@@ -147,7 +147,8 @@ hengine_OBJ = \
     $(O)vmd250.obj   \
     $(O)vstore.obj   \
     $(O)w32chan.obj  \
-    $(O)xstore.obj
+    $(O)xstore.obj   \
+    $(O)s37x.obj
 
 hmodule_OBJ = \
     $(O)cardpch.obj  \

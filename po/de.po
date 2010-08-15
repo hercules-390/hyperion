@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hercules 2.16\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-08-07 15:10+0200\n"
+"POT-Creation-Date: 2010-08-13 14:39+0200\n"
 "PO-Revision-Date: 2002-05-10 16:16+0200\n"
 "Last-Translator: Jan Jaeger <jj@septa.nl>\n"
 "Language-Team: none <test@li.org>\n"
@@ -93,7 +93,7 @@ msgstr ""
 msgid "Resl Frac: %16.16llX %16.16llX\n"
 msgstr ""
 
-#: general1.c:3934
+#: general1.c:3935
 msgid "MVCL destructive overlap: "
 msgstr ""
 
@@ -157,23 +157,23 @@ msgstr ""
 msgid "break"
 msgstr ""
 
-#: hsccmd.c:3510 hsccmd.c:7217
+#: hsccmd.c:3510 hsccmd.c:7249
 msgid "on"
 msgstr ""
 
-#: hsccmd.c:3510 hsccmd.c:7220
+#: hsccmd.c:3510 hsccmd.c:7252
 msgid "off"
 msgstr ""
 
-#: hsccmd.c:4327
+#: hsccmd.c:4359
 msgid "open "
 msgstr ""
 
-#: hsccmd.c:4328
+#: hsccmd.c:4360
 msgid "busy "
 msgstr ""
 
-#: hsccmd.c:4329
+#: hsccmd.c:4361
 msgid "pending "
 msgstr ""
 

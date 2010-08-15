@@ -34,23 +34,11 @@ the casual user of hercules, meaning that designers of programs
 requiring those additional instructions would have required the
 users of those programs to have custom built version of hercules.
 
-II. Implementing a runtime option
+II. Enabling the additional instructions
 
-II.a The S37X configuration statement
+From the configuration file statement or the panel issue :
 
-The S37X configuration statement allows the ESA/390 and z/Architecture
-features that are compatible with the S/370 architecture to be made
-available or not. By default, if the statement is not present,
-the additional features are NOT available. The syntax of the
-statement is :
-
-S37X ENABLE|DISABLE
-
-II.b the S37X panel command
-
-The S37X panel command has the same effect and syntax as the
-configuration statement. It may also be invoked without any parameter
-in order to query the state of the option.
+ldmod s37x
 
 III New features enabled (provisional list)
 

@@ -131,6 +131,7 @@ endif
 dynamic_SRC        = dyngui.c   \
                      dyninst.c  \
                      s37x.c     \
+                     s37xmod.c  \
                      hdteq.c
 
 dyndev_SRC         = commadpt.c  \
@@ -274,7 +275,7 @@ if OPTION_DYNAMIC_LOAD
   dyninst_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
   dyninst_la_LIBADD  = $(DYNMOD_LD_ADD)
 
-  s37x_la_SOURCES    = s37x.c
+  s37x_la_SOURCES    = s37x.c s37xmod.c
   s37x_la_LDFLAGS    = $(DYNMOD_LD_FLAGS)
   s37x_la_LIBADD     = $(DYNMOD_LD_ADD)
 

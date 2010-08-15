@@ -9,9 +9,12 @@
 
 #include "hstdinc.h"
 #include "hercules.h"
+#include "hdl.h"
 #include "opcode.h"
 
 #if defined(OPTION_370_EXTENSION)
+
+static void    *(*resolver)(char *ep);
 
 /**********************************************************/
 /* Table structures                                       */
@@ -50,7 +53,7 @@ static struct s37x_inst_table_entry s37x_table_ ## _tbn[] = {
    2nd parm is opcode or opcode extension */
 
 #define INST37X( _ifun, _ix ) \
-    { (s370_ ## _ifun), NULL, (_ix) },
+    { s370_ ## _ifun, NULL, (_ix) },
 
 /* INST37X_TABLE_END
    Closes an opcode table. Defines the properties
@@ -479,19 +482,19 @@ static  void    s37x_replace_opcode(struct s37x_inst_table_entry *tb,int code,in
         if(set)
         {
             tb[i].oldfun=s370_opcode_replace_instruction(tb[i].newfun,code1,code2);
-            // printf("Opcode %2.2X %2.2X : Old = %p, New=%p\n",(unsigned char)code1,(unsigned char)code2,tb[i].oldfun,tb[i].newfun);
+//            logmsg("Replacing Opcode %2.2X%2.2X; Old = %p, New=%p\n",(unsigned char)code1,(unsigned char)code2,tb[i].oldfun,tb[i].newfun);
         }
         else
         {
             zz_func old;
             old=s370_opcode_replace_instruction(tb[i].oldfun,code1,code2);
-            // printf("Opcode %2.2X %2.2X : Old = %p, New=%p\n",(unsigned char)code1,(unsigned char)code2,old,tb[i].oldfun);
+//            logmsg("Restoring Opcode %2.2X%2.2X; Old = %p, New=%p\n",(unsigned char)code1,(unsigned char)code2,old,tb[i].oldfun);
         }
     }
 }
 
 /* scan the 1st level table */
-static void s37x_replace_opcode_scan(int set)
+DLL_EXPORT void s37x_replace_opcode_scan(int set)
 {
     int i;
     struct  s37x_inst_table_header   *tb;
@@ -501,32 +504,4 @@ static void s37x_replace_opcode_scan(int set)
         s37x_replace_opcode(tb->tbl,tb->ix,set);
     }
 }
-
-/* Module start : set the instruction functions */
-HDL_REGISTER_SECTION;
-{
-    s37x_replace_opcode_scan(1);
-}
-END_REGISTER_SECTION
-/* Module end : restore the instruction functions */
-HDL_FINAL_SECTION;
-{
-    s37x_replace_opcode_scan(0);
-}
-END_FINAL_SECTION
-
-#else /* defined(OPTION_370_EXTENSION) */
-HDL_REGISTER_SECTION;
-{
-    logmsg("the S/370 Extension module requires the OPTION_S370_EXTENSION build option\n");
-    return -1;
-}
-END_REGISTER_SECTION
-
-#endif /* defined(OPTION_370_EXTENSION) */
-
-HDL_DEPENDENCY_SECTION;
-{
-     HDL_DEPENDENCY (HERCULES);
-
-} END_DEPENDENCY_SECTION
+#endif

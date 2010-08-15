@@ -100,6 +100,9 @@ $(X)dyngui.dll: $(O)dyngui.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)he
 $(X)dyninst.dll: $(O)dyninst.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
     $(linkdll)
 
+$(X)s37x.dll: $(O)s37xmod.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
+    $(linkdll)
+
 !IFNDEF NOCRYPTO
 crypto: $(X)dyncrypt.dll
 

@@ -37,6 +37,7 @@ MODULES = \
     $(X)hdteq.dll    \
     $(X)hdtqeth.dll  \
     $(X)dyninst.dll  \
+    $(X)s37x.dll     \
     $(X)decNumber.dll \
     $(DYNCRYPT_DLL)
 

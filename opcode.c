@@ -1120,49 +1120,21 @@ DEF_INST(execute_a7xx)
 {
     regs->ARCH_DEP(opcode_a7xx)[inst[1]](inst, regs);
 }
-#if ARCH_MODE==ARCH_370 && defined(OPTION_370_EXTENSION)
-DEF_INST_37X(execute_a7xx)
-{
-    regs->s37X_opcode_a7xx[inst[1]](inst, regs);
-}
-#endif
-
 
 DEF_INST(execute_b2xx)
 {
     regs->ARCH_DEP(opcode_b2xx)[inst[1]](inst, regs);
 }
-#if ARCH_MODE==ARCH_370 && defined(OPTION_370_EXTENSION)
-DEF_INST_37X(execute_b2xx)
-{
-    regs->s37X_opcode_b2xx[inst[1]](inst, regs);
-}
-#endif
-
 
 DEF_INST(execute_b9xx)
 {
     regs->ARCH_DEP(opcode_b9xx)[inst[1]](inst, regs);
 }
-#if ARCH_MODE==ARCH_370 && defined(OPTION_370_EXTENSION)
-DEF_INST_37X(execute_b9xx)
-{
-    regs->s37X_opcode_b9xx[inst[1]](inst, regs);
-}
-#endif
-
 
 DEF_INST(execute_ebxx)
 {
     regs->ARCH_DEP(opcode_ebxx)[inst[5]](inst, regs);
 }
-#if ARCH_MODE==ARCH_370 && defined(OPTION_370_EXTENSION)
-DEF_INST_37X(execute_ebxx)
-{
-    regs->s37X_opcode_ebxx[inst[1]](inst, regs);
-}
-#endif
-
 
 DEF_INST(execute_b3xx)
 {
@@ -1173,122 +1145,51 @@ DEF_INST(execute_edxx)
 {
     regs->ARCH_DEP(opcode_edxx)[inst[5]](inst, regs);
 }
-#if ARCH_MODE==ARCH_370 && defined(OPTION_370_EXTENSION)
-DEF_INST_37X(execute_b3xx)
-{
-    regs->s37X_opcode_b3xx[inst[1]](inst, regs);
-}
-DEF_INST_37X(execute_edxx)
-{
-    regs->s37X_opcode_edxx[inst[1]](inst, regs);
-}
-#endif
-
 
 DEF_INST(execute_e5xx)
 {
     regs->ARCH_DEP(opcode_e5xx)[inst[1]](inst, regs);
 }
-#if ARCH_MODE==ARCH_370 && defined(OPTION_370_EXTENSION)
-DEF_INST_37X(execute_e5xx)
-{
-    regs->s37X_opcode_e5xx[inst[1]](inst, regs);
-}
-#endif
 
 DEF_INST(execute_e6xx)
 {
     regs->ARCH_DEP(opcode_e6xx)[inst[1]](inst, regs);
 }
-#if ARCH_MODE==ARCH_370 && defined(OPTION_370_EXTENSION)
-DEF_INST_37X(execute_e6xx)
-{
-    regs->s37X_opcode_e6xx[inst[1]](inst, regs);
-}
-#endif
 
 DEF_INST(execute_a5xx)
 {
     regs->ARCH_DEP(opcode_a5xx)[inst[1]](inst, regs);
 }
-#if ARCH_MODE==ARCH_370 && defined(OPTION_370_EXTENSION)
-DEF_INST_37X(execute_a5xx)
-{
-    regs->s37X_opcode_a5xx[inst[1]](inst, regs);
-}
-#endif
-
 
 DEF_INST(execute_e3xx)
 {
     regs->ARCH_DEP(opcode_e3xx)[inst[5]](inst, regs);
 }
-#if ARCH_MODE==ARCH_370 && defined(OPTION_370_EXTENSION)
-DEF_INST_37X(execute_e3xx)
-{
-    regs->s37X_opcode_e3xx[inst[1]](inst, regs);
-}
-#endif
-
 
 DEF_INST(execute_ecxx)
 {
     regs->ARCH_DEP(opcode_ecxx[inst[5]])(inst, regs);
 }
-#if ARCH_MODE==ARCH_370 && defined(OPTION_370_EXTENSION)
-DEF_INST_37X(execute_ecxx)
-{
-    regs->s37X_opcode_ecxx[inst[1]](inst, regs);
-}
-#endif
-
 
 DEF_INST(execute_c0xx)
 {
     regs->ARCH_DEP(opcode_c0xx)[inst[1]](inst, regs);
 }
-#if ARCH_MODE==ARCH_370 && defined(OPTION_370_EXTENSION)
-DEF_INST_37X(execute_c0xx)
-{
-    regs->s37X_opcode_c0xx[inst[1]](inst, regs);
-}
-#endif
-
 
 DEF_INST(execute_c2xx)                                          /*@Z9*/
 {                                                               /*@Z9*/
     regs->ARCH_DEP(opcode_c2xx)[inst[1]](inst, regs);           /*@Z9*/
 }                                                               /*@Z9*/
-#if ARCH_MODE==ARCH_370 && defined(OPTION_370_EXTENSION)
-DEF_INST_37X(execute_c2xx)
-{
-    regs->s37X_opcode_c2xx[inst[1]](inst, regs);
-}
-#endif
 
 DEF_INST(execute_c4xx)                                          /*208*/
 {                                                               /*208*/
     regs->ARCH_DEP(opcode_c4xx)[inst[1]](inst, regs);           /*208*/
 }                                                               /*208*/
-#if ARCH_MODE==ARCH_370 && defined(OPTION_370_EXTENSION)
-DEF_INST_37X(execute_c4xx)
-{
-    regs->s37X_opcode_c4xx[inst[1]](inst, regs);
-}
-#endif
-
 
 DEF_INST(execute_c6xx)                                          /*208*/
 {                                                               /*208*/
     regs->ARCH_DEP(opcode_c6xx)[inst[1]](inst, regs);           /*208*/
 }                                                               /*208*/
-#if ARCH_MODE==ARCH_370 && defined(OPTION_370_EXTENSION)
-DEF_INST_37X(execute_c6xx)
-{
-    regs->s37X_opcode_c6xx[inst[1]](inst, regs);
-}
-#endif
-
 
 DEF_INST(execute_c8xx)
 {
@@ -1306,48 +1207,21 @@ DEF_INST(execute_a4xx)
 {
     regs->ARCH_DEP(opcode_a4xx)[inst[1]](inst, regs);
 }
-#if ARCH_MODE==ARCH_370 && defined(OPTION_370_EXTENSION)
-DEF_INST_37X(execute_a4xx)
-{
-    regs->s37X_opcode_a4xx[inst[1]](inst, regs);
-}
-#endif
-
 
 DEF_INST(execute_a5xx)
 {
     regs->ARCH_DEP(opcode_a5xx)[inst[1]](inst, regs);
 }
-#if ARCH_MODE==ARCH_370 && defined(OPTION_370_EXTENSION)
-DEF_INST_37X(execute_a5xx)
-{
-    regs->s37X_opcode_a5xx[inst[1]](inst, regs);
-}
-#endif
-
 
 DEF_INST(execute_a6xx)
 {
     regs->ARCH_DEP(opcode_a6xx)[inst[1]](inst, regs);
 }
-#if ARCH_MODE==ARCH_370 && defined(OPTION_370_EXTENSION)
-DEF_INST_37X(execute_a6xx)
-{
-    regs->s37X_opcode_a6xx[inst[1]](inst, regs);
-}
-#endif
-
 
 DEF_INST(execute_e4xx)
 {
     regs->ARCH_DEP(opcode_e4xx)[inst[1]](inst, regs);
 }
-#if ARCH_MODE==ARCH_370 && defined(OPTION_370_EXTENSION)
-DEF_INST_37X(execute_e4xx)
-{
-    regs->s37X_opcode_e4xx[inst[1]](inst, regs);
-}
-#endif
 #endif /*defined(FEATURE_VECTOR_FACILITY)*/
 
 
@@ -2220,31 +2094,6 @@ static zz_func s370_opcode_ebxx[256];
 static zz_func s370_opcode_ecxx[256];                           /*@N3*/
 static zz_func s370_opcode_edxx[256];                           /*@N3*/
 
-#if defined(OPTION_370_EXTENSION)
-DLL_EXPORT zz_func s37X_opcode_table[256];
-static zz_func s37X_opcode_01xx[256];
-static zz_func s37X_opcode_a4xx[256];
-static zz_func s37X_opcode_a5xx[256];
-static zz_func s37X_opcode_a6xx[256];
-static zz_func s37X_opcode_a7xx[256];
-static zz_func s37X_opcode_b2xx[256];
-static zz_func s37X_opcode_b3xx[256];                           /*FPE*/
-static zz_func s37X_opcode_b9xx[256];
-static zz_func s37X_opcode_c0xx[256];                           /*@N3*/
-static zz_func s37X_opcode_c2xx[256];                           /*208*/
-static zz_func s37X_opcode_c4xx[256];                           /*208*/
-static zz_func s37X_opcode_c6xx[256];                           /*208*/
-static zz_func s37X_opcode_c8xx[256];                           /*208*/
-static zz_func s37X_opcode_ccxx[256];                           /*208*/
-static zz_func s37X_opcode_e3xx[256];                           /*@N3*/
-static zz_func s37X_opcode_e4xx[256];
-static zz_func s37X_opcode_e5xx[256];
-static zz_func s37X_opcode_e6xx[256];
-static zz_func s37X_opcode_ebxx[256];
-static zz_func s37X_opcode_ecxx[256];                           /*@N3*/
-static zz_func s37X_opcode_edxx[256];                           /*@N3*/
-#endif /* defined(OPTION_370_EXTENSION) */
-
 zz_func s390_opcode_table[256];
 static zz_func s390_opcode_01xx[256];
 static zz_func s390_opcode_a4xx[256];
@@ -2380,32 +2229,6 @@ int i;
         s370_opcode_ebxx [i] = opcode_ebxx [i][ARCH_370];
         s370_opcode_ecxx [i] = opcode_ecxx [i][ARCH_370];       /*@N3*/
         s370_opcode_edxx [i] = opcode_edxx [i][ARCH_370];       /*@N3*/
-
-#if defined(OPTION_370_EXTENSION)
-        s37X_opcode_table[i] = opcode_table[i][GEN_ARCHCOUNT+ARCH_370];
-        s37X_opcode_01xx [i] = opcode_01xx [i&0x0F][GEN_ARCHCOUNT+ARCH_370];
-        s37X_opcode_a4xx [i] = v_opcode_a4xx [i][GEN_ARCHCOUNT+ARCH_370];
-        s37X_opcode_a5xx [i] = v_opcode_a5xx [i][GEN_ARCHCOUNT+ARCH_370];
-        s37X_opcode_a6xx [i] = v_opcode_a6xx [i][GEN_ARCHCOUNT+ARCH_370];
-        s37X_opcode_a7xx [i] = opcode_a7xx [i&0x0F][GEN_ARCHCOUNT+ARCH_370];
-        s37X_opcode_b2xx [i] = opcode_b2xx [i][GEN_ARCHCOUNT+ARCH_370];
-        s37X_opcode_b3xx [i] = opcode_b3xx [i][GEN_ARCHCOUNT+ARCH_370];       /*FPE*/
-        s37X_opcode_b9xx [i] = opcode_b9xx [i][GEN_ARCHCOUNT+ARCH_370];
-        s37X_opcode_c0xx [i] = opcode_c0xx [i&0x0F][GEN_ARCHCOUNT+ARCH_370];  /*@N3*/
-        s37X_opcode_c2xx [i] = opcode_c2xx [i&0x0F][GEN_ARCHCOUNT+ARCH_370];  /*208*/
-        s37X_opcode_c4xx [i] = opcode_c4xx [i&0x0F][GEN_ARCHCOUNT+ARCH_370];  /*208*/
-        s37X_opcode_c6xx [i] = opcode_c6xx [i&0x0F][GEN_ARCHCOUNT+ARCH_370];  /*208*/
-        s37X_opcode_c8xx [i] = opcode_c8xx [i&0x0F][GEN_ARCHCOUNT+ARCH_370];  /*208*/
-        s37X_opcode_ccxx [i] = opcode_ccxx [i&0x0F][GEN_ARCHCOUNT+ARCH_370];  /*208*/
-        s37X_opcode_e3xx [i] = opcode_e3xx [i][GEN_ARCHCOUNT+ARCH_370];       /*@N3*/
-        s37X_opcode_e4xx [i] = v_opcode_e4xx [i][GEN_ARCHCOUNT+ARCH_370];
-        s37X_opcode_e5xx [i] = opcode_e5xx [i][GEN_ARCHCOUNT+ARCH_370];
-        s37X_opcode_e6xx [i] = opcode_e6xx [i][GEN_ARCHCOUNT+ARCH_370];
-        s37X_opcode_ebxx [i] = opcode_ebxx [i][GEN_ARCHCOUNT+ARCH_370];
-        s37X_opcode_ecxx [i] = opcode_ecxx [i][GEN_ARCHCOUNT+ARCH_370];       /*@N3*/
-        s37X_opcode_edxx [i] = opcode_edxx [i][GEN_ARCHCOUNT+ARCH_370];       /*@N3*/
-#endif /* defined(OPTION_370_EXTENSION) */
-
 #endif
 
 #if defined(_390)
@@ -2513,43 +2336,6 @@ void set_opcode_pointers(REGS *regs)
     regs->s370_opcode_e5xx = s370_opcode_e5xx;
     regs->s370_opcode_e6xx = s370_opcode_e6xx;
     regs->s370_opcode_ecxx = s370_opcode_ecxx;                  /*@N3*/
-
-#if defined(OPTION_370_EXTENSION)
-    regs->s37X_opcode_table = s37X_opcode_table;
-    regs->s37X_opcode_a4xx = s37X_opcode_a4xx;
-    regs->s37X_opcode_a5xx = s37X_opcode_a5xx;
-    regs->s37X_opcode_a6xx = s37X_opcode_a6xx;
- #if defined(MULTI_BYTE_ASSIST)
-    memcpy(regs->s37X_opcode_a7xx, s37X_opcode_a7xx,
-           sizeof(s37X_opcode_a7xx));
-    memcpy(regs->s37X_opcode_b2xx, s37X_opcode_b2xx,
-           sizeof(s37X_opcode_b2xx));
-    memcpy(regs->s37X_opcode_b9xx, s37X_opcode_b9xx,
-           sizeof(s37X_opcode_b9xx));
-    memcpy(regs->s37X_opcode_c0xx, s37X_opcode_c0xx,            /*@N3*/
-           sizeof(s37X_opcode_c0xx));                           /*@N3*/
-    memcpy(regs->s37X_opcode_e3xx, s37X_opcode_e3xx,            /*@N3*/
-           sizeof(s37X_opcode_e3xx));                           /*@N3*/
-    memcpy(regs->s37X_opcode_ebxx, s37X_opcode_ebxx,
-           sizeof(s37X_opcode_ebxx));
- #else
-    regs->s37X_opcode_a7xx = s37X_opcode_a7xx;
-    regs->s37X_opcode_b2xx = s37X_opcode_b2xx;
-    regs->s37X_opcode_b9xx = s37X_opcode_b9xx;
-    regs->s37X_opcode_c0xx = s37X_opcode_c0xx;                  /*@N3*/
-    regs->s37X_opcode_e3xx = s37X_opcode_e3xx;                  /*@N3*/
-    regs->s37X_opcode_ebxx = s37X_opcode_ebxx;
- #endif
-    regs->s37X_opcode_b3xx = s37X_opcode_b3xx;                  /*FPE*/
-    regs->s37X_opcode_c2xx = s37X_opcode_c2xx;                  /*208*/
-    regs->s37X_opcode_c4xx = s37X_opcode_c4xx;                  /*208*/
-    regs->s37X_opcode_c6xx = s37X_opcode_c6xx;                  /*208*/
-    regs->s37X_opcode_e4xx = s37X_opcode_e4xx;
-    regs->s37X_opcode_e5xx = s37X_opcode_e5xx;
-    regs->s37X_opcode_e6xx = s37X_opcode_e6xx;
-    regs->s37X_opcode_ecxx = s37X_opcode_ecxx;                  /*@N3*/
-#endif /* defined(OPTION_370_EXTENSION) */
-
 #endif
 
 #if defined(_390)
@@ -2793,7 +2579,7 @@ DLL_EXPORT zz_func opcode_table[256][GEN_MAXARCH] = {
  /*A4*/   GENx370x390x900 (execute_a4xx,a4xx,""),
  /*A5*/   GENx370x390x900 (execute_a5xx,a5xx,""),
  /*A6*/   GENx370x390x900 (execute_a6xx,a6xx,""),
- /*A7*/   GENx370x390x900X(execute_a7xx,a7xx,""),
+ /*A7*/   GENx370x390x900 (execute_a7xx,a7xx,""),
  /*A8*/   GENx370x390x900 (move_long_extended,RS,"MVCLE"),
  /*A9*/   GENx370x390x900 (compare_logical_long_extended,RS,"CLCLE"),
  /*AA*/   GENx___x___x___ ,
@@ -2805,26 +2591,26 @@ DLL_EXPORT zz_func opcode_table[256][GEN_MAXARCH] = {
  /*B0*/   GENx___x___x___ ,
  /*B1*/   GENx370x390x900 (load_real_address,RX,"LRA"),
  /*B2*/   GENx370x390x900 (execute_b2xx,b2xx,""),
- /*B3*/   GENx370x390x900X(execute_b3xx,b3xx,""),
+ /*B3*/   GENx370x390x900 (execute_b3xx,b3xx,""),
  /*B4*/   GENx___x___x___ ,
  /*B5*/   GENx___x___x___ ,
  /*B6*/   GENx370x390x900 (store_control,RS,"STCTL"),
  /*B7*/   GENx370x390x900 (load_control,RS,"LCTL"),
  /*B8*/   GENx___x___x___ ,
- /*B9*/   GENx370x390x900X(execute_b9xx,b9xx,""),
+ /*B9*/   GENx370x390x900 (execute_b9xx,b9xx,""),
  /*BA*/   GENx370x390x900 (compare_and_swap,RS,"CS"),
  /*BB*/   GENx370x390x900 (compare_double_and_swap,RS,"CDS"),
  /*BC*/   GENx___x___x___ ,
  /*BD*/   GENx370x390x900 (compare_logical_characters_under_mask,RS,"CLM"),
  /*BE*/   GENx370x390x900 (store_characters_under_mask,RS,"STCM"),
  /*BF*/   GENx370x390x900 (insert_characters_under_mask,RS,"ICM"),
- /*C0*/   GENx370x390x900X(execute_c0xx,c0xx,""),
+ /*C0*/   GENx370x390x900 (execute_c0xx,c0xx,""),
  /*C1*/   GENx___x___x___ ,
- /*C2*/   GENx370x390x900X(execute_c2xx,c2xx,""),               /*@Z9*/
+ /*C2*/   GENx370x390x900 (execute_c2xx,c2xx,""),               /*@Z9*/
  /*C3*/   GENx___x___x___ ,
- /*C4*/   GENx370x390x900X(execute_c4xx,c4xx,""),               /*208*/
+ /*C4*/   GENx370x390x900 (execute_c4xx,c4xx,""),               /*208*/
  /*C5*/   GENx___x___x___ ,
- /*C6*/   GENx370x390x900X(execute_c6xx,c6xx,""),               /*208*/
+ /*C6*/   GENx370x390x900 (execute_c6xx,c6xx,""),               /*208*/
  /*C7*/   GENx___x___x___ ,
  /*C8*/   GENx370x390x900 (execute_c8xx,c8xx,""),
  /*C9*/   GENx___x___x___ ,
@@ -2853,17 +2639,17 @@ DLL_EXPORT zz_func opcode_table[256][GEN_MAXARCH] = {
  /*E0*/   GENx___x___x___ ,
  /*E1*/   GENx37Xx390x900 (pack_unicode,SS_L2,"PKU"),
  /*E2*/   GENx37Xx390x900 (unpack_unicode,SS_L,"UNPKU"),
- /*E3*/   GENx370x390x900X(execute_e3xx,e3xx,""),
+ /*E3*/   GENx370x390x900 (execute_e3xx,e3xx,""),
  /*E4*/   GENx370x390x900 (execute_e4xx,e4xx,""),
- /*E5*/   GENx370x390x900X(execute_e5xx,e5xx,""),
+ /*E5*/   GENx370x390x900 (execute_e5xx,e5xx,""),
  /*E6*/   GENx370x390x900 (execute_e6xx,e6xx,""),
  /*E7*/   GENx___x___x___ ,
  /*E8*/   GENx370x390x900 (move_inverse,SS_L,"MVCIN"),
  /*E9*/   GENx37Xx390x900 (pack_ascii,SS_L2,"PKA"),
  /*EA*/   GENx37Xx390x900 (unpack_ascii,SS_L,"UNPKA"),
- /*EB*/   GENx370x390x900X(execute_ebxx,ebxx,""),
- /*EC*/   GENx370x390x900X(execute_ecxx,ecxx,""),
- /*ED*/   GENx370x390x900X(execute_edxx,edxx,""),
+ /*EB*/   GENx370x390x900 (execute_ebxx,ebxx,""),
+ /*EC*/   GENx370x390x900 (execute_ecxx,ecxx,""),
+ /*ED*/   GENx370x390x900 (execute_edxx,edxx,""),
  /*EE*/   GENx___x390x900 (perform_locked_operation,SS_RSRS,"PLO"),
  /*EF*/   GENx___x___x900 (load_multiple_disjoint,SS_R,"LMD"),
  /*F0*/   GENx370x390x900 (shift_and_round_decimal,SS_I,"SRP"),

@@ -37,14 +37,9 @@
 /* The following section defines the ESA/390 and
    z/Architecture defined features (and their related
    instructions) that are compatible and backported to
-   the S/370 architecture. Those features are also controled
-   by a runtime extension (S37X statement and panel command)
-   and are disabled by default. If it is needed to have
-   those features available unconditionally, the following
-   #if preprocessor statement should be commented out and
-   the OPTION_370_EXTENSION macro in featall.h should be 
-   removed or commented out as well. It is still possible
-   to comment out individual features if necessary. */
+   the S/370 architecture. The availability of the 
+   relevant instructions are enabled by the s37x loadable
+   module */
 
 #if defined(OPTION_370_EXTENSION)
 
