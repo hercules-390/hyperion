@@ -1,11 +1,11 @@
-/* S37X.C  (c) Copyright Ivan S. Warren 2010                         */
+/* S37XMOD.C (c) Copyright Ivan S. Warren 2010                       */
 /*            Optional S370 Extensions                               */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id: s37x.c 6313 2010-08-14 09:27:49Z bernard $
+// $Id$
 
 #include "hstdinc.h"
 #include "hercules.h"
