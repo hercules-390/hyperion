@@ -2142,9 +2142,18 @@ static zz_func z900_opcode_edxx[256];
    opcode.c (because the auto inclusion is done
    at the start...) */
 
+
 #define _REP_FUNC_256(_code) \
     case 0x ## _code: \
-        oldfun=s370_opcode_ ## _code ## xx[code2]; \
+        oldfun=opcode_ ## _code ## xx[code2][ARCH_370]; \
+        opcode_ ## _code ## xx[code2][ARCH_370]=newfunc; \
+        s370_opcode_ ## _code ## xx[code2]=newfunc; \
+        return oldfun;
+
+#define _REP_FUNC_256_v(_code) \
+    case 0x ## _code: \
+        oldfun=v_opcode_ ## _code ## xx[code2][ARCH_370]; \
+        v_opcode_ ## _code ## xx[code2][ARCH_370]=newfunc; \
         s370_opcode_ ## _code ## xx[code2]=newfunc; \
         return oldfun;
 
@@ -2165,7 +2174,8 @@ DLL_EXPORT  zz_func s370_opcode_replace_instruction(zz_func newfunc,int code1,in
     if(code1>255) return NULL;
     if(code2<0)
     {
-        oldfun=s370_opcode_table[code1];
+        oldfun=opcode_table[code1][ARCH_370];
+        opcode_table[code1][ARCH_370]=newfunc;
         s370_opcode_table[code1]=newfunc;
         return oldfun;
     }
@@ -2173,9 +2183,9 @@ DLL_EXPORT  zz_func s370_opcode_replace_instruction(zz_func newfunc,int code1,in
     switch(code1)
     {
         _REP_FUNC_256(01)
-        _REP_FUNC_256(a4)
-        _REP_FUNC_256(a5)
-        _REP_FUNC_256(a6)
+        _REP_FUNC_256_v(a4)
+        _REP_FUNC_256_v(a5)
+        _REP_FUNC_256_v(a6)
         _REP_FUNC_16(a7)
         _REP_FUNC_256(b2)
         _REP_FUNC_256(b3)
