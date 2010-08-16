@@ -12,6 +12,12 @@
 #include "hdl.h"
 #include "opcode.h"
 
+/* This file is only a STUB to separate the module part of s37x
+   from the functional code.
+   This is necessary because the final location of the functional
+   code may depend on the host operating system capabilities.
+   The actual functional code resides in s37x.c */
+
 #if defined(OPTION_370_EXTENSION)
 
 DLL_IMPORT void s37x_replace_opcode_scan(int x);
@@ -28,22 +34,6 @@ HDL_FINAL_SECTION;
     s37x_replace_opcode_scan(0);
 }
 END_FINAL_SECTION
-
-#if 0
-/* Only need this to get the actual resolver entry point */
-/* resolution will be done later on */
-HDL_RESOLVER_SECTION;
-{
-    {
-        rep_opcode_scan(1);
-    }
-    else
-    {
-        logmsg("the S/370 Extension instruction replacement entry point was not found\n");
-    }
-}
-END_RESOLVER_SECTION;
-#endif
 
 #else /* defined(OPTION_370_EXTENSION) */
 
