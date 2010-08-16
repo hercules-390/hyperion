@@ -1156,10 +1156,13 @@ DEF_INST(execute_e6xx)
     regs->ARCH_DEP(opcode_e6xx)[inst[1]](inst, regs);
 }
 
+/* Will be defined in VF support further down */
+#if !defined(VECTOR_FACILITY)
 DEF_INST(execute_a5xx)
 {
     regs->ARCH_DEP(opcode_a5xx)[inst[1]](inst, regs);
 }
+#endif
 
 DEF_INST(execute_e3xx)
 {
@@ -2140,77 +2143,192 @@ static zz_func z900_opcode_edxx[256];
 /* FIXME ! Can't use ARCH_DEP() to reference 
    stuff generate inside ifndef(_GEN_ARCH) in
    opcode.c (because the auto inclusion is done
-   at the start...) */
+   at the start...) - Required because the non
+   ARCH_DEP'd stuff references ARCH_DEP'd stuff */
 
 
-#define _REP_FUNC_256(_code) \
+#define _REP_FUNC_256(_arch,_code) \
     case 0x ## _code: \
-        oldfun=opcode_ ## _code ## xx[code2][ARCH_370]; \
-        opcode_ ## _code ## xx[code2][ARCH_370]=newfunc; \
-        s370_opcode_ ## _code ## xx[code2]=newfunc; \
+        oldfun=opcode_ ## _code ## xx[code2][arch]; \
+        opcode_ ## _code ## xx[code2][arch]=newfunc; \
+        _arch ## _opcode_ ## _code ## xx[code2]=newfunc; \
         return oldfun;
 
-#define _REP_FUNC_256_v(_code) \
+#define _REP_FUNC_256_v(_arch,_code) \
     case 0x ## _code: \
-        oldfun=v_opcode_ ## _code ## xx[code2][ARCH_370]; \
-        v_opcode_ ## _code ## xx[code2][ARCH_370]=newfunc; \
-        s370_opcode_ ## _code ## xx[code2]=newfunc; \
+        oldfun=v_opcode_ ## _code ## xx[code2][arch]; \
+        v_opcode_ ## _code ## xx[code2][arch]=newfunc; \
+        _arch ## _opcode_ ## _code ## xx[code2]=newfunc; \
         return oldfun;
 
-#define _REP_FUNC_16(_code) \
+#define _REP_FUNC_16(_arch,_code) \
     case 0x ## _code: \
         if(code2 > 15) return NULL; \
-        oldfun=opcode_ ## _code ## xx[code2][ARCH_370]; \
-        opcode_ ## _code ## xx[code2][ARCH_370]=newfunc; \
+        oldfun=opcode_ ## _code ## xx[code2][arch]; \
+        opcode_ ## _code ## xx[code2][arch]=newfunc; \
         for(i=0;i<16;i++) \
         { \
-            s370_opcode_ ## _code ## xx[i*16+code2]=newfunc; \
+            _arch ## _opcode_ ## _code ## xx[i*16+code2]=newfunc; \
         } \
         return oldfun; \
 
-DLL_EXPORT  zz_func s370_opcode_replace_instruction(zz_func newfunc,int code1,int code2)
+DLL_EXPORT  zz_func opcode_replace_instruction(int arch,zz_func newfunc,int code1,int code2)
 {
     zz_func oldfun;
     int i;
+    if(arch>=GEN_ARCHCOUNT) return NULL;
     if(code1>255) return NULL;
     if(code2<0)
     {
         oldfun=opcode_table[code1][ARCH_370];
         opcode_table[code1][ARCH_370]=newfunc;
-        s370_opcode_table[code1]=newfunc;
+        switch(arch)
+        {
+#if defined(_370)
+            case ARCH_370:
+                s370_opcode_table[code1]=newfunc;
+                break;
+#endif
+#if defined(_390)
+            case ARCH_390:
+                s390_opcode_table[code1]=newfunc;
+                break;
+#endif
+#if defined(_900)
+            case ARCH_900:
+                z900_opcode_table[code1]=newfunc;
+                break;
+#endif
+        }
         return oldfun;
     }
     if(code2>255) return NULL;
-    switch(code1)
+    switch(arch)
     {
-        _REP_FUNC_256(01)
-        _REP_FUNC_256_v(a4)
-        _REP_FUNC_256_v(a5)
-        _REP_FUNC_256_v(a6)
-        _REP_FUNC_16(a7)
-        _REP_FUNC_256(b2)
-        _REP_FUNC_256(b3)
-        _REP_FUNC_256(b9)
-        _REP_FUNC_16(c0)
-        _REP_FUNC_16(c2)
-        _REP_FUNC_16(c4)
-        _REP_FUNC_16(c6)
-        _REP_FUNC_16(c8)
-        _REP_FUNC_16(cc)
-        _REP_FUNC_256(e3)
-        _REP_FUNC_256(e4)
-        _REP_FUNC_256(e5)
-        _REP_FUNC_256(e6)
-        _REP_FUNC_256(eb)
-        _REP_FUNC_256(ec)
-        _REP_FUNC_256(ed)
-        default:
-            return NULL;
+#if defined(_370)
+        case ARCH_370:
+            switch(code1)
+            {
+                _REP_FUNC_256(s370,01)
+                _REP_FUNC_256_v(s370,a4)
+                _REP_FUNC_256_v(s370,a5)
+                _REP_FUNC_256_v(s370,a6)
+                _REP_FUNC_16(s370,a7)
+                _REP_FUNC_256(s370,b2)
+                _REP_FUNC_256(s370,b3)
+                _REP_FUNC_256(s370,b9)
+                _REP_FUNC_16(s370,c0)
+                _REP_FUNC_16(s370,c2)
+                _REP_FUNC_16(s370,c4)
+                _REP_FUNC_16(s370,c6)
+                _REP_FUNC_16(s370,c8)
+                _REP_FUNC_16(s370,cc)
+                _REP_FUNC_256(s370,e3)
+                _REP_FUNC_256(s370,e4)
+                _REP_FUNC_256(s370,e5)
+                _REP_FUNC_256(s370,e6)
+                _REP_FUNC_256(s370,eb)
+                _REP_FUNC_256(s370,ec)
+                _REP_FUNC_256(s370,ed)
+                default:
+                    return NULL;
+            }
+            break;
+#endif
+#if defined(_390)
+        case ARCH_390:
+            switch(code1)
+            {
+                _REP_FUNC_256(s390,01)
+                _REP_FUNC_256_v(s390,a4)
+                _REP_FUNC_256_v(s390,a5)
+                _REP_FUNC_256_v(s390,a6)
+                _REP_FUNC_16(s390,a7)
+                _REP_FUNC_256(s390,b2)
+                _REP_FUNC_256(s390,b3)
+                _REP_FUNC_256(s390,b9)
+                _REP_FUNC_16(s390,c0)
+                _REP_FUNC_16(s390,c2)
+                _REP_FUNC_16(s390,c4)
+                _REP_FUNC_16(s390,c6)
+                _REP_FUNC_16(s390,c8)
+                _REP_FUNC_16(s390,cc)
+                _REP_FUNC_256(s390,e3)
+                _REP_FUNC_256(s390,e4)
+                _REP_FUNC_256(s390,e5)
+                _REP_FUNC_256(s390,e6)
+                _REP_FUNC_256(s390,eb)
+                _REP_FUNC_256(s390,ec)
+                _REP_FUNC_256(s390,ed)
+                default:
+                    return NULL;
+            }
+            break;
+#endif
+#if defined(_900)
+        case ARCH_900:
+            switch(code1)
+            {
+                _REP_FUNC_256(z900,01)
+                /* Vector NOT in z/Arch */
+                /*
+                _REP_FUNC_256_v(z900,a4)
+                */
+                _REP_FUNC_256(z900,a5)   /* NOT Vector */
+                /*
+                _REP_FUNC_256(z900,a6)
+                */
+                _REP_FUNC_16(z900,a7)
+                _REP_FUNC_256(z900,b2)
+                _REP_FUNC_256(z900,b3)
+                _REP_FUNC_256(z900,b9)
+                _REP_FUNC_16(z900,c0)
+                _REP_FUNC_16(z900,c2)
+                _REP_FUNC_16(z900,c4)
+                _REP_FUNC_16(z900,c6)
+                _REP_FUNC_16(z900,c8)
+                _REP_FUNC_16(z900,cc)
+                _REP_FUNC_256(z900,e3)
+                /*
+                _REP_FUNC_256(e4)
+                */
+                _REP_FUNC_256(z900,e5)
+                _REP_FUNC_256(z900,e6)
+                _REP_FUNC_256(z900,eb)
+                _REP_FUNC_256(z900,ec)
+                _REP_FUNC_256(z900,ed)
+                default:
+                    return NULL;
+            }
+#endif
+            default:
+                return NULL;
+            break;
     }
 }
 
 #undef _REP_FUNC_256
 #undef _REP_FUNC_16
+
+/* For callers that can use ARCH_DEP() */
+#if defined(_370)
+DLL_EXPORT  zz_func s370_opcode_replace_instruction(zz_func newfunc,int code1,int code2)
+{
+    return opcode_replace_instruction(ARCH_370,newfunc,code1,code2);
+}
+#endif
+#if defined(_390)
+DLL_EXPORT  zz_func s390_opcode_replace_instruction(zz_func newfunc,int code1,int code2)
+{
+    return opcode_replace_instruction(ARCH_390,newfunc,code1,code2);
+}
+#endif
+#if defined(_900)
+DLL_EXPORT  zz_func z900_opcode_replace_instruction(zz_func newfunc,int code1,int code2)
+{
+    return opcode_replace_instruction(ARCH_900,newfunc,code1,code2);
+}
+#endif
 
 DLL_EXPORT void copy_opcode_tables()
 {

@@ -181,10 +181,18 @@ typedef int (*func) ();
 
 extern int disasm_table (BYTE inst[], char mnemonic[], char *p);
 
-OPC_DLL_IMPORT  zz_func s370_opcode_replace_instruction(zz_func newfun,int code1,int code2);
-// OPC_DLL_IMPORT  zz_func s390_opcode_replace_instruction(zz_func newfun,int code1,int code2);
-// OPC_DLL_IMPORT  zz_func z900_opcode_replace_instruction(zz_func newfun,int code1,int code2);
+OPC_DLL_IMPORT  zz_func opcode_replace_instruction(int arch,zz_func newfun,int code1,int code2);
 
+/* For callers that can ARCH_DEP() */
+#if defined(_370)
+OPC_DLL_IMPORT  zz_func s370_opcode_replace_instruction(zz_func newfun,int code1,int code2);
+#endif
+#if defined(_390)
+OPC_DLL_IMPORT  zz_func s390_opcode_replace_instruction(zz_func newfun,int code1,int code2);
+#endif
+#if defined(_900)
+OPC_DLL_IMPORT  zz_func s900_opcode_replace_instruction(zz_func newfun,int code1,int code2);
+#endif
 
 #if defined(OPTION_INSTRUCTION_COUNTING)
 
