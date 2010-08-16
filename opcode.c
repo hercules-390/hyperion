@@ -2160,7 +2160,8 @@ static zz_func z900_opcode_edxx[256];
 #define _REP_FUNC_16(_code) \
     case 0x ## _code: \
         if(code2 > 15) return NULL; \
-        oldfun=s370_opcode_ ## _code ## xx[code2]; \
+        oldfun=opcode_ ## _code ## xx[code2][ARCH_370]; \
+        opcode_ ## _code ## xx[code2][ARCH_370]=newfunc; \
         for(i=0;i<16;i++) \
         { \
             s370_opcode_ ## _code ## xx[i*16+code2]=newfunc; \
