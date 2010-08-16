@@ -228,7 +228,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00317 "%1d:%04X CCKD file: device is not a cckd device"
 #define HHC00318 "%1d:%04X CCKD file[%d] '%s': error adding shadow file, sf command busy on device"
 #define HHC00319 "%1d:%04X CCKD file[%d] '%s': error adding shadow file"
-#define HHC00320 "%1d:%04X CCKD file[%d] '%s': shaddow file succesfully added"
+#define HHC00320 "%1d:%04X CCKD file[%d] '%s': shadow file succesfully added"
 #define HHC00321 "%1d:%04X CCKD file: merging shadow files..."
 #define HHC00322 "%1d:%04X CCKD file[%d] '%s': error merging shadow file, sf command busy on device"
 #define HHC00323 "%1d:%04X CCKD file[%d] '%s': cannot remove base file"
