@@ -1,3 +1,4 @@
+16 Aug 2010 Deprecate s37x statement. Use "ldmod s37x" instead - Ivan Warren
 11 Aug 2010 Enhance IPL command adding loadparm option. - Paul Gorlinsky
 11 Aug 2010 High-Word Facility - Roger Bowler
 10 Aug 2010 'qcodepages' added as command to display valid codepages; 'codepage' command 
