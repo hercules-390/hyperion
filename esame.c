@@ -5145,9 +5145,23 @@ BYTE *stfl_data;    /* -> STFL data being modified. Depends upon     */
 #if defined(FEATURE_MESSAGE_SECURITY_ASSIST)
     /* MSA is enabled only if the dyncrypt DLL module is loaded */
     if(ARCH_DEP(cipher_message))
-        stfl_data[2] |= STFL_2_MSG_SECURITY;
+        stfl_data[2] |= (STFL_2_MSG_SECURITY
+#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
+                        | STFL_9_MSA_EXTENSION_3
+#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
+                        | STFL_9_MSA_EXTENSION_4
+#endif
+#endif
+                                                );
     else
-        stfl_data[2] &= ~STFL_2_MSG_SECURITY;
+        stfl_data[2] &= ~(STFL_2_MSG_SECURITY
+#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
+                        | STFL_9_MSA_EXTENSION_3
+#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
+                        | STFL_9_MSA_EXTENSION_4
+#endif
+#endif
+                                                );
 #endif /*defined(FEATURE_MESSAGE_SECURITY_ASSIST)*/
 
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
