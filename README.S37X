@@ -40,7 +40,41 @@ From the configuration file statement or the panel issue :
 
 ldmod s37x
 
-III New features enabled (provisional list)
+III. Implementing conditional instructions (for hercules developpers)
+
+The general steps that are taken when new instructions are implemented
+are :
+
+- Define a FEATURE_XXX which describes the feature to which the
+  new instructions are a part of
+- Include the FEATURE_XXX macro in featall.h and #undef it
+- Include the FEATURE_XXX macro in the feat370.h, feat390.h and feat900.h
+  as appropriate. These control for which architectures the instruction
+  functions will actually be compiled.
+- If the instruction is part of an already existing MULTI BYTE opcode,
+  the function for the instruction is included in the opcode_XXxx table
+  in opcode.c. The macro used to indicate which architecture will be
+  made available is GENxAAAxBBBxCCC where AAA is either '370' or '___',
+  BBB is either '390' or '___' and CCC is either '900' or '___'. When 
+  '___' is used, it means the instruction is not made available.
+  Additionally, AAA may also be '37X' to indicate its use is conditional.
+- If the instruction is NOT part of an already existing MULTI BYTE
+  opcode, a new table is created. A new execute_XXxx is also added
+  to allow instruction routing. The format of all these depend
+  on the placement and mask of the 2nd part of the multi byte
+  operation code.
+  The new opcode table must also be copied into the relevant operational
+  opcode tables (named s370_opcode_xxx, s390_opcode_xxx and z900_opcode_xxx)
+  Finaly, the new opcode table pointer must also be added in the REGS
+  structure in hstruct.h.
+  It also must be added to the opcode_replace_instruction so that it
+  may be dynamically updated.
+
+If the instruction is to be made conditionally available in S/370 mode,
+the instruction should be added in the s37x.c module. Also, in feat370.h
+the feature should be included in the section bounded by OPTION_370_EXTENSION.
+
+IV New features enabled (provisional list)
 
 The following ESA/390 features are made available in S/370 mode :
 
