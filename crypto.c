@@ -89,8 +89,6 @@ DEF_INST(compute_message_authentication_code_r)
     }
 }
 
-#endif /*defined(FEATURE_MESSAGE_SECURITY_ASSIST)*/
-
 /*----------------------------------------------------------------------------*/
 /* B92F KMC   - Cipher Message with Chaining                            [RRE] */
 /*----------------------------------------------------------------------------*/
@@ -107,6 +105,8 @@ DEF_INST(cipher_message_with_chaining_r)
         ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     }
 }
+
+#endif /*defined(FEATURE_MESSAGE_SECURITY_ASSIST)*/
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
 /*----------------------------------------------------------------------------*/

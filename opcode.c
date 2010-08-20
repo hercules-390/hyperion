@@ -1036,7 +1036,8 @@
 #if !defined(FEATURE_MESSAGE_SECURITY_ASSIST)
  UNDEF_INST(cipher_message_r)
  UNDEF_INST(cipher_message_with_chaining_r)
- UNDEF_INST(compute_message_digest_r)
+ UNDEF_INST(compute_intermediate_message_digest_r)
+ UNDEF_INST(compute_last_message_digest_r)
  UNDEF_INST(compute_message_authentication_code_r)
 #endif /*!defined(FEATURE_MESSAGE_SECURITY_ASSIST)*/
 
