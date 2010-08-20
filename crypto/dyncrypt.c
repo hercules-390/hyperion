@@ -1627,7 +1627,7 @@ static void ARCH_DEP(kmc_prng)(int r1, int r2, REGS *regs)
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
 /*----------------------------------------------------------------------------*/
-/* B9?? Cipher message with counter (KMCTR) FC 1, 2 and 3                     */
+/* B92D Cipher message with counter (KMCTR) FC 1, 2 and 3                     */
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(kmctr_dea)(int r1, int r2, REGS *regs)
 {
@@ -1803,7 +1803,7 @@ static void ARCH_DEP(kmctr_dea)(int r1, int r2, REGS *regs)
 }
 
 /*----------------------------------------------------------------------------*/
-/* B9?? Cipher message with counter (KMCTR) FC 18, 19 and 20                  */
+/* B92D Cipher message with counter (KMCTR) FC 18, 19 and 20                  */
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(kmctr_aes)(int r1, int r2, REGS *regs)
 {
@@ -1918,7 +1918,7 @@ static void ARCH_DEP(kmctr_aes)(int r1, int r2, REGS *regs)
 }
 
 /*----------------------------------------------------------------------------*/
-/* B9?? Cipher message with cipher feedback (KMF) FC 1, 2 and 3               */
+/* B92D Cipher message with cipher feedback (KMF) FC 1, 2 and 3               */
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(kmf_dea)(int r1, int r2, REGS *regs)
 {
@@ -2121,7 +2121,7 @@ static void ARCH_DEP(kmf_dea)(int r1, int r2, REGS *regs)
 }
 
 /*----------------------------------------------------------------------------*/
-/* B9?? Cipher message with cipher feedback (KMF) FC 18, 19 and 20            */
+/* B92A Cipher message with cipher feedback (KMF) FC 18, 19 and 20            */
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(kmf_aes)(int r1, int r2, REGS *regs)
 {
@@ -2237,7 +2237,7 @@ static void ARCH_DEP(kmf_aes)(int r1, int r2, REGS *regs)
 }
 
 /*----------------------------------------------------------------------------*/
-/* B9?? Cipher message with output feedback (KMO) FC 1, 2 and 3               */
+/* B92B Cipher message with output feedback (KMO) FC 1, 2 and 3               */
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(kmo_dea)(int r1, int r2, REGS *regs)
 {
@@ -2401,7 +2401,7 @@ static void ARCH_DEP(kmo_dea)(int r1, int r2, REGS *regs)
 }
 
 /*----------------------------------------------------------------------------*/
-/* B9?? Cipher message with output feedback (KMO) FC 18, 19 and 20            */
+/* B92B Cipher message with output feedback (KMO) FC 18, 19 and 20            */
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(kmo_aes)(int r1, int r2, REGS *regs)
 {
@@ -2903,14 +2903,15 @@ DEF_INST(cipher_message_with_chaining_d)
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
 /*----------------------------------------------------------------------------*/
-/* B9?? KMCTR - Cipher message with counter                             [RRE] */
+/* B92D KMCTR - Cipher message with counter                             [RRF] */
 /*----------------------------------------------------------------------------*/
 DEF_INST(cipher_message_with_counter_d)
 {
   int r1;
   int r2;
+  int r3;
 
-  RRE(inst, regs, r1, r2);
+  RRF_M(inst, regs, r1, r2, r3);
 
 #ifdef OPTION_KMCTR_DEBUG
   logmsg("KMCTR: cipher message with counter\n");
@@ -2977,7 +2978,7 @@ DEF_INST(cipher_message_with_counter_d)
 }
 
 /*----------------------------------------------------------------------------*/
-/* B9?? KMF   - Cipher message with cipher feedback                     [RRE] */
+/* B92A KMF   - Cipher message with cipher feedback                     [RRE] */
 /*----------------------------------------------------------------------------*/
 DEF_INST(cipher_message_with_cipher_feedback_d)
 {
@@ -3052,7 +3053,7 @@ DEF_INST(cipher_message_with_cipher_feedback_d)
 }
 
 /*----------------------------------------------------------------------------*/
-/* B9?? KMO   - Cipher message with output feedback                     [RRE] */
+/* B92B KMO   - Cipher message with output feedback                     [RRE] */
 /*----------------------------------------------------------------------------*/
 DEF_INST(cipher_message_with_output_feedback_d)
 {
@@ -3126,7 +3127,7 @@ DEF_INST(cipher_message_with_output_feedback_d)
 }
 
 /*----------------------------------------------------------------------------*/
-/* B9?? PCC   - Perform cryptographic computation                       [RRE] */
+/* B92C PCC   - Perform cryptographic computation                       [RRE] */
 /*----------------------------------------------------------------------------*/
 DEF_INST(perform_cryptographic_computation_d)
 {
@@ -3214,7 +3215,7 @@ DEF_INST(perform_cryptographic_computation_d)
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
 /*----------------------------------------------------------------------------*/
-/* B9?? PCKMO - Perform cryptographic key management operation          [RRE] */
+/* B928 PCKMO - Perform cryptographic key management operation          [RRE] */
 /*----------------------------------------------------------------------------*/
 DEF_INST(perform_cryptographic_key_management_operation_d)
 {

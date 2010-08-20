@@ -110,24 +110,24 @@ DEF_INST(cipher_message_with_chaining_r)
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
 /*----------------------------------------------------------------------------*/
-/* B9?? KMCTR - Cipher message with counter                             [RRE] */
+/* B92D KMCTR - Cipher message with counter                             [RRF] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(cipher_message_with_cipher_feedback_r)
+DEF_INST(cipher_message_with_counter_r)
 {
     if( ARCH_DEP(cipher_message_with_counter) )
         ARCH_DEP(cipher_message_with_counter) (inst, regs);
     else
     {
-    int  r1, r2;                                /* register values   */
+    int  r1, r2, r3;                            /* register values   */
 
-        RRE(inst, regs, r1, r2);
+        RRF_M(inst, regs, r1, r2, r3);
 
         ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     }
 }
 
 /*----------------------------------------------------------------------------*/
-/* B9?? KMF   - Cipher message with cipher feedback                     [RRE] */
+/* B92A KMF   - Cipher message with cipher feedback                     [RRE] */
 /*----------------------------------------------------------------------------*/
 DEF_INST(cipher_message_with_cipher_feedback_r)
 {
@@ -144,7 +144,7 @@ DEF_INST(cipher_message_with_cipher_feedback_r)
 }
 
 /*----------------------------------------------------------------------------*/
-/* B9?? KMO   - Cipher message with output feedback                     [RRE] */
+/* B92B KMO   - Cipher message with output feedback                     [RRE] */
 /*----------------------------------------------------------------------------*/
 DEF_INST(cipher_message_with_output_feedback_r)
 {
@@ -161,7 +161,7 @@ DEF_INST(cipher_message_with_output_feedback_r)
 }
 
 /*----------------------------------------------------------------------------*/
-/* B9?? PCC  - Perform cryptographic computation                        [RRE] */
+/* B92C PCC  - Perform cryptographic computation                        [RRE] */
 /*----------------------------------------------------------------------------*/
 DEF_INST(perform_cryptographic_computation_r)
 {
@@ -180,7 +180,7 @@ DEF_INST(perform_cryptographic_computation_r)
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
 /*----------------------------------------------------------------------------*/
-/* B9?? PCKMO - Perform cryptographic key management operation          [RRE] */
+/* B928 PCKMO - Perform cryptographic key management operation          [RRE] */
 /*----------------------------------------------------------------------------*/
 DEF_INST(perform_cryptographic_key_management_operation_r)
 {
