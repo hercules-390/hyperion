@@ -2678,8 +2678,77 @@ DEF_INST(load_and_or_long)                                      /*810*/
 } /* end DEF_INST(load_and_or_long) */
 
 
-//DEF_INST(load_pair_disjoint)                                    /*810*/
-//DEF_INST(load_pair_disjoint_long)                               /*810*/
+/*-------------------------------------------------------------------*/
+/* C8x4 LPD   - Load Pair Disjoint                             [SSF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_pair_disjoint)                                    /*810*/
+{
+int     r3;                             /* Register number           */
+int     b1, b2;                         /* Base register numbers     */
+VADR    effective_addr1,
+        effective_addr2;                /* Effective addresses       */
+U32     v1, v2;                         /* Operand values            */
+U32     w1, w2;                         /* Refetched values          */
+
+    SSF(inst, regs, b1, effective_addr1, b2, effective_addr2, r3);
+
+    ODD_CHECK(r3, regs);
+
+    /* Fetch the values of the storage operands */
+    v1 = ARCH_DEP(vfetch4) ( effective_addr1, b1, regs );
+    v2 = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Fetch operands again to check for alteration by another CPU */
+    w1 = ARCH_DEP(vfetch4) ( effective_addr1, b1, regs );
+    w2 = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Load R3 register from first storage operand */
+    regs->GR_L(r3) = v1;
+
+    /* Load R3+1 register from second storage operand */
+    regs->GR_L(r3+1) = v2;
+
+    /* Set condition code 0 if operands unaltered, or 3 if altered */
+    regs->psw.cc = (v1 == w1 && v2 == w2) ? 0 : 3;
+
+} /* end DEF_INST(load_pair_disjoint) */
+
+
+/*-------------------------------------------------------------------*/
+/* C8x5 LPDG  - Load Pair Disjoint Long                        [SSF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_pair_disjoint_long)                               /*810*/
+{
+int     r3;                             /* Register number           */
+int     b1, b2;                         /* Base register numbers     */
+VADR    effective_addr1,
+        effective_addr2;                /* Effective addresses       */
+U64     v1, v2;                         /* Operand values            */
+U64     w1, w2;                         /* Refetched values          */
+
+    SSF(inst, regs, b1, effective_addr1, b2, effective_addr2, r3);
+
+    ODD_CHECK(r3, regs);
+
+    /* Fetch the values of the storage operands */
+    v1 = ARCH_DEP(vfetch8) ( effective_addr1, b1, regs );
+    v2 = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
+
+    /* Fetch operands again to check for alteration by another CPU */
+    w1 = ARCH_DEP(vfetch8) ( effective_addr1, b1, regs );
+    w2 = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
+
+    /* Load R3 register from first storage operand */
+    regs->GR_G(r3) = v1;
+
+    /* Load R3+1 register from second storage operand */
+    regs->GR_G(r3+1) = v2;
+
+    /* Set condition code 0 if operands unaltered, or 3 if altered */
+    regs->psw.cc = (v1 == w1 && v2 == w2) ? 0 : 3;
+
+} /* end DEF_INST(load_pair_disjoint_long) */
+
 #endif /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)*/         /*810*/
 
 
