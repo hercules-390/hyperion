@@ -150,14 +150,15 @@ DLL_EXPORT void log_close(void)
     return;
 }
 
-DLL_EXPORT void writemsg(const char *file, int line, const char* function, int lvl, char *color, char *msg, ...)
+DLL_EXPORT void writemsg(const char *file, int line, const char* function, int grp, int lvl, char *color, char *msg, ...)
 {
     char   *bfr     =   NULL;
     int     rc      =   1;
     int     siz     =   1024;
     va_list vl;
 
-    obtain_lock(&sysblk.msglock);
+    if(!sysblk.msggrp || (sysblk.msggrp && !grp))
+      obtain_lock(&sysblk.msglock);
 
   #ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  
@@ -226,7 +227,8 @@ DLL_EXPORT void writemsg(const char *file, int line, const char* function, int l
     fflush(stdout);  
   #endif
 
-    release_lock(&sysblk.msglock);
+    if(!sysblk.msggrp || (sysblk.msggrp && !grp))
+      release_lock(&sysblk.msglock);
 }
 
 /*-------------------------------------------------------------------*/

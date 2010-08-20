@@ -171,20 +171,22 @@
 /*----------------------------------------------------------------------------*/
 #define LOGBYTE(s, v, x) \
 { \
+  char buf[128]; \
   int i; \
   \
-  logmsg("  " s " "); \
+  buf[0] = 0; \
   for(i = 0; i < (x); i++) \
-    logmsg("%02X", (v)[i]); \
-  logmsg(" | "); \
+    snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%02X", (v)[i]); \
+  snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " | "); \
   for(i = 0; i < (x); i++) \
   { \
     if(isprint(guest_to_host((v)[i]))) \
-      logmsg("%c", guest_to_host((v)[i])); \
+      snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%c", guest_to_host((v)[i])); \
     else \
-      logmsg("."); \
+      snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "."); \
   } \
-  logmsg(" |\n"); \
+  snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " |"); \
+  WRMSG(HHC90109, "D", s, buf); \
 }
 
 /*----------------------------------------------------------------------------*/
@@ -192,25 +194,29 @@
 /*----------------------------------------------------------------------------*/
 #define LOGBYTE2(s, v, x, y) \
 { \
+  char buf[128]; \
   int i; \
   int j; \
   \
-  logmsg("  " s "\n"); \
+  buf[0] = 0; \
+  WRGMSG_ON; \
+  WRGMSG(HHC90109, "D", s, ""); \
   for(i = 0; i < (y); i++) \
   { \
-    logmsg("      "); \
     for(j = 0; j < (x); j++) \
-      logmsg("%02X", (v)[i * (x) + j]); \
-    logmsg(" | "); \
+      snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%02X", (v)[i * (x) + j]); \
+    snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " | "); \
     for(j = 0; j < (x); j++) \
     { \
       if(isprint(guest_to_host((v)[i * (x) + j]))) \
-        logmsg("%c", guest_to_host((v)[i * (x) + j])); \
+        snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%c", guest_to_host((v)[i * (x) + j])); \
       else \
-        logmsg("."); \
+        snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "."); \
     } \
-    logmsg(" |\n"); \
+    snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " |"); \
+    WRGMSG(HHC90110, "D", buf); \
   } \
+  WRGMSG_OFF; \
 }
 
 /*----------------------------------------------------------------------------*/
@@ -503,8 +509,8 @@ static void ARCH_DEP(kimd_sha)(int r1, int r2, REGS *regs, int klmd)
     SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - message_blocklen);
 
 #ifdef OPTION_KIMD_DEBUG
-    logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
-    logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
+    WRMSG(HHC90108, "D", r2, (regs)->GR(r2));
+    WRMSG(HHC90108, "D", r2 + 1, (regs)->GR(r2 + 1));
 #endif
 
     /* check for end of data */
@@ -717,8 +723,8 @@ static void ARCH_DEP(klmd_sha)(int r1, int r2, REGS *regs)
   SET_GR_A(r2 + 1, regs, 0);
 
 #ifdef OPTION_KLMD_DEBUG
-  logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
-  logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
+  WRMSG(HHC90108, "D", r2, (regs)->GR(r2));
+  WRMSG(HHC90108, "D", r2 + 1, (regs)->GR(r2 + 1));
 #endif
 
   /* Set condition code */
@@ -839,9 +845,9 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
     SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - 8);
 
 #ifdef OPTION_KM_DEBUG
-    logmsg("  GR%02d  : " F_GREG "\n", r1, (regs)->GR(r1));
-    logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
-    logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
+    WRMSG(HHC90108, "D", r1, (regs)->GR(r1));
+    WRMSG(HHC90108, "D", r2, (regs)->GR(r2));
+    WRMSG(HHC90108, "D", r2 + 1, (regs)->GR(r2 + 1));
 #endif
 
     /* check for end of data */
@@ -928,9 +934,9 @@ static void ARCH_DEP(km_aes)(int r1, int r2, REGS *regs)
     SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - 16);
 
 #ifdef OPTION_KM_DEBUG
-    logmsg("  GR%02d  : " F_GREG "\n", r1, (regs)->GR(r1));
-    logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
-    logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
+    WRMSG(HHC90108, "D", r1, (regs)->GR(r1));
+    WRMSG(HHC90108, "D", r2, (regs)->GR(r2));
+    WRMSG(HHC90108, "D", (regs)->GR(r2 + 1));
 #endif
 
     /* check for end of data */
@@ -1070,8 +1076,8 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
     SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - 8);
 
 #ifdef OPTION_KMAC_DEBUG
-    logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
-    logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
+    WRMSG(HHC90108, "D", (regs)->GR(r2));
+    WRMSG(HHC90108, "D", (regs)->GR(r2 + 1));
 #endif
 
     /* check for end of data */
@@ -1160,8 +1166,8 @@ static void ARCH_DEP(kmac_aes)(int r1, int r2, REGS *regs)
     SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - 16);
 
 #ifdef OPTION_KMAC_DEBUG
-    logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
-    logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
+    WRMSG(HHC90108, "D", r2, (regs)->GR(r2));
+    WRMSG(HHC90108, "D", r2 + 1, (regs)->GR(r2 + 1));
 #endif
 
     /* check for end of data */
@@ -1360,9 +1366,9 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
     SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - 8);
 
 #ifdef OPTION_KMC_DEBUG
-    logmsg("  GR%02d  : " F_GREG "\n", r1, (regs)->GR(r1));
-    logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
-    logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
+    WRMSG(HHC90108, "D", r1, (regs)->GR(r1));
+    WRMSG(HHC90108, "D", r2, (regs)->GR(r2));
+    WRMSG(HHC90108, "D", r2 + 1, (regs)->GR(r2 + 1));
 #endif
 
     /* check for end of data */
@@ -1478,9 +1484,9 @@ static void ARCH_DEP(kmc_aes)(int r1, int r2, REGS *regs)
     SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - 16);
 
 #ifdef OPTION_KMC_DEBUG
-    logmsg("  GR%02d  : " F_GREG "\n", r1, (regs)->GR(r1));
-    logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
-    logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
+    WRMSG(HHC90108, "D", r1, (regs)->GR(r1));
+    WRMSG(HHC90108, "D", r2, (regs)->GR(r2));
+    WRMSG(HHC90108, "D", r2 + 1, (regs)->GR(r2 + 1));
 #endif
 
     /* check for end of data */
@@ -1604,9 +1610,9 @@ static void ARCH_DEP(kmc_prng)(int r1, int r2, REGS *regs)
     SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - 8);
 
 #ifdef OPTION_KMC_DEBUG
-    logmsg("  GR%02d  : " F_GREG "\n", r1, (regs)->GR(r1));
-    logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
-    logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
+    WRMSG(HHC90108, "D", r1, (regs)->GR(r1));
+    WRMSG(HHC90108, "D", r2, (regs)->GR(r2));
+    WRMSG(HHC90108, "D", r2 + 1, (regs)->GR(r2 + 1));
 #endif
 
     /* check for end of data */
@@ -1782,9 +1788,9 @@ static void ARCH_DEP(kmctr_dea)(int r1, int r2, REGS *regs)
     SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - 8);
 
 #ifdef OPTION_KMCTR_DEBUG
-    logmsg("  GR%02d  : " F_GREG "\n", r1, (regs)->GR(r1));
-    logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
-    logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
+    WRMSG(HHC90108, "D", r1, (regs)->GR(r1));
+    WRMSG(HHC90108, "D", r2, (regs)->GR(r2));
+    WRMSG(HHC90108, "D", r2 + 1, (regs)->GR(r2 + 1));
 #endif
 
     /* check for end of data */
@@ -1897,9 +1903,9 @@ static void ARCH_DEP(kmctr_aes)(int r1, int r2, REGS *regs)
     SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - 16);
 
 #ifdef OPTION_KMCTR_DEBUG
-    logmsg("  GR%02d  : " F_GREG "\n", r1, (regs)->GR(r1));
-    logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
-    logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
+    WRMSG(HHC90108, "D", r1, (regs)->GR(r1));
+    WRMSG(HHC90108, "D", r2, (regs)->GR(r2));
+    WRMSG(HHC90108, "D", r2 + 1, (regs)->GR(r2 + 1));
 #endif
 
     /* check for end of data */
@@ -2100,9 +2106,9 @@ static void ARCH_DEP(kmf_dea)(int r1, int r2, REGS *regs)
     SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - 8);
 
 #ifdef OPTION_KMF_DEBUG
-    logmsg("  GR%02d  : " F_GREG "\n", r1, (regs)->GR(r1));
-    logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
-    logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
+    WRMSG(HHC90108, "D", r1, (regs)->GR(r1));
+    WRMSG(HHC90108, "D", r2, (regs)->GR(r2));
+    WRMSG(HHC90108, "D", r2 + 1, (regs)->GR(r2 + 1));
 #endif
 
     /* check for end of data */
@@ -2216,9 +2222,9 @@ static void ARCH_DEP(kmf_aes)(int r1, int r2, REGS *regs)
     SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - 16);
 
 #ifdef OPTION_KMF_DEBUG
-    logmsg("  GR%02d  : " F_GREG "\n", r1, (regs)->GR(r1));
-    logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
-    logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
+    WRMSG(HHC90108, "D", r1, (regs)->GR(r1));
+    WRMSG(HHC90108, "D", r2, (regs)->GR(r2));
+    WRMSG(HHC90108, "D", r2 + 1, (regs)->GR(r2 + 1));
 #endif
 
     /* check for end of data */
@@ -2380,9 +2386,9 @@ static void ARCH_DEP(kmo_dea)(int r1, int r2, REGS *regs)
     SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - 8);
 
 #ifdef OPTION_KMO_DEBUG
-    logmsg("  GR%02d  : " F_GREG "\n", r1, (regs)->GR(r1));
-    logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
-    logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
+    WRMSG(HHC90108, "D", r1, (regs)->GR(r1));
+    WRMSG(HHC90108, "D", r2, (regs)->GR(r2));
+    WRMSG(HHC90108, "D", r2 + 1, (regs)->GR(r2 + 1));
 #endif
 
     /* check for end of data */
@@ -2483,9 +2489,9 @@ static void ARCH_DEP(kmo_aes)(int r1, int r2, REGS *regs)
     SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - 16);
 
 #ifdef OPTION_KMO_DEBUG
-    logmsg("  GR%02d  : " F_GREG "\n", r1, (regs)->GR(r1));
-    logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
-    logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
+    WRMSG(HHC90108, "D", r1, (regs)->GR(r1));
+    WRMSG(HHC90108, "D", r2, (regs)->GR(r2));
+    WRMSG(HHC90108, "D", r2 + 1, (regs)->GR(r2 + 1));
 #endif
 
     /* check for end of data */
@@ -2515,16 +2521,18 @@ DEF_INST(compute_intermediate_message_digest_d)
   RRE(inst, regs, r1, r2);
 
 #ifdef OPTION_KIMD_DEBUG
-  logmsg("KIMD: compute intermediate message digest\n");
-  logmsg("  r1        : GR%02d\n", r1);
-  logmsg("    address : " F_VADR "\n", regs->GR(r1));
-  logmsg("  r2        : GR%02d\n", r2);
-  logmsg("    address : " F_VADR "\n", regs->GR(r2));
-  logmsg("    length  : " F_GREG "\n", regs->GR(r2 + 1));
-  logmsg("  GR00      : " F_GREG "\n", regs->GR(0));
-  logmsg("    bit 56  : %s\n", TRUEFALSE(GR0_m(regs)));
-  logmsg("    fc      : %d\n", GR0_fc(regs));
-  logmsg("  GR01      : " F_GREG "\n", regs->GR(1));
+  WRGMSG_ON;
+  WRGMSG(HHC90100, "D", "KIMD: compute intermediate message digest");
+  WRGMSG(HHC90101, "D", 1, r1);
+  WRGMSG(HHC90102, "D", regs->GR(r1));
+  WRGMSG(HHC90101, "D", 2, r2);
+  WRGMSG(HHC90102, "D", regs->GR(r2));
+  WRGMSG(HHC90103, "D", regs->GR(r2 + 1));
+  WRGMSG(HHC90104, "D", 0, regs->GR(0));
+  WRGMSG(HHC90105, "D", TRUEFALSE(GR0_m(regs)));
+  WRGMSG(HHC90106, "D", GR0_fc(regs));
+  WRGMSG(HHC90104, "D", 1, regs->GR(1));
+  WRGMSG_OFF;
 #endif
 
   /* Check special conditions */
@@ -2586,16 +2594,18 @@ DEF_INST(compute_last_message_digest_d)
   RRE(inst, regs, r1, r2);
 
 #ifdef OPTION_KLMD_DEBUG
-  logmsg("KLMD: compute last message digest\n");
-  logmsg("  r1        : GR%02d\n", r1);
-  logmsg("    address : " F_VADR "\n", regs->GR(r1));
-  logmsg("  r2        : GR%02d\n", r2);
-  logmsg("    address : " F_VADR "\n", regs->GR(r2));
-  logmsg("    length  : " F_GREG "\n", regs->GR(r2 + 1));
-  logmsg("  GR00      : " F_GREG "\n", regs->GR(0));
-  logmsg("    bit 56  : %s\n", TRUEFALSE(GR0_m(regs)));
-  logmsg("    fc      : %d\n", GR0_fc(regs));
-  logmsg("  GR01      : " F_GREG "\n", regs->GR(1));
+  WRGMSG_ON;
+  WRGMSG(HHC90100, "D", "KLMD: compute last message digest");
+  WRGMSG(HHC90101, "D", 1, r1);
+  WRGMSG(HHC90102, "D", regs->GR(r1));
+  WRGMSG(HHC90101, "D", 2, r2);
+  WRGMSG(HHC90102, "D", regs->GR(r2));
+  WRGMSG(HHC90103, "D", regs->GR(r2 + 1));
+  WRGMSG(HHC90104, "D", 0, regs->GR(0));
+  WRGMSG(HHC90105, "D", TRUEFALSE(GR0_m(regs)));
+  WRGMSG(HHC90106, "D", GR0_fc(regs));
+  WRGMSG(HHC90104, "D", 1, regs->GR(1));
+  WRGMSG_OFF;
 #endif
 
   /* Check special conditions */
@@ -2652,16 +2662,18 @@ DEF_INST(cipher_message_d)
   RRE(inst, regs, r1, r2);
 
 #ifdef OPTION_KM_DEBUG
-  logmsg("KM: cipher message\n");
-  logmsg("  r1        : GR%02d\n", r1);
-  logmsg("    address : " F_VADR "\n", regs->GR(r1));
-  logmsg("  r2        : GR%02d\n", r2);
-  logmsg("    address : " F_VADR "\n", regs->GR(r2));
-  logmsg("    length  : " F_GREG "\n", regs->GR(r2 + 1));
-  logmsg("  GR00      : " F_GREG "\n", regs->GR(0));
-  logmsg("    m       : %s\n", TRUEFALSE(GR0_m(regs)));
-  logmsg("    fc      : %d\n", GR0_fc(regs));
-  logmsg("  GR01      : " F_GREG "\n", regs->GR(1));
+  WRGMSG_ON;
+  WRGMSG(HHC90100, "D", "KM: cipher message");
+  WRGMSG(HHC90101, "D", 1, r1);
+  WRGMSG(HHC90102, "D", regs->GR(r1));
+  WRGMSG(HHC90101, "D", 2, r2);
+  WRGMSG(HHC90102, "D", regs->GR(r2));
+  WRGMSG(HHC90103, "D", regs->GR(r2 + 1));
+  WRGMSG(HHC90104, "D", 0, regs->GR(0));
+  WRGMSG(HHC90107, "D", TRUEFALSE(GR0_m(regs)));
+  WRGMSG(HHC90106, "D", GR0_fc(regs));
+  WRGMSG(HHC90104, "D", 1, regs->GR(1));
+  WRGMSG_OFF;
 #endif
 
   /* Check special conditions */
@@ -2747,14 +2759,16 @@ DEF_INST(compute_message_authentication_code_d)
   RRE(inst, regs, r1, r2);
 
 #ifdef OPTION_KMAC_DEBUG
-  logmsg("KMAC: compute message authentication code\n");
-  logmsg("  r2        : GR%02d\n", r2);
-  logmsg("    address : " F_VADR "\n", regs->GR(r2));
-  logmsg("    length  : " F_GREG "\n", regs->GR(r2 + 1));
-  logmsg("  GR00      : " F_GREG "\n", regs->GR(0));
-  logmsg("    bit 56  : %s\n", TRUEFALSE(GR0_m(regs)));
-  logmsg("    fc      : %d\n", GR0_fc(regs));
-  logmsg("  GR01      : " F_GREG "\n", regs->GR(1));
+  WRGMSG_ON;
+  WRGMSG(HHC90100, "D", "KMAC: compute message authentication code");
+  WRGMSG(HHC90101, "D", 2, r2);
+  WRGMSG(HHC90102, "D", regs->GR(r2));
+  WRGMSG(HHC90103, "D", regs->GR(r2 + 1));
+  WRGMSG(HHC90104, "D", 0, regs->GR(0));
+  WRGMSG(HHC90105, "D", TRUEFALSE(GR0_m(regs)));
+  WRGMSG(HHC90106, "D", GR0_fc(regs));
+  WRGMSG(HHC90104, "D", 1, regs->GR(1));
+  WRGMSG_OFF;
 #endif
 
   /* Check special conditions */
@@ -2823,16 +2837,18 @@ DEF_INST(cipher_message_with_chaining_d)
   RRE(inst, regs, r1, r2);
 
 #ifdef OPTION_KMC_DEBUG
-  logmsg("KMC: cipher message with chaining\n");
-  logmsg("  r1        : GR%02d\n", r1);
-  logmsg("    address : " F_VADR "\n", regs->GR(r1));
-  logmsg("  r2        : GR%02d\n", r2);
-  logmsg("    address : " F_VADR "\n", regs->GR(r2));
-  logmsg("    length  : " F_GREG "\n", regs->GR(r2 + 1));
-  logmsg("  GR00      : " F_GREG "\n", regs->GR(0));
-  logmsg("    m       : %s\n", TRUEFALSE(GR0_m(regs)));
-  logmsg("    fc      : %d\n", GR0_fc(regs));
-  logmsg("  GR01      : " F_GREG "\n", regs->GR(1));
+  WRGMSG_ON;
+  WRGMSG(HHC90100, "D", "KMC: cipher message with chaining");
+  WRGMSG(HHC90101, "D", 1, r1);
+  WRGMSG(HHC90102, "D", regs->GR(r1));
+  WRGMSG(HHC90101, "D", 2, r2);
+  WRGMSG(HHC90102, "D", regs->GR(r2));
+  WRGMSG(HHC90103, "D", regs->GR(r2 + 1));
+  WRGMSG(HHC90104, "D", 0, regs->GR(0));
+  WRGMSG(HHC90107, "D", TRUEFALSE(GR0_m(regs)));
+  WRGMSG(HHC90106, "D", GR0_fc(regs));
+  WRGMSG(HHC90104, "D", 1, regs->GR(1));
+  WRGMSG_OFF;
 #endif
 
   /* Check special conditions */
@@ -2914,15 +2930,17 @@ DEF_INST(cipher_message_with_counter_d)
   RRF_M(inst, regs, r1, r2, r3);
 
 #ifdef OPTION_KMCTR_DEBUG
-  logmsg("KMCTR: cipher message with counter\n");
-  logmsg("  r1        : GR%02d\n", r1);
-  logmsg("    address : " F_VADR "\n", regs->GR(r1));
-  logmsg("  r2        : GR%02d\n", r2);
-  logmsg("    address : " F_VADR "\n", regs->GR(r2));
-  logmsg("    length  : " F_GREG "\n", regs->GR(r2 + 1));
-  logmsg("  GR00      : " F_GREG "\n", regs->GR(0));
-  logmsg("    fc      : %d\n", GR0_fc(regs));
-  logmsg("  GR01      : " F_GREG "\n", regs->GR(1));
+  WRGMSG_ON;
+  WRGMSG(HHC90100, "D", "KMCTR: cipher message with counter");
+  WRGMSG(HHC90101, "D", 1, r1);
+  WRGMSG(HHC90102, "D", regs->GR(r1));
+  WRGMSG(HHC90101, "D", 2, r2);
+  WRGMSG(HHC90102, "D", regs->GR(r2));
+  WRGMSG(HHC90103, "D", regs->GR(r2 + 1));
+  WRGMSG(HHC90104, "D", 0, regs->GR(0));
+  WRGMSG(HHC90106, "D", GR0_fc(regs));
+  WRGMSG(HHC90104, "D", 1, regs->GR(1));
+  WRGMSG_OFF;
 #endif
 
   /* Check special conditions */
@@ -2988,16 +3006,18 @@ DEF_INST(cipher_message_with_cipher_feedback_d)
   RRE(inst, regs, r1, r2);
 
 #ifdef OPTION_KMF_DEBUG
-  logmsg("KMF: cipher message with cipher feedback\n");
-  logmsg("  r1        : GR%02d\n", r1);
-  logmsg("    address : " F_VADR "\n", regs->GR(r1));
-  logmsg("  r2        : GR%02d\n", r2);
-  logmsg("    address : " F_VADR "\n", regs->GR(r2));
-  logmsg("    length  : " F_GREG "\n", regs->GR(r2 + 1));
-  logmsg("  GR00      : " F_GREG "\n", regs->GR(0));
-  logmsg("    m       : %s\n", TRUEFALSE(GR0_m(regs)));
-  logmsg("    fc      : %d\n", GR0_fc(regs));
-  logmsg("  GR01      : " F_GREG "\n", regs->GR(1));
+  WRGMSG_ON;
+  WRGMSG(HHC90100, "D", "KMF: cipher message with cipher feedback");
+  WRGMSG(HHC90101, "D", 1, r1);
+  WRGMSG(HHC90102, "D", regs->GR(r1));
+  WRGMSG(HHC90101, "D", 2, r2);
+  WRGMSG(HHC90102, "D", regs->GR(r2));
+  WRGMSG(HHC90103, "D", regs->GR(r2 + 1));
+  WRGMSG(HHC90104, "D", 0, regs->GR(0));
+  WRGMSG(HHC90107, "D", TRUEFALSE(GR0_m(regs)));
+  WRGMSG(HHC90106, "D", GR0_fc(regs));
+  WRGMSG(HHC90104, "D", 1, regs->GR(1));
+  WRGMSG_OFF;
 #endif
 
   /* Check special conditions */
@@ -3063,15 +3083,17 @@ DEF_INST(cipher_message_with_output_feedback_d)
   RRE(inst, regs, r1, r2);
 
 #ifdef OPTION_KMO_DEBUG
-  logmsg("KMO: cipher message with output feedback\n");
-  logmsg("  r1        : GR%02d\n", r1);
-  logmsg("    address : " F_VADR "\n", regs->GR(r1));
-  logmsg("  r2        : GR%02d\n", r2);
-  logmsg("    address : " F_VADR "\n", regs->GR(r2));
-  logmsg("    length  : " F_GREG "\n", regs->GR(r2 + 1));
-  logmsg("  GR00      : " F_GREG "\n", regs->GR(0));
-  logmsg("    fc      : %d\n", GR0_fc(regs));
-  logmsg("  GR01      : " F_GREG "\n", regs->GR(1));
+  WRGMSG_ON;
+  WRGMSG(HHC90100, "D", "KMO: cipher message with output feedback");
+  WRGMSG(HHC90101, "D", 1, r1);
+  WRGMSG(HHC90102, "D", regs->GR(r1));
+  WRGMSG(HHC90101, "D", 2, r2);
+  WRGMSG(HHC90102, "D", regs->GR(r2));
+  WRGMSG(HHC90103, "D", regs->GR(r2 + 1));
+  WRGMSG(HHC90104, "D", 0, regs->GR(0));
+  WRGMSG(HHC90106, "D", GR0_fc(regs));
+  WRGMSG(HHC90104, "D", 1, regs->GR(1));
+  WRGMSG_OFF;
 #endif
 
   /* Check special conditions */
@@ -3137,15 +3159,17 @@ DEF_INST(perform_cryptographic_computation_d)
   RRE(inst, regs, r1, r2);
   
 #ifdef OPTION_PCC_DEBUG
-  logmsg("PCC: perform cryptographic computation\n");
-  logmsg("  r1        : GR%02d\n", r1);
-  logmsg("    address : " F_VADR "\n", regs->GR(r1));
-  logmsg("  r2        : GR%02d\n", r2);
-  logmsg("    address : " F_VADR "\n", regs->GR(r2));
-  logmsg("    length  : " F_GREG "\n", regs->GR(r2 + 1));
-  logmsg("  GR00      : " F_GREG "\n", regs->GR(0));
-  logmsg("    fc      : %d\n", GR0_fc(regs));
-  logmsg("  GR01      : " F_GREG "\n", regs->GR(1));
+  WRGMSG_ON;
+  WRGMSG(HHC90100, "D", "PCC: perform cryptographic computation\n";
+  WRGMSG(HHC90101, "D", 1, r1);
+  WRGMSG(HHC90102, "D", regs->GR(r1));
+  WRGMSG(HHC90101, "D", 2, r2);
+  WRGMSG(HHC90102, "D", regs->GR(r2));
+  WRGMSG(HHC90103, "D", regs->GR(r2 + 1));
+  WRGMSG(HHC90104, "D", 0, regs->GR(0));
+  WRGMSG(HHC90106, "D", GR0_fc(regs));
+  WRGMSG(HHC90104, "D", 1, regs->GR(1));
+  WRGMSG_OFF;
 #endif
 
   /* Check special conditions */
@@ -3225,15 +3249,17 @@ DEF_INST(perform_cryptographic_key_management_operation_d)
   RRE(inst, regs, r1, r2);
   
 #ifdef OPTION_PCKMO_DEBUG
-  logmsg("PCKMO: perform cryptographic key management operation\n");
-  logmsg("  r1        : GR%02d\n", r1);
-  logmsg("    address : " F_VADR "\n", regs->GR(r1));
-  logmsg("  r2        : GR%02d\n", r2);
-  logmsg("    address : " F_VADR "\n", regs->GR(r2));
-  logmsg("    length  : " F_GREG "\n", regs->GR(r2 + 1));
-  logmsg("  GR00      : " F_GREG "\n", regs->GR(0));
-  logmsg("    fc      : %d\n", GR0_fc(regs));
-  logmsg("  GR01      : " F_GREG "\n", regs->GR(1));
+  WRGMSG_ON;
+  WRGMSG(HHC90100, "D", "PCKMO: perform cryptographic key management operation");
+  WRGMSG(HHC90101, "D", 1, r1);
+  WRGMSG(HHC90102, "D", regs->GR(r1));
+  WRGMSG(HHC90101, "D", 2, r2);
+  WRGMSG(HHC90102, "D", regs->GR(r2));
+  WRGMSG(HHC90103, "D", regs->GR(r2 + 1));
+  WRGMSG(HHC90104, "D", 0, regs->GR(0));
+  WRGMSG(HHC90106, "D", GR0_fc(regs));
+  WRGMSG(HHC90104, "D", 1, regs->GR(1));
+  WRGMSG_OFF;
 #endif
 
   /* Privileged operation */

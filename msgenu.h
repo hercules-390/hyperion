@@ -86,13 +86,20 @@ cpu.c:123:HABC1234I This is a message
 #endif
 
 /* Use these macro's */
-#define MSGBUF(buf, ...)            snprintf(buf, sizeof(buf)-1, ## __VA_ARGS__)
-#define MSG(id, s, ...)             #id s " " id "\n", ## __VA_ARGS__
-#define MSG_C(id, s, ...)           #id s " " id "", ## __VA_ARGS__
-#define WRMSG(id, s, ...)           writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, "", _(#id s " " id "\n"), ## __VA_ARGS__)
-#define WRMSG_C(id, s, ...)         writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, "", _(#id s " " id ""), ## __VA_ARGS__)
-#define WRCMSG(color, id, s, ...)   writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, color, _(#id s " " id "\n"), ## __VA_ARGS__)
-#define WRCMSG_C(color, id, s, ...) writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, color, _(#id s " " id ""), ## __VA_ARGS__)
+#define MSGBUF(buf, ...)             snprintf(buf, sizeof(buf)-1, ## __VA_ARGS__)
+#define MSG(id, s, ...)              #id s " " id "\n", ## __VA_ARGS__
+#define MSG_C(id, s, ...)            #id s " " id "", ## __VA_ARGS__
+#define WRMSG(id, s, ...)            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, sysblk.msglvl, "", _(#id s " " id "\n"), ## __VA_ARGS__)
+#define WRMSG_C(id, s, ...)          writemsg(__FILE__, __LINE__, __FUNCTION__, 0, sysblk.msglvl, "", _(#id s " " id ""), ## __VA_ARGS__)
+#define WRCMSG(color, id, s, ...)    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, sysblk.msglvl, color, _(#id s " " id "\n"), ## __VA_ARGS__)
+#define WRCMSG_C(color, id, s, ...)  writemsg(__FILE__, __LINE__, __FUNCTION__, 0, sysblk.msglvl, color, _(#id s " " id ""), ## __VA_ARGS__)
+
+#define WRGMSG_ON                    { obtain_lock(&sysblk.msglock); sysblk.msggrp = 1; logmsg(">\n"); }
+#define WRGMSG(id, s, ...)           writemsg(__FILE__, __LINE__, __FUNCTION__, 1, sysblk.msglvl, "", _(#id s " " id "\n"), ## __VA_ARGS__)
+#define WRGMSG_C(id, s, ...)         writemsg(__FILE__, __LINE__, __FUNCTION__, 1, sysblk.msglvl, "", _(#id s " " id ""), ## __VA_ARGS__)
+#define WRGCMSG(color, id, s, ...)   writemsg(__FILE__, __LINE__, __FUNCTION__, 1, sysblk.msglvl, color, _(#id s " " id "\n"), ## __VA_ARGS__)
+#define WRGCMSG_C(color, id, s, ...) writemsg(__FILE__, __LINE__, __FUNCTION__, 1, sysblk.msglvl, color, _(#id s " " id ""), ## __VA_ARGS__)
+#define WRGMSG_OFF                   { logmsg("<\n"); sysblk.msggrp = 0; release_lock(&sysblk.msglock); }
 
 /* Hercules messages */
 #define HHC00001 "%s"
@@ -1627,13 +1634,91 @@ cpu.c:123:HABC1234I This is a message
 #define HHC90011 "Pttrace: invalid argument '%s'"
 #define HHC90012 "Pttrace: %s%s%s%s%s%s%s%s%s%s%s %s %s to %d %d"
 
+/* from crypto/dyncrypt.c when compiled with debug on*/
+#define HHC90100 "%s"
+#define HHC90101 "  r%d        : GR%02d"
+#define HHC90102 "    address : " F_VADR
+#define HHC90103 "    length  : " F_GREG
+#define HHC90104 "  GR%02d      : " F_GREG
+#define HHC90105 "    bit 56  : %s"
+#define HHC90106 "    fc      : %d"
+#define HHC90107 "    m       : %s"
+#define HHC90108 "  GR%02d  : " F_GREG
+#define HHC90109 "  %s %s"
+#define HHC90110 "      %s"
+
 /* from scsitape.c trace */
 #define HHC90205 "%1d:%04X Tape file '%s', type '%s': error in function '%s': '%s'"
+
+/* from cmpsc.c when compiled with debug on */
+#define HHC90300 "CMPSC: compression call"
+#define HHC90301 " r%d      : GR%02d"
+#define HHC90302 " address : " F_VADR
+#define HHC90303 " length  : " F_GREG
+#define HHC90304 " GR%02d    : " F_GREG
+#define HHC90305 "   st    : %s"
+#define HHC90306 "   cdss  : %d"
+#define HHC90307 "   f1    : %s"
+#define HHC90308 "   e     : %s"
+#define HHC90309 "   dictor: " F_GREG
+#define HHC90310 "   sttoff: %08X"
+#define HHC90311 "   cbn   : %d"
+#define HHC90312 "*** Registers committed"
+#define HHC90313 "Cbn not zero, process individual index symbols"
+#define HHC90314 "compress : is %04X (%d)"
+#define HHC90315 "compress : reached CPU determined amount of data"
+#define HHC90316 "fetch_cce: index %04X"
+#define HHC90317 "fetch_ch : reached end of source"
+#define HHC90318 "fetch_ch : %02X at " F_VADR
+#define HHC90319 "  cce    : %s"
+#define HHC90320 "  cct    : %d"
+#define HHC90321 "  act    : %d"
+#define HHC90322 "  ec(s)  :%s"
+#define HHC90323 "  x1     : %c"
+#define HHC90324 "  act    : %d"
+#define HHC90325 "  cptr   : %04X"
+#define HHC90326 "  cc     : %02X"
+#define HHC90327 "  x1..x5 : %s"
+#define HHC90328 "  y1..y2 : %s"
+#define HHC90329 "  d      : %s"
+#define HHC90330 "  ec     : %02X"
+#define HHC90331 "  ccs    :%s"
+#define HHC90332 "  sd1    : %s"
+#define HHC90333 "  sct    : %d"
+#define HHC90334 "  y1..y12: %s"
+#define HHC90335 "  sc(s)  :%s"
+#define HHC90336 "  sd0    : %s"
+#define HHC90337 "  y1..y5 : %s"
+#define HHC90338 "search_cce index %04X parent"
+#define HHC90339 "fetch_sd1: index %04X"
+#define HHC90340 "fetch_sd0: index %04X"
+#define HHC90341 "search_sd: index %04X parent"
+#define HHC90342 "store_is : end of output buffer"
+#define HHC90343 "store_is : %04X -> %02X%02X"
+#define HHC90344 "store_is : %04X, cbn=%d, GR%02d=" F_VADR ", GR%02d=" F_GREG
+#define HHC90345 "store_iss: %04X -> %02X%02X"
+#define HHC90346 "store_iss:%s, GR%02d=" F_VADR ", GR%02d=" F_GREG
+#define HHC90347 "expand   : is %04X (%d)"
+#define HHC90348 "expand   : reached CPU determined amount of data"
+#define HHC90349 "fetch_ece: index %04X"
+#define HHC90350 "fetch_is : reached end of source"
+#define HHC90351 "fetch_is : %04X, cbn=%d, GR%02d=" F_VADR ", GR%02d=" F_GREG
+#define HHC90352 "fetch_iss: GR%02d=" F_VADR ", GR%02d=" F_GREG
+#define HHC90353 "  ece    : %s"
+#define HHC90354 "  psl    : %d"
+#define HHC90355 "  pptr   : %04X"
+#define HHC90356 "  ecs    :%s"
+#define HHC90357 "  ofst   : %02X"
+#define HHC90358 "  bit34  : %s"
+#define HHC90359 "  csl    : %d"
+#define HHC90360 "vstore   : Reached end of destination"
+#define HHC90361 F_GREG " - " F_GREG " Same buffer as previously shown"
+#define HHC90362 "%s - " F_GREG " Same line as above"
+#define HHC90363 "%s"
 
 /* tapeccws tapedev */
 #define HHC93480 "%1d:%04X TDSPSTAT[%02X] msg1[%-8s] msg2[%-8s] msg[%-8s] mnt[%s] unmnt[%s] TDSPFLAG[%02X]"
 
 /* ctc/lcs/ndis */
-
 #define HHC90900 "DBG: CTC: %s device port %2.2X: %s"
 #define HHC90901 "DBG: CTC: %s: %s"

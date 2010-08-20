@@ -718,6 +718,7 @@ struct SYSBLK {
 #ifdef OPTION_MSGHLD
         int     keep_timeout_secs;      /* Message hold time         */
 #endif
+        int     msggrp;                 /* msg group writing active  */
         LOCK    msglock;                /* lock for writemsg         */
         int     msglvl;                 /* Message level             */
         BYTE    emsg;                   /* error message display ctrl*/

@@ -1038,7 +1038,7 @@ char    buf[100];                       /* Message buffer            */
     for (i = 0; i < 999 && raddr <= eaddr; i++)
     {
         ARCH_DEP(display_real) (regs, raddr, buf, 1, "HHC02290I ");
-        writemsg(__FILE__,__LINE__,__FUNCTION__,sysblk.msglvl,"","%s\n", buf);
+        writemsg(__FILE__,__LINE__,__FUNCTION__,0,sysblk.msglvl,"","%s\n", buf);
         raddr += 16;
     } /* end for(i) */
 
@@ -1216,7 +1216,7 @@ REGS   *regs;                           /* Copied regs               */
             n += display_regs (regs, buf + n, "HHC02267I ");
 
         if (!iregs->ghostregs) free(regs);
-        writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, "", "%s", buf);
+        writemsg(__FILE__, __LINE__, __FUNCTION__, 0, sysblk.msglvl, "", "%s", buf);
         return;
     }
 
@@ -1396,7 +1396,7 @@ REGS   *regs;                           /* Copied regs               */
 
     if (!iregs->ghostregs)
         free (regs);
-    writemsg(__FILE__, __LINE__, __FUNCTION__, sysblk.msglvl, "", "%s", buf);
+    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, sysblk.msglvl, "", "%s", buf);
 
 } /* end function display_inst */
 

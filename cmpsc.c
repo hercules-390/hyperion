@@ -66,7 +66,7 @@
 #ifdef OPTION_CMPSC_DEBUG
 #define COMMITREGS(regs, iregs, r1, r2) \
   __COMMITREGS((regs), (iregs), (r1), (r2)) \
-  logmsg("*** Regs committed\n");
+  WRMSG(HHC90312, "D");
 #else
 #define COMMITREGS(regs, iregs, r1, r2) \
   __COMMITREGS((regs), (iregs), (r1), (r2))
@@ -86,7 +86,7 @@
 #ifdef OPTION_CMPSC_DEBUG
 #define COMMITREGS2(regs, iregs, r1, r2) \
   __COMMITREGS2((regs), (iregs), (r1), (r2)) \
-  logmsg("*** Regs committed\n");
+  WRMSG(HHC90312, "D");
 #else
 #define COMMITREGS2(regs, iregs, r1, r2) \
   __COMMITREGS2((regs), (iregs), (r1), (r2))
@@ -211,7 +211,7 @@ static int   ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, struct ec *ec, 
 static void  ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, struct ec *ec, U16 is[8]);
 #ifdef OPTION_CMPSC_DEBUG
 static void  print_cce(BYTE *cce);
-static void  print_ece(BYTE *ece);
+static void  print_ece(U16 is, BYTE *ece);
 static void  print_sd(int f1, BYTE *sd1, BYTE *sd2);
 #endif
 static int   ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, struct cc *cc, BYTE *ch, U16 *is);
@@ -232,23 +232,25 @@ DEF_INST(compression_call)
 
   RRE(inst, regs, r1, r2);
 
-#ifdef OPTION_CMPSC_DEBUG 
-  logmsg("CMPSC: compression call\n");
-  logmsg(" r1      : GR%02d\n", r1);
-  logmsg(" address : " F_VADR "\n", regs->GR(r1));
-  logmsg(" length  : " F_GREG "\n", regs->GR(r1 + 1));
-  logmsg(" r2      : GR%02d\n", r2);
-  logmsg(" address : " F_VADR "\n", regs->GR(r2));
-  logmsg(" length  : " F_GREG "\n", regs->GR(r2 + 1));
-  logmsg(" GR00    : " F_GREG "\n", regs->GR(0));
-  logmsg("   st    : %s\n", TRUEFALSE(GR0_st(regs)));
-  logmsg("   cdss  : %d\n", GR0_cdss(regs));
-  logmsg("   f1    : %s\n", TRUEFALSE(GR0_f1(regs)));
-  logmsg("   e     : %s\n", TRUEFALSE(GR0_e(regs)));
-  logmsg(" GR01    : " F_GREG "\n", regs->GR(1));
-  logmsg("   dictor: " F_GREG "\n", GR1_dictor(regs));
-  logmsg("   sttoff: %08X\n", GR1_sttoff(regs));
-  logmsg("   cbn   : %d\n", GR1_cbn(regs));
+#ifdef OPTION_CMPSC_DEBUG
+  WRGMSG_ON;
+  WRGMSG(HHC90300, "D");
+  WRGMSG(HHC90301, "D", 1, r1);
+  WRGMSG(HHC90302, "D", regs->GR(r1));
+  WRGMSG(HHC90303, "D", regs->GR(r1 + 1));
+  WRGMSG(HHC90301, "D", 2, r2);
+  WRGMSG(HHC90302, "D", regs->GR(r2));
+  WRGMSG(HHC90303, "D", regs->GR(r2 + 1));
+  WRGMSG(HHC90304, "D", 0, regs->GR(0));
+  WRGMSG(HHC90305, "D", TRUEFALSE(GR0_st(regs)));
+  WRGMSG(HHC90306, "D", GR0_cdss(regs));
+  WRGMSG(HHC90307, "D", TRUEFALSE(GR0_f1(regs)));
+  WRGMSG(HHC90308, "D", TRUEFALSE(GR0_e(regs)));
+  WRGMSG(HHC90304, "D", 1, regs->GR(1));
+  WRGMSG(HHC90309, "D", GR1_dictor(regs));
+  WRGMSG(HHC90310, "D", GR1_sttoff(regs));
+  WRGMSG(HHC90311, "D", GR1_cbn(regs));
+  WRGMSG_OFF;
 #endif 
 
   /* Check the registers on even-odd pairs and valid compression-data symbol size */
@@ -430,7 +432,7 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
   {
  
 #ifdef OPTION_CMPSC_DEBUG
-    logmsg("Cbn not zero, process individual index symbols\n");
+    WRMSG(HHC90313, "D");
 #endif
 
     while(likely(GR1_cbn(regs)))
@@ -495,7 +497,7 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
       cc.is[i] = is;
 
 #ifdef OPTION_CMPSC_DEBUG
-      logmsg("compress : is %04X (%d)\n", is, i);
+      WRMSG(HHC90314, "D", is, i);
 #endif
 
     }
@@ -538,7 +540,7 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
   regs->psw.cc = 3;
 
 #ifdef OPTION_CMPSC_DEBUG
-  logmsg("compress : reached CPU determined amount of data\n");
+  WRMSG(HHC90315, "D");
 #endif
 
 }
@@ -556,7 +558,7 @@ static BYTE *ARCH_DEP(fetch_cce)(REGS *regs, struct cc *cc, unsigned index)
   ITIMER_SYNC(GR1_dictor(regs) + index, 8 - 1, regs);
 
 #ifdef OPTION_CMPSC_DEBUG
-  logmsg("fetch_cce: index %04X\n", index / 8);
+  WRMSG(HHC90316, "D", index / 8);
   print_cce(cce);
 #endif
 
@@ -594,7 +596,7 @@ static int ARCH_DEP(fetch_ch)(int r2, REGS *regs, REGS *iregs, struct cc *cc, BY
   {
 
 #ifdef OPTION_CMPSC_DEBUG
-    logmsg("fetch_ch : reached end of source\n");
+    WRMSG(HHC90317, "D");
 #endif
 
     regs->psw.cc = 0;
@@ -611,7 +613,7 @@ static int ARCH_DEP(fetch_ch)(int r2, REGS *regs, REGS *iregs, struct cc *cc, BY
   cc->ofst = ofst;
 
 #ifdef OPTION_CMPSC_DEBUG
-  logmsg("fetch_ch : %02X at " F_VADR "\n", *ch, GR_A(r2, iregs));
+  WRMSG(HHC90318, "D", *ch, GR_A(r2, iregs));
 #endif
 
   return(0);
@@ -624,70 +626,77 @@ static int ARCH_DEP(fetch_ch)(int r2, REGS *regs, REGS *iregs, struct cc *cc, BY
 /*----------------------------------------------------------------------------*/
 static void print_cce(BYTE *cce)
 {
+  char buf[128];
   int j;
   int prt_detail;
 
-  logmsg("  cce    : ");
+  buf[0] = 0;
   prt_detail = 0;
   for(j = 0; j < 8; j++)
   {
     if(!prt_detail && cce[j])
       prt_detail = 1;
-    logmsg("%02X", cce[j]);
+    snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%02X", cce[j]);
   }
-  logmsg("\n");
   if(prt_detail)
   {
-    logmsg("  cct    : %d\n", CCE_cct(cce));
+    WRGMSG_ON;
+    WRGMSG(HHC90319, "D", buf);;
+    WRGMSG(HHC90320, "D", CCE_cct(cce));
     switch(CCE_cct(cce))
     { 
       case 0:
       {
-        logmsg("  act    : %d\n", (int) CCE_act(cce));
+        WRGMSG(HHC90321, "D", (int) CCE_act(cce));
         if(CCE_act(cce))
         {
-          logmsg("  ec(s)  :");
+          buf[0] = 0;
           for(j = 0; j < CCE_ecs(cce); j++)
-            logmsg(" %02X", CCE_ec(cce, j));
-          logmsg("\n");
+            snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " %02X", CCE_ec(cce, j));
+          WRGMSG(HHC90322, "D", buf);
         }
         break;
       }
       case 1:
       {
-        logmsg("  x1     : %c\n", (int) (CCE_x(cce, 0) ? '1' : '0'));
-        logmsg("  act    : %d\n", (int) CCE_act(cce));
-        logmsg("  cptr   : %04X\n", CCE_cptr(cce));
+        WRGMSG(HHC90323, "D", (int) (CCE_x(cce, 0) ? '1' : '0'));
+        WRGMSG(HHC90324, "D", (int) CCE_act(cce));
+        WRGMSG(HHC90325, "D", CCE_cptr(cce));
         if(CCE_act(cce))
         {
-          logmsg("  ec(s)  :");
+          buf[0] = 0;
           for(j = 0; j < CCE_ecs(cce); j++)
-            logmsg(" %02X", CCE_ec(cce, j));
-          logmsg("\n");
+            snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " %02X", CCE_ec(cce, j));
+          WRGMSG(HHC90322, "D", buf);
         }
-        logmsg("  cc     : %02X\n", CCE_cc(cce, 0));
+        WRGMSG(HHC90326, "D", CCE_cc(cce, 0));
         break;
       }
       default:
       {
-        logmsg("  x1..x5 : ");
+        buf[0] = 0;
         for(j = 0; j < 5; j++)
-          logmsg("%c", (int) (CCE_x(cce, j) ? '1' : '0'));
-        logmsg("\n  y1..y2 : ");
+          snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%c", (int) (CCE_x(cce, j) ? '1' : '0'));
+        WRGMSG(HHC90327, "D", buf);
+        buf[0] = 0;
         for(j = 0; j < 2; j++)
-          logmsg("%c", (int) (CCE_y(cce, j) ? '1' : '0'));
-        logmsg("\n  d      : %s\n", TRUEFALSE(CCE_d(cce)));
-        logmsg("  cptr   : %04X\n", CCE_cptr(cce));
+          snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%c", (int) (CCE_y(cce, j) ? '1' : '0'));
+        WRGMSG(HHC90328, "D", buf);
+        WRGMSG(HHC90329, "D", TRUEFALSE(CCE_d(cce)));
+        WRGMSG(HHC90325, "D", CCE_cptr(cce));
         if(CCE_d(cce))
-          logmsg("  ec     : %02X\n", CCE_ec(cce, 0));
-        logmsg("  ccs    :");
+          WRGMSG(HHC90330, "D", CCE_ec(cce, 0));
+        buf[0] = 0;
         for(j = 0; j < CCE_ccs(cce); j++)
-          logmsg(" %02X", CCE_cc(cce, j));
-        logmsg("\n");
+          snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " %02X", CCE_cc(cce, j));
+        WRGMSG(HHC90331, "D", buf);
         break;
       }
     }
+    WRGMSG_OFF;
   }
+  else
+    WRMSG(HHC90319, "D", buf);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -695,60 +704,71 @@ static void print_cce(BYTE *cce)
 /*----------------------------------------------------------------------------*/
 static void print_sd(int f1, BYTE *sd1, BYTE *sd2)
 {
+  char buf[128];
   int j;
   int prt_detail;
 
   if(f1)
   {
-    logmsg("  sd1    : ");
+    buf[0] = 0;
     prt_detail = 0;
     for(j = 0; j < 8; j++)
     {
       if(!prt_detail && sd1[j])
         prt_detail = 1;
-      logmsg("%02X", sd1[j]);
+      snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%02X", sd1[j]);
     }
     for(j = 0; j < 8; j++)
     {
       if(!prt_detail && sd2[j])
         prt_detail = 1;
-      logmsg("%02X", sd2[j]);
+      snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%02X", sd2[j]);
     }
-    logmsg("\n");
     if(prt_detail)
     {
-      logmsg("  sct    : %d\n", SD1_sct(sd1));
-      logmsg("  y1..y12: ");
+      WRGMSG_ON;
+      WRGMSG(HHC90332, "D", buf);
+      WRGMSG(HHC90333, "D", SD1_sct(sd1));
+      buf[0] = 0;      
       for(j = 0; j < 12; j++)
-        logmsg("%c", (SD1_y(sd1, j) ? '1' : '0'));
-      logmsg("\n  sc(s)  :");
+        snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%c", (SD1_y(sd1, j) ? '1' : '0'));
+      WRGMSG(HHC90334, "D", buf);
+      buf[0] = 0;
       for(j = 0; j < SD1_scs(sd1); j++)
-        logmsg(" %02X", SD1_sc(sd1, sd2, j));
-      logmsg("\n");
+        snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " %02X", SD1_sc(sd1, sd2, j));
+      WRGMSG(HHC90335, "D", buf);
+      WRGMSG_OFF;
     }
+    else
+      WRMSG(HHC90332, "D", buf);
   }
   else
   {
-    logmsg("  sd0    : ");
+    buf[0] = 0;
     prt_detail = 0;
     for(j = 0; j < 8; j++)
     {
       if(!prt_detail && sd1[j])
         prt_detail = 1;
-      logmsg("%02X", sd1[j]);
+      snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%02X", sd1[j]);
     }
-    logmsg("\n");
     if(prt_detail)
     {
-      logmsg("  sct    : %d\n", SD0_sct(sd1));
-      logmsg("  y1..y5 : ");
+      WRGMSG_ON;
+      WRGMSG(HHC90336, "D", buf);
+      WRGMSG(HHC90333, "D", SD0_sct(sd1));
+      buf[0] = 0;
       for(j = 0; j < 5; j++)
-        logmsg("%c", (SD0_y(sd1, j) ? '1' : '0'));
-      logmsg("\n  sc(s)  :");
+        snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%c", (SD0_y(sd1, j) ? '1' : '0'));
+      WRGMSG(HHC90337, "D", buf);
+      buf[0] = 0;
       for(j = 0; j < SD0_scs(sd1); j++)
-        logmsg(" %02X", SD0_sc(sd1, j));
-      logmsg("\n");
+        snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " %02X", SD0_sc(sd1, j));
+      WRGMSG(HHC90335, "D", buf);
+      WRGMSG_OFF;
     }
+    else
+      WRMSG(HHC90336, "D", buf);
   }
 }
 #endif
@@ -809,7 +829,7 @@ static int ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, struct cc *cc, 
           *is = CCE_cptr(cc->cce) + i;
 
 #ifdef OPTION_CMPSC_DEBUG
-          logmsg("search_cce index %04X parent\n", *is);
+          WRMSG(HHC90338, "D", *is);
 #endif 
 
           /* Found a matching child, make it parent */
@@ -882,7 +902,7 @@ static int ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, struct cc *cc, B
 
 #ifdef OPTION_CMPSC_DEBUG
       /* Print before possible exception */
-      logmsg("fetch_sd1: index %04X\n", CCE_cptr(cc->cce) + sd_ptr);
+      WRMSG(HHC90339, "D", CCE_cptr(cc->cce) + sd_ptr);
       print_sd(1, sd1, sd2);
 #endif
 
@@ -894,7 +914,7 @@ static int ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, struct cc *cc, B
     {
 
 #ifdef OPTION_CMPSC_DEBUG
-      logmsg("fetch_sd0: index %04X\n", CCE_cptr(cc->cce) + sd_ptr);
+      WRMSG(HHC90340, "D", CCE_cptr(cc->cce) + sd_ptr);
       print_sd(0, sd1, sd2);
 #endif
  
@@ -935,7 +955,7 @@ static int ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, struct cc *cc, B
           *is = CCE_cptr(cc->cce) + sd_ptr + i + 1;
 
 #ifdef OPTION_CMPSC_DEBUG
-          logmsg("search_sd: index %04X parent\n", *is);
+          WRMSG(HHC90341, "D", *is);
 #endif 
 
           /* Found a matching child, make it parent */
@@ -982,7 +1002,7 @@ static int ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, struct cc
       regs->psw.cc = 1;
 
 #ifdef OPTION_CMPSC_DEBUG
-      logmsg("store_is : end of output buffer\n");
+      WRMSG(HHC90342, "D");
 #endif 
 
       return(-1);
@@ -996,7 +1016,7 @@ static int ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, struct cc
     ARCH_DEP(vfetchc)(work, 1, (GR1_dictor(regs) + GR1_sttoff(regs) + is * 2) & ADDRESS_MAXWRAP(regs), r2, regs);
 
 #ifdef OPTION_CMPSC_DEBUG
-    logmsg("store_is : %04X -> %02X%02X\n", is, work[0], work[1]);
+    WRMSG(HHC90343, "D", is, work[0], work[1]);
 #endif
 
     /* set index_symbol to interchange symbol */
@@ -1034,7 +1054,7 @@ static int ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, struct cc
   GR1_setcbn(iregs, (cbn + cc->smbsz) % 8);
 
 #ifdef OPTION_CMPSC_DEBUG
-  logmsg("store_is : %04X, cbn=%d, GR%02d=" F_VADR ", GR%02d=" F_GREG "\n", is, GR1_cbn(iregs), r1, iregs->GR(r1), r1 + 1, iregs->GR(r1 + 1));
+  WRMSG(HHC90344, "D", is, GR1_cbn(iregs), r1, iregs->GR(r1), r1 + 1, iregs->GR(r1 + 1));
 #endif 
 
   return(0);
@@ -1045,6 +1065,9 @@ static int ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, struct cc
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(store_iss)(int r1, int r2, REGS *regs, REGS *iregs, struct cc *cc)
 {
+#ifdef OPTION_CMPSC_DEBUG
+  char buf[128];
+#endif
   GREG dictor;                         /* dictionary origin                   */ 
   int i;
   U16 *is;                             /* Index symbol array                  */
@@ -1064,7 +1087,7 @@ static void ARCH_DEP(store_iss)(int r1, int r2, REGS *regs, REGS *iregs, struct 
       ARCH_DEP(vfetchc)(mem, 1, (dictor + cc->is[i] * 2) & ADDRESS_MAXWRAP(regs), r2, regs);
 
 #ifdef OPTION_CMPSC_DEBUG
-      logmsg("store_iss: %04X -> %02X%02X\n", cc->is[i], mem[0], mem[1]);
+      WRMSG(HHC90345, "D", cc->is[i], mem[0], mem[1]);
 #endif
 
       /* set index_symbol to interchange symbol */
@@ -1199,10 +1222,10 @@ static void ARCH_DEP(store_iss)(int r1, int r2, REGS *regs, REGS *iregs, struct 
   ADJUSTREGS(r1, regs, iregs, cc->smbsz);
 
 #ifdef OPTION_CMPSC_DEBUG
-  logmsg("store_iss:");
+  buf[0] = 0;
   for(i = 0; i < 8; i++)
-    logmsg(" %04X", cc->is[i]);
-  logmsg(", GR%02d=" F_VADR ", GR%02d=" F_GREG "\n", r1, iregs->GR(r1), r1 + 1, iregs->GR(r1 + 1));
+    snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " %04X", cc->is[i]);
+  WRMSG(HHC90346, "D", buf, r1, iregs->GR(r1), r1 + 1, iregs->GR(r1 + 1));
 #endif
 
 }
@@ -1334,7 +1357,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
     {
 
 #ifdef OPTION_CMPSC_DEBUG
-      logmsg("expand   : is %04X (%d)\n", iss[i], i);
+      WRMSG(HHC90347, "D", iss[i], i);
 #endif
 
       if(unlikely(!ec.ecl[iss[i]]))
@@ -1358,7 +1381,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
     regs->psw.cc = 3;
 
 #ifdef OPTION_CMPSC_DEBUG
-    logmsg("expand   : reached CPU determined amount of data\n");
+    WRMSG(HHC90348, "D");
 #endif
 
     return;
@@ -1414,8 +1437,7 @@ static void ARCH_DEP(expand_is)(REGS *regs, struct ec *ec, U16 is)
   ITIMER_SYNC(dictor + index, 8 - 1, regs);
 
 #ifdef OPTION_CMPSC_DEBUG
-  logmsg("fetch_ece: index %04X\n", is);
-  print_ece(ece);
+  print_ece(is, ece);
 #endif
 
   /* Process preceded entries */
@@ -1440,8 +1462,7 @@ static void ARCH_DEP(expand_is)(REGS *regs, struct ec *ec, U16 is)
     ITIMER_SYNC(dictor + index, 8 - 1, regs);
 
 #ifdef OPTION_CMPSC_DEBUG
-    logmsg("fetch_ece: index %04X\n", ECE_pptr(ece));
-    print_ece(ece);
+    print_ece(index / 8, ece);
 #endif
 
     /* Calculate partial symbol length */
@@ -1493,7 +1514,7 @@ static int ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, struct ec *ec, U1
     {
 
 #ifdef OPTION_CMPSC_DEBUG
-      logmsg("fetch_is : reached end of source\n");
+      WRMSG(HHC90350, "D");
 #endif
 
       regs->psw.cc = 0;
@@ -1518,7 +1539,7 @@ static int ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, struct ec *ec, U1
   GR1_setcbn(iregs, (cbn + ec->smbsz) % 8);
 
 #ifdef OPTION_CMPSC_DEBUG
-  logmsg("fetch_is : %04X, cbn=%d, GR%02d=" F_VADR ", GR%02d=" F_GREG "\n", *is, GR1_cbn(iregs), r2, iregs->GR(r2), r2 + 1, iregs->GR(r2 + 1));
+  WRMSG(HHC90351, "D", *is, GR1_cbn(iregs), r2, iregs->GR(r2), r2 + 1, iregs->GR(r2 + 1));
 #endif
 
   return(0);
@@ -1642,7 +1663,7 @@ static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, struct ec *ec, 
   ADJUSTREGS(r2, regs, iregs, ec->smbsz);
 
 #ifdef OPTION_CMPSC_DEBUG
-  logmsg("fetch_iss: GR%02d=" F_VADR ", GR%02d=" F_GREG "\n", r2, iregs->GR(r2), r2 + 1, iregs->GR(r2 + 1));
+  WRMSG(HHC90352, "D", r2, iregs->GR(r2), r2 + 1, iregs->GR(r2 + 1));
 #endif
 }
 
@@ -1651,43 +1672,47 @@ static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, struct ec *ec, 
 /*----------------------------------------------------------------------------*/
 /* print_ece (expansion character entry).                                     */
 /*----------------------------------------------------------------------------*/
-static void print_ece(BYTE *ece)
+static void print_ece(U16 is, BYTE *ece)
 {
+  char buf[128];
   int i;
   int prt_detail;
 
-  logmsg("  ece    : ");
+  buf[0] = 0;
   prt_detail = 0;
   for(i = 0; i < 8; i++)
   {
     if(!prt_detail && ece[i])
       prt_detail = 1;
-    logmsg("%02X", ece[i]);
+    snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%02X", ece[i]);
   }
-  logmsg("\n");
+  WRGMSG_ON;
+  WRGMSG(HHC90349, "D", is); 
+  WRGMSG(HHC90353, "D", buf);
   if(prt_detail)
   {
     if(ECE_psl(ece))
     {
-      logmsg("  psl    : %d\n", ECE_psl(ece));
-      logmsg("  pptr   : %04X\n", ECE_pptr(ece));
-      logmsg("  ecs    :");
+      WRGMSG(HHC90354, "D", ECE_psl(ece));
+      WRGMSG(HHC90355, "D", ECE_pptr(ece));
+      buf[0] = 0;
       for(i = 0; i < ECE_psl(ece); i++)
-        logmsg(" %02X", ece[i + 2]);
-      logmsg("\n");
-      logmsg("  ofst   : %02X\n", ECE_ofst(ece));
+        snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " %02X", ece[i + 2]);
+      WRGMSG(HHC90356, "D", buf);
+      WRGMSG(HHC90357, "D", ECE_ofst(ece));
     }
     else
     {
-      logmsg("  psl    : %d\n", ECE_psl(ece));
-      logmsg("  bit34  : %s\n", TRUEFALSE(ECE_bit34(ece)));
-      logmsg("  csl    : %d\n", ECE_csl(ece));
-      logmsg("  ecs    :");
+      WRGMSG(HHC90354, "D", ECE_psl(ece));
+      WRGMSG(HHC90358, "D", TRUEFALSE(ECE_bit34(ece)));
+      WRGMSG(HHC90359, "D", ECE_csl(ece));
+      buf[0] = 0;
       for(i = 0; i < ECE_csl(ece); i++)
-        logmsg(" %02X", ece[i + 1]);
-      logmsg("\n");
+        snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " %02X", ece[i + 1]);
+      WRGMSG(HHC90356, "D", buf);
     }
   }
+  WRGMSG_OFF;
 }
 #endif
 #endif /* #ifndef NO_2ND_COMPILE */
@@ -1708,7 +1733,7 @@ static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, struct ec *ec, BYTE
   {
 
 #ifdef OPTION_CMPSC_DEBUG
-    logmsg("vstore   : Reached end of destination\n");
+    WRMSG(HHC90360, "D");
 #endif
 
     /* Indicate end of destination */
@@ -1717,52 +1742,59 @@ static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, struct ec *ec, BYTE
   }
 
 #ifdef OPTION_CMPSC_DEBUG
+  char buf2[256];
   unsigned i;
   unsigned j;
   static BYTE pbuf[2060];
   static unsigned plen = 2061;         /* Impossible value                    */
 
   if(plen == len && !memcmp(pbuf, buf, plen))
-    logmsg(F_GREG " - " F_GREG " Same buffer as previously shown\n", iregs->GR(r1), iregs->GR(r1) + len - 1);
+    WRMSG(HHC90361, "D", iregs->GR(r1), iregs->GR(r1) + len - 1);
   else
   {
+    WRGMSG_ON;
     for(i = 0; i < len; i += 32)
     {
-      logmsg(F_GREG, iregs->GR(r1) + i);
+      buf2[0] = 0;
+      snprintf(buf2 + strlen(buf2), sizeof(buf2) - strlen(buf2), F_GREG, iregs->GR(r1) + i);
       if(i && i + 32 < len && !memcmp(&buf[i], &buf[i - 32], 32))
       {
         for(j = i + 32; j + 32 < len && !memcmp(&buf[j], &buf[j - 32], 32); j += 32);
         if(j > 32)
         {
-          logmsg(" - " F_GREG " Same line as above\n" F_GREG, iregs->GR(r1) + j - 32, iregs->GR(r1) + j);
+          WRGMSG(HHC90362, "D", buf2, iregs->GR(r1) + j - 32);
+          buf2[0] = 0;
+          snprintf(buf2 + strlen(buf2), sizeof(buf2) - strlen(buf2), F_GREG, iregs->GR(r1) + j);
           i = j;
         }
       }
-      logmsg(": ");
+      snprintf(buf2 + strlen(buf2), sizeof(buf2) - strlen(buf2), ": ");
       for(j = 0; j < 32; j++)
       {
         if(!(j % 8))
-          logmsg(" ");
+          snprintf(buf2 + strlen(buf2), sizeof(buf2) - strlen(buf2), " ");
         if(i + j >= len)
-          logmsg("  ");
+          snprintf(buf2 + strlen(buf2), sizeof(buf2) - strlen(buf2), "  ");
         else
-          logmsg("%02X", buf[i + j]);
+          snprintf(buf2 + strlen(buf2), sizeof(buf2) - strlen(buf2), "%02X", buf[i + j]);
       }
-      logmsg(" | ");
+      snprintf(buf2 + strlen(buf2), sizeof(buf2) - strlen(buf2), " | ");
       for(j = 0; j < 32; j++)
       {
         if(i + j >= len)
-          logmsg(" ");
+          snprintf(buf2 + strlen(buf2), sizeof(buf2) - strlen(buf2), " ");
         else
         {
           if(isprint(guest_to_host(buf[i + j])))
-            logmsg("%c", guest_to_host(buf[i + j]));
+            snprintf(buf2 + strlen(buf2), sizeof(buf2) - strlen(buf2), "%c", guest_to_host(buf[i + j]));
           else
-            logmsg(".");
+            snprintf(buf2 + strlen(buf2), sizeof(buf2) - strlen(buf2), ".");
         }
       } 
-      logmsg(" |\n");
+      snprintf(buf2 + strlen(buf2), sizeof(buf2) - strlen(buf2), " |");
+      WRGMSG(HHC90363, "D", buf2);
     }
+    WRGMSG_OFF;
     memcpy(pbuf, buf, len);
     plen = len;
   }
