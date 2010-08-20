@@ -602,12 +602,39 @@ struct TAPE_BLOCKS *load_text_file(char *infile,char recfm,int *recl,int *recc,s
 /* Load a structured file for DUMP function */
 struct TAPE_BLOCKS *load_structured_file(char *infile,char recfm,int *recl,int *recc,size_t *filesz)
 {
-    UNREFERENCED(infile);
-    UNREFERENCED(recfm);
-    UNREFERENCED(recl);
-    UNREFERENCED(recc);
-    UNREFERENCED(filesz);
-    return NULL;
+    int     rsz,rc;
+    FILE    *ifile;
+    int     maxsize;
+    unsigned char bfr[65536];
+    uint16_t    rlbfr;
+    struct  RECS *recs;
+
+    maxsize=65536;
+    ifile=fopen(infile,"r");
+    if(ifile==NULL)
+    {
+        perror(infile);
+        return NULL;
+    }
+    if(recfm!='V') 
+    {
+        fprintf(stderr,"Structured input files for output to RECFM F files not supported (yet)\n");
+        return NULL; /* Structured files only for RECFM V for the time being */
+    }
+    recs=initrecs(recfm,*recl,plcd_hdr,5);
+    while(((int)fread(&rlbfr,1,2,ifile))==2)
+    {
+        rsz=bswap_16(rlbfr);
+        rc=fread(bfr,1,rsz,ifile);
+        if(rc!=rsz) 
+        {
+            fprintf(stderr,"Expected %d bytes from file %s, but only %d file read\n",rsz,infile,rc);
+            return NULL;
+        }
+        addrecs(recs,bfr,rsz);
+    }
+    fclose(ifile);
+    return flushrecs(recs,recl,recc,filesz,0x40);
 }
 
 /* Load file for DUMP function */
@@ -700,6 +727,10 @@ struct FST_BLOCK *format_fst(char *fn,char *ft,char *fm,char recfm,int lrecl,int
     big_endian_16(fstb->fst.rp,1);
     big_endian_32(fstb->fst.aic,reccount);
 
+    if(recfm=='V')
+    {
+        filesz+=reccount*2;
+    }
     numfull=filesz/TAPE_BLOCKSIZE;
     lastsz=filesz%TAPE_BLOCKSIZE;
     if(lastsz%TAPE_BLKSIZE_MODULO==0)
