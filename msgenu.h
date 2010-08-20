@@ -94,12 +94,12 @@ cpu.c:123:HABC1234I This is a message
 #define WRCMSG(color, id, s, ...)    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, sysblk.msglvl, color, _(#id s " " id "\n"), ## __VA_ARGS__)
 #define WRCMSG_C(color, id, s, ...)  writemsg(__FILE__, __LINE__, __FUNCTION__, 0, sysblk.msglvl, color, _(#id s " " id ""), ## __VA_ARGS__)
 
-#define WRGMSG_ON                    { obtain_lock(&sysblk.msglock); sysblk.msggrp = 1; logmsg(">\n"); }
+#define WRGMSG_ON                    { obtain_lock(&sysblk.msglock); sysblk.msggrp = 1; }
 #define WRGMSG(id, s, ...)           writemsg(__FILE__, __LINE__, __FUNCTION__, 1, sysblk.msglvl, "", _(#id s " " id "\n"), ## __VA_ARGS__)
 #define WRGMSG_C(id, s, ...)         writemsg(__FILE__, __LINE__, __FUNCTION__, 1, sysblk.msglvl, "", _(#id s " " id ""), ## __VA_ARGS__)
 #define WRGCMSG(color, id, s, ...)   writemsg(__FILE__, __LINE__, __FUNCTION__, 1, sysblk.msglvl, color, _(#id s " " id "\n"), ## __VA_ARGS__)
 #define WRGCMSG_C(color, id, s, ...) writemsg(__FILE__, __LINE__, __FUNCTION__, 1, sysblk.msglvl, color, _(#id s " " id ""), ## __VA_ARGS__)
-#define WRGMSG_OFF                   { logmsg("<\n"); sysblk.msggrp = 0; release_lock(&sysblk.msglock); }
+#define WRGMSG_OFF                   { sysblk.msggrp = 0; release_lock(&sysblk.msglock); }
 
 /* Hercules messages */
 #define HHC00001 "%s"
