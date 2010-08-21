@@ -2755,7 +2755,7 @@ U64     w1, w2;                         /* Refetched values          */
 #if defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY)           /*810*/
 
 /*-------------------------------------------------------------------*/
-/* B9F2 LOCR  - Load on Condition Register                     [RRF] */
+/* B9F2 LROC  - Load on Condition Register                     [RRF] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_on_condition_register)                            /*810*/
 {
@@ -2776,7 +2776,7 @@ int     m3;                             /* Value of M field          */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* B9E2 LOCGR - Load on Condition Long Register                [RRF] */
+/* B9E2 LGROC - Load on Condition Long Register                [RRF] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_on_condition_long_register)                       /*810*/
 {
@@ -2820,7 +2820,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* EBE2 LOCG  - Load on Condition Long                         [RSY] */
+/* EBE2 LGOC  - Load on Condition Long                         [RSY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_on_condition_long)                                /*810*/
 {
@@ -2866,7 +2866,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* EBE3 STOCG - Store on Condition Long                        [RSY] */
+/* EBE3 STGOC - Store on Condition Long                        [RSY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(store_on_condition_long)                               /*810*/
 {
