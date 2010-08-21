@@ -787,6 +787,15 @@ int process_entry(struct options *opts,char *orec,int recno)
             ignore=1;
             break;
         }
+        if(fn[0]=='@')
+        {
+            if(strcasecmp(fn,"@TM")==0)
+            {
+                write_tape_mark(opts);
+                ignore=1;
+                break;
+            }
+        }
         ft=strtok(NULL," ");
         if(ft==NULL) 
         {
@@ -958,7 +967,7 @@ int open_tapefile(struct options *opts,int w)
 /* Perform vmfplc2 DUMP operation */
 int dodump(struct options *opts)
 {
-    printf(" DUMPING...\n");
+    printf(" DUMPING.....\n");
     open_tapefile(opts,1);
     return process_procfile(opts);
 }
