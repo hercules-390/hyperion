@@ -158,7 +158,18 @@ DLL_EXPORT void writemsg(const char *file, int line, const char* function, int g
     va_list vl;
 
     if(!sysblk.msggrp || (sysblk.msggrp && !grp))
-      obtain_lock(&sysblk.msglock);
+    {
+      while(try_obtain_lock(&sysblk.msglock))
+      {
+        usleep(100);
+        if(host_tod() - sysblk.msglocktime > 1000000)
+        {
+          release_lock(&sysblk.msglock);
+          logmsg("HHC00016" "E" " " HHC00016 "\n");
+        }
+      }
+      sysblk.msglocktime = host_tod();
+    }
 
   #ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  

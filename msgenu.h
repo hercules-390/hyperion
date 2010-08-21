@@ -94,7 +94,20 @@ cpu.c:123:HABC1234I This is a message
 #define WRCMSG(color, id, s, ...)    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, sysblk.msglvl, color, _(#id s " " id "\n"), ## __VA_ARGS__)
 #define WRCMSG_C(color, id, s, ...)  writemsg(__FILE__, __LINE__, __FUNCTION__, 0, sysblk.msglvl, color, _(#id s " " id ""), ## __VA_ARGS__)
 
-#define WRGMSG_ON                    { obtain_lock(&sysblk.msglock); sysblk.msggrp = 1; }
+#define WRGMSG_ON \
+{ \
+  while(try_obtain_lock(&sysblk.msglock)) \
+  { \
+    usleep(100); \
+    if(host_tod() - sysblk.msglocktime > 1000000) \
+    { \
+      release_lock(&sysblk.msglock); \
+      WRMSG(HHC00016, "E"); \
+    } \
+  } \
+  sysblk.msglocktime = host_tod(); \
+  sysblk.msggrp = 1; \
+}
 #define WRGMSG(id, s, ...)           writemsg(__FILE__, __LINE__, __FUNCTION__, 1, sysblk.msglvl, "", _(#id s " " id "\n"), ## __VA_ARGS__)
 #define WRGMSG_C(id, s, ...)         writemsg(__FILE__, __LINE__, __FUNCTION__, 1, sysblk.msglvl, "", _(#id s " " id ""), ## __VA_ARGS__)
 #define WRGCMSG(color, id, s, ...)   writemsg(__FILE__, __LINE__, __FUNCTION__, 1, sysblk.msglvl, color, _(#id s " " id "\n"), ## __VA_ARGS__)
@@ -117,6 +130,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00013 "Herc command: '%s'"
 #define HHC00014 "select: %s"
 #define HHC00015 "keyboard read: %s"
+#define HHC00016 "Message lock hold longer than 1 second, release forced"
 
 // reserve 20-39 for file related
 
