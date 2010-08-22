@@ -625,7 +625,7 @@ struct TAPE_BLOCKS *load_structured_file(char *infile,char recfm,int *recl,int *
     while(((int)fread(&rlbfr,1,2,ifile))==2)
     {
         rsz=bswap_16(rlbfr);
-        rc=fread(bfr,1,rsz,ifile);
+        rc=(int)fread(bfr,1,rsz,ifile);
         if(rc!=rsz) 
         {
             fprintf(stderr,"Expected %d bytes from file %s, but only %d file read\n",rsz,infile,rc);
