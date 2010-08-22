@@ -220,6 +220,9 @@ static int   ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, struct 
 static void  ARCH_DEP(store_iss)(int r1, int r2, REGS *regs, REGS *iregs, struct cc *cc);
 static int   ARCH_DEP(test_ec)(int r2, REGS *regs, REGS *iregs, struct cc *cc, BYTE *cce);
 static int   ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, struct ec *ec, BYTE *buf, unsigned len);
+#ifdef FEATURE_ENHANCEMENT_FACILITY
+static int   ARCH_DEP(zero_padding)(int r1, REGS *regs, REGS *iregs, struct cc *cc);
+#endif
 
 /*----------------------------------------------------------------------------*/
 /* B263 CMPSC - Compression Call                                        [RRE] */
@@ -534,7 +537,15 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 
   /* When reached end of source, return to caller */
   if(likely(!GR_A(r2 + 1, regs)))
+  {
+
+#ifdef FEATURE_CMPSC_ENHANCEMENT_FACILITY
+    if(GR0_zp(regs))
+      ARCH_DEP(zero_padding)(r1, regs, iregs, &cc);
+#endif /* FEATURE_CMPSC_ENHANCEMENT_FACILITY */
+
     return;
+  }
 
   /* Reached model dependent CPU processing amount */
   regs->psw.cc = 3;
@@ -1258,6 +1269,49 @@ static int ARCH_DEP(test_ec)(int r2, REGS *regs, REGS *iregs, struct cc *cc, BYT
   /* a perfect match */
   return(1);
 }
+
+#ifdef FEATURE_CMPSC_ENHANCEMENT_FACILITY
+/*----------------------------------------------------------------------------*/
+/* zero_padding                                                               */
+/*----------------------------------------------------------------------------*/
+static int ARCH_DEP(zero_padding)(int r1, REGS *regs, REGS *iregs, struct cc *cc)
+{
+  unsigned len;                        /* Length to clear                     */
+  unsigned ofst;                       /* Offset within page                  */
+  BYTE *sk;                            /* Storage key                         */
+
+  /* Check for end of destination */
+  if(!GR_A(r1 + 1, regs))
+    return;
+
+  /* Fill first page */
+  ofst = GR_A(r1, iregs) & 0x7ff;
+  len = 0x800 - ofst;
+  if(len > GR_A(r1 + 1, iregs))
+    len = GR_A(r1 + 1, iregs);
+  if(unlikely(!cc->dest))
+    cc->dest = MADDR((GR_A(r1, iregs) & ~0x7ff) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+  memset(&cc->dest[ofst], 0, len);
+  ITIMER_UPDATE(GR_A(r1, iregs), cc->smbsz - 1, regs);
+  ADJUST_REGS(r1, regs, iregs, len);
+  COMMIT_REGS(regs, iregs, r1, r2);
+  
+  /* Fill next pages */
+  while(GR_A(r1 + 1, regs))
+  {
+    len = 0x800;
+    if(len > GR_A(r1 + 1, iregs))
+      len = GR_A(r1 + 1, iregs);
+    sk = regs->dat.storkey;
+    cc->dest = MADDR((GR_A(r1, iregs) + len1) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    memset(cc->dest, 0, len);
+    *sk |= (STORKEY_REF | STORKEY_CHANGE);
+    ADJUST_REGS(r1, regs, iregs, len);
+    COMMIT_REGS(regs, iregs, r1, r2);
+  }
+  return(0);
+}
+#endif /* FEATURE_CMPSC_ENHANCEMENT_FACILITY */
 
 /*============================================================================*/
 /* Expand                                                                     */
