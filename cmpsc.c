@@ -1292,7 +1292,7 @@ static int ARCH_DEP(zero_padding)(int r1, REGS *regs, REGS *iregs, struct cc *cc
   if(unlikely(!cc->dest))
     cc->dest = MADDR((GR_A(r1, iregs) & ~0x7ff) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
   memset(&cc->dest[ofst], 0, len);
-  ITIMER_UPDATE(GR_A(r1, iregs), cc->smbsz - 1, regs);
+  ITIMER_UPDATE(GR_A(r1, iregs), len - 1, regs);
   ADJUST_REGS(r1, regs, iregs, len);
   COMMIT_REGS(regs, iregs, r1, r2);
   
