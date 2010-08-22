@@ -2487,6 +2487,9 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
             /* Add unsigned operands and set condition code */
             cc = add_logical (&result, v2, v3);
             break;
+        default: /* To prevent compiler warnings */
+            result = 0;
+            cc = 0;
         } /* end switch(opcode) */
 
         /* Interlocked exchange to storage location */
@@ -2560,6 +2563,9 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
             /* Add unsigned operands and set condition code */
             cc = add_logical_long (&result, v2, v3);
             break;
+        default: /* To prevent compiler warnings */
+            result = 0;
+            cc = 0;
         } /* end switch(opcode) */
 
         /* Interlocked exchange to storage location */
