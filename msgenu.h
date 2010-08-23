@@ -1678,7 +1678,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC90310 "   sttoff: %08X"
 #define HHC90311 "   cbn   : %d"
 #define HHC90312 "*** Registers committed"
-#define HHC90313 "Cbn not zero, process individual index symbols"
+#define HHC90313 "cbn not zero, process individual index symbols"
 #define HHC90314 "compress : is %04X (%d)"
 #define HHC90315 "compress : reached CPU determined amount of data"
 #define HHC90316 "fetch_cce: index %04X"
@@ -1729,7 +1729,8 @@ cpu.c:123:HABC1234I This is a message
 #define HHC90361 F_GREG " - " F_GREG " Same buffer as previously shown"
 #define HHC90362 "%s - " F_GREG " Same line as above"
 #define HHC90363 "%s"
-
+#define HHC90364 "zero padding GR%02d=" F_VADR ", GR%02d=" F_GREG
+ 
 /* tapeccws tapedev */
 #define HHC93480 "%1d:%04X TDSPSTAT[%02X] msg1[%-8s] msg2[%-8s] msg[%-8s] mnt[%s] unmnt[%s] TDSPFLAG[%02X]"
 

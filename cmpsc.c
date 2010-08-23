@@ -540,7 +540,7 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
   {
 
 #ifdef FEATURE_CMPSC_ENHANCEMENT_FACILITY
-    if(GR0_zp(regs))
+    if(unlikely(GR0_zp(regs)))
       ARCH_DEP(zero_padding)(r1, regs, iregs, &cc);
 #endif
 
@@ -1280,8 +1280,12 @@ static int ARCH_DEP(zero_padding)(int r1, REGS *regs, REGS *iregs, struct cc *cc
   unsigned ofst;                       /* Offset within page                  */
   BYTE *sk;                            /* Storage key                         */
 
+#ifdef OPTION_CMPSC_DEBUG
+  WRMSG(HHC90364, "D", r1, GR(r1, regs), r1 + 1, GR(r1 + 1, regs));
+#endif
+
   /* Check for end of destination */
-  if(!GR_A(r1 + 1, regs))
+  if(unlikely((!GR_A(r1 + 1, regs)))
     return;
 
   /* Fill first page */
@@ -1295,7 +1299,11 @@ static int ARCH_DEP(zero_padding)(int r1, REGS *regs, REGS *iregs, struct cc *cc
   ITIMER_UPDATE(GR_A(r1, iregs), len - 1, regs);
   ADJUST_REGS(r1, regs, iregs, len);
   COMMIT_REGS(regs, iregs, r1, r2);
-  
+
+#ifdef OPTION_CMPSC_DEBUG
+  WRMSG(HHC90364, "D", r1, GR(r1, regs), r1 + 1, GR(r1 + 1, regs));
+#endif
+	
   /* Fill next pages */
   while(GR_A(r1 + 1, regs))
   {
@@ -1303,11 +1311,16 @@ static int ARCH_DEP(zero_padding)(int r1, REGS *regs, REGS *iregs, struct cc *cc
     if(len > GR_A(r1 + 1, iregs))
       len = GR_A(r1 + 1, iregs);
     sk = regs->dat.storkey;
-    cc->dest = MADDR((GR_A(r1, iregs) + len1) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    cc->dest = MADDR((GR_A(r1, iregs) + len) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
     memset(cc->dest, 0, len);
     *sk |= (STORKEY_REF | STORKEY_CHANGE);
     ADJUST_REGS(r1, regs, iregs, len);
     COMMIT_REGS(regs, iregs, r1, r2);
+
+#ifdef OPTION_CMPSC_DEBUG
+    WRMSG(HHC90364, "D", r1, GR(r1, regs), r1 + 1, GR(r1 + 1, regs));
+#endif
+
   }
   return(0);
 }
