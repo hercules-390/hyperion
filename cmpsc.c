@@ -265,6 +265,12 @@ DEF_INST(compression_call)
   if(unlikely(!GR_A(r2 + 1, regs)))
   {
     regs->psw.cc = 0;
+
+#ifdef FEATURE_CMPSC_ENHANCEMENT_FACILITY
+    if(unlikely(GR0_zp(regs)))
+      ARCH_DEP(zero_padding)(r1, regs, iregs, &cc);
+#endif
+
     return;
   }
 
