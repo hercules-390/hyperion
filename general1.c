@@ -420,7 +420,7 @@ VADR    newia;                          /* New instruction address   */
     regs->GR_L(r1) =
         ( regs->psw.amode )
         ? (0x80000000                 | PSW_IA31(regs, 2))
-        : (((!regs->execflag ? 2 : regs->exrl ? 6 : 4) << 29)
+        : (((likely(!regs->execflag) ? 2 : regs->exrl ? 6 : 4) << 29)
         |  (regs->psw.cc << 28)       | (regs->psw.progmask << 24)
         |  PSW_IA24(regs, 2));
 

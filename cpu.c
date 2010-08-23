@@ -587,7 +587,7 @@ static char *pgmintname[] = {
     {
         /* This can happen if BALR, BASR, BASSM or BSM
            program checks during trace */
-        ilc = !realregs->execflag ? 2 : realregs->exrl ? 6 : 4;
+        ilc = likely(!realregs->execflag) ? 2 : realregs->exrl ? 6 : 4;
         realregs->ip += ilc;
         realregs->psw.IA += ilc;
         realregs->psw.ilc = ilc;
@@ -600,7 +600,7 @@ static char *pgmintname[] = {
         if (realregs->guestregs->psw.ilc == 0
          && !realregs->guestregs->psw.zeroilc)
         {
-            sie_ilc = !realregs->guestregs->execflag ? 2 : 
+            sie_ilc = likely(!realregs->guestregs->execflag) ? 2 : 
                     realregs->guestregs->exrl ? 6 : 4;
             realregs->guestregs->psw.ilc = sie_ilc;
         }

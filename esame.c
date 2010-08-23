@@ -227,7 +227,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     S(inst, regs, b2, effective_addr2);
 
     /* Determine the address of the parameter list */
-    pl_addr = !regs->execflag ? PSW_IA(regs, 0) :
+    pl_addr = likely(!regs->execflag) ? PSW_IA(regs, 0) :
                regs->exrl ? (regs->ET + 6) : (regs->ET + 4);
 
     /* Fetch flags from the instruction address space */
@@ -2163,7 +2163,7 @@ U64     gr0, gr1;                       /* Result register workareas */
         if( OPEN_IC_PTIMER(regs) )
         {
             RELEASE_INTLOCK(regs);
-            UPD_PSW_IA(regs, PSW_IA(regs, !regs->execflag ? -6 :
+            UPD_PSW_IA(regs, PSW_IA(regs, likely(!regs->execflag) ? -6 :
                                                 regs->exrl ? -6 : -4));
             RETURN_INTCHECK(regs);
         }

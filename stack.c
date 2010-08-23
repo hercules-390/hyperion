@@ -244,7 +244,7 @@ int  i;
 
     trap_flags = REAL_ILC(regs) << 16;
 
-    if(regs->execflag)
+    if(unlikely(regs->execflag))
         trap_flags |= TRAP0_EXECUTE;
 
     if(trap_is_trap4)
@@ -341,7 +341,7 @@ int  i;
 
     /* Set the Breaking Event Address Register */
     SET_BEAR_REG(regs, regs->ip - 
-      (trap_is_trap4 ? 4 : !regs->execflag ? 2 : regs->exrl ? 6 : 4));
+      (trap_is_trap4 ? 4 : likely(!regs->execflag) ? 2 : regs->exrl ? 6 : 4));
     regs->psw.amode = 1;
     regs->psw.AMASK = AMASK31;
     UPD_PSW_IA(regs, trap_ia);
