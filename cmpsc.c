@@ -220,6 +220,7 @@ static int   ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, struct 
 static void  ARCH_DEP(store_iss)(int r1, int r2, REGS *regs, REGS *iregs, struct cc *cc);
 static int   ARCH_DEP(test_ec)(int r2, REGS *regs, REGS *iregs, struct cc *cc, BYTE *cce);
 static int   ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, struct ec *ec, BYTE *buf, unsigned len);
+//#define FEATURE_CMPSC_ENHANCEMENT_FACILITY
 #ifdef FEATURE_CMPSC_ENHANCEMENT_FACILITY
 static int   ARCH_DEP(zero_padding)(int r1, REGS *regs, REGS *iregs, struct cc *cc);
 #endif
@@ -1285,7 +1286,7 @@ static int ARCH_DEP(zero_padding)(int r1, REGS *regs, REGS *iregs, struct cc *cc
 #endif
 
   /* Check for end of destination */
-  if(unlikely((!GR_A(r1 + 1, regs)))
+  if(unlikely((!GR_A(r1 + 1, regs))))
     return;
 
   /* Fill first page */
