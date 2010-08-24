@@ -1304,10 +1304,7 @@ static void ARCH_DEP(zero_padding)(int r1, REGS *regs)
 
   /* Check for end of destination */
   if(unlikely((!GR_A(r1 + 1, regs))))
-  {
-    regs->psw.cc = 0;
     return;
-  }
 
   /* Fill first page */
   ofst = GR_A(r1, regs) & 0x7ff;
@@ -1340,9 +1337,6 @@ static void ARCH_DEP(zero_padding)(int r1, REGS *regs)
 #endif
 
   }
-
-  /* Padding completed */
-  regs->psw.cc = 0;
 }
 #endif /* FEATURE_CMPSC_ENHANCEMENT_FACILITY */
 
