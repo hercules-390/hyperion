@@ -268,11 +268,7 @@ DEF_INST(compression_call)
 
 #ifdef FEATURE_CMPSC_ENHANCEMENT_FACILITY
     if(unlikely(GR0_zp(regs)))
-    {
-      /* Force return on page fault */
-      regs->psw.cc = 3; 
       ARCH_DEP(zero_padding)(r1, regs);
-    }
 #endif
 
     regs->psw.cc = 0;
@@ -301,12 +297,7 @@ DEF_INST(compression_call)
 
 #ifdef FEATURE_CMPSC_ENHANCEMENT_FACILITY
     if(unlikely(GR0_zp(regs) && !GR_A(r2 + 1, regs)))
-    {
-      /* Force return on page fault */
-      regs->psw.cc = 3;
       ARCH_DEP(zero_padding)(r1, regs);
-      regs->psw.cc = 0;
-    }
 #endif
 
   }
@@ -1296,17 +1287,12 @@ static void ARCH_DEP(zero_padding)(int r1, REGS *regs)
   BYTE *dest;                          /* Destination MADDR page address      */
   unsigned len;                        /* Length to clear                     */
   unsigned ofst;                       /* Offset within page                  */
-  BYTE *sk;                            /* Storage key                         */
-
-#ifdef OPTION_CMPSC_DEBUG
-  WRMSG(HHC90364, "D", r1, GR(r1, regs), r1 + 1, GR(r1 + 1, regs));
-#endif
 
   /* Check for end of destination */
   if(unlikely((!GR_A(r1 + 1, regs))))
     return;
 
-  /* Fill first page */
+  /* Zero page in progress */
   ofst = GR_A(r1, regs) & 0x7ff;
   len = 0x800 - ofst;
   if(len > GR_A(r1 + 1, regs))
@@ -1314,29 +1300,7 @@ static void ARCH_DEP(zero_padding)(int r1, REGS *regs)
   dest = MADDR((GR_A(r1, regs) & ~0x7ff) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
   memset(&dest[ofst], 0, len);
   ITIMER_UPDATE(GR_A(r1, regs), len - 1, regs);
-  ADJUSTREGS(r1, regs, regs, len);
-
-#ifdef OPTION_CMPSC_DEBUG
-  WRMSG(HHC90364, "D", r1, GR(r1, regs), r1 + 1, GR(r1 + 1, regs));
-#endif
 	
-  /* Fill next pages */
-  while(GR_A(r1 + 1, regs))
-  {
-    len = 0x800;
-    if(len > GR_A(r1 + 1, regs))
-      len = GR_A(r1 + 1, regs);
-    sk = regs->dat.storkey;
-    dest = MADDR((GR_A(r1, regs) + len) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
-    memset(dest, 0, len);
-    *sk |= (STORKEY_REF | STORKEY_CHANGE);
-    ADJUSTREGS(r1, regs, regs, len);
-
-#ifdef OPTION_CMPSC_DEBUG
-    WRMSG(HHC90364, "D", r1, GR(r1, regs), r1 + 1, GR(r1 + 1, regs));
-#endif
-
-  }
 }
 #endif /* FEATURE_CMPSC_ENHANCEMENT_FACILITY */
 
