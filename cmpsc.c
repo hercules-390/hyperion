@@ -131,11 +131,13 @@
 /* e     : expansion operation                                                */
 /* f1    : format-1 sibling descriptors                                       */
 /* st    : symbol-translation option                                          */
+/* zp    : zero padding                                                       */
 /*----------------------------------------------------------------------------*/
 #define GR0_cdss(regs)       (((regs)->GR_L(0) & 0x0000F000) >> 12)
 #define GR0_e(regs)          ((regs)->GR_L(0) & 0x00000100)
 #define GR0_f1(regs)         ((regs)->GR_L(0) & 0x00000200)
 #define GR0_st(regs)         ((regs)->GR_L(0) & 0x00010000)
+#define GR0_zp(regs)         ((regs)->GR_L(0) & 0x00000400) // Just guessing!
 
 /*----------------------------------------------------------------------------*/
 /* General Purpose Register 0 macro's (GR0) derived                           */
@@ -220,9 +222,8 @@ static int   ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, struct 
 static void  ARCH_DEP(store_iss)(int r1, int r2, REGS *regs, REGS *iregs, struct cc *cc);
 static int   ARCH_DEP(test_ec)(int r2, REGS *regs, REGS *iregs, struct cc *cc, BYTE *cce);
 static int   ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, struct ec *ec, BYTE *buf, unsigned len);
-//#define FEATURE_CMPSC_ENHANCEMENT_FACILITY
 #ifdef FEATURE_CMPSC_ENHANCEMENT_FACILITY
-static int   ARCH_DEP(zero_padding)(int r1, REGS *regs, REGS *iregs, struct cc *cc);
+static void  ARCH_DEP(zero_padding)(int r1, REGS *regs);
 #endif
 
 /*----------------------------------------------------------------------------*/
@@ -264,13 +265,17 @@ DEF_INST(compression_call)
   /* Check for empty input */
   if(unlikely(!GR_A(r2 + 1, regs)))
   {
-    regs->psw.cc = 0;
 
 #ifdef FEATURE_CMPSC_ENHANCEMENT_FACILITY
     if(unlikely(GR0_zp(regs)))
-      ARCH_DEP(zero_padding)(r1, regs, iregs, &cc);
+    {
+      /* Force return on page fault */
+      regs->psw.cc = 3; 
+      ARCH_DEP(zero_padding)(r1, regs);
+    }
 #endif
 
+    regs->psw.cc = 0;
     return;
   }
 
@@ -282,7 +287,7 @@ DEF_INST(compression_call)
   }
 
   /* Set possible Data Exception code right away */
-  regs->dxc = DXC_DECIMAL;     
+  regs->dxc = DXC_DECIMAL;
 
   /* Initialize intermediate registers */
   INITREGS(&iregs, regs, r1, r2);
@@ -291,7 +296,20 @@ DEF_INST(compression_call)
   if(likely(GR0_e(regs)))
     ARCH_DEP(expand)(r1, r2, regs, &iregs);
   else
+  {
     ARCH_DEP(compress)(r1, r2, regs, &iregs);
+
+#ifdef FEATURE_CMPSC_ENHANCEMENT_FACILITY
+    if(unlikely(GR0_zp(regs) && !GR_A(r2 + 1, regs)))
+    {
+      /* Force return on page fault */
+      regs->psw.cc = 3;
+      ARCH_DEP(zero_padding)(r1, regs);
+      regs->psw.cc = 0;
+    }
+#endif
+
+  }
 }
 
 /*============================================================================*/
@@ -544,15 +562,7 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 
   /* When reached end of source, return to caller */
   if(likely(!GR_A(r2 + 1, regs)))
-  {
-
-#ifdef FEATURE_CMPSC_ENHANCEMENT_FACILITY
-    if(unlikely(GR0_zp(regs)))
-      ARCH_DEP(zero_padding)(r1, regs, iregs, &cc);
-#endif
-
     return;
-  }
 
   /* Reached model dependent CPU processing amount */
   regs->psw.cc = 3;
@@ -1281,8 +1291,9 @@ static int ARCH_DEP(test_ec)(int r2, REGS *regs, REGS *iregs, struct cc *cc, BYT
 /*----------------------------------------------------------------------------*/
 /* zero_padding                                                               */
 /*----------------------------------------------------------------------------*/
-static int ARCH_DEP(zero_padding)(int r1, REGS *regs, REGS *iregs, struct cc *cc)
+static void ARCH_DEP(zero_padding)(int r1, REGS *regs)
 {
+  BYTE *dest;                          /* Destination MADDR page address      */
   unsigned len;                        /* Length to clear                     */
   unsigned ofst;                       /* Offset within page                  */
   BYTE *sk;                            /* Storage key                         */
@@ -1293,19 +1304,20 @@ static int ARCH_DEP(zero_padding)(int r1, REGS *regs, REGS *iregs, struct cc *cc
 
   /* Check for end of destination */
   if(unlikely((!GR_A(r1 + 1, regs))))
+  {
+    regs->psw.cc = 0;
     return;
+  }
 
   /* Fill first page */
-  ofst = GR_A(r1, iregs) & 0x7ff;
+  ofst = GR_A(r1, regs) & 0x7ff;
   len = 0x800 - ofst;
-  if(len > GR_A(r1 + 1, iregs))
-    len = GR_A(r1 + 1, iregs);
-  if(unlikely(!cc->dest))
-    cc->dest = MADDR((GR_A(r1, iregs) & ~0x7ff) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
-  memset(&cc->dest[ofst], 0, len);
-  ITIMER_UPDATE(GR_A(r1, iregs), len - 1, regs);
-  ADJUST_REGS(r1, regs, iregs, len);
-  COMMIT_REGS(regs, iregs, r1, r2);
+  if(len > GR_A(r1 + 1, regs))
+    len = GR_A(r1 + 1, regs);
+  dest = MADDR((GR_A(r1, regs) & ~0x7ff) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+  memset(&dest[ofst], 0, len);
+  ITIMER_UPDATE(GR_A(r1, regs), len - 1, regs);
+  ADJUSTREGS(r1, regs, regs, len);
 
 #ifdef OPTION_CMPSC_DEBUG
   WRMSG(HHC90364, "D", r1, GR(r1, regs), r1 + 1, GR(r1 + 1, regs));
@@ -1315,21 +1327,22 @@ static int ARCH_DEP(zero_padding)(int r1, REGS *regs, REGS *iregs, struct cc *cc
   while(GR_A(r1 + 1, regs))
   {
     len = 0x800;
-    if(len > GR_A(r1 + 1, iregs))
-      len = GR_A(r1 + 1, iregs);
+    if(len > GR_A(r1 + 1, regs))
+      len = GR_A(r1 + 1, regs);
     sk = regs->dat.storkey;
-    cc->dest = MADDR((GR_A(r1, iregs) + len) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
-    memset(cc->dest, 0, len);
+    dest = MADDR((GR_A(r1, regs) + len) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    memset(dest, 0, len);
     *sk |= (STORKEY_REF | STORKEY_CHANGE);
-    ADJUST_REGS(r1, regs, iregs, len);
-    COMMIT_REGS(regs, iregs, r1, r2);
+    ADJUSTREGS(r1, regs, regs, len);
 
 #ifdef OPTION_CMPSC_DEBUG
     WRMSG(HHC90364, "D", r1, GR(r1, regs), r1 + 1, GR(r1 + 1, regs));
 #endif
 
   }
-  return(0);
+
+  /* Padding completed */
+  regs->psw.cc = 0;
 }
 #endif /* FEATURE_CMPSC_ENHANCEMENT_FACILITY */
 
