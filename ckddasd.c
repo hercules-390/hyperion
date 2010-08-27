@@ -3098,7 +3098,17 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                 iobuf[94] = (myssid >> 8) & 0xff;
                 iobuf[95] = myssid & 0xff;
                 break;
-
+            case 0x03:  /* Read attention message for this path-group for 
+                          the addressed device Return a "no message"
+                           message */
+                iobuf[0] = 0x00;                     // Message length
+                iobuf[1] = 0x09;                    // ...
+                iobuf[2] = 0x02;                    // 3990-x/ESS message
+                iobuf[3] = 0x00;                    // Message code
+                memcpy (iobuf+4, iobuf+8, 4);       // Copy message identifier from bytes 8-11
+                iobuf[9] = 0x00;                    // Flags
+                dev->ckdssdlen = 9;                 // Indicate length of subsystem data prepared
+                break;
             case 0x0E: /* Unit address configuration */
                 /* Prepare unit address configuration record */
                 memset (iobuf, 0x00, 512);
