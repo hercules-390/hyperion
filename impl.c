@@ -863,7 +863,22 @@ int     dll_count;                      /* index into array          */
 
 #ifdef OPTION_MIPS_COUNTING
     /* Initialize "maxrates" command reporting intervals */
-    curr_int_start_time = time( NULL );
+
+    if ( maxrates_rpt_intvl == 1440 )
+    {
+        time_t      current_time;
+        struct tm  *current_tm;
+        time_t      since_midnight = 0;            
+        current_time = time( NULL );
+        current_tm   = localtime( &current_time );
+        since_midnight = (time_t)( ( ( current_tm->tm_hour  * 60 ) + 
+                                       current_tm->tm_min ) * 60   +
+                                       current_tm->tm_sec );
+        curr_int_start_time = current_time - since_midnight;
+    }
+    else
+        curr_int_start_time = time( NULL );
+
     prev_int_start_time = curr_int_start_time;
 #endif
 
