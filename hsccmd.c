@@ -188,6 +188,7 @@ static inline void missing_devnum()
 int maxrates_cmd(int argc, char *argv[],char *cmdline)
 {
     char buf[128];
+
     UNREFERENCED(cmdline);
 
     if (argc > 1)
@@ -197,6 +198,22 @@ int maxrates_cmd(int argc, char *argv[],char *cmdline)
         {
             WRMSG(HHC02205, "E", argv[2], "");
             bError = TRUE;
+        }
+        else if ( CMD( argv[1],midnight,3 ) )
+        {
+            time_t      current_time;
+            struct tm  *current_tm;
+            time_t      since_midnight = 0;
+
+            current_time = time( NULL );
+            current_tm   = localtime( &current_time );
+            since_midnight = (time_t)( ( ( current_tm->tm_hour  * 60 ) + 
+                                           current_tm->tm_min ) * 60   +
+                                           current_tm->tm_sec );
+            curr_int_start_time = current_time - since_midnight;
+
+            maxrates_rpt_intvl = 1440;
+            WRMSG( HHC02204, "I", "maxrates", "midnight" );
         }
         else
         {

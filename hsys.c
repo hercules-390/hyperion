@@ -1,4 +1,4 @@
-/* HSYS.H       (c) Copyright Roger Bowler, 1999-2010                */
+/* HSYS.C       (c) Copyright Roger Bowler, 1999-2010                */
 /*              Hercules hsys Header                                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
