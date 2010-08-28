@@ -4116,6 +4116,14 @@ BYTE            buf[65536];             /* Buffer                    */
     memset (&cckd->cdevhdr[from_sfx], 0, CCKDDASD_DEVHDR_SIZE);
     rc = unlink (cckd_sf_name (dev, from_sfx));
 
+    /* adjust the stats */
+    cckd->reads[to_sfx] += cckd->reads[from_sfx];
+    cckd->writes[to_sfx] += cckd->writes[from_sfx];
+    cckd->l2reads[to_sfx] += cckd->l2reads[from_sfx];
+    cckd->reads[from_sfx] = 0;
+    cckd->writes[from_sfx] = 0;
+    cckd->l2reads[from_sfx] = 0;
+
     /* Add the file back if necessary */
     if (add) rc = cckd_sf_new (dev) ;
 
