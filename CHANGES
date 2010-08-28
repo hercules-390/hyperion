@@ -1,3 +1,8 @@
+28 Aug 2010 Move update_maxrates_hwm() from panel.c and dyngui.c to timer.c to
+            correct update of maxrates when daemon mode is enabled without a
+            GUI interface being used. Previous maxrates will not be displayed if a 
+            prior interval has not occurred. Current maxrates will be displayed
+            during shutdown. - Paul Gorlinsky
 26 Aug 2010 Add "midnight" option to maxrates. Sets interval to 1440 and 
             curr_int_start_time to the prior midnight. This will cause 
             the maxrates stats to print at midnight. 

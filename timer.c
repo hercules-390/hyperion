@@ -266,7 +266,12 @@ U64     total_sios;                     /* Total SIO rate            */
             /* Total for ALL CPUs together */
             sysblk.mipsrate = total_mips;
             sysblk.siosrate = total_sios;
+            
+            update_maxrates_hwm(); // (update high-water-mark values)
+        
         } /* end if(diff >= 1000000) */
+
+
 #endif /*OPTION_MIPS_COUNTING*/
 
         /* Sleep for another timer update interval... */

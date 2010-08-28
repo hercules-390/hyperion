@@ -747,8 +747,6 @@ void  UpdateCPUStatus ()
         prev_sios_rate = sysblk.siosrate;
     }
 
-    update_maxrates_hwm(); // (update high-water-mark values)
-
 #endif // defined(OPTION_MIPS_COUNTING)
 }
 

@@ -1979,10 +1979,6 @@ char    buf[1024];                      /* Buffer workarea           */
     /* Process messages and commands */
     while ( 1 )
     {
-#if defined(OPTION_MIPS_COUNTING)
-        update_maxrates_hwm(); // (update high-water-mark values)
-#endif // defined(OPTION_MIPS_COUNTING)
-
 #if defined( _MSVC_ )
         /* Wait for keyboard input */
 #define WAIT_FOR_KEYBOARD_INPUT_SLEEP_MILLISECS  (20)
