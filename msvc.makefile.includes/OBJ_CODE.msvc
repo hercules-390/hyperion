@@ -92,6 +92,7 @@ decNumber_OBJ = \
     $(O)decPacked.obj
 
 hengine_OBJ = \
+    $(O)archlvl.obj  \
     $(O)assist.obj   \
     $(O)bldcfg.obj   \
     $(O)cgibin.obj   \

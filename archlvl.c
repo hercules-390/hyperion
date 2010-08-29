@@ -21,6 +21,10 @@
 #include "opcode.h"
 #include "hostinfo.h"
 
+#ifdef OPTION_FISHIO
+#include "w32chan.h"
+#endif
+
 #if !defined(_GEN_ARCH)
 
 #if defined(_ARCHMODE3)

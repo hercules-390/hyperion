@@ -847,6 +847,10 @@
 						Name="Source Files"
 						>
 						<File
+							RelativePath=".\archlvl.c"
+							>
+						</File>
+						<File
 							RelativePath=".\assist.c"
 							>
 						</File>
