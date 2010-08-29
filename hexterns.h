@@ -210,6 +210,10 @@ CONF_DLL_IMPORT int parse_conkpalv(char* s, int* idle, int* intv, int* cnt );
 BLDC_DLL_IMPORT int add_tamdir( char *tamdir, TAMDIR **ppTAMDIR );
 #endif /* OPTION_TAPE_AUTOMOUNT */
 
+/* Functions in archlvl.c */
+int set_archlvl(char *archname);
+void init_als(REGS *regs);
+
 /* Global data areas and functions in module cpu.c                   */
 extern const char* arch_name[];
 extern const char* get_arch_mode_string(REGS* regs);

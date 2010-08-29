@@ -1,3 +1,4 @@
+29 Aug 2010 Virtual Architecture Level support - Jan Jaeger
 28 Aug 2010 Add "autoinit" command to control a sysblk variable noautoinit. 
             sysblk.noautoinit = FALSE, devinit will create a file when requested
             file is not found, write 2 TMs and rewind the file. 

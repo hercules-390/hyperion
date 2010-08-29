@@ -32,8 +32,6 @@
 #if !defined(_ESAME_C_)
 #define _ESAME_C_
 
-BYTE * get_stfl_data(int, int *);
-
 #endif
 
 #include "hercules.h"
@@ -4941,243 +4939,6 @@ int     fc, rc = 0;                     /* Function / Reason Code    */
 
 
 #if defined(FEATURE_STORE_FACILITY_LIST)
-
-#define HAVE_STFL_DATA 1
-
-BYTE ARCH_DEP(stfl_data)[] = {
-                 0
-#if defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)
-                 | STFL_0_N3
-#endif /*defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)*/
-#if defined(FEATURE_ESAME)
-                 | STFL_0_ESAME_ACTIVE
-#endif /*defined(FEATURE_ESAME)*/
-#if defined(FEATURE_ESAME)
-                 | STFL_0_ESAME_INSTALLED
-#endif /*defined(FEATURE_ESAME)*/
-#if defined(FEATURE_DAT_ENHANCEMENT)
-                 | STFL_0_IDTE_INSTALLED
-#endif /*defined(FEATURE_DAT_ENHANCEMENT)*/
-#if defined(FEATURE_ASN_AND_LX_REUSE)
-                 | STFL_0_ASN_LX_REUSE
-#endif /*defined(FEATURE_ASN_AND_LX_REUSE)*/
-#if defined(FEATURE_STORE_FACILITY_LIST_EXTENDED)
-                 | STFL_0_STFL_EXTENDED
-#endif /*defined(FEATURE_STORE_FACILITY_LIST_EXTENDED)*/
-                 ,
-                 0
-#if defined(FEATURE_ENHANCED_DAT_FACILITY)                      /*208*/
-                 | STFL_1_ENHANCED_DAT                          /*208*/
-#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/               /*208*/
-#if defined(FEATURE_SENSE_RUNNING_STATUS)
-                 | STFL_1_SENSE_RUN_STATUS
-#endif /*defined(FEATURE_SENSE_RUNNING_STATUS)*/
-#if defined(FEATURE_CONDITIONAL_SSKE)
-                 | STFL_1_CONDITIONAL_SSKE
-#endif /*defined(FEATURE_CONDITIONAL_SSKE)*/
-#if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)            /*208*/
-                 | STFL_1_CONFIG_TOPOLOGY                       /*208*/
-#endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/     /*208*/
-                 ,
-                 0
-#if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
-                 | STFL_2_TRAN_FAC2
-#endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/
-#if defined(FEATURE_MESSAGE_SECURITY_ASSIST)
-                 | STFL_2_MSG_SECURITY
-#endif /*defined(FEATURE_MESSAGE_SECURITY_ASSIST)*/
-#if defined(FEATURE_LONG_DISPLACEMENT)
-                 | STFL_2_LONG_DISPL_INST
-                 | STFL_2_LONG_DISPL_HPERF
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
-#if defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)
-                 | STFL_2_HFP_MULT_ADD_SUB
-#endif /*defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)*/
-#if defined(FEATURE_EXTENDED_IMMEDIATE)
-                 | STFL_2_EXTENDED_IMMED
-#endif /*defined(FEATURE_EXTENDED_IMMEDIATE)*/
-#if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_3)
-                 | STFL_2_TRAN_FAC3
-#endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_3)*/
-#if defined(FEATURE_HFP_UNNORMALIZED_EXTENSION)
-                 | STFL_2_HFP_UNNORM_EXT
-#endif /*defined(FEATURE_HFP_UNNORMALIZED_EXTENSION)*/
-                 ,
-                 0
-#if defined(FEATURE_ETF2_ENHANCEMENT)
-                 | STFL_3_ETF2_ENHANCEMENT
-#endif /*defined(FEATURE_ETF2_ENHANCEMENT)*/
-#if defined(FEATURE_STORE_CLOCK_FAST)
-                 | STFL_3_STORE_CLOCK_FAST
-#endif /*defined(FEATURE_STORE_CLOCK_FAST)*/
-#if defined(FEATURE_PARSING_ENHANCEMENT_FACILITY)               /*208*/
-                 | STFL_3_PARSING_ENHANCE                       /*208*/
-#endif /*defined(FEATURE_PARSING_ENHANCEMENT_FACILITY)*/        /*208*/
-#if defined(FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS)          /*208*/
-                 | STFL_3_MVCOS                                 /*208*/
-#endif /*defined(FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS)*/   /*208*/
-#if defined(FEATURE_TOD_CLOCK_STEERING)
-                 | STFL_3_TOD_CLOCK_STEER
-#endif /*defined(FEATURE_TOD_CLOCK_STEERING)*/
-#if defined(FEATURE_ETF3_ENHANCEMENT)
-                 | STFL_3_ETF3_ENHANCEMENT
-#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
-#if defined(FEATURE_EXTRACT_CPU_TIME)
-                 | STFL_3_EXTRACT_CPU_TIME
-#endif /*defined(FEATURE_EXTRACT_CPU_TIME)*/
-                 ,
-                 0
-#if defined(FEATURE_COMPARE_AND_SWAP_AND_STORE)
-                 | STFL_4_CSSF
-#endif /*defined(FEATURE_COMPARE_AND_SWAP_AND_STORE)*/
-#if defined(FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY_2)      /*208*/
-                 | STFL_4_CSSF2                                 /*208*/
-#endif /*FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY_2*/        /*208*/
-#if defined(FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY)    /*208*/
-                 | STFL_4_GEN_INST_EXTN                         /*208*/
-#endif /*FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY*/      /*208*/
-#if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)                /*208*/
-                 | STFL_4_EXECUTE_EXTN                          /*208*/
-#endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/         /*208*/
-                 ,
-                 0
-#if defined(FEATURE_SET_PROGRAM_PARAMETER_FACILITY)
-                 | STFL_5_SET_PROG_PARAM
-#endif /*defined(FEATURE_SET_PROGRAM_PARAMETER_FACILITY)*/
-#if defined(FEATURE_FPS_ENHANCEMENT)
-                 | STFL_5_FPS_ENHANCEMENT
-#endif /*defined(FEATURE_FPS_ENHANCEMENT)*/
-#if defined(FEATURE_DECIMAL_FLOATING_POINT)
-                 | STFL_5_DECIMAL_FLOAT
-                 | STFL_5_DFP_HPERF
-#endif /*defined(FEATURE_DECIMAL_FLOATING_POINT)*/
-#if defined(FEATURE_PFPO)
-                 | STFL_5_PFPO
-#endif /*defined(FEATURE_PFPO)*/
-                 ,
-                 0
-                 ,
-                 0
-                 ,
-                 0
-#if defined(FEATURE_CPU_MEASUREMENT_COUNTER_FACILITY)
-                 | STFL_8_CPU_MEAS_COUNTER
-#endif /*defined(FEATURE_CPU_MEASUREMENT_COUNTER_FACILITY)*/
-#if defined(FEATURE_CPU_MEASUREMENT_SAMPLING_FACILITY)
-                 | STFL_8_CPU_MEAS_SAMPLNG
-#endif /*defined(FEATURE_CPU_MEASUREMENT_SAMPLING_FACILITY)*/
-                 ,
-                 0
-                 ,
-                 0
-                 ,
-                 0
-                 ,
-                 0
-                 ,
-                 0
-                 ,
-                 0
-                 ,
-                 0
-                 };
-
-/*-------------------------------------------------------------------*/
-/* Adjust the facility list to account for runtime options           */
-/*-------------------------------------------------------------------*/
-BYTE * ARCH_DEP(adjust_stfl_data) (int *data_len, REGS *regs)
-{
-int   stfl_len;     /* Length of STFL data                           */
-BYTE *stfl_data;    /* -> STFL data being modified. Depends upon     */
-                    /* installed architecture, but not the current   */
-                    /* architecture mode being executed.             */
-                    /* ARCH_DEP is unreliable choice for STFL data   */
-                    /* post IPL of a z/Architecture machine but      */
-                    /* before the CPU has been placed in             */
-                    /* in z/Architecture mode.  In this case,        */
-                    /* ARCH_DEP selects ESA/390 STFL data which is   */
-                    /* incomplete when z/Architecture is installed.  */
-                    /* This creates problems for OS's that expect to */
-                    /* detect z/Architecture features before         */
-                    /* entering z/Architecture mode and only find    */
-                    /* ESA/390 features.                             */
-
-    if (sysblk.arch_z900)
-    {   
-        /* 'ARCHMODE z/Arch' in configuration (or console configured) */
-
-        /* Locate the STFL data for a z/Architecture system */
-        stfl_data=get_stfl_data(ARCH_900, &stfl_len);
-
-        /* A little overkill, but deals with the possible corner case */
-        if (!stfl_data)
-        {   
-            stfl_len=sizeof(ARCH_DEP(stfl_data));
-            stfl_data=&ARCH_DEP(stfl_data)[0];
-        }
-
-        stfl_data[0] |= STFL_0_ESAME_INSTALLED;
-
-        /* Set whether z/Arch is active based upon CPU mode */
-        if (regs->arch_mode == ARCH_900)
-            stfl_data[0] |= STFL_0_ESAME_ACTIVE;
-        else
-            stfl_data[0] &= ~STFL_0_ESAME_ACTIVE;
-    }
-    else
-    {
-        /* 'ARCHMODE ESA/390' in configuration (or console configured) */
-        
-        /* Locate the STFL data for an ESA/390 system */
-        stfl_data=get_stfl_data(ARCH_390, &stfl_len);
-        
-        /* Same overkill, but just in case */
-        if (!stfl_data)
-        {   
-            stfl_len=sizeof(ARCH_DEP(stfl_data));
-            stfl_data=&ARCH_DEP(stfl_data)[0];
-        }
-        
-        stfl_data[0] &= ~STFL_0_ESAME_INSTALLED;
-        stfl_data[0] &= ~STFL_0_ESAME_ACTIVE;
-    }
-
-#if defined(FEATURE_MESSAGE_SECURITY_ASSIST)
-    /* MSA is enabled only if the dyncrypt DLL module is loaded */
-    if(ARCH_DEP(cipher_message))
-        stfl_data[2] |= (STFL_2_MSG_SECURITY
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
-                        | STFL_9_MSA_EXTENSION_3
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
-                        | STFL_9_MSA_EXTENSION_4
-#endif
-#endif
-                                                );
-    else
-        stfl_data[2] &= ~(STFL_2_MSG_SECURITY
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
-                        | STFL_9_MSA_EXTENSION_3
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
-                        | STFL_9_MSA_EXTENSION_4
-#endif
-#endif
-                                                );
-#endif /*defined(FEATURE_MESSAGE_SECURITY_ASSIST)*/
-
-#if defined(_FEATURE_ASN_AND_LX_REUSE)
-    /* ALRF enablement is an option in the configuration file */
-    if(sysblk.asnandlxreuse)
-        stfl_data[0] |= STFL_0_ASN_LX_REUSE;
-    else
-        stfl_data[0] &= ~STFL_0_ASN_LX_REUSE;
-#endif /*defined(FEATURE_ASN_AND_LX_REUSE)*/
-
-    *data_len=stfl_len;
-    return stfl_data;
-} /* end ARCH_DEP(adjust_stfl_data) */
-
-
-
 /*-------------------------------------------------------------------*/
 /* B2B1 STFL  - Store Facility List                              [S] */
 /*-------------------------------------------------------------------*/
@@ -5185,10 +4946,7 @@ DEF_INST(store_facility_list)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-int     data_len;                       /* Size of STFL data         */
-        /* Note: data_len not used here, but STFLE needs it          */
 PSA    *psa;                            /* -> Prefixed storage area  */
-BYTE   *stfl_data;                      /* -> STFL data              */
 
     S(inst, regs, b2, effective_addr2);
 
@@ -5198,24 +4956,16 @@ BYTE   *stfl_data;                      /* -> STFL data              */
 
     PTT(PTT_CL_INF,"STFL",b2,(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
 
-    /* Adjust the facility list to account for runtime options */
-    stfl_data = ARCH_DEP(adjust_stfl_data)(&data_len, regs);
-
-#if 0
-    logmsg ("store_facility_list STFL data length %i\n",data_len);
-    logmsg ("STFL=%2.2X %2.2X %2.2X %2.2X\n",
-            *stfl_data,*(stfl_data+1),*(stfl_data+2),*(stfl_data+3));
-#endif
-
     /* Set the main storage reference and change bits */
     STORAGE_KEY(regs->PX, regs) |= (STORKEY_REF | STORKEY_CHANGE);
 
     /* Point to PSA in main storage */
     psa = (void*)(regs->mainstor + regs->PX);
 
-    memcpy(psa->stfl, stfl_data, sizeof(psa->stfl));
+    memcpy(psa->stfl, regs->facility_list, sizeof(psa->stfl));
 
 } /* end DEF_INST(store_facility_list) */
+#endif /*defined(FEATURE_STORE_FACILITY_LIST) */
 
 
 #if defined(FEATURE_STORE_FACILITY_LIST_EXTENDED)
@@ -5226,11 +4976,8 @@ DEF_INST(store_facility_list_extended)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-int     data_len;                       /* Size of STFL data         */
-int     nmax;                           /* #of doublewords defined   */
 int     ndbl;                           /* #of doublewords to store  */
 int     cc;                             /* Condition code            */
-BYTE   *stfl_data;                      /* -> STFL data              */
 
     S(inst, regs, b2, effective_addr2);
 
@@ -5242,41 +4989,41 @@ BYTE   *stfl_data;                      /* -> STFL data              */
 
     DW_CHECK(effective_addr2, regs);
 
-    /* Adjust the facility list to account for runtime options */
-    stfl_data = ARCH_DEP(adjust_stfl_data)(&data_len, regs);
-
-    /* Calculate number of doublewords of facilities defined */
-    nmax = (data_len+7) / 8;
-
     /* Obtain operand length from register 0 bits 56-63 */
     ndbl = regs->GR_LHLCL(0) + 1;
 
     /* Check if operand length is sufficient */
-    if (ndbl >= nmax)
+    if (ndbl >= STFL_DWRDSIZE)
     {
-        ndbl = nmax;
+        ndbl = STFL_DWRDSIZE;
         cc = 0;
     }
     else
     {
-        PTT(PTT_CL_ERR,"*STFLE", ndbl, nmax, regs->psw.IA_L);
+        PTT(PTT_CL_ERR,"*STFLE", ndbl, STFL_DWRDSIZE, regs->psw.IA_L);
         cc = 3;
     }
 
+#if 0
+    logmsg ("STFL=%2.2X %2.2X %2.2X %2.2X\n",
+            regs->facility_list[0],
+            regs->facility_list[1],
+            regs->facility_list[2],
+            regs->facility_list[3]);
+#endif
+
     /* Store facility list at operand location */
-    ARCH_DEP(vstorec) ( stfl_data, ndbl*8-1,
+    ARCH_DEP(vstorec) ( regs->facility_list, ndbl*8-1,
                         effective_addr2, b2, regs );
 
     /* Save number of doublewords minus 1 into register 0 bits 56-63 */
-    regs->GR_LHLCL(0) = (BYTE)(nmax - 1);
+    regs->GR_LHLCL(0) = (BYTE)(STFL_DWRDSIZE - 1);
 
     /* Set condition code */
     regs->psw.cc = cc;
 
 } /* end DEF_INST(store_facility_list_extended) */
 #endif /*defined(FEATURE_STORE_FACILITY_LIST_EXTENDED)*/
-
-#endif /*defined(FEATURE_STORE_FACILITY_LIST) */
 
 
 #if defined(FEATURE_LOAD_REVERSED) && defined(FEATURE_ESAME)

@@ -401,6 +401,7 @@ endif
                        impl.c       \
                        config.c     \
                        bldcfg.c     \
+                       archlvl.c    \
                        panel.c      \
                        history.c    \
                        fillfnam.c   \

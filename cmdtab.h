@@ -290,15 +290,17 @@ COMMAND("restart",   PANEL,         SYSCMDALL,          restart_cmd,
   "Generate restart interrupt", 
     NULL)
 
-COMMAND("archmode",  PANEL+CONFIG,  SYSCMDALL-SYSOPER, archmode_cmd,
-  "Set architecture mode",
-    "Format: \"archmode [S/370 | ESA/390 | z/Arch | ESAME]\". Entering the\n"
+COMMAND("archlvl",  PANEL+CONFIG,  SYSCMDALL-SYSOPER, archlvl_cmd,
+  "Set Architecture Level",
+    "Format: archlvl s/370|als0 | esa/390|als1 | esame|als2 | z/arch|als3\n"
+    "                enable|disable|query <facility> [s/370|esa/390|z/arch]\n"
     "command without any argument simply displays the current architecture\n"
     "mode. Entering the command with an argument sets the architecture mode\n"
-    "to the specified value.\n"
-    "Note: \"ESAME\" (Enterprise System Architecture, Modal Extensions) is\n"
-    "simply a synonym for \"z/Arch\". (they are identical to each other and\n"
-    "mean the same thing)\n")
+    "to the specified value.\n")
+
+COMMAND("archmode",  PANEL+CONFIG,  SYSCMDALL-SYSOPER, archlvl_cmd, 
+  "Alias for archlvl", 
+    NULL)
 
 COMMAND("loadparm",  PANEL+CONFIG,  SYSCMDALL,          loadparm_cmd, 
   "Set IPL parameter", 
@@ -924,7 +926,8 @@ COMMAND("maxrates",  PANEL,         SYSCMDALL,          maxrates_cmd,
 
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
 COMMAND("asn_and_lx_reuse", CONFIG, SYSCMDALL-SYSOPER,  alrf_cmd, 
-  "Enable/Disable ASN and LX reuse facility", 
+  "Command depricated:" 
+  "Use \"archlvl enable/disable/query asn_lx_reuse\" instead\n",
     NULL)
     
 COMMAND("alrf",      CONFIG,        SYSCMDALL-SYSOPER,  alrf_cmd, 

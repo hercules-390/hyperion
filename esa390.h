@@ -1295,109 +1295,104 @@ typedef struct _MBK {
 #define PLO_CSTSTGR             22      /* C/S/TS              ESAME */
 #define PLO_CSTSTX              23      /* C/S/TS              ESAME */
 
-/* Bit definitions for Store Facilities List instruction */
-/* Byte STFL_0: STFL/STFLE bits 0-7 */
-#define STFL_0_N3               0x80    /* Instructions marked N3 in
+/* Facility List definitions */
+#define STFL_N3                    0    /* Instructions marked N3 in
                                            the reference summary are
                                            available in ESA/390 mode */
-#define STFL_0_ESAME_INSTALLED  0x40    /* ESAME mode is available on
+#define STFL_ESAME_INSTALLED       1    /* ESAME mode is available on
                                            this processor            */
-#define STFL_0_ESAME_ACTIVE     0x20    /* ESAME mode is active on
+#define STFL_ESAME_ACTIVE          2    /* ESAME mode is active on
                                            this processor            */
-#define STFL_0_IDTE_INSTALLED   0x10    /* IDTE installed ESAME mode */
-#define STFL_0_IDTE_SC_SEGTAB   0x08    /* IDTE selective clearing
+#define STFL_IDTE_INSTALLED        3    /* IDTE installed ESAME mode */
+#define STFL_IDTE_SC_SEGTAB        4    /* IDTE selective clearing
                                            when segtab invalidated   */
-#define STFL_0_IDTE_SC_REGTAB   0x04    /* IDTE selective clearing
+#define STFL_IDTE_SC_REGTAB        5    /* IDTE selective clearing
                                            when regtab invalidated   */
-#define STFL_0_ASN_LX_REUSE     0x02    /* ASN-and-LX-reuse facility
+#define STFL_ASN_LX_REUSE          6    /* ASN-and-LX-reuse facility
                                            is installed              */
-#define STFL_0_STFL_EXTENDED    0x01    /* Store facility list    @Z9
+#define STFL_STFL_EXTENDED         7    /* Store facility list    @Z9
                                            extended is installed  @Z9*/
-/* Byte STFL_1: STFL/STFLE bits 8-15 */
-#define STFL_1_ENHANCED_DAT     0x80    /* Enhanced-DAT facility  208
+#define STFL_ENHANCED_DAT          8    /* Enhanced-DAT facility  208
                                            is installed           208*/
-#define STFL_1_SENSE_RUN_STATUS 0x40    /* Sense running status   @Z9
+#define STFL_SENSE_RUN_STATUS      9    /* Sense running status   @Z9
                                            facility is installed  @Z9*/
-#define STFL_1_CONDITIONAL_SSKE 0x20    /* Conditional SSKE facility
+#define STFL_CONDITIONAL_SSKE     10    /* Conditional SSKE facility
                                            is installed           407*/
-#define STFL_1_CONFIG_TOPOLOGY  0x10    /* STSI-enhancement for
+#define STFL_CONFIG_TOPOLOGY      11    /* STSI-enhancement for
                                            configuration topology    */
-#define STFL_1_IPTE_RANGE       0x04    /* IPTE-Range facility      810
+#define STFL_IPTE_RANGE           13    /* IPTE-Range facility      810
                                            installed              810*/
-#define STFL_1_NONQ_KEY_SET     0x02    /* Nonquiescing Key-Setting 810
+#define STFL_NONQ_KEY_SET         14    /* Nonquiescing Key-Setting 810
                                            Facility installed     810*/
-/* Byte STFL_2: STFL/STFLE bits 16-23 */
-#define STFL_2_TRAN_FAC2        0x80    /* Extended translation
+#define STFL_TRAN_FAC2            16    /* Extended translation
                                            facility 2 is installed   */
-#define STFL_2_MSG_SECURITY     0x40    /* Message security assist
+#define STFL_MSG_SECURITY         17    /* Message security assist
                                            feature is installed      */
-#define STFL_2_LONG_DISPL_INST  0x20    /* Long displacement facility
+#define STFL_LONG_DISPL_INST      18    /* Long displacement facility
                                            is installed              */
-#define STFL_2_LONG_DISPL_HPERF 0x10    /* Long displacement facility
+#define STFL_LONG_DISPL_HPERF     19    /* Long displacement facility
                                            has high performance      */
-#define STFL_2_HFP_MULT_ADD_SUB 0x08    /* HFP multiply-add/subtract
+#define STFL_HFP_MULT_ADD_SUB     20    /* HFP multiply-add/subtract
                                            facility is installed     */
-#define STFL_2_EXTENDED_IMMED   0x04    /* Extended immediate     @Z9
+#define STFL_EXTENDED_IMMED       21    /* Extended immediate     @Z9
                                            facility is installed  @Z9*/
-#define STFL_2_TRAN_FAC3        0x02    /* Extended translation
+#define STFL_TRAN_FAC3            22    /* Extended translation
                                            facility 3 is installed   */
-#define STFL_2_HFP_UNNORM_EXT   0x01    /* HFP unnormalized extension
+#define STFL_HFP_UNNORM_EXT       23    /* HFP unnormalized extension
                                            facility is installed  @Z9*/
-/* Byte STFL_3: STFL/STFLE bits 24-31 */
-#define STFL_3_ETF2_ENHANCEMENT 0x80    /* Extended translation   @Z9
+#define STFL_ETF2_ENHANCEMENT     24    /* Extended translation   @Z9
                                            facility 2 enhancement @Z9*/
-#define STFL_3_STORE_CLOCK_FAST 0x40    /* Store clock fast       @Z9
+#define STFL_STORE_CLOCK_FAST     25    /* Store clock fast       @Z9
                                            enhancement installed  @Z9*/
-#define STFL_3_PARSING_ENHANCE  0x20    /* Parsing-Enhancement    208
+#define STFL_PARSING_ENHANCE      26    /* Parsing-Enhancement    208
                                            facility is installed  208*/
-#define STFL_3_MVCOS            0x10    /* MVCOS instruction
+#define STFL_MVCOS                27    /* MVCOS instruction
                                            is installed           407*/
-#define STFL_3_TOD_CLOCK_STEER  0x08    /* TOD clock steering     @Z9
+#define STFL_TOD_CLOCK_STEER      28    /* TOD clock steering     @Z9
                                            facility is installed  @Z9*/
-#define STFL_3_ETF3_ENHANCEMENT 0x02    /* Extended translation   @Z9
+#define STFL_ETF3_ENHANCEMENT     30    /* Extended translation   @Z9
                                            facility 3 enhancement @Z9*/
-#define STFL_3_EXTRACT_CPU_TIME 0x01    /* Extract CPU time facility
+#define STFL_EXTRACT_CPU_TIME     31    /* Extract CPU time facility
                                            is installed           407*/
-/* Byte STFL_4: STFLE bits 32-39 */
-#define STFL_4_CSSF             0x80    /* Compare-and-Swap-and-Store
+#define STFL_CSSF                 32    /* Compare-and-Swap-and-Store
                                            facility is installed     */
-#define STFL_4_CSSF2            0x40    /* Compare-and-Swap-and-Store
+#define STFL_CSSF2                33    /* Compare-and-Swap-and-Store
                                            facility 2 is installed   */
-#define STFL_4_GEN_INST_EXTN    0x20    /* General-Instr-Extn     208
+#define STFL_GEN_INST_EXTN        34    /* General-Instr-Extn     208
                                            facility is installed  208*/
-#define STFL_4_EXECUTE_EXTN     0x10    /* Execute-Extensions     208
+#define STFL_EXECUTE_EXTN         35    /* Execute-Extensions     208
                                            facility is installed  208*/
-#define STFL_4_ENH_MONITOR      0x08    /* Enhanced-Monitor         810
+#define STFL_ENH_MONITOR          36    /* Enhanced-Monitor         810
                                            facility installed     810*/
-/* Byte STFL_5: STFLE bits 40-47 */
-#define STFL_5_SET_PROG_PARAM   0x80    /* 40:Set-Program-Parameter
+#define STFL_RESERVED_39          39    /* Reserved */
+#define STFL_SET_PROG_PARAM       40    /* Set-Program-Parameter
                                            facility installed (ESAME)*/
-#define STFL_5_FPS_ENHANCEMENT  0x40    /* Floating point support
+#define STFL_FPS_ENHANCEMENT      41    /* Floating point support
                                            enhancements (FPR-GR-loading
                                            FPS-sign-handling, and
                                            DFP-rounding) installed   */
-#define STFL_5_DECIMAL_FLOAT    0x20    /* Decimal floating point
+#define STFL_DECIMAL_FLOAT        42    /* Decimal floating point
                                            (DFP) facility            */
-#define STFL_5_DFP_HPERF        0x10    /* DFP has high performance  */
-#define STFL_5_PFPO             0x08    /* PFPO instruction installed*/
-#define STFL_5_FAST_BCR_SERIAL  0x04    /* Fast-BCR-serialization   810
+#define STFL_DFP_HPERF            43    /* DFP has high performance  */
+#define STFL_PFPO                 44    /* PFPO instruction installed*/
+#define STFL_FAST_BCR_SERIAL      45    /* Fast-BCR-serialization   810
                                            Facility installed     810*/
-#define STFL_5_CMPSC_ENH        0x01    /* CMPSC-enhancement        810
+#define STFL_CMPSC_ENH            47    /* CMPSC-enhancement        810
                                            Facility installed     810*/
-/* Byte STFL_6: STFLE bits 48-55 */
-/* Byte STFL_7: STFLE bits 56-63 */
-/* Byte STFL_8: STFLE bits 64-71 */
-#define STFL_9_RES_REF_BITS_MUL 0x20    /* Reset-Reference-Bits-    810
+#define STFL_RES_REF_BITS_MUL     66    /* Reset-Reference-Bits-    810
                                            Multiple Fac installed 810*/
-#define STFL_8_CPU_MEAS_COUNTER 0x10    /* 67:CPU-measurement counter
+#define STFL_CPU_MEAS_COUNTER     67    /* CPU-measurement counter
                                            facility installed (ESAME)*/
-#define STFL_8_CPU_MEAS_SAMPLNG 0x08    /* 68:CPU-measurement sampling
+#define STFL_CPU_MEAS_SAMPLNG     68    /* CPU-measurement sampling
                                            facility installed (ESAME)*/
-/* Byte STFL_9: STFLE bits 72-79 */
-#define STFL_9_MSA_EXTENSION_3  0x08    /* Message Security Assist  810  
+#define STFL_MSA_EXTENSION_3      76    /* Message Security Assist  810  
                                            Extension 3 installed  810*/
-#define STFL_9_MSA_EXTENSION_4  0x04    /* Message Security Assist  810 
+#define STFL_MSA_EXTENSION_4      77    /* Message Security Assist  810 
                                            Extension 4 installed  810*/
+
+#define STFL_MAX                  77
+#define STFL_BYTESIZE (((STFL_MAX+8))/8)
+#define STFL_DWRDSIZE ((STFL_BYTESIZE+7)/8)
 
 /* Bit definitions for the Vector Facility */
 #define VSR_M    0x0001000000000000ULL  /* Vector mask mode bit      */
@@ -1749,7 +1744,7 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 /*0A0*/ DBLWRD gr14;                    /* Guest gr 14               */
 /*0A8*/ DBLWRD gr15;                    /* Guest gr 15               */
 /*0B0*/ DBLWRD recv0b0d;
-/*0B8*/ HWORD  recv0b8d;
+/*0B8*/ HWORD  recv0b8h;
 /*0BA*/ BYTE   xso[3];                  /* Expanded storage origin   */
 /*0BD*/ BYTE   xsl[3];                  /* Expanded storage limit    */
 /*0C0*/ BYTE   ip[52];                  /* Interruption parameters   */
@@ -1763,7 +1758,9 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 /*0FA*/ HWORD  ief;                     /* Migration Emulation cnlt  */
 /*0FC*/ FWORD  resv0fcf;
 /*100*/ DBLWRD cr[16];                  /* Control registers         */
-/*180*/ BYTE  resv180b[128];
+/*180*/ BYTE   resv180b[32];
+/*1A0*/ FWORD  fld;                     /* Facility List Designation */
+/*1A4*/ BYTE   resv1a4b[92];
 } SIE2BK;
 
 

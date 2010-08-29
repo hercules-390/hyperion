@@ -511,6 +511,35 @@ U64     dreg;
         }
     }
 
+#if defined(FEATURE_VIRTUAL_ARCHITECTURE_LEVEL)
+    /* Set Virtual Architecture Level (Facility List) */
+    {
+    U32 fld;
+    int i;
+    BYTE *facility_mask;
+
+        for(i = 0; i < STFL_MAX; i++)
+            GUESTREGS->facility_list[i] = regs->facility_list[i];
+
+        FETCH_FW(fld,STATEBK->fld);
+
+        if(fld > regs->mainlim)
+        {
+//          SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
+// ZZ: FIXME           SIE_VI_WHY_??ADR, GUESTREGS);
+            STATEBK->c = SIE_C_VALIDITY;
+            return;
+        }
+
+        if(fld & 0x7ffffff8)
+        {
+            facility_mask = &(sysblk.mainstor[fld]);
+            for(i = 0; i < STFL_MAX; i++)
+               GUESTREGS->facility_list[i] &= facility_mask[i];
+        }
+    }
+#endif /*defined(FEATURE_VIRTUAL_ARCHITECTURE_LEVEL)*/
+
 #if !defined(FEATURE_ESAME)
     /* Reference and Change Preservation Origin */
     FETCH_FW(GUESTREGS->sie_rcpo, STATEBK->rcpo);

@@ -1830,6 +1830,9 @@ FUNC    *current_opcode_table;
         return oldregs;
     }
 
+    /* Initialize Architecture Level Set */
+    init_als(&regs);
+
     current_opcode_table=regs.ARCH_DEP(opcode_table);
 
     RELEASE_INTLOCK(&regs);

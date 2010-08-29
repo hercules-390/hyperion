@@ -781,12 +781,12 @@ char    fname[MAX_PATH];                /* normalized filename       */
     yroffset = 0;
     tzoffset = 0;
 #if defined(_390)
-    sysblk.arch_mode = ARCH_390;
+    set_archlvl(_ARCH_390_NAME);
 #else
-    sysblk.arch_mode = ARCH_370;
+    set_archlvl(_ARCH_370_NAME);
 #endif
 #if defined(_900)
-    sysblk.arch_z900 = ARCH_900;
+    set_archlvl(_ARCH_900_NAME);
 #endif
     sysblk.pgminttr = OS_NONE;
 
@@ -813,10 +813,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
     shrdport = 0;
 #endif /*defined(OPTION_SHARED_DEVICES)*/
 
-#if defined(_FEATURE_ASN_AND_LX_REUSE)
-    sysblk.asnandlxreuse = 0;  /* ASN And LX Reuse is defaulted to DISABLE */
-#endif
-  
 #ifdef PANEL_REFRESH_RATE
     sysblk.panrate = PANEL_REFRESH_RATE_SLOW;
 #endif

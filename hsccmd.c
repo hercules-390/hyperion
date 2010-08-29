@@ -2532,24 +2532,16 @@ char c;
 /*-------------------------------------------------------------------*/
 int alrf_cmd(int argc, char *argv[], char *cmdline)
 {
+static char *ArchlvlCmd[3] = { "archlvl", "Query", "asn_lx_reuse" };
+
     UNREFERENCED(cmdline);
 
-    if (argc > 1)
-    {
-        if(strcasecmp(argv[1],"enable")==0)
-            sysblk.asnandlxreuse=1;
-        else
-        {
-            if(strcasecmp(argv[1],"disable")==0)
-                sysblk.asnandlxreuse=0;
-            else {
-                WRMSG(HHC02205, "S", argv[1], "");
-                return -1;
-                }
-        }
-    }
-    else
-        WRMSG(HHC02204,"I","ASN and LX reuse",sysblk.asnandlxreuse ? "enabled" : "disabled");
+    logmsg("ALRF command depricated: Use \"archlvl enable/disable asn_lx_reuse\" instead\n");
+
+    if(argc > 1)
+        ArchlvlCmd[1] = argv[1];
+
+    ProcessConfigCommand(3,ArchlvlCmd,NULL);
 
     return 0;
 }
@@ -7177,109 +7169,6 @@ int defsym_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 #endif // defined(OPTION_CONFIG_SYMBOLS)
-
-
-/*-------------------------------------------------------------------*/
-/* archmode command - set architecture mode                          */
-/*-------------------------------------------------------------------*/
-int archmode_cmd(int argc, char *argv[], char *cmdline)
-{
-    int i;
-
-    UNREFERENCED(cmdline);
-
-    if (argc < 2)
-    {
-        WRMSG(HHC02203, "I", "archmode", get_arch_mode_string(NULL) );
-        return 0;
-    }
-
-    OBTAIN_INTLOCK(NULL);
-
-    /* Make sure all CPUs are deconfigured or stopped */
-    for (i = 0; i < MAX_CPU_ENGINES; i++)
-        if (IS_CPU_ONLINE(i)
-         && CPUSTATE_STOPPED != sysblk.regs[i]->cpustate)
-        {
-            RELEASE_INTLOCK(NULL);
-            WRMSG(HHC02253, "E");
-            return -1;
-        }
-#if defined(_370)
-    if ( 0 
-        || !strcasecmp (argv[1], arch_name[ARCH_370]) 
-        || !strcasecmp (argv[1], "370" )
-        || !strcasecmp (argv[1], "s370" )
-        )
-    {
-        sysblk.arch_mode = ARCH_370;
-        sysblk.maxcpu = sysblk.numcpu;
-    }
-    else
-#endif
-#if defined(_390)
-    if ( 0
-        || !strcasecmp (argv[1], arch_name[ARCH_390]) 
-        || !strcasecmp (argv[1], "390" )
-        || !strcasecmp (argv[1], "s390" )
-        )
-    {
-        sysblk.arch_mode = ARCH_390;
-#if defined(_FEATURE_CPU_RECONFIG)
-        sysblk.maxcpu = MAX_CPU_ENGINES;
-#else
-        sysblk.maxcpu = sysblk.numcpu;
-#endif
-    }
-    else
-#endif
-#if defined(_900)
-    if (0
-        || !strcasecmp (argv[1], arch_name[ARCH_900])
-        || !strcasecmp (argv[1], "zarch")
-        || !strcasecmp (argv[1], "z")
-        || !strcasecmp (argv[1], "ESAME")
-    )
-    {
-        sysblk.arch_mode = ARCH_900;
-#if defined(_FEATURE_CPU_RECONFIG)
-        sysblk.maxcpu = MAX_CPU_ENGINES;
-#else
-        sysblk.maxcpu = sysblk.numcpu;
-#endif
-    }
-    else
-#endif
-    {
-        RELEASE_INTLOCK(NULL);
-        WRMSG(HHC02205, "E", argv[1], "" );
-        return -1;
-    }
-    if (sysblk.pcpu >= MAX_CPU)
-        sysblk.pcpu = 0;
-
-    sysblk.dummyregs.arch_mode = sysblk.arch_mode;
-#if defined(OPTION_FISHIO)
-    ios_arch_mode = sysblk.arch_mode;
-#endif /* defined(OPTION_FISHIO) */
-
-    /* Indicate if z/Architecture is supported */
-    sysblk.arch_z900 = sysblk.arch_mode != ARCH_390;
-
-#if defined(_FEATURE_CPU_RECONFIG) && defined(_S370)
-    /* Configure CPUs for S/370 mode */
-    if (sysblk.archmode == ARCH_370)
-        for (i = MAX_CPU_ENGINES - 1; i >= 0; i--)
-            if (i < MAX_CPU && !IS_CPU_ONLINE(i))
-                configure_cpu(i);
-            else if (i >= MAX_CPU && IS_CPU_ONLINE(i))
-                deconfigure_cpu(i);
-#endif
-
-    RELEASE_INTLOCK(NULL);
-
-    return 0;
-}
 
 
 /*-------------------------------------------------------------------*/

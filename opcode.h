@@ -609,6 +609,17 @@ do { \
 #define LCSS_TO_SSID(_lcss) \
     (((_lcss) << 1) | 1)
 
+/* Virtual Architecture Level Set Facility */
+#define FACILITY_ENABLED(_faci, _regs) \
+        (((_regs)->facility_list[((STFL_ ## _faci)/8)]) & (0x80 >> ((STFL_ ## _faci) % 8)))
+
+#define FACILITY_CHECK(_faci, _regs) \
+    do { \
+        if(!FACILITY_ENABLED( (_faci) ) ) \
+          (_regs)->program_interrupt( (_regs), PGM_OPERATION_EXCEPTION); \
+    } while (0) 
+
+
 #define PER_RANGE_CHECK(_addr, _low, _high) \
   ( (((_high) & MAXADDRESS) >= ((_low) & MAXADDRESS)) ? \
   (((_addr) >= ((_low) & MAXADDRESS)) && (_addr) <= ((_high) & MAXADDRESS)) : \

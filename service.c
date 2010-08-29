@@ -1294,7 +1294,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         memcpy(sccbscp->cfg, ARCH_DEP(scpinfo_cfg), sizeof(sccbscp->cfg));
         /* sccbscp->cfg11 = ARCH_DEP(scpinfo_cfg11); */
 #if defined(_900) || defined(FEATURE_ESAME)
-        if(sysblk.arch_z900)
+        if(FACILITY_ENABLED(ESAME_INSTALLED,regs))
             sccbscp->cfg[5] |= SCCB_CFG5_ESAME;
 #endif /*defined(_900) || defined(FEATURE_ESAME)*/
                         ;

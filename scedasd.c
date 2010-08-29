@@ -589,7 +589,6 @@ char    fname[MAX_PATH];
                 return FALSE;
         }
         FETCH_DW(sto,scediov_bk->sto);
-        FETCH_DW(seek,scediov_bk->seek);
         FETCH_DW(length,scediov_bk->length);
 
         totwrite = ARCH_DEP(write_file)(fname,

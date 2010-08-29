@@ -262,6 +262,9 @@ struct REGS {                           /* Processor registers       */
         pi_func program_interrupt;
         func    trace_br;
 
+     /* Active Facility List */
+        BYTE    facility_list[STFL_BYTESIZE];
+
      /* ------------------------------------------------------------ */
         U64     regs_copy_end;          /* Copy regs to here         */
      /* ------------------------------------------------------------ */
@@ -411,7 +414,6 @@ struct SYSBLK {
                                         /* 0 == S/370   (ARCH_370)   */
                                         /* 1 == ESA/390 (ARCH_390)   */
                                         /* 2 == ESAME   (ARCH_900)   */
-        int     arch_z900;              /* 1 == ESAME supported      */
         RADR    mainsize;               /* Main storage size (bytes) */
         BYTE   *mainstor;               /* -> Main storage           */
         BYTE   *storkeys;               /* -> Main storage key array */
@@ -449,6 +451,10 @@ struct SYSBLK {
         TID     captid;                 /* TID capping manager       */
         U64     capvalue;               /* Capping value in mips     */
 #endif // OPTION_CAPPING
+
+        /* Active Facility List */
+        BYTE    facility_list[GEN_MAXARCH][STFL_BYTESIZE];
+
 #if defined(_FEATURE_VECTOR_FACILITY)
         VFREGS  vf[MAX_CPU_ENGINES];    /* Vector Facility           */
 #endif /*defined(_FEATURE_VECTOR_FACILITY)*/
@@ -621,9 +627,6 @@ struct SYSBLK {
         CPU_BITMAP sync_mask;           /* CPU mask for syncing CPUs */
         COND    sync_cond;              /* COND for syncing CPU      */
         COND    sync_bc_cond;           /* COND for other CPUs       */
-#if defined(_FEATURE_ASN_AND_LX_REUSE)
-        int     asnandlxreuse;          /* ASN And LX Reuse enable   */
-#endif
 #if defined(OPTION_SHARED_DEVICES)
         TID     shrdtid;                /* Shared device listener    */
         U16     shrdport;               /* Shared device server port */

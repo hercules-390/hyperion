@@ -437,9 +437,6 @@ S64      dreg;
                 goto sr_error_exit;
             }
             sysblk.arch_mode = i;
-#if defined (_900)
-            sysblk.arch_z900 = sysblk.arch_mode != ARCH_390;
-#endif
             sysblk.pcpu = 0;
             sysblk.dummyregs.arch_mode = sysblk.arch_mode;
 #if defined(OPTION_FISHIO)

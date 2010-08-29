@@ -359,7 +359,7 @@ s390_ ## _name
    facility is installed and CR0 bit 44 is 1 */
 #if defined(FEATURE_ASN_AND_LX_REUSE)
   #define ASN_AND_LX_REUSE_ENABLED(_regs) \
-      (sysblk.asnandlxreuse && ((_regs)->CR_L(0) & CR0_ASN_LX_REUS))
+      (FACILITY_ENABLED(ASN_LX_REUSE,(_regs)) && ((_regs)->CR_L(0) & CR0_ASN_LX_REUS))
 #else /* !defined(FEATURE_ASN_AND_LX_REUSE) */
   #define ASN_AND_LX_REUSE_ENABLED(_regs) 0
 #endif /* !defined(FEATURE_ASN_AND_LX_REUSE) */

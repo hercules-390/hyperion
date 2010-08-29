@@ -855,7 +855,7 @@ DEF_INST(extract_primary_asn_and_instance)
 int r1, r2;                             /* Values of R fields        */
 
     /* Operation exception if ASN-and-LX-reuse is not enabled */
-    if(!sysblk.asnandlxreuse)
+    if(!FACILITY_ENABLED(ASN_LX_REUSE,regs))
     {
         ARCH_DEP(operation_exception)(inst,regs);
     }
@@ -925,7 +925,7 @@ int r1, r2;                             /* Values of R fields        */
 
 
     /* Operation exception if ASN-and-LX-reuse is not enabled */
-    if(!sysblk.asnandlxreuse)
+    if(!FACILITY_ENABLED(ASN_LX_REUSE,regs))
     {
         ARCH_DEP(operation_exception)(inst,regs);
     }
@@ -1006,7 +1006,7 @@ int     max_esta_code;
     code = regs->GR_LHLCL(r2);
 
 #if defined(FEATURE_ASN_AND_LX_REUSE)
-    max_esta_code=sysblk.asnandlxreuse?5:4;
+    max_esta_code=FACILITY_ENABLED(ASN_LX_REUSE,regs)?5:4;
 #elif defined(FEATURE_ESAME)
     max_esta_code=4;
 #else /*!defined(FEATURE_ESAME)*/
@@ -3890,7 +3890,7 @@ DEF_INST(program_transfer_with_instance)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    if(!sysblk.asnandlxreuse)
+    if(!FACILITY_ENABLED(ASN_LX_REUSE,regs))
     {
         ARCH_DEP(operation_exception)(inst,regs);
     }
@@ -4856,7 +4856,7 @@ DEF_INST(set_secondary_asn_with_instance)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    if(!sysblk.asnandlxreuse)
+    if(!FACILITY_ENABLED(ASN_LX_REUSE,regs))
     {
         ARCH_DEP(operation_exception)(inst,regs);
     }
@@ -5976,7 +5976,7 @@ static char *ordername[] = {
         case SIGP_SETARCH:
 
             /* CPU must have ESAME support */
-            if(!sysblk.arch_z900)
+            if(!FACILITY_ENABLED(ESAME_INSTALLED,regs))
                 status = SIGP_STATUS_INVALID_ORDER;
 
             PERFORM_SERIALIZATION (regs);
