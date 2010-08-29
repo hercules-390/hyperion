@@ -319,13 +319,26 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 void fbadasd_query_device (DEVBLK *dev, char **class,
                 int buflen, char *buffer)
 {
+    CCKDDASD_EXT    *cckd;
 
     BEGIN_DEVICE_CLASS_QUERY( "DASD", dev, class, buflen, buffer );
 
-    snprintf (buffer, buflen, "%s [%lld,%d] IO[%" I64_FMT "u]",
-            dev->filename,
-            (long long)dev->fbaorigin, dev->fbanumblk,
-            dev->excps);
+    cckd = dev->cckd_ext;
+    if (!cckd)
+    {
+        snprintf( buffer, buflen, "%s [%lld,%d] IO[%" I64_FMT "u]",
+                  dev->filename,
+                 (long long)dev->fbaorigin, dev->fbanumblk,
+                  dev->excps);
+    }
+    else
+    {
+        snprintf( buffer, buflen, "%s [%lld,%d] [%d sfs] IO[%" I64_FMT "u]",
+                  dev->filename,
+                 (long long)dev->fbaorigin, dev->fbanumblk,
+                  cckd->sfn,
+                  dev->excps);
+    }
 
 } /* end function fbadasd_query_device */
 

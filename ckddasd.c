@@ -636,12 +636,26 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 void ckddasd_query_device (DEVBLK *dev, char **class,
                 int buflen, char *buffer)
 {
+    CCKDDASD_EXT    *cckd;
+
     BEGIN_DEVICE_CLASS_QUERY( "DASD", dev, class, buflen, buffer );
 
-    snprintf (buffer, buflen, "%s [%d cyls] IO[%" I64_FMT "u]",
-            dev->filename,
-            dev->ckdcyls,
-            dev->excps);
+    cckd = dev->cckd_ext;
+    if (!cckd)
+    {
+        snprintf( buffer, buflen, "%s [%d cyls] IO[%" I64_FMT "u]",
+                  dev->filename,
+                  dev->ckdcyls,
+                  dev->excps );
+    }
+    else
+    {
+        snprintf( buffer, buflen, "%s [%d cyls] [%d sfs] IO[%" I64_FMT "u]",
+                  dev->filename,
+                  dev->ckdcyls,
+                  cckd->sfn,
+                  dev->excps );
+    }
 
 } /* end function ckddasd_query_device */
 
