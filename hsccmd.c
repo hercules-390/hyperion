@@ -1533,6 +1533,42 @@ int iodelay_cmd(int argc, char *argv[], char *cmdline)
 
 #endif /*OPTION_IODELAY_KLUDGE*/
 
+/*-------------------------------------------------------------------*/
+/* autoinit_cmd - show or set AUTOINIT switch                        */
+/*-------------------------------------------------------------------*/
+int autoinit_cmd( int argc, char *argv[], char *cmdline )
+{
+    UNREFERENCED(cmdline);
+
+    if ( argc == 2 )
+    {
+        if ( CMD(argv[1],on,2) )
+        {
+            sysblk.noautoinit = FALSE;
+        }
+        else if ( CMD(argv[1],off,3) )
+        {
+            sysblk.noautoinit = TRUE;
+        }
+        else 
+        {
+            WRMSG( HHC17000, "E" );
+            return -1;
+        }
+    }
+    else if( argc < 1 || argc > 2 )
+    {
+        WRMSG( HHC17000, "E" );
+        return -1;
+    }
+
+    if ( argc == 1 )
+        WRMSG(HHC02203, "I", "autoinit", sysblk.noautoinit ? "off" : "on" );
+    else
+        WRMSG(HHC02204, "I", "autoinit", sysblk.noautoinit ? "off" : "on" );
+
+    return 0;
+}
 
 #if defined( OPTION_TAPE_AUTOMOUNT )
 /*-------------------------------------------------------------------*/
@@ -5207,9 +5243,9 @@ int mnttapri_cmd(int argc, char *argv[], char *cmdline)
     if(argc > 1)
     {
         if ( CMD(argv[1],disallow,4) )
-            sysblk.nomountedtapereinit = 1;
+            sysblk.nomountedtapereinit = TRUE;
         else if ( CMD(argv[1],allow,3) )
-            sysblk.nomountedtapereinit = 0;
+            sysblk.nomountedtapereinit = FALSE;
         else
         {
             WRMSG(HHC02205, "E", argv[1], "");

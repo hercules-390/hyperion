@@ -59,7 +59,10 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Open the HET file */
     hostpath(pathname, dev->filename, sizeof(pathname));
-    rc = het_open (&dev->hetb, pathname, dev->tdparms.logical_readonly ? HETOPEN_READONLY : HETOPEN_CREATE );
+    rc = het_open (&dev->hetb, pathname, 
+                   dev->tdparms.logical_readonly ? HETOPEN_READONLY : 
+                   sysblk.noautoinit ? 0 : HETOPEN_CREATE );
+
     if (rc >= 0)
     {
         if(dev->hetb->writeprotect)
@@ -98,12 +101,19 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         {
             char msgbuf[128];
             MSGBUF( msgbuf, "Het error '%s': '%s'", het_error(rc), strerror(errno));
-            WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "het", "het_open()", msgbuf);
+            WRMSG( HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, 
+                    dev->filename, "het", "het_open()", msgbuf );
         }
 
         strcpy(dev->filename, TAPE_UNLOADED);
         build_senseX(TAPE_BSENSE_TAPELOADFAIL,dev,unitstat,code);
         return -1;
+    }
+
+    if ( !sysblk.noautoinit && dev->hetb->created )
+    {
+        WRMSG( HHC00235, "I", SSID_TO_LCSS(dev->ssid), 
+                dev->devnum, dev->filename, "het" );
     }
 
     /* Indicate file opened */

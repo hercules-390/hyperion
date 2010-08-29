@@ -227,6 +227,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00232 "%1d:%04X Tape file '%s', '%s' volume '%s': not loaded; duplicate file found" 
 #define HHC00233 "%1d:%04X Tape file '%s', '%s' volume '%s': not loaded; rename failed" 
 #define HHC00234 "%1d:%04X Tape file '%s', '%s' volume '%s': not loaded; not enough space on volume" 
+#define HHC00235 "%1d:%04X Tape file '%s', type '%s': tape created"
 
 // reserve 003xx for compressed dasd device related
 #define HHC00300 "%1d:%04X CCKD file: error initializing shadow files"

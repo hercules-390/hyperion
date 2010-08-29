@@ -430,6 +430,9 @@ int     dll_count;                      /* index into array          */
                         SYSGROUP_SYSPROG;
 #endif//     OPTION_HERCULES_DEVELOPER
 
+    /* set default tape autoinit value to OFF   */
+    sysblk.noautoinit = TRUE;
+
     /* set default error message display (emsg) */
     sysblk.emsg = EMSG_ON;
 

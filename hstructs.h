@@ -574,6 +574,7 @@ struct SYSBLK {
                 showregsnone:1,         /* 1 = show no registers     */
                 nomountedtapereinit:1,  /* 1 = disallow tape devinit
                                              if tape already mounted */
+                noautoinit:1,           /* 1=AUTOINIT disabled       */
                 legacysenseid:1,        /* ena/disa senseid on       */
                                         /*   legacy devices          */
 #if defined(OPTION_IPLPARM)

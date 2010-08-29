@@ -248,7 +248,11 @@ het_open( HETB **hetb, char *filename, int flags )
         {
             return( rc );
         }
+
+        thetb->created = TRUE;
     }
+    else
+        thetb->created = FALSE;
 
     /*
     || Reposition tape to load point

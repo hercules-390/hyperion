@@ -5,7 +5,7 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id: ftlib.h 6033 2010-05-25 03:55:37Z pgorlinsky $
+// $Id: ftlib.h 433 2010-08-10 04:05:01Z paulgorlinsky $
 
 #if !defined( _FTLIB_H_ )
 #define _FTLIB_H_
@@ -76,6 +76,7 @@ typedef struct _fetb
     u_int           readlast:1;         /* TRUE=last i/o was read           */
     u_int           truncated:1;        /* TRUE=file truncated              */
     u_int           eotwarning:1;       /* TRUE=EOT warning area reached    */
+    u_int           created:1;          /* TRUE = CREATED                   */
 
 } FETB;
 

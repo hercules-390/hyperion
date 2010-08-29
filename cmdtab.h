@@ -584,9 +584,19 @@ CMDABBR("mounted_tape_reinit",9, PANEL+CONFIG, SYSCMDALL-SYSOPER, mnttapri_cmd,
   "Control tape initilization", 
     NULL)
 
+CMDABBR("autoinit",8, PANEL+CONFIG, SYSCMDALL-SYSOPER, autoinit_cmd,  
+  "Display/Set automatic create empty tape file switch", 
+  "Format: \"autoinit [on|off]\"\n"
+  "Default for autoinit is off.\n"
+  "When autoinit is off, devinit will return a file not found error\n"
+  "if the specified file is not found.\n"
+  "When autoinit is on, devinit will initialize a blank, non-labeled\n"
+  "tape if the requested file is not found. Tape will have two tapemarks\n"
+  "and be positioned at the beginning of the tape.")
+
 #if defined( OPTION_TAPE_AUTOMOUNT )
 COMMAND("automount", PANEL+CONFIG,  SYSCMDALL-SYSOPER,  automount_cmd,
-  "Show/Update allowable tape automount directories",
+  "Display/Update allowable tape automount directories",
     "Format: \"automount  { add <dir> | del <dir> | list }\"\n"
     "\n"
     "Adds or deletes entries from the list of allowable/unallowable tape\n"

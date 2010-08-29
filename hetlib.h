@@ -93,6 +93,7 @@ typedef struct _hetb
     u_int           decompress:1;       /* TRUE=decompress read data        */
     u_int           method:2;           /* 1=ZLIB, 2=BZLIB compresion       */
     u_int           level:4;            /* 1=<n<=9 compression level        */
+    u_int           created:1;          /* TRUE = CREATED                   */
 } HETB;
 
 /*

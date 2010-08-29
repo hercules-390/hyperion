@@ -1,3 +1,11 @@
+28 Aug 2010 Add "autoinit" command to control a sysblk variable noautoinit. 
+            sysblk.noautoinit = FALSE, devinit will create a file when requested
+            file is not found, write 2 TMs and rewind the file. 
+            sysblk.noautoinit = TRUE, devinit will fail the open when requested
+            file is not found.
+            "autoinit" sets with [on|off] - default is off. "off" means 
+            sysblk.noautoinit = TRUE.
+            New message HHC00235I is displayed when a tape file is created. - Paul Gorlinsky
 28 Aug 2010 Move update_maxrates_hwm() from panel.c and dyngui.c to timer.c to
             correct update of maxrates when daemon mode is enabled without a
             GUI interface being used. Previous maxrates will not be displayed if a 
