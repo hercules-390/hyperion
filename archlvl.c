@@ -375,7 +375,6 @@ BYTE als =
         als = arch2als[ab->archmode];
     }
 
-//  process s/370|esame arg  here
     if((tb = get_factab(argv[2])))
         set_facility(tb, enable, als);
     else
