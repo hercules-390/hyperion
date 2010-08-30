@@ -82,18 +82,23 @@ typedef struct _ARCHTAB
 
 static ARCHTAB archtab[] =
 {
+#if defined(_370)
 /* S/370 - ALS0 */
 ARCHLVL(_ARCH_370_NAME,  ARCH_370, ALS0) /* "S/370" */
 ARCHLVL("S370",          ARCH_370, ALS0)
 ARCHLVL("ALS0",          ARCH_370, ALS0)
+#endif
 
+#if defined(_390)
 /* ESA/390 - ALS1 */
 ARCHLVL(_ARCH_390_NAME,  ARCH_390, ALS1) /* "ESA/390" */
 ARCHLVL("ESA390",        ARCH_390, ALS1)
 ARCHLVL("S/390",         ARCH_390, ALS1)
 ARCHLVL("S390",          ARCH_390, ALS1)
 ARCHLVL("ALS1",          ARCH_390, ALS1)
+#endif
 
+#if defined(_900)
 /* z/Arch - ALS2 */
 ARCHLVL("ESA/ME",        ARCH_900, ALS2)
 ARCHLVL("ESAME",         ARCH_900, ALS2)
@@ -104,6 +109,7 @@ ARCHLVL(_ARCH_900_NAME,  ARCH_900, ALS3) /* "z/Arch" */
 ARCHLVL("zArch",         ARCH_900, ALS3)
 ARCHLVL("z",             ARCH_900, ALS3)
 ARCHLVL("ALS3",          ARCH_900, ALS3)
+#endif
 
 { NULL, 0, 0 }
 };
