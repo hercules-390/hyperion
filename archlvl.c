@@ -184,7 +184,7 @@ void set_alslevel(int alslevel)
 FACTAB *tb;
 int i,j;
 
-    for(i = 0; i < STFL_BYTESIZE; i++);
+    for(i = 0; i < STFL_BYTESIZE; i++)
         for(j = 0; j < GEN_MAXARCH; j++)
             sysblk.facility_list[j][i] = 0;
 
