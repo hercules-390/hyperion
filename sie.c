@@ -518,7 +518,7 @@ U64     dreg;
     int i;
     BYTE *facility_mask;
 
-        for(i = 0; i < STFL_MAX; i++)
+        for(i = 0; i < STFL_BYTESIZE; i++)
             GUESTREGS->facility_list[i] = regs->facility_list[i];
 
         FETCH_FW(fld,STATEBK->fld);
@@ -534,7 +534,7 @@ U64     dreg;
         if(fld & 0x7ffffff8)
         {
             facility_mask = &(sysblk.mainstor[fld]);
-            for(i = 0; i < STFL_MAX; i++)
+            for(i = 0; i < STFL_BYTESIZE; i++)
                GUESTREGS->facility_list[i] &= facility_mask[i];
         }
     }
