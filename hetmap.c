@@ -248,12 +248,19 @@ main( int argc, char *argv[] )
     U32  totcbytes;
     U32  opts = 0;
     SInt32  lResidue	= max_bytes_dsply;	/* amount of space left to print */ 
-    char pgmpath[MAX_PATH];
     char *pgm;
+#if 0
+ /**
+  ** 2010/08/31 @kl Attempt to set tapemap defaults if invoked
+  **                as "tapemap" was commented out after problems
+  **                encountered with libtool wrapper on Linux.
+  **/
+    char pgmpath[MAX_PATH];
 #if defined( _MSVC_ )
     char fname[_MAX_FNAME];
     char ext[_MAX_EXT];
 #endif
+#endif  /* 0 */
 
 #define O_ALL               0xC0
 #define O_FILES             0X80
@@ -263,6 +270,13 @@ main( int argc, char *argv[] )
 #define O_TAPEMAP_INVOKED   0x08
 #define O_SLANAL_OUT        0x04
 
+    pgm = "hetmap";
+#if 0
+ /**
+  ** 2010/08/31 @kl Attempt to set tapemap defaults if invoked
+  **                as "tapemap" was commented out after problems
+  **                encountered with libtool wrapper on Linux.
+  **/
     /* Figure out processing based on the program name */
 #if defined( _MSVC_ )
     GetModuleFileName( NULL, pgmpath, MAX_PATH );
@@ -286,6 +300,7 @@ main( int argc, char *argv[] )
     {
         opts = O_TAPEMAP_OUTPUT+O_TAPEMAP_INVOKED;
     }
+#endif  /* 0 */
 
     INITIALIZE_UTILITY(pgm);
 
