@@ -172,7 +172,7 @@ and how they are used.
 <dl>
 
 <a name="ARCHMODE"></a>
-<dt><code>ARCHMODE &nbsp; S/370 &#124; ESA/390 &#124; z/Arch &#124; ESAME</code>
+<dt><code>ARCHLVL &nbsp; S/370 &#124; ESA/390 &#124; ESAME &#124; z/Arch</code>
 <dd><p>
     specifies the initial architecture mode:
     <ul compact>
@@ -181,12 +181,23 @@ and how they are used.
     Linux/390, and ZZSA.
     <li>use <code>z/Arch</code> or <code>ESAME</code> for z/OS and zLinux.
     </ul>
-    <p><code>ESAME</code> is a synonym for <code>z/Arch</code>.
+    <p><code>ESAME</code> is similar to <code>z/Arch</code>.
     When <code>z/Arch</code> or <code>ESAME</code> is specified,
     the machine will always IPL in ESA/390 mode,
     but is capable of being switched into z/Architecture mode after IPL.
     This is handled automatically by all z/Architecture operating systems.
+    <br>
+    The ESAME mode is equivalent to z/Architecture mode at Architecture Level 2
+    <br>
+    The z/Arch mode is equivalent to z/Architecture mode at Architecture Level 3
+    <br>
+    The synonyms ALS0, ALS1, ALS2 and ALS3 may be used to specify S/370, ESA/390, ESAME or Z/Arch respectively.
     <p>
+<dt><code>ARCHLVL &nbsp; ENABLE &#124; DISABLE &#124; QUERY <em>facility</em></code>
+<dd><p>
+    specifies a particular facility to be enabled or disabled, or the current setting queried.
+   <p>
+
 
 <a name="ASN_AND_LX_REUSE"></a>
 <dt><code>ASN_AND_LX_REUSE &nbsp; DISABLE &#124; ENABLE</code>
@@ -202,6 +213,8 @@ and how they are used.
     program interrupt when instructions such as LASP are issued.
     <p>
     <code>ASN_AND_LX_REUSE</code> may be abbreviated as <code>ALRF</code>
+    <p>
+    The <code>ASN_AND_LX_REUSE</code> statement has been superseeded by <code>ARCHLVL ENABLE/DISABLE ASN_LX_REUSE</code>
     <p>
 
 <a name="AUTOMOUNT"></a>
