@@ -206,6 +206,7 @@
             keeping message similar. - Paul G.
 11 Mar 2010 Correct cckddasd merge flag error. Correct fbadasd sf= filename error. - Paul G.
 10 Mar 2010 Add SIGTERM handler to cleanly shut down clients - Frans Pop
+10 Mar 2010 ============ Hercules 3.07 released ============
 16 Feb 2010 Fix Conditional SSKE failing with Storage Key Assist - Ivan Warren
 04 Feb 2010 Fix building on 64-bit Macs under Snow Leopard - Jay Maynard
 16 Dec 2009 Fix S/370 SIE guests - Ivan Warren
@@ -243,6 +244,7 @@
 03 Feb 2009 Fix TPROT under SIE problem reported by 'pat' - Ivan Warren
 23 Jan 2009 copyright notice - Bernard van der Helm
 17 Jan 2009 Fix change recording on page crossing first op of MVC - Reported by Greg Price
+11 Jan 2009 ============ Hercules 3.06 released ============
 08 Jan 2009 Cosmetic improvement to CPU type display on startup - Jay
             Maynard
 07 Jan 2009 Remove --enable-universal-binary configure option; doesn't work
@@ -407,6 +409,7 @@
 24 Jul 2007 Fix tape Synchronize CCW (x'43') to do actual commit - Fish
 24 Jul 2007 Fix Windows SCSI tape Locate and Read-Block-Id SNAFU - Fish
 19 Jul 2007 Disable DIAG 308 Re-IPL feature until it is complete - Ivan Warren
+23 Jun 2007 ============ Hercules 3.05 released ============
 21 Jun 2007 revert config_cpu.pat due to problems in testing - Greg
 20 Jun 2007 3.05 release doc changes - Jay Maynard
 18 Jun 2007 make 3990-6 default control unit for 3390 devices - Greg
@@ -665,6 +668,7 @@
                d) fix Read Block Id logic (MTIOCPOS) to return a more
                   technically accurate position value (the actual one)
             17) many minor editorial corrections (remove TRACE stmts, etc)
+25 Mar 2006 ============ Hercules 3.04.1 released ============
 05 Mar 2006 hercules logo spec precedence fix by "Rodrigo" - Ivan Warren
 01 Mar 2006 Customizable 3270 Logo screen. See README.HERCLOGO - Ivan Warren
 28 Feb 2006 Generalize Multiple CSS device numbering for most statements
@@ -673,6 +677,7 @@
 26 Feb 2006 Implement LCSS feature - Jan Jaeger
 25 Feb 2006 cckd 0.3.1 - Greg Smith
 24 Feb 2006 Skeletal last floating point instructions - Bernard van der Helm
+24 Feb 2006 ============ Hercules 3.04 released ============
 21 Feb 2006 Fix string overrun when hitting tab at the wrong time - Bjoern
             Zeeb
 18 Feb 2006 Reinstate byteswap.h check - Greg Smith
@@ -707,6 +712,7 @@
 31 Dec 2005 SET_THREAD_NAME for easier MSVC debugging - Fish
 31 Dec 2005 Fix for Windows ..\relative path dasd files - Fish
 31 Dec 2005 Add space as valid volser char, remove owner field check - Fish
+30 Dec 2005 ============ Hercules 3.03.1 released ============
 29 Dec 2005 Fix bug causing semigraphical panel to always devinit the first
             device, regardless of what device was specified - Jay Maynard
 29 Dec 2005 Add confirmations to semigraphical panel EXT and RST (external
@@ -720,6 +726,7 @@
 27 Dec 2005 Performance patch TM, TMH, TML, TMHH, TMHL, TMY - Bernard van der Helm
 24 Dec 2005 Add IFL SCPINFO support for zLinux zipl code - Jan Jaeger
 23 Dec 2005 Fix for Windows ..\relative path shadow files - Fish
+20 Dec 2005 ============ Hercules 3.03 released ============
 11 Dec 2005 Correction to format 1 STIDP - Jan Jaeger
 10 Dec 2005 Update FAQ software prerequisite sections - Roger Bowler
 09 Dec 2005 MAX_CPU_ENGINES defaults to 8 for MSVC build too - Ivan Warren
@@ -1036,6 +1043,7 @@
 14 Dec 2004 Ensure dyncrypt is built *AFTER* core - Ivan Warren
 14 Dec 2004 cckd garbage collector fix - Greg Smith
 14 Dec 2004 Bug in utf xlations, cc3 was never reached - Bernard van der Helm
+11 Dec 2004 ============ Hercules 3.02 released ============
 10 Dec 2004 ppc assembler assists for cmpxchg1, cmpxchg4 - Greg Smith
 08 Dec 2004 dasdinit -linux option support - Greg Smith
 06 Dec 2004 Keep crx in sync with INST_SPACE - Jan Jaeger
@@ -1284,6 +1292,7 @@ der Helm
             Volker Bandke, original code by Marian Gasparovic
 04 Dec 2003 Add sclp reset to io reset - Jan Jaeger
 01 Dec 2003 Signal Quiesce (shutdown) & ssd command - Jan Jaeger
+30 Nov 2003 ============ Hercules 3.01 released ============
 29 Nov 2003 Fix race condition in console.c recv_3270_data causing 100%
             CPU utilization, zero MIPS" Hercules hang symptom (version
             in configure.ac version bumped to 3.00a.5) - Fish
@@ -1332,6 +1341,7 @@ parovic
 06 Oct 2003 Enable ia32 assembler assists for -fPIC - Greg Smith
 02 Oct 2003 Issue warning message when restoring non-IEBCOPY xmit file
             using dasdload - Greg Smith
+02 Oct 2003 ============ Hercules 3.00 2 released ============
 01 Oct 2003 Fix segmentation fault using NPTL threads and no console
             device is specified - Greg Smith
 29 Sep 2003 Backout STUPID (dangerous) 16 Aug 2003 het changes now that
@@ -1588,6 +1598,7 @@ en
 26 Feb 2003 Add util/cvslvlck cvs level check by Jim Morrison
 26 Feb 2003 Add Signal Adapter instruction - Jan Jaeger
 20 Feb 2003 FBA devtype update + script command support - Ivan Warren (by Greg)
+12 Feb 2003 ============ Hercules 2.17.1 released ============
 08 Feb 2003 Fix dasdload message verbosity test (was backwards) - Jay
             Maynard
 08 Feb 2003 Fix eof/intrq mode saving in card reader initialization, add *
