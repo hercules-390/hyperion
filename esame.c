@@ -4822,6 +4822,8 @@ DEF_INST(perform_timing_facility_function)
 
     UNREFERENCED(inst);
 
+    FACILITY_CHECK(TOD_CLOCK_STEER,regs);
+
     SIE_INTERCEPT(regs);
 
     if(regs->GR_L(0) & PTFF_GPR0_RESV)
