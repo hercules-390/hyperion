@@ -615,7 +615,7 @@ do { \
 
 #define FACILITY_CHECK(_faci, _regs) \
     do { \
-        if(!FACILITY_ENABLED( (_faci) ) ) \
+        if(!FACILITY_ENABLED( _faci, _regs ) ) \
           (_regs)->program_interrupt( (_regs), PGM_OPERATION_EXCEPTION); \
     } while (0) 
 
