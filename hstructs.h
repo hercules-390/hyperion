@@ -263,7 +263,7 @@ struct REGS {                           /* Processor registers       */
         func    trace_br;
 
      /* Active Facility List */
-        BYTE    facility_list[STFL_BYTESIZE];
+        BYTE    facility_list[STFL_HBYTESIZE];
 
      /* ------------------------------------------------------------ */
         U64     regs_copy_end;          /* Copy regs to here         */
@@ -453,7 +453,7 @@ struct SYSBLK {
 #endif // OPTION_CAPPING
 
         /* Active Facility List */
-        BYTE    facility_list[GEN_MAXARCH][STFL_BYTESIZE];
+        BYTE    facility_list[GEN_MAXARCH][STFL_HBYTESIZE];
 
 #if defined(_FEATURE_VECTOR_FACILITY)
         VFREGS  vf[MAX_CPU_ENGINES];    /* Vector Facility           */

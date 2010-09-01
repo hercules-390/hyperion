@@ -1394,6 +1394,20 @@ typedef struct _MBK {
 #define STFL_BYTESIZE (((STFL_MAX+8))/8)
 #define STFL_DWRDSIZE ((STFL_BYTESIZE+7)/8)
 
+/* The below facility definitions are not part of the architecture 
+   but are hercules specific.  They are placed here for the convenience 
+   of being able to use the Virtual Architecture Level facility */
+
+#define STFL_HBASE              (STFL_BYTESIZE*8)
+
+#define STFL_MOVE_INVERSE       (STFL_HBASE+0)
+//#define STFL_SOME_FEATURE     (STFL_HBASE+1)
+
+#define STFL_HMAX               (STFL_HBASE+1)
+#define STFL_HBYTESIZE (((STFL_HMAX+8))/8)
+#define STFL_HDWRDSIZE ((STFL_HBYTESIZE+7)/8)
+
+
 /* Bit definitions for the Vector Facility */
 #define VSR_M    0x0001000000000000ULL  /* Vector mask mode bit      */
 #define VSR_VCT  0x0000FFFF00000000ULL  /* Vector count              */

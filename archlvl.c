@@ -105,7 +105,7 @@ ARCHLVL("ESAME",         ARCH_900, ALS2)
 ARCHLVL("ALS2",          ARCH_900, ALS2)
 
 /* z/Arch - ALS3 */
-ARCHLVL(_ARCH_900_NAME,  ARCH_900, ALS3) /* "z/Arch" */
+ARCHLVL(_ARCH_900_NAME,  ARCH_900, ALS3)
 ARCHLVL("zArch",         ARCH_900, ALS3)
 ARCHLVL("z",             ARCH_900, ALS3)
 ARCHLVL("ALS3",          ARCH_900, ALS3)
@@ -166,6 +166,8 @@ FACILITY(CPU_MEAS_SAMPLNG, NONE,         NONE,      ZARCH,         ALS3)
 FACILITY(MSA_EXTENSION_3,  NONE,         NONE,      ZARCH,         ALS3)
 FACILITY(MSA_EXTENSION_4,  NONE,         NONE,      ZARCH,         ALS3)
 
+FACILITY(MOVE_INVERSE,     S370|ESA390|ZARCH, ZARCH, NONE,         ALS0|ALS1|ALS2|ALS3)
+
 { NULL, 0, 0, 0, 0, 0 }
 };
 
@@ -174,7 +176,7 @@ void init_als(REGS *regs)
 {
 int i;
 
-    for(i = 0; i < STFL_BYTESIZE; i++)
+    for(i = 0; i < STFL_HBYTESIZE; i++)
         regs->facility_list[i] = sysblk.facility_list[sysblk.arch_mode][i];
 }
 
@@ -184,7 +186,7 @@ void set_alslevel(int alslevel)
 FACTAB *tb;
 int i,j;
 
-    for(i = 0; i < STFL_BYTESIZE; i++)
+    for(i = 0; i < STFL_HBYTESIZE; i++)
         for(j = 0; j < GEN_MAXARCH; j++)
             sysblk.facility_list[j][i] = 0;
 

@@ -518,7 +518,7 @@ U64     dreg;
     int i;
     BYTE *facility_mask;
 
-        for(i = 0; i < STFL_BYTESIZE; i++)
+        for(i = 0; i < STFL_HBYTESIZE; i++)
             GUESTREGS->facility_list[i] = regs->facility_list[i];
 
         FETCH_FW(fld,STATEBK->fld);
