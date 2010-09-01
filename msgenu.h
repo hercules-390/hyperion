@@ -563,6 +563,16 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00881 "I/O interrupt queue:%s" 
 #define HHC00882 "device %1d:%04X: %s%s%s%s, pri %d" 
 
+#define HHC00890 "Facility(%-20s) %sabled"
+#define HHC00891 "Facility name not found"
+#define HHC00892 "Facility name not specified"
+#define HHC00893 "Facility(%s) does not exist"
+#define HHC00895 "Archmode %s is invalid"
+#define HHC00896 "Facility(%s) not supported for specified archmode%s %s"
+#define HHC00897 "Facility(%s) mandatory for specified archmode%s %s"
+#define HHC00898 "Facility(%s) %sabled for archmode %s"
+#define HHC00899 "Facility(%s) not supported for archmode %s"
+
 // reserve 009xx for ctc related messages 
 /*ctc_ctci.c*/
 #define HHC00900 "%1d:%04X CTC: error in function '%s': '%s'"

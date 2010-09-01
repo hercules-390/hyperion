@@ -39,6 +39,9 @@
  #undef   _GEN_ARCH
 #endif
 
+#define  CMD(str,cmd,min) ( strlen( str ) >= min && \
+                            strlen( str ) <= strlen(#cmd) && \
+                            !strncasecmp( str, #cmd, strlen( str ) ) )
 
 #define STR_Q( _string ) #_string
 #define STR_M( _string ) STR_Q( _string )
@@ -256,19 +259,86 @@ ARCHTAB *tb;
 void set_facility(FACTAB *facility, int enable, BYTE mode)
 {
 int fbyte, fbit;
+int scnt = 0;
+int mcnt = 0;
+char sbuf[64] = "";
+char mbuf[64] = "";
+
+    if ( facility->supported & S370 )
+    {
+        scnt++;
+        strcat(sbuf, "S/370");
+    }
+    if ( facility->supported & ESA390 )
+    {
+        if ( scnt == 0 )
+        {
+            strcat( sbuf, "ESA/390" );
+        }
+        else
+        {
+            strcat( sbuf, ", ESA/390" );
+        }
+
+        scnt++;
+    }
+    if ( facility->supported & ZARCH )
+    {
+        if ( scnt == 0 )
+        {
+            strcat( sbuf, "z/Arch" );
+        }
+        else
+        {
+            strcat( sbuf, ", z/Arch" );
+        }
+
+        scnt++;
+    }
+    if ( facility->fixed & S370 )
+    {
+        mcnt++;
+        strcat(mbuf, "S/370");
+    }
+    if ( facility->fixed & ESA390 )
+    {
+        if ( mcnt == 0 )
+        {
+            strcat( mbuf, "ESA/390" );
+        }
+        else
+        {
+            strcat( mbuf, ", ESA/390" );
+        }
+
+        mcnt++;
+    }
+    if ( facility->fixed & ZARCH )
+    {
+        if ( mcnt == 0 )
+        {
+            strcat( mbuf, "z/Arch" );
+        }
+        else
+        {
+            strcat( mbuf, ", z/Arch" );
+        }
+
+        mcnt++;
+    }
 
     fbyte = facility->bitno / 8;
     fbit = 0x80 >> (facility->bitno % 8);
 
     if(enable && !(facility->supported & mode))
     {
-        logmsg("HHCnnnnnE Facility(%s) not supported for specified mode\n",facility->name);
+        WRMSG( HHC00896, "E", facility->name, scnt > 1 ? "s": "", sbuf );
         return;
     }
 
     if(!enable && (facility->fixed & mode))
     {
-        logmsg("HHCnnnnnE Facility(%s) mandatory for specified mode\n",facility->name);
+        WRMSG( HHC00897, "E", facility->name, mcnt > 1 ? "s": "", mbuf);
         return;
     }
 
@@ -279,7 +349,11 @@ int fbyte, fbit;
             sysblk.facility_list[ARCH_370][fbyte] |= fbit;
         else
             sysblk.facility_list[ARCH_370][fbyte] &= ~fbit;
+
+        WRMSG( HHC00898, "I", facility->name, enable ? "en":"dis", "S/370" ); 
     }
+    else
+        WRMSG( HHC00899, "I", facility->name, "S/370" );
 #endif
 #if defined(_390)
     if(facility->mode & ESA390 & mode)
@@ -288,7 +362,11 @@ int fbyte, fbit;
             sysblk.facility_list[ARCH_390][fbyte] |= fbit;
         else
             sysblk.facility_list[ARCH_390][fbyte] &= ~fbit;
+
+        WRMSG( HHC00898, "I", facility->name, enable ? "en":"dis", "ESA/390" ); 
     }
+    else
+        WRMSG( HHC00899, "I", facility->name, "ESA/390" );
 #endif
 #if defined(_900)
     if(facility->mode & ZARCH & mode)
@@ -296,8 +374,12 @@ int fbyte, fbit;
         if(enable)
             sysblk.facility_list[ARCH_900][fbyte] |= fbit;
         else
-            sysblk.facility_list[ARCH_390][fbyte] &= ~fbit;
+            sysblk.facility_list[ARCH_900][fbyte] &= ~fbit;
+
+        WRMSG( HHC00898, "I", facility->name, enable ? "en":"dis", "z/Arch" ); 
     }
+    else
+        WRMSG( HHC00899, "I", facility->name, "z/Arch" );
 #endif
     
 }
@@ -335,44 +417,28 @@ BYTE als =
 #endif
  ;
 
-    if(!strcasecmp(argv[1],"Enable"))
+    if( CMD(argv[1],enable,3) )
         enable = TRUE;
     else
-    if(!strcasecmp(argv[1],"Disable"))
+    if( CMD(argv[1],disable,4) )
         enable = FALSE;
     else
     {
-        if(!strcasecmp(argv[1],"Query"))
-        {
-            for(tb = factab; tb->name; tb++)
-            {
-            int fbyte, fbit;
-    
-                fbyte = tb->bitno / 8;
-                fbit = 0x80 >> (tb->bitno % 8);
-
-                if(argc < 3 || !strcasecmp(argv[2],tb->name))
-                    logmsg("Facility(%s) %s\n",tb->name,
-                        (sysblk.facility_list[sysblk.arch_mode][fbyte] & fbit) ? "Enabled" : "Disabled");
-            }
-            return 0;;
-        }
-        else
-            return -1;
+        return -1;
     }
 
     if(argc < 3) 
     {
-        logmsg("HHCnnnnnE no facility specified\n");
-        return 0;
+        WRMSG( HHC00892, "E" );
+        return -1;
     }
 
     if(argc > 3)
     {
         if(!(ab = get_archtab(argv[3])))
         {
-            logmsg("HHCnnnnnE invalid archmode specified\n");
-            return 0;
+            WRMSG( HHC00895, "E", argv[3] );
+            return -1;
         }
         als = arch2als[ab->archmode];
     }
@@ -380,7 +446,7 @@ BYTE als =
     if((tb = get_factab(argv[2])))
         set_facility(tb, enable, als);
     else
-        logmsg("HHCnnnnnE Facility(%s) does not exist\n",argv[2]);
+        WRMSG( HHC00893, "E", argv[2] ); 
 
     return 0;
 }
@@ -397,6 +463,8 @@ BYTE als =
 
                 enable|disable <facility>|all [s/370|esa/390|z/arch]
 
+                query <facility>|all
+
 */
 
 
@@ -409,6 +477,48 @@ int archlvl_cmd(int argc, char *argv[], char *cmdline)
     if (argc < 2)
     {
         WRMSG(HHC02203, "I", "archmode", get_arch_mode_string(NULL) );
+        return 0;
+    }
+    
+    if ( argc > 4 )
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        return -1;
+    }
+
+    if( CMD(argv[1],query,1) )
+    {
+        FACTAB *tb;
+        int     fcnt = 0;
+
+        if ( argc > 3 )
+        {
+            WRMSG( HHC02299, "E", argv[0] );
+            return -1;
+        }
+
+        for(tb = factab; tb->name; tb++)
+        {
+            int fbyte, fbit;
+    
+            fbyte = tb->bitno / 8;
+            fbit = 0x80 >> (tb->bitno % 8);
+
+            if( argc < 3 || CMD(argv[2],all,3) || !strcasecmp( argv[2], tb->name ) )
+            { 
+                fcnt++;
+                WRMSG( HHC00890, "I", tb->name,
+                       sysblk.facility_list[sysblk.arch_mode][fbyte] & fbit
+                        ? "En" : "Dis" );
+            }
+
+            if ( fcnt == 0 )
+            {
+                WRMSG( HHC00891, "E" );
+                return -1;
+            }
+        }
+
         return 0;
     }
 
