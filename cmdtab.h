@@ -293,7 +293,8 @@ COMMAND("restart",   PANEL,         SYSCMDALL,          restart_cmd,
 COMMAND("archlvl",  PANEL+CONFIG,  SYSCMDALL-SYSOPER, archlvl_cmd,
   "Set Architecture Level",
     "Format: archlvl s/370|als0 | esa/390|als1 | esame|als2 | z/arch|als3\n"
-    "                enable|disable|query <facility> [s/370|esa/390|z/arch]\n"
+    "                enable|disable <facility> [s/370|esa/390|z/arch]\n"
+    "                query [<facility> | all]\n"
     "command without any argument simply displays the current architecture\n"
     "mode. Entering the command with an argument sets the architecture mode\n"
     "to the specified value.\n")

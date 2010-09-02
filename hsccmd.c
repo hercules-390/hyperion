@@ -2536,7 +2536,7 @@ static char *ArchlvlCmd[3] = { "archlvl", "Query", "asn_lx_reuse" };
 
     UNREFERENCED(cmdline);
 
-    logmsg("ALRF command depricated: Use \"archlvl enable/disable asn_lx_reuse\" instead\n");
+    WRMSG( HHC02256, "W", "ALRF", "archlvl enable|disable asn_lx_reuse" );
 
     if(argc > 1)
         ArchlvlCmd[1] = argv[1];
@@ -7883,7 +7883,7 @@ int evm_cmd_1(int argc, char *argv[], char *cmdline)
     UNREFERENCED(argc);
     UNREFERENCED(argv);
 
-    WRMSG(HHC02256, "W");
+    WRMSG( HHC02256, "W", "evm", "ecpsvm" );
     ecpsvm_command(argc,argv);
     return 0;
 }
