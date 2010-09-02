@@ -223,11 +223,12 @@ violate the software vendor's licensing terms.</em>
 
 <h4>Starting Hercules</h4>
 <p>
-To start Hercules enter this command at the Unix or Windows command prompt:
+To start Hercules enter this command at the host's command prompt:
 <blockquote><code><pre>
     hercules  [ -f <em>filename</em> ]
               [ -d ]
               [ -p <em>dyndir</em> ]  [[-l <em>dynmod</em> ] ... ]
+              [ -s symbol=value ]
               [ &gt; <em>logfile</em> ]
 </pre></code>
 </blockquote>
@@ -260,6 +261,13 @@ where:
             although each must be preceded with the <code>-l</code>
             option specifier.
         <p>
+        <dt><code><em>symbol=value</em></code><p><dd>
+
+            the name of symbol and the associated value to be used in configuration
+            processing or panel commands. See the command 'defsym'
+            for more information on using symbols. The '-s' option maybe repeated. 
+            Note: 'value' maybe quoted to contain imbedded blanks. 
+        <p>        
         <dt><code><em>logfile</em></code><p><dd>
 
             is an optional log file which will receive a copy of
