@@ -1,4 +1,4 @@
-/* ARCHLVL.C    (c) Copyright Jan Jaeger, 2010                       */
+/* ARCHLVL.C    (c) Copyright Jan Jaeger,   1999-2010                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
@@ -121,8 +121,8 @@ ARCHLVL("ALS3",          ARCH_900, ALS3)
 static FACTAB factab[] =
 {
 /*       Facility          Default       Mandatory  Supported      Group        */
-FACILITY(N3,               Z390,         NONE,      Z390,          ALS1|ALS2|ALS3)
-FACILITY(ESAME_INSTALLED,  Z390,         NONE,      Z390,          ALS2|ALS3)
+FACILITY(N3,               ESA390|ZARCH, NONE,      ESA390|ZARCH,  ALS1|ALS2|ALS3)
+FACILITY(ESAME_INSTALLED,  ESA390|ZARCH, NONE,      ESA390|ZARCH,  ALS2|ALS3)
 FACILITY(ESAME_ACTIVE,     ZARCH,        ZARCH,     ZARCH,         ALS2|ALS3)
 FACILITY(IDTE_INSTALLED,   Z390,         NONE,      ZARCH,         ALS2|ALS3)
 FACILITY(IDTE_SC_SEGTAB,   0, /*ZARCH*/  NONE,      ZARCH,         ALS2|ALS3)
@@ -169,7 +169,7 @@ FACILITY(CPU_MEAS_SAMPLNG, NONE,         NONE,      ZARCH,         ALS3)
 FACILITY(MSA_EXTENSION_3,  NONE,         NONE,      ZARCH,         ALS3)
 FACILITY(MSA_EXTENSION_4,  NONE,         NONE,      ZARCH,         ALS3)
 
-FACILITY(MOVE_INVERSE,     S370|Z390,    ZARCH,     S370|Z390,     ALS0|ALS1|ALS2|ALS3)
+FACILITY(MOVE_INVERSE,     S370|ESA390|ZARCH, ZARCH, NONE,         ALS0|ALS1|ALS2|ALS3)
 
 { NULL, 0, 0, 0, 0, 0 }
 };
