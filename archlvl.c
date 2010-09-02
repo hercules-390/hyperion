@@ -511,12 +511,12 @@ int archlvl_cmd(int argc, char *argv[], char *cmdline)
                        sysblk.facility_list[sysblk.arch_mode][fbyte] & fbit
                         ? "En" : "Dis" );
             }
+        }
 
-            if ( fcnt == 0 )
-            {
-                WRMSG( HHC00891, "E" );
-                return -1;
-            }
+        if ( fcnt == 0 )
+        {
+            WRMSG( HHC00891, "E" );
+            return -1;
         }
 
         return 0;
