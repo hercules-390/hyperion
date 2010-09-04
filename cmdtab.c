@@ -311,8 +311,12 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
         for (pCmdTab = cmdtab; pCmdTab->statement; pCmdTab++)
         {
             if ( (pCmdTab->type & PANEL) && 
-                 ( (sysblk.diag8cmd & DIAG8CMD_RUNNING) || (pCmdTab->group & sysblk.sysgroup) ) && 
-                 (!strcasecmp(pCmdTab->statement,argv[1]) ) )
+                 ( (sysblk.diag8cmd & DIAG8CMD_RUNNING) || 
+                   (pCmdTab->group & sysblk.sysgroup) ) && 
+                 ( !strcasecmp(pCmdTab->statement,argv[1]) ||
+                   ( strlen(argv[1]) >= pCmdTab->statminlen &&
+                     !strncasecmp(pCmdTab->statement, argv[1], strlen(argv[1]) )
+                 ) ) )
             {
                 WRMSG( HHC01602, "I", "Command", "Description" );
                 WRMSG( HHC01602, "I", "-------", "-----------------------------------------------" );

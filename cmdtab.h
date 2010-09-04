@@ -584,8 +584,22 @@ CMDABBR("qstor",5,   PANEL,         SYSCMDALL,          qstor_cmd,
   "Display main and expanded storage values\n")
 
 CMDABBR("mounted_tape_reinit",9, PANEL+CONFIG, SYSCMDALL-SYSOPER, mnttapri_cmd,  
-  "Control tape initilization", 
-    NULL)
+  "Control tape initialization", 
+  "Format: \"mounted_tape_reinit [disallow|allow]\"\n"
+  "Specifies whether reinitialization of tape drive devices\n"
+  "(via the devinit command, in order to mount a new tape)\n"
+  "should be allowed if there is already a tape mounted on\n"
+  "the drive. The current value is displayed if no operand is\n"
+  "specified\n" 
+  "Specifying ALLOW (the default) indicates new tapes may be\n"
+  "mounted (via 'devinit nnnn new-tape-filename') irrespective\n"
+  "of whether or not there is already a tape mounted on the drive.\n" 
+  "Specifying DISALLOW prevents new tapes from being mounted if\n"
+  "one is already mounted. When DISALLOW is specified and a tape\n"
+  "is already mounted on the drive, it must first be unmounted\n"
+  "(via the command 'devinit nnnn *') before the new tape can be\n"
+  "mounted. Otherwise the devinit attempt to mount the new tape\n"
+  "is rejected.\n")
 
 CMDABBR("autoinit",8, PANEL+CONFIG, SYSCMDALL-SYSOPER, autoinit_cmd,  
   "Display/Set automatic create empty tape file switch", 
@@ -785,8 +799,8 @@ COMMAND("g",         PANEL,         SYSCMDALL-SYSOPER,  g_cmd,
     NULL)
 
 COMMAND("ostailor",  PANEL+CONFIG,  SYSCMDALL-SYSOPER,  ostailor_cmd,
-  "Trace program interrupts",
-    "Format: \"ostailor quiet | os/390 | z/os | vm | vse | linux | null\".\n"
+  "Tailor trace information for specific OS",
+  "Format: \"ostailor [quiet | os/390 | z/os | vm | vse | linux | null]\".\n"
     "Specifies the intended operating system. The effect is to reduce\n"
     "control panel message traffic by selectively suppressing program\n"
     "check trace messages which are considered normal in the specified\n"
