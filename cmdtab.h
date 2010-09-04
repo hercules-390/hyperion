@@ -975,9 +975,9 @@ COMMAND("defsym",    PANEL+CONFIG,  SYSCMDALL-SYSOPER,  defsym_cmd,
     "Enter \"defsym\" by itself to display the values of all defined\n"
     "symbols.\n")
 COMMAND("import",    PANEL+CONFIG,  SYSCMDALL-SYSOPER,  import_cmd,
-  "import symbol",
-    "Format: \"defsym symbol [value] ...\". Imports symbol 'symbol' from\n"
-    "the envionment pool\n")
+  "Import symbol",
+    "Format: \"import symbol ...\". Imports symbol 'symbol' from the\n"
+    "envionment pool\n")
 #endif
 
 COMMAND("script",    PANEL,         SYSCMDALL-SYSOPER,  script_cmd,
