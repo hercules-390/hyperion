@@ -904,7 +904,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01496 "Invalid comparator '%s'; valid comparators are '==' and '!='"
 #define HHC01497 "Invalid number of arguments count '%d'"
 #define HHC01498 "Statement '%s' is invalid"
-#define HHC01499 "Nesting '$if' is not supported"
+#define HHC01499 "Nesting '%%if' is not supported"
 
 // reserve 015xx for Hercules dynamic loader      
 /* hdl.c */

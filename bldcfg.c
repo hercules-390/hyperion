@@ -615,14 +615,23 @@ char   *buf1;                           /* Pointer to resolved buffer*/
             }
         }
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
-
-        if( !ProcessConfigCommand (addargc, (char**)addargv, cnfline) )
         {
-            free(cnfline);
-            continue;
-        }
+            int rc = ProcessConfigCommand (addargc, (char**)addargv, cnfline);
 
-        free(cnfline);
+            free(cnfline);
+
+            if( rc == 0 )
+            {
+                continue;
+            }
+            else
+            { 
+                if ( strcasecmp( addargv[0], "%if" ) == 0 ||
+                     strcasecmp( addargv[0], "%else" ) == 0 ||
+                     strcasecmp( addargv[0], "%endif" ) == 0 ) 
+                    delayed_exit(1);
+            }
+        }
 
         /* Move the first two arguments to separate variables */
 
