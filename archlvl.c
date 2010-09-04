@@ -169,7 +169,7 @@ FACILITY(CPU_MEAS_SAMPLNG, NONE,         NONE,      ZARCH,         ALS3)
 FACILITY(MSA_EXTENSION_3,  NONE,         NONE,      ZARCH,         ALS3)
 FACILITY(MSA_EXTENSION_4,  NONE,         NONE,      ZARCH,         ALS3)
 
-FACILITY(MOVE_INVERSE,     S370|ESA390|ZARCH, ZARCH, NONE,         ALS0|ALS1|ALS2|ALS3)
+FACILITY(MOVE_INVERSE,     S370|ESA390|ZARCH, ZARCH, S370|ESA390|ZARCH, ALS0|ALS1|ALS2|ALS3)
 
 { NULL, 0, 0, 0, 0, 0 }
 };
@@ -256,157 +256,69 @@ ARCHTAB *tb;
 }
 
 
-void set_facility(FACTAB *facility, int enable, BYTE mode, int mode_spec)
+void set_facility(FACTAB *facility, int enable, BYTE mode)
 {
 int fbyte, fbit;
-int scnt = 0;
-int mcnt = 0;
-char sbuf[64] = "";
-char mbuf[64] = "";
-
-    if ( facility->supported & S370 )
-    {
-        scnt++;
-        strcat(sbuf, "S/370");
-    }
-    if ( facility->supported & ESA390 )
-    {
-        if ( scnt == 0 )
-        {
-            strcat( sbuf, "ESA/390" );
-        }
-        else
-        {
-            strcat( sbuf, ", ESA/390" );
-        }
-
-        scnt++;
-    }
-    if ( facility->supported & ZARCH )
-    {
-        if ( scnt == 0 )
-        {
-            strcat( sbuf, "z/Arch" );
-        }
-        else
-        {
-            strcat( sbuf, ", z/Arch" );
-        }
-
-        scnt++;
-    }
-    if ( facility->fixed & S370 )
-    {
-        mcnt++;
-        strcat(mbuf, "S/370");
-    }
-    if ( facility->fixed & ESA390 )
-    {
-        if ( mcnt == 0 )
-        {
-            strcat( mbuf, "ESA/390" );
-        }
-        else
-        {
-            strcat( mbuf, ", ESA/390" );
-        }
-
-        mcnt++;
-    }
-    if ( facility->fixed & ZARCH )
-    {
-        if ( mcnt == 0 )
-        {
-            strcat( mbuf, "z/Arch" );
-        }
-        else
-        {
-            strcat( mbuf, ", z/Arch" );
-        }
-
-        mcnt++;
-    }
 
     fbyte = facility->bitno / 8;
     fbit = 0x80 >> (facility->bitno % 8);
 
     if( !(facility->supported & mode) )
     {
-        WRMSG( HHC00896, "E", facility->name, scnt > 1 ? "s": "", sbuf );
-        return;
-    }
-
-    if(!enable && mode_spec && (facility->fixed & mode))
-    {
-        WRMSG( HHC00897, "E", facility->name, mcnt > 1 ? "s": "", mbuf);
+        WRMSG( HHC00896, "E", facility->name );
         return;
     }
 
 #if defined(_370)
-    if( facility->mode & S370 & mode )
+    if( facility->supported & S370 & mode )
     {
         if(enable)
         {
             sysblk.facility_list[ARCH_370][fbyte] |= fbit;
-            WRMSG( HHC00898, "I", facility->name, "en", "S/370" );
+            WRMSG( HHC00898, "I", facility->name, "en", _ARCH_370_NAME );
         }
         else
         {
             if ( !(facility->fixed & S370) )
             {
                 sysblk.facility_list[ARCH_370][fbyte] &= ~fbit;
-                WRMSG( HHC00898, "I", facility->name, "dis", "S/370" );
+                WRMSG( HHC00898, "I", facility->name, "dis", _ARCH_370_NAME);
             }
         }
     }
-    else
-    {   
-        if ( !mode_spec )
-            WRMSG( HHC00899, "I", facility->name, "S/370" );
-    }
 #endif
 #if defined(_390)
-    if( facility->mode & ESA390 & mode )
+    if( facility->supported & ESA390 & mode )
     {
         if(enable)
         {
             sysblk.facility_list[ARCH_390][fbyte] |= fbit;
-            WRMSG( HHC00898, "I", facility->name, "en", "ESA/390" );
+            WRMSG( HHC00898, "I", facility->name, "en", _ARCH_390_NAME );
         }
         else
         {
             if ( !(facility->fixed & ESA390) )
             sysblk.facility_list[ARCH_390][fbyte] &= ~fbit;
-            WRMSG( HHC00898, "I", facility->name, "dis", "ESA/390" );
+            WRMSG( HHC00898, "I", facility->name, "dis", _ARCH_390_NAME );
         }
-    }
-    else
-    {
-        if ( !mode_spec )
-            WRMSG( HHC00899, "I", facility->name, "ESA/390" );
     }
 #endif
 #if defined(_900)
-    if( facility->mode & ZARCH & mode )
+    if( facility->supported & ZARCH & mode )
     {
         if(enable)
         {
             sysblk.facility_list[ARCH_900][fbyte] |= fbit;
-            WRMSG( HHC00898, "I", facility->name, "en", "z/Arch" ); 
+            WRMSG( HHC00898, "I", facility->name, "en", _ARCH_900_NAME ); 
         }
         else
         { 
             if ( !(facility->fixed & ZARCH) )
             {
                 sysblk.facility_list[ARCH_900][fbyte] &= ~fbit;
-                WRMSG( HHC00898, "I", facility->name, "dis", "z/Arch" );
+                WRMSG( HHC00898, "I", facility->name, "dis", _ARCH_900_NAME );
             }
         }
-    }
-    else
-    {
-        if ( !mode_spec )
-            WRMSG( HHC00899, "I", facility->name, "z/Arch" );
     }
 #endif
     
@@ -418,7 +330,6 @@ int update_archlvl(int argc, char *argv[])
 FACTAB *tb;
 ARCHTAB *ab;
 int enable;
-int mode_spec = FALSE;
 const BYTE arch2als[] = {
 #if defined(_370)
  S370
@@ -470,11 +381,10 @@ BYTE als =
             return 0;
         }
         als = arch2als[ab->archmode];
-        mode_spec = TRUE;
     }
 
     if((tb = get_factab(argv[2])))
-        set_facility(tb, enable, als, mode_spec );
+        set_facility(tb, enable, als );
     else
         WRMSG( HHC00893, "E", argv[2] ); 
 
