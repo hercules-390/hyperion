@@ -7168,6 +7168,22 @@ int defsym_cmd(int argc, char *argv[], char *cmdline)
     free(sym);
     return 0;
 }
+/*-------------------------------------------------------------------*/
+/* import command - import substitution symbol                       */
+/*-------------------------------------------------------------------*/
+int import_cmd(int argc, char *argv[], char *cmdline)
+{
+    char *val;
+    int   i;
+
+    UNREFERENCED(cmdline);
+
+    for(i = 1; i < argc; i++)
+        if((val = getenv(argv[i])))
+            set_symbol(argv[i],val);
+
+    return 0;
+}
 #endif // defined(OPTION_CONFIG_SYMBOLS)
 
 
