@@ -568,7 +568,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00892 "Facility name not specified"
 #define HHC00893 "Facility(%s) does not exist"
 #define HHC00895 "Archmode %s is invalid"
-#define HHC00896 "Facility(%s) is not supported for specified mode"
+#define HHC00896 "Facility(%s) is only supported for archmode%s %s"
 #define HHC00897 "Facility(%s) is mandatory for archmode%s %s"
 #define HHC00898 "Facility(%s) %sabled for archmode %s"
 #define HHC00899 "Facility(%s) not supported for archmode %s"
@@ -897,6 +897,14 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01476 "Codepage is '%s'"
 #define HHC01477 "Valid codepage conversion tables are:"
 #define HHC01478 "      %s"
+
+/* $IF/$ELSE/$ENDIF processing */
+#define HHC01480 "Invalid '%s'; preceeding '$if' is missing"
+
+#define HHC01496 "Invalid comparator '%s'; valid comparators are '==' and '!='"
+#define HHC01497 "Invalid number of arguments count '%d'"
+#define HHC01498 "Statement '%s' is invalid"
+#define HHC01499 "Nesting '$if' is not supported"
 
 // reserve 015xx for Hercules dynamic loader      
 /* hdl.c */

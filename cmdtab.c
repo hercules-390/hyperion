@@ -1,6 +1,7 @@
 /* CMDTAB.C     (c) Copyright Roger Bowler, 1999-2010                */
 /*              (c) Copyright "Fish" (David B. Trout), 2002-2009     */
 /*              (c) Copyright Jan Jaeger, 2003-2009                  */
+/*              (c) Copyright TurboHercules, SAS 2010                */
 /*              Route all Hercules configuration statements          */
 /*              and panel commands to the appropriate functions      */
 /*                                                                   */
@@ -85,6 +86,10 @@ static CMDTAB cmdtab[] =
 #include "cmdtab.h"
 COMMAND ( NULL, 0, 0, NULL, NULL, NULL ) /* End of table */
 };
+
+#define  CMD(str,cmd,min) ( strlen( str ) >= min && \
+                            strlen( str ) <= strlen(#cmd) && \
+                            !strncasecmp( str, #cmd, strlen( str ) ) )
 /* internal functions */
 int HelpMessage(char *);
 
@@ -655,3 +660,144 @@ void *panel_command (void *cmdline)
 
     return NULL;
 }
+
+extern int Cond_Proc_Stmt;
+extern int Cond_Proc_if;
+extern int Cond_Proc_else;
+
+#if defined(OPTION_CONFIG_SYMBOLS)
+/*-------------------------------------------------------------------*/
+/* Conditional processes   $IF/$ELSE/$ENDIF                          */
+/*-------------------------------------------------------------------*/
+int cond_proc_cmd(int argc, char *argv[], char *cmdline)
+{
+    int rc = -1;
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+    UNREFERENCED(cmdline);
+
+    if ( CMD(argv[0],%if,3) )
+    {
+        if ( Cond_Proc_if )
+        {
+            WRMSG( HHC01499, "E" );
+            rc = -1;
+        }
+        else
+        {
+            if ( argc == 4 )
+            {
+                if ( strcmp(argv[2], "==") == 0 )
+                {
+                    Cond_Proc_if = TRUE;
+                    Cond_Proc_else = FALSE;
+                    if ( strcasecmp(argv[1],argv[3]) == 0 )
+                    {
+                        Cond_Proc_Stmt = TRUE;
+                    }
+                    else
+                    {
+                        Cond_Proc_Stmt = FALSE;
+                    }
+                    rc = 0;
+                }
+                else if ( strcmp(argv[2], "!=") == 0  )
+                {
+                    Cond_Proc_if = TRUE;
+                    Cond_Proc_else = FALSE;
+                    if ( strcasecmp(argv[1],argv[3]) != 0 )
+                    {
+                        Cond_Proc_Stmt = TRUE;
+                    }
+                    else
+                    {
+                        Cond_Proc_Stmt = FALSE;
+                    }
+                    rc = 0;
+                }
+                else
+                { 
+                    WRMSG( HHC01496, "E", argv[2] );
+                    rc = -1;
+                }
+            }
+            else if ( argc == 2 )
+            {
+                if ( !strcasecmp(argv[1], "**UNRESOLVED**") || strlen(argv[1]) == 0 )
+                {
+                    Cond_Proc_if = TRUE;
+                    Cond_Proc_else = FALSE;
+                    Cond_Proc_Stmt = FALSE;
+                }
+                else
+                {
+                    Cond_Proc_if = TRUE;
+                    Cond_Proc_else = FALSE;
+                    Cond_Proc_Stmt = TRUE;
+                }
+                rc = 0;
+            }
+            else
+            {
+                WRMSG( HHC01497, "E", argc );
+                rc = -1;
+            }
+        }
+    }
+
+    else if ( CMD(argv[0],%else,5) )
+    {
+        if ( Cond_Proc_if )
+        {
+            Cond_Proc_else = TRUE;
+
+            if ( Cond_Proc_Stmt )
+            {
+                Cond_Proc_Stmt = FALSE;
+            }
+            else
+            {
+                Cond_Proc_Stmt = TRUE;
+            }
+            rc = 0;
+        }
+        else
+        {
+            WRMSG( HHC01480, "E", argv[0] );
+            rc = -1;
+        }
+    }
+    else if ( CMD(argv[0],%endif,6) )
+    {
+        if ( Cond_Proc_if )
+        {
+            Cond_Proc_if = FALSE;
+            Cond_Proc_else = FALSE;
+            Cond_Proc_Stmt = TRUE;
+            rc = 0;
+        }
+        else
+        {
+            WRMSG( HHC01480, "E", argv[0] );
+            rc = -1;
+        }
+    }
+    else
+    {
+        WRMSG( HHC01498, "E", argv[0] );
+        Cond_Proc_if = FALSE;
+        Cond_Proc_else = FALSE;
+        Cond_Proc_Stmt = TRUE;
+        rc = -1;
+    }
+
+    if ( rc == -1 )
+    {
+        Cond_Proc_if = FALSE;
+        Cond_Proc_else = FALSE;
+        Cond_Proc_Stmt = TRUE;
+    }
+    
+    return( rc );
+}
+#endif // OPTION_CONFIG_SYMBOLS

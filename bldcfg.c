@@ -1,4 +1,5 @@
 /* BLDCFG.C     (c) Copyright Roger Bowler, 1999-2010                */
+/*              (c) Copyright TurboHercules, SAS 2010                */
 /*              ESA/390 Configuration Builder                        */
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2010      */
 /*                                                                   */
@@ -101,6 +102,10 @@ static char *operand;                   /* -> First argument         */
 static int  addargc;                    /* Number of additional args */
 static char *addargv[MAX_ARGS];         /* Additional argument array */
 
+/* Global Variables for Conditional Processing */
+int Cond_Proc_Stmt   = TRUE;
+int Cond_Proc_if     = FALSE;
+int Cond_Proc_else   = FALSE;
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to parse an argument string. The string that is passed */
@@ -590,6 +595,16 @@ char   *buf1;                           /* Pointer to resolved buffer*/
 
         parse_args (buf, MAX_ARGS, addargv, &addargc);
 
+#if defined(OPTION_CONFIG_SYMBOLS)
+        if ( Cond_Proc_Stmt == FALSE )
+        {
+            if ( !( strcasecmp( addargv[0], "%if" ) == 0 ||
+                    strcasecmp( addargv[0], "%else" ) == 0 ||
+                    strcasecmp( addargv[0], "%endif" ) == 0 ) )
+                    continue;
+        }
+#endif /* defined(OPTION_CONFIG_SYMBOLS) */
+
 #if defined(OPTION_DYNAMIC_LOAD)
         if(config_command)
         {
@@ -653,6 +668,7 @@ U64 tod = hw_clock();
 
 
 DLL_EXPORT char *config_cnslport = "3270";
+
 /*-------------------------------------------------------------------*/
 /* Function to build system configuration                            */
 /*-------------------------------------------------------------------*/
@@ -1784,6 +1800,10 @@ char    fname[MAX_PATH];                /* normalized filename       */
     rc = fclose(inc_fp[inc_level]);
 #endif // !defined( OPTION_ENHANCED_CONFIG_INCLUDE )
     
+    Cond_Proc_Stmt   = TRUE;
+    Cond_Proc_if     = FALSE;
+    Cond_Proc_else   = FALSE;
+
     /* Now configure storage.  We do this after processing the device
      * statements so the fork()ed hercifc process won't require as much
      * virtual storage.  We will need to update all the devices too.
