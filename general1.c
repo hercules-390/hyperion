@@ -676,12 +676,20 @@ DEF_INST(branch_on_condition_register)
     {
         INST_UPDATE_PSW(regs, 2, 0);
         /* Perform serialization and checkpoint synchronization if
-           the mask is all ones and the register is all zeroes */
+           the mask is all ones and R2 is register 0 */
         if ( inst[1] == 0xF0 )
         {
             PERFORM_SERIALIZATION (regs);
             PERFORM_CHKPT_SYNC (regs);
         }
+#if defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)            /*810*/
+        /* Perform serialization without checkpoint synchronization 
+           the mask is B'1110' and R2 is register 0 */
+        else if (inst[1] == 0xE0)
+        {
+            PERFORM_SERIALIZATION (regs);
+        }
+#endif /*defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)*/     
     }
 
 } /* end DEF_INST(branch_on_condition_register) */

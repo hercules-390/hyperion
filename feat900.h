@@ -64,7 +64,7 @@
 #define FEATURE_EXTERNAL_INTERRUPT_ASSIST
 #define FEATURE_EXTRACT_CPU_TIME                                /*407*/
 #define FEATURE_FETCH_PROTECTION_OVERRIDE
-//#define FEATURE_FAST_BCR_SERIALIZATION_FACILITY                 /*810*/
+#define FEATURE_FAST_BCR_SERIALIZATION_FACILITY                 /*810*/
 //#define FEATURE_FLOATING_POINT_EXTENSION_FACILITY               /*810*/
 #define FEATURE_FPS_ENHANCEMENT                                 /*DFP*/
 #define FEATURE_FPS_EXTENSIONS
