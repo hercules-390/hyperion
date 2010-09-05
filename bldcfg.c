@@ -624,6 +624,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
             {
                 continue;
             }
+#if defined(OPTION_CONFIG_SYMBOLS)
             else
             { 
                 if ( strcasecmp( addargv[0], "%if" ) == 0 ||
@@ -631,6 +632,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
                      strcasecmp( addargv[0], "%endif" ) == 0 ) 
                     delayed_exit(1);
             }
+#endif /*defined(OPTION_CONFIG_SYMBOLS) */
         }
 
         /* Move the first two arguments to separate variables */

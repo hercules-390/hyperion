@@ -1071,6 +1071,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02103 "Logger: logger thread terminating"
 #define HHC02104 "Logger: log switched to '%s'"
 
+#define HHC02197 "Environment variable '%s' does not exist; processing continues"
 #define HHC02198 "Device attached"
 #define HHC02199 "Symbol %-12s '%s'"
 // reserve 022xx for command processing */
@@ -1174,7 +1175,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02296 "Capping rate for each non-CP CPU is %d MIPS"
 #define HHC02297 "MIP capping is not enabled"
 #define HHC02298 "%1d:%04X drive is empty"
-#define HHC02299 "Too many arguments. Type 'help %s' for assistance."
+#define HHC02299 "Invalid number of arguments. Type 'help %s' for assistance."
 
 // reserve 023xx for ieee.c
 #define HHC02300 "Function '%s': unexpectedly converting to '%s'"

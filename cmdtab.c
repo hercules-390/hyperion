@@ -667,7 +667,7 @@ extern int Cond_Proc_else;
 
 #if defined(OPTION_CONFIG_SYMBOLS)
 /*-------------------------------------------------------------------*/
-/* Conditional processes   $IF/$ELSE/$ENDIF                          */
+/* Conditional processes   %IF/%ELSE/%ENDIF                          */
 /*-------------------------------------------------------------------*/
 int cond_proc_cmd(int argc, char *argv[], char *cmdline)
 {
@@ -676,7 +676,7 @@ int cond_proc_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(argv);
     UNREFERENCED(cmdline);
 
-    if ( CMD(argv[0],%if,3) )
+    if ( CMD(argv[0],%if,3) && ( argc == 2 || argc == 4 ) )
     {
         if ( Cond_Proc_if )
         {
@@ -745,7 +745,7 @@ int cond_proc_cmd(int argc, char *argv[], char *cmdline)
         }
     }
 
-    else if ( CMD(argv[0],%else,5) )
+    else if ( CMD(argv[0],%else,5) && argc == 1 )
     {
         if ( Cond_Proc_if )
         {
@@ -767,7 +767,7 @@ int cond_proc_cmd(int argc, char *argv[], char *cmdline)
             rc = -1;
         }
     }
-    else if ( CMD(argv[0],%endif,6) )
+    else if ( CMD(argv[0],%endif,6) && argc == 1 )
     {
         if ( Cond_Proc_if )
         {
@@ -784,7 +784,7 @@ int cond_proc_cmd(int argc, char *argv[], char *cmdline)
     }
     else
     {
-        WRMSG( HHC01498, "E", argv[0] );
+        WRMSG( HHC01498, "E", cmdline );
         Cond_Proc_if = FALSE;
         Cond_Proc_else = FALSE;
         Cond_Proc_Stmt = TRUE;
