@@ -160,7 +160,7 @@ COMMAND("quit",      PANEL,         SYSNONE,            quit_cmd,
     "              force     This option will terminate hercules\n"
     "                        immediately.\n")
 
-COMMAND("quitmout",  PANEL,         SYSNONE,            quitmout_cmd,
+COMMAND("quitmout",  PANEL+CONFIG,  SYSNONE,            quitmout_cmd,
   "Set/Display the quit timeout value",
   "Format: \"quitmount [n]\" Sets or displays the elasped time that\n"
     "                        a confirming quit/ssd command must be\n"
