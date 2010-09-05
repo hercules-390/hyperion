@@ -420,6 +420,10 @@
  UNDEF_INST(population_count)                                   /*810*/
 #endif /*!defined(FEATURE_POPULATION_COUNT_FACILITY)*/          /*810*/
 
+#if !defined(FEATURE_RESET_REFERENCE_BITS_MULTIPLE_FACILITY)    /*810*/
+ UNDEF_INST(reset_reference_bits_multiple)                      /*810*/
+#endif /*!defined(FEATURE_RESET_REFERENCE_BITS_MULTIPLE_FACILITY)*/
+
 #if !defined(FEATURE_VECTOR_FACILITY)
  UNDEF_INST(execute_a4xx)
 #if 0
@@ -4073,7 +4077,7 @@ DLL_EXPORT zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B9AB*/ GENx___x___x___ , /*(extract_and_set_storage_attributes,?,"ESSA"),*/
  /*B9AC*/ GENx___x___x___ ,
  /*B9AD*/ GENx___x___x___ ,
- /*B9AE*/ GENx___x___x___ ,
+ /*B9AE*/ GENx___x___x900 (reset_reference_bits_multiple,RRE,"RRBM"),              /*810*/
  /*B9AF*/ GENx___x___x900 (perform_frame_management_function,RRE,"PFMF"),
  /*B9B0*/ GENx37Xx390x900 (convert_utf8_to_utf32,RRF_M3,"CU14"),
  /*B9B1*/ GENx37Xx390x900 (convert_utf16_to_utf32,RRF_M3,"CU24"),
