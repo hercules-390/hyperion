@@ -1,29 +1,3 @@
-04 Sep 2010 Add "%if/%else/%endif" logic in configuration file processing.
-            Format 1:
-              %if $(symbol) 
-            If the symbol is defined then include the following statements until
-            either a %else or %endif is found.
-
-	    Format 2:
-              %if $(symbol) == | != "string"
-            If the symbol value matches the string regardless of case, then
-            include the following statements until either a %else or %endif is 
-            found.
-
-            %else will invert the processing logic until a %endif is found.
-
-            %endif reverts processing to normal.
-
-            No Nesting allowed. Comments on the '%*' statements are not allowed.
-
-            Notes: it is the value of the symbol tested and environment variables
-            will be used if defined and a symbol of the same name does not
-            exist.
-
-            Paul Gorlinsky
-
-04 Sep 2010 Add "import" statement to define as symbols environment variables - Jan Jaeger
-
 31 Aug 2010 Comment out unimplemented hetmap support for "tapemap" alias
             that produces incorrect output under Linux due to libtool
             wrappers - Kevin Leonard

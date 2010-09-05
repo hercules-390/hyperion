@@ -30,20 +30,6 @@ COMMAND("?",         PANEL,         SYSNONE,            HelpCommand,
   "alias for help", 
     NULL)
 
-#if defined( OPTION_CONFIG_SYMBOLS )
-COMMAND("%if",       CONFIG,         SYSNONE,           cond_proc_cmd,  
-  "Conditional configuration processing", 
-    NULL)
-
-COMMAND("%else",     CONFIG,         SYSNONE,           cond_proc_cmd,  
-  "Conditional configuration processing", 
-    NULL)
-
-COMMAND("%endif",    CONFIG,         SYSNONE,           cond_proc_cmd,  
-  "Conditional configuration processing", 
-    NULL)
-#endif // OPTION_CONFIG_SYMBOLS
-
 COMMAND("cmdlevel",  PANEL+CONFIG,  SYSNONE,            CmdLevel,     
   "Display/Set current command group",
     "display/set the current command group set(s)\n"
@@ -988,11 +974,6 @@ COMMAND("defsym",    PANEL+CONFIG,  SYSCMDALL-SYSOPER,  defsym_cmd,
     "configuration file statement in Hercules documentation.\n"
     "Enter \"defsym\" by itself to display the values of all defined\n"
     "symbols.\n")
-
-COMMAND("import",    PANEL+CONFIG,  SYSCMDALL-SYSOPER,  import_cmd,
-  "Import symbol",
-    "Format: \"import symbol ...\". Imports symbol 'symbol' from the\n"
-    "envionment pool\n")
 #endif
 
 COMMAND("script",    PANEL,         SYSCMDALL-SYSOPER,  script_cmd,

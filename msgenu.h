@@ -898,14 +898,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01477 "Valid codepage conversion tables are:"
 #define HHC01478 "      %s"
 
-/* $IF/$ELSE/$ENDIF processing */
-#define HHC01480 "Invalid '%s'; preceeding '$if' is missing"
-
-#define HHC01496 "Invalid comparator '%s'; valid comparators are '==' and '!='"
-#define HHC01497 "Invalid number of arguments count '%d'"
-#define HHC01498 "Statement '%s' is invalid"
-#define HHC01499 "Nesting '%%if' is not supported"
-
 // reserve 015xx for Hercules dynamic loader      
 /* hdl.c */
 #define HHC01500 "HDL: begin shutdown sequence"
@@ -1071,7 +1063,6 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02103 "Logger: logger thread terminating"
 #define HHC02104 "Logger: log switched to '%s'"
 
-#define HHC02197 "Environment variable '%s' does not exist; processing continues"
 #define HHC02198 "Device attached"
 #define HHC02199 "Symbol %-12s '%s'"
 // reserve 022xx for command processing */

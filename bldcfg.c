@@ -102,10 +102,6 @@ static char *operand;                   /* -> First argument         */
 static int  addargc;                    /* Number of additional args */
 static char *addargv[MAX_ARGS];         /* Additional argument array */
 
-/* Global Variables for Conditional Processing */
-int Cond_Proc_Stmt   = TRUE;
-int Cond_Proc_if     = FALSE;
-int Cond_Proc_else   = FALSE;
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to parse an argument string. The string that is passed */
@@ -472,7 +468,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
                         stmtlen = inc_dollar;
 
                         /* Get variable value */
-                        inc_envvar = getenv (&buf[inc_lbrace]);
+                        inc_envvar = (char *)get_symbol (&buf[inc_lbrace]);
 
                         /* Variable unset? */
                         if (inc_envvar == NULL)
@@ -595,16 +591,6 @@ char   *buf1;                           /* Pointer to resolved buffer*/
 
         parse_args (buf, MAX_ARGS, addargv, &addargc);
 
-#if defined(OPTION_CONFIG_SYMBOLS)
-        if ( Cond_Proc_Stmt == FALSE )
-        {
-            if ( !( strcasecmp( addargv[0], "%if" ) == 0 ||
-                    strcasecmp( addargv[0], "%else" ) == 0 ||
-                    strcasecmp( addargv[0], "%endif" ) == 0 ) )
-                    continue;
-        }
-#endif /* defined(OPTION_CONFIG_SYMBOLS) */
-
 #if defined(OPTION_DYNAMIC_LOAD)
         if(config_command)
         {
@@ -624,15 +610,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
             {
                 continue;
             }
-#if defined(OPTION_CONFIG_SYMBOLS)
-            else
-            { 
-                if ( strcasecmp( addargv[0], "%if" ) == 0 ||
-                     strcasecmp( addargv[0], "%else" ) == 0 ||
-                     strcasecmp( addargv[0], "%endif" ) == 0 ) 
-                    delayed_exit(1);
-            }
-#endif /*defined(OPTION_CONFIG_SYMBOLS) */
+
         }
 
         /* Move the first two arguments to separate variables */
@@ -1779,10 +1757,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
     rc = fclose(inc_fp[inc_level]);
 #endif // !defined( OPTION_ENHANCED_CONFIG_INCLUDE )
     
-    Cond_Proc_Stmt   = TRUE;
-    Cond_Proc_if     = FALSE;
-    Cond_Proc_else   = FALSE;
-
     /* Now configure storage.  We do this after processing the device
      * statements so the fork()ed hercifc process won't require as much
      * virtual storage.  We will need to update all the devices too.

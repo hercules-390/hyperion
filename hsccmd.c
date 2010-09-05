@@ -7168,57 +7168,6 @@ int defsym_cmd(int argc, char *argv[], char *cmdline)
     free(sym);
     return 0;
 }
-/*-------------------------------------------------------------------*/
-/* import command - import substitution symbol                       */
-/*-------------------------------------------------------------------*/
-int import_cmd(int argc, char *argv[], char *cmdline)
-{
-    char* sym;
-    char *val;
-    int   i,j;
-
-    UNREFERENCED(cmdline);
-
-    if ( argc <= 1 )
-    {
-        WRMSG( HHC02299, "E", argv[0] );
-        return( -1 );
-    }
-
-    for(i = 1; i < argc; i++)
-    {
-        if((val = getenv(argv[i])))
-        {
-            /* point to symbol name */
-            sym = strdup(argv[i]);
-
-            if ( sym == NULL )
-            {
-                WRMSG(HHC02219, "E", "strdup()", strerror( errno ) ); 
-                return -1;
-            }
-
-            /* store Symbol names in UC */
-            
-            for ( j = 0; sym[j] != '\0'; j++ )
-                sym[j] = toupper( sym[j] );
-
-            set_symbol(sym, val);
-
-            val = (char *)get_symbol(sym);
-
-            WRMSG(HHC02199, "I", sym, val ? val : "");
-
-            free(sym);
-        }
-        else
-        {
-            WRMSG( HHC02197, "W", argv[i] );
-        }
-    }
-
-    return 0;
-}
 #endif // defined(OPTION_CONFIG_SYMBOLS)
 
 
