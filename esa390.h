@@ -1364,6 +1364,8 @@ typedef struct _MBK {
                                            facility is installed  208*/
 #define STFL_ENH_MONITOR          36    /* Enhanced-Monitor         810
                                            facility installed     810*/
+#define STFL_FP_EXTENSION         37    /* Floating-point extension   
+                                           facility installed     810*/
 #define STFL_RESERVED_39          39    /* Reserved */
 #define STFL_SET_PROG_PARAM       40    /* Set-Program-Parameter
                                            facility installed (ESAME)*/
@@ -1377,14 +1379,19 @@ typedef struct _MBK {
 #define STFL_PFPO                 44    /* PFPO instruction installed*/
 #define STFL_FAST_BCR_SERIAL      45    /* Fast-BCR-serialization   810
                                            Facility installed     810*/
+#define STFL_RESERVED_46          46    /* Reserved */
 #define STFL_CMPSC_ENH            47    /* CMPSC-enhancement        810
                                            Facility installed     810*/
+#define STFL_RESERVED_62          62    /* Reserved */
+#define STFL_RESERVED_63          63    /* Reserved */
 #define STFL_RES_REF_BITS_MUL     66    /* Reset-Reference-Bits-    810
                                            Multiple Fac installed 810*/
 #define STFL_CPU_MEAS_COUNTER     67    /* CPU-measurement counter
                                            facility installed (ESAME)*/
 #define STFL_CPU_MEAS_SAMPLNG     68    /* CPU-measurement sampling
                                            facility installed (ESAME)*/
+#define STFL_ACC_EX_FS_INDIC      75    /* Access-exception fetch/store  
+                                           indication facility    810*/
 #define STFL_MSA_EXTENSION_3      76    /* Message Security Assist  810  
                                            Extension 3 installed  810*/
 #define STFL_MSA_EXTENSION_4      77    /* Message Security Assist  810 
