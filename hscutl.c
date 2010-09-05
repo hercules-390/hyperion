@@ -414,7 +414,7 @@ static void append_symbol(char **bfr,char *sym,int *ix_p,int *max_p)
     txt=(char *)get_symbol(sym);
     if(txt==NULL)
     {
-        txt="**UNRESOLVED**";
+        txt="";
     }
     append_string(bfr,txt,ix_p,max_p);
     return;
