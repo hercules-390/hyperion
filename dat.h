@@ -27,57 +27,6 @@
 /*      ESAME ASN authorization and ALET translation - Roger Bowler  */
 /*-------------------------------------------------------------------*/
 
-// $Log$
-// Revision 1.112  2008/12/08 20:38:20  ivan
-// Fix SIE DAT Issue with ESA/390 Guest on z/Arch host with >2GB of storage
-//
-// Revision 1.111  2008/03/16 00:04:37  rbowler
-// Replace ACC_ARMODE by USE_ARMODE for LPTEA
-//
-// Revision 1.110  2008/03/15 23:41:16  rbowler
-// Correct end function comment for logical_to_main
-//
-// Revision 1.109  2008/01/25 00:50:18  gsmith
-// Fix invalidate_tlbe processing - Paul Leisy
-//
-// Revision 1.108  2007/08/31 10:01:01  ivan
-// Throw an addressing exception when a SIE host->guest DAT points beyond
-// addressable storage
-//
-// Revision 1.107  2007/06/23 00:04:08  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.106  2007/06/06 22:14:57  gsmith
-// Fix SYNCHRONIZE_CPUS when numcpu > number of host processors - Greg
-//
-// Revision 1.105  2007/03/21 01:28:20  gsmith
-// Fix missed (acctype != ACC...) compares
-//
-// Revision 1.104  2007/03/20 23:46:15  gsmith
-// Don't update TLB if ACC_NOTLB
-//
-// Revision 1.103  2007/03/20 22:27:25  gsmith
-// Simplify some code in logical_to_main
-//
-// Revision 1.102  2007/03/20 22:23:32  gsmith
-// Redefine ACC_ and ACCTYPE_ macros
-//
-// Revision 1.101  2007/03/20 02:06:02  gsmith
-// Rename IS_MCDS macro to MULTIPLE_CONTROLLED_DATA_SPACE
-//
-// Revision 1.100  2007/03/18 18:47:43  gsmith
-// Simplify MULTIPLE_CONTROLLED_DATA_SPACE tests
-//
-// Revision 1.99  2007/03/18 00:41:53  gsmith
-// Clarify load_address_space_designator code
-//
-// Revision 1.98  2007/01/04 23:12:03  gsmith
-// remove thunk calls for program_interrupt
-//
-// Revision 1.97  2006/12/08 09:43:20  jj
-// Add CVS message log
-//
-
 #if !defined(OPTION_NO_INLINE_DAT) || defined(_DAT_C)
 #if defined(FEATURE_DUAL_ADDRESS_SPACE)
 /*-------------------------------------------------------------------*/
@@ -1678,6 +1627,15 @@ tran_excp_addr:
         else
             regs->TEA |= regs->dat.stid;
 #endif /*!defined(FEATURE_ESAME)*/
+
+#if defined(FEATURE_ACCESS_EXCEPTION_FETCH_STORE_INDICATION)         /*810*/
+    /* Set the fetch/store indication bits 52-53 in the TEA */
+    if (acctype & ACC_READ) {
+        regs->TEA |= TEA_FETCH;
+    } else if (acctype & (ACC_WRITE|ACC_CHECK)) {
+        regs->TEA |= TEA_STORE;
+    }
+#endif /*defined(FEATURE_ACCESS_EXCEPTION_FETCH_STORE_INDICATION)*/  /*810*/
 
     /* Set the exception access identification */
     if (ACCESS_REGISTER_MODE(&regs->psw)

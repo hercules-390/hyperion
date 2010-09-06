@@ -17,6 +17,7 @@
 
 /* This file MUST NOT contain #undef statements */
 #define FEATURE_4K_STORAGE_KEYS
+#define FEATURE_ACCESS_EXCEPTION_FETCH_STORE_INDICATION         /*810*/
 #define FEATURE_ACCESS_REGISTERS
 #define FEATURE_ADDRESS_LIMIT_CHECKING
 #define FEATURE_ASN_AND_LX_REUSE
@@ -48,6 +49,7 @@
 #define FEATURE_EMULATE_VM
 //#define FEATURE_ENHANCED_DAT_FACILITY                           /*208*/
 //#define FEATURE_ENHANCED_MONITOR_FACILITY                       /*810*/
+#define FEATURE_ENHANCED_SUPPRESSION_ON_PROTECTION              /*208*/
 #define FEATURE_ESAME
 #define FEATURE_ETF2_ENHANCEMENT                                /*@Z9*/
 #define FEATURE_ETF3_ENHANCEMENT                                /*@Z9*/

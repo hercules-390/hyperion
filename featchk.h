@@ -433,6 +433,17 @@
   #endif
 #endif
 
+#if defined(FEATURE_ACCESS_EXCEPTION_FETCH_STORE_INDICATION)         /*810*/
+  #if !defined(FEATURE_ENHANCED_SUPPRESSION_ON_PROTECTION)
+    #error Access-Exception Fetch/Store Indication facility requires Enhanced Suppression on Protection
+  #endif
+#endif
+
+#if defined(FEATURE_ENHANCED_SUPPRESSION_ON_PROTECTION)              /*208*/
+  #if !defined(FEATURE_SUPPRESSION_ON_PROTECTION)
+    #error Enhanced Suppression on Protection facility requires Suppression on Protection
+  #endif
+#endif
 
 #endif /*!defined(FEATALL_CHECKALL)*/
 

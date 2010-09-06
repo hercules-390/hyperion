@@ -799,6 +799,8 @@ typedef struct _PSA_900 {               /* Prefixed storage area     */
 
 /* Bit settings for translation exception address */
 #define TEA_SECADDR     0x80000000      /* Secondary addr (370,390)  */
+#define TEA_FETCH       0x800           /* Fetch exception        810*/
+#define TEA_STORE       0x400           /* Store exception        810*/
 #define TEA_PROT_A      0x008           /* Access-list prot (ESAME)  */
 #define TEA_PROT_AP     0x004           /* Access-list/page protected*/
 #define TEA_MVPG        0x004           /* MVPG exception (ESAME)    */
