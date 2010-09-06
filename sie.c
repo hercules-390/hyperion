@@ -533,7 +533,7 @@ U64     dreg;
 
         if(fld & 0x7ffffff8)
         {
-            facility_mask = &(sysblk.mainstor[fld]);
+            facility_mask = &(regs->mainstor[fld]);
             for(i = 0; i < STFL_BYTESIZE; i++)
                GUESTREGS->facility_list[i] &= facility_mask[i];
         }
