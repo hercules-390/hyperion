@@ -340,6 +340,12 @@ static SYMBOL_TOKEN *get_symbol_token(const char *sym,int alloc)
 DLL_EXPORT void set_symbol(const char *sym,const char *value)
 {
     SYMBOL_TOKEN        *tok;
+
+    char *ev=malloc(strlen(sym)+strlen(value)+2);
+    strcpy(ev,sym); strcat(ev,"=");strcat(ev,value);
+    putenv(ev);
+    free(ev);
+    
     tok=get_symbol_token(sym,1);
     if(tok==NULL)
     {
