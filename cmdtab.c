@@ -171,7 +171,6 @@ int ProcessPanelCommand (char* pszCmdLine)
 {
     CMDTAB*  pCmdTab         = NULL;
     char*    pszSaveCmdLine  = NULL;
-    char*    cl              = NULL;
     int      rc              = -1;
     int      cmdl;
 
@@ -184,23 +183,13 @@ int ProcessPanelCommand (char* pszCmdLine)
         goto ProcessPanelCommandExit;
     }
 
-#if defined(OPTION_CONFIG_SYMBOLS)
-    /* Perform variable substitution */
-    /* First, set some 'dynamic' symbols to their own values */
-    set_symbol("CUU","$(CUU)");
-    set_symbol("CCUU","$(CCUU)");
-    cl=resolve_symbol_string(pszCmdLine);
-#else
-    cl=pszCmdLine;
-#endif
-
     /* Save unmodified copy of the command line in case
        its format is unusual and needs customized parsing. */
-    pszSaveCmdLine = strdup(cl);
+    pszSaveCmdLine = strdup(pszCmdLine);
 
     /* Parse the command line into its individual arguments...
        Note: original command line now sprinkled with nulls */
-    parse_args (cl, MAX_ARGS, cmd_argv, &cmd_argc);
+    parse_args (pszCmdLine, MAX_ARGS, cmd_argv, &cmd_argc);
 
     /* If no command was entered (i.e. they entered just a comment
        (e.g. "# comment")) then ignore their input */
@@ -274,11 +263,6 @@ ProcessPanelCommandExit:
 
     /* Free our saved copy */
     free(pszSaveCmdLine);
-
-#if defined(OPTION_CONFIG_SYMBOLS)
-    if (cl != pszCmdLine)
-        free(cl);
-#endif
 
     return rc;
 }
@@ -537,6 +521,7 @@ void *panel_command (void *cmdline)
 #define MAX_CMD_LEN (32768)
     char  cmd[MAX_CMD_LEN];             /* Copy of panel command     */
     char *pCmdLine;
+    char *cl;
     unsigned i;
     int noredisp;
 
@@ -620,7 +605,17 @@ void *panel_command (void *cmdline)
 #endif /*_FEATURE_SYSTEM_CONSOLE*/
             {
                 if (!noredisp) WRMSG(HHC00013, "I", cmd);     // Echo command to the control panel
+#if defined(OPTION_CONFIG_SYMBOLS)
+                /* Perform variable substitution */
+                /* First, set some 'dynamic' symbols to their own values */
+                set_symbol("CUU","$(CUU)");
+                set_symbol("CCUU","$(CCUU)");
+                cl=resolve_symbol_string(cmd);
+                ProcessPanelCommand(cl);
+                free(cl);
+#else
                 ProcessPanelCommand(cmd);
+#endif
             }
             break;
         }
@@ -656,6 +651,7 @@ void *panel_command (void *cmdline)
 #endif /*_FEATURE_SYSTEM_CONSOLE*/
     if (!noredisp) WRMSG(HHC00013, "I", cmd);     // Echo command to the control panel
     ProcessPanelCommand(cmd);
+
 #endif // OPTION_CMDTGT
 
     return NULL;
