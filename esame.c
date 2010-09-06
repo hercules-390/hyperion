@@ -7853,32 +7853,4 @@ int     n;                              /* Position of leftmost one  */
  #include "esame.c"
 #endif
 
-#if defined(HAVE_STFL_DATA)
-/*-------------------------------------------------------------------*/
-/* Locate STFL data independent of current architecture mode setting */
-/*-------------------------------------------------------------------*/
-/* Note: this function must be here so that all ARCH_DEP(stlf_data)  */
-/*       with correct architecture settings have been defined with   */
-/*       architecture sensitive features                             */
-
-BYTE* get_stfl_data(int mode, int *data_len)
-{
-    switch(mode) 
-    {
-#if defined(_390)
-        case ARCH_390:
-            *data_len=sizeof(s390_stfl_data);
-            return &s390_stfl_data[0];
-#endif
-#if defined(_900)
-        case ARCH_900:
-            *data_len=sizeof(z900_stfl_data);
-            return &z900_stfl_data[0];
-#endif
-    }
-    *data_len=0;
-    return NULL;
-}
-#endif /* defined(HAVE_STFL_DATA) */
-
 #endif /*!defined(_GEN_ARCH)*/
