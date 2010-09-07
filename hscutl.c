@@ -341,11 +341,31 @@ DLL_EXPORT void set_symbol(const char *sym,const char *value)
 {
     SYMBOL_TOKEN        *tok;
 
+#if defined ( _MSVC_ )
     char *ev=malloc(strlen(sym)+strlen(value)+2);
-    strcpy(ev,sym); strcat(ev,"=");strcat(ev,value);
-    putenv(ev);
-    free(ev);
     
+    if ( !ev )
+    {
+        WRMSG(HHC00136, "W", "malloc()", strerror(errno));
+    }
+    else
+    {
+        int rc;
+
+        strcpy( ev, sym ); 
+        strcat( ev, "=" );
+        strcat( ev, value );
+        rc = putenv( ev );
+        free( ev );
+        if ( rc )
+            WRMSG(HHC00136, "W", "putenv()", strerror(errno));
+    }
+
+#else
+    if ( setenv( sym, value, TRUE ) )
+        WRMSG(HHC00136, "W", "setenv()", strerror(errno));
+#endif
+
     tok=get_symbol_token(sym,1);
     if(tok==NULL)
     {
