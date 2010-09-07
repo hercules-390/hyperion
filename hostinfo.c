@@ -80,7 +80,7 @@ DLL_EXPORT char* get_hostinfo_str ( HOST_INFO*  pHostInfo,
             strlcpy( num_procs,   "",  sizeof(num_procs) );
 
         snprintf( pszHostInfoStrBuff, nHostInfoStrBuffSiz,
-            _("Running on %s %s-%s.%s %s%s"),
+            _("Running on %s %s-%s. %s %s%s"),
             pHostInfo->nodename,
             pHostInfo->sysname,
             pHostInfo->release,

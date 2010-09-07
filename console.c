@@ -1807,16 +1807,7 @@ char                    *logoout;
     if (class != 'K')
     {
 #if defined(OPTION_CONFIG_SYMBOLS)
-        set_symbol("VERSION",VERSION);
-        set_symbol("BDATE",__DATE__);
-        set_symbol("BTIME",__TIME__);
-        set_symbol("HOSTNAME",cons_hostinfo.nodename);
-        set_symbol("HOSTOS",cons_hostinfo.sysname);
-        set_symbol("HOSTOSREL",cons_hostinfo.release);
-        set_symbol("HOSTOSVER",cons_hostinfo.version);
-        set_symbol("HOSTARCH",cons_hostinfo.machine);
-        set_symbol("HOSTNUMCPUS",num_procs);
-        set_symbol("LPARNAME",str_lparname());
+
         snprintf(conmsg,sizeof(conmsg),"%3.3X",dev->devnum);
         set_symbol("CUU",conmsg);
         snprintf(conmsg,sizeof(conmsg),"%4.4X",dev->devnum);

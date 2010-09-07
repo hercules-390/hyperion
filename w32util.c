@@ -1715,7 +1715,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
 
     _snprintf(
         pHostInfo->version, sizeof(
-        pHostInfo->version)-1,        " %s %s%s", psz, prod_id, prod_proc );
+        pHostInfo->version)-1,        "%s %s%s", psz, prod_id, prod_proc );
         pHostInfo->version[ sizeof(
         pHostInfo->version)-1] = 0;
 

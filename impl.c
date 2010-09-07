@@ -416,8 +416,33 @@ int     dll_count;                      /* index into array          */
     }
 
 #if       defined( OPTION_CONFIG_SYMBOLS )
-    set_symbol("MODNAME", sysblk.hercules_pgmname);
-    set_symbol("MODPATH", sysblk.hercules_pgmpath);
+    set_symbol( "VERSION", VERSION);
+    set_symbol( "BDATE", __DATE__ );
+    set_symbol( "BTIME", __TIME__ );
+
+    {
+        HOST_INFO  cons_hostinfo;       /* Host info for this system */
+        char buf[8];
+
+        /* Get information about this system */
+        init_hostinfo( &cons_hostinfo );
+
+        if ( cons_hostinfo.num_procs > 1 )
+            MSGBUF( buf, "MP=%d", cons_hostinfo.num_procs );
+        else
+            MSGBUF( buf, "UP" );
+
+        set_symbol( "HOSTNAME", cons_hostinfo.nodename );
+        set_symbol( "HOSTOS", cons_hostinfo.sysname );
+        set_symbol( "HOSTOSREL", cons_hostinfo.release );
+        set_symbol( "HOSTOSVER", cons_hostinfo.version );
+        set_symbol( "HOSTARCH", cons_hostinfo.machine );
+        set_symbol( "HOSTNUMCPUS", buf );
+    }
+
+    set_symbol( "MODNAME", sysblk.hercules_pgmname );
+    set_symbol( "MODPATH", sysblk.hercules_pgmpath );
+
 #endif
 
     /* set default operations mode */
@@ -825,6 +850,7 @@ int     dll_count;                      /* index into array          */
 
     /* Build system configuration */
     build_config (cfgfile);
+
 
 #if defined( OPTION_LOCK_CONFIG_FILE )
     if ( ( fd_cfg = open( pathname, O_RDONLY, S_IRUSR | S_IRGRP ) ) < 0 )

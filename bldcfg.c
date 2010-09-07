@@ -1680,6 +1680,26 @@ char    fname[MAX_PATH];                /* normalized filename       */
     /* Gabor Hoffer (performance option) */
     copy_opcode_tables();
 
+#if defined(OPTION_CONFIG_SYMBOLS)
+    /* setup configuration related symbols  */
+    {
+        char buf[8];
+
+        set_symbol("LPARNAME", str_lparname() );
+
+        MSGBUF( buf, "%02X", sysblk.lparnum );
+        set_symbol("LPARNUM", buf );
+
+        MSGBUF( buf, "%06X", ((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32) );
+        set_symbol( "CPUSERIAL", buf );
+
+        MSGBUF( buf, "%04X", ((sysblk.cpuid & 0x00000000FFFF0000ULL) >> 16) );
+        set_symbol( "CPUMODEL", buf );
+
+        set_symbol( "ARCHMODE", get_arch_mode_string(NULL) );  
+    }
+#endif /* defined(OPTION_CONFIG_SYMBOLS) */
+
     /*****************************************************************/
     /* Parse configuration file device statements...                 */
     /*****************************************************************/
