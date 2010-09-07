@@ -57,6 +57,7 @@
 extern void ecpsvm_command( int argc, char **argv );
 #endif
 int ProcessPanelCommand ( char * );
+int exec_cmd(int argc, char *argv[],char *cmdline);
 int process_script_file ( char *, int );
 
 static void fcb_dump( DEVBLK*, char *, unsigned int );
@@ -8213,6 +8214,7 @@ int     scrbufsize = 1024;              /* Size of RC file  buffer   */
 char   *scrbuf = NULL;                  /* RC file input buffer      */
 int     scrlen;                         /* length of RC file record  */
 int     scr_pause_amt = 0;              /* seconds to pause RC file  */
+int     lineno = 0;
 char   *p;                              /* (work)                    */
 char    pathname[MAX_PATH];             /* (work)                    */
 
@@ -8280,10 +8282,23 @@ char    pathname[MAX_PATH];             /* (work)                    */
 
         if (!fgets(scrbuf, scrbufsize, scrfp)) break;
 
+        lineno++;
+
         /* Remove trailing whitespace */
 
         for (scrlen = (int)strlen(scrbuf); scrlen && isspace(scrbuf[scrlen-1]); scrlen--);
         scrbuf[scrlen] = 0;
+
+#if defined(HAVE_REGINA_REXXSAA_H)
+        /* Check for a REXX exec being executed */
+        if( lineno == 1 && !strncasecmp(scrbuf,"/*",2))
+        {
+        char *rcmd[2] = { "exec", NULL };
+            rcmd[1] = script_name;
+            exec_cmd(2,rcmd,NULL);
+            goto rexx_done;
+        }
+#endif /*defined(HAVE_REGINA_REXXSAA_H)*/
 
         /* Remove any # comments on the line before processing */
 
@@ -8334,6 +8349,7 @@ char    pathname[MAX_PATH];             /* (work)                    */
         }
     }
 
+rexx_done:
     fclose(scrfp);
     scr_recursion--;    /* Decrement recursion count */
     if(scr_recursion==0)
@@ -8387,15 +8403,15 @@ int emsg_cmd(int argc, char *argv[], char *cmdline)
         WRMSG( HHC17000, "E" );
         return -1;
     }
-
-    if ( sysblk.emsg & EMSG_TS )
-        WRMSG( HHC17012, "I", "timestamp" );
-    else if ( sysblk.emsg & EMSG_TEXT )
-        WRMSG( HHC17012, "I", "text" );
-    else if ( sysblk.emsg & EMSG_ON )
-        WRMSG( HHC17012, "I", "on" );
-    else 
-        WRMSG( HHC17012, "I", "off" );
+    else
+        if ( sysblk.emsg & EMSG_TS )
+            WRMSG( HHC17012, "I", "timestamp" );
+        else if ( sysblk.emsg & EMSG_TEXT )
+            WRMSG( HHC17012, "I", "text" );
+        else if ( sysblk.emsg & EMSG_ON )
+            WRMSG( HHC17012, "I", "on" );
+        else 
+            WRMSG( HHC17012, "I", "off" );
 
     return 0;
 }

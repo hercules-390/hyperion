@@ -687,6 +687,12 @@ COMMAND("sh",        PANEL,         SYSCMDALL-SYSOPER,  sh_cmd,
     "command. The entered command and any arguments are passed as-is to the\n"
     "shell for processing and the results are displayed on the console.\n")
 
+#if defined(HAVE_REGINA_REXXSAA_H)
+COMMAND("exec",      PANEL,         SYSCMDALL,          exec_cmd,       
+  "exec script", 
+    "Format: \"exec rexx_exec [args...]\" where 'rexx_exec' is REXX script\n")
+#endif /*defined(HAVE_REGINA_REXXSAA_H)*/
+
 COMMAND("cache",     PANEL,         SYSCMDALL-SYSOPER,  EXT_CMD(cache_cmd), 
   "Cache command", 
     NULL)

@@ -455,7 +455,8 @@ endif
                        sr.c         \
                        $(FISHIO)    \
                        $(DYNSRC)    \
-                       ecpsvm.c
+                       ecpsvm.c     \
+                       rexx.c
 
   EXTRA_libherc_la_SOURCES = $(fthreads_SRC)  \
                              $(fishhang_SRC)  \

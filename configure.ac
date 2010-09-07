@@ -572,6 +572,7 @@ AC_CHECK_HEADERS( time.h,         [hc_cv_have_time_h=yes],         [hc_cv_have_t
 AC_CHECK_HEADERS( zlib.h,         [hc_cv_have_zlib_h=yes],         [hc_cv_have_zlib_h=no]         )
 AC_CHECK_HEADERS( sys/capability.h, [hc_cv_have_sys_capa_h=yes],   [hc_cv_have_sys_capa_h=no]     )
 AC_CHECK_HEADERS( sys/prctl.h,    [hc_cv_have_sys_prctl_h=yes],    [hc_cv_have_sys_prctl_h=no]    )
+AC_CHECK_HEADERS( regina/rexxsaa.h, [hc_cv_have_regina_rexxsaa_h=yes],    [hc_cv_have_regina_rexxsaa_h=no]    )
 
 AC_CACHE_SAVE()
 
