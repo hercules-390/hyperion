@@ -17,7 +17,12 @@
 #if defined(HAVE_REGINA_REXXSAA_H)
 
 #define INCL_REXXSAA
+
+#if defined( _MSVC_ )
+#include "rexxsaa.h"
+#else
 #include <regina/rexxsaa.h>
+#endif
 
 #define hSubcom "Hercules"
 
@@ -110,7 +115,7 @@ int exec_cmd(int argc, char *argv[],char *cmdline)
         int i,l=0;
 
         for ( i = 2; i < argc; i++ )
-            l += strlen( (char *)argv[i] );
+            l += (int)strlen( (char *)argv[i] );
 
         arg.strptr = (char *)malloc( l + argc );
         strcpy( arg.strptr, "" );
