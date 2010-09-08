@@ -24,7 +24,7 @@
 #include <regina/rexxsaa.h>
 #endif
 
-#define hSubcom "Hercules"
+#define hSubcom "HERCULES"
 
 static int rexx_initialised = FALSE;
 
