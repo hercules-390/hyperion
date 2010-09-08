@@ -1119,6 +1119,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\rexx.c"
+							>
+						</File>
+						<File
 							RelativePath=".\scedasd.c"
 							>
 						</File>
@@ -1531,6 +1535,10 @@
 					</File>
 					<File
 						RelativePath=".\README.OSX"
+						>
+					</File>
+					<File
+						RelativePath=".\README.REXX"
 						>
 					</File>
 					<File
