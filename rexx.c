@@ -30,7 +30,11 @@ static int rexx_initialised = FALSE;
 
 #if !defined(NO_DYNAMIC_RESOLVE_REXX)
 
+#if defined ( _MSVC_ )
+#define REGINA_LIBRARY "regina.dll"
+#else
 #define REGINA_LIBRARY "libregina.so"
+#endif
 
 typedef APIRET APIENTRY rRexxStart( LONG, PRXSTRING, PCSZ, PRXSTRING, PCSZ, LONG, PRXSYSEXIT, PSHORT, PRXSTRING ) ;
 typedef APIRET APIENTRY rRexxRegisterSubcomExe( PCSZ, RexxSubcomHandler *, PUCHAR ) ; 
