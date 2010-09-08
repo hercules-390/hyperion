@@ -49,16 +49,17 @@ static rRexxStart             *hRexxStart = NULL;
 
 #endif
 
-RexxSubcomHandler *hSubCmd( PRXSTRING command, PUSHORT flags, PRXSTRING retstr ) 
+RexxSubcomHandler *hSubCmd( PRXSTRING command, PUSHORT flags, PRXSTRING retval ) 
 {
+SHORT rc;
 
-    if( ProcessPanelCommand(command[0].strptr) )
+    if( (rc = ProcessPanelCommand(command[0].strptr)) )
         *flags = RXSUBCOM_ERROR;
     else
         *flags = RXSUBCOM_OK;
 
-    strcpy(retstr->strptr, (*flags == RXSUBCOM_OK) ? "0" : "1");
-    retstr->strlength = 1;
+    sprintf(retval->strptr,"%hd",rc);
+    retval->strlength = strlen(retval->strptr);
 
     return 0;
 }
@@ -98,6 +99,9 @@ int init_rexx()
 /*-------------------------------------------------------------------*/
 int exec_cmd(int argc, char *argv[],char *cmdline)
 {
+    SHORT rc;
+    RXSTRING retval;
+    char buffer[250];
     RXSTRING arg;
 
     UNREFERENCED(cmdline);
@@ -132,16 +136,15 @@ int exec_cmd(int argc, char *argv[],char *cmdline)
         arg.strlength = argc + l - 3;
     }
     else
-    {
-        arg.strptr = NULL;
-        arg.strlength = 0;
-    }
+        MAKERXSTRING(arg, NULL, 0);
     
-    hRexxStart ((argc > 2) ? 1 : 0, &arg, argv[1], NULL, hSubcom, RXCOMMAND, 0, 0, 0 );
+    MAKERXSTRING(retval, buffer, sizeof(buffer));
+
+    hRexxStart ((argc > 2) ? 1 : 0, &arg, argv[1], NULL, hSubcom, RXCOMMAND, 0, &rc, &retval );
 
     if(arg.strptr)
         free(arg.strptr);
 
-    return 0;
+    return rc;
 }
 #endif /*defined(HAVE_REGINA_REXXSAA_H)*/
