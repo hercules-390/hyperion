@@ -23,7 +23,4 @@ Not yet implemented are:
 
 - REXX support for the hercules.cnf config file
 
-- The windows build will probably require some minor adjustments 
-
-
 Jan Jaeger
