@@ -906,7 +906,7 @@ COMMAND("panrate",   PANEL+CONFIG,  SYSCMDALL,          panrate_cmd,
     "If no operand is specified, panrate displays the current refresh rate.\n")
 #endif
 
-COMMAND("pantitle",  CONFIG,        SYSCMDALL,          pantitle_cmd, 
+COMMAND("pantitle",  PANEL+CONFIG,        SYSCMDALL,          pantitle_cmd, 
   "Display or set console title", 
     NULL)
  

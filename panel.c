@@ -903,12 +903,26 @@ static void draw_button (short bg, short fg, short hfg, char *left, char *mid, c
     draw_text (right);
 }
 
-static void set_console_title ()
+void set_console_title ( char *status )
 {
-    if (!sysblk.pantitle) return;
+    char    title[256];
+
+    if ( sysblk.daemon_mode ) return;
+
+    if ( !sysblk.pantitle && ( !status || strlen(status) == 0 ) ) return;
+
+    if ( !sysblk.pantitle )
+        MSGBUF( title, "System Status: %s", status );
+    else
+    {
+        if ( !status || strlen(status) == 0 )
+            MSGBUF( title, "%s", sysblk.pantitle );
+        else
+            MSGBUF( title, "%s - System Status: %s", sysblk.pantitle, status );
+    }
 
   #if defined( _MSVC_ )
-    w32_set_console_title(sysblk.pantitle);
+    w32_set_console_title( title );
   #else /*!defined(_MSVC_) */
     /* For Unix systems we set the window title by sending a special
        escape sequence (depends on terminal type) to the console.
@@ -919,7 +933,7 @@ static void set_console_title ()
      || strcmp(cons_term,"dtterm")==0
      || strcmp(cons_term,"screen")==0)
     {
-        fprintf(confp,"%c]0;%s%c",'\033',sysblk.pantitle,'\007');
+        fprintf( confp, "%c]0;%s%c", '\033', title, '\007' );
     }
   #endif /*!defined(_MSVC_) */
 }
@@ -1969,7 +1983,7 @@ char    buf[1024];                      /* Buffer workarea           */
     set_or_reset_console_mode( keybfd, 1 );
 
     /* Set console title */
-    set_console_title();
+    set_console_title(NULL);
 
     /* Clear the screen */
     set_color (COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
@@ -3193,6 +3207,33 @@ FinishShutdown:
             if (redraw_status && !npquiet)
             {
                 char instcnt[32];
+                {
+                    int cnt_disabled = 0;
+                    int cnt_stopped  = 0;
+                    int cnt_online = 0;
+                    char   *state;
+                    for ( i = 0; i < MAX_CPU; i++ )
+                    {
+                        if ( IS_CPU_ONLINE(i) )
+                        {
+                            cnt_online++;
+                            if ( sysblk.regs[i]->cpustate != CPUSTATE_STARTED )
+                                cnt_stopped++;
+                            if ( WAITSTATE(&sysblk.regs[i]->psw) && 
+                                 IS_IC_DISABLED_WAIT_PSW( sysblk.regs[i] ) )
+                                cnt_disabled++;
+                        }
+                    }
+                    state = "RED";
+
+                    if ( cnt_online > cnt_stopped && cnt_disabled == 0 )
+                        state = "YELLOW";
+                    if ( cnt_stopped == 0 && cnt_disabled == 0 )
+                        state = "GREEN";
+                    set_console_title(state);
+
+                }
+
                 /* Save cursor location */
                 saved_cons_row = cur_cons_row;
                 saved_cons_col = cur_cons_col;
@@ -3228,6 +3269,7 @@ FinishShutdown:
                            PROBSTATE(&regs->psw)              ? 'P' : '.',
                            SIE_MODE(regs)                     ? 'S' : '.',
                            regs->arch_mode == ARCH_900        ? 'Z' : '.');
+
 #ifdef OPTION_MIPS_COUNTING
                     buf[len++] = ' ';
                     totalcount = 0;

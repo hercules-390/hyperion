@@ -2659,6 +2659,7 @@ int pantitle_cmd(int argc, char *argv[], char *cmdline)
         if (sysblk.pantitle)
             free(sysblk.pantitle);
         sysblk.pantitle = strdup(argv[1]);
+        set_console_title( NULL );
     }
     else
         WRMSG(HHC02204, "I", "pantitle", sysblk.pantitle);
@@ -8348,8 +8349,9 @@ char    pathname[MAX_PATH];             /* (work)                    */
            scr_uaborted=1;
         }
     }
-
+#if defined(HAVE_REGINA_REXXSAA_H)
 rexx_done:
+#endif /* defined(HAVE_REGINA_REXXSAA_H) */
     fclose(scrfp);
     scr_recursion--;    /* Decrement recursion count */
     if(scr_recursion==0)
