@@ -148,10 +148,13 @@ int exec_cmd(int argc, char *argv[],char *cmdline)
     
     MAKERXSTRING(retval, buffer, sizeof(buffer));
 
-    hRexxStart ((argc > 2) ? 1 : 0, &arg, argv[1], NULL, hSubcom, RXCOMMAND, 0, &rc, &retval );
+    hRexxStart ((argc > 2) ? 1 : 0, &arg, argv[1], NULL, hSubcom, RXCOMMAND, NULL, &rc, &retval );
 
-    if(arg.strptr)
-        free(arg.strptr);
+    if(rc)
+        logmsg("REXX Error %s\n",RXSTRPTR(retval));
+
+    if(RXSTRPTR(arg))
+        free(RXSTRPTR(arg));
 
     return rc;
 }
