@@ -79,6 +79,14 @@ int init_rexx()
             return -1;
         if(!(hRexxStart = (rRexxStart *)dlsym(addr,"RexxStart")))
             return -1;
+        if(
+#if defined ( _MSVC_ )
+        putenv( "REGINA_OPTIONS=STDOUT_FOR_STDERR" )
+#else
+        setenv( "REGINA_OPTIONS", "STDOUT_FOR_STDERR", TRUE )
+#endif
+            )
+            return -1;
     }
 #endif
 

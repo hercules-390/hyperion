@@ -14,6 +14,11 @@ The EXEC command may be used to explicitly invoke a REXX script, optional argume
 
 REXX will be invoked implicitly if existing script files start with /*
 
+Hercules symbols can be retrieved as normal environment variables with value() or getvar()
+
+Say 'LPARNAME=' value('LPARNAME',,'SYSTEM')
+or
+Say 'LPARNAME=' getenv('LPARNAME')
 
 Not yet implemented are:
 
