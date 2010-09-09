@@ -3993,6 +3993,41 @@ int stsi_mfct_cmd(int argc, char *argv[], char *cmdline)
 #endif /* defined(OPTION_SET_STSI_INFO) */
 
 
+#ifdef OPTION_CAPPING
+/*-------------------------------------------------------------------*/
+/* capping - cap mip rate                                            */
+/*-------------------------------------------------------------------*/
+int capping_cmd(int argc, char *argv[], char *cmdline)
+{
+U32  cap;
+BYTE c;
+
+    UNREFERENCED(cmdline);
+
+    /* Update capping value */
+    if (argc > 1)
+    {
+        if (argv[1] != NULL
+          && strlen(argv[1]) >= 1
+          && sscanf(argv[1], "%x%c", &cap, &c) == 1)  
+            sysblk.capvalue = cap;
+        else
+        {
+            logmsg("invalid capping value\n");
+            return 1;
+        }
+    }
+    else
+    {
+        logmsg("no capping value\n");
+        return 1;
+    }
+
+    return 0;
+}
+#endif // OPTION_CAPPING
+
+
 /*-------------------------------------------------------------------*/
 /* lparname - set or display LPAR name                               */
 /*-------------------------------------------------------------------*/

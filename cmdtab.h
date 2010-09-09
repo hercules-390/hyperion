@@ -335,6 +335,12 @@ COMMAND("cnslport",  CONFIG,        SYSCMDALL,          cnslport_cmd,
   "Set console port", 
     NULL)
 
+#ifdef OPTION_CAPPING
+COMMAND("capping",   CONFIG,        SYSCMDALL,          capping_cmd,
+  "Set capping value", 
+    NULL)
+#endif // OPTION_CAPPING
+
 #if defined(OPTION_SET_STSI_INFO)
 COMMAND("model",     CONFIG,        SYSCMDALL,          stsi_model_cmd,
   "Set STSI model code", 

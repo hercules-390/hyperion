@@ -1077,21 +1077,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
                 WRMSG( HHC01450, "W", inc_stmtnum[inc_level], fname, keyword, "OPTION_SHARED_DEVICES" ); 
             }
 #endif /*defined(OPTION_SHARED_DEVICES)*/
-
-            else if (strcasecmp (keyword, "capping") == 0)
-#ifdef OPTION_CAPPING
-            {
-                unsigned u;
-                if (sscanf (operand, "%u", &u) != 1)
-                    WRMSG(HHC01443, "E", inc_stmtnum[inc_level], fname, operand, "capping value");		
-                else
-                    sysblk.capvalue = u;
-            }
-#else
-            {
-                WRMSG( HHC01450, "W", inc_stmtnum[inc_level], fname, keyword, "OPTION_CAPPING" );
-            }
-#endif // OPTION_CAPPING
             else
             {
                 WRMSG(HHC01441, "E", inc_stmtnum[inc_level], fname, keyword);
