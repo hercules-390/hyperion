@@ -311,6 +311,18 @@ COMMAND("lparname",  PANEL+CONFIG,  SYSCMDALL,          lparname_cmd,
   "Set LPAR name", 
     NULL)
 
+COMMAND("cpuverid",  CONFIG,        SYSCMDALL,          cpuverid_cmd,    
+  "Set CPU verion number",
+    NULL)
+
+COMMAND("cpumodel",  CONFIG,        SYSCMDALL,          cpumodel_cmd,    
+  "Set CPU model number",
+    NULL)
+
+COMMAND("cpuserial", CONFIG,        SYSCMDALL,          cpuserial_cmd,    
+  "Set CPU serial number",
+    NULL)
+
 COMMAND("lparnum",   PANEL+CONFIG,  SYSCMDALL,          lparnum_cmd,  
   "Set LPAR identification number", 
     NULL)

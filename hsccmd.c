@@ -3960,6 +3960,113 @@ BYTE    c;
     return 0;
 }
 
+
+/*-------------------------------------------------------------------*/
+/* cpuverid command - set or display cpu version                     */
+/*-------------------------------------------------------------------*/
+int cpuverid_cmd(int argc, char *argv[], char *cmdline)
+{
+U32     cpuverid;
+BYTE    c;
+
+    UNREFERENCED(cmdline);
+
+    /* Update CPU version if operand is specified */
+    if (argc > 1)
+    {
+        if ( (strlen(argv[1]) > 1) && (strlen(argv[1]) < 3)
+          && (sscanf(argv[1], "%x%c", &cpuverid, &c) == 1) )
+        {
+            char buf[8];
+            sprintf(buf,"%02X",cpuverid);
+            set_symbol("CPUVERID", buf);
+            sysblk.cpuid &= 0x00FFFFFFFFFFFFFFULL;
+            sysblk.cpuid |= (U64)cpuverid << 56;
+        }
+        else
+        {
+            logmsg("CPUVERID %s invalid\n",argv[1]);
+            return -1;
+        }
+    }
+    else
+        logmsg("CPUVERID=%02X\n",((sysblk.cpuid & 0xFF00000000000000ULL) >> 56));
+
+    return 0;
+}
+
+
+
+/*-------------------------------------------------------------------*/
+/* cpumodel command - set or display cpu model                       */
+/*-------------------------------------------------------------------*/
+int cpumodel_cmd(int argc, char *argv[], char *cmdline)
+{
+U32     cpumodel;
+BYTE    c;
+
+    UNREFERENCED(cmdline);
+
+    /* Update CPU model if operand is specified */
+    if (argc > 1)
+    {
+        if ( (strlen(argv[1]) > 1) && (strlen(argv[1]) < 5)
+          && (sscanf(argv[1], "%x%c", &cpumodel, &c) == 1) )
+        {
+            char buf[8];
+            sprintf(buf,"%04X",cpumodel);
+            set_symbol("CPUMODEL", buf);
+            sysblk.cpuid &= 0xFFFFFFFF0000FFFFULL;
+            sysblk.cpuid |= (U64)cpumodel << 16;
+        }
+        else
+        {
+            logmsg("CPUMODEL %s invalid\n",argv[1]);
+            return -1;
+        }
+    }
+    else
+        logmsg("CPUMODEL=%04X\n",((sysblk.cpuid & 0x00000000FFFF0000ULL) >> 16));
+
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* cpuserial command - set or display cpu serial                     */
+/*-------------------------------------------------------------------*/
+int cpuserial_cmd(int argc, char *argv[], char *cmdline)
+{
+U32     cpuserial;
+BYTE    c;
+
+    UNREFERENCED(cmdline);
+
+    /* Update CPU serial if operand is specified */
+    if (argc > 1)
+    {
+        if ( (strlen(argv[1]) > 1) && (strlen(argv[1]) < 7)
+          && (sscanf(argv[1], "%x%c", &cpuserial, &c) == 1) )
+        {
+            char buf[8];
+            sprintf(buf,"%06X",cpuserial);
+            set_symbol("CPUSERIAL", buf);
+            sysblk.cpuid &= 0xFF000000FFFFFFFFULL;
+            sysblk.cpuid |= (U64)cpuserial << 32;
+        }
+        else
+        {
+            logmsg("CPUSERIAL %s invalid\n",argv[1]);
+            return -1;
+        }
+    }
+    else
+        logmsg("CPUSERIAL=%06X\n",((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32));
+
+    return 0;
+}
+
+
 /*-------------------------------------------------------------------*/
 /* cpuidfmt command - set or display STIDP format {0|1}              */
 /*-------------------------------------------------------------------*/

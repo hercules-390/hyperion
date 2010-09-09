@@ -671,7 +671,6 @@ int     count;                          /* Counter                   */
 FILE   *inc_fp[MAX_INC_LEVEL];          /* Configuration file pointer*/
 char   *sserial;                        /* -> CPU serial string      */
 char   *smodel;                         /* -> CPU model string       */
-char   *sversion;                       /* -> CPU version string     */
 char   *smainsize;                      /* -> Main size string       */
 char   *sxpndsize;                      /* -> Expanded size string   */
 char   *smaxcpu;                        /* -> Maximum number of CPUs */
@@ -697,7 +696,6 @@ char   *sshrdport;                      /* -> Shared device port nbr */
 #endif /*defined(OPTION_SHARED_DEVICES)*/
 
 U16     version = 0x00;                 /* CPU version code          */
-int     dfltver = 1;                    /* Default version code      */
 U32     serial;                         /* CPU serial number         */
 U16     model;                          /* CPU model number          */
 unsigned mainsize;                      /* Main storage size (MB)    */
@@ -957,7 +955,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
         /* Clear the operand value pointers */
         sserial = NULL;
         smodel = NULL;
-        sversion = NULL;
         smainsize = NULL;
         sxpndsize = NULL;
         smaxcpu = NULL;
@@ -993,18 +990,30 @@ char    fname[MAX_PATH];                /* normalized filename       */
             scnslport = strdup(addargv[2]);
             snumcpu = addargv[3];
             set_loadparm(addargv[4]);
+
+            if (strlen(sserial) != 6
+                || sscanf(sserial, "%x%c", &serial, &c) != 1)
+            {
+                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, sserial, "serial number");
+                delayed_exit(1);
+            }
+        
+            if (strlen(smodel) != 4
+                || sscanf(smodel, "%hx%c", &model, &c) != 1)
+            {
+                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, smodel, "CPU model");
+                delayed_exit(1);
+            }
+
+            /* Build CPU identifier */
+            sysblk.cpuid = ((U64)version << 56)
+                         | ((U64)serial << 32)
+                         | ((U64)model << 16);
+
         }
         else
         {
-            if (strcasecmp (keyword, "cpuserial") == 0)
-            {
-                sserial = operand;
-            }
-            else if (strcasecmp (keyword, "cpumodel") == 0)
-            {
-                smodel = operand;
-            }
-            else if (strcasecmp (keyword, "mainsize") == 0)
+            if (strcasecmp (keyword, "mainsize") == 0)
             {
                 smainsize = operand;
             }
@@ -1048,10 +1057,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
             else if (strcasecmp (keyword, "tzoffset") == 0)
             {
                 stzoffset = operand;
-            }
-            else if (strcasecmp (keyword, "cpuverid") == 0)
-            {
-                sversion = operand;
             }
             else if (strcasecmp (keyword, "hercprio") == 0)
             {
@@ -1141,41 +1146,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
             }
 
         } /* end else (not old-style CPU statement) */
-
-        /* Parse CPU version number operand */
-        if (sversion != NULL)
-        {
-            if (strlen(sversion) != 2
-                || sscanf(sversion, "%hx%c", &version, &c) != 1
-                || version>255)
-            {
-                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, sversion, "CPU version code");
-                delayed_exit(1);
-            }
-            dfltver = 0;
-        }
-
-        /* Parse CPU serial number operand */
-        if (sserial != NULL)
-        {
-            if (strlen(sserial) != 6
-                || sscanf(sserial, "%x%c", &serial, &c) != 1)
-            {
-                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, sserial, "serial number");
-                delayed_exit(1);
-            }
-        }
-
-        /* Parse CPU model number operand */
-        if (smodel != NULL)
-        {
-            if (strlen(smodel) != 4
-                || sscanf(smodel, "%hx%c", &model, &c) != 1)
-            {
-                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, smodel, "CPU model");
-                delayed_exit(1);
-            }
-        }
 
         /* Parse main storage size operand */
         if (smainsize != NULL)
@@ -1641,19 +1611,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
     sysblk.shrdport = shrdport;
 #endif /*defined(OPTION_SHARED_DEVICES)*/
 
-#if defined(_370) || defined(_390)
-    if(dfltver)
-        version =
-#if defined(_900)
-                  (sysblk.arch_mode == ARCH_900) ? 0x00 :
-#endif
-                                                          0xFD;
-#endif
-    /* Build CPU identifier */
-    sysblk.cpuid = ((U64)version << 56)
-                 | ((U64)serial << 32)
-                 | ((U64)model << 16);
-
     /* Reset the clock steering registers */
     csr_reset();
 
@@ -1679,26 +1636,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
 
     /* Gabor Hoffer (performance option) */
     copy_opcode_tables();
-
-#if defined(OPTION_CONFIG_SYMBOLS)
-    /* setup configuration related symbols  */
-    {
-        char buf[8];
-
-        set_symbol("LPARNAME", str_lparname() );
-
-        MSGBUF( buf, "%02X", sysblk.lparnum );
-        set_symbol("LPARNUM", buf );
-
-        MSGBUF( buf, "%06X", ((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32) );
-        set_symbol( "CPUSERIAL", buf );
-
-        MSGBUF( buf, "%04X", ((sysblk.cpuid & 0x00000000FFFF0000ULL) >> 16) );
-        set_symbol( "CPUMODEL", buf );
-
-        set_symbol( "ARCHMODE", get_arch_mode_string(NULL) );  
-    }
-#endif /* defined(OPTION_CONFIG_SYMBOLS) */
 
     /*****************************************************************/
     /* Parse configuration file device statements...                 */
@@ -1861,6 +1798,26 @@ char    fname[MAX_PATH];                /* normalized filename       */
         WRMSG(HHC00102, "E", strerror(rc));
     }
 #endif // OPTION_CAPPING
+
+#if defined(OPTION_CONFIG_SYMBOLS)
+    /* setup configuration related symbols  */
+    {
+        char buf[8];
+
+        set_symbol("LPARNAME", str_lparname() );
+
+        MSGBUF( buf, "%02X", sysblk.lparnum );
+        set_symbol("LPARNUM", buf );
+
+        MSGBUF( buf, "%06X", ((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32) );
+        set_symbol( "CPUSERIAL", buf );
+
+        MSGBUF( buf, "%04X", ((sysblk.cpuid & 0x00000000FFFF0000ULL) >> 16) );
+        set_symbol( "CPUMODEL", buf );
+
+        set_symbol( "ARCHMODE", get_arch_mode_string(NULL) );  
+    }
+#endif /* defined(OPTION_CONFIG_SYMBOLS) */
 
 } /* end function build_config */
 
