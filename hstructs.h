@@ -560,6 +560,7 @@ struct SYSBLK {
 #endif /* defined(FEATURE_VM_BLOCKIO) */
         U32     servparm;               /* Service signal parameter  */
         unsigned int                    /* Flags                     */
+                config_done:1,          /* 1 = config complete       */ 
                 sys_reset:1,            /* 1 = system in reset state */ 
                 daemon_mode:1,          /* Daemon mode active        */
                 panel_init:1,           /* Panel display initialized */

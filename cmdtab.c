@@ -158,6 +158,25 @@ CMDTAB* cmdent;
 }
 
 
+CMDT_DLL_IMPORT
+int ProcessConfigCmdLine(char* pszCmdLine)
+{
+    int      rc, argc;
+    char*    argv[MAX_ARGS];
+    char*    pszSaveCmdLine;
+
+    pszSaveCmdLine = strdup(pszCmdLine);
+
+    parse_args (pszCmdLine, MAX_ARGS, argv, &argc);
+
+    rc = ProcessConfigCommand(argc, argv, pszSaveCmdLine);
+
+    free(pszSaveCmdLine);
+
+    return rc;
+}
+
+
 /*-------------------------------------------------------------------*/
 /* Main panel command processing function                            */
 /*-------------------------------------------------------------------*/

@@ -245,6 +245,7 @@ HCMD_DLL_IMPORT int stopall_cmd (int argc, char *argv[], char *cmdline);
 
 /* Functions in module cmdtab.c */
 CMDT_DLL_IMPORT int ProcessConfigCommand (int argc, char **argv, char *cmdline);
+CMDT_DLL_IMPORT int ProcessConfigCmdLine (char *cmdline);
 CMDT_DLL_IMPORT int ProcessPanelCommand (char *cmdline);
 
 /* Functions in losc.c */

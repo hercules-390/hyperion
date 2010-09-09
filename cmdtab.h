@@ -331,6 +331,10 @@ COMMAND("cpuidfmt",  PANEL+CONFIG,  SYSCMDALL,          cpuidfmt_cmd,
   "Set format 0/1 STIDP generation", 
     NULL)
 
+COMMAND("cnslport",  CONFIG,        SYSCMDALL,          cnslport_cmd,
+  "Set console port", 
+    NULL)
+
 #if defined(OPTION_SET_STSI_INFO)
 COMMAND("model",     CONFIG,        SYSCMDALL,          stsi_model_cmd,
   "Set STSI model code", 
@@ -525,7 +529,7 @@ COMMAND("k",         PANEL,         SYSCMDALL-SYSOPER,  k_cmd,
   "Display cckd internal trace", 
     NULL)
 
-COMMAND("attach",    PANEL,         SYSCMDALL,          attach_cmd,
+COMMAND("attach",    PANEL+CONFIG,  SYSCMDALL,          attach_cmd,
   "Configure device",
     "Format: \"attach devn type [arg...]\n")
 
@@ -1007,12 +1011,12 @@ COMMAND("cscript",   PANEL,         SYSCMDALL-SYSOPER,  cscript_cmd,
     "script. If no script is running, no action is taken.\n")
 
 #if defined(FEATURE_ECPSVM)
-COMMAND("evm",       PANEL,         SYSCMDALL-SYSOPER,  evm_cmd_1,
+COMMAND("evm",       PANEL+CONFIG,  SYSCMDALL-SYSOPER,  evm_cmd_1,
   "ECPS:VM Commands (Deprecated)",
     "Format: \"evm\". This command is deprecated.\n"
     "use \"ecpsvm\" instead\n")
 
-COMMAND ( "ecpsvm",  PANEL,         SYSCMDALL-SYSOPER,  evm_cmd,
+COMMAND ( "ecpsvm",  PANEL+CONFIG,  SYSCMDALL-SYSOPER,  evm_cmd,
   "ECPS:VM Commands",
     "Format: \"ecpsvm\". This command invokes ECPS:VM Subcommands.\n"
     "Type \"ecpsvm help\" to see a list of available commands\n")
@@ -1049,7 +1053,7 @@ COMMAND("suspend",   PANEL,         SYSCMDALL-SYSOPER,      suspend_cmd,
 COMMAND("resume",    PANEL,         SYSCMDALL-SYSOPER,      resume_cmd,    
         "Resume hercules", NULL )
 
-COMMAND("herclogo",  PANEL,         SYSCMDALL-SYSOPER,      herclogo_cmd,
+COMMAND("herclogo",  PANEL+CONFIG,  SYSCMDALL-SYSOPER,      herclogo_cmd,
   "Read a new hercules logo file",
     "Format: \"herclogo [<filename>]\". Load a new logo file for 3270\n"
     "terminal sessions. If no filename is specified, the built-in logo\n"

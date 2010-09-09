@@ -848,9 +848,12 @@ int     dll_count;                      /* index into array          */
     /* File was not lock, therefore we can proceed */
 #endif // OPTION_LOCK_CONFIG_FILE
 
+    sysblk.config_done = FALSE;
+
     /* Build system configuration */
     build_config (cfgfile);
 
+    sysblk.config_done = TRUE;
 
 #if defined( OPTION_LOCK_CONFIG_FILE )
     if ( ( fd_cfg = open( pathname, O_RDONLY, S_IRUSR | S_IRGRP ) ) < 0 )

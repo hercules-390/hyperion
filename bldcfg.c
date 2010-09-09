@@ -684,13 +684,6 @@ char   *shercprio;                      /* -> Hercules base priority */
 char   *stodprio;                       /* -> Timer thread priority  */
 char   *scpuprio;                       /* -> CPU thread priority    */
 char   *sdevprio;                       /* -> Device thread priority */
-char   *slogofile;                      /* -> 3270 logo file         */
-char   *scnslport;                      /* -> console port           */
-#if defined(_FEATURE_ECPSVM)
-char   *secpsvmlevel;                   /* -> ECPS:VM Keyword        */
-char   *secpsvmlvl;                     /* -> ECPS:VM level (or 'no')*/
-int    ecpsvmac;                        /* -> ECPS:VM add'l arg cnt  */
-#endif /*defined(_FEATURE_ECPSVM)*/
 #if defined(OPTION_SHARED_DEVICES)
 char   *sshrdport;                      /* -> Shared device port nbr */
 #endif /*defined(OPTION_SHARED_DEVICES)*/
@@ -718,10 +711,6 @@ DEVBLK *dev;                            /* -> Device Block           */
 char   *sdevnum;                        /* -> Device number string   */
 char   *sdevtype;                       /* -> Device type string     */
 int     devtmax;                        /* Max number device threads */
-#if defined(_FEATURE_ECPSVM)
-int     ecpsvmavail;                    /* ECPS:VM Available flag    */
-int     ecpsvmlevel;                    /* ECPS:VM declared level    */
-#endif /*defined(_FEATURE_ECPSVM)*/
 BYTE    c;                              /* Work area for sscanf      */
 char   *styp;                           /* -> Engine type string     */
 char   *styp_values[] = {"CP","CF","AP","IL","??","IP"}; /* type values */
@@ -734,7 +723,6 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                                            cygwin from thrashing in
                                            select(). sigh            */
 #endif
-char    hlogofile[FILENAME_MAX+1] = ""; /* File name from HERCLOGO   */
 char    pathname[MAX_PATH];             /* file path in host format  */
 char    fname[MAX_PATH];                /* normalized filename       */ 
 
@@ -807,11 +795,13 @@ char    fname[MAX_PATH];                /* normalized filename       */
     sysblk.kaidle = KEEPALIVE_IDLE_TIME;
     sysblk.kaintv = KEEPALIVE_PROBE_INTERVAL;
     sysblk.kacnt  = KEEPALIVE_PROBE_COUNT;
-    scnslport = strdup(config_cnslport);
+    sysblk.cnslport = strdup(config_cnslport);
+
 #if defined(_FEATURE_ECPSVM)
-    ecpsvmavail = 0;
-    ecpsvmlevel = 20;
+    sysblk.ecpsvm.available = 0;
+    sysblk.ecpsvm.level = 20;
 #endif /*defined(_FEATURE_ECPSVM)*/
+
 #if defined(OPTION_SHARED_DEVICES)
     shrdport = 0;
 #endif /*defined(OPTION_SHARED_DEVICES)*/
@@ -881,6 +871,19 @@ char    fname[MAX_PATH];                /* normalized filename       */
             WRMSG(HHC01434, "S", fname);
             delayed_exit(1);
         }
+
+#if defined(HAVE_REGINA_REXXSAA_H)
+        /* Check for REXX exec being executed */
+        if( inc_level == 0
+         && inc_stmtnum[inc_level] == 1
+         && !strncmp(keyword, "/*",2) )
+        {
+        char *rcmd[2] = { "exec", NULL };
+            rcmd[1] = fname;
+            exec_cmd(2,rcmd,NULL);
+            goto rexx_done;
+        }
+#endif /*defined(HAVE_REGINA_REXXSAA_H)*/
 
 #if defined( OPTION_ENHANCED_CONFIG_INCLUDE )
         if  (strcasecmp (keyword, "ignore") == 0)
@@ -968,12 +971,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
         stodprio = NULL;
         scpuprio = NULL;
         sdevprio = NULL;
-        slogofile = NULL;
-#if defined(_FEATURE_ECPSVM)
-        secpsvmlevel = NULL;
-        secpsvmlvl = NULL;
-        ecpsvmac = 0;
-#endif /*defined(_FEATURE_ECPSVM)*/
 
 #if defined(OPTION_SHARED_DEVICES)
         sshrdport = NULL;
@@ -987,7 +984,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
             smodel = operand;
             smainsize = addargv[0];
             sxpndsize = addargv[1];
-            scnslport = strdup(addargv[2]);
             snumcpu = addargv[3];
             set_loadparm(addargv[4]);
 
@@ -1010,6 +1006,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
                          | ((U64)serial << 32)
                          | ((U64)model << 16);
 
+            sysblk.cnslport = strdup(addargv[2]);
         }
         else
         {
@@ -1020,10 +1017,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
             else if (strcasecmp (keyword, "xpndsize") == 0)
             {
                 sxpndsize = operand;
-            }
-            else if (strcasecmp (keyword, "cnslport") == 0)
-            {
-                scnslport = strdup(operand);
             }
             else if (strcasecmp (keyword, "maxcpu") == 0)
             {
@@ -1074,39 +1067,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
             {
                 sdevprio = operand;
             }
-            else if (strcasecmp (keyword, "logofile") == 0)
-            {
-                WRMSG(HHC01440, "W", inc_stmtnum[inc_level], fname, "LOGOFILE", "HERCLOGO");
-                slogofile=operand;
-            }
-            else if (strcasecmp (keyword, "herclogo") == 0)
-            {
-                slogofile=operand;
-            }
-#if defined(_FEATURE_ECPSVM)
-            /* ECPS:VM support */
-            else if(strcasecmp(keyword, "ecps:vm") == 0)
-            {
-                secpsvmlevel=operand;
-                secpsvmlvl=addargv[0];
-                ecpsvmac=addargc;
-                WRMSG(HHC01440, "W", inc_stmtnum[inc_level], fname, "ECPS:VM", "ECPSVM");
-                addargc=0;
-            }
-            else if(strcasecmp(keyword, "ecpsvm") == 0)
-            {
-                secpsvmlevel=operand;
-                secpsvmlvl=addargv[0];
-                ecpsvmac=addargc;
-                addargc=0;
-            }
-#else
-            else if (strcasecmp (keyword, "ecps:vm") == 0 || strcasecmp(keyword, "ecpsvm") == 0)
-            {
-                WRMSG( HHC01450, "W", inc_stmtnum[inc_level], fname, keyword, "FEATURE_ECPSVM" ); 
-            }
-#endif /*defined(_FEATURE_ECPSVM)*/
-
             else if (strcasecmp (keyword, "shrdport") == 0)
 #if defined(OPTION_SHARED_DEVICES)
             {
@@ -1378,71 +1338,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
             }
         }
 
-        /* Parse terminal logo option */
-        if (slogofile != NULL)
-        {
-            strncpy(hlogofile, slogofile, sizeof(hlogofile)-1);
-            hlogofile[sizeof(hlogofile)-1] = '\0';
-        }
-
-#if defined(_FEATURE_ECPSVM)
-        /* Parse ECPS:VM level */
-        if(secpsvmlevel != NULL)
-        {
-            while(1)        /* Dummy while loop for break support */
-            {
-                ecpsvmavail=0;
-                ecpsvmlevel=0;
-                if(strcasecmp(secpsvmlevel,"no")==0)
-                {
-                    ecpsvmavail=0;
-                    break;
-                }
-                if(strcasecmp(secpsvmlevel,"yes")==0)
-                {
-                    ecpsvmavail=1;
-                    ecpsvmlevel=20;
-                    break;
-                }
-                if(strcasecmp(secpsvmlevel,"level")==0)
-                {
-                    ecpsvmavail=1;
-                    if(ecpsvmac==0)
-                    {
-                        WRMSG(HHC01446, "W", inc_stmtnum[inc_level], fname, "", "ECPSVM level", "20");
-                        ecpsvmavail=1;
-                        ecpsvmlevel=20;
-                        break;
-                    }
-                    if (sscanf(secpsvmlvl, "%d%c", &ecpsvmlevel, &c) != 1)
-                    {
-                        WRMSG(HHC01446, "W", inc_stmtnum[inc_level], fname, secpsvmlevel, "ECPSVM level", "20");
-                        ecpsvmavail=1;
-                        ecpsvmlevel=20;
-                        break;
-                    }
-                    break;
-                }
-                ecpsvmavail=1;
-                if (sscanf(secpsvmlevel, "%d%c", &ecpsvmlevel, &c) != 1)
-                {
-                    WRMSG(HHC01446, "W", inc_stmtnum[inc_level], fname, secpsvmlevel, "ECPSVM level", "no");
-                    ecpsvmavail=0;
-                    ecpsvmlevel=0;
-                    break;
-                }
-                else
-                {
-                    WRMSG(HHC01440, "W", inc_stmtnum[inc_level], fname, "ECPSVM level directly", "LEVEL");
-                    break;
-                }
-                break;
-            }
-            sysblk.ecpsvm.available=ecpsvmavail;
-            sysblk.ecpsvm.level=ecpsvmlevel;
-        }
-#endif /*defined(_FEATURE_ECPSVM)*/
-
 #if defined(OPTION_SHARED_DEVICES)
         /* Parse shared device port number operand */
         if (sshrdport != NULL)
@@ -1457,31 +1352,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
 #endif /*defined(OPTION_SHARED_DEVICES)*/
 
     } /* end for(scount) (end of configuration file statement loop) */
-
-    /* Read the logofile */
-    if (sysblk.logofile == NULL) /* LogoFile NOT passed in command line */
-    {
-        if (hlogofile[0] != '\0') /* LogoFile SET in hercules config */
-        {
-            readlogo(hlogofile);
-        }
-        else /* Try to Read Logo File using Default FileName */
-        {
-            slogofile=getenv("HERCLOGO");
-            if (slogofile==NULL)
-            {
-                readlogo("herclogo.txt");
-            }
-            else
-            {
-                readlogo(slogofile);
-            }
-        } /* Otherwise Use Internal LOGO */
-    }
-    else /* LogoFile passed in command line */
-    {
-        readlogo(sysblk.logofile);
-    }
 
 #if defined( OPTION_TAPE_AUTOMOUNT )
     /* Define default AUTOMOUNT directory if needed */
@@ -1519,89 +1389,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
 
     /* Back to user mode */
     SETMODE(USER);
-
-    /* set console port */
-    if (strchr(scnslport, ':') == NULL)
-    {
-        if ( isdigit(scnslport[0]) )
-        {
-            int i;
-            for ( i = 0; i < (int)strlen(scnslport); i++ )
-            {
-                if ( !isdigit(scnslport[i]) )
-                {
-                    WRMSG( HHC01451, "E", scnslport );
-                    free(scnslport);
-                    scnslport = strdup(config_cnslport);
-                    WRMSG( HHC01452, "W", scnslport );
-                    break;
-                }
-            }
-            i = atoi ( scnslport );
-            if (i < 0 || i > 65535)
-            {
-                WRMSG( HHC01451, "E", scnslport );
-                free(scnslport);
-                scnslport = strdup(config_cnslport);
-                WRMSG( HHC01452, "W", scnslport );
-            }
-        }
-    }
-    else
-    {   
-        char *serv;
-        char *port = strdup( scnslport );
-        char msgbuf[512];
-
-        msgbuf[0] = '\0';
-
-        if ((serv = strchr(port,':')))
-        {
-            *serv++ = '\0';
-            if (*port)
-            {
-                strcpy(msgbuf, port);
-                strcat(msgbuf, ":");
-            }
-
-        }
-        if ( isdigit( serv[0]) )
-        {
-            char *p;
-            int i;
-
-            p = strdup(serv);
-
-            for ( i = 0; i < (int)strlen(p); i++ )
-            {
-                if ( !isdigit(p[i]) )
-                {
-                    WRMSG( HHC01451, "E", p );
-                    free(p);
-                    p = strdup(config_cnslport);
-                    WRMSG( HHC01452, "W", p );
-                    break;
-                }
-            }
-            
-            i = atoi ( p );
-            if (i < 0 || i > 65535)
-            {
-                WRMSG( HHC01451, "E", p );
-                free( p );
-                p = strdup(config_cnslport);
-                WRMSG( HHC01452, "W", p );
-            }
-
-            strcat(msgbuf,p);
-            free(p);
-        }
-        free( port );
-        free(scnslport);
-        scnslport = strdup(msgbuf);
-    }
-
-    sysblk.cnslport = scnslport;
 
     /* Display Hercules thread information on control panel */
     // Removed this message. build_cfg is not a thread?
@@ -1708,6 +1495,10 @@ char    fname[MAX_PATH];                /* normalized filename       */
             break;
 
     } /* end while(1) */
+
+#if defined(HAVE_REGINA_REXXSAA_H)
+rexx_done:
+#endif /*defined(HAVE_REGINA_REXXSAA_H)*/
 
 #if !defined( OPTION_ENHANCED_CONFIG_INCLUDE )
     /* close configuration file */

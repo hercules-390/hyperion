@@ -27,7 +27,7 @@ Say 'LPARNAME=' getenv('LPARNAME')
 
 Not yet implemented are:
 
-- EXECIO command to capture command output
+- capture output by means of ADDRESS 'HERCULES' command WITH OUTPUT STEM 
 - interactive trace input from the console
 - stack underflow reads (pull) from the console
 

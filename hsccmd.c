@@ -2399,6 +2399,99 @@ char *basedir;
 }
 
 
+/*-------------------------------------------------------------------*/
+/* cnslport command - set console port                               */
+/*-------------------------------------------------------------------*/
+int cnslport_cmd(int argc, char *argv[], char *cmdline)
+{
+    UNREFERENCED(cmdline);
+
+    if(argc < 2)
+    {
+        WRMSG( HHC01451, "E", argv[1] );
+        WRMSG( HHC01452, "W", sysblk.cnslport );
+        return 1;
+    }
+
+    /* set console port */
+    if (strchr(argv[1], ':') == NULL)
+    {
+        if ( isdigit(argv[1][0]) )
+        {
+            int i;
+            for ( i = 0; i < (int)strlen(argv[1]); i++ )
+            {
+                if ( !isdigit(argv[1][i]) )
+                {
+                    WRMSG( HHC01451, "E", argv[1] );
+                    WRMSG( HHC01452, "W", sysblk.cnslport );
+                    break;
+                }
+            }
+            i = atoi ( argv[1] );
+            if (i < 0 || i > 65535)
+            {
+                WRMSG( HHC01451, "E", argv[1] );
+                WRMSG( HHC01452, "W", sysblk.cnslport );
+            }
+        }
+    }
+    else
+    {   
+        char *serv;
+        char *port = strdup( sysblk.cnslport );
+        char msgbuf[512];
+
+        msgbuf[0] = '\0';
+
+        if ((serv = strchr(port,':')))
+        {
+            *serv++ = '\0';
+            if (*port)
+            {
+                strcpy(msgbuf, port);
+                strcat(msgbuf, ":");
+            }
+
+        }
+        if ( isdigit( serv[0]) )
+        {
+            char *p;
+            int i;
+
+            p = strdup(serv);
+
+            for ( i = 0; i < (int)strlen(p); i++ )
+            {
+                if ( !isdigit(p[i]) )
+                {
+                    WRMSG( HHC01451, "E", p );
+                    free(p);
+                    p = strdup(sysblk.cnslport);
+                    WRMSG( HHC01452, "W", p );
+                    break;
+                }
+            }
+            
+            i = atoi ( p );
+            if (i < 0 || i > 65535)
+            {
+                WRMSG( HHC01451, "E", p );
+                free( p );
+                p = strdup(sysblk.cnslport);
+                WRMSG( HHC01452, "W", p );
+            }
+
+            strcat(msgbuf,p);
+            free(p);
+        }
+        free( port );
+        sysblk.cnslport = strdup(msgbuf);
+    }
+
+    return 0;
+}
+
 #if defined(OPTION_HTTP_SERVER)
 /*-------------------------------------------------------------------*/
 /* httproot command - set HTTP server base directory                 */
@@ -8399,7 +8492,7 @@ char    pathname[MAX_PATH];             /* (work)                    */
 
 #if defined(HAVE_REGINA_REXXSAA_H)
         /* Check for a REXX exec being executed */
-        if( lineno == 1 && !strncasecmp(scrbuf,"/*",2))
+        if( lineno == 1 && !strncmp(scrbuf,"/*",2))
         {
         char *rcmd[2] = { "exec", NULL };
             rcmd[1] = script_name;
