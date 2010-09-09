@@ -137,7 +137,7 @@
 #define GR0_e(regs)          ((regs)->GR_L(0) & 0x00000100)
 #define GR0_f1(regs)         ((regs)->GR_L(0) & 0x00000200)
 #define GR0_st(regs)         ((regs)->GR_L(0) & 0x00010000)
-#define GR0_zp(regs)         ((regs)->GR_L(0) & 0x00000400) // Just guessing!
+#define GR0_zp(regs)         ((regs)->GR_L(0) & 0x00020000)
 
 /*----------------------------------------------------------------------------*/
 /* General Purpose Register 0 macro's (GR0) derived                           */
@@ -222,9 +222,6 @@ static int   ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, struct 
 static void  ARCH_DEP(store_iss)(int r1, int r2, REGS *regs, REGS *iregs, struct cc *cc);
 static int   ARCH_DEP(test_ec)(int r2, REGS *regs, REGS *iregs, struct cc *cc, BYTE *cce);
 static int   ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, struct ec *ec, BYTE *buf, unsigned len);
-#ifdef FEATURE_CMPSC_ENHANCEMENT_FACILITY
-static void  ARCH_DEP(zero_padding)(int r1, REGS *regs);
-#endif
 
 /*----------------------------------------------------------------------------*/
 /* B263 CMPSC - Compression Call                                        [RRE] */
@@ -247,6 +244,7 @@ DEF_INST(compression_call)
   WRGMSG(HHC90302, "D", regs->GR(r2));
   WRGMSG(HHC90303, "D", regs->GR(r2 + 1));
   WRGMSG(HHC90304, "D", 0, regs->GR(0));
+  WRGMSG(HHC90364, "D", TRUEFALSE(GR0_zp(regs))); // We currently do nothing with zp
   WRGMSG(HHC90305, "D", TRUEFALSE(GR0_st(regs)));
   WRGMSG(HHC90306, "D", GR0_cdss(regs));
   WRGMSG(HHC90307, "D", TRUEFALSE(GR0_f1(regs)));
@@ -265,12 +263,6 @@ DEF_INST(compression_call)
   /* Check for empty input */
   if(unlikely(!GR_A(r2 + 1, regs)))
   {
-
-#ifdef FEATURE_CMPSC_ENHANCEMENT_FACILITY
-    if(unlikely(GR0_zp(regs)))
-      ARCH_DEP(zero_padding)(r1, regs);
-#endif
-
     regs->psw.cc = 0;
     return;
   }
@@ -292,15 +284,7 @@ DEF_INST(compression_call)
   if(likely(GR0_e(regs)))
     ARCH_DEP(expand)(r1, r2, regs, &iregs);
   else
-  {
     ARCH_DEP(compress)(r1, r2, regs, &iregs);
-
-#ifdef FEATURE_CMPSC_ENHANCEMENT_FACILITY
-    if(unlikely(GR0_zp(regs) && !GR_A(r2 + 1, regs)))
-      ARCH_DEP(zero_padding)(r1, regs);
-#endif
-
-  }
 }
 
 /*============================================================================*/
@@ -1217,12 +1201,16 @@ static void ARCH_DEP(store_iss)(int r1, int r2, REGS *regs, REGS *iregs, struct 
 
   /* Fingers crossed that we stay within one page */
   ofst = GR_A(r1, iregs) & 0x7ff;
-  if(likely(ofst + cc->smbsz < 0x800))
+  if(likely(ofst + cc->smbsz <= 0x800))
   {
     if(unlikely(!cc->dest))
       cc->dest = MADDR((GR_A(r1, iregs) & ~0x7ff) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
     memcpy(&cc->dest[ofst], mem, cc->smbsz);
     ITIMER_UPDATE(GR_A(r1, iregs), cc->smbsz - 1, regs);
+
+    /* Perfect fit? */
+    if(unlikely(ofst + cc->smbsz == 0x800))
+      cc->dest = NULL;
   }
   else
   {
@@ -1277,32 +1265,6 @@ static int ARCH_DEP(test_ec)(int r2, REGS *regs, REGS *iregs, struct cc *cc, BYT
   /* a perfect match */
   return(1);
 }
-
-#ifdef FEATURE_CMPSC_ENHANCEMENT_FACILITY
-/*----------------------------------------------------------------------------*/
-/* zero_padding                                                               */
-/*----------------------------------------------------------------------------*/
-static void ARCH_DEP(zero_padding)(int r1, REGS *regs)
-{
-  BYTE *dest;                          /* Destination MADDR page address      */
-  unsigned len;                        /* Length to clear                     */
-  unsigned ofst;                       /* Offset within page                  */
-
-  /* Check for end of destination */
-  if(unlikely((!GR_A(r1 + 1, regs))))
-    return;
-
-  /* Zero page in progress */
-  ofst = GR_A(r1, regs) & 0x7ff;
-  len = 0x800 - ofst;
-  if(len > GR_A(r1 + 1, regs))
-    len = GR_A(r1 + 1, regs);
-  dest = MADDR((GR_A(r1, regs) & ~0x7ff) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
-  memset(&dest[ofst], 0, len);
-  ITIMER_UPDATE(GR_A(r1, regs), len - 1, regs);
-	
-}
-#endif /* FEATURE_CMPSC_ENHANCEMENT_FACILITY */
 
 /*============================================================================*/
 /* Expand                                                                     */
@@ -1604,10 +1566,14 @@ static void ARCH_DEP(fetch_iss)(int r2, REGS *regs, REGS *iregs, struct ec *ec, 
   ofst = GR_A(r2, iregs) & 0x7ff;
   if(unlikely(!ec->src))
     ec->src = MADDR((GR_A(r2, iregs) & ~0x7ff) & ADDRESS_MAXWRAP(regs), r2, regs, ACCTYPE_READ, regs->psw.pkey);
-  if(likely(ofst + ec->smbsz < 0x800))
+  if(likely(ofst + ec->smbsz <= 0x800))
   { 
     ITIMER_SYNC(GR_A(r2, iregs), ec->smbsz - 1, regs);
     mem = &ec->src[ofst]; 
+
+    /* Perfect fit? */
+    if(unlikely(ofst + ec->smbsz == 0x800))
+      ec->src = NULL;
   } 
   else
   {
@@ -1773,6 +1739,14 @@ static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, struct ec *ec, BYTE
   unsigned ofst;                       /* Offset within page                  */
   BYTE *sk;                            /* Storage key                         */
 
+#ifdef OPTION_CMPSC_DEBUG
+  char buf2[256];
+  unsigned i;
+  unsigned j;
+  static BYTE pbuf[2060];
+  static unsigned plen = 2061;         /* Impossible value                    */
+#endif
+
   /* Check destination size */
   if(unlikely(GR_A(r1 + 1, iregs) < len))
   {
@@ -1787,12 +1761,6 @@ static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, struct ec *ec, BYTE
   }
 
 #ifdef OPTION_CMPSC_DEBUG
-  char buf2[256];
-  unsigned i;
-  unsigned j;
-  static BYTE pbuf[2060];
-  static unsigned plen = 2061;         /* Impossible value                    */
-
   if(plen == len && !memcmp(pbuf, buf, plen))
     WRMSG(HHC90361, "D", iregs->GR(r1), iregs->GR(r1) + len - 1);
   else
@@ -1846,13 +1814,17 @@ static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, struct ec *ec, BYTE
 #endif
 
   /* Fingers crossed that we stay within one page */
-  ofst = GR_A(r1, iregs) & 0x7ff;
-  if(likely(ofst + len < 0x800))
+  ofst = GR_A(r1, iregs) & 0x7ff; 
+  if(likely(ofst + len <= 0x800))
   {
     if(unlikely(!ec->dest))
       ec->dest = MADDR((GR_A(r1, iregs) & ~0x7ff) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
     memcpy(&ec->dest[ofst], buf, len);
     ITIMER_UPDATE(GR_A(r1, iregs), len - 1, regs);
+
+    /* Perfect fit? */
+    if(unlikely(ofst + len == 0x800))
+      ec->dest = NULL;
   }
   else
   {
@@ -1874,7 +1846,12 @@ static int ARCH_DEP(vstore)(int r1, REGS *regs, REGS *iregs, struct ec *ec, BYTE
       {
         len1 += 0x800;
         len2 -= 0x800;
-        ec->dest = MADDR((GR_A(r1, iregs) + len1) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+
+        /* Perfect fit? */
+        if(unlikely(!len2))
+          ec->dest = NULL;
+        else
+          ec->dest = MADDR((GR_A(r1, iregs) + len1) & ADDRESS_MAXWRAP(regs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
         sk = regs->dat.storkey;
       }
       else
