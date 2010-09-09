@@ -1,0 +1,30 @@
+# ***************************************************************************
+#     REXX_RULES.msvc      (!INCLUDE ed by "makefile-dllmod.msvc")
+# --------------------------------------------------------------------------
+# (c) Copyright Roger Bowler, 2010
+# --------------------------------------------------------------------------
+# $Id$
+#
+#  Build rules for REXX support
+#
+# ***************************************************************************
+
+!IFDEF REXX_DIR
+
+$(X)$(REXX_DLLNAME1):
+    XCOPY "$(REXX_DLLPATH1)" $(X) /V /C /F /H /R /K /O /X /Y
+
+$(X)$(REXX_DLLNAME2):
+    XCOPY "$(REXX_DLLPATH2)" $(X) /V /C /F /H /R /K /O /X /Y
+
+allrexx: allHercules \
+    $(X)$(REXX_DLLNAME1) \
+    $(X)$(REXX_DLLNAME2)
+
+!ELSE
+
+allrexx: allHercules
+
+!ENDIF
+
+# End of build rules for REXX support

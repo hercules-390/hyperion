@@ -1,0 +1,15 @@
+# ***************************************************************************
+#     REXX_FLAGS.msvc      (!INCLUDE ed by "makefile-dllmod.msvc")
+# --------------------------------------------------------------------------
+# (c) Copyright Roger Bowler, 2010
+# --------------------------------------------------------------------------
+# $Id$
+#
+#  Sets compiler and linker flags for REXX support
+#
+# ***************************************************************************
+
+!IFDEF REXX_DIR
+LIBS   = $(LIBS) "$(REXX_LIBPATH)"
+cflags = $(cflags) /D HAVE_REGINA_REXXSAA_H /I"$(REXX_INCDIR)" 
+!ENDIF

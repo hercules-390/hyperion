@@ -1,32 +1,19 @@
 # ***************************************************************************
 #     PRIM_RULES.msvc      (!INCLUDE ed by "makefile-dllmod.msvc")
 # --------------------------------------------------------------------------
-# (c) Copyright Roger Bowler, 2005-2007
+# (c) Copyright Roger Bowler, 2005-2010
 # --------------------------------------------------------------------------
 # $Id$
 #
 #  Primary generic build rules...  ('all', 'clean', etc...)
 #
-#
-#                           CHANGE HISTORY
-# $Log$
-# Revision 1.2  2008/10/11 23:47:05  fish
-# Fix MSVC build failure when 'rebase' utility doesn't exist
-# Add CVS "Id" and "Log"
-#
-#
-# DD/MM/YY Description
-#
-# 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
-# 07/02/10 Fish: allHercules, rmdir DYNDIR, del fna
-#
 # ***************************************************************************
 
 # ---------------------------------------------------------------------
-#  Primary build rules...
+#  Primary build rules
 # ---------------------------------------------------------------------
 
-all: allzlib alllibbz2 allpcre allHercules
+all: allzlib alllibbz2 allpcre allrexx allHercules
     for %I in (rebase.exe) do if exist %~$$PATH:I rebase -b 0x400000 $(X)*.dll
     if exist $(EXEDIR)\*.manifest del /f /q $(EXEDIR)\*.manifest
 

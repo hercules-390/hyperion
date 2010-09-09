@@ -1,0 +1,74 @@
+# ***************************************************************************
+#     REXX_DIR.msvc      (!INCLUDE ed by "makefile-dllmod.msvc")
+# --------------------------------------------------------------------------
+# (c) Copyright Roger Bowler, 2010
+# --------------------------------------------------------------------------
+# $Id$
+#
+#  Determines which directory contains the optional REXX package
+#
+# ***************************************************************************
+
+# ---------------------------------------------------------------------
+# To enable REXX support, download regina35w32.zip from sourceforge.net
+# unzip it into the winbuild\rexx\ subdirectory of the build directory.
+# For Windows x86_64 download regina35w64.zip and unzip it into the
+# winbuild\rexx\x64 subdirectory. You can set the REXX_DIR environment
+# variable to override the default location.
+# ---------------------------------------------------------------------
+
+!IFNDEF REXX_DIR
+# Undefined: use default value, if it exists.
+# REXX_DIR defaults to winbuild\rexx relative to current directory
+!IF "$(CPU)" == "i386" && EXIST(winbuild\rexx)
+REXX_DIR = winbuild\rexx
+!ELSEIF "$(CPU)" == "AMD64" && EXIST(winbuild\rexx\x64)
+REXX_DIR = winbuild\rexx\x64
+!ELSEIF "$(CPU)" == "IA64" && EXIST(winbuild\rexx\ia64)
+REXX_DIR = winbuild\rexx\ia64
+!ENDIF
+!ELSE
+# Defined: use explicit directory or subdirectory
+# unless "NONE" is specified or it doesn't exist.
+!IF "$(REXX_DIR)" == "NONE"
+!UNDEF REXX_DIR
+!ELSE
+!IF "$(CPU)" == "i386"
+!IF !EXIST($(REXX_DIR))
+!UNDEF REXX_DIR
+!ENDIF
+!ELSEIF "$(CPU)" == "AMD64"
+!IF EXIST($(REXX_DIR)\x64)
+REXX_DIR = $(REXX_DIR)\x64
+!ENDIF
+!ELSEIF "$(CPU)" == "IA64"
+!IF EXIST($(REXX_DIR)\ia64)
+REXX_DIR = $(REXX_DIR)\ia64
+!ENDIF
+!ENDIF
+!ENDIF
+!ENDIF
+
+!IFDEF REXX_DIR
+REXX_INCNAME  = rexxsaa.h
+REXX_LIBNAME  = regina.lib
+REXX_DLLNAME1 = regina.dll
+REXX_DLLNAME2 = regutil.dll
+REXX_INCDIR   = $(REXX_DIR)\include
+REXX_INCPATH  = $(REXX_DIR)\include\$(REXX_INCNAME)
+REXX_LIBPATH  = $(REXX_DIR)\lib\$(REXX_LIBNAME)
+REXX_DLLPATH1 = $(REXX_DIR)\$(REXX_DLLNAME1)
+REXX_DLLPATH2 = $(REXX_DIR)\$(REXX_DLLNAME2)
+!IF !EXIST("$(REXX_INCPATH)")
+!ERROR REXX_DIR "$(REXX_INCPATH)" does not exist. Check REXX_DIR
+!ELSEIF !EXIST("$(REXX_LIBPATH)")
+!ERROR REXX_DIR "$(REXX_LIBPATH)" does not exist. Check REXX_DIR
+!ELSEIF !EXIST("$(REXX_DLLPATH1)")
+!ERROR REXX_DIR "$(REXX_DLLPATH1)" does not exist. Check REXX_DIR
+!ELSEIF !EXIST("$(REXX_DLLPATH2)")
+!ERROR REXX_DIR "$(REXX_DLLPATH2)" does not exist. Check REXX_DIR
+!ENDIF
+!MESSAGE REXX support will be included from "$(REXX_DIR)" 
+!ELSE
+!MESSAGE REXX support will not be generated
+!ENDIF

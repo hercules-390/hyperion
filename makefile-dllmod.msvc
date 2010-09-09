@@ -1,76 +1,8 @@
 # ***************************************************************************
-# MAKEFILE-DLLMOD.MSVC (c) Copyright Roger Bowler, 2005-2007
+# MAKEFILE-DLLMOD.MSVC (c) Copyright Roger Bowler, 2005-2010
 # Build Hercules for Win32 using MSVC and nmake (DLL version with loadable modules)
 #
 # $Id$
-#
-# DD/MM/YY Description.......................................................
-# 17/02/05 Created by - Roger Bowler
-# 01/03/05 Place debug/retail builds into separate directories - Fish
-# 06/03/05 DLL version - Ivan Warren
-# 07/03/05 Precompiled headers for faster compilation - Ivan Warren
-# 08/03/05 Added /QIfist to cflags - JJ
-# 08/03/05 Modified to build DLL version in its own subdirectories separate
-#          from the static build version, and to place the generated .lib
-#          and .exp files into the object module sub-directory instead of
-#          the executable sub-directory - R.Bowler
-# 08/03/05 Modified to do "batch build" for faster builds - Fish
-# 08/03/05 Fixed optimization flags - Fish
-# 08/03/05 Added support for DEBUG builds - Fish
-# 08/03/05 Use XCOPY instead of COPY - Fish
-# 10/03/05 Fixed creation of directories - R.Bowler
-# 12/03/05 first attempt at loadable modules - jj
-# 21/03/05 Support for new VS 8.0 compiler (version 14.00) - Fish
-# 04/04/05 VS8: _CRT_SECURE_NO_DEPRECATE - Fish
-# 15/04/05 BZIP2 support (libbz2.dll) - Fish
-# 17/04/05 Resource file support (with version numbering) - Fish
-# 18/04/05 SCSI tape: w32stape.c - Fish
-# 22/04/05 'ftol2' moved to w32util.c - Fish
-# 01/05/05 Move "MAX_CPU_ENGINES" to here instead of 'hercwind.h' - Fish
-# 03/05/05 Remove '/map 'options and replace with /Zi and /DEBUG options
-#          instead in order to produce .PDB files so we can more easily
-#          debug/analyze "crash dumps" should we ever need to - Fish
-# 06/05/05 Eliminate duplicate link commands like makefile.dll - Roger Bowler
-# 06/05/05 Place .pdb files in separate directory - Roger Bowler
-# 06/05/05 Can we agree on these o/p directory names?? - Fish
-# 07/05/05 /MANIFEST:NO in wrong spot (is only for VS8.0) - Fish
-# 02/07/05 VS8: _CRT_NONSTDC_NO_DEPRECATE to prevent compiler warning:
-#          "C4996 'function': was declared deprecated"
-# 02/07/05 VS8: Add pre-compiled header object file (build_pch.obj)
-#          to both 'linkexe' and 'linkdll' to prevent linker error:
-#          "LNK2011 "precompiled object not linked in; image may not run"
-# 02/07/05 VS8: _USE_32BIT_TIME_T to prevent problems with presumed
-#          assumed size of timeval tv.tv_sec and time(time_t) - Fish
-# 31/07/05 Change default release (non-DEBUG) build optimization options
-#          to simply /O2 (maximize speed), and remove the /GF (Eliminate
-#          Duplicate Strings) option (which is the default for /O2 anyway)
-#          and the /GS (Buffer Security Check) option (which seems to slow
-#          things down WAY too much).
-# 02/08/05 Add optional compilation of cryptographic modules (nmake crypto)
-# 14/11/05 Add /map option back again; make similar to dll version. - Fish
-# 22/11/05 Crypto module now included standard - Ivan
-# 24/11/05 Rebase all DLLs at 0x400000 (same as executables default) - Fish
-# 29/11/05 Create assembly listings if 'ASSEMBLY_LISTINGS' defined - Fish
-# 01/12/05 Fix for VS 8.0 "manifest" files issue - Volker Bandke
-# 02/12/05 Added 'conspawn' utility to build - Fish
-# 30/03/06 (just changed some tabs to spaces) - Fish
-# 04/05/06 clean: skip 'del' (delete) if files don't exist - Fish
-# 04/09/06 PCRE (Regular Expressions) support (http://www.pcre.org) - Fish
-# 06/09/06 HAO (Hercules Automatic Operator) support - Fish
-# 06/12/06 Add decNumber for DFP (Decimal Floating Point) support - Roger Bowler
-# 26/12/06 Broke sections out into separate !INCLUDE-able files for easier
-#          maintenance and use by externally built dynamic modules. - Fish
-# 30/01/10 Dynamic module builds now use same makefile as Hercules. - Fish
-#
-# $Log$
-# Revision 1.30  2008/05/06 19:56:29  rbowler
-# Default BZIP2_DIR to winbuild/bzip2 if it exists
-#
-# Revision 1.29  2006/12/28 19:03:38  fish
-# New makefile restructuring
-#
-# Revision 1.28  2006/12/08 09:43:29  jj
-# Add CVS message log
 #
 # ***************************************************************************
 
@@ -85,6 +17,7 @@ INCDIR = msvc.makefile.includes
 !INCLUDE $(INCDIR)\ZLIB_DIR.msvc
 !INCLUDE $(INCDIR)\BZIP2_DIR.msvc
 !INCLUDE $(INCDIR)\PCRE_DIR.msvc
+!INCLUDE $(INCDIR)\REXX_DIR.msvc
 # ---------------------------------------------------------------------
 
 ###################################################
@@ -106,6 +39,7 @@ INCDIR = msvc.makefile.includes
 !INCLUDE $(INCDIR)\ZLIB_FLAGS.msvc
 !INCLUDE $(INCDIR)\BZIP2_FLAGS.msvc
 !INCLUDE $(INCDIR)\PCRE_FLAGS.msvc
+!INCLUDE $(INCDIR)\REXX_FLAGS.msvc
 !INCLUDE $(INCDIR)\HERC_FLAGS.msvc
 # ---------------------------------------------------------------------
 
@@ -123,6 +57,7 @@ rcflags = $(rcflags) -D TARGETFILENAME=\"$(DYNMOD).dll\" -D MAX_CPU_ENGINES_STR=
 !INCLUDE $(INCDIR)\ZLIB_RULES.msvc
 !INCLUDE $(INCDIR)\BZIP2_RULES.msvc
 !INCLUDE $(INCDIR)\PCRE_RULES.msvc
+!INCLUDE $(INCDIR)\REXX_RULES.msvc
 # ---------------------------------------------------------------------
 
 !IFDEF DYNDIR
