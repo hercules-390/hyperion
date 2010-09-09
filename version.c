@@ -1,4 +1,4 @@
-/* VERSION.C    (c) Copyright Roger Bowler, 1999-2009                */
+/* VERSION.C    (c) Copyright Roger Bowler, 1999-2010                */
 /*              Hercules Version Display Module                      */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -8,8 +8,8 @@
 // $Id$
 
 /*-------------------------------------------------------------------*/
-/* This module displays the Hercules program name, version, build    */
-/* date and time, and copyright notice to the indicated file.        */
+/* This module displays the Hercules program name and version,       */
+/* copyright notice, build date and time, and build information.     */
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
@@ -132,6 +132,10 @@ static const char *build_info[] = {
 
 #if defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
     "Regular Expressions support",
+#endif
+
+#if defined(HAVE_REGINA_REXXSAA_H)
+    "REXX support",
 #endif
 
 #if defined(OPTION_HAO)
