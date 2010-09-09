@@ -684,9 +684,6 @@ char   *shercprio;                      /* -> Hercules base priority */
 char   *stodprio;                       /* -> Timer thread priority  */
 char   *scpuprio;                       /* -> CPU thread priority    */
 char   *sdevprio;                       /* -> Device thread priority */
-#if defined(OPTION_SHARED_DEVICES)
-char   *sshrdport;                      /* -> Shared device port nbr */
-#endif /*defined(OPTION_SHARED_DEVICES)*/
 
 U16     version = 0x00;                 /* CPU version code          */
 U32     serial;                         /* CPU serial number         */
@@ -696,9 +693,6 @@ unsigned xpndsize;                      /* Expanded storage size (MB)*/
 U16     maxcpu;                         /* Maximum number of CPUs    */
 U16     numcpu;                         /* Number of CPUs            */
 U16     numvec;                         /* Number of VFs             */
-#if defined(OPTION_SHARED_DEVICES)
-U16     shrdport;                       /* Shared device port number */
-#endif /*defined(OPTION_SHARED_DEVICES)*/
 S32     sysepoch;                       /* System epoch year         */
 S32     tzoffset;                       /* System timezone offset    */
 S32     yroffset;                       /* System year offset        */
@@ -787,6 +781,10 @@ char    fname[MAX_PATH];                /* normalized filename       */
     sysblk.quitmout = QUITTIME_PERIOD;     /* quit timeout value        */
 #endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
 
+#if defined(OPTION_SHARED_DEVICES)
+    sysblk.shrdport = 0;
+#endif /*defined(OPTION_SHARED_DEVICES)*/
+
     hercprio = DEFAULT_HERCPRIO;
     todprio  = DEFAULT_TOD_PRIO;
     cpuprio  = DEFAULT_CPU_PRIO;
@@ -801,10 +799,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
     sysblk.ecpsvm.available = 0;
     sysblk.ecpsvm.level = 20;
 #endif /*defined(_FEATURE_ECPSVM)*/
-
-#if defined(OPTION_SHARED_DEVICES)
-    shrdport = 0;
-#endif /*defined(OPTION_SHARED_DEVICES)*/
 
 #ifdef PANEL_REFRESH_RATE
     sysblk.panrate = PANEL_REFRESH_RATE_SLOW;
@@ -972,10 +966,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
         scpuprio = NULL;
         sdevprio = NULL;
 
-#if defined(OPTION_SHARED_DEVICES)
-        sshrdport = NULL;
-#endif /*defined(OPTION_SHARED_DEVICES)*/
-
         /* Check for old-style CPU statement */
         if (scount == 0 && addargc == 5 && strlen(keyword) == 6
             && sscanf(keyword, "%x%c", &rc, &c) == 1)
@@ -1067,16 +1057,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
             {
                 sdevprio = operand;
             }
-            else if (strcasecmp (keyword, "shrdport") == 0)
-#if defined(OPTION_SHARED_DEVICES)
-            {
-                sshrdport = operand;
-            }
-#else
-            {
-                WRMSG( HHC01450, "W", inc_stmtnum[inc_level], fname, keyword, "OPTION_SHARED_DEVICES" ); 
-            }
-#endif /*defined(OPTION_SHARED_DEVICES)*/
             else
             {
                 WRMSG(HHC01441, "E", inc_stmtnum[inc_level], fname, keyword);
@@ -1323,19 +1303,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
             }
         }
 
-#if defined(OPTION_SHARED_DEVICES)
-        /* Parse shared device port number operand */
-        if (sshrdport != NULL)
-        {
-            if (sscanf(sshrdport, "%hu%c", &shrdport, &c) != 1
-                || shrdport < 1024 )
-            {
-                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, sshrdport, "SHRDPORT");
-                delayed_exit(1);
-            }
-        }
-#endif /*defined(OPTION_SHARED_DEVICES)*/
-
     } /* end for(scount) (end of configuration file statement loop) */
 
 #if defined( OPTION_TAPE_AUTOMOUNT )
@@ -1378,10 +1345,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
     /* Display Hercules thread information on control panel */
     // Removed this message. build_cfg is not a thread?
     //WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "hercules");
-
-#if defined(OPTION_SHARED_DEVICES)
-    sysblk.shrdport = shrdport;
-#endif /*defined(OPTION_SHARED_DEVICES)*/
 
     /* Reset the clock steering registers */
     csr_reset();

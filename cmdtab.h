@@ -341,6 +341,12 @@ COMMAND("capping",   CONFIG,        SYSCMDALL,          capping_cmd,
     NULL)
 #endif // OPTION_CAPPING
 
+#if defined(OPTION_SHARED_DEVICES)
+COMMAND("shrdport",  CONFIG,        SYSCMDALL,          shrdport_cmd,
+  "Set shrdport value", 
+    NULL)
+#endif /*defined(OPTION_SHARED_DEVICES)*/
+
 #if defined(OPTION_SET_STSI_INFO)
 COMMAND("model",     CONFIG,        SYSCMDALL,          stsi_model_cmd,
   "Set STSI model code", 
