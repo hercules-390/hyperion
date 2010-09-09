@@ -2,6 +2,8 @@
 
 /* Trace Command */
 
+call on error
+
 /*
  *       Sample configuration file for Hercules ESA/390 emulator
  *
@@ -146,3 +148,11 @@
  *
  * 0700    3270
  */
+exit
+
+error:
+  Say ' '
+  Say 'Error in configuration file line' sigl
+  Say 'An invalid statement was encountered:' sourceline(sigl)
+  Say ' '
+return
