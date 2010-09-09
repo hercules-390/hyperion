@@ -1740,7 +1740,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC90361 F_GREG " - " F_GREG " Same buffer as previously shown"
 #define HHC90362 "%s - " F_GREG " Same line as above"
 #define HHC90363 "%s"
-#define HHC90364 "zero padding GR%02d=" F_VADR ", GR%02d=" F_GREG
+#define HHC90364 "   zp    : %s"
  
 /* tapeccws tapedev */
 #define HHC93480 "%1d:%04X TDSPSTAT[%02X] msg1[%-8s] msg2[%-8s] msg[%-8s] mnt[%s] unmnt[%s] TDSPFLAG[%02X]"
