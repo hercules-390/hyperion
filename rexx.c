@@ -54,7 +54,7 @@ RexxSubcomHandler *hSubCmd( PRXSTRING command, PUSHORT flags, PRXSTRING retval )
 SHORT rc;
 
     if( (rc = ProcessPanelCommand(command[0].strptr)) )
-        *flags = RXSUBCOM_ERROR;
+        *flags = rc < 0 ? RXSUBCOM_ERROR : RXSUBCOM_FAILURE;
     else
         *flags = RXSUBCOM_OK;
 

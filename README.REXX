@@ -9,6 +9,11 @@ To build Hercules with REXX support the regina3-dev package is needed
 The default command environment is HERCULES
 
 command errors may be handled with SIGNAL ON ERROR
+command faulures may be handles with SIGNAL ON FAILURE
+command returncodes < 0 are interpreted as ERROR returncodes > 0 are interpreted as FAILURE
+e.g. command not found is an error
+e.g. file not found on attach is a failure
+
 
 The EXEC command may be used to explicitly invoke a REXX script, optional arguments will be passed 
 
