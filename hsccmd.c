@@ -4846,6 +4846,7 @@ int attach_cmd(int argc, char *argv[], char *cmdline)
     rc = parse_and_attach_devices(argv[1],argv[2],argc-3,&argv[3]);
     if(rc)
         WRMSG(HHC02198, "I");
+
     return rc;
 }
 

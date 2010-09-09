@@ -1244,7 +1244,6 @@ parse_and_attach_devices(const char *sdevnum,
                }
                 /* Build the device configuration block */
                rc=attach_device(dnd.lcss, devnum, sdevtype, addargc, newargv);
-logmsg("attach %s %s\n",sdevtype,sdevnum);
                for(j=0;j<addargc;j++)
                {
                    free(orig_newargv[j]);
@@ -1269,7 +1268,7 @@ logmsg("attach %s %s\n",sdevtype,sdevnum);
         free(orig_newargv);
 #endif /* #if defined(OPTION_CONFIG_SYMBOLS) */
         free(dnd.da);
-        return baddev?0:-1;
+        return baddev?-1:0;
 } 
 
 #define MAX_LOGO_LINES 256
