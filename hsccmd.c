@@ -2415,6 +2415,64 @@ char *basedir;
 
 
 /*-------------------------------------------------------------------*/
+/* engines command                                                   */
+/*-------------------------------------------------------------------*/
+int engines_cmd(int argc, char *argv[], char *cmdline)
+{
+char *styp;                           /* -> Engine type string     */
+char *styp_values[] = {"CP","CF","AP","IL","??","IP"}; /* type values */
+BYTE ptyp;                           /* Processor engine type     */
+int  cpu,count;
+BYTE c;
+
+    UNREFERENCED(cmdline);
+
+    /* Parse processor engine types operand */
+    /* example: ENGINES 4*CP,AP,2*IP */
+    if(argc > 1)
+    {
+        styp = strtok(argv[1],",");
+        for (cpu = 0; styp != NULL; )
+        {
+            count = 1;
+            if (isdigit(styp[0]))
+            {
+                if (sscanf(styp, "%d%c", &count, &c) != 2
+                    || c != '*' || count < 1)
+                {
+                    logmsg("ENGINES: invalid syntax %s\n",styp);
+                    return -1;
+                }
+                styp = strchr(styp,'*') + 1;
+            }
+            if (strcasecmp(styp,"cp") == 0)
+                ptyp = SCCB_PTYP_CP;
+            else if (strcasecmp(styp,"cf") == 0)
+                ptyp = SCCB_PTYP_ICF;
+            else if (strcasecmp(styp,"il") == 0)
+                ptyp = SCCB_PTYP_IFL;
+            else if (strcasecmp(styp,"ap") == 0)
+                ptyp = SCCB_PTYP_IFA;
+            else if (strcasecmp(styp,"ip") == 0)
+                ptyp = SCCB_PTYP_SUP;
+            else {
+                logmsg("ENGINES: invalid engine type %s\n",styp);
+                return -1;
+            }
+            while (count-- > 0 && cpu < MAX_CPU_ENGINES)
+            {
+                sysblk.ptyp[cpu] = ptyp;
+                WRMSG(HHC00827, "I", PTYPSTR(cpu), cpu, cpu, ptyp, styp_values[ptyp]);
+                cpu++;
+            }
+            styp = strtok(NULL,",");
+        }
+    }
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
 /* sysepoch command                                                  */
 /*-------------------------------------------------------------------*/
 int sysepoch_cmd(int argc, char *argv[], char *cmdline)

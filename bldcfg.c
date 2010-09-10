@@ -673,17 +673,12 @@ int     scount;                         /* Statement counter         */
 int     cpu;                            /* CPU number                */
 int     count;                          /* Counter                   */
 FILE   *inc_fp[MAX_INC_LEVEL];          /* Configuration file pointer*/
-char   *sengines;                       /* -> Processor engine types */
-
 S64     ly1960;                         /* Leap offset for 1960 epoch*/
 DEVBLK *dev;                            /* -> Device Block           */
 char   *sdevnum;                        /* -> Device number string   */
 char   *sdevtype;                       /* -> Device type string     */
 int     devtmax;                        /* Max number device threads */
 BYTE    c;                              /* Work area for sscanf      */
-char   *styp;                           /* -> Engine type string     */
-char   *styp_values[] = {"CP","CF","AP","IL","??","IP"}; /* type values */
-BYTE    ptyp;                           /* Processor engine type     */
 #ifdef OPTION_SELECT_KLUDGE
 int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                                            this allows the console to
@@ -923,8 +918,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
             break;
         }
 
-        sengines = NULL;
-
         /* Check for old-style CPU statement */
         if (scount == 0 && addargc == 5 && strlen(keyword) == 6
             && sscanf(keyword, "%x%c", &rc, &c) == 1)
@@ -956,16 +949,9 @@ char    fname[MAX_PATH];                /* normalized filename       */
         }
         else
         {
-            if (strcasecmp (keyword, "engines") == 0)
-            {
-                sengines = operand;
-            }
-            else
-            {
-                WRMSG(HHC01441, "E", inc_stmtnum[inc_level], fname, keyword);
-                operand = "";
-                addargc = 0;
-            }
+            WRMSG(HHC01441, "E", inc_stmtnum[inc_level], fname, keyword);
+            operand = "";
+            addargc = 0;
 
             /* Check for one and only one operand */
             if (operand == NULL || addargc != 0)
@@ -974,50 +960,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
             }
 
         } /* end else (not old-style CPU statement) */
-
-        /* Parse processor engine types operand */
-        /* example: ENGINES 4*CP,AP,2*IP */
-        if (sengines != NULL)
-        {
-            styp = strtok(sengines,",");
-            for (cpu = 0; styp != NULL; )
-            {
-                count = 1;
-                if (isdigit(styp[0]))
-                {
-                    if (sscanf(styp, "%d%c", &count, &c) != 2
-                        || c != '*' || count < 1)
-                    {
-                        WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, styp, "engine syntax");
-                        delayed_exit(1);
-                        break;
-                    }
-                    styp = strchr(styp,'*') + 1;
-                }
-                if (strcasecmp(styp,"cp") == 0)
-                    ptyp = SCCB_PTYP_CP;
-                else if (strcasecmp(styp,"cf") == 0)
-                    ptyp = SCCB_PTYP_ICF;
-                else if (strcasecmp(styp,"il") == 0)
-                    ptyp = SCCB_PTYP_IFL;
-                else if (strcasecmp(styp,"ap") == 0)
-                    ptyp = SCCB_PTYP_IFA;
-                else if (strcasecmp(styp,"ip") == 0)
-                    ptyp = SCCB_PTYP_SUP;
-                else {
-                    WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, styp, "engine type");
-                    delayed_exit(1);
-                    break;
-                }
-                while (count-- > 0 && cpu < MAX_CPU_ENGINES)
-                {
-                    sysblk.ptyp[cpu] = ptyp;
-                    WRMSG(HHC00827, "I", PTYPSTR(cpu), cpu, cpu, ptyp, styp_values[ptyp]);
-                    cpu++;
-                }
-                styp = strtok(NULL,",");
-            }
-        }
 
     } /* end for(scount) (end of configuration file statement loop) */
 

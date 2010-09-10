@@ -307,6 +307,10 @@ COMMAND("archmode",  PANEL+CONFIG,  SYSCMDALL-SYSOPER, archlvl_cmd,
   "Alias for archlvl", 
     NULL)
 
+COMMAND("engines",   CONFIG,        SYSCMDALL,          engines_cmd, 
+  "Set engines parameter",
+    NULL)
+
 COMMAND("sysepoch",  CONFIG,        SYSCMDALL,          sysepoch_cmd, 
   "Set sysepoch parameter",
     NULL)
