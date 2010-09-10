@@ -674,13 +674,7 @@ int     cpu;                            /* CPU number                */
 int     count;                          /* Counter                   */
 FILE   *inc_fp[MAX_INC_LEVEL];          /* Configuration file pointer*/
 char   *sengines;                       /* -> Processor engine types */
-char   *ssysepoch;                      /* -> System epoch           */
-char   *syroffset;                      /* -> System year offset     */
-char   *stzoffset;                      /* -> System timezone offset */
 
-S32     sysepoch;                       /* System epoch year         */
-S32     tzoffset;                       /* System timezone offset    */
-S32     yroffset;                       /* System year offset        */
 S64     ly1960;                         /* Leap offset for 1960 epoch*/
 DEVBLK *dev;                            /* -> Device Block           */
 char   *sdevnum;                        /* -> Device number string   */
@@ -737,9 +731,9 @@ char    fname[MAX_PATH];                /* normalized filename       */
 #else  //!_FEATURE_VECTOR_FACILITY
     sysblk.numvec = 0;
 #endif // _FEATURE_VECTOR_FACILITY
-    sysepoch = 1900;
-    yroffset = 0;
-    tzoffset = 0;
+    sysblk.sysepoch = 1900;
+    sysblk.yroffset = 0;
+    sysblk.tzoffset = 0;
 #if defined(_390)
     set_archlvl(_ARCH_390_NAME);
 #else
@@ -930,15 +924,11 @@ char    fname[MAX_PATH];                /* normalized filename       */
         }
 
         sengines = NULL;
-        ssysepoch = NULL;
-        syroffset = NULL;
-        stzoffset = NULL;
 
         /* Check for old-style CPU statement */
         if (scount == 0 && addargc == 5 && strlen(keyword) == 6
             && sscanf(keyword, "%x%c", &rc, &c) == 1)
         {
-        U16 numcpu;
         char *exec_cpuserial[2] = { "cpuserial", NULL };
         char *exec_cpumodel[2]  = { "cpumodel", NULL };
         char *exec_mainsize[2]  = { "mainsize", NULL };
@@ -969,23 +959,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
             if (strcasecmp (keyword, "engines") == 0)
             {
                 sengines = operand;
-            }
-            else if (strcasecmp (keyword, "sysepoch") == 0)
-            {
-                ssysepoch = operand;
-                if (addargc > 0)
-                {
-                    syroffset = addargv[0];
-                    addargc--;
-                }
-            }
-            else if (strcasecmp (keyword, "yroffset") == 0)
-            {
-                syroffset = operand;
-            }
-            else if (strcasecmp (keyword, "tzoffset") == 0)
-            {
-                stzoffset = operand;
             }
             else
             {
@@ -1043,41 +1016,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
                     cpu++;
                 }
                 styp = strtok(NULL,",");
-            }
-        }
-
-        /* Parse system epoch operand */
-        if (ssysepoch != NULL)
-        {
-            if (strlen(ssysepoch) != 4
-                || sscanf(ssysepoch, "%d%c", &sysepoch, &c) != 1
-                || sysepoch <= 1800 || sysepoch >= 2100)
-            {
-                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, ssysepoch, "system epoch");
-                delayed_exit(1);
-            }
-        }
-
-        /* Parse year offset operand */
-        if (syroffset != NULL)
-        {
-            if (sscanf(syroffset, "%d%c", &yroffset, &c) != 1
-                || (yroffset < -142) || (yroffset > 142))
-            {
-                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, syroffset, "year offset");
-                delayed_exit(1);
-            }
-        }
-
-        /* Parse timezone offset operand */
-        if (stzoffset != NULL)
-        {
-            if (strlen(stzoffset) != 5
-                || sscanf(stzoffset, "%d%c", &tzoffset, &c) != 1
-                || (tzoffset < -2359) || (tzoffset > 2359))
-            {
-                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, stzoffset, "time zone offset");
-                delayed_exit(1);
             }
         }
 
@@ -1206,22 +1144,21 @@ rexx_done:
     /* Set up the system TOD clock offset: compute the number of
      * microseconds offset to 0000 GMT, 1 January 1900 */
 
-    if(sysepoch != 1900 && sysepoch != 1960)
+    if(sysblk.sysepoch != 1900 && sysblk.sysepoch != 1960)
         WRMSG(HHC01440, "W", inc_stmtnum[inc_level], fname, "SYSEPOCH <value>", "SYSEPOCH 1900/1960 +/- <value>");
  
-    if(sysepoch == 1960 || sysepoch == 1988)
+    if(sysblk.sysepoch == 1960 || sysblk.sysepoch == 1988)
         ly1960 = TOD_DAY;
     else
         ly1960 = 0;
 
-    sysepoch -= 1900 + yroffset;
+    sysblk.sysepoch -= 1900 + sysblk.yroffset;
 
-    set_tod_epoch(((sysepoch*365+(sysepoch/4))*-TOD_DAY)+lyear_adjust(sysepoch)+ly1960);
+    set_tod_epoch(((sysblk.sysepoch*365+(sysblk.sysepoch/4))*-TOD_DAY)+lyear_adjust(sysblk.sysepoch)+ly1960);
 
-    sysblk.sysepoch = sysepoch;
 
     /* Set the timezone offset */
-    adjust_tod_epoch((tzoffset/100*3600+(tzoffset%100)*60)*16000000LL);
+    adjust_tod_epoch((sysblk.tzoffset/100*3600+(sysblk.tzoffset%100)*60)*16000000LL);
 
     /* Gabor Hoffer (performance option) */
     copy_opcode_tables();

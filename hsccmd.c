@@ -2415,6 +2415,119 @@ char *basedir;
 
 
 /*-------------------------------------------------------------------*/
+/* sysepoch command                                                  */
+/*-------------------------------------------------------------------*/
+int sysepoch_cmd(int argc, char *argv[], char *cmdline)
+{
+U32 sysepoch;
+S32 tzoffset;
+BYTE c;
+
+    UNREFERENCED(cmdline);
+
+    /* Parse system epoch operand */
+    if(argc > 1)
+    {
+        if (strlen(argv[1]) != 4
+            || sscanf(argv[1], "%u%c", &sysepoch, &c) != 1
+            || sysepoch <= 1800 || sysepoch >= 2100)
+        {
+            logmsg("SYSEPOCH %s invalid\n",argv[1]);
+            return -1;
+        }
+        else
+        {
+            if(argc > 2)
+            {
+                if (strlen(argv[2]) != 5
+                    || sscanf(argv[2], "%d%c", &tzoffset, &c) != 1
+                    || (tzoffset < -2359) || (tzoffset > 2359))
+                {
+                    logmsg("SYSEPOCH tzoffset %s invalid\n",argv[1]);
+                    return -1;
+                }
+                else
+                    sysblk.tzoffset = tzoffset;
+             }
+            sysblk.sysepoch = sysepoch;
+        }
+    }
+    else
+    {
+        logmsg("SYSEPOCH: No argument\n");
+        return -1;
+    }
+
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* yroffset command                                                  */
+/*-------------------------------------------------------------------*/
+int yroffset_cmd(int argc, char *argv[], char *cmdline)
+{
+S32 yroffset;
+BYTE c;
+
+    UNREFERENCED(cmdline);
+
+    /* Parse year offset operand */
+    if(argc > 1)
+    {
+        if (sscanf(argv[1], "%d%c", &yroffset, &c) != 1
+            || (yroffset < -142) || (yroffset > 142))
+        {
+            logmsg("YROFFSET %s invalid\n",argv[1]);
+            return -1;
+        }
+        else
+            sysblk.yroffset = yroffset;
+    }
+    else
+    {
+        logmsg("YROFFSET: No argument\n");
+        return -1;
+    }
+
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* tzoffset command                                                  */
+/*-------------------------------------------------------------------*/
+int tzoffset_cmd(int argc, char *argv[], char *cmdline)
+{
+S32 tzoffset;
+BYTE c;
+
+    UNREFERENCED(cmdline);
+
+    /* Parse timezone offset operand */
+    if(argc > 1)
+    {
+        if (strlen(argv[1]) != 5
+            || sscanf(argv[1], "%d%c", &tzoffset, &c) != 1
+            || (tzoffset < -2359) || (tzoffset > 2359))
+        {
+            logmsg("TZOFFSET %s invalid\n",argv[1]);
+            return -1;
+        }
+        else
+            sysblk.tzoffset = tzoffset;
+    }
+    else
+    {
+        logmsg("TZOFFSET: No argument\n");
+        return -1;
+    }
+
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
 /* mainsize command                                                  */
 /*-------------------------------------------------------------------*/
 int mainsize_cmd(int argc, char *argv[], char *cmdline)

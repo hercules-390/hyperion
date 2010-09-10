@@ -435,6 +435,8 @@ struct SYSBLK {
         int     cpus;                   /* Number CPUs configured    */
         int     hicpu;                  /* Hi cpu + 1 configured     */
         int     sysepoch;               /* TOD clk epoch (1900/1960) */
+        S32     tzoffset;               /* System timezone offset    */
+        S32     yroffset;               /* System year offset        */
         int     topchnge;               /* 1 = Topology Change Report
                                            pending (CPU cfg on/off)  */
         COND    cpucond;                /* CPU config/deconfig cond  */

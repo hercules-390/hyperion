@@ -307,6 +307,18 @@ COMMAND("archmode",  PANEL+CONFIG,  SYSCMDALL-SYSOPER, archlvl_cmd,
   "Alias for archlvl", 
     NULL)
 
+COMMAND("sysepoch",  CONFIG,        SYSCMDALL,          sysepoch_cmd, 
+  "Set sysepoch parameter",
+    NULL)
+
+COMMAND("tzoffset",  CONFIG,        SYSCMDALL,          tzoffset_cmd, 
+  "Set tzoffset parameter",
+    NULL)
+
+COMMAND("yroffset",  CONFIG,        SYSCMDALL,          yroffset_cmd, 
+  "Set yroffset parameter",
+    NULL)
+
 COMMAND("mainsize",  CONFIG,        SYSCMDALL,          mainsize_cmd, 
   "Set mainsize parameter",
     NULL)
