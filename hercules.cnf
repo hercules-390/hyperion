@@ -155,7 +155,7 @@ do i=1 to errline.0
   Say 'Line' errlnum.i || ':' errline.i
 end
 
-if errline.0 > 12 then
+if errline.0 > 9 then
   do
     Say ' '
     Say '*** TOO MANY ERRORS ENCOUNTERED DURING STARTUP ***'

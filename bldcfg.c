@@ -689,7 +689,6 @@ U32     serial;                         /* CPU serial number         */
 U16     model;                          /* CPU model number          */
 unsigned mainsize;                      /* Main storage size (MB)    */
 unsigned xpndsize;                      /* Expanded storage size (MB)*/
-U16     numcpu;                         /* Number of CPUs            */
 U16     numvec;                         /* Number of VFs             */
 S32     sysepoch;                       /* System epoch year         */
 S32     tzoffset;                       /* System timezone offset    */
@@ -748,7 +747,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
     model = 0x0586;
     mainsize = 2;
     xpndsize = 0;
-    numcpu = 0;
 #ifdef    _FEATURE_VECTOR_FACILITY
     numvec = MAX_CPU_ENGINES;
 #else  //!_FEATURE_VECTOR_FACILITY
@@ -966,6 +964,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
         if (scount == 0 && addargc == 5 && strlen(keyword) == 6
             && sscanf(keyword, "%x%c", &rc, &c) == 1)
         {
+        U16 numcpu;
             sserial = keyword;
             smodel = operand;
             smainsize = addargv[0];
@@ -987,12 +986,22 @@ char    fname[MAX_PATH];                /* normalized filename       */
                 delayed_exit(1);
             }
 
+            if (sscanf(snumcpu, "%hu%c", &numcpu, &c) != 1
+                || numcpu > MAX_CPU_ENGINES)
+            {
+                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, 
+                                snumcpu, "number of CPUs");
+                delayed_exit(1);
+            }
+
             /* Build CPU identifier */
             sysblk.cpuid = ((U64)version << 56)
                          | ((U64)serial << 32)
                          | ((U64)model << 16);
 
             sysblk.cnslport = strdup(addargv[2]);
+
+            sysblk.numcpu = numcpu;
         }
         else
         {
@@ -1003,10 +1012,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
             else if (strcasecmp (keyword, "xpndsize") == 0)
             {
                 sxpndsize = operand;
-            }
-            else if (strcasecmp (keyword, "numcpu") == 0)
-            {
-                snumcpu = operand;
             }
             else if (strcasecmp (keyword, "numvec") == 0)
             {
@@ -1174,18 +1179,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
 
         sysblk.devprio = devprio;
 #endif
-        /* Parse number of CPUs operand */
-        if (snumcpu != NULL)
-        {
-            if (sscanf(snumcpu, "%hu%c", &numcpu, &c) != 1
-                || numcpu > MAX_CPU_ENGINES)
-            {
-                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, 
-                                snumcpu, "number of CPUs");
-                delayed_exit(1);
-            }
-        }
-        sysblk.numcpu = numcpu ? numcpu : 1;
 
         /* Parse number of VFs operand */
         if (snumvec != NULL)
@@ -1482,12 +1475,14 @@ rexx_done:
         close(dummyfd[i]);
 #endif
 
+    sysblk.numcpu = sysblk.numcpu ? sysblk.numcpu : 1;
+
     /* Set default maximum number of CPUs */
     if(!sysblk.maxcpu)
 #ifdef _FEATURE_CPU_RECONFIG
-        sysblk.maxcpu = sysblk.arch_mode == ARCH_370 ? numcpu : MAX_CPU_ENGINES;
+        sysblk.maxcpu = sysblk.arch_mode == ARCH_370 ? sysblk.numcpu : MAX_CPU_ENGINES;
 #else
-        sysblk.maxcpu = numcpu;
+        sysblk.maxcpu = sysblk.numcpu;
 #endif /*_FEATURE_CPU_RECONFIG*/
 
     /* Check that numcpu does not exceed maxcpu */
@@ -1499,7 +1494,7 @@ rexx_done:
 
     /* Start the CPUs */
     OBTAIN_INTLOCK(NULL);
-    for(i = 0; i < numcpu; i++)
+    for(i = 0; i < sysblk.numcpu; i++)
         configure_cpu(i);
     RELEASE_INTLOCK(NULL);
 

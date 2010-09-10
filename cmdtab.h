@@ -308,7 +308,11 @@ COMMAND("archmode",  PANEL+CONFIG,  SYSCMDALL-SYSOPER, archlvl_cmd,
     NULL)
 
 COMMAND("maxcpu",    CONFIG,        SYSCMDALL,          maxcpu_cmd, 
-  "Set IPL parameter", 
+  "Set maxcpu parameter",
+    NULL)
+
+COMMAND("numcpu",    CONFIG,        SYSCMDALL,          numcpu_cmd, 
+  "Set numcpu parameter",
     NULL)
 
 COMMAND("loadparm",  PANEL+CONFIG,  SYSCMDALL,          loadparm_cmd, 

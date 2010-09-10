@@ -2415,6 +2415,38 @@ char *basedir;
 
 
 /*-------------------------------------------------------------------*/
+/* numcpu command                                                    */
+/*-------------------------------------------------------------------*/
+int numcpu_cmd(int argc, char *argv[], char *cmdline)
+{
+U16 numcpu;
+BYTE c;
+
+    UNREFERENCED(cmdline);
+
+    /* Parse maximum number of CPUs operand */
+    if(argc > 1)
+    {
+        if (sscanf(argv[1], "%hu%c", &numcpu, &c) != 1
+            || numcpu > MAX_CPU_ENGINES)
+        {
+            logmsg("NUMCPU invalid argument: %d\n",argv[1]);
+            return -1;
+        }
+        else
+            sysblk.numcpu = numcpu;
+    }
+    else
+    {
+        logmsg("NUMCPU: No argument\n");
+        return  -1;
+    }
+
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
 /* maxcpu command                                                    */
 /*-------------------------------------------------------------------*/
 int maxcpu_cmd(int argc, char *argv[], char *cmdline)
