@@ -755,14 +755,6 @@ COMMAND("exec",      PANEL,         SYSCMDALL,          exec_cmd,
     "passed to the script.\n")
 #endif /*defined(HAVE_REGINA_REXXSAA_H)*/
 
-COMMAND("/*",        PANEL,         SYSCMDALL,          null_cmd,
-  "Comment", 
-    NULL)
-
-COMMAND("*/",        PANEL,         SYSCMDALL,          null_cmd,
-  "Comment", 
-    NULL)
-
 COMMAND("cache",     PANEL,         SYSCMDALL-SYSOPER,  EXT_CMD(cache_cmd), 
   "Cache command", 
     NULL)

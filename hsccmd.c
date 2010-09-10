@@ -396,19 +396,6 @@ int comment_cmd(int argc, char *argv[],char *cmdline)
 
 
 /*-------------------------------------------------------------------*/
-/* null command                                                      */
-/*-------------------------------------------------------------------*/
-int null_cmd(int argc, char *argv[],char *cmdline)
-{
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
-    UNREFERENCED(cmdline);
-
-    return 0;
-}
-
-
-/*-------------------------------------------------------------------*/
 /* abort command                                                     */
 /*-------------------------------------------------------------------*/
 int abort_cmd(int argc, char *argv[],char *cmdline)

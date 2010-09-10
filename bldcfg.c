@@ -1143,73 +1143,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
 
     } /* end for(scount) (end of configuration file statement loop) */
 
-#if defined( OPTION_TAPE_AUTOMOUNT )
-    /* Define default AUTOMOUNT directory if needed */
-    if (sysblk.tamdir && sysblk.defdir == NULL)
-    {
-        char cwd[ MAX_PATH ];
-        TAMDIR *pNewTAMDIR = malloc( sizeof(TAMDIR) );
-        if (!pNewTAMDIR)
-        {
-            char buf[40];
-            snprintf(buf, 40, "malloc(%lu)", sizeof(TAMDIR));
-            WRMSG(HHC01430, "S", buf, strerror(errno));
-            delayed_exit(1);
-        }
-        VERIFY( getcwd( cwd, sizeof(cwd) ) != NULL );
-        rc = (int)strlen( cwd );
-        if (cwd[rc-1] != *PATH_SEP)
-            strlcat (cwd, PATH_SEP, sizeof(cwd));
-        pNewTAMDIR->dir = strdup (cwd);
-        pNewTAMDIR->len = (int)strlen (cwd);
-        pNewTAMDIR->rej = 0;
-        pNewTAMDIR->next = sysblk.tamdir;
-        sysblk.tamdir = pNewTAMDIR;
-        sysblk.defdir = pNewTAMDIR->dir;
-        WRMSG(HHC01447, "I", sysblk.defdir);
-    }
-#endif /* OPTION_TAPE_AUTOMOUNT */
-
-    /* Set root mode in order to set priority */
-    SETMODE(ROOT);
-
-    /* Set Hercules base priority */
-    if (setpriority(PRIO_PGRP, 0, sysblk.hercprio))
-        WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
-
-    /* Back to user mode */
-    SETMODE(USER);
-
-    /* Display Hercules thread information on control panel */
-    // Removed this message. build_cfg is not a thread?
-    //WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "hercules");
-
-    /* Reset the clock steering registers */
-    csr_reset();
-
-    /* Set up the system TOD clock offset: compute the number of
-     * microseconds offset to 0000 GMT, 1 January 1900 */
-
-    if(sysepoch != 1900 && sysepoch != 1960)
-        WRMSG(HHC01440, "W", inc_stmtnum[inc_level], fname, "SYSEPOCH <value>", "SYSEPOCH 1900/1960 +/- <value>");
- 
-    if(sysepoch == 1960 || sysepoch == 1988)
-        ly1960 = TOD_DAY;
-    else
-        ly1960 = 0;
-
-    sysepoch -= 1900 + yroffset;
-
-    set_tod_epoch(((sysepoch*365+(sysepoch/4))*-TOD_DAY)+lyear_adjust(sysepoch)+ly1960);
-
-    sysblk.sysepoch = sysepoch;
-
-    /* Set the timezone offset */
-    adjust_tod_epoch((tzoffset/100*3600+(tzoffset%100)*60)*16000000LL);
-
-    /* Gabor Hoffer (performance option) */
-    copy_opcode_tables();
-
     /*****************************************************************/
     /* Parse configuration file device statements...                 */
     /*****************************************************************/
@@ -1285,6 +1218,73 @@ char    fname[MAX_PATH];                /* normalized filename       */
 #if defined(HAVE_REGINA_REXXSAA_H)
 rexx_done:
 #endif /*defined(HAVE_REGINA_REXXSAA_H)*/
+
+#if defined( OPTION_TAPE_AUTOMOUNT )
+    /* Define default AUTOMOUNT directory if needed */
+    if (sysblk.tamdir && sysblk.defdir == NULL)
+    {
+        char cwd[ MAX_PATH ];
+        TAMDIR *pNewTAMDIR = malloc( sizeof(TAMDIR) );
+        if (!pNewTAMDIR)
+        {
+            char buf[40];
+            snprintf(buf, 40, "malloc(%lu)", sizeof(TAMDIR));
+            WRMSG(HHC01430, "S", buf, strerror(errno));
+            delayed_exit(1);
+        }
+        VERIFY( getcwd( cwd, sizeof(cwd) ) != NULL );
+        rc = (int)strlen( cwd );
+        if (cwd[rc-1] != *PATH_SEP)
+            strlcat (cwd, PATH_SEP, sizeof(cwd));
+        pNewTAMDIR->dir = strdup (cwd);
+        pNewTAMDIR->len = (int)strlen (cwd);
+        pNewTAMDIR->rej = 0;
+        pNewTAMDIR->next = sysblk.tamdir;
+        sysblk.tamdir = pNewTAMDIR;
+        sysblk.defdir = pNewTAMDIR->dir;
+        WRMSG(HHC01447, "I", sysblk.defdir);
+    }
+#endif /* OPTION_TAPE_AUTOMOUNT */
+
+    /* Set root mode in order to set priority */
+    SETMODE(ROOT);
+
+    /* Set Hercules base priority */
+    if (setpriority(PRIO_PGRP, 0, sysblk.hercprio))
+        WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
+
+    /* Back to user mode */
+    SETMODE(USER);
+
+    /* Display Hercules thread information on control panel */
+    // Removed this message. build_cfg is not a thread?
+    //WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "hercules");
+
+    /* Reset the clock steering registers */
+    csr_reset();
+
+    /* Set up the system TOD clock offset: compute the number of
+     * microseconds offset to 0000 GMT, 1 January 1900 */
+
+    if(sysepoch != 1900 && sysepoch != 1960)
+        WRMSG(HHC01440, "W", inc_stmtnum[inc_level], fname, "SYSEPOCH <value>", "SYSEPOCH 1900/1960 +/- <value>");
+ 
+    if(sysepoch == 1960 || sysepoch == 1988)
+        ly1960 = TOD_DAY;
+    else
+        ly1960 = 0;
+
+    sysepoch -= 1900 + yroffset;
+
+    set_tod_epoch(((sysepoch*365+(sysepoch/4))*-TOD_DAY)+lyear_adjust(sysepoch)+ly1960);
+
+    sysblk.sysepoch = sysepoch;
+
+    /* Set the timezone offset */
+    adjust_tod_epoch((tzoffset/100*3600+(tzoffset%100)*60)*16000000LL);
+
+    /* Gabor Hoffer (performance option) */
+    copy_opcode_tables();
 
 #if !defined( OPTION_ENHANCED_CONFIG_INCLUDE )
     /* close configuration file */

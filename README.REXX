@@ -19,25 +19,6 @@ The EXEC command may be used to explicitly invoke a REXX script, optional argume
 
 REXX will be invoked implicitly if existing script files start with /*
 
-If REXX support is not installed, then /* will be ignored on the first line, */ will be treated as EOF, thus allowing for configuration, startup and script files that are bi-lingual
-
-eg:
-
-/* Classic config below
-ARCHMODE S/370
-.
-.
-.
-*/
-
-/* This is now where the REXX variant starts:
-  'ARCHMODE S/370'
-.
-.
-.
-exit
-
-
 
 Hercules symbols can be retrieved as normal environment variables with value() or getvar()
 
@@ -53,7 +34,6 @@ Not yet implemented are:
 
 Partially:
 - REXX support for the hercules.cnf config file
-- bi-lingual config, rc + script files
 
 
 Jan Jaeger

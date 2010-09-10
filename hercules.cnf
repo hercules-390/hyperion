@@ -1,177 +1,141 @@
-/* REXX */
+#
+#       Sample configuration file for Hercules ESA/390 emulator
+#
 
-/* Trace Command */
+# $Id$
+#
+# $Log$
+# Revision 1.26  2009/01/14 14:45:20  jj
+# hercules command table now also used for config commands
+#
+# Revision 1.25  2008/12/01 16:19:49  jj
+# Check for licensed operating systems without impairing architectural
+# compliance of IFL's
+#
+# Revision 1.24  2006/12/08 09:43:25  jj
+# Add CVS message log
+#
 
-errline.0 = 0
-call on error
+#------------------------------------------------------------------------------
+#       CPU Configuration
+#------------------------------------------------------------------------------
 
-/*
- *       Sample configuration file for Hercules ESA/390 emulator
- *
+  CPUSERIAL 002623              # CPU serial number
+  CPUMODEL  3090                # CPU model number
+  MODEL     EMULATOR            # STSI returned model
+  PLANT     ZZ                  # STSI returned plant
+  MANUFACTURER HRC              # STSI returned manufacturer
+  LPARNAME  HERCULES            # DIAG 204 returned lparname
+  CPUVERID  FD                  # CPU Version Identification
+  MAINSIZE  64                  # Main storage size in megabytes
+  XPNDSIZE  0                   # Expanded storage size in megabytes
+  NUMCPU    1                   # Number of CPUs
+# NUMVEC    1                   # Number of Vector Processors
+  MAXCPU    8                   # Maximum number of CPUs
+  CAPPING   0                   # Capping of CPs in MIPS, 0 = off
+  ARCHLVL   z/Arch              # Architecture mode S/370, ESA/390 or z/Arch
+  ARCHLVL   DISABLE ASN_LX_REUSE   # ASN-and-LX-Reuse facility
+# ECPSVM    DISABLE             # VM Assist : NO or Level (20 recommended)
 
- * $Id$
- *
- * $Log$
- * Revision 1.26  2009/01/14 14:45:20  jj
- * hercules command table now also used for config commands
- *
- * Revision 1.25  2008/12/01 16:19:49  jj
- * Check for licensed operating systems without impairing architectural
- * compliance of IFL's
- *
- * Revision 1.24  2006/12/08 09:43:25  jj
- * Add CVS message log
- *
+#------------------------------------------------------------------------------
+#       OS Tailoring
+#------------------------------------------------------------------------------
 
- *------------------------------------------------------------------------------
- *       CPU Configuration
- *------------------------------------------------------------------------------
- */
- 'CPUSERIAL 002623'            /* CPU serial number */
- 'CPUMODEL  3090'              /* CPU model number */
- 'MODEL     EMULATOR'          /* STSI returned model */
- 'PLANT     ZZ'                /* STSI returned plant */
- 'MANUFACTURER HRC'            /* STSI returned manufacturer */
- 'LPARNAME  HERCULES'          /* DIAG 204 returned lparname */
- 'CPUVERID  FD'                /* CPU Version Identification */
- 'MAINSIZE  64'                /* Main storage size in megabytes */
- 'XPNDSIZE  0'                 /* Expanded storage size in megabytes */
- 'NUMCPU    1'                 /* Number of CPUs */
- 'NUMVEC    1'                 /* Number of Vector Processors */
- 'MAXCPU    8'                 /* Maximum number of CPUs */
- 'CAPPING   100'               /* Capping of CPs in MIPS, 0 = off */
- 'ARCHLVL   z/Arch'            /* Architecture mode S/370, ESA/390 or z/Arch */
- 'ARCHLVL   DISABLE ASN_LX_REUSE' /* ASN-and-LX-Reuse facility */
- 'ECPSVM    NO'                /* VM Assist : NO or Level (20 recommended) */
-/*
- *------------------------------------------------------------------------------
- *       OS Tailoring
- *------------------------------------------------------------------------------
- */
- 'LOADPARM  0120....'          /* IPL parameter */
- 'OSTAILOR  LINUX'             /* OS tailoring */
- 'SYSEPOCH  1900'              /* Base year for initial TOD clock */
- 'TZOFFSET  0'                 /* Using UTC (GMT) */
+  LOADPARM  0120....            # IPL parameter
+  OSTAILOR  LINUX               # OS tailoring
+  SYSEPOCH  1900                # Base year for initial TOD clock
+# TZOFFSET  0                   # Using UTC (GMT)
 
-/*
- *------------------------------------------------------------------------------
- *       Hercules Service Processor and Hercules Application Window
- *------------------------------------------------------------------------------
- */
 
- 'MODPATH   /usr/local/lib/hercules'   /* Where to search for modules */
- 'LDMOD     dyninst tcpip'             /* Modules to be loaded */
-/*
- *------------------------------------------------------------------------------
- *       Hercules Service Processor and Hercules Application Window
- *------------------------------------------------------------------------------
- */
- 'CODEPAGE  default'                   /* CodePage conversion table */
- 'DIAG8CMD  disable'                   /* OS may not issue commands via DIAG 8 */
+#------------------------------------------------------------------------------
+#       Hercules Service Processor and Hercules Application Window
+#------------------------------------------------------------------------------
 
- 'HTTPPORT  8081 noauth userid password' /* HTTP server port */
- 'HTTPROOT  /usr/local/share/hercules/'  /* HTTP root directory */
 
- 'PANRATE   FAST'                      /* Panel refresh rate */
+# MODPATH   /usr/local/lib/hercules     # Where to search for modules
+# LDMOD     dyninst tcpip               # Modules to be loaded
 
-/*
- *-------------------------------------------------------------------------------
- *       Advanced Hercules Performance Tailoring
- *
- *       +----------------------------------------------------------------+
- *       | Caution:  Modification of these parameters may adversely       |
- *       |           affect the performance of the host system            |
- *       |           and/or Hercules.                                     |
- *       +----------------------------------------------------------------+
- *-------------------------------------------------------------------------------
- */
- 'HERCPRIO    0'               /* Hercules process runs at Normal priority */
- 'CPUPRIO    15'               /* CPU thread(s) run at Low priority */
- 'DEVPRIO     8'               /* Device thread(s) run at Below Normal priority */
- 'TODPRIO   -20'               /* TOD Clock and timer thread are Time Critical */
+#------------------------------------------------------------------------------
+#       Hercules Service Processor and Hercules Application Window
+#------------------------------------------------------------------------------
 
-/*
- *-------------------------------------------------------------------------------
- *       Integrated Hercules I/O Controller
- *
- */
- 'DEVTMAX      0'              /* Device threads, 8 on Windows, else unlimited */
- 'CNSLPORT  3270'              /* TCP port number to which consoles connect */
- 'SHRDPORT  3990'              /* TCP port number for sharing DASD images on */
-                               /* this instance of Hercules (inactive) */
-/*
- *   .-----------------------Device number
- *   |     .-----------------Device type
- *   |     |       .---------File name and parameters
- *   |     |       |
- *   V     V       V
- * ----    ----    --------------------
- */
- 'attach 0009    3215-C  / noprompt'
- 'attach 000C    3505    ./util/zzsacard.bin'
- 'attach 000D    3525    punch00d.txt ascii'
- 'attach 000E    1403    print00e.txt crlf'
- 'attach 001F    3270'
-/*
- *         The following statements are examples. Some of them require
- *         user tailoring before being used.
- * 0580    3420    ickdsf.ipl
- * 0120    3380    mvsv5r.120
- * 0121    3380    mvsv5d.121
- * 0122    3380    mvswk1.122
- * 0140    9336    dosres.140
- * 0141    9336    syswk1.141
- *
- *         The following statement defines 3 3270 devices starting
- *             at address 0200
- * 0200.3  3270
- *
- *         The following statement defines 3480 devices
- *             at addresses 0280 to 028F
- * 280-28F 3480
- *
- *         The following statement defines 3420 devices
- *             at addresses 02C0 & 02C2
- * 2C0,2C2 3420
- * 0300    3370    sysres.300
- *
- *         The following statements define 3380 Devices
- *             with the CUU substituted in the device file name
- *             device file names will be
- *                  400.3380, 401.3380, 402.3380 and 403.3380
- * 400-403 3380   $(CUU).3380
- *
- *         CCUU may also be used to define a 4 digit device address
- *                 in the name
- *                 device file names will be
- *                 0480.3380, 0481.3380, 0482.3380 and 0483.3380
- * 480-483 3380   $(CCUU).3380
- *
- * 0700    3270
- */
-Say ' '
-Say 'The Following statements could not be processed:'
-do i=1 to errline.0
-  Say 'Line' errlnum.i || ':' errline.i
-end
+  CODEPAGE  default                     # CodePage conversion table
+  DIAG8CMD  disable                     # OS may not issue commands via DIAG 8
 
-if errline.0 > 9 then
-  do
-    Say ' '
-    Say '*** TOO MANY ERRORS ENCOUNTERED DURING STARTUP ***'
-    Say ' '
-    'ABORT'
-  end
+  HTTPPORT  8081 noauth userid password # HTTP server port
+# HTTPROOT  /usr/local/share/hercules/  # HTTP root directory
 
-exit
+  PANRATE   FAST                        # Panel refresh rate
 
-error:
-  errline.0 = errline.0 + 1
-  i = errline.0
-  interpret ('err =' sourceline(sigl))
-  errline.i = err
-  errlnum.i = sigl
-Say errline.0
-Say err
-  Say '*** Error in configuration file line' sigl
-return
+
+#-------------------------------------------------------------------------------
+#       Advanced Hercules Performance Tailoring
+#
+#       +----------------------------------------------------------------+
+#       | Caution:  Modification of these parameters may adversely       |
+#       |           affect the performance of the host system            |
+#       |           and/or Hercules.                                     |
+#       +----------------------------------------------------------------+
+#-------------------------------------------------------------------------------
+
+# HERCPRIO    0                 # Hercules process runs at Normal priority
+# CPUPRIO    15                 # CPU thread(s) run at Low priority
+# DEVPRIO     8                 # Device thread(s) run at Below Normal priority
+# TODPRIO   -20                 # TOD Clock and timer thread are Time Critical
+
+
+#-------------------------------------------------------------------------------
+#       Integrated Hercules I/O Controller
+#
+
+# DEVTMAX      0                # Device threads, 8 on Windows, else unlimited
+  CNSLPORT  3270                # TCP port number to which consoles connect
+# SHRDPORT  3990                # TCP port number for sharing DASD images on
+                                # this instance of Hercules (inactive)
+
+#   .-----------------------Device number
+#   |     .-----------------Device type
+#   |     |       .---------File name and parameters
+#   |     |       |
+#   V     V       V
+# ----    ----    --------------------
+  0009    3215-C  / noprompt
+  000C    3505    ./util/zzsacard.bin
+  000D    3525    punch00d.txt ascii
+  000E    1403    print00e.txt crlf
+  001F    3270
+#         The following statements are examples. Some of them require
+#         user tailoring before being used.
+# 0580    3420    ickdsf.ipl
+# 0120    3380    mvsv5r.120
+# 0121    3380    mvsv5d.121
+# 0122    3380    mvswk1.122
+# 0140    9336    dosres.140
+# 0141    9336    syswk1.141
+#
+#         The following statement defines 3 3270 devices starting
+#             at address 0200
+# 0200.3  3270
+#
+#         The following statement defines 3480 devices
+#             at addresses 0280 to 028F
+# 280-28F 3480
+#
+#         The following statement defines 3420 devices
+#             at addresses 02C0 & 02C2
+# 2C0,2C2 3420
+# 0300    3370    sysres.300
+#
+#         The following statements define 3380 Devices
+#             with the CUU substituted in the device file name
+#             device file names will be
+#                  400.3380, 401.3380, 402.3380 and 403.3380
+# 400-403 3380   $(CUU).3380
+#
+#         CCUU may also be used to define a 4 digit device address
+#                 in the name
+#                 device file names will be
+#                 0480.3380, 0481.3380, 0482.3380 and 0483.3380
+# 480-483 3380   $(CCUU).3380
+#
+# 0700    3270
