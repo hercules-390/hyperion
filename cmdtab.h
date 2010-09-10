@@ -131,7 +131,7 @@ COMMAND("version",   PANEL,         SYSNONE,            version_cmd,
   "Display version information", 
     NULL)
 
-COMMAND("abort",     CONFIG,        SYSNONE,            quit_cmd,     
+COMMAND("abort",     CONFIG,        SYSNONE,            abort_cmd,     
   "Abort initialisation",          
     NULL)
 
@@ -305,6 +305,10 @@ COMMAND("archlvl",  PANEL+CONFIG,  SYSCMDALL-SYSOPER, archlvl_cmd,
 
 COMMAND("archmode",  PANEL+CONFIG,  SYSCMDALL-SYSOPER, archlvl_cmd, 
   "Alias for archlvl", 
+    NULL)
+
+COMMAND("maxcpu",    CONFIG,        SYSCMDALL,          maxcpu_cmd, 
+  "Set IPL parameter", 
     NULL)
 
 COMMAND("loadparm",  PANEL+CONFIG,  SYSCMDALL,          loadparm_cmd, 

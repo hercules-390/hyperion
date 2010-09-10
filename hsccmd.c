@@ -396,6 +396,21 @@ int comment_cmd(int argc, char *argv[],char *cmdline)
 
 
 /*-------------------------------------------------------------------*/
+/* abort command                                                     */
+/*-------------------------------------------------------------------*/
+int abort_cmd(int argc, char *argv[],char *cmdline)
+{
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+    UNREFERENCED(cmdline);
+ 
+    delayed_exit(1);
+ 
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
 /* quit or exit command - terminate the emulator                     */
 /*-------------------------------------------------------------------*/
 int quit_cmd(int argc, char *argv[],char *cmdline)
@@ -2394,6 +2409,39 @@ char *basedir;
             WRMSG(HHC02204, "I","SCLPROOT",basedir);
         else
             WRMSG(HHC02204, "I", "SCLP disk I/O", "disabled");
+
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* maxcpu command                                                    */
+/*-------------------------------------------------------------------*/
+int maxcpu_cmd(int argc, char *argv[], char *cmdline)
+{
+U16 maxcpu;
+BYTE c;
+
+    UNREFERENCED(cmdline);
+
+    /* Parse maximum number of CPUs operand */
+    if(argc > 1)
+    {
+        if (sscanf(argv[1], "%hu%c", &maxcpu, &c) != 1
+            || maxcpu < 1
+            || maxcpu > MAX_CPU_ENGINES)
+        {
+            logmsg("MAXCPU invalid argument: %d\n",argv[1]);
+            return -1;
+        }
+        else
+            sysblk.maxcpu = maxcpu;
+    }
+    else
+    {
+        logmsg("MAXCPU: No argument\n");
+        return  -1;
+    }
 
     return 0;
 }

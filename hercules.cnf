@@ -173,6 +173,5 @@ error:
   errlnum.i = sigl
 Say errline.0
 Say err
-  Say 'Error in configuration file line' sigl
-  Say 'An invalid statement was encountered:' sourceline(sigl)
+  Say '*** Error in configuration file line' sigl
 return
