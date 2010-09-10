@@ -131,6 +131,10 @@ COMMAND("version",   PANEL,         SYSNONE,            version_cmd,
   "Display version information", 
     NULL)
 
+COMMAND("abort",     CONFIG,        SYSNONE,            quit_cmd,     
+  "Abort initialisation",          
+    NULL)
+
 #if defined (OPTION_SHUTDOWN_CONFIRMATION)
 COMMAND("quit",      PANEL,         SYSNONE,            quit_cmd,     
   "Terminate the emulator", 
@@ -331,18 +335,18 @@ COMMAND("cpuidfmt",  PANEL+CONFIG,  SYSCMDALL,          cpuidfmt_cmd,
   "Set format 0/1 STIDP generation", 
     NULL)
 
-COMMAND("cnslport",  CONFIG,        SYSCMDALL,          cnslport_cmd,
+COMMAND("cnslport",  CONFIG,        SYSNONE,            cnslport_cmd,
   "Set console port", 
     NULL)
 
 #ifdef OPTION_CAPPING
-COMMAND("capping",   CONFIG,        SYSCMDALL,          capping_cmd,
+COMMAND("capping",   CONFIG,        SYSNONE,            capping_cmd,
   "Set capping value", 
     NULL)
 #endif // OPTION_CAPPING
 
 #if defined(OPTION_SHARED_DEVICES)
-COMMAND("shrdport",  CONFIG,        SYSCMDALL,          shrdport_cmd,
+COMMAND("shrdport",  CONFIG,        SYSNONE,            shrdport_cmd,
   "Set shrdport value", 
     NULL)
 #endif /*defined(OPTION_SHARED_DEVICES)*/

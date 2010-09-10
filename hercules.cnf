@@ -2,6 +2,7 @@
 
 /* Trace Command */
 
+errline.0 = 0
 call on error
 
 /*
@@ -148,11 +149,30 @@ call on error
  *
  * 0700    3270
  */
+Say ' '
+Say 'The Following statements could not be processed:'
+do i=1 to errline.0
+  Say 'Line' errlnum.i || ':' errline.i
+end
+
+if errline.0 > 12 then
+  do
+    Say ' '
+    Say '*** TOO MANY ERRORS ENCOUNTERED DURING STARTUP ***'
+    Say ' '
+    'ABORT'
+  end
+
 exit
 
 error:
-  Say ' '
+  errline.0 = errline.0 + 1
+  i = errline.0
+  interpret ('err =' sourceline(sigl))
+  errline.i = err
+  errlnum.i = sigl
+Say errline.0
+Say err
   Say 'Error in configuration file line' sigl
   Say 'An invalid statement was encountered:' sourceline(sigl)
-  Say ' '
 return
