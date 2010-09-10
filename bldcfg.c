@@ -681,10 +681,6 @@ char   *sengines;                       /* -> Processor engine types */
 char   *ssysepoch;                      /* -> System epoch           */
 char   *syroffset;                      /* -> System year offset     */
 char   *stzoffset;                      /* -> System timezone offset */
-char   *shercprio;                      /* -> Hercules base priority */
-char   *stodprio;                       /* -> Timer thread priority  */
-char   *scpuprio;                       /* -> CPU thread priority    */
-char   *sdevprio;                       /* -> Device thread priority */
 
 U16     version = 0x00;                 /* CPU version code          */
 U32     serial;                         /* CPU serial number         */
@@ -695,10 +691,6 @@ S32     sysepoch;                       /* System epoch year         */
 S32     tzoffset;                       /* System timezone offset    */
 S32     yroffset;                       /* System year offset        */
 S64     ly1960;                         /* Leap offset for 1960 epoch*/
-int     hercprio;                       /* Hercules base priority    */
-int     todprio;                        /* Timer thread priority     */
-int     cpuprio;                        /* CPU thread priority       */
-int     devprio;                        /* Device thread priority    */
 DEVBLK *dev;                            /* -> Device Block           */
 char   *sdevnum;                        /* -> Device number string   */
 char   *sdevtype;                       /* -> Device type string     */
@@ -781,10 +773,10 @@ char    fname[MAX_PATH];                /* normalized filename       */
     sysblk.shrdport = 0;
 #endif /*defined(OPTION_SHARED_DEVICES)*/
 
-    hercprio = DEFAULT_HERCPRIO;
-    todprio  = DEFAULT_TOD_PRIO;
-    cpuprio  = DEFAULT_CPU_PRIO;
-    devprio  = DEFAULT_DEV_PRIO;
+    sysblk.hercprio = DEFAULT_HERCPRIO;
+    sysblk.todprio  = DEFAULT_TOD_PRIO;
+    sysblk.cpuprio  = DEFAULT_CPU_PRIO;
+    sysblk.devprio  = DEFAULT_DEV_PRIO;
     devtmax  = MAX_DEVICE_THREADS;
     sysblk.kaidle = KEEPALIVE_IDLE_TIME;
     sysblk.kaintv = KEEPALIVE_PROBE_INTERVAL;
@@ -833,14 +825,14 @@ char    fname[MAX_PATH];                /* normalized filename       */
     if (sysblk.suid != 0)
     {
 #endif /*!defined(NO_SETUID)*/
-        if (hercprio < 0)
-            hercprio = 0;
-        if (todprio < 0)
-            todprio = 0;
-        if (cpuprio < 0)
-            cpuprio = 0;
-        if (devprio < 0)
-            devprio = 0;
+        if (sysblk.hercprio < 0)
+            sysblk.hercprio = 0;
+        if (sysblk.todprio < 0)
+            sysblk.todprio = 0;
+        if (sysblk.cpuprio < 0)
+            sysblk.cpuprio = 0;
+        if (sysblk.devprio < 0)
+            sysblk.devprio = 0;
 #if !defined(NO_SETUID)
     }
 #endif /*!defined(NO_SETUID)*/
@@ -955,10 +947,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
         ssysepoch = NULL;
         syroffset = NULL;
         stzoffset = NULL;
-        shercprio = NULL;
-        stodprio = NULL;
-        scpuprio = NULL;
-        sdevprio = NULL;
 
         /* Check for old-style CPU statement */
         if (scount == 0 && addargc == 5 && strlen(keyword) == 6
@@ -1034,22 +1022,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
             {
                 stzoffset = operand;
             }
-            else if (strcasecmp (keyword, "hercprio") == 0)
-            {
-                shercprio = operand;
-            }
-            else if (strcasecmp (keyword, "todprio") == 0)
-            {
-                stodprio = operand;
-            }
-            else if (strcasecmp (keyword, "cpuprio") == 0)
-            {
-                scpuprio = operand;
-            }
-            else if (strcasecmp (keyword, "devprio") == 0)
-            {
-                sdevprio = operand;
-            }
             else
             {
                 WRMSG(HHC01441, "E", inc_stmtnum[inc_level], fname, keyword);
@@ -1089,92 +1061,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
                 delayed_exit(1);
             }
         }
-
-        /* Parse Hercules priority operand */
-        if (shercprio != NULL)
-            if (sscanf(shercprio, "%d%c", &hercprio, &c) != 1)
-            {
-                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, shercprio, "Hercules process group thread priority");
-                delayed_exit(1);
-            }
-
-#if !defined(NO_SETUID)
-        if(sysblk.suid != 0 && hercprio < 0)
-        {
-            WRMSG(HHC01444, "W", "Hercules process group thread priority");
-            hercprio = 0;               /* Set priority to Normal     */
-        }
-#endif /*!defined(NO_SETUID)*/
-
-        sysblk.hercprio = hercprio;
-
-        /* Parse TOD Clock priority operand */
-        if (stodprio != NULL)
-            if (sscanf(stodprio, "%d%c", &todprio, &c) != 1)
-            {
-                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, stodprio, "TOD clock thread priority");
-                delayed_exit(1);
-            }
-
-#if !defined(NO_SETUID)
-        if(sysblk.suid != 0 && todprio < 0)
-        {
-            WRMSG(HHC01444, "W", "TOD clock thread priority");
-            todprio = 0;                /* Set priority to Normal     */
-        }
-#endif /*!defined(NO_SETUID)*/
-
-        sysblk.todprio = todprio;
-
-        /* Parse CPU thread priority operand */
-        if (scpuprio != NULL)
-            if (sscanf(scpuprio, "%d%c", &cpuprio, &c) != 1)
-            {
-                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, scpuprio, "CPU thread priority");
-                delayed_exit(1);
-            }
-
-#if !defined(NO_SETUID)
-        if(sysblk.suid != 0 && cpuprio < 0)
-        {
-            WRMSG(HHC01444, "W", "CPU thread priority");
-            cpuprio = 0;                /* Set priority to Normal     */
-        }
-#endif /*!defined(NO_SETUID)*/
-
-            sysblk.cpuprio = cpuprio;
-
-        /* Parse Device thread priority operand */
-        if (sdevprio != NULL)
-            if (sscanf(sdevprio, "%d%c", &devprio, &c) != 1)
-            {
-                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, sdevprio, "device thread priority");
-                delayed_exit(1);
-            }
-
-#if !defined(NO_SETUID)
-        if(sysblk.suid != 0 && devprio < 0)
-            WRMSG(HHC01444, "W", "device thread priority");
-#endif /*!defined(NO_SETUID)*/
-
-        sysblk.devprio = devprio;
-#if 0
-        /* BHe: twice the same statement?? */
-        /* Parse Device thread priority operand */
-        if (sdevprio != NULL)
-            if (sscanf(sdevprio, "%d%c", &devprio, &c) != 1)
-            {
-                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, sdevprio, "device thread priority");
-                delayed_exit(1);
-            }
-
-#if !defined(NO_SETUID)
-        if(sysblk.suid != 0 && devprio < 0)
-            WRMSG(HHC01444, "W", "device thread priority");
-#endif /*!defined(NO_SETUID)*/
-
-        sysblk.devprio = devprio;
-#endif
 
         /* Parse processor engine types operand */
         /* example: ENGINES 4*CP,AP,2*IP */
@@ -1288,7 +1174,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
     SETMODE(ROOT);
 
     /* Set Hercules base priority */
-    if (setpriority(PRIO_PGRP, 0, hercprio))
+    if (setpriority(PRIO_PGRP, 0, sysblk.hercprio))
         WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
 
     /* Back to user mode */

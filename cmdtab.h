@@ -307,8 +307,20 @@ COMMAND("archmode",  PANEL+CONFIG,  SYSCMDALL-SYSOPER, archlvl_cmd,
   "Alias for archlvl", 
     NULL)
 
-COMMAND("maxcpu",    CONFIG,        SYSCMDALL,          maxcpu_cmd, 
-  "Set maxcpu parameter",
+COMMAND("hercprio",  CONFIG,        SYSCMDALL,          hercprio_cmd, 
+  "Set hercprio parameter",
+    NULL)
+
+COMMAND("cpuprio",   CONFIG,        SYSCMDALL,          cpuprio_cmd, 
+  "Set cpuprio parameter",
+    NULL)
+
+COMMAND("devprio",   CONFIG,        SYSCMDALL,          devprio_cmd, 
+  "Set devprio parameter",
+    NULL)
+
+COMMAND("todprio",   CONFIG,        SYSCMDALL,          todprio_cmd, 
+  "Set todprio parameter",
     NULL)
 
 COMMAND("numvec",    CONFIG,        SYSCMDALL,          numvec_cmd, 
@@ -317,6 +329,10 @@ COMMAND("numvec",    CONFIG,        SYSCMDALL,          numvec_cmd,
 
 COMMAND("numcpu",    CONFIG,        SYSCMDALL,          numcpu_cmd, 
   "Set numcpu parameter",
+    NULL)
+
+COMMAND("maxcpu",    CONFIG,        SYSCMDALL,          maxcpu_cmd, 
+  "Set maxcpu parameter",
     NULL)
 
 COMMAND("loadparm",  PANEL+CONFIG,  SYSCMDALL,          loadparm_cmd, 
@@ -736,6 +752,14 @@ COMMAND("exec",      PANEL,         SYSCMDALL,          exec_cmd,
   "exec script", 
     "Format: \"exec rexx_exec [args...]\" where 'rexx_exec' is REXX script\n")
 #endif /*defined(HAVE_REGINA_REXXSAA_H)*/
+
+COMMAND("/*",        PANEL,         SYSCMDALL,          null_cmd,
+  "Comment", 
+    NULL)
+
+COMMAND("*/",        PANEL,         SYSCMDALL,          null_cmd,
+  "Comment", 
+    NULL)
 
 COMMAND("cache",     PANEL,         SYSCMDALL-SYSOPER,  EXT_CMD(cache_cmd), 
   "Cache command", 

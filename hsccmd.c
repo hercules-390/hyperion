@@ -396,6 +396,19 @@ int comment_cmd(int argc, char *argv[],char *cmdline)
 
 
 /*-------------------------------------------------------------------*/
+/* null command                                                      */
+/*-------------------------------------------------------------------*/
+int null_cmd(int argc, char *argv[],char *cmdline)
+{
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+    UNREFERENCED(cmdline);
+
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
 /* abort command                                                     */
 /*-------------------------------------------------------------------*/
 int abort_cmd(int argc, char *argv[],char *cmdline)
@@ -2415,6 +2428,130 @@ char *basedir;
 
 
 /*-------------------------------------------------------------------*/
+/* hercprio command                                                  */
+/*-------------------------------------------------------------------*/
+int hercprio_cmd(int argc, char *argv[], char *cmdline)
+{
+S32 hercprio;
+BYTE c;
+
+    UNREFERENCED(cmdline);
+
+    /* Parse priority value */
+    if(argc > 1)
+    {
+        if (sscanf(argv[1], "%d%c", &hercprio, &c) != 1)
+        {
+            logmsg("HERCPRIO invalid argument: %s\n",argv[1]);
+            return -1;
+        }
+        else
+            sysblk.hercprio = hercprio;
+    }
+    else
+    {
+        logmsg("HERCPRIO: No argument\n");
+        return  -1;
+    }
+
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* cpuprio command                                                   */
+/*-------------------------------------------------------------------*/
+int cpuprio_cmd(int argc, char *argv[], char *cmdline)
+{
+S32 cpuprio;
+BYTE c;
+
+    UNREFERENCED(cmdline);
+
+    /* Parse priority value */
+    if(argc > 1)
+    {
+        if (sscanf(argv[1], "%d%c", &cpuprio, &c) != 1)
+        {
+            logmsg("CPUPRIO invalid argument: %s\n",argv[1]);
+            return -1;
+        }
+        else
+            sysblk.cpuprio = cpuprio;
+    }
+    else
+    {
+        logmsg("CPUPRIO: No argument\n");
+        return  -1;
+    }
+
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* devprio command                                                  */
+/*-------------------------------------------------------------------*/
+int devprio_cmd(int argc, char *argv[], char *cmdline)
+{
+S32 devprio;
+BYTE c;
+
+    UNREFERENCED(cmdline);
+
+    /* Parse priority value */
+    if(argc > 1)
+    {
+        if (sscanf(argv[1], "%d%c", &devprio, &c) != 1)
+        {
+            logmsg("DEVPRIO invalid argument: %s\n",argv[1]);
+            return -1;
+        }
+        else
+            sysblk.devprio = devprio;
+    }
+    else
+    {
+        logmsg("DEVPRIO: No argument\n");
+        return  -1;
+    }
+
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* todprio command                                                  */
+/*-------------------------------------------------------------------*/
+int todprio_cmd(int argc, char *argv[], char *cmdline)
+{
+S32 todprio;
+BYTE c;
+
+    UNREFERENCED(cmdline);
+
+    /* Parse priority value */
+    if(argc > 1)
+    {
+        if (sscanf(argv[1], "%d%c", &todprio, &c) != 1)
+        {
+            logmsg("TODPRIO invalid argument: %s\n",argv[1]);
+            return -1;
+        }
+        else
+            sysblk.todprio = todprio;
+    }
+    else
+    {
+        logmsg("TODPRIO: No argument\n");
+        return  -1;
+    }
+
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
 /* numvec command                                                    */
 /*-------------------------------------------------------------------*/
 int numvec_cmd(int argc, char *argv[], char *cmdline)
@@ -2424,13 +2561,13 @@ BYTE c;
 
     UNREFERENCED(cmdline);
 
-    /* Parse maximum number of CPUs operand */
+    /* Parse maximum number of Vector processors operand */
     if(argc > 1)
     {
         if (sscanf(argv[1], "%hu%c", &numvec, &c) != 1
             || numvec > MAX_CPU_ENGINES)
         {
-            logmsg("NUMVEC invalid argument: %d\n",argv[1]);
+            logmsg("NUMVEC invalid argument: %s\n",argv[1]);
             return -1;
         }
         else
@@ -2446,6 +2583,7 @@ BYTE c;
 }
 
 
+/*-------------------------------------------------------------------*/
 /* numcpu command                                                    */
 /*-------------------------------------------------------------------*/
 int numcpu_cmd(int argc, char *argv[], char *cmdline)
@@ -2461,7 +2599,7 @@ BYTE c;
         if (sscanf(argv[1], "%hu%c", &numcpu, &c) != 1
             || numcpu > MAX_CPU_ENGINES)
         {
-            logmsg("NUMCPU invalid argument: %d\n",argv[1]);
+            logmsg("NUMCPU invalid argument: %s\n",argv[1]);
             return -1;
         }
         else
@@ -2494,7 +2632,7 @@ BYTE c;
             || maxcpu < 1
             || maxcpu > MAX_CPU_ENGINES)
         {
-            logmsg("MAXCPU invalid argument: %d\n",argv[1]);
+            logmsg("MAXCPU invalid argument: %s\n",argv[1]);
             return -1;
         }
         else
