@@ -148,11 +148,19 @@ int ProcessConfigCommand (int argc, char **argv, char *cmdline)
 {
 CMDTAB* cmdent;
 
-    if (argc)
-        for (cmdent = cmdtab; cmdent->statement; cmdent++)
-            if(cmdent->function && (cmdent->type & CONFIG))
-                if(!strcasecmp(argv[0], cmdent->statement))
-                    return cmdent->function(argc, argv, cmdline);
+    if (!argc)
+        return -1;
+
+#if defined(OPTION_DYNAMIC_LOAD)
+    if(config_command)
+        if( !config_command(argc, argv, cmdline) )
+            return 0;
+#endif /*defined(OPTION_DYNAMIC_LOAD)*/
+
+    for (cmdent = cmdtab; cmdent->statement; cmdent++)
+        if(cmdent->function && (cmdent->type & CONFIG))
+            if(!strcasecmp(argv[0], cmdent->statement))
+                return cmdent->function(argc, argv, cmdline);
 
     return -1;
 }

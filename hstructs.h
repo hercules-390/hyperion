@@ -408,6 +408,7 @@ struct SYSBLK {
 #define HDL_SIZE_SYSBLK   sizeof(SYSBLK)
         char   *hercules_pgmname;       /* Starting program name     */ 
         char   *hercules_pgmpath;       /* Starting pgm path name    */
+        char   *hercules_cmdline;       /* Hercules Command line     */
         pid_t   hercules_pid;           /* Process Id of Hercules    */
         time_t  impltime;               /* TOD system was IMPL'ed    */
         int     arch_mode;              /* Architecturual mode       */

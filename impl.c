@@ -383,6 +383,23 @@ int     dll_count;                      /* index into array          */
     /* Clear the system configuration block */
     memset (&sysblk, 0, sizeof(SYSBLK));
 
+    if ( argc > 0 )
+    {
+        int i,len;
+
+        for (len = 0, i = 0; i < argc; i++ )
+            len += (int)strlen( (char *)argv[i] ) + 1;
+
+        sysblk.hercules_cmdline = (char *)malloc( len );
+
+        strcpy( sysblk.hercules_cmdline, argv[0] );
+        for ( i = 1; i < argc; i++ )
+        {
+            strcat( sysblk.hercules_cmdline, " " );
+            strcat( sysblk.hercules_cmdline, argv[i] );
+        }
+    }
+
     /* Set program name */
     if ( argc > 0 )
     {

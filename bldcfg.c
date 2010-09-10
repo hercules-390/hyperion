@@ -595,16 +595,6 @@ char   *buf1;                           /* Pointer to resolved buffer*/
 
         parse_args (buf, MAX_ARGS, addargv, &addargc);
 
-#if defined(OPTION_DYNAMIC_LOAD)
-        if(config_command)
-        {
-            if( config_command(addargc, (char**)addargv, cnfline) )
-            {
-                free(cnfline);
-                continue;
-            }
-        }
-#endif /*defined(OPTION_DYNAMIC_LOAD)*/
         {
             int rc = ProcessConfigCommand (addargc, (char**)addargv, cnfline);
 
