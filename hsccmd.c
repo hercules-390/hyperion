@@ -2415,6 +2415,37 @@ char *basedir;
 
 
 /*-------------------------------------------------------------------*/
+/* numvec command                                                    */
+/*-------------------------------------------------------------------*/
+int numvec_cmd(int argc, char *argv[], char *cmdline)
+{
+U16 numvec;
+BYTE c;
+
+    UNREFERENCED(cmdline);
+
+    /* Parse maximum number of CPUs operand */
+    if(argc > 1)
+    {
+        if (sscanf(argv[1], "%hu%c", &numvec, &c) != 1
+            || numvec > MAX_CPU_ENGINES)
+        {
+            logmsg("NUMVEC invalid argument: %d\n",argv[1]);
+            return -1;
+        }
+        else
+            sysblk.numvec = numvec;
+    }
+    else
+    {
+        logmsg("NUMVEC: No argument\n");
+        return  -1;
+    }
+
+    return 0;
+}
+
+
 /* numcpu command                                                    */
 /*-------------------------------------------------------------------*/
 int numcpu_cmd(int argc, char *argv[], char *cmdline)

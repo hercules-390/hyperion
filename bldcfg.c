@@ -677,7 +677,6 @@ char   *smodel;                         /* -> CPU model string       */
 char   *smainsize;                      /* -> Main size string       */
 char   *sxpndsize;                      /* -> Expanded size string   */
 char   *snumcpu;                        /* -> Number of CPUs         */
-char   *snumvec;                        /* -> Number of VFs          */
 char   *sengines;                       /* -> Processor engine types */
 char   *ssysepoch;                      /* -> System epoch           */
 char   *syroffset;                      /* -> System year offset     */
@@ -692,7 +691,6 @@ U32     serial;                         /* CPU serial number         */
 U16     model;                          /* CPU model number          */
 unsigned mainsize;                      /* Main storage size (MB)    */
 unsigned xpndsize;                      /* Expanded storage size (MB)*/
-U16     numvec;                         /* Number of VFs             */
 S32     sysepoch;                       /* System epoch year         */
 S32     tzoffset;                       /* System timezone offset    */
 S32     yroffset;                       /* System year offset        */
@@ -751,9 +749,9 @@ char    fname[MAX_PATH];                /* normalized filename       */
     mainsize = 2;
     xpndsize = 0;
 #ifdef    _FEATURE_VECTOR_FACILITY
-    numvec = MAX_CPU_ENGINES;
+    sysblk.numvec = MAX_CPU_ENGINES;
 #else  //!_FEATURE_VECTOR_FACILITY
-    numvec = 0;
+    sysblk.numvec = 0;
 #endif // _FEATURE_VECTOR_FACILITY
     sysepoch = 1900;
     yroffset = 0;
@@ -953,7 +951,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
         smainsize = NULL;
         sxpndsize = NULL;
         snumcpu = NULL;
-        snumvec = NULL;
         sengines = NULL;
         ssysepoch = NULL;
         syroffset = NULL;
@@ -1015,10 +1012,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
             else if (strcasecmp (keyword, "xpndsize") == 0)
             {
                 sxpndsize = operand;
-            }
-            else if (strcasecmp (keyword, "numvec") == 0)
-            {
-                snumvec = operand;
             }
             else if (strcasecmp (keyword, "engines") == 0)
             {
@@ -1182,22 +1175,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
 
         sysblk.devprio = devprio;
 #endif
-
-        /* Parse number of VFs operand */
-        if (snumvec != NULL)
-        {
-#ifdef _FEATURE_VECTOR_FACILITY
-            if (sscanf(snumvec, "%hu%c", &numvec, &c) != 1
-                || numvec > MAX_CPU_ENGINES)
-            {
-                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, snumvec, "number of VFs");
-                delayed_exit(1);
-            }
-#else /*!_FEATURE_VECTOR_FACILITY*/
-            WRMSG(HHC01445, "I");
-#endif /*!_FEATURE_VECTOR_FACILITY*/
-        }
-        sysblk.numvec = numvec;
 
         /* Parse processor engine types operand */
         /* example: ENGINES 4*CP,AP,2*IP */

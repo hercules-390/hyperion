@@ -311,6 +311,10 @@ COMMAND("maxcpu",    CONFIG,        SYSCMDALL,          maxcpu_cmd,
   "Set maxcpu parameter",
     NULL)
 
+COMMAND("numvec",    CONFIG,        SYSCMDALL,          numvec_cmd, 
+  "Set numvec parameter",
+    NULL)
+
 COMMAND("numcpu",    CONFIG,        SYSCMDALL,          numcpu_cmd, 
   "Set numcpu parameter",
     NULL)
