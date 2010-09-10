@@ -2415,6 +2415,74 @@ char *basedir;
 
 
 /*-------------------------------------------------------------------*/
+/* mainsize command                                                  */
+/*-------------------------------------------------------------------*/
+int mainsize_cmd(int argc, char *argv[], char *cmdline)
+{
+U32 mainsize;
+BYTE c;
+
+    UNREFERENCED(cmdline);
+
+    /* Parse main storage size operand */
+    if(argc > 1)
+    {
+        if (sscanf(argv[1], "%u%c", &mainsize, &c) != 1
+         || mainsize < 2
+         || (mainsize > 4095 && sizeof(sysblk.mainsize) < 8)
+         || (mainsize > 4095 && sizeof(size_t) < 8))
+        {
+            logmsg("MAINSIZE %s invalid\n",argv[1]);
+            return -1;
+        }
+        else
+            sysblk.mainsize = mainsize;
+    }
+    else
+    {
+        logmsg("XPNDSIZE: No argument\n");
+        return -1;
+    }
+
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* xpndsize command                                                  */
+/*-------------------------------------------------------------------*/
+int xpndsize_cmd(int argc, char *argv[], char *cmdline)
+{
+U32 xpndsize;
+BYTE c;
+
+    UNREFERENCED(cmdline);
+
+    /* Parse priority value */
+    if(argc > 1)
+    {
+        /* Parse expanded storage size operand */
+        if (sscanf(argv[1], "%u%c", &xpndsize, &c) != 1
+            || xpndsize > (0x100000000ULL / XSTORE_PAGESIZE) - 1
+            || (xpndsize > 4095 && sizeof(size_t) < 8))
+        {
+            logmsg("XPNDSIZE %s invalid\n",argv[1]);
+            return -1;
+        }
+        else
+            sysblk.xpndsize = xpndsize;
+    }
+    else
+    {
+        logmsg("XPNDSIZE: No argument\n");
+        return  -1;
+    }
+
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
 /* hercprio command                                                  */
 /*-------------------------------------------------------------------*/
 int hercprio_cmd(int argc, char *argv[], char *cmdline)

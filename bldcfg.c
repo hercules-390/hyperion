@@ -173,13 +173,15 @@ void delayed_exit (int exit_code)
 
 
 /* storage configuration routine. To be moved *JJ */
-static void config_storage(unsigned mainsize, unsigned xpndsize)
+static void config_storage()
 {
 int off;
 
-    /* Obtain main storage */
-    sysblk.mainsize = mainsize * 1024 * 1024ULL;
+    /* Convert from configuration units to bytes */
+    sysblk.xpndsize *= (1024*1024 / XSTORE_PAGESIZE);
+    sysblk.mainsize *= 1024 * 1024ULL;
 
+    /* Obtain main storage */
     sysblk.mainstor = calloc((size_t)(sysblk.mainsize + 8192), 1);
 
     if (sysblk.mainstor != NULL)
@@ -226,12 +228,11 @@ int off;
             sysblk.storkeys[i++] = STORKEY_BADFRM;
 #endif
 
-    if (xpndsize != 0)
+    if (sysblk.xpndsize != 0)
     {
 #ifdef _FEATURE_EXPANDED_STORAGE
 
         /* Obtain expanded storage */
-        sysblk.xpndsize = xpndsize * (1024*1024 / XSTORE_PAGESIZE);
         sysblk.xpndstor = calloc(sysblk.xpndsize, XSTORE_PAGESIZE);
         if (sysblk.xpndstor)
             sysblk.xpnd_clear = 1;
@@ -672,21 +673,11 @@ int     scount;                         /* Statement counter         */
 int     cpu;                            /* CPU number                */
 int     count;                          /* Counter                   */
 FILE   *inc_fp[MAX_INC_LEVEL];          /* Configuration file pointer*/
-char   *sserial;                        /* -> CPU serial string      */
-char   *smodel;                         /* -> CPU model string       */
-char   *smainsize;                      /* -> Main size string       */
-char   *sxpndsize;                      /* -> Expanded size string   */
-char   *snumcpu;                        /* -> Number of CPUs         */
 char   *sengines;                       /* -> Processor engine types */
 char   *ssysepoch;                      /* -> System epoch           */
 char   *syroffset;                      /* -> System year offset     */
 char   *stzoffset;                      /* -> System timezone offset */
 
-U16     version = 0x00;                 /* CPU version code          */
-U32     serial;                         /* CPU serial number         */
-U16     model;                          /* CPU model number          */
-unsigned mainsize;                      /* Main storage size (MB)    */
-unsigned xpndsize;                      /* Expanded storage size (MB)*/
 S32     sysepoch;                       /* System epoch year         */
 S32     tzoffset;                       /* System timezone offset    */
 S32     yroffset;                       /* System year offset        */
@@ -735,11 +726,12 @@ char    fname[MAX_PATH];                /* normalized filename       */
 
     inc_stmtnum[inc_level] = 0;
 
-    /* Set the default system parameter values */
-    serial = 0x000001;
-    model = 0x0586;
-    mainsize = 2;
-    xpndsize = 0;
+    /* Build CPU identifier */
+    sysblk.cpuid = ((U64)     0x00 << 56)
+                 | ((U64) 0x000001 << 32)
+                 | ((U64)   0x0586 << 16);
+    sysblk.mainsize = 2;
+    sysblk.xpndsize = 0;
 #ifdef    _FEATURE_VECTOR_FACILITY
     sysblk.numvec = MAX_CPU_ENGINES;
 #else  //!_FEATURE_VECTOR_FACILITY
@@ -937,12 +929,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
             break;
         }
 
-        /* Clear the operand value pointers */
-        sserial = NULL;
-        smodel = NULL;
-        smainsize = NULL;
-        sxpndsize = NULL;
-        snumcpu = NULL;
         sengines = NULL;
         ssysepoch = NULL;
         syroffset = NULL;
@@ -953,55 +939,34 @@ char    fname[MAX_PATH];                /* normalized filename       */
             && sscanf(keyword, "%x%c", &rc, &c) == 1)
         {
         U16 numcpu;
-            sserial = keyword;
-            smodel = operand;
-            smainsize = addargv[0];
-            sxpndsize = addargv[1];
-            snumcpu = addargv[3];
-            set_loadparm(addargv[4]);
+        char *exec_cpuserial[2] = { "cpuserial", NULL };
+        char *exec_cpumodel[2]  = { "cpumodel", NULL };
+        char *exec_mainsize[2]  = { "mainsize", NULL };
+        char *exec_xpndsize[2]  = { "xpndsize", NULL };
+        char *exec_cnslport[2]  = { "cnslport", NULL };
+        char *exec_numcpu[2]    = { "numcpu", NULL };
+        char *exec_loadparm[2]  = { "loadparm", NULL };
 
-            if (strlen(sserial) != 6
-                || sscanf(sserial, "%x%c", &serial, &c) != 1)
-            {
-                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, sserial, "serial number");
-                delayed_exit(1);
-            }
-        
-            if (strlen(smodel) != 4
-                || sscanf(smodel, "%hx%c", &model, &c) != 1)
-            {
-                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, smodel, "CPU model");
-                delayed_exit(1);
-            }
+            exec_cpuserial[1] = keyword;
+            exec_cpumodel[1]  = operand;
+            exec_mainsize[1]  = addargv[0];
+            exec_xpndsize[1]  = addargv[1];
+            exec_cnslport[1]  = addargv[2];
+            exec_numcpu[1]    = addargv[3];
+            exec_loadparm[1]  = addargv[4];
 
-            if (sscanf(snumcpu, "%hu%c", &numcpu, &c) != 1
-                || numcpu > MAX_CPU_ENGINES)
-            {
-                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, 
-                                snumcpu, "number of CPUs");
-                delayed_exit(1);
-            }
+            ProcessConfigCommand (2, exec_cpuserial, NULL);
+            ProcessConfigCommand (2, exec_cpumodel, NULL);
+            ProcessConfigCommand (2, exec_mainsize, NULL);
+            ProcessConfigCommand (2, exec_xpndsize, NULL);
+            ProcessConfigCommand (2, exec_cnslport, NULL);
+            ProcessConfigCommand (2, exec_numcpu, NULL);
+            ProcessConfigCommand (2, exec_loadparm, NULL);
 
-            /* Build CPU identifier */
-            sysblk.cpuid = ((U64)version << 56)
-                         | ((U64)serial << 32)
-                         | ((U64)model << 16);
-
-            sysblk.cnslport = strdup(addargv[2]);
-
-            sysblk.numcpu = numcpu;
         }
         else
         {
-            if (strcasecmp (keyword, "mainsize") == 0)
-            {
-                smainsize = operand;
-            }
-            else if (strcasecmp (keyword, "xpndsize") == 0)
-            {
-                sxpndsize = operand;
-            }
-            else if (strcasecmp (keyword, "engines") == 0)
+            if (strcasecmp (keyword, "engines") == 0)
             {
                 sengines = operand;
             }
@@ -1036,31 +1001,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
             }
 
         } /* end else (not old-style CPU statement) */
-
-        /* Parse main storage size operand */
-        if (smainsize != NULL)
-        {
-            if (sscanf(smainsize, "%u%c", &mainsize, &c) != 1
-             || mainsize < 2
-             || (mainsize > 4095 && sizeof(sysblk.mainsize) < 8)
-             || (mainsize > 4095 && sizeof(size_t) < 8))
-            {
-                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, smainsize, "main storage size");
-                delayed_exit(1);
-            }
-        }
-
-        /* Parse expanded storage size operand */
-        if (sxpndsize != NULL)
-        {
-            if (sscanf(sxpndsize, "%u%c", &xpndsize, &c) != 1
-                || xpndsize > (0x100000000ULL / XSTORE_PAGESIZE) - 1
-                || (xpndsize > 4095 && sizeof(size_t) < 8))
-            {
-                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, sxpndsize, "expanded storage size");
-                delayed_exit(1);
-            }
-        }
 
         /* Parse processor engine types operand */
         /* example: ENGINES 4*CP,AP,2*IP */
@@ -1295,7 +1235,7 @@ rexx_done:
      * statements so the fork()ed hercifc process won't require as much
      * virtual storage.  We will need to update all the devices too.
      */
-    config_storage(mainsize, xpndsize);
+    config_storage();
     for (dev = sysblk.firstdev; dev; dev = dev->nextdev)
     {
         dev->mainstor = sysblk.mainstor;

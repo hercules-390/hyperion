@@ -307,6 +307,14 @@ COMMAND("archmode",  PANEL+CONFIG,  SYSCMDALL-SYSOPER, archlvl_cmd,
   "Alias for archlvl", 
     NULL)
 
+COMMAND("mainsize",  CONFIG,        SYSCMDALL,          mainsize_cmd, 
+  "Set mainsize parameter",
+    NULL)
+
+COMMAND("xpndsize",  CONFIG,        SYSCMDALL,          xpndsize_cmd, 
+  "Set xpndsize parameter",
+    NULL)
+
 COMMAND("hercprio",  CONFIG,        SYSCMDALL,          hercprio_cmd, 
   "Set hercprio parameter",
     NULL)
