@@ -670,8 +670,6 @@ void build_config (char *_fname)
 int     rc;                             /* Return code               */
 int     i;                              /* Array subscript           */
 int     scount;                         /* Statement counter         */
-int     cpu;                            /* CPU number                */
-int     count;                          /* Counter                   */
 FILE   *inc_fp[MAX_INC_LEVEL];          /* Configuration file pointer*/
 S64     ly1960;                         /* Leap offset for 1960 epoch*/
 DEVBLK *dev;                            /* -> Device Block           */
