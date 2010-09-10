@@ -182,8 +182,15 @@ HSYS_DLL_IMPORT int extgui;             // __attribute__ ((deprecated));
    HDC(debug_cpu_state, regs) interface */
 #endif /*EXTERNALGUI*/
 
-/* Functions in module config.c or bldcfg.c */
+/* Functions in module bldcfg.c */
+BLDC_DLL_IMPORT int parse_args (char* p, int maxargc, char** pargv, int* pargc);
+void delayed_exit (int exit_code);
+#if defined( OPTION_TAPE_AUTOMOUNT )
+BLDC_DLL_IMPORT int add_tamdir( char *tamdir, TAMDIR **ppTAMDIR );
+#endif /* OPTION_TAPE_AUTOMOUNT */
 void build_config (char *fname);
+ 
+/* Functions in module config.c */
 void release_config ();
 CONF_DLL_IMPORT DEVBLK *find_device_by_devnum (U16 lcss, U16 devnum);
 DEVBLK *find_device_by_subchan (U32 ioid);
@@ -198,7 +205,6 @@ int  define_device (U16 lcss, U16 olddev, U16 newdev);
 CONF_DLL_IMPORT int  group_device(DEVBLK *dev, int members);
 int  configure_cpu (int cpu);
 int  deconfigure_cpu (int cpu);
-BLDC_DLL_IMPORT int parse_args (char* p, int maxargc, char** pargv, int* pargc);
 #define MAX_ARGS  12                    /* Max argv[] array size     */
 int parse_and_attach_devices(const char *devnums,const char *devtype,int ac,char **av);
 CONF_DLL_IMPORT int parse_single_devnum(const char *spec, U16 *lcss, U16 *devnum);
@@ -206,11 +212,8 @@ int parse_single_devnum_silent(const char *spec, U16 *lcss, U16 *devnum);
 int readlogo(char *fn);
 void clearlogo(void);
 CONF_DLL_IMPORT int parse_conkpalv(char* s, int* idle, int* intv, int* cnt );
-#if defined( OPTION_TAPE_AUTOMOUNT )
-BLDC_DLL_IMPORT int add_tamdir( char *tamdir, TAMDIR **ppTAMDIR );
-#endif /* OPTION_TAPE_AUTOMOUNT */
 
-/* Functions in archlvl.c */
+/* Functions in module archlvl.c */
 int set_archlvl(char *archname);
 void init_als(REGS *regs);
 
@@ -248,7 +251,7 @@ CMDT_DLL_IMPORT int ProcessConfigCommand (int argc, char **argv, char *cmdline);
 CMDT_DLL_IMPORT int ProcessConfigCmdLine (char *cmdline);
 CMDT_DLL_IMPORT int ProcessPanelCommand (char *cmdline);
 
-/* Functions in losc.c */
+/* Functions in module losc.c */
 void losc_set (int license_status);
 void losc_check(char *ostype);
 
@@ -418,6 +421,9 @@ void alter_display_real (char *opnd, REGS *regs);
 void alter_display_virt (char *opnd, REGS *regs);
 void disasm_stor(REGS *regs, char *opnd);
 int drop_privileges(int capa);
+
+/* Functions in module rexx.c */
+int exec_cmd(int argc, char *argv[],char *cmdline);
 
 /* Functions in module sr.c */
 int suspend_cmd(int argc, char *argv[],char *cmdline);

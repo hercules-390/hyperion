@@ -27,9 +27,6 @@
 #include "hostinfo.h"
 #include "history.h"
 
-/* (delayed_exit function defined in config.c) */
-extern void delayed_exit (int exit_code);
-
 /* forward define process_script_file (ISW20030220-3) */
 int process_script_file(char *,int);
 
@@ -195,7 +192,7 @@ int i;
     if(sysblk.cpuprio >= 0)
     {
         if(setpriority(PRIO_PROCESS, 0, sysblk.cpuprio+1))
-	   WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
+       WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
     }
 
     for (i = 0; i < MAX_CPU_ENGINES; i ++) savecount[i] = -1;

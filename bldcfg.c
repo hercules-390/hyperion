@@ -152,6 +152,9 @@ DLL_EXPORT int parse_args (char* p, int maxargc, char** pargv, int* pargc)
     return *pargc;
 }
 
+/*-------------------------------------------------------------------*/
+/* Subroutine to exit process after flushing stderr and stdout       */
+/*-------------------------------------------------------------------*/
 void delayed_exit (int exit_code)
 {
     /* Delay exiting is to give the system
