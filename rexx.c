@@ -109,7 +109,7 @@ int init_rexx()
 /*-------------------------------------------------------------------*/
 /* exec command - execute a rexx script                              */
 /*-------------------------------------------------------------------*/
-int exec_cmd(int argc, char *argv[],char *cmdline)
+int exec_cmd(int argc, char *argv[], char *cmdline)
 {
     SHORT rc;
     RXSTRING retval;
@@ -132,20 +132,20 @@ int exec_cmd(int argc, char *argv[],char *cmdline)
 
     if ( argc > 2 )
     {
-        int i,l=0;
+        int i,len;
 
-        for ( i = 2; i < argc; i++ )
-            l += (int)strlen( (char *)argv[i] );
+        for (len = 0, i = 2; i < argc; i++ )
+            len += (int)strlen( (char *)argv[i] ) + 1;
 
-        arg.strptr = (char *)malloc( l + argc );
-        strcpy( arg.strptr, "" );
-        for ( i = 2; i < argc; i++ )
+        arg.strptr = (char *)malloc( len );
+
+        strcpy( arg.strptr, argv[2] );
+        for ( i = 3; i < argc; i++ )
         {
+            strcat( arg.strptr, " " );
             strcat( arg.strptr, argv[i] );
-            if ( i != argc - 1 )
-                strcat( arg.strptr, " " );
         }
-        arg.strlength = argc + l - 3;
+        arg.strlength = len - 1;
     }
     else
         MAKERXSTRING(arg, NULL, 0);
