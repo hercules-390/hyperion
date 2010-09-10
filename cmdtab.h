@@ -749,8 +749,10 @@ COMMAND("sh",        PANEL,         SYSCMDALL-SYSOPER,  sh_cmd,
 
 #if defined(HAVE_REGINA_REXXSAA_H)
 COMMAND("exec",      PANEL,         SYSCMDALL,          exec_cmd,       
-  "exec script", 
-    "Format: \"exec rexx_exec [args...]\" where 'rexx_exec' is REXX script\n")
+  "Execute a REXX script", 
+    "Format: \"exec rexx_exec [args...]\" where 'rexx_exec' is the name of\n"
+    "the REXX script, and 'args' are arguments (separated by spaces) to be\n"
+    "passed to the script.\n")
 #endif /*defined(HAVE_REGINA_REXXSAA_H)*/
 
 COMMAND("/*",        PANEL,         SYSCMDALL,          null_cmd,
