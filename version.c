@@ -135,7 +135,7 @@ static const char *build_info[] = {
 #endif
 
 #if defined(HAVE_REGINA_REXXSAA_H)
-    "REXX support",
+    "REXX(Regina) support",
 #endif
 
 #if defined(OPTION_HAO)
