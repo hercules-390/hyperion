@@ -27,6 +27,7 @@
 typedef LONG APIENTRY RexxExitHandler( LONG, LONG, /* CONST */ PEXIT ) ;
 
 #define hSubcom "HERCULES"
+#define hSIOExit "HERCSIO"
 
 static int rexx_initialised = FALSE;
 
@@ -132,7 +133,7 @@ int init_rexx()
     }
 #endif
 
-    if(hRexxRegisterExitExe( "HERC_SIO", (RexxExitHandler *)exit_handler, NULL ) != RXEXIT_OK)
+    if(hRexxRegisterExitExe( hSIOExit, (RexxExitHandler *)exit_handler, NULL ) != RXEXIT_OK)
         return -1;
 
     if(hRexxRegisterSubcomExe( hSubcom, (RexxSubcomHandler *)hSubCmd, NULL) != RXSUBCOM_OK)
@@ -190,7 +191,7 @@ int exec_cmd(int argc, char *argv[], char *cmdline)
     
     MAKERXSTRING(retval, buffer, sizeof(buffer));
 
-    Exits[0].sysexit_name = "HERC_SIO";
+    Exits[0].sysexit_name = hSIOExit;
     Exits[0].sysexit_code = RXSIO;
     Exits[1].sysexit_code = RXENDLST;
 
