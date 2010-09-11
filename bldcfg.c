@@ -616,8 +616,6 @@ U64 tod = hw_clock();
 }
 
 
-DLL_EXPORT char *config_cnslport = "3270";
-
 /*-------------------------------------------------------------------*/
 /* Function to build system configuration                            */
 /*-------------------------------------------------------------------*/
@@ -716,7 +714,6 @@ char    fname[MAX_PATH];                /* normalized filename       */
     sysblk.kaidle = KEEPALIVE_IDLE_TIME;
     sysblk.kaintv = KEEPALIVE_PROBE_INTERVAL;
     sysblk.kacnt  = KEEPALIVE_PROBE_COUNT;
-    sysblk.cnslport = strdup(config_cnslport);
 
 #if defined(_FEATURE_ECPSVM)
     sysblk.ecpsvm.available = 0;

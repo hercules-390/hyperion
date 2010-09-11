@@ -469,6 +469,9 @@ int     dll_count;                      /* index into array          */
                         SYSGROUP_SYSPROG;
 #endif//     OPTION_HERCULES_DEVELOPER
 
+    /* set default console port address */
+    sysblk.cnslport = strdup("3270");
+
     /* set default tape autoinit value to OFF   */
     sysblk.noautoinit = TRUE;
 

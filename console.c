@@ -68,16 +68,7 @@
 #if defined(WIN32) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
   SYSBLK *psysblk;
   #define sysblk (*psysblk)
-  #define config_cnslport (*config_cnslport)
-  static
-#else
- #if defined(OPTION_DYNAMIC_LOAD) && defined(_MSVC_)
-  DLL_IMPORT
- #else
-  extern
- #endif
 #endif
-char *config_cnslport;
 
 /*-------------------------------------------------------------------*/
 /* Ivan Warren 20040227                                              */
@@ -3696,11 +3687,9 @@ END_DEPENDENCY_SECTION
 
 #if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
   #undef sysblk
-  #undef config_cnslport
   HDL_RESOLVER_SECTION;
   {
     HDL_RESOLVE_PTRVAR( psysblk, sysblk );
-    HDL_RESOLVE( config_cnslport );
   }
   END_RESOLVER_SECTION
 #endif
