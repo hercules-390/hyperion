@@ -2891,25 +2891,26 @@ int cnslport_cmd(int argc, char *argv[], char *cmdline)
     /* set console port */
     if (strchr(argv[1], ':') == NULL)
     {
-        if ( isdigit(argv[1][0]) )
+        int i;
+        for ( i = 0; i < (int)strlen(argv[1]); i++ )
         {
-            int i;
-            for ( i = 0; i < (int)strlen(argv[1]); i++ )
-            {
-                if ( !isdigit(argv[1][i]) )
-                {
-                    WRMSG( HHC01451, "E", argv[1] );
-                    WRMSG( HHC01452, "W", sysblk.cnslport );
-                    break;
-                }
-            }
-            i = atoi ( argv[1] );
-            if (i < 0 || i > 65535)
+            if ( !isdigit(argv[1][i]) )
             {
                 WRMSG( HHC01451, "E", argv[1] );
                 WRMSG( HHC01452, "W", sysblk.cnslport );
+                return -1;
             }
         }
+        i = atoi ( argv[1] );
+        if (i < 0 || i > 65535)
+        {
+            WRMSG( HHC01451, "E", argv[1] );
+            WRMSG( HHC01452, "W", sysblk.cnslport );
+            return -1;
+        }
+        if (sysblk.cnslport != NULL) 
+            free(sysblk.cnslport);
+        sysblk.cnslport = strdup(argv[1]);
     }
     else
     {   
