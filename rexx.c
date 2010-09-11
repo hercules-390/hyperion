@@ -60,8 +60,11 @@ RXSIOSAY_PARM *sayparm;
 RXSIOTRC_PARM *trcparm;
 
     switch( ExitNumber ) {
+
         case RXSIO:
+
             switch( Subfunction ) {
+
                 case RXSIOSAY:
                     sayparm = (RXSIOSAY_PARM *)ParmBlock;
                     logmsg("%s\n",RXSTRPTR(sayparm->rxsio_string));
@@ -74,13 +77,15 @@ RXSIOTRC_PARM *trcparm;
                     return RXEXIT_HANDLED;
                     break;
 
+                case RXSIOTRD:
+                case RXSIODTR:
 //  ZZFIXME:  Need to add RXSIO I/O Exit to handle trace and stack reads
-//  RexxRegisterExitExe( hSubcom, hSubExit, NULL);
-//  
+
                 default:
                     break;
             }
             break;
+
         default:
             break;
     }
