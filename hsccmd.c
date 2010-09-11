@@ -2879,91 +2879,57 @@ BYTE c;
 /*-------------------------------------------------------------------*/
 int cnslport_cmd(int argc, char *argv[], char *cmdline)
 {
+    char *def_port = "3270";
+    int rc = 0;
+    int i;
+
     UNREFERENCED(cmdline);
 
-    if(argc < 2)
+    if ( argc != 2 )
     {
-        WRMSG( HHC01451, "E", argv[1] );
-        WRMSG( HHC01452, "W", sysblk.cnslport );
-        return 1;
+        WRMSG( HHC01455, "E", argv[0] );
+        rc = 1;
     }
+    else 
+    {   /* set console port */
+        char *port;
+        char *host = strdup( argv[1] );
 
-    /* set console port */
-    if (strchr(argv[1], ':') == NULL)
-    {
-        int i;
-        for ( i = 0; i < (int)strlen(argv[1]); i++ )
+        if ((port = strchr(host,':')) == NULL)
+            port = host;
+        else
+            *port++ = '\0';
+
+        for ( i = 0; i < (int)strlen(port); i++ )
         {
-            if ( !isdigit(argv[1][i]) )
+            if ( !isdigit(port[i]) )
             {
-                WRMSG( HHC01451, "E", argv[1] );
-                WRMSG( HHC01452, "W", sysblk.cnslport );
-                return -1;
+                WRMSG( HHC01451, "E", port, argv[0] );
+                rc = 1;
             }
         }
-        i = atoi ( argv[1] );
+
+        i = atoi ( port );
+        
         if (i < 0 || i > 65535)
         {
-            WRMSG( HHC01451, "E", argv[1] );
-            WRMSG( HHC01452, "W", sysblk.cnslport );
-            return -1;
+            WRMSG( HHC01451, "E", port, argv[0] );
+            rc = 1;
         }
-        if (sysblk.cnslport != NULL) 
-            free(sysblk.cnslport);
-        sysblk.cnslport = strdup(argv[1]);
+
+        free(host);
+    }
+
+    if (sysblk.cnslport != NULL) 
+        free(sysblk.cnslport);
+
+    if ( rc == 1 )
+    {
+        WRMSG( HHC01452, "W", def_port, argv[0] );
+        sysblk.cnslport = strdup(def_port);
     }
     else
-    {   
-        char *serv;
-        char *port = strdup( sysblk.cnslport );
-        char msgbuf[512];
-
-        msgbuf[0] = '\0';
-
-        if ((serv = strchr(port,':')))
-        {
-            *serv++ = '\0';
-            if (*port)
-            {
-                strcpy(msgbuf, port);
-                strcat(msgbuf, ":");
-            }
-
-        }
-        if ( isdigit( serv[0]) )
-        {
-            char *p;
-            int i;
-
-            p = strdup(serv);
-
-            for ( i = 0; i < (int)strlen(p); i++ )
-            {
-                if ( !isdigit(p[i]) )
-                {
-                    WRMSG( HHC01451, "E", p );
-                    free(p);
-                    p = strdup(sysblk.cnslport);
-                    WRMSG( HHC01452, "W", p );
-                    break;
-                }
-            }
-            
-            i = atoi ( p );
-            if (i < 0 || i > 65535)
-            {
-                WRMSG( HHC01451, "E", p );
-                free( p );
-                p = strdup(sysblk.cnslport);
-                WRMSG( HHC01452, "W", p );
-            }
-
-            strcat(msgbuf,p);
-            free(p);
-        }
-        free( port );
-        sysblk.cnslport = strdup(msgbuf);
-    }
+        sysblk.cnslport = strdup(argv[1]);
 
     return 0;
 }

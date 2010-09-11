@@ -868,10 +868,11 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01448 "Config file[%d] '%s': missing device number or device type"
 #define HHC01449 "Config file '%s': NUMCPU %d exceeds MAXCPU %d; MAXCPU set to NUMCPU"
 #define HHC01450 "Config file[%d] '%s': '%s' not supported in this build; see option '%s'"
-#define HHC01451 "Invalid value '%s' specified for CNSLPORT"
-#define HHC01452 "Default port '%s' being used for CNSLPORT"
+#define HHC01451 "Invalid value '%s' specified for '%s'"
+#define HHC01452 "Default port '%s' being used for '%s'"
 #define HHC01453 "Config file '%s': lock failure:'%s'; multiple instances restricted"
 #define HHC01454 "Config file '%s': error in function '%s': '%s'"
+#define HHC01455 "Invalid number of arguments for '%s'"
 
 /* config.c */
 #define HHC01458 "%1d:%04X: only devices on CSS 0 are usable in S/370 mode"
