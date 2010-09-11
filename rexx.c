@@ -24,6 +24,8 @@
 #include <regina/rexxsaa.h>
 #endif
 
+typedef LONG APIENTRY RexxExitHandler( LONG, LONG, /* CONST */ PEXIT ) ;
+
 #define hSubcom "HERCULES"
 
 static int rexx_initialised = FALSE;
@@ -38,7 +40,7 @@ static int rexx_initialised = FALSE;
 
 typedef APIRET APIENTRY rRexxStart( LONG, PRXSTRING, PCSZ, PRXSTRING, PCSZ, LONG, PRXSYSEXIT, PSHORT, PRXSTRING ) ;
 typedef APIRET APIENTRY rRexxRegisterSubcomExe( PCSZ, RexxSubcomHandler *, PUCHAR ) ; 
-typedef APIRET APIENTRY rRexxRegisterExitExe( PSZ, PFN, PUCHAR ) ;
+typedef APIRET APIENTRY rRexxRegisterExitExe( PSZ, RexxExitHandler *, PUCHAR ) ;
 
 static rRexxRegisterSubcomExe *hRexxRegisterSubcomExe = NULL;
 static rRexxStart             *hRexxStart = NULL;
@@ -52,7 +54,7 @@ static rRexxRegisterExitExe   *hRexxRegisterExitExe = NULL;
 
 #endif
 
-RexxExitHandler *exit_handler( LONG ExitNumber, LONG Subfunction, PEXIT ParmBlock )
+LONG exit_handler( LONG ExitNumber, LONG Subfunction, PEXIT ParmBlock )
 {
 RXSIOSAY_PARM *sayparm;
 RXSIOTRC_PARM *trcparm;
@@ -125,7 +127,7 @@ int init_rexx()
     }
 #endif
 
-    if(hRexxRegisterExitExe( "HERC_SIO", (PFN)exit_handler, NULL ))
+    if(hRexxRegisterExitExe( "HERC_SIO", (RexxExitHandler *)exit_handler, NULL ))
         return -1;
 
     if(hRexxRegisterSubcomExe( hSubcom, (RexxSubcomHandler *)hSubCmd, NULL) != RXSUBCOM_OK)
