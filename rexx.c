@@ -94,7 +94,7 @@ RXSIOTRC_PARM *trcparm;
 }
 
 
-RexxSubcomHandler *hSubCmd( PRXSTRING command, PUSHORT flags, PRXSTRING retval ) 
+APIRET APIENTRY hSubCmd( PRXSTRING command, PUSHORT flags, PRXSTRING retval ) 
 {
 SHORT rc;
 
