@@ -97,10 +97,9 @@ static char buf[1024];                  /* Config statement buffer   */
 #else /*!EXTERNALGUI*/
 static char buf[256];                   /* Config statement buffer   */
 #endif /*EXTERNALGUI*/
-static char *keyword;                   /* -> Statement keyword      */
-static char *operand;                   /* -> First argument         */
 static int  addargc;                    /* Number of additional args */
 static char *addargv[MAX_ARGS];         /* Additional argument array */
+static int errorcount = 0;
 
 
 /*-------------------------------------------------------------------*/
@@ -369,12 +368,8 @@ DLL_EXPORT int add_tamdir( char *tamdir, TAMDIR **ppTAMDIR )
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to read a statement from the configuration file        */
-/* The statement is then parsed into keyword, operand, and           */
-/* additional arguments.  The output values are:                     */
-/* keyword      Points to first word of statement                    */
-/* operand      Points to second word of statement                   */
-/* addargc      Contains number of additional arguments              */
-/* addargv      An array of pointers to each additional argument     */
+/* addargc      Contains number of arguments                         */
+/* addargv      An array of pointers to each argument                */
 /* Returns 0 if successful, -1 if end of file                        */
 /*-------------------------------------------------------------------*/
 static int read_config (char *fname, FILE *fp)
@@ -391,7 +386,6 @@ char    *inc_envvar;                    /* ->Environment variable    */
 #endif // defined( OPTION_ENHANCED_CONFIG_SYMBOLS )
 int     lstarted;                       /* Indicate if non-whitespace*/
                                         /* has been seen yet in line */
-char   *cnfline;                        /* Pointer to copy of buffer */
 #if defined(OPTION_CONFIG_SYMBOLS)
 char   *buf1;                           /* Pointer to resolved buffer*/
 #endif /*defined(OPTION_CONFIG_SYMBOLS)*/
@@ -567,8 +561,6 @@ char   *buf1;                           /* Pointer to resolved buffer*/
         if (stmtlen == 0 || buf[0] == '*' || buf[0] == '#')
            continue;
 
-        cnfline = strdup(buf);
-
         /* Parse the statement just read */
 
 #if defined(OPTION_CONFIG_SYMBOLS)
@@ -594,31 +586,6 @@ char   *buf1;                           /* Pointer to resolved buffer*/
 #endif /*defined(OPTION_CONFIG_SYMBOLS)*/
 
         parse_args (buf, MAX_ARGS, addargv, &addargc);
-
-        {
-            int rc = ProcessConfigCommand (addargc, (char**)addargv, cnfline);
-
-            free(cnfline);
-
-            if( rc == 0 )
-            {
-                continue;
-            }
-
-        }
-
-        /* Move the first two arguments to separate variables */
-
-        keyword = addargv[0];
-        operand = addargv[1];
-
-        addargc = (addargc > 2) ? (addargc-2) : (0);
-
-        for (i = 0; i < MAX_ARGS; i++)
-        {
-            if (i < (MAX_ARGS-2)) addargv[i] = addargv[i+2];
-            else addargv[i] = NULL;
-        }
 
         break;
     } /* end while */
@@ -827,7 +794,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
         /* Check for REXX exec being executed */
         if( inc_level == 0
          && inc_stmtnum[inc_level] == 1
-         && !strncmp(keyword, "/*",2) )
+         && !strncmp(addargv[0], "/*",2) )
         {
         char *rcmd[2] = { "exec", NULL };
             rcmd[1] = fname;
@@ -837,9 +804,9 @@ char    fname[MAX_PATH];                /* normalized filename       */
 #endif /*defined(HAVE_REGINA_REXXSAA_H)*/
 
 #if defined( OPTION_ENHANCED_CONFIG_INCLUDE )
-        if  (strcasecmp (keyword, "ignore") == 0)
+        if  (strcasecmp (addargv[0], "ignore") == 0)
         {
-            if  (strcasecmp (operand, "include_errors") == 0) 
+            if  (strcasecmp (addargv[1], "include_errors") == 0) 
             {              
                 WRMSG(HHC01435, "I", fname);
                 inc_ignore_errors = 1 ;
@@ -849,7 +816,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
         }
 
         /* Check for include statement */
-        if (strcasecmp (keyword, "include") == 0)
+        if (strcasecmp (addargv[0], "include") == 0)
         {              
             if (++inc_level >= MAX_INC_LEVEL)
             {
@@ -857,7 +824,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
                 delayed_exit(1);
             }
 
-            hostpath(pathname, operand, sizeof(pathname));
+            hostpath(pathname, addargv[1], sizeof(pathname));
             WRMSG(HHC01437, "I", inc_stmtnum[inc_level-1], fname, pathname);
 
             inc_fp[inc_level] = fopen (pathname, "r");
@@ -866,12 +833,12 @@ char    fname[MAX_PATH];                /* normalized filename       */
                 inc_level--;
                 if ( inc_ignore_errors == 1 ) 
                 {
-                    WRMSG(HHC01438, "W", fname, operand, strerror(errno));
+                    WRMSG(HHC01438, "W", fname, addargv[1], strerror(errno));
                     continue ;
                 }
                 else 
                 {
-                    WRMSG(HHC01439, "S", fname, operand, strerror(errno));
+                    WRMSG(HHC01439, "S", fname, addargv[1], strerror(errno));
                     delayed_exit(1);
                 }
             }
@@ -881,34 +848,34 @@ char    fname[MAX_PATH];                /* normalized filename       */
 #endif // defined( OPTION_ENHANCED_CONFIG_INCLUDE )
 
         /* Exit loop if first device statement found */
-        if (strlen(keyword) <= 4
-            && sscanf(keyword, "%x%c", &rc, &c) == 1)
+        if (strlen(addargv[0]) <= 4
+            && sscanf(addargv[0], "%x%c", &rc, &c) == 1)
             break;
         /* ISW */
-        /* Also exit if keyword contains '-', ',' or '.' */
+        /* Also exit if addargv[0] contains '-', ',' or '.' */
         /* Added because device statements may now be a compound device number specification */
-        if(strchr(keyword,'-'))
+        if(strchr(addargv[0],'-'))
         {
             break;
         }
-        if(strchr(keyword,'.'))
+        if(strchr(addargv[0],'.'))
         {
             break;
         }
-        if(strchr(keyword,','))
+        if(strchr(addargv[0],','))
         {
             break;
         }
-        /* Also exit if keyword contains ':' (added by Harold Grovesteen jan2008) */
+        /* Also exit if addargv[0] contains ':' (added by Harold Grovesteen jan2008) */
         /* Added because device statements may now contain channel set or LCSS id */
-        if(strchr(keyword,':'))
+        if(strchr(addargv[0],':'))
         {
             break;
         }
 
         /* Check for old-style CPU statement */
-        if (scount == 0 && addargc == 5 && strlen(keyword) == 6
-            && sscanf(keyword, "%x%c", &rc, &c) == 1)
+        if (scount == 0 && addargc == 7 && strlen(addargv[0]) == 6
+            && sscanf(addargv[0], "%x%c", &rc, &c) == 1)
         {
         char *exec_cpuserial[2] = { "cpuserial", NULL };
         char *exec_cpumodel[2]  = { "cpumodel", NULL };
@@ -918,33 +885,38 @@ char    fname[MAX_PATH];                /* normalized filename       */
         char *exec_numcpu[2]    = { "numcpu", NULL };
         char *exec_loadparm[2]  = { "loadparm", NULL };
 
-            exec_cpuserial[1] = keyword;
-            exec_cpumodel[1]  = operand;
-            exec_mainsize[1]  = addargv[0];
-            exec_xpndsize[1]  = addargv[1];
-            exec_cnslport[1]  = addargv[2];
-            exec_numcpu[1]    = addargv[3];
-            exec_loadparm[1]  = addargv[4];
+            exec_cpuserial[1] = addargv[0];
+            exec_cpumodel[1]  = addargv[1];
+            exec_mainsize[1]  = addargv[2];
+            exec_xpndsize[1]  = addargv[3];
+            exec_cnslport[1]  = addargv[4];
+            exec_numcpu[1]    = addargv[5];
+            exec_loadparm[1]  = addargv[6];
 
-            ProcessConfigCommand (2, exec_cpuserial, NULL);
-            ProcessConfigCommand (2, exec_cpumodel, NULL);
-            ProcessConfigCommand (2, exec_mainsize, NULL);
-            ProcessConfigCommand (2, exec_xpndsize, NULL);
-            ProcessConfigCommand (2, exec_cnslport, NULL);
-            ProcessConfigCommand (2, exec_numcpu, NULL);
-            ProcessConfigCommand (2, exec_loadparm, NULL);
+            if(ProcessConfigCommand (2, exec_cpuserial, NULL))
+                errorcount++;
+            if(ProcessConfigCommand (2, exec_cpumodel, NULL))
+                errorcount++;
+            if(ProcessConfigCommand (2, exec_mainsize, NULL))
+                errorcount++;
+            if(ProcessConfigCommand (2, exec_xpndsize, NULL))
+                errorcount++;
+            if(ProcessConfigCommand (2, exec_cnslport, NULL))
+                errorcount++;
+            if(ProcessConfigCommand (2, exec_numcpu, NULL))
+                errorcount++;
+            if(ProcessConfigCommand (2, exec_loadparm, NULL))
+                errorcount++;
 
+            if(errorcount)
+                WRMSG(HHC01441, "E", inc_stmtnum[inc_level], fname, addargv[0]);
         }
         else
         {
-            WRMSG(HHC01441, "E", inc_stmtnum[inc_level], fname, keyword);
-            operand = "";
-            addargc = 0;
-
-            /* Check for one and only one operand */
-            if (operand == NULL || addargc != 0)
+            if(ProcessConfigCommand (addargc, addargv, NULL))
             {
-                WRMSG(HHC01442, "E", inc_stmtnum[inc_level], fname);
+                errorcount++;
+                WRMSG(HHC01441, "E", inc_stmtnum[inc_level], fname, addargv[0]);
             }
 
         } /* end else (not old-style CPU statement) */
@@ -958,8 +930,8 @@ char    fname[MAX_PATH];                /* normalized filename       */
     while(1)
     {
         /* First two fields are device number and device type */
-        sdevnum = keyword;
-        sdevtype = operand;
+        sdevnum = addargv[0];
+        sdevtype = addargv[1];
 
         if (sdevnum == NULL || sdevtype == NULL)
         {
@@ -967,9 +939,9 @@ char    fname[MAX_PATH];                /* normalized filename       */
             delayed_exit(1);
         }
         /* Parse devnum */
-        rc=parse_and_attach_devices(sdevnum,sdevtype,addargc,addargv);
+        rc=parse_and_attach_devices(sdevnum,sdevtype,addargc-2,addargv+2);
 
-        if(rc==-2)
+        if(rc)
         {
             WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, sdevnum, "device number specification");
             delayed_exit(1);
@@ -984,7 +956,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
                 fclose (inc_fp[inc_level--]);
             }
 
-            if (inc_level < 0 || strcasecmp (keyword, "include") != 0)
+            if (inc_level < 0 || strcasecmp (addargv[0], "include") != 0)
                 break;
 
             if (++inc_level >= MAX_INC_LEVEL)
@@ -993,7 +965,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
                 delayed_exit(1);
             }
 
-            hostpath(pathname, operand, sizeof(pathname));
+            hostpath(pathname, addargv[1], sizeof(pathname));
             WRMSG(HHC01437, "I", inc_stmtnum[inc_level-1], fname, pathname);
 
             inc_fp[inc_level] = fopen (pathname, "r");
@@ -1002,12 +974,12 @@ char    fname[MAX_PATH];                /* normalized filename       */
                 inc_level--;
                 if ( inc_ignore_errors == 1 ) 
                 {
-                    WRMSG(HHC01438, "W", fname, operand, strerror(errno));
+                    WRMSG(HHC01438, "W", fname, addargv[1], strerror(errno));
                     continue ;
                 }
                 else 
                 {
-                    WRMSG(HHC01439, "S", fname, operand, strerror(errno));
+                    WRMSG(HHC01439, "S", fname, addargv[1], strerror(errno));
                     delayed_exit(1);
                 }
             }
@@ -1022,6 +994,10 @@ char    fname[MAX_PATH];                /* normalized filename       */
             break;
 
     } /* end while(1) */
+
+    /* Terminate on config errors */
+    if(errorcount)
+        delayed_exit(1);
 
 #if defined(HAVE_REGINA_REXXSAA_H)
 rexx_done:
