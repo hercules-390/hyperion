@@ -127,7 +127,7 @@ int init_rexx()
     }
 #endif
 
-    if(hRexxRegisterExitExe( "HERC_SIO", (RexxExitHandler *)exit_handler, NULL ))
+    if(hRexxRegisterExitExe( "HERC_SIO", (RexxExitHandler *)exit_handler, NULL ) != RXEXIT_OK)
         return -1;
 
     if(hRexxRegisterSubcomExe( hSubcom, (RexxSubcomHandler *)hSubCmd, NULL) != RXSUBCOM_OK)
