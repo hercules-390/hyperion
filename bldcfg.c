@@ -374,7 +374,6 @@ DLL_EXPORT int add_tamdir( char *tamdir, TAMDIR **ppTAMDIR )
 /*-------------------------------------------------------------------*/
 static int read_config (char *fname, FILE *fp)
 {
-int     i;                              /* Array subscript           */
 int     c;                              /* Character work area       */
 int     stmtlen;                        /* Statement length          */
 #if defined( OPTION_ENHANCED_CONFIG_SYMBOLS )
