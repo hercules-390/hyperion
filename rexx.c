@@ -55,7 +55,7 @@ static rRexxRegisterExitExe   *hRexxRegisterExitExe = NULL;
 
 #endif
 
-LONG exit_handler( LONG ExitNumber, LONG Subfunction, PEXIT ParmBlock )
+LONG APIENTRY exit_handler( LONG ExitNumber, LONG Subfunction, PEXIT ParmBlock )
 {
 RXSIOSAY_PARM *sayparm;
 RXSIOTRC_PARM *trcparm;
