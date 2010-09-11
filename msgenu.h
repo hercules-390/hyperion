@@ -1631,7 +1631,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC04110 "Maximum device threads (devtmax) of %d exceeded by %d"
 #define HHC04111 "%1d:%04X Function %s failed: '[%02d] %s'"
 
-// reserve 17000 messages for QUERY and SET functions
+// reserve 17000-17099 messages for QUERY and SET functions
 #define HHC17000 "Missing or invalid argument(s)"
 #define HHC17001 "Server '%12s' is listening %s"
 #define HHC17002 "Server '%12s' is inactive"
@@ -1649,6 +1649,11 @@ cpu.c:123:HABC1234I This is a message
 
 #define HHC17100 "Timeout value for 'quit' and 'ssd' is '%d' seconds"
 #define HHC17199 "%.4s '%s'"
+
+// Reserve 17500-17999 REXX Message
+#define HHC17500 "REXX(%s) Initialization failed"
+#define HHC17501 "REXX(%s) Script file name missing"
+#define HHC17502 "REXX(%s) Error: %s"
 
 // reserve 90000 messages for debugging
 #define HHC90000 "DBG: %s"

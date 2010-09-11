@@ -63,7 +63,7 @@ SHORT rc;
         *flags = RXSUBCOM_OK;
 
     sprintf(retval->strptr,"%hd",rc);
-    retval->strlength = strlen(retval->strptr);
+    retval->strlength = (ULONG)strlen(retval->strptr);
 
     return 0;
 }
@@ -120,13 +120,13 @@ int exec_cmd(int argc, char *argv[], char *cmdline)
 
     if(argc < 2)
     {
-        logmsg("no exec\n");
+        WRMSG( HHC17501, "E", "Regina" );
         return -1;
     }
 
     if(init_rexx())
     {
-        logmsg("REXX(Regina) Initialisation failed\n");
+        WRMSG( HHC17500, "E", "Regina" );
         return -1;
     }
 
@@ -155,7 +155,9 @@ int exec_cmd(int argc, char *argv[], char *cmdline)
     hRexxStart ((argc > 2) ? 1 : 0, &arg, argv[1], NULL, hSubcom, RXCOMMAND, NULL, &rc, &retval );
 
     if(rc)
-        logmsg("REXX Error %s\n",RXSTRPTR(retval));
+    {
+        WRMSG( HHC17502, "E", "Regina", RXSTRPTR(retval) );
+    }
 
     if(RXSTRPTR(arg))
         free(RXSTRPTR(arg));
