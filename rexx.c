@@ -38,16 +38,53 @@ static int rexx_initialised = FALSE;
 
 typedef APIRET APIENTRY rRexxStart( LONG, PRXSTRING, PCSZ, PRXSTRING, PCSZ, LONG, PRXSYSEXIT, PSHORT, PRXSTRING ) ;
 typedef APIRET APIENTRY rRexxRegisterSubcomExe( PCSZ, RexxSubcomHandler *, PUCHAR ) ; 
+typedef APIRET APIENTRY rRexxRegisterExitExe( PSZ, PFN, PUCHAR ) ;
 
 static rRexxRegisterSubcomExe *hRexxRegisterSubcomExe = NULL;
 static rRexxStart             *hRexxStart = NULL;
+static rRexxRegisterExitExe   *hRexxRegisterExitExe = NULL;
 
 #else
 
-#define hRexxRegisterSubcomExe RexxRegisterSubcomExe
 #define hRexxStart             RexxStart
+#define hRexxRegisterSubcomExe RexxRegisterSubcomExe
+#define hRexxRegisterExitExe   RexxRegisterExitExe  
 
 #endif
+
+RexxExitHandler *exit_handler( LONG ExitNumber, LONG Subfunction, PEXIT ParmBlock )
+{
+RXSIOSAY_PARM *sayparm;
+RXSIOTRC_PARM *trcparm;
+
+    switch( ExitNumber ) {
+        case RXSIO:
+            switch( Subfunction ) {
+                case RXSIOSAY:
+                    sayparm = (RXSIOSAY_PARM *)ParmBlock;
+                    logmsg("%s\n",RXSTRPTR(sayparm->rxsio_string));
+                    return RXEXIT_HANDLED;
+                    break;
+             
+                case RXSIOTRC:
+                    trcparm = (RXSIOTRC_PARM *)ParmBlock;
+                    logmsg("%s\n",RXSTRPTR(trcparm->rxsio_string));
+                    return RXEXIT_HANDLED;
+                    break;
+
+//  ZZFIXME:  Need to add RXSIO I/O Exit to handle trace and stack reads
+//  RexxRegisterExitExe( hSubcom, hSubExit, NULL);
+//  
+                default:
+                    break;
+            }
+            break;
+        default:
+            break;
+    }
+    return RXEXIT_NOT_HANDLED;
+}
+
 
 RexxSubcomHandler *hSubCmd( PRXSTRING command, PUSHORT flags, PRXSTRING retval ) 
 {
@@ -81,25 +118,18 @@ int init_rexx()
             return -1;
         if(!(hRexxRegisterSubcomExe = (rRexxRegisterSubcomExe *)dlsym(addr, "RexxRegisterSubcomExe")))
             return -1;
-        if(!(hRexxStart = (rRexxStart *)dlsym(addr,"RexxStart")))
+        if(!(hRexxRegisterExitExe = (rRexxRegisterExitExe *)dlsym( addr, "RexxRegisterExitExe" )))
             return -1;
-        if(
-#if defined ( _MSVC_ )
-        putenv( "REGINA_OPTIONS=STDOUT_FOR_STDERR" )
-#else
-        setenv( "REGINA_OPTIONS", "STDOUT_FOR_STDERR", TRUE )
-#endif
-            )
+        if(!(hRexxStart = (rRexxStart *)dlsym(addr,"RexxStart")))
             return -1;
     }
 #endif
 
-    if(hRexxRegisterSubcomExe( hSubcom, (RexxSubcomHandler *)hSubCmd, NULL) != RXSUBCOM_OK)
+    if(hRexxRegisterExitExe( "HERC_SIO", (PFN)exit_handler, NULL ))
         return -1;
 
-//  ZZFIXME:  Need to add RXSIO I/O Exit to handle trace and stack reads
-//  RexxRegisterExitExe( hSubcom, hSubExit, NULL);
-//  
+    if(hRexxRegisterSubcomExe( hSubcom, (RexxSubcomHandler *)hSubCmd, NULL) != RXSUBCOM_OK)
+        return -1;
 
     rexx_initialised = TRUE;
 
@@ -115,6 +145,7 @@ int exec_cmd(int argc, char *argv[], char *cmdline)
     RXSTRING retval;
     char buffer[250];
     RXSTRING arg;
+    RXSYSEXIT Exits[2];
 
     UNREFERENCED(cmdline);
 
@@ -152,7 +183,11 @@ int exec_cmd(int argc, char *argv[], char *cmdline)
     
     MAKERXSTRING(retval, buffer, sizeof(buffer));
 
-    hRexxStart ((argc > 2) ? 1 : 0, &arg, argv[1], NULL, hSubcom, RXCOMMAND, NULL, &rc, &retval );
+    Exits[0].sysexit_name = "HERC_SIO";
+    Exits[0].sysexit_code = RXSIO;
+    Exits[1].sysexit_code = RXENDLST;
+
+    hRexxStart ((argc > 2) ? 1 : 0, &arg, argv[1], NULL, hSubcom, RXCOMMAND, Exits, &rc, &retval );
 
     if(rc)
     {
