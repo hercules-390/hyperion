@@ -32,8 +32,5 @@ Not yet implemented are:
 - interactive trace input from the console
 - stack underflow reads (pull) from the console
 
-Partially:
-- REXX support for the hercules.cnf config file
-
 
 Jan Jaeger
