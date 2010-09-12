@@ -26,8 +26,8 @@
 
 typedef LONG APIENTRY RexxExitHandler( LONG, LONG, /* CONST */ PEXIT ) ;
 
-#define hSubcom "HERCULES"
-#define hSIOExit "HERCSIO"
+#define hSubcom  "HERCULES"
+#define hSIOExit "HERCSIOE"
 
 static int rexx_initialised = FALSE;
 
