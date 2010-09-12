@@ -909,7 +909,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
         }
         else
         {
-            if(ProcessConfigCommand (addargc, addargv, NULL))
+            if(ProcessConfigCommand (addargc, addargv, buf))
             {
                 errorcount++;
                 WRMSG(HHC01441, "E", inc_stmtnum[inc_level], fname, addargv[0]);
@@ -937,7 +937,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
         /* Parse devnum */
         rc=parse_and_attach_devices(sdevnum,sdevtype,addargc-2,addargv+2);
 
-        if(rc)
+        if(rc == -2)
         {
             WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, sdevnum, "device number specification");
             delayed_exit(1);
