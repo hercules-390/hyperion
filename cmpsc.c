@@ -1291,7 +1291,6 @@ static int ARCH_DEP(test_ec)(struct cc *cc, BYTE *cce)
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 {
-  unsigned cw;                         /* Characters written                  */
   int dcten;                           /* Number of different symbols         */
   struct ec ec;                        /* Expand cache                        */
   int i;
@@ -1300,7 +1299,6 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   GREG vaddr;                          /* Virtual address                     */
 
   /* Initialize values */
-  cw = 0;
   dcten = GR0_dcten(regs);
 
   /* Initialize destination dictionary address */
@@ -1346,13 +1344,11 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
         ARCH_DEP(expand_is)(&ec, is);
         if(unlikely(ARCH_DEP(vstore)(&ec, ec.oc, ec.ocl)))
           return;
-        cw += ec.ocl;
       }
       else
       {
         if(unlikely(ARCH_DEP(vstore)(&ec, &ec.ec[ec.eci[is]], ec.ecl[is])))
           return;
-        cw += ec.ecl[is];
       }
     }
 
@@ -1387,7 +1383,6 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 
     /* Commit registers, return with cc3 on interrupt pending */
     COMMITREGS2(regs, iregs, r1, r2);
-    cw += ec.ocl;
   }
 
   /* Process last index symbols, never mind about childs written */
