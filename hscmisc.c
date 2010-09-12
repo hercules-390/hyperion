@@ -120,6 +120,7 @@ static void cancel_wait_sigq()
 static void do_shutdown_now()
 {
     WRMSG(HHC01420, "I");
+    if ( sysblk.config_done )
     {
         char*   pszCurrIntervalStartDateTime;
         char*   pszCurrentDateTime;
@@ -154,7 +155,11 @@ static void do_shutdown_now()
 
     obtain_lock(&sysblk.msglock);
     sysblk.shutdown = TRUE;  // (system shutdown initiated)
-    set_screen_color(stdout, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
+    if ( sysblk.config_done )
+    {
+        set_screen_color(stdout, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
+        set_screen_color(stderr, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
+    }
     release_lock(&sysblk.msglock);
 
     WRMSG(HHC01421, "I");

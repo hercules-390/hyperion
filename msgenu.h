@@ -874,6 +874,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01454 "Config file '%s': error in function '%s': '%s'"
 #define HHC01455 "Invalid number of arguments for '%s'"
 #define HHC01456 "Invalid syntax '%s' for '%s'"
+#define HHC01457 "Valid years for '%s' are '%s'; other values no longer supported"
 
 /* config.c */
 #define HHC01458 "%1d:%04X: only devices on CSS 0 are usable in S/370 mode"

@@ -158,6 +158,11 @@ void delayed_exit (int exit_code)
 {
     /* Delay exiting is to give the system
      * time to display the error message. */
+#if defined( _MSVC_ )
+    SetConsoleCtrlHandler( NULL, FALSE); // disable Ctrl-C intercept
+#endif
+    sysblk.shutimmed = TRUE;
+
     fflush(stderr);  
     fflush(stdout);  
     usleep(100000);
@@ -165,14 +170,12 @@ void delayed_exit (int exit_code)
     fflush(stderr);  
     fflush(stdout);  
     usleep(100000);
-    if (exit_code > 0)
-        exit(exit_code);
     return;
 }
 
 
 /* storage configuration routine. To be moved *JJ */
-static void config_storage()
+static int config_storage()
 {
 int off;
 
@@ -193,7 +196,7 @@ int off;
         char buf[40];
         snprintf(buf, 40, "malloc(%" I64_FMT "d)", sysblk.mainsize + 8192);
         WRMSG(HHC01430, "S", buf, strerror(errno));
-        delayed_exit(1);
+        return FALSE;
     }
 
     /* Trying to get mainstor aligned to the next 4K boundary - Greg */
@@ -212,7 +215,7 @@ int off;
         char buf[40];
         snprintf(buf, 40, "malloc(%" I64_FMT "d)", sysblk.mainsize / STORAGE_KEY_UNITSIZE);
         WRMSG(HHC01430, "S", buf, strerror(errno));
-        delayed_exit(1);
+        return FALSE;
     }
 
     /* Initial power-on reset for main storage */
@@ -242,7 +245,7 @@ int off;
             char buf[40];
             snprintf(buf, 40, "malloc(%lu)", (unsigned long)sysblk.xpndsize * XSTORE_PAGESIZE);
             WRMSG(HHC01430, "S", buf, strerror(errno));
-            delayed_exit(1);
+            return FALSE;
         }
         /* Initial power-on reset for expanded storage */
         xstorage_clear();
@@ -250,6 +253,7 @@ int off;
         WRMSG(HHC01431, "I");
 #endif /*!_FEATURE_EXPANDED_STORAGE*/
     } /* end if(sysblk.xpndsize) */
+    return TRUE;
 }
 
 #if defined( OPTION_TAPE_AUTOMOUNT )
@@ -411,7 +415,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
             if (ferror(fp))
             {
                 WRMSG(HHC01432, "S", inc_stmtnum[inc_level], fname, "fgetc()", strerror(errno));
-                delayed_exit(1);
+                return -1;
             }
 
             /* Check for end of file */
@@ -433,7 +437,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
             if (stmtlen >= (int)(sizeof(buf) - 1))
             {
                 WRMSG(HHC01433, "S", inc_stmtnum[inc_level], fname);
-                delayed_exit(1);
+                return -1;
             }
 
 #if defined( OPTION_ENHANCED_CONFIG_SYMBOLS )
@@ -496,7 +500,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
                             if (stmtlen+strlen(inc_envvar) >= sizeof(buf) - 1)
                             {
                                 WRMSG(HHC01433, "S", inc_stmtnum[inc_level], fname);
-                                delayed_exit(1);
+                                return -1;
                             }
 
                             /* Copy to buffer and update index */
@@ -578,7 +582,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
             {
                 WRMSG(HHC01433, "S", inc_stmtnum[inc_level], fname);
                 free(buf1);
-                delayed_exit(1);
+                return -1;
             }
             strcpy(buf,buf1);
         }
@@ -619,7 +623,7 @@ U64 tod = hw_clock();
 /*-------------------------------------------------------------------*/
 /* Function to build system configuration                            */
 /*-------------------------------------------------------------------*/
-void build_config (char *_fname)
+int build_config (char *_fname)
 {
 int     rc;                             /* Return code               */
 int     i;                              /* Array subscript           */
@@ -660,7 +664,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
         fflush(stderr);  
         fflush(stdout);  
         usleep(100000);
-        exit(1);
+        return FALSE;
     }
 
     inc_stmtnum[inc_level] = 0;
@@ -781,7 +785,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
         if (inc_level < 0)
         {
             WRMSG(HHC01434, "S", fname);
-            delayed_exit(1);
+            return FALSE;
         }
 
 #if defined(HAVE_REGINA_REXXSAA_H)
@@ -815,7 +819,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
             if (++inc_level >= MAX_INC_LEVEL)
             {
                 WRMSG(HHC01436, "S", inc_stmtnum[inc_level-1], fname, MAX_INC_LEVEL);
-                delayed_exit(1);
+                return FALSE;
             }
 
             hostpath(pathname, addargv[1], sizeof(pathname));
@@ -833,7 +837,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
                 else 
                 {
                     WRMSG(HHC01439, "S", fname, addargv[1], strerror(errno));
-                    delayed_exit(1);
+                    return FALSE;
                 }
             }
             inc_stmtnum[inc_level] = 0;
@@ -929,7 +933,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
         if (addargv[0] == NULL || addargv[1] == NULL)
         {
             WRMSG(HHC01448, "S", inc_stmtnum[inc_level], fname);
-            delayed_exit(1);
+            return FALSE;
         }
 
         /* Build attach command to attach device(s) */
@@ -947,7 +951,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
         if(rc == -2)
         {
             WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, addargv[0], "device number specification");
-            delayed_exit(1);
+            return FALSE;
         }
 
         /* Read next device record from the configuration file */
@@ -965,7 +969,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
             if (++inc_level >= MAX_INC_LEVEL)
             {
                 WRMSG(HHC01436, "S", inc_stmtnum[inc_level-1], fname, MAX_INC_LEVEL);
-                delayed_exit(1);
+                return FALSE;
             }
 
             hostpath(pathname, addargv[1], sizeof(pathname));
@@ -983,7 +987,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
                 else 
                 {
                     WRMSG(HHC01439, "S", fname, addargv[1], strerror(errno));
-                    delayed_exit(1);
+                    return FALSE;
                 }
             }
             inc_stmtnum[inc_level] = 0;
@@ -1000,7 +1004,9 @@ char    fname[MAX_PATH];                /* normalized filename       */
 
     /* Terminate on config errors */
     if(errorcount)
-        delayed_exit(1);
+    {
+        return FALSE;
+    }
 
 #if defined(HAVE_REGINA_REXXSAA_H)
 rexx_done:
@@ -1022,7 +1028,7 @@ rexx_done:
             char buf[40];
             snprintf(buf, 40, "malloc(%lu)", sizeof(TAMDIR));
             WRMSG(HHC01430, "S", buf, strerror(errno));
-            delayed_exit(1);
+            return FALSE;
         }
         VERIFY( getcwd( cwd, sizeof(cwd) ) != NULL );
         rc = (int)strlen( cwd );
@@ -1048,20 +1054,13 @@ rexx_done:
     /* Back to user mode */
     SETMODE(USER);
 
-    /* Display Hercules thread information on control panel */
-    // Removed this message. build_cfg is not a thread?
-    //WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "hercules");
-
     /* Reset the clock steering registers */
     csr_reset();
 
     /* Set up the system TOD clock offset: compute the number of
      * microseconds offset to 0000 GMT, 1 January 1900 */
-
-    if(sysblk.sysepoch != 1900 && sysblk.sysepoch != 1960)
-        WRMSG(HHC01440, "W", inc_stmtnum[inc_level], fname, "SYSEPOCH <value>", "SYSEPOCH 1900/1960 +/- <value>");
  
-    if(sysblk.sysepoch == 1960 || sysblk.sysepoch == 1988)
+    if( sysblk.sysepoch == 1960 )
         ly1960 = TOD_DAY;
     else
         ly1960 = 0;
@@ -1081,7 +1080,9 @@ rexx_done:
      * statements so the fork()ed hercifc process won't require as much
      * virtual storage.  We will need to update all the devices too.
      */
-    config_storage();
+    if ( !config_storage() )
+        return FALSE;
+
     for (dev = sysblk.firstdev; dev; dev = dev->nextdev)
     {
         dev->mainstor = sysblk.mainstor;
@@ -1179,6 +1180,7 @@ rexx_done:
     }
 #endif /* defined(OPTION_CONFIG_SYMBOLS) */
 
+    return TRUE;
 } /* end function build_config */
 
 #endif /*!defined(_GEN_ARCH)*/

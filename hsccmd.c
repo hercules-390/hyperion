@@ -2509,9 +2509,12 @@ BYTE    c;
     {
         if (strlen(ssysepoch) != 4
             || sscanf(ssysepoch, "%d%c", &sysepoch, &c) != 1
-            || ( sysepoch != 1900 && sysepoch != 1960) )
+            || ( sysepoch != 1900 && sysepoch != 1960 ) )
         {
-            WRMSG( HHC01451, "E", ssysepoch, argv[0] );
+            if ( sysepoch == 1900 || sysepoch == 1960 )
+                WRMSG( HHC01451, "E", ssysepoch, argv[0] );
+            else
+                WRMSG( HHC01457, "E", argv[0], "1900|1960" );
             return -1;
         }
     }

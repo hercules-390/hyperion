@@ -188,7 +188,7 @@ void delayed_exit (int exit_code);
 #if defined( OPTION_TAPE_AUTOMOUNT )
 BLDC_DLL_IMPORT int add_tamdir( char *tamdir, TAMDIR **ppTAMDIR );
 #endif /* OPTION_TAPE_AUTOMOUNT */
-void build_config (char *fname);
+int build_config (char *fname);
  
 /* Functions in module config.c */
 void release_config ();
