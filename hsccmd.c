@@ -4469,11 +4469,11 @@ BYTE c;
 
     UNREFERENCED(cmdline);
 
-    /* Update shared device port number */
+    /* Update capping value */
     if (argc == 2)
     {
         if (strlen(argv[1]) >= 1
-          && sscanf(argv[1], "%hu%c", &shrdport, &c) == 1
+          && sscanf(argv[1], "%hx%c", &shrdport, &c) == 1  
           && shrdport >= 1024 )
             sysblk.shrdport = shrdport;
         else
