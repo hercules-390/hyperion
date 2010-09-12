@@ -627,8 +627,6 @@ int     scount;                         /* Statement counter         */
 FILE   *inc_fp[MAX_INC_LEVEL];          /* Configuration file pointer*/
 S64     ly1960;                         /* Leap offset for 1960 epoch*/
 DEVBLK *dev;                            /* -> Device Block           */
-char   *sdevnum;                        /* -> Device number string   */
-char   *sdevtype;                       /* -> Device type string     */
 int     devtmax;                        /* Max number device threads */
 BYTE    c;                              /* Work area for sscanf      */
 #ifdef OPTION_SELECT_KLUDGE
@@ -925,21 +923,30 @@ char    fname[MAX_PATH];                /* normalized filename       */
 
     while(1)
     {
-        /* First two fields are device number and device type */
-        sdevnum = addargv[0];
-        sdevtype = addargv[1];
+    int   attargc;
+    char **attargv;
 
-        if (sdevnum == NULL || sdevtype == NULL)
+        if (addargv[0] == NULL || addargv[1] == NULL)
         {
             WRMSG(HHC01448, "S", inc_stmtnum[inc_level], fname);
             delayed_exit(1);
         }
-        /* Parse devnum */
-        rc=parse_and_attach_devices(sdevnum,sdevtype,addargc-2,addargv+2);
+
+        /* Build attach command to attach device(s) */
+        attargc = addargc + 1;
+        attargv = malloc(attargc * sizeof(char *));
+
+        attargv[0] = "attach";
+        for(i = 1; i < attargc; i++)
+            attargv[i] = addargv[i - 1];
+
+        rc = ProcessConfigCommand (attargc, attargv, NULL);
+
+        free(attargv);
 
         if(rc == -2)
         {
-            WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, sdevnum, "device number specification");
+            WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, addargv[0], "device number specification");
             delayed_exit(1);
         }
 
@@ -999,6 +1006,11 @@ char    fname[MAX_PATH];                /* normalized filename       */
 rexx_done:
 #endif /*defined(HAVE_REGINA_REXXSAA_H)*/
 
+#if !defined( OPTION_ENHANCED_CONFIG_INCLUDE )
+    /* close configuration file */
+    rc = fclose(inc_fp[inc_level]);
+#endif // !defined( OPTION_ENHANCED_CONFIG_INCLUDE )
+    
 #if defined( OPTION_TAPE_AUTOMOUNT )
     /* Define default AUTOMOUNT directory if needed */
     if (sysblk.tamdir && sysblk.defdir == NULL)
@@ -1065,11 +1077,6 @@ rexx_done:
     /* Gabor Hoffer (performance option) */
     copy_opcode_tables();
 
-#if !defined( OPTION_ENHANCED_CONFIG_INCLUDE )
-    /* close configuration file */
-    rc = fclose(inc_fp[inc_level]);
-#endif // !defined( OPTION_ENHANCED_CONFIG_INCLUDE )
-    
     /* Now configure storage.  We do this after processing the device
      * statements so the fork()ed hercifc process won't require as much
      * virtual storage.  We will need to update all the devices too.
