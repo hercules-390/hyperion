@@ -194,7 +194,8 @@ DLL_EXPORT void writemsg(const char *file, int line, const char* function, int g
 
     switch(lvl)
     {
-        case 0: // normal
+        case MLVL_NORMAL:
+        case MLVL_VERBOSE:
 #if defined( OPTION_MSGCLR )
             if (strlen(color) > 0 && !sysblk.shutdown && sysblk.panel_init)
             {
@@ -203,7 +204,7 @@ DLL_EXPORT void writemsg(const char *file, int line, const char* function, int g
 #endif // defined( OPTION_MSGCLR )
             BFR_VSNPRINTF();
             break;
-        case 1: // debug
+        case MLVL_DEBUG:
 
 #if defined( OPTION_MSGCLR )
             if (strlen(color) > 0 && !sysblk.shutdown && sysblk.panel_init)
@@ -225,7 +226,7 @@ DLL_EXPORT void writemsg(const char *file, int line, const char* function, int g
             log_write( 0, bfr );
         free(bfr);
     }
-    if(!lvl && (msg[8] == 'S' || msg[8] == 'E' || msg[8] == 'W'))
+    if(MLVL(DEBUG) && (msg[8] == 'S' || msg[8] == 'E' || msg[8] == 'W'))
     {
         /* __FILENAME__ resolves differently for the various OS environments */
         /* we are only interested in the filename and ext.                   */

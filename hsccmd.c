@@ -337,7 +337,7 @@ int message_cmd(int argc,char *argv[], char *cmdline,int withhdr)
         {
             time(&mytime);
             mytm=localtime(&mytime);
-            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, sysblk.msglvl, 
+            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG), 
 #if defined(OPTION_MSGCLR)
                      "<pnl,color(white,black)>",
 #else
@@ -351,7 +351,7 @@ int message_cmd(int argc,char *argv[], char *cmdline,int withhdr)
         }
         else
         {
-            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, sysblk.msglvl,
+            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG),
 #if defined(OPTION_MSGCLR)
                      "<pnl,color(white,black)>",
 #else
@@ -3280,19 +3280,28 @@ int msglvl_cmd(int argc, char *argv[], char *cmdline)
   {
     if(!strcasecmp(argv[1], "info"))
     {
-      WRMSG(HHC02203, "I", "message level", sysblk.msglvl ? "debug" : "normal");
+      WRMSG(HHC02203, "I", "message level", MLVL(NORMAL) ? "normal" : (MLVL(VERBOSE) ? "verbose" : "debug" ));
       return(0);
     }
     else if(!strcasecmp(argv[1], "normal"))
     {
-      sysblk.msglvl = 0;
-      WRMSG(HHC02204, "I", "message level", "normal");
+      if(MLVL(VERBOSE))
+          WRMSG(HHC02204, "I", "message level", "normal");
+      sysblk.msglvl = MLVL_NORMAL;
+      return(0);
+    }
+    else if(!strcasecmp(argv[1], "verbose"))
+    {
+      if(MLVL(VERBOSE))
+          WRMSG(HHC02204, "I", "message level", "verbose");
+      sysblk.msglvl = MLVL_VERBOSE;
       return(0);
     }
     else if(!strcasecmp(argv[1], "debug"))
     {
-      sysblk.msglvl = 1;
-      WRMSG(HHC02204, "I", "message level", "debug");
+      if(MLVL(VERBOSE))
+          WRMSG(HHC02204, "I", "message level", "debug");
+      sysblk.msglvl = MLVL_DEBUG;
       return(0);
     }
     else
@@ -3473,7 +3482,7 @@ char buf[512];
 
     display_regs (regs, buf, "HHC02269I ");
     WRMSG(HHC02269, "I", "General purpose registers");
-    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, sysblk.msglvl, "", "%s", buf);
+    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG), "", "%s", buf);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -3505,7 +3514,7 @@ char buf[512];
 
     display_fregs (regs, buf, "HHC02270I ");
     WRMSG(HHC02270, "I", "Floating point registers");
-    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, sysblk.msglvl, "", "%s", buf);
+    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG), "", "%s", buf);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -3583,7 +3592,7 @@ char buf[512];
 
     display_cregs (regs, buf, "HHC02271I ");
     WRMSG(HHC02271, "I", "Control registers");
-    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, sysblk.msglvl, "", "%s", buf);
+    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG), "", "%s", buf);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -3615,7 +3624,7 @@ char buf[384];
 
     display_aregs (regs, buf, "HHC02272I ");
     WRMSG(HHC02272, "I", "Access registers");
-    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, sysblk.msglvl, "", "%s", buf);
+    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG), "", "%s", buf);
     
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -4600,7 +4609,8 @@ BYTE    c;
             set_symbol("CPUVERID", buf);
             sysblk.cpuid &= 0x00FFFFFFFFFFFFFFULL;
             sysblk.cpuid |= (U64)cpuverid << 56;
-            WRMSG( HHC02204, "I", argv[0], buf );
+            if(MLVL(VERBOSE))
+                WRMSG( HHC02204, "I", argv[0], buf );
         }
         else
         {
@@ -4645,7 +4655,8 @@ BYTE    c;
             set_symbol("CPUMODEL", buf);
             sysblk.cpuid &= 0xFFFFFFFF0000FFFFULL;
             sysblk.cpuid |= (U64)cpumodel << 16;
-            WRMSG( HHC02204, "I", argv[0], buf );
+            if(MLVL(VERBOSE))
+                WRMSG( HHC02204, "I", argv[0], buf );
         }
         else
         {
@@ -4690,7 +4701,8 @@ BYTE    c;
             set_symbol("CPUSERIAL", buf);
             sysblk.cpuid &= 0xFF000000FFFFFFFFULL;
             sysblk.cpuid |= (U64)cpuserial << 32;
-            WRMSG( HHC02204, "I", argv[0], buf );
+            if(MLVL(VERBOSE))
+                WRMSG( HHC02204, "I", argv[0], buf );
         }
         else
         {
@@ -5696,7 +5708,7 @@ char buf[1024];
     }
 
     display_subchannel (dev, buf, "HHC02268I ");
-    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, sysblk.msglvl, "", "%s", buf);
+    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG), "", "%s", buf);
 
     return 0;
 }

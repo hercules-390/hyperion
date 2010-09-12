@@ -51,18 +51,18 @@ COMMAND("cmdsep",    PANEL,         SYSNONE,            cmdsep_cmd,
     "                processing command lines that contain comments\n"
     "        off     disables command separation\n")
 
-COMMAND("msglevel",  PANEL,         SYSNONE,            msglvl_cmd,   
+COMMAND("msglevel",  PANEL+CONFIG,  SYSNONE,            msglvl_cmd,   
   "Display or set the message level",
     "Format: msglevel [normal | debug | info]\n"
     "normal: default messages\n"
     "debug:  messages prefixed with source and linenumber\n"
     "info:   displays the message level\n")
     
-COMMAND("msglvl",    PANEL,         SYSNONE,            msglvl_cmd,   
+COMMAND("msglvl",    PANEL+CONFIG,  SYSNONE,            msglvl_cmd,   
   "Alias for msglevel", 
     NULL)
 
-COMMAND("emsg",      PANEL,         SYSNONE,            emsg_cmd,
+COMMAND("emsg",      PANEL+CONFIG,  SYSNONE,            emsg_cmd,
   "Display/Set current Error Message display",
   "Format: emsg [ on | off | text | time ]\n"
   "  on    Normal message display\n"

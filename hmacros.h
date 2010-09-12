@@ -193,6 +193,12 @@
 /* Macro for Debugging / Tracing...                                  */
 /*-------------------------------------------------------------------*/
 
+#define MLVL( _lvl) \
+    (sysblk.msglvl & (MLVL_ ## _lvl))
+#define MLVL_NORMAL  0x00
+#define MLVL_VERBOSE 0x01
+#define MLVL_DEBUG   0xff
+
 /* Add message prefix filename:linenumber: to messages
    when compiled with debug enabled - JJ 30/12/99 */
 /* But only if OPTION_DEBUG_MESSAGES defined in featall.h - Fish */

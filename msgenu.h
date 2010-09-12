@@ -89,10 +89,10 @@ cpu.c:123:HABC1234I This is a message
 #define MSGBUF(buf, ...)             snprintf(buf, sizeof(buf)-1, ## __VA_ARGS__)
 #define MSG(id, s, ...)              #id s " " id "\n", ## __VA_ARGS__
 #define MSG_C(id, s, ...)            #id s " " id "", ## __VA_ARGS__
-#define WRMSG(id, s, ...)            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, sysblk.msglvl, "", _(#id s " " id "\n"), ## __VA_ARGS__)
-#define WRMSG_C(id, s, ...)          writemsg(__FILE__, __LINE__, __FUNCTION__, 0, sysblk.msglvl, "", _(#id s " " id ""), ## __VA_ARGS__)
-#define WRCMSG(color, id, s, ...)    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, sysblk.msglvl, color, _(#id s " " id "\n"), ## __VA_ARGS__)
-#define WRCMSG_C(color, id, s, ...)  writemsg(__FILE__, __LINE__, __FUNCTION__, 0, sysblk.msglvl, color, _(#id s " " id ""), ## __VA_ARGS__)
+#define WRMSG(id, s, ...)            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG), "", _(#id s " " id "\n"), ## __VA_ARGS__)
+#define WRMSG_C(id, s, ...)          writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG), "", _(#id s " " id ""), ## __VA_ARGS__)
+#define WRCMSG(color, id, s, ...)    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG), color, _(#id s " " id "\n"), ## __VA_ARGS__)
+#define WRCMSG_C(color, id, s, ...)  writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG), color, _(#id s " " id ""), ## __VA_ARGS__)
 
 #define WRGMSG_ON \
 { \
@@ -108,10 +108,10 @@ cpu.c:123:HABC1234I This is a message
   sysblk.msglocktime = host_tod(); \
   sysblk.msggrp = 1; \
 }
-#define WRGMSG(id, s, ...)           writemsg(__FILE__, __LINE__, __FUNCTION__, 1, sysblk.msglvl, "", _(#id s " " id "\n"), ## __VA_ARGS__)
-#define WRGMSG_C(id, s, ...)         writemsg(__FILE__, __LINE__, __FUNCTION__, 1, sysblk.msglvl, "", _(#id s " " id ""), ## __VA_ARGS__)
-#define WRGCMSG(color, id, s, ...)   writemsg(__FILE__, __LINE__, __FUNCTION__, 1, sysblk.msglvl, color, _(#id s " " id "\n"), ## __VA_ARGS__)
-#define WRGCMSG_C(color, id, s, ...) writemsg(__FILE__, __LINE__, __FUNCTION__, 1, sysblk.msglvl, color, _(#id s " " id ""), ## __VA_ARGS__)
+#define WRGMSG(id, s, ...)           writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(DEBUG), "", _(#id s " " id "\n"), ## __VA_ARGS__)
+#define WRGMSG_C(id, s, ...)         writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(DEBUG), "", _(#id s " " id ""), ## __VA_ARGS__)
+#define WRGCMSG(color, id, s, ...)   writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(DEBUG), color, _(#id s " " id "\n"), ## __VA_ARGS__)
+#define WRGCMSG_C(color, id, s, ...) writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(DEBUG), color, _(#id s " " id ""), ## __VA_ARGS__)
 #define WRGMSG_OFF                   { sysblk.msggrp = 0; release_lock(&sysblk.msglock); }
 
 /* Hercules messages */
