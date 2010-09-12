@@ -37,13 +37,13 @@
 #include "dasdtab.h"
 #include "ctcadpt.h"
 
-#define  ONE_KILOBYTE	((unsigned int)(1024))                      /* 2^10	(16^2)  * 4  */
-#define  HALF_MEGABYTE	((unsigned int)(512 * 1024))                /* 2^19 (16^4)  * 8  */
-#define  ONE_MEGABYTE	((unsigned long long)(1024 * 1024))         /* 2^20 (16^5)       */
-#define  ONE_GIGABYTE	(ONE_MEGABYTE * (unsigned long long)(1024)) /* 2^30	(16^7)  * 4  */
-#define  ONE_TERABYTE	(ONE_GIGABYTE * (unsigned long long)(1024)) /* 2^40	(16^10)      */
-#define  ONE_PETABYTE	(ONE_TERABYTE * (unsigned long long)(1024)) /* 2^50	(16^12) * 4  */
-#define  ONE_EXABYTE	(ONE_PETABYTE * (unsigned long long)(1024)) /* 2^60	(16^15)	     */
+#define  ONE_KILOBYTE   ((unsigned int)(1024))                      /* 2^10     (16^2)  * 4  */
+#define  HALF_MEGABYTE  ((unsigned int)(512 * 1024))                /* 2^19 (16^4)  * 8  */
+#define  ONE_MEGABYTE   ((unsigned long long)(1024 * 1024))         /* 2^20 (16^5)       */
+#define  ONE_GIGABYTE   (ONE_MEGABYTE * (unsigned long long)(1024)) /* 2^30     (16^7)  * 4  */
+#define  ONE_TERABYTE   (ONE_GIGABYTE * (unsigned long long)(1024)) /* 2^40     (16^10)      */
+#define  ONE_PETABYTE   (ONE_TERABYTE * (unsigned long long)(1024)) /* 2^50     (16^12) * 4  */
+#define  ONE_EXABYTE    (ONE_PETABYTE * (unsigned long long)(1024)) /* 2^60     (16^15)      */
 
 #define  CMD(str,cmd,min) ( strlen( str ) >= min && \
                             strlen( str ) <= strlen(#cmd) && \
@@ -63,7 +63,7 @@ int process_script_file ( char *, int );
 static void fcb_dump( DEVBLK*, char *, unsigned int );
 /* $test_cmd - do something or other */
 
-#ifdef _MSVC_ 
+#ifdef _MSVC_
 #pragma optimize( "", off )
 #endif
 
@@ -162,7 +162,7 @@ int test_cmd(int argc, char *argv[],char *cmdline)
     return 0;
 }
 
-#ifdef _MSVC_ 
+#ifdef _MSVC_
 #pragma optimize( "", on )
 #endif
 
@@ -208,7 +208,7 @@ int maxrates_cmd(int argc, char *argv[],char *cmdline)
 
             current_time = time( NULL );
             current_tm   = localtime( &current_time );
-            since_midnight = (time_t)( ( ( current_tm->tm_hour  * 60 ) + 
+            since_midnight = (time_t)( ( ( current_tm->tm_hour  * 60 ) +
                                            current_tm->tm_min ) * 60   +
                                            current_tm->tm_sec );
             curr_int_start_time = current_time - since_midnight;
@@ -252,7 +252,7 @@ int maxrates_cmd(int argc, char *argv[],char *cmdline)
         WRMSG(HHC02272, "I", "Highest observed MIPS and IO/s rates:");
         if ( prev_int_start_time != curr_int_start_time )
         {
-            MSGBUF( buf, "From %s to %s", pszPrevIntervalStartDateTime, 
+            MSGBUF( buf, "From %s to %s", pszPrevIntervalStartDateTime,
                          pszCurrIntervalStartDateTime);
             WRMSG(HHC02272, "I", buf);
             MSGBUF( buf, "MIPS: %d.%02d", prev_high_mips_rate / 1000000,
@@ -337,7 +337,7 @@ int message_cmd(int argc,char *argv[], char *cmdline,int withhdr)
         {
             time(&mytime);
             mytm=localtime(&mytime);
-            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG), 
+            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG),
 #if defined(OPTION_MSGCLR)
                      "<pnl,color(white,black)>",
 #else
@@ -403,9 +403,9 @@ int abort_cmd(int argc, char *argv[],char *cmdline)
     UNREFERENCED(argc);
     UNREFERENCED(argv);
     UNREFERENCED(cmdline);
- 
+
     delayed_exit(1);
- 
+
     return 0;
 }
 
@@ -448,7 +448,7 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
                 j++;
             }
         }
-        
+
         if ( j > 0 )
         {
             time( &end );
@@ -473,7 +473,7 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
     UNREFERENCED(argc);
     UNREFERENCED(argv);
     UNREFERENCED(cmdline);
-    
+
     if ((argc > 2) ||
         (argc > 1 && strcasecmp(argv[1],"force")))
     {
@@ -495,7 +495,7 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
 /* quitmout command                                                  */
 /*-------------------------------------------------------------------*/
 int quitmout_cmd(int argc, char *argv[],char *cmdline)
-{     
+{
     UNREFERENCED(cmdline);
 
     if ( argc == 2)
@@ -504,17 +504,17 @@ int quitmout_cmd(int argc, char *argv[],char *cmdline)
 
         if (1
             && sscanf(argv[1], "%d%c", &tm, &c) == 1
-            && ( 
-                 ( ( sysblk.sysgroup & (SYSGROUP_ALL - SYSGROUP_SYSOPER - SYSGROUP_SYSNONE) ) && tm >= 0 ) 
-                || 
-                 ( ( sysblk.sysgroup & SYSGROUP_SYSOPER ) && tm >= 2 ) 
+            && (
+                 ( ( sysblk.sysgroup & (SYSGROUP_ALL - SYSGROUP_SYSOPER - SYSGROUP_SYSNONE) ) && tm >= 0 )
+                ||
+                 ( ( sysblk.sysgroup & SYSGROUP_SYSOPER ) && tm >= 2 )
                )
             && tm <= 60
            )
         {
             sysblk.quitmout = tm;
         }
-        else 
+        else
         {
             WRMSG( HHC17000, "E" );
             return -1;
@@ -525,9 +525,9 @@ int quitmout_cmd(int argc, char *argv[],char *cmdline)
         WRMSG( HHC17000, "E" );
         return -1;
     }
-     
+
     WRMSG( HHC17100, "I", sysblk.quitmout );
-   
+
     return 0;
 }
 #endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
@@ -617,7 +617,7 @@ int logopt_cmd(int argc, char *argv[],char *cmdline)
         while (argc > 1)
         {
             argv++; argc--;
-            if ( CMD(argv[0],timestamp,4) ) 
+            if ( CMD(argv[0],timestamp,4) )
             {
                 sysblk.logoptnotime = 0;
                 WRMSG(HHC02204, "I", "log option", "TIMESTAMP");
@@ -656,7 +656,7 @@ unsigned uptime, weeks, days, hours, mins, secs;
 
 #define  SECS_PER_MIN     ( 60                 )
 #define  SECS_PER_HOUR    ( 60 * SECS_PER_MIN  )
-#define  SECS_PER_DAY     ( 24 * SECS_PER_HOUR ) 
+#define  SECS_PER_DAY     ( 24 * SECS_PER_HOUR )
 #define  SECS_PER_WEEK    (  7 * SECS_PER_DAY  )
 
     weeks = uptime /  SECS_PER_WEEK;
@@ -717,7 +717,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
     int      iarg,jarg;
     int      chan;
     int      line;
-    
+
     char     wbuf[150];
     int      wlpi;
     int      windex;
@@ -756,7 +756,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
         return -1;
     }
 
-    if ( argc == 2 ) 
+    if ( argc == 2 )
     {
         fcb_dump(dev, wbuf, sizeof(wbuf));
         WRMSG(HHC02210, "I", lcss, devnum, wbuf );
@@ -810,7 +810,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
             }
             continue;
         }
-        
+
         if (strncasecmp("lpp=", argv[iarg], 4) == 0)
         {
             ptr = argv[iarg]+4;
@@ -843,9 +843,9 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
         {
             for (line = 0 ; line <= FCBSIZE; line++)  wfcb[line] = 0;
             /* check for simple mode */
-            if	( strstr(argv[iarg],":") )	
+            if  ( strstr(argv[iarg],":") )
             {
-                /* ':" found  ==> new mode */			
+                /* ':" found  ==> new mode */
                 ptr = argv[iarg]+4;
                 while (*ptr)
                 {
@@ -868,9 +868,9 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
                         return -1;
                     }
                     wfcb[line] = chan;
-                    if ( nxt == 0 ) 
+                    if ( nxt == 0 )
                         break ;
-                    ptr = nxt + 1; 
+                    ptr = nxt + 1;
                 }
 
             }
@@ -890,26 +890,26 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
                         return -1;
                     }
                     chan += 1;
-                    if ( chan > 12 ) 
+                    if ( chan > 12 )
                     {
                         jarg = ptr - argv[iarg] ;
                         WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, jarg);
                         return -1;
                     }
                     wfcb[line] = chan;
-                    if ( nxt == 0 ) 
+                    if ( nxt == 0 )
                         break ;
-                    ptr = nxt + 1; 
+                    ptr = nxt + 1;
                 }
-                if ( chan != 12 ) 
+                if ( chan != 12 )
                 {
                     jarg = 5 ;
                     WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, jarg);
                     return -1;
                 }
             }
-                
-            continue;  
+
+            continue;
         }
 
         WRMSG (HHC01102, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1);
@@ -1566,7 +1566,7 @@ int autoinit_cmd( int argc, char *argv[], char *cmdline )
         {
             sysblk.noautoinit = TRUE;
         }
-        else 
+        else
         {
             WRMSG( HHC17000, "E" );
             return -1;
@@ -2108,14 +2108,14 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
             }
 
             logmsg("\n%s\n", eyecatcher);
-            WRMSG(HHC02223, "I"                
+            WRMSG(HHC02223, "I"
                 ,mountreq ? "Mount" : "Dismount"
                 ,label_type
                 ,volname
                 ,SSID_TO_LCSS(dev->ssid)
                 ,dev->devnum
                 ,dev->filename
-                
+
             );
             logmsg("\n%s\n", eyecatcher);
         }
@@ -2440,7 +2440,7 @@ BYTE c;
                 if (sscanf(styp, "%d%c", &count, &c) != 2
                     || c != '*' || count < 1)
                 {
-                    WRMSG( HHC01456, "E", styp, argv[0] ); 
+                    WRMSG( HHC01456, "E", styp, argv[0] );
                     return -1;
                 }
                 styp = strchr(styp,'*') + 1;
@@ -2455,7 +2455,7 @@ BYTE c;
                 ptyp = SCCB_PTYP_IFA;
             else if (strcasecmp(styp,"ip") == 0)
                 ptyp = SCCB_PTYP_SUP;
-            else 
+            else
             {
                 WRMSG( HHC01451, "E", styp, argv[0] );
                 return -1;
@@ -2904,7 +2904,7 @@ int cnslport_cmd(int argc, char *argv[], char *cmdline)
         WRMSG( HHC01455, "E", argv[0] );
         rc = 1;
     }
-    else 
+    else
     {   /* set console port */
         char *port;
         char *host = strdup( argv[1] );
@@ -2924,7 +2924,7 @@ int cnslport_cmd(int argc, char *argv[], char *cmdline)
         }
 
         i = atoi ( port );
-        
+
         if (i < 0 || i > 65535)
         {
             WRMSG( HHC01451, "E", port, argv[0] );
@@ -2934,7 +2934,7 @@ int cnslport_cmd(int argc, char *argv[], char *cmdline)
         free(host);
     }
 
-    if (sysblk.cnslport != NULL) 
+    if (sysblk.cnslport != NULL)
         free(sysblk.cnslport);
 
     if ( rc == 1 )
@@ -3223,7 +3223,7 @@ int pantitle_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int msghld_cmd(int argc, char *argv[], char *cmdline)
 {
-    if ( !strcasecmp(cmdline, "kd") ) 
+    if ( !strcasecmp(cmdline, "kd") )
     {
         expire_kept_msgs(TRUE);
         WRMSG(HHC02226, "I");
@@ -3275,7 +3275,7 @@ int msghld_cmd(int argc, char *argv[], char *cmdline)
 int msglvl_cmd(int argc, char *argv[], char *cmdline)
 {
   UNREFERENCED(cmdline);
-  
+
   if(argc == 2)
   {
     if(!strcasecmp(argv[1], "info"))
@@ -3329,10 +3329,10 @@ int sh_cmd(int argc, char *argv[], char *cmdline)
         while (isspace(*cmd)) cmd++;
         if (*cmd)
             return herc_system (cmd);
-        else 
+        else
             return -1;
     }
-    else 
+    else
     {
         WRMSG(HHC02227, "E");
     }
@@ -3356,10 +3356,10 @@ int ls_cmd(int argc, char *argv[], char *cmdline)
         cmd = cmdline;
         if (*cmd)
             return herc_system (cmd);
-        else 
+        else
             return -1;
     }
-    else 
+    else
     {
         WRMSG(HHC02227, "E");
     }
@@ -3424,7 +3424,7 @@ int pwd_cmd(int argc, char *argv[], char *cmdline)
     {
         WRMSG(HHC02227, "E");
     }
-    return -1; 
+    return -1;
 }
 
 
@@ -3625,7 +3625,7 @@ char buf[384];
     display_aregs (regs, buf, "HHC02272I ");
     WRMSG(HHC02272, "I", "Access registers");
     writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG), "", "%s", buf);
-    
+
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
     return 0;
@@ -3899,7 +3899,7 @@ int restart_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
     UNREFERENCED(argv);
-     
+
     /* Check that target processor type allows IPL */
     if (sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_IFA
      || sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_SUP)
@@ -3907,7 +3907,7 @@ int restart_cmd(int argc, char *argv[], char *cmdline)
         WRMSG(HHC00818, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return -1;
     }
-      
+
     WRMSG(HHC02228, "I", "restart");
 
     /* Obtain the interrupt lock */
@@ -4111,7 +4111,7 @@ char range[256];
     on = (trace && sysblk.insttrace) || (!trace && sysblk.inststep);
 
     /* Display message */
-    
+
     WRMSG(HHC02229, "I",
            cmdline[0] == 't' ? _("tracing") :
            cmdline[0] == 's' ? _("stepping") : _("break"),
@@ -4272,7 +4272,7 @@ int i;
         char buf[40];
         MSGBUF( buf, "%sable, %secho",(sysblk.diag8cmd & DIAG8CMD_ENABLE) ? "en" : "dis",
             (sysblk.diag8cmd & DIAG8CMD_ECHO)   ? ""   : "no ");
-        
+
         WRMSG(HHC02203, "I", "DIAG8CMD", buf);
     }
     return 0;
@@ -4314,7 +4314,7 @@ int i;
         char buf[40];
         MSGBUF( buf, "%sabled%s", (sysblk.shcmdopt&SHCMDOPT_ENABLE)?"En":"Dis",
           (sysblk.shcmdopt&SHCMDOPT_DIAG8)?"":" NoDiag8");
-        WRMSG(HHC02203, "I", "SHCMDOPT", buf); 
+        WRMSG(HHC02203, "I", "SHCMDOPT", buf);
     }
     return 0;
 }
@@ -4382,7 +4382,7 @@ int codepage_cmd(int argc, char *argv[], char *cmdline)
             WRMSG( HHC01476, "I", cp );
         }
     }
-    else 
+    else
     {
         WRMSG( HHC02299, "E", argv[0] );
         rc = -1;
@@ -4469,16 +4469,16 @@ BYTE c;
 
     UNREFERENCED(cmdline);
 
-    /* Update capping value */
+    /* Update shared device port number */
     if (argc == 2)
     {
         if (strlen(argv[1]) >= 1
-          && sscanf(argv[1], "%hx%c", &shrdport, &c) == 1  
+          && sscanf(argv[1], "%hu%c", &shrdport, &c) == 1
           && shrdport >= 1024 )
             sysblk.shrdport = shrdport;
         else
         {
-            WRMSG( HHC01451, "E", argv[1], argv[0] ); 
+            WRMSG( HHC01451, "E", argv[1], argv[0] );
             return 1;
         }
     }
@@ -4508,11 +4508,11 @@ BYTE c;
     if (argc > 1)
     {
         if (strlen(argv[1]) >= 1
-          && sscanf(argv[1], "%x%c", &cap, &c) == 1)  
+          && sscanf(argv[1], "%x%c", &cap, &c) == 1)
             sysblk.capvalue = cap;
         else
         {
-            WRMSG( HHC01451, "E", argv[1], argv[0] ); 
+            WRMSG( HHC01451, "E", argv[1], argv[0] );
             return 1;
         }
     }
@@ -4559,13 +4559,13 @@ BYTE    c;
     if (argc > 1)
     {
         if ( strlen(argv[1]) >= 1 && strlen(argv[1]) <= 2
-          && sscanf(argv[1], "%hx%c", &id, &c) == 1)  
+          && sscanf(argv[1], "%hx%c", &id, &c) == 1)
         {
             if ( strlen(argv[1]) == 2 && id > 0x3f )
             {
                 char buf[8];
                 MSGBUF( buf, "%02X", id);
-                WRMSG(HHC02205,"E", buf, ": must be within 00 to 3F (hex)"); 
+                WRMSG(HHC02205,"E", buf, ": must be within 00 to 3F (hex)");
                 return -1;
             }
             sysblk.lparnum = id;
@@ -4604,7 +4604,7 @@ BYTE    c;
           && (sscanf(argv[1], "%x%c", &cpuverid, &c) == 1) )
         {
             char buf[8];
-            
+
             MSGBUF(buf,"%02X",cpuverid);
             set_symbol("CPUVERID", buf);
             sysblk.cpuid &= 0x00FFFFFFFFFFFFFFULL;
@@ -4624,7 +4624,7 @@ BYTE    c;
         MSGBUF( msgbuf, "%02X",((sysblk.cpuid & 0xFF00000000000000ULL) >> 56));
         WRMSG( HHC02203, "I", argv[0], msgbuf );
     }
-    else 
+    else
     {
         WRMSG( HHC01455, "E", argv[0] );
         return -1;
@@ -4739,8 +4739,8 @@ u_int     id;
     if (argc > 1)
     {
         if (argv[1] != NULL
-          && strlen(argv[1]) == 1 
-          && sscanf(argv[1], "%u", &id) == 1)  
+          && strlen(argv[1]) == 1
+          && sscanf(argv[1], "%u", &id) == 1)
         {
             if ( id == 0 || id == 1 )
                 sysblk.cpuidfmt = (U16)id;
@@ -4760,7 +4760,7 @@ u_int     id;
     {
         char buf[40];
         MSGBUF( buf, "%d", sysblk.cpuidfmt);
-        WRMSG(HHC02203, "I", "CPUIDFMT", buf); 
+        WRMSG(HHC02203, "I", "CPUIDFMT", buf);
     }
     return 0;
 }
@@ -5067,7 +5067,7 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
              CMD(argv[1],TAPE,4) ||
              CMD(argv[1],CTCA,4) ||
              CMD(argv[1],LINE,4) ||
-             CMD(argv[1],QETH,4) 
+             CMD(argv[1],QETH,4)
            )
         {
             int i;
@@ -5148,7 +5148,7 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
 
     // Now use our sorted array of DEVBLK pointers
     // to display our sorted list of devices...
-    
+
     cnt = 0;
 
     for (i = nDevCount, pDevBlkPtr = orig_pDevBlkPtrs; i; --i, pDevBlkPtr++)
@@ -5163,7 +5163,7 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
 #endif
         dev->hnd->query( dev, &devclass, sizeof(devnam), devnam );
 
-        if ( strlen( devtype ) == 0 || 
+        if ( strlen( devtype ) == 0 ||
              ( strlen( devtype ) > 0 && strcmp(devclass,devtype) == 0 )
            )
         {
@@ -6047,7 +6047,7 @@ int ascsimnt_cmd(int argc, char *argv[], char *cmdline)
         }
     }
     else
-    { 
+    {
         char buf[20];
         MSGBUF( buf, "%d seconds", sysblk.auto_scsi_mount_secs);
         WRMSG(HHC02203, "I","auto SCSI mount", buf);
@@ -6090,7 +6090,7 @@ BYTE     unitstat, code = 0;
             (strcasecmp(argv[2],"fsr") == 0) ||
             (strcasecmp(argv[2],"bsr") == 0) ||
             (strcasecmp(argv[2],"asf") == 0) ||
-            (strcasecmp(argv[2],"wtm") == 0) 
+            (strcasecmp(argv[2],"wtm") == 0)
           )
        )
     {
@@ -6101,16 +6101,16 @@ BYTE     unitstat, code = 0;
     if ( argc == 4  && !(strcasecmp(argv[2],"rew") == 0) )
     {
         for (rc = 0; rc < (int)strlen(argv[3]); rc++)
-        { 
+        {
             if ( !isdigit(argv[3][rc]) )
-            { 
+            {
                 WRMSG( HHC02205, "E", argv[3], "; not in range of 1-9999");
                 return -1;
             }
         }
         sscanf(argv[3],"%d", &count);
         if ( count < 1 || count > 9999 )
-        { 
+        {
             WRMSG( HHC02205, "E", argv[3], "; not in range of 1-9999");
             return -1;
         }
@@ -6154,7 +6154,7 @@ BYTE     unitstat, code = 0;
         return -1;
 
     }
-    
+
     ASSERT( dev->tmh && dev->tmh->tapeloaded );
     if ( !dev->tmh->tapeloaded( dev, NULL, 0 ) )
     {
@@ -6162,7 +6162,7 @@ BYTE     unitstat, code = 0;
         WRMSG(HHC02298, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
     }
-    
+
     if (strcasecmp(argv[2],"rew") == 0)
     {
         if (argc > 3)
@@ -6173,7 +6173,7 @@ BYTE     unitstat, code = 0;
         else
         {
             rc = dev->tmh->rewind( dev, &unitstat, code);
-  
+
             if ( rc == 0 )
             {
                 dev->eotwarning = 0;
@@ -6185,7 +6185,7 @@ BYTE     unitstat, code = 0;
         for ( ; count >= 1; count-- )
         {
             rc = dev->tmh->fsf( dev, &unitstat, code);
-  
+
             if ( rc < 0 )
             {
                 break;
@@ -6197,7 +6197,7 @@ BYTE     unitstat, code = 0;
         for ( ; count >= 1; count-- )
         {
             rc = dev->tmh->bsf( dev, &unitstat, code);
-  
+
             if ( rc < 0 )
             {
                 break;
@@ -6209,7 +6209,7 @@ BYTE     unitstat, code = 0;
         for ( ; count >= 1; count-- )
         {
             rc = dev->tmh->fsb( dev, &unitstat, code);
-  
+
             if ( rc <= 0 )
             {
                 break;
@@ -6221,7 +6221,7 @@ BYTE     unitstat, code = 0;
         for ( ; count >= 1; count-- )
         {
             rc = dev->tmh->bsb( dev, &unitstat, code);
-  
+
             if ( rc < 0 )
             {
                 break;
@@ -6236,7 +6236,7 @@ BYTE     unitstat, code = 0;
             for ( ; count > 1; count-- )
             {
                 rc = dev->tmh->fsf( dev, &unitstat, code);
-  
+
                 if ( rc < 0 )
                 {
                     break;
@@ -6256,7 +6256,7 @@ BYTE     unitstat, code = 0;
             for ( ; count >= 1; count-- )
             {
                 rc = dev->tmh->wtm( dev, &unitstat, code);
-  
+
                 if ( rc >= 0 )
                 {
                     dev->curfilen++;
@@ -6333,7 +6333,7 @@ char   **init_argv;
     /* wait up to 5 seconds for the busy to go away */
     {
         int i = 1000;
-        while ( i-- > 0 && ( dev->busy        || 
+        while ( i-- > 0 && ( dev->busy        ||
                              IOPENDING(dev)   ||
                              (dev->scsw.flag3 & SCSW3_SC_PEND) ) )
         {
@@ -6801,45 +6801,45 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
         }
 
 // /*DEBUG*/logmsg( _("hsccmd.c: %s%02X: Any cpu interrupt %spending\n"),
-// /*DEBUG*/    PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, 
+// /*DEBUG*/    PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
 // /*DEBUG*/    sysblk.regs[i]->cpuint ? "" : _("not ") );
 //
         WRMSG( HHC00850, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
-                              IC_INTERRUPT_CPU(sysblk.regs[i]), 
-                              sysblk.regs[i]->ints_state, 
+                              IC_INTERRUPT_CPU(sysblk.regs[i]),
+                              sysblk.regs[i]->ints_state,
                               sysblk.regs[i]->ints_mask);
-        WRMSG( HHC00851, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, 
+        WRMSG( HHC00851, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
                               IS_IC_INTERRUPT(sysblk.regs[i]) ? "" : "not ");
-        WRMSG( HHC00852, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, 
+        WRMSG( HHC00852, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
                               IS_IC_IOPENDING                 ? "" : "not ");
-        WRMSG( HHC00853, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, 
+        WRMSG( HHC00853, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
                               IS_IC_CLKC(sysblk.regs[i])      ? "" : "not ");
-        WRMSG( HHC00854, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, 
+        WRMSG( HHC00854, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
                               IS_IC_PTIMER(sysblk.regs[i])    ? "" : "not ");
 
 #if defined(_FEATURE_INTERVAL_TIMER)
-        WRMSG( HHC00855, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, 
+        WRMSG( HHC00855, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
                               IS_IC_ITIMER(sysblk.regs[i])    ? "" : "not ");
 #if defined(_FEATURE_ECPSVM)
-        WRMSG( HHC00856, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, 
+        WRMSG( HHC00856, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
                               IS_IC_ECPSVTIMER(sysblk.regs[i])? "" : "not ");
 #endif /*defined(_FEATURE_ECPSVM)*/
 #endif /*defined(_FEATURE_INTERVAL_TIMER)*/
-        WRMSG( HHC00857, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, 
+        WRMSG( HHC00857, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
                               IS_IC_EXTCALL(sysblk.regs[i]) ? "" : "not ");
-        WRMSG( HHC00858, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, 
+        WRMSG( HHC00858, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
                               IS_IC_EMERSIG(sysblk.regs[i]) ? "" : "not ");
-        WRMSG( HHC00859, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, 
+        WRMSG( HHC00859, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
                               IS_IC_MCKPENDING(sysblk.regs[i]) ? "" : "not ");
-        WRMSG( HHC00860, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, 
+        WRMSG( HHC00860, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
                               IS_IC_SERVSIG ? "" : "not ");
-        WRMSG( HHC00861, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, 
+        WRMSG( HHC00861, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
                               sysblk.regs[i]->cpuad == sysblk.mainowner ? "yes" : "no");
-        WRMSG( HHC00862, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, 
+        WRMSG( HHC00862, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
                               sysblk.regs[i]->cpuad == sysblk.intowner ? "yes" : "no");
-        WRMSG( HHC00863, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, 
+        WRMSG( HHC00863, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
                               sysblk.regs[i]->intwait && !(sysblk.waiting_mask & CPU_BIT(i)) ? "yes" : "no");
-        WRMSG( HHC00864, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, 
+        WRMSG( HHC00864, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
                               test_lock(&sysblk.cpulock[i]) ? "" : "not ");
         if (ARCH_370 == sysblk.arch_mode)
         {
@@ -6853,7 +6853,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
             }
             WRMSG( HHC00865, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf );
         }
-        WRMSG( HHC00866, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, 
+        WRMSG( HHC00866, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
                               states[sysblk.regs[i]->cpustate] );
         WRMSG( HHC00867, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, INSTCOUNT(sysblk.regs[i]));
         WRMSG( HHC00868, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, sysblk.regs[i]->siototal);
@@ -6868,7 +6868,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
         }
         else
         {
-            MSGBUF( buf, "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",               
+            MSGBUF( buf, "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",
                 curpsw[0], curpsw[1], curpsw[2], curpsw[3],
                 curpsw[4], curpsw[5], curpsw[6], curpsw[7]);
         }
@@ -6877,7 +6877,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
         {
             WRMSG( HHC00850, "I", "IE", sysblk.regs[i]->cpuad,
                             IC_INTERRUPT_CPU(sysblk.regs[i]),
-                            sysblk.regs[i]->guestregs->ints_state, 
+                            sysblk.regs[i]->guestregs->ints_state,
                             sysblk.regs[i]->guestregs->ints_mask);
             WRMSG( HHC00851, "I", "IE", sysblk.regs[i]->cpuad,
                             IS_IC_INTERRUPT(sysblk.regs[i]->guestregs) ? "" : "not ");
@@ -6894,7 +6894,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
             if (ARCH_370 == sysblk.arch_mode)
             {
                 if (0xFFFF == sysblk.regs[i]->guestregs->chanset)
-                {                  
+                {
                     MSGBUF( buf, "none");
                 }
                 else
@@ -6904,7 +6904,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
                 WRMSG( HHC00865, "I", "IE", sysblk.regs[i]->cpuad, buf );
             }
             WRMSG( HHC00866, "I", "IE", sysblk.regs[i]->cpuad, states[sysblk.regs[i]->guestregs->cpustate]);
-            WRMSG( HHC00867, "I", "IE", sysblk.regs[i]->cpuad, sysblk.regs[i]->guestregs->instcount); 
+            WRMSG( HHC00867, "I", "IE", sysblk.regs[i]->cpuad, sysblk.regs[i]->guestregs->instcount);
             WRMSG( HHC00868, "I", "IE", sysblk.regs[i]->cpuad, sysblk.regs[i]->guestregs->siototal);
             copy_psw(sysblk.regs[i]->guestregs, curpsw);
             if (ARCH_900 == sysblk.arch_mode)
@@ -6917,14 +6917,14 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
             }
             else
             {
-               MSGBUF( buf, "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",               
+               MSGBUF( buf, "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",
                    curpsw[0], curpsw[1], curpsw[2], curpsw[3],
                    curpsw[4], curpsw[5], curpsw[6], curpsw[7]);
             }
             WRMSG(HHC00869, "I", "IE", sysblk.regs[i]->cpuad, buf);
         }
     }
-        
+
     if ( first > 0 )
     {
         if ( first == last )
@@ -6932,7 +6932,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
         else
             WRMSG( HHC00815, "I", PTYPSTR(first), first, PTYPSTR(last), last );
     }
-    
+
     WRMSG( HHC00870, "I", sysblk.config_mask, sysblk.started_mask, sysblk.waiting_mask );
     WRMSG( HHC00871, "I", sysblk.sync_mask, sysblk.syncing ? "sync in progress" : "" );
     WRMSG( HHC00872, "I", test_lock(&sysblk.sigplock) ? "" : "not ");
@@ -7912,12 +7912,12 @@ int defsym_cmd(int argc, char *argv[], char *cmdline)
 
     if ( sym == NULL )
     {
-        WRMSG(HHC02219, "E", "strdup()", strerror( errno ) ); 
+        WRMSG(HHC02219, "E", "strdup()", strerror( errno ) );
         return -1;
     }
 
     /* store Symbol names in UC */
-    { 
+    {
         int i;
         for ( i = 0; sym[i] != '\0'; i++ )
             sym[i] = toupper( sym[i] );
@@ -7993,7 +7993,7 @@ BYTE c;                                 /* Character work area       */
         if (!oneorzero)
             STORAGE_KEY(aaddr, regs) |= STORKEY_BADFRM;
         RELEASE_INTLOCK(NULL);
-        MSGBUF( buf, "frame %08X", aaddr);        
+        MSGBUF( buf, "frame %08X", aaddr);
         WRMSG(HHC02204, "I", buf, oneorzero ? "usable" : "unusable");
         return 0;
     }
@@ -8214,7 +8214,7 @@ DLL_EXPORT int aia_cmd(int argc, char *argv[], char *cmdline)
     WRMSG(HHC02283, "I", buf);
 
     if (regs->sie_active)
-    { 
+    {
         regs = regs->guestregs;
         sprintf(buf + sprintf(buf, "SIE: "), "AIV %16.16" I64_FMT "x aip %p ip %p aie %p",
             regs->AIV_G,regs->aip,regs->ip,regs->aie);
@@ -8369,7 +8369,7 @@ int cmdsep_cmd(int argc, char *argv[], char *cmdline)
     }
     else if ( argc == 2 && strlen( argv[1] ) == 1 )
     {
-        if ( !strcmp(argv[1], "-") || !strcmp(argv[1], ".") || !strcmp(argv[1], "!") ) 
+        if ( !strcmp(argv[1], "-") || !strcmp(argv[1], ".") || !strcmp(argv[1], "!") )
             WRMSG( HHC02205, "E", argv[1], "; '.', '-', and '!' are invalid characters" );
         else
         {
@@ -8401,7 +8401,7 @@ int cmdsep_cmd(int argc, char *argv[], char *cmdline)
 int ssd_cmd(int argc, char *argv[], char *cmdline)
 {
 #if       defined( OPTION_SHUTDOWN_CONFIRMATION )
-   
+
     time_t  end;
 
     UNREFERENCED(cmdline);
@@ -8433,7 +8433,7 @@ int ssd_cmd(int argc, char *argv[], char *cmdline)
 #else  // !defined( OPTION_SHUTDOWN_CONFIRMATION )
     UNREFERENCED(argc);
     UNREFERENCED(argv);
-    UNREFERENCED(cmdline);    
+    UNREFERENCED(cmdline);
     signal_quiesce(0, 0);
 #endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
 
@@ -8478,7 +8478,7 @@ int scpecho_cmd(int argc, char *argv[], char *cmdline)
 int scpimply_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
-    
+
     if ( argc == 2 )
     {
         if ( CMD(argv[1],on,2) )
@@ -8794,7 +8794,7 @@ int traceopt_cmd(int argc, char *argv[], char *cmdline)
         }
     }
     else
-        WRMSG(HHC02203, "I", "Hercules inst trace displayed", 
+        WRMSG(HHC02203, "I", "Hercules inst trace displayed",
             sysblk.showregsnone ? "noregs mode" :
             sysblk.showregsfirst ? "regsfirst mode" : "traditional mode");
     return 0;
@@ -9134,7 +9134,7 @@ rexx_done:
 /* emsg command                                                      */
 /*-------------------------------------------------------------------*/
 int emsg_cmd(int argc, char *argv[], char *cmdline)
-{ 
+{
     UNREFERENCED(cmdline);
 
     if ( argc == 2 )
@@ -9161,7 +9161,7 @@ int emsg_cmd(int argc, char *argv[], char *cmdline)
             sysblk.emsg |= EMSG_TS + EMSG_ON;
             sysblk.emsg &= ~EMSG_TEXT;
         }
-        else 
+        else
         {
             WRMSG( HHC17000, "E" );
             return -1;
@@ -9179,7 +9179,7 @@ int emsg_cmd(int argc, char *argv[], char *cmdline)
             WRMSG( HHC17012, "I", "text" );
         else if ( sysblk.emsg & EMSG_ON )
             WRMSG( HHC17012, "I", "on" );
-        else 
+        else
             WRMSG( HHC17012, "I", "off" );
 
     return 0;
@@ -9189,7 +9189,7 @@ int emsg_cmd(int argc, char *argv[], char *cmdline)
 /* qcodepage command                                                 */
 /*-------------------------------------------------------------------*/
 int qcodepage_cmd(int argc, char *argv[], char *cmdline)
-{ 
+{
     UNREFERENCED(cmdline);
     UNREFERENCED(argv);
 
@@ -9201,14 +9201,14 @@ int qcodepage_cmd(int argc, char *argv[], char *cmdline)
 
     query_codepages();
 
-    return 0;    
+    return 0;
 }
 
 /*-------------------------------------------------------------------*/
 /* qcpuid command                                                    */
 /*-------------------------------------------------------------------*/
 int qcpuid_cmd(int argc, char *argv[], char *cmdline)
-{ 
+{
     UNREFERENCED(cmdline);
     UNREFERENCED(argv);
 
@@ -9222,7 +9222,7 @@ int qcpuid_cmd(int argc, char *argv[], char *cmdline)
     WRMSG( HHC17005, "I", ((sysblk.cpuid & 0x00000000FFFF0000ULL) >> 16),
                            str_model(), str_manufacturer(), str_plant(),
                            ((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32) );
-    return 0;    
+    return 0;
 }
 /*-------------------------------------------------------------------*/
 /* qlpar command                                                     */
@@ -9238,7 +9238,7 @@ int qlpar_cmd(int argc, char *argv[], char *cmdline)
         WRMSG( HHC17000, "E" );
         return -1;
     }
-   
+
     WRMSG( HHC17006, "I", sysblk.lparnum, str_lparname() );
     return 0;
 }
@@ -9271,7 +9271,7 @@ int qpfkeys_cmd(int argc, char *argv[], char *cmdline)
         szPF[4] = '\0';
 
         pszVAL = (char*)get_symbol(szPF);
-                
+
         if ( pszVAL == NULL )
             pszVAL = "UNDEFINED";
 
@@ -9296,7 +9296,7 @@ int qpid_cmd(int argc, char *argv[], char *cmdline)
         WRMSG( HHC17000, "E" );
         return -1;
     }
-    
+
     WRMSG( HHC17013, "I", sysblk.hercules_pid );
 
     return 0;
@@ -9323,7 +9323,7 @@ int qports_cmd(int argc, char *argv[], char *cmdline)
         WRMSG( HHC17001, "I", "http", buf);
     }
     else
-    {   
+    {
         WRMSG( HHC17002, "I", "http");
     }
     if ( sysblk.shrdport > 0 )
@@ -9332,7 +9332,7 @@ int qports_cmd(int argc, char *argv[], char *cmdline)
         WRMSG( HHC17001, "I", "shared_dasd", buf);
     }
     else
-    {   
+    {
         WRMSG( HHC17002, "I", "shared_dasd");
     }
     if (strchr(sysblk.cnslport, ':') == NULL)
@@ -9340,7 +9340,7 @@ int qports_cmd(int argc, char *argv[], char *cmdline)
         MSGBUF( buf, "on port %-5s", sysblk.cnslport);
     }
     else
-    {   
+    {
         char *serv;
         char *host = NULL;
         char *port = strdup(sysblk.cnslport);
@@ -9361,11 +9361,11 @@ int qports_cmd(int argc, char *argv[], char *cmdline)
 /* qproc command                                                     */
 /*-------------------------------------------------------------------*/
 int qproc_cmd(int argc, char *argv[], char *cmdline)
-{   
+{
     int i, j, k;
     int cpupct = 0;
     U32 mipsrate = 0;
- 
+
     UNREFERENCED(cmdline);
     UNREFERENCED(argv);
 
@@ -9373,14 +9373,14 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
     {
         WRMSG( HHC17000, "E" );
         return -1;
-    } 
-                
+    }
+
 #ifdef    _FEATURE_VECTOR_FACILITY
     WRMSG( HHC17007, "I",   sysblk.numcpu, sysblk.numvec, sysblk.maxcpu );
 #else  /*!_FEATURE_VECTOR_FACILITY*/
     WRMSG( HHC17007, "I",   sysblk.numcpu,             0, sysblk.maxcpu );
 #endif /* _FEATURE_VECTOR_FACILITY*/
-               
+
     for ( i = j = 0; i < MAX_CPU; i++ )
     {
         if ( IS_CPU_ONLINE(i) && sysblk.regs[i]->cpustate == CPUSTATE_STARTED )
@@ -9390,8 +9390,8 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
         }
     }
 
-    WRMSG( HHC17008, "I", ( j == 0 ? 0 : ( cpupct / j ) ), j, 
-                    sysblk.mipsrate / 1000000, ( sysblk.mipsrate % 1000000 ) / 10000, 
+    WRMSG( HHC17008, "I", ( j == 0 ? 0 : ( cpupct / j ) ), j,
+                    sysblk.mipsrate / 1000000, ( sysblk.mipsrate % 1000000 ) / 10000,
                     sysblk.siosrate );
 
 #if defined(OPTION_CAPPING)
@@ -9412,8 +9412,8 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
         }
 
         if ( k > 0 && k != j )
-            WRMSG( HHC17011, "I", ( k == 0 ? 0 : ( cpupct / k ) ), k, 
-                                  mipsrate / 1000000, 
+            WRMSG( HHC17011, "I", ( k == 0 ? 0 : ( cpupct / k ) ), k,
+                                  mipsrate / 1000000,
                                 ( mipsrate % 1000000 ) / 10000 );
     }
 #endif
@@ -9421,11 +9421,11 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
     {
         if ( IS_CPU_ONLINE(i) )
         {
-            WRMSG( HHC17009, "I", PTYPSTR(i), i, 
-                                ( sysblk.regs[i]->cpustate == CPUSTATE_STARTED ) ? '-' : 
-                                ( sysblk.regs[i]->cpustate == CPUSTATE_STOPPING ) ? ':' : '*', 
+            WRMSG( HHC17009, "I", PTYPSTR(i), i,
+                                ( sysblk.regs[i]->cpustate == CPUSTATE_STARTED ) ? '-' :
+                                ( sysblk.regs[i]->cpustate == CPUSTATE_STOPPING ) ? ':' : '*',
                                   sysblk.regs[i]->cpupct,
-                                  sysblk.regs[i]->mipsrate / 1000000, 
+                                  sysblk.regs[i]->mipsrate / 1000000,
                                 ( sysblk.regs[i]->mipsrate % 1000000 ) / 10000,
                                   sysblk.regs[i]->siosrate );
         }
@@ -9450,7 +9450,7 @@ int qstor_cmd(int argc, char *argv[], char *cmdline)
     {
         WRMSG( HHC17000, "E" );
         return -1;
-    } 
+    }
 
     if ( sysblk.mainsize >= ONE_EXABYTE )
     {
@@ -9468,7 +9468,7 @@ int qstor_cmd(int argc, char *argv[], char *cmdline)
     {
         MSGBUF( buf, "%3.3" I64_FMT "d G", sysblk.mainsize >> 30 );
     }
-    else 
+    else
     {
         MSGBUF( buf, "%3.3" I64_FMT "d M", sysblk.mainsize >> 20 );
     }
@@ -9491,12 +9491,12 @@ int qstor_cmd(int argc, char *argv[], char *cmdline)
     {
         MSGBUF( buf, "%3.3" I64_FMT "d G", xpndsize >> 30 );
     }
-    else 
+    else
     {
         MSGBUF( buf, "%3.3" I64_FMT "d M", xpndsize >> 20 );
     }
     WRMSG( HHC17003, "I", "EXPANDED", buf, "xpnd" );
-    
+
     return 0;
 }
 
