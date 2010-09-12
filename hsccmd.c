@@ -2440,7 +2440,7 @@ BYTE c;
                 if (sscanf(styp, "%d%c", &count, &c) != 2
                     || c != '*' || count < 1)
                 {
-                    logmsg("ENGINES: invalid syntax %s\n",styp);
+                    WRMSG( HHC01456, "E", styp, argv[0] ); 
                     return -1;
                 }
                 styp = strchr(styp,'*') + 1;
@@ -2455,8 +2455,9 @@ BYTE c;
                 ptyp = SCCB_PTYP_IFA;
             else if (strcasecmp(styp,"ip") == 0)
                 ptyp = SCCB_PTYP_SUP;
-            else {
-                logmsg("ENGINES: invalid engine type %s\n",styp);
+            else 
+            {
+                WRMSG( HHC01451, "E", styp, argv[0] );
                 return -1;
             }
             while (count-- > 0 && cpu < MAX_CPU_ENGINES)
@@ -2468,53 +2469,66 @@ BYTE c;
             styp = strtok(NULL,",");
         }
     }
+    else
+    {
+        WRMSG( HHC01455, "E", argv[0] );
+        return -1;
+    }
+
     return 0;
 }
 
 
 /*-------------------------------------------------------------------*/
-/* sysepoch command                                                  */
+/* sysepoch command  1900|1960 [+|-142]                              */
 /*-------------------------------------------------------------------*/
 int sysepoch_cmd(int argc, char *argv[], char *cmdline)
 {
-U32 sysepoch;
-S32 tzoffset;
-BYTE c;
+char   *ssysepoch   = NULL;
+char   *syroffset   = NULL;
+int     sysepoch    = 1900;
+S32     yroffset    = 0;
+BYTE    c;
 
     UNREFERENCED(cmdline);
 
-    /* Parse system epoch operand */
-    if(argc > 1)
+    if ( argc < 2 || argc > 3 )
     {
-        if (strlen(argv[1]) != 4
-            || sscanf(argv[1], "%u%c", &sysepoch, &c) != 1
-            || sysepoch <= 1800 || sysepoch >= 2100)
-        {
-            logmsg("SYSEPOCH %s invalid\n",argv[1]);
-            return -1;
-        }
-        else
-        {
-            if(argc > 2)
-            {
-                if (strlen(argv[2]) != 5
-                    || sscanf(argv[2], "%d%c", &tzoffset, &c) != 1
-                    || (tzoffset < -2359) || (tzoffset > 2359))
-                {
-                    logmsg("SYSEPOCH tzoffset %s invalid\n",argv[1]);
-                    return -1;
-                }
-                else
-                    sysblk.tzoffset = tzoffset;
-             }
-            sysblk.sysepoch = sysepoch;
-        }
-    }
-    else
-    {
-        logmsg("SYSEPOCH: No argument\n");
+        WRMSG( HHC01455, "E", argv[0] );
         return -1;
     }
+
+    ssysepoch = argv[1];
+    if ( argc == 3 )
+        syroffset = argv[2];
+    else
+        syroffset = NULL;
+
+    /* Parse system epoch operand */
+    if (ssysepoch != NULL)
+    {
+        if (strlen(ssysepoch) != 4
+            || sscanf(ssysepoch, "%d%c", &sysepoch, &c) != 1
+            || ( sysepoch != 1900 && sysepoch != 1960) )
+        {
+            WRMSG( HHC01451, "E", ssysepoch, argv[0] );
+            return -1;
+        }
+    }
+
+        /* Parse year offset operand */
+    if (syroffset != NULL)
+    {
+        if (sscanf(syroffset, "%d%c", &yroffset, &c) != 1
+            || (yroffset < -142) || (yroffset > 142))
+        {
+            WRMSG( HHC01451, "E", syroffset, argv[0] );
+            return -1;
+        }
+    }
+
+    sysblk.sysepoch = sysepoch;
+    sysblk.yroffset = yroffset;
 
     return 0;
 }
@@ -2531,12 +2545,12 @@ BYTE c;
     UNREFERENCED(cmdline);
 
     /* Parse year offset operand */
-    if(argc > 1)
+    if(argc == 2)
     {
         if (sscanf(argv[1], "%d%c", &yroffset, &c) != 1
             || (yroffset < -142) || (yroffset > 142))
         {
-            logmsg("YROFFSET %s invalid\n",argv[1]);
+            WRMSG( HHC01451, "E", argv[1], argv[0] );
             return -1;
         }
         else
@@ -2544,7 +2558,7 @@ BYTE c;
     }
     else
     {
-        logmsg("YROFFSET: No argument\n");
+        WRMSG( HHC01455, "E", argv[0] );
         return -1;
     }
 
@@ -2563,13 +2577,13 @@ BYTE c;
     UNREFERENCED(cmdline);
 
     /* Parse timezone offset operand */
-    if(argc > 1)
+    if(argc == 2)
     {
         if (strlen(argv[1]) != 5
             || sscanf(argv[1], "%d%c", &tzoffset, &c) != 1
             || (tzoffset < -2359) || (tzoffset > 2359))
         {
-            logmsg("TZOFFSET %s invalid\n",argv[1]);
+            WRMSG( HHC01451, "E", argv[1], argv[0] );
             return -1;
         }
         else
@@ -2577,7 +2591,7 @@ BYTE c;
     }
     else
     {
-        logmsg("TZOFFSET: No argument\n");
+        WRMSG( HHC01455, "E", argv[0] );
         return -1;
     }
 
@@ -2603,7 +2617,7 @@ BYTE c;
          || (mainsize > 4095 && sizeof(sysblk.mainsize) < 8)
          || (mainsize > 4095 && sizeof(size_t) < 8))
         {
-            logmsg("MAINSIZE %s invalid\n",argv[1]);
+            WRMSG( HHC01451, "E", argv[1], argv[0] );
             return -1;
         }
         else
@@ -2611,7 +2625,7 @@ BYTE c;
     }
     else
     {
-        logmsg("XPNDSIZE: No argument\n");
+        WRMSG( HHC01455, "E", argv[0] );
         return -1;
     }
 
@@ -2630,14 +2644,14 @@ BYTE c;
     UNREFERENCED(cmdline);
 
     /* Parse priority value */
-    if(argc > 1)
+    if(argc == 2)
     {
         /* Parse expanded storage size operand */
         if (sscanf(argv[1], "%u%c", &xpndsize, &c) != 1
             || xpndsize > (0x100000000ULL / XSTORE_PAGESIZE) - 1
             || (xpndsize > 4095 && sizeof(size_t) < 8))
         {
-            logmsg("XPNDSIZE %s invalid\n",argv[1]);
+            WRMSG( HHC01451, "E", argv[1], argv[0] );
             return -1;
         }
         else
@@ -2645,7 +2659,7 @@ BYTE c;
     }
     else
     {
-        logmsg("XPNDSIZE: No argument\n");
+        WRMSG( HHC01455, "E", argv[0] );
         return  -1;
     }
 
@@ -2658,7 +2672,7 @@ BYTE c;
 /*-------------------------------------------------------------------*/
 int hercprio_cmd(int argc, char *argv[], char *cmdline)
 {
-S32 hercprio;
+int hercprio;
 BYTE c;
 
     UNREFERENCED(cmdline);
@@ -2668,7 +2682,7 @@ BYTE c;
     {
         if (sscanf(argv[1], "%d%c", &hercprio, &c) != 1)
         {
-            logmsg("HERCPRIO invalid argument: %s\n",argv[1]);
+            WRMSG( HHC01451, "E", argv[1], argv[0] );
             return -1;
         }
         else
@@ -2676,7 +2690,7 @@ BYTE c;
     }
     else
     {
-        logmsg("HERCPRIO: No argument\n");
+        WRMSG( HHC01455, "E", argv[0] );
         return  -1;
     }
 
@@ -2689,17 +2703,17 @@ BYTE c;
 /*-------------------------------------------------------------------*/
 int cpuprio_cmd(int argc, char *argv[], char *cmdline)
 {
-S32 cpuprio;
+int cpuprio;
 BYTE c;
 
     UNREFERENCED(cmdline);
 
     /* Parse priority value */
-    if(argc > 1)
+    if(argc == 2)
     {
         if (sscanf(argv[1], "%d%c", &cpuprio, &c) != 1)
         {
-            logmsg("CPUPRIO invalid argument: %s\n",argv[1]);
+            WRMSG( HHC01451, "E", argv[1], argv[0] );
             return -1;
         }
         else
@@ -2707,7 +2721,7 @@ BYTE c;
     }
     else
     {
-        logmsg("CPUPRIO: No argument\n");
+        WRMSG( HHC01455, "E", argv[0] );
         return  -1;
     }
 
@@ -2726,11 +2740,11 @@ BYTE c;
     UNREFERENCED(cmdline);
 
     /* Parse priority value */
-    if(argc > 1)
+    if(argc == 2)
     {
         if (sscanf(argv[1], "%d%c", &devprio, &c) != 1)
         {
-            logmsg("DEVPRIO invalid argument: %s\n",argv[1]);
+            WRMSG( HHC01451, "E", argv[1], argv[0] );
             return -1;
         }
         else
@@ -2738,7 +2752,7 @@ BYTE c;
     }
     else
     {
-        logmsg("DEVPRIO: No argument\n");
+        WRMSG( HHC01455, "E", argv[0] );
         return  -1;
     }
 
@@ -2757,11 +2771,11 @@ BYTE c;
     UNREFERENCED(cmdline);
 
     /* Parse priority value */
-    if(argc > 1)
+    if(argc == 2)
     {
         if (sscanf(argv[1], "%d%c", &todprio, &c) != 1)
         {
-            logmsg("TODPRIO invalid argument: %s\n",argv[1]);
+            WRMSG( HHC01451, "E", argv[1], argv[0] );
             return -1;
         }
         else
@@ -2769,7 +2783,7 @@ BYTE c;
     }
     else
     {
-        logmsg("TODPRIO: No argument\n");
+        WRMSG( HHC01455, "E", argv[0] );
         return  -1;
     }
 
@@ -2788,12 +2802,12 @@ BYTE c;
     UNREFERENCED(cmdline);
 
     /* Parse maximum number of Vector processors operand */
-    if(argc > 1)
+    if(argc == 2)
     {
         if (sscanf(argv[1], "%hu%c", &numvec, &c) != 1
             || numvec > MAX_CPU_ENGINES)
         {
-            logmsg("NUMVEC invalid argument: %s\n",argv[1]);
+            WRMSG( HHC01451, "E", argv[1], argv[0] );
             return -1;
         }
         else
@@ -2801,7 +2815,7 @@ BYTE c;
     }
     else
     {
-        logmsg("NUMVEC: No argument\n");
+        WRMSG( HHC01455, "E", argv[0] );
         return  -1;
     }
 
@@ -2820,12 +2834,12 @@ BYTE c;
     UNREFERENCED(cmdline);
 
     /* Parse maximum number of CPUs operand */
-    if(argc > 1)
+    if(argc == 2)
     {
         if (sscanf(argv[1], "%hu%c", &numcpu, &c) != 1
             || numcpu > MAX_CPU_ENGINES)
         {
-            logmsg("NUMCPU invalid argument: %s\n",argv[1]);
+            WRMSG( HHC01451, "E", argv[1], argv[0] );
             return -1;
         }
         else
@@ -2833,7 +2847,7 @@ BYTE c;
     }
     else
     {
-        logmsg("NUMCPU: No argument\n");
+        WRMSG( HHC01455, "E", argv[0] );
         return  -1;
     }
 
@@ -2852,13 +2866,13 @@ BYTE c;
     UNREFERENCED(cmdline);
 
     /* Parse maximum number of CPUs operand */
-    if(argc > 1)
+    if(argc == 2)
     {
         if (sscanf(argv[1], "%hu%c", &maxcpu, &c) != 1
             || maxcpu < 1
             || maxcpu > MAX_CPU_ENGINES)
         {
-            logmsg("MAXCPU invalid argument: %s\n",argv[1]);
+            WRMSG( HHC01451, "E", argv[1], argv[0] );
             return -1;
         }
         else
@@ -2866,7 +2880,7 @@ BYTE c;
     }
     else
     {
-        logmsg("MAXCPU: No argument\n");
+        WRMSG( HHC01455, "E", argv[0] );
         return  -1;
     }
 
@@ -4447,7 +4461,7 @@ BYTE c;
     UNREFERENCED(cmdline);
 
     /* Update capping value */
-    if (argc > 1)
+    if (argc == 2)
     {
         if (strlen(argv[1]) >= 1
           && sscanf(argv[1], "%hx%c", &shrdport, &c) == 1  
@@ -4455,13 +4469,13 @@ BYTE c;
             sysblk.shrdport = shrdport;
         else
         {
-            logmsg("invalid shrdport value\n");
+            WRMSG( HHC01451, "E", argv[1], argv[0] ); 
             return 1;
         }
     }
     else
     {
-        logmsg("no shrdport portnumber\n");
+        WRMSG( HHC01455, "E", argv[0] );
         return 1;
     }
 
@@ -4489,13 +4503,13 @@ BYTE c;
             sysblk.capvalue = cap;
         else
         {
-            logmsg("invalid capping value\n");
+            WRMSG( HHC01451, "E", argv[1], argv[0] ); 
             return 1;
         }
     }
     else
     {
-        logmsg("no capping value\n");
+        WRMSG( HHC01455, "E", argv[0] );
         return 1;
     }
 
@@ -4575,26 +4589,36 @@ BYTE    c;
     UNREFERENCED(cmdline);
 
     /* Update CPU version if operand is specified */
-    if (argc > 1)
+    if (argc == 2)
     {
         if ( (strlen(argv[1]) > 1) && (strlen(argv[1]) < 3)
           && (sscanf(argv[1], "%x%c", &cpuverid, &c) == 1) )
         {
             char buf[8];
-            sprintf(buf,"%02X",cpuverid);
+            
+            MSGBUF(buf,"%02X",cpuverid);
             set_symbol("CPUVERID", buf);
             sysblk.cpuid &= 0x00FFFFFFFFFFFFFFULL;
             sysblk.cpuid |= (U64)cpuverid << 56;
+            WRMSG( HHC02204, "I", argv[0], buf );
         }
         else
         {
-            logmsg("CPUVERID %s invalid\n",argv[1]);
+            WRMSG( HHC01451, "E", argv[1], argv[0] );
             return -1;
         }
     }
-    else
-        logmsg("CPUVERID=%02X\n",((sysblk.cpuid & 0xFF00000000000000ULL) >> 56));
-
+    else if ( argc == 1 )
+    {
+        char msgbuf[8];
+        MSGBUF( msgbuf, "%02X",((sysblk.cpuid & 0xFF00000000000000ULL) >> 56));
+        WRMSG( HHC02203, "I", argv[0], msgbuf );
+    }
+    else 
+    {
+        WRMSG( HHC01455, "E", argv[0] );
+        return -1;
+    }
     return 0;
 }
 
@@ -4611,7 +4635,7 @@ BYTE    c;
     UNREFERENCED(cmdline);
 
     /* Update CPU model if operand is specified */
-    if (argc > 1)
+    if (argc == 2)
     {
         if ( (strlen(argv[1]) > 1) && (strlen(argv[1]) < 5)
           && (sscanf(argv[1], "%x%c", &cpumodel, &c) == 1) )
@@ -4621,15 +4645,25 @@ BYTE    c;
             set_symbol("CPUMODEL", buf);
             sysblk.cpuid &= 0xFFFFFFFF0000FFFFULL;
             sysblk.cpuid |= (U64)cpumodel << 16;
+            WRMSG( HHC02204, "I", argv[0], buf );
         }
         else
         {
-            logmsg("CPUMODEL %s invalid\n",argv[1]);
+            WRMSG( HHC01451, "E", argv[1], argv[0] );
             return -1;
         }
     }
+    else if ( argc == 1 )
+    {
+        char msgbuf[8];
+        MSGBUF( msgbuf, "%04X",((sysblk.cpuid & 0x00000000FFFF0000ULL) >> 16));
+        WRMSG( HHC02203, "I", argv[0], msgbuf );
+    }
     else
-        logmsg("CPUMODEL=%04X\n",((sysblk.cpuid & 0x00000000FFFF0000ULL) >> 16));
+    {
+        WRMSG( HHC01455, "E", argv[0] );
+        return -1;
+    }
 
     return 0;
 }
@@ -4646,7 +4680,7 @@ BYTE    c;
     UNREFERENCED(cmdline);
 
     /* Update CPU serial if operand is specified */
-    if (argc > 1)
+    if (argc == 2)
     {
         if ( (strlen(argv[1]) > 1) && (strlen(argv[1]) < 7)
           && (sscanf(argv[1], "%x%c", &cpuserial, &c) == 1) )
@@ -4656,15 +4690,25 @@ BYTE    c;
             set_symbol("CPUSERIAL", buf);
             sysblk.cpuid &= 0xFF000000FFFFFFFFULL;
             sysblk.cpuid |= (U64)cpuserial << 32;
+            WRMSG( HHC02204, "I", argv[0], buf );
         }
         else
         {
-            logmsg("CPUSERIAL %s invalid\n",argv[1]);
+            WRMSG( HHC01451, "E", argv[1], argv[0] );
             return -1;
         }
     }
+    else if (argc == 1)
+    {
+        char msgbuf[8];
+        MSGBUF( msgbuf, "%06X",((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32));
+        WRMSG( HHC02203, "I", argv[0], msgbuf );
+    }
     else
-        logmsg("CPUSERIAL=%06X\n",((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32));
+    {
+        WRMSG( HHC01455, "E", argv[0] );
+        return -1;
+    }
 
     return 0;
 }
