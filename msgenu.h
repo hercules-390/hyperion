@@ -1698,7 +1698,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC90312 "*** Registers committed"
 #define HHC90313 "cbn not zero, process individual index symbols"
 #define HHC90314 "compress : is %04X (%d)"
-#define HHC90315 "compress : reached CPU determined amount of data"
+#define HHC90315 "*** Interrupt pending, commit and return with cc3"
 #define HHC90316 "fetch_cce: index %04X"
 #define HHC90317 "fetch_ch : reached end of source"
 #define HHC90318 "fetch_ch : %02X at " F_VADR
