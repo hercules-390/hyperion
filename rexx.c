@@ -24,8 +24,6 @@
 #include <regina/rexxsaa.h>
 #endif
 
-typedef LONG APIENTRY RexxExitHandler( LONG, LONG, /* CONST */ PEXIT ) ;
-
 #define hSubcom  "HERCULES"
 #define hSIOExit "HERCSIOE"
 
@@ -59,6 +57,8 @@ LONG APIENTRY exit_handler( LONG ExitNumber, LONG Subfunction, PEXIT ParmBlock )
 {
 RXSIOSAY_PARM *sayparm;
 RXSIOTRC_PARM *trcparm;
+RXSIOTRD_PARM *trdparm;
+RXSIODTR_PARM *dtrparm;
 
     switch( ExitNumber ) {
 
@@ -79,8 +79,17 @@ RXSIOTRC_PARM *trcparm;
                     break;
 
                 case RXSIOTRD:
+                    trdparm = (RXSIOTRD_PARM *)ParmBlock;
+                    MAKERXSTRING(trdparm->rxsiotrd_retc, NULL, 0);
+                    return RXEXIT_HANDLED;
+                    break;
+
                 case RXSIODTR:
-//  ZZFIXME:  Need to add RXSIO I/O Exit to handle trace and stack reads
+                    dtrparm = (RXSIODTR_PARM *)ParmBlock;
+                    MAKERXSTRING(dtrparm->rxsiodtr_retc, NULL, 0);
+                    return RXEXIT_HANDLED;
+                    break;
+
 
                 default:
                     break;
@@ -149,11 +158,13 @@ int init_rexx()
 /*-------------------------------------------------------------------*/
 int exec_cmd(int argc, char *argv[], char *cmdline)
 {
-    SHORT rc;
-    RXSTRING retval;
-    char buffer[250];
-    RXSTRING arg;
-    RXSYSEXIT Exits[2];
+int rc;
+SHORT ret;
+RXSTRING retval;
+char buffer[250];
+char pathname[MAX_PATH];
+RXSTRING arg;
+RXSYSEXIT ExitList[2];
 
     UNREFERENCED(cmdline);
 
@@ -168,6 +179,8 @@ int exec_cmd(int argc, char *argv[], char *cmdline)
         WRMSG( HHC17500, "E", "Regina" );
         return -1;
     }
+
+    hostpath(pathname, argv[1], sizeof(pathname));
 
     if ( argc > 2 )
     {
@@ -191,16 +204,15 @@ int exec_cmd(int argc, char *argv[], char *cmdline)
     
     MAKERXSTRING(retval, buffer, sizeof(buffer));
 
-    Exits[0].sysexit_name = hSIOExit;
-    Exits[0].sysexit_code = RXSIO;
-    Exits[1].sysexit_code = RXENDLST;
+    ExitList[0].sysexit_name = hSIOExit;
+    ExitList[0].sysexit_code = RXSIO;
+    ExitList[1].sysexit_code = RXENDLST;
 
-    hRexxStart ((argc > 2) ? 1 : 0, &arg, argv[1], NULL, hSubcom, RXCOMMAND, Exits, &rc, &retval );
-
-    if(rc)
-    {
-        WRMSG( HHC17502, "E", "Regina", RXSTRPTR(retval) );
-    }
+    if((rc = hRexxStart ((argc > 2) ? 1 : 0, &arg, pathname, NULL, hSubcom, RXCOMMAND, ExitList, &ret, &retval )))
+        WRMSG( HHC17503, "E", "Regina", rc );
+    else
+        if(ret)
+            WRMSG( HHC17502, "E", "Regina", RXSTRPTR(retval) );
 
     if(RXSTRPTR(arg))
         free(RXSTRPTR(arg));
