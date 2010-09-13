@@ -1208,7 +1208,7 @@ void cgibin_cmd_cmd(WEBBLK *webblk, char *command)
     html_header(webblk);
     hprintf(webblk->sock, "<PRE>\n");
 
-    cgibin_hwrite(webblk, response, strlen (response));
+    cgibin_hwrite(webblk, response, (int)strlen (response));
 
     hprintf(webblk->sock, "</PRE>\n");
     html_footer(webblk);
