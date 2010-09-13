@@ -1114,10 +1114,134 @@ void cgibin_xml_rates_info(WEBBLK *webblk)
 }
 #endif /*defined(OPTION_MIPS_COUNTING)*/
 
+
+//  cgibin_hwrite: helper function to output HTML
+
+void cgibin_hwrite(WEBBLK *webblk, char *msg, int msg_len)
+{
+    char buffer[1024];
+    char *new_str;
+
+    int buf_used = 0;
+    int new_len;
+    int i;
+
+
+    if ((msg == NULL) || (msg_len < 1))
+        return;
+
+    // Output message, accounting for http special characters.
+
+    // Method: rather than doing an hwrite for every character,
+    // buffer the message, expanding special characters.
+    // Output the buffer when full, then reuse it.
+
+    // Note that sizeof(X) where X is a #define string literal is 1 greater
+    // than strlen(X).
+
+    for (i = 0; i < msg_len; i++)
+    {
+        switch (msg[i])
+        {
+        case '<':
+            new_len = sizeof(AMP_LT) - 1;
+            new_str = AMP_LT;
+            break;
+        case '>':
+            new_len = sizeof(AMP_GT) - 1;
+            new_str = AMP_GT;
+            break;
+        case '&':
+            new_len = sizeof(AMP_AMP) - 1;
+            new_str = AMP_AMP;
+            break;
+        default:
+            new_len = 1;
+            new_str = &(msg[i]);
+            break;
+        }
+
+        if ((buf_used + new_len) > sizeof(buffer))
+        {
+            // new piece won't fit, write forced
+            hwrite(webblk->sock, buffer,  buf_used);
+            buf_used = 0;
+        }
+
+        while (new_len > 0)
+        {
+            buffer[buf_used++] = *new_str++;
+            new_len--;
+        }
+    }
+
+    if (buf_used > 0)
+    {
+        // write out final/partial buffer
+        hwrite(webblk->sock, buffer,  buf_used);
+    }
+}
+
+
+//  cgibin_cmd_cmd: issue panel command and return response only
+//  without the rest of the syslog, and without most of the HTML wrapping
+
+void cgibin_cmd_cmd(WEBBLK *webblk, char *command)
+{
+    char * response;
+
+    while (isspace(*command))
+        command++;
+
+    if (*command == 0)
+    {
+        return;             /* command is all blank, ignore */
+    }
+
+    response = log_capture(panel_command, command);
+
+    if (response == NULL)
+    {
+        return;             /* command failed to execute */
+    }
+
+    html_header(webblk);
+    hprintf(webblk->sock, "<PRE>\n");
+
+    cgibin_hwrite(webblk, response, strlen (response));
+
+    hprintf(webblk->sock, "</PRE>\n");
+    html_footer(webblk);
+
+    // Ensure command and response is visible on Hercules console panel
+
+    logmsg ("%s", response);
+
+    free (response);
+}
+
+
+//  handle http requests of the form:
+//  http://localhost:8081/cgi-bin/tasks/cmd?cmd=qcpuid
+
+void cgibin_cmd(WEBBLK *webblk)
+{
+char   *command;
+
+    if ((command = cgi_variable(webblk,"cmd")))
+    {
+        /* "cmd" issues a single command */
+        cgibin_cmd_cmd (webblk, command);
+        return;
+    }
+}
+
+
 /* The following table is the cgi-bin directory, which               */
 /* associates directory filenames with cgibin routines               */
 
 CGITAB cgidir[] = {
+    { "tasks/cmd", &cgibin_cmd },
     { "tasks/syslog", &cgibin_syslog },
     { "tasks/ipl", &cgibin_ipl },
     { "configure/cpu", &cgibin_configure_cpu },

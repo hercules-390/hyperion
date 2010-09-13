@@ -1,3 +1,4 @@
+13 Sep 2010 Issue herc commands via HTTP /cgi-bin/tasks/cmd?cmd=xxx - Robert Hodge
 05 Sep 2010 Fast-BCR-Serialization Facility - Roger Bowler
 31 Aug 2010 Comment out unimplemented hetmap support for "tapemap" alias
             that produces incorrect output under Linux due to libtool
