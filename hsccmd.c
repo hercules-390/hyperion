@@ -1562,11 +1562,15 @@ int iodelay_cmd(int argc, char *argv[], char *cmdline)
         {
             sysblk.iodelay = iodelay;
             if(MLVL(VERBOSE))
-                WRMSG(HHC02204, "I", "I/O delay", sysblk.iodelay );
+                WRMSG(HHC02204, "I", "I/O delay", argv[1] );
         }
     }
     else
-        WRMSG(HHC02203, "I", "I/O delay", sysblk.iodelay );
+    {
+        char msgbuf[8];
+        MSGBUF( msgbuf, "%d", sysblk.iodelay );
+        WRMSG(HHC02203, "I", "I/O delay", msgbuf );
+    }
 
     return 0;
 }
@@ -2671,8 +2675,12 @@ BYTE c;
             return -1;
         }
         else
+        {
             sysblk.mainsize = mainsize;
-    }
+            if (MLVL(VERBOSE))
+                WRMSG( HHC02204, "I", argv[0], argv[1] );
+        }
+    }       
     else
     {
         WRMSG( HHC01455, "E", argv[0] );
@@ -2705,7 +2713,11 @@ BYTE c;
             return -1;
         }
         else
+        {
             sysblk.xpndsize = xpndsize;
+            if (MLVL(VERBOSE))
+                WRMSG( HHC02204, "I", argv[0], argv[1] );
+        }
     }
     else
     {
@@ -2736,7 +2748,11 @@ BYTE c;
             return -1;
         }
         else
+        {
             sysblk.hercprio = hercprio;
+            if (MLVL(VERBOSE))
+                WRMSG(HHC02204, "I", argv[0], argv[1] );
+        }
     }
     else
     {
@@ -2767,7 +2783,11 @@ BYTE c;
             return -1;
         }
         else
+        {
             sysblk.cpuprio = cpuprio;
+            if (MLVL(VERBOSE))
+                WRMSG(HHC02204, "I", argv[0], argv[1] );
+        }
     }
     else
     {
@@ -2798,7 +2818,11 @@ BYTE c;
             return -1;
         }
         else
+        {
             sysblk.devprio = devprio;
+            if (MLVL(VERBOSE))
+                WRMSG(HHC02204, "I", argv[0], argv[1] );
+        }
     }
     else
     {
@@ -2939,7 +2963,11 @@ BYTE c;
             return -1;
         }
         else
+        {
             sysblk.maxcpu = maxcpu;
+            if (MLVL(VERBOSE))
+                WRMSG( HHC02204, "I", argv[0], argv[1] );
+        }
     }
     else
     {
@@ -8800,25 +8828,55 @@ int modpath_cmd(int argc, char *argv[], char *cmdline)
 
 #ifdef FEATURE_ECPSVM
 /*-------------------------------------------------------------------*/
-/* evm - ECPS:VM command                                             */
+/* ecpsvm - ECPS:VM command                                          */
 /*-------------------------------------------------------------------*/
-int evm_cmd_1(int argc, char *argv[], char *cmdline)
+int ecpsvm_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
 
-    WRMSG( HHC02256, "W", "evm", "ecpsvm" );
-    ecpsvm_command(argc,argv);
-    return 0;
-}
+    if ( CMD(argv[0],evm,3) || CMD(argv[0],ecps:vm,7) )
+        WRMSG( HHC02256, "W", argv[0], "ecpsvm" );
 
-
-/*-------------------------------------------------------------------*/
-/* evm - ECPS:VM command                                             */
-/*-------------------------------------------------------------------*/
-int evm_cmd(int argc, char *argv[], char *cmdline)
-{
-    UNREFERENCED(cmdline);
-
+    if ( !sysblk.config_done && ( argc == 2 || argc == 3 ) )
+    {
+        if ( CMD(argv[1],no,2) && argc == 2 )
+        {
+            sysblk.ecpsvm.available = FALSE;
+            if ( MLVL(VERBOSE) )
+                WRMSG( HHC02204, "I", "ecpsvm", "disabled" ); 
+            return 0;
+        }
+        else if ( CMD(argv[1],yes,3) && argc == 2 )
+        {
+            sysblk.ecpsvm.available = TRUE;
+            if ( MLVL(VERBOSE) )
+                WRMSG( HHC02204, "I", "ecpsvm", "enabled" ); 
+            return 0;
+        }
+        else if ( CMD(argv[1],level,5) )
+        {
+            int lvl = 20;
+            if ( argc == 3 )
+            {
+                BYTE    c;
+                if (sscanf(argv[2], "%d%c", &lvl, &c) != 1)
+                {
+                    WRMSG( HHC01723, "W", argv[2] );
+                    lvl = 20;
+                }
+            }
+            sysblk.ecpsvm.level = lvl;
+            sysblk.ecpsvm.available = TRUE;
+            if ( MLVL(VERBOSE) )
+            {
+                char msgbuf[8];
+                MSGBUF( msgbuf, "%d", lvl );
+                WRMSG( HHC02204, "I", "ecpsvm", "enabled" ); 
+                WRMSG( HHC02204, "I", "ecpsvmlvl", msgbuf ); 
+            }
+            return 0;
+        }
+    }
     ecpsvm_command(argc,argv);
     return 0;
 }

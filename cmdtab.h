@@ -1085,12 +1085,17 @@ COMMAND("cscript",   PANEL,         SYSCMDALL-SYSOPER,  cscript_cmd,
     "script. If no script is running, no action is taken.\n")
 
 #if defined(FEATURE_ECPSVM)
-COMMAND("evm",       PANEL+CONFIG,  SYSCMDALL-SYSOPER,  evm_cmd_1,
+COMMAND("ecps:vm",   PANEL+CONFIG,  SYSCMDALL-SYSOPER,  ecpsvm_cmd,
+  "ECPS:VM Commands (Deprecated)",
+  "Format: \"ecps:vm\". This command is deprecated.\n"
+    "use \"ecpsvm\" instead\n")
+
+COMMAND("evm",       PANEL+CONFIG,  SYSCMDALL-SYSOPER,  ecpsvm_cmd,
   "ECPS:VM Commands (Deprecated)",
     "Format: \"evm\". This command is deprecated.\n"
     "use \"ecpsvm\" instead\n")
 
-COMMAND ( "ecpsvm",  PANEL+CONFIG,  SYSCMDALL-SYSOPER,  evm_cmd,
+COMMAND ( "ecpsvm",  PANEL+CONFIG,  SYSCMDALL-SYSOPER,  ecpsvm_cmd,
   "ECPS:VM Commands",
     "Format: \"ecpsvm\". This command invokes ECPS:VM Subcommands.\n"
     "Type \"ecpsvm help\" to see a list of available commands\n")

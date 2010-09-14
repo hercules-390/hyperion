@@ -2900,21 +2900,18 @@ void ecpsvm_nodebug(int ac,char **av)
 void ecpsvm_level(int ac,char **av)
 {
     int lvl;
-    if(sysblk.ecpsvm.available)
-    {
-        WRMSG(HHC01712,"I",sysblk.ecpsvm.level);
-    }
-    else
-    {
-        WRMSG(HHC01712,"I",sysblk.ecpsvm.level);
+
+    WRMSG(HHC01712,"I",sysblk.ecpsvm.level);
+    if(!sysblk.ecpsvm.available)
         WRMSG(HHC01713,"I");
-    }
-    if(ac>1)
+
+    if( ac > 1 )
     {
         lvl=atoi(av[1]);
         WRMSG(HHC01714,"I",lvl);
         sysblk.ecpsvm.level=lvl;
     }
+
     if(sysblk.ecpsvm.level!=20)
     {
           WRMSG(HHC01715,"W",sysblk.ecpsvm.level);
@@ -2925,16 +2922,23 @@ void ecpsvm_level(int ac,char **av)
 static  void ecpsvm_helpcmd(int,char **);
 
 static ECPSVM_CMDENT ecpsvm_cmdtab[]={
-    {"Help",1,ecpsvm_helpcmd,"Show help","format : \"evm help [cmd]\" Shows help on the specified\n"
-                                                        "        ECPSVM subcommand\n"},
-    {"STats",2,ecpsvm_showstats,"Show statistical counters","format : evm stats : Shows various ECPS:VM Counters\n"},
-    {"DIsable",2,ecpsvm_disable,"Disable ECPS:VM Features","format : evm disable [ALL|feat1[ feat2|...]\n"},
-    {"ENable",2,ecpsvm_enable,"Enable ECPS:VM Features","format : evm enable [ALL|feat1[ feat2|...]\n"},
+    {"Help",    1,ecpsvm_helpcmd,"Show help",
+            "format : \"ecpsvm help [cmd]\" Shows help on the specified\n"
+            "        ECPSVM subcommand"},
+    {"STats",   2,ecpsvm_showstats,"Show statistical counters",
+            "format : ecpsvm stats : Shows various ECPSVM Counters"},
+    {"DIsable", 2,ecpsvm_disable,"Disable ECPS:VM Features",
+            "format : ecpsvm disable [ALL|feat1[ feat2|...]"},
+    {"ENable",  2,ecpsvm_enable,"Enable ECPS:VM Features",
+            "format : ecpsvm enable [ALL|feat1[ feat2|...]"},
 #if defined(DEBUG_SASSIST) || defined(DEBUG_CPASSIST)
-    {"DEBUG",5,ecpsvm_debug,"Debug ECPS:VM Features","format : evm debug [ALL|feat1[ feat2|...]\n"},
-    {"NODebug",3,ecpsvm_nodebug,"Turn Debug off for ECPS:VM Features","format : evm NODebug [ALL|feat1[ feat2|...]\n"},
+    {"DEBUG",   5,ecpsvm_debug,"Debug ECPS:VM Features",
+            "format : ecpsvm debug [ALL|feat1[ feat2|...]"},
+    {"NODebug", 3,ecpsvm_nodebug,"Turn Debug off for ECPS:VM Features",
+            "format : ecpsvm NODebug [ALL|feat1[ feat2|...]"},
 #endif
-    {"Level",1,ecpsvm_level,"Set/Show ECPS:VM level","format : evm Level [nn]\n"},
+    {"Level",   1,ecpsvm_level,"Set/Show ECPS:VM level",
+            "format : ecpsvm Level [nn]\n"},
     {NULL,0,NULL,NULL,NULL}};
 
 static void ecpsvm_helpcmdlist(void)
