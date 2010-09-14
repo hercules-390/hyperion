@@ -1828,7 +1828,7 @@ static int ARCH_DEP(vstore)(struct ec *ec, BYTE *buf, unsigned len)
     len1 = 0x800 - ofst;
     ec->dest = MADDR((GR_A(ec->r1, ec->iregs) + len1) & ADDRESS_MAXWRAP(ec->regs), ec->r1, ec->regs, ACCTYPE_WRITE, ec->regs->psw.pkey);
     memcpy(&main1[ofst], buf, len1);
-    len2 = len - len1 + 1;
+    len2 = len - len1;
     while(len2)
     {
       memcpy(ec->dest, &buf[len1], (len2 > 0x800 ? 0x800 : len2));
