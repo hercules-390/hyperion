@@ -368,13 +368,13 @@ DLL_EXPORT int cache_cmd(int argc, char *argv[], char *cmdline)
         WRMSG(HHC02294, "I", buf);
         snprintf(buf, 80, "waits ........... %10d", cacheblk[ix].waits);
         WRMSG(HHC02294, "I", buf);
-        snprintf(buf, 80, "buf size ........ %10lld", cacheblk[ix].size);
+        snprintf(buf, 80, "buf size ........ %10" I64_FMT "d", cacheblk[ix].size);
         WRMSG(HHC02294, "I", buf);
-        snprintf(buf, 80, "hits ............ %10lld", cacheblk[ix].hits);
+        snprintf(buf, 80, "hits ............ %10" I64_FMT "d", cacheblk[ix].hits);
         WRMSG(HHC02294, "I", buf);
-        snprintf(buf, 80, "fast hits ....... %10lld", cacheblk[ix].fasthits);
+        snprintf(buf, 80, "fast hits ....... %10" I64_FMT "d", cacheblk[ix].fasthits);
         WRMSG(HHC02294, "I", buf);
-        snprintf(buf, 80, "misses .......... %10lld", cacheblk[ix].misses);
+        snprintf(buf, 80, "misses .......... %10" I64_FMT "d", cacheblk[ix].misses);
         WRMSG(HHC02294, "I", buf);
         snprintf(buf, 80, "hit%% ............ %10d", cache_hit_percent(ix));
         WRMSG(HHC02294, "I", buf);
