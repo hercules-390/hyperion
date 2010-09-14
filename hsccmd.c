@@ -4796,7 +4796,7 @@ BYTE    c;
     else if ( argc == 1 )
     {
         char msgbuf[8];
-        MSGBUF( msgbuf, "%02X",((sysblk.cpuid & 0xFF00000000000000ULL) >> 56));
+        MSGBUF( msgbuf, "%02X",(unsigned int)((sysblk.cpuid & 0xFF00000000000000ULL) >> 56));
         WRMSG( HHC02203, "I", argv[0], msgbuf );
     }
     else
@@ -4842,7 +4842,7 @@ BYTE    c;
     else if ( argc == 1 )
     {
         char msgbuf[8];
-        MSGBUF( msgbuf, "%04X",((sysblk.cpuid & 0x00000000FFFF0000ULL) >> 16));
+        MSGBUF( msgbuf, "%04X",(unsigned int)((sysblk.cpuid & 0x00000000FFFF0000ULL) >> 16));
         WRMSG( HHC02203, "I", argv[0], msgbuf );
     }
     else
@@ -4888,7 +4888,7 @@ BYTE    c;
     else if (argc == 1)
     {
         char msgbuf[8];
-        MSGBUF( msgbuf, "%06X",((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32));
+        MSGBUF( msgbuf, "%06X",(unsigned int)((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32));
         WRMSG( HHC02203, "I", argv[0], msgbuf );
     }
     else
