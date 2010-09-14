@@ -1548,7 +1548,7 @@ static int ARCH_DEP(fetch_is)(struct ec *ec, U16 *is)
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(fetch_iss)(struct ec *ec, U16 is[8])
 {
-  BYTE buf[13];                        /* Buffer for 8 index symbols          */
+  BYTE buf[2048];                      /* Buffer for Index Symbols            */
   unsigned len1;                       /* Lenght in first page                */
   BYTE *mem;                           /* Pointer to maddr or buf             */
   unsigned ofst;                       /* Offset in first page                */
