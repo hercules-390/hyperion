@@ -9314,16 +9314,16 @@ rexx_done:
 }
 
 /*-------------------------------------------------------------------*/
-/* emsg command                                                      */
+/* msglevel command                                                  */
 /*-------------------------------------------------------------------*/
-int emsg_cmd(int argc, char *argv[], char *cmdline)
+int msglevel_cmd(int argc, char *argv[], char *cmdline)
 {
 int i;    
 
     UNREFERENCED(cmdline);
-    if ( !CMD(argv[0],emsg,4) )
+    if ( CMD(argv[0],emsg,4) )
     {
-        WRMSG( HHC02256, "W", argv[0], "emsg" );
+        WRMSG( HHC02256, "W", argv[0], "msglevel" );
     }
 
     if ( argc >= 2 )

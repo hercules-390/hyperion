@@ -51,9 +51,9 @@ COMMAND("cmdsep",    PANEL,         SYSNONE,            cmdsep_cmd,
     "                processing command lines that contain comments\n"
     "        off     disables command separation\n")
 
-COMMAND("emsg",      PANEL+CONFIG,  SYSNONE,            emsg_cmd,
-  "Display/Set current Error Message display",
-  "Format: emsg [on|off|text|time|debug|nodebug|verbose|terse]\n"
+COMMAND("msglevel", PANEL+CONFIG,  SYSNONE,            msglevel_cmd,
+  "Display/Set current Message Display output",
+  "Format: msglevel [on|off|text|time|debug|nodebug|verbose|terse]\n"
   "  on      Normal message display\n"
   "  off     No messages are displayed\n"
   "  text    Text portion only of message is display\n"
@@ -63,11 +63,11 @@ COMMAND("emsg",      PANEL+CONFIG,  SYSNONE,            emsg_cmd,
   "  verbose Display messages during configuration file processing\n"
   "  terse   Turn off verbose")
 
-COMMAND("msglevel",  PANEL+CONFIG,  SYSNONE,            emsg_cmd,
-  "Alias for emsg", NULL)
+COMMAND("msglvl",   PANEL+CONFIG,  SYSNONE,            msglevel_cmd,
+  "Alias for msglevel", NULL)
 
-COMMAND("msglvl",    PANEL+CONFIG,  SYSNONE,            emsg_cmd,
-  "Alias for emsg", NULL)
+COMMAND("emsg",     PANEL+CONFIG,  SYSNONE,            msglevel_cmd,
+  "Command deprecated - Use \"MSGLEVEL\"", NULL)
 
 COMMAND("*",         PANEL+CONFIG,  SYSNONE,            comment_cmd,  
   "Comment", 
@@ -1085,14 +1085,12 @@ COMMAND("cscript",   PANEL,         SYSCMDALL-SYSOPER,  cscript_cmd,
 
 #if defined(FEATURE_ECPSVM)
 COMMAND("ecps:vm",   PANEL+CONFIG,  SYSCMDALL-SYSOPER,  ecpsvm_cmd,
-  "ECPS:VM Commands (Deprecated)",
-  "Format: \"ecps:vm\". This command is deprecated.\n"
-    "use \"ecpsvm\" instead\n")
+  "Command deprecated - Use \"ECPSVM\"",
+    "This command is deprecated. Use \"ecpsvm\" instead.\n")
 
 COMMAND("evm",       PANEL+CONFIG,  SYSCMDALL-SYSOPER,  ecpsvm_cmd,
-  "ECPS:VM Commands (Deprecated)",
-    "Format: \"evm\". This command is deprecated.\n"
-    "use \"ecpsvm\" instead\n")
+  "Command deprecated - Use \"ECPSVM\"",
+    "This command is deprecated. Use \"ecpsvm\" instead.\n")
 
 COMMAND ( "ecpsvm",  PANEL+CONFIG,  SYSCMDALL-SYSOPER,  ecpsvm_cmd,
   "ECPS:VM Commands",
