@@ -994,7 +994,11 @@ COMMAND("panrate",   PANEL+CONFIG,  SYSCMDALL,          panrate_cmd,
 
 COMMAND("pantitle",  PANEL+CONFIG,        SYSCMDALL,          pantitle_cmd, 
   "Display or set console title", 
-    NULL)
+    "Format: pantitle [\"title string\"]\n"
+    "Sets or displays the optional console window title-bar\n"
+    "string to be used in place of the default supplied by\n"
+    "the windowing system. The value should be enclosed within\n"
+    "double quotes if there are embedded blanks.\n")
  
 #ifdef OPTION_MSGHLD
 COMMAND("kd",        PANEL,         SYSCMDALL,          msghld_cmd, 
@@ -1034,7 +1038,7 @@ COMMAND("maxrates",  PANEL,         SYSCMDALL,          maxrates_cmd,
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
 COMMAND("asn_and_lx_reuse", CONFIG, SYSCMDALL-SYSOPER,  alrf_cmd, 
   "Command depricated:" 
-  "Use \"archlvl enable/disable/query asn_lx_reuse\" instead\n",
+  "Use \"archlvl enable|disable|query asn_lx_reuse\" instead\n",
     NULL)
     
 COMMAND("alrf",      CONFIG,        SYSCMDALL-SYSOPER,  alrf_cmd, 

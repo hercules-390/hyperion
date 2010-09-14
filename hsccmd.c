@@ -619,13 +619,13 @@ int logopt_cmd(int argc, char *argv[],char *cmdline)
             argv++; argc--;
             if ( CMD(argv[0],timestamp,4) )
             {
-                sysblk.logoptnotime = 0;
+                sysblk.logoptnotime = FALSE;
                 WRMSG(HHC02204, "I", "log option", "TIMESTAMP");
                 continue;
             }
             if ( CMD(argv[0],notimestamp,6) )
             {
-                sysblk.logoptnotime = 1;
+                sysblk.logoptnotime = TRUE;
                 WRMSG(HHC02204, "I", "log option", "NOTIMESTAMP");
                 continue;
             }
@@ -1345,12 +1345,20 @@ int timerint_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
 
-    if (argc > 1)
+    if ( argc > 2 )
     {
-        if (!strcasecmp(argv[1],"default"))
+        WRMSG( HHC02299, "E", argv[0] );
+        return -1;
+    }
+
+    if ( argc == 2 )
+    {
+        if ( CMD( argv[1], default, 7 ) || CMD( argv[1], reset, 5 ) )
+        {
             sysblk.timerint = DEFAULT_TIMER_REFRESH_USECS;
-        else if (!strcasecmp(argv[1],"reset"))
-            sysblk.timerint = DEFAULT_TIMER_REFRESH_USECS;
+            if ( MLVL(VERBOSE) )
+                WRMSG( HHC02204, "I", "timer update interval", argv[1] );
+        }
         else
         {
             int timerint = 0; BYTE c;
@@ -1362,6 +1370,17 @@ int timerint_cmd(int argc, char *argv[], char *cmdline)
             )
             {
                 sysblk.timerint = timerint;
+                if ( MLVL(VERBOSE) )
+                {
+                    char buf[25];
+                    MSGBUF( buf, "%d", sysblk.timerint);
+                    WRMSG(HHC02204, "I", "timer update interval", buf );
+                }
+            }
+            else
+            {
+                WRMSG( HHC02205, "E", argv[1], ": must be 'default' or n where 1<=n<=1000000" );
+                return -1;
             }
         }
     }
@@ -1530,8 +1549,9 @@ char buf[64];
 int iodelay_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
-
-    if (argc > 1)
+    if ( argc > 2 )
+        WRMSG( HHC01455, "E", argv[0] );
+    else if ( argc == 2 )
     {
         int iodelay = 0;
         BYTE    c;                      /* Character work area       */
@@ -1539,10 +1559,14 @@ int iodelay_cmd(int argc, char *argv[], char *cmdline)
         if (sscanf(argv[1], "%d%c", &iodelay, &c) != 1)
             WRMSG(HHC02205, "E", argv[1], "" );
         else
+        {
             sysblk.iodelay = iodelay;
+            if(MLVL(VERBOSE))
+                WRMSG(HHC02204, "I", "I/O delay", sysblk.iodelay );
+        }
     }
     else
-        WRMSG(HHC02204, "I", "I/O delay", sysblk.iodelay );
+        WRMSG(HHC02203, "I", "I/O delay", sysblk.iodelay );
 
     return 0;
 }
@@ -1581,7 +1605,8 @@ int autoinit_cmd( int argc, char *argv[], char *cmdline )
     if ( argc == 1 )
         WRMSG(HHC02203, "I", "autoinit", sysblk.noautoinit ? "off" : "on" );
     else
-        WRMSG(HHC02204, "I", "autoinit", sysblk.noautoinit ? "off" : "on" );
+        if(MLVL(VERBOSE))
+            WRMSG(HHC02204, "I", "autoinit", sysblk.noautoinit ? "off" : "on" );
 
     return 0;
 }
@@ -2137,12 +2162,26 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int cckd_cmd(int argc, char *argv[], char *cmdline)
 {
-    char* p = strtok(cmdline+4," \t");
-
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
-
-    return cckd_command(p,1);
+    char*   p;
+    int     rc = -1;
+        
+    if ( argc != 2 || cmdline == NULL || (int)strlen(cmdline) < 5 )
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+    }
+    else
+    {
+        p = strtok(cmdline+4," \t");
+        if ( p == NULL )
+        {
+            WRMSG( HHC02299, "E", argv[0] );
+        }
+        else
+        {
+            rc = cckd_command( p, 1 );
+        }
+    }
+    return rc;
 }
 
 
@@ -2429,7 +2468,7 @@ BYTE c;
 
     /* Parse processor engine types operand */
     /* example: ENGINES 4*CP,AP,2*IP */
-    if(argc > 1)
+    if(argc == 2)
     {
         styp = strtok(argv[1],",");
         for (cpu = 0; styp != NULL; )
@@ -2557,7 +2596,11 @@ BYTE c;
             return -1;
         }
         else
+        {
             sysblk.yroffset = yroffset;
+            if ( MLVL(VERBOSE) )
+                WRMSG( HHC02204, "I", argv[0], argv[1] );
+        }
     }
     else
     {
@@ -2590,7 +2633,11 @@ BYTE c;
             return -1;
         }
         else
+        {
             sysblk.tzoffset = tzoffset;
+            if ( MLVL( VERBOSE ) )
+                WRMSG( HHC02204, "I", argv[0], argv[1] );
+        }
     }
     else
     {
@@ -2613,7 +2660,7 @@ BYTE c;
     UNREFERENCED(cmdline);
 
     /* Parse main storage size operand */
-    if(argc > 1)
+    if ( argc == 2 )
     {
         if (sscanf(argv[1], "%u%c", &mainsize, &c) != 1
          || mainsize < 2
@@ -2681,7 +2728,7 @@ BYTE c;
     UNREFERENCED(cmdline);
 
     /* Parse priority value */
-    if(argc > 1)
+    if(argc == 2)
     {
         if (sscanf(argv[1], "%d%c", &hercprio, &c) != 1)
         {
@@ -2782,7 +2829,11 @@ BYTE c;
             return -1;
         }
         else
+        {
             sysblk.todprio = todprio;
+            if (MLVL(VERBOSE))
+                WRMSG( HHC02204, "I", argv[0], argv[1] ); 
+        }
     }
     else
     {
@@ -2814,7 +2865,11 @@ BYTE c;
             return -1;
         }
         else
+        {
             sysblk.numvec = numvec;
+            if ( MLVL(VERBOSE) )
+                WRMSG( HHC02204, "I", argv[0], argv[1] );
+        }
     }
     else
     {
@@ -2846,7 +2901,12 @@ BYTE c;
             return -1;
         }
         else
+        {
             sysblk.numcpu = numcpu;
+            if ( MLVL(VERBOSE) )
+                WRMSG( HHC02204, "I", argv[0], argv[1] );
+        }
+
     }
     else
     {
@@ -2960,8 +3020,13 @@ int httproot_cmd(int argc, char *argv[], char *cmdline)
 char pathname[MAX_PATH];
 
     UNREFERENCED(cmdline);
+    if ( argc > 2 )
+    {
+        WRMSG( HHC01455, "S", argv[0] );
+        return -1;
+    }
 
-    if (argc > 1)
+    if ( argc == 2 )
     {
         if (sysblk.httproot)
             free(sysblk.httproot);
@@ -2969,7 +3034,7 @@ char pathname[MAX_PATH];
         sysblk.httproot = strdup(pathname);
     }
     else
-        WRMSG(HHC02204, "I", "HTTPROOT", sysblk.httproot ? sysblk.httproot : "<not specified>");
+        WRMSG(HHC02203, "I", "HTTPROOT", sysblk.httproot ? sysblk.httproot : "<not specified>");
 
     return 0;
 }
@@ -2984,6 +3049,11 @@ char c;
 int rc;
 
     UNREFERENCED(cmdline);
+    if ( argc > 5 )
+    {
+        WRMSG( HHC01455, "S", argv[0] );
+        return -1;
+    }
 
     if (argc > 1)
     {
@@ -3086,17 +3156,28 @@ char c;
 int alrf_cmd(int argc, char *argv[], char *cmdline)
 {
 static char *ArchlvlCmd[3] = { "archlvl", "Query", "asn_lx_reuse" };
+int     rc = 0;
 
     UNREFERENCED(cmdline);
 
-    WRMSG( HHC02256, "W", "ALRF", "archlvl enable|disable asn_lx_reuse" );
+    WRMSG( HHC02256, "W", "ALRF", "archlvl enable|disable|query asn_lx_reuse" );
 
-    if(argc > 1)
+    if ( argc == 2 )
+    {
         ArchlvlCmd[1] = argv[1];
+        ProcessConfigCommand(3,ArchlvlCmd,NULL);
+    }
+    else if ( argc == 1 )
+    {
+        ProcessConfigCommand(3,ArchlvlCmd,NULL);
+    }
+    else
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        rc = -1;
+    }
 
-    ProcessConfigCommand(3,ArchlvlCmd,NULL);
-
-    return 0;
+    return rc;
 }
 #endif /*defined(_FEATURE_ASN_AND_LX_REUSE)*/
 
@@ -3107,8 +3188,13 @@ static char *ArchlvlCmd[3] = { "archlvl", "Query", "asn_lx_reuse" };
 int toddrag_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
+    if ( argc > 2 )
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        return -1;
+    }
 
-    if (argc > 1)
+    if ( argc == 2 )
     {
         double toddrag = -1.0;
 
@@ -3118,13 +3204,24 @@ int toddrag_cmd(int argc, char *argv[], char *cmdline)
         {
             /* Set clock steering based on drag factor */
             set_tod_steering(-(1.0-(1.0/toddrag)));
+            if ( MLVL(VERBOSE) )
+            {        
+                char buf[20];
+                MSGBUF( buf, "%lf",(1.0/(1.0+get_tod_steering())));
+                WRMSG(HHC02204, "I", "TOD clock drag factor", buf);
+            }
+        }
+        else
+        {
+            WRMSG( HHC01451, "E", argv[1], argv[0] );
+            return -1;
         }
     }
     else
     {
         char buf[20];
         MSGBUF( buf, "%lf",(1.0/(1.0+get_tod_steering())));
-        WRMSG(HHC02204, "I", "TOD clock drag factor", buf);
+        WRMSG(HHC02203, "I", "TOD clock drag factor", buf);
     }
     return 0;
 }
@@ -3141,8 +3238,13 @@ int panrate_cmd(int argc, char *argv[], char *cmdline)
     char msgbuf[16];
 
     UNREFERENCED(cmdline);
+    if ( argc > 2 )
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        return -1;
+    }
 
-    if (argc > 1)
+    if ( argc == 2 )
     {
         if (!strcasecmp(argv[1],"fast"))
             sysblk.panrate = PANEL_REFRESH_RATE_FAST;
@@ -3177,19 +3279,15 @@ int panrate_cmd(int argc, char *argv[], char *cmdline)
                 return -1;
             }
         }
-    }
-    else if ( argc > 2 )
-    {
-        WRMSG( HHC02299, "E", argv[0] );
-        return -1;
-    }
 
-    if ( argc == 2 )
         MSGBUF( msgbuf, "%s", argv[1] );
+        WRMSG(HHC02204, "I", "panel refresh rate", msgbuf );
+    }
     else
+    {
         MSGBUF( msgbuf, "%d", sysblk.panrate );
-
-    WRMSG(HHC02204, "I", "panel refresh rate", msgbuf );
+        WRMSG(HHC02203, "I", "panel refresh rate", msgbuf );
+    }
 
     return 0;
 }
@@ -3205,16 +3303,24 @@ int pantitle_cmd(int argc, char *argv[], char *cmdline)
 
     UNREFERENCED(cmdline);
 
+    if ( argc > 2 )
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        return -1;
+    }
+
     /* Update pantitle if operand is specified */
-    if (argc > 1)
+    if (argc == 2)
     {
         if (sysblk.pantitle)
             free(sysblk.pantitle);
         sysblk.pantitle = strdup(argv[1]);
         set_console_title( NULL );
+        if ( MLVL(VERBOSE) )
+            WRMSG(HHC02204, "I", "pantitle", sysblk.pantitle);
     }
     else
-        WRMSG(HHC02204, "I", "pantitle", sysblk.pantitle);
+        WRMSG(HHC02203, "I", "pantitle", sysblk.pantitle);
 
     return 0;
 }
@@ -4211,28 +4317,27 @@ int pgmprdos_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(cmdline);
 
     /* Parse program product OS allowed */
-    if (argc > 1)
+    if (argc == 2)
     {
-        if (strcasecmp (argv[1], "LICENSED") == 0)
+        if ( CMD( argv[1], LICENSED, 3 ) || CMD( argv[1], LICENCED, 3 ) )
         {
             losc_set(PGM_PRD_OS_LICENSED);
         }
-        /* Handle silly British spelling. */
-        else if (strcasecmp (argv[1], "LICENCED") == 0)
-        {
-            losc_set(PGM_PRD_OS_LICENSED);
-        }
-        else if (strcasecmp (argv[1], "RESTRICTED") == 0)
+        else if ( CMD( argv[1], RESTRICTED, 3 ) )
         {
             losc_set(PGM_PRD_OS_RESTRICTED);
         }
         else
         {
             WRMSG(HHC02205, "S", argv[1], "");
+            return -1;
         }
     }
     else
+    {
+        WRMSG( HHC01455, "E", argv[0] );
         return -1;
+    }
 
     return 0;
 }
@@ -4247,8 +4352,14 @@ int i;
 
     UNREFERENCED(cmdline);
 
+    if ( argc > 3 )
+    {
+        WRMSG( HHC01455, "S", argv[0] );
+        return -1;
+    }
+
     /* Parse diag8cmd operand */
-    if(argc > 1)
+    if( argc > 1 )
         for(i = 1; i < argc; i++)
         {
             if(strcasecmp(argv[i],"echo")==0)
@@ -4265,7 +4376,7 @@ int i;
                 sysblk.diag8cmd &= ~(DIAG8CMD_ENABLE | DIAG8CMD_ECHO);
             else
             {
-                WRMSG(HHC02205, "S",argv[i], "");
+                WRMSG(HHC02205, "S", argv[i], "");
                 return -1;
             }
 
@@ -4293,18 +4404,19 @@ int i;
 
     /* Parse SHCMDOPT operand */
     if (argc > 1)
+    {
         for(i = 1; i < argc; i++)
         {
-            if (strcasecmp (argv[i], "enable") == 0)
+            if ( CMD( argv[i], enable,  3 ) )
                 sysblk.shcmdopt |= SHCMDOPT_ENABLE;
             else
-            if (strcasecmp (argv[i], "diag8") == 0)
+            if ( CMD( argv[i], diag8,   4 ) )
                 sysblk.shcmdopt |= SHCMDOPT_DIAG8;
             else
-            if (strcasecmp (argv[i], "disable") == 0)
+            if ( CMD( argv[i], disable, 4 ) )
                 sysblk.shcmdopt &= ~SHCMDOPT_ENABLE;
             else
-            if (strcasecmp (argv[i], "nodiag8") == 0)
+            if ( CMD( argv[i], nodiag8, 6 ) )
                 sysblk.shcmdopt &= ~SHCMDOPT_DIAG8;
             else
             {
@@ -4312,6 +4424,15 @@ int i;
                 return -1;
             }
         }
+        if ( MLVL(VERBOSE) )
+        {
+            char buf[40];
+            MSGBUF( buf, "%sabled%s", 
+                    (sysblk.shcmdopt&SHCMDOPT_ENABLE)?"En":"Dis",
+                    (sysblk.shcmdopt&SHCMDOPT_DIAG8)?"":" NoDiag8");
+            WRMSG(HHC02204, "I", "SHCMDOPT", buf);
+        }
+    }
     else
     {
         char buf[40];
@@ -4332,24 +4453,25 @@ int lsid_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(cmdline);
 
     /* Parse Legacy SenseID option */
-    if (argc > 1)
+    if ( argc > 2 )
     {
-        if(strcasecmp(argv[1],"enable") == 0)
-            sysblk.legacysenseid = 1;
-        else
-        if(strcasecmp(argv[1],"on") == 0)
-            sysblk.legacysenseid = 1;
-        else
-        if(strcasecmp(argv[1],"disable") == 0)
-            sysblk.legacysenseid = 0;
-        else
-        if(strcasecmp(argv[1],"off") == 0)
-            sysblk.legacysenseid = 0;
+        WRMSG( HHC01455, "E", argv[0] );
+        return -1;
+    }
+
+    if ( argc == 2 )
+    {
+        if( CMD(argv[1],enable,3) || CMD(argv[1],on,2) )
+            sysblk.legacysenseid = TRUE;
+        else if( CMD(argv[1],disable,4) || CMD(argv[1],off,3) )
+            sysblk.legacysenseid = FALSE;
         else
         {
             WRMSG(HHC02205, "E",argv[1],"");
             return -1;
         }
+        if (MLVL(VERBOSE))
+            WRMSG(HHC02204, "I", "legacysenseid", sysblk.legacysenseid?"enabled":"disabled");
     }
     else
         WRMSG(HHC02203, "I", "legacysenseid", sysblk.legacysenseid?"enabled":"disabled");
@@ -4406,13 +4528,13 @@ int stsi_model_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(cmdline);
 
     /* Update model name if operand is specified */
-    if (argc > 1)
-        set_model(argc, argv[1], argv[2], argv[3], argv[4]);
-    else
+    if ( argc < 2 || argc > 5 )
     {
-        WRMSG(HHC02202, "E");
+        WRMSG( HHC01455, "E", argv[0] );
         return -1;
     }
+    else
+        set_model(argc, argv[1], argv[2], argv[3], argv[4]);
 
     return 0;
 }
@@ -4427,13 +4549,14 @@ int stsi_plant_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(cmdline);
 
     /* Update model name if operand is specified */
-    if (argc > 1)
-        set_plant(argv[1]);
-    else
+
+    if ( argc != 2 )
     {
-        WRMSG(HHC02202, "E");
+        WRMSG( HHC01455, "E", argv[0] );
         return -1;
     }
+    else
+        set_plant(argv[1]);
 
     return 0;
 }
@@ -4448,13 +4571,13 @@ int stsi_mfct_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(cmdline);
 
     /* Update model name if operand is specified */
-    if (argc > 1)
-        set_manufacturer(argv[1]);
-    else
+    if ( argc != 2 )
     {
-        WRMSG(HHC02202, "E");
+        WRMSG( HHC01455, "E", argv[0] );
         return -1;
     }
+    else 
+        set_manufacturer(argv[1]);
 
     return 0;
 }
@@ -4538,9 +4661,19 @@ int lparname_cmd(int argc, char *argv[], char *cmdline)
 
     UNREFERENCED(cmdline);
 
+    if ( argc > 2 )
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        return -1;
+    }
+
     /* Update LPAR name if operand is specified */
-    if (argc > 1)
+    if (argc == 2)
+    {
         set_lparname(argv[1]);
+        if ( MLVL(VERBOSE) )
+            WRMSG(HHC02204, "I", "lparname", str_lparname());
+    }
     else
         WRMSG(HHC02203, "I", "lparname", str_lparname());
 
@@ -4558,8 +4691,14 @@ BYTE    c;
 
     UNREFERENCED(cmdline);
 
+    if ( argc > 2 )
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        return -1;
+    }
+
     /* Update LPAR identification number if operand is specified */
-    if (argc > 1)
+    if ( argc == 2 )
     {
         if ( strlen(argv[1]) >= 1 && strlen(argv[1]) <= 2
           && sscanf(argv[1], "%hx%c", &id, &c) == 1)
@@ -4573,10 +4712,16 @@ BYTE    c;
             }
             sysblk.lparnum = id;
             sysblk.lparnuml = (U16)strlen(argv[1]);
+            if ( MLVL(VERBOSE) )
+            {
+                char buf[20];
+                MSGBUF( buf, "%02X", sysblk.lparnum);
+                WRMSG(HHC02204, "I", "lparnum", buf);
+            }
         }
         else
         {
-            WRMSG(HHC02202, "E");
+            WRMSG(HHC02205, "E", argv[1], ": must be within 00 to 3F (hex)" );
             return -1;
         }
     }
@@ -4778,8 +4923,18 @@ int loadparm_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(cmdline);
 
     /* Update IPL parameter if operand is specified */
-    if (argc > 1)
+    if ( argc > 2 )
+    {
+        WRMSG( HHC01455, "E", argv[0] );
+        return -1;
+    }
+
+    if ( argc == 2 )
+    {
         set_loadparm(argv[1]);
+        if ( MLVL(VERBOSE) )
+            WRMSG(HHC02204, "I", "loadparm", str_loadparm());
+    }
     else
         WRMSG(HHC02203, "I", "loadparm", str_loadparm());
 
@@ -5542,124 +5697,102 @@ BYTE    c;                              /* Character work area       */
 /*-------------------------------------------------------------------*/
 int ostailor_cmd(int argc, char *argv[], char *cmdline)
 {
+    char   *postailor   = NULL;
+    int     b_on    = FALSE;
+    int     b_off   = FALSE;
+    U64     mask    = 0;
+
     UNREFERENCED(cmdline);
+
+    if ( argc > 2 )
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        return -1;
+    }
 
     if (argc < 2)
     {
-        char* sostailor = "(custom)";
-        if (sysblk.pgminttr == OS_OS390 ) sostailor = "OS/390";
-        if (sysblk.pgminttr == OS_ZOS   ) sostailor = "z/OS";
-        if (sysblk.pgminttr == OS_VSE   ) sostailor = "VSE";
-        if (sysblk.pgminttr == OS_VM    ) sostailor = "VM";
-        if (sysblk.pgminttr == OS_LINUX ) sostailor = "LINUX";
-        if (sysblk.pgminttr == OS_OPENSOLARIS ) sostailor = "OpenSolaris";
-        if (sysblk.pgminttr == 0xFFFFFFFFFFFFFFFFULL) sostailor = "NULL";
-        if (sysblk.pgminttr == 0                    ) sostailor = "QUIET";
-        WRMSG(HHC02204, "I", "OSTAILOR",sostailor);
+        char    msgbuf[64];
+        char   *sostailor = NULL;
+
+        if (sysblk.pgminttr == OS_OS390             )   sostailor = "OS/390";
+        if (sysblk.pgminttr == OS_ZOS               )   sostailor = "z/OS";
+        if (sysblk.pgminttr == OS_VSE               )   sostailor = "VSE";
+        if (sysblk.pgminttr == OS_VM                )   sostailor = "VM";
+        if (sysblk.pgminttr == OS_LINUX             )   sostailor = "LINUX";
+        if (sysblk.pgminttr == OS_OPENSOLARIS       )   sostailor = "OpenSolaris";
+        if (sysblk.pgminttr == 0xFFFFFFFFFFFFFFFFULL)   sostailor = "NULL";
+        if (sysblk.pgminttr == 0                    )   sostailor = "QUIET";
+        if (sysblk.pgminttr == OS_NONE              )   sostailor = "DEFAULT";
+        if ( sostailor == NULL )
+            MSGBUF( msgbuf, "Custom(0x"I64_FMTX")", sysblk.pgminttr );
+        else
+            MSGBUF( msgbuf, "%s", sostailor );
+        WRMSG(HHC02204, "I", "OSTAILOR", msgbuf);
         return 0;
     }
-    if (strcasecmp (argv[1], "OS/390") == 0)
+
+    postailor = argv[1];
+
+    if ( postailor[0] == '+' )
     {
-        sysblk.pgminttr = OS_OS390;
-        return 0;
+        b_on = TRUE;
+        b_off = FALSE;
+        postailor++;
     }
-    if (strcasecmp (argv[1], "+OS/390") == 0)
+    else if ( postailor[0] == '-' )
     {
-        sysblk.pgminttr &= OS_OS390;
-        return 0;
+        b_off = TRUE;
+        b_on = FALSE;
+        postailor++;
     }
-    if (strcasecmp (argv[1], "-OS/390") == 0)
+    else
     {
-        sysblk.pgminttr |= ~OS_OS390;
-        return 0;
+        b_on = FALSE;
+        b_off = FALSE;
     }
-    if (strcasecmp (argv[1], "Z/OS") == 0)
+    
+    if      ( CMD( postailor, OS/390, 2 ) )
+        mask = OS_OS390;
+    else if ( CMD( postailor, Z/OS,   1 ) )
+        mask = OS_ZOS;
+    else if ( CMD( postailor, VSE,    2 ) )
+        mask = OS_VSE;
+    else if ( CMD( postailor, VM,     2 ) )
+        mask = OS_VM;
+    else if ( CMD( postailor, LINUX,  5 ) )
+        mask = OS_LINUX;
+    else if ( CMD( postailor, OpenSolaris, 4 ) )
+        mask = OS_OPENSOLARIS;
+    else if ( CMD( postailor, DEFAULT,7 ) || CMD( postailor, NONE, 4 ) )
     {
-        sysblk.pgminttr = OS_ZOS;
-        return 0;
+        mask = OS_NONE;
+        b_on = FALSE;
+        b_off = FALSE;
     }
-    if (strcasecmp (argv[1], "+Z/OS") == 0)
+    else if ( CMD( postailor, NULL,   4 ) )
     {
-        sysblk.pgminttr &= OS_ZOS;
-        return 0;
+        mask = 0xFFFFFFFFFFFFFFFFULL;
+        b_on = FALSE;
+        b_off = FALSE;
     }
-    if (strcasecmp (argv[1], "-Z/OS") == 0)
+    else if ( CMD( postailor, QUIET,  5 ) )
     {
-        sysblk.pgminttr |= ~OS_ZOS;
-        return 0;
+        mask = 0;
+        b_on = FALSE;
+        b_off = FALSE;
     }
-    if (strcasecmp (argv[1], "VSE") == 0)
+    else
     {
-        sysblk.pgminttr = OS_VSE;
-        return 0;
+        WRMSG(HHC02205, "E", argv[1], ": unknown OS tailor specification");
+        return -1;
     }
-    if (strcasecmp (argv[1], "+VSE") == 0)
-    {
-        sysblk.pgminttr &= OS_VSE;
-        return 0;
-    }
-    if (strcasecmp (argv[1], "-VSE") == 0)
-    {
-        sysblk.pgminttr |= ~OS_VSE;
-        return 0;
-    }
-    if (strcasecmp (argv[1], "VM") == 0)
-    {
-        sysblk.pgminttr = OS_VM;
-        return 0;
-    }
-    if (strcasecmp (argv[1], "+VM") == 0)
-    {
-        sysblk.pgminttr &= OS_VM;
-        return 0;
-    }
-    if (strcasecmp (argv[1], "-VM") == 0)
-    {
-        sysblk.pgminttr |= ~OS_VM;
-        return 0;
-    }
-    if (strcasecmp (argv[1], "LINUX") == 0)
-    {
-        sysblk.pgminttr = OS_LINUX;
-        return 0;
-    }
-    if (strcasecmp (argv[1], "+LINUX") == 0)
-    {
-        sysblk.pgminttr &= OS_LINUX;
-        return 0;
-    }
-    if (strcasecmp (argv[1], "-LINUX") == 0)
-    {
-        sysblk.pgminttr |= ~OS_LINUX;
-        return 0;
-    }
-    if (strcasecmp (argv[1], "OpenSolaris") == 0)
-    {
-        sysblk.pgminttr = OS_OPENSOLARIS;
-        return 0;
-    }
-    if (strcasecmp (argv[1], "+OpenSolaris") == 0)
-    {
-        sysblk.pgminttr &= OS_OPENSOLARIS;
-        return 0;
-    }
-    if (strcasecmp (argv[1], "-OpenSolaris") == 0)
-    {
-        sysblk.pgminttr |= ~OS_OPENSOLARIS;
-        return 0;
-    }
-    if (strcasecmp (argv[1], "NULL") == 0)
-    {
-        sysblk.pgminttr = 0xFFFFFFFFFFFFFFFFULL;
-        return 0;
-    }
-    if ( CMD(argv[1],QUIET,5) )
-    {
-        sysblk.pgminttr = 0;
-        return 0;
-    }
-    WRMSG(HHC02205, "E", argv[1], ": unknown OS tailor specification");
-    return -1;
+
+    if      ( b_off ) sysblk.pgminttr |= ~mask;
+    else if ( b_on  ) sysblk.pgminttr &=  mask;
+    else              sysblk.pgminttr  =  mask;
+
+    return 0;
 }
 
 
@@ -5802,8 +5935,12 @@ int devtmax_cmd(int argc, char *argv[], char *cmdline)
     TID tid;
 
     UNREFERENCED(cmdline);
-
-    if (argc > 1)
+    if ( argc > 2 )
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        return -1;
+    }
+    else if ( argc == 2 )
     {
         sscanf(argv[1], "%d", &devtmax);
 
@@ -5837,8 +5974,7 @@ int devtmax_cmd(int argc, char *argv[], char *cmdline)
     else
         WRMSG(HHC02242, "I",
             sysblk.devtmax, sysblk.devtnbr, sysblk.devthwm,
-            sysblk.devtwait, sysblk.devtunavail
-        );
+            sysblk.devtwait, sysblk.devtunavail );
 
 #endif /* defined(OPTION_FISHIO) */
 
@@ -6003,8 +6139,13 @@ char    c;                              /* work for sscan            */
 int mnttapri_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
+    if ( argc > 2 )
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        return -1;
+    }
 
-    if(argc > 1)
+    if ( argc == 2 )
     {
         if ( CMD(argv[1],disallow,4) )
             sysblk.nomountedtapereinit = TRUE;
@@ -6015,9 +6156,13 @@ int mnttapri_cmd(int argc, char *argv[], char *cmdline)
             WRMSG(HHC02205, "E", argv[1], "");
             return -1;
         }
+        if ( MLVL(VERBOSE) )
+            WRMSG(HHC02204, "I","tape mount reinit", 
+                  sysblk.nomountedtapereinit?"disallowed":"allowed");
     }
     else
-        WRMSG(HHC02203, "I","tape mount reinit", sysblk.nomountedtapereinit?"disallowed":"allowed");
+        WRMSG(HHC02203, "I","tape mount reinit", 
+              sysblk.nomountedtapereinit?"disallowed":"allowed");
 
     return 0;
 }
@@ -6028,9 +6173,16 @@ int mnttapri_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int ascsimnt_cmd(int argc, char *argv[], char *cmdline)
 {
+int rc = 0;
+
     UNREFERENCED(cmdline);
 
-    if(argc > 1)
+    if ( argc >= 2 )
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        rc = -1;
+    }
+    else if( argc == 2 )
     {
         if ( CMD(argv[1],no,2) )
             sysblk.auto_scsi_mount_secs = 0;
@@ -6042,8 +6194,8 @@ int ascsimnt_cmd(int argc, char *argv[], char *cmdline)
             if ( sscanf( argv[1], "%d%c", &secs, &c ) != 1
                 || secs <= 0 || secs > 99 )
             {
-                WRMSG(HHC02205, "S",argv[1],"");
-                return -1;
+                WRMSG( HHC02205, "S", argv[1] , "" );
+                rc = -1;
             }
             else
                 sysblk.auto_scsi_mount_secs = secs;
@@ -6053,9 +6205,9 @@ int ascsimnt_cmd(int argc, char *argv[], char *cmdline)
     {
         char buf[20];
         MSGBUF( buf, "%d seconds", sysblk.auto_scsi_mount_secs);
-        WRMSG(HHC02203, "I","auto SCSI mount", buf);
+        WRMSG(HHC02203, "I", "auto SCSI mount" , buf);
     }
-    return 0;
+    return rc;
 }
 #endif /*defined( OPTION_SCSI_TAPE )*/
 
@@ -8550,17 +8702,19 @@ int ldmod_cmd(int argc, char *argv[], char *cmdline)
 
     UNREFERENCED(cmdline);
 
-    if(argc <= 1)
+    if( argc > 1)
+    {
+        for(i = 1; i < argc; i++)
+        {
+            WRMSG(HHC01526,"I",argv[i]);
+            if(!hdl_load(argv[i], 0))
+                WRMSG(HHC01527,"I",argv[i]);
+        }
+    }
+    else
     {
         WRMSG(HHC01525,"E",argv[0]);
         return -1;
-    }
-
-    for(i = 1; i < argc; i++)
-    {
-        WRMSG(HHC01526,"I",argv[i]);
-        if(!hdl_load(argv[i], 0))
-            WRMSG(HHC01527,"I",argv[i]);
     }
 
     return 0;
@@ -8630,7 +8784,7 @@ int modpath_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
 
-    if(argc <= 1)
+    if( argc != 2 )
     {
         WRMSG(HHC01530,"E",argv[0]);
         return -1;
@@ -8638,8 +8792,8 @@ int modpath_cmd(int argc, char *argv[], char *cmdline)
     else
     {
         hdl_setpath(argv[1], TRUE);
-        return 0;
     }
+    return 0;
 }
 
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
@@ -8652,8 +8806,6 @@ int modpath_cmd(int argc, char *argv[], char *cmdline)
 int evm_cmd_1(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
 
     WRMSG( HHC02256, "W", "evm", "ecpsvm" );
     ecpsvm_command(argc,argv);
@@ -8667,8 +8819,6 @@ int evm_cmd_1(int argc, char *argv[], char *cmdline)
 int evm_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
 
     ecpsvm_command(argc,argv);
     return 0;
@@ -8778,28 +8928,47 @@ int conkpalv_cmd( int argc, char *argv[], char *cmdline )
 int traceopt_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
-    if (argc > 1)
+    if ( argc > 2 )
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        return -1;
+    }
+
+    if (argc == 2)
     {
         if ( CMD(argv[1],traditional,4) )
         {
             sysblk.showregsfirst = 0;
             sysblk.showregsnone = 0;
         }
-        if ( CMD(argv[1],regsfirst,4) )
+        else if ( CMD(argv[1],regsfirst,4) )
         {
             sysblk.showregsfirst = 1;
             sysblk.showregsnone = 0;
         }
-        if ( CMD(argv[1],noregs,4) )
+        else if ( CMD(argv[1],noregs,4) )
         {
             sysblk.showregsfirst = 0;
             sysblk.showregsnone = 1;
         }
+        else 
+        {
+            WRMSG( HHC01451, "E", argv[1], argv[0] );
+            return -1;
+        }
+        if ( MLVL(VERBOSE) )
+        {
+            WRMSG(HHC02203, "I", "Hercules inst trace displayed",
+                sysblk.showregsnone ? "noregs mode" :
+                sysblk.showregsfirst ? "regsfirst mode" : "traditional mode");
+        }
     }
     else
+    {
         WRMSG(HHC02203, "I", "Hercules inst trace displayed",
             sysblk.showregsnone ? "noregs mode" :
             sysblk.showregsfirst ? "regsfirst mode" : "traditional mode");
+    }
     return 0;
 }
 
@@ -8969,11 +9138,11 @@ int script_cmd(int argc, char *argv[], char *cmdline)
 
 void script_test_userabort()
 {
-        if(scr_uaborted)
-        {
-           WRMSG(HHC02259, "E", "user cancel request");
-           scr_aborted=1;
-        }
+    if(scr_uaborted)
+    {
+        WRMSG(HHC02259, "E", "user cancel request");
+        scr_aborted=1;
+    }
 }
 
 
