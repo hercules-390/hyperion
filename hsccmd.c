@@ -6176,7 +6176,7 @@ int rc = 0;
 
     UNREFERENCED(cmdline);
 
-    if ( argc >= 2 )
+    if ( argc > 2 )
     {
         WRMSG( HHC02299, "E", argv[0] );
         rc = -1;
