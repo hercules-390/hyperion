@@ -938,6 +938,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
     {
     int   attargc;
     char **attargv;
+    char  attcmdline[260];
 
         if (addargv[0] == NULL || addargv[1] == NULL)
         {
@@ -950,10 +951,16 @@ char    fname[MAX_PATH];                /* normalized filename       */
         attargv = malloc(attargc * sizeof(char *));
 
         attargv[0] = "attach";
-        for(i = 1; i < attargc; i++)
-            attargv[i] = addargv[i - 1];
+        strcpy(attcmdline, attargv[0]);
 
-        rc = ProcessConfigCommand (attargc, attargv, NULL);
+        for(i = 1; i < attargc; i++)
+        {
+            attargv[i] = addargv[i - 1];
+            strcat(attcmdline, " ");
+            strcat(attcmdline, attargv[i]);
+        }
+
+        rc = ProcessConfigCommand (attargc, attargv, attcmdline);
 
         free(attargv);
 

@@ -3383,44 +3383,43 @@ int msghld_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int msglvl_cmd(int argc, char *argv[], char *cmdline)
 {
-  UNREFERENCED(cmdline);
+    UNREFERENCED(cmdline);
 
-  if(argc == 2)
-  {
-    if(!strcasecmp(argv[1], "info"))
+    if(argc == 2)
     {
-      WRMSG(HHC02203, "I", "message level", MLVL(NORMAL) ? "normal" : (MLVL(VERBOSE) ? "verbose" : "debug" ));
-      return(0);
+        if( CMD( argv[1], normal, 4 ) )
+        {
+            if(MLVL(VERBOSE))
+                WRMSG(HHC02204, "I", "message level", "normal");
+            sysblk.msglvl = MLVL_NORMAL;
+        }
+        else if( CMD( argv[1], verbose, 4 ) )
+        {
+            if(MLVL(VERBOSE))
+                WRMSG(HHC02204, "I", "message level", "verbose");
+            sysblk.msglvl = MLVL_VERBOSE;
+        }
+        else if( CMD( argv[1], debug, 5 ) )
+        {
+            if(MLVL(VERBOSE))
+                WRMSG(HHC02204, "I", "message level", "debug");
+            sysblk.msglvl = MLVL_DEBUG;
+        }
+        else
+        {
+            WRMSG(HHC02205, "E", argv[1], "");
+        }
     }
-    else if(!strcasecmp(argv[1], "normal"))
+    else if ( argc == 1 )
     {
-      if(MLVL(VERBOSE))
-          WRMSG(HHC02204, "I", "message level", "normal");
-      sysblk.msglvl = MLVL_NORMAL;
-      return(0);
-    }
-    else if(!strcasecmp(argv[1], "verbose"))
-    {
-      if(MLVL(VERBOSE))
-          WRMSG(HHC02204, "I", "message level", "verbose");
-      sysblk.msglvl = MLVL_VERBOSE;
-      return(0);
-    }
-    else if(!strcasecmp(argv[1], "debug"))
-    {
-      if(MLVL(VERBOSE))
-          WRMSG(HHC02204, "I", "message level", "debug");
-      sysblk.msglvl = MLVL_DEBUG;
-      return(0);
+        WRMSG(HHC02203, "I", "message level", 
+                MLVL(NORMAL) ? "normal" : 
+               (MLVL(VERBOSE) ? "verbose" : "debug" ));
     }
     else
-    {
-      WRMSG(HHC02205, "E", argv[1], "");
-      return(0);
-    }
-  }
-  WRMSG(HHC02202, "E");
-  return(0);
+        WRMSG(HHC02202, "E");
+
+    return 0;
 }
 
 
@@ -5568,7 +5567,7 @@ int attach_cmd(int argc, char *argv[], char *cmdline)
         return -1;
     }
     rc = parse_and_attach_devices(argv[1],argv[2],argc-3,&argv[3]);
-    if(rc)
+    if( rc == 0 && sysblk.config_done )
         WRMSG(HHC02198, "I");
 
     return rc;
