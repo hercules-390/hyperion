@@ -1548,7 +1548,7 @@ static int ARCH_DEP(fetch_is)(struct ec *ec, U16 *is)
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(fetch_iss)(struct ec *ec, U16 is[8])
 {
-  BYTE buf[2048];                      /* Buffer for Index Symbols            */
+  BYTE buf[13];                        /* Buffer for Index Symbols            */
   unsigned len1;                       /* Lenght in first page                */
   BYTE *mem;                           /* Pointer to maddr or buf             */
   unsigned ofst;                       /* Offset in first page                */
@@ -1572,7 +1572,7 @@ static void ARCH_DEP(fetch_iss)(struct ec *ec, U16 is[8])
     len1 = 0x800 - ofst;
     memcpy(buf, &ec->src[ofst], len1);
     ec->src = MADDR((GR_A(ec->r2, ec->iregs) + len1) & ADDRESS_MAXWRAP(ec->regs), ec->r2, ec->regs, ACCTYPE_READ, ec->regs->psw.pkey);
-    memcpy(&buf[len1], ec->src, ec->smbsz - len1 + 1);
+    memcpy(&buf[len1], ec->src, ec->smbsz - len1);
     mem = buf;
   }
 
