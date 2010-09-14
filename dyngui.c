@@ -482,7 +482,7 @@ NotSpecialGUICommand:
     next_panel_command_handler = HDL_FINDNXT( gui_panel_command );
 
     if (!next_panel_command_handler)    // (extremely unlikely!)
-        return NULL;                    // (extremely unlikely!)
+        return -1;                      // (extremely unlikely!)
 
     return  next_panel_command_handler( pszCommand );
 }

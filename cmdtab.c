@@ -225,7 +225,7 @@ int ProcessPanelCommand (char* pszCmdLine)
 
 #if defined(OPTION_DYNAMIC_LOAD)
     if(system_command)
-        if((rc = system_command(cmd_argc, (char**)cmd_argv, pszSaveCmdLine)))
+        if(!(rc = system_command(cmd_argc, (char**)cmd_argv, pszSaveCmdLine)))
             goto ProcessPanelCommandExit;
 #endif
 
