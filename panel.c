@@ -912,13 +912,13 @@ void set_console_title ( char *status )
     if ( !sysblk.pantitle && ( !status || strlen(status) == 0 ) ) return;
 
     if ( !sysblk.pantitle )
-        MSGBUF( title, "Hercule's Status: %s", status );
+        MSGBUF( title, "System Status: %s", status );
     else
     {
         if ( !status || strlen(status) == 0 )
             MSGBUF( title, "%s", sysblk.pantitle );
         else
-            MSGBUF( title, "%s - Hercule's Status: %s", sysblk.pantitle, status );
+            MSGBUF( title, "%s - System Status: %s", sysblk.pantitle, status );
     }
 
   #if defined( _MSVC_ )
