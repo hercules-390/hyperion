@@ -1,3 +1,14 @@
+14 Sep 2010 1) Set Subsystem Mode support (treats SSM the same way the 2105 does,
+               mostly validate and NOP). There is still one validation sequence to
+               be added, but can be done later (marked TBD). Future support can be
+               added for changes to subsystem caching by dynamically changing
+               SYNCIO to NOSYNCIO; position marked in the update as TBD/Future.
+            2) Move of sense length to CU type where it belongs, rather than by
+               device type; new code in ckddasd.c turns on 24-bit compatibility
+               sense for 3380 devices when attached to newer controllers.
+            3) Update of CKD RDC features and documentation of feature bits.
+               Device features corrected to reflect Hercules supported and
+               unsupported CKD features.
 12 Sep 2010 Support REXX as scripting language for .cnf .rc and script files - Jan Jaeger
 13 Sep 2010 Issue herc commands via HTTP /cgi-bin/tasks/cmd?cmd=xxx - Robert Hodge
 05 Sep 2010 Fast-BCR-Serialization Facility - Roger Bowler

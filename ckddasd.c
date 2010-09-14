@@ -572,20 +572,6 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     WRMSG (HHC00414, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->ckdcyls,
             dev->ckdheads, dev->ckdtrks, dev->ckdtrksz);
 
-    /* Set number of sense bytes */
-    dev->numsense = 32;
-    if ((dev->devtype == 0x2311 ) || (dev->devtype == 0x2314 )
-     || (dev->devtype == 0x2305 ))
-    {
-        dev->numsense = 6;
-    }
-    if ((dev->devtype == 0x3330 ) || (dev->devtype == 0x3340 )
-     || (dev->devtype == 0x3350 ) || (dev->devtype == 0x3375 )
-     || (dev->devtype == 0x3380 ))
-    {
-        dev->numsense = 24;
-    }
-
     /* Locate the CKD dasd table entry */
     dev->ckdtab = dasd_lookup (DASD_CKDDEV, NULL, dev->devtype, dev->ckdcyls);
     if (dev->ckdtab == NULL)
@@ -601,6 +587,9 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         WRMSG (HHC00416, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, cu ? cu : dev->ckdtab->cu);
         return -1;
     }
+
+    /* Set number of sense bytes according to controller specification */
+    dev->numsense = dev->ckdcu->senselength;
 
     /* Set flag bit if 3990 controller */
     if (dev->ckdcu->devt == 0x3990)
@@ -3112,7 +3101,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                 iobuf[94] = (myssid >> 8) & 0xff;
                 iobuf[95] = myssid & 0xff;
                 break;
-            case 0x03:  /* Read attention message for this path-group for 
+            case 0x03:  /* Read attention message for this path-group for
                           the addressed device Return a "no message"
                            message */
                 iobuf[0] = 0x00;                     // Message length
@@ -3201,7 +3190,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         case 0xB0: /* Set Interface Identifier */
 
-            /* Command reject if flag byte bits 0-5 are not zero 
+            /* Command reject if flag byte bits 0-5 are not zero
                or bits 6-7 are 11 or 10 */
             if ((iobuf[1] & 0xFE) != 0x00)
             {
@@ -4637,8 +4626,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 #if 0
                 if (memcmp (&rechdr, cchhr, 4) != 0)
                 {
-                    WRMSG( HHC00443, "E", 
-                           SSID_TO_LCSS(dev->ssid), dev->devnum, 
+                    WRMSG( HHC00443, "E",
+                           SSID_TO_LCSS(dev->ssid), dev->devnum,
                            (rechdr.cyl[0] << 8) | rechdr.cyl[1],
                            (rechdr.head[0] << 8) | rechdr.head[1],
                            rechdr.rec,
@@ -5739,6 +5728,82 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         memset (iobuf, 0x00, 32);
 
         /* Return unit status */
+        *unitstat = CSW_CE | CSW_DE;
+        break;
+
+    case 0x87:
+    /*---------------------------------------------------------------*/
+    /* Set Subsystem Mode                                            */
+    /*---------------------------------------------------------------*/
+
+        /* Command reject if within the domain of a Locate Record */
+        if (dev->ckdlcount > 0)
+        {
+            ckd_build_sense (dev, SENSE_CR, 0, 0,
+                            FORMAT_0, MESSAGE_2);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
+        /* Command reject if not a cached device, first in chain, or */
+        /* immediately preceded by Suspend Multipath Connection      */
+        /*                                                           */
+        /* TBD: Add first in chain and Suspend Multipath check       */
+        /*                                                           */
+        if ((dev->ckdcu->devt != 0x3990 && dev->ckdcu->devt != 0x2105)
+            || (dev->ckdcu->model & 0x07) == 0x02)      /* 3990-1/2  */
+        {
+            ckd_build_sense (dev, SENSE_CR, 0, 0,
+                            FORMAT_0, MESSAGE_2);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
+        /* Calculate residual byte count */
+        num = (count < 2) ? count : 2;
+        *residual = count - num;
+
+        /* Control information length must be at least 2 bytes */
+        if (count < 2)
+        {
+            ckd_build_sense (dev, SENSE_CR, 0, 0,
+                            FORMAT_0, MESSAGE_3);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
+        /* TBD / MGD:   Complete checks for Set Subsystem Mode      */
+        /*              covering message required flag and read     */
+        /*              message id check                            */
+
+        /* Validate operands -- Refer to 2105 validation sequence   */
+        if (((iobuf[0] & 0x02) != 0) || ((iobuf[1] & 0x07) != 0)    ||
+            ((iobuf[1] & 0x18) != 0) /* zero unless in TPF mode */  ||
+            ((iobuf[0] & 0xE0) > 0xA0)                              ||
+            ((iobuf[0] & 0x1C) > 0x14)                              ||
+            ((iobuf[1] & 0xE0) > 0xA0)                              ||
+            ((iobuf[1] & 0x18) == 0x18) /* TPF reserved */          ||
+            (((iobuf[0] & 0x10) != 0) && (
+               ((iobuf[0] & 0xE0) >  0x80) ||
+               ((iobuf[0] & 0xE0) <  0x40) ||
+               ((iobuf[0] & 0x1C) != 0x10) ||
+               ((iobuf[1] & 0xE0) >  0xA0) ||
+               ((iobuf[1] & 0xE0) <  0x40) ||
+               ((iobuf[1] & 0xE0) == 0x60)))                        ||
+            (((iobuf[0] & 0xE0) != 0) && (
+               ((iobuf[0] & 0x1C) != 0) || (iobuf[1] != 0)))        ||
+            (((iobuf[0] & 0x1C) != 0) && (iobuf[1] != 0)))
+        {
+
+            ckd_build_sense (dev, SENSE_CR, 0, 0,
+                            FORMAT_0, MESSAGE_4);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
+        /* TBD / Future:        Cache Fast Write Data Control        */
+
+        /* Treat as NOP and Return unit status */
         *unitstat = CSW_CE | CSW_DE;
         break;
 

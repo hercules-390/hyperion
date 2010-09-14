@@ -61,7 +61,7 @@ static CKDDEV ckdtab[] = {
  {"3380",      0x3380,0x02,0x20,0x0e,  885,1,15,47988,47476,1088,47968,222,0x5007, 1, 32,492,236,   0,  0,0,"3880"},
  {"3380-1",    0x3380,0x02,0x20,0x0e,  885,1,15,47988,47476,1088,47968,222,0x5007, 1, 32,492,236,   0,  0,0,"3880"},
  {"3380-A",    0x3380,0x02,0x20,0x0e,  885,1,15,47988,47476,1088,47968,222,0x5007, 1, 32,492,236,   0,  0,0,"3880"},
- {"3380-B",    0x3380,0x02,0x20,0x0e,  885,1,15,47988,47476,1088,47968,222,0x5007, 1, 32,492,236,   0,  0,0,"3880"}, 
+ {"3380-B",    0x3380,0x02,0x20,0x0e,  885,1,15,47988,47476,1088,47968,222,0x5007, 1, 32,492,236,   0,  0,0,"3880"},
  {"3380-D",    0x3380,0x06,0x20,0x0e,  885,1,15,47988,47476,1088,47968,222,0x5007, 1, 32,492,236,   0,  0,0,"3880"},
  {"3380-J",    0x3380,0x16,0x20,0x0e,  885,1,15,47988,47476,1088,47968,222,0x5007, 1, 32,492,236,   0,  0,0,"3880"},
  {"3380-2",    0x3380,0x0a,0x20,0x0e, 1770,2,15,47988,47476,1088,47968,222,0x5007, 1, 32,492,236,   0,  0,0,"3880"},
@@ -92,18 +92,68 @@ static CKDDEV ckdtab[] = {
 /*-------------------------------------------------------------------*/
 /* CKD control unit definitions                                      */
 /*-------------------------------------------------------------------*/
+/*                                                                   */
+/*                                                                   */
+/* 3880, 3990, 2105 and higher coding                                */
+/* ----------------------------------                                */
+/*                                                                   */
+/* Model coding bits (RDC byte 2):                                   */
+/*                                                                   */
+/*   11.. .... 3880 Speed Matching Buffer (LR support)               */
+/*   ..1. .... Non-Gap-Synchronous mode                              */
+/*   .... 1... Cached                                                */
+/*   .... .011 3880-3                                                */
+/*   .... .101 3880-3     Feature 3005 - 3380 AJ4/AK4 Attachment     */
+/*   .... .010 3990-1/2   Nocache/Synchronous                        */
+/*   .... .100 3990-3/6/7 Basic Operation Mode                       */
+/*   .... .001 3990-6/7   Enhanced Mode                              */
+/*                                                                   */
+/*                                                                   */
+/* Features (RDC bytes 6-9):                                         */
+/*                                                                   */
+/*   Byte 6:                                                         */
+/*   1... .... Multiple Burst ECC (ignored, 3380 devices)            */
+/*   .1.. .... Locate Record, Read Tracks                            */
+/*   ..1. .... Reserved                                              */
+/*   ...1 .... Locate Record, Read                                   */
+/*   .... ...1 Reserved for VM minidisk use                          */
+/*             (testing this bit for zero is not reliable as an      */
+/*             indicator that this is not a minidisk; can fail       */
+/*             when minidisk is a fullpack minidisk)                 */
+/*                                                                   */
+/*   Byte 7 - Levels defining byte 8 format                          */
+/*   0000 0000 Not supported by Hercules, must be zero               */
+/*                                                                   */
+/*   Byte 8 - Added feature support                                  */
+/*   0000 0000 Not supported by Hercules, must be zero               */
+/*                                                                   */
+/*   Byte 9 - Subsystem Program Visible Facilities                   */
+/*   1... .... Cache Fast Write supported (not supported, yet!)      */
+/*             (non-retentive data)                                  */
+/*   .1.. .... Lock Facility supported    (not supported, yet!)      */
+/*   ..1. .... Record Cache supported                                */
+/*   ...1 .... Track Cache supported                                 */
+/*   .... 1... Dual Copy supported        (not supported)            */
+/*   .... .1.. DASD Fast Write supported  (not supported)            */
+/*   .... ..1. Reset Allegiance           (not supported, yet!)      */
+/*   .... ...1 24 Byte Compatibility Sense Format                    */
+/*             (set by code when 3380 on 3390 controller)            */
+/*                                                                   */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
 static CKDCU ckdcutab[] = {
-/*                              func/ type                           */
-/* name          type model code feat code features   ciws --------- */
- {"2314",       0x2314,0x00,0x00,0x00,0x00,0x50000103,0,0,0,0,0,0,0,0},
- {"2835",       0x2835,0x00,0x00,0x00,0x00,0x50000103,0,0,0,0,0,0,0,0},
- {"2841",       0x2841,0x00,0x00,0x00,0x00,0x50000103,0,0,0,0,0,0,0,0},
- {"3830",       0x3830,0x02,0x00,0x00,0x00,0x50000103,0,0,0,0,0,0,0,0},
- {"3880",       0x3880,0x05,0x09,0x00,0x00,0x80000000,0,0,0,0,0,0,0,0},
- {"3990",       0x3990,0xc2,0x10,0x00,0x00,0xd0000002,0x40fa0100,0,0,0,0,0,0,0},
- {"3990-3",     0x3990,0xec,0x06,0x00,0x00,0xd000009e,0x40fa0100,0x41270004,0x423e0040,0,0,0,0,0},
- {"3990-6",     0x3990,0xe9,0x15,0x48,0x15,0x50003097,0x40fa0100,0x41270004,0x423e0060,0,0,0,0,0},
- {"9343",       0x9343,0xe0,0x11,0x00,0x00,0x80000000,0,0,0,0,0,0,0,0}
+/*                              func/ type                                        */
+/* name          type model code feat code features   ciws ---------  senselength */
+ {"2314",       0x2314,0x00,0x00,0x00,0x00,0x00000000,0,0,0,0,0,0,0,0,6},
+ {"2835",       0x2835,0x00,0x00,0x00,0x00,0x00000000,0,0,0,0,0,0,0,0,6},
+ {"2841",       0x2841,0x00,0x00,0x00,0x00,0x00000000,0,0,0,0,0,0,0,0,6},
+ {"3830",       0x3830,0x02,0x00,0x00,0x00,0x00000000,0,0,0,0,0,0,0,0,24},
+ {"3880",       0x3880,0x05,0x09,0x00,0x00,0x80000000,0,0,0,0,0,0,0,0,24},
+ {"3990",       0x3990,0xc2,0x10,0x00,0x00,0xd0000000,0x40fa0100,0,0,0,0,0,0,0,32},
+ {"3990-3",     0x3990,0xec,0x06,0x00,0x00,0xd0000010,0x40fa0100,0x41270004,0x423e0040,0,0,0,0,0,32},
+ {"3990-6",     0x3990,0xe9,0x15,0x48,0x15,0x50000010,0x40fa0100,0x41270004,0x423e0060,0,0,0,0,0,32},
+ {"9343",       0x9343,0xe0,0x11,0x00,0x00,0x80000000,0,0,0,0,0,0,0,0,32}
+/*"2105",       0x2105,0xe8,0x15,0x48,0x15,0x50000037,0x40fa0100,0x41270004,0x423e01a0,0x433e0008,0,0,0,0,32}, */
 } ;
 #define CKDCU_NUM (sizeof(ckdcutab)/CKDCU_SIZE)
 
@@ -307,7 +357,10 @@ int altcyls;                            /* Number alternate cyls     */
     devchar[2]  = cu->model;                    // CU model
     store_hw(devchar+3, ckd->devt);             // Device type
     devchar[5]  = ckd->model;                   // Device model
-    store_fw(devchar+6, cu->sctlfeat);          // Device and SD facilities
+    store_fw(devchar+6, cu->sctlfeat |          // Device and SD facilities
+      (cu->devt == 0x3990 &&                    // ... or in 24-byte sense
+       ckd->devt == 0x3380));                   // ... compatability for 3380
+                                                // ... hosted on 3990 controller
     devchar[10] = ckd->class;                   // Device class code
     devchar[11] = ckd->code;                    // Device type code
     store_hw(devchar+12, cyls - altcyls);       // Primary cylinders
@@ -344,7 +397,11 @@ int altcyls;                            /* Number alternate cyls     */
     devchar[47] = 0x01;                         // Track set
     devchar[48] = (BYTE)(ckd->f6);              // F6
     store_hw(devchar+49, ckd->rpscalc);         // RPS factor
-    devchar[51] = MODEL6(cu) ? 0x0f : 0x00;     // reserved byte 51
+//--REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE
+//  devchar[51] = MODEL6(cu) ? 0x0f : 0x00;     // reserved byte 51             !!! REMOVE !!!
+//  Setting of byte 51 is in ERROR when Hercules does not support the feature   !!! REMOVE !!!
+//  for which a threshold is being set.                                         !!! REMOVE !!!
+//--REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE
     devchar[54] = cu->funcfeat;                 // device/CU functions/features
     devchar[56] = cu->typecode;                 // Real CU type code
 
