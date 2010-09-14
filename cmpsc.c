@@ -1224,7 +1224,7 @@ static void ARCH_DEP(store_iss)(struct cc *cc)
     len1 = 0x800 - ofst;
     cc->dest = MADDR((GR_A(cc->r1, cc->iregs) + len1) & ADDRESS_MAXWRAP(cc->regs), cc->r1, cc->regs, ACCTYPE_WRITE, cc->regs->psw.pkey);
     memcpy(&main1[ofst], mem, len1);
-    memcpy(cc->dest, &mem[len1], cc->smbsz - len1 + 1);
+    memcpy(cc->dest, &mem[len1], cc->smbsz - len1);
     *sk |= (STORKEY_REF | STORKEY_CHANGE);
   }
   ADJUSTREGS(cc->r1, cc->regs, cc->iregs, cc->smbsz);
