@@ -3405,52 +3405,6 @@ int msghld_cmd(int argc, char *argv[], char *cmdline)
 }
 #endif // OPTION_MSGHLD
 
-
-/*-------------------------------------------------------------------*/
-/* msglvl command - display or set the message level                 */
-/*-------------------------------------------------------------------*/
-int msglvl_cmd(int argc, char *argv[], char *cmdline)
-{
-    UNREFERENCED(cmdline);
-
-    if(argc == 2)
-    {
-        if( CMD( argv[1], normal, 4 ) )
-        {
-            if(MLVL(VERBOSE))
-                WRMSG(HHC02204, "I", "message level", "normal");
-            sysblk.msglvl = MLVL_NORMAL;
-        }
-        else if( CMD( argv[1], verbose, 4 ) )
-        {
-            if(MLVL(VERBOSE))
-                WRMSG(HHC02204, "I", "message level", "verbose");
-            sysblk.msglvl = MLVL_VERBOSE;
-        }
-        else if( CMD( argv[1], debug, 5 ) )
-        {
-            if(MLVL(VERBOSE))
-                WRMSG(HHC02204, "I", "message level", "debug");
-            sysblk.msglvl = MLVL_DEBUG;
-        }
-        else
-        {
-            WRMSG(HHC02205, "E", argv[1], "");
-        }
-    }
-    else if ( argc == 1 )
-    {
-        WRMSG(HHC02203, "I", "message level", 
-                MLVL(NORMAL) ? "normal" : 
-               (MLVL(VERBOSE) ? "verbose" : "debug" ));
-    }
-    else
-        WRMSG(HHC02202, "E");
-
-    return 0;
-}
-
-
 /*-------------------------------------------------------------------*/
 /* shell command                                                     */
 /*-------------------------------------------------------------------*/
@@ -9364,52 +9318,95 @@ rexx_done:
 /*-------------------------------------------------------------------*/
 int emsg_cmd(int argc, char *argv[], char *cmdline)
 {
-    UNREFERENCED(cmdline);
+int i;    
 
-    if ( argc == 2 )
+    UNREFERENCED(cmdline);
+    if ( !CMD(argv[0],emsg,4) )
     {
-        if ( CMD(argv[1],on,2) )
+        WRMSG( HHC02256, "W", argv[0], "emsg" );
+    }
+
+    if ( argc >= 2 )
+    {
+        for ( i=1; i<argc; i++)
         {
-            sysblk.emsg |= EMSG_ON;
-            sysblk.emsg &= ~EMSG_TEXT;
-            sysblk.emsg &= ~EMSG_TS;
-        }
-        else if ( CMD(argv[1],off,3) )
-        {
-            sysblk.emsg &= ~EMSG_ON;
-            sysblk.emsg &= ~EMSG_TEXT;
-            sysblk.emsg &= ~EMSG_TS;
-        }
-        else if ( CMD(argv[1],text,4) )
-        {
-            sysblk.emsg |= EMSG_TEXT + EMSG_ON;
-            sysblk.emsg &= ~EMSG_TS;
-        }
-        else if ( CMD(argv[1],timestamp,4) )
-        {
-            sysblk.emsg |= EMSG_TS + EMSG_ON;
-            sysblk.emsg &= ~EMSG_TEXT;
-        }
-        else
-        {
-            WRMSG( HHC17000, "E" );
-            return -1;
+            if ( CMD(argv[i],on,2) )
+            {
+                sysblk.emsg |= EMSG_ON;
+                sysblk.emsg &= ~EMSG_TEXT;
+                sysblk.emsg &= ~EMSG_TS;
+            }
+            else if ( CMD(argv[i],off,3) )
+            {
+                sysblk.emsg &= ~EMSG_ON;
+                sysblk.emsg &= ~EMSG_TEXT;
+                sysblk.emsg &= ~EMSG_TS;
+            }
+            else if ( CMD(argv[i],text,4) )
+            {
+                sysblk.emsg |= EMSG_TEXT + EMSG_ON;
+                sysblk.emsg &= ~EMSG_TS;
+            }
+            else if ( CMD(argv[i],timestamp,4) )
+            {
+                sysblk.emsg |= EMSG_TS + EMSG_ON;
+                sysblk.emsg &= ~EMSG_TEXT;
+            }
+            else if ( CMD(argv[i],terse,5) )
+            {
+                sysblk.msglvl &= ~MLVL_VERBOSE;
+            }
+            else if ( CMD(argv[i],verbose,4) )
+            {
+                sysblk.msglvl |= MLVL_VERBOSE;
+            }
+            else if ( CMD(argv[i],nodebug,5) )
+            {
+                sysblk.msglvl &= ~MLVL_DEBUG;
+            }
+            else if ( CMD(argv[i],debug,5) )
+            {
+                sysblk.msglvl |= MLVL_DEBUG;
+            }
+            else
+            {
+                WRMSG( HHC02205, "E", argv[i], "" );
+                return -1;
+            }
         }
     }
-    else if( argc < 1 || argc > 2 )
+    else if( argc < 1 )
     {
         WRMSG( HHC17000, "E" );
         return -1;
     }
     else
+    {
+        char msgbuf[80];
+
+        msgbuf[0] = '\0';
+
         if ( sysblk.emsg & EMSG_TS )
-            WRMSG( HHC17012, "I", "timestamp" );
-        else if ( sysblk.emsg & EMSG_TEXT )
-            WRMSG( HHC17012, "I", "text" );
+            strcat(msgbuf, "timestamp ");
+        if ( sysblk.emsg & EMSG_TEXT )
+            strcat(msgbuf, "text ");
         else if ( sysblk.emsg & EMSG_ON )
-            WRMSG( HHC17012, "I", "on" );
+            strcat(msgbuf, "on ");
+        if ( sysblk.msglvl & MLVL_VERBOSE )
+            strcat(msgbuf, "verbose ");
         else
+            strcat(msgbuf, "terse ");
+        if ( sysblk.msglvl == MLVL_DEBUG )
+            strcat(msgbuf, "debug ");
+        else
+            strcat(msgbuf, "nodebug ");
+        if ( strlen(msgbuf) > 0 && msgbuf[(int)strlen(msgbuf) - 1] == ' ' )
+            msgbuf[(int)strlen(msgbuf) - 1] = '\0';
+        if ( strlen(msgbuf) == 0 )
             WRMSG( HHC17012, "I", "off" );
+        else
+            WRMSG( HHC17012, "I", msgbuf );
+    }
 
     return 0;
 }

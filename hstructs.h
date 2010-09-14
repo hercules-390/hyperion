@@ -730,6 +730,9 @@ struct SYSBLK {
         LOCK    msglock;                /* lock for writemsg         */
         U64     msglocktime;            /* Time lock locked          */
         int     msglvl;                 /* Message level             */
+#define MLVL_NORMAL  0x00
+#define MLVL_VERBOSE 0x01
+#define MLVL_DEBUG   0xff
 
         BYTE    emsg;                   /* error message display ctrl*/
 #define EMSG_ON     0x01

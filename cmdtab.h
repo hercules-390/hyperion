@@ -51,24 +51,23 @@ COMMAND("cmdsep",    PANEL,         SYSNONE,            cmdsep_cmd,
     "                processing command lines that contain comments\n"
     "        off     disables command separation\n")
 
-COMMAND("msglevel",  PANEL+CONFIG,  SYSNONE,            msglvl_cmd,   
-  "Display or set the message level",
-    "Format: msglevel [normal | debug | info]\n"
-    "normal: default messages\n"
-    "debug:  messages prefixed with source and linenumber\n"
-    "info:   displays the message level\n")
-    
-COMMAND("msglvl",    PANEL+CONFIG,  SYSNONE,            msglvl_cmd,   
-  "Alias for msglevel", 
-    NULL)
-
 COMMAND("emsg",      PANEL+CONFIG,  SYSNONE,            emsg_cmd,
   "Display/Set current Error Message display",
-  "Format: emsg [ on | off | text | time ]\n"
-  "  on    Normal message display\n"
-  "  off   No messages are displayed\n"
-  "  text  Text portion of message is display\n"
-  "  time  Timestamp is prefixed to message\n" )
+  "Format: emsg [on|off|text|time|debug|nodebug|verbose|terse]\n"
+  "  on      Normal message display\n"
+  "  off     No messages are displayed\n"
+  "  text    Text portion only of message is display\n"
+  "  time    Timestamp is prefixed to message\n"
+  "  debug   Messages prefixed with source and linenumber\n"
+  "  nodebug Turn off debug\n"
+  "  verbose Display messages during configuration file processing\n"
+  "  terse   Turn off verbose")
+
+COMMAND("msglevel",  PANEL+CONFIG,  SYSNONE,            emsg_cmd,
+  "Alias for emsg", NULL)
+
+COMMAND("msglvl",    PANEL+CONFIG,  SYSNONE,            emsg_cmd,
+  "Alias for emsg", NULL)
 
 COMMAND("*",         PANEL+CONFIG,  SYSNONE,            comment_cmd,  
   "Comment", 
