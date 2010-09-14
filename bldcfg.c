@@ -911,7 +911,16 @@ char    fname[MAX_PATH];                /* normalized filename       */
         }
         else
         {
-            if(ProcessConfigCommand (addargc, addargv, buf))
+            char addcmdline[256];
+            int i;
+
+            strcpy( addcmdline, addargv[0] );
+            for( i = 1; i < addargc; i++ )
+            {
+                strcat(addcmdline, " ");
+                strcat(addcmdline, addargv[i]);
+            }
+            if(ProcessConfigCommand (addargc, addargv, addcmdline))
             {
                 errorcount++;
                 WRMSG(HHC01441, "E", inc_stmtnum[inc_level], fname, addargv[0]);
