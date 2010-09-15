@@ -513,6 +513,9 @@ int quitmout_cmd(int argc, char *argv[],char *cmdline)
            )
         {
             sysblk.quitmout = tm;
+            if (MLVL(VERBOSE))
+                WRMSG( HHC02204, "I", argv[0], argv[1] );
+            return 0;
         }
         else
         {
@@ -1193,9 +1196,9 @@ int cf_cmd(int argc, char *argv[], char *cmdline)
 
     if (argc == 2)
     {
-        if (!strcasecmp(argv[1],"on"))
+        if ( CMD(argv[1],on,2) )
             on = 1;
-        else if (!strcasecmp(argv[1], "off"))
+        else if ( CMD(argv[1],off,3) )
             on = 0;
     }
 
@@ -1236,9 +1239,9 @@ int cfall_cmd(int argc, char *argv[], char *cmdline)
 
     if (argc == 2)
     {
-        if (!strcasecmp(argv[1],"on"))
+        if ( CMD(argv[1],on,2) )
             on = 1;
-        else if (!strcasecmp(argv[1], "off"))
+        else if ( CMD(argv[1],off,3) )
             on = 0;
     }
 
@@ -2443,7 +2446,7 @@ char *basedir;
     UNREFERENCED(cmdline);
 
     if (argc > 1)
-        if (!strcasecmp(argv[1],"none"))
+        if ( CMD(argv[1],none,4) )
             set_sce_dir(NULL);
         else
             set_sce_dir(argv[1]);
@@ -3085,7 +3088,7 @@ int rc;
 
     if (argc > 1)
     {
-        if (!strcasecmp(argv[1],"none"))
+        if ( CMD(argv[1],none,4) )
         {
             if(sysblk.httpport)
             {
@@ -3108,9 +3111,9 @@ int rc;
             }
             if (argc > 2)
             {
-                if (!strcasecmp(argv[2],"auth"))
+                if ( CMD(argv[2],auth,4) )
                     sysblk.httpauth = 1;
-                else if (strcasecmp(argv[2],"noauth"))
+                else if ( !CMD(argv[2],noauth,6) )
                 {
                     WRMSG(HHC02205, "S",argv[2], "");
                     return -1;
@@ -3274,9 +3277,9 @@ int panrate_cmd(int argc, char *argv[], char *cmdline)
 
     if ( argc == 2 )
     {
-        if (!strcasecmp(argv[1],"fast"))
+        if ( CMD(argv[1],fast,4) )
             sysblk.panrate = PANEL_REFRESH_RATE_FAST;
-        else if (!strcasecmp(argv[1],"slow"))
+        else if ( CMD(argv[1],slow,4) )
             sysblk.panrate = PANEL_REFRESH_RATE_SLOW;
         else
         {
@@ -3308,8 +3311,7 @@ int panrate_cmd(int argc, char *argv[], char *cmdline)
             }
         }
 
-        MSGBUF( msgbuf, "%s", argv[1] );
-        WRMSG(HHC02204, "I", "panel refresh rate", msgbuf );
+        WRMSG(HHC02204, "I", argv[0], argv[1] );
     }
     else
     {
@@ -3360,7 +3362,7 @@ int pantitle_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int msghld_cmd(int argc, char *argv[], char *cmdline)
 {
-    if ( !strcasecmp(cmdline, "kd") )
+    if ( CMD(cmdline, kd,2) )
     {
         expire_kept_msgs(TRUE);
         WRMSG(HHC02226, "I");
@@ -3368,14 +3370,14 @@ int msghld_cmd(int argc, char *argv[], char *cmdline)
     }
     else if(argc == 2)
     {
-        if(!strcasecmp(argv[1], "info"))
+        if( CMD(argv[1],info,4) )
         {
             char buf[40];
             MSGBUF( buf, "%d seconds", sysblk.keep_timeout_secs);
             WRMSG(HHC02203, "I", "message held time", buf);
             return(0);
         }
-        else if(!strcasecmp(argv[1], "clear"))
+        else if( CMD(argv[1],clear,5) )
         {
             expire_kept_msgs(TRUE);
             WRMSG(HHC02226, "I");
@@ -7158,7 +7160,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
 
     obtain_lock( &sysblk.icount_lock );
 
-    if (argc > 1 && !strcasecmp(argv[1], "clear"))
+    if ( argc > 1 && CMD(argv[1],clear,5) )
     {
         memset(IMAP_FIRST,0,IMAP_SIZE);
         WRMSG(HHC02204, "I", "instruction counts", "zero");
@@ -7169,7 +7171,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
 #define  MAX_ICOUNT_INSTR   1000    /* Maximum number of instructions
                                      in architecture instruction set */
 
-    if(argc > 1 && !strcasecmp(argv[1], "sort"))
+    if ( argc > 1 && CMD(argv[1],sort,4) )
     {
       /* Allocate space */
       if(!(opcode1 = malloc(MAX_ICOUNT_INSTR * sizeof(unsigned char))))
@@ -9000,13 +9002,13 @@ int cmdtgt_cmd(int argc, char *argv[], char *cmdline)
 
   if(argc == 2)
   {
-    if(!strcasecmp(argv[1], "herc"))
+    if     ( CMD(argv[1],herc,4) )
       sysblk.cmdtgt = 0;
-    else if(!strcasecmp(argv[1], "scp"))
+    else if( CMD(argv[1],scp,3) )
       sysblk.cmdtgt = 1;
-    else if(!strcasecmp(argv[1], "pscp"))
+    else if( CMD(argv[1],pscp,4) )
       sysblk.cmdtgt = 2;
-    else if(!strcasecmp(argv[1], "?"))
+    else if( CMD(argv[1],?,1) )
       ;
     else
     {

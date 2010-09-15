@@ -30,7 +30,7 @@
 #endif /* _LOGGER_C_ */
 
 #if !defined(VERSION)
-#if defined(V1) && defined(V2) && defined(V3) & defined(V4)
+#if defined(V1) && defined(V2) && defined(V3) && defined(V4)
 #define Q_(x) #x
 #define Q(x) Q_(x)
 #define VER V1##.##V2##.##V3##.##V4
