@@ -66,9 +66,6 @@ COMMAND("msglevel", PANEL+CONFIG,  SYSNONE,            msglevel_cmd,
 COMMAND("msglvl",   PANEL+CONFIG,  SYSNONE,            msglevel_cmd,
   "Alias for msglevel", NULL)
 
-COMMAND("emsg",     PANEL+CONFIG,  SYSNONE,            msglevel_cmd,
-  "Command deprecated - Use \"MSGLEVEL\"", NULL)
-
 COMMAND("*",         PANEL+CONFIG,  SYSNONE,            comment_cmd,  
   "Comment", 
     NULL)
