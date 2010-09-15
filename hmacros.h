@@ -190,6 +190,13 @@
 #define  UNREFERENCED_900(x)  ((x)=(x))
 
 /*-------------------------------------------------------------------*/
+/* Macro for command parsing with variable length                    */
+/*-------------------------------------------------------------------*/
+#define  CMD(str,cmd,min) ( strlen( str ) >= min && \
+                            strlen( str ) <= strlen(#cmd) && \
+                            !strncasecmp( str, #cmd, strlen( str ) ) )
+
+/*-------------------------------------------------------------------*/
 /* Macro for Debugging / Tracing...                                  */
 /*-------------------------------------------------------------------*/
 

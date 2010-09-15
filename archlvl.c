@@ -39,10 +39,6 @@
  #undef   _GEN_ARCH
 #endif
 
-#define  CMD(str,cmd,min) ( strlen( str ) >= min && \
-                            strlen( str ) <= strlen(#cmd) && \
-                            !strncasecmp( str, #cmd, strlen( str ) ) )
-
 #define STR_Q( _string ) #_string
 #define STR_M( _string ) STR_Q( _string )
 

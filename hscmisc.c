@@ -216,7 +216,10 @@ static void do_shutdown_now()
 #ifdef DEBUG
         fprintf(stdout, _("DO_SHUTDOWN_NOW EXIT\n"));
 #endif
-        fprintf(stdout, MSG(HHC01412, "I"));
+        if ( sysblk.emsg & EMSG_TEXT )
+            fprintf(stdout, HHC01412);
+        else
+            fprintf(stdout, MSG(HHC01412, "I"));
         fflush(stdout);
         exit(0);
     }

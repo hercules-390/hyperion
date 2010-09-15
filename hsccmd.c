@@ -45,9 +45,6 @@
 #define  ONE_PETABYTE   (ONE_TERABYTE * (unsigned long long)(1024)) /* 2^50     (16^12) * 4  */
 #define  ONE_EXABYTE    (ONE_PETABYTE * (unsigned long long)(1024)) /* 2^60     (16^15)      */
 
-#define  CMD(str,cmd,min) ( strlen( str ) >= min && \
-                            strlen( str ) <= strlen(#cmd) && \
-                            !strncasecmp( str, #cmd, strlen( str ) ) )
 
 // (forward references, etc)
 
@@ -2185,7 +2182,7 @@ int cckd_cmd(int argc, char *argv[], char *cmdline)
         }
         else
         {
-            rc = cckd_command( p, 1 );
+            rc = cckd_command( p, sysblk.config_done? 1 : MLVL(VERBOSE)? 1 : 0 );
         }
     }
     return rc;
@@ -2211,15 +2208,15 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
 
     if (0
         || argc < 3
-        ||  strcasecmp( argv[1], "debug" ) != 0
+        || !CMD(argv[1],debug,5)
         || (1
-            && strcasecmp( argv[2], "on"  ) != 0
-            && strcasecmp( argv[2], "off" ) != 0
+            && !CMD(argv[2],on,2)
+            && !CMD(argv[2],off,3)
            )
         || argc > 4
         || (1
             && argc == 4
-            && strcasecmp( argv[3], "ALL" ) != 0
+            && !CMD(argv[3],ALL,3)
             && parse_single_devnum( argv[3], &lcss, &devnum) < 0
            )
     )
@@ -2228,9 +2225,9 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
         return -1;
     }
 
-    onoff = (strcasecmp( argv[2], "on" ) == 0);
+    onoff = ( CMD(argv[2],on,2) );
 
-    if (argc < 4 || strcasecmp( argv[3], "ALL" ) == 0)
+    if (argc < 4 || CMD(argv[3],ALL,3) )
     {
         for ( dev = sysblk.firstdev; dev; dev = dev->nextdev )
         {
@@ -6301,7 +6298,7 @@ BYTE     unitstat, code = 0;
         return -1;
     }
 
-    if (strcasecmp(argv[2],"rew") == 0)
+    if ( CMD(argv[2],rew,3) )
     {
         if (argc > 3)
         {
@@ -6318,7 +6315,7 @@ BYTE     unitstat, code = 0;
             }
         }
     }
-    else if (strcasecmp(argv[2],"fsf") == 0)
+    else if ( CMD(argv[2],fsf,3) )
     {
         for ( ; count >= 1; count-- )
         {
@@ -6330,7 +6327,7 @@ BYTE     unitstat, code = 0;
             }
         }
     }
-    else if (strcasecmp(argv[2],"bsf") == 0)
+    else if ( CMD(argv[2],bsf,3) )
     {
         for ( ; count >= 1; count-- )
         {
@@ -6342,7 +6339,7 @@ BYTE     unitstat, code = 0;
             }
         }
     }
-    else if (strcasecmp(argv[2],"fsr") == 0)
+    else if ( CMD(argv[2],fsr,3) )
     {
         for ( ; count >= 1; count-- )
         {
@@ -6354,7 +6351,7 @@ BYTE     unitstat, code = 0;
             }
         }
     }
-    else if (strcasecmp(argv[2],"bsr") == 0)
+    else if ( CMD(argv[2],bsr,3) )
     {
         for ( ; count >= 1; count-- )
         {
@@ -6366,7 +6363,7 @@ BYTE     unitstat, code = 0;
             }
         }
     }
-    else if (strcasecmp(argv[2],"asf") == 0)
+    else if ( CMD(argv[2],asf,3) )
     {
         rc = dev->tmh->rewind( dev, &unitstat, code);
         if ( rc == 0 )
@@ -6382,7 +6379,7 @@ BYTE     unitstat, code = 0;
             }
         }
     }
-    else if (strcasecmp(argv[2],"wtm") == 0)
+    else if ( CMD(argv[2],wtm,3) )
     {
         if ( dev->readonly || dev->tdparms.logical_readonly )
         {

@@ -1041,7 +1041,10 @@ int     dll_count;                      /* index into array          */
     SetConsoleCtrlHandler(console_ctrl_handler, FALSE);
     socket_deinit();
 #endif
-    fprintf(stdout, MSG(HHC01412, "I"));
+    if ( sysblk.emsg & EMSG_TEXT )
+        fprintf(stdout, HHC01412 );
+    else
+        fprintf(stdout, MSG(HHC01412, "I"));
     fflush(stdout);
     usleep(10000);
     return 0;

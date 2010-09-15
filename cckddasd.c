@@ -5409,27 +5409,27 @@ int   rc;
         else val = -77;
 
         /* Parse the keyword */
-        if (strcasecmp (kw, "help") == 0)
+        if ( CMD(kw,help,4 ) )
         {
             if (!cmd) return 0;
             cckd_command_help();
         }
-        else if (strcasecmp (kw, "stats") == 0)
+        else if ( CMD(kw,stats,4) )
         {
             if (!cmd) return 0;
             cckd_command_stats ();
         }
-        else if (strcasecmp (kw, "opts") == 0)
+        else if ( CMD(kw,opts,4) )
         {
             if (!cmd) return 0;
             cckd_command_opts();
         }
-        else if (strcasecmp (kw, "debug") == 0)
+        else if ( CMD(kw,debug,5) )
         {
             if (!cmd) return 0;
             cckd_command_debug();
         }
-        else if (strcasecmp (kw, "comp") == 0)
+        else if ( CMD(kw,comp,4) )
         {
             if (val < -1 || (val & ~cckdblk.comps) || c != '\0')
             {
@@ -5442,7 +5442,7 @@ int   rc;
                 opts = 1;
             }
         }
-        else if (strcasecmp (kw, "compparm") == 0)
+        else if ( CMD(kw,compparm,8) )
         {
             if (val < -1 || val > 9 || c != '\0')
             {
@@ -5455,7 +5455,7 @@ int   rc;
                 opts = 1;
             }
         }
-        else if (strcasecmp (kw, "ra") == 0)
+        else if ( CMD(kw,ra,2) )
         {
             if (val < CCKD_MIN_RA || val > CCKD_MAX_RA || c != '\0')
             {
@@ -5468,7 +5468,7 @@ int   rc;
                 opts = 1;
             }
         }
-        else if (strcasecmp (kw, "raq") == 0)
+        else if ( CMD(kw,raq,3) )
         {
             if (val < 0 || val > CCKD_MAX_RA_SIZE || c != '\0')
             {
@@ -5481,7 +5481,7 @@ int   rc;
                 opts = 1;
             }
         }
-        else if (strcasecmp (kw, "rat") == 0)
+        else if ( CMD(kw,rat,3) )
         {
             if (val < 0 || val > CCKD_MAX_RA_SIZE || c != '\0')
             {
@@ -5494,7 +5494,7 @@ int   rc;
                 opts = 1;
             }
         }
-        else if (strcasecmp (kw, "wr") == 0)
+        else if ( CMD(kw,wr,2) )
         {
             if (val < CCKD_MIN_WRITER || val > CCKD_MAX_WRITER || c != '\0')
             {
@@ -5507,7 +5507,7 @@ int   rc;
                 opts = 1;
             }
         }
-        else if (strcasecmp (kw, "gcint") == 0)
+        else if ( CMD(kw,gcint,5) )
         {
             if (val < 1 || val > 60 || c != '\0')
             {
@@ -5520,7 +5520,7 @@ int   rc;
                 opts = 1;
             }
         }
-        else if (strcasecmp (kw, "gcparm") == 0)
+        else if ( CMD(kw,gcparm,6) )
         {
             if (val < -8 || val > 8 || c != '\0')
             {
@@ -5533,7 +5533,7 @@ int   rc;
                 opts = 1;
             }
         }
-        else if (strcasecmp (kw, "nostress") == 0)
+        else if ( CMD(kw,nostress,8) )
         {
             if (val < 0 || val > 1 || c != '\0')
             {
@@ -5546,7 +5546,7 @@ int   rc;
                 opts = 1;
             }
         }
-        else if (strcasecmp (kw, "freepend") == 0)
+        else if ( CMD(kw,freepend,8) )
         {
             if (val < -1 || val > CCKD_MAX_FREEPEND || c != '\0')
             {
@@ -5559,7 +5559,7 @@ int   rc;
                 opts = 1;
             }
         }
-        else if (strcasecmp (kw, "fsync") == 0)
+        else if ( CMD(kw,fsync,5) )
         {
             if (val < 0 || val > 1 || c != '\0')
             {
@@ -5572,7 +5572,7 @@ int   rc;
                 opts = 1;
             }
         }
-        else if (strcasecmp (kw, "trace") == 0)
+        else if ( CMD(kw,trace,5) )
         {
             if (val < 0 || val > CCKD_MAX_TRACE || c != '\0')
             {
@@ -5613,7 +5613,7 @@ int   rc;
                 opts = 1;
             }
         }
-        else if (strcasecmp (kw, "linuxnull") == 0)
+        else if ( CMD(kw,linuxnull,5) )
         {
             if (val < 0 || val > 1 || c != '\0')
             {
@@ -5626,7 +5626,7 @@ int   rc;
                 opts = 1;
             }
         }
-        else if (strcasecmp (kw, "gcstart") == 0)
+        else if ( CMD(kw,gcstart,7) )
         {
             DEVBLK *dev;
             CCKDDASD_EXT *cckd;
@@ -5663,7 +5663,9 @@ int   rc;
         }
     }
 
-    if (cmd && opts) cckd_command_opts();
+    if (cmd && opts) 
+        cckd_command_opts();
+
     return 0;
 } /* end function cckd_command */
 

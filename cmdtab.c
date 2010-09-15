@@ -87,9 +87,6 @@ static CMDTAB cmdtab[] =
 COMMAND ( NULL, 0, 0, NULL, NULL, NULL ) /* End of table */
 };
 
-#define  CMD(str,cmd,min) ( strlen( str ) >= min && \
-                            strlen( str ) <= strlen(#cmd) && \
-                            !strncasecmp( str, #cmd, strlen( str ) ) )
 /* internal functions */
 int HelpMessage(char *);
 
