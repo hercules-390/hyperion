@@ -1650,7 +1650,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC17009 "PROC %s%02X %c %03d%%; MIPS[%4d.%02d]; SIOS[%6d]"
 #define HHC17010 " - Started        : Stopping        * Stopped"
 #define HHC17011 "Avg CP   %03d%% %02d; MIPS[%4d.%02d];"
-#define HHC17012 "EMSG = %s"
+#define HHC17012 "MSGLEVEL = %s"
 #define HHC17013 "Process ID = %d"
 
 #define HHC17100 "Timeout value for 'quit' and 'ssd' is '%d' seconds"
