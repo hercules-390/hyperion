@@ -3254,7 +3254,6 @@ int toddrag_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-
 #ifdef PANEL_REFRESH_RATE
 
 
@@ -3307,8 +3306,8 @@ int panrate_cmd(int argc, char *argv[], char *cmdline)
                 return -1;
             }
         }
-
-        WRMSG(HHC02204, "I", argv[0], argv[1] );
+        if ( sysblk.config_done || ( !sysblk.config_done && MLVL(VERBOSE) ) )
+            WRMSG(HHC02204, "I", argv[0], argv[1] );
     }
     else
     {
