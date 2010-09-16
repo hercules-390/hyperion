@@ -182,10 +182,10 @@ DEF_INST(perform_cryptographic_computation_r)
 /*----------------------------------------------------------------------------*/
 /* B928 PCKMO - Perform cryptographic key management operation          [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(perform_cryptographic_key_management_operation_r)
+DEF_INST(perform_cryptographic_key_management_operations_r)
 {
-    if( ARCH_DEP(perform_cryptographic_key_management_operation) )
-        ARCH_DEP(perform_cryptographic_key_management_operation) (inst, regs);
+    if( ARCH_DEP(perform_cryptographic_key_management_operations) )
+        ARCH_DEP(perform_cryptographic_key_management_operations) (inst, regs);
     else
     {
     int  r1, r2;                                /* register values   */

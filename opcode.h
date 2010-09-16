@@ -2941,11 +2941,12 @@ DEF_INST(cipher_message_with_chaining_r);
 DEF_INST(compute_intermediate_message_digest_r);
 DEF_INST(compute_last_message_digest_r);
 DEF_INST(compute_message_authentication_code_r);
-DEF_INST(perform_cryptographic_key_management_operation_r);
+DEF_INST(perform_cryptographic_key_management_operations_r);
 DEF_INST(cipher_message_with_cipher_feedback_r);
 DEF_INST(cipher_message_with_counter_r);
 DEF_INST(cipher_message_with_output_feedback_r);
 DEF_INST(perform_cryptographic_computation_r);
+
 
 /* Instructions in control.c */
 DEF_INST(branch_and_set_authority);
