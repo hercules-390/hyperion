@@ -418,7 +418,7 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
     UNREFERENCED(cmdline);
 
     if ((argc > 2) ||
-        (argc > 1 && strcasecmp(argv[1],"force")))
+        (argc > 1 && !CMD(argv[1],force,5) ) )
     {
         WRMSG(HHC02205, "E", argv[argc-1], "");
         return(0);
@@ -472,7 +472,7 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
     UNREFERENCED(cmdline);
 
     if ((argc > 2) ||
-        (argc > 1 && strcasecmp(argv[1],"force")))
+        (argc > 1 && !CMD(argv[1],force,5) ) )
     {
         WRMSG(HHC02205, "E", argv[argc-1], "");
         return(0);
@@ -588,10 +588,10 @@ int log_cmd(int argc, char *argv[],char *cmdline)
 
     if(argc > 1)
     {
-        if(strcasecmp("off",argv[1]))
-            log_sethrdcpy(argv[1]);
-        else
+        if( CMD(argv[1],off,3) )
             log_sethrdcpy(NULL);
+        else
+            log_sethrdcpy(argv[1]);
     }
     else
         WRMSG(HHC02202,"E");
@@ -750,7 +750,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
 
     (dev->hnd->query)(dev, &devclass, 0, NULL);
 
-    if (strcasecmp(devclass,"PRT"))
+    if ( !CMD(devclass,PRT,3) )
     {
         WRMSG(HHC02209, "E", lcss, devnum, "printer" );
         return -1;
@@ -778,7 +778,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
 
     for (iarg = 2; iarg < argc; iarg++)
     {
-        if (strncasecmp("lpi=", argv[iarg], 4) == 0)
+        if ( CMD(argv[iarg],lpi=,4) )
         {
             ptr = argv[iarg]+4;
             errno = 0;
@@ -792,7 +792,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
             continue;
         }
 
-        if (strncasecmp("index=", argv[iarg], 6) == 0)
+        if ( CMD(argv[iarg],index=,6) )
         {
             if (0x3211 != dev->devtype )
             {
@@ -811,7 +811,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
             continue;
         }
 
-        if (strncasecmp("lpp=", argv[iarg], 4) == 0)
+        if ( CMD(argv[iarg],lpp=,4) )
         {
             ptr = argv[iarg]+4;
             errno = 0;
@@ -825,7 +825,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
             continue;
         }
 #if 0
-        if (strncasecmp("ffchan=", argv[iarg], 7) == 0)
+        if ( CMD(argv[iarg],ffchan=,7) )
         {
             ptr = argv[iarg]+7;
             errno = 0;
@@ -839,7 +839,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
             continue ;
         }
 #endif
-        if (strncasecmp("fcb=", argv[iarg], 4) == 0)
+        if ( CMD(argv[iarg],fcb=,4) )
         {
             for (line = 0 ; line <= FCBSIZE; line++)  wfcb[line] = 0;
             /* check for simple mode */
@@ -999,7 +999,7 @@ int start_cmd(int argc, char *argv[], char *cmdline)
 
         (dev->hnd->query)(dev, &devclass, 0, NULL);
 
-        if (strcasecmp(devclass,"PRT"))
+        if ( !CMD(devclass,PRT,3) )
         {
             WRMSG(HHC02209, "E", lcss, devnum, "printer" );
             return -1;
@@ -1099,7 +1099,7 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
 
         (dev->hnd->query)(dev, &devclass, 0, NULL);
 
-        if (strcasecmp(devclass,"PRT"))
+        if ( !CMD(devclass,PRT,3) )
         {
             WRMSG(HHC02209, "E", lcss, devnum, "printer" );
             return -1;
@@ -1632,7 +1632,7 @@ int rc;
         return -1;
     }
 
-    if (strcasecmp(argv[1],"list") == 0)
+    if ( CMD(argv[1],list,4) )
     {
         TAMDIR* pTAMDIR = sysblk.tamdir;
 
@@ -1658,7 +1658,7 @@ int rc;
         return 0;
     }
 
-    if (strcasecmp(argv[1],"add") == 0 || *argv[1] == '+')
+    if ( CMD(argv[1],add,3) || *argv[1] == '+' )
     {
         char *argv2;
         char tamdir[MAX_PATH+1]; /* +1 for optional '+' or '-' prefix */
@@ -1772,7 +1772,7 @@ int rc;
         }
     }
 
-    if (strcasecmp(argv[1],"del") == 0 || *argv[1] == '-')
+    if ( CMD(argv[1],del,3) || *argv[1] == '-')
     {
         char *argv2;
         char tamdir1[MAX_PATH+1] = {0};     // (resolved path)
@@ -2006,26 +2006,29 @@ static void try_scsi_refresh( DEVBLK* dev )
 /*-------------------------------------------------------------------*/
 int scsimount_cmd(int argc, char *argv[], char *cmdline)
 {
-    char*  eyecatcher =
-"*************************************************************************************************";
     DEVBLK*  dev;
     int      tapeloaded;
     char*    tapemsg="";
     char     volname[7];
     BYTE     mountreq, unmountreq;
     char*    label_type;
-    char     buf[128];
+    char     buf[512];
     // Unused..
     // int      old_auto_scsi_mount_secs = sysblk.auto_scsi_mount_secs;
     UNREFERENCED(cmdline);
-
-    if (argc > 1)
+    if ( argc > 2 )
     {
-        if ( strcasecmp( argv[1], "no" ) == 0 )
+        WRMSG( HHC02299, "E", argv[0] );
+        return -1;
+    }
+
+    if (argc == 2)
+    {
+        if ( CMD(argv[1],no,2) )
         {
             sysblk.auto_scsi_mount_secs = 0;
         }
-        else if ( strcasecmp( argv[1], "yes" ) == 0 )
+        else if ( CMD(argv[1],yes,3) )
         {
             sysblk.auto_scsi_mount_secs = DEFAULT_AUTO_SCSI_MOUNT_SECS;
         }
@@ -2036,20 +2039,24 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
                 || auto_scsi_mount_secs < 0 || auto_scsi_mount_secs > 99 )
             {
                 WRMSG (HHC02205, "E", argv[1], "");
-                return 0;
+                return -1;
             }
             sysblk.auto_scsi_mount_secs = auto_scsi_mount_secs;
+        }
+        if ( !sysblk.config_done && MLVL(VERBOSE) )
+        {
+            WRMSG( HHC02204, "I", argv[0], argv[1] );
+            return 0;
         }
     }
 
     if ( sysblk.auto_scsi_mount_secs )
     {
-        MSGBUF( buf, "SCSI auto-mount queries are done every %d seconds",
-            sysblk.auto_scsi_mount_secs );
-        WRMSG(HHC02275, "I", buf);
+        MSGBUF( buf, "%d", sysblk.auto_scsi_mount_secs );
+        WRMSG(HHC02203, "I", argv[0], buf);
     }
     else
-        WRMSG(HHC02275, "I", "SCSI auto-mount queries are disabled");
+        WRMSG(HHC02275, "I", argv[0], "NO");
 
     // Scan the device list looking for all SCSI tape devices
     // with either an active scsi mount thread and/or an out-
@@ -2063,8 +2070,8 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
         try_scsi_refresh( dev );    // (see comments in function)
 
         MSGBUF( buf,
-            "SCSI auto-mount thread %s active for drive %u:%4.4X = %s.\n"
-            ,dev->stape_mountmon_tid ? "IS" : "is NOT"
+            "thread IS%s active for drive %u:%4.4X = %s\n"
+            ,dev->stape_mountmon_tid ? "" : " NOT"
             ,SSID_TO_LCSS(dev->ssid)
             ,dev->devnum
             ,dev->filename
@@ -2136,21 +2143,17 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
                 volname[6]=0;
             }
 
-            logmsg("\n%s\n", eyecatcher);
             WRMSG(HHC02223, "I"
-                ,mountreq ? "Mount" : "Dismount"
-                ,label_type
-                ,volname
-                ,SSID_TO_LCSS(dev->ssid)
-                ,dev->devnum
-                ,dev->filename
-
-            );
-            logmsg("\n%s\n", eyecatcher);
+                    ,mountreq ? "Mount" : "Dismount"
+                    ,label_type
+                    ,volname
+                    ,SSID_TO_LCSS(dev->ssid)
+                    ,dev->devnum
+                    ,dev->filename);
         }
         else
         {
-            MSGBUF( buf, "No mount/dismount requests pending for drive %u:%4.4X = %s.\n",
+            MSGBUF( buf, "no requests pending for drive %u:%4.4X = %s.\n",
                 SSID_TO_LCSS(dev->ssid),dev->devnum, dev->filename );
             WRMSG(HHC02275, "I", buf);
         }
@@ -2323,7 +2326,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
         WRMSG(HHC02202, "E");
         rc = -1;
     }
-    else if (strcasecmp(argv[1],"stats") == 0)
+    else if ( CMD(argv[1],stats,5) )
     {
         if (argc < 3)
         {
@@ -2355,7 +2358,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
             rc = -1;
         }
     }
-    else if (strcasecmp(argv[1],"debug") == 0)
+    else if ( CMD(argv[1],debug,5) )
     {
         if (debug_tt32_tracing)
         {
@@ -2369,7 +2372,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
             rc = -1;
         }
     }
-    else if (strcasecmp(argv[1],"nodebug") == 0)
+    else if ( CMD(argv[1],nodebug,7) )
     {
         if (debug_tt32_tracing)
         {
@@ -2488,15 +2491,15 @@ BYTE c;
                 }
                 styp = strchr(styp,'*') + 1;
             }
-            if (strcasecmp(styp,"cp") == 0)
+            if ( CMD(styp,cp,2) )
                 ptyp = SCCB_PTYP_CP;
-            else if (strcasecmp(styp,"cf") == 0)
+            else if ( CMD(styp,cf,2) )
                 ptyp = SCCB_PTYP_ICF;
-            else if (strcasecmp(styp,"il") == 0)
+            else if ( CMD(styp,il,2) )
                 ptyp = SCCB_PTYP_IFL;
-            else if (strcasecmp(styp,"ap") == 0)
+            else if ( CMD(styp,ap,2) )
                 ptyp = SCCB_PTYP_IFA;
-            else if (strcasecmp(styp,"ip") == 0)
+            else if ( CMD(styp,ip,2) )
                 ptyp = SCCB_PTYP_SUP;
             else
             {
@@ -3784,7 +3787,7 @@ char  buf[64];
     {
         modflag = 1;
         errflag = 0;
-        if (strncasecmp(argv[n],"sm=",3) == 0)
+        if ( CMD(argv[n],sm=,3) )
         {
             /* PSW system mask operand */
             if (sscanf(argv[n]+3, "%x%c", &newsm, &c) == 1
@@ -3793,7 +3796,7 @@ char  buf[64];
             else
                 errflag = 1;
         }
-        else if (strncasecmp(argv[n],"pk=",3) == 0)
+        else if ( CMD(argv[n],pk=,3) )
         {
             /* PSW protection key operand */
             if (sscanf(argv[n]+3, "%d%c", &newpk, &c) == 1
@@ -3802,7 +3805,7 @@ char  buf[64];
             else
                 errflag = 1;
         }
-        else if (strncasecmp(argv[n],"cmwp=",5) == 0)
+        else if ( CMD(argv[n],cmwp=,5) )
         {
             /* PSW CMWP bits operand */
             if (sscanf(argv[n]+5, "%x%c", &newcmwp, &c) == 1
@@ -3811,22 +3814,22 @@ char  buf[64];
             else
                 errflag = 1;
         }
-        else if (strncasecmp(argv[n],"as=",3) == 0)
+        else if ( CMD(argv[n],as=,3) )
         {
             /* PSW address-space control operand */
-            if (strcasecmp(argv[n]+3,"pri") == 0)
+            if ( CMD(argv[n]+3,pri,3) )
                 newas = PSW_PRIMARY_SPACE_MODE;
-            else if (strcmp(argv[n]+3,"ar") == 0)
+            else if ( CMD(argv[n]+3,ar,2) )
                 newas = PSW_ACCESS_REGISTER_MODE;
-            else if (strcmp(argv[n]+3,"sec") == 0)
+            else if ( CMD(argv[n]+3,sec,3) )
                 newas = PSW_SECONDARY_SPACE_MODE;
-            else if (strcmp(argv[n]+3,"home") == 0)
+            else if ( CMD(argv[n]+3,home,4) )
                 newas = PSW_HOME_SPACE_MODE;
             else
                 errflag = 1;
             if (errflag == 0) updas = 1;
         }
-        else if (strncasecmp(argv[n],"cc=",3) == 0)
+        else if ( CMD(argv[n],cc=,3) )
         {
             /* PSW condition code operand */
             if (sscanf(argv[n]+3, "%d%c", &newcc, &c) == 1
@@ -3835,7 +3838,7 @@ char  buf[64];
             else
                 errflag = 1;
         }
-        else if (strncasecmp(argv[n],"pm=",3) == 0)
+        else if ( CMD(argv[n],pm=,3) )
         {
             /* PSW program mask operand */
             if (sscanf(argv[n]+3, "%x%c", &newpm, &c) == 1
@@ -3844,7 +3847,7 @@ char  buf[64];
             else
                 errflag = 1;
         }
-        else if (strncasecmp(argv[n],"am=",3) == 0)
+        else if ( CMD(argv[n],am=,3) )
         {
             /* PSW addressing mode operand */
             if (strcmp(argv[n]+3,"24") == 0)
@@ -3859,7 +3862,7 @@ char  buf[64];
             else
                 errflag = 1;
         }
-        else if (strncasecmp(argv[n],"ia=",3) == 0)
+        else if ( CMD(argv[n],ia=,3) )
         {
             /* PSW instruction address operand */
             if (sscanf(argv[n]+3, "%"I64_FMT"x%c", &newia, &c) == 1)
@@ -4341,16 +4344,16 @@ int i;
     if( argc > 1 )
         for(i = 1; i < argc; i++)
         {
-            if(strcasecmp(argv[i],"echo")==0)
+            if( CMD(argv[i],echo,4) )
                 sysblk.diag8cmd |= DIAG8CMD_ECHO;
             else
-            if(strcasecmp(argv[i],"noecho")==0)
+            if( CMD(argv[i],noecho,6) )
                 sysblk.diag8cmd &= ~DIAG8CMD_ECHO;
             else
-            if(strcasecmp(argv[i],"enable")==0)
+            if( CMD(argv[i],enable,3) )
                 sysblk.diag8cmd |= DIAG8CMD_ENABLE;
             else
-            if(strcasecmp(argv[i],"disable")==0)
+            if( CMD(argv[i],disable,4) )
                 // disable implies no echo
                 sysblk.diag8cmd &= ~(DIAG8CMD_ENABLE | DIAG8CMD_ECHO);
             else
@@ -6218,13 +6221,13 @@ BYTE     unitstat, code = 0;
         WRMSG(HHC02299,"E", argv[0]);
         return -1;
     }
-    if ( !( (strcasecmp(argv[2],"rew") == 0) ||
-            (strcasecmp(argv[2],"fsf") == 0) ||
-            (strcasecmp(argv[2],"bsf") == 0) ||
-            (strcasecmp(argv[2],"fsr") == 0) ||
-            (strcasecmp(argv[2],"bsr") == 0) ||
-            (strcasecmp(argv[2],"asf") == 0) ||
-            (strcasecmp(argv[2],"wtm") == 0)
+    if ( !( ( CMD(argv[2],rew,3) ) ||
+            ( CMD(argv[2],fsf,3) ) ||
+            ( CMD(argv[2],bsf,3) ) ||
+            ( CMD(argv[2],fsr,3) ) ||
+            ( CMD(argv[2],bsr,3) ) ||
+            ( CMD(argv[2],asf,3) ) ||
+            ( CMD(argv[2],wtm,3) )
           )
        )
     {
@@ -6232,7 +6235,7 @@ BYTE     unitstat, code = 0;
         return -1;
     }
 
-    if ( argc == 4  && !(strcasecmp(argv[2],"rew") == 0) )
+    if ( argc == 4  && !( CMD(argv[2],rew,3) ) )
     {
         for (rc = 0; rc < (int)strlen(argv[3]); rc++)
         {
@@ -8136,7 +8139,7 @@ BYTE c;                                 /* Character work area       */
 
     // t+ckd and t-ckd commands - turn CKD_KEY tracing on/off
 
-    if ((cmd[0] == 't') && (strcasecmp(cmd+2, "ckd") == 0))
+    if ( (cmd[0] == 't') && CMD(cmd+2,ckd,3) )
     {
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
         {
@@ -8541,7 +8544,7 @@ int ssd_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(cmdline);
 
     if ((argc > 2) ||
-        (argc > 1 && strcasecmp(argv[1],"now")))
+        (argc > 1 && !CMD(argv[1],now,3)))
     {
         WRMSG(HHC02205, "E", argv[argc-1], "");
         return(0);
@@ -8650,7 +8653,7 @@ int count_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(argv);
     UNREFERENCED(cmdline);
 
-    if (argc > 1 && strcasecmp(argv[1],"clear") == 0)
+    if (argc > 1 && CMD(argv[1],clear,5) )
     {
         for (i = 0; i < MAX_CPU; i++)
             if (IS_CPU_ONLINE(i))
@@ -9254,7 +9257,7 @@ char    pathname[MAX_PATH];             /* (work)                    */
         if ((p = strchr(scrbuf,'#')) && p > scrbuf)
             do *p = 0; while (isspace(*--p) && p >= scrbuf);
 
-        if (strncasecmp(scrbuf,"pause",5) == 0)
+        if ( CMD(scrbuf,pause,5) )
         {
             sscanf(scrbuf+5, "%d", &scr_pause_amt);
 

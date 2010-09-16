@@ -63,7 +63,7 @@ COMMAND("msglevel", PANEL+CONFIG,  SYSNONE,            msglevel_cmd,
   "  verbose Display messages during configuration file processing\n"
   "  terse   Turn off verbose")
 
-COMMAND("msglvl",   PANEL+CONFIG,  SYSNONE,            msglevel_cmd,
+COMMAND("msglvl",    PANEL+CONFIG,  SYSNONE,            msglevel_cmd,
   "Alias for msglevel", NULL)
 
 COMMAND("*",         PANEL+CONFIG,  SYSNONE,            comment_cmd,  
@@ -290,7 +290,7 @@ COMMAND("restart",   PANEL,         SYSCMDALL,          restart_cmd,
   "Generate restart interrupt", 
     NULL)
 
-COMMAND("archlvl",  PANEL+CONFIG,  SYSCMDALL-SYSOPER, archlvl_cmd,
+COMMAND("archlvl",  PANEL+CONFIG,   SYSCMDALL-SYSOPER,  archlvl_cmd,
   "Set Architecture Level",
     "Format: archlvl s/370|als0 | esa/390|als1 | esame|als2 | z/arch|als3\n"
     "                enable|disable <facility> [s/370|esa/390|z/arch]\n"
@@ -299,7 +299,7 @@ COMMAND("archlvl",  PANEL+CONFIG,  SYSCMDALL-SYSOPER, archlvl_cmd,
     "mode. Entering the command with an argument sets the architecture mode\n"
     "to the specified value.\n")
 
-COMMAND("archmode",  PANEL+CONFIG,  SYSCMDALL-SYSOPER, archlvl_cmd, 
+COMMAND("archmode",  PANEL+CONFIG,  SYSCMDALL-SYSOPER,  archlvl_cmd, 
   "Alias for archlvl", 
     NULL)
 
@@ -710,13 +710,13 @@ COMMAND("automount", PANEL+CONFIG,  SYSCMDALL-SYSOPER,  automount_cmd,
 #endif /* OPTION_TAPE_AUTOMOUNT */
 
 #if defined( OPTION_SCSI_TAPE )
-COMMAND("auto_scsi_mount", PANEL+CONFIG, SYSCMDALL-SYSOPER, ascsimnt_cmd,  
-  "Control SCSI tape mount", 
-    NULL)
+COMMAND("auto_scsi_mount", PANEL+CONFIG, SYSCMDALL-SYSOPER, scsimount_cmd, 
+  "Command deprecated - Use \"SCSIMOUNT\"",
+    "This command is deprecated. Use \"scsimount\" instead.\n")
 
-COMMAND("scsimount",       PANEL,   SYSCMDALL-SYSOPER,  scsimount_cmd,
+COMMAND("scsimount",       PANEL+CONFIG, SYSCMDALL-SYSOPER, scsimount_cmd,
   "Automatic SCSI tape mounts",
-    "Format:    \"scsimount  [ no | yes | 0-99 ]\".\n"
+    "Format:    \"scsimount [ no | yes | 0-99 ]\".\n"
     "\n"
     "Displays or modifies the automatic SCSI tape mounts option.\n\n"
     "When entered without any operands, it displays the current interval\n"

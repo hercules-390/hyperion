@@ -1147,7 +1147,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02272 "%s"
 #define HHC02273 "Index %2d: '%s'"
 #define HHC02274 "%s"
-#define HHC02275 "%s"
+#define HHC02275 "SCSI auto-mount: %s"
 #define HHC02276 "Floating point control register: %08"I32_FMT"X"
 #define HHC02277 "Prefix register: %s"
 #define HHC02278 "Program status word: %s\n" \
