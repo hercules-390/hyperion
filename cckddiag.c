@@ -504,7 +504,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     readpos(fd, &devhdr, 0, sizeof(devhdr));
     if (cmd_devhdr) {
         fprintf(stderr, "\nDEVHDR - %d (decimal) bytes:\n", 
-                sizeof(devhdr));
+                (ssize_t)sizeof(devhdr));
         data_dump(&devhdr, sizeof(devhdr));
     }
 
@@ -571,7 +571,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     readpos(fd, &cdevhdr, CKDDASD_DEVHDR_SIZE, sizeof(cdevhdr));
     if (cmd_cdevhdr) {
         fprintf(stderr, "\nCDEVHDR - %d (decimal) bytes:\n",
-                sizeof(cdevhdr));
+                (ssize_t)sizeof(cdevhdr));
         data_dump(&cdevhdr, sizeof(cdevhdr));
     }
 
@@ -593,8 +593,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     readpos(fd, l1, CCKD_L1TAB_POS, n * CCKD_L1ENT_SIZE);
     /* L1TAB itself is not adjusted for endian-ness                  */
     if (cmd_l1tab) {
-        fprintf(stderr, "\nL1TAB - %d (0x%0X) bytes:\n",
-                (n * CCKD_L1ENT_SIZE), (n * CCKD_L1ENT_SIZE));
+        fprintf(stderr, "\nL1TAB - %d (0x%X) bytes:\n",
+                (ssize_t)(n * CCKD_L1ENT_SIZE), (ssize_t)(n * CCKD_L1ENT_SIZE));
         data_dump(l1, n * CCKD_L1ENT_SIZE);
     }
 
@@ -656,11 +656,11 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if (cmd_l2tab) {
             fprintf(stderr, 
                    "\nL2TAB - %d (decimal) bytes\n", 
-                   (cdevhdr.numl2tab * sizeof(CCKD_L2ENT)));
+                   (ssize_t)(cdevhdr.numl2tab * sizeof(CCKD_L2ENT)));
             data_dump(l2, (cdevhdr.numl2tab * sizeof(CCKD_L2ENT)) );
         }
         fprintf(stderr, "\nL2 index %d = L2TAB entry %d bytes\n",
-               l2ndx, sizeof(CCKD_L2ENT) );
+               l2ndx, (ssize_t)sizeof(CCKD_L2ENT) );
         data_dump(&l2[l2ndx], sizeof(CCKD_L2ENT) );
         trkhdroff = l2[l2ndx].pos;
         imglen = l2[l2ndx].len;
