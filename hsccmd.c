@@ -1553,15 +1553,15 @@ int iodelay_cmd(int argc, char *argv[], char *cmdline)
         WRMSG( HHC01455, "E", argv[0] );
     else if ( argc == 2 )
     {
-        int iodelay = 0;
+        int     iodelay = 0;
         BYTE    c;                      /* Character work area       */
 
-        if (sscanf(argv[1], "%d%c", &iodelay, &c) != 1)
+        if (sscanf(argv[1], "%d%c", &iodelay, &c) != 1 || iodelay < 0 )
             WRMSG(HHC02205, "E", argv[1], "" );
         else
         {
             sysblk.iodelay = iodelay;
-            if(MLVL(VERBOSE))
+            if ( sysblk.config_done || MLVL(VERBOSE) )
                 WRMSG(HHC02204, "I", "I/O delay", argv[1] );
         }
     }

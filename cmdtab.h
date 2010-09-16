@@ -357,11 +357,13 @@ COMMAND("maxcpu",    CONFIG,        SYSCMDALL,          maxcpu_cmd,
 
 COMMAND("loadparm",  PANEL+CONFIG,  SYSCMDALL,          loadparm_cmd, 
   "Set IPL parameter", 
-    NULL)
+  "Specifies the eight-character IPL parameter which is used by\n"
+  "some operating systems to select system parameters.")
 
 COMMAND("lparname",  PANEL+CONFIG,  SYSCMDALL,          lparname_cmd, 
   "Set LPAR name", 
-    NULL)
+    "Specifies the eight-character LPAR name returned by\n" 
+    "DIAG X'204'. The default is HERCULES")
 
 COMMAND("cpuverid",  CONFIG,        SYSCMDALL,          cpuverid_cmd,    
   "Set CPU verion number",
@@ -377,7 +379,11 @@ COMMAND("cpuserial", CONFIG,        SYSCMDALL,          cpuserial_cmd,
 
 COMMAND("lparnum",   PANEL+CONFIG,  SYSCMDALL,          lparnum_cmd,  
   "Set LPAR identification number", 
-    NULL)
+  "Specifies the one- or two-digit hexadecimal LPAR identification\n"
+  "number stored by the STIDP instruction. If a one-digit number\n"
+  "is specified then STIDP stores a format-0 CPU ID. If a two-digit\n"
+  "number is specified then STIDP stores a format-1 CPU ID. If\n"
+  "LPARNUM is not specified, then STIDP stores a basic-mode CPUID")
 
 COMMAND("cpuidfmt",  PANEL+CONFIG,  SYSCMDALL,          cpuidfmt_cmd, 
   "Set format 0/1 STIDP generation", 
@@ -553,7 +559,14 @@ COMMAND("pr",        PANEL,         SYSCMDALL-SYSOPER,  pr_cmd,
 
 COMMAND("timerint",  PANEL+CONFIG,  SYSCMDALL-SYSOPER,  timerint_cmd,  
   "Display or set timers update interval", 
-    NULL)
+  "Specifies the internal timers update interval, in microseconds.\n"
+  "This parameter specifies how frequently Hercules's internal\n"
+  "timers-update thread updates the TOD Clock, CPU Timer, and other\n"
+  "architectural related clock/timer values. The default interval\n"
+  "is 50 microseconds, which strikes a reasonable balance between\n"
+  "clock accuracy and overall host performance. The minimum allowed\n"
+  "value is 1 microsecond and the maximum is 1000000 microseconds\n"
+  "(i.e. one second).\n")
 
 COMMAND("clocks",    PANEL,         SYSCMDALL-SYSOPER,  clocks_cmd,    
   "Display tod clkc and cpu timer", 
@@ -587,7 +600,38 @@ COMMAND("u",         PANEL,         SYSCMDALL-SYSOPER,  u_cmd,
 
 COMMAND("devtmax",   PANEL+CONFIG,  SYSCMDALL-SYSOPER,  devtmax_cmd,   
   "Display or set max device threads", 
-    NULL)
+    "Specifies the maximum number of device threads allowed.\n"
+    "\n"
+    "Specify -1 to cause 'one time only' temporary threads to be created\n"
+    "to service each I/O request to a device. Once the I/O request is\n"
+    "complete, the thread exits. Subsequent I/O to the same device will\n"
+    "cause another worker thread to be created again.\n"
+    "\n"
+    "Specify 0 to cause an unlimited number of 'semi-permanent' threads\n"
+    "to be created on an 'as-needed' basis. With this option, a thread\n"
+    "is created to service an I/O request for a device if one doesn't\n"
+    "already exist, but once the I/O is complete, the thread enters an\n"
+    "idle state waiting for new work. If a new I/O request for the device\n"
+    "arrives before the timeout period expires, the existing thread will\n"
+    "be reused. The timeout value is currently hard coded at 5 minutes.\n"
+    "Note that this option can cause one thread (or possibly more) to be\n"
+    "created for each device defined in your configuration. Specifying 0\n"
+    "means there is no limit to the number of threads that can be created.\n"
+    "\n"
+    "Specify a value from 1 to nnn  to set an upper limit to the number of\n"
+    "threads that can be created to service any I/O request to any device.\n"
+    "Like the 0 option, each thread, once done servicing an I/O request,\n"
+    "enters an idle state. If a new request arrives before the timeout\n"
+    "period expires, the thread is reused. If all threads are busy when a\n"
+    "new I/O request arrives however, a new thread is created only if the\n"
+    "specified maximum has not yet been reached. If the specified maximum\n"
+    "number of threads has already been reached, then the I/O request is\n"
+    "placed in a queue and will be serviced by the first available thread\n"
+    "(i.e. by whichever thread becomes idle first). This option was created\n"
+    "to address a threading issue (possibly related to the cygwin Pthreads\n"
+    "implementation) on Windows systems.\n" 
+    "\n" 
+    "The default for Windows is 8. The default for all other systems is 0.\n")
 
 COMMAND("k",         PANEL,         SYSCMDALL-SYSOPER,  k_cmd,         
   "Display cckd internal trace", 
@@ -781,7 +825,9 @@ COMMAND("cache",     PANEL,         SYSCMDALL-SYSOPER,  EXT_CMD(cache_cmd),
 
 COMMAND("cckd",      PANEL+CONFIG,  SYSCMDALL-SYSOPER,  cckd_cmd,       
   "cckd command", 
-    NULL)
+    "The cckd statement is used to display current cckd processing\n"
+    "options and statistics, and to set new cckd options.\n"
+    "Type \"cckd help\" for additional information.\n")
 
 COMMAND("shrd",      PANEL,         SYSCMDALL-SYSOPER,  EXT_CMD(shared_cmd), 
   "shrd command", 
@@ -888,7 +934,7 @@ COMMAND("g",         PANEL,         SYSCMDALL-SYSOPER,  g_cmd,
 
 COMMAND("ostailor",  PANEL+CONFIG,  SYSCMDALL-SYSOPER,  ostailor_cmd,
   "Tailor trace information for specific OS",
-  "Format: \"ostailor [quiet | os/390 | z/os | vm | vse | linux | null]\".\n"
+  "Format: \"ostailor [quiet|os/390|z/os|vm|vse|linux|opensolaris|null]\".\n"
     "Specifies the intended operating system. The effect is to reduce\n"
     "control panel message traffic by selectively suppressing program\n"
     "check trace messages which are considered normal in the specified\n"
@@ -935,8 +981,10 @@ COMMAND("modpath",   CONFIG,        SYSCMDALL-SYSOPER,  modpath_cmd,
     NULL)
 
 COMMAND("ldmod",     PANEL+CONFIG,  SYSCMDALL-SYSOPER,  ldmod_cmd,    
-  "Load a module", 
-    NULL)
+  "Load a module",
+  "Format: \"ldmod module ...\"\n"
+  "Specifies additional modules that are to be loaded by the\n"
+  "Hercules dynamic loader.\n")
 
 COMMAND("rmmod",     PANEL,         SYSCMDALL-SYSOPER,  rmmod_cmd,    
   "Delete a module", 
@@ -953,8 +1001,15 @@ COMMAND("lsdep",     PANEL,         SYSCMDALL-SYSOPER,  lsdep_cmd,
 
 #ifdef OPTION_IODELAY_KLUDGE
 COMMAND("iodelay",   PANEL+CONFIG,  SYSCMDALL-SYSOPER,  iodelay_cmd,   
-  "Display or set I/O delay value", 
-    NULL)
+  "Display or set I/O delay value",
+  "Format:  \"iodelay  n\".\n\n"
+  "Specifies the amount of time (in microseconds) to wait after an\n"
+  "I/O interrupt is ready to be set pending. This value can also be\n"
+  "set using the Hercules console. The purpose of this parameter is\n"
+  "to bypass a bug in the Linux/390 and zLinux dasd.c device driver.\n"
+  "The problem is more apt to happen under Hercules than on a real\n"
+  "machine because we may present an I/O interrupt sooner than a\n"
+  "real machine.\n") 
 #endif
 
 COMMAND("ctc",       PANEL,         SYSCMDALL-SYSOPER,  ctc_cmd,
