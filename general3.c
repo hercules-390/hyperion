@@ -3413,6 +3413,9 @@ U64     mask = 0x0101010101010101ULL;   /* Bit mask                  */
     /* Load the result into the R1 register */
     regs->GR_G(r1) = result;
 
+    /* Set condition code 0 if result is zero, or 1 if non-zero */
+    regs->psw.cc = (result == 0) ? 0 : 1;
+
 } /* end DEF_INST(population_count) */
 #endif /*defined(FEATURE_POPULATION_COUNT_FACILITY)*/           /*810*/
 
