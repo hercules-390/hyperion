@@ -97,7 +97,7 @@ and how they are used.
     <a href="#ECPSVM">ECPSVM</a>     no
     <a href="#ASN_AND_LX_REUSE">ASN_AND_LX_REUSE</a>  disable
 
-    <a href="#AUTO_SCSI_MOUNT">AUTO_SCSI_MOUNT</a>      no
+    <a href="#SCSIMOUNT">SCSIMOUNT</a>  no
     <a href="#MOUNTED_TAPE_REINIT">MOUNTED_TAPE_REINIT</a>  allow
 
     <a href="#INCLUDE">INCLUDE</a>    mydevs.cfg
@@ -262,37 +262,6 @@ and how they are used.
     <p>
     Refer to the description of the virtual tape device
     '<a href="#noautomount">noautomount</a>' option for more information.
-    <p>
-
-<a name="AUTO_SCSI_MOUNT"></a>
-<dt><code>AUTO_SCSI_MOUNT &nbsp; NO &#124; YES &#124; <em>nn</em></code>
-<dd><p>
-    specifies whether automatic detection of SCSI tape mounts are to be
-    enabled or not.
-    <p>
-    Specifying <code>NO</code> or 0 seconds (the default) indicates
-    the option is disabled, forcing all SCSI tape mounts to be done
-    manually via an appropriate <code>devinit</code> command.
-    <p>
-    A value from 1 to 99 seconds inclusive enables the option
-    and causes periodic queries of the SCSI tape drive to automatically
-    detect when a new tape is mounted. Specifying <code>YES</code>&nbsp;
-    is the same as specifying 5 seconds, the current default interval.
-    <p>
-    The <code>scsimount</code> panel command may also be used to display
-    and/or modify this value on demand once Hercules has been started. Note
-    too that the <code>scsimount</code> panel command also lists any mounts
-    and/or dismounts that may still be pending on the drive, as long as
-    you've defined your tape drive as a model that has an LCD "display"
-    (such as a model 3480, 3490 or 3590).
-    <p>
-    <i>
-    <b>Note:</b> &nbsp;enabling this option may cause Hercules to take
-    longer to shutdown depending on the value specified for this option
-    as well as how the host operating system (Windows, Linux, etc) and
-    associated hardware (SCSI adapter) behaves to drive status queries
-    for drives which do not have any media currently mounted on them.
-    </i>
     <p>
 
 <a name="CCKD"></a>
@@ -723,7 +692,7 @@ and how they are used.
     <p>
 
 <a name="IODELAY"></a>
-<dt><code>IODELAY &nbsp; <em>usec</em> [NOWARN]</code>
+<dt><code>IODELAY &nbsp; <em>usec</em></code>
 <dd><p>
     specifies the amount of time (in microseconds) to wait after
     an I/O interrupt is ready to be set pending.  This value can also be
@@ -732,9 +701,6 @@ and how they are used.
     device driver. The problem is more apt to happen under Hercules than
     on a real machine because we may present an I/O interrupt sooner than a
     real machine.
-    <p>
-    If the IODELAY value is non-zero a warning message (HHCCF037W) will be
-    issued unless <code>NOWARN</code> is specified.
     <p>
     NOTE : <a href="#OSTAILOR"><code>OSTAILOR LINUX</code></a> no longer sets
     IODELAY to 800 since the problem described above is no longer present in
@@ -1034,6 +1000,37 @@ and how they are used.
 <dd><p>
     specifies the PLANT name returned by the STSI instruction.  The default is
     <code>ZZ</code>.
+    <p>
+
+<a name="SCSIMOUNT"></a>
+<dt><code>SCSIMOUNT &nbsp; NO &#124; YES &#124; <em>nn</em></code>
+<dd><p>
+    specifies whether automatic detection of SCSI tape mounts are to be
+    enabled or not.
+    <p>
+    Specifying <code>NO</code> or 0 seconds (the default) indicates
+    the option is disabled, forcing all SCSI tape mounts to be done
+    manually via an appropriate <code>devinit</code> command.
+    <p>
+    A value from 1 to 99 seconds inclusive enables the option
+    and causes periodic queries of the SCSI tape drive to automatically
+    detect when a new tape is mounted. Specifying <code>YES</code>&nbsp;
+    is the same as specifying 5 seconds, the current default interval.
+    <p>
+    The <code>scsimount</code> panel command may also be used to display
+    and/or modify this value on demand once Hercules has been started. Note
+    too that the <code>scsimount</code> panel command also lists any mounts
+    and/or dismounts that may still be pending on the drive, as long as
+    you've defined your tape drive as a model that has an LCD "display"
+    (such as a model 3480, 3490 or 3590).
+    <p>
+    <i>
+    <b>Note:</b> &nbsp;enabling this option may cause Hercules to take
+    longer to shutdown depending on the value specified for this option
+    as well as how the host operating system (Windows, Linux, etc) and
+    associated hardware (SCSI adapter) behaves to drive status queries
+    for drives which do not have any media currently mounted on them.
+    </i>
     <p>
 
 <a name="SHCMDOPT"></a>
