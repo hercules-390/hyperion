@@ -1,3 +1,4 @@
+16 Sep 2010 Message Security Assist Extension 3 - Bernard van der Helm
 14 Sep 2010 1) Set Subsystem Mode support (treats SSM the same way the 2105 does,
                mostly validate and NOP). There is still one validation sequence to
                be added, but can be done later (marked TBD). Future support can be
