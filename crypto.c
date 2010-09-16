@@ -180,7 +180,7 @@ DEF_INST(perform_cryptographic_computation_r)
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
 /*----------------------------------------------------------------------------*/
-/* B928 PCKMO - Perform cryptographic key management operation          [RRE] */
+/* B928 PCKMO - Perform cryptographic key management operations         [RRE] */
 /*----------------------------------------------------------------------------*/
 DEF_INST(perform_cryptographic_key_management_operations_r)
 {

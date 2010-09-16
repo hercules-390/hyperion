@@ -3682,7 +3682,7 @@ DEF_INST(perform_cryptographic_key_management_operations_d)
   
 #ifdef OPTION_PCKMO_DEBUG
   WRGMSG_ON;
-  WRGMSG(HHC90100, "D", "PCKMO: perform cryptographic key management operation");
+  WRGMSG(HHC90100, "D", "PCKMO: perform cryptographic key management operations");
   WRGMSG(HHC90101, "D", 1, r1);
   WRGMSG(HHC90102, "D", regs->GR(r1));
   WRGMSG(HHC90101, "D", 2, r2);
