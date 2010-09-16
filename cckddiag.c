@@ -121,8 +121,8 @@ int readpos(
     }
     if (debug) 
         fprintf(stderr, 
-                "HHC90000D DBG: READPOS reading buf addr %p length %"SIZE_T_FMT"d (0x"SIZE_T_FMTX")\n",
-                buf, (long unsigned) len, (long unsigned) len);
+                "HHC90000D DBG: READPOS reading buf addr %p length %d (0x%X)\n",
+                buf, len, len);
     if (read(fd, buf, len) < (ssize_t)len) {
         fprintf(stderr, MSG( HHC02604, "E", "READPOS", strerror(errno) ) );
         clean();
@@ -503,7 +503,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /*---------------------------------------------------------------*/
     readpos(fd, &devhdr, 0, sizeof(devhdr));
     if (cmd_devhdr) {
-        fprintf(stderr, "\nDEVHDR - %"SIZE_T_FMT"d (decimal) bytes:\n", 
+        fprintf(stderr, "\nDEVHDR - %d (decimal) bytes:\n", 
                 sizeof(devhdr));
         data_dump(&devhdr, sizeof(devhdr));
     }
@@ -570,7 +570,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /*---------------------------------------------------------------*/
     readpos(fd, &cdevhdr, CKDDASD_DEVHDR_SIZE, sizeof(cdevhdr));
     if (cmd_cdevhdr) {
-        fprintf(stderr, "\nCDEVHDR - %"SIZE_T_FMT"d (decimal) bytes:\n",
+        fprintf(stderr, "\nCDEVHDR - %d (decimal) bytes:\n",
                 sizeof(cdevhdr));
         data_dump(&cdevhdr, sizeof(cdevhdr));
     }
@@ -593,7 +593,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     readpos(fd, l1, CCKD_L1TAB_POS, n * CCKD_L1ENT_SIZE);
     /* L1TAB itself is not adjusted for endian-ness                  */
     if (cmd_l1tab) {
-        fprintf(stderr, "\nL1TAB - %"SIZE_T_FMT"d (0x"SIZE_T_FMTX") bytes:\n",
+        fprintf(stderr, "\nL1TAB - %d (0x%0X) bytes:\n",
                 (n * CCKD_L1ENT_SIZE), (n * CCKD_L1ENT_SIZE));
         data_dump(l1, n * CCKD_L1ENT_SIZE);
     }
@@ -655,11 +655,11 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 cdevhdr.numl2tab * sizeof(CCKD_L2ENT));
         if (cmd_l2tab) {
             fprintf(stderr, 
-                   "\nL2TAB - %"SIZE_T_FMT"d (decimal) bytes\n", 
+                   "\nL2TAB - %d (decimal) bytes\n", 
                    (cdevhdr.numl2tab * sizeof(CCKD_L2ENT)));
             data_dump(l2, (cdevhdr.numl2tab * sizeof(CCKD_L2ENT)) );
         }
-        fprintf(stderr, "\nL2 index %d = L2TAB entry %"SIZE_T_FMT"d bytes\n",
+        fprintf(stderr, "\nL2 index %d = L2TAB entry %d bytes\n",
                l2ndx, sizeof(CCKD_L2ENT) );
         data_dump(&l2[l2ndx], sizeof(CCKD_L2ENT) );
         trkhdroff = l2[l2ndx].pos;

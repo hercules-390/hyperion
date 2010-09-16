@@ -124,14 +124,14 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
             if (lseek (dev->fd, CCKD_DEVHDR_POS, SEEK_SET) < 0)
             {
                 fprintf(stderr, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                        "lseek()", (long unsigned)CCKD_DEVHDR_POS, strerror(errno)));
+                        "lseek()", (long long unsigned)CCKD_DEVHDR_POS, strerror(errno)));
                 close (dev->fd);
                 continue;
             }
             if ((rc = read (dev->fd, &cdevhdr, CCKD_DEVHDR_SIZE)) < CCKD_DEVHDR_SIZE)
             {
                 fprintf(stderr, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                        "read()", (long unsigned)CCKD_DEVHDR_POS, rc < 0 ? strerror(errno) : "incomplete"));
+                        "read()", (long long unsigned)CCKD_DEVHDR_POS, rc < 0 ? strerror(errno) : "incomplete"));
                 close (dev->fd);
                 continue;
             }
