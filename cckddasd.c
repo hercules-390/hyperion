@@ -5763,7 +5763,7 @@ int             l;
         if (p)
         {
             l = sprintf ((char *)p, "%s" "." "%6.6ld %1d:%04X> ",
-                tbuf+11, tv.tv_usec, dev ? SSID_TO_LCSS(dev->ssid) : 0, dev ? dev->devnum : 0);
+                tbuf+11, (long)tv.tv_usec, dev ? SSID_TO_LCSS(dev->ssid) : 0, dev ? dev->devnum : 0);
             vsprintf ((char *)p + l, msg, vl);
         }
     }

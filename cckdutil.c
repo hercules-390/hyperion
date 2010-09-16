@@ -207,28 +207,28 @@ cswp_fstat_error:
 cswp_lseek_error:
     if(dev->batch)
         fprintf(stdout, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
-                "lseek()", (long unsigned)off, strerror(errno)));
+                "lseek()", off, strerror(errno)));
     else
         WRMSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
-              "lseek()", (long unsigned)off, strerror(errno));
+              "lseek()", off, strerror(errno));
     goto cswp_error;
 
 cswp_read_error:
     if(dev->batch)
         fprintf(stdout, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
-                "read()", (long unsigned)off, rc < 0 ? strerror(errno) : "incomplete"));
+                "read()", off, rc < 0 ? strerror(errno) : "incomplete"));
     else
         WRMSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
-              "read()", (long unsigned)off, rc < 0 ? strerror(errno) : "incomplete");
+              "read()", off, rc < 0 ? strerror(errno) : "incomplete");
     goto cswp_error;
 
 cswp_write_error:
     if(dev->batch)
         fprintf(stdout, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
-                "write()", (long unsigned)off, rc < 0 ? strerror(errno) : "incomplete"));
+                "write()", off, rc < 0 ? strerror(errno) : "incomplete"));
     else
         WRMSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
-              "write()", (long unsigned)off, rc < 0 ? strerror(errno) : "incomplete");
+              "write()", off, rc < 0 ? strerror(errno) : "incomplete");
     goto cswp_error;
 
 cswp_malloc_error:
@@ -855,28 +855,28 @@ comp_fstat_error:
 comp_lseek_error:
     if(dev->batch)
         fprintf(stdout, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
-                "lseek()", (long unsigned)off, strerror(errno)));
+                "lseek()", off, strerror(errno)));
     else
         WRMSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
-              "lseek()", (long unsigned)off, strerror(errno));
+              "lseek()", off, strerror(errno));
     goto comp_error;
 
 comp_read_error:
     if(dev->batch)
         fprintf(stdout, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
-                "read()", (long unsigned)off, rc < 0 ? strerror(errno) : "incomplete"));
+                "read()", off, rc < 0 ? strerror(errno) : "incomplete"));
     else
         WRMSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
-              "read()", (long unsigned)off, rc < 0 ? strerror(errno) : "incomplete");
+              "read()", off, rc < 0 ? strerror(errno) : "incomplete");
     goto comp_error;
 
 comp_write_error:
     if(dev->batch)
         fprintf(stdout, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
-                "write()", (long unsigned)off, rc < 0 ? strerror(errno) : "incomplete"));
+                "write()", off, rc < 0 ? strerror(errno) : "incomplete"));
     else
         WRMSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
-              "write()", (long unsigned)off, rc < 0 ? strerror(errno) : "incomplete");
+              "write()", off, rc < 0 ? strerror(errno) : "incomplete");
     goto comp_error;
 
 comp_malloc_error:
@@ -1703,11 +1703,11 @@ cdsk_space_check:
             {
                 if(dev->batch)
                     fprintf(stdout, MSG(HHC00369, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                            spaces[trktyp], spctab[i].val, (long unsigned)off, 
+                            spaces[trktyp], spctab[i].val, off, 
                             buf[0],buf[1],buf[2],buf[3],buf[4]));
                 else
                     WRMSG(HHC00369, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                          spaces[trktyp], spctab[i].val, (long unsigned)off,
+                          spaces[trktyp], spctab[i].val, off,
                           buf[0],buf[1],buf[2],buf[3],buf[4]);
 
                 /* recover this track */
@@ -1748,10 +1748,10 @@ cdsk_space_check:
                 {
                     if(dev->batch)                  
                         fprintf(stdout, MSG(HHC00371, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                                spaces[trktyp], trk, (long unsigned)off, len));
+                                spaces[trktyp], trk, off, len));
                     else
                         WRMSG(HHC00371, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                              spaces[trktyp], trk, (long unsigned)off, len);
+                              spaces[trktyp], trk, off, len);
 
                     /* recover this track */
                     rcvtab[trk] = recovery = 1;
@@ -1954,10 +1954,10 @@ cdsk_recovery:
 cdsk_ckd_recover:
                     if(dev->batch)
                         fprintf(stdout, MSG(HHC00372, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                                spaces[trktyp], trk, (long unsigned)off + i, l));
+                                spaces[trktyp], trk, off + i, l));
                     else
                         WRMSG(HHC00372, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                              spaces[trktyp], trk, (long unsigned)off + i, l);
+                              spaces[trktyp], trk, off + i, l);
                     n--;
                     rcvtab[trk] = 2;
 
@@ -2181,10 +2181,10 @@ cdsk_ckd_recover:
 cdsk_fba_recover:
                     if(dev->batch)
                         fprintf(stdout, MSG(HHC00372, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                                spaces[trktyp], blkgrp, (long unsigned)off + i, l));
+                                spaces[trktyp], blkgrp, off + i, l));
                     else
                         WRMSG(HHC00372, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                              spaces[trktyp], blkgrp, (long unsigned)off + i, l);
+                              spaces[trktyp], blkgrp, off + i, l);
                     n--;
                     rcvtab[blkgrp] = 2;
 
@@ -2675,28 +2675,28 @@ cdsk_fstat_error:
 cdsk_lseek_error:
     if(dev->batch)
         fprintf(stdout, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
-                "lseek()", (long unsigned)off, strerror(errno)));
+                "lseek()", off, strerror(errno)));
     else
         WRMSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
-              "lseek()", (long unsigned)off, strerror(errno));
+              "lseek()", off, strerror(errno));
     goto cdsk_error;
 
 cdsk_read_error:
     if(dev->batch)
         fprintf(stdout, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
-                "read()", (long unsigned)off, rc < 0 ? strerror(errno) : "incomplete"));
+                "read()", off, rc < 0 ? strerror(errno) : "incomplete"));
     else
         WRMSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
-              "read()", (long unsigned)off, rc < 0 ? strerror(errno) : "incomplete");
+              "read()", off, rc < 0 ? strerror(errno) : "incomplete");
     goto cdsk_error;
 
 cdsk_write_error:
     if(dev->batch)
         fprintf(stdout, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
-                "write()", (long unsigned)off, rc < 0 ? strerror(errno) : "incomplete"));
+                "write()", off, rc < 0 ? strerror(errno) : "incomplete"));
     else
         WRMSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
-              "write()", (long unsigned)off, rc < 0 ? strerror(errno) : "incomplete");
+              "write()", off, rc < 0 ? strerror(errno) : "incomplete");
     goto cdsk_error;
 
 cdsk_malloc_error:
