@@ -1,3 +1,5 @@
+17 Sep 2010 Reset Reference Bits Multiple Facility - Jan Jaeger
+17 Sep 2010 Enhanced Monitor Facility - Jan Jaeger
 16 Sep 2010 Message Security Assist Extension 3 - Bernard van der Helm
 14 Sep 2010 1) Set Subsystem Mode support (treats SSM the same way the 2105 does,
                mostly validate and NOP). There is still one validation sequence to
