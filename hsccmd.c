@@ -1561,7 +1561,7 @@ int iodelay_cmd(int argc, char *argv[], char *cmdline)
         else
         {
             sysblk.iodelay = iodelay;
-            if ( sysblk.config_done || MLVL(VERBOSE) )
+            if ( MLVL(VERBOSE) )
                 WRMSG(HHC02204, "I", "I/O delay", argv[1] );
         }
     }
@@ -2043,7 +2043,7 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
             }
             sysblk.auto_scsi_mount_secs = auto_scsi_mount_secs;
         }
-        if ( !sysblk.config_done && MLVL(VERBOSE) )
+        if ( MLVL(VERBOSE) )
         {
             WRMSG( HHC02204, "I", argv[0], argv[1] );
             return 0;
@@ -2185,7 +2185,7 @@ int cckd_cmd(int argc, char *argv[], char *cmdline)
         }
         else
         {
-            rc = cckd_command( p, sysblk.config_done? 1 : MLVL(VERBOSE)? 1 : 0 );
+            rc = cckd_command( p, MLVL(VERBOSE) ? 1 : 0 );
         }
     }
     return rc;
@@ -3309,7 +3309,7 @@ int panrate_cmd(int argc, char *argv[], char *cmdline)
                 return -1;
             }
         }
-        if ( sysblk.config_done || ( !sysblk.config_done && MLVL(VERBOSE) ) )
+        if ( MLVL(VERBOSE) )
             WRMSG(HHC02204, "I", argv[0], argv[1] );
     }
     else
@@ -5550,7 +5550,7 @@ int attach_cmd(int argc, char *argv[], char *cmdline)
         return -1;
     }
     rc = parse_and_attach_devices(argv[1],argv[2],argc-3,&argv[3]);
-    if( rc == 0 && sysblk.config_done )
+    if( rc == 0 && MLVL(VERBOSE) )
         WRMSG(HHC02198, "I");
 
     return rc;
