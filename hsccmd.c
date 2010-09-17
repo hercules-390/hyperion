@@ -588,10 +588,10 @@ int log_cmd(int argc, char *argv[],char *cmdline)
 
     if(argc > 1)
     {
-        if( CMD(argv[1],off,3) )
-            log_sethrdcpy(NULL);
-        else
+        if(strcasecmp("off",argv[1]))
             log_sethrdcpy(argv[1]);
+        else
+            log_sethrdcpy(NULL);
     }
     else
         WRMSG(HHC02202,"E");
@@ -750,7 +750,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
 
     (dev->hnd->query)(dev, &devclass, 0, NULL);
 
-    if ( !CMD(devclass,PRT,3) )
+    if (strcasecmp(devclass,"PRT"))
     {
         WRMSG(HHC02209, "E", lcss, devnum, "printer" );
         return -1;
@@ -778,7 +778,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
 
     for (iarg = 2; iarg < argc; iarg++)
     {
-        if ( CMD(argv[iarg],lpi=,4) )
+        if (strncasecmp("lpi=", argv[iarg], 4) == 0)
         {
             ptr = argv[iarg]+4;
             errno = 0;
@@ -792,7 +792,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
             continue;
         }
 
-        if ( CMD(argv[iarg],index=,6) )
+        if (strncasecmp("index=", argv[iarg], 6) == 0)
         {
             if (0x3211 != dev->devtype )
             {
@@ -811,7 +811,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
             continue;
         }
 
-        if ( CMD(argv[iarg],lpp=,4) )
+        if (strncasecmp("lpp=", argv[iarg], 4) == 0)
         {
             ptr = argv[iarg]+4;
             errno = 0;
@@ -825,7 +825,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
             continue;
         }
 #if 0
-        if ( CMD(argv[iarg],ffchan=,7) )
+        if (strncasecmp("ffchan=", argv[iarg], 7) == 0)
         {
             ptr = argv[iarg]+7;
             errno = 0;
@@ -839,7 +839,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
             continue ;
         }
 #endif
-        if ( CMD(argv[iarg],fcb=,4) )
+        if (strncasecmp("fcb=", argv[iarg], 4) == 0)
         {
             for (line = 0 ; line <= FCBSIZE; line++)  wfcb[line] = 0;
             /* check for simple mode */
@@ -999,7 +999,7 @@ int start_cmd(int argc, char *argv[], char *cmdline)
 
         (dev->hnd->query)(dev, &devclass, 0, NULL);
 
-        if ( !CMD(devclass,PRT,3) )
+        if (strcasecmp(devclass,"PRT"))
         {
             WRMSG(HHC02209, "E", lcss, devnum, "printer" );
             return -1;
@@ -1099,7 +1099,7 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
 
         (dev->hnd->query)(dev, &devclass, 0, NULL);
 
-        if ( !CMD(devclass,PRT,3) )
+        if (strcasecmp(devclass,"PRT"))
         {
             WRMSG(HHC02209, "E", lcss, devnum, "printer" );
             return -1;
@@ -1632,7 +1632,7 @@ int rc;
         return -1;
     }
 
-    if ( CMD(argv[1],list,4) )
+    if (strcasecmp(argv[1],"list") == 0)
     {
         TAMDIR* pTAMDIR = sysblk.tamdir;
 
@@ -1658,7 +1658,7 @@ int rc;
         return 0;
     }
 
-    if ( CMD(argv[1],add,3) || *argv[1] == '+' )
+    if (strcasecmp(argv[1],"add") == 0 || *argv[1] == '+')
     {
         char *argv2;
         char tamdir[MAX_PATH+1]; /* +1 for optional '+' or '-' prefix */
@@ -1772,7 +1772,7 @@ int rc;
         }
     }
 
-    if ( CMD(argv[1],del,3) || *argv[1] == '-')
+    if (strcasecmp(argv[1],"del") == 0 || *argv[1] == '-')
     {
         char *argv2;
         char tamdir1[MAX_PATH+1] = {0};     // (resolved path)
@@ -2326,7 +2326,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
         WRMSG(HHC02202, "E");
         rc = -1;
     }
-    else if ( CMD(argv[1],stats,5) )
+    else if (strcasecmp(argv[1],"stats") == 0)
     {
         if (argc < 3)
         {
@@ -2358,7 +2358,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
             rc = -1;
         }
     }
-    else if ( CMD(argv[1],debug,5) )
+    else if (strcasecmp(argv[1],"debug") == 0)
     {
         if (debug_tt32_tracing)
         {
@@ -2372,7 +2372,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
             rc = -1;
         }
     }
-    else if ( CMD(argv[1],nodebug,7) )
+    else if (strcasecmp(argv[1],"nodebug") == 0)
     {
         if (debug_tt32_tracing)
         {
@@ -2491,15 +2491,15 @@ BYTE c;
                 }
                 styp = strchr(styp,'*') + 1;
             }
-            if ( CMD(styp,cp,2) )
+            if (strcasecmp(styp,"cp") == 0)
                 ptyp = SCCB_PTYP_CP;
-            else if ( CMD(styp,cf,2) )
+            else if (strcasecmp(styp,"cf") == 0)
                 ptyp = SCCB_PTYP_ICF;
-            else if ( CMD(styp,il,2) )
+            else if (strcasecmp(styp,"il") == 0)
                 ptyp = SCCB_PTYP_IFL;
-            else if ( CMD(styp,ap,2) )
+            else if (strcasecmp(styp,"ap") == 0)
                 ptyp = SCCB_PTYP_IFA;
-            else if ( CMD(styp,ip,2) )
+            else if (strcasecmp(styp,"ip") == 0)
                 ptyp = SCCB_PTYP_SUP;
             else
             {
@@ -3787,7 +3787,7 @@ char  buf[64];
     {
         modflag = 1;
         errflag = 0;
-        if ( CMD(argv[n],sm=,3) )
+        if (strncasecmp(argv[n],"sm=",3) == 0)
         {
             /* PSW system mask operand */
             if (sscanf(argv[n]+3, "%x%c", &newsm, &c) == 1
@@ -3796,7 +3796,7 @@ char  buf[64];
             else
                 errflag = 1;
         }
-        else if ( CMD(argv[n],pk=,3) )
+        else if (strncasecmp(argv[n],"pk=",3) == 0)
         {
             /* PSW protection key operand */
             if (sscanf(argv[n]+3, "%d%c", &newpk, &c) == 1
@@ -3805,7 +3805,7 @@ char  buf[64];
             else
                 errflag = 1;
         }
-        else if ( CMD(argv[n],cmwp=,5) )
+        else if (strncasecmp(argv[n],"cmwp=",5) == 0)
         {
             /* PSW CMWP bits operand */
             if (sscanf(argv[n]+5, "%x%c", &newcmwp, &c) == 1
@@ -3814,22 +3814,22 @@ char  buf[64];
             else
                 errflag = 1;
         }
-        else if ( CMD(argv[n],as=,3) )
+        else if (strncasecmp(argv[n],"as=",3) == 0)
         {
             /* PSW address-space control operand */
-            if ( CMD(argv[n]+3,pri,3) )
+            if (strcasecmp(argv[n]+3,"pri") == 0)
                 newas = PSW_PRIMARY_SPACE_MODE;
-            else if ( CMD(argv[n]+3,ar,2) )
+            else if (strcmp(argv[n]+3,"ar") == 0)
                 newas = PSW_ACCESS_REGISTER_MODE;
-            else if ( CMD(argv[n]+3,sec,3) )
+            else if (strcmp(argv[n]+3,"sec") == 0)
                 newas = PSW_SECONDARY_SPACE_MODE;
-            else if ( CMD(argv[n]+3,home,4) )
+            else if (strcmp(argv[n]+3,"home") == 0)
                 newas = PSW_HOME_SPACE_MODE;
             else
                 errflag = 1;
             if (errflag == 0) updas = 1;
         }
-        else if ( CMD(argv[n],cc=,3) )
+        else if (strncasecmp(argv[n],"cc=",3) == 0)
         {
             /* PSW condition code operand */
             if (sscanf(argv[n]+3, "%d%c", &newcc, &c) == 1
@@ -3838,7 +3838,7 @@ char  buf[64];
             else
                 errflag = 1;
         }
-        else if ( CMD(argv[n],pm=,3) )
+        else if (strncasecmp(argv[n],"pm=",3) == 0)
         {
             /* PSW program mask operand */
             if (sscanf(argv[n]+3, "%x%c", &newpm, &c) == 1
@@ -3847,7 +3847,7 @@ char  buf[64];
             else
                 errflag = 1;
         }
-        else if ( CMD(argv[n],am=,3) )
+        else if (strncasecmp(argv[n],"am=",3) == 0)
         {
             /* PSW addressing mode operand */
             if (strcmp(argv[n]+3,"24") == 0)
@@ -3862,7 +3862,7 @@ char  buf[64];
             else
                 errflag = 1;
         }
-        else if ( CMD(argv[n],ia=,3) )
+        else if (strncasecmp(argv[n],"ia=",3) == 0)
         {
             /* PSW instruction address operand */
             if (sscanf(argv[n]+3, "%"I64_FMT"x%c", &newia, &c) == 1)
@@ -4344,16 +4344,16 @@ int i;
     if( argc > 1 )
         for(i = 1; i < argc; i++)
         {
-            if( CMD(argv[i],echo,4) )
+            if(strcasecmp(argv[i],"echo")==0)
                 sysblk.diag8cmd |= DIAG8CMD_ECHO;
             else
-            if( CMD(argv[i],noecho,6) )
+            if(strcasecmp(argv[i],"noecho")==0)
                 sysblk.diag8cmd &= ~DIAG8CMD_ECHO;
             else
-            if( CMD(argv[i],enable,3) )
+            if(strcasecmp(argv[i],"enable")==0)
                 sysblk.diag8cmd |= DIAG8CMD_ENABLE;
             else
-            if( CMD(argv[i],disable,4) )
+            if(strcasecmp(argv[i],"disable")==0)
                 // disable implies no echo
                 sysblk.diag8cmd &= ~(DIAG8CMD_ENABLE | DIAG8CMD_ECHO);
             else
@@ -6221,13 +6221,13 @@ BYTE     unitstat, code = 0;
         WRMSG(HHC02299,"E", argv[0]);
         return -1;
     }
-    if ( !( ( CMD(argv[2],rew,3) ) ||
-            ( CMD(argv[2],fsf,3) ) ||
-            ( CMD(argv[2],bsf,3) ) ||
-            ( CMD(argv[2],fsr,3) ) ||
-            ( CMD(argv[2],bsr,3) ) ||
-            ( CMD(argv[2],asf,3) ) ||
-            ( CMD(argv[2],wtm,3) )
+    if ( !( (strcasecmp(argv[2],"rew") == 0) ||
+            (strcasecmp(argv[2],"fsf") == 0) ||
+            (strcasecmp(argv[2],"bsf") == 0) ||
+            (strcasecmp(argv[2],"fsr") == 0) ||
+            (strcasecmp(argv[2],"bsr") == 0) ||
+            (strcasecmp(argv[2],"asf") == 0) ||
+            (strcasecmp(argv[2],"wtm") == 0)
           )
        )
     {
@@ -6235,7 +6235,7 @@ BYTE     unitstat, code = 0;
         return -1;
     }
 
-    if ( argc == 4  && !( CMD(argv[2],rew,3) ) )
+    if ( argc == 4  && !(strcasecmp(argv[2],"rew") == 0) )
     {
         for (rc = 0; rc < (int)strlen(argv[3]); rc++)
         {
@@ -8139,7 +8139,7 @@ BYTE c;                                 /* Character work area       */
 
     // t+ckd and t-ckd commands - turn CKD_KEY tracing on/off
 
-    if ( (cmd[0] == 't') && CMD(cmd+2,ckd,3) )
+    if ((cmd[0] == 't') && (strcasecmp(cmd+2, "ckd") == 0))
     {
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
         {
@@ -8544,7 +8544,7 @@ int ssd_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(cmdline);
 
     if ((argc > 2) ||
-        (argc > 1 && !CMD(argv[1],now,3)))
+        (argc > 1 && strcasecmp(argv[1],"now")))
     {
         WRMSG(HHC02205, "E", argv[argc-1], "");
         return(0);
@@ -8653,7 +8653,7 @@ int count_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(argv);
     UNREFERENCED(cmdline);
 
-    if (argc > 1 && CMD(argv[1],clear,5) )
+    if (argc > 1 && strcasecmp(argv[1],"clear") == 0)
     {
         for (i = 0; i < MAX_CPU; i++)
             if (IS_CPU_ONLINE(i))
