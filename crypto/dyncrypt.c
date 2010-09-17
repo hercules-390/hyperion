@@ -71,9 +71,13 @@
 /*----------------------------------------------------------------------------*/
 /* fc   : Function code                                                       */
 /* m    : Modifier bit                                                        */
+/* wrap : Indication if key is wrapped                                        */
+/* tfc  : Function code without wrap indication                               */
 /*----------------------------------------------------------------------------*/
 #define GR0_fc(regs)    ((regs)->GR_L(0) & 0x0000007F)
 #define GR0_m(regs)     (((regs)->GR_L(0) & 0x00000080) ? TRUE : FALSE)
+#define GR0_wrap(egs)   (((regs)->GR_L(0) & 0x08) ? TRUE : FALSE)
+#define GR0_tfc(regs)   (GR0_fc(regs) & 0x77)
 
 /*----------------------------------------------------------------------------*/
 /* Bit strings for query functions                                            */
@@ -887,13 +891,14 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
   des_context context;
   des3_context des3_ctx;
   int crypted;
-  int fc;
   int keylen;
   BYTE message_block[8];
   int modifier_bit;
   BYTE parameter_block[48];
   int parameter_blocklen;
   int r1_is_not_r2;
+  int tfc;
+  int wrap;
 
   /* Check special conditions */
   if(unlikely(GR_A(r2 + 1, regs) % 8))
@@ -907,70 +912,55 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
   }
 
   /* Initialize values */
-  fc = GR0_fc(regs);
-  if(fc <= 3)
-  {
-    keylen = fc * 8;
-    parameter_blocklen = keylen;
-  }
-  else
-  {
-    keylen = (fc - 8) * 8;
-    parameter_blocklen = keylen + 24;
-  }
+  tfc = GR0_tfc(regs);
+  wrap = GR0_wrap(regs);
+  keylen = tfc * 8;
+  parameter_blocklen = keylen;
+  if(wrap)
+    parameter_blocklen += 24;
 
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KM_DEBUG
-  switch(fc)
+  switch(tfc)
   {
     case 1: /* dea */
-    case 9: /* encrypted-dea */
       LOGBYTE("k     :", parameter_block, 8);
       break;
 
     case 2: /* tdea-128 */
-    case 10: /* encrypted-tdea-128 */
       LOGBYTE("k1    :", parameter_block, 8);
       LOGBYTE("k2    :", &parameter_block[8], 8);
       break;
 
     case 3: /* tdea-192 */
-    case 11: /* encrypted-tdea-192 */
       LOGBYTE("k1    :", parameter_block, 8);
       LOGBYTE("k2    :", &parameter_block[8], 8);
       LOGBYTE("k3    :", &parameter_block[16], 8);
       break;
   }
-  if(fc > 3) 
+  if(wrap) 
     LOGBYTE("wkvp  :", &parameter_block[keylen], 24);
 #endif
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
   /* Verify and unwrap */
-  switch(fc)
+  if(wrap)
   {
-    case 9: /* encrypted-dea */
-    case 10: /* encrypted-tdea-128 */
-    case 11: /* encrypted-tdea-192 */
-      if(unlikely(memcmp(&parameter_block[keylen], wkvp_regs_dea, 24)))
-      {
-        regs->psw.cc = 1;
-        return;
-      }
+    if(unlikely(memcmp(&parameter_block[keylen], wkvp_regs_dea, 24)))
+    {
+      regs->psw.cc = 1;
+      return;
+    }
       
-      /* Unwrap the cryptographic key */
-      dea_unwrap(parameter_block, keylen);
-      
-      /* Indicate fc to unwrapped keys */
-      fc -= 8;
-      break;
+    /* Unwrap the cryptographic key */
+    dea_unwrap(parameter_block, keylen);
   }
 #endif  
 
   /* Set the cryptographic key */
-  switch(fc)
+  switch(tfc)
   {
     case 1: /* dea */
       des_set_key(&context, parameter_block);
@@ -998,7 +988,7 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
 #endif
 
     /* Do the job */
-    switch(fc)
+    switch(tfc)
     {
       case 1: /* dea */
         if(modifier_bit)
@@ -1055,13 +1045,14 @@ static void ARCH_DEP(km_aes)(int r1, int r2, REGS *regs)
 {
   aes_context context;
   int crypted;
-  int fc;
   int keylen;
   BYTE message_block[16];
   int modifier_bit;
   BYTE parameter_block[64];
   int parameter_blocklen;
   int r1_is_not_r2;
+  int tfc;
+  int wrap;
 
   /* Check special conditions */
   if(unlikely(GR_A(r2 + 1, regs) % 16))
@@ -1075,46 +1066,34 @@ static void ARCH_DEP(km_aes)(int r1, int r2, REGS *regs)
   }
 
   /* Initialize values */
-  fc = GR0_fc(regs);
-  if(fc <= 20)
-  {
-    keylen = (fc - 17) * 8 + 8;
-    parameter_blocklen = keylen;
-  }
-  else
-  {
-    keylen = (fc - 25) * 8 + 8;
-    parameter_blocklen = keylen + 32;
-  }
+  tfc = GR0_tfc(regs);
+  wrap = GR0_wrap(regs);
+  keylen = (tfc - 17) * 8 + 8;
+  parameter_blocklen = keylen;
+  if(wrap)
+    parameter_blocklen += 32;
   
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KM_DEBUG
   LOGBYTE("k     :", parameter_block, keylen);
-  if(fc > 20)
+  if(wrap)
     LOGBYTE("wkvp  :", &parameter_block[keylen], 32);
 #endif
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
   /* Verify and unwrap */
-  switch(fc)
+  if(wrap)
   {
-    case 26: /* encrypted-aes-128 */
-    case 27: /* encrypted-aes-192 */
-    case 28: /* encrypted-aes-256 */
-      if(unlikely(memcmp(&parameter_block[keylen], wkvp_regs_aes, 32)))
-      {
-        regs->psw.cc = 1;
-        return;
-      }
+    if(unlikely(memcmp(&parameter_block[keylen], wkvp_regs_aes, 32)))
+    {
+      regs->psw.cc = 1;
+      return;
+    }
       
-      /* Unwrap the cryptographic key */
-      aes_unwrap(parameter_block, keylen);
-
-//    /* Indicate fc to unwrapped keys */
-//    fc -= 8;    
-      break;
+    /* Unwrap the cryptographic key */
+    aes_unwrap(parameter_block, keylen);
   }
 #endif  
 
@@ -1180,12 +1159,13 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
   des_context context2;
   des_context context3;
   int crypted;
-  int fc;
   int keylen;
   int i;
   BYTE message_block[8];
   BYTE parameter_block[56];
   int parameter_blocklen;
+  int tfc;
+  int wrap;
 
   UNREFERENCED(r1);
 
@@ -1201,17 +1181,12 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
   }
 
   /* Initialize values */
-  fc = GR0_fc(regs);
-  if(fc < 3)
-  {
-    keylen = fc * 8;
-    parameter_blocklen = keylen + 8;
-  }
-  else
-  {
-    keylen = (fc - 8) * 8;
-    parameter_blocklen = keylen + 8 + 24;
-  }
+  tfc = GR0_tfc(regs);
+  wrap = GR0_wrap(regs);
+  keylen = tfc * 8;
+  parameter_blocklen = keylen + 8;
+  if(wrap)
+    parameter_blocklen += 24;
 
   /* Test writeability output chaining value */
   ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 7, ACCTYPE_WRITE, regs);
@@ -1221,54 +1196,44 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
 
 #ifdef OPTION_KMAC_DEBUG
   LOGBYTE("icv   :", parameter_block, 8);
-  switch(fc)
+  switch(tfc)
   {
     case 1: /* dea */
-    case 9: /* encrypted-dea */
       LOGBYTE("k1    :", &parameter_block[8], 8);
       break;
     
     case 2: /* tdea-128 */
-    case 10: /* encrypted-tdea-128 */
       LOGBYTE("k1    :", &parameter_block[8], 8);
       LOGBYTE("k2    :", &parameter_block[16], 8);
       break;
     
     case 3: /* tdea-192 */
-    case 11: /* encrypted-tdea-192 */
       LOGBYTE("k1    :", &parameter_block[8], 8);
       LOGBYTE("k2    :", &parameter_block[16], 8);
       LOGBYTE("k3    :", &parameter_block[24], 8);
       break;
   }
-  if(fc > 3) 
+  if(wrap) 
     LOGBYTE("wkvp  :", &parameter_block[keylen + 8], 24);
 #endif
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
   /* Verify and unwrap */
-  switch(fc)
+  if(wrap)
   {
-    case 9: /* encrypted-dea */
-    case 10: /* encrypted-tdea-128 */
-    case 11: /* encrypted-tdea-192 */
-      if(unlikely(memcmp(&parameter_block[keylen + 8], wkvp_regs_dea, 24)))
-      {
-        regs->psw.cc = 1;
-        return;
-      }
+    if(unlikely(memcmp(&parameter_block[keylen + 8], wkvp_regs_dea, 24)))
+    {
+      regs->psw.cc = 1;
+      return;
+    }
 
-      /* Unwrap the cryptographic key */
-      dea_unwrap(&parameter_block[8], keylen);
-      
-      /* Indicate fc to unwrapped keys */
-      fc -= 8;
-      break;
+    /* Unwrap the cryptographic key */
+    dea_unwrap(&parameter_block[8], keylen);
   }
 #endif
 
   /* Set the cryptographic key */
-  switch(fc)
+  switch(tfc)
   {
     case 1: /* dea */
       des_set_key(&context1, &parameter_block[8]);
@@ -1301,7 +1266,7 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
       message_block[i] ^= parameter_block[i];
 
     /* Calculate the output chaining value */
-    switch(fc)
+    switch(tfc)
     {
       case 1: /* dea */
         des_encrypt(&context1, message_block, parameter_block);
@@ -1356,12 +1321,13 @@ static void ARCH_DEP(kmac_aes)(int r1, int r2, REGS *regs)
 {
   aes_context context;
   int crypted;
-  int fc;
   int keylen;
   int i;
   BYTE message_block[16];
   BYTE parameter_block[80];
   int parameter_blocklen;
+  int tfc;
+  int wrap;
 
   UNREFERENCED(r1);
 
@@ -1377,17 +1343,12 @@ static void ARCH_DEP(kmac_aes)(int r1, int r2, REGS *regs)
   }
 
   /* Initialize values */
-  fc = GR0_fc(regs);
-  if(fc <= 20)
-  {
-    keylen = (fc - 17) * 8 + 8;
-    parameter_blocklen = keylen + 16;
-  }
-  else
-  {
-    keylen = (fc - 25) * 8 + 8;
-    parameter_blocklen = keylen + 16 + 32;
-  }
+  tfc = GR0_tfc(regs);
+  wrap = GR0_wrap(regs);
+  keylen = (tfc - 17) * 8 + 8;
+  parameter_blocklen = keylen + 16;
+  if(wrap)
+    parameter_blocklen += 32;
 
   /* Test writeability output chaining value */
   ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 15, ACCTYPE_WRITE, regs);
@@ -1398,29 +1359,22 @@ static void ARCH_DEP(kmac_aes)(int r1, int r2, REGS *regs)
 #ifdef OPTION_KMAC_DEBUG
   LOGBYTE("icv   :", parameter_block, 16);
   LOGBYTE("k     :", &parameter_block[16], keylen);
-  if(fc > 20)
+  if(wrap)
     LOGBYTE("k     :", &parameter_block[16 + keylen], 32);
 #endif
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
   /* Verify and unwrap */
-  switch(fc)
+  if(wrap)
   {
-    case 26: /* encrypted-aes-128 */
-    case 27: /* encrypted-aes-192 */
-    case 28: /* encrypted-aes-256 */
-      if(unlikely(memcmp(&parameter_block[keylen], wkvp_regs_aes, 32)))
-      {
-        regs->psw.cc = 1;
-        return;
-      }
+    if(unlikely(memcmp(&parameter_block[keylen], wkvp_regs_aes, 32)))
+    {
+      regs->psw.cc = 1;
+      return;
+    }
 
-      /* Unwrap the cryptographic key */
-      aes_unwrap(parameter_block, keylen);
-
-//    /* Indicate fc to unwrapped keys */
-//    fc -= 8;    
-      break;
+    /* Unwrap the cryptographic key */
+    aes_unwrap(parameter_block, keylen);
   }
 #endif		      
 
@@ -1482,7 +1436,6 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
   des_context context2;
   des_context context3;
   int crypted;
-  int fc;
   int keylen;
   int i;
   BYTE message_block[8];
@@ -1491,6 +1444,8 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
   BYTE parameter_block[56];
   int parameter_blocklen;
   int r1_is_not_r2;
+  int tfc;
+  int wrap;
 
   /* Check special conditions */
   if(unlikely(GR_A(r2 + 1, regs) % 8))
@@ -1504,17 +1459,12 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
   }
 
   /* Initialize values */
-  fc = GR0_fc(regs);
-  if(fc <= 3)
-  {
-    keylen = fc * 8;
-    parameter_blocklen = keylen + 8;
-  }
-  else
-  {
-    keylen = (fc - 8) * 8;
-    parameter_blocklen = keylen + 8 + 24;
-  }
+  tfc = GR0_tfc(regs);
+  wrap = GR0_wrap(regs);
+  keylen = tfc * 8;
+  parameter_blocklen = keylen + 8;
+  if(wrap)
+    parameter_blocklen += 24;
 
   /* Test writeability output chaining value */
   ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 7, ACCTYPE_WRITE, regs);
@@ -1524,54 +1474,44 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
 
 #ifdef OPTION_KMC_DEBUG
   LOGBYTE("icv   :", parameter_block, 8);
-  switch(fc)
+  switch(tfc)
   {
     case 1: /* dea */
-    case 9: /* encrypted-dea */
       LOGBYTE("k     :", &parameter_block[8], 8);
       break;
 
     case 2: /* tdea-128 */
-    case 10: /* encrypted-tdea-128 */
       LOGBYTE("k1    :", &parameter_block[8], 8);
       LOGBYTE("k2    :", &parameter_block[16], 8);
       break;
 
     case 3: /* tdea-192 */
-    case 11: /* encrypted-tdea-192 */
       LOGBYTE("k1    :", &parameter_block[8], 8);
       LOGBYTE("k2    :", &parameter_block[16], 8);
       LOGBYTE("k3    :", &parameter_block[24], 8);
       break;
   }
-  if(fc > 3) 
+  if(wrap) 
     LOGBYTE("wkvp  :", &parameter_block[keylen + 8], 24);
 #endif
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
   /* Verify and unwrap */
-  switch(fc)
+  if(wrap)
   {
-    case 9: /* encrypted-dea */
-    case 10: /* encrypted-tdea-128 */
-    case 11: /* encrypted-tdea-192 */
-      if(unlikely(memcmp(&parameter_block[keylen + 8], wkvp_regs_dea, 24)))
-      {
-        regs->psw.cc = 1;
-        return;
-      }
+    if(unlikely(memcmp(&parameter_block[keylen + 8], wkvp_regs_dea, 24)))
+    {
+      regs->psw.cc = 1;
+      return;
+    }
 
-      /* Unwrap the cryptographic key */
-      dea_unwrap(&parameter_block[8], keylen);
-      
-      /* Indicate fc to unwrapped keys */
-      fc -= 8;
-      break;
+    /* Unwrap the cryptographic key */
+    dea_unwrap(&parameter_block[8], keylen);
   }
 #endif
 
   /* Set the cryptographic key */
-  switch(fc)
+  switch(tfc)
   {
     case 1: /* dea */
       des_set_key(&context1, &parameter_block[8]);
@@ -1602,7 +1542,7 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
 #endif
 
     /* Do the job */
-    switch(fc)
+    switch(tfc)
     {
       case 1: /* dea */
         if(modifier_bit)
@@ -1719,7 +1659,6 @@ static void ARCH_DEP(kmc_aes)(int r1, int r2, REGS *regs)
 {
   aes_context context;
   int crypted;
-  int fc;
   int keylen;
   int i;
   BYTE message_block[16];
@@ -1728,6 +1667,8 @@ static void ARCH_DEP(kmc_aes)(int r1, int r2, REGS *regs)
   BYTE parameter_block[80];
   int parameter_blocklen;
   int r1_is_not_r2;
+  int tfc;
+  int wrap;
 
   /* Check special conditions */
   if(unlikely(GR_A(r2 + 1, regs) % 16))
@@ -1741,17 +1682,12 @@ static void ARCH_DEP(kmc_aes)(int r1, int r2, REGS *regs)
   }
 
   /* Initialize values */
-  fc = GR0_fc(regs);
-  if(fc <= 20)
-  {
-    keylen = (fc - 17) * 8 + 8;
-    parameter_blocklen = keylen + 16;
-  }
-  else
-  {
-    keylen = (fc - 25) * 8 + 8;
-    parameter_blocklen = keylen + 16 + 32;
-  }
+  tfc = GR0_tfc(regs);
+  wrap = GR0_wrap(regs);
+  keylen = (tfc - 17) * 8 + 8;
+  parameter_blocklen = keylen + 16;
+  if(wrap)
+    parameter_blocklen += 32;
 
   /* Test writeability output chaining value */
   ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 15, ACCTYPE_WRITE, regs);
@@ -1762,29 +1698,22 @@ static void ARCH_DEP(kmc_aes)(int r1, int r2, REGS *regs)
 #ifdef OPTION_KMC_DEBUG
   LOGBYTE("icv   :", parameter_block, 16);
   LOGBYTE("k     :", &parameter_block[16], keylen);
-  if(fc > 20)
+  if(wrap)
     LOGBYTE("wkvp  :", &parameter_block[16 + keylen], 32);
 #endif
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
   /* Verify and unwrap */
-  switch(fc)
+  if(wrap)
   {
-    case 26: /* encrypted-aes-128 */
-    case 27: /* encrypted-aes-192 */
-    case 28: /* encrypted-aes-256 */
-      if(unlikely(memcmp(&parameter_block[keylen + 16], wkvp_regs_aes, 32)))
-      {
-        regs->psw.cc = 1;
-        return;
-      }
+    if(unlikely(memcmp(&parameter_block[keylen + 16], wkvp_regs_aes, 32)))
+    {
+      regs->psw.cc = 1;
+      return;
+    }
 
-      /* Unwrap the cryptographic key */
-      aes_unwrap(&parameter_block[16], keylen);
-
-//    /* Indicate fc to unwrapped keys */
-//    fc -= 8;
-      break;
+    /* Unwrap the cryptographic key */
+    aes_unwrap(&parameter_block[16], keylen);
   }
 #endif
 
@@ -2002,7 +1931,6 @@ static void ARCH_DEP(kmctr_dea)(int r1, int r2, int r3, REGS *regs)
   des_context context3;
   BYTE countervalue_block[8];
   int crypted;
-  int fc;
   int i;
   int keylen;
   BYTE message_block[8];
@@ -2011,6 +1939,8 @@ static void ARCH_DEP(kmctr_dea)(int r1, int r2, int r3, REGS *regs)
   int r1_is_not_r2;
   int r1_is_not_r3;
   int r2_is_not_r3;
+  int tfc;
+  int wrap;
 
   /* Check special conditions */
   if(unlikely(GR_A(r2 + 1, regs) % 8))
@@ -2024,17 +1954,12 @@ static void ARCH_DEP(kmctr_dea)(int r1, int r2, int r3, REGS *regs)
   }
 
   /* Initialize values */
-  fc = GR0_fc(regs);
-  if(fc <= 3)
-  {
-    keylen = fc * 8;
-    parameter_blocklen = keylen;
-  }
-  else
-  {
-    keylen = (fc - 8) * 8;
-    parameter_blocklen = keylen + 24;
-  }
+  tfc = GR0_tfc(regs);
+  wrap = GR0_wrap(regs);
+  keylen = tfc * 8;
+  parameter_blocklen = keylen;
+  if(wrap)
+    parameter_blocklen += 24;
 
   /* Test writeability output chaining value */
   ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 7, ACCTYPE_WRITE, regs);
@@ -2043,68 +1968,43 @@ static void ARCH_DEP(kmctr_dea)(int r1, int r2, int r3, REGS *regs)
   ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KMCTR_DEBUG
-  switch(fc)
+  LOGBYTE("icv   :", parameter_block, 8);
+  switch(tfc)
   {
     case 1: /* dea */
-      LOGBYTE("icv   :", parameter_block, 8);
       LOGBYTE("k     :", &parameter_block[8], 8);
       break;
 
     case 2: /* tdea-128 */
-      LOGBYTE("icv   :", parameter_block, 8);
       LOGBYTE("k1    :", &parameter_block[8], 8);
       LOGBYTE("k2    :", &parameter_block[16], 8);
       break;
 
     case 3: /* tdea-192 */
-      LOGBYTE("icv   :", parameter_block, 8);
       LOGBYTE("k1    :", &parameter_block[8], 8);
       LOGBYTE("k2    :", &parameter_block[16], 8);
       LOGBYTE("k3    :", &parameter_block[24], 8);
       break;
-      
-    case 9: /* encrypted-dea */
-      LOGBYTE("k     :", parameter_block, 8);
-      LOGBYTE("wkvp  :", &parameter_block[8], 24);
-      break;
-
-    case 10: /* encrypted-tdea-128 */
-      LOGBYTE("k1    :", parameter_block, 8);
-      LOGBYTE("k2    :", &parameter_block[8], 8);
-      LOGBYTE("wkvp  :", &parameter_block[16], 24);
-      break;
-
-    case 11: /* encrypted-tdea-192 */
-      LOGBYTE("k1    :", parameter_block, 8);
-      LOGBYTE("k2    :", &parameter_block[8], 8);
-      LOGBYTE("k3    :", &parameter_block[16], 8);
-      LOGBYTE("wkvp  :", &parameter_block[24], 24);
-      break;
   }
+  if(wrap)
+    LOGBYTE("wkvp  :", &parameter_block[24], 24);
 #endif
 
   /* Verify and unwrap */
-  switch(fc)
+  if(wrap)
   {
-    case 9: /* encrypted-dea */
-    case 10: /* encrypted-tdea-128 */
-    case 11: /* encrypted-tdea-192 */
-      if(memcmp(&parameter_block[keylen], wkvp_regs_dea, 24))
-      {
-        regs->psw.cc = 1;
-        return;
-      }
+    if(memcmp(&parameter_block[keylen], wkvp_regs_dea, 24))
+    {
+      regs->psw.cc = 1;
+      return;
+    }
 
-      /* Unwrap the cryptographic key */
-      dea_unwrap(parameter_block, keylen);
-      
-      /* Indicate fc to unwrapped keys */
-      fc -= 8;
-      break;
+    /* Unwrap the cryptographic key */
+    dea_unwrap(parameter_block, keylen);
   }
 
   /* Set the cryptographic key */
-  switch(fc)
+  switch(tfc)
   {
     case 1: /* dea */
       des_set_key(&context1, &parameter_block[8]);
@@ -2138,7 +2038,7 @@ static void ARCH_DEP(kmctr_dea)(int r1, int r2, int r3, REGS *regs)
 #endif
 
     /* Do the job */
-    switch(fc)
+    switch(tfc)
     {
       case 1: /* dea */
         /* Encrypt and XOR */
@@ -2208,7 +2108,6 @@ static void ARCH_DEP(kmctr_aes)(int r1, int r2, int r3, REGS *regs)
   int carry;
   aes_context context;
   int crypted;
-  int fc;
   int i;
   int keylen;
   BYTE message_block[16];
@@ -2216,6 +2115,8 @@ static void ARCH_DEP(kmctr_aes)(int r1, int r2, int r3, REGS *regs)
   BYTE parameter_block[48];
   int parameter_blocklen;
   int r1_is_not_r2;
+  int tfc;
+  int wrap;
 
   /* Check special conditions */
   if(unlikely(GR_A(r2 + 1, regs) % 16))
@@ -2229,17 +2130,12 @@ static void ARCH_DEP(kmctr_aes)(int r1, int r2, int r3, REGS *regs)
   }
 
   /* Initialize values */
-  fc = GR0_fc(regs);
-  if(fc <= 19)
-  {
-    keylen = (fc - 17) * 8 + 8;
-    parameter_blocklen = keylen;
-  }
-  else
-  {
-    keylen = (fc - 25) * 8 + 8;
-    parameter_blocklen = keylen;
-  }
+  tfc = GR0_tfc(regs);
+  wrap = GR0_wrap(regs);
+  keylen = (fc - 17) * 8 + 8;
+  parameter_blocklen = keylen;
+  if(wrap)
+    parameter_blocklen += 32;
 
   /* Test writeability output chaining value */
   ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 15, ACCTYPE_WRITE, regs);
@@ -2250,6 +2146,8 @@ static void ARCH_DEP(kmctr_aes)(int r1, int r2, int r3, REGS *regs)
 #ifdef OPTION_KMCTR_DEBUG
   LOGBYTE("icv   :", parameter_block, 16);
   LOGBYTE("k     :", &parameter_block[16], parameter_blocklen - 16);
+  if(wrap)
+    LOGBYTE("wkvp  :", &parameter_block[16 + keylen], 32);
 #endif
 
   /* Set the cryptographic key */
