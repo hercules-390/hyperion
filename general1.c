@@ -3833,11 +3833,11 @@ CREG    n;                              /* Work                      */
                 /* Convert real address to absolute address */
                 ceh = APPLY_PREFIXING (regs->dat.raddr, regs->PX);
 
-                SIE_TRANSLATE(&ceh, ACCTYPE_WRITE, regs);
-
                 /* Ensure absolute address is available */
                 if (!(unavailable = (ceh >= regs->mainlim )))
                 {
+                    SIE_TRANSLATE(&ceh, ACCTYPE_WRITE, regs);
+
                     /* Update counter */
                     FETCH_HW(hwc, ceh + regs->mainstor);
                     STORAGE_KEY(ceh, regs) |= STORKEY_REF;
@@ -3855,11 +3855,11 @@ CREG    n;                              /* Work                      */
                             /* Convert real address to absolute address */
                             cew = APPLY_PREFIXING (regs->dat.raddr, regs->PX);
     
-                            SIE_TRANSLATE(&cew, ACCTYPE_WRITE, regs);
-    
                             /* Ensure absolute address is available */
                             if (!(unavailable = (cew >= regs->mainlim )))
                             {
+                                SIE_TRANSLATE(&cew, ACCTYPE_WRITE, regs);
+    
                                 /* Update both counters */
                                 FETCH_W(fwc, cew + regs->mainstor);
                                 fwc++;
