@@ -3687,8 +3687,6 @@ DEF_INST(perform_cryptographic_key_management_operations_d)
       LOGBYTE("output:", parameter_block, 16);
 #endif
 
-      /* Set condition code 0 */
-      regs->psw.cc = 0;
       return;
     }
 
