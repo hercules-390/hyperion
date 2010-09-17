@@ -273,14 +273,16 @@ int fbyte, fbit;
         if(enable)
         {
             sysblk.facility_list[ARCH_370][fbyte] |= fbit;
-            WRMSG( HHC00898, "I", facility->name, "en", _ARCH_370_NAME );
+            if(MLVL(VERBOSE))
+                WRMSG( HHC00898, "I", facility->name, "en", _ARCH_370_NAME );
         }
         else
         {
             if ( !(facility->fixed & S370) )
             {
                 sysblk.facility_list[ARCH_370][fbyte] &= ~fbit;
-                WRMSG( HHC00898, "I", facility->name, "dis", _ARCH_370_NAME);
+                if(MLVL(VERBOSE))
+                    WRMSG( HHC00898, "I", facility->name, "dis", _ARCH_370_NAME);
             }
         }
     }
@@ -291,13 +293,15 @@ int fbyte, fbit;
         if(enable)
         {
             sysblk.facility_list[ARCH_390][fbyte] |= fbit;
-            WRMSG( HHC00898, "I", facility->name, "en", _ARCH_390_NAME );
+            if(MLVL(VERBOSE))
+                WRMSG( HHC00898, "I", facility->name, "en", _ARCH_390_NAME );
         }
         else
         {
             if ( !(facility->fixed & ESA390) )
             sysblk.facility_list[ARCH_390][fbyte] &= ~fbit;
-            WRMSG( HHC00898, "I", facility->name, "dis", _ARCH_390_NAME );
+            if(MLVL(VERBOSE))
+                WRMSG( HHC00898, "I", facility->name, "dis", _ARCH_390_NAME );
         }
     }
 #endif
@@ -307,14 +311,16 @@ int fbyte, fbit;
         if(enable)
         {
             sysblk.facility_list[ARCH_900][fbyte] |= fbit;
-            WRMSG( HHC00898, "I", facility->name, "en", _ARCH_900_NAME ); 
+            if(MLVL(VERBOSE))
+                WRMSG( HHC00898, "I", facility->name, "en", _ARCH_900_NAME ); 
         }
         else
         { 
             if ( !(facility->fixed & ZARCH) )
             {
                 sysblk.facility_list[ARCH_900][fbyte] &= ~fbit;
-                WRMSG( HHC00898, "I", facility->name, "dis", _ARCH_900_NAME );
+                if(MLVL(VERBOSE))
+                    WRMSG( HHC00898, "I", facility->name, "dis", _ARCH_900_NAME );
             }
         }
     }
