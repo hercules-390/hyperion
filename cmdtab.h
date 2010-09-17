@@ -106,12 +106,13 @@ COMMAND("hao",       PANEL,         SYSPROG+SYSDEVEL,   hao_cmd,
     "  hao clear     : delete all rules (stops automatic operator)\n")
 #endif /* defined(OPTION_HAO) */
 
-COMMAND("log",       PANEL,         SYSCMDALL,          log_cmd,      
-  "Direct log output", 
-    NULL)
+COMMAND("log",       PANEL+CONFIG,  SYSCMDALL,          log_cmd,      
+  "Direct logger output", 
+    "Format: \"log [ OFF | newfile ]\".   Sets log filename or stops\n"
+    "log file output with the \"OFF\" option." )
 
-COMMAND("logopt",    PANEL+CONFIG,  SYSCMDALL,          logopt_cmd,   
-  "Change log options",
+CMDABBR("logopts",6, PANEL+CONFIG,  SYSCMDALL,          logopt_cmd,   
+  "Set/Display logging options",
     "Format: \"logopt [timestamp | notimestamp]\".   Sets logging options.\n"
     "\"timestamp\" inserts a time stamp in front of each log message.\n"
     "\"notimestamp\" displays log messages with no time stamps.  Entering\n"
@@ -215,17 +216,22 @@ COMMAND("cfall",     PANEL,         SYSCMDALL,          cfall_cmd,
 #endif
 
 #ifdef _FEATURE_SYSTEM_CONSOLE
-COMMAND("scpimply",   PANEL+CONFIG,  SYSCMDALL,          scpimply_cmd,  
-  "Toggle on/off passing non-hercules commands to the scp",
-    "scpimply toggles passing non-hercules commands to the scp if the scp\n"
-    "has enabled receipt of scp commands. The default is off. If on,\n"
-    "'invalid' hercules commands are passed to the scp.\n")
+COMMAND("scpimply",   PANEL+CONFIG,  SYSCMDALL,          scpimply_cmd, 
+  "Set/Display option to pass non-hercules commands to the scp",
+  "Format: \"scpimply [ on | off ]\"\n"
+    "When scpimply is set ON, non-hercules commands are passed to\n"
+    "the scp if the scp has enabled receipt of scp commands. The\n"
+    "default is off. When scpimply is entered without any options,\n"
+    "the current state is displayed.\n")
 
 COMMAND("scpecho",   PANEL+CONFIG,  SYSCMDALL,          scpecho_cmd,  
-  "Toggle on/off echo to console and history of scp replys",
-    "scpecho toggles the '.' (scp) and '!' (priority scp) replys and\n"
-    "responses to the hercules console. The default is off. This is to\n"
-    "manage passwords being displayed and journaled.\n")
+  "Set/Display option to echo to console and history of scp replys",
+  "Format: \"scpecho [ on | off ]\"\n"
+    "When scpecho is set ON, scp commands entered on the console are\n"
+    "echoed to console and recording in command history.\n"
+    "The default is off. When scpecho is entered without any options,\n"
+    "the current state is displayed. This is to help manage passwords\n"
+    "sent to the scp from being displayed and journaled.\n")
     
 COMMAND(".reply",    PANEL,         SYSCMDALL,          g_cmd,
   "SCP command",

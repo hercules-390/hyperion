@@ -40,6 +40,7 @@ static FILE *logger_syslog[2];          /* Syslog read/write pipe    */
        int   logger_syslogfd[2];        /*   pairs                   */
 static FILE *logger_hrdcpy;             /* Hardcopy log or zero      */
 static int   logger_hrdcpyfd;           /* Hardcopt fd or -1         */
+static char  logger_filename[MAX_PATH];
 
 /* Find the index for a specific line number in the log,             */
 /* one being the most recent line                                    */
@@ -576,6 +577,10 @@ DLL_EXPORT void logger_init(void)
 
 }
 
+DLL_EXPORT char *log_dsphrdcpy(void)
+{
+    return logger_filename;
+}
 
 DLL_EXPORT void log_sethrdcpy(char *filename)
 {
@@ -585,6 +590,8 @@ int   new_hrdcpyfd;
 
     if(!filename)
     {
+        logger_filename[0] = '\0';
+
         if(!logger_hrdcpy)
         {
             WRMSG(HHC02100, "E");
@@ -606,6 +613,8 @@ int   new_hrdcpyfd;
     {
         char pathname[MAX_PATH];
         hostpath(pathname, filename, sizeof(pathname));
+        
+        logger_filename[0] = '\0';
 
         new_hrdcpyfd = open(pathname,
                 O_WRONLY | O_CREAT | O_TRUNC /* O_SYNC */,
@@ -629,6 +638,7 @@ int   new_hrdcpyfd;
                 obtain_lock(&logger_lock);
                 logger_hrdcpy = new_hrdcpy;
                 logger_hrdcpyfd = new_hrdcpyfd;
+                strcpy(logger_filename, filename);
                 release_lock(&logger_lock);
 
                 if(temp_hrdcpy)

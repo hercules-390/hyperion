@@ -585,16 +585,24 @@ int History(int argc, char *argv[], char *cmdline)
 int log_cmd(int argc, char *argv[],char *cmdline)
 {
     UNREFERENCED(cmdline);
-
-    if(argc > 1)
+    if ( argc > 2 )
     {
-        if(strcasecmp("off",argv[1]))
-            log_sethrdcpy(argv[1]);
-        else
+        WRMSG( HHC02299, "E", argv[0] );
+    }
+    else if(argc == 2)
+    {
+        if( CMD(argv[1],off,3) )
             log_sethrdcpy(NULL);
+        else
+            log_sethrdcpy(argv[1]);
     }
     else
-        WRMSG(HHC02202,"E");
+    {
+        if ( strlen( log_dsphrdcpy() ) == 0 )
+            WRMSG( HHC02106, "I" );
+        else
+            WRMSG( HHC02105, "I", log_dsphrdcpy() );
+    }
 
     return 0;
 }
@@ -1632,7 +1640,7 @@ int rc;
         return -1;
     }
 
-    if (strcasecmp(argv[1],"list") == 0)
+    if ( CMD(argv[1],list,4) )
     {
         TAMDIR* pTAMDIR = sysblk.tamdir;
 
@@ -1658,7 +1666,7 @@ int rc;
         return 0;
     }
 
-    if (strcasecmp(argv[1],"add") == 0 || *argv[1] == '+')
+    if ( CMD(argv[1],add,3) || *argv[1] == '+' )
     {
         char *argv2;
         char tamdir[MAX_PATH+1]; /* +1 for optional '+' or '-' prefix */
@@ -1772,7 +1780,7 @@ int rc;
         }
     }
 
-    if (strcasecmp(argv[1],"del") == 0 || *argv[1] == '-')
+    if ( CMD(argv[1],del,3) || *argv[1] == '-')
     {
         char *argv2;
         char tamdir1[MAX_PATH+1] = {0};     // (resolved path)
@@ -2185,7 +2193,7 @@ int cckd_cmd(int argc, char *argv[], char *cmdline)
         }
         else
         {
-            rc = cckd_command( p, MLVL(VERBOSE) ? 1 : 0 );
+            rc = cckd_command( p, sysblk.config_done? 1 : MLVL(VERBOSE)? 1 : 0 );
         }
     }
     return rc;
@@ -2326,7 +2334,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
         WRMSG(HHC02202, "E");
         rc = -1;
     }
-    else if (strcasecmp(argv[1],"stats") == 0)
+    else if ( CMD(argv[1],stats,5) )
     {
         if (argc < 3)
         {
@@ -2358,7 +2366,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
             rc = -1;
         }
     }
-    else if (strcasecmp(argv[1],"debug") == 0)
+    else if ( CMD(argv[1],debug,5) )
     {
         if (debug_tt32_tracing)
         {
@@ -2372,7 +2380,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
             rc = -1;
         }
     }
-    else if (strcasecmp(argv[1],"nodebug") == 0)
+    else if ( CMD(argv[1],nodebug,7) )
     {
         if (debug_tt32_tracing)
         {
@@ -2491,15 +2499,15 @@ BYTE c;
                 }
                 styp = strchr(styp,'*') + 1;
             }
-            if (strcasecmp(styp,"cp") == 0)
+            if ( CMD(styp,cp,2) )
                 ptyp = SCCB_PTYP_CP;
-            else if (strcasecmp(styp,"cf") == 0)
+            else if ( CMD(styp,cf,2) )
                 ptyp = SCCB_PTYP_ICF;
-            else if (strcasecmp(styp,"il") == 0)
+            else if ( CMD(styp,il,2) )
                 ptyp = SCCB_PTYP_IFL;
-            else if (strcasecmp(styp,"ap") == 0)
+            else if ( CMD(styp,ap,2) )
                 ptyp = SCCB_PTYP_IFA;
-            else if (strcasecmp(styp,"ip") == 0)
+            else if ( CMD(styp,ip,2) )
                 ptyp = SCCB_PTYP_SUP;
             else
             {
@@ -3309,7 +3317,7 @@ int panrate_cmd(int argc, char *argv[], char *cmdline)
                 return -1;
             }
         }
-        if ( MLVL(VERBOSE) )
+        if ( sysblk.config_done || MLVL(VERBOSE) )
             WRMSG(HHC02204, "I", argv[0], argv[1] );
     }
     else
@@ -4344,16 +4352,16 @@ int i;
     if( argc > 1 )
         for(i = 1; i < argc; i++)
         {
-            if(strcasecmp(argv[i],"echo")==0)
+            if( CMD(argv[i],echo,4) )
                 sysblk.diag8cmd |= DIAG8CMD_ECHO;
             else
-            if(strcasecmp(argv[i],"noecho")==0)
+            if( CMD(argv[i],noecho,6) )
                 sysblk.diag8cmd &= ~DIAG8CMD_ECHO;
             else
-            if(strcasecmp(argv[i],"enable")==0)
+            if( CMD(argv[i],enable,3) )
                 sysblk.diag8cmd |= DIAG8CMD_ENABLE;
             else
-            if(strcasecmp(argv[i],"disable")==0)
+            if( CMD(argv[i],disable,4) )
                 // disable implies no echo
                 sysblk.diag8cmd &= ~(DIAG8CMD_ENABLE | DIAG8CMD_ECHO);
             else
@@ -5550,6 +5558,8 @@ int attach_cmd(int argc, char *argv[], char *cmdline)
         return -1;
     }
     rc = parse_and_attach_devices(argv[1],argv[2],argc-3,&argv[3]);
+    if( rc == 0 && sysblk.config_done )
+        WRMSG(HHC02198, "I");
 
     return rc;
 }
@@ -6219,13 +6229,13 @@ BYTE     unitstat, code = 0;
         WRMSG(HHC02299,"E", argv[0]);
         return -1;
     }
-    if ( !( (strcasecmp(argv[2],"rew") == 0) ||
-            (strcasecmp(argv[2],"fsf") == 0) ||
-            (strcasecmp(argv[2],"bsf") == 0) ||
-            (strcasecmp(argv[2],"fsr") == 0) ||
-            (strcasecmp(argv[2],"bsr") == 0) ||
-            (strcasecmp(argv[2],"asf") == 0) ||
-            (strcasecmp(argv[2],"wtm") == 0)
+    if ( !( ( CMD(argv[2],rew,3) ) ||
+            ( CMD(argv[2],fsf,3) ) ||
+            ( CMD(argv[2],bsf,3) ) ||
+            ( CMD(argv[2],fsr,3) ) ||
+            ( CMD(argv[2],bsr,3) ) ||
+            ( CMD(argv[2],asf,3) ) ||
+            ( CMD(argv[2],wtm,3) )
           )
        )
     {
@@ -6233,7 +6243,7 @@ BYTE     unitstat, code = 0;
         return -1;
     }
 
-    if ( argc == 4  && !(strcasecmp(argv[2],"rew") == 0) )
+    if ( argc == 4  && !( CMD(argv[2],rew,3) ) )
     {
         for (rc = 0; rc < (int)strlen(argv[3]); rc++)
         {
@@ -8542,7 +8552,7 @@ int ssd_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(cmdline);
 
     if ((argc > 2) ||
-        (argc > 1 && strcasecmp(argv[1],"now")))
+        (argc > 1 && !CMD(argv[1],now,3)))
     {
         WRMSG(HHC02205, "E", argv[argc-1], "");
         return(0);
@@ -8601,8 +8611,10 @@ int scpecho_cmd(int argc, char *argv[], char *cmdline)
         WRMSG( HHC02299, "E", argv[0] );
         return 0;
     }
-
-    WRMSG(HHC02204, "I", "SCP, PSCP echo", (sysblk.scpecho ? "on" : "off") );
+    if ( argc == 1 )
+        WRMSG(HHC02203, "I", "SCP, PSCP echo", (sysblk.scpecho ? "on" : "off") );
+    else    
+        WRMSG(HHC02204, "I", "SCP, PSCP echo", (sysblk.scpecho ? "on" : "off") );
 
     return 0;
 }
@@ -8632,7 +8644,10 @@ int scpimply_cmd(int argc, char *argv[], char *cmdline)
         return 0;
     }
 
-    WRMSG(HHC02204, "I", "scpimply", (sysblk.scpimply ? "on" : "off") );
+    if ( argc == 1 )
+        WRMSG(HHC02203, "I", "scpimply", (sysblk.scpimply ? "on" : "off") );
+    else
+        WRMSG(HHC02204, "I", "scpimply", (sysblk.scpimply ? "on" : "off") );
     return 0;
 }
 #endif
@@ -8651,7 +8666,7 @@ int count_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(argv);
     UNREFERENCED(cmdline);
 
-    if (argc > 1 && strcasecmp(argv[1],"clear") == 0)
+    if (argc > 1 && CMD(argv[1],clear,5) )
     {
         for (i = 0; i < MAX_CPU; i++)
             if (IS_CPU_ONLINE(i))

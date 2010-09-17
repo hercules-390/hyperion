@@ -63,6 +63,7 @@ LOGR_DLL_IMPORT int log_read(char **buffer, int *msgindex, int block);
 LOGR_DLL_IMPORT int log_line(int linenumber);
 LOGR_DLL_IMPORT void log_sethrdcpy(char *filename);
 LOGR_DLL_IMPORT void log_wakeup(void *arg);
+LOGR_DLL_IMPORT char *log_dsphrdcpy(void);
 
 /* Log routing section */
 typedef void LOG_WRITER(void *,char *);
