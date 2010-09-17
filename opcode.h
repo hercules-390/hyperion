@@ -2987,7 +2987,6 @@ DEF_INST(purge_accesslist_lookaside_buffer);
 DEF_INST(purge_translation_lookaside_buffer);
 DEF_INST(reset_reference_bit);
 DEF_INST(reset_reference_bit_extended);
-DEF_INST(reset_reference_bits_multiple);
 DEF_INST(set_address_space_control);
 DEF_INST(set_address_space_control_fast);
 DEF_INST(set_clock);
@@ -3574,6 +3573,7 @@ DEF_INST(load_address_relative_long);
 DEF_INST(perform_frame_management_function);                    /*208*/
 DEF_INST(perform_timing_facility_function);                     /*@Z9*/
 DEF_INST(perform_topology_function);                            /*208*/
+DEF_INST(reset_reference_bits_multiple);                        /*810*/
 DEF_INST(store_facility_list);
 DEF_INST(store_facility_list_extended);                         /*@Z9*/
 DEF_INST(load_long_halfword_immediate);
