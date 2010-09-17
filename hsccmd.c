@@ -9270,23 +9270,6 @@ char    pathname[MAX_PATH];             /* (work)                    */
         if ((p = strchr(scrbuf,'#')) && p > scrbuf)
             do *p = 0; while (isspace(*--p) && p >= scrbuf);
 
-        if ( !strncasecmp(scrbuf,"pause",5) )
-        {
-            sscanf(scrbuf+5, "%d", &scr_pause_amt);
-
-            if (scr_pause_amt < 0 || scr_pause_amt > 999)
-            {
-                WRMSG(HHC02261, "W",scrbuf+5);
-                continue;
-            }
-
-            WRMSG(HHC02262, "I",scr_pause_amt);
-            SLEEP(scr_pause_amt);
-            WRMSG(HHC02263, "I");
-
-            continue;
-        }
-
         /* Process the command */
 
         for (p = scrbuf; isspace(*p); p++);
@@ -9322,6 +9305,40 @@ rexx_done:
     {
       scr_aborted=0;    /* reset abort flag */
       scr_tid=0;    /* reset script thread id */
+    }
+
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* pause command - sleep for n seconds                               */
+/*-------------------------------------------------------------------*/
+int pause_cmd(int argc, char *argv[], char *cmdline)
+{
+    UNREFERENCED(cmdline);
+    if ( argc != 2 )
+        WRMSG( HHC01455, "E", argv[0] );
+    else if ( argc == 2 )
+    {
+        int     sleepamt = 0;
+        BYTE    c;                      /* Character work area       */
+
+        if (sscanf(argv[1], "%d%c", &sleepamt, &c) != 1 || sleepamt < 1 || sleepamt > 999 )
+            WRMSG(HHC02205, "E", argv[1], "" );
+        else
+        {
+            if (scr_tid != 0)
+            {
+                WRMSG(HHC02262, "I",sleepamt);
+                SLEEP(sleepamt);
+                WRMSG(HHC02263, "I");
+            }
+            else
+            {
+                WRMSG(HHC02261, "I" );
+            }
+        }
     }
 
     return 0;

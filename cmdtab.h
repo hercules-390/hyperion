@@ -1136,6 +1136,12 @@ COMMAND("script",    PANEL,         SYSCMDALL-SYSOPER,  script_cmd,
     "also contain \"script\" commands, but the system ensures that no more\n"
     "than 10 levels of script are invoked at any one time.\n")
 
+COMMAND("pause",    PANEL+CONFIG,   SYSCMDALL-SYSOPER,  pause_cmd,
+  "Sleep for n seconds",
+  "Format: \"pause n \". Value of 'n' must be between 1 and 999.\n"
+  "This command is used for script processing only to sleep n\n"
+  "seconds before continuing.n")
+
 COMMAND("cscript",   PANEL,         SYSCMDALL-SYSOPER,  cscript_cmd,
   "Cancels a running script thread",
     "Format: \"cscript\". This command will cancel the currently running\n"
