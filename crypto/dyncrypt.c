@@ -69,9 +69,11 @@
 /*----------------------------------------------------------------------------*/
 /* General Purpose Register 0 macro's (GR0)                                   */
 /*----------------------------------------------------------------------------*/
-/* fc   : Function code                                                       */
-/* m    : Modifier bit                                                        */
+/* bit56 : Indication of but 56                                               */
+/* fc    : Function code                                                      */
+/* m     : Modifier bit                                                       */
 /*----------------------------------------------------------------------------*/
+#define GR0_bit56(regs) ((regs)->GR_L(0) & 0x00000080)
 #define GR0_fc(regs)    ((regs)->GR_L(0) & 0x0000007F)
 #define GR0_m(regs)     (((regs)->GR_L(0) & 0x00000080) ? TRUE : FALSE)
 
@@ -1286,7 +1288,6 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
       
       /* Indicate fc to unwrapped keys */
       fc -= 8;
-
       break;
   }
 #endif
@@ -1999,21 +2000,23 @@ static void ARCH_DEP(kmc_prng)(int r1, int r2, REGS *regs)
 /*----------------------------------------------------------------------------*/
 /* B92D Cipher message with counter (KMCTR) FC 1, 2, 3, 9, 10 and 11          */
 /*----------------------------------------------------------------------------*/
-static void ARCH_DEP(kmctr_dea)(int r1, int r2, REGS *regs)
+static void ARCH_DEP(kmctr_dea)(int r1, int r2, int r3, REGS *regs)
 {
   int carry;
   des_context context1;
   des_context context2;
   des_context context3;
+  BYTE countervalue_block[8];
   int crypted;
   int fc;
   int i;
   int keylen;
   BYTE message_block[8];
-  BYTE ocv[8];
   BYTE parameter_block[32];
   int parameter_blocklen;
   int r1_is_not_r2;
+  int r1_is_not_r3;
+  int r2_is_not_r3;
 
   /* Check special conditions */
   if(unlikely(GR_A(r2 + 1, regs) % 8))
@@ -2086,7 +2089,6 @@ static void ARCH_DEP(kmctr_dea)(int r1, int r2, REGS *regs)
   }
 #endif
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
   /* Verify and unwrap */
   switch(fc)
   {
@@ -2106,7 +2108,6 @@ static void ARCH_DEP(kmctr_dea)(int r1, int r2, REGS *regs)
       fc -= 8;
       break;
   }
-#endif
 
   /* Set the cryptographic key */
   switch(fc)
@@ -2129,70 +2130,53 @@ static void ARCH_DEP(kmctr_dea)(int r1, int r2, REGS *regs)
 
   /* Try to process the CPU-determined amount of data */
   r1_is_not_r2 = r1 != r2;
+  r1_is_not_r3 = r1 != r3;
+  r2_is_not_r3 = r2 != r3;
   for(crypted = 0; crypted < PROCESS_MAX; crypted += 8)
   {
-    /* Fetch a block of data */
+    /* Fetch a block of data and counter-value */
     ARCH_DEP(vfetchc)(message_block, 7, GR_A(r2, regs), r2, regs);
-
+    ARCH_DEP(vfetchc)(countervalue_block, 7, GR_A(r3, regs), r3, regs);
+    
 #ifdef OPTION_KMCTR_DEBUG
     LOGBYTE("input :", message_block, 8);
+    LOGBYTE("cv    :", countervalue_block, 8);
 #endif
 
     /* Do the job */
     switch(fc)
     {
       case 1: /* dea */
-        /* Encrypt, save and XOR */
-        des_encrypt(&context1, parameter_block, parameter_block);
-        memcpy(ocv, message_block, 8);
+        /* Encrypt and XOR */
+        des_encrypt(&context1, countervalue_block, countervalue_block);
         for(i = 0; i < 8; i++)
-          message_block[i] ^= parameter_block[i];
+          countervalue_block[i] ^= message_block[i];
         break;
 
       case 2: /* tdea-128 */
-        /* Encrypt, save and XOR */
-        des_encrypt(&context1, parameter_block, parameter_block);
-        des_decrypt(&context2, parameter_block, parameter_block);
-        des_encrypt(&context1, parameter_block, parameter_block);
-        memcpy(ocv, message_block, 8);
+        /* Encrypt and XOR */
+        des_encrypt(&context1, countervalue_block, countervalue_block);
+        des_decrypt(&context2, countervalue_block, countervalue_block);
+        des_encrypt(&context1, countervalue_block, countervalue_block);
         for(i = 0 ; i < 8; i++)
-            message_block[i] ^= parameter_block[i];
+            countervalue_block[i] ^= message_block[i];
         break;
 
       case 3: /* tdea-192 */
         /* Encrypt, save and XOR */
-        des_encrypt(&context1, parameter_block, parameter_block);
-        des_decrypt(&context2, parameter_block, parameter_block);
-        des_encrypt(&context3, parameter_block, parameter_block);
-        memcpy(ocv, message_block, 8);
+        des_encrypt(&context1, countervalue_block, countervalue_block);
+        des_decrypt(&context2, countervalue_block, countervalue_block);
+        des_encrypt(&context3, countervalue_block, countervalue_block);
         for(i = 0; i < 8; i++)
-          message_block[i] ^= parameter_block[i];
+          countervalue_block[i] ^= message_block[i];
         break;
     }
 
     /* Store the output */
-    ARCH_DEP(vstorec)(message_block, 7, GR_A(r1, regs), r1, regs);
+    ARCH_DEP(vstorec)(countervalue_block, 7, GR_A(r1, regs), r1, regs);
 
 #ifdef OPTION_KMCTR_DEBUG
-    LOGBYTE("output:", message_block, 8);
-#endif
-
-    /* Increase OCV */
-    carry = 1;
-    for(i = 0; i < 8; i--)
-    {
-      ocv[7 - i] += carry;
-      if(!ocv[7 - i])
-        carry = 1;
-      else
-        carry = 0;
-    } 
-
-    /* Store the output chaining value */
-    ARCH_DEP(vstorec)(ocv, 7, GR_A(1, regs), 1, regs);
-
-#ifdef OPTION_KMCTR_DEBUG
-    LOGBYTE("ocv   :", ocv, 8);
+    LOGBYTE("output:", countervalue_block, 8);
 #endif
 
     /* Update the registers */
@@ -2200,11 +2184,14 @@ static void ARCH_DEP(kmctr_dea)(int r1, int r2, REGS *regs)
     if(likely(r1_is_not_r2))
       SET_GR_A(r2, regs, GR_A(r2, regs) + 8);
     SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - 8);
+    if(likely(r1_is_not_r3 && r2_is_not_r3))
+      SET_GR_A(r2, regs, GR_A(r2, regs) + 8);
 
 #ifdef OPTION_KMCTR_DEBUG
     WRMSG(HHC90108, "D", r1, (regs)->GR(r1));
     WRMSG(HHC90108, "D", r2, (regs)->GR(r2));
     WRMSG(HHC90108, "D", r2 + 1, (regs)->GR(r2 + 1));
+    WRMSG(HHC90108, "D", r3, (regs)->GR(r3));
 #endif
 
     /* check for end of data */
@@ -2213,9 +2200,6 @@ static void ARCH_DEP(kmctr_dea)(int r1, int r2, REGS *regs)
       regs->psw.cc = 0;
       return;
     }
-
-    /* Set cv for next 8 bytes */
-    memcpy(parameter_block, ocv, 8);
   }
 
   /* CPU-determined amount of data processed */
@@ -2225,7 +2209,7 @@ static void ARCH_DEP(kmctr_dea)(int r1, int r2, REGS *regs)
 /*----------------------------------------------------------------------------*/
 /* B92D Cipher message with counter (KMCTR) FC 18, 19, 20, 26, 27 and 28      */
 /*----------------------------------------------------------------------------*/
-static void ARCH_DEP(kmctr_aes)(int r1, int r2, REGS *regs)
+static void ARCH_DEP(kmctr_aes)(int r1, int r2, int r3, REGS *regs)
 {
   int carry;
   aes_context context;
@@ -3366,6 +3350,7 @@ DEF_INST(cipher_message_with_counter_d)
   WRGMSG(HHC90101, "D", 2, r2);
   WRGMSG(HHC90102, "D", regs->GR(r2));
   WRGMSG(HHC90103, "D", regs->GR(r2 + 1));
+  WRGMSG(HHC90101, "D", 3, r3);
   WRGMSG(HHC90104, "D", 0, regs->GR(0));
   WRGMSG(HHC90106, "D", GR0_fc(regs));
   WRGMSG(HHC90104, "D", 1, regs->GR(1));
@@ -3397,25 +3382,19 @@ DEF_INST(cipher_message_with_counter_d)
     case 1: /* dea */
     case 2: /* tdea-128 */
     case 3: /* tdea-192 */
-      ARCH_DEP(kmctr_dea)(r1, r2, regs);
-      break;
-
     case 9: /* encrypted dea */
     case 10: /* encrypted tdea-128 */
     case 11: /* encrypted tdea-192 */
-      ARCH_DEP(kmctr_encrypted_dea)(r1, r2, regs);
+      ARCH_DEP(kmctr_dea)(r1, r2, r3, regs);
       break;
     
     case 18: /* aes-128 */
     case 19: /* aes-192 */
     case 20: /* aes-256 */
-      ARCH_DEP(kmctr_aes)(r1, r2, regs);
-      break;
-
     case 26: /* encrypted aes-128 */
     case 27: /* encrypted aes-192 */
     case 28: /* encrypted aes-256 */
-      ARCH_DEP(kmctr_encrypted_aes)(r1, r2, regs);
+      ARCH_DEP(kmctr_aes)(r1, r2, r3, regs);
       break;
 
     default:
@@ -3679,15 +3658,10 @@ DEF_INST(perform_cryptographic_key_management_operations_d)
   int r2;
 
   RRE(inst, regs, r1, r2);
-  
+
 #ifdef OPTION_PCKMO_DEBUG
   WRGMSG_ON;
   WRGMSG(HHC90100, "D", "PCKMO: perform cryptographic key management operations");
-  WRGMSG(HHC90101, "D", 1, r1);
-  WRGMSG(HHC90102, "D", regs->GR(r1));
-  WRGMSG(HHC90101, "D", 2, r2);
-  WRGMSG(HHC90102, "D", regs->GR(r2));
-  WRGMSG(HHC90103, "D", regs->GR(r2 + 1));
   WRGMSG(HHC90104, "D", 0, regs->GR(0));
   WRGMSG(HHC90106, "D", GR0_fc(regs));
   WRGMSG(HHC90104, "D", 1, regs->GR(1));
@@ -3698,7 +3672,7 @@ DEF_INST(perform_cryptographic_key_management_operations_d)
   PRIV_CHECK(regs);
 
   /* Check special conditions */
-  if(unlikely(!r1 || r1 & 0x01 || !r2 || r2 & 0x01))
+  if(GR0_bit56(regs))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Initialize values */
