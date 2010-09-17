@@ -4940,6 +4940,211 @@ int     fc, rc = 0;                     /* Function / Reason Code    */
 #endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
 
 
+#if defined(FEATURE_RESET_REFERENCE_BITS_MULTIPLE_FACILITY)
+/*-------------------------------------------------------------------*/
+/* B9AE RRBM  - Reset Reference Bits Multiple                  [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(reset_reference_bits_multiple)
+{
+int     r1, r2;                         /* Register values           */
+RADR    a;                              /* Abs frame addr stor key   */
+BYTE    storkey;                        /* Storage key               */
+int     i;
+U64     bitmap;                         /* Bitmap to be ret in r1    */
+
+    RRE(inst, regs, r1, r2);
+
+    FACILITY_CHECK(RES_REF_BITS_MUL,regs);
+
+    PRIV_CHECK(regs);
+
+    /* Load 4K block address from R2 register */
+    a = regs->GR(r2) & ADDRESS_MAXWRAP_E(regs);
+
+    /* Addressing exception if block is outside main storage */
+    if ( a > regs->mainlim )
+        ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+
+    /* Ignore bits 46-63 of the 2nd operand */
+    a &= ~0x3fULL;
+
+#if defined(_FEATURE_SIE)
+    if(SIE_MODE(regs) && (SIE_STATB(regs, IC2, RRBE)))
+        longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+
+
+    for(i =0 , bitmap = 0; i < 64; i++, a+= PAGEFRAME_PAGESIZE, bitmap <<= 1)
+    {
+    RADR n = a;
+
+        if(SIE_MODE(regs))
+        {
+            SIE_TRANSLATE(&n, ACCTYPE_SIE, regs);
+ 
+            if(regs->sie_pref)
+            {
+#if defined(_FEATURE_STORAGE_KEY_ASSIST)
+                if((SIE_STATB(regs, RCPO0, SKA)
+#if defined(_FEATURE_ZSIE)
+                  || (regs->hostregs->arch_mode == ARCH_900)
+#endif /*defined(_FEATURE_ZSIE)*/
+                  ) && SIE_STATB(regs, RCPO2, RCPBY))
+                {
+#if !defined(_FEATURE_2K_STORAGE_KEYS)
+                    storkey = STORAGE_KEY(n, regs);
+#else
+                    storkey = STORAGE_KEY1(n, regs)
+                            | (STORAGE_KEY2(n, regs) & (STORKEY_REF))
+#endif
+                                                                    ;
+                        /* Reset the reference bit in the storage key */
+#if !defined(_FEATURE_2K_STORAGE_KEYS)
+                    STORAGE_KEY(n, regs) &= ~(STORKEY_REF);
+#else
+                    STORAGE_KEY1(n, regs) &= ~(STORKEY_REF);
+                    STORAGE_KEY2(n, regs) &= ~(STORKEY_REF);
+#endif
+                }
+                else
+#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
+                {
+                BYTE rcpkey, realkey;
+                RADR ra;
+                RADR rcpa;
+
+#if defined(_FEATURE_STORAGE_KEY_ASSIST)
+                    if(SIE_STATB(regs, RCPO0, SKA)
+#if defined(_FEATURE_ZSIE)
+                      || (regs->hostregs->arch_mode == ARCH_900)
+#endif /*defined(_FEATURE_ZSIE)*/
+                                                                 )
+                    {
+                        /* guest absolute to host PTE addr */
+                        if (SIE_TRANSLATE_ADDR (regs->sie_mso + n, USE_PRIMARY_SPACE,
+                                                regs->hostregs, ACCTYPE_PTE))
+                            longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+    
+                        /* Convert real address to absolute address */
+                        rcpa = APPLY_PREFIXING (regs->hostregs->dat.raddr, regs->hostregs->PX);
+    
+                        /* For ESA/390 the RCP byte entry is at offset 1 in a
+                           four byte entry directly beyond the page table,
+                           for ESAME mode, this entry is eight bytes long */
+                        rcpa += regs->hostregs->arch_mode == ARCH_900 ? 2049 : 1025;
+                    }
+                    else
+#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
+                    {
+#if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+                        if(SIE_STATB(regs, MX, XC))
+                            longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+#endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
+
+                        /* Obtain address of the RCP area from the state desc */
+                        rcpa = regs->sie_rcpo &= 0x7FFFF000;
+
+                        /* frame index as byte offset to 4K keys in RCP area */
+                        rcpa += n >> 12;
+
+                        /* host primary to host absolute */
+                        rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
+                                                   regs->hostregs, ACCTYPE_SIE, 0);
+                    }
+
+                    /* fetch the RCP key */
+                    rcpkey = regs->mainstor[rcpa];
+                    STORAGE_KEY(rcpa, regs) |= STORKEY_REF;
+
+                    if (!SIE_TRANSLATE_ADDR (regs->sie_mso + n, USE_PRIMARY_SPACE,
+                                             regs->hostregs, ACCTYPE_SIE))
+                    {
+                        ra = APPLY_PREFIXING(regs->hostregs->dat.raddr, regs->hostregs->PX);
+#if !defined(_FEATURE_2K_STORAGE_KEYS)
+                        realkey = STORAGE_KEY(ra, regs) & (STORKEY_REF);
+#else
+                        realkey = (STORAGE_KEY1(ra, regs) | STORAGE_KEY2(ra, regs))
+                                  & (STORKEY_REF);
+#endif
+                        /* Reset the reference and change bits in
+                           the real machine storage key */
+#if !defined(_FEATURE_2K_STORAGE_KEYS)
+                        STORAGE_KEY(ra, regs) &= ~(STORKEY_REF);
+#else
+                        STORAGE_KEY1(ra, regs) &= ~(STORKEY_REF);
+                        STORAGE_KEY2(ra, regs) &= ~(STORKEY_REF);
+#endif
+                    }
+                    else
+                        realkey = 0;
+
+                    /* The storage key is obtained by logical or
+                       or the real and guest RC bits */
+                    storkey = realkey | (rcpkey & (STORKEY_REF));
+                    /* or with host set */
+                    rcpkey |= realkey << 4;
+                    /* Put storage key in guest set */
+                    rcpkey |= storkey;
+                    /* reset the reference bit */
+                    rcpkey &= ~(STORKEY_REF);
+                    regs->mainstor[rcpa] = rcpkey;
+                    STORAGE_KEY(rcpa, regs) |= (STORKEY_REF);
+                }
+            }
+            else
+            {
+#if !defined(_FEATURE_2K_STORAGE_KEYS)
+                storkey = STORAGE_KEY(n, regs);
+#else
+                storkey = STORAGE_KEY1(n, regs)
+                          | (STORAGE_KEY2(n, regs) & (STORKEY_REF))
+#endif
+                                    ;
+                /* Reset the reference bit in the storage key */
+#if !defined(_FEATURE_2K_STORAGE_KEYS)
+                STORAGE_KEY(n, regs) &= ~(STORKEY_REF);
+#else
+                STORAGE_KEY1(n, regs) &= ~(STORKEY_REF);
+                STORAGE_KEY2(n, regs) &= ~(STORKEY_REF);
+#endif
+            }
+        }
+        else
+#endif /*defined(_FEATURE_SIE)*/
+        {
+#if !defined(_FEATURE_2K_STORAGE_KEYS)
+            storkey = STORAGE_KEY(n, regs);
+#else
+            storkey = STORAGE_KEY1(n, regs)
+                    | (STORAGE_KEY2(n, regs) & (STORKEY_REF))
+#endif
+                                                             ;
+            /* Reset the reference bit in the storage key */
+#if !defined(_FEATURE_2K_STORAGE_KEYS)
+        STORAGE_KEY(n, regs) &= ~(STORKEY_REF);
+#else
+        STORAGE_KEY1(n, regs) &= ~(STORKEY_REF);
+        STORAGE_KEY2(n, regs) &= ~(STORKEY_REF);
+#endif
+        }
+
+        /* Insert the original state of the reference bit
+           in the bitmap */
+        bitmap |= (storkey & STORKEY_REF) ? 0x01ULL : 0;
+
+        /* If the storage key had the REF bit on then perform
+         * accelerated lookup invalidations on all CPUs
+         * so that the REF bit will be set when referenced next.
+         */
+        if (storkey & STORKEY_REF)
+            STORKEY_INVALIDATE(regs, n);
+    }
+
+    regs->GR_G(r1) = bitmap;
+
+} /* end DEF_INST(reset_reference_bits_multiple) */
+#endif /*defined(FEATURE_RESET_REFERENCE_BITS_MULTIPLE_FACILITY)*/
+
+
 #if defined(FEATURE_STORE_FACILITY_LIST)
 /*-------------------------------------------------------------------*/
 /* B2B1 STFL  - Store Facility List                              [S] */

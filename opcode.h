@@ -2987,6 +2987,7 @@ DEF_INST(purge_accesslist_lookaside_buffer);
 DEF_INST(purge_translation_lookaside_buffer);
 DEF_INST(reset_reference_bit);
 DEF_INST(reset_reference_bit_extended);
+DEF_INST(reset_reference_bits_multiple);
 DEF_INST(set_address_space_control);
 DEF_INST(set_address_space_control_fast);
 DEF_INST(set_clock);
