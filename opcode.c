@@ -4129,7 +4129,7 @@ DLL_EXPORT zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B9DF*/ GENx___x___x900 (compare_logical_high_low_register,RRE,"CLHLR"),         /*810*/
  /*B9E0*/ GENx___x___x___ ,
  /*B9E1*/ GENx___x___x900 (population_count,RRE,"POPCNT"),                         /*810*/
- /*B9E2*/ GENx___x___x900 (load_on_condition_long_register,RRF_M3,"LGROC"),        /*810*/
+ /*B9E2*/ GENx___x___x900 (load_on_condition_long_register,RRF_M3,"LOCGR"),        /*810*/
  /*B9E3*/ GENx___x___x___ ,
  /*B9E4*/ GENx___x___x900 (and_distinct_long_register,RRR,"NGRK"),                 /*810*/
  /*B9E5*/ GENx___x___x___ ,
@@ -4145,7 +4145,7 @@ DLL_EXPORT zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B9EF*/ GENx___x___x___ ,
  /*B9F0*/ GENx___x___x___ ,
  /*B9F1*/ GENx___x___x___ ,
- /*B9F2*/ GENx37Xx390x900 (load_on_condition_register,RRF_M3,"LROC"),              /*810*/
+ /*B9F2*/ GENx37Xx390x900 (load_on_condition_register,RRF_M3,"LOCR"),              /*810*/
  /*B9F3*/ GENx___x___x___ ,
  /*B9F4*/ GENx37Xx390x900 (and_distinct_register,RRR,"NRK"),                       /*810*/
  /*B9F5*/ GENx___x___x___ ,
@@ -5284,8 +5284,8 @@ DLL_EXPORT zz_func opcode_ebxx[256][GEN_MAXARCH] = {
  /*EBDF*/ GENx37Xx390x900 (shift_left_single_logical_distinct,RSY,"SLLK"),         /*810*/
  /*EBE0*/ GENx___x___x___ ,
  /*EBE1*/ GENx___x___x___ ,
- /*EBE2*/ GENx___x___x900 (load_on_condition_long,RSY_M3,"LGOC"),                  /*810*/
- /*EBE3*/ GENx___x___x900 (store_on_condition_long,RSY_M3,"STGOC"),                /*810*/
+ /*EBE2*/ GENx___x___x900 (load_on_condition_long,RSY_M3,"LOCG"),                  /*810*/
+ /*EBE3*/ GENx___x___x900 (store_on_condition_long,RSY_M3,"STOCG"),                /*810*/
  /*EBE4*/ GENx___x___x900 (load_and_and_long,RSY,"LANG"),                          /*810*/
  /*EBE5*/ GENx___x___x___ ,
  /*EBE6*/ GENx___x___x900 (load_and_or_long,RSY,"LAOG"),                           /*810*/
