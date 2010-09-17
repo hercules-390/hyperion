@@ -9257,7 +9257,7 @@ char    pathname[MAX_PATH];             /* (work)                    */
         if ((p = strchr(scrbuf,'#')) && p > scrbuf)
             do *p = 0; while (isspace(*--p) && p >= scrbuf);
 
-        if ( CMD(scrbuf,pause,5) )
+        if ( !strncasecmp(scrbuf,"pause",5) )
         {
             sscanf(scrbuf+5, "%d", &scr_pause_amt);
 
