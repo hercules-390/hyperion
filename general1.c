@@ -3841,7 +3841,7 @@ CREG    n;                              /* Work                      */
                     /* Update counter */
                     FETCH_HW(hwc, ceh + regs->mainstor);
                     STORAGE_KEY(ceh, regs) |= STORKEY_REF;
-                    if(hwc++)
+                    if(++hwc)
                     {
                          STORE_HW(ceh + regs->mainstor, hwc);
                          STORAGE_KEY(ceh, regs) |= (STORKEY_REF | STORKEY_CHANGE);
