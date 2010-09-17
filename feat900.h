@@ -48,7 +48,7 @@
 #define FEATURE_DUAL_ADDRESS_SPACE
 #define FEATURE_EMULATE_VM
 //#define FEATURE_ENHANCED_DAT_FACILITY                           /*208*/
-//#define FEATURE_ENHANCED_MONITOR_FACILITY                       /*810*/
+#define FEATURE_ENHANCED_MONITOR_FACILITY                       /*810*/
 #define FEATURE_ENHANCED_SUPPRESSION_ON_PROTECTION              /*208*/
 #define FEATURE_ESAME
 #define FEATURE_ETF2_ENHANCEMENT                                /*@Z9*/

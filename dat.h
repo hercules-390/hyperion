@@ -763,6 +763,8 @@ U16     eax;                            /* Authorization index       */
 /*          ASCE-type or region-translation error: real address      */
 /*          is not set; exception code is X'0038' through X'003B'.   */
 /*          The LRA instruction converts this to condition code 3.   */
+/*      5 = For ACCTYPE_EMC (Enhanced MC access only):               */
+/*          A translation specification exception occured            */
 /*                                                                   */
 /*      For ACCTYPE_LPTEA, the return value is set to facilitate     */
 /*      setting the condition code by the LPTEA instruction:         */
@@ -1478,6 +1480,14 @@ spec_oper_excp:
 #endif /*defined(FEATURE_ESAME)*/
 
 tran_prog_check:
+#if defined(FEATURE_ENHANCED_MONITOR_FACILITY)
+    /* No program interrupt for enhanced MC */
+    if(acctype & ACC_ENH_MC)
+    {
+        cc = 5;
+        return cc;
+    }
+#endif /*defined(FEATURE_ENHANCED_MONITOR_FACILITY)*/
     regs->program_interrupt (regs, regs->dat.xcode);
 
 /* Conditions which the caller may or may not program check */

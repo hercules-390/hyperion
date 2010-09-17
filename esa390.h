@@ -279,6 +279,7 @@ typedef struct _DAT {
 /* CR7 is the secondary segment table descriptor or secondary ASCE */
 
 /* Bit definitions for control register 8 */
+#define CR8_ENHMCMASK   0x0000FFFF00000000ULL /* Enh Monitor masks   */
 #define CR8_EAX         0xFFFF0000      /* Extended auth index       */
 #define CR8_MCMASK      0x0000FFFF      /* Monitor masks             */
 

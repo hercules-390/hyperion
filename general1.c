@@ -3792,6 +3792,105 @@ CREG    n;                              /* Work                      */
     if ((n & 0x00008000) == 0)
         return;
 
+#if defined(FEATURE_ENHANCED_MONITOR_FACILITY)
+    /* Perform Monitor Event Counting Operation if enabled */
+    if(FACILITY_ENABLED(ENH_MONITOR,regs)
+      && (( (regs->CR_H(8) & CR8_MCMASK) << i2) & 0x00008000))
+    {
+        PSA *psa;                       /* -> Prefixed storage area  */
+        RADR cao;           /* Enhanced Monitor Counter Array Origin */
+        U32  cal;           /* Enhanced Monitor Counter Array Length */
+        U32  ec;         /* Enhanced Montior Counter Exception Count */
+        RADR ceh;                        /* HW Counter Entry address */
+        RADR cew;                        /* FW Counter Entry address */
+        RADR px;
+        int  unavailable;
+        U16  hwc;
+        U32  fwc;
+
+        px = regs->PX;
+        SIE_TRANSLATE(&px, ACCTYPE_WRITE, regs);
+        
+        /* Point to PSA in main storage */
+        psa = (void*)(regs->mainstor + px);
+ 
+        /* Set the main storage reference bit */
+        STORAGE_KEY(px, regs) |= STORKEY_REF;
+
+        /* Fetch Counter Array Origin and Size from PSA */
+        FETCH_DW(cao, psa->cao);
+        FETCH_W(cal, psa->cal);
+
+        /* DW boundary, ignore last 3 bits */
+        cao &= ~7ULL;
+
+        if(!(unavailable = (effective_addr1 >= cal)))
+        {
+            /* Point to the virtual address of the HW entry */
+            ceh = cao + (effective_addr1 << 1);
+            if(!(unavailable = ARCH_DEP(translate_addr) (ceh, USE_HOME_SPACE, regs, ACCTYPE_EMC)))
+            {
+                /* Convert real address to absolute address */
+                ceh = APPLY_PREFIXING (regs->dat.raddr, regs->PX);
+
+                SIE_TRANSLATE(&ceh, ACCTYPE_WRITE, regs);
+
+                /* Ensure absolute address is available */
+                if (!(unavailable = (ceh >= regs->mainlim )))
+                {
+                    /* Update counter */
+                    FETCH_HW(hwc, ceh + regs->mainstor);
+                    STORAGE_KEY(ceh, regs) |= STORKEY_REF;
+                    if(hwc++)
+                    {
+                         STORE_HW(ceh + regs->mainstor, hwc);
+                         STORAGE_KEY(ceh, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+                    }
+                    else
+                    {
+                        /* Point to the virtual address of the FW entry */
+                        cew = cao + (cal << 1) + (effective_addr1 << 2);
+                        if(!(unavailable = ARCH_DEP(translate_addr) (cew, USE_HOME_SPACE, regs, ACCTYPE_EMC)))
+                        {
+                            /* Convert real address to absolute address */
+                            cew = APPLY_PREFIXING (regs->dat.raddr, regs->PX);
+    
+                            SIE_TRANSLATE(&cew, ACCTYPE_WRITE, regs);
+    
+                            /* Ensure absolute address is available */
+                            if (!(unavailable = (cew >= regs->mainlim )))
+                            {
+                                /* Update both counters */
+                                FETCH_W(fwc, cew + regs->mainstor);
+                                fwc++;
+
+                                STORE_W(cew + regs->mainstor, fwc);
+                                STORAGE_KEY(cew, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+
+                                STORE_HW(ceh + regs->mainstor, hwc);
+                                STORAGE_KEY(ceh, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    
+        /* Update the Enhance Monitor Exception Counter if the array could not be updated */
+        if(unavailable)
+        {
+            FETCH_W(ec,psa->ec);
+            ec++;
+            /* Set the main storage reference and change bits */
+            STORAGE_KEY(px, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+            STORE_W(psa->ec,ec);
+        }
+              
+        return;
+
+    }
+#endif /*defined(FEATURE_ENHANCED_MONITOR_FACILITY)*/
+
     regs->monclass = i2;
     regs->MONCODE = effective_addr1;
 
