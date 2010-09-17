@@ -69,11 +69,9 @@
 /*----------------------------------------------------------------------------*/
 /* General Purpose Register 0 macro's (GR0)                                   */
 /*----------------------------------------------------------------------------*/
-/* bit56 : Indication of but 56                                               */
-/* fc    : Function code                                                      */
-/* m     : Modifier bit                                                       */
+/* fc   : Function code                                                       */
+/* m    : Modifier bit                                                        */
 /*----------------------------------------------------------------------------*/
-#define GR0_bit56(regs) ((regs)->GR_L(0) & 0x00000080)
 #define GR0_fc(regs)    ((regs)->GR_L(0) & 0x0000007F)
 #define GR0_m(regs)     (((regs)->GR_L(0) & 0x00000080) ? TRUE : FALSE)
 
@@ -3652,17 +3650,16 @@ DEF_INST(perform_cryptographic_key_management_operations_d)
 {
   int fc;
   int keylen;
-  BYTE parameter_block[48];
+  BYTE parameter_block[64];
   int parameter_blocklen;
-  int r1;
-  int r2;
 
-  RRE(inst, regs, r1, r2);
+  UNREFERENCED(inst);
 
 #ifdef OPTION_PCKMO_DEBUG
   WRGMSG_ON;
   WRGMSG(HHC90100, "D", "PCKMO: perform cryptographic key management operations");
   WRGMSG(HHC90104, "D", 0, regs->GR(0));
+  WRGMSG(HHC90105, "D", TRUEFALSE(GR0_m(regs)));
   WRGMSG(HHC90106, "D", GR0_fc(regs));
   WRGMSG(HHC90104, "D", 1, regs->GR(1));
   WRGMSG_OFF;
@@ -3672,7 +3669,7 @@ DEF_INST(perform_cryptographic_key_management_operations_d)
   PRIV_CHECK(regs);
 
   /* Check special conditions */
-  if(GR0_bit56(regs))
+  if(GR0_m(regs))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Initialize values */
@@ -3686,7 +3683,7 @@ DEF_INST(perform_cryptographic_key_management_operations_d)
       /* Store the parameter block */
       ARCH_DEP(vstorec)(parameter_block, 15, GR_A(1, regs), 1, regs);
 
-#ifdef OPTION_KMO_DEBUG
+#ifdef OPTION_PCKMO_DEBUG
       LOGBYTE("output:", parameter_block, 16);
 #endif
 
@@ -3717,6 +3714,10 @@ DEF_INST(perform_cryptographic_key_management_operations_d)
 
       /* Fetch the parameter block */
       ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+
+#ifdef OPTION_PCKMO_DEBUG
+      LOGBYTE("input :", parameter_block, parameter_blocklen);
+#endif
       
       /* Encrypt the key and fill the wrapping key verification pattern */
       if(fc <= 3)
@@ -3732,6 +3733,11 @@ DEF_INST(perform_cryptographic_key_management_operations_d)
         
       /* Store the parameterblock */
       ARCH_DEP(vstorec)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+
+#ifdef OPTION_PCKMO_DEBUG
+      LOGBYTE("output:", parameter_block, parameter_blocklen);
+#endif
+
       break;
 
     default:
