@@ -687,11 +687,11 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01015 "%1d:%04X CA: BSC communication thread did not initialize"
 #define HHC01016 "CA: unable to determine '%s' from '%s'"
 #define HHC01017 "CA: invalid parameter '%s'"
-#define HHC01018 "%1d:%04X CA: client '%s' connected to %4.4X device"
+#define HHC01018 "%1d:%04X CA: client %s devtype %4.4X: connected"
 #define HHC01019 "%1d:%04X CA: unrecognized parameter '%s'"
 #define HHC01020 "%1d:%04X CA: no buffers trying to send '%s'"
-#define HHC01021 "%1d:%04X CA: client '%s' devtype %4.4X: '%s'"
-#define HHC01022 "%1d:%04X CA: connection closed by client '%s'"
+#define HHC01021 "%1d:%04X CA: client %s devtype %4.4X: connection closed"
+#define HHC01022 "%1d:%04X CA: client %s devtype %4.4X: connection closed by client"
 #define HHC01023 "Waiting for port %u to become free for console connections"
 #define HHC01024 "Waiting for console connections on port %u"
 #define HHC01025 "%1d:%04X CA: duplicate SYSG console definition"
@@ -754,6 +754,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01082 "%1d:%04X CA: cthread - inbound socket data"
 #define HHC01083 "%1d:%04X CA: cthread - socket write available"
 #define HHC01084 "%1d:%04X CA: set mode '%s'" 
+#define HHC01090 "%1d:%04X CA: client %s devtype %4.4X: connection reset"
 
 // reserve 011xx for printer specific component messages
 #define HHC01100 "%1d:%04X Printer: client '%s', ip '%s' disconnected from device '%s'"

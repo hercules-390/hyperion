@@ -896,8 +896,8 @@ int     eor = 0;                        /* 1=End of record received  */
 
     if (rc < 0) {
         if ( HSO_ECONNRESET == HSO_errno )
-            WRMSG(HHC01021, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, inet_ntoa(dev->ipaddr), dev->devtype,
-                  "connection reset");
+            WRMSG(HHC01090, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, 
+                  inet_ntoa(dev->ipaddr), dev->devtype);
         else
             TNSERROR("console: DBG023: recv: %s\n", strerror(HSO_errno));
         dev->sense[0] = SENSE_EC;
@@ -906,8 +906,8 @@ int     eor = 0;                        /* 1=End of record received  */
 
     /* If zero bytes were received then client has closed connection */
     if (rc == 0) {
-        WRMSG(HHC01021, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, inet_ntoa(dev->ipaddr), dev->devtype,
-              "connection closed");
+        WRMSG(HHC01022, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, 
+              inet_ntoa(dev->ipaddr), dev->devtype);
         dev->sense[0] = SENSE_IR;
         return (CSW_ATTN | CSW_UC | CSW_DE);
     }
@@ -1071,7 +1071,8 @@ BYTE    c;                              /* Character work area       */
 
     /* If zero bytes were received then client has closed connection */
     if (num == 0) {
-        WRMSG(HHC01022, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, inet_ntoa(dev->ipaddr));
+        WRMSG(HHC01022, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, 
+              inet_ntoa(dev->ipaddr), dev->devtype);
         dev->sense[0] = SENSE_IR;
         return (CSW_ATTN | CSW_UC);
     }
@@ -1693,24 +1694,20 @@ char                    *logoout;
     /* Build connection message for client */
 
     if ( cons_hostinfo.num_procs > 1 )
-        snprintf( num_procs, sizeof(num_procs), "MP=%d", cons_hostinfo.num_procs );
+        MSGBUF( num_procs, "MP=%d", cons_hostinfo.num_procs );
     else
-        strlcpy( num_procs, "UP", sizeof(num_procs) );
+        MSGBUF( num_procs, "UP" );
 
-    snprintf
-    (
-        hostmsg, sizeof(hostmsg),
-
-        MSG(HHC01031, "I"
-
-        ,cons_hostinfo.nodename
-        ,cons_hostinfo.sysname
-        ,cons_hostinfo.release
-        ,cons_hostinfo.version
-        ,cons_hostinfo.machine
-        ,num_procs)
-    );
-    snprintf (conmsg, sizeof(conmsg), MSG(HHC01027, "I", VERSION, __DATE__, __TIME__));
+    MSGBUF( hostmsg, 
+            MSG(HHC01031, "I"
+                ,cons_hostinfo.nodename
+                ,cons_hostinfo.sysname
+                ,cons_hostinfo.release
+                ,cons_hostinfo.version
+                ,cons_hostinfo.machine
+                ,num_procs)
+          );
+    MSGBUF( conmsg, MSG(HHC01027, "I", VERSION, __DATE__, __TIME__) );
 
     /* Reject the connection if no available console device */
     if (dev == NULL)
@@ -1720,14 +1717,14 @@ char                    *logoout;
         {
             if(!group[0])
             {
-                snprintf (rejmsg, sizeof(rejmsg), MSG(HHC01028, "E", 
+                MSGBUF( rejmsg, MSG(HHC01028, "E", 
                         (class=='D' ? "3270" : (class=='P' ? "3287" : "1052 or 3215"))));
-                WRMSG(HHC01028, "E", 
+                WRMSG( HHC01028, "E", 
                         (class=='D' ? "3270" : (class=='P' ? "3287" : "1052 or 3215")));
             }
             else
             {
-                snprintf (rejmsg, sizeof(rejmsg), MSG(HHC01029, "E",
+                MSGBUF( rejmsg, MSG(HHC01029, "E",
                         (class=='D' ? "3270" : (class=='P' ? "3287" : "1052 or 3215")),group));
                 WRMSG(HHC01029, "E",
                         (class=='D' ? "3270" : (class=='P' ? "3287" : "1052 or 3215")),group);
@@ -1735,7 +1732,7 @@ char                    *logoout;
         }
         else
         {
-            snprintf (rejmsg, sizeof(rejmsg), MSG(HHC01030, "I", devnum));
+            MSGBUF( rejmsg, MSG(HHC01030, "I", devnum));
             WRMSG(HHC01030, "I", devnum);
         }
 
@@ -1744,7 +1741,7 @@ char                    *logoout;
         /* Send connection rejection message to client */
         if (class != 'K')
         {
-            len = snprintf (buf, sizeof(buf),
+            len = MSGBUF( buf,
                         "\xF5\x40\x11\x40\x40\x1D\x60%s"
                         "\x11\xC1\x50\x1D\x60%s"
                         "\x11\xC2\x60\x1D\x60%s",
@@ -1772,7 +1769,7 @@ char                    *logoout;
         }
         else
         {
-            len = snprintf (buf, sizeof(buf), "%s\r\n%s\r\n%s\r\n", conmsg, hostmsg, rejmsg);
+            len = MSGBUF( buf, "%s\r\n%s\r\n%s\r\n", conmsg, hostmsg, rejmsg);
         }
 
         if (class != 'P')  /* do not write connection resp on 3287 */
@@ -1788,28 +1785,28 @@ char                    *logoout;
     }
     else
     {
-        snprintf (devmsg, sizeof(devmsg), MSG(HHC01021, "I",
-                  SSID_TO_LCSS(dev->ssid), dev->devnum, clientip, dev->devtype, "connected"));
+        MSGBUF( devmsg, MSG(HHC01018, "I",
+                  SSID_TO_LCSS(dev->ssid), dev->devnum, clientip, dev->devtype));
     }
 
-    WRMSG(HHC01021, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, clientip, dev->devtype, "connected");
+    WRMSG(HHC01018, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, clientip, dev->devtype);
 
     /* Send connection message to client */
     if (class != 'K')
     {
 #if defined(OPTION_CONFIG_SYMBOLS)
 
-        snprintf(conmsg,sizeof(conmsg),"%3.3X",dev->devnum);
+        MSGBUF(conmsg,"%3.3X",dev->devnum);
         set_symbol("CUU",conmsg);
-        snprintf(conmsg,sizeof(conmsg),"%4.4X",dev->devnum);
+        MSGBUF(conmsg,"%4.4X",dev->devnum);
   #if defined(_FEATURE_INTEGRATED_3270_CONSOLE)
         if (dev == sysblk.sysgdev)
            strncpy(conmsg,"SYSG",sizeof(conmsg));
   #endif /*defined(_FEATURE_INTEGRATED_3270_CONSOLE)*/
         set_symbol("CCUU",conmsg);
-        snprintf(conmsg,sizeof(conmsg),"%d",SSID_TO_LCSS(dev->ssid));
+        MSGBUF(conmsg,"%d",SSID_TO_LCSS(dev->ssid));
         set_symbol("CSS",conmsg);
-        snprintf(conmsg,sizeof(conmsg),"%4.4X",dev->subchan);
+        MSGBUF(conmsg,"%4.4X",dev->subchan);
         set_symbol("SUBCHAN",conmsg);
 #endif // defined(OPTION_CONFIG_SYMBOLS)
         if(sysblk.herclogo!=NULL)
@@ -1825,7 +1822,7 @@ char                    *logoout;
     }
     else
     {
-        len = snprintf (buf, sizeof(buf), "%s\r\n%s\r\n%s\r\n",
+        len = MSGBUF( buf, "%s\r\n%s\r\n%s\r\n",
                         conmsg, hostmsg, devmsg);
         logoout=buf;
     }
@@ -1991,19 +1988,15 @@ BYTE                   unitstat;        /* Status after receive data */
                         */
                         if (dev->fd < 0)
                         {
+                            char msgbuf[256];
                             // Ah-HA! We may have FINALLY found (or at
                             // least have gotten a little bit closer to
                             // finding) the ROOT CAUSE of our problematic
                             // "DBG028 select: Bad FIle Number" problem!
-                            logmsg
-                            (
-                                "\n"
-                                "*********** DBG028 CONSOLE BUG ***********\n"
-                                "device %4.4X: 'connected', but dev->fd = -1\n"
-                                "\n"
-
-                                ,dev->devnum
-                            );
+                            MSGBUF( msgbuf, "028 CONSOLE BUG device %4.4X "
+                                "'connected', but dev->fd = %d", dev->devnum,
+                                dev->fd );
+                            WRMSG( HHC90000, "D",msgbuf);
                             dev->connected = 0;  // (since it's not connected!)
                         }
                         else
@@ -2365,7 +2358,8 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
         {
             if ((dev->acc_ipaddr = inet_addr(argv[ac])) == (in_addr_t)(-1))
             {
-                WRMSG(HHC01007, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "IP address", argv[ac]);
+                WRMSG(HHC01007, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, 
+                      "IP address", argv[ac]);
                 return -1;
             }
             else
@@ -2375,7 +2369,8 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
                 {
                     if ((dev->acc_ipmask = inet_addr(argv[ac])) == (in_addr_t)(-1))
                     {
-                        WRMSG(HHC01007, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "mask value", argv[ac]);
+                        WRMSG(HHC01007, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, 
+                              "mask value", argv[ac]);
                         return -1;
                     }
                     else
@@ -2383,7 +2378,8 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
                         argc--; ac++;
                         if (argc > 0)   // too many args?
                         {
-                            WRMSG(HHC01019, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[ac] );
+                            WRMSG(HHC01019, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, 
+                                  argv[ac] );
                             return -1;
                         }
                     }
@@ -2549,8 +2545,9 @@ loc3270_hresume(DEVBLK *dev, void *file)
             if (rbuf == NULL)
             {
                 char buf[40];
-                snprintf(buf, 40, "malloc(%lu)", len);
-                WRMSG(HHC01000, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, buf, strerror(errno));
+                MSGBUF( buf, "malloc(%lu)", len);
+                WRMSG(HHC01000, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, buf, 
+                      strerror(errno));
                 return 0;
             }
             SR_READ_BUF(file, rbuf, rbuflen);
@@ -2722,26 +2719,23 @@ constty_query_device (DEVBLK *dev, char **class,
     }
     else
     {
-        char  acc[48];
+        char  acc[64];
 
         if (dev->acc_ipaddr || dev->acc_ipmask)
         {
-            char  ip   [16];
-            char  mask [16];
+            char  ip   [32];
+            char  mask [32];
             struct in_addr  xxxx;
 
             xxxx.s_addr = dev->acc_ipaddr;
 
-            snprintf( ip, sizeof( ip ),
-                "%s", inet_ntoa( xxxx ));
+            MSGBUF( ip, "%s", inet_ntoa( xxxx ));
 
             xxxx.s_addr = dev->acc_ipmask;
 
-            snprintf( mask, sizeof( mask ),
-                "%s", inet_ntoa( xxxx ));
+            MSGBUF( mask, "%s", inet_ntoa( xxxx ));
 
-            snprintf( acc, sizeof( acc ),
-                "%s mask %s", ip, mask );
+            MSGBUF( acc, "%s mask %s", ip, mask );
         }
         else
             acc[0] = 0;
