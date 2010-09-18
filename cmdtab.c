@@ -44,8 +44,6 @@ CALL_EXT_CMD ( shared_cmd )
 #define _FW_REF
 #define COMMAND(_stmt, _type, _group, _func, _sdesc, _ldesc)        \
 int (_func)(int argc, char *argv[], char *cmdline);
-#define CMDABBR(_stmt, _abbr, _type, _group, _func, _sdesc, _ldesc) \
-int (_func)(int argc, char *argv[], char *cmdline);
 #include "cmdtab.h"
 #undef COMMAND
 #undef CMDABBR
@@ -58,7 +56,6 @@ typedef int CMDFUNC(int argc, char *argv[], char *cmdline);
 typedef struct _CMDTAB
 {
     const char  *statement;        /* statement           */
-    const size_t statminlen;       /* min abbreviation    */
           BYTE    type;            /* statement type      */
 #define DISABLED   0x00            /* disabled statement  */
 #define CONFIG     0x01            /* config statement    */
@@ -77,9 +74,7 @@ typedef struct _CMDTAB
 } CMDTAB;
 
 #define COMMAND(_stmt, _type, _group, _func, _sdesc, _ldesc) \
-{ (_stmt),     (0), (_type), (_group), (_func), (_sdesc), (_ldesc) },
-#define CMDABBR(_stmt, _abbr, _type, _group, _func, _sdesc, _ldesc) \
-{ (_stmt), (_abbr), (_type), (_group), (_func), (_sdesc), (_ldesc) },
+{ (_stmt), (_type), (_group), (_func), (_sdesc), (_ldesc) },
 
 static CMDTAB cmdtab[] =
 {
@@ -196,7 +191,6 @@ int ProcessPanelCommand (char* pszCmdLine)
     CMDTAB*  pCmdTab         = NULL;
     char*    pszSaveCmdLine  = NULL;
     int      rc              = -1;
-    int      cmdl;
 
     if (!pszCmdLine || !*pszCmdLine)
     {
@@ -233,22 +227,10 @@ int ProcessPanelCommand (char* pszCmdLine)
             if ( pCmdTab->function && (pCmdTab->type & PANEL) &&
                  ( (sysblk.diag8cmd & DIAG8CMD_RUNNING) || (pCmdTab->group & sysblk.sysgroup) ) )
             {
-                if (!pCmdTab->statminlen)
+                if(!strcasecmp(cmd_argv[0], pCmdTab->statement))
                 {
-                    if(!strcasecmp(cmd_argv[0], pCmdTab->statement))
-                    {
-                        rc = pCmdTab->function(cmd_argc, (char**)cmd_argv, pszSaveCmdLine);
-                        goto ProcessPanelCommandExit;
-                    }
-                }
-                else
-                {
-                    cmdl=(int)MAX(strlen(cmd_argv[0]),pCmdTab->statminlen);
-                    if(!strncasecmp(cmd_argv[0],pCmdTab->statement,cmdl))
-                    {
-                        rc = pCmdTab->function(cmd_argc, (char**)cmd_argv, pszSaveCmdLine);
-                        goto ProcessPanelCommandExit;
-                    }
+                    rc = pCmdTab->function(cmd_argc, (char**)cmd_argv, pszSaveCmdLine);
+                    goto ProcessPanelCommandExit;
                 }
             }
         }
@@ -323,13 +305,9 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
     {
         for (pCmdTab = cmdtab; pCmdTab->statement; pCmdTab++)
         {
-            if ( (pCmdTab->type & PANEL) && 
-                 ( (sysblk.diag8cmd & DIAG8CMD_RUNNING) || 
-                   (pCmdTab->group & sysblk.sysgroup) ) && 
-                 ( !strcasecmp(pCmdTab->statement,argv[1]) ||
-                   ( strlen(argv[1]) >= pCmdTab->statminlen &&
-                     !strncasecmp(pCmdTab->statement, argv[1], strlen(argv[1]) )
-                 ) ) )
+            if ( (pCmdTab->type & PANEL)
+              && ( (sysblk.diag8cmd & DIAG8CMD_RUNNING) || (pCmdTab->group & sysblk.sysgroup) )
+              && ( !strcasecmp(pCmdTab->statement,argv[1]) ) )
             {
                 WRMSG( HHC01602, "I", "Command", "Description" );
                 WRMSG( HHC01602, "I", "-------", "-----------------------------------------------" );

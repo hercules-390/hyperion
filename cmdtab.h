@@ -74,11 +74,11 @@ COMMAND("#",         PANEL+CONFIG,  SYSNONE,            comment_cmd,
   "Comment", 
     NULL)
 
-CMDABBR("message",1, PANEL,         SYSNONE,            msg_cmd,      
+COMMAND("message",   PANEL,         SYSNONE,            msg_cmd,      
   "Display message on console a la VM", 
     NULL)
     
-CMDABBR("msg",1,     PANEL,         SYSNONE,            msg_cmd,      
+COMMAND("msg",       PANEL,         SYSNONE,            msg_cmd,      
   "Alias for message", 
     NULL)
     
@@ -111,7 +111,7 @@ COMMAND("log",       PANEL+CONFIG,  SYSCMDALL,          log_cmd,
     "Format: \"log [ OFF | newfile ]\".   Sets log filename or stops\n"
     "log file output with the \"OFF\" option." )
 
-CMDABBR("logopts",6, PANEL+CONFIG,  SYSCMDALL,          logopt_cmd,   
+COMMAND("logopt",    PANEL+CONFIG,  SYSCMDALL,          logopt_cmd,   
   "Set/Display logging options",
     "Format: \"logopt [timestamp | notimestamp]\".   Sets logging options.\n"
     "\"timestamp\" inserts a time stamp in front of each log message.\n"
@@ -443,7 +443,7 @@ COMMAND("shcmdopt",  CONFIG,        SYSCMDALL,          shcmdopt_cmd,
   "Set diag8 sh option", 
     NULL)
 
-CMDABBR("legacysenseid",9,CONFIG,   SYSCMDALL,          lsid_cmd,    
+COMMAND("legacysenseid",  CONFIG,   SYSCMDALL,          lsid_cmd,    
   "Set legacysenseid setting", 
     NULL)
 
@@ -675,41 +675,41 @@ COMMAND("fcb",       PANEL,         SYSCMDALL,          fcb_cmd,
    "Reset the fcb to the standard one \n" 
    "Load a fcb image \n")
 
-CMDABBR("qcodepages",5,PANEL,       SYSCMDALL,          qcodepage_cmd,
+COMMAND("qcodepages",  PANEL,       SYSCMDALL,          qcodepage_cmd,
   "Display list of valid codepages",
   "Display codepages currently available for selection\n")
 
-CMDABBR("qcpuid",5,  PANEL,         SYSCMDALL,          qcpuid_cmd,
+COMMAND("qcpuid",    PANEL,         SYSCMDALL,          qcpuid_cmd,
   "Display cpuid",
   "Display cpuid and STSI results presented to the SCP\n")
 
-CMDABBR("qlpar",5,   PANEL,         SYSCMDALL,          qlpar_cmd,
+COMMAND("qlpar",     PANEL,         SYSCMDALL,          qlpar_cmd,
   "Display lpar name and number",
   "Display LPAR name and number presented to the SCP\n")
 
 #if        defined( OPTION_CONFIG_SYMBOLS )
-CMDABBR("qpfkeys",3, PANEL,         SYSCMDALL,          qpfkeys_cmd,
+COMMAND("qpfkeys",   PANEL,         SYSCMDALL,          qpfkeys_cmd,
   "Display pf keys",
   "Display the current PF Key settings\n")
 #endif  // defined( OPTION_CONFIG_SYMBOLS )
 
-CMDABBR("qpid",4,    PANEL,         SYSCMDALL,          qpid_cmd,
+COMMAND("qpid",      PANEL,         SYSCMDALL,          qpid_cmd,
   "Display PID",
   "Display Process ID of Hercules\n")
 
-CMDABBR("qports",5,  PANEL,         SYSCMDALL,          qports_cmd,
+COMMAND("qports",    PANEL,         SYSCMDALL,          qports_cmd,
   "Display ports",
   "Display TCP/IP ports in use\n")
 
-CMDABBR("qproc",5,   PANEL,         SYSCMDALL,          qproc_cmd,
+COMMAND("qproc",     PANEL,         SYSCMDALL,          qproc_cmd,
   "Display processors",
   "Display processors type and utilization\n")
 
-CMDABBR("qstor",5,   PANEL,         SYSCMDALL,          qstor_cmd,
+COMMAND("qstor",     PANEL,         SYSCMDALL,          qstor_cmd,
   "Display storage",
   "Display main and expanded storage values\n")
 
-CMDABBR("mounted_tape_reinit",9, PANEL+CONFIG, SYSCMDALL-SYSOPER, mnttapri_cmd,  
+COMMAND("mounted_tape_reinit", PANEL+CONFIG, SYSCMDALL-SYSOPER, mnttapri_cmd,  
   "Control tape initialization", 
   "Format: \"mounted_tape_reinit [disallow|allow]\"\n"
   "Specifies whether reinitialization of tape drive devices\n"
@@ -727,7 +727,7 @@ CMDABBR("mounted_tape_reinit",9, PANEL+CONFIG, SYSCMDALL-SYSOPER, mnttapri_cmd,
   "mounted. Otherwise the devinit attempt to mount the new tape\n"
   "is rejected.\n")
 
-CMDABBR("autoinit",8, PANEL+CONFIG, SYSCMDALL-SYSOPER, autoinit_cmd,  
+COMMAND("autoinit",   PANEL+CONFIG, SYSCMDALL-SYSOPER, autoinit_cmd,  
   "Display/Set automatic create empty tape file switch", 
   "Format: \"autoinit [on|off]\"\n"
   "Default for autoinit is off.\n"
