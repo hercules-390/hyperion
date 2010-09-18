@@ -9729,4 +9729,145 @@ int qstor_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
+/*-------------------------------------------------------------------*/
+/* cmdlevel - display/set the current command level group(s)         */
+/*-------------------------------------------------------------------*/
+int CmdLevel(int argc, char *argv[], char *cmdline)
+{
+    int i;
+
+    UNREFERENCED(cmdline);
+
+ /* Parse CmdLevel operands */
+    if (argc > 1)
+        for(i = 1; i < argc; i++)
+        {
+            if (strcasecmp (argv[i], "all") == 0)
+                sysblk.sysgroup = SYSGROUP_ALL;
+            else
+            if (strcasecmp (argv[i], "+all") == 0)
+                sysblk.sysgroup = SYSGROUP_ALL;
+            else
+            if (strcasecmp (argv[i], "-all") == 0)
+                sysblk.sysgroup = SYSGROUP_SYSNONE;
+            else
+            if  ( strlen( argv[i] ) >= 4 && 
+                  strlen( argv[i] ) <= 8 && 
+                  !strncasecmp( argv[i], "operator", strlen( argv[i] ) )
+                )
+                sysblk.sysgroup |= SYSGROUP_SYSOPER;
+            else
+            if  ( strlen( argv[i] ) >= 5 && 
+                  strlen( argv[i] ) <= 9 && 
+                  !strncasecmp( argv[i], "+operator", strlen( argv[i] ) )
+                )
+                sysblk.sysgroup |= SYSGROUP_SYSOPER;
+            else
+            if  ( strlen( argv[i] ) >= 5 && 
+                  strlen( argv[i] ) <= 9 && 
+                  !strncasecmp( argv[i], "-operator", strlen( argv[i] ) )
+                )
+                sysblk.sysgroup &= ~SYSGROUP_SYSOPER;
+            else
+            if  ( strlen( argv[i] ) >= 5  && 
+                  strlen( argv[i] ) <= 11 && 
+                  !strncasecmp( argv[i], "maintenance", strlen( argv[i] ) )
+                )
+                sysblk.sysgroup |= SYSGROUP_SYSMAINT;
+            else
+            if  ( strlen( argv[i] ) >= 6  && 
+                  strlen( argv[i] ) <= 12 && 
+                  !strncasecmp( argv[i], "+maintenance", strlen( argv[i] ) )
+                )
+                sysblk.sysgroup |= SYSGROUP_SYSMAINT;
+            else
+            if  ( strlen( argv[i] ) >= 6  && 
+                  strlen( argv[i] ) <= 12 && 
+                  !strncasecmp( argv[i], "-maintenance", strlen( argv[i] ) )
+                )
+                sysblk.sysgroup &= ~SYSGROUP_SYSMAINT;
+            else
+            if  ( strlen( argv[i] ) >= 4  && 
+                  strlen( argv[i] ) <= 10 && 
+                  !strncasecmp( argv[i], "programmer", strlen( argv[i] ) )
+                )
+                sysblk.sysgroup |= SYSGROUP_SYSPROG;
+            else
+            if  ( strlen( argv[i] ) >= 5  && 
+                  strlen( argv[i] ) <= 11 && 
+                  !strncasecmp( argv[i], "+programmer", strlen( argv[i] ) )
+                )
+                sysblk.sysgroup |= SYSGROUP_SYSPROG;
+            else
+            if  ( strlen( argv[i] ) >= 5  && 
+                  strlen( argv[i] ) <= 11 && 
+                  !strncasecmp( argv[i], "-programmer", strlen( argv[i] ) )
+                )
+                sysblk.sysgroup &= ~SYSGROUP_SYSPROG;
+            else
+            if  ( strlen( argv[i] ) >= 3  && 
+                  strlen( argv[i] ) <= 9 && 
+                  !strncasecmp( argv[i], "developer", strlen( argv[i] ) )
+                )
+                sysblk.sysgroup |= SYSGROUP_SYSDEVEL;
+            else
+            if  ( strlen( argv[i] ) >= 4  && 
+                  strlen( argv[i] ) <= 10 && 
+                  !strncasecmp( argv[i], "+developer", strlen( argv[i] ) )
+                )
+                sysblk.sysgroup |= SYSGROUP_SYSDEVEL;
+            else
+            if  ( strlen( argv[i] ) >= 4  && 
+                  strlen( argv[i] ) <= 10 && 
+                  !strncasecmp( argv[i], "-developer", strlen( argv[i] ) )
+                )
+                sysblk.sysgroup &= ~SYSGROUP_SYSDEVEL;
+            else
+            if  ( strlen( argv[i] ) >= 3  && 
+                  strlen( argv[i] ) <= 5  && 
+                  !strncasecmp( argv[i], "debug", strlen( argv[i] ) )
+                )
+                sysblk.sysgroup |= SYSGROUP_SYSDEBUG;
+            else
+            if  ( strlen( argv[i] ) >= 4  && 
+                  strlen( argv[i] ) <= 6  && 
+                  !strncasecmp( argv[i], "+debug", strlen( argv[i] ) )
+                )
+                sysblk.sysgroup |= SYSGROUP_SYSDEBUG;
+            else
+            if  ( strlen( argv[i] ) >= 4  && 
+                  strlen( argv[i] ) <= 6  && 
+                  !strncasecmp( argv[i], "-debug", strlen( argv[i] ) )
+                )
+                sysblk.sysgroup &= ~SYSGROUP_SYSDEBUG;
+            else
+            {
+                WRMSG(HHC01605,"E", argv[i]);
+                return -1;
+            }
+        }
+
+    if ( sysblk.sysgroup == SYSGROUP_ALL )
+    {
+        WRMSG(HHC01606, "I", sysblk.sysgroup, "all");
+    }
+    else if ( sysblk.sysgroup == SYSGROUP_SYSNONE )
+    {
+        WRMSG(HHC01606, "I", sysblk.sysgroup, "none");
+    }
+    else
+    {
+        char buf[128];
+        MSGBUF( buf, "%s%s%s%s%s", 
+            (sysblk.sysgroup&SYSGROUP_SYSOPER)?"operator ":"",
+            (sysblk.sysgroup&SYSGROUP_SYSMAINT)?"maintenance ":"",
+            (sysblk.sysgroup&SYSGROUP_SYSPROG)?"programmer ":"",
+            (sysblk.sysgroup&SYSGROUP_SYSDEVEL)?"developer ":"",
+            (sysblk.sysgroup&SYSGROUP_SYSDEBUG)?"debugging ":"");
+        buf[strlen(buf)-1] = 0;
+        WRMSG(HHC01606, "I", sysblk.sysgroup, buf);
+    }
+    
+    return 0;
+}
 /* HSCCMD.C End-of-text */
