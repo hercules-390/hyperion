@@ -300,12 +300,31 @@ ProcessPanelCommandExit:
 int HelpCommand(int argc, char *argv[], char *cmdline)
 {
     CMDTAB* pCmdTab;
-    int rc = 1;
+    int     rc = 1;
+    int     len = -1;
+    char   *p = NULL;
+          
+    if ( argc == 2 ) 
+    {
+        p = strchr(argv[1], '*');
+        if ( p != NULL );
+        {
+            len = (int)(p - argv[1]);
+            if ( strlen( argv[1] ) > ( len + 1) )
+            {
+                WRMSG( HHC02299, "E", argv[0] );
+                return -1;
+            }
+        }
+    }
 
     UNREFERENCED(cmdline);
 
-    if (argc < 2)
+    if (argc < 2 || ( argc == 2 && len >= 0 ) )
     {
+        if ( argc < 2) 
+            len = 0;
+
         WRMSG( HHC01602, "I", "Command", "Description" );
         WRMSG( HHC01602, "I", "-------", "-----------------------------------------------" );
 
@@ -313,9 +332,13 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
 
         for (pCmdTab = cmdtab; pCmdTab->statement; pCmdTab++)
         {
-            if ( (pCmdTab->type & PANEL) && 
-                 ( (sysblk.diag8cmd & DIAG8CMD_RUNNING) || (pCmdTab->group & sysblk.sysgroup) ) && 
-                 (pCmdTab->shortdesc) )
+            if (  (pCmdTab->type & PANEL)
+               && ( (sysblk.diag8cmd & DIAG8CMD_RUNNING) || 
+                    (pCmdTab->group & sysblk.sysgroup) 
+                  )  
+               && (pCmdTab->shortdesc) 
+               && ( len == 0 || ( len > 0 && !strncasecmp(argv[1],pCmdTab->statement,len) ) )
+               )
                 WRMSG( HHC01602, "I", pCmdTab->statement, pCmdTab->shortdesc );
         }
         

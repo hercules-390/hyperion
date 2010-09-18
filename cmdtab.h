@@ -20,11 +20,22 @@
 
 COMMAND("help",      PANEL,         SYSNONE,            HelpCommand, 
   "list all commands / command specific help",
-    "Enter \"help cmd\" where cmd is the command you need help\n"
-    "with. If the command has additional help text defined for it,\n"
-    "it will be displayed. Help text is usually limited to explaining\n"
-    "the format of the command and its various required or optional\n"
-    "parameters and is not meant to replace reading the documentation.\n")
+  "Format: \"help [cmd|c*]\".\n"
+  "\n"
+  "The command without any options will display a short description\n"
+  "of all of the commands available matching the current cmdlevel. You\n"
+  "may specify a partial command name followed by an '*' to get a\n"
+  "list matching the partial command name. For example 'help msg*'\n"
+  "will list all commands beginning with 'msg' and matching the current\n"
+  "cmdlevel.\n"
+  "\n"
+  "This command with the 'cmd' option will display a long form of help\n"
+  "information associated with that command if the command is available\n"
+  "for the current cmdlevel.\n"
+  "\n"
+  "Help text may be limited to explaining the general format of the\n"
+  "command and its various required or optional parameters and is not\n"
+  "meant to replace the appropriate manual.\n")
     
 COMMAND("?",         PANEL,         SYSNONE,            HelpCommand,  
   "alias for help", 
