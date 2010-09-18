@@ -4450,7 +4450,7 @@ int i;
 /*-------------------------------------------------------------------*/
 /* legacysenseid command                                             */
 /*-------------------------------------------------------------------*/
-int lsid_cmd(int argc, char *argv[], char *cmdline)
+int legacysenseid_cmd(int argc, char *argv[], char *cmdline)
 {
 
     UNREFERENCED(cmdline);
@@ -4568,7 +4568,7 @@ int stsi_plant_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 /* manufacturer config statement                                     */
 /*-------------------------------------------------------------------*/
-int stsi_mfct_cmd(int argc, char *argv[], char *cmdline)
+int stsi_manufacturer_cmd(int argc, char *argv[], char *cmdline)
 {
 
     UNREFERENCED(cmdline);
@@ -4980,7 +4980,7 @@ static int reset_cmd(int ac,char *av[],char *cmdline,int clear)
 /*-------------------------------------------------------------------*/
 /* system reset command                                              */
 /*-------------------------------------------------------------------*/
-int sysr_cmd(int ac,char *av[],char *cmdline)
+int sysreset_cmd(int ac,char *av[],char *cmdline)
 {
     return(reset_cmd(ac,av,cmdline,0));
 }
@@ -4989,7 +4989,7 @@ int sysr_cmd(int ac,char *av[],char *cmdline)
 /*-------------------------------------------------------------------*/
 /* system reset clear command                                        */
 /*-------------------------------------------------------------------*/
-int sysc_cmd(int ac,char *av[],char *cmdline)
+int sysclear_cmd(int ac,char *av[],char *cmdline)
 {
     return(reset_cmd(ac,av,cmdline,1));
 }
@@ -6142,7 +6142,7 @@ char    c;                              /* work for sscan            */
 /*-------------------------------------------------------------------*/
 /* mounted_tape_reinit statement                                     */
 /*-------------------------------------------------------------------*/
-int mnttapri_cmd(int argc, char *argv[], char *cmdline)
+int mounted_tape_reinit_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
     if ( argc > 2 )
@@ -9415,9 +9415,9 @@ int i;
 }
 
 /*-------------------------------------------------------------------*/
-/* qcodepage command                                                 */
+/* qcodepages command                                                */
 /*-------------------------------------------------------------------*/
-int qcodepage_cmd(int argc, char *argv[], char *cmdline)
+int qcodepages_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
     UNREFERENCED(argv);

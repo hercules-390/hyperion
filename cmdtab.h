@@ -419,7 +419,7 @@ COMMAND("plant",     CONFIG,        SYSCMDALL,          stsi_plant_cmd,
   "Set STSI plant code", 
     NULL)
 
-COMMAND("manufacturer",CONFIG,      SYSCMDALL,          stsi_mfct_cmd,
+CMDABBR("manufacturer",8,CONFIG,    SYSCMDALL,          stsi_manufacturer_cmd,
   "Set STSI manufacturer code", 
     NULL)
 #endif /* defined(OPTION_SET_STSI_INFO) */
@@ -446,7 +446,7 @@ COMMAND("shcmdopt",  CONFIG,        SYSCMDALL,          shcmdopt_cmd,
   "Set diag8 sh option", 
     NULL)
 
-CMDABBR("legacysenseid",9,CONFIG,   SYSCMDALL,          lsid_cmd,    
+CMDABBR("legacysenseid",9,CONFIG,   SYSCMDALL,          legacysenseid_cmd,    
   "Set legacysenseid setting", 
     NULL)
 
@@ -471,12 +471,12 @@ COMMAND("iplc",      PANEL,         SYSCMDALL,          iplc_cmd,
   "IPL Clear from device xxxx",
     "Performs the Load Clear manual control function. See \"ipl\".\n")
 
-COMMAND("sysreset",  PANEL,         SYSCMDALL,          sysr_cmd,
+COMMAND("sysreset",  PANEL,         SYSCMDALL,          sysreset_cmd,
   "SYSTEM Reset manual operation",
     "Performs the System Reset manual control function. A CPU and I/O\n"
     "subsystem reset are performed.\n")
 
-COMMAND("sysclear",  PANEL,         SYSCMDALL,          sysc_cmd,
+COMMAND("sysclear",  PANEL,         SYSCMDALL,          sysclear_cmd,
   "SYSTEM Clear Reset manual operation",
     "Performs the System Reset Clear manual control function. Same as\n"
     "the \"sysreset\" command but also clears main storage to 0. Also,\n"
@@ -678,7 +678,7 @@ COMMAND("fcb",       PANEL,         SYSCMDALL,          fcb_cmd,
    "Reset the fcb to the standard one \n" 
    "Load a fcb image \n")
 
-CMDABBR("qcodepages",5,PANEL,       SYSCMDALL,          qcodepage_cmd,
+CMDABBR("qcodepages",5,PANEL,       SYSCMDALL,          qcodepages_cmd,
   "Display list of valid codepages",
   "Display codepages currently available for selection\n")
 
@@ -712,25 +712,25 @@ CMDABBR("qstor",5,   PANEL,         SYSCMDALL,          qstor_cmd,
   "Display storage",
   "Display main and expanded storage values\n")
 
-CMDABBR("mounted_tape_reinit",9, PANEL+CONFIG, SYSCMDALL-SYSOPER, mnttapri_cmd,  
+CMDABBR("mounted_tape_reinit",9, PANEL+CONFIG, SYSCMDALL-SYSOPER, mounted_tape_reinit_cmd,  
   "Control tape initialization", 
-  "Format: \"mounted_tape_reinit [disallow|allow]\"\n"
+  "Format: \"mounted_tape_reinit [disable|enable]\"\n"
   "Specifies whether reinitialization of tape drive devices\n"
   "(via the devinit command, in order to mount a new tape)\n"
   "should be allowed if there is already a tape mounted on\n"
   "the drive. The current value is displayed if no operand is\n"
   "specified\n" 
-  "Specifying ALLOW (the default) indicates new tapes may be\n"
+  "Specifying ENABLE (the default) indicates new tapes may be\n"
   "mounted (via 'devinit nnnn new-tape-filename') irrespective\n"
   "of whether or not there is already a tape mounted on the drive.\n" 
-  "Specifying DISALLOW prevents new tapes from being mounted if\n"
-  "one is already mounted. When DISALLOW is specified and a tape\n"
+  "Specifying DISABLE prevents new tapes from being mounted if\n"
+  "one is already mounted. When DISABLE is specified and a tape\n"
   "is already mounted on the drive, it must first be unmounted\n"
   "(via the command 'devinit nnnn *') before the new tape can be\n"
   "mounted. Otherwise the devinit attempt to mount the new tape\n"
   "is rejected.\n")
 
-CMDABBR("autoinit",8, PANEL+CONFIG, SYSCMDALL-SYSOPER, autoinit_cmd,  
+COMMAND("autoinit",  PANEL+CONFIG,  SYSCMDALL-SYSOPER,  autoinit_cmd,  
   "Display/Set automatic create empty tape file switch", 
   "Format: \"autoinit [on|off]\"\n"
   "Default for autoinit is off.\n"
@@ -1093,12 +1093,13 @@ COMMAND("maxrates",  PANEL,         SYSCMDALL,          maxrates_cmd,
 
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
 COMMAND("asn_and_lx_reuse", CONFIG, SYSCMDALL-SYSOPER,  alrf_cmd, 
-  "Command depricated:" 
+  "Command deprecated:" 
   "Use \"archlvl enable|disable|query asn_lx_reuse\" instead\n",
     NULL)
     
 COMMAND("alrf",      CONFIG,        SYSCMDALL-SYSOPER,  alrf_cmd, 
-  "Alias for asn_and_lx_reuse\n", 
+  "Command deprecated:" 
+  "Use \"archlvl enable|disable|query asn_lx_reuse\" instead\n",
     NULL)
 #endif /* defined(_FEATURE_ASN_AND_LX_REUSE) */
 
