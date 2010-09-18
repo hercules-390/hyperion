@@ -386,21 +386,6 @@ int comment_cmd(int argc, char *argv[],char *cmdline)
 
 
 /*-------------------------------------------------------------------*/
-/* abort command                                                     */
-/*-------------------------------------------------------------------*/
-int abort_cmd(int argc, char *argv[],char *cmdline)
-{
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
-    UNREFERENCED(cmdline);
-
-    delayed_exit(1);
-
-    return 0;
-}
-
-
-/*-------------------------------------------------------------------*/
 /* quit or exit command - terminate the emulator                     */
 /*-------------------------------------------------------------------*/
 int quit_cmd(int argc, char *argv[],char *cmdline)

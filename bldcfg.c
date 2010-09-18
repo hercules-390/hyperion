@@ -796,7 +796,7 @@ char    fname[MAX_PATH];                /* normalized filename       */
         {
         char *rcmd[2] = { "exec", NULL };
             rcmd[1] = fname;
-            exec_cmd(2,rcmd,NULL);
+            errorcount = exec_cmd(2,rcmd,NULL);
             goto rexx_done;
         }
 #endif /*defined(HAVE_REGINA_REXXSAA_H)*/
@@ -1018,15 +1018,15 @@ char    fname[MAX_PATH];                /* normalized filename       */
 
     } /* end while(1) */
 
+#if defined(HAVE_REGINA_REXXSAA_H)
+rexx_done:
+#endif /*defined(HAVE_REGINA_REXXSAA_H)*/
+
     /* Terminate on config errors */
     if(errorcount)
     {
         return FALSE;
     }
-
-#if defined(HAVE_REGINA_REXXSAA_H)
-rexx_done:
-#endif /*defined(HAVE_REGINA_REXXSAA_H)*/
 
 #if !defined( OPTION_ENHANCED_CONFIG_INCLUDE )
     /* close configuration file */

@@ -128,10 +128,6 @@ COMMAND("version",   PANEL,         SYSNONE,            version_cmd,
   "Display version information", 
     NULL)
 
-COMMAND("abort",     CONFIG,        SYSNONE,            abort_cmd,     
-  "Abort initialisation",          
-    NULL)
-
 #if defined (OPTION_SHUTDOWN_CONFIRMATION)
 COMMAND("quit",      PANEL,         SYSNONE,            quit_cmd,     
   "Terminate the emulator", 

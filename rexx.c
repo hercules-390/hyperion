@@ -217,6 +217,6 @@ RXSYSEXIT ExitList[2];
     if(RXSTRPTR(arg))
         free(RXSTRPTR(arg));
 
-    return rc;
+    return rc ? rc : ret;
 }
 #endif /*defined(HAVE_REGINA_REXXSAA_H)*/
