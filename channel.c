@@ -513,6 +513,10 @@ int     cc;                             /* Condition code            */
                 /* Reset the scsw */
                 dev->scsw.flag2 &= ~(SCSW2_AC_RESUM | SCSW2_FC_START | SCSW2_AC_START);
                 dev->scsw.flag3 &= ~(SCSW3_AC_SUSP);
+
+                /* Reset the device busy indicator */
+                dev->busy = dev->startpending = 0;
+
             }
         }
         release_lock(&sysblk.ioqlock);
