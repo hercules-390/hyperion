@@ -523,6 +523,8 @@ int archlvl_cmd(int argc, char *argv[], char *cmdline)
 
     RELEASE_INTLOCK(NULL);
 
+    set_symbol( "ARCHMODE", get_arch_mode_string(NULL) );
+
     return 0;
 }
 

@@ -332,6 +332,7 @@ int message_cmd(int argc,char *argv[], char *cmdline,int withhdr)
     {
         if(withhdr)
         {
+            char *lparname = str_lparname();
             time(&mytime);
             mytm=localtime(&mytime);
             writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG),
@@ -340,10 +341,11 @@ int message_cmd(int argc,char *argv[], char *cmdline,int withhdr)
 #else
                      "",
 #endif
-                     " %2.2u:%2.2u:%2.2u  * MSG FROM HERCULES: %s\n",
+                     " %2.2u:%2.2u:%2.2u  * MSG FROM %s: %s\n",
                      mytm->tm_hour,
                      mytm->tm_min,
                      mytm->tm_sec,
+                     (strlen(lparname)!=0)? lparname: "HERCULES",
                      msgtxt);
         }
         else
@@ -362,20 +364,11 @@ int message_cmd(int argc,char *argv[], char *cmdline,int withhdr)
 
 
 /*-------------------------------------------------------------------*/
-/* msg command - Display a line of text at the console               */
+/* msg/msgnoh command - Display a line of text at the console        */
 /*-------------------------------------------------------------------*/
 int msg_cmd(int argc,char *argv[], char *cmdline)
 {
-    return(message_cmd(argc,argv,cmdline,1));
-}
-
-
-/*-------------------------------------------------------------------*/
-/* msgnoh command - Display a line of text at the console            */
-/*-------------------------------------------------------------------*/
-int msgnoh_cmd(int argc,char *argv[], char *cmdline)
-{
-    return(message_cmd(argc,argv,cmdline,0));
+    return(message_cmd(argc,argv,cmdline, CMD(argv[0],msgnoh,6)? 0: 1));
 }
 
 
@@ -4661,6 +4654,7 @@ int lparname_cmd(int argc, char *argv[], char *cmdline)
     if (argc == 2)
     {
         set_lparname(argv[1]);
+        set_symbol("LPARNAME", str_lparname());
         if ( MLVL(VERBOSE) )
             WRMSG(HHC02204, "I", "lparname", str_lparname());
     }
@@ -4707,6 +4701,8 @@ BYTE    c;
                 char buf[20];
                 MSGBUF( buf, "%02X", sysblk.lparnum);
                 WRMSG(HHC02204, "I", "lparnum", buf);
+                set_symbol("LPARNUM", buf );
+
             }
         }
         else
@@ -8779,14 +8775,18 @@ int modpath_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
 
-    if( argc != 2 )
+    if( argc > 2 )
     {
         WRMSG(HHC01530,"E",argv[0]);
         return -1;
     }
+    else if (argc == 2)
+    {
+        set_symbol( "MODPATH", hdl_setpath(argv[1], TRUE) );
+    }
     else
     {
-        hdl_setpath(argv[1], TRUE);
+        WRMSG (HHC01508, "I", hdl_setpath( NULL, TRUE) );
     }
     return 0;
 }

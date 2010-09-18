@@ -82,7 +82,7 @@ CMDABBR("msg",1,     PANEL,         SYSNONE,            msg_cmd,
   "Alias for message", 
     NULL)
     
-COMMAND("msgnoh",    PANEL,         SYSNONE,            msgnoh_cmd,   
+COMMAND("msgnoh",    PANEL,         SYSNONE,            msg_cmd,   
   "Similar to \"message\" but no header", 
     NULL)
 
@@ -982,7 +982,7 @@ COMMAND("loadtext",  PANEL,         SYSCMDALL-SYSOPER,  loadtext_cmd,
     "file with \"TXT\" and \"END\" 80 byte records (i.e. an object deck).\n")
 
 #if defined(OPTION_DYNAMIC_LOAD)
-COMMAND("modpath",   CONFIG,        SYSCMDALL-SYSOPER,  modpath_cmd,  
+COMMAND("modpath",   PANEL+CONFIG,  SYSCMDALL-SYSOPER,  modpath_cmd,  
   "Set module load path", 
     NULL)
 
