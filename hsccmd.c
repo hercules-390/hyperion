@@ -368,6 +368,11 @@ int message_cmd(int argc,char *argv[], char *cmdline,int withhdr)
 /*-------------------------------------------------------------------*/
 int msg_cmd(int argc,char *argv[], char *cmdline)
 {
+    if ( argc < 3 )
+    { 
+        WRMSG( HHC02299, "E", argv[0] ); 
+        return -1;
+    }
     return(message_cmd(argc,argv,cmdline, CMD(argv[0],msgnoh,6)? 0: 1));
 }
 
@@ -595,24 +600,25 @@ int logopt_cmd(int argc, char *argv[],char *cmdline)
 
     if(argc < 2)
     {
-        WRMSG( HHC02203, "I", "log option",
+        WRMSG( HHC02203, "I", argv[0],
             sysblk.logoptnotime ? "NOTIMESTAMP" : "TIMESTAMP" );
     }
     else
     {
+        char *cmd = argv[0];
         while (argc > 1)
         {
             argv++; argc--;
             if ( CMD(argv[0],timestamp,4) )
             {
                 sysblk.logoptnotime = FALSE;
-                WRMSG(HHC02204, "I", "log option", "TIMESTAMP");
+                WRMSG(HHC02204, "I", cmd, "TIMESTAMP");
                 continue;
             }
             if ( CMD(argv[0],notimestamp,6) )
             {
                 sysblk.logoptnotime = TRUE;
-                WRMSG(HHC02204, "I", "log option", "NOTIMESTAMP");
+                WRMSG(HHC02204, "I", cmd, "NOTIMESTAMP");
                 continue;
             }
 
@@ -1343,7 +1349,7 @@ int timerint_cmd(int argc, char *argv[], char *cmdline)
         {
             sysblk.timerint = DEFAULT_TIMER_REFRESH_USECS;
             if ( MLVL(VERBOSE) )
-                WRMSG( HHC02204, "I", "timer update interval", argv[1] );
+                WRMSG( HHC02204, "I", argv[0], argv[1] );
         }
         else
         {
@@ -1360,7 +1366,7 @@ int timerint_cmd(int argc, char *argv[], char *cmdline)
                 {
                     char buf[25];
                     MSGBUF( buf, "%d", sysblk.timerint);
-                    WRMSG(HHC02204, "I", "timer update interval", buf );
+                    WRMSG(HHC02204, "I", argv[0], buf );
                 }
             }
             else
@@ -1548,14 +1554,14 @@ int iodelay_cmd(int argc, char *argv[], char *cmdline)
         {
             sysblk.iodelay = iodelay;
             if ( MLVL(VERBOSE) )
-                WRMSG(HHC02204, "I", "I/O delay", argv[1] );
+                WRMSG(HHC02204, "I", argv[0], argv[1] );
         }
     }
     else
     {
         char msgbuf[8];
         MSGBUF( msgbuf, "%d", sysblk.iodelay );
-        WRMSG(HHC02203, "I", "I/O delay", msgbuf );
+        WRMSG(HHC02203, "I", argv[0], msgbuf );
     }
 
     return 0;
@@ -1593,10 +1599,10 @@ int autoinit_cmd( int argc, char *argv[], char *cmdline )
     }
 
     if ( argc == 1 )
-        WRMSG(HHC02203, "I", "autoinit", sysblk.noautoinit ? "off" : "on" );
+        WRMSG(HHC02203, "I", argv[0], sysblk.noautoinit ? "off" : "on" );
     else
         if(MLVL(VERBOSE))
-            WRMSG(HHC02204, "I", "autoinit", sysblk.noautoinit ? "off" : "on" );
+            WRMSG(HHC02204, "I", argv[0], sysblk.noautoinit ? "off" : "on" );
 
     return 0;
 }
@@ -2210,7 +2216,7 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
            )
     )
     {
-        panel_command ("help ctc");
+        WRMSG( HHC02299, "E", argv[0] );
         return -1;
     }
 
@@ -2240,7 +2246,7 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
             }
         }
 
-        WRMSG(HHC02204, "I", "CTC debugging for all CTCI/LCS device groups", onoff ? "on" : "off");
+        WRMSG(HHC02204, "I", "CTC debug", onoff ? "on ALL" : "off ALL");
     }
     else
     {
@@ -2283,10 +2289,11 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
 
         {
           char buf[128];
-          MSGBUF( buf, "CTC debugging for %s device %1d:%04X group",
+          MSGBUF( buf, "%s for %s device %1d:%04X pair",
+                  onoff ? "on" : "off",
                   CTC_LCS == dev->ctctype ? "LCS" : "CTCI",
                   lcss, devnum );
-          WRMSG(HHC02204, "I", buf, onoff ? "on" : "off");
+          WRMSG(HHC02204, "I", "CTC debug", buf);
         }
     }
 
@@ -2350,7 +2357,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
         {
             debug_tt32_tracing(1); // 1=ON
             rc = 0;
-            WRMSG(HHC02204, "I", "TT32 debug tracing messages", "enabled");
+            WRMSG(HHC02204, "I", "TT32 debug", "enabled");
         }
         else
         {
@@ -2364,7 +2371,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
         {
             debug_tt32_tracing(0); // 0=OFF
             rc = 0;
-            WRMSG(HHC02204, "I", "TT32 debug tracing messages", "disabled");
+            WRMSG(HHC02204, "I", "TT32 debug", "disabled");
         }
         else
         {
@@ -2374,7 +2381,10 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
     }
     else
     {
-        WRMSG(HHC02205, "E", argv[1], "");
+        char buf[64];
+
+        MSGBUF( buf, ". Type 'help %s' for assistance", argv[0] );
+        WRMSG(HHC02205, "E", argv[1], buf);
         rc = -1;
     }
 
@@ -2438,7 +2448,19 @@ char *basedir;
             set_sce_dir(argv[1]);
     else
         if((basedir = get_sce_dir()))
-            WRMSG(HHC02204, "I","SCLPROOT",basedir);
+        {
+            char buf[MAX_PATH+64];
+            char *p = strchr(basedir,' ');
+
+            if ( p == NULL )
+                p = basedir;
+            else
+            {
+                MSGBUF( buf, "'%s'", basedir );
+                p = buf;
+            }
+            WRMSG( HHC02204, "I", argv[0], p );
+        }
         else
             WRMSG(HHC02204, "I", "SCLP disk I/O", "disabled");
 
@@ -3222,11 +3244,7 @@ int toddrag_cmd(int argc, char *argv[], char *cmdline)
             /* Set clock steering based on drag factor */
             set_tod_steering(-(1.0-(1.0/toddrag)));
             if ( MLVL(VERBOSE) )
-            {        
-                char buf[20];
-                MSGBUF( buf, "%lf",(1.0/(1.0+get_tod_steering())));
-                WRMSG(HHC02204, "I", "TOD clock drag factor", buf);
-            }
+                WRMSG(HHC02204, "I", argv[0], argv[1] );
         }
         else
         {
@@ -3236,9 +3254,9 @@ int toddrag_cmd(int argc, char *argv[], char *cmdline)
     }
     else
     {
-        char buf[20];
+        char buf[32];
         MSGBUF( buf, "%lf",(1.0/(1.0+get_tod_steering())));
-        WRMSG(HHC02203, "I", "TOD clock drag factor", buf);
+        WRMSG(HHC02203, "I", argv[0], buf);
     }
     return 0;
 }
@@ -3301,7 +3319,7 @@ int panrate_cmd(int argc, char *argv[], char *cmdline)
     else
     {
         MSGBUF( msgbuf, "%d", sysblk.panrate );
-        WRMSG(HHC02203, "I", "panel refresh rate", msgbuf );
+        WRMSG(HHC02203, "I", argv[0], msgbuf );
     }
 
     return 0;
@@ -3332,7 +3350,19 @@ int pantitle_cmd(int argc, char *argv[], char *cmdline)
         sysblk.pantitle = strdup(argv[1]);
         set_console_title( NULL );
         if ( MLVL(VERBOSE) )
-            WRMSG(HHC02204, "I", "pantitle", sysblk.pantitle);
+        {
+            char *p = (char *)strchr((const char *)sysblk.pantitle, ' ' );
+            char buf[MAX_PATH+3];
+
+            if ( p == NULL )
+                p = sysblk.pantitle;
+            else
+            {
+                MSGBUF( buf, "'%s'", sysblk.pantitle );
+                p = buf;
+            }
+            WRMSG(HHC02204, "I", argv[0], p);
+        }
     }
     else
         WRMSG(HHC02203, "I", "pantitle", sysblk.pantitle);
@@ -3347,8 +3377,13 @@ int pantitle_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int msghld_cmd(int argc, char *argv[], char *cmdline)
 {
-    if ( CMD(cmdline, kd,2) )
+    if ( CMD(argv[0],kd,2) )
     {
+        if ( argc != 1 )
+        {
+            WRMSG( HHC02299, "E", argv[0] );
+            return(0);
+        }
         expire_kept_msgs(TRUE);
         WRMSG(HHC02226, "I");
         return(0);
@@ -3359,7 +3394,7 @@ int msghld_cmd(int argc, char *argv[], char *cmdline)
         {
             char buf[40];
             MSGBUF( buf, "%d seconds", sysblk.keep_timeout_secs);
-            WRMSG(HHC02203, "I", "message held time", buf);
+            WRMSG(HHC02203, "I", "message hold time", buf);
             return(0);
         }
         else if( CMD(argv[1],clear,5) )
@@ -3377,7 +3412,7 @@ int msghld_cmd(int argc, char *argv[], char *cmdline)
                 char buf[40];
                 sysblk.keep_timeout_secs = new_timeout;
                 MSGBUF( buf, "%d seconds", sysblk.keep_timeout_secs);
-                WRMSG(HHC02204, "I", "message held time", buf);
+                WRMSG(HHC02204, "I", "message hold time", buf);
                 return(0);
             }
             else
@@ -6118,9 +6153,9 @@ int mnttapri_cmd(int argc, char *argv[], char *cmdline)
 
     if ( argc == 2 )
     {
-        if ( CMD(argv[1],disallow,4) )
+        if ( CMD(argv[1],disallow,4) || CMD(argv[1],disable,4) )
             sysblk.nomountedtapereinit = TRUE;
-        else if ( CMD(argv[1],allow,3) )
+        else if ( CMD(argv[1],allow,3) || CMD(argv[1],enable,3) )
             sysblk.nomountedtapereinit = FALSE;
         else
         {
@@ -6128,59 +6163,15 @@ int mnttapri_cmd(int argc, char *argv[], char *cmdline)
             return -1;
         }
         if ( MLVL(VERBOSE) )
-            WRMSG(HHC02204, "I","tape mount reinit", 
-                  sysblk.nomountedtapereinit?"disallowed":"allowed");
+            WRMSG(HHC02204, "I", argv[0], 
+                  sysblk.nomountedtapereinit?"disabled":"enabled");
     }
     else
-        WRMSG(HHC02203, "I","tape mount reinit", 
-              sysblk.nomountedtapereinit?"disallowed":"allowed");
+        WRMSG(HHC02203, "I", argv[0], 
+              sysblk.nomountedtapereinit?"disabled":"enabled");
 
     return 0;
 }
-
-#if defined( OPTION_SCSI_TAPE )
-/*-------------------------------------------------------------------*/
-/* auto_scsi_mount statement                                         */
-/*-------------------------------------------------------------------*/
-int ascsimnt_cmd(int argc, char *argv[], char *cmdline)
-{
-int rc = 0;
-
-    UNREFERENCED(cmdline);
-
-    if ( argc > 2 )
-    {
-        WRMSG( HHC02299, "E", argv[0] );
-        rc = -1;
-    }
-    else if( argc == 2 )
-    {
-        if ( CMD(argv[1],no,2) )
-            sysblk.auto_scsi_mount_secs = 0;
-        else if ( CMD(argv[1],yes,3) )
-            sysblk.auto_scsi_mount_secs = DEFAULT_AUTO_SCSI_MOUNT_SECS;
-        else
-        {
-            int secs; char c;
-            if ( sscanf( argv[1], "%d%c", &secs, &c ) != 1
-                || secs <= 0 || secs > 99 )
-            {
-                WRMSG( HHC02205, "S", argv[1] , "" );
-                rc = -1;
-            }
-            else
-                sysblk.auto_scsi_mount_secs = secs;
-        }
-    }
-    else
-    {
-        char buf[20];
-        MSGBUF( buf, "%d seconds", sysblk.auto_scsi_mount_secs);
-        WRMSG(HHC02203, "I", "auto SCSI mount" , buf);
-    }
-    return rc;
-}
-#endif /*defined( OPTION_SCSI_TAPE )*/
 
 
 /*-------------------------------------------------------------------*/
@@ -9321,7 +9312,7 @@ int pause_cmd(int argc, char *argv[], char *cmdline)
             }
             else
             {
-                WRMSG(HHC02261, "I" );
+                WRMSG(HHC02261, "I", argv[0] );
             }
         }
     }
