@@ -643,6 +643,8 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
 #endif
 char    pathname[MAX_PATH];             /* file path in host format  */
 char    fname[MAX_PATH];                /* normalized filename       */ 
+int     msglevel = FALSE;               /* indicator for msglevel 
+                                           statement                 */
 
     /* Initialize SETMODE and set user authority */
     SETMODE(INIT);
@@ -920,6 +922,8 @@ char    fname[MAX_PATH];                /* normalized filename       */
                 strcat(addcmdline, " ");
                 strcat(addcmdline, addargv[i]);
             }
+            if ( CMD(addargv[0],msglevel,8) || CMD(addargv[0],msglvl,6) )
+                msglevel = TRUE;
             if(ProcessConfigCommand (addargc, addargv, addcmdline))
             {
                 errorcount++;
@@ -1196,6 +1200,8 @@ rexx_done:
     }
 #endif /* defined(OPTION_CONFIG_SYMBOLS) */
 
+    if ( !msglevel )
+        sysblk.msglvl = MLVL_VERBOSE;
     return TRUE;
 } /* end function build_config */
 
