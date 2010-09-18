@@ -13,12 +13,11 @@ command faulures may be handles with SIGNAL ON FAILURE
 command returncodes < 0 are interpreted as ERROR returncodes > 0 are interpreted as FAILURE
 e.g. command not found is an error
 e.g. file not found on attach is a failure
-
+Hercules will abort startup of if the .cnf REXX exec returns with a non-zero value
 
 The EXEC command may be used to explicitly invoke a REXX script, optional arguments will be passed 
 
 REXX will be invoked implicitly if existing script files start with /*
-
 
 Hercules symbols can be retrieved as normal environment variables with value() or getvar()
 
