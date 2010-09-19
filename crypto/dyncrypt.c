@@ -3647,8 +3647,10 @@ DEF_INST(perform_cryptographic_key_management_operations_d)
   int keylen = 0;
   BYTE parameter_block[64];
   int parameter_blocklen = 0;
+  int r1;
+  int r2;
 
-  UNREFERENCED(inst);
+  RRE(inst, regs, r1, r2);
 
 #ifdef OPTION_PCKMO_DEBUG
   WRGMSG_ON;
