@@ -16,6 +16,8 @@
 
 #if defined(HAVE_REGINA_REXXSAA_H)
 
+#define REXX_PACKAGE "Regina"
+
 #define INCL_REXXSAA
 
 #if defined( _MSVC_ )
@@ -37,6 +39,10 @@ static int rexx_initialised = FALSE;
 #define REGINA_LIBRARY "libregina.so"
 #endif
 
+#define REXX_REGISTER_SUBCOM "RexxRegisterSubcomExe"
+#define REXX_REGISTER_EXIT   "RexxRegisterExitExe"
+#define REXX_START           "RexxStart"
+
 typedef APIRET APIENTRY rRexxStart( LONG, PRXSTRING, PCSZ, PRXSTRING, PCSZ, LONG, PRXSYSEXIT, PSHORT, PRXSTRING ) ;
 typedef APIRET APIENTRY rRexxRegisterSubcomExe( PCSZ, RexxSubcomHandler *, PUCHAR ) ; 
 typedef APIRET APIENTRY rRexxRegisterExitExe( PSZ, RexxExitHandler *, PUCHAR ) ;
@@ -53,7 +59,7 @@ static rRexxRegisterExitExe   *hRexxRegisterExitExe = NULL;
 
 #endif
 
-LONG APIENTRY exit_handler( LONG ExitNumber, LONG Subfunction, PEXIT ParmBlock )
+LONG APIENTRY hExitHnd( LONG ExitNumber, LONG Subfunction, PEXIT ParmBlock )
 {
 RXSIOSAY_PARM *sayparm;
 RXSIOTRC_PARM *trcparm;
@@ -124,6 +130,8 @@ SHORT rc;
 
 int init_rexx()
 {
+int rc;
+
     if( rexx_initialised )
         return 0;
 
@@ -132,21 +140,42 @@ int init_rexx()
         void *addr;
 
         if(!(addr = dlopen(REGINA_LIBRARY,RTLD_LAZY)))
+        {
+            WRMSG( HHC17504, "E", REXX_PACKAGE, REGINA_LIBRARY, strerror(errno));
             return -1;
-        if(!(hRexxRegisterSubcomExe = (rRexxRegisterSubcomExe *)dlsym(addr, "RexxRegisterSubcomExe")))
+        }
+
+        if(!(hRexxRegisterSubcomExe = (rRexxRegisterSubcomExe *)dlsym(addr, REXX_REGISTER_SUBCOM )))
+        {
+            WRMSG( HHC17505, "E", REXX_PACKAGE, REXX_REGISTER_SUBCOM, strerror(errno));
             return -1;
-        if(!(hRexxRegisterExitExe = (rRexxRegisterExitExe *)dlsym( addr, "RexxRegisterExitExe" )))
+        }
+
+        if(!(hRexxRegisterExitExe = (rRexxRegisterExitExe *)dlsym( addr, REXX_REGISTER_EXIT )))
+        {
+            WRMSG( HHC17505, "E", REXX_PACKAGE, REXX_REGISTER_EXIT, strerror(errno));
             return -1;
-        if(!(hRexxStart = (rRexxStart *)dlsym(addr,"RexxStart")))
+        }
+
+        if(!(hRexxStart = (rRexxStart *)dlsym(addr, REXX_START )))
+        {
+            WRMSG( HHC17505, "E", REXX_PACKAGE, REXX_START, strerror(errno));
             return -1;
+        }
     }
 #endif
 
-    if(hRexxRegisterExitExe( hSIOExit, (RexxExitHandler *)exit_handler, NULL ) != RXEXIT_OK)
+    if((rc = hRexxRegisterExitExe( hSIOExit, (RexxExitHandler *)hExitHnd, NULL )) != RXEXIT_OK)
+    {
+        WRMSG( HHC17506, "E", REXX_PACKAGE, REXX_REGISTER_EXIT, rc);
         return -1;
+    }
 
-    if(hRexxRegisterSubcomExe( hSubcom, (RexxSubcomHandler *)hSubCmd, NULL) != RXSUBCOM_OK)
+    if((rc = hRexxRegisterSubcomExe( hSubcom, (RexxSubcomHandler *)hSubCmd, NULL)) != RXSUBCOM_OK)
+    {
+        WRMSG( HHC17506, "E", REXX_PACKAGE, REXX_REGISTER_SUBCOM, rc);
         return -1;
+    }
 
     rexx_initialised = TRUE;
 
@@ -170,13 +199,13 @@ RXSYSEXIT ExitList[2];
 
     if(argc < 2)
     {
-        WRMSG( HHC17501, "E", "Regina" );
+        WRMSG( HHC17501, "E", REXX_PACKAGE );
         return -1;
     }
 
     if(init_rexx())
     {
-        WRMSG( HHC17500, "E", "Regina" );
+        WRMSG( HHC17500, "E", REXX_PACKAGE );
         return -1;
     }
 
@@ -209,10 +238,10 @@ RXSYSEXIT ExitList[2];
     ExitList[1].sysexit_code = RXENDLST;
 
     if((rc = hRexxStart ((argc > 2) ? 1 : 0, &arg, pathname, NULL, hSubcom, RXCOMMAND, ExitList, &ret, &retval )))
-        WRMSG( HHC17503, "E", "Regina", rc );
+        WRMSG( HHC17503, "E", REXX_PACKAGE, rc );
     else
         if(ret)
-            WRMSG( HHC17502, "E", "Regina", RXSTRPTR(retval) );
+            WRMSG( HHC17502, "E", REXX_PACKAGE, RXSTRPTR(retval) );
 
     if(RXSTRPTR(arg))
         free(RXSTRPTR(arg));

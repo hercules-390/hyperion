@@ -1664,9 +1664,12 @@ cpu.c:123:HABC1234I This is a message
 
 // Reserve 17500-17999 REXX Message
 #define HHC17500 "REXX(%s) Initialization failed"
-#define HHC17501 "REXX(%s) Script file name missing"
-#define HHC17502 "REXX(%s) Script returned error code: %s"
-#define HHC17503 "REXX(%s) REXX interpreter error code: %d"
+#define HHC17501 "REXX(%s) Exec file name missing"
+#define HHC17502 "REXX(%s) Exec returned error code: %s"
+#define HHC17503 "REXX(%s) Interpreter error code: %d"
+#define HHC17504 "REXX(%s) Unable to not open %s, error: %s\n"
+#define HHC17505 "REXX(%s) Could not load %s, error: %s\n"
+#define HHC17506 "REXX(%s) Could not register %s, return code: %d\n"
 
 // reserve 90000 messages for debugging
 #define HHC90000 "DBG: %s"
