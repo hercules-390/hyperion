@@ -396,6 +396,9 @@ char   *buf1;                           /* Pointer to resolved buffer*/
         /* Read next statement from configuration file */
         for (stmtlen = 0, lstarted = 0; ;)
         {
+            if (stmtlen == 0)
+                memset(buf,'\0',sizeof(buf)); // clear work area
+
             /* Read character from configuration file */
             c = fgetc(fp);
 
@@ -462,7 +465,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
                 free(buf1);
                 return -1;
             }
-            strcpy(buf,buf1);
+            strlcpy(buf,buf1,sizeof(buf));
         }
 #endif /*defined(OPTION_CONFIG_SYMBOLS)*/
 

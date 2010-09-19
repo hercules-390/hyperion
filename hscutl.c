@@ -434,7 +434,8 @@ DLL_EXPORT const char *get_symbol(const char *sym)
     if(tok==NULL)
     {
         val=getenv(sym);
-        return(val);
+        MSGBUF(buf, "%s", val == NULL? "" : val );    
+        return(buf);
     }
     return(tok->val);
 }
@@ -491,6 +492,7 @@ static void append_symbol(char **bfr,char *sym,int *ix_p,int *max_p)
 DLL_EXPORT char *resolve_symbol_string(const char *text)
 {
     char    buf[MAX_PATH*4];                /* Statement buffer          */
+    char    dflt[MAX_PATH*4];               /* temp location for default */
     int     c;                              /* Character work area       */
     int     i = 0;                          /* Position in the input     */
     int     stmtlen = 0;                    /* Statement length          */
@@ -561,24 +563,14 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
                         inc_envvar = (char *)get_symbol (&buf[inc_lbrace]);
 
                         /* Variable unset? */
-                        if (inc_envvar == NULL)
+                        if (inc_envvar == NULL || strlen(inc_envvar) == 0 )
                         {
                             /* Substitute default if specified */
                             if (inc_equals >= 0)
                             {
-                                inc_envvar = &buf[inc_equals+1];
-                            }
-                        }
-                        else // (environ variable defined)
-                        {
-                            /* Have ":=" specification? */
-                            if (/*inc_colon >= 0 && */inc_equals >= 0)
-                            {
-                                /* Substitute default if value is NULL */
-                                if (strlen (inc_envvar) == 0)
-                                {
-                                    inc_envvar = &buf[inc_equals+1];
-                                }
+                                memset(dflt,0,sizeof(dflt));
+                                strlcpy(dflt, &buf[inc_equals+1], sizeof(dflt));
+                                inc_envvar = dflt;
                             }
                         }
 
@@ -595,6 +587,7 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
                             /* Copy to buffer and update index */
                             stmtlen += sprintf (&buf[stmtlen], "%s", inc_envvar);
                         }
+                        memset(&buf[stmtlen],0,(sizeof(buf) - stmtlen));
 
                         /* Reset indexes */
                         inc_equals = -1;
