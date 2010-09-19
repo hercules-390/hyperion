@@ -35,8 +35,6 @@
 #include "sha1.h"
 #include "sha256.h"
 
-//#define FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
-
 #if defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1) && !defined(FEATURE_MESSAGE_SECURITY_ASSIST)
   #error You cannot have "Message Security Assist extension 1" without having "Message Security Assist"
 #endif
@@ -2941,7 +2939,8 @@ DEF_INST(compute_intermediate_message_digest_d)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
     case 65: /* ghash */
     {
-      ARCH_DEP(kimd_ghash)(r1, r2, regs, 0);
+      ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+      //ARCH_DEP(kimd_ghash)(r1, r2, regs, 0);
       break;
     }
 #endif
@@ -3126,7 +3125,8 @@ DEF_INST(cipher_message_d)
     case 58: /* encrypted xts aes-128 */
     case 60: /* encrypted xts aes-256 */
     {
-      ARCH_DEP(km_xts_aes)(r1, r2, regs);
+      ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+      //ARCH_DEP(km_xts_aes)(r1, r2, regs);
       break;
     }
 #endif
@@ -3599,14 +3599,14 @@ DEF_INST(perform_cryptographic_computation_d)
       regs->psw.cc = 0;
       return;
     }
-    case 1: /* dea */
-    case 2: /* tdea-128 */
-    case 3: /* tdea-192 */
-    case 9: /* encrypted dea */
+    case  1: /* dea */
+    case  2: /* tdea-128 */
+    case  3: /* tdea-192 */
+    case  9: /* encrypted dea */
     case 10: /* encrypted tdea-128 */
     case 11: /* encrypted tdea-192 */
     {
-      ARCH_DEP(pcc_cmac_dea)(r1, r2, regs);
+      //ARCH_DEP(pcc_cmac_dea)(r1, r2, regs);
       break;
     } 
     case 18: /* aes-128 */
@@ -3616,15 +3616,15 @@ DEF_INST(perform_cryptographic_computation_d)
     case 27: /* encrypted aes-192 */
     case 28: /* encrypted aes-256 */
     {
-      ARCH_DEP(pcc_cmac_aes)(r1, r2, regs);
+      //ARCH_DEP(pcc_cmac_aes)(r1, r2, regs);
       break;
     }
     case 50: /* aes-128 */
     case 52: /* aes-256 */
-    case 58: /* aes-128 */
-    case 60: /* aes-256 */
+    case 58: /* encrypted aes-128 */
+    case 60: /* encrypted aes-256 */
     {
-      ARCH_DEP(pcc_xts_aes)(r1, r2, regs);
+      //ARCH_DEP(pcc_xts_aes)(r1, r2, regs);
       break;
     }
     default:

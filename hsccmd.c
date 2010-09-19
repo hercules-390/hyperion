@@ -3377,6 +3377,8 @@ int pantitle_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int msghld_cmd(int argc, char *argv[], char *cmdline)
 {
+    UNREFERENCED(cmdline);
+
     if ( CMD(argv[0],kd,2) )
     {
         if ( argc != 1 )
@@ -9204,7 +9206,7 @@ FILE   *scrfp;                          /* RC file pointer           */
 int     scrbufsize = 1024;              /* Size of RC file  buffer   */
 char   *scrbuf = NULL;                  /* RC file input buffer      */
 int     scrlen;                         /* length of RC file record  */
-int     scr_pause_amt = 0;              /* seconds to pause RC file  */
+//int     scr_pause_amt = 0;              /* seconds to pause RC file  */
 int     lineno = 0;
 char   *p;                              /* (work)                    */
 char    pathname[MAX_PATH];             /* (work)                    */

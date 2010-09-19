@@ -117,7 +117,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         if ((rc = read (dev->fd, &devhdr, CKDDASD_DEVHDR_SIZE)) < CKDDASD_DEVHDR_SIZE)
         {
             fprintf(stdout, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                    "read()", (long long unsigned)0, rc < 0 ? strerror(errno) : "incomplete"));
+                    "read()", (long unsigned)0, rc < 0 ? strerror(errno) : "incomplete"));
             close (dev->fd);
             continue;
         }
@@ -135,7 +135,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         if ((rc = read (dev->fd, &cdevhdr, CCKD_DEVHDR_SIZE)) < CCKD_DEVHDR_SIZE)
         {
             fprintf(stdout, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                    "read()", (long long unsigned)CCKD_DEVHDR_POS, rc < 0 ? strerror(errno) : "incomplete"));
+                    "read()", (long unsigned)CCKD_DEVHDR_POS, rc < 0 ? strerror(errno) : "incomplete"));
             close (dev->fd);
             continue;
         }
@@ -163,14 +163,14 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         if (lseek (dev->fd, CCKD_DEVHDR_POS, SEEK_SET) < 0)
         {
             fprintf(stdout, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                    "lseek()", (long long unsigned)CCKD_DEVHDR_POS, strerror(errno)));
+                    "lseek()", (long unsigned)CCKD_DEVHDR_POS, strerror(errno)));
             close (dev->fd);
             continue;
         }
         if ((rc = read (dev->fd, &cdevhdr, CCKD_DEVHDR_SIZE)) < CCKD_DEVHDR_SIZE)
         {
             fprintf(stdout, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                    "read()", (long long unsigned)CCKD_DEVHDR_POS, rc < 0 ? strerror(errno) : "incomplete"));
+                    "read()", (long unsigned)CCKD_DEVHDR_POS, rc < 0 ? strerror(errno) : "incomplete"));
             close (dev->fd);
             continue;
         }

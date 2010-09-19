@@ -310,7 +310,7 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
         if ( p != NULL )
         {
             len = (int)(p - argv[1]);
-            if ( strlen( argv[1] ) > ( len + 1) )
+            if ( strlen( argv[1] ) > (unsigned) ( len + 1) )
             {
                 WRMSG( HHC02299, "E", argv[0] );
                 return -1;

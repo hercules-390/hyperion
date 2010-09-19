@@ -1122,8 +1122,8 @@ void cgibin_hwrite(WEBBLK *webblk, char *msg, int msg_len)
     char buffer[1024];
     char *new_str;
 
-    int buf_used = 0;
-    int new_len;
+    unsigned buf_used = 0;
+    unsigned new_len;
     int i;
 
 

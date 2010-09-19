@@ -156,6 +156,8 @@ DLL_EXPORT int parse_args (char* p, int maxargc, char** pargv, int* pargc)
 /*-------------------------------------------------------------------*/
 void delayed_exit (int exit_code)
 {
+    UNREFERENCED(exit_code);
+
     /* Delay exiting is to give the system
      * time to display the error message. */
 #if defined( _MSVC_ )
@@ -1067,10 +1069,10 @@ rexx_done:
         MSGBUF( buf, "%02X", sysblk.lparnum );
         set_symbol("LPARNUM", buf );
 
-        MSGBUF( buf, "%06X", ((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32) );
+        MSGBUF( buf, "%06X", (unsigned int) ((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32) );
         set_symbol( "CPUSERIAL", buf );
 
-        MSGBUF( buf, "%04X", ((sysblk.cpuid & 0x00000000FFFF0000ULL) >> 16) );
+        MSGBUF( buf, "%04X", (unsigned int) ((sysblk.cpuid & 0x00000000FFFF0000ULL) >> 16) );
         set_symbol( "CPUMODEL", buf );
 
         set_symbol( "ARCHMODE", get_arch_mode_string(NULL) );  
