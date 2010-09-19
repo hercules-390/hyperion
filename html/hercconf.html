@@ -862,17 +862,17 @@ and how they are used.
     <p>
 
 <a name="MOUNTED_TAPE_REINIT"></a>
-<dt><code>MOUNTED_TAPE_REINIT &nbsp; DISALLOW &#124; ALLOW</code>
+<dt><code>MOUNTED_TAPE_REINIT &nbsp; DISALLOW &#124; DISABLE &#124; ALLOW &#124; ENABLE </code>
 <dd><p>
     specifies whether reinitialization of tape drive devices (via the
     <code>devinit</code> command, in order to mount a new tape) should
     be allowed if there is already a tape mounted on the drive.
     <p>
-    Specifying <code>ALLOW</code> (the default) indicates new tapes may
+    Specifying <code>ALLOW</code>&#124;<code>ENABLE</code> (default) indicates new tapes may
     be mounted (via <code>'devinit <i>nnnn</i> <i>new-tape-filename</i>'</code>)
     irrespective of whether or not there is already a tape mounted on the drive.
     <p>
-    Specifying <code>DISALLOW</code> prevents new tapes from being mounted
+    Specifying <code>DISALLOW</code>&#124;<code>DISABLE</code> prevents new tapes from being mounted
     if one is already mounted. When <code>DISALLOW</code> is specified
     and a tape is already mounted on the drive, it must first be unmounted
     (via the command <code>'devinit <i>nnnn</i> *'</code>) before

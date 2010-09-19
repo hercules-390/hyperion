@@ -721,21 +721,22 @@ CMDABBR("qstor",5,   PANEL,         SYSCMDALL,          qstor_cmd,
 
 CMDABBR("mounted_tape_reinit",9, PANEL+CONFIG, SYSCMDALL-SYSOPER, mounted_tape_reinit_cmd,  
   "Control tape initialization", 
-  "Format: \"mounted_tape_reinit [disable|enable]\"\n"
+  "Format: \"mounted_tape_reinit [disallow|disable | allow|enable]\"\n"
   "Specifies whether reinitialization of tape drive devices\n"
   "(via the devinit command, in order to mount a new tape)\n"
   "should be allowed if there is already a tape mounted on\n"
   "the drive. The current value is displayed if no operand is\n"
   "specified\n" 
-  "Specifying ENABLE (the default) indicates new tapes may be\n"
+  "Specifying ALLOW or ENABLE indicates new tapes may be\n"
   "mounted (via 'devinit nnnn new-tape-filename') irrespective\n"
-  "of whether or not there is already a tape mounted on the drive.\n" 
-  "Specifying DISABLE prevents new tapes from being mounted if\n"
-  "one is already mounted. When DISABLE is specified and a tape\n"
-  "is already mounted on the drive, it must first be unmounted\n"
-  "(via the command 'devinit nnnn *') before the new tape can be\n"
-  "mounted. Otherwise the devinit attempt to mount the new tape\n"
-  "is rejected.\n")
+  "of whether or not there is already a tape mounted on the drive.\n"
+  "This is the default state.\n"
+  "Specifying DISALLOW or DISABLE prevents new tapes from being\n"
+  "mounted if one is already mounted. When DISALLOW or DISABLE has\n"
+  "been specified and a tape is already mounted on the drive, it\n"
+  "must first be unmounted (via the command 'devinit nnnn *') before\n"
+  "the new tape can be mounted. Otherwise the devinit attempt to\n"
+  "mount the new tape is rejected.\n")
 
 COMMAND("autoinit",  PANEL+CONFIG,  SYSCMDALL-SYSOPER,  autoinit_cmd,  
   "Display/Set automatic create empty tape file switch", 
