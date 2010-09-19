@@ -9510,25 +9510,6 @@ int i;
 }
 
 /*-------------------------------------------------------------------*/
-/* qcodepages command                                                */
-/*-------------------------------------------------------------------*/
-int qcodepages_cmd(int argc, char *argv[], char *cmdline)
-{
-    UNREFERENCED(cmdline);
-    UNREFERENCED(argv);
-
-    if (argc != 1)
-    {
-        WRMSG( HHC17000, "E" );
-        return -1;
-    }
-
-    query_codepages();
-
-    return 0;
-}
-
-/*-------------------------------------------------------------------*/
 /* qcpuid command                                                    */
 /*-------------------------------------------------------------------*/
 int qcpuid_cmd(int argc, char *argv[], char *cmdline)

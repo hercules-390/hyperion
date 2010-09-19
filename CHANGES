@@ -1,3 +1,4 @@
+19 Sep 2010 Process Panel started scripts in a seperate thread. - Paul Gorlinsky
 19 Sep 2010 Message Security Assist Extension 4 - Bernard van der Helm
 19 Sep 2010 Change SYMBOL processing to use either $() or ${} syntax and support
             default assignment if SYMBOL is not defined. - Paul Gorlinsky

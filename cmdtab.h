@@ -444,8 +444,7 @@ COMMAND("codepage",  PANEL+CONFIG,  SYSCMDALL,          codepage_cmd,
     "Format: \"codepage [cp]\"\n"
     "If no operand is specified, the current codepage is displayed.\n"
     "If 'cp' is specified, then codepage is set to the specified page\n"
-    "if the page is valid. Type 'qcodepages' for a list of valid 'cp'\n"
-    "operands.\n")
+    "if the page is valid.\n")
 
 COMMAND("diag8cmd",  CONFIG,        SYSCMDALL,          diag8_cmd,    
   "Set diag8 command option", 
@@ -688,10 +687,6 @@ COMMAND("fcb",       PANEL,         SYSCMDALL,          fcb_cmd,
   "Display the current FCB (if only the printer is given)",
    "Reset the fcb to the standard one \n" 
    "Load a fcb image \n")
-
-CMDABBR("qcodepages",5,PANEL,       SYSCMDALL,          qcodepages_cmd,
-  "Display list of valid codepages",
-  "Display codepages currently available for selection\n")
 
 CMDABBR("qcpuid",5,  PANEL,         SYSCMDALL,          qcpuid_cmd,
   "Display cpuid",
