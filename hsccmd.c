@@ -56,6 +56,7 @@ extern void ecpsvm_command( int argc, char **argv );
 int ProcessPanelCommand ( char * );
 int exec_cmd(int argc, char *argv[],char *cmdline);
 int process_script_file ( char *, int );
+void *script_process_thread(void *);
 
 static void fcb_dump( DEVBLK*, char *, unsigned int );
 /* $test_cmd - do something or other */
@@ -9133,6 +9134,7 @@ static int scr_recursion=0;     /* Recursion count (set to 0) */
 static int scr_aborted=0;          /* Script abort flag */
 static int scr_uaborted=0;          /* Script user abort flag */
 TID scr_tid=0;
+static char *pszCmdline = NULL;     /* save pointer to cmdline */
 int scr_recursion_level() { return scr_recursion; }
 
 /*-------------------------------------------------------------------*/
@@ -9156,38 +9158,70 @@ int cscript_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int script_cmd(int argc, char *argv[], char *cmdline)
 {
+    int rc;
+    UNREFERENCED(argv);
 
-    int i;
-
-    UNREFERENCED(cmdline);
     if(argc<2)
     {
-        WRMSG(HHC02202, "E");
+        WRMSG( HHC02299, "E", argv[0] );
         return 1;
     }
+
     if(scr_tid==0)
     {
-        scr_tid=thread_id();
-        scr_aborted=0;
-        scr_uaborted=0;
+        pszCmdline = strdup(cmdline);
+
+        scr_aborted = 0;
+        scr_uaborted = 0;
+        rc = create_thread(&scr_tid,DETACHED,
+                  script_process_thread,NULL,"script processing");
+        if (rc)
+        {
+            if (pszCmdline != NULL)
+            {
+                free(pszCmdline);
+                pszCmdline = NULL;
+            }
+            WRMSG(HHC00102, "E", strerror(rc));
+            scr_tid = 0;
+        }
     }
     else
     {
-        if(scr_tid!=thread_id())
+        if( scr_tid != 0)
         {
             WRMSG(HHC02258, "E");
             return 1;
         }
     }
 
-    for(i=1;i<argc;i++)
-    {
-        process_script_file(argv[i],0);
-    }
-    return(0);
+    return 0;
 }
 
+void *script_process_thread( void *cmd)
+{
+int     cmd_argc;
+char*   cmd_argv[MAX_ARGS];
+int     i;
 
+    UNREFERENCED(cmd);
+
+    /* Parse the command line into its individual arguments...
+       Note: original command line now sprinkled with nulls */
+    parse_args (pszCmdline, MAX_ARGS, cmd_argv, &cmd_argc);
+
+    /* If no command was entered (i.e. they entered just a comment
+       (e.g. "# comment")) then ignore their input */
+    if ( cmd_argc > 1 )
+        for(i=1;i<cmd_argc;i++)
+            process_script_file(cmd_argv[i],0);
+    scr_tid = 0;
+    scr_aborted = 0;
+    scr_uaborted = 0;
+    free(pszCmdline);
+    pszCmdline = NULL;
+    return 0;
+}
 
 void script_test_userabort()
 {
@@ -9301,7 +9335,7 @@ char    pathname[MAX_PATH];             /* (work)                    */
         /* Process the command */
 
         for (p = scrbuf; isspace(*p); p++);
-
+        
         panel_command(p);
         script_test_userabort();
         if(scr_aborted)
@@ -9328,16 +9362,15 @@ char    pathname[MAX_PATH];             /* (work)                    */
 rexx_done:
 #endif /* defined(HAVE_REGINA_REXXSAA_H) */
     fclose(scrfp);
-    scr_recursion--;    /* Decrement recursion count */
+    scr_recursion--;        /* Decrement recursion count */
     if(scr_recursion==0)
     {
-      scr_aborted=0;    /* reset abort flag */
-      scr_tid=0;    /* reset script thread id */
+        scr_aborted=0;      /* reset abort flag */
+        scr_tid=0;          /* reset script thread id */
     }
 
     return 0;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* pause command - sleep for n seconds                               */
@@ -9356,11 +9389,21 @@ int pause_cmd(int argc, char *argv[], char *cmdline)
             WRMSG(HHC02205, "E", argv[1], "" );
         else
         {
-            if (scr_tid != 0)
+            if (sysblk.impltid != thread_id() )
             {
-                WRMSG(HHC02262, "I",sleepamt);
-                SLEEP(sleepamt);
-                WRMSG(HHC02263, "I");
+                int i;
+                if (MLVL(VERBOSE))
+                    WRMSG(HHC02262, "I",sleepamt);
+                for( i = sleepamt; i > 0; i--)
+                {
+                    SLEEP(1);
+                    if (scr_uaborted) break;
+                }
+                if (!scr_uaborted)
+                {
+                    if (MLVL(VERBOSE))
+                        WRMSG(HHC02263, "I");
+                }
             }
             else
             {

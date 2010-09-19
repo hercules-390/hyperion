@@ -1139,7 +1139,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02258 "Only 1 script may be invoked from the panel at any time"
 #define HHC02259 "Script aborted: '%s'"
 #define HHC02260 "Script file processing started using file '%s'"
-#define HHC02261 "Script file not processing; %s statement ignored"
+#define HHC02261 "Script file statement only; %s ignored"
 #define HHC02262 "Script file processing paused for %d seconds..."
 #define HHC02263 "Script file processing resuming..."
 #define HHC02264 "Script file processing complete"
@@ -1178,7 +1178,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02296 "Capping rate for each non-CP CPU is %d MIPS"
 #define HHC02297 "MIP capping is not enabled"
 #define HHC02298 "%1d:%04X drive is empty"
-#define HHC02299 "Invalid command format. Type 'help %s' for assistance."
+#define HHC02299 "Invalid command usage. Type 'help %s' for assistance."
 
 // reserve 023xx for ieee.c
 #define HHC02300 "Function '%s': unexpectedly converting to '%s'"
