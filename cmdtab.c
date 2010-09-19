@@ -307,7 +307,7 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
     if ( argc == 2 ) 
     {
         p = strchr(argv[1], '*');
-        if ( p != NULL );
+        if ( p != NULL )
         {
             len = (int)(p - argv[1]);
             if ( strlen( argv[1] ) > ( len + 1) )
