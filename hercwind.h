@@ -12,6 +12,10 @@
 
 // $Id$
 
+/*
+    (c) Copyright TurboHercules, SAS 2010 - All Rights Reserved
+        Contains Licensed Materials - Property of TurboHercules, SAS
+ */
 
 #if !defined(_HERCWIND_H)
 #define _HERCWIND_H
@@ -143,7 +147,6 @@ typedef int             mode_t;
 #endif
 
 #define OPTION_CONFIG_SYMBOLS
-#define OPTION_ENHANCED_CONFIG_SYMBOLS
 #define OPTION_ENHANCED_CONFIG_INCLUDE
 
 #if !( defined( OPTION_FTHREADS ) || defined( OPTION_WTHREADS ) )
@@ -151,7 +154,13 @@ typedef int             mode_t;
 #endif
 
 #define HAVE_STRSIGNAL
+
+#if defined(TURBO_HERCULES)
+#undef EXTERNALGUI
+#else // !defined(TURBO_HERCULES)
 #define EXTERNALGUI
+#endif // defined(TURBO_HERCULES)
+
 #define NO_SETUID
 #define NO_SIGABEND_HANDLER
 

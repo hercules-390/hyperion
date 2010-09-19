@@ -380,25 +380,11 @@ static int read_config (char *fname, FILE *fp)
 {
 int     c;                              /* Character work area       */
 int     stmtlen;                        /* Statement length          */
-#if defined( OPTION_ENHANCED_CONFIG_SYMBOLS )
-int     inc_dollar;                     /* >=0 Ndx of dollar         */
-int     inc_lbrace;                     /* >=0 Ndx of lbrace + 1     */
-int     inc_colon;                      /* >=0 Ndx of colon          */
-int     inc_equals;                     /* >=0 Ndx of equals         */
-char    *inc_envvar;                    /* ->Environment variable    */
-#endif // defined( OPTION_ENHANCED_CONFIG_SYMBOLS )
 int     lstarted;                       /* Indicate if non-whitespace*/
                                         /* has been seen yet in line */
 #if defined(OPTION_CONFIG_SYMBOLS)
 char   *buf1;                           /* Pointer to resolved buffer*/
 #endif /*defined(OPTION_CONFIG_SYMBOLS)*/
-
-#if defined( OPTION_ENHANCED_CONFIG_SYMBOLS )
-    inc_dollar = -1;
-    inc_lbrace = -1;
-    inc_colon  = -1;
-    inc_equals = -1;
-#endif // defined( OPTION_ENHANCED_CONFIG_SYMBOLS )
 
     while (1)
     {
@@ -440,115 +426,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
                 return -1;
             }
 
-#if defined( OPTION_ENHANCED_CONFIG_SYMBOLS )
-            /* inc_dollar already processed? */
-            if (inc_dollar >= 0)
-            {
-                /* Left brace already processed? */
-                if (inc_lbrace >= 0)
-                {
-                    /* End of variable spec? */
-                    if (c == '}')
-                    {
-                        /* Terminate it */
-                        buf[stmtlen] = '\0';
 
-                        /* Terminate var name if we have a inc_colon specifier */
-                        if (inc_colon >= 0)
-                        {
-                            buf[inc_colon] = '\0';
-                        }
-
-                        /* Terminate var name if we have a default value */
-                        if (inc_equals >= 0)
-                        {
-                            buf[inc_equals] = '\0';
-                        }
-
-                        /* Reset statement index to start of variable */
-                        stmtlen = inc_dollar;
-
-                        /* Get variable value */
-                        inc_envvar = (char *)get_symbol (&buf[inc_lbrace]);
-
-                        /* Variable unset? */
-                        if (inc_envvar == NULL)
-                        {
-                            /* Substitute default if specified */
-                            if (inc_equals >= 0)
-                            {
-                                inc_envvar = &buf[inc_equals+1];
-                            }
-                        }
-                        else // (environ variable defined)
-                        {
-                            /* Have ":=" specification? */
-                            if (/*inc_colon >= 0 && */inc_equals >= 0)
-                            {
-                                /* Substitute default if value is NULL */
-                                if (strlen (inc_envvar) == 0)
-                                {
-                                    inc_envvar = &buf[inc_equals+1];
-                                }
-                            }
-                        }
-
-                        /* Have a value? (environment or default) */
-                        if (inc_envvar != NULL)
-                        {
-                            /* Check that statement does not overflow buffer */
-                            if (stmtlen+strlen(inc_envvar) >= sizeof(buf) - 1)
-                            {
-                                WRMSG(HHC01433, "S", inc_stmtnum[inc_level], fname);
-                                return -1;
-                            }
-
-                            /* Copy to buffer and update index */
-                            stmtlen += sprintf (&buf[stmtlen], "%s", inc_envvar);
-                        }
-
-                        /* Reset indexes */
-                        inc_equals = -1;
-                        inc_colon = -1;
-                        inc_lbrace = -1;
-                        inc_dollar = -1;
-                        continue;
-                    }
-                    else if (c == ':' && inc_colon < 0 && inc_equals < 0)
-                    {
-                        /* Remember possible start of default specifier */
-                        inc_colon = stmtlen;
-                    }
-                    else if (c == '=' && inc_equals < 0)
-                    {
-                        /* Remember possible start of default specifier */
-                        inc_equals = stmtlen;
-                    }
-                }
-                else // (inc_lbrace < 0)
-                {
-                    /* Remember start of variable name */
-                    if (c == '{')
-                    {
-                        inc_lbrace = stmtlen + 1;
-                    }
-                    else
-                    {
-                        /* Reset inc_dollar specifier if immediately following
-                           character is not a left brace */
-                        inc_dollar = -1;
-                    }
-                }
-            }
-            else // (inc_dollar < 0)
-            {
-                /* Enter variable substitution state */
-                if (c == '$')
-                {
-                    inc_dollar = stmtlen;
-                }
-            }
-#endif // defined( OPTION_ENHANCED_CONFIG_SYMBOLS )
 
             /* Append character to buffer */
             buf[stmtlen++] = c;
@@ -563,8 +441,6 @@ char   *buf1;                           /* Pointer to resolved buffer*/
         /* Ignore comments and null statements */
         if (stmtlen == 0 || buf[0] == '*' || buf[0] == '#')
            continue;
-
-        /* Parse the statement just read */
 
 #if defined(OPTION_CONFIG_SYMBOLS)
 
@@ -588,6 +464,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
         }
 #endif /*defined(OPTION_CONFIG_SYMBOLS)*/
 
+        /* Parse the statement just read */
         parse_args (buf, MAX_ARGS, addargv, &addargc);
 
         break;
@@ -750,7 +627,11 @@ int     msglevel = FALSE;               /* indicator for msglevel
 #endif // defined(OPTION_FISHIO)
 
     /* Default the licence setting */
+#if defined(TURBO_HERCULES)
+    losc_set(PGM_PRD_OS_LICENSED);	// default for TurboHercules
+#else // !defined(TURBO_HERCULES)
     losc_set(PGM_PRD_OS_RESTRICTED);
+#endif // defined(TURBO_HERCULES)
 
     /* Default CPU type CP */
     for (i = 0; i < MAX_CPU_ENGINES; i++)

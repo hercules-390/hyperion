@@ -8054,6 +8054,41 @@ int defsym_cmd(int argc, char *argv[], char *cmdline)
     free(sym);
     return 0;
 }
+
+/*-------------------------------------------------------------------*/
+/* delsym command - delete substitution symbol                       */
+/*-------------------------------------------------------------------*/
+int delsym_cmd(int argc, char *argv[], char *cmdline)
+{
+    char* sym;
+
+    UNREFERENCED(cmdline);
+    if ( argc != 2 )
+    {
+        WRMSG( HHC02299, "E" );
+        return -1;
+    }
+    /* point to symbol name */
+    sym = strdup(argv[1]);
+
+    if ( sym == NULL )
+    {
+        WRMSG(HHC02219, "E", "strdup()", strerror( errno ) );
+        return -1;
+    }
+
+    /* Symbol names stored in UC */
+    {
+        int i;
+        for ( i = 0; sym[i] != '\0'; i++ )
+            sym[i] = toupper( sym[i] );
+    }
+
+    /* delete the symbol */
+    del_symbol(sym);
+    free(sym);
+    return 0;
+}
 #endif // defined(OPTION_CONFIG_SYMBOLS)
 
 

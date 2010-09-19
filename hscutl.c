@@ -1,4 +1,5 @@
 /*  HSCUTL.C    (c) Copyright Ivan Warren & Others, 2003-2010        */
+/*              (c) Copyright TurboHercules, SAS 2010                */
 /*              Hercules Platform Port & Misc Functions              */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -336,6 +337,30 @@ static SYMBOL_TOKEN *get_symbol_token(const char *sym,int alloc)
     symbol_count++;
     return(tok);
 }
+DLL_EXPORT void del_symbol(const char *sym)
+{
+    SYMBOL_TOKEN        *tok;
+    int i;
+
+    for(i=0;i<symbol_count;i++)
+    {
+        tok=symbols[i];
+        if(tok==NULL)
+        {
+            continue;
+        }
+        if(strcasecmp(symbols[i]->var,sym)==0)
+        {
+            if ( tok->val != NULL ) free(tok->val);
+            if ( tok->var != NULL ) free(tok->var);
+            free(tok);
+            symbols[i] = NULL;
+            return;
+        }
+    }    
+
+    return;
+}
 
 DLL_EXPORT void set_symbol(const char *sym,const char *value)
 {
@@ -465,69 +490,168 @@ static void append_symbol(char **bfr,char *sym,int *ix_p,int *max_p)
 
 DLL_EXPORT char *resolve_symbol_string(const char *text)
 {
-    char *resstr;
-    int curix,maxix;
-    char cursym[MAX_SYMBOL_SIZE+1];
-    int cursymsize=0;
-    int q1,q2;
-    int i;
+    char    buf[MAX_PATH*4];                /* Statement buffer          */
+    int     c;                              /* Character work area       */
+    int     i = 0;                          /* Position in the input     */
+    int     stmtlen = 0;                    /* Statement length          */
+    int     inc_dollar = -1;                /* >=0 Ndx of dollar         */
+    int     inc_lbrace = -1;                /* >=0 Ndx of lbrace + 1     */
+    int     inc_colon  = -1;                /* >=0 Ndx of colon          */
+    int     inc_equals = -1;                /* >=0 Ndx of equals         */
+    int     lstarted;                       /* Indicate if non-whitespace*/
+    char   *inc_envvar;                     /* ->Environment variable    */
+    int     f$Parens    = TRUE;             /* Is it $() or ${} ?        */
 
-    /* Quick check - look for QUAL1 ('$') or QUAL2 ('(').. if not found, return the string as-is */
-    if(!strchr(text,SYMBOL_QUAL_1) || !strchr(text,SYMBOL_QUAL_2))
+    if( strstr( text, "$(" ) == NULL && strstr( text, "${" ) == NULL )
     {
         /* Malloc anyway - the caller will free() */
-        resstr = strdup( text );
-        return(resstr);
+        return( strdup( text ) );
     }
-    q1=0;
-    q2=0;
-    curix=0;
-    maxix=0;
-    resstr=NULL;
-    for(i=0;text[i]!=0;i++)
+
+    memset(buf,0,sizeof(buf));
+
+    while(1)
     {
-        if(q1)
+        for (i = 0, stmtlen = 0, lstarted = 0; ;i++)
         {
-            if(text[i]==SYMBOL_QUAL_2)
+            c = text[i];
+
+            /* Ignore nulls and carriage returns */
+            if (c == '\0' ) break;
+
+            /* Check if it is a white space and no other character yet */
+            if(!lstarted && isspace(c)) continue;
+            lstarted=1;
+
+            /* Check that statement does not overflow buffer */
+            if (stmtlen >= (int)(sizeof(buf) - 1))
             {
-                q2=1;
-                q1=0;
-                continue;
+                WRMSG( HHC01418, "E" );
+                return( strdup(text) );
             }
-            q1=0;
-            buffer_addchar_and_alloc(&resstr,SYMBOL_QUAL_1,&curix,&maxix);
-            buffer_addchar_and_alloc(&resstr,text[i],&curix,&maxix);
-            continue;
-        }
-        if(q2)
-        {
-            if(text[i]==SYMBOL_QUAL_3)
+
+            /* inc_dollar already processed? */
+            if (inc_dollar >= 0)
             {
-                append_symbol(&resstr,cursym,&curix,&maxix);
-                cursymsize=0;
-                q2=0;
-                continue;
+                /* Left brace already processed? */
+                if (inc_lbrace >= 0)
+                {
+                    /* End of variable spec? */
+                    if ( ( f$Parens && c == ')' )  || ( !f$Parens && c == '}' ) )    
+                    {
+                        /* Terminate it */
+                        buf[stmtlen] = '\0';
+
+                        /* Terminate var name if we have a inc_colon specifier */
+                        if (inc_colon >= 0)
+                        {
+                            buf[inc_colon] = '\0';
+                        }
+
+                        /* Terminate var name if we have a default value */
+                        if (inc_equals >= 0)
+                        {
+                            buf[inc_equals] = '\0';
+                        }
+
+                        /* Reset statement index to start of variable */
+                        stmtlen = inc_dollar;
+
+                        /* Get variable value */
+                        inc_envvar = (char *)get_symbol (&buf[inc_lbrace]);
+
+                        /* Variable unset? */
+                        if (inc_envvar == NULL)
+                        {
+                            /* Substitute default if specified */
+                            if (inc_equals >= 0)
+                            {
+                                inc_envvar = &buf[inc_equals+1];
+                            }
+                        }
+                        else // (environ variable defined)
+                        {
+                            /* Have ":=" specification? */
+                            if (/*inc_colon >= 0 && */inc_equals >= 0)
+                            {
+                                /* Substitute default if value is NULL */
+                                if (strlen (inc_envvar) == 0)
+                                {
+                                    inc_envvar = &buf[inc_equals+1];
+                                }
+                            }
+                        }
+
+                        /* Have a value? (environment or default) */
+                        if (inc_envvar != NULL)
+                        {
+                            /* Check that statement does not overflow buffer */
+                            if (stmtlen+strlen(inc_envvar) >= sizeof(buf) - 1)
+                            {
+                                WRMSG( HHC01418, "E" );
+                                return( strdup( text ) );
+                            }
+
+                            /* Copy to buffer and update index */
+                            stmtlen += sprintf (&buf[stmtlen], "%s", inc_envvar);
+                        }
+
+                        /* Reset indexes */
+                        inc_equals = -1;
+                        inc_colon = -1;
+                        inc_lbrace = -1;
+                        inc_dollar = -1;
+                        continue;
+                    }
+                    else if (c == ':' && inc_colon < 0 && inc_equals < 0)
+                    {
+                        /* Remember possible start of default specifier */
+                        inc_colon = stmtlen;
+                    }
+                    else if (c == '=' && inc_equals < 0)
+                    {
+                        /* Remember possible start of default specifier */
+                        inc_equals = stmtlen;
+                    }
+                }
+                else // (inc_lbrace < 0)
+                {
+                    /* Remember start of variable name */
+                    if (c == '(' || c == '{' )
+                    {
+                        if ( c == '(' )
+                            f$Parens = TRUE;
+                        else
+                            f$Parens = FALSE;
+
+                        inc_lbrace = stmtlen + 1;
+                    }
+                    else
+                    {
+                        /* Reset inc_dollar specifier if immediately following
+                        character is not a left brace */
+                        inc_dollar = -1;
+                    }
+                }
             }
-            if(cursymsize<MAX_SYMBOL_SIZE)
+            else // (inc_dollar < 0)
             {
-                cursym[cursymsize++]=text[i];
-                cursym[cursymsize]=0;
+                /* Enter variable substitution state */
+                if (c == '$')
+                {
+                    inc_dollar = stmtlen;
+                }
             }
-            continue;
-        }
-        if(text[i]==SYMBOL_QUAL_1)
-        {
-            q1=1;
-            continue;
-        }
-        buffer_addchar_and_alloc(&resstr,text[i],&curix,&maxix);
+
+            /* Append character to buffer */
+            buf[stmtlen++] = c;
+
+        } /* end for(stmtlen) */
+
+        break;
     }
-    if(!resstr)
-    {
-        /* Malloc anyway - the caller will free() */
-        resstr = strdup( text );
-    }
-    return(resstr);
+
+    return (strdup(buf));
 }
 
 /* (called by defsym panel command) */

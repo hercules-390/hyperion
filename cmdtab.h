@@ -1138,6 +1138,11 @@ COMMAND("defsym",    PANEL+CONFIG,  SYSCMDALL-SYSOPER,  defsym_cmd,
     "configuration file statement in Hercules documentation.\n"
     "Enter \"defsym\" by itself to display the values of all defined\n"
     "symbols.\n")
+
+COMMAND("delsym",    PANEL+CONFIG,  SYSCMDALL-SYSOPER,  delsym_cmd,
+  "Delete a symbol",
+    "Format: \"delsym symbol\". Deletes symbol 'symbol'.\n")
+
 #endif
 
 COMMAND("script",    PANEL,         SYSCMDALL-SYSOPER,  script_cmd,

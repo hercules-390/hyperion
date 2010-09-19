@@ -96,6 +96,7 @@
 
 #if defined(OPTION_CONFIG_SYMBOLS)
   HUT_DLL_IMPORT void set_symbol(const char *,const char *);
+  HUT_DLL_IMPORT void del_symbol(const char *);
   HUT_DLL_IMPORT const char *get_symbol(const char *);
   HUT_DLL_IMPORT char *resolve_symbol_string(const char *);
   HUT_DLL_IMPORT void kill_all_symbols(void);

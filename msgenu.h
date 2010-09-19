@@ -838,6 +838,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01416 "Build information:"
 #define HHC01417 "%s"
 
+#define HHC01418 "Symbol expansion will result in buffer overflow; ignored"
 #define HHC01419 "Symbol and/or Value is invalid; ignored"
 
 /* hscmisc.c */
