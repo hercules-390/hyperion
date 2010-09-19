@@ -957,6 +957,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01606 "cmdlevel[%2.2X] is '%s'"
 #define HHC01607 "No help available yet for message '%s'"
 #define HHC01608 "PF KEY SUBSTitution results would exceed command line maximum size of %d; truncation occurred"
+#define HHC01609 "No help available for mask '%s'"
 
 /* ecpsvm.c */
 // reserve 017xx for ecps:vm support

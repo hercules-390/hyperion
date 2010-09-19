@@ -322,11 +322,9 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
 
     if (argc < 2 || ( argc == 2 && len >= 0 ) )
     {
+        int first = TRUE;
         if ( argc < 2) 
             len = 0;
-
-        WRMSG( HHC01602, "I", "Command", "Description" );
-        WRMSG( HHC01602, "I", "-------", "-----------------------------------------------" );
 
         /* List standard formatted commands from our routing table... */
 
@@ -339,10 +337,23 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
                && (pCmdTab->shortdesc) 
                && ( len == 0 || ( len > 0 && !strncasecmp(argv[1],pCmdTab->statement,len) ) )
                )
+            {
+                if (first)
+                {
+                    first = FALSE;
+                    WRMSG( HHC01602, "I", "Command", "Description" );
+                    WRMSG( HHC01602, "I", "-------", "-----------------------------------------------" );
+                }
                 WRMSG( HHC01602, "I", pCmdTab->statement, pCmdTab->shortdesc );
+            }
         }
-        
-        rc = 0;
+        if (first && len > 0)
+        {
+            WRMSG( HHC01609, "E", argv[1] );
+            rc = -1;
+        }
+        else
+            rc = 0;
     }
     else
     {
