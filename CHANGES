@@ -15,8 +15,9 @@
             3) Update of CKD RDC features and documentation of feature bits.
                Device features corrected to reflect Hercules supported and
                unsupported CKD features.
-12 Sep 2010 Support REXX as scripting language for .cnf .rc and script files - Jan Jaeger
+14 Sep 2010 CMPSC Fix - Richard Pinion / Bernard van der Helm
 13 Sep 2010 Issue herc commands via HTTP /cgi-bin/tasks/cmd?cmd=xxx - Robert Hodge
+12 Sep 2010 Support REXX as scripting language for .cnf .rc and script files - Jan Jaeger
 05 Sep 2010 Fast-BCR-Serialization Facility - Roger Bowler
 31 Aug 2010 Comment out unimplemented hetmap support for "tapemap" alias
             that produces incorrect output under Linux due to libtool
