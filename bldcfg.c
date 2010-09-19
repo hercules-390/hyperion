@@ -627,11 +627,7 @@ int     msglevel = FALSE;               /* indicator for msglevel
 #endif // defined(OPTION_FISHIO)
 
     /* Default the licence setting */
-#if defined(TURBO_HERCULES)
-    losc_set(PGM_PRD_OS_LICENSED);	// default for TurboHercules
-#else // !defined(TURBO_HERCULES)
     losc_set(PGM_PRD_OS_RESTRICTED);
-#endif // defined(TURBO_HERCULES)
 
     /* Default CPU type CP */
     for (i = 0; i < MAX_CPU_ENGINES; i++)
