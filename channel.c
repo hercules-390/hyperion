@@ -2719,7 +2719,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 
         /* For an invalid CCW address in a TIC we must backup to TIC+8 */
         if(ticaddr && (chanstat & CSW_PROGC))
-            ccwaddr = ticaddr;
+            ccwaddr = ticaddr-8;
 
         /* Point to the CCW in main storage */
         ccw = dev->mainstor + ccwaddr;
