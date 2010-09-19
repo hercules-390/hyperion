@@ -9505,24 +9505,6 @@ int qcpuid_cmd(int argc, char *argv[], char *cmdline)
                            ((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32) );
     return 0;
 }
-/*-------------------------------------------------------------------*/
-/* qlpar command                                                     */
-/*-------------------------------------------------------------------*/
-int qlpar_cmd(int argc, char *argv[], char *cmdline)
-{
-
-    UNREFERENCED(cmdline);
-    UNREFERENCED(argv);
-
-    if (argc != 1)
-    {
-        WRMSG( HHC17000, "E" );
-        return -1;
-    }
-
-    WRMSG( HHC17006, "I", sysblk.lparnum, str_lparname() );
-    return 0;
-}
 
 #if       defined( OPTION_CONFIG_SYMBOLS )
 /*-------------------------------------------------------------------*/

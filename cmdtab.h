@@ -697,10 +697,6 @@ CMDABBR("qcpuid",5,  PANEL,         SYSCMDALL,          qcpuid_cmd,
   "Display cpuid",
   "Display cpuid and STSI results presented to the SCP\n")
 
-CMDABBR("qlpar",5,   PANEL,         SYSCMDALL,          qlpar_cmd,
-  "Display lpar name and number",
-  "Display LPAR name and number presented to the SCP\n")
-
 #if        defined( OPTION_CONFIG_SYMBOLS )
 CMDABBR("qpfkeys",3, PANEL,         SYSCMDALL,          qpfkeys_cmd,
   "Display pf keys",
