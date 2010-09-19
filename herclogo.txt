@@ -26,14 +26,14 @@ Processors        :
 $(HOSTNUMCPUS)
 @NL
 @SF P
-Chanl Subsys      :
+LPAR Name         :
 @SF HP
-$(CSS)
+$(LPARNAME)
 @NL
 @SF P
 Device number     :
 @SF HP
-$(CCUU)
+$(CSS):$(CCUU)
 @NL
 @SF P
 Subchannel        :

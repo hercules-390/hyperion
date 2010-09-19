@@ -1074,6 +1074,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02105 "Logger: log to '%s'"
 #define HHC02106 "Logger: log switched off"
 
+#define HHC02197 "Symbol name %s is reserved" 
 #define HHC02198 "Device attached"
 #define HHC02199 "Symbol %-12s '%s'"
 // reserve 022xx for command processing */

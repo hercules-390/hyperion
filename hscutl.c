@@ -416,13 +416,13 @@ DLL_EXPORT const char *get_symbol(const char *sym)
     time_t          raw_tt;
     static char     buf[80];
 
-    if ( CMD(sym,!DATE,5) )
+    if ( CMD(sym,DATE,4) )
     {
         time( &raw_tt );        // YYYYMMDD
         strftime(buf, sizeof(buf)-1, "%Y%m%d", localtime(&raw_tt) );
         return(buf);
     }
-    else if ( CMD(sym,!TIME,5) )
+    else if ( CMD(sym,TIME,4) )
     {
         time( &raw_tt );                // HHMMSS
         strftime(buf, sizeof(buf)-1, "%H%M%S", localtime(&raw_tt) );
