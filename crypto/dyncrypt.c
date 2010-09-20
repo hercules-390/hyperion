@@ -352,6 +352,70 @@ static void sha512_seticv(sha512_context *ctx, BYTE icv[64])
 #endif /* __SHA512_COMPILE__ */
 #endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2 */
 
+#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
+#ifndef __GF_COMPILE__
+#define __GF_COMPILE__
+/* LibTomCrypt, modular cryptographic library -- Tom St Denis
+ *
+ * LibTomCrypt is a library that provides various cryptographic
+ * algorithms in a highly modular and flexible manner.
+ *
+ * The library is free for all purposes without any express
+ * guarantee it works.
+ *
+ * Tom St Denis, tomstdenis@..., http://libtomcrypt.org
+*/
+
+/* Remarks Bernard van der Helm: Strongly adjusted for
+ * Hercules-390. We need the internal function gcm_gf_mult.
+ * The rest of of the code is deleted.
+ *
+ * Thanks Tom!
+*/
+
+/* Hercules adjustments */
+#define zeromem(dst, len)    memset((dst), 0, (len))
+#define GF(X, Y, Z)          gcm_gf_mult((X), (Y), (Z))
+#define XMEMCPY              memcpy
+
+/* Original code from gcm_gf_mult.c */
+/* right shift */
+static void gcm_rightshift(unsigned char *a)
+{
+  int x;
+  
+  for(x = 15; x > 0; x--) 
+    a[x] = (a[x] >> 1) | ((a[x-1] << 7) & 0x80);
+  a[0] >>= 1;
+}
+
+/* c = b*a */
+static const unsigned char mask[] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
+static const unsigned char poly[] = { 0x00, 0xE1 };
+
+void gcm_gf_mult(const unsigned char *a, const unsigned char *b, unsigned char *c)
+{
+  unsigned char Z[16], V[16];
+  unsigned x, y, z;
+
+  zeromem(Z, 16);
+  XMEMCPY(V, a, 16);
+  for (x = 0; x < 128; x++) 
+  {
+    if(b[x>>3] & mask[x&7]) 
+    {
+      for(y = 0; y < 16; y++) 
+        Z[y] ^= V[y];
+    }
+    z = V[15] & 0x01;
+    gcm_rightshift(V);
+    V[0] ^= poly[z];
+  }
+  XMEMCPY(c, Z, 16);
+}
+#endif /* __GF_COMPILE__ */
+#endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4 */
+
 /*----------------------------------------------------------------------------*/
 /* Needed functions from sha1.c and sha256.c.                                 */
 /* We do our own counting and padding, we only need the hashing.              */
@@ -708,6 +772,83 @@ static void ARCH_DEP(kimd_sha)(int r1, int r2, REGS *regs, int klmd)
     {
       if(unlikely(klmd))
         return;
+      regs->psw.cc = 0;
+      return;
+    }
+  }
+
+  /* CPU-determined amount of data processed */
+  regs->psw.cc = 3;
+}
+
+/*----------------------------------------------------------------------------*/
+/* B93E Compute intermediate message digest (KIMD) FC 65                      */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(kimd_ghash)(int r1, int r2, REGS *regs)
+{
+  int crypted;
+  int i;
+  BYTE message_block[16];
+  BYTE parameter_block[32];
+
+  UNREFERENCED(r1);
+
+  /* Check special conditions */
+  if(unlikely(GR_A(r2 + 1, regs) % 16))
+    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+  /* Return with cc 0 on zero length */
+  if(unlikely(!GR_A(r2 + 1, regs)))
+  {
+    regs->psw.cc = 0;
+    return;
+  }
+
+  /* Test writeability output chaining value */
+  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 15, ACCTYPE_WRITE, regs);
+
+  /* Fetch the parameter block */
+  ARCH_DEP(vfetchc)(parameter_block, 31, GR_A(1, regs), 1, regs);
+
+#ifdef OPTION_KIMD_DEBUG
+  LOGBYTE("icv   :", parameter_block, 16);
+  LOGBYTE("h     :", &parameter_block[16], 16);
+#endif
+
+  /* Try to process the CPU-determined amount of data */
+  for(crypted = 0; crypted < PROCESS_MAX; crypted += 16)
+  {
+    /* Fetch and process a block of data */
+    ARCH_DEP(vfetchc)(message_block, 15, GR_A(r2, regs), r2, regs);
+
+#ifdef OPTION_KIMD_DEBUG
+    LOGBYTE("input :", message_block, 16);
+#endif
+
+    /* XOR and multiply */
+    for(i = 0; i < 16; i++)
+      parameter_block[i] ^= message_block[i];
+    GF(parameter_block, &parameter_block[16], parameter_block);
+
+    /* Store the output chaining value */
+    ARCH_DEP(vstorec)(parameter_block, 15, GR_A(1, regs), 1, regs);
+
+#ifdef OPTION_KIMD_DEBUG
+    LOGBYTE("ocv   :", parameter_block, 16);
+#endif
+
+    /* Update the registers */
+    SET_GR_A(r2, regs, GR_A(r2, regs) + 16);
+    SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - 16);
+
+#ifdef OPTION_KIMD_DEBUG
+    WRMSG(HHC90108, "D", r2, (regs)->GR(r2));
+    WRMSG(HHC90108, "D", r2 + 1, (regs)->GR(r2 + 1));
+#endif
+
+    /* check for end of data */
+    if(unlikely(!GR_A(r2 + 1, regs)))
+    {
       regs->psw.cc = 0;
       return;
     }
@@ -2939,8 +3080,7 @@ DEF_INST(compute_intermediate_message_digest_d)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
     case 65: /* ghash */
     {
-      ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-      //ARCH_DEP(kimd_ghash)(r1, r2, regs, 0);
+      ARCH_DEP(kimd_ghash)(r1, r2, regs);
       break;
     }
 #endif
