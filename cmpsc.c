@@ -81,7 +81,7 @@
 }
 
 /*----------------------------------------------------------------------------*/
-/* Commit intermediate register, except for GR1 and rc3 on interrupt pending  */
+/* Commit intermediate register, except for GR1                               */
 /*----------------------------------------------------------------------------*/
 #ifdef OPTION_CMPSC_DEBUG
 #define COMMITREGS2(regs, iregs, r1, r2) \
@@ -99,11 +99,6 @@
   SET_GR_A((r1) + 1, (regs), GR_A((r1) + 1, (iregs)));\
   SET_GR_A((r2), (regs), GR_A((r2), (iregs)));\
   SET_GR_A((r2) + 1, (regs), GR_A((r2) + 1, (iregs)));\
-  if(INTERRUPT_PENDING(regs)) \
-  { \
-    regs->psw.cc = 3; \
-    return; \
-  } \
 }
 
 /*----------------------------------------------------------------------------*/
@@ -517,8 +512,15 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
     }
     ARCH_DEP(store_iss)(&cc);
 
-    /* Commit registers, return with cc3 on interrupt pending */
+    /* Commit registers */
     COMMITREGS2(regs, iregs, r1, r2);
+
+    /* Return with cc3 on interrupt pending */
+    if(INTERRUPT_PENDING(regs))
+    {
+      regs->psw.cc = 3;
+      return;
+    }
   }
 
   while(GR_A(r2 + 1, regs))
@@ -1381,8 +1383,15 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
     if(unlikely(ARCH_DEP(vstore)(&ec, ec.oc, ec.ocl)))
       return;
 
-    /* Commit registers, return with cc3 on interrupt pending */
+    /* Commit registers */
     COMMITREGS2(regs, iregs, r1, r2);
+
+    /* Return with cc3 on interrupt pending */
+    if(INTERRUPT_PENDING(regs))
+    {
+      regs->psw.cc = 3;
+      return;
+    }
   }
 
   /* Process last index symbols, never mind about childs written */
