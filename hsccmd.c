@@ -8042,15 +8042,17 @@ int defsym_cmd(int argc, char *argv[], char *cmdline)
         for ( i = 0; sym[i] != '\0'; i++ )
             sym[i] = toupper( sym[i] );
     }
-
-    if ( CMD(sym,DATE,4)     || CMD(sym,VERSION,7)  || CMD(sym,BDATE,5)    ||
+    if (
+         CMD(sym,SYSTYPE,7)  || CMD(sym,SYSNAME,7)  || CMD(sym,SYSPLEX,7)  ||
+         CMD(sym,DATE,4)     || CMD(sym,VERSION,7)  || CMD(sym,BDATE,5)    ||
          CMD(sym,TIME,4)     || CMD(sym,BTIME,5)    || CMD(sym,HOSTNAME,8) ||
          CMD(sym,LPARNAME,8) || CMD(sym,HOSTOS,6)   || CMD(sym,HOSTOSREL,9)||
          CMD(sym,LPARNUM,7)  || CMD(sym,HOSTOSVER,9)|| CMD(sym,HOSTARCH,8) ||
          CMD(sym,CPUID,5)    || CMD(sym,HOSTNUMCPUS,11)||CMD(sym,MODPATH,7)||       
          CMD(sym,MODNAME,7)  || CMD(sym,ARCHMODE,8) || CMD(sym,CPUMODEL,8) ||
          CMD(sym,CPUSERIAL,9)|| CMD(sym,CPUVERID,8) || CMD(sym,CUU,3)      ||
-         CMD(sym,CCUU,4)     || CMD(sym,CSS,3) )
+         CMD(sym,CCUU,4)     || CMD(sym,CSS,3)      || CMD(sym,SYSLEVEL,8)
+       )
     {
         WRMSG( HHC02197, "E", sym );
         free(sym);

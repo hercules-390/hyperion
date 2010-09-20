@@ -360,6 +360,17 @@ U64  syslevel;
 
     WRMSG(HHC00004, "I",systype,sysname,sysplex,syslevel);
 
+    {
+        char buf[128];
+
+        MSGBUF(buf, "%"I64_FMT"X", syslevel );
+        set_symbol("SYSTYPE", systype);
+        set_symbol("SYSNAME", sysname);
+        set_symbol("SYSPLEX", sysplex);
+        set_symbol("SYSLEVEL", buf);
+    }
+       
+
     losc_check(systype);
 
     /* Indicate Event Processed */
