@@ -4677,7 +4677,11 @@ int lparname_cmd(int argc, char *argv[], char *cmdline)
     if (argc == 2)
     {
         set_lparname(argv[1]);
+
+#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
         set_symbol("LPARNAME", str_lparname());
+#endif /* define(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
+
         if ( MLVL(VERBOSE) )
             WRMSG(HHC02204, "I", "lparname", str_lparname());
     }
@@ -4724,7 +4728,10 @@ BYTE    c;
                 char buf[20];
                 MSGBUF( buf, "%02X", sysblk.lparnum);
                 WRMSG(HHC02204, "I", "lparnum", buf);
+
+#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
                 set_symbol("LPARNUM", buf );
+#endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
 
             }
         }
@@ -4763,7 +4770,11 @@ BYTE    c;
             char buf[8];
 
             MSGBUF(buf,"%02X",cpuverid);
+
+#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
             set_symbol("CPUVERID", buf);
+#endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
+            
             sysblk.cpuid &= 0x00FFFFFFFFFFFFFFULL;
             sysblk.cpuid |= (U64)cpuverid << 56;
             if(MLVL(VERBOSE))
@@ -4809,7 +4820,11 @@ BYTE    c;
         {
             char buf[8];
             sprintf(buf,"%04X",cpumodel);
+
+#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
             set_symbol("CPUMODEL", buf);
+#endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
+
             sysblk.cpuid &= 0xFFFFFFFF0000FFFFULL;
             sysblk.cpuid |= (U64)cpumodel << 16;
             if(MLVL(VERBOSE))
@@ -4855,7 +4870,11 @@ BYTE    c;
         {
             char buf[8];
             sprintf(buf,"%06X",cpuserial);
+
+#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
             set_symbol("CPUSERIAL", buf);
+#endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
+
             sysblk.cpuid &= 0xFF000000FFFFFFFFULL;
             sysblk.cpuid |= (U64)cpuserial << 32;
             if(MLVL(VERBOSE))
@@ -8043,15 +8062,22 @@ int defsym_cmd(int argc, char *argv[], char *cmdline)
             sym[i] = toupper( sym[i] );
     }
     if (
-         CMD(sym,SYSTYPE,7)  || CMD(sym,SYSNAME,7)  || CMD(sym,SYSPLEX,7)  ||
-         CMD(sym,DATE,4)     || CMD(sym,VERSION,7)  || CMD(sym,BDATE,5)    ||
-         CMD(sym,TIME,4)     || CMD(sym,BTIME,5)    || CMD(sym,HOSTNAME,8) ||
-         CMD(sym,LPARNAME,8) || CMD(sym,HOSTOS,6)   || CMD(sym,HOSTOSREL,9)||
-         CMD(sym,LPARNUM,7)  || CMD(sym,HOSTOSVER,9)|| CMD(sym,HOSTARCH,8) ||
-         CMD(sym,CPUID,5)    || CMD(sym,HOSTNUMCPUS,11)||CMD(sym,MODPATH,7)||       
-         CMD(sym,MODNAME,7)  || CMD(sym,ARCHMODE,8) || CMD(sym,CPUMODEL,8) ||
-         CMD(sym,CPUSERIAL,9)|| CMD(sym,CPUVERID,8) || CMD(sym,CUU,3)      ||
-         CMD(sym,CCUU,4)     || CMD(sym,CSS,3)      || CMD(sym,SYSLEVEL,8)
+         CMD(sym,VERSION,7)  || CMD(sym,BDATE,5)    || CMD(sym,BTIME,5)    || 
+         CMD(sym,HOSTNAME,8) || CMD(sym,HOSTOS,6)   || CMD(sym,HOSTOSREL,9)||
+         CMD(sym,HOSTOSVER,9)|| CMD(sym,HOSTARCH,8) || CMD(sym,HOSTNUMCPUS,11)||
+         CMD(sym,MODPATH,7)  || CMD(sym,MODNAME,7)  ||  
+         CMD(sym,CUU,3)      || CMD(sym,CCUU,4)     || CMD(sym,CSS,3)      || 
+#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
+         CMD(sym,DATE,4)     || CMD(sym,TIME,4)     || 
+         CMD(sym,LPARNUM,7)  || CMD(sym,LPARNAME,8) || 
+         CMD(sym,ARCHMODE,8) || 
+         CMD(sym,CPUMODEL,8) || CMD(sym,CPUID,5)    || CMD(sym,CPUSERIAL,9)|| 
+         CMD(sym,CPUVERID,8) || 
+         CMD(sym,SYSLEVEL,8) || CMD(sym,SYSTYPE,7)  || CMD(sym,SYSNAME,7)  || 
+         CMD(sym,SYSPLEX,7)  ||
+#endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
+
+         FALSE
        )
     {
         WRMSG( HHC02197, "E", sym );
@@ -8103,7 +8129,29 @@ int delsym_cmd(int argc, char *argv[], char *cmdline)
         for ( i = 0; sym[i] != '\0'; i++ )
             sym[i] = toupper( sym[i] );
     }
+    if (
+         CMD(sym,VERSION,7)  || CMD(sym,BDATE,5)    || CMD(sym,BTIME,5)    || 
+         CMD(sym,HOSTNAME,8) || CMD(sym,HOSTOS,6)   || CMD(sym,HOSTOSREL,9)||
+         CMD(sym,HOSTOSVER,9)|| CMD(sym,HOSTARCH,8) || CMD(sym,HOSTNUMCPUS,11)||
+         CMD(sym,MODPATH,7)  || CMD(sym,MODNAME,7)  ||  
+         CMD(sym,CUU,3)      || CMD(sym,CCUU,4)     || CMD(sym,CSS,3)      || 
+#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
+         CMD(sym,DATE,4)     || CMD(sym,TIME,4)     || 
+         CMD(sym,LPARNUM,7)  || CMD(sym,LPARNAME,8) || 
+         CMD(sym,ARCHMODE,8) || 
+         CMD(sym,CPUMODEL,8) || CMD(sym,CPUID,5)    || CMD(sym,CPUSERIAL,9)|| 
+         CMD(sym,CPUVERID,8) || 
+         CMD(sym,SYSLEVEL,8) || CMD(sym,SYSTYPE,7)  || CMD(sym,SYSNAME,7)  || 
+         CMD(sym,SYSPLEX,7)  ||
+#endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
 
+         FALSE
+       )
+    {
+        WRMSG( HHC02197, "E", sym );
+        free(sym);
+        return -1;
+    }
     /* delete the symbol */
     del_symbol(sym);
     free(sym);
@@ -8812,8 +8860,12 @@ int modpath_cmd(int argc, char *argv[], char *cmdline)
         return -1;
     }
     else if (argc == 2)
-    {
+    {   
+#if defined(OPTION_CONFIG_SYMBOLS)
         set_symbol( "MODPATH", hdl_setpath(argv[1], TRUE) );
+#else 
+        hdl_setpath(argv[1], TRUE);
+#endif /* defined(OPTION_CONFIG_SYMBOLS) */
     }
     else
     {

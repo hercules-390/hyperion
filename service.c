@@ -360,6 +360,7 @@ U64  syslevel;
 
     WRMSG(HHC00004, "I",systype,sysname,sysplex,syslevel);
 
+#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
     {
         char buf[128];
 
@@ -369,6 +370,8 @@ U64  syslevel;
         set_symbol("SYSPLEX", sysplex);
         set_symbol("SYSLEVEL", buf);
     }
+#endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
+
        
 
     losc_check(systype);

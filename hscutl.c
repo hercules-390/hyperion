@@ -413,22 +413,28 @@ DLL_EXPORT const char *get_symbol(const char *sym)
 {
     char *val;
     SYMBOL_TOKEN   *tok;
-    time_t          raw_tt;
     static char     buf[80];
-
+        
+#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
     if ( CMD(sym,DATE,4) )
     {
+        time_t  raw_tt;
+
         time( &raw_tt );        // YYYYMMDD
         strftime(buf, sizeof(buf)-1, "%Y%m%d", localtime(&raw_tt) );
         return(buf);
     }
     else if ( CMD(sym,TIME,4) )
     {
+        time_t  raw_tt;
+
         time( &raw_tt );                // HHMMSS
         strftime(buf, sizeof(buf)-1, "%H%M%S", localtime(&raw_tt) );
         return(buf);
     }
     else
+#endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
+
         tok=get_symbol_token(sym,0);
 
     if(tok==NULL)

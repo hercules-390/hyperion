@@ -1062,7 +1062,7 @@ rexx_done:
     }
 #endif // OPTION_CAPPING
 
-#if defined(OPTION_CONFIG_SYMBOLS)
+#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
     /* setup configuration related symbols  */
     {
         char buf[8];
@@ -1080,7 +1080,7 @@ rexx_done:
 
         set_symbol( "ARCHMODE", get_arch_mode_string(NULL) );  
     }
-#endif /* defined(OPTION_CONFIG_SYMBOLS) */
+#endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS */
 
     if ( !msglevel )
         sysblk.msglvl = MLVL_VERBOSE;

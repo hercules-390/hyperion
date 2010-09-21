@@ -523,7 +523,9 @@ int archlvl_cmd(int argc, char *argv[], char *cmdline)
 
     RELEASE_INTLOCK(NULL);
 
+#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
     set_symbol( "ARCHMODE", get_arch_mode_string(NULL) );
+#endif/* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS */
 
     return 0;
 }

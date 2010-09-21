@@ -430,6 +430,7 @@ int     dll_count;                      /* index into array          */
     }
 
 #if       defined( OPTION_CONFIG_SYMBOLS )
+    /* These were moved from console.c to make them available sooner */
     set_symbol( "VERSION", VERSION);
     set_symbol( "BDATE", __DATE__ );
     set_symbol( "BTIME", __TIME__ );
