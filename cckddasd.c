@@ -5326,7 +5326,31 @@ BYTE *buf;
 /*-------------------------------------------------------------------*/
 void cckd_command_help()
 {
-    WRMSG(HHC00345, "I");
+    int i;
+    char *help[] = {
+                    "Command parameters for cckd:"
+                    ,"  help          Display help message"
+                    ,"  stats         Display cckd statistics"
+                    ,"  opts          Display cckd options"
+                    ,"  comp=<n>      Override compression                 (-1 ... 2)"
+                    ,"  compparm=<n>  Override compression parm            (-1 ... 9)"
+                    ,"  ra=<n>        Set number readahead threads         ( 1 ... 9)"
+                    ,"  raq=<n>       Set readahead queue size             ( 0 .. 16)"
+                    ,"  rat=<n>       Set number tracks to read ahead      ( 0 .. 16)"
+                    ,"  wr=<n>        Set number writer threads            ( 1 ... 9)"
+                    ,"  gcint=<n>     Set garbage collector interval (sec) ( 1 .. 60)"
+                    ,"  gcparm=<n>    Set garbage collector parameter      (-8 ... 8)"
+                    ,"  gcstart       Start garbage collector"
+                    ,"  nostress=<n>  1=Disable stress writes"
+                    ,"  freepend=<n>  Set free pending cycles              (-1 ... 4)"
+                    ,"  fsync=<n>     1=Enable fsync"
+                    ,"  linuxnull=<n> 1=Check for null linux tracks"
+                    ,"  trace=<n>     Set trace table size            ( 0 ... 200000)"
+                    ,NULL };
+
+    for( i = 0; help[i] != NULL; i++ )
+        WRMSG(HHC00345, "I", help[i] );
+
 } /* end function cckd_command_help */
 
 /*-------------------------------------------------------------------*/
@@ -5334,14 +5358,21 @@ void cckd_command_help()
 /*-------------------------------------------------------------------*/
 void cckd_command_opts()
 {
+    char msgbuf[128];
     
-    WRMSG(HHC00346, "I", 
-             cckdblk.comp == 0xff ? -1 : cckdblk.comp,
-             cckdblk.compparm, cckdblk.ramax,
-             cckdblk.ranbr, cckdblk.readaheads,
-             cckdblk.wrmax, cckdblk.gcwait,
-             cckdblk.gcparm, cckdblk.nostress, cckdblk.freepend,
-             cckdblk.fsync, cckdblk.linuxnull, cckdblk.itracen );
+    MSGBUF( msgbuf, "cckd opts: comp=%d,compparm=%d,ra=%d,raq=%d,rat=%d,wr=%d,gcint=%d",
+                    cckdblk.comp == 0xff ? -1 : cckdblk.comp,
+                    cckdblk.compparm, cckdblk.ramax,
+                    cckdblk.ranbr, cckdblk.readaheads,
+                    cckdblk.wrmax, cckdblk.gcwait );
+    WRMSG( HHC00346, "I", msgbuf );
+  
+    MSGBUF( msgbuf, "           gcparm=%d,nostress=%d,freepend=%d,fsync=%d,linuxnull=%d,trace=%d",
+                    cckdblk.gcparm, cckdblk.nostress, cckdblk.freepend,
+                    cckdblk.fsync, cckdblk.linuxnull, cckdblk.itracen );
+    WRMSG( HHC00346, "I", msgbuf );
+
+    return;
 } /* end function cckd_command_opts */
 
 /*-------------------------------------------------------------------*/
@@ -5349,17 +5380,47 @@ void cckd_command_opts()
 /*-------------------------------------------------------------------*/
 void cckd_command_stats()
 {
-    WRMSG(HHC00347, "I",
-            cckdblk.stats_reads, cckdblk.stats_readbytes >> 10,
-            cckdblk.stats_writes, cckdblk.stats_writebytes >> 10,
-            cckdblk.stats_readaheads, cckdblk.stats_readaheadmisses,
-            cckdblk.stats_syncios, cckdblk.stats_synciomisses,
-            cckdblk.stats_switches, cckdblk.stats_l2reads,
-            cckdblk.stats_stresswrites,
-            cckdblk.stats_cachehits, cckdblk.stats_cachemisses,
-            cckdblk.stats_l2cachehits, cckdblk.stats_l2cachemisses,
-            cckdblk.stats_iowaits, cckdblk.stats_cachewaits,
-            cckdblk.stats_gcolmoves, cckdblk.stats_gcolbytes >> 10);
+    char msgbuf[128];
+    
+    WRMSG( HHC00347, "I", "cckd stats:" );
+
+    MSGBUF( msgbuf, "  reads....%10" I64_FMT "d Kbytes...%10" I64_FMT "d",
+                    cckdblk.stats_reads, cckdblk.stats_readbytes >> 10 );
+    WRMSG( HHC00347, "I", msgbuf );
+
+    MSGBUF( msgbuf, "  writes...%10" I64_FMT "d Kbytes...%10" I64_FMT "d",
+                    cckdblk.stats_writes, cckdblk.stats_writebytes >> 10 );
+    WRMSG( HHC00347, "I", msgbuf );
+
+    MSGBUF( msgbuf, "  readaheads%9" I64_FMT "d misses...%10" I64_FMT "d",
+                    cckdblk.stats_readaheads, cckdblk.stats_readaheadmisses );
+    WRMSG( HHC00347, "I", msgbuf );
+
+    MSGBUF( msgbuf, "  syncios..%10" I64_FMT "d misses...%10" I64_FMT "d",
+                    cckdblk.stats_syncios, cckdblk.stats_synciomisses );
+    WRMSG( HHC00347, "I", msgbuf );
+
+    MSGBUF( msgbuf, "  switches.%10" I64_FMT "d l2 reads.%10" I64_FMT "d strs wrt.%10" I64_FMT "d",
+                    cckdblk.stats_switches, cckdblk.stats_l2reads, cckdblk.stats_stresswrites );
+    WRMSG( HHC00347, "I", msgbuf );
+
+    MSGBUF( msgbuf, "  cachehits%10" I64_FMT "d misses...%10" I64_FMT "d",
+                    cckdblk.stats_cachehits, cckdblk.stats_cachemisses );
+    WRMSG( HHC00347, "I", msgbuf );
+
+    MSGBUF( msgbuf, "  l2 hits..%10" I64_FMT "d misses...%10" I64_FMT "d",
+                    cckdblk.stats_l2cachehits, cckdblk.stats_l2cachemisses );
+    WRMSG( HHC00347, "I", msgbuf );
+
+    MSGBUF( msgbuf, "  waits............   i/o......%10" I64_FMT "d cache....%10" I64_FMT "d",
+                    cckdblk.stats_iowaits, cckdblk.stats_cachewaits );
+    WRMSG( HHC00347, "I", msgbuf );
+
+    MSGBUF( msgbuf, "  garbage collector   moves....%10" I64_FMT "d Kbytes...%10" I64_FMT "d",
+                    cckdblk.stats_gcolmoves, cckdblk.stats_gcolbytes >> 10 );
+    WRMSG( HHC00347, "I", msgbuf );
+    
+    return;
 } /* end function cckd_command_stats */
 
 /*-------------------------------------------------------------------*/
@@ -5367,6 +5428,7 @@ void cckd_command_stats()
 /*-------------------------------------------------------------------*/
 void cckd_command_debug()
 {
+    return;
 }
 
 /*-------------------------------------------------------------------*/

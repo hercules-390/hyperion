@@ -275,36 +275,12 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00342 "%1d:%04X CCKD file[%d] '%s': offset 0x%" I64_FMT "x unknown space %2.2x%2.2x%2.2x%2.2x%2.2x"
 #define HHC00343 "%1d:%04X CCKD file[%d] '%s': uncompress error trk %d: %2.2x%2.2x%2.2x%2.2x%2.2x"
 #define HHC00344 "%1d:%04X CCKD file[%d] '%s': compression '%s' not supported"
-#define HHC00345 "Command parameters for cckd:\n" \
-                 "\t  help\t\tDisplay help message\n" \
-                 "\t  stats\t\tDisplay cckd statistics\n" \
-                 "\t  opts\t\tDisplay cckd options\n" \
-                 "\t  comp=<n>\tOverride compression\t\t\t(-1 .. 2)\n" \
-                 "\t  compparm=<n>\tOverride compression parm\t\t(-1 .. 9)\n" \
-                 "\t  ra=<n>\tSet number readahead threads\t\t(1 .. 9)\n" \
-                 "\t  raq=<n>\tSet readahead queue size\t\t(0 .. 16)\n" \
-                 "\t  rat=<n>\tSet number tracks to read ahead\t\t(0 .. 16)\n" \
-                 "\t  wr=<n>\tSet number writer threads\t\t(1 .. 9)\n" \
-                 "\t  gcint=<n>\tSet garbage collector interval (sec)\t(1 .. 60)\n" \
-                 "\t  gcparm=<n>\tSet garbage collector parameter\t\t(-8 .. 8)\n" \
-                 "\t  gcstart\tStart garbage collector\n" \
-                 "\t  nostress=<n>\t1=Disable stress writes\n" \
-                 "\t  freepend=<n>\tSet free pending cycles\t\t\t(-1 .. 4)\n" \
-                 "\t  fsync=<n>\t1=Enable fsync\n" \
-                 "\t  linuxnull=<n>\t1=Check for null linux tracks\n" \
-                 "\t  trace=<n>\tSet trace table size\t\t\t(0 .. 200000)"
-#define HHC00346 "cckd opts: comp=%d,compparm=%d,ra=%d,raq=%d,rat=%d,wr=%d,gcint=%d,\n" \
-             "\t  gcparm=%d,nostress=%d,freepend=%d,fsync=%d,linuxnull=%d,trace=%d"
-#define HHC00347 "cckd stats:\n" \
-                 "\t  reads....%10" I64_FMT "d Kbytes...%10" I64_FMT "d\n" \
-                 "\t  writes...%10" I64_FMT "d Kbytes...%10" I64_FMT "d\n" \
-                 "\t  readaheads%9" I64_FMT "d misses...%10" I64_FMT "d\n" \
-                 "\t  syncios..%10" I64_FMT "d misses...%10" I64_FMT "d\n" \
-                 "\t  switches.%10" I64_FMT "d l2 reads.%10" I64_FMT "d strs wrt.%10" I64_FMT "d\n" \
-                 "\t  cachehits%10" I64_FMT "d misses...%10" I64_FMT "d\n" \
-                 "\t  l2 hits..%10" I64_FMT "d misses...%10" I64_FMT "d\n" \
-                 "\t  waits............   i/o......%10" I64_FMT "d cache....%10" I64_FMT "d\n" \
-                 "\t  garbage collector   moves....%10" I64_FMT "d Kbytes...%10" I64_FMT "d"
+/* HHC00345 cckd help output */
+#define HHC00345 "%s"
+/* HHC00346 cckd opts output */
+#define HHC00346 "%s"
+/* HHC00347 cckd stats output */
+#define HHC00347 "%s" 
 #define HHC00348 "CCKD file: invalid value '%d' for '%s'"
 #define HHC00349 "CCKD file: invalid cckd keyword: '%s'"
 
