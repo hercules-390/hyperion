@@ -8058,22 +8058,23 @@ BYTE    dword[8];
     if(!FACILITY_ENABLED(LOAD_PROG_PARAM,regs))
     {
         ARCH_DEP(operation_exception)(inst,regs);
-    } 
-    
-    /* NOP is at least one of these is not installed */
-    if (!FACILITY_ENABLED(CPU_MEAS_COUNTER,regs) && 
-        !FACILITY_ENABLED(CPU_MEAS_SAMPLNG,regs) )
-    {
-        return;
     }
 
     S(inst, regs, b2, effective_addr2);
-
+ 
     PRIV_CHECK(regs);
 
-    /* Fetch data from operand address */
-    ARCH_DEP(vfetchc) ( dword, 8-1, effective_addr2, b2, regs );
-    memcpy(&regs->program_parameter,dword,sizeof(regs->program_parameter));
+    /* At least one of these is installed */
+    if (FACILITY_ENABLED(CPU_MEAS_COUNTER,regs) ||
+        FACILITY_ENABLED(CPU_MEAS_SAMPLNG,regs) )
+    {
+        /* Fetch data from operand address */
+        ARCH_DEP(vfetchc) ( dword, 8-1, effective_addr2, b2, regs );
+        memcpy(&regs->program_parameter,dword,sizeof(regs->program_parameter));
+    }
+    else    /* NOP */
+    {   
+    }
 
 } /* end DEF_INST(load_program_parameter) */
 #endif /* defined(FEATURE_LOAD_PROGRAM_PARAMETER_FACILITY) */   /* 810 */ 
