@@ -195,8 +195,8 @@ int off;
 
     if (sysblk.mainstor == NULL)
     {
-        char buf[40];
-        snprintf(buf, 40, "malloc(%" I64_FMT "d)", sysblk.mainsize + 8192);
+        char buf[64];
+        MSGBUF( buf, "malloc(%" I64_FMT "d)", sysblk.mainsize + 8192);
         WRMSG(HHC01430, "S", buf, strerror(errno));
         return FALSE;
     }
@@ -214,8 +214,8 @@ int off;
     }
     if (sysblk.storkeys == NULL)
     {
-        char buf[40];
-        snprintf(buf, 40, "malloc(%" I64_FMT "d)", sysblk.mainsize / STORAGE_KEY_UNITSIZE);
+        char buf[64];
+        MSGBUF( buf, "malloc(%" I64_FMT "d)", sysblk.mainsize / STORAGE_KEY_UNITSIZE);
         WRMSG(HHC01430, "S", buf, strerror(errno));
         return FALSE;
     }
@@ -244,8 +244,8 @@ int off;
             sysblk.xpndstor = malloc((size_t)sysblk.xpndsize * XSTORE_PAGESIZE);
         if (sysblk.xpndstor == NULL)
         {
-            char buf[40];
-            snprintf(buf, 40, "malloc(%lu)", (unsigned long)sysblk.xpndsize * XSTORE_PAGESIZE);
+            char buf[64];
+            MSGBUF( buf, "malloc(%lu)", (unsigned long)sysblk.xpndsize * XSTORE_PAGESIZE);
             WRMSG(HHC01430, "S", buf, strerror(errno));
             return FALSE;
         }
@@ -523,9 +523,9 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                                            cygwin from thrashing in
                                            select(). sigh            */
 #endif
-char    pathname[MAX_PATH];             /* file path in host format  */
-char    fname[MAX_PATH];                /* normalized filename       */ 
-int     msglevel = FALSE;               /* indicator for msglevel 
+static  char    pathname[MAX_PATH];     /* file path in host format  */
+static  char    fname[MAX_PATH];        /* normalized filename       */ 
+int             msglevel = FALSE;       /* indicator for msglevel 
                                            statement                 */
 
     /* Initialize SETMODE and set user authority */
@@ -541,7 +541,11 @@ int     msglevel = FALSE;               /* indicator for msglevel
     hostpath(fname, _fname, sizeof(fname));
 
     inc_level = 0;
+#if defined(_MSVC_)
+    fopen_s( &inc_fp[inc_level], fname, "r");
+#else
     inc_fp[inc_level] = fopen (fname, "r");
+#endif
     if (inc_fp[inc_level] == NULL)
     {
         WRMSG(HHC01432, "S", 1, fname, "fopen()", strerror(errno));
@@ -708,8 +712,11 @@ int     msglevel = FALSE;               /* indicator for msglevel
 
             hostpath(pathname, addargv[1], sizeof(pathname));
             WRMSG(HHC01437, "I", inc_stmtnum[inc_level-1], fname, pathname);
-
+#if defined(_MSVC_)
+            fopen_s ( &inc_fp[inc_level], pathname, "r");
+#else
             inc_fp[inc_level] = fopen (pathname, "r");
+#endif
             if (inc_fp[inc_level] == NULL)
             {
                 inc_level--;
@@ -731,7 +738,11 @@ int     msglevel = FALSE;               /* indicator for msglevel
 
         /* Exit loop if first device statement found */
         if (strlen(addargv[0]) <= 4
+#if defined( _MSVC_)
+            && sscanf_s(addargv[0], "%x%c", &rc, &c, sizeof(BYTE)) == 1)
+#else
             && sscanf(addargv[0], "%x%c", &rc, &c) == 1)
+#endif
             break;
         /* ISW */
         /* Also exit if addargv[0] contains '-', ',' or '.' */
@@ -757,7 +768,11 @@ int     msglevel = FALSE;               /* indicator for msglevel
 
         /* Check for old-style CPU statement */
         if (scount == 0 && addargc == 7 && strlen(addargv[0]) == 6
+#if defined( _MSVC_)
+            && sscanf_s(addargv[0], "%x%c", &rc, &c, sizeof(BYTE)) == 1)
+#else
             && sscanf(addargv[0], "%x%c", &rc, &c) == 1)
+#endif
         {
         char *exec_cpuserial[2] = { "cpuserial", NULL };
         char *exec_cpumodel[2]  = { "cpumodel", NULL };
@@ -797,12 +812,20 @@ int     msglevel = FALSE;               /* indicator for msglevel
         {
             char addcmdline[256];
             int i;
-
+#if defined(_MSVC_)
+            strcpy_s( addcmdline, sizeof(addcmdline), addargv[0] );
+#else
             strcpy( addcmdline, addargv[0] );
+#endif
             for( i = 1; i < addargc; i++ )
             {
+#if defined(_MSVC_)
+                strcat_s(addcmdline, sizeof(addcmdline), " ");
+                strcat_s(addcmdline, sizeof(addcmdline), addargv[i]);
+#else
                 strcat(addcmdline, " ");
                 strcat(addcmdline, addargv[i]);
+#endif
             }
             if ( CMD(addargv[0],msglevel,8) || CMD(addargv[0],msglvl,6) )
                 msglevel = TRUE;
@@ -837,13 +860,21 @@ int     msglevel = FALSE;               /* indicator for msglevel
         attargv = malloc(attargc * sizeof(char *));
 
         attargv[0] = "attach";
+#if defined(_MSVC_)
+        strcpy_s(attcmdline, sizeof(attcmdline), attargv[0]);
+#else
         strcpy(attcmdline, attargv[0]);
-
+#endif
         for(i = 1; i < attargc; i++)
         {
             attargv[i] = addargv[i - 1];
+#if defined(_MSVC_)
+            strcat_s(attcmdline, sizeof(attcmdline), " ");
+            strcat_s(attcmdline, sizeof(attcmdline), attargv[i]);
+#else
             strcat(attcmdline, " ");
             strcat(attcmdline, attargv[i]);
+#endif
         }
 
         rc = ProcessConfigCommand (attargc, attargv, attcmdline);
@@ -876,8 +907,11 @@ int     msglevel = FALSE;               /* indicator for msglevel
 
             hostpath(pathname, addargv[1], sizeof(pathname));
             WRMSG(HHC01437, "I", inc_stmtnum[inc_level-1], fname, pathname);
-
+#if defined(_MSVC_)
+            fopen_s( &inc_fp[inc_level], pathname,  "r");
+#else
             inc_fp[inc_level] = fopen (pathname, "r");
+#endif
             if (inc_fp[inc_level] == NULL)
             {
                 inc_level--;
@@ -927,8 +961,8 @@ rexx_done:
         TAMDIR *pNewTAMDIR = malloc( sizeof(TAMDIR) );
         if (!pNewTAMDIR)
         {
-            char buf[40];
-            snprintf(buf, 40, "malloc(%lu)", sizeof(TAMDIR));
+            char buf[64];
+            MSGBUF( buf, "malloc(%lu)", sizeof(TAMDIR));
             WRMSG(HHC01430, "S", buf, strerror(errno));
             return FALSE;
         }

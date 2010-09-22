@@ -41,7 +41,22 @@
 /* char *msg; is the message format       */
 /* int    rc; to contain final size       */
 /******************************************/
-
+#if defined(_MSVC_)
+#define  BFR_VSNPRINTF()                      \
+        bfr=malloc(siz);                      \
+        rc=-1;                                \
+        while(bfr&&rc<0)                      \
+        {                                     \
+            va_start(vl,msg);                 \
+            rc=_vsnprintf_s(bfr,siz,siz-1,msg,vl);     \
+            va_end(vl);                       \
+            if(rc>=0 && rc<siz)               \
+                break;                        \
+            rc=-1;                            \
+            siz+=BFR_CHUNKSIZE;               \
+            bfr=realloc(bfr,siz);             \
+        }
+#else
 #define  BFR_VSNPRINTF()                      \
         bfr=malloc(siz);                      \
         rc=-1;                                \
@@ -56,7 +71,7 @@
             siz+=BFR_CHUNKSIZE;               \
             bfr=realloc(bfr,siz);             \
         }
-
+#endif
 static LOCK log_route_lock;
 
 #define MAX_LOG_ROUTES 16

@@ -88,12 +88,12 @@ int configure_cpu(int cpu)
 {
 int   i;
 int   rc;
-char  thread_name[16];
+char  thread_name[32];
 
     if(IS_CPU_ONLINE(cpu))
         return -1;
 
-    snprintf(thread_name,sizeof(thread_name),"cpu%d thread",cpu);
+    MSGBUF( thread_name, "cpu%d thread",cpu);
     thread_name[sizeof(thread_name)-1]=0;
 
     rc = create_thread (&sysblk.cputid[cpu], DETACHED, cpu_thread,
@@ -270,8 +270,8 @@ DEVBLK**dvpp;
     {
         if (!(dev = (DEVBLK*)malloc(sizeof(DEVBLK))))
         {
-            char buf[40];
-            snprintf(buf, 40, "malloc(%lu)", sizeof(DEVBLK));
+            char buf[64];
+            MSGBUF(buf, "malloc(%lu)", sizeof(DEVBLK));
             WRMSG (HHC01460, "E", lcss, devnum, buf, strerror(errno));
             return NULL;
         }
@@ -445,8 +445,8 @@ int     i;                              /* Loop index                */
         dev->buf = malloc (dev->bufsize);
         if (dev->buf == NULL)
         {
-            char buf[40];
-            snprintf(buf, 40, "malloc(%lu)", (unsigned long) dev->bufsize);
+            char buf[64];
+            MSGBUF( buf, "malloc(%lu)", (unsigned long) dev->bufsize);
             WRMSG (HHC01460, "E", lcss, dev->devnum, buf, strerror(errno));
 
             for (i = 0; i < dev->argc; i++)
@@ -571,11 +571,11 @@ int detach_subchan (U16 lcss, U16 subchan, U16 devnum)
 {
 DEVBLK *dev;                            /* -> Device block           */
 int    rc;
-char   str[40];
+char   str[64];
     /* Find the device block */
     dev = find_device_by_subchan ((LCSS_TO_SSID(lcss)<<16)|subchan);
 
-    snprintf(str, 40, "subchannel %1d:%04X", lcss, subchan);
+    MSGBUF( str, "subchannel %1d:%04X", lcss, subchan);
 
     if (dev == NULL)
     {
@@ -926,10 +926,11 @@ parse_lcss(const char *spec,
     char    *r;
     char    *strptr;
     char    *garbage;
+    char    *strtok_str;
 
     wrk=malloc(strlen(spec)+1);
     strcpy(wrk,spec);
-    lcss=strtok(wrk,":");
+    lcss=strtok_r(wrk,":",&strtok_str);
     if(lcss==NULL)
     {
         if(verbose)
@@ -939,13 +940,13 @@ parse_lcss(const char *spec,
         free(wrk);
         return(-1);
     }
-    r=strtok(NULL,":");
+    r=strtok_r(NULL,":",&strtok_str );
     if(r==NULL)
     {
         *rest=wrk;
         return 0;
     }
-    garbage=strtok(NULL,":");
+    garbage=strtok_r(NULL,":",&strtok_str );
     if(garbage!=NULL)
     {
         if(verbose)
@@ -1061,13 +1062,14 @@ static size_t parse_devnums(const char *spec,DEVNUMSDESC *dd)
     size_t i;           /* Index runner                    */
     char *grps;         /* Pointer to current devnum group */
     char *sc;           /* Specification string copy       */
-    DEVARRAY *dgrs;   /* Device groups                   */
+    DEVARRAY *dgrs;     /* Device groups                   */
     U16  cuu1,cuu2;     /* CUUs                            */
     char *strptr;       /* strtoul ptr-ptr                 */
     int  basechan=0;    /* Channel for all CUUs            */
     int  duplicate;     /* duplicated CUU indicator        */
     int badcuu;         /* offending CUU                   */
     int rc;             /* Return code work var            */
+    char *strtok_str;   /* last token                      */
 
     rc=parse_lcss(spec,&sc,1);
     if(rc<0)
@@ -1078,7 +1080,7 @@ static size_t parse_devnums(const char *spec,DEVNUMSDESC *dd)
 
     /* Split by ',' groups */
     gcount=0;
-    grps=strtok(sc,",");
+    grps=strtok_r(sc,",",&strtok_str );
     dgrs=NULL;
     while(grps!=NULL)
     {
@@ -1187,7 +1189,7 @@ static size_t parse_devnums(const char *spec,DEVNUMSDESC *dd)
         dgrs[gcount].cuu1=cuu1;
         dgrs[gcount].cuu2=cuu2;
         gcount++;
-        grps=strtok(NULL,",");
+        grps=strtok_r(NULL,",",&strtok_str );
     }
     free(sc);
     dd->da=dgrs;
@@ -1231,12 +1233,12 @@ parse_and_attach_devices(const char *sdevnum,
             for(devnum=da[i].cuu1;devnum<=da[i].cuu2;devnum++)
             {
 #if defined(OPTION_CONFIG_SYMBOLS)
-               char wrkbfr[16];
-               snprintf(wrkbfr,sizeof(wrkbfr),"%3.3X",devnum);
+               char wrkbfr[32];
+               MSGBUF( wrkbfr, "%3.3X",devnum);
                set_symbol("CUU",wrkbfr);
-               snprintf(wrkbfr,sizeof(wrkbfr),"%4.4X",devnum);
+               MSGBUF( wrkbfr, "%4.4X",devnum);
                set_symbol("CCUU",wrkbfr);
-               snprintf(wrkbfr,sizeof(wrkbfr),"%d",dnd.lcss);
+               MSGBUF( wrkbfr, "%d",dnd.lcss);
                set_symbol("CSS",wrkbfr);
                for(j=0;j<addargc;j++)
                {

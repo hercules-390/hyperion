@@ -1412,7 +1412,7 @@ S64 vcpt_now = 0;
 char sie_flag = 0;
 #endif
 U32 itimer = 0;
-char itimer_formatted[20];
+char itimer_formatted[32];
 char arch370_flag = 0;
 char buf[64];
 
@@ -1452,7 +1452,7 @@ char buf[64];
         itimer = INT_TIMER(regs);
         /* The interval timer counts 76800 per second, or one every
            13.0208 microseconds. */
-        sprintf(itimer_formatted,"%02u:%02u:%02u.%06u",
+        MSGBUF(itimer_formatted,"%02u:%02u:%02u.%06u",
                 (itimer/(76800*60*60)),((itimer%(76800*60*60))/(76800*60)),
                 ((itimer%(76800*60))/76800),((itimer%76800)*13));
         arch370_flag = 1;
@@ -2164,14 +2164,14 @@ int cckd_cmd(int argc, char *argv[], char *cmdline)
 {
     char*   p;
     int     rc = -1;
-        
+    char*   strtok_str;    
     if ( argc != 2 || cmdline == NULL || (int)strlen(cmdline) < 5 )
     {
         WRMSG( HHC02299, "E", argv[0] );
     }
     else
     {
-        p = strtok(cmdline+4," \t");
+        p = strtok_r(cmdline+4, " \t", &strtok_str );
         if ( p == NULL )
         {
             WRMSG( HHC02299, "E", argv[0] );
@@ -2479,6 +2479,7 @@ char *styp_values[] = {"CP","CF","AP","IL","??","IP"}; /* type values */
 BYTE ptyp;                           /* Processor engine type     */
 int  cpu,count;
 BYTE c;
+char *strtok_str;
 
     UNREFERENCED(cmdline);
 
@@ -2486,7 +2487,7 @@ BYTE c;
     /* example: ENGINES 4*CP,AP,2*IP */
     if(argc == 2)
     {
-        styp = strtok(argv[1],",");
+        styp = strtok_r(argv[1],",",&strtok_str );
         for (cpu = 0; styp != NULL; )
         {
             count = 1;
@@ -2521,7 +2522,7 @@ BYTE c;
                 WRMSG(HHC00827, "I", PTYPSTR(cpu), cpu, cpu, ptyp, styp_values[ptyp]);
                 cpu++;
             }
-            styp = strtok(NULL,",");
+            styp = strtok_r(NULL,",",&strtok_str );
         }
     }
     else
@@ -3488,8 +3489,8 @@ int ls_cmd(int argc, char *argv[], char *cmdline)
 int cd_cmd(int argc, char *argv[], char *cmdline)
 {
     char* path;
-    char cwd [ MAX_PATH ];
-
+    char  cwd [ MAX_PATH ];
+    char* strtok_str;
     UNREFERENCED(argc);
     UNREFERENCED(argv);
 
@@ -3498,7 +3499,7 @@ int cd_cmd(int argc, char *argv[], char *cmdline)
         path = cmdline + 2;
         while (isspace(*path)) path++;
 #ifdef _MSVC_
-        _chdir( strtok( path, "\"" ) );
+        _chdir( strtok_r( path, "\"",&strtok_str  ) );
 #else
         chdir(path);
 #endif
@@ -7089,15 +7090,15 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
         else if (dev->ioactive == DEV_SYS_LOCAL)
             strcpy (sysid, "local");
         else
-            sprintf (sysid, "id=%d", dev->ioactive);
+            MSGBUF( sysid, "id=%d", dev->ioactive);
         if (dev->busy && !(dev->suspended && dev->ioactive == DEV_SYS_NONE))
         {
-            sprintf(buf, "busy %s", sysid);
+            MSGBUF(buf, "busy %s", sysid);
             WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, buf);
         }
         if (dev->reserved)
         {
-            sprintf(buf, "reserved %s", sysid);
+            MSGBUF(buf, "reserved %s", sysid);
             WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, buf);
         }
         if (dev->suspended)

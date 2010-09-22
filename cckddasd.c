@@ -665,8 +665,8 @@ int             rc;                     /* Return code               */
 		"read()", (long long)off, strerror(errno));
         else
 	{
-	    char buf[80];
-            snprintf(buf, 80, "read incomplete: read %d, expected %d", rc, len);
+	    char buf[128];
+            MSGBUF( buf, "read incomplete: read %d, expected %d", rc, len);
             WRMSG (HHC00302, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, cckd_sf_name (dev, sfx),
 		"read()", (long long)off, buf);
 	}
@@ -708,8 +708,8 @@ int             rc = 0;                 /* Return code               */
 		"write()", (long long)off, strerror(errno));
         else
 	{
-	    char buf[80];
-	    snprintf(buf, 80, "write incomplete: write %d, expected %d", rc, len);
+	    char buf[128];
+	    MSGBUF( buf, "write incomplete: write %d, expected %d", rc, len);
             WRMSG (HHC00302, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, cckd_sf_name (dev, sfx),
 		"write()", (long long)off, buf);
 	}
@@ -758,8 +758,8 @@ void           *p;                      /* Pointer                   */
 
     if (p == NULL)
     {
-	char buf[40];
-	snprintf(buf, 40, "malloc(%lu)", size);
+	char buf[64];
+	MSGBUF( buf, "malloc(%lu)", size);
         WRMSG (HHC00303, "E", dev ? SSID_TO_LCSS(dev->ssid) : 0, dev ? dev->devnum : 0, buf, strerror(errno));
         cckd_print_itrace ();
     }
@@ -780,8 +780,8 @@ void           *p;                      /* Pointer                   */
 
     if (p == NULL)
     {
-	char buf[40];
-	snprintf(buf, 40, "calloc(%lu, %lu)", n, size);
+	char buf[64];
+	MSGBUF( buf, "calloc(%lu, %lu)", n, size);
         WRMSG (HHC00303, "E", dev ? SSID_TO_LCSS(dev->ssid) : 0, dev ? dev->devnum : 0, buf, strerror(errno));
         cckd_print_itrace ();
     }
@@ -1535,7 +1535,7 @@ int             rc;
 
     if (!cckdblk.batch)
     {
-        snprintf(threadname, 40, "Read-ahead thread-%d", ra);
+        MSGBUF( threadname, "Read-ahead thread-%d", ra);
         WRMSG (HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), threadname);
     }
 
@@ -1747,8 +1747,8 @@ int             rc;
 
     if (!cckdblk.batch)
     {
-	snprintf(threadname, 40, "Writer thread-%d", writer);
-	WRMSG (HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), threadname);
+	MSGBUF( threadname, "Writer thread-%d", writer);
+	WRMSG ( HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), threadname);
     }
 
     while (writer <= cckdblk.wrmax || cckdblk.wrpending)
@@ -5667,8 +5667,8 @@ int   rc;
                     }
                     else
                     {
-                        char buf[40];
-                        snprintf(buf, 40, "calloc(%d, %lu)", val, sizeof(CCKD_TRACE));
+                        char buf[64];
+                        MSGBUF( buf, "calloc(%d, %lu)", val, sizeof(CCKD_TRACE));
                         WRMSG (HHC00303, "E", buf, strerror(errno));
                     }
                 }

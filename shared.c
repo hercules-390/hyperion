@@ -120,6 +120,7 @@ BYTE     c;                             /* Used for parsing          */
 char    *cu = NULL;                     /* Specified control unit    */
 FWORD    cyls;                          /* Remote number cylinders   */
 char    *p, buf[1024];                  /* Work buffer               */
+char    *strtok_str;                    /* last position             */
 
     retry = dev->connecting;
 
@@ -195,8 +196,8 @@ char    *p, buf[1024];                  /* Work buffer               */
             if (strlen (argv[i]) > 3
              && memcmp("cu=", argv[i], 3) == 0)
             {
-                kw = strtok (argv[i], "=");
-                op = strtok (NULL, " \t");
+                kw = strtok_r (argv[i], "=", &strtok_str );
+                op = strtok_r (NULL, " \t", &strtok_str );
                 cu = op;
                 continue;
             }
@@ -204,8 +205,8 @@ char    *p, buf[1024];                  /* Work buffer               */
             if (strlen (argv[i]) > 5
              && memcmp("comp=", argv[i], 5) == 0)
             {
-                kw = strtok (argv[i], "=");
-                op = strtok (NULL, " \t");
+                kw = strtok_r (argv[i], "=", &strtok_str );
+                op = strtok_r (NULL, " \t", &strtok_str );
                 dev->rmtcomp = atoi (op);
                 if (dev->rmtcomp < 0 || dev->rmtcomp > 9)
                     dev->rmtcomp = 0;
@@ -387,6 +388,7 @@ FWORD    origin;                        /* FBA origin                */
 FWORD    numblks;                       /* FBA number blocks         */
 FWORD    blksiz;                        /* FBA block size            */
 char    *p, buf[1024];                  /* Work buffer               */
+char    *strtok_str;                    /* last token                */
 
     retry = dev->connecting;
 
@@ -443,8 +445,8 @@ char    *p, buf[1024];                  /* Work buffer               */
             if (strlen (argv[i]) > 5
              && memcmp("comp=", argv[i], 5) == 0)
             {
-                kw = strtok (argv[i], "=");
-                op = strtok (NULL, " \t");
+                kw = strtok_r (argv[i], "=", &strtok_str );
+                op = strtok_r (NULL, " \t", &strtok_str );
                 dev->rmtcomp = atoi (op);
                 if (dev->rmtcomp < 0 || dev->rmtcomp > 9)
                     dev->rmtcomp = 0;
@@ -2861,6 +2863,7 @@ DLL_EXPORT int shared_cmd(int argc, char *argv[], char *cmdline)
 {
     char buf[256];
     char *kw, *op, c;
+    char *strtok_str; 
 
     UNREFERENCED(cmdline);
 
@@ -2871,8 +2874,8 @@ DLL_EXPORT int shared_cmd(int argc, char *argv[], char *cmdline)
         return 0;
     }
     strcpy (buf, argv[1]);
-    kw = strtok (buf, "=");
-    op = strtok (NULL, " \t");
+    kw = strtok_r (buf, "=", &strtok_str );
+    op = strtok_r (NULL, " \t", &strtok_str );
 
     if (kw == NULL)
     {

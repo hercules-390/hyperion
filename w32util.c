@@ -396,7 +396,7 @@ DLL_EXPORT int sched_yield ( void )
 DLL_EXPORT char* strtok_r ( char* s, const char* sep, char** lasts )
 {
     UNREFERENCED( lasts );
-    return strtok( s, sep );
+    return strtok_s( s, sep, lasts );
 }
 
 #endif

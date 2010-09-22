@@ -223,6 +223,7 @@ char           *cu = NULL;              /* Specified control unit    */
 char           *kw;                     /* Argument keyword          */
 int             cckd=0;                 /* 1 if compressed CKD       */
 char            pathname[MAX_PATH];     /* file path in host format  */
+char           *strtok_str;             /* save last position        */
 
     if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
         dev->devtype = 0x3380;
@@ -333,8 +334,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if (strlen (argv[i]) > 3
          && memcmp("cu=", argv[i], 3) == 0)
         {
-            kw = strtok (argv[i], "=");
-            cu = strtok (NULL, " \t");
+            kw = strtok_r (argv[i], "=", &strtok_str );
+            cu = strtok_r (NULL, " \t", &strtok_str );
             continue;
         }
         if (strcasecmp ("nosyncio", argv[i]) == 0 ||

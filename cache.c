@@ -342,7 +342,7 @@ int cache_release(int ix, int i, int flag)
 DLL_EXPORT int cache_cmd(int argc, char *argv[], char *cmdline)
 {
     int ix, i;
-    char buf[80];
+    char buf[128];
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -354,45 +354,43 @@ DLL_EXPORT int cache_cmd(int argc, char *argv[], char *cmdline)
             WRMSG(HHC02294, "I", buf);
             continue;
         }
-        snprintf(buf, 80, "Cache............ %10d", ix);
+        MSGBUF( buf, "Cache............ %10d", ix);
         WRMSG(HHC02294, "I", buf);
-        snprintf(buf, 80, "nbr ............. %10d", cacheblk[ix].nbr);
+        MSGBUF( buf, "nbr ............. %10d", cacheblk[ix].nbr);
         WRMSG(HHC02294, "I", buf);
-        snprintf(buf, 80, "busy ............ %10d", cacheblk[ix].busy);
+        MSGBUF( buf, "busy ............ %10d", cacheblk[ix].busy);
         WRMSG(HHC02294, "I", buf);
-        snprintf(buf, 80, "busy%% ........... %10d",cache_busy_percent(ix));
+        MSGBUF( buf, "busy%% ........... %10d",cache_busy_percent(ix));
         WRMSG(HHC02294, "I", buf);
-        snprintf(buf, 80, "empty ........... %10d", cacheblk[ix].empty);
+        MSGBUF( buf, "empty ........... %10d", cacheblk[ix].empty);
         WRMSG(HHC02294, "I", buf);
-        snprintf(buf, 80, "waiters ......... %10d", cacheblk[ix].waiters);
+        MSGBUF( buf, "waiters ......... %10d", cacheblk[ix].waiters);
         WRMSG(HHC02294, "I", buf);
-        snprintf(buf, 80, "waits ........... %10d", cacheblk[ix].waits);
+        MSGBUF( buf, "waits ........... %10d", cacheblk[ix].waits);
         WRMSG(HHC02294, "I", buf);
-        snprintf(buf, 80, "buf size ........ %10" I64_FMT "d", (long int) cacheblk[ix].size);
+        MSGBUF( buf, "buf size ........ %10" I64_FMT "d", (long int) cacheblk[ix].size);
         WRMSG(HHC02294, "I", buf);
-        snprintf(buf, 80, "hits ............ %10" I64_FMT "d", (long int) cacheblk[ix].hits);
+        MSGBUF( buf, "hits ............ %10" I64_FMT "d", (long int) cacheblk[ix].hits);
         WRMSG(HHC02294, "I", buf);
-        snprintf(buf, 80, "fast hits ....... %10" I64_FMT "d", (long int) cacheblk[ix].fasthits);
+        MSGBUF( buf, "fast hits ....... %10" I64_FMT "d", (long int) cacheblk[ix].fasthits);
         WRMSG(HHC02294, "I", buf);
-        snprintf(buf, 80, "misses .......... %10" I64_FMT "d", (long int) cacheblk[ix].misses);
+        MSGBUF( buf, "misses .......... %10" I64_FMT "d", (long int) cacheblk[ix].misses);
         WRMSG(HHC02294, "I", buf);
-        snprintf(buf, 80, "hit%% ............ %10d", cache_hit_percent(ix));
+        MSGBUF( buf, "hit%% ............ %10d", cache_hit_percent(ix));
         WRMSG(HHC02294, "I", buf);
-        snprintf(buf, 80, "age ............. %10" I64_FMT "d", cacheblk[ix].age);
+        MSGBUF( buf, "age ............. %10" I64_FMT "d", cacheblk[ix].age);
         WRMSG(HHC02294, "I", buf);
-        snprintf(buf, 80, "last adjusted ... %s", ctime(&cacheblk[ix].atime));
-        buf[strlen(buf) - 1] = 0;
+        MSGBUF( buf, "last adjusted ... %s", ctime(&cacheblk[ix].atime));
         WRMSG(HHC02294, "I", buf);
-        snprintf(buf, 80,"last wait ....... %s", ctime(&cacheblk[ix].wtime));
-        buf[strlen(buf) - 1] = 0;
+        MSGBUF( buf, "last wait ....... %s", ctime(&cacheblk[ix].wtime));
         WRMSG(HHC02294, "I", buf);
-        snprintf(buf, 80, "adjustments ..... %10d", cacheblk[ix].adjusts);
+        MSGBUF( buf, "adjustments ..... %10d", cacheblk[ix].adjusts);
         WRMSG(HHC02294, "I", buf);
 
         if (argc > 1)
           for (i = 0; i < cacheblk[ix].nbr; i++)
           {
-            snprintf(buf, 80, "[%4d] %16.16" I64_FMT "x %8.8x %10p %6d %10" I64_FMT "d",
+            MSGBUF( buf, "[%4d] %16.16" I64_FMT "x %8.8x %10p %6d %10" I64_FMT "d",
               i, cacheblk[ix].cache[i].key, cacheblk[ix].cache[i].flag,
               cacheblk[ix].cache[i].buf, cacheblk[ix].cache[i].len,
               cacheblk[ix].cache[i].age);

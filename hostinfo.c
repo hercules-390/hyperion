@@ -69,11 +69,10 @@ DLL_EXPORT char* get_hostinfo_str ( HOST_INFO*  pHostInfo,
 {
     if ( pszHostInfoStrBuff && nHostInfoStrBuffSiz )
     {
-        char num_procs[16];
+        char num_procs[32];
         if ( !pHostInfo ) pHostInfo = &hostinfo;
         if ( pHostInfo->num_procs > 1 )
-            snprintf( num_procs, sizeof(num_procs),
-                " MP=%d", pHostInfo->num_procs );
+            MSGBUF( num_procs, " MP=%d", pHostInfo->num_procs );
         else if ( pHostInfo->num_procs == 1 )
             strlcpy( num_procs, " UP", sizeof(num_procs) );
         else

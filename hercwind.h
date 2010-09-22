@@ -214,9 +214,9 @@ inline void DebugTrace(char* fmt, ...)
     {
         if (buffer) free( buffer );
         buffsize += chunksize;
-        buffer = malloc( buffsize );
+        buffer = malloc( buffsize + 1 );
         if (!buffer) __debugbreak();
-        rc = vsnprintf( buffer, buffsize, fmt, args);
+        rc = _vsnprintf_s( buffer, buffsize+1, buffsize, fmt, args);
     }
     while (rc < 0 || rc >= buffsize);
     OutputDebugStringA( buffer );
