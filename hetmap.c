@@ -249,8 +249,8 @@ main( int argc, char *argv[] )
     U32  opts = 0;
     SInt32  lResidue	= max_bytes_dsply;	/* amount of space left to print */ 
     char *pgm;
-    char *strtok_str;
 #if 0
+    char *strtok_str;
  /**
   ** 2010/08/31 @kl Attempt to set tapemap defaults if invoked
   **                as "tapemap" was commented out after problems
