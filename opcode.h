@@ -3782,7 +3782,7 @@ DEF_INST(load_logical_halfword_register);                       /*@Z9*/
 DEF_INST(load_logical_long_halfword_register);                  /*@Z9*/
 DEF_INST(find_leftmost_one_long_register);                      /*@Z9*/
 DEF_INST(extract_cpu_time);
-
+DEF_INST(load_program_parameter);                               /*810*/
 
 /* Instructions in ecpsvm.c */
 DEF_INST(ecpsvm_basic_freex);

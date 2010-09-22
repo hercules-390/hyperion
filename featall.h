@@ -52,6 +52,7 @@
                                            of inter-thread signaling */
 #define OPTION_TIMESTAMP_LOGFILE        /* Hardcopy logfile HH:MM:SS */
 #define OPTION_IPLPARM                  /* IPL PARM a la VM          */
+
 #define OPTION_CAPPING                  /* Enable capping cnf stmnt  */
 #ifndef FISH_HANG
 #ifndef OPTION_WTHREADS
@@ -189,6 +190,7 @@
 #undef FEATURE_IO_ASSIST
 #undef FEATURE_LINKAGE_STACK
 #undef FEATURE_LOAD_REVERSED
+#undef FEATURE_LOAD_PROGRAM_PARAMETER_FACILITY
 #undef FEATURE_LOAD_STORE_ON_CONDITION_FACILITY                 /*810*/
 #undef FEATURE_LOCK_PAGE
 #undef FEATURE_LONG_DISPLACEMENT
@@ -229,7 +231,6 @@
 #undef FEATURE_SENSE_RUNNING_STATUS                             /*@Z9*/
 #undef FEATURE_SERVICE_PROCESSOR
 #undef FEATURE_SET_ADDRESS_SPACE_CONTROL_FAST
-#undef FEATURE_SET_PROGRAM_PARAMETER_FACILITY
 #undef FEATURE_SQUARE_ROOT
 #undef FEATURE_STORAGE_KEY_ASSIST
 #undef FEATURE_STORAGE_PROTECTION_OVERRIDE

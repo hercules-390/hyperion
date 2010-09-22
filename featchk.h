@@ -445,6 +445,13 @@
   #endif
 #endif
 
+#if defined(FEATURE_CPU_MEASUREMENT_COUNTER_FACILITY)\
+    || defined(FEATURE_CPU_MEASUREMENT_SAMPLING_FACILITY)
+  #if !defined(FEATURE_LOAD_PROGRAM_PARAMETER_FACILITY)
+    #error CPU Measurement facilities requires Load Program Parameter facility 
+  #endif
+#endif
+
 #endif /*!defined(FEATALL_CHECKALL)*/
 
 /* end of FEATCHK.H */

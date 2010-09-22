@@ -8044,6 +8044,39 @@ int     n;                              /* Position of leftmost one  */
 } /* end DEF_INST(find_leftmost_one_long_register) */
 #endif /*defined(FEATURE_EXTENDED_IMMEDIATE)*/                  /*@Z9*/
 
+#if defined(FEATURE_LOAD_PROGRAM_PARAMETER_FACILITY)            /* 810 */
+/*-------------------------------------------------------------------*/
+/* B280 LPP - LOAD PROGRAM PARAMETER                             [S] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_program_parameter)
+{
+int     b2;                             /* Base of effective addr    */
+U64     effective_addr2;                /* Effective address         */
+BYTE    dword[8];
+
+    /* Operation exception if LOAD_PROG_PARAM is not enabled */
+    if(!FACILITY_ENABLED(LOAD_PROG_PARAM,regs))
+    {
+        ARCH_DEP(operation_exception)(inst,regs);
+    } 
+    
+    /* NOP is at least one of these is not installed */
+    if (!FACILITY_ENABLED(CPU_MEAS_COUNTER,regs) && 
+        !FACILITY_ENABLED(CPU_MEAS_SAMPLNG,regs) )
+    {
+        return;
+    }
+
+    S(inst, regs, b2, effective_addr2);
+
+    PRIV_CHECK(regs);
+
+    /* Fetch data from operand address */
+    ARCH_DEP(vfetchc) ( dword, 8-1, effective_addr2, b2, regs );
+    memcpy(&regs->program_parameter,dword,sizeof(regs->program_parameter));
+
+} /* end DEF_INST(load_program_parameter) */
+#endif /* defined(FEATURE_LOAD_PROGRAM_PARAMETER_FACILITY) */   /* 810 */ 
 
 #if !defined(_GEN_ARCH)
 

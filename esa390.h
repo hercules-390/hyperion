@@ -1371,7 +1371,7 @@ typedef struct _MBK {
 #define STFL_FP_EXTENSION         37    /* Floating-point extension   
                                            facility installed     810*/
 #define STFL_RESERVED_39          39    /* Reserved */
-#define STFL_SET_PROG_PARAM       40    /* Set-Program-Parameter
+#define STFL_LOAD_PROG_PARAM      40    /* Load-Program-Parameter
                                            facility installed (ESAME)*/
 #define STFL_FPS_ENHANCEMENT      41    /* Floating point support
                                            enhancements (FPR-GR-loading

@@ -445,6 +445,9 @@ int ARCH_DEP(initial_cpu_reset) (REGS *regs)
     regs->fpc    = 0;
     regs->PX     = 0;
     regs->psw.AMASK_G = AMASK24;
+
+    memset ( &regs->program_parameter, 0, sizeof(regs->program_parameter) );
+
     /* 
      * ISW20060125 : Since we reset the prefix, we must also adjust 
      * the PSA ptr

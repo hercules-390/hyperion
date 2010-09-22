@@ -265,6 +265,11 @@ struct REGS {                           /* Processor registers       */
      /* Active Facility List */
         BYTE    facility_list[STFL_HBYTESIZE];
 
+     /* CPU Measurement Counter facility 
+        CPU Measurement Sampling facility
+        Load Program Parameter facility */
+        BYTE    program_parameter[8];   /* Program Parameter Register*/
+
      /* ------------------------------------------------------------ */
         U64     regs_copy_end;          /* Copy regs to here         */
      /* ------------------------------------------------------------ */

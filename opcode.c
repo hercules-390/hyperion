@@ -1,4 +1,5 @@
 /* OPCODE.C     (c) Copyright Jan Jaeger, 2000-2010                  */
+/*              (c) Copyright TurboHercules, SAS 2010                */
 /*              Instruction decoding functions                       */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -842,27 +843,25 @@
  UNDEF_INST(disconnect_channel_set)
 #endif /*!defined(FEATURE_CHANNEL_SWITCHING)*/
 
-
-#if !defined(FEATURE_SET_PROGRAM_PARAMETER_FACILITY)
- UNDEF_INST(set_program_parameter)
-#endif /*!defined(FEATURE_SET_PROGRAM_PARAMETER_FACILITY)*/
-
+#if !defined(FEATURE_LOAD_PROGRAM_PARAMETER_FACILITY)
+ UNDEF_INST(load_program_parameter)
+#endif /* !defined(FEATURE_LOAD_PROGRAM_PARAMETER_FACILITY) */
 
 #if !defined(FEATURE_CPU_MEASUREMENT_COUNTER_FACILITY)
  UNDEF_INST(extract_coprocessor_group_address)
  UNDEF_INST(extract_cpu_counter)
  UNDEF_INST(extract_peripheral_counter)
+ UNDEF_INST(load_cpu_counter_set_controls)
+ UNDEF_INST(load_peripheral_counter_set_controls)
  UNDEF_INST(query_counter_information)
  UNDEF_INST(set_cpu_counter)
- UNDEF_INST(set_cpu_counter_set_controls)
  UNDEF_INST(set_peripheral_counter)
- UNDEF_INST(set_peripheral_counter_set_controls)
 #endif /*!defined(FEATURE_CPU_MEASUREMENT_COUNTER_FACILITY)*/
 
 
 #if !defined(FEATURE_CPU_MEASUREMENT_SAMPLING_FACILITY)
+ UNDEF_INST(load_sampling_controls)
  UNDEF_INST(query_sampling_information)
- UNDEF_INST(set_sampling_controls)
 #endif /*!defined(FEATURE_CPU_MEASUREMENT_SAMPLING_FACILITY)*/
 
 
@@ -3508,21 +3507,21 @@ DLL_EXPORT zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B27D*/ GENx370x390x900 (store_system_information,S,"STSI"),
  /*B27E*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B27F*/ GENx___x___x___ ,                                     /* Sysplex   */
- /*B280*/ GENx___x___x900 (set_program_parameter,S,"SPP"),      /*#LN L      */
+ /*B280*/ GENx___x___x900 (load_program_parameter,S,"LPP"),     /* LPPF     */
  /*B281*/ GENx___x___x___ ,                                     /*#LN S      */
  /*B282*/ GENx___x___x___ ,                                     /*#EXP L     */
  /*B283*/ GENx___x___x___ ,                                     /*#EXP S     */
- /*B284*/ GENx___x___x900 (set_cpu_counter_set_controls,S,"SCCTL"), /*#LOG L */
- /*B285*/ GENx___x___x900 (set_peripheral_counter_set_controls,S,"SPCTL"),/*#LOG S*/
- /*B286*/ GENx___x___x900 (query_sampling_information,S,"QSI"), /*#POWER L   */
- /*B287*/ GENx___x___x900 (set_sampling_controls,S,"SSCTL"),    /*#POWER S   */
+ /*B284*/ GENx___x___x900 (load_cpu_counter_set_controls,S,"LCCTL"),        /*  CMCF */
+ /*B285*/ GENx___x___x900 (load_peripheral_counter_set_controls,S,"LPCTL"), /*  CMCF */
+ /*B286*/ GENx___x___x900 (query_sampling_information,S,"QSI"),             /*  CMCF */
+ /*B287*/ GENx___x___x900 (load_sampling_controls,S,"LSCTL"),               /*  CMCF */
  /*B288*/ GENx___x___x___ ,                                     /*#SIN L     */
  /*B289*/ GENx___x___x___ ,                                     /*#SIN S     */
  /*B28A*/ GENx___x___x___ ,                                     /*#COS L     */
  /*B28B*/ GENx___x___x___ ,                                     /*#COS S     */
  /*B28C*/ GENx___x___x___ ,
  /*B28D*/ GENx___x___x___ ,
- /*B28E*/ GENx___x___x900 (query_counter_information,S,"QCTRI"),
+ /*B28E*/ GENx___x___x900 (query_counter_information,S,"QCTRI"),            /*  CMCF */
  /*B28F*/ GENx___x___x___ ,
  /*B290*/ GENx___x___x___ ,
  /*B291*/ GENx___x___x___ ,
@@ -3604,12 +3603,12 @@ DLL_EXPORT zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B2DD*/ GENx___x___x___ ,
  /*B2DE*/ GENx___x___x___ ,
  /*B2DF*/ GENx___x___x___ ,
- /*B2E0*/ GENx___x___x900 (set_cpu_counter,RRE,"SCCTR"),
- /*B2E1*/ GENx___x___x900 (set_peripheral_counter,RRE,"SPCTR"),
+ /*B2E0*/ GENx___x___x900 (set_cpu_counter,RRE,"SCCTR"),                /*  CMCF */
+ /*B2E1*/ GENx___x___x900 (set_peripheral_counter,RRE,"SPCTR"),         /*  CMCF */
  /*B2E2*/ GENx___x___x___ ,
  /*B2E3*/ GENx___x___x___ ,
- /*B2E4*/ GENx___x___x900 (extract_cpu_counter,RRE,"ECCTR"),
- /*B2E5*/ GENx___x___x900 (extract_peripheral_counter,RRE,"EPCTR"),
+ /*B2E4*/ GENx___x___x900 (extract_cpu_counter,RRE,"ECCTR"),            /*  CMCF */
+ /*B2E5*/ GENx___x___x900 (extract_peripheral_counter,RRE,"EPCTR"),     /*  CMCF */
  /*B2E6*/ GENx___x___x___ ,
  /*B2E7*/ GENx___x___x___ ,
  /*B2E8*/ GENx___x___x___ ,
@@ -3617,7 +3616,7 @@ DLL_EXPORT zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B2EA*/ GENx___x___x___ ,
  /*B2EB*/ GENx___x___x___ ,
  /*B2EC*/ GENx___x___x___ ,
- /*B2ED*/ GENx___x___x900 (extract_coprocessor_group_address,RRE,"ECA"),
+ /*B2ED*/ GENx___x___x900 (extract_coprocessor_group_address,RRE,"ECPGA"), /*  CMCF */
  /*B2EE*/ GENx___x___x___ ,
  /*B2EF*/ GENx___x___x___ ,
  /*B2F0*/ GENx370x390x900 (inter_user_communication_vehicle,S,"IUCV"),
