@@ -768,13 +768,14 @@ int process_entry(struct options *opts,char *orec,int recno)
     struct  TAPE_BLOCKS *blks;
     struct  FST_BLOCK *fstb;
     struct  stat stt;
+    char   *strtok_str;
 
     ignore=0;
     rec=strdup(orec);
     do
     {
         badentry=1;
-        fn=strtok(rec," ");
+        fn=strtok_r(rec," ",&strtok_str);
         if(fn==NULL)
         {
             /* blank line : ignore */
@@ -796,13 +797,13 @@ int process_entry(struct options *opts,char *orec,int recno)
                 break;
             }
         }
-        ft=strtok(NULL," ");
+        ft=strtok_r(NULL," ",&strtok_str);
         if(ft==NULL) 
         {
             msg="File type missing";
             break;
         }
-        fm=strtok(NULL," ");
+        fm=strtok_r(NULL," ",&strtok_str);
         if(fm==NULL) 
         {
             msg="File mode missing";
@@ -813,7 +814,7 @@ int process_entry(struct options *opts,char *orec,int recno)
         str_toupper(fm);
         msg=validate_cmsfile(fn,ft,fm);
         if(msg!=NULL) break;
-        recfm=strtok(NULL," ");
+        recfm=strtok_r(NULL," ",&strtok_str);
         if(recfm==NULL)
         {
             msg="Record format missing";
@@ -827,7 +828,7 @@ int process_entry(struct options *opts,char *orec,int recno)
         }
         if(recfm[0]=='F')
         {
-            lrecl=strtok(NULL," ");
+            lrecl=strtok_r(NULL," ",&strtok_str);
             if(lrecl==NULL)
             {
                 msg="Logical Record Length missing for F record format file";
@@ -851,7 +852,7 @@ int process_entry(struct options *opts,char *orec,int recno)
         {
             reclen=0;
         }
-        filefmt=strtok(NULL," ");
+        filefmt=strtok_r(NULL," ",&strtok_str);
         if(filefmt==NULL)
         {
             msg="File format missing";
@@ -863,7 +864,7 @@ int process_entry(struct options *opts,char *orec,int recno)
             msg="File format must be B (Binary) S (Structured) or T (Text)";
             break;
         }
-        infile=strtok(NULL,"");	/* allow spaces here */
+        infile=strtok_r(NULL,"",&strtok_str);	/* allow spaces here */
         if(infile==NULL)
         {
             msg="Input file name missing";
@@ -997,6 +998,8 @@ int main(int argc,char **argv)
     char           *pgm;                    /* less any extension (.ext) */
     char           *pgmpath;                /* prog path in host format  */
     char            msgbuf[512];            /* message build work area   */
+    char           *strtok_str;
+
     /* Set program name */
     if ( argc > 0 )
     {
@@ -1026,7 +1029,7 @@ int main(int argc,char **argv)
             pgmpath = strdup( "" );
     }
 
-    pgm = strtok( strdup(pgmname), ".");
+    pgm = strtok_r( strdup(pgmname), ".", &strtok_str);
     INITIALIZE_UTILITY( pgmname );
 
     /* Display the program identification message */

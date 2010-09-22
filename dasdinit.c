@@ -97,6 +97,7 @@ FBADEV *fba;                            /* -> FBA device table entry */
 int     lfs = 0;                        /* 1 = Build large file      */
 int     nullfmt = CKDDASD_NULLTRK_FMT1; /* Null track format type    */
 int     rc;                             /* Return code               */
+char   *strtok_str;
 
     /* Set program name */
     if ( argc > 0 )
@@ -127,7 +128,7 @@ int     rc;                             /* Return code               */
             pgmpath = strdup( "" );
     }
 
-    pgm = strtok( strdup(pgmname), ".");
+    pgm = strtok_r( strdup(pgmname), ".", &strtok_str);
     INITIALIZE_UTILITY( pgmname );
 
 

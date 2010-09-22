@@ -1482,10 +1482,10 @@ BYTE            buf[4*65536];           /* buffer                    */
             recovery = 1;
 
             /* issue error message */
-            j = sprintf(space1, "%s", spaces[spctab[i].typ]);
+            j = MSGBUF(space1, "%s", spaces[spctab[i].typ]);
             if (spctab[i].val >= 0)
                 sprintf(space1+j, "[%d]", spctab[i].val);
-            j = sprintf(space2, "%s", spaces[spctab[i+1].typ]);
+            j = MSGBUF(space2, "%s", spaces[spctab[i+1].typ]);
             if (spctab[i+1].val >= 0)
                 sprintf(space2+j, "[%d]", spctab[i+1].val);
 

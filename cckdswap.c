@@ -38,6 +38,7 @@ int             i;                      /* Index                     */
 int             bigend;                 /* 1=big-endian file         */
 DEVBLK          devblk;                 /* DEVBLK                    */
 DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
+char           *strtok_str;
 
     /* Set program name */
     if ( argc > 0 )
@@ -68,7 +69,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
             pgmpath = strdup( "" );
     }
 
-    pgm = strtok( strdup(pgmname), ".");
+    pgm = strtok_r( strdup(pgmname), ".", &strtok_str);
     INITIALIZE_UTILITY( pgmname );
     /* Display the program identification message */
     MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "Swap 'endianess' of a cckd file" ) );

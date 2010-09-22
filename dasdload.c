@@ -3746,10 +3746,11 @@ char           *pkeyln;                 /* -> key length             */
 char           *pimeth;                 /* -> initialization method  */
 char           *pifile;                 /* -> initialization filename*/
 BYTE            c;                      /* Character work area       */
+char           *strtok_str;             /* last token                */
 
     /* Parse the input statement */
-    pdsnam = strtok (stmt, " \t");
-    pimeth = strtok (NULL, " \t");
+    pdsnam = strtok_r (stmt, " \t", &strtok_str);
+    pimeth = strtok_r (NULL, " \t", &strtok_str);
 
     /* Check that all mandatory fields are present */
     if (pdsnam == NULL || pimeth == NULL)
@@ -3802,7 +3803,7 @@ BYTE            c;                      /* Character work area       */
     /* Locate the initialization file name */
     if (*method == METHOD_XMIT || *method == METHOD_VS || *method == METHOD_SEQ)
     {
-        pifile = strtok (NULL, " \t");
+        pifile = strtok_r (NULL, " \t", &strtok_str);
         if (pifile == NULL)
         {
             XMERR ( MSG( HHC02580, "E" ) );
@@ -3812,7 +3813,7 @@ BYTE            c;                      /* Character work area       */
     }
 
     /* Determine the space allocation units */
-    punits = strtok (NULL, " \t");
+    punits = strtok_r (NULL, " \t", &strtok_str );
     if (punits == NULL) return 0;
 
     string_to_upper (punits);
@@ -3827,7 +3828,7 @@ BYTE            c;                      /* Character work area       */
     }
 
     /* Determine the primary space allocation quantity */
-    psppri = strtok (NULL, " \t");
+    psppri = strtok_r (NULL, " \t", &strtok_str);
     if (psppri == NULL) return 0;
 
     if (sscanf(psppri, "%u%c", sppri, &c) != 1)
@@ -3837,7 +3838,7 @@ BYTE            c;                      /* Character work area       */
     }
 
     /* Determine the secondary space allocation quantity */
-    pspsec = strtok (NULL, " \t");
+    pspsec = strtok_r (NULL, " \t", &strtok_str);
     if (pspsec == NULL) return 0;
 
     if (sscanf(pspsec, "%u%c", spsec, &c) != 1)
@@ -3847,7 +3848,7 @@ BYTE            c;                      /* Character work area       */
     }
 
     /* Determine the directory space allocation quantity */
-    pspdir = strtok (NULL, " \t");
+    pspdir = strtok_r (NULL, " \t", &strtok_str);
     if (pspdir == NULL) return 0;
 
     if (sscanf(pspdir, "%u%c", spdir, &c) != 1)
@@ -3857,7 +3858,7 @@ BYTE            c;                      /* Character work area       */
     }
 
     /* Determine the dataset organization */
-    pdsorg = strtok (NULL, " \t");
+    pdsorg = strtok_r (NULL, " \t", &strtok_str);
     if (pdsorg == NULL) return 0;
 
     string_to_upper (pdsorg);
@@ -3876,7 +3877,7 @@ BYTE            c;                      /* Character work area       */
     }
 
     /* Determine the record format */
-    precfm = strtok (NULL, " \t");
+    precfm = strtok_r (NULL, " \t", &strtok_str);
     if (precfm == NULL) return 0;
 
     string_to_upper (precfm);
@@ -3901,7 +3902,7 @@ BYTE            c;                      /* Character work area       */
     }
 
     /* Determine the logical record length */
-    plrecl = strtok (NULL, " \t");
+    plrecl = strtok_r (NULL, " \t", &strtok_str);
     if (plrecl == NULL) return 0;
 
     if (sscanf(plrecl, "%u%c", lrecl, &c) != 1
@@ -3912,7 +3913,7 @@ BYTE            c;                      /* Character work area       */
     }
 
     /* Determine the block size */
-    pblksz = strtok (NULL, " \t");
+    pblksz = strtok_r (NULL, " \t", &strtok_str);
     if (pblksz == NULL) return 0;
 
     if (sscanf(pblksz, "%u%c", blksz, &c) != 1
@@ -3923,7 +3924,7 @@ BYTE            c;                      /* Character work area       */
     }
 
     /* Determine the key length */
-    pkeyln = strtok (NULL, " \t");
+    pkeyln = strtok_r (NULL, " \t", &strtok_str);
     if (pkeyln == NULL) return 0;
 
     if (sscanf(pkeyln, "%u%c", keyln, &c) != 1
@@ -4281,6 +4282,7 @@ BYTE            comp = 0xff;            /* Compression algoritm      */
 int             altcylflag = 0;         /* Alternate cylinders flag  */
 int             lfs = 0;                /* 1 = Large file            */
 char            pathname[MAX_PATH];     /* cfname in host path format*/
+char           *strtok_str;             /* last token position       */
 
     /* Set program name */
     if ( argc > 0 )
@@ -4311,7 +4313,7 @@ char            pathname[MAX_PATH];     /* cfname in host path format*/
             pgmpath = strdup( "" );
     }
 
-    pgm = strtok( strdup(pgmname), ".");
+    pgm = strtok_r( strdup(pgmname), ".", &strtok_str);
     INITIALIZE_UTILITY( pgmname );
 
     /* Display the program identification message */
@@ -4381,10 +4383,10 @@ char            pathname[MAX_PATH];     /* cfname in host path format*/
     }
 
     /* Parse the volume serial statement */
-    volser = strtok (stmt, " \t");
-    sdevtp = strtok (NULL, " \t");
-    sdevsz = strtok (NULL, " \t");
-    iplfnm = strtok (NULL, " \t");
+    volser = strtok_r (stmt, " \t", &strtok_str);
+    sdevtp = strtok_r (NULL, " \t", &strtok_str);
+    sdevsz = strtok_r (NULL, " \t", &strtok_str);
+    iplfnm = strtok_r (NULL, " \t", &strtok_str);
 
     /* Validate the volume serial number */
     if (volser == NULL || strlen(volser) == 0 || strlen(volser) > 6)

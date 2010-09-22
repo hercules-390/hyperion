@@ -36,6 +36,7 @@ int             force=0;                /* 1=Check if OPENED bit on  */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
 DEVBLK          devblk;                 /* DEVBLK                    */
 DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
+char           *strtok_str;             /* last token position       */
 
     /* Set program name */
     if ( argc > 0 )
@@ -66,7 +67,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
             pgmpath = strdup( "" );
     }
 
-    pgm = strtok( strdup(pgmname), ".");
+    pgm = strtok_r( strdup(pgmname), ".", &strtok_str);
     INITIALIZE_UTILITY( pgm );
 
     /* Display the program identification message */

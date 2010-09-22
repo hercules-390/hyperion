@@ -696,12 +696,14 @@ int     dll_count;                      /* index into array          */
     if (arg_error)
     {
         char pgm[MAX_PATH];
+        char* strtok_str;
         strncpy(pgm, sysblk.hercules_pgmname, sizeof(pgm));
 
 #if defined(OPTION_DYNAMIC_LOAD)
-        WRMSG (HHC01407, "S", strtok(pgm,"."), " [-p dyn-load-dir] [[-l dynmod-to-load]...]");
+        WRMSG (HHC01407, "S", strtok_r(pgm,".",&strtok_str), 
+                             " [-p dyn-load-dir] [[-l dynmod-to-load]...]");
 #else
-        WRMSG (HHC01407, "S", strtok(pgm,"."), "");
+        WRMSG (HHC01407, "S", strtok_r(pgm,".", &strtok_str), "");
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
         fflush(stderr);  
         fflush(stdout);  

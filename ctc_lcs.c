@@ -2287,6 +2287,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
     char*       pszIPAddress = NULL;
     char*       pszNetAddr   = NULL;
     char*       pszNetMask   = NULL;
+    char*       strtok_str;
 
     struct in_addr  addr;               // Work area for addresses
     char        pathname[MAX_PATH];     // pszOATName in host path format
@@ -2335,13 +2336,13 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
         memset( &addr, 0, sizeof( addr ) );
 
         // Split the statement into keyword and first operand
-        pszKeyword = strtok( pszStatement, " \t" );
-        pszOperand = strtok( NULL,   " \t" );
+        pszKeyword = strtok_r( pszStatement, " \t", &strtok_str );
+        pszOperand = strtok_r( NULL,   " \t", &strtok_str );
 
         // Extract any arguments
         for( argc = 0;
              argc < MAX_ARGS &&
-                 ( argv[argc] = strtok( NULL, " \t" ) ) != NULL &&
+                 ( argv[argc] = strtok_r( NULL, " \t", &strtok_str ) ) != NULL &&
                  argv[argc][0] != '#';
              argc++ );
 

@@ -675,14 +675,15 @@ static void do_panel_command( void* cmd )
          strstr(cmdline, sysblk.cmdsep) != NULL )
     {
         char *command;
-        
+        char *strtok_str;
+
         command = strdup(cmdline);
 
-        cmdsep = strtok(cmdline, sysblk.cmdsep);
+        cmdsep = strtok_r(cmdline, sysblk.cmdsep, &strtok_str);
         while ( cmdsep != NULL )
         {
             panel_command( cmdsep );
-            cmdsep = strtok(NULL, sysblk.cmdsep);
+            cmdsep = strtok_r(NULL, sysblk.cmdsep, &strtok_str);
         }
 
         history_add( command );

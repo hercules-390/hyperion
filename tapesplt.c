@@ -80,6 +80,8 @@ int             files2copy;             /* Current # files to copy   */
 BYTE            labelrec[81];           /* Standard label (ASCIIZ)   */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
 char            pathname[MAX_PATH];     /* file path in host format  */
+char           *strtok_str;
+
     /* Set program name */
     if ( argc > 0 )
     {
@@ -109,7 +111,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             pgmpath = strdup( "" );
     }
 
-    pgm = strtok( strdup(pgmname), ".");
+    pgm = strtok_r( strdup(pgmname), ".", &strtok_str);
     INITIALIZE_UTILITY( pgmname );
 
     /* Display the program identification message */

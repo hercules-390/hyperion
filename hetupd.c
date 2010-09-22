@@ -356,6 +356,7 @@ main( int argc, char *argv[] )
     char            msgbuf[512];            /* message build work area   */
     char            toname[ MAX_PATH ];
     int             rc;
+    char           *strtok_str;
 
     /* Set program name */
     if ( argc > 0 )
@@ -386,7 +387,7 @@ main( int argc, char *argv[] )
             pgmpath = strdup( "" );
     }
 
-    pgm = strtok( strdup(pgmname), ".");
+    pgm = strtok_r( strdup(pgmname), ".", &strtok_str);
     INITIALIZE_UTILITY( pgmname );
 
     /* Display the program identification message */

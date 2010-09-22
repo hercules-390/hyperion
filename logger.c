@@ -550,7 +550,7 @@ DLL_EXPORT void logger_init(void)
     if(!(logger_buffer = malloc(logger_bufsize)))
     {
         char buf[40];
-        sprintf(buf, "malloc(%d)", logger_bufsize);
+        MSGBUF(buf, "malloc(%d)", logger_bufsize);
         fprintf(stderr, MSG(HHC02102, "E", buf, strerror(errno)));
         exit(1);
     }

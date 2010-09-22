@@ -120,7 +120,7 @@ BYTE           *blkptr;                 /* -> PDS directory block    */
 CIFBLK         *cif;                    /* CKD image file descriptor */
 MEMINFO        *memtab;                 /* -> Member info array      */
 int             nmem = 0;               /* Number of array entries   */
-
+char           *strtok_str;
 
     /* Set program name */
     if ( argc > 0 )
@@ -151,7 +151,7 @@ int             nmem = 0;               /* Number of array entries   */
             pgmpath = strdup( "" );
     }
 
-    pgm = strtok( strdup(pgmname), ".");
+    pgm = strtok_r( strdup(pgmname), ".", &strtok_str);
     INITIALIZE_UTILITY( pgm );
 
     /* Display the program identification message */

@@ -146,6 +146,7 @@ int main(int argc, char **argv)
     int             dsorg;
     int             rc;
     char            pathname[MAX_PATH];
+    char           *strtok_str;
 
     /* Set program name */
     if ( argc > 0 )
@@ -176,7 +177,7 @@ int main(int argc, char **argv)
             pgmpath = strdup( "" );
     }
 
-    pgm = strtok( strdup(pgmname), ".");
+    pgm = strtok_r( strdup(pgmname), ".", &strtok_str);
     INITIALIZE_UTILITY( pgmname );
 
     /* Display the program identification message */

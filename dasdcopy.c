@@ -82,6 +82,7 @@ char            msgbuf[512];            /* Message buffer            */
 size_t          fba_bytes_remaining=0;  /* FBA bytes to be copied    */
 int             nullfmt = CKDDASD_NULLTRK_FMT0; /* Null track format */
 char            pathname[MAX_PATH];     /* file path in host format  */
+char           *strtok_str;             
 
     /* Set program name */
     if ( argc > 0 )
@@ -112,7 +113,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             pgmpath = strdup( "" );
     }
 
-    pgm = strtok( strdup(pgmname), ".");
+    pgm = strtok_r( strdup(pgmname), ".", &strtok_str);
     INITIALIZE_UTILITY( pgm );
 
     if (strcasecmp(pgm, "ckd2cckd") == 0)

@@ -214,12 +214,13 @@ BYTE    c;                              /* Print character           */
 
         /* process multiline messages */
         {
-            char    *str = strtok ((char *)iobuf,"\n");
+            char    *strtok_str;
+            char    *str = strtok_r ((char *)iobuf,"\n", &strtok_str);
 
             while (str != NULL)
             {
                 WRCMSG ("<pnl,color(green,black)>", HHC00001, "I", str);
-                str = strtok (NULL, "\n");
+                str = strtok_r (NULL, "\n", &strtok_str);
             }
 
         }

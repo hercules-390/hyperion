@@ -649,9 +649,9 @@ time_t tt;
                 result[0] = '\0';
             else
                 if((pttrace[i].class & ~PTT_CL_THR))
-                    sprintf(result, "%8.8x", pttrace[i].result);
+                    MSGBUF(result, "%8.8x", pttrace[i].result);
                 else
-                    sprintf(result, "%d", pttrace[i].result);
+                    MSGBUF(result, "%d", pttrace[i].result);
 
             logmsg
             (

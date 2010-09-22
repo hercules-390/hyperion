@@ -3490,7 +3490,6 @@ int cd_cmd(int argc, char *argv[], char *cmdline)
 {
     char* path;
     char  cwd [ MAX_PATH ];
-    char* strtok_str;
     UNREFERENCED(argc);
     UNREFERENCED(argv);
 
@@ -3499,7 +3498,10 @@ int cd_cmd(int argc, char *argv[], char *cmdline)
         path = cmdline + 2;
         while (isspace(*path)) path++;
 #ifdef _MSVC_
-        _chdir( strtok_r( path, "\"",&strtok_str  ) );
+        {
+            char* strtok_str;
+            _chdir( strtok_r( path, "\"", &strtok_str ) );
+        }
 #else
         chdir(path);
 #endif
@@ -5033,6 +5035,7 @@ size_t  maxb;
 U16  lcss;
 U16  devnum;
 char *cdev, *clcss;
+char *strtok_str;
 
 #if defined(OPTION_IPLPARM)
 char save_loadparm[16];
@@ -5119,7 +5122,7 @@ int  rest_loadparm = FALSE;
     /* If the ipl device is not a valid hex number we assume */
     /* This is a load from the service processor             */
     if (sscanf(cdev, "%hx%c", &devnum, &c) != 1)
-        rc = load_hmc(strtok(cmdline+3+clear," \t"), sysblk.pcpu, clear);
+        rc = load_hmc(strtok_r(cmdline+3+clear," \t", &strtok_str ), sysblk.pcpu, clear);
     else
     {
         *--cdev = '\0';

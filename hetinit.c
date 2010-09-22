@@ -70,6 +70,7 @@ main( int argc, char *argv[] )
     char           *o_filename;
     char           *o_owner;
     char           *o_volser;
+    char           *strtok_str;
 
 
     /* Set program name */
@@ -101,7 +102,7 @@ main( int argc, char *argv[] )
             pgmpath = strdup( "" );
     }
 
-    pgm = strtok( strdup(pgmname), ".");
+    pgm = strtok_r( strdup(pgmname), ".", &strtok_str);
     INITIALIZE_UTILITY( pgmname );
 
     /* Display the program identification message */

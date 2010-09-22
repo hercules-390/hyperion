@@ -1372,6 +1372,7 @@ static char *build_logo(char **logodata,size_t logosize,size_t *blen)
     int     attr;
     int     align;
     char    *wrk;
+    char    *strtok_str;
 
     bfr=NULL;
     len=0;
@@ -1440,24 +1441,24 @@ static char *build_logo(char **logodata,size_t logosize,size_t *blen)
                 bfr=buffer_addstring(bfr,&len,&alen,(char *)translate_to_ebcdic(cline));
                 break;
             }
-            verb=strtok(cline," \t");
+            verb=strtok_r(cline," \t", &strtok_str);
             if(verb==NULL)
             {
                 break;
             }
-            rest=strtok(NULL," \t");
+            rest=strtok_r(NULL," \t", &strtok_str);
             if(strcasecmp(verb,"@sba")==0)
             {
                 if(rest==NULL)
                 {
                     break;
                 }
-                wrk=strtok(rest,",");
+                wrk=strtok_r(rest,",", &strtok_str);
                 if(wrk!=NULL)
                 {
                     xpos=atoi(wrk);
                 }
-                wrk=strtok(NULL,",");
+                wrk=strtok_r(NULL,",", &strtok_str);
                 if(wrk!=NULL)
                 {
                     ypos=atoi(wrk);

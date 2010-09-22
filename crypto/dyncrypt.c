@@ -3954,7 +3954,7 @@ HDL_REGISTER_SECTION;
   WRMSG(HHC00151, "I", "Message Security Assist Extension 3"); // Feature notice
 #endif
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
-  WRMSG(HHC00151, "I", "Message Security Assist Extension 4 (excluding the ghash functionality)"); // Feature notice
+  WRMSG(HHC00151, "I", "Message Security Assist Extension 4"); // Feature notice
 #endif
 }
 END_REGISTER_SECTION;

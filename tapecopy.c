@@ -500,6 +500,8 @@ int64_t         bytes_read;             /* Bytes read from i/p file  */
 int64_t         file_bytes;             /* Byte count for curr file  */
 char            pathname[MAX_PATH];     /* file name in host format  */
 struct mtget    mtget;                  /* Area for MTIOCGET ioctl   */
+char           *strtok_str;
+
 #if defined(EXTERNALGUI)
 struct mtpos    mtpos;                  /* Area for MTIOCPOS ioctl   */
 int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
@@ -534,7 +536,7 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
             pgmpath = strdup( "" );
     }
 
-    pgm = strtok( strdup(pgmname), ".");
+    pgm = strtok_r( strdup(pgmname), ".", &strtok_str);
     INITIALIZE_UTILITY( pgmname );
 
     /* Display the program identification message */

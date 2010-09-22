@@ -249,6 +249,7 @@ main( int argc, char *argv[] )
     U32  opts = 0;
     SInt32  lResidue	= max_bytes_dsply;	/* amount of space left to print */ 
     char *pgm;
+    char *strtok_str;
 #if 0
  /**
   ** 2010/08/31 @kl Attempt to set tapemap defaults if invoked
@@ -295,7 +296,7 @@ main( int argc, char *argv[] )
         pgm = argv[0];
     }
 #endif
-    strtok (pgm, ".");
+    strtok_r (pgm, ".", &strtok_str);
     if  ((strcmp(pgm, "tapemap") == 0) || (strcmp(pgm, "TAPEMAP") == 0))
     {
         opts = O_TAPEMAP_OUTPUT+O_TAPEMAP_INVOKED;
