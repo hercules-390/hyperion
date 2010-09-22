@@ -53,6 +53,9 @@ int ARCH_DEP(system_reset) (int cpu, int clear)
     }
     regs = sysblk.regs[cpu];
 
+    /* Initialize Architecture Level Set */
+    init_als(regs);
+
     HDC1(debug_cpu_state, regs);
 
     /* Perform system-reset-normal or system-reset-clear function */
@@ -101,6 +104,7 @@ int ARCH_DEP(system_reset) (int cpu, int clear)
         /* Perform I/O subsystem reset */
         io_reset ();
 
+        memset(sysblk.program_parameter,0,sizeof(sysblk.program_parameter));
         /* Clear storage */
         sysblk.main_clear = sysblk.xpnd_clear = 0;
         storage_clear();
@@ -445,8 +449,6 @@ int ARCH_DEP(initial_cpu_reset) (REGS *regs)
     regs->fpc    = 0;
     regs->PX     = 0;
     regs->psw.AMASK_G = AMASK24;
-
-    memset ( &regs->program_parameter, 0, sizeof(regs->program_parameter) );
 
     /* 
      * ISW20060125 : Since we reset the prefix, we must also adjust 
