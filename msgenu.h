@@ -385,11 +385,13 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00458 "%1d:%04X CKD file '%s': dataset '%s' not found in VTOC"
 #define HHC00459 "%1d:%04X CKD file '%s': DSNAME '%s' F1DSCB CCHHR=%4.4X%4.4X%2.2X"
 #define HHC00460 "%1d:%04X CKD file '%s': %u '%s' successfully written"
-#define HHC00461 "%1d:%04X CKD file '%s': '%s' count %u is outside range %u-%u"
+#define HHC00461 "%1d:%04X CKD file '%s': %s count %u is outside range %u-%u"
 #define HHC00462 "%1d:%04X CKD file '%s': creating %4.4X volume %s: %u cyls, %u trks/cyl, %u bytes/track"
 #define HHC00463 "%1d:%04X CKD file '%s': creating %4.4X volume %s: %u sectors, %u bytes/sector"
 #define HHC00464 "%1d:%04X CKD file '%s': file size too large: %"I64_FMT"ud [%d]"
 #define HHC00465 "%1d:%04X CKD file '%s': creating %4.4X compressed volume %s: %u sectors, %u bytes/sector"
+#define HHC00466 "Maximum of %u %s in %u 2GB file(s) supported"
+#define HHC00467 "Maximum %s supported is %u" 
 
 // reserve 005xx for fba dasd device related messages 
 #define HHC00500 "%1d:%04X FBA file: name missing or invalid filename length"
@@ -413,6 +415,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00518 "%1d:%04X FBA file '%s': read blkgrp %d cache miss, using cache[%d]"
 #define HHC00519 "%1d:%04X FBA file '%s': read blkgrp %d offset %" I64_FMT "d len %d"
 #define HHC00520 "%1d:%04X FBA file '%s': positioning to %8.8" I64_FMT "X %" I64_FMT "u"
+#define HHC00521 "Maximum of %u %s in a 2GB file"
 
 // reserve 006xx for sce dasd device related messages 
 #define HHC00600 "SCE file '%s': error in function '%s': '%s'"

@@ -1713,11 +1713,19 @@ U32             trksize;                /* DASD image track length   */
     }
     else
         maxcpif = maxcyls = volcyls;
-    if (maxcyls > 65536) maxcyls = 65536;
+
+    if (maxcyls > 65536)
+    {
+        maxcyls = 65536;
+        fprintf( stderr, MSG(HHC00467, "I", "cylinders", maxcyls) );
+    }
 
     /* Check for valid number of cylinders */
     if (volcyls < mincyls || volcyls > maxcyls)
     {
+        if (comp == 0xff && !lfs)
+            fprintf( stderr, MSG(HHC00466, "I", maxcyls, "cylinders", CKD_MAXFILES) );
+
         fprintf (stderr, MSG(HHC00461, "E", 0, 0, fname,
                 "cylinder", volcyls, mincyls, maxcyls));
         return -1;
@@ -1842,6 +1850,9 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /* Check for valid number of sectors */
     if (sectors < minsect || (!lfs && sectors > maxsect))
     {
+        if (!lfs)
+            fprintf( stderr, MSG(HHC00521, "I", maxsect, "sectors") );
+
         fprintf (stderr, MSG(HHC00461, "E", 0, 0, fname,
                 "sector", sectors, minsect, maxsect));
         return -1;
