@@ -8070,7 +8070,7 @@ BYTE    dword[8];
     {
         /* Fetch data from operand address */
         ARCH_DEP(vfetchc) ( dword, 8-1, effective_addr2, b2, regs );
-        memcpy(&regs->program_parameter,dword,sizeof(regs->program_parameter));
+        memcpy(sysblk.program_parameter,dword,sizeof(sysblk.program_parameter));
     }
     else    /* NOP */
     {   
