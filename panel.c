@@ -269,9 +269,9 @@ typedef struct _PANMSG      /* Panel message control block structure */
 }
 PANMSG;                     /* Panel message control block structure */
 
-static PANMSG*  msgbuf;                 /* Circular message buffer   */
-static PANMSG*  topmsg;                 /* message at top of screen  */
-static PANMSG*  curmsg;                 /* newest message            */
+static PANMSG*  msgbuf = NULL;          /* Circular message buffer   */
+static PANMSG*  topmsg = NULL;          /* message at top of screen  */
+static PANMSG*  curmsg = NULL;          /* newest message            */
 static int      wrapped = 0;            /* wrapped-around flag       */
 static int      numkept = 0;            /* count of kept messages    */
 static int      npquiet = 0;            /* screen updating flag      */
@@ -1802,7 +1802,8 @@ DLL_EXPORT void update_maxrates_hwm()       // (update high-water-mark values)
 
     if ( elapsed_secs >= ( maxrates_rpt_intvl * 60 ) )
     {
-        do_panel_command("-herc maxrates");
+        if (sysblk.panel_init)
+            do_panel_command("-herc maxrates");
 
         prev_high_mips_rate = curr_high_mips_rate;
         prev_high_sios_rate = curr_high_sios_rate;
@@ -1910,9 +1911,6 @@ char    buf[1024];                      /* Buffer workarea           */
     /* Display thread started message on control panel */
     WRMSG (HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Control panel");
 
-    /* Notify logger_thread we're in control */
-    sysblk.panel_init = 1;
-
     hdl_adsc("panel_cleanup",panel_cleanup, NULL);
     history_init();
 
@@ -1990,6 +1988,9 @@ char    buf[1024];                      /* Buffer workarea           */
     set_color (COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
     clr_screen ();
     redraw_msgs = redraw_cmd = redraw_status = 1;
+
+    /* Notify logger_thread we're in control */
+    sysblk.panel_init = 1;
 
     /* Process messages and commands */
     while ( 1 )
