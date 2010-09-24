@@ -132,10 +132,8 @@ int init_rexx()
 {
 int rc;
 
-    if( rexx_initialised )
-        return 0;
-
 #if !defined(NO_DYNAMIC_RESOLVE_REXX)
+    if( !rexx_initialised )
     {
         void *addr;
 
@@ -162,6 +160,9 @@ int rc;
             WRMSG( HHC17505, "E", REXX_PACKAGE, REXX_START, strerror(errno));
             return -1;
         }
+
+        rexx_initialised = TRUE;
+
     }
 #endif
 
@@ -176,8 +177,6 @@ int rc;
         WRMSG( HHC17506, "E", REXX_PACKAGE, REXX_REGISTER_SUBCOM, rc);
         return -1;
     }
-
-    rexx_initialised = TRUE;
 
     return 0;
 }
