@@ -461,7 +461,7 @@ int bind_device_ex (DEVBLK* dev, char* spec, ONCONNECT fn, void* arg )
     if (!bs)
     {
         char buf[40];
-        snprintf(buf, 40, "malloc(%lu)", sizeof(bind_struct));
+        MSGBUF( buf, "malloc(%lu)", sizeof(bind_struct));
         WRMSG (HHC01000, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, buf, strerror(errno));
         return 0;   /* (failure) */
     }

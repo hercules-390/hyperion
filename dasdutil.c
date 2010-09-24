@@ -529,7 +529,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     if (cif == NULL)
     {
         char buf[40];
-        snprintf(buf, 40, "calloc(%lu)", sizeof(CIFBLK));
+        MSGBUF(buf, "calloc(%lu)", sizeof(CIFBLK));
         fprintf (stderr, MSG(HHC00404, "E", SSID_TO_LCSS(cif->devblk.ssid), cif->devblk.devnum, fname,
                              buf, strerror(errno)));
         return NULL;
@@ -631,7 +631,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             return NULL;
         }
         dev->devtype = ckd->devt;
-        snprintf(typname,64,"%4.4X",dev->devtype);
+        MSGBUF(typname, "%4.4X", dev->devtype);
         dev->typname=typname;   /* Makes HDL Happy */
     }
 
@@ -759,7 +759,7 @@ int             argc=0;                 /*  device open              */
     if (cif == NULL)
     {
         char buf[40];
-        snprintf(buf, 40, "calloc(%lu)", sizeof(CIFBLK));
+        MSGBUF(buf, "calloc(%lu)", sizeof(CIFBLK));
         fprintf (stderr, MSG(HHC00404, "E", SSID_TO_LCSS(cif->devblk.ssid), cif->devblk.devnum, fname,
                 buf, strerror(errno)));
         return NULL;
@@ -1264,7 +1264,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if (l1 == NULL)
         {
             char buf[40];
-            snprintf(buf, 40, "calloc(%lu)", cdevhdr.numl1tab * CCKD_L1ENT_SIZE);
+            MSGBUF( buf, "calloc(%lu)", cdevhdr.numl1tab * CCKD_L1ENT_SIZE);
             fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname, buf, strerror(errno)));
             return -1;
         }
@@ -1736,7 +1736,7 @@ U32             trksize;                /* DASD image track length   */
     if (buf == NULL)
     {
         char buf[40];
-        snprintf(buf, 40, "malloc(%u)", trksize);
+        MSGBUF( buf, "malloc(%u)", trksize);
         fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname,
                 buf, strerror(errno)));
         return -1;
@@ -1863,7 +1863,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     if (buf == NULL)
     {
         char buf[40];
-        snprintf(buf, 40, "malloc(%u)", sectsz);
+        MSGBUF( buf, "malloc(%u)", sectsz);
         fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname,
                 buf, strerror(errno)));
         return -1;

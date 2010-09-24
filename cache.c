@@ -350,7 +350,7 @@ DLL_EXPORT int cache_cmd(int argc, char *argv[], char *cmdline)
 
     for (ix = 0; ix < CACHE_MAX_INDEX; ix++) {
         if (cacheblk[ix].magic != CACHE_MAGIC) {          
-            snprintf(buf, 80, "Cache[%d] ....... not created", ix);
+            MSGBUF(buf, "Cache[%d] ....... not created", ix);
             WRMSG(HHC02294, "I", buf);
             continue;
         }

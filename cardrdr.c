@@ -85,7 +85,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     if (!dev->more_files)
     {
         char buf[40];
-        snprintf(buf, 40, "malloc(%lu)", sizeof(char) * (fc + 1));
+        MSGBUF(buf, "malloc(%lu)", sizeof(char) * (fc + 1));
         WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, buf, strerror(errno));
         return -1;
     }
