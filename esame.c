@@ -5184,6 +5184,7 @@ DEF_INST(store_facility_list_extended)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 int     ndbl;                           /* #of doublewords to store  */
+int     sdbl;                           /* Supported dblwrd size     */
 int     cc;                             /* Condition code            */
 
     S(inst, regs, b2, effective_addr2);
@@ -5199,15 +5200,20 @@ int     cc;                             /* Condition code            */
     /* Obtain operand length from register 0 bits 56-63 */
     ndbl = regs->GR_LHLCL(0) + 1;
 
+    /* Calculate set STFLE array size to min supported
+    sdbl = STFL_BYTESIZE;
+    while(--sdbl && !regs->facility_list[sdbl]);
+    sdbl = (sdbl>>3)+1;
+
     /* Check if operand length is sufficient */
-    if (ndbl >= STFL_DWRDSIZE)
+    if (ndbl >= sdbl)
     {
-        ndbl = STFL_DWRDSIZE;
+        ndbl = sdbl;
         cc = 0;
     }
     else
     {
-        PTT(PTT_CL_ERR,"*STFLE", ndbl, STFL_DWRDSIZE, regs->psw.IA_L);
+        PTT(PTT_CL_ERR,"*STFLE", ndbl, sdbl, regs->psw.IA_L);
         cc = 3;
     }
 
@@ -5224,7 +5230,7 @@ int     cc;                             /* Condition code            */
                         effective_addr2, b2, regs );
 
     /* Save number of doublewords minus 1 into register 0 bits 56-63 */
-    regs->GR_LHLCL(0) = (BYTE)(STFL_DWRDSIZE - 1);
+    regs->GR_LHLCL(0) = (BYTE)(sdbl - 1);
 
     /* Set condition code */
     regs->psw.cc = cc;

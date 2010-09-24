@@ -1409,7 +1409,7 @@ typedef struct _MBK {
    but are hercules specific.  They are placed here for the convenience 
    of being able to use the Virtual Architecture Level facility */
 
-#define STFL_HBASE              (STFL_BYTESIZE*8)
+#define STFL_HBASE              (STFL_DWRDSIZE*64)
 
 #define STFL_MOVE_INVERSE       (STFL_HBASE+0)
 //#define STFL_SOME_FEATURE     (STFL_HBASE+1)
