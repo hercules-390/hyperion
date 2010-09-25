@@ -1352,6 +1352,126 @@ static void ARCH_DEP(km_aes)(int r1, int r2, REGS *regs)
 }
 #endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
 
+#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
+/*----------------------------------------------------------------------------*/
+/* B92E Cipher message (KM) FC 50, 52, 58 and 60                              */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(km_xts_aes)(int r1, int r2, REGS *regs)
+{
+  aes_context context;
+  int crypted;
+  int i;
+  int keylen;
+  BYTE message_block[16];
+  int modifier_bit;
+  BYTE parameter_block[80];
+  int parameter_blocklen;
+  int r1_is_not_r2;
+  int tfc;
+  BYTE two[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2 };
+  int wrap;
+
+  /* Check special conditions */
+  if(unlikely(GR_A(r2 + 1, regs) % 16))
+    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+  /* Return with cc 0 on zero length */
+  if(unlikely(!GR_A(r2 + 1, regs)))
+  {
+    regs->psw.cc = 0;
+    return;
+  }
+
+  /* Initialize values */
+  tfc = GR0_tfc(regs);
+  wrap = GR0_wrap(regs);
+  keylen = (tfc - 49) * 8 + 8;
+  parameter_blocklen = keylen + 16;
+  if(wrap)
+    parameter_blocklen += 32;
+  
+  /* Test writeability output chaining value */ 
+  ARCH_DEP(validate_operand)((GR_A(1, regs) + parameter_blocklen - 16), 1, 15, ACCTYPE_WRITE, regs);
+  
+  /* Fetch the parameter block */
+  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+
+#ifdef OPTION_KM_DEBUG
+  LOGBYTE("k     :", parameter_block, keylen);
+  if(wrap)
+    LOGBYTE("wkvp  :", &parameter_block[keylen], 32);
+  LOGBYTE("xtsp  :", &parameter_block[parameter_blocklen - 16], 32);
+#endif
+
+  /* Verify and unwrap */
+  if(wrap && unwrap_aes(parameter_block, keylen, &parameter_block[keylen]))
+  {
+    regs->psw.cc = 1;
+    return;
+  }
+
+  /* Set the cryptographic keys */
+  aes_set_key(&context, parameter_block, keylen * 8);
+
+  /* Try to process the CPU-determined amount of data */
+  modifier_bit = GR0_m(regs);
+  r1_is_not_r2 = r1 != r2;
+  for(crypted = 0; crypted < PROCESS_MAX; crypted += 16)
+  {
+    /* Fetch a block of data */
+    ARCH_DEP(vfetchc)(message_block, 15, GR_A(r2, regs), r2, regs);
+
+#ifdef OPTION_KM_DEBUG
+    LOGBYTE("input :", message_block, 16);
+#endif
+
+    /* XOR, decrypt/encrypt and XOR again*/
+    for(i = 0; i < 16; i++)
+      message_block[i] ^= parameter_block[parameter_blocklen - 16 + i];
+    if(modifier_bit)
+      aes_decrypt(&context, message_block, message_block);
+    else
+      aes_encrypt(&context, message_block, message_block);
+    for(i = 0; i < 16; i++)
+      message_block[i] ^= parameter_block[parameter_blocklen - 16 + i];
+
+    /* Calculate output XTSP */
+    GF(&parameter_block[parameter_blocklen - 16], two, &parameter_block[parameter_blocklen - 16]);
+    
+    /* Store the output and XTSP */
+    ARCH_DEP(vstorec)(message_block, 15, GR_A(r1, regs), r1, regs);
+    ARCH_DEP(vstorec)(&parameter_block[parameter_blocklen - 16], 15, GR_A(1, regs), 1, regs);
+
+#ifdef OPTION_KM_DEBUG
+    LOGBYTE("output:", message_block, 16);
+    LOGBYTE("xtsp  :", &parameter_block[parameter_bloklen - 16]);
+#endif
+
+    /* Update the registers */
+    SET_GR_A(r1, regs, GR_A(r1, regs) + 16);
+    if(likely(r1_is_not_r2))
+      SET_GR_A(r2, regs, GR_A(r2, regs) + 16);
+    SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - 16);
+
+#ifdef OPTION_KM_DEBUG
+    WRMSG(HHC90108, "D", r1, (regs)->GR(r1));
+    WRMSG(HHC90108, "D", r2, (regs)->GR(r2));
+    WRMSG(HHC90108, "D", (regs)->GR(r2 + 1));
+#endif
+
+    /* check for end of data */
+    if(unlikely(!GR_A(r2 + 1, regs)))
+    {
+      regs->psw.cc = 0;
+      return;
+    }
+  }
+
+  /* CPU-determined amount of data processed */
+  regs->psw.cc = 3;
+}
+#endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4 */
+
 /*----------------------------------------------------------------------------*/
 /* B91E Compute message authentication code (KMAC) FC 1-3 and 9-11            */
 /*----------------------------------------------------------------------------*/
@@ -3265,8 +3385,7 @@ DEF_INST(cipher_message_d)
     case 58: /* encrypted xts aes-128 */
     case 60: /* encrypted xts aes-256 */
     {
-      ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-      //ARCH_DEP(km_xts_aes)(r1, r2, regs);
+      ARCH_DEP(km_xts_aes)(r1, r2, regs);
       break;
     }
 #endif
@@ -3954,7 +4073,7 @@ HDL_REGISTER_SECTION;
   WRMSG(HHC00151, "I", "Message Security Assist Extension 3"); // Feature notice
 #endif
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
-  WRMSG(HHC00151, "I", "Message Security Assist Extension 4 (excluding the ghash functionality)"); // Feature notice
+  WRMSG(HHC00151, "I", "Message Security Assist Extension 4 (excluding PCC)"); // Feature notice
 #endif
 }
 END_REGISTER_SECTION;
@@ -3965,6 +4084,9 @@ END_REGISTER_SECTION;
 Remarks POP 
 Page 1-16, 10-66, X-40, X41: "PERFORM CRYPTOGRAPHIC KEY MANAGEMENT OPERATION"
 Suggested change: "PERFORM CRYPTOGRAPHIC KEY MANAGEMENT OPERATIONS"
+
+Page 4-55
+Action 6 should be added that denotes the creation of a new set of wrapping keys.
 
 Figure 7-15, 7-19, 7-23, 7-27, 7-31, 7-35, 7-39, 7-43, 7-48, 7-52, 7-56, 7-60, 7-64, 
        7-68, 7-73, 7-83, 7-87, 7-91, 7-99, 7-103, 7-106, 7-116, 7-120, 7-124, 7-128, 
