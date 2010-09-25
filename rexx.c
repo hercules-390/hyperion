@@ -61,11 +61,6 @@ static rRexxRegisterExitExe   *hRexxRegisterExitExe = NULL;
 
 LONG APIENTRY hExitHnd( LONG ExitNumber, LONG Subfunction, PEXIT ParmBlock )
 {
-RXSIOSAY_PARM *sayparm;
-RXSIOTRC_PARM *trcparm;
-RXSIOTRD_PARM *trdparm;
-RXSIODTR_PARM *dtrparm;
-
     switch( ExitNumber ) {
 
         case RXSIO:
@@ -73,32 +68,28 @@ RXSIODTR_PARM *dtrparm;
             switch( Subfunction ) {
 
                 case RXSIOSAY:
-                    sayparm = (RXSIOSAY_PARM *)ParmBlock;
-                    logmsg("%s\n",RXSTRPTR(sayparm->rxsio_string));
+                    logmsg("%s\n",RXSTRPTR(((RXSIOSAY_PARM *)ParmBlock)->rxsio_string));
                     return RXEXIT_HANDLED;
                     break;
              
                 case RXSIOTRC:
-                    trcparm = (RXSIOTRC_PARM *)ParmBlock;
-                    logmsg("%s\n",RXSTRPTR(trcparm->rxsio_string));
+                    logmsg("%s\n",RXSTRPTR(((RXSIOTRC_PARM *)ParmBlock)->rxsio_string));
                     return RXEXIT_HANDLED;
                     break;
 
                 case RXSIOTRD:
-                    trdparm = (RXSIOTRD_PARM *)ParmBlock;
-                    MAKERXSTRING(trdparm->rxsiotrd_retc, NULL, 0);
+                    MAKERXSTRING(((RXSIOTRD_PARM *)ParmBlock)->rxsiotrd_retc, NULL, 0);
                     return RXEXIT_HANDLED;
                     break;
 
                 case RXSIODTR:
-                    dtrparm = (RXSIODTR_PARM *)ParmBlock;
-                    MAKERXSTRING(dtrparm->rxsiodtr_retc, NULL, 0);
+                    MAKERXSTRING(((RXSIODTR_PARM *)ParmBlock)->rxsiodtr_retc, NULL, 0);
                     return RXEXIT_HANDLED;
                     break;
 
-
                 default:
                     break;
+
             }
             break;
 
@@ -161,22 +152,24 @@ int rc;
             return -1;
         }
 
-        rexx_initialised = TRUE;
-
     }
 #endif
 
-    if((rc = hRexxRegisterExitExe( hSIOExit, (RexxExitHandler *)hExitHnd, NULL )) != RXEXIT_OK)
+    if((rc = hRexxRegisterExitExe( hSIOExit, (RexxExitHandler *)hExitHnd, NULL )) != RXEXIT_OK
+      && !(rexx_initialised && rc == RXEXIT_NOTREG))
     {
         WRMSG( HHC17506, "E", REXX_PACKAGE, REXX_REGISTER_EXIT, rc);
         return -1;
     }
 
-    if((rc = hRexxRegisterSubcomExe( hSubcom, (RexxSubcomHandler *)hSubCmd, NULL)) != RXSUBCOM_OK)
+    if((rc = hRexxRegisterSubcomExe( hSubcom, (RexxSubcomHandler *)hSubCmd, NULL)) != RXSUBCOM_OK
+      && !(rexx_initialised && rc == RXSUBCOM_NOTREG))
     {
         WRMSG( HHC17506, "E", REXX_PACKAGE, REXX_REGISTER_SUBCOM, rc);
         return -1;
     }
+
+    rexx_initialised = TRUE;
 
     return 0;
 }
