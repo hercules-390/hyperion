@@ -2479,7 +2479,7 @@ char *styp_values[] = {"CP","CF","AP","IL","??","IP"}; /* type values */
 BYTE ptyp;                           /* Processor engine type     */
 int  cpu,count;
 BYTE c;
-char *strtok_str;
+char *strtok_str = "";
 
     UNREFERENCED(cmdline);
 

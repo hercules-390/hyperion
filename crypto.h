@@ -30,6 +30,4 @@ CRY_DLL_IMPORT void (ATTR_REGPARM(2) *ARCH_DEP(compute_message_authentication_co
 CRY_DLL_IMPORT void (ATTR_REGPARM(2) *ARCH_DEP(perform_cryptographic_computation              ))(BYTE*, REGS*);
 CRY_DLL_IMPORT void (ATTR_REGPARM(2) *ARCH_DEP(perform_cryptographic_key_management_operations))(BYTE*, REGS*);
 
-void renew_wrapping_keys(void);
-
 #endif /*defined(_FEATURE_MESSAGE_SECURITY_ASSIST)*/

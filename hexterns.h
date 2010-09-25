@@ -453,4 +453,9 @@ HSYS_DLL_IMPORT int  (*debug_tt32_stats)   (int);
 HSYS_DLL_IMPORT void (*debug_tt32_tracing) (int);
 #endif // defined(OPTION_W32_CTCI)
 
+/* Function in crypto.c */
+#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
+void renew_wrapping_keys(void);
+#endif
+
 #endif // _HEXTERNS_H

@@ -119,7 +119,7 @@ parser( PARSER *pp, char *str, void *res )
     int ndx;
     char *key;
     char *val;
-    char *strtok_str;
+    char *strtok_str ="";
 
     ndx = 1;
     key = strtok_r(  str, "=", &strtok_str );
