@@ -219,7 +219,7 @@ BYTE    c;                              /* Print character           */
 
             while (str != NULL)
             {
-                WRCMSG ("<pnl,color(green,black)>", HHC00001, "I", str);
+                logmsg ("<pnl,color(green,black)>%s\n", str);
                 str = strtok_r (NULL, "\n", &strtok_str);
             }
 

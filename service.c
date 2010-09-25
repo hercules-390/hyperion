@@ -1529,14 +1529,14 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                         if(evd_hdr->type == SCCB_EVD_TYPE_MSG)
                         {
                           if(mto_bk->presattr[3] == SCCB_MTO_PRATTR3_HIGH)
-                            WRCMSG("<pnl,color(lightyellow,black),keep>", HHC00001, "I", message);
+                            logmsg("<pnl,color(lightyellow,black),keep>%s\n", message);
                           else
-                            WRCMSG("<pnl,color(green,black)>", HHC00001, "I", message);
+                            logmsg("<pnl,color(green,black)>%s\n", message);
                         }
                         else
-                          WRCMSG("<pnl,color(lightred,black),keep>", HHC00001, "I", message);
+                          logmsg("<pnl,color(lightred,black),keep>%s\n", message);
 #else
-                        WRMSG(HHC00001, "I", message);
+                        logmsg("%s\n",message);
 #endif
                     }
                 }

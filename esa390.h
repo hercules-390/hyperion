@@ -1299,6 +1299,22 @@ typedef struct _MBK {
 #define PLO_CSTSTGR             22      /* C/S/TS              ESAME */
 #define PLO_CSTSTX              23      /* C/S/TS              ESAME */
 
+/* Perform Frame Management Function definitions */
+#define PFMF_FMFI            0x000f0000 
+#define PFMF_FMFI_RESV       0x000c0000 /* Reserved must be zero     */
+#define PFMF_FMFI_SK         0x00020000 /* Set-Key Control           */
+#define PFMF_FMFI_CF         0x00010000 /* Clear-Frame Control       */
+#define PFMF_FMFI_UI         0x00008000 /* Usage Indication          */
+#define PFMF_FMFI_FSC        0x00007000 /* Frame-Size Code           */
+#define PFMF_FMFI_FSC_2K     0x00000000 /* 4K                        */
+#define PFMF_FMFI_FSC_1M     0x00001000 /* 1M                        */
+#define PFMF_FMFI_FSC_RESV   0x00006000 /* Reserved                  */
+#define PFMF_FMFI_NQ         0x00000800 /* Quiesce (SK must be one)  */
+#define PFMF_FMFI_MR         0x00000400 /* Reference Bit Update Mask */
+#define PFMF_FMFI_MC         0x00000200 /* Change Bit Update Mask    */
+#define PFMF_FMFI_KEY        0x000000F7 /* Storage Key               */
+#define PFMF_RESERVED        0xFFF00101 /* Reserved                  */
+
 /* Facility List definitions */
 #define STFL_N3                    0    /* Instructions marked N3 in
                                            the reference summary are

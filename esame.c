@@ -5145,6 +5145,31 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
 #endif /*defined(FEATURE_RESET_REFERENCE_BITS_MULTIPLE_FACILITY)*/
 
 
+#if defined(FEATURE_ENHANCED_DAT_FACILITY)
+/*-------------------------------------------------------------------*/
+/* B9AF PFMF  - Perform Frame Management Function              [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(perform_frame_management_function)
+{
+int     r1, r2;                         /* Register values           */
+
+    RRE(inst, regs, r1, r2);
+
+    FACILITY_CHECK(ENHANCED_DAT,regs)
+
+    PRIV_CHECK(regs);
+
+    if((regs->GR_L(r1) & PFMF_RESERVED)
+      || (!FACILITY_ENABLED(NONQ_KEY_SET,regs) && (regs->GR_L(r1) & PFMF_FMFI_NQ)))
+        regs->program_interrupt (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
+
+
+// ZZ INCOMPLETE
+
+} /* end DEF_INST(perform_frame_management_function) */
+#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
+
+
 #if defined(FEATURE_STORE_FACILITY_LIST)
 /*-------------------------------------------------------------------*/
 /* B2B1 STFL  - Store Facility List                              [S] */
