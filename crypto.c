@@ -235,13 +235,13 @@ void renew_wrapping_keys(void)
   logmsg("AES wrapping key: ");
   for(i = 0; i < 32; i++)
     logmsg("%02X", sysblk.wkaes_reg[i]);
-  logmsg("\nAES wrapping key verification pattern:");
+  logmsg("\nAES wrapping key verification pattern: ");
   for(i = 0; i < 32; i++)
     logmsg("%02X", sysblk.wkvpaes_reg[i]);
   logmsg("\nDEA wrapping key: ");
   for(i = 0; i < 24; i++)
     logmsg("%02X", sysblk.wkdea_reg[i]);
-  logmsg("\nDEA wrapping key verification pattern:");
+  logmsg("\nDEA wrapping key verification pattern: ");
   for(i = 0; i < 24; i++)
     logmsg("%02X", sysblk.wkvpdea_reg[i]);
   logmsg("\n");
