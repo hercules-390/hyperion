@@ -195,6 +195,59 @@ DEF_INST(perform_cryptographic_key_management_operations_r)
         ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     }
 }
+
+#ifndef __WK__
+#define __WK__
+/*----------------------------------------------------------------------------*/
+/* Function: renew_wrapping_keys                                              */
+/*                                                                            */
+/* Each time a clear reset is performed, a new set of wrapping keys and their */
+/* associated verification patterns are generated. The contents of the two    */
+/* wrapping-key registers are kept internal to the model so that no program,  */
+/* including the operating system, can directly observe their clear value.    */
+/*----------------------------------------------------------------------------*/
+void renew_wrapping_keys(void)
+{
+  int i;
+  U64 time;
+  char *s = "Hercules-390";
+
+  obtain_lock(&sysblk.wklock);
+  time = host_tod();
+  srandom(time);
+  for(i = 0; i < 32; i++)
+    sysblk.wkaes_reg[i] = random();
+  for(i = 0; i < 24; i++)
+    sysblk.wkdea_reg[i] = random();
+  memset(sysblk.wkvpaes_reg, 0, 32);
+  memset(sysblk.wkvpdea_reg, 0, 24);
+  strcpy((char *) sysblk.wkvpaes_reg, s);
+  strcpy((char *) sysblk.wkvpdea_reg, s);
+  for(i = 0; i < 8; i++)
+  {
+    sysblk.wkvpaes_reg[31 - i] = time;
+    sysblk.wkvpdea_reg[23 - i] = time;
+    time >>= 8;
+  }
+  release_lock(&sysblk.wklock);
+
+#if 0
+  logmsg("AES wrapping key: ");
+  for(i = 0; i < 32; i++)
+    logmsg("%02X", sysblk.wkaes_reg[i]);
+  logmsg("\nAES wrapping key verification pattern:");
+  for(i = 0; i < 32; i++)
+    logmsg("%02X", sysblk.wkvpaes_reg[i]);
+  logmsg("\nDEA wrapping key: ");
+  for(i = 0; i < 24; i++)
+    logmsg("%02X", sysblk.wkdea_reg[i]);
+  logmsg("\nDEA wrapping key verification pattern:");
+  for(i = 0; i < 24; i++)
+    logmsg("%02X", sysblk.wkvpdea_reg[i]);
+  logmsg("\n");
+#endif
+}
+#endif
 #endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
 
 #if !defined(_GEN_ARCH)

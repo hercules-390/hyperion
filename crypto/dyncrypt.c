@@ -438,19 +438,6 @@ void sha512_process(sha512_context *ctx, BYTE data[128]);
 #ifndef __KEY_WRAP__
 #define __KEY_WRAP__
 /*----------------------------------------------------------------------------*/
-/* Machine generated Wrapping-Key Registers                                   */
-/*----------------------------------------------------------------------------*/
-/* For now they are fixed */   /*01234567890123456789012345678901*/
-static BYTE wk_regs_aes[32] =   "W#$%Y%NY$^HNNGFdghk57MGF%^hmghf4"; 
-static BYTE wk_regs_dea[24] =   "TRHsdgh%&%^GFNTUK%&GFNf(";        
-
-/*----------------------------------------------------------------------------*/
-/* Wrapping-Key Verification-Pattern Registers                                */
-/*----------------------------------------------------------------------------*/
-static BYTE wkvp_regs_aes[32] = "asdfsgtrnFNH57N57%J&5jfnh56w46gf";
-static BYTE wkvp_regs_dea[24] = "GFN5u46y%^%&mju%&$%tymty";
-
-/*----------------------------------------------------------------------------*/
 /* Wrap key using aes                                                         */
 /*----------------------------------------------------------------------------*/
 static void wrap_aes(BYTE *key, int keylen)
@@ -459,8 +446,8 @@ static void wrap_aes(BYTE *key, int keylen)
   int i;
   aes_context context;
   BYTE cv[16];
-  
-  aes_set_key(&context, wk_regs_aes, 256);
+ 
+  aes_set_key(&context, sysblk.wkaes_reg, 256);
   switch(keylen)
   {
     case 16:
@@ -500,7 +487,7 @@ static void wrap_dea(BYTE *key, int keylen)
   int i;
   int j;
 
-  des3_set_3keys(&context, wk_regs_dea, &wk_regs_dea[8], &wk_regs_dea[16]);
+  des3_set_3keys(&context, sysblk.wkdea_reg, &sysblk.wkdea_reg[8], &sysblk.wkdea_reg[16]);
   for(i = 0; i < keylen; i += 8)
   {
     if(i)
@@ -524,12 +511,16 @@ static int unwrap_aes(BYTE *key, int keylen, BYTE *wkvp)
   aes_context context;
   BYTE cv[16];
   int i;
-  
+ 
   /* Verify verification pattern */
-  if(unlikely(memcmp(wkvp, wkvp_regs_aes, 32)))
+  obtain_lock(&sysblk.wklock);
+  if(unlikely(memcmp(wkvp, sysblk.wkvpaes_reg, 32)))
+  {
+    release_lock(&sysblk.wklock);
     return(1);
+  }
   
-  aes_set_key(&context, wk_regs_aes, 256);
+  aes_set_key(&context, sysblk.wkaes_reg, 256);
   switch(keylen)
   {
     case 16:
@@ -557,6 +548,7 @@ static int unwrap_aes(BYTE *key, int keylen, BYTE *wkvp)
       break;
     }
   }
+  release_lock(&sysblk.wklock);
   return(0);
 }
 
@@ -571,10 +563,14 @@ static int unwrap_dea(BYTE *key, int keylen, BYTE *wkvp)
   int j;
   
   /* Verify verification pattern */
-  if(unlikely(memcmp(wkvp, wkvp_regs_aes, 32)))
+  obtain_lock(&sysblk.wklock);
+  if(unlikely(memcmp(wkvp, sysblk.wkvpaes_reg, 32)))
+  {
+    release_lock(&sysblk.wklock);
     return(1);
-  
-  des3_set_3keys(&context, wk_regs_dea, &wk_regs_dea[8], &wk_regs_dea[16]);
+  }
+
+  des3_set_3keys(&context, sysblk.wkdea_reg, &sysblk.wkdea_reg[8], &sysblk.wkdea_reg[16]);
   for(i = 0; i < keylen; i += 8)
   {
     /* Save cv */
@@ -591,6 +587,7 @@ static int unwrap_dea(BYTE *key, int keylen, BYTE *wkvp)
         key[i + j] ^= cv[j];
     }
   }
+  release_lock(&sysblk.wklock);
   return(0);
 }
 #endif /* __KEY_WRAP__ */
@@ -3985,16 +3982,20 @@ DEF_INST(perform_cryptographic_key_management_operations_d)
     case 2: /* encrypt-tdea-128 */
     case 3: /* encrypt-tdea-192 */
     {
+      obtain_lock(&sysblk.wklock);
       wrap_dea(parameter_block, keylen);
-      memcpy(&parameter_block[keylen], wkvp_regs_dea, 24);
+      memcpy(&parameter_block[keylen], sysblk.wkvpdea_reg, 24);
+      release_lock(&sysblk.wklock);
       break;
     }
     case 18: /* encrypt-aes-128 */
     case 19: /* encrypt-aes-192 */
     case 20: /* encrypt-aes-256 */
     {
+      obtain_lock(&sysblk.wklock);
       wrap_aes(parameter_block, keylen);
-      memcpy(&parameter_block[keylen], wkvp_regs_aes, 32);
+      memcpy(&parameter_block[keylen], sysblk.wkvpaes_reg, 32);
+      release_lock(&sysblk.wklock);
       break;
     }
   }

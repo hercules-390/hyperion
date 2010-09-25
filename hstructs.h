@@ -463,6 +463,14 @@ struct SYSBLK {
         Load Program Parameter facility */
         BYTE    program_parameter[8];   /* Program Parameter Register*/
 
+#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
+        LOCK    wklock;                 /* Update lock               */
+        BYTE    wkaes_reg[32];          /* Wrapping-key registers    */
+        BYTE    wkdea_reg[24];
+        BYTE    wkvpaes_reg[32];        /* Wrapping-key Verification */
+        BYTE    wkvpdea_reg[24];        /* Pattern registers         */
+#endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
+
 #if defined(_FEATURE_VECTOR_FACILITY)
         VFREGS  vf[MAX_CPU_ENGINES];    /* Vector Facility           */
 #endif /*defined(_FEATURE_VECTOR_FACILITY)*/
