@@ -2355,6 +2355,7 @@ int i;
     {
 #if defined(_370)
         s370_opcode_table[i] = opcode_table[i][ARCH_370];
+        s370_opcode_01xx [i] = opcode_01xx [i][ARCH_370];
         s370_opcode_a4xx [i] = v_opcode_a4xx [i][ARCH_370];
         s370_opcode_a5xx [i] = v_opcode_a5xx [i][ARCH_370];
         s370_opcode_a6xx [i] = v_opcode_a6xx [i][ARCH_370];
@@ -2450,6 +2451,7 @@ void set_opcode_pointers(REGS *regs)
 {
 #if defined(_370)
     regs->s370_opcode_table = s370_opcode_table;
+    regs->s370_opcode_01xx = s370_opcode_01xx;
     regs->s370_opcode_a4xx = s370_opcode_a4xx;
     regs->s370_opcode_a5xx = s370_opcode_a5xx;
     regs->s370_opcode_a6xx = s370_opcode_a6xx;
