@@ -167,10 +167,13 @@ FACILITY(RES_REF_BITS_MUL, Z390,         NONE,      Z390,          ALS3)
 FACILITY(CPU_MEAS_COUNTER, NONE,         NONE,      Z390,          ALS3)
 FACILITY(CPU_MEAS_SAMPLNG, NONE,         NONE,      Z390,          ALS3)
 FACILITY(ACC_EX_FS_INDIC,  NONE,         NONE,      Z390,          ALS3)
-FACILITY(MSA_EXTENSION_3,  NONE,         NONE,      Z390,          ALS3)
-FACILITY(MSA_EXTENSION_4,  NONE,         NONE,      Z390,          ALS3)
+FACILITY(MSA_EXTENSION_3,  Z390,         NONE,      Z390,          ALS3)
+FACILITY(MSA_EXTENSION_4,  Z390,         NONE,      Z390,          ALS3)
 
+/* The Following entries are not part of STFL(E) but do indicate the availability of facilities */
 FACILITY(MOVE_INVERSE,     S370|ESA390|ZARCH, ZARCH, S370|ESA390|ZARCH, ALS0|ALS1|ALS2|ALS3)
+FACILITY(MSA_EXTENSION_1,  Z390,         NONE,      Z390,          ALS3)
+FACILITY(MSA_EXTENSION_2,  Z390,         NONE,      Z390,          ALS3)
 
 { NULL, 0, 0, 0, 0, 0 }
 };

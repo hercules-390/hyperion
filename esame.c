@@ -5225,7 +5225,7 @@ int     cc;                             /* Condition code            */
     /* Obtain operand length from register 0 bits 56-63 */
     ndbl = regs->GR_LHLCL(0) + 1;
 
-    /* Calculate set STFLE array size to min supported */
+    /* Determine the STFLE array size from the available facilities */
     sdbl = STFL_BYTESIZE;
     while(--sdbl && !regs->facility_list[sdbl]);
     sdbl = (sdbl>>3)+1;

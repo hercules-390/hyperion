@@ -3137,6 +3137,8 @@ DEF_INST(compute_intermediate_message_digest_d)
 
   RRE(inst, regs, r1, r2);
 
+  FACILITY_CHECK(MSG_SECURITY,regs);
+
 #ifdef OPTION_KIMD_DEBUG
   WRGMSG_ON;
   WRGMSG(HHC90100, "D", "KIMD: compute intermediate message digest");
@@ -3182,7 +3184,10 @@ DEF_INST(compute_intermediate_message_digest_d)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
     case 2: /* sha-256 */
     {
-      ARCH_DEP(kimd_sha)(r1, r2, regs, 0);
+      if(FACILITY_ENABLED(MSA_EXTENSION_1,regs))
+          ARCH_DEP(kimd_sha)(r1, r2, regs, 0);
+      else
+          ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3190,7 +3195,10 @@ DEF_INST(compute_intermediate_message_digest_d)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
     case 3: /* sha-512 */
     {
-      ARCH_DEP(kimd_sha)(r1, r2, regs, 0);
+      if(FACILITY_ENABLED(MSA_EXTENSION_2,regs))
+          ARCH_DEP(kimd_sha)(r1, r2, regs, 0);
+      else
+          ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3198,7 +3206,10 @@ DEF_INST(compute_intermediate_message_digest_d)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
     case 65: /* ghash */
     {
-      ARCH_DEP(kimd_ghash)(r1, r2, regs);
+      if(FACILITY_ENABLED(MSA_EXTENSION_4,regs))
+          ARCH_DEP(kimd_ghash)(r1, r2, regs);
+      else
+          ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3220,6 +3231,8 @@ DEF_INST(compute_last_message_digest_d)
   int r2;
 
   RRE(inst, regs, r1, r2);
+
+  FACILITY_CHECK(MSG_SECURITY,regs);
 
 #ifdef OPTION_KLMD_DEBUG
   WRGMSG_ON;
@@ -3296,6 +3309,8 @@ DEF_INST(cipher_message_d)
 
   RRE(inst, regs, r1, r2);
 
+  FACILITY_CHECK(MSG_SECURITY,regs);
+
 #ifdef OPTION_KM_DEBUG
   WRGMSG_ON;
   WRGMSG(HHC90100, "D", "KM: cipher message");
@@ -3345,7 +3360,10 @@ DEF_INST(cipher_message_d)
     case 10: /* encrypted tdea-128 */
     case 11: /* encrypted tdea-192 */
     {
-      ARCH_DEP(km_dea)(r1, r2, regs);
+      if(FACILITY_ENABLED(MSA_EXTENSION_3,regs))
+          ARCH_DEP(km_dea)(r1, r2, regs);
+      else
+          ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3353,7 +3371,10 @@ DEF_INST(cipher_message_d)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
     case 18: /* aes-128 */
     {
-      ARCH_DEP(km_aes)(r1, r2, regs);
+      if(FACILITY_ENABLED(MSA_EXTENSION_1,regs))
+          ARCH_DEP(km_aes)(r1, r2, regs);
+      else
+          ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3362,7 +3383,10 @@ DEF_INST(cipher_message_d)
     case 19: /* aes-192 */
     case 20: /* aes-256 */
     {
-      ARCH_DEP(km_aes)(r1, r2, regs);
+      if(FACILITY_ENABLED(MSA_EXTENSION_2,regs))
+          ARCH_DEP(km_aes)(r1, r2, regs);
+      else
+          ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3372,7 +3396,10 @@ DEF_INST(cipher_message_d)
     case 27: /* encrypted aes-192 */
     case 28: /* encrypted aes-256 */
     {
-      ARCH_DEP(km_aes)(r1, r2, regs);
+      if(FACILITY_ENABLED(MSA_EXTENSION_3,regs))
+          ARCH_DEP(km_aes)(r1, r2, regs);
+      else
+          ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3383,7 +3410,10 @@ DEF_INST(cipher_message_d)
     case 58: /* encrypted xts aes-128 */
     case 60: /* encrypted xts aes-256 */
     {
-      ARCH_DEP(km_xts_aes)(r1, r2, regs);
+      if(FACILITY_ENABLED(MSA_EXTENSION_4,regs))
+          ARCH_DEP(km_xts_aes)(r1, r2, regs);
+      else
+          ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3405,6 +3435,8 @@ DEF_INST(compute_message_authentication_code_d)
   int r2;
 
   RRE(inst, regs, r1, r2);
+
+  FACILITY_CHECK(MSG_SECURITY,regs);
 
 #ifdef OPTION_KMAC_DEBUG
   WRGMSG_ON;
@@ -3453,7 +3485,10 @@ DEF_INST(compute_message_authentication_code_d)
     case 10: /* encrypted tdea-128 */
     case 11: /* encrypted tdea-192 */
     {
-      ARCH_DEP(kmac_dea)(r1, r2, regs);
+      if(FACILITY_ENABLED(MSA_EXTENSION_3,regs))
+          ARCH_DEP(kmac_dea)(r1, r2, regs);
+      else
+          ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3466,7 +3501,10 @@ DEF_INST(compute_message_authentication_code_d)
     case 27: /* encrypted aes-192 */
     case 28: /* encrypted aes-256 */
     {
-      ARCH_DEP(kmac_aes)(r1, r2, regs);
+      if(FACILITY_ENABLED(MSA_EXTENSION_4,regs))
+          ARCH_DEP(kmac_aes)(r1, r2, regs);
+      else
+          ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3488,6 +3526,8 @@ DEF_INST(cipher_message_with_chaining_d)
   int r2;
 
   RRE(inst, regs, r1, r2);
+
+  FACILITY_CHECK(MSG_SECURITY,regs);
 
 #ifdef OPTION_KMC_DEBUG
   WRGMSG_ON;
@@ -3538,7 +3578,10 @@ DEF_INST(cipher_message_with_chaining_d)
     case 10: /* encrypted tdea-128 */
     case 11: /* encrypted tdea-192 */
     {
-      ARCH_DEP(kmc_dea)(r1, r2, regs);
+      if(FACILITY_ENABLED(MSA_EXTENSION_3,regs))
+          ARCH_DEP(kmc_dea)(r1, r2, regs);
+      else
+          ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3546,7 +3589,10 @@ DEF_INST(cipher_message_with_chaining_d)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
     case 18: /* aes-128 */
     {
-      ARCH_DEP(kmc_aes)(r1, r2, regs);
+      if(FACILITY_ENABLED(MSA_EXTENSION_1,regs))
+          ARCH_DEP(kmc_aes)(r1, r2, regs);
+      else
+          ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3555,7 +3601,10 @@ DEF_INST(cipher_message_with_chaining_d)
     case 19: /* aes-192 */
     case 20: /* aes-256 */
     {
-      ARCH_DEP(kmc_aes)(r1, r2, regs);
+      if(FACILITY_ENABLED(MSA_EXTENSION_2,regs))
+          ARCH_DEP(kmc_aes)(r1, r2, regs);
+      else
+          ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3565,7 +3614,10 @@ DEF_INST(cipher_message_with_chaining_d)
     case 27: /* encrypted aes-192 */
     case 28: /* encrypted aes-256 */
     {
-      ARCH_DEP(kmc_aes)(r1, r2, regs);
+      if(FACILITY_ENABLED(MSA_EXTENSION_3,regs))
+          ARCH_DEP(kmc_aes)(r1, r2, regs);
+      else
+          ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3573,7 +3625,10 @@ DEF_INST(cipher_message_with_chaining_d)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
     case 67: /* prng */
     {
-      ARCH_DEP(kmc_prng)(r1, r2, regs);
+      if(FACILITY_ENABLED(MSA_EXTENSION_1,regs))
+          ARCH_DEP(kmc_prng)(r1, r2, regs);
+      else
+          ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3597,6 +3652,8 @@ DEF_INST(cipher_message_with_counter_d)
   int r3;
 
   RRF_M(inst, regs, r1, r2, r3);
+
+  FACILITY_CHECK(MSA_EXTENSION_4,regs);
 
 #ifdef OPTION_KMCTR_DEBUG
   WRGMSG_ON;
@@ -3673,6 +3730,8 @@ DEF_INST(cipher_message_with_cipher_feedback_d)
 
   RRE(inst, regs, r1, r2);
 
+  FACILITY_CHECK(MSA_EXTENSION_4,regs);
+
 #ifdef OPTION_KMF_DEBUG
   WRGMSG_ON;
   WRGMSG(HHC90100, "D", "KMF: cipher message with cipher feedback");
@@ -3748,6 +3807,8 @@ DEF_INST(cipher_message_with_output_feedback_d)
 
   RRE(inst, regs, r1, r2);
 
+  FACILITY_CHECK(MSA_EXTENSION_4,regs);
+
 #ifdef OPTION_KMO_DEBUG
   WRGMSG_ON;
   WRGMSG(HHC90100, "D", "KMO: cipher message with output feedback");
@@ -3821,6 +3882,8 @@ DEF_INST(perform_cryptographic_computation_d)
 
   RRE(inst, regs, r1, r2);
   
+  FACILITY_CHECK(MSA_EXTENSION_4,regs);
+
 #ifdef OPTION_PCC_DEBUG
   WRGMSG_ON;
   WRGMSG(HHC90100, "D", "PCC: perform cryptographic computation\n");
@@ -3908,6 +3971,8 @@ DEF_INST(perform_cryptographic_key_management_operations_d)
   int r2;
 
   RRE(inst, regs, r1, r2);
+
+  FACILITY_CHECK(MSA_EXTENSION_3,regs);
 
 #ifdef OPTION_PCKMO_DEBUG
   WRGMSG_ON;
