@@ -4038,9 +4038,9 @@ HDL_REGISTER_SECTION;
 #if defined(_390_FEATURE_MESSAGE_SECURITY_ASSIST)
   HDL_REGISTER(s390_cipher_message, s390_cipher_message_d);
   HDL_REGISTER(s390_cipher_message_with_chaining, s390_cipher_message_with_chaining_d);
-//  HDL_REGISTER(s390_cipher_message_with_cipher_feedback, s390_cipher_message_with_cipher_feedback_d);
-//  HDL_REGISTER(s390_cipher_message_with_counter, s390_cipher_message_with_counter_d);
-//  HDL_REGISTER(s390_cipher_message_with_output_feedback, s390_cipher_message_with_output_feedback_d);
+  HDL_REGISTER(s390_cipher_message_with_cipher_feedback, s390_cipher_message_with_cipher_feedback_d);
+  HDL_REGISTER(s390_cipher_message_with_counter, s390_cipher_message_with_counter_d);
+  HDL_REGISTER(s390_cipher_message_with_output_feedback, s390_cipher_message_with_output_feedback_d);
   HDL_REGISTER(s390_compute_intermediate_message_digest, s390_compute_intermediate_message_digest_d);
   HDL_REGISTER(s390_compute_last_message_digest, s390_compute_last_message_digest_d);
   HDL_REGISTER(s390_compute_message_authentication_code, s390_compute_message_authentication_code_d);
@@ -4051,9 +4051,9 @@ HDL_REGISTER_SECTION;
 #if defined(_900_FEATURE_MESSAGE_SECURITY_ASSIST)
   HDL_REGISTER(z900_cipher_message, z900_cipher_message_d);
   HDL_REGISTER(z900_cipher_message_with_chaining, z900_cipher_message_with_chaining_d);
-//  HDL_REGISTER(z900_cipher_message_with_cipher_feedback, z900_cipher_message_with_cipher_feedback_d);
-//  HDL_REGISTER(z900_cipher_message_with_counter, z900_cipher_message_with_counter_d);
-//  HDL_REGISTER(z900_cipher_message_with_output_feedback, z900_cipher_message_with_output_feedback_d);
+  HDL_REGISTER(z900_cipher_message_with_cipher_feedback, z900_cipher_message_with_cipher_feedback_d);
+  HDL_REGISTER(z900_cipher_message_with_counter, z900_cipher_message_with_counter_d);
+  HDL_REGISTER(z900_cipher_message_with_output_feedback, z900_cipher_message_with_output_feedback_d);
   HDL_REGISTER(z900_compute_intermediate_message_digest, z900_compute_intermediate_message_digest_d);
   HDL_REGISTER(z900_compute_last_message_digest, z900_compute_last_message_digest_d);
   HDL_REGISTER(z900_compute_message_authentication_code, z900_compute_message_authentication_code_d);
