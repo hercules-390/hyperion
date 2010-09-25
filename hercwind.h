@@ -128,6 +128,9 @@ typedef int             mode_t;
 #define strerror        w32_strerror
 #define strerror_r      w32_strerror_r
 
+#define srandom         srand 
+#define random          rand 
+
 #define inline          __inline
 #define __inline__      __inline
 
@@ -150,7 +153,11 @@ typedef int             mode_t;
 
 #define HAVE_STRSIGNAL
 
+#if defined(TURBO_HERCULES)
+#undef EXTERNALGUI
+#else // !defined(TURBO_HERCULES)
 #define EXTERNALGUI
+#endif // defined(TURBO_HERCULES)
 
 #define NO_SETUID
 #define NO_SIGABEND_HANDLER
