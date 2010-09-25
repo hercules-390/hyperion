@@ -549,6 +549,8 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00881 "I/O interrupt queue:%s" 
 #define HHC00882 "device %1d:%04X: %s%s%s%s, pri %d" 
 
+#define HHC00888 "Architecture level changes take effect after a system reset or IPL"
+#define HHC00889 "Facility change pending; ipl/sysreset/sysclear needed to complete"
 #define HHC00890 "Facility(%-20s) %sabled"
 #define HHC00891 "Facility name not found"
 #define HHC00892 "Facility name not specified"

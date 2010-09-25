@@ -216,6 +216,7 @@ CONF_DLL_IMPORT int parse_conkpalv(char* s, int* idle, int* intv, int* cnt );
 /* Functions in module archlvl.c */
 int set_archlvl(char *archname);
 void init_als(REGS *regs);
+BYTE als_update_pending(void);
 
 /* Global data areas and functions in module cpu.c                   */
 extern const char* arch_name[];

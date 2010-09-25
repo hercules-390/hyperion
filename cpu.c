@@ -1814,6 +1814,7 @@ FUNC    *current_opcode_table;
     {
         PTT(PTT_CL_INF,"*SETARCH",regs.arch_mode,sysblk.arch_mode,cpu);
         regs.arch_mode = sysblk.arch_mode;
+
         oldregs = malloc (sizeof(REGS));
         if (oldregs)
         {
@@ -1831,7 +1832,7 @@ FUNC    *current_opcode_table;
     }
 
     /* Initialize Architecture Level Set */
-    init_als(&regs);
+    INIT_ALS(regs);
 
     current_opcode_table=regs.ARCH_DEP(opcode_table);
 

@@ -591,6 +591,16 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
   #define HDC6(_func, _arg1,_arg2,_arg3,_arg4,_arg5,_arg6) \
     (NULL)
 #endif
+/*-------------------------------------------------------------------*/
+/* init_als macro Initialise Arch Level Set                          */
+/*                Initialize Arch Level Set                          */
+/*-------------------------------------------------------------------*/
+#define INIT_ALS(_regs)\
+{ \
+    static int i;  \
+    for(i = 0; i < STFL_HBYTESIZE; i++)      \
+        _regs.facility_list[i] = sysblk.facility_list[sysblk.arch_mode][i];    \
+}
 
 /*-------------------------------------------------------------------*/
 /* sleep for as long as we like                                      */
