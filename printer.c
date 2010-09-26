@@ -345,7 +345,7 @@ int   sockdev = 0;                     /* 1 == is socket device     */
     dev->diaggate = 0;
     dev->fold = 0;
     dev->crlf = 0;
-    dev->stopprt = 0;
+    dev->stopdev = FALSE;
     dev->notrunc = 0;
     dev->ispiped = (dev->filename[0] == '|');
 
@@ -638,7 +638,7 @@ static void printer_query_device (DEVBLK *dev, char **class,
                 (dev->notrunc    ? " noclear"      : ""),
                 (dev->rawcc      ? " rawcc"        : dev->optbrowse  ? " brwse"    : " print"),
                 (dev->nofcbcheck ? " nofcbck"   : " fcbck"),
-                (dev->stopprt    ? " (stopped)"    : ""),
+                (dev->stopdev    ? " (stopped)"    : ""),
                 dev->excps );
 
 } /* end function printer_query_device */
@@ -844,7 +844,7 @@ int fd = dev->fd;
         return 0;
 
     dev->fd      = -1;
-    dev->stopprt =  0;
+    dev->stopdev =  FALSE;
 
     /* Close the device file */
     if ( dev->ispiped )
@@ -906,7 +906,7 @@ char            wbuf[150];
     else
     {
         /* If printer stopped, return intervention required */
-        if (dev->stopprt && !IS_CCW_SENSE(code))
+        if (dev->stopdev && !IS_CCW_SENSE(code))
             rc = -1;
         else
             rc = 0;

@@ -1062,7 +1062,7 @@ struct DEVBLK {                         /* Device configuration block*/
         u_int   diaggate:1;             /* 1=Diagnostic gate command */
         u_int   fold:1;                 /* 1=Fold to upper case      */
         u_int   ispiped:1;              /* 1=Piped device            */
-        u_int   stopprt:1;              /* 1=stopped; 0=started      */
+        u_int   stopdev:1;              /* T=stopped; F=started      */
         u_int   notrunc:1;              /* 1=do not truncate at open */
 
         u_int   fcbsupp:1;              /* fcb support flag          */

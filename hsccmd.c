@@ -756,7 +756,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
         return 0;
     }
 
-    if ( !dev->stopprt )
+    if ( !dev->stopdev )
     {
         WRMSG(HHC02211, "E", lcss, devnum );
         return -1;
@@ -948,10 +948,12 @@ static void fcb_dump(DEVBLK* dev, char *buf, unsigned int buflen)
 }
 
 /*-------------------------------------------------------------------*/
-/* start command - start CPU (or printer device if argument given)   */
+/* start command - start CPU (or printer/punch  if argument given)   */
 /*-------------------------------------------------------------------*/
 int start_cmd(int argc, char *argv[], char *cmdline)
 {
+    int rc = 0;
+
     UNREFERENCED(cmdline);
 
     if (argc < 2)
@@ -966,60 +968,74 @@ int start_cmd(int argc, char *argv[], char *cmdline)
             WAKEUP_CPU(regs);
         }
         RELEASE_INTLOCK(NULL);
+        WRMSG( HHC00834, "I", PTYPSTR(sysblk.regs[sysblk.pcpu]->cpuad), 
+                              sysblk.regs[sysblk.pcpu]->cpuad, "running state selected" );
+        rc = 0;
     }
-    else
+    else if ( argc == 2 )
     {
-        /* start specified printer device */
+        /* start specified printer/punch device */
 
         U16      devnum;
         U16      lcss;
-        int      stopprt;
+        int      stopdev;
         DEVBLK*  dev;
         char*    devclass;
-        int      rc;
 
-        rc=parse_single_devnum(argv[1],&lcss,&devnum);
-        if (rc<0)
+        if ( parse_single_devnum(argv[1],&lcss,&devnum) < 0 )
         {
-            return -1;
+            rc = -1;
         }
-
-        if (!(dev = find_device_by_devnum (lcss,devnum)))
+        else if (!(dev = find_device_by_devnum (lcss,devnum)))
         {
             devnotfound_msg(lcss,devnum);
-            return -1;
+            rc = -1;
         }
-
-        (dev->hnd->query)(dev, &devclass, 0, NULL);
-
-        if (strcasecmp(devclass,"PRT"))
+        else
         {
-            WRMSG(HHC02209, "E", lcss, devnum, "printer" );
-            return -1;
+            (dev->hnd->query)(dev, &devclass, 0, NULL);
+            
+            if ( CMD(devclass,PRT,3) || CMD(devclass,PCH,3) )
+            { 
+                /* un-stop the unit record device and raise attention interrupt */
+                /* PRINTER or PUNCH */ 
+
+                stopdev = dev->stopdev; 
+                
+                dev->stopdev = FALSE;
+
+                rc = device_attention (dev, CSW_ATTN);
+
+                if (rc) dev->stopdev = stopdev;
+
+                switch (rc) {
+                case 0: WRMSG(HHC02212, "I", lcss,devnum);
+                    break;
+                case 1: WRMSG(HHC02213, "E", lcss, devnum, ": busy or interrupt pending");
+                    break;
+                case 2: WRMSG(HHC02213, "E", lcss, devnum, ": attention request rejected");
+                    break;
+                case 3: WRMSG(HHC02213, "E", lcss, devnum, ": subchannel not enabled");
+                    break;
+                }
+
+                if ( rc != 0 ) 
+                    rc = -1;
+            }
+            else
+            {
+                WRMSG(HHC02209, "E", lcss, devnum, "printer or punch" );
+                rc = -1;
+            }
         }
-
-        /* un-stop the printer and raise attention interrupt */
-
-        stopprt = dev->stopprt; dev->stopprt = 0;
-
-        rc = device_attention (dev, CSW_ATTN);
-
-        if (rc) dev->stopprt = stopprt;
-
-        switch (rc) {
-            case 0: WRMSG(HHC02208, "I", lcss,devnum);
-                    break;
-            case 1: WRMSG(HHC02213, "E", lcss, devnum, ": busy or interrupt pending");
-                    break;
-            case 2: WRMSG(HHC02213, "E", lcss, devnum, ": attention request rejected");
-                    break;
-            case 3: WRMSG(HHC02213, "E", lcss, devnum, ": subchannel not enabled");
-                    break;
-        }
-
+    }
+    else
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        rc = -1;
     }
 
-    return 0;
+    return rc;
 }
 
 
@@ -1053,6 +1069,8 @@ int g_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int stop_cmd(int argc, char *argv[], char *cmdline)
 {
+    int rc = 0;
+
     UNREFERENCED(cmdline);
 
     if (argc < 2)
@@ -1067,8 +1085,11 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
             WAKEUP_CPU (regs);
         }
         RELEASE_INTLOCK(NULL);
+        WRMSG( HHC00834, "I", PTYPSTR(sysblk.regs[sysblk.pcpu]->cpuad), 
+                              sysblk.regs[sysblk.pcpu]->cpuad, "manual state selected" );
+        rc = 0;
     }
-    else
+    else if ( argc == 2 )
     {
         /* stop specified printer device */
 
@@ -1076,34 +1097,40 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
         U16      lcss;
         DEVBLK*  dev;
         char*    devclass;
-        int     rc;
 
-        rc=parse_single_devnum(argv[1],&lcss,&devnum);
-        if (rc<0)
+        if ( parse_single_devnum(argv[1],&lcss,&devnum) < 0 )
         {
-            return -1;
+            rc = -1;
         }
-
-        if (!(dev = find_device_by_devnum (lcss, devnum)))
+        else if (!(dev = find_device_by_devnum (lcss, devnum)))
         {
             devnotfound_msg(lcss,devnum);
-            return -1;
+            rc = -1;
         }
-
-        (dev->hnd->query)(dev, &devclass, 0, NULL);
-
-        if (strcasecmp(devclass,"PRT"))
+        else 
         {
-            WRMSG(HHC02209, "E", lcss, devnum, "printer" );
-            return -1;
+            (dev->hnd->query)(dev, &devclass, 0, NULL);
+
+            if (CMD(devclass,PRT,3) || CMD(devclass,PCH,3) )
+            {
+                dev->stopdev = TRUE;
+
+                WRMSG(HHC02214, "I", lcss, devnum );
+            }
+            else
+            {
+                WRMSG(HHC02209, "E", lcss, devnum, "printer or punch" );
+                rc = -1;
+            }
         }
-
-        dev->stopprt = 1;
-
-        WRMSG(HHC02214, "I", lcss, devnum );
+    }
+    else
+    {
+        WRMSG( HHC02299, "E" );
+        rc = -1;
     }
 
-    return 0;
+    return rc;
 }
 
 

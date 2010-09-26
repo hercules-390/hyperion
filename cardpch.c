@@ -76,6 +76,7 @@ int     i;                              /* Array subscript           */
     dev->cardpos = 0;
     dev->cardrem = CARD_LENGTH;
     dev->notrunc = 0;
+    dev->stopdev = FALSE;
 
     dev->excps = 0;
 
@@ -144,11 +145,12 @@ static void cardpch_query_device (DEVBLK *dev, char **class,
 
     BEGIN_DEVICE_CLASS_QUERY( "PCH", dev, class, buflen, buffer );
 
-    snprintf (buffer, buflen, "%s%s%s%s IO[%" I64_FMT "u]",
+    snprintf (buffer, buflen, "%s%s%s%s%s IO[%" I64_FMT "u]",
                 dev->filename,
                 (dev->ascii ? " ascii" : " ebcdic"),
                 ((dev->ascii && dev->crlf) ? " crlf" : ""),
                 (dev->notrunc ? " notrunc" : ""),
+                (dev->stopdev    ? " (stopped)"    : ""),
                 dev->excps );
 
 } /* end function cardpch_query_device */
@@ -162,6 +164,7 @@ static int cardpch_close_device ( DEVBLK *dev )
     if (dev->fd >= 0)
         close (dev->fd);
     dev->fd = -1;
+    dev->stopdev = FALSE;
 
     return 0;
 } /* end function cardpch_close_device */
@@ -205,6 +208,22 @@ BYTE            c;                      /* Output character          */
             return;
         }
         dev->fd = rc;
+    }
+    else
+    {
+        /* If punch stopped, return intervention required */
+        if (dev->stopdev && !IS_CCW_SENSE(code))
+            rc = -1;
+        else
+            rc = 0;
+    }
+
+    if (rc < 0)
+    {
+        /* Set unit check with intervention required */
+        dev->sense[0] = SENSE_IR;
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
     }
 
     /* Process depending on CCW opcode */
