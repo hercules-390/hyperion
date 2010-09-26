@@ -283,7 +283,7 @@ static int display_regs32(char *hdr,U16 cpuad,U32 *r,int numcpus, char *buf, cha
         {
             if(i)
             {
-                len+=sprintf(buf+len,"\n");
+                len+=sprintf(buf+len, "\n");
             }
             len+=sprintf(buf+len,msghdr);
             if(numcpus>1)
@@ -766,8 +766,8 @@ static REGS  *copy_regs (REGS *regs)
     newregs = malloc(size);
     if (newregs == NULL)
     {
-        char buf[40];
-        snprintf(buf, 40, "malloc(%lu)", size);
+        char buf[64];
+        MSGBUF(buf, "malloc(%lu)", size);
         WRMSG(HHC00075, "E", buf, strerror(errno));
         return NULL;
     }
@@ -854,7 +854,7 @@ static int ARCH_DEP(display_real) (REGS *regs, RADR raddr, char *buf,
 RADR    aaddr;                          /* Absolute storage address  */
 int     i, j;                           /* Loop counters             */
 int     n = 0;                          /* Number of bytes in buffer */
-char    hbuf[40];                       /* Hexadecimal buffer        */
+char    hbuf[64];                       /* Hexadecimal buffer        */
 BYTE    cbuf[17];                       /* Character buffer          */
 BYTE    c;                              /* Character work area       */
 
@@ -943,7 +943,7 @@ BYTE    inst[6];                        /* Storage alteration value  */
 BYTE    opcode;
 U16     xcode;
 char    type;
-char    buf[80];
+char    buf[512];
 
     /* Set limit for address range */
   #if defined(FEATURE_ESAME)
@@ -984,7 +984,7 @@ char    buf[80];
         {
             if((xcode = ARCH_DEP(virt_to_abs) (&raddr, &stid, saddr, 0, regs, ACCTYPE_INSTFETCH) ))
             {
-                snprintf(buf, 80, "Storage not accessible code = %4.4X", xcode);
+                MSGBUF(buf, "Storage not accessible code = %4.4X", xcode);
                 WRMSG(HHC02289, "I", buf);
                 return;
             }
@@ -1014,14 +1014,14 @@ char    buf[80];
           raddr, inst[0], inst[1]);
         if(ilc > 2)
         {
-            len += sprintf(buf + len, "%2.2X%2.2X", inst[2], inst[3]);
+            len += snprintf(buf + len, sizeof(buf)-len, "%2.2X%2.2X", inst[2], inst[3]);
             if(ilc > 4)
-                len += sprintf(buf + len, "%2.2X%2.2X ", inst[4], inst[5]);
+                len += snprintf(buf + len, sizeof(buf)-len, "%2.2X%2.2X ", inst[4], inst[5]);
             else
-                len += sprintf(buf + len, "     ");
+                len += snprintf(buf + len, sizeof(buf)-len, "     ");
         }
         else
-            len += sprintf(buf + len, "         ");
+            len += snprintf(buf + len, sizeof(buf)-len, "         ");
         DISASM_INSTRUCTION(inst, buf + len);
         WRMSG(HHC02289, "I", buf);
         saddr += ilc;
@@ -1042,7 +1042,7 @@ RADR    aaddr;                          /* Absolute storage address  */
 int     len;                            /* Number of bytes to alter  */
 int     i;                              /* Loop counter              */
 BYTE    newval[32];                     /* Storage alteration value  */
-char    buf[100];                       /* Message buffer            */
+char    buf[512];                       /* Message buffer            */
 
     /* Set limit for address range */
   #if defined(FEATURE_ESAME)
@@ -1097,7 +1097,7 @@ int     n;                              /* Number of bytes in buffer */
 int     arn = 0;                        /* Access register number    */
 U16     xcode;                          /* Exception code            */
 BYTE    newval[32];                     /* Storage alteration value  */
-char    buf[100];                       /* Message buffer            */
+char    buf[512];                       /* Message buffer            */
 
     /* Set limit for address range */
   #if defined(FEATURE_ESAME)
@@ -1155,19 +1155,19 @@ char    buf[100];                       /* Message buffer            */
         {
             xcode = ARCH_DEP(virt_to_abs) (&raddr, &stid, vaddr, arn,
                                             regs, ACCTYPE_LRA);
-            n = sprintf (buf, "V:"F_VADR" ", vaddr);
+            n = snprintf (buf, sizeof(buf), "V:"F_VADR" ", vaddr);
             if (REAL_MODE(&regs->psw))
-                n += sprintf (buf+n, "(dat off)");
+                n += snprintf (buf+n, sizeof(buf)-n, "(dat off)");
             else if (stid == TEA_ST_PRIMARY)
-                n += sprintf (buf+n, "(primary)");
+                n += snprintf (buf+n, sizeof(buf)-n, "(primary)");
             else if (stid == TEA_ST_SECNDRY)
-                n += sprintf (buf+n, "(secondary)");
+                n += snprintf (buf+n, sizeof(buf)-n, "(secondary)");
             else if (stid == TEA_ST_HOME)
-                n += sprintf (buf+n, "(home)");
+                n += snprintf (buf+n, sizeof(buf)-n, "(home)");
             else
-                n += sprintf (buf+n, "(AR%2.2d)", arn);
+                n += snprintf (buf+n, sizeof(buf)-n, "(AR%2.2d)", arn);
             if (xcode == 0)
-                n += sprintf (buf+n, " R:"F_RADR, raddr);
+                n += snprintf (buf+n, sizeof(buf)-n, " R:"F_RADR, raddr);
             WRMSG(HHC02291, "I", buf);
         }
         ARCH_DEP(display_virt) (regs, vaddr, buf, arn, ACCTYPE_LRA, "");
@@ -1201,7 +1201,7 @@ REGS   *regs;                           /* Copied regs               */
         buf[0] = '\0';
     }
     else
-        n = sprintf(buf,"HHC02267I ");
+        n = snprintf(buf, sizeof(buf), "HHC02267I ");
 
     if (iregs->ghostregs)
         regs = iregs;
@@ -1210,16 +1210,16 @@ REGS   *regs;                           /* Copied regs               */
 
   #if defined(_FEATURE_SIE)
     if(SIE_MODE (regs))
-        n += sprintf (buf + n, "SIE: ");
+        n += snprintf (buf + n, sizeof(buf)-n, "SIE: ");
   #endif /*defined(_FEATURE_SIE)*/
 
 #if 0
 #if _GEN_ARCH == 370
-    n += sprintf (buf + n, "S/370 ");
+    n += snprintf (buf + n, sizeof(buf)-n, "S/370 ");
 #elif _GEN_ARCH == 390
-    n += sprintf (buf + n, "ESA/390 ");
+    n += snprintf (buf + n, sizeof(buf)-n, "ESA/390 ");
 #else
-    n += sprintf (buf + n, "z/Arch ");
+    n += snprintf (buf + n, sizeof(buf)-n, "z/Arch ");
 #endif
 #endif
 
@@ -1228,13 +1228,13 @@ REGS   *regs;                           /* Copied regs               */
     copy_psw (regs, qword);
 
     if ( sysblk.cpus > 1 )
-        n += sprintf (buf + n, "%s%02X: ", PTYPSTR(regs->cpuad), regs->cpuad);
-    n += sprintf (buf + n,
+        n += snprintf (buf + n, sizeof(buf)-n, "%s%02X: ", PTYPSTR(regs->cpuad), regs->cpuad);
+    n += snprintf (buf + n, sizeof(buf)-n, 
                 "PSW=%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X ",
                 qword[0], qword[1], qword[2], qword[3],
                 qword[4], qword[5], qword[6], qword[7]);
   #if defined(FEATURE_ESAME)
-    n += sprintf (buf + n,
+    n += snprintf (buf + n, sizeof(buf)-n, 
                 "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X ",
                 qword[8], qword[9], qword[10], qword[11],
                 qword[12], qword[13], qword[14], qword[15]);
@@ -1243,7 +1243,7 @@ REGS   *regs;                           /* Copied regs               */
     /* Exit if instruction is not valid */
     if (inst == NULL)
     {
-        n += sprintf(buf + n, "Instruction fetch error\n");
+        n += snprintf(buf + n, sizeof(buf)-n, "Instruction fetch error\n");
 
         if ( sysblk.emsg & EMSG_TEXT )
             n += display_regs (regs, buf + n, "");
@@ -1269,12 +1269,12 @@ REGS   *regs;                           /* Copied regs               */
     }
 
     /* Display the instruction */
-    n += sprintf (buf + n, "INST=%2.2X%2.2X", inst[0], inst[1]);
-    if (ilc > 2) n += sprintf (buf + n, "%2.2X%2.2X", inst[2], inst[3]);
-    if (ilc > 4) n += sprintf (buf + n, "%2.2X%2.2X", inst[4], inst[5]);
-    n += sprintf (buf + n, " %s", (ilc<4) ? "        " : (ilc<6) ? "    " : "");
+    n += snprintf (buf + n, sizeof(buf)-n, "INST=%2.2X%2.2X", inst[0], inst[1]);
+    if (ilc > 2) n += snprintf (buf + n, sizeof(buf)-n, "%2.2X%2.2X", inst[2], inst[3]);
+    if (ilc > 4) n += snprintf (buf + n, sizeof(buf)-n, "%2.2X%2.2X", inst[4], inst[5]);
+    n += snprintf (buf + n, sizeof(buf)-n, " %s", (ilc<4) ? "        " : (ilc<6) ? "    " : "");
     n += DISASM_INSTRUCTION(inst, buf + n);
-    n += sprintf (buf + n, "\n");
+    n += snprintf (buf + n, sizeof(buf)-n, "\n");
 
 #ifdef DISPLAY_INSTRUCTION_OPERANDS
 
@@ -1384,13 +1384,14 @@ REGS   *regs;                           /* Copied regs               */
                                  opcode == 0xB1 ? ACCTYPE_LRA :
                                                   ACCTYPE_READ),"");
         if ( !(sysblk.emsg & EMSG_TEXT) )
-            n += sprintf(buf+n, "HHC02267I ");
+            n += snprintf(buf+n, sizeof(buf)-n, "HHC02267I ");
 
         if ( sysblk.cpus > 1 )
         {
-            n += sprintf(buf + n, "%s%02X: ", PTYPSTR(regs->cpuad), regs->cpuad );
+            n += snprintf(buf + n, sizeof(buf)-n, "%s%02X: ", 
+                          PTYPSTR(regs->cpuad), regs->cpuad );
         }
-        n += sprintf(buf+n,"%s\n", buf2);
+        n += snprintf(buf+n, sizeof(buf)-n, "%s\n", buf2);
     }
 
     /* Display storage at second storage operand location */
@@ -1409,13 +1410,14 @@ REGS   *regs;                           /* Copied regs               */
                                         ACCTYPE_READ, "");
 
         if ( !(sysblk.emsg & EMSG_TEXT) )
-            n += sprintf(buf+n, "HHC02267I ");
+            n += snprintf(buf+n, sizeof(buf)-n, "HHC02267I ");
         
         if ( sysblk.cpus > 1 )
         {
-            n += sprintf(buf + n, "%s%02X: ", PTYPSTR(regs->cpuad), regs->cpuad );
+            n += snprintf(buf + n, sizeof(buf)-n, "%s%02X: ", 
+                          PTYPSTR(regs->cpuad), regs->cpuad );
         }
-        n += sprintf(buf + n, "%s\n", buf2);
+        n += snprintf(buf + n, sizeof(buf)-n, "%s\n", buf2);
     }
 
 #endif /*DISPLAY_INSTRUCTION_OPERANDS*/
