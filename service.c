@@ -1529,14 +1529,27 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                         if(evd_hdr->type == SCCB_EVD_TYPE_MSG)
                         {
                           if(mto_bk->presattr[3] == SCCB_MTO_PRATTR3_HIGH)
+    #ifdef OPTION_SCP_MSG_PREFIX    
+                            WRCMSG("<pnl,color(lightyellow,black),keep>", HHC00001, "I", message);
+                          else
+                            WRCMSG("<pnl,color(green,black)>", HHC00001, "I", message);
+                        }
+                        else
+                          WRCMSG("<pnl,color(lightred,black),keep>", HHC00001, "I", message);
+    #else
                             logmsg("<pnl,color(lightyellow,black),keep>%s\n", message);
                           else
                             logmsg("<pnl,color(green,black)>%s\n", message);
                         }
                         else
                           logmsg("<pnl,color(lightred,black),keep>%s\n", message);
+    #endif /* OPTION_SCP_MSG_PREFIX */
 #else
+    #ifdef OPTION_SCP_MSG_PREFIX
+                        WRMSG(HHC00001, "I", message);
+    #else
                         logmsg("%s\n",message);
+    #endif /* OPTION_SCP_MSG_PREFIX */
 #endif
                     }
                 }

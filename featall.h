@@ -68,6 +68,7 @@
 #define OPTION_CMDTGT                   /* the cmdtgt command        */
 #define OPTION_MSGCLR                   /* Colored messages          */
 #define OPTION_MSGHLD                   /* Sticky messages           */
+//#define OPTION_SCP_MSG_PREFIX         /* Prefix scp msg with HHC*  */
 
 #undef  OPTION_WINDOWS_HOST_FILENAMES   /* Format files for display  
                                            in native host format       
