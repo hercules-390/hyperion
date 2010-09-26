@@ -414,6 +414,29 @@ void gcm_gf_mult(const unsigned char *a, const unsigned char *b, unsigned char *
   }
   XMEMCPY(c, Z, 16);
 }
+
+/* Exponentiate_tweak is inspired on code from 
+ * John Ioannidis Athens, Greece 
+ *
+ * Thanks John!
+*/
+
+void exponentiate_tweak(BYTE *tweak)
+{
+  int carry_in;
+  int carry_out;
+  int i;
+
+  carry_in = 0;
+  for(i = 0; i < 16; i++) 
+  {
+    carry_out = tweak[i] & 0x80;
+    tweak[i] = (tweak[i] << 1) | (carry_in ? 1 : 0);
+    carry_in = carry_out;
+  }
+  if(carry_in)
+    tweak[0] ^= 0x87;
+}
 #endif /* __GF_COMPILE__ */
 #endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4 */
 
