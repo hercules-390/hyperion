@@ -124,22 +124,22 @@ FACILITY(IDTE_INSTALLED,   Z390,         NONE,      Z390,          ALS2|ALS3)
 FACILITY(IDTE_SC_SEGTAB,   0, /*ZARCH*/  NONE,      ZARCH,         ALS2|ALS3)
 FACILITY(IDTE_SC_REGTAB,   0, /*ZARCH*/  NONE,      ZARCH,         ALS2|ALS3)
 FACILITY(ASN_LX_REUSE,     0, /*Z390*/   NONE,      Z390,          ALS2|ALS3)
-FACILITY(STFL_EXTENDED,    ZARCH,        NONE,      ZARCH,         ALS2|ALS3)
+FACILITY(STFL_EXTENDED,    ESA390|ZARCH, NONE,      ESA390|ZARCH,  ALS2|ALS3)
 FACILITY(ENHANCED_DAT,     0, /*Z390*/   NONE,      Z390,          ALS2|ALS3)
 FACILITY(SENSE_RUN_STATUS, Z390,         NONE,      Z390,          ALS2|ALS3)
 FACILITY(CONDITIONAL_SSKE, Z390,         NONE,      Z390,          ALS2|ALS3)
 FACILITY(CONFIG_TOPOLOGY,  Z390,         NONE,      Z390,          ALS2|ALS3)
 FACILITY(IPTE_RANGE,       NONE,         NONE,      Z390,          ALS3)
 FACILITY(NONQ_KEY_SET,     NONE,         NONE,      Z390,          ALS3)
-FACILITY(TRAN_FAC2,        ZARCH,        NONE,      ZARCH,         ALS2|ALS3)
-FACILITY(MSG_SECURITY,     ZARCH,        NONE,      ZARCH,         ALS2|ALS3)
+FACILITY(TRAN_FAC2,        ESA390|ZARCH, NONE,      ESA390|ZARCH,  ALS2|ALS3)
+FACILITY(MSG_SECURITY,     ESA390|ZARCH, NONE,      ESA390|ZARCH,  ALS2|ALS3)
 FACILITY(LONG_DISPL_INST,  Z390,         NONE,      Z390,          ALS2|ALS3)
 FACILITY(LONG_DISPL_HPERF, Z390,         NONE,      ZARCH,         ALS2|ALS3)
-FACILITY(HFP_MULT_ADD_SUB, ZARCH,        NONE,      ZARCH,         ALS2|ALS3)
+FACILITY(HFP_MULT_ADD_SUB, ESA390|ZARCH, NONE,      ESA390|ZARCH,  ALS2|ALS3)
 FACILITY(EXTENDED_IMMED,   Z390,         NONE,      Z390,          ALS2|ALS3)
 FACILITY(TRAN_FAC3,        Z390,         NONE,      Z390,          ALS2|ALS3)
 FACILITY(HFP_UNNORM_EXT,   Z390,         NONE,      Z390,          ALS2|ALS3)
-FACILITY(ETF2_ENHANCEMENT, ZARCH,        NONE,      ZARCH,         ALS2|ALS3)
+FACILITY(ETF2_ENHANCEMENT, ESA390|ZARCH, NONE,      ESA390|ZARCH,  ALS2|ALS3)
 FACILITY(STORE_CLOCK_FAST, Z390,         NONE,      Z390,          ALS2|ALS3)
 FACILITY(PARSING_ENHANCE,  Z390,         NONE,      Z390,          ALS2|ALS3)
 FACILITY(MVCOS,            Z390,         NONE,      Z390,          ALS2|ALS3)
@@ -190,7 +190,7 @@ void init_als(REGS *regs)
 int i;
 
     for(i = 0; i < STFL_HBYTESIZE; i++)
-        regs->facility_list[i] = sysblk.facility_list[sysblk.arch_mode][i];
+        regs->facility_list[i] = sysblk.facility_list[regs->arch_mode][i];
 
     request_pending = FALSE;
 }
