@@ -505,7 +505,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00831 "No central processors found, capping disabled"
 #define HHC00832 "Central processors will be capped to %u MIPS"
 #define HHC00833 "Invalid capping argument '%s', capping disabled"
-
+#define HHC00834 "Processor %s%02X: %s"
 /* external.c */
 #define HHC00840 "External interrupt: interrupt key"
 #define HHC00841 "External interrupt: clock comparator"
@@ -888,6 +888,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01474 "Using '%s' codepage conversion table '%s'"
 #define HHC01475 "Codepage conversion table '%s' is not defined"
 #define HHC01476 "Codepage is '%s'"
+#define HHC01477 "Codepage 'user' is not available; 'default' selected"
 
 // reserve 015xx for Hercules dynamic loader      
 /* hdl.c */
@@ -1164,9 +1165,9 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02298 "%1d:%04X drive is empty"
 #define HHC02299 "Invalid command usage. Type 'help %s' for assistance."
 
-// reserve 023xx for ieee.c
-#define HHC02300 "Function '%s': unexpectedly converting to '%s'"
-#define HHC02301 "Inexact"
+// reserve 02390 for ieee.c
+#define HHC02390 "Function '%s': unexpectedly converting to '%s'"
+#define HHC02391 "Inexact"
 
 // reserve 024xx for dasd* utilities
 //dasdcat.c

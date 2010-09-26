@@ -22,8 +22,6 @@
  * For details, see html/herclic.html
  */
 
-// $Id$
-
 /*
  * This module implements the ESA/390 Binary (IEEE) Floating Point
  * Instructions as described in
@@ -520,11 +518,11 @@ void ebfpston(struct ebfp *op)
 
     switch (ebfpclassify(op)) {
     case FP_NAN:
-        WRMSG(HHC02300, "E", "ebfpston", "NaN");
+        WRMSG(HHC02390, "E", "ebfpston", "NaN");
         op->v = sqrt(-1);
         break;
     case FP_INFINITE:
-        WRMSG(HHC02300, "E", "ebfpston", "Infinite");
+        WRMSG(HHC02390, "E", "ebfpston", "Infinite");
         if (op->sign) {
             op->v = log(0);
         } else {
@@ -579,11 +577,11 @@ void lbfpston(struct lbfp *op)
 
     switch (lbfpclassify(op)) {
     case FP_NAN:
-        WRMSG(HHC02300, "E", "lbfpston", "NaN");
+        WRMSG(HHC02390, "E", "lbfpston", "NaN");
         op->v = sqrt(-1);
         break;
     case FP_INFINITE:
-        WRMSG(HHC02300, "E", "lbfpston", "Infinite");
+        WRMSG(HHC02390, "E", "lbfpston", "Infinite");
         if (op->sign) {
             op->v = log(0);
         } else {
@@ -632,11 +630,11 @@ void sbfpston(struct sbfp *op)
 
     switch (sbfpclassify(op)) {
     case FP_NAN:
-        WRMSG(HHC02300, "E", "sbfpston", "NaN");
+        WRMSG(HHC02390, "E", "sbfpston", "NaN");
         op->v = sqrt(-1);
         break;
     case FP_INFINITE:
-        WRMSG(HHC02300, "E", "sbfpston", "Infinite");
+        WRMSG(HHC02390, "E", "sbfpston", "Infinite");
         if (op->sign) {
             op->v = log(0);
         } else {
@@ -2182,7 +2180,7 @@ DEF_INST(convert_bfp_ext_to_fix32_reg)
         if (regs->fpc & FPC_MASK_IMX) {
             pgm_check = ieee_exception(FE_INEXACT, regs);
             if (pgm_check) {
-                ebfpston(&op2);WRMSG(HHC02301, "E");
+                ebfpston(&op2);WRMSG(HHC02391, "E");
                 regs->program_interrupt(regs, pgm_check);
             }
         }
@@ -2247,7 +2245,7 @@ DEF_INST(convert_bfp_long_to_fix32_reg)
         if (regs->fpc & FPC_MASK_IMX) {
             pgm_check = ieee_exception(FE_INEXACT, regs);
             if (pgm_check) {
-                lbfpston(&op2);WRMSG(HHC02301, "E");
+                lbfpston(&op2);WRMSG(HHC02391, "E");
                 regs->program_interrupt(regs, pgm_check);
             }
         }
@@ -2378,7 +2376,7 @@ DEF_INST(convert_bfp_ext_to_fix64_reg)
         if (regs->fpc & FPC_MASK_IMX) {
             pgm_check = ieee_exception(FE_INEXACT, regs);
             if (pgm_check) {
-                ebfpston(&op2);WRMSG(HHC02301, "E");
+                ebfpston(&op2);WRMSG(HHC02391, "E");
                 regs->program_interrupt(regs, pgm_check);
             }
         }
@@ -2445,7 +2443,7 @@ DEF_INST(convert_bfp_long_to_fix64_reg)
         if (regs->fpc & FPC_MASK_IMX) {
             pgm_check = ieee_exception(FE_INEXACT, regs);
             if (pgm_check) {
-                lbfpston(&op2);WRMSG(HHC02301, "E");
+                lbfpston(&op2);WRMSG(HHC02391, "E");
                 regs->program_interrupt(regs, pgm_check);
             }
         }
