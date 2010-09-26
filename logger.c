@@ -590,7 +590,7 @@ int   new_hrdcpyfd;
 
     if(!filename)
     {
-        logger_filename[0] = '\0';
+        memcpy(logger_filename, '\0', sizeof(logger_filename));
 
         if(!logger_hrdcpy)
         {
@@ -612,9 +612,10 @@ int   new_hrdcpyfd;
     else
     {
         char pathname[MAX_PATH];
+
         hostpath(pathname, filename, sizeof(pathname));
         
-        logger_filename[0] = '\0';
+        memcpy(logger_filename, '\0', sizeof(logger_filename));
 
         new_hrdcpyfd = open(pathname,
                 O_WRONLY | O_CREAT | O_TRUNC /* O_SYNC */,
@@ -638,7 +639,7 @@ int   new_hrdcpyfd;
                 obtain_lock(&logger_lock);
                 logger_hrdcpy = new_hrdcpy;
                 logger_hrdcpyfd = new_hrdcpyfd;
-                strcpy(logger_filename, filename);
+                strlcpy(logger_filename, filename, sizeof(logger_filename));
                 release_lock(&logger_lock);
 
                 if(temp_hrdcpy)
