@@ -1665,7 +1665,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC90011 "Pttrace: invalid argument '%s'"
 #define HHC90012 "Pttrace: %s%s%s%s%s%s%s%s%s%s%s %s %s to %d %d"
 
-/* from crypto/dyncrypt.c when compiled with debug on*/
+/* from crypto/dyncrypt.c when compiled with debug on */
 #define HHC90100 "%s"
 #define HHC90101 "  r%d        : GR%02d"
 #define HHC90102 "    address : " F_VADR
@@ -1677,6 +1677,9 @@ cpu.c:123:HABC1234I This is a message
 #define HHC90108 "  GR%02d  : " F_GREG
 #define HHC90109 "  %s %s"
 #define HHC90110 "      %s"
+
+/* from crypto.c when compiled with debug on */
+#define HHC90190 "%s"
 
 /* from scsitape.c trace */
 #define HHC90205 "%1d:%04X Tape file '%s', type '%s': error in function '%s': '%s'"

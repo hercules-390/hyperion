@@ -232,19 +232,29 @@ void renew_wrapping_keys(void)
   release_lock(&sysblk.wklock);
 
 #if 0
-  logmsg("AES wrapping key: ");
+#define OPTION_WRAPPINGKEYS_DEBUG
+#endif
+#ifdef OPTION_WRAPPINGKEYS_DEBUG
+  char buf[128];
+
+  snprintf(buf, sizeof(buf), "AES wrapping key:    ");
   for(i = 0; i < 32; i++)
-    logmsg("%02X", sysblk.wkaes_reg[i]);
-  logmsg("\nAES wrapping key verification pattern: ");
+    snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%02X", sysblk.wkaes_reg[i]);
+  WRGMSG_ON;
+  WRGMSG(HHC90190, "D", buf);
+  snprintf(buf, sizeof(buf), "AES wrapping key vp: ");
   for(i = 0; i < 32; i++)
-    logmsg("%02X", sysblk.wkvpaes_reg[i]);
-  logmsg("\nDEA wrapping key: ");
+    snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%02X", sysblk.wkvpaes_reg[i]);
+  WRGMSG(HHC90190, "D", buf);
+  snprintf(buf, sizeof(buf), "DEA wrapping key:    ");
   for(i = 0; i < 24; i++)
-    logmsg("%02X", sysblk.wkdea_reg[i]);
-  logmsg("\nDEA wrapping key verification pattern: ");
+    snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%02X", sysblk.wkdea_reg[i]);
+  WRGMSG(HHC90190, "D", buf);
+  snprintf(buf, sizeof(buf), "DEA wrapping key vp: ");
   for(i = 0; i < 24; i++)
-    logmsg("%02X", sysblk.wkvpdea_reg[i]);
-  logmsg("\n");
+    snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%02X", sysblk.wkvpdea_reg[i]);
+  WRGMSG(HHC90190, "D", buf);
+  WRGMSG_OFF;
 #endif
 }
 #endif
