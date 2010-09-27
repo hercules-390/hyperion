@@ -367,7 +367,8 @@ DLL_EXPORT void set_symbol(const char *sym,const char *value)
     SYMBOL_TOKEN        *tok;
 
 #if defined ( _MSVC_ )
-    char *ev=malloc(strlen(sym)+strlen(value)+2);
+    size_t   evl = strlen(sym)+strlen(value)+2; 
+    char    *ev=malloc(evl);
     
     if ( !ev )
     {
@@ -377,9 +378,9 @@ DLL_EXPORT void set_symbol(const char *sym,const char *value)
     {
         int rc;
 
-        strcpy( ev, sym ); 
-        strcat( ev, "=" );
-        strcat( ev, value );
+        strlcpy( ev, sym, evl ); 
+        strlcat( ev, "=", evl );
+        strlcat( ev, value, evl );
         rc = putenv( ev );
         free( ev );
         if ( rc )
@@ -405,7 +406,7 @@ DLL_EXPORT void set_symbol(const char *sym,const char *value)
     {
         return;
     }
-    strcpy(tok->val,value);
+    strlcpy(tok->val,value,strlen(value)+1);
     return;
 }
 
@@ -516,7 +517,7 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
         return( strdup( text ) );
     }
 
-    memset(buf,0,sizeof(buf));
+    bzero(buf,sizeof(buf));
 
     while(1)
     {
@@ -574,7 +575,7 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
                             /* Substitute default if specified */
                             if (inc_equals >= 0)
                             {
-                                memset(dflt,0,sizeof(dflt));
+                                bzero(dflt,sizeof(dflt));
                                 strlcpy(dflt, &buf[inc_equals+1], sizeof(dflt));
                                 inc_envvar = dflt;
                             }
@@ -591,9 +592,11 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
                             }
 
                             /* Copy to buffer and update index */
-                            stmtlen += sprintf (&buf[stmtlen], "%s", inc_envvar);
+                            stmtlen += snprintf( &buf[stmtlen], 
+                                                 (sizeof(buf) - stmtlen) - 1, 
+                                                 "%s", inc_envvar );
                         }
-                        memset(&buf[stmtlen],0,(sizeof(buf) - stmtlen));
+                        bzero(&buf[stmtlen],(sizeof(buf) - stmtlen));
 
                         /* Reset indexes */
                         inc_equals = -1;

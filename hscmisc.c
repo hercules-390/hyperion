@@ -1581,6 +1581,7 @@ void disasm_stor(REGS *iregs, char *opnd)
 /*-------------------------------------------------------------------*/
 /* Execute a Unix or Windows command                                 */
 /* Returns the system command status code                            */
+/* look at popen for this in the future                              */
 /*-------------------------------------------------------------------*/
 int herc_system (char* command)
 {
