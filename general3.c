@@ -30,6 +30,134 @@
 
 #if defined(FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY)
 
+#if defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)                /*810*/
+/*-------------------------------------------------------------------*/
+/* Perform Interlocked Add                                           */
+/* Subroutine called by ASI and ALSI instructions                    */
+/*-------------------------------------------------------------------*/
+DEF_INST(perform_interlocked_add)                               /*810*/
+{
+BYTE    opcode;                         /* 2nd byte of opcode        */
+BYTE    i2;                             /* Immediate byte            */
+int     b1;                             /* Base of effective addr    */
+VADR    addr1;                          /* Effective address         */
+BYTE    *m1;                            /* Mainstor address          */
+U32     n;                              /* 32-bit operand value      */
+U32     result;                         /* Result value              */
+U32     old, new;                       /* Values for cmpxchg4       */
+int     cc;                             /* Condition code            */
+int     rc;                             /* Return code               */
+
+    SIY(inst, regs, i2, b1, addr1);
+
+    /* Extract second byte of instruction opcode */
+    opcode = inst[5];
+
+    /* Get mainstor address of storage operand */
+    m1 = MADDRL (addr1, 4, b1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+
+    do {
+        /* Load 32-bit operand from operand address */
+        n = ARCH_DEP(vfetch4) (addr1, b1, regs);
+
+        switch (opcode) {
+        case 0x6A: /* Add Storage Immediate */
+            /* Add signed operands and set condition code */
+            cc = add_signed (&result, n, (S32)(S8)i2);
+            break;
+        case 0x6E: /* Add Logical Storage with Signed Immediate */
+            /* Add operands and set condition code */
+            cc = (S8)i2 < 0 ?
+                sub_logical (&result, n, (S32)(-(S8)i2)) :
+                add_logical (&result, n, (S32)(S8)i2);
+            break;
+        default: /* To prevent compiler warnings */
+            result = 0;
+            cc = 0;
+        } /* end switch(opcode) */
+
+        /* Regular store if operand is not on a fullword boundary */
+        if ((addr1 & 0x03) != 0) {
+            ARCH_DEP(vstore4) (result, addr1, b1, regs);
+            break;
+        }
+
+        /* Interlocked exchange if operand is on a fullword boundary */
+        old = CSWAP32(n);
+        new = CSWAP32(result);
+        rc = cmpxchg4(&old, new, m1);
+
+    } while (rc != 0);
+
+    /* Set condition code in PSW */
+    regs->psw.cc = cc;
+
+} /* end DEF_INST(perform_interlocked_add) */
+
+/*-------------------------------------------------------------------*/
+/* Perform Interlocked Add Long                                      */
+/* Subroutine called by AGSI and ALGSI instructions                  */
+/*-------------------------------------------------------------------*/
+DEF_INST(perform_interlocked_add_long)                          /*810*/
+{
+BYTE    opcode;                         /* 2nd byte of opcode        */
+BYTE    i2;                             /* Immediate byte            */
+int     b1;                             /* Base of effective addr    */
+VADR    addr1;                          /* Effective address         */
+BYTE    *m1;                            /* Mainstor address          */
+U64     n;                              /* 64-bit operand value      */
+U64     result;                         /* Result value              */
+U64     old, new;                       /* Values for cmpxchg4       */
+int     cc;                             /* Condition code            */
+int     rc;                             /* Return code               */
+
+    SIY(inst, regs, i2, b1, addr1);
+
+    /* Extract second byte of instruction opcode */
+    opcode = inst[5];
+
+    /* Get mainstor address of storage operand */
+    m1 = MADDRL (addr1, 8, b1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+
+    do {
+        /* Load 64-bit operand from operand address */
+        n = ARCH_DEP(vfetch8) (addr1, b1, regs);
+
+        switch (opcode) {
+        case 0x7A: /* Add Long Storage Immediate */
+            /* Add signed operands and set condition code */
+            cc = add_signed_long (&result, n, (S64)(S8)i2);
+            break;
+        case 0x7E: /* Add Logical Long Storage with Signed Immediate */
+            /* Add operands and set condition code */
+            cc = (S8)i2 < 0 ?
+                sub_logical_long (&result, n, (S64)(-(S8)i2)) :
+                add_logical_long (&result, n, (S64)(S8)i2);
+            break;
+        default: /* To prevent compiler warnings */
+            result = 0;
+            cc = 0;
+        } /* end switch(opcode) */
+
+        /* Regular store if operand is not on a doubleword boundary */
+        if ((addr1 & 0x07) != 0) {
+            ARCH_DEP(vstore8) (result, addr1, b1, regs);
+            break;
+        }
+
+        /* Interlocked exchange if operand is on doubleword boundary */
+        old = CSWAP64(n);
+        new = CSWAP64(result);
+        rc = cmpxchg8(&old, new, m1);
+
+    } while (rc != 0);
+
+    /* Set condition code in PSW */
+    regs->psw.cc = cc;
+
+} /* end DEF_INST(perform_interlocked_add_long) */
+#endif /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)*/         /*810*/
+
 /*-------------------------------------------------------------------*/
 /* EB6A ASI   - Add Immediate Storage                          [SIY] */
 /*-------------------------------------------------------------------*/
