@@ -793,7 +793,7 @@ VADR    effective_addr2;                /* Effective address         */
 #if defined(_FEATURE_SIE)
         !SIE_MODE(regs) &&
 #endif /* defined(_FEATURE_SIE) */
-                      effective_addr2 != 0xF08)
+                      !(effective_addr2 == 0xF08 && FACILITY_ENABLED(PROBSTATE_DIAGF08,regs)) )
 #endif
 
     PRIV_CHECK(regs);
