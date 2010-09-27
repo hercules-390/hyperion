@@ -509,6 +509,8 @@ DLL_EXPORT void logger_init(void)
             /* Ignore standard output to the extent that it is
             treated as standard error */
             logger_hrdcpyfd = dup(STDOUT_FILENO);
+            strlcpy(logger_filename, "STDOUT redirected from command line",
+                    sizeof(logger_filename));
             if(dup2(STDERR_FILENO,STDOUT_FILENO) == -1)
             {
                 fprintf(stderr, MSG(HHC02102, "E", "dup2()", strerror(errno)));
@@ -520,6 +522,8 @@ DLL_EXPORT void logger_init(void)
             if(!isatty(STDOUT_FILENO))
             {
                 logger_hrdcpyfd = dup(STDOUT_FILENO);
+                strlcpy(logger_filename, "STDOUT redirected from command line", 
+                        sizeof(logger_filename));
                 if(dup2(STDERR_FILENO,STDOUT_FILENO) == -1)
                 {
                     fprintf(stderr, MSG(HHC02102, "E", "dup2()", strerror(errno)));
@@ -528,6 +532,8 @@ DLL_EXPORT void logger_init(void)
             }
             if(!isatty(STDERR_FILENO))
             {
+                strlcpy(logger_filename, "STDERR redirected from command line",
+                        sizeof(logger_filename));
                 logger_hrdcpyfd = dup(STDERR_FILENO);
                 if(dup2(STDOUT_FILENO,STDERR_FILENO) == -1)
                 {
@@ -625,6 +631,17 @@ int   new_hrdcpyfd = -1;
             logger_hrdcpy = 0;
             logger_hrdcpyfd = 0;
             release_lock(&logger_lock);
+            if ( sysblk.emsg & EMSG_TS )
+            {
+                struct timeval  now;
+                time_t          tt;
+                char            hhmmss[10];
+
+                gettimeofday( &now, NULL ); tt = now.tv_sec;
+                strlcpy( hhmmss, ctime(&tt)+11, sizeof(hhmmss) );
+                hhmmss[8] = '\0';
+                fprintf(temp_hrdcpy, "%s ", hhmmss); 
+            }
             fprintf(temp_hrdcpy,MSG(HHC02101, "I"));
             fclose(temp_hrdcpy);
             WRMSG(HHC02101, "I");
@@ -672,6 +689,18 @@ int   new_hrdcpyfd = -1;
                         pzbuf = filename;
                     else
                         MSGBUF(buf,"'%s'",filename);
+
+                    if ( sysblk.emsg & EMSG_TS )
+                    {
+                        struct timeval  now;
+                        time_t          tt;
+                        char            hhmmss[10];
+
+                        gettimeofday( &now, NULL ); tt = now.tv_sec;
+                        strlcpy( hhmmss, ctime(&tt)+11, sizeof(hhmmss) );
+                        hhmmss[8] = '\0';
+                        fprintf(temp_hrdcpy, "%s ", hhmmss); 
+                    }
                     fprintf(temp_hrdcpy, MSG(HHC02104, "I", pzbuf));
                     fclose(temp_hrdcpy);
                 }
