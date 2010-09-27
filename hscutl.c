@@ -509,7 +509,7 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
     int     inc_equals = -1;                /* >=0 Ndx of equals         */
     int     lstarted;                       /* Indicate if non-whitespace*/
     char   *inc_envvar;                     /* ->Environment variable    */
-    int     f$Parens    = TRUE;             /* Is it $() or ${} ?        */
+    int     fDParens    = TRUE;             /* Is it $() or ${} ?        */
 
     if( strstr( text, "$(" ) == NULL && strstr( text, "${" ) == NULL )
     {
@@ -546,7 +546,7 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
                 if (inc_lbrace >= 0)
                 {
                     /* End of variable spec? */
-                    if ( ( f$Parens && c == ')' )  || ( !f$Parens && c == '}' ) )    
+                    if ( ( fDParens && c == ')' )  || ( !fDParens && c == '}' ) )    
                     {
                         /* Terminate it */
                         buf[stmtlen] = '\0';
@@ -622,9 +622,9 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
                     if (c == '(' || c == '{' )
                     {
                         if ( c == '(' )
-                            f$Parens = TRUE;
+                            fDParens = TRUE;
                         else
-                            f$Parens = FALSE;
+                            fDParens = FALSE;
 
                         inc_lbrace = stmtlen + 1;
                     }
