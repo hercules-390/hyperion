@@ -1,24 +1,24 @@
-* KM fc26
+* KM fc11
 stopall
 pause 1
 sysclear
 archmode esame
 r 1A0=00000001800000000000000000000200 # z/Arch restart PSW
 r 1D0=0002000180000000000000000000DEAD # z/Arch pgm new PSW
-r 200=41000012     # LA R0,X'12'       R0->function code 18
+r 200=41000003     # LA R0,X'03'       R0->function code 3 
 r 204=41100500     # LA R1,PB          R1->parameter block address
 r 208=B9280000     # PCKMO             Encrypt DEA Key
-r 20C=4100001A     # LA R0,X'1A'       R0->function code 26 encrypt
+r 20C=4100000B     # LA R0,X'0B'       R0->function code 11 encrypt
 r 210=41100500     # LA R1,PB          R1->parameter block address
 r 214=41200600     # LA R2,FO          R2->first operand 
 r 218=41400700     # LA R4,SO          R4->second operand
-r 21C=41500010     # LA R5,SOL         R5->second operand length
+r 21C=41500008     # LA R5,SOL         R5->second operand length
 r 220=B92E0024     # KM R2,R4          Cipher message
-r 224=4100009A     # LA R0,X'9A'       R0->function code 26 decrypt
+r 224=4100008A     # LA R0,X'8B'       R0->function code 11 decrypt
 r 228=41100500     # LA R1,PB          R1->parameter block address
 r 22C=41200800     # LA R2,SO          R2->second operand from encrypt operation
 r 230=41400600     # LA R4,FO          R4->first operand from encrypt operation
-r 234=41500010     # LA R5,FOL         R5->first operand length
+r 234=41500008     # LA R5,FOL         R5->first operand length
 r 238=B92E0024     # KM R2,R4          Cipher message
 r 23C=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
 r 300=07020001800000000123456789ABCDEF # WAITPSW Enabled wait state PSW
@@ -27,11 +27,11 @@ r 500=000102030405060708090A0B0C0D0E0F # Parameter block
 r 510=101112131415161718191A1B1C1D1E1F # Parameter block
 r 520=202122232425262728292A2B2C2D2E2F # Parameter block
 *
-r 600=000102030405060708090A0B0C0D0E0F # First operand
+r 600=0001020304050607                 # First operand
 *
-r 680=0A940BB5416EF045F1C39458C653EA5A # Expected result
+r 680=58ED248F77F6B19E                 # Expected result
 *
-r 700=000102030405060708090A0B0C0D0E0F # Second operand
+r 700=0001020304050607                 # Second operand
 *
 r 800=FFFFFFFFFFFFFFFF                 # Expected result
 *
