@@ -1,4 +1,5 @@
-17 Sep 2010 IPTE Range Facility - Jan Jaeger
+27 Sep 2010 IPTE Range Facility - Jan Jaeger
+22 Sep 2010 Load Program Parameter Facility - Paul Gorlinsky
 19 Sep 2010 Process Panel started scripts in a seperate thread. - Paul Gorlinsky
 19 Sep 2010 Message Security Assist Extension 4 - Bernard van der Helm
 19 Sep 2010 Change SYMBOL processing to use either $() or ${} syntax and support
