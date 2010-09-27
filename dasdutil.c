@@ -1,4 +1,4 @@
-/* DASDUTIL.C   (c) Copyright Roger Bowler, 1999-2009                */
+/* DASDUTIL.C   (c) Copyright Roger Bowler, 1999-2010                */
 /*              Hercules DASD Utilities: Common subroutines          */
 
 // $Id$
@@ -6,14 +6,6 @@
 /*-------------------------------------------------------------------*/
 /* This module contains common subroutines used by DASD utilities    */
 /*-------------------------------------------------------------------*/
-
-// $Log$
-// Revision 1.60  2007/06/23 00:04:08  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.59  2006/12/08 09:43:20  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 
@@ -1335,7 +1327,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 r++;
 
                 /* Track 0 contains IPL records and volume label */
-                if (!rawflag && trk == 0)
+                if (!rawflag && fseqn == 1 && trk == 0)
                 {
                     /* Build the IPL1 record */
                     rechdr = (CKDDASD_RECHDR*)pos;
@@ -1417,7 +1409,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 } /* end if(trk == 0) */
 
                 /* Track 1 for linux contains an empty VTOC */
-                else if (trk == 1 && nullfmt == CKDDASD_NULLTRK_FMT2)
+                else if (fseqn == 1 && trk == 1 && nullfmt == CKDDASD_NULLTRK_FMT2)
                 {
                     /* build format 4 dscb */
                     rechdr = (CKDDASD_RECHDR*)pos;
