@@ -3414,7 +3414,7 @@ DLL_EXPORT zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B21E*/ GENx___x___x___ ,
  /*B21F*/ GENx___x___x___ ,
  /*B220*/ GENx___x390x900 (service_call,RRE,"SERVC"),
- /*B221*/ GENx370x390x900 (invalidate_page_table_entry,RRE,"IPTE"),
+ /*B221*/ GENx370x390x900 (invalidate_page_table_entry,RRR,"IPTE"),
  /*B222*/ GENx370x390x900 (insert_program_mask,RRE_R1,"IPM"),
  /*B223*/ GENx370x390x900 (insert_virtual_storage_key,RRE,"IVSK"),
  /*B224*/ GENx370x390x900 (insert_address_space_control,RRE_R1,"IAC"),

@@ -1963,8 +1963,8 @@ _DAT_C_STATIC void ARCH_DEP(invalidate_tlbe) (REGS *regs, BYTE *main)
 /* SYNCHRONIZE_CPUS issued while intlock is held.                    */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-_DAT_C_STATIC void ARCH_DEP(invalidate_pte) (BYTE ibyte, int r1,
-                                                    int r2, REGS *regs)
+_DAT_C_STATIC void ARCH_DEP(invalidate_pte) (BYTE ibyte, RADR op1,
+                                                    U32 op2, REGS *regs)
 {
 RADR    raddr;                          /* Addr of page table entry  */
 RADR    pte;
@@ -1985,14 +1985,14 @@ RADR    pfra;
         /* Combine the page table origin in the R1 register with
            the page index in the R2 register, ignoring carry, to
            form the 31-bit real address of the page table entry */
-        raddr = (regs->GR_L(r1) & SEGTAB_370_PTO)
+        raddr = (op1 & SEGTAB_370_PTO)
                     + (((regs->CR(0) & CR0_SEG_SIZE) == CR0_SEG_SZ_1M) ?
                       (((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K) ?
-                      ((regs->GR_L(r2) & 0x000FF000) >> 11) :
-                      ((regs->GR_L(r2) & 0x000FF800) >> 10)) :
+                      ((op2 & 0x000FF000) >> 11) :
+                      ((op2 & 0x000FF800) >> 10)) :
                       (((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K) ?
-                      ((regs->GR_L(r2) & 0x0000F000) >> 11) :
-                      ((regs->GR_L(r2) & 0x0000F800) >> 10)));
+                      ((op2 & 0x0000F000) >> 11) :
+                      ((op2 & 0x0000F800) >> 10)));
         raddr &= 0x00FFFFFF;
 
         /* Fetch the page table entry from real storage, subject
@@ -2026,8 +2026,8 @@ RADR    pfra;
         /* Combine the page table origin in the R1 register with
            the page index in the R2 register, ignoring carry, to
            form the 31-bit real address of the page table entry */
-        raddr = (regs->GR_L(r1) & SEGTAB_PTO)
-                    + ((regs->GR_L(r2) & 0x000FF000) >> 10);
+        raddr = (op1 & SEGTAB_PTO)
+                    + ((op2 & 0x000FF000) >> 10);
         raddr &= 0x7FFFFFFF;
 
         /* Fetch the page table entry from real storage, subject
@@ -2050,8 +2050,8 @@ RADR    pfra;
         /* Combine the page table origin in the R1 register with
            the page index in the R2 register, ignoring carry, to
            form the 64-bit real address of the page table entry */
-        raddr = (regs->GR_G(r1) & ZSEGTAB_PTO)
-                    + ((regs->GR_G(r2) & 0x000FF000) >> 9);
+        raddr = (op1 & ZSEGTAB_PTO)
+                    + ((op2 & 0x000FF000) >> 9);
 
 #if defined(MODEL_DEPENDENT)
         raddr = APPLY_PREFIXING (raddr, regs->PX);

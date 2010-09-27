@@ -86,7 +86,7 @@
 #define FEATURE_INTERLOCKED_ACCESS_FACILITY                     /*810*/
 #define FEATURE_INTERPRETIVE_EXECUTION
 #define FEATURE_IO_ASSIST
-//#define FEATURE_IPTE_RANGE_FACILITY                             /*810*/
+#define FEATURE_IPTE_RANGE_FACILITY                             /*810*/
 #define FEATURE_LINKAGE_STACK
 #define FEATURE_LOAD_PROGRAM_PARAMETER_FACILITY                 /* 810 */
 #define FEATURE_LOAD_REVERSED

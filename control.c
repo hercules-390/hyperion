@@ -1503,10 +1503,34 @@ int     sr;                             /* SIE_TRANSLATE_ADDR rc     */
 DEF_INST(invalidate_page_table_entry)
 {
 int     r1, r2;                         /* Values of R fields        */
+RADR    op1;
+U32     op2;
+#if defined(FEATURE_IPTE_RANGE_FACILITY)
+int     r3;
+int     op3;
+#endif /*defined(FEATURE_IPTE_RANGE_FACILITY)*/
 
+#if defined(FEATURE_IPTE_RANGE_FACILITY)
+    RRR(inst, regs, r1, r2, r3);
+#else /*defined(FEATURE_IPTE_RANGE_FACILITY)*/
     RRE(inst, regs, r1, r2);
+#endif /*defined(FEATURE_IPTE_RANGE_FACILITY)*/
 
     PRIV_CHECK(regs);
+
+    op1 = regs->GR(r1);
+    op2 = regs->GR_L(r2);
+#if defined(FEATURE_IPTE_RANGE_FACILITY)
+    if(FACILITY_ENABLED(IPTE_RANGE,regs) && r3)
+    {
+        op3 = regs->GR_LHLCL(r3);
+
+        if(op3 + ((op2 >> 12) & 0xFF) > 0xFF)
+            ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+    }
+    else
+        op3 = 0;
+#endif /*defined(FEATURE_IPTE_RANGE_FACILITY)*/
 
 #if defined(_FEATURE_SIE)
     if(SIE_STATB(regs, IC0, IPTECSP))
@@ -1532,8 +1556,14 @@ int     r1, r2;                         /* Values of R fields        */
     }
 #endif /*defined(_FEATURE_SIE)*/
 
+#if defined(FEATURE_IPTE_RANGE_FACILITY)
+    /* Invalidate the additional ptes as specfied by op3 */
+    for( ; op3; op3--, op2 += 0x1000)
+       ARCH_DEP(invalidate_pte) (inst[1], op1, op2, regs);
+#endif /*defined(FEATURE_IPTE_RANGE_FACILITY)*/
+
     /* Invalidate page table entry */
-    ARCH_DEP(invalidate_pte) (inst[1], r1, r2, regs);
+    ARCH_DEP(invalidate_pte) (inst[1], op1, op2, regs);
 
 #if defined(_FEATURE_SIE)
     if(SIE_MODE(regs) && regs->sie_scao)
