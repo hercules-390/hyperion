@@ -2073,7 +2073,7 @@ REGS cregs;
 /*-------------------------------------------------------------------*/
 /* Display program status word                                       */
 /*-------------------------------------------------------------------*/
-int display_psw (REGS *regs, char *buf)
+int display_psw (REGS *regs, char *buf, int buflen)
 {
 QWORD   qword;                            /* quadword work area      */
 
@@ -2082,14 +2082,16 @@ QWORD   qword;                            /* quadword work area      */
     if( regs->arch_mode != ARCH_900 )
     {
         copy_psw (regs, qword);
-        return(sprintf(buf, "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",
+        return(snprintf(buf, buflen-1, 
+                "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",
                 qword[0], qword[1], qword[2], qword[3],
                 qword[4], qword[5], qword[6], qword[7]));
     }
     else
     {
         copy_psw (regs, qword);
-        return(sprintf(buf,"%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X "
+        return(snprintf(buf, buflen-1, 
+                "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X "
                 "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",
                 qword[0], qword[1], qword[2], qword[3],
                 qword[4], qword[5], qword[6], qword[7],

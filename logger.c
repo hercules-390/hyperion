@@ -208,7 +208,7 @@ static void logger_logfile_write( void* pBuff, size_t nBytes )
 #endif // defined( OPTION_MSGCLR )
     /* (ignore any errors; we did the best we could) */
     if (nLeft)
-    {      
+    {     
         if ( fwrite( pLeft, nLeft, 1, logger_hrdcpy ) != 1 )
         {
             fprintf(logger_hrdcpy, MSG(HHC02102, "E", "fwrite()",
@@ -305,8 +305,14 @@ int bytes_read;
             if (HSO_EINTR == read_pipe_errno)
                 continue;
 
+            obtain_lock(&logger_lock);
             if(logger_hrdcpy)
-                fprintf(logger_hrdcpy, MSG(HHC02102, "E", "read_pipe()", strerror(read_pipe_errno)));
+            {
+                fprintf(logger_hrdcpy, MSG(HHC02102, "E", "read_pipe()", 
+                                        strerror(read_pipe_errno)));
+            }
+            release_lock(&logger_lock);
+
             bytes_read = 0;
         }
 
@@ -337,7 +343,9 @@ int bytes_read;
                     fwrite( pLeft2, nLeft2, 1, stderr );
             }
         }
-
+        
+        obtain_lock(&logger_lock);
+        
         /* Write log data to hardcopy file */
         if (logger_hrdcpy)
 #if !defined( OPTION_TIMESTAMP_LOGFILE )
@@ -362,7 +370,9 @@ int bytes_read;
             }
 #endif // defined( OPTION_MSGCLR )
             if (nLeft2)
+            {
                 logger_logfile_write( pLeft2, nLeft2 );
+            }
         }
 #else // defined( OPTION_TIMESTAMP_LOGFILE )
         {
@@ -433,6 +443,8 @@ int bytes_read;
                 logger_logfile_write( pLeft, nLeft );
         }
 #endif // !defined( OPTION_TIMESTAMP_LOGFILE )
+        
+        release_lock(&logger_lock);
 
         /* Increment buffer index to next available position */
         logger_currmsg += bytes_read;
@@ -579,18 +591,28 @@ DLL_EXPORT void logger_init(void)
 
 DLL_EXPORT char *log_dsphrdcpy(void)
 {
-    return logger_filename;
+    static char  buf[MAX_PATH+2];
+    static char *pzbuf = buf;
+
+    if ( strchr(logger_filename,SPACE) == NULL )
+        pzbuf = logger_filename;
+    else
+        MSGBUF(buf, "'%s'", logger_filename);
+    
+    return pzbuf;
 }
+
+static char wrk_pathname[MAX_PATH];
 
 DLL_EXPORT void log_sethrdcpy(char *filename)
 {
 FILE *temp_hrdcpy = logger_hrdcpy;
 FILE *new_hrdcpy;
-int   new_hrdcpyfd;
+int   new_hrdcpyfd = -1;
 
     if(!filename)
     {
-        memcpy(logger_filename, '\0', sizeof(logger_filename));
+        bzero(logger_filename, sizeof(logger_filename));
 
         if(!logger_hrdcpy)
         {
@@ -612,10 +634,9 @@ int   new_hrdcpyfd;
     else
     {
         char pathname[MAX_PATH];
-
         hostpath(pathname, filename, sizeof(pathname));
         
-        memcpy(logger_filename, '\0', sizeof(logger_filename));
+        bzero(logger_filename, sizeof(logger_filename));
 
         new_hrdcpyfd = open(pathname,
                 O_WRONLY | O_CREAT | O_TRUNC /* O_SYNC */,
@@ -644,7 +665,14 @@ int   new_hrdcpyfd;
 
                 if(temp_hrdcpy)
                 {
-                    fprintf(temp_hrdcpy, MSG(HHC02104, "I", filename));
+                    char buf[MAX_PATH+2];
+                    char *pzbuf = buf;
+
+                    if ( strchr(filename,SPACE) == NULL )
+                        pzbuf = filename;
+                    else
+                        MSGBUF(buf,"'%s'",filename);
+                    fprintf(temp_hrdcpy, MSG(HHC02104, "I", pzbuf));
                     fclose(temp_hrdcpy);
                 }
             }

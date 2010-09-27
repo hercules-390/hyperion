@@ -228,7 +228,7 @@ struct _ECPSVM_SASTATS
 
 #define SASSIST_PROLOG( _instname) \
     VADR amicblok; \
-    char buf[256]; \
+    char buf[512]; \
     VADR vpswa; \
     BYTE *vpswa_p; \
     REGS vpregs; \
@@ -299,12 +299,12 @@ struct _ECPSVM_SASTATS
     MSGBUF(buf, "SASSIST "#_instname" MICVTMR= %8.8X",micblok.MICVTMR); \
     DEBUG_SASSISTX(_instname,WRMSG(HHC90000, "D", buf)); \
     MSGBUF(buf, "SASSIST "#_instname" Real PSW="); \
-    display_psw(regs, &buf[strlen(buf)]); \
+    display_psw(regs, &buf[strlen(buf)], sizeof(buf)-(int)strlen(buf)); \
     /* Load the Virtual PSW in a temporary REGS structure */ \
     INITPSEUDOREGS(vpregs); \
     ARCH_DEP(load_psw) (&vpregs,vpswa_p); \
-    strcat(buf, " PSW="); \
-    display_psw(&vpregs, &buf[strlen(buf)]); \
+    strlcat(buf, " PSW=", sizeof(buf)-(int)strlen(buf)-1); \
+    display_psw(&vpregs, &buf[strlen(buf)], sizeof(buf)-(int)strlen(buf)); \
     DEBUG_SASSISTX(_instname,WRMSG(HHC90000, "D", buf)); \
 
 
@@ -1113,18 +1113,18 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         work_p=MADDR(RUNPSW,USE_REAL_ADDR,regs,ACCTYPE_WRITE,0); \
         ARCH_DEP(store_psw) (&rregs,work_p);
         MSGBUF(buf, "DISP2 : Entry Real PSW=");
-        display_psw(regs, &buf[strlen(buf)]);
-	DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
+        display_psw(regs, &buf[strlen(buf)], sizeof(buf)-(int)strlen(buf));
+        DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
         ARCH_DEP(load_psw) (regs,work_p);
         MSGBUF(buf, "DISP2 : VMB @ %6.6X Now being dispatched",vmb);
-	DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
+        DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
         MSGBUF(buf, "DISP2 : Real PSW=");
-        display_psw(regs, &buf[strlen(buf)]);
+        display_psw(regs, &buf[strlen(buf)], sizeof(buf)-(int)strlen(buf));
         DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
         MSGBUF(buf, "DISP2 : Virtual PSW=");
-        display_psw(&wregs, &buf[strlen(buf)]);
+        display_psw(&wregs, &buf[strlen(buf)], sizeof(buf)-(int)strlen(buf));
         DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
-	/* TEST */
+        /* TEST */
         ARCH_DEP(purge_tlb)(regs);
         SET_IC_MASK(regs);
         SET_AEA_MODE(regs);
@@ -1132,9 +1132,9 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         SET_PSW_IA(regs);
         /* Dispatch..... */
         MSGBUF(buf, "DISP2 - Next Instruction : %2.2X\n",ARCH_DEP(vfetchb)(regs->psw.IA,USE_PRIMARY_SPACE,regs));
-	display_regs(regs, &buf[strlen(buf)], "HHC90000D ");
+        display_regs(regs, &buf[strlen(buf)], sizeof(buf)-(int)strlen(buf), "HHC90000D ");
         strcat(buf, "\n");
-	display_cregs(regs, &buf[strlen(buf)], "HHC90000D ");
+        display_cregs(regs, &buf[strlen(buf)], sizeof(buf)-(int)strlen(buf), "HHC90000D ");
         DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
         return(2);      /* OK - Perform INTCHECK */
     }
@@ -2252,10 +2252,10 @@ int     ecpsvm_dossm(REGS *regs,int b2,VADR effective_addr2)
     MSGBUF(buf2, "SASSIST SSM Complete : new SM = %2.2X",reqmask);
     DEBUG_SASSISTX(SSM,WRMSG(HHC90000, "D", buf2));
     MSGBUF(buf2, "SASSIST SSM New VIRT ");
-    display_psw(&npregs, &buf2[strlen(buf2)]);
+    display_psw(&npregs, &buf2[strlen(buf2)], sizeof(buf2)-(int)strlen(buf2));
     DEBUG_SASSISTX(LPSW,WRMSG(HHC90000, "D", buf2));
     MSGBUF(buf2, "SASSIST SSM New REAL ");
-    display_psw(regs, &buf2[strlen(buf2)]);
+    display_psw(regs, &buf2[strlen(buf2)], sizeof(buf2)-(int)strlen(buf2));
     DEBUG_SASSISTX(LPSW,WRMSG(HHC90000, "D", buf2));
     SASSIST_HIT(SSM);
     return(0);
@@ -2286,7 +2286,7 @@ int     ecpsvm_dosvc(REGS *regs,int svccode)
     INITPSEUDOREGS(newr);
     ARCH_DEP(load_psw) (&newr, (BYTE *)&psa->svcnew);   /* Ref bit set above */
     MSGBUF(buf, "SASSIST SVC NEW VIRT ");
-    display_psw(&newr, &buf[strlen(buf)]);
+    display_psw(&newr, &buf[strlen(buf)], sizeof(buf)-(int)strlen(buf));
     DEBUG_SASSISTX(SVC,WRMSG(HHC90000, "D", buf));
     /* Get some stuff from the REAL Running PSW to put in OLD SVC PSW */
     SET_PSW_IA(regs);
@@ -2296,7 +2296,7 @@ int     ecpsvm_dosvc(REGS *regs,int svccode)
     vpregs.psw.progmask=regs->psw.progmask;       /* Program Mask        */
     vpregs.psw.intcode=svccode;                   /* SVC Interrupt code  */
     MSGBUF(buf, "SASSIST SVC OLD VIRT ");
-    display_psw(&vpregs, &buf[strlen(buf)]);
+    display_psw(&vpregs, &buf[strlen(buf)], sizeof(buf)-(int)strlen(buf));
     DEBUG_SASSISTX(SVC,WRMSG(HHC90000, "D", buf));
     if(ecpsvm_check_pswtrans(regs,&micblok,micpend,&vpregs,&newr))       /* Check PSW transition capability */
     {
@@ -2370,10 +2370,10 @@ int ecpsvm_dolpsw(REGS *regs,int b2,VADR e2)
                         /* Set ref bit in address pointed by MICBLOK */
     ARCH_DEP(store_psw) (&nregs,vpswa_p);
     MSGBUF(buf, "SASSIST LPSW New VIRT ");
-    display_psw(&nregs, &buf[strlen(buf)]);
+    display_psw(&nregs, &buf[strlen(buf)], sizeof(buf)-(int)strlen(buf));
     DEBUG_SASSISTX(LPSW,WRMSG(HHC90000, "D", buf));
     MSGBUF(buf, "SASSIST LPSW New REAL ");
-    display_psw(regs, &buf[strlen(buf)]);
+    display_psw(regs, &buf[strlen(buf)], sizeof(buf)-(int)strlen(buf));
     DEBUG_SASSISTX(LPSW,WRMSG(HHC90000, "D", buf));
     SASSIST_HIT(LPSW);
     return(0);
@@ -2386,7 +2386,7 @@ int     ecpsvm_virttmr_ext(REGS *regs)
 
     DEBUG_SASSISTX(VTIMER,WRMSG(HHC90000, "D", "SASSIST VTIMER Checking if we can IRPT"));
     MSGBUF(buf, "SASSIST VTIMER Virtual");
-    display_psw(regs, &buf[strlen(buf)]);
+    display_psw(regs, &buf[strlen(buf)], sizeof(buf)-(int)strlen(buf));
     DEBUG_SASSISTX(VTIMER,WRMSG(HHC90000, "D", buf));
     if(IS_IC_ECPSVTIMER(regs))
     {

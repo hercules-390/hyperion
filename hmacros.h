@@ -116,6 +116,9 @@
 /*-------------------------------------------------------------------*/
 /* some handy array/struct macros...                                 */
 /*-------------------------------------------------------------------*/
+#ifndef   bzero
+    #define bzero(_dest,_len) memset(_dest,'\0',_len)
+#endif
 
 #ifndef   _countof
   #define _countof(x)       ( sizeof(x) / sizeof(x[0]) )

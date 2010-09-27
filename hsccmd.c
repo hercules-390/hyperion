@@ -3625,7 +3625,7 @@ char buf[512];
             regs->GR_L(reg_num) = (U32) reg_value;
     }
 
-    display_regs (regs, buf, "HHC02269I ");
+    display_regs (regs, buf, sizeof(buf), "HHC02269I ");
     WRMSG(HHC02269, "I", "General purpose registers");
     writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG), "", "%s", buf);
 
@@ -3657,7 +3657,7 @@ char buf[512];
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    display_fregs (regs, buf, "HHC02270I ");
+    display_fregs (regs, buf, sizeof(buf), "HHC02270I ");
     WRMSG(HHC02270, "I", "Floating point registers");
     writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG), "", "%s", buf);
 
@@ -3735,7 +3735,7 @@ char buf[512];
             regs->CR_G(cr_num) = (U32)cr_value;
     }
 
-    display_cregs (regs, buf, "HHC02271I ");
+    display_cregs (regs, buf, sizeof(buf), "HHC02271I ");
     WRMSG(HHC02271, "I", "Control registers");
     writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG), "", "%s", buf);
 
@@ -3767,7 +3767,7 @@ char buf[384];
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    display_aregs (regs, buf, "HHC02272I ");
+    display_aregs (regs, buf, sizeof(buf), "HHC02272I ");
     WRMSG(HHC02272, "I", "Access registers");
     writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG), "", "%s", buf);
 
@@ -3822,7 +3822,7 @@ U64   newia=0;
 int   newam=0, newas=0, newcc=0, newcmwp=0, newpk=0, newpm=0, newsm=0;
 int   updia=0, updas=0, updcc=0, updcmwp=0, updpk=0, updpm=0, updsm=0;
 int   n, errflag, stopflag=0, modflag=0;
-char  buf[64];
+char  buf[512];
 
     UNREFERENCED(cmdline);
 
@@ -4013,9 +4013,9 @@ char  buf[64];
     }
 
     /* Display the PSW and PSW field by field */
-    display_psw( regs, buf );
-    WRMSG( HHC02278, "I",
-        buf,
+    display_psw( regs, buf, sizeof(buf) );
+    WRMSG( HHC02278, "I", buf );
+    WRMSG( HHC02300, "I",
         regs->psw.sysmask,
         regs->psw.pkey >> 4,
         regs->psw.states,
@@ -5902,7 +5902,7 @@ char buf[1024];
         return -1;
     }
 
-    display_subchannel (dev, buf, "HHC02268I ");
+    display_subchannel (dev, buf, sizeof(buf), "HHC02268I ");
     writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG), "", "%s", buf);
 
     return 0;

@@ -1053,10 +1053,10 @@ cpu.c:123:HABC1234I This is a message
 // reserve 021xx for logger.c
 #define HHC02100 "Logger: log not active"
 #define HHC02101 "Logger: log closed"
-#define HHC02102 "Logger: error in function '%s': '%s'"
+#define HHC02102 "Logger: error in function %s: %s"
 #define HHC02103 "Logger: logger thread terminating"
-#define HHC02104 "Logger: log switched to '%s'"
-#define HHC02105 "Logger: log to '%s'"
+#define HHC02104 "Logger: log switched to %s"
+#define HHC02105 "Logger: log to %s"
 #define HHC02106 "Logger: log switched off"
 
 #define HHC02197 "Symbol name %s is reserved" 
@@ -1141,8 +1141,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02275 "SCSI auto-mount: %s"
 #define HHC02276 "Floating point control register: %08"I32_FMT"X"
 #define HHC02277 "Prefix register: %s"
-#define HHC02278 "Program status word: %s\n" \
-       "          sm=%2.2X pk=%d cmwp=%X as=%s cc=%d pm=%X am=%s ia=%"I64_FMT"X" 
+#define HHC02278 "Program status word: %s"
 #define HHC02279 "%s"
 #define HHC02280 "%s"
 #define HHC02281 "%s"
@@ -1164,6 +1163,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02297 "MIP capping is not enabled"
 #define HHC02298 "%1d:%04X drive is empty"
 #define HHC02299 "Invalid command usage. Type 'help %s' for assistance."
+#define HHC02300 "sm=%2.2X pk=%d cmwp=%X as=%s cc=%d pm=%X am=%s ia=%"I64_FMT"X" 
 
 // reserve 02390 for ieee.c
 #define HHC02390 "Function '%s': unexpectedly converting to '%s'"

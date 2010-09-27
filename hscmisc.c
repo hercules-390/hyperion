@@ -273,7 +273,7 @@ TID tid;
 /* display_cregs and display_aregs                                   */
 /* Ivan Warren 2005/11/07                                            */
 /*-------------------------------------------------------------------*/
-static int display_regs32(char *hdr,U16 cpuad,U32 *r,int numcpus, char *buf, char *msghdr)
+static int display_regs32(char *hdr,U16 cpuad,U32 *r,int numcpus,char *buf,int buflen,char *msghdr)
 {
     int i;
     int len=0;
@@ -283,27 +283,27 @@ static int display_regs32(char *hdr,U16 cpuad,U32 *r,int numcpus, char *buf, cha
         {
             if(i)
             {
-                len+=sprintf(buf+len, "\n");
+                len+=snprintf(buf+len, buflen-len-1, "\n");
             }
-            len+=sprintf(buf+len,msghdr);
+            len+=snprintf(buf+len, buflen-len-1, msghdr);
             if(numcpus>1)
             {
-                len+=sprintf(buf+len,"%s%02X: ", PTYPSTR(cpuad), cpuad);
+                len+=snprintf(buf+len,buflen-len-1,"%s%02X: ", PTYPSTR(cpuad), cpuad);
             }
         }
         if(i%4)
         {
-            len+=sprintf(buf+len," ");
+            len+=snprintf(buf+len,buflen-len-1," ");
         }
-        len+=sprintf(buf+len,"%s%2.2d=%8.8"I32_FMT"X",hdr,i,r[i]);
+        len+=snprintf(buf+len,buflen-len-1,"%s%2.2d=%8.8"I32_FMT"X",hdr,i,r[i]);
     }
-    len+=sprintf(buf+len,"\n");
+    len+=snprintf(buf+len,buflen-len-1,"\n");
     return(len);
 }
 
 #if defined(_900)
 
-static int display_regs64(char *hdr,U16 cpuad,U64 *r,int numcpus, char *buf, char *msghdr)
+static int display_regs64(char *hdr,U16 cpuad,U64 *r,int numcpus,char *buf,int buflen,char *msghdr)
 {
     int i;
     int rpl;
@@ -322,21 +322,21 @@ static int display_regs64(char *hdr,U16 cpuad,U64 *r,int numcpus, char *buf, cha
         {
             if(i)
             {
-                len+=sprintf(buf+len,"\n");
+                len+=snprintf(buf+len,buflen-len-1,"\n");
             }
-            len+=sprintf(buf+len,msghdr);
+            len+=snprintf(buf+len,buflen-len-1,msghdr);
             if(numcpus>1)
             {
-                len+=sprintf(buf+len,"%s%02X: ", PTYPSTR(cpuad), cpuad);
+                len+=snprintf(buf+len,buflen-len-1,"%s%02X: ", PTYPSTR(cpuad), cpuad);
             }
         }
         if(i%rpl)
         {
-            len+=sprintf(buf+len," ");
+            len+=snprintf(buf+len,buflen-len-1," ");
         }
-        len+=sprintf(buf+len,"%s%1.1X=%16.16"I64_FMT"X",hdr,i,r[i]);
+        len+=snprintf(buf+len,buflen-len-1,"%s%1.1X=%16.16"I64_FMT"X",hdr,i,r[i]);
     }
-    len+=sprintf(buf+len,"\n");
+    len+=snprintf(buf+len,buflen-len-1,"\n");
     return(len);
 }
 
@@ -345,7 +345,7 @@ static int display_regs64(char *hdr,U16 cpuad,U64 *r,int numcpus, char *buf, cha
 /*-------------------------------------------------------------------*/
 /* Display registers for the instruction display                     */
 /*-------------------------------------------------------------------*/
-int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, char *hdr)
+int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, int buflen, char *hdr)
 {
     int len=0;
     
@@ -356,22 +356,25 @@ int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, char *hdr
                 || (inst[1] >= 0xE1 && inst[1] <= 0xFE)
            )))
     {
-        len += display_regs (regs, buf + len, hdr);
-        if (sysblk.showregsfirst) len += sprintf(buf + len, "\n");
+        len += display_regs (regs, buf + len, buflen - len - 1, hdr);
+        if (sysblk.showregsfirst) 
+            len += snprintf(buf + len, buflen - len - 1, "\n");
     }
 
     /* Display control registers if appropriate */
     if (!REAL_MODE(&regs->psw) || opcode == 0xB2)
     {
-        len += display_cregs (regs, buf + len, hdr);
-        if (sysblk.showregsfirst) len += sprintf(buf + len, "\n");
+        len += display_cregs (regs, buf + len, buflen - len - 1, hdr);
+        if (sysblk.showregsfirst) 
+            len += snprintf(buf + len, buflen - len - 1, "\n");
     }
 
     /* Display access registers if appropriate */
     if (!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
     {
-        len += display_aregs (regs, buf + len, hdr);
-        if (sysblk.showregsfirst) len += sprintf(buf + len, "\n");
+        len += display_aregs (regs, buf + len, buflen - len - 1, hdr);
+        if (sysblk.showregsfirst) 
+            len += snprintf(buf + len, buflen - len - 1, "\n");
     }
 
     /* Display floating-point registers if appropriate */
@@ -384,8 +387,9 @@ int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, char *hdr
         || (opcode == 0xB2 && inst[1] == 0x45) /*SQER*/
        )
     {
-        len += display_fregs (regs, buf + len, hdr);
-        if (sysblk.showregsfirst) len += sprintf(buf + len, "\n");
+        len += display_fregs (regs, buf + len, buflen - len - 1, hdr);
+        if (sysblk.showregsfirst) 
+            len += snprintf(buf + len, buflen - len - 1, "\n");
     }
     return(len);
 }
@@ -393,7 +397,7 @@ int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, char *hdr
 /*-------------------------------------------------------------------*/
 /* Display general purpose registers                                 */
 /*-------------------------------------------------------------------*/
-int display_regs (REGS *regs, char *buf, char *hdr)
+int display_regs (REGS *regs, char *buf, int buflen, char *hdr)
 {
     int i;
     U32 gprs[16];
@@ -409,7 +413,7 @@ int display_regs (REGS *regs, char *buf, char *hdr)
         {
             gprs[i]=regs->GR_L(i);
         }
-        return(display_regs32("GR",regs->cpuad,gprs,sysblk.cpus,buf,hdr));
+        return(display_regs32("GR",regs->cpuad,gprs,sysblk.cpus,buf,buflen,hdr));
 #if defined(_900)
     }
     else
@@ -418,7 +422,7 @@ int display_regs (REGS *regs, char *buf, char *hdr)
         {
             ggprs[i]=regs->GR_G(i);
         }
-        return(display_regs64("R",regs->cpuad,ggprs,sysblk.cpus,buf,hdr));
+        return(display_regs64("R",regs->cpuad,ggprs,sysblk.cpus,buf,buflen,hdr));
     }
 #endif
 
@@ -428,7 +432,7 @@ int display_regs (REGS *regs, char *buf, char *hdr)
 /*-------------------------------------------------------------------*/
 /* Display control registers                                         */
 /*-------------------------------------------------------------------*/
-int display_cregs (REGS *regs, char *buf, char *hdr)
+int display_cregs (REGS *regs, char *buf, int buflen, char *hdr)
 {
     int i;
     U32 crs[16];
@@ -444,7 +448,7 @@ int display_cregs (REGS *regs, char *buf, char *hdr)
         {
             crs[i]=regs->CR_L(i);
         }
-        return(display_regs32("CR",regs->cpuad,crs,sysblk.cpus,buf,hdr));
+        return(display_regs32("CR",regs->cpuad,crs,sysblk.cpus,buf,buflen,hdr));
 #if defined(_900)
     }
     else
@@ -453,7 +457,7 @@ int display_cregs (REGS *regs, char *buf, char *hdr)
         {
             gcrs[i]=regs->CR_G(i);
         }
-        return(display_regs64("C",regs->cpuad,gcrs,sysblk.cpus,buf,hdr));
+        return(display_regs64("C",regs->cpuad,gcrs,sysblk.cpus,buf,buflen,hdr));
     }
 #endif
 
@@ -463,7 +467,7 @@ int display_cregs (REGS *regs, char *buf, char *hdr)
 /*-------------------------------------------------------------------*/
 /* Display access registers                                          */
 /*-------------------------------------------------------------------*/
-int display_aregs (REGS *regs, char *buf, char *hdr)
+int display_aregs (REGS *regs, char *buf, int buflen, char *hdr)
 {
     int i;
     U32 ars[16];
@@ -472,7 +476,7 @@ int display_aregs (REGS *regs, char *buf, char *hdr)
     {
         ars[i]=regs->AR(i);
     }
-    return(display_regs32("AR",regs->cpuad,ars,sysblk.cpus,buf,hdr));
+    return(display_regs32("AR",regs->cpuad,ars,sysblk.cpus,buf,buflen,hdr));
 
 } /* end function display_aregs */
 
@@ -480,17 +484,17 @@ int display_aregs (REGS *regs, char *buf, char *hdr)
 /*-------------------------------------------------------------------*/
 /* Display floating point registers                                  */
 /*-------------------------------------------------------------------*/
-int display_fregs (REGS *regs, char *buf, char *hdr)
+int display_fregs (REGS *regs, char *buf, int buflen, char *hdr)
 {
 char cpustr[32] = "";               
 
     if(sysblk.cpus>1)
-        snprintf(cpustr, 32, "%s%s%02X: ", hdr, PTYPSTR(regs->cpuad), regs->cpuad);
+        MSGBUF(cpustr, "%s%s%02X: ", hdr, PTYPSTR(regs->cpuad), regs->cpuad);
     else
-        snprintf(cpustr, 32, hdr);
+        MSGBUF(cpustr, "%s", hdr);
 
     if(regs->CR(0) & CR0_AFP)
-        return(sprintf(buf,
+        return(snprintf(buf,buflen-1,
             "%sFPR0=%8.8X%8.8X FPR2=%8.8X%8.8X\n"
             "%sFPR1=%8.8X%8.8X FPR3=%8.8X%8.8X\n"
             "%sFPR4=%8.8X%8.8X FPR6=%8.8X%8.8X\n"
@@ -509,7 +513,7 @@ char cpustr[32] = "";
             ,cpustr, regs->fpr[26], regs->fpr[27], regs->fpr[30], regs->fpr[31]
         ));
     else
-        return(sprintf(buf,
+        return(snprintf(buf,buflen-1,
             "%sFPR0=%8.8X%8.8X FPR2=%8.8X%8.8X\n"
             "%sFPR4=%8.8X%8.8X FPR6=%8.8X%8.8X\n"
             ,cpustr, regs->fpr[0], regs->fpr[1], regs->fpr[2], regs->fpr[3]
@@ -522,25 +526,27 @@ char cpustr[32] = "";
 /*-------------------------------------------------------------------*/
 /* Display subchannel                                                */
 /*-------------------------------------------------------------------*/
-int display_subchannel (DEVBLK *dev, char *buf, char *hdr)
+int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
 {
-    char devstr[64] = {0};      /* "0:0000 D/T0000" */
+    char devstr[128] = {0};      /* "0:0000 D/T0000" */
     struct BITS { U8 b7:1; U8 b6:1; U8 b5:1; U8 b4:1; U8 b3:1; U8 b2:1; U8 b1:1; U8 b0:1; };
     union ByteToBits { struct BITS b; U8 status; } u;
     int len = 0;
     
-    snprintf(devstr, 64, "%s%1d:%04X D/T%04X", hdr, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->devtype);
+    MSGBUF(devstr, "%s%1d:%04X D/T%04X", hdr, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->devtype);
 
     if (ARCH_370 == sysblk.arch_mode)
     {
-        len+=sprintf(buf+len,"%s CSW Flags:%2.2X CCW:%2.2X%2.2X%2.2X "
+        len+=snprintf(buf+len,buflen-len-1,
+                "%s CSW Flags:%2.2X CCW:%2.2X%2.2X%2.2X "
                 "US:%2.2X CS:%2.2X Count:%2.2X%2.2X\n",
                 devstr,
                 dev->csw[0], dev->csw[1], dev->csw[2], dev->csw[3],
                 dev->csw[4], dev->csw[5], dev->csw[6], dev->csw[7]);
 
         u.status = (U8)dev->csw[4];
-        len+=sprintf(buf+len,"%s    Unit Status    %s%s%s%s%s%s%s%s%s\n", hdr,
+        len+=snprintf(buf+len,buflen-len-1,"%s    Unit Status    %s%s%s%s%s%s%s%s%s\n", 
+            hdr,
             u.status == 0 ? "is Normal" : "",
             u.b.b0 ? "Attention " : "",
             u.b.b1 ? "SM " : "",
@@ -552,7 +558,8 @@ int display_subchannel (DEVBLK *dev, char *buf, char *hdr)
             u.b.b7 ? "UE " : "");
 
         u.status = (U8)dev->csw[5];
-        len+=sprintf(buf+len,"%s    Channel Status %s%s%s%s%s%s%s%s%s\n", hdr,
+        len+=snprintf(buf+len,buflen-len-1,"%s    Channel Status %s%s%s%s%s%s%s%s%s\n", 
+            hdr,
             u.status == 0 ? "is Normal" : "",
             u.b.b0 ? "PCI " : "",
             u.b.b1 ? "IL " : "",
@@ -566,7 +573,8 @@ int display_subchannel (DEVBLK *dev, char *buf, char *hdr)
     } 
     else 
     {
-        len+=sprintf(buf+len,"%s Subchannel Number[%04X]\n"
+        len+=snprintf(buf+len,buflen-len-1,
+                "%s Subchannel Number[%04X]\n"
                 "%s    Path Management Control Word (PMCW)\n"
                 "%s  IntParm:%2.2X%2.2X%2.2X%2.2X\n"
                 "%s    Flags:%2.2X%2.2X        Dev:%2.2X%2.2X\n"
@@ -591,7 +599,8 @@ int display_subchannel (DEVBLK *dev, char *buf, char *hdr)
                 hdr,dev->pmcw.zone, dev->pmcw.flag25,
                 dev->pmcw.flag26, dev->pmcw.flag27);
 
-        len+=sprintf(buf+len,"%s    Subchannel Status Word (SCSW)\n"
+        len+=snprintf(buf+len,buflen-len-1,
+                "%s    Subchannel Status Word (SCSW)\n"
                 "%s    Flags:%2.2X%2.2X SCHC:%2.2X%2.2X "
                     "DS:%2.2X SS:%2.2X Count:%2.2X%2.2X "
                     "CCW:%2.2X%2.2X%2.2X%2.2X\n",
@@ -603,7 +612,8 @@ int display_subchannel (DEVBLK *dev, char *buf, char *hdr)
                 dev->scsw.ccwaddr[2], dev->scsw.ccwaddr[3]);
 
         u.status = (U8)dev->scsw.unitstat;
-        len+=sprintf(buf+len,"%s    Device Status     %s%s%s%s%s%s%s%s%s\n", 
+        len+=snprintf(buf+len,buflen-len-1,
+            "%s    Device Status     %s%s%s%s%s%s%s%s%s\n", 
             hdr, u.status == 0 ? "is Normal" : "",
             u.b.b0 ? "Attention " : "",
             u.b.b1 ? "SM " : "",
@@ -615,7 +625,8 @@ int display_subchannel (DEVBLK *dev, char *buf, char *hdr)
             u.b.b7 ? "UE " : "");
         
         u.status = (U8)dev->scsw.chanstat;
-        len+=sprintf(buf+len,"%s    Subchannel Status %s%s%s%s%s%s%s%s%s\n", 
+        len+=snprintf(buf+len,buflen-len-1,
+            "%s    Subchannel Status %s%s%s%s%s%s%s%s%s\n", 
             hdr, u.status == 0 ? "is Normal" : "",
             u.b.b0 ? "PCI " : "",
             u.b.b1 ? "IL " : "",
@@ -1014,14 +1025,14 @@ char    buf[512];
           raddr, inst[0], inst[1]);
         if(ilc > 2)
         {
-            len += snprintf(buf + len, sizeof(buf)-len, "%2.2X%2.2X", inst[2], inst[3]);
+            len += snprintf(buf + len, sizeof(buf)-len-1, "%2.2X%2.2X", inst[2], inst[3]);
             if(ilc > 4)
-                len += snprintf(buf + len, sizeof(buf)-len, "%2.2X%2.2X ", inst[4], inst[5]);
+                len += snprintf(buf + len, sizeof(buf)-len-1, "%2.2X%2.2X ", inst[4], inst[5]);
             else
-                len += snprintf(buf + len, sizeof(buf)-len, "     ");
+                len += snprintf(buf + len, sizeof(buf)-len-1, "     ");
         }
         else
-            len += snprintf(buf + len, sizeof(buf)-len, "         ");
+            len += snprintf(buf + len, sizeof(buf)-len-1, "         ");
         DISASM_INSTRUCTION(inst, buf + len);
         WRMSG(HHC02289, "I", buf);
         saddr += ilc;
@@ -1155,19 +1166,19 @@ char    buf[512];                       /* Message buffer            */
         {
             xcode = ARCH_DEP(virt_to_abs) (&raddr, &stid, vaddr, arn,
                                             regs, ACCTYPE_LRA);
-            n = snprintf (buf, sizeof(buf), "V:"F_VADR" ", vaddr);
+            n = snprintf (buf, sizeof(buf)-1, "V:"F_VADR" ", vaddr);
             if (REAL_MODE(&regs->psw))
-                n += snprintf (buf+n, sizeof(buf)-n, "(dat off)");
+                n += snprintf (buf+n, sizeof(buf)-n-1, "(dat off)");
             else if (stid == TEA_ST_PRIMARY)
-                n += snprintf (buf+n, sizeof(buf)-n, "(primary)");
+                n += snprintf (buf+n, sizeof(buf)-n-1, "(primary)");
             else if (stid == TEA_ST_SECNDRY)
-                n += snprintf (buf+n, sizeof(buf)-n, "(secondary)");
+                n += snprintf (buf+n, sizeof(buf)-n-1, "(secondary)");
             else if (stid == TEA_ST_HOME)
-                n += snprintf (buf+n, sizeof(buf)-n, "(home)");
+                n += snprintf (buf+n, sizeof(buf)-n-1, "(home)");
             else
-                n += snprintf (buf+n, sizeof(buf)-n, "(AR%2.2d)", arn);
+                n += snprintf (buf+n, sizeof(buf)-n-1, "(AR%2.2d)", arn);
             if (xcode == 0)
-                n += snprintf (buf+n, sizeof(buf)-n, " R:"F_RADR, raddr);
+                n += snprintf (buf+n, sizeof(buf)-n-1, " R:"F_RADR, raddr);
             WRMSG(HHC02291, "I", buf);
         }
         ARCH_DEP(display_virt) (regs, vaddr, buf, arn, ACCTYPE_LRA, "");
@@ -1201,7 +1212,7 @@ REGS   *regs;                           /* Copied regs               */
         buf[0] = '\0';
     }
     else
-        n = snprintf(buf, sizeof(buf), "HHC02267I ");
+        n = snprintf(buf, sizeof(buf)-1, "HHC02267I ");
 
     if (iregs->ghostregs)
         regs = iregs;
@@ -1210,16 +1221,16 @@ REGS   *regs;                           /* Copied regs               */
 
   #if defined(_FEATURE_SIE)
     if(SIE_MODE (regs))
-        n += snprintf (buf + n, sizeof(buf)-n, "SIE: ");
+        n += snprintf (buf + n, sizeof(buf)-n-1, "SIE: ");
   #endif /*defined(_FEATURE_SIE)*/
 
 #if 0
 #if _GEN_ARCH == 370
-    n += snprintf (buf + n, sizeof(buf)-n, "S/370 ");
+    n += snprintf (buf + n, sizeof(buf)-n-1, "S/370 ");
 #elif _GEN_ARCH == 390
-    n += snprintf (buf + n, sizeof(buf)-n, "ESA/390 ");
+    n += snprintf (buf + n, sizeof(buf)-n-1, "ESA/390 ");
 #else
-    n += snprintf (buf + n, sizeof(buf)-n, "z/Arch ");
+    n += snprintf (buf + n, sizeof(buf)-n-1, "z/Arch ");
 #endif
 #endif
 
@@ -1228,13 +1239,13 @@ REGS   *regs;                           /* Copied regs               */
     copy_psw (regs, qword);
 
     if ( sysblk.cpus > 1 )
-        n += snprintf (buf + n, sizeof(buf)-n, "%s%02X: ", PTYPSTR(regs->cpuad), regs->cpuad);
-    n += snprintf (buf + n, sizeof(buf)-n, 
+        n += snprintf (buf + n, sizeof(buf)-n-1, "%s%02X: ", PTYPSTR(regs->cpuad), regs->cpuad);
+    n += snprintf (buf + n, sizeof(buf)-n-1, 
                 "PSW=%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X ",
                 qword[0], qword[1], qword[2], qword[3],
                 qword[4], qword[5], qword[6], qword[7]);
   #if defined(FEATURE_ESAME)
-    n += snprintf (buf + n, sizeof(buf)-n, 
+    n += snprintf (buf + n, sizeof(buf)-n-1, 
                 "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X ",
                 qword[8], qword[9], qword[10], qword[11],
                 qword[12], qword[13], qword[14], qword[15]);
@@ -1243,12 +1254,12 @@ REGS   *regs;                           /* Copied regs               */
     /* Exit if instruction is not valid */
     if (inst == NULL)
     {
-        n += snprintf(buf + n, sizeof(buf)-n, "Instruction fetch error\n");
+        n += snprintf(buf + n, sizeof(buf)-n-1, "Instruction fetch error\n");
 
         if ( sysblk.emsg & EMSG_TEXT )
-            n += display_regs (regs, buf + n, "");
+            n += display_regs (regs, buf + n, sizeof(buf)-n-1, "");
         else
-            n += display_regs (regs, buf + n, "HHC02267I ");
+            n += display_regs (regs, buf + n, sizeof(buf)-n-1, "HHC02267I ");
 
         if (!iregs->ghostregs) free(regs);
         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG), "", "%s", buf);
@@ -1263,18 +1274,18 @@ REGS   *regs;                           /* Copied regs               */
     if (sysblk.showregsfirst)
     {
         if ( sysblk.emsg & EMSG_TEXT )
-            n += display_inst_regs (regs, inst, opcode, buf + n, "");
+            n += display_inst_regs (regs, inst, opcode, buf + n, sizeof(buf)-n, "");
         else
-            n += display_inst_regs (regs, inst, opcode, buf + n, "HHC02267I ");
+            n += display_inst_regs (regs, inst, opcode, buf + n, sizeof(buf)-n, "HHC02267I ");
     }
 
     /* Display the instruction */
-    n += snprintf (buf + n, sizeof(buf)-n, "INST=%2.2X%2.2X", inst[0], inst[1]);
-    if (ilc > 2) n += snprintf (buf + n, sizeof(buf)-n, "%2.2X%2.2X", inst[2], inst[3]);
-    if (ilc > 4) n += snprintf (buf + n, sizeof(buf)-n, "%2.2X%2.2X", inst[4], inst[5]);
-    n += snprintf (buf + n, sizeof(buf)-n, " %s", (ilc<4) ? "        " : (ilc<6) ? "    " : "");
+    n += snprintf (buf + n, sizeof(buf)-n-1, "INST=%2.2X%2.2X", inst[0], inst[1]);
+    if (ilc > 2) n += snprintf (buf + n, sizeof(buf)-n-1, "%2.2X%2.2X", inst[2], inst[3]);
+    if (ilc > 4) n += snprintf (buf + n, sizeof(buf)-n-1, "%2.2X%2.2X", inst[4], inst[5]);
+    n += snprintf (buf + n, sizeof(buf)-n-1, " %s", (ilc<4) ? "        " : (ilc<6) ? "    " : "");
     n += DISASM_INSTRUCTION(inst, buf + n);
-    n += snprintf (buf + n, sizeof(buf)-n, "\n");
+    n += snprintf (buf + n, sizeof(buf)-n-1, "\n");
 
 #ifdef DISPLAY_INSTRUCTION_OPERANDS
 
@@ -1384,14 +1395,14 @@ REGS   *regs;                           /* Copied regs               */
                                  opcode == 0xB1 ? ACCTYPE_LRA :
                                                   ACCTYPE_READ),"");
         if ( !(sysblk.emsg & EMSG_TEXT) )
-            n += snprintf(buf+n, sizeof(buf)-n, "HHC02267I ");
+            n += snprintf(buf+n, sizeof(buf)-n-1, "HHC02267I ");
 
         if ( sysblk.cpus > 1 )
         {
-            n += snprintf(buf + n, sizeof(buf)-n, "%s%02X: ", 
+            n += snprintf(buf + n, sizeof(buf)-n-1, "%s%02X: ", 
                           PTYPSTR(regs->cpuad), regs->cpuad );
         }
-        n += snprintf(buf+n, sizeof(buf)-n, "%s\n", buf2);
+        n += snprintf(buf+n, sizeof(buf)-n-1, "%s\n", buf2);
     }
 
     /* Display storage at second storage operand location */
@@ -1410,14 +1421,14 @@ REGS   *regs;                           /* Copied regs               */
                                         ACCTYPE_READ, "");
 
         if ( !(sysblk.emsg & EMSG_TEXT) )
-            n += snprintf(buf+n, sizeof(buf)-n, "HHC02267I ");
+            n += snprintf(buf+n, sizeof(buf)-n-1, "HHC02267I ");
         
         if ( sysblk.cpus > 1 )
         {
-            n += snprintf(buf + n, sizeof(buf)-n, "%s%02X: ", 
+            n += snprintf(buf + n, sizeof(buf)-n-1, "%s%02X: ", 
                           PTYPSTR(regs->cpuad), regs->cpuad );
         }
-        n += snprintf(buf + n, sizeof(buf)-n, "%s\n", buf2);
+        n += snprintf(buf + n, sizeof(buf)-n-1, "%s\n", buf2);
     }
 
 #endif /*DISPLAY_INSTRUCTION_OPERANDS*/
@@ -1426,9 +1437,9 @@ REGS   *regs;                           /* Copied regs               */
     if (!sysblk.showregsfirst && !sysblk.showregsnone)
     {
         if ( sysblk.emsg & EMSG_TEXT )
-            n += display_inst_regs (regs, inst, opcode, buf + n, "");
+            n += display_inst_regs (regs, inst, opcode, buf + n, sizeof(buf)-n, "");
         else
-            n += display_inst_regs (regs, inst, opcode, buf + n, "HHC02267I ");
+            n += display_inst_regs (regs, inst, opcode, buf + n, sizeof(buf)-n, "HHC02267I ");
     }
 
     if (!iregs->ghostregs)
