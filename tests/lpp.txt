@@ -1,0 +1,15 @@
+* LPP test $Id: lpp.txt 5304 2009-03-31 14:06:29Z rbowler $
+sysclear           
+archmode ESAME
+archlvl  ena load_prog_param
+r 000=0008000000000200                 # EC mode restart PSW
+r 068=000A00000000DEAD                 # EC mode pgm new PSW
+r 1a0=00000001800000000000000000000200 # z/Arch restart PSW
+r 1d0=0002000180000000000000000000DEAD # z/Arch pgm new PSW
+r 200=B2800400     # LPP 0(400)        Load Program Parameter 
+r 204=82000300     # LPSW WAITPSW      Load enabled wait PSW
+r 300=070A000000FED0D0                 # WAITPSW Enabled wait state PSW
+r 400=C8C5D9C3E4D3C5E2		       # HERCULES
+ostailor null
+restart
+ 
