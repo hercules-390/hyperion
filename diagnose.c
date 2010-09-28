@@ -310,7 +310,7 @@ U32   code;
     /* Diagnose 060: Virtual Machine Storage Size                    */
     /*---------------------------------------------------------------*/
         /* Load main storage size in bytes into R1 register */
-        regs->GR_L(r1) = sysblk.mainsize;
+        regs->GR_L(r1) = regs->mainlim + 1;
         break;
 
     case 0x064:
