@@ -1431,8 +1431,9 @@ typedef struct _MBK {
 #define STFL_MSA_EXTENSION_1    (STFL_HBASE+1)
 #define STFL_MSA_EXTENSION_2    (STFL_HBASE+2)
 #define STFL_PROBSTATE_DIAGF08  (STFL_HBASE+3)
+#define STFL_SIGP_SETARCH_S370  (STFL_HBASE+4)
 
-#define STFL_HMAX               (STFL_HBASE+3)
+#define STFL_HMAX               (STFL_HBASE+4)
 #define STFL_HBYTESIZE (((STFL_HMAX+8))/8)
 #define STFL_HDWRDSIZE ((STFL_HBYTESIZE+7)/8)
 

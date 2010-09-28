@@ -6111,20 +6111,23 @@ static char *ordername[] = {
 #if defined(FEATURE_HERCULES_DIAGCALLS)
 
                     case 37:
-
-                        if(sysblk.arch_mode == ARCH_370)
-                            status = SIGP_STATUS_INVALID_PARAMETER;
-                        else
+                        if(FACILITY_ENABLED(SIGP_SETARCH_S370,regs))
                         {
-                            sysblk.arch_mode = ARCH_370;
-                            set_arch = 1;
+                            if(sysblk.arch_mode == ARCH_370)
+                                status = SIGP_STATUS_INVALID_PARAMETER;
+                            else
+                            {
+                                sysblk.arch_mode = ARCH_370;
+                                set_arch = 1;
+                            }
                         }
+                        else
+                            status = SIGP_STATUS_INVALID_ORDER;
                         break;
 
 #endif /*defined(FEATURE_HERCULES_DIAGCALLS)*/
 
                     default:
-                        PTT(PTT_CL_ERR,"*SIGP",parm,cpad,order);
                         status |= SIGP_STATUS_INVALID_PARAMETER;
                 } /* end switch(parm & 0xFF) */
             } /* end if(!status) */
@@ -6158,7 +6161,6 @@ static char *ordername[] = {
 #endif /*defined(FEATURE_SENSE_RUNNING_STATUS)*/
 
         default:
-            PTT(PTT_CL_ERR,"*SIGP",parm,cpad,order);
             status = SIGP_STATUS_INVALID_ORDER;
         } /* end switch(order) */
 
@@ -6171,6 +6173,9 @@ static char *ordername[] = {
 
     /* Release the interrupt lock */
     RELEASE_INTLOCK(regs);
+
+    if(status)
+        PTT(PTT_CL_ERR,"*SIGP",parm,cpad,order);
 
     /* If status is non-zero, load the status word into
        the R1 register and return condition code 1 */
