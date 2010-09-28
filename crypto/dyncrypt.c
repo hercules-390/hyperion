@@ -1431,7 +1431,7 @@ static void ARCH_DEP(km_xts_aes)(int r1, int r2, REGS *regs)
   LOGBYTE("k     :", parameter_block, keylen);
   if(wrap)
     LOGBYTE("wkvp  :", &parameter_block[keylen], 32);
-  LOGBYTE("xtsp  :", &parameter_block[parameter_blocklen - 16], 32);
+  LOGBYTE("xtsp  :", &parameter_block[parameter_blocklen - 16], 16);
 #endif
 
   /* Verify and unwrap */
@@ -1476,7 +1476,7 @@ static void ARCH_DEP(km_xts_aes)(int r1, int r2, REGS *regs)
     
     /* Store the output and XTSP */
     ARCH_DEP(vstorec)(message_block, 15, GR_A(r1, regs), r1, regs);
-    ARCH_DEP(vstorec)(&parameter_block[parameter_blocklen - 16], 15, GR_A(1, regs), 1, regs);
+    ARCH_DEP(vstorec)(&parameter_block[parameter_blocklen - 16], 15, GR_A(1, regs) + parameter_blocklen - 16, 1, regs);
 
 #ifdef OPTION_KM_DEBUG
     LOGBYTE("output:", message_block, 16);
@@ -1492,7 +1492,7 @@ static void ARCH_DEP(km_xts_aes)(int r1, int r2, REGS *regs)
 #ifdef OPTION_KM_DEBUG
     WRMSG(HHC90108, "D", r1, (regs)->GR(r1));
     WRMSG(HHC90108, "D", r2, (regs)->GR(r2));
-    WRMSG(HHC90108, "D", (regs)->GR(r2 + 1));
+    WRMSG(HHC90108, "D", r2 + 1, (regs)->GR(r2 + 1));
 #endif
 
     /* check for end of data */
