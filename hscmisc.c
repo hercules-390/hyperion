@@ -120,7 +120,6 @@ static void cancel_wait_sigq()
 static void do_shutdown_now()
 {
     WRMSG(HHC01420, "I");
-    if ( sysblk.config_done )
 
     ASSERT( !sysblk.shutfini );  // (sanity check)
 
