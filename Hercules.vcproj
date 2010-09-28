@@ -1877,6 +1877,18 @@
 							>
 						</File>
 						<File
+							RelativePath=".\msvc.makefile.includes\REXX_DIR.msvc"
+							>
+						</File>
+						<File
+							RelativePath=".\msvc.makefile.includes\REXX_FLAGS.msvc"
+							>
+						</File>
+						<File
+							RelativePath=".\msvc.makefile.includes\REXX_RULES.msvc"
+							>
+						</File>
+						<File
 							RelativePath=".\msvc.makefile.includes\VERSION.msvc"
 							>
 						</File>
