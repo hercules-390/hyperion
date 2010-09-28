@@ -1,27 +1,18 @@
 # ***************************************************************************
 #     BZIP2_RULES.msvc      (!INCLUDE ed by "makefile-dllmod.msvc")
 # --------------------------------------------------------------------------
-# (c) Copyright Roger Bowler, 2005-2007
+# (c) Copyright Roger Bowler, 2005-2010
 # --------------------------------------------------------------------------
 # $Id$
 #
-#  BZIP2 build rules...
-#
-#
-#                           CHANGE HISTORY
-# $Log$
-#
-# DD/MM/YY Description
-#
-# 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
-# 07/02/10 Fish: allHercules.
+#  BZIP2 build rules
 #
 # ***************************************************************************
 
 !IFDEF BZIP2_DIR
 
 $(X)libbz2.dll:
-    XCOPY "$(BZIP2_DLL)" $(X) /V /C /F /H /R /K /O /X /Y
+    XCOPY "$(BZIP2_DLL)" $(X) /V /C /F /H /R /K /Y
 
 alllibbz2: allHercules \
     $(X)libbz2.dll

@@ -1,27 +1,18 @@
 # ***************************************************************************
 #     ZLIB_RULES.msvc      (!INCLUDE ed by "makefile-dllmod.msvc")
 # --------------------------------------------------------------------------
-# (c) Copyright Roger Bowler, 2005-2007
+# (c) Copyright Roger Bowler, 2005-2010
 # --------------------------------------------------------------------------
 # $Id$
 #
-#  ZLIB build rules...
-#
-#
-#                           CHANGE HISTORY
-# $Log$
-#
-# DD/MM/YY Description
-#
-# 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
-# 07/02/10 Fish: allHercules.
+#  ZLIB build rules
 #
 # ***************************************************************************
 
 !IFDEF ZLIB_DIR
 
 $(X)zlib1.dll:
-    XCOPY "$(ZLIB_DLL)" $(X) /V /C /F /H /R /K /O /X /Y
+    XCOPY "$(ZLIB_DLL)" $(X) /V /C /F /H /R /K /Y
 
 allzlib: allHercules \
     $(X)zlib1.dll
