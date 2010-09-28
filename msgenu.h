@@ -390,8 +390,9 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00463 "%1d:%04X CKD file '%s': creating %4.4X volume %s: %u sectors, %u bytes/sector"
 #define HHC00464 "%1d:%04X CKD file '%s': file size too large: %"I64_FMT"ud [%d]"
 #define HHC00465 "%1d:%04X CKD file '%s': creating %4.4X compressed volume %s: %u sectors, %u bytes/sector"
-#define HHC00466 "Maximum of %u %s in %u 2GB file(s) supported"
-#define HHC00467 "Maximum %s supported is %u" 
+#define HHC00466 "Maximum of %u %s in %u 2GB file(s) is supported"
+#define HHC00467 "Maximum %s supported is %u"
+#define HHC00468 "For larger capacity DASD volumes, use %s"
 
 // reserve 005xx for fba dasd device related messages 
 #define HHC00500 "%1d:%04X FBA file: name missing or invalid filename length"

@@ -1720,7 +1720,30 @@ U32             trksize;                /* DASD image track length   */
     if (volcyls < mincyls || volcyls > maxcyls)
     {
         if (comp == 0xff && !lfs)
+        {
+            char    msgbuf[128];
+
+#if defined(HAVE_LIBZ) && defined(CCKD_BZIP2)
+            char   *pszcomp     = " or zlib/bzip2 compression";
+#elif defined(HAVE_LIBZ)
+            char   *pszcomp     = " or zlib compression";
+#elif defined(CCKD_BZIP2)
+            char   *pszcomp     = " or bzip2 compression";
+#else
+            char   *pszcomp     = "";
+#endif
+            char   *pszopt;
+
             fprintf( stderr, MSG(HHC00466, "I", maxcyls, "cylinders", CKD_MAXFILES) );
+                        
+            if ( strlen(pszcomp) > 0 )
+                pszopt = "related options";
+            else
+                pszopt = "option";
+
+            MSGBUF(msgbuf, "-lfs%s %s", pszcomp, pszopt );
+            fprintf( stderr, MSG(HHC00468, "I", msgbuf) );
+        }
 
         fprintf (stderr, MSG(HHC00461, "E", 0, 0, fname,
                 "cylinder", volcyls, mincyls, maxcyls));
