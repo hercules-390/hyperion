@@ -3342,7 +3342,7 @@ int panrate_cmd(int argc, char *argv[], char *cmdline)
                 return -1;
             }
         }
-        if ( sysblk.config_done || MLVL(VERBOSE) )
+        if ( MLVL(VERBOSE) )
             WRMSG(HHC02204, "I", argv[0], argv[1] );
     }
     else
@@ -9408,10 +9408,11 @@ FILE   *scrfp;                          /* RC file pointer           */
 int     scrbufsize = 1024;              /* Size of RC file  buffer   */
 char   *scrbuf = NULL;                  /* RC file input buffer      */
 int     scrlen;                         /* length of RC file record  */
-//int     scr_pause_amt = 0;              /* seconds to pause RC file  */
+int     scr_pause_amt = 0;              /* seconds to pause RC file  */
 int     lineno = 0;
 char   *p;                              /* (work)                    */
 char    pathname[MAX_PATH];             /* (work)                    */
+int i;
 
     /* Check the recursion level - if it exceeds a certain amount
        abort the script stack
@@ -9500,6 +9501,32 @@ char    pathname[MAX_PATH];             /* (work)                    */
         if ((p = strchr(scrbuf,'#')) && p > scrbuf)
             do *p = 0; while (isspace(*--p) && p >= scrbuf);
 
+        if ( !strncasecmp(scrbuf,"pause",5) )
+        {
+            sscanf(scrbuf+5, "%d", &scr_pause_amt);
+
+            if (scr_pause_amt < 0 || scr_pause_amt > 999)
+            {
+                WRMSG(HHC02261, "W",scrbuf+5);
+                continue;
+            }
+
+            if (MLVL(VERBOSE))
+                WRMSG(HHC02262, "I",scr_pause_amt);
+            for( i = scr_pause_amt; i > 0; i--)
+            {
+                SLEEP(1);
+                if (scr_uaborted) break;
+            }
+            if (!scr_uaborted)
+            {
+                if (MLVL(VERBOSE))
+                    WRMSG(HHC02263, "I");
+            }
+
+            continue;
+        }
+
         /* Process the command */
 
         for (p = scrbuf; isspace(*p); p++);
@@ -9540,48 +9567,6 @@ rexx_done:
     return 0;
 }
 
-/*-------------------------------------------------------------------*/
-/* pause command - sleep for n seconds                               */
-/*-------------------------------------------------------------------*/
-int pause_cmd(int argc, char *argv[], char *cmdline)
-{
-    UNREFERENCED(cmdline);
-    if ( argc != 2 )
-        WRMSG( HHC01455, "E", argv[0] );
-    else if ( argc == 2 )
-    {
-        int     sleepamt = 0;
-        BYTE    c;                      /* Character work area       */
-
-        if (sscanf(argv[1], "%d%c", &sleepamt, &c) != 1 || sleepamt < 1 || sleepamt > 999 )
-            WRMSG(HHC02205, "E", argv[1], "" );
-        else
-        {
-            if (sysblk.impltid != thread_id() )
-            {
-                int i;
-                if (MLVL(VERBOSE))
-                    WRMSG(HHC02262, "I",sleepamt);
-                for( i = sleepamt; i > 0; i--)
-                {
-                    SLEEP(1);
-                    if (scr_uaborted) break;
-                }
-                if (!scr_uaborted)
-                {
-                    if (MLVL(VERBOSE))
-                        WRMSG(HHC02263, "I");
-                }
-            }
-            else
-            {
-                WRMSG(HHC02261, "I", argv[0] );
-            }
-        }
-    }
-
-    return 0;
-}
 
 /*-------------------------------------------------------------------*/
 /* msglevel command                                                  */
