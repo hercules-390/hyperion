@@ -121,46 +121,12 @@ static void do_shutdown_now()
 {
     WRMSG(HHC01420, "I");
     if ( sysblk.config_done )
-    {
-        char*   pszCurrIntervalStartDateTime;
-        char*   pszCurrentDateTime;
-        char    buf[128];
-        time_t  current_time;
-
-        current_time = time( NULL );
-
-        pszCurrIntervalStartDateTime = strdup( ctime( &curr_int_start_time ) );
-        pszCurrIntervalStartDateTime[strlen(pszCurrIntervalStartDateTime) - 1] = 0;
-        pszCurrentDateTime           = strdup( ctime(    &current_time     ) );
-        pszCurrentDateTime[strlen(pszCurrentDateTime) - 1] = 0;
-
-        WRMSG(HHC02272, "I", "Highest observed MIPS and IO/s rates");
-        MSGBUF( buf, "  from %s", pszCurrIntervalStartDateTime);
-        WRMSG(HHC02272, "I", buf);
-        MSGBUF( buf, "    to %s", pszCurrentDateTime);
-        WRMSG(HHC02272, "I", buf);
-        MSGBUF( buf, "  MIPS: %d.%02d  IO/s: %d", 
-                    curr_high_mips_rate / 1000000,
-                    curr_high_mips_rate % 1000000, 
-                    curr_high_sios_rate );
-        WRMSG(HHC02272, "I", buf);
-
-        free( pszCurrIntervalStartDateTime );
-        free( pszCurrentDateTime           );
-    }
 
     ASSERT( !sysblk.shutfini );  // (sanity check)
 
     sysblk.shutfini = FALSE;  // (shutdown NOT finished yet)
 
-    obtain_lock(&sysblk.msglock);
     sysblk.shutdown = TRUE;  // (system shutdown initiated)
-    if ( sysblk.config_done )
-    {
-        set_screen_color(stdout, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
-        set_screen_color(stderr, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
-    }
-    release_lock(&sysblk.msglock);
 
     WRMSG(HHC01421, "I");
 
