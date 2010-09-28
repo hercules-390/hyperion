@@ -4552,6 +4552,75 @@ int codepage_cmd(int argc, char *argv[], char *cmdline)
     return rc;
 }
 
+/*-------------------------------------------------------------------
+ * cpupdt command       User code page management
+ *
+ * cpupdt alt ebcdic|ascii (p,v)    modify user pages
+ * cpupdt ref codepage              copy existing page to user area
+ * cpupdt del                       delete user area contents
+ * cpupdt dsp ebcdic|ascii          display user pages
+ * cpupdt imp ebcdic|ascii filename import filename to user table 
+ * cpupdt exp ebcdic|ascii filename export filename to user table 
+ *
+ *-------------------------------------------------------------------*/
+int cpupdt_cmd(int argc, char *argv[], char *cmdline)
+{
+    int     rc = 0;
+
+    UNREFERENCED(cmdline);
+
+
+    if ( argc == 2 && CMD(argv[1],del,3) )
+    {
+        argc--;
+        argv++;
+
+        rc = update_codepage( argc, argv, argv[0] );
+    }
+    else if ( ( argc == 2 || argc == 3 ) && CMD(argv[1],ref,3) )
+    {
+        argc--;
+        argv++;
+
+        rc = update_codepage( argc, argv, argv[0] );
+    }
+    else if ( ( argc == 3 ) && CMD(argv[1],dsp,3) ) 
+    { 
+        argc--;
+        argv++;
+
+        rc = update_codepage( argc, argv, argv[0] );
+    }
+    else if ( ( argc == 4 || argc == 6 ) && CMD(argv[1],alt,3) )
+    {
+        argc--;
+        argv++;
+
+        rc = update_codepage( argc, argv, argv[0] );
+    }
+    else if ( ( argc == 4 || argc == 6 ) && CMD(argv[1],exp,3) )
+    {
+        argc--;
+        argv++;
+
+        rc = update_codepage( argc, argv, argv[0] );
+    }
+    else if ( ( argc == 4 || argc == 6 ) && CMD(argv[1],imp,3) )
+    {
+        argc--;
+        argv++;
+
+        rc = update_codepage( argc, argv, argv[0] );
+    }
+    else
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        rc = -1;
+    }
+
+    return rc;
+}
+
 
 #if defined(OPTION_SET_STSI_INFO)
 /*-------------------------------------------------------------------*/
@@ -8996,6 +9065,8 @@ int sizeof_cmd(int argc, char *argv[], char *cmdline)
     WRMSG(HHC02257, "I", "(long long) .......",sizeof(long long));
     WRMSG(HHC02257, "I", "(size_t) ..........",sizeof(size_t));
     WRMSG(HHC02257, "I", "(off_t) ...........",sizeof(off_t));
+    WRMSG(HHC02257, "I", "FILENAME_MAX ......",FILENAME_MAX);
+    WRMSG(HHC02257, "I", "PATH_MAX ..........",PATH_MAX);
     WRMSG(HHC02257, "I", "SYSBLK ............",sizeof(SYSBLK));
     WRMSG(HHC02257, "I", "REGS ..............",sizeof(REGS));
     WRMSG(HHC02257, "I", "REGS (copy len) ...",sysblk.regs_copy_len);
@@ -9003,9 +9074,8 @@ int sizeof_cmd(int argc, char *argv[], char *cmdline)
     WRMSG(HHC02257, "I", "DEVBLK ............",sizeof(DEVBLK));
     WRMSG(HHC02257, "I", "TLB entry .........",sizeof(TLB)/TLBN);
     WRMSG(HHC02257, "I", "TLB table .........",sizeof(TLB));
-    WRMSG(HHC02257, "I", "FILENAME_MAX ......",FILENAME_MAX);
-    WRMSG(HHC02257, "I", "PATH_MAX ..........",PATH_MAX);
     WRMSG(HHC02257, "I", "CPU_BITMAP ........",sizeof(CPU_BITMAP));
+    WRMSG(HHC02257, "I", "STFL_BYTESIZE .....",STFL_BYTESIZE);
     return 0;
 }
 

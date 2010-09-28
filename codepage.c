@@ -15,6 +15,20 @@
 
 #include "hercules.h"
 
+/* space for user modifiable tables */
+static unsigned char user_h_to_g[256];
+static int user_h_to_g_filled = FALSE;
+
+static unsigned char user_g_to_h[256];
+static int user_g_to_h_filled = FALSE;
+
+static int user_in_use = FALSE;
+
+/* internal routines */
+static int import_file( char *fn, char *buf, int buflen);
+static int export_file( char *fn, char *buf, int buflen);
+static void imp_exp_error( char *fn, char *cmd, char *tab, int err);
+
 static unsigned char    /* ISO/ANSI ASCII to CECP 037 */
 ind$file_a_to_e[] = {
       "\x00\x01\x02\x03\x37\x2D\x2E\x2F\x16\x05\x25\x0B\x0C\x0D\x0E\x0F"
@@ -998,6 +1012,7 @@ static CPCONV cpconv[] = {
     { "1252/1047",  cp_1252_to_1047,  cp_1047_to_1252  },
     { "1252/1140",  cp_1252_to_1140,  cp_1140_to_1252  },
     { "ISOANSI/037",ind$file_a_to_e,  ind$file_e_to_a  }, /* CECP 037 to ISO/ANSI ASCII */
+    { "user",       user_h_to_g,      user_g_to_h      },
     { NULL,         ascii_to_ebcdic,  ebcdic_to_ascii  }
 };
 
@@ -1101,9 +1116,18 @@ DLL_EXPORT void set_codepage(char *name)
              name = "default";
     }
 
+    if( strcasecmp(name,"user") == 0 && user_in_use == FALSE )
+    {
+        WRMSG( HHC01477, "W" );
+        name = "default";
+    }
+
     for(codepage_conv = cpconv; 
         codepage_conv->name && strcasecmp(codepage_conv->name,name);
         codepage_conv++);
+
+    if( strcasecmp(codepage_conv->name,"user") == 0 && user_in_use == FALSE )
+        codepage_conv++;
 
     if(codepage_conv->name)
     {
@@ -1131,6 +1155,332 @@ DLL_EXPORT void set_codepage(char *name)
     }
 }
 
+DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
+{   
+    int rc = 0;
+    
+    if ( CMD(cmd,alt,3) )
+    {
+        int     addargc;
+        char   *strtok_str = "";
+
+        char   *p;
+        char    buf[256];
+        unsigned int pos[16] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
+        unsigned int val[16] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
+        int     cnt = -1;
+        int     arg2ok = FALSE;
+
+        if ( argv[2][0] == '(' && argv[2][strlen(argv[2])-1] == ')' )
+        {
+            int     x;
+            BYTE    c;
+
+            p = argv[2];
+            p++;
+
+            strlcpy(buf,p,sizeof(buf));
+            buf[strlen(buf)-1] = '\0';
+
+            for( addargc = 0; ; addargc++ )
+            {
+                if ( cnt >= 15 )
+                {
+                    rc = -1;
+                    break;
+                }
+
+                if ( addargc == 0 )
+                    p = strtok_r(buf,",",&strtok_str );
+                else
+                    p = strtok_r(NULL,",",&strtok_str );
+
+                if ( p == NULL ) 
+                    break;
+
+                if ( sscanf(p, "%x%c", &x, &c) != 1 || x > 255 || x < 0 ) 
+                {
+                    rc = -1;
+                    break;
+                }
+
+                if ( ( addargc % 2 ) == 0 )
+                    pos[++cnt] = (unsigned int)x;
+                else
+                    val[cnt] = (unsigned int)x;
+            }
+
+            if ( ( addargc % 2 ) == 0 && rc == 0 ) 
+                arg2ok = TRUE;
+        }
+        
+        /* at this point we have pairs of strings */
+
+        if ( arg2ok && CMD(argv[1],ebcdic,1) )
+        {
+            int i;
+
+            WRMSG( HHC01487, "I", "ebcdic" );
+
+            for( i = 0; i <= cnt; i++ )
+            {
+                WRMSG( HHC01488, "I", pos[i], user_g_to_h[pos[i]], val[i] );
+                user_g_to_h[pos[i]] = val[i];
+            }
+        }
+        else if ( arg2ok && CMD(argv[1],ascii,1) )
+        {
+            int i;
+
+            WRMSG( HHC01487, "I", "ascii" );
+
+            for( i = 0; i <= cnt; i++ )
+            {
+                WRMSG( HHC01488, "I", pos[i], user_h_to_g[pos[i]], val[i] );
+                user_h_to_g[pos[i]] = val[i];
+            }
+        }
+        else
+        {
+            WRMSG( HHC17000, "E" );
+            rc = -1;
+        }
+    }
+    else if ( CMD(cmd,exp,3) )
+    {
+        int     writecnt;
+        char   *fn;
+
+        /* validate options */
+        if ( ( argc == 3 && ( CMD(argv[1],ebcdic,1) || CMD(argv[1],ascii,1) ) ) || 
+             ( argc == 5 && ( CMD(argv[3],ebcdic,1) || CMD(argv[3],ascii,1) ) ) )
+        {
+            if ( ( argc == 3 && CMD(argv[1],ebcdic,1) ) ||
+                 ( argc == 5 && CMD(argv[3],ebcdic,1) ) )
+            {
+                if ( !user_g_to_h_filled )
+                {
+                    WRMSG( HHC01483, "E", "ebcdic" );
+                    rc = -1;
+                    return rc;
+                }
+
+                if ( argc == 3 ) 
+                    fn = argv[2];
+                else 
+                    fn = argv[4];
+                
+
+                writecnt = export_file( fn, user_g_to_h, sizeof(user_g_to_h) );
+                
+                if ( writecnt != sizeof(user_g_to_h) )
+                {
+                    imp_exp_error( fn, "exporting", "ebcdic", writecnt );
+                }
+            }
+            if ( ( argc == 3 && CMD(argv[1],ascii,1) ) ||
+                 ( argc == 5 && CMD(argv[3],ascii,1) ) )
+            {
+                if ( !user_h_to_g_filled )
+                {
+                    WRMSG( HHC01483, "E", "ascii" );
+                    rc = -1;
+                    return rc;
+                }
+
+                if ( argc == 3 ) 
+                    fn = argv[2];
+                else 
+                    fn = argv[4];
+                
+                writecnt = export_file( fn, user_h_to_g, sizeof(user_h_to_g) );
+                
+                if ( writecnt != sizeof(user_h_to_g) )
+                {
+                    imp_exp_error( fn, "exporting", "ascii", writecnt );
+                }
+            }
+        }
+        else
+        {
+            WRMSG( HHC17000, "E" );
+            rc = -1;
+        }
+    }
+    else if ( CMD(cmd,imp,3) )
+    {
+        char    readbuf[sizeof(user_g_to_h)];
+        int     readcnt;
+        char   *fn;
+
+        /* validate options */
+        if ( ( argc == 3 && ( CMD(argv[1],ebcdic,1) || CMD(argv[1],ascii,1) ) ) || 
+             ( argc == 5 && ( CMD(argv[3],ebcdic,1) || CMD(argv[3],ascii,1) ) ) )
+        {
+            if ( ( argc == 3 && CMD(argv[1],ebcdic,1) ) ||
+                 ( argc == 5 && CMD(argv[3],ebcdic,1) ) )
+            {
+                if ( argc == 3 ) 
+                    fn = argv[2];
+                else 
+                    fn = argv[4];
+                
+                readcnt = import_file( fn, readbuf, sizeof(readbuf) );
+                
+                if ( readcnt == sizeof(readbuf) )
+                {
+                    memcpy(user_g_to_h,readbuf,sizeof(user_g_to_h));
+                    user_g_to_h_filled = TRUE;
+                }
+                else
+                {
+                    imp_exp_error( fn, "importing", "ebcdic", readcnt );
+                }
+            }
+            if ( ( argc == 3 && CMD(argv[1],ascii,1) ) ||
+                 ( argc == 5 && CMD(argv[3],ascii,1) ) )
+            {
+                if ( argc == 3 ) 
+                    fn = argv[2];
+                else 
+                    fn = argv[4];
+
+                readcnt = import_file( fn, readbuf, sizeof(readbuf) );
+                
+                if ( readcnt == sizeof(readbuf) )
+                {
+                    memcpy(user_h_to_g,readbuf,sizeof(user_h_to_g));
+                    user_h_to_g_filled = TRUE;
+                }
+                else
+                {
+                    imp_exp_error( fn, "importing", "ascii", readcnt );
+                }
+            }
+            if ( user_h_to_g_filled && user_g_to_h_filled )
+                user_in_use = TRUE;
+            else
+                user_in_use = FALSE;
+        }
+        else
+        {
+            WRMSG( HHC17000, "E" );
+            rc = -1;
+        }
+    }
+    else if ( CMD(cmd,del,3) )
+    {
+        bzero(user_h_to_g,sizeof(user_h_to_g));
+        user_h_to_g_filled = FALSE;
+        bzero(user_g_to_h,sizeof(user_g_to_h));
+        user_g_to_h_filled = FALSE;
+        user_in_use = FALSE;
+        WRMSG( HHC01479, "I" );
+    }
+    else if ( CMD(cmd,dsp,3) )
+    {
+        char   *tbl = NULL;
+        char   *tblname = NULL;
+        int     g_to_h = FALSE; 
+        char    hbuf[64];
+        BYTE    cbuf[17];
+        int     i, j, o;
+        BYTE    c;
+
+        if ( CMD(argv[1],ebcdic,1) )
+        {
+            tbl     = user_g_to_h;
+            tblname = "ebcdic";
+            g_to_h  = FALSE;
+        }
+        else if ( CMD(argv[1],ascii,1) )
+        {
+            tbl     = user_h_to_g;
+            tblname = "ascii";
+            g_to_h  = TRUE;
+        }
+        else 
+        {
+            WRMSG( HHC17000, "E" );
+            rc = -1;
+        }
+        
+        if ( rc == 0 )
+        {
+            WRMSG( HHC01484, "I", tblname );
+            WRMSG( HHC01485, "I" );
+            for( o = 0; o < 256; o += 16 )
+            {
+                memset (hbuf, SPACE, sizeof(hbuf));
+                memset (cbuf, SPACE, sizeof(cbuf));
+
+                for (i = 0, j = 0; i < 16; i++)
+                {
+                    c = tbl[o+i];
+                    if ( (i & 0x3) == 0x0 ) hbuf[j++] = SPACE;
+                    j += snprintf( hbuf+j, sizeof(hbuf)-j, "%2.2X", c );
+                    if ( g_to_h) c = guest_to_host(c);
+                    cbuf[i] = ( !isprint(c) ? '.' : c );
+                } /* end for(i) */
+                WRMSG( HHC01486, "I", ( ( o >> 4 ) & 0xf ), hbuf, cbuf, ( ( o >> 4 ) & 0xf ) ); 
+            }
+        }
+        return rc;
+    }
+    else if ( CMD(cmd,ref,3) )
+    {
+        CPCONV *cpref = cpconv;
+        if ( argc == 2 && !CMD(argv[1],user,4) )
+        {
+            for(cpref = cpconv; 
+                cpref->name && strcasecmp(cpref->name,argv[1]);
+                cpref++);
+
+            if(cpref->name)
+            {
+                memcpy(user_h_to_g,cpref->h2g,sizeof(user_h_to_g)); 
+                user_h_to_g_filled = TRUE;
+                memcpy(user_g_to_h,cpref->g2h,sizeof(user_g_to_h));
+                user_g_to_h_filled = TRUE;
+                user_in_use = TRUE;
+                WRMSG( HHC01478, "I", cpref->name );
+            }
+            else
+            {
+                WRMSG (HHC01475, "E", argv[1]);
+                rc = -1;
+            }
+        }
+
+        if ( argc == 1 || rc == -1 )
+        {
+            int i;
+            
+            WRMSG( HHC01481, "I" );
+            for ( i = 0; ; i += 2 )
+            {
+
+                if ( cpref[i].name == NULL ||
+                     CMD(cpref[i].name,user,4) ) break;
+
+                WRMSG( HHC01482, "I", 
+                        cpref[i].name,
+                        cpref[i+1].name == NULL ? "" : 
+                            CMD(cpref[i+1].name,user,4) ? "" :
+                            cpref[i+1].name );
+                if ( cpref[i+1].name == NULL ||
+                     CMD(cpref[i+1].name,user,4) ) break;
+            }
+        }
+    }
+    else
+    {
+        WRMSG( HHC17000, "E" );
+        rc = -1;
+    }
+
+    return rc;
+}
 
 DLL_EXPORT unsigned char host_to_guest (unsigned char byte)
 {
@@ -1167,4 +1517,100 @@ size_t inbytes = 1, outbytes = 1;
     else
 #endif /*defined(HAVE_ICONV)*/
         return codepage_conv->g2h[byte];
+}
+
+static int import_file(char *fn, char *buf, int buflen)
+{
+    FILE   *binfile;
+    char    readbuf[512];
+    size_t  readcnt;
+    int     errno_i = 0;
+    int     rc = 0;
+
+    binfile = fopen( fn, "rb" );
+    if ( binfile != NULL )
+    {
+        readcnt = fread(readbuf, 1, sizeof(readbuf), binfile);
+
+        if ( readcnt == 0 )
+            errno_i = errno;
+
+        fclose(binfile);
+        if ( readcnt == buflen )
+        {
+            memcpy(buf,readbuf,buflen);
+            rc = (int)readcnt;
+        }
+        else
+        {
+            rc = ( errno_i + 2000 ) * -1;            
+        }
+    }
+    else
+    {
+        rc = ( errno + 1000) * -1;
+    }
+
+    return rc;
+}
+
+static int export_file(char *fn, char *buf, int buflen)
+{
+    FILE   *binfile;
+    size_t  writecnt;
+    int     rc = 0;
+    int     errno_i = 0;
+
+    binfile = fopen( fn, "wb" );
+    if ( binfile != NULL )
+    {
+        writecnt = fwrite(buf, 1, (size_t)buflen, binfile);
+        if ( writecnt == 0 )
+            errno_i = errno;
+
+        fclose(binfile);
+        
+        rc = ( (int)writecnt == buflen ? (int)writecnt : ( errno_i + 3000 ) * -1 );
+    }
+    else
+    {
+        rc = ( errno + 1000) * -1;
+    }
+
+    return rc;
+}
+
+static void imp_exp_error( char *fn, char *cmd, char *tab, int err)
+{
+    int     errno_i = err;
+    char   *fun = "";
+    char    msgbuf[FILENAME_MAX+3];
+
+
+    if ( errno_i < 0 )
+        errno_i *= -1;
+    if ( errno_i >= 1000 && errno_i <= 1999 )
+    {
+        fun = "fopen()";
+        errno_i -= 1000;
+    }
+    else if ( errno_i >= 2000 && errno_i <= 2999 )
+    {
+        fun = "fread()";
+        errno_i -= 2000;
+    }
+    if ( errno_i >= 3000 && errno_i <= 3999 )
+    {
+        fun = "fwrite()";
+        errno_i -= 3000;
+    }
+
+    if ( strchr(fn,SPACE) == NULL )
+        MSGBUF( msgbuf, "%s", fn );
+    else
+        MSGBUF( msgbuf, "'%s'", fn );
+
+    WRMSG( HHC01480, "E", cmd, tab, msgbuf, 
+                        ( errno_i != 0 ? strerror(errno_i) : "file size != 256") );
+    return;
 }

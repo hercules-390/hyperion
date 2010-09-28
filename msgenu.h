@@ -889,6 +889,18 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01475 "Codepage conversion table '%s' is not defined"
 #define HHC01476 "Codepage is '%s'"
 #define HHC01477 "Codepage 'user' is not available; 'default' selected"
+#define HHC01478 "Codepage '%s' copied to 'user'"
+#define HHC01479 "Codepage 'user' is deleted"
+#define HHC01480 "Codepage: Error %s %s table data file %s; %s"
+#define HHC01481 "Codepage: Valid conversion tables are:"
+#define HHC01482 "Codepage: %-10.10s %-10.10s"
+#define HHC01483 "Codepage: 'user' %s table is empty"
+#define HHC01484 "Codepage: Displaying user table %s"
+#define HHC01485 "Codepage:     _0_1_2_3 _4_5_6_7 _8_9_A_B _C_D_E_F  0...4...8...C..."
+#define HHC01486 "Codepage: %01.1X_ %36.36s  %16.16s  %01.1X_"
+#define HHC01487 "Codepage: Alerting user table %s"
+#define HHC01488 "Codepage: Pos[%02.2X] was %02.2X is %02.2X"
+#define HHC01489 "Codepage: function not implemented yet"
 
 // reserve 015xx for Hercules dynamic loader      
 /* hdl.c */
@@ -1628,7 +1640,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC04110 "Maximum device threads (devtmax) of %d exceeded by %d"
 #define HHC04111 "%1d:%04X Function %s failed: '[%02d] %s'"
 
-// reserve 17000-17099 messages for QUERY and SET functions
+// reserve 17000-17499 messages command processing
 #define HHC17000 "Missing or invalid argument(s)"
 #define HHC17001 "Server '%12s' is listening %s"
 #define HHC17002 "Server '%12s' is inactive"

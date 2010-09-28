@@ -440,11 +440,33 @@ COMMAND("pgmprdos",  CONFIG,        SYSCMDALL,          pgmprdos_cmd,
     NULL)
 
 COMMAND("codepage",  PANEL+CONFIG,  SYSCMDALL,          codepage_cmd, 
-  "Set/display codepage conversion table", 
-    "Format: \"codepage [cp]\"\n"
+  "Set/display code page conversion table", 
+    "Format: 'codepage [cp]'\n"
     "If no operand is specified, the current codepage is displayed.\n"
-    "If 'cp' is specified, then codepage is set to the specified page\n"
+    "If 'cp' is specified, then code page is set to the specified page\n"
     "if the page is valid.\n")
+
+COMMAND("cpupdt",   PANEL+CONFIG,   SYSCMDALL,          cpupdt_cmd,
+  "Create/Modify user character conversion table",
+    "Format: 'cpupdt cmd [operands]'\n"
+    "  alt ebcdic|ascii (p,v)    - alter the user ebcdic|ascii table\n"
+    "                              value at hex Position to hex Value\n"
+    "                              16 pairs of hex digits may be specified\n"
+    "                              within the parens.\n"
+    "  del                       - delete user cp table\n"
+    "  dsp ebcdic|ascii          - display user Ebcdic|Ascii table\n"
+    "  exp ebcdic|ascii filename - export contents of user table to file\n"
+    "  imp ebcdic|ascii filename - import file contents into user table\n"
+    "  ref [cp]                  - copy codepage to user tables\n"
+    "                              if cp is not specified, a list of\n"
+    "                              valid codepage tables is generated\n"
+    "\n"
+    "To activate the user table, enter the command 'codepage user'\n"
+    "\n"
+    "Note: ebcdic refers to guest to host translation\n"
+    "      ascii refers to host to guest translation\n"
+    "      These terms are used for historical purposes and do not\n"
+    "      represent the literal term.\n")
 
 COMMAND("diag8cmd",  CONFIG,        SYSCMDALL,          diag8_cmd,    
   "Set diag8 command option", 
