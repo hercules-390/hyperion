@@ -32,10 +32,10 @@
 
 #if defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)                /*810*/
 /*-------------------------------------------------------------------*/
-/* Perform Interlocked Add                                           */
+/* Perform Interlocked Storage Immediate Operation                   */
 /* Subroutine called by ASI and ALSI instructions                    */
 /*-------------------------------------------------------------------*/
-DEF_INST(perform_interlocked_add)                               /*810*/
+DEF_INST(perform_interlocked_storage_immediate)                 /*810*/
 {
 BYTE    opcode;                         /* 2nd byte of opcode        */
 BYTE    i2;                             /* Immediate byte            */
@@ -92,13 +92,13 @@ int     rc;                             /* Return code               */
     /* Set condition code in PSW */
     regs->psw.cc = cc;
 
-} /* end DEF_INST(perform_interlocked_add) */
+} /* end DEF_INST(perform_interlocked_storage_immediate) */
 
 /*-------------------------------------------------------------------*/
-/* Perform Interlocked Add Long                                      */
+/* Perform Interlocked Long Storage Immediate Operation              */
 /* Subroutine called by AGSI and ALGSI instructions                  */
 /*-------------------------------------------------------------------*/
-DEF_INST(perform_interlocked_add_long)                          /*810*/
+DEF_INST(perform_interlocked_long_storage_immediate)            /*810*/
 {
 BYTE    opcode;                         /* 2nd byte of opcode        */
 BYTE    i2;                             /* Immediate byte            */
@@ -155,7 +155,7 @@ int     rc;                             /* Return code               */
     /* Set condition code in PSW */
     regs->psw.cc = cc;
 
-} /* end DEF_INST(perform_interlocked_add_long) */
+} /* end DEF_INST(perform_interlocked_long_storage_immediate) */
 #endif /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)*/         /*810*/
 
 /*-------------------------------------------------------------------*/
@@ -163,6 +163,7 @@ int     rc;                             /* Return code               */
 /*-------------------------------------------------------------------*/
 DEF_INST(add_immediate_storage)
 {
+#if !defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)               /*810*/
 BYTE    i2;                             /* Immediate byte            */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
@@ -183,6 +184,10 @@ int     cc;                             /* Condition Code            */
     /* Update Condition Code */
     regs->psw.cc = cc;
 
+#else /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)*/          /*810*/
+    ARCH_DEP(perform_interlocked_storage_immediate) (inst, regs);
+#endif /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)*/         /*810*/
+
     /* Program check if fixed-point overflow */
     if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
@@ -195,6 +200,7 @@ int     cc;                             /* Condition Code            */
 /*-------------------------------------------------------------------*/
 DEF_INST(add_immediate_long_storage)
 {
+#if !defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)               /*810*/
 BYTE    i2;                             /* Immediate byte            */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
@@ -215,6 +221,10 @@ int     cc;                             /* Condition Code            */
     /* Update Condition Code */
     regs->psw.cc = cc;
 
+#else /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)*/          /*810*/
+    ARCH_DEP(perform_interlocked_long_storage_immediate) (inst, regs);
+#endif /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)*/         /*810*/
+
     /* Program check if fixed-point overflow */
     if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
@@ -227,6 +237,7 @@ int     cc;                             /* Condition Code            */
 /*-------------------------------------------------------------------*/
 DEF_INST(add_logical_with_signed_immediate)
 {
+#if !defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)               /*810*/
 BYTE    i2;                             /* Immediate byte            */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
@@ -249,6 +260,10 @@ int     cc;                             /* Condition Code            */
     /* Update Condition Code */
     regs->psw.cc = cc;
 
+#else /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)*/          /*810*/
+    ARCH_DEP(perform_interlocked_storage_immediate) (inst, regs);
+#endif /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)*/         /*810*/
+
 } /* end DEF_INST(add_logical_with_signed_immediate) */
 
 
@@ -257,6 +272,7 @@ int     cc;                             /* Condition Code            */
 /*-------------------------------------------------------------------*/
 DEF_INST(add_logical_with_signed_immediate_long)
 {
+#if !defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)               /*810*/
 BYTE    i2;                             /* Immediate byte            */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
@@ -278,6 +294,10 @@ int     cc;                             /* Condition Code            */
 
     /* Update Condition Code */
     regs->psw.cc = cc;
+
+#else /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)*/          /*810*/
+    ARCH_DEP(perform_interlocked_long_storage_immediate) (inst, regs);
+#endif /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)*/         /*810*/
 
 } /* end DEF_INST(add_logical_with_signed_immediate_long) */
 
