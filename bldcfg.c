@@ -837,7 +837,7 @@ int             msglevel = FALSE;       /* indicator for msglevel
             if(ProcessConfigCommand (addargc, addargv, addcmdline))
             {
                 errorcount++;
-                WRMSG(HHC01441, "E", inc_stmtnum[inc_level], fname, addargv[0]);
+                WRMSG(HHC01441, "E", inc_stmtnum[inc_level], fname, addcmdline);
             }
 
         } /* end else (not old-style CPU statement) */

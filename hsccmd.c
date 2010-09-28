@@ -9039,14 +9039,27 @@ int ecpsvm_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int herclogo_cmd(int argc,char *argv[], char *cmdline)
 {
+    int rc = 0;
     UNREFERENCED(cmdline);
-    if(argc<2)
+    
+    if( argc < 2 )
     {
         sysblk.logofile=NULL;
         clearlogo();
         return 0;
     }
-    return readlogo(argv[1]);
+    if ( argc > 3 )
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        return -1;
+    }
+
+    rc = readlogo(argv[1]);
+    
+    if ( rc == -1 && MLVL(VERBOSE) )
+        WRMSG( HHC01430, "E", "fopen()", strerror(errno) );
+
+    return rc;
 }
 
 
