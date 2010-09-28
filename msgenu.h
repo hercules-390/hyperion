@@ -898,7 +898,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01484 "Codepage: Displaying user table %s"
 #define HHC01485 "Codepage:     _0_1_2_3 _4_5_6_7 _8_9_A_B _C_D_E_F  0...4...8...C..."
 #define HHC01486 "Codepage: %01.1X_ %36.36s  %16.16s  %01.1X_"
-#define HHC01487 "Codepage: Alerting user table %s"
+#define HHC01487 "Codepage: Altering user table %s"
 #define HHC01488 "Codepage: Pos[%02.2X] was %02.2X is %02.2X"
 #define HHC01489 "Codepage: function not implemented yet"
 
