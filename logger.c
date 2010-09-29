@@ -608,8 +608,6 @@ DLL_EXPORT char *log_dsphrdcpy(void)
     return pzbuf;
 }
 
-static char wrk_pathname[MAX_PATH];
-
 DLL_EXPORT void log_sethrdcpy(char *filename)
 {
 FILE *temp_hrdcpy = logger_hrdcpy;

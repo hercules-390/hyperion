@@ -484,6 +484,7 @@ static void append_string(char **bfr,char *text,int *ix_p,int *max_p)
     return;
 }
 
+#if FALSE
 static void append_symbol(char **bfr,char *sym,int *ix_p,int *max_p)
 {
     char *txt;
@@ -495,6 +496,7 @@ static void append_symbol(char **bfr,char *sym,int *ix_p,int *max_p)
     append_string(bfr,txt,ix_p,max_p);
     return;
 }
+#endif
 
 DLL_EXPORT char *resolve_symbol_string(const char *text)
 {
