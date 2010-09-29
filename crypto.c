@@ -210,7 +210,7 @@ void renew_wrapping_keys(void)
 {
   int i;
   U64 time;
-  char *s = "Hercules-390";
+  BYTE lparname[8];
 
   obtain_lock(&sysblk.wklock);
   time = host_tod();
@@ -221,8 +221,9 @@ void renew_wrapping_keys(void)
     sysblk.wkdea_reg[i] = random();
   memset(sysblk.wkvpaes_reg, 0, 32);
   memset(sysblk.wkvpdea_reg, 0, 24);
-  strcpy((char *) sysblk.wkvpaes_reg, s);
-  strcpy((char *) sysblk.wkvpdea_reg, s);
+  get_lparname(lparname);
+  memcpy((char *) sysblk.wkvpaes_reg, lparname, 8);
+  memcpy((char *) sysblk.wkvpdea_reg, lparname, 8);
   for(i = 0; i < 8; i++)
   {
     sysblk.wkvpaes_reg[31 - i] = time;

@@ -1666,8 +1666,8 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
     SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - 8);
 
 #ifdef OPTION_KMAC_DEBUG
-    WRMSG(HHC90108, "D", (regs)->GR(r2));
-    WRMSG(HHC90108, "D", (regs)->GR(r2 + 1));
+    WRMSG(HHC90108, "D", r2, (regs)->GR(r2));
+    WRMSG(HHC90108, "D", r2 + 1, (regs)->GR(r2 + 1));
 #endif
 
     /* check for end of data */
@@ -1754,7 +1754,7 @@ static void ARCH_DEP(kmac_aes)(int r1, int r2, REGS *regs)
     ARCH_DEP(vfetchc)(message_block, 15, GR_A(r2, regs), r2, regs);
 
 #ifdef OPTION_KMAC_DEBUG
-    LOGBYTE("input :", message_block, 15);
+    LOGBYTE("input :", message_block, 16);
 #endif
 
     /* XOR the message with chaining value */
@@ -1768,7 +1768,7 @@ static void ARCH_DEP(kmac_aes)(int r1, int r2, REGS *regs)
     ARCH_DEP(vstorec)(parameter_block, 15, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KMAC_DEBUG
-    LOGBYTE("ocv   :", parameter_block, 15);
+    LOGBYTE("ocv   :", parameter_block, 16);
 #endif
 
     /* Update the registers */
@@ -4126,7 +4126,8 @@ DEF_INST(perform_cryptographic_key_management_operations_d)
   ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_PCKMO_DEBUG
-  LOGBYTE("input :", parameter_block, parameter_blocklen);
+  LOGBYTE("key in : ", parameter_block, keylen);
+  LOGBYTE("wkvp   : ", &parameter_block[keylen], parameter_blocklen - keylen);
 #endif
       
   /* Encrypt the key and fill the wrapping key verification pattern */
@@ -4158,7 +4159,8 @@ DEF_INST(perform_cryptographic_key_management_operations_d)
   ARCH_DEP(vstorec)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_PCKMO_DEBUG
-  LOGBYTE("output:", parameter_block, parameter_blocklen);
+  LOGBYTE("key out: ", parameter_block, keylen);
+  LOGBYTE("wkvp   : ", &parameter_block[keylen], parameter_blocklen - keylen);
 #endif
 }
 #endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
