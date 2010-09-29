@@ -261,6 +261,15 @@ U32   code;
         break;
 #endif
 
+#if 0
+    case 0x288;:
+    /*---------------------------------------------------------------*/
+    /* Diagnose 288: Control Virtual Machine Time Bomb               */
+    /*---------------------------------------------------------------*/
+        regs->psw.cc = ARCH_DEP(vm_timebomb) (r1, r2, regs);
+        break;
+#endif
+
 #ifdef FEATURE_EMULATE_VM
     case 0x000:
     /*---------------------------------------------------------------*/
