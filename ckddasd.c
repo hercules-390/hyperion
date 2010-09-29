@@ -648,10 +648,21 @@ void ckddasd_query_device (DEVBLK *dev, char **class,
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        snprintf( buffer, buflen, "%s [%d cyls] IO[%" I64_FMT "u]",
-                  dev->filename,
-                  dev->ckdcyls,
-                  dev->excps );
+        if ( dev->ckdnumfd > 1)
+        {
+            snprintf( buffer, buflen, "%s [%d cyls] [%d segs] IO[%" I64_FMT "u]",
+                      dev->filename,
+                      dev->ckdcyls,
+                      dev->ckdnumfd,
+                      dev->excps );
+        }
+        else
+        {
+            snprintf( buffer, buflen, "%s [%d cyls] IO[%" I64_FMT "u]",
+                      dev->filename,
+                      dev->ckdcyls,
+                      dev->excps );    
+        }
     }
     else
     {
