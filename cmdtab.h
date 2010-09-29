@@ -442,24 +442,30 @@ COMMAND("pgmprdos",  CONFIG,        SYSCMDALL,          pgmprdos_cmd,
 COMMAND("codepage",  PANEL+CONFIG,  SYSCMDALL,          codepage_cmd, 
   "Set/display code page conversion table", 
     "Format: 'codepage [cp]'\n"
+    "        'codepage maint cmd [operands]' - see cp_updt command for\n"
+    "                                          help\n"
     "If no operand is specified, the current codepage is displayed.\n"
     "If 'cp' is specified, then code page is set to the specified page\n"
     "if the page is valid.\n")
 
-COMMAND("cpupdt",   PANEL+CONFIG,   SYSCMDALL,          cpupdt_cmd,
+COMMAND("cp_updt",   PANEL+CONFIG,   SYSCMDALL,          cp_updt_cmd,
   "Create/Modify user character conversion table",
-    "Format: 'cpupdt cmd [operands]'\n"
-    "  alt ebcdic|ascii (p,v)    - alter the user ebcdic|ascii table\n"
+    "Format: 'cp_updt cmd [operands]'\n"
+    "  altER e|a|g2h|h2g (p,v)     - alter the user Ebcdic|Ascii table\n"
     "                              value at hex Position to hex Value\n"
     "                              16 pairs of hex digits may be specified\n"
     "                              within the parens.\n"
-    "  del                       - delete user cp table\n"
-    "  dsp ebcdic|ascii          - display user Ebcdic|Ascii table\n"
-    "  exp ebcdic|ascii filename - export contents of user table to file\n"
-    "  imp ebcdic|ascii filename - import file contents into user table\n"
-    "  ref [cp]                  - copy codepage to user tables\n"
+    "  delETE                      - delete user cp table\n"
+    "  dsp|disPLAY e|a|g2h|h2g     - display user Ebcdic|Ascii table\n"
+    "  expORT e|a|g2h|h2g filename - export contents of user table to file\n"
+    "  impORT e|a|g2h|h2g filename - import file contents into user table\n"
+    "  refERENCE [cp]              - copy codepage to user tables\n"
     "                              if cp is not specified, a list of\n"
     "                              valid codepage tables is generated\n"
+    "\n"
+    " *e|g2h represent ebcdic; a|h2g represent ascii\n"
+    " **lower case part of the cmd name represent the minimum abbreviation\n"
+    "   for the command\n"
     "\n"
     "To activate the user table, enter the command 'codepage user'\n"
     "\n"

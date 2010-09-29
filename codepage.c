@@ -988,6 +988,7 @@ typedef struct _CPCONV {
     unsigned char *g2h;
 } CPCONV;
 
+/* NOTE: 'maint' can never be a code page name */
 
 static CPCONV cpconv[] = {
     { "default",    ascii_to_ebcdic,  ebcdic_to_ascii  },
@@ -1159,7 +1160,7 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
 {   
     int rc = 0;
     
-    if ( CMD(cmd,alt,3) )
+    if ( CMD(cmd,alter,3) )
     {
         int     addargc;
         char   *strtok_str = "";
@@ -1215,12 +1216,18 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
         }
         
         /* at this point we have pairs of strings */
-
-        if ( arg2ok && CMD(argv[1],ebcdic,1) )
+        if ( strcasecmp(codepage_conv->name,"user") == 0 )
+        {
+            WRMSG( HHC01489, "E", "alter" );
+            rc = -1;
+        }
+        else if ( arg2ok && ( CMD(argv[1],ebcdic,1) || CMD(argv[1],g2h,3) ) )
         {
             int i;
 
-            WRMSG( HHC01487, "I", "ebcdic" );
+            user_g_to_h_filled = TRUE;
+            
+            WRMSG( HHC01487, "I", "ebcdic/g2h" );
 
             for( i = 0; i <= cnt; i++ )
             {
@@ -1228,11 +1235,13 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
                 user_g_to_h[pos[i]] = val[i];
             }
         }
-        else if ( arg2ok && CMD(argv[1],ascii,1) )
+        else if ( arg2ok && ( CMD(argv[1],ascii,1) || CMD(argv[1],h2g,3) ))
         {
             int i;
 
-            WRMSG( HHC01487, "I", "ascii" );
+            user_h_to_g_filled = TRUE;
+
+            WRMSG( HHC01487, "I", "ascii/h2g" );
 
             for( i = 0; i <= cnt; i++ )
             {
@@ -1246,21 +1255,24 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
             rc = -1;
         }
     }
-    else if ( CMD(cmd,exp,3) )
+    else if ( CMD(cmd,export,3) )
     {
         int     writecnt;
         char   *fn;
 
         /* validate options */
-        if ( ( argc == 3 && ( CMD(argv[1],ebcdic,1) || CMD(argv[1],ascii,1) ) ) || 
-             ( argc == 5 && ( CMD(argv[3],ebcdic,1) || CMD(argv[3],ascii,1) ) ) )
+        if ( ( argc == 3 && ( CMD(argv[1],ebcdic,1) || CMD(argv[1],ascii,1) 
+                              || CMD(argv[1],g2h,1) || CMD(argv[1],h2g,3) ) )
+           ||( argc == 5 && ( CMD(argv[3],ebcdic,1) || CMD(argv[3],ascii,1)
+                              || CMD(argv[3],g2h,1) || CMD(argv[3],h2g,3) ) ) 
+           )
         {
-            if ( ( argc == 3 && CMD(argv[1],ebcdic,1) ) ||
-                 ( argc == 5 && CMD(argv[3],ebcdic,1) ) )
+            if ( ( argc == 3 && ( CMD(argv[1],ebcdic,1) || CMD(argv[1],g2h,1) ) ) ||
+                 ( argc == 5 && ( CMD(argv[3],ebcdic,1) || CMD(argv[3],g2h,1) ) ) )
             {
                 if ( !user_g_to_h_filled )
                 {
-                    WRMSG( HHC01483, "E", "ebcdic" );
+                    WRMSG( HHC01483, "E", "ebcdic/g2h" );
                     rc = -1;
                     return rc;
                 }
@@ -1271,19 +1283,23 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
                     fn = argv[4];
                 
 
-                writecnt = export_file( fn, user_g_to_h, sizeof(user_g_to_h) );
+                writecnt = export_file( fn, user_g_to_h, (int)sizeof(user_g_to_h) );
                 
                 if ( writecnt != sizeof(user_g_to_h) )
                 {
-                    imp_exp_error( fn, "exporting", "ebcdic", writecnt );
+                    imp_exp_error( fn, "exporting", "ebcdic/g2h", writecnt );
+                }
+                else
+                {
+                    WRMSG( HHC01490, "I", "Emported", "ebcdic/g2h", "to", fn );
                 }
             }
-            if ( ( argc == 3 && CMD(argv[1],ascii,1) ) ||
-                 ( argc == 5 && CMD(argv[3],ascii,1) ) )
+            if ( ( argc == 3 && ( CMD(argv[1],ascii,1) || CMD(argv[1],h2g,3) ) ) ||
+                 ( argc == 5 && ( CMD(argv[3],ascii,1) || CMD(argv[3],h2g,3) ) ) )
             {
                 if ( !user_h_to_g_filled )
                 {
-                    WRMSG( HHC01483, "E", "ascii" );
+                    WRMSG( HHC01483, "E", "ascii/h2g" );
                     rc = -1;
                     return rc;
                 }
@@ -1293,11 +1309,15 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
                 else 
                     fn = argv[4];
                 
-                writecnt = export_file( fn, user_h_to_g, sizeof(user_h_to_g) );
+                writecnt = export_file( fn, user_h_to_g, (int)sizeof(user_h_to_g) );
                 
                 if ( writecnt != sizeof(user_h_to_g) )
                 {
-                    imp_exp_error( fn, "exporting", "ascii", writecnt );
+                    imp_exp_error( fn, "exporting", "ascii/h2g", writecnt );
+                }
+                else
+                {
+                    WRMSG( HHC01490, "I", "Emported", "ascii/h2g", "to", fn );
                 }
             }
         }
@@ -1307,54 +1327,60 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
             rc = -1;
         }
     }
-    else if ( CMD(cmd,imp,3) )
+    else if ( CMD(cmd,import,3) )
     {
         char    readbuf[sizeof(user_g_to_h)];
         int     readcnt;
         char   *fn;
-
+        
         /* validate options */
-        if ( ( argc == 3 && ( CMD(argv[1],ebcdic,1) || CMD(argv[1],ascii,1) ) ) || 
-             ( argc == 5 && ( CMD(argv[3],ebcdic,1) || CMD(argv[3],ascii,1) ) ) )
+        if ( ( ( argc == 3 && ( CMD(argv[1],ebcdic,1) || CMD(argv[1],ascii,1)
+                                || CMD(argv[1],g2h,3) || CMD(argv[1],h2g,3)   ) ) || 
+               ( argc == 5 && ( CMD(argv[3],ebcdic,1) || CMD(argv[3],ascii,1)
+                                || CMD(argv[3],g2h,3) || CMD(argv[3],h2g,3)   ) ) ) &&
+             ( strcasecmp(codepage_conv->name,"user") != 0 ) 
+           )
         {
-            if ( ( argc == 3 && CMD(argv[1],ebcdic,1) ) ||
-                 ( argc == 5 && CMD(argv[3],ebcdic,1) ) )
+            if ( ( argc == 3 && ( CMD(argv[1],ebcdic,1) || CMD(argv[1],g2h,3) ) ) ||
+                 ( argc == 5 && ( CMD(argv[3],ebcdic,1) || CMD(argv[3],g2h,3) ) ) )
             {
                 if ( argc == 3 ) 
                     fn = argv[2];
                 else 
                     fn = argv[4];
                 
-                readcnt = import_file( fn, readbuf, sizeof(readbuf) );
+                readcnt = import_file( fn, readbuf, (int)sizeof(readbuf) );
                 
                 if ( readcnt == sizeof(readbuf) )
                 {
                     memcpy(user_g_to_h,readbuf,sizeof(user_g_to_h));
                     user_g_to_h_filled = TRUE;
+                    WRMSG( HHC01490, "I", "Imported", "ebcdic/g2h", "from", fn );
                 }
                 else
                 {
-                    imp_exp_error( fn, "importing", "ebcdic", readcnt );
+                    imp_exp_error( fn, "importing", "ebcdic/g2h", readcnt );
                 }
             }
-            if ( ( argc == 3 && CMD(argv[1],ascii,1) ) ||
-                 ( argc == 5 && CMD(argv[3],ascii,1) ) )
+            if ( ( argc == 3 && ( CMD(argv[1],ascii,1) || CMD(argv[1],h2g,3) ) ) ||
+                 ( argc == 5 && ( CMD(argv[3],ascii,1) || CMD(argv[1],h2g,3) ) ) )
             {
                 if ( argc == 3 ) 
                     fn = argv[2];
                 else 
                     fn = argv[4];
 
-                readcnt = import_file( fn, readbuf, sizeof(readbuf) );
+                readcnt = import_file( fn, readbuf, (int)sizeof(readbuf) );
                 
                 if ( readcnt == sizeof(readbuf) )
                 {
                     memcpy(user_h_to_g,readbuf,sizeof(user_h_to_g));
                     user_h_to_g_filled = TRUE;
+                    WRMSG( HHC01490, "I", "Imported", "ascii/h2g", "from", fn );
                 }
                 else
                 {
-                    imp_exp_error( fn, "importing", "ascii", readcnt );
+                    imp_exp_error( fn, "importing", "ascii/h2g", readcnt );
                 }
             }
             if ( user_h_to_g_filled && user_g_to_h_filled )
@@ -1363,41 +1389,57 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
                 user_in_use = FALSE;
         }
         else
-        {
-            WRMSG( HHC17000, "E" );
+        {   
+            if ( strcasecmp(codepage_conv->name,"user") == 0 )
+            {
+                WRMSG( HHC01489, "E", "import" );
+            }
+            else
+                WRMSG( HHC17000, "E" );
             rc = -1;
         }
     }
-    else if ( CMD(cmd,del,3) )
+    else if ( CMD(cmd,delete,3) )
     {
-        bzero(user_h_to_g,sizeof(user_h_to_g));
-        user_h_to_g_filled = FALSE;
-        bzero(user_g_to_h,sizeof(user_g_to_h));
-        user_g_to_h_filled = FALSE;
-        user_in_use = FALSE;
-        WRMSG( HHC01479, "I" );
+        if ( strcasecmp(codepage_conv->name,"user") == 0 )
+        {
+            WRMSG( HHC01489, "E", "delete" );
+            rc = -1;
+        }
+        else
+        {
+            bzero(user_h_to_g,sizeof(user_h_to_g));
+            user_h_to_g_filled = FALSE;
+            bzero(user_g_to_h,sizeof(user_g_to_h));
+            user_g_to_h_filled = FALSE;
+            user_in_use = FALSE;
+            WRMSG( HHC01479, "I" );
+        }
     }
-    else if ( CMD(cmd,dsp,3) )
+    else if ( CMD(cmd,dsp,3) || CMD(cmd,display,3) )
     {
         char   *tbl = NULL;
         char   *tblname = NULL;
-        int     g_to_h = FALSE; 
+        int     g_to_h = FALSE;
+        int     valid = FALSE;
         char    hbuf[64];
-        BYTE    cbuf[17];
-        int     i, j, o;
+        BYTE    cbuf[32];
+        int     i, j, k, o;
         BYTE    c;
 
-        if ( CMD(argv[1],ebcdic,1) )
+        if ( CMD(argv[1],ebcdic,1) || CMD(argv[1],g2h,3) )
         {
             tbl     = user_g_to_h;
-            tblname = "ebcdic";
+            tblname = "ebcdic/g2h";
             g_to_h  = FALSE;
+            valid   = user_g_to_h_filled ? TRUE : FALSE;
         }
-        else if ( CMD(argv[1],ascii,1) )
+        else if ( CMD(argv[1],ascii,1) || CMD(argv[1],h2g,3) )
         {
             tbl     = user_h_to_g;
-            tblname = "ascii";
+            tblname = "ascii/h2g";
             g_to_h  = TRUE;
+            valid   = user_h_to_g_filled ? TRUE : FALSE;
         }
         else 
         {
@@ -1407,30 +1449,39 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
         
         if ( rc == 0 )
         {
-            WRMSG( HHC01484, "I", tblname );
+            WRMSG( HHC01484, "I", tblname, valid ? "" : ", table is invalid" );
             WRMSG( HHC01485, "I" );
             for( o = 0; o < 256; o += 16 )
             {
                 memset (hbuf, SPACE, sizeof(hbuf));
                 memset (cbuf, SPACE, sizeof(cbuf));
 
-                for (i = 0, j = 0; i < 16; i++)
+                for (i = 0, j = 0, k = 0; i < 16; i++)
                 {
                     c = tbl[o+i];
-                    if ( (i & 0x3) == 0x0 ) hbuf[j++] = SPACE;
+                    if ( (i & 0x3) == 0x0 )
+                    {
+                        hbuf[j++] = SPACE;
+                        cbuf[k++] = SPACE;
+                    }
                     j += snprintf( hbuf+j, sizeof(hbuf)-j, "%2.2X", c );
                     if ( g_to_h) c = guest_to_host(c);
-                    cbuf[i] = ( !isprint(c) ? '.' : c );
+                    cbuf[k++] = ( !isprint(c) ? '.' : c );
                 } /* end for(i) */
                 WRMSG( HHC01486, "I", ( ( o >> 4 ) & 0xf ), hbuf, cbuf, ( ( o >> 4 ) & 0xf ) ); 
             }
         }
         return rc;
     }
-    else if ( CMD(cmd,ref,3) )
+    else if ( CMD(cmd,reference,3) )
     {
         CPCONV *cpref = cpconv;
-        if ( argc == 2 && !CMD(argv[1],user,4) )
+        if ( strcasecmp(codepage_conv->name,"user") == 0 )
+        {
+            WRMSG( HHC01489, "E", "refresh/copy" );
+            rc = -2;
+        }
+        else if ( argc == 2 && !CMD(argv[1],user,4) )
         {
             for(cpref = cpconv; 
                 cpref->name && strcasecmp(cpref->name,argv[1]);
@@ -1472,6 +1523,7 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
                      CMD(cpref[i+1].name,user,4) ) break;
             }
         }
+        if ( rc == -2 ) rc = -1;
     }
     else
     {
@@ -1536,7 +1588,7 @@ static int import_file(char *fn, char *buf, int buflen)
             errno_i = errno;
 
         fclose(binfile);
-        if ( readcnt == buflen )
+        if ( (int)readcnt == buflen )
         {
             memcpy(buf,readbuf,buflen);
             rc = (int)readcnt;

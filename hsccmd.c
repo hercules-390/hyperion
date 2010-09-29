@@ -4515,9 +4515,79 @@ int legacysenseid_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
+/*-------------------------------------------------------------------
+ * cp_updt command       User code page management
+ *
+ * cp_updt altER ebcdic|ascii (p,v)       modify user pages
+ * cp_updt refERENCE codepage             copy existing page to user area
+ * cp_updt delETE                         delete user area contents
+ * cp_updt dsp|disPLAY ebcdic|ascii       display user pages
+ * cp_updt impORT ebcdic|ascii filename   import filename to user table 
+ * cp_updt expORT ebcdic|ascii filename   export filename to user table 
+ *
+ * ebcdic = g2h (Guest to Host) Guest = Mainframe OS
+ * ascii  = h2g (Host to Guest) Host  = PC OS (Unix/Linux/Windows)
+ *-------------------------------------------------------------------*/
+int cp_updt_cmd(int argc, char *argv[], char *cmdline)
+{
+    int     rc = 0;
+
+    UNREFERENCED(cmdline);
+
+    if ( argc == 2 && CMD(argv[1],delete,3) )
+    {
+        argc--;
+        argv++;
+
+        rc = update_codepage( argc, argv, argv[0] );
+    }
+    else if ( ( argc == 2 || argc == 3 ) && CMD(argv[1],reference,3) )
+    {
+        argc--;
+        argv++;
+
+        rc = update_codepage( argc, argv, argv[0] );
+    }
+    else if ( ( argc == 3 ) && ( CMD(argv[1],dsp,3) || CMD(argv[1],display,3) ) ) 
+    { 
+        argc--;
+        argv++;
+
+        rc = update_codepage( argc, argv, argv[0] );
+    }
+    else if ( ( argc == 4 || argc == 6 ) && CMD(argv[1],alter,3) )
+    {
+        argc--;
+        argv++;
+
+        rc = update_codepage( argc, argv, argv[0] );
+    }
+    else if ( ( argc == 4 || argc == 6 ) && CMD(argv[1],export,3) )
+    {
+        argc--;
+        argv++;
+
+        rc = update_codepage( argc, argv, argv[0] );
+    }
+    else if ( ( argc == 4 || argc == 6 ) && CMD(argv[1],import,3) )
+    {
+        argc--;
+        argv++;
+
+        rc = update_codepage( argc, argv, argv[0] );
+    }
+    else
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        rc = -1;
+    }
+
+    return rc;
+}
 
 /*-------------------------------------------------------------------*/
-/* codepage xxxxxxxx command                                         */
+/* codepage xxxxxxxx command      *** KEEP AFTER CP_UPDT_CMD ***     */
+/* Note: maint can never be a code page name                         */
 /*-------------------------------------------------------------------*/
 int codepage_cmd(int argc, char *argv[], char *cmdline)
 {
@@ -4526,7 +4596,13 @@ int codepage_cmd(int argc, char *argv[], char *cmdline)
 
     UNREFERENCED(cmdline);
 
-    if (argc == 2)
+    if ( argc >= 2 && CMD(argv[1],maint,1) )
+    {
+        argc--;
+        argv++;
+        rc = cp_updt_cmd(argc, argv, NULL);
+    }
+    else if (argc == 2)
     {
         /* Update codepage if operand is specified */
         set_codepage(argv[1]);
@@ -4542,75 +4618,6 @@ int codepage_cmd(int argc, char *argv[], char *cmdline)
         {
             WRMSG( HHC01476, "I", cp );
         }
-    }
-    else
-    {
-        WRMSG( HHC02299, "E", argv[0] );
-        rc = -1;
-    }
-
-    return rc;
-}
-
-/*-------------------------------------------------------------------
- * cpupdt command       User code page management
- *
- * cpupdt alt ebcdic|ascii (p,v)    modify user pages
- * cpupdt ref codepage              copy existing page to user area
- * cpupdt del                       delete user area contents
- * cpupdt dsp ebcdic|ascii          display user pages
- * cpupdt imp ebcdic|ascii filename import filename to user table 
- * cpupdt exp ebcdic|ascii filename export filename to user table 
- *
- *-------------------------------------------------------------------*/
-int cpupdt_cmd(int argc, char *argv[], char *cmdline)
-{
-    int     rc = 0;
-
-    UNREFERENCED(cmdline);
-
-
-    if ( argc == 2 && CMD(argv[1],del,3) )
-    {
-        argc--;
-        argv++;
-
-        rc = update_codepage( argc, argv, argv[0] );
-    }
-    else if ( ( argc == 2 || argc == 3 ) && CMD(argv[1],ref,3) )
-    {
-        argc--;
-        argv++;
-
-        rc = update_codepage( argc, argv, argv[0] );
-    }
-    else if ( ( argc == 3 ) && CMD(argv[1],dsp,3) ) 
-    { 
-        argc--;
-        argv++;
-
-        rc = update_codepage( argc, argv, argv[0] );
-    }
-    else if ( ( argc == 4 || argc == 6 ) && CMD(argv[1],alt,3) )
-    {
-        argc--;
-        argv++;
-
-        rc = update_codepage( argc, argv, argv[0] );
-    }
-    else if ( ( argc == 4 || argc == 6 ) && CMD(argv[1],exp,3) )
-    {
-        argc--;
-        argv++;
-
-        rc = update_codepage( argc, argv, argv[0] );
-    }
-    else if ( ( argc == 4 || argc == 6 ) && CMD(argv[1],imp,3) )
-    {
-        argc--;
-        argv++;
-
-        rc = update_codepage( argc, argv, argv[0] );
     }
     else
     {
@@ -9412,7 +9419,7 @@ int     scr_pause_amt = 0;              /* seconds to pause RC file  */
 int     lineno = 0;
 char   *p;                              /* (work)                    */
 char    pathname[MAX_PATH];             /* (work)                    */
-int i;
+int     i;
 
     /* Check the recursion level - if it exceeds a certain amount
        abort the script stack
