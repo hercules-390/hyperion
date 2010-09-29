@@ -7,17 +7,16 @@ r 1A0=00000001800000000000000000000200 # z/Arch restart PSW
 r 1D0=0002000180000000000000000000DEAD # z/Arch pgm new PSW
 r 200=41000002     # LA R0,X'02'       R0->function code 2 encrypt
 r 204=41100500     # LA R1,PB          R1->parameter block address
-r 208=41200600     # LA R2,FO          R2->first operand 
-r 20C=41400700     # LA R4,SO          R4->second operand
-r 210=41500008     # LA R5,SOL         R5->second operand length
-r 214=B91E0024     # KMAC R2,R4        Compute message authentication code
-r 218=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
+r 208=41400700     # LA R4,SO          R4->second operand
+r 20C=41500008     # LA R5,SOL         R5->second operand length
+r 210=B91E0024     # KMAC R2,R4        Compute message authentication code
+r 214=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
 r 300=07020001800000000123456789ABCDEF # WAITPSW Enabled wait state PSW
 *
 r 500=000102030405060708090A0B0C0D0E0F # Parameter block
 r 510=1011121314151617                 # Parameter block
 *
-r 580=F4F9F93F1B40EDE708090A0B0C0D0E0F # Expected result
+r 580=F4F9F93F1B40EDE7                 # Expected result
 *
 r 700=0001020304050607                 # Second operand
 *
