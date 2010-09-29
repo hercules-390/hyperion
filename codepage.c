@@ -1283,7 +1283,7 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
                     fn = argv[4];
                 
 
-                writecnt = export_file( fn, user_g_to_h, (int)sizeof(user_g_to_h) );
+                writecnt = export_file( fn, (char *)user_g_to_h, (int)sizeof(user_g_to_h) );
                 
                 if ( writecnt != sizeof(user_g_to_h) )
                 {
@@ -1309,7 +1309,7 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
                 else 
                     fn = argv[4];
                 
-                writecnt = export_file( fn, user_h_to_g, (int)sizeof(user_h_to_g) );
+                writecnt = export_file( fn, (char *)user_h_to_g, (int)sizeof(user_h_to_g) );
                 
                 if ( writecnt != sizeof(user_h_to_g) )
                 {
@@ -1418,7 +1418,7 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
     }
     else if ( CMD(cmd,dsp,3) || CMD(cmd,display,3) )
     {
-        char   *tbl = NULL;
+        unsigned char   *tbl = NULL;
         char   *tblname = NULL;
         int     g_to_h = FALSE;
         int     valid = FALSE;
