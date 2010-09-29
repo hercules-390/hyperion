@@ -223,6 +223,7 @@ char           *cu = NULL;              /* Specified control unit    */
 char           *kw;                     /* Argument keyword          */
 int             cckd=0;                 /* 1 if compressed CKD       */
 char            pathname[MAX_PATH];     /* file path in host format  */
+char            filename[FILENAME_MAX]; /* work area for display     */
 char           *strtok_str;             /* save last position        */
 
     if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
@@ -241,6 +242,15 @@ char           *strtok_str;             /* save last position        */
     /* Save the file name in the device block */
     hostpath(dev->filename, argv[0], sizeof(dev->filename));
 
+    if (strchr(dev->filename, SPACE) == NULL)
+    {
+        MSGBUF(filename, "%s", dev->filename);
+    }
+    else
+    {
+        MSGBUF(filename, "'%s'", dev->filename);
+    }
+
     /* Device is shareable */
     dev->shared = 1;
 
@@ -250,7 +260,7 @@ char           *strtok_str;             /* save last position        */
         rc = shared_ckd_init ( dev, argc, argv);
         if (rc < 0)
         {
-            WRMSG (HHC00401, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+            WRMSG (HHC00401, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename);
             return -1;
         }
         else
@@ -361,7 +371,7 @@ char           *strtok_str;             /* save last position        */
 
     /* Open all of the CKD image files which comprise this volume */
     if (dev->ckdrdonly)
-        WRMSG (HHC00403, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+        WRMSG (HHC00403, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, filename,
                 dev->ckdfakewr ? " with fake writing" : "");
     for (fileseq = 1;;)
     {
@@ -374,7 +384,8 @@ char           *strtok_str;             /* save last position        */
                 dev->fd = open (dev->filename, O_RDONLY|O_BINARY);
             if (dev->fd < 0)
             {
-                WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "open()", strerror(errno));
+                WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, 
+                                 filename, "open()", strerror(errno));
                 return -1;
             }
         }
@@ -382,7 +393,7 @@ char           *strtok_str;             /* save last position        */
         /* If shadow file, only one base file is allowed */
         if (fileseq > 1 && dev->dasdsfn != NULL)
         {
-            WRMSG (HHC00405, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+            WRMSG (HHC00405, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename);
             return -1;
         }
 
@@ -390,7 +401,8 @@ char           *strtok_str;             /* save last position        */
         rc = fstat (dev->fd, &statbuf);
         if (rc < 0)
         {
-            WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "fstat()", strerror(errno));
+            WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), 
+                             dev->devnum, filename, "fstat()", strerror(errno));
             return -1;
         }
 
@@ -399,9 +411,9 @@ char           *strtok_str;             /* save last position        */
         if (rc < (int)CKDDASD_DEVHDR_SIZE)
         {
             if (rc < 0)
-                WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "read()", strerror(errno));
+                WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, "read()", strerror(errno));
             else
-                WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "read()", "CKD header incomplete");
+                WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, "read()", "CKD header incomplete");
             return -1;
         }
 
@@ -410,7 +422,7 @@ char           *strtok_str;             /* save last position        */
         {
             if (memcmp(devhdr.devid, "CKD_C370", 8) != 0)
             {
-                WRMSG (HHC00406, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+                WRMSG (HHC00406, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename);
                 return -1;
             }
             else
@@ -418,7 +430,7 @@ char           *strtok_str;             /* save last position        */
                 cckd = 1;
                 if (fileseq != 1)
                 {
-                    WRMSG (HHC00407, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+                    WRMSG (HHC00407, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename);
                     return -1;
                 }
             }
@@ -432,11 +444,11 @@ char           *strtok_str;             /* save last position        */
             {
                 if (rc < 0)
                 {
-                    WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "read()", strerror(errno));
+                    WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, "read()", strerror(errno));
                 }
                 else
                 {
-                    WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "read()", "CCKD header incomplete");
+                    WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, "read()", "CCKD header incomplete");
                 }
                 return -1;
             }
@@ -498,13 +510,13 @@ char           *strtok_str;             /* save last position        */
         if (devhdr.fileseq != fileseq
             && !(devhdr.fileseq == 0 && fileseq == 1))
         {
-            WRMSG (HHC00408, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+            WRMSG (HHC00408, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename);
             return -1;
         }
 
         if (devhdr.fileseq > 0)
         {
-            WRMSG (HHC00409, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, devhdr.fileseq, dev->ckdcyls,
+            WRMSG (HHC00409, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, devhdr.fileseq, dev->ckdcyls,
                     (highcyl > 0 ? highcyl : dev->ckdcyls + cyls - 1));
         }
 
@@ -517,7 +529,7 @@ char           *strtok_str;             /* save last position        */
         }
         else if (heads != dev->ckdheads || trksize != dev->ckdtrksz)
         {
-            WRMSG (HHC00410, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, heads, trksize,
+            WRMSG (HHC00410, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, heads, trksize,
                     dev->ckdheads, dev->ckdtrksz);
             return -1;
         }
@@ -528,14 +540,14 @@ char           *strtok_str;             /* save last position        */
                             != statbuf.st_size
             || (highcyl != 0 && highcyl != dev->ckdcyls + cyls - 1)))
         {
-            WRMSG (HHC00411, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+            WRMSG (HHC00411, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename);
             return -1;
         }
 
         /* Check for correct high cylinder number */
         if (highcyl != 0 && highcyl != dev->ckdcyls + cyls - 1)
         {
-            WRMSG (HHC00412, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+            WRMSG (HHC00412, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename);
             return -1;
         }
 
@@ -563,7 +575,7 @@ char           *strtok_str;             /* save last position        */
         /* Check that maximum files has not been exceeded */
         if (fileseq > CKD_MAXFILES)
         {
-            WRMSG (HHC00413, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, CKD_MAXFILES);
+            WRMSG (HHC00413, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, CKD_MAXFILES);
             return -1;
         }
 
@@ -573,14 +585,14 @@ char           *strtok_str;             /* save last position        */
     *sfxptr = sfxchar;
 
     /* Log the device geometry */
-    WRMSG (HHC00414, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->ckdcyls,
+    WRMSG (HHC00414, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, dev->ckdcyls,
             dev->ckdheads, dev->ckdtrks, dev->ckdtrksz);
 
     /* Locate the CKD dasd table entry */
     dev->ckdtab = dasd_lookup (DASD_CKDDEV, NULL, dev->devtype, dev->ckdcyls);
     if (dev->ckdtab == NULL)
     {
-        WRMSG (HHC00415, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->devtype);
+        WRMSG (HHC00415, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, dev->devtype);
         return -1;
     }
 
@@ -588,7 +600,7 @@ char           *strtok_str;             /* save last position        */
     dev->ckdcu = dasd_lookup (DASD_CKDCU, cu ? cu : dev->ckdtab->cu, 0, 0);
     if (dev->ckdcu == NULL)
     {
-        WRMSG (HHC00416, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, cu ? cu : dev->ckdtab->cu);
+        WRMSG (HHC00416, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, cu ? cu : dev->ckdtab->cu);
         return -1;
     }
 
