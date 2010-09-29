@@ -1,0 +1,34 @@
+* KMAC fc26
+stopall
+pause 1
+sysclear
+archmode esame
+r 1A0=00000001800000000000000000000200 # z/Arch restart PSW
+r 1D0=0002000180000000000000000000DEAD # z/Arch pgm new PSW
+r 200=41000012     # LA R0,X'12'       R0->function code 18 encrypt
+r 204=41100510     # LA R1,PB          R1->parameter block address
+r 208=B9280000     # PCKMO             Encrypt DEA Key
+r 20C=4100001A     # LA R0,X'1A'       R0->function code 26 encrypt
+r 210=41100500     # LA R1,PB          R1->parameter block address
+r 214=41400700     # LA R4,SO          R4->second operand
+r 218=41500010     # LA R5,SOL         R5->second operand length
+r 21C=B91E0024     # KMAC R2,R4        Compute message authentication code
+r 220=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
+r 300=07020001800000000123456789ABCDEF # WAITPSW Enabled wait state PSW
+*
+r 500=000102030405060708090A0B0C0D0E0F # Parameter block
+r 510=101112131415161718191A1B1C1D1E1F # Parameter block
+r 520=202122232425262728292A2B2C2D2E2F # Parameter block
+r 530=303132333435363738393A3B3C3D3E3F # Parameter block
+*
+r 580=EDA330F90EECD16C003E5FB09BCFF358 # Expected result
+*
+r 700=000102030405060708090A0B0C0D0E0F # Second operand
+*
+ostailor null
+restart
+pause 1
+* Display parameter blocks
+r 500.8
+* Expected results
+r 580.8
