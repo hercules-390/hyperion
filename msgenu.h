@@ -1692,6 +1692,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC90109 "  %s %s"
 #define HHC90110 "      %s"
 #define HHC90111 "Wrapping Verification Pattern does not match, return with cc1"
+#define HHC90112 "    lcfb    : %d"
 
 /* from crypto.c when compiled with debug on */
 #define HHC90190 "%s"
