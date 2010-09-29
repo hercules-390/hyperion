@@ -555,7 +555,10 @@ char           *strtok_str;             /* save last position        */
         fileseq++;
 
         /* Alter the file name suffix ready for the next file */
-        *sfxptr = '0' + fileseq;
+        if ( fileseq <= 9 )
+            *sfxptr = '0' + fileseq;
+        else
+            *sfxptr = 'A' - 10 + fileseq;
 
         /* Check that maximum files has not been exceeded */
         if (fileseq > CKD_MAXFILES)

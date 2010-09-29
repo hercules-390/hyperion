@@ -516,7 +516,7 @@ CKDDEV         *ckd;                    /* CKD DASD table entry      */
 char           *rmtdev;                 /* Possible remote device    */
 char           *argv[2];                /* Arguments to              */
 int             argc=0;                 /*                           */
-char            sfxname[1024];          /* Suffixed file name        */
+char            sfxname[FILENAME_MAX*2];/* Suffixed file name        */
 char            typname[64];
 char            pathname[MAX_PATH];     /* file path in host format  */
 
@@ -1679,7 +1679,7 @@ int             i;                      /* Array subscript           */
 int             rc;                     /* Return code               */
 char            *s;                     /* String pointer            */
 int             fileseq;                /* File sequence number      */
-char            sfname[260];            /* Suffixed name of this file*/
+char            sfname[FILENAME_MAX];   /* Suffixed name of this file*/
 char            *suffix;                /* -> Suffix character       */
 U32             endcyl;                 /* Last cylinder of this file*/
 U32             cyl;                    /* Cylinder number           */
@@ -1806,7 +1806,13 @@ U32             trksize;                /* DASD image track length   */
             cyl += maxcpif, fileseq++)
     {
         /* Insert the file sequence number in the file name */
-        if (suffix) *suffix = '0' + fileseq;
+        if (suffix)
+        {   
+            if ( fileseq <= 9 )
+                *suffix = '0' + fileseq;
+            else
+                *suffix = 'A' - 10 + fileseq;
+        }
 
         /* Calculate the ending cylinder for this file */
         if (cyl + maxcpif < volcyls)
