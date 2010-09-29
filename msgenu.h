@@ -849,7 +849,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01438 "Config file '%s': open error ignored file '%s': '%s'"
 #define HHC01439 "Config file '%s': open error file '%s': '%s'"
 #define HHC01440 "Config file[%d] '%s': statement '%s' deprecated, use '%s' instead"
-#define HHC01441 "Config file[%d] '%s': syntax error: '%s'"
+#define HHC01441 "Config file[%d] '%s': error processing statement: '%s'"
 #define HHC01442 "Config file[%d] '%s': incorrect number of operands"
 #define HHC01443 "Config file[%d] '%s': '%s' is not a valid '%s'"
 #define HHC01444 "Hercules is not running as root, cannot raise '%s'"
