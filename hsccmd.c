@@ -4636,17 +4636,75 @@ int codepage_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int stsi_model_cmd(int argc, char *argv[], char *cmdline)
 {
+    int rc;
 
     UNREFERENCED(cmdline);
 
     /* Update model name if operand is specified */
-    if ( argc < 2 || argc > 5 )
+    if ( argc > 5 )
     {
         WRMSG( HHC01455, "E", argv[0] );
         return -1;
     }
+    
+    if ( argc == 1 )
+    {
+        char *models[4];
+        str_model(models);
+        WRMSG( HHC02204, "I", "hdw model", models[0] );
+        WRMSG( HHC02204, "I", "cap model", models[1] );
+        WRMSG( HHC02204, "I", "prm model", models[2] );
+        WRMSG( HHC02204, "I", "tmp model", models[3] );    
+    }
     else
-        set_model(argc, argv[1], argv[2], argv[3], argv[4]);
+    {
+        int   m;
+        char *model[4] = { "", "", "", "" };
+        
+        if ( argc > 1 ) model[0] = argv[1]; 
+        if ( argc > 2 ) model[1] = argv[2];
+        if ( argc > 3 ) model[2] = argv[3];
+        if ( argc > 4 ) model[3] = argv[4];
+
+        for ( m = 0; m < ( argc - 1 ); m++ )
+        {
+            int i;
+
+            if (strlen(model[m]) > 16 )
+            {
+                WRMSG( HHC02205, "E", model[m], "; argument > 16 characters" );
+                return -1;
+            }
+
+            if (strlen(model[m]) != 0 )
+            {
+                for( i=0; i < strlen(model[m]); i++ )
+                {
+                    if( isalnum(model[m][i]) ) continue;
+                    {
+                        WRMSG( HHC02205, "E", model[m], "; argument contains invalid characters");
+                        return -1;
+                    }
+                }
+            }
+        }
+        
+        if ( ( rc = set_model(model[0], model[1], model[2], model[3]) ) != 0 )
+        {
+            WRMSG( HHC02205, "E", model[rc-1], "; argument contains invalid characters");
+            return -1;
+        }
+
+        if ( MLVL(VERBOSE) )
+        {
+            char *models[4];
+            str_model(models);
+            WRMSG( HHC02204, "I", "hdw model", models[0] );
+            WRMSG( HHC02204, "I", "cap model", models[1] );
+            WRMSG( HHC02204, "I", "prm model", models[2] );
+            WRMSG( HHC02204, "I", "tmp model", models[3] );
+        }
+    }
 
     return 0;
 }
@@ -4660,15 +4718,47 @@ int stsi_plant_cmd(int argc, char *argv[], char *cmdline)
 
     UNREFERENCED(cmdline);
 
-    /* Update model name if operand is specified */
-
-    if ( argc != 2 )
+    /* Update plant name if operand is specified */
+    if ( argc > 2 )
     {
         WRMSG( HHC01455, "E", argv[0] );
         return -1;
     }
+    if ( argc == 1 )
+    {
+        WRMSG( HHC02203, "I", argv[0], str_plant() ); 
+    }
     else
-        set_plant(argv[1]);
+    {
+        int i;
+
+        if (strlen(argv[1]) > 4)
+        {
+            WRMSG( HHC02205, "E", argv[1], "; argument > 4 characters" );
+            return -1;
+        }
+
+        if (strlen(argv[1]) != 0 )
+        {
+            for( i=0; i < strlen(argv[1]); i++ )
+            {
+                if( isalnum(argv[1][i]) ) continue;
+                {
+                    WRMSG( HHC02205, "E", argv[1], "; argument contains invalid characters");
+                    return -1;
+                }
+            }
+        }
+
+        if ( set_plant(argv[1]) != 0 )
+        {
+            WRMSG( HHC02205, "E", argv[1], "; argument contains invalid characters");
+            return -1;
+        }
+        
+        if ( MLVL(VERBOSE) )
+            WRMSG( HHC02204, "I", argv[0], str_plant() );
+    }
 
     return 0;
 }
@@ -4682,14 +4772,46 @@ int stsi_manufacturer_cmd(int argc, char *argv[], char *cmdline)
 
     UNREFERENCED(cmdline);
 
-    /* Update model name if operand is specified */
-    if ( argc != 2 )
+    /* Update manufacturer name if operand is specified */
+    if ( argc > 2 )
     {
         WRMSG( HHC01455, "E", argv[0] );
         return -1;
     }
-    else 
-        set_manufacturer(argv[1]);
+    if ( argc == 1 )
+    {
+        WRMSG( HHC02203, "I", argv[0], str_manufacturer() ); 
+    }
+    else
+    {
+        int i;
+
+        if (strlen(argv[1]) > 16)
+        {
+            WRMSG( HHC02205, "E", argv[1], "; argument > 16 characters" );
+            return -1;
+        }
+
+        if (strlen(argv[1]) != 0 )
+        {
+            for( i=0; i < strlen(argv[1]); i++ )
+            {
+                if( isalnum(argv[1][i]) ) continue;
+                {
+                    WRMSG( HHC02205, "E", argv[1], "; argument contains invalid characters");
+                    return -1;
+                }
+            }
+        }
+
+        if ( set_manufacturer(argv[1]) != 0 )
+        {
+            WRMSG( HHC02205, "E", argv[1], "; argument contains invalid characters");
+            return -1;
+        }
+        if ( MLVL(VERBOSE) )
+            WRMSG( HHC02204, "I", argv[0], str_manufacturer() );
+    }
 
     return 0;
 }
@@ -9684,9 +9806,9 @@ int qcpuid_cmd(int argc, char *argv[], char *cmdline)
     }
 
     WRMSG( HHC17004, "I", sysblk.cpuid );
-    WRMSG( HHC17005, "I", ((sysblk.cpuid & 0x00000000FFFF0000ULL) >> 16),
+ /*   WRMSG( HHC17005, "I", ((sysblk.cpuid & 0x00000000FFFF0000ULL) >> 16),
                            str_model(), str_manufacturer(), str_plant(),
-                           ((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32) );
+                           ((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32) ); */
     return 0;
 }
 

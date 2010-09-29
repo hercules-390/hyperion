@@ -422,15 +422,15 @@ COMMAND("shrdport",  CONFIG,        SYSNONE,            shrdport_cmd,
 #endif /*defined(OPTION_SHARED_DEVICES)*/
 
 #if defined(OPTION_SET_STSI_INFO)
-COMMAND("model",     CONFIG,        SYSCMDALL,          stsi_model_cmd,
+COMMAND("model",     PANEL+CONFIG,        SYSCMDALL,          stsi_model_cmd,
   "Set STSI model code", 
     NULL)
 
-COMMAND("plant",     CONFIG,        SYSCMDALL,          stsi_plant_cmd,
+COMMAND("plant",     PANEL+CONFIG,        SYSCMDALL,          stsi_plant_cmd,
   "Set STSI plant code", 
     NULL)
 
-CMDABBR("manufacturer",8,CONFIG,    SYSCMDALL,          stsi_manufacturer_cmd,
+CMDABBR("manufacturer",8,PANEL+CONFIG,    SYSCMDALL,          stsi_manufacturer_cmd,
   "Set STSI manufacturer code", 
     NULL)
 #endif /* defined(OPTION_SET_STSI_INFO) */

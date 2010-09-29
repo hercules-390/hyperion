@@ -23,19 +23,51 @@
 /*-------------------------------------------------------------------*/
 /* SUBROUTINE TO COPY A STRINGZ TO A FIXED-LENGTH EBCDIC FIELD       */
 /*-------------------------------------------------------------------*/
-static void copy_stringz_to_ebcdic(BYTE* fld, size_t len, char *name)
+int copy_stringz_to_ebcdic(BYTE* fld, size_t len, char *name)
 {
     size_t i;
 
-    for(i = 0; name && i < strlen(name) && i < len; i++)
-        if(isprint(name[i]))
+    if ( name == NULL || strlen(name) == 0 ) 
+    {
+        bzero(fld, len);
+        return 0;
+    }
+
+    memset(fld, 0x40, len);
+
+    for(i = 0; i < strlen(name) && i < len; i++)
+        if(isalnum(name[i]))
             fld[i] = host_to_guest((int)(islower(name[i]) ? toupper(name[i]) : name[i]));
         else
-            fld[i] = 0x40;
-    for(; i < len; i++)
-        fld[i] = 0x40;
+            return -1;
+    return 0;
 }
 
+/*-------------------------------------------------------------------*/
+/* SUBROUTINE TO COPY A FIXED-LENGTH EBCDIC FIELD TO A STRINGZ       */
+/*-------------------------------------------------------------------*/
+int copy_ebcdic_to_stringz(char *name, size_t nlen, BYTE* fld, size_t flen)
+{
+    size_t  i;
+    char    c;
+
+    if ( name == NULL || nlen == 0 || flen == 0 ) return -1;
+    
+    bzero(name, nlen);
+
+    for( i = 0; i < MIN((nlen-1),flen) ; i++ )
+    {
+        c = guest_to_host(fld[i]);
+        
+        if ( c == SPACE || !isalnum(c) )
+            break; /* there should not be any embedded blanks */
+
+        name[i] = c;       
+    }
+
+    return 0;
+
+}
 /*-------------------------------------------------------------------*/
 /* LOAD PARAMETER                                                    */
 /* Set by: LOADPARM configuration statement or panel command         */
@@ -137,17 +169,18 @@ char *str_lparname()
 static BYTE manufact[16] = { 0xC8,0xD9,0xC3,0x40,0x40,0x40,0x40,0x40,
                              0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
 
-void set_manufacturer(char *name)
+int set_manufacturer(char *name)
 {
     size_t i;
 
+    memset(manufact, 0x40, sizeof(manufact) );
+
     for(i = 0; name && i < strlen(name) && i < sizeof(manufact); i++)
-        if(isprint(name[i]))
+        if(isalnum(name[i]))
             manufact[i] = host_to_guest((int)(islower(name[i]) ? toupper(name[i]) : name[i]));
         else
-            manufact[i] = 0x40;
-    for(; i < sizeof(manufact); i++)
-        manufact[i] = 0x40;
+            return -1;      /* 0-9, A-Z */
+    return 0;
 }
 
 void get_manufacturer(BYTE *dest)
@@ -160,14 +193,18 @@ char *str_manufacturer()
 {
     static char ret_manufacturer[sizeof(manufact)+1];
     int i;
+    char    c;
 
-    ret_manufacturer[sizeof(manufact)] = '\0';
-    for(i = sizeof(manufact) - 1; i >= 0; i--)
+    bzero(ret_manufacturer, sizeof(ret_manufacturer));
+
+    for( i = 0; i < sizeof(manufact); i++ )
     {
-        ret_manufacturer[i] = guest_to_host((int)manufact[i]);
+        c = guest_to_host(manufact[i]);
+        
+        if ( c == SPACE || !isalnum(c) )
+            break; /* there should not be any embedded blanks */
 
-        if(isspace(ret_manufacturer[i]) && !ret_manufacturer[i+1])
-            ret_manufacturer[i] = '\0';
+        ret_manufacturer[i] = c;       
     }
 
     return ret_manufacturer;
@@ -176,22 +213,24 @@ char *str_manufacturer()
 /*-------------------------------------------------------------------*/
 /* MANUFACTURING PLANT NAME                                          */
 /* Set by: PLANT configuration statement                             */
-/* Retrieved by: STSI instruction                                    */
+/* Retrieved by: STSI instruction      A-Z, 0-9                      */
 /*-------------------------------------------------------------------*/
                       /*  "Z    Z"  */
 static BYTE plant[4] = { 0xE9,0xE9,0x40,0x40 };
 
-void set_plant(char *name)
+int set_plant(char *name)
 {
     size_t i;
+    
+    memset(plant, 0x40, sizeof(plant) );
 
     for(i = 0; name && i < strlen(name) && i < sizeof(plant); i++)
-        if(isprint(name[i]))
+        if(isalnum(name[i]))
             plant[i] = host_to_guest((int)(islower(name[i]) ? toupper(name[i]) : name[i]));
         else
-            plant[i] = 0x40;
-    for(; i < sizeof(plant); i++)
-        plant[i] = 0x40;
+            return -1;
+    return 0;
+
 }
 
 void get_plant(BYTE *dest)
@@ -203,15 +242,19 @@ LOADPARM_DLL_IMPORT
 char *str_plant()
 {
     static char ret_plant[sizeof(plant)+1];
-    int i;
+    int     i;
+    char    c;
 
-    ret_plant[sizeof(plant)] = '\0';
-    for(i = sizeof(plant) - 1; i >= 0; i--)
+    bzero(ret_plant, sizeof(ret_plant));
+
+    for( i = 0; i < sizeof(plant); i++ )
     {
-        ret_plant[i] = guest_to_host((int)plant[i]);
+        c = guest_to_host(plant[i]);
+        
+        if ( c == SPACE || !isalnum(c) )
+            break; /* there should not be any embedded blanks */
 
-        if(isspace(ret_plant[i]) && !ret_plant[i+1])
-            ret_plant[i] = '\0';
+        ret_plant[i] = c;       
     }
 
     return ret_plant;
@@ -223,40 +266,49 @@ char *str_plant()
 /* Retrieved by: STSI instruction                                    */
 /*-------------------------------------------------------------------*/
                        /*  "E    M    U    L    A    T    O    R" */
-static BYTE model[16] = { 0xC5,0xD4,0xE4,0xD3,0xC1,0xE3,0xD6,0xD9,
-                          0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
-static BYTE modelcapa[16] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
+static BYTE     model[16] = { 0xC5,0xD4,0xE4,0xD3,0xC1,0xE3,0xD6,0xD9,
+                              0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
+static BYTE modelcapa[16] = { 0xC5,0xD4,0xE4,0xD3,0xC1,0xE3,0xD6,0xD9,
+                              0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
 static BYTE modelperm[16] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 static BYTE modeltemp[16] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 
-void set_model(int argc, char *m1, char *m2, char *m3, char *m4)
+int set_model(char *m1, char *m2, char *m3, char *m4)
 {
-    if (argc > 1 && m1 != NULL)
-        copy_stringz_to_ebcdic(model, sizeof(model), m1);
-    if (argc > 2 && m2 != NULL)
-        copy_stringz_to_ebcdic(modelcapa, sizeof(modelcapa), m2);
-    if (argc > 3 && m3 != NULL)
-        copy_stringz_to_ebcdic(modelperm, sizeof(modelperm), m3);
-    if (argc > 4 && m4 != NULL)
-        copy_stringz_to_ebcdic(modeltemp, sizeof(modeltemp), m4);
+    if ( copy_stringz_to_ebcdic(model,     sizeof(model),     m1) != 0 ) return 1;
+    if ( copy_stringz_to_ebcdic(modelcapa, sizeof(modelcapa), m2) != 0 ) return 2;
+    if ( copy_stringz_to_ebcdic(modelperm, sizeof(modelperm), m3) != 0 ) return 3;
+    if ( copy_stringz_to_ebcdic(modeltemp, sizeof(modeltemp), m4) != 0 ) return 4;
+    return 0;
 }
 
 LOADPARM_DLL_IMPORT
-char *str_model()
+void str_model(char**szmodels)
 {
-    static char ret_model[sizeof(model)+1];
-    int i;
+    //static char *szmodels[4];
 
-    ret_model[sizeof(model)] = '\0';
-    for(i = sizeof(model) - 1; i >= 0; i--)
-    {
-        ret_model[i] = guest_to_host((int)model[i]);
+    static char h_model[sizeof(model)+1];
+    static char c_model[sizeof(modelcapa)+1];
+    static char p_model[sizeof(modelperm)+1];
+    static char t_model[sizeof(modeltemp)+1];
+    int rc;
+    
+    bzero(h_model,sizeof(h_model));
+    bzero(c_model,sizeof(c_model));
+    bzero(p_model,sizeof(p_model));
+    bzero(t_model,sizeof(t_model));
+    
+    szmodels[0] = h_model;
+    szmodels[1] = c_model;
+    szmodels[2] = p_model;
+    szmodels[3] = t_model;
 
-        if(isspace(ret_model[i]) && !ret_model[i+1])
-            ret_model[i] = '\0';
-    }
-
-    return ret_model;
+    rc = copy_ebcdic_to_stringz(h_model, sizeof(h_model), model, sizeof(model));
+    rc = copy_ebcdic_to_stringz(c_model, sizeof(c_model), modelcapa, sizeof(modelcapa));
+    rc = copy_ebcdic_to_stringz(p_model, sizeof(p_model), modelperm, sizeof(modelperm));
+    rc = copy_ebcdic_to_stringz(t_model, sizeof(t_model), modeltemp, sizeof(modeltemp));
+    
+    return;
 }
 
 void get_model(BYTE *dest)
