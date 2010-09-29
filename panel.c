@@ -3475,7 +3475,6 @@ PANMSG* p;
     while((lmscnt = log_read(&lmsbuf, &lmsnum, LOG_NOBLOCK)))
         fwrite(lmsbuf,lmscnt,1,stderr);
 
-    set_screen_color(stdout, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
     set_screen_color(stderr, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
 
     fflush(stderr);
