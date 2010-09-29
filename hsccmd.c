@@ -4668,7 +4668,7 @@ int stsi_model_cmd(int argc, char *argv[], char *cmdline)
 
         for ( m = 0; m < ( argc - 1 ); m++ )
         {
-            int i;
+            size_t i;
 
             if (strlen(model[m]) > 16 )
             {
@@ -4730,7 +4730,7 @@ int stsi_plant_cmd(int argc, char *argv[], char *cmdline)
     }
     else
     {
-        int i;
+        size_t i;
 
         if (strlen(argv[1]) > 4)
         {
@@ -4784,7 +4784,7 @@ int stsi_manufacturer_cmd(int argc, char *argv[], char *cmdline)
     }
     else
     {
-        int i;
+        size_t i;
 
         if (strlen(argv[1]) > 16)
         {
