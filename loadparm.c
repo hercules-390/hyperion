@@ -276,7 +276,10 @@ static BYTE modeltemp[16] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 int set_model(char *m1, char *m2, char *m3, char *m4)
 {
     if ( copy_stringz_to_ebcdic(model,     sizeof(model),     m1) != 0 ) return 1;
-    if ( copy_stringz_to_ebcdic(modelcapa, sizeof(modelcapa), m2) != 0 ) return 2;
+    if ( m2 == NULL || strlen(m2) ==  0)
+        if ( copy_stringz_to_ebcdic(modelcapa, sizeof(modelcapa), m1) != 0 ) return 1;
+    else
+        if ( copy_stringz_to_ebcdic(modelcapa, sizeof(modelcapa), m2) != 0 ) return 2;
     if ( copy_stringz_to_ebcdic(modelperm, sizeof(modelperm), m3) != 0 ) return 3;
     if ( copy_stringz_to_ebcdic(modeltemp, sizeof(modeltemp), m4) != 0 ) return 4;
     return 0;
