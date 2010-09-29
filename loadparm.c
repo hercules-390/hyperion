@@ -265,7 +265,7 @@ char *str_plant()
 /* Set by: MODEL configuration statement                             */
 /* Retrieved by: STSI instruction                                    */
 /*-------------------------------------------------------------------*/
-                       /*  "E    M    U    L    A    T    O    R" */
+                            /*  "E    M    U    L    A    T    O    R" */
 static BYTE     model[16] = { 0xC5,0xD4,0xE4,0xD3,0xC1,0xE3,0xD6,0xD9,
                               0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
 static BYTE modelcapa[16] = { 0xC5,0xD4,0xE4,0xD3,0xC1,0xE3,0xD6,0xD9,
@@ -276,7 +276,7 @@ static BYTE modeltemp[16] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 int set_model(char *m1, char *m2, char *m3, char *m4)
 {
     if ( copy_stringz_to_ebcdic(model,     sizeof(model),     m1) != 0 ) return 1;
-    if ( m2 == NULL || strlen(m2) ==  0)
+    if ( m2 == NULL || strlen(m2) ==  0 )
     {
         if ( copy_stringz_to_ebcdic(modelcapa, sizeof(modelcapa), m1) != 0 ) return 1;
     }
@@ -290,12 +290,13 @@ int set_model(char *m1, char *m2, char *m3, char *m4)
 }
 
 LOADPARM_DLL_IMPORT
-char *str_model(char**szmodels)
+char **str_model()
 {
     static char h_model[sizeof(model)+1];
     static char c_model[sizeof(modelcapa)+1];
     static char p_model[sizeof(modelperm)+1];
     static char t_model[sizeof(modeltemp)+1];
+    static char *models[5] = { h_model, c_model, p_model, t_model, NULL };
     int rc;
     
     bzero(h_model,sizeof(h_model));
@@ -303,20 +304,12 @@ char *str_model(char**szmodels)
     bzero(p_model,sizeof(p_model));
     bzero(t_model,sizeof(t_model));
     
-    if (szmodels != NULL)
-    {
-        szmodels[0] = h_model;
-        szmodels[1] = c_model;
-        szmodels[2] = p_model;
-        szmodels[3] = t_model;
-    }
-
     rc = copy_ebcdic_to_stringz(h_model, sizeof(h_model), model, sizeof(model));
     rc = copy_ebcdic_to_stringz(c_model, sizeof(c_model), modelcapa, sizeof(modelcapa));
     rc = copy_ebcdic_to_stringz(p_model, sizeof(p_model), modelperm, sizeof(modelperm));
     rc = copy_ebcdic_to_stringz(t_model, sizeof(t_model), modeltemp, sizeof(modeltemp));
     
-    return c_model;
+    return models;
 }
 
 void get_model(BYTE *dest)

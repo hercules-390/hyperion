@@ -369,12 +369,17 @@ int message_cmd(int argc,char *argv[], char *cmdline,int withhdr)
 /*-------------------------------------------------------------------*/
 int msg_cmd(int argc,char *argv[], char *cmdline)
 {
+    int rc;
+
     if ( argc < 3 )
     { 
         WRMSG( HHC02299, "E", argv[0] ); 
         return -1;
     }
-    return(message_cmd(argc,argv,cmdline, CMD(argv[0],msgnoh,6)? 0: 1));
+
+    rc = message_cmd(argc,argv,cmdline, CMD(argv[0],msgnoh,6)? 0: 1);
+
+    return rc;
 }
 
 
@@ -405,7 +410,7 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
          ( argc > 1 && !CMD(argv[1],force,5) ) )
     {
         WRMSG( HHC02205, "E", argv[argc-1], "" );
-        return(0);
+        return 0;
     }
 
     if ( argc > 1 )
@@ -3419,11 +3424,11 @@ int msghld_cmd(int argc, char *argv[], char *cmdline)
         if ( argc != 1 )
         {
             WRMSG( HHC02299, "E", argv[0] );
-            return(0);
+            return 0;
         }
         expire_kept_msgs(TRUE);
         WRMSG(HHC02226, "I");
-        return(0);
+        return 0;
     }
     else if ( argc == 2 )
     {
@@ -3432,13 +3437,13 @@ int msghld_cmd(int argc, char *argv[], char *cmdline)
             char buf[40];
             MSGBUF( buf, "%d seconds", sysblk.keep_timeout_secs);
             WRMSG(HHC02203, "I", "message hold time", buf);
-            return(0);
+            return 0;
         }
         else if ( CMD(argv[1],clear,5) )
         {
             expire_kept_msgs(TRUE);
             WRMSG(HHC02226, "I");
-            return(0);
+            return 0;
         }
         else
         {
@@ -3450,17 +3455,17 @@ int msghld_cmd(int argc, char *argv[], char *cmdline)
                 sysblk.keep_timeout_secs = new_timeout;
                 MSGBUF( buf, "%d seconds", sysblk.keep_timeout_secs);
                 WRMSG(HHC02204, "I", "message hold time", buf);
-                return(0);
+                return 0;
             }
             else
             {
                 WRMSG(HHC02205, "E", argv[1], "");
-                return(0);
+                return 0;
             }
         }
     }
     WRMSG(HHC02202, "E");
-    return(0);
+    return 0;
 }
 #endif // OPTION_MSGHLD
 
@@ -3470,14 +3475,20 @@ int msghld_cmd(int argc, char *argv[], char *cmdline)
 int sh_cmd(int argc, char *argv[], char *cmdline)
 {
     char* cmd;
+    int   rc;
+
     UNREFERENCED(argc);
     UNREFERENCED(argv);
+
     if (sysblk.shcmdopt & SHCMDOPT_ENABLE)
     {
         cmd = cmdline + 2;
         while (isspace(*cmd)) cmd++;
         if (*cmd)
-            return herc_system (cmd);
+        {
+            rc = herc_system(cmd);
+            return rc;
+        }
         else
             return -1;
     }
@@ -3498,13 +3509,19 @@ int ls_cmd(int argc, char *argv[], char *cmdline)
 #endif
 {
     char* cmd;
+    int   rc;
+
     UNREFERENCED(argc);
     UNREFERENCED(argv);
+
     if (sysblk.shcmdopt & SHCMDOPT_ENABLE)
     {
         cmd = cmdline;
         if (*cmd)
-            return herc_system (cmd);
+        {
+            rc = herc_system(cmd);
+            return rc;
+        }
         else
             return -1;
     }
@@ -4644,6 +4661,8 @@ int codepage_cmd(int argc, char *argv[], char *cmdline)
 int stsi_model_cmd(int argc, char *argv[], char *cmdline)
 {
     int rc;
+    int m;
+    char *model[4] = { "", "", "", "" };
 
     UNREFERENCED(cmdline);
 
@@ -4654,65 +4673,56 @@ int stsi_model_cmd(int argc, char *argv[], char *cmdline)
         return -1;
     }
     
-    if ( argc == 1 )
+    if ( argc > 1 ) model[0] = argv[1]; 
+    if ( argc > 2 ) model[1] = argv[2];
+    if ( argc > 3 ) model[2] = argv[3];
+    if ( argc > 4 ) model[3] = argv[4];
+
+    for ( m = 0; m < ( argc - 1 ); m++ )
     {
-        char *models[4];
+        size_t i;
 
-        str_model(models);
-
-        WRMSG( HHC02204, "I", "hdw model", models[0] );
-        WRMSG( HHC02204, "I", "cap model", models[1] );
-        WRMSG( HHC02204, "I", "prm model", models[2] );
-        WRMSG( HHC02204, "I", "tmp model", models[3] );    
-    }
-    else
-    {
-        int   m;
-        char *model[4] = { "", "", "", "" };
-        
-        if ( argc > 1 ) model[0] = argv[1]; 
-        if ( argc > 2 ) model[1] = argv[2];
-        if ( argc > 3 ) model[2] = argv[3];
-        if ( argc > 4 ) model[3] = argv[4];
-
-        for ( m = 0; m < ( argc - 1 ); m++ )
+        if ( strlen(model[m]) > 16 )
         {
-            size_t i;
-
-            if ( strlen(model[m]) > 16 )
-            {
-                WRMSG( HHC02205, "E", model[m], "; argument > 16 characters" );
-                return -1;
-            }
-
-            for ( i=0; i < strlen( model[m] ); i++ )
-            {
-                if ( isalnum(model[m][i]) )
-                    continue;
-                WRMSG( HHC02205, "E", model[m], "; argument contains invalid characters" );
-                return -1;
-            }
-        }
-        
-        if ( ( rc = set_model( model[0], model[1], model[2], model[3]) ) != 0 )
-        {
-            if ( rc > 0 && rc < 4 )
-                WRMSG( HHC02205, "E", model[rc-1], "; argument contains invalid characters" );
-            else
-                WRMSG( HHC02205, "E", argv[0], "" );  
+            WRMSG( HHC02205, "E", model[m], "; argument > 16 characters" );
             return -1;
         }
 
-        if ( MLVL(VERBOSE) )
+        for ( i=0; i < strlen( model[m] ); i++ )
         {
-            char *models[4] = { "", "", "", "" };
+            if ( isalnum(model[m][i]) )
+                continue;
+            WRMSG( HHC02205, "E", model[m], "; argument contains invalid characters" );
+            return -1;
+        }
+    }
+        
+    if ( argc > 1 && ( rc = set_model(model[0], model[1], model[2], model[3]) ) != 0 )
+    {
+        if ( rc > 0 && rc < 4 )
+            WRMSG( HHC02205, "E", model[rc-1], "; argument contains invalid characters" );
+        else
+            WRMSG( HHC02205, "E", argv[0], "" );  
+        return -1;
+    }
 
-            str_model(models);
+    if ( MLVL(VERBOSE) || argc == 1 )
+    {
+        char **model = str_model();
 
-            WRMSG( HHC02204, "I", "hdw model", models[0] );
-            WRMSG( HHC02204, "I", "cap model", models[1] );
-            WRMSG( HHC02204, "I", "prm model", models[2] );
-            WRMSG( HHC02204, "I", "tmp model", models[3] );
+        if ( argc == 1 )
+        {
+            WRMSG( HHC02203, "I", "hdw model", ( model == NULL ? "" : model[0] == NULL ? "" : model[0] ) );   
+            WRMSG( HHC02203, "I", "cap model", ( model == NULL ? "" : model[1] == NULL ? "" : model[1] ) );
+            WRMSG( HHC02203, "I", "prm model", ( model == NULL ? "" : model[2] == NULL ? "" : model[2] ) );
+            WRMSG( HHC02203, "I", "tmp model", ( model == NULL ? "" : model[3] == NULL ? "" : model[3] ) );
+        }
+        else
+        {
+            WRMSG( HHC02204, "I", "hdw model", ( model == NULL ? "" : model[0] == NULL ? "" : model[0] ) );
+            WRMSG( HHC02204, "I", "cap model", ( model == NULL ? "" : model[1] == NULL ? "" : model[1] ) );
+            WRMSG( HHC02204, "I", "prm model", ( model == NULL ? "" : model[2] == NULL ? "" : model[2] ) );
+            WRMSG( HHC02204, "I", "tmp model", ( model == NULL ? "" : model[3] == NULL ? "" : model[3] ) );
         }
     }
 
@@ -5237,7 +5247,7 @@ static int reset_cmd(int ac,char *av[],char *cmdline,int clear)
 /*-------------------------------------------------------------------*/
 int sysreset_cmd(int ac,char *av[],char *cmdline)
 {
-    return(reset_cmd(ac,av,cmdline,0));
+    return reset_cmd(ac,av,cmdline,0);
 }
 
 
@@ -5246,7 +5256,7 @@ int sysreset_cmd(int ac,char *av[],char *cmdline)
 /*-------------------------------------------------------------------*/
 int sysclear_cmd(int ac,char *av[],char *cmdline)
 {
-    return(reset_cmd(ac,av,cmdline,1));
+    return reset_cmd(ac,av,cmdline,1);
 }
 
 
@@ -5383,7 +5393,7 @@ int  rest_loadparm = FALSE;
 /*-------------------------------------------------------------------*/
 int ipl_cmd(int argc, char *argv[], char *cmdline)
 {
-    return(ipl_cmd2(argc,argv,cmdline,0));
+    return ipl_cmd2(argc,argv,cmdline,0);
 }
 
 
@@ -5392,7 +5402,7 @@ int ipl_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int iplc_cmd(int argc, char *argv[], char *cmdline)
 {
-    return(ipl_cmd2(argc,argv,cmdline,1));
+    return ipl_cmd2(argc,argv,cmdline,1);
 }
 
 
@@ -5447,9 +5457,11 @@ int FishHangReport_cmd(int argc, char *argv[], char *cmdline)
 
 static int SortDevBlkPtrsAscendingByDevnum(const void* pDevBlkPtr1, const void* pDevBlkPtr2)
 {
-    return
-        ((int)((*(DEVBLK**)pDevBlkPtr1)->devnum) -
-         (int)((*(DEVBLK**)pDevBlkPtr2)->devnum));
+    int rc;
+    
+    rc = (int)((*(DEVBLK**)pDevBlkPtr1)->devnum) -
+         (int)((*(DEVBLK**)pDevBlkPtr2)->devnum);
+    return rc;
 }
 
 
@@ -5473,8 +5485,6 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
     char     buf[256];
 
     UNREFERENCED(cmdline);
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
 
     if ( argc == 2 && ( strlen(argv[1]) > 2 && strlen(argv[1]) < 5 ))
     {
@@ -5859,10 +5869,11 @@ int rc;
     {
         return -1;
     }
+    
+    rc = detach_device (lcss, devnum);
 
-    return  detach_device (lcss, devnum);
+    return rc;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* define command - rename a device                                  */
@@ -5897,7 +5908,9 @@ int rc;
         return -1;
     }
 
-    return  define_device (lcss, devnum, newdevn);
+    rc = define_device (lcss, devnum, newdevn);
+
+    return rc;
 }
 
 
@@ -6259,6 +6272,7 @@ int     flag = 1;                       /* sf- flag (default merge)  */
 int     level = 2;                      /* sfk level (default 2)     */
 TID     tid;                            /* sf command thread id      */
 char    c;                              /* work for sscan            */
+int     rc;
 
     UNREFERENCED(cmdline);
 
@@ -6302,7 +6316,10 @@ char    c;                              /* work for sscan            */
         if (parse_single_devnum(devascii,&lcss,&devnum) < 0)
             return -1;
         if ((dev = find_device_by_devnum (lcss,devnum)) == NULL)
-            return devnotfound_msg(lcss,devnum);
+        {
+            rc = devnotfound_msg(lcss,devnum);
+            return rc;
+        }
         if (dev->cckd_ext == NULL)
         {
             WRMSG(HHC02209, "E", lcss, devnum, "cckd device" );
@@ -7434,7 +7451,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
         free(opcode1);
         free(opcode2);
         release_lock( &sysblk.icount_lock );
-        return(0);
+        return 0;
       }
       for ( i = 0; i < (MAX_ICOUNT_INSTR-1); i++ )
       {
@@ -8509,7 +8526,8 @@ BYTE c;                                 /* Character work area       */
 static inline char *aea_mode_str(BYTE mode)
 {
 static char *name[] = { "DAT-Off", "Primary", "AR", "Secondary", "Home",
-0, 0, 0, "PER/DAT-Off", "PER/Primary", "PER/AR", "PER/Secondary", "PER/Home" };
+                        0, 0, 0, "PER/DAT-Off", "PER/Primary", "PER/AR", 
+                        "PER/Secondary", "PER/Home" };
 
     return name[(mode & 0x0f) | ((mode & 0xf0) ? 8 : 0)];
 }
@@ -8864,7 +8882,7 @@ int ssd_cmd(int argc, char *argv[], char *cmdline)
         (argc > 1 && !CMD(argv[1],now,3)))
     {
         WRMSG(HHC02205, "E", argv[argc-1], "");
-        return(0);
+        return 0;
     }
 
     if ( (argc > 1) ||
@@ -9861,6 +9879,11 @@ int i;
 /*-------------------------------------------------------------------*/
 int qcpuid_cmd(int argc, char *argv[], char *cmdline)
 {
+
+    char **model = str_model();
+    char *manuf =  str_manufacturer();
+    char *plant = str_plant();
+
     UNREFERENCED(cmdline);
     UNREFERENCED(argv);
 
@@ -9870,10 +9893,14 @@ int qcpuid_cmd(int argc, char *argv[], char *cmdline)
         return -1;
     }
 
+    model[1] = ( model == NULL ? "" : model[1] == NULL ? "" : model[1] );
+    if ( manuf    == NULL ) manuf = "";
+    if ( plant    == NULL ) plant = "";
+
     WRMSG( HHC17004, "I", sysblk.cpuid );
     WRMSG( HHC17005, "I", ((sysblk.cpuid & 0x00000000FFFF0000ULL) >> 16),
-                           str_model(NULL), str_manufacturer(), str_plant(),
-                           ((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32) );
+                           model[1], manuf, plant,
+                          ((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32) );
     return 0;
 }
 
@@ -9951,27 +9978,30 @@ int qports_cmd(int argc, char *argv[], char *cmdline)
         WRMSG( HHC17000, "E" );
         return -1;
     }
+
     if ( sysblk.httpport > 0 )
     {
-        MSGBUF( buf, "on port %-5d", sysblk.httpport);
-        WRMSG( HHC17001, "I", "http", buf);
+        MSGBUF( buf, "on port %ud", sysblk.httpport);
+        WRMSG( HHC17001, "I", "HTTP", buf);
     }
     else
     {
-        WRMSG( HHC17002, "I", "http");
+        WRMSG( HHC17002, "I", "HTTP");
     }
+
     if ( sysblk.shrdport > 0 )
     {
-        MSGBUF( buf, "on port %-5d", sysblk.shrdport);
-        WRMSG( HHC17001, "I", "shared_dasd", buf);
+        MSGBUF( buf, "on port %ud", sysblk.shrdport);
+        WRMSG( HHC17001, "I", "Shared DASD", buf);
     }
     else
     {
-        WRMSG( HHC17002, "I", "shared_dasd");
+        WRMSG( HHC17002, "I", "Shared DASD");
     }
+
     if (strchr(sysblk.cnslport, ':') == NULL)
     {
-        MSGBUF( buf, "on port %-5s", sysblk.cnslport);
+        MSGBUF( buf, "on port %s", sysblk.cnslport);
     }
     else
     {
@@ -9985,10 +10015,11 @@ int qports_cmd(int argc, char *argv[], char *cmdline)
             if (*port)
                 host = port;
         }
-        MSGBUF( buf, "for host %s on port %-5s", host, serv);
+        MSGBUF( buf, "for host %s on port %s", host, serv);
         free( port );
     }
-    WRMSG( HHC17001, "I", "console", buf);
+    WRMSG( HHC17001, "I", "Console", buf);
+
     return 0;
 }
 /*-------------------------------------------------------------------*/

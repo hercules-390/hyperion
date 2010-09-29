@@ -1644,8 +1644,8 @@ cpu.c:123:HABC1234I This is a message
 
 // reserve 17000-17499 messages command processing
 #define HHC17000 "Missing or invalid argument(s)"
-#define HHC17001 "Server '%12s' is listening %s"
-#define HHC17002 "Server '%12s' is inactive"
+#define HHC17001 "%s server listening %s"
+#define HHC17002 "%s server inactive"
 #define HHC17003 "%-8s storage is %sBytes '%ssize' "
 #define HHC17004 "CPUID  = "I64_FMTX""
 #define HHC17005 "CPC SI = %4.4X.%s.%s.%s.%16.16X"
