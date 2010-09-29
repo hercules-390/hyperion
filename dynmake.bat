@@ -138,7 +138,7 @@
 
   cd /d "%hercdir%"
 
-  set xcopy_opts=/v /c /r /k /o /x /y
+  set xcopy_opts=/v /c /r /k /y
 
 ::---------------------------------------------------------------------
 ::  Create our o/p module building sub-directory...
