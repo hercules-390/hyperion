@@ -627,6 +627,9 @@ EXTRA_DIST = autoconf/config.rpath \
              msvc.makefile.includes/PCRE_FLAGS.msvc   \
              msvc.makefile.includes/PCRE_RULES.msvc   \
              msvc.makefile.includes/PRIM_RULES.msvc   \
+             msvc.makefile.includes/REXX_DIR.msvc     \
+             msvc.makefile.includes/REXX_FLAGS.msvc   \
+             msvc.makefile.includes/REXX_RULES.msvc   \
              msvc.makefile.includes/VERSION.msvc      \
              msvc.makefile.includes/ZLIB_DIR.msvc     \
              msvc.makefile.includes/ZLIB_FLAGS.msvc   \
