@@ -2621,7 +2621,7 @@ static void ARCH_DEP(kmf_dea)(int r1, int r2, REGS *regs)
   lcfb = GR0_lcfb(regs);
   
   /* Check special conditions */
-  if(unlikely(GR_A(r2 + 1, regs) % lcfb || !lcfb || lcfb > 8))
+  if(unlikely(!lcfb || lcfb > 8 || GR_A(r2 + 1, regs)))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Return with cc 0 on zero length */
@@ -3829,6 +3829,7 @@ DEF_INST(cipher_message_with_cipher_feedback_d)
   WRGMSG(HHC90102, "D", regs->GR(r2));
   WRGMSG(HHC90103, "D", regs->GR(r2 + 1));
   WRGMSG(HHC90104, "D", 0, regs->GR(0));
+  WRGMSG(HHC90112, "D", GR0_lcfb(regs));
   WRGMSG(HHC90107, "D", TRUEFALSE(GR0_m(regs)));
   WRGMSG(HHC90106, "D", GR0_fc(regs));
   WRGMSG(HHC90104, "D", 1, regs->GR(1));
