@@ -9169,6 +9169,10 @@ int ecpsvm_cmd(int argc, char *argv[], char *cmdline)
 int herclogo_cmd(int argc,char *argv[], char *cmdline)
 {
     int rc = 0;
+    char    fn[FILENAME_MAX];
+
+    bzero(fn,sizeof(fn));
+
     UNREFERENCED(cmdline);
     
     if( argc < 2 )
@@ -9183,8 +9187,22 @@ int herclogo_cmd(int argc,char *argv[], char *cmdline)
         return -1;
     }
 
-    rc = readlogo(argv[1]);
-    
+    hostpath(fn,argv[1],sizeof(fn));
+
+    rc = readlogo(fn);
+
+    if ( rc == -1 && strcasecmp(fn,basename(fn)) == 0
+                  && strlen(sysblk.hercules_pgmpath) > 0 )
+    {
+        char altfn[FILENAME_MAX];
+        char pathname[MAX_PATH];
+
+        bzero(altfn,sizeof(altfn));
+            
+        MSGBUF(altfn,"%s%c%s", sysblk.hercules_pgmpath, PATHSEPC, fn);
+        rc = readlogo(pathname);
+    }
+
     if ( rc == -1 && MLVL(VERBOSE) )
         WRMSG( HHC01430, "E", "fopen()", strerror(errno) );
 
@@ -9696,6 +9714,48 @@ rexx_done:
     return 0;
 }
 
+/*-------------------------------------------------------------------*/
+/* pause command - sleep for n seconds                               */
+/*-------------------------------------------------------------------*/
+int pause_cmd(int argc, char *argv[], char *cmdline)
+{
+    UNREFERENCED(cmdline);
+    if ( argc != 2 )
+        WRMSG( HHC01455, "E", argv[0] );
+    else if ( argc == 2 )
+    {
+        int     sleepamt = 0;
+        BYTE    c;                      /* Character work area       */
+
+        if (sscanf(argv[1], "%d%c", &sleepamt, &c) != 1 || sleepamt < 1 || sleepamt > 999 )
+            WRMSG(HHC02205, "E", argv[1], "" );
+        else
+        {
+            if (sysblk.impltid != thread_id() )
+            {
+                int i;
+                if (MLVL(VERBOSE))
+                    WRMSG(HHC02262, "I",sleepamt);
+                for( i = sleepamt; i > 0; i--)
+                {
+                    SLEEP(1);
+                    if (scr_uaborted) break;
+                }
+                if (!scr_uaborted)
+                {
+                    if (MLVL(VERBOSE))
+                        WRMSG(HHC02263, "I");
+                }
+            }
+            else
+            {
+                WRMSG(HHC02261, "I", argv[0] );
+            }
+        }
+    }
+
+    return 0;
+}
 
 /*-------------------------------------------------------------------*/
 /* msglevel command                                                  */
