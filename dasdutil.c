@@ -554,7 +554,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             char *s,*suffix;
 
             /* Look for last slash marking end of directory name */
-            s = strrchr (fname, '/');
+            s = strrchr (fname, PATHSEPC);
             if (s == NULL) s = fname;
 
             /* Insert suffix before first dot in file name, or
@@ -1773,7 +1773,7 @@ U32             trksize;                /* DASD image track length   */
     if (volcyls > maxcpif)
     {
         /* Look for last slash marking end of directory name */
-        s = strrchr (fname, '/');
+        s = strrchr (fname, PATHSEPC);
         if (s == NULL) s = fname;
 
         /* Insert suffix before first dot in file name, or

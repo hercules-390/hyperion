@@ -176,7 +176,7 @@ char   *strtok_str;                     /* save last position        */
                 if (dev->dasdsfn)
                 {
                     /* Set the pointer to the suffix character */
-                    dev->dasdsfx = strrchr (dev->dasdsfn, '/');
+                    dev->dasdsfx = strrchr (dev->dasdsfn, PATHSEPC);
                     if (dev->dasdsfx == NULL)
                         dev->dasdsfx = dev->dasdsfn + 1;
                     dev->dasdsfx = strchr (dev->dasdsfx, '.');

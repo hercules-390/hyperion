@@ -274,7 +274,7 @@ char           *strtok_str;             /* save last position        */
     dev->bufcur = dev->cache = -1;
 
     /* Locate and save the last character of the file name */
-    sfxptr = strrchr (dev->filename, '/');
+    sfxptr = strrchr (dev->filename, PATHSEPC);
     if (sfxptr == NULL) sfxptr = dev->filename + 1;
     sfxptr = strchr (sfxptr, '.');
     if (sfxptr == NULL) sfxptr = dev->filename + strlen(dev->filename);
@@ -331,7 +331,7 @@ char           *strtok_str;             /* save last position        */
             if (dev->dasdsfn)
             {
                 /* Set the pointer to the suffix character */
-                dev->dasdsfx = strrchr (dev->dasdsfn, '/');
+                dev->dasdsfx = strrchr (dev->dasdsfn, PATHSEPC);
                 if (dev->dasdsfx == NULL)
                     dev->dasdsfx = dev->dasdsfn + 1;
                 dev->dasdsfx = strchr (dev->dasdsfx, '.');

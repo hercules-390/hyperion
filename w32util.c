@@ -1125,11 +1125,7 @@ DLL_EXPORT BYTE *hostpath( BYTE *outpath, const BYTE *inpath, size_t buffsize )
         while (*inpath && --buffsize)
         {
             BYTE c = *inpath++;
-#if      defined(OPTION_WINDOWS_HOST_FILENAMES)
-            if ( c == '/' ) c = '\\';
-#else //!defined(OPTION_WINDOWS_HOST_FILENAMES)
-            if (c == '\\') c = '/';
-#endif //defined(OPTION_WINDOWS_HOST_FILENAMES)
+            if (c == '\\' || c == '/' ) c = PATHSEPC;
             *outpath++ = c;
         }
         *outpath = 0;
@@ -3420,18 +3416,13 @@ DLL_EXPORT char*  w32_dirname( const char* path )
     char drive[_MAX_DRIVE];
     char dir[_MAX_DIR];
     char *t;
-#if      defined(OPTION_WINDOWS_HOST_FILENAMES)
-    char *h = "\\";
-#else
-    char *h = "/";
-#endif
 
     memset( _dirname, '\0', MAX_PATH );          // zero for security reasons
     _splitpath( path, drive, dir, NULL, NULL ); // C4996
 
     /* Remove trailing slashes */
     t = dir + strlen(dir) -1;
-    for ( ; (*t == *h && t > dir) ; t--) *t = '\0';
+    for ( ; (*t == PATHSEPC && t > dir) ; t--) *t = '\0';
 
     strcat(strcpy(_dirname,drive), dir);
 
