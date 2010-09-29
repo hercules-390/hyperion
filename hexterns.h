@@ -309,7 +309,7 @@ LOADPARM_DLL_IMPORT char *str_manufacturer();
 int set_plant(char *name);
 LOADPARM_DLL_IMPORT char *str_plant();
 int set_model(char *m1, char* m2, char* m3, char* m4);
-LOADPARM_DLL_IMPORT void str_model(char **model);
+LOADPARM_DLL_IMPORT char *str_model(char **model);
 void get_manufacturer(BYTE *name);
 void get_plant(BYTE *name);
 void get_model(BYTE *name);

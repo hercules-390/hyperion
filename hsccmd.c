@@ -9866,9 +9866,9 @@ int qcpuid_cmd(int argc, char *argv[], char *cmdline)
     }
 
     WRMSG( HHC17004, "I", sysblk.cpuid );
- /*   WRMSG( HHC17005, "I", ((sysblk.cpuid & 0x00000000FFFF0000ULL) >> 16),
-                           str_model(), str_manufacturer(), str_plant(),
-                           ((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32) ); */
+    WRMSG( HHC17005, "I", ((sysblk.cpuid & 0x00000000FFFF0000ULL) >> 16),
+                           str_model(NULL), str_manufacturer(), str_plant(),
+                           ((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32) );
     return 0;
 }
 

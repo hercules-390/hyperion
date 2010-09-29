@@ -277,19 +277,21 @@ int set_model(char *m1, char *m2, char *m3, char *m4)
 {
     if ( copy_stringz_to_ebcdic(model,     sizeof(model),     m1) != 0 ) return 1;
     if ( m2 == NULL || strlen(m2) ==  0)
+    {
         if ( copy_stringz_to_ebcdic(modelcapa, sizeof(modelcapa), m1) != 0 ) return 1;
+    }
     else
+    {
         if ( copy_stringz_to_ebcdic(modelcapa, sizeof(modelcapa), m2) != 0 ) return 2;
+    }
     if ( copy_stringz_to_ebcdic(modelperm, sizeof(modelperm), m3) != 0 ) return 3;
     if ( copy_stringz_to_ebcdic(modeltemp, sizeof(modeltemp), m4) != 0 ) return 4;
     return 0;
 }
 
 LOADPARM_DLL_IMPORT
-void str_model(char**szmodels)
+char *str_model(char**szmodels)
 {
-    //static char *szmodels[4];
-
     static char h_model[sizeof(model)+1];
     static char c_model[sizeof(modelcapa)+1];
     static char p_model[sizeof(modelperm)+1];
@@ -301,17 +303,20 @@ void str_model(char**szmodels)
     bzero(p_model,sizeof(p_model));
     bzero(t_model,sizeof(t_model));
     
-    szmodels[0] = h_model;
-    szmodels[1] = c_model;
-    szmodels[2] = p_model;
-    szmodels[3] = t_model;
+    if (szmodels != NULL)
+    {
+        szmodels[0] = h_model;
+        szmodels[1] = c_model;
+        szmodels[2] = p_model;
+        szmodels[3] = t_model;
+    }
 
     rc = copy_ebcdic_to_stringz(h_model, sizeof(h_model), model, sizeof(model));
     rc = copy_ebcdic_to_stringz(c_model, sizeof(c_model), modelcapa, sizeof(modelcapa));
     rc = copy_ebcdic_to_stringz(p_model, sizeof(p_model), modelperm, sizeof(modelperm));
     rc = copy_ebcdic_to_stringz(t_model, sizeof(t_model), modeltemp, sizeof(modeltemp));
     
-    return;
+    return c_model;
 }
 
 void get_model(BYTE *dest)
