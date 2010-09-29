@@ -4,74 +4,6 @@
 #
 # $Id$
 #
-# $Log$
-# Revision 1.187  2009/01/18 00:52:19  jmaynard
-# Fix Gentoo reported bug: unable to do multithreaded "make install" reliably
-# if --enable-setuid-hercifc is specified.
-#
-# Revision 1.186  2008/12/29 11:03:10  jj
-# Move HMC disk I/O functions to scedasd.c
-#
-# Revision 1.185  2008/12/04 17:39:02  rbowler
-# Add ability to configure group name with --enable-setuid-hercifc=name
-#
-# Revision 1.184  2008/12/01 16:19:49  jj
-# Check for licensed operating systems without impairing architectural
-# compliance of IFL's
-#
-# Revision 1.183  2008/05/22 19:25:58  fish
-# Flex FakeTape support
-#
-# Revision 1.182  2008/03/25 11:41:31  fish
-# SCSI TAPE MODS part 1: groundwork: non-functional changes:
-# rename some functions, comments, general restructuring, etc.
-# New source modules awstape.c, omatape.c, hettape.c and
-# tapeccws.c added, but not yet used (all will be used in a future
-# commit though when tapedev.c code is eventually split)
-#
-# Revision 1.181  2008/03/02 22:50:35  rbowler
-# Restore tabs corrupted by previous modification
-#
-# Revision 1.180  2008/03/01 14:19:29  rbowler
-# Add new module general3.c for general-instructions-extension facility
-#
-# Revision 1.179  2008/02/19 11:49:18  ivan
-# - Move setting of CPU priority after spwaning timer thread
-# - Added support for Posix 1003.1e capabilities
-#
-# Revision 1.178  2007/06/02 13:46:41  rbowler
-# PFPO framework
-#
-# Revision 1.177  2006/12/30 21:13:37  rbowler
-# Backout rev 1.176
-#
-# Revision 1.175  2006/12/30 16:54:07  rbowler
-# Reinstate missing changelog entries
-#
-# Revision 1.174  2006/12/30 15:37:01  jmaynard
-# Removed a coupple of stray ^Ms.
-#
-# Revision 1.173  2006/12/30 01:20:09  fish
-# Add new MSVC makefile includes to distribution
-#
-# Revision 1.172  2006/12/18 13:35:51  rbowler
-# Add hstdint.h to make dist
-#
-# Revision 1.171  2006/12/13 17:16:30  rbowler
-# Make libherc depend on libdecNumber
-#
-# Revision 1.170  2006/12/11 16:56:59  rbowler
-# Update Makefile.am to search decNumber for include files
-#
-# Revision 1.169  2006/12/09 01:05:59  ivan
-# Remove makefile-dll.msvc from Makefile.am dist list since it has been removed from the repository
-#
-# Revision 1.168  2006/12/08 09:43:16  jj
-# Add CVS message log
-#
-# DD/MM/YY Description.......................................................
-# 06/09/06 Change History added - Fish
-# 06/09/06 HAO (Hercules Automatic Operator) support - Fish
 # ***************************************************************************
 
 AUTOMAKE_OPTIONS = foreign 1.5
@@ -145,7 +77,7 @@ dyndev_SRC         = commadpt.c  \
                      tapeccws.c  \
                      sllib.c     \
                      hetlib.c    \
-		     ftlib.c     \
+                     ftlib.c     \
                      awstape.c   \
                      faketape.c  \
                      hettape.c   \
@@ -344,7 +276,7 @@ endif
 #
 
   libherct_la_SOURCES = sllib.c  \
-			ftlib.c  \
+                        ftlib.c  \
                         hetlib.c
 
   libherct_la_LDFLAGS = $(LIB_LD_FLAGS)
@@ -736,7 +668,7 @@ noinst_HEADERS = fishhang.h     \
                  hbyteswp.h     \
                  dasdblks.h     \
                  hetlib.h       \
-		 ftlib.h	\
+                 ftlib.h        \
                  version.h      \
                  parser.h       \
                  dasdtab.h      \
