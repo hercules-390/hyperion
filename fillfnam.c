@@ -15,9 +15,10 @@
    and alphasort function. In this case fillfnam does nothing
    and the tab command is effectively a no-operation */
 #if !(defined(HAVE_SCANDIR) && defined(HAVE_ALPHASORT)) && !defined(_MSVC_)
-int tab_pressed(char *cmdlinefull, int *cmdoffset) {
+int tab_pressed(char *cmdlinefull, size_t cmdlinelen, int *cmdoffset) {
   UNREFERENCED(cmdlinefull);
-  UNREFERENCED(cmdoffset);  
+  UNREFERENCED(cmdoffset);
+  UNREFERENCED(cmdlinelen);
   return 0; 
 }
 #else 
@@ -41,16 +42,16 @@ int filter(const struct dirent *ent) {
    part3 = " sf=volume1.shadow"
    only part2 can be changed and it must be divided into path and filename
 */
-int tab_pressed(char *cmdlinefull, int *cmdoffset) {
+int tab_pressed(char *cmdlinefull, size_t cmdlinelen, int *cmdoffset) {
   struct dirent **namelist;
-  int n, i, j, len, len1, len2;
-  int cmdoff = *(cmdoffset); /* for easy reading of source code */
+  int   n, i, j, len, len1, len2;
+  int   cmdoff = *(cmdoffset); /* for easy reading of source code */
   char *part1, *part2, *part3;
   char *buff;
   char *filename, *path, *tmp;
-  char result[1024];
-  char pathname[MAX_PATH];
-  size_t    bl;
+  char  result[1024];
+  char  pathname[MAX_PATH];
+  size_t    bl, pl;
 #ifdef _MSVC_
   int within_quoted_string = 0;
   int quote_pos;
@@ -102,7 +103,8 @@ int tab_pressed(char *cmdlinefull, int *cmdoffset) {
 #endif
   if (len < 2)
     len = 2;
-  path = (char*)malloc(len + 1);
+  pl = len + 1;
+  path = (char*)malloc(pl);
   *path = '\0';
   filename = part2;
   /* is it pure filename or is there whole path ? */
@@ -123,11 +125,11 @@ int tab_pressed(char *cmdlinefull, int *cmdoffset) {
   else {
 #ifdef _MSVC_
     if (within_quoted_string)
-        strcpy(path,"\".\\");
+        strlcpy(path,"\".\\",pl);
     else
-        strcpy(path,".\\");
+        strlcpy(path,".\\",pl);
 #else
-        strcpy(path,"./");
+        strlcpy(path,"./",pl);
 #endif
 
   }
@@ -200,10 +202,11 @@ int tab_pressed(char *cmdlinefull, int *cmdoffset) {
       snprintf(result, sizeof(result)-1, "%s%s%s", part1, fullfilename, part3);
       /* move cursor */
       *(cmdoffset) = (int)(strlen(part1) + strlen(fullfilename));
-      strcpy(cmdlinefull, result);
+      strlcpy(cmdlinefull, result, cmdlinelen);
       free(fullfilename);
     }
-    else {
+    else 
+    {
       /* display all alternatives */
       for (i = 0; i< n; i++)
          logmsg("%s\n", namelist[i]->d_name);

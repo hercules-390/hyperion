@@ -420,7 +420,7 @@ int clock_hsuspend(void *file)
     i = (current == &new);
     SR_WRITE_VALUE(file, SR_SYS_CLOCK_CURRENT_CSR, i, sizeof(i));
     SR_WRITE_VALUE(file, SR_SYS_CLOCK_UNIVERSAL_TOD, universal_tod, sizeof(universal_tod));
-    snprintf(buf, sizeof(buf), "%f", hw_steering);
+    MSGBUF(buf, "%f", hw_steering);
     SR_WRITE_STRING(file, SR_SYS_CLOCK_HW_STEERING, buf);
     SR_WRITE_VALUE(file, SR_SYS_CLOCK_HW_EPISODE, hw_episode, sizeof(hw_episode));
     SR_WRITE_VALUE(file, SR_SYS_CLOCK_HW_OFFSET, hw_offset, sizeof(hw_offset));

@@ -927,9 +927,11 @@ parse_lcss(const char *spec,
     char    *strptr;
     char    *garbage;
     char    *strtok_str = "";
+    size_t  len;
 
-    wrk=malloc(strlen(spec)+1);
-    strcpy(wrk,spec);
+    len = strlen(spec)+1;
+    wrk=malloc(len);
+    strlcpy(wrk,spec,len);
     lcss=strtok_r(wrk,":",&strtok_str);
     if(lcss==NULL)
     {
@@ -975,8 +977,9 @@ parse_lcss(const char *spec,
         free(wrk);
         return -1;
     }
-    *rest=malloc(strlen(r)+1);
-    strcpy(*rest,r);
+    len = strlen(r)+1;
+    *rest=malloc(len);
+    strlcpy(*rest,r,len);
     free(wrk);
     return lcssid;
 }
@@ -1292,9 +1295,10 @@ int
 readlogo(char *fn)
 {
     char    **data;
-    char    bfr[256];
+    char     bfr[256];
     char    *rec;
-    FILE *lf;
+    FILE    *lf;
+    size_t   len;
 
     clearlogo();
 
@@ -1308,8 +1312,9 @@ readlogo(char *fn)
     while((rec=fgets(bfr,sizeof(bfr),lf))!=NULL)
     {
         rec[strlen(rec)-1]=0;
-        data[sysblk.logolines]=malloc(strlen(rec)+1);
-        strcpy(data[sysblk.logolines],rec);
+        len = strlen(rec)+1;
+        data[sysblk.logolines]=malloc(len);
+        strlcpy(data[sysblk.logolines],rec,len);
         sysblk.logolines++;
         if(sysblk.logolines>MAX_LOGO_LINES)
         {

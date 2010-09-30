@@ -91,7 +91,7 @@ con1052_init_handler ( DEVBLK *dev, int argc, char *argv[] )
     dev->prompt1052 = 1;
 
     /* Default command character is "/" */
-    strcpy(dev->filename,"/");
+    strlcpy(dev->filename,"/",sizeof(dev->filename));
 
     /* Is there an argument? */
     if (argc > 0)

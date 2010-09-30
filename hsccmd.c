@@ -949,10 +949,10 @@ static void fcb_dump(DEVBLK* dev, char *buf, unsigned int buflen)
             if (strlen(buf) + strlen(wrk) >= buflen - 4)
             {
                 /* Too long, truncate it */
-                strcat(buf, ",...");
+                strlcat(buf, ",...", buflen);
                 return;
             }
-            strcat(buf, wrk);
+            strlcat(buf, wrk,buflen);
         }
     }
     return;
@@ -5306,7 +5306,7 @@ int  rest_loadparm = FALSE;
     {
         if ( CMD( argv[2], loadparm, 4) )
         {
-            strcpy( save_loadparm, str_loadparm() );
+            strlcpy( save_loadparm, str_loadparm(), sizeof(save_loadparm) );
             rest_loadparm = TRUE;
             if ( argc == 4 )
                 set_loadparm(argv[3]);
@@ -5501,7 +5501,7 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
            )
         {
             int i;
-            strcpy( devtype, argv[1] );
+            strlcpy( devtype, argv[1], strlen(devtype) );
             for ( i = 0; i < (int)strlen( devtype ); i++ )
                 if ( isalpha( devtype[i] ) )
                     devtype[i] = toupper( devtype[i] );
@@ -7336,9 +7336,9 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
         if (dev->ioactive == DEV_SYS_NONE)
-            strcpy (sysid, "(none)");
+            strlcpy( sysid, "(none)", sizeof(sysid) );
         else if (dev->ioactive == DEV_SYS_LOCAL)
-            strcpy (sysid, "local");
+            strlcpy( sysid, "local", sizeof(sysid) );
         else
             MSGBUF( sysid, "id=%d", dev->ioactive);
         if (dev->busy && !(dev->suspended && dev->ioactive == DEV_SYS_NONE))
@@ -9850,19 +9850,19 @@ int i;
         msgbuf[0] = '\0';
 
         if ( sysblk.emsg & EMSG_TS )
-            strcat(msgbuf, "timestamp ");
+            strlcat(msgbuf, "timestamp ",sizeof(msgbuf));
         if ( sysblk.emsg & EMSG_TEXT )
-            strcat(msgbuf, "text ");
+            strlcat(msgbuf, "text ",sizeof(msgbuf));
         else if ( sysblk.emsg & EMSG_ON )
-            strcat(msgbuf, "on ");
+            strlcat(msgbuf, "on ",sizeof(msgbuf));
         if ( sysblk.msglvl & MLVL_VERBOSE )
-            strcat(msgbuf, "verbose ");
+            strlcat(msgbuf, "verbose ",sizeof(msgbuf));
         else
-            strcat(msgbuf, "terse ");
+            strlcat(msgbuf, "terse ",sizeof(msgbuf));
         if ( sysblk.msglvl == MLVL_DEBUG )
-            strcat(msgbuf, "debug ");
+            strlcat(msgbuf, "debug ",sizeof(msgbuf));
         else
-            strcat(msgbuf, "nodebug ");
+            strlcat(msgbuf, "nodebug ",sizeof(msgbuf));
         if ( strlen(msgbuf) > 0 && msgbuf[(int)strlen(msgbuf) - 1] == ' ' )
             msgbuf[(int)strlen(msgbuf) - 1] = '\0';
         if ( strlen(msgbuf) == 0 )

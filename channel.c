@@ -1333,7 +1333,7 @@ int     current_priority;               /* Current thread priority   */
         while ((dev=sysblk.ioq) != NULL)
         {
 #ifdef _MSVC_		
-            snprintf ( thread_name, sizeof(thread_name),
+            MSGBUF( thread_name,
                 "device %4.4X thread", dev->devnum );
             thread_name[sizeof(thread_name)-1]=0;
 #endif
@@ -2334,7 +2334,7 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
     {
         char thread_name[32];
 	// BHe: Do we want this for every ccw?
-        snprintf(thread_name,sizeof(thread_name),
+        MSGBUF(thread_name,
             "execute %4.4X ccw chain",dev->devnum);
         thread_name[sizeof(thread_name)-1]=0;
 

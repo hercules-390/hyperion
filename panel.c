@@ -701,7 +701,7 @@ static void do_prev_history()
 {
     if (history_prev() != -1)
     {
-        strcpy(cmdline, historyCmdLine);
+        strlcpy(cmdline, historyCmdLine, sizeof(cmdline) );
         cmdlen = (int)strlen(cmdline);
         cmdoff = cmdlen < cmdcols ? cmdlen : 0;
         ADJ_CMDCOL();
@@ -712,7 +712,7 @@ static void do_next_history()
 {
     if (history_next() != -1)
     {
-        strcpy(cmdline, historyCmdLine);
+        strlcpy(cmdline, historyCmdLine, sizeof(cmdline) );
         cmdlen = (int)strlen(cmdline);
         cmdoff = cmdlen < cmdcols ? cmdlen : 0;
         ADJ_CMDCOL();
@@ -946,8 +946,8 @@ void set_console_title ( char *status )
 static void NP_init()
 {
     NPdataentry = 0;
-    strcpy(NPprompt1, "");
-    strcpy(NPprompt2, "");
+    strlcpy(NPprompt1, "", sizeof(NPprompt1));
+    strlcpy(NPprompt2, "", sizeof(NPprompt2));
 }
 
 /*=NP================================================================*/
@@ -1153,12 +1153,12 @@ static void NP_screen_redraw (REGS *regs)
 
 static char *format_int(uint64_t ic)
 {
-    static    char obfr[32];  /* Enough for displaying 2^64-1 */
-    char  grps[7][4]; /* 7 groups of 3 digits */
-    int   maxg=0;
-    int   i;
+    static char     obfr[32];   /* Enough for displaying 2^64-1 */
+    char            grps[7][4]; /* 7 groups of 3 digits */
+    int             maxg=0;
+    int             i;
 
-    strcpy(grps[0],"0");
+    strlcpy(grps[0],"0",sizeof(grps[0]) );
     while(ic>0)
     {
         int grp;
@@ -1166,11 +1166,11 @@ static char *format_int(uint64_t ic)
         ic/=1000;
         if(ic==0)
         {
-            sprintf(grps[maxg],"%u",grp);
+            snprintf(grps[maxg],sizeof(grps[maxg]),"%u",grp);
         }
         else
         {
-            sprintf(grps[maxg],"%3.3u",grp);
+            snprintf(grps[maxg],sizeof(grps[maxg]),"%3.3u",grp);
         }
         maxg++;
     }
@@ -1336,11 +1336,11 @@ static void NP_update(REGS *regs)
                   mode                               ? 'Z' : '.');
     if (!NPpswstate_valid || strcmp(NPpswstate, buf))
     {
-        set_color (COLOR_LIGHT_YELLOW, COLOR_BLACK );
-        set_pos (mode || zhost ? (PSW_LINE+1) : PSW_LINE, 28);
-        draw_text (buf);
+        set_color( COLOR_LIGHT_YELLOW, COLOR_BLACK );
+        set_pos( mode || zhost ? (PSW_LINE+1) : PSW_LINE, 28 );
+        draw_text( buf );
         NPpswstate_valid = 1;
-        strcpy (NPpswstate, buf);
+        strlcpy( NPpswstate, buf, sizeof(NPpswstate) );
     }
 
     /* Redraw the register template if the regmode switched */
@@ -1704,7 +1704,7 @@ static void NP_update(REGS *regs)
         for ( ; i < NP_MAX_DEVICES; i++)
         {
             NPonline[i] = NPdevnum[i] = NPbusy[i] = NPdevtype[i] = NPopen[i] = 0;
-            strcpy (NPdevnam[i], "");
+            strlcpy( NPdevnam[i], "", sizeof(NPdevnam[i]) );
         }
         NPdevices_valid = 1;
     }
@@ -1712,7 +1712,7 @@ static void NP_update(REGS *regs)
     /* Prompt 1 */
     if (strcmp(NPprompt1, NPoldprompt1))
     {
-        strcpy(NPoldprompt1, NPprompt1);
+        strlcpy(NPoldprompt1, NPprompt1, sizeof(NPoldprompt1) );
         if (strlen(NPprompt1) > 0)
         {
             set_color (COLOR_WHITE, COLOR_BLUE);
@@ -1730,18 +1730,18 @@ static void NP_update(REGS *regs)
     /* Prompt 2 */
     if (strcmp(NPprompt2, NPoldprompt2))
     {
-        strcpy(NPoldprompt2, NPprompt2);
+        strlcpy(NPoldprompt2, NPprompt2, sizeof(NPoldprompt2) );
         if (strlen(NPprompt2) > 0)
         {
-            set_color (COLOR_WHITE, COLOR_BLUE);
-            set_pos (cons_rows, 41);
-            draw_text (NPprompt2);
+            set_color(COLOR_WHITE, COLOR_BLUE);
+            set_pos(cons_rows, 41);
+            draw_text(NPprompt2);
         }
         else if (cons_rows >= 24)
         {
-            set_color (COLOR_LIGHT_GREY, COLOR_BLACK);
-            set_pos (cons_rows, 41);
-            fill_text ('-', cons_cols);
+            set_color( COLOR_LIGHT_GREY, COLOR_BLACK );
+            set_pos( cons_rows, 41) ;
+            fill_text( '-', cons_cols );
         }
     }
 
@@ -1930,7 +1930,7 @@ char    buf[1024];                      /* Buffer workarea           */
     if (!(kbbuf = malloc (kbbufsize)))
     {
         char buf[40];
-        snprintf(buf, 40, "malloc(%lu)", kbbufsize);
+        MSGBUF(buf, "malloc(%lu)", kbbufsize);
         WRMSG(HHC00075, "E", buf, strerror(errno));
         return;
     }
@@ -1940,7 +1940,7 @@ char    buf[1024];                      /* Buffer workarea           */
     if (msgbuf == NULL)
     {
         char buf[40];
-        snprintf(buf, 40, "malloc(%lu)", MAX_MSGS * sizeof(PANMSG));
+        MSGBUF(buf, "malloc(%lu)", MAX_MSGS * sizeof(PANMSG));
         fprintf (stderr,
                 MSG(HHC00075, "E", buf, strerror(errno)));
         return;
@@ -2140,8 +2140,8 @@ char    buf[1024];                      /* Buffer workarea           */
                             NPcolorSwitch = 1;
                             NPcolorFore = COLOR_WHITE;
                             NPcolorBack = COLOR_BLUE;
-                            strcpy(NPentered, "");
-                            strcpy(NPprompt1, "Enter Address");
+                            strlcpy(NPentered, "", sizeof(NPentered) );
+                            strlcpy(NPprompt1, "Enter Address", sizeof(NPprompt1) );
                             redraw_status = 1;
                             break;
                         case 'd':                   /* Enter data */
@@ -2155,59 +2155,59 @@ char    buf[1024];                      /* Buffer workarea           */
                             NPcolorSwitch = 1;
                             NPcolorFore = COLOR_WHITE;
                             NPcolorBack = COLOR_BLUE;
-                            strcpy(NPentered, "");
-                            strcpy(NPprompt1, "Enter Data Value");
+                            strlcpy(NPentered, "", sizeof(NPentered) );
+                            strlcpy(NPprompt1, "Enter Data Value", sizeof(NPprompt1) );
                             redraw_status = 1;
                             break;
                         case 'l':                   /* IPL */
                         case 'L':
                             NPdevsel = 1;
                             NPsel2 = 1;
-                            strcpy(NPprompt2, "Select Device for IPL");
+                            strlcpy(NPprompt2, "Select Device for IPL", sizeof(NPprompt2) );
                             redraw_status = 1;
                             break;
                         case 1:                     /* IPL - 2nd part */
                             i = toupper(NPdevice) - 'A';
                             if (i < 0 || i > NPlastdev) {
-                                strcpy(NPprompt2, "");
+                                bzero(NPprompt2,sizeof(NPprompt2));
                                 redraw_status = 1;
                                 break;
                             }
                             sprintf (cmdline, "herc ipl %4.4x", NPdevnum[i]);
                             do_panel_command(cmdline);
-                            strcpy(NPprompt2, "");
+                            bzero(NPprompt2,sizeof(NPprompt2));
                             redraw_status = 1;
                             break;
                         case 'u':                   /* Device interrupt */
                         case 'U':
                             NPdevsel = 1;
                             NPsel2 = 2;
-                            strcpy(NPprompt2, "Select Device for Interrupt");
+                            strlcpy(NPprompt2, "Select Device for Interrupt", sizeof(NPprompt2));
                             redraw_status = 1;
                             break;
                         case 2:                     /* Device int: part 2 */
                             i = toupper(NPdevice) - 'A';
                             if (i < 0 || i > NPlastdev) {
-                                strcpy(NPprompt2, "");
+                                bzero(NPprompt2,sizeof(NPprompt2));
                                 redraw_status = 1;
                                 break;
                             }
-                            sprintf (cmdline, "herc i %4.4x", NPdevnum[i]);
+                            MSGBUF( cmdline, "herc i %4.4x", NPdevnum[i]);
                             do_panel_command(cmdline);
-                            strcpy(NPprompt2, "");
+                            bzero(NPprompt2,sizeof(NPprompt2));
                             redraw_status = 1;
                             break;
                         case 'n':                   /* Device Assignment */
                         case 'N':
                             NPdevsel = 1;
                             NPsel2 = 3;
-                            strcpy(NPprompt2, "Select Device to Reassign");
+                            strlcpy(NPprompt2, "Select Device to Reassign", sizeof(NPprompt2));
                             redraw_status = 1;
                             break;
                         case 3:                     /* Device asgn: part 2 */
                             i = toupper(NPdevice) - 'A';
                             if (i < 0 || i > NPlastdev) {
-                                strcpy(NPprompt2, "");
+                                bzero(NPprompt2,sizeof(NPprompt2));
                                 redraw_status = 1;
                                 break;
                             }
@@ -2221,47 +2221,47 @@ char    buf[1024];                      /* Buffer workarea           */
                             NPcolorSwitch = 1;
                             NPcolorFore = COLOR_DEFAULT_LIGHT;
                             NPcolorBack = COLOR_BLUE;
-                            strcpy(NPentered, "");
-                            strcpy(NPprompt2, "New Name, or [enter] to Reload");
+                            bzero(NPentered,sizeof(NPentered));
+                            strlcpy(NPprompt2, "New Name, or [enter] to Reload", sizeof(NPprompt2) );
                             redraw_status = 1;
                             break;
                         case 'W':                   /* POWER */
                         case 'w':
                             NPdevsel = 1;
                             NPsel2 = 4;
-                            strcpy(NPprompt1, "Confirm Powerdown Y or N");
+                            strlcpy(NPprompt1, "Confirm Powerdown Y or N", sizeof(NPprompt1) );
                             redraw_status = 1;
                             break;
                         case 4:                     /* POWER - 2nd part */
                             if (NPdevice == 'y' || NPdevice == 'Y')
                                 do_panel_command("herc quit");
-                            strcpy(NPprompt1, "");
+                            bzero(NPprompt1, sizeof(NPprompt1));
                             redraw_status = 1;
                             break;
                         case 'T':                   /* Restart */
                         case 't':
                             NPdevsel = 1;
                             NPsel2 = 5;
-                            strcpy(NPprompt1, "Confirm Restart Y or N");
+                            strlcpy(NPprompt1, "Confirm Restart Y or N", sizeof(NPprompt1) );
                             redraw_status = 1;
                             break;
                         case 5:                    /* Restart - part 2 */
                             if (NPdevice == 'y' || NPdevice == 'Y')
                                 do_panel_command("herc restart");
-                            strcpy(NPprompt1, "");
+                            bzero(NPprompt1, sizeof(NPprompt1));
                             redraw_status = 1;
                             break;
                         case 'E':                   /* Ext int */
                         case 'e':
                             NPdevsel = 1;
                             NPsel2 = 6;
-                            strcpy(NPprompt1, "Confirm External Interrupt Y or N");
+                            strlcpy(NPprompt1, "Confirm External Interrupt Y or N", sizeof(NPprompt1));
                             redraw_status = 1;
                             break;
                         case 6:                    /* External - part 2 */
                             if (NPdevice == 'y' || NPdevice == 'Y')
                                 do_panel_command("herc ext");
-                            strcpy(NPprompt1, "");
+                            bzero(NPprompt1, sizeof(NPprompt1));
                             redraw_status = 1;
                             break;
                         default:
@@ -2274,8 +2274,8 @@ char    buf[1024];                      /* Buffer workarea           */
                         NPdataentry = 0;
                         NPaddr_valid = 0;
                         NPdata_valid = 0;
-                        strcpy(NPprompt1, "");
-                        strcpy(NPprompt2, "");
+                        bzero(NPprompt1, sizeof(NPprompt1));
+                        bzero(NPprompt2, sizeof(NPprompt2));
                         NPcmd = 1;
                     }
                     else
@@ -2426,7 +2426,7 @@ char    buf[1024];                      /* Buffer workarea           */
 
                                     if ( *p != ' ')
                                     {
-                                        strcpy(psz_cmdline, p);
+                                        strlcpy(psz_cmdline, p, sizeof(cmdline));
                                         *p = ' ';                       // insert a space
                                         strcpy(p+1, psz_cmdline);
                                         psz_cmdline[0] = 0;
@@ -2756,12 +2756,16 @@ char    buf[1024];                      /* Buffer workarea           */
                 }
 
                 /* Process TAB */
-                if (kbbuf[i] == '\t' || kbbuf[i] == '\x7F') {
-                    if (NPDup == 1 || !is_cursor_on_cmdline()) {
+                if (kbbuf[i] == '\t' || kbbuf[i] == '\x7F') 
+                {
+                    if (NPDup == 1 || !is_cursor_on_cmdline()) 
+                    {
                         cursor_cmdline_home();
                         redraw_cmd = 1;
-                    } else {
-                        tab_pressed(cmdline, &cmdoff);
+                    } 
+                    else 
+                    {
+                        tab_pressed(cmdline, sizeof(cmdline), &cmdoff);
                         cmdlen = (int)strlen(cmdline);
                         ADJ_CMDCOL();
                         i++;

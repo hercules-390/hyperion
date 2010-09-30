@@ -820,7 +820,7 @@ int             msglevel = FALSE;       /* indicator for msglevel
 #if defined(_MSVC_)
             strcpy_s( addcmdline, sizeof(addcmdline), addargv[0] );
 #else
-            strcpy( addcmdline, addargv[0] );
+            strlcpy( addcmdline, addargv[0], sizeof(addcmdline) );
 #endif
             for( i = 1; i < addargc; i++ )
             {
@@ -828,8 +828,8 @@ int             msglevel = FALSE;       /* indicator for msglevel
                 strcat_s(addcmdline, sizeof(addcmdline), " ");
                 strcat_s(addcmdline, sizeof(addcmdline), addargv[i]);
 #else
-                strcat(addcmdline, " ");
-                strcat(addcmdline, addargv[i]);
+                strlcat(addcmdline, " ", sizeof(addcmdline));
+                strlcat(addcmdline, addargv[i], sizeof(addcmdline));
 #endif
             }
             if ( CMD(addargv[0],msglevel,8) || CMD(addargv[0],msglvl,6) )
@@ -868,7 +868,7 @@ int             msglevel = FALSE;       /* indicator for msglevel
 #if defined(_MSVC_)
         strcpy_s(attcmdline, sizeof(attcmdline), attargv[0]);
 #else
-        strcpy(attcmdline, attargv[0]);
+        strlcpy(attcmdline, attargv[0], sizeof(attcmdline));
 #endif
         for(i = 1; i < attargc; i++)
         {
@@ -877,8 +877,8 @@ int             msglevel = FALSE;       /* indicator for msglevel
             strcat_s(attcmdline, sizeof(attcmdline), " ");
             strcat_s(attcmdline, sizeof(attcmdline), attargv[i]);
 #else
-            strcat(attcmdline, " ");
-            strcat(attcmdline, attargv[i]);
+            strlcat(attcmdline, " ", sizeof(attcmdline));
+            strlcat(attcmdline, attargv[i], sizeof(attcmdline));
 #endif
         }
 

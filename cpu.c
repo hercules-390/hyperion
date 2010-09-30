@@ -1823,7 +1823,7 @@ FUNC    *current_opcode_table;
         else
         {
             char buf[40];
-            snprintf(buf, 40, "malloc(%lu)", sizeof(REGS));
+            MSGBUF(buf, "malloc(%lu)", sizeof(REGS));
             WRMSG (HHC00813, "E", PTYPSTR(cpu), cpu, buf, strerror(errno));
             cpu_uninit (cpu, &regs);
         }

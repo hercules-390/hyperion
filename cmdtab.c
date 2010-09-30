@@ -162,7 +162,7 @@ CMDTAB* cmdent;
                 MAX( cmdent->statminlen, strlen(argv[0]) ) ) )
             {
                 char cmd[256];
-                strcpy(cmd, cmdent->statement);
+                strlcpy( cmd, cmdent->statement, sizeof(cmd) );
                 argv[0] = cmd;             
                 return cmdent->function(argc, argv, cmdline);
             }
@@ -247,7 +247,7 @@ int ProcessPanelCommand (char* pszCmdLine)
                     MAX( pCmdTab->statminlen, strlen(cmd_argv[0]) ) ) )
                 {
                     char cmd[256];
-                    strcpy(cmd, pCmdTab->statement);
+                    strlcpy(cmd, pCmdTab->statement, sizeof(cmd));
                     cmd_argv[0] = cmd;             
                     rc = pCmdTab->function(cmd_argc, (char**)cmd_argv, pszSaveCmdLine);
                     goto ProcessPanelCommandExit;
@@ -422,7 +422,7 @@ int HelpMessage(char *msg)
 {
     char id[9];
 
-    strcpy(id, "HHC");
+    strlcpy(id, "HHC",sizeof(id));
     strncpy(&id[3], &msg[3], 5);
     id[8] = 0;
 

@@ -6195,7 +6195,7 @@ static char *ordername[] = {
         else
 	{
 	    char buf[40];
-	    snprintf(buf, 40, " status %8.8X", (U32) status);
+	    MSGBUF(buf, " status %8.8X", (U32) status);
             WRMSG(HHC00814, "I", log_buf, 1, buf);
 	}
     }
