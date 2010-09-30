@@ -817,20 +817,12 @@ int             msglevel = FALSE;       /* indicator for msglevel
         {
             char addcmdline[256];
             int i;
-#if defined(_MSVC_)
-            strcpy_s( addcmdline, sizeof(addcmdline), addargv[0] );
-#else
+
             strlcpy( addcmdline, addargv[0], sizeof(addcmdline) );
-#endif
             for( i = 1; i < addargc; i++ )
             {
-#if defined(_MSVC_)
-                strcat_s(addcmdline, sizeof(addcmdline), " ");
-                strcat_s(addcmdline, sizeof(addcmdline), addargv[i]);
-#else
                 strlcat(addcmdline, " ", sizeof(addcmdline));
                 strlcat(addcmdline, addargv[i], sizeof(addcmdline));
-#endif
             }
             if ( CMD(addargv[0],msglevel,8) || CMD(addargv[0],msglvl,6) )
                 msglevel = TRUE;
@@ -865,21 +857,12 @@ int             msglevel = FALSE;       /* indicator for msglevel
         attargv = malloc(attargc * sizeof(char *));
 
         attargv[0] = "attach";
-#if defined(_MSVC_)
-        strcpy_s(attcmdline, sizeof(attcmdline), attargv[0]);
-#else
         strlcpy(attcmdline, attargv[0], sizeof(attcmdline));
-#endif
         for(i = 1; i < attargc; i++)
         {
             attargv[i] = addargv[i - 1];
-#if defined(_MSVC_)
-            strcat_s(attcmdline, sizeof(attcmdline), " ");
-            strcat_s(attcmdline, sizeof(attcmdline), attargv[i]);
-#else
             strlcat(attcmdline, " ", sizeof(attcmdline));
             strlcat(attcmdline, attargv[i], sizeof(attcmdline));
-#endif
         }
 
         rc = ProcessConfigCommand (attargc, attargv, attcmdline);

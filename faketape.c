@@ -60,7 +60,7 @@ void close_faketape (DEVBLK *dev)
         WRMSG (HHC00201, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "fake");
         close(dev->fd);
     }
-    strcpy(dev->filename, TAPE_UNLOADED);
+    strlcpy( dev->filename, TAPE_UNLOADED, sizeof(dev->filename) );
     dev->fd=-1;
     dev->blockid = 0;
     dev->fenced = 0;
@@ -179,7 +179,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     {
         WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "fake", "open()", strerror(errno));
 
-        strcpy(dev->filename, TAPE_UNLOADED);
+        strlcpy( dev->filename, TAPE_UNLOADED, sizeof(dev->filename) );
         build_senseX(TAPE_BSENSE_TAPELOADFAIL,dev,unitstat,code);
         return -1;
     }
@@ -378,7 +378,7 @@ int  writehdr_faketape (DEVBLK *dev, off_t blkpos,
 int             rc;                     /* Return code               */
 off_t           rcoff;                  /* Return code from lseek()  */
 FAKETAPE_BLKHDR fakehdr;                /* FAKETAPE block header     */
-char            sblklen[5];             /* work buffer               */
+char            sblklen[8];             /* work buffer               */
 
     /* Position file to where block header is to go */
     rcoff = lseek (dev->fd, blkpos, SEEK_SET);
@@ -393,11 +393,11 @@ char            sblklen[5];             /* work buffer               */
     }
 
     /* Build the 12-ASCII-hex-character block header */
-    snprintf( sblklen, sizeof(sblklen), "%4.4X", prvblkl );
+    MSGBUF( sblklen, "%4.4X", prvblkl );
     strncpy( fakehdr.sprvblkl, sblklen, sizeof(fakehdr.sprvblkl) );
-    snprintf( sblklen, sizeof(sblklen), "%4.4X", curblkl );
+    MSGBUF( sblklen, "%4.4X", curblkl );
     strncpy( fakehdr.scurblkl, sblklen, sizeof(fakehdr.scurblkl) );
-    snprintf( sblklen, sizeof(sblklen), "%4.4X", prvblkl ^ curblkl );
+    MSGBUF( sblklen, "%4.4X", prvblkl ^ curblkl );
     strncpy( fakehdr.sxorblkl, sblklen, sizeof(fakehdr.sxorblkl) );
 
     /* Write the block header */

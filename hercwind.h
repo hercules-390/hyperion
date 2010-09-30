@@ -153,11 +153,13 @@ typedef int             mode_t;
 
 #define HAVE_STRSIGNAL
 
-#if defined(TURBO_HERCULES)
-#undef EXTERNALGUI
-#else // !defined(TURBO_HERCULES)
+#if !defined(OPTION_NO_EXTERNAL_GUI)
+#if !defined(EXTERNALGUI)
 #define EXTERNALGUI
-#endif // defined(TURBO_HERCULES)
+#endif
+#else
+#undef  EXTERNALGUI
+#endif
 
 #define NO_SETUID
 #define NO_SIGABEND_HANDLER

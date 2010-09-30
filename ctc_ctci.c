@@ -152,7 +152,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     if( !pWrkCTCBLK )
     {
         char buf[40];
-        snprintf(buf, 40, "malloc(%lu)", sizeof(CTCBLK));
+        MSGBUF(buf,"malloc(%lu)", sizeof(CTCBLK));
         WRMSG(HHC00900, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, buf, strerror(errno) );
         return -1;
     }
@@ -174,7 +174,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     if( !pDevCTCBLK )
     {
         char buf[40];
-        snprintf(buf, 40, "malloc(%lu)", sizeof(CTCBLK));
+        MSGBUF(buf, "malloc(%lu)", sizeof(CTCBLK));
         WRMSG(HHC00900, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, buf, strerror(errno) );
         free( pWrkCTCBLK );
         pWrkCTCBLK = NULL;
@@ -275,19 +275,14 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         {
             build_herc_iface_mac ( wrk_guest_mac_addr, (const BYTE*) &wrk_guest_ip_addr );
 
-            snprintf
-            (
-                pDevCTCBLK->szMACAddress,  sizeof( pDevCTCBLK->szMACAddress ),
-
-                "%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X"
-
-                ,wrk_guest_mac_addr[0]
-                ,wrk_guest_mac_addr[1]
-                ,wrk_guest_mac_addr[2]
-                ,wrk_guest_mac_addr[3]
-                ,wrk_guest_mac_addr[4]
-                ,wrk_guest_mac_addr[5]
-            );
+            MSGBUF( pDevCTCBLK->szMACAddress,
+                    "%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X"
+                    ,wrk_guest_mac_addr[0]
+                    ,wrk_guest_mac_addr[1]
+                    ,wrk_guest_mac_addr[2]
+                    ,wrk_guest_mac_addr[3]
+                    ,wrk_guest_mac_addr[4]
+                    ,wrk_guest_mac_addr[5] );
         }
     }
 
@@ -320,8 +315,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     pDevCTCBLK->pDEVBLK[0]->fd =
     pDevCTCBLK->pDEVBLK[1]->fd = pDevCTCBLK->fd;
 
-    snprintf(thread_name,sizeof(thread_name),"CTCI %4.4X ReadThread",pDEVBLK->devnum);
-    thread_name[sizeof(thread_name)-1]=0;
+    MSGBUF(thread_name, "CTCI %4.4X ReadThread", pDEVBLK->devnum);
     rc = create_thread( &pDevCTCBLK->tid, JOINABLE, CTCI_ReadThread, pDevCTCBLK, thread_name );
     if(rc)
        WRMSG(HHC00102, "E", strerror(rc));
@@ -619,15 +613,19 @@ void  CTCI_Query( DEVBLK* pDEVBLK, char** ppszClass,
     if(!pCTCBLK)
     {
         strlcpy(pBuffer,"*Uninitialized",iBufLen);
-        return;
+    }
+    else
+    {
+        snprintf( pBuffer, iBufLen, "CTCI %s/%s (%s)%s IO[%" I64_FMT "u]",
+                  pCTCBLK->szGuestIPAddr,
+                  pCTCBLK->szDriveIPAddr,
+                  pCTCBLK->szTUNDevName,
+                  pCTCBLK->fDebug ? " -d" : "",
+                  pDEVBLK->excps );
+        pBuffer[iBufLen-1] = '\0';
     }
 
-    snprintf( pBuffer, iBufLen, "CTCI %s/%s (%s)%s IO[%" I64_FMT "u]",
-              pCTCBLK->szGuestIPAddr,
-              pCTCBLK->szDriveIPAddr,
-              pCTCBLK->szTUNDevName,
-              pCTCBLK->fDebug ? " -d" : "",
-              pDEVBLK->excps );
+    return;
 }
 
 // -------------------------------------------------------------------
@@ -1134,12 +1132,13 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
     memset( &mac,  0, sizeof( MAC ) );
 
     // Set some initial defaults
-    strcpy( pCTCBLK->szMTU,     "1500" );
-    strcpy( pCTCBLK->szNetMask, "255.255.255.255" );
+    strlcpy( pCTCBLK->szMTU,     "1500",            sizeof(pCTCBLK->szMTU) );
+    strlcpy( pCTCBLK->szNetMask, "255.255.255.255", sizeof(pCTCBLK->szNetMask) );
 #if defined( OPTION_W32_CTCI )
-    strcpy( pCTCBLK->szTUNCharName,  tt32_get_default_iface() );
+    strlcpy( pCTCBLK->szTUNCharName,  tt32_get_default_iface(), 
+             sizeof(pCTCBLK->szTUNCharName) );
 #else
-    strcpy( pCTCBLK->szTUNCharName,  HERCTUN_DEV );
+    strlcpy( pCTCBLK->szTUNCharName,  HERCTUN_DEV, sizeof(pCTCBLK->szTUNCharName) );
 #endif
 
 #if defined( OPTION_W32_CTCI )
@@ -1252,7 +1251,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                       "device name", optarg );
                 return -1;
             }
-            strcpy( pCTCBLK->szTUNCharName, optarg );
+            strlcpy( pCTCBLK->szTUNCharName, optarg, sizeof(pCTCBLK->szTUNCharName) );
             break;
 
 #if defined( OPTION_W32_CTCI )
@@ -1295,7 +1294,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 return -1;
             }
 
-            strcpy( pCTCBLK->szMTU, optarg );
+            strlcpy( pCTCBLK->szMTU, optarg, sizeof(pCTCBLK->szMTU) );
             break;
 
         case 's':     // Netmask of point-to-point link
@@ -1306,7 +1305,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 return -1;
             }
 
-            strcpy( pCTCBLK->szNetMask, optarg );
+            strlcpy( pCTCBLK->szNetMask, optarg, sizeof(pCTCBLK->szNetMask) );
             break;
 
         case 'm':
@@ -1317,7 +1316,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 return -1;
             }
 
-            strcpy( pCTCBLK->szMACAddress, optarg );
+            strlcpy( pCTCBLK->szMACAddress, optarg, sizeof(pCTCBLK->szMACAddress) );
 
             break;
 
@@ -1360,7 +1359,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             return -1;
         }
 
-        strcpy( pCTCBLK->szGuestIPAddr, *argv );
+        strlcpy( pCTCBLK->szGuestIPAddr, *argv, sizeof(pCTCBLK->szGuestIPAddr) );
 
         argc--; argv++;
 
@@ -1372,7 +1371,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             return -1;
         }
 
-        strcpy( pCTCBLK->szDriveIPAddr, *argv );
+        strlcpy( pCTCBLK->szDriveIPAddr, *argv, sizeof(pCTCBLK->szDriveIPAddr) );
 
         argc--; argv++;
     }
@@ -1396,7 +1395,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             return -1;
         }
 
-        strcpy( pCTCBLK->szTUNCharName, *argv );
+        strlcpy( pCTCBLK->szTUNCharName, *argv, sizeof(pCTCBLK->szTUNCharName) );
 
         argc--; argv++;
 
@@ -1410,7 +1409,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             return -1;
         }
 
-        strcpy( pCTCBLK->szMTU, *argv );
+        strlcpy( pCTCBLK->szMTU, *argv, sizeof(pCTCBLK->szMTU) );
         argc--; argv++;
 
         // Guest IP Address
@@ -1421,7 +1420,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             return -1;
         }
 
-        strcpy( pCTCBLK->szGuestIPAddr, *argv );
+        strlcpy( pCTCBLK->szGuestIPAddr, *argv, sizeof(pCTCBLK->szGuestIPAddr) );
 
         argc--; argv++;
 
@@ -1433,7 +1432,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             return -1;
         }
 
-        strcpy( pCTCBLK->szDriveIPAddr, *argv );
+        strlcpy( pCTCBLK->szDriveIPAddr, *argv, sizeof(pCTCBLK->szDriveIPAddr) );
 
         argc--; argv++;
 
@@ -1445,7 +1444,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             return -1;
         }
 
-        strcpy( pCTCBLK->szNetMask, *argv );
+        strlcpy( pCTCBLK->szNetMask, *argv, sizeof(pCTCBLK->szNetMask) );
 
         argc--; argv++;
 
@@ -1473,7 +1472,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                     return -1;
                 }
 
-                strcpy( pCTCBLK->szGuestIPAddr, *argv );
+                strlcpy( pCTCBLK->szGuestIPAddr, *argv, sizeof(pCTCBLK->szGuestIPAddr) );
 
                 argc--; argv++;
 
@@ -1489,7 +1488,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                     }
                 }
 
-                strcpy( pCTCBLK->szTUNCharName, *argv );
+                strlcpy( pCTCBLK->szTUNCharName, *argv, sizeof(pCTCBLK->szTUNCharName) );
 
                 // Kludge: This may look strange at first, but with
                 // TunTap32, only the last 3 bytes of the "driver IP
@@ -1502,8 +1501,9 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 // This also fixes the confusing error messages from
                 // TunTap.c when a MAC is given for this argument.
 
-                strcpy( pCTCBLK->szDriveIPAddr,
-                        pCTCBLK->szGuestIPAddr );
+                strlcpy( pCTCBLK->szDriveIPAddr,
+                         pCTCBLK->szGuestIPAddr,
+                         sizeof(pCTCBLK->szDriveIPAddr) );
 
                 argc--; argv++; i++;
                 continue;

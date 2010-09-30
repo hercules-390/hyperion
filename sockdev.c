@@ -89,7 +89,7 @@ int unix_socket (char* path)
     }
 
     addr.sun_family = AF_UNIX;
-    strcpy (addr.sun_path, path); /* guaranteed room by above check */
+    strlcpy( addr.sun_path, path,sizeof(addr.sun_path) ); /* guaranteed room by above check */
     sd = socket (PF_UNIX, SOCK_STREAM, 0);
 
     if (sd == -1)
@@ -135,7 +135,7 @@ int inet_socket (char* spec)
 
     memset(&sin, 0, sizeof(sin));
     sin.sin_family = AF_INET;
-    strcpy(buf, spec);
+    strlcpy(buf, spec, sizeof(buf));
     colon = strchr(buf, ':');
 
     if (colon)

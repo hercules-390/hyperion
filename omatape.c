@@ -1204,7 +1204,7 @@ void close_omatape2(DEVBLK *dev)
 void close_omatape(DEVBLK *dev)
 {
     close_omatape2(dev);
-    strcpy(dev->filename,TAPE_UNLOADED);
+    strlcpy( dev->filename, TAPE_UNLOADED, sizeof(dev->filename) );
     dev->blockid = 0;
     dev->fenced = 0;
     return;

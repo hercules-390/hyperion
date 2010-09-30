@@ -388,10 +388,13 @@ DLL_EXPORT void log_write(int panel,char *msg)
 {
 /* (log_write function proper starts here) */
     int     slot;
-    char   *ptr;
+    char   *ptr; 
+    size_t  pl;
     char   *pszMSG;
 
-    ptr = malloc( (strlen(msg) + 1 + 20) );
+    pl = strlen(msg) + 1 + 20;
+    ptr = malloc( pl );
+
     if ( ptr == NULL ) 
         pszMSG = msg;
     else 
@@ -405,8 +408,8 @@ DLL_EXPORT void log_write(int panel,char *msg)
             gettimeofday( &now, NULL ); tt = now.tv_sec;
             strlcpy( hhmmss, ctime(&tt)+11, sizeof(hhmmss) );
         
-            strcpy(ptr,hhmmss);
-            strcat(ptr,msg);
+            strlcpy( ptr, hhmmss, pl);
+            strlcat( ptr, msg,    pl);
             pszMSG = ptr;
         }
         else
@@ -467,7 +470,7 @@ DLL_EXPORT void log_capture_writer(void *vcd,char *msg)
         cd->sz+=strlen(msg);
         cd->obfr=realloc(cd->obfr,cd->sz);
     }
-    strcat(cd->obfr,msg);
+    strlcat(cd->obfr,msg,cd->sz);
     return;
 }
 DLL_EXPORT void log_capture_closer(void *vcd)

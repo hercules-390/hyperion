@@ -1141,7 +1141,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
 
     /* The first argument is the file name */
     if (argc == 0 || strlen(argv[0]) >= sizeof(dev->filename))
-        strcpy (dev->filename, TAPE_UNLOADED);
+        strlcpy( dev->filename, TAPE_UNLOADED, sizeof(dev->filename) );
     else
     {
         /* Save the file name in the device block */
@@ -1155,7 +1155,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
     ASSERT(dev->tapedevt != TAPEDEVT_UNKNOWN);
     ASSERT(dev->tmh != NULL);
     ASSERT(short_descr != NULL);
-    sprintf(msg, "not valid for %s", short_descr); 
+    MSGBUF(msg, "not valid for %s", short_descr); 
 
     /* Initialize device dependent fields */
     dev->fd                = -1;
@@ -1451,9 +1451,9 @@ void tapedev_query_device ( DEVBLK *dev, char **class,
 
     BEGIN_DEVICE_CLASS_QUERY( "TAPE", dev, class, buflen, buffer );
 
-    *buffer = 0;
-    devparms[0]=0;
-    dispmsg [0]=0;
+    bzero(buffer, buflen);
+    bzero(devparms,sizeof(devparms));
+    bzero(dispmsg,sizeof(dispmsg));
 
     GetDisplayMsg( dev, dispmsg, sizeof(dispmsg) );
 
@@ -1489,16 +1489,17 @@ void tapedev_query_device ( DEVBLK *dev, char **class,
             dev->tdparms.displayfeat ? ", Display: " : "",
             dev->tdparms.displayfeat ?    dispmsg    : "",
             dev->excps );
+        buffer[buflen-1] = '\0';
     }
     else // (filename was specified)
     {
-        char tapepos[64]; tapepos[0]=0;
+        char tapepos[64];
+
+        bzero(tapepos,sizeof(tapepos));
 
         if ( TAPEDEVT_SCSITAPE != dev->tapedevt )
         {
-            snprintf( tapepos, sizeof(tapepos), "[%d:%08"I64_FMT"X] ",
-                dev->curfilen, dev->nxtblkpos );
-            tapepos[sizeof(tapepos)-1] = 0;
+            MSGBUF( tapepos, "[%d:%08"I64_FMT"X] ", dev->curfilen, dev->nxtblkpos );
         }
 #if defined(OPTION_SCSI_TAPE)
         else // (this is a SCSI tape drive)
@@ -1536,31 +1537,29 @@ void tapedev_query_device ( DEVBLK *dev, char **class,
         {
             // Not a SCSI tape,  -or-  mounted SCSI tape...
 
-            snprintf (buffer, buflen, "%s%s %s%s%s IO[%" I64_FMT "u]",
-
+            snprintf( buffer, buflen, "%s%s %s%s%s IO[%" I64_FMT "u]",
                 devparms, (dev->readonly ? " ro" : ""),
-
                 tapepos,
                 dev->tdparms.displayfeat ? "Display: " : "",
                 dev->tdparms.displayfeat ?  dispmsg    : "",
                 dev->excps );
+            buffer[buflen-1] = '\0';
         }
         else /* ( TAPEDEVT_SCSITAPE == dev->tapedevt && STS_NOT_MOUNTED(dev) ) */
         {
             // UNmounted SCSI tape...
 
-            snprintf (buffer, buflen, "%s%s (%sNOTAPE)%s%s IO[%" I64_FMT "u]",
-
+            snprintf( buffer, buflen, "%s%s (%sNOTAPE)%s%s IO[%" I64_FMT "u]",
                 devparms, (dev->readonly ? " ro" : ""),
-
                 dev->fd < 0              ?   "closed; "  : "",
                 dev->tdparms.displayfeat ? ", Display: " : "",
                 dev->tdparms.displayfeat ?    dispmsg    : "",
                 dev->excps );
+            buffer[buflen-1] = '\0';
         }
     }
 
-    buffer[buflen-1] = 0;
+    return;
 
 } /* end function tapedev_query_device */
 

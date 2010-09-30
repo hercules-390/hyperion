@@ -1373,6 +1373,7 @@ static char *build_logo(char **logodata,size_t logosize,size_t *blen)
     int     align;
     char    *wrk;
     char    *strtok_str;
+    size_t  tsize;
 
     bfr=NULL;
     len=0;
@@ -1389,8 +1390,9 @@ static char *build_logo(char **logodata,size_t logosize,size_t *blen)
     attr=SF_ATTR_PROTECTED;
     for(i=0;i<logosize;i++)
     {
-        cline=malloc(strlen(logodata[i])+1);
-        strcpy(cline,logodata[i]);
+        tsize = strlen(logodata[i])+1;
+        cline=malloc(tsize);
+        strlcpy(cline,logodata[i],tsize);
         while(1)
         {
             if(cline[0]!='@')
@@ -2417,29 +2419,27 @@ loc3270_query_device (DEVBLK *dev, char **class,
     {
         snprintf (buffer, buflen, "%s IO[%" I64_FMT "u]",
             inet_ntoa(dev->ipaddr), dev->excps );
+        buffer[buflen-1] = '\0';
     }
     else
     {
-        char  acc[48];
+        char  acc[64];
 
         if (dev->acc_ipaddr || dev->acc_ipmask)
         {
-            char  ip   [16];
-            char  mask [16];
+            char  ip   [32];
+            char  mask [32];
             struct in_addr  xxxx;
 
             xxxx.s_addr = dev->acc_ipaddr;
 
-            snprintf( ip, sizeof( ip ),
-                "%s", inet_ntoa( xxxx ));
+            MSGBUF( ip, "%s", inet_ntoa( xxxx ));
 
             xxxx.s_addr = dev->acc_ipmask;
 
-            snprintf( mask, sizeof( mask ),
-                "%s", inet_ntoa( xxxx ));
+            MSGBUF( mask, "%s", inet_ntoa( xxxx ));
 
-            snprintf( acc, sizeof( acc ),
-                "%s mask %s", ip, mask );
+            MSGBUF( acc, "%s mask %s", ip, mask );
         }
         else
             acc[0] = 0;
@@ -2449,6 +2449,7 @@ loc3270_query_device (DEVBLK *dev, char **class,
             snprintf(buffer, buflen,
                 "GROUP=%s%s%s IO[%" I64_FMT "u]",
                 dev->filename, acc[0] ? " " : "", acc, dev->excps );
+            buffer[buflen-1] = '\0';
         }
         else
         {
@@ -2456,10 +2457,14 @@ loc3270_query_device (DEVBLK *dev, char **class,
             {
                 snprintf(buffer, buflen,
                     "* %s IO[%" I64_FMT "u]", acc, dev->excps );
+                buffer[buflen-1] = '\0';
             }
             else
+            {
                 snprintf(buffer, buflen,
                     "* IO[%" I64_FMT "u]", dev->excps );
+                buffer[buflen-1] = '\0';
+            }
         }
     }
 
@@ -2717,6 +2722,7 @@ constty_query_device (DEVBLK *dev, char **class,
             inet_ntoa(dev->ipaddr),
             dev->prompt1052 ? "" : " noprompt",
             dev->excps );
+        buffer[buflen-1] = '\0';
     }
     else
     {
@@ -2749,24 +2755,36 @@ constty_query_device (DEVBLK *dev, char **class,
                 !dev->prompt1052 ? " noprompt" : "",
                 acc[0] ? " " : "", acc,
                 dev->excps );
+            buffer[buflen-1] = '\0';
         }
         else
         {
             if (acc[0])
             {
                 if (!dev->prompt1052)
-                    snprintf(buffer, buflen,
-                        "noprompt %s IO[%" I64_FMT "u]", acc, dev->excps );
+                {
+                    snprintf(buffer, buflen, "noprompt %s IO[%" I64_FMT "u]", 
+                                             acc, dev->excps );
+                    buffer[buflen-1] = '\0';
+                }
                 else
-                    snprintf(buffer, buflen,
-                        "* %s", acc);
+                {
+                    snprintf(buffer, buflen, "* %s", acc);
+                    buffer[buflen-1] = '\0';
+                }
             }
             else
             {
                 if (!dev->prompt1052)
+                {
                     snprintf( buffer, buflen, "noprompt IO[%" I64_FMT "u]", dev->excps );
+                    buffer[buflen-1] = '\0';
+                }
                 else
+                {
                     snprintf( buffer, buflen, "IO[%" I64_FMT "u]", dev->excps );
+                    buffer[buflen-1] = '\0';
+                }
             }
         }
     }
@@ -3495,6 +3513,7 @@ BYTE    stat;                           /* Unit status               */
             {
                 snprintf ((char *)dev->buf, dev->bufsize,
                         MSG(HHC01026, "A", SSID_TO_LCSS(dev->ssid), dev->devnum));
+                dev->buf[dev->bufsize-1] = '\0';
                 len = (int)strlen((char *)dev->buf);
                 rc = send_packet (dev->fd, dev->buf, len, NULL);
                 if (rc < 0)

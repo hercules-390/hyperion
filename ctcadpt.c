@@ -517,7 +517,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
         if( ( hp = gethostbyname( remaddr ) ) != NULL )
         {
             memcpy( &ipaddr, hp->h_addr, hp->h_length );
-            strcpy( address, inet_ntoa( ipaddr ) );
+            strlcpy( address, inet_ntoa( ipaddr ), sizeof(address) );
             remaddr = address;
         }
         else
@@ -1095,7 +1095,7 @@ U16 lcss;
         if (start_vmnet(dev, xdev, argc - 1, &argv[1]))
             return -1;
     }
-    strcpy(dev->filename, "vmnet");
+    strlcpy(dev->filename, "vmnet", sizeof(dev->filename) );
 
     /* Set the control unit type */
     /* Linux/390 currently only supports 3088 model 2 CTCA and ESCON */
@@ -1401,7 +1401,8 @@ void packet_trace( BYTE* pAddr, int iLen, BYTE bDir )
         memset( print_ebcdic, 0, sizeof( print_ebcdic ) );
         memset( print_line, 0, sizeof( print_line ) );
 
-        snprintf((char *) print_line, 64, "+%4.4X%c ", offset, bDir );
+        snprintf((char *) print_line, sizeof(print_line), "+%4.4X%c ", offset, bDir );
+        print_line[sizeof(print_line)-1] = '\0'; /* force null termination */
 
         for( i = 0; i < 16; i++ )
         {
@@ -1410,7 +1411,8 @@ void packet_trace( BYTE* pAddr, int iLen, BYTE bDir )
             if( offset < iLen )
             {
                 snprintf((char *) tmp, 32, "%2.2X", c ); 
-                strcat((char *) print_line, (char *) tmp );
+                tmp[sizeof(tmp)-1] = '\0';
+                strlcat((char *) print_line, (char *) tmp, sizeof(print_line) );
 
                 print_ebcdic[i] = print_ascii[i] = '.';
                 e = guest_to_host( c );
@@ -1422,13 +1424,13 @@ void packet_trace( BYTE* pAddr, int iLen, BYTE bDir )
             }
             else
             {
-                strcat((char *) print_line, "  " );
+                strlcat((char *) print_line, "  ", sizeof(print_line)  );
             }
 
             offset++;
             if( ( offset & 3 ) == 0 )
             {
-                strcat((char *) print_line, " " );
+                strlcat((char *) print_line, " ", sizeof(print_line)  );
             }
         }
 

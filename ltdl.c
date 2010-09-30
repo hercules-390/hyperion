@@ -283,7 +283,7 @@ strdup(str)
       tmp = LT_DLMALLOC (char, 1+ strlen (str));
       if (tmp)
     {
-      strcpy(tmp, str);
+      strlcpy(tmp, str, strlen(str)+1);
     }
     }
 
@@ -2704,13 +2704,13 @@ foreach_dirinpath (search_path, base_name, func, data1, data2)
     }
 
     assert (filenamesize > lendir);
-    strcpy (filename, dir_name);
+    strlcpy (filename, dir_name, filenamesize );
 
     if (base_name && *base_name)
       {
         if (filename[lendir -1] != '/')
           filename[lendir++] = '/';
-        strcpy (filename +lendir, base_name);
+        strlcpy (filename +lendir, base_name, filenamesize-lendir);
       }
 
     if ((result = (*func) (filename, data1, data2)))
@@ -3485,13 +3485,17 @@ lt_dlopenext (filename)
     }
 
   /* First try appending ARCHIVE_EXT.  */
-  tmp = LT_EMALLOC (char, len + strlen (archive_ext) + 1);
-  if (!tmp)
-    return 0;
+  {
+      size_t tsize = len + strlen (archive_ext) + 1;
 
-  strcpy (tmp, filename);
-  strcat (tmp, archive_ext);
-  errors = try_dlopen (&handle, tmp);
+    tmp = LT_EMALLOC (char, tsize);
+    if (!tmp)
+        return 0;
+
+    strlcpy (tmp, filename, tsize );
+    strlcat (tmp, archive_ext, tsize );
+    errors = try_dlopen (&handle, tmp);
+  }
 
   /* If we found FILENAME, stop searching -- whether we were able to
      load the file as a module or not.  If the file exists but loading
@@ -3642,9 +3646,9 @@ lt_argz_insertdir (pargz, pargz_len, dirnam, dp)
 
   assert (buf);
 
-  strcpy  (buf, dirnam);
-  strcat  (buf, "/");
-  strncat (buf, dp->d_name, end_offset);
+  strlcpy( buf, dirnam, buf_len+1);
+  strlcat( buf, "/", buf_len+1);
+  strncat( buf, dp->d_name, end_offset);
   buf[buf_len] = LT_EOS_CHAR;
 
   /* Try to insert (in order) into ARGZ/ARGZ_LEN.  */
