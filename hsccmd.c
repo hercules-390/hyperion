@@ -7012,7 +7012,7 @@ REGS *regs;
 
         if (sscanf(loadaddr, "%x", &aaddr) !=1)
         {
-            WRMSG(HHC02205, "E", loadaddr, ": invallid address" );
+            WRMSG(HHC02205, "E", loadaddr, ": invalid address" );
             return -1;
         }
     }
@@ -7058,10 +7058,16 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
     U32     aaddr;                      /* Absolute storage address  */
     int     fd;                         /* File descriptor           */
     BYTE    buf[80];                    /* Read buffer               */
-    int     len;                        /* Number of bytes read      */
-    int     n;
+    U16     len;                        /* Number of bytes read      */
+    U32     n;
+    int     rc;
     REGS   *regs;
     char    pathname[MAX_PATH];
+    BYTE    comment[1] = { "\x5C" };       /* Comment card '*' CC 1  */
+    BYTE    txtcard[5] = { "\x02\xE3\xE7\xE5\x40" }; /* TXT card x'02'TXT*/
+    BYTE    endcard[5] = { "\x02\xC5\xD5\xC4\x40" }; /* END card x'02'END*/
+    BYTE    esdcard[5] = { "\x02\xC5\xE2\xC4\x40" }; /* ESD card x'02'ESD*/
+    BYTE    rldcard[5] = { "\x02\xD9\xD3\xC4\x40" }; /* RLD card x'02'RLD*/
 
     UNREFERENCED(cmdline);
 
@@ -7073,7 +7079,8 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
 
     fname = argv[1];
 
-    if (argc < 3) aaddr = 0;
+    if (argc < 3) 
+        aaddr = 0;
     else
     {
         loadaddr = argv[2];
@@ -7122,35 +7129,66 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
     for ( n = 0; ; )
     {
         /* Read 80 bytes into buffer */
-        if ((len = read (fd, buf, 80)) < 0)
+        if ((read (fd, buf, 80)) < 0)
         {
-            release_lock(&sysblk.cpulock[sysblk.pcpu]);
             WRMSG(HHC02219,"E", "read()", strerror(errno));
-            close (fd);
-            return -1;
-        }
-
-        /* if record is "END" then break out of loop */
-        if (0xC5 == buf[1] && 0xD5 == buf[2] && 0xC4 == buf[3])
+            rc = -1;
             break;
-
+        }
+        
         /* if record is "TXT" then copy bytes to mainstore */
-        if (0xE3 == buf[1] && 0xE7 == buf[2] && 0xE3 == buf[3])
+        else if ( strncmp( buf, txtcard, sizeof(txtcard) ) == 0 && 
+                  0x40 == buf[8]  && 0x40 == buf[9]             &&       // Required blanks
+                  0x40 == buf[12] && 0x40 == buf[13] )                   // ...
+
         {
-            n   = buf[5]*65536 + buf[6]*256 + buf[7];
-            len = buf[11];
+            n   = ((((buf[5] << 8) | buf[6])<<8) | buf[7]);     // Relative address (positive)
+            len = (buf[10] << 8) | buf[11];                     // Byte count of useable
+            if (len <= 56)                                      // Process if good count
+            {
+               if ((RADR)(aaddr + n + len - 1) > sysblk.mainsize) // Bytes must fit into storage
+               {
+                  WRMSG(HHC02251,"E");
+                  rc = -1;
+                  break;
+               }
+            }
             memcpy(regs->mainstor + aaddr + n, &buf[16], len);
             STORAGE_KEY(aaddr + n, regs) |= (STORKEY_REF | STORKEY_CHANGE);
             STORAGE_KEY(aaddr + n + len - 1, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+        }
+            /* if comment card continue (usually from VM) */
+        else if ( strncmp( buf, comment, sizeof(comment) ) == 0 )
+        {
+            continue;
+        }
+            /* if rdl card continue */
+        else if ( strncmp( buf, rldcard, sizeof(rldcard) ) == 0 )
+        {
+            continue;
+        }
+            /* if esd card continue */
+        else if ( strncmp( buf, esdcard, sizeof(esdcard) ) == 0 )
+        {
+            continue;
+        }
+            /* if record is "END" then break out of loop */
+        else if ( strncmp( buf, endcard, sizeof(endcard) ) == 0 )
+        {
+            rc = 0;
+            break;
         }
     }
 
     /* Close file and issue status message */
     close (fd);
-    WRMSG(HHC02249, "I" );
+
+    if ( rc == 0 )
+        WRMSG(HHC02249, "I" );
+
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
-    return 0;
+    return rc;
 }
 
 
