@@ -30,7 +30,7 @@ static int export_file( char *fn, char *buf, int buflen);
 static void imp_exp_error( char *fn, char *cmd, char *tab, int err);
 
 static unsigned char    /* ISO/ANSI ASCII to CECP 037 */
-ind$file_a_to_e[] = {
+ind_file_a_to_e[] = {
       "\x00\x01\x02\x03\x37\x2D\x2E\x2F\x16\x05\x25\x0B\x0C\x0D\x0E\x0F"
       "\x10\x11\x12\x13\x3C\x3D\x32\x26\x18\x19\x3F\x27\x1C\x1D\x1E\x1F"
       "\x40\x5A\x7F\x7B\x5B\x6C\x50\x7D\x4D\x5D\x5C\x4E\x6B\x60\x4B\x61"
@@ -50,7 +50,7 @@ ind$file_a_to_e[] = {
       };
 
 static unsigned char    /* CECP 037 to ISO/ANSI ASCII */
-ind$file_e_to_a[] = {
+ind_file_e_to_a[] = {
       "\x00\x01\x02\x03\x9C\x09\x86\x7F\x97\x8D\x8E\x0B\x0C\x0D\x0E\x0F"
       "\x10\x11\x12\x13\x9D\x85\x08\x87\x18\x19\x92\x8F\x1C\x1D\x1E\x1F"
       "\x80\x81\x82\x83\x84\x0A\x17\x1B\x88\x89\x8A\x8B\x8C\x05\x06\x07"
@@ -1012,7 +1012,7 @@ static CPCONV cpconv[] = {
     { "1252/037v2", cp_1252_to_037v2, cp_037v2_to_1252 },
     { "1252/1047",  cp_1252_to_1047,  cp_1047_to_1252  },
     { "1252/1140",  cp_1252_to_1140,  cp_1140_to_1252  },
-    { "ISOANSI/037",ind$file_a_to_e,  ind$file_e_to_a  }, /* CECP 037 to ISO/ANSI ASCII */
+    { "ISOANSI/037",ind_file_a_to_e,  ind_file_e_to_a  }, /* CECP 037 to ISO/ANSI ASCII */
     { "user",       user_h_to_g,      user_g_to_h      },
     { NULL,         ascii_to_ebcdic,  ebcdic_to_ascii  }
 };
