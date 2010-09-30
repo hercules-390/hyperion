@@ -3735,8 +3735,6 @@ DEF_INST(cipher_message_with_counter_d)
   if(msa < 4)
     ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
 
-  FACILITY_CHECK(MSA_EXTENSION_4,regs);
-
 #ifdef OPTION_KMCTR_DEBUG
   WRGMSG_ON;
   WRGMSG(HHC90100, "D", "KMCTR: cipher message with counter");
@@ -3822,8 +3820,6 @@ DEF_INST(cipher_message_with_cipher_feedback_d)
   msa = get_msa(regs);
   if(msa < 4)
     ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
-
-  FACILITY_CHECK(MSA_EXTENSION_4,regs);
 
 #ifdef OPTION_KMF_DEBUG
   WRGMSG_ON;
