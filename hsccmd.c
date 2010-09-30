@@ -9981,7 +9981,7 @@ int qports_cmd(int argc, char *argv[], char *cmdline)
 
     if ( sysblk.httpport > 0 )
     {
-        MSGBUF( buf, "on port %ud", sysblk.httpport);
+        MSGBUF( buf, "on port %u", sysblk.httpport);
         WRMSG( HHC17001, "I", "HTTP", buf);
     }
     else
@@ -9991,7 +9991,7 @@ int qports_cmd(int argc, char *argv[], char *cmdline)
 
     if ( sysblk.shrdport > 0 )
     {
-        MSGBUF( buf, "on port %ud", sysblk.shrdport);
+        MSGBUF( buf, "on port %u", sysblk.shrdport);
         WRMSG( HHC17001, "I", "Shared DASD", buf);
     }
     else
