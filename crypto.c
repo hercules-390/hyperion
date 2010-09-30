@@ -237,6 +237,8 @@ void renew_wrapping_keys(void)
   get_lparname(lparname);
   memcpy(&sysblk.wkvpaes_reg[8], lparname, 8);
   memcpy(&sysblk.wkvpdea_reg[8], lparname, 8);
+  sysblk.wkvpaes_reg[16] = sysblk.lparnum;
+  sysblk.wkvpdea_reg[16] = sysblk.lparnum;
   for(i = 0; i < 8; i++)
   {
     sysblk.wkvpaes_reg[31 - i] = time;
