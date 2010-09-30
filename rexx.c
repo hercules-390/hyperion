@@ -105,16 +105,16 @@ APIRET APIENTRY hSubCmd( PRXSTRING command, PUSHORT flags, PRXSTRING retval )
 SHORT rc;
 
     rc = (sysblk.config_done) 
-       ? ProcessPanelCommand(command[0].strptr)
-       : ProcessConfigCmdLine(command[0].strptr);
+       ? ProcessPanelCommand(RXSTRPTR(*command))
+       : ProcessConfigCmdLine(RXSTRPTR(*command));
 
     if( rc )
         *flags = rc < 0 ? RXSUBCOM_ERROR : RXSUBCOM_FAILURE;
     else
         *flags = RXSUBCOM_OK;
 
-    sprintf(retval->strptr,"%hd",rc);
-    retval->strlength = (ULONG)strlen(retval->strptr);
+    sprintf(RXSTRPTR(*retval),"%hd",rc);
+    MAKERXSTRING(*retval, RXSTRPTR(*retval), strlen(RXSTRPTR(*retval)));
 
     return 0;
 }
@@ -208,17 +208,16 @@ RXSYSEXIT ExitList[2];
         int i,len;
 
         for (len = 0, i = 2; i < argc; i++ )
-            len += (int)strlen( (char *)argv[i] ) + 1;
+            len += strlen(argv[i]) + 1;
 
-        arg.strptr = (char *)malloc( len );
+        MAKERXSTRING(arg, malloc(len), len - 1);
 
-        strcpy( arg.strptr, argv[2] );
-        for ( i = 3; i < argc; i++ )
+        strcpy(RXSTRPTR(arg), argv[2]);
+        for ( i = 3; i < argc; i++)
         {
-            strlcat( arg.strptr, " ", len );
-            strlcat( arg.strptr, argv[i], len );
+            strcat( RXSTRPTR(arg), " ");
+            strcat( RXSTRPTR(arg), argv[i]);
         }
-        arg.strlength = len - 1;
     }
     else
         MAKERXSTRING(arg, NULL, 0);
