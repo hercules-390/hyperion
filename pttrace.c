@@ -643,7 +643,7 @@ time_t tt;
     {
         if (pttrace[i].tid)
         {
-            tt = pttrace[i].tv.tv_sec; strcpy(tbuf, ctime(&tt)); tbuf[19] = '\0';
+            tt = pttrace[i].tv.tv_sec; strlcpy(tbuf, ctime(&tt),sizeof(tbuf)); tbuf[19] = '\0';
 
             if (pttrace[i].result == PTT_MAGIC && (pttrace[i].class & PTT_CL_THR))
                 result[0] = '\0';

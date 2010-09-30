@@ -771,13 +771,16 @@ DLL_EXPORT int scandir
   int count, pos;
   struct dirent **names;
   char *pattern;
+  size_t    m;
 
   /* 3 for "*.*", 1 for "\", 1 for zero termination */
-  pattern = (char*)malloc(strlen(dir) + 3 +1 +1);
-  strcpy(pattern, dir);
-  if (pattern[ strlen(pattern) - 1] != '\\')
-    strcat(pattern, "\\");
-  strcat(pattern, "*.*");
+  m = strlen(dir) +3 +1 +1;
+
+  pattern = (char*)malloc(m);
+  strlcpy(pattern, dir,m);
+  if ( pattern[strlen(pattern) - 1] != '\\')
+    strlcat(pattern, "\\",m);
+  strlcat(pattern, "*.*",m);
 
   /* 1st pass thru is just to count them */
   handle = FindFirstFile(pattern, &file_data);
@@ -814,12 +817,12 @@ DLL_EXPORT int scandir
       int rtn;
       struct dirent current;
 
-      strcpy(current.d_name, file_data.cFileName);
+      strlcpy( current.d_name, file_data.cFileName, sizeof(current.d_name) );
 
       if (!filter || filter(&current))
         {
           struct dirent *copyentry = malloc(sizeof(struct dirent));
-          strcpy(copyentry->d_name, current.d_name);
+          strlcpy(copyentry->d_name, current.d_name, sizeof(copyentry->d_name) );
           names[pos] = copyentry;
           pos++;
         }
@@ -3196,7 +3199,7 @@ UINT  WINAPI  w32_read_piped_process_stdxxx_output_thread ( void* pThreadParm )
 
             oflow = TRUE;
             memcpy( holdbuff + nHoldAmount, readbuff, HOLDBUFSIZE - nHoldAmount);
-            strcpy(                         readbuff, buffer_overflow_msg);
+            strlcpy(                        readbuff, buffer_overflow_msg, sizeof(readbuff) );
             nAmountRead =                   (DWORD)buffer_overflow_msg_len;
             nHoldAmount =  HOLDBUFSIZE  -   nAmountRead - 1;
         }
@@ -3397,10 +3400,11 @@ DLL_EXPORT char*  w32_basename( const char* path )
     memset( _basename, '\0', MAX_PATH );        // zero for security reasons
     _splitpath( path, NULL, NULL, fname, ext ); // C4996
     
-    strcat( strcpy( _basename, fname ), ext);
+    strlcpy( _basename, fname, sizeof( _basename ) );
+    strlcat( _basename, ext,   sizeof( _basename ) );
 
     if ( strlen( _basename ) == 0 || path == NULL ) 
-        strcpy( _basename, "." );
+        strlcpy( _basename, ".", sizeof( _basename ) );
 
     return( _basename );
 }
@@ -3424,10 +3428,11 @@ DLL_EXPORT char*  w32_dirname( const char* path )
     t = dir + strlen(dir) -1;
     for ( ; (*t == PATHSEPC && t > dir) ; t--) *t = '\0';
 
-    strcat(strcpy(_dirname,drive), dir);
+    strlcpy( _dirname, drive, sizeof(_dirname) );
+    strlcat( _dirname, dir,   sizeof(_dirname) );
 
     if ( strlen( _dirname ) == 0 || path == NULL )
-        strcpy( _dirname, "." );
+        strlcpy( _dirname, ".", sizeof(_dirname) );
     
     return( _dirname );
 }

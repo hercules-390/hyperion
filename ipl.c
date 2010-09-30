@@ -289,16 +289,16 @@ BYTE    chanstat;                       /* IPL device channel status */
         char buf[80];
         char buf2[16];
         
-        strcpy(buf, "");
+        bzero(buf,sizeof(buf));
         for (i=0; i < (int)dev->numsense; i++)
         {
-            snprintf(buf2, 16, "%2.2X", dev->sense[i]);
-            strcat(buf, buf2);
-            if ((i & 3) == 3) strcat(buf, " ");
+            MSGBUF(buf2, "%2.2X", dev->sense[i]);
+            strlcat(buf, buf2, sizeof(buf) );
+            if ((i & 3) == 3) strlcat(buf, " ", sizeof(buf));
         }
         {
             char buffer[256];
-            snprintf(buffer, 256, "architecture mode '%s', csw status %2.2X%2.2X, sense %s", get_arch_mode_string(regs), 
+            MSGBUF(buffer, "architecture mode '%s', csw status %2.2X%2.2X, sense %s", get_arch_mode_string(regs), 
                 unitstat, chanstat, buf);
             WRMSG (HHC00828, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu, buffer);
             WRMSG (HHC00829, "I");

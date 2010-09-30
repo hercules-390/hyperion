@@ -190,10 +190,10 @@ static void fcb_dump(DEVBLK* dev, char *buf, unsigned int buflen)
             if (strlen(buf) + strlen(wrk) >= buflen - 4)
             {
                 /* Too long, truncate it */
-                strcat(buf, ",...");
+                strlcat(buf, ",...", buflen);
                 return;
             }
-            strcat(buf, wrk);
+            strlcat(buf, wrk, buflen);
         }
     }
     return;

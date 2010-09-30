@@ -5448,7 +5448,7 @@ int   rc;
         return 0;
     }
 
-    strcpy(buf, op);
+    strlcpy(buf, op, sizeof(buf));
     op = buf;
 
     /* Initialize the global cckd block if necessary */
@@ -5810,7 +5810,7 @@ int             l;
     {
         gettimeofday(&tv, NULL);
         t = tv.tv_sec;
-        strcpy(tbuf, ctime(&t));
+        strlcpy(tbuf, ctime(&t), sizeof(tbuf));
         tbuf[19] = '\0';
 
         va_start(vl,msg);

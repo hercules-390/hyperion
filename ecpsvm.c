@@ -1133,7 +1133,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         /* Dispatch..... */
         MSGBUF(buf, "DISP2 - Next Instruction : %2.2X\n",ARCH_DEP(vfetchb)(regs->psw.IA,USE_PRIMARY_SPACE,regs));
         display_regs(regs, &buf[strlen(buf)], sizeof(buf)-(int)strlen(buf), "HHC90000D ");
-        strcat(buf, "\n");
+        strlcat(buf, "\n", sizeof(buf));
         display_cregs(regs, &buf[strlen(buf)], sizeof(buf)-(int)strlen(buf), "HHC90000D ");
         DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
         return(2);      /* OK - Perform INTCHECK */
@@ -2670,18 +2670,18 @@ static void ecpsvm_showstats2(ECPSVM_STAT *ar,size_t count)
                 haveunsup++;
             }
             havedisp=1;
-            snprintf(nname,32,"%s%s",ar[i].name,ar[i].support ? "" : "*");
+            snprintf(nname,sizeof(nname),"%s%s",ar[i].name,ar[i].support ? "" : "*");
             if(!ar[i].enabled)
             {
-                strcat(nname,"-");
+                strlcat(nname,"-",sizeof(nname));
             }
             if(ar[i].debug)
             {
-                strcat(nname,"%");
+                strlcat(nname,"%",sizeof(nname));
             }
             if(ar[i].total)
             {
-                strcat(nname,"+");
+                strlcat(nname,"+",sizeof(nname));
             }
             WRMSG(HHC01701,"I",
                     nname,

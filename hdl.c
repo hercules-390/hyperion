@@ -369,12 +369,14 @@ HDLDEV *hndent;
  */
 static char * hdl_bdnm (const char *ltype)
 {
-char *dtname;
+char        *dtname;
 unsigned int n;
+size_t       m;
 
-    dtname = malloc(strlen(ltype) + sizeof(HDL_HDTP_Q));
-    strcpy(dtname,HDL_HDTP_Q);
-    strcat(dtname,ltype);
+    m = strlen(ltype) + sizeof(HDL_HDTP_Q);
+    dtname = malloc(m);
+    strlcpy(dtname,HDL_HDTP_Q,m);
+    strlcat(dtname,ltype,m);
 
     for(n = 0; n < strlen(dtname); n++)
         if(isupper(dtname[n]))

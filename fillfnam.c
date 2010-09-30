@@ -50,6 +50,7 @@ int tab_pressed(char *cmdlinefull, int *cmdoffset) {
   char *filename, *path, *tmp;
   char result[1024];
   char pathname[MAX_PATH];
+  size_t    bl;
 #ifdef _MSVC_
   int within_quoted_string = 0;
   int quote_pos;
@@ -152,23 +153,24 @@ int tab_pressed(char *cmdlinefull, int *cmdoffset) {
       hostpath(pathname, fullfilename, sizeof(pathname));
       if (stat(pathname,&buf) == 0)
          if (buf.st_mode & S_IFDIR) {
-//          strcat(namelist[i]->d_name,"/");
+//          strlcat(namelist[i]->d_name,"/",sizeof(namelist[i]->d_name));
 // Don't write past end of d_name
 // Problem debugged by bb5ch39t
             namelist[i] = realloc(namelist[i], sizeof(struct dirent)
                                 + strlen(namelist[i]->d_name) + 2);
             if (namelist[i])
 #ifdef _MSVC_
-               strcat(namelist[i]->d_name,"\\");
+               strlcat(namelist[i]->d_name,"\\",sizeof(namelist[i]->d_name));
 #else
-               strcat(namelist[i]->d_name,"/");
+               strlcat(namelist[i]->d_name,"/",sizeof(namelist[i]->d_name));
 #endif
          }
     }
     /* now check, if filenames have something in common, after a cycle buff
        contains maximal intersection of names */
-    buff = (char*)malloc(strlen(namelist[0]->d_name) + 1); /* first one */
-    strcpy(buff, namelist[0]->d_name);
+    bl = (size_t)(strlen(namelist[0]->d_name) + 1);
+    buff = (char*)malloc(bl); /* first one */
+    strlcpy(buff, namelist[0]->d_name,bl);
     for (i = 1; i < n; i++) {
       len1 = (int)strlen(buff);
       len2 = (int)strlen(namelist[i]->d_name);
@@ -183,17 +185,19 @@ int tab_pressed(char *cmdlinefull, int *cmdoffset) {
     /* if maximal intersection of filenames is longer then original filename */
     if (strlen(buff) > strlen(filename)) {
       char *fullfilename;
-
-      fullfilename = (char*)malloc(strlen(path) + strlen(buff) + 1);
+      
+      bl = (size_t)(strlen(path) + strlen(buff) + 2);
+      fullfilename = (char*)malloc(bl);
+      bzero(fullfilename,bl);
       /* this test is not useless as path contains './' if there was no path
          in original filename. it is because of scandir function, which
          needs path portion */
       if (tmp != NULL)
-         sprintf(fullfilename, "%s%s", path, buff);
+         snprintf(fullfilename, bl-1, "%s%s", path, buff);
       else
-         sprintf(fullfilename, "%s", buff);
+         snprintf(fullfilename, bl-1, "%s", buff);
       /* construct command line */
-      sprintf(result, "%s%s%s", part1, fullfilename, part3);
+      snprintf(result, sizeof(result)-1, "%s%s%s", part1, fullfilename, part3);
       /* move cursor */
       *(cmdoffset) = (int)(strlen(part1) + strlen(fullfilename));
       strcpy(cmdlinefull, result);

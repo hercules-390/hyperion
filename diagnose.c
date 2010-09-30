@@ -87,8 +87,8 @@ static char *prefix[] = {
     }
     /* Ensure string terminator */
     name[i] = '\0';
-    strcpy(entry,prefix[regs->arch_mode]);
-    strcat(entry,name);
+    strlcpy(entry,prefix[regs->arch_mode],sizeof(entry));
+    strlcat(entry,name,sizeof(entry));
 
     if( (dllcall = HDL_FINDSYM(entry)) )
         dllcall(r1, r3, regs);

@@ -215,8 +215,8 @@ RXSYSEXIT ExitList[2];
         strcpy( arg.strptr, argv[2] );
         for ( i = 3; i < argc; i++ )
         {
-            strcat( arg.strptr, " " );
-            strcat( arg.strptr, argv[i] );
+            strlcat( arg.strptr, " ", len );
+            strlcat( arg.strptr, argv[i], len );
         }
         arg.strlength = len - 1;
     }

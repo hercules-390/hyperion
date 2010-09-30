@@ -1178,10 +1178,10 @@ static char *format_int(uint64_t ic)
     obfr[0]=0;
     for(i=maxg;i>=0;i--)
     {
-        strcat(obfr,grps[i]);
+        strlcat(obfr,grps[i],sizeof(obfr));
         if(i)
         {
-            strcat(obfr,",");
+            strlcat(obfr,",",sizeof(obfr));
         }
     }
     return obfr;

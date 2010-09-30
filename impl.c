@@ -392,11 +392,11 @@ int     dll_count;                      /* index into array          */
 
         sysblk.hercules_cmdline = (char *)malloc( len );
 
-        strcpy( sysblk.hercules_cmdline, argv[0] );
+        strlcpy( sysblk.hercules_cmdline, argv[0], len );
         for ( i = 1; i < argc; i++ )
         {
-            strcat( sysblk.hercules_cmdline, " " );
-            strcat( sysblk.hercules_cmdline, argv[i] );
+            strlcat( sysblk.hercules_cmdline, " ", len );
+            strlcat( sysblk.hercules_cmdline, argv[i], len );
         }
     }
 
