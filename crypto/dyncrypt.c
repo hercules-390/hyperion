@@ -81,95 +81,25 @@
 #define GR0_wrap(egs)   (((regs)->GR_L(0) & 0x08) ? TRUE : FALSE)
 #define GR0_tfc(regs)   (GR0_fc(regs) & 0x77)
 
+#ifndef __GET_MSA__
+#define __GET_MSA__
 /*----------------------------------------------------------------------------*/
-/* Bit strings for query functions                                            */
+/* Message Security Assist Extension query                                    */
 /*----------------------------------------------------------------------------*/
-#undef KIMD_BITS
-#undef KLMD_BITS
-#undef KM_BITS
-#undef KMAC_BITS
-#undef KMC_BITS
-#undef KMCTR_BITS
-#undef KMF_BITS
-#undef KMO_BITS
-#undef PCC_BITS
-#undef PCKMO_BITS
-
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
-  #define KIMD_BITS     { 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-#else
-  #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
-    #define KIMD_BITS   { 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-  #else
-    #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
-      #define KIMD_BITS { 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-    #else
-      #define KIMD_BITS { 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-    #endif
-  #endif
-#endif
-
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
-  #define KLMD_BITS     { 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-#else
-  #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
-    #define KLMD_BITS   { 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-  #else
-    #define KLMD_BITS   { 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-  #endif
-#endif
-
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
-  #define KM_BITS       { 0xf0, 0x70, 0x38, 0x38, 0x00, 0x00, 0x28, 0x28, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-#else
-  #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
-    #define KM_BITS     { 0xf0, 0x70, 0x38, 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-  #else
-    #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
-      #define KM_BITS   { 0xf0, 0x00, 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-    #else
-      #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
-        #define KM_BITS { 0xf0, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-      #else
-        #define KM_BITS { 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-      #endif
-    #endif
-  #endif
-#endif
-
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
-  #define KMAC_BITS     { 0xf0, 0x70, 0x38, 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-#else
-  #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
-    #define KMAC_BITS   { 0xf0, 0x70, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-  #else
-    #define KMAC_BITS   { 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-  #endif
-#endif
-  
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
-  #define KMC_BITS      { 0xf0, 0x70, 0x38, 0x38, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-#else
-  #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
-    #define KMC_BITS    { 0xf0, 0x00, 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-  #else
-    #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
-      #define KMC_BITS  { 0xf0, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-    #else
-      #define KMC_BITS  { 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-    #endif
-  #endif
-#endif
-
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
-  #define PCKMO_BITS    { 0xf0, 0x00, 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-#endif
-
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
-  #define KMCTR_BITS    { 0xf0, 0x70, 0x38, 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-  #define KMF_BITS      { 0xf0, 0x70, 0x38, 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-  #define KMO_BITS      { 0xf0, 0x70, 0x38, 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-  #define PCC_BITS      { 0xf0, 0x70, 0x38, 0x38, 0x00, 0x00, 0x28, 0x28, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+static int get_msa(REGS *regs)
+{
+  if(FACILITY_ENABLED(MSA_EXTENSION_4, regs))
+    return(4);
+  if(FACILITY_ENABLED(MSA_EXTENSION_3, regs))
+    return(3);
+  if(FACILITY_ENABLED(MSA_EXTENSION_2, regs))
+    return(2);
+  if(FACILITY_ENABLED(MSA_EXTENSION_1, regs))
+    return(1);
+  if(FACILITY_ENABLED(MSG_SECURITY, regs))
+    return(0);
+  return(-1);
+}
 #endif
 
 /*----------------------------------------------------------------------------*/
@@ -3220,12 +3150,23 @@ static void ARCH_DEP(kmo_aes)(int r1, int r2, REGS *regs)
 /*----------------------------------------------------------------------------*/
 DEF_INST(compute_intermediate_message_digest_d)
 {
+  int msa;
+  BYTE query_bits[5][16] =
+  {
+    { 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+    { 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+    { 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+    /**/ { 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+    { 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
+  };
   int r1;
   int r2;
 
   RRE(inst, regs, r1, r2);
 
-  FACILITY_CHECK(MSG_SECURITY,regs);
+  msa = get_msa(regs);
+  if(msa < 0)
+    ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
 
 #ifdef OPTION_KIMD_DEBUG
   WRGMSG_ON;
@@ -3250,13 +3191,11 @@ DEF_INST(compute_intermediate_message_digest_d)
   {
     case 0: /* Query */
     {
-      BYTE parameter_block[16] = KIMD_BITS;
-
       /* Store the parameter block */
-      ARCH_DEP(vstorec)(parameter_block, 15, GR_A(1, regs), 1, regs);
+      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KIMD_DEBUG
-      LOGBYTE("output:", parameter_block, 16);
+      LOGBYTE("output:", query_bits[msa], 16);
 #endif
 
       /* Set condition code 0 */
@@ -3272,10 +3211,10 @@ DEF_INST(compute_intermediate_message_digest_d)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
     case 2: /* sha-256 */
     {
-      if(FACILITY_ENABLED(MSA_EXTENSION_1,regs))
-          ARCH_DEP(kimd_sha)(r1, r2, regs, 0);
+      if(msa >= 1)
+        ARCH_DEP(kimd_sha)(r1, r2, regs, 0);
       else
-          ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3283,10 +3222,10 @@ DEF_INST(compute_intermediate_message_digest_d)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
     case 3: /* sha-512 */
     {
-      if(FACILITY_ENABLED(MSA_EXTENSION_2,regs))
-          ARCH_DEP(kimd_sha)(r1, r2, regs, 0);
+      if(msa >= 2)
+        ARCH_DEP(kimd_sha)(r1, r2, regs, 0);
       else
-          ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3294,10 +3233,10 @@ DEF_INST(compute_intermediate_message_digest_d)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
     case 65: /* ghash */
     {
-      if(FACILITY_ENABLED(MSA_EXTENSION_4,regs))
-          ARCH_DEP(kimd_ghash)(r1, r2, regs);
+      if(msa >= 4)
+        ARCH_DEP(kimd_ghash)(r1, r2, regs);
       else
-          ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3315,12 +3254,23 @@ DEF_INST(compute_intermediate_message_digest_d)
 /*----------------------------------------------------------------------------*/
 DEF_INST(compute_last_message_digest_d)
 {
+  int msa;
+  BYTE query_bits[5][16] =
+  {
+    { 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+    { 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+    { 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+    /**/ { 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+    /**/ { 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
+  };
   int r1;
   int r2;
 
   RRE(inst, regs, r1, r2);
 
-  FACILITY_CHECK(MSG_SECURITY,regs);
+  msa = get_msa(regs);
+  if(msa < 0)
+    ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
 
 #ifdef OPTION_KLMD_DEBUG
   WRGMSG_ON;
@@ -3345,13 +3295,11 @@ DEF_INST(compute_last_message_digest_d)
   {
     case 0: /* Query */
     {
-      BYTE parameter_block[16] = KLMD_BITS;
-
       /* Store the parameter block */
-      ARCH_DEP(vstorec)(parameter_block, 15, GR_A(1, regs), 1, regs);
+      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KLMD_DEBUG
-      LOGBYTE("output:", parameter_block, 16);
+      LOGBYTE("output:", query_bits[msa], 16);
 #endif
 
       /* Set condition code 0 */
@@ -3366,7 +3314,10 @@ DEF_INST(compute_last_message_digest_d)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
     case 2: /* sha-256 */
     {
-      ARCH_DEP(klmd_sha)(r1, r2, regs);
+      if(msa >= 1)
+        ARCH_DEP(klmd_sha)(r1, r2, regs);
+      else
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3374,7 +3325,10 @@ DEF_INST(compute_last_message_digest_d)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
     case 3: /* sha-512 */
     {
-      ARCH_DEP(klmd_sha)(r1, r2, regs);
+      if(msa >= 2)
+        ARCH_DEP(klmd_sha)(r1, r2, regs);
+      else
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3392,12 +3346,23 @@ DEF_INST(compute_last_message_digest_d)
 /*----------------------------------------------------------------------------*/
 DEF_INST(cipher_message_d)
 {
+  int msa;
+  BYTE query_bits[5][16] =
+  {
+    { 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+    { 0xf0, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+    { 0xf0, 0x00, 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+    { 0xf0, 0x70, 0x38, 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+    { 0xf0, 0x70, 0x38, 0x38, 0x00, 0x00, 0x28, 0x28, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
+  };
   int r1;
   int r2;
 
   RRE(inst, regs, r1, r2);
 
-  FACILITY_CHECK(MSG_SECURITY,regs);
+  msa = get_msa(regs);
+  if(msa < 0)
+    ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
 
 #ifdef OPTION_KM_DEBUG
   WRGMSG_ON;
@@ -3422,13 +3387,11 @@ DEF_INST(cipher_message_d)
   {
     case 0: /* Query */
     {
-      BYTE parameter_block[16] = KM_BITS;
-
       /* Store the parameter block */
-      ARCH_DEP(vstorec)(parameter_block, 15, GR_A(1, regs), 1, regs);
+      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KM_DEBUG
-      LOGBYTE("output:", parameter_block, 16);
+      LOGBYTE("output:", query_bits[msa], 16);
 #endif
 
       /* Set condition code 0 */
@@ -3448,10 +3411,10 @@ DEF_INST(cipher_message_d)
     case 10: /* encrypted tdea-128 */
     case 11: /* encrypted tdea-192 */
     {
-      if(FACILITY_ENABLED(MSA_EXTENSION_3,regs))
-          ARCH_DEP(km_dea)(r1, r2, regs);
+      if(msa >= 3)
+        ARCH_DEP(km_dea)(r1, r2, regs);
       else
-          ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3459,10 +3422,10 @@ DEF_INST(cipher_message_d)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
     case 18: /* aes-128 */
     {
-      if(FACILITY_ENABLED(MSA_EXTENSION_1,regs))
-          ARCH_DEP(km_aes)(r1, r2, regs);
+      if(msa >= 1)
+        ARCH_DEP(km_aes)(r1, r2, regs);
       else
-          ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3471,10 +3434,10 @@ DEF_INST(cipher_message_d)
     case 19: /* aes-192 */
     case 20: /* aes-256 */
     {
-      if(FACILITY_ENABLED(MSA_EXTENSION_2,regs))
-          ARCH_DEP(km_aes)(r1, r2, regs);
+      if(msa >= 2)
+        ARCH_DEP(km_aes)(r1, r2, regs);
       else
-          ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3484,10 +3447,10 @@ DEF_INST(cipher_message_d)
     case 27: /* encrypted aes-192 */
     case 28: /* encrypted aes-256 */
     {
-      if(FACILITY_ENABLED(MSA_EXTENSION_3,regs))
-          ARCH_DEP(km_aes)(r1, r2, regs);
+      if(msa >= 3)
+        ARCH_DEP(km_aes)(r1, r2, regs);
       else
-          ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3498,10 +3461,10 @@ DEF_INST(cipher_message_d)
     case 58: /* encrypted xts aes-128 */
     case 60: /* encrypted xts aes-256 */
     {
-      if(FACILITY_ENABLED(MSA_EXTENSION_4,regs))
-          ARCH_DEP(km_xts_aes)(r1, r2, regs);
+      if(msa >= 4)
+        ARCH_DEP(km_xts_aes)(r1, r2, regs);
       else
-          ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3519,12 +3482,23 @@ DEF_INST(cipher_message_d)
 /*----------------------------------------------------------------------------*/
 DEF_INST(compute_message_authentication_code_d)
 {
+  int msa;
+  BYTE query_bits[5][16] =
+  {
+    { 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+    /**/ { 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+    /**/ { 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+    { 0xf0, 0x70, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+    { 0xf0, 0x70, 0x38, 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
+  }; 
   int r1;
   int r2;
 
   RRE(inst, regs, r1, r2);
 
-  FACILITY_CHECK(MSG_SECURITY,regs);
+  msa = get_msa(regs);
+  if(msa < 0)
+    ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
 
 #ifdef OPTION_KMAC_DEBUG
   WRGMSG_ON;
@@ -3547,13 +3521,11 @@ DEF_INST(compute_message_authentication_code_d)
   {
     case 0: /* Query */
     {
-      BYTE parameter_block[16] = KMAC_BITS;
-
       /* Store the parameter block */
-      ARCH_DEP(vstorec)(parameter_block, 15, GR_A(1, regs), 1, regs);
+      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs), 1, regs);
 
-#ifdef OPTION_KMAC_DEBUG
-      LOGBYTE("output:", parameter_block, 16);
+#ifdef OPTION_KIMD_DEBUG
+      LOGBYTE("output:", query_bits[msa], 16);
 #endif
 
       /* Set condition code 0 */
@@ -3573,10 +3545,10 @@ DEF_INST(compute_message_authentication_code_d)
     case 10: /* encrypted tdea-128 */
     case 11: /* encrypted tdea-192 */
     {
-      if(FACILITY_ENABLED(MSA_EXTENSION_3,regs))
-          ARCH_DEP(kmac_dea)(r1, r2, regs);
+      if(msa >= 3)
+        ARCH_DEP(kmac_dea)(r1, r2, regs);
       else
-          ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3589,10 +3561,10 @@ DEF_INST(compute_message_authentication_code_d)
     case 27: /* encrypted aes-192 */
     case 28: /* encrypted aes-256 */
     {
-      if(FACILITY_ENABLED(MSA_EXTENSION_4,regs))
-          ARCH_DEP(kmac_aes)(r1, r2, regs);
+      if(msa >= 4)
+        ARCH_DEP(kmac_aes)(r1, r2, regs);
       else
-          ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3610,12 +3582,23 @@ DEF_INST(compute_message_authentication_code_d)
 /*----------------------------------------------------------------------------*/
 DEF_INST(cipher_message_with_chaining_d)
 {
+  int msa;
+  BYTE query_bits[5][16] =
+  {
+    { 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+    { 0xf0, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+    { 0xf0, 0x00, 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+    { 0xf0, 0x70, 0x38, 0x38, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+    /**/ { 0xf0, 0x70, 0x38, 0x38, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
+  };
   int r1;
   int r2;
 
   RRE(inst, regs, r1, r2);
 
-  FACILITY_CHECK(MSG_SECURITY,regs);
+  msa = get_msa(regs);
+  if(msa < 0)
+    ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
 
 #ifdef OPTION_KMC_DEBUG
   WRGMSG_ON;
@@ -3640,13 +3623,11 @@ DEF_INST(cipher_message_with_chaining_d)
   {
     case 0: /* Query */
     {
-      BYTE parameter_block[16] = KMC_BITS;
-
       /* Store the parameter block */
-      ARCH_DEP(vstorec)(parameter_block, 15, GR_A(1, regs), 1, regs);
+      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KMC_DEBUG
-      LOGBYTE("output:", parameter_block, 16);
+      LOGBYTE("output:", query_bits[msa], 16);
 #endif
 
       /* Set condition code 0 */
@@ -3666,10 +3647,10 @@ DEF_INST(cipher_message_with_chaining_d)
     case 10: /* encrypted tdea-128 */
     case 11: /* encrypted tdea-192 */
     {
-      if(FACILITY_ENABLED(MSA_EXTENSION_3,regs))
-          ARCH_DEP(kmc_dea)(r1, r2, regs);
+      if(msa >= 3)
+        ARCH_DEP(kmc_dea)(r1, r2, regs);
       else
-          ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3677,10 +3658,10 @@ DEF_INST(cipher_message_with_chaining_d)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
     case 18: /* aes-128 */
     {
-      if(FACILITY_ENABLED(MSA_EXTENSION_1,regs))
-          ARCH_DEP(kmc_aes)(r1, r2, regs);
+      if(msa >= 1)
+        ARCH_DEP(kmc_aes)(r1, r2, regs);
       else
-          ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3689,10 +3670,10 @@ DEF_INST(cipher_message_with_chaining_d)
     case 19: /* aes-192 */
     case 20: /* aes-256 */
     {
-      if(FACILITY_ENABLED(MSA_EXTENSION_2,regs))
-          ARCH_DEP(kmc_aes)(r1, r2, regs);
+      if(msa >= 2)
+        ARCH_DEP(kmc_aes)(r1, r2, regs);
       else
-          ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3702,10 +3683,10 @@ DEF_INST(cipher_message_with_chaining_d)
     case 27: /* encrypted aes-192 */
     case 28: /* encrypted aes-256 */
     {
-      if(FACILITY_ENABLED(MSA_EXTENSION_3,regs))
-          ARCH_DEP(kmc_aes)(r1, r2, regs);
+      if(msa >= 3)
+        ARCH_DEP(kmc_aes)(r1, r2, regs);
       else
-          ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3713,10 +3694,10 @@ DEF_INST(cipher_message_with_chaining_d)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
     case 67: /* prng */
     {
-      if(FACILITY_ENABLED(MSA_EXTENSION_1,regs))
-          ARCH_DEP(kmc_prng)(r1, r2, regs);
+      if(msa >= 1)
+        ARCH_DEP(kmc_prng)(r1, r2, regs);
       else
-          ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
 #endif
@@ -3735,11 +3716,24 @@ DEF_INST(cipher_message_with_chaining_d)
 /*----------------------------------------------------------------------------*/
 DEF_INST(cipher_message_with_counter_d)
 {
+  int msa;
+  BYTE query_bits[5][16] =
+  {
+    { },
+    { },
+    { },
+    { },
+    { 0xf0, 0x70, 0x38, 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
+  };
   int r1;
   int r2;
   int r3;
 
   RRF_M(inst, regs, r1, r2, r3);
+
+  msa = get_msa(regs);
+  if(msa < 4)
+    ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
 
   FACILITY_CHECK(MSA_EXTENSION_4,regs);
 
@@ -3766,13 +3760,11 @@ DEF_INST(cipher_message_with_counter_d)
   {
     case 0: /* Query */
     {
-      BYTE parameter_block[16] = KMCTR_BITS;
-
       /* Store the parameter block */
-      ARCH_DEP(vstorec)(parameter_block, 15, GR_A(1, regs), 1, regs);
+      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KMCTR_DEBUG
-      LOGBYTE("output:", parameter_block, 16);
+      LOGBYTE("output:", query_bits[msa], 16);
 #endif
 
       /* Set condition code 0 */
@@ -3813,10 +3805,23 @@ DEF_INST(cipher_message_with_counter_d)
 /*----------------------------------------------------------------------------*/
 DEF_INST(cipher_message_with_cipher_feedback_d)
 {
+  int msa;
+  BYTE query_bits[5][16] =
+  {
+    { },
+    { },
+    { },
+    { },
+    { 0xf0, 0x70, 0x38, 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
+  };
   int r1;
   int r2;
 
   RRE(inst, regs, r1, r2);
+
+  msa = get_msa(regs);
+  if(msa < 4)
+    ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
 
   FACILITY_CHECK(MSA_EXTENSION_4,regs);
 
@@ -3844,13 +3849,11 @@ DEF_INST(cipher_message_with_cipher_feedback_d)
   {
     case 0: /* Query */
     {
-      BYTE parameter_block[16] = KMF_BITS;
-
       /* Store the parameter block */
-      ARCH_DEP(vstorec)(parameter_block, 15, GR_A(1, regs), 1, regs);
+      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KMF_DEBUG
-      LOGBYTE("output:", parameter_block, 16);
+      LOGBYTE("output:", query_bits[msa], 16);
 #endif
 
       /* Set condition code 0 */
@@ -3891,12 +3894,23 @@ DEF_INST(cipher_message_with_cipher_feedback_d)
 /*----------------------------------------------------------------------------*/
 DEF_INST(cipher_message_with_output_feedback_d)
 {
+  int msa;
+  BYTE query_bits[5][16] =
+  {
+    { },
+    { },
+    { },
+    { },
+    { 0xf0, 0x70, 0x38, 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
+  };
   int r1;
   int r2;
 
   RRE(inst, regs, r1, r2);
 
-  FACILITY_CHECK(MSA_EXTENSION_4,regs);
+  msa = get_msa(regs);
+  if(msa < 4)
+    ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
 
 #ifdef OPTION_KMO_DEBUG
   WRGMSG_ON;
@@ -3920,13 +3934,11 @@ DEF_INST(cipher_message_with_output_feedback_d)
   {
     case 0: /* Query */
     {
-      BYTE parameter_block[16] = KMO_BITS;
-
       /* Store the parameter block */
-      ARCH_DEP(vstorec)(parameter_block, 15, GR_A(1, regs), 1, regs);
+      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KMO_DEBUG
-      LOGBYTE("output:", parameter_block, 16);
+      LOGBYTE("output:", query_bits[msa], 16);
 #endif
 
       /* Set condition code 0 */
@@ -3966,12 +3978,23 @@ DEF_INST(cipher_message_with_output_feedback_d)
 /*----------------------------------------------------------------------------*/
 DEF_INST(perform_cryptographic_computation_d)
 {
+  int msa;
+  BYTE query_bits[5][16] =
+  {
+    { },
+    { },
+    { },
+    { },
+    { 0xf0, 0x70, 0x38, 0x38, 0x00, 0x00, 0x28, 0x28, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
+  };
   int r1;
   int r2;
 
   RRE(inst, regs, r1, r2);
-  
-  FACILITY_CHECK(MSA_EXTENSION_4,regs);
+
+  msa = get_msa(regs);
+  if(msa < 4)
+    ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
 
 #ifdef OPTION_PCC_DEBUG
   WRGMSG_ON;
@@ -3995,13 +4018,11 @@ DEF_INST(perform_cryptographic_computation_d)
   {
     case 0: /* Query */
     {
-      BYTE parameter_block[16] = PCC_BITS;
-
       /* Store the parameter block */
-      ARCH_DEP(vstorec)(parameter_block, 15, GR_A(1, regs), 1, regs);
+      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_PCC_DEBUG
-      LOGBYTE("output:", parameter_block, 16);
+      LOGBYTE("output:", query_bits[msa], 16);
 #endif
 
       /* Set condition code 0 */
@@ -4054,14 +4075,25 @@ DEF_INST(perform_cryptographic_key_management_operations_d)
 {
   int fc;
   int keylen = 0;
+  int msa;
   BYTE parameter_block[64];
   int parameter_blocklen = 0;
+  BYTE query_bits[5][16] = 
+  {
+    { },
+    { },
+    { },
+    { 0xf0, 0x00, 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+    /**/ { 0xf0, 0x00, 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
+  };
   int r1;
   int r2;
 
   RRE(inst, regs, r1, r2);
 
-  FACILITY_CHECK(MSA_EXTENSION_3,regs);
+  msa = get_msa(regs);
+  if(msa < 3)
+    ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
 
 #ifdef OPTION_PCKMO_DEBUG
   WRGMSG_ON;
@@ -4086,13 +4118,11 @@ DEF_INST(perform_cryptographic_key_management_operations_d)
   {
     case 0: /* Query */
     {
-      BYTE parameter_block[16] = PCKMO_BITS;
-
       /* Store the parameter block */
-      ARCH_DEP(vstorec)(parameter_block, 15, GR_A(1, regs), 1, regs);
+      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_PCKMO_DEBUG
-      LOGBYTE("output:", parameter_block, 16);
+      LOGBYTE("output:", query_bits[msa], 16);
 #endif
 
       return;
