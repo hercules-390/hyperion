@@ -1178,6 +1178,8 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02298 "%1d:%04X drive is empty"
 #define HHC02299 "Invalid command usage. Type 'help %s' for assistance."
 #define HHC02300 "sm=%2.2X pk=%d cmwp=%X as=%s cc=%d pm=%X am=%s ia=%"I64_FMT"X" 
+#define HHC02301 "%s: Unexpected read length. Records should be %d bytes long."
+#define HHC02302 "%s: Unknown card type read: %s; skipped"
 
 // reserve 02390 for ieee.c
 #define HHC02390 "Function '%s': unexpectedly converting to '%s'"

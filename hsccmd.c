@@ -7058,6 +7058,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
     U32     aaddr;                      /* Absolute storage address  */
     int     fd;                         /* File descriptor           */
     BYTE    buf[80];                    /* Read buffer               */
+    int     rlen;                       /* read length               */
     U16     len;                        /* Number of bytes read      */
     U32     n;
     int     rc;
@@ -7129,13 +7130,20 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
     for ( n = 0; ; )
     {
         /* Read 80 bytes into buffer */
-        if ((read (fd, buf, 80)) < 0)
+        rlen = read( fd, buf, sizeof(buf) );
+        if ( rlen < 0 )
         {
             WRMSG(HHC02219,"E", "read()", strerror(errno));
             rc = -1;
             break;
+        }   
+        /* if record length is not 80; leave */
+        else if ( rlen != sizeof(buf) )
+        {
+            WRMSG( HHC02301, "E", "loadtext", sizeof(buf) );
+            rc = -1;
+            break;
         }
-        
         /* if record is "TXT" then copy bytes to mainstore */
         else if ( strncmp( buf, txtcard, sizeof(txtcard) ) == 0 && 
                   0x40 == buf[8]  && 0x40 == buf[9]             &&       // Required blanks
@@ -7177,6 +7185,16 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
         {
             rc = 0;
             break;
+        }
+        else
+        {
+            char msgbuf[8];
+
+            bzero(msgbuf,sizeof(msgbuf));
+            msgbuf[0] = guest_to_host(buf[1]);
+            msgbuf[1] = guest_to_host(buf[2]);
+            msgbuf[2] = guest_to_host(buf[3]);
+            WRMSG( HHC02302, "W", "loadtext", msgbuf );
         }
     }
 
