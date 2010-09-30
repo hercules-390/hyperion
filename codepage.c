@@ -1291,7 +1291,7 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
                 }
                 else
                 {
-                    WRMSG( HHC01490, "I", "Emported", "ebcdic/g2h", "to", fn );
+                    WRMSG( HHC01490, "I", "Exported", "ebcdic/g2h", "to", fn );
                 }
             }
             if ( ( argc == 3 && ( CMD(argv[1],ascii,1) || CMD(argv[1],h2g,3) ) ) ||
@@ -1399,11 +1399,11 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
             rc = -1;
         }
     }
-    else if ( CMD(cmd,delete,3) )
+    else if ( CMD(cmd,reset,5) )
     {
         if ( strcasecmp(codepage_conv->name,"user") == 0 )
         {
-            WRMSG( HHC01489, "E", "delete" );
+            WRMSG( HHC01489, "E", "reset" );
             rc = -1;
         }
         else

@@ -4543,7 +4543,7 @@ int legacysenseid_cmd(int argc, char *argv[], char *cmdline)
  *
  * cp_updt altER ebcdic|ascii (p,v)       modify user pages
  * cp_updt refERENCE codepage             copy existing page to user area
- * cp_updt delETE                         delete user area contents
+ * cp_updt reset                          reset user area contents to '\0'
  * cp_updt dsp|disPLAY ebcdic|ascii       display user pages
  * cp_updt impORT ebcdic|ascii filename   import filename to user table 
  * cp_updt expORT ebcdic|ascii filename   export filename to user table 
@@ -4557,7 +4557,11 @@ int cp_updt_cmd(int argc, char *argv[], char *cmdline)
 
     UNREFERENCED(cmdline);
 
-    if ( argc == 2 && CMD(argv[1],delete,3) )
+    /*  This is coded in this manner in case additional checks are
+     *  made later.
+     */ 
+
+    if ( argc == 2 && CMD(argv[1],reset,5) )
     {
         argc--;
         argv++;
