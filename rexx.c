@@ -130,25 +130,25 @@ int rc;
 
         if(!(addr = dlopen(REGINA_LIBRARY,RTLD_LAZY)))
         {
-            WRMSG( HHC17504, "E", REXX_PACKAGE, REGINA_LIBRARY, strerror(errno));
+            WRMSG( HHC17504, "E", REXX_PACKAGE, REGINA_LIBRARY, dlerror());
             return -1;
         }
 
         if(!(hRexxRegisterSubcomExe = (rRexxRegisterSubcomExe *)dlsym(addr, REXX_REGISTER_SUBCOM )))
         {
-            WRMSG( HHC17505, "E", REXX_PACKAGE, REXX_REGISTER_SUBCOM, strerror(errno));
+            WRMSG( HHC17505, "E", REXX_PACKAGE, REXX_REGISTER_SUBCOM, dlerror());
             return -1;
         }
 
         if(!(hRexxRegisterExitExe = (rRexxRegisterExitExe *)dlsym( addr, REXX_REGISTER_EXIT )))
         {
-            WRMSG( HHC17505, "E", REXX_PACKAGE, REXX_REGISTER_EXIT, strerror(errno));
+            WRMSG( HHC17505, "E", REXX_PACKAGE, REXX_REGISTER_EXIT, dlerror());
             return -1;
         }
 
         if(!(hRexxStart = (rRexxStart *)dlsym(addr, REXX_START )))
         {
-            WRMSG( HHC17505, "E", REXX_PACKAGE, REXX_START, strerror(errno));
+            WRMSG( HHC17505, "E", REXX_PACKAGE, REXX_START, dlerror());
             return -1;
         }
 
