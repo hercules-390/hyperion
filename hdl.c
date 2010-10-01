@@ -12,7 +12,7 @@
 #define _HDL_C_
 #define _HUTIL_DLL_
 
-#if !defined(WIN32) && !defined(__FreeBSD__) && !defined(__APPLE__)
+#if !defined(WIN32) && !defined(__FreeBSD__) && !defined(__APPLE__) && defined(OPTION_DYNAMIC_LOAD)
 #define ZZ_NO_BACKLINK
 #endif
 
