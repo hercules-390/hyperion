@@ -75,8 +75,6 @@
                                            slashes                   */
 #undef  OPTION_SHUTDOWN_CONFIRMATION    /* Confirm quit and ssd cmds */
 
-#define OPTION_DYNAMIC_RESOLVE_REXX     /* Dynamically load REXX     */
-
 #undef  OPTION_LOCK_CONFIG_FILE         /* Keep Configuration file 
                                            locked during execution   */
 #define OPTION_ENHANCED_DEVICE_ATTACH   /* Multiple device att feat  */
@@ -84,6 +82,10 @@
 #if defined(OPTION_BUILTIN_SYMBOLS) && !defined(OPTION_CONFIG_SYMBOLS)
   #error OPTION_BUILTIN_SYMBOLS requires OPTION_CONFIG_SYMBOLS
 #endif
+
+#if defined(OPTION_DYNAMIC_LOAD)
+  #define OPTION_DYNAMIC_RESOLVE_REXX   /* Dynamically load REXX     */
+#endif /*defined(OPTION_DYNAMIC_LOAD)*/
 
 #if defined(OPTION_MSGHLD) && !defined(OPTION_MSGCLR)
   #error OPTION_MSGHLD requires OPTION_MSGCLR
