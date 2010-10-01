@@ -1260,8 +1260,6 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
     }
     else if ( CMD(cmd,test,4) )
     {
-        char    *g2h = user_g_to_h;
-        char    *h2g = user_h_to_g;
         int     i;
         int     a = 0;
 
@@ -1269,7 +1267,7 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
 
         for( a = 0, i = 0; i < sizeof(user_g_to_h); i++ )
         {
-            if ( i == user_h_to_g[user_g_to_h[i]] ) 
+            if ( i == (int)user_h_to_g[user_g_to_h[i]] ) 
                 continue;
             a++;
             WRMSG( HHC01491, "I", i, user_g_to_h[i],
@@ -1283,7 +1281,7 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
 
         for( a = 0, i = 0; i < sizeof(user_h_to_g); i++ )
         {
-            if ( i == user_g_to_h[user_h_to_g[i]] ) 
+            if ( i == (int)user_g_to_h[user_h_to_g[i]] ) 
                 continue;
             a++;
             WRMSG( HHC01492, "I", i, user_h_to_g[i],
