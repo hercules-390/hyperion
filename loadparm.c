@@ -192,12 +192,12 @@ LOADPARM_DLL_IMPORT
 char *str_manufacturer()
 {
     static char ret_manufacturer[sizeof(manufact)+1];
-    int i;
+    int     i;
     char    c;
 
     bzero(ret_manufacturer, sizeof(ret_manufacturer));
 
-    for( i = 0; i < sizeof(manufact); i++ )
+    for( i = 0; i < (int)sizeof(manufact); i++ )
     {
         c = guest_to_host(manufact[i]);
         
@@ -247,7 +247,7 @@ char *str_plant()
 
     bzero(ret_plant, sizeof(ret_plant));
 
-    for( i = 0; i < sizeof(plant); i++ )
+    for( i = 0; i < (int)sizeof(plant); i++ )
     {
         c = guest_to_host(plant[i]);
         

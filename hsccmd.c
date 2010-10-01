@@ -7154,7 +7154,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
             break;
         }
         /* if record is "TXT" then copy bytes to mainstore */
-        else if ( strncmp( buf, txtcard, sizeof(txtcard) ) == 0 && 
+        else if ( strncmp( (char*)buf, (char*)txtcard, sizeof(txtcard) ) == 0 && 
                   0x40 == buf[8]  && 0x40 == buf[9]             &&       // Required blanks
                   0x40 == buf[12] && 0x40 == buf[13] )                   // ...
 
@@ -7175,22 +7175,22 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
             STORAGE_KEY(aaddr + n + len - 1, regs) |= (STORKEY_REF | STORKEY_CHANGE);
         }
             /* if comment card continue (usually from VM) */
-        else if ( strncmp( buf, comment, sizeof(comment) ) == 0 )
+        else if ( strncmp( (char*)buf, (char*)comment, sizeof(comment) ) == 0 )
         {
             continue;
         }
             /* if rdl card continue */
-        else if ( strncmp( buf, rldcard, sizeof(rldcard) ) == 0 )
+        else if ( strncmp( (char*)buf, (char*)rldcard, sizeof(rldcard) ) == 0 )
         {
             continue;
         }
             /* if esd card continue */
-        else if ( strncmp( buf, esdcard, sizeof(esdcard) ) == 0 )
+        else if ( strncmp( (char*)buf, (char*)esdcard, sizeof(esdcard) ) == 0 )
         {
             continue;
         }
             /* if record is "END" then break out of loop */
-        else if ( strncmp( buf, endcard, sizeof(endcard) ) == 0 )
+        else if ( strncmp( (char*)buf, (char*)endcard, sizeof(endcard) ) == 0 )
         {
             rc = 0;
             break;
