@@ -31,7 +31,7 @@
 
 static int rexx_initialised = FALSE;
 
-#if !defined(NO_DYNAMIC_RESOLVE_REXX)
+#if defined(OPTION_DYNAMIC_RESOLVE_REXX)
 
 #if defined ( _MSVC_ )
 #define REGINA_LIBRARY "regina.dll"
@@ -51,13 +51,13 @@ static rRexxRegisterSubcomExe *hRexxRegisterSubcomExe = NULL;
 static rRexxStart             *hRexxStart = NULL;
 static rRexxRegisterExitExe   *hRexxRegisterExitExe = NULL;
 
-#else
+#else /*defined(OPTION_DYNAMIC_RESOLVE_REXX)*/
 
 #define hRexxStart             RexxStart
 #define hRexxRegisterSubcomExe RexxRegisterSubcomExe
 #define hRexxRegisterExitExe   RexxRegisterExitExe  
 
-#endif
+#endif /*defined(OPTION_DYNAMIC_RESOLVE_REXX)*/
 
 LONG APIENTRY hExitHnd( LONG ExitNumber, LONG Subfunction, PEXIT ParmBlock )
 {
@@ -123,7 +123,7 @@ int init_rexx()
 {
 int rc;
 
-#if !defined(NO_DYNAMIC_RESOLVE_REXX)
+#if defined(OPTION_DYNAMIC_RESOLVE_REXX)
     if( !rexx_initialised )
     {
         void *addr;
@@ -153,7 +153,7 @@ int rc;
         }
 
     }
-#endif
+#endif /*defined(OPTION_DYNAMIC_RESOLVE_REXX)*/
 
     if((rc = hRexxRegisterExitExe( hSIOExit, (RexxExitHandler *)hExitHnd, NULL )) != RXEXIT_OK
       && !(rexx_initialised && rc == RXEXIT_NOTREG))

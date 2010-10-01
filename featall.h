@@ -75,6 +75,8 @@
                                            slashes                   */
 #undef  OPTION_SHUTDOWN_CONFIRMATION    /* Confirm quit and ssd cmds */
 
+#define OPTION_DYNAMIC_RESOLVE_REXX     /* Dynamically load REXX     */
+
 #undef  OPTION_LOCK_CONFIG_FILE         /* Keep Configuration file 
                                            locked during execution   */
 #define OPTION_ENHANCED_DEVICE_ATTACH   /* Multiple device att feat  */
