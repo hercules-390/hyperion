@@ -702,6 +702,7 @@ AC_CHECK_LIB( iconv,  iconv          )
 AC_CHECK_LIB( rt,     sched_yield    )
 # rbowler 2008/03/10 rev 1.196 Solaris 2.9 requires -lpthread
 AC_CHECK_LIB( pthread,pthread_create )
+AC_CHECK_LIB( regina, RexxStart      )
 
 AC_CACHE_SAVE()
 
