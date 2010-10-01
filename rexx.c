@@ -113,7 +113,7 @@ SHORT rc;
     else
         *flags = RXSUBCOM_OK;
 
-    sprintf(RXSTRPTR(*retval),"%hd",rc);
+    snprintf(RXSTRPTR(*retval), RXSTRLEN(*retval), "%hd", rc);
     MAKERXSTRING(*retval, RXSTRPTR(*retval), (ULONG)strlen(RXSTRPTR(*retval)));
 
     return 0;
@@ -203,11 +203,11 @@ RXSYSEXIT ExitList[2];
 
     hostpath(pathname, argv[1], sizeof(pathname));
 
-    if ( argc > 2 )
+    if(argc > 2)
     {
         int i,len;
 
-        for (len = 0, i = 2; i < argc; i++ )
+        for (len = 0, i = 2; i < argc; i++)
             len += (int)strlen(argv[i]) + 1;
 
         MAKERXSTRING(arg, malloc(len), len - 1);
@@ -215,8 +215,8 @@ RXSYSEXIT ExitList[2];
         strcpy(RXSTRPTR(arg), argv[2]);
         for ( i = 3; i < argc; i++)
         {
-            strcat( RXSTRPTR(arg), " ");
-            strcat( RXSTRPTR(arg), argv[i]);
+            strcat(RXSTRPTR(arg), " ");
+            strcat(RXSTRPTR(arg), argv[i]);
         }
     }
     else
