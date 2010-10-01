@@ -1013,7 +1013,7 @@ static CPCONV cpconv[] = {
     { "1252/1047",  cp_1252_to_1047,  cp_1047_to_1252  },
     { "1252/1140",  cp_1252_to_1140,  cp_1140_to_1252  },
     { "ISOANSI/037",ind_file_a_to_e,  ind_file_e_to_a  }, /* CECP 037 to ISO/ANSI ASCII */
-    { "user",       user_h_to_g,      user_g_to_h      },
+    { "user",       user_h_to_g,      user_g_to_h      }, /* keep this before the NULL */
     { NULL,         ascii_to_ebcdic,  ebcdic_to_ascii  },
     { NULL,         NULL,             NULL             },   /* extras for print assistance */
     { NULL,         NULL,             NULL             },
@@ -1260,14 +1260,14 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
     }
     else if ( CMD(cmd,test,4) )
     {
-        int     i;
+        U16     i;
         int     a = 0;
 
         WRMSG( HHC01487, "I", "Testing", "ebcdic/g2h vs. ascii/h2g" );
 
         for( a = 0, i = 0; i < sizeof(user_g_to_h); i++ )
         {
-            if ( i == (int)user_h_to_g[user_g_to_h[i]] ) 
+            if ( i == user_h_to_g[user_g_to_h[i]] ) 
                 continue;
             a++;
             WRMSG( HHC01491, "I", i, user_g_to_h[i],
@@ -1281,7 +1281,7 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
 
         for( a = 0, i = 0; i < sizeof(user_h_to_g); i++ )
         {
-            if ( i == (int)user_g_to_h[user_h_to_g[i]] ) 
+            if ( i == user_g_to_h[user_h_to_g[i]] ) 
                 continue;
             a++;
             WRMSG( HHC01492, "I", i, user_h_to_g[i],
