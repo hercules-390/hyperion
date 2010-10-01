@@ -19,6 +19,7 @@
 #define REXX_PACKAGE "Regina"
 
 #define INCL_REXXSAA
+#define RX_STRONGTYPING
 
 #if defined( _MSVC_ )
 #include "rexxsaa.h"
