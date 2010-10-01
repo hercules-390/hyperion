@@ -321,7 +321,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
                                          &pLCSBLK->Port[pLCSDev->bPort].fd,
                                          pLCSBLK->Port[pLCSDev->bPort].szNetDevName );
 
-            WRMSG(HHC00901, "E", SSID_TO_LCSS(pLCSDev->pDEVBLK[0]->ssid), pLCSDev->pDEVBLK[0]->devnum,
+            WRMSG(HHC00901, "I", SSID_TO_LCSS(pLCSDev->pDEVBLK[0]->ssid), pLCSDev->pDEVBLK[0]->devnum,
                       pLCSBLK->Port[pLCSDev->bPort].szNetDevName, "TAP");
 
 #if defined(OPTION_W32_CTCI)
