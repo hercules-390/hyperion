@@ -114,7 +114,7 @@ SHORT rc;
         *flags = RXSUBCOM_OK;
 
     sprintf(RXSTRPTR(*retval),"%hd",rc);
-    MAKERXSTRING(*retval, RXSTRPTR(*retval), strlen(RXSTRPTR(*retval)));
+    MAKERXSTRING(*retval, RXSTRPTR(*retval), (ULONG)strlen(RXSTRPTR(*retval)));
 
     return 0;
 }
@@ -208,7 +208,7 @@ RXSYSEXIT ExitList[2];
         int i,len;
 
         for (len = 0, i = 2; i < argc; i++ )
-            len += strlen(argv[i]) + 1;
+            len += (int)strlen(argv[i]) + 1;
 
         MAKERXSTRING(arg, malloc(len), len - 1);
 
