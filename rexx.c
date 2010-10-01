@@ -158,14 +158,14 @@ int rc;
     if((rc = hRexxRegisterExitExe( hSIOExit, (RexxExitHandler *)hExitHnd, NULL )) != RXEXIT_OK
       && !(rexx_initialised && rc == RXEXIT_NOTREG))
     {
-        WRMSG( HHC17506, "E", REXX_PACKAGE, REXX_REGISTER_EXIT, rc);
+        WRMSG( HHC17506, "E", REXX_PACKAGE, "Exit Handler", rc);
         return -1;
     }
 
     if((rc = hRexxRegisterSubcomExe( hSubcom, (RexxSubcomHandler *)hSubCmd, NULL)) != RXSUBCOM_OK
       && !(rexx_initialised && rc == RXSUBCOM_NOTREG))
     {
-        WRMSG( HHC17506, "E", REXX_PACKAGE, REXX_REGISTER_SUBCOM, rc);
+        WRMSG( HHC17506, "E", REXX_PACKAGE, "Subcom Handler", rc);
         return -1;
     }
 
