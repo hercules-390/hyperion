@@ -77,6 +77,7 @@
 
 #undef  OPTION_LOCK_CONFIG_FILE         /* Keep Configuration file 
                                            locked during execution   */
+#define OPTION_ENHANCED_DEVICE_ATTACH   /* Multiple device att feat  */
 #undef  OPTION_BUILTIN_SYMBOLS          /* Internal Symbols Defined  */
 #if defined(OPTION_BUILTIN_SYMBOLS) && !defined(OPTION_CONFIG_SYMBOLS)
   #error OPTION_BUILTIN_SYMBOLS requires OPTION_CONFIG_SYMBOLS

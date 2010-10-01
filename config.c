@@ -1031,6 +1031,7 @@ parse_single_devnum_silent(const char *spec,
     return parse_single_devnum__INTERNAL(spec,lcss,devnum,0);
 }
 
+#if defined(OPTION_ENHANCED_DEVICE_ATTACH)
 /*-------------------------------------------------------------------*/
 /* Function to Parse compound device numbers                         */
 /* Syntax : [lcss:]CCUU[-CUU][,CUU..][.nn][...]                      */
@@ -1275,6 +1276,7 @@ parse_and_attach_devices(const char *sdevnum,
         free(dnd.da);
         return baddev?-1:0;
 } 
+#endif /*defined(OPTION_ENHANCED_DEVICE_ATTACH)*/
 
 #define MAX_LOGO_LINES 256
 void
