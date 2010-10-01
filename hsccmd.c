@@ -3387,25 +3387,17 @@ int pantitle_cmd(int argc, char *argv[], char *cmdline)
     {
         if (sysblk.pantitle)
             free(sysblk.pantitle);
-        sysblk.pantitle = strdup(argv[1]);
-        set_console_title( NULL );
-        if ( MLVL(VERBOSE) )
-        {
-            char *p = (char *)strchr((const char *)sysblk.pantitle, ' ' );
-            char buf[MAX_PATH+3];
 
-            if ( p == NULL )
-                p = sysblk.pantitle;
-            else
-            {
-                MSGBUF( buf, "'%s'", sysblk.pantitle );
-                p = buf;
-            }
-            WRMSG(HHC02204, "I", argv[0], p);
-        }
+        sysblk.pantitle = (strlen(argv[1]) == 0 ) ? NULL : strdup(argv[1]);
+        
+        if ( MLVL(VERBOSE) )
+            WRMSG( HHC02204, "I", argv[0], 
+                   (sysblk.pantitle == NULL) ? "(none)" : sysblk.pantitle);
+
+        set_console_title( NULL );
     }
     else
-        WRMSG(HHC02203, "I", "pantitle", sysblk.pantitle);
+        WRMSG(HHC02203, "I", argv[0], (sysblk.pantitle == NULL) ? "(none)" : sysblk.pantitle);
 
     return 0;
 }
@@ -9300,6 +9292,7 @@ int herclogo_cmd(int argc,char *argv[], char *cmdline)
         bzero(altfn,sizeof(altfn));
             
         MSGBUF(altfn,"%s%c%s", sysblk.hercules_pgmpath, PATHSEPC, fn);
+        hostpath(pathname,altfn,sizeof(pathname));
         rc = readlogo(pathname);
     }
 

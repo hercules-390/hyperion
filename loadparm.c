@@ -350,6 +350,26 @@ void get_systype(BYTE *dst)
     memcpy(dst, systype, sizeof(systype));
 }
 
+LOADPARM_DLL_IMPORT
+char *str_systype()
+{
+    static char ret_systype[sizeof(systype)+1];
+    int i;
+
+    ret_systype[sizeof(systype)] = '\0';
+
+    for(i = sizeof(systype) - 1; i >= 0; i--)
+    {
+        ret_systype[i] = guest_to_host((int)systype[i]);
+
+        if(isspace(ret_systype[i]) && !ret_systype[i+1])
+            ret_systype[i] = '\0';
+    }
+
+    return ret_systype;
+}
+
+
 
 /*-------------------------------------------------------------------*/
 /* SYSTEM NAME                                                       */
@@ -368,6 +388,26 @@ void get_sysname(BYTE *dst)
     memcpy(dst, sysname, sizeof(sysname));
 }
 
+LOADPARM_DLL_IMPORT
+char *str_sysname()
+{
+    static char ret_sysname[sizeof(sysname)+1];
+    int i;
+
+    ret_sysname[sizeof(sysname)] = '\0';
+
+    for(i = sizeof(sysname) - 1; i >= 0; i--)
+    {
+        ret_sysname[i] = guest_to_host((int)sysname[i]);
+
+        if(isspace(ret_sysname[i]) && !ret_sysname[i+1])
+            ret_sysname[i] = '\0';
+    }
+
+    return ret_sysname;
+}
+
+
 
 /*-------------------------------------------------------------------*/
 /* SYSPLEX NAME                                                      */
@@ -385,6 +425,26 @@ void get_sysplex(BYTE *dst)
 {
     memcpy(dst, sysplex, sizeof(sysplex));
 }
+
+LOADPARM_DLL_IMPORT
+char *str_sysplex()
+{
+    static char ret_sysplex[sizeof(sysplex)+1];
+    int i;
+
+    ret_sysplex[sizeof(sysplex)] = '\0';
+
+    for(i = sizeof(sysplex) - 1; i >= 0; i--)
+    {
+        ret_sysplex[i] = guest_to_host((int)sysplex[i]);
+
+        if(isspace(ret_sysplex[i]) && !ret_sysplex[i+1])
+            ret_sysplex[i] = '\0';
+    }
+
+    return ret_sysplex;
+}
+
 
 /*-------------------------------------------------------------------*/
 /* Retrieve Multiprocessing CPU-Capability Adjustment Factors        */

@@ -632,8 +632,6 @@ int             msglevel = FALSE;       /* indicator for msglevel
         devtmax                         // (maximum #of device threads allowed)
     );
 #else // !defined(OPTION_FISHIO)
-    initialize_lock (&sysblk.ioqlock);
-    initialize_condition (&sysblk.ioqcond);
     /* Set max number device threads */
     sysblk.devtmax = devtmax;
     sysblk.devtwait = sysblk.devtnbr =

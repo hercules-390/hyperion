@@ -539,6 +539,11 @@ int     dll_count;                      /* index into array          */
     initialize_condition (&sysblk.sync_cond);
     initialize_condition (&sysblk.sync_bc_cond);
 
+#if !defined(OPTION_FISHIO)
+    initialize_lock (&sysblk.ioqlock);
+    initialize_condition (&sysblk.ioqcond);
+#endif
+
 #if defined(OPTION_INSTRUCTION_COUNTING)
     initialize_lock (&sysblk.icount_lock);
 #endif
@@ -867,6 +872,42 @@ int     dll_count;                      /* index into array          */
 
     /* File was not lock, therefore we can proceed */
 #endif // OPTION_LOCK_CONFIG_FILE
+
+    /* Read the logofile */
+    {
+        char   *p;            /* pointer logo filename */
+        int     rc = 0;
+        char    fn[FILENAME_MAX] = { 0 };
+
+        if (sysblk.logofile == NULL) /* LogoFile NOT passed in command line */
+        {
+            p = getenv("HERCLOGO");
+
+            if ( p == NULL)
+                p = "herclogo.txt";
+        }
+        else 
+            p = sysblk.logofile;
+
+        hostpath( fn, p, sizeof(fn) );
+
+        rc = readlogo(fn);
+        
+        if ( rc == -1 && strcasecmp(fn,basename(fn)) == 0
+                  && strlen(sysblk.hercules_pgmpath) > 0 )
+        {
+            char altfn[FILENAME_MAX];
+            char pathname[MAX_PATH];
+
+            bzero(altfn,sizeof(altfn));
+            
+            MSGBUF(altfn,"%s%c%s", sysblk.hercules_pgmpath, PATHSEPC, fn);
+
+            hostpath( pathname, altfn, sizeof(pathname));
+
+            rc = readlogo(pathname);
+        }
+    } /* end of logo parm processing */
 
     sysblk.config_done = FALSE;
 

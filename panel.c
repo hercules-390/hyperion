@@ -910,10 +910,57 @@ void set_console_title ( char *status )
 
     if ( sysblk.daemon_mode ) return;
 
+    redraw_status = 1;          
+
     if ( !sysblk.pantitle && ( !status || strlen(status) == 0 ) ) return;
 
     if ( !sysblk.pantitle )
-        MSGBUF( title, "System Status: %s", status );
+    {
+        char msgbuf[256];
+        char sysname[16] = { 0 };
+        char sysplex[16] = { 0 };
+        char systype[16] = { 0 };
+        char lparnam[16] = { 0 };
+
+        bzero(msgbuf,sizeof(msgbuf));
+
+        strlcat(systype,str_systype(),sizeof(systype));
+        strlcat(sysname,str_sysname(),sizeof(sysname)); 
+        strlcat(sysplex,str_sysplex(),sizeof(sysplex)); 
+        strlcat(lparnam,str_lparname(),sizeof(lparnam));
+
+        if ( strlen(lparnam)+strlen(systype)+strlen(sysname)+strlen(sysplex) > 0 )
+        {
+            if ( strlen(lparnam) > 0 )
+            {
+                strlcat(msgbuf, lparnam, sizeof(msgbuf));
+                if ( strlen(systype)+strlen(sysname)+strlen(sysplex) > 0 )
+                    strlcat(msgbuf, " - ", sizeof(msgbuf));
+            }
+            if ( strlen(systype) > 0 )
+            {
+                strlcat(msgbuf, systype, sizeof(msgbuf));
+                if ( strlen(sysname)+strlen(sysplex) > 0 )
+                    strlcat(msgbuf, " * ", sizeof(msgbuf));
+            }
+            if ( strlen(sysname) > 0 )
+            {
+                strlcat(msgbuf, sysname, sizeof(msgbuf));
+                if ( strlen(sysplex) > 0 )
+                    strlcat(msgbuf, " * ", sizeof(msgbuf));
+            }
+            if ( strlen(sysplex) > 0 )
+            {
+                strlcat(msgbuf, sysplex, sizeof(msgbuf));
+            }
+
+            MSGBUF( title, "%s - System Status: %s", msgbuf, status );
+        }
+        else
+        {
+            MSGBUF( title, "System Status: %s", status );
+        }
+    }
     else
     {
         if ( !status || strlen(status) == 0 )

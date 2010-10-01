@@ -322,6 +322,9 @@ void get_sysplex(BYTE *name);
 void set_sysname(BYTE *name);
 void set_systype(BYTE *name);
 void set_sysplex(BYTE *name);
+LOADPARM_DLL_IMPORT char *str_sysname();
+LOADPARM_DLL_IMPORT char *str_sysplex();
+LOADPARM_DLL_IMPORT char *str_systype();
 void get_mpfactors(BYTE *dest);
 
 /* Functions in module impl.c */
