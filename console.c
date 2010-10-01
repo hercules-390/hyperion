@@ -312,7 +312,7 @@ BYTE print_chars[17];
 
 
 #if 1
-struct sockaddr_in * get_inet_socket(const char *host_serv)
+static struct sockaddr_in * get_inet_socket(const char *host_serv)
 {
 char *host = NULL;
 char *serv;
