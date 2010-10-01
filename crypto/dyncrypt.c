@@ -368,24 +368,24 @@ static void sha512_seticv(sha512_context *ctx, BYTE icv[64])
 /*----------------------------------------------------------------------------*/
 /* Shif left                                                                  */
 /*----------------------------------------------------------------------------*/
-void shift_left(BYTE dst[8], BYTE src[8])
+void shift_left(BYTE *dst, BYTE* src, int len)
 {
   int carry;
   int i;
   
   carry = 0;
-  for(i = 0; i < 8; i++)
+  for(i = 0; i < len; i++)
   {
     if(carry)
     {
-      carry = src[7 - i] & 0x80;
-      dst[7 - i] = src[7 - i] << 1;
-      dst[7 - i] |= 0x01;
+      carry = src[len - 1 - i] & 0x80;
+      dst[len - 1 - i] = src[len - 1 - i] << 1;
+      dst[len - 1 - i] |= 0x01;
     }
     else
     {
-      carry = src[7 - i] & 0x80;
-      dst[7 - i] = src[7 - i] << 1;
+      carry = src[len - 1 - i] & 0x80;
+      dst[len - 1 - i] = src[len - 1 - i] << 1;
     }
   }
 }
@@ -3164,8 +3164,7 @@ static void ARCH_DEP(pcc_cmac_dea)(REGS *regs)
   des_context context2;
   des_context context3;
   int i;
-  BYTE kx[8];
-  BYTE ky[8];
+  BYTE k[8];
   int keylen;
   BYTE mask[8] = { 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, 0xff };
   BYTE parameter_block[72];
@@ -3279,58 +3278,56 @@ static void ARCH_DEP(pcc_cmac_dea)(REGS *regs)
   LOGBYTE("msg   :", &parameter_block[8], 8);
 #endif  
   
-  /* Calculate subkeys */
-  memset(kx, 0, 8);
+  /* Calculate subkey */
+  memset(k, 0, 8);
   switch(tfc)
   {
     case 1: /* dea */
     {
-      des_encrypt(&context1, kx, kx);
+      des_encrypt(&context1, k, k);
       break;
     }
     case 2: /* tdea-128 */
     {
-      des_encrypt(&context1, kx, kx);
-      des_decrypt(&context2, kx, kx);
-      des_encrypt(&context1, kx, kx);
+      des_encrypt(&context1, k, k);
+      des_decrypt(&context2, k, k);
+      des_encrypt(&context1, k, k);
       break;
     }
     case 3: /* tdea-192 */
     {
-      des_encrypt(&context1, kx, kx);
-      des_decrypt(&context2, kx, kx);
-      des_encrypt(&context3, kx, kx);
+      des_encrypt(&context1, k, k);
+      des_decrypt(&context2, k, k);
+      des_encrypt(&context3, k, k);
       break;
     }
   }
   
   /* Calculate subkeys Kx and Ky */
-  if(kx[0] & 0x80)
-    shift_left(kx, kx);
+  if(k[0] & 0x80)
+    shift_left(k, k, 8);
   else
   {
-    shift_left(kx, kx);
+    shift_left(k, k, 8);
     for(i = 0; i < 8; i++)
-      kx[i] ^= r64[i];
+      k[i] ^= r64[i];
   }
   if(parameter_block[0] != 64)
   {
-    if(kx[0] & 0x80)
-      shift_left(ky, kx);
+    if(k[0] & 0x80)
+      shift_left(k, k, 8);
     else
     {
-      shift_left(ky, kx);
+      shift_left(k, k, 8);
       for(i = 0; i < 8; i++)
-        ky[i] ^= r64[i];
+        k[i] ^= r64[i];
     }
   }
 
+  /* XOR with kx or ky and encrypt */
   for(i = 0; i < 8; i++)
   {
-    if(parameter_block[0] == 64)
-      parameter_block[i + 8] ^= kx[i];
-    else
-      parameter_block[i + 8] ^= ky[i];
+    parameter_block[i + 8] ^= k[i];
     parameter_block[i + 8] ^= parameter_block[i + 16];
   }
   switch(tfc)
@@ -3372,6 +3369,124 @@ static void ARCH_DEP(pcc_cmac_dea)(REGS *regs)
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(pcc_cmac_aes)(REGS *regs)
 {
+  aes_context context;
+  int i;
+  BYTE k[16];
+  int keylen;
+  BYTE mask[8] = { 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, 0xff };
+  BYTE parameter_block[104];
+  int parameter_blocklen;
+  BYTE r128[16] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x87 };
+  int tfc;
+  int wrap;
+
+  /* Check special conditions */
+  if(unlikely(GR0_m(regs)))
+    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+  /* Initialize values */
+  tfc = GR0_tfc(regs);
+  wrap = GR0_wrap(regs);
+  keylen = (17 - tfc) * 8 + 8;
+  parameter_blocklen = keylen + 24;
+  if(wrap)
+    parameter_blocklen += 32;
+
+  /* Test writeability output chaining value */
+  ARCH_DEP(validate_operand)((GR_A(1, regs) + 24) & ADDRESS_MAXWRAP(regs), 1, 15, ACCTYPE_WRITE, regs);
+
+  /* Fetch the parameter block */
+  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+
+#ifdef OPTION_PCC_DEBUG
+  LOGBYTE("ml    :", parameter_block, 1);
+  LOGBYTE("msg   :", &parameter_block[8], 16);
+  LOGBYTE("icv   :", &parameter_block[24], 16);
+  LOGBYTE("k     :", &parameter_block[40], keylen);
+  if(wrap) 
+    LOGBYTE("wkvp  :", &parameter_block[keylen + 40], 24);
+#endif
+
+  /* Verify and unwrap */
+  if(wrap && unwrap_aes(&parameter_block[40], keylen, &parameter_block[keylen + 40]))
+  {
+
+#ifdef OPTION_PCC_DEBUG
+    WRMSG(HHC90111, "D");
+#endif
+
+    regs->psw.cc = 1;
+    return;
+  }
+
+  /* Set the cryptographic key */
+  aes_set_key(&context, &parameter_block[40], keylen * 8);
+
+  /* Check validity ML value */
+  if(parameter_block[0] > 128)
+  {
+    regs->psw.cc = 2;
+    return;
+  }
+
+  /* Place the one bit */
+  if(parameter_block[0] != 128)
+    parameter_block[(parameter_block[0] / 8) + 8] |= (0x80 >> (parameter_block[0] % 8));
+  
+  /* Pad with zeroes */
+  if(parameter_block[0] < 127)
+  {    
+    parameter_block[(parameter_block[0] / 8) + 8] &= mask[parameter_block[0] % 8];
+    for(i = (parameter_block[0] / 8) + 1; i < 16; i++)
+      parameter_block[i + 8] = 0x00;
+  }
+    
+#ifdef OPTION_PCC_DEBUG
+  LOGBYTE("msg   :", &parameter_block[8], 16);
+#endif  
+  
+  /* Calculate subkeys */
+  memset(k, 0, 16);
+  aes_encrypt(&context, k, k);
+  
+  /* Calculate subkeys Kx and Ky */
+  if(k[0] & 0x80)
+    shift_left(k, k, 16);
+  else
+  {
+    shift_left(k, k, 16);
+    for(i = 0; i < 16; i++)
+      k[i] ^= r128[i];
+  }
+  if(parameter_block[0] != 128)
+  {
+    if(k[0] & 0x80)
+      shift_left(k, k, 16);
+    else
+    {
+      shift_left(k, k, 16);
+      for(i = 0; i < 16; i++)
+        k[i] ^= r128[i];
+    }
+  }
+
+  /* XOR with kx or ky and encrypt */
+  for(i = 0; i < 16; i++)
+  {
+    parameter_block[i + 8] ^= k[i];
+    parameter_block[i + 8] ^= parameter_block[i + 24];
+  }
+  aes_encrypt(&context, &parameter_block[8], &parameter_block[8]);
+
+#ifdef OPTION_PCC_DEBUG
+  LOGBYTE("cmac  :", &parameter_block[8], 16);
+#endif  
+
+  /* Store the CMAC */
+  ARCH_DEP(vstorec)(&parameter_block[8], 15, (GR_A(1, regs) + 24) & ADDRESS_MAXWRAP(regs), 1, regs);
+  
+  /* Normal completion */
+  regs->psw.cc = 0;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -4525,4 +4640,7 @@ Remark: It is not clearly stated that the LCFB is the "s" value of s-byte.
 
 Page 7-98 and further: Description of KMO FC 1-3, 9-11, 18-20 and 26-28
 Suggested change: Provide one description for cipher and decipher. The algoritm is the same!
+
+Figure 7-276, 7-279, 7-282
+The explanation denotes R64, this should be R128
 #endif
