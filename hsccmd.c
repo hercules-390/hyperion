@@ -4582,6 +4582,13 @@ int cp_updt_cmd(int argc, char *argv[], char *cmdline)
 
         rc = update_codepage( argc, argv, argv[0] );
     }
+    else if ( ( argc == 2 ) && CMD(argv[1],test,4) ) 
+    { 
+        argc--;
+        argv++;
+
+        rc = update_codepage( argc, argv, argv[0] );
+    }
     else if ( ( argc == 4 || argc == 6 ) && CMD(argv[1],alter,3) )
     {
         argc--;
@@ -9940,7 +9947,8 @@ int i;
 int qcpuid_cmd(int argc, char *argv[], char *cmdline)
 {
 
-    char **model = str_model();
+    char **models = str_model();
+    char *model = NULL;
     char *manuf =  str_manufacturer();
     char *plant = str_plant();
 
@@ -9953,13 +9961,13 @@ int qcpuid_cmd(int argc, char *argv[], char *cmdline)
         return -1;
     }
 
-    model[1] = ( model == NULL ? "" : model[1] == NULL ? "" : model[1] );
+    model = ( models == NULL ? "" : models[1] == NULL ? "" : models[1] );
     if ( manuf    == NULL ) manuf = "";
     if ( plant    == NULL ) plant = "";
 
     WRMSG( HHC17004, "I", sysblk.cpuid );
     WRMSG( HHC17005, "I", ((sysblk.cpuid & 0x00000000FFFF0000ULL) >> 16),
-                           model[1], manuf, plant,
+                           model, manuf, plant,
                           ((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32) );
     return 0;
 }

@@ -1014,7 +1014,10 @@ static CPCONV cpconv[] = {
     { "1252/1140",  cp_1252_to_1140,  cp_1140_to_1252  },
     { "ISOANSI/037",ind_file_a_to_e,  ind_file_e_to_a  }, /* CECP 037 to ISO/ANSI ASCII */
     { "user",       user_h_to_g,      user_g_to_h      },
-    { NULL,         ascii_to_ebcdic,  ebcdic_to_ascii  }
+    { NULL,         ascii_to_ebcdic,  ebcdic_to_ascii  },
+    { NULL,         NULL,             NULL             },   /* extras for print assistance */
+    { NULL,         NULL,             NULL             },
+    { NULL,         NULL,             NULL             }
 };
 
 
@@ -1227,7 +1230,7 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
 
             user_g_to_h_filled = TRUE;
             
-            WRMSG( HHC01487, "I", "ebcdic/g2h" );
+            WRMSG( HHC01487, "I", "Altering", "ebcdic/g2h" );
 
             for( i = 0; i <= cnt; i++ )
             {
@@ -1241,7 +1244,7 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
 
             user_h_to_g_filled = TRUE;
 
-            WRMSG( HHC01487, "I", "ascii/h2g" );
+            WRMSG( HHC01487, "I", "Altering", "ascii/h2g" );
 
             for( i = 0; i <= cnt; i++ )
             {
@@ -1254,6 +1257,44 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
             WRMSG( HHC17000, "E" );
             rc = -1;
         }
+    }
+    else if ( CMD(cmd,test,4) )
+    {
+        char    *g2h = user_g_to_h;
+        char    *h2g = user_h_to_g;
+        int     i;
+        int     a = 0;
+
+        WRMSG( HHC01487, "I", "Testing", "ebcdic/g2h vs. ascii/h2g" );
+
+        for( a = 0, i = 0; i < sizeof(user_g_to_h); i++ )
+        {
+            if ( i == user_h_to_g[user_g_to_h[i]] ) 
+                continue;
+            a++;
+            WRMSG( HHC01491, "I", i, user_g_to_h[i],
+                     user_g_to_h[i], user_h_to_g[user_g_to_h[i]] );
+            rc = -1;
+            if ( a >= 10 )      // limit to first 10 mismatches
+                break;
+        }
+
+        WRMSG( HHC01487, "I", "Testing", "ascii/h2g vs. ebcdic/g2h" );
+
+        for( a = 0, i = 0; i < sizeof(user_h_to_g); i++ )
+        {
+            if ( i == user_g_to_h[user_h_to_g[i]] ) 
+                continue;
+            a++;
+            WRMSG( HHC01492, "I", i, user_h_to_g[i],
+                     user_h_to_g[i], user_g_to_h[user_h_to_g[i]] );
+            rc = -1;
+            if ( a >= 10 )      // limit to first 10 mismatches
+                break;
+        }
+
+        if ( rc == 0 )
+            WRMSG( HHC01493, "I" );
     }
     else if ( CMD(cmd,export,3) )
     {
@@ -1508,19 +1549,29 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
             int i;
             
             WRMSG( HHC01481, "I" );
-            for ( i = 0; ; i += 2 )
+            for ( i = 0; ; i += 4 )
             {
 
-                if ( cpref[i].name == NULL ||
-                     CMD(cpref[i].name,user,4) ) break;
+                if ( cpref[i].name == NULL || CMD(cpref[i].name,user,4) ) break;
 
                 WRMSG( HHC01482, "I", 
                         cpref[i].name,
                         cpref[i+1].name == NULL ? "" : 
                             CMD(cpref[i+1].name,user,4) ? "" :
-                            cpref[i+1].name );
-                if ( cpref[i+1].name == NULL ||
-                     CMD(cpref[i+1].name,user,4) ) break;
+                            cpref[i+1].name, 
+                        cpref[i+2].name == NULL ? "" : 
+                            CMD(cpref[i+2].name,user,4) ? "" :
+                            cpref[i+2].name, 
+                        cpref[i+3].name == NULL ? "" : 
+                            CMD(cpref[i+3].name,user,4) ? "" :
+                            cpref[i+3].name );
+
+                if ( cpref[i+3].name == NULL     || 
+                     cpref[i+2].name == NULL     || 
+                     cpref[i+1].name == NULL     || 
+                     CMD(cpref[3+1].name,user,4) ||  
+                     CMD(cpref[2+1].name,user,4) ||
+                     CMD(cpref[1+1].name,user,4) ) break;
             }
         }
         if ( rc == -2 ) rc = -1;
