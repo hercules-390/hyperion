@@ -121,16 +121,16 @@ FACILITY(N3,               ESA390|ZARCH, NONE,      ESA390|ZARCH,  ALS1|ALS2|ALS
 FACILITY(ESAME_INSTALLED,  ESA390|ZARCH, NONE,      ESA390|ZARCH,  ALS2|ALS3)
 FACILITY(ESAME_ACTIVE,     ZARCH,        ZARCH,     ZARCH,         ALS2|ALS3)
 FACILITY(IDTE_INSTALLED,   Z390,         NONE,      Z390,          ALS2|ALS3)
-FACILITY(IDTE_SC_SEGTAB,   0, /*ZARCH*/  NONE,      ZARCH,         ALS2|ALS3)
-FACILITY(IDTE_SC_REGTAB,   0, /*ZARCH*/  NONE,      ZARCH,         ALS2|ALS3)
+FACILITY(IDTE_SC_SEGTAB,   0, /*ZARCH*/  NONE,      0, /*ZARCH*/   ALS2|ALS3)
+FACILITY(IDTE_SC_REGTAB,   0, /*ZARCH*/  NONE,      0, /*ZARCH*/   ALS2|ALS3)
 FACILITY(ASN_LX_REUSE,     0, /*Z390*/   NONE,      Z390,          ALS2|ALS3)
 FACILITY(STFL_EXTENDED,    ESA390|ZARCH, NONE,      ESA390|ZARCH,  ALS2|ALS3)
-FACILITY(ENHANCED_DAT,     0, /*Z390*/   NONE,      Z390,          ALS2|ALS3)
+FACILITY(ENHANCED_DAT,     0, /*Z390*/   NONE,      0, /*Z390*/    ALS2|ALS3)
 FACILITY(SENSE_RUN_STATUS, Z390,         NONE,      Z390,          ALS2|ALS3)
 FACILITY(CONDITIONAL_SSKE, Z390,         NONE,      Z390,          ALS2|ALS3)
 FACILITY(CONFIG_TOPOLOGY,  Z390,         NONE,      Z390,          ALS2|ALS3)
 FACILITY(IPTE_RANGE,       Z390,         NONE,      Z390,          ALS3)
-FACILITY(NONQ_KEY_SET,     NONE,         NONE,      Z390,          ALS3)
+FACILITY(NONQ_KEY_SET,     0, /*Z390*/   NONE,      0, /*Z390*/    ALS3)
 FACILITY(TRAN_FAC2,        ESA390|ZARCH, NONE,      ESA390|ZARCH,  ALS2|ALS3)
 FACILITY(MSG_SECURITY,     ESA390|ZARCH, NONE,      ESA390|ZARCH,  ALS2|ALS3)
 FACILITY(LONG_DISPL_INST,  Z390,         NONE,      Z390,          ALS2|ALS3)
@@ -151,22 +151,18 @@ FACILITY(CSSF2,            Z390,         NONE,      Z390,          ALS2|ALS3)
 FACILITY(GEN_INST_EXTN,    Z390,         NONE,      Z390,          ALS2|ALS3)
 FACILITY(EXECUTE_EXTN,     Z390,         NONE,      Z390,          ALS2|ALS3)
 FACILITY(ENH_MONITOR,      Z390,         NONE,      Z390,          ALS3)
-FACILITY(FP_EXTENSION,     NONE,         NONE,      ZARCH,         ALS3)
-FACILITY(RESERVED_39,      NONE,         NONE,      ESA390|ZARCH,  ALS3)
+FACILITY(FP_EXTENSION,     0, /*ZARCH*/  NONE,      0, /*ZARCH*/   ALS3)
 FACILITY(LOAD_PROG_PARAM,  Z390,         NONE,      Z390,          ALS3)
 FACILITY(FPS_ENHANCEMENT,  Z390,         NONE,      Z390,          ALS2|ALS3)
 FACILITY(DECIMAL_FLOAT,    Z390,         NONE,      Z390,          ALS2|ALS3)
 FACILITY(DFP_HPERF,        Z390,         NONE,      Z390,          ALS2|ALS3)
-FACILITY(PFPO,             0, /*Z390*/   NONE,      Z390,          ALS2|ALS3)
-FACILITY(FAST_BCR_SERIAL,  NONE,         NONE,      Z390,          ALS3)
-FACILITY(RESERVED_46,      NONE,         NONE,      ESA390|ZARCH,  ALS3)
-FACILITY(CMPSC_ENH,        NONE,         NONE,      Z390,          ALS3)
-FACILITY(RESERVED_62,      NONE,         NONE,      ESA390|ZARCH,  ALS3)
-FACILITY(RESERVED_63,      NONE,         NONE,      ESA390|ZARCH,  ALS3)
+FACILITY(PFPO,             0, /*Z390*/   NONE,      0, /*Z390*/    ALS2|ALS3)
+FACILITY(FAST_BCR_SERIAL,  0, /*Z390*/   NONE,      0, /*Z390*/    ALS3)
+FACILITY(CMPSC_ENH,        0, /*Z390*/   NONE,      0, /*Z390*/    ALS3)
 FACILITY(RES_REF_BITS_MUL, Z390,         NONE,      Z390,          ALS3)
-FACILITY(CPU_MEAS_COUNTER, NONE,         NONE,      Z390,          ALS3)
-FACILITY(CPU_MEAS_SAMPLNG, NONE,         NONE,      Z390,          ALS3)
-FACILITY(ACC_EX_FS_INDIC,  NONE,         NONE,      Z390,          ALS3)
+FACILITY(CPU_MEAS_COUNTER, 0, /*Z390*/   NONE,      0, /*Z390*/    ALS3)
+FACILITY(CPU_MEAS_SAMPLNG, 0, /*Z390*/   NONE,      0, /*Z390*/    ALS3)
+FACILITY(ACC_EX_FS_INDIC,  0, /*Z390*/   NONE,      0, /*Z390*/    ALS3)
 FACILITY(MSA_EXTENSION_3,  Z390,         NONE,      Z390,          ALS3)
 FACILITY(MSA_EXTENSION_4,  Z390,         NONE,      Z390,          ALS3)
 
@@ -275,6 +271,78 @@ ARCHTAB *tb;
     }
     else
         return FALSE;
+}
+
+
+void force_facbit(int bitno, int enable, BYTE mode)
+{
+int fbyte, fbit;
+char buf[10];
+#define i2a(_int) ( (snprintf(buf,sizeof(buf),"%d", _int) <= sizeof(buf)) ? buf : "?" )
+
+    fbyte = bitno / 8;
+    fbit = 0x80 >> (bitno % 8);
+
+    if(enable)
+    {
+#if defined(_370)
+        if( S370 & mode )
+            if ( !(sysblk.facility_list[ARCH_370][fbyte] & fbit) )
+            {
+                sysblk.facility_list[ARCH_370][fbyte] |= fbit;
+                if(MLVL(VERBOSE))
+                    WRMSG( HHC00898, "I", i2a(bitno), "en", _ARCH_370_NAME );
+            }
+#endif
+#if defined(_390)
+        if( ESA390 & mode )
+            if ( !(sysblk.facility_list[ARCH_390][fbyte] & fbit) )
+            {
+                sysblk.facility_list[ARCH_390][fbyte] |= fbit;
+                if(MLVL(VERBOSE))
+                    WRMSG( HHC00898, "I", i2a(bitno), "en", _ARCH_390_NAME );
+            }
+#endif
+#if defined(_900)
+        if( ZARCH & mode )
+            if ( !(sysblk.facility_list[ARCH_900][fbyte] & fbit) )
+            {
+                sysblk.facility_list[ARCH_900][fbyte] |= fbit;
+                if(MLVL(VERBOSE))
+                    WRMSG( HHC00898, "I", i2a(bitno), "en", _ARCH_900_NAME ); 
+            }
+#endif
+    }
+    else
+    {
+#if defined(_370)
+        if( S370 & mode )
+            if ( sysblk.facility_list[ARCH_370][fbyte] & fbit )
+            {
+                sysblk.facility_list[ARCH_370][fbyte] &= ~fbit;
+                if(MLVL(VERBOSE))
+                    WRMSG( HHC00898, "I", i2a(bitno), "dis", _ARCH_370_NAME);
+            }
+#endif
+#if defined(_390)
+        if( ESA390 & mode )
+            if ( sysblk.facility_list[ARCH_390][fbyte] & fbit )
+            {
+                sysblk.facility_list[ARCH_390][fbyte] &= ~fbit;
+                if(MLVL(VERBOSE))
+                    WRMSG( HHC00898, "I", i2a(bitno), "dis", _ARCH_390_NAME );
+            }
+#endif
+#if defined(_900)
+        if( ZARCH & mode )
+            if ( sysblk.facility_list[ARCH_900][fbyte] & fbit ) 
+            {
+                sysblk.facility_list[ARCH_900][fbyte] &= ~fbit;
+                if(MLVL(VERBOSE))
+                    WRMSG( HHC00898, "I", i2a(bitno), "dis", _ARCH_900_NAME );
+            }
+#endif
+    }
 }
 
 
@@ -429,7 +497,44 @@ BYTE als =
         enable = FALSE;
     else
     {
-        return -1;
+    int bitno;
+    char c;
+
+        if( CMD(argv[1],forceon,7) )
+            enable = TRUE;
+        else
+        if( CMD(argv[1],forceoff,8) )
+            enable = FALSE;
+        else
+            return -1;
+
+        if(argc < 3) 
+        {
+            WRMSG( HHC00892, "E" );
+            return 0;
+        }
+
+        if( (sscanf( argv[2], "%d%c", &bitno, &c ) != 1) 
+          || bitno < 0 || bitno > STFL_HMAX)
+        {
+            WRMSG( HHC00893, "E", argv[2] ); 
+            return -1;
+        }
+        else
+        {
+            if(argc == 4)
+            {
+                if(!(ab = get_archtab(argv[3])))
+                {
+                    WRMSG( HHC00895, "E", argv[3] );
+                    return 0;
+                }
+                als = arch2als[ab->archmode];
+            }
+
+            force_facbit(bitno,enable,als);
+            return 0;
+        }
     }
 
     if(argc < 3) 
