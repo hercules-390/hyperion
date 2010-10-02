@@ -68,17 +68,22 @@
 #define OPTION_CMDTGT                   /* the cmdtgt command        */
 #define OPTION_MSGCLR                   /* Colored messages          */
 #define OPTION_MSGHLD                   /* Sticky messages           */
+
 //#define OPTION_SCP_MSG_PREFIX         /* Prefix scp msg with HHC*  */
 
-#undef  OPTION_WINDOWS_HOST_FILENAMES   /* Format files for display  
-                                           in native host format       
-                                           slashes                   */
-#undef  OPTION_SHUTDOWN_CONFIRMATION    /* Confirm quit and ssd cmds */
+//#define  OPTION_WINDOWS_HOST_FILENAMES/* Format files for display  
+//                                         in native host format       
+//                                         slashes                   */
+//#define  OPTION_SHUTDOWN_CONFIRMATION /* Confirm quit and ssd cmds */
 
-#undef  OPTION_LOCK_CONFIG_FILE         /* Keep Configuration file 
-                                           locked during execution   */
+//#define  OPTION_LOCK_CONFIG_FILE      /* Keep Configuration file 
+//                                         locked during execution   */
+
 #define OPTION_ENHANCED_DEVICE_ATTACH   /* Multiple device att feat  */
-#undef  OPTION_BUILTIN_SYMBOLS          /* Internal Symbols Defined  */
+
+                                           
+//#define  OPTION_BUILTIN_SYMBOLS       /* Internal Symbols Defined  */
+
 #if defined(OPTION_BUILTIN_SYMBOLS) && !defined(OPTION_CONFIG_SYMBOLS)
   #error OPTION_BUILTIN_SYMBOLS requires OPTION_CONFIG_SYMBOLS
 #endif
