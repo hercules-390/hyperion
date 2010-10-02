@@ -66,6 +66,14 @@ int history_add(char *cmdline) {
     backup = NULL;
   }
 
+  /* If last line is exactly the same as this line 
+     ignore and return to caller */
+
+  if ( history_lines != NULL && !strcmp(cmdline,history_lines_end->cmdline) )
+  {
+      history_ptr = NULL;
+      return 0;
+  }
   /* allocate space and copy string */
   tmp = (HISTORY*) malloc(sizeof(HISTORY));
   tmp->cmdline = (char*) malloc(strlen(cmdline) + 1);
