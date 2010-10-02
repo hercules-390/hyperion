@@ -165,7 +165,8 @@ DLL_EXPORT void log_close(void)
     return;
 }
 
-DLL_EXPORT void writemsg(const char *file, int line, const char* function, int grp, int lvl, char *color, char *msg, ...)
+DLL_EXPORT void writemsg(const char *file, int line, const char* function, 
+                         int grp, int lvl, char *color, char *msg, ...)
 {
     char   *bfr     =   NULL;
     int     rc      =   1;
@@ -241,13 +242,15 @@ DLL_EXPORT void writemsg(const char *file, int line, const char* function, int g
 
     if(bfr)
     {
-        if ( !strncmp(bfr, "HHC", 3) && strlen(bfr) > 10 )
+        if ( strlen(bfr) > 10 && !strncmp(bfr, "HHC", 3) )
             log_write( 0, ( sysblk.emsg & EMSG_TEXT ) ? &bfr[10] : bfr );
         else
             log_write( 0, bfr );
         free(bfr);
     }
-    if(MLVL(DEBUG) && (msg[8] == 'S' || msg[8] == 'E' || msg[8] == 'W'))
+
+    if ( MLVL(DEBUG) && strlen(msg) > 10 && !strncmp(msg,"HHC",3) &&
+        (msg[8] == 'S' || msg[8] == 'E' || msg[8] == 'W') )
     {
         /* __FILENAME__ resolves differently for the various OS environments */
         /* we are only interested in the filename and ext.                   */
