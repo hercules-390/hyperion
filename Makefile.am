@@ -483,7 +483,11 @@ endif
 #
 
 tools_LD_FLAGS =
+if OPTION_DYNAMIC_LOAD
 tools_ADDLIBS = $(HERCLIBS2) $(LDADD)
+else
+tools_ADDLIBS = $(HERCLIBS2) $(LDADD) hdlmain.o
+endif
 
 if BUILD_HERCIFC
 hercifc_SOURCES       = hercifc.c
