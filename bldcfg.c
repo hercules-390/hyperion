@@ -83,73 +83,6 @@ typedef struct _DEVNUMSDESC
     DEVARRAY *da;
 } DEVNUMSDESC;
 
-/*-------------------------------------------------------------------*/
-/* Static data areas                                                 */
-/*-------------------------------------------------------------------*/
-#define MAX_INC_LEVEL 8                 /* Maximum nest level        */
-static int  inc_level;                  /* Current nesting level     */
-// following commented out ISW 20061009 : Not referenced anywhere.
-// static int  inc_fname[MAX_INC_LEVEL];   /* filename (base or incl)   */
-static int  inc_stmtnum[MAX_INC_LEVEL]; /* statement number          */
-static int  inc_ignore_errors = 0;      /* 1==ignore include errors  */
-#ifdef EXTERNALGUI
-static char buf[1024];                  /* Config statement buffer   */
-#else /*!EXTERNALGUI*/
-static char buf[256];                   /* Config statement buffer   */
-#endif /*EXTERNALGUI*/
-static int  addargc;                    /* Number of additional args */
-static char *addargv[MAX_ARGS];         /* Additional argument array */
-static int errorcount = 0;
-
-
-/*-------------------------------------------------------------------*/
-/* Subroutine to parse an argument string. The string that is passed */
-/* is modified in-place by inserting null characters at the end of   */
-/* each argument found. The returned array of argument pointers      */
-/* then points to each argument found in the original string. Any    */
-/* argument that begins with '#' comment indicator causes early      */
-/* termination of the parsing and is not included in the count. Any  */
-/* argument found that starts with a quote or apostrophe causes      */
-/* all characters up to the next quote or apostrophe to be           */
-/* included as part of that argument. The quotes/apostrophes them-   */
-/* selves are not considered part of any argument and are ignored.   */
-/* p            Points to string to be parsed.                       */
-/* maxargc      Maximum allowable number of arguments. (Prevents     */
-/*              overflowing the pargv array)                         */
-/* pargv        Pointer to buffer for argument pointer array.        */
-/* pargc        Pointer to number of arguments integer result.       */
-/* Returns number of arguments found. (same value as at *pargc)      */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT int parse_args (char* p, int maxargc, char** pargv, int* pargc)
-{
-    for (*pargc = 0; *pargc < MAX_ARGS; ++*pargc) addargv[*pargc] = NULL;
-
-    *pargc = 0;
-    *pargv = NULL;
-
-    while (*p && *pargc < maxargc)
-    {
-        while (*p && isspace(*p)) p++; if (!*p) break; // find start of arg
-
-        if (*p == '#') break; // stop on comments
-
-        *pargv = p; ++*pargc; // count new arg
-
-        while (*p && !isspace(*p) && *p != '\"' && *p != '\'') p++; if (!*p) break; // find end of arg
-
-        if (*p == '\"' || *p == '\'')
-        {
-            char delim = *p;
-            if (p == *pargv) *pargv = p+1;
-            while (*++p && *p != delim); if (!*p) break; // find end of quoted string
-        }
-
-        *p++ = 0; // mark end of arg
-        pargv++; // next arg ptr
-    }
-
-    return *pargc;
-}
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to exit process after flushing stderr and stdout       */
@@ -198,7 +131,7 @@ int off;
         char buf[64];
         MSGBUF( buf, "malloc(%" I64_FMT "d)", sysblk.mainsize + 8192);
         WRMSG(HHC01430, "S", buf, strerror(errno));
-        return FALSE;
+        return -1;
     }
 
     /* Trying to get mainstor aligned to the next 4K boundary - Greg */
@@ -217,7 +150,7 @@ int off;
         char buf[64];
         MSGBUF( buf, "malloc(%" I64_FMT "d)", sysblk.mainsize / STORAGE_KEY_UNITSIZE);
         WRMSG(HHC01430, "S", buf, strerror(errno));
-        return FALSE;
+        return -1;
     }
 
     /* Initial power-on reset for main storage */
@@ -247,7 +180,7 @@ int off;
             char buf[64];
             MSGBUF( buf, "malloc(%lu)", (unsigned long)sysblk.xpndsize * XSTORE_PAGESIZE);
             WRMSG(HHC01430, "S", buf, strerror(errno));
-            return FALSE;
+            return -1;
         }
         /* Initial power-on reset for expanded storage */
         xstorage_clear();
@@ -255,7 +188,7 @@ int off;
         WRMSG(HHC01431, "I");
 #endif /*!_FEATURE_EXPANDED_STORAGE*/
     } /* end if(sysblk.xpndsize) */
-    return TRUE;
+    return 0;
 }
 
 #if defined( OPTION_TAPE_AUTOMOUNT )
@@ -372,111 +305,6 @@ DLL_EXPORT int add_tamdir( char *tamdir, TAMDIR **ppTAMDIR )
 }
 #endif /* OPTION_TAPE_AUTOMOUNT */
 
-/*-------------------------------------------------------------------*/
-/* Subroutine to read a statement from the configuration file        */
-/* addargc      Contains number of arguments                         */
-/* addargv      An array of pointers to each argument                */
-/* Returns 0 if successful, -1 if end of file                        */
-/*-------------------------------------------------------------------*/
-static int read_config (char *fname, FILE *fp)
-{
-int     c;                              /* Character work area       */
-int     stmtlen;                        /* Statement length          */
-int     lstarted;                       /* Indicate if non-whitespace*/
-                                        /* has been seen yet in line */
-#if defined(OPTION_CONFIG_SYMBOLS)
-char   *buf1;                           /* Pointer to resolved buffer*/
-#endif /*defined(OPTION_CONFIG_SYMBOLS)*/
-
-    while (1)
-    {
-        /* Increment statement number */
-        inc_stmtnum[inc_level]++;
-
-        /* Read next statement from configuration file */
-        for (stmtlen = 0, lstarted = 0; ;)
-        {
-            if (stmtlen == 0)
-                memset(buf,'\0',sizeof(buf)); // clear work area
-
-            /* Read character from configuration file */
-            c = fgetc(fp);
-
-            /* Check for I/O error */
-            if (ferror(fp))
-            {
-                WRMSG(HHC01432, "S", inc_stmtnum[inc_level], fname, "fgetc()", strerror(errno));
-                return -1;
-            }
-
-            /* Check for end of file */
-            if (stmtlen == 0 && (c == EOF || c == '\x1A'))
-                return -1;
-
-            /* Check for end of line */
-            if (c == '\n' || c == EOF || c == '\x1A')
-                break;
-
-            /* Ignore nulls and carriage returns */
-            if (c == '\0' || c == '\r') continue;
-
-            /* Check if it is a white space and no other character yet */
-            if(!lstarted && isspace(c)) continue;
-            lstarted=1;
-
-            /* Check that statement does not overflow buffer */
-            if (stmtlen >= (int)(sizeof(buf) - 1))
-            {
-                WRMSG(HHC01433, "S", inc_stmtnum[inc_level], fname);
-                return -1;
-            }
-
-
-
-            /* Append character to buffer */
-            buf[stmtlen++] = c;
-
-        } /* end for(stmtlen) */
-
-        /* Remove trailing blanks and tabs */
-        while (stmtlen > 0 && (buf[stmtlen-1] == SPACE
-                || buf[stmtlen-1] == '\t')) stmtlen--;
-        buf[stmtlen] = '\0';
-
-        /* Ignore comments and null statements */
-        if (stmtlen == 0 || buf[0] == '*' || buf[0] == '#')
-           continue;
-
-#if defined(OPTION_CONFIG_SYMBOLS)
-
-        /* Perform variable substitution */
-        /* First, set some 'dynamic' symbols to their own values */
-
-        set_symbol("CUU","$(CUU)");
-        set_symbol("CCUU","$(CCUU)");
-
-        buf1=resolve_symbol_string(buf);
-
-        if(buf1!=NULL)
-        {
-            if(strlen(buf1)>=sizeof(buf))
-            {
-                WRMSG(HHC01433, "S", inc_stmtnum[inc_level], fname);
-                free(buf1);
-                return -1;
-            }
-            strlcpy(buf,buf1,sizeof(buf));
-        }
-#endif /*defined(OPTION_CONFIG_SYMBOLS)*/
-
-        /* Parse the statement just read */
-        parse_args (buf, MAX_ARGS, addargv, &addargc);
-
-        break;
-    } /* end while */
-
-    return 0;
-} /* end function read_config */
 
 static inline S64 lyear_adjust(int epoch)
 {
@@ -505,16 +333,13 @@ U64 tod = hw_clock();
 /*-------------------------------------------------------------------*/
 /* Function to build system configuration                            */
 /*-------------------------------------------------------------------*/
-int build_config (char *_fname)
+int build_config (char *hercules_cnf)
 {
 int     rc;                             /* Return code               */
 int     i;                              /* Array subscript           */
-int     scount;                         /* Statement counter         */
-FILE   *inc_fp[MAX_INC_LEVEL];          /* Configuration file pointer*/
 S64     ly1960;                         /* Leap offset for 1960 epoch*/
 DEVBLK *dev;                            /* -> Device Block           */
 int     devtmax;                        /* Max number device threads */
-BYTE    c;                              /* Work area for sscanf      */
 #ifdef OPTION_SELECT_KLUDGE
 int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                                            this allows the console to
@@ -523,10 +348,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                                            cygwin from thrashing in
                                            select(). sigh            */
 #endif
-static  char    pathname[MAX_PATH];     /* file path in host format  */
 static  char    fname[MAX_PATH];        /* normalized filename       */ 
-int             msglevel = FALSE;       /* indicator for msglevel 
-                                           statement                 */
 
     /* Initialize SETMODE and set user authority */
     SETMODE(INIT);
@@ -536,26 +358,6 @@ int             msglevel = FALSE;       /* indicator for msglevel
     for (i = 0; i < OPTION_SELECT_KLUDGE; i++)
         dummyfd[i] = dup(fileno(stderr));
 #endif
-
-    /* Open the base configuration file */
-    hostpath(fname, _fname, sizeof(fname));
-
-    inc_level = 0;
-#if defined(_MSVC_)
-    fopen_s( &inc_fp[inc_level], fname, "r");
-#else
-    inc_fp[inc_level] = fopen (fname, "r");
-#endif
-    if (inc_fp[inc_level] == NULL)
-    {
-        WRMSG(HHC01432, "S", 1, fname, "fopen()", strerror(errno));
-        fflush(stderr);  
-        fflush(stdout);  
-        usleep(100000);
-        return FALSE;
-    }
-
-    inc_stmtnum[inc_level] = 0;
 
     /* Build CPU identifier */
     sysblk.cpuid = ((U64)     0x00 << 56)
@@ -662,283 +464,9 @@ int             msglevel = FALSE;       /* indicator for msglevel
     }
 #endif /*!defined(NO_SETUID)*/
 
-    /*****************************************************************/
-    /* Parse configuration file system parameter statements...       */
-    /*****************************************************************/
+    if((process_config(hercules_cnf)))
+        return -1;
 
-    for (scount = 0; ; scount++)
-    {
-        /* Read next record from the configuration file */
-        while (inc_level >= 0 && read_config (fname, inc_fp[inc_level]))
-        {
-            fclose (inc_fp[inc_level--]);
-        }
-        if (inc_level < 0)
-        {
-            WRMSG(HHC01434, "S", fname);
-            return FALSE;
-        }
-
-#if defined(HAVE_REGINA_REXXSAA_H)
-        /* Check for REXX exec being executed */
-        if( inc_level == 0
-         && inc_stmtnum[inc_level] == 1
-         && !strncmp(addargv[0], "/*",2) )
-        {
-        char *rcmd[2] = { "exec", NULL };
-            rcmd[1] = fname;
-            errorcount = exec_cmd(2,rcmd,NULL);
-            goto rexx_done;
-        }
-#endif /*defined(HAVE_REGINA_REXXSAA_H)*/
-
-#if defined( OPTION_ENHANCED_CONFIG_INCLUDE )
-        if  (strcasecmp (addargv[0], "ignore") == 0)
-        {
-            if  (strcasecmp (addargv[1], "include_errors") == 0) 
-            {              
-                WRMSG(HHC01435, "I", fname);
-                inc_ignore_errors = 1 ;
-            }
-
-            continue ;
-        }
-
-        /* Check for include statement */
-        if (strcasecmp (addargv[0], "include") == 0)
-        {              
-            if (++inc_level >= MAX_INC_LEVEL)
-            {
-                WRMSG(HHC01436, "S", inc_stmtnum[inc_level-1], fname, MAX_INC_LEVEL);
-                return FALSE;
-            }
-
-            hostpath(pathname, addargv[1], sizeof(pathname));
-            WRMSG(HHC01437, "I", inc_stmtnum[inc_level-1], fname, pathname);
-#if defined(_MSVC_)
-            fopen_s ( &inc_fp[inc_level], pathname, "r");
-#else
-            inc_fp[inc_level] = fopen (pathname, "r");
-#endif
-            if (inc_fp[inc_level] == NULL)
-            {
-                inc_level--;
-                if ( inc_ignore_errors == 1 ) 
-                {
-                    WRMSG(HHC01438, "W", fname, addargv[1], strerror(errno));
-                    continue ;
-                }
-                else 
-                {
-                    WRMSG(HHC01439, "S", fname, addargv[1], strerror(errno));
-                    return FALSE;
-                }
-            }
-            inc_stmtnum[inc_level] = 0;
-            continue;
-        }
-#endif // defined( OPTION_ENHANCED_CONFIG_INCLUDE )
-
-        /* Exit loop if first device statement found */
-        if (strlen(addargv[0]) <= 4
-#if defined( _MSVC_)
-            && sscanf_s(addargv[0], "%x%c", &rc, &c, sizeof(BYTE)) == 1)
-#else
-            && sscanf(addargv[0], "%x%c", &rc, &c) == 1)
-#endif
-            break;
-        /* ISW */
-        /* Also exit if addargv[0] contains '-', ',' or '.' */
-        /* Added because device statements may now be a compound device number specification */
-        if(strchr(addargv[0],'-'))
-        {
-            break;
-        }
-        if(strchr(addargv[0],'.'))
-        {
-            break;
-        }
-        if(strchr(addargv[0],','))
-        {
-            break;
-        }
-        /* Also exit if addargv[0] contains ':' (added by Harold Grovesteen jan2008) */
-        /* Added because device statements may now contain channel set or LCSS id */
-        if(strchr(addargv[0],':'))
-        {
-            break;
-        }
-
-        /* Check for old-style CPU statement */
-        if (scount == 0 && addargc == 7 && strlen(addargv[0]) == 6
-#if defined( _MSVC_)
-            && sscanf_s(addargv[0], "%x%c", &rc, &c, sizeof(BYTE)) == 1)
-#else
-            && sscanf(addargv[0], "%x%c", &rc, &c) == 1)
-#endif
-        {
-        char *exec_cpuserial[2] = { "cpuserial", NULL };
-        char *exec_cpumodel[2]  = { "cpumodel", NULL };
-        char *exec_mainsize[2]  = { "mainsize", NULL };
-        char *exec_xpndsize[2]  = { "xpndsize", NULL };
-        char *exec_cnslport[2]  = { "cnslport", NULL };
-        char *exec_numcpu[2]    = { "numcpu", NULL };
-        char *exec_loadparm[2]  = { "loadparm", NULL };
-
-            exec_cpuserial[1] = addargv[0];
-            exec_cpumodel[1]  = addargv[1];
-            exec_mainsize[1]  = addargv[2];
-            exec_xpndsize[1]  = addargv[3];
-            exec_cnslport[1]  = addargv[4];
-            exec_numcpu[1]    = addargv[5];
-            exec_loadparm[1]  = addargv[6];
-
-            if(ProcessConfigCommand (2, exec_cpuserial, NULL))
-                errorcount++;
-            if(ProcessConfigCommand (2, exec_cpumodel, NULL))
-                errorcount++;
-            if(ProcessConfigCommand (2, exec_mainsize, NULL))
-                errorcount++;
-            if(ProcessConfigCommand (2, exec_xpndsize, NULL))
-                errorcount++;
-            if(ProcessConfigCommand (2, exec_cnslport, NULL))
-                errorcount++;
-            if(ProcessConfigCommand (2, exec_numcpu, NULL))
-                errorcount++;
-            if(ProcessConfigCommand (2, exec_loadparm, NULL))
-                errorcount++;
-
-            if(errorcount)
-                WRMSG(HHC01441, "E", inc_stmtnum[inc_level], fname, addargv[0]);
-        }
-        else
-        {
-            char addcmdline[256];
-            int i;
-
-            strlcpy( addcmdline, addargv[0], sizeof(addcmdline) );
-            for( i = 1; i < addargc; i++ )
-            {
-                strlcat(addcmdline, " ", sizeof(addcmdline));
-                strlcat(addcmdline, addargv[i], sizeof(addcmdline));
-            }
-            if ( CMD(addargv[0],msglevel,8) || CMD(addargv[0],msglvl,6) )
-                msglevel = TRUE;
-            if(ProcessConfigCommand (addargc, addargv, addcmdline))
-            {
-                errorcount++;
-                WRMSG(HHC01441, "E", inc_stmtnum[inc_level], fname, addcmdline);
-            }
-
-        } /* end else (not old-style CPU statement) */
-
-    } /* end for(scount) (end of configuration file statement loop) */
-
-    /*****************************************************************/
-    /* Parse configuration file device statements...                 */
-    /*****************************************************************/
-
-    while(1)
-    {
-    int   attargc;
-    char **attargv;
-    char  attcmdline[260];
-
-        if (addargv[0] == NULL || addargv[1] == NULL)
-        {
-            WRMSG(HHC01448, "S", inc_stmtnum[inc_level], fname);
-            return FALSE;
-        }
-
-        /* Build attach command to attach device(s) */
-        attargc = addargc + 1;
-        attargv = malloc(attargc * sizeof(char *));
-
-        attargv[0] = "attach";
-        strlcpy(attcmdline, attargv[0], sizeof(attcmdline));
-        for(i = 1; i < attargc; i++)
-        {
-            attargv[i] = addargv[i - 1];
-            strlcat(attcmdline, " ", sizeof(attcmdline));
-            strlcat(attcmdline, attargv[i], sizeof(attcmdline));
-        }
-
-        rc = ProcessConfigCommand (attargc, attargv, attcmdline);
-
-        free(attargv);
-
-        if(rc == -2)
-        {
-            WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, addargv[0], "device number specification");
-            return FALSE;
-        }
-
-        /* Read next device record from the configuration file */
-#if defined( OPTION_ENHANCED_CONFIG_INCLUDE )
-        while (1)
-        {
-            while (inc_level >= 0 && read_config (fname, inc_fp[inc_level]) )
-            {
-                fclose (inc_fp[inc_level--]);
-            }
-
-            if (inc_level < 0 || strcasecmp (addargv[0], "include") != 0)
-                break;
-
-            if (++inc_level >= MAX_INC_LEVEL)
-            {
-                WRMSG(HHC01436, "S", inc_stmtnum[inc_level-1], fname, MAX_INC_LEVEL);
-                return FALSE;
-            }
-
-            hostpath(pathname, addargv[1], sizeof(pathname));
-            WRMSG(HHC01437, "I", inc_stmtnum[inc_level-1], fname, pathname);
-#if defined(_MSVC_)
-            fopen_s( &inc_fp[inc_level], pathname,  "r");
-#else
-            inc_fp[inc_level] = fopen (pathname, "r");
-#endif
-            if (inc_fp[inc_level] == NULL)
-            {
-                inc_level--;
-                if ( inc_ignore_errors == 1 ) 
-                {
-                    WRMSG(HHC01438, "W", fname, addargv[1], strerror(errno));
-                    continue ;
-                }
-                else 
-                {
-                    WRMSG(HHC01439, "S", fname, addargv[1], strerror(errno));
-                    return FALSE;
-                }
-            }
-            inc_stmtnum[inc_level] = 0;
-            continue;
-        }
-
-        if (inc_level < 0)
-#else // !defined( OPTION_ENHANCED_CONFIG_INCLUDE )
-        if (read_config (fname, inc_fp[inc_level]))
-#endif // defined( OPTION_ENHANCED_CONFIG_INCLUDE )
-            break;
-
-    } /* end while(1) */
-
-#if defined(HAVE_REGINA_REXXSAA_H)
-rexx_done:
-#endif /*defined(HAVE_REGINA_REXXSAA_H)*/
-
-    /* Terminate on config errors */
-    if(errorcount)
-    {
-        return FALSE;
-    }
-
-#if !defined( OPTION_ENHANCED_CONFIG_INCLUDE )
-    /* close configuration file */
-    rc = fclose(inc_fp[inc_level]);
-#endif // !defined( OPTION_ENHANCED_CONFIG_INCLUDE )
-    
 #if defined( OPTION_TAPE_AUTOMOUNT )
     /* Define default AUTOMOUNT directory if needed */
     if (sysblk.tamdir && sysblk.defdir == NULL)
@@ -950,7 +478,7 @@ rexx_done:
             char buf[64];
             MSGBUF( buf, "malloc(%lu)", sizeof(TAMDIR));
             WRMSG(HHC01430, "S", buf, strerror(errno));
-            return FALSE;
+            return -1;
         }
         VERIFY( getcwd( cwd, sizeof(cwd) ) != NULL );
         rc = (int)strlen( cwd );
@@ -1002,8 +530,8 @@ rexx_done:
      * statements so the fork()ed hercifc process won't require as much
      * virtual storage.  We will need to update all the devices too.
      */
-    if ( !config_storage() )
-        return FALSE;
+    if ( config_storage() )
+        return -1;
 
     for (dev = sysblk.firstdev; dev; dev = dev->nextdev)
     {
@@ -1102,9 +630,7 @@ rexx_done:
     }
 #endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS */
 
-    if ( !msglevel )
-        sysblk.msglvl = MLVL_VERBOSE;
-    return TRUE;
+    return 0;
 } /* end function build_config */
 
 #endif /*!defined(_GEN_ARCH)*/

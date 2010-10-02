@@ -563,7 +563,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00892 "Facility name not specified"
 #define HHC00893 "Facility(%s) does not exist"
 #define HHC00895 "Archmode %s is invalid"
-#define HHC00896 "Facility(%s) is only supported for archmode%s %s"
+#define HHC00896 "Facility(%s) not supported for specfied archmode"
 #define HHC00897 "Facility(%s) is mandatory for archmode%s %s"
 #define HHC00898 "Facility(%s) %sabled for archmode %s"
 #define HHC00899 "Facility(%s) not supported for archmode %s"

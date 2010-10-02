@@ -183,12 +183,15 @@ HSYS_DLL_IMPORT int extgui;             // __attribute__ ((deprecated));
 #endif /*EXTERNALGUI*/
 
 /* Functions in module bldcfg.c */
-BLDC_DLL_IMPORT int parse_args (char* p, int maxargc, char** pargv, int* pargc);
 void delayed_exit (int exit_code);
 #if defined( OPTION_TAPE_AUTOMOUNT )
 BLDC_DLL_IMPORT int add_tamdir( char *tamdir, TAMDIR **ppTAMDIR );
 #endif /* OPTION_TAPE_AUTOMOUNT */
 int build_config (char *fname);
+
+/* Functions in module script.c */
+int process_config (char *fname);
+BLDC_DLL_IMPORT int parse_args (char* p, int maxargc, char** pargv, int* pargc);
  
 /* Functions in module config.c */
 void release_config ();

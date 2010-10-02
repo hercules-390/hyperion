@@ -912,7 +912,7 @@ int     dll_count;                      /* index into array          */
     sysblk.config_done = FALSE;
 
     /* Build system configuration */
-    if ( !build_config (cfgfile) )
+    if ( build_config (cfgfile) )
     {
         delayed_exit(-1);
         return(1);

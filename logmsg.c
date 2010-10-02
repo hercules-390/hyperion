@@ -211,16 +211,6 @@ DLL_EXPORT void writemsg(const char *file, int line, const char* function, int g
 
     switch(lvl)
     {
-        case MLVL_NORMAL:
-        case MLVL_VERBOSE:
-#if defined( OPTION_MSGCLR )
-            if (strlen(color) > 0 && !sysblk.shutdown && sysblk.panel_init)
-            {
-                logmsg(color);
-            }
-#endif // defined( OPTION_MSGCLR )
-            BFR_VSNPRINTF();
-            break;
         case MLVL_DEBUG:
 
 #if defined( OPTION_MSGCLR )
@@ -231,6 +221,20 @@ DLL_EXPORT void writemsg(const char *file, int line, const char* function, int g
 #else
             logmsg("%-10.10s %4d ", file, line);
 #endif
+            BFR_VSNPRINTF();
+            break;
+
+        case MLVL_NORMAL:
+
+        case MLVL_VERBOSE:
+
+        default:
+#if defined( OPTION_MSGCLR )
+            if (strlen(color) > 0 && !sysblk.shutdown && sysblk.panel_init)
+            {
+                logmsg(color);
+            }
+#endif // defined( OPTION_MSGCLR )
             BFR_VSNPRINTF();
             break;
     }

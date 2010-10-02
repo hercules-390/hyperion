@@ -333,6 +333,7 @@ endif
                        impl.c       \
                        config.c     \
                        bldcfg.c     \
+                       script.c     \
                        archlvl.c    \
                        panel.c      \
                        history.c    \
