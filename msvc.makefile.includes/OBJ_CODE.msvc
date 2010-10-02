@@ -95,6 +95,7 @@ hengine_OBJ = \
     $(O)archlvl.obj  \
     $(O)assist.obj   \
     $(O)bldcfg.obj   \
+    $(O)script.obj   \
     $(O)cgibin.obj   \
     $(O)channel.obj  \
     $(O)chsc.obj     \

@@ -115,6 +115,16 @@
 #define CONF_DLL_IMPORT DLL_EXPORT
 #endif
 
+#ifndef _SCRIPT_C_
+#ifndef _HENGINE_DLL_
+#define SCRI_DLL_IMPORT DLL_IMPORT
+#else   /* _SCRIPT_DLL_ */
+#define SCRI_DLL_IMPORT extern
+#endif  /* _SCRIPT_DLL_ */
+#else
+#define SCRI_DLL_IMPORT DLL_EXPORT
+#endif
+
 #ifndef _BLDCFG_C_
 #ifndef _HENGINE_DLL_
 #define BLDC_DLL_IMPORT DLL_IMPORT
@@ -190,8 +200,8 @@ BLDC_DLL_IMPORT int add_tamdir( char *tamdir, TAMDIR **ppTAMDIR );
 int build_config (char *fname);
 
 /* Functions in module script.c */
-int process_config (char *fname);
-BLDC_DLL_IMPORT int parse_args (char* p, int maxargc, char** pargv, int* pargc);
+SCRI_DLL_IMPORT int process_config (char *fname);
+SCRI_DLL_IMPORT int parse_args (char* p, int maxargc, char** pargv, int* pargc);
  
 /* Functions in module config.c */
 void release_config ();
