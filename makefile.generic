@@ -6,36 +6,6 @@
 
 VERSION  = \"3.05\"
 
-# $Log$
-# Revision 1.44  2008/12/01 20:28:21  rbowler
-# Add new module losc.c in build process
-#
-# Revision 1.43  2008/05/22 19:25:58  fish
-# Flex FakeTape support
-#
-# Revision 1.42  2008/03/25 11:41:31  fish
-# SCSI TAPE MODS part 1: groundwork: non-functional changes:
-# rename some functions, comments, general restructuring, etc.
-# New source modules awstape.c, omatape.c, hettape.c and
-# tapeccws.c added, but not yet used (all will be used in a future
-# commit though when tapedev.c code is eventually split)
-#
-# Revision 1.41  2008/03/02 22:50:35  rbowler
-# Restore tabs corrupted by previous modification
-#
-# Revision 1.40  2008/03/01 14:19:29  rbowler
-# Add new module general3.c for general-instructions-extension facility
-#
-# Revision 1.39  2007/06/20 23:40:58  jmaynard
-# 3.05 version bump.
-#
-# Revision 1.38  2007/06/02 13:46:41  rbowler
-# PFPO framework
-#
-# Revision 1.37  2006/12/08 09:43:29  jj
-# Add CVS message log
-#
-
 # Change this if you want to install the Hercules executables somewhere
 #   besides /usr/bin. The $PREFIX (which defaults to nothing) can be
 #   overridden in the make command line, as in "PREFIX=/foo make install"
@@ -198,7 +168,7 @@ dyninst_OBJ = dyninst.o
 HEADERS  = codepage.h commadpt.h cpuint.h ctcadpt.h dasdblks.h \
            dasdtab.h dat.h devtype.h esa390.h feat370.h feat390.h \
            feat900.h featall.h featchk.h feature.h fishhang.h \
-           fthreads.h wthreads.h hbyteswp.h hercifc.h hercnls.h hercules.h \
+           fthreads.h wthreads.h hbyteswp.h hercifc.h hercules.h \
            hetlib.h ftlib.h hostinfo.h httpmisc.h htypes.h ieee-w32.h \
            inline.h linklist.h logger.h machdep.h opcode.h chsc.h \
            parser.h sllib.h tapedev.h tt32api.h tuntap.h version.h \
@@ -209,129 +179,129 @@ HEADERS  = codepage.h commadpt.h cpuint.h ctcadpt.h dasdblks.h \
 all:      $(EXEFILES) $(DYNFILES)
 
 hercules: $(hercules_OBJ)
-          $(CC) -o hercules $(hercules_OBJ) $(LFLAGS)
+	$(CC) -o hercules $(hercules_OBJ) $(LFLAGS)
 
 $(hercules_OBJ): %.o: %.c $(HEADERS)
-          $(CC) $(CFLAGS) -o $@ -c $<
+	$(CC) $(CFLAGS) -o $@ -c $<
 
 hercifc:  $(hercifc_OBJ)
-          $(CC) -o hercifc $(hercifc_OBJ) $(LFLAGS)
+	$(CC) -o hercifc $(hercifc_OBJ) $(LFLAGS)
 
 dasdinit: $(dasdinit_OBJ)
-          $(CC) -o dasdinit $(dasdinit_OBJ) $(LFLAGS)
+	$(CC) -o dasdinit $(dasdinit_OBJ) $(LFLAGS)
 
 dasdisup: $(dasdisup_OBJ)
-          $(CC) -o dasdisup $(dasdisup_OBJ) $(LFLAGS)
+	$(CC) -o dasdisup $(dasdisup_OBJ) $(LFLAGS)
 
 dasdload: $(dasdload_OBJ)
-          $(CC) -o dasdload $(dasdload_OBJ) $(LFLAGS)
+	$(CC) -o dasdload $(dasdload_OBJ) $(LFLAGS)
 
 dasdconv: $(dasdconv_OBJ)
-          $(CC) -o dasdconv $(dasdconv_OBJ) $(LFLAGS)
+	$(CC) -o dasdconv $(dasdconv_OBJ) $(LFLAGS)
 
 dasdls:   $(dasdls_OBJ)
-          $(CC) -o dasdls $(dasdls_OBJ) $(LFLAGS)
+	$(CC) -o dasdls $(dasdls_OBJ) $(LFLAGS)
 
 dasdcat:  $(dasdcat_OBJ)
-          $(CC) -o dasdcat $(dasdcat_OBJ) $(LFLAGS)
+	$(CC) -o dasdcat $(dasdcat_OBJ) $(LFLAGS)
 
 dasdpdsu: $(dasdpdsu_OBJ)
-          $(CC) -o dasdpdsu $(dasdpdsu_OBJ) $(LFLAGS)
+	$(CC) -o dasdpdsu $(dasdpdsu_OBJ) $(LFLAGS)
 
 dasdseq:  $(dasdseq_OBJ)
-          $(CC) -o dasdseq $(dasdseq_OBJ) $(LFLAGS)
+	$(CC) -o dasdseq $(dasdseq_OBJ) $(LFLAGS)
 
 tapecopy: $(tapecopy_OBJ)
-          $(CC) -o tapecopy $(tapecopy_OBJ) $(LFLAGS)
+	$(CC) -o tapecopy $(tapecopy_OBJ) $(LFLAGS)
 
 tapemap:  $(tapemap_OBJ)
-          $(CC) -o tapemap $(tapemap_OBJ) $(LFLAGS)
+	$(CC) -o tapemap $(tapemap_OBJ) $(LFLAGS)
 
 tapesplt: $(tapesplt_OBJ)
-          $(CC) -o tapesplt $(tapesplt_OBJ) $(LFLAGS)
+	$(CC) -o tapesplt $(tapesplt_OBJ) $(LFLAGS)
 
 cckdcdsk: $(cckdcdsk_OBJ)
-          $(CC) -o cckdcdsk $(cckdcdsk_OBJ) $(LFLAGS)
+	$(CC) -o cckdcdsk $(cckdcdsk_OBJ) $(LFLAGS)
 
 cckdcomp: $(cckdcomp_OBJ)
-          $(CC) -o cckdcomp $(cckdcomp_OBJ) $(LFLAGS)
+	$(CC) -o cckdcomp $(cckdcomp_OBJ) $(LFLAGS)
 
 cckddiag: $(cckddiag_OBJ)
-          $(CC) -o cckddiag $(cckddiag_OBJ) $(LFLAGS)
+	$(CC) -o cckddiag $(cckddiag_OBJ) $(LFLAGS)
 
 cckdswap: $(cckdswap_OBJ)
-          $(CC) -o cckdswap $(cckdswap_OBJ) $(LFLAGS)
+	$(CC) -o cckdswap $(cckdswap_OBJ) $(LFLAGS)
 
 cckd2ckd: $(cckd2ckd_OBJ)
-          $(CC) -o cckd2ckd $(cckd2ckd_OBJ) $(LFLAGS)
+	$(CC) -o cckd2ckd $(cckd2ckd_OBJ) $(LFLAGS)
 
 ckd2cckd: $(ckd2cckd_OBJ)
-          $(CC) -o ckd2cckd $(ckd2cckd_OBJ) $(LFLAGS)
+	$(CC) -o ckd2cckd $(ckd2cckd_OBJ) $(LFLAGS)
 
 fba2cfba: $(fba2cfba_OBJ)
-          $(CC) -o fba2cfba $(fba2cfba_OBJ) $(LFLAGS)
+	$(CC) -o fba2cfba $(fba2cfba_OBJ) $(LFLAGS)
 
 cfba2fba: $(cfba2fba_OBJ)
-          $(CC) -o cfba2fba $(cfba2fba_OBJ) $(LFLAGS)
+	$(CC) -o cfba2fba $(cfba2fba_OBJ) $(LFLAGS)
 
 dasdcopy: $(dasdcopy_OBJ)
-          $(CC) -o dasdcopy $(dasdcopy_OBJ) $(LFLAGS)
+	$(CC) -o dasdcopy $(dasdcopy_OBJ) $(LFLAGS)
 
 hetget:   $(hetget_OBJ)
-          $(CC) -o hetget $(hetget_OBJ) $(LFLAGS)
+	$(CC) -o hetget $(hetget_OBJ) $(LFLAGS)
 
 hetinit:  $(hetinit_OBJ)
-          $(CC) -o hetinit $(hetinit_OBJ) $(LFLAGS)
+	$(CC) -o hetinit $(hetinit_OBJ) $(LFLAGS)
 
 hetmap:   $(hetmap_OBJ)
-          $(CC) -o hetmap $(hetmap_OBJ) $(LFLAGS)
+	$(CC) -o hetmap $(hetmap_OBJ) $(LFLAGS)
 
 hetupd:   $(hetupd_OBJ)
-          $(CC) -o hetupd $(hetupd_OBJ) $(LFLAGS)
+	$(CC) -o hetupd $(hetupd_OBJ) $(LFLAGS)
 
 dmap2hrc: $(dmap2hrc_OBJ)
-          $(CC) -o dmap2hrc $(dmap2hrc_OBJ) $(LFLAGS)
+	$(CC) -o dmap2hrc $(dmap2hrc_OBJ) $(LFLAGS)
 
 dyninst:  $(dyninst_OBJ)
-          $(CC) -o dyninst $(dyninst_OBJ) $(LFLAGS) -shared
+	$(CC) -o dyninst $(dyninst_OBJ) $(LFLAGS) -shared
 
 hdt1403:  $(hdt1403_OBJ)
-          $(CC) -o hdt1403 $(hdt1403_OBJ) $(LFLAGS) -shared
+	$(CC) -o hdt1403 $(hdt1403_OBJ) $(LFLAGS) -shared
 
 hdt2703:  $(hdt2703_OBJ)
-          $(CC) -o hdt2703 $(hdt2703_OBJ) $(LFLAGS) -shared
+	$(CC) -o hdt2703 $(hdt2703_OBJ) $(LFLAGS) -shared
 
 hdt3088:  $(hdt3088_OBJ)
-          $(CC) -o hdt3088 $(hdt3088_OBJ) $(LFLAGS) -shared
+	$(CC) -o hdt3088 $(hdt3088_OBJ) $(LFLAGS) -shared
 
 hdt3270:  $(hdt3270_OBJ)
-          $(CC) -o hdt3270 $(hdt3270_OBJ) $(LFLAGS) -shared
+	$(CC) -o hdt3270 $(hdt3270_OBJ) $(LFLAGS) -shared
 
 hdt1052c: $(hdt1052c_OBJ)
-          $(CC) -o hdt1052c $(hdt1052c_OBJ) $(LFLAGS) -shared
+	$(CC) -o hdt1052c $(hdt1052c_OBJ) $(LFLAGS) -shared
 
 hdt3420:  $(hdt3420_OBJ)
-          $(CC) -o hdt3420 $(hdt3420_OBJ) $(LFLAGS) -shared
+	$(CC) -o hdt3420 $(hdt3420_OBJ) $(LFLAGS) -shared
 
 hdt3505:  $(hdt3505_OBJ)
-          $(CC) -o hdt3505 $(hdt3505_OBJ) $(LFLAGS) -shared
+	$(CC) -o hdt3505 $(hdt3505_OBJ) $(LFLAGS) -shared
 
 hdt3525:  $(hdt3525_OBJ)
-          $(CC) -o hdt3525 $(hdt3525_OBJ) $(LFLAGS) -shared
+	$(CC) -o hdt3525 $(hdt3525_OBJ) $(LFLAGS) -shared
 
 hdteq:    $(hdteq_OBJ)
-          $(CC) -o hdteq $(hdteq_OBJ) $(LFLAGS) -shared
+	$(CC) -o hdteq $(hdteq_OBJ) $(LFLAGS) -shared
 
 clean:
-        rm -rf $(EXEFILES) $(DYNFILES) *.o
+	rm -rf $(EXEFILES) $(DYNFILES) *.o
 
 tar:    clean
-        (cd ..; tar cvzf hercules-$(VERSION).tar.gz hercules-$(VERSION))
+	(cd ..; tar cvzf hercules-$(VERSION).tar.gz hercules-$(VERSION))
 
 install:  $(EXEFILES)
-        cp $(EXEFILES) $(DESTDIR)
-        cp $(DYNFILES) $(DESTLIB)
-        chown root $(DESTDIR)/hercifc
-        chmod 0751 $(DESTDIR)/hercifc
-        chmod +s $(DESTDIR)/hercifc
-        rm hercifc
+	cp $(EXEFILES) $(DESTDIR)
+	cp $(DYNFILES) $(DESTLIB)
+	chown root $(DESTDIR)/hercifc
+	chmod 0751 $(DESTDIR)/hercifc
+	chmod +s $(DESTDIR)/hercifc
+	rm hercifc
