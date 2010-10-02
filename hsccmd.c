@@ -18,6 +18,37 @@
 /* near the end of this module.                                      */
 /*-------------------------------------------------------------------*/
 
+/* 
+
+   Standard conventions are:
+
+     argc             contains the number of elements in argv[]
+     argv[0]          contains the actual command
+     argv[1..argc-1]  contains the optional arguments
+     cmdline          contains the original command line
+
+     returncode:
+
+     0 = Success
+
+     < 0 Error: Command not executed
+
+     > 1 Failure:  one or more functions could not complete
+
+   int test_cmd(int argc, char *argv[],char *cmdline)
+   {
+
+   .
+   .
+   .
+   return rc
+
+   }
+   
+
+*/
+
+
 #include "hstdinc.h"
 
 #define _HSCCMD_C_
