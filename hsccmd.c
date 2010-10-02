@@ -5504,7 +5504,7 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
            )
         {
             int i;
-            strlcpy( devtype, argv[1], strlen(devtype) );
+            strlcpy( devtype, argv[1], sizeof(devtype) );
             for ( i = 0; i < (int)strlen( devtype ); i++ )
                 if ( isalpha( devtype[i] ) )
                     devtype[i] = toupper( devtype[i] );
