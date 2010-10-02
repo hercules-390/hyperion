@@ -388,7 +388,9 @@ FWORD    origin;                        /* FBA origin                */
 FWORD    numblks;                       /* FBA number blocks         */
 FWORD    blksiz;                        /* FBA block size            */
 char    *p, buf[1024];                  /* Work buffer               */
+#ifdef HAVE_LIBZ
 char    *strtok_str;                    /* last token                */
+#endif /*HAVE_LIBZ*/
 
     retry = dev->connecting;
 
@@ -2473,7 +2475,7 @@ char            threadname[40];
 
     /* This thread will be the shared device thread */
     MSGBUF(threadname, "Shared device(%1d:%04X)", SSID_TO_LCSS(dev->ssid), dev->devnum);
-    WRMSG (HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), threadname); 
+    WRMSG (HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), threadname);
 
     while (dev->shrdconn)
     {
@@ -2827,7 +2829,7 @@ char                    threadname[40];
             /* Create a thread to complete the client connection */
             rc = create_thread (&tid, DETACHED,
                                 serverConnect, psock, "serverConnect");
-	    if(rc)
+            if(rc)
             {
                 WRMSG(HHC00102, "E", strerror(rc));
                 close_socket (csock);
@@ -2863,7 +2865,7 @@ DLL_EXPORT int shared_cmd(int argc, char *argv[], char *cmdline)
 {
     char buf[256];
     char *kw, *op, c;
-    char *strtok_str; 
+    char *strtok_str;
 
     UNREFERENCED(cmdline);
 
