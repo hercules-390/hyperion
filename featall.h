@@ -68,6 +68,7 @@
 #define OPTION_CMDTGT                   /* the cmdtgt command        */
 #define OPTION_MSGCLR                   /* Colored messages          */
 #define OPTION_MSGHLD                   /* Sticky messages           */
+#define OPTION_MSGLCK                   /* Lock during msg write     */
 
 //#define OPTION_SCP_MSG_PREFIX         /* Prefix scp msg with HHC*  */
 

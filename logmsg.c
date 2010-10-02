@@ -172,6 +172,7 @@ DLL_EXPORT void writemsg(const char *file, int line, const char* function, int g
     int     siz     =   1024;
     va_list vl;
 
+#ifdef OPTION_MSGLCK
     if(!sysblk.msggrp || (sysblk.msggrp && !grp))
     {
       while(try_obtain_lock(&sysblk.msglock))
@@ -185,6 +186,7 @@ DLL_EXPORT void writemsg(const char *file, int line, const char* function, int g
       }
       sysblk.msglocktime = host_tod();
     }
+#endif
 
   #ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  
@@ -254,8 +256,10 @@ DLL_EXPORT void writemsg(const char *file, int line, const char* function, int g
     fflush(stdout);  
   #endif
 
+#ifdef OPTION_MSGLCK
     if(!sysblk.msggrp || (sysblk.msggrp && !grp))
       release_lock(&sysblk.msglock);
+#endif
 }
 
 /*-------------------------------------------------------------------*/

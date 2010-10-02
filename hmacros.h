@@ -637,13 +637,19 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
   } while (0)
 #endif
 
+#if defined(OPTION_MSGLCK)
+ #define INIT_MSGLCK initialize_lock (&sysblk.msglock);
+#else
+ #define INIT_MSGLCK
+#endif
+
 #define INITIALIZE_UTILITY(name) \
   do { \
     SET_THREAD_NAME(name); \
     INITIALIZE_NLS(); \
     INITIALIZE_EXTERNAL_GUI(); \
     memset (&sysblk, 0, sizeof(SYSBLK)); \
-    initialize_lock (&sysblk.msglock); \
+    INIT_MSGLCK \
     initialize_detach_attr (DETACHED); \
     initialize_join_attr   (JOINABLE); \
     set_codepage(NULL); \

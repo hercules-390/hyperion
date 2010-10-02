@@ -490,9 +490,11 @@ DLL_EXPORT void logger_init(void)
 {
     int rc;
 
+#ifdef OPTION_MSGLCK
     initialize_condition (&logger_cond);
     initialize_lock (&logger_lock);
     initialize_lock (&sysblk.msglock);
+#endif
 
     obtain_lock(&logger_lock);
 
