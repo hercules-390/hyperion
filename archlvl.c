@@ -278,7 +278,7 @@ void force_facbit(int bitno, int enable, BYTE mode)
 {
 int fbyte, fbit;
 char buf[10];
-#define i2a(_int) ( (snprintf(buf,sizeof(buf),"%d", _int) <= sizeof(buf)) ? buf : "?" )
+#define i2a(_int) ( (snprintf(buf,sizeof(buf),"%d", _int) <= (int)sizeof(buf)) ? buf : "?" )
 
     fbyte = bitno / 8;
     fbit = 0x80 >> (bitno % 8);
