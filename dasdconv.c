@@ -84,7 +84,7 @@ BYTE ckd_ident[] = {0x43, 0x4B, 0x44, 0x5F}; /* CKD_ in ASCII */
   #define IFCLOS        close
 #endif /*!defined(HAVE_LIBZ)*/
 
-void        delayed_exit    (int exit_code);
+static void delayed_exit (int exit_code);
 static void argexit         ( int code, char *pgm );
 static void read_input_data (IFD ifd, char *ifname, BYTE *buf, int reqlen, U32 offset);
 static int  find_input_record (BYTE *buf, BYTE **ppbuf, int *plen,
@@ -229,7 +229,7 @@ char           *strtok_str;
 /*-------------------------------------------------------------------*/
 /* Subroutine to exit the program                                    */
 /*-------------------------------------------------------------------*/
-void delayed_exit (int exit_code)
+static void delayed_exit (int exit_code)
 {
     /* Delay exiting is to give the system
      * time to display the error message. */

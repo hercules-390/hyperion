@@ -124,7 +124,7 @@ char           *filenameout;            /* -> Output AWS file name   */
 /*-------------------------------------------------------------------*/
 /* Custom exit function...                                           */
 /*-------------------------------------------------------------------*/
-void delayed_exit (int exit_code)
+static void delayed_exit (int exit_code)
 {
     if (RC_SUCCESS != exit_code)
         printf( MSG( HHC02701, "E" ) );

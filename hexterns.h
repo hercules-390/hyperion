@@ -193,7 +193,6 @@ HSYS_DLL_IMPORT int extgui;             // __attribute__ ((deprecated));
 #endif /*EXTERNALGUI*/
 
 /* Functions in module bldcfg.c */
-void delayed_exit (int exit_code);
 #if defined( OPTION_TAPE_AUTOMOUNT )
 BLDC_DLL_IMPORT int add_tamdir( char *tamdir, TAMDIR **ppTAMDIR );
 #endif /* OPTION_TAPE_AUTOMOUNT */

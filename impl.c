@@ -41,6 +41,31 @@ DLL_EXPORT void registerLogCallback(LOGCALLBACK lcb)
 }
 
 /*-------------------------------------------------------------------*/
+/* Subroutine to exit process after flushing stderr and stdout       */
+/*-------------------------------------------------------------------*/
+static void delayed_exit (int exit_code)
+{
+    UNREFERENCED(exit_code);
+
+    /* Delay exiting is to give the system
+     * time to display the error message. */
+#if defined( _MSVC_ )
+    SetConsoleCtrlHandler( NULL, FALSE); // disable Ctrl-C intercept
+#endif
+    sysblk.shutimmed = TRUE;
+
+    fflush(stderr);  
+    fflush(stdout);  
+    usleep(100000);
+    do_shutdown();
+    fflush(stderr);  
+    fflush(stdout);  
+    usleep(100000);
+    return;
+}
+
+
+/*-------------------------------------------------------------------*/
 /* Signal handler for SIGINT signal                                  */
 /*-------------------------------------------------------------------*/
 static void sigint_handler (int signo)

@@ -71,52 +71,14 @@
  #undef   _GEN_ARCH
 #endif
 
-typedef struct _DEVARRAY
-{
-    U16 cuu1;
-    U16 cuu2;
-} DEVARRAY;
-
-typedef struct _DEVNUMSDESC
-{
-    BYTE lcss;
-    DEVARRAY *da;
-} DEVNUMSDESC;
-
-
-/*-------------------------------------------------------------------*/
-/* Subroutine to exit process after flushing stderr and stdout       */
-/*-------------------------------------------------------------------*/
-void delayed_exit (int exit_code)
-{
-    UNREFERENCED(exit_code);
-
-    /* Delay exiting is to give the system
-     * time to display the error message. */
-#if defined( _MSVC_ )
-    SetConsoleCtrlHandler( NULL, FALSE); // disable Ctrl-C intercept
-#endif
-    sysblk.shutimmed = TRUE;
-
-    fflush(stderr);  
-    fflush(stdout);  
-    usleep(100000);
-    do_shutdown();
-    fflush(stderr);  
-    fflush(stdout);  
-    usleep(100000);
-    return;
-}
-
 
 /* storage configuration routine. To be moved *JJ */
-static int config_storage()
+static int config_storage(RADR mbstor)
 {
 int off;
 
     /* Convert from configuration units to bytes */
-    sysblk.xpndsize *= (1024*1024 / XSTORE_PAGESIZE);
-    sysblk.mainsize *= 1024 * 1024ULL;
+    sysblk.mainsize = mbstor * 1024 * 1024;
 
     /* Obtain main storage */
     sysblk.mainstor = calloc((size_t)(sysblk.mainsize + 8192), 1);
@@ -165,9 +127,16 @@ int off;
             sysblk.storkeys[i++] = STORKEY_BADFRM;
 #endif
 
-    if (sysblk.xpndsize != 0)
+    return 0;
+}
+
+static int config_xstorage(U32 mbxstor)
+{
+    if (mbxstor)
     {
 #ifdef _FEATURE_EXPANDED_STORAGE
+
+        sysblk.xpndsize = mbxstor * (1024*1024 / XSTORE_PAGESIZE);
 
         /* Obtain expanded storage */
         sysblk.xpndstor = calloc(sysblk.xpndsize, XSTORE_PAGESIZE);
@@ -182,12 +151,15 @@ int off;
             WRMSG(HHC01430, "S", buf, strerror(errno));
             return -1;
         }
+
         /* Initial power-on reset for expanded storage */
         xstorage_clear();
+
 #else /*!_FEATURE_EXPANDED_STORAGE*/
         WRMSG(HHC01431, "I");
 #endif /*!_FEATURE_EXPANDED_STORAGE*/
     } /* end if(sysblk.xpndsize) */
+
     return 0;
 }
 
@@ -530,7 +502,10 @@ static  char    fname[MAX_PATH];        /* normalized filename       */
      * statements so the fork()ed hercifc process won't require as much
      * virtual storage.  We will need to update all the devices too.
      */
-    if ( config_storage() )
+    if ( config_storage(sysblk.mainsize) )
+        return -1;
+
+    if ( config_xstorage(sysblk.xpndsize) )
         return -1;
 
     for (dev = sysblk.firstdev; dev; dev = dev->nextdev)
