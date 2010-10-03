@@ -491,7 +491,11 @@ void *panel_command (void *cmdline)
     /* Ignore null commands (just pressing enter)
        unless instruction stepping is enabled or
        commands are being sent to the SCP by default. */
-    if (!sysblk.inststep && (sysblk.cmdtgt == 0) && (0 == cmd[0]))
+    if (!sysblk.inststep
+#ifdef OPTION_CMDTGT
+                         && (sysblk.cmdtgt == 0)
+#endif
+                                                 && (0 == cmd[0]))
         return NULL;
 
 #ifdef OPTION_CMDTGT
