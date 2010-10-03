@@ -40,17 +40,17 @@
 /*-------------------------------------------------------------------*/
 int ARCH_DEP(system_reset) (int cpu, int clear)
 {
-    int    rc     =  0;
+    int    rc1 = 0, rc;
     REGS  *regs;
 
     /* Configure the cpu if it is not online */
     if (!IS_CPU_ONLINE(cpu))
     {
-        if (configure_cpu(cpu) != 0)
+        if ( (rc = configure_cpu(cpu)) )
         {
             /* ZZ FIXME: we should probably present a machine-check
                if we encounter any errors during the reset (rc != 0) */
-            return -1;
+            return rc;
         }
         ASSERT(IS_CPU_ONLINE(cpu));
     }
@@ -71,8 +71,8 @@ int ARCH_DEP(system_reset) (int cpu, int clear)
         /* Reset all CPUs in the configuration */
         for (cpu = 0; cpu < MAX_CPU; cpu++)
             if (IS_CPU_ONLINE(cpu))
-                if (ARCH_DEP(cpu_reset) (sysblk.regs[cpu]))
-                    rc = -1;
+                if ((rc = ARCH_DEP(cpu_reset) (sysblk.regs[cpu])) )
+                    rc1 = rc;
 
         /* Perform I/O subsystem reset */
         io_reset ();
@@ -89,9 +89,9 @@ int ARCH_DEP(system_reset) (int cpu, int clear)
             if (IS_CPU_ONLINE(cpu))
             {
                 regs=sysblk.regs[cpu];
-                if (ARCH_DEP(initial_cpu_reset) (regs))
+                if ((rc = ARCH_DEP(initial_cpu_reset) (regs)) )
                 {
-                    rc = -1;
+                    rc1 = rc;
                 }
                 /* Clear all the registers (AR, GPR, FPR, VR)
                    as part of the CPU CLEAR RESET operation */
@@ -125,7 +125,7 @@ int ARCH_DEP(system_reset) (int cpu, int clear)
 
     /* ZZ FIXME: we should probably present a machine-check
        if we encounter any errors during the reset (rc != 0) */
-    return rc;
+    return rc1;
 } /* end function system_reset */
 
 /*-------------------------------------------------------------------*/
@@ -147,6 +147,7 @@ PSW     captured_zpsw;                  /* Captured z/Arch PSW       */
 int ARCH_DEP(common_load_begin) (int cpu, int clear)
 {
     REGS *regs;
+    int rc;
 
     /* Save the original architecture mode for later */
     orig_arch_mode = sysblk.dummyregs.arch_mode = sysblk.arch_mode;
@@ -155,8 +156,8 @@ int ARCH_DEP(common_load_begin) (int cpu, int clear)
 #endif // defined(OPTION_FISHIO)
 
     /* Perform system-reset-normal or system-reset-clear function */
-    if (ARCH_DEP(system_reset(cpu,clear)) != 0)
-        return -1;
+    if ( (rc = ARCH_DEP(system_reset(cpu,clear))) )
+        return rc;
     regs = sysblk.regs[cpu];
 
     if (sysblk.arch_mode == ARCH_900)
@@ -178,8 +179,8 @@ int ARCH_DEP(common_load_begin) (int cpu, int clear)
     if (!clear)
     {
         /* Perform initial reset on the IPL CPU */
-        if (ARCH_DEP(initial_cpu_reset) (regs) != 0)
-            return -1;
+        if ( (rc = ARCH_DEP(initial_cpu_reset) (regs)) )
+            return rc;
         /* Save our captured-z/Arch-PSW if this is a Load-normal IPL
            since the initial_cpu_reset call cleared it to zero. */
         if (orig_arch_mode == ARCH_900)
@@ -204,10 +205,11 @@ DEVBLK *dev;                            /* -> Device control block   */
 int     i;                              /* Array subscript           */
 BYTE    unitstat;                       /* IPL device unit status    */
 BYTE    chanstat;                       /* IPL device channel status */
+int rc;
 
     /* Get started */
-    if (ARCH_DEP(common_load_begin) (cpu, clear) != 0)
-        return -1;
+    if ((rc = ARCH_DEP(common_load_begin) (cpu, clear)) )
+        return rc;
 
     /* The actual IPL proper starts here... */
 
@@ -341,11 +343,12 @@ BYTE    chanstat;                       /* IPL device channel status */
 /*-------------------------------------------------------------------*/
 int ARCH_DEP(common_load_finish) (REGS *regs)
 {
+int rc;
     /* Zeroize the interrupt code in the PSW */
     regs->psw.intcode = 0;
 
     /* Load IPL PSW from PSA+X'0' */
-    if (ARCH_DEP(load_psw) (regs, regs->psa->iplpsw) != 0)
+    if ((rc = ARCH_DEP(load_psw) (regs, regs->psa->iplpsw)) ) 
     {
         char buf[80];
         snprintf(buf, 80, "architecture mode '%s', invalid ipl psw %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X", 
@@ -356,7 +359,7 @@ int ARCH_DEP(common_load_finish) (REGS *regs)
                 regs->psa->iplpsw[6], regs->psa->iplpsw[7]);
         WRMSG (HHC00828, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu, buf);
         HDC1(debug_cpu_state, regs);
-        return -1;
+        return rc;
     }
 
     /* Set the CPU into the started state */
@@ -381,7 +384,7 @@ int ARCH_DEP(common_load_finish) (REGS *regs)
 /*-------------------------------------------------------------------*/
 int ARCH_DEP(cpu_reset) (REGS *regs)
 {
-int             i;                      /* Array subscript           */
+int i, rc = 0;                          /* Array subscript           */
 
     regs->ip = regs->inst;
 
@@ -427,13 +430,13 @@ int             i;                      /* Array subscript           */
 
    if(regs->host && regs->guestregs)
    {
-        ARCH_DEP(cpu_reset)(regs->guestregs);
+        rc = ARCH_DEP(cpu_reset)(regs->guestregs);
         /* CPU state of SIE copy cannot be controlled */
         regs->guestregs->opinterv = 0;
         regs->guestregs->cpustate = CPUSTATE_STARTED;
    }
 
-   return 0;
+   return rc;
 } /* end function cpu_reset */
 
 /*-------------------------------------------------------------------*/
@@ -441,6 +444,7 @@ int             i;                      /* Array subscript           */
 /*-------------------------------------------------------------------*/
 int ARCH_DEP(initial_cpu_reset) (REGS *regs)
 {
+int rc1 = 0, rc;
     /* Clear reset pending indicators */
     regs->sigpireset = regs->sigpreset = 0;
 
@@ -460,7 +464,7 @@ int ARCH_DEP(initial_cpu_reset) (REGS *regs)
     regs->psa = (PSA_3XX *)regs->mainstor;
 
     /* Perform a CPU reset (after setting PSA) */
-    ARCH_DEP(cpu_reset) (regs);
+    rc1 = ARCH_DEP(cpu_reset) (regs);
 
     regs->todpr  = 0;
     regs->clkc   = 0;
@@ -495,13 +499,14 @@ int ARCH_DEP(initial_cpu_reset) (REGS *regs)
 #endif /*!FEATURE_LINKAGE_STACK*/
 
     if(regs->host && regs->guestregs)
-      ARCH_DEP(initial_cpu_reset)(regs->guestregs);
+      if( (rc = ARCH_DEP(initial_cpu_reset)(regs->guestregs)) )
+        rc1 = rc;
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
     renew_wrapping_keys();
 #endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
 
-    return 0;
+    return rc1;
 } /* end function initial_cpu_reset */
 
 #if !defined(_GEN_ARCH)
