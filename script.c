@@ -342,7 +342,7 @@ int errorcount = 0;
 #endif
             break;
 
-#if !defined(OPTION_ENHANCED_DEVICE_ATTACH)
+#if defined(OPTION_ENHANCED_DEVICE_ATTACH)
         /* ISW */
         /* Also exit if addargv[0] contains '-', ',' or '.' */
         /* Added because device statements may now be a compound device number specification */
@@ -358,7 +358,7 @@ int errorcount = 0;
         {
             break;
         }
-#endif /*!defined(OPTION_ENHANCED_DEVICE_ATTACH)*/
+#endif /*defined(OPTION_ENHANCED_DEVICE_ATTACH)*/
 
         /* Also exit if addargv[0] contains ':' (added by Harold Grovesteen jan2008) */
         /* Added because device statements may now contain channel set or LCSS id */
