@@ -411,7 +411,7 @@ S64      dreg;
             {
                 i = ARCH_390;
 #if defined(_FEATURE_CPU_RECONFIG)
-                sysblk.maxcpu = MAX_CPU_ENGINES;
+                sysblk.maxcpu = MAX_CPU;
 #else
                 sysblk.maxcpu = sysblk.numcpu;
 #endif
@@ -425,7 +425,7 @@ S64      dreg;
             {
                 i = ARCH_900;
 #if defined(_FEATURE_CPU_RECONFIG)
-                sysblk.maxcpu = MAX_CPU_ENGINES;
+                sysblk.maxcpu = MAX_CPU;
 #else
                 sysblk.maxcpu = sysblk.numcpu;
 #endif
@@ -635,7 +635,7 @@ S64      dreg;
 
         case SR_CPU:
             SR_READ_VALUE(file, len, &i, sizeof(i));
-            if (i >= MAX_CPU_ENGINES)
+            if (i >= MAX_CPU)
             {
                 WRMSG(HHC02010, "E", i, MAX_CPU-1);
                 goto sr_error_exit;
