@@ -4727,7 +4727,7 @@ int stsi_model_cmd(int argc, char *argv[], char *cmdline)
     
         /* Validate and set new model and capacity 
            numbers according to arguments */
-        for ( m = 0, n = 1; m < argc; m++, n++ )
+        for ( m = 0, n = 1; n < argc; m++, n++ )
         {
             size_t i;
             size_t len;
