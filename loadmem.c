@@ -5,7 +5,7 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id: loadmem.c 589 2010-10-03 06:12:47Z paulgorlinsky $
+// $Id$
 
 #include "hstdinc.h"
 
