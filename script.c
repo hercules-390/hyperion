@@ -520,6 +520,11 @@ int errorcount = 0;
 #endif // defined( OPTION_ENHANCED_CONFIG_INCLUDE )
             break;
 
+#if !defined( OPTION_ENHANCED_CONFIG_INCLUDE )
+        /* Parse the statement just read */
+        parse_args (buf, MAX_ARGS, addargv, &addargc);
+#endif // defined( OPTION_ENHANCED_CONFIG_INCLUDE )
+
     } /* end while(1) */
 
 #if defined(HAVE_REGINA_REXXSAA_H)
