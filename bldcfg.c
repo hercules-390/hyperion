@@ -338,7 +338,7 @@ static  char    fname[MAX_PATH];        /* normalized filename       */
     sysblk.mainsize = 2;
     sysblk.xpndsize = 0;
 #ifdef    _FEATURE_VECTOR_FACILITY
-    sysblk.numvec = MAX_CPU_ENGINES;
+    sysblk.numvec = MAX_CPU;
 #else  //!_FEATURE_VECTOR_FACILITY
     sysblk.numvec = 0;
 #endif // _FEATURE_VECTOR_FACILITY
@@ -416,7 +416,7 @@ static  char    fname[MAX_PATH];        /* normalized filename       */
     losc_set(PGM_PRD_OS_RESTRICTED);
 
     /* Default CPU type CP */
-    for (i = 0; i < MAX_CPU_ENGINES; i++)
+    for (i = 0; i < MAX_CPU; i++)
         sysblk.ptyp[i] = SCCB_PTYP_CP;
 
     /* Cap the default priorities at zero if setuid not available */

@@ -220,7 +220,7 @@ int i;
        WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
     }
 
-    for (i = 0; i < MAX_CPU_ENGINES; i ++) savecount[i] = -1;
+    for (i = 0; i < MAX_CPU; i ++) savecount[i] = -1;
 
     while(!sysblk.shutdown)
     {
@@ -303,7 +303,7 @@ char    pathname[MAX_PATH];             /* (work)                    */
     for (;;)
     {
         numcpu = 0;
-        for (i = 0; i < MAX_CPU_ENGINES; i++)
+        for (i = 0; i < MAX_CPU; i++)
             if (IS_CPU_ONLINE(i) &&
                 CPUSTATE_STOPPED == sysblk.regs[i]->cpustate)
                 numcpu++;
@@ -558,7 +558,7 @@ int     dll_count;                      /* index into array          */
     initialize_condition (&sysblk.cpucond);
     {
         int i;
-        for (i = 0; i < MAX_CPU_ENGINES; i++)
+        for (i = 0; i < MAX_CPU; i++)
             initialize_lock (&sysblk.cpulock[i]);
     }
     initialize_condition (&sysblk.sync_cond);

@@ -1304,7 +1304,7 @@ int cfall_cmd(int argc, char *argv[], char *cmdline)
 
     OBTAIN_INTLOCK(NULL);
 
-    for (i = 0; i < MAX_CPU_ENGINES; i++)
+    for (i = 0; i < MAX_CPU; i++)
         if (IS_CPU_ONLINE(i))
         {
             if (on < 0)
@@ -2583,7 +2583,7 @@ char *strtok_str = "";
                 WRMSG( HHC01451, "E", styp, argv[0] );
                 return -1;
             }
-            while (count-- > 0 && cpu < MAX_CPU_ENGINES)
+            while (count-- > 0 && cpu < MAX_CPU)
             {
                 sysblk.ptyp[cpu] = ptyp;
                 WRMSG(HHC00827, "I", PTYPSTR(cpu), cpu, cpu, ptyp, styp_values[ptyp]);
@@ -2963,7 +2963,7 @@ BYTE c;
     if ( argc == 2 )
     {
         if (sscanf(argv[1], "%hu%c", &numvec, &c) != 1
-            || numvec > MAX_CPU_ENGINES)
+            || numvec > MAX_CPU)
         {
             WRMSG( HHC01451, "E", argv[1], argv[0] );
             return -1;
@@ -2999,7 +2999,7 @@ BYTE c;
     if ( argc == 2 )
     {
         if (sscanf(argv[1], "%hu%c", &numcpu, &c) != 1
-            || numcpu > MAX_CPU_ENGINES)
+            || numcpu > MAX_CPU)
         {
             WRMSG( HHC01451, "E", argv[1], argv[0] );
             return -1;
@@ -7255,7 +7255,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
 {
     DEVBLK *dev;                        /* -> Device block           */
     IOINT  *io;                         /* -> I/O interrupt entry    */
-    unsigned i;
+    int i;
     int first, last;
     char    sysid[12];
     BYTE    curpsw[16];
@@ -7268,7 +7268,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
 
     first = last = -1;
 
-    for (i = 0; i < MAX_CPU_ENGINES; i++)
+    for (i = 0; i < MAX_CPU; i++)
     {
         if (!IS_CPU_ONLINE(i))
         {

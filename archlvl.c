@@ -640,7 +640,7 @@ int archlvl_cmd(int argc, char *argv[], char *cmdline)
     OBTAIN_INTLOCK(NULL);
 
     /* Make sure all CPUs are deconfigured or stopped */
-    for (i = 0; i < MAX_CPU_ENGINES; i++)
+    for (i = 0; i < MAX_CPU; i++)
         if (IS_CPU_ONLINE(i)
          && CPUSTATE_STOPPED != sysblk.regs[i]->cpustate)
         {
@@ -660,7 +660,7 @@ int archlvl_cmd(int argc, char *argv[], char *cmdline)
 #endif
 #if defined(_390) || defined(_900)
 #if defined(_FEATURE_CPU_RECONFIG)
-        sysblk.maxcpu = MAX_CPU_ENGINES;
+        sysblk.maxcpu = MAX_CPU;
 #else
         sysblk.maxcpu = sysblk.numcpu;
 #endif
@@ -685,7 +685,7 @@ int archlvl_cmd(int argc, char *argv[], char *cmdline)
 #if defined(_FEATURE_CPU_RECONFIG) && defined(_S370)
     /* Configure CPUs for S/370 mode */
     if (sysblk.archmode == ARCH_370)
-        for (i = MAX_CPU_ENGINES - 1; i >= 0; i--)
+        for (i = MAX_CPU - 1; i >= 0; i--)
             if (i < MAX_CPU && !IS_CPU_ONLINE(i))
                 configure_cpu(i);
             else if (i >= MAX_CPU && IS_CPU_ONLINE(i))

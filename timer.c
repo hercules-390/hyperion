@@ -318,7 +318,7 @@ void *capping_manager_thread (void *p)
   WRMSG(HHC00877, "I", sysblk.capvalue);
 
   /* Check if we have CP engines */
-  for(i = 0; i < MAX_CPU_ENGINES; i++)
+  for(i = 0; i < MAX_CPU; i++)
   {
     if(sysblk.ptyp[i] == SCCB_PTYP_CP)
       break;
@@ -331,7 +331,7 @@ void *capping_manager_thread (void *p)
   }
 
   /* Initialize interrupt wait locks */
-  for(i = 0; i < MAX_CPU_ENGINES; i++)
+  for(i = 0; i < MAX_CPU; i++)
     initialize_lock(&sysblk.caplock[i]);
 
   /* Lets get started */
@@ -350,7 +350,7 @@ void *capping_manager_thread (void *p)
     instcnt = 0;
 
     /* Count the number of executed instructions */
-    for(i = 0; i < MAX_CPU_ENGINES; i++)
+    for(i = 0; i < MAX_CPU; i++)
     {
       if(IS_CPU_ONLINE(i) && sysblk.ptyp[i] == SCCB_PTYP_CP)
       {
@@ -375,7 +375,7 @@ void *capping_manager_thread (void *p)
       {
         /* Wakeup the capped CPs */
         sysblk.capactive = 0;
-        for(i = 0; i < MAX_CPU_ENGINES; i++)
+        for(i = 0; i < MAX_CPU; i++)
         {
           if(sysblk.caplocked[i])
           {
@@ -390,7 +390,7 @@ void *capping_manager_thread (void *p)
       else
       {
         /* I do not know why, but do not delete these lines! */
-        for(i = 0; i < MAX_CPU_ENGINES; i++)
+        for(i = 0; i < MAX_CPU; i++)
         {
           if(sysblk.caplocked[i])
             ON_IC_INTERRUPT(sysblk.regs[i]);
@@ -407,7 +407,7 @@ void *capping_manager_thread (void *p)
       {
         /* Cap the CPs */
         sysblk.capactive = 1;
-        for(i = 0; i < MAX_CPU_ENGINES; i++)
+        for(i = 0; i < MAX_CPU; i++)
         {
           if(IS_CPU_ONLINE(i) && sysblk.ptyp[i] == SCCB_PTYP_CP && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED)
           {

@@ -60,7 +60,7 @@ int pending, i;
     {
         OBTAIN_INTLOCK(NULL);
         wait_sigq_pending = 0;
-        for (i = 0; i < MAX_CPU_ENGINES; i++)
+        for (i = 0; i < MAX_CPU; i++)
         if (IS_CPU_ONLINE(i)
           && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED)
             wait_sigq_pending = 1;

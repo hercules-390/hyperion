@@ -1398,7 +1398,7 @@ int   rc;
     if (cpu + 1 >= sysblk.hicpu)
     {
         int i;
-        for (i = MAX_CPU_ENGINES - 1; i >= 0; i--)
+        for (i = MAX_CPU - 1; i >= 0; i--)
             if (IS_CPU_ONLINE(i))
                 break;
         sysblk.hicpu = i + 1;
