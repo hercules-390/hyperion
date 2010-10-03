@@ -199,6 +199,9 @@
                             strlen( str ) <= strlen(#cmd) && \
                             !strncasecmp( str, #cmd, strlen( str ) ) )
 
+#define  NCMP(_lvar,_rvar,_svar) ( !memcmp( _lvar, _rvar, _svar ) ) 
+#define  SNCMP(_lvar,_rvar,_svar) ( !strncasecmp( _lvar, _rvar, _svar ) )
+
 /*-------------------------------------------------------------------*/
 /* Macro for Debugging / Tracing...                                  */
 /*-------------------------------------------------------------------*/

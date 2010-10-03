@@ -25,7 +25,11 @@
 /*-------------------------------------------------------------------*/
 int copy_stringz_to_ebcdic(BYTE* fld, size_t len, char *name)
 {
-    size_t i;
+    size_t  i;
+    int     n;
+    BYTE    *temp_fld;
+
+    temp_fld = (BYTE *)malloc(len+1);
 
     if ( name == NULL || strlen(name) == 0 ) 
     {
@@ -33,14 +37,26 @@ int copy_stringz_to_ebcdic(BYTE* fld, size_t len, char *name)
         return 0;
     }
 
-    memset(fld, 0x40, len);
+    memset(temp_fld, 0x40, len);
 
-    for(i = 0; i < strlen(name) && i < len; i++)
-        if(isalnum(name[i]))
-            fld[i] = host_to_guest((int)(islower(name[i]) ? toupper(name[i]) : name[i]));
+    for ( i = 0, n = 0; i < strlen(name) && i < len; i++ )
+        if ( isalnum(name[i]) )
+        {
+            temp_fld[i] = host_to_guest((int)(islower(name[i]) ? toupper(name[i]) : name[i]));
+            n++;
+        }
         else
-            return -1;
-    return 0;
+        {
+            n = -1;
+            break;
+        }
+    
+    if ( n > 0 )
+        memcpy(fld,temp_fld,len);
+    
+    free(temp_fld);
+
+    return n;
 }
 
 /*-------------------------------------------------------------------*/
@@ -55,7 +71,7 @@ int copy_ebcdic_to_stringz(char *name, size_t nlen, BYTE* fld, size_t flen)
     
     bzero(name, nlen);
 
-    for( i = 0; i < MIN((nlen-1),flen) ; i++ )
+    for ( i = 0; i < MIN((nlen-1),flen) ; i++ )
     {
         c = guest_to_host(fld[i]);
         
@@ -79,12 +95,12 @@ void set_loadparm(char *name)
 {
     size_t i;
 
-    for(i = 0; name && i < strlen(name) && i < sizeof(loadparm); i++)
-    if(isprint(name[i]))
+    for (i = 0; name && i < strlen(name) && i < sizeof(loadparm); i++)
+    if (isprint(name[i]))
             loadparm[i] = host_to_guest((int)(islower(name[i]) ? toupper(name[i]) : name[i]));
         else
             loadparm[i] = 0x40;
-    for(; i < sizeof(loadparm); i++)
+    for (; i < sizeof(loadparm); i++)
         loadparm[i] = 0x40;
 }
 
@@ -101,11 +117,11 @@ char *str_loadparm()
     int i;
 
     ret_loadparm[sizeof(loadparm)] = '\0';
-    for(i = sizeof(loadparm) - 1; i >= 0; i--)
+    for (i = sizeof(loadparm) - 1; i >= 0; i--)
     {
         ret_loadparm[i] = guest_to_host((int)loadparm[i]);
 
-        if(isspace(ret_loadparm[i]) && !ret_loadparm[i+1])
+        if (isspace(ret_loadparm[i]) && !ret_loadparm[i+1])
             ret_loadparm[i] = '\0';
     }
 
@@ -125,12 +141,12 @@ void set_lparname(char *name)
 {
     size_t i;
 
-    for(i = 0; name && i < strlen(name) && i < sizeof(lparname); i++)
-        if(isprint(name[i]))
+    for ( i = 0; name && i < strlen(name) && i < sizeof(lparname); i++)
+        if (isprint(name[i]))
             lparname[i] = host_to_guest((int)(islower(name[i]) ? toupper(name[i]) : name[i]));
         else
             lparname[i] = 0x40;
-    for(; i < sizeof(lparname); i++)
+    for (; i < sizeof(lparname); i++)
         lparname[i] = 0x40;
 }
 
@@ -148,11 +164,11 @@ char *str_lparname()
     int i;
 
     ret_lparname[sizeof(lparname)] = '\0';
-    for(i = sizeof(lparname) - 1; i >= 0; i--)
+    for (i = sizeof(lparname) - 1; i >= 0; i--)
     {
         ret_lparname[i] = guest_to_host((int)lparname[i]);
 
-        if(isspace(ret_lparname[i]) && !ret_lparname[i+1])
+        if (isspace(ret_lparname[i]) && !ret_lparname[i+1])
             ret_lparname[i] = '\0';
     }
 
@@ -171,16 +187,29 @@ static BYTE manufact[16] = { 0xC8,0xD9,0xC3,0x40,0x40,0x40,0x40,0x40,
 
 int set_manufacturer(char *name)
 {
-    size_t i;
+    size_t  i;
+    int     n;
+    BYTE    temp_man[16];   /*  H    R    C  */
+    BYTE    dflt_man[16] = { 0xC8,0xD9,0xC3,0x40,0x40,0x40,0x40,0x40,
+                             0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
 
-    memset(manufact, 0x40, sizeof(manufact) );
+    memset(temp_man, 0x40, sizeof(temp_man) );
 
-    for(i = 0; name && i < strlen(name) && i < sizeof(manufact); i++)
-        if(isalnum(name[i]))
-            manufact[i] = host_to_guest((int)(islower(name[i]) ? toupper(name[i]) : name[i]));
+    for (i = 0, n = 0; name && i < strlen(name) && i < sizeof(temp_man); i++)
+        if (isalnum(name[i]))
+        {
+            temp_man[i] = host_to_guest((int)(islower(name[i]) ? toupper(name[i]) : name[i]));
+            n++;
+        }
         else
             return -1;      /* 0-9, A-Z */
-    return 0;
+
+    if ( n > 0 )            /* valid if > 0 count */
+        memcpy(manufact,temp_man,sizeof(manufact));
+    else
+        memcpy(manufact,dflt_man,sizeof(manufact));
+
+    return n;
 }
 
 void get_manufacturer(BYTE *dest)
@@ -197,7 +226,7 @@ char *str_manufacturer()
 
     bzero(ret_manufacturer, sizeof(ret_manufacturer));
 
-    for( i = 0; i < (int)sizeof(manufact); i++ )
+    for ( i = 0; i < (int)sizeof(manufact); i++ )
     {
         c = guest_to_host(manufact[i]);
         
@@ -220,16 +249,28 @@ static BYTE plant[4] = { 0xE9,0xE9,0x40,0x40 };
 
 int set_plant(char *name)
 {
-    size_t i;
+    size_t  i;
+    int     n;
+    BYTE    temp_plant[4];    /* Z    Z           */
+    BYTE    dflt_plant[4] = { 0xE9,0xE9,0x40,0x40 };
     
-    memset(plant, 0x40, sizeof(plant) );
+    memset(temp_plant, 0x40, sizeof(temp_plant) );
 
-    for(i = 0; name && i < strlen(name) && i < sizeof(plant); i++)
-        if(isalnum(name[i]))
-            plant[i] = host_to_guest((int)(islower(name[i]) ? toupper(name[i]) : name[i]));
+    for (i = 0, n = 0; name && i < strlen(name) && i < sizeof(plant); i++)
+        if (isalnum(name[i]))
+        {
+            temp_plant[i] = host_to_guest((int)(islower(name[i]) ? toupper(name[i]) : name[i]));
+            n++;
+        }
         else
-            return -1;
-    return 0;
+            return -1;      /* invalid characters 0-9,A-Z */
+    
+    if ( n > 0 )            /* only copy if not 0 */
+        memcpy(plant, temp_plant, sizeof(plant));
+    else
+        memcpy(plant, dflt_plant, sizeof(plant));
+
+    return n;
 
 }
 
@@ -247,7 +288,7 @@ char *str_plant()
 
     bzero(ret_plant, sizeof(ret_plant));
 
-    for( i = 0; i < (int)sizeof(plant); i++ )
+    for ( i = 0; i < (int)sizeof(plant); i++ )
     {
         c = guest_to_host(plant[i]);
         
@@ -264,6 +305,15 @@ char *str_plant()
 /* MODEL IDENTIFICATION                                              */
 /* Set by: MODEL configuration statement                             */
 /* Retrieved by: STSI instruction                                    */
+/* Notes: Although model and modelcapa are initially set to EBCDIC
+ * "EMULATOR" it is possible for model, modeltemp, modelperm each to
+ * be binary zero filled fields. "modelcapa" may never be binary zero.
+ * All blanks is invalid for any of the fields. An attempt to set any
+ * field other than "modelcapa" to all blanks will result in the field
+ * being set to binary zeros. "modelcapa" must have at least one
+ * character in the field. Valid characters are 0-9,A-Z, right padded
+ * with blanks.
+ */ 
 /*-------------------------------------------------------------------*/
                             /*  "E    M    U    L    A    T    O    R" */
 static BYTE     model[16] = { 0xC5,0xD4,0xE4,0xD3,0xC1,0xE3,0xD6,0xD9,
@@ -275,17 +325,50 @@ static BYTE modeltemp[16] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 
 int set_model(char *m1, char *m2, char *m3, char *m4)
 {
-    if ( copy_stringz_to_ebcdic(model,     sizeof(model),     m1) != 0 ) return 1;
-    if ( m2 == NULL || strlen(m2) ==  0 )
+    BYTE    dflt_model[16] = { 0xC5,0xD4,0xE4,0xD3,0xC1,0xE3,0xD6,0xD9,
+                               0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
+
+    /* Model maybe binary zero */
+    if ( m1 != NULL && m1[0] != '*' )
     {
-        if ( copy_stringz_to_ebcdic(modelcapa, sizeof(modelcapa), m1) != 0 ) return 1;
+        if ( strlen(m1) == 0 )
+            bzero(model,sizeof(model));
+        else if ( copy_stringz_to_ebcdic(model,     sizeof(model),     m1) <= 0 ) return 1;
     }
-    else
+    else if ( m1 == NULL )
+        return 0;
+
+    /* model-capa may never be binary zero, if NULL or "" then default of "EMULATOR" will 
+       be assigned */
+    if ( m2 != NULL && m2[0] != '*' )
     {
-        if ( copy_stringz_to_ebcdic(modelcapa, sizeof(modelcapa), m2) != 0 ) return 2;
+        if ( strlen(m2) == 0 )
+            memcpy(modelcapa,dflt_model,sizeof(modelcapa));
+        else if ( copy_stringz_to_ebcdic(modelcapa, sizeof(modelcapa), m2) <= 0) return 2;
     }
-    if ( copy_stringz_to_ebcdic(modelperm, sizeof(modelperm), m3) != 0 ) return 3;
-    if ( copy_stringz_to_ebcdic(modeltemp, sizeof(modeltemp), m4) != 0 ) return 4;
+    else if ( m2 == NULL )
+        return 0;
+
+    /* model-perm may be binary zero */
+    if ( m3 != NULL && m3[0] != '*' )
+    {
+        if ( strlen(m3) == 0 )
+            bzero(modelperm,sizeof(modelperm));
+        else if ( copy_stringz_to_ebcdic(modelperm, sizeof(modelperm), m3) <= 0 ) return 3;
+    }
+    else if ( m3 == NULL )
+        return 0;
+
+    /* model-temp may be binary zero */
+    if ( m4 != NULL && m4[0] != '*' )
+    {
+        if ( strlen(m4) == 0 )
+            bzero(modeltemp,sizeof(modeltemp));
+        else if ( copy_stringz_to_ebcdic(modeltemp, sizeof(modeltemp), m4) <= 0 ) return 4;
+    }
+    else if ( m4 == NULL )
+        return 0;
+
     return 0;
 }
 
@@ -358,11 +441,11 @@ char *str_systype()
 
     ret_systype[sizeof(systype)] = '\0';
 
-    for(i = sizeof(systype) - 1; i >= 0; i--)
+    for (i = sizeof(systype) - 1; i >= 0; i--)
     {
         ret_systype[i] = guest_to_host((int)systype[i]);
 
-        if(isspace(ret_systype[i]) && !ret_systype[i+1])
+        if (isspace(ret_systype[i]) && !ret_systype[i+1])
             ret_systype[i] = '\0';
     }
 
@@ -396,11 +479,11 @@ char *str_sysname()
 
     ret_sysname[sizeof(sysname)] = '\0';
 
-    for(i = sizeof(sysname) - 1; i >= 0; i--)
+    for (i = sizeof(sysname) - 1; i >= 0; i--)
     {
         ret_sysname[i] = guest_to_host((int)sysname[i]);
 
-        if(isspace(ret_sysname[i]) && !ret_sysname[i+1])
+        if (isspace(ret_sysname[i]) && !ret_sysname[i+1])
             ret_sysname[i] = '\0';
     }
 
@@ -434,11 +517,11 @@ char *str_sysplex()
 
     ret_sysplex[sizeof(sysplex)] = '\0';
 
-    for(i = sizeof(sysplex) - 1; i >= 0; i--)
+    for (i = sizeof(sysplex) - 1; i >= 0; i--)
     {
         ret_sysplex[i] = guest_to_host((int)sysplex[i]);
 
-        if(isspace(ret_sysplex[i]) && !ret_sysplex[i+1])
+        if (isspace(ret_sysplex[i]) && !ret_sysplex[i+1])
             ret_sysplex[i] = '\0';
     }
 

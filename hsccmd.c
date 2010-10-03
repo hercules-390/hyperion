@@ -241,7 +241,7 @@ int maxrates_cmd(int argc, char *argv[],char *cmdline)
             curr_int_start_time = current_time - since_midnight;
 
             maxrates_rpt_intvl = 1440;
-            WRMSG( HHC02204, "I", "maxrates", "midnight" );
+            WRMSG( HHC02204, "I", argv[0], "midnight" );
         }
         else
         {
@@ -256,7 +256,7 @@ int maxrates_cmd(int argc, char *argv[],char *cmdline)
             {
                 MSGBUF( buf, "%d minutes", interval);
                 maxrates_rpt_intvl = interval;
-                WRMSG(HHC02204, "I", "maxrates", buf );
+                WRMSG(HHC02204, "I", argv[0], buf );
             }
         }
     }
@@ -1448,7 +1448,7 @@ int timerint_cmd(int argc, char *argv[], char *cmdline)
     {
         char buf[25];
         MSGBUF( buf, "%d", sysblk.timerint);
-        WRMSG(HHC02203, "I", "timer update interval", buf );
+        WRMSG(HHC02203, "I", argv[0], buf );
     }
 
     return 0;
@@ -3139,10 +3139,17 @@ char pathname[MAX_PATH];
         if (sysblk.httproot)
             free(sysblk.httproot);
         hostpath(pathname, argv[1], sizeof(pathname));
+        if ( pathname[strlen(pathname)-1] != PATHSEPC )
+            strlcat( pathname, PATHSEPS, strlen(pathname) );
+
         sysblk.httproot = strdup(pathname);
+
+        if ( MLVL(VERBOSE) )
+            WRMSG(HHC02204, "I", argv[0], sysblk.httproot ? sysblk.httproot : "<not specified>");
+            
     }
     else
-        WRMSG(HHC02203, "I", "HTTPROOT", sysblk.httproot ? sysblk.httproot : "<not specified>");
+        WRMSG(HHC02203, "I", argv[0], sysblk.httproot ? sysblk.httproot : "<not specified>");
 
     return 0;
 }
@@ -3223,7 +3230,7 @@ int rc;
     {
         char buf[40];
         MSGBUF( buf, "%d", sysblk.httpport);
-        WRMSG(HHC02204, "I", "HTTPPORT", buf);
+        WRMSG(HHC02204, "I", argv[0], buf);
     }
     return 0;
 }
@@ -4509,7 +4516,7 @@ int i;
             MSGBUF( buf, "%sabled%s", 
                     (sysblk.shcmdopt&SHCMDOPT_ENABLE)?"En":"Dis",
                     (sysblk.shcmdopt&SHCMDOPT_DIAG8)?"":" NoDiag8");
-            WRMSG(HHC02204, "I", "SHCMDOPT", buf);
+            WRMSG(HHC02204, "I", argv[0], buf);
         }
     }
     else
@@ -4517,7 +4524,7 @@ int i;
         char buf[40];
         MSGBUF( buf, "%sabled%s", (sysblk.shcmdopt&SHCMDOPT_ENABLE)?"En":"Dis",
           (sysblk.shcmdopt&SHCMDOPT_DIAG8)?"":" NoDiag8");
-        WRMSG(HHC02203, "I", "SHCMDOPT", buf);
+        WRMSG(HHC02203, "I", argv[0], buf);
     }
     return 0;
 }
@@ -4550,11 +4557,11 @@ int legacysenseid_cmd(int argc, char *argv[], char *cmdline)
             return -1;
         }
         if ( MLVL(VERBOSE) )
-            WRMSG( HHC02204, "I", "legacysenseid", 
+            WRMSG( HHC02204, "I", argv[0], 
                    sysblk.legacysenseid ? "enabled" : "disabled" );
     }
     else
-        WRMSG( HHC02203, "I", "legacysenseid", sysblk.legacysenseid ? "enabled" : "disabled" );
+        WRMSG( HHC02203, "I", argv[0], sysblk.legacysenseid ? "enabled" : "disabled" );
 
     return 0;
 }
@@ -4695,6 +4702,8 @@ int stsi_model_cmd(int argc, char *argv[], char *cmdline)
     int rc;
     int m;
     char *model[4] = { "", "", "", "" };
+    char *model_name[4] = { "hardware", "capacity", "perm", "temp" };
+
 
     UNREFERENCED(cmdline);
 
@@ -4722,17 +4731,31 @@ int stsi_model_cmd(int argc, char *argv[], char *cmdline)
 
         for ( i=0; i < strlen( model[m] ); i++ )
         {
+            if ( strlen( model[m] ) == 1 && model[m][0] == '*' ) 
+                break;
+
             if ( isalnum(model[m][i]) )
                 continue;
-            WRMSG( HHC02205, "E", model[m], "; argument contains invalid characters" );
+
+            {
+                char msgbuf[64];
+
+                MSGBUF( msgbuf, "%s-model = <%s>", model_name[m], model[m]);
+                WRMSG( HHC02205, "E", msgbuf, "; Characters not valid for field. 0-9 or A-Z only" );
+            }
             return -1;
         }
     }
         
     if ( argc > 1 && ( rc = set_model(model[0], model[1], model[2], model[3]) ) != 0 )
     {
-        if ( rc > 0 && rc < 4 )
-            WRMSG( HHC02205, "E", model[rc-1], "; argument contains invalid characters" );
+        if ( rc > 0 && rc <= 4 )
+        {
+            char msgbuf[64];
+
+            MSGBUF( msgbuf, "%s-model = <%s>", model_name[rc-1], model[rc-1]);
+            WRMSG( HHC02205, "E", msgbuf, "; Characters not valid for field. 0-9 or A-Z only" );
+        }
         else
             WRMSG( HHC02205, "E", argv[0], "" );  
         return -1;
@@ -4958,10 +4981,10 @@ int lparname_cmd(int argc, char *argv[], char *cmdline)
 #endif /* define(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
 
         if ( MLVL(VERBOSE) )
-            WRMSG(HHC02204, "I", "lparname", str_lparname());
+            WRMSG(HHC02204, "I", argv[0], str_lparname());
     }
     else
-        WRMSG(HHC02203, "I", "lparname", str_lparname());
+        WRMSG(HHC02203, "I", argv[0], str_lparname());
 
     return 0;
 }
@@ -5002,7 +5025,7 @@ BYTE    c;
             {
                 char buf[20];
                 MSGBUF( buf, "%02X", sysblk.lparnum);
-                WRMSG(HHC02204, "I", "lparnum", buf);
+                WRMSG(HHC02204, "I", argv[0], buf);
 
 #if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
                 set_symbol("LPARNUM", buf );
@@ -5020,7 +5043,7 @@ BYTE    c;
     {
         char buf[20];
         MSGBUF( buf, "%02X", sysblk.lparnum);
-        WRMSG(HHC02203, "I", "lparnum", buf);
+        WRMSG(HHC02203, "I", argv[0], buf);
     }
     return 0;
 }
@@ -5206,12 +5229,18 @@ u_int     id;
             WRMSG(HHC02205, "E", argv[1], "");
             return -1;
         }
+        if ( MLVL(VERBOSE) )
+        {
+            char buf[40];
+            MSGBUF( buf, "%d", sysblk.cpuidfmt);
+            WRMSG(HHC02204, "I", argv[0], buf);
+        }
     }
     else
     {
         char buf[40];
         MSGBUF( buf, "%d", sysblk.cpuidfmt);
-        WRMSG(HHC02203, "I", "CPUIDFMT", buf);
+        WRMSG(HHC02203, "I", argv[0], buf);
     }
     return 0;
 }
@@ -5236,10 +5265,10 @@ int loadparm_cmd(int argc, char *argv[], char *cmdline)
     {
         set_loadparm(argv[1]);
         if ( MLVL(VERBOSE) )
-            WRMSG(HHC02204, "I", "loadparm", str_loadparm());
+            WRMSG(HHC02204, "I", argv[0], str_loadparm());
     }
     else
-        WRMSG(HHC02203, "I", "loadparm", str_loadparm());
+        WRMSG(HHC02203, "I", argv[0], str_loadparm());
 
     return 0;
 }
@@ -6045,7 +6074,7 @@ int ostailor_cmd(int argc, char *argv[], char *cmdline)
             MSGBUF( msgbuf, "Custom(0x"I64_FMTX")", sysblk.pgminttr );
         else
             MSGBUF( msgbuf, "%s", sostailor );
-        WRMSG(HHC02204, "I", "OSTAILOR", msgbuf);
+        WRMSG(HHC02203, "I", argv[0], msgbuf);
         return 0;
     }
 
@@ -7091,22 +7120,32 @@ REGS *regs;
 /*-------------------------------------------------------------------*/
 int loadtext_cmd(int argc, char *argv[], char *cmdline)
 {
+    const char blanks[8]     = {"\x40\x40\x40\x40\x40\x40\x40\x40"};
+
+    /* Object deck record format headers                             */
+    /* (names chosen not to conflict with future GOFF support)       */
+
+    const char ObjectESD[10] = {"\x02\xC5\xE2\xC4\x40\x40\x40\x40\x40\x40"};    /* ESD card */
+    const char ObjectTXT[5]  = {"\x02\xE3\xE7\xE3\x40"};                        /* TXT card */
+    const char ObjectRLD[10] = {"\x02\xD9\xD3\xC4\x40\x40\x40\x40\x40\x40"};    /* RLD card */
+    const char ObjectEND[5]  = {"\x02\xC5\xD5\xC4\x40"};                        /* END card */
+    const char ObjectSYM[10] = {"\x02\xE2\xE8\xD4\x40\x40\x40\x40\x40\x40"};    /* SYM card */
+
+    /* Special SPB (Set Page Boundary) directive from VM             */
+
+    const char ObjectSPB[5]  = {"\x02\xE1\xD7\xC2\x40"};                        /* SPB card */
+    const char ObjectComment[1] = { "\x5C" };                                   /* comment card */
+
     char   *fname;                      /* -> File name (ASCIIZ)     */
     char   *loadaddr;                   /* loadcore memory address   */
     U32     aaddr;                      /* Absolute storage address  */
+    U32     ahighaddr;                  /* Absolute high address     */
     int     fd;                         /* File descriptor           */
     BYTE    buf[80];                    /* Read buffer               */
-    int     rlen;                       /* read length               */
-    U16     len;                        /* Number of bytes read      */
-    U32     n;
-    int     rc;
+    int     recno;                      /* Record number             */
+    int     rc = 0;                     /* Return code               */
     REGS   *regs;
     char    pathname[MAX_PATH];
-    BYTE    comment[1] = { "\x5C" };       /* Comment card '*' CC 1  */
-    BYTE    txtcard[5] = { "\x02\xE3\xE7\xE5\x40" }; /* TXT card x'02'TXT*/
-    BYTE    endcard[5] = { "\x02\xC5\xD5\xC4\x40" }; /* END card x'02'END*/
-    BYTE    esdcard[5] = { "\x02\xC5\xE2\xC4\x40" }; /* ESD card x'02'ESD*/
-    BYTE    rldcard[5] = { "\x02\xD9\xD3\xC4\x40" }; /* RLD card x'02'RLD*/
 
     UNREFERENCED(cmdline);
 
@@ -7129,7 +7168,14 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
             WRMSG(HHC02205, "E", loadaddr, ": invalid address" );
             return -1;
         }
+        
+        if ( aaddr > sysblk.mainsize )
+        {
+            WRMSG( HHC02251, "E" );
+        }
     }
+
+    ahighaddr = aaddr;
 
     obtain_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -7165,8 +7211,10 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
         return -1;
     }
 
-    for ( n = 0; ; )
+    for ( recno = 1; ; recno++ )
     {
+        int rlen;                               /* Record Length */
+
         /* Read 80 bytes into buffer */
         rlen = read( fd, buf, sizeof(buf) );
         if ( rlen < 0 )
@@ -7182,57 +7230,222 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
             rc = -1;
             break;
         }
-        /* if record is "TXT" then copy bytes to mainstore */
-        else if ( strncmp( (char*)buf, (char*)txtcard, sizeof(txtcard) ) == 0 && 
-                  0x40 == buf[8]  && 0x40 == buf[9]             &&       // Required blanks
-                  0x40 == buf[12] && 0x40 == buf[13] )                   // ...
+        /* Process valid Object Deck Records; priority sorted        */
 
+        /* - Unknown cards such as comments and link-edit/binder     */
+        /*   commands are ignored.                                   */
+        /* - Cards that are determined to be in error either raise   */
+        /*   an error condition to the operator, or are ignored.     */
+        /* - Columns 73-80 (Deck ID, sequence number, or both) are   */
+        /*   ignored.                                                */
+
+        /* if record is "TXT" then copy bytes to mainstore */
+
+        if ( NCMP(ObjectTXT, buf, sizeof(ObjectTXT)) && // TXT Object identifier
+             NCMP(buf+8, blanks, 2) &&                  // Required blanks
+             NCMP(buf+12, blanks, 2) )                  // ...
         {
-            n   = ((((buf[5] << 8) | buf[6])<<8) | buf[7]);     // Relative address (positive)
-            len = (buf[10] << 8) | buf[11];                     // Byte count of useable
-            if (len <= 56)                                      // Process if good count
+            int n   = ((((buf[5] << 8) | buf[6])<<8) | buf[7]); // Relative address (positive)
+            int len = (buf[10] << 8) | buf[11];                 // Byte count
+            if (len <= 56)                                      // Process if useable count
             {
-               if ((RADR)(aaddr + n + len - 1) > sysblk.mainsize) // Bytes must fit into storage
+               RADR lastbyte = aaddr + n + len - 1;
+               if (lastbyte > sysblk.mainsize)                  // Bytes must fit into storage
                {
                   WRMSG(HHC02251,"E");
                   rc = -1;
                   break;
                }
+               ahighaddr = MAX(ahighaddr, lastbyte);            // Keep track of highsest byte used
+               memcpy(regs->mainstor + aaddr + n, &buf[16], len);
+               STORAGE_KEY(aaddr + n, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+               STORAGE_KEY(aaddr + n + len - 1, regs) |= (STORKEY_REF | STORKEY_CHANGE);
             }
-            memcpy(regs->mainstor + aaddr + n, &buf[16], len);
-            STORAGE_KEY(aaddr + n, regs) |= (STORKEY_REF | STORKEY_CHANGE);
-            STORAGE_KEY(aaddr + n + len - 1, regs) |= (STORKEY_REF | STORKEY_CHANGE);
         }
-            /* if comment card continue (usually from VM) */
-        else if ( strncmp( (char*)buf, (char*)comment, sizeof(comment) ) == 0 )
+
+        /* if record is "RLD" then process */
+        else if (NCMP(ObjectRLD, buf, sizeof(ObjectRLD)) && // RLD Object identifier
+                 NCMP(buf+12, blanks, 4))                   // Required blanks
         {
-            continue;
+
+            /* Define local macros for relocation tests              */
+
+#define RLD_RELOC_A     ((reloc[4] & 0x30) == 0x00)             // A-constant
+#define RLD_RELOC_V     ((reloc[4] & 0x30) == 0x10)             // V-constant
+#define RLD_RELOC_Q     ((reloc[4] & 0x30) == 0x20)             // Q-constant
+#define RLD_RELOC_CXD   ((reloc[4] & 0x30) == 0x30)             // CXD-constant
+#define RLD_RELOC_RI2   ((reloc[4] & 0x7C) == 0x70)             // 2-byte Relative-Immediate reference
+#define RLD_RELOC_RI4   ((reloc[4] & 0x7C) == 0x78)             // 4-byte Relative-Immediate reference
+#define RLD_RELOC_RI    (RLD_RELOC_RI2 || RLD_RELOC_RI4)        // Relative-Immediate reference
+
+
+            char *reloc;
+            U16 count = (buf[10] << 8) | buf[11];
+            int seglength = 8;                  // Set initial segment length
+            U16 resdid;                         // Relocation ESDID
+            U16 pesdid;                         // Position ESDID
+
+            if (count > 56)
+               continue;                        // Skip if bad count
+
+            /* Process Relocation Dictionary Entries                          */
+
+            /* Note: All relocations are presently considered to only have    */
+            /*       relocation within a single object deck (ESDIDs ignored). */
+
+            for (reloc = (char *)buf+16; reloc < (char *)buf+16+count; )
+            {
+               int acl;                        // Address constant length
+               int aarel;                      // Load relocation address
+               int n;                          // Working length
+               char *vc;                       // Pointer to relocation constant
+               U64 v = 0;                      // Variable contents for relocation
+
+
+               /* Load new Relocation ESDID and Position ESDID */
+
+               if (seglength > 4)
+               {
+                  resdid = (reloc[0] << 8) | reloc[1];
+                  pesdid = (reloc[2] << 8) | reloc[3];
+               }
+
+
+               /* Determine address constant length - 1 */
+
+               if (RLD_RELOC_RI)                        // Relative-Immediate?
+                  acl = ((reloc[4] & 0x08) >> 2) + 1;   // Set 2/4-byte Relative-Immediate length
+               else                                     // Else set address constant length
+                  acl = ((reloc[4] & 0x40) >> 4) + ((reloc[4] & 0x0C) >> 2);
+
+
+               /* Load relocation address */
+
+               aarel = (((reloc[5] << 8) | reloc[6]) << 8) | reloc[7];
+               if ((aaddr + aarel + acl) > sysblk.mainsize)
+               {
+                  WRMSG(HHC02251,"E");
+                  rc = -1;
+                  break;
+               }
+
+
+               if (!(RLD_RELOC_Q || RLD_RELOC_CXD))     // Relocate all except Q/CXD-constants
+               {
+
+                  /* Fetch variable length constant                     */
+
+                  vc = (char *)regs->mainstor + aaddr + aarel;     // Point to constant
+                  v = 0;
+                  for (n = 0;;)                                    // Load constant
+                  {
+                     v |=  vc[n];
+                     if (n++ >= acl)
+                        break;
+                     v <<= 8;
+                  }
+
+                  /* Relocate value */
+
+                  if (reloc[4] & 0x02)
+                     v = aaddr - v;        /* Negative relocation */
+                  else
+                     v += aaddr;           /* Positive relocation */
+
+
+                  /* Store variable length constant */
+
+                  for (n = acl; n >= 0; n--)               // Store constant
+                  {
+                     vc[n] = v & 0xFF;
+                     v >>= 8;
+                  }
+               }
+
+
+               /* Set length based on using last ESDID entries */
+
+               reloc += seglength = (reloc[4] & 0x01) ? 4 : 8;
+            }
+
+            /* Undefine local macros for relocation tests            */
+
+#undef RLD_RELOC_A      // A-constant
+#undef RLD_RELOC_V      // V-constant
+#undef RLD_RELOC_Q      // Q-constant
+#undef RLD_RELOC_CXD    // CXD-constant
+#undef RLD_RELOC_RI2    // 2-byte Relative-Immediate reference
+#undef RLD_RELOC_RI4    // 4-byte Relative-Immediate reference
+#undef RLD_RELOC_RI     // Relative-Immediate reference
+
         }
-            /* if rdl card continue */
-        else if ( strncmp( (char*)buf, (char*)rldcard, sizeof(rldcard) ) == 0 )
+
+        /* if record is "ESD" then process */
+        else if (NCMP(ObjectESD, buf, sizeof(ObjectESD)) && // ESD Object identifier
+                 NCMP(buf+12, blanks, 2) &&                 // Required blanks
+                 NCMP(buf+64, blanks, 8))                   // ...
         {
-            continue;
+            continue;    // For now, fill in later
         }
-            /* if esd card continue */
-        else if ( strncmp( (char*)buf, (char*)esdcard, sizeof(esdcard) ) == 0 )
+
+        /* if record is "END" then break out of loop */
+        else if (NCMP(ObjectEND, buf, sizeof(ObjectEND)) && // END Object identifier
+                 NCMP(buf+8, blanks, 6) &&                  // Required blanks
+                 NCMP(buf+24, blanks, 4) &&                 // ...
+                 NCMP(buf+71, blanks, 1 ) )                 // ...
         {
-            continue;
-        }
-            /* if record is "END" then break out of loop */
-        else if ( strncmp( (char*)buf, (char*)endcard, sizeof(endcard) ) == 0 )
-        {
-            rc = 0;
             break;
         }
-        else
+
+        /* if record is "SYM" then process */
+        else if (NCMP(ObjectSYM, buf, sizeof(ObjectSYM)) && // SYM Object identifier
+                 NCMP(buf+12, blanks, 4))                   // Required blanks
         {
-            char msgbuf[8];
+            continue;    // For now, fill in later
+        }
+
+        /* if record is "SPB" then process */
+        else if (NCMP(ObjectSPB, buf, sizeof(ObjectSPB)))   // SPB Object identifier
+        {
+            aaddr = ahighaddr = (ahighaddr + 4093) && 0xFFFFF000;
+        }
+
+        /* if comment record inserted by a VM process, ignore */
+        else if (NCMP(ObjectComment, buf, sizeof(ObjectComment)))
+        {
+            continue;    // Ignore record
+        }
+
+        /* If invalid object record, complain */
+        else if (buf[0] == 0x02)
+        {
+            char msgbuf[4];
 
             bzero(msgbuf,sizeof(msgbuf));
             msgbuf[0] = guest_to_host(buf[1]);
             msgbuf[1] = guest_to_host(buf[2]);
             msgbuf[2] = guest_to_host(buf[3]);
-            WRMSG( HHC02302, "W", "loadtext", msgbuf );
+            WRMSG( HHC02302, "W", argv[0], msgbuf );
+        }
+
+        /* Error if GOFF object (not handled yet) */
+        else if (buf[0] == 0x03)
+        {
+            char msgbuf[4];
+
+            bzero(msgbuf,sizeof(msgbuf));
+            msgbuf[0] = guest_to_host(buf[1]);
+            msgbuf[1] = guest_to_host(buf[2]);
+            msgbuf[2] = guest_to_host(buf[3]);
+            WRMSG( HHC02303, "E", "GOFF", argv[0], msgbuf );
+            rc = -1;
+            break;
+        }
+
+        /* Error if unrecognized record, but we'll ignore it (probable linkage editor command) */
+        else
+        {
+            WRMSG( HHC02304, "W", argv[0], recno );
         }
     }
 
@@ -7255,7 +7468,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
 {
     DEVBLK *dev;                        /* -> Device block           */
     IOINT  *io;                         /* -> I/O interrupt entry    */
-    int i;
+    int     i;
     int first, last;
     char    sysid[12];
     BYTE    curpsw[16];
@@ -8924,9 +9137,9 @@ int cmdsep_cmd(int argc, char *argv[], char *cmdline)
     if ( argc == 1 )
     {
         if ( sysblk.cmdsep == NULL )
-            WRMSG( HHC02203, "I", "cmdsep", "Not set" );
+            WRMSG( HHC02203, "I", argv[0], "Not set" );
         else
-            WRMSG( HHC02203, "I", "cmdsep", sysblk.cmdsep );
+            WRMSG( HHC02203, "I", argv[0], sysblk.cmdsep );
     }
     else if ( argc == 2 && CMD(argv[1],off,3) )
     {
@@ -8935,7 +9148,7 @@ int cmdsep_cmd(int argc, char *argv[], char *cmdline)
             free( sysblk.cmdsep );
             sysblk.cmdsep = NULL;
         }
-        WRMSG( HHC02204, "I", "cmdsep", "off" );
+        WRMSG( HHC02204, "I", argv[0], "off" );
     }
     else if ( argc == 2 && strlen( argv[1] ) == 1 )
     {
@@ -8949,7 +9162,7 @@ int cmdsep_cmd(int argc, char *argv[], char *cmdline)
                 sysblk.cmdsep = NULL;
             }
             sysblk.cmdsep = strdup(argv[1]);
-            WRMSG( HHC02204, "I", "cmdsep", sysblk.cmdsep );
+            WRMSG( HHC02204, "I", argv[0], sysblk.cmdsep );
         }
     }
     else if ( argc > 2 )
@@ -9070,9 +9283,9 @@ int scpimply_cmd(int argc, char *argv[], char *cmdline)
     }
 
     if ( argc == 1 )
-        WRMSG(HHC02203, "I", "scpimply", (sysblk.scpimply ? "on" : "off") );
+        WRMSG(HHC02203, "I", argv[0], (sysblk.scpimply ? "on" : "off") );
     else
-        WRMSG(HHC02204, "I", "scpimply", (sysblk.scpimply ? "on" : "off") );
+        WRMSG(HHC02204, "I", argv[0], (sysblk.scpimply ? "on" : "off") );
     return 0;
 }
 #endif
@@ -9244,14 +9457,14 @@ int ecpsvm_cmd(int argc, char *argv[], char *cmdline)
         {
             sysblk.ecpsvm.available = FALSE;
             if ( MLVL(VERBOSE) )
-                WRMSG( HHC02204, "I", "ecpsvm", "disabled" ); 
+                WRMSG( HHC02204, "I", argv[0], "disabled" ); 
             return 0;
         }
         else if ( CMD(argv[1],yes,3) && argc == 2 )
         {
             sysblk.ecpsvm.available = TRUE;
             if ( MLVL(VERBOSE) )
-                WRMSG( HHC02204, "I", "ecpsvm", "enabled" ); 
+                WRMSG( HHC02204, "I", argv[0], "enabled" ); 
             return 0;
         }
         else if ( CMD(argv[1],level,5) )
@@ -9270,10 +9483,9 @@ int ecpsvm_cmd(int argc, char *argv[], char *cmdline)
             sysblk.ecpsvm.available = TRUE;
             if ( MLVL(VERBOSE) )
             {
-                char msgbuf[8];
-                MSGBUF( msgbuf, "%d", lvl );
-                WRMSG( HHC02204, "I", "ecpsvm", "enabled" ); 
-                WRMSG( HHC02204, "I", "ecpsvmlvl", msgbuf ); 
+                char msgbuf[40];
+                MSGBUF( msgbuf, "enabled: level %d", lvl );
+                WRMSG( HHC02204, "I", argv[0], msgbuf ); 
             }
             return 0;
         }
@@ -9667,9 +9879,11 @@ int qcpuid_cmd(int argc, char *argv[], char *cmdline)
 {
 
     char **models = str_model();
-    char *model = NULL;
+    char *model;
     char *manuf =  str_manufacturer();
     char *plant = str_plant();
+    U16   machinetype = ( sysblk.cpuid >> 16 ) & 0xFFFF;
+    U32   sequence    = ( sysblk.cpuid >> 32 ) & 0x00FFFFFF;
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argv);
@@ -9684,10 +9898,12 @@ int qcpuid_cmd(int argc, char *argv[], char *cmdline)
     if ( manuf    == NULL ) manuf = "";
     if ( plant    == NULL ) plant = "";
 
-    WRMSG( HHC17004, "I", sysblk.cpuid );
-    WRMSG( HHC17005, "I", ((sysblk.cpuid & 0x00000000FFFF0000ULL) >> 16),
-                           model, manuf, plant,
-                          ((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32) );
+    WRMSG( HHC17004, "I",  sysblk.cpuid );
+    WRMSG( HHC17005, "I",  machinetype,
+                           model,
+                           manuf, 
+                           plant,
+                           sequence );
     return 0;
 }
 

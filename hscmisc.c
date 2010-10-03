@@ -1048,8 +1048,8 @@ char    buf[512];                       /* Message buffer            */
     /* Display real storage */
     for (i = 0; i < 999 && raddr <= eaddr; i++)
     {
-        ARCH_DEP(display_real) (regs, raddr, buf, 1, "HHC02290I ");
-        writemsg(__FILE__,__LINE__,__FUNCTION__,0,MLVL(DEBUG),"","%s\n", buf);
+        ARCH_DEP(display_real) (regs, raddr, buf, 1, "");
+        WRMSG( HHC02290, "I", buf );
         raddr += 16;
     } /* end for(i) */
 

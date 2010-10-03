@@ -1153,8 +1153,8 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02264 "Script file processing complete"
 #define HHC02265 "Script file '%s' aborted due to previous conditions"
 #define HHC02266 "Confirm command by entering '%s' again within %d seconds"
-//efine HHC02267 "%s" /* Used for instruction tracing */
-//efine HHC02268 "%s" /* Used for ds command */
+#define HHC02267 "%s"
+#define HHC02268 "%s"
 #define HHC02269 "%s" 
 #define HHC02270 "%s" 
 #define HHC02271 "%s"
@@ -1189,6 +1189,8 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02300 "sm=%2.2X pk=%d cmwp=%X as=%s cc=%d pm=%X am=%s ia=%"I64_FMT"X" 
 #define HHC02301 "%s: Unexpected read length. Records should be %d bytes long."
 #define HHC02302 "%s: Unknown card type read: %s; skipped"
+#define HHC02303 "%s: Unsupported card type %s read: %s; aborting"
+#define HHC02304 "%s: Record %d is an unknown card type; skipped"
 
 // reserve 02390 for ieee.c
 #define HHC02390 "Function '%s': unexpectedly converting to '%s'"
