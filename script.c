@@ -51,18 +51,9 @@
 /* Static data areas                                                 */
 /*-------------------------------------------------------------------*/
 #define MAX_INC_LEVEL 8                 /* Maximum nest level        */
-static int  inc_level;                  /* Current nesting level     */
-// following commented out ISW 20061009 : Not referenced anywhere.
-// static int  inc_fname[MAX_INC_LEVEL];   /* filename (base or incl)   */
 static int  inc_stmtnum[MAX_INC_LEVEL]; /* statement number          */
-static int  inc_ignore_errors = 0;      /* 1==ignore include errors  */
-#ifdef EXTERNALGUI
-static char buf[1024];                  /* Config statement buffer   */
-#else /*!EXTERNALGUI*/
-static char buf[256];                   /* Config statement buffer   */
-#endif /*EXTERNALGUI*/
-static int  addargc;                    /* Number of additional args */
-static char *addargv[MAX_ARGS];         /* Additional argument array */
+// following commented out ISW 20061009 : Not referenced anywhere.
+// int  inc_fname[MAX_INC_LEVEL];       /* filename (base or incl)   */
 
 
 /*-------------------------------------------------------------------*/
@@ -85,8 +76,6 @@ static char *addargv[MAX_ARGS];         /* Additional argument array */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int parse_args (char* p, int maxargc, char** pargv, int* pargc)
 {
-    for (*pargc = 0; *pargc < MAX_ARGS; ++*pargc) addargv[*pargc] = NULL;
-
     *pargc = 0;
     *pargv = NULL;
 
@@ -121,10 +110,10 @@ DLL_EXPORT int parse_args (char* p, int maxargc, char** pargv, int* pargc)
 /* addargv      An array of pointers to each argument                */
 /* Returns 0 if successful, -1 if end of file                        */
 /*-------------------------------------------------------------------*/
-static int read_config (char *fname, FILE *fp)
+static int read_config (char *fname, FILE *fp, char *buf, unsigned int buflen, int inc_level)
 {
 int     c;                              /* Character work area       */
-int     stmtlen;                        /* Statement length          */
+unsigned int     stmtlen;               /* Statement length          */
 int     lstarted;                       /* Indicate if non-whitespace*/
                                         /* has been seen yet in line */
 #if defined(OPTION_CONFIG_SYMBOLS)
@@ -140,7 +129,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
         for (stmtlen = 0, lstarted = 0; ;)
         {
             if (stmtlen == 0)
-                memset(buf,'\0',sizeof(buf)); // clear work area
+                memset(buf,'\0',buflen); // clear work area
 
             /* Read character from configuration file */
             c = fgetc(fp);
@@ -168,13 +157,11 @@ char   *buf1;                           /* Pointer to resolved buffer*/
             lstarted=1;
 
             /* Check that statement does not overflow buffer */
-            if (stmtlen >= (int)(sizeof(buf) - 1))
+            if (stmtlen >= buflen - 1)
             {
                 WRMSG(HHC01433, "S", inc_stmtnum[inc_level], fname);
                 return -1;
             }
-
-
 
             /* Append character to buffer */
             buf[stmtlen++] = c;
@@ -202,18 +189,15 @@ char   *buf1;                           /* Pointer to resolved buffer*/
 
         if(buf1!=NULL)
         {
-            if(strlen(buf1)>=sizeof(buf))
+            if(strlen(buf1)>=buflen)
             {
                 WRMSG(HHC01433, "S", inc_stmtnum[inc_level], fname);
                 free(buf1);
                 return -1;
             }
-            strlcpy(buf,buf1,sizeof(buf));
+            strlcpy(buf,buf1,buflen);
         }
 #endif /*defined(OPTION_CONFIG_SYMBOLS)*/
-
-        /* Parse the statement just read */
-        parse_args (buf, MAX_ARGS, addargv, &addargc);
 
         break;
     } /* end while */
@@ -227,13 +211,24 @@ char   *buf1;                           /* Pointer to resolved buffer*/
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int process_config (char *cfg_name)
 {
+#ifdef EXTERNALGUI
+char buf[1024];                         /* Config statement buffer   */
+#else /*!EXTERNALGUI*/
+char buf[256];                          /* Config statement buffer   */
+#endif /*EXTERNALGUI*/
+int  addargc;                           /* Number of additional args */
+char *addargv[MAX_ARGS];                /* Additional argument array */
+
+
 int     rc;                             /* Return code               */
 int     i;                              /* Array subscript           */
 int     scount;                         /* Statement counter         */
+int  inc_level;                         /* Current nesting level     */
 FILE   *inc_fp[MAX_INC_LEVEL];          /* Configuration file pointer*/
+int  inc_ignore_errors = 0;             /* 1==ignore include errors  */
 BYTE    c;                              /* Work area for sscanf      */
-static  char    pathname[MAX_PATH];     /* file path in host format  */
-static  char    fname[MAX_PATH];        /* normalized filename       */ 
+char    pathname[MAX_PATH];             /* file path in host format  */
+char    fname[MAX_PATH];                /* normalized filename       */ 
 int errorcount = 0;
 
     /* Open the base configuration file */
@@ -263,7 +258,7 @@ int errorcount = 0;
     for (scount = 0; ; scount++)
     {
         /* Read next record from the configuration file */
-        while (inc_level >= 0 && read_config (fname, inc_fp[inc_level]))
+        while (inc_level >= 0 && read_config (fname, inc_fp[inc_level], buf, sizeof(buf), inc_level))
         {
             fclose (inc_fp[inc_level--]);
         }
@@ -272,6 +267,9 @@ int errorcount = 0;
             WRMSG(HHC01434, "S", fname);
             return -1;
         }
+
+        /* Parse the statement just read */
+        parse_args (buf, MAX_ARGS, addargv, &addargc);
 
 #if defined(HAVE_REGINA_REXXSAA_H)
         /* Check for REXX exec being executed */
@@ -474,10 +472,13 @@ int errorcount = 0;
 #if defined( OPTION_ENHANCED_CONFIG_INCLUDE )
         while (1)
         {
-            while (inc_level >= 0 && read_config (fname, inc_fp[inc_level]) )
+            while (inc_level >= 0 && read_config (fname, inc_fp[inc_level], buf, sizeof(buf), inc_level) )
             {
                 fclose (inc_fp[inc_level--]);
             }
+
+            /* Parse the statement just read */
+            parse_args (buf, MAX_ARGS, addargv, &addargc);
 
             if (inc_level < 0 || strcasecmp (addargv[0], "include") != 0)
                 break;
@@ -515,7 +516,7 @@ int errorcount = 0;
 
         if (inc_level < 0)
 #else // !defined( OPTION_ENHANCED_CONFIG_INCLUDE )
-        if (read_config (fname, inc_fp[inc_level]))
+        if (read_config (fname, inc_fp[inc_level], buf, sizeof(buf), inc_level))
 #endif // defined( OPTION_ENHANCED_CONFIG_INCLUDE )
             break;
 
