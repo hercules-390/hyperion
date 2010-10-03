@@ -2847,8 +2847,11 @@ char    buf[1024];                      /* Buffer workarea           */
 
                 /* Process the command when the ENTER key is pressed */
                 if (kbbuf[i] == '\n') {
-                    if (cmdlen == 0 && NPDup == 0 && !sysblk.inststep &&
-                        sysblk.cmdtgt == 0) {
+                    if (cmdlen == 0 && NPDup == 0 && !sysblk.inststep
+#if defined(OPTION_CMDTGT)
+                     && sysblk.cmdtgt == 0
+#endif /*defined(OPTION_CMDTGT)*/
+                                           ) {
                         history_show();
                     } else {
                         cmdline[cmdlen] = '\0';
