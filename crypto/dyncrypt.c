@@ -4686,32 +4686,3 @@ HDL_REGISTER_SECTION;
 END_REGISTER_SECTION;
 
 #endif /*!defined(_GEN_ARCH)*/
-
-#if 0
-Remarks POP 
-Page 1-16, 10-66, X-40, X41: "PERFORM CRYPTOGRAPHIC KEY MANAGEMENT OPERATION"
-Suggested change: "PERFORM CRYPTOGRAPHIC KEY MANAGEMENT OPERATIONS"
-
-Page 4-55
-Suggested change: Action 6 should be added that denotes the creation of a new set of wrapping keys.
-
-Figure 7-15, 7-19, 7-23, 7-27, 7-31, 7-35, 7-39, 7-43, 7-48, 7-52, 7-56, 7-60, 7-64, 
-       7-68, 7-73, 7-83, 7-87, 7-91, 7-99, 7-103, 7-106, 7-116, 7-120, 7-124, 7-128, 
-       7-132, 7-136, 7-139, 7-149, 7-153, 7-157, 7-165, 7-169, 7-172, 7-227, 7-230,
-       7-233, 7-236, 7-239, 7-242, 7-244, 7-266, 7-269, 7-272, 7-275, 7-278, 7-281,
-       7-284, 7-287, 7-289, 10-36, 10-37, 10-38, 10-39, 10-40, 10-41 : "Verification Pattern"
-Page 7-70, 7-85, 7-98, 7-111, 7-180, 7-269: "Verification pattern"
-Suggested change: "Verification-Pattern"
-
-Page 7-90 and further: Description of KMCTR FC 1-3, 9-11, 18-20 and 26-28
-Suggested change: Provide one description for cipher and decipher. The algoritm is the same!
-
-Page 7-73 and further
-Remark: It is not clearly stated that the LCFB is the "s" value of s-byte.
-
-Page 7-98 and further: Description of KMO FC 1-3, 9-11, 18-20 and 26-28
-Suggested change: Provide one description for cipher and decipher. The algoritm is the same!
-
-Figure 7-276, 7-279, 7-282
-Suggested change: The explanation denotes R64, this should be R128
-#endif
