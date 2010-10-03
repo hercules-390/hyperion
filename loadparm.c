@@ -20,6 +20,14 @@
 #include "hercules.h"
 
 
+#define ebcdic_to_stringz_return(_field) \
+    { \
+        static char result[sizeof(_field)+1]; \
+        copy_ebcdic_to_stringz(result, sizeof(result), _field, sizeof(_field)); \
+        return result; \
+    }
+
+
 /*-------------------------------------------------------------------*/
 /* SUBROUTINE TO COPY A STRINGZ TO A FIXED-LENGTH EBCDIC FIELD       */
 /*-------------------------------------------------------------------*/
@@ -29,20 +37,19 @@ int copy_stringz_to_ebcdic(BYTE* fld, size_t len, char *name)
     int     n;
     BYTE    *temp_fld;
 
-    temp_fld = (BYTE *)malloc(len+1);
-
     if ( name == NULL || strlen(name) == 0 ) 
     {
         bzero(fld, len);
         return 0;
     }
 
+    temp_fld = (BYTE *)malloc(len+1);
     memset(temp_fld, 0x40, len);
 
     for ( i = 0, n = 0; i < strlen(name) && i < len; i++ )
         if ( isalnum(name[i]) )
         {
-            temp_fld[i] = host_to_guest((int)(islower(name[i]) ? toupper(name[i]) : name[i]));
+            temp_fld[i] = host_to_guest((int)toupper(name[i]));
             n++;
         }
         else
@@ -97,7 +104,7 @@ void set_loadparm(char *name)
 
     for (i = 0; name && i < strlen(name) && i < sizeof(loadparm); i++)
     if (isprint(name[i]))
-            loadparm[i] = host_to_guest((int)(islower(name[i]) ? toupper(name[i]) : name[i]));
+            loadparm[i] = host_to_guest((int)toupper(name[i]));
         else
             loadparm[i] = 0x40;
     for (; i < sizeof(loadparm); i++)
@@ -143,7 +150,7 @@ void set_lparname(char *name)
 
     for ( i = 0; name && i < strlen(name) && i < sizeof(lparname); i++)
         if (isprint(name[i]))
-            lparname[i] = host_to_guest((int)(islower(name[i]) ? toupper(name[i]) : name[i]));
+            lparname[i] = host_to_guest((int)toupper(name[i]));
         else
             lparname[i] = 0x40;
     for (; i < sizeof(lparname); i++)
@@ -160,20 +167,8 @@ void get_lparname(BYTE *dest)
 LOADPARM_DLL_IMPORT
 char *str_lparname()
 {
-    static char ret_lparname[sizeof(lparname)+1];
-    int i;
-
-    ret_lparname[sizeof(lparname)] = '\0';
-    for (i = sizeof(lparname) - 1; i >= 0; i--)
-    {
-        ret_lparname[i] = guest_to_host((int)lparname[i]);
-
-        if (isspace(ret_lparname[i]) && !ret_lparname[i+1])
-            ret_lparname[i] = '\0';
+    ebcdic_to_stringz_return(lparname);
     }
-
-    return ret_lparname;
-}
 
 
 /*-------------------------------------------------------------------*/
@@ -198,7 +193,7 @@ int set_manufacturer(char *name)
     for (i = 0, n = 0; name && i < strlen(name) && i < sizeof(temp_man); i++)
         if (isalnum(name[i]))
         {
-            temp_man[i] = host_to_guest((int)(islower(name[i]) ? toupper(name[i]) : name[i]));
+            temp_man[i] = host_to_guest((int)toupper(name[i]));
             n++;
         }
         else
@@ -220,24 +215,8 @@ void get_manufacturer(BYTE *dest)
 LOADPARM_DLL_IMPORT
 char *str_manufacturer()
 {
-    static char ret_manufacturer[sizeof(manufact)+1];
-    int     i;
-    char    c;
-
-    bzero(ret_manufacturer, sizeof(ret_manufacturer));
-
-    for ( i = 0; i < (int)sizeof(manufact); i++ )
-    {
-        c = guest_to_host(manufact[i]);
-        
-        if ( c == SPACE || !isalnum(c) )
-            break; /* there should not be any embedded blanks */
-
-        ret_manufacturer[i] = c;       
+    ebcdic_to_stringz_return(manufact);
     }
-
-    return ret_manufacturer;
-}
 
 /*-------------------------------------------------------------------*/
 /* MANUFACTURING PLANT NAME                                          */
@@ -259,7 +238,7 @@ int set_plant(char *name)
     for (i = 0, n = 0; name && i < strlen(name) && i < sizeof(plant); i++)
         if (isalnum(name[i]))
         {
-            temp_plant[i] = host_to_guest((int)(islower(name[i]) ? toupper(name[i]) : name[i]));
+            temp_plant[i] = host_to_guest((int)toupper(name[i]));
             n++;
         }
         else
@@ -282,24 +261,8 @@ void get_plant(BYTE *dest)
 LOADPARM_DLL_IMPORT
 char *str_plant()
 {
-    static char ret_plant[sizeof(plant)+1];
-    int     i;
-    char    c;
-
-    bzero(ret_plant, sizeof(ret_plant));
-
-    for ( i = 0; i < (int)sizeof(plant); i++ )
-    {
-        c = guest_to_host(plant[i]);
-        
-        if ( c == SPACE || !isalnum(c) )
-            break; /* there should not be any embedded blanks */
-
-        ret_plant[i] = c;       
+    ebcdic_to_stringz_return(plant);
     }
-
-    return ret_plant;
-}
 
 /*-------------------------------------------------------------------*/
 /* MODEL IDENTIFICATION                                              */
@@ -325,7 +288,7 @@ static BYTE modeltemp[16] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 
 int set_model(char *m1, char *m2, char *m3, char *m4)
 {
-    BYTE    dflt_model[16] = { 0xC5,0xD4,0xE4,0xD3,0xC1,0xE3,0xD6,0xD9,
+    const BYTE dflt_model[16] = { 0xC5,0xD4,0xE4,0xD3,0xC1,0xE3,0xD6,0xD9,
                                0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
 
     /* Model maybe binary zero */
@@ -415,6 +378,26 @@ void get_modeltemp(BYTE *dest)
     memcpy(dest, modeltemp, sizeof(modeltemp));
 }
 
+char *str_modelhard()
+{
+    ebcdic_to_stringz_return(model);
+}
+
+char *str_modelcapa()
+{
+    ebcdic_to_stringz_return(modelcapa);
+}
+
+char *str_modelperm()
+{
+    ebcdic_to_stringz_return(modelperm);
+}
+
+char *str_modeltemp()
+{
+    ebcdic_to_stringz_return(modeltemp);
+}
+
 
 /*-------------------------------------------------------------------*/
 /* SYSTEM TYPE IDENTIFICATION                                        */
@@ -436,21 +419,8 @@ void get_systype(BYTE *dst)
 LOADPARM_DLL_IMPORT
 char *str_systype()
 {
-    static char ret_systype[sizeof(systype)+1];
-    int i;
-
-    ret_systype[sizeof(systype)] = '\0';
-
-    for (i = sizeof(systype) - 1; i >= 0; i--)
-    {
-        ret_systype[i] = guest_to_host((int)systype[i]);
-
-        if (isspace(ret_systype[i]) && !ret_systype[i+1])
-            ret_systype[i] = '\0';
+    ebcdic_to_stringz_return(systype);
     }
-
-    return ret_systype;
-}
 
 
 
@@ -474,21 +444,8 @@ void get_sysname(BYTE *dst)
 LOADPARM_DLL_IMPORT
 char *str_sysname()
 {
-    static char ret_sysname[sizeof(sysname)+1];
-    int i;
-
-    ret_sysname[sizeof(sysname)] = '\0';
-
-    for (i = sizeof(sysname) - 1; i >= 0; i--)
-    {
-        ret_sysname[i] = guest_to_host((int)sysname[i]);
-
-        if (isspace(ret_sysname[i]) && !ret_sysname[i+1])
-            ret_sysname[i] = '\0';
+    ebcdic_to_stringz_return(sysname);
     }
-
-    return ret_sysname;
-}
 
 
 
@@ -512,21 +469,8 @@ void get_sysplex(BYTE *dst)
 LOADPARM_DLL_IMPORT
 char *str_sysplex()
 {
-    static char ret_sysplex[sizeof(sysplex)+1];
-    int i;
-
-    ret_sysplex[sizeof(sysplex)] = '\0';
-
-    for (i = sizeof(sysplex) - 1; i >= 0; i--)
-    {
-        ret_sysplex[i] = guest_to_host((int)sysplex[i]);
-
-        if (isspace(ret_sysplex[i]) && !ret_sysplex[i+1])
-            ret_sysplex[i] = '\0';
+    ebcdic_to_stringz_return(sysplex);
     }
-
-    return ret_sysplex;
-}
 
 
 /*-------------------------------------------------------------------*/

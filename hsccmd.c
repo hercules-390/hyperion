@@ -4699,86 +4699,90 @@ int codepage_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int stsi_model_cmd(int argc, char *argv[], char *cmdline)
 {
-    int rc;
-    int m;
-    char *model[4] = { "", "", "", "" };
-    char *model_name[4] = { "hardware", "capacity", "perm", "temp" };
-
+    const char *model_name[4] = { "hardware", "capacity", "perm", "temp" };
 
     UNREFERENCED(cmdline);
 
     /* Update model name if operand is specified */
-    if ( argc > 5 )
-    {
-        WRMSG( HHC01455, "E", argv[0] );
-        return -1;
-    }
-    
-    if ( argc > 1 ) model[0] = argv[1]; 
-    if ( argc > 2 ) model[1] = argv[2];
-    if ( argc > 3 ) model[2] = argv[3];
-    if ( argc > 4 ) model[3] = argv[4];
 
-    for ( m = 0; m < ( argc - 1 ); m++ )
+    if (argc > 1)
     {
-        size_t i;
+        int rc;
+        int m;
+        int n;
+        char *model[4] = { "", "", "", "" };
 
-        if ( strlen(model[m]) > 16 )
+        /* Validate argument count */
+
+        if ( argc > 5 )
         {
-            WRMSG( HHC02205, "E", model[m], "; argument > 16 characters" );
+            WRMSG( HHC01455, "E", argv[0] );
             return -1;
         }
-
-        for ( i=0; i < strlen( model[m] ); i++ )
+    
+        /* Validate and set new model and capacity 
+           numbers according to arguments */
+        for ( m = 0, n = 1; m < argc; m++, n++ )
         {
-            if ( strlen( model[m] ) == 1 && model[m][0] == '*' ) 
+            size_t i;
+            size_t len;
+        
+            if ( argv[n] == NULL )
                 break;
 
-            if ( isalnum(model[m][i]) )
-                continue;
+            model[m] = argv[n];
+            len = strlen( model[m] );
 
+            if ( len > 16 )
+            {
+                WRMSG( HHC02205, "E", model[n], "; argument > 16 characters" );
+                return -1;
+            }
+
+            if (!(len == 1 && model[m][0] == '*'))
+            {
+                for (i=0; i < len; i++)
+                {
+                    if (!isalnum(model[m][i]))
+                    {
+                        char msgbuf[64];
+
+                        MSGBUF( msgbuf, "%s-model = <%s>", model_name[m], model[m]);
+                        WRMSG( HHC02205, "E", msgbuf, "; argument contains an invalid character"  );
+                        return -1;
+                    }
+                }
+            }
+        }
+    
+        if ((rc = set_model(model[0], model[1], model[2], model[3])) != 0)
+        {
+            if ( rc > 0 && rc <= 4 )
             {
                 char msgbuf[64];
 
-                MSGBUF( msgbuf, "%s-model = <%s>", model_name[m], model[m]);
+                MSGBUF( msgbuf, "%s-model = <%s>", model_name[rc-1], model[rc-1]);
                 WRMSG( HHC02205, "E", msgbuf, "; Characters not valid for field. 0-9 or A-Z only" );
             }
+            else
+                WRMSG( HHC02205, "E", argv[0], "" );  
             return -1;
         }
+
+        if ( MLVL(VERBOSE) )
+        {
+            WRMSG( HHC02204, "I", "hdw model", str_modelhard() );   
+            WRMSG( HHC02204, "I", "cap model", str_modelcapa() );
+            WRMSG( HHC02204, "I", "prm model", str_modelperm() );
+            WRMSG( HHC02204, "I", "tmp model", str_modeltemp() );
+        }
     }
-        
-    if ( argc > 1 && ( rc = set_model(model[0], model[1], model[2], model[3]) ) != 0 )
+    else
     {
-        if ( rc > 0 && rc <= 4 )
-        {
-            char msgbuf[64];
-
-            MSGBUF( msgbuf, "%s-model = <%s>", model_name[rc-1], model[rc-1]);
-            WRMSG( HHC02205, "E", msgbuf, "; Characters not valid for field. 0-9 or A-Z only" );
-        }
-        else
-            WRMSG( HHC02205, "E", argv[0], "" );  
-        return -1;
-    }
-
-    if ( MLVL(VERBOSE) || argc == 1 )
-    {
-        char **model = str_model();
-
-        if ( argc == 1 )
-        {
-            WRMSG( HHC02203, "I", "hdw model", ( model == NULL ? "" : model[0] == NULL ? "" : model[0] ) );   
-            WRMSG( HHC02203, "I", "cap model", ( model == NULL ? "" : model[1] == NULL ? "" : model[1] ) );
-            WRMSG( HHC02203, "I", "prm model", ( model == NULL ? "" : model[2] == NULL ? "" : model[2] ) );
-            WRMSG( HHC02203, "I", "tmp model", ( model == NULL ? "" : model[3] == NULL ? "" : model[3] ) );
-        }
-        else
-        {
-            WRMSG( HHC02204, "I", "hdw model", ( model == NULL ? "" : model[0] == NULL ? "" : model[0] ) );
-            WRMSG( HHC02204, "I", "cap model", ( model == NULL ? "" : model[1] == NULL ? "" : model[1] ) );
-            WRMSG( HHC02204, "I", "prm model", ( model == NULL ? "" : model[2] == NULL ? "" : model[2] ) );
-            WRMSG( HHC02204, "I", "tmp model", ( model == NULL ? "" : model[3] == NULL ? "" : model[3] ) );
-        }
+        WRMSG( HHC02203, "I", "hdw model", str_modelhard() );   
+        WRMSG( HHC02203, "I", "cap model", str_modelcapa() );
+        WRMSG( HHC02203, "I", "prm model", str_modelperm() );
+        WRMSG( HHC02203, "I", "tmp model", str_modeltemp() );
     }
 
     return 0;
@@ -9877,10 +9881,12 @@ int i;
 /*-------------------------------------------------------------------*/
 int qcpuid_cmd(int argc, char *argv[], char *cmdline)
 {
+    /* Note: The machine-type must be set before the message is      */
+    /*       issued due to gcc incorrectly handling substitution     */
+    /*       of the third and fourth variables on some platforms.    */
 
-    char **models = str_model();
-    char *model;
-    char *manuf =  str_manufacturer();
+    char *model = str_modelcapa();
+    char *manuf = str_manufacturer();
     char *plant = str_plant();
     U16   machinetype = ( sysblk.cpuid >> 16 ) & 0xFFFF;
     U32   sequence    = ( sysblk.cpuid >> 32 ) & 0x00FFFFFF;
@@ -9890,13 +9896,9 @@ int qcpuid_cmd(int argc, char *argv[], char *cmdline)
 
     if (argc != 1)
     {
-        WRMSG( HHC17000, "E" );
+        WRMSG( HHC02299, "E", argv[0] );
         return -1;
     }
-
-    model = ( models == NULL ? "" : models[1] == NULL ? "" : models[1] );
-    if ( manuf    == NULL ) manuf = "";
-    if ( plant    == NULL ) plant = "";
 
     WRMSG( HHC17004, "I",  sysblk.cpuid );
     WRMSG( HHC17005, "I",  machinetype,
