@@ -4821,7 +4821,7 @@ int stsi_plant_cmd(int argc, char *argv[], char *cmdline)
             return -1;
         }
 
-        if ( set_plant(argv[1]) != 0 )
+        if ( set_plant(argv[1]) < 0 )
         {
             WRMSG( HHC02205, "E", argv[1], "; argument contains invalid characters" );
             return -1;
@@ -4873,7 +4873,7 @@ int stsi_manufacturer_cmd(int argc, char *argv[], char *cmdline)
             return -1;
         }
 
-        if ( set_manufacturer(argv[1]) != 0 )
+        if ( set_manufacturer(argv[1]) < 0 )
         {
             WRMSG( HHC02205, "E", argv[1], "; argument contains invalid characters");
             return -1;
