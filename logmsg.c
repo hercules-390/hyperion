@@ -165,13 +165,21 @@ DLL_EXPORT void log_close(void)
     return;
 }
 
-DLL_EXPORT void writemsg(const char *file, int line, const char* function, 
+DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function, 
                          int grp, int lvl, char *color, char *msg, ...)
 {
     char   *bfr     =   NULL;
     int     rc      =   1;
     int     siz     =   1024;
+    char    file[FILENAME_MAX];
+
     va_list vl;
+
+    bfr = strdup(srcfile);
+    strlcpy(file, basename(bfr), sizeof(file));
+    free(bfr);
+    bfr = NULL;
+
 
 #ifdef OPTION_MSGLCK
     if(!sysblk.msggrp || (sysblk.msggrp && !grp))
@@ -210,34 +218,27 @@ DLL_EXPORT void writemsg(const char *file, int line, const char* function,
     }
 #endif // defined( OPTION_MSGCLR )
 
-    switch(lvl)
+    if ( lvl & MLVL_DEBUG )
     {
-        case MLVL_DEBUG:
-
 #if defined( OPTION_MSGCLR )
-            if (strlen(color) > 0 && !sysblk.shutdown && sysblk.panel_init)
-                logmsg("%s%-10.10s %4d ", color, file, line);
-            else
-                logmsg("%-10.10s %4d ", file, line);
+        if (strlen(color) > 0 && !sysblk.shutdown && sysblk.panel_init)
+            logmsg("%s%-10.10s %5d ", color, file, line);
+        else
+            logmsg("%-10.10s %5d ", file, line);
 #else
-            logmsg("%-10.10s %4d ", file, line);
+            logmsg("%-10.10s %5d ", file, line);
 #endif
             BFR_VSNPRINTF();
-            break;
-
-        case MLVL_NORMAL:
-
-        case MLVL_VERBOSE:
-
-        default:
+    }
+    else
+    {
 #if defined( OPTION_MSGCLR )
-            if (strlen(color) > 0 && !sysblk.shutdown && sysblk.panel_init)
-            {
-                logmsg(color);
-            }
+        if (strlen(color) > 0 && !sysblk.shutdown && sysblk.panel_init)
+        {
+            logmsg(color);
+        }
 #endif // defined( OPTION_MSGCLR )
-            BFR_VSNPRINTF();
-            break;
+        BFR_VSNPRINTF();
     }
 
     if(bfr)
@@ -249,14 +250,20 @@ DLL_EXPORT void writemsg(const char *file, int line, const char* function,
         free(bfr);
     }
 
-    if ( MLVL(DEBUG) && strlen(msg) > 10 && !strncmp(msg,"HHC",3) &&
-        (msg[8] == 'S' || msg[8] == 'E' || msg[8] == 'W') )
+    if ( MLVL(DEBUG) || ( strlen(msg) > 10 && SNCMP(msg,"HHC",3) &&
+                        (msg[8] == 'S' || msg[8] == 'E' || msg[8] == 'W') ) )
     {
-        /* __FILENAME__ resolves differently for the various OS environments */
-        /* we are only interested in the filename and ext.                   */
-        char *fn = strdup( file );
-        logmsg("HHC00007" "I" " " HHC00007 "\n", function, basename(fn), line);
-        free( fn );
+        if ( MLVL(DEBUG) )
+        {
+            char *fn = strdup(__FILE__);
+
+            logmsg("%-10.10s %5d " "HHC00007" "I" " " HHC00007 "\n", 
+                    basename(fn), (int)(__LINE__), function, file, line);
+
+            free(fn);
+        }
+        else
+            logmsg("HHC00007" "I" " " HHC00007 "\n", function, file, line);
     }
 
   #ifdef NEED_LOGMSG_FFLUSH

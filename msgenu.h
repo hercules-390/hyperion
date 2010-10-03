@@ -94,10 +94,10 @@ cpu.c:123:HABC1234I This is a message
 
 #define MSG(id, s, ...)              #id s " " id "\n", ## __VA_ARGS__
 #define MSG_C(id, s, ...)            #id s " " id "", ## __VA_ARGS__
-#define WRMSG(id, s, ...)            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG), "", _(#id s " " id "\n"), ## __VA_ARGS__)
-#define WRMSG_C(id, s, ...)          writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG), "", _(#id s " " id ""), ## __VA_ARGS__)
-#define WRCMSG(color, id, s, ...)    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG), color, _(#id s " " id "\n"), ## __VA_ARGS__)
-#define WRCMSG_C(color, id, s, ...)  writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG), color, _(#id s " " id ""), ## __VA_ARGS__)
+#define WRMSG(id, s, ...)            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", _(#id s " " id "\n"), ## __VA_ARGS__)
+#define WRMSG_C(id, s, ...)          writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", _(#id s " " id ""), ## __VA_ARGS__)
+#define WRCMSG(color, id, s, ...)    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), color, _(#id s " " id "\n"), ## __VA_ARGS__)
+#define WRCMSG_C(color, id, s, ...)  writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), color, _(#id s " " id ""), ## __VA_ARGS__)
 
 #ifndef OPTION_MSGLCK
 #define WRGMSG_ON \
@@ -120,10 +120,10 @@ cpu.c:123:HABC1234I This is a message
 #define WRGMSG_ON
 #endif
 
-#define WRGMSG(id, s, ...)           writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(DEBUG), "", _(#id s " " id "\n"), ## __VA_ARGS__)
-#define WRGMSG_C(id, s, ...)         writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(DEBUG), "", _(#id s " " id ""), ## __VA_ARGS__)
-#define WRGCMSG(color, id, s, ...)   writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(DEBUG), color, _(#id s " " id "\n"), ## __VA_ARGS__)
-#define WRGCMSG_C(color, id, s, ...) writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(DEBUG), color, _(#id s " " id ""), ## __VA_ARGS__)
+#define WRGMSG(id, s, ...)           writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), "", _(#id s " " id "\n"), ## __VA_ARGS__)
+#define WRGMSG_C(id, s, ...)         writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), "", _(#id s " " id ""), ## __VA_ARGS__)
+#define WRGCMSG(color, id, s, ...)   writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), color, _(#id s " " id "\n"), ## __VA_ARGS__)
+#define WRGCMSG_C(color, id, s, ...) writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), color, _(#id s " " id ""), ## __VA_ARGS__)
 
 /* Hercules messages */
 #define HHC00001 "%s"
@@ -132,7 +132,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00004 "Control program identification: type '%s', name '%s', sysplex '%s', level %"I64_FMT"X"
 #define HHC00005 "The configuration has been placed into a system check-stop state because of an incompatible service call"
 #define HHC00006 "SCLP console interface '%s'"
-#define HHC00007 "Previous message from function '%s()' in '%s' line %d" 
+#define HHC00007 "Previous message from function %s() at %s[%d]" 
 #define HHC00008 "%s%s"
 #define HHC00009 "RRR...RING...GGG!\a"
 #define HHC00010 "Enter input for console %1d:%04X"

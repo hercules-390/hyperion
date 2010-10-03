@@ -1227,7 +1227,7 @@ REGS   *regs;                           /* Copied regs               */
             n += display_regs (regs, buf + n, sizeof(buf)-n-1, "HHC02267I ");
 
         if (!iregs->ghostregs) free(regs);
-        writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG), "", "%s", buf);
+        writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", buf);
         return;
     }
 
@@ -1409,7 +1409,7 @@ REGS   *regs;                           /* Copied regs               */
 
     if (!iregs->ghostregs)
         free (regs);
-    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG), "", "%s", buf);
+    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", buf);
 
 } /* end function display_inst */
 

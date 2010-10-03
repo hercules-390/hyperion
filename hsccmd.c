@@ -365,7 +365,7 @@ int message_cmd(int argc,char *argv[], char *cmdline,int withhdr)
             char *lparname = str_lparname();
             time(&mytime);
             mytm=localtime(&mytime);
-            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG),
+            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY),
 #if defined(OPTION_MSGCLR)
                      "<pnl,color(white,black)>",
 #else
@@ -380,7 +380,7 @@ int message_cmd(int argc,char *argv[], char *cmdline,int withhdr)
         }
         else
         {
-            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG),
+            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY),
 #if defined(OPTION_MSGCLR)
                      "<pnl,color(white,black)>",
 #else
@@ -3683,7 +3683,7 @@ char buf[512];
 
     display_regs (regs, buf, sizeof(buf), "HHC02269I ");
     WRMSG(HHC02269, "I", "General purpose registers");
-    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG), "", "%s", buf);
+    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", buf);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -3715,7 +3715,7 @@ char buf[512];
 
     display_fregs (regs, buf, sizeof(buf), "HHC02270I ");
     WRMSG(HHC02270, "I", "Floating point registers");
-    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG), "", "%s", buf);
+    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", buf);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -3793,7 +3793,7 @@ char buf[512];
 
     display_cregs (regs, buf, sizeof(buf), "HHC02271I ");
     WRMSG(HHC02271, "I", "Control registers");
-    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG), "", "%s", buf);
+    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", buf);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -3825,7 +3825,7 @@ char buf[384];
 
     display_aregs (regs, buf, sizeof(buf), "HHC02272I ");
     WRMSG(HHC02272, "I", "Access registers");
-    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG), "", "%s", buf);
+    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", buf);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -3869,6 +3869,15 @@ char buf[32];
 
 /*-------------------------------------------------------------------*/
 /* psw command - display or alter program status word                */
+/*
+ * Return Codes:
+ * -1 invalid command operands
+ * 0  running normal cpu
+ * 1  enabled wait
+ * 2  disabled wait
+ * 3  Instruction Step
+ * 4  manual (STOPPED)
+ * 5  offline cpu
 /*-------------------------------------------------------------------*/
 int psw_cmd(int argc, char *argv[], char *cmdline)
 {
@@ -3877,7 +3886,8 @@ BYTE  c;
 U64   newia=0;
 int   newam=0, newas=0, newcc=0, newcmwp=0, newpk=0, newpm=0, newsm=0;
 int   updia=0, updas=0, updcc=0, updcmwp=0, updpk=0, updpm=0, updsm=0;
-int   n, errflag, stopflag=0, modflag=0;
+int   n, errflag, modflag=0;
+int   rc;
 char  buf[512];
 
     UNREFERENCED(cmdline);
@@ -3888,8 +3898,10 @@ char  buf[512];
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
         WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
-        return 0;
+        rc = 5;
+        return rc;
     }
+
     regs = sysblk.regs[sysblk.pcpu];
 
     /* Process optional operands */
@@ -3987,16 +3999,10 @@ char  buf[512];
         if (errflag)
         {
             WRMSG(HHC02205, "E", argv[n], "");
-            stopflag = 1;
+            release_lock(&sysblk.cpulock[sysblk.pcpu]);
+            return -1;
         }
     } /* end for (n) */
-
-    /* Finish now if any errors occurred */
-    if (stopflag)
-    {
-        release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        return 0;
-    }
 
     /* Update the PSW system mask, if specified */
     if (updsm)
@@ -4086,9 +4092,18 @@ char  buf[512];
             regs->psw.amode == 1 && regs->psw.amode64 == 1 ? "64" : "???"),
         regs->psw.IA_G);
 
+    if ( WAITSTATE( &regs->psw ) )
+    {
+        if ( !IS_IC_DISABLED_WAIT_PSW( regs ) )     rc = 1; /* Enabled Wait */
+        else                                        rc = 2; /* Disabled Wait */
+    }
+    else if ( sysblk.inststep )                     rc = 3; /* Instruction Step */
+    else if ( regs->cpustate == CPUSTATE_STOPPED )  rc = 4; /* Manual Mode */
+    else                                            rc = 0; /* Running Normal */
+
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
-    return 0;
+    return rc;
 }
 
 
@@ -6199,7 +6214,7 @@ char buf[1024];
     }
 
     display_subchannel (dev, buf, sizeof(buf), "HHC02268I ");
-    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(DEBUG), "", "%s", buf);
+    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", buf);
 
     return 0;
 }
@@ -9866,7 +9881,7 @@ int i;
             strlcat(msgbuf, "verbose ",sizeof(msgbuf));
         else
             strlcat(msgbuf, "terse ",sizeof(msgbuf));
-        if ( sysblk.msglvl == MLVL_DEBUG )
+        if ( sysblk.msglvl & MLVL_DEBUG )
             strlcat(msgbuf, "debug ",sizeof(msgbuf));
         else
             strlcat(msgbuf, "nodebug ",sizeof(msgbuf));

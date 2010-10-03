@@ -747,7 +747,8 @@ struct SYSBLK {
         int     msglvl;                 /* Message level             */
 #define MLVL_NORMAL  0x01
 #define MLVL_VERBOSE 0x02
-#define MLVL_DEBUG   0xff
+#define MLVL_DEBUG   0x80               /* bits */
+#define MLVL_ANY     0xff               
 
         int     emsg;                   /* error message display ctrl*/
 #define EMSG_ON     0x01
