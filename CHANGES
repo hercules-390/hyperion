@@ -1,3 +1,5 @@
+02 Oct 2010 Change MAX_CPU_ENGINES to MAX_CPU in several places. Wrong use of 
+            MAX_CPU_ENGINES. MAX_CPU_ENGINES is a build time option. Paul Gorlinsky
 29 Sep 2010 CKD non-lfs and non-compressed disk, maximum 35 chunks 1-9,A-Z Paul Gorlinsky
 29 Sep 2010 MODEL, PLANT, MANUFACTURER changed to PANEL+CONFIG, enhanced support - Paul Gorlinsky
 27 Sep 2010 Code page user table support - Paul Gorlinsky
