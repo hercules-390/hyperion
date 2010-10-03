@@ -1547,7 +1547,7 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
             int i;
             
             WRMSG( HHC01481, "I" );
-            for ( i = 0; ; i += 4 )
+            for ( i = 0, cpref = cpconv; ; i += 4 )
             {
 
                 if ( cpref[i].name == NULL || CMD(cpref[i].name,user,4) ) break;
