@@ -558,7 +558,7 @@ int     dll_count;                      /* index into array          */
     initialize_condition (&sysblk.cpucond);
     {
         int i;
-        for (i = 0; i < MAX_CPU; i++)
+        for (i = 0; i < MAX_CPU_ENGINES; i++)
             initialize_lock (&sysblk.cpulock[i]);
     }
     initialize_condition (&sysblk.sync_cond);
