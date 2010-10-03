@@ -380,6 +380,7 @@ endif
                        machdep.h    \
                        httpserv.c   \
                        cgibin.c     \
+                       loadmem.c    \
                        loadparm.c   \
                        hsccmd.c     \
                        cmdtab.c     \

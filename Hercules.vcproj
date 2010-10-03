@@ -1063,6 +1063,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\loadmem.c"
+							>
+						</File>
+						<File
 							RelativePath=".\loadparm.c"
 							>
 						</File>

@@ -129,6 +129,7 @@ hengine_OBJ = \
     $(O)impl.obj     \
     $(O)io.obj       \
     $(O)ipl.obj      \
+    $(O)loadmem.obj  \
     $(O)loadparm.obj \
     $(O)losc.obj     \
     $(O)machchk.obj  \
