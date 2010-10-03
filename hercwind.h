@@ -144,8 +144,13 @@ typedef int             mode_t;
 #define MAX_CPU_ENGINES  8
 #endif
 
+#if !defined(OPTION_CONFIG_SYMBOLS)
 #define OPTION_CONFIG_SYMBOLS
+#endif
+
+#if !defined(OPTION_ENHANCED_CONFIG_INCLUDE)
 #define OPTION_ENHANCED_CONFIG_INCLUDE
+#endif
 
 #if !( defined( OPTION_FTHREADS ) || defined( OPTION_WTHREADS ) )
 #define OPTION_FTHREADS 
