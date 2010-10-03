@@ -289,6 +289,14 @@ ProcessPanelCommandExit:
 
     /* Free our saved copy */
     free(pszSaveCmdLine);
+    
+    if ( MLVL(DEBUG) )
+    {
+        char msgbuf[32];
+
+        MSGBUF( msgbuf, "RC = %d", rc );
+        WRMSG( HHC90000, "D", msgbuf );
+    }
 
     return rc;
 }
