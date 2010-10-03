@@ -3001,7 +3001,12 @@ BYTE c;
         if (sscanf(argv[1], "%hu%c", &numcpu, &c) != 1
             || numcpu > MAX_CPU)
         {
-            WRMSG( HHC01451, "E", argv[1], argv[0] );
+            if ( numcpu > MAX_CPU )
+            {
+                WRMSG( HHC02205, "E", argv[1], "; NUMCPU must be <= MAXCPU" );
+            }
+            else
+                WRMSG( HHC01451, "E", argv[1], argv[0] );
             return -1;
         }
         else
