@@ -101,7 +101,7 @@ char  thread_name[32];
     if (rc)   
     {
         WRMSG(HHC00102, "E", strerror(rc));
-        return -1;
+        return HERRCPUOFF; /* CPU offline */
     }
 
     /* Find out if we are a cpu thread */
@@ -1223,9 +1223,7 @@ parse_and_attach_devices(const char *sdevnum,
         devncount=parse_devnums(sdevnum,&dnd);
 
         if(devncount==0)
-        {
-            return -2;
-        }
+            return HERRDEVIDA; /* Invalid Device Address */
 
 #if defined(OPTION_CONFIG_SYMBOLS)
         newargv=malloc(MAX_ARGS*sizeof(char *));

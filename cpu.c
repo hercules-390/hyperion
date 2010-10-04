@@ -1350,9 +1350,6 @@ int   rc;
 
     OBTAIN_INTLOCK(NULL);
 
-    /* Signal cpu has started */
-    signal_condition (&sysblk.cpucond);
-
     /* Increment number of CPUs online */
     sysblk.cpus++;
 
@@ -1785,6 +1782,9 @@ FUNC    *current_opcode_table;
 
         if (cpu_init (cpu, &regs, NULL))
             return NULL;
+
+        /* Signal cpu has started */
+        signal_condition (&sysblk.cpucond);
 
         WRMSG (HHC00811, "I", PTYPSTR(cpu), cpu, get_arch_mode_string(&regs));
 

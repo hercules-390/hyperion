@@ -41,79 +41,77 @@
 int ARCH_DEP(system_reset) (int cpu, int clear)
 {
     int    rc1 = 0, rc;
+    int    n;
     REGS  *regs;
 
-    /* Configure the cpu if it is not online */
+    /* Configure the cpu if it is not online (configure implies init reset) */
     if (!IS_CPU_ONLINE(cpu))
-    {
         if ( (rc = configure_cpu(cpu)) )
-        {
-            /* ZZ FIXME: we should probably present a machine-check
-               if we encounter any errors during the reset (rc != 0) */
             return rc;
-        }
-        ASSERT(IS_CPU_ONLINE(cpu));
-    }
-    regs = sysblk.regs[cpu];
 
-    /* Initialize Architecture Level Set */
-    init_als(regs);
+    HDC1(debug_cpu_state, sysblk.regs[cpu]);
 
-    HDC1(debug_cpu_state, regs);
+    /* Reset external interrupts */
+    OFF_IC_SERVSIG;
+    OFF_IC_INTKEY;
 
     /* Perform system-reset-normal or system-reset-clear function */
-    if (!clear)
+    if (clear)
     {
-        /* Reset external interrupts */
-        OFF_IC_SERVSIG;
-        OFF_IC_INTKEY;
-
         /* Reset all CPUs in the configuration */
-        for (cpu = 0; cpu < MAX_CPU; cpu++)
-            if (IS_CPU_ONLINE(cpu))
-                if ((rc = ARCH_DEP(cpu_reset) (sysblk.regs[cpu])) )
-                    rc1 = rc;
+        for (n = 0; n < MAX_CPU; n++)
+            if (IS_CPU_ONLINE(n))
+            {
+                regs=sysblk.regs[n];
 
-        /* Perform I/O subsystem reset */
-        io_reset ();
+                if ((rc = ARCH_DEP(initial_cpu_reset) (regs)) )
+                    rc1 = rc;
+                else
+                {
+                    /* Clear all the registers (AR, GPR, FPR, VR)
+                       as part of the CPU CLEAR RESET operation */
+                    memset (regs->ar,0,sizeof(regs->ar));
+                    memset (regs->gr,0,sizeof(regs->gr));
+                    memset (regs->fpr,0,sizeof(regs->fpr));
+                  #if defined(_FEATURE_VECTOR_FACILITY)
+                    memset (regs->vf->vr,0,sizeof(regs->vf->vr));
+                  #endif /*defined(_FEATURE_VECTOR_FACILITY)*/
+                }
+            }
     }
     else
     {
-        /* Reset external interrupts */
-        OFF_IC_SERVSIG;
-        OFF_IC_INTKEY;
-
         /* Reset all CPUs in the configuration */
-        for (cpu = 0; cpu < MAX_CPU; cpu++)
-        {
-            if (IS_CPU_ONLINE(cpu))
+        for (n = 0; n < MAX_CPU; n++)
+            if (IS_CPU_ONLINE(n))
             {
-                regs=sysblk.regs[cpu];
-                if ((rc = ARCH_DEP(initial_cpu_reset) (regs)) )
+                regs=sysblk.regs[n];
+        
+                if(n == cpu)
                 {
-                    rc1 = rc;
+                    /* Perform initial reset on the IPL CPU */
+                    if ( (rc = ARCH_DEP(initial_cpu_reset) (regs)) )
+                        rc1 = rc;
                 }
-                /* Clear all the registers (AR, GPR, FPR, VR)
-                   as part of the CPU CLEAR RESET operation */
-                memset (regs->ar,0,sizeof(regs->ar));
-                memset (regs->gr,0,sizeof(regs->gr));
-                memset (regs->fpr,0,sizeof(regs->fpr));
-              #if defined(_FEATURE_VECTOR_FACILITY)
-                memset (regs->vf->vr,0,sizeof(regs->vf->vr));
-              #endif /*defined(_FEATURE_VECTOR_FACILITY)*/
+                else
+                {
+                    /* Perform reset on the other CPUs */
+                    if ( (rc = ARCH_DEP(cpu_reset) (regs)) )
+                        rc1 = rc;
+                }
             }
-        }
-
-        /* Perform I/O subsystem reset */
-        io_reset ();
-
+    
         memset(sysblk.program_parameter,0,sizeof(sysblk.program_parameter));
+    
         /* Clear storage */
         sysblk.main_clear = sysblk.xpnd_clear = 0;
         storage_clear();
         xstorage_clear();
 
     }
+
+    /* Perform I/O subsystem reset */
+    io_reset ();
 
 #if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
     /* Clear topology-change-report-pending condition */
@@ -123,8 +121,6 @@ int ARCH_DEP(system_reset) (int cpu, int clear)
     /* set default system state to reset */
     sysblk.sys_reset = TRUE; 
 
-    /* ZZ FIXME: we should probably present a machine-check
-       if we encounter any errors during the reset (rc != 0) */
     return rc1;
 } /* end function system_reset */
 
@@ -158,6 +154,7 @@ int ARCH_DEP(common_load_begin) (int cpu, int clear)
     /* Perform system-reset-normal or system-reset-clear function */
     if ( (rc = ARCH_DEP(system_reset(cpu,clear))) )
         return rc;
+
     regs = sysblk.regs[cpu];
 
     if (sysblk.arch_mode == ARCH_900)
@@ -178,9 +175,6 @@ int ARCH_DEP(common_load_begin) (int cpu, int clear)
     */
     if (!clear)
     {
-        /* Perform initial reset on the IPL CPU */
-        if ( (rc = ARCH_DEP(initial_cpu_reset) (regs)) )
-            return rc;
         /* Save our captured-z/Arch-PSW if this is a Load-normal IPL
            since the initial_cpu_reset call cleared it to zero. */
         if (orig_arch_mode == ARCH_900)
@@ -435,6 +429,9 @@ int i, rc = 0;                          /* Array subscript           */
         regs->guestregs->opinterv = 0;
         regs->guestregs->cpustate = CPUSTATE_STARTED;
    }
+
+    /* Initialize Architecture Level Set */
+    init_als(regs);
 
    return rc;
 } /* end function cpu_reset */

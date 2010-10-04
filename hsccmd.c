@@ -4176,7 +4176,7 @@ int restart_cmd(int argc, char *argv[], char *cmdline)
     {
         RELEASE_INTLOCK(NULL);
         WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
-        return 5;
+        return 0;
     }
 
     /* Indicate that a restart interrupt is pending */
@@ -5419,7 +5419,6 @@ int  rest_loadparm = FALSE;
         return -1;
     }
 
-
     /* Check the parameters of the IPL command */
     if (argc < 2)
     {
@@ -5465,13 +5464,6 @@ int  rest_loadparm = FALSE;
 
     OBTAIN_INTLOCK(NULL);
 
-    if (!IS_CPU_ONLINE(sysblk.pcpu))
-    {
-        RELEASE_INTLOCK(NULL);
-        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
-        return 5;
-    }
-
     for (i = 0; i < MAX_CPU; i++)
         if (IS_CPU_ONLINE(i)
          && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED)
@@ -5514,7 +5506,16 @@ int  rest_loadparm = FALSE;
         else
             lcss = 0;
 
-        rc = load_ipl (lcss, devnum, sysblk.pcpu, clear);
+        if((rc = load_ipl (lcss, devnum, sysblk.pcpu, clear)))
+        {
+            switch (rc)
+            {
+            case HERRCPUOFF:
+                WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
+                rc = 5;
+                break;
+            }
+        }
     }
 
     RELEASE_INTLOCK(NULL);
