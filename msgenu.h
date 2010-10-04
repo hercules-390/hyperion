@@ -1186,11 +1186,13 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02297 "MIP capping is not enabled"
 #define HHC02298 "%1d:%04X drive is empty"
 #define HHC02299 "Invalid command usage. Type 'help %s' for assistance."
-#define HHC02300 "sm=%2.2X pk=%d cmwp=%X as=%s cc=%d pm=%X am=%s ia=%"I64_FMT"X" 
-#define HHC02301 "%s: Unexpected read length. Records should be %d bytes long."
-#define HHC02302 "%s: Unknown card type read: %s; skipped"
-#define HHC02303 "%s: Unsupported card type %s read: %s; aborting"
-#define HHC02304 "%s: Record %d is an unknown card type; skipped"
+#define HHC02300 "sm=%2.2X pk=%d cmwp=%X as=%s cc=%d pm=%X am=%s ia=%"I64_FMT"X"
+#define HHC02301 "%s: Unexpected read length at record %d; expected %d-byte record"
+#define HHC02302 "%s: Record %d is unknown record type %s; aborting"
+#define HHC02303 "%s: GOFF object found at record %d; aborting"
+#define HHC02304 "%s: Record %d is unknown record type; skipped"
+#define HHC02305 "%s: Record %d is unknown record type; aborting"
+#define HHC02306 "Address %s not on quadword boundary"
 
 // reserve 02390 for ieee.c
 #define HHC02390 "Function '%s': unexpectedly converting to '%s'"
