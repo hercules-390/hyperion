@@ -18,7 +18,7 @@
 /* near the end of this module.                                      */
 /*-------------------------------------------------------------------*/
 
-/* 
+/*
 
    Standard conventions are:
 
@@ -44,7 +44,7 @@
    return rc
 
    }
-   
+
 
 */
 
@@ -401,8 +401,8 @@ int msg_cmd(int argc,char *argv[], char *cmdline)
     int rc;
 
     if ( argc < 3 )
-    { 
-        WRMSG( HHC02299, "E", argv[0] ); 
+    {
+        WRMSG( HHC02299, "E", argv[0] );
         return -1;
     }
 
@@ -515,7 +515,7 @@ int quitmout_cmd(int argc, char *argv[], char *cmdline)
 
     if ( argc == 2)
     {
-        int     tm = 0; 
+        int     tm = 0;
         BYTE    c;
 
         if ( 1
@@ -645,9 +645,9 @@ int logopt_cmd(int argc, char *argv[], char *cmdline)
 
         while ( argc > 1 )
         {
-            argv++; 
+            argv++;
             argc--;
-            
+
             if ( CMD(argv[0],timestamp,4) )
             {
                 sysblk.logoptnotime = FALSE;
@@ -1008,7 +1008,7 @@ int start_cmd(int argc, char *argv[], char *cmdline)
             WAKEUP_CPU(regs);
         }
         RELEASE_INTLOCK(NULL);
-        WRMSG( HHC00834, "I", PTYPSTR(sysblk.regs[sysblk.pcpu]->cpuad), 
+        WRMSG( HHC00834, "I", PTYPSTR(sysblk.regs[sysblk.pcpu]->cpuad),
                               sysblk.regs[sysblk.pcpu]->cpuad, "running state selected" );
         rc = 0;
     }
@@ -1034,14 +1034,14 @@ int start_cmd(int argc, char *argv[], char *cmdline)
         else
         {
             (dev->hnd->query)(dev, &devclass, 0, NULL);
-            
-            if ( CMD(devclass,PRT,3) || CMD(devclass,PCH,3) )
-            { 
-                /* un-stop the unit record device and raise attention interrupt */
-                /* PRINTER or PUNCH */ 
 
-                stopdev = dev->stopdev; 
-                
+            if ( CMD(devclass,PRT,3) || CMD(devclass,PCH,3) )
+            {
+                /* un-stop the unit record device and raise attention interrupt */
+                /* PRINTER or PUNCH */
+
+                stopdev = dev->stopdev;
+
                 dev->stopdev = FALSE;
 
                 rc = device_attention (dev, CSW_ATTN);
@@ -1059,7 +1059,7 @@ int start_cmd(int argc, char *argv[], char *cmdline)
                     break;
                 }
 
-                if ( rc != 0 ) 
+                if ( rc != 0 )
                     rc = -1;
             }
             else
@@ -1125,7 +1125,7 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
             WAKEUP_CPU (regs);
         }
         RELEASE_INTLOCK(NULL);
-        WRMSG( HHC00834, "I", PTYPSTR(sysblk.regs[sysblk.pcpu]->cpuad), 
+        WRMSG( HHC00834, "I", PTYPSTR(sysblk.regs[sysblk.pcpu]->cpuad),
                               sysblk.regs[sysblk.pcpu]->cpuad, "manual state selected" );
         rc = 0;
     }
@@ -1147,7 +1147,7 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
             devnotfound_msg(lcss,devnum);
             rc = -1;
         }
-        else 
+        else
         {
             (dev->hnd->query)(dev, &devclass, 0, NULL);
 
@@ -2231,7 +2231,7 @@ int cckd_cmd(int argc, char *argv[], char *cmdline)
 {
     char*   p;
     int     rc = -1;
-    char*   strtok_str;    
+    char*   strtok_str;
     if ( argc != 2 || cmdline == NULL || (int)strlen(cmdline) < 5 )
     {
         WRMSG( HHC02299, "E", argv[0] );
@@ -2760,7 +2760,7 @@ BYTE c;
             if (MLVL(VERBOSE))
                 WRMSG( HHC02204, "I", argv[0], argv[1] );
         }
-    }       
+    }
     else
     {
         WRMSG( HHC01455, "E", argv[0] );
@@ -2936,7 +2936,7 @@ BYTE c;
         {
             sysblk.todprio = todprio;
             if (MLVL(VERBOSE))
-                WRMSG( HHC02204, "I", argv[0], argv[1] ); 
+                WRMSG( HHC02204, "I", argv[0], argv[1] );
         }
     }
     else
@@ -3151,7 +3151,7 @@ char pathname[MAX_PATH];
 
         if ( MLVL(VERBOSE) )
             WRMSG(HHC02204, "I", argv[0], sysblk.httproot ? sysblk.httproot : "<not specified>");
-            
+
     }
     else
         WRMSG(HHC02203, "I", argv[0], sysblk.httproot ? sysblk.httproot : "<not specified>");
@@ -3430,9 +3430,9 @@ int pantitle_cmd(int argc, char *argv[], char *cmdline)
             free(sysblk.pantitle);
 
         sysblk.pantitle = (strlen(argv[1]) == 0 ) ? NULL : strdup(argv[1]);
-        
+
         if ( MLVL(VERBOSE) )
-            WRMSG( HHC02204, "I", argv[0], 
+            WRMSG( HHC02204, "I", argv[0],
                    (sysblk.pantitle == NULL) ? "(none)" : sysblk.pantitle);
 
         set_console_title( NULL );
@@ -3878,7 +3878,7 @@ char buf[32];
  * 3  Instruction Step
  * 4  manual (STOPPED)
  * 5  offline cpu
-/*-------------------------------------------------------------------*/
+---------------------------------------------------------------------*/
 int psw_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
@@ -4533,7 +4533,7 @@ int i;
         if ( MLVL(VERBOSE) )
         {
             char buf[40];
-            MSGBUF( buf, "%sabled%s", 
+            MSGBUF( buf, "%sabled%s",
                     (sysblk.shcmdopt&SHCMDOPT_ENABLE)?"En":"Dis",
                     (sysblk.shcmdopt&SHCMDOPT_DIAG8)?"":" NoDiag8");
             WRMSG(HHC02204, "I", argv[0], buf);
@@ -4577,7 +4577,7 @@ int legacysenseid_cmd(int argc, char *argv[], char *cmdline)
             return -1;
         }
         if ( MLVL(VERBOSE) )
-            WRMSG( HHC02204, "I", argv[0], 
+            WRMSG( HHC02204, "I", argv[0],
                    sysblk.legacysenseid ? "enabled" : "disabled" );
     }
     else
@@ -4593,8 +4593,8 @@ int legacysenseid_cmd(int argc, char *argv[], char *cmdline)
  * cp_updt refERENCE codepage             copy existing page to user area
  * cp_updt reset                          reset user area contents to '\0'
  * cp_updt dsp|disPLAY ebcdic|ascii       display user pages
- * cp_updt impORT ebcdic|ascii filename   import filename to user table 
- * cp_updt expORT ebcdic|ascii filename   export filename to user table 
+ * cp_updt impORT ebcdic|ascii filename   import filename to user table
+ * cp_updt expORT ebcdic|ascii filename   export filename to user table
  *
  * ebcdic = g2h (Guest to Host) Guest = Mainframe OS
  * ascii  = h2g (Host to Guest) Host  = PC OS (Unix/Linux/Windows)
@@ -4607,7 +4607,7 @@ int cp_updt_cmd(int argc, char *argv[], char *cmdline)
 
     /*  This is coded in this manner in case additional checks are
      *  made later.
-     */ 
+     */
 
     if ( argc == 2 && CMD(argv[1],reset,5) )
     {
@@ -4623,15 +4623,15 @@ int cp_updt_cmd(int argc, char *argv[], char *cmdline)
 
         rc = update_codepage( argc, argv, argv[0] );
     }
-    else if ( ( argc == 3 ) && ( CMD(argv[1],dsp,3) || CMD(argv[1],display,3) ) ) 
-    { 
+    else if ( ( argc == 3 ) && ( CMD(argv[1],dsp,3) || CMD(argv[1],display,3) ) )
+    {
         argc--;
         argv++;
 
         rc = update_codepage( argc, argv, argv[0] );
     }
-    else if ( ( argc == 2 ) && CMD(argv[1],test,4) ) 
-    { 
+    else if ( ( argc == 2 ) && CMD(argv[1],test,4) )
+    {
         argc--;
         argv++;
 
@@ -4739,17 +4739,16 @@ int stsi_model_cmd(int argc, char *argv[], char *cmdline)
             WRMSG( HHC01455, "E", argv[0] );
             return -1;
         }
-    
-        /* Validate and set new model and capacity 
+
+        /* Validate and set new model and capacity
            numbers according to arguments */
         for ( m = 0, n = 1; n < argc; m++, n++ )
         {
             size_t i;
             size_t len;
-        
+
             if ( argv[n] == NULL )
                 break;
-
             model[m] = argv[n];
             len = strlen( model[m] );
 
@@ -4759,7 +4758,7 @@ int stsi_model_cmd(int argc, char *argv[], char *cmdline)
                 return -1;
             }
 
-            if (!(len == 1 && model[m][0] == '*'))
+            if (!(len == 1 && (model[m][0] == '*' || model[m][0] == '=')))
             {
                 for (i=0; i < len; i++)
                 {
@@ -4774,7 +4773,7 @@ int stsi_model_cmd(int argc, char *argv[], char *cmdline)
                 }
             }
         }
-    
+
         if ((rc = set_model(model[0], model[1], model[2], model[3])) != 0)
         {
             if ( rc > 0 && rc <= 4 )
@@ -4785,13 +4784,13 @@ int stsi_model_cmd(int argc, char *argv[], char *cmdline)
                 WRMSG( HHC02205, "E", msgbuf, "; Characters not valid for field. 0-9 or A-Z only" );
             }
             else
-                WRMSG( HHC02205, "E", argv[0], "" );  
+                WRMSG( HHC02205, "E", argv[0], "" );
             return -1;
         }
 
         if ( MLVL(VERBOSE) )
         {
-            WRMSG( HHC02204, "I", "hdw model", str_modelhard() );   
+            WRMSG( HHC02204, "I", "hdw model", str_modelhard() );
             WRMSG( HHC02204, "I", "cap model", str_modelcapa() );
             WRMSG( HHC02204, "I", "prm model", str_modelperm() );
             WRMSG( HHC02204, "I", "tmp model", str_modeltemp() );
@@ -4799,7 +4798,7 @@ int stsi_model_cmd(int argc, char *argv[], char *cmdline)
     }
     else
     {
-        WRMSG( HHC02203, "I", "hdw model", str_modelhard() );   
+        WRMSG( HHC02203, "I", "hdw model", str_modelhard() );
         WRMSG( HHC02203, "I", "cap model", str_modelcapa() );
         WRMSG( HHC02203, "I", "prm model", str_modelperm() );
         WRMSG( HHC02203, "I", "tmp model", str_modeltemp() );
@@ -4825,7 +4824,7 @@ int stsi_plant_cmd(int argc, char *argv[], char *cmdline)
     }
     if ( argc == 1 )
     {
-        WRMSG( HHC02203, "I", argv[0], str_plant() ); 
+        WRMSG( HHC02203, "I", argv[0], str_plant() );
     }
     else
     {
@@ -4839,7 +4838,7 @@ int stsi_plant_cmd(int argc, char *argv[], char *cmdline)
 
         for ( i = 0; i < strlen(argv[1]); i++ )
         {
-            if ( isalnum(argv[1][i]) ) 
+            if ( isalnum(argv[1][i]) )
                 continue;
             WRMSG( HHC02205, "E", argv[1], "; argument contains invalid characters" );
             return -1;
@@ -4850,7 +4849,7 @@ int stsi_plant_cmd(int argc, char *argv[], char *cmdline)
             WRMSG( HHC02205, "E", argv[1], "; argument contains invalid characters" );
             return -1;
         }
-        
+
         if ( MLVL(VERBOSE) )
             WRMSG( HHC02204, "I", argv[0], str_plant() );
     }
@@ -4876,7 +4875,7 @@ int stsi_manufacturer_cmd(int argc, char *argv[], char *cmdline)
 
     if ( argc == 1 )
     {
-        WRMSG( HHC02203, "I", argv[0], str_manufacturer() ); 
+        WRMSG( HHC02203, "I", argv[0], str_manufacturer() );
     }
     else
     {
@@ -4890,7 +4889,7 @@ int stsi_manufacturer_cmd(int argc, char *argv[], char *cmdline)
 
         for ( i = 0; i < strlen(argv[1]); i++ )
         {
-            if ( isalnum(argv[1][i]) ) 
+            if ( isalnum(argv[1][i]) )
                 continue;
 
             WRMSG( HHC02205, "E", argv[1], "; argument contains invalid characters" );
@@ -5096,7 +5095,7 @@ BYTE    c;
 #if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
             set_symbol("CPUVERID", buf);
 #endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
-            
+
             sysblk.cpuid &= 0x00FFFFFFFFFFFFFFULL;
             sysblk.cpuid |= (U64)cpuverid << 56;
             if ( MLVL(VERBOSE) )
@@ -5551,7 +5550,7 @@ int FishHangReport_cmd(int argc, char *argv[], char *cmdline)
 static int SortDevBlkPtrsAscendingByDevnum(const void* pDevBlkPtr1, const void* pDevBlkPtr2)
 {
     int rc;
-    
+
     rc = (int)((*(DEVBLK**)pDevBlkPtr1)->devnum) -
          (int)((*(DEVBLK**)pDevBlkPtr2)->devnum);
     return rc;
@@ -5972,7 +5971,7 @@ int rc;
     {
         return -1;
     }
-    
+
     rc = detach_device (lcss, devnum);
 
     return rc;
@@ -6129,7 +6128,7 @@ int ostailor_cmd(int argc, char *argv[], char *cmdline)
         b_on = FALSE;
         b_off = FALSE;
     }
-    
+
     if      ( CMD( postailor, OS/390, 2 ) )
         mask = OS_OS390;
     else if ( CMD( postailor, Z/OS,   1 ) )
@@ -6539,11 +6538,11 @@ int mounted_tape_reinit_cmd(int argc, char *argv[], char *cmdline)
             return -1;
         }
         if ( MLVL(VERBOSE) )
-            WRMSG(HHC02204, "I", argv[0], 
+            WRMSG(HHC02204, "I", argv[0],
                   sysblk.nomountedtapereinit?"disabled":"enabled");
     }
     else
-        WRMSG(HHC02203, "I", argv[0], 
+        WRMSG(HHC02203, "I", argv[0],
               sysblk.nomountedtapereinit?"disabled":"enabled");
 
     return 0;
@@ -7071,8 +7070,6 @@ REGS *regs;
 
     return 0;
 }
-
-
 
 
 /*-------------------------------------------------------------------*/
@@ -8238,18 +8235,18 @@ int defsym_cmd(int argc, char *argv[], char *cmdline)
             sym[i] = toupper( sym[i] );
     }
     if (
-         CMD(sym,VERSION,7)  || CMD(sym,BDATE,5)    || CMD(sym,BTIME,5)    || 
+         CMD(sym,VERSION,7)  || CMD(sym,BDATE,5)    || CMD(sym,BTIME,5)    ||
          CMD(sym,HOSTNAME,8) || CMD(sym,HOSTOS,6)   || CMD(sym,HOSTOSREL,9)||
          CMD(sym,HOSTOSVER,9)|| CMD(sym,HOSTARCH,8) || CMD(sym,HOSTNUMCPUS,11)||
-         CMD(sym,MODPATH,7)  || CMD(sym,MODNAME,7)  ||  
-         CMD(sym,CUU,3)      || CMD(sym,CCUU,4)     || CMD(sym,CSS,3)      || 
+         CMD(sym,MODPATH,7)  || CMD(sym,MODNAME,7)  ||
+         CMD(sym,CUU,3)      || CMD(sym,CCUU,4)     || CMD(sym,CSS,3)      ||
 #if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
-         CMD(sym,DATE,4)     || CMD(sym,TIME,4)     || 
-         CMD(sym,LPARNUM,7)  || CMD(sym,LPARNAME,8) || 
-         CMD(sym,ARCHMODE,8) || 
-         CMD(sym,CPUMODEL,8) || CMD(sym,CPUID,5)    || CMD(sym,CPUSERIAL,9)|| 
-         CMD(sym,CPUVERID,8) || 
-         CMD(sym,SYSLEVEL,8) || CMD(sym,SYSTYPE,7)  || CMD(sym,SYSNAME,7)  || 
+         CMD(sym,DATE,4)     || CMD(sym,TIME,4)     ||
+         CMD(sym,LPARNUM,7)  || CMD(sym,LPARNAME,8) ||
+         CMD(sym,ARCHMODE,8) ||
+         CMD(sym,CPUMODEL,8) || CMD(sym,CPUID,5)    || CMD(sym,CPUSERIAL,9)||
+         CMD(sym,CPUVERID,8) ||
+         CMD(sym,SYSLEVEL,8) || CMD(sym,SYSTYPE,7)  || CMD(sym,SYSNAME,7)  ||
          CMD(sym,SYSPLEX,7)  ||
 #endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
 
@@ -8306,18 +8303,18 @@ int delsym_cmd(int argc, char *argv[], char *cmdline)
             sym[i] = toupper( sym[i] );
     }
     if (
-         CMD(sym,VERSION,7)  || CMD(sym,BDATE,5)    || CMD(sym,BTIME,5)    || 
+         CMD(sym,VERSION,7)  || CMD(sym,BDATE,5)    || CMD(sym,BTIME,5)    ||
          CMD(sym,HOSTNAME,8) || CMD(sym,HOSTOS,6)   || CMD(sym,HOSTOSREL,9)||
          CMD(sym,HOSTOSVER,9)|| CMD(sym,HOSTARCH,8) || CMD(sym,HOSTNUMCPUS,11)||
-         CMD(sym,MODPATH,7)  || CMD(sym,MODNAME,7)  ||  
-         CMD(sym,CUU,3)      || CMD(sym,CCUU,4)     || CMD(sym,CSS,3)      || 
+         CMD(sym,MODPATH,7)  || CMD(sym,MODNAME,7)  ||
+         CMD(sym,CUU,3)      || CMD(sym,CCUU,4)     || CMD(sym,CSS,3)      ||
 #if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
-         CMD(sym,DATE,4)     || CMD(sym,TIME,4)     || 
-         CMD(sym,LPARNUM,7)  || CMD(sym,LPARNAME,8) || 
-         CMD(sym,ARCHMODE,8) || 
-         CMD(sym,CPUMODEL,8) || CMD(sym,CPUID,5)    || CMD(sym,CPUSERIAL,9)|| 
-         CMD(sym,CPUVERID,8) || 
-         CMD(sym,SYSLEVEL,8) || CMD(sym,SYSTYPE,7)  || CMD(sym,SYSNAME,7)  || 
+         CMD(sym,DATE,4)     || CMD(sym,TIME,4)     ||
+         CMD(sym,LPARNUM,7)  || CMD(sym,LPARNAME,8) ||
+         CMD(sym,ARCHMODE,8) ||
+         CMD(sym,CPUMODEL,8) || CMD(sym,CPUID,5)    || CMD(sym,CPUSERIAL,9)||
+         CMD(sym,CPUVERID,8) ||
+         CMD(sym,SYSLEVEL,8) || CMD(sym,SYSTYPE,7)  || CMD(sym,SYSNAME,7)  ||
          CMD(sym,SYSPLEX,7)  ||
 #endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
 
@@ -8451,7 +8448,7 @@ BYTE c;                                 /* Character work area       */
 static inline char *aea_mode_str(BYTE mode)
 {
 static char *name[] = { "DAT-Off", "Primary", "AR", "Secondary", "Home",
-                        0, 0, 0, "PER/DAT-Off", "PER/Primary", "PER/AR", 
+                        0, 0, 0, "PER/DAT-Off", "PER/Primary", "PER/AR",
                         "PER/Secondary", "PER/Home" };
 
     return name[(mode & 0x0f) | ((mode & 0xf0) ? 8 : 0)];
@@ -8865,7 +8862,7 @@ int scpecho_cmd(int argc, char *argv[], char *cmdline)
     }
     if ( argc == 1 )
         WRMSG(HHC02203, "I", "SCP, PSCP echo", (sysblk.scpecho ? "on" : "off") );
-    else    
+    else
         WRMSG(HHC02204, "I", "SCP, PSCP echo", (sysblk.scpecho ? "on" : "off") );
 
     return 0;
@@ -9037,10 +9034,10 @@ int modpath_cmd(int argc, char *argv[], char *cmdline)
         return -1;
     }
     else if (argc == 2)
-    {   
+    {
 #if defined(OPTION_CONFIG_SYMBOLS)
         set_symbol( "MODPATH", hdl_setpath(argv[1], TRUE) );
-#else 
+#else
         hdl_setpath(argv[1], TRUE);
 #endif /* defined(OPTION_CONFIG_SYMBOLS) */
     }
@@ -9071,14 +9068,14 @@ int ecpsvm_cmd(int argc, char *argv[], char *cmdline)
         {
             sysblk.ecpsvm.available = FALSE;
             if ( MLVL(VERBOSE) )
-                WRMSG( HHC02204, "I", argv[0], "disabled" ); 
+                WRMSG( HHC02204, "I", argv[0], "disabled" );
             return 0;
         }
         else if ( CMD(argv[1],yes,3) && argc == 2 )
         {
             sysblk.ecpsvm.available = TRUE;
             if ( MLVL(VERBOSE) )
-                WRMSG( HHC02204, "I", argv[0], "enabled" ); 
+                WRMSG( HHC02204, "I", argv[0], "enabled" );
             return 0;
         }
         else if ( CMD(argv[1],level,5) )
@@ -9099,7 +9096,7 @@ int ecpsvm_cmd(int argc, char *argv[], char *cmdline)
             {
                 char msgbuf[40];
                 MSGBUF( msgbuf, "enabled: level %d", lvl );
-                WRMSG( HHC02204, "I", argv[0], msgbuf ); 
+                WRMSG( HHC02204, "I", argv[0], msgbuf );
             }
             return 0;
         }
@@ -9121,7 +9118,7 @@ int herclogo_cmd(int argc,char *argv[], char *cmdline)
     bzero(fn,sizeof(fn));
 
     UNREFERENCED(cmdline);
-    
+
     if ( argc < 2 )
     {
         sysblk.logofile=NULL;
@@ -9145,7 +9142,7 @@ int herclogo_cmd(int argc,char *argv[], char *cmdline)
         char pathname[MAX_PATH];
 
         bzero(altfn,sizeof(altfn));
-            
+
         MSGBUF(altfn,"%s%c%s", sysblk.hercules_pgmpath, PATHSEPC, fn);
         hostpath(pathname,altfn,sizeof(pathname));
         rc = readlogo(pathname);
@@ -9268,7 +9265,7 @@ int traceopt_cmd(int argc, char *argv[], char *cmdline)
             sysblk.showregsfirst = 0;
             sysblk.showregsnone = 1;
         }
-        else 
+        else
         {
             WRMSG( HHC01451, "E", argv[1], argv[0] );
             return -1;
@@ -9397,7 +9394,7 @@ int herc_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int msglevel_cmd(int argc, char *argv[], char *cmdline)
 {
-int i;    
+int i;
 
     UNREFERENCED(cmdline);
 
@@ -9513,7 +9510,7 @@ int qcpuid_cmd(int argc, char *argv[], char *cmdline)
     WRMSG( HHC17004, "I",  sysblk.cpuid );
     WRMSG( HHC17005, "I",  machinetype,
                            model,
-                           manuf, 
+                           manuf,
                            plant,
                            sequence );
     return 0;
@@ -9802,92 +9799,92 @@ int CmdLevel(int argc, char *argv[], char *cmdline)
             if (strcasecmp (argv[i], "-all") == 0)
                 sysblk.sysgroup = SYSGROUP_SYSNONE;
             else
-            if  ( strlen( argv[i] ) >= 4 && 
-                  strlen( argv[i] ) <= 8 && 
+            if  ( strlen( argv[i] ) >= 4 &&
+                  strlen( argv[i] ) <= 8 &&
                   !strncasecmp( argv[i], "operator", strlen( argv[i] ) )
                 )
                 sysblk.sysgroup |= SYSGROUP_SYSOPER;
             else
-            if  ( strlen( argv[i] ) >= 5 && 
-                  strlen( argv[i] ) <= 9 && 
+            if  ( strlen( argv[i] ) >= 5 &&
+                  strlen( argv[i] ) <= 9 &&
                   !strncasecmp( argv[i], "+operator", strlen( argv[i] ) )
                 )
                 sysblk.sysgroup |= SYSGROUP_SYSOPER;
             else
-            if  ( strlen( argv[i] ) >= 5 && 
-                  strlen( argv[i] ) <= 9 && 
+            if  ( strlen( argv[i] ) >= 5 &&
+                  strlen( argv[i] ) <= 9 &&
                   !strncasecmp( argv[i], "-operator", strlen( argv[i] ) )
                 )
                 sysblk.sysgroup &= ~SYSGROUP_SYSOPER;
             else
-            if  ( strlen( argv[i] ) >= 5  && 
-                  strlen( argv[i] ) <= 11 && 
+            if  ( strlen( argv[i] ) >= 5  &&
+                  strlen( argv[i] ) <= 11 &&
                   !strncasecmp( argv[i], "maintenance", strlen( argv[i] ) )
                 )
                 sysblk.sysgroup |= SYSGROUP_SYSMAINT;
             else
-            if  ( strlen( argv[i] ) >= 6  && 
-                  strlen( argv[i] ) <= 12 && 
+            if  ( strlen( argv[i] ) >= 6  &&
+                  strlen( argv[i] ) <= 12 &&
                   !strncasecmp( argv[i], "+maintenance", strlen( argv[i] ) )
                 )
                 sysblk.sysgroup |= SYSGROUP_SYSMAINT;
             else
-            if  ( strlen( argv[i] ) >= 6  && 
-                  strlen( argv[i] ) <= 12 && 
+            if  ( strlen( argv[i] ) >= 6  &&
+                  strlen( argv[i] ) <= 12 &&
                   !strncasecmp( argv[i], "-maintenance", strlen( argv[i] ) )
                 )
                 sysblk.sysgroup &= ~SYSGROUP_SYSMAINT;
             else
-            if  ( strlen( argv[i] ) >= 4  && 
-                  strlen( argv[i] ) <= 10 && 
+            if  ( strlen( argv[i] ) >= 4  &&
+                  strlen( argv[i] ) <= 10 &&
                   !strncasecmp( argv[i], "programmer", strlen( argv[i] ) )
                 )
                 sysblk.sysgroup |= SYSGROUP_SYSPROG;
             else
-            if  ( strlen( argv[i] ) >= 5  && 
-                  strlen( argv[i] ) <= 11 && 
+            if  ( strlen( argv[i] ) >= 5  &&
+                  strlen( argv[i] ) <= 11 &&
                   !strncasecmp( argv[i], "+programmer", strlen( argv[i] ) )
                 )
                 sysblk.sysgroup |= SYSGROUP_SYSPROG;
             else
-            if  ( strlen( argv[i] ) >= 5  && 
-                  strlen( argv[i] ) <= 11 && 
+            if  ( strlen( argv[i] ) >= 5  &&
+                  strlen( argv[i] ) <= 11 &&
                   !strncasecmp( argv[i], "-programmer", strlen( argv[i] ) )
                 )
                 sysblk.sysgroup &= ~SYSGROUP_SYSPROG;
             else
-            if  ( strlen( argv[i] ) >= 3  && 
-                  strlen( argv[i] ) <= 9 && 
+            if  ( strlen( argv[i] ) >= 3  &&
+                  strlen( argv[i] ) <= 9 &&
                   !strncasecmp( argv[i], "developer", strlen( argv[i] ) )
                 )
                 sysblk.sysgroup |= SYSGROUP_SYSDEVEL;
             else
-            if  ( strlen( argv[i] ) >= 4  && 
-                  strlen( argv[i] ) <= 10 && 
+            if  ( strlen( argv[i] ) >= 4  &&
+                  strlen( argv[i] ) <= 10 &&
                   !strncasecmp( argv[i], "+developer", strlen( argv[i] ) )
                 )
                 sysblk.sysgroup |= SYSGROUP_SYSDEVEL;
             else
-            if  ( strlen( argv[i] ) >= 4  && 
-                  strlen( argv[i] ) <= 10 && 
+            if  ( strlen( argv[i] ) >= 4  &&
+                  strlen( argv[i] ) <= 10 &&
                   !strncasecmp( argv[i], "-developer", strlen( argv[i] ) )
                 )
                 sysblk.sysgroup &= ~SYSGROUP_SYSDEVEL;
             else
-            if  ( strlen( argv[i] ) >= 3  && 
-                  strlen( argv[i] ) <= 5  && 
+            if  ( strlen( argv[i] ) >= 3  &&
+                  strlen( argv[i] ) <= 5  &&
                   !strncasecmp( argv[i], "debug", strlen( argv[i] ) )
                 )
                 sysblk.sysgroup |= SYSGROUP_SYSDEBUG;
             else
-            if  ( strlen( argv[i] ) >= 4  && 
-                  strlen( argv[i] ) <= 6  && 
+            if  ( strlen( argv[i] ) >= 4  &&
+                  strlen( argv[i] ) <= 6  &&
                   !strncasecmp( argv[i], "+debug", strlen( argv[i] ) )
                 )
                 sysblk.sysgroup |= SYSGROUP_SYSDEBUG;
             else
-            if  ( strlen( argv[i] ) >= 4  && 
-                  strlen( argv[i] ) <= 6  && 
+            if  ( strlen( argv[i] ) >= 4  &&
+                  strlen( argv[i] ) <= 6  &&
                   !strncasecmp( argv[i], "-debug", strlen( argv[i] ) )
                 )
                 sysblk.sysgroup &= ~SYSGROUP_SYSDEBUG;
@@ -9909,7 +9906,7 @@ int CmdLevel(int argc, char *argv[], char *cmdline)
     else
     {
         char buf[128];
-        MSGBUF( buf, "%s%s%s%s%s", 
+        MSGBUF( buf, "%s%s%s%s%s",
             (sysblk.sysgroup&SYSGROUP_SYSOPER)?"operator ":"",
             (sysblk.sysgroup&SYSGROUP_SYSMAINT)?"maintenance ":"",
             (sysblk.sysgroup&SYSGROUP_SYSPROG)?"programmer ":"",
@@ -9918,7 +9915,7 @@ int CmdLevel(int argc, char *argv[], char *cmdline)
         buf[strlen(buf)-1] = 0;
         WRMSG(HHC01606, "I", sysblk.sysgroup, buf);
     }
-    
+
     return 0;
 }
 /* HSCCMD.C End-of-text */

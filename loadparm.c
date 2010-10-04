@@ -19,13 +19,71 @@
 
 #include "hercules.h"
 
+// ebcdic_to_stringz_allow_return returns a null terminated string allowing
+//                                embedded spaces
+#define ebcdic_to_stringz_allow_return(_field) \
+{ \
+    static char result[sizeof(_field)+1]; \
+    int i; \
+    result[sizeof(_field)] = 0; \
+    for (i = sizeof(_field) - 1; i >= 0 && _field[i] == 0x40; i--) \
+        result[i] = 0; \
+    for (; i >= 0; i--) \
+        result[i] = guest_to_host((int)_field[i]); \
+    return result; \
+}
+
+
+// ebcdic_to_stringz_return returns a null terminated string stopping
+//                          at first embedded blank or end of field
 
 #define ebcdic_to_stringz_return(_field) \
-    { \
-        static char result[sizeof(_field)+1]; \
-        copy_ebcdic_to_stringz(result, sizeof(result), _field, sizeof(_field)); \
-        return result; \
-    }
+{ \
+    static char result[sizeof(_field)+1]; \
+    copy_ebcdic_to_stringz(result, sizeof(result), _field, sizeof(_field)); \
+    return result; \
+}
+
+
+// set_static
+
+#define set_static(_target,_source) \
+{ \
+    size_t i = 0; \
+    size_t n = MIN(strlen(_source), sizeof(_target)); \
+    if (_source) \
+        for (; i < n; i++) \
+             if (isprint(_source[i])) \
+                 _target[i] = host_to_guest((int)toupper(_source[i])); \
+             else \
+                 _target[i] = 0x40; \
+    for (; i < sizeof(_target); i++) \
+        _target[i] = 0x40; \
+}
+
+
+// set_stsi_and_return
+
+#define set_stsi_and_return(_target,_source,_default) \
+{ \
+    size_t  i; \
+    int     n; \
+    BYTE    temp[sizeof(_target)]; \
+    memset(temp, 0x40, sizeof(temp) ); \
+    for (i = 0, n = 0; name && i < strlen(name) && i < sizeof(temp); i++) \
+        if (isalnum(name[i])) \
+        { \
+            temp[i] = host_to_guest((int)toupper(name[i])); \
+            n++; \
+        } \
+        else \
+            return -1;      /* 0-9, A-Z */ \
+    if ( n > 0 )            /* valid if > 0 count */ \
+        memcpy(_target,temp,sizeof(_target)); \
+    else \
+        memcpy(_target,_default,MIN(sizeof(_target),sizeof(_default))); \
+    return n; \
+}
 
 
 /*-------------------------------------------------------------------*/
@@ -34,10 +92,11 @@
 int copy_stringz_to_ebcdic(BYTE* fld, size_t len, char *name)
 {
     size_t  i;
+    size_t  copylen;
     int     n;
     BYTE    *temp_fld;
 
-    if ( name == NULL || strlen(name) == 0 ) 
+    if ( name == NULL || strlen(name) == 0 )
     {
         bzero(fld, len);
         return 0;
@@ -45,8 +104,9 @@ int copy_stringz_to_ebcdic(BYTE* fld, size_t len, char *name)
 
     temp_fld = (BYTE *)malloc(len+1);
     memset(temp_fld, 0x40, len);
+    copylen = MIN(strlen(name), len);
 
-    for ( i = 0, n = 0; i < strlen(name) && i < len; i++ )
+    for ( i = 0, n = 0; i < copylen; i++ )
         if ( isalnum(name[i]) )
         {
             temp_fld[i] = host_to_guest((int)toupper(name[i]));
@@ -57,10 +117,10 @@ int copy_stringz_to_ebcdic(BYTE* fld, size_t len, char *name)
             n = -1;
             break;
         }
-    
+
     if ( n > 0 )
         memcpy(fld,temp_fld,len);
-    
+
     free(temp_fld);
 
     return n;
@@ -72,20 +132,22 @@ int copy_stringz_to_ebcdic(BYTE* fld, size_t len, char *name)
 int copy_ebcdic_to_stringz(char *name, size_t nlen, BYTE* fld, size_t flen)
 {
     size_t  i;
+    size_t  copylen;
     char    c;
 
     if ( name == NULL || nlen == 0 || flen == 0 ) return -1;
-    
-    bzero(name, nlen);
 
-    for ( i = 0; i < MIN((nlen-1),flen) ; i++ )
+    bzero(name, nlen);
+    copylen = MIN(nlen-1, flen);
+
+    for ( i = 0; i < copylen; i++ )
     {
         c = guest_to_host(fld[i]);
-        
+
         if ( c == SPACE || !isalnum(c) )
             break; /* there should not be any embedded blanks */
 
-        name[i] = c;       
+        name[i] = c;
     }
 
     return 0;
@@ -100,15 +162,7 @@ static BYTE loadparm[8] = {0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40};
 
 void set_loadparm(char *name)
 {
-    size_t i;
-
-    for (i = 0; name && i < strlen(name) && i < sizeof(loadparm); i++)
-    if (isprint(name[i]))
-            loadparm[i] = host_to_guest((int)toupper(name[i]));
-        else
-            loadparm[i] = 0x40;
-    for (; i < sizeof(loadparm); i++)
-        loadparm[i] = 0x40;
+    set_static(loadparm, name);
 }
 
 
@@ -120,19 +174,7 @@ void get_loadparm(BYTE *dest)
 
 char *str_loadparm()
 {
-    static char ret_loadparm[sizeof(loadparm)+1];
-    int i;
-
-    ret_loadparm[sizeof(loadparm)] = '\0';
-    for (i = sizeof(loadparm) - 1; i >= 0; i--)
-    {
-        ret_loadparm[i] = guest_to_host((int)loadparm[i]);
-
-        if (isspace(ret_loadparm[i]) && !ret_loadparm[i+1])
-            ret_loadparm[i] = '\0';
-    }
-
-    return ret_loadparm;
+    ebcdic_to_stringz_allow_return(loadparm);
 }
 
 
@@ -141,20 +183,12 @@ char *str_loadparm()
 /* Set by: LPARNAME configuration statement                          */
 /* Retrieved by: STSI and MSSF_CALL instructions                     */
 /*-------------------------------------------------------------------*/
-static BYTE lparname[8] = {0xC8, 0xC5, 0xD9, 0xC3, 0xE4, 0xD3, 0xC5, 0xE2};
-                          /* HERCULES */
+                          /*  H    E    R    C    U    L    E    S  */
+static BYTE lparname[8] = { 0xC8,0xC5,0xD9,0xC3,0xE4,0xD3,0xC5,0xE2 };
 
 void set_lparname(char *name)
 {
-    size_t i;
-
-    for ( i = 0; name && i < strlen(name) && i < sizeof(lparname); i++)
-        if (isprint(name[i]))
-            lparname[i] = host_to_guest((int)toupper(name[i]));
-        else
-            lparname[i] = 0x40;
-    for (; i < sizeof(lparname); i++)
-        lparname[i] = 0x40;
+    set_static(lparname, name);
 }
 
 
@@ -168,7 +202,7 @@ LOADPARM_DLL_IMPORT
 char *str_lparname()
 {
     ebcdic_to_stringz_return(lparname);
-    }
+}
 
 
 /*-------------------------------------------------------------------*/
@@ -176,35 +210,17 @@ char *str_lparname()
 /* Set by: MANUFACTURER configuration statement                      */
 /* Retrieved by: STSI instruction                                    */
 /*-------------------------------------------------------------------*/
-                          /*  "H    R    C"  */
+                          /*   H    R    C   */
 static BYTE manufact[16] = { 0xC8,0xD9,0xC3,0x40,0x40,0x40,0x40,0x40,
                              0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
 
 int set_manufacturer(char *name)
 {
-    size_t  i;
-    int     n;
-    BYTE    temp_man[16];   /*  H    R    C  */
-    BYTE    dflt_man[16] = { 0xC8,0xD9,0xC3,0x40,0x40,0x40,0x40,0x40,
-                             0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
+                                      /*  H    R    C  */
+    const BYTE default_manufact[16] = { 0xC8,0xD9,0xC3,0x40,0x40,0x40,0x40,0x40,
+                                        0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
 
-    memset(temp_man, 0x40, sizeof(temp_man) );
-
-    for (i = 0, n = 0; name && i < strlen(name) && i < sizeof(temp_man); i++)
-        if (isalnum(name[i]))
-        {
-            temp_man[i] = host_to_guest((int)toupper(name[i]));
-            n++;
-        }
-        else
-            return -1;      /* 0-9, A-Z */
-
-    if ( n > 0 )            /* valid if > 0 count */
-        memcpy(manufact,temp_man,sizeof(manufact));
-    else
-        memcpy(manufact,dflt_man,sizeof(manufact));
-
-    return n;
+    set_stsi_and_return(manufact, name, default_manufact);
 }
 
 void get_manufacturer(BYTE *dest)
@@ -228,29 +244,10 @@ static BYTE plant[4] = { 0xE9,0xE9,0x40,0x40 };
 
 int set_plant(char *name)
 {
-    size_t  i;
-    int     n;
-    BYTE    temp_plant[4];    /* Z    Z           */
-    BYTE    dflt_plant[4] = { 0xE9,0xE9,0x40,0x40 };
-    
-    memset(temp_plant, 0x40, sizeof(temp_plant) );
+                                  /*  Z    Z           */
+    const BYTE default_plant[4] = { 0xE9,0xE9,0x40,0x40 };
 
-    for (i = 0, n = 0; name && i < strlen(name) && i < sizeof(plant); i++)
-        if (isalnum(name[i]))
-        {
-            temp_plant[i] = host_to_guest((int)toupper(name[i]));
-            n++;
-        }
-        else
-            return -1;      /* invalid characters 0-9,A-Z */
-    
-    if ( n > 0 )            /* only copy if not 0 */
-        memcpy(plant, temp_plant, sizeof(plant));
-    else
-        memcpy(plant, dflt_plant, sizeof(plant));
-
-    return n;
-
+    set_stsi_and_return(plant, name, default_plant);
 }
 
 void get_plant(BYTE *dest)
@@ -276,9 +273,9 @@ char *str_plant()
  * being set to binary zeros. "modelcapa" must have at least one
  * character in the field. Valid characters are 0-9,A-Z, right padded
  * with blanks.
- */ 
+ */
 /*-------------------------------------------------------------------*/
-                            /*  "E    M    U    L    A    T    O    R" */
+                            /*  E    M    U    L    A    T    O    R  */
 static BYTE     model[16] = { 0xC5,0xD4,0xE4,0xD3,0xC1,0xE3,0xD6,0xD9,
                               0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
 static BYTE modelcapa[16] = { 0xC5,0xD4,0xE4,0xD3,0xC1,0xE3,0xD6,0xD9,
@@ -288,25 +285,30 @@ static BYTE modeltemp[16] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 
 int set_model(char *m1, char *m2, char *m3, char *m4)
 {
+                               /*   E    M    U    L    A    T    O    R  */
     const BYTE dflt_model[16] = { 0xC5,0xD4,0xE4,0xD3,0xC1,0xE3,0xD6,0xD9,
-                               0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
+                                  0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
 
     /* Model maybe binary zero */
     if ( m1 != NULL && m1[0] != '*' )
     {
         if ( strlen(m1) == 0 )
             bzero(model,sizeof(model));
+        else if ( strcmp(m1, "=") == 0)
+            memcpy(model, dflt_model, sizeof(model));
         else if ( copy_stringz_to_ebcdic(model,     sizeof(model),     m1) <= 0 ) return 1;
     }
     else if ( m1 == NULL )
         return 0;
 
-    /* model-capa may never be binary zero, if NULL or "" then default of "EMULATOR" will 
+    /* model-capa may never be binary zero, if NULL or "" then default of "EMULATOR" will
        be assigned */
     if ( m2 != NULL && m2[0] != '*' )
     {
         if ( strlen(m2) == 0 )
             memcpy(modelcapa,dflt_model,sizeof(modelcapa));
+        else if ( strcmp(m2, "=") == 0)
+            memcpy(modelcapa, model, sizeof(modelcapa));
         else if ( copy_stringz_to_ebcdic(modelcapa, sizeof(modelcapa), m2) <= 0) return 2;
     }
     else if ( m2 == NULL )
@@ -317,6 +319,8 @@ int set_model(char *m1, char *m2, char *m3, char *m4)
     {
         if ( strlen(m3) == 0 )
             bzero(modelperm,sizeof(modelperm));
+        else if ( strcmp(m3, "=") == 0)
+            memcpy(modelperm, modelcapa, sizeof(modelperm));
         else if ( copy_stringz_to_ebcdic(modelperm, sizeof(modelperm), m3) <= 0 ) return 3;
     }
     else if ( m3 == NULL )
@@ -327,10 +331,12 @@ int set_model(char *m1, char *m2, char *m3, char *m4)
     {
         if ( strlen(m4) == 0 )
             bzero(modeltemp,sizeof(modeltemp));
+        else if ( strcmp(m4, "=") == 0)
+            memcpy(modeltemp, modelperm, sizeof(modeltemp));
         else if ( copy_stringz_to_ebcdic(modeltemp, sizeof(modeltemp), m4) <= 0 ) return 4;
     }
-    else if ( m4 == NULL )
-        return 0;
+//  else if ( m4 == NULL )      // uncomment test if anything else is done
+//      return 0;
 
     return 0;
 }
@@ -344,17 +350,17 @@ char **str_model()
     static char t_model[sizeof(modeltemp)+1];
     static char *models[5] = { h_model, c_model, p_model, t_model, NULL };
     int rc;
-    
+
     bzero(h_model,sizeof(h_model));
     bzero(c_model,sizeof(c_model));
     bzero(p_model,sizeof(p_model));
     bzero(t_model,sizeof(t_model));
-    
+
     rc = copy_ebcdic_to_stringz(h_model, sizeof(h_model), model, sizeof(model));
     rc = copy_ebcdic_to_stringz(c_model, sizeof(c_model), modelcapa, sizeof(modelcapa));
     rc = copy_ebcdic_to_stringz(p_model, sizeof(p_model), modelperm, sizeof(modelperm));
     rc = copy_ebcdic_to_stringz(t_model, sizeof(t_model), modeltemp, sizeof(modeltemp));
-    
+
     return models;
 }
 
@@ -420,8 +426,7 @@ LOADPARM_DLL_IMPORT
 char *str_systype()
 {
     ebcdic_to_stringz_return(systype);
-    }
-
+}
 
 
 /*-------------------------------------------------------------------*/
@@ -445,8 +450,7 @@ LOADPARM_DLL_IMPORT
 char *str_sysname()
 {
     ebcdic_to_stringz_return(sysname);
-    }
-
+}
 
 
 /*-------------------------------------------------------------------*/
@@ -470,7 +474,7 @@ LOADPARM_DLL_IMPORT
 char *str_sysplex()
 {
     ebcdic_to_stringz_return(sysplex);
-    }
+}
 
 
 /*-------------------------------------------------------------------*/
@@ -496,7 +500,7 @@ void get_mpfactors(BYTE *dest)
 /* granularity. But this will mess up old software. We will stick    */
 /* to the old value of 100. Bernard Feb 26, 2010.                    */
 /*-------------------------------------------------------------------*/
-#define  MPFACTOR_DENOMINATOR   100   
+#define  MPFACTOR_DENOMINATOR   100
 #define  MPFACTOR_PERCENT       95
 
     static U16 mpfactors[MAX_CPU_ENGINES-1] = {0};
