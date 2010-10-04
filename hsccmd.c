@@ -3075,10 +3075,36 @@ int cnslport_cmd(int argc, char *argv[], char *cmdline)
 
     UNREFERENCED(cmdline);
 
-    if ( argc != 2 )
+    if ( argc > 2 )
     {
         WRMSG( HHC01455, "E", argv[0] );
-        rc = 1;
+        rc = -1;
+    }
+    else if ( argc == 1 )
+    {
+        char buf[128];
+
+        if (strchr(sysblk.cnslport, ':') == NULL)
+        {
+            MSGBUF( buf, "on port %s", sysblk.cnslport);
+        }
+        else
+        {
+            char *serv;
+            char *host = NULL;
+            char *port = strdup(sysblk.cnslport);
+
+            if ((serv = strchr(port,':')))
+            {
+                *serv++ = '\0';
+                if (*port)
+                    host = port;
+            }
+            MSGBUF( buf, "for host %s on port %s", host, serv);
+            free( port );
+        }
+        WRMSG( HHC17001, "I", "Console", buf);
+        rc = 0;
     }
     else
     {   /* set console port */
@@ -3095,7 +3121,7 @@ int cnslport_cmd(int argc, char *argv[], char *cmdline)
             if ( !isdigit(port[i]) )
             {
                 WRMSG( HHC01451, "E", port, argv[0] );
-                rc = 1;
+                rc = -1;
             }
         }
 
@@ -3104,24 +3130,32 @@ int cnslport_cmd(int argc, char *argv[], char *cmdline)
         if (i < 0 || i > 65535)
         {
             WRMSG( HHC01451, "E", port, argv[0] );
-            rc = 1;
+            rc = -1;
         }
 
         free(host);
+        rc = 1;
     }
 
-    if (sysblk.cnslport != NULL)
-        free(sysblk.cnslport);
-
-    if ( rc == 1 )
+    if ( rc != 0 )
     {
-        WRMSG( HHC01452, "W", def_port, argv[0] );
-        sysblk.cnslport = strdup(def_port);
-    }
-    else
-        sysblk.cnslport = strdup(argv[1]);
+        if (sysblk.cnslport != NULL)
+            free(sysblk.cnslport);
 
-    return 0;
+        if ( rc == -1 )
+        {
+            WRMSG( HHC01452, "W", def_port, argv[0] );
+            sysblk.cnslport = strdup(def_port);
+            rc = 1;
+        }
+        else
+        {
+            sysblk.cnslport = strdup(argv[1]);
+            rc = 0;
+        }
+    }
+
+    return rc;
 }
 
 #if defined(OPTION_HTTP_SERVER)
@@ -3131,15 +3165,16 @@ int cnslport_cmd(int argc, char *argv[], char *cmdline)
 int httproot_cmd(int argc, char *argv[], char *cmdline)
 {
 char pathname[MAX_PATH];
+int rc;
 
     UNREFERENCED(cmdline);
     if ( argc > 2 )
     {
         WRMSG( HHC01455, "S", argv[0] );
-        return -1;
+        rc = -1;
     }
 
-    if ( argc == 2 )
+    else if ( argc == 2 )
     {
         if (sysblk.httproot)
             free(sysblk.httproot);
@@ -3151,12 +3186,20 @@ char pathname[MAX_PATH];
 
         if ( MLVL(VERBOSE) )
             WRMSG(HHC02204, "I", argv[0], sysblk.httproot ? sysblk.httproot : "<not specified>");
-
+        rc = 0;
     }
     else
+    {
         WRMSG(HHC02203, "I", argv[0], sysblk.httproot ? sysblk.httproot : "<not specified>");
+        rc = 0;
+    }
 
-    return 0;
+    if ( rc == 0 && sysblk.httproot )
+    {
+        rc = 1;         /* rc = 1 if path is null */
+    }
+
+    return rc;
 }
 
 
@@ -5512,6 +5555,12 @@ BYTE c;                                 /* Character work area       */
     if (argc < 2)
     {
         WRMSG(HHC02202, "E");
+        return -1;
+    }
+
+    if ( argc > 2 )
+    {
+        WRMSG( HHC02299, "E", argv[0] );
         return -1;
     }
 
