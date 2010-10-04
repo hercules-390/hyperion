@@ -3536,6 +3536,7 @@ DEF_INST(load_fpc);
 DEF_INST(set_fpc);
 DEF_INST(extract_fpc);
 DEF_INST(set_bfp_rounding_mode);
+DEF_INST(set_bfp_rounding_mode_3bit);                           /*810*/
 DEF_INST(trap2);
 DEF_INST(trap4);
 DEF_INST(resume_program);
@@ -3833,15 +3834,27 @@ DEF_INST(compare_and_signal_bfp_short);
 DEF_INST(convert_fix32_to_bfp_ext_reg);
 DEF_INST(convert_fix32_to_bfp_long_reg);
 DEF_INST(convert_fix32_to_bfp_short_reg);
+DEF_INST(convert_u32_to_bfp_ext_reg);                           /*810*/
+DEF_INST(convert_u32_to_bfp_long_reg);                          /*810*/
+DEF_INST(convert_u32_to_bfp_short_reg);                         /*810*/
 DEF_INST(convert_fix64_to_bfp_ext_reg);
 DEF_INST(convert_fix64_to_bfp_long_reg);
 DEF_INST(convert_fix64_to_bfp_short_reg);
+DEF_INST(convert_u64_to_bfp_ext_reg);                           /*810*/
+DEF_INST(convert_u64_to_bfp_long_reg);                          /*810*/
+DEF_INST(convert_u64_to_bfp_short_reg);                         /*810*/
 DEF_INST(convert_bfp_ext_to_fix32_reg);
 DEF_INST(convert_bfp_long_to_fix32_reg);
 DEF_INST(convert_bfp_short_to_fix32_reg);
+DEF_INST(convert_bfp_ext_to_u32_reg);                           /*810*/
+DEF_INST(convert_bfp_long_to_u32_reg);                          /*810*/
+DEF_INST(convert_bfp_short_to_u32_reg);                         /*810*/
 DEF_INST(convert_bfp_ext_to_fix64_reg);
 DEF_INST(convert_bfp_long_to_fix64_reg);
 DEF_INST(convert_bfp_short_to_fix64_reg);
+DEF_INST(convert_bfp_ext_to_u64_reg);                           /*810*/
+DEF_INST(convert_bfp_long_to_u64_reg);                          /*810*/
+DEF_INST(convert_bfp_short_to_u64_reg);                         /*810*/
 DEF_INST(divide_bfp_ext_reg);
 DEF_INST(divide_bfp_long_reg);
 DEF_INST(divide_bfp_long);
@@ -3922,14 +3935,26 @@ DEF_INST(compare_and_signal_dfp_ext_reg);
 DEF_INST(compare_and_signal_dfp_long_reg);
 DEF_INST(compare_exponent_dfp_ext_reg);
 DEF_INST(compare_exponent_dfp_long_reg);
+DEF_INST(convert_fix32_to_dfp_ext_reg);                         /*810*/
+DEF_INST(convert_fix32_to_dfp_long_reg);                        /*810*/
+DEF_INST(convert_u32_to_dfp_ext_reg);                           /*810*/
+DEF_INST(convert_u32_to_dfp_long_reg);                          /*810*/
 DEF_INST(convert_fix64_to_dfp_ext_reg);
 DEF_INST(convert_fix64_to_dfp_long_reg);
+DEF_INST(convert_u64_to_dfp_ext_reg);                           /*810*/
+DEF_INST(convert_u64_to_dfp_long_reg);                          /*810*/
 DEF_INST(convert_sbcd128_to_dfp_ext_reg);
 DEF_INST(convert_sbcd64_to_dfp_long_reg);
 DEF_INST(convert_ubcd128_to_dfp_ext_reg);
 DEF_INST(convert_ubcd64_to_dfp_long_reg);
+DEF_INST(convert_dfp_ext_to_fix32_reg);                         /*810*/
+DEF_INST(convert_dfp_long_to_fix32_reg);                        /*810*/
+DEF_INST(convert_dfp_ext_to_u32_reg);                           /*810*/
+DEF_INST(convert_dfp_long_to_u32_reg);                          /*810*/
 DEF_INST(convert_dfp_ext_to_fix64_reg);
 DEF_INST(convert_dfp_long_to_fix64_reg);
+DEF_INST(convert_dfp_ext_to_u64_reg);                           /*810*/
+DEF_INST(convert_dfp_long_to_u64_reg);                          /*810*/
 DEF_INST(convert_dfp_ext_to_sbcd128_reg);
 DEF_INST(convert_dfp_long_to_sbcd64_reg);
 DEF_INST(convert_dfp_ext_to_ubcd128_reg);
