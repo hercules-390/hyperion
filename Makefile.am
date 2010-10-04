@@ -722,6 +722,7 @@ noinst_HEADERS = fishhang.h     \
                  hostopts.h     \
                  w32util.h      \
                  hconsts.h      \
+                 herror.h       \
                  hmacros.h      \
                  hstructs.h     \
                  hexterns.h     \
