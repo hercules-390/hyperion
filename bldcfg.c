@@ -553,8 +553,6 @@ static  char    fname[MAX_PATH];        /* normalized filename       */
         close(dummyfd[i]);
 #endif
 
-    sysblk.numcpu = sysblk.numcpu ? sysblk.numcpu : 1;
-
     /* Set default maximum number of CPUs */
     if(!sysblk.maxcpu)
 #ifdef _FEATURE_CPU_RECONFIG
