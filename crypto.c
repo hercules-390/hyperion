@@ -224,6 +224,7 @@ void renew_wrapping_keys(void)
   /* We set the verification pattern to */
   /* cpuid (8 bytes) */
   /* lpar name (8 bytes) */
+  /* lparnum (1 byte) */
   /* time (8 bytes at the end) */
   memset(sysblk.wkvpaes_reg, 0, 32);
   memset(sysblk.wkvpdea_reg, 0, 24);
