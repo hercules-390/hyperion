@@ -1319,6 +1319,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\herror.h"
+							>
+						</File>
+						<File
 							RelativePath=".\hextapi.h"
 							>
 						</File>
