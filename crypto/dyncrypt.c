@@ -4397,7 +4397,10 @@ DEF_INST(cipher_message_with_counter_d)
     case 10: /* encrypted tdea-128 */
     case 11: /* encrypted tdea-192 */
     {
-      ARCH_DEP(kmctr_dea)(r1, r2, r3, regs);
+      if(msa >= 4)
+        ARCH_DEP(kmctr_dea)(r1, r2, r3, regs);
+      else
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
     case 18: /* aes-128 */
@@ -4407,7 +4410,10 @@ DEF_INST(cipher_message_with_counter_d)
     case 27: /* encrypted aes-192 */
     case 28: /* encrypted aes-256 */
     {
-      ARCH_DEP(kmctr_aes)(r1, r2, r3, regs);
+      if(msa >= 4)
+        ARCH_DEP(kmctr_aes)(r1, r2, r3, regs);
+      else
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);	      
       break;
     }
     default:
@@ -4484,7 +4490,10 @@ DEF_INST(cipher_message_with_cipher_feedback_d)
     case 10: /* encrypted tdea-128 */
     case 11: /* encrypted tdea-192 */
     {
-      ARCH_DEP(kmf_dea)(r1, r2, regs);
+      if(msa >= 4)
+        ARCH_DEP(kmf_dea)(r1, r2, regs);
+      else
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);	      
       break;      
     } 
     case 18: /* aes-128 */
@@ -4494,7 +4503,10 @@ DEF_INST(cipher_message_with_cipher_feedback_d)
     case 27: /* encrypted aes-192 */
     case 28: /* encrypted aes-256 */
     {
-      ARCH_DEP(kmf_aes)(r1, r2, regs);
+      if(msa >= 4)
+        ARCH_DEP(kmf_aes)(r1, r2, regs);
+      else
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);	      
       break;
     }
     default:
@@ -4568,7 +4580,10 @@ DEF_INST(cipher_message_with_output_feedback_d)
     case 10: /* encrypted tdea-128 */
     case 11: /* encrypted tdea-192 */
     {
-      ARCH_DEP(kmo_dea)(r1, r2, regs);
+      if(msa >= 4)	    
+        ARCH_DEP(kmo_dea)(r1, r2, regs);
+      else
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);	      
       break;      
     } 
     case 18: /* aes-128 */
@@ -4578,7 +4593,10 @@ DEF_INST(cipher_message_with_output_feedback_d)
     case 27: /* encrypted aes-192 */
     case 28: /* encrypted aes-256 */
     {
-      ARCH_DEP(kmo_aes)(r1, r2, regs);
+      if(msa >= 4)	    
+        ARCH_DEP(kmo_aes)(r1, r2, regs);
+      else
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);	      
       break;
     }
     default:
@@ -4657,7 +4675,10 @@ DEF_INST(perform_cryptographic_computation_d)
     case 10: /* encrypted tdea-128 */
     case 11: /* encrypted tdea-192 */
     {
-      ARCH_DEP(pcc_cmac_dea)(regs);
+      if(msa >= 4)	    
+        ARCH_DEP(pcc_cmac_dea)(regs);
+      else
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);	      
       break;
     } 
     case 18: /* aes-128 */
@@ -4667,7 +4688,10 @@ DEF_INST(perform_cryptographic_computation_d)
     case 27: /* encrypted aes-192 */
     case 28: /* encrypted aes-256 */
     {
-      ARCH_DEP(pcc_cmac_aes)(regs);
+      if(msa >= 4)	    
+        ARCH_DEP(pcc_cmac_aes)(regs);
+      else
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);	      
       break;
     }
     case 50: /* aes-128 */
@@ -4675,7 +4699,10 @@ DEF_INST(perform_cryptographic_computation_d)
     case 58: /* encrypted aes-128 */
     case 60: /* encrypted aes-256 */
     {
-      ARCH_DEP(pcc_xts_aes)(regs);
+      if(msa >= 4)
+        ARCH_DEP(pcc_xts_aes)(regs);
+      else
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);	      
       break;
     }
     default:
@@ -4690,9 +4717,9 @@ DEF_INST(perform_cryptographic_computation_d)
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
 /*----------------------------------------------------------------------------*/
-/* B928 PCKMO - Perform cryptographic key management operations         [RRE] */
+/* B928 PCKMO - Perform cryptographic key management operation          [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(perform_cryptographic_key_management_operations_d)
+DEF_INST(perform_cryptographic_key_management_operation_d)
 {
   int fc;
   int keylen = 0;
@@ -4718,7 +4745,7 @@ DEF_INST(perform_cryptographic_key_management_operations_d)
 
 #ifdef OPTION_PCKMO_DEBUG
   WRGMSG_ON;
-  WRGMSG(HHC90100, "D", "PCKMO: perform cryptographic key management operations");
+  WRGMSG(HHC90100, "D", "PCKMO: perform cryptographic key management operation");
   WRGMSG(HHC90104, "D", 0, regs->GR(0));
   WRGMSG(HHC90105, "D", TRUEFALSE(GR0_m(regs)));
   WRGMSG(HHC90106, "D", GR0_fc(regs));
@@ -4854,7 +4881,7 @@ HDL_REGISTER_SECTION;
   HDL_REGISTER(s390_compute_last_message_digest, s390_compute_last_message_digest_d);
   HDL_REGISTER(s390_compute_message_authentication_code, s390_compute_message_authentication_code_d);
 //  HDL_REGISTER(s390_perform_cryptographic_computation, s390_perform_cryptographic_computation_d);
-  HDL_REGISTER(s390_perform_cryptographic_key_management_operations, s390_perform_cryptographic_key_management_operations_d);
+  HDL_REGISTER(s390_perform_cryptographic_key_management_operation, s390_perform_cryptographic_key_management_operation_d);
 #endif /*defined(_390_FEATURE_MESSAGE_SECURITY_ASSIST)*/
 
 #if defined(_900_FEATURE_MESSAGE_SECURITY_ASSIST)
@@ -4867,7 +4894,7 @@ HDL_REGISTER_SECTION;
   HDL_REGISTER(z900_compute_last_message_digest, z900_compute_last_message_digest_d);
   HDL_REGISTER(z900_compute_message_authentication_code, z900_compute_message_authentication_code_d);
 //  HDL_REGISTER(z900_perform_cryptographic_computation, z900_perform_cryptographic_computation_d);
-  HDL_REGISTER(z900_perform_cryptographic_key_management_operations, z900_perform_cryptographic_key_management_operations_d);
+  HDL_REGISTER(z900_perform_cryptographic_key_management_operation, z900_perform_cryptographic_key_management_operation_d);
 #endif /*defined(_900_FEATURE_MESSAGE_SECURITY_ASSIST)*/
 
   WRMSG(HHC00150, "I", "Crypto", " (c) Copyright 2003-2010 by Bernard van der Helm"); // Copyright notice

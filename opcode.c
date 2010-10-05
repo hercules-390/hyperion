@@ -1075,7 +1075,7 @@
 
 
 #if !defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3)       /*810*/
- UNDEF_INST(perform_cryptographic_key_management_operations_r)  /*810*/
+ UNDEF_INST(perform_cryptographic_key_management_operation_r)   /*810*/
 #endif /*!defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3)*/
 
 
@@ -3973,7 +3973,7 @@ DLL_EXPORT zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B925*/ GENx___x___x900 (store_using_real_address_long,RRE,"STURG"),
  /*B926*/ GENx37Xx390x900 (load_byte_register,RRE,"LBR"),                          /*@Z9*/
  /*B927*/ GENx37Xx390x900 (load_halfword_register,RRE,"LHR"),                      /*@Z9*/
- /*B928*/ GENx37Xx390x900 (perform_cryptographic_key_management_operations_r,RRE,"PCKMO"), /*810*/
+ /*B928*/ GENx37Xx390x900 (perform_cryptographic_key_management_operation_r,RRE,"PCKMO"), /*810*/
  /*B929*/ GENx___x___x___ ,
  /*B92A*/ GENx37Xx390x900 (cipher_message_with_cipher_feedback_r,RRE,"KMF"),       /*810*/
  /*B92B*/ GENx37Xx390x900 (cipher_message_with_output_feedback_r,RRE,"KMO"),       /*810*/
