@@ -581,13 +581,22 @@ COMMAND("sclproot",  PANEL+CONFIG,  SYSCMDALL,          sclproot_cmd,
     "the current setting.\n")
 
 #if defined(OPTION_HTTP_SERVER)
-COMMAND("httproot",  CONFIG,        SYSCMDALL,          httproot_cmd,
+COMMAND("httproot",  CONFIG+PANEL,  SYSCMDALL,          httproot_cmd,
   "Set HTTP server root directory",
     NULL)
 
-COMMAND("httpport",  CONFIG,        SYSCMDALL,          httpport_cmd,
+COMMAND("httpport",  CONFIG+PANEL,  SYSCMDALL,          httpport_cmd,
   "Set HTTP server port",
     NULL)
+
+COMMAND("http",     PANEL,          SYSCMDALL,          http_cmd,
+  "Start/Stop/Display HTTP Server",
+  "Format: 'http [start|stop]'\n"
+  "\n"
+  "start        - starts HTTP server if stopped\n"
+  "stop         - stops HTTP server if started\n"
+  "\n"
+  "<none>       - display status of HTTP server\n")
 
 #if defined( HTTP_SERVER_CONNECT_KLUDGE )
 COMMAND("HTTP_SERVER_CONNECT_KLUDGE", CONFIG, SYSCMDALL, httpskm_cmd,

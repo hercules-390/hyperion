@@ -558,13 +558,17 @@ static void *http_request(int sock)
     }
 
     if (!authok)
+    {
         http_error(webblk, "401 Authorization Required",
                            "WWW-Authenticate: Basic realm=\"HERCULES\"\n",
                            "You must be authenticated to use this service");
+    }
 
     if (!url)
+    {
         http_error(webblk,"400 Bad Request", "",
                           "You must specify a GET or POST request");
+    }
 
     /* anything following a ? in the URL is part of the get arguments */
     if ((pointer=strchr(url,'?'))) {
@@ -623,7 +627,6 @@ static void *http_request(int sock)
 
     http_error(webblk, "404 File Not Found","",
                        "The requested file was not found");
-
     return NULL;
 }
 
@@ -638,6 +641,7 @@ fd_set              selset;             /* Read bit map for select   */
 int                 optval;             /* Argument for setsockopt   */
 TID                 httptid;            /* Negotiation thread id     */
 char                pathname[MAX_PATH]; /* working pathname          */
+struct timeval      timeout;            /* timeout value             */
 
     UNREFERENCED(arg);
 
@@ -730,11 +734,12 @@ char                pathname[MAX_PATH]; /* working pathname          */
     server.sin_port = sysblk.httpport;
     server.sin_port = htons(server.sin_port);
 
+    sysblk.httpbinddone = FALSE;
     /* Attempt to bind the socket to the port */
     while (TRUE)
     {
         rc = bind (lsock, (struct sockaddr *)&server, sizeof(server));
-
+        
         if (rc == 0 || HSO_errno != HSO_EADDRINUSE) break;
 
         WRMSG(HHC01804, "W", sysblk.httpport);
@@ -746,27 +751,37 @@ char                pathname[MAX_PATH]; /* working pathname          */
         WRMSG(HHC01800,"E", "bind()", strerror(HSO_errno));
         return NULL;
     }
-
+    else
+        sysblk.httpbinddone = TRUE;
+    
     /* Put the socket into listening state */
     rc = listen (lsock, 32);
 
     if (rc < 0)
     {
         WRMSG(HHC01800,"E", "listen()", strerror(HSO_errno));
+        sysblk.httpbinddone = FALSE;
         return NULL;
     }
+
+    sysblk.httpshut = 0;
 
     WRMSG(HHC01803, "I", sysblk.httpport);
 
     /* Handle http requests */
-    while (sysblk.httpport) {
+    while ( sysblk.httpshut != 1 ) 
+    {
 
         /* Initialize the select parameters */
         FD_ZERO (&selset);
         FD_SET (lsock, &selset);
+        
+        timeout.tv_sec  = 3;
+        timeout.tv_usec = 0;
+
 
         /* Wait for a file descriptor to become ready */
-        rc = select ( lsock+1, &selset, NULL, NULL, NULL );
+        rc = select ( lsock+1, &selset, NULL, NULL, &timeout );
 
         if (rc == 0) continue;
 
@@ -776,6 +791,8 @@ char                pathname[MAX_PATH]; /* working pathname          */
             WRMSG(HHC01800, "E", "select()", strerror(HSO_errno));
             break;
         }
+        
+        if ( sysblk.httpshut == 1 ) continue;
 
         /* If a http request has arrived then accept it */
         if (FD_ISSET(lsock, &selset))
@@ -805,6 +822,8 @@ char                pathname[MAX_PATH]; /* working pathname          */
 
     /* Close the listening socket */
     close_socket (lsock);
+    
+    sysblk.httpbinddone = FALSE;
 
     /* Display thread started message on control panel */
     WRMSG(HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), "HTTP server");

@@ -389,19 +389,19 @@ int errorcount = 0;
             exec_numcpu[1]    = addargv[5];
             exec_loadparm[1]  = addargv[6];
 
-            if(ProcessConfigCommand (2, exec_cpuserial, NULL))
+            if(ProcessConfigCommand (2, exec_cpuserial, NULL) < 0 )
                 errorcount++;
-            if(ProcessConfigCommand (2, exec_cpumodel, NULL))
+            if(ProcessConfigCommand (2, exec_cpumodel,  NULL) < 0 )
                 errorcount++;
-            if(ProcessConfigCommand (2, exec_mainsize, NULL))
+            if(ProcessConfigCommand (2, exec_mainsize,  NULL) < 0 )
                 errorcount++;
-            if(ProcessConfigCommand (2, exec_xpndsize, NULL))
+            if(ProcessConfigCommand (2, exec_xpndsize,  NULL) < 0 )
                 errorcount++;
-            if(ProcessConfigCommand (2, exec_cnslport, NULL))
+            if(ProcessConfigCommand (2, exec_cnslport,  NULL) < 0 )
                 errorcount++;
-            if(ProcessConfigCommand (2, exec_numcpu, NULL))
+            if(ProcessConfigCommand (2, exec_numcpu,    NULL) < 0 )
                 errorcount++;
-            if(ProcessConfigCommand (2, exec_loadparm, NULL))
+            if(ProcessConfigCommand (2, exec_loadparm,  NULL) < 0 )
                 errorcount++;
 
             if(errorcount)
@@ -411,6 +411,7 @@ int errorcount = 0;
         {
             char addcmdline[256];
             int i;
+            int rc;
 
             strlcpy( addcmdline, addargv[0], sizeof(addcmdline) );
             for( i = 1; i < addargc; i++ )
@@ -419,7 +420,11 @@ int errorcount = 0;
                 strlcat(addcmdline, addargv[i], sizeof(addcmdline));
             }
 
-            if(ProcessConfigCommand (addargc, addargv, addcmdline))
+            rc = ProcessConfigCommand (addargc, addargv, addcmdline);
+
+            /* rc < 0 abort, rc == 0 OK, rc > warnings */
+            
+            if( rc < 0 )
             {
                 errorcount++;
                 WRMSG(HHC01441, "E", inc_stmtnum[inc_level], fname, addcmdline);
