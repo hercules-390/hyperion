@@ -25,6 +25,7 @@
 #define KEEPMSG ""
 #endif
 
+#if defined(OPTION_LPP_RESTRICT)
 static char *licensed_os[] = {
       "MVS", /* Generic name for MVS, OS/390, z/OS       */
       "VM",  /* Generic name for VM, VM/XA, VM/ESA, z/VM */
@@ -78,3 +79,4 @@ CPU_BITMAP mask;
         }
     }
 }
+#endif /*defined(OPTION_LPP_RESTRICT)*/

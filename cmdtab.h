@@ -463,9 +463,11 @@ CMDABBR("manufacturer",8,PANEL+CONFIG,    SYSCMDALL,          stsi_manufacturer_
     NULL)
 #endif /* defined(OPTION_SET_STSI_INFO) */
 
-COMMAND("pgmprdos",  CONFIG,        SYSCMDALL,          pgmprdos_cmd,
-  "Set LPP license setting",
+#if defined(OPTION_LPP_RESTRICT)
+COMMAND("pgmprdos",  CONFIG,        SYSCMDALL,          pgmprdos_cmd, 
+  "Set LPP license setting", 
     NULL)
+#endif /*defined(OPTION_LPP_RESTRICT)*/
 
 COMMAND("codepage",  PANEL+CONFIG,  SYSCMDALL,          codepage_cmd,
   "Set/display code page conversion table",
@@ -588,15 +590,6 @@ COMMAND("httproot",  CONFIG+PANEL,  SYSCMDALL,          httproot_cmd,
 COMMAND("httpport",  CONFIG+PANEL,  SYSCMDALL,          httpport_cmd,
   "Set HTTP server port",
     NULL)
-
-COMMAND("http",     PANEL,          SYSCMDALL,          http_cmd,
-  "Start/Stop/Display HTTP Server",
-  "Format: 'http [start|stop]'\n"
-  "\n"
-  "start        - starts HTTP server if stopped\n"
-  "stop         - stops HTTP server if started\n"
-  "\n"
-  "<none>       - display status of HTTP server\n")
 
 #if defined( HTTP_SERVER_CONNECT_KLUDGE )
 COMMAND("HTTP_SERVER_CONNECT_KLUDGE", CONFIG, SYSCMDALL, httpskm_cmd,

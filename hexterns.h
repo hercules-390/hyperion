@@ -265,8 +265,10 @@ CMDT_DLL_IMPORT int ProcessConfigCmdLine (char *cmdline);
 CMDT_DLL_IMPORT int ProcessPanelCommand (char *cmdline);
 
 /* Functions in module losc.c */
+#if defined(OPTION_LPP_RESTRICT)
 void losc_set (int license_status);
 void losc_check(char *ostype);
+#endif /*defined(OPTION_LPP_RESTRICT)*/
 
 #if defined(OPTION_DYNAMIC_LOAD)
 

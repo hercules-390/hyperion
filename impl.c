@@ -26,7 +26,6 @@
 #include "herc_getopt.h"
 #include "hostinfo.h"
 #include "history.h"
-#include "httpmisc.h"
 
 /* forward define process_script_file (ISW20030220-3) */
 int process_script_file(char *,int);
@@ -945,20 +944,6 @@ int     dll_count;                      /* index into array          */
     }
 
     sysblk.config_done = TRUE;
-
-#if defined(OPTION_HTTP_SERVER)
-    /* Start the http server connection thread */
-    if ( sysblk.httpport != 0 )
-    {
-        rc = create_thread (&sysblk.httptid, DETACHED, http_server, NULL, "http_server");
-        if ( rc )
-        {
-            WRMSG(HHC00102, "E", strerror(rc));
-            delayed_exit(-1);
-            return(1);
-        }
-    }
-#endif
 
 #if defined( OPTION_LOCK_CONFIG_FILE )
     if ( ( fd_cfg = open( pathname, O_RDONLY, S_IRUSR | S_IRGRP ) ) < 0 )

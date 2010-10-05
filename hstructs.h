@@ -635,8 +635,6 @@ struct SYSBLK {
         char   *httpuser;               /* HTTP userid               */
         char   *httppass;               /* HTTP password             */
         char   *httproot;               /* HTTP root                 */
-        int     httpbinddone;           /* HTTP waiting for bind     */
-        int     httpshut;               /* HTTP Flag to signal shut  */
 #if defined( OPTION_TAPE_AUTOMOUNT )
         TAMDIR *tamdir;                 /* Acc/Rej AUTOMOUNT dir ctl */
         char   *defdir;                 /* Default AUTOMOUNT dir     */

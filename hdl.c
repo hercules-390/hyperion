@@ -121,8 +121,6 @@ int logger_flag = 0;
 
     WRMSG(HHC01500, "I");
 
-    sysblk.httpshut = 1;            /* shutdown indicator */
-
     obtain_lock (&hdl_sdlock);
 
     for(shdent = hdl_shdlist; shdent; shdent = hdl_shdlist)

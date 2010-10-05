@@ -372,9 +372,9 @@ U64  syslevel;
     }
 #endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
 
-       
-
+#if defined(OPTION_LPP_RESTRICT)
     losc_check(systype);
+#endif /*defined(OPTION_LPP_RESTRICT)*/
 
     /* Indicate Event Processed */
     evd_hdr->flag |= SCCB_EVD_FLAG_PROC;
