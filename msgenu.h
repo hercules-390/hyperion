@@ -863,7 +863,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01446 "Config file[%d] '%s': '%s' is not a valid '%s', assumed '%s'"
 #define HHC01447 "Default allowed AUTOMOUNT directory: '%s'"
 #define HHC01448 "Config file[%d] '%s': missing device number or device type"
-#define HHC01449 "Config file '%s': NUMCPU %d exceeds MAXCPU %d; MAXCPU set to NUMCPU"
+#define HHC01449 "NUMCPU %d exceeds MAXCPU %d; MAXCPU set to NUMCPU"
 #define HHC01450 "Config file[%d] '%s': '%s' not supported in this build; see option '%s'"
 #define HHC01451 "Invalid value '%s' specified for '%s'"
 #define HHC01452 "Default port '%s' being used for '%s'"

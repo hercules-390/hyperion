@@ -320,7 +320,6 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                                            cygwin from thrashing in
                                            select(). sigh            */
 #endif
-static  char    fname[MAX_PATH];        /* normalized filename       */ 
 
     /* Initialize SETMODE and set user authority */
     SETMODE(INIT);
@@ -558,7 +557,7 @@ static  char    fname[MAX_PATH];        /* normalized filename       */
     /* Check that numcpu does not exceed maxcpu */
     if (sysblk.numcpu > sysblk.maxcpu) 
     {
-        WRMSG(HHC01449, "W", fname, sysblk.numcpu, sysblk.maxcpu);
+        WRMSG(HHC01449, "W", sysblk.numcpu, sysblk.maxcpu);
         sysblk.maxcpu = sysblk.numcpu;
     }
 
