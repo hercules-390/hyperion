@@ -558,8 +558,8 @@ static  char    fname[MAX_PATH];        /* normalized filename       */
     /* Check that numcpu does not exceed maxcpu */
     if (sysblk.numcpu > sysblk.maxcpu) 
     {
-        sysblk.maxcpu = sysblk.numcpu;
         WRMSG(HHC01449, "W", fname, sysblk.numcpu, sysblk.maxcpu);
+        sysblk.maxcpu = sysblk.numcpu;
     }
 
     /* Start the CPUs */
