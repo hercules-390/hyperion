@@ -4842,16 +4842,26 @@ DEF_INST(perform_cryptographic_key_management_operation_d)
     case 2: /* encrypt-tdea-128 */
     case 3: /* encrypt-tdea-192 */
     {
-      keylen = fc * 8;
-      parameter_blocklen = keylen + 24;
+      if(msa >= 3)
+      {
+        keylen = fc * 8;
+        parameter_blocklen = keylen + 24;
+      }
+      else
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }  
     case 18: /* encrypt-aes-128 */
     case 19: /* encrypt-aes-192 */
     case 20: /* encrypt-aes-256 */
     {
-      keylen = (fc - 16) * 8;
-      parameter_blocklen = keylen + 32;
+      if(msa >= 3)
+      {
+        keylen = (fc - 16) * 8;
+        parameter_blocklen = keylen + 32;
+      }
+      else
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
     default:
@@ -4879,20 +4889,14 @@ DEF_INST(perform_cryptographic_key_management_operation_d)
     case 2: /* encrypt-tdea-128 */
     case 3: /* encrypt-tdea-192 */
     {
-      if(msa >= 3)
-        wrap_dea(parameter_block, keylen);
-      else
-        ARCH_DEP(vstorec)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+      wrap_dea(parameter_block, keylen);
       break;
     }
     case 18: /* encrypt-aes-128 */
     case 19: /* encrypt-aes-192 */
     case 20: /* encrypt-aes-256 */
     {
-      if(msa >= 3)	    
-        wrap_aes(parameter_block, keylen);
-      else
-        ARCH_DEP(vstorec)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+      wrap_aes(parameter_block, keylen);
       break;
     }
   }
