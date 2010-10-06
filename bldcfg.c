@@ -337,6 +337,8 @@ static  char    fname[MAX_PATH];        /* normalized filename       */
                  | ((U64)   0x0586 << 16);
     sysblk.mainsize = 2;
     sysblk.xpndsize = 0;
+    sysblk.maxcpu = MAX_CPU_ENGINES;
+    sysblk.numcpu = 1;
 #ifdef    _FEATURE_VECTOR_FACILITY
     sysblk.numvec = MAX_CPU;
 #else  //!_FEATURE_VECTOR_FACILITY
@@ -552,14 +554,6 @@ static  char    fname[MAX_PATH];        /* normalized filename       */
     for (i = 0; i < OPTION_SELECT_KLUDGE; i++)
         close(dummyfd[i]);
 #endif
-
-    /* Set default maximum number of CPUs */
-    if(!sysblk.maxcpu)
-#ifdef _FEATURE_CPU_RECONFIG
-        sysblk.maxcpu = sysblk.arch_mode == ARCH_370 ? sysblk.numcpu : MAX_CPU_ENGINES;
-#else
-        sysblk.maxcpu = sysblk.numcpu;
-#endif /*_FEATURE_CPU_RECONFIG*/
 
     /* Check that numcpu does not exceed maxcpu */
     if (sysblk.numcpu > sysblk.maxcpu) 
