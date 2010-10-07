@@ -48,6 +48,7 @@
 #include "devtype.h"
 #include "opcode.h"
 #include "hostinfo.h"
+#include "hdl.h"
 
 #if defined(OPTION_FISHIO)
 #include "w32chan.h"
@@ -575,15 +576,6 @@ static  char    fname[MAX_PATH];        /* normalized filename       */
     }
 #endif // OPTION_CAPPING
 
-#if defined(OPTION_HTTP_SERVER)
-    http_startup(TRUE);                 /* indicate configuration start request
-                                           HTTP Server will only start if just 
-                                           HTTPPORT & HTTPROOT (not HTTP)
-                                           statements have been processed.
-                                           This should be removed when HTTPPORT 
-                                           and HTTPROOT are nolonger supported  */
-#endif // OPTION_HTTP_SERVER
-
 #if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
     /* setup configuration related symbols  */
     {
@@ -603,6 +595,10 @@ static  char    fname[MAX_PATH];        /* normalized filename       */
         set_symbol( "ARCHMODE", get_arch_mode_string(NULL) );  
     }
 #endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS */
+    
+    /* last thing to do before we leave */
+
+    hdl_startup();
 
     return 0;
 } /* end function build_config */

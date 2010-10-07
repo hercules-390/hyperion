@@ -957,6 +957,10 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01541 "HDL: dyngui.dll initiated"
 #define HHC01542 "HDL: dyngui.dll terminated"
 
+/* hdl.c */
+#define HHC01550 "HDL: startup sequence beginning"
+#define HHC01551 "HDL: startup sequence completed"
+
 // reserve 016xx for panel communication
 #define HHC01600 "Unknown herc command '%s', enter 'help' for a list of valid commands"
 #define HHC01602 "%-9.9s    %s"

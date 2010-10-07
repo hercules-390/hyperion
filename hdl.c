@@ -59,8 +59,11 @@ static int   hdl_arg_p = FALSE;
 
 #endif
 
-static LOCK   hdl_sdlock;                /* shutdown lock            */
-static HDLSHD *hdl_shdlist;              /* Shutdown call list       */
+static LOCK      hdl_sdlock;              /* shutdown lock            */
+static HDLSHD   *hdl_shdlist = NULL;      /* Shutdown call list       */
+
+static LOCK      hdl_startuplock;         /* Startup lock            */
+static HDLSTART *hdl_startlist = NULL;    /* Startup list for post config */
 
 static void hdl_didf (int, int, char *, void *);
 #ifdef ZZ_NO_BACKLINK
@@ -71,11 +74,82 @@ static void hdl_modify_opcode(int, HDLINS *);
 
 DLL_EXPORT char *(*hdl_device_type_equates)(const char *);
 
+
+
+/* hdl_adstc - add start call
+ */
+DLL_EXPORT void hdl_addstartcall (char* startname, void * startcall, void * startarg)
+{
+HDLSTART *newcall;
+    
+    hdl_rmvstartcall(startcall, startarg);  /* prevent duplicate calls */
+
+    newcall = malloc(sizeof(HDLSTART));
+    newcall->startname = startname;
+    newcall->startcall = startcall;
+    newcall->startarg = startarg;
+    newcall->next = hdl_startlist;
+    hdl_startlist = newcall;
+}
+
+
+/* hdl_rmstc - remove start call
+ */
+DLL_EXPORT int hdl_rmvstartcall (void *startcall, void *startarg)
+{
+HDLSTART **tmpcall;
+
+    for(tmpcall = &(hdl_startlist); *tmpcall; tmpcall = &((*tmpcall)->next) )
+    {
+        if( (*tmpcall)->startcall == startcall
+          && (*tmpcall)->startarg == startarg )
+        {
+        HDLSTART *frecall;
+            frecall = *tmpcall;
+            *tmpcall = (*tmpcall)->next;
+            free(frecall);
+            return 0;
+        }
+    }
+    return -1;
+}
+
+/* hdl_startup - call all startup call entries in LIFO order
+ */
+DLL_EXPORT void hdl_startup (void)
+{
+HDLSTART *startent;
+
+    WRMSG(HHC01550, "I");
+
+    obtain_lock (&hdl_startuplock);
+
+    for(startent = hdl_startlist; startent; startent = hdl_startlist)
+    {
+        {
+            WRMSG(HHC01501, "I", startent->startname);
+            {
+                (startent->startcall) (startent->startarg);
+            }
+            WRMSG(HHC01502, "I", startent->startname);
+        }   
+        /* Remove startup call entry to ensure it is called once */
+        hdl_startlist = startent->next;
+        free(startent);
+    }
+
+    release_lock (&hdl_startuplock);
+
+    WRMSG(HHC01551, "I");
+}
+
 /* hdl_adsc - add shutdown call
  */
 DLL_EXPORT void hdl_adsc (char* shdname, void * shdcall, void * shdarg)
 {
 HDLSHD *newcall;
+
+    hdl_rmsc(shdcall,shdarg);               /* remove duplicate */
 
     newcall = malloc(sizeof(HDLSHD));
     newcall->shdname = shdname;
@@ -790,6 +864,7 @@ HDLPRE *preload;
 
     initialize_lock(&hdl_lock);
     initialize_lock(&hdl_sdlock);
+    initialize_lock(&hdl_startuplock);
 
     if ( hdl_modpath == NULL )
     {

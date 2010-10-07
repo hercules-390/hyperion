@@ -52,9 +52,22 @@ typedef struct _HDLSHD {
     void *shdarg;                       /* Optional argument         */
 } HDLSHD;
 
+struct _HDLSTART;
+typedef struct _HDLSTART {
+    struct _HDLSTART *next;
+    char* startname;                      /* identifying name          */
+    void (*startcall) (void *);           /* Entry to be called        */
+    void *startarg;                       /* Optional argument         */
+} HDLSTART;
+
 HDL_DLL_IMPORT void    hdl_adsc(char*, void *, void *);/* Add shutdown routine      */
 HDL_DLL_IMPORT int     hdl_rmsc(void *, void *);       /* Remove shutdown routine   */
 HDL_DLL_IMPORT void    hdl_shut(void);                 /* Call all shutdown routines*/
+
+HDL_DLL_IMPORT void    hdl_addstartcall(char*, void *, void *); /* Add startup routine       */
+HDL_DLL_IMPORT int     hdl_rmvstartcall(void *, void *);        /* Remove startup routine    */
+HDL_DLL_IMPORT void    hdl_startup(void);                       /* Call all startup routines */
+
 DLL_EXPORT DEVHND *hdl_ghnd(const char *devname);        /* Get device handler        */
 
 /*********************************************************************/

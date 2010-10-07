@@ -79,6 +79,7 @@ typedef struct _HTTP_SERV {
     } HTTP_SERV;
 
 static HTTP_SERV    http_serv = { 0, FALSE, NULL, NULL, NULL, FALSE, FALSE, FALSE, FALSE };
+static httpConfigStartupCompleted   = FALSE;
 
 DLL_EXPORT int html_include(WEBBLK *webblk, char *filename)
 {
@@ -881,6 +882,8 @@ int http_startup(int isconfigcalling)
     }
     else if ( isconfigcalling )
     {
+        httpConfigStartupCompleted = TRUE;
+
         if ( !http_serv.httpstmtold )
         {
             rc = 1;
@@ -934,10 +937,17 @@ int http_command(int argc, char *argv[])
             if (!http_serv.httpstmtnew)
             {
                 http_serv.httpstmtold = TRUE;
+                if ( !httpConfigStartupCompleted )
+                    hdl_addstartcall("http startup", http_startup, TRUE);
             }
         }
         else
+        {
+            if ( !httpConfigStartupCompleted )
+                hdl_rmvstartcall(http_startup, TRUE);
+
             http_serv.httpstmtnew = TRUE;
+        }
 
         if ( sysblk.httptid != 0 )
         {
@@ -979,11 +989,19 @@ int http_command(int argc, char *argv[])
         {
             old = TRUE;
             if (!http_serv.httpstmtnew)
+            {
                 http_serv.httpstmtold = TRUE;
+                if ( !httpConfigStartupCompleted )
+                    hdl_addstartcall("http startup", http_startup, TRUE);
+            }
         }
         else
+        {
             http_serv.httpstmtnew = TRUE;
-       
+            if ( !httpConfigStartupCompleted )
+                hdl_rmvstartcall(http_startup, TRUE);
+        }
+
         if ( sysblk.httptid != 0 )
         {
             WRMSG( HHC01812, "E" );
@@ -1050,6 +1068,9 @@ int http_command(int argc, char *argv[])
     } 
     else if ( argc == 1 && CMD(argv[0],start,3) )
     {
+        if ( !httpConfigStartupCompleted )
+            hdl_rmvstartcall(http_startup, TRUE);
+
         http_serv.httpstmtold = FALSE;
 
         if ( http_serv.httpport == 0 )
@@ -1062,6 +1083,9 @@ int http_command(int argc, char *argv[])
     }
     else if (argc == 1 && CMD(argv[0],stop,4))
     {
+        if ( !httpConfigStartupCompleted )
+            hdl_rmvstartcall(http_startup, TRUE);
+
         http_serv.httpstmtold = FALSE;
 
         if ( sysblk.httptid != 0 )
@@ -1079,6 +1103,9 @@ int http_command(int argc, char *argv[])
     }
     else if ( argc == 0 )
     {
+        if ( !httpConfigStartupCompleted )
+            hdl_rmvstartcall(http_startup, TRUE);
+
         http_serv.httpstmtold = FALSE;
 
         if ( sysblk.httptid != 0 )
@@ -1139,6 +1166,9 @@ int http_command(int argc, char *argv[])
     }
     else
     {
+        if ( !httpConfigStartupCompleted )
+            hdl_rmvstartcall(http_startup, TRUE);
+
         http_serv.httpstmtold = FALSE;
 
         WRMSG( HHC02299, "E", "http" );
