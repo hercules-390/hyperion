@@ -51,7 +51,7 @@
   CODEPAGE  default                     # CodePage conversion table
   DIAG8CMD  disable                     # OS may not issue commands via DIAG 8
 
-  HTTP      PORT  8081 noauth userid password # HTTP server port
+  HTTP      PORT  8081 noauth                 # HTTP server port
 # HTTP      ROOT  /usr/local/share/hercules/  # HTTP root directory
   HTTP      START                             # HTTP Start Server
 
