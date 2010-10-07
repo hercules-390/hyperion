@@ -648,6 +648,8 @@ static void *http_request(int sock)
 
 static void http_shutdown(void * unused)
 {
+    UNREFERENCED(unused);
+
     http_serv.httpshutdown = TRUE;      /* signal shutdown */
 }
 
@@ -662,10 +664,8 @@ fd_set              selset;             /* Read bit map for select   */
 int                 optval;             /* Argument for setsockopt   */
 TID                 httptid;            /* Negotiation thread id     */
 char                pathname[MAX_PATH]; /* working pathname          */
-
-#if defined(_MSVC_)
 struct timeval      timeout;            /* timeout value             */
-#endif
+
 
     UNREFERENCED(arg);
 
