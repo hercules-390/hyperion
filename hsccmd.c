@@ -3201,7 +3201,7 @@ int httpport_cmd(int argc, char *argv[], char *cmdline)
 
     UNREFERENCED(cmdline);
 
-    WRMSG( HHC02256, "W", argv[0], "http port nnnn [auth|noauth [user [pass]]]" );
+    WRMSG( HHC02256, "W", argv[0], "http port nnnn [[noauth]|[auth user pass]]" );
 
     if ( argc > 5 )
     {

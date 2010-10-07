@@ -597,9 +597,10 @@ COMMAND("http",      PANEL+CONFIG,  SYSCMDALL,          http_cmd,
   "\n"
   "start                                 - starts HTTP server if stopped\n"
   "stop                                  - stops HTTP server if started\n"
-  "port nnnn [[noauth]|[auth user pass]] - set port and optional authorization\n"
-  "                                        information including user and\n"
-  "                                        password\n"
+  "port nnnn [[noauth]|[auth user pass]] - set port and optional authorization.\n"
+  "                                        Default is noauthorization needed.\n"
+  "                                        'auth' requires a user and password\n"
+  "\n"  
   "root path                             - set the root file path name\n"
   "\n"
   "<none>                                - display status of HTTP server\n")

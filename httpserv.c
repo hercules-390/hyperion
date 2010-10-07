@@ -865,9 +865,6 @@ http_server_stop:
 
 } /* end function http_server */
 
-
-/******** hsccmd.c **********/
-
 /*-------------------------------------------------------------------*/
 /* http command - manage HTTP server status                          */
 /*-------------------------------------------------------------------*/
@@ -907,7 +904,7 @@ int http_command(int argc, char *argv[])
             rc = 0;
         }
     }
-    else if ( argc >= 2 && argc <= 5 && CMD(argv[0],port,4))
+    else if ( (argc == 2 || argc == 3 || argc == 5) && CMD(argv[0],port,4))
     {
         if ( sysblk.httptid != 0 )
         {
@@ -922,49 +919,53 @@ int http_command(int argc, char *argv[])
                     || http_serv.httpport == 0 
                     || (http_serv.httpport < 1024 && http_serv.httpport != 80) )
             {
-                WRMSG(HHC02205, "S", argv[1], "");
                 rc = -1;
             }
-            if (rc >= 0 && argc > 2)
+            if ( rc >= 0 && argc == 3 && CMD(argv[2],noauth,6) )
             {
-                if ( CMD(argv[2],auth,4) )
+                http_serv.httpauth = 0;
+            }
+            else if ( rc >=0 && argc == 5 && CMD(argv[2],auth,4) )
+            {
+                if ( strlen( argv[3] ) < 1 || strlen( argv[4] ) < 1 )
                 {
-                    http_serv.httpauth = 1;
-                }
-                else if ( CMD(argv[2],noauth,6) )
-                {
-                    http_serv.httpauth = 0;
+                    WRMSG( HHC01814, "E" );
+                    rc = -1;
                 }
                 else
                 {
-                    WRMSG(HHC02205, "S", argv[2], "");
-                    rc = -1;
+                    if (http_serv.httpuser)
+                        free(http_serv.httpuser);
+                    http_serv.httpuser = strdup(argv[3]);
+                 
+                    if (http_serv.httppass)
+                        free(http_serv.httppass);
+                    http_serv.httppass = strdup(argv[4]);
+                 
+                    http_serv.httpauth = 1;
                 }
             }
-            if (rc >= 0 &&  argc > 3)
+            else if ( argc != 2 )
             {
-                if (http_serv.httpuser)
-                    free(http_serv.httpuser);
-                    http_serv.httpuser = strdup(argv[3]);
-            }
-            if (rc >= 0 && argc > 4)
-            {
-                if (http_serv.httppass)
-                    free(http_serv.httppass);
-                http_serv.httppass = strdup(argv[4]);
+                WRMSG( HHC02299, "E", "http" );
+                rc = -1;
             }
 
-            if ( MLVL(VERBOSE) )
+            if ( rc >= 0 && MLVL(VERBOSE) )
             {
                 char msgbuf[128];
-            
-                MSGBUF( msgbuf, "port=%hu %sauth userid<%s> password<%s>", 
+                if ( http_serv.httpauth == 1 )
+                {
+                    MSGBUF( msgbuf, "port=%hu auth userid<%s> password<%s>", 
                             http_serv.httpport, 
-                            http_serv.httpauth == 1 ? "" : "no",
                           ( http_serv.httpuser == NULL || strlen(http_serv.httpuser) == 0 ) ? 
                                 "" : http_serv.httpuser,
                           ( http_serv.httppass == NULL || strlen(http_serv.httppass) == 0 ) ? 
                                 "" : http_serv.httppass );
+                }
+                else
+                    MSGBUF( msgbuf, "port=%hu noauth", http_serv.httpport );
+
                 WRMSG( HHC02204, "I", argv[0], msgbuf );
             }   /* VERBOSE */
         }       
@@ -975,8 +976,6 @@ int http_command(int argc, char *argv[])
         {
             int rc_ct;
                 
-            http_serv.httpshutdown = FALSE;            /* running state */
-
             rc_ct = create_thread (&sysblk.httptid, DETACHED, http_server, NULL, "http_server");
             if ( rc_ct )
             {
@@ -1052,19 +1051,25 @@ int http_command(int argc, char *argv[])
         {
             char msgbuf[128];
             
-            MSGBUF( msgbuf, "port=%hu %sauth userid<%s> password<%s>", 
+            if ( http_serv.httpauth == 1)
+            {
+                MSGBUF( msgbuf, "port=%hu auth userid<%s> password<%s>", 
                             http_serv.httpport, 
-                            http_serv.httpauth == 1 ? "" : "no",
                           ( http_serv.httpuser == NULL || strlen(http_serv.httpuser) == 0 ) ? 
                                 "" : http_serv.httpuser,
                           ( http_serv.httppass == NULL || strlen(http_serv.httppass) == 0 ) ? 
                                 "" : http_serv.httppass );
+            }
+            else
+            {
+                MSGBUF( msgbuf, "port=%hu noauth", http_serv.httpport );
+            }
             WRMSG(HHC01808, "I", msgbuf);
         }
     }
     else
     {
-        WRMSG( HHC02299, "E", argv[0] );
+        WRMSG( HHC02299, "E", "http" );
         rc = -1;
     }
     return rc;

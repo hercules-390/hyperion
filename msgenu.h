@@ -1008,8 +1008,9 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01809 "HTTP server is waiting for requests"
 #define HHC01810 "HTTP server is stopped"
 #define HHC01811 "HTTP server root directory %s"
-#define HHC01812 "HTTP server must be stopped"
+#define HHC01812 "HTTP server must be stopped for this command"
 #define HHC01813 "HTTP server waiting for bind to complete; port in user by another server"
+#define HHC01814 "HTTP server: 'auth' requires valid userid and password operands"
 
 // reserve 019xx for diagnose calls
 /* diagnose.c */
