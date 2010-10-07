@@ -593,11 +593,11 @@ COMMAND("httpport",  CONFIG,        SYSCMDALL,          httpport_cmd,
 
 COMMAND("http",      PANEL+CONFIG,  SYSCMDALL,          http_cmd,
   "Start/Stop/Modify/Display HTTP Server",
-  "Format: 'http [start|stop|port nnnn [auth|noauth [user [pass]]]|root path]'\n"
+  "Format: 'http [start|stop|port nnnn [[noauth]|[auth user pass]]|root path]'\n"
   "\n"
   "start                                 - starts HTTP server if stopped\n"
   "stop                                  - stops HTTP server if started\n"
-  "port nnnn [auth|noauth [user [pass]]] - set port and optional authorization\n"
+  "port nnnn [[noauth]|[auth user pass]] - set port and optional authorization\n"
   "                                        information including user and\n"
   "                                        password\n"
   "root path                             - set the root file path name\n"
