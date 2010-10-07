@@ -410,8 +410,10 @@ static  char    fname[MAX_PATH];        /* normalized filename       */
     sysblk.devthwm  = sysblk.devtunavail = 0;
 #endif // defined(OPTION_FISHIO)
 
+#if defined(OPTION_LPP_RESTRICT)
     /* Default the licence setting */
     losc_set(PGM_PRD_OS_RESTRICTED);
+#endif
 
     /* Default CPU type CP */
     for (i = 0; i < MAX_CPU; i++)
