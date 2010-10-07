@@ -1039,7 +1039,7 @@ int http_command(int argc, char *argv[])
             
             else if ( strchr(http_serv.httproot, SPACE) != NULL )
             {
-                MSGBUF( "'%s'", http_serv.httproot );
+                MSGBUF( msgbuf, "'%s'", http_serv.httproot );
                 p = msgbuf;
             }
             else
