@@ -78,6 +78,14 @@ int ARCH_DEP(system_reset) (int cpu, int clear)
                   #endif /*defined(_FEATURE_VECTOR_FACILITY)*/
                 }
             }
+    
+        memset(sysblk.program_parameter,0,sizeof(sysblk.program_parameter));
+    
+        /* Clear storage */
+        sysblk.main_clear = sysblk.xpnd_clear = 0;
+        storage_clear();
+        xstorage_clear();
+
     }
     else
     {
@@ -100,14 +108,6 @@ int ARCH_DEP(system_reset) (int cpu, int clear)
                         rc1 = rc;
                 }
             }
-    
-        memset(sysblk.program_parameter,0,sizeof(sysblk.program_parameter));
-    
-        /* Clear storage */
-        sysblk.main_clear = sysblk.xpnd_clear = 0;
-        storage_clear();
-        xstorage_clear();
-
     }
 
     /* Perform I/O subsystem reset */
