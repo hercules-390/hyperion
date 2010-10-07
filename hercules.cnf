@@ -18,9 +18,9 @@
   CPUVERID  FD                  # CPU Version Identification
   MAINSIZE  64                  # Main storage size in megabytes
   XPNDSIZE  0                   # Expanded storage size in megabytes
+  NUMCPU    1                   # Number of CPUs
 # NUMVEC    1                   # Number of Vector Processors
   MAXCPU    8                   # Maximum number of CPUs
-  NUMCPU    1                   # Number of CPUs
   CAPPING   0                   # Capping of CPs in MIPS, 0 = off
   ARCHLVL   z/Arch              # Architecture mode S/370, ESA/390 or z/Arch
   ARCHLVL   DISABLE ASN_LX_REUSE   # ASN-and-LX-Reuse facility
