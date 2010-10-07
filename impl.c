@@ -289,32 +289,9 @@ void* process_rc_file (void* dummy)
 {
 char   *rcname;                         /* hercules.rc name pointer  */
 int     is_default_rc  = 0;             /* 1 == default name used    */
-int     numcpu         = 0;             /* #of ONLINE & STOPPED CPUs */
-int     i;                              /* (work)                    */
 char    pathname[MAX_PATH];             /* (work)                    */
 
     UNREFERENCED(dummy);
-
-    /* Wait for all installed/configured CPUs to
-       come ONLINE and enter the STOPPED state */
-
-    OBTAIN_INTLOCK(NULL);
-
-    for (;;)
-    {
-        numcpu = 0;
-        for (i = 0; i < MAX_CPU; i++)
-            if (IS_CPU_ONLINE(i) &&
-                CPUSTATE_STOPPED == sysblk.regs[i]->cpustate)
-                numcpu++;
-        if (numcpu == sysblk.numcpu)
-            break;
-        RELEASE_INTLOCK(NULL);
-        usleep( 10 * 1000 );
-        OBTAIN_INTLOCK(NULL);
-    }
-
-    RELEASE_INTLOCK(NULL);
 
     /* Wait for panel thread to engage */
 
