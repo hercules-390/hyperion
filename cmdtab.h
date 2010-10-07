@@ -583,19 +583,27 @@ COMMAND("sclproot",  PANEL+CONFIG,  SYSCMDALL,          sclproot_cmd,
     "the current setting.\n")
 
 #if defined(OPTION_HTTP_SERVER)
-COMMAND("httproot",  CONFIG+PANEL,  SYSCMDALL,          httproot_cmd,
-  "Set HTTP server root directory",
-    NULL)
+COMMAND("httproot",  CONFIG,        SYSCMDALL,          httproot_cmd,
+  "Command deprecated - Use \"HTTP ROOT fn\"",
+    "This command is deprecated. Use \"http root fn\" instead.\n")
 
-COMMAND("httpport",  CONFIG+PANEL,  SYSCMDALL,          httpport_cmd,
-  "Set HTTP server port",
-    NULL)
+COMMAND("httpport",  CONFIG,        SYSCMDALL,          httpport_cmd,
+  "Command deprecated - Use \"HTTP PORT ...\"",
+    "This command is deprecated. Use \"http port ...\" instead.\n")
 
-#if defined( HTTP_SERVER_CONNECT_KLUDGE )
-COMMAND("HTTP_SERVER_CONNECT_KLUDGE", CONFIG, SYSCMDALL, httpskm_cmd,
-  "HTTP_SERVER_CONNECT_KLUDGE",
-    NULL)
-#endif // defined( HTTP_SERVER_CONNECT_KLUDGE )
+COMMAND("http",      PANEL+CONFIG,  SYSCMDALL,          http_cmd,
+  "Start/Stop/Modify/Display HTTP Server",
+  "Format: 'http [start|stop|port nnnn [auth|noauth [user [pass]]]|root path]'\n"
+  "\n"
+  "start                                 - starts HTTP server if stopped\n"
+  "stop                                  - stops HTTP server if started\n"
+  "port nnnn [auth|noauth [user [pass]]] - set port and optional authorization\n"
+  "                                        information including user and\n"
+  "                                        password\n"
+  "root path                             - set the root file path name\n"
+  "\n"
+  "<none>                                - display status of HTTP server\n")
+
 #endif /*defined(OPTION_HTTP_SERVER)*/
 
 COMMAND("psw",       PANEL,         SYSCMDALL-SYSOPER,  psw_cmd,

@@ -3159,44 +3159,31 @@ int cnslport_cmd(int argc, char *argv[], char *cmdline)
 }
 
 #if defined(OPTION_HTTP_SERVER)
+
 /*-------------------------------------------------------------------*/
 /* httproot command - set HTTP server base directory                 */
 /*-------------------------------------------------------------------*/
 int httproot_cmd(int argc, char *argv[], char *cmdline)
 {
-char pathname[MAX_PATH];
-int rc;
+    int     rc = 0;
+    int     a_argc;
+    char   *a_argv[2] = { "root", NULL };
 
     UNREFERENCED(cmdline);
+
+    WRMSG( HHC02256, "W", argv[0], "http root pathname" );
+
     if ( argc > 2 )
     {
         WRMSG( HHC01455, "S", argv[0] );
         rc = -1;
     }
-
-    else if ( argc == 2 )
-    {
-        if (sysblk.httproot)
-            free(sysblk.httproot);
-        hostpath(pathname, argv[1], sizeof(pathname));
-        if ( pathname[strlen(pathname)-1] != PATHSEPC )
-            strlcat( pathname, PATHSEPS, strlen(pathname) );
-
-        sysblk.httproot = strdup(pathname);
-
-        if ( MLVL(VERBOSE) )
-            WRMSG(HHC02204, "I", argv[0], sysblk.httproot ? sysblk.httproot : "<not specified>");
-        rc = 0;
-    }
     else
     {
-        WRMSG(HHC02203, "I", argv[0], sysblk.httproot ? sysblk.httproot : "<not specified>");
-        rc = 0;
-    }
-
-    if ( rc == 0 && sysblk.httproot )
-    {
-        rc = 1;         /* rc = 1 if path is null */
+        a_argc = 2;
+        a_argv[1] = argv[1];    /* root filename */
+    
+        rc = http_command(a_argc, a_argv);
     }
 
     return rc;
@@ -3208,108 +3195,50 @@ int rc;
 /*-------------------------------------------------------------------*/
 int httpport_cmd(int argc, char *argv[], char *cmdline)
 {
-char c;
-int rc;
+    int     rc = 0;
+    int     a_argc;
+    char   *a_argv[5] = { "port", NULL, NULL, NULL, NULL };
 
     UNREFERENCED(cmdline);
+
+    WRMSG( HHC02256, "W", argv[0], "http port nnnn [auth|noauth [user [pass]]]" );
+
     if ( argc > 5 )
     {
         WRMSG( HHC01455, "S", argv[0] );
-        return -1;
-    }
-
-    if (argc > 1)
-    {
-        if ( CMD(argv[1],none,4) )
-        {
-            if (sysblk.httpport)
-            {
-                sysblk.httpport = 0;
-                signal_thread(sysblk.httptid, SIGUSR2);
-            }
-        }
-        else if (sysblk.httpport)
-        {
-            WRMSG(HHC02225, "S");
-            return -1;
-        }
-        else
-        {
-            if (sscanf(argv[1], "%hu%c", &sysblk.httpport, &c) != 1
-                || sysblk.httpport == 0 || (sysblk.httpport < 1024 && sysblk.httpport != 80) )
-            {
-                WRMSG(HHC02205, "S", argv[1], "");
-                return -1;
-            }
-            if (argc > 2)
-            {
-                if ( CMD(argv[2],auth,4) )
-                    sysblk.httpauth = 1;
-                else if ( !CMD(argv[2],noauth,6) )
-                {
-                    WRMSG(HHC02205, "S",argv[2], "");
-                    return -1;
-                }
-            }
-            if (argc > 3)
-            {
-                if (sysblk.httpuser)
-                    free(sysblk.httpuser);
-                sysblk.httpuser = strdup(argv[3]);
-            }
-            if (argc > 4)
-            {
-                if (sysblk.httppass)
-                    free(sysblk.httppass);
-                sysblk.httppass = strdup(argv[4]);
-            }
-
-            /* Start the http server connection thread */
-            rc = create_thread (&sysblk.httptid, DETACHED,
-                                http_server, NULL, "http_server");
-            if (rc)
-            {
-                WRMSG(HHC00102, "E", strerror(rc));
-                return -1;
-            }
-        }
+        rc = -1;
     }
     else
     {
-        char buf[40];
-        MSGBUF( buf, "%d", sysblk.httpport);
-        WRMSG(HHC02204, "I", argv[0], buf);
+        a_argc = argc;
+        a_argv[1] = argv[1];    /* port number */
+        a_argv[2] = argv[2];    /* auth|noauth */
+        a_argv[3] = argv[3];    /* userid      */
+        a_argv[4] = argv[4];    /* password    */
+
+        rc = http_command(a_argc, a_argv);
     }
-    return 0;
+
+    return rc;
 }
 
-
-#if defined( HTTP_SERVER_CONNECT_KLUDGE )
 /*-------------------------------------------------------------------*/
-/* http_server_kludge_msecs                                          */
+/* http command - manage HTTP server                                 */
 /*-------------------------------------------------------------------*/
-int httpskm_cmd(int argc, char *argv[], char *cmdline)
+int http_cmd(int argc, char *argv[], char *cmdline)
 {
-char c;
+    int     rc = 0;
 
     UNREFERENCED(cmdline);
 
-    if (argc > 1)
-    {
-    int http_server_kludge_msecs;
-        if ( sscanf( argv[1], "%d%c", &http_server_kludge_msecs, &c ) != 1
-            || http_server_kludge_msecs <= 0 || http_server_kludge_msecs > 50 )
-        {
-            WRMSG(HHC02205, "S",argv[1], "");
-            return -1;
-        }
-        sysblk.http_server_kludge_msecs = http_server_kludge_msecs;
-    }
-    else
-        WRMSG(HHC02204,"I","HTTP_SERVER_CONNECT_KLUDGE",sysblk.http_server_kludge_msecs);
-    return 0;
+    argc--;
+    argv++;
+
+    rc = http_command(argc, argv);
+
+    return rc;
 }
-#endif // defined( HTTP_SERVER_CONNECT_KLUDGE )
+
 #endif /*defined(OPTION_HTTP_SERVER)*/
 
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
@@ -9641,16 +9570,6 @@ int qports_cmd(int argc, char *argv[], char *cmdline)
     {
         WRMSG( HHC17000, "E" );
         return -1;
-    }
-
-    if ( sysblk.httpport > 0 )
-    {
-        MSGBUF( buf, "on port %u", sysblk.httpport);
-        WRMSG( HHC17001, "I", "HTTP", buf);
-    }
-    else
-    {
-        WRMSG( HHC17002, "I", "HTTP");
     }
 
     if ( sysblk.shrdport > 0 )

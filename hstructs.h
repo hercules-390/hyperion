@@ -630,11 +630,7 @@ struct SYSBLK {
         int     cpuprio;                /* CPU thread priority       */
         int     devprio;                /* Device thread priority    */
         TID     httptid;                /* HTTP listener thread id   */
-        U16     httpport;               /* HTTP port number or zero  */
-        int     httpauth;               /* HTTP auth required flag   */
-        char   *httpuser;               /* HTTP userid               */
-        char   *httppass;               /* HTTP password             */
-        char   *httproot;               /* HTTP root                 */
+
 #if defined( OPTION_TAPE_AUTOMOUNT )
         TAMDIR *tamdir;                 /* Acc/Rej AUTOMOUNT dir ctl */
         char   *defdir;                 /* Default AUTOMOUNT dir     */
@@ -656,9 +652,7 @@ struct SYSBLK {
 #ifdef OPTION_IODELAY_KLUDGE
         int     iodelay;                /* I/O delay kludge for linux*/
 #endif /*OPTION_IODELAY_KLUDGE*/
-#if defined( HTTP_SERVER_CONNECT_KLUDGE )
-        int     http_server_kludge_msecs;
-#endif // defined( HTTP_SERVER_CONNECT_KLUDGE )
+
 #if !defined(NO_SETUID)
         uid_t   ruid, euid, suid;
         gid_t   rgid, egid, sgid;

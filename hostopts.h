@@ -164,7 +164,6 @@
   #define  DLL_IMPORT   extern
   #define  DLL_EXPORT
 #endif
-#define HTTP_SERVER_CONNECT_KLUDGE
 
 #if defined( OPTION_WTHREADS ) && ( _WIN32_WINNT < _WIN32_WINNT_VISTA )
     #pragma message( MSVC_MESSAGE_LINENUM "OPTION_WTHREADS specified on unsupported version of Windows; Using FTHREADS" )

@@ -311,6 +311,9 @@ void panel_display (void);
 #define debug_watchdog_signal           NULL
 #endif
 
+/* Functions in module httpserv.c */
+int http_command(int argc, char *argv[]);
+
 /* Functions in module loadparm.c */
 void set_loadparm(char *name);
 void get_loadparm(BYTE *dest);

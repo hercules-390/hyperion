@@ -59,8 +59,9 @@ and how they are used.
     <a href="#YROFFSET">YROFFSET</a>   -28
     <a href="#TZOFFSET">TZOFFSET</a>   -0500
 
-    <a href="#HTTPROOT">HTTPROOT</a>   /usr/local/share/hercules/
-    <a href="#HTTPPORT">HTTPPORT</a>   8081 NOAUTH
+    <a href="#HTTPPORT">HTTP</a>       port 8081 NOAUTH
+    <a href="#HTTPROOT">HTTP</a>       root /usr/local/share/hercules/
+    <a href="#HTTPSTRT">HTTP</a>       start 
 
     <a href="#CCKD">CCKD</a>       RA=2,RAQ=4,RAT=2,WR=2,GCINT=10,GCPARM=0,NOSTRESS=0,TRACE=0,FREEPEND=-1
     <a href="#SHRDPORT">SHRDPORT</a>   3990
@@ -644,20 +645,19 @@ and how they are used.
     <p>
 
 <a name="HTTPPORT"></a>
-<dt><code>HTTPPORT &nbsp; <em>nnnn</em> [AUTH &#124; NOAUTH] [ <em>userid password</em> ]</code>
+<dt><code>HTTP PORT &nbsp; <em>nnnn</em> [AUTH &#124; NOAUTH] [ <em>userid password</em> ]</code>
 <dd><p>
     specifies the port number (in decimal) on which the HTTP server
     will listen. The port number must either be 80
-    or within the range 1024 - 65535 inclusive. If no HTTPPORT statement is
-    present or an invalid port number is specified, then the HTTP server thread
-    will not be activated.<br>
+    or within the range 1024 - 65535 inclusive. The server is not start until a subsequent
+    <code><a href="#HTTPSTRT">HTTP START</a></code> statement is found.<br>
     <tt>AUTH</tt> indictates that a userid and password are required to access
     the HTTP server, whereas <tt>NOAUTH</tt> indicates that a userid and password
     are not required. The userid and password may be any valid string.
     <p>
 
 <a name="HTTPROOT"></a>
-<dt><code>HTTPROOT &nbsp; <em>directory</em></code>
+<dt><code>HTTP ROOT &nbsp; <em>directory</em></code>
 <dd><p>
     specifies the root directory where the HTTP server's files reside.
     If not specified, the default value for Win32 builds of Hercules is the
@@ -668,6 +668,12 @@ and how they are used.
     <tt>/usr/local/share/hercules/</tt>).
     <p>
 
+<a name="HTTPSTRT"></a>
+<dt><code>HTTP START</code>
+<dd><p>
+    starts the HTTP server. (Note: The server is no longer started by default.)
+    <p>
+    
 <a name="IGNORE"></a>
 <dt><code>IGNORE &nbsp; INCLUDE_ERRORS</code>
 <dd><p>

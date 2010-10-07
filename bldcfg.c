@@ -320,6 +320,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                                            cygwin from thrashing in
                                            select(). sigh            */
 #endif
+static  char    fname[MAX_PATH];        /* normalized filename       */ 
 
     /* Initialize SETMODE and set user authority */
     SETMODE(INIT);
@@ -357,10 +358,6 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
     sysblk.pgminttr = OS_NONE;
 
     sysblk.timerint = DEFAULT_TIMER_REFRESH_USECS;
-
-#if defined( HTTP_SERVER_CONNECT_KLUDGE )
-    sysblk.http_server_kludge_msecs = 10;
-#endif // defined( HTTP_SERVER_CONNECT_KLUDGE )
 
 #if       defined( OPTION_SHUTDOWN_CONFIRMATION )
     /* Set the quitmout value */
@@ -437,7 +434,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
     }
 #endif /*!defined(NO_SETUID)*/
 
-    if((process_config(hercules_cnf)))
+    if ((process_config(hercules_cnf)))
         return -1;
 
 #if defined( OPTION_TAPE_AUTOMOUNT )
