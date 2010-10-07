@@ -313,6 +313,7 @@ void panel_display (void);
 
 /* Functions in module httpserv.c */
 int http_command(int argc, char *argv[]);
+int http_startup(int isconfigcalling);
 
 /* Functions in module loadparm.c */
 void set_loadparm(char *name);

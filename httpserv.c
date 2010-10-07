@@ -43,6 +43,7 @@
 #include "httpmisc.h"
 #include "hostinfo.h"
 
+
 #if defined(OPTION_HTTP_SERVER)
 
 /* External reference to the cgi-bin directory in cgibin.c */
@@ -73,9 +74,11 @@ typedef struct _HTTP_SERV {
         char   *httproot;               /* HTTP root                 */
         int     httpbinddone;           /* HTTP waiting for bind     */
         int     httpshutdown;           /* HTTP Flag to signal shut  */
+        int     httpstmtnew;            /* HTTP new command type     */
+        int     httpstmtold;            /* HTTP old command type     */
     } HTTP_SERV;
 
-static HTTP_SERV    http_serv = { 0, FALSE, NULL, NULL, NULL, FALSE, FALSE };
+static HTTP_SERV    http_serv = { 0, FALSE, NULL, NULL, NULL, FALSE, FALSE, FALSE, FALSE };
 
 DLL_EXPORT int html_include(WEBBLK *webblk, char *filename)
 {
@@ -866,14 +869,76 @@ http_server_stop:
 } /* end function http_server */
 
 /*-------------------------------------------------------------------*/
+/* http startup - start HTTP server                                  */
+/*-------------------------------------------------------------------*/
+int http_startup(int isconfigcalling)
+{ 
+    int rc = 0;
+
+    if ( http_serv.httpport == 0 )
+    {    
+        rc = -1;
+    }
+    else if ( isconfigcalling )
+    {
+        if ( !http_serv.httpstmtold )
+        {
+            rc = 1;
+        }
+    }
+
+    if ( rc == 0 )
+    {
+        if ( sysblk.httptid == 0 )
+        {
+            int rc_ct;
+                
+            rc_ct = create_thread (&sysblk.httptid, DETACHED, http_server, NULL, "http_server");
+            if ( rc_ct )
+            {
+                WRMSG(HHC00102, "E", strerror(rc));
+                rc = -1;
+            }
+            else
+            {
+                WRMSG( HHC01807, "I" );
+                rc = 0;
+            }
+        }
+        else
+        {
+            WRMSG( HHC01806, "W", "already started" );
+            rc = 0;
+        }
+    }
+
+    return rc;
+}
+/*-------------------------------------------------------------------*/
 /* http command - manage HTTP server status                          */
 /*-------------------------------------------------------------------*/
 int http_command(int argc, char *argv[])
 {
     int rc = 0;
 
-    if ( argc == 2 && CMD(argv[0],root,4))
+    if ( argc == 2 && CMD(argv[0],rootx,4) &&
+         ( ( strlen(argv[0]) == 5 && argv[2] != NULL && strcmp(argv[2],"httproot") == 0 ) ||
+           ( strlen(argv[0]) == 4 ) ) )    
     {
+        int old = FALSE;
+        
+        if ( strlen(argv[0]) == 5 )
+        {
+            old = TRUE;
+            
+            if (!http_serv.httpstmtnew)
+            {
+                http_serv.httpstmtold = TRUE;
+            }
+        }
+        else
+            http_serv.httpstmtnew = TRUE;
+
         if ( sysblk.httptid != 0 )
         {
             WRMSG( HHC01812, "E" );
@@ -900,12 +965,25 @@ int http_command(int argc, char *argv[])
             }
 
             if ( MLVL(VERBOSE) )
-                WRMSG(HHC02204, "I", "httproot", http_serv.httproot ? http_serv.httproot : "<not specified>");
+                WRMSG(HHC02204, "I", old ? "httproot": "root", http_serv.httproot ? http_serv.httproot : "<not specified>");
             rc = 0;
         }
     }
-    else if ( (argc == 2 || argc == 3 || argc == 5) && CMD(argv[0],port,4))
+    else if ( (argc == 2 || argc == 3 || argc == 5) && CMD(argv[0],portx,4) &&
+              ( ( strlen(argv[0]) == 5 && argv[5] != NULL && strcmp(argv[5],"httpport") == 0 ) ||
+                ( strlen(argv[0]) == 4 ) ) )    
     {
+        int old = FALSE;
+
+        if ( strlen(argv[0]) == 5 )
+        {
+            old = TRUE;
+            if (!http_serv.httpstmtnew)
+                http_serv.httpstmtold = TRUE;
+        }
+        else
+            http_serv.httpstmtnew = TRUE;
+       
         if ( sysblk.httptid != 0 )
         {
             WRMSG( HHC01812, "E" );
@@ -945,7 +1023,7 @@ int http_command(int argc, char *argv[])
                     http_serv.httpauth = 1;
                 }
             }
-            else if ( argc != 2 )
+            else if ( argc != 2 || rc < 0 )
             {
                 WRMSG( HHC02299, "E", "http" );
                 rc = -1;
@@ -966,36 +1044,26 @@ int http_command(int argc, char *argv[])
                 else
                     MSGBUF( msgbuf, "port=%hu noauth", http_serv.httpport );
 
-                WRMSG( HHC02204, "I", argv[0], msgbuf );
+                WRMSG( HHC02204, "I", old ? "httpport":"port", msgbuf );
             }   /* VERBOSE */
         }       
     } 
     else if ( argc == 1 && CMD(argv[0],start,3) )
     {
-        if ( sysblk.httptid == 0 )
+        http_serv.httpstmtold = FALSE;
+
+        if ( http_serv.httpport == 0 )
         {
-            int rc_ct;
-                
-            rc_ct = create_thread (&sysblk.httptid, DETACHED, http_server, NULL, "http_server");
-            if ( rc_ct )
-            {
-                WRMSG(HHC00102, "E", strerror(rc));
-                rc = -1;
-            }
-            else
-            {
-                WRMSG( HHC01807, "I" );
-                rc = 0;
-            }
+            WRMSG( HHC01808, "E", "valid");
+            rc = -1;
         }
         else
-        {
-            WRMSG( HHC01806, "W", "already started" );
-            rc = 0;
-        }
+            rc = http_startup(FALSE);
     }
     else if (argc == 1 && CMD(argv[0],stop,4))
     {
+        http_serv.httpstmtold = FALSE;
+
         if ( sysblk.httptid != 0 )
         {
             http_shutdown(NULL);
@@ -1011,6 +1079,8 @@ int http_command(int argc, char *argv[])
     }
     else if ( argc == 0 )
     {
+        http_serv.httpstmtold = FALSE;
+
         if ( sysblk.httptid != 0 )
         {
             if ( http_serv.httpbinddone )
@@ -1069,6 +1139,8 @@ int http_command(int argc, char *argv[])
     }
     else
     {
+        http_serv.httpstmtold = FALSE;
+
         WRMSG( HHC02299, "E", "http" );
         rc = -1;
     }

@@ -566,7 +566,7 @@ static  char    fname[MAX_PATH];        /* normalized filename       */
         configure_cpu(i);
     RELEASE_INTLOCK(NULL);
 
-#ifdef OPTION_CAPPING
+#if defined(OPTION_CAPPING)
     if(sysblk.capvalue)
     {
       rc = create_thread(&sysblk.captid, DETACHED, capping_manager_thread, NULL, "Capping manager");
@@ -574,6 +574,15 @@ static  char    fname[MAX_PATH];        /* normalized filename       */
         WRMSG(HHC00102, "E", strerror(rc));
     }
 #endif // OPTION_CAPPING
+
+#if defined(OPTION_HTTP_SERVER)
+    http_startup(TRUE);                 /* indicate configuration start request
+                                           HTTP Server will only start if just 
+                                           HTTPPORT & HTTPROOT (not HTTP)
+                                           statements have been processed.
+                                           This should be removed when HTTPPORT 
+                                           and HTTPROOT are nolonger supported  */
+#endif // OPTION_HTTP_SERVER
 
 #if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
     /* setup configuration related symbols  */

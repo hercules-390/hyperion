@@ -645,7 +645,7 @@ and how they are used.
     <p>
 
 <a name="HTTPPORT"></a>
-<dt><code>HTTP PORT &nbsp; <em>nnnn</em> [[NOAUTH] &#124; [AUTH <em>userid password</em> ]]</code>
+<dt><code>HTTP PORT &nbsp; <em>nnnn</em> [[NOAUTH] &#124; [AUTH <em>userid password</em>]]</code>
 <dd><p>
     specifies the port number (in decimal) on which the HTTP server
     will listen. The port number must either be 80
@@ -654,6 +654,9 @@ and how they are used.
     <tt>AUTH</tt> indictates that a userid and password are required to access
     the HTTP server, whereas <tt>NOAUTH</tt> indicates that a userid and password
     are not required. The userid and password may be any valid string.
+    <p>
+    Note: <code>HTTPPORT nnnn [[NOAUTH] &#124; [AUTH <em>userid password</em>]]</code> is still supported, 
+    however, it has been deprecated.
     <p>
 
 <a name="HTTPROOT"></a>
@@ -666,6 +669,8 @@ and how they are used.
     installation directory when the Hercules executable was built (which can
     vary depending on how the Hercules package was built, but is usually
     <tt>/usr/local/share/hercules/</tt>).
+    <p>
+    Note: <code>HTTPROOT <em>directory </em></code>&nbsp; is still supported, however, it has been deprecated.
     <p>
 
 <a name="HTTPSTRT"></a>

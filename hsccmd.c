@@ -3167,7 +3167,7 @@ int httproot_cmd(int argc, char *argv[], char *cmdline)
 {
     int     rc = 0;
     int     a_argc;
-    char   *a_argv[2] = { "root", NULL };
+    char   *a_argv[3] = { "rootx", NULL, "httproot" };
 
     UNREFERENCED(cmdline);
 
@@ -3197,7 +3197,7 @@ int httpport_cmd(int argc, char *argv[], char *cmdline)
 {
     int     rc = 0;
     int     a_argc;
-    char   *a_argv[5] = { "port", NULL, NULL, NULL, NULL };
+    char   *a_argv[6] = { "portx", NULL, NULL, NULL, NULL, "httpport" };
 
     UNREFERENCED(cmdline);
 
