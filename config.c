@@ -314,10 +314,12 @@ int     cpu;
 #if defined(OPTION_CAPPING)
 int configure_capping(int value)
 {
-    if((sysblk.capvalue = value))
-      return create_thread(&sysblk.captid, DETACHED, capping_manager_thread, NULL, "Capping manager");
-    else 
-      return 0;
+    if(sysblk.capvalue)
+        sysblk.capvalue = value;
+    else
+        if((sysblk.capvalue = value))
+            return create_thread(&sysblk.captid, DETACHED, capping_manager_thread, NULL, "Capping manager");
+    return 0;
 }
 #endif // OPTION_CAPPING
 

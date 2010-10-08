@@ -308,6 +308,7 @@ void *capping_manager_thread (void *p)
   U64 now;                   /* Current time                         */
   U64 prevcnt;               /* Inst CP count on previous interval   */
   U64 then;                  /* Previous interval time               */
+  U64 prevcap = 0;           /* Previous cappling value              */
 
   UNREFERENCED(p);
 
@@ -315,7 +316,6 @@ void *capping_manager_thread (void *p)
 
   /* Display thread started message on control panel */
   WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Capping manager");
-  WRMSG(HHC00877, "I", sysblk.capvalue);
 
   /* Check if we have CP engines */
   for(i = 0; i < MAX_CPU; i++)
@@ -341,6 +341,12 @@ void *capping_manager_thread (void *p)
   /* Check as long as we have a capping value */
   while(sysblk.capvalue)
   {
+    if(sysblk.capvalue != prevcap)
+    {
+      WRMSG(HHC00877, "I", sysblk.capvalue);
+      prevcap = sysblk.capvalue;
+    }
+
     then = now;
 
     /* Sleep for 1/100 of a second */
