@@ -327,6 +327,7 @@ void *capping_manager_thread (void *p)
   {
     WRMSG(HHC00878, "E");
     WRMSG(HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Capping manager");
+    sysblk.capvalue = 0;
     return(NULL);
   }
 
