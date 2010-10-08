@@ -589,6 +589,11 @@ int     dll_count;                      /* index into array          */
     initialize_lock (&sysblk.sigplock);
     initialize_lock (&sysblk.mntlock);
 
+#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
+    /* Initialize the wrapping key registers lock */
+    initialize_lock(&sysblk.wklock);
+#endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
+
     /* Initialize thread creation attributes so all of hercules
        can use them at any time when they need to create_thread
     */

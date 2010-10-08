@@ -264,10 +264,6 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
     ptt_trace_init (0, 1);
 #endif
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
-    /* Initialize the wrapping key registers lock */
-    initialize_lock(&sysblk.wklock);
-#endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
 
 #if defined(OPTION_FISHIO)
     InitIOScheduler                     // initialize i/o scheduler...
