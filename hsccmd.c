@@ -1287,6 +1287,7 @@ int cf_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 /* cfall command - configure/deconfigure all CPU's                   */
 /*-------------------------------------------------------------------*/
+int qproc_cmd(int argc, char *argv[], char *cmdline);
 int cfall_cmd(int argc, char *argv[], char *cmdline)
 {
 static char *qproc[] = { "qproc", NULL };
