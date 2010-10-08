@@ -938,13 +938,13 @@ int http_command(int argc, char *argv[])
             {
                 http_serv.httpstmtold = TRUE;
                 if ( !httpConfigStartupCompleted )
-                    hdl_addstartcall("http startup", http_startup, TRUE);
+                    http_startup(TRUE);
             }
         }
         else
         {
             if ( !httpConfigStartupCompleted )
-                hdl_rmvstartcall(http_startup, TRUE);
+                http_startup(TRUE);
 
             http_serv.httpstmtnew = TRUE;
         }
@@ -992,14 +992,14 @@ int http_command(int argc, char *argv[])
             {
                 http_serv.httpstmtold = TRUE;
                 if ( !httpConfigStartupCompleted )
-                    hdl_addstartcall("http startup", http_startup, TRUE);
+                    http_startup(TRUE);
             }
         }
         else
         {
             http_serv.httpstmtnew = TRUE;
             if ( !httpConfigStartupCompleted )
-                hdl_rmvstartcall(http_startup, TRUE);
+                http_startup(TRUE);
         }
 
         if ( sysblk.httptid != 0 )
@@ -1069,7 +1069,7 @@ int http_command(int argc, char *argv[])
     else if ( argc == 1 && CMD(argv[0],start,3) )
     {
         if ( !httpConfigStartupCompleted )
-            hdl_rmvstartcall(http_startup, TRUE);
+            http_startup(TRUE);
 
         http_serv.httpstmtold = FALSE;
 
@@ -1084,7 +1084,7 @@ int http_command(int argc, char *argv[])
     else if (argc == 1 && CMD(argv[0],stop,4))
     {
         if ( !httpConfigStartupCompleted )
-            hdl_rmvstartcall(http_startup, TRUE);
+            http_startup(TRUE);
 
         http_serv.httpstmtold = FALSE;
 
@@ -1104,7 +1104,7 @@ int http_command(int argc, char *argv[])
     else if ( argc == 0 )
     {
         if ( !httpConfigStartupCompleted )
-            hdl_rmvstartcall(http_startup, TRUE);
+            http_startup(TRUE);
 
         http_serv.httpstmtold = FALSE;
 
@@ -1167,7 +1167,7 @@ int http_command(int argc, char *argv[])
     else
     {
         if ( !httpConfigStartupCompleted )
-            hdl_rmvstartcall(http_startup, TRUE);
+            http_startup(TRUE);
 
         http_serv.httpstmtold = FALSE;
 

@@ -412,10 +412,6 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
         close(dummyfd[i]);
 #endif
 
-    /* last thing to do before we leave */
-
-    hdl_startup();
-
     return 0;
 } /* end function build_config */
 
