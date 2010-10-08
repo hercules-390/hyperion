@@ -5540,11 +5540,11 @@ static char *ordername[] = {
         return;
     }
 
-    /* Issuing Sense to an offline CPU that is >= numcpu or
-       HI_CPU is not now considered unusual especially since
+    /* Issuing Sense to an offline CPU that is >= hicpu 
+       now not considered unusual especially since
        we have increased the default max CPU number to 8 */
     if (order == SIGP_SENSE && !IS_CPU_ONLINE(cpad)
-     && cpad >= sysblk.numcpu && cpad >= HI_CPU)
+     && cpad >= HI_CPU)
     {
         PTT(PTT_CL_ERR,"*SIGP",parm,cpad,order);
         regs->psw.cc = 3;

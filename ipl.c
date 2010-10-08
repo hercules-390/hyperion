@@ -142,7 +142,7 @@ PSW     captured_zpsw;                  /* Captured z/Arch PSW       */
 /*-------------------------------------------------------------------*/
 int ARCH_DEP(common_load_begin) (int cpu, int clear)
 {
-    REGS *regs;
+    int capture;
     int rc;
 
     /* Save the original architecture mode for later */
@@ -151,38 +151,27 @@ int ARCH_DEP(common_load_begin) (int cpu, int clear)
     ios_arch_mode = sysblk.arch_mode;
 #endif // defined(OPTION_FISHIO)
 
+    capture = (!clear) && IS_CPU_ONLINE(cpu) && sysblk.arch_mode == ARCH_900;
+
+    /* Capture the z/Arch PSW if this is a Load-normal IPL */
+    if (capture)
+        captured_zpsw = sysblk.regs[cpu]->psw;
+
+    /* Switch architecture mode to ESA390 mode for z/Arch IPL */
+    if (sysblk.arch_mode == ARCH_900)
+        sysblk.arch_mode = ARCH_390;
+
     /* Perform system-reset-normal or system-reset-clear function */
     if ( (rc = ARCH_DEP(system_reset(cpu,clear))) )
         return rc;
 
-    regs = sysblk.regs[cpu];
-
-    if (sysblk.arch_mode == ARCH_900)
-    {
-        /* Switch architecture mode to ESA390 mode for z/Arch IPL */
-        sysblk.arch_mode = ARCH_390;
-        /* Capture the z/Arch PSW if this is a Load-normal IPL */
-        if (!clear)
-            captured_zpsw = regs->psw;
-    }
-
-    /* Load-clear does a clear-reset (which does an initial-cpu-reset)
-       on all cpus in the configuration, but Load-normal does an initial-
-       cpu-reset only for the IPL CPU and a regular cpu-reset for all
-       other CPUs in the configuration. Thus if the above system_reset
-       call did a system-normal-reset for us, then we need to manually
-       do a clear-reset (initial-cpu-reset) on the IPL CPU...
-    */
-    if (!clear)
-    {
-        /* Save our captured-z/Arch-PSW if this is a Load-normal IPL
-           since the initial_cpu_reset call cleared it to zero. */
-        if (orig_arch_mode == ARCH_900)
-            regs->captured_zpsw = captured_zpsw;
-    }
+    /* Save our captured-z/Arch-PSW if this is a Load-normal IPL
+       since the initial_cpu_reset call cleared it to zero. */
+    if (capture)
+        sysblk.regs[cpu]->captured_zpsw = captured_zpsw;
 
     /* The actual IPL (load) now begins... */
-    regs->loadstate = 1;
+    sysblk.regs[cpu]->loadstate = 1;
 
     return 0;
 } /* end function common_load_begin */
@@ -219,6 +208,7 @@ int rc;
         HDC1(debug_cpu_state, regs);
         return -1;
     }
+
 #if defined(OPTION_IPLPARM)
     if(sysblk.haveiplparm)
     {

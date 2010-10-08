@@ -1764,6 +1764,7 @@ REGS *ARCH_DEP(run_cpu) (int cpu, REGS *oldregs)
 BYTE   *ip;
 REGS    regs;
 FUNC    *current_opcode_table;
+int     aswitch;
 
     if (oldregs)
     {
@@ -1782,9 +1783,6 @@ FUNC    *current_opcode_table;
 
         if (cpu_init (cpu, &regs, NULL))
             return NULL;
-
-        /* Signal cpu has started */
-        signal_condition (&sysblk.cpucond);
 
         WRMSG (HHC00811, "I", PTYPSTR(cpu), cpu, get_arch_mode_string(&regs));
 
@@ -1807,7 +1805,7 @@ FUNC    *current_opcode_table;
         return cpu_uninit(cpu, &regs);
 
     /* Establish longjmp destination for architecture switch */
-    setjmp(regs.archjmp);
+    aswitch = setjmp(regs.archjmp);
 
     /* Switch architecture mode if appropriate */
     if(sysblk.arch_mode != regs.arch_mode)
@@ -1834,6 +1832,10 @@ FUNC    *current_opcode_table;
     init_als(&regs);
 
     current_opcode_table=regs.ARCH_DEP(opcode_table);
+
+    /* Signal cpu has started */
+    if(!aswitch)
+        signal_condition (&sysblk.cpucond);
 
     RELEASE_INTLOCK(&regs);
 

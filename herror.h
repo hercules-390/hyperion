@@ -17,6 +17,7 @@
 
 /* CPU related error codes */
 #define HERRCPUOFF    (-2)                            /* CPU Offline */
+#define HERRCPUONL    (-3)                             /* CPU Online */
 
 /* Device related error codes */
 #define HERRDEVIDA    (-2)                 /* Invalid Device Address */

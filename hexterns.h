@@ -217,6 +217,9 @@ int  define_device (U16 lcss, U16 olddev, U16 newdev);
 CONF_DLL_IMPORT int  group_device(DEVBLK *dev, int members);
 int  configure_cpu (int cpu);
 int  deconfigure_cpu (int cpu);
+int  configure_numcpu (int numcpu);
+int  configure_storage(RADR);
+int  configure_xstorage(U32);
 #define MAX_ARGS  12                    /* Max argv[] array size     */
 int parse_and_attach_devices(const char *devnums,const char *devtype,int ac,char **av);
 CONF_DLL_IMPORT int parse_single_devnum(const char *spec, U16 *lcss, U16 *devnum);

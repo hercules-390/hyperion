@@ -724,62 +724,30 @@ int archlvl_cmd(int argc, char *argv[], char *cmdline)
         return 0;
     }
 
-    OBTAIN_INTLOCK(NULL);
-
     /* Make sure all CPUs are deconfigured or stopped */
-    for (i = 0; i < MAX_CPU; i++)
-        if (IS_CPU_ONLINE(i)
-         && CPUSTATE_STOPPED != sysblk.regs[i]->cpustate)
-        {
-            RELEASE_INTLOCK(NULL);
-            WRMSG(HHC02253, "E");
-            return -1;
-        }
+    
+    OBTAIN_INTLOCK(NULL);
+    if(sysblk.cpus)
+        for(i = 0; i < MAX_CPU; i++)
+            if(IS_CPU_ONLINE(i) && sysblk.regs[i]->cpustate == CPUSTATE_STARTED)
+            {
+                RELEASE_INTLOCK(NULL);
+                WRMSG(HHC02253, "E");
+                return HERRCPUONL;
+            }
+    RELEASE_INTLOCK(NULL);
 
-    if(set_archlvl(argv[1]))
-    {
-#if defined(_370)
-        if(sysblk.arch_mode == ARCH_370)
-            sysblk.maxcpu = sysblk.numcpu;
-#endif
-#if defined(_370) && (defined(_390) || defined(_900))
-    else
-#endif
-#if defined(_390) || defined(_900)
-#if defined(_FEATURE_CPU_RECONFIG)
-        sysblk.maxcpu = MAX_CPU;
-#else
-        sysblk.maxcpu = sysblk.numcpu;
-#endif
-#endif
-    }
-    else
+    if(!set_archlvl(argv[1]))
         if(update_archlvl(argc, argv))
         {
-            RELEASE_INTLOCK(NULL);
             WRMSG(HHC02205, "E", argv[1], "" );
             return -1;
         }
-
-    if (sysblk.pcpu >= MAX_CPU)
-        sysblk.pcpu = 0;
 
     sysblk.dummyregs.arch_mode = sysblk.arch_mode;
 #if defined(OPTION_FISHIO)
     ios_arch_mode = sysblk.arch_mode;
 #endif /* defined(OPTION_FISHIO) */
-
-#if defined(_FEATURE_CPU_RECONFIG) && defined(_S370)
-    /* Configure CPUs for S/370 mode */
-    if (sysblk.archmode == ARCH_370)
-        for (i = MAX_CPU - 1; i >= 0; i--)
-            if (i < MAX_CPU && !IS_CPU_ONLINE(i))
-                configure_cpu(i);
-            else if (i >= MAX_CPU && IS_CPU_ONLINE(i))
-                deconfigure_cpu(i);
-#endif
-
-    RELEASE_INTLOCK(NULL);
 
 #if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
     set_symbol( "ARCHMODE", get_arch_mode_string(NULL) );

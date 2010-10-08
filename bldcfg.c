@@ -73,97 +73,6 @@
 #endif
 
 
-/* storage configuration routine. To be moved *JJ */
-static int config_storage(RADR mbstor)
-{
-int off;
-
-    /* Convert from configuration units to bytes */
-    sysblk.mainsize = mbstor * 1024 * 1024;
-
-    /* Obtain main storage */
-    sysblk.mainstor = calloc((size_t)(sysblk.mainsize + 8192), 1);
-
-    if (sysblk.mainstor != NULL)
-        sysblk.main_clear = 1;
-    else
-        sysblk.mainstor = malloc((size_t)(sysblk.mainsize + 8192));
-
-    if (sysblk.mainstor == NULL)
-    {
-        char buf[64];
-        MSGBUF( buf, "malloc(%" I64_FMT "d)", sysblk.mainsize + 8192);
-        WRMSG(HHC01430, "S", buf, strerror(errno));
-        return -1;
-    }
-
-    /* Trying to get mainstor aligned to the next 4K boundary - Greg */
-    off = (uintptr_t)sysblk.mainstor & 0xFFF;
-    sysblk.mainstor += off ? 4096 - off : 0;
-
-    /* Obtain main storage key array */
-    sysblk.storkeys = calloc((size_t)(sysblk.mainsize / STORAGE_KEY_UNITSIZE), 1);
-    if (sysblk.storkeys == NULL)
-    {
-        sysblk.main_clear = 0;
-        sysblk.storkeys = malloc((size_t)(sysblk.mainsize / STORAGE_KEY_UNITSIZE));
-    }
-    if (sysblk.storkeys == NULL)
-    {
-        char buf[64];
-        MSGBUF( buf, "malloc(%" I64_FMT "d)", sysblk.mainsize / STORAGE_KEY_UNITSIZE);
-        WRMSG(HHC01430, "S", buf, strerror(errno));
-        return -1;
-    }
-
-    /* Initial power-on reset for main storage */
-    storage_clear();
-
-#if 0   /*DEBUG-JJ-20/03/2000*/
-    /* Mark selected frames invalid for debugging purposes */
-    for (i = 64 ; i < (sysblk.mainsize / STORAGE_KEY_UNITSIZE); i += 2)
-        if (i < (sysblk.mainsize / STORAGE_KEY_UNITSIZE) - 64)
-            sysblk.storkeys[i] = STORKEY_BADFRM;
-        else
-            sysblk.storkeys[i++] = STORKEY_BADFRM;
-#endif
-
-    return 0;
-}
-
-static int config_xstorage(U32 mbxstor)
-{
-    if (mbxstor)
-    {
-#ifdef _FEATURE_EXPANDED_STORAGE
-
-        sysblk.xpndsize = mbxstor * (1024*1024 / XSTORE_PAGESIZE);
-
-        /* Obtain expanded storage */
-        sysblk.xpndstor = calloc(sysblk.xpndsize, XSTORE_PAGESIZE);
-        if (sysblk.xpndstor)
-            sysblk.xpnd_clear = 1;
-        else
-            sysblk.xpndstor = malloc((size_t)sysblk.xpndsize * XSTORE_PAGESIZE);
-        if (sysblk.xpndstor == NULL)
-        {
-            char buf[64];
-            MSGBUF( buf, "malloc(%lu)", (unsigned long)sysblk.xpndsize * XSTORE_PAGESIZE);
-            WRMSG(HHC01430, "S", buf, strerror(errno));
-            return -1;
-        }
-
-        /* Initial power-on reset for expanded storage */
-        xstorage_clear();
-
-#else /*!_FEATURE_EXPANDED_STORAGE*/
-        WRMSG(HHC01431, "I");
-#endif /*!_FEATURE_EXPANDED_STORAGE*/
-    } /* end if(sysblk.xpndsize) */
-
-    return 0;
-}
-
 #if defined( OPTION_TAPE_AUTOMOUNT )
 /*-------------------------------------------------------------------*/
 /* Add directory to AUTOMOUNT allowed/disallowed directories list    */
@@ -311,7 +220,6 @@ int build_config (char *hercules_cnf)
 int     rc;                             /* Return code               */
 int     i;                              /* Array subscript           */
 S64     ly1960;                         /* Leap offset for 1960 epoch*/
-DEVBLK *dev;                            /* -> Device Block           */
 int     devtmax;                        /* Max number device threads */
 #ifdef OPTION_SELECT_KLUDGE
 int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
@@ -321,7 +229,6 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                                            cygwin from thrashing in
                                            select(). sigh            */
 #endif
-static  char    fname[MAX_PATH];        /* normalized filename       */ 
 
     /* Initialize SETMODE and set user authority */
     SETMODE(INIT);
@@ -336,8 +243,8 @@ static  char    fname[MAX_PATH];        /* normalized filename       */
     sysblk.cpuid = ((U64)     0x00 << 56)
                  | ((U64) 0x000001 << 32)
                  | ((U64)   0x0586 << 16);
-    sysblk.mainsize = 2;
     sysblk.xpndsize = 0;
+    configure_storage(2);
     sysblk.maxcpu = MAX_CPU_ENGINES;
     sysblk.numcpu = 1;
 #ifdef    _FEATURE_VECTOR_FACILITY
@@ -499,54 +406,6 @@ static  char    fname[MAX_PATH];        /* normalized filename       */
     /* Gabor Hoffer (performance option) */
     copy_opcode_tables();
 
-    /* Now configure storage.  We do this after processing the device
-     * statements so the fork()ed hercifc process won't require as much
-     * virtual storage.  We will need to update all the devices too.
-     */
-    if ( config_storage(sysblk.mainsize) )
-        return -1;
-
-    if ( config_xstorage(sysblk.xpndsize) )
-        return -1;
-
-    for (dev = sysblk.firstdev; dev; dev = dev->nextdev)
-    {
-        dev->mainstor = sysblk.mainstor;
-        dev->storkeys = sysblk.storkeys;
-        dev->mainlim = sysblk.mainsize - 1;
-    }
-
-#if defined(_FEATURE_REGION_RELOCATE)
-    /* Initialize base zone storage view (SIE compat) */
-    for(i = 0; i < FEATURE_SIE_MAXZONES; i++)
-    {
-        sysblk.zpb[i].mso = 0;
-        sysblk.zpb[i].msl = (sysblk.mainsize - 1) >> 20;
-        if(sysblk.xpndsize)
-        {
-            sysblk.zpb[i].eso = 0;
-            sysblk.zpb[i].esl = ((size_t)sysblk.xpndsize * XSTORE_PAGESIZE - 1) >> 20;
-        }
-        else
-        {
-            sysblk.zpb[i].eso = -1;
-            sysblk.zpb[i].esl = -1;
-        }
-    }
-#endif
-
-    /* Initialize dummy regs.
-     * Dummy regs are used by the panel or gui when the target cpu
-     * (sysblk.pcpu) is not configured (ie cpu_thread not started).
-     */
-    sysblk.dummyregs.mainstor = sysblk.mainstor;
-    sysblk.dummyregs.psa = (PSA*)sysblk.mainstor;
-    sysblk.dummyregs.storkeys = sysblk.storkeys;
-    sysblk.dummyregs.mainlim = sysblk.mainsize - 1;
-    sysblk.dummyregs.dummy = 1;
-    initial_cpu_reset (&sysblk.dummyregs);
-    sysblk.dummyregs.arch_mode = sysblk.arch_mode;
-    sysblk.dummyregs.hostregs = &sysblk.dummyregs;
 
 #ifdef OPTION_SELECT_KLUDGE
     /* Release the dummy file descriptors */
@@ -561,12 +420,6 @@ static  char    fname[MAX_PATH];        /* normalized filename       */
         sysblk.maxcpu = sysblk.numcpu;
     }
 
-    /* Start the CPUs */
-    OBTAIN_INTLOCK(NULL);
-    for(i = 0; i < sysblk.numcpu; i++)
-        configure_cpu(i);
-    RELEASE_INTLOCK(NULL);
-
 #if defined(OPTION_CAPPING)
     if(sysblk.capvalue)
     {
@@ -576,26 +429,6 @@ static  char    fname[MAX_PATH];        /* normalized filename       */
     }
 #endif // OPTION_CAPPING
 
-#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
-    /* setup configuration related symbols  */
-    {
-        char buf[8];
-
-        set_symbol("LPARNAME", str_lparname() );
-
-        MSGBUF( buf, "%02X", sysblk.lparnum );
-        set_symbol("LPARNUM", buf );
-
-        MSGBUF( buf, "%06X", (unsigned int) ((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32) );
-        set_symbol( "CPUSERIAL", buf );
-
-        MSGBUF( buf, "%04X", (unsigned int) ((sysblk.cpuid & 0x00000000FFFF0000ULL) >> 16) );
-        set_symbol( "CPUMODEL", buf );
-
-        set_symbol( "ARCHMODE", get_arch_mode_string(NULL) );  
-    }
-#endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS */
-    
     /* last thing to do before we leave */
 
     hdl_startup();

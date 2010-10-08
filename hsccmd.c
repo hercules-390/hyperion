@@ -2740,6 +2740,7 @@ int mainsize_cmd(int argc, char *argv[], char *cmdline)
 {
 U32 mainsize;
 BYTE c;
+int rc;
 
     UNREFERENCED(cmdline);
 
@@ -2756,7 +2757,18 @@ BYTE c;
         }
         else
         {
-            sysblk.mainsize = mainsize;
+            if((rc = configure_storage(mainsize)))
+            {
+                switch(rc) {
+                case HERRCPUONL:
+                    logmsg("CPU's must be offline or stopped\n");
+                    break;
+                default:
+                    logmsg("Configure storage error %d\n",rc);
+                }
+                return rc;
+            }
+
             if (MLVL(VERBOSE))
                 WRMSG( HHC02204, "I", argv[0], argv[1] );
         }
@@ -2778,6 +2790,7 @@ int xpndsize_cmd(int argc, char *argv[], char *cmdline)
 {
 U32 xpndsize;
 BYTE c;
+int rc;
 
     UNREFERENCED(cmdline);
 
@@ -2794,7 +2807,18 @@ BYTE c;
         }
         else
         {
-            sysblk.xpndsize = xpndsize;
+            if((rc = configure_xstorage(xpndsize)))
+            {
+                switch(rc) {
+                case HERRCPUONL:
+                    logmsg("CPU's must be offline or stopped\n");
+                    break;
+                default:
+                    logmsg("Configure xstorage error %d\n",rc);
+                }
+                return rc;
+            }
+
             if (MLVL(VERBOSE))
                 WRMSG( HHC02204, "I", argv[0], argv[1] );
         }
@@ -2991,6 +3015,7 @@ BYTE c;
 int numcpu_cmd(int argc, char *argv[], char *cmdline)
 {
 U16 numcpu;
+int rc;
 BYTE c;
 
     UNREFERENCED(cmdline);
@@ -3011,7 +3036,17 @@ BYTE c;
         }
         else
         {
-            sysblk.numcpu = numcpu;
+            if((rc = configure_numcpu(numcpu)))
+            {
+                switch(rc) {
+                case HERRCPUONL:
+                    logmsg("CPU's must be offline or stopped\n");
+                    break;
+                default:
+                    logmsg("Configure CPU error %d\n",rc);
+                }
+                return rc;
+            }
             if ( MLVL(VERBOSE) )
                 WRMSG( HHC02204, "I", argv[0], argv[1] );
         }
@@ -5397,7 +5432,7 @@ int  rest_loadparm = FALSE;
 
     for (i = 0; i < MAX_CPU; i++)
         if (IS_CPU_ONLINE(i)
-         && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED)
+         && sysblk.regs[i]->cpustate == CPUSTATE_STARTED)
         {
             RELEASE_INTLOCK(NULL);
             WRMSG(HHC02236, "E");

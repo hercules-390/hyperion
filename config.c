@@ -38,6 +38,237 @@
 #endif // defined(OPTION_FISHIO)
 
 
+static void configure_region_reloc()
+{
+DEVBLK *dev;
+int i;
+#if defined(_FEATURE_REGION_RELOCATE)
+
+    /* Initialize base zone storage view (SIE compat) */
+    for(i = 0; i < FEATURE_SIE_MAXZONES; i++)
+    {
+        sysblk.zpb[i].mso = 0;
+        sysblk.zpb[i].msl = (sysblk.mainsize - 1) >> 20;
+        if(sysblk.xpndsize)
+        {
+            sysblk.zpb[i].eso = 0;
+            sysblk.zpb[i].esl = ((size_t)sysblk.xpndsize * XSTORE_PAGESIZE - 1) >> 20;
+        }
+        else
+        {
+            sysblk.zpb[i].eso = -1;
+            sysblk.zpb[i].esl = -1;
+        }
+    }
+#endif
+
+    /* Relocate storage for all devices */
+    for (dev = sysblk.firstdev; dev; dev = dev->nextdev)
+    {
+        dev->mainstor = sysblk.mainstor;
+        dev->storkeys = sysblk.storkeys;
+        dev->mainlim = sysblk.mainsize - 1;
+    }
+
+    /* Relocate storage for all online cpus */
+    for (i = 0; i < MAX_CPU; i++)
+        if (IS_CPU_ONLINE(i))
+        {
+            sysblk.regs[i]->storkeys = sysblk.storkeys;
+            sysblk.regs[i]->mainstor = sysblk.mainstor;
+            sysblk.regs[i]->mainlim  = sysblk.mainsize - 1;
+        }
+
+}
+
+/* storage configuration */
+static RADR config_allocmsize = 0;
+int configure_storage(RADR mbstor)
+{
+int off;
+BYTE *mainstor;
+BYTE *storkeys;
+RADR  mainsize;
+RADR  storsize;
+RADR  skeysize;
+BYTE *dofree = NULL;
+int cpu;
+
+    OBTAIN_INTLOCK(NULL);
+    if(sysblk.cpus)
+        for(cpu = 0; cpu < MAX_CPU; cpu++)
+            if(IS_CPU_ONLINE(cpu) && sysblk.regs[cpu]->cpustate == CPUSTATE_STARTED)
+            {
+                RELEASE_INTLOCK(NULL);
+                return HERRCPUONL;
+            }
+    RELEASE_INTLOCK(NULL);
+
+    /* Convert from configuration units to bytes */
+    mainsize = mbstor * 1024 * 1024;
+    /* Adjust for alignment */
+    storsize = mainsize + 8192;
+    /* Storage key array size */
+    skeysize = storsize / STORAGE_KEY_UNITSIZE;
+    /* Add Storage key array size */
+    storsize += skeysize;
+
+    if(storsize > config_allocmsize)
+    {
+        /* Obtain storage */
+        storkeys = calloc((size_t)(storsize >> 10), 1024);
+
+        if (storkeys != NULL)
+            sysblk.main_clear = 1;
+        else
+        {
+            sysblk.main_clear = 0;
+            storkeys = malloc((size_t)(storsize));
+        }
+
+        if (storkeys == NULL)
+        {
+            char buf[64];
+            MSGBUF( buf, "malloc(%" I64_FMT "d)", storsize);
+            WRMSG(HHC01430, "S", buf, strerror(errno));
+            return -1;
+        }
+        else
+            config_allocmsize = storsize;
+
+        /* Free previously allocated storage */
+        dofree = sysblk.storkeys;
+    }
+    else
+    {
+        storkeys = sysblk.storkeys;
+        sysblk.main_clear = 0;
+        dofree = NULL;
+    }
+
+    /* Mainstor is located beyond the storage key array */
+    mainstor = storkeys + skeysize;
+
+    /* Trying to get mainstor aligned to the next 4K boundary - Greg */
+    off = (uintptr_t)mainstor & 0xFFF;
+    mainstor += off ? 4096 - off : 0;
+
+    /* Set in sysblk */
+    sysblk.storkeys = storkeys;
+    sysblk.mainstor = mainstor;
+    sysblk.mainsize = mainsize;
+
+    if(dofree)
+        free(dofree);
+
+    /* Initial power-on reset for main storage */
+    storage_clear();
+
+#if 0   /*DEBUG-JJ-20/03/2000*/
+    /* Mark selected frames invalid for debugging purposes */
+    for (i = 64 ; i < (sysblk.mainsize / STORAGE_KEY_UNITSIZE); i += 2)
+        if (i < (sysblk.mainsize / STORAGE_KEY_UNITSIZE) - 64)
+            sysblk.storkeys[i] = STORKEY_BADFRM;
+        else
+            sysblk.storkeys[i++] = STORKEY_BADFRM;
+#endif
+
+#if 1 // The below is a kludge that will need to be cleaned up at some point in time
+    /* Initialize dummy regs.
+     * Dummy regs are used by the panel or gui when the target cpu
+     * (sysblk.pcpu) is not configured (ie cpu_thread not started).
+     */
+    sysblk.dummyregs.mainstor = sysblk.mainstor;
+    sysblk.dummyregs.psa = (PSA*)sysblk.mainstor;
+    sysblk.dummyregs.storkeys = sysblk.storkeys;
+    sysblk.dummyregs.mainlim = sysblk.mainsize - 1;
+    sysblk.dummyregs.dummy = 1;
+    initial_cpu_reset (&sysblk.dummyregs);
+    sysblk.dummyregs.arch_mode = sysblk.arch_mode;
+    sysblk.dummyregs.hostregs = &sysblk.dummyregs;
+#endif
+
+    configure_region_reloc();
+
+    return 0;
+}
+
+static U32 config_allocxsize = 0;
+int configure_xstorage(U32 mbxstor)
+{
+BYTE *xpndstor;
+RADR  xpndsize;
+BYTE *dofree = NULL;
+int cpu;
+
+#ifdef _FEATURE_EXPANDED_STORAGE
+    OBTAIN_INTLOCK(NULL);
+    if(sysblk.cpus)
+        for(cpu = 0; cpu < MAX_CPU; cpu++)
+            if(IS_CPU_ONLINE(cpu) && sysblk.regs[cpu]->cpustate == CPUSTATE_STARTED)
+            {
+                RELEASE_INTLOCK(NULL);
+                return HERRCPUONL;
+            }
+    RELEASE_INTLOCK(NULL);
+
+    /* Convert from configuration units to bytes */
+    xpndsize = mbxstor * 1024 * 1024;
+    /* Adjust for alignment */
+
+    if (xpndsize > config_allocxsize)
+    {
+
+        /* Obtain expanded storage */
+        xpndstor = calloc((size_t)(xpndsize >> 10), 1024);
+
+        if (xpndstor)
+            sysblk.xpnd_clear = 1;
+        else
+        {
+            sysblk.xpnd_clear = 0;
+            xpndstor = malloc((size_t)xpndsize);
+        }
+
+        if (xpndstor == NULL)
+        {
+            char buf[64];
+            MSGBUF( buf, "malloc(%lu)", (unsigned long)sysblk.xpndsize * XSTORE_PAGESIZE);
+            WRMSG(HHC01430, "S", buf, strerror(errno));
+            return -1;
+        }
+        else
+            config_allocxsize = xpndsize;
+
+        /* Free previously allocated storage */
+        dofree = sysblk.xpndstor;
+    }
+    else
+    {
+        xpndstor = sysblk.xpndstor;
+        sysblk.xpnd_clear = 0;
+        dofree = NULL;
+    }
+
+
+    sysblk.xpndstor = xpndstor;
+    sysblk.xpndsize = xpndsize / XSTORE_PAGESIZE;
+
+    if(dofree)
+        free(dofree);
+
+    /* Initial power-on reset for expanded storage */
+    xstorage_clear();
+
+#else /*!_FEATURE_EXPANDED_STORAGE*/
+        WRMSG(HHC01431, "I");
+#endif /*!_FEATURE_EXPANDED_STORAGE*/
+
+    configure_region_reloc();
+
+    return 0;
+}
+
 /*-------------------------------------------------------------------*/
 /* Function to terminate all CPUs and devices                        */
 /*-------------------------------------------------------------------*/
@@ -113,7 +344,9 @@ char  thread_name[32];
         sysblk.regs[i]->intwait = 1;
 
     /* Wait for CPU thread to initialize */
-    wait_condition (&sysblk.cpucond, &sysblk.intlock);
+    do 
+       wait_condition (&sysblk.cpucond, &sysblk.intlock);
+    while (!IS_CPU_ONLINE(cpu));
 
     if (i < MAX_CPU)
         sysblk.regs[i]->intwait = 0;
@@ -154,7 +387,9 @@ int   i;
             sysblk.regs[i]->intwait = 1;
 
         /* Wait for CPU thread to terminate */
-        wait_condition (&sysblk.cpucond, &sysblk.intlock);
+        do
+            wait_condition (&sysblk.cpucond, &sysblk.intlock);
+        while (IS_CPU_ONLINE(cpu));
 
         /* (if we're a cpu thread) */
         if (i < MAX_CPU)
@@ -177,6 +412,43 @@ int   i;
 
 } /* end function deconfigure_cpu */
 
+#ifdef OPTION_ECL_CPU_ORDER
+static int configure_cpu_order[] = { 1, 0, 3, 2 }; // ECL CPU type order
+#define config_order(_cpu) (((_cpu) < (int)(sizeof(configure_cpu_order)/sizeof(int))) ? configure_cpu_order[(_cpu)] : (_cpu))
+#else
+#define config_order(_cpu) (_cpu)
+#endif
+
+int configure_numcpu(int numcpu)
+{
+int cpu;
+
+    OBTAIN_INTLOCK(NULL);
+    if(sysblk.cpus)
+        for(cpu = 0; cpu < MAX_CPU; cpu++)
+            if(IS_CPU_ONLINE(cpu) && sysblk.regs[cpu]->cpustate == CPUSTATE_STARTED)
+            {
+                RELEASE_INTLOCK(NULL);
+                return HERRCPUONL;
+            }
+
+    /* Start the CPUs */
+    for(cpu = 0; cpu < MAX_CPU; cpu++)
+        if(cpu < numcpu)
+        {
+            if(!IS_CPU_ONLINE(config_order(cpu)))
+                configure_cpu(config_order(cpu));
+        }
+        else
+        {
+            if(IS_CPU_ONLINE(config_order(cpu)))
+                deconfigure_cpu(config_order(cpu));
+        }
+
+    RELEASE_INTLOCK(NULL);
+ 
+    return 0;
+}
 
 /* 4 next functions used for fast device lookup cache management */
 #if defined(OPTION_FAST_DEVLOOKUP)

@@ -335,11 +335,11 @@ COMMAND("yroffset",  CONFIG,        SYSCMDALL,          yroffset_cmd,
   "Set yroffset parameter",
     NULL)
 
-COMMAND("mainsize",  CONFIG,        SYSCMDALL,          mainsize_cmd,
+COMMAND("mainsize",  CONFIG+PANEL,  SYSCMDALL,          mainsize_cmd,
   "Set mainsize parameter",
     NULL)
 
-COMMAND("xpndsize",  CONFIG,        SYSCMDALL,          xpndsize_cmd,
+COMMAND("xpndsize",  CONFIG+PANEL,  SYSCMDALL,          xpndsize_cmd,
   "Set xpndsize parameter",
     NULL)
 
@@ -363,11 +363,11 @@ COMMAND("numvec",    CONFIG,        SYSCMDALL,          numvec_cmd,
   "Set numvec parameter",
     NULL)
 
-COMMAND("numcpu",    CONFIG,        SYSCMDALL,          numcpu_cmd,
+COMMAND("numcpu",    CONFIG+PANEL,  SYSCMDALL,          numcpu_cmd,
   "Set numcpu parameter",
     NULL)
 
-COMMAND("maxcpu",    CONFIG,        SYSCMDALL,          maxcpu_cmd,
+COMMAND("maxcpu",    CONFIG+PANEL,  SYSCMDALL,          maxcpu_cmd,
   "Set maxcpu parameter",
     NULL)
 
