@@ -125,5 +125,6 @@ HTTP_DLL_IMPORT int   html_include  (WEBBLK *webblk, char *filename);
 HTTP_DLL_IMPORT char *http_variable (WEBBLK *webblk, char *name, int type);
 
 void *http_server (void *arg);
+char *http_root();
 
 #endif /* _HTTPMISC_H */

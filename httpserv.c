@@ -74,12 +74,10 @@ typedef struct _HTTP_SERV {
         char   *httproot;               /* HTTP root                 */
         int     httpbinddone;           /* HTTP waiting for bind     */
         int     httpshutdown;           /* HTTP Flag to signal shut  */
-        int     httpstmtnew;            /* HTTP new command type     */
         int     httpstmtold;            /* HTTP old command type     */
     } HTTP_SERV;
 
-static HTTP_SERV    http_serv = { 0, FALSE, NULL, NULL, NULL, FALSE, FALSE, FALSE, FALSE };
-static httpConfigStartupCompleted   = FALSE;
+static HTTP_SERV    http_serv = { 0, FALSE, NULL, NULL, NULL, FALSE, FALSE, FALSE };
 
 DLL_EXPORT int html_include(WEBBLK *webblk, char *filename)
 {
@@ -645,45 +643,15 @@ static void *http_request(int sock)
                        "The requested file was not found");
     return NULL;
 }
-
 /*-------------------------------------------------------------------*/
-/* HTTP SERVER THREAD - SHUTDOWN                                     */
+/* http command - manage HTTP server status                          */
 /*-------------------------------------------------------------------*/
-
-static void http_shutdown(void * unused)
+char *http_root()
 {
-    UNREFERENCED(unused);
-
-    http_serv.httpshutdown = TRUE;      /* signal shutdown */
-}
-
-
-void *http_server (void *arg)
-{
-int                 rc;                 /* Return code               */
-int                 lsock;              /* Socket for listening      */
-int                 csock;              /* Socket for conversation   */
-struct sockaddr_in  server;             /* Server address structure  */
-fd_set              selset;             /* Read bit map for select   */
-int                 optval;             /* Argument for setsockopt   */
-TID                 httptid;            /* Negotiation thread id     */
-char                pathname[MAX_PATH]; /* working pathname          */
-struct timeval      timeout;            /* timeout value             */
-
-
-    UNREFERENCED(arg);
-
-    hdl_adsc("http_shutdown",http_shutdown, NULL);
-
-    http_serv.httpshutdown = TRUE;
-    
-    /* Display thread started message on control panel */
-    WRMSG (HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "HTTP server");
-
     /* If the HTTP root directory is not specified,
        use a reasonable default */
     if (!http_serv.httproot)
-        {
+    {
 #if defined(_MSVC_)
         char process_dir[HTTP_PATH_LENGTH];
         if (get_process_directory(process_dir,HTTP_PATH_LENGTH) > 0)
@@ -712,10 +680,19 @@ struct timeval      timeout;            /* timeout value             */
         }
 #endif /* defined(_MSVC_) */
         /* Convert to absolute path */
-        if (!realpath(http_serv.httproot,absolute_httproot_path))
+        if (!realpath(http_serv.httproot, absolute_httproot_path))
         {
-            WRMSG(HHC01801, "E", http_serv.httproot, strerror(errno));
-            goto http_server_stop;
+            char msgbuf[MAX_PATH+3] = { 0 };
+            char *p = msgbuf;
+
+            if ( strchr( http_serv.httproot, SPACE ) == NULL )
+                p = http_serv.httproot;
+            else
+                MSGBUF(msgbuf, "'%s'", http_serv.httproot);
+
+            WRMSG(HHC01801, "E", p, strerror(errno));
+            
+            return NULL;
         }
         /* Verify that the absolute path is valid */
         // mode: 0 = exist only, 2 = write, 4 = read, 6 = read/write
@@ -723,27 +700,95 @@ struct timeval      timeout;            /* timeout value             */
         // ENOENT = File name or path not found.
         if (access( absolute_httproot_path, R_OK ) != 0)
         {
-            WRMSG(HHC01801, "E", absolute_httproot_path, strerror(errno));
-            goto http_server_stop;
+            char msgbuf[MAX_PATH+3] = { 0 };
+            char *p = msgbuf;
+
+            if ( strchr( absolute_httproot_path, SPACE ) == NULL )
+                p = absolute_httproot_path;
+            else
+                MSGBUF(msgbuf, "'%s'", absolute_httproot_path);
+
+            WRMSG(HHC01801, "E", p, strerror(errno));
+            return NULL;
         }
         /* Append trailing [back]slash, but only if needed */
         rc = (int)strlen(absolute_httproot_path);
+
         if (absolute_httproot_path[rc-1] != *HTTP_PS)
             strlcat(absolute_httproot_path,HTTP_PS,sizeof(absolute_httproot_path));
+        
         /* Save the absolute path */
         free(http_serv.httproot);
+        
         if (strlen(absolute_httproot_path) > MAX_PATH )
         {
-            WRMSG(HHC01801, "E", absolute_httproot_path, "path length too long");
-            goto http_server_stop;
+            char msgbuf[MAX_PATH+3] = { 0 };
+            char *p = msgbuf;
+
+            if ( strchr( absolute_httproot_path, SPACE ) == NULL )
+                p = absolute_httproot_path;
+            else
+                MSGBUF(msgbuf, "'%s'", absolute_httproot_path);
+
+            WRMSG(HHC01801, "E", p, "path length too long");
+            return NULL;
         }
         else
         {
+            char    pathname[MAX_PATH];     /* working pathname          */
+            char msgbuf[MAX_PATH+3] = { 0 };
+            char *p = msgbuf;
+
             hostpath(pathname, absolute_httproot_path, sizeof(pathname));
             http_serv.httproot = strdup(pathname);
-            WRMSG(HHC01802, "I", http_serv.httproot);
+
+            if ( strchr( http_serv.httproot, SPACE ) == NULL )
+                p = http_serv.httproot;
+            else
+                MSGBUF(msgbuf, "'%s'", http_serv.httproot);
+
+            WRMSG(HHC01802, "I", p);
         }
     }
+    return http_serv.httproot;
+}
+
+/*-------------------------------------------------------------------*/
+/* HTTP SERVER THREAD - SHUTDOWN                                     */
+/*-------------------------------------------------------------------*/
+
+static void http_shutdown(void * unused)
+{
+    UNREFERENCED(unused);
+
+    http_serv.httpshutdown = TRUE;      /* signal shutdown */
+}
+
+
+void *http_server (void *arg)
+{
+int                 rc;                 /* Return code               */
+int                 lsock;              /* Socket for listening      */
+int                 csock;              /* Socket for conversation   */
+struct sockaddr_in  server;             /* Server address structure  */
+fd_set              selset;             /* Read bit map for select   */
+int                 optval;             /* Argument for setsockopt   */
+TID                 httptid;            /* Negotiation thread id     */
+struct timeval      timeout;            /* timeout value             */
+
+
+    UNREFERENCED(arg);
+
+    hdl_adsc("http_shutdown",http_shutdown, NULL);
+
+    http_serv.httpshutdown = TRUE;
+    
+    /* Display thread started message on control panel */
+    WRMSG (HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "HTTP server");
+
+    /* make sure root path is built */
+    if ( http_root(NULL) == NULL )
+        goto http_server_stop;
 
     /* Obtain a socket */
     lsock = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -808,8 +853,8 @@ struct timeval      timeout;            /* timeout value             */
         FD_ZERO (&selset);
         FD_SET (lsock, &selset);
      
-        timeout.tv_sec  = 3;
-        timeout.tv_usec = 0;
+        timeout.tv_sec  = 0;
+        timeout.tv_usec = 10000;
 
         /* until a better way to implement this use standard windows */
 #undef select
@@ -882,8 +927,6 @@ int http_startup(int isconfigcalling)
     }
     else if ( isconfigcalling )
     {
-        httpConfigStartupCompleted = TRUE;
-
         if ( !http_serv.httpstmtold )
         {
             rc = 1;
@@ -924,82 +967,53 @@ int http_command(int argc, char *argv[])
 {
     int rc = 0;
 
+    http_serv.httpstmtold = FALSE;
+
     if ( argc == 2 && CMD(argv[0],rootx,4) &&
          ( ( strlen(argv[0]) == 5 && argv[2] != NULL && strcmp(argv[2],"httproot") == 0 ) ||
            ( strlen(argv[0]) == 4 ) ) )    
     {
-        int old = FALSE;
-        
         if ( strlen(argv[0]) == 5 )
         {
-            old = TRUE;
+            http_serv.httpstmtold = TRUE;
+        }
+
+        if (http_serv.httproot)
+        {
+            free(http_serv.httproot);
+            http_serv.httproot = NULL;
+        }
+
+        if ( strlen(argv[1]) > 0 )
+        {
+            char    pathname[MAX_PATH];
             
-            if (!http_serv.httpstmtnew)
-            {
-                http_serv.httpstmtold = TRUE;
-                if ( !httpConfigStartupCompleted )
-                    http_startup(TRUE);
-            }
+            hostpath(pathname, argv[1], sizeof(pathname));
+
+            if ( pathname[strlen(pathname)-1] != PATHSEPC )
+                strlcat( pathname, PATHSEPS, sizeof(pathname) );
+
+            http_serv.httproot = strdup(pathname);
         }
-        else
-        {
-            if ( !httpConfigStartupCompleted )
-                http_startup(TRUE);
+        
+        http_root();
 
-            http_serv.httpstmtnew = TRUE;
-        }
+        if ( MLVL(VERBOSE) )
+            WRMSG(HHC02204, "I", http_serv.httpstmtold ? "httproot": "root", 
+                        http_serv.httproot ? http_serv.httproot : "<not specified>");
+        
+        if ( http_serv.httpstmtold )
+            http_startup(TRUE);
 
-        if ( sysblk.httptid != 0 )
-        {
-            WRMSG( HHC01812, "E" );
-            rc = -1;
-        }
-        else
-        {
-            if (http_serv.httproot)
-            {
-                free(http_serv.httproot);
-                http_serv.httproot = NULL;
-            }
-
-            if ( strlen(argv[1]) > 0 )
-            {
-                char    pathname[MAX_PATH];
-
-                hostpath(pathname, argv[1], sizeof(pathname));
-
-                if ( pathname[strlen(pathname)-1] != PATHSEPC )
-                    strlcat( pathname, PATHSEPS, sizeof(pathname) );
-
-                http_serv.httproot = strdup(pathname);
-            }
-
-            if ( MLVL(VERBOSE) )
-                WRMSG(HHC02204, "I", old ? "httproot": "root", http_serv.httproot ? http_serv.httproot : "<not specified>");
-            rc = 0;
-        }
+        rc = 0;
     }
     else if ( (argc == 2 || argc == 3 || argc == 5) && CMD(argv[0],portx,4) &&
               ( ( strlen(argv[0]) == 5 && argv[5] != NULL && strcmp(argv[5],"httpport") == 0 ) ||
                 ( strlen(argv[0]) == 4 ) ) )    
     {
-        int old = FALSE;
-
         if ( strlen(argv[0]) == 5 )
         {
-            old = TRUE;
-            if (!http_serv.httpstmtnew)
-            {
-                http_serv.httpstmtold = TRUE;
-                if ( !httpConfigStartupCompleted )
-                    http_startup(TRUE);
-            }
-        }
-        else
-        {
-            http_serv.httpstmtnew = TRUE;
-            if ( !httpConfigStartupCompleted )
-                http_startup(TRUE);
+            http_serv.httpstmtold = TRUE;
         }
 
         if ( sysblk.httptid != 0 )
@@ -1062,17 +1076,16 @@ int http_command(int argc, char *argv[])
                 else
                     MSGBUF( msgbuf, "port=%hu noauth", http_serv.httpport );
 
-                WRMSG( HHC02204, "I", old ? "httpport":"port", msgbuf );
+                WRMSG( HHC02204, "I", http_serv.httpstmtold ? "httpport":"port", msgbuf );
+
+                if ( http_serv.httpstmtold )
+                    http_startup(TRUE);
+
             }   /* VERBOSE */
         }       
     } 
     else if ( argc == 1 && CMD(argv[0],start,3) )
     {
-        if ( !httpConfigStartupCompleted )
-            http_startup(TRUE);
-
-        http_serv.httpstmtold = FALSE;
-
         if ( http_serv.httpport == 0 )
         {
             WRMSG( HHC01808, "E", "valid");
@@ -1083,11 +1096,6 @@ int http_command(int argc, char *argv[])
     }
     else if (argc == 1 && CMD(argv[0],stop,4))
     {
-        if ( !httpConfigStartupCompleted )
-            http_startup(TRUE);
-
-        http_serv.httpstmtold = FALSE;
-
         if ( sysblk.httptid != 0 )
         {
             http_shutdown(NULL);
@@ -1103,11 +1111,6 @@ int http_command(int argc, char *argv[])
     }
     else if ( argc == 0 )
     {
-        if ( !httpConfigStartupCompleted )
-            http_startup(TRUE);
-
-        http_serv.httpstmtold = FALSE;
-
         if ( sysblk.httptid != 0 )
         {
             if ( http_serv.httpbinddone )
@@ -1166,11 +1169,6 @@ int http_command(int argc, char *argv[])
     }
     else
     {
-        if ( !httpConfigStartupCompleted )
-            http_startup(TRUE);
-
-        http_serv.httpstmtold = FALSE;
-
         WRMSG( HHC02299, "E", "http" );
         rc = -1;
     }

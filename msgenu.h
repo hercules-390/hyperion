@@ -1001,10 +1001,10 @@ cpu.c:123:HABC1234I This is a message
 
 // reserve 018xx for http server
 #define HHC01800 "HTTP server: error in function '%s': '%s'"
-#define HHC01801 "Invalid HTTPROOT: '%s': '%s'"
-#define HHC01802 "Using HTTPROOT directory '%s'"
-#define HHC01803 "Waiting for HTTP requests on port %u"
-#define HHC01804 "Waiting for port %u to become free for HTTP requests"
+#define HHC01801 "HTTP server: invalid root directory: %s: %s"
+#define HHC01802 "HTTP server using root directory %s"
+#define HHC01803 "HTTP server waiting for requests on port %u"
+#define HHC01804 "HTTP server waiting for port %u to become free for requests"
 #define HHC01805 "HTTP server signaled to stop"
 #define HHC01806 "HTTP server is %s"
 #define HHC01807 "HTTP server signaled to start"
