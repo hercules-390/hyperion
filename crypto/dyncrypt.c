@@ -3781,7 +3781,7 @@ static void ARCH_DEP(pcc_xts_aes)(REGS *regs)
     regs->psw.cc = 1;
     return;
   }
-  
+
   /* Check block sequential number (j) == 0 */
   if(!memcmp(bsn, zero, 16))
   {
@@ -3818,6 +3818,7 @@ static void ARCH_DEP(pcc_xts_aes)(REGS *regs)
   }
 
   /* Encrypt tweak and multiply */
+  aes_set_key(&context, parameter_block, keylen * 8);
   aes_encrypt(&context, tweak, tweak);
   gcm_gf_mult(xts, xts, tweak);
 
