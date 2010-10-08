@@ -412,15 +412,6 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
         close(dummyfd[i]);
 #endif
 
-#if defined(OPTION_CAPPING)
-    if(sysblk.capvalue)
-    {
-      rc = create_thread(&sysblk.captid, DETACHED, capping_manager_thread, NULL, "Capping manager");
-      if(rc)
-        WRMSG(HHC00102, "E", strerror(rc));
-    }
-#endif // OPTION_CAPPING
-
     /* last thing to do before we leave */
 
     hdl_startup();

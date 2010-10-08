@@ -4949,6 +4949,7 @@ int capping_cmd(int argc, char *argv[], char *cmdline)
 {
 U32  cap;
 BYTE c;
+int rc;
 
     UNREFERENCED(cmdline);
 
@@ -4957,7 +4958,13 @@ BYTE c;
     {
         if (strlen(argv[1]) >= 1
           && sscanf(argv[1], "%x%c", &cap, &c) == 1)
-            sysblk.capvalue = cap;
+        {
+            if((rc = configure_capping(cap)))
+            {
+                WRMSG(HHC00102, "E", strerror(rc));
+                return -1;
+            }
+        }
         else
         {
             WRMSG( HHC01451, "E", argv[1], argv[0] );

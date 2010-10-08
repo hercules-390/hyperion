@@ -410,7 +410,7 @@ COMMAND("cnslport",  CONFIG,        SYSNONE,            cnslport_cmd,
     NULL)
 
 #ifdef OPTION_CAPPING
-COMMAND("capping",   CONFIG,        SYSNONE,            capping_cmd,
+COMMAND("capping",   PANEL+CONFIG,  SYSNONE,            capping_cmd,
   "Set capping value",
     NULL)
 #endif // OPTION_CAPPING

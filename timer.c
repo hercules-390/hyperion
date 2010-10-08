@@ -338,8 +338,8 @@ void *capping_manager_thread (void *p)
   now = host_tod();
   prevcnt = 0;
 
-  /* Check as long as we have CPs */
-  while(sysblk.cpus)
+  /* Check as long as we have a capping value */
+  while(sysblk.capvalue)
   {
     then = now;
 

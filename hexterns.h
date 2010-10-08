@@ -220,6 +220,7 @@ int  deconfigure_cpu (int cpu);
 int  configure_numcpu (int numcpu);
 int  configure_storage(RADR);
 int  configure_xstorage(U32);
+int configure_capping(int value);
 #define MAX_ARGS  12                    /* Max argv[] array size     */
 int parse_and_attach_devices(const char *devnums,const char *devtype,int ac,char **av);
 CONF_DLL_IMPORT int parse_single_devnum(const char *spec, U16 *lcss, U16 *devnum);
