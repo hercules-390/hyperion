@@ -239,21 +239,15 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
         dummyfd[i] = dup(fileno(stderr));
 #endif
 
-    /* Build CPU identifier */
-    sysblk.cpuid = ((U64)     0x00 << 56)
-                 | ((U64) 0x000001 << 32)
-                 | ((U64)   0x0586 << 16);
     sysblk.xpndsize = 0;
     configure_storage(2);
+
     sysblk.maxcpu = MAX_CPU_ENGINES;
 #ifdef    _FEATURE_VECTOR_FACILITY
     sysblk.numvec = MAX_CPU;
 #else  //!_FEATURE_VECTOR_FACILITY
     sysblk.numvec = 0;
 #endif // _FEATURE_VECTOR_FACILITY
-    sysblk.sysepoch = 1900;
-    sysblk.yroffset = 0;
-    sysblk.tzoffset = 0;
 #if defined(_390)
     set_archlvl(_ARCH_390_NAME);
 #else
@@ -262,36 +256,9 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
 #if defined(_900)
     set_archlvl(_ARCH_900_NAME);
 #endif
-    sysblk.pgminttr = OS_NONE;
-
-    sysblk.timerint = DEFAULT_TIMER_REFRESH_USECS;
-
-#if       defined( OPTION_SHUTDOWN_CONFIRMATION )
-    /* Set the quitmout value */
-    sysblk.quitmout = QUITTIME_PERIOD;     /* quit timeout value        */
-#endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
-
-#if defined(OPTION_SHARED_DEVICES)
-    sysblk.shrdport = 0;
-#endif /*defined(OPTION_SHARED_DEVICES)*/
-
-    sysblk.hercprio = DEFAULT_HERCPRIO;
-    sysblk.todprio  = DEFAULT_TOD_PRIO;
-    sysblk.cpuprio  = DEFAULT_CPU_PRIO;
-    sysblk.devprio  = DEFAULT_DEV_PRIO;
     devtmax  = MAX_DEVICE_THREADS;
-    sysblk.kaidle = KEEPALIVE_IDLE_TIME;
-    sysblk.kaintv = KEEPALIVE_PROBE_INTERVAL;
-    sysblk.kacnt  = KEEPALIVE_PROBE_COUNT;
 
-#if defined(_FEATURE_ECPSVM)
-    sysblk.ecpsvm.available = 0;
-    sysblk.ecpsvm.level = 20;
-#endif /*defined(_FEATURE_ECPSVM)*/
 
-#ifdef PANEL_REFRESH_RATE
-    sysblk.panrate = PANEL_REFRESH_RATE_SLOW;
-#endif
 
 #ifdef OPTION_PTTRACE
     ptt_trace_init (0, 1);

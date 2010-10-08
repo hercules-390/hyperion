@@ -510,11 +510,74 @@ int     dll_count;                      /* index into array          */
     /* Save TOD of when we were first IMPL'ed */
     time( &sysblk.impltime );
 
+    /* set default CPU identifier */
+    sysblk.cpuid = ((U64)     0x00 << 56)
+                 | ((U64) 0x000001 << 32)
+                 | ((U64)   0x0586 << 16);
+
+    /* set clock related elements */
+    sysblk.sysepoch = 1900;
+    sysblk.yroffset = 0;
+    sysblk.tzoffset = 0;
+
+    /* set default Program Interrupt Trace to NONE */
+    sysblk.pgminttr = OS_NONE;
+
+    sysblk.timerint = DEFAULT_TIMER_REFRESH_USECS;
+
+    /* set default thread priorities */
+    sysblk.hercprio = DEFAULT_HERCPRIO;
+    sysblk.todprio  = DEFAULT_TOD_PRIO;
+    sysblk.cpuprio  = DEFAULT_CPU_PRIO;
+    sysblk.devprio  = DEFAULT_DEV_PRIO;
+
+    /* set default console keep alive values */
+    sysblk.kaidle = KEEPALIVE_IDLE_TIME;
+    sysblk.kaintv = KEEPALIVE_PROBE_INTERVAL;
+    sysblk.kacnt  = KEEPALIVE_PROBE_COUNT;
+
+#if defined(_FEATURE_ECPSVM)
+    sysblk.ecpsvm.available = 0;
+    sysblk.ecpsvm.level = 20;
+#endif /*defined(_FEATURE_ECPSVM)*/
+
+#ifdef PANEL_REFRESH_RATE
+    sysblk.panrate = PANEL_REFRESH_RATE_SLOW;
+#endif
+
+#if       defined( OPTION_SHUTDOWN_CONFIRMATION )
+    /* Set the quitmout value */
+    sysblk.quitmout = QUITTIME_PERIOD;     /* quit timeout value        */
+#endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
+
+#if defined(OPTION_SHARED_DEVICES)
+    sysblk.shrdport = 0;
+#endif /*defined(OPTION_SHARED_DEVICES)*/
+
 #ifdef OPTION_MSGHLD
     /* Set the default timeout value */
     sysblk.keep_timeout_secs = 120;
 #endif
 
+#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
+    /* setup defaults for BUILTIN symbols  */
+    {
+        char buf[8];
+
+        set_symbol("LPARNAME", str_lparname() );
+
+        MSGBUF( buf, "%02X", sysblk.lparnum );
+        set_symbol("LPARNUM", buf );
+
+        MSGBUF( buf, "%06X", (unsigned int) ((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32) );
+        set_symbol( "CPUSERIAL", buf );
+
+        MSGBUF( buf, "%04X", (unsigned int) ((sysblk.cpuid & 0x00000000FFFF0000ULL) >> 16) );
+        set_symbol( "CPUMODEL", buf );
+
+    }
+#endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS */
+    
     
     /* Initialize locks, conditions, and attributes */
     initialize_lock (&sysblk.todlock);

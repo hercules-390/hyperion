@@ -354,6 +354,11 @@ ARCHTAB *tb;
         set_alslevel(tb->alslevel);
         if (sysblk.cpus != 0)
             request_pending = TRUE;
+
+#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
+        set_symbol( "ARCHMODE", get_arch_mode_string(NULL) );
+#endif/* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS */
+
         return TRUE;
     }
     else
@@ -750,9 +755,6 @@ int archlvl_cmd(int argc, char *argv[], char *cmdline)
     ios_arch_mode = sysblk.arch_mode;
 #endif /* defined(OPTION_FISHIO) */
 
-#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
-    set_symbol( "ARCHMODE", get_arch_mode_string(NULL) );
-#endif/* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS */
 
     return 0;
 }
