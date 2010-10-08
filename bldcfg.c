@@ -329,6 +329,9 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
     for (i = 0; i < MAX_CPU; i++)
         sysblk.ptyp[i] = SCCB_PTYP_CP;
 
+    /* Gabor Hoffer (performance option) */
+    copy_opcode_tables();
+
     /* Cap the default priorities at zero if setuid not available */
 #if !defined(NO_SETUID)
     if (sysblk.suid != 0)
@@ -376,16 +379,6 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
     }
 #endif /* OPTION_TAPE_AUTOMOUNT */
 
-    /* Set root mode in order to set priority */
-    SETMODE(ROOT);
-
-    /* Set Hercules base priority */
-    if (setpriority(PRIO_PGRP, 0, sysblk.hercprio))
-        WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
-
-    /* Back to user mode */
-    SETMODE(USER);
-
     /* Set up the system TOD clock offset: compute the number of
      * microseconds offset to 0000 GMT, 1 January 1900 */
  
@@ -398,13 +391,8 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
 
     set_tod_epoch(((sysblk.sysepoch*365+(sysblk.sysepoch/4))*-TOD_DAY)+lyear_adjust(sysblk.sysepoch)+ly1960);
 
-
     /* Set the timezone offset */
     adjust_tod_epoch((sysblk.tzoffset/100*3600+(sysblk.tzoffset%100)*60)*16000000LL);
-
-    /* Gabor Hoffer (performance option) */
-    copy_opcode_tables();
-
 
 #ifdef OPTION_SELECT_KLUDGE
     /* Release the dummy file descriptors */

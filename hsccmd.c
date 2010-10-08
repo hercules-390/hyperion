@@ -2840,7 +2840,12 @@ BYTE c;
         }
         else
         {
-            sysblk.hercprio = hercprio;
+            if(configure_herc_priority(hercprio))
+            {
+                WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
+                return -1;
+            }
+
             if (MLVL(VERBOSE))
                 WRMSG(HHC02204, "I", argv[0], argv[1] );
         }

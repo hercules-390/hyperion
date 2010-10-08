@@ -343,7 +343,7 @@ COMMAND("xpndsize",  CONFIG+PANEL,  SYSCMDALL,          xpndsize_cmd,
   "Set xpndsize parameter",
     NULL)
 
-COMMAND("hercprio",  CONFIG,        SYSCMDALL,          hercprio_cmd,
+COMMAND("hercprio",  CONFIG+PANEL,  SYSCMDALL,          hercprio_cmd,
   "Set hercprio parameter",
     NULL)
 
@@ -410,7 +410,7 @@ COMMAND("cnslport",  CONFIG,        SYSNONE,            cnslport_cmd,
     NULL)
 
 #ifdef OPTION_CAPPING
-COMMAND("capping",   PANEL+CONFIG,  SYSNONE,            capping_cmd,
+COMMAND("capping",   CONFIG+PANEL,  SYSNONE,            capping_cmd,
   "Set capping value",
     NULL)
 #endif // OPTION_CAPPING

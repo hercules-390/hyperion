@@ -323,6 +323,22 @@ int configure_capping(int value)
 }
 #endif // OPTION_CAPPING
 
+int configure_herc_priority(int prio)
+{
+int rc;
+
+    /* Set root mode in order to set priority */
+    SETMODE(ROOT);
+
+    /* Set Hercules base priority */
+    rc = setpriority(PRIO_PGRP, 0, (sysblk.hercprio = prio));
+
+    /* Back to user mode */
+    SETMODE(USER);
+
+    return rc;
+}
+
 /*-------------------------------------------------------------------*/
 /* Function to start a new CPU thread                                */
 /* Caller MUST own the intlock                                       */
