@@ -538,7 +538,8 @@ BYTE fac_changed = FALSE;
 
     if (request_pending)
     {
-        WRMSG( HHC00888, "I" );
+        if(MLVL(VERBOSE))
+            WRMSG( HHC00888, "I" );
     }
 
     return;
