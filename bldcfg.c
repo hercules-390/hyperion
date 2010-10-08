@@ -322,6 +322,9 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
     losc_set(PGM_PRD_OS_RESTRICTED);
 #endif
 
+    /* Reset the clock steering registers */
+    csr_reset();
+
     /* Default CPU type CP */
     for (i = 0; i < MAX_CPU; i++)
         sysblk.ptyp[i] = SCCB_PTYP_CP;
@@ -382,9 +385,6 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
 
     /* Back to user mode */
     SETMODE(USER);
-
-    /* Reset the clock steering registers */
-    csr_reset();
 
     /* Set up the system TOD clock offset: compute the number of
      * microseconds offset to 0000 GMT, 1 January 1900 */
