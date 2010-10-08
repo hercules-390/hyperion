@@ -4928,8 +4928,8 @@ BYTE c;
     {
         if (strlen(argv[1]) >= 1
           && sscanf(argv[1], "%hu%c", &shrdport, &c) == 1
-          && shrdport >= 1024 )
-            sysblk.shrdport = shrdport;
+          && (shrdport >= 1024 || shrdport == 0))
+            configure_shrdport(shrdport);
         else
         {
             WRMSG( HHC01451, "E", argv[1], argv[0] );
@@ -4963,7 +4963,7 @@ int rc;
     if (argc > 1)
     {
         if (strlen(argv[1]) >= 1
-          && sscanf(argv[1], "%x%c", &cap, &c) == 1)
+          && sscanf(argv[1], "%u%c", &cap, &c) == 1)
         {
             if((rc = configure_capping(cap)))
             {

@@ -452,7 +452,7 @@ struct SYSBLK {
         LOCK    caplock[MAX_CPU_ENGINES]; /* CP capping locks        */
         int     caplocked[MAX_CPU_ENGINES]; /* Indication locked     */
         TID     captid;                 /* TID capping manager       */
-        U64     capvalue;               /* Capping value in mips     */
+        U32     capvalue;               /* Capping value in mips     */
 #endif // OPTION_CAPPING
 
         /* Active Facility List */

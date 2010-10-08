@@ -1056,40 +1056,6 @@ int     dll_count;                      /* index into array          */
     }
 #endif /*!defined(NO_SIGABEND_HANDLER)*/
 
-#ifdef OPTION_SHARED_DEVICES
-    /* Start the shared server */
-    if (sysblk.shrdport)
-    {
-        rc = create_thread (&sysblk.shrdtid, DETACHED,
-                            shared_server, NULL, "shared_server");
-        if (rc)
-        {
-            WRMSG(HHC00102, "E", strerror(rc));
-            delayed_exit(-1);
-            return(1);
-        }
-    }
-
-    /* Retry pending connections */
-    {
-        DEVBLK *dev;
-        TID     tid;
-
-        for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-            if (dev->connecting)
-            {
-                rc = create_thread (&tid, DETACHED,
-                           *dev->hnd->init, dev, "device connecting thread");
-                if (rc)
-                {
-                    WRMSG(HHC00102, "E", strerror(rc));
-                    delayed_exit(-1);
-                    return(1);
-                }
-            }
-    }
-#endif
-
     /* Start up the RC file processing thread */
     rc = create_thread(&rctid,DETACHED,
                   process_rc_file,NULL,"process_rc_file");

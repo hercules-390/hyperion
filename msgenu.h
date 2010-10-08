@@ -477,6 +477,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00741 "Shared: invalid or missing keyword '%s'"
 #define HHC00742 "Shared: OPTION_SHARED_DEVICES not defined"
 #define HHC00743 "Shared: %s"
+#define HHC00744 "Shared: Server already active"
 
 // reserve 008xx for processor related messages 
 #define HHC00800 "Processor %s%02X: loaded wait state PSW %s"

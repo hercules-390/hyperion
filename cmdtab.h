@@ -416,7 +416,7 @@ COMMAND("capping",   CONFIG+PANEL,  SYSNONE,            capping_cmd,
 #endif // OPTION_CAPPING
 
 #if defined(OPTION_SHARED_DEVICES)
-COMMAND("shrdport",  CONFIG,        SYSNONE,            shrdport_cmd,
+COMMAND("shrdport",  CONFIG+PANEL,  SYSNONE,            shrdport_cmd,
   "Set shrdport value",
     NULL)
 #endif /*defined(OPTION_SHARED_DEVICES)*/

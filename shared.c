@@ -2649,6 +2649,7 @@ va_list         vl;
 
 } /* shrdtrc */
 
+
 /*-------------------------------------------------------------------
  * Shared device server
  *-------------------------------------------------------------------*/
@@ -2710,7 +2711,7 @@ char                    threadname[40];
     server.sin_port = htons(server.sin_port);
 
     /* Attempt to bind the internet socket to the port */
-    while (1)
+    while (sysblk.shrdport)
     {
         rc = bind (lsock, (struct sockaddr *)&server, sizeof(server));
         if (rc == 0 || HSO_errno != HSO_EADDRINUSE) break;
@@ -2718,7 +2719,7 @@ char                    threadname[40];
         SLEEP(10);
     } /* end while */
 
-    if (rc != 0)
+    if (rc != 0 || !sysblk.shrdport)
     {
         WRMSG(HHC00735, "E", "bind()", strerror(HSO_errno));
         close_socket(lsock); close_socket(usock);
@@ -2777,7 +2778,7 @@ char                    threadname[40];
     WRMSG(HHC00737, "I", sysblk.shrdport);
 
     /* Handle connection requests and attention interrupts */
-    while (!sysblk.shutdown)
+    while (sysblk.shrdport)
     {
         /* Initialize the select parameters */
         FD_ZERO (&selset);
@@ -2850,7 +2851,7 @@ char                    threadname[40];
     }
 #endif
 
-    sysblk.shrdtid = 0;
+    sysblk.shrdport = sysblk.shrdtid = 0;
 
     WRMSG (HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), threadname);
 

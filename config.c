@@ -312,7 +312,7 @@ int     cpu;
 
 
 #if defined(OPTION_CAPPING)
-int configure_capping(int value)
+int configure_capping(U32 value)
 {
     if(sysblk.capvalue)
         sysblk.capvalue = value;
@@ -322,6 +322,60 @@ int configure_capping(int value)
     return 0;
 }
 #endif // OPTION_CAPPING
+
+#ifdef OPTION_SHARED_DEVICES
+int configure_shrdport(U16 shrdport)
+{
+int rc;
+
+    if(sysblk.shrdport && shrdport)
+    {
+        WRMSG(HHC00744, "E");
+        return -1;
+    }
+    
+    /* Start the shared server */
+    if ((sysblk.shrdport = shrdport))
+    {
+        rc = create_thread (&sysblk.shrdtid, DETACHED,
+                            shared_server, NULL, "shared_server");
+        if (rc)
+        {
+            WRMSG(HHC00102, "E", strerror(rc));
+            sysblk.shrdport = 0;
+            return(1);
+        }
+
+    }
+    else
+    {
+        /* Terminate the shared device listener thread */
+        if (sysblk.shrdtid)
+            signal_thread (sysblk.shrdtid, SIGUSR2);
+        return 0;
+    }
+
+    /* Retry pending connections */
+    {
+        DEVBLK *dev;
+        TID     tid;
+
+        for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+            if (dev->connecting)
+            {
+                rc = create_thread (&tid, DETACHED,
+                           *dev->hnd->init, dev, "device connecting thread");
+                if (rc)
+                {
+                    WRMSG(HHC00102, "E", strerror(rc));
+                    return(1);
+                }
+            }
+    }
+    return 0;
+}
+#endif
+
 
 int configure_herc_priority(int prio)
 {

@@ -296,6 +296,7 @@ int i;
     DEVBLK *dev;
         if ( equal_threads( tid, sysblk.cnsltid ) ||
              equal_threads( tid, sysblk.socktid ) ||
+             equal_threads( tid, sysblk.shrdtid ) ||
              equal_threads( tid, sysblk.httptid ) )
             return;
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
