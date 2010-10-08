@@ -1289,42 +1289,28 @@ int cf_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int cfall_cmd(int argc, char *argv[], char *cmdline)
 {
-    int i;
-    int on = -1;
+static char *qproc[] = { "qproc", NULL };
+
+int on = -1;
 
     UNREFERENCED(cmdline);
 
-    if (argc == 2)
+    if (argc > 1)
     {
         if ( CMD(argv[1],on,2) )
             on = 1;
         else if ( CMD(argv[1],off,3) )
             on = 0;
-    }
-
-    OBTAIN_INTLOCK(NULL);
-
-    for (i = 0; i < MAX_CPU; i++)
-        if (IS_CPU_ONLINE(i))
-        {
-            if (on < 0)
-                WRMSG(HHC00819, "I", PTYPSTR(i), i );
-            else if (on == 0)
-                deconfigure_cpu(i);
-        }
         else
         {
-            if (on < 0)
-                WRMSG(HHC00820, "I", PTYPSTR(i), i );
-            else if (on > 0 && i < MAX_CPU)
-                configure_cpu(i);
+            WRMSG( HHC17000, "E" );
+            return -1;
         }
+    }
+    else
+        return qproc_cmd(1, qproc, *qproc);
 
-    RELEASE_INTLOCK(NULL);
-
-    if (on >= 0) cfall_cmd (0, NULL, NULL);
-
-    return 0;
+    return configure_numcpu(on ? MAX_CPU : 0);
 }
 
 #endif /*_FEATURE_CPU_RECONFIG*/
