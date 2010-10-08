@@ -246,7 +246,6 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
     sysblk.xpndsize = 0;
     configure_storage(2);
     sysblk.maxcpu = MAX_CPU_ENGINES;
-    sysblk.numcpu = 1;
 #ifdef    _FEATURE_VECTOR_FACILITY
     sysblk.numvec = MAX_CPU;
 #else  //!_FEATURE_VECTOR_FACILITY
@@ -412,13 +411,6 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
     for (i = 0; i < OPTION_SELECT_KLUDGE; i++)
         close(dummyfd[i]);
 #endif
-
-    /* Check that numcpu does not exceed maxcpu */
-    if (sysblk.numcpu > sysblk.maxcpu) 
-    {
-        WRMSG(HHC01449, "W", sysblk.numcpu, sysblk.maxcpu);
-        sysblk.maxcpu = sysblk.numcpu;
-    }
 
 #if defined(OPTION_CAPPING)
     if(sysblk.capvalue)
