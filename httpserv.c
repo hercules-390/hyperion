@@ -43,6 +43,7 @@
 #include "httpmisc.h"
 #include "hostinfo.h"
 
+#define OPTION_HTTP_SERVER
 
 #if defined(OPTION_HTTP_SERVER)
 
@@ -75,9 +76,11 @@ typedef struct _HTTP_SERV {
         int     httpbinddone;           /* HTTP waiting for bind     */
         int     httpshutdown;           /* HTTP Flag to signal shut  */
         int     httpstmtold;            /* HTTP old command type     */
+        COND    http_wait_shutdown;     /* HTTP Shutdown condition   */
+        LOCK    http_lock_shutdown;     /* HTTP Shutdown lock        */
     } HTTP_SERV;
 
-static HTTP_SERV    http_serv = { 0, FALSE, NULL, NULL, NULL, FALSE, FALSE, FALSE };
+static HTTP_SERV    http_serv = { 0, FALSE, NULL, NULL, NULL, FALSE, FALSE, FALSE, 0, 0 };
 
 DLL_EXPORT int html_include(WEBBLK *webblk, char *filename)
 {
@@ -760,8 +763,15 @@ char *http_root()
 static void http_shutdown(void * unused)
 {
     UNREFERENCED(unused);
+    
+    obtain_lock(&http_serv.http_lock_shutdown);
 
     http_serv.httpshutdown = TRUE;      /* signal shutdown */
+
+    if ( sysblk.httptid != 0 )
+        timed_wait_condition_relative_usecs(&http_serv.http_wait_shutdown,&http_serv.http_lock_shutdown,2*1000*1000,NULL);
+
+    release_lock(&http_serv.http_lock_shutdown);
 }
 
 
@@ -779,9 +789,9 @@ struct timeval      timeout;            /* timeout value             */
 
     UNREFERENCED(arg);
 
-    hdl_adsc("http_shutdown",http_shutdown, NULL);
-
     http_serv.httpshutdown = TRUE;
+
+    hdl_adsc("http_shutdown",http_shutdown, NULL);
     
     /* Display thread started message on control panel */
     WRMSG (HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "HTTP server");
@@ -900,8 +910,6 @@ struct timeval      timeout;            /* timeout value             */
     close_socket (lsock);
 
 http_server_stop:
-    
-    hdl_rmsc(http_shutdown, NULL);
 
     /* Display thread started message on control panel */
     WRMSG(HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), "HTTP server");
@@ -909,6 +917,10 @@ http_server_stop:
     sysblk.httptid = 0;
 
     http_serv.httpbinddone = FALSE;
+
+    signal_condition(&http_serv.http_wait_shutdown);
+
+    hdl_rmsc(http_shutdown, NULL);
 
     return NULL;
 
@@ -920,6 +932,14 @@ http_server_stop:
 int http_startup(int isconfigcalling)
 { 
     int rc = 0;
+    static int first_call = TRUE;
+
+    if ( first_call )
+    {
+        initialize_condition( &http_serv.http_wait_shutdown );
+        initialize_lock( &http_serv.http_lock_shutdown );
+        first_call = FALSE;
+    }
 
     if ( http_serv.httpport == 0 )
     {    
