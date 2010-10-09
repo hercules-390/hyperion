@@ -1203,11 +1203,14 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02299 "Invalid command usage. Type 'help %s' for assistance."
 #define HHC02300 "sm=%2.2X pk=%d cmwp=%X as=%s cc=%d pm=%X am=%s ia=%"I64_FMT"X"
 #define HHC02301 "%s: Unexpected read length at record %d; expected %d-byte record"
-#define HHC02302 "%s: Record %d is unknown record type %s; aborting"
+#define HHC02302 "%s: Record %d is unknown record type %s; skipped"
 #define HHC02303 "%s: GOFF object found at record %d; aborting"
 #define HHC02304 "%s: Record %d is unknown record type; skipped"
 #define HHC02305 "%s: Record %d is unknown record type; aborting"
-#define HHC02306 "Address %s not on quadword boundary"
+#define HHC02306 "%s: Address %s not on quadword boundary"
+#define HHC02307 "%s: Record %d relocation value %6.6X address exceeds main storage size"
+#define HHC02308 "%s: Warning messages issued, review before executing"
+#define HHC02309 "%s: Record %d is unsupported record type %s; skipped"
 
 // reserve 02390 for ieee.c
 #define HHC02390 "Function '%s': unexpectedly converting to '%s'"
