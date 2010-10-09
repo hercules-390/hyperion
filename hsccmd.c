@@ -88,12 +88,12 @@ int ProcessPanelCommand ( char * );
 int exec_cmd(int argc, char *argv[],char *cmdline);
 
 static void fcb_dump( DEVBLK*, char *, unsigned int );
-/* $test_cmd - do something or other */
 
+
+/* $test_cmd - do something or other */
 #ifdef _MSVC_
 #pragma optimize( "", off )
 #endif
-
 int test_p   = 0;
 int test_n   = 0;
 int test_t   = 0;
@@ -1663,6 +1663,148 @@ int autoinit_cmd( int argc, char *argv[], char *cmdline )
 }
 
 #if defined( OPTION_TAPE_AUTOMOUNT )
+static void check_define_default_automount_dir()
+{
+    /* Define default AUTOMOUNT directory if needed */
+    if (sysblk.tamdir && sysblk.defdir == NULL)
+    {
+    int rc;
+        char cwd[ MAX_PATH ];
+        TAMDIR *pNewTAMDIR = malloc( sizeof(TAMDIR) );
+        if (!pNewTAMDIR)
+        {
+            char buf[64];
+            MSGBUF( buf, "malloc(%lu)", sizeof(TAMDIR));
+            WRMSG(HHC01430, "S", buf, strerror(errno));
+            return -1;
+        }
+        VERIFY( getcwd( cwd, sizeof(cwd) ) != NULL );
+        rc = (int)strlen( cwd );
+        if (cwd[rc-1] != *PATH_SEP)
+            strlcat (cwd, PATH_SEP, sizeof(cwd));
+        pNewTAMDIR->dir = strdup (cwd);
+        pNewTAMDIR->len = (int)strlen (cwd);
+        pNewTAMDIR->rej = 0;
+        pNewTAMDIR->next = sysblk.tamdir;
+        sysblk.tamdir = pNewTAMDIR;
+        sysblk.defdir = pNewTAMDIR->dir;
+        WRMSG(HHC01447, "I", sysblk.defdir);
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/* Add directory to AUTOMOUNT allowed/disallowed directories list    */
+/*                                                                   */
+/* Input:  tamdir     pointer to work character array of at least    */
+/*                    MAX_PATH size containing an allowed/disallowed */
+/*                    directory specification, optionally prefixed   */
+/*                    with the '+' or '-' indicator.                 */
+/*                                                                   */
+/*         ppTAMDIR   address of TAMDIR ptr that upon successful     */
+/*                    completion is updated to point to the TAMDIR   */
+/*                    entry that was just successfully added.        */
+/*                                                                   */
+/* Output: upon success, ppTAMDIR is updated to point to the TAMDIR  */
+/*         entry just added. Upon error, ppTAMDIR is set to NULL and */
+/*         the original input character array is set to the inter-   */
+/*         mediate value being processed when the error occurred.    */
+/*                                                                   */
+/* Returns:  0 == success                                            */
+/*           1 == unresolvable path                                  */
+/*           2 == path inaccessible                                  */
+/*           3 == conflict w/previous                                */
+/*           4 == duplicates previous                                */
+/*           5 == out of memory                                      */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+static int add_tamdir( char *tamdir, TAMDIR **ppTAMDIR )
+{
+    char pathname[MAX_PATH];
+    int  rc, rej = 0;
+    char dirwrk[ MAX_PATH ] = {0};
+
+    *ppTAMDIR = NULL;
+
+    if (*tamdir == '-')
+    {
+        rej = 1;
+        memmove (tamdir, tamdir+1, MAX_PATH);
+    }
+    else if (*tamdir == '+')
+    {
+        rej = 0;
+        memmove (tamdir, tamdir+1, MAX_PATH);
+    }
+
+    /* Convert tamdir to absolute path ending with a slash */
+
+#if defined(_MSVC_)
+    /* (expand any embedded %var% environment variables) */
+    rc = expand_environ_vars( tamdir, dirwrk, MAX_PATH );
+    if (rc == 0)
+        strlcpy (tamdir, dirwrk, MAX_PATH);
+#endif
+
+    if (!realpath( tamdir, dirwrk ))
+        return (1); /* ("unresolvable path") */
+    strlcpy (tamdir, dirwrk, MAX_PATH);
+
+    hostpath(pathname, tamdir, MAX_PATH);
+    strlcpy (tamdir, pathname, MAX_PATH);
+
+    /* Verify that the path is valid */
+    if (access( tamdir, R_OK | W_OK ) != 0)
+        return (2); /* ("path inaccessible") */
+
+    /* Append trailing path separator if needed */
+    rc = (int)strlen( tamdir );
+    if (tamdir[rc-1] != *PATH_SEP)
+        strlcat (tamdir, PATH_SEP, MAX_PATH);
+
+    /* Check for duplicate/conflicting specification */
+    for (*ppTAMDIR = sysblk.tamdir;
+         *ppTAMDIR;
+         *ppTAMDIR = (*ppTAMDIR)->next)
+    {
+        if (strfilenamecmp( tamdir, (*ppTAMDIR)->dir ) == 0)
+        {
+            if ((*ppTAMDIR)->rej != rej)
+                return (3); /* ("conflict w/previous") */
+            else
+                return (4); /* ("duplicates previous") */
+        }
+    }
+
+    /* Allocate new AUTOMOUNT directory entry */
+    *ppTAMDIR = malloc( sizeof(TAMDIR) );
+    if (!*ppTAMDIR)
+        return (5); /* ("out of memory") */
+
+    /* Fill in the new entry... */
+    (*ppTAMDIR)->dir = strdup (tamdir);
+    (*ppTAMDIR)->len = (int)strlen (tamdir);
+    (*ppTAMDIR)->rej = rej;
+    (*ppTAMDIR)->next = NULL;
+
+    /* Add new entry to end of existing list... */
+    if (sysblk.tamdir == NULL)
+        sysblk.tamdir = *ppTAMDIR;
+    else
+    {
+        TAMDIR *pTAMDIR = sysblk.tamdir;
+        while (pTAMDIR->next)
+            pTAMDIR = pTAMDIR->next;
+        pTAMDIR->next = *ppTAMDIR;
+    }
+
+    /* Use first allowable dir as default */
+    if (rej == 0 && sysblk.defdir == NULL)
+        sysblk.defdir = (*ppTAMDIR)->dir;
+
+    return (0); /* ("success") */
+}
+
+
 /*-------------------------------------------------------------------*/
 /* automount_cmd - show or update AUTOMOUNT directories list         */
 /*-------------------------------------------------------------------*/
@@ -1678,6 +1820,8 @@ int rc;
         WRMSG(HHC02202, "E");
         return -1;
     }
+
+    check_define_default_automount_dir();
 
     if ( CMD(argv[1],list,4) )
     {
