@@ -511,7 +511,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00829 "IPL failure is usually as a result of ipl text missing or invalid."
 #define HHC00830 "Capping active, specialty engines excluded from MIPS calculation"
 #define HHC00831 "No central processors found, capping disabled"
-#define HHC00832 "Central processors will be capped to %u MIPS"
+#define HHC00832 "Central processors will be capped at %u MIPS"
 #define HHC00833 "Invalid capping argument '%s', capping disabled"
 #define HHC00834 "Processor %s%02X: %s"
 /* external.c */

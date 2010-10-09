@@ -4976,13 +4976,13 @@ int rc;
         else
         {
             WRMSG( HHC01451, "E", argv[1], argv[0] );
-            return 1;
+            return -1;
         }
     }
     else
     {
-        WRMSG( HHC01455, "E", argv[0] );
-        return 1;
+        WRMSG( HHC00832, "I", sysblk.capvalue );
+        return 0;
     }
 
     return 0;
