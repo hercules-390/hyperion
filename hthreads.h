@@ -229,53 +229,55 @@ typedef void*THREAD_FUNC(void*);
 #include "pttrace.h"
 
 #undef  initialize_lock
-#define initialize_lock(plk) \
-        ptt_pthread_mutex_init((plk),NULL,PTT_LOC)
+#define initialize_lock(plk)                    ptt_pthread_mutex_init((plk),NULL,PTT_LOC)
 #undef  obtain_lock
-#define obtain_lock(plk) \
-        ptt_pthread_mutex_lock((plk),PTT_LOC)
+#define obtain_lock(plk)                        ptt_pthread_mutex_lock((plk),PTT_LOC)
 #undef  try_obtain_lock
-#define try_obtain_lock(plk) \
-        ptt_pthread_mutex_trylock((plk),PTT_LOC)
+#define try_obtain_lock(plk)                    ptt_pthread_mutex_trylock((plk),PTT_LOC)
 #undef  test_lock
-#define test_lock(plk) \
-        (ptt_pthread_mutex_trylock ((plk),PTT_LOC) ? 1 : \
-         ptt_pthread_mutex_unlock  ((plk),PTT_LOC))
+#define test_lock(plk)                          (ptt_pthread_mutex_trylock((plk),PTT_LOC) ? 1 : ptt_pthread_mutex_unlock((plk),PTT_LOC))
 #undef  release_lock
-#define release_lock(plk) \
-        ptt_pthread_mutex_unlock((plk),PTT_LOC)
+#define release_lock(plk)                       ptt_pthread_mutex_unlock((plk),PTT_LOC)
+
+#undef  initialize_rwlock
+#define initialize_rwlock(plk)                  ptt_pthread_rwlock_init((plk),NULL,PTT_LOC)
+#undef  obtain_rdlock
+#define obtain_rdlock(plk)                      ptt_pthread_rwlock_rdlock((plk),PTT_LOC)
+#undef  obtain_wrlock
+#define obtain_wrlock(plk)                      ptt_pthread_rwlock_wrlock((plk),PTT_LOC)
+#undef  release_rwlock
+#define release_rwlock(plk)                     ptt_pthread_rwlock_unlock((plk),PTT_LOC)
+#undef  try_obtain_rdlock
+#define try_obtain_rdlock(plk)                  ptt_pthread_rwlock_tryrdlock((plk),PTT_LOC)
+#undef  try_obtain_wrlock
+#define try_obtain_wrlock(plk)                  ptt_pthread_rwlock_trywrlock((plk),PTT_LOC)
+#undef  test_rdlock
+#define test_rdlock(plk)                        (ptt_pthread_rwlock_tryrdlock((plk),PTT_LOC) ? 1 : ptt_pthread_rwlock_unlock((plk),PTT_LOC))
+#undef  test_wrlock
+#define test_wrlock(plk)                        (ptt_pthread_rwlock_trywrlock((plk),PTT_LOC) ? 1 : ptt_pthread_rwlock_unlock((plk),PTT_LOC))
+
 #undef  initialize_condition
-#define initialize_condition(pcond) \
-        ptt_pthread_cond_init((pcond),NULL,PTT_LOC)
+#define initialize_condition(pcond)             ptt_pthread_cond_init((pcond),NULL,PTT_LOC)
 #undef  signal_condition
-#define signal_condition(pcond) \
-        ptt_pthread_cond_signal((pcond),PTT_LOC)
+#define signal_condition(pcond)                 ptt_pthread_cond_signal((pcond),PTT_LOC)
 #undef  broadcast_condition
-#define broadcast_condition(pcond) \
-        ptt_pthread_cond_broadcast((pcond),PTT_LOC)
+#define broadcast_condition(pcond)              ptt_pthread_cond_broadcast((pcond),PTT_LOC)
 #undef  wait_condition
-#define wait_condition(pcond,plk) \
-        ptt_pthread_cond_wait((pcond),(plk),PTT_LOC)
+#define wait_condition(pcond,plk)               ptt_pthread_cond_wait((pcond),(plk),PTT_LOC)
 #undef  timed_wait_condition
-#define timed_wait_condition(pcond,plk,timeout) \
-        ptt_pthread_cond_timedwait((pcond),(plk),(timeout),PTT_LOC)
+#define timed_wait_condition(pcond,plk,timeout) ptt_pthread_cond_timedwait((pcond),(plk),(timeout),PTT_LOC)
 #undef  create_thread
 #if     defined(OPTION_FTHREADS)
-#define create_thread(ptid,pat,fn,arg,nm) \
-        ptt_pthread_create((ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),(nm),PTT_LOC)
+#define create_thread(ptid,pat,fn,arg,nm)       ptt_pthread_create((ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),(nm),PTT_LOC)
 #else
-#define create_thread(ptid,pat,fn,arg,nm) \
-        ptt_pthread_create(ptid,pat,(THREAD_FUNC*)&(fn),arg,(nm),PTT_LOC)
+#define create_thread(ptid,pat,fn,arg,nm)       ptt_pthread_create(ptid,pat,(THREAD_FUNC*)&(fn),arg,(nm),PTT_LOC)
 #endif
 #undef  join_thread
-#define join_thread(tid,pcode) \
-        ptt_pthread_join((tid),(pcode),PTT_LOC)
+#define join_thread(tid,pcode)                  ptt_pthread_join((tid),(pcode),PTT_LOC)
 #undef  detach_thread
-#define detach_thread(tid) \
-        ptt_pthread_detach((tid),PTT_LOC)
+#define detach_thread(tid)                      ptt_pthread_detach((tid),PTT_LOC)
 #undef  signal_thread
-#define signal_thread(tid,signo) \
-        ptt_pthread_kill((tid),(signo),PTT_LOC)
+#define signal_thread(tid,signo)                ptt_pthread_kill((tid),(signo),PTT_LOC)
 
 #else  // OPTION_PTTRACE
 #define PTT(...)

@@ -369,6 +369,79 @@ int result;
     return result;
 }
 
+DLL_EXPORT int ptt_pthread_rwlock_init(RWLOCK *rwlock, pthread_rwlockattr_t *attr, char *loc)
+{
+    PTTRACE ("rwlock init", rwlock, attr, loc, PTT_MAGIC);
+    return pthread_rwlock_init(rwlock, attr);
+}
+
+DLL_EXPORT int ptt_pthread_rwlock_rdlock(RWLOCK *rwlock, char *loc)
+{
+int result;
+U64 s;
+
+    PTTRACE ("rdlock before", rwlock, NULL, loc, PTT_MAGIC);
+    result = pthread_rwlock_tryrdlock(rwlock);
+    if(result)
+    {
+        s = host_tod();
+        result = pthread_rwlock_rdlock(rwlock);
+        s = host_tod() - s;
+    }
+    else
+        s = 0;
+    PTTRACE ("rdlock after", rwlock, (void *) s, loc, result);
+    return result;
+}
+
+DLL_EXPORT int ptt_pthread_rwlock_wrlock(RWLOCK *rwlock, char *loc)
+{
+int result;
+U64 s;
+
+    PTTRACE ("wrlock before", rwlock, NULL, loc, PTT_MAGIC);
+    result = pthread_rwlock_trywrlock(rwlock);
+    if(result)
+    {
+        s = host_tod();
+        result = pthread_rwlock_wrlock(rwlock);
+        s = host_tod() - s;
+    }
+    else
+        s = 0;
+    PTTRACE ("wrlock after", rwlock, (void *) s, loc, result);
+    return result;
+}
+
+DLL_EXPORT int ptt_pthread_rwlock_tryrdlock(RWLOCK *rwlock, char *loc)
+{
+int result;
+
+    PTTRACE ("tryrd before", rwlock, NULL, loc, PTT_MAGIC);
+    result = pthread_rwlock_tryrdlock(rwlock);
+    PTTRACE ("tryrd after", rwlock, NULL, loc, result);
+    return result;
+}
+
+DLL_EXPORT int ptt_pthread_rwlock_trywrlock(RWLOCK *rwlock, char *loc)
+{
+int result;
+
+    PTTRACE ("trywr before", rwlock, NULL, loc, PTT_MAGIC);
+    result = pthread_rwlock_trywrlock(rwlock);
+    PTTRACE ("trywr after", rwlock, NULL, loc, result);
+    return result;
+}
+
+DLL_EXPORT int ptt_pthread_rwlock_unlock(RWLOCK *rwlock, char *loc)
+{
+int result;
+
+    result = pthread_rwlock_unlock(rwlock);
+    PTTRACE ("rwunlock", rwlock, NULL, loc, result);
+    return result;
+}
+
 DLL_EXPORT int ptt_pthread_cond_init(COND *cond, pthread_condattr_t *attr, char *loc)
 {
     PTTRACE ("cond init", NULL, cond, loc, PTT_MAGIC);
