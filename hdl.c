@@ -59,6 +59,7 @@ static int   hdl_arg_p = FALSE;
 
 #endif
 
+static int    hdl_sdlock_initialized = FALSE;
 static LOCK   hdl_sdlock;                /* shutdown lock            */
 static HDLSHD *hdl_shdlist;              /* Shutdown call list       */
 
@@ -76,6 +77,13 @@ DLL_EXPORT char *(*hdl_device_type_equates)(const char *);
 DLL_EXPORT void hdl_adsc (char* shdname, void * shdcall, void * shdarg)
 {
 HDLSHD *newcall;
+    if ( !hdl_sdlock_initialized )
+    {
+        initialize_lock(&hdl_sdlock);
+        hdl_sdlock_initialized = TRUE;
+    }
+
+    obtain_lock(&hdl_sdlock);
 
     newcall = malloc(sizeof(HDLSHD));
     newcall->shdname = shdname;
@@ -83,6 +91,8 @@ HDLSHD *newcall;
     newcall->shdarg = shdarg;
     newcall->next = hdl_shdlist;
     hdl_shdlist = newcall;
+
+    release_lock(&hdl_sdlock);
 }
 
 
@@ -91,7 +101,16 @@ HDLSHD *newcall;
 DLL_EXPORT int hdl_rmsc (void *shdcall, void *shdarg)
 {
 HDLSHD **tmpcall;
+int rc = -1;
 
+    if ( !hdl_sdlock_initialized )
+    {
+        initialize_lock(&hdl_sdlock);
+        hdl_sdlock_initialized = TRUE;
+    }
+
+    obtain_lock( &hdl_sdlock );
+   
     for(tmpcall = &(hdl_shdlist); *tmpcall; tmpcall = &((*tmpcall)->next) )
     {
         if( (*tmpcall)->shdcall == shdcall
@@ -101,10 +120,11 @@ HDLSHD **tmpcall;
             frecall = *tmpcall;
             *tmpcall = (*tmpcall)->next;
             free(frecall);
-            return 0;
+            rc = 0;
         }
     }
-    return -1;
+    release_lock( &hdl_sdlock );
+    return rc;
 }
 
 
@@ -120,11 +140,20 @@ int logger_flag = 0;
 #endif // defined( _MSVC_ )
 
     WRMSG(HHC01500, "I");
+    
+    if ( !hdl_sdlock_initialized )
+    {
+        initialize_lock(&hdl_sdlock);
+        hdl_sdlock_initialized = TRUE;
+    }
 
     obtain_lock (&hdl_sdlock);
 
     for(shdent = hdl_shdlist; shdent; shdent = hdl_shdlist)
     {
+        /* Remove shutdown call entry to ensure it is called once */
+        hdl_shdlist = shdent->next;
+
 #if defined( _MSVC_ )
         if ( strcmp( shdent->shdname, "logger_term" ) == 0 )
         {
@@ -143,8 +172,6 @@ int logger_flag = 0;
             }
             WRMSG(HHC01502, "I", shdent->shdname);
         }   
-        /* Remove shutdown call entry to ensure it is called once */
-        hdl_shdlist = shdent->next;
         free(shdent);
     }
 
@@ -164,8 +191,8 @@ int logger_flag = 0;
                 (loggercall->shdcall) (loggercall->shdarg);
             }
             WRMSG(HHC01502, "I", loggercall->shdname);
-            free(loggercall);
         }
+        free(loggercall);
     }
 #endif // defined( _MSVC_ )
 
@@ -789,7 +816,6 @@ DLL_EXPORT void hdl_main (void)
 HDLPRE *preload;
 
     initialize_lock(&hdl_lock);
-    initialize_lock(&hdl_sdlock);
 
     if ( hdl_modpath == NULL )
     {
