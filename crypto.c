@@ -213,7 +213,7 @@ void renew_wrapping_keys(void)
   BYTE lparname[8];
   U64 cpuid;
 
-  obtain_lock(&sysblk.wklock);
+  obtain_wrlock(&sysblk.wklock);
   time = host_tod();
   srandom(time);
   for(i = 0; i < 32; i++)
@@ -246,7 +246,7 @@ void renew_wrapping_keys(void)
     sysblk.wkvpdea_reg[23 - i] = time;
     time >>= 8;
   }
-  release_lock(&sysblk.wklock);
+  release_rwlock(&sysblk.wklock);
 
 #if 0
 #define OPTION_WRAPPINGKEYS_DEBUG

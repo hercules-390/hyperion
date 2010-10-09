@@ -464,7 +464,7 @@ struct SYSBLK {
         BYTE    program_parameter[8];   /* Program Parameter Register*/
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
-        LOCK    wklock;                 /* Update lock               */
+        RWLOCK  wklock;                 /* Update lock               */
         BYTE    wkaes_reg[32];          /* Wrapping-key registers    */
         BYTE    wkdea_reg[24];
         BYTE    wkvpaes_reg[32];        /* Wrapping-key Verification */

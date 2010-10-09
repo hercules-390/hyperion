@@ -376,16 +376,16 @@ static int unwrap_aes(BYTE *key, int keylen)
   BYTE cv[16];
   int i;
  
-  obtain_lock(&sysblk.wklock);
+  obtain_rdlock(&sysblk.wklock);
 
   /* Verify verification pattern */
   if(unlikely(memcmp(&key[keylen], sysblk.wkvpaes_reg, 32)))
   {
-    release_lock(&sysblk.wklock);
+    release_rwlock(&sysblk.wklock);
     return(1);
   }
   aes_set_key(&context, sysblk.wkaes_reg, 256);
-  release_lock(&sysblk.wklock);
+  release_rwlock(&sysblk.wklock);
   switch(keylen)
   {
     case 16:
@@ -426,16 +426,16 @@ static int unwrap_dea(BYTE *key, int keylen)
   int i;
   int j;
   
-  obtain_lock(&sysblk.wklock);
+  obtain_rdlock(&sysblk.wklock);
 
   /* Verify verification pattern */
   if(unlikely(memcmp(&key[keylen], sysblk.wkvpdea_reg, 24)))
   {
-    release_lock(&sysblk.wklock);
+    release_rwlock(&sysblk.wklock);
     return(1);
   }
   des3_set_3keys(&context, sysblk.wkdea_reg, &sysblk.wkdea_reg[8], &sysblk.wkdea_reg[16]);
-  release_lock(&sysblk.wklock);
+  release_rwlock(&sysblk.wklock);
   for(i = 0; i < keylen; i += 8)
   {
     /* Save cv */
@@ -465,10 +465,10 @@ static void wrap_aes(BYTE *key, int keylen)
   BYTE cv[16];
   int i;
 
-  obtain_lock(&sysblk.wklock);
+  obtain_rdlock(&sysblk.wklock);
   memcpy(&key[keylen], sysblk.wkvpaes_reg, 32);
   aes_set_key(&context, sysblk.wkaes_reg, 256);
-  release_lock(&sysblk.wklock);
+  release_rwlock(&sysblk.wklock);
   switch(keylen)
   {
     case 16:
@@ -508,10 +508,10 @@ static void wrap_dea(BYTE *key, int keylen)
   int i;
   int j;
 
-  obtain_lock(&sysblk.wklock);
+  obtain_rdlock(&sysblk.wklock);
   memcpy(&key[keylen], sysblk.wkvpdea_reg, 24);
   des3_set_3keys(&context, sysblk.wkdea_reg, &sysblk.wkdea_reg[8], &sysblk.wkdea_reg[16]);
-  release_lock(&sysblk.wklock);  
+  release_rwlock(&sysblk.wklock);  
   for(i = 0; i < keylen; i += 8)
   {
     if(i)
