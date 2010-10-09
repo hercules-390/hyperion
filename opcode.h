@@ -915,7 +915,7 @@ do { \
    if (sysblk.cpus > 1) { \
      int i; \
      OBTAIN_INTLOCK ((_regs)); \
-     for (i = 0; i < HI_CPU; i++) { \
+     for (i = 0; i < sysblk.hicpu; i++) { \
        if (IS_CPU_ONLINE(i) && i != (_regs)->cpuad) { \
          if ( sysblk.waiting_mask & CPU_BIT(i) ) \
            ARCH_DEP(invalidate_tlbe)(sysblk.regs[i], mn); \

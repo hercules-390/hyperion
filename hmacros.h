@@ -340,14 +340,6 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
 #define IS_CPU_ONLINE(_cpu) \
   (sysblk.regs[(_cpu)] != NULL)
 
-#if defined(_FEATURE_CPU_RECONFIG)
- #define MAX_CPU sysblk.maxcpu
-#else
- #define MAX_CPU sysblk.numcpu
-#endif
-
-#define HI_CPU sysblk.hicpu
-
 /* Instruction count for a CPU */
 #define INSTCOUNT(_regs) \
  ((_regs)->hostregs->prevcount + (_regs)->hostregs->instcount)

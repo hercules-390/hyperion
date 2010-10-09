@@ -456,7 +456,7 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
         int i;
         int j;
 
-        for ( i = 0, j = 0; i < MAX_CPU; i++ )
+        for ( i = 0, j = 0; i < sysblk.maxcpu; i++ )
         {
             if ( IS_CPU_ONLINE(i) && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED )
             {
@@ -1093,7 +1093,7 @@ int g_cmd(int argc, char *argv[], char *cmdline)
     OBTAIN_INTLOCK(NULL);
     sysblk.inststep = 0;
     SET_IC_TRACE;
-    for (i = 0; i < HI_CPU; i++)
+    for (i = 0; i < sysblk.hicpu; i++)
         if (IS_CPU_ONLINE(i) && sysblk.regs[i]->stepwait)
         {
             sysblk.regs[i]->cpustate = CPUSTATE_STARTED;
@@ -1311,7 +1311,7 @@ int on = -1;
     else
         return qproc_cmd(1, qproc, *qproc);
 
-    return configure_numcpu(on ? MAX_CPU : 0);
+    return configure_numcpu(on ? sysblk.maxcpu : 0);
 }
 
 #endif /*_FEATURE_CPU_RECONFIG*/
@@ -2570,7 +2570,7 @@ char *strtok_str = "";
                 WRMSG( HHC01451, "E", styp, argv[0] );
                 return -1;
             }
-            while (count-- > 0 && cpu < MAX_CPU)
+            while (count-- > 0 && cpu < sysblk.maxcpu)
             {
                 sysblk.ptyp[cpu] = ptyp;
                 WRMSG(HHC00827, "I", PTYPSTR(cpu), cpu, cpu, ptyp, styp_values[ptyp]);
@@ -2979,7 +2979,7 @@ BYTE c;
     if ( argc == 2 )
     {
         if (sscanf(argv[1], "%hu%c", &numvec, &c) != 1
-            || numvec > MAX_CPU)
+            || numvec > sysblk.maxcpu)
         {
             WRMSG( HHC01451, "E", argv[1], argv[0] );
             return -1;
@@ -3016,9 +3016,9 @@ BYTE c;
     if ( argc == 2 )
     {
         if (sscanf(argv[1], "%hu%c", &numcpu, &c) != 1
-            || numcpu > MAX_CPU)
+            || numcpu > sysblk.maxcpu)
         {
-            if ( numcpu > MAX_CPU )
+            if ( numcpu > sysblk.maxcpu )
             {
                 WRMSG( HHC02205, "E", argv[1], "; NUMCPU must be <= MAXCPU" );
             }
@@ -3061,6 +3061,8 @@ int maxcpu_cmd(int argc, char *argv[], char *cmdline)
 {
 U16 maxcpu;
 BYTE c;
+char buf[10];
+#define i2a(_int) ( (snprintf(buf,sizeof(buf),"%d", _int) <= (int)sizeof(buf)) ? buf : "?" )
 
     UNREFERENCED(cmdline);
 
@@ -3076,9 +3078,9 @@ BYTE c;
         }
         else
         {
-            sysblk.maxcpu = maxcpu;
+            sysblk.maxcpu = (maxcpu < sysblk.hicpu) ? sysblk.hicpu : maxcpu;
             if (MLVL(VERBOSE))
-                WRMSG( HHC02204, "I", argv[0], argv[1] );
+                WRMSG( HHC02204, "I", argv[0], i2a(sysblk.maxcpu) );
         }
     }
     else
@@ -3087,7 +3089,7 @@ BYTE c;
         return  -1;
     }
 
-    return 0;
+    return (sysblk.maxcpu == maxcpu) ? 0 : -HERRCPUONL;
 }
 
 
@@ -5316,7 +5318,7 @@ static int reset_cmd(int ac,char *av[],char *cmdline,int clear)
     UNREFERENCED(cmdline);
     OBTAIN_INTLOCK(NULL);
 
-    for (i = 0; i < MAX_CPU; i++)
+    for (i = 0; i < sysblk.maxcpu; i++)
         if (IS_CPU_ONLINE(i)
          && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED)
         {
@@ -5429,7 +5431,7 @@ int  rest_loadparm = FALSE;
 
     OBTAIN_INTLOCK(NULL);
 
-    for (i = 0; i < MAX_CPU; i++)
+    for (i = 0; i < sysblk.maxcpu; i++)
         if (IS_CPU_ONLINE(i)
          && sysblk.regs[i]->cpustate == CPUSTATE_STARTED)
         {
@@ -5531,7 +5533,7 @@ BYTE c;                                 /* Character work area       */
     }
 
     if (sscanf(argv[1], "%x%c", &cpu, &c) != 1
-     || cpu < 0 || cpu >= MAX_CPU)
+     || cpu < 0 || cpu >= sysblk.maxcpu)
     {
         WRMSG(HHC02205, "E", argv[1], ": target processor is invalid" );
         return -1;
@@ -7107,7 +7109,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
 
     first = last = -1;
 
-    for (i = 0; i < MAX_CPU; i++)
+    for (i = 0; i < sysblk.maxcpu; i++)
     {
         if (!IS_CPU_ONLINE(i))
         {
@@ -8932,13 +8934,13 @@ int count_cmd(int argc, char *argv[], char *cmdline)
 
     if (argc > 1 && CMD(argv[1],clear,5) )
     {
-        for (i = 0; i < MAX_CPU; i++)
+        for (i = 0; i < sysblk.maxcpu; i++)
             if (IS_CPU_ONLINE(i))
                 sysblk.regs[i]->instcount = sysblk.regs[i]->prevcount = 0;
         for (i = 0; i < OPTION_COUNTING; i++)
             sysblk.count[i] = 0;
     }
-    for (i = 0; i < MAX_CPU; i++)
+    for (i = 0; i < sysblk.maxcpu; i++)
         if (IS_CPU_ONLINE(i))
             instcount += INSTCOUNT(sysblk.regs[i]);
     WRMSG(HHC02254, "I", instcount);
@@ -9658,12 +9660,12 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
     }
 
 #ifdef    _FEATURE_VECTOR_FACILITY
-    WRMSG( HHC17007, "I",   sysblk.numcpu, sysblk.numvec, sysblk.maxcpu );
+    WRMSG( HHC17007, "I",   sysblk.cpus, sysblk.numvec, sysblk.maxcpu );
 #else  /*!_FEATURE_VECTOR_FACILITY*/
-    WRMSG( HHC17007, "I",   sysblk.numcpu,             0, sysblk.maxcpu );
+    WRMSG( HHC17007, "I",   sysblk.cpus,             0, sysblk.maxcpu );
 #endif /* _FEATURE_VECTOR_FACILITY*/
 
-    for ( i = j = 0; i < MAX_CPU; i++ )
+    for ( i = j = 0; i < sysblk.maxcpu; i++ )
     {
         if ( IS_CPU_ONLINE(i) && sysblk.regs[i]->cpustate == CPUSTATE_STARTED )
         {
@@ -9681,7 +9683,7 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
     if ( sysblk.capvalue > 0 )
     {
         cpupct = 0;
-        for ( i = k = 0; i < MAX_CPU; i++ )
+        for ( i = k = 0; i < sysblk.maxcpu; i++ )
         {
             if ( IS_CPU_ONLINE(i) &&
                  sysblk.ptyp[i] == SCCB_PTYP_CP &&
@@ -9699,7 +9701,7 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
                                 ( mipsrate % 1000000 ) / 10000 );
     }
 #endif
-    for ( i = 0; i < MAX_CPU; i++ )
+    for ( i = 0; i < sysblk.maxcpu; i++ )
     {
         if ( IS_CPU_ONLINE(i) )
         {

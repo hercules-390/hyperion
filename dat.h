@@ -511,7 +511,7 @@ _DAT_C_STATIC void ARCH_DEP(purge_alb_all) ()
 {
 int i;
 
-    for (i = 0; i < MAX_CPU; i++)
+    for (i = 0; i < sysblk.maxcpu; i++)
         if (IS_CPU_ONLINE(i)
          && (sysblk.regs[i]->cpubit & sysblk.started_mask))
             ARCH_DEP(purge_alb) (sysblk.regs[i]);
@@ -1733,7 +1733,7 @@ _DAT_C_STATIC void ARCH_DEP(purge_tlb_all) ()
 {
 int i;
 
-    for (i = 0; i < MAX_CPU; i++)
+    for (i = 0; i < sysblk.maxcpu; i++)
         if (IS_CPU_ONLINE(i)
          && (sysblk.regs[i]->cpubit & sysblk.started_mask))
             ARCH_DEP(purge_tlb) (sysblk.regs[i]);
@@ -1801,7 +1801,7 @@ _DAT_C_STATIC void ARCH_DEP(purge_tlbe_all) (RADR pfra)
 {
 int i;
 
-    for (i = 0; i < MAX_CPU; i++)
+    for (i = 0; i < sysblk.maxcpu; i++)
         if (IS_CPU_ONLINE(i)
          && (sysblk.regs[i]->cpubit & sysblk.started_mask))
             ARCH_DEP(purge_tlbe) (sysblk.regs[i], pfra);

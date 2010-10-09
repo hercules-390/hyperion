@@ -163,7 +163,7 @@ int cpu;
     /* Update the TOD clock of all CPU's in the configuration
        as we simulate 1 shared TOD clock, and do not support the
        TOD clock sync check */
-    for (cpu = 0; cpu < MAX_CPU; cpu++)
+    for (cpu = 0; cpu < sysblk.maxcpu; cpu++)
     {
         obtain_lock(&sysblk.cpulock[cpu]);
         if (IS_CPU_ONLINE(cpu))

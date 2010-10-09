@@ -314,7 +314,7 @@ int i;
         return;
     }
 
-    for (i = 0; i < MAX_CPU; i++)
+    for (i = 0; i < sysblk.maxcpu; i++)
     {
         if ( equal_threads( sysblk.cputid[i], tid ) )
         {
@@ -395,7 +395,7 @@ int i;
         {
             if(!try_obtain_lock(&sysblk.intlock))
             {
-                for (i = 0; i < MAX_CPU; i++)
+                for (i = 0; i < sysblk.maxcpu; i++)
                     if (i != regs->cpuad && IS_CPU_ONLINE(i))
                     {
                         ON_IC_MALFALT(sysblk.regs[i]);

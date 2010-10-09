@@ -220,11 +220,11 @@ int i;
        WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
     }
 
-    for (i = 0; i < MAX_CPU; i ++) savecount[i] = -1;
+    for (i = 0; i < sysblk.maxcpu; i ++) savecount[i] = -1;
 
     while(!sysblk.shutdown)
     {
-        for (i = 0; i < MAX_CPU; i++)
+        for (i = 0; i < sysblk.maxcpu; i++)
         {
 //          obtain_lock (&sysblk.cpulock[i]);
             if (IS_CPU_ONLINE(i)

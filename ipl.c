@@ -59,7 +59,7 @@ int ARCH_DEP(system_reset) (int cpu, int clear)
     if (clear)
     {
         /* Reset all CPUs in the configuration */
-        for (n = 0; n < MAX_CPU; n++)
+        for (n = 0; n < sysblk.maxcpu; n++)
             if (IS_CPU_ONLINE(n))
             {
                 regs=sysblk.regs[n];
@@ -90,7 +90,7 @@ int ARCH_DEP(system_reset) (int cpu, int clear)
     else
     {
         /* Reset all CPUs in the configuration */
-        for (n = 0; n < MAX_CPU; n++)
+        for (n = 0; n < sysblk.maxcpu; n++)
             if (IS_CPU_ONLINE(n))
             {
                 regs=sysblk.regs[n];
@@ -377,7 +377,7 @@ int i, rc = 0;                          /* Array subscript           */
     regs->checkstop = 0;
     regs->sigpreset = 0;
     regs->extccpu = 0;
-    for (i = 0; i < MAX_CPU; i++)
+    for (i = 0; i < sysblk.maxcpu; i++)
         regs->emercpu[i] = 0;
     regs->instinvalid = 1;
     regs->instcount = regs->prevcount = 0;

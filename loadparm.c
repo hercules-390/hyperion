@@ -522,5 +522,5 @@ void get_mpfactors(BYTE *dest)
     }
 
     /* Return the requested information... */
-    memcpy( dest, &mpfactors[0], (MAX_CPU-1) * sizeof(U16) );
+    memcpy( dest, &mpfactors[0], (sysblk.maxcpu-1) * sizeof(U16) );
 }

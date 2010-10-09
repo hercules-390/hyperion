@@ -1161,8 +1161,8 @@ static void NP_screen_redraw (REGS *regs)
 
     /* CPU busy graph */
     line = CPU_GRAPH_LINE;                          // this is where the dashes start 
-    NPcpugraph_ncpu = MIN(cons_rows - line - 1, HI_CPU);
-    if (HI_CPU > 0)
+    NPcpugraph_ncpu = MIN(cons_rows - line - 1, sysblk.hicpu);
+    if (sysblk.hicpu > 0)
     {
         NPcpugraph = 1;
         NPcpugraph_valid = 0;
@@ -1287,7 +1287,7 @@ static void NP_update(REGS *regs)
     /* percent CPU busy */
     cpupct_total = 0;
     n = 0;
-    for ( i = 0; i < MAX_CPU; i++ )
+    for ( i = 0; i < sysblk.maxcpu; i++ )
         if ( IS_CPU_ONLINE(i) )
             if ( sysblk.regs[i]->cpustate == CPUSTATE_STARTED )
             {
@@ -1869,7 +1869,7 @@ REGS *copy_regs(int cpu)
 {
     REGS *regs;
 
-    if (cpu < 0 || cpu >= MAX_CPU)
+    if (cpu < 0 || cpu >= sysblk.maxcpu)
         cpu = 0;
 
     obtain_lock (&sysblk.cpulock[cpu]);
@@ -3268,7 +3268,7 @@ FinishShutdown:
                     int cnt_stopped  = 0;
                     int cnt_online = 0;
                     char   *state;
-                    for ( i = 0; i < MAX_CPU; i++ )
+                    for ( i = 0; i < sysblk.maxcpu; i++ )
                     {
                         if ( IS_CPU_ONLINE(i) )
                         {
@@ -3329,7 +3329,7 @@ FinishShutdown:
 #ifdef OPTION_MIPS_COUNTING
                     buf[len++] = ' ';
                     totalcount = 0;
-                    for ( i = 0; i < MAX_CPU; i++ )
+                    for ( i = 0; i < sysblk.maxcpu; i++ )
                     {
                         if ( IS_CPU_ONLINE(i) )
                             totalcount += INSTCOUNT(sysblk.regs[i]);

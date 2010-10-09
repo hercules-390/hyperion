@@ -346,13 +346,13 @@ DEVBLK            *dev;                /* Device block pointer       */
             spccbconfig->hex01 = 0x01;
 
             /* Set CPU array count and offset in SPCCB */
-            STORE_HW(spccbconfig->toticpu,MAX_CPU);
+            STORE_HW(spccbconfig->toticpu,sysblk.maxcpu);
             offset = sizeof(SPCCB_HEADER) + sizeof(SPCCB_CONFIG_INFO);
             STORE_HW(spccbconfig->officpu,offset);
 
             /* Set HSA array count and offset in SPCCB */
             STORE_HW(spccbconfig->tothsa,0);
-            offset += (U16)(sizeof(SPCCB_CPU_INFO) * MAX_CPU);
+            offset += (U16)(sizeof(SPCCB_CPU_INFO) * sysblk.maxcpu);
             STORE_HW(spccbconfig->offhsa,offset);
 
             /* Move IPL load parameter to SPCCB */
@@ -360,7 +360,7 @@ DEVBLK            *dev;                /* Device block pointer       */
 
             /* Build the CPU information array after the SCP info */
             spccbcpu = (SPCCB_CPU_INFO*)(spccbconfig+1);
-            for (i = 0; i < MAX_CPU; i++, spccbcpu++)
+            for (i = 0; i < sysblk.maxcpu; i++, spccbcpu++)
             {
                 memset (spccbcpu, 0, sizeof(SPCCB_CPU_INFO));
                 spccbcpu->cpuaddr = i;
@@ -498,7 +498,7 @@ static BYTE       physical[8] =
         /* hercules cpu's */
         getrusage(RUSAGE_SELF,&usage);
         cpuinfo = (DIAG204_PART_CPU*)(partinfo + 1);
-        for(i = 0; i < MAX_CPU; i++)
+        for(i = 0; i < sysblk.maxcpu; i++)
           if (IS_CPU_ONLINE(i))
           {
               memset(cpuinfo, 0, sizeof(DIAG204_PART_CPU));
@@ -530,7 +530,7 @@ static BYTE       physical[8] =
         /* report all emulated physical cpu's */
         getrusage(RUSAGE_SELF,&usage);
         cpuinfo = (DIAG204_PART_CPU*)(partinfo + 1);
-        for(i = 0; i < MAX_CPU; i++)
+        for(i = 0; i < sysblk.maxcpu; i++)
           if (IS_CPU_ONLINE(i))
           {
               memset(cpuinfo, 0, sizeof(DIAG204_PART_CPU));
@@ -559,7 +559,7 @@ static BYTE       physical[8] =
 #if defined(FEATURE_EXTENDED_DIAG204)
     /* Extended subcode 5 returns the size of the data areas provided by extended subcodes 6 and 7 */
     case 0x00010005:
-        i = sizeof(DIAG204_X_HDR) + ((sizeof(DIAG204_X_PART) + (MAX_CPU * sizeof(DIAG204_X_PART_CPU))) * 2);
+        i = sizeof(DIAG204_X_HDR) + ((sizeof(DIAG204_X_PART) + (sysblk.maxcpu * sizeof(DIAG204_X_PART_CPU))) * 2);
         regs->GR_L(r2+1) = (i + PAGEFRAME_BYTEMASK) / PAGEFRAME_PAGESIZE;
         regs->GR_L(r2) = 0;
 
@@ -610,7 +610,7 @@ static BYTE       physical[8] =
         /* hercules cpu's */
         getrusage(RUSAGE_SELF,&usage);
         cpuxinfo = (DIAG204_X_PART_CPU*)(partxinfo + 1);
-        for(i = 0; i < MAX_CPU; i++)
+        for(i = 0; i < sysblk.maxcpu; i++)
           if (IS_CPU_ONLINE(i))
           {
               memset(cpuxinfo, 0, sizeof(DIAG204_X_PART_CPU));
@@ -653,7 +653,7 @@ static BYTE       physical[8] =
         /* report all emulated physical cpu's */
         getrusage(RUSAGE_CHILDREN,&usage);
         cpuxinfo = (DIAG204_PART_CPU*)(partinfo + 1);
-        for(i = 0; i < MAX_CPU; i++)
+        for(i = 0; i < sysblk.maxcpu; i++)
           if (IS_CPU_ONLINE(i))
           {
               memset(cpuxinfo, 0, sizeof(DIAG204_X_PART_CPU));

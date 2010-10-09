@@ -430,7 +430,6 @@ struct SYSBLK {
         U16     ipldev;                 /* IPL device                */
         int     iplcpu;                 /* IPL cpu                   */
         int     ipllcss;                /* IPL lcss                  */
-        int     numcpu;                 /* Number of CPUs installed  */
         int     numvec;                 /* Number vector processors  */
         int     maxcpu;                 /* Max number of CPUs        */
         int     cpus;                   /* Number CPUs configured    */

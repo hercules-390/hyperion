@@ -212,7 +212,7 @@ void ARCH_DEP(checkstop_cpu)(REGS *regs)
 void ARCH_DEP(checkstop_config)(void)
 {
     int i;
-    for(i=0;i<MAX_CPU;i++)
+    for(i=0;i<sysblk.maxcpu;i++)
     {
         if(IS_CPU_ONLINE(i))
         {
@@ -1395,7 +1395,7 @@ int   rc;
     if (cpu + 1 >= sysblk.hicpu)
     {
         int i;
-        for (i = MAX_CPU - 1; i >= 0; i--)
+        for (i = sysblk.maxcpu - 1; i >= 0; i--)
             if (IS_CPU_ONLINE(i))
                 break;
         sysblk.hicpu = i + 1;

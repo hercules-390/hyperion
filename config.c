@@ -71,7 +71,7 @@ int i;
     }
 
     /* Relocate storage for all online cpus */
-    for (i = 0; i < MAX_CPU; i++)
+    for (i = 0; i < sysblk.maxcpu; i++)
         if (IS_CPU_ONLINE(i))
         {
             sysblk.regs[i]->storkeys = sysblk.storkeys;
@@ -96,7 +96,7 @@ int cpu;
 
     OBTAIN_INTLOCK(NULL);
     if(sysblk.cpus)
-        for(cpu = 0; cpu < MAX_CPU; cpu++)
+        for(cpu = 0; cpu < sysblk.maxcpu; cpu++)
             if(IS_CPU_ONLINE(cpu) && sysblk.regs[cpu]->cpustate == CPUSTATE_STARTED)
             {
                 RELEASE_INTLOCK(NULL);
@@ -204,7 +204,7 @@ int cpu;
 #ifdef _FEATURE_EXPANDED_STORAGE
     OBTAIN_INTLOCK(NULL);
     if(sysblk.cpus)
-        for(cpu = 0; cpu < MAX_CPU; cpu++)
+        for(cpu = 0; cpu < sysblk.maxcpu; cpu++)
             if(IS_CPU_ONLINE(cpu) && sysblk.regs[cpu]->cpustate == CPUSTATE_STARTED)
             {
                 RELEASE_INTLOCK(NULL);
@@ -279,7 +279,7 @@ int     cpu;
 
     /* Deconfigure all CPU's */
     OBTAIN_INTLOCK(NULL);
-    for (cpu = 0; cpu < MAX_CPU; cpu++)
+    for (cpu = 0; cpu < sysblk.maxcpu; cpu++)
         if(IS_CPU_ONLINE(cpu))
             deconfigure_cpu(cpu);
     RELEASE_INTLOCK(NULL);
@@ -418,11 +418,11 @@ char  thread_name[32];
     }
 
     /* Find out if we are a cpu thread */
-    for (i = 0; i < MAX_CPU; i++)
+    for (i = 0; i < sysblk.maxcpu; i++)
         if (sysblk.cputid[i] == thread_id())
             break;
 
-    if (i < MAX_CPU)
+    if (i < sysblk.maxcpu)
         sysblk.regs[i]->intwait = 1;
 
     /* Wait for CPU thread to initialize */
@@ -430,7 +430,7 @@ char  thread_name[32];
        wait_condition (&sysblk.cpucond, &sysblk.intlock);
     while (!IS_CPU_ONLINE(cpu));
 
-    if (i < MAX_CPU)
+    if (i < sysblk.maxcpu)
         sysblk.regs[i]->intwait = 0;
 
     return 0;
@@ -446,7 +446,7 @@ int deconfigure_cpu(int cpu)
 int   i;
 
     /* Find out if we are a cpu thread */
-    for (i = 0; i < MAX_CPU; i++)
+    for (i = 0; i < sysblk.maxcpu; i++)
         if (sysblk.cputid[i] == thread_id())
             break;
 
@@ -465,7 +465,7 @@ int   i;
         WAKEUP_CPU (sysblk.regs[cpu]);
 
         /* (if we're a cpu thread) */
-        if (i < MAX_CPU)
+        if (i < sysblk.maxcpu)
             sysblk.regs[i]->intwait = 1;
 
         /* Wait for CPU thread to terminate */
@@ -474,7 +474,7 @@ int   i;
         while (IS_CPU_ONLINE(cpu));
 
         /* (if we're a cpu thread) */
-        if (i < MAX_CPU)
+        if (i < sysblk.maxcpu)
             sysblk.regs[i]->intwait = 0;
 
         join_thread (sysblk.cputid[cpu], NULL);
@@ -507,7 +507,7 @@ int cpu;
 
     OBTAIN_INTLOCK(NULL);
     if(sysblk.cpus)
-        for(cpu = 0; cpu < MAX_CPU; cpu++)
+        for(cpu = 0; cpu < sysblk.maxcpu; cpu++)
             if(IS_CPU_ONLINE(cpu) && sysblk.regs[cpu]->cpustate == CPUSTATE_STARTED)
             {
                 RELEASE_INTLOCK(NULL);
@@ -515,7 +515,7 @@ int cpu;
             }
 
     /* Start the CPUs */
-    for(cpu = 0; cpu < MAX_CPU; cpu++)
+    for(cpu = 0; cpu < sysblk.maxcpu; cpu++)
         if(cpu < numcpu)
         {
             if(!IS_CPU_ONLINE(config_order(cpu)))
@@ -1232,7 +1232,7 @@ REGS *devregs(DEVBLK *dev)
     {
         int i;
         TID tid = thread_id();              /* Our own thread id     */
-        for (i=0; i < MAX_CPU; i++)
+        for (i=0; i < sysblk.maxcpu; i++)
             if (tid == sysblk.cputid[i])    /* Are we a cpu thread?  */
                 return sysblk.regs[i];      /* yes, use its context  */
     }

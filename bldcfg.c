@@ -244,7 +244,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
 
     sysblk.maxcpu = MAX_CPU_ENGINES;
 #ifdef    _FEATURE_VECTOR_FACILITY
-    sysblk.numvec = MAX_CPU;
+    sysblk.numvec = sysblk.maxcpu;
 #else  //!_FEATURE_VECTOR_FACILITY
     sysblk.numvec = 0;
 #endif // _FEATURE_VECTOR_FACILITY
@@ -289,7 +289,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
     csr_reset();
 
     /* Default CPU type CP */
-    for (i = 0; i < MAX_CPU; i++)
+    for (i = 0; i < sysblk.maxcpu; i++)
         sysblk.ptyp[i] = SCCB_PTYP_CP;
 
     /* Gabor Hoffer (performance option) */

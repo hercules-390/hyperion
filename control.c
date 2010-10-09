@@ -5533,7 +5533,7 @@ static char *ordername[] = {
     PTT(PTT_CL_SIG,"SIGP",parm,cpad,order);
 
     /* Return condition code 3 if target CPU does not exist */
-    if (cpad >= MAX_CPU)
+    if (cpad >= sysblk.maxcpu)
     {
         PTT(PTT_CL_ERR,"*SIGP",parm,cpad,order);
         regs->psw.cc = 3;
@@ -5544,7 +5544,7 @@ static char *ordername[] = {
        now not considered unusual especially since
        we have increased the default max CPU number to 8 */
     if (order == SIGP_SENSE && !IS_CPU_ONLINE(cpad)
-     && cpad >= HI_CPU)
+     && cpad >= sysblk.hicpu)
     {
         PTT(PTT_CL_ERR,"*SIGP",parm,cpad,order);
         regs->psw.cc = 3;
@@ -6012,7 +6012,7 @@ static char *ordername[] = {
             PERFORM_SERIALIZATION (regs);
             PERFORM_CHKPT_SYNC (regs);
 
-            for (cpu = 0; cpu < MAX_CPU; cpu++)
+            for (cpu = 0; cpu < sysblk.maxcpu; cpu++)
                 if (IS_CPU_ONLINE(cpu)
                  && sysblk.regs[cpu]->cpustate != CPUSTATE_STOPPED
                  && sysblk.regs[cpu]->cpuad != regs->cpuad)
@@ -6037,7 +6037,7 @@ static char *ordername[] = {
                             regs->psw.states |= BIT(PSW_NOTESAME_BIT);
                             regs->PX_L &= 0x7FFFE000;
 
-                            for (cpu = 0; cpu < MAX_CPU; cpu++)
+                            for (cpu = 0; cpu < sysblk.maxcpu; cpu++)
                             {
                                 if (IS_CPU_ONLINE(cpu) &&
                                     sysblk.regs[cpu]->cpuad != regs->cpuad)
@@ -6065,7 +6065,7 @@ static char *ordername[] = {
                             regs->psw.IA_H = 0;
                             regs->PX_G &= 0x7FFFE000;
 
-                            for (cpu = 0; cpu < MAX_CPU; cpu++)
+                            for (cpu = 0; cpu < sysblk.maxcpu; cpu++)
                             {
                                 if (IS_CPU_ONLINE(cpu) &&
                                     sysblk.regs[cpu]->cpuad != regs->cpuad)
@@ -6093,7 +6093,7 @@ static char *ordername[] = {
                             regs->psw.IA_H = 0;
                             regs->PX_G &= 0x7FFFE000;
 
-                            for (cpu = 0; cpu < MAX_CPU; cpu++)
+                            for (cpu = 0; cpu < sysblk.maxcpu; cpu++)
                             {
                                 if (IS_CPU_ONLINE(cpu) &&
                                     sysblk.regs[cpu]->cpuad != regs->cpuad)
@@ -6733,9 +6733,9 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                 STORE_HW(sysib122->accoff, offset);
                 STORE_FW(sysib122->sccap, STSI_CAPABILITY);
                 STORE_FW(sysib122->cap,   STSI_CAPABILITY);
-                STORE_HW(sysib122->totcpu, MAX_CPU);
+                STORE_HW(sysib122->totcpu, sysblk.maxcpu);
                 STORE_HW(sysib122->confcpu, sysblk.cpus);
-                STORE_HW(sysib122->sbcpu, MAX_CPU - sysblk.cpus);
+                STORE_HW(sysib122->sbcpu, sysblk.maxcpu - sysblk.cpus);
                 get_mpfactors((BYTE*)sysib122->mpfact);
                 STORE_FW(sysib122->accap, STSI_CAPABILITY);
                 get_mpfactors((BYTE*)sysib122->ampfact);
@@ -6782,9 +6782,9 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                 memset(sysib222, 0x00, MAX(sizeof(SYSIB222),64*4));
                 STORE_HW(sysib222->lparnum,1);
                 sysib222->lcpuc = SYSIB222_LCPUC_SHARED;
-                STORE_HW(sysib222->totcpu,MAX_CPU);
+                STORE_HW(sysib222->totcpu,sysblk.maxcpu);
                 STORE_HW(sysib222->confcpu,sysblk.cpus);
-                STORE_HW(sysib222->sbcpu,MAX_CPU - sysblk.cpus);
+                STORE_HW(sysib222->sbcpu,sysblk.maxcpu - sysblk.cpus);
                 get_lparname(sysib222->lparname);
                 STORE_FW(sysib222->lparcaf,1000);   /* Full capability factor */
                 STORE_FW(sysib222->mdep[0],1000);   /* ZZ nonzero value */

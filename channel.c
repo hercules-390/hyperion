@@ -1264,7 +1264,7 @@ int i;
     sclp_reset();
 
     /* Connect each channel set to its home cpu */
-    for (i = 0; i < MAX_CPU; i++)
+    for (i = 0; i < sysblk.maxcpu; i++)
         if (IS_CPU_ONLINE(i))
             sysblk.regs[i]->chanset = i < FEATURE_LCSS_MAX ? i : 0xFFFF;
 

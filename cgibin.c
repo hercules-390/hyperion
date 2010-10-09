@@ -388,12 +388,12 @@ REGS *regs;
         select_ar = 0;
 
     /* Validate cpu number */
-    if (cpu < 0 || cpu >= MAX_CPU || !IS_CPU_ONLINE(cpu))
-        for (cpu = 0; cpu < MAX_CPU; cpu++)
+    if (cpu < 0 || cpu >= sysblk.maxcpu || !IS_CPU_ONLINE(cpu))
+        for (cpu = 0; cpu < sysblk.maxcpu; cpu++)
             if(IS_CPU_ONLINE(cpu))
                 break;
 
-    if(cpu < MAX_CPU)
+    if(cpu < sysblk.maxcpu)
         regs = sysblk.regs[cpu];
     else
         regs = sysblk.regs[sysblk.pcpu];
@@ -448,7 +448,7 @@ REGS *regs;
     hprintf(webblk->sock,"<form method=post>\n"
                           "<select type=submit name=cpu>\n");
 
-    for(i = 0; i < MAX_CPU; i++)
+    for(i = 0; i < sysblk.maxcpu; i++)
         if(IS_CPU_ONLINE(i))
             hprintf(webblk->sock,"<option value=%d%s>CPU%4.4X</option>\n",
               i,i==cpu?" selected":"",i);
@@ -686,7 +686,7 @@ U32 doipl;
     set_loadparm(value);
 
     /* Validate CPU number */
-    if(iplcpu >= MAX_CPU)
+    if(iplcpu >= sysblk.maxcpu)
         doipl = 0;
 
     if(!doipl)
@@ -695,7 +695,7 @@ U32 doipl;
         hprintf(webblk->sock,"<form method=post>\n"
                               "<select type=submit name=cpu>\n");
 
-        for(i = 0; i < MAX_CPU; i++)
+        for(i = 0; i < sysblk.maxcpu; i++)
             if(IS_CPU_ONLINE(i))
                 hprintf(webblk->sock,"<option value=%4.4X%s>CPU%4.4X</option>\n",
                   i, ((sysblk.regs[i]->cpuad == iplcpu) ? " selected" : ""), i);
@@ -1037,7 +1037,7 @@ int i,j;
 
     hprintf(webblk->sock,"<h1>Configure CPU</h1>\n");
 
-    for(i = 0; i < MAX_CPU; i++)
+    for(i = 0; i < sysblk.maxcpu; i++)
     {
     char cpuname[8], *cpustate;
     int  cpuonline = -1;
@@ -1064,7 +1064,7 @@ int i,j;
         RELEASE_INTLOCK(NULL);
     }
 
-    for(i = 0; i < MAX_CPU; i++)
+    for(i = 0; i < sysblk.maxcpu; i++)
     {
         hprintf(webblk->sock,"<p>CPU%4.4X\n"
                               "<form method=post>\n"

@@ -734,7 +734,7 @@ int archlvl_cmd(int argc, char *argv[], char *cmdline)
     
     OBTAIN_INTLOCK(NULL);
     if(sysblk.cpus)
-        for(i = 0; i < MAX_CPU; i++)
+        for(i = 0; i < sysblk.maxcpu; i++)
             if(IS_CPU_ONLINE(i) && sysblk.regs[i]->cpustate == CPUSTATE_STARTED)
             {
                 RELEASE_INTLOCK(NULL);

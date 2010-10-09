@@ -139,7 +139,7 @@ REGS* CopyREGS( int cpu )               // (same logic as in panel.c)
 {
     REGS* regs;
 
-    if (cpu < 0 || cpu >= MAX_CPU)
+    if (cpu < 0 || cpu >= sysblk.maxcpu)
         cpu = 0;
 
     obtain_lock( &sysblk.cpulock[cpu] );

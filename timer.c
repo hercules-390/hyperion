@@ -43,7 +43,7 @@ CPU_BITMAP      intmask = 0;            /* Interrupt CPU mask        */
     /* Check for [1] clock comparator, [2] cpu timer, and
      * [3] interval timer interrupts for each CPU.
      */
-    for (cpu = 0; cpu < HI_CPU; cpu++)
+    for (cpu = 0; cpu < sysblk.hicpu; cpu++)
     {
         /* Ignore this CPU if it is not started */
         if (!IS_CPU_ONLINE(cpu)
@@ -211,7 +211,7 @@ U64     total_sios;                     /* Total SIO rate            */
             sysblk.shrdcount = 0;
     #endif
 
-            for (i = 0; i < HI_CPU; i++)
+            for (i = 0; i < sysblk.hicpu; i++)
             {
                 obtain_lock (&sysblk.cpulock[i]);
 
@@ -318,12 +318,12 @@ void *capping_manager_thread (void *p)
   WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Capping manager");
 
   /* Check if we have CP engines */
-  for(i = 0; i < MAX_CPU; i++)
+  for(i = 0; i < sysblk.maxcpu; i++)
   {
     if(sysblk.ptyp[i] == SCCB_PTYP_CP)
       break;
   }
-  if(i == MAX_CPU)
+  if(i == sysblk.maxcpu)
   {
     WRMSG(HHC00878, "E");
     WRMSG(HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Capping manager");
@@ -332,7 +332,7 @@ void *capping_manager_thread (void *p)
   }
 
   /* Initialize interrupt wait locks */
-  for(i = 0; i < MAX_CPU; i++)
+  for(i = 0; i < sysblk.maxcpu; i++)
     initialize_lock(&sysblk.caplock[i]);
 
 
@@ -357,7 +357,7 @@ void *capping_manager_thread (void *p)
     instcnt = 0;
 
     /* Count the number of executed instructions */
-    for(i = 0; i < MAX_CPU; i++)
+    for(i = 0; i < sysblk.maxcpu; i++)
     {
       if(IS_CPU_ONLINE(i) && sysblk.ptyp[i] == SCCB_PTYP_CP)
       {
@@ -382,7 +382,7 @@ void *capping_manager_thread (void *p)
       {
         /* Wakeup the capped CPs */
         sysblk.capactive = 0;
-        for(i = 0; i < MAX_CPU; i++)
+        for(i = 0; i < sysblk.maxcpu; i++)
         {
           if(sysblk.caplocked[i])
           {
@@ -397,7 +397,7 @@ void *capping_manager_thread (void *p)
       else
       {
         /* I do not know why, but do not delete these lines! */
-        for(i = 0; i < MAX_CPU; i++)
+        for(i = 0; i < sysblk.maxcpu; i++)
         {
           if(sysblk.caplocked[i])
             ON_IC_INTERRUPT(sysblk.regs[i]);
@@ -414,7 +414,7 @@ void *capping_manager_thread (void *p)
       {
         /* Cap the CPs */
         sysblk.capactive = 1;
-        for(i = 0; i < MAX_CPU; i++)
+        for(i = 0; i < sysblk.maxcpu; i++)
         {
           if(IS_CPU_ONLINE(i) && sysblk.ptyp[i] == SCCB_PTYP_CP && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED)
           {
@@ -430,7 +430,7 @@ void *capping_manager_thread (void *p)
   }
 
   /* Uncap all before exit */
-  for(i = 0; i < MAX_CPU; i++)
+  for(i = 0; i < sysblk.maxcpu; i++)
     if(sysblk.caplocked[i])
     {
       release_lock(&sysblk.caplock[i]);

@@ -1236,7 +1236,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         /* Set response code X'0300' if SCCB length
            is insufficient to contain SCP info */
         if ( sccblen < sizeof(SCCB_HEADER) + sizeof(SCCB_SCP_INFO)
-                + (sizeof(SCCB_CPU_INFO) * MAX_CPU))
+                + (sizeof(SCCB_CPU_INFO) * sysblk.maxcpu))
         {
             sccb->reas = SCCB_REAS_TOO_SHORT;
             sccb->resp = SCCB_RESP_BLOCK_ERROR;
@@ -1280,21 +1280,21 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 #endif /*FEATURE_VECTOR_FACILITY*/
 
         /* Set CPU array count and offset in SCCB */
-        STORE_HW(sccbscp->numcpu, MAX_CPU);
+        STORE_HW(sccbscp->numcpu, sysblk.maxcpu);
         offset = sizeof(SCCB_HEADER) + sizeof(SCCB_SCP_INFO);
         STORE_HW(sccbscp->offcpu, offset);
 
 #if defined(FEATURE_MPF_INFO)
         /* Set MPF array count and offset in SCCB */
-        STORE_HW(sccbscp->nummpf, MAX_CPU-1);
+        STORE_HW(sccbscp->nummpf, sysblk.maxcpu-1);
 #endif /*defined(FEATURE_MPF_INFO)*/
-        offset += (U16)sizeof(SCCB_CPU_INFO) * MAX_CPU;
+        offset += (U16)sizeof(SCCB_CPU_INFO) * sysblk.maxcpu;
         STORE_HW(sccbscp->offmpf, offset);
 
         /* Set HSA array count and offset in SCCB */
         STORE_HW(sccbscp->numhsa, 0);
 #if defined(FEATURE_MPF_INFO)
-        offset += (U16)sizeof(SCCB_MPF_INFO) * MAX_CPU-1;
+        offset += (U16)sizeof(SCCB_MPF_INFO) * sysblk.maxcpu-1;
 #endif /*defined(FEATURE_MPF_INFO)*/
         STORE_HW(sccbscp->offhsa, offset);
 
@@ -1315,7 +1315,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
         /* Build the CPU information array after the SCP info */
         sccbcpu = (SCCB_CPU_INFO*)(sccbscp+1);
-        for (i = 0; i < MAX_CPU; i++, sccbcpu++)
+        for (i = 0; i < sysblk.maxcpu; i++, sccbcpu++)
         {
             memset (sccbcpu, 0, sizeof(SCCB_CPU_INFO));
             sccbcpu->cpa = i;
@@ -1820,7 +1820,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         i = (sclp_command & SCLP_RESOURCE_MASK) >> SCLP_RESOURCE_SHIFT;
 
         /* Return invalid resource in parm if target does not exist */
-        if(i >= MAX_CPU)
+        if(i >= sysblk.maxcpu)
         {
             sccb->reas = SCCB_REAS_INVALID_RSCP;
             sccb->resp = SCCB_RESP_REJECT;
@@ -1840,7 +1840,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         i = (sclp_command & SCLP_RESOURCE_MASK) >> SCLP_RESOURCE_SHIFT;
 
         /* Return invalid resource in parm if target does not exist */
-        if(i >= MAX_CPU)
+        if(i >= sysblk.maxcpu)
         {
             sccb->reas = SCCB_REAS_INVALID_RSCP;
             sccb->resp = SCCB_RESP_REJECT;
@@ -1862,7 +1862,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         i = (sclp_command & SCLP_RESOURCE_MASK) >> SCLP_RESOURCE_SHIFT;
 
         /* Return invalid resource in parm if target does not exist */
-        if(i >= MAX_CPU || !IS_CPU_ONLINE(i))
+        if(i >= sysblk.maxcpu || !IS_CPU_ONLINE(i))
         {
             sccb->reas = SCCB_REAS_INVALID_RSCP;
             sccb->resp = SCCB_RESP_REJECT;
@@ -1885,7 +1885,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         i = (sclp_command & SCLP_RESOURCE_MASK) >> SCLP_RESOURCE_SHIFT;
 
         /* Return invalid resource in parm if target does not exist */
-        if(i >= MAX_CPU)
+        if(i >= sysblk.maxcpu)
         {
             sccb->reas = SCCB_REAS_INVALID_RSCP;
             sccb->resp = SCCB_RESP_REJECT;
