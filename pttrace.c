@@ -524,10 +524,29 @@ DLL_EXPORT int ptt_pthread_kill(pthread_t tid, int sig, char *loc)
     return pthread_kill(tid, sig);
 }
 #else /* OPTION_FTHREADS */
+DLL_EXPORT int ptt_pthread_rwlock_init(RWLOCK *rwlock, void *attr, char *loc)
+{
+    LOCK *mutex = (LOCK*)rwlock;
+
+    return ptt_pthread_mutex_init(mutex, attr, loc);
+}
+
 DLL_EXPORT int ptt_pthread_mutex_init(LOCK *mutex, void *attr, char *loc)
 {
     PTTRACE ("lock init", mutex, attr, loc, PTT_MAGIC);
     return fthread_mutex_init(mutex,attr);
+}
+
+DLL_EXPORT int ptt_pthread_rwlock_rdlock(RWLOCK *rwlock, char *loc)
+{
+    LOCK *mutex = (LOCK*)rwlock;
+    return ptt_pthread_mutex_lock(mutex, loc);
+}
+
+DLL_EXPORT int ptt_pthread_rwlock_wrlock(RWLOCK *rwlock, char *loc)
+{
+    LOCK *mutex = (LOCK*)rwlock;
+    return ptt_pthread_mutex_lock(mutex, loc);
 }
 
 DLL_EXPORT int ptt_pthread_mutex_lock(LOCK *mutex, char *loc)
@@ -539,6 +558,17 @@ int result;
     PTTRACE ("lock after", mutex, NULL, loc, result);
     return result;
 }
+DLL_EXPORT int ptt_pthread_rwlock_tryrdlock(RWLOCK *rwlock, char *loc)
+{
+    LOCK *mutex = (LOCK*)rwlock;
+    return ptt_pthread_mutex_trylock(mutex, loc);
+}
+
+DLL_EXPORT int ptt_pthread_rwlock_trywrlock(RWLOCK *rwlock, char *loc)
+{
+    LOCK *mutex = (LOCK*)rwlock;
+    return ptt_pthread_mutex_trylock(mutex, loc);
+}
 
 DLL_EXPORT int ptt_pthread_mutex_trylock(LOCK *mutex, char *loc)
 {
@@ -548,6 +578,12 @@ int result;
     result = fthread_mutex_trylock(mutex);
     PTTRACE ("try after", mutex, NULL, loc, result);
     return result;
+}
+
+DLL_EXPORT int ptt_pthread_rwlock_unlock(RWLOCK *rwlock, char *loc)
+{
+    LOCK *mutex = (LOCK*)rwlock;
+    return ptt_pthread_mutex_unlock(mutex, loc);
 }
 
 DLL_EXPORT int ptt_pthread_mutex_unlock(LOCK *mutex, char *loc)
