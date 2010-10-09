@@ -335,9 +335,6 @@ void *capping_manager_thread (void *p)
   for(i = 0; i < MAX_CPU; i++)
     initialize_lock(&sysblk.caplock[i]);
 
-  /* Lets get started */
-  now = host_tod();
-  prevcnt = 0;
 
   /* Check as long as we have a capping value */
   while(sysblk.capvalue)
@@ -346,6 +343,9 @@ void *capping_manager_thread (void *p)
     {
       WRMSG(HHC00877, "I", sysblk.capvalue);
       prevcap = sysblk.capvalue;
+      /* Lets get started */
+      now = host_tod();
+      prevcnt = 0xFFFFFFFFFFFFFFFFULL;
     }
 
     then = now;
@@ -428,6 +428,15 @@ void *capping_manager_thread (void *p)
         prevcnt = instcnt;
     }
   }
+
+  /* Uncap all before exit */
+  for(i = 0; i < MAX_CPU; i++)
+    if(sysblk.caplocked[i])
+    {
+      release_lock(&sysblk.caplock[i]);
+      sysblk.caplocked[i] = 0;
+    }
+
   WRMSG(HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Capping manager");
   return(NULL);
 }
