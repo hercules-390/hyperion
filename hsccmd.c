@@ -5188,7 +5188,10 @@ BYTE c;
         if (strlen(argv[1]) >= 1
           && sscanf(argv[1], "%hu%c", &shrdport, &c) == 1
           && (shrdport >= 1024 || shrdport == 0))
-            configure_shrdport((default_shrdport = shrdport));
+        {
+            if(!configure_shrdport(shrdport))
+                default_shrdport = shrdport;
+        }
         else
         {
             WRMSG( HHC01451, "E", argv[1], argv[0] );
