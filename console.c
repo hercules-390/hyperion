@@ -1870,18 +1870,24 @@ char                    *logoout;
 
 static int     console_cnslcnt  = 0;    /* count of connected terms  */
 static LOCK    console_lock;            /* console_cnslcnt lock      */
-static int     did_init         = 0;    /* console_lock initialized  */
+static COND    console_wait;            /* console wait for shutdown */
+static int     did_init     = FALSE;    /* console_lock initialized  */
 
 static void console_shutdown(void * unused)
 {
     UNREFERENCED(unused);
 
     obtain_lock( &console_lock );
-    {
-        console_cnslcnt = 0;
-        SIGNAL_CONSOLE_THREAD();
-    }
+
+    console_cnslcnt = 0;
+
+    SIGNAL_CONSOLE_THREAD();
+
+    if ( sysblk.cnsltid != 0 )
+        timed_wait_condition_relative_usecs(&console_wait,&console_lock,2*1000*1000,NULL);
+
     release_lock( &console_lock );
+
 }
 
 static void *
@@ -2224,10 +2230,16 @@ BYTE                   unitstat;        /* Status after receive data */
 
     /* Close the listening socket */
     close_socket (lsock);
+  
     free(server);
 
     WRMSG(HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Console connection");
+
     sysblk.cnsltid = 0;
+
+    signal_condition(&console_wait);
+
+    hdl_rmsc(console_shutdown, NULL);
 
     return NULL;
 
@@ -2241,8 +2253,10 @@ console_initialise()
 
     if (!did_init)
     {
-        did_init = 1;
+        did_init = TRUE;
         initialize_lock( &console_lock );
+        initialize_condition( &console_wait );
+
     }
 
     obtain_lock( &console_lock );
