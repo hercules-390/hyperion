@@ -351,6 +351,11 @@ int     rc;
 #if defined(EXTERNALGUI)
 int     e_gui = FALSE;                  /* EXTERNALGUI parm          */
 #endif
+#if defined(OPTION_DYNAMIC_LOAD)
+#define MAX_DLL_TO_LOAD         50
+char   *dll_load[MAX_DLL_TO_LOAD];      /* Pointers to modnames      */
+int     dll_count;                      /* index into array          */ 
+#endif
 
     /* Clear the system configuration block */
     memset (&sysblk, 0, sizeof(SYSBLK));
@@ -359,10 +364,6 @@ int     e_gui = FALSE;                  /* EXTERNALGUI parm          */
     SETMODE(INIT);
 
 #if defined(OPTION_DYNAMIC_LOAD)
-#define MAX_DLL_TO_LOAD         50
-char   *dll_load[MAX_DLL_TO_LOAD];      /* Pointers to modnames      */
-int     dll_count;                      /* index into array          */ 
-
     for ( dll_count = 0; dll_count < MAX_DLL_TO_LOAD; dll_count++ )
         dll_load[dll_count] = NULL;
     dll_count = -1;
