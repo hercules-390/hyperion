@@ -309,6 +309,7 @@ void *capping_manager_thread (void *p)
   U64 prevcnt;               /* Inst CP count on previous interval   */
   U64 then;                  /* Previous interval time               */
   U64 prevcap = 0;           /* Previous cappling value              */
+  int capactive = 0;
 
   UNREFERENCED(p);
 
@@ -372,7 +373,7 @@ void *capping_manager_thread (void *p)
       prevcnt = instcnt;
 
     /* Are the CPs capped? */
-    if(sysblk.capactive)
+    if(capactive)
     {
       /* Add the allowed amount of executed instructions */
       allowed += sysblk.capvalue * diff;
@@ -381,7 +382,7 @@ void *capping_manager_thread (void *p)
       if(allowed >= instcnt - prevcnt)
       {
         /* Wakeup the capped CPs */
-        sysblk.capactive = 0;
+        capactive = 0;
         for(i = 0; i < sysblk.maxcpu; i++)
         {
           if(sysblk.caplocked[i])
@@ -413,7 +414,7 @@ void *capping_manager_thread (void *p)
       if(instcnt - prevcnt > allowed)
       {
         /* Cap the CPs */
-        sysblk.capactive = 1;
+        capactive = 1;
         for(i = 0; i < sysblk.maxcpu; i++)
         {
           if(IS_CPU_ONLINE(i) && sysblk.ptyp[i] == SCCB_PTYP_CP && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED)

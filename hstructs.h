@@ -447,7 +447,6 @@ struct SYSBLK {
         TID     todtid;                 /* Thread-id for TOD update  */
         REGS   *regs[MAX_CPU_ENGINES+1];   /* Registers for each CPU */
 #ifdef OPTION_CAPPING
-        int     capactive;              /* Indicator CP capping on   */
         LOCK    caplock[MAX_CPU_ENGINES]; /* CP capping locks        */
         int     caplocked[MAX_CPU_ENGINES]; /* Indication locked     */
         TID     captid;                 /* TID capping manager       */
