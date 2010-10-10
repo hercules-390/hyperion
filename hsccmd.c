@@ -403,10 +403,10 @@ int msg_cmd(int argc,char *argv[], char *cmdline)
     if ( argc < 3 )
     {
         WRMSG( HHC02299, "E", argv[0] );
-        return -1;
+        rc = -1;
     }
-
-    rc = message_cmd(argc,argv,cmdline, CMD(argv[0],msgnoh,6)? 0: 1);
+    else
+        rc = message_cmd(argc,argv,cmdline, CMD(argv[0],msgnoh,6)? 0: 1);
 
     return rc;
 }
@@ -603,10 +603,12 @@ int History(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int log_cmd(int argc, char *argv[], char *cmdline)
 {
+    int rc = 0;
     UNREFERENCED(cmdline);
     if ( argc > 2 )
     {
         WRMSG( HHC02299, "E", argv[0] );
+        rc = -1;
     }
     else if ( argc == 2 )
     {
@@ -623,7 +625,7 @@ int log_cmd(int argc, char *argv[], char *cmdline)
             WRMSG( HHC02105, "I", log_dsphrdcpy() );
     }
 
-    return 0;
+    return rc;
 }
 
 
@@ -632,6 +634,7 @@ int log_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int logopt_cmd(int argc, char *argv[], char *cmdline)
 {
+    int rc = 0;
     UNREFERENCED(cmdline);
 
     if ( argc < 2 )
@@ -662,9 +665,11 @@ int logopt_cmd(int argc, char *argv[], char *cmdline)
             }
 
             WRMSG( HHC02205, "E", argv[0], "" );
+            rc = -1;
+            break;
         } /* while (argc > 1) */
     }
-    return 0;
+    return rc;
 }
 
 
@@ -674,51 +679,62 @@ int logopt_cmd(int argc, char *argv[], char *cmdline)
 
 int uptime_cmd(int argc, char *argv[],char *cmdline)
 {
+int     rc = 0;
 time_t  now;
 unsigned uptime, weeks, days, hours, mins, secs;
 
     UNREFERENCED( cmdline );
-    UNREFERENCED(  argc   );
-    UNREFERENCED(  argv   );
+    
+    if ( argc > 1 )
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        rc = -1;
+    }
+    else
+    {
+        time( &now );
 
-    time( &now );
-
-    uptime = (unsigned) difftime( now, sysblk.impltime );
+        uptime = (unsigned) difftime( now, sysblk.impltime );
 
 #define  SECS_PER_MIN     ( 60                 )
 #define  SECS_PER_HOUR    ( 60 * SECS_PER_MIN  )
 #define  SECS_PER_DAY     ( 24 * SECS_PER_HOUR )
 #define  SECS_PER_WEEK    (  7 * SECS_PER_DAY  )
 
-    weeks = uptime /  SECS_PER_WEEK;
-            uptime %= SECS_PER_WEEK;
-    days  = uptime /  SECS_PER_DAY;
-            uptime %= SECS_PER_DAY;
-    hours = uptime /  SECS_PER_HOUR;
-            uptime %= SECS_PER_HOUR;
-    mins  = uptime /  SECS_PER_MIN;
-            uptime %= SECS_PER_MIN;
-    secs  = uptime;
+        weeks = uptime /  SECS_PER_WEEK;
+                uptime %= SECS_PER_WEEK;
+        days  = uptime /  SECS_PER_DAY;
+                uptime %= SECS_PER_DAY;
+        hours = uptime /  SECS_PER_HOUR;
+                uptime %= SECS_PER_HOUR;
+        mins  = uptime /  SECS_PER_MIN;
+                uptime %= SECS_PER_MIN;
+        secs  = uptime;
 
-    if (weeks)
-    {
-        WRMSG( HHC02206, "I",
+        if (weeks)
+        {
+            WRMSG( HHC02206, "I",
                     weeks, weeks >  1 ? "s" : "",
                     days,  days  != 1 ? "s" : "",
                     hours, mins, secs );
-    }
-    else if (days)
-    {
-        WRMSG( HHC02207, "I",
+        }
+        else if (days)
+        {
+            WRMSG( HHC02207, "I",
                     days, days != 1 ? "s" : "",
                     hours, mins, secs );
-    }
-    else
-    {
-        WRMSG( HHC02208, "I",
+        }
+        else
+        {
+            WRMSG( HHC02208, "I",
                     hours, mins, secs );
+        }
     }
-    return 0;
+    return rc;
+#undef SECS_PER_MIN
+#undef SECS_PER_HOUR
+#undef SECS_PER_DAY
+#undef SECS_PER_WEEK
 }
 
 
@@ -727,13 +743,18 @@ unsigned uptime, weeks, days, hours, mins, secs;
 /*-------------------------------------------------------------------*/
 int version_cmd(int argc, char *argv[],char *cmdline)
 {
+int rc = 0;
     UNREFERENCED(cmdline);
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
+    
+    if ( argc > 1 )
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        rc = -1;
+    }
+    else
+        display_version( stdout, "Hercules", TRUE );
 
-    display_version( stdout, "Hercules", TRUE );
-
-    return 0;
+    return rc;
 }
 
 /*-------------------------------------------------------------------*/
@@ -996,7 +1017,7 @@ int start_cmd(int argc, char *argv[], char *cmdline)
 
     UNREFERENCED(cmdline);
 
-    if (argc < 2)
+    if (argc == 1)
     {
         OBTAIN_INTLOCK(NULL);
         if (IS_CPU_ONLINE(sysblk.pcpu))
@@ -1085,22 +1106,31 @@ int start_cmd(int argc, char *argv[], char *cmdline)
 int g_cmd(int argc, char *argv[], char *cmdline)
 {
     int i;
+    int rc = 0;
 
     UNREFERENCED(cmdline);
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
 
-    OBTAIN_INTLOCK(NULL);
-    sysblk.inststep = 0;
-    SET_IC_TRACE;
-    for (i = 0; i < sysblk.hicpu; i++)
-        if (IS_CPU_ONLINE(i) && sysblk.regs[i]->stepwait)
+    if ( argc == 1 )
+    {
+        OBTAIN_INTLOCK(NULL);
+        sysblk.inststep = 0;
+        SET_IC_TRACE;
+        for (i = 0; i < sysblk.hicpu; i++)
         {
-            sysblk.regs[i]->cpustate = CPUSTATE_STARTED;
-            WAKEUP_CPU(sysblk.regs[i]);
+            if (IS_CPU_ONLINE(i) && sysblk.regs[i]->stepwait)
+            {
+                sysblk.regs[i]->cpustate = CPUSTATE_STARTED;
+                WAKEUP_CPU(sysblk.regs[i]);
+            }
         }
-    RELEASE_INTLOCK(NULL);
-    return 0;
+        RELEASE_INTLOCK(NULL);
+    }
+    else
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        rc = -1;
+    }
+    return rc;
 }
 
 
@@ -1166,7 +1196,7 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
     }
     else
     {
-        WRMSG( HHC02299, "E" );
+        WRMSG( HHC02299, "E", argv[0] );
         rc = -1;
     }
 
@@ -1180,29 +1210,34 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
 int startall_cmd(int argc, char *argv[], char *cmdline)
 {
     int i;
+    int rc = 0;
     CPU_BITMAP mask;
 
     UNREFERENCED(cmdline);
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
 
-    OBTAIN_INTLOCK(NULL);
-    mask = (~sysblk.started_mask) & sysblk.config_mask;
-    for (i = 0; mask; i++)
+    if ( argc == 1 )
     {
-        if (mask & 1)
+        OBTAIN_INTLOCK(NULL);
+        mask = (~sysblk.started_mask) & sysblk.config_mask;
+        for (i = 0; mask; i++)
         {
-            REGS *regs = sysblk.regs[i];
-            regs->opinterv = 0;
-            regs->cpustate = CPUSTATE_STARTED;
-            signal_condition(&regs->intcond);
+            if (mask & 1)
+            {
+                REGS *regs = sysblk.regs[i];
+                regs->opinterv = 0;
+                regs->cpustate = CPUSTATE_STARTED;
+                signal_condition(&regs->intcond);
+            }
+            mask >>= 1;
         }
-        mask >>= 1;
+        RELEASE_INTLOCK(NULL);
     }
-
-    RELEASE_INTLOCK(NULL);
-
-    return 0;
+    else
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        rc = -1;
+    }
+    return rc;
 }
 
 
@@ -1212,35 +1247,41 @@ int startall_cmd(int argc, char *argv[], char *cmdline)
 DLL_EXPORT int stopall_cmd(int argc, char *argv[], char *cmdline)
 {
     int i;
+    int rc = 0;
     CPU_BITMAP mask;
 
     UNREFERENCED(cmdline);
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
 
-    OBTAIN_INTLOCK(NULL);
-
-    mask = sysblk.started_mask;
-    for (i = 0; mask; i++)
+    if ( argc == 1 )
     {
-        if (mask & 1)
+        OBTAIN_INTLOCK(NULL);
+
+        mask = sysblk.started_mask;
+        for (i = 0; mask; i++)
         {
-            REGS *regs = sysblk.regs[i];
-            regs->opinterv = 1;
-            regs->cpustate = CPUSTATE_STOPPING;
-            ON_IC_INTERRUPT(regs);
-            signal_condition(&regs->intcond);
+            if (mask & 1)
+            {
+                REGS *regs = sysblk.regs[i];
+                regs->opinterv = 1;
+                regs->cpustate = CPUSTATE_STOPPING;
+                ON_IC_INTERRUPT(regs);
+                signal_condition(&regs->intcond);
+            }
+            mask >>= 1;
         }
-        mask >>= 1;
+
+        RELEASE_INTLOCK(NULL);
+    }
+    else
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        rc = -1;
     }
 
-    RELEASE_INTLOCK(NULL);
-
-    return 0;
+    return rc;
 }
 
 #ifdef _FEATURE_CPU_RECONFIG
-
 
 /*-------------------------------------------------------------------*/
 /* cf command - configure/deconfigure a CPU                          */
@@ -1291,12 +1332,12 @@ int qproc_cmd(int argc, char *argv[], char *cmdline);
 int cfall_cmd(int argc, char *argv[], char *cmdline)
 {
 static char *qproc[] = { "qproc", NULL };
-
+int rc = 0;
 int on = -1;
 
     UNREFERENCED(cmdline);
 
-    if (argc > 1)
+    if (argc == 2)
     {
         if ( CMD(argv[1],on,2) )
             on = 1;
@@ -1305,15 +1346,44 @@ int on = -1;
         else
         {
             WRMSG( HHC17000, "E" );
-            return -1;
+            rc = -1;
+        }
+        if ( rc == 0 )
+        {
+            rc = configure_numcpu(on ? sysblk.maxcpu : 0);
         }
     }
+    else if ( argc == 1 )
+    {
+        rc = qproc_cmd(1, qproc, *qproc);
+    }
     else
-        return qproc_cmd(1, qproc, *qproc);
-
-    return configure_numcpu(on ? sysblk.maxcpu : 0);
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        rc = -1;
+    }
+    return rc;
 }
 
+#else
+int cf_cmd(int argc, char *argv[], char *cmdline)
+{    
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+    UNREFERENCED(cmdline);
+
+    WRMSG( HHC02310, "S", "cf", "FEATURE_CPU_RECONFIG" );
+    return -1;
+}
+int cfall_cmd(int argc, char *argv[], char *cmdline)
+{
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+    UNREFERENCED(cmdline);
+
+    WRMSG( HHC02310, "S", "cfall", "FEATURE_CPU_RECONFIG" );
+    return -1;
+}
 #endif /*_FEATURE_CPU_RECONFIG*/
 
 
@@ -1390,13 +1460,8 @@ char * format_tod(char *buf, U64 tod, int flagdate)
 /*-------------------------------------------------------------------*/
 int timerint_cmd(int argc, char *argv[], char *cmdline)
 {
+    int rc = 0;
     UNREFERENCED(cmdline);
-
-    if ( argc > 2 )
-    {
-        WRMSG( HHC02299, "E", argv[0] );
-        return -1;
-    }
 
     if ( argc == 2 )
     {
@@ -1427,18 +1492,23 @@ int timerint_cmd(int argc, char *argv[], char *cmdline)
             else
             {
                 WRMSG( HHC02205, "E", argv[1], ": must be 'default' or n where 1<=n<=1000000" );
-                return -1;
+                rc = -1;
             }
         }
     }
-    else
+    else if ( argc == 1 )
     {
         char buf[25];
         MSGBUF( buf, "%d", sysblk.timerint);
         WRMSG(HHC02203, "I", argv[0], buf );
     }
+    else
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        rc = -1;
+    }
 
-    return 0;
+    return rc;
 }
 
 
@@ -1469,122 +1539,132 @@ U32 itimer = 0;
 char itimer_formatted[32];
 char arch370_flag = 0;
 char buf[64];
+int rc = 0;
 
     UNREFERENCED(cmdline);
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
 
-    obtain_lock(&sysblk.cpulock[sysblk.pcpu]);
-
-    if (!IS_CPU_ONLINE(sysblk.pcpu))
+    if ( argc == 1 ) for (;;)        
     {
-        release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
-        return 0;
-    }
-    regs = sysblk.regs[sysblk.pcpu];
+        obtain_lock(&sysblk.cpulock[sysblk.pcpu]);
 
-/* Get the clock values all at once for consistency and so we can
-   release the CPU lock more quickly. */
-    tod_now = (tod_clock(regs) << 8) >> 8;
-    hw_now = hw_tod;
-    epoch_now = regs->tod_epoch;
-    clkc_now = regs->clkc;
-    cpt_now = CPU_TIMER(regs);
+        if (!IS_CPU_ONLINE(sysblk.pcpu))
+        {
+            release_lock(&sysblk.cpulock[sysblk.pcpu]);
+            WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
+            break;
+        }
+        regs = sysblk.regs[sysblk.pcpu];
+
+    /* Get the clock values all at once for consistency and so we can
+        release the CPU lock more quickly. */
+        tod_now = (tod_clock(regs) << 8) >> 8;
+        hw_now = hw_tod;
+        epoch_now = regs->tod_epoch;
+        clkc_now = regs->clkc;
+        cpt_now = CPU_TIMER(regs);
 #if defined(_FEATURE_SIE)
-    if ( regs->sie_active )
-    {
-        vtod_now = (TOD_CLOCK(regs->guestregs) << 8) >> 8;
-        vepoch_now = regs->guestregs->tod_epoch;
-        vclkc_now = regs->guestregs->clkc;
-        vcpt_now = CPU_TIMER(regs->guestregs);
-        sie_flag = 1;
-    }
+        if ( regs->sie_active )
+        {
+            vtod_now = (TOD_CLOCK(regs->guestregs) << 8) >> 8;
+            vepoch_now = regs->guestregs->tod_epoch;
+            vclkc_now = regs->guestregs->clkc;
+            vcpt_now = CPU_TIMER(regs->guestregs);
+            sie_flag = 1;
+        }
 #endif
-    if (regs->arch_mode == ARCH_370)
-    {
-        itimer = INT_TIMER(regs);
+        if (regs->arch_mode == ARCH_370)
+        {
+            itimer = INT_TIMER(regs);
         /* The interval timer counts 76800 per second, or one every
            13.0208 microseconds. */
-        MSGBUF(itimer_formatted,"%02u:%02u:%02u.%06u",
+            MSGBUF(itimer_formatted,"%02u:%02u:%02u.%06u",
                 (itimer/(76800*60*60)),((itimer%(76800*60*60))/(76800*60)),
                 ((itimer%(76800*60))/76800),((itimer%76800)*13));
-        arch370_flag = 1;
-    }
+            arch370_flag = 1;
+        }
 
-    release_lock(&sysblk.cpulock[sysblk.pcpu]);
+        release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
-    MSGBUF( buf, "tod = %16.16" I64_FMT "X    %s",
+        MSGBUF( buf, "tod = %16.16" I64_FMT "X    %s",
                (tod_now << 8),format_tod(clock_buf,tod_now,TRUE));
-    WRMSG(HHC02274, "I", buf);
-
-    MSGBUF( buf, "h/w = %16.16" I64_FMT "X    %s",
-               (hw_now << 8),format_tod(clock_buf,hw_now,TRUE));
-    WRMSG(HHC02274, "I", buf);
-
-    if (epoch_now < 0) {
-        epoch_now_abs = -(epoch_now);
-        epoch_sign = '-';
-    }
-    else
-    {
-        epoch_now_abs = epoch_now;
-        epoch_sign = ' ';
-    }
-    MSGBUF( buf, "off = %16.16" I64_FMT "X   %c%s",
-               (epoch_now << 8),epoch_sign,
-               format_tod(clock_buf,epoch_now_abs,FALSE));
-    WRMSG(HHC02274, "I", buf);
-
-    MSGBUF( buf, "ckc = %16.16" I64_FMT "X    %s",
-               (clkc_now << 8),format_tod(clock_buf,clkc_now,TRUE));
-    WRMSG(HHC02274, "I", buf);
-
-    if (regs->cpustate != CPUSTATE_STOPPED)
-        MSGBUF( buf, "cpt = %16.16" I64_FMT "X", cpt_now << 8);
-    else
-        MSGBUF( buf, "cpt = not decrementing");
-    WRMSG(HHC02274, "I", buf);
-
-#if defined(_FEATURE_SIE)
-    if (sie_flag)
-    {
-
-        MSGBUF( buf, "vtod = %16.16" I64_FMT "X    %s",
-                   (vtod_now << 8), format_tod(clock_buf,vtod_now,TRUE) );
         WRMSG(HHC02274, "I", buf);
 
-        if (vepoch_now < 0) {
-            vepoch_now_abs = -(vepoch_now);
-            vepoch_sign = '-';
+        MSGBUF( buf, "h/w = %16.16" I64_FMT "X    %s",
+               (hw_now << 8),format_tod(clock_buf,hw_now,TRUE));
+        WRMSG(HHC02274, "I", buf);
+
+        if (epoch_now < 0) 
+        {
+            epoch_now_abs = -(epoch_now);
+            epoch_sign = '-';
         }
         else
         {
-            vepoch_now_abs = vepoch_now;
-            vepoch_sign = ' ';
+            epoch_now_abs = epoch_now;
+            epoch_sign = ' ';
         }
-        MSGBUF( buf, "voff = %16.16" I64_FMT "X   %c%s",
+        MSGBUF( buf, "off = %16.16" I64_FMT "X   %c%s",
+               (epoch_now << 8),epoch_sign,
+               format_tod(clock_buf,epoch_now_abs,FALSE));
+        WRMSG(HHC02274, "I", buf);
+
+        MSGBUF( buf, "ckc = %16.16" I64_FMT "X    %s",
+               (clkc_now << 8),format_tod(clock_buf,clkc_now,TRUE));
+        WRMSG(HHC02274, "I", buf);
+
+        if (regs->cpustate != CPUSTATE_STOPPED)
+            MSGBUF( buf, "cpt = %16.16" I64_FMT "X", cpt_now << 8);
+        else
+            MSGBUF( buf, "cpt = not decrementing");
+        WRMSG(HHC02274, "I", buf);
+
+#if defined(_FEATURE_SIE)
+        if (sie_flag)
+        {
+
+            MSGBUF( buf, "vtod = %16.16" I64_FMT "X    %s",
+                   (vtod_now << 8), format_tod(clock_buf,vtod_now,TRUE) );
+            WRMSG(HHC02274, "I", buf);
+
+            if (vepoch_now < 0) 
+            {
+                vepoch_now_abs = -(vepoch_now);
+                vepoch_sign = '-';
+            }
+            else
+            {
+                vepoch_now_abs = vepoch_now;
+                vepoch_sign = ' ';
+            }
+            MSGBUF( buf, "voff = %16.16" I64_FMT "X   %c%s",
                    (vepoch_now << 8),vepoch_sign,
                    format_tod(clock_buf,vepoch_now_abs,FALSE));
-        WRMSG(HHC02274, "I", buf);
+            WRMSG(HHC02274, "I", buf);
 
-        MSGBUF( buf, "vckc = %16.16" I64_FMT "X    %s",
+            MSGBUF( buf, "vckc = %16.16" I64_FMT "X    %s",
                    (vclkc_now << 8),format_tod(clock_buf,vclkc_now,TRUE));
-        WRMSG(HHC02274, "I", buf);
+            WRMSG(HHC02274, "I", buf);
 
-        MSGBUF( buf, "vcpt = %16.16" I64_FMT "X",vcpt_now << 8);
-        WRMSG(HHC02274, "I", buf);
-    }
+            MSGBUF( buf, "vcpt = %16.16" I64_FMT "X",vcpt_now << 8);
+            WRMSG(HHC02274, "I", buf);
+        }
 #endif
 
-    if (arch370_flag)
-    {
-        MSGBUF( buf, "itm = %8.8" I32_FMT "X                     %s",
+        if (arch370_flag)
+        {
+            MSGBUF( buf, "itm = %8.8" I32_FMT "X                     %s",
                    itimer, itimer_formatted );
-        WRMSG(HHC02274, "I", buf);
+            WRMSG(HHC02274, "I", buf);
+        }
+        break;
+    }
+    else
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        rc = -1;
     }
 
-    return 0;
+    return rc;
 }
 
 #ifdef OPTION_IODELAY_KLUDGE

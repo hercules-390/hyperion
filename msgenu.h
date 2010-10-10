@@ -1210,6 +1210,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02307 "%s: Record %d relocation value %6.6X address exceeds main storage size"
 #define HHC02308 "%s: Warning messages issued, review before executing"
 #define HHC02309 "%s: Record %d is unsupported record type %s; skipped"
+#define HHC02310 "Panel command %s is not supported in this build; see option %s"
 
 #define HHC02388 "Configure storage error %d"
 #define HHC02389 "CPU's must be offline or stopped"

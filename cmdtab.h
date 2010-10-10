@@ -134,7 +134,7 @@ CMDABBR("logopts",6, PANEL+CONFIG,  SYSCMDALL,          logopt_cmd,
     "\"timestamp\" and \"notimestamp\" may be abbreviated as \"time\"\n"
     "and \"notime\" respectively.\n")
 
-COMMAND("uptime",    PANEL,         SYSCMDALL,          uptime_cmd,
+COMMAND("uptime",    PANEL,         SYSNONE,            uptime_cmd,
   "Display how long Hercules has been running",
     NULL)
 
@@ -157,7 +157,7 @@ COMMAND("quit",      PANEL,         SYSNONE,            quit_cmd,
     "              force     This option will terminate hercules\n"
     "                        immediately.\n")
 
-COMMAND("quitmout",  PANEL+CONFIG,  SYSNONE,            quitmout_cmd,
+COMMAND("quitmout",  PANEL+CONFIG,  SYSCMDALL-SYSOPER,  quitmout_cmd,
   "Set/Display the quit timeout value",
   "Format: \"quitmount [n]\" Sets or displays the elasped time that\n"
     "                        a confirming quit/ssd command must be\n"
@@ -223,6 +223,9 @@ COMMAND("cf",        PANEL,         SYSCMDALL,          cf_cmd,
 COMMAND("cfall",     PANEL,         SYSCMDALL,          cfall_cmd,
   "Configure all CPU's online or offline",
      NULL)
+#else
+COMMAND("cf",        PANEL,         SYSCMDALL,          cf_cmd, NULL, NULL );
+COMMAND("cfall",     PANEL,         SYSCMDALL,          cfall_cmd, NULL, NULL );
 #endif
 
 #ifdef _FEATURE_SYSTEM_CONSOLE
@@ -319,55 +322,55 @@ COMMAND("archmode",  PANEL+CONFIG,  SYSCMDALL-SYSOPER,  archlvl_cmd,
   "Alias for archlvl",
     NULL)
 
-COMMAND("engines",   CONFIG,        SYSCMDALL,          engines_cmd,
+COMMAND("engines",   CONFIG,        SYSCMDALL-SYSOPER,  engines_cmd,
   "Set engines parameter",
     NULL)
 
-COMMAND("sysepoch",  CONFIG,        SYSCMDALL,          sysepoch_cmd,
+COMMAND("sysepoch",  CONFIG,        SYSCMDALL-SYSOPER,  sysepoch_cmd,
   "Set sysepoch parameter",
     NULL)
 
-COMMAND("tzoffset",  CONFIG,        SYSCMDALL,          tzoffset_cmd,
+COMMAND("tzoffset",  CONFIG,        SYSCMDALL-SYSOPER,  tzoffset_cmd,
   "Set tzoffset parameter",
     NULL)
 
-COMMAND("yroffset",  CONFIG,        SYSCMDALL,          yroffset_cmd,
+COMMAND("yroffset",  CONFIG,        SYSCMDALL-SYSOPER,  yroffset_cmd,
   "Set yroffset parameter",
     NULL)
 
-COMMAND("mainsize",  CONFIG+PANEL,  SYSCMDALL,          mainsize_cmd,
+COMMAND("mainsize",  CONFIG+PANEL,  SYSCMDALL-SYSOPER,  mainsize_cmd,
   "Set mainsize parameter",
     NULL)
 
-COMMAND("xpndsize",  CONFIG+PANEL,  SYSCMDALL,          xpndsize_cmd,
+COMMAND("xpndsize",  CONFIG+PANEL,  SYSCMDALL-SYSOPER,  xpndsize_cmd,
   "Set xpndsize parameter",
     NULL)
 
-COMMAND("hercprio",  CONFIG+PANEL,  SYSCMDALL,          hercprio_cmd,
+COMMAND("hercprio",  CONFIG+PANEL,  SYSCMDALL-SYSOPER,  hercprio_cmd,
   "Set hercprio parameter",
     NULL)
 
-COMMAND("cpuprio",   CONFIG+PANEL,  SYSCMDALL,          cpuprio_cmd,
+COMMAND("cpuprio",   CONFIG+PANEL,  SYSCMDALL-SYSOPER,  cpuprio_cmd,
   "Set cpuprio parameter",
     NULL)
 
-COMMAND("devprio",   CONFIG+PANEL,  SYSCMDALL,          devprio_cmd,
+COMMAND("devprio",   CONFIG+PANEL,  SYSCMDALL-SYSOPER,  devprio_cmd,
   "Set devprio parameter",
     NULL)
 
-COMMAND("todprio",   CONFIG+PANEL,  SYSCMDALL,          todprio_cmd,
+COMMAND("todprio",   CONFIG+PANEL,  SYSCMDALL-SYSOPER,  todprio_cmd,
   "Set todprio parameter",
     NULL)
 
-COMMAND("numvec",    CONFIG,        SYSCMDALL,          numvec_cmd,
+COMMAND("numvec",    CONFIG,        SYSCMDALL-SYSOPER,  numvec_cmd,
   "Set numvec parameter",
     NULL)
 
-COMMAND("numcpu",    CONFIG+PANEL,  SYSCMDALL,          numcpu_cmd,
+COMMAND("numcpu",    CONFIG+PANEL,  SYSCMDALL-SYSOPER,  numcpu_cmd,
   "Set numcpu parameter",
     NULL)
 
-COMMAND("maxcpu",    CONFIG+PANEL,  SYSCMDALL,          maxcpu_cmd,
+COMMAND("maxcpu",    CONFIG+PANEL,  SYSCMDALL-SYSOPER,  maxcpu_cmd,
   "Set maxcpu parameter",
     NULL)
 
@@ -376,24 +379,24 @@ COMMAND("loadparm",  PANEL+CONFIG,  SYSCMDALL,          loadparm_cmd,
   "Specifies the eight-character IPL parameter which is used by\n"
   "some operating systems to select system parameters.")
 
-COMMAND("lparname",  PANEL+CONFIG,  SYSCMDALL,          lparname_cmd,
+COMMAND("lparname",  PANEL+CONFIG,  SYSCMDALL-SYSOPER,  lparname_cmd,
   "Set LPAR name",
     "Specifies the eight-character LPAR name returned by\n"
     "DIAG X'204'. The default is HERCULES")
 
-COMMAND("cpuverid",  CONFIG,        SYSCMDALL,          cpuverid_cmd,
+COMMAND("cpuverid",  CONFIG,        SYSCMDALL-SYSOPER,  cpuverid_cmd,
   "Set CPU verion number",
     NULL)
 
-COMMAND("cpumodel",  CONFIG,        SYSCMDALL,          cpumodel_cmd,
+COMMAND("cpumodel",  CONFIG,        SYSCMDALL-SYSOPER,  cpumodel_cmd,
   "Set CPU model number",
     NULL)
 
-COMMAND("cpuserial", CONFIG,        SYSCMDALL,          cpuserial_cmd,
+COMMAND("cpuserial", CONFIG,        SYSCMDALL-SYSOPER,  cpuserial_cmd,
   "Set CPU serial number",
     NULL)
 
-COMMAND("lparnum",   PANEL+CONFIG,  SYSCMDALL,          lparnum_cmd,
+COMMAND("lparnum",   PANEL+CONFIG,  SYSCMDALL-SYSOPER,  lparnum_cmd,
   "Set LPAR identification number",
   "Specifies the one- or two-digit hexadecimal LPAR identification\n"
   "number stored by the STIDP instruction. If a one-digit number\n"
@@ -401,28 +404,28 @@ COMMAND("lparnum",   PANEL+CONFIG,  SYSCMDALL,          lparnum_cmd,
   "number is specified then STIDP stores a format-1 CPU ID. If\n"
   "LPARNUM is not specified, then STIDP stores a basic-mode CPUID")
 
-COMMAND("cpuidfmt",  PANEL+CONFIG,  SYSCMDALL,          cpuidfmt_cmd,
+COMMAND("cpuidfmt",  PANEL+CONFIG,  SYSCMDALL-SYSOPER,  cpuidfmt_cmd,
   "Set format 0/1 STIDP generation",
     NULL)
 
-COMMAND("cnslport",  CONFIG,        SYSNONE,            cnslport_cmd,
+COMMAND("cnslport",  CONFIG,        SYSCMDALL-SYSOPER,  cnslport_cmd,
   "Set console port",
     NULL)
 
 #ifdef OPTION_CAPPING
-COMMAND("capping",   CONFIG+PANEL,  SYSNONE,            capping_cmd,
+COMMAND("capping",   CONFIG+PANEL,  SYSCMDALL-SYSOPER,  capping_cmd,
   "Set capping value",
     NULL)
 #endif // OPTION_CAPPING
 
 #if defined(OPTION_SHARED_DEVICES)
-COMMAND("shrdport",  CONFIG+PANEL,  SYSNONE,            shrdport_cmd,
+COMMAND("shrdport",  CONFIG+PANEL,  SYSCMDALL-SYSOPER,  shrdport_cmd,
   "Set shrdport value",
     NULL)
 #endif /*defined(OPTION_SHARED_DEVICES)*/
 
 #if defined(OPTION_SET_STSI_INFO)
-COMMAND("model",     PANEL+CONFIG,        SYSCMDALL,          stsi_model_cmd,
+COMMAND("model",     PANEL+CONFIG,  SYSCMDALL-SYSOPER,  stsi_model_cmd,
   "Set/Query STSI model code",
   "\n"
   "Format:\n"
@@ -454,22 +457,22 @@ COMMAND("model",     PANEL+CONFIG,        SYSCMDALL,          stsi_model_cmd,
   "             The default temporary model is \"\" (null string).\n"
   "\n")
 
-COMMAND("plant",     PANEL+CONFIG,        SYSCMDALL,          stsi_plant_cmd,
+COMMAND("plant",     PANEL+CONFIG,        SYSCMDALL-SYSOPER,    stsi_plant_cmd,
   "Set STSI plant code",
     NULL)
 
-CMDABBR("manufacturer",8,PANEL+CONFIG,    SYSCMDALL,          stsi_manufacturer_cmd,
+CMDABBR("manufacturer",8,PANEL+CONFIG,    SYSCMDALL-SYSOPER,    stsi_manufacturer_cmd,
   "Set STSI manufacturer code",
     NULL)
 #endif /* defined(OPTION_SET_STSI_INFO) */
 
 #if defined(OPTION_LPP_RESTRICT)
-COMMAND("pgmprdos",  CONFIG,        SYSCMDALL,          pgmprdos_cmd, 
+COMMAND("pgmprdos",  CONFIG,        SYSCMDALL-SYSOPER,  pgmprdos_cmd, 
   "Set LPP license setting", 
     NULL)
 #endif /*defined(OPTION_LPP_RESTRICT)*/
 
-COMMAND("codepage",  PANEL+CONFIG,  SYSCMDALL,          codepage_cmd,
+COMMAND("codepage",  PANEL+CONFIG,  SYSCMDALL-SYSOPER,  codepage_cmd,
   "Set/display code page conversion table",
     "Format: 'codepage [cp]'\n"
     "        'codepage maint cmd [operands]' - see cp_updt command for\n"
@@ -478,7 +481,7 @@ COMMAND("codepage",  PANEL+CONFIG,  SYSCMDALL,          codepage_cmd,
     "If 'cp' is specified, then code page is set to the specified page\n"
     "if the page is valid.\n")
 
-COMMAND("cp_updt",   PANEL+CONFIG,   SYSCMDALL,          cp_updt_cmd,
+COMMAND("cp_updt",   PANEL+CONFIG,   SYSCMDALL-SYSOPER, cp_updt_cmd,
   "Create/Modify user character conversion table",
     "Format: 'cp_updt cmd [operands]'\n"
     "\n"
@@ -518,7 +521,7 @@ COMMAND("cp_updt",   PANEL+CONFIG,   SYSCMDALL,          cp_updt_cmd,
     "      These terms are used for historical purposes and do not\n"
     "      represent the literal term.\n")
 
-COMMAND("diag8cmd",  CONFIG,        SYSCMDALL,          diag8_cmd,
+COMMAND("diag8cmd",  CONFIG,        SYSCMDALL-SYSOPER,  diag8_cmd,
   "Set diag8 command option",
     NULL)
 
