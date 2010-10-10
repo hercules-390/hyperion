@@ -2653,6 +2653,28 @@ va_list         vl;
 /*-------------------------------------------------------------------
  * Shared device server
  *-------------------------------------------------------------------*/
+LOCK shrdlock;
+COND shrdcond;
+
+static void shared_device_manager_shutdown(void * unused)
+{
+    UNREFERENCED(unused);
+    
+    if(sysblk.shrdport)
+    {
+        sysblk.shrdport = 0;
+
+        if (sysblk.shrdtid)
+        {
+            signal_thread (sysblk.shrdtid, SIGUSR2);
+
+            obtain_lock(&shrdlock);
+            timed_wait_condition_relative_usecs(&shrdcond,&shrdlock,2*1000*1000,NULL);
+            release_lock(&shrdlock);
+        }
+    }
+}
+
 DLL_EXPORT void *shared_server (void *arg)
 {
 int                     rc;             /* Return code               */
@@ -2768,7 +2790,6 @@ char                    threadname[40];
         }
     }
 
-    sysblk.shrdtid = thread_id();
     csock = -1;
     if (lsock < usock)
         hi = usock + 1;
@@ -2776,6 +2797,11 @@ char                    threadname[40];
         hi = lsock + 1;
 
     WRMSG(HHC00737, "I", sysblk.shrdport);
+
+    initialize_lock (&shrdlock);
+    initialize_condition(&shrdcond);
+
+    hdl_adsc("shared_device_manager_shutdown",shared_device_manager_shutdown, NULL);
 
     /* Handle connection requests and attention interrupts */
     while (sysblk.shrdport)
@@ -2851,7 +2877,11 @@ char                    threadname[40];
     }
 #endif
 
-    sysblk.shrdport = sysblk.shrdtid = 0;
+    signal_condition(&shrdcond);
+
+    hdl_rmsc(shared_device_manager_shutdown, NULL);
+
+    sysblk.shrdtid = 0;
 
     WRMSG (HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), threadname);
 

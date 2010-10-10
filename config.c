@@ -284,12 +284,6 @@ int     cpu;
             deconfigure_cpu(cpu);
     RELEASE_INTLOCK(NULL);
 
-#if defined(OPTION_SHARED_DEVICES)
-    /* Terminate the shared device listener thread */
-    if (sysblk.shrdtid)
-        signal_thread (sysblk.shrdtid, SIGUSR2);
-#endif
-
     /* Detach all devices */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
         if (dev->allocated)
