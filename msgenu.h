@@ -1212,6 +1212,9 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02308 "%s: Warning messages issued, review before executing"
 #define HHC02309 "%s: Record %d is unsupported record type %s; skipped"
 
+#define HHC02388 "Configure storage error %d"
+#define HHC02389 "CPU's must be offline or stopped"
+
 // reserve 02390 for ieee.c
 #define HHC02390 "Function '%s': unexpectedly converting to '%s'"
 #define HHC02391 "Inexact"

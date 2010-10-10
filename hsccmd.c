@@ -2738,6 +2738,7 @@ char *strtok_str = "";
 /*-------------------------------------------------------------------*/
 int sysepoch_cmd(int argc, char *argv[], char *cmdline)
 {
+int     rc          = 0;
 char   *ssysepoch   = NULL;
 char   *syroffset   = NULL;
 int     sysepoch    = 1900;
@@ -2749,45 +2750,51 @@ BYTE    c;
     if ( argc < 2 || argc > 3 )
     {
         WRMSG( HHC01455, "E", argv[0] );
-        return -1;
+        rc = -1;
     }
-
-    ssysepoch = argv[1];
-    if ( argc == 3 )
-        syroffset = argv[2];
-    else
-        syroffset = NULL;
-
-    /* Parse system epoch operand */
-    if (ssysepoch != NULL)
+    else for ( ;; )
     {
-        if (strlen(ssysepoch) != 4
-            || sscanf(ssysepoch, "%d%c", &sysepoch, &c) != 1
-            || ( sysepoch != 1900 && sysepoch != 1960 ) )
+        ssysepoch = argv[1];
+        if ( argc == 3 )
+            syroffset = argv[2];
+        else
+            syroffset = NULL;
+
+        /* Parse system epoch operand */
+        if (ssysepoch != NULL)
         {
-            if ( sysepoch == 1900 || sysepoch == 1960 )
-                WRMSG( HHC01451, "E", ssysepoch, argv[0] );
-            else
-                WRMSG( HHC01457, "E", argv[0], "1900|1960" );
-            return -1;
+            if (strlen(ssysepoch) != 4
+                || sscanf(ssysepoch, "%d%c", &sysepoch, &c) != 1
+                || ( sysepoch != 1900 && sysepoch != 1960 ) )
+            {
+                if ( sysepoch == 1900 || sysepoch == 1960 )
+                    WRMSG( HHC01451, "E", ssysepoch, argv[0] );
+                else
+                    WRMSG( HHC01457, "E", argv[0], "1900|1960" );
+                rc = -1;
+                break;
+            }
         }
-    }
 
         /* Parse year offset operand */
-    if (syroffset != NULL)
-    {
-        if (sscanf(syroffset, "%d%c", &yroffset, &c) != 1
-            || (yroffset < -142) || (yroffset > 142))
+        if (syroffset != NULL)
         {
-            WRMSG( HHC01451, "E", syroffset, argv[0] );
-            return -1;
+            if (sscanf(syroffset, "%d%c", &yroffset, &c) != 1
+                || (yroffset < -142) || (yroffset > 142))
+            {
+                WRMSG( HHC01451, "E", syroffset, argv[0] );
+                rc = -1;
+                break;
+            }
         }
+        
+        sysblk.sysepoch = sysepoch;
+        sysblk.yroffset = yroffset;
+        
+        break;
     }
 
-    sysblk.sysepoch = sysepoch;
-    sysblk.yroffset = yroffset;
-
-    return 0;
+    return rc;
 }
 
 
@@ -2796,34 +2803,40 @@ BYTE    c;
 /*-------------------------------------------------------------------*/
 int yroffset_cmd(int argc, char *argv[], char *cmdline)
 {
-S32 yroffset;
-BYTE c;
+int     rc  = 0;
+S32     yroffset;
+BYTE    c;
 
     UNREFERENCED(cmdline);
 
     /* Parse year offset operand */
     if ( argc == 2 )
     {
-        if (sscanf(argv[1], "%d%c", &yroffset, &c) != 1
-            || (yroffset < -142) || (yroffset > 142))
+        for ( ;; )
         {
-            WRMSG( HHC01451, "E", argv[1], argv[0] );
-            return -1;
-        }
-        else
-        {
-            sysblk.yroffset = yroffset;
-            if ( MLVL(VERBOSE) )
-                WRMSG( HHC02204, "I", argv[0], argv[1] );
+            if (sscanf(argv[1], "%d%c", &yroffset, &c) != 1
+                || (yroffset < -142) || (yroffset > 142))
+            {
+                WRMSG( HHC01451, "E", argv[1], argv[0] );
+                rc = -1;
+                break;
+            }
+            else
+            {
+                sysblk.yroffset = yroffset;
+                if ( MLVL(VERBOSE) )
+                    WRMSG( HHC02204, "I", argv[0], argv[1] );
+            }
+            break;
         }
     }
     else
     {
         WRMSG( HHC01455, "E", argv[0] );
-        return -1;
+        rc = -1;
     }
 
-    return 0;
+    return rc;
 }
 
 
@@ -2832,6 +2845,7 @@ BYTE c;
 /*-------------------------------------------------------------------*/
 int tzoffset_cmd(int argc, char *argv[], char *cmdline)
 {
+int rc = 0;
 S32 tzoffset;
 BYTE c;
 
@@ -2840,27 +2854,32 @@ BYTE c;
     /* Parse timezone offset operand */
     if ( argc == 2 )
     {
-        if (strlen(argv[1]) != 5
-            || sscanf(argv[1], "%d%c", &tzoffset, &c) != 1
-            || (tzoffset < -2359) || (tzoffset > 2359))
+        for ( ;; )
         {
-            WRMSG( HHC01451, "E", argv[1], argv[0] );
-            return -1;
-        }
-        else
-        {
-            sysblk.tzoffset = tzoffset;
-            if ( MLVL( VERBOSE ) )
-                WRMSG( HHC02204, "I", argv[0], argv[1] );
+            if (strlen(argv[1]) != 5
+                || sscanf(argv[1], "%d%c", &tzoffset, &c) != 1
+                || (tzoffset < -2359) || (tzoffset > 2359))
+            {
+                WRMSG( HHC01451, "E", argv[1], argv[0] );
+                rc = -1;
+                break;
+            }
+            else
+            {
+                sysblk.tzoffset = tzoffset;
+                if ( MLVL( VERBOSE ) )
+                    WRMSG( HHC02204, "I", argv[0], argv[1] );
+            }
+            break;
         }
     }
     else
     {
         WRMSG( HHC01455, "E", argv[0] );
-        return -1;
+        rc = -1;
     }
 
-    return 0;
+    return rc;
 }
 
 
@@ -2871,46 +2890,53 @@ int mainsize_cmd(int argc, char *argv[], char *cmdline)
 {
 U32 mainsize;
 BYTE c;
-int rc;
+int rc = 0;
 
     UNREFERENCED(cmdline);
 
     /* Parse main storage size operand */
     if ( argc == 2 )
     {
-        if (sscanf(argv[1], "%u%c", &mainsize, &c) != 1
-         || mainsize < 2
-         || (mainsize > 4095 && sizeof(sysblk.mainsize) < 8)
-         || (mainsize > 4095 && sizeof(size_t) < 8))
+        for ( ;; )
         {
-            WRMSG( HHC01451, "E", argv[1], argv[0] );
-            return -1;
-        }
-        else
-        {
-            if((rc = configure_storage(mainsize)))
+            if (sscanf(argv[1], "%u%c", &mainsize, &c) != 1
+                || mainsize < 2
+                || (mainsize > 4095 && sizeof(sysblk.mainsize) < 8)
+                || (mainsize > 4095 && sizeof(size_t) < 8))
             {
-                switch(rc) {
-                case HERRCPUONL:
-                    logmsg("CPU's must be offline or stopped\n");
+                WRMSG( HHC01451, "E", argv[1], argv[0] );
+                rc = -1;
+                break;
+            }
+            else
+            {
+                if((rc = configure_storage(mainsize)))
+                {
+                    switch(rc) 
+                    {
+                        case HERRCPUONL:
+                            WRMSG( HHC02389, "E" );
+                            break;
+                        default:
+                            WRMSG( HHC02388, "E", rc );
+                    }
                     break;
-                default:
-                    logmsg("Configure storage error %d\n",rc);
                 }
-                return rc;
+
+                if (MLVL(VERBOSE))
+                    WRMSG( HHC02204, "I", argv[0], argv[1] );
             }
 
-            if (MLVL(VERBOSE))
-                WRMSG( HHC02204, "I", argv[0], argv[1] );
+            break;
         }
     }
     else
     {
         WRMSG( HHC01455, "E", argv[0] );
-        return -1;
+        rc = -1;
     }
 
-    return 0;
+    return rc;
 }
 
 
