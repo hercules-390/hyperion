@@ -127,12 +127,6 @@ static void do_shutdown_now()
 
     sysblk.shutdown = TRUE;  // (system shutdown initiated)
 
-    WRMSG(HHC01421, "I");
-
-    release_config();
-
-    WRMSG(HHC01422, "I");
-
     WRMSG(HHC01423, "I");
 
     hdl_shut();

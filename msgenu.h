@@ -837,8 +837,7 @@ cpu.c:123:HABC1234I This is a message
 
 /* hscmisc.c */
 #define HHC01420 "Begin Hercules shutdown"
-#define HHC01421 "Releasing configuration"
-#define HHC01422 "Configuration release complete"
+#define HHC01422 "Configuration released"
 #define HHC01423 "Calling termination routines"
 #define HHC01424 "All termination routines complete"
 #define HHC01425 "Hercules shutdown complete"

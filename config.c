@@ -308,6 +308,8 @@ int     cpu;
     release_lock (&sysblk.ioqlock);
 #endif
 
+    WRMSG(HHC01422, "I");
+
 } /* end function release_config */
 
 

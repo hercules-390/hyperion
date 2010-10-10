@@ -1000,6 +1000,8 @@ int     dll_count;                      /* index into array          */
         }
     } /* end of logo parm processing */
 
+    hdl_adsc("release_config", release_config, NULL);
+
     sysblk.config_done = FALSE;
 
     /* Build system configuration */

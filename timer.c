@@ -18,7 +18,6 @@
 #include "feat390.h"
 #include "feat370.h"
 
-// ZZ int ecpsvm_testvtimer(REGS *,int);
 
 /*-------------------------------------------------------------------*/
 /* Check for timer event                                             */
@@ -288,6 +287,23 @@ U64     total_sios;                     /* Total SIO rate            */
 } /* end function timer_update_thread */
 
 #ifdef OPTION_CAPPING
+LOCK caplock;
+COND capcond;
+
+static void capping_manager_shutdown(void * unused)
+{
+    UNREFERENCED(unused);
+    
+    if(sysblk.capvalue)
+    {
+        sysblk.capvalue = 0;
+
+        obtain_lock(&caplock);
+        timed_wait_condition_relative_usecs(&capcond,&caplock,2*1000*1000,NULL);
+        release_lock(&caplock);
+    }
+}
+
 /*-------------------------------------------------------------------*/
 /* Capping manager thread                                            */
 /*                                                                   */
@@ -299,146 +315,127 @@ U64     total_sios;                     /* Total SIO rate            */
 /* waking them up. Capping does only apply to CP, not specialty      */
 /* engines. Those engines are untouched by the capping manager.      */
 /*-------------------------------------------------------------------*/
-void *capping_manager_thread (void *p)
+void *capping_manager_thread (void *unused)
 {
-  U64 allowed;               /* Max allowed insts during interval    */
-  U64 diff;                  /* Time passed during interval          */
-  int i;                     /* cpu index                            */
-  U64 instcnt;               /* Number of CP insts executed          */
-  U64 now;                   /* Current time                         */
-  U64 prevcnt;               /* Inst CP count on previous interval   */
-  U64 then;                  /* Previous interval time               */
-  U64 prevcap = 0;           /* Previous cappling value              */
-  int capactive = 0;
+U64 diff;                    /* Time passed during interval          */
+U64 now;                     /* Current time                         */
+U64 then;                    /* Previous interval time               */
+int cpu;                     /* cpu index                            */
+U32 allowed;                 /* Max allowed insts during interval    */
+U64 instcnt[MAX_CPU_ENGINES]; /* Number of CP insts executed         */
+U64 prevcnt[MAX_CPU_ENGINES]; /* Inst CP count on previous interval  */
+U32 prevcap = 0;             /* Previous cappling value              */
+U32 iactual;                 /* Actual instruction count             */
+U32 irate[MAX_CPU_ENGINES];  /* Actual instruction rate              */
+int numcap = 1;              /* Number of CPU's being capped         */
 
-  UNREFERENCED(p);
+    UNREFERENCED(unused);
 
-  allowed = 0;
+    initialize_lock (&caplock);
+    initialize_condition(&capcond);
 
-  /* Display thread started message on control panel */
-  WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Capping manager");
+    hdl_adsc("capping_manager_shutdown",capping_manager_shutdown, NULL);
 
-  /* Check if we have CP engines */
-  for(i = 0; i < sysblk.maxcpu; i++)
-  {
-    if(sysblk.ptyp[i] == SCCB_PTYP_CP)
-      break;
-  }
-  if(i == sysblk.maxcpu)
-  {
-    WRMSG(HHC00878, "E");
+    /* Display thread started message on control panel */
+    WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Capping manager");
+
+    /* Initialize interrupt wait locks */
+    for(cpu = 0; cpu < sysblk.maxcpu; cpu++)
+        initialize_lock(&sysblk.caplock[cpu]);
+
+    /* Check for as long as capping is active */
+    while(sysblk.capvalue)
+    {
+        if(sysblk.capvalue != prevcap)
+        {
+            prevcap = sysblk.capvalue;
+            WRMSG(HHC00877, "I", sysblk.capvalue);
+
+            /* Lets get started */
+            then = host_tod();
+            for(cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
+            {
+                prevcnt[cpu] = 0xFFFFFFFFFFFFFFFFULL;
+                irate[cpu] = 0;
+            }
+        }
+
+        /* Sleep for 1/100 of a second */
+        usleep(10000);
+        now = host_tod();
+
+        /* Count the number of CPs to be capped */
+        for(numcap = cpu = 0; cpu < sysblk.hicpu; cpu++)
+            if(IS_CPU_ONLINE(cpu) && sysblk.ptyp[cpu] == SCCB_PTYP_CP && sysblk.regs[cpu]->cpustate == CPUSTATE_STARTED)
+                numcap++;
+
+        /* Continue if no CPU's to be capped */
+        if(!numcap)
+            continue;
+
+        /* Actual elapsed time of our approximate 1/100 of a second wait */
+        diff = now - then;
+
+        /* Calculate the allowed amount of executed instructions for this interval */
+        allowed = sysblk.capvalue * diff;
+        allowed /= numcap;
+
+        /* Calculate the number of executed instructions */
+        for(cpu = 0; cpu < sysblk.hicpu; cpu++)
+        {
+            if(!IS_CPU_ONLINE(cpu) || sysblk.ptyp[cpu] != SCCB_PTYP_CP || sysblk.regs[cpu]->cpustate != CPUSTATE_STARTED)
+                break;
+           
+            obtain_lock(&sysblk.cpulock[cpu]);
+            instcnt[cpu] = sysblk.regs[cpu]->prevcount + sysblk.regs[cpu]->instcount;
+            release_lock(&sysblk.cpulock[cpu]);
+
+            /* Check for CP reset */
+            if(prevcnt[cpu] > instcnt[cpu])
+                prevcnt[cpu] = instcnt[cpu];
+
+            /* Actual number of instructions executed in interval */
+            iactual = instcnt[cpu] - prevcnt[cpu];
+
+            /* Calculate floating average rate over the past second */
+            irate[cpu] = (irate[cpu] - ((irate[cpu] + 64) >> 7)) + ((iactual + 64) >> 7);
+
+            /* Wakeup the capped CP if rate not exceeded */
+            if(sysblk.caplocked[cpu] && (allowed > irate[cpu]))
+            {
+                sysblk.caplocked[cpu] = 0;
+                release_lock(&sysblk.caplock[cpu]);
+            }
+            else /* We will never unlock and relock in the same interval, this to ensure we do not starve a CP */
+                /* Cap if the rate has exceeded the allowed rate */
+                if(!sysblk.caplocked[cpu] && (allowed < irate[cpu]))
+                {
+                    /* Cap the CP */
+                    obtain_lock(&sysblk.caplock[cpu]);
+                    sysblk.caplocked[cpu] = 1;
+                    OBTAIN_INTLOCK(NULL);
+                    ON_IC_INTERRUPT(sysblk.regs[cpu]);
+                    RELEASE_INTLOCK(NULL);
+                }
+            
+            prevcnt[cpu] = instcnt[cpu];
+            then = now;
+        }
+    }
+
+    /* Uncap all before exit */
+    for(cpu = 0; cpu < sysblk.maxcpu; cpu++)
+        if(sysblk.caplocked[cpu])
+        {
+            sysblk.caplocked[cpu] = 0;
+            release_lock(&sysblk.caplock[cpu]);
+        }
+
+    signal_condition(&capcond);
+
+    hdl_rmsc(capping_manager_shutdown, NULL);
+
     WRMSG(HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Capping manager");
-    sysblk.capvalue = 0;
     return(NULL);
-  }
-
-  /* Initialize interrupt wait locks */
-  for(i = 0; i < sysblk.maxcpu; i++)
-    initialize_lock(&sysblk.caplock[i]);
-
-
-  /* Check as long as we have a capping value */
-  while(sysblk.capvalue)
-  {
-    if(sysblk.capvalue != prevcap)
-    {
-      WRMSG(HHC00877, "I", sysblk.capvalue);
-      prevcap = sysblk.capvalue;
-      /* Lets get started */
-      now = host_tod();
-      prevcnt = 0xFFFFFFFFFFFFFFFFULL;
-    }
-
-    then = now;
-
-    /* Sleep for 1/100 of a second */
-    usleep(10000);
-    now = host_tod();
-    diff = now - then;
-    instcnt = 0;
-
-    /* Count the number of executed instructions */
-    for(i = 0; i < sysblk.maxcpu; i++)
-    {
-      if(IS_CPU_ONLINE(i) && sysblk.ptyp[i] == SCCB_PTYP_CP)
-      {
-        obtain_lock(&sysblk.cpulock[i]);
-        instcnt += sysblk.regs[i]->prevcount + sysblk.regs[i]->instcount;
-        release_lock(&sysblk.cpulock[i]);
-      }
-    }
-
-    /* Check on CP reset */
-    if(prevcnt > instcnt)
-      prevcnt = instcnt;
-
-    /* Are the CPs capped? */
-    if(capactive)
-    {
-      /* Add the allowed amount of executed instructions */
-      allowed += sysblk.capvalue * diff;
-
-      /* Did we wait long enough? */
-      if(allowed >= instcnt - prevcnt)
-      {
-        /* Wakeup the capped CPs */
-        capactive = 0;
-        for(i = 0; i < sysblk.maxcpu; i++)
-        {
-          if(sysblk.caplocked[i])
-          {
-            release_lock(&sysblk.caplock[i]);
-            sysblk.caplocked[i] = 0;
-          }
-        }
-
-        /* We waited too long */
-        prevcnt += allowed;
-      }
-      else
-      {
-        /* I do not know why, but do not delete these lines! */
-        for(i = 0; i < sysblk.maxcpu; i++)
-        {
-          if(sysblk.caplocked[i])
-            ON_IC_INTERRUPT(sysblk.regs[i]);
-        }
-      }
-    }
-    else
-    {
-      /* Calculate the allowed amount of executed instructions */
-      allowed = sysblk.capvalue * diff;
-
-      /* Did we execute more instructions than allowed? */
-      if(instcnt - prevcnt > allowed)
-      {
-        /* Cap the CPs */
-        capactive = 1;
-        for(i = 0; i < sysblk.maxcpu; i++)
-        {
-          if(IS_CPU_ONLINE(i) && sysblk.ptyp[i] == SCCB_PTYP_CP && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED)
-          {
-            obtain_lock(&sysblk.caplock[i]);
-            sysblk.caplocked[i] = 1;
-            ON_IC_INTERRUPT(sysblk.regs[i]);
-          }
-        }
-      }
-      else
-        prevcnt = instcnt;
-    }
-  }
-
-  /* Uncap all before exit */
-  for(i = 0; i < sysblk.maxcpu; i++)
-    if(sysblk.caplocked[i])
-    {
-      release_lock(&sysblk.caplock[i]);
-      sysblk.caplocked[i] = 0;
-    }
-
-  WRMSG(HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Capping manager");
-  return(NULL);
 }
 #endif // OPTION_CAPPING
