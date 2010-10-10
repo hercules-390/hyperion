@@ -347,15 +347,15 @@ COMMAND("hercprio",  CONFIG+PANEL,  SYSCMDALL,          hercprio_cmd,
   "Set hercprio parameter",
     NULL)
 
-COMMAND("cpuprio",   CONFIG,        SYSCMDALL,          cpuprio_cmd,
+COMMAND("cpuprio",   CONFIG+PANEL,  SYSCMDALL,          cpuprio_cmd,
   "Set cpuprio parameter",
     NULL)
 
-COMMAND("devprio",   CONFIG,        SYSCMDALL,          devprio_cmd,
+COMMAND("devprio",   CONFIG+PANEL,  SYSCMDALL,          devprio_cmd,
   "Set devprio parameter",
     NULL)
 
-COMMAND("todprio",   CONFIG,        SYSCMDALL,          todprio_cmd,
+COMMAND("todprio",   CONFIG+PANEL,  SYSCMDALL,          todprio_cmd,
   "Set todprio parameter",
     NULL)
 

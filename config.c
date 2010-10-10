@@ -381,6 +381,11 @@ int configure_herc_priority(int prio)
 {
 int rc;
 
+#if !defined(NO_SETUID)
+    /* Cap the default priority at zero if setuid not available */
+    prio = (sysblk.suid && (prio < 0)) ? 0 : prio;
+#endif /*!defined(NO_SETUID)*/
+
     /* Set root mode in order to set priority */
     SETMODE(ROOT);
 
@@ -392,6 +397,43 @@ int rc;
 
     return rc;
 }
+
+int configure_cpu_priority(int prio)
+{
+#if !defined(NO_SETUID)
+    /* Cap the default priority at zero if setuid not available */
+    prio = (sysblk.suid && (prio < 0)) ? 0 : prio;
+#endif /*!defined(NO_SETUID)*/
+
+    sysblk.cpuprio = prio;
+
+    return 0;
+}
+
+int configure_dev_priority(int prio)
+{
+#if !defined(NO_SETUID)
+    /* Cap the default priority at zero if setuid not available */
+    prio = (sysblk.suid && (prio < 0)) ? 0 : prio;
+#endif /*!defined(NO_SETUID)*/
+
+    sysblk.devprio = prio;
+
+    return 0;
+}
+
+int configure_tod_priority(int prio)
+{
+#if !defined(NO_SETUID)
+    /* Cap the default priority at zero if setuid not available */
+    prio = (sysblk.suid && (prio < 0)) ? 0 : prio;
+#endif /*!defined(NO_SETUID)*/
+
+    sysblk.todprio = prio;
+
+    return 0;
+}
+
 
 /*-------------------------------------------------------------------*/
 /* Function to start a new CPU thread                                */

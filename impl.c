@@ -352,6 +352,12 @@ int     rc;
 int     e_gui = FALSE;                  /* EXTERNALGUI parm          */
 #endif
 
+    /* Clear the system configuration block */
+    memset (&sysblk, 0, sizeof(SYSBLK));
+
+    /* Initialize SETMODE and set user authority */
+    SETMODE(INIT);
+
 #if defined(OPTION_DYNAMIC_LOAD)
 #define MAX_DLL_TO_LOAD         50
 char   *dll_load[MAX_DLL_TO_LOAD];      /* Pointers to modnames      */
@@ -381,9 +387,6 @@ int     dll_count;                      /* index into array          */
     /* Ensure hdl_shut is called in case of shutdown
        hdl_shut will ensure entries are only called once */
     atexit(hdl_shut);
-
-    /* Clear the system configuration block */
-    memset (&sysblk, 0, sizeof(SYSBLK));
 
     if ( argc > 0 )
     {
@@ -530,6 +533,23 @@ int     dll_count;                      /* index into array          */
     sysblk.todprio  = DEFAULT_TOD_PRIO;
     sysblk.cpuprio  = DEFAULT_CPU_PRIO;
     sysblk.devprio  = DEFAULT_DEV_PRIO;
+
+    /* Cap the default priorities at zero if setuid not available */
+#if !defined(NO_SETUID)
+    if (sysblk.suid)
+    {
+#endif /*!defined(NO_SETUID)*/
+        if (sysblk.hercprio < 0)
+            sysblk.hercprio = 0;
+        if (sysblk.todprio < 0)
+            sysblk.todprio = 0;
+        if (sysblk.cpuprio < 0)
+            sysblk.cpuprio = 0;
+        if (sysblk.devprio < 0)
+            sysblk.devprio = 0;
+#if !defined(NO_SETUID)
+    }
+#endif /*!defined(NO_SETUID)*/
 
     /* set default console keep alive values */
     sysblk.kaidle = KEEPALIVE_IDLE_TIME;

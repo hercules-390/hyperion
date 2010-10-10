@@ -219,6 +219,9 @@ int  configure_storage(RADR);
 int  configure_xstorage(U32);
 int  configure_capping(U32 value);
 int  configure_herc_priority(int prio);
+int  configure_cpu_priority(int prio);
+int  configure_dev_priority(int prio);
+int  configure_tod_priority(int prio);
 int  configure_shrdport(U16 shrdport);
 #define MAX_ARGS  12                    /* Max argv[] array size     */
 int parse_and_attach_devices(const char *devnums,const char *devtype,int ac,char **av);

@@ -3050,7 +3050,7 @@ BYTE c;
         }
         else
         {
-            sysblk.cpuprio = cpuprio;
+            configure_cpu_priority(cpuprio);
             if (MLVL(VERBOSE))
                 WRMSG(HHC02204, "I", argv[0], argv[1] );
         }
@@ -3085,7 +3085,7 @@ BYTE c;
         }
         else
         {
-            sysblk.devprio = devprio;
+            configure_dev_priority(devprio);
             if (MLVL(VERBOSE))
                 WRMSG(HHC02204, "I", argv[0], argv[1] );
         }
@@ -3120,7 +3120,7 @@ BYTE c;
         }
         else
         {
-            sysblk.todprio = todprio;
+            configure_tod_priority(todprio);
             if (MLVL(VERBOSE))
                 WRMSG( HHC02204, "I", argv[0], argv[1] );
         }

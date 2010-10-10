@@ -114,9 +114,6 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                                            select(). sigh            */
 #endif
 
-    /* Initialize SETMODE and set user authority */
-    SETMODE(INIT);
-
 #ifdef OPTION_SELECT_KLUDGE
     /* Reserve some fd's to be used later for the message pipes */
     for (i = 0; i < OPTION_SELECT_KLUDGE; i++)
@@ -178,23 +175,6 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
 
     /* Gabor Hoffer (performance option) */
     copy_opcode_tables();
-
-    /* Cap the default priorities at zero if setuid not available */
-#if !defined(NO_SETUID)
-    if (sysblk.suid != 0)
-    {
-#endif /*!defined(NO_SETUID)*/
-        if (sysblk.hercprio < 0)
-            sysblk.hercprio = 0;
-        if (sysblk.todprio < 0)
-            sysblk.todprio = 0;
-        if (sysblk.cpuprio < 0)
-            sysblk.cpuprio = 0;
-        if (sysblk.devprio < 0)
-            sysblk.devprio = 0;
-#if !defined(NO_SETUID)
-    }
-#endif /*!defined(NO_SETUID)*/
 
     if ((process_config(hercules_cnf)))
         return -1;
