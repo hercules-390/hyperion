@@ -14,7 +14,7 @@ DESTDIR  = $(PREFIX)/usr/bin
 DESTLIB  = $(PREFIX)/usr/lib
 
 # For Linux use:
-CFLAGS  = -O3 -march=pentium -fomit-frame-pointer -I.
+CFLAGS  = -O3 -march=pentium -fomit-frame-pointer -I. -IdecNumber
 // CFLAGS += -DVERSION=$(VERSION) -DHAVE_INTTYPES_H -DMAX_CPU_ENGINES=2
 CFLAGS += -W -Wall
 # For older Linux versions use:

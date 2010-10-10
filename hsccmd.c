@@ -5165,6 +5165,7 @@ int stsi_manufacturer_cmd(int argc, char *argv[], char *cmdline)
 
 
 #if defined(OPTION_SHARED_DEVICES)
+static int default_shrdport = 3390;
 /*-------------------------------------------------------------------*/
 /* shrdport - shared dasd port number                                */
 /*-------------------------------------------------------------------*/
@@ -5178,10 +5179,16 @@ BYTE c;
     /* Update shared device port number */
     if (argc == 2)
     {
+        if ( CMD( argv[1], start, 5))
+            configure_shrdport(default_shrdport);
+        else
+        if( CMD( argv[1], stop, 4))
+            configure_shrdport( 0);
+        else
         if (strlen(argv[1]) >= 1
           && sscanf(argv[1], "%hu%c", &shrdport, &c) == 1
           && (shrdport >= 1024 || shrdport == 0))
-            configure_shrdport(shrdport);
+            configure_shrdport((default_shrdport = shrdport));
         else
         {
             WRMSG( HHC01451, "E", argv[1], argv[0] );
@@ -5214,6 +5221,9 @@ int rc;
     /* Update capping value */
     if (argc > 1)
     {
+        if( CMD( argv[1], off, 3))
+            configure_capping(0);
+        else
         if (strlen(argv[1]) >= 1
           && sscanf(argv[1], "%u%c", &cap, &c) == 1)
         {
