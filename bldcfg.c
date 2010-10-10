@@ -102,7 +102,6 @@ U64 tod = hw_clock();
 /*-------------------------------------------------------------------*/
 int build_config (char *hercules_cnf)
 {
-int     rc;                             /* Return code               */
 int     i;                              /* Array subscript           */
 S64     ly1960;                         /* Leap offset for 1960 epoch*/
 int     devtmax;                        /* Max number device threads */

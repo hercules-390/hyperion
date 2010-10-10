@@ -1663,12 +1663,11 @@ int autoinit_cmd( int argc, char *argv[], char *cmdline )
 }
 
 #if defined( OPTION_TAPE_AUTOMOUNT )
-static void check_define_default_automount_dir()
+static char * check_define_default_automount_dir()
 {
     /* Define default AUTOMOUNT directory if needed */
     if (sysblk.tamdir && sysblk.defdir == NULL)
     {
-    int rc;
         char cwd[ MAX_PATH ];
         TAMDIR *pNewTAMDIR = malloc( sizeof(TAMDIR) );
         if (!pNewTAMDIR)
@@ -1676,11 +1675,10 @@ static void check_define_default_automount_dir()
             char buf[64];
             MSGBUF( buf, "malloc(%lu)", sizeof(TAMDIR));
             WRMSG(HHC01430, "S", buf, strerror(errno));
-            return -1;
+            return NULL;
         }
         VERIFY( getcwd( cwd, sizeof(cwd) ) != NULL );
-        rc = (int)strlen( cwd );
-        if (cwd[rc-1] != *PATH_SEP)
+        if (cwd[strlen(cwd)-1] != *PATH_SEP)
             strlcat (cwd, PATH_SEP, sizeof(cwd));
         pNewTAMDIR->dir = strdup (cwd);
         pNewTAMDIR->len = (int)strlen (cwd);
@@ -1690,6 +1688,8 @@ static void check_define_default_automount_dir()
         sysblk.defdir = pNewTAMDIR->dir;
         WRMSG(HHC01447, "I", sysblk.defdir);
     }
+
+    return sysblk.defdir;
 }
 
 /*-------------------------------------------------------------------*/
