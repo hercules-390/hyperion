@@ -7,7 +7,7 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id$ 
+// $Id$
 
 /*-------------------------------------------------------------------*/
 /* This file contains the text of all of the messages issued by      */
@@ -40,8 +40,8 @@ D: Debug message.
 -----------------------------------------------------------------------
 Text principles
 -----------------------------------------------------------------------
-Text: 
-1. The text is written in lower characters and starts with a 
+Text:
+1. The text is written in lower characters and starts with a
    capital and does not end with a '.', '!' or something else.
 2. Added strings are rounded with apostrophes to delimiter it from
    the text and to see the start and endpoint of the string.
@@ -86,7 +86,7 @@ cpu.c:123:HABC1234I This is a message
 #endif
 
 /* Use these macro's */
-#if defined (_MSVC_) 
+#if defined (_MSVC_)
 #define MSGBUF(buf, ...)             _snprintf_s(buf, sizeof(buf), sizeof(buf)-1, ## __VA_ARGS__)
 #else
 #define MSGBUF(buf, ...)             snprintf(buf, sizeof(buf)-1, ## __VA_ARGS__)
@@ -132,7 +132,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00004 "Control program identification: type '%s', name '%s', sysplex '%s', level %"I64_FMT"X"
 #define HHC00005 "The configuration has been placed into a system check-stop state because of an incompatible service call"
 #define HHC00006 "SCLP console interface '%s'"
-#define HHC00007 "Previous message from function %s() at %s[%d]" 
+#define HHC00007 "Previous message from function %s() at %s[%d]"
 #define HHC00008 "%s%s"
 #define HHC00009 "RRR...RING...GGG!\a"
 #define HHC00010 "Enter input for console %1d:%04X"
@@ -233,11 +233,11 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00227 "%1d:%04X Tape file '%s', type '%s': '%s' tape volume '%s' being auto loaded"
 #define HHC00228 "Tape autoloader: file request fn '%s'"
 #define HHC00229 "Tape autoloader: adding '%s' value '%s'"
-#define HHC00230 "%1d:%04X Tape file '%s', '%s' volume '%s': not loaded; file not found" 
-#define HHC00231 "%1d:%04X Tape file '%s', '%s' volume '%s': not loaded; manual mount pending" 
-#define HHC00232 "%1d:%04X Tape file '%s', '%s' volume '%s': not loaded; duplicate file found" 
-#define HHC00233 "%1d:%04X Tape file '%s', '%s' volume '%s': not loaded; rename failed" 
-#define HHC00234 "%1d:%04X Tape file '%s', '%s' volume '%s': not loaded; not enough space on volume" 
+#define HHC00230 "%1d:%04X Tape file '%s', '%s' volume '%s': not loaded; file not found"
+#define HHC00231 "%1d:%04X Tape file '%s', '%s' volume '%s': not loaded; manual mount pending"
+#define HHC00232 "%1d:%04X Tape file '%s', '%s' volume '%s': not loaded; duplicate file found"
+#define HHC00233 "%1d:%04X Tape file '%s', '%s' volume '%s': not loaded; rename failed"
+#define HHC00234 "%1d:%04X Tape file '%s', '%s' volume '%s': not loaded; not enough space on volume"
 #define HHC00235 "%1d:%04X Tape file '%s', type '%s': tape created"
 
 // reserve 003xx for compressed dasd device related
@@ -291,7 +291,7 @@ cpu.c:123:HABC1234I This is a message
 /* HHC00346 cckd opts output */
 #define HHC00346 "%s"
 /* HHC00347 cckd stats output */
-#define HHC00347 "%s" 
+#define HHC00347 "%s"
 #define HHC00348 "CCKD file: invalid value '%d' for '%s'"
 #define HHC00349 "CCKD file: invalid cckd keyword: '%s'"
 
@@ -400,12 +400,12 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00467 "Maximum %s supported is %u"
 #define HHC00468 "For larger capacity DASD volumes, use %s"
 
-// reserve 005xx for fba dasd device related messages 
+// reserve 005xx for fba dasd device related messages
 #define HHC00500 "%1d:%04X FBA file: name missing or invalid filename length"
 #define HHC00501 "%1d:%04X FBA file '%s' not found or invalid"
 #define HHC00502 "%1d:%04X FBA file '%s': error in function '%s': '%s'"
 #define HHC00503 "%1d:%04X FBA file: parameter '%s' in argument %d is invalid"
-#define HHC00504 "%1d:%04X FBA file '%s': REAL FBA opened"                   
+#define HHC00504 "%1d:%04X FBA file '%s': REAL FBA opened"
 #define HHC00505 "%1d:%04X FBA file '%s': invalid device origin block number '%s'"
 #define HHC00506 "%1d:%04X FBA file '%s': invalid device block count '%s'"
 #define HHC00507 "%1d:%04X FBA file '%s': origin %lld, blks %d"
@@ -424,7 +424,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00520 "%1d:%04X FBA file '%s': positioning to %8.8" I64_FMT "X %" I64_FMT "u"
 #define HHC00521 "Maximum of %u %s in a 2GB file"
 
-// reserve 006xx for sce dasd device related messages 
+// reserve 006xx for sce dasd device related messages
 #define HHC00600 "SCE file '%s': error in function '%s': '%s'"
 #define HHC00601 "SCE file '%s': load from file failed: '%s'"
 #define HHC00602 "SCE file '%s': load from path failed: '%s'"
@@ -432,7 +432,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00604 "SCE file '%s': access error on image '%s': '%s'"
 #define HHC00605 "SCE file '%s': access error: %s"
 
-// reserve 007xx for shared device related messages 
+// reserve 007xx for shared device related messages
 #define HHC00700 "Shared: parameter '%s' in argument %d is invalid"
 #define HHC00701 "%1d:%04X Shared: connect pending to file '%s'"
 #define HHC00702 "%1d:%04X Shared: error retrieving cylinders"
@@ -479,7 +479,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00743 "Shared: %s"
 #define HHC00744 "Shared: Server already active"
 
-// reserve 008xx for processor related messages 
+// reserve 008xx for processor related messages
 #define HHC00800 "Processor %s%02X: loaded wait state PSW %s"
 #define HHC00801 "Processor %s%02X: %s%s '%s' code %4.4X  ilc %d%s"
 #define HHC00802 "Processor %s%02X: PER event: code %4.4X perc %2.2X addr "F_VADR
@@ -495,10 +495,10 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00813 "Processor %s%02X: error in function '%s': '%s'"
 #define HHC00814 "Processor %s: CC %d%s"
 #define HHC00815 "Processors %s%02X through %s%02X are offline"
-#define HHC00816 "Processor %s%02X: processor is not '%s'"
+#define HHC00816 "Processor %s%02X: processor is not %s"
 #define HHC00817 "Processor %s%02X: store status completed"
 #define HHC00818 "Processor %s%02X: not eligible for ipl nor restart"
-#define HHC00819 "Processor %s%02X: online" 
+#define HHC00819 "Processor %s%02X: online"
 #define HHC00820 "Processor %s%02X: offline"
 #define HHC00821 "Processor %s%02X: vector facility configured '%s'"
 #define HHC00822 "Processor %s%02X: machine check due to host error: '%s'"
@@ -514,6 +514,10 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00832 "Central processors will be capped at %u MIPS"
 #define HHC00833 "Invalid capping argument '%s', capping disabled"
 #define HHC00834 "Processor %s%02X: %s"
+#define HHC00835 "Processor %s%02X: offline; not eligible for ipl nor restart"
+#define HHC00836 "%d processor%s %s"
+#define HHC00837 "No processors started in configuration"
+
 /* external.c */
 #define HHC00840 "External interrupt: interrupt key"
 #define HHC00841 "External interrupt: clock comparator"
@@ -554,8 +558,8 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00878 "No central processors found, capping disabled"
 
 #define HHC00880 "device %1d:%04X: status %s"
-#define HHC00881 "I/O interrupt queue:%s" 
-#define HHC00882 "device %1d:%04X: %s%s%s%s, pri %d" 
+#define HHC00881 "I/O interrupt queue:%s"
+#define HHC00882 "device %1d:%04X: %s%s%s%s, pri %d"
 
 #define HHC00888 "Architecture level changes take effect after a system reset or IPL"
 #define HHC00889 "Facility change pending; ipl/sysreset/sysclear needed to complete"
@@ -569,7 +573,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00898 "Facility(%s) %sabled for archmode %s"
 #define HHC00899 "Facility(%s) not supported for archmode %s"
 
-// reserve 009xx for ctc related messages 
+// reserve 009xx for ctc related messages
 /*ctc_ctci.c*/
 #define HHC00900 "%1d:%04X CTC: error in function '%s': '%s'"
 #define HHC00901 "%1d:%04X CTC: device '%s', type '%s' opened"
@@ -747,7 +751,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01081 "%1d:%04X COMM: cthread - ipc pipe data: code %d"
 #define HHC01082 "%1d:%04X COMM: cthread - inbound socket data"
 #define HHC01083 "%1d:%04X COMM: cthread - socket write available"
-#define HHC01084 "%1d:%04X COMM: set mode '%s'" 
+#define HHC01084 "%1d:%04X COMM: set mode '%s'"
 #define HHC01090 "%1d:%04X COMM: client %s devtype %4.4X: connection reset"
 
 // reserve 011xx for printer specific component messages
@@ -913,7 +917,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01492 "Codepage: h2g pos[%02.2X] = %02.2X; g2h pos[%02.2X] = %02.2X"
 #define HHC01493 "Codepage: Tables are transparent"
 
-// reserve 015xx for Hercules dynamic loader      
+// reserve 015xx for Hercules dynamic loader
 /* hdl.c */
 #define HHC01500 "HDL: begin shutdown sequence"
 #define HHC01501 "HDL: calling '%s'"
@@ -1063,7 +1067,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01954 "Host command processing not included in engine build"
 
 
-// reserve 020xx for sr.c 
+// reserve 020xx for sr.c
 #define HHC02000 "SR: too many arguments"
 #define HHC02001 "SR: error in function '%s': '%s'"
 #define HHC02002 "SR: waiting for device %04X"
@@ -1096,7 +1100,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02105 "Logger: log to %s"
 #define HHC02106 "Logger: log switched off"
 
-#define HHC02197 "Symbol name %s is reserved" 
+#define HHC02197 "Symbol name %s is reserved"
 #define HHC02198 "Device attached"
 #define HHC02199 "Symbol %-12s '%s'"
 // reserve 022xx for command processing */
@@ -1169,8 +1173,8 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02266 "Confirm command by entering '%s' again within %d seconds"
 #define HHC02267 "%s"
 #define HHC02268 "%s"
-#define HHC02269 "%s" 
-#define HHC02270 "%s" 
+#define HHC02269 "%s"
+#define HHC02270 "%s"
 #define HHC02271 "%s"
 #define HHC02272 "%s"
 #define HHC02273 "Index %2d: '%s'"
@@ -1212,8 +1216,10 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02309 "%s: Record %d is unsupported record type %s; skipped"
 #define HHC02310 "Panel command %s is not supported in this build; see option %s"
 
+#define HHC02386 "Configure CPU error %d"
+#define HHC02387 "Configure expanded storage error %d"
 #define HHC02388 "Configure storage error %d"
-#define HHC02389 "CPU's must be offline or stopped"
+#define HHC02389 "CPUs must be offline or stopped"
 
 // reserve 02390 for ieee.c
 #define HHC02390 "Function '%s': unexpectedly converting to '%s'"
@@ -1486,7 +1492,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02541 "COPYR%d unload format is unsupported"
 #define HHC02542 "Invalid number of extents %d"
 #define HHC02543 "Invalid directory block record length"
-#define HHC02544 "Storage allocation for '%s' using '%s' failed: '%s'" 
+#define HHC02544 "Storage allocation for '%s' using '%s' failed: '%s'"
 #define HHC02545 "Internal error: Number of directory blocks exceeds MAXDBLK of %d"
 #define HHC02546 "Invalid directory block byte count"
 #define HHC02547 "File '%s': read error at cyl[%04X/%d] head[%04X/%d]"
@@ -1513,7 +1519,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02567 "File '%s'[%04d]: '%s'"
 #define HHC02568 "Creating dataset %-44s at cyl[%04X/%d] head[%04X/%d]"
 #define HHC02569 "File '%s': line[%04d] error: statement is invalid"
-#define HHC02570 "File '%s': '%s' error: input record CCHHR[%04X%04X%02X] (TTR[%04X%02X]) kl[%d] dl[%d]" 
+#define HHC02570 "File '%s': '%s' error: input record CCHHR[%04X%04X%02X] (TTR[%04X%02X]) kl[%d] dl[%d]"
 #define HHC02571 "Internal error: TTR count exceeds MAXTTR of %d"
 #define HHC02572 "File '%s': XMIT utility file is not in IEBCOPY format; file is not loaded"
 #define HHC02573 "File '%s': invalid dsorg[0x%02X] for SEQ processing; dsorg must be PS or DA"
@@ -1555,7 +1561,7 @@ cpu.c:123:HABC1234I This is a message
        "           -x        hex display track key/data\n" \
        "\n" \
        "           Offset option:\n" \
-       "           -o oo ll  hex display data at offset oo of length ll" 
+       "           -o oo ll  hex display data at offset oo of length ll"
 #define HHC02601 "Press enter to continue"
 #define HHC02602 "From '%s': Storage allocation of size '%d' using '%s' failed"
 #define HHC02603 "In '%s': lseek() to pos 0x%08x error: '%s'"
@@ -1631,7 +1637,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC02741 "File '%s': Error, incomplete %s header"
 #define HHC02742 "File '%s': Error, incomplete final data block: expected %d bytes, read %d"
 #define HHC02743 "File '%s': Error, %s header block without data"
-#define HHC02744 "File '%s': Error renaming file to '%s' - manual intervention required" 
+#define HHC02744 "File '%s': Error renaming file to '%s' - manual intervention required"
 #define HHC02745 "File '%s': Error removing file - manual intervention required"
 
 #define HHC02750 "DCB attributes required for NL tape"
@@ -1673,7 +1679,7 @@ cpu.c:123:HABC1234I This is a message
        "          %12" I64_FMT "d  Packets To All Zeroes MAC Read\n" \
        "          %12" I64_FMT "d  Total Packets Read\n" \
        "          %12" I64_FMT "d  Total Bytes Read\n\n"
-#define HHC04102 "One of the GetProcAddress calls failed" 
+#define HHC04102 "One of the GetProcAddress calls failed"
 #define HHC04109 "%s"
 #define HHC04110 "Maximum device threads (devtmax) of %d exceeded by %d"
 #define HHC04111 "%1d:%04X Function %s failed: '[%02d] %s'"
@@ -1686,7 +1692,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC17004 "CPUID  = "I64_FMTX""
 #define HHC17005 "CPC SI = %4.4X.%s.%s.%s.%16.16X"
 #define HHC17006 "LPARNAME[%2.2X] = %s"
-#define HHC17007 "NumCPU = %02d, NumVEC = %02d, MaxCPU = %02d"
+#define HHC17007 "NumCPU = %02d, NumVEC = %02d, ReservedCPU = %02d, MaxCPU = %02d"
 #define HHC17008 "Avgproc  %03d%% %02d; MIPS[%4d.%02d]; SIOS[%6d]"
 #define HHC17009 "PROC %s%02X %c %03d%%; MIPS[%4d.%02d]; SIOS[%6d]"
 #define HHC17010 " - Started        : Stopping        * Stopped"
@@ -1802,7 +1808,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC90362 "%s - " F_GREG " Same line as above"
 #define HHC90363 "%s"
 #define HHC90364 "   zp    : %s"
- 
+
 /* tapeccws tapedev */
 #define HHC93480 "%1d:%04X TDSPSTAT[%02X] msg1[%-8s] msg2[%-8s] msg[%-8s] mnt[%s] unmnt[%s] TDSPFLAG[%02X]"
 

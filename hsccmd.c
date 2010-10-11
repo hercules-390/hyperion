@@ -2867,10 +2867,10 @@ BYTE    c;
                 break;
             }
         }
-        
+
         sysblk.sysepoch = sysepoch;
         sysblk.yroffset = yroffset;
-        
+
         break;
     }
 
@@ -2970,50 +2970,40 @@ int mainsize_cmd(int argc, char *argv[], char *cmdline)
 {
 U32 mainsize;
 BYTE c;
-int rc = 0;
+int rc;
 
     UNREFERENCED(cmdline);
 
-    /* Parse main storage size operand */
-    if ( argc == 2 )
-    {
-        for ( ;; )
-        {
-            if (sscanf(argv[1], "%u%c", &mainsize, &c) != 1
-                || mainsize < 2
-                || (mainsize > 4095 && sizeof(sysblk.mainsize) < 8)
-                || (mainsize > 4095 && sizeof(size_t) < 8))
-            {
-                WRMSG( HHC01451, "E", argv[1], argv[0] );
-                rc = -1;
-                break;
-            }
-            else
-            {
-                if((rc = configure_storage(mainsize)))
-                {
-                    switch(rc) 
-                    {
-                        case HERRCPUONL:
-                            WRMSG( HHC02389, "E" );
-                            break;
-                        default:
-                            WRMSG( HHC02388, "E", rc );
-                    }
-                    break;
-                }
-
-                if (MLVL(VERBOSE))
-                    WRMSG( HHC02204, "I", argv[0], argv[1] );
-            }
-
-            break;
-        }
-    }
-    else
+    /* Validate argument count */
+    if ( argc != 2 )
     {
         WRMSG( HHC01455, "E", argv[0] );
-        rc = -1;
+        return -1;
+    }
+
+    /* Parse main storage size operand */
+    if (sscanf(argv[1], "%u%c", &mainsize, &c) != 1
+        || (mainsize == 0 && sysblk.maxcpu > 0)
+        || (mainsize > 4095 && sizeof(sysblk.mainsize) < 8)
+        || (mainsize > 4095 && sizeof(size_t) < 8))
+    {
+        WRMSG( HHC01451, "E", argv[1], argv[0] );
+        return -1;
+    }
+
+    /* Update main storage size */
+    rc = configure_storage(mainsize);
+    switch(rc)
+    {
+        case 0:
+            if (MLVL(VERBOSE))
+                WRMSG( HHC02204, "I", argv[0], argv[1] );
+            break;
+        case HERRCPUONL:
+            WRMSG( HHC02389, "E" );
+            break;
+        default:
+            WRMSG( HHC02388, "E", rc );
     }
 
     return rc;
@@ -3031,42 +3021,36 @@ int rc;
 
     UNREFERENCED(cmdline);
 
-    /* Parse priority value */
-    if ( argc == 2 )
-    {
-        /* Parse expanded storage size operand */
-        if (sscanf(argv[1], "%u%c", &xpndsize, &c) != 1
-            || xpndsize > (0x100000000ULL / XSTORE_PAGESIZE) - 1
-            || (xpndsize > 4095 && sizeof(size_t) < 8))
-        {
-            WRMSG( HHC01451, "E", argv[1], argv[0] );
-            return -1;
-        }
-        else
-        {
-            if((rc = configure_xstorage(xpndsize)))
-            {
-                switch(rc) {
-                case HERRCPUONL:
-                    logmsg("CPU's must be offline or stopped\n");
-                    break;
-                default:
-                    logmsg("Configure xstorage error %d\n",rc);
-                }
-                return rc;
-            }
-
-            if (MLVL(VERBOSE))
-                WRMSG( HHC02204, "I", argv[0], argv[1] );
-        }
-    }
-    else
+    /* Validate argument count */
+    if ( argc != 2 )
     {
         WRMSG( HHC01455, "E", argv[0] );
         return  -1;
     }
 
-    return 0;
+    /* Parse expanded storage size operand */
+    if (sscanf(argv[1], "%u%c", &xpndsize, &c) != 1
+        || xpndsize > (0x100000000ULL / XSTORE_PAGESIZE) - 1
+        || (xpndsize > 4095 && sizeof(size_t) < 8))
+    {
+        WRMSG( HHC01451, "E", argv[1], argv[0] );
+        return -1;
+    }
+
+    rc = configure_xstorage(xpndsize);
+    switch(rc) {
+        case 0:
+            if (MLVL(VERBOSE))
+                WRMSG( HHC02204, "I", argv[0], argv[1] );
+            break;
+        case HERRCPUONL:
+            WRMSG( HHC02389, "E" );
+            break;
+        default:
+            WRMSG( HHC02387, "E", rc );
+    }
+
+    return rc;
 }
 
 
@@ -3262,45 +3246,41 @@ BYTE c;
 
     UNREFERENCED(cmdline);
 
-    /* Parse maximum number of CPUs operand */
-    if ( argc == 2 )
-    {
-        if (sscanf(argv[1], "%hu%c", &numcpu, &c) != 1
-            || numcpu > sysblk.maxcpu)
-        {
-            if ( numcpu > sysblk.maxcpu )
-            {
-                WRMSG( HHC02205, "E", argv[1], "; NUMCPU must be <= MAXCPU" );
-            }
-            else
-                WRMSG( HHC01451, "E", argv[1], argv[0] );
-            return -1;
-        }
-        else
-        {
-            if((rc = configure_numcpu(numcpu)))
-            {
-                switch(rc) {
-                case HERRCPUONL:
-                    logmsg("CPU's must be offline or stopped\n");
-                    break;
-                default:
-                    logmsg("Configure CPU error %d\n",rc);
-                }
-                return rc;
-            }
-            if ( MLVL(VERBOSE) )
-                WRMSG( HHC02204, "I", argv[0], argv[1] );
-        }
-
-    }
-    else
+    /* Ensure only two arguments passed */
+    if ( argc != 2 )
     {
         WRMSG( HHC01455, "E", argv[0] );
-        return  -1;
+        return -1;
     }
 
-    return 0;
+    /* Parse maximum number of CPUs operand */
+    if (sscanf(argv[1], "%hu%c", &numcpu, &c) != 1)
+    {
+        WRMSG( HHC01451, "E", argv[1], argv[0] );
+        return -1;
+    }
+
+    if ( numcpu > sysblk.maxcpu )
+    {
+        WRMSG( HHC02205, "E", argv[1], "; NUMCPU must be <= MAXCPU" );
+        return -1;
+    }
+
+    /* Configure CPUs */
+    rc = configure_numcpu(numcpu);
+    switch(rc) {
+    case 0:
+        if ( MLVL(VERBOSE) )
+            WRMSG( HHC02204, "I", argv[0], argv[1] );
+        break;
+    case HERRCPUONL:
+        WRMSG( HHC02389, "E");
+        break;
+    default:
+        WRMSG( HHC02386, "E", rc);
+    }
+
+    return rc;
 }
 
 
@@ -3316,30 +3296,33 @@ char buf[10];
 
     UNREFERENCED(cmdline);
 
-    /* Parse maximum number of CPUs operand */
-    if ( argc == 2 )
-    {
-        if (sscanf(argv[1], "%hu%c", &maxcpu, &c) != 1
-            || maxcpu < 1
-            || maxcpu > MAX_CPU_ENGINES)
-        {
-            WRMSG( HHC01451, "E", argv[1], argv[0] );
-            return -1;
-        }
-        else
-        {
-            sysblk.maxcpu = (maxcpu < sysblk.hicpu) ? sysblk.hicpu : maxcpu;
-            if (MLVL(VERBOSE))
-                WRMSG( HHC02204, "I", argv[0], i2a(sysblk.maxcpu) );
-        }
-    }
-    else
+    /* Ensure only two arguments passed */
+    if ( argc != 2 )
     {
         WRMSG( HHC01455, "E", argv[0] );
-        return  -1;
+        return -1;
     }
 
-    return (sysblk.maxcpu == maxcpu) ? 0 : -HERRCPUONL;
+    /* Parse maximum number of CPUs operand */
+    if (sscanf(argv[1], "%hu%c", &maxcpu, &c) != 1
+        || maxcpu > MAX_CPU_ENGINES)
+    {
+        WRMSG( HHC01451, "E", argv[1], argv[0] );
+        return -1;
+    }
+
+    if (maxcpu < sysblk.hicpu)
+    {
+        WRMSG( HHC02389, "E");
+        return HERRCPUONL;
+    }
+
+    sysblk.maxcpu = maxcpu;
+
+    if (MLVL(VERBOSE))
+        WRMSG( HHC02204, "I", argv[0], i2a(sysblk.maxcpu) );
+
+    return 0;
 }
 
 
@@ -3461,7 +3444,7 @@ int httproot_cmd(int argc, char *argv[], char *cmdline)
     {
         a_argc = 2;
         a_argv[1] = argv[1];    /* root filename */
-    
+
         rc = http_command(a_argc, a_argv);
     }
 
@@ -9922,11 +9905,18 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
         return -1;
     }
 
+/* VS does not allow for macros to be split with ifdefs */
+    
+    {
+        int i;
 #ifdef    _FEATURE_VECTOR_FACILITY
-    WRMSG( HHC17007, "I",   sysblk.cpus, sysblk.numvec, sysblk.maxcpu );
+        i = sysblk.numvec;
 #else  /*!_FEATURE_VECTOR_FACILITY*/
-    WRMSG( HHC17007, "I",   sysblk.cpus,             0, sysblk.maxcpu );
+        i = 0;
 #endif /* _FEATURE_VECTOR_FACILITY*/
+
+        WRMSG( HHC17007, "I",   sysblk.cpus, i, sysblk.maxcpu - sysblk.cpus, sysblk.maxcpu );
+    }
 
     for ( i = j = 0; i < sysblk.maxcpu; i++ )
     {
