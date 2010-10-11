@@ -688,6 +688,7 @@ noinst_HEADERS = fishhang.h     \
                  w32ctca.h      \
                  tt32api.h      \
                  linklist.h     \
+                 ieee-sol.h     \
                  ieee-w32.h     \
                  httpmisc.h     \
                  devtype.h      \
