@@ -1004,19 +1004,6 @@ int     dll_count;                      /* index into array          */
         }
     } /* end of logo parm processing */
 
-    hdl_adsc("release_config", release_config, NULL);
-
-    sysblk.config_done = FALSE;
-
-    /* Build system configuration */
-    if ( build_config (cfgfile) )
-    {
-        delayed_exit(-1);
-        return(1);
-    }
-
-    sysblk.config_done = TRUE;
-
 #if defined( OPTION_LOCK_CONFIG_FILE )
     if ( ( fd_cfg = open( pathname, O_RDONLY, S_IRUSR | S_IRGRP ) ) < 0 )
     {
@@ -1088,12 +1075,6 @@ int     dll_count;                      /* index into array          */
     }
 #endif /*!defined(NO_SIGABEND_HANDLER)*/
 
-    /* Start up the RC file processing thread */
-    rc = create_thread(&rctid,DETACHED,
-                  process_rc_file,NULL,"process_rc_file");
-    if (rc)
-        WRMSG(HHC00102, "E", strerror(rc));
-
     if(log_callback)
     {
         // 'herclin' called us. IT'S in charge. Create its requested
@@ -1104,6 +1085,25 @@ int     dll_count;                      /* index into array          */
             WRMSG(HHC00102, "E", strerror(rc));
         return(0);
     }
+
+    hdl_adsc("release_config", release_config, NULL);
+
+    sysblk.config_done = FALSE;
+
+    /* Build system configuration */
+    if ( build_config (cfgfile) )
+    {
+        delayed_exit(-1);
+        return(1);
+    }
+
+    sysblk.config_done = TRUE;
+
+    /* Start up the RC file processing thread */
+    rc = create_thread(&rctid,DETACHED,
+                  process_rc_file,NULL,"process_rc_file");
+    if (rc)
+        WRMSG(HHC00102, "E", strerror(rc));
 
     //---------------------------------------------------------------
     // The below functions will not return until Hercules is shutdown
