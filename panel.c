@@ -184,6 +184,8 @@ static char  *NPhelp[] = {
 
 ///////////////////////////////////////////////////////////////////////
 
+static int   panel_is_running = FALSE;  /* Flag for startup/shutdown */ 
+
 static int   cons_rows = 0;             /* console height in lines   */
 static int   cons_cols = 0;             /* console width in chars    */
 static short cur_cons_row = 0;          /* current console row       */
@@ -1959,6 +1961,9 @@ char    buf[1024];                      /* Buffer workarea           */
     WRMSG (HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Control panel");
 
     hdl_adsc("panel_cleanup",panel_cleanup, NULL);
+
+    panel_is_running = TRUE;
+
     history_init();
 
     /* Set up the input file descriptors */
@@ -3470,6 +3475,8 @@ int i;
 PANMSG* p;
 
     UNREFERENCED(unused);
+    
+    if ( !panel_is_running ) return;
 
     log_wakeup(NULL);
 
