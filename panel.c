@@ -3533,13 +3533,3 @@ PANMSG* p;
 
     fflush(stderr);
 }
-
-int panel_initialization()
-{
-    int rc = 0;
-
-    /* call logger_term on system shutdown */
-    hdl_adsc("panel_cleanup",panel_cleanup, NULL);
-
-    return 0;
-}
