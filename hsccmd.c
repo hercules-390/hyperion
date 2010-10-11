@@ -199,10 +199,24 @@ static inline int devnotfound_msg(U16 lcss,U16 devnum)
     WRMSG(HHC02200,"E",lcss,devnum);
     return -1;
 }
+
 /* Issue generic Missing device number message */
 static inline void missing_devnum()
 {
     WRMSG(HHC02201,"E");
+}
+
+/* Check for all processors stopped */
+#define ALL_STOPPED all_stopped()
+static inline int all_stopped()
+{
+    int   i;
+
+    for ( i = 0; i < sysblk.maxcpu; i++)
+        if ( IS_CPU_ONLINE(i) &&
+             sysblk.regs[i]->cpustate != CPUSTATE_STOPPED )
+            return 0;
+    return 1;
 }
 
 
@@ -684,7 +698,7 @@ time_t  now;
 unsigned uptime, weeks, days, hours, mins, secs;
 
     UNREFERENCED( cmdline );
-    
+
     if ( argc > 1 )
     {
         WRMSG( HHC02299, "E", argv[0] );
@@ -745,7 +759,7 @@ int version_cmd(int argc, char *argv[],char *cmdline)
 {
 int rc = 0;
     UNREFERENCED(cmdline);
-    
+
     if ( argc > 1 )
     {
         WRMSG( HHC02299, "E", argv[0] );
@@ -1367,7 +1381,7 @@ int on = -1;
 
 #else
 int cf_cmd(int argc, char *argv[], char *cmdline)
-{    
+{
     UNREFERENCED(argc);
     UNREFERENCED(argv);
     UNREFERENCED(cmdline);
@@ -1543,7 +1557,7 @@ int rc = 0;
 
     UNREFERENCED(cmdline);
 
-    if ( argc == 1 ) for (;;)        
+    if ( argc == 1 ) for (;;)
     {
         obtain_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -1593,7 +1607,7 @@ int rc = 0;
                (hw_now << 8),format_tod(clock_buf,hw_now,TRUE));
         WRMSG(HHC02274, "I", buf);
 
-        if (epoch_now < 0) 
+        if (epoch_now < 0)
         {
             epoch_now_abs = -(epoch_now);
             epoch_sign = '-';
@@ -1626,7 +1640,7 @@ int rc = 0;
                    (vtod_now << 8), format_tod(clock_buf,vtod_now,TRUE) );
             WRMSG(HHC02274, "I", buf);
 
-            if (vepoch_now < 0) 
+            if (vepoch_now < 0)
             {
                 vepoch_now_abs = -(vepoch_now);
                 vepoch_sign = '-';
@@ -3317,7 +3331,24 @@ char buf[10];
         return HERRCPUONL;
     }
 
+    /* If CPU ID format change from 0 to 1, all stop required */
+    if (maxcpu > 16 && sysblk.cpuidfmt == 0)
+    {
+        if (!ALL_STOPPED)
+        {
+            WRMSG(HHC02253, "E");
+            return -1;
+        }
+
+        sysblk.cpuidfmt = 1;
+
+        if (MLVL(VERBOSE))
+            WRMSG(HHC02204, "I", "cpuidfmt", i2a(sysblk.cpuidfmt));
+    }
+
+
     sysblk.maxcpu = maxcpu;
+
 
     if (MLVL(VERBOSE))
         WRMSG( HHC02204, "I", argv[0], i2a(sysblk.maxcpu) );
@@ -5488,20 +5519,29 @@ u_int     id;
 
     UNREFERENCED(cmdline);
 
-    /* Update LPAR identification number if operand is specified */
+    /* Update CPU ID format if operand is specified */
     if (argc > 1)
     {
         if (argv[1] != NULL
           && strlen(argv[1]) == 1
           && sscanf(argv[1], "%u", &id) == 1)
         {
-            if ( id == 0 || id == 1 )
-                sysblk.cpuidfmt = (U16)id;
-            else
+            if (id > 1)
             {
                 WRMSG(HHC02205, "E", argv[1], ": must be either 0 or 1");
                 return -1;
             }
+            if (sysblk.maxcpu > 16 && id == 0)
+            {
+                WRMSG(HHC02205, "E", argv[1], ": must be 1 when MAXCPU > 16");
+                return -1;
+            }
+            if (!ALL_STOPPED)
+            {
+                WRMSG(HHC02253, "E");
+                return -1;
+            }
+            sysblk.cpuidfmt = (U16)id;
         }
         else
         {
@@ -9906,15 +9946,13 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
     }
 
 /* VS does not allow for macros to be split with ifdefs */
-    
-    {
-        int i;
-#ifdef    _FEATURE_VECTOR_FACILITY
-        i = sysblk.numvec;
-#else  /*!_FEATURE_VECTOR_FACILITY*/
-        i = 0;
-#endif /* _FEATURE_VECTOR_FACILITY*/
 
+    {
+#ifdef    _FEATURE_VECTOR_FACILITY
+        u_int i = sysblk.numvec;
+#else  /*!_FEATURE_VECTOR_FACILITY*/
+        u_int i = 0;
+#endif /* _FEATURE_VECTOR_FACILITY*/
         WRMSG( HHC17007, "I",   sysblk.cpus, i, sysblk.maxcpu - sysblk.cpus, sysblk.maxcpu );
     }
 
