@@ -77,6 +77,10 @@ DLL_EXPORT char *(*hdl_device_type_equates)(const char *);
 DLL_EXPORT void hdl_adsc (char* shdname, void * shdcall, void * shdarg)
 {
 HDLSHD *newcall;
+HDLSHD **tmpcall;
+
+int not_found = TRUE;
+
     if ( !hdl_sdlock_initialized )
     {
         initialize_lock(&hdl_sdlock);
@@ -85,16 +89,29 @@ HDLSHD *newcall;
 
     obtain_lock(&hdl_sdlock);
 
-    newcall = malloc(sizeof(HDLSHD));
-    newcall->shdname = shdname;
-    newcall->shdcall = shdcall;
-    newcall->shdarg = shdarg;
-    newcall->next = hdl_shdlist;
-    hdl_shdlist = newcall;
+    /* avoid duplicates - keep the first one */
+    for(tmpcall = &(hdl_shdlist); *tmpcall; tmpcall = &((*tmpcall)->next) )
+    {
+        if( (*tmpcall)->shdcall == shdcall
+          && (*tmpcall)->shdarg == shdarg )
+        {
+            not_found = FALSE;
+            break;
+        }
+    }
+    
+    if ( not_found )
+    {
+        newcall = malloc(sizeof(HDLSHD));
+        newcall->shdname = shdname;
+        newcall->shdcall = shdcall;
+        newcall->shdarg = shdarg;
+        newcall->next = hdl_shdlist;
+        hdl_shdlist = newcall;
+    }
 
     release_lock(&hdl_sdlock);
 }
-
 
 /* hdl_rmsc - remove shutdown call
  */
@@ -134,11 +151,6 @@ DLL_EXPORT void hdl_shut (void)
 {
 HDLSHD *shdent;
 
-#if defined( _MSVC_ )
-HDLSHD *loggercall;
-int logger_flag = 0;
-#endif // defined( _MSVC_ )
-
     WRMSG(HHC01500, "I");
     
     if ( !hdl_sdlock_initialized )
@@ -154,17 +166,6 @@ int logger_flag = 0;
         /* Remove shutdown call entry to ensure it is called once */
         hdl_shdlist = shdent->next;
 
-#if defined( _MSVC_ )
-        if ( strcmp( shdent->shdname, "logger_term" ) == 0 )
-        {
-            loggercall = malloc(sizeof(HDLSHD));
-            loggercall->shdname = shdent->shdname;
-            loggercall->shdcall = shdent->shdcall;
-            loggercall->shdarg = shdent->shdarg;
-            logger_flag = 1;
-        }
-        else
-#endif // defined( _MSVC_ )
         {
             WRMSG(HHC01501, "I", shdent->shdname);
             {
@@ -173,28 +174,10 @@ int logger_flag = 0;
             WRMSG(HHC01502, "I", shdent->shdname);
         }   
         free(shdent);
+        log_wakeup(NULL);
     }
 
     release_lock (&hdl_sdlock);
-#if defined( _MSVC_ )
-    if ( logger_flag == 1 )
-    {
-        if ( sysblk.shutimmed )
-            /* shutdown of logger is skipped in a Windows Environment 
-             * because we still have messages to write to the log file 
-             */
-            WRMSG(HHC01503, "I", loggercall->shdname); 
-        else
-        {
-            WRMSG(HHC01501, "I", loggercall->shdname);
-            {
-                (loggercall->shdcall) (loggercall->shdarg);
-            }
-            WRMSG(HHC01502, "I", loggercall->shdname);
-        }
-        free(loggercall);
-    }
-#endif // defined( _MSVC_ )
 
     WRMSG(HHC01504, "I");
 }

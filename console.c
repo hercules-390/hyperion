@@ -2290,7 +2290,7 @@ console_remove(DEVBLK *dev)
         dev->console = 0;
         dev->fd = -1;
 
-        if (console_cnslcnt <= 0)
+        if (console_cnslcnt <= 0 && !sysblk.shutdown )
             logmsg(_("** BUG! console_remove() error! **\n"));
         else
             console_cnslcnt--;

@@ -660,6 +660,10 @@ int     dll_count;                      /* index into array          */
     */
     logger_init();
 
+    /* we need to queue this behind logger for proper shutdown */
+    if(!sysblk.daemon_mode)
+        panel_initialization();
+    
     /*
        Setup the initial codepage
     */

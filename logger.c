@@ -274,8 +274,6 @@ int bytes_read;
 
     setvbuf (stdout, NULL, _IONBF, 0);
 
-    /* call logger_term on system shutdown */
-    hdl_adsc("logger_term",logger_term, NULL);
 
     obtain_lock(&logger_lock);
 
@@ -594,6 +592,9 @@ DLL_EXPORT void logger_init(void)
     wait_condition(&logger_cond, &logger_lock);
 
     release_lock(&logger_lock);
+
+    /* call logger_term on system shutdown */
+    hdl_adsc("logger_term",logger_term, NULL);
 
 }
 

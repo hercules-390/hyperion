@@ -7,7 +7,7 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id$
+// $Id$ 
 
 /*-------------------------------------------------------------------*/
 /* This file contains the text of all of the messages issued by      */
