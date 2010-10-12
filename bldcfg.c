@@ -121,7 +121,6 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
 #endif
 
     sysblk.xpndsize = 0;
-    configure_storage(2);
 
     sysblk.maxcpu = MAX_CPU_ENGINES;
 #ifdef    _FEATURE_VECTOR_FACILITY
@@ -168,6 +167,10 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
 
     /* Reset the clock steering registers */
     csr_reset();
+
+    /* Default Storage & NUMCPU */
+    configure_storage(2);
+    configure_numcpu(1);
 
     /* Default CPU type CP */
     for (i = 0; i < sysblk.maxcpu; i++)
