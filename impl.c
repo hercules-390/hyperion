@@ -660,10 +660,6 @@ int     dll_count;                      /* index into array          */
     */
     logger_init();
 
-    /* we need to queue this behind logger for proper shutdown */
-    if(!sysblk.daemon_mode)
-        panel_initialization();
-    
     /*
        Setup the initial codepage
     */
@@ -942,6 +938,9 @@ int     dll_count;                      /* index into array          */
     hostpath(pathname, cfgfile, sizeof(pathname));
 
 #if defined( OPTION_LOCK_CONFIG_FILE )
+
+    /* Test that we can get a read the file */
+
     if ( ( fd_cfg = open( pathname, O_RDONLY, S_IRUSR | S_IRGRP ) ) < 0 )
     {
         if ( errno == EACCES )
@@ -1004,41 +1003,7 @@ int     dll_count;                      /* index into array          */
         }
     } /* end of logo parm processing */
 
-#if defined( OPTION_LOCK_CONFIG_FILE )
-    if ( ( fd_cfg = open( pathname, O_RDONLY, S_IRUSR | S_IRGRP ) ) < 0 )
-    {
-        WRMSG( HHC01432, "S", pathname, "open()", strerror( errno ) );
-        delayed_exit(-1);
-        return(1);
-    }
-    else
-    {
-#if defined( _MSVC_ )
-        if( ( rc = _locking( fd_cfg, _LK_NBRLCK, 1L ) ) < 0 )
-        {
-            int rc = errno;
-            WRMSG( HHC01454, "S", pathname, "_locking()", strerror( errno ) );
-            delayed_exit(-1);
-            return(1);
-        }
-#else
-        fl_cfg.l_type = F_RDLCK;
-        fl_cfg.l_whence = SEEK_SET;
-        fl_cfg.l_start = 0;
-        fl_cfg.l_len = 1;
-        
-        if ( fcntl(fd_cfg, F_SETLK, &fl_cfg) == -1 ) 
-        {
-            if (errno == EACCES || errno == EAGAIN) 
-            {
-                WRMSG( HHC01432, "S", pathname, "fcntl()", strerror( errno ) );
-                delayed_exit(-1);
-                return(1);
-            }
-        }
-#endif
-    }
-#endif // OPTION_LOCK_CONFIG_FILE
+
     /* System initialisation time */
     sysblk.todstart = hw_clock() << 8;
 
@@ -1104,6 +1069,42 @@ int     dll_count;                      /* index into array          */
                   process_rc_file,NULL,"process_rc_file");
     if (rc)
         WRMSG(HHC00102, "E", strerror(rc));
+
+#if defined( OPTION_LOCK_CONFIG_FILE )
+    if ( ( fd_cfg = open( pathname, O_RDONLY, S_IRUSR | S_IRGRP ) ) < 0 )
+    {
+        WRMSG( HHC01432, "S", pathname, "open()", strerror( errno ) );
+        delayed_exit(-1);
+        return(1);
+    }
+    else
+    {
+#if defined( _MSVC_ )
+        if( ( rc = _locking( fd_cfg, _LK_NBRLCK, 1L ) ) < 0 )
+        {
+            int rc = errno;
+            WRMSG( HHC01454, "S", pathname, "_locking()", strerror( errno ) );
+            delayed_exit(-1);
+            return(1);
+        }
+#else
+        fl_cfg.l_type = F_RDLCK;
+        fl_cfg.l_whence = SEEK_SET;
+        fl_cfg.l_start = 0;
+        fl_cfg.l_len = 1;
+        
+        if ( fcntl(fd_cfg, F_SETLK, &fl_cfg) == -1 ) 
+        {
+            if (errno == EACCES || errno == EAGAIN) 
+            {
+                WRMSG( HHC01432, "S", pathname, "fcntl()", strerror( errno ) );
+                delayed_exit(-1);
+                return(1);
+            }
+        }
+#endif
+    }
+#endif // OPTION_LOCK_CONFIG_FILE
 
     //---------------------------------------------------------------
     // The below functions will not return until Hercules is shutdown
