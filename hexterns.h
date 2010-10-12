@@ -243,7 +243,6 @@ extern const char* get_arch_mode_string(REGS* regs);
 /* Functions in module panel.c */
 void expire_kept_msgs(int unconditional);
 void set_console_title(char * status);
-int  panel_initialization(void);
 #ifdef OPTION_MIPS_COUNTING
 HPAN_DLL_IMPORT U32    maxrates_rpt_intvl;  // (reporting interval)
 HPAN_DLL_IMPORT U32    curr_high_mips_rate; // (high water mark for current interval)
