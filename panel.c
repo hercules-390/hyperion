@@ -184,8 +184,6 @@ static char  *NPhelp[] = {
 
 ///////////////////////////////////////////////////////////////////////
 
-static int   panel_is_running = FALSE;  /* Flag for startup/shutdown */ 
-
 static int   cons_rows = 0;             /* console height in lines   */
 static int   cons_cols = 0;             /* console width in chars    */
 static short cur_cons_row = 0;          /* current console row       */
@@ -1962,8 +1960,6 @@ char    buf[1024];                      /* Buffer workarea           */
 
     hdl_adsc("panel_cleanup",panel_cleanup, NULL);
 
-    panel_is_running = TRUE;
-
     history_init();
 
     /* Set up the input file descriptors */
@@ -3462,6 +3458,9 @@ FinishShutdown:
         npquiet = sysblk.npquiet;
 
     } /* end while */
+
+    sysblk.panel_init = 0;
+
     WRMSG (HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Control panel");
 	
 
@@ -3476,8 +3475,6 @@ PANMSG* p;
 
     UNREFERENCED(unused);
     
-    if ( !panel_is_running ) return;
-
     log_wakeup(NULL);
 
     set_screen_color( stderr, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
@@ -3497,6 +3494,8 @@ PANMSG* p;
 #endif // defined(OPTION_MSGCLR)
         write_text (p->msg, MSG_SIZE);
     }
+
+    sysblk.panel_init = 0;                          /* Panel is no longer running */
 
     /* Restore the terminal mode */
     set_or_reset_console_mode( keybfd, 0 );
@@ -3539,14 +3538,4 @@ PANMSG* p;
     set_screen_color(stderr, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
 
     fflush(stderr);
-}
-
-int panel_initialization()
-{
-    int rc = 0;
-
-    /* call logger_term on system shutdown */
-    hdl_adsc("panel_cleanup",panel_cleanup, NULL);
-
-    return rc;
 }
