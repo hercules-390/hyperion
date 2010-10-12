@@ -703,16 +703,17 @@ char *http_root()
         // ENOENT = File name or path not found.
         if (access( absolute_httproot_path, R_OK ) != 0)
         {
-            char msgbuf[MAX_PATH+3] = { 0 };
-            char *p = msgbuf;
+            char msgbuf[MAX_PATH+3];
+            char *p = absolute_httproot_path;
 
-            if ( strchr( absolute_httproot_path, SPACE ) == NULL )
-                p = absolute_httproot_path;
-            else
+            if ( strchr( absolute_httproot_path, SPACE ) != NULL )
+            {
                 MSGBUF(msgbuf, "'%s'", absolute_httproot_path);
+                p = msgbuf;
+            }
 
             WRMSG(HHC01801, "E", p, strerror(errno));
-            return NULL;
+            return p;
         }
         /* Append trailing [back]slash, but only if needed */
         rc = (int)strlen(absolute_httproot_path);
@@ -739,8 +740,10 @@ char *http_root()
         else
         {
             char    pathname[MAX_PATH];     /* working pathname          */
-            char msgbuf[MAX_PATH+3] = { 0 };
+            char msgbuf[MAX_PATH+3];
             char *p = msgbuf;
+
+            bzero(msgbuf,sizeof(msgbuf));
 
             hostpath(pathname, absolute_httproot_path, sizeof(pathname));
             http_serv.httproot = strdup(pathname);
@@ -797,7 +800,7 @@ struct timeval      timeout;            /* timeout value             */
     WRMSG (HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "HTTP server");
 
     /* make sure root path is built */
-    if ( http_root(NULL) == NULL )
+    if ( http_root() == NULL )
         goto http_server_stop;
 
     /* Obtain a socket */
