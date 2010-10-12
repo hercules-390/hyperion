@@ -161,7 +161,18 @@ int bytes_returned;
 
 static void logger_term(void *arg)
 {
+    char *lmsbuf = NULL;             /* xxx                       */
+    int   lmsnum = -1;               /* xxx                       */
+    int   lmscnt = -1;               /* xxx                       */
+
     UNREFERENCED(arg);
+    
+    log_wakeup(NULL);
+    usleep(10000);
+    log_wakeup(NULL);
+    usleep(10000);
+    log_wakeup(NULL);
+    usleep(10000);
 
     if(logger_active)
     {
@@ -187,6 +198,12 @@ static void logger_term(void *arg)
         /* Wait for the logger to terminate */
         join_thread( logger_tid, NULL );
         detach_thread( logger_tid );
+        
+        fwrite("\n",1,1,stderr);
+        /* Read and display any msgs still remaining in the system log */
+        while((lmscnt = log_read(&lmsbuf, &lmsnum, LOG_NOBLOCK)))
+        fwrite(lmsbuf,lmscnt,1,stderr);
+        fflush(stderr);
     }
 }
 static void logger_logfile_write( void* pBuff, size_t nBytes )
