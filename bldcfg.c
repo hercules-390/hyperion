@@ -168,16 +168,16 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
     /* Reset the clock steering registers */
     csr_reset();
 
-    /* Default Storage & NUMCPU */
-    configure_storage(2);
-    configure_numcpu(1);
-
     /* Default CPU type CP */
     for (i = 0; i < sysblk.maxcpu; i++)
         sysblk.ptyp[i] = SCCB_PTYP_CP;
 
     /* Gabor Hoffer (performance option) */
     copy_opcode_tables();
+
+    /* Default Storage & NUMCPU */
+    configure_storage(2);
+    configure_numcpu(1);
 
     if ((process_config(hercules_cnf)))
         return -1;
