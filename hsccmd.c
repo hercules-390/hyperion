@@ -1333,7 +1333,10 @@ int cf_cmd(int argc, char *argv[], char *cmdline)
 
     RELEASE_INTLOCK(NULL);
 
-    if (on >= 0) cf_cmd (0, NULL, NULL);
+    if (on >= 0)
+    {
+        cf_cmd (1, argv, argv[0]);
+    }
 
     return 0;
 }
@@ -1381,7 +1384,7 @@ int on = -1;
 
 #else
 int cf_cmd(int argc, char *argv[], char *cmdline)
-{
+{    
     UNREFERENCED(argc);
     UNREFERENCED(argv);
     UNREFERENCED(cmdline);
@@ -1557,7 +1560,7 @@ int rc = 0;
 
     UNREFERENCED(cmdline);
 
-    if ( argc == 1 ) for (;;)
+    if ( argc == 1 ) for (;;)        
     {
         obtain_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -1607,7 +1610,7 @@ int rc = 0;
                (hw_now << 8),format_tod(clock_buf,hw_now,TRUE));
         WRMSG(HHC02274, "I", buf);
 
-        if (epoch_now < 0)
+        if (epoch_now < 0) 
         {
             epoch_now_abs = -(epoch_now);
             epoch_sign = '-';
@@ -1640,7 +1643,7 @@ int rc = 0;
                    (vtod_now << 8), format_tod(clock_buf,vtod_now,TRUE) );
             WRMSG(HHC02274, "I", buf);
 
-            if (vepoch_now < 0)
+            if (vepoch_now < 0) 
             {
                 vepoch_now_abs = -(vepoch_now);
                 vepoch_sign = '-';
@@ -3348,7 +3351,6 @@ char buf[10];
 
 
     sysblk.maxcpu = maxcpu;
-
 
     if (MLVL(VERBOSE))
         WRMSG( HHC02204, "I", argv[0], i2a(sysblk.maxcpu) );
