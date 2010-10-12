@@ -285,10 +285,10 @@ int     rc;
 
     rc = exec_cmd(cmd_argc, cmd_argv, pszCmdline);
     rexx_tid = 0;
-    WRMSG( HHC02264, "I", cmdargv[1] );
+    WRMSG( HHC02264, "I", cmd_argv[1] );
     free(pszCmdline);
     pszCmdline = NULL;
-    return rc;
+    return 0;
 }
 
 /*-------------------------------------------------------------------*/
