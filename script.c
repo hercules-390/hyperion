@@ -549,11 +549,12 @@ rexx_done:
 
 
 /* PATCH ISW20030220 - Script command support */
-static int scr_recursion=0;     /* Recursion count (set to 0) */
-static int scr_aborted=0;          /* Script abort flag */
+static int scr_recursion=0;         /* Recursion count (set to 0) */
+static int scr_aborted=0;           /* Script abort flag */
 static int scr_uaborted=0;          /* Script user abort flag */
-TID scr_tid=0;
+static TID scr_tid=0;               /* Script TID */
 static char *pszCmdline = NULL;     /* save pointer to cmdline */
+
 int scr_recursion_level() { return scr_recursion; }
 
 /*-------------------------------------------------------------------*/
@@ -720,7 +721,7 @@ int     i;
     }
 
     if (feof(scrfp))
-        WRMSG(HHC02264, "I");
+        WRMSG(HHC02264, "I", script_name );
     else
     {
         if (!scr_aborted)
@@ -809,11 +810,7 @@ int script_cmd(int argc, char *argv[], char *cmdline)
     }
     else
     {
-        if ( scr_tid != 0)
-        {
-            WRMSG(HHC02258, "E");
-            return 1;
-        }
+        return process_script_file(argv[1], 0);
     }
 
     return 0;

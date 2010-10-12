@@ -87,6 +87,11 @@ static CMDTAB cmdtab[] =
 COMMAND ( NULL, 0, 0, NULL, NULL, NULL ) /* End of table */
 };
 
+/* Static Variables */
+static LOCK    ProcessConsoleCommandLock;
+static int     ConsoleCommandLockInitialized = FALSE;
+static int     CommandLockCounter = 0;          /* Counting for Debug Purposes */
+
 /* internal functions */
 int HelpMessage(char *);
 
@@ -104,21 +109,21 @@ int i;
     {
         for (cmdent = cmdtab; cmdent->statement; cmdent++)
         {
-            if(!strcasecmp(argv[1], cmdent->statement))
+            if (!strcasecmp(argv[1], cmdent->statement))
             {
-                if(argc > 2)
-                    for(i = 2; i < argc; i++)
+                if (argc > 2)
+                    for (i = 2; i < argc; i++)
                     {
-                        if(!strcasecmp(argv[i],"Cfg"))
+                        if (!strcasecmp(argv[i],"Cfg"))
                             cmdent->type |= CONFIG;
                         else
-                        if(!strcasecmp(argv[i],"NoCfg"))
+                        if (!strcasecmp(argv[i],"NoCfg"))
                             cmdent->type &= ~CONFIG;
                         else
-                        if(!strcasecmp(argv[i],"Cmd"))
+                        if (!strcasecmp(argv[i],"Cmd"))
                             cmdent->type |= PANEL;
                         else
-                        if(!strcasecmp(argv[i],"NoCmd"))
+                        if (!strcasecmp(argv[i],"NoCmd"))
                             cmdent->type &= ~PANEL;
                         else
                         {
@@ -144,30 +149,62 @@ CMDT_DLL_IMPORT
 int ProcessConfigCommand (int argc, char **argv, char *cmdline)
 {
 CMDTAB* cmdent;
+int     rc = 0;
 
     if (!argc)
         return -1;
+    
+    if ( !ConsoleCommandLockInitialized )
+        initialize_lock(&ProcessConsoleCommandLock);
+
+    obtain_lock(&ProcessConsoleCommandLock);
+    
+    CommandLockCounter++;
+    if (MLVL(DEBUG))
+    {
+        char msgbuf[64];
+        MSGBUF( msgbuf, "Config_Enter CommandLockCounter %d", CommandLockCounter );
+        WRMSG( HHC90000, "D", msgbuf );
+    }
 
 #if defined(OPTION_DYNAMIC_LOAD)
     if(config_command)
         if( !config_command(argc, argv, cmdline) )
-            return 0;
+        {
+            rc = 0;
+            goto ProcessConfigExit;
+        }
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
 
     for (cmdent = cmdtab; cmdent->statement; cmdent++)
-        if(cmdent->function && (cmdent->type & CONFIG))
-            if( !strncasecmp(argv[0], cmdent->statement, 
+        if (cmdent->function && (cmdent->type & CONFIG))
+            if ( !strncasecmp(argv[0], cmdent->statement, 
                 cmdent->statminlen == 0 ? 
                 MAX( strlen(argv[0]), strlen(cmdent->statement) ) : 
                 MAX( cmdent->statminlen, strlen(argv[0]) ) ) )
             {
                 char cmd[256];
                 strlcpy( cmd, cmdent->statement, sizeof(cmd) );
-                argv[0] = cmd;             
-                return cmdent->function(argc, argv, cmdline);
+                argv[0] = cmd;              /* argv[0] is a pointer within another string - no heap issue */      
+                rc = cmdent->function(argc, argv, cmdline);
+                break;
             }
 
-    return -1;
+ProcessConfigExit:;
+
+    CommandLockCounter--;
+
+    if ( CommandLockCounter <= 0 )
+        release_lock(&ProcessConsoleCommandLock);
+    
+    if (MLVL(DEBUG))
+    {
+        char msgbuf[64];
+        MSGBUF( msgbuf, "Config_Exit CommandLockCounter %d", CommandLockCounter );
+        WRMSG( HHC90000, "D", msgbuf );
+    }
+
+    return rc;
 }
 
 
@@ -205,6 +242,20 @@ int ProcessPanelCommand (char* pszCmdLine)
     char*    pszSaveCmdLine  = NULL;
     int      rc              = -1;
 
+    if ( !ConsoleCommandLockInitialized )
+        initialize_lock(&ProcessConsoleCommandLock);
+
+    obtain_lock(&ProcessConsoleCommandLock);
+
+    CommandLockCounter++;
+
+    if (MLVL(DEBUG))
+    {
+        char msgbuf[64];
+        MSGBUF( msgbuf, "Panel_Enter CommandLockCounter %d", CommandLockCounter );
+        WRMSG( HHC90000, "D", msgbuf );
+    }
+
     if (!pszCmdLine || !*pszCmdLine)
     {
         /* [enter key] by itself: start the CPU
@@ -241,7 +292,7 @@ int ProcessPanelCommand (char* pszCmdLine)
                  ( (sysblk.diag8cmd & DIAG8CMD_RUNNING) || 
                    (pCmdTab->group & sysblk.sysgroup) ) )
             {
-                if(!strncasecmp(cmd_argv[0],pCmdTab->statement,
+                if (!strncasecmp(cmd_argv[0],pCmdTab->statement,
                     pCmdTab->statminlen == 0 ?
                     MAX( strlen(cmd_argv[0]), strlen(pCmdTab->statement) ) : 
                     MAX( pCmdTab->statminlen, strlen(cmd_argv[0]) ) ) )
@@ -285,11 +336,23 @@ int ProcessPanelCommand (char* pszCmdLine)
     else
         WRMSG( HHC01600, "E", cmd_argv[0] );
 
-ProcessPanelCommandExit:
+ProcessPanelCommandExit:;
 
     /* Free our saved copy */
     free(pszSaveCmdLine);
     
+    CommandLockCounter--;
+
+    if (MLVL(DEBUG))
+    {
+        char msgbuf[64];
+        MSGBUF( msgbuf, "Panel_Exit CommandLockCounter %d", CommandLockCounter );
+        WRMSG( HHC90000, "D", msgbuf );
+    }
+    
+    if ( CommandLockCounter <= 0 )
+        release_lock(&ProcessConsoleCommandLock);
+
     if ( MLVL(DEBUG) )
     {
         char msgbuf[32];

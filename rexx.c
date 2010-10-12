@@ -31,6 +31,8 @@
 #define hSIOExit "HERCSIOE"
 
 static int rexx_initialised = FALSE;
+static TID rexx_tid=0;
+static char *pszCmdline = NULL;     /* save pointer to cmdline */
 
 #if defined(OPTION_DYNAMIC_RESOLVE_REXX)
 
@@ -109,12 +111,14 @@ SHORT rc;
        ? ProcessPanelCommand(RXSTRPTR(*command))
        : ProcessConfigCmdLine(RXSTRPTR(*command));
 
-    if( rc )
-        *flags = rc < 0 ? RXSUBCOM_ERROR : RXSUBCOM_FAILURE;
-    else
-        *flags = RXSUBCOM_OK;
+    *flags = rc < 0 ? RXSUBCOM_ERROR : rc > 0 ? RXSUBCOM_FAILURE : RXSUBCOM_OK;
 
     snprintf(RXSTRPTR(*retval), RXSTRLEN(*retval), "%hd", rc);
+
+#if defined(_MSVC_)
+    RXSTRPTR(*retval)[ (RXSTRLEN(*retval)) - 1 ] = '\0';    /* VS does not protect overruns */
+#endif
+
     MAKERXSTRING(*retval, RXSTRPTR(*retval), (ULONG)strlen(RXSTRPTR(*retval)));
 
     return 0;
@@ -125,29 +129,29 @@ int init_rexx()
 int rc;
 
 #if defined(OPTION_DYNAMIC_RESOLVE_REXX)
-    if( !rexx_initialised )
+    if ( !rexx_initialised )
     {
         void *addr;
 
-        if(!(addr = dlopen(REGINA_LIBRARY,RTLD_LAZY)))
+        if (!(addr = dlopen(REGINA_LIBRARY,RTLD_LAZY)))
         {
             WRMSG( HHC17504, "E", REXX_PACKAGE, REGINA_LIBRARY, dlerror());
             return -1;
         }
 
-        if(!(hRexxRegisterSubcomExe = (rRexxRegisterSubcomExe *)dlsym(addr, REXX_REGISTER_SUBCOM )))
+        if (!(hRexxRegisterSubcomExe = (rRexxRegisterSubcomExe *)dlsym(addr, REXX_REGISTER_SUBCOM )))
         {
             WRMSG( HHC17505, "E", REXX_PACKAGE, REXX_REGISTER_SUBCOM, dlerror());
             return -1;
         }
 
-        if(!(hRexxRegisterExitExe = (rRexxRegisterExitExe *)dlsym( addr, REXX_REGISTER_EXIT )))
+        if (!(hRexxRegisterExitExe = (rRexxRegisterExitExe *)dlsym( addr, REXX_REGISTER_EXIT )))
         {
             WRMSG( HHC17505, "E", REXX_PACKAGE, REXX_REGISTER_EXIT, dlerror());
             return -1;
         }
 
-        if(!(hRexxStart = (rRexxStart *)dlsym(addr, REXX_START )))
+        if (!(hRexxStart = (rRexxStart *)dlsym(addr, REXX_START )))
         {
             WRMSG( HHC17505, "E", REXX_PACKAGE, REXX_START, dlerror());
             return -1;
@@ -156,14 +160,14 @@ int rc;
     }
 #endif /*defined(OPTION_DYNAMIC_RESOLVE_REXX)*/
 
-    if((rc = hRexxRegisterExitExe( hSIOExit, (RexxExitHandler *)hExitHnd, NULL )) != RXEXIT_OK
+    if ((rc = hRexxRegisterExitExe( hSIOExit, (RexxExitHandler *)hExitHnd, NULL )) != RXEXIT_OK
       && !(rexx_initialised && rc == RXEXIT_NOTREG))
     {
         WRMSG( HHC17506, "E", REXX_PACKAGE, "Exit Handler", rc);
         return -1;
     }
 
-    if((rc = hRexxRegisterSubcomExe( hSubcom, (RexxSubcomHandler *)hSubCmd, NULL)) != RXSUBCOM_OK
+    if ((rc = hRexxRegisterSubcomExe( hSubcom, (RexxSubcomHandler *)hSubCmd, NULL)) != RXSUBCOM_OK
       && !(rexx_initialised && rc == RXSUBCOM_NOTREG))
     {
         WRMSG( HHC17506, "E", REXX_PACKAGE, "Subcom Handler", rc);
@@ -190,21 +194,45 @@ RXSYSEXIT ExitList[2];
 
     UNREFERENCED(cmdline);
 
-    if(argc < 2)
+    if (argc < 2)
     {
         WRMSG( HHC17501, "E", REXX_PACKAGE );
         return -1;
     }
 
-    if(init_rexx())
+    if (init_rexx())
     {
         WRMSG( HHC17500, "E", REXX_PACKAGE );
         return -1;
     }
 
-    hostpath(pathname, argv[1], sizeof(pathname));
+    hostpath( pathname, argv[1], sizeof(pathname) );
 
-    if(argc > 2)
+    if (access( pathname, R_OK ) != 0 && strcmp(basename(argv[1]),argv[1]) == 0 )
+    {   /* try $(MODPATH)\rexx\filename if not found and no pathing information */
+        char *p = malloc(sizeof(pathname)+1);
+        if ( p != NULL )
+        {
+            bzero(p,sizeof(pathname)+1);
+            strlcpy( p, get_symbol("MODPATH"), sizeof(pathname) );
+            strlcat( p, PATHSEPS,              sizeof(pathname) );
+            strlcat( p, "rexx",                sizeof(pathname) );
+            strlcat( p, PATHSEPS,              sizeof(pathname) );
+            strlcat( p, argv[1],               sizeof(pathname) );
+
+            if (access( pathname, R_OK ) == 0)
+                hostpath( pathname, p, sizeof(pathname));
+        }
+        else
+        {
+            char msgbuf[64];
+            MSGBUF( msgbuf, "malloc(%lu)", sizeof(pathname)+1 );
+            WRMSG(HHC02219, "E", msgbuf, strerror(errno) );
+            return -1;
+        }
+    }
+
+    if (argc > 2)
     {
         int i,len;
 
@@ -213,31 +241,93 @@ RXSYSEXIT ExitList[2];
 
         MAKERXSTRING(arg, malloc(len), len - 1);
 
-        strcpy(RXSTRPTR(arg), argv[2]);
-        for ( i = 3; i < argc; i++)
+        strlcpy( RXSTRPTR(arg), argv[2], len );
+        for ( i = 3; i < argc; i++ )
         {
-            strcat(RXSTRPTR(arg), " ");
-            strcat(RXSTRPTR(arg), argv[i]);
+            strlcat( RXSTRPTR(arg), " ", len );
+            strlcat( RXSTRPTR(arg), argv[i], len );
         }
     }
     else
-        MAKERXSTRING(arg, NULL, 0);
+        MAKERXSTRING( arg, NULL, 0 );
     
-    MAKERXSTRING(retval, buffer, sizeof(buffer));
+    MAKERXSTRING( retval, buffer, sizeof(buffer) );
 
     ExitList[0].sysexit_name = hSIOExit;
     ExitList[0].sysexit_code = RXSIO;
     ExitList[1].sysexit_code = RXENDLST;
 
-    if((rc = hRexxStart ((argc > 2) ? 1 : 0, &arg, pathname, NULL, hSubcom, RXCOMMAND, ExitList, &ret, &retval )))
+    if ((rc = hRexxStart ((argc > 2) ? 1 : 0, &arg, pathname, NULL, hSubcom, RXCOMMAND, ExitList, &ret, &retval )))
         WRMSG( HHC17503, "E", REXX_PACKAGE, rc );
     else
-        if(ret)
+        if (ret)
             WRMSG( HHC17502, "E", REXX_PACKAGE, RXSTRPTR(retval) );
 
-    if(RXSTRPTR(arg))
+    if (RXSTRPTR(arg))
         free(RXSTRPTR(arg));
 
     return rc ? rc : ret;
+}
+
+void *exec_process_thread( void *cmd)
+{
+int     cmd_argc;
+char*   cmd_argv[MAX_ARGS];
+int     rc;
+
+    UNREFERENCED(cmd);
+
+    /* Parse the command line into its individual arguments...
+       Note: original command line now sprinkled with nulls */
+    parse_args (pszCmdline, MAX_ARGS, cmd_argv, &cmd_argc);
+
+    cmd_argv[0] = "exec";
+
+    rc = exec_cmd(cmd_argc, cmd_argv, pszCmdline);
+    rexx_tid = 0;
+    WRMSG( HHC02264, "I", cmdargv[1] );
+    free(pszCmdline);
+    pszCmdline = NULL;
+    return rc;
+}
+
+/*-------------------------------------------------------------------*/
+/* execb command - REXX BACKGROUND                                   */
+/*-------------------------------------------------------------------*/
+int execb_cmd(int argc, char *argv[], char *cmdline)
+{
+    int rc;
+    UNREFERENCED(argv);
+
+    if (argc<2)
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        return 1;
+    }
+
+    if (rexx_tid==0)
+    {
+        pszCmdline = strdup(cmdline);
+
+        rc = create_thread(&rexx_tid,DETACHED,
+                  exec_process_thread,NULL,"rexx processing");
+        if (rc)
+        {
+            if (pszCmdline != NULL)
+            {
+                free(pszCmdline);
+                pszCmdline = NULL;
+            }
+            WRMSG(HHC00102, "E", strerror(rc));
+            rexx_tid = 0;
+        }
+    }
+    else
+    {
+        WRMSG( HHC02258, "E", "rexx script" );
+        return -1;
+    }
+
+    return 0;
 }
 #endif /*defined(HAVE_REGINA_REXXSAA_H)*/
