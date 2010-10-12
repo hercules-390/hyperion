@@ -5802,21 +5802,13 @@ int iplc_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int cpu_cmd(int argc, char *argv[], char *cmdline)
 {
-BYTE c;                                 /* Character work area       */
-
-    int cpu;
-
-    UNREFERENCED(cmdline);
+    BYTE c;
+    int  cpu;
+    int  currcpu = sysblk.pcpu;
 
     if (argc < 2)
     {
         WRMSG(HHC02202, "E");
-        return -1;
-    }
-
-    if ( argc > 2 )
-    {
-        WRMSG( HHC02299, "E", argv[0] );
         return -1;
     }
 
@@ -5829,6 +5821,32 @@ BYTE c;                                 /* Character work area       */
 
     sysblk.dummyregs.cpuad = cpu;
     sysblk.pcpu = cpu;
+
+    if ( argc > 2 )
+    {
+         u_int i = 0;
+         u_int j = 0;
+         u_int n = strlen(cmdline);
+
+         /* Skip leading blanks, if any */
+         for ( ; i < n && cmdline[i] == ' '; i++ );
+
+         /* Skip two words */
+         for ( ; j < 2; j++ )
+         {
+           for ( ; i < n && cmdline[i] != ' '; i++ );
+           for ( ; i < n && cmdline[i] == ' '; i++ );
+         }
+
+         /* Issue command to temporary target cpu */
+         if (i < n)
+         {
+             cmdline[--i] = '-';
+             panel_command(cmdline+i);
+             sysblk.pcpu = currcpu;
+             sysblk.dummyregs.cpuad = currcpu;
+         }
+    }
 
     return 0;
 }

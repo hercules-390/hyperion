@@ -184,9 +184,13 @@ COMMAND("cpu",       PANEL,         SYSCMDALL,          cpu_cmd,
   "Define target cpu for panel display and commands",
     "Format: \"cpu xx\" where 'xx' is the hexadecimal cpu address of the cpu\n"
     "in your multiprocessor configuration which you wish all panel commands\n"
-    "to apply to. For example, entering 'cpu 1F' followed by \"gpr\" will\n"
-    "display the general purpose registers for cpu 31 of your\n"
-    "configuration.\n")
+    "to apply to. If command text follows the cpu address, the command will\n"
+    "execute on cpu xx and the target cpu will not be permanently changed.\n"
+    "For example, entering 'cpu 1F' followed by \"gpr\" will change the\n"
+    "target cpu for the panel display and commands and then display the\n"
+    "general purpose registers for cpu 31 of your configuration. Entering\n"
+    "'cpu 14 gpr' will execute the 'gpr' command on cpu 20, but will not\n"
+    "change the target cpu for subsequent panel displays and commands.\n")
 
 COMMAND("start",     PANEL,         SYSCMDALL,          start_cmd,
   "Start CPU (or printer device if argument given)",
@@ -467,8 +471,8 @@ CMDABBR("manufacturer",8,PANEL+CONFIG,    SYSCMDALL-SYSOPER,    stsi_manufacture
 #endif /* defined(OPTION_SET_STSI_INFO) */
 
 #if defined(OPTION_LPP_RESTRICT)
-COMMAND("pgmprdos",  CONFIG,        SYSCMDALL-SYSOPER,  pgmprdos_cmd, 
-  "Set LPP license setting", 
+COMMAND("pgmprdos",  CONFIG,        SYSCMDALL-SYSOPER,  pgmprdos_cmd,
+  "Set LPP license setting",
     NULL)
 #endif /*defined(OPTION_LPP_RESTRICT)*/
 
@@ -603,7 +607,7 @@ COMMAND("http",      PANEL+CONFIG,  SYSCMDALL,          http_cmd,
   "port nnnn [[noauth]|[auth user pass]] - set port and optional authorization.\n"
   "                                        Default is noauthorization needed.\n"
   "                                        'auth' requires a user and password\n"
-  "\n"  
+  "\n"
   "root path                             - set the root file path name\n"
   "\n"
   "<none>                                - display status of HTTP server\n")
