@@ -2226,22 +2226,26 @@ DLL_EXPORT  zz_func opcode_replace_instruction(int arch,zz_func newfunc,int code
     if(code1>255) return NULL;
     if(code2<0)
     {
-        oldfun=opcode_table[code1][ARCH_370];
-        opcode_table[code1][ARCH_370]=newfunc;
         switch(arch)
         {
 #if defined(_370)
             case ARCH_370:
+                oldfun=opcode_table[code1][ARCH_370];
+                opcode_table[code1][ARCH_370]=newfunc;
                 s370_opcode_table[code1]=newfunc;
                 break;
 #endif
 #if defined(_390)
             case ARCH_390:
+                oldfun=opcode_table[code1][ARCH_390];
+                opcode_table[code1][ARCH_390]=newfunc;
                 s390_opcode_table[code1]=newfunc;
                 break;
 #endif
 #if defined(_900)
             case ARCH_900:
+                oldfun=opcode_table[code1][ARCH_900];
+                opcode_table[code1][ARCH_900]=newfunc;
                 z900_opcode_table[code1]=newfunc;
                 break;
 #endif
