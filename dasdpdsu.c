@@ -60,11 +60,11 @@ char           *pgmpath;                /* prog path in host format  */
 char            msgbuf[512];            /* message build work area   */
 int             rc;                     /* Return code               */
 int             i=0;                    /* Arument index             */
-int             len;                    /* Record length             */
-int             cyl;                    /* Cylinder number           */
-int             head;                   /* Head number               */
-int             rec;                    /* Record number             */
-int             trk;                    /* Relative track number     */
+U16             len;                    /* Record length             */
+U32             cyl;                    /* Cylinder number           */
+U8              head;                   /* Head number               */
+U8              rec;                    /* Record number             */
+u_int           trk;                    /* Relative track number     */
 char           *fname;                  /* -> CKD image file name    */
 char           *sfname=NULL;            /* -> CKD shadow file name   */
 char            dsnama[45];             /* Dataset name (ASCIIZ)     */
@@ -250,11 +250,11 @@ process_member (CIFBLK *cif, int noext, DSXTENT extent[],
                 char *memname, BYTE *ttr)
 {
 int             rc;                     /* Return code               */
-int             len;                    /* Record length             */
-int             trk;                    /* Relative track number     */
-int             cyl;                    /* Cylinder number           */
-int             head;                   /* Head number               */
-int             rec;                    /* Record number             */
+U16             len;                    /* Record length             */
+u_int           trk;                    /* Relative track number     */
+U32             cyl;                    /* Cylinder number           */
+U8              head;                   /* Head number               */
+U8              rec;                    /* Record number             */
 BYTE           *buf;                    /* -> Data block             */
 FILE           *ofp;                    /* Output file pointer       */
 char            ofname[256];            /* Output file name          */
@@ -331,7 +331,7 @@ char            pathname[MAX_PATH];     /* ofname in host format     */
 
             if (ferror(ofp))
             {
-                fprintf (stderr, MSG( HHC02468, "E", 
+                fprintf (stderr, MSG( HHC02468, "E",
                                       ofname, "fwrite", strerror(errno) ) );
                 return -1;
             }

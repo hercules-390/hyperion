@@ -336,14 +336,14 @@ struct DATABLK {                        /* IEBCOPY unload data rec   */
 struct CIFBLK {                         /* CKD image file descriptor */
         char   *fname;                  /* -> CKD image file name    */
         int     fd;                     /* CKD image file descriptor */
-        int     trksz;                  /* CKD image track size      */
+        u_int   trksz;                  /* CKD image track size      */
         BYTE   *trkbuf;                 /* -> Track buffer           */
-        int     curcyl;                 /* Cylinder number of track
+        u_int   curcyl;                 /* Cylinder number of track
                                            currently in track buffer */
-        int     curhead;                /* Head number of track
+        u_int   curhead;                /* Head number of track
                                            currently in track buffer */
         int     trkmodif;               /* 1=Track has been modified */
-        int     heads;                  /* Tracks per cylinder       */
+        u_int   heads;                  /* Tracks per cylinder       */
         DEVBLK  devblk;                 /* Device Block              */
 };
 
@@ -362,14 +362,14 @@ DUT_DLL_IMPORT void string_to_lower (char *source);
 DUT_DLL_IMPORT void convert_to_ebcdic (BYTE *dest, int len, char *source);
 DUT_DLL_IMPORT int  make_asciiz (char *dest, int destlen, BYTE *src, int srclen);
 DUT_DLL_IMPORT void data_dump (void *addr, int len);
-DUT_DLL_IMPORT int  read_track (CIFBLK *cif, int cyl, int head);
+DUT_DLL_IMPORT int  read_track (CIFBLK *cif, U32 cyl, U8 head);
 int  rewrite_track (CIFBLK *cif);
-DUT_DLL_IMPORT int  read_block (CIFBLK *cif, int cyl, int head, int rec,
-        BYTE **keyptr, int *keylen, BYTE **dataptr, int *datalen);
-DUT_DLL_IMPORT int  search_key_equal (CIFBLK *cif, BYTE *key, int keylen, int noext,
-        DSXTENT extent[], int *cyl, int *head, int *rec);
-DUT_DLL_IMPORT int  convert_tt (int tt, int noext, DSXTENT extent[], int heads,
-        int *cyl, int *head);
+DUT_DLL_IMPORT int  read_block (CIFBLK *cif, U32 cyl, U8 head, U8 rec,
+        BYTE **keyptr, U8 *keylen, BYTE **dataptr, U16 *datalen);
+DUT_DLL_IMPORT int  search_key_equal (CIFBLK *cif, BYTE *key, U8 keylen, u_int noext,
+        DSXTENT extent[], U32 *cyl, U8 *head, U8 *rec);
+DUT_DLL_IMPORT int  convert_tt (u_int tt, u_int noext, DSXTENT extent[], U8 heads,
+        U32 *cyl, U8 *head);
 DUT_DLL_IMPORT CIFBLK* open_ckd_image (char *fname, char *sfname, int omode,
         int dasdcopy);
 DUT_DLL_IMPORT CIFBLK* open_fba_image (char *fname, char *sfname, int omode,

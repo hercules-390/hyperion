@@ -97,7 +97,7 @@ int main(int argc, char **argv)
     display_version (stderr, msgbuf+10, FALSE);
 
 
-    if (argc < 2) 
+    if (argc < 2)
     {
         fprintf( stderr, MSG( HHC02405, "I", pgm ) );
         exit(2);
@@ -149,17 +149,17 @@ int end_of_track(BYTE *p)
 
 int do_cat_cards(BYTE *buf, int len, unsigned long optflags)
 {
-    if (len % 80 != 0) 
+    if (len % 80 != 0)
     {
         fprintf(stderr, MSG(HHC02404, "E", len));
         return -1;
     }
 
-    while (len) 
+    while (len)
     {
      char card[81];
         make_asciiz(card, sizeof(card), buf, (optflags & OPT_SEQNO) ? 80 : 72);
-        if (optflags & OPT_PDS_WILDCARD) 
+        if (optflags & OPT_PDS_WILDCARD)
         {
             putchar('|');
             putchar(' ');
@@ -175,7 +175,12 @@ int do_cat_cards(BYTE *buf, int len, unsigned long optflags)
 int process_member(CIFBLK *cif, int noext, DSXTENT extent[],
                     BYTE *ttr, unsigned long optflags)
 {
- int rc, trk, len, cyl, head, rec;
+ int   rc;
+ u_int trk;
+ U16   len;
+ U32   cyl;
+ U8    head;
+ U8    rec;
  BYTE *buf;
 
     set_codepage(NULL);
@@ -183,7 +188,7 @@ int process_member(CIFBLK *cif, int noext, DSXTENT extent[],
     trk = (ttr[0] << 8) | ttr[1];
     rec = ttr[2];
 
-    while (1) 
+    while (1)
     {
         rc = convert_tt(trk, noext, extent, cif->heads, &cyl, &head);
         if (rc < 0)
@@ -193,7 +198,7 @@ int process_member(CIFBLK *cif, int noext, DSXTENT extent[],
         if (rc < 0)
             return -1;
 
-        if (rc > 0) 
+        if (rc > 0)
         {
             trk++;
             rec = 1;
@@ -205,14 +210,14 @@ int process_member(CIFBLK *cif, int noext, DSXTENT extent[],
 
         if (optflags & OPT_CARDS)
             do_cat_cards(buf, len, optflags);
-        else 
-            if (optflags & OPT_ASCIIFY) 
+        else
+            if (optflags & OPT_ASCIIFY)
             {
              BYTE *p;
                 for (p = buf; len--; p++)
                     putchar(guest_to_host(*p));
-            } 
-            else 
+            }
+            else
             {
 #if O_BINARY != 0
                 setmode(fileno(stdout),O_BINARY);
@@ -234,7 +239,7 @@ int process_dirblk(CIFBLK *cif, int noext, DSXTENT extent[], BYTE *dirblk,
 
  /* Load number of bytes in directory block */
     dirrem = (dirblk[0] << 8) | dirblk[1];
-    if (dirrem < 2 || dirrem > 256) 
+    if (dirrem < 2 || dirrem > 256)
     {
         fprintf(stderr, MSG(HHC02400, "E"));
         return -1;
@@ -242,7 +247,7 @@ int process_dirblk(CIFBLK *cif, int noext, DSXTENT extent[], BYTE *dirblk,
 
     if (!strcmp(pdsmember, "*"))
         optflags |= OPT_PDS_WILDCARD;
-    else 
+    else
         if (!strcmp(pdsmember, "?"))
             optflags |= OPT_PDS_LISTONLY;
 
@@ -250,7 +255,7 @@ int process_dirblk(CIFBLK *cif, int noext, DSXTENT extent[], BYTE *dirblk,
     dirblk += 2;
     dirrem -= 2;
 
-    while (dirrem > 0) 
+    while (dirrem > 0)
     {
      PDSDIR *dirent = (PDSDIR*)dirblk;
      int k, size;
@@ -260,15 +265,15 @@ int process_dirblk(CIFBLK *cif, int noext, DSXTENT extent[], BYTE *dirblk,
 
         make_asciiz(memname, sizeof(memname), dirent->pds2name, 8);
 
-        if (optflags & OPT_PDS_LISTONLY) 
+        if (optflags & OPT_PDS_LISTONLY)
         {
          char memname_lc[9];
             memcpy(memname_lc, memname, sizeof(memname));
             string_to_lower(memname_lc);
             puts(memname_lc);
         }
-        else 
-            if ((optflags & OPT_PDS_WILDCARD) || !strcmp(pdsmember, memname)) 
+        else
+            if ((optflags & OPT_PDS_WILDCARD) || !strcmp(pdsmember, memname))
             {
                 if (optflags & OPT_PDS_WILDCARD)
                     printf("> Member %s\n", memname);
@@ -291,18 +296,22 @@ int process_dirblk(CIFBLK *cif, int noext, DSXTENT extent[], BYTE *dirblk,
 int do_cat_pdsmember(CIFBLK *cif, DSXTENT *extent, int noext,
                     char *pdsmember, unsigned long optflags)
 {
- int rc, trk, rec;
+ int   rc;
+ u_int trk;
+ U8    rec;
 
  /* Point to the start of the directory */
     trk = 0;
     rec = 1;
 
  /* Read the directory */
-    while (1) 
+    while (1)
     {
      BYTE *blkptr;
      BYTE dirblk[256];
-     int cyl, head, len;
+     U32 cyl;
+     U8  head;
+     U16 len;
 #ifdef EXTERNALGUI
         if (extgui) fprintf(stderr,"CTRK=%d\n",trk);
 #endif /*EXTERNALGUI*/
@@ -314,7 +323,7 @@ int do_cat_pdsmember(CIFBLK *cif, DSXTENT *extent, int noext,
         if (rc < 0)
             return -1;
 
-        if (rc > 0) 
+        if (rc > 0)
         {
             trk++;
             rec = 1;
@@ -366,10 +375,10 @@ int do_cat(CIFBLK *cif, char *file)
     buff[sizeof(buff)-1] = 0;
 
     p = strchr(buff, ':');
-    if (p) 
+    if (p)
     {
         *p++ = 0;
-        for (; *p; p++) 
+        for (; *p; p++)
         {
             if (*p == 'a')
                 optflags |= OPT_ASCIIFY;
@@ -388,7 +397,7 @@ int do_cat(CIFBLK *cif, char *file)
     }
 
     p = strchr(buff, '/');
-    if (p) 
+    if (p)
     {
         *p = 0;
         pdsmember = p + 1;
@@ -405,7 +414,7 @@ int do_cat(CIFBLK *cif, char *file)
 
 #ifdef EXTERNALGUI
  /* Calculate ending relative track */
-    if (extgui) 
+    if (extgui)
     {
         int bcyl;  /* Extent begin cylinder     */
         int btrk;  /* Extent begin head         */
@@ -413,8 +422,8 @@ int do_cat(CIFBLK *cif, char *file)
         int etrk;  /* Extent end head           */
         int trks;  /* total tracks in dataset   */
         int i;     /* loop control              */
-        
-        for (i = 0, trks = 0; i < noext; i++) 
+
+        for (i = 0, trks = 0; i < noext; i++)
         {
             bcyl = (extent[i].xtbcyl[0] << 8) | extent[i].xtbcyl[1];
             btrk = (extent[i].xtbtrk[0] << 8) | extent[i].xtbtrk[1];

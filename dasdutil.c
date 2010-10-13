@@ -197,10 +197,10 @@ int             lastsame = 0;
 /*                                                                   */
 /* Return value is 0 if successful, -1 if error                      */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int read_track (CIFBLK *cif, int cyl, int head)
+DLL_EXPORT int read_track (CIFBLK *cif, U32 cyl, U8 head)
 {
 int             rc;                     /* Return code               */
-int             trk;                    /* Track number              */
+U32             trk;                    /* Track number              */
 DEVBLK         *dev;                    /* -> CKD device block       */
 BYTE            unitstat;               /* Unit status               */
 
@@ -227,7 +227,7 @@ BYTE            unitstat;               /* Unit status               */
     }
 
     if (verbose) /* Issue progress message */
-       fprintf (stdout, MSG(HHC00447, "I", SSID_TO_LCSS(cif->devblk.ssid), cif->devblk.devnum, cif->fname, 
+       fprintf (stdout, MSG(HHC00447, "I", SSID_TO_LCSS(cif->devblk.ssid), cif->devblk.devnum, cif->fname,
                             cyl, head));
 
     trk = (cyl * cif->heads) + head;
@@ -262,14 +262,14 @@ BYTE            unitstat;               /* Unit status               */
 /*                                                                   */
 /* Return value is 0 if successful, +1 if end of track, -1 if error  */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int read_block (CIFBLK *cif, int cyl, int head, int rec, BYTE **keyptr,
-                int *keylen, BYTE **dataptr, int *datalen)
+DLL_EXPORT int read_block (CIFBLK *cif, U32 cyl, U8 head, U8 rec, BYTE **keyptr,
+                U8 *keylen, BYTE **dataptr, U16 *datalen)
 {
 int             rc;                     /* Return code               */
 BYTE           *ptr;                    /* -> byte in track buffer   */
 CKDDASD_RECHDR *rechdr;                 /* -> Record header          */
-int             kl;                     /* Key length                */
-int             dl;                     /* Data length               */
+U8              kl;                     /* Key length                */
+U16             dl;                     /* Data length               */
 
     /* Read the required track into the track buffer if necessary */
     rc = read_track (cif, cyl, head);
@@ -331,19 +331,19 @@ int             dl;                     /* Data length               */
 /*                                                                   */
 /* Return value is 0 if successful, +1 if key not found, -1 if error */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int search_key_equal (CIFBLK *cif, BYTE *key, int keylen, int noext,
-                    DSXTENT extent[], int *cyl, int *head, int *rec)
+DLL_EXPORT int search_key_equal (CIFBLK *cif, BYTE *key, U8 keylen, u_int noext,
+                    DSXTENT extent[], U32 *cyl, U8 *head, U8 *rec)
 {
 int             rc;                     /* Return code               */
-int             ccyl;                   /* Cylinder number           */
-int             chead;                  /* Head number               */
-int             cext;                   /* Extent sequence number    */
-int             ecyl;                   /* Extent end cylinder       */
-int             ehead;                  /* Extent end head           */
+U32             ccyl;                   /* Cylinder number           */
+U8              chead;                  /* Head number               */
+u_int           cext;                   /* Extent sequence number    */
+U32             ecyl;                   /* Extent end cylinder       */
+U32             ehead;                  /* Extent end head           */
 BYTE           *ptr;                    /* -> byte in track buffer   */
 CKDDASD_RECHDR *rechdr;                 /* -> Record header          */
-int             kl;                     /* Key length                */
-int             dl;                     /* Data length               */
+U8              kl;                     /* Key length                */
+U16             dl;                     /* Data length               */
 
     /* Start at first track of first extent */
     cext = 0;
@@ -449,18 +449,18 @@ int             dl;                     /* Data length               */
 /*                                                                   */
 /* Return value is 0 if successful, or -1 if error                   */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int convert_tt (int tt, int noext, DSXTENT extent[], int heads,
-                int *cyl, int *head)
+DLL_EXPORT int convert_tt (u_int tt, u_int noext, DSXTENT extent[], U8 heads,
+                U32 *cyl, U8 *head)
 {
-int             i;                      /* Extent sequence number    */
-int             trk;                    /* Relative track number     */
-int             bcyl;                   /* Extent begin cylinder     */
-int             btrk;                   /* Extent begin head         */
-int             ecyl;                   /* Extent end cylinder       */
-int             etrk;                   /* Extent end head           */
-int             start;                  /* Extent begin track        */
-int             end;                    /* Extent end track          */
-int             extsize;                /* Extent size in tracks     */
+u_int           i;                      /* Extent sequence number    */
+u_int           trk;                    /* Relative track number     */
+u_int           bcyl;                   /* Extent begin cylinder     */
+u_int           btrk;                   /* Extent begin head         */
+u_int           ecyl;                   /* Extent end cylinder       */
+u_int           etrk;                   /* Extent end head           */
+u_int           start;                  /* Extent begin track        */
+u_int           end;                    /* Extent end track          */
+u_int           extsize;                /* Extent size in tracks     */
 
     for (i = 0, trk = tt; i < noext; i++)
     {
@@ -508,7 +508,7 @@ DLL_EXPORT CIFBLK* open_ckd_image (char *fname, char *sfname, int omode,
 {
 int             fd;                     /* File descriptor           */
 int             rc;                     /* Return code               */
-int             len;                    /* Record length             */
+int             iLen;                   /* Record length             */
 CKDDASD_DEVHDR  devhdr;                 /* CKD device header         */
 CIFBLK         *cif;                    /* CKD image file descriptor */
 DEVBLK         *dev;                    /* CKD device block          */
@@ -594,12 +594,13 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         else if (fd < 0) strlcpy( sfxname, fname, sizeof(sfxname) );
     }
 
-    /* If not a possible remote devic, check the dasd header
+    /* If not a possible remote device, check the dasd header
        and set the device type */
     if (fd >= 0)
     {
-        len = read (fd, &devhdr, CKDDASD_DEVHDR_SIZE);
-        if (len < 0)
+       
+        iLen = read(fd, &devhdr, CKDDASD_DEVHDR_SIZE);
+        if (iLen < 0)
         {
             fprintf (stderr, MSG(HHC00404, "E", SSID_TO_LCSS(cif->devblk.ssid), cif->devblk.devnum, cif->fname,
                      "read()", strerror(errno)));
@@ -608,7 +609,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             return NULL;
         }
         close (fd);
-        if (len < (int)CKDDASD_DEVHDR_SIZE
+
+        if (iLen < CKDDASD_DEVHDR_SIZE
          || (memcmp(devhdr.devid, "CKD_P370", 8)
           && memcmp(devhdr.devid, "CKD_C370", 8)))
         {
@@ -694,7 +696,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 DLL_EXPORT int close_ckd_image (CIFBLK *cif)
 {
 int             rc;                     /* Return code               */
-int             trk;                    /* Track number              */
+U32             trk;                    /* Track number              */
 DEVBLK         *dev;                    /* -> CKD device block       */
 BYTE            unitstat;               /* Unit status               */
 
@@ -838,10 +840,11 @@ DLL_EXPORT int build_extent_array (CIFBLK *cif, char *dsnama, DSXTENT extent[],
                         int *noext)
 {
 int             rc;                     /* Return code               */
-int             len;                    /* Record length             */
-int             cyl;                    /* Cylinder number           */
-int             head;                   /* Head number               */
-int             rec;                    /* Record number             */
+U16             len;                    /* Record length             */
+U8              keylen;                 /* Key length                */
+U32             cyl;                    /* Cylinder number           */
+U8              head;                   /* Head number               */
+U8              rec;                    /* Record number             */
 BYTE           *vol1data;               /* -> Volume label           */
 FORMAT1_DSCB   *f1dscb;                 /* -> Format 1 DSCB          */
 FORMAT3_DSCB   *f3dscb;                 /* -> Format 3 DSCB          */
@@ -875,7 +878,7 @@ char            volser[7];              /* Volume serial (ASCIIZ)    */
 
     /* Read the format 4 DSCB */
     rc = read_block (cif, cyl, head, rec,
-                    (void *)&f4dscb, &len, NULL, NULL);
+                    (void *)&f4dscb, &keylen, NULL, NULL);
     if (rc < 0) return -1;
     if (rc > 0)
     {
@@ -911,7 +914,7 @@ char            volser[7];              /* Volume serial (ASCIIZ)    */
 
     /* Read the format 1 DSCB */
     rc = read_block (cif, cyl, head, rec,
-                    (void *)&f1dscb, &len, NULL, NULL);
+                    (void *)&f1dscb, &keylen, NULL, NULL);
     if (rc < 0) return -1;
     if (rc > 0)
     {
@@ -933,7 +936,7 @@ char            volser[7];              /* Volume serial (ASCIIZ)    */
         head = (f1dscb->ds1ptrds[2] << 8) | f1dscb->ds1ptrds[3];
         rec = f1dscb->ds1ptrds[4];
         rc = read_block (cif, cyl, head, rec,
-                        (void *)&f3dscb, &len, NULL, NULL);
+                        (void *)&f3dscb, &keylen, NULL, NULL);
         if (rc < 0) return -1;
         if (rc > 0)
         {
@@ -998,10 +1001,10 @@ DLL_EXPORT int capacity_calc (CIFBLK *cif, int used, int keylen, int datalen,
                 int *maxdlen, int *numrecs, int *numhead, int *numcyls)
 {
 CKDDEV         *ckd;                    /* -> CKD device table entry */
-int             heads;                  /* Number of tracks/cylinder */
-int             cyls;                   /* Number of cyls/volume     */
-int             trklen;                 /* Physical track length     */
-int             maxlen;                 /* Maximum data length       */
+U8              heads;                  /* Number of tracks/cylinder */
+U32             cyls;                   /* Number of cyls/volume     */
+U16             trklen;                 /* Physical track length     */
+U16             maxlen;                 /* Maximum data length       */
 int             devi, devl, devk;       /* Overhead fields for VTOC  */
 BYTE            devfg;                  /* Flag field for VTOC       */
 int             devtl;                  /* Tolerance field for VTOC  */
@@ -1137,19 +1140,19 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> Track header           */
 CKDDASD_RECHDR *rechdr;                 /* -> Record header          */
 U32             cyl;                    /* Cylinder number           */
 U32             head;                   /* Head number               */
-int             trk = 0;                /* Track number              */
-int             trks;                   /* Total number tracks       */
+U32             trk = 0;                /* Track number              */
+U32             trks;                   /* Total number tracks       */
 BYTE            r;                      /* Record number             */
 BYTE           *pos;                    /* -> Next position in buffer*/
 U32             cpos = 0;               /* Offset into cckd file     */
-int             len = 0;                /* Length used in track      */
-int             keylen = 4;             /* Length of keys            */
-int             ipl1len = 24;           /* Length of IPL1 data       */
-int             ipl2len = 144;          /* Length of IPL2 data       */
-int             vol1len = 80;           /* Length of VOL1 data       */
-int             rec0len = 8;            /* Length of R0 data         */
-int             fileseq;                /* CKD header sequence number*/
-int             highcyl;                /* CKD header high cyl number*/
+u_int           len = 0;                /* Length used in track      */
+u_int           keylen = 4;             /* Length of keys            */
+u_int           ipl1len = 24;           /* Length of IPL1 data       */
+u_int           ipl2len = 144;          /* Length of IPL2 data       */
+u_int           vol1len = 80;           /* Length of VOL1 data       */
+u_int           rec0len = 8;            /* Length of R0 data         */
+u_int           fileseq;                /* CKD header sequence number*/
+u_int           highcyl;                /* CKD header high cyl number*/
 int             x=O_EXCL;               /* Open option               */
 CKDDEV         *ckdtab;                 /* -> CKD table entry        */
 char            pathname[MAX_PATH];     /* file path in host format  */
@@ -1568,7 +1571,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
                 /* Write the track to the file */
                 rc = write (fd, buf, len);
-                if (rc != len)
+                if (rc != (int)len)
                 {
                     fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname,
                                  "write()", errno ? strerror(errno) : "incomplete"));
@@ -1678,7 +1681,7 @@ create_ckd (char *fname, U16 devtype, U32 heads, U32 maxdlen,
 int             i;                      /* Array subscript           */
 int             rc;                     /* Return code               */
 char            *s;                     /* String pointer            */
-int             fileseq;                /* File sequence number      */
+u_int           fileseq;                /* File sequence number      */
 char            sfname[FILENAME_MAX];   /* Suffixed name of this file*/
 char            *suffix;                /* -> Suffix character       */
 U32             endcyl;                 /* Last cylinder of this file*/
@@ -1689,7 +1692,7 @@ U32             mincyls;                /* Minimum cylinder count    */
 U32             maxcyls;                /* Maximum cylinder count    */
 U32             maxcpif;                /* Maximum number of cylinders
                                            in each CKD image file    */
-int             rec0len = 8;            /* Length of R0 data         */
+u_int           rec0len = 8;            /* Length of R0 data         */
 U32             trksize;                /* DASD image track length   */
 
     /* Compute the DASD image track length */
@@ -1735,7 +1738,7 @@ U32             trksize;                /* DASD image track length   */
             char   *pszopt;
 
             fprintf( stderr, MSG(HHC00466, "I", maxcyls, "cylinders", CKD_MAXFILES) );
-                        
+
             if ( strlen(pszcomp) > 0 )
                 pszopt = "related options";
             else
@@ -1807,7 +1810,7 @@ U32             trksize;                /* DASD image track length   */
     {
         /* Insert the file sequence number in the file name */
         if (suffix)
-        {   
+        {
             if ( fileseq <= 9 )
                 *suffix = '0' + fileseq;
             else

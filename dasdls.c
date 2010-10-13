@@ -114,11 +114,11 @@ int end_of_track(BYTE *p)
 
 int list_contents(CIFBLK *cif, char *volser, DSXTENT *extent)
 {
-    int cext = 0;
-    int ccyl = (extent[cext].xtbcyl[0] << 8) | extent[cext].xtbcyl[1];
-    int chead = (extent[cext].xtbtrk[0] << 8) | extent[cext].xtbtrk[1];
-    int ecyl = (extent[cext].xtecyl[0] << 8) | extent[cext].xtecyl[1];
-    int ehead = (extent[cext].xtetrk[0] << 8) | extent[cext].xtetrk[1];
+    u_int cext = 0;
+    u_int ccyl = (extent[cext].xtbcyl[0] << 8) | extent[cext].xtbcyl[1];
+    u_int chead = (extent[cext].xtbtrk[0] << 8) | extent[cext].xtbtrk[1];
+    u_int ecyl = (extent[cext].xtecyl[0] << 8) | extent[cext].xtecyl[1];
+    u_int ehead = (extent[cext].xtetrk[0] << 8) | extent[cext].xtetrk[1];
 
 #ifdef EXTERNALGUI
     if (extgui) fprintf(stderr,"ETRK=%d\n",((ecyl*(cif->heads))+ehead));
@@ -166,12 +166,16 @@ int list_contents(CIFBLK *cif, char *volser, DSXTENT *extent)
 
 int do_ls_cif(CIFBLK *cif)
 {
-    int rc, cyl, head, rec, len;
+    int rc;
+    U32 cyl;
+    U8  head, rec;
+    U16 rlen;
+    U8  klen;
     unsigned char *vol1data;
     FORMAT4_DSCB *f4dscb;
     char volser[7];
 
-    rc = read_block(cif, 0, 0, 3, 0, 0, &vol1data, &len);
+    rc = read_block(cif, 0, 0, 3, 0, 0, &vol1data, &rlen);
     if (rc < 0)
         return -1;
     if (rc > 0) 
@@ -185,7 +189,7 @@ int do_ls_cif(CIFBLK *cif)
     head = (vol1data[13] << 8) | vol1data[14];
     rec = vol1data[15];
 
-    rc = read_block(cif, cyl, head, rec, (void *)&f4dscb, &len, 0, 0);
+    rc = read_block(cif, cyl, head, rec, (void *)&f4dscb, &klen, 0, 0);
     if (rc < 0)
         return -1;
     if (rc > 0) 

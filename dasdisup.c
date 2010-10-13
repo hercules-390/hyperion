@@ -107,11 +107,11 @@ char           *pgmpath;                /* prog path in host format  */
 char            msgbuf[512];            /* message build work area   */
 int             rc;                     /* Return code               */
 int             i;                      /* Array subscript           */
-int             len;                    /* Record length             */
-int             cyl;                    /* Cylinder number           */
-int             head;                   /* Head number               */
-int             rec;                    /* Record number             */
-int             trk;                    /* Relative track number     */
+U16             len;                    /* Record length             */
+U32             cyl;                    /* Cylinder number           */
+U8              head;                   /* Head number               */
+U8              rec;                    /* Record number             */
+u_int           trk;                    /* Relative track number     */
 char           *fname;                  /* -> CKD image file name    */
 char           *sfname;                 /* -> CKD shadow file name   */
 int             noext;                  /* Number of extents         */
@@ -155,7 +155,7 @@ char           *strtok_str;
     INITIALIZE_UTILITY( pgm );
 
     /* Display the program identification message */
-    
+
     MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "IEHIOSUP" ) );
     display_version( stderr, msgbuf+10, FALSE );
 
@@ -551,11 +551,11 @@ resolve_xctltab (CIFBLK *cif, int noext, DSXTENT extent[],
 {
 int             rc;                     /* Return code               */
 int             i;                      /* Array subscript           */
-int             len;                    /* Record length             */
-int             cyl;                    /* Cylinder number           */
-int             head;                   /* Head number               */
-int             rec;                    /* Record number             */
-int             trk;                    /* Relative track number     */
+U16             len;                    /* Record length             */
+U32             cyl;                    /* Cylinder number           */
+U8              head;                   /* Head number               */
+U8              rec;                    /* Record number             */
+u_int           trk;                    /* Relative track number     */
 int             xctloff;                /* Offset to XCTL table      */
 int             warn;                   /* 1=Flag TTRL difference    */
 BYTE           *blkptr;                 /* -> Text record data       */
@@ -695,7 +695,7 @@ char            refnama[9];             /* Referred name (ASCIIZ)    */
         {
             char buf[80];
             MSGBUF( buf, " member '%s' not found", refnama);
-            
+
             /* Display XCTL table entry */
             fprintf (stdout, MSG(HHC02462, "I", memnama, refnama,
                 blkptr[xctloff+2], blkptr[xctloff+3],
@@ -738,7 +738,7 @@ char            refnama[9];             /* Referred name (ASCIIZ)    */
           fprintf (stdout, MSG(HHC02462, "I", memnama, refnama,
               blkptr[xctloff+2], blkptr[xctloff+3],
               blkptr[xctloff+4], blkptr[xctloff+5], buf));
-        }                
+        }
 
         /* Flag the track as modified to force rewrite */
         cif->trkmodif = 1;
