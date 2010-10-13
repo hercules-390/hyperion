@@ -5806,6 +5806,9 @@ int cpu_cmd(int argc, char *argv[], char *cmdline)
     int     rc      =  0;
     int     cpu     = -1;
     int     currcpu = sysblk.pcpu;
+    char    cmd[32768];
+
+    bzero(cmd,sizeof(cmd));
 
     if (argc < 2)
     {
@@ -5823,27 +5826,28 @@ int cpu_cmd(int argc, char *argv[], char *cmdline)
     sysblk.dummyregs.cpuad = cpu;
     sysblk.pcpu = cpu;
 
+    strlcpy(cmd,cmdline,sizeof(cmd));
+
     if ( argc > 2 )
     {
          u_int i = 0;
          u_int j = 0;
-         u_int n = strlen(cmdline);
+         u_int n = (u_int)strlen(cmd);
 
          /* Skip leading blanks, if any */
-         for ( ; i < n && cmdline[i] == ' '; i++ );
+         for ( ; i < n && cmd[i] == ' '; i++ );
 
          /* Skip two words */
          for ( ; j < 2; j++ )
          {
-           for ( ; i < n && cmdline[i] != ' '; i++ );
-           for ( ; i < n && cmdline[i] == ' '; i++ );
+           for ( ; i < n && cmd[i] != ' '; i++ );
+           for ( ; i < n && cmd[i] == ' '; i++ );
          }
 
          /* Issue command to temporary target cpu */
          if (i < n)
          {
-             cmdline[--i] = '-';
-             rc = panel_command(cmdline+i);
+             rc = ProcessPanelCommand(cmd+i);
              sysblk.pcpu = currcpu;
              sysblk.dummyregs.cpuad = currcpu;
          }
