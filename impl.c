@@ -694,6 +694,7 @@ int     dll_count;                      /* index into array          */
 #endif
 
 #if       defined( OPTION_CONFIG_SYMBOLS )
+// ZZ FIXME These should move to panel.c PF keys are a panel feature
     /* Set Function Key Defaults */
     {
         set_symbol("PF01", "SUBST IMMED herc help &0");
@@ -962,6 +963,7 @@ int     dll_count;                      /* index into array          */
     /* File was not lock, therefore we can proceed */
 #endif // OPTION_LOCK_CONFIG_FILE
 
+// ZZ FIXME all logo stuff should move to console.c, the logo is a console only feature
     /* Read the logofile */
     {
         char   *p;            /* pointer logo filename */
@@ -1003,6 +1005,7 @@ int     dll_count;                      /* index into array          */
     sysblk.todstart = hw_clock() << 8;
 
 #ifdef OPTION_MIPS_COUNTING
+// ZZ FIXME This should move to the timer thread which initialises and processes all MIPS counting
     /* Initialize "maxrates" command reporting intervals */
 
     if ( maxrates_rpt_intvl == 1440 )
