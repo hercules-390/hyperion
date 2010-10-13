@@ -263,12 +263,41 @@ int     msgcount = 22;
         // that the logfile buffer actually wraps around and over-
         // lays the message data we were going to display (which
         // could happen if there's a sudden flood of messages)
+        char   *wrk_bufptr      = malloc( num_bytes );
+        char   *sav_wrk         = NULL;
 
-        int   sav_bytes  =         num_bytes;
-        char *wrk_bufptr = malloc( num_bytes );
+        if ( wrk_bufptr )
+        {
+#if defined( OPTION_MSGCLR )
+            char* l = logbuf_ptr;
+            char* w = wrk_bufptr;
+            int   n = 0;
+            int   i = 0;
+            
+            sav_wrk = wrk_bufptr;
 
-        if ( wrk_bufptr ) strncpy( wrk_bufptr,  logbuf_ptr, num_bytes );
+            bzero(wrk_bufptr,num_bytes);
+
+            while ( n < num_bytes )
+            {
+                
+                if ( ( n + 5 ) < num_bytes && strncasecmp( &l[n], "<pnl", 4 ) == 0 )
+                {
+                    for ( n+=4; n < num_bytes; n++ )
+                        if ( l[n] == '>' ) break;
+                    n++;
+                }
+                
+                w[i++] = l[n++];
+            }
+            num_bytes = i;            
+#else
+            sav_wrk = wrk_bufptr;
+            strncpy( wrk_bufptr,  logbuf_ptr, num_bytes );
+#endif
+        }
         else                       wrk_bufptr = logbuf_ptr;
+
 
         // We need to convert certain characters that might
         // possibly be erroneously interpretted as HTML code
@@ -300,8 +329,8 @@ int     msgcount = 22;
 
         // (free our work buffer if it's really ours)
 
-        if ( ( wrk_bufptr -= sav_bytes ) != logbuf_ptr )
-            free( wrk_bufptr );
+        if ( sav_wrk )
+            free( sav_wrk );
     }
 
     hprintf(webblk->sock, "</PRE>\n");
