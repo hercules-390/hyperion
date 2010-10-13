@@ -5802,9 +5802,10 @@ int iplc_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int cpu_cmd(int argc, char *argv[], char *cmdline)
 {
-    BYTE c;
-    int  cpu;
-    int  currcpu = sysblk.pcpu;
+    BYTE    c;
+    int     rc      =  0;
+    int     cpu     = -1;
+    int     currcpu = sysblk.pcpu;
 
     if (argc < 2)
     {
@@ -5842,13 +5843,13 @@ int cpu_cmd(int argc, char *argv[], char *cmdline)
          if (i < n)
          {
              cmdline[--i] = '-';
-             panel_command(cmdline+i);
+             rc = panel_command(cmdline+i);
              sysblk.pcpu = currcpu;
              sysblk.dummyregs.cpuad = currcpu;
          }
     }
 
-    return 0;
+    return rc;
 }
 
 
@@ -6368,6 +6369,11 @@ BYTE    c;                              /* Character work area       */
         }
         return 0;
     }
+    else if ( argc > 2 )
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        return -1;
+    }
 
     if (sscanf(argv[1], "%x%c", &rupt_num, &c) != 1)
     {
@@ -6502,8 +6508,12 @@ int ostailor_cmd(int argc, char *argv[], char *cmdline)
 int k_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
+    
+    if ( argc > 1 )
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        return -1;
+    }
 
     cckd_print_itrace ();
 
@@ -6527,6 +6537,11 @@ char buf[1024];
     if (argc < 2)
     {
         missing_devnum();
+        return -1;
+    }
+    else if ( argc > 2 )
+    {
+        WRMSG( HHC02299, "E", argv[0] );
         return -1;
     }
 
@@ -6560,8 +6575,12 @@ int syncio_cmd(int argc, char *argv[], char *cmdline)
     int       found = 0;
 
     UNREFERENCED(cmdline);
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
+
+    if ( argc > 1 )
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        return -1;
+    }
 
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
@@ -6578,7 +6597,10 @@ int syncio_cmd(int argc, char *argv[], char *cmdline)
     }
 
     if (!found)
+    {
         WRMSG(HHC02216, "I");
+        return 1;
+    }
     else
         WRMSG(HHC02240, "I",
                (long long)syncios, (long long)asyncios,

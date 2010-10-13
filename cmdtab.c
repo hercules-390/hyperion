@@ -57,23 +57,26 @@ typedef int CMDFUNC(int argc, char *argv[], char *cmdline);
 /* Layout of command routing table                        */
 typedef struct _CMDTAB
 {
-    const char  *statement;        /* statement           */
-    const size_t statminlen;       /* min abbreviation    */
-          BYTE    type;            /* statement type      */
-#define DISABLED   0x00            /* disabled statement  */
-#define CONFIG     0x01            /* config statement    */
-#define PANEL      0x02            /* command statement   */
-          BYTE    group;           /* grouping commands   */
-#define SYSOPER    0x01          /* System Operator     */
-#define SYSMAINT   0x02          /* System Maintainer   */
-#define SYSPROG    0x04          /* Systems Programmer  */
-#define SYSDEVEL   0x20          /* System Developer    */
-#define SYSDEBUG   0x40          /* Enable Debugging    */
-#define SYSNONE    0x80          /* Enable for any lvls */
+    const char  *statement;         /* statement           */
+    const size_t statminlen;        /* min abbreviation    */
+          BYTE    type;             /* statement type      */
+#define DISABLED   0x00             /* disabled statement  */
+#define CONFIG     0x01             /* config statement    */
+#define PANEL      0x02             /* command statement   */
+#define ASYNC      0x04             /* command can be "batched" */
+#define THREADSAFE 0x08             /* command is threadsafe, ie. LOCKS not needed */  
+
+          BYTE    group;            /* grouping commands   */
+#define SYSOPER    0x01             /* System Operator     */
+#define SYSMAINT   0x02             /* System Maintainer   */
+#define SYSPROG    0x04             /* Systems Programmer  */
+#define SYSDEVEL   0x20             /* System Developer    */
+#define SYSDEBUG   0x40             /* Enable Debugging    */
+#define SYSNONE    0x80             /* Enable for any lvls */
 #define SYSCMDALL  ( SYSOPER + SYSMAINT + SYSPROG + SYSDEVEL + SYSDEBUG ) /* Valid in all states */ 
-    CMDFUNC    *function;          /* handler function    */
-    const char *shortdesc;         /* description         */
-    const char *longdesc;          /* detaled description */
+    CMDFUNC    *function;           /* handler function    */
+    const char *shortdesc;          /* description         */
+    const char *longdesc;           /* detaled description */
 } CMDTAB;
 
 #define COMMAND(_stmt, _type, _group, _func, _sdesc, _ldesc) \
@@ -195,7 +198,10 @@ ProcessConfigExit:;
     CommandLockCounter--;
 
     if ( CommandLockCounter <= 0 )
+    {
+        CommandLockCounter = 0;
         release_lock(&ProcessConsoleCommandLock);
+    }
     
     if (MLVL(DEBUG))
     {
@@ -351,7 +357,10 @@ ProcessPanelCommandExit:;
     }
     
     if ( CommandLockCounter <= 0 )
+    {   
+        CommandLockCounter = 0;
         release_lock(&ProcessConsoleCommandLock);
+    }
 
     if ( MLVL(DEBUG) )
     {
