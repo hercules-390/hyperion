@@ -366,9 +366,14 @@ IMPL_DLL_IMPORT void regiserLogCallback(LOGCALLBACK);
 IMPL_DLL_IMPORT COMMANDHANDLER getCommandHandler(void);
 
 /* Functions in module timer.c */
-void update_TOD_clock (void);
 void *timer_update_thread (void *argp);
 void *capping_manager_thread(void *argp);
+
+/* Functions in module clock.c */
+void update_TOD_clock (void);
+int configure_epoch(int);
+int configure_yroffset(int);
+int configure_tzoffset(int);
 
 /* Functions in module service.c */
 void scp_command (char *command, int priomsg, int echo);

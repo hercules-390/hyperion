@@ -519,11 +519,6 @@ int     dll_count;                      /* index into array          */
                  | ((U64) 0x000001 << 32)
                  | ((U64)   0x0586 << 16);
 
-    /* set clock related elements */
-    sysblk.sysepoch = 1900;
-    sysblk.yroffset = 0;
-    sysblk.tzoffset = 0;
-
     /* set default Program Interrupt Trace to NONE */
     sysblk.pgminttr = OS_NONE;
 

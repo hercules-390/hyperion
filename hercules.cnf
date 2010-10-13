@@ -33,7 +33,7 @@
   LOADPARM  0120....            # IPL parameter
   OSTAILOR  LINUX               # OS tailoring
   SYSEPOCH  1900                # Base year for initial TOD clock
-# TZOFFSET  0                   # Using UTC (GMT)
+  TZOFFSET  +0200               # Using UTC (GMT)
 
 
 #------------------------------------------------------------------------------

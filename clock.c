@@ -349,6 +349,105 @@ int pending = 0;
 #endif /*defined(_FEATURE_INTERVAL_TIMER)*/
 
 
+static inline S64 lyear_adjust(int epoch)
+{
+int year, leapyear;
+U64 tod = hw_clock();
+
+    if(tod >= TOD_YEAR)
+    {
+        tod -= TOD_YEAR;
+        year = (tod / TOD_4YEARS * 4) + 1;
+        tod %= TOD_4YEARS;
+        if((leapyear = tod / TOD_YEAR) == 4)
+            year--;
+        year += leapyear;
+    }
+    else
+       year = 0;
+
+    if(epoch > 0)
+        return (((year % 4) != 0) && (((year % 4) - (epoch % 4)) <= 0)) ? -TOD_DAY : 0;
+    else
+        return (((year % 4) == 0 && (-epoch % 4) != 0) || ((year % 4) + (-epoch % 4) > 4)) ? TOD_DAY : 0;
+}
+
+
+int default_epoch = 1900;
+int default_yroffset = 0;
+int default_tzoffset = 0;
+
+
+static inline void configure_time()
+{
+int epoch;
+S64 ly1960;
+
+    /* Set up the system TOD clock offset: compute the number of
+     * microseconds offset to 0000 GMT, 1 January 1900 */
+ 
+    if( (epoch = default_epoch) == 1960 )
+        ly1960 = TOD_DAY;
+    else
+        ly1960 = 0;
+
+    epoch -= 1900 + default_yroffset;
+
+    set_tod_epoch(((epoch*365+(epoch/4))*-TOD_DAY)+lyear_adjust(epoch)+ly1960);
+
+    /* Set the timezone offset */
+    adjust_tod_epoch((default_tzoffset/100*3600+(default_tzoffset%100)*60)*16000000LL);
+}
+
+
+/*-------------------------------------------------------------------*/
+/* epoch     1900|1960                                               */
+/*-------------------------------------------------------------------*/
+int configure_epoch(int epoch)
+{
+    if(epoch != 1900 && epoch != 1960)
+        return -1;
+
+    default_epoch = epoch;
+
+    configure_time();
+
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* yroffset  +|-142                                                  */
+/*-------------------------------------------------------------------*/
+int configure_yroffset(int yroffset)
+{
+    if(yroffset < -142 || yroffset > 142)
+        return -1;
+
+    default_yroffset = yroffset;
+
+    configure_time();
+
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* tzoffset  -2359..+2359                                            */
+/*-------------------------------------------------------------------*/
+int configure_tzoffset(int tzoffset)
+{
+    if(tzoffset < -2359 || tzoffset > 2359)
+        return -1;
+
+    default_tzoffset = tzoffset;
+
+    configure_time();
+
+    return 0;
+}
+
+
 /*-------------------------------------------------------------------*/
 /* Update TOD clock                                                  */
 /*                                                                   */

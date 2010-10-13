@@ -2885,8 +2885,8 @@ BYTE    c;
             }
         }
 
-        sysblk.sysepoch = sysepoch;
-        sysblk.yroffset = yroffset;
+        configure_epoch(sysepoch);  
+        configure_yroffset(yroffset);
 
         break;
     }
@@ -2920,7 +2920,7 @@ BYTE    c;
             }
             else
             {
-                sysblk.yroffset = yroffset;
+                configure_yroffset(yroffset);
                 if ( MLVL(VERBOSE) )
                     WRMSG( HHC02204, "I", argv[0], argv[1] );
             }
@@ -2963,7 +2963,7 @@ BYTE c;
             }
             else
             {
-                sysblk.tzoffset = tzoffset;
+                configure_tzoffset(tzoffset);
                 if ( MLVL( VERBOSE ) )
                     WRMSG( HHC02204, "I", argv[0], argv[1] );
             }
