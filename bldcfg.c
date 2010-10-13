@@ -80,20 +80,6 @@ int build_config (char *hercules_cnf)
 {
 int     i;                              /* Array subscript           */
 int     devtmax;                        /* Max number device threads */
-#ifdef OPTION_SELECT_KLUDGE
-int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
-                                           this allows the console to
-                                           get a low fd when the msg
-                                           pipe is opened... prevents
-                                           cygwin from thrashing in
-                                           select(). sigh            */
-#endif
-
-#ifdef OPTION_SELECT_KLUDGE
-    /* Reserve some fd's to be used later for the message pipes */
-    for (i = 0; i < OPTION_SELECT_KLUDGE; i++)
-        dummyfd[i] = dup(fileno(stderr));
-#endif
 
     sysblk.xpndsize = 0;
 
@@ -103,13 +89,13 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
 #else  //!_FEATURE_VECTOR_FACILITY
     sysblk.numvec = 0;
 #endif // _FEATURE_VECTOR_FACILITY
-#if defined(_390)
+
+#if defined(_900)
+    set_archlvl(_ARCH_900_NAME);
+#elif defined(_390)
     set_archlvl(_ARCH_390_NAME);
 #else
     set_archlvl(_ARCH_370_NAME);
-#endif
-#if defined(_900)
-    set_archlvl(_ARCH_900_NAME);
 #endif
     devtmax  = MAX_DEVICE_THREADS;
 
@@ -156,12 +142,6 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
 
     if ((process_config(hercules_cnf)))
         return -1;
-
-#ifdef OPTION_SELECT_KLUDGE
-    /* Release the dummy file descriptors */
-    for (i = 0; i < OPTION_SELECT_KLUDGE; i++)
-        close(dummyfd[i]);
-#endif
 
     return 0;
 } /* end function build_config */
