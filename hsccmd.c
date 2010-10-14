@@ -3276,6 +3276,14 @@ BYTE c;
                 WRMSG( HHC02204, "I", argv[0], argv[1] );
         }
     }
+    else if ( argc == 1)
+    {
+        char msgbuf[16];
+        MSGBUF(msgbuf, "%hu", sysblk.numvec );
+        WRMSG( HHC02203, "I", argv[0], msgbuf );
+        if ( sysblk.numvec == 0 )
+            return 1;
+    }
     else
     {
         WRMSG( HHC01455, "E", argv[0] );
@@ -3298,10 +3306,19 @@ BYTE c;
     UNREFERENCED(cmdline);
 
     /* Ensure only two arguments passed */
-    if ( argc != 2 )
+    if ( argc > 2 )
     {
         WRMSG( HHC01455, "E", argv[0] );
         return -1;
+    }
+
+    if ( argc == 1 )
+    {
+        WRMSG( HHC02203, "I", argv[0], sysblk.cpus );
+        if ( sysblk.cpus == 0 )
+            return 1;
+        else
+            return 0;
     }
 
     /* Parse maximum number of CPUs operand */
@@ -3357,7 +3374,10 @@ char buf[10];
     if ( argc == 1 )
     {
         WRMSG( HHC02203, "I", argv[0], i2a(sysblk.maxcpu) ); 
-        return 0;
+        if ( sysblk.maxcpu == 0 )
+            return 1;
+        else
+            return 0;
     }
 
     /* Parse maximum number of CPUs operand */
