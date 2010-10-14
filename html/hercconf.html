@@ -78,6 +78,7 @@ and how they are used.
     <a href="#TODPRIO">TODPRIO</a>    -20
     <a href="#DEVPRIO">DEVPRIO</a>    8
     <a href="#CPUPRIO">CPUPRIO</a>    15
+    <a href="#SRVPRIO">SRVPRIO</a>    4
 
     <a href="#TIMERINT">TIMERINT</a>   DEFAULT
     <a href="#TODDRAG">TODDRAG</a>    1.0
@@ -1074,6 +1075,18 @@ and how they are used.
     Hercules clients.
     If no SHRDPORT statement is present then the Shared Device server thread
     will not be activated.<br>
+    <p>
+    
+<a name="SRVPRIO"></a>
+<dt><code>SRVPRIO &nbsp; <em>nn</em></code>
+<dd><p>
+    specifies the priority of the server threads.  The default value is 4.
+    See <a href="#thread_priorities">"Thread Priorities"</a>
+    below for more information.
+    <p>
+
+    <i><b>Caution:</b> &nbsp; SRVPRIO should not have a higher dispatching
+    priority than the TOD Clock and timer thread.</i>
     <p>
 
 <a name="SYSEPOCH"></a>
