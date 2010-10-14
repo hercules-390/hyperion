@@ -624,6 +624,7 @@ struct SYSBLK {
         int     todprio;                /* TOD Clock thread priority */
         int     cpuprio;                /* CPU thread priority       */
         int     devprio;                /* Device thread priority    */
+        int     srvprio;                /* Listeners thread priority */
         TID     httptid;                /* HTTP listener thread id   */
 
 #if defined( OPTION_TAPE_AUTOMOUNT )
@@ -786,7 +787,8 @@ struct DEVBLK {                         /* Device configuration block*/
         int     allocated;              /* Device block free/in use  */
 
         /*  device identification                                    */
-
+        void   *cu;                     /* pointer to future control
+                                           unit support for stats,etc*/
         U16     ssid;                   /* Subsystem ID incl. lcssid */
         U16     subchan;                /* Subchannel number         */
         U16     devnum;                 /* Device number             */
@@ -1209,7 +1211,7 @@ struct DEVBLK {                         /* Device configuration block*/
 
         char   *dasdsfn;                /* Shadow file name          */
         char   *dasdsfx;                /* Pointer to suffix char    */
-
+        char    dasdvol[7];             /* dasd volume  ASCII        */
 
         /*  Device dependent fields for fbadasd                      */
 
