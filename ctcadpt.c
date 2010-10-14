@@ -194,7 +194,7 @@ void  CTCX_Query( DEVBLK* pDEVBLK,
 {
     BEGIN_DEVICE_CLASS_QUERY( "CTCA", pDEVBLK, ppszClass, iBufLen, pBuffer );
 
-    snprintf( pBuffer, iBufLen, "%s IO[%" I64_FMT "u]", pDEVBLK->filename, pDEVBLK->excps );
+    snprintf( pBuffer, iBufLen-1, "%s IO[%" I64_FMT "u]", pDEVBLK->filename, pDEVBLK->excps );
 }
 
 // -------------------------------------------------------------------
@@ -659,8 +659,8 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
 
     // for cosmetics, since we are successfully connected or serving,
     // fill in some details for the panel.
-    snprintf( dev->filename, PATH_MAX + 1, "%s:%s", remaddr, remotep );
-
+    snprintf( dev->filename, sizeof(dev->filename), "%s:%s", remaddr, remotep );
+    dev->filename[sizeof(dev->filename)-1] = '\0';
     return 0;
 }
 
@@ -965,7 +965,7 @@ static void*  CTCT_ListenThread( void* argp )
                          (struct sockaddr *)&parm.addr,
                          &servlen );
 
-        snprintf( str, 80, "%s:%d",
+        MSGBUF( str, "%s:%d",
                  inet_ntoa( parm.addr.sin_addr ),
                  ntohs( parm.addr.sin_port ) );
 

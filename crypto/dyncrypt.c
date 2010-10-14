@@ -103,6 +103,7 @@
       snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "."); \
   } \
   snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " |"); \
+  buf[sizeof(buf)-1] = '\0'; \
   WRMSG(HHC90109, "D", s, buf); \
 }
 
@@ -131,6 +132,7 @@
         snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "."); \
     } \
     snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " |"); \
+    buf[sizeof(buf)-1] = '\0'; \
     WRGMSG(HHC90110, "D", buf); \
     buf[0] = 0; \
   } \

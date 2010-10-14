@@ -894,7 +894,7 @@ char                    group[16];      /* Console group             */
     /* Build connection message for client */
 
     if ( cons_hostinfo.num_procs > 1 )
-        snprintf( num_procs, sizeof(num_procs), "MP=%d", cons_hostinfo.num_procs );
+        snprintf( num_procs, sizeof(num_procs)-1, "MP=%d", cons_hostinfo.num_procs );
     else
         strlcpy( num_procs, "UP", sizeof(num_procs) );
 
@@ -911,12 +911,12 @@ char                    group[16];      /* Console group             */
         ,cons_hostinfo.machine
         ,num_procs
     );
-    snprintf (conmsg, sizeof(conmsg),
+    snprintf (conmsg, sizeof(conmsg)-1,
                 "Hercules version %s built on %s %s",
                 VERSION, __DATE__, __TIME__);
 
     {
-        snprintf (devmsg, sizeof(devmsg), "Connected to device %4.4X",
+        snprintf (devmsg, sizeof(devmsg)-1, "Connected to device %4.4X",
                   0);
     }
 
@@ -925,7 +925,7 @@ char                    group[16];      /* Console group             */
     /* Send connection message to client */
     if (class != 'K')
     {
-        len = snprintf (buf, sizeof(buf),
+        len = snprintf (buf, sizeof(buf)-1,
                     "\xF5\x40\x11\x40\x40\x1D\x60%s"
                     "\x11\xC1\x50\x1D\x60%s"
                     "\x11\xC2\x60\x1D\x60%s",
@@ -953,7 +953,7 @@ char                    group[16];      /* Console group             */
     }
     else
     {
-        len = snprintf (buf, sizeof(buf), "%s\r\n%s\r\n%s\r\n",
+        len = snprintf (buf, sizeof(buf)-1, "%s\r\n%s\r\n%s\r\n",
                         conmsg, hostmsg, devmsg);
     }
 
@@ -1392,7 +1392,7 @@ static void *commadpt_thread(void *vca)
 
     init_signaled=0;
 
-    snprintf(threadname, 40, "3705 device(%1d:%04X) thread", ca->dev->ssid, devnum);
+    MSGBUF(threadname, "3705 device(%1d:%04X) thread", ca->dev->ssid, devnum);
     WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), threadname);
 
     for (;;) {
@@ -1608,7 +1608,7 @@ static void commadpt_query_device (DEVBLK *dev, char **class,
                 int buflen, char *buffer)
 {
     *class = "LINE";
-    snprintf(buffer,buflen,"Read count=%d, Write count=%d IO[%" I64_FMT "u]", 
+    snprintf(buffer,buflen-1,"Read count=%d, Write count=%d IO[%" I64_FMT "u]", 
         dev->commadpt->read_ccw_count, dev->commadpt->write_ccw_count, dev->excps );
 }
 

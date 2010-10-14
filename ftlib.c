@@ -363,11 +363,14 @@ char            sblklen[5];             /* work buffer               */
         rcoff = ftell( fetb->fd );
 
     /* Build the 12-ASCII-hex-character block header */
-    snprintf( sblklen, sizeof(sblklen), "%4.4X", prvblkl );
+    snprintf( sblklen, sizeof(sblklen), "%4.4X", prvblkl ); 
+    sblklen[sizeof(sblklen)-1] = '\0';
     strncpy( fakehdr.sprvblkl, sblklen, sizeof(fakehdr.sprvblkl) );
-    snprintf( sblklen, sizeof(sblklen), "%4.4X", curblkl );
+    snprintf( sblklen, sizeof(sblklen), "%4.4X", curblkl ); 
+    sblklen[sizeof(sblklen)-1] = '\0';
     strncpy( fakehdr.scurblkl, sblklen, sizeof(fakehdr.scurblkl) );
-    snprintf( sblklen, sizeof(sblklen), "%4.4X", prvblkl ^ curblkl );
+    snprintf( sblklen, sizeof(sblklen), "%4.4X", prvblkl ^ curblkl ); 
+    sblklen[sizeof(sblklen)-1] = '\0';
     strncpy( fakehdr.sxorblkl, sblklen, sizeof(fakehdr.sxorblkl) );
 
     /* Write the block header */

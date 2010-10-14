@@ -1214,10 +1214,12 @@ static char *format_int(uint64_t ic)
         if(ic==0)
         {
             snprintf(grps[maxg],sizeof(grps[maxg]),"%u",grp);
+            grps[maxg][sizeof(grps[maxg])-1] = '\0';
         }
         else
         {
             snprintf(grps[maxg],sizeof(grps[maxg]),"%3.3u",grp);
+            grps[maxg][sizeof(grps[maxg])-1] = '\0';
         }
         maxg++;
     }

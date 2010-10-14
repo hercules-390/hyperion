@@ -666,7 +666,7 @@ char*  PrintDEVIOREQUEST(DEVIOREQUEST* pIORequest, DEVTHREADPARMS* pDEVTHREADPAR
     }
     else pNextDEVIOREQUEST = (DEVIOREQUEST*) &pDEVTHREADPARMS->IORequestListHeadListEntry;
 
-    snprintf(PrintDEVIOREQUESTBuffer,sizeof(PrintDEVIOREQUESTBuffer),
+    MSGBUF(PrintDEVIOREQUESTBuffer,
         "DEVIOREQUEST @ %8.8X\n"
         "               pDevBlk                       = %8.8X\n"
         "               wDevNum                       = %4.4X\n"
@@ -676,8 +676,6 @@ char*  PrintDEVIOREQUEST(DEVIOREQUEST* pIORequest, DEVTHREADPARMS* pDEVTHREADPAR
             pIORequest->wDevNum,
             (int)pNextDEVIOREQUEST
         );
-
-    PrintDEVIOREQUESTBuffer[ sizeof(PrintDEVIOREQUESTBuffer) - 1 ] = 0;
 
     return PrintDEVIOREQUESTBuffer;
 }
@@ -725,8 +723,7 @@ char*  PrintDEVTHREADPARMS(DEVTHREADPARMS* pDEVTHREADPARMS)
     }
     else pNextDEVTHREADPARMS = (DEVTHREADPARMS*) &ThreadListHeadListEntry;
 
-    snprintf(PrintDEVTHREADPARMSBuffer,sizeof(PrintDEVTHREADPARMSBuffer),
-
+    MSGBUF(PrintDEVTHREADPARMSBuffer,
         "DEVTHREADPARMS @ %8.8X\n"
         "                 dwThreadID                 = %8.8X\n"
         "                 bThreadIsDead              = %s\n"
@@ -745,8 +742,6 @@ char*  PrintDEVTHREADPARMS(DEVTHREADPARMS* pDEVTHREADPARMS)
             ,(int)pDEVIOREQUEST
             ,(int)pNextDEVTHREADPARMS
         );
-
-    PrintDEVTHREADPARMSBuffer[ sizeof(PrintDEVTHREADPARMSBuffer) - 1 ] = 0;
 
     return PrintDEVTHREADPARMSBuffer;
 }

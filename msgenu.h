@@ -1012,7 +1012,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01805 "HTTP server signaled to stop"
 #define HHC01806 "HTTP server is %s"
 #define HHC01807 "HTTP server signaled to start"
-#define HHC01808 "HTTP server port is %s"
+#define HHC01808 "HTTP server port is %s with %s"
 #define HHC01809 "HTTP server is waiting for requests"
 #define HHC01810 "HTTP server is stopped"
 #define HHC01811 "HTTP server root directory %s"

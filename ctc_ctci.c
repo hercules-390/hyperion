@@ -616,7 +616,7 @@ void  CTCI_Query( DEVBLK* pDEVBLK, char** ppszClass,
     }
     else
     {
-        snprintf( pBuffer, iBufLen, "CTCI %s/%s (%s)%s IO[%" I64_FMT "u]",
+        snprintf( pBuffer, iBufLen-1, "CTCI %s/%s (%s)%s IO[%" I64_FMT "u]",
                   pCTCBLK->szGuestIPAddr,
                   pCTCBLK->szDriveIPAddr,
                   pCTCBLK->szTUNDevName,

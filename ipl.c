@@ -203,7 +203,7 @@ int rc;
     if (dev == NULL)
     {
         char buf[80];
-        snprintf(buf, 80, "device %4.4X not found", devnum);
+        MSGBUF(buf, "device %4.4X not found", devnum);
         WRMSG (HHC00828, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu, buf);
         HDC1(debug_cpu_state, regs);
         return -1;
@@ -335,7 +335,7 @@ int rc;
     if ((rc = ARCH_DEP(load_psw) (regs, regs->psa->iplpsw)) ) 
     {
         char buf[80];
-        snprintf(buf, 80, "architecture mode '%s', invalid ipl psw %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X", 
+        MSGBUF(buf, "architecture mode '%s', invalid ipl psw %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X", 
                 get_arch_mode_string(regs),
                 regs->psa->iplpsw[0], regs->psa->iplpsw[1],
                 regs->psa->iplpsw[2], regs->psa->iplpsw[3],

@@ -294,7 +294,7 @@ U64     dreg;
         if (GUESTREGS == NULL)
          {
          char buf[40];
-         snprintf(buf, 40, "calloc(%lu, %d)", sizeof(REGS), 1);
+         MSGBUF(buf, "calloc(%lu, %d)", sizeof(REGS), 1);
              WRMSG (HHC00813, "E", PTYPSTR(regs->cpuad), regs->cpuad, buf, strerror(errno));
 #if !defined(NO_SIGABEND_HANDLER)
              signal_thread(sysblk.cputid[regs->cpuad], SIGUSR1);

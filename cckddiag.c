@@ -184,7 +184,7 @@ unsigned int    ubufl;                  /* when size_t != unsigned int */
                          ibuflen);
         if (rc != Z_OK) {
             if (msg)
-                snprintf(msg, 80, "%s %d uncompress error, rc=%d;"
+                MSGBUF(msg, "%s %d uncompress error, rc=%d;"
                          "%2.2x%2.2x%2.2x%2.2x%2.2x",
                          heads >= 0 ? "trk" : "blk", trk, rc,
                          ibuf[0], ibuf[1], ibuf[2], ibuf[3], ibuf[4]);
@@ -206,7 +206,7 @@ unsigned int    ubufl;                  /* when size_t != unsigned int */
                  ibuflen, 0, 0);
         if (rc != BZ_OK) {
             if (msg)
-                snprintf(msg, 80, "%s %d decompress error, rc=%d;"
+                MSGBUF(msg, "%s %d decompress error, rc=%d;"
                          "%2.2x%2.2x%2.2x%2.2x%2.2x",
                          heads >= 0 ? "trk" : "blk", trk, rc,
                          ibuf[0], ibuf[1], ibuf[2], ibuf[3], ibuf[4]);

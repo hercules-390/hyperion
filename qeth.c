@@ -82,7 +82,7 @@ static void qeth_query_device (DEVBLK *dev, char **class,
 {
     BEGIN_DEVICE_CLASS_QUERY( "QETH", dev, class, buflen, buffer );
 
-    snprintf (buffer, buflen, "\n");
+    snprintf (buffer, buflen-1, "\n");
 
 } /* end function qeth_query_device */
 

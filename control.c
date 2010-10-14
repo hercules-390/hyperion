@@ -5557,7 +5557,7 @@ static char *ordername[] = {
     if ((order > LOG_SIGPORDER && order != SIGP_SENSE_RUNNING_STATE)
         || !IS_CPU_ONLINE(cpad))
     {
-        log_sigp = snprintf ( log_buf, sizeof(log_buf), 
+        log_sigp = MSGBUF( log_buf,  
                 "%s%02X: SIGP %-32s (%2.2X) %s%02X, PARM "F_GREG,
                 PTYPSTR(regs->cpuad), regs->cpuad,
                 order >= sizeof(ordername) / sizeof(ordername[0]) ?

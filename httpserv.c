@@ -796,6 +796,16 @@ struct timeval      timeout;            /* timeout value             */
 
     hdl_adsc("http_shutdown",http_shutdown, NULL);
     
+    /* Set root mode in order to set priority */
+    SETMODE(ROOT);
+
+    /* Set server thread priority; ignore any errors */
+    if(setpriority(PRIO_PROCESS, 0, sysblk.srvprio))
+       WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
+
+    /* Back to user mode */
+    SETMODE(USER);
+
     /* Display thread started message on control panel */
     WRMSG (HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "HTTP server");
 
@@ -983,6 +993,7 @@ int http_startup(int isconfigcalling)
 
     return rc;
 }
+
 /*-------------------------------------------------------------------*/
 /* http command - manage HTTP server status                          */
 /*-------------------------------------------------------------------*/
@@ -1152,43 +1163,10 @@ int http_command(int argc, char *argv[])
             WRMSG( HHC01810, "I", "stopped" );
             rc = 1;
         }
-        {
-            char *p;
-            char msgbuf[FILENAME_MAX+3];
 
-            if ( http_serv.httproot == NULL )
-                p = "is <not specified>";
-            
-            else if ( strchr(http_serv.httproot, SPACE) != NULL )
-            {
-                MSGBUF( msgbuf, "'%s'", http_serv.httproot );
-                p = msgbuf;
-            }
-            else
-            {
-                p = http_serv.httproot;
-            }
-
-            WRMSG(HHC01811, "I", p);
-        }
-        {
-            char msgbuf[128];
-            
-            if ( http_serv.httpauth == 1)
-            {
-                MSGBUF( msgbuf, "port=%hu auth userid<%s> password<%s>", 
-                            http_serv.httpport, 
-                          ( http_serv.httpuser == NULL || strlen(http_serv.httpuser) == 0 ) ? 
-                                "" : http_serv.httpuser,
-                          ( http_serv.httppass == NULL || strlen(http_serv.httppass) == 0 ) ? 
-                                "" : http_serv.httppass );
-            }
-            else
-            {
-                MSGBUF( msgbuf, "port=%hu noauth", http_serv.httpport );
-            }
-            WRMSG(HHC01808, "I", msgbuf);
-        }
+        WRMSG(HHC01811, "I", http_get_root());
+        
+        WRMSG(HHC01808, "I", http_get_port(), http_get_portauth());
     }
     else
     {
@@ -1196,6 +1174,67 @@ int http_command(int argc, char *argv[])
         rc = -1;
     }
     return rc;
+}
+
+/*-------------------------------------------------------------------*/
+/* http port - return port string                                    */
+/*-------------------------------------------------------------------*/
+char *http_get_port()
+{
+static char msgbuf[128];
+            
+    MSGBUF( msgbuf, "%hu", http_serv.httpport );
+
+    return msgbuf;
+
+}
+
+/*-------------------------------------------------------------------*/
+/* http auth - return port authorization string                      */
+/*-------------------------------------------------------------------*/
+char *http_get_portauth()
+{
+static char msgbuf[128];
+            
+    if ( http_serv.httpauth == 1)
+    {
+        MSGBUF( msgbuf, "auth userid<%s> password<%s>", 
+                ( http_serv.httpuser == NULL || strlen(http_serv.httpuser) == 0 ) ? 
+                                "" : http_serv.httpuser,
+                ( http_serv.httppass == NULL || strlen(http_serv.httppass) == 0 ) ? 
+                                "" : http_serv.httppass );
+    }
+    else
+    {
+        MSGBUF( msgbuf, "%s", "noauth" );
+    }
+
+    return msgbuf;
+
+}
+
+/*-------------------------------------------------------------------*/
+/* http root - return root string                                    */
+/*-------------------------------------------------------------------*/
+char *http_get_root()
+{
+        char *p;
+static  char msgbuf[FILENAME_MAX+3];
+
+    if ( http_serv.httproot == NULL )
+        p = "is <not specified>";
+            
+    else if ( strchr(http_serv.httproot, SPACE) != NULL )
+    {
+        MSGBUF( msgbuf, "'%s'", http_serv.httproot );
+        p = msgbuf;
+    }
+    else
+    {
+        p = http_serv.httproot;
+    }
+
+    return p;
 }
 
 

@@ -488,7 +488,7 @@ static int commadpt_alloc_device(DEVBLK *dev)
     if(dev->commadpt==NULL)
     {
         char buf[40];
-        snprintf(buf, 40, "malloc(%lu)", sizeof(COMMADPT));
+        MSGBUF(buf, "malloc(%lu)", sizeof(COMMADPT));
         WRMSG(HHC01000, "E",SSID_TO_LCSS(dev->ssid),dev->devnum, buf, strerror(errno));
         return -1;
     }
@@ -968,8 +968,18 @@ static void *commadpt_thread(void *vca)
     ca_shutdown=0;
 
     init_signaled=0;
+    
+    /* Set root mode in order to set priority */
+    SETMODE(ROOT);
 
-    snprintf(threadname, 40, "%1d:%04X communication thread", SSID_TO_LCSS(ca->dev->ssid), devnum);
+    /* Set server thread priority; ignore any errors */
+    if(setpriority(PRIO_PROCESS, 0, sysblk.srvprio))
+       WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
+
+    /* Back to user mode */
+    SETMODE(USER);
+
+    MSGBUF(threadname, "%1d:%04X communication thread", SSID_TO_LCSS(ca->dev->ssid), devnum);
     WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), threadname);
 
     pollact=0;  /* Initialise Poll activity flag */
@@ -1704,21 +1714,18 @@ static void msg016w017i(DEVBLK *dev,char *dialt,char *kw,char *kv)
 /*-------------------------------------------------------------------*/
 static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
 {
-    char thread_name[32];
-    int i;
-    int ix;
-    int rc;
-    int pc; /* Parse code */
-    int errcnt;
-    struct in_addr in_temp;
-    char    *dialt;
-    char        fmtbfr[64];
-    int etospec;        /* ETO= Specified */
-    union {
-        int num;
-        char text[MAX_PARSER_STRLEN+1];  /* (+1 for null terminator) */
-    } res;
-    char bf[4];
+    char    thread_name[33];
+    int     i;
+    int     ix;
+    int     rc;
+    int     pc;             /* Parse code */
+    int     errcnt;
+    struct  in_addr in_temp;
+    char   *dialt;
+    char    fmtbfr[65];
+    int     etospec;        /* ETO= Specified */
+    union   { int num; char text[MAX_PARSER_STRLEN+1];  /* (+1 for null terminator) */ } res;
+    char    bf[4];
     
         dev->excps = 0;
     
@@ -2006,7 +2013,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
                 }
                 if(etospec)
                 {
-                    snprintf(fmtbfr,sizeof(fmtbfr),"%d",dev->commadpt->eto);
+                    MSGBUF(fmtbfr,"%d",dev->commadpt->eto);
                     msg016w017i(dev,dialt,"ETO",fmtbfr);
                     errcnt++;
                 }
@@ -2021,7 +2028,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
                 }
                 if(dev->commadpt->rport!=0)
                 {
-                    snprintf(fmtbfr,sizeof(fmtbfr),"%d",dev->commadpt->rport);
+                    MSGBUF(fmtbfr,"%d",dev->commadpt->rport);
                     msg016w017i(dev,dialt,"RPORT",fmtbfr);
                 }
                 if(dev->commadpt->rhost!=INADDR_NONE)
@@ -2034,13 +2041,13 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
             case 2: /* DIAL = OUT */
                 if(dev->commadpt->lport!=0)
                 {
-                    snprintf(fmtbfr,sizeof(fmtbfr),"%d",dev->commadpt->lport);
+                    MSGBUF(fmtbfr,"%d",dev->commadpt->lport);
                     msg016w017i(dev,dialt,"LPORT",fmtbfr);
                     dev->commadpt->lport=0;
                 }
                 if(dev->commadpt->rport!=0)
                 {
-                    snprintf(fmtbfr,sizeof(fmtbfr),"%d",dev->commadpt->rport);
+                    MSGBUF(fmtbfr,"%d",dev->commadpt->rport);
                     msg016w017i(dev,dialt,"RPORT",fmtbfr);
                     dev->commadpt->rport=0;
                 }
@@ -2121,8 +2128,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         /* Start the async worker thread */
 
     /* Set thread-name for debugging purposes */
-        snprintf(thread_name,sizeof(thread_name),
-                 "commadpt %4.4X thread",dev->devnum);
+        MSGBUF(thread_name, "commadpt %4.4X thread", dev->devnum);
         thread_name[sizeof(thread_name)-1]=0;
 
         dev->commadpt->curpending=COMMADPT_PEND_TINIT;
@@ -2163,7 +2169,7 @@ static void commadpt_query_device (DEVBLK *dev, char **class,
 {
     BEGIN_DEVICE_CLASS_QUERY( "LINE", dev, class, buflen, buffer );
 
-    snprintf(buffer,buflen,"%s STA=%s CN=%s, EIB=%s OP=%s IO[%" I64_FMT "u]",
+    snprintf(buffer,buflen-1,"%s STA=%s CN=%s, EIB=%s OP=%s IO[%" I64_FMT "u]",
             commadpt_lnctl_names[dev->commadpt->lnctl],
             dev->commadpt->enabled?"ENA":"DISA",
             dev->commadpt->connect?"YES":"NO",

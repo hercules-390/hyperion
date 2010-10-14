@@ -327,14 +327,14 @@ void fbadasd_query_device (DEVBLK *dev, char **class,
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        snprintf( buffer, buflen, "%s [%lld,%d] IO[%" I64_FMT "u]",
+        snprintf( buffer, buflen-1, "%s [%lld,%d] IO[%" I64_FMT "u]",
                   dev->filename,
                  (long long)dev->fbaorigin, dev->fbanumblk,
                   dev->excps);
     }
     else
     {
-        snprintf( buffer, buflen, "%s [%lld,%d] [%d sfs] IO[%" I64_FMT "u]",
+        snprintf( buffer, buflen-1, "%s [%lld,%d] [%d sfs] IO[%" I64_FMT "u]",
                   dev->filename,
                  (long long)dev->fbaorigin, dev->fbanumblk,
                   cckd->sfn,

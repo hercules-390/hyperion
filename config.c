@@ -430,6 +430,17 @@ int configure_tod_priority(int prio)
     return 0;
 }
 
+int configure_srv_priority(int prio)
+{
+#if !defined(NO_SETUID)
+    /* Cap the default priority at zero if setuid not available */
+    prio = (sysblk.suid && (prio < 0)) ? 0 : prio;
+#endif /*!defined(NO_SETUID)*/
+
+    sysblk.srvprio = prio;
+
+    return 0;
+}
 
 /*-------------------------------------------------------------------*/
 /* Function to start a new CPU thread                                */

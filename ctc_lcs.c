@@ -175,7 +175,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         if( !pLCSBLK )
         {
             char buf[40];
-            snprintf(buf, 40, "malloc(%lu)", sizeof(LCSBLK));
+            MSGBUF(buf, "malloc(%lu)", sizeof(LCSBLK));
             WRMSG(HHC00900, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, buf, strerror(errno) );
             return -1;
         }
@@ -767,7 +767,7 @@ void  LCS_Query( DEVBLK* pDEVBLK, char** ppszClass,
         return;
     }
 
-    snprintf( pBuffer, iBufLen, "LCS Port %2.2X %s%s (%s)%s IO[%" I64_FMT "u]",
+    snprintf( pBuffer, iBufLen-1, "LCS Port %2.2X %s%s (%s)%s IO[%" I64_FMT "u]",
               pLCSDEV->bPort,
               pLCSDEV->bMode == LCSDEV_MODE_IP ? "IP" : "SNA",
               sType[pLCSDEV->bType],
@@ -1599,7 +1599,7 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 
         memcpy( pPortMAC, pIFaceMAC, IFHWADDRLEN );
 
-        snprintf(pLCSPORT->szMACAddress, sizeof(pLCSPORT->szMACAddress),
+        snprintf(pLCSPORT->szMACAddress, sizeof(pLCSPORT->szMACAddress)-1,
             "%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X", *(pPortMAC+0), *(pPortMAC+1),
             *(pPortMAC+2), *(pPortMAC+3), *(pPortMAC+4), *(pPortMAC+5));
     }
@@ -1743,7 +1743,7 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
                         char  str[40];
 
                         c.i = ntohl(lIPAddress);
-                        snprintf( str, 40, "%8.08X %d.%d.%d.%d", c.i, c.b.d, c.b.c, c.b.b, c.b.a );
+                        MSGBUF( str, "%8.08X %d.%d.%d.%d", c.i, c.b.d, c.b.c, c.b.b, c.b.a );
 
                         WRMSG(HHC00946, "I", pLCSPORT->bPort, str );
 
@@ -1774,7 +1774,7 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
                         char  str[40];
 
                         c.i = ntohl(lIPAddress);
-                        snprintf( str, 40, "%8.08X %d.%d.%d.%d", c.i, c.b.d, c.b.c, c.b.b, c.b.a );
+                        MSGBUF( str, "%8.08X %d.%d.%d.%d", c.i, c.b.d, c.b.c, c.b.b, c.b.a );
                         
                         WRMSG(HHC00947, "I", pLCSPORT->bPort, str );
 
@@ -1889,7 +1889,7 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
             char  str[40];
 
             c.i = ntohl(pMatchingLCSDEV->lIPAddress);
-            snprintf( str, 40, "%8.08X %d.%d.%d.%d", c.i, c.b.d, c.b.c, c.b.b, c.b.a );
+            MSGBUF( str, "%8.08X %d.%d.%d.%d", c.i, c.b.d, c.b.c, c.b.b, c.b.a );
 
             WRMSG( HHC00952, "I", pLCSPORT->bPort, pMatchingLCSDEV->sAddr, str );
         }

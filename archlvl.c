@@ -369,8 +369,8 @@ ARCHTAB *tb;
 void force_facbit(int bitno, int enable, BYTE mode)
 {
 int fbyte, fbit;
-char buf[10];
-#define i2a(_int) ( (snprintf(buf,sizeof(buf),"%d", _int) <= (int)sizeof(buf)) ? buf : "?" )
+char buf[11];
+#define i2a(_int) ( (MSGBUF(buf,"%d", _int) <= (int)sizeof(buf)) ? buf : "?" )
 
     fbyte = bitno / 8;
     fbit = 0x80 >> (bitno % 8);
@@ -436,7 +436,7 @@ char buf[10];
 #endif
     }
 }
-
+#undef i2a
 
 void set_facility(FACTAB *facility, int enable, BYTE mode)
 {

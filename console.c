@@ -1907,7 +1907,17 @@ BYTE                   unitstat;        /* Status after receive data */
     UNREFERENCED(arg);
 
     hdl_adsc("console_shutdown",console_shutdown, NULL);
+    
+    /* Set root mode in order to set priority */
+    SETMODE(ROOT);
 
+    /* Set server thread priority; ignore any errors */
+    if(setpriority(PRIO_PROCESS, 0, sysblk.srvprio))
+       WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
+
+    /* Back to user mode */
+    SETMODE(USER);
+    
     /* Display thread started message on control panel */
     WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Console connection");
 

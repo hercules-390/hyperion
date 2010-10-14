@@ -751,6 +751,7 @@ static char *pgmintname[] = {
 #endif /*defined(SIE_DEBUG)*/
        if (code == PGM_DATA_EXCEPTION)
            snprintf(dxcstr, sizeof(dxcstr), " DXC=%2.2X", regs->dxc);
+       dxcstr[sizeof(dxcstr)-1] = '\0';
        WRMSG(HHC00801, "I",
         PTYPSTR(realregs->cpuad), realregs->cpuad, buf1, buf2, 
                 pgmintname[ (code - 1) & 0x3F], pcode, ilc, dxcstr);

@@ -1003,7 +1003,7 @@ static void fcb_dump(DEVBLK* dev, char *buf, unsigned int buflen)
     char wrk[16];
     char sep[1];
     sep[0] = '=';
-    snprintf( buf, buflen, "lpi=%d index=%d lpp=%d fcb", dev->lpi, dev->index, dev->lpp );
+    snprintf( buf, buflen-1, "lpi=%d index=%d lpp=%d fcb", dev->lpi, dev->index, dev->lpp );
     for (i = 1; i <= dev->lpp; i++)
     {
         if (dev->fcb[i] != 0)
@@ -1016,7 +1016,7 @@ static void fcb_dump(DEVBLK* dev, char *buf, unsigned int buflen)
                 strlcat(buf, ",...", buflen);
                 return;
             }
-            strlcat(buf, wrk,buflen);
+            strlcat(buf, wrk, buflen);
         }
     }
     return;
@@ -3215,6 +3215,40 @@ BYTE c;
     return 0;
 }
 
+/*-------------------------------------------------------------------*/
+/* srvprio command                                                  */
+/*-------------------------------------------------------------------*/
+int srvprio_cmd(int argc, char *argv[], char *cmdline)
+{
+S32 srvprio;
+BYTE c;
+
+    UNREFERENCED(cmdline);
+
+    /* Parse priority value */
+    if ( argc == 2 )
+    {
+        if (sscanf(argv[1], "%d%c", &srvprio, &c) != 1)
+        {
+            WRMSG( HHC01451, "E", argv[1], argv[0] );
+            return -1;
+        }
+        else
+        {
+            configure_srv_priority(srvprio);
+            if (MLVL(VERBOSE))
+                WRMSG( HHC02204, "I", argv[0], argv[1] );
+        }
+    }
+    else
+    {
+        WRMSG( HHC01455, "E", argv[0] );
+        return  -1;
+    }
+
+    return 0;
+}
+
 
 /*-------------------------------------------------------------------*/
 /* numvec command                                                    */
@@ -3309,15 +3343,21 @@ int maxcpu_cmd(int argc, char *argv[], char *cmdline)
 U16 maxcpu;
 BYTE c;
 char buf[10];
-#define i2a(_int) ( (snprintf(buf,sizeof(buf),"%d", _int) <= (int)sizeof(buf)) ? buf : "?" )
+#define i2a(_int) ( (MSGBUF(buf,"%d", _int) <= (int)sizeof(buf)) ? buf : "?" )
 
     UNREFERENCED(cmdline);
 
     /* Ensure only two arguments passed */
-    if ( argc != 2 )
+    if ( argc > 2 )
     {
         WRMSG( HHC01455, "E", argv[0] );
         return -1;
+    }
+    
+    if ( argc == 1 )
+    {
+        WRMSG( HHC02203, "I", argv[0], i2a(sysblk.maxcpu) ); 
+        return 0;
     }
 
     /* Parse maximum number of CPUs operand */
@@ -3357,7 +3397,7 @@ char buf[10];
 
     return 0;
 }
-
+#undef i2a
 
 /*-------------------------------------------------------------------*/
 /* cnslport command - set console port                               */
@@ -5600,6 +5640,7 @@ int loadparm_cmd(int argc, char *argv[], char *cmdline)
 static int reset_cmd(int ac,char *av[],char *cmdline,int clear)
 {
     int i;
+    int rc;
 
     UNREFERENCED(ac);
     UNREFERENCED(av);
@@ -5615,11 +5656,11 @@ static int reset_cmd(int ac,char *av[],char *cmdline,int clear)
             return -1;
         }
 
-    system_reset (sysblk.pcpu, clear);
+    rc = system_reset (sysblk.pcpu, clear);
 
     RELEASE_INTLOCK(NULL);
 
-    return 0;
+    return rc;
 
 }
 
@@ -6058,13 +6099,13 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
     {
         WRMSG(HHC02237, "W", MAX_DEVLIST_DEVICES);
 
-        return -1;      // (treat as error)
+        return 2;      // (treat as warning)
     }
 
     if ( cnt == 0 )
     {
         WRMSG(HHC02216, "W" );
-        return -1;
+        return 1;
     }
 
     return 0;
@@ -9939,6 +9980,9 @@ int qports_cmd(int argc, char *argv[], char *cmdline)
         WRMSG( HHC17000, "E" );
         return -1;
     }
+    
+    MSGBUF( buf, "on port %s with %s", http_get_port(), http_get_portauth());
+    WRMSG(HHC17001, "I", "HTTP", buf);
 
     if ( sysblk.shrdport > 0 )
     {

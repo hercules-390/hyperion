@@ -439,8 +439,8 @@ S64      dreg;
             {
                 char buf1[20];
                 char buf2[20];
-                snprintf(buf1, 20, "%dM", len / (1024*1024));
-                snprintf(buf2, 20, "%dM", (int)sysblk.mainsize / (1024*1024));
+                MSGBUF(buf1, "%dM", len / (1024*1024));
+                MSGBUF(buf2, "%dM", (int)sysblk.mainsize / (1024*1024));
                 WRMSG(HHC02009, "E", "mainsize", buf1, buf2);
                 goto sr_error_exit;
             }
@@ -451,8 +451,8 @@ S64      dreg;
             {
                 char buf1[20];
                 char buf2[20];
-                snprintf(buf1, 20, "%dM", len / (1024*1024));
-                snprintf(buf2, 20, "%dM", (int)sysblk.mainsize / (1024*1024));
+                MSGBUF(buf1, "%dM", len / (1024*1024));
+                MSGBUF(buf2, "%dM", (int)sysblk.mainsize / (1024*1024));
                 WRMSG(HHC02009, "E", "mainsize", buf1, buf2);              
                 goto sr_error_exit;
             }
@@ -465,8 +465,8 @@ S64      dreg;
             {
                 char buf1[20];
                 char buf2[20];
-                snprintf(buf1, 20, "%d", len);
-                snprintf(buf2, 20, "%d", (int)sysblk.mainsize/STORAGE_KEY_UNITSIZE);
+                MSGBUF(buf1, "%d", len);
+                MSGBUF(buf2, "%d", (int)sysblk.mainsize/STORAGE_KEY_UNITSIZE);
                 WRMSG(HHC02009, "E", "storkey size", buf1, buf2);              
                 goto sr_error_exit;
             }
@@ -477,8 +477,8 @@ S64      dreg;
             {
                 char buf1[20];
                 char buf2[20];
-                snprintf(buf1, 20, "%d", len);
-                snprintf(buf2, 20, "%d", (int)sysblk.mainsize/STORAGE_KEY_UNITSIZE);
+                MSGBUF(buf1, "%d", len);
+                MSGBUF(buf2, "%d", (int)sysblk.mainsize/STORAGE_KEY_UNITSIZE);
                 WRMSG(HHC02009, "E", "storkey size", buf1, buf2);              
                 goto sr_error_exit;
             }
@@ -491,8 +491,8 @@ S64      dreg;
             {
                 char buf1[20];
                 char buf2[20];
-                snprintf(buf1, 20, "%dM", len / (1024*1024));
-                snprintf(buf2, 20, "%dM", sysblk.xpndsize / (1024*1024));
+                MSGBUF(buf1, "%dM", len / (1024*1024));
+                MSGBUF(buf2, "%dM", sysblk.xpndsize / (1024*1024));
                 WRMSG(HHC02009, "E", "expand size", buf1, buf2);              
                 goto sr_error_exit;
             }
@@ -503,8 +503,8 @@ S64      dreg;
             {
                 char buf1[20];
                 char buf2[20];
-                snprintf(buf1, 20, "%dM", len / (1024*1024));
-                snprintf(buf2, 20, "%dM", sysblk.xpndsize / (1024*1024));
+                MSGBUF(buf1, "%dM", len / (1024*1024));
+                MSGBUF(buf2, "%dM", sysblk.xpndsize / (1024*1024));
                 WRMSG(HHC02009, "E", "expand size", buf1, buf2);              
                 goto sr_error_exit;
             }
@@ -1238,8 +1238,8 @@ S64      dreg;
             {
                 char buf1[20];
                 char buf2[20];
-                snprintf(buf1, 20, "%04X", hw);
-                snprintf(buf2, 20, "%04X", dev->devtype);
+                MSGBUF(buf1, "%04X", hw);
+                MSGBUF(buf2, "%04X", dev->devtype);
                 WRMSG(HHC02016, "E", dev->devnum, buf1, buf2);
                 goto sr_error_exit;
             }

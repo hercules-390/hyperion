@@ -351,19 +351,23 @@ COMMAND("xpndsize",  CONFIG+PANEL,  SYSCMDALL-SYSOPER,  xpndsize_cmd,
     NULL)
 
 COMMAND("hercprio",  CONFIG+PANEL,  SYSCMDALL-SYSOPER,  hercprio_cmd,
-  "Set hercprio parameter",
+  "Set/Display hercprio parameter",
     NULL)
 
 COMMAND("cpuprio",   CONFIG+PANEL,  SYSCMDALL-SYSOPER,  cpuprio_cmd,
-  "Set cpuprio parameter",
+  "Set/Display cpuprio parameter",
     NULL)
 
 COMMAND("devprio",   CONFIG+PANEL,  SYSCMDALL-SYSOPER,  devprio_cmd,
-  "Set devprio parameter",
+  "Set/Display devprio parameter",
     NULL)
 
 COMMAND("todprio",   CONFIG+PANEL,  SYSCMDALL-SYSOPER,  todprio_cmd,
-  "Set todprio parameter",
+  "Set/Display todprio parameter",
+    NULL)
+
+COMMAND("srvprio",   CONFIG+PANEL,  SYSCMDALL-SYSOPER,  srvprio_cmd,
+  "Set/Display srvprio parameter",
     NULL)
 
 COMMAND("numvec",    CONFIG,        SYSCMDALL-SYSOPER,  numvec_cmd,

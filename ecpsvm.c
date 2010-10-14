@@ -2671,6 +2671,7 @@ static void ecpsvm_showstats2(ECPSVM_STAT *ar,size_t count)
             }
             havedisp=1;
             snprintf(nname,sizeof(nname),"%s%s",ar[i].name,ar[i].support ? "" : "*");
+            nname[sizeof(nname)-1] = '\0';
             if(!ar[i].enabled)
             {
                 strlcat(nname,"-",sizeof(nname));

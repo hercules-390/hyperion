@@ -641,6 +641,7 @@ static void print_cce(BYTE *cce)
     if(!prt_detail && cce[j])
       prt_detail = 1;
     snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%02X", cce[j]);
+    buf[sizeof(buf)-1] = '\0';
   }
   if(prt_detail)
   {
@@ -657,6 +658,7 @@ static void print_cce(BYTE *cce)
           buf[0] = 0;
           for(j = 0; j < CCE_ecs(cce); j++)
             snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " %02X", CCE_ec(cce, j));
+          buf[sizeof(buf)-1] = '\0';
           WRGMSG(HHC90322, "D", buf);
         }
         break;
@@ -671,6 +673,7 @@ static void print_cce(BYTE *cce)
           buf[0] = 0;
           for(j = 0; j < CCE_ecs(cce); j++)
             snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " %02X", CCE_ec(cce, j));
+          buf[sizeof(buf)-1] = '\0';
           WRGMSG(HHC90322, "D", buf);
         }
         WRGMSG(HHC90326, "D", CCE_cc(cce, 0));
@@ -681,10 +684,12 @@ static void print_cce(BYTE *cce)
         buf[0] = 0;
         for(j = 0; j < 5; j++)
           snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%c", (int) (CCE_x(cce, j) ? '1' : '0'));
+        buf[sizeof(buf)-1] = '\0';
         WRGMSG(HHC90327, "D", buf);
         buf[0] = 0;
         for(j = 0; j < 2; j++)
           snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%c", (int) (CCE_y(cce, j) ? '1' : '0'));
+        buf[sizeof(buf)-1] = '\0';
         WRGMSG(HHC90328, "D", buf);
         WRGMSG(HHC90329, "D", TRUEFALSE(CCE_d(cce)));
         WRGMSG(HHC90325, "D", CCE_cptr(cce));
@@ -693,6 +698,7 @@ static void print_cce(BYTE *cce)
         buf[0] = 0;
         for(j = 0; j < CCE_ccs(cce); j++)
           snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " %02X", CCE_cc(cce, j));
+        buf[sizeof(buf)-1] = '\0';
         WRGMSG(HHC90331, "D", buf);
         break;
       }
@@ -722,12 +728,14 @@ static void print_sd(int f1, BYTE *sd1, BYTE *sd2)
         prt_detail = 1;
       snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%02X", sd1[j]);
     }
+    buf[sizeof(buf)-1] = '\0';
     for(j = 0; j < 8; j++)
     {
       if(!prt_detail && sd2[j])
         prt_detail = 1;
       snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%02X", sd2[j]);
     }
+    buf[sizeof(buf)-1] = '\0';
     if(prt_detail)
     {
       WRGMSG_ON;
@@ -736,10 +744,12 @@ static void print_sd(int f1, BYTE *sd1, BYTE *sd2)
       buf[0] = 0;      
       for(j = 0; j < 12; j++)
         snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%c", (SD1_y(sd1, j) ? '1' : '0'));
+      buf[sizeof(buf)-1] = '\0';
       WRGMSG(HHC90334, "D", buf);
       buf[0] = 0;
       for(j = 0; j < SD1_scs(sd1); j++)
         snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " %02X", SD1_sc(sd1, sd2, j));
+      buf[sizeof(buf)-1] = '\0';
       WRGMSG(HHC90335, "D", buf);
       WRGMSG_OFF;
     }
@@ -756,6 +766,7 @@ static void print_sd(int f1, BYTE *sd1, BYTE *sd2)
         prt_detail = 1;
       snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%02X", sd1[j]);
     }
+    buf[sizeof(buf)-1] = '\0';
     if(prt_detail)
     {
       WRGMSG_ON;
@@ -764,10 +775,12 @@ static void print_sd(int f1, BYTE *sd1, BYTE *sd2)
       buf[0] = 0;
       for(j = 0; j < 5; j++)
         snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%c", (SD0_y(sd1, j) ? '1' : '0'));
+      buf[sizeof(buf)-1] = '\0';
       WRGMSG(HHC90337, "D", buf);
       buf[0] = 0;
       for(j = 0; j < SD0_scs(sd1); j++)
         snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " %02X", SD0_sc(sd1, j));
+      buf[sizeof(buf)-1] = '\0';
       WRGMSG(HHC90335, "D", buf);
       WRGMSG_OFF;
     }
@@ -1235,6 +1248,7 @@ static void ARCH_DEP(store_iss)(struct cc *cc)
   buf[0] = 0;
   for(i = 0; i < 8; i++)
     snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " %04X", cc->is[i]);
+  buf[sizeof(buf)-1] = '\0';
   WRMSG(HHC90346, "D", buf, cc->r1, cc->iregs->GR(cc->r1), cc->r1 + 1, cc->iregs->GR(cc->r1 + 1));
 #endif
 
@@ -1697,6 +1711,7 @@ static void print_ece(U16 is, BYTE *ece)
       prt_detail = 1;
     snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%02X", ece[i]);
   }
+  buf[sizeof(buf)-1] = '\0';
   WRGMSG_ON;
   WRGMSG(HHC90349, "D", is); 
   WRGMSG(HHC90353, "D", buf);
@@ -1709,6 +1724,7 @@ static void print_ece(U16 is, BYTE *ece)
       buf[0] = 0;
       for(i = 0; i < ECE_psl(ece); i++)
         snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " %02X", ece[i + 2]);
+      buf[sizeof(buf)-1] = '\0';
       WRGMSG(HHC90356, "D", buf);
       WRGMSG(HHC90357, "D", ECE_ofst(ece));
     }
@@ -1720,6 +1736,7 @@ static void print_ece(U16 is, BYTE *ece)
       buf[0] = 0;
       for(i = 0; i < ECE_csl(ece); i++)
         snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " %02X", ece[i + 1]);
+      buf[sizeof(buf)-1] = '\0';
       WRGMSG(HHC90356, "D", buf);
     }
   }
@@ -1805,6 +1822,7 @@ static int ARCH_DEP(vstore)(struct ec *ec, BYTE *buf, unsigned len)
         }
       } 
       snprintf(buf2 + strlen(buf2), sizeof(buf2) - strlen(buf2), " |");
+      buf2[sizeof(buf2)-1] = '\0';
       WRGMSG(HHC90363, "D", buf2);
     }
     WRGMSG_OFF;

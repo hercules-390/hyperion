@@ -217,7 +217,7 @@ int i;
     if(sysblk.cpuprio >= 0)
     {
         if(setpriority(PRIO_PROCESS, 0, sysblk.cpuprio+1))
-       WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
+        WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
     }
 
     for (i = 0; i < sysblk.maxcpu; i ++) savecount[i] = -1;
@@ -529,6 +529,7 @@ int     dll_count;                      /* index into array          */
     sysblk.todprio  = DEFAULT_TOD_PRIO;
     sysblk.cpuprio  = DEFAULT_CPU_PRIO;
     sysblk.devprio  = DEFAULT_DEV_PRIO;
+    sysblk.srvprio  = DEFAULT_SRV_PRIO;
 
     /* Cap the default priorities at zero if setuid not available */
 #if !defined(NO_SETUID)
@@ -543,6 +544,8 @@ int     dll_count;                      /* index into array          */
             sysblk.cpuprio = 0;
         if (sysblk.devprio < 0)
             sysblk.devprio = 0;
+        if (sysblk.srvprio < 0)
+            sysblk.srvprio = 0;
 #if !defined(NO_SETUID)
     }
 #endif /*!defined(NO_SETUID)*/
