@@ -171,6 +171,7 @@ U64     siosrate;                       /* Calculated SIO rate       */
 U64     cpupct;                         /* Calculated cpu percentage */
 U64     total_mips;                     /* Total MIPS rate           */
 U64     total_sios;                     /* Total SIO rate            */
+static  int do_once = TRUE ;            /* Switch for onetime proc   */
 #endif /*OPTION_MIPS_COUNTING*/
 
     UNREFERENCED(argp);
@@ -189,6 +190,29 @@ U64     total_sios;                     /* Total SIO rate            */
     WRMSG (HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Timer");
 
 #ifdef OPTION_MIPS_COUNTING
+    /* Initialize "maxrates" command reporting intervals */
+    if ( do_once )
+    {
+        do_once = FALSE;
+
+        if ( maxrates_rpt_intvl == 1440 )
+        {
+            time_t      current_time;
+            struct tm  *current_tm;
+            time_t      since_midnight = 0;            
+            current_time = time( NULL );
+            current_tm   = localtime( &current_time );
+            since_midnight = (time_t)( ( ( current_tm->tm_hour  * 60 ) + 
+                                           current_tm->tm_min ) * 60   +
+                                           current_tm->tm_sec );
+            curr_int_start_time = current_time - since_midnight;
+        }
+        else
+            curr_int_start_time = time( NULL );
+
+        prev_int_start_time = curr_int_start_time;
+    }
+
     then = host_tod();
 #endif
 

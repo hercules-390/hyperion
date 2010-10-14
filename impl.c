@@ -696,16 +696,6 @@ int     dll_count;                      /* index into array          */
     strerror_r_init();
 #endif
 
-#if       defined( OPTION_CONFIG_SYMBOLS )
-// ZZ FIXME These should move to panel.c PF keys are a panel feature
-    /* Set Function Key Defaults */
-    {
-        set_symbol("PF01", "SUBST IMMED herc help &0");
-        set_symbol("PF11", "IMMED herc devlist TAPE");
-        set_symbol("PF10", "SUBST DELAY herc devinit &*");
-    }
-#endif
-
     /* Get name of configuration file or default to hercules.cnf */
     if(!(cfgfile = getenv("HERCULES_CNF")))
         cfgfile = "hercules.cnf";
@@ -966,68 +956,8 @@ int     dll_count;                      /* index into array          */
     /* File was not lock, therefore we can proceed */
 #endif // OPTION_LOCK_CONFIG_FILE
 
-// ZZ FIXME all logo stuff should move to console.c, the logo is a console only feature
-    /* Read the logofile */
-    {
-        char   *p;            /* pointer logo filename */
-        int     rc = 0;
-        char    fn[FILENAME_MAX] = { 0 };
-
-        if (sysblk.logofile == NULL) /* LogoFile NOT passed in command line */
-        {
-            p = getenv("HERCLOGO");
-
-            if ( p == NULL)
-                p = "herclogo.txt";
-        }
-        else 
-            p = sysblk.logofile;
-
-        hostpath( fn, p, sizeof(fn) );
-
-        rc = readlogo(fn);
-        
-        if ( rc == -1 && strcasecmp(fn,basename(fn)) == 0
-                  && strlen(sysblk.hercules_pgmpath) > 0 )
-        {
-            char altfn[FILENAME_MAX];
-            char pathname[MAX_PATH];
-
-            bzero(altfn,sizeof(altfn));
-            
-            MSGBUF(altfn,"%s%c%s", sysblk.hercules_pgmpath, PATHSEPC, fn);
-
-            hostpath( pathname, altfn, sizeof(pathname));
-
-            rc = readlogo(pathname);
-        }
-    } /* end of logo parm processing */
-
-
     /* System initialisation time */
     sysblk.todstart = hw_clock() << 8;
-
-#ifdef OPTION_MIPS_COUNTING
-// ZZ FIXME This should move to the timer thread which initialises and processes all MIPS counting
-    /* Initialize "maxrates" command reporting intervals */
-
-    if ( maxrates_rpt_intvl == 1440 )
-    {
-        time_t      current_time;
-        struct tm  *current_tm;
-        time_t      since_midnight = 0;            
-        current_time = time( NULL );
-        current_tm   = localtime( &current_time );
-        since_midnight = (time_t)( ( ( current_tm->tm_hour  * 60 ) + 
-                                       current_tm->tm_min ) * 60   +
-                                       current_tm->tm_sec );
-        curr_int_start_time = current_time - since_midnight;
-    }
-    else
-        curr_int_start_time = time( NULL );
-
-    prev_int_start_time = curr_int_start_time;
-#endif
 
 #if !defined(NO_SIGABEND_HANDLER)
     /* Start the watchdog */

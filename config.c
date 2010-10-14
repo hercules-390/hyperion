@@ -1680,8 +1680,7 @@ parse_and_attach_devices(const char *sdevnum,
 #endif /*defined(OPTION_ENHANCED_DEVICE_ATTACH)*/
 
 #define MAX_LOGO_LINES 256
-void
-clearlogo()
+DLL_EXPORT void clearlogo()
 {
     size_t i;
     if(sysblk.herclogo!=NULL)
@@ -1694,8 +1693,7 @@ clearlogo()
         sysblk.herclogo=NULL;
     }
 }
-int
-readlogo(char *fn)
+DLL_EXPORT int readlogo(char *fn)
 {
     char    **data;
     char     bfr[256];

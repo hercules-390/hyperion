@@ -1964,6 +1964,15 @@ char    buf[1024];                      /* Buffer workarea           */
 
     history_init();
 
+#if       defined( OPTION_CONFIG_SYMBOLS )
+    /* Set Some Function Key Defaults */
+    {
+        set_symbol("PF01", "SUBST IMMED herc help &0");
+        set_symbol("PF11", "IMMED herc devlist TAPE");
+        set_symbol("PF10", "SUBST DELAY herc devinit &*");
+    }
+#endif
+
     /* Set up the input file descriptors */
     confp = stderr;
     keybfd = STDIN_FILENO;

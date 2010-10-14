@@ -58,6 +58,7 @@
 
 #include "hstdinc.h"
 #include "hercules.h"
+#include "hexterns.h"
 
 #include "devtype.h"
 
@@ -2266,6 +2267,42 @@ console_initialise()
         did_init = TRUE;
         initialize_lock( &console_lock );
         initialize_condition( &console_wait );
+
+        /* Read the logofile */
+        {
+            char   *p;            /* pointer logo filename */
+            int     rc = 0;
+            char    fn[FILENAME_MAX] = { 0 };
+
+            if (sysblk.logofile == NULL) /* LogoFile NOT passed in command line */
+            {
+                p = getenv("HERCLOGO");
+
+                if ( p == NULL)
+                    p = "herclogo.txt";
+            }
+            else 
+                p = sysblk.logofile;
+
+            hostpath( fn, p, sizeof(fn) );
+
+            rc = readlogo(fn);
+        
+            if ( rc == -1 && strcasecmp(fn,basename(fn)) == 0
+                       && strlen(sysblk.hercules_pgmpath) > 0 )
+            {
+                char altfn[FILENAME_MAX];
+                char pathname[MAX_PATH];
+
+                bzero(altfn,sizeof(altfn));
+            
+                MSGBUF(altfn,"%s%c%s", sysblk.hercules_pgmpath, PATHSEPC, fn);
+
+                hostpath( pathname, altfn, sizeof(pathname));
+
+                rc = readlogo(pathname);
+            }
+        } /* end of logo parm processing */
 
     }
 
