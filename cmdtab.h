@@ -927,8 +927,18 @@ COMMAND("execb",      PANEL,         SYSCMDALL,          execb_cmd,
     "passed to the script.\n")
 #endif /*defined(HAVE_REGINA_REXXSAA_H)*/
 
-COMMAND("cache",     PANEL,         SYSCMDALL-SYSOPER,  EXT_CMD(cache_cmd),
-  "Cache command",
+COMMAND("cache",       PANEL+CONFIG, SYSCMDALL-SYSOPER,   cache_cmd,
+  "Execute cache related commands",
+    "Format: \"cache [dasd system [on|off]]\"\n"
+    "\n"
+    "dasd system on|off         will enable(on) or disable(off) caching for\n"
+    "                           all dasd devices\n"
+    "dasd system                will present status of system dasd caching\n"
+    "\n"
+    "Command without arguments will present cache stats.\n")
+
+COMMAND("cachestats",     PANEL,         SYSCMDALL-SYSOPER,  EXT_CMD(cachestats_cmd),
+  "Cache stats command",
     NULL)
 
 COMMAND("cckd",      PANEL+CONFIG,  SYSCMDALL-SYSOPER,  cckd_cmd,

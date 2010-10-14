@@ -339,7 +339,7 @@ int cache_release(int ix, int i, int flag)
     return 0;
 }
 
-DLL_EXPORT int cache_cmd(int argc, char *argv[], char *cmdline)
+DLL_EXPORT int cachestats_cmd(int argc, char *argv[], char *cmdline)
 {
     int ix, i;
     char buf[128];

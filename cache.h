@@ -289,7 +289,7 @@ int         cache_getlen(int ix, int i);
 int         cache_getval(int ix, int i);
 int         cache_setval(int ix, int i, int val);
 int         cache_release(int ix, int i, int flag);
-CCH_DLL_IMPORT int         cache_cmd(int argc, char *argv[], char *cmdline);
+CCH_DLL_IMPORT int  cachestats_cmd(int argc, char *argv[], char *cmdline);
 
 #ifdef _CACHE_C_
 static int  cache_create (int ix);
