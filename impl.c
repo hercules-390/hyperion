@@ -482,6 +482,9 @@ int     dll_count;                      /* index into array          */
     /* set default tape autoinit value to OFF   */
     sysblk.noautoinit = TRUE;
 
+    /* default for system dasd cache is on */
+    sysblk.dasdcache = TRUE;
+
     /* set default error message display (emsg) */
     sysblk.emsg = EMSG_ON;
 

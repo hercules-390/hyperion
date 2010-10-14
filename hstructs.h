@@ -548,6 +548,8 @@ struct SYSBLK {
                                         /* lookup table              */
 #endif  /* FAST_DEVICE_LOOKUP */
         U16     highsubchan[FEATURE_LCSS_MAX];  /* Highest subchan+1 */
+        BYTE    dasdcache:1;            /* 0 = system cache off
+                                           1 = system cache on       */
         U32     chp_reset[8];           /* Channel path reset masks  */
         IOINT  *iointq;                 /* I/O interrupt queue       */
 #if !defined(OPTION_FISHIO)
@@ -920,7 +922,6 @@ struct DEVBLK {                         /* Device configuration block*/
         BYTE    reserved3;              /* (pad/align/unused/avail)  */
 
         /*  control flags...                                         */
-
         unsigned int                    /* Flags                     */
 #ifdef OPTION_CKD_KEY_TRACING
                 ckdkeytrace:1,          /* 1=Log CKD_KEY_TRACE       */
@@ -1276,6 +1277,8 @@ struct DEVBLK {                         /* Device configuration block*/
         BYTE    ckdreserved1;           /* Alignment                 */
         void   *cckd_ext;               /* -> Compressed ckddasd
                                            extension otherwise NULL  */
+        BYTE    devcache:1;             /* 0 = device cache off
+                                           1 = device cache on       */
         u_int   ckd3990:1;              /* 1=Control unit is 3990    */
         u_int   ckdxtdef:1;             /* 1=Define Extent processed */
         u_int   ckdsetfm:1;             /* 1=Set File Mask processed */

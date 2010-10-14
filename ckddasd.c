@@ -628,6 +628,9 @@ char           *strtok_str;             /* save last position        */
     /* Request the channel to merge data chained write CCWs into
        a single buffer before passing data to the device handler */
     dev->cdwmerge = 1;
+    
+    /* default for device cache is on */
+    dev->devcache = TRUE;
 
     if (!cckd) return 0;
     else return cckddasd_init_handler(dev, argc, argv);
