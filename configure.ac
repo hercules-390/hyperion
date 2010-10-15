@@ -1501,14 +1501,14 @@ AC_ARG_ENABLE( multi-cpu,
 
     AC_HELP_STRING( [--enable-multi-cpu=yes|no|NUMBER],
 
-        [enable/disable multi-cpu support (1-64, default 8)]
+        [enable/disable multi-cpu support (1-128, default 8)]
     ),
     [
         case "${enableval}" in
         yes)             hc_cv_opt_num_cpu_engines=8                  ;;
         no)              hc_cv_opt_num_cpu_engines=1                  ;;
         *)
-            if test 0 -lt "${enableval}" -a 64 -ge "${enableval}"
+            if test 0 -lt "${enableval}" -a 128 -ge "${enableval}"
             then
                 hc_cv_opt_num_cpu_engines=${enableval}
             else
