@@ -239,103 +239,67 @@ DLL_EXPORT char *hdl_setpath(char *path, int flag)
     return hdl_modpath;
 }
 
-
+/*
+ * Check in this order:
+ * 1) filename as passed
+ * 2) filename with extension if needed
+ * 3) modpath added if basename(filename)
+ * 4) extension added to #3
+ */
 static void * hdl_dlopen(char *filename, int flag _HDL_UNUSED)
 {
-char *fullname;
-void *ret;
-size_t fulllen = 0;
+char   *fullname;
+void   *ret;
+size_t  fulllen = 0;
 
-    if(filename && 
-#if      defined(_MSVC_)
-           *filename != '\\'
-#else //!defined(_MSVC_) 
-           *filename != '/' 
-#endif// defined(_MSVC_) 
-        && *filename != '.')
+    if ( (ret = dlopen(filename,flag)) )       /* try filename as is first */
     {
-        if(hdl_modpath && *hdl_modpath)
-        {
-            fulllen = strlen(filename) + strlen(hdl_modpath) + 2 + HDL_SUFFIX_LENGTH;
-            fullname = malloc(fulllen);
-            strlcpy(fullname,hdl_modpath,fulllen);
-#if      defined(_MSVC_)
-            strlcat(fullname,"\\",fulllen);
-#else //!defined(_MSVC_)
-            strlcat(fullname,"/",fulllen);
-#endif// defined(_MSVC_)
-            strlcat(fullname,filename,fulllen);
-#if defined(HDL_MODULE_SUFFIX)
-            strlcat(fullname,HDL_MODULE_SUFFIX,fulllen);
-#endif
-        }
-        else
-            fullname = filename;
-
-        if((ret = dlopen(fullname,flag)))
-        {
-            if(fulllen)
-                free(fullname);
-
-            return ret;
-        }
-
-#if defined(HDL_MODULE_SUFFIX)
-        fullname[strlen(fullname) - HDL_SUFFIX_LENGTH] = '\0';
-
-        if((ret = dlopen(fullname,flag)))
-        {
-            if(fulllen)
-                free(fullname);
-
-            return ret;
-        }
-#endif
-
-        if(fulllen)
-            free(fullname);
-        fulllen=0;
+        return ret;
     }
-    if(filename && 
-#if      defined(_MSVC_)
-           *filename != '\\'
-#else //!defined(_MSVC_) 
-           *filename != '/' 
-#endif// defined(_MSVC_) 
-           && *filename != '.')
+ 
+    fulllen = strlen(filename) + strlen(hdl_modpath) + 2 + HDL_SUFFIX_LENGTH;
+    fullname = (char *)calloc(1,fulllen);
+    
+    if ( fullname == NULL ) 
+        return NULL;
+
+#if defined(HDL_MODULE_SUFFIX)
+    strlcpy(fullname,filename,fulllen);
+    strlcat(fullname,HDL_MODULE_SUFFIX,fulllen);
+
+    if ( (ret = dlopen(fullname,flag)) )       /* try filename with suffix next */
     {
-        fulllen = strlen(filename) + 1 + HDL_SUFFIX_LENGTH;
-        fullname = malloc(fulllen);
+        free(fullname);
+        return ret;
+    }
+#endif
+    
+    if( hdl_modpath && *hdl_modpath)
+    {
+        strlcpy(fullname,hdl_modpath,fulllen);
+        strlcat(fullname,PATHSEPS,fulllen);
+        strlcat(fullname,basename(filename),fulllen);
+    }
+    else
         strlcpy(fullname,filename,fulllen);
-#if defined(HDL_MODULE_SUFFIX)
-        strlcat(fullname,HDL_MODULE_SUFFIX,fulllen);
-#endif
-        if((ret = dlopen(fullname,flag)))
-        {
-            if(fulllen)
-                free(fullname);
 
-            return ret;
-        }
-
-#if defined(HDL_MODULE_SUFFIX)
-        fullname[strlen(fullname) - HDL_SUFFIX_LENGTH] = '\0';
-
-        if((ret = dlopen(fullname,flag)))
-        {
-            if(fulllen)
-                free(fullname);
-
-            return ret;
-        }
-#endif
-
-        if(fulllen)
-            free(fullname);
-        fulllen=0;
+    if ( (ret = dlopen(fullname,flag)) )
+    {
+        free(fullname);
+        return ret;
     }
 
-    return dlopen(filename,flag);
+#if defined(HDL_MODULE_SUFFIX)
+    strlcat(fullname,HDL_MODULE_SUFFIX,fulllen);
+
+    if((ret = dlopen(fullname,flag)))
+    {
+        free(fullname);
+        return ret;
+    }
+#endif
+
+    return NULL;
 }
     
 
