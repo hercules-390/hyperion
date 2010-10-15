@@ -488,13 +488,14 @@ void colormsg(PANMSG *p)
       }
       else if(!strncasecmp(&p->msg[i], "nokeep", 6))
       {
+#if defined(OPTION_MSGHLD)
           if ( !k )
           {
               p->keep = 0;
               p->expiration.tv_sec = 0;
               p->expiration.tv_usec = 0;
           }
-
+#endif
           i += 6;   // skip nokeep
           k = TRUE;
       }
@@ -578,7 +579,7 @@ static void scroll_up_lines( int numlines, int doexpire )
         // our topmsg ptr), so if that's the case then we need to
         // continue backing up until we reach a non-kept message.
         // Only then is the screen actually scrolled up one line.
-
+#if defined(OPTION_MSGHLD)
         while (1
             && topmsg->keep
             && lastkept
@@ -590,6 +591,7 @@ static void scroll_up_lines( int numlines, int doexpire )
                 break;
             topmsg = topmsg->prev;
         }
+#endif
     }
 }
 
@@ -609,7 +611,7 @@ static void scroll_down_lines( int numlines, int doexpire )
         // so if that's the case then we need to keep doing that
         // until we eventually find the next non-kept message.
         // Only then is the screen really scrolled down one line.
-
+#if defined(OPTION_MSGHLD)
         while (1
             && topmsg->keep
             && (!lastkept || topmsg->msgnum != lastkept->msgnum)
@@ -620,7 +622,7 @@ static void scroll_down_lines( int numlines, int doexpire )
             if (topmsg == newest_msg())
                 break;
         }
-
+#endif
         if (topmsg != newest_msg())
             topmsg = topmsg->next;
     }
@@ -644,8 +646,10 @@ static void scroll_to_top_line( int doexpire )
     if (doexpire)
         expire_kept_msgs(0);
     topmsg = oldest_msg();
+#if defined(OPTION_MSGHLD)
     while (keptmsgs)
         unkeep( keptmsgs );
+#endif
 }
 
 static void scroll_to_bottom_line( int doexpire )
@@ -2843,8 +2847,10 @@ char    buf[1024];                      /* Buffer workarea           */
                         int keepnum = get_keepnum_by_row( cur_cons_row );
                         if (keepnum >= 0)
                         {
+#if defined(OPTION_MSGHLD)
                             /* ENTER pressed on kept msg; remove msg */
                             unkeep_by_keepnum( keepnum, 1 );
+#endif 
                             redraw_msgs = 1;
                             break;
                         }
@@ -3171,7 +3177,7 @@ FinishShutdown:
 
                 /* Unkeep kept messages if needed */
                 expire_kept_msgs(0);
-
+#if defined(OPTION_MSGHLD)
                 /* Draw kept messages first */
                 for (i=0, p=keptmsgs; i < (SCROLL_LINES + numkept) && p; i++, p = p->next)
                 {
@@ -3183,7 +3189,7 @@ FinishShutdown:
 #endif // defined(OPTION_MSGCLR)
                     write_text (p->msg, MSG_SIZE);
                 }
-
+#endif // defined(OPTION_MSGHLD)
                 /* Then draw current screen */
                 for (p=topmsg; i < (SCROLL_LINES + numkept) && (p != curmsg->next || p == topmsg); i++, p = p->next)
                 {
