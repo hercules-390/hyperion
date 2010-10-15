@@ -2220,7 +2220,7 @@ static zz_func z900_opcode_edxx[256];
 
 DLL_EXPORT  zz_func opcode_replace_instruction(int arch,zz_func newfunc,int code1,int code2)
 {
-    zz_func oldfun;
+    zz_func oldfun = NULL;
     int i;
     if(arch>=GEN_ARCHCOUNT) return NULL;
     if(code1>255) return NULL;

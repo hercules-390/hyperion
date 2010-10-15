@@ -343,7 +343,7 @@ void *capping_manager_thread (void *unused)
 {
 U64 diff;                    /* Time passed during interval          */
 U64 now;                     /* Current time                         */
-U64 then;                    /* Previous interval time               */
+U64 then = 0;                /* Previous interval time               */
 int cpu;                     /* cpu index                            */
 U32 allowed;                 /* Max allowed insts during interval    */
 U64 instcnt[MAX_CPU_ENGINES]; /* Number of CP insts executed         */

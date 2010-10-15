@@ -4185,9 +4185,9 @@ char buf[32];
     regs = sysblk.regs[sysblk.pcpu];
 
     if ( regs->arch_mode == ARCH_900 )
-        MSGBUF( buf, "%16.16"I64_FMT"X", (long unsigned)regs->PX_G);
+        MSGBUF( buf, I64_FMTX, (U64)regs->PX_G);
     else
-        MSGBUF( buf, "%08X", regs->PX_L);
+        MSGBUF( buf, I32_FMTX, (U32)regs->PX_L);
     WRMSG(HHC02277, "I", buf);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);

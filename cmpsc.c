@@ -882,8 +882,8 @@ static int ARCH_DEP(search_sd)(struct cc *cc, BYTE *ch, U16 *is)
   U16 index;                           /* Index within dictionary             */
   int ind_search_siblings;             /* Indicator for keep searching        */
   int scs;                             /* Number of sibling characters        */
-  BYTE *sd1;                           /* Sibling descriptor fmt-0|1 part 1   */
-  BYTE *sd2;                           /* Sibling descriptor fmt-1 part 2     */
+  BYTE *sd1 = NULL;                    /* Sibling descriptor fmt-0|1 part 1   */
+  BYTE *sd2 = NULL;                    /* Sibling descriptor fmt-1 part 2     */
   int sd_ptr;                          /* Pointer to sibling descriptor       */
   int searched;                        /* Number of children searched         */
   int y_in_parent;                     /* Indicator if y bits are in parent   */

@@ -69,18 +69,18 @@ static MIMETAB mime_types[] = {
 
 typedef struct _HTTP_SERV {
         U16     httpport;               /* HTTP port number or zero  */
-        int     httpauth;               /* HTTP auth required flag   */
         char   *httpuser;               /* HTTP userid               */
         char   *httppass;               /* HTTP password             */
         char   *httproot;               /* HTTP root                 */
-        int     httpbinddone;           /* HTTP waiting for bind     */
-        int     httpshutdown;           /* HTTP Flag to signal shut  */
-        int     httpstmtold;            /* HTTP old command type     */
+        BYTE    httpauth:1;             /* HTTP auth required flag   */
+        BYTE    httpbinddone:1;         /* HTTP waiting for bind     */
+        BYTE    httpshutdown:1;         /* HTTP Flag to signal shut  */
+        BYTE    httpstmtold:1;          /* HTTP old command type     */
         COND    http_wait_shutdown;     /* HTTP Shutdown condition   */
         LOCK    http_lock_shutdown;     /* HTTP Shutdown lock        */
     } HTTP_SERV;
 
-static HTTP_SERV    http_serv = { 0, FALSE, NULL, NULL, NULL, FALSE, FALSE, FALSE, 0, 0 };
+static HTTP_SERV    http_serv = { 0, NULL, NULL, NULL, FALSE, FALSE, FALSE, FALSE, {0}, {0} };
 
 DLL_EXPORT int html_include(WEBBLK *webblk, char *filename)
 {
