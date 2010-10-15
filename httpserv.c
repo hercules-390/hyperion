@@ -80,7 +80,8 @@ typedef struct _HTTP_SERV {
         LOCK    http_lock_shutdown;     /* HTTP Shutdown lock        */
     } HTTP_SERV;
 
-static HTTP_SERV    http_serv = { 0, NULL, NULL, NULL, FALSE, FALSE, FALSE, FALSE, {0}, {0} };
+static HTTP_SERV    http_serv;
+static BYTE         http_struct_init = FALSE;
 
 DLL_EXPORT int html_include(WEBBLK *webblk, char *filename)
 {
@@ -952,6 +953,11 @@ int http_startup(int isconfigcalling)
         initialize_condition( &http_serv.http_wait_shutdown );
         initialize_lock( &http_serv.http_lock_shutdown );
         first_call = FALSE;
+        if ( !http_struct_init )
+        {
+            bzero(&http_serv,sizeof(HTTP_SERV));
+            http_struct_init = TRUE;
+        }
     }
 
     if ( http_serv.httpport == 0 )
@@ -1000,6 +1006,12 @@ int http_startup(int isconfigcalling)
 int http_command(int argc, char *argv[])
 {
     int rc = 0;
+
+    if ( !http_struct_init )
+    {
+        bzero(&http_serv,sizeof(HTTP_SERV));
+        http_struct_init = TRUE;
+    }
 
     http_serv.httpstmtold = FALSE;
 
