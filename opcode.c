@@ -2120,7 +2120,7 @@ int d2,b2;
 }
 
 /* Gabor Hoffer (performance option) */
-DLL_EXPORT zz_func s370_opcode_table[256];
+zz_func s370_opcode_table[256];
 static zz_func s370_opcode_01xx[256];
 static zz_func s370_opcode_a4xx[256];
 static zz_func s370_opcode_a5xx[256];
