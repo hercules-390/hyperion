@@ -920,11 +920,6 @@ COMMAND("exec",      PANEL,         SYSCMDALL,          exec_cmd,
     "Format: \"exec rexx_exec [args...]\" where 'rexx_exec' is the name of\n"
     "the REXX script, and 'args' are arguments (separated by spaces) to be\n"
     "passed to the script.\n")
-COMMAND("execb",      PANEL,         SYSCMDALL,          execb_cmd,
-  "Execute a REXX script in background",
-    "Format: \"execb rexx_exec [args...]\" where 'rexx_exec' is the name of\n"
-    "the REXX script, and 'args' are arguments (separated by spaces) to be\n"
-    "passed to the script.\n")
 #endif /*defined(HAVE_REGINA_REXXSAA_H)*/
 
 COMMAND("cache",       PANEL+CONFIG, SYSCMDALL-SYSOPER,   cache_cmd,

@@ -31,8 +31,6 @@
 #define hSIOExit "HERCSIOE"
 
 static int rexx_initialised = FALSE;
-static TID rexx_tid=0;
-static char *pszCmdline = NULL;     /* save pointer to cmdline */
 
 #if defined(OPTION_DYNAMIC_RESOLVE_REXX)
 
@@ -208,27 +206,18 @@ RXSYSEXIT ExitList[2];
 
     hostpath( pathname, argv[1], sizeof(pathname) );
 
-    if (access( pathname, R_OK ) != 0 && strcmp(basename(argv[1]),argv[1]) == 0 )
+    if (access( pathname, R_OK ) != 0 && !strcmp(basename(argv[1]),argv[1]) )
     {   /* try $(MODPATH)\rexx\filename if not found and no pathing information */
-        char *p = calloc(1,sizeof(pathname)+1);
-        if ( p != NULL )
-        {
-            strlcpy( p, get_symbol("MODPATH"), sizeof(pathname) );
-            strlcat( p, PATHSEPS,              sizeof(pathname) );
-            strlcat( p, "rexx",                sizeof(pathname) );
-            strlcat( p, PATHSEPS,              sizeof(pathname) );
-            strlcat( p, argv[1],               sizeof(pathname) );
+    char execpath[MAX_PATH];
 
-            if (access( pathname, R_OK ) == 0)
-                hostpath( pathname, p, sizeof(pathname));
-        }
-        else
-        {
-            char msgbuf[64];
-            MSGBUF( msgbuf, "malloc(%lu)", sizeof(pathname)+1 );
-            WRMSG(HHC02219, "E", msgbuf, strerror(errno) );
-            return -1;
-        }
+        strlcpy( execpath, get_symbol("MODPATH"), sizeof(pathname) );
+        strlcat( execpath, PATHSEPS,              sizeof(pathname) );
+        strlcat( execpath, "rexx",                sizeof(pathname) );
+        strlcat( execpath, PATHSEPS,              sizeof(pathname) );
+        strlcat( execpath, argv[1],               sizeof(pathname) );
+
+        if (access( pathname, R_OK ) == 0)
+            hostpath( pathname, execpath, sizeof(pathname));
     }
 
     if (argc > 2)
@@ -240,11 +229,11 @@ RXSYSEXIT ExitList[2];
 
         MAKERXSTRING(arg, malloc(len), len - 1);
 
-        strlcpy( RXSTRPTR(arg), argv[2], len );
+        strcpy( RXSTRPTR(arg), argv[2] );
         for ( i = 3; i < argc; i++ )
         {
-            strlcat( RXSTRPTR(arg), " ", len );
-            strlcat( RXSTRPTR(arg), argv[i], len );
+            strcat( RXSTRPTR(arg), " " );
+            strcat( RXSTRPTR(arg), argv[i] );
         }
     }
     else
@@ -268,65 +257,4 @@ RXSYSEXIT ExitList[2];
     return rc ? rc : ret;
 }
 
-void *exec_process_thread( void *cmd)
-{
-int     cmd_argc;
-char*   cmd_argv[MAX_ARGS];
-int     rc;
-
-    UNREFERENCED(cmd);
-
-    /* Parse the command line into its individual arguments...
-       Note: original command line now sprinkled with nulls */
-    parse_args (pszCmdline, MAX_ARGS, cmd_argv, &cmd_argc);
-
-    cmd_argv[0] = "exec";
-
-    rc = exec_cmd(cmd_argc, cmd_argv, pszCmdline);
-    rexx_tid = 0;
-    WRMSG( HHC02264, "I", cmd_argv[1] );
-    free(pszCmdline);
-    pszCmdline = NULL;
-    return 0;
-}
-
-/*-------------------------------------------------------------------*/
-/* execb command - REXX BACKGROUND                                   */
-/*-------------------------------------------------------------------*/
-int execb_cmd(int argc, char *argv[], char *cmdline)
-{
-    int rc;
-    UNREFERENCED(argv);
-
-    if (argc<2)
-    {
-        WRMSG( HHC02299, "E", argv[0] );
-        return 1;
-    }
-
-    if (rexx_tid==0)
-    {
-        pszCmdline = strdup(cmdline);
-
-        rc = create_thread(&rexx_tid,DETACHED,
-                  exec_process_thread,NULL,"rexx processing");
-        if (rc)
-        {
-            if (pszCmdline != NULL)
-            {
-                free(pszCmdline);
-                pszCmdline = NULL;
-            }
-            WRMSG(HHC00102, "E", strerror(rc));
-            rexx_tid = 0;
-        }
-    }
-    else
-    {
-        WRMSG( HHC02258, "E", "rexx script" );
-        return -1;
-    }
-
-    return 0;
-}
 #endif /*defined(HAVE_REGINA_REXXSAA_H)*/
