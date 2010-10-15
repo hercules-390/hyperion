@@ -38,7 +38,7 @@ int             i;                      /* Index                     */
 int             bigend;                 /* 1=big-endian file         */
 DEVBLK          devblk;                 /* DEVBLK                    */
 DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
-char           *strtok_str;
+char           *strtok_str = NULL;
 
     /* Set program name */
     if ( argc > 0 )

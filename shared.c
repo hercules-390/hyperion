@@ -120,7 +120,7 @@ BYTE     c;                             /* Used for parsing          */
 char    *cu = NULL;                     /* Specified control unit    */
 FWORD    cyls;                          /* Remote number cylinders   */
 char    *p, buf[1024];                  /* Work buffer               */
-char    *strtok_str;                    /* last position             */
+char    *strtok_str = NULL;             /* last position             */
 
     retry = dev->connecting;
 
@@ -389,7 +389,7 @@ FWORD    numblks;                       /* FBA number blocks         */
 FWORD    blksiz;                        /* FBA block size            */
 char    *p, buf[1024];                  /* Work buffer               */
 #ifdef HAVE_LIBZ
-char    *strtok_str;                    /* last token                */
+char    *strtok_str = NULL;             /* last token                */
 #endif /*HAVE_LIBZ*/
 
     retry = dev->connecting;
@@ -2896,7 +2896,7 @@ DLL_EXPORT int shared_cmd(int argc, char *argv[], char *cmdline)
 {
     char buf[256];
     char *kw, *op, c;
-    char *strtok_str;
+    char *strtok_str = NULL;
 
     UNREFERENCED(cmdline);
 

@@ -214,7 +214,7 @@ BYTE    c;                              /* Print character           */
 
         /* process multiline messages */
         {
-            char    *strtok_str;
+            char    *strtok_str = NULL;
             char    *str = strtok_r ((char *)iobuf,"\n", &strtok_str);
 
             while (str != NULL)

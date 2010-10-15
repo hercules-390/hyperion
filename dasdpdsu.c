@@ -73,7 +73,7 @@ DSXTENT         extent[16];             /* Extent descriptor array   */
 BYTE           *blkptr;                 /* -> PDS directory block    */
 BYTE            dirblk[256];            /* Copy of directory block   */
 CIFBLK         *cif;                    /* CKD image file descriptor */
-char           *strtok_str;
+char           *strtok_str = NULL;
 
 
     /* Set program name */

@@ -70,7 +70,7 @@ main( int argc, char *argv[] )
     char           *o_filename;
     char           *o_owner;
     char           *o_volser;
-    char           *strtok_str;
+    char           *strtok_str = NULL;
 
 
     /* Set program name */

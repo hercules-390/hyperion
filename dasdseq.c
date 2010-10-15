@@ -146,7 +146,7 @@ int main(int argc, char **argv)
     int             dsorg;
     int             rc;
     char            pathname[MAX_PATH];
-    char           *strtok_str;
+    char           *strtok_str = NULL;
 
     /* Set program name */
     if ( argc > 0 )

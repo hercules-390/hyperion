@@ -356,7 +356,7 @@ main( int argc, char *argv[] )
     char            msgbuf[512];            /* message build work area   */
     char            toname[ MAX_PATH ];
     int             rc;
-    char           *strtok_str;
+    char           *strtok_str = NULL;
 
     /* Set program name */
     if ( argc > 0 )

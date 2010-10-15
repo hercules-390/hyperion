@@ -123,7 +123,7 @@ char            ifname[256];            /* Input file name           */
 char            ofname[256];            /* Output file name          */
 BYTE            volser[7];              /* Volume serial (ASCIIZ)    */
 int             lfs = 0;                /* 1 = Build large file      */
-char           *strtok_str;
+char           *strtok_str = NULL;
 
     /* Set program name */
     if ( argc > 0 )

@@ -82,7 +82,7 @@ char            msgbuf[512];            /* Message buffer            */
 size_t          fba_bytes_remaining=0;  /* FBA bytes to be copied    */
 int             nullfmt = CKDDASD_NULLTRK_FMT0; /* Null track format */
 char            pathname[MAX_PATH];     /* file path in host format  */
-char           *strtok_str;             
+char           *strtok_str = NULL;      
 
     /* Set program name */
     if ( argc > 0 )

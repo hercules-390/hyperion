@@ -120,7 +120,7 @@ BYTE           *blkptr;                 /* -> PDS directory block    */
 CIFBLK         *cif;                    /* CKD image file descriptor */
 MEMINFO        *memtab;                 /* -> Member info array      */
 int             nmem = 0;               /* Number of array entries   */
-char           *strtok_str;
+char           *strtok_str = NULL;
 
     /* Set program name */
     if ( argc > 0 )

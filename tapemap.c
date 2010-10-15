@@ -72,7 +72,7 @@ int64_t         file_bytes;             /* File byte count           */
 BYTE            labelrec[81];           /* Standard label (ASCIIZ)   */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
 char            pathname[MAX_PATH];     /* file path in host format  */
-char           *strtok_str;
+char           *strtok_str = NULL;
 
     /* Set program name */
     if ( argc > 0 )

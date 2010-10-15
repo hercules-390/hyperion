@@ -306,7 +306,7 @@ static void http_interpret_variable_string(WEBBLK *webblk, char *qstring, int ty
 {
 char *name;
 char *value;
-char *strtok_str;
+char *strtok_str = NULL;
 CGIVAR **cgivar;
 
     for (cgivar = &(webblk->cgivar);
@@ -493,7 +493,7 @@ static void *http_request(int sock)
     char line[HTTP_PATH_LENGTH];
     char *url = NULL;
     char *pointer;
-    char *strtok_str;
+    char *strtok_str = NULL;
     CGITAB *cgient;
     int content_length = 0;
 

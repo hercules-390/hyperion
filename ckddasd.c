@@ -224,7 +224,7 @@ char           *kw;                     /* Argument keyword          */
 int             cckd=0;                 /* 1 if compressed CKD       */
 char            pathname[MAX_PATH];     /* file path in host format  */
 char            filename[FILENAME_MAX]; /* work area for display     */
-char           *strtok_str;             /* save last position        */
+char           *strtok_str = NULL;      /* save last position        */
 
     if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
         dev->devtype = 0x3380;

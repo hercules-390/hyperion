@@ -679,7 +679,7 @@ static void do_panel_command( void* cmd )
          strstr(cmdline, sysblk.cmdsep) != NULL )
     {
         char *command;
-        char *strtok_str;
+        char *strtok_str = NULL;
 
         command = strdup(cmdline);
 

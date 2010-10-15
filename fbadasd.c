@@ -73,7 +73,7 @@ int     i;                              /* Loop index                */
 CKDDASD_DEVHDR  devhdr;                 /* Device header             */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
 char    pathname[MAX_PATH];             /* file path in host format  */
-char   *strtok_str;                     /* save last position        */ 
+char   *strtok_str = NULL;              /* save last position        */ 
 
     if (!dev->typname || !sscanf(dev->typname,"%hx",&(dev->devtype)))
         dev->devtype = DEFAULT_FBA_TYPE;

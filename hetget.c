@@ -666,7 +666,7 @@ main( int argc, char *argv[] )
     int             rc;
     int             i;
     char            pathname[MAX_PATH];
-    char           *strtok_str;
+    char           *strtok_str = NULL;
 
     /* Set program name */
     if ( argc > 0 )

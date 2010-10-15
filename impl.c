@@ -749,7 +749,7 @@ int     dll_count;                      /* index into array          */
             break;
         case 'l':
             {
-            char *dllname, *strtok_str;
+            char *dllname, *strtok_str = NULL;
                 for(dllname = strtok_r(optarg,", ",&strtok_str);
                     dllname;
                     dllname = strtok_r(NULL,", ",&strtok_str))
@@ -784,7 +784,7 @@ int     dll_count;                      /* index into array          */
     if (arg_error)
     {
         char pgm[MAX_PATH];
-        char* strtok_str;
+        char* strtok_str = NULL;
         strncpy(pgm, sysblk.hercules_pgmname, sizeof(pgm));
 
 #if defined(OPTION_DYNAMIC_LOAD)

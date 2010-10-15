@@ -57,7 +57,7 @@ int main(int argc, char **argv)
  CIFBLK         *cif = 0;
  char           *fn;
  char           *sfn;
- char           *strtok_str;
+ char           *strtok_str = NULL;
 
 
     /* Set program name */

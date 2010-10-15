@@ -1031,7 +1031,7 @@ static int set_iconv_cp(char *name)
 {
 char *codepage;
 char *fcp, *tcp;
-char *strtok_str;
+char *strtok_str = NULL;
 
 char ibyte, obyte;
 char *ibytes ,*obytes;
@@ -1166,7 +1166,7 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
     if ( CMD(cmd,alter,3) )
     {
         int     addargc;
-        char   *strtok_str = "";
+        char   *strtok_str = NULL;
 
         char   *p;
         char    buf[256];

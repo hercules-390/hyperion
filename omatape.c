@@ -68,7 +68,7 @@ char           *tdfblklen;              /* -> Length in TDF record   */
 OMATAPE_DESC   *tdftab;                 /* -> Tape descriptor array  */
 BYTE            c;                      /* Work area for sscanf      */
 char            pathname[MAX_PATH];     /* file path in host format  */
-char           *strtok_str;             /* last token position       */
+char           *strtok_str = NULL;      /* last token position       */
 
     /* Isolate the base path name of the TDF file */
     for (pathlen = strlen(dev->filename); pathlen > 0; )

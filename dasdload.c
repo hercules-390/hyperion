@@ -3746,7 +3746,7 @@ char           *pkeyln;                 /* -> key length             */
 char           *pimeth;                 /* -> initialization method  */
 char           *pifile;                 /* -> initialization filename*/
 BYTE            c;                      /* Character work area       */
-char           *strtok_str;             /* last token                */
+char           *strtok_str = NULL;      /* last token                */
 
     /* Parse the input statement */
     pdsnam = strtok_r (stmt, " \t", &strtok_str);
@@ -4282,7 +4282,7 @@ BYTE            comp = 0xff;            /* Compression algoritm      */
 int             altcylflag = 0;         /* Alternate cylinders flag  */
 int             lfs = 0;                /* 1 = Large file            */
 char            pathname[MAX_PATH];     /* cfname in host path format*/
-char           *strtok_str;             /* last token position       */
+char           *strtok_str = NULL;      /* last token position       */
 
     /* Set program name */
     if ( argc > 0 )

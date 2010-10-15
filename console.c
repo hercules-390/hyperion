@@ -1373,7 +1373,7 @@ static char *build_logo(char **logodata,size_t logosize,size_t *blen)
     int     attr;
     int     align;
     char    *wrk;
-    char    *strtok_str;
+    char    *strtok_str = NULL;
     size_t  tsize;
 
     bfr=NULL;

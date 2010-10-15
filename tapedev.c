@@ -2052,7 +2052,7 @@ void autoload_init(DEVBLK *dev,int ac,char **av)
     FILE        *aldf;
     char    *verb;
     int        i;
-    char    *strtokw;
+    char    *strtokw = NULL;
     char     pathname[MAX_PATH];
 
     autoload_close(dev);

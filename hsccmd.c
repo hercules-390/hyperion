@@ -2459,7 +2459,7 @@ int cckd_cmd(int argc, char *argv[], char *cmdline)
 {
     char*   p;
     int     rc = -1;
-    char*   strtok_str;
+    char*   strtok_str = NULL;
     if ( argc != 2 || cmdline == NULL || (int)strlen(cmdline) < 5 )
     {
         WRMSG( HHC02299, "E", argv[0] );
@@ -2774,7 +2774,7 @@ char *styp_values[] = {"CP","CF","AP","IL","??","IP"}; /* type values */
 BYTE ptyp;                           /* Processor engine type     */
 int  cpu,count;
 BYTE c;
-char *strtok_str = "";
+char *strtok_str = NULL;
 
     UNREFERENCED(cmdline);
 
@@ -3911,7 +3911,7 @@ int cd_cmd(int argc, char *argv[], char *cmdline)
         while (isspace(*path)) path++;
 #ifdef _MSVC_
         {
-            char* strtok_str;
+            char* strtok_str = NULL;
             _chdir( strtok_r( path, "\"", &strtok_str ) );
         }
 #else
@@ -5720,7 +5720,7 @@ size_t  maxb;
 U16  lcss;
 U16  devnum;
 char *cdev, *clcss;
-char *strtok_str;
+char *strtok_str = NULL;
 
 #if defined(OPTION_IPLPARM)
 char save_loadparm[16];

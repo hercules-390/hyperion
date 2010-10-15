@@ -500,7 +500,7 @@ int64_t         bytes_read;             /* Bytes read from i/p file  */
 int64_t         file_bytes;             /* Byte count for curr file  */
 char            pathname[MAX_PATH];     /* file name in host format  */
 struct mtget    mtget;                  /* Area for MTIOCGET ioctl   */
-char           *strtok_str;
+char           *strtok_str = NULL;
 
 #if defined(EXTERNALGUI)
 struct mtpos    mtpos;                  /* Area for MTIOCPOS ioctl   */

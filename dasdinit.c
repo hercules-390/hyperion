@@ -97,7 +97,7 @@ FBADEV *fba;                            /* -> FBA device table entry */
 int     lfs = 0;                        /* 1 = Build large file      */
 int     nullfmt = CKDDASD_NULLTRK_FMT1; /* Null track format type    */
 int     rc;                             /* Return code               */
-char   *strtok_str;
+char   *strtok_str = NULL;
 
     /* Set program name */
     if ( argc > 0 )

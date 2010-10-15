@@ -768,7 +768,7 @@ int process_entry(struct options *opts,char *orec,int recno)
     struct  TAPE_BLOCKS *blks;
     struct  FST_BLOCK *fstb;
     struct  stat stt;
-    char   *strtok_str;
+    char   *strtok_str = NULL;
 
     ignore=0;
     rec=strdup(orec);
@@ -998,7 +998,7 @@ int main(int argc,char **argv)
     char           *pgm;                    /* less any extension (.ext) */
     char           *pgmpath;                /* prog path in host format  */
     char            msgbuf[512];            /* message build work area   */
-    char           *strtok_str;
+    char           *strtok_str = NULL;
 
     /* Set program name */
     if ( argc > 0 )

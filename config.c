@@ -1329,7 +1329,7 @@ parse_lcss(const char *spec,
     char    *r;
     char    *strptr;
     char    *garbage;
-    char    *strtok_str = "";
+    char    *strtok_str = NULL;
     size_t  len;
 
     len = strlen(spec)+1;
@@ -1476,7 +1476,7 @@ static size_t parse_devnums(const char *spec,DEVNUMSDESC *dd)
     int  duplicate;     /* duplicated CUU indicator        */
     int badcuu;         /* offending CUU                   */
     int rc;             /* Return code work var            */
-    char *strtok_str = ""; /* last token                   */
+    char *strtok_str = NULL; /* Last token                 */
 
     rc=parse_lcss(spec,&sc,1);
     if(rc<0)

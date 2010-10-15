@@ -36,7 +36,7 @@ int             force=0;                /* 1=Check if OPENED bit on  */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
 DEVBLK          devblk;                 /* DEVBLK                    */
 DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
-char           *strtok_str;             /* last token position       */
+char           *strtok_str = NULL;      /* last token position       */
 
     /* Set program name */
     if ( argc > 0 )
