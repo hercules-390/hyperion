@@ -3813,7 +3813,7 @@ static void ARCH_DEP(pcc_xts_aes)(REGS *regs)
     do
     {
       if(bsn[ibi[15] / 8] & mask[ibi[15] % 8])
-        gcm_gf_mult(xts, xts, exp_table[ibi[15]]);
+        gcm_gf_mult(xts, exp_table[ibi[15]], xts);
       ibi[15]++;
     }
     while(ibi[15] != 128);
@@ -3822,7 +3822,7 @@ static void ARCH_DEP(pcc_xts_aes)(REGS *regs)
   /* Encrypt tweak and multiply */
   aes_set_key(&context, parameter_block, keylen * 8);
   aes_encrypt(&context, tweak, tweak);
-  gcm_gf_mult(xts, xts, tweak);
+  gcm_gf_mult(xts, tweak, xts);
 
 #ifdef OPTION_PCC_DEBUG
   LOGBYTE("ibi   :", ibi, 16);
