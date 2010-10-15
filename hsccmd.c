@@ -10180,6 +10180,7 @@ int qstor_cmd(int argc, char *argv[], char *cmdline)
         return -1;
     }
 
+#if defined(_900)
     if ( sysblk.mainsize >= ONE_EXABYTE )
     {
         MSGBUF( buf, "%" I64_FMT "d E", sysblk.mainsize >> 60 );
@@ -10192,6 +10193,7 @@ int qstor_cmd(int argc, char *argv[], char *cmdline)
     {
         MSGBUF( buf, "%" I64_FMT "d T", sysblk.mainsize >> 40 );
     }
+#endif // defined(_900)
     else if ( sysblk.mainsize >= ONE_GIGABYTE )
     {
         MSGBUF( buf, "%3.3" I64_FMT "d G", sysblk.mainsize >> 30 );

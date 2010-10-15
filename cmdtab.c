@@ -390,9 +390,11 @@ int ProcessPanelCommand (char* pszCmdLine)
     /* Error: unknown/unsupported command... */
     ASSERT( cmd_argv[0] );
 
+#if defined(_FEATURE_SYSTEM_CONSOLE)
     if ( sysblk.scpimply && can_send_command() )
         scp_command(pszSaveCmdLine, FALSE, sysblk.scpecho ? TRUE : FALSE);
     else
+#endif
         WRMSG( HHC01600, "E", cmd_argv[0] );
 
 ProcessPanelCommandExit:;
@@ -585,12 +587,14 @@ void *panel_command (void *cmdline)
     {
         if (!(*pCmdLine == '-'))
         {
+#if defined(_FEATURE_SYSTEM_CONSOLE)
             if (*pCmdLine == '.' || *pCmdLine == '!')
             {
                 if (sysblk.scpecho)
                     history_add(cmdline);
             }
             else
+#endif
                 history_add(cmdline);
         }
     }

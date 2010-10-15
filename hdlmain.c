@@ -178,7 +178,7 @@ HDL_RESOLVER_SECTION;
     HDL_RESOLVE( s390_cipher_message_with_output_feedback );
     HDL_RESOLVE( s390_perform_cryptographic_computation   );
 #endif
-#if defined(_390) && defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4)
+#if defined(_900) && defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4)
     HDL_RESOLVE( z900_cipher_message_with_cipher_feedback );
     HDL_RESOLVE( z900_cipher_message_with_counter         );
     HDL_RESOLVE( z900_cipher_message_with_output_feedback );

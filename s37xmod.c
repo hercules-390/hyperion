@@ -12,6 +12,7 @@
 #include "hdl.h"
 #include "opcode.h"
 
+#if defined(_370)
 /* This file is only a STUB to separate the module part of s37x
    from the functional code.
    This is necessary because the final location of the functional
@@ -46,6 +47,8 @@ END_REGISTER_SECTION
 
 
 #endif /* defined(OPTION_370_EXTENSION) */
+
+#endif // defined(_370)
 
 HDL_DEPENDENCY_SECTION;
 {

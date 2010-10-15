@@ -12,6 +12,8 @@
 #include "hdl.h"
 #include "opcode.h"
 
+#if defined(_370)
+
 #if defined(OPTION_370_EXTENSION)
 
 static void    *(*resolver)(char *ep);
@@ -517,3 +519,4 @@ DLL_EXPORT void s37x_replace_opcode_scan(int set)
     }
 }
 #endif
+#endif // defined(_370)

@@ -496,11 +496,13 @@ int     dll_count;                      /* index into array          */
     /* Default command separator to off (NULL) */
     sysblk.cmdsep = NULL;
 
+#if defined(_FEATURE_SYSTEM_CONSOLE)
     /* set default for scpecho to FALSE */
     sysblk.scpecho = FALSE;
 
     /* set fault for scpimply to FALSE */
     sysblk.scpimply = FALSE;
+#endif
 
     /* set default system state to reset */
     sysblk.sys_reset = TRUE; 

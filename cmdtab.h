@@ -228,8 +228,8 @@ COMMAND("cfall",     PANEL,         SYSCMDALL,          cfall_cmd,
   "Configure all CPU's online or offline",
      NULL)
 #else
-COMMAND("cf",        PANEL,         SYSCMDALL,          cf_cmd, NULL, NULL );
-COMMAND("cfall",     PANEL,         SYSCMDALL,          cfall_cmd, NULL, NULL );
+COMMAND("cf",        PANEL,         SYSCMDALL,          cf_cmd, NULL, NULL )
+COMMAND("cfall",     PANEL,         SYSCMDALL,          cfall_cmd, NULL, NULL )
 #endif
 
 #ifdef _FEATURE_SYSTEM_CONSOLE

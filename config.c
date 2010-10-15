@@ -196,12 +196,12 @@ int cpu;
 static U32 config_allocxsize = 0;
 int configure_xstorage(U32 mbxstor)
 {
+#ifdef _FEATURE_EXPANDED_STORAGE
 BYTE *xpndstor;
 RADR  xpndsize;
 BYTE *dofree = NULL;
 int cpu;
 
-#ifdef _FEATURE_EXPANDED_STORAGE
     OBTAIN_INTLOCK(NULL);
     if(sysblk.cpus)
         for(cpu = 0; cpu < sysblk.maxcpu; cpu++)

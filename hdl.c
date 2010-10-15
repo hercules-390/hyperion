@@ -427,7 +427,7 @@ int len;
         HDLDEV *hndent;
             len = 0;
             for(hndent = dllent->hndent; hndent; hndent = hndent->next)
-                len += sprintf(buf + len, " %s",hndent->name);
+                len += snprintf(buf + len, sizeof(buf) - len - 1, " %s",hndent->name);
             WRMSG(HHC01533, "I", buf);
 
         }
@@ -438,13 +438,18 @@ int len;
             for(insent = dllent->insent; insent; insent = insent->next)
             {
                 len = 0;
+#if defined(_370)
                 if(insent->archflags & HDL_INSTARCH_370)
-                    len += sprintf(buf + len, ", archmode = " _ARCH_370_NAME);
+                    len += snprintf(buf + len, sizeof(buf) - len - 1, ", archmode = " _ARCH_370_NAME);
+#endif
+#if defined(_390)
                 if(insent->archflags & HDL_INSTARCH_390)
-                    len += sprintf(buf + len, ", archmode = " _ARCH_390_NAME);
+                    len += snprintf(buf + len, sizeof(buf) - len - 1, ", archmode = " _ARCH_390_NAME);
+#endif
+#if defined(_900)
                 if(insent->archflags & HDL_INSTARCH_900)
-                    len += sprintf(buf + len, ", archmode = " _ARCH_900_NAME);
-
+                    len += snprintf(buf + len, sizeof(buf) - len - 1, ", archmode = " _ARCH_900_NAME);
+#endif
                 WRMSG( HHC01534, "I"
                     ,insent->instname
                     ,insent->opcode

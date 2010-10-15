@@ -559,12 +559,18 @@ int enable;
 const BYTE arch2als[] = {
 #if defined(_370)
  S370
-#endif
+  #if defined(_390) || defined(_900) 
  ,
+  #endif // defined(_390) || defined(_900)
+#endif
+
 #if defined(_390)
  ESA390
-#endif
+  #if defined(_900) 
  ,
+  #endif // defined(_900)
+#endif
+
 #if defined(_900)
  ZARCH
 #endif
@@ -572,12 +578,18 @@ const BYTE arch2als[] = {
 BYTE als = 
 #if defined(_370)
  S370
-#endif
+  #if defined(_390) || defined(_900) 
  |
+  #endif
+#endif
+
 #if defined(_390)
  ESA390
-#endif
+  #if defined(_900) 
  |
+  #endif
+#endif
+
 #if defined(_900)
  ZARCH
 #endif
