@@ -40,7 +40,7 @@
 /* Structure definition for CPU register context                     */
 /*-------------------------------------------------------------------*/
 struct REGS {                           /* Processor registers       */
-#define HDL_VERS_REGS   "3.03"          /* Internal Version Number   */
+#define HDL_VERS_REGS   "3.08"          /* Internal Version Number   */
 #define HDL_SIZE_REGS   sizeof(REGS)
 
         int     arch_mode;              /* Architectural mode        */
@@ -781,7 +781,7 @@ struct IOINT {                          /* I/O interrupt queue entry */
 /* Device configuration block                                        */
 /*-------------------------------------------------------------------*/
 struct DEVBLK {                         /* Device configuration block*/
-#define HDL_VERS_DEVBLK   "3.05"        /* Internal Version Number   */
+#define HDL_VERS_DEVBLK   "3.08"        /* Internal Version Number   */
 #define HDL_SIZE_DEVBLK   sizeof(DEVBLK)
         DEVBLK *nextdev;                /* -> next device block      */
         REGS   *regs;                   /* -> REGS if syncio         */
