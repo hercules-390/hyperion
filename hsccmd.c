@@ -9475,45 +9475,46 @@ int ecpsvm_cmd(int argc, char *argv[], char *cmdline)
     if ( CMD(argv[0],evm,3) || CMD(argv[0],ecps:vm,7) )
         WRMSG( HHC02256, "W", argv[0], "ecpsvm" );
 
-    if ( CMD(argv[1],no,2) && argc == 2 )
+    if ( !sysblk.config_done && ( argc == 2 || argc == 3 ) )
     {
-        sysblk.ecpsvm.available = FALSE;
-        if ( MLVL(VERBOSE) )
-            WRMSG( HHC02204, "I", argv[0], "disabled" );
-        return 0;
-    }
-    else if ( CMD(argv[1],yes,3) && argc == 2 )
-    {
-        sysblk.ecpsvm.available = TRUE;
-        if ( MLVL(VERBOSE) )
-            WRMSG( HHC02204, "I", argv[0], "enabled" );
-        return 0;
-    }
-    else if ( CMD(argv[1],level,5) && !MLVL(VERBOSE))
-    {
-        int lvl = 20;
-        if ( argc == 3 )
+        if ( CMD(argv[1],no,2) && argc == 2 )
         {
-            BYTE    c;
-            if (sscanf(argv[2], "%d%c", &lvl, &c) != 1)
+            sysblk.ecpsvm.available = FALSE;
+            if ( MLVL(VERBOSE) )
+                WRMSG( HHC02204, "I", argv[0], "disabled" );
+            return 0;
+        }
+        else if ( CMD(argv[1],yes,3) && argc == 2 )
+        {
+            sysblk.ecpsvm.available = TRUE;
+            if ( MLVL(VERBOSE) )
+                WRMSG( HHC02204, "I", argv[0], "enabled" );
+            return 0;
+        }
+        else if ( CMD(argv[1],level,5) )
+        {
+            int lvl = 20;
+            if ( argc == 3 )
             {
-                WRMSG( HHC01723, "W", argv[2] );
-                lvl = 20;
+                BYTE    c;
+                if (sscanf(argv[2], "%d%c", &lvl, &c) != 1)
+                {
+                    WRMSG( HHC01723, "W", argv[2] );
+                    lvl = 20;
+                }
             }
+            sysblk.ecpsvm.level = lvl;
+            sysblk.ecpsvm.available = TRUE;
+            if ( MLVL(VERBOSE) )
+            {
+                char msgbuf[40];
+                MSGBUF( msgbuf, "enabled: level %d", lvl );
+                WRMSG( HHC02204, "I", argv[0], msgbuf );
+            }
+            return 0;
         }
-        sysblk.ecpsvm.level = lvl;
-        sysblk.ecpsvm.available = TRUE;
-        if ( MLVL(VERBOSE) )
-        {
-            char msgbuf[40];
-            MSGBUF( msgbuf, "enabled: level %d", lvl );
-            WRMSG( HHC02204, "I", argv[0], msgbuf );
-        }
-        return 0;
     }
-    else
-        ecpsvm_command(argc,argv);
-
+    ecpsvm_command(argc,argv);
     return 0;
 }
 #endif
@@ -10306,7 +10307,24 @@ int CmdLevel(int argc, char *argv[], char *cmdline)
                 )
                 sysblk.sysgroup &= ~SYSGROUP_SYSPROG;
             else
-            if  ( strlen( argv[i] ) >= 3  &&
+            if  ( strlen( argv[i] ) >= 6  &&
+                  strlen( argv[i] ) <= 13 &&
+                  !strncasecmp( argv[i], "configuration", strlen( argv[i] ) )
+                )
+                sysblk.sysgroup |= SYSGROUP_SYSCONFIG;
+            else
+            if  ( strlen( argv[i] ) >= 7  &&
+                  strlen( argv[i] ) <= 14 &&
+                  !strncasecmp( argv[i], "+configuration", strlen( argv[i] ) )
+                )
+                sysblk.sysgroup |= SYSGROUP_SYSCONFIG;
+            else
+            if  ( strlen( argv[i] ) >= 7  &&
+                  strlen( argv[i] ) <= 14 &&
+                  !strncasecmp( argv[i], "-configuration", strlen( argv[i] ) )
+                )
+                sysblk.sysgroup &= ~SYSGROUP_SYSCONFIG;
+            else            if  ( strlen( argv[i] ) >= 3  &&
                   strlen( argv[i] ) <= 9 &&
                   !strncasecmp( argv[i], "developer", strlen( argv[i] ) )
                 )
@@ -10363,6 +10381,7 @@ int CmdLevel(int argc, char *argv[], char *cmdline)
             (sysblk.sysgroup&SYSGROUP_SYSOPER)?"operator ":"",
             (sysblk.sysgroup&SYSGROUP_SYSMAINT)?"maintenance ":"",
             (sysblk.sysgroup&SYSGROUP_SYSPROG)?"programmer ":"",
+            (sysblk.sysgroup&SYSGROUP_SYSCONFIG)?"configuration ":"",
             (sysblk.sysgroup&SYSGROUP_SYSDEVEL)?"developer ":"",
             (sysblk.sysgroup&SYSGROUP_SYSDEBUG)?"debugging ":"");
         buf[strlen(buf)-1] = 0;

@@ -70,11 +70,11 @@ typedef struct _CMDTAB
 #define SYSOPER    0x01             /* System Operator     */
 #define SYSMAINT   0x02             /* System Maintainer   */
 #define SYSPROG    0x04             /* Systems Programmer  */
-#define SYSCONFIG  0x10             /* System Configuration*/
+#define SYSCONFIG  0x08             /* System Configuration*/
 #define SYSDEVEL   0x20             /* System Developer    */
 #define SYSDEBUG   0x40             /* Enable Debugging    */
 #define SYSNONE    0x80             /* Enable for any lvls */
-#define SYSCMDALL  ( SYSOPER + SYSMAINT + SYSPROG + SYSDEVEL + SYSDEBUG + SYSCONFIG ) /* Valid in all states */ 
+#define SYSCMDALL  ( SYSOPER + SYSMAINT + SYSPROG + SYSCONFIG + SYSDEVEL + SYSDEBUG ) /* Valid in all states */ 
     CMDFUNC    *function;           /* handler function    */
     const char *shortdesc;          /* description         */
     const char *longdesc;           /* detaled description */
