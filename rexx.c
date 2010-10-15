@@ -210,10 +210,9 @@ RXSYSEXIT ExitList[2];
 
     if (access( pathname, R_OK ) != 0 && strcmp(basename(argv[1]),argv[1]) == 0 )
     {   /* try $(MODPATH)\rexx\filename if not found and no pathing information */
-        char *p = malloc(sizeof(pathname)+1);
+        char *p = calloc(1,sizeof(pathname)+1);
         if ( p != NULL )
         {
-            bzero(p,sizeof(pathname)+1);
             strlcpy( p, get_symbol("MODPATH"), sizeof(pathname) );
             strlcat( p, PATHSEPS,              sizeof(pathname) );
             strlcat( p, "rexx",                sizeof(pathname) );

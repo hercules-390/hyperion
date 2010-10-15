@@ -189,8 +189,8 @@ int tab_pressed(char *cmdlinefull, size_t cmdlinelen, int *cmdoffset) {
       char *fullfilename;
       
       bl = (size_t)(strlen(path) + strlen(buff) + 2);
-      fullfilename = (char*)malloc(bl);
-      bzero(fullfilename,bl);
+      fullfilename = (char*)calloc(1,bl);
+
       /* this test is not useless as path contains './' if there was no path
          in original filename. it is because of scandir function, which
          needs path portion */

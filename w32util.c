@@ -778,8 +778,8 @@ DLL_EXPORT int scandir
 
   pattern = (char*)malloc(m);
   strlcpy(pattern, dir,m);
-  if ( pattern[strlen(pattern) - 1] != '\\')
-    strlcat(pattern, "\\",m);
+  if ( pattern[strlen(pattern) - 1] != PATHSEPC)
+    strlcat(pattern, PATHSEPS, m);
   strlcat(pattern, "*.*",m);
 
   /* 1st pass thru is just to count them */
@@ -3397,7 +3397,7 @@ DLL_EXPORT char*  w32_basename( const char* path )
     char fname[_MAX_FNAME];
     char ext[_MAX_EXT];
 
-    memset( _basename, '\0', MAX_PATH );        // zero for security reasons
+    bzero( _basename, sizeof(_basename) );      // zero for security reasons
     _splitpath( path, NULL, NULL, fname, ext ); // C4996
     
     strlcpy( _basename, fname, sizeof( _basename ) );
