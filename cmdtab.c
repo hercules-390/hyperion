@@ -239,14 +239,12 @@ int ProcessConfigCmdLine(char* pszCmdLine)
 int OnOffCommand(int argc, char *argv[], char *cmdline);
 int ShadowFile_cmd(int argc, char *argv[], char *cmdline);
 
-int    cmd_argc;
-char*  cmd_argv[MAX_ARGS];
-
 
 typedef struct _BCMD {
     CMDFUNC *func;
     char    *cmdline;
 } BCMD;
+
 
 void *background_command( void *bcmd)
 {
@@ -271,6 +269,9 @@ int ProcessPanelCommand (char* pszCmdLine)
     CMDTAB*  pCmdTab         = NULL;
     char*    pszSaveCmdLine  = NULL;
     int      rc              = -1;
+    int      cmd_argc;
+    char*    cmd_argv[MAX_ARGS];
+
 
     if ( !ConsoleCommandLockInitialized )
         initialize_lock(&ProcessConsoleCommandLock);
