@@ -3302,6 +3302,8 @@ int numcpu_cmd(int argc, char *argv[], char *cmdline)
 U16 numcpu;
 int rc;
 BYTE c;
+char buf[10];
+#define i2a(_int) ( (MSGBUF(buf,"%d", _int) <= (int)sizeof(buf)) ? buf : "?" )
 
     UNREFERENCED(cmdline);
 
@@ -3314,7 +3316,7 @@ BYTE c;
 
     if ( argc == 1 )
     {
-        WRMSG( HHC02203, "I", argv[0], sysblk.cpus );
+        WRMSG( HHC02203, "I", argv[0], i2a(sysblk.cpus) );
         if ( sysblk.cpus == 0 )
             return 1;
         else
