@@ -1808,6 +1808,7 @@ char                    *logoout;
            strncpy(conmsg,"SYSG",sizeof(conmsg));
   #endif /*defined(_FEATURE_INTEGRATED_3270_CONSOLE)*/
         set_symbol("CCUU",conmsg);
+        set_symbol("DEVN",conmsg);
         MSGBUF(conmsg,"%d",SSID_TO_LCSS(dev->ssid));
         set_symbol("CSS",conmsg);
         MSGBUF(conmsg,"%4.4X",dev->subchan);

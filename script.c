@@ -175,7 +175,8 @@ char   *buf1;                           /* Pointer to resolved buffer*/
 
         set_symbol("CUU","$(CUU)");
         set_symbol("CCUU","$(CCUU)");
-
+        set_symbol("DEVN","$(DEVN)");
+        
         buf1=resolve_symbol_string(buf);
 
         if(buf1!=NULL)

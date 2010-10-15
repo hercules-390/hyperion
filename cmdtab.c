@@ -672,6 +672,7 @@ void *panel_command (void *cmdline)
                 /* First, set some 'dynamic' symbols to their own values */
                 set_symbol("CUU","$(CUU)");
                 set_symbol("CCUU","$(CCUU)");
+                set_symbol("DEVN","$(DEVN)");
                 cl=resolve_symbol_string(cmd);
                 ProcessPanelCommand(cl);
                 free(cl);

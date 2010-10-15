@@ -8652,6 +8652,7 @@ int defsym_cmd(int argc, char *argv[], char *cmdline)
          CMD(sym,HOSTOSVER,9)|| CMD(sym,HOSTARCH,8) || CMD(sym,HOSTNUMCPUS,11)||
          CMD(sym,MODPATH,7)  || CMD(sym,MODNAME,7)  ||
          CMD(sym,CUU,3)      || CMD(sym,CCUU,4)     || CMD(sym,CSS,3)      ||
+         CMD(sym,DEVN,4)     ||
 #if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
          CMD(sym,DATE,4)     || CMD(sym,TIME,4)     ||
          CMD(sym,LPARNUM,7)  || CMD(sym,LPARNAME,8) ||

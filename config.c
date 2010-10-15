@@ -1643,6 +1643,7 @@ parse_and_attach_devices(const char *sdevnum,
                set_symbol("CUU",wrkbfr);
                MSGBUF( wrkbfr, "%4.4X",devnum);
                set_symbol("CCUU",wrkbfr);
+               set_symbol("DEVN", wrkbfr);
                MSGBUF( wrkbfr, "%d",dnd.lcss);
                set_symbol("CSS",wrkbfr);
                for(j=0;j<addargc;j++)
