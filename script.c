@@ -48,15 +48,6 @@
 
 
 /*-------------------------------------------------------------------*/
-/* Static data areas                                                 */
-/*-------------------------------------------------------------------*/
-#define MAX_INC_LEVEL 8                 /* Maximum nest level        */
-static int  inc_stmtnum[MAX_INC_LEVEL]; /* statement number          */
-// following commented out ISW 20061009 : Not referenced anywhere.
-// int  inc_fname[MAX_INC_LEVEL];       /* filename (base or incl)   */
-
-
-/*-------------------------------------------------------------------*/
 /* Subroutine to parse an argument string. The string that is passed */
 /* is modified in-place by inserting null characters at the end of   */
 /* each argument found. The returned array of argument pointers      */
@@ -110,7 +101,7 @@ DLL_EXPORT int parse_args (char* p, int maxargc, char** pargv, int* pargc)
 /* addargv      An array of pointers to each argument                */
 /* Returns 0 if successful, -1 if end of file                        */
 /*-------------------------------------------------------------------*/
-static int read_config (char *fname, FILE *fp, char *buf, unsigned int buflen, int inc_level)
+static int read_config (char *fname, FILE *fp, char *buf, unsigned int buflen, int *inc_stmtnum)
 {
 int     c;                              /* Character work area       */
 unsigned int     stmtlen;               /* Statement length          */
@@ -123,7 +114,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
     while (1)
     {
         /* Increment statement number */
-        inc_stmtnum[inc_level]++;
+        (*inc_stmtnum)++;
 
         /* Read next statement from configuration file */
         for (stmtlen = 0, lstarted = 0; ;)
@@ -137,7 +128,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
             /* Check for I/O error */
             if (ferror(fp))
             {
-                WRMSG(HHC01432, "S", inc_stmtnum[inc_level], fname, "fgetc()", strerror(errno));
+                WRMSG(HHC01432, "S", *inc_stmtnum, fname, "fgetc()", strerror(errno));
                 return -1;
             }
 
@@ -159,7 +150,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
             /* Check that statement does not overflow buffer */
             if (stmtlen >= buflen - 1)
             {
-                WRMSG(HHC01433, "S", inc_stmtnum[inc_level], fname);
+                WRMSG(HHC01433, "S", *inc_stmtnum, fname);
                 return -1;
             }
 
@@ -191,7 +182,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
         {
             if(strlen(buf1)>=buflen)
             {
-                WRMSG(HHC01433, "S", inc_stmtnum[inc_level], fname);
+                WRMSG(HHC01433, "S", *inc_stmtnum, fname);
                 free(buf1);
                 return -1;
             }
@@ -219,6 +210,8 @@ char buf[256];                          /* Config statement buffer   */
 int  addargc;                           /* Number of additional args */
 char *addargv[MAX_ARGS];                /* Additional argument array */
 
+#define MAX_INC_LEVEL 8                 /* Maximum nest level        */
+static int  inc_stmtnum[MAX_INC_LEVEL]; /* statement number          */
 
 int     rc;                             /* Return code               */
 int     i;                              /* Array subscript           */
@@ -258,7 +251,7 @@ int errorcount = 0;
     for (scount = 0; ; scount++)
     {
         /* Read next record from the configuration file */
-        while (inc_level >= 0 && read_config (fname, inc_fp[inc_level], buf, sizeof(buf), inc_level))
+        while (inc_level >= 0 && read_config (fname, inc_fp[inc_level], buf, sizeof(buf), &inc_stmtnum[inc_level]))
         {
             fclose (inc_fp[inc_level--]);
         }
@@ -477,7 +470,7 @@ int errorcount = 0;
 #if defined( OPTION_ENHANCED_CONFIG_INCLUDE )
         while (1)
         {
-            while (inc_level >= 0 && read_config (fname, inc_fp[inc_level], buf, sizeof(buf), inc_level) )
+            while (inc_level >= 0 && read_config (fname, inc_fp[inc_level], buf, sizeof(buf), &inc_stmtnum[inc_level]) )
             {
                 fclose (inc_fp[inc_level--]);
             }
@@ -521,7 +514,7 @@ int errorcount = 0;
 
         if (inc_level < 0)
 #else // !defined( OPTION_ENHANCED_CONFIG_INCLUDE )
-        if (read_config (fname, inc_fp[inc_level], buf, sizeof(buf), inc_level))
+        if (read_config (fname, inc_fp[inc_level], buf, sizeof(buf), &inc_stmtnum[inc_level]))
 #endif // defined( OPTION_ENHANCED_CONFIG_INCLUDE )
             break;
 
