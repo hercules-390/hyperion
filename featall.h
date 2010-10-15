@@ -66,6 +66,7 @@
 
 #define OPTION_TAPE_AUTOMOUNT           /* "Automount" CCWs support  */
 #define OPTION_CMDTGT                   /* the cmdtgt command        */
+// ZZ FIXME:  OPTION_MSGCLR and OPTION_MGHLD are broken, disabling causes compile errors, this needs fixing
 #define OPTION_MSGCLR                   /* Colored messages          */
 #define OPTION_MSGHLD                   /* Sticky messages           */
 #define OPTION_MSGLCK                   /* Lock during msg write     */
