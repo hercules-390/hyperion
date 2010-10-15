@@ -41,13 +41,13 @@ COMMAND("?",         PANEL,         SYSNONE,            HelpCommand,
   "alias for help",
     NULL)
 
-COMMAND("cmdlevel",  PANEL+CONFIG,  SYSNONE,            CmdLevel,
+COMMAND("cmdlevel",  PANEL+CONFIG,  SYSCONFIG,          CmdLevel,
   "Display/Set current command group",
     "display/set the current command group set(s)\n"
     "Format: cmdlevel [{+/-}{ALL, MAINT, PROGrammer, OPERator,\n"
     "                        and/or DEVELoper}]\n")
 
-COMMAND("cmdlvl",    PANEL+CONFIG,  SYSNONE,            CmdLevel,
+COMMAND("cmdlvl",    PANEL+CONFIG,  SYSCONFIG,          CmdLevel,
   "Alias for cmdlevel",
     NULL)
 
@@ -326,47 +326,47 @@ COMMAND("archmode",  PANEL+CONFIG,  SYSCMDALL-SYSOPER,  archlvl_cmd,
   "Alias for archlvl",
     NULL)
 
-COMMAND("engines",   CONFIG,        SYSCMDALL-SYSOPER,  engines_cmd,
+COMMAND("engines",   CONFIG,        SYSCONFIG,          engines_cmd,
   "Set engines parameter",
     NULL)
 
-COMMAND("sysepoch",  CONFIG,        SYSCMDALL-SYSOPER,  sysepoch_cmd,
+COMMAND("sysepoch",  CONFIG,        SYSCONFIG,          sysepoch_cmd,
   "Set sysepoch parameter",
     NULL)
 
-COMMAND("tzoffset",  CONFIG,        SYSCMDALL-SYSOPER,  tzoffset_cmd,
+COMMAND("tzoffset",  CONFIG,        SYSCONFIG,          tzoffset_cmd,
   "Set tzoffset parameter",
     NULL)
 
-COMMAND("yroffset",  CONFIG,        SYSCMDALL-SYSOPER,  yroffset_cmd,
+COMMAND("yroffset",  CONFIG,        SYSCONFIG,          yroffset_cmd,
   "Set yroffset parameter",
     NULL)
 
-COMMAND("mainsize",  CONFIG+PANEL,  SYSCMDALL-SYSOPER,  mainsize_cmd,
+COMMAND("mainsize",  CONFIG+PANEL,  SYSCONFIG,          mainsize_cmd,
   "Set mainsize parameter",
     NULL)
 
-COMMAND("xpndsize",  CONFIG+PANEL,  SYSCMDALL-SYSOPER,  xpndsize_cmd,
+COMMAND("xpndsize",  CONFIG+PANEL,  SYSCONFIG,          xpndsize_cmd,
   "Set xpndsize parameter",
     NULL)
 
-COMMAND("hercprio",  CONFIG+PANEL,  SYSCMDALL-SYSOPER,  hercprio_cmd,
+COMMAND("hercprio",  CONFIG+PANEL,  SYSCONFIG,          hercprio_cmd,
   "Set/Display hercprio parameter",
     NULL)
 
-COMMAND("cpuprio",   CONFIG+PANEL,  SYSCMDALL-SYSOPER,  cpuprio_cmd,
+COMMAND("cpuprio",   CONFIG+PANEL,  SYSCONFIG,          cpuprio_cmd,
   "Set/Display cpuprio parameter",
     NULL)
 
-COMMAND("devprio",   CONFIG+PANEL,  SYSCMDALL-SYSOPER,  devprio_cmd,
+COMMAND("devprio",   CONFIG+PANEL,  SYSCONFIG,          devprio_cmd,
   "Set/Display devprio parameter",
     NULL)
 
-COMMAND("todprio",   CONFIG+PANEL,  SYSCMDALL-SYSOPER,  todprio_cmd,
+COMMAND("todprio",   CONFIG+PANEL,  SYSCONFIG,          todprio_cmd,
   "Set/Display todprio parameter",
     NULL)
 
-COMMAND("srvprio",   CONFIG+PANEL,  SYSCMDALL-SYSOPER,  srvprio_cmd,
+COMMAND("srvprio",   CONFIG+PANEL,  SYSCONFIG,          srvprio_cmd,
   "Set/Display srvprio parameter",
     NULL)
 
@@ -387,24 +387,24 @@ COMMAND("loadparm",  PANEL+CONFIG,  SYSCMDALL,          loadparm_cmd,
   "Specifies the eight-character IPL parameter which is used by\n"
   "some operating systems to select system parameters.")
 
-COMMAND("lparname",  PANEL+CONFIG,  SYSCMDALL-SYSOPER,  lparname_cmd,
+COMMAND("lparname",  PANEL+CONFIG,  SYSCONFIG,          lparname_cmd,
   "Set LPAR name",
     "Specifies the eight-character LPAR name returned by\n"
     "DIAG X'204'. The default is HERCULES")
 
-COMMAND("cpuverid",  CONFIG,        SYSCMDALL-SYSOPER,  cpuverid_cmd,
+COMMAND("cpuverid",  CONFIG,        SYSCONFIG,          cpuverid_cmd,
   "Set CPU verion number",
     NULL)
 
-COMMAND("cpumodel",  CONFIG,        SYSCMDALL-SYSOPER,  cpumodel_cmd,
+COMMAND("cpumodel",  CONFIG,        SYSCONFIG,          cpumodel_cmd,
   "Set CPU model number",
     NULL)
 
-COMMAND("cpuserial", CONFIG,        SYSCMDALL-SYSOPER,  cpuserial_cmd,
+COMMAND("cpuserial", CONFIG,        SYSCONFIG,          cpuserial_cmd,
   "Set CPU serial number",
     NULL)
 
-COMMAND("lparnum",   PANEL+CONFIG,  SYSCMDALL-SYSOPER,  lparnum_cmd,
+COMMAND("lparnum",   PANEL+CONFIG,  SYSCONFIG,          lparnum_cmd,
   "Set LPAR identification number",
   "Specifies the one- or two-digit hexadecimal LPAR identification\n"
   "number stored by the STIDP instruction. If a one-digit number\n"
@@ -412,28 +412,28 @@ COMMAND("lparnum",   PANEL+CONFIG,  SYSCMDALL-SYSOPER,  lparnum_cmd,
   "number is specified then STIDP stores a format-1 CPU ID. If\n"
   "LPARNUM is not specified, then STIDP stores a basic-mode CPUID")
 
-COMMAND("cpuidfmt",  PANEL+CONFIG,  SYSCMDALL-SYSOPER,  cpuidfmt_cmd,
+COMMAND("cpuidfmt",  PANEL+CONFIG,  SYSCONFIG,          cpuidfmt_cmd,
   "Set format 0/1 STIDP generation",
     NULL)
 
-COMMAND("cnslport",  CONFIG,        SYSCMDALL-SYSOPER,  cnslport_cmd,
+COMMAND("cnslport",  CONFIG,        SYSCONFIG,          cnslport_cmd,
   "Set console port",
     NULL)
 
 #ifdef OPTION_CAPPING
-COMMAND("capping",   CONFIG+PANEL,  SYSCMDALL-SYSOPER,  capping_cmd,
+COMMAND("capping",   CONFIG+PANEL,  SYSCONFIG,          capping_cmd,
   "Set capping value",
     NULL)
 #endif // OPTION_CAPPING
 
 #if defined(OPTION_SHARED_DEVICES)
-COMMAND("shrdport",  CONFIG+PANEL,  SYSCMDALL-SYSOPER,  shrdport_cmd,
+COMMAND("shrdport",  CONFIG+PANEL,  SYSCONFIG,          shrdport_cmd,
   "Set shrdport value",
     NULL)
 #endif /*defined(OPTION_SHARED_DEVICES)*/
 
 #if defined(OPTION_SET_STSI_INFO)
-COMMAND("model",     PANEL+CONFIG,  SYSCMDALL-SYSOPER,  stsi_model_cmd,
+COMMAND("model",     PANEL+CONFIG,  SYSCONFIG,          stsi_model_cmd,
   "Set/Query STSI model code",
   "\n"
   "Format:\n"
@@ -465,17 +465,17 @@ COMMAND("model",     PANEL+CONFIG,  SYSCMDALL-SYSOPER,  stsi_model_cmd,
   "             The default temporary model is \"\" (null string).\n"
   "\n")
 
-COMMAND("plant",     PANEL+CONFIG,        SYSCMDALL-SYSOPER,    stsi_plant_cmd,
+COMMAND("plant",     PANEL+CONFIG,        SYSCONFIG,            stsi_plant_cmd,
   "Set STSI plant code",
     NULL)
 
-CMDABBR("manufacturer",8,PANEL+CONFIG,    SYSCMDALL-SYSOPER,    stsi_manufacturer_cmd,
+CMDABBR("manufacturer",8,PANEL+CONFIG,    SYSCONFIG,            stsi_manufacturer_cmd,
   "Set STSI manufacturer code",
     NULL)
 #endif /* defined(OPTION_SET_STSI_INFO) */
 
 #if defined(OPTION_LPP_RESTRICT)
-COMMAND("pgmprdos",  CONFIG,        SYSCMDALL-SYSOPER,  pgmprdos_cmd,
+COMMAND("pgmprdos",  CONFIG,        SYSCONFIG,          pgmprdos_cmd,
   "Set LPP license setting",
     NULL)
 #endif /*defined(OPTION_LPP_RESTRICT)*/
@@ -529,17 +529,15 @@ COMMAND("cp_updt",   PANEL+CONFIG,   SYSCMDALL-SYSOPER, cp_updt_cmd,
     "      These terms are used for historical purposes and do not\n"
     "      represent the literal term.\n")
 
-COMMAND("diag8cmd",  CONFIG,        SYSCMDALL-SYSOPER,  diag8_cmd,
+COMMAND("diag8cmd",  CONFIG,        SYSCONFIG,          diag8_cmd,
   "Set diag8 command option",
     NULL)
 
-// The shcmdopt config statement should never be a command as
-// it will introduce a possible integrity exposure *JJ
-COMMAND("shcmdopt",  CONFIG,        SYSCMDALL,          shcmdopt_cmd,
+COMMAND("shcmdopt",  CONFIG,        SYSCONFIG,          shcmdopt_cmd,
   "Set diag8 sh option",
     NULL)
 
-CMDABBR("legacysenseid",9,CONFIG,   SYSCMDALL,          legacysenseid_cmd,
+CMDABBR("legacysenseid",9,CONFIG,   SYSCONFIG,          legacysenseid_cmd,
   "Set legacysenseid setting",
     NULL)
 
@@ -584,7 +582,7 @@ COMMAND("store",     PANEL,         SYSCMDALL,          store_cmd,
   "Store CPU status at absolute zero",
     NULL)
 
-COMMAND("sclproot",  PANEL+CONFIG,  SYSCMDALL,          sclproot_cmd,
+COMMAND("sclproot",  PANEL+CONFIG,  SYSCONFIG,          sclproot_cmd,
   "Set SCLP base directory",
     "Format: \"sclproot [path|NONE]\"\n"
     "Enables SCLP disk I/O for the specified directory path, or disables\n"
@@ -594,15 +592,15 @@ COMMAND("sclproot",  PANEL+CONFIG,  SYSCMDALL,          sclproot_cmd,
     "the current setting.\n")
 
 #if defined(OPTION_HTTP_SERVER)
-COMMAND("httproot",  CONFIG,        SYSCMDALL,          httproot_cmd,
+COMMAND("httproot",  CONFIG,        SYSCONFIG,          httproot_cmd,
   "Command deprecated - Use \"HTTP ROOT fn\"",
     "This command is deprecated. Use \"http root fn\" instead.\n")
 
-COMMAND("httpport",  CONFIG,        SYSCMDALL,          httpport_cmd,
+COMMAND("httpport",  CONFIG,        SYSCONFIG,          httpport_cmd,
   "Command deprecated - Use \"HTTP PORT ...\"",
     "This command is deprecated. Use \"http port ...\" instead.\n")
 
-COMMAND("http",      PANEL+CONFIG,  SYSCMDALL,          http_cmd,
+COMMAND("http",      PANEL+CONFIG,  SYSCONFIG,          http_cmd,
   "Start/Stop/Modify/Display HTTP Server",
   "Format: 'http [start|stop|port nnnn [[noauth]|[auth user pass]]|root path]'\n"
   "\n"
@@ -708,7 +706,7 @@ COMMAND("u",         PANEL,         SYSCMDALL-SYSOPER,  u_cmd,
   "Disassemble storage",
     NULL)
 
-COMMAND("devtmax",   PANEL+CONFIG,  SYSCMDALL-SYSOPER,  devtmax_cmd,
+COMMAND("devtmax",   PANEL+CONFIG,  SYSCONFIG,          devtmax_cmd,
   "Display or set max device threads",
     "Specifies the maximum number of device threads allowed.\n"
     "\n"
@@ -922,7 +920,7 @@ COMMAND("exec",      PANEL,         SYSCMDALL,          exec_cmd,
     "passed to the script.\n")
 #endif /*defined(HAVE_REGINA_REXXSAA_H)*/
 
-COMMAND("cache",       PANEL+CONFIG, SYSCMDALL-SYSOPER,   cache_cmd,
+COMMAND("cache",       PANEL+CONFIG, SYSCONFIG,           cache_cmd,
   "Execute cache related commands",
     "Format: \"cache [dasd system [on|off]]\"\n"
     "\n"
@@ -936,7 +934,7 @@ COMMAND("cachestats",     PANEL,         SYSCMDALL-SYSOPER,  EXT_CMD(cachestats_
   "Cache stats command",
     NULL)
 
-COMMAND("cckd",      PANEL+CONFIG,  SYSCMDALL-SYSOPER,  cckd_cmd,
+COMMAND("cckd",      PANEL+CONFIG,  SYSCONFIG,          cckd_cmd,
   "cckd command",
     "The cckd statement is used to display current cckd processing\n"
     "options and statistics, and to set new cckd options.\n"
@@ -1089,7 +1087,7 @@ COMMAND("loadtext",  PANEL,         SYSCMDALL-SYSOPER,  loadtext_cmd,
     "file with \"TXT\" and \"END\" 80 byte records (i.e. an object deck).\n")
 
 #if defined(OPTION_DYNAMIC_LOAD)
-COMMAND("modpath",   PANEL+CONFIG,  SYSCMDALL-SYSOPER,  modpath_cmd,
+COMMAND("modpath",   PANEL+CONFIG,  SYSCONFIG,          modpath_cmd,
   "Set module load path",
     NULL)
 
@@ -1330,7 +1328,7 @@ COMMAND("traceopt",  PANEL+CONFIG,  SYSCMDALL-SYSOPER,  traceopt_cmd,
     "Entering the command without any argument simply displays the current\n"
     "mode.\n" )
 
-COMMAND("symptom",   CONFIG,        SYSCMDALL-SYSOPER,  traceopt_cmd,
+COMMAND("symptom",   PANEL+CONFIG,  SYSCMDALL-SYSOPER,  traceopt_cmd,
   "Alias for traceopt",
     NULL)
 

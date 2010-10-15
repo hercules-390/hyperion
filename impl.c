@@ -473,7 +473,8 @@ int     dll_count;                      /* index into array          */
     sysblk.sysgroup =   SYSGROUP_SYSNONE  +
                         SYSGROUP_SYSOPER  +
                         SYSGROUP_SYSMAINT +
-                        SYSGROUP_SYSPROG;
+                        SYSGROUP_SYSPROG +
+                        SYSGROUP_SYSCONFIG;
 #endif//     OPTION_HERCULES_DEVELOPER
 
     /* set default console port address */

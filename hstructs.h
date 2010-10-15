@@ -523,7 +523,7 @@ struct SYSBLK {
 #define SYSGROUP_SYSMAINT    0x02     /* Maintenance functions       */
 #define SYSGROUP_SYSPROG     0x04     /* Systems Programmer functions*/
 #define SYSGROUP_SYS0x08     0x08     /* Unused                      */
-#define SYSGROUP_SYS0x10     0x10     /* Unused                      */
+#define SYSGROUP_SYSCONFIG   0x10     /* System Configuration        */
 #define SYSGROUP_SYSDEVEL    0x20     /* Developer functions         */
 #define SYSGROUP_SYSDEBUG    0x40     /* Internal Debug functions    */ 
 #define SYSGROUP_SYSNONE     0x80     /* Command works always        */
