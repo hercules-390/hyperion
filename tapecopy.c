@@ -555,6 +555,9 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
 
     if (0
         || ( strlen( argv[1] ) > 5 && strnfilenamecmp( argv[1], "/dev/",   5 ) == 0 )
+#if defined(_MSVC_)
+        || ( strlen( argv[1] ) > 5 && strnfilenamecmp( argv[1], "\\dev\\", 5 ) == 0 )
+#endif
         || ( strlen( argv[1] ) > 4 && strnfilenamecmp( argv[1], "\\\\.\\", 4 ) == 0 )
     )
     {
@@ -574,6 +577,9 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
     {
         if (0
             || ( strlen( argv[2] ) > 5 && strnfilenamecmp( argv[2], "/dev/",   5 ) == 0 )
+#if defined(_MSVC_)
+            || ( strlen( argv[2] ) > 5 && strnfilenamecmp( argv[2], "\\dev\\",   5 ) == 0 )
+#endif
             || ( strlen( argv[2] ) > 4 && strnfilenamecmp( argv[2], "\\\\.\\", 4 ) == 0 )
         )
         {
