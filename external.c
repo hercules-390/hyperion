@@ -293,7 +293,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
     {
         if (CPU_STEPPING_OR_TRACING_ALL)
         {
-            WRMSG (HHC00842, "I", (long long)CPU_TIMER(regs) << 8);
+            WRMSG (HHC00842, "I", CPU_TIMER(regs) << 8);
         }
         ARCH_DEP(external_interrupt) (EXT_CPU_TIMER_INTERRUPT, regs);
     }

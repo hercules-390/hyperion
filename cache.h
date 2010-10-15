@@ -42,13 +42,13 @@
       int         cache_waiters(int ix);
                   Number of waiters for a non-busy cache entry
 
-      long long   cache_size(int ix);
+      S64         cache_size(int ix);
                   Size of all allocated objects
 
-      long long   cache_hits(int ix);
+      S64         cache_hits(int ix);
                   Number of successful lookups
 
-      long long   cache_misses(int ix);
+      S64         cache_misses(int ix);
                   Number of unsuccessful lookups
 
       int         cache_busy_percent(int ix);
@@ -210,10 +210,10 @@ typedef struct _CACHEBLK {              /* Cache header              */
       int       empty;                  /* Number empty entries      */
       int       waiters;                /* Number waiters            */
       int       waits;                  /* Number times waited       */
-      long long size;                   /* Allocated buffer size     */
-      long long hits;                   /* Number lookup hits        */
-      long long fasthits;               /* Number fast lookup hits   */
-      long long misses;                 /* Number lookup misses      */
+      S64       size;                   /* Allocated buffer size     */
+      S64       hits;                   /* Number lookup hits        */
+      S64       fasthits;               /* Number fast lookup hits   */
+      S64       misses;                 /* Number lookup misses      */
       U64       age;                    /* Age counter               */
       LOCK      lock;                   /* Lock                      */
       COND      waitcond;               /* Wait for available entry  */
@@ -265,9 +265,9 @@ int         cache_nbr(int ix);
 int         cache_busy(int ix);
 int         cache_empty(int ix);
 int         cache_waiters(int ix);
-long long   cache_size(int ix);
-long long   cache_hits(int ix);
-long long   cache_misses(int ix);
+S64         cache_size(int ix);
+S64         cache_hits(int ix);
+S64         cache_misses(int ix);
 int         cache_busy_percent(int ix);
 int         cache_empty_percent(int ix);
 int         cache_hit_percent(int ix);

@@ -279,7 +279,7 @@ char   *strtok_str;                     /* save last position        */
     }
     dev->fbaend = (dev->fbaorigin + dev->fbanumblk) * dev->fbablksiz;
 
-    WRMSG (HHC00507, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, (long long)dev->fbaorigin, dev->fbanumblk);
+    WRMSG (HHC00507, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->fbaorigin, dev->fbanumblk);
 
     /* Set number of sense bytes */
     dev->numsense = 24;
@@ -327,16 +327,16 @@ void fbadasd_query_device (DEVBLK *dev, char **class,
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        snprintf( buffer, buflen-1, "%s [%lld,%d] IO[%" I64_FMT "u]",
+        snprintf( buffer, buflen-1, "%s [%"I64_FMT"d,%d] IO[%"I64_FMT"u]",
                   dev->filename,
-                 (long long)dev->fbaorigin, dev->fbanumblk,
+                  dev->fbaorigin, dev->fbanumblk,
                   dev->excps);
     }
     else
     {
-        snprintf( buffer, buflen-1, "%s [%lld,%d] [%d sfs] IO[%" I64_FMT "u]",
+        snprintf( buffer, buflen-1, "%s [%"I64_FMT"d,%d] [%d sfs] IO[%"I64_FMT"u]",
                   dev->filename,
-                 (long long)dev->fbaorigin, dev->fbanumblk,
+                  dev->fbaorigin, dev->fbanumblk,
                   cckd->sfn,
                   dev->excps);
     }
@@ -631,7 +631,7 @@ fba_read_blkgrp_retry:
     len = fba_blkgrp_len (dev, blkgrp);
 
     logdevtr (dev, MSG(HHC00519, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
-                        blkgrp, (long long)offset, fba_blkgrp_len(dev, blkgrp)));
+                        blkgrp, offset, fba_blkgrp_len(dev, blkgrp)));
 
     /* Seek to the block group offset */
     offset = lseek (dev->fd, offset, SEEK_SET);
@@ -1083,7 +1083,7 @@ int     repcnt;                         /* Replication count         */
                       ) * dev->fbablksiz;
 
         logdevtr (dev, MSG(HHC00520, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                            (long long unsigned int)dev->fbarba, (long long unsigned int)dev->fbarba));
+                            dev->fbarba, dev->fbarba));
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;

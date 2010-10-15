@@ -825,7 +825,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
             file_limit=rlim.rlim_max;
             file_limit=(file_limit>1024)?1024:file_limit;
 
-            TRACE(MSG(HHC00148, "I", (long long)file_limit));
+            TRACE(MSG(HHC00148, "I", file_limit));
 
             for(i=0;(unsigned int)i<file_limit;i++)
             {

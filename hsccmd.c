@@ -68,13 +68,13 @@
 #include "dasdtab.h"
 #include "ctcadpt.h"
 
-#define  ONE_KILOBYTE   ((unsigned int)(1024))                      /* 2^10     (16^2)  * 4  */
-#define  HALF_MEGABYTE  ((unsigned int)(512 * 1024))                /* 2^19 (16^4)  * 8  */
-#define  ONE_MEGABYTE   ((unsigned long long)(1024 * 1024))         /* 2^20 (16^5)       */
-#define  ONE_GIGABYTE   (ONE_MEGABYTE * (unsigned long long)(1024)) /* 2^30     (16^7)  * 4  */
-#define  ONE_TERABYTE   (ONE_GIGABYTE * (unsigned long long)(1024)) /* 2^40     (16^10)      */
-#define  ONE_PETABYTE   (ONE_TERABYTE * (unsigned long long)(1024)) /* 2^50     (16^12) * 4  */
-#define  ONE_EXABYTE    (ONE_PETABYTE * (unsigned long long)(1024)) /* 2^60     (16^15)      */
+#define  ONE_KILOBYTE   ((U32)(1024))                /* 2^10     (16^2)  * 4  */
+#define  HALF_MEGABYTE  ((U32)(512 * 1024))          /* 2^19     (16^4)  * 8  */
+#define  ONE_MEGABYTE   ((U64)(1024 * 1024))         /* 2^20     (16^5)       */
+#define  ONE_GIGABYTE   (ONE_MEGABYTE * (U64)(1024)) /* 2^30     (16^7)  * 4  */
+#define  ONE_TERABYTE   (ONE_GIGABYTE * (U64)(1024)) /* 2^40     (16^10)      */
+#define  ONE_PETABYTE   (ONE_TERABYTE * (U64)(1024)) /* 2^50     (16^12) * 4  */
+#define  ONE_EXABYTE    (ONE_PETABYTE * (U64)(1024)) /* 2^60     (16^15)      */
 
 
 // (forward references, etc)
@@ -6655,8 +6655,8 @@ int syncio_cmd(int argc, char *argv[], char *cmdline)
 
         found = 1;
 
-        WRMSG(HHC02239, "I",  SSID_TO_LCSS(dev->ssid), dev->devnum, (long long)dev->syncios,
-                (long long)dev->asyncios
+        WRMSG(HHC02239, "I",  SSID_TO_LCSS(dev->ssid), dev->devnum, dev->syncios,
+                dev->asyncios
             );
 
         syncios  += dev->syncios;
@@ -6670,8 +6670,8 @@ int syncio_cmd(int argc, char *argv[], char *cmdline)
     }
     else
         WRMSG(HHC02240, "I",
-               (long long)syncios, (long long)asyncios,
-               (long long)((syncios * 100) / (syncios + asyncios + 1))
+               syncios, asyncios,
+               ((syncios * 100) / (syncios + asyncios + 1))
             );
 
     return 0;

@@ -709,7 +709,7 @@ void  UpdateCPUStatus ()
 #else  // !defined(_900)
                                                                    '.'
 #endif //  defined(_900)
-            ,(long long)INSTCOUNT(pTargetCPU_REGS)
+            ,(U64)INSTCOUNT(pTargetCPU_REGS)
         );
 
     } // endif cpu is online/offline

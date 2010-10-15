@@ -78,21 +78,21 @@ typedef unsigned char                   Boolean;
  *
  */
 
-#define  ONE_KILOBYTE	((unsigned int)(1024))				/* 2^10	(16^2)  * 4  */
-#define  HALF_MEGABYTE	((unsigned int)(512 * 1024))			/* 2^19 (16^4)  * 8  */
-#define  ONE_MEGABYTE	((unsigned long long)(1024 * 1024))		/* 2^20 (16^5)       */
-#define  ONE_GIGABYTE	(ONE_MEGABYTE * (unsigned long long)(1024))	/* 2^30	(16^7)  * 4  */
-#define  ONE_TERABYTE	(ONE_GIGABYTE * (unsigned long long)(1024))	/* 2^40	(16^10)      */
-#define  ONE_PETABYTE	(ONE_TERABYTE * (unsigned long long)(1024))	/* 2^50	(16^12) * 4  */
-#define  ONE_EXABYTE	(ONE_PETABYTE * (unsigned long long)(1024))	/* 2^60	(16^15)	     */
+#define  ONE_KILOBYTE	((U32)(1024))				    /* 2^10	(16^2)  * 4  */
+#define  HALF_MEGABYTE	((U32)(512 * 1024))			    /* 2^19 (16^4)  * 8  */
+#define  ONE_MEGABYTE	((U64)(1024 * 1024))		    /* 2^20 (16^5)       */
+#define  ONE_GIGABYTE	(ONE_MEGABYTE * (U64)(1024))	/* 2^30	(16^7)  * 4  */
+#define  ONE_TERABYTE	(ONE_GIGABYTE * (U64)(1024))	/* 2^40	(16^10)      */
+#define  ONE_PETABYTE	(ONE_TERABYTE * (U64)(1024))	/* 2^50	(16^12) * 4  */
+#define  ONE_EXABYTE	(ONE_PETABYTE * (U64)(1024))	/* 2^60	(16^15)	     */
 
-#define  ONE_HUNDRED	((unsigned int)(100))
-#define	 ONE_THOUSAND	((unsigned int)(1000))
-#define	 ONE_MILLION	((unsigned long long)(1000 * 1000))		/* zeros = 6  */
-#define  ONE_BILLION	(ONE_MILLION	* (unsigned long long)(1000))	/* zeros = 9  */
-#define  ONE_TRILLION	(ONE_BILLION	* (unsigned long long)(1000))	/* zeros = 12 */
-#define  ONE_QUADRILLION (ONE_TRILLION	* (unsigned long long)(1000))	/* zeros = 15 */
-#define  ONE_QUINTILLION (ONE_QUADRILLION * (unsigned long long)(1000))	/* zeros = 18 */
+#define  ONE_HUNDRED	((U32)(100))
+#define	 ONE_THOUSAND	((U32)(1000))
+#define	 ONE_MILLION	((U64)(1000 * 1000))		        /* zeros = 6  */
+#define  ONE_BILLION	(ONE_MILLION	* (U64)(1000))	    /* zeros = 9  */
+#define  ONE_TRILLION	(ONE_BILLION	* (U64)(1000))	    /* zeros = 12 */
+#define  ONE_QUADRILLION (ONE_TRILLION	* (U64)(1000))	    /* zeros = 15 */
+#define  ONE_QUINTILLION (ONE_QUADRILLION * (U64)(1000))	/* zeros = 18 */
 
 #define DO_FOREVER	while(1)
 

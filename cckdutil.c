@@ -351,7 +351,7 @@ DLL_EXPORT int cckd_comp (DEVBLK *dev)
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             fd;                     /* File descriptor           */
 struct stat     fst;                    /* File status buffer        */
-long long       maxsize;                /* Max cckd file size        */
+S64             maxsize;                /* Max cckd file size        */
 int             rc;                     /* Return code               */
 off_t           off;                    /* File offset               */
 off_t           l2area;                 /* Boundary for l2 tables    */
@@ -803,10 +803,9 @@ comp_restart:
         ftruncate (fd, off);
         if(dev->batch)
             fprintf(stdout, MSG(HHC00359, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                    (long long)fst.st_size - off));
+                    fst.st_size - off));
         else
-            WRMSG(HHC00359, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                  (long long)fst.st_size - off);
+            WRMSG(HHC00359, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, fst.st_size - off);
     }
     else
     {
@@ -942,7 +941,7 @@ CCKDDASD_EXT   *cckd;                   /* -> ckd extension          */
 int             fd;                     /* file descriptor           */
 struct stat     fst;                    /* file status information   */
 int             fdflags;                /* file descriptor flags     */
-long long       maxsize;                /* max cckd file size        */
+S64             maxsize;                /* max cckd file size        */
 int             ro;                     /* 1=file opened read-only   */
 int             f, i, j, l, n;          /* work integers             */
 int             l1x, l2x;               /* l1, l2 table indexes      */

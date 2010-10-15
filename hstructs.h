@@ -657,7 +657,7 @@ struct SYSBLK {
 #endif /*!defined(NO_SETUID)*/
 
 #if defined(OPTION_COUNTING)
-        long long count[OPTION_COUNTING];
+        S64     count[OPTION_COUNTING];
 #define COUNT(n) sysblk.count[(n)]++
 #else
 #define COUNT(n)
@@ -1594,7 +1594,7 @@ struct CCKDDASD_EXT {                   /* Ext for compressed ckd    */
         LOCK             filelock;      /* File lock                 */
         LOCK             iolock;        /* I/O lock                  */
         COND             iocond;        /* I/O condition             */
-        long long        maxsize;       /* Maximum file size         */
+        S64              maxsize;       /* Maximum file size         */
         int              iowaiters;     /* Number I/O waiters        */
         int              wrpending;     /* Number writes pending     */
         int              ras;           /* Number readaheads active  */

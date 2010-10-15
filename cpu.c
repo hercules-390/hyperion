@@ -1291,7 +1291,7 @@ RADR    fsta;                           /* Failing storage address   */
 
     /* Trace the machine check interrupt */
     if (CPU_STEPPING_OR_TRACING(regs, 0))
-        WRMSG (HHC00807, "I", PTYPSTR(regs->cpuad), regs->cpuad, (long long)mcic);
+        WRMSG (HHC00807, "I", PTYPSTR(regs->cpuad), regs->cpuad, mcic);
 
     /* Store the external damage code at PSA+244 */
     STORE_FW(psa->xdmgcode, xdmg);

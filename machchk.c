@@ -242,9 +242,9 @@ RADR    fsta = 0;
     if (CPU_STEPPING_OR_TRACING(regs, 0))
 #if defined(_FEATURE_SIE)      
         WRMSG (HHC00824, "I", regs->sie_active ? "IE" : PTYPSTR(regs->cpuad), 
-            regs->sie_active ? regs->guestregs->cpuad : regs->cpuad, (long long)mcic);
+            regs->sie_active ? regs->guestregs->cpuad : regs->cpuad, mcic);
 #else
-        WRMSG (HHC00824, "I", PTYPSTR(regs->cpuad), regs->cpuad, (long long)mcic);
+        WRMSG (HHC00824, "I", PTYPSTR(regs->cpuad), regs->cpuad, mcic);
 #endif
 
     /* Store the external damage code at PSA+244 */

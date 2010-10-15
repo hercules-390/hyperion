@@ -958,7 +958,8 @@ ckd_read_track_retry:
 
     dev->syncio_active = active;
 
-    logdevtr (dev, MSG(HHC00429, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, trk, f+1, (long long)dev->ckdtrkoff, dev->ckdtrksz));
+    logdevtr (dev, MSG(HHC00429, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, trk, f+1, 
+        dev->ckdtrkoff, dev->ckdtrksz));
 
     /* Seek to the track image offset */
     offset = (off_t)dev->ckdtrkoff;
