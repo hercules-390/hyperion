@@ -242,6 +242,30 @@ int ShadowFile_cmd(int argc, char *argv[], char *cmdline);
 int    cmd_argc;
 char*  cmd_argv[MAX_ARGS];
 
+
+typedef struct _BCMD {
+    CMDFUNC *func;
+    char    *cmdline;
+} BCMD;
+
+void *background_command( void *bcmd)
+{
+int   argc;
+char *argv[MAX_ARGS];
+
+char *cmdline = strdup(((BCMD*)bcmd)->cmdline);
+
+    parse_args (cmdline, MAX_ARGS, argv, &argc);
+
+    ((BCMD*)bcmd)->func(argc, (char**)argv, ((BCMD*)bcmd)->cmdline);
+
+    free(bcmd);
+    free(cmdline);
+
+    return 0;
+}
+
+
 int ProcessPanelCommand (char* pszCmdLine)
 {
     CMDTAB*  pCmdTab         = NULL;
@@ -305,8 +329,36 @@ int ProcessPanelCommand (char* pszCmdLine)
                 {
                     char cmd[256];
                     strlcpy(cmd, pCmdTab->statement, sizeof(cmd));
-                    cmd_argv[0] = cmd;             
-                    rc = pCmdTab->function(cmd_argc, (char**)cmd_argv, pszSaveCmdLine);
+                    cmd_argv[0] = cmd;
+
+                    if(strcmp(cmd_argv[cmd_argc-1],"&"))
+                    {
+                        if(!strncmp(cmd_argv[cmd_argc-1],"&&",2))
+                            cmd_argv[cmd_argc-1]++;
+                        rc = pCmdTab->function(cmd_argc, (char**)cmd_argv, pszSaveCmdLine);
+                    }
+                    else
+                    {
+                    BCMD *bcmd;
+                    TID  bgnd_tid;
+                    int i,len;
+
+                        for (len = 0, i = 0; i < cmd_argc-1; i++ )
+                            len += (int)strlen( (char *)cmd_argv[i] ) + 1;
+
+                        bcmd = (void *)malloc( len + sizeof(BCMD) );
+                        bcmd->func = pCmdTab->function;
+                        bcmd->cmdline = (char *)(bcmd + 1);
+
+                        strcpy( bcmd->cmdline, cmd_argv[0]);
+                        for ( i = 1; i < cmd_argc-1; i++)
+                        {
+                            strcat( bcmd->cmdline, " ");
+                            strcat( bcmd->cmdline, cmd_argv[i]);
+                        }
+
+                        rc = create_thread(&bgnd_tid, DETACHED, background_command, bcmd, "background_command");
+                    }
                     goto ProcessPanelCommandExit;
                 }
             }
