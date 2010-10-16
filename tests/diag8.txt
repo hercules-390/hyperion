@@ -1,0 +1,19 @@
+* DIAG8 test $Id$
+sysclear
+archmode esa/390
+r 000=000C000000000200                 # ESA/390 restart PSW
+r 068=000A00000000DEAD                 # ESA/390 pgm new PSW
+r 070=000A00000000BEEF                 # ESA/390 mck new PSW
+r 200=41200280     # LA R2,X'280'      Load R2 = address
+r 204=41400008     # LA R4,8    '      Load R4 = length
+r 208=83240008     # DIAG X'008'       Test data
+r 20C=41200290     # LA R2,X'290'      Load R2 = address
+r 210=41400006     # LA R4,6           Load R4 = length
+r 214=83240008     # DIAG X'008'       Test data
+r 218=82000300     # LPSW WAITPSW      Load enabled wait PSW
+r 280=C4C9C1C7F8C3D4C4                 # C'DIAG8CMD'
+r 290=D4C1E7C3D7E4                     # C'MAXCPU'  
+r 300=070A000080FED0D0                 # WAITPSW Enabled wait state PSW
+ostailor null
+s+
+restart
