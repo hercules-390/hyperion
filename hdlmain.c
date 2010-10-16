@@ -71,7 +71,6 @@ HDL_REGISTER_SECTION;
     HDL_REGISTER( parse_args,                 parse_args      );
     HDL_REGISTER( panel_command,              panel_command_r );
     HDL_REGISTER( panel_display,              panel_display_r );
-    HDL_REGISTER( config_command,             UNRESOLVED      );
     HDL_REGISTER( system_command,             UNRESOLVED      );
     HDL_REGISTER( daemon_task,                UNRESOLVED      );
     HDL_REGISTER( debug_cpu_state,            UNRESOLVED      );
@@ -132,7 +131,6 @@ HDL_RESOLVER_SECTION;
 {
     HDL_RESOLVE( panel_command              );
     HDL_RESOLVE( panel_display              );
-    HDL_RESOLVE( config_command             );
     HDL_RESOLVE( system_command             );
     HDL_RESOLVE( daemon_task                );
     HDL_RESOLVE( debug_cpu_state            );

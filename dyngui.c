@@ -1893,7 +1893,7 @@ static char *DisQuietCmd[] = { "$zapcmd", "quiet", "NoCmd" };
 
     SET_THREAD_NAME("dyngui");
 
-    ProcessConfigCommand(3,DisQuietCmd,NULL); // Disable the quiet command
+    ProcessCommand(3,DisQuietCmd,NULL); // Disable the quiet command
 
     if ( !bDoneProcessing )
     {

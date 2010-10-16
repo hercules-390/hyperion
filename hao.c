@@ -601,7 +601,7 @@ DLL_EXPORT void hao_message(char *buf)
         /* issue command for this rule */
         WRMSG(HHC00081, "I", i, ao_cmd[i]);
         sysgroup = sysblk.sysgroup;
-        sysblk.sysgroup = SYSGROUP_ALL;
+        sysblk.sysgroup = SYSGROUP_SYSALL;
         panel_command(ao_cmd[i]);
         sysblk.sysgroup = sysgroup;
       }

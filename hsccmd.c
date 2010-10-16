@@ -84,7 +84,7 @@
 #if defined(FEATURE_ECPSVM)
 extern void ecpsvm_command( int argc, char **argv );
 #endif
-int ProcessPanelCommand ( char * );
+int ProcessCmdLine ( char * );
 int exec_cmd(int argc, char *argv[],char *cmdline);
 
 static void fcb_dump( DEVBLK*, char *, unsigned int );
@@ -535,7 +535,7 @@ int quitmout_cmd(int argc, char *argv[], char *cmdline)
         if ( 1
             && sscanf(argv[1], "%d%c", &tm, &c) == 1
             && (
-                 ( ( sysblk.sysgroup & (SYSGROUP_ALL - SYSGROUP_SYSOPER - SYSGROUP_SYSNONE) ) && tm >= 0 )
+                 ( ( sysblk.sysgroup & (SYSGROUP_SYSALL - SYSGROUP_SYSOPER) ) && tm >= 0 )
                 ||
                  ( ( sysblk.sysgroup & SYSGROUP_SYSOPER ) && tm >= 2 )
                )
@@ -1031,7 +1031,7 @@ int start_cmd(int argc, char *argv[], char *cmdline)
 
     UNREFERENCED(cmdline);
 
-    if (argc == 1)
+    if (argc < 2)
     {
         OBTAIN_INTLOCK(NULL);
         if (IS_CPU_ONLINE(sysblk.pcpu))
@@ -1043,7 +1043,8 @@ int start_cmd(int argc, char *argv[], char *cmdline)
             WAKEUP_CPU(regs);
         }
         RELEASE_INTLOCK(NULL);
-        WRMSG( HHC00834, "I", PTYPSTR(sysblk.regs[sysblk.pcpu]->cpuad),
+        if(argc > 0)
+            WRMSG( HHC00834, "I", PTYPSTR(sysblk.regs[sysblk.pcpu]->cpuad),
                               sysblk.regs[sysblk.pcpu]->cpuad, "running state selected" );
         rc = 0;
     }
@@ -3614,11 +3615,11 @@ int     rc = 0;
     if ( argc == 2 )
     {
         ArchlvlCmd[1] = argv[1];
-        ProcessConfigCommand(3,ArchlvlCmd,NULL);
+        ProcessCommand(3,ArchlvlCmd,NULL);
     }
     else if ( argc == 1 )
     {
-        ProcessConfigCommand(3,ArchlvlCmd,NULL);
+        ProcessCommand(3,ArchlvlCmd,NULL);
     }
     else
     {
@@ -5910,7 +5911,7 @@ int cpu_cmd(int argc, char *argv[], char *cmdline)
          /* Issue command to temporary target cpu */
          if (i < n)
          {
-             rc = ProcessPanelCommand(cmd+i);
+             rc = ProcessCmdLine(cmd+i);
              sysblk.pcpu = currcpu;
              sysblk.dummyregs.cpuad = currcpu;
          }
@@ -9794,9 +9795,9 @@ int herc_cmd(int argc, char *argv[], char *cmdline)
 {
   UNREFERENCED(argv);
   if (argc == 1)
-    ProcessPanelCommand(" ");
+    ProcessCmdLine(" ");
   else
-    ProcessPanelCommand(&cmdline[5]);
+    ProcessCmdLine(&cmdline[5]);
   return 0;
 }
 #endif // OPTION_CMDTGT
@@ -10245,13 +10246,13 @@ int CmdLevel(int argc, char *argv[], char *cmdline)
         for (i = 1; i < argc; i++)
         {
             if (strcasecmp (argv[i], "all") == 0)
-                sysblk.sysgroup = SYSGROUP_ALL;
+                sysblk.sysgroup = SYSGROUP_SYSALL;
             else
             if (strcasecmp (argv[i], "+all") == 0)
-                sysblk.sysgroup = SYSGROUP_ALL;
+                sysblk.sysgroup = SYSGROUP_SYSALL;
             else
             if (strcasecmp (argv[i], "-all") == 0)
-                sysblk.sysgroup = SYSGROUP_SYSNONE;
+                sysblk.sysgroup = SYSGROUP_SYSALL;
             else
             if  ( strlen( argv[i] ) >= 4 &&
                   strlen( argv[i] ) <= 8 &&
@@ -10366,13 +10367,9 @@ int CmdLevel(int argc, char *argv[], char *cmdline)
             }
         }
 
-    if ( sysblk.sysgroup == SYSGROUP_ALL )
+    if ( sysblk.sysgroup == SYSGROUP_SYSALL )
     {
         WRMSG(HHC01606, "I", sysblk.sysgroup, "all");
-    }
-    else if ( sysblk.sysgroup == SYSGROUP_SYSNONE )
-    {
-        WRMSG(HHC01606, "I", sysblk.sysgroup, "none");
     }
     else
     {

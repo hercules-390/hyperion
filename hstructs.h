@@ -523,11 +523,11 @@ struct SYSBLK {
 #define SYSGROUP_SYSMAINT    0x02     /* Maintenance functions       */
 #define SYSGROUP_SYSPROG     0x04     /* Systems Programmer functions*/
 #define SYSGROUP_SYSCONFIG   0x08     /* System Configuration Funcs  */
-#define SYSGROUP_SYS0x10     0x10     /* Unused                      */
+#define SYSGROUP_SYSRESV     0x10     /* Reserved                    */
 #define SYSGROUP_SYSDEVEL    0x20     /* Developer functions         */
 #define SYSGROUP_SYSDEBUG    0x40     /* Internal Debug functions    */ 
-#define SYSGROUP_SYSNONE     0x80     /* Command works always        */
-#define SYSGROUP_ALL         0xFF
+#define SYSGROUP_SYSDIAG     0x80     /* Not supported by DIAG008    */
+#define SYSGROUP_SYSALL      0x7F
         BYTE    diag8cmd;               /* Allow diagnose 8 commands */
 #define DIAG8CMD_ENABLE   0x01          /* Enable DIAG8 interface    */
 #define DIAG8CMD_RUNNING  0x40          /* Indicate DIAG8 in process */ 

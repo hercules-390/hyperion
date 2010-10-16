@@ -269,9 +269,8 @@ HCMD_DLL_IMPORT int aia_cmd     (int argc, char *argv[], char *cmdline);
 HCMD_DLL_IMPORT int stopall_cmd (int argc, char *argv[], char *cmdline);
 
 /* Functions in module cmdtab.c */
-CMDT_DLL_IMPORT int ProcessConfigCommand (int argc, char **argv, char *cmdline);
-CMDT_DLL_IMPORT int ProcessConfigCmdLine (char *cmdline);
-CMDT_DLL_IMPORT int ProcessPanelCommand (char *cmdline);
+CMDT_DLL_IMPORT int ProcessCommand (int argc, char **argv, char *cmdline);
+CMDT_DLL_IMPORT int ProcessCmdLine (char *cmdline);
 
 /* Functions in module losc.c */
 #if defined(OPTION_LPP_RESTRICT)
@@ -285,7 +284,6 @@ HHDL_DLL_IMPORT char *(*hdl_device_type_equates) (const char *);
 CMDT_DLL_IMPORT void *(panel_command_r)          (void *cmdline);
 HPAN_DLL_IMPORT void  (panel_display_r)          (void);
 
-HSYS_DLL_IMPORT int   (*config_command) (int argc, char *argv[], char *cmdline);
 HSYS_DLL_IMPORT int   (*system_command) (int argc, char *argv[], char *cmdline);
 HSYS_DLL_IMPORT void  (*daemon_task)    (void);
 HSYS_DLL_IMPORT void  (*panel_display)  (void);

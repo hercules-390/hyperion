@@ -42,9 +42,9 @@ CALL_EXT_CMD ( shared_cmd )
 /* Create forward references for all commands in the command table   */
 /*-------------------------------------------------------------------*/
 #define _FW_REF
-#define COMMAND(_stmt, _type, _group, _func, _sdesc, _ldesc)        \
+#define COMMAND(_stmt, _type, _func, _sdesc, _ldesc)        \
 int (_func)(int argc, char *argv[], char *cmdline);
-#define CMDABBR(_stmt, _abbr, _type, _group, _func, _sdesc, _ldesc) \
+#define CMDABBR(_stmt, _abbr, _type, _func, _sdesc, _ldesc) \
 int (_func)(int argc, char *argv[], char *cmdline);
 #include "cmdtab.h"
 #undef COMMAND
@@ -60,35 +60,30 @@ typedef struct _CMDTAB
     const char  *statement;         /* statement           */
     const size_t statminlen;        /* min abbreviation    */
           BYTE    type;             /* statement type      */
-#define DISABLED   0x00             /* disabled statement  */
-#define CONFIG     0x01             /* config statement    */
-#define PANEL      0x02             /* command statement   */
-#define ASYNC      0x04             /* command can be "batched" */
-#define THREADSAFE 0x08             /* command is threadsafe, ie. LOCKS not needed */  
-
-          BYTE    group;            /* grouping commands   */
+#define DISABLED   0x00             /* Disabled command    */
 #define SYSOPER    0x01             /* System Operator     */
 #define SYSMAINT   0x02             /* System Maintainer   */
 #define SYSPROG    0x04             /* Systems Programmer  */
 #define SYSCONFIG  0x08             /* System Configuration*/
 #define SYSDEVEL   0x20             /* System Developer    */
 #define SYSDEBUG   0x40             /* Enable Debugging    */
-#define SYSNONE    0x80             /* Enable for any lvls */
-#define SYSCMDALL  ( SYSOPER + SYSMAINT + SYSPROG + SYSCONFIG + SYSDEVEL + SYSDEBUG ) /* Valid in all states */ 
+#define SYSNDIAG   0x80             /* Invalid for DIAG008 */
+#define SYSALL     0x7F             /* Enable for any lvls */
+#define SYSCMDALL  ( SYSOPER | SYSMAINT | SYSPROG | SYSCONFIG | SYSDEVEL | SYSDEBUG ) /* Valid in all states */ 
     CMDFUNC    *function;           /* handler function    */
     const char *shortdesc;          /* description         */
     const char *longdesc;           /* detaled description */
 } CMDTAB;
 
-#define COMMAND(_stmt, _type, _group, _func, _sdesc, _ldesc) \
-{ (_stmt),     (0), (_type), (_group), (_func), (_sdesc), (_ldesc) },
-#define CMDABBR(_stmt, _abbr, _type, _group, _func, _sdesc, _ldesc) \
-{ (_stmt), (_abbr), (_type), (_group), (_func), (_sdesc), (_ldesc) },
+#define COMMAND(_stmt, _type, _func, _sdesc, _ldesc) \
+{ (_stmt),     (0), (_type), (_func), (_sdesc), (_ldesc) },
+#define CMDABBR(_stmt, _abbr, _type, _func, _sdesc, _ldesc) \
+{ (_stmt), (_abbr), (_type), (_func), (_sdesc), (_ldesc) },
 
 static CMDTAB cmdtab[] =
 {
 #include "cmdtab.h"
-COMMAND ( NULL, 0, 0, NULL, NULL, NULL ) /* End of table */
+COMMAND ( NULL, 0, NULL, NULL, NULL ) /* End of table */
 };
 
 /* Static Variables */
@@ -119,16 +114,16 @@ int i;
                     for (i = 2; i < argc; i++)
                     {
                         if (!strcasecmp(argv[i],"Cfg"))
-                            cmdent->type |= CONFIG;
+                            cmdent->type |= SYSCONFIG;
                         else
                         if (!strcasecmp(argv[i],"NoCfg"))
-                            cmdent->type &= ~CONFIG;
+                            cmdent->type &= ~SYSCONFIG;
                         else
                         if (!strcasecmp(argv[i],"Cmd"))
-                            cmdent->type |= PANEL;
+                            cmdent->type |= SYSCMDALL;
                         else
                         if (!strcasecmp(argv[i],"NoCmd"))
-                            cmdent->type &= ~PANEL;
+                            cmdent->type &= ~SYSCMDALL;
                         else
                         {
                             logmsg(_("Invalid arg: %s: %s %s [(No)Cfg|(No)Cmd]\n"),argv[i],argv[0],argv[1]);
@@ -137,7 +132,7 @@ int i;
                     }
                 else
                     logmsg(_("%s: %s(%sCfg,%sCmd)\n"),argv[0],cmdent->statement,
-                      (cmdent->type&CONFIG)?"":"No",(cmdent->type&PANEL)?"":"No");
+                      (cmdent->type&SYSCONFIG)?"":"No",(cmdent->type&SYSCMDALL)?"":"No");
                 return 0;
             }
         }
@@ -147,90 +142,6 @@ int i;
     else
         logmsg(_("Usage: %s <command> [(No)Cfg|(No)Cmd]\n"),argv[0]);
     return -1;
-}
-
-CMDT_DLL_IMPORT
-int ProcessConfigCommand (int argc, char **argv, char *cmdline)
-{
-CMDTAB* cmdent;
-int     rc = 0;
-
-    if (!argc)
-        return -1;
-    
-    if ( !ConsoleCommandLockInitialized )
-        initialize_lock(&ProcessConsoleCommandLock);
-
-    obtain_lock(&ProcessConsoleCommandLock);
-    
-    CommandLockCounter++;
-    if (MLVL(DEBUG))
-    {
-        char msgbuf[64];
-        MSGBUF( msgbuf, "Config_Enter CommandLockCounter %d", CommandLockCounter );
-        WRMSG( HHC90000, "D", msgbuf );
-    }
-
-#if defined(OPTION_DYNAMIC_LOAD)
-    if(config_command)
-        if( !config_command(argc, argv, cmdline) )
-        {
-            rc = 0;
-            goto ProcessConfigExit;
-        }
-#endif /*defined(OPTION_DYNAMIC_LOAD)*/
-
-    for (cmdent = cmdtab; cmdent->statement; cmdent++)
-        if (cmdent->function && (cmdent->type & CONFIG))
-            if ( !strncasecmp(argv[0], cmdent->statement, 
-                cmdent->statminlen == 0 ? 
-                MAX( strlen(argv[0]), strlen(cmdent->statement) ) : 
-                MAX( cmdent->statminlen, strlen(argv[0]) ) ) )
-            {
-                char cmd[256];
-                strlcpy( cmd, cmdent->statement, sizeof(cmd) );
-                argv[0] = cmd;              /* argv[0] is a pointer within another string - no heap issue */      
-                rc = cmdent->function(argc, argv, cmdline);
-                break;
-            }
-
-ProcessConfigExit:;
-
-    CommandLockCounter--;
-
-    if ( CommandLockCounter <= 0 )
-    {
-        CommandLockCounter = 0;
-        release_lock(&ProcessConsoleCommandLock);
-    }
-    
-    if (MLVL(DEBUG))
-    {
-        char msgbuf[64];
-        MSGBUF( msgbuf, "Config_Exit CommandLockCounter %d", CommandLockCounter );
-        WRMSG( HHC90000, "D", msgbuf );
-    }
-
-    return rc;
-}
-
-
-CMDT_DLL_IMPORT
-int ProcessConfigCmdLine(char* pszCmdLine)
-{
-    int      rc, argc;
-    char*    argv[MAX_ARGS];
-    char*    pszSaveCmdLine;
-
-    pszSaveCmdLine = strdup(pszCmdLine);
-
-    parse_args (pszCmdLine, MAX_ARGS, argv, &argc);
-
-    rc = ProcessConfigCommand(argc, argv, pszSaveCmdLine);
-
-    free(pszSaveCmdLine);
-
-    return rc;
 }
 
 
@@ -265,14 +176,76 @@ char *cmdline = strdup(((BCMD*)bcmd)->cmdline);
 }
 
 
-int ProcessPanelCommand (char* pszCmdLine)
+int ProcessCommand (int argc, char *argv[], char* cmdline)
 {
-    CMDTAB*  pCmdTab         = NULL;
+CMDTAB* pCmdTab;
+int     rc = -1;
+
+#if defined(OPTION_DYNAMIC_LOAD)
+    if(system_command)
+        if(!(rc = system_command(argc, (char**)argv, cmdline)))
+            return -1;
+#endif
+
+    /* Route standard formatted commands from our routing table... */
+    if (argc)
+        for (pCmdTab = cmdtab; pCmdTab->function; pCmdTab++)
+        {
+            if ( pCmdTab->function && (pCmdTab->type & sysblk.sysgroup) 
+              /* Commands issues through DIAG8 must NOT be part of the SYSNDIAG group */
+              && !((sysblk.diag8cmd & DIAG8CMD_RUNNING) && (pCmdTab->type & SYSNDIAG)) )
+            {
+                if (!strncasecmp(argv[0],pCmdTab->statement,
+                    pCmdTab->statminlen == 0 ?
+                    MAX( strlen(argv[0]), strlen(pCmdTab->statement) ) : 
+                    MAX( pCmdTab->statminlen, strlen(argv[0]) ) ) )
+                {
+                    char cmd[256];
+                    strlcpy(cmd, pCmdTab->statement, sizeof(cmd));
+                    argv[0] = cmd;
+
+                    if(strcmp(argv[argc-1],"&"))
+                    {
+                        if(!strncmp(argv[argc-1],"&&",2))
+                            argv[argc-1]++;
+                        rc = pCmdTab->function(argc, (char**)argv, cmdline);
+                    }
+                    else
+                    {
+                    BCMD *bcmd;
+                    TID  bgnd_tid;
+                    int i,len;
+
+                        for (len = 0, i = 0; i < argc-1; i++ )
+                            len += (int)strlen( (char *)argv[i] ) + 1;
+
+                        bcmd = (void *)malloc( len + sizeof(BCMD) );
+                        bcmd->func = pCmdTab->function;
+                        bcmd->cmdline = (char *)(bcmd + 1);
+
+                        strcpy( bcmd->cmdline, argv[0]);
+                        for ( i = 1; i < argc-1; i++)
+                        {
+                            strcat( bcmd->cmdline, " ");
+                            strcat( bcmd->cmdline, argv[i]);
+                        }
+
+                        rc = create_thread(&bgnd_tid, DETACHED, background_command, bcmd, "background_command");
+                    }
+                    return rc;
+                }
+            }
+        }
+
+    return rc;
+}
+
+int ProcessCmdLine (char* pszCmdLine)
+{
     char*    pszSaveCmdLine  = NULL;
     int      rc              = -1;
     int      cmd_argc;
     char*    cmd_argv[MAX_ARGS];
-
 
     if ( !ConsoleCommandLockInitialized )
         initialize_lock(&ProcessConsoleCommandLock);
@@ -307,65 +280,12 @@ int ProcessPanelCommand (char* pszCmdLine)
 
     /* If no command was entered (i.e. they entered just a comment
        (e.g. "# comment")) then ignore their input */
-    if ( !cmd_argv[0] )
+    if ( !cmd_argv[0] || !*cmd_argv[0] )
         goto ProcessPanelCommandExit;
 
-#if defined(OPTION_DYNAMIC_LOAD)
-    if(system_command)
-        if(!(rc = system_command(cmd_argc, (char**)cmd_argv, pszSaveCmdLine)))
-            goto ProcessPanelCommandExit;
-#endif
-
-    /* Route standard formatted commands from our routing table... */
-    if (cmd_argc)
-        for (pCmdTab = cmdtab; pCmdTab->function; pCmdTab++)
-        {
-            if ( pCmdTab->function && (pCmdTab->type & PANEL) &&
-                 ( (sysblk.diag8cmd & DIAG8CMD_RUNNING) || 
-                   (pCmdTab->group & sysblk.sysgroup) ) )
-            {
-                if (!strncasecmp(cmd_argv[0],pCmdTab->statement,
-                    pCmdTab->statminlen == 0 ?
-                    MAX( strlen(cmd_argv[0]), strlen(pCmdTab->statement) ) : 
-                    MAX( pCmdTab->statminlen, strlen(cmd_argv[0]) ) ) )
-                {
-                    char cmd[256];
-                    strlcpy(cmd, pCmdTab->statement, sizeof(cmd));
-                    cmd_argv[0] = cmd;
-
-                    if(strcmp(cmd_argv[cmd_argc-1],"&"))
-                    {
-                        if(!strncmp(cmd_argv[cmd_argc-1],"&&",2))
-                            cmd_argv[cmd_argc-1]++;
-                        rc = pCmdTab->function(cmd_argc, (char**)cmd_argv, pszSaveCmdLine);
-                    }
-                    else
-                    {
-                    BCMD *bcmd;
-                    TID  bgnd_tid;
-                    int i,len;
-
-                        for (len = 0, i = 0; i < cmd_argc-1; i++ )
-                            len += (int)strlen( (char *)cmd_argv[i] ) + 1;
-
-                        bcmd = (void *)malloc( len + sizeof(BCMD) );
-                        bcmd->func = pCmdTab->function;
-                        bcmd->cmdline = (char *)(bcmd + 1);
-
-                        strcpy( bcmd->cmdline, cmd_argv[0]);
-                        for ( i = 1; i < cmd_argc-1; i++)
-                        {
-                            strcat( bcmd->cmdline, " ");
-                            strcat( bcmd->cmdline, cmd_argv[i]);
-                        }
-
-                        rc = create_thread(&bgnd_tid, DETACHED, background_command, bcmd, "background_command");
-                    }
-                    goto ProcessPanelCommandExit;
-                }
-            }
-        }
-
+    if((rc = ProcessCommand (cmd_argc, cmd_argv, pszSaveCmdLine)) != -1)
+        goto ProcessPanelCommandExit;
+    
     /* Route non-standard formatted commands... */
 
     /* sf commands - shadow file add/remove/set/compress/display */
@@ -466,10 +386,7 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
 
         for (pCmdTab = cmdtab; pCmdTab->statement; pCmdTab++)
         {
-            if (  (pCmdTab->type & PANEL)
-               && ( (sysblk.diag8cmd & DIAG8CMD_RUNNING) || 
-                    (pCmdTab->group & sysblk.sysgroup) 
-                  )  
+            if (  (pCmdTab->type & sysblk.sysgroup)
                && (pCmdTab->shortdesc) 
                && ( len == 0 || ( len > 0 && !strncasecmp(argv[1],pCmdTab->statement,len) ) )
                )
@@ -495,9 +412,7 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
     {
         for (pCmdTab = cmdtab; pCmdTab->statement; pCmdTab++)
         {
-            if ( (pCmdTab->type & PANEL) && 
-                 ( (sysblk.diag8cmd & DIAG8CMD_RUNNING) || 
-                   (pCmdTab->group & sysblk.sysgroup) ) && 
+            if ( (pCmdTab->type & sysblk.sysgroup) && 
                  ( !strncasecmp(argv[1], pCmdTab->statement,
                                          pCmdTab->statminlen == 0 ?
                                 MAX( strlen(argv[1]), strlen(pCmdTab->statement) ) : 
@@ -643,7 +558,7 @@ void *panel_command (void *cmdline)
     if(!strncasecmp(cmd, "herc ", 5) || !strncasecmp(cmd, "scp ", 4) || !strncasecmp(cmd, "pscp ", 5))
     {
         if (!noredisp) WRMSG(HHC00013, "I", cmd);     // Echo command to the control panel
-        ProcessPanelCommand(cmd);
+        ProcessCmdLine(cmd);
         return NULL;
     }
 
@@ -666,7 +581,7 @@ void *panel_command (void *cmdline)
             else
 #endif /*_FEATURE_SYSTEM_CONSOLE*/
             {
-                if (!noredisp) WRMSG(HHC00013, "I", cmd);     // Echo command to the control panel
+                if (!noredisp && *cmd) WRMSG(HHC00013, "I", cmd);     // Echo command to the control panel
 #if defined(OPTION_CONFIG_SYMBOLS)
                 /* Perform variable substitution */
                 /* First, set some 'dynamic' symbols to their own values */
@@ -674,10 +589,10 @@ void *panel_command (void *cmdline)
                 set_symbol("CCUU","$(CCUU)");
                 set_symbol("DEVN","$(DEVN)");
                 cl=resolve_symbol_string(cmd);
-                ProcessPanelCommand(cl);
+                ProcessCmdLine(cl);
                 free(cl);
 #else
-                ProcessPanelCommand(cmd);
+                ProcessCmdLine(cmd);
 #endif
             }
             break;
@@ -712,8 +627,8 @@ void *panel_command (void *cmdline)
         return NULL;
     }
 #endif /*_FEATURE_SYSTEM_CONSOLE*/
-    if (!noredisp) WRMSG(HHC00013, "I", cmd);     // Echo command to the control panel
-    ProcessPanelCommand(cmd);
+    if (!noredisp && *cmd) WRMSG(HHC00013, "I", cmd);     // Echo command to the control panel
+    ProcessCmdLine(cmd);
 
 #endif // OPTION_CMDTGT
 

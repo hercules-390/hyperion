@@ -439,7 +439,7 @@ HDL_RESOLVER_SECTION;
                  you need to call
                  directly yourself
     */
-    HDL_RESOLVE( config_command          );
+    HDL_RESOLVE( system_command          );
     HDL_RESOLVE( some_exitpoint          );
     HDL_RESOLVE( debug_cpu_state         );
     HDL_RESOLVE( debug_program_interrupt );
