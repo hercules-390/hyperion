@@ -3837,6 +3837,84 @@ static void ARCH_DEP(pcc_xts_aes)(REGS *regs)
 }
 #endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4 */
 
+#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
+/*----------------------------------------------------------------------------*/
+/* Perform cryptographic key management operation (PCKMO) FC 1-3        [RRE] */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(pckmo_dea)(REGS *regs)
+{
+  int fc;
+  int keylen;
+  BYTE parameter_block[64];
+  int parameter_blocklen;
+
+  /* Initialize values */
+  fc = GR0_fc(regs);
+  keylen = fc * 8;
+  parameter_blocklen = keylen + 24;
+      
+  /* Test writeability */
+  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, parameter_blocklen - 1, ACCTYPE_WRITE, regs);
+
+  /* Fetch the parameter block */
+  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+
+#ifdef OPTION_PCKMO_DEBUG
+  LOGBYTE("key in : ", parameter_block, keylen);
+  LOGBYTE("wkvp   : ", &parameter_block[keylen], parameter_blocklen - keylen);
+#endif
+      
+  /* Encrypt the key and fill the wrapping key verification pattern */
+  wrap_dea(parameter_block, keylen);
+        
+  /* Store the parameterblock */
+  ARCH_DEP(vstorec)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+
+#ifdef OPTION_PCKMO_DEBUG
+  LOGBYTE("key out: ", parameter_block, keylen);
+  LOGBYTE("wkvp   : ", &parameter_block[keylen], parameter_blocklen - keylen);
+#endif
+}
+
+/*----------------------------------------------------------------------------*/
+/* Perform cryptographic key management operation (PCKMO) FC 18-20      [RRE] */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(pckmo_aes)(REGS *regs)
+{
+  int fc;
+  int keylen;
+  BYTE parameter_block[64];
+  int parameter_blocklen;
+
+  /* Initialize values */
+  fc = GR0_fc(regs);
+  keylen = (fc - 16) * 8;
+  parameter_blocklen = keylen + 32;
+      
+  /* Test writeability */
+  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, parameter_blocklen - 1, ACCTYPE_WRITE, regs);
+
+  /* Fetch the parameter block */
+  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+
+#ifdef OPTION_PCKMO_DEBUG
+  LOGBYTE("key in : ", parameter_block, keylen);
+  LOGBYTE("wkvp   : ", &parameter_block[keylen], parameter_blocklen - keylen);
+#endif
+      
+  /* Encrypt the key and fill the wrapping key verification pattern */
+  wrap_aes(parameter_block, keylen);
+        
+  /* Store the parameterblock */
+  ARCH_DEP(vstorec)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+
+#ifdef OPTION_PCKMO_DEBUG
+  LOGBYTE("key out: ", parameter_block, keylen);
+  LOGBYTE("wkvp   : ", &parameter_block[keylen], parameter_blocklen - keylen);
+#endif
+}
+#endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
+
 /*----------------------------------------------------------------------------*/
 /* B93E KIMD  - Compute intermediate message digest                     [RRE] */
 /*----------------------------------------------------------------------------*/
@@ -4789,10 +4867,7 @@ DEF_INST(perform_cryptographic_computation_d)
 DEF_INST(perform_cryptographic_key_management_operation_d)
 {
   int fc;
-  int keylen = 0;
   int msa;
-  BYTE parameter_block[64];
-  int parameter_blocklen = 0;
   BYTE query_bits[][16] = 
   {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -4847,10 +4922,7 @@ DEF_INST(perform_cryptographic_key_management_operation_d)
     case 3: /* encrypt-tdea-192 */
     {
       if(msa >= 3)
-      {
-        keylen = fc * 8;
-        parameter_blocklen = keylen + 24;
-      }
+        ARCH_DEP(pckmo_dea)(regs);
       else
         ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
@@ -4860,10 +4932,7 @@ DEF_INST(perform_cryptographic_key_management_operation_d)
     case 20: /* encrypt-aes-256 */
     {
       if(msa >= 3)
-      {
-        keylen = (fc - 16) * 8;
-        parameter_blocklen = keylen + 32;
-      }
+        ARCH_DEP(pckmo_aes)(regs);
       else
         ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
@@ -4874,44 +4943,6 @@ DEF_INST(perform_cryptographic_key_management_operation_d)
       break;
     }
   }      
-      
-  /* Test writeability */
-  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, parameter_blocklen - 1, ACCTYPE_WRITE, regs);
-
-  /* Fetch the parameter block */
-  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
-
-#ifdef OPTION_PCKMO_DEBUG
-  LOGBYTE("key in : ", parameter_block, keylen);
-  LOGBYTE("wkvp   : ", &parameter_block[keylen], parameter_blocklen - keylen);
-#endif
-      
-  /* Encrypt the key and fill the wrapping key verification pattern */
-  switch(fc)
-  {
-    case 1: /* encrypt-dea */
-    case 2: /* encrypt-tdea-128 */
-    case 3: /* encrypt-tdea-192 */
-    {
-      wrap_dea(parameter_block, keylen);
-      break;
-    }
-    case 18: /* encrypt-aes-128 */
-    case 19: /* encrypt-aes-192 */
-    case 20: /* encrypt-aes-256 */
-    {
-      wrap_aes(parameter_block, keylen);
-      break;
-    }
-  }
-        
-  /* Store the parameterblock */
-  ARCH_DEP(vstorec)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
-
-#ifdef OPTION_PCKMO_DEBUG
-  LOGBYTE("key out: ", parameter_block, keylen);
-  LOGBYTE("wkvp   : ", &parameter_block[keylen], parameter_blocklen - keylen);
-#endif
 }
 #endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
 
