@@ -79,7 +79,7 @@ int  i;
             {
                 if(!(tmpbuf = (void *)memrchr(msgbuf[i],'\n',msgcnt[i])))
                     break;
-                msgcnt[i] = tmpbuf - msgbuf[i];
+                msgcnt[i] = (int)(tmpbuf - msgbuf[i]);
             }
             if(!linenumber)
                 break;
@@ -219,7 +219,7 @@ static void logger_logfile_write( void* pBuff, size_t nBytes )
         )
     {
         pLeft++;
-        nLeft -= (pLeft - (char*)pBuff);
+        nLeft -= (int)(pLeft - (char*)pBuff);
     }
 
 #endif // defined( OPTION_MSGCLR )
@@ -349,7 +349,7 @@ int bytes_read;
                 )
                 {
                     pLeft2++;
-                    nLeft2 -= (pLeft2 - (logger_buffer + logger_currmsg));
+                    nLeft2 -= (int)(pLeft2 - (logger_buffer + logger_currmsg));
                 }
 
 #endif // defined( OPTION_MSGCLR )
@@ -409,7 +409,7 @@ int bytes_read;
             while ( (pNL = memchr( pLeft, '\n', nLeft )) != NULL )
             {
                 pRight  = pNL + 1;
-                nRight  = nLeft - (pRight - pLeft);
+                nRight  = nLeft - (int)(pRight - pLeft);
                 nLeft  -= nRight;
 
 #if defined( OPTION_MSGCLR )
@@ -425,7 +425,7 @@ int bytes_read;
                     )
                     {
                         pLeft2++;
-                        nLeft2 -= (pLeft2 - pLeft);
+                        nLeft2 -= (int)(pLeft2 - pLeft);
                     }
                     else
                     {
