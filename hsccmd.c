@@ -10377,7 +10377,7 @@ int CmdLevel(int argc, char *argv[], char *cmdline)
     else
     {
         char buf[128];
-        MSGBUF( buf, "%s%s%s%s%s",
+        MSGBUF( buf, "%s%s%s%s%s%s",
             (sysblk.sysgroup&SYSGROUP_SYSOPER)?"operator ":"",
             (sysblk.sysgroup&SYSGROUP_SYSMAINT)?"maintenance ":"",
             (sysblk.sysgroup&SYSGROUP_SYSPROG)?"programmer ":"",
