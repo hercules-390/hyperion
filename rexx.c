@@ -208,11 +208,11 @@ RXSYSEXIT ExitList[2];
     {   /* try $(MODPATH)\rexx\filename if not found and no pathing information */
     char execpath[MAX_PATH];
 
-        strlcpy( execpath, get_symbol("MODPATH"), sizeof(pathname) );
-        strlcat( execpath, PATHSEPS,              sizeof(pathname) );
-        strlcat( execpath, "rexx",                sizeof(pathname) );
-        strlcat( execpath, PATHSEPS,              sizeof(pathname) );
-        strlcat( execpath, argv[1],               sizeof(pathname) );
+        strlcpy( execpath, get_symbol("MODPATH"), sizeof(execpath) );
+        strlcat( execpath, PATHSEPS,              sizeof(execpath) );
+        strlcat( execpath, "rexx",                sizeof(execpath) );
+        strlcat( execpath, PATHSEPS,              sizeof(execpath) );
+        strlcat( execpath, argv[1],               sizeof(execpath) );
 
         if (access( pathname, R_OK ) == 0)
             hostpath( pathname, execpath, sizeof(pathname));
