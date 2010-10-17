@@ -183,8 +183,8 @@ int     rc = HERRINVCMD;             // Indicate invalid command
 
 #if defined(OPTION_DYNAMIC_LOAD)
     if(system_command)
-        if(!(rc = system_command(argc, (char**)argv, cmdline)))
-            return -1;
+        if((rc = system_command(argc, (char**)argv, cmdline)) != HERRINVCMD)
+            return rc;
 #endif
 
     /* Route standard formatted commands from our routing table... */
