@@ -562,7 +562,7 @@ int syntax (char *pgm)
         MSGBUF( usage ,MSG( HHC02438, "I", buflfs ) );
     else
         MSGBUF( usage ,MSG( HHC02439, "I", pgm, bufz, bufbz, buflfs ) );
-    printf (usage);
+    printf ("%s", usage);
     return -1;
 } /* end function syntax */
 
