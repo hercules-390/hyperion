@@ -244,9 +244,9 @@ static int display_regs32(char *hdr,U16 cpuad,U32 *r,int numcpus,char *buf,int b
         {
             if(i)
             {
-                len+=snprintf(buf+len, buflen-len-1, "\n");
+                len+=snprintf(buf+len, buflen-len-1, "%s", "\n");
             }
-            len+=snprintf(buf+len, buflen-len-1, msghdr);
+            len+=snprintf(buf+len, buflen-len-1, "%s", msghdr);
             if(numcpus>1)
             {
                 len+=snprintf(buf+len,buflen-len-1,"%s%02X: ", PTYPSTR(cpuad), cpuad);
@@ -254,11 +254,11 @@ static int display_regs32(char *hdr,U16 cpuad,U32 *r,int numcpus,char *buf,int b
         }
         if(i%4)
         {
-            len+=snprintf(buf+len,buflen-len-1," ");
+            len+=snprintf(buf+len,buflen-len-1,"%s", " ");
         }
         len+=snprintf(buf+len,buflen-len-1,"%s%2.2d=%8.8"I32_FMT"X",hdr,i,r[i]);
     }
-    len+=snprintf(buf+len,buflen-len-1,"\n");
+    len+=snprintf(buf+len,buflen-len-1,"%s","\n");
     return(len);
 }
 
@@ -283,9 +283,9 @@ static int display_regs64(char *hdr,U16 cpuad,U64 *r,int numcpus,char *buf,int b
         {
             if(i)
             {
-                len+=snprintf(buf+len,buflen-len-1,"\n");
+                len+=snprintf(buf+len,buflen-len-1,"%s", "\n");
             }
-            len+=snprintf(buf+len,buflen-len-1,msghdr);
+            len+=snprintf(buf+len,buflen-len-1, "%s", msghdr);
             if(numcpus>1)
             {
                 len+=snprintf(buf+len,buflen-len-1,"%s%02X: ", PTYPSTR(cpuad), cpuad);
@@ -293,11 +293,11 @@ static int display_regs64(char *hdr,U16 cpuad,U64 *r,int numcpus,char *buf,int b
         }
         if(i%rpl)
         {
-            len+=snprintf(buf+len,buflen-len-1," ");
+            len+=snprintf(buf+len,buflen-len-1,"%s"," ");
         }
         len+=snprintf(buf+len,buflen-len-1,"%s%1.1X=%16.16"I64_FMT"X",hdr,i,r[i]);
     }
-    len+=snprintf(buf+len,buflen-len-1,"\n");
+    len+=snprintf(buf+len,buflen-len-1,"%s","\n");
     return(len);
 }
 
@@ -820,7 +820,7 @@ int icode;
 /* Prefixes display by Rxxxxx: if draflag is 1                       */
 /* Returns number of characters placed in display buffer             */
 /*-------------------------------------------------------------------*/
-static int ARCH_DEP(display_real) (REGS *regs, RADR raddr, char *buf,
+static int ARCH_DEP(display_real) (REGS *regs, RADR raddr, char *buf, size_t bufl,
                                     int draflag, char *hdr)
 {
 RADR    aaddr;                          /* Absolute storage address  */
@@ -835,20 +835,20 @@ BYTE    c;                              /* Character work area       */
         ARCH_DEP(store_int_timer)(regs);
 #endif
 
-    n = sprintf(buf, hdr);
+    n = snprintf(buf, bufl-1, "%s", hdr);
     if (draflag)
     {
-        n += sprintf (buf+n, "R:"F_RADR":", raddr);
+        n += snprintf (buf+n, bufl-n-1, "R:"F_RADR":", raddr);
     }
 
     aaddr = APPLY_PREFIXING (raddr, regs->PX);
     if (aaddr > regs->mainlim)
     {
-        n += sprintf (buf+n, " Real address is not valid");
+        n += snprintf (buf+n, bufl-n-1, "%s", " Real address is not valid");
         return n;
     }
 
-    n += sprintf (buf+n, "K:%2.2X=", STORAGE_KEY(aaddr, regs));
+    n += snprintf (buf+n, bufl-n-1, "K:%2.2X=", STORAGE_KEY(aaddr, regs));
 
     memset (hbuf, SPACE, sizeof(hbuf));
     memset (cbuf, SPACE, sizeof(cbuf));
@@ -856,7 +856,7 @@ BYTE    c;                              /* Character work area       */
     for (i = 0, j = 0; i < 16; i++)
     {
         c = regs->mainstor[aaddr++];
-        j += sprintf (hbuf+j, "%2.2X", c);
+        j += snprintf (hbuf+j, sizeof(hbuf)-1, "%2.2X", c);
         if ((aaddr & 0x3) == 0x0) hbuf[j++] = SPACE;
         c = guest_to_host(c);
         if (!isprint(c)) c = '.';
@@ -864,7 +864,7 @@ BYTE    c;                              /* Character work area       */
         if ((aaddr & PAGEFRAME_BYTEMASK) == 0x000) break;
     } /* end for(i) */
 
-    n += sprintf (buf+n, "%36.36s %16.16s", hbuf, cbuf);
+    n += snprintf (buf+n, bufl-n-1, "%36.36s %16.16s", hbuf, cbuf);
     return n;
 
 } /* end function display_real */
@@ -874,7 +874,7 @@ BYTE    c;                              /* Character work area       */
 /* Display virtual storage (up to 16 bytes, or until end of page)    */
 /* Returns number of characters placed in display buffer             */
 /*-------------------------------------------------------------------*/
-static int ARCH_DEP(display_virt) (REGS *regs, VADR vaddr, char *buf,
+static int ARCH_DEP(display_virt) (REGS *regs, VADR vaddr, char *buf, size_t bufl,
                                     int ar, int acctype, char *hdr)
 {
 RADR    raddr;                          /* Real address              */
@@ -882,16 +882,16 @@ int     n;                              /* Number of bytes in buffer */
 int     stid;                           /* Segment table indication  */
 U16     xcode;                          /* Exception code            */
 
-    n = sprintf (buf, "%s%c:"F_VADR":", hdr, 
+    n = snprintf (buf, bufl-1, "%s%c:"F_VADR":", hdr, 
                  ar == USE_REAL_ADDR ? 'R' : 'V', vaddr);
     xcode = ARCH_DEP(virt_to_abs) (&raddr, &stid,
                                     vaddr, ar, regs, acctype);
     if (xcode == 0)
     {
-        n += ARCH_DEP(display_real) (regs, raddr, buf+n, 0, "");
+        n += ARCH_DEP(display_real) (regs, raddr, buf+n, bufl-n, 0, "");
     }
     else
-        n += sprintf (buf+n," Translation exception %4.4hX",xcode);
+        n += snprintf (buf+n,bufl-n-1," Translation exception %4.4hX",xcode);
 
     return n;
 
@@ -1044,7 +1044,7 @@ char    buf[512];                       /* Message buffer            */
     /* Display real storage */
     for (i = 0; i < 999 && raddr <= eaddr; i++)
     {
-        ARCH_DEP(display_real) (regs, raddr, buf, 1, "");
+        ARCH_DEP(display_real) (regs, raddr, buf, sizeof(buf), 1, "");
         WRMSG( HHC02290, "I", buf );
         raddr += 16;
     } /* end for(i) */
@@ -1142,7 +1142,7 @@ char    buf[512];                       /* Message buffer            */
                 n += snprintf (buf+n, sizeof(buf)-n-1, " R:"F_RADR, raddr);
             WRMSG(HHC02291, "I", buf);
         }
-        ARCH_DEP(display_virt) (regs, vaddr, buf, arn, ACCTYPE_LRA, "");
+        ARCH_DEP(display_virt) (regs, vaddr, buf, sizeof(buf), arn, ACCTYPE_LRA, "");
         WRMSG(HHC02291, "I", buf);
         vaddr += 16;
     } /* end for(i) */
@@ -1344,10 +1344,10 @@ REGS   *regs;                           /* Copied regs               */
     if (b1 >= 0)
     {
         if(REAL_MODE(&regs->psw))
-            ARCH_DEP(display_virt) (regs, addr1, buf2, USE_REAL_ADDR,
+            ARCH_DEP(display_virt) (regs, addr1, buf2, sizeof(buf2), USE_REAL_ADDR,
                                                 ACCTYPE_READ, "");
         else
-            ARCH_DEP(display_virt) (regs, addr1, buf2, b1,
+            ARCH_DEP(display_virt) (regs, addr1, buf2, sizeof(buf2), b1,
                                 (opcode == 0x44 
 #if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
                                  || (opcode == 0xc6 && !(inst[1] & 0x0f))
@@ -1375,10 +1375,10 @@ REGS   *regs;                           /* Copied regs               */
             || (opcode == 0xB2 && inst[1] == 0x46) /*STURA*/
             || (opcode == 0xB9 && inst[1] == 0x05) /*LURAG*/
             || (opcode == 0xB9 && inst[1] == 0x25))) /*STURG*/
-            ARCH_DEP(display_virt) (regs, addr2, buf2, USE_REAL_ADDR,
+            ARCH_DEP(display_virt) (regs, addr2, buf2, sizeof(buf2), USE_REAL_ADDR,
                                                 ACCTYPE_READ, "");
         else
-            ARCH_DEP(display_virt) (regs, addr2, buf2, b2,
+            ARCH_DEP(display_virt) (regs, addr2, buf2, sizeof(buf2), b2,
                                         ACCTYPE_READ, "");
 
         if ( !(sysblk.emsg & EMSG_TEXT) )
