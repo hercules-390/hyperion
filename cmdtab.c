@@ -179,7 +179,7 @@ char *cmdline = strdup(((BCMD*)bcmd)->cmdline);
 int ProcessCommand (int argc, char *argv[], char* cmdline)
 {
 CMDTAB* pCmdTab;
-int     rc = -1;
+int     rc = HERRINVCMD;             // Indicate invalid command
 
 #if defined(OPTION_DYNAMIC_LOAD)
     if(system_command)
@@ -283,7 +283,7 @@ int ProcessCmdLine (char* pszCmdLine)
     if ( !cmd_argv[0] || !*cmd_argv[0] )
         goto ProcessPanelCommandExit;
 
-    if((rc = ProcessCommand (cmd_argc, cmd_argv, pszSaveCmdLine)) != -1)
+    if((rc = ProcessCommand (cmd_argc, cmd_argv, pszSaveCmdLine)) != HERRINVCMD)
         goto ProcessPanelCommandExit;
     
     /* Route non-standard formatted commands... */

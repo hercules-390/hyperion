@@ -14,13 +14,14 @@
 /* Generic codes */
 #define HNOERROR       (0)                          /* OK / NO ERROR */
 #define HERROR        (-1)                          /* Generic Error */
-
+#define HERRINVCMD    (-32767)                      /* Invalid command  KEEP UNIQUE */ 
 /* CPU related error codes */
-#define HERRCPUOFF    (-2)                            /* CPU Offline */
-#define HERRCPUONL    (-3)                             /* CPU Online */
+#define HERRCPUOFF    (-2)                          /* CPU Offline */
+#define HERRCPUONL    (-3)                          /* CPU Online */
 
 /* Device related error codes */
-#define HERRDEVIDA    (-2)                 /* Invalid Device Address */
+#define HERRDEVIDA    (-2)                          /* Invalid Device Address */
+
 
 
 #endif /* _HERROR_H */

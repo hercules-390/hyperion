@@ -1114,7 +1114,7 @@ cpu.c:123:HABC1234I This is a message
 // reserve 022xx for command processing */
 #define HHC02200 "%1d:%04X device not found"
 #define HHC02201 "Device number missing"
-#define HHC02202 "Missing argument(s)"
+#define HHC02202 "Missing argument(s). Type 'help %s' for assistance."
 #define HHC02203 "%-14s: %s"
 #define HHC02204 "%-14s set to %s"
 #define HHC02205 "Invalid argument '%s'%s"

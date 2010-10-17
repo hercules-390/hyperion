@@ -1915,7 +1915,7 @@ int rc;
 
     if (argc < 2)
     {
-        WRMSG(HHC02202, "E");
+        WRMSG(HHC02202, "E", argv[0] );
         return -1;
     }
 
@@ -1927,7 +1927,7 @@ int rc;
 
         if (argc != 2)
         {
-            WRMSG(HHC02202, "E");
+            WRMSG(HHC02202, "E", argv[0] );
             return -1;
         }
 
@@ -1960,7 +1960,7 @@ int rc;
 
             if (argc != 2 )
             {
-                WRMSG(HHC02202, "E");
+                WRMSG(HHC02202, "E", argv[0] );
                 return -1;
             }
         }
@@ -1970,7 +1970,7 @@ int rc;
 
             if (argc != 3 )
             {
-                WRMSG(HHC02202, "E");
+                WRMSG(HHC02202, "E", argv[0] );
                 return -1;
             }
         }
@@ -2080,7 +2080,7 @@ int rc;
 
             if (argc != 2 )
             {
-                WRMSG(HHC02202, "E");
+                WRMSG(HHC02202, "E", argv[0] );
                 return -1;
             }
         }
@@ -2090,7 +2090,7 @@ int rc;
 
             if (argc != 3 )
             {
-                WRMSG(HHC02202, "E");
+                WRMSG(HHC02202, "E", argv[0] );
                 return -1;
             }
         }
@@ -2613,7 +2613,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
 
     if (argc < 2)
     {
-        WRMSG(HHC02202, "E");
+        WRMSG(HHC02202, "E", argv[0] );
         rc = -1;
     }
     else if ( CMD(argv[1],stats,5) )
@@ -2980,6 +2980,7 @@ BYTE c;
     return rc;
 }
 
+int qstor_cmd(int argc, char *argv[], char *cmdline);
 
 /*-------------------------------------------------------------------*/
 /* mainsize command                                                  */
@@ -2993,10 +2994,16 @@ int rc;
     UNREFERENCED(cmdline);
 
     /* Validate argument count */
-    if ( argc != 2 )
+    if ( argc > 2 )
     {
         WRMSG( HHC01455, "E", argv[0] );
         return -1;
+    }
+
+    if ( argc == 1 )
+    {
+        char *q_argv[2] = { "qstor", "main" };
+        return qstor_cmd( 2, q_argv, "qstor main" );
     }
 
     /* Parse main storage size operand */
@@ -3040,10 +3047,16 @@ int rc;
     UNREFERENCED(cmdline);
 
     /* Validate argument count */
-    if ( argc != 2 )
+    if ( argc > 2 )
     {
         WRMSG( HHC01455, "E", argv[0] );
         return  -1;
+    }
+
+    if ( argc == 1 )
+    {
+        char *q_argv[2] = { "qstor", "xpnd" };
+        return qstor_cmd( 2, q_argv, "qstor xpnd" );
     }
 
     /* Parse expanded storage size operand */
@@ -3827,7 +3840,7 @@ int msghld_cmd(int argc, char *argv[], char *cmdline)
             }
         }
     }
-    WRMSG(HHC02202, "E");
+    WRMSG(HHC02202, "E", argv[0] );
     return 0;
 }
 #endif // OPTION_MSGHLD
@@ -5876,7 +5889,7 @@ int cpu_cmd(int argc, char *argv[], char *cmdline)
 
     if (argc < 2)
     {
-        WRMSG(HHC02202, "E");
+        WRMSG(HHC02202, "E", argv[0] );
         return -1;
     }
 
@@ -6323,7 +6336,7 @@ int attach_cmd(int argc, char *argv[], char *cmdline)
 
     if (argc < 3)
     {
-        WRMSG(HHC02202, "E");
+        WRMSG(HHC02202, "E", argv[0] );
         return -1;
     }
 #if defined(OPTION_ENHANCED_DEVICE_ATTACH)
@@ -6382,7 +6395,7 @@ int rc;
 
     if (argc < 3)
     {
-        WRMSG(HHC02202, "E");
+        WRMSG(HHC02202, "E", argv[0] );
         return -1;
     }
 
@@ -6980,7 +6993,7 @@ BYTE     unitstat, code = 0;
 
     if (argc < 3)
     {
-        WRMSG(HHC02202,"E");
+        WRMSG(HHC02202,"E", argv[0] );
         return -1;
     }
 
@@ -7215,7 +7228,7 @@ char   **init_argv;
 
     if (argc < 2)
     {
-        WRMSG(HHC02202,"E");
+        WRMSG(HHC02202,"E", argv[0] );
         return -1;
     }
 
@@ -7378,7 +7391,7 @@ REGS *regs;
 
     if (argc < 2)
     {
-        WRMSG(HHC02202,"E");
+        WRMSG(HHC02202,"E", argv[0] );
         return -1;
     }
 
@@ -8698,7 +8711,7 @@ int delsym_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(cmdline);
     if ( argc != 2 )
     {
-        WRMSG( HHC02299, "E" );
+        WRMSG( HHC02202, "E", argv[0] );
         return -1;
     }
     /* point to symbol name */
@@ -9711,8 +9724,8 @@ int cmdtgt_cmd(int argc, char *argv[], char *cmdline)
 
   if (argc == 1)
   {
-    WRMSG(HHC02202, "I");
-    return 0;
+    WRMSG(HHC02202, "E", argv[0] );
+    return -1;
   }
 
   if (argc == 2)
@@ -10170,65 +10183,82 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int qstor_cmd(int argc, char *argv[], char *cmdline)
 {
+    BYTE    display_main = TRUE;
+    BYTE    display_xpnd = TRUE;
+
     char buf[64];
     U64  xpndsize = (U64)(sysblk.xpndsize) << 12;
 
     UNREFERENCED(cmdline);
-    UNREFERENCED(argv);
 
-    if (argc != 1)
+    if (argc > 2)
     {
-        WRMSG( HHC17000, "E" );
+        WRMSG( HHC02299, "E", argv[0] );
         return -1;
     }
 
+    if ( argc == 2 && CMD(argv[1],mainsize,1) )
+        display_xpnd = FALSE;
+    else if ( argc == 2 && ( CMD(argv[1],xpndsize,1) || CMD(argv[1],expanded,2) ) )
+        display_main = FALSE;
+    else if ( argc == 2 )
+    {
+        WRMSG( HHC02205, "E", argv[1], "; either 'mainsize' or 'xpndsize' is valid" );
+        return -1;
+    }
+
+    if ( display_main )
+    {
 #if defined(_900)
-    if ( sysblk.mainsize >= ONE_EXABYTE )
-    {
-        MSGBUF( buf, "%" I64_FMT "d E", sysblk.mainsize >> 60 );
-    }
-    else if ( sysblk.mainsize >= ONE_PETABYTE )
-    {
-        MSGBUF( buf, "%" I64_FMT "d P", sysblk.mainsize >> 50 );
-    }
-    else if ( sysblk.mainsize >= ONE_TERABYTE )
-    {
-        MSGBUF( buf, "%" I64_FMT "d T", sysblk.mainsize >> 40 );
-    }
+        if ( sysblk.mainsize >= ONE_EXABYTE )
+        {
+            MSGBUF( buf, "%" I64_FMT "d E", sysblk.mainsize >> 60 );
+        }
+        else if ( sysblk.mainsize >= ONE_PETABYTE )
+        {
+            MSGBUF( buf, "%" I64_FMT "d P", sysblk.mainsize >> 50 );
+        }
+        else if ( sysblk.mainsize >= ONE_TERABYTE )
+        {
+            MSGBUF( buf, "%" I64_FMT "d T", sysblk.mainsize >> 40 );
+        }
+        else
 #endif // defined(_900)
-    else if ( sysblk.mainsize >= ONE_GIGABYTE )
-    {
-        MSGBUF( buf, "%3.3" I64_FMT "d G", sysblk.mainsize >> 30 );
-    }
-    else
-    {
-        MSGBUF( buf, "%3.3" I64_FMT "d M", sysblk.mainsize >> 20 );
-    }
+             if ( sysblk.mainsize >= ONE_GIGABYTE )
+        {
+            MSGBUF( buf, "%3.3" I64_FMT "d G", sysblk.mainsize >> 30 );
+        }
+        else
+        {
+            MSGBUF( buf, "%3.3" I64_FMT "d M", sysblk.mainsize >> 20 );
+        }
 
-    WRMSG( HHC17003, "I", "MAIN", buf, "main" );
-
-    if ( xpndsize >= ONE_EXABYTE )
-    {
-        MSGBUF( buf, "%" I64_FMT "d E", xpndsize >> 60 );
+        WRMSG( HHC17003, "I", "MAIN", buf, "main" );
     }
-    else if ( xpndsize >= ONE_PETABYTE )
+    if ( display_xpnd )
     {
-        MSGBUF( buf, "%" I64_FMT "d P", xpndsize >> 50 );
+        if ( xpndsize >= ONE_EXABYTE )
+        {
+            MSGBUF( buf, "%" I64_FMT "d E", xpndsize >> 60 );
+        }
+        else if ( xpndsize >= ONE_PETABYTE )
+        {
+            MSGBUF( buf, "%" I64_FMT "d P", xpndsize >> 50 );
+        }
+        else if ( xpndsize >= ONE_TERABYTE )
+        {
+            MSGBUF( buf, "%" I64_FMT "d T", xpndsize >> 40 );
+        }
+        else if ( xpndsize >= ONE_GIGABYTE )
+        {
+            MSGBUF( buf, "%3.3" I64_FMT "d G", xpndsize >> 30 );
+        }
+        else
+        {
+            MSGBUF( buf, "%3.3" I64_FMT "d M", xpndsize >> 20 );
+        }
+        WRMSG( HHC17003, "I", "EXPANDED", buf, "xpnd" );
     }
-    else if ( xpndsize >= ONE_TERABYTE )
-    {
-        MSGBUF( buf, "%" I64_FMT "d T", xpndsize >> 40 );
-    }
-    else if ( xpndsize >= ONE_GIGABYTE )
-    {
-        MSGBUF( buf, "%3.3" I64_FMT "d G", xpndsize >> 30 );
-    }
-    else
-    {
-        MSGBUF( buf, "%3.3" I64_FMT "d M", xpndsize >> 20 );
-    }
-    WRMSG( HHC17003, "I", "EXPANDED", buf, "xpnd" );
-
     return 0;
 }
 

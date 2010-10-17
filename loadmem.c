@@ -31,7 +31,7 @@ REGS *regs;
 
     if (argc < 2)
     {
-        WRMSG(HHC02202, "E");
+        WRMSG(HHC02202, "E", argv[0] );
         return -1;
     }
 
@@ -185,7 +185,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
 
     if (argc < 2)
     {
-        WRMSG(HHC02202, "E");
+        WRMSG(HHC02202, "E", argv[0] );
         return -1;
     }
 
