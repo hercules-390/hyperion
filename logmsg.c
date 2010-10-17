@@ -43,7 +43,7 @@
 /******************************************/
 #if defined(_MSVC_)
 #define  BFR_VSNPRINTF()                      \
-        bfr=malloc(siz);                      \
+        bfr=(char *)calloc(1,siz);            \
         rc=-1;                                \
         while(bfr&&rc<0)                      \
         {                                     \
@@ -58,7 +58,7 @@
         }
 #else
 #define  BFR_VSNPRINTF()                      \
-        bfr=malloc(siz);                      \
+        bfr=(char*)calloc(1,siz);             \
         rc=-1;                                \
         while(bfr&&rc<0)                      \
         {                                     \
