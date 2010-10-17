@@ -7,7 +7,7 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id$ 
+// $Id$
 
 /*-------------------------------------------------------------------*/
 /* This file contains the text of all of the messages issued by      */
@@ -800,7 +800,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01310 "%1d:%04X CHAN: suspended"
 #define HHC01311 "%1d:%04X CHAN: resumed"
 #define HHC01312 "%1d:%04X CHAN: stat %2.2X%2.2X, count %4.4X '%s'"
-#define HHC01313 "%1d:%04X CHAN: sense %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X"
+#define HHC01313 "%1d:%04X CHAN: sense %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X"
 #define HHC01314 "%1d:%04X CHAN: sense %s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s"
 #define HHC01315 "%1d:%04X CHAN: ccw %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%s"
 #define HHC01316 "%1d:%04X CHAN: stat %2.2X%2.2X, count %2.2X%2.2X, ccw %2.2X%2.2X%2.2X"

@@ -1150,9 +1150,9 @@ void device_reset (DEVBLK *dev)
     memset (dev->sense, 0, sizeof(dev->sense));
     dev->sns_pending = 0;
     memset (dev->pgid, 0, sizeof(dev->pgid));
-    /* By Adrian - Reset drive password */   
-    memset (dev->drvpwd, 0, sizeof(dev->drvpwd));   
-   
+    /* By Adrian - Reset drive password */
+    memset (dev->drvpwd, 0, sizeof(dev->drvpwd));
+
 #if defined(_FEATURE_IO_ASSIST)
     dev->mainstor = sysblk.mainstor;
     dev->storkeys = sysblk.storkeys;
@@ -1690,20 +1690,20 @@ U16     maxlen;                         /* Maximum allowable length  */
 
     /* Fetch MIDAW from main storage (MIDAW is quadword
        aligned and so cannot cross a page boundary) */
-    FETCH_DW(mword1, dev->mainstor + midawadr);        
-    FETCH_DW(mword2, dev->mainstor + midawadr + 8);        
+    FETCH_DW(mword1, dev->mainstor + midawadr);
+    FETCH_DW(mword2, dev->mainstor + midawadr + 8);
 
     /* Channel program check in reserved bits are non-zero */
-    if (mword1 & 0xFFFFFFFFFF000000ULL) 
-    {   
-        *chanstat = CSW_PROGC;     
-        return;                    
-    }   
+    if (mword1 & 0xFFFFFFFFFF000000ULL)
+    {
+        *chanstat = CSW_PROGC;
+        return;
+    }
 
-    /* Extract fields from MIDAW */                  
+    /* Extract fields from MIDAW */
     mflags = mword1 >> 16;
     mcount = mword1 & 0xFFFF;
-    mdaddr = (RADR)mword2;                                  
+    mdaddr = (RADR)mword2;
 
     /* Channel program check if data transfer interrupt flag is set */
     if (mflags & MIDAW_DTI)
@@ -1791,16 +1791,16 @@ BYTE    midawflg;                       /* MIDAW flags            @MW*/
 
 #if defined(FEATURE_MIDAW)                                      /*@MW*/
     /* Move data when modified indirect data addressing is used */
-    if (flags & CCW_FLAGS_MIDAW)        
-    {                                   
-        midawptr = addr;                
-        midawrem = count;               
-        midawflg = 0;                   
+    if (flags & CCW_FLAGS_MIDAW)
+    {
+        midawptr = addr;
+        midawrem = count;
+        midawflg = 0;
 
         for (midawseq = 0;
              midawrem > 0 && (midawflg & MIDAW_LAST) == 0;
              midawseq++)
-        {                                                       
+        {
             /* Fetch MIDAW and set data address, length, flags */
             ARCH_DEP(fetch_midaw) (dev, code, ccwkey,
                     midawseq, midawptr,
@@ -1809,9 +1809,9 @@ BYTE    midawflg;                       /* MIDAW flags            @MW*/
             /* Exit if fetch_midaw detected channel program check */
             if (*chanstat != 0) return;
 
-            /* Channel program check if MIDAW length 
+            /* Channel program check if MIDAW length
                exceeds the remaining CCW count */
-            if (midawlen > midawrem) 
+            if (midawlen > midawrem)
             {
                 *chanstat = CSW_PROGC;
                 return;
@@ -1835,7 +1835,7 @@ BYTE    midawflg;                       /* MIDAW flags            @MW*/
                 }
 
                 /* Set the main storage reference and change bits */
-                STORAGE_KEY(midawdat, dev) |= (readcmd ? 
+                STORAGE_KEY(midawdat, dev) |= (readcmd ?
                         (STORKEY_REF|STORKEY_CHANGE) : STORKEY_REF);
 
                 /* Copy data between main storage and channel buffer */
@@ -1866,7 +1866,7 @@ BYTE    midawflg;                       /* MIDAW flags            @MW*/
             if (dev->ccwtrace || dev->ccwstep)
             {
                 format_iobuf_data (midawdat, area, dev);
-                WRMSG (HHC01301, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, midawflg, midawlen, (U64)midawdat, area);                  
+                WRMSG (HHC01301, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, midawflg, midawlen, (U64)midawdat, area);
             }
 
             /* Decrement remaining count */
@@ -1962,8 +1962,8 @@ BYTE    midawflg;                       /* MIDAW flags            @MW*/
                 if (idawfmt == 1)                              /*@IWZ*/
                 {                                              /*@IWZ*/
                     WRMSG (HHC01302, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, (U32)idadata, idalen, area); /*@IWZ*/
-                } 
-                else 
+                }
+                else
                 {                                       /*@IWZ*/
                     WRMSG (HHC01303, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, (U64)idadata, idalen, area); /*@IWZ*/
                 }
@@ -2982,7 +2982,7 @@ resume_suspend:
         if ((flags & CCW_FLAGS_PCI) && !dev->syncio_retry)
         {
             ARCH_DEP(raise_pci) (dev, ccwkey, ccwfmt, ccwaddr); /*@MW*/
-        } 
+        }
 
         /* Channel program check if invalid count */
         if (count == 0 && (ccwfmt == 0 ||
@@ -3163,34 +3163,35 @@ resume_suspend:
             /* Display sense bytes if unit check is indicated */
             if (unitstat & CSW_UC)
             {
-                WRMSG (HHC01313, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->sense[0], dev->sense[1],
-                        dev->sense[2], dev->sense[3], dev->sense[4],
-                        dev->sense[5], dev->sense[6], dev->sense[7],
-                        dev->sense[8], dev->sense[9], dev->sense[10],
-                        dev->sense[11], dev->sense[12], dev->sense[13],
-                        dev->sense[14], dev->sense[15], dev->sense[16],
-                        dev->sense[17], dev->sense[18], dev->sense[19],
-                        dev->sense[20], dev->sense[21], dev->sense[22],
-                        dev->sense[23]);
-                if (dev->sense[0] != 0 || dev->sense[1] != 0)
+                register BYTE *sense = dev->sense;
+                WRMSG (HHC01313, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
+                        sense[0], sense[1], sense[2], sense[3],
+                        sense[4], sense[5], sense[6], sense[7],
+                        sense[8], sense[9], sense[10], sense[11],
+                        sense[12], sense[13], sense[14], sense[15],
+                        sense[16], sense[17], sense[18], sense[19],
+                        sense[20], sense[21], sense[22], sense[23],
+                        sense[24], sense[25], sense[26], sense[27],
+                        sense[28], sense[29], sense[30], sense[31]);
+                if (sense[0] != 0 || sense[1] != 0)
                 {
                     WRMSG (HHC01314, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
-                            (dev->sense[0] & SENSE_CR) ? "CMDREJ " : "",
-                            (dev->sense[0] & SENSE_IR) ? "INTREQ " : "",
-                            (dev->sense[0] & SENSE_BOC) ? "BOC " : "",
-                            (dev->sense[0] & SENSE_EC) ? "EQC " : "",
-                            (dev->sense[0] & SENSE_DC) ? "DCK " : "",
-                            (dev->sense[0] & SENSE_OR) ? "OVR " : "",
-                            (dev->sense[0] & SENSE_CC) ? "CCK " : "",
-                            (dev->sense[0] & SENSE_OC) ? "OCK " : "",
-                            (dev->sense[1] & SENSE1_PER) ? "PER " : "",
-                            (dev->sense[1] & SENSE1_ITF) ? "ITF " : "",
-                            (dev->sense[1] & SENSE1_EOC) ? "EOC " : "",
-                            (dev->sense[1] & SENSE1_MTO) ? "MSG " : "",
-                            (dev->sense[1] & SENSE1_NRF) ? "NRF " : "",
-                            (dev->sense[1] & SENSE1_FP) ? "FP " : "",
-                            (dev->sense[1] & SENSE1_WRI) ? "WRI " : "",
-                            (dev->sense[1] & SENSE1_IE) ? "IE " : "");
+                            (sense[0] & SENSE_CR) ? "CMDREJ " : "",
+                            (sense[0] & SENSE_IR) ? "INTREQ " : "",
+                            (sense[0] & SENSE_BOC) ? "BOC " : "",
+                            (sense[0] & SENSE_EC) ? "EQC " : "",
+                            (sense[0] & SENSE_DC) ? "DCK " : "",
+                            (sense[0] & SENSE_OR) ? "OVR " : "",
+                            (sense[0] & SENSE_CC) ? "CCK " : "",
+                            (sense[0] & SENSE_OC) ? "OCK " : "",
+                            (sense[1] & SENSE1_PER) ? "PER " : "",
+                            (sense[1] & SENSE1_ITF) ? "ITF " : "",
+                            (sense[1] & SENSE1_EOC) ? "EOC " : "",
+                            (sense[1] & SENSE1_MTO) ? "MSG " : "",
+                            (sense[1] & SENSE1_NRF) ? "NRF " : "",
+                            (sense[1] & SENSE1_FP) ? "FP " : "",
+                            (sense[1] & SENSE1_WRI) ? "WRI " : "",
+                            (sense[1] & SENSE1_IE) ? "IE " : "");
                 }
             }
         }
