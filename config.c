@@ -396,12 +396,18 @@ int rc;
 
 int configure_cpu_priority(int prio)
 {
+int cpu;
 #if !defined(NO_SETUID)
     /* Cap the default priority at zero if setuid not available */
     prio = (sysblk.suid && (prio < 0)) ? 0 : prio;
 #endif /*!defined(NO_SETUID)*/
 
     sysblk.cpuprio = prio;
+
+    for(cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
+        if(sysblk.cputid[cpu])
+            if(pthread_setschedprio(sysblk.cputid[cpu], prio))
+                WRMSG(HHC00136, "W", "setschedrio()", strerror(errno));
 
     return 0;
 }
@@ -426,6 +432,10 @@ int configure_tod_priority(int prio)
 #endif /*!defined(NO_SETUID)*/
 
     sysblk.todprio = prio;
+
+    if(sysblk.todtid)
+        if(pthread_setschedprio(sysblk.todtid, prio))
+            WRMSG(HHC00136, "W", "setschedprio()", strerror(errno));
 
     return 0;
 }
