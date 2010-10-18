@@ -526,7 +526,7 @@ struct SYSBLK {
 #define SYSGROUP_SYSCONFIG   0x10     /* System Configuration Funcs  */
 #define SYSGROUP_SYSDEVEL    0x20     /* Developer functions         */
 #define SYSGROUP_SYSDEBUG    0x40     /* Internal Debug functions    */ 
-#define SYSGROUP_SYSDIAG     0x80     /* Not supported by DIAG008    */
+#define SYSGROUP_SYSNDIAG    0x80     /* Not supported by DIAG008    */
 #define SYSGROUP_SYSALL      0x7F
         BYTE    diag8cmd;               /* Allow diagnose 8 commands */
 #define DIAG8CMD_ENABLE   0x01          /* Enable DIAG8 interface    */
