@@ -459,7 +459,26 @@ DLL_EXPORT void log_write(int panel,char *msg)
 
     if ( ptr != NULL ) free(ptr);
 
-    log_routes[slot].w(log_routes[slot].u,msg);
+    /* strip color part of message */
+    {
+        char* pLeft = msg;
+        int   nLeft = (int)strlen(msg);
+#if defined( OPTION_MSGCLR )
+    /* Remove "<pnl,..." color string if it exists */
+        if ( 1
+             && nLeft > 5
+             && strncasecmp( pLeft, "<pnl", 4 ) == 0
+             && (pLeft = memchr( pLeft+4, '>', nLeft-4 )) != NULL
+           )
+        {
+            pLeft++;
+            nLeft -= (int)(pLeft - (char*)msg);
+        }
+
+#endif // defined( OPTION_MSGCLR )  
+        if (nLeft)
+            log_routes[slot].w(log_routes[slot].u,pLeft);
+    }
     return;
 }
 

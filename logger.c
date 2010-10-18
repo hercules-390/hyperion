@@ -202,7 +202,37 @@ static void logger_term(void *arg)
         fwrite("\n",1,1,stderr);
         /* Read and display any msgs still remaining in the system log */
         while((lmscnt = log_read(&lmsbuf, &lmsnum, LOG_NOBLOCK)))
-        fwrite(lmsbuf,lmscnt,1,stderr);
+        {
+            char *p = NULL;
+            char *strtok_str = NULL;
+
+            lmsbuf[lmscnt-1] = '\0';
+
+            p = strtok_r( lmsbuf, "\n", &strtok_str );
+            while ( (p = strtok_r(NULL, "\n", &strtok_str ) ) != NULL )
+            {
+                char*   pLeft = p;
+                int     nLeft = (int)strlen(p);
+
+#if defined( OPTION_MSGCLR )
+                /* Remove "<pnl,..." color string if it exists */
+                if (1
+                    && nLeft > 5
+                    && strncasecmp( pLeft, "<pnl", 4 ) == 0
+                    && (pLeft = memchr( pLeft+4, '>', nLeft-4 )) != NULL
+                   )
+                {
+                    pLeft++;
+                    nLeft -= (int)(pLeft - p);
+                }
+#endif // defined( OPTION_MSGCLR )
+                if (nLeft)
+                {
+                    fwrite(pLeft,nLeft,1,stderr);
+                    fwrite("\n",1,1,stderr);
+                }
+            }
+        }
         fflush(stderr);
     }
 }
