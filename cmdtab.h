@@ -41,14 +41,14 @@ COMMAND("?",         SYSALL,             HelpCommand,
   "alias for help",
     NULL)
 
-COMMAND("cmdlevel",  SYSCONFIG,          CmdLevel,
+COMMAND("cmdlevel",  SYSALL,            CmdLevel,
   "Display/Set current command group",
     "display/set the current command group set(s)\n"
     "Format: cmdlevel [{+/-}{ALL, MAINT, PROGrammer, OPERator,\n"
     "                        and/or DEVELoper}]\n")
 
-COMMAND("cmdlvl",    SYSCONFIG,          CmdLevel,
-  "Alias for cmdlevel",
+COMMAND("cmdlvl",    SYSALL,            CmdLevel,
+    NULL,
     NULL)
 
 COMMAND("cmdsep",    SYSALL,             cmdsep_cmd,
@@ -77,15 +77,15 @@ COMMAND("msglevel", SYSALL,             msglevel_cmd,
 COMMAND("msglvl",    SYSALL,             msglevel_cmd,
   "Alias for msglevel", NULL)
 
-COMMAND("*",         SYSALL,             comment_cmd,
+COMMAND("*",         SYSALL,           comment_cmd,
   "Comment",
     NULL)
 
-COMMAND("#",         SYSALL,             comment_cmd,
+COMMAND("#",         SYSALL,           comment_cmd,
   "Comment",
     NULL)
 
-CMDABBR("message",1, SYSALL,             msg_cmd,
+CMDABBR("message",1, SYSALL,           msg_cmd,
   "Display message on console a la VM",
   "Format: \"message * text\". The 'text' field is variable in size.\n"
   "A 'VM' formatted similar to \"13:02:41  * MSG FROM HERCULES: hello\" is\n"
@@ -100,7 +100,7 @@ COMMAND("msgnoh",    SYSALL,             msg_cmd,
   "Similar to \"message\" but no header",
     NULL)
 
-COMMAND("hst",       SYSALL,             History,
+COMMAND("hst",       SYSALL,        History,
   "History of commands",
     "Format: \"hst | hst n | hst l\". Command \"hst l\" or \"hst 0\" displays\n"
     "list of last ten commands entered from command line\n"
@@ -143,7 +143,7 @@ COMMAND("version",   SYSALL,             version_cmd,
     NULL)
 
 #if defined (OPTION_SHUTDOWN_CONFIRMATION)
-COMMAND("quit",      SYSALL,             quit_cmd,
+COMMAND("quit",      SYSALL|SYSNDIAG,             quit_cmd,
   "Terminate the emulator",
   "Format: \"quit [force]\"  Terminates the emulator. The \"quit\"\n"
     "                        command will first check that all online\n"
@@ -165,7 +165,7 @@ COMMAND("quitmout",  SYSCMDALL-SYSOPER,  quitmout_cmd,
     "               n        This is a value between 2 and 60,\n"
     "                        representing seconds.\n")
 #else
-COMMAND("quit",      SYSALL,             quit_cmd,
+COMMAND("quit",      SYSALL|SYSNDIAG,             quit_cmd,
   "Terminate the emulator",
   "Format: \"quit [force]\"  Terminates the emulator. If the guest OS\n"
     "                        has enabled Signal Shutdown, then a\n"
@@ -176,7 +176,7 @@ COMMAND("quit",      SYSALL,             quit_cmd,
     "                        immediately.\n" )
 
 #endif
-COMMAND("exit",      SYSALL,             quit_cmd,
+COMMAND("exit",      SYSALL|SYSNDIAG,             quit_cmd,
   "(Synonym for 'quit')",
     NULL)
 
@@ -204,16 +204,16 @@ COMMAND("stop",      SYSCMDALL,          stop_cmd,
     "CPU, whereas 'stop <devn>' presses the virtual stop button on\n"
     "printer device <devn>, usually causing an INTREQ.\n")
 
-COMMAND("startall",  SYSCMDALL,          startall_cmd,
+COMMAND("startall",  SYSCMDALL|SYSNDIAG,          startall_cmd,
   "Start all CPU's",
     NULL)
 
-COMMAND("stopall",   SYSCMDALL,          stopall_cmd,
+COMMAND("stopall",   SYSCMDALL|SYSNDIAG,          stopall_cmd,
   "Stop all CPU's",
     NULL)
 
 #ifdef _FEATURE_CPU_RECONFIG
-COMMAND("cf",        SYSCMDALL,          cf_cmd,
+COMMAND("cf",        SYSCMDALL|SYSNDIAG,          cf_cmd,
   "Configure current CPU online or offline",
     "Configure current CPU online or offline:  Format->  \"cf [on|off]\"\n"
     "Where the 'current' CPU is defined as whatever CPU was defined as\n"
@@ -224,12 +224,12 @@ COMMAND("cf",        SYSCMDALL,          cf_cmd,
     "specified.\n"
     "Use 'cfall' to configure/display all CPUs online/offline state.\n")
 
-COMMAND("cfall",     SYSCMDALL,          cfall_cmd,
+COMMAND("cfall",     SYSCMDALL|SYSNDIAG,          cfall_cmd,
   "Configure all CPU's online or offline",
      NULL)
 #else
-COMMAND("cf",        SYSCMDALL,          cf_cmd, NULL, NULL )
-COMMAND("cfall",     SYSCMDALL,          cfall_cmd, NULL, NULL )
+COMMAND("cf",        SYSCMDALL|SYSNDIAG,          cf_cmd, NULL, NULL )
+COMMAND("cfall",     SYSCMDALL|SYSNDIAG,          cfall_cmd, NULL, NULL )
 #endif
 
 #ifdef _FEATURE_SYSTEM_CONSOLE
@@ -301,19 +301,19 @@ COMMAND("ptt",       SYSCMDALL-SYSOPER, EXT_CMD(ptt_cmd),
      "  nnn         - trace buffer size\n")
 #endif
 
-COMMAND("i",         SYSCMDALL,          i_cmd,
+COMMAND("i",         SYSCMDALL|SYSNDIAG,          i_cmd,
   "Generate I/O attention interrupt for device",
     NULL)
 
-COMMAND("ext",       SYSCMDALL,          ext_cmd,
+COMMAND("ext",       SYSCMDALL|SYSNDIAG,          ext_cmd,
   "Generate external interrupt",
     NULL)
 
-COMMAND("restart",   SYSCMDALL,          restart_cmd,
+COMMAND("restart",   SYSCMDALL|SYSNDIAG,          restart_cmd,
   "Generate restart interrupt",
     NULL)
 
-COMMAND("archlvl",   SYSCMDALL-SYSOPER,  archlvl_cmd,
+COMMAND("archlvl",   (SYSCMDALL|SYSNDIAG)-SYSOPER,  archlvl_cmd,
   "Set Architecture Level",
     "Format: archlvl s/370|als0 | esa/390|als1 | esame|als2 | z/arch|als3\n"
     "                enable|disable <facility> [s/370|esa/390|z/arch]\n"
@@ -322,7 +322,7 @@ COMMAND("archlvl",   SYSCMDALL-SYSOPER,  archlvl_cmd,
     "mode. Entering the command with an argument sets the architecture mode\n"
     "to the specified value.\n")
 
-COMMAND("archmode",  SYSCMDALL-SYSOPER,  archlvl_cmd,
+COMMAND("archmode",  (SYSCMDALL|SYSNDIAG)-SYSOPER,  archlvl_cmd,
   "Alias for archlvl",
     NULL)
 
@@ -541,7 +541,7 @@ CMDABBR("legacysenseid",9,SYSCONFIG,          legacysenseid_cmd,
   "Set legacysenseid setting",
     NULL)
 
-COMMAND("ipl",       SYSCMDALL,          ipl_cmd,
+COMMAND("ipl",       SYSCMDALL|SYSNDIAG,          ipl_cmd,
   "IPL Normal from device xxxx",
     "Format: \"ipl xxxx | cccc [loadparm xxxxnnnn | parm xxxxxxxxxxxxxx]\"\n"
     "\n"
@@ -561,16 +561,16 @@ COMMAND("ipl",       SYSCMDALL,          ipl_cmd,
     "register for up to 64 bytes). The PARM option behaves similarly to\n"
     "the VM IPL command.\n")
 
-COMMAND("iplc",      SYSCMDALL,          iplc_cmd,
+COMMAND("iplc",      SYSCMDALL|SYSNDIAG,          iplc_cmd,
   "IPL Clear from device xxxx",
     "Performs the Load Clear manual control function. See \"ipl\".\n")
 
-COMMAND("sysreset",  SYSCMDALL,          sysreset_cmd,
+COMMAND("sysreset",  SYSCMDALL|SYSNDIAG,          sysreset_cmd,
   "SYSTEM Reset manual operation",
     "Performs the System Reset manual control function. A CPU and I/O\n"
     "subsystem reset are performed.\n")
 
-COMMAND("sysclear",  SYSCMDALL,          sysclear_cmd,
+COMMAND("sysclear",  SYSCMDALL|SYSNDIAG,          sysclear_cmd,
   "SYSTEM Clear Reset manual operation",
     "Performs the System Reset Clear manual control function. Same as\n"
     "the \"sysreset\" command but also clears main storage to 0. Also,\n"
@@ -578,7 +578,7 @@ COMMAND("sysclear",  SYSCMDALL,          sysclear_cmd,
     "At this point, the system is essentially in the same state as it was\n"
     "just after having been started\n")
 
-COMMAND("store",     SYSCMDALL,          store_cmd,
+COMMAND("store",     SYSCMDALL|SYSNDIAG,          store_cmd,
   "Store CPU status at absolute zero",
     NULL)
 
@@ -1170,8 +1170,8 @@ COMMAND("pantitle",        SYSCMDALL,          pantitle_cmd,
     "LPARNAME - SYSTYPE * SYSNAME * SYSPLEX - System Status: color\n"
     "\n"
     "SYSTYPE, SYSNAME, and SYSPLEX are populated by the system call\n"
-    "SCLP Control Program Identification. If anyone of the values is\n"
-    "blank, then that field is not presented.\n"
+    "SCLP Control Program Identification. If a value is blank, then\n"
+    "that field is not presented.\n"
     "\n"
     "System Status colors: GREEN  - is every thing working correctly\n"
     "                      YELLOW - one or more CPUs are not running\n"

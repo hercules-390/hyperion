@@ -522,8 +522,8 @@ struct SYSBLK {
 #define SYSGROUP_SYSOPER     0x01     /* computer operator functions */
 #define SYSGROUP_SYSMAINT    0x02     /* Maintenance functions       */
 #define SYSGROUP_SYSPROG     0x04     /* Systems Programmer functions*/
-#define SYSGROUP_SYSCONFIG   0x08     /* System Configuration Funcs  */
-#define SYSGROUP_SYSRESV     0x10     /* Reserved                    */
+#define SYSGROUP_SYSNONE     0x08     /* Command valid with no group */
+#define SYSGROUP_SYSCONFIG   0x10     /* System Configuration Funcs  */
 #define SYSGROUP_SYSDEVEL    0x20     /* Developer functions         */
 #define SYSGROUP_SYSDEBUG    0x40     /* Internal Debug functions    */ 
 #define SYSGROUP_SYSDIAG     0x80     /* Not supported by DIAG008    */

@@ -1031,7 +1031,7 @@ int start_cmd(int argc, char *argv[], char *cmdline)
 
     UNREFERENCED(cmdline);
 
-    if (argc < 2)
+    if (argc < 2 && !(sysblk.diag8cmd & DIAG8CMD_RUNNING))
     {
         OBTAIN_INTLOCK(NULL);
         if (IS_CPU_ONLINE(sysblk.pcpu))
@@ -1158,7 +1158,7 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
 
     UNREFERENCED(cmdline);
 
-    if (argc < 2)
+    if (argc < 2 && !(sysblk.diag8cmd & DIAG8CMD_RUNNING))
     {
         OBTAIN_INTLOCK(NULL);
         if (IS_CPU_ONLINE(sysblk.pcpu))
@@ -10282,7 +10282,7 @@ int CmdLevel(int argc, char *argv[], char *cmdline)
                 sysblk.sysgroup = SYSGROUP_SYSALL;
             else
             if (strcasecmp (argv[i], "-all") == 0)
-                sysblk.sysgroup = SYSGROUP_SYSALL;
+                sysblk.sysgroup = SYSGROUP_SYSNONE;
             else
             if  ( strlen( argv[i] ) >= 4 &&
                   strlen( argv[i] ) <= 8 &&
@@ -10401,6 +10401,10 @@ int CmdLevel(int argc, char *argv[], char *cmdline)
     {
         WRMSG(HHC01606, "I", sysblk.sysgroup, "all");
     }
+    else if ( sysblk.sysgroup == SYSGROUP_SYSNONE )
+    {
+        WRMSG( HHC01606, "I", sysblk.sysgroup, "none");
+    }
     else
     {
         char buf[128];
@@ -10411,7 +10415,8 @@ int CmdLevel(int argc, char *argv[], char *cmdline)
             (sysblk.sysgroup&SYSGROUP_SYSCONFIG)?"configuration ":"",
             (sysblk.sysgroup&SYSGROUP_SYSDEVEL)?"developer ":"",
             (sysblk.sysgroup&SYSGROUP_SYSDEBUG)?"debugging ":"");
-        buf[strlen(buf)-1] = 0;
+        if ( strlen(buf) > 1 )
+            buf[strlen(buf)-1] = 0;
         WRMSG(HHC01606, "I", sysblk.sysgroup, buf);
     }
 

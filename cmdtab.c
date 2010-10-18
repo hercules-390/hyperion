@@ -64,7 +64,8 @@ typedef struct _CMDTAB
 #define SYSOPER    0x01             /* System Operator     */
 #define SYSMAINT   0x02             /* System Maintainer   */
 #define SYSPROG    0x04             /* Systems Programmer  */
-#define SYSCONFIG  0x08             /* System Configuration*/
+#define SYSNONE    0x08             /* Valid with no group */
+#define SYSCONFIG  0x10             /* System Configuration*/
 #define SYSDEVEL   0x20             /* System Developer    */
 #define SYSDEBUG   0x40             /* Enable Debugging    */
 #define SYSNDIAG   0x80             /* Invalid for DIAG008 */
@@ -286,26 +287,29 @@ int ProcessCmdLine (char* pszCmdLine)
     if((rc = ProcessCommand (cmd_argc, cmd_argv, pszSaveCmdLine)) != HERRINVCMD)
         goto ProcessPanelCommandExit;
     
-    /* Route non-standard formatted commands... */
-
-    /* sf commands - shadow file add/remove/set/compress/display */
-    if (0
-        || !strncasecmp(pszSaveCmdLine,"sf+",3)
-        || !strncasecmp(pszSaveCmdLine,"sf-",3)
-        || !strncasecmp(pszSaveCmdLine,"sfc",3)
-        || !strncasecmp(pszSaveCmdLine,"sfd",3)
-        || !strncasecmp(pszSaveCmdLine,"sfk",3)
-    )
+    if ( sysblk.sysgroup & (SYSCMDALL-SYSOPER) )
     {
-        rc = ShadowFile_cmd(cmd_argc,(char**)cmd_argv,pszSaveCmdLine);
-        goto ProcessPanelCommandExit;
-    }
+        /* Route non-standard formatted commands... */
 
-    /* x+ and x- commands - turn switches on or off */
-    if ('+' == pszSaveCmdLine[1] || '-' == pszSaveCmdLine[1])
-    {
-        rc = OnOffCommand(cmd_argc,(char**)cmd_argv,pszSaveCmdLine);
-        goto ProcessPanelCommandExit;
+        /* sf commands - shadow file add/remove/set/compress/display */
+        if ( 0 
+            || !strncasecmp(pszSaveCmdLine,"sf+",3)
+            || !strncasecmp(pszSaveCmdLine,"sf-",3)
+            || !strncasecmp(pszSaveCmdLine,"sfc",3)
+            || !strncasecmp(pszSaveCmdLine,"sfd",3)
+            || !strncasecmp(pszSaveCmdLine,"sfk",3)
+           )
+        {
+            rc = ShadowFile_cmd(cmd_argc,(char**)cmd_argv,pszSaveCmdLine);
+            goto ProcessPanelCommandExit;
+        }
+
+        /* x+ and x- commands - turn switches on or off */
+        if ('+' == pszSaveCmdLine[1] || '-' == pszSaveCmdLine[1])
+        {
+            rc = OnOffCommand(cmd_argc,(char**)cmd_argv,pszSaveCmdLine);
+            goto ProcessPanelCommandExit;
+        }
     }
 
     /* Error: unknown/unsupported command... */
@@ -417,6 +421,7 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
                                          pCmdTab->statminlen == 0 ?
                                 MAX( strlen(argv[1]), strlen(pCmdTab->statement) ) : 
                                 MAX( pCmdTab->statminlen, strlen(argv[1]) ) ) )
+                 && (pCmdTab->shortdesc) 
                )
 
             {
