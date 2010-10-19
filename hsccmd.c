@@ -3154,12 +3154,13 @@ BYTE c;
         }
         else
         {
+#if 0
             int i;
-
+#endif
             configure_cpu_priority(cpuprio);
             if (MLVL(VERBOSE))
                 WRMSG(HHC02204, "I", argv[0], argv[1] );
-
+#if 0
             /* Set root mode in order to set priority */
             SETMODE(ROOT);
             
@@ -3199,6 +3200,7 @@ BYTE c;
             
             /* Back to user mode */
             SETMODE(USER);
+#endif
         }
     }
     else
@@ -3286,7 +3288,7 @@ BYTE c;
             configure_tod_priority(todprio);
             if (MLVL(VERBOSE))
                 WRMSG( HHC02204, "I", argv[0], argv[1] );
-
+#if 0
             /* Set root mode in order to set priority */
             SETMODE(ROOT);
             
@@ -3317,6 +3319,7 @@ BYTE c;
             
             /* Back to user mode */
             SETMODE(USER);
+#endif
         }
     }
     else
@@ -3348,14 +3351,15 @@ BYTE c;
         }
         else
         {
+#if 0
             char *tname[3]  = { "HTTP server",  "Console connection",   NULL };
             TID tid[3]      = { sysblk.httptid, sysblk.cnsltid,         0 };
             int i;
-
+#endif
             configure_srv_priority(srvprio);
             if (MLVL(VERBOSE))
                 WRMSG( HHC02204, "I", argv[0], argv[1] );
-
+#if 0
             /* Set root mode in order to set priority */
             SETMODE(ROOT);
 
@@ -3384,7 +3388,7 @@ BYTE c;
             
             /* Back to user mode */
             SETMODE(USER);
-
+#endif
         }
     }
     else if ( argc == 1 )
