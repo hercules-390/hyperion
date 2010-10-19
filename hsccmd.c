@@ -1044,8 +1044,7 @@ int start_cmd(int argc, char *argv[], char *cmdline)
         }
         RELEASE_INTLOCK(NULL);
         if(argc > 0)
-            WRMSG( HHC00834, "I", PTYPSTR(sysblk.regs[sysblk.pcpu]->cpuad),
-                              sysblk.regs[sysblk.pcpu]->cpuad, "running state selected" );
+            WRMSG( HHC00834, "I", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "running state selected" );
         rc = 0;
     }
     else if ( argc == 2 )
@@ -1170,9 +1169,7 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
             WAKEUP_CPU (regs);
         }
         RELEASE_INTLOCK(NULL);
-        WRMSG( HHC00834, "I", PTYPSTR(sysblk.regs[sysblk.pcpu]->cpuad),
-                              sysblk.regs[sysblk.pcpu]->cpuad, "manual state selected" );
-        rc = 0;
+        WRMSG( HHC00834, "I", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "manual state selected" );
     }
     else if ( argc == 2 )
     {
