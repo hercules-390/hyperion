@@ -404,6 +404,8 @@ int cpu;
 
     sysblk.cpuprio = prio;
 
+    SETMODE(ROOT);
+
     for(cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
         if(sysblk.cputid[cpu])
         {
@@ -414,7 +416,6 @@ int cpu;
                                              sysblk.cputid[cpu]);
 #endif /*!defined(USE_GETTID)*/
 
-
             if(setpriority(PRIO_PROCESS,
 #if defined(USE_GETTID)
                                         sysblk.cputidp[cpu],
@@ -424,6 +425,8 @@ int cpu;
                                                             prio))
                 WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
         }
+
+    SETMODE(USER);
 
     return 0;
 }
@@ -449,6 +452,8 @@ int configure_tod_priority(int prio)
 
     sysblk.todprio = prio;
 
+    SETMODE(ROOT);
+
     prio -= getpriority(PRIO_PROCESS,
 #if defined(USE_GETTID)
                                      sysblk.todtidp);
@@ -464,7 +469,9 @@ int configure_tod_priority(int prio)
                                     sysblk.todtid,
 #endif /*!defined(USE_GETTID)*/
                                                    prio))
-            WRMSG(HHC00136, "W", "setschedprio()", strerror(errno));
+            WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
+
+    SETMODE(USER);
 
     return 0;
 }
