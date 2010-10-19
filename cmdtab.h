@@ -906,7 +906,7 @@ COMMAND("ls",        SYSCMDALL|SYSNDIAG, ls_cmd,
   "List directory contents",
     NULL)
 #endif
-COMMAND("sh",        (SYSCMDALL-SYSOPER)|SYSNDIAG,  sh_cmd,
+COMMAND("sh",        SYSCMDALL-SYSOPER,  sh_cmd,
   "Shell command",
     "Format: \"sh command [args...]\" where 'command' is any valid shell\n"
     "command. The entered command and any arguments are passed as-is to the\n"
