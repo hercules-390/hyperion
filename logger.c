@@ -164,41 +164,44 @@ static void logger_term(void *arg)
     char *lmsbuf = NULL;             /* xxx                       */
     int   lmsnum = -1;               /* xxx                       */
     int   lmscnt = -1;               /* xxx                       */
+    char* term_msg = MSG(HHC02103, "I");
 
     UNREFERENCED(arg);
     
     log_wakeup(NULL);
-    usleep(10000);
+    usleep(1000);
     log_wakeup(NULL);
-    usleep(10000);
+    usleep(1000);
     log_wakeup(NULL);
-    usleep(10000);
+    usleep(1000);
+
+    /* Flush all pending logger o/p before redirecting?? */
+    fflush(stdout);
 
     if(logger_active)
     {
-        char* term_msg = MSG(HHC02103, "I");
-        size_t term_msg_len = strlen(term_msg);
-
-        obtain_lock(&logger_lock);
-
-        /* Flush all pending logger o/p before redirecting?? */
-        fflush(stdout);
-
         /* Redirect all output to stderr */
         dup2(STDERR_FILENO, STDOUT_FILENO);
 
         /* Tell logger thread we want it to exit */
         logger_active = 0;
+        log_wakeup(NULL);
+        sleep(1);
 
-        /* Send the logger a message to wake it up */
-        write_pipe( logger_syslogfd[LOG_WRITE], term_msg, term_msg_len );
+        if ( logger_tid != 0 )
+        {
+            sleep(2);
+            /* Logger is now terminating */
+            obtain_lock(&logger_lock);  
 
-        release_lock(&logger_lock);
+            /* Wait for the logger to terminate */
+            join_thread( logger_tid, NULL );
+            detach_thread( logger_tid );
 
-        /* Wait for the logger to terminate */
-        join_thread( logger_tid, NULL );
-        detach_thread( logger_tid );
-        
+            release_lock(&logger_lock);  
+
+        }
+
         fwrite("\n",1,1,stderr);
         /* Read and display any msgs still remaining in the system log */
         while((lmscnt = log_read(&lmsbuf, &lmsnum, LOG_NOBLOCK)))
@@ -233,6 +236,9 @@ static void logger_term(void *arg)
                 }
             }
         }
+
+        fwrite( term_msg, strlen(term_msg), 1, stderr );
+
         fflush(stderr);
     }
 }
@@ -504,6 +510,8 @@ int bytes_read;
         broadcast_condition(&logger_cond);
         release_lock(&logger_lock);
     }
+
+    logger_tid = 0;
 
     /* Logger is now terminating */
     obtain_lock(&logger_lock);
