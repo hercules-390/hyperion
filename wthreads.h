@@ -7,7 +7,7 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id: wthreads.h 5620 2010-02-09 00:24:03Z xxx $
+// $Id: wthreads.h 433 2010-08-10 04:05:01Z paulgorlinsky $
 
 #ifndef _WTHREADS_H_
 #define _WTHREADS_H_
@@ -52,6 +52,16 @@ typedef PTHREAD_START_ROUTINE PWIN_THREAD_FUNC; // Function address definition
 /////////////////////////////////////////////////////////////////////////////////////
 // DLL Imports for all functions
 /////////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Get the handle for a specific Thread ID
+/////////////////////////////////////////////////////////////////////////////////////
+
+WT_DLL_IMPORT
+HANDLE winthread_get_handle
+(
+    winthread_t             pdwWinThreadID      // Thread ID
+);
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Create a new thread using above defaults.  Keep the interface the same as it is

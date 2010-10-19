@@ -3135,6 +3135,15 @@ BYTE c;
 
     UNREFERENCED(cmdline);
 
+    if ( argc == 1 )
+    {
+        char msgbuf[8];
+
+        VERIFY( MSGBUF( msgbuf, "%d", sysblk.cpuprio ) != -1);
+        WRMSG( HHC02203, "I", argv[0], msgbuf );
+    }
+    else
+
     /* Parse priority value */
     if ( argc == 2 )
     {
@@ -3145,9 +3154,51 @@ BYTE c;
         }
         else
         {
+            int i;
+
             configure_cpu_priority(cpuprio);
             if (MLVL(VERBOSE))
                 WRMSG(HHC02204, "I", argv[0], argv[1] );
+
+            /* Set root mode in order to set priority */
+            SETMODE(ROOT);
+            
+            OBTAIN_INTLOCK(NULL);
+
+            for (i = 0; i < sysblk.maxcpu; i++)
+            {
+                S32 curprio;
+                TID tid;
+                int rc;
+                char cpustr[40];
+
+                if (IS_CPU_ONLINE(i))
+                {
+                    tid = sysblk.cputid[i];
+
+                    if ( tid == 0 ) continue; // the mask check should prevent this.
+
+                    curprio = tid == 0 ? 0: getpriority(PRIO_PROCESS, tid );
+                    
+                    if ( curprio == cpuprio ) continue;
+
+                    rc = setpriority( PRIO_PROCESS, tid, cpuprio );
+                    if ( MLVL(VERBOSE) )
+                    {
+                        MSGBUF( cpustr, "Processor %s%02X", PTYPSTR( i ), i );
+
+                        if ( rc == 0 )
+                            WRMSG( HHC00103, "I", tid, cpustr, curprio, cpuprio );
+                        else
+                            WRMSG( HHC00136, "W", "setpriority()", strerror(errno));
+                    }
+                }
+            }
+
+            RELEASE_INTLOCK(NULL);
+            
+            /* Back to user mode */
+            SETMODE(USER);
         }
     }
     else
@@ -3169,6 +3220,14 @@ S32 devprio;
 BYTE c;
 
     UNREFERENCED(cmdline);
+
+    if ( argc == 1 )
+    {
+        char msgbuf[8];
+        VERIFY( MSGBUF( msgbuf, "%d", sysblk.devprio ) != -1);
+        WRMSG( HHC02203, "I", argv[0], msgbuf );
+    }
+    else
 
     /* Parse priority value */
     if ( argc == 2 )
@@ -3205,7 +3264,16 @@ BYTE c;
 
     UNREFERENCED(cmdline);
 
-    /* Parse priority value */
+    if ( argc == 1 )
+    {
+        char msgbuf[8];
+
+        VERIFY( MSGBUF( msgbuf, "%d", sysblk.todprio ) != -1);
+        WRMSG( HHC02203, "I", argv[0], msgbuf );
+    }
+    else
+
+     /* Parse priority value */
     if ( argc == 2 )
     {
         if (sscanf(argv[1], "%d%c", &todprio, &c) != 1)
@@ -3218,6 +3286,37 @@ BYTE c;
             configure_tod_priority(todprio);
             if (MLVL(VERBOSE))
                 WRMSG( HHC02204, "I", argv[0], argv[1] );
+
+            /* Set root mode in order to set priority */
+            SETMODE(ROOT);
+            
+            for(;;)
+            {
+                S32 curprio;
+                TID tid = sysblk.todtid;
+                int rc;
+                
+                if ( tid == 0 ) 
+                    continue;
+
+                curprio = tid == 0 ? 0: getpriority(PRIO_PROCESS, tid );
+
+                if ( curprio == todprio )
+                    continue;
+
+                rc = setpriority( PRIO_PROCESS, tid, todprio );
+                if ( MLVL(VERBOSE) )
+                {
+                    if ( rc == 0 )
+                        WRMSG( HHC00103, "I", tid, "Timer", curprio, todprio );
+                    else
+                        WRMSG( HHC00136, "W", "setpriority()", strerror(errno));
+                }
+                break;
+            }
+            
+            /* Back to user mode */
+            SETMODE(USER);
         }
     }
     else
@@ -3249,10 +3348,51 @@ BYTE c;
         }
         else
         {
+            char *tname[3]  = { "HTTP server",  "Console connection",   NULL };
+            TID tid[3]      = { sysblk.httptid, sysblk.cnsltid,         0 };
+            int i;
+
             configure_srv_priority(srvprio);
             if (MLVL(VERBOSE))
                 WRMSG( HHC02204, "I", argv[0], argv[1] );
+
+            /* Set root mode in order to set priority */
+            SETMODE(ROOT);
+
+            for ( i = 0; tname[i] != NULL; i++ )
+            {
+                S32 curprio;
+                int rc;
+                
+                if ( tid[i] == 0 ) 
+                    continue;
+
+                curprio = tid[i] == 0 ? 0: getpriority(PRIO_PROCESS, tid[i] );
+
+                if ( curprio == srvprio )
+                    continue;
+
+                rc = setpriority( PRIO_PROCESS, tid[i], srvprio );
+                if ( MLVL(VERBOSE) )
+                {
+                    if ( rc == 0 )
+                        WRMSG( HHC00103, "I", tid[i], tname[i], curprio, srvprio );
+                    else
+                        WRMSG( HHC00136, "W", "setpriority()", strerror(errno));
+                }
+            }
+            
+            /* Back to user mode */
+            SETMODE(USER);
+
         }
+    }
+    else if ( argc == 1 )
+    {
+        char msgbuf[8];
+
+        VERIFY( MSGBUF( msgbuf, "%d", sysblk.srvprio ) != -1);
+        WRMSG( HHC02203, "I", argv[0], msgbuf );
     }
     else
     {

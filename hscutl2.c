@@ -100,10 +100,15 @@ getpriority_thread(id_t who)
     HANDLE thread;
     int priority;
 
-    if (who)
-       return EINVAL;
+    if ( who )
+    {
+        thread = win_thread_handle( who );
+    }
+    else
+    {
+        thread = GetCurrentThread();
+    }
 
-    thread = GetCurrentThread();
     priority = GetThreadPriority (thread);
 
     switch (priority) {
@@ -187,10 +192,14 @@ setpriority_thread(id_t who , int prio )
     HANDLE thread;
     int priority;
 
-    if (who)
-       return EINVAL;
-
-    thread = GetCurrentThread();
+    if ( who )
+    {
+        thread = win_thread_handle( who );
+    }
+    else
+    {
+        thread = GetCurrentThread();
+    }
 
     if      (prio < -15) priority = THREAD_PRIORITY_TIME_CRITICAL;
     else if (prio <  -8) priority = THREAD_PRIORITY_HIGHEST;

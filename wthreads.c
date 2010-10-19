@@ -7,7 +7,7 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id: wthreads.c 5620 2010-02-09 00:24:03Z xxxx $
+// $Id: wthreads.c 433 2010-08-10 04:05:01Z paulgorlinsky $
 
 
 #include "hstdinc.h"
@@ -112,6 +112,27 @@ static WINTHREAD*  FindWinTHREAD ( DWORD dwWinThreadID )
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Get the handle for a specific Thread ID
+/////////////////////////////////////////////////////////////////////////////////////
+
+DLL_EXPORT
+HANDLE winthread_get_handle
+(
+    winthread_t         pdwWinThreadID      // Thread ID
+)
+{    
+    WINTHREAD*      pWINTHREAD = NULL;          // Local pointer storage
+
+    if ( pdwWinThreadID != 0 )
+    {
+        pWINTHREAD = FindWinTHREAD( pdwWinThreadID );
+    }
+
+
+    return pWINTHREAD->hWinThreadHandle;
+}
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Create a new thread using above defaults.  Keep the interface the same as it is

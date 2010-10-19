@@ -163,6 +163,19 @@ int  fthread_detach
     fthread_t  dwThreadID
 );
 
+/////////////////////////////////////////////////////////////////////////////////////
+// Get the handle for a specific Thread ID
+
+DLL_EXPORT
+HANDLE fthread_get_handle
+(
+#ifdef FISH_HANG
+    const char*     pszFile,
+    const int       nLine,
+#endif
+    fthread_t       pdwThreadID             // Thread ID
+);
+
 ////////////////////////////////////////////////////////////////////////////////////
 // Create a new thread...
 

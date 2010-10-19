@@ -913,6 +913,29 @@ static DWORD  __stdcall  FTWin32ThreadFunc
     return 0;   // (make compiler happy)
 }
 
+/////////////////////////////////////////////////////////////////////////////////////
+// Get the handle for a specific Thread ID
+
+DLL_EXPORT
+HANDLE fthread_get_handle
+(
+#ifdef FISH_HANG
+    const char*     pszFile,
+    const int       nLine,
+#endif
+    fthread_t       pdwThreadID             // Thread ID
+)
+{    
+    FTHREAD*      pFTHREAD = NULL;          // Local pointer storage
+
+    if ( pdwThreadID != 0 )
+    {
+        pFTHREAD = FindFTHREAD( pdwThreadID );
+    }
+
+
+    return pFTHREAD->hThreadHandle;
+}
 ////////////////////////////////////////////////////////////////////////////////////
 // Create a new thread...
 
