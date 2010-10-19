@@ -308,13 +308,6 @@ char    pathname[MAX_PATH];             /* (work)                    */
 
     hostpath(pathname, rcname, sizeof(pathname));
 
-#if defined(OPTION_HAO)
-    /* Initialize the Hercules Automatic Operator */
-
-    if ( !hao_initialize() )
-        WRMSG(HHC01404, "S");
-#endif /* defined(OPTION_HAO) */
-
     /* Run the script processor for this file */
 
     if (process_script_file(pathname,1) != 0)
@@ -1000,6 +993,13 @@ int     dll_count;                      /* index into array          */
     }
 
     sysblk.config_done = TRUE;
+
+#if defined(OPTION_HAO)
+    /* Initialize the Hercules Automatic Operator */
+
+    if ( !hao_initialize() )
+        WRMSG(HHC01404, "S");
+#endif /* defined(OPTION_HAO) */
 
     /* Start up the RC file processing thread */
     rc = create_thread(&rctid,DETACHED,

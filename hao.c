@@ -512,7 +512,7 @@ static void* hao_thread(void* dummy)
   WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Hercules Automatic Operator");
 
   /* Wait for panel thread to engage */
-  while(!sysblk.panel_init && !sysblk.shutdown)
+  while(!sysblk.panel_init && !sysblk.shutdown && !logger_status() )
     usleep( 10 * 1000 );
 
   /* Do until shutdown */

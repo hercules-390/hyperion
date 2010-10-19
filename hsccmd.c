@@ -3151,17 +3151,12 @@ BYTE c;
         }
         else
         {
-#if 0
             int i;
-#endif
             configure_cpu_priority(cpuprio);
             if (MLVL(VERBOSE))
                 WRMSG(HHC02204, "I", argv[0], argv[1] );
-#if 0
             /* Set root mode in order to set priority */
             SETMODE(ROOT);
-            
-            OBTAIN_INTLOCK(NULL);
 
             for (i = 0; i < sysblk.maxcpu; i++)
             {
@@ -3193,11 +3188,8 @@ BYTE c;
                 }
             }
 
-            RELEASE_INTLOCK(NULL);
-            
             /* Back to user mode */
             SETMODE(USER);
-#endif
         }
     }
     else
@@ -3285,7 +3277,7 @@ BYTE c;
             configure_tod_priority(todprio);
             if (MLVL(VERBOSE))
                 WRMSG( HHC02204, "I", argv[0], argv[1] );
-#if 0
+  
             /* Set root mode in order to set priority */
             SETMODE(ROOT);
             
@@ -3296,12 +3288,12 @@ BYTE c;
                 int rc;
                 
                 if ( tid == 0 ) 
-                    continue;
+                    break;
 
-                curprio = tid == 0 ? 0: getpriority(PRIO_PROCESS, tid );
+                curprio = getpriority(PRIO_PROCESS, tid );
 
                 if ( curprio == todprio )
-                    continue;
+                    break;
 
                 rc = setpriority( PRIO_PROCESS, tid, todprio );
                 if ( MLVL(VERBOSE) )
@@ -3316,7 +3308,6 @@ BYTE c;
             
             /* Back to user mode */
             SETMODE(USER);
-#endif
         }
     }
     else
@@ -3348,15 +3339,14 @@ BYTE c;
         }
         else
         {
-#if 0
             char *tname[3]  = { "HTTP server",  "Console connection",   NULL };
             TID tid[3]      = { sysblk.httptid, sysblk.cnsltid,         0 };
             int i;
-#endif
+   
             configure_srv_priority(srvprio);
             if (MLVL(VERBOSE))
                 WRMSG( HHC02204, "I", argv[0], argv[1] );
-#if 0
+ 
             /* Set root mode in order to set priority */
             SETMODE(ROOT);
 
@@ -3385,7 +3375,6 @@ BYTE c;
             
             /* Back to user mode */
             SETMODE(USER);
-#endif
         }
     }
     else if ( argc == 1 )

@@ -7,7 +7,7 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id: wthreads.c 637 2010-10-19 00:22:17Z paulgorlinsky $
+// $Id: wthreads.c 638 2010-10-19 04:11:24Z paulgorlinsky $
 
 
 #include "hstdinc.h"
@@ -99,8 +99,6 @@ static WINTHREAD*  FindWinTHREAD ( DWORD dwWinThreadID )
         if ( pWINTHREAD->dwWinThreadID != dwWinThreadID )
             continue;
 
-// We found it.  Return with the pointer
-
         return pWINTHREAD;    // (return with thread list lock still held)
     }
 
@@ -129,9 +127,15 @@ HANDLE winthread_get_handle
     {
         pWINTHREAD = FindWinTHREAD( pdwWinThreadID );
     }
+    
+    if ( pWINTHREAD != NULL )
+    {
+        // We found it.  release the lock and return with the pointer
+        release_lock ( &WinThreadListLock );
+        return pWINTHREAD->hWinThreadHandle;
+    }
 
-
-    return pWINTHREAD->hWinThreadHandle;
+    return NULL;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -292,18 +296,7 @@ int  winthread_join
 // thread and return that to the caller if they want it.  If they have passed a
 // NULL pointer to us, don't bother.
     
-    for(;;)
-    {
-        int timer = 20;             // wait at most 10 seconds
-
-        for ( ; timer > 0 ; timer--)
-        {
-            dwWaitReturnValue = WaitForSingleObject ( hWinThread, 500 );
-            if ( dwWaitReturnValue != WAIT_TIMEOUT ) 
-                break;
-        }
-        break;
-    }
+    dwWaitReturnValue = WaitForSingleObject ( hWinThread, INFINITE );
 
     if (pWinExitVal!=NULL)
     {

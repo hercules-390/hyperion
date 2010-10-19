@@ -933,8 +933,13 @@ HANDLE fthread_get_handle
         pFTHREAD = FindFTHREAD( pdwThreadID );
     }
 
+    if ( pFTHREAD != NULL )
+    {
+        UnlockThreadsList();    // (release thread list lock
+        return pFTHREAD->hThreadHandle;
+    }
 
-    return pFTHREAD->hThreadHandle;
+    return NULL;
 }
 ////////////////////////////////////////////////////////////////////////////////////
 // Create a new thread...
@@ -1116,16 +1121,7 @@ int  fthread_join
     // FishHang doesn't support waiting on thread objects,
     // only event objects. Thus we do a normal Win32 call here...
 
-    for (;;)
-    {
-        int timer = 20;
-        for ( ; timer > 0; timer-- )
-        {
-            if ( WaitForSingleObject ( hThread, INFINITE ) != WAIT_TIMEOUT )
-                break;
-        }
-        break;
-    }
+    WaitForSingleObject ( hThread, INFINITE );
 
     LockThreadsList();
 

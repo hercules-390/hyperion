@@ -327,7 +327,6 @@ int bytes_read;
 
     setvbuf (stdout, NULL, _IONBF, 0);
 
-
     obtain_lock(&logger_lock);
 
     logger_active = 1;
@@ -775,4 +774,10 @@ DLL_EXPORT void log_wakeup(void *arg)
     broadcast_condition(&logger_cond);
 
     release_lock(&logger_lock);
+}
+
+/* is logger active */
+DLL_EXPORT int logger_status(void)
+{
+    return logger_active;
 }
