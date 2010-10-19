@@ -457,7 +457,8 @@ int numcap = 1;              /* Number of CPU's being capped         */
 
     signal_condition(&capcond);
 
-    hdl_rmsc(capping_manager_shutdown, NULL);
+    if ( !sysblk.shutdown )
+        hdl_rmsc(capping_manager_shutdown, NULL);
 
     WRMSG(HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Capping manager");
     return(NULL);

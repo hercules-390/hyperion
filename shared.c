@@ -2879,7 +2879,8 @@ char                    threadname[40];
 
     signal_condition(&shrdcond);
 
-    hdl_rmsc(shared_device_manager_shutdown, NULL);
+    if ( !sysblk.shutdown )
+        hdl_rmsc(shared_device_manager_shutdown, NULL);
 
     sysblk.shrdtid = 0;
 

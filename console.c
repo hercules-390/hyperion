@@ -2251,7 +2251,8 @@ BYTE                   unitstat;        /* Status after receive data */
 
     signal_condition(&console_wait);
 
-    hdl_rmsc(console_shutdown, NULL);
+    if ( !sysblk.shutdown )
+        hdl_rmsc(console_shutdown, NULL);
 
     return NULL;
 

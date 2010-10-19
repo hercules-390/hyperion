@@ -924,6 +924,8 @@ struct timeval      timeout;            /* timeout value             */
     close_socket (lsock);
 
 http_server_stop:
+    if ( !sysblk.shutdown )
+        hdl_rmsc(http_shutdown, NULL);
 
     /* Display thread started message on control panel */
     WRMSG(HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), "HTTP server");
@@ -933,8 +935,6 @@ http_server_stop:
     http_serv.httpbinddone = FALSE;
 
     signal_condition(&http_serv.http_wait_shutdown);
-
-    hdl_rmsc(http_shutdown, NULL);
 
     return NULL;
 
