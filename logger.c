@@ -186,9 +186,9 @@ static void logger_term(void *arg)
         /* Tell logger thread we want it to exit */
         logger_active = 0;
         log_wakeup(NULL);
-        sleep(1);
+        usleep(1000);
 
-        if ( logger_tid != 0 )
+        if ( logger_tid != 0 && !sysblk.shutdown )
         {
             sleep(2);
             /* Logger is now terminating */

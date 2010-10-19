@@ -127,13 +127,13 @@ static void do_shutdown_now()
 
     sysblk.shutdown = TRUE;  // (system shutdown initiated)
 
-#if defined(_MSVC_)
+//#if defined(_MSVC_)
     WRMSG(HHC01423, "I");
 
     hdl_shut();
 
     WRMSG(HHC01424, "I");
-#endif
+//#endif
 
     /*
     logmsg("Terminating threads\n");

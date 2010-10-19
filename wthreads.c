@@ -7,7 +7,7 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id: wthreads.c 433 2010-08-10 04:05:01Z paulgorlinsky $
+// $Id: wthreads.c 637 2010-10-19 00:22:17Z paulgorlinsky $
 
 
 #include "hstdinc.h"
@@ -291,12 +291,23 @@ int  winthread_join
 // Once the wait is satisfied we can retreive the exit code for the now defunct
 // thread and return that to the caller if they want it.  If they have passed a
 // NULL pointer to us, don't bother.
+    
+    for(;;)
+    {
+        int timer = 20;             // wait at most 10 seconds
 
-    dwWaitReturnValue = WaitForSingleObject ( hWinThread, INFINITE );
+        for ( ; timer > 0 ; timer--)
+        {
+            dwWaitReturnValue = WaitForSingleObject ( hWinThread, 500 );
+            if ( dwWaitReturnValue != WAIT_TIMEOUT ) 
+                break;
+        }
+        break;
+    }
 
     if (pWinExitVal!=NULL)
     {
-    bExitCode = GetExitCodeThread( pWINTHREAD->hWinThreadHandle, pWinExitVal );
+        bExitCode = GetExitCodeThread( pWINTHREAD->hWinThreadHandle, pWinExitVal );
     }
 
 // The thread has expired.  We need to do the following:

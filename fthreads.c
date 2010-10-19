@@ -1116,7 +1116,16 @@ int  fthread_join
     // FishHang doesn't support waiting on thread objects,
     // only event objects. Thus we do a normal Win32 call here...
 
-    WaitForSingleObject ( hThread, INFINITE ); // (wait for thread exit)
+    for (;;)
+    {
+        int timer = 20;
+        for ( ; timer > 0; timer-- )
+        {
+            if ( WaitForSingleObject ( hThread, INFINITE ) != WAIT_TIMEOUT )
+                break;
+        }
+        break;
+    }
 
     LockThreadsList();
 
