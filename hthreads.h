@@ -13,6 +13,12 @@
 
 #include "hercules.h"
 
+#if defined(HAVE_SYS_SYSCALL_H) && !defined(HAVE_GETTID)
+ #include <sys/syscall.h>
+ #define gettid() ((pid_t)(syscall(SYS_gettid)))
+ #define USE_GETTID
+#endif
+
 #if defined( OPTION_WTHREADS )
 
 #include "wthreads.h"
@@ -153,12 +159,20 @@ typedef fthread_attr_t    ATTR;
 
 #endif // defined(FISH_HANG)
 
-#define initialize_detach_attr(pat)            fthread_attr_init((pat)); \
-                                               fthread_attr_setstacksize((pat),1048576); \
-                                               fthread_attr_setdetachstate((pat),FTHREAD_CREATE_DETACHED)
-#define initialize_join_attr(pat)              fthread_attr_init((pat)); \
-                                               fthread_attr_setstacksize((pat),1048576); \
-                                               fthread_attr_setdetachstate((pat),FTHREAD_CREATE_JOINABLE)
+#define initialize_detach_attr(pat) \
+    do { \
+        fthread_attr_init((pat)); \
+        fthread_attr_setstacksize((pat),1048576); \
+        fthread_attr_setdetachstate((pat),FTHREAD_CREATE_DETACHED); \
+    } while (0)
+
+#define initialize_join_attr(pat) \
+    do { \
+        fthread_attr_init((pat)); \
+        fthread_attr_setstacksize((pat),1048576); \
+        fthread_attr_setdetachstate((pat),FTHREAD_CREATE_JOINABLE); \
+    } while (0)
+
 #define detach_thread(tid)                     fthread_detach((tid))
 #define signal_thread(tid,signo)               fthread_kill((tid),(signo))
 #define thread_id()                            fthread_self()
@@ -204,12 +218,20 @@ typedef pthread_attr_t                          ATTR;
 #define wait_condition(pcond,plk)               pthread_cond_wait((pcond),(plk))
 #define timed_wait_condition(pcond,plk,timeout) pthread_cond_timedwait((pcond),(plk),(timeout))
 
-#define initialize_detach_attr(pat)             pthread_attr_init((pat)); \
-                                                pthread_attr_setstacksize((pat),1048576); \
-                                                pthread_attr_setdetachstate((pat),PTHREAD_CREATE_DETACHED)
-#define initialize_join_attr(pat)               pthread_attr_init((pat)); \
-                                                pthread_attr_setstacksize((pat),1048576); \
-                                                pthread_attr_setdetachstate((pat),PTHREAD_CREATE_JOINABLE)
+#define initialize_detach_attr(pat) \
+    do { \
+        pthread_attr_init((pat)); \
+        pthread_attr_setstacksize((pat),1048576); \
+        pthread_attr_setdetachstate((pat),PTHREAD_CREATE_DETACHED); \
+    } while (0)
+
+#define initialize_join_attr(pat) \
+    do { \
+        pthread_attr_init((pat)); \
+        pthread_attr_setstacksize((pat),1048576); \
+        pthread_attr_setdetachstate((pat),PTHREAD_CREATE_JOINABLE); \
+    } while (0)
+
 #define join_thread(tid,pcode)                  pthread_join((tid),(pcode))
 #define detach_thread(tid)                      pthread_detach((tid))
 

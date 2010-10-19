@@ -176,6 +176,10 @@ static  int do_once = TRUE ;            /* Switch for onetime proc   */
 
     UNREFERENCED(argp);
 
+#if defined(USE_GETTID)
+    sysblk.todtidp = gettid();
+#endif /*defined(USE_GETTID)*/
+
     /* Set root mode in order to set priority */
     SETMODE(ROOT);
 

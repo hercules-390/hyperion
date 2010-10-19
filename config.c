@@ -396,12 +396,34 @@ int rc;
 
 int configure_cpu_priority(int prio)
 {
+int cpu;
 #if !defined(NO_SETUID)
     /* Cap the default priority at zero if setuid not available */
     prio = (sysblk.suid && (prio < 0)) ? 0 : prio;
 #endif /*!defined(NO_SETUID)*/
 
     sysblk.cpuprio = prio;
+
+    for(cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
+        if(sysblk.cputid[cpu])
+        {
+            prio -= getpriority(PRIO_PROCESS,
+#if defined(USE_GETTID)
+                                             sysblk.cputidp[cpu]);
+#else /*!defined(USE_GETTID)*/
+                                             sysblk.cputid[cpu]);
+#endif /*!defined(USE_GETTID)*/
+
+
+            if(setpriority(PRIO_PROCESS,
+#if defined(USE_GETTID)
+                                        sysblk.cputidp[cpu],
+#else /*!defined(USE_GETTID)*/
+                                        sysblk.cputid[cpu],
+#endif /*!defined(USE_GETTID)*/
+                                                            prio))
+                WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
+        }
 
     return 0;
 }
@@ -426,6 +448,23 @@ int configure_tod_priority(int prio)
 #endif /*!defined(NO_SETUID)*/
 
     sysblk.todprio = prio;
+
+    prio -= getpriority(PRIO_PROCESS,
+#if defined(USE_GETTID)
+                                     sysblk.todtidp);
+#else /*!defined(USE_GETTID)*/
+                                     sysblk.todtid);
+#endif /*!defined(USE_GETTID)*/
+
+    if(sysblk.todtid)
+        if(setpriority(PRIO_PROCESS,
+#if defined(USE_GETTID)
+                                    sysblk.todtidp,
+#else /*!defined(USE_GETTID)*/
+                                    sysblk.todtid,
+#endif /*!defined(USE_GETTID)*/
+                                                   prio))
+            WRMSG(HHC00136, "W", "setschedprio()", strerror(errno));
 
     return 0;
 }

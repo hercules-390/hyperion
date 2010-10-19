@@ -572,6 +572,7 @@ AC_CHECK_HEADERS( time.h,         [hc_cv_have_time_h=yes],         [hc_cv_have_t
 AC_CHECK_HEADERS( zlib.h,         [hc_cv_have_zlib_h=yes],         [hc_cv_have_zlib_h=no]         )
 AC_CHECK_HEADERS( sys/capability.h, [hc_cv_have_sys_capa_h=yes],   [hc_cv_have_sys_capa_h=no]     )
 AC_CHECK_HEADERS( sys/prctl.h,    [hc_cv_have_sys_prctl_h=yes],    [hc_cv_have_sys_prctl_h=no]    )
+AC_CHECK_HEADERS( sys/syscall.h, [hc_cv_have_syscall_h=yes],       [hc_cv_have_syscall_h=no]    )
 AC_CHECK_HEADERS( regina/rexxsaa.h, [hc_cv_have_regina_rexxsaa_h=yes],    [hc_cv_have_regina_rexxsaa_h=no]    )
 
 AC_CACHE_SAVE()
@@ -737,6 +738,7 @@ AC_CHECK_FUNCS( fdatasync fsync ftruncate )
 AC_CHECK_FUNCS( inet_aton )
 AC_CHECK_FUNCS( fork socketpair )
 AC_CHECK_FUNCS( sysconf )
+AC_CHECK_FUNCS( gettid )
 
 AC_CHECK_FUNCS( vsscanf,
                [hc_cv_have_vsscanf=yes],
