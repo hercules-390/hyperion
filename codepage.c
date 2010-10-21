@@ -1492,8 +1492,8 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
             WRMSG( HHC01485, "I" );
             for( o = 0; o < 256; o += 16 )
             {
-                memset (hbuf, SPACE, sizeof(hbuf));
-                memset (cbuf, SPACE, sizeof(cbuf));
+                bzero( hbuf, sizeof(hbuf) );
+                bzero( cbuf, sizeof(cbuf) );
 
                 for (i = 0, j = 0, k = 0; i < 16; i++)
                 {
