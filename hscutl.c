@@ -484,7 +484,7 @@ static void append_string(char **bfr,char *text,int *ix_p,int *max_p)
     return;
 }
 
-#if FALSE
+#if 0
 static void append_symbol(char **bfr,char *sym,int *ix_p,int *max_p)
 {
     char *txt;
