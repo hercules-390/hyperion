@@ -203,10 +203,54 @@ HUT_DLL_IMPORT int hwrite(int s,const char *,size_t);
 HUT_DLL_IMPORT int hgetc(int s);
 HUT_DLL_IMPORT char *hgets(char *b,size_t c,int s);
 
+
 /* Posix 1003.e capabilities */
 #if defined(OPTION_CAPABILITIES)
 HUT_DLL_IMPORT int drop_privileges(int c);
 HUT_DLL_IMPORT int drop_all_caps(void);
+#endif
+
+/* inline functions for byte swaps */
+
+#if defined(_MSVC_)
+static __inline__ U16 swap_byte_U16(U16 s)
+{
+    return( (U16)_byteswap_ushort( (unsigned short) s ) );
+}
+static __inline__ U32 swap_byte_U32(U32 i)
+{
+    return( (U32)_byteswap_ulong( (unsigned long) i ) );
+}
+static __inline__ U64 swap_byte_U64(U64 ll )
+{
+    return( (U64)_byteswap_uint64( (unsigned __int64) ll ) );
+}
+#else
+#define H_GCC_VER (__GNUC__ * 10000 \
+               + __GNUC_MINOR__ * 100 \
+               + __GNUC_PATCHLEVEL__)
+ 
+static __inline__ U16 swap_byte_U16(U16 s)
+{ 
+    return ( (U8)((s) >> 8) | ((U8)(s)) << 8 );
+}
+static __inline__ U32 swap_byte_U32(U32 i)
+{
+#if H_GCC_VER >= 40300
+    return( (U32)( __builtin_bswap32((int32_t) i )) );
+#else
+    return( (U32)( bswap32((int32_t) i )) );
+#endif
+}
+static __inline__ U64 swap_byte_U64(U64 l)
+{
+#if H_GCC_VER >= 40300
+    return( (U64)( __builtin_bswap64((int64_t) l )) );
+#else
+    return( (U64)( bswap64((int64_t) l )) );
+#endif
+}
+#undef H_GCC_VER
 #endif
 
 #endif /* __HSCUTL_H__ */
