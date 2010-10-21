@@ -501,8 +501,7 @@ char  thread_name[32];
     if(IS_CPU_ONLINE(cpu))
         return -1;
 
-    MSGBUF( thread_name, "cpu%d thread",cpu);
-    thread_name[sizeof(thread_name)-1]=0;
+    MSGBUF( thread_name, "Processor %s%02X", PTYPSTR( cpu ), cpu );
 
     rc = create_thread (&sysblk.cputid[cpu], DETACHED, cpu_thread,
                         &cpu, thread_name);
