@@ -7,7 +7,7 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id: wthreads.c 638 2010-10-19 04:11:24Z paulgorlinsky $
+// $Id: wthreads.c 643 2010-10-19 22:44:42Z paulgorlinsky $
 
 
 #include "hstdinc.h"
@@ -198,7 +198,7 @@ int  winthread_create
 
     pWINTHREAD->dwWinThreadID    = 0;
     pWINTHREAD->hWinThreadHandle = NULL;
-    pWINTHREAD->pszWinThreadName = pszWinThreadName;
+    pWINTHREAD->pszWinThreadName = strdup(pszWinThreadName);
 
 // Lock the list
 
@@ -223,6 +223,8 @@ int  winthread_create
 
         release_lock ( &WinThreadListLock );
         logmsg("fthread_create: MyCreateThread failed\n");
+        if ( pWINTHREAD->pszWinThreadName != NULL )
+            free( pWINTHREAD->pszWinThreadName );
         free ( pWINTHREAD );
         return RC(EAGAIN);      // (unable to obtain required resources)
     }
@@ -315,6 +317,8 @@ int  winthread_join
     CloseHandle ( pWINTHREAD->hWinThreadHandle );
     RemoveListEntry ( &pWINTHREAD->WinThreadListLink );
     release_lock ( &WinThreadListLock );
+    if ( pWINTHREAD->pszWinThreadName != NULL )
+        free( pWINTHREAD->pszWinThreadName );
     free ( pWINTHREAD );
 
     return RC(0);  //Successful return
