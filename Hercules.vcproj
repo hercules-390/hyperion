@@ -1023,7 +1023,19 @@
 							>
 						</File>
 						<File
+							RelativePath=".\hscemode.c"
+							>
+						</File>
+						<File
+							RelativePath=".\hscloc.c"
+							>
+						</File>
+						<File
 							RelativePath=".\hscmisc.c"
+							>
+						</File>
+						<File
+							RelativePath=".\hscpufun.c"
 							>
 						</File>
 						<File

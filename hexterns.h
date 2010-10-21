@@ -55,6 +55,36 @@
 #define HCMD_DLL_IMPORT DLL_EXPORT
 #endif
 
+#ifndef _HSCEMODE_C_
+#ifndef _HENGINE_DLL_
+#define HCEM_DLL_IMPORT DLL_IMPORT
+#else   /* _HENGINE_DLL_ */
+#define HCEM_DLL_IMPORT extern
+#endif  /* _HENGINE_DLL_ */
+#else
+#define HCEM_DLL_IMPORT DLL_EXPORT
+#endif
+
+#ifndef _HSCLOC_C_
+#ifndef _HENGINE_DLL_
+#define HCML_DLL_IMPORT DLL_IMPORT
+#else   /* _HENGINE_DLL_ */
+#define HCML_DLL_IMPORT extern
+#endif  /* _HENGINE_DLL_ */
+#else
+#define HCML_DLL_IMPORT DLL_EXPORT
+#endif
+
+#ifndef _HSCPUFUN_C_
+#ifndef _HENGINE_DLL_
+#define HCPU_DLL_IMPORT DLL_IMPORT
+#else   /* _HENGINE_DLL_ */
+#define HCPU_DLL_IMPORT extern
+#endif  /* _HENGINE_DLL_ */
+#else
+#define HCPU_DLL_IMPORT DLL_EXPORT
+#endif
+
 #ifndef _CMDTAB_C_
 #ifndef _HENGINE_DLL_
 #define CMDT_DLL_IMPORT DLL_IMPORT
@@ -265,8 +295,15 @@ HAO_DLL_IMPORT void hao_message(char *message); /* process message */
 #endif /* defined(OPTION_HAO) */
 
 /* Functions in module hsccmd.c (so PTT debugging patches can access them) */
-HCMD_DLL_IMPORT int aia_cmd     (int argc, char *argv[], char *cmdline);
-HCMD_DLL_IMPORT int stopall_cmd (int argc, char *argv[], char *cmdline);
+int qproc_cmd(int argc, char *argv[], char *cmdline);
+
+/* Functions in module hscpufun.c (so PTT debugging patches can access them) */
+HCPU_DLL_IMPORT int stopall_cmd (int argc, char *argv[], char *cmdline);
+int start_cmd_cpu (int argc, char *argv[], char *cmdline);
+int stop_cmd_cpu (int argc, char *argv[], char *cmdline);
+
+/* Functions in module hscemode.c (so PTT debugging patches can access them) */
+HCEM_DLL_IMPORT int aia_cmd     (int argc, char *argv[], char *cmdline);
 
 /* Functions in module cmdtab.c */
 CMDT_DLL_IMPORT int ProcessCommand (int argc, char **argv, char *cmdline);

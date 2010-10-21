@@ -1,3 +1,4 @@
+21 Oct 2010 Split CPU and DEBUG functions from hsccmd.c to hscpufun.c and hscemode.c - Paul Gorlinsky
 03 Oct 2010 Split loadtext_cmd() and loadcore_cmd() from hsccmd.c to loadmem.c - Paul Gorlinsky
 02 Oct 2010 Change MAX_CPU_ENGINES to MAX_CPU in several places. Wrong use of 
             MAX_CPU_ENGINES. MAX_CPU_ENGINES is a build time option. Paul Gorlinsky

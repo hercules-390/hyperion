@@ -383,6 +383,9 @@ endif
                        loadmem.c    \
                        loadparm.c   \
                        hsccmd.c     \
+                       hscemode.c   \
+                       hscpufun.c   \
+                       hscloc.c     \
                        cmdtab.c     \
                        hao.c        \
                        hscmisc.c    \

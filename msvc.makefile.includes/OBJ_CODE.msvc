@@ -122,6 +122,9 @@ hengine_OBJ = \
     $(O)hconsole.obj \
     $(O)history.obj  \
     $(O)hsccmd.obj   \
+    $(O)hscemode.obj \
+    $(O)hscpufun.obj \
+    $(O)hscloc.obj   \
     $(O)hao.obj      \
     $(O)hscmisc.obj  \
     $(O)httpserv.obj \
