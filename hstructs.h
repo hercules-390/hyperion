@@ -47,8 +47,13 @@
 /* Structure definition for CPU register context                     */
 /*-------------------------------------------------------------------*/
 struct REGS {                           /* Processor registers       */
+#define HDL_NAME_REGS   "REGS"          /* Eye-Catch NAME            */
 #define HDL_VERS_REGS   "3.08"          /* Internal Version Number   */
 #define HDL_SIZE_REGS   sizeof(REGS)
+        BYTE    blknam[16];             /* Name of block   REGS_CP00 */
+        BYTE    blkver[8];              /* Version Number            */
+        U64     blkloc;                 /* Address of block    big-e */
+        U32     blksiz;                 /* size of block       big-e */
 
         int     arch_mode;              /* Architectural mode        */
 
@@ -374,7 +379,8 @@ struct REGS {                           /* Processor registers       */
 
         unsigned int tlbID;             /* Validation identifier     */
         TLB     tlb;                    /* Translation lookaside buf */
-
+        BYTE    blkend[16];             /* Name of block  END        */
+        
 };
 
 /*-------------------------------------------------------------------*/
@@ -411,8 +417,13 @@ struct ZPBLK {
 /* System configuration block                                        */
 /*-------------------------------------------------------------------*/
 struct SYSBLK {
+#define HDL_NAME_SYSBLK   "SYSBLK"
 #define HDL_VERS_SYSBLK   "3.08"        /* Internal Version Number   */
 #define HDL_SIZE_SYSBLK   sizeof(SYSBLK)
+        BYTE    blknam[16];             /* Name of block             */
+        BYTE    blkver[8];              /* Version Number            */
+        U64     blkloc;                 /* Address of block    big-e */
+        U32     blksiz;                 /* size of block       big-e */
         char   *hercules_pgmname;       /* Starting program name     */ 
         char   *hercules_pgmpath;       /* Starting pgm path name    */
         char   *hercules_cmdline;       /* Hercules Command line     */
@@ -773,7 +784,7 @@ struct SYSBLK {
         time_t  shutquittime;           /* Quit requested time       */
         time_t  SSD_time;               /* SSD requested time        */
 #endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
-
+        BYTE    blkend[16];             /* eye-end                   */
 };
 
 /*-------------------------------------------------------------------*/

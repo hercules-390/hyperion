@@ -353,6 +353,27 @@ int     dll_count;                      /* index into array          */
     /* Clear the system configuration block */
     memset (&sysblk, 0, sizeof(SYSBLK));
 
+#if defined (_MSVC_)
+    VERIFY( VirtualLock( &sysblk, sizeof(SYSBLK) ) ); 
+#else
+    VERIFY( mlock( &sysblk, sizeof(SYSBLK) ) == 0 );
+#endif
+    
+    /* Initialize EYE-CATCHERS for SYSBLK       */
+    memset(&sysblk.blknam,SPACE,sizeof(sysblk.blknam));
+    memset(&sysblk.blkver,SPACE,sizeof(sysblk.blkver));
+    memset(&sysblk.blkend,SPACE,sizeof(sysblk.blkend));
+    sysblk.blkloc = swap_byte_U64((U64)&sysblk);
+    memcpy(sysblk.blknam,HDL_NAME_SYSBLK,strlen(HDL_NAME_SYSBLK));
+    memcpy(sysblk.blkver,HDL_VERS_SYSBLK,strlen(HDL_VERS_SYSBLK));
+    sysblk.blksiz = swap_byte_U32((U32)sizeof(SYSBLK));
+    {
+        char buf[32];
+        MSGBUF( buf, "END%13.13s", HDL_NAME_SYSBLK );
+
+        memcpy(sysblk.blkend, buf, sizeof(sysblk.blkend));
+    }
+
     /* Initialize SETMODE and set user authority */
     SETMODE(INIT);
 

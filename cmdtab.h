@@ -1332,6 +1332,9 @@ COMMAND("symptom",   SYSCMDALL-SYSOPER,  traceopt_cmd,
   "Alias for traceopt",
     NULL)
 
+CMDABBR("locate",3,  SYSDEBUG,           locate_cmd,
+        NULL, NULL)
+
 COMMAND("$zapcmd",   SYSDEBUG,           zapcmd_cmd,
   NULL,
     NULL)     // enable/disable commands and config statements

@@ -1431,6 +1431,26 @@ int i;
 
     obtain_lock (&sysblk.cpulock[cpu]);
 
+    /* initialize eye-catchers */
+    memset(&regs->blknam,SPACE,sizeof(regs->blknam));
+    memset(&regs->blkver,SPACE,sizeof(regs->blkver));
+    memset(&regs->blkend,SPACE,sizeof(regs->blkend));
+    regs->blkloc = swap_byte_U64((U64)&regs);
+    regs->blksiz = swap_byte_U32((U32)sizeof(REGS));
+    {
+        char cputyp[32];
+        char buf[32];
+
+        MSGBUF( cputyp, "%-4.4s_%s%02X", HDL_NAME_REGS, PTYPSTR( cpu ), cpu );
+        
+        memcpy(regs->blknam,cputyp,strlen(cputyp)>sizeof(regs->blknam) ? sizeof(regs->blknam) : strlen(cputyp) );
+        memcpy(regs->blkver,HDL_VERS_REGS,strlen(HDL_VERS_REGS));
+        
+        MSGBUF( buf, "END%13.13s", cputyp );
+        memcpy(regs->blkend, buf, strlen(buf)>sizeof(regs->blkend) ? sizeof(regs->blkend): strlen(buf) );
+    }
+
+
     regs->cpuad = cpu;
     regs->cpubit = CPU_BIT(cpu);
     regs->arch_mode = sysblk.arch_mode;
@@ -1775,6 +1795,7 @@ int     aswitch;
     {
         memcpy (&regs, oldregs, sizeof(REGS));
         free (oldregs);
+        regs.blkloc = swap_byte_U64((U64)&regs);
         regs.hostregs = &regs;
         if (regs.guestregs)
             regs.guestregs->hostregs = &regs;
