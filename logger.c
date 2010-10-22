@@ -170,10 +170,6 @@ static void logger_term(void *arg)
     
     log_wakeup(NULL);
     usleep(1000);
-    log_wakeup(NULL);
-    usleep(1000);
-    log_wakeup(NULL);
-    usleep(1000);
 
     /* Flush all pending logger o/p before redirecting?? */
     fflush(stdout);
@@ -542,11 +538,11 @@ DLL_EXPORT void logger_init(void)
 {
     int rc;
 
-#ifdef OPTION_MSGLCK
     initialize_condition (&logger_cond);
     initialize_lock (&logger_lock);
-    initialize_lock (&sysblk.msglock);
-#endif
+
+    /* this is a conditional macro based upon OPTION_MSGLCK */
+    INIT_MSGLCK;
 
     obtain_lock(&logger_lock);
 
