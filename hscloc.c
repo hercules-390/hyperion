@@ -43,7 +43,7 @@ int locate_cmd(int argc, char *argv[], char *cmdline)
             /* verify head, tail, length and address */
             if ( loc != (U64)&sysblk )
             {
-                MSGBUF( msgbuf, "SYSBLK moved; was 0x%X, is 0x%p", loc, &sysblk );
+                MSGBUF( msgbuf, "SYSBLK moved; was 0x"I64_FMTX", is 0x%p", loc, &sysblk );
                 WRMSG( HHC90000, "D", msgbuf );
                 ok = FALSE;
             }
@@ -124,7 +124,7 @@ int locate_cmd(int argc, char *argv[], char *cmdline)
             {
                 return -1;
             }
-            if ( x > sizeof(SYSBLK) )
+            if ( x > (int)sizeof(SYSBLK) )
             {
                 return -1;
             }
