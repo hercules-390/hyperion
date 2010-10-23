@@ -13,6 +13,36 @@
 
 #include "hercules.h"
 
+void fmt_line( unsigned char *tbl, char *name, int start, int length)
+{
+    int     i, j, k, l, o;
+    char    hbuf[128];
+    char    cbuf[64];
+    char    fmtline[256];
+    BYTE    c;
+
+    l = length < 32 ? length : 32;
+
+    for( o = start; o < (start+length); o += l )
+    {
+        bzero( hbuf, sizeof(hbuf) );
+        bzero( cbuf, sizeof(cbuf) );
+            
+        for (i = 0, j = 0, k = 0; i < l; i++)
+        {
+            c = tbl[o+i];
+            if ( (i & 0x3) == 0x0 ) hbuf[j++] = SPACE;
+            if ( (i & 0xf) == 0x0 ) { hbuf[j++] = SPACE; cbuf[k++] = SPACE; }
+
+            j += snprintf( hbuf+j, sizeof(hbuf)-j, "%2.2X", c );
+            cbuf[k++] = ( !isprint(c) ? '.' : c );
+
+        } /* end for(i) */
+        MSGBUF( fmtline, "%s+0x%04x%-74.74s %-34.34s", name, o, hbuf, cbuf );
+        WRMSG( HHC90000, "D", fmtline );
+    }
+
+}
 /*-------------------------------------------------------------------*/
 /* locate - display control blocks by name                           */
 /*-------------------------------------------------------------------*/
@@ -26,13 +56,9 @@ int locate_cmd(int argc, char *argv[], char *cmdline)
     if (argc > 1 && CMD(argv[1],sysblk,6))
     {
         char    msgbuf[256];
-        int     i, j, k, l, o;
-        char    hbuf[128];
-        char    cbuf[64];
         int     start = 0; 
         int     start_adj = 0;
         int     length = 512;
-        BYTE    c;
         unsigned char   *tbl = (unsigned char *)&sysblk;
 
         if ( argc == 2 )
@@ -153,26 +179,8 @@ int locate_cmd(int argc, char *argv[], char *cmdline)
         length += start_adj;
         if ( start + length > (int)sizeof(SYSBLK) )
             length = (int)sizeof(SYSBLK) - start;
-
-        l = length < 32 ? length : 32;
-        for( o = start; o < (start+length); o += l )
-        {
-            bzero( hbuf, sizeof(hbuf) );
-            bzero( cbuf, sizeof(cbuf) );
-            
-            for (i = 0, j = 0, k = 0; i < l; i++)
-            {
-                c = tbl[o+i];
-                if ( (i & 0x3) == 0x0 ) hbuf[j++] = SPACE;
-                if ( (i & 0xf) == 0x0 ) { hbuf[j++] = SPACE; cbuf[k++] = SPACE; }
-
-                j += snprintf( hbuf+j, sizeof(hbuf)-j, "%2.2X", c );
-                cbuf[k++] = ( !isprint(c) ? '.' : c );
-
-            } /* end for(i) */
-            MSGBUF( msgbuf, "sysblk+0x%04x%-73.73s %-33.33s", o, hbuf, cbuf );
-            WRMSG( HHC90000, "D", msgbuf );
-        }
+        
+        fmt_line( tbl, "sysblk", start, length);
     }
     return rc;
 }

@@ -244,6 +244,56 @@ int  winthread_cond_destroy
 (
     CONDITION_VARIABLE*  pWIN_COND_VAR          // Pointer to condition variable
 );
+
+#if defined(DEBUG)
+WT_DLL_IMPORT 
+void DBGInitializeConditionVariable
+( 
+    const char*         src, 
+    int                 line, 
+    const char*         fun,
+    PCONDITION_VARIABLE pcond 
+);
+
+WT_DLL_IMPORT 
+int  DBGwinthread_cond_destroy
+( 
+    const char*         src, 
+    int                 line, 
+    const char*         fun,
+    PCONDITION_VARIABLE pcond 
+);
+
+WT_DLL_IMPORT 
+void DBGWakeConditionVariable
+( 
+    const char*         src, 
+    int                 line, 
+    const char*         fun,
+    PCONDITION_VARIABLE pcond 
+);
+
+WT_DLL_IMPORT 
+void DBGWakeAllConditionVariable
+( 
+    const char*         src, 
+    int                 line, 
+    const char*         fun,
+    PCONDITION_VARIABLE pcond 
+);
+
+WT_DLL_IMPORT 
+int DBGSleepConditionVariableCS
+(
+    const char*         src, 
+    int                 line, 
+    const char*         fun,
+    PCONDITION_VARIABLE pcond,
+    PCRITICAL_SECTION   plk,
+    DWORD               waitdelta
+);
+#endif
+
 #endif // OPTION_WTHREADS
 
 #endif // _WTHREADS_H_

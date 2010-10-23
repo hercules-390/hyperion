@@ -555,4 +555,144 @@ int  winthread_cond_destroy
     return RC(0);
 }
 
+
+#if defined(DEBUG)
+
+static inline int check_mod( const char* src )
+{
+    int rc = FALSE;
+    
+    if ( CMD(src,cpu.c,5)     ||
+         CMD(src,control.c,9) )
+         rc = TRUE;
+
+    return rc;
+}
+
+DLL_EXPORT
+void DBGInitializeConditionVariable( const char* src, int line, const char* fun, PCONDITION_VARIABLE pcond )
+{
+    char    msgbuf[256];
+    
+    if ( MLVL(DEBUG) && check_mod(basename(src)) )
+    {
+        MSGBUF( msgbuf, "%-10.10s %5d %-30.30s tid("TIDPAT") InitializeConditionVariable(%p) Entered",
+                basename(src), line, fun, thread_id(), pcond );
+        WRMSG( HHC90000, "D", msgbuf );
+    }
+    
+    InitializeConditionVariable( pcond);
+
+    if ( MLVL(DEBUG) && check_mod(basename(src)) )
+    {
+        MSGBUF( msgbuf, "%-10.10s %5d %-30.30s tid("TIDPAT") InitializeConditionVariable(%p) Exited",
+                basename(src), line, fun, thread_id(), pcond );
+        WRMSG( HHC90000, "D", msgbuf );
+    }
+
+    return;
+}
+
+DLL_EXPORT
+int DBGwinthread_cond_destroy( const char* src, int line, const char* fun, PCONDITION_VARIABLE pcond )
+{
+    int rc;
+    char    msgbuf[256];
+    
+    if ( MLVL(DEBUG) && check_mod(basename(src)) )
+    {
+        MSGBUF( msgbuf, "%-10.10s %5d %-30.30s tid("TIDPAT") winthread_cond_destroy(%p) Entered",
+                basename(src), line, fun, thread_id(), pcond );
+        WRMSG( HHC90000, "D", msgbuf );
+    }
+
+    rc = winthread_cond_destroy( pcond );
+ 
+    if ( MLVL(DEBUG) && check_mod(basename(src)) )
+    {
+        MSGBUF( msgbuf, "%-10.10s %5d %-30.30s tid("TIDPAT") winthread_cond_destroy(%p) Exited rc = %d",
+                basename(src), line, fun, thread_id(), pcond, rc );
+        WRMSG( HHC90000, "D", msgbuf );
+    }
+
+   return rc;
+}
+
+DLL_EXPORT
+void DBGWakeConditionVariable( const char* src, int line, const char* fun, PCONDITION_VARIABLE pcond )
+{
+    char    msgbuf[256];
+    
+    if ( MLVL(DEBUG) && check_mod(basename(src)) )
+    {
+        MSGBUF( msgbuf, "%-10.10s %5d %-30.30s tid("TIDPAT") WakeConditionVariable(%p) Entered",
+                basename(src), line, fun, thread_id(), pcond );
+        WRMSG( HHC90000, "D", msgbuf );
+    }
+
+    WakeConditionVariable( pcond );
+
+    if ( MLVL(DEBUG) && check_mod(basename(src)) )
+    {
+        MSGBUF( msgbuf, "%-10.10s %5d %-30.30s tid("TIDPAT") WakeConditionVariable(%p) Exited",
+                basename(src), line, fun, thread_id(), pcond );
+        WRMSG( HHC90000, "D", msgbuf );
+    }
+
+    return;
+}
+
+DLL_EXPORT
+void DBGWakeAllConditionVariable( const char* src, int line, const char* fun, PCONDITION_VARIABLE pcond )
+{
+    char    msgbuf[256];
+
+    if ( MLVL(DEBUG) && check_mod(basename(src)) )
+    {
+        MSGBUF( msgbuf, "%-10.10s %5d %-30.30s tid("TIDPAT") WakeAllConditionVariable(%p) Entered",
+                basename(src), line, fun, thread_id(), pcond );
+        WRMSG( HHC90000, "D", msgbuf );
+    }
+
+    WakeAllConditionVariable( pcond );
+
+    if ( MLVL(DEBUG) && check_mod(basename(src)) )
+    {
+        MSGBUF( msgbuf, "%-10.10s %5d %-30.30s tid("TIDPAT") WakeAllConditionVariable(%p) Exited",
+                basename(src), line, fun, thread_id(), pcond );
+        WRMSG( HHC90000, "D", msgbuf );
+    }
+
+    return;
+}
+
+DLL_EXPORT
+int DBGSleepConditionVariableCS( const char* src, int line, const char* fun, 
+                                 PCONDITION_VARIABLE pcond, PCRITICAL_SECTION plk, DWORD wtime )
+{
+    int rc;
+    char    msgbuf[256];
+    
+    if ( MLVL(DEBUG) && check_mod(basename(src)) )
+    {
+        MSGBUF( msgbuf, "%-10.10s %5d %-30.30s tid("TIDPAT") SleepConditionVariableCS(%p, %p, %lu) Entered",
+                basename(src), line, fun, thread_id(), pcond, plk, wtime );
+        WRMSG( HHC90000, "D", msgbuf );
+    }
+    
+    rc = (int)SleepConditionVariableCS( pcond, plk, wtime );
+    
+    if ( MLVL(DEBUG) && check_mod(basename(src)) )
+    {
+        MSGBUF( msgbuf, "%-10.10s %5d %-30.30s tid("TIDPAT") SleepConditionVariableCS(%p, %p, %lu) Exited RC = %d",
+                basename(src), line, fun, thread_id(), pcond, plk, wtime, rc );
+        WRMSG( HHC90000, "D", msgbuf );
+    }
+    
+    return rc;
+
+}
+
+#endif
+
 #endif // defined( OPTION_WTHREADS )

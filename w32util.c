@@ -502,13 +502,11 @@ static int w32_nanosleep ( const struct timespec* rqtp )
 
     // Set the waitable timer... 
 
-    VERIFY( SetWaitableTimer( hTimer, &liDueTime, 5000, NULL, NULL, FALSE ) );
+    VERIFY( SetWaitableTimer( hTimer, &liDueTime, 0, NULL, NULL, FALSE ) );
 
     // Wait for the waitable timer to expire...
 
     VERIFY( WaitForSingleObject( hTimer, INFINITE ) == WAIT_OBJECT_0 );
-
-    VERIFY( CancelWaitableTimer( hTimer ) );
 
     return 0;
 }

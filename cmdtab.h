@@ -478,6 +478,8 @@ CMDABBR("manufacturer",8,  SYSCONFIG|SYSNDIAG,   stsi_manufacturer_cmd,
 COMMAND("pgmprdos",  SYSCONFIG|SYSNDIAG, pgmprdos_cmd,
   "Set LPP license setting",
     NULL)
+#else
+COMMAND("pgmprdos",  SYSCONFIG|SYSNDIAG, pgmprdos_cmd, NULL, NULL )
 #endif /*defined(OPTION_LPP_RESTRICT)*/
 
 COMMAND("codepage",  SYSCMDALL-SYSOPER,  codepage_cmd,

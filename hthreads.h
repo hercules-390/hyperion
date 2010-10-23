@@ -69,6 +69,15 @@ typedef fthread_attr_t         ATTR;
 #define test_wrlock(plk)                       test_lock((plk))
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // The condition object of Hercules threading is translated into a Windows condition variable
+#if defined(DEBUG)
+#define initialize_condition(pcond)            DBGInitializeConditionVariable( __FILE__, __LINE__, __FUNCTION__,(CONDITION_VARIABLE*)(pcond))
+#define destroy_condition(pcond)               DBGwinthread_cond_destroy( __FILE__, __LINE__, __FUNCTION__,(CONDITION_VARIABLE*)(pcond)) // Dummy function
+#define signal_condition(pcond)                DBGWakeConditionVariable( __FILE__, __LINE__, __FUNCTION__,(CONDITION_VARIABLE*)(pcond))
+#define broadcast_condition(pcond)             DBGWakeAllConditionVariable( __FILE__, __LINE__, __FUNCTION__,(CONDITION_VARIABLE*)(pcond))
+#define wait_condition(pcond,plk)              DBGSleepConditionVariableCS( __FILE__, __LINE__, __FUNCTION__,(CONDITION_VARIABLE*)(pcond),(plk),INFINITE)
+#define timed_wait_condition(pcond,plk,waitdelta) \
+    ((DBGSleepConditionVariableCS(__FILE__, __LINE__, __FUNCTION__,(CONDITION_VARIABLE*)(pcond),(plk),(waitdelta))) ? (0) : (ETIMEDOUT))
+#else
 #define initialize_condition(pcond)            InitializeConditionVariable((CONDITION_VARIABLE*)(pcond))
 #define destroy_condition(pcond)               winthread_cond_destroy((CONDITION_VARIABLE*)(pcond)) // Dummy function
 #define signal_condition(pcond)                WakeConditionVariable((CONDITION_VARIABLE*)(pcond))
@@ -76,6 +85,7 @@ typedef fthread_attr_t         ATTR;
 #define wait_condition(pcond,plk)              SleepConditionVariableCS((CONDITION_VARIABLE*)(pcond),(plk),INFINITE)
 #define timed_wait_condition(pcond,plk,waitdelta) \
     ((SleepConditionVariableCS((CONDITION_VARIABLE*)(pcond),(plk),(waitdelta))) ? (0) : (ETIMEDOUT))
+#endif
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #endif // defined( OPTION_WTHREADS )
