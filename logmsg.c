@@ -169,17 +169,19 @@ DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
                          int grp, int lvl, char *color, char *msg, ...)
 {
     char   *bfr     =   NULL;
+    char   *msgbuf  =   NULL;
     int     rc      =   1;
     int     siz     =   1024;
     char    file[FILENAME_MAX];
-
+    char    prefix[64];
     va_list vl;
 
     bfr = strdup(srcfile);
     strlcpy(file, basename(bfr), sizeof(file));
     free(bfr);
     bfr = NULL;
-
+    
+    bzero(prefix,sizeof(prefix));
 
 #ifdef OPTION_MSGLCK
     if(!sysblk.msggrp || (sysblk.msggrp && !grp))
@@ -204,6 +206,8 @@ DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
     fflush(stdout);  
   #endif
 
+    BFR_VSNPRINTF();
+
 #if defined( OPTION_MSGCLR )
     if (!strlen(color))
     {
@@ -219,41 +223,48 @@ DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
                 break;
         }
     }
+#else
+    color = "";
 #endif // defined( OPTION_MSGCLR )
 
     if ( lvl & MLVL_DEBUG )
     {
 #if defined( OPTION_MSGCLR )
         if (strlen(color) > 0 && !sysblk.shutdown && sysblk.panel_init)
-            logmsg("%s%-10.10s %5d ", color, file, line);
+            MSGBUF(prefix, "%s%-10.10s %5d ", color, file, line);
         else
-            logmsg("%-10.10s %5d ", file, line);
+            MSGBUF(prefix, "%-10.10s %5d ", file, line);
 #else
-            logmsg("%-10.10s %5d ", file, line);
+            MSGBUF(prefix, "%-10.10s %5d ", file, line);
 #endif
-            BFR_VSNPRINTF();
     }
     else
     {
 #if defined( OPTION_MSGCLR )
         if (strlen(color) > 0 && !sysblk.shutdown && sysblk.panel_init)
         {
-            logmsg(color);
+            MSGBUF(prefix, "%s", color );
         }
 #endif // defined( OPTION_MSGCLR )
-        BFR_VSNPRINTF();
     }
 
     if(bfr)
     {
-        if ( strlen(bfr) > 10 && !strncmp(bfr, "HHC", 3) )
-            log_write( 0, ( sysblk.emsg & EMSG_TEXT ) ? &bfr[10] : bfr );
-        else
-            log_write( 0, bfr );
+        size_t l = strlen(prefix)+strlen(bfr)+256;
+        msgbuf = calloc(1,l);
+        if (msgbuf)
+        {
+            if ( strlen(bfr) > 10 && !strncmp(bfr, "HHC", 3) )
+                snprintf( msgbuf, l-1, "%s%s", prefix, ( sysblk.emsg & EMSG_TEXT ) ? &bfr[10] : bfr ); 
+            else
+                snprintf( msgbuf, l-1, "%s%s", prefix, bfr );
+            log_write( 0, msgbuf );
+            free(msgbuf);
+        }
         free(bfr);
     }
 
-    if ( MLVL(DEBUG) || ( strlen(msg) > 10 && SNCMP(msg,"HHC",3) &&
+    if ( ( MLVL(DEBUG) && msg[8] != 'D' ) || ( strlen(msg) > 10 && SNCMP(msg,"HHC",3) &&
                         (msg[8] == 'S' || msg[8] == 'E' || msg[8] == 'W') ) )
     {
         if ( MLVL(DEBUG) )
