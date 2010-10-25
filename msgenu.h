@@ -101,7 +101,7 @@ cpu.c:123:HABC1234I This is a message
          char _msgbuf[32768]; \
          int _rc; \
          _rc = MSGBUF( _msgbuf, #id s " " id "\n", ## __VA_ARGS__); \
-         ASSERT( _rc != -1 || _rc < sizeof(_msgbuf)-1 ); \
+         ASSERT( _rc != -1 || _rc < (int)sizeof(_msgbuf)-1 ); \
          writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", _msgbuf ); \
        } while(0)
 
@@ -110,7 +110,7 @@ cpu.c:123:HABC1234I This is a message
          char _msgbuf[32768]; \
          int _rc; \
          _rc = MSGBUF( _msgbuf, #id s " " id "", ## __VA_ARGS__); \
-         ASSERT( _rc != -1 || _rc < sizeof(_msgbuf)-1 ); \
+         ASSERT( _rc != -1 || _rc < (int)sizeof(_msgbuf)-1 ); \
          writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", _msgbuf ); \
        } while(0)
 
@@ -119,7 +119,7 @@ cpu.c:123:HABC1234I This is a message
          char _msgbuf[32768]; \
          int _rc; \
          _rc = MSGBUF( _msgbuf, #id s " " id "\n", ## __VA_ARGS__); \
-         ASSERT( _rc != -1 || _rc < sizeof(_msgbuf)-1 ); \
+         ASSERT( _rc != -1 || _rc < (int)sizeof(_msgbuf)-1 ); \
          writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), color, "%s", _msgbuf ); \
        } while(0)
 
@@ -128,7 +128,7 @@ cpu.c:123:HABC1234I This is a message
          char _msgbuf[32768]; \
          int _rc; \
          _rc = MSGBUF( _msgbuf, #id s " " id "\n", ## __VA_ARGS__); \
-         ASSERT( _rc != -1 || _rc < sizeof(_msgbuf)-1 ); \
+         ASSERT( _rc != -1 || _rc < (int)sizeof(_msgbuf)-1 ); \
          writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), color, "%s", _msgbuf ); \
        } while(0)
 #else
