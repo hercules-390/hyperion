@@ -572,7 +572,7 @@ init_retry:
     clientPurge (dev, 0, NULL);
 
     /* Log the device geometry */
-    WRMSG (HHC00712, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->fbaorigin, dev->fbanumblk);
+    WRMSG (HHC00712, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, (int)dev->fbaorigin, dev->fbanumblk);
 
     dev->connecting = 0;
 

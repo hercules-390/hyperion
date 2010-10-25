@@ -984,7 +984,7 @@ ckd_read_track_retry:
         if (rc < dev->ckdtrksz)
         {
             /* Handle read error condition */
-            WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+            WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "read()",
                 (rc < 0 ? strerror(errno) : "unexpected end of file"));
             ckd_build_sense (dev, SENSE_EC, 0, 0, FORMAT_1, MESSAGE_0);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1836,7 +1836,7 @@ CKDDASD_RECHDR  rechdr;                 /* Record header             */
         if (dev->bufoff + dev->ckdcurdl >= dev->bufoffhi)
         {
             /* Handle error condition */
-            WRMSG (HHC00419, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bufoff, dev->bufoffhi);
+            WRMSG (HHC00419, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->bufoff, dev->bufoffhi);
 
             /* Set unit check with equipment check */
             ckd_build_sense (dev, SENSE_EC, 0, 0,

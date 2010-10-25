@@ -416,7 +416,7 @@ static int cache_create (int ix)
     initialize_condition (&cacheblk[ix].waitcond);
     cacheblk[ix].cache = calloc (cacheblk[ix].nbr, sizeof(CACHE));
     if (cacheblk[ix].cache == NULL) {
-        WRMSG (HHC00011, "E", "cache()", ix, cacheblk[ix].nbr * sizeof(CACHE), errno, strerror(errno));
+        WRMSG (HHC00011, "E", "cache()", ix, (int)(cacheblk[ix].nbr * (int)sizeof(CACHE)), errno, strerror(errno));
         return -1;
     }
     return 0;

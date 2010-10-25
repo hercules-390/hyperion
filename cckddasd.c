@@ -4422,7 +4422,7 @@ int             freenbr=0;              /* Total number free spaces  */
     for (i = 1; i <= cckd->sfn; i++)
     {
         WRMSG (HHC00341, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, 
-                i, cckd->cdevhdr[i].size,
+                i, (S64)cckd->cdevhdr[i].size,
                 ((S64)(cckd->cdevhdr[i].free_total * 100) / cckd->cdevhdr[i].size),
                 cckd->cdevhdr[i].free_number, ost[cckd->open[i]],
                 cckd->reads[i], cckd->writes[i], cckd->l2reads[i]);
@@ -5668,7 +5668,7 @@ int   rc;
                     {
                         char buf[64];
                         MSGBUF( buf, "calloc(%d, %lu)", val, sizeof(CCKD_TRACE));
-                        WRMSG (HHC00303, "E", buf, strerror(errno));
+                        WRMSG (HHC00303, "E", 0, 0, buf, strerror(errno));
                     }
                 }
                 opts = 1;

@@ -652,7 +652,7 @@ fba_read_blkgrp_retry:
     if (rc < len)
     {
         /* Handle read error condition */
-        WRMSG (HHC00502, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "read()", blkgrp, rc < 0 ? strerror(errno) : "unexpected end of file");
+        WRMSG (HHC00502, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "read()", rc < 0 ? strerror(errno) : "unexpected end of file");
         dev->sense[0] = SENSE_EC;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
         cache_lock(CACHE_DEVBUF);
@@ -1506,7 +1506,7 @@ BYTE byte;
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
             if ((off_t)rc != dev->fbaorigin)
             {
-                WRMSG(HHC00513, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, rc, dev->fbaorigin);
+                WRMSG(HHC00513, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, rc, (int)dev->fbaorigin);
                 return -1;
             }
             break;

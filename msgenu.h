@@ -87,9 +87,9 @@ cpu.c:123:HABC1234I This is a message
 
 /* Use these macro's */
 #if defined (_MSVC_)
-#define MSGBUF(buf, ...)             _snprintf_s(buf, sizeof(buf), sizeof(buf)-1, ## __VA_ARGS__)
+#define MSGBUF(_buf, ...)             _snprintf_s(_buf, sizeof(_buf), sizeof(_buf)-1, ## __VA_ARGS__)
 #else
-#define MSGBUF(buf, ...)             snprintf(buf, sizeof(buf)-1, ## __VA_ARGS__)
+#define MSGBUF(_buf, ...)             snprintf(_buf, sizeof(_buf)-1, ## __VA_ARGS__)
 #endif
 
 #define MSG(id, s, ...)              #id s " " id "\n", ## __VA_ARGS__
@@ -400,7 +400,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00415 "%1d:%04X CKD file %s: device type %4.4X not found in dasd table"
 #define HHC00416 "%1d:%04X CKD file %s: control unit '%s' not found in dasd table"
 #define HHC00417 "%1d:%04X CKD file '%s': cache hits %d, misses %d, waits %d"
-#define HHC00418 "%1d:%04X CKD file '%s': invalid track header for cyl %d head %d %02X%02X%02X%02X%%02X"
+#define HHC00418 "%1d:%04X CKD file '%s': invalid track header for cyl %d head %d %02X %02X%02X %02X%02X"
 #define HHC00419 "%1d:%04X CKD file '%s': error attempting to read past end of track '%d %d'"
 #define HHC00420 "%1d:%04X CKD file '%s': error write kd orientation"
 #define HHC00421 "%1d:%04X CKD file '%s': error write data orientation"
@@ -961,13 +961,13 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01483 "Codepage: 'user' %s table is empty"
 #define HHC01484 "Codepage: Displaying user table %s%s"
 #define HHC01485 "Codepage:    _0_1_2_3 _4_5_6_7 _8_9_A_B _C_D_E_F 0... 4... 8... C..."
-#define HHC01486 "Codepage: %01.1X_%36.36s%20.20s %01.1X_"
+#define HHC01486 "Codepage: %1.1X_%36.36s%20.20s %1.1X_"
 #define HHC01487 "Codepage: %s user table %s"
-#define HHC01488 "Codepage: Pos[%02.2X] was %02.2X is %02.2X"
+#define HHC01488 "Codepage: Pos[%2.2X] was %2.2X is %2.2X"
 #define HHC01489 "Codepage: Cannot %s; user table in use"
 #define HHC01490 "Codepage: %s user table %s %s file %s"
-#define HHC01491 "Codepage: g2h pos[%02.2X] = %02.2X; h2g pos[%02.2X] = %02.2X"
-#define HHC01492 "Codepage: h2g pos[%02.2X] = %02.2X; g2h pos[%02.2X] = %02.2X"
+#define HHC01491 "Codepage: g2h pos[%2.2X] = %2.2X; h2g pos[%2.2X] = %2.2X"
+#define HHC01492 "Codepage: h2g pos[%2.2X] = %2.2X; g2h pos[%2.2X] = %2.2X"
 #define HHC01493 "Codepage: Tables are transparent"
 
 // reserve 015xx for Hercules dynamic loader
@@ -1006,7 +1006,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01531 "HDL: dll type = %s, name = %s, flags = (%s, %s)"
 #define HHC01532 "HDL:  symbol = %s, loadcount = %d%s, owner = %s"
 #define HHC01533 "HDL:  devtype(s) =%s"
-#define HHC01534 "HDL:  instruction = %s, opcode = %4.4X"
+#define HHC01534 "HDL:  instruction = %s, opcode = %4.4X%s"
 #define HHC01535 "HDL: dependency '%s' version '%s' size %d"
 
 /* dyngui.c */

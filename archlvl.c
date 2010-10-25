@@ -383,7 +383,9 @@ char sbitno[32];
             {
                 sysblk.facility_list[ARCH_370][fbyte] |= fbit;
                 if(MLVL(VERBOSE))
+                {
                     WRMSG( HHC00898, "I", sbitno, "en", _ARCH_370_NAME );
+                }
             }
 #endif
 #if defined(_390)

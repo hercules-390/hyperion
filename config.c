@@ -1603,7 +1603,7 @@ static size_t parse_devnums(const char *spec,DEVNUMSDESC *dd)
         }
         if(badcuu>=0)
         {
-            WRMSG(HHC01472,"E", dd->lcss, badcuu,basechan);
+            WRMSG(HHC01472,"E", dd->lcss, badcuu, basechan);
             free(dgrs);
             free(sc);
             return(0);
