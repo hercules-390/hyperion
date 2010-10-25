@@ -369,9 +369,9 @@ ARCHTAB *tb;
 void force_facbit(int bitno, int enable, BYTE mode)
 {
 int fbyte, fbit;
-char buf[11];
-#define i2a(_int) ( (MSGBUF(buf,"%d", _int) <= (int)sizeof(buf)) ? buf : "?" )
+char sbitno[32];
 
+    MSGBUF(sbitno, "%d", bitno);
     fbyte = bitno / 8;
     fbit = 0x80 >> (bitno % 8);
 
@@ -383,7 +383,7 @@ char buf[11];
             {
                 sysblk.facility_list[ARCH_370][fbyte] |= fbit;
                 if(MLVL(VERBOSE))
-                    WRMSG( HHC00898, "I", i2a(bitno), "en", _ARCH_370_NAME );
+                    WRMSG( HHC00898, "I", sbitno, "en", _ARCH_370_NAME );
             }
 #endif
 #if defined(_390)
@@ -392,7 +392,7 @@ char buf[11];
             {
                 sysblk.facility_list[ARCH_390][fbyte] |= fbit;
                 if(MLVL(VERBOSE))
-                    WRMSG( HHC00898, "I", i2a(bitno), "en", _ARCH_390_NAME );
+                    WRMSG( HHC00898, "I", sbitno, "en", _ARCH_390_NAME );
             }
 #endif
 #if defined(_900)
@@ -401,7 +401,7 @@ char buf[11];
             {
                 sysblk.facility_list[ARCH_900][fbyte] |= fbit;
                 if(MLVL(VERBOSE))
-                    WRMSG( HHC00898, "I", i2a(bitno), "en", _ARCH_900_NAME ); 
+                    WRMSG( HHC00898, "I", sbitno, "en", _ARCH_900_NAME ); 
             }
 #endif
     }
@@ -413,7 +413,7 @@ char buf[11];
             {
                 sysblk.facility_list[ARCH_370][fbyte] &= ~fbit;
                 if(MLVL(VERBOSE))
-                    WRMSG( HHC00898, "I", i2a(bitno), "dis", _ARCH_370_NAME);
+                    WRMSG( HHC00898, "I", sbitno, "dis", _ARCH_370_NAME);
             }
 #endif
 #if defined(_390)
@@ -422,7 +422,7 @@ char buf[11];
             {
                 sysblk.facility_list[ARCH_390][fbyte] &= ~fbit;
                 if(MLVL(VERBOSE))
-                    WRMSG( HHC00898, "I", i2a(bitno), "dis", _ARCH_390_NAME );
+                    WRMSG( HHC00898, "I", sbitno, "dis", _ARCH_390_NAME );
             }
 #endif
 #if defined(_900)
@@ -431,12 +431,11 @@ char buf[11];
             {
                 sysblk.facility_list[ARCH_900][fbyte] &= ~fbit;
                 if(MLVL(VERBOSE))
-                    WRMSG( HHC00898, "I", i2a(bitno), "dis", _ARCH_900_NAME );
+                    WRMSG( HHC00898, "I", sbitno, "dis", _ARCH_900_NAME );
             }
 #endif
     }
 }
-#undef i2a
 
 void set_facility(FACTAB *facility, int enable, BYTE mode)
 {

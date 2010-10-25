@@ -2954,8 +2954,6 @@ int numcpu_cmd(int argc, char *argv[], char *cmdline)
 U16 numcpu;
 int rc;
 BYTE c;
-char buf[10];
-#define i2a(_int) ( (MSGBUF(buf,"%d", _int) <= (int)sizeof(buf)) ? buf : "?" )
 
     UNREFERENCED(cmdline);
 
@@ -2968,7 +2966,9 @@ char buf[10];
 
     if ( argc == 1 )
     {
-        WRMSG( HHC02203, "I", argv[0], i2a(sysblk.cpus) );
+        char msgbuf[32];
+        MSGBUF(msgbuf, "%d", sysblk.cpus);
+        WRMSG( HHC02203, "I", argv[0], msgbuf );
         if ( sysblk.cpus == 0 )
             return 1;
         else
@@ -3013,8 +3013,6 @@ int maxcpu_cmd(int argc, char *argv[], char *cmdline)
 {
 U16 maxcpu;
 BYTE c;
-char buf[10];
-#define i2a(_int) ( (MSGBUF(buf,"%d", _int) <= (int)sizeof(buf)) ? buf : "?" )
 
     UNREFERENCED(cmdline);
 
@@ -3027,7 +3025,10 @@ char buf[10];
     
     if ( argc == 1 )
     {
-        WRMSG( HHC02203, "I", argv[0], i2a(sysblk.maxcpu) ); 
+        char msgbuf[32];
+
+        MSGBUF(msgbuf, "%d", sysblk.maxcpu);
+        WRMSG( HHC02203, "I", argv[0], msgbuf ); 
         if ( sysblk.maxcpu == 0 )
             return 1;
         else
@@ -3060,18 +3061,27 @@ char buf[10];
         sysblk.cpuidfmt = 1;
 
         if (MLVL(VERBOSE))
-            WRMSG(HHC02204, "I", "cpuidfmt", i2a(sysblk.cpuidfmt));
+        {
+            char msgbuf[32];
+
+            MSGBUF(msgbuf, "%d", sysblk.cpuidfmt);
+            WRMSG(HHC02204, "I", "cpuidfmt", msgbuf);
+        }
     }
 
 
     sysblk.maxcpu = maxcpu;
 
     if (MLVL(VERBOSE))
-        WRMSG( HHC02204, "I", argv[0], i2a(sysblk.maxcpu) );
+    {
+        char msgbuf[32];
+
+        MSGBUF(msgbuf, "%d", sysblk.maxcpu);
+        WRMSG( HHC02204, "I", argv[0], msgbuf );
+    }
 
     return 0;
 }
-#undef i2a
 
 /*-------------------------------------------------------------------*/
 /* cnslport command - set console port                               */
