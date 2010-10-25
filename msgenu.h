@@ -120,7 +120,7 @@ cpu.c:123:HABC1234I This is a message
          int _rc; \
          _rc = MSGBUF( _msgbuf, #id s " " id "\n", ## __VA_ARGS__); \
          ASSERT( _rc != -1 || _rc < sizeof(_msgbuf)-1 ); \
-         writemsg(__FILE__, __LINE__, __FUNCTION__, color, MLVL(ANY), "", "%s", _msgbuf ); \
+         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), color, "%s", _msgbuf ); \
        } while(0)
 
 #define WRCMSG_C(color, id, s, ...) \
@@ -129,7 +129,7 @@ cpu.c:123:HABC1234I This is a message
          int _rc; \
          _rc = MSGBUF( _msgbuf, #id s " " id "\n", ## __VA_ARGS__); \
          ASSERT( _rc != -1 || _rc < sizeof(_msgbuf)-1 ); \
-         writemsg(__FILE__, __LINE__, __FUNCTION__, color, MLVL(ANY), "", "%s", _msgbuf ); \
+         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), color, "%s", _msgbuf ); \
        } while(0)
 #else
 #define WRMSG(id, s, ...)            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", _(#id s " " id "\n"), ## __VA_ARGS__)
