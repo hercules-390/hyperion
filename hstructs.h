@@ -66,6 +66,19 @@ struct REGS {                           /* Processor registers       */
         U64     blkloc;                 /* Address of block    big-e */
         U32     blksiz;                 /* size of block       big-e */
 
+        SYSBLK *sysblk;                 /* Pointer to sysblk         */
+
+        CPU_BITMAP cpubit;              /* Only this CPU's bit is 1  */
+        U32     ints_state;             /* CPU Interrupts Status     */
+        U32     ints_mask;              /* Respective Interrupts Mask*/
+
+        BYTE    cpustate;               /* CPU stopped/started state */
+        BYTE    malfcpu                 /* Malfuction alert flags    */
+                    [MAX_CPU_ENGINES];  /* for each CPU (1=pending)  */
+        BYTE    emercpu                 /* Emergency signal flags    */
+                    [MAX_CPU_ENGINES];  /* for each CPU (1=pending)  */
+        U16     extccpu;                /* CPU causing external call */
+
         int     arch_mode;              /* Architectural mode        */
 
         DW      px;                     /* Prefix register           */
@@ -206,7 +219,6 @@ struct REGS {                           /* Processor registers       */
                                            register context          */
         REGS   *guestregs;              /* Pointer to the guest
                                            register context          */
-        SYSBLK *sysblk;                 /* Pointer to sysblk         */
 
 #if defined(_FEATURE_SIE)
         RADR    sie_state;              /* Address of the SIE state
@@ -232,9 +244,6 @@ struct REGS {                           /* Processor registers       */
         BYTE    peraid;                 /* PER access id             */
 // #endif /*defined(FEATURE_PER)*/
 
-        CPU_BITMAP cpubit;              /* Only this CPU's bit is 1  */
-        U32     ints_state;             /* CPU Interrupts Status     */
-        U32     ints_mask;              /* Respective Interrupts Mask*/
      /*
       * Making the following flags 'stand-alone' (instead of bit-
       * flags like they were) addresses a compiler bit-flag serial-
@@ -244,12 +253,6 @@ struct REGS {                           /* Processor registers       */
         int     intwait;                /* 1=Waiting on intlock      */
         int     syncio;                 /* 1=Synchronous i/o active  */
 
-        BYTE    cpustate;               /* CPU stopped/started state */
-        BYTE    malfcpu                 /* Malfuction alert flags    */
-                    [MAX_CPU_ENGINES];  /* for each CPU (1=pending)  */
-        BYTE    emercpu                 /* Emergency signal flags    */
-                    [MAX_CPU_ENGINES];  /* for each CPU (1=pending)  */
-        U16     extccpu;                /* CPU causing external call */
         BYTE    inst[8];                /* Fetched instruction when
                                            instruction crosses a page
                                            boundary                  */
@@ -816,8 +819,14 @@ struct IOINT {                          /* I/O interrupt queue entry */
 /* Device configuration block                                        */
 /*-------------------------------------------------------------------*/
 struct DEVBLK {                         /* Device configuration block*/
+#define HDL_NAME_DEVBLK   "DEVBLK"      /* Internal Version Number   */
 #define HDL_VERS_DEVBLK   "3.08"        /* Internal Version Number   */
 #define HDL_SIZE_DEVBLK   sizeof(DEVBLK)
+        BYTE    blknam[16];             /* Name of block             */
+        BYTE    blkver[8];              /* Version Number            */
+        U64     blkloc;                 /* Address of block    big-e */
+        U32     blksiz;                 /* size of block       big-e */
+
         DEVBLK *nextdev;                /* -> next device block      */
         REGS   *regs;                   /* -> REGS if syncio         */
         LOCK    lock;                   /* Device block lock         */
@@ -1341,6 +1350,7 @@ struct DEVBLK {                         /* Device configuration block*/
                                              for read only file      */
         U16     ckdssdlen;              /* #of bytes of data prepared
                                            for Read Subsystem Data   */
+        BYTE    blkend[16];             /* eye-end                   */
 };
 
 

@@ -1435,7 +1435,7 @@ int i;
     memset(&regs->blknam,SPACE,sizeof(regs->blknam));
     memset(&regs->blkver,SPACE,sizeof(regs->blkver));
     memset(&regs->blkend,SPACE,sizeof(regs->blkend));
-    regs->blkloc = swap_byte_U64((U64)&regs);
+    regs->blkloc = swap_byte_U64((U64)regs);
     regs->blksiz = swap_byte_U32((U32)sizeof(REGS));
     {
         char cputyp[32];
