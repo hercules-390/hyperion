@@ -1023,7 +1023,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
                 WRMSG( HHC00865, "I", "IE", sysblk.regs[i]->cpuad, buf );
             }
             WRMSG( HHC00866, "I", "IE", sysblk.regs[i]->cpuad, states[sysblk.regs[i]->guestregs->cpustate]);
-            WRMSG( HHC00867, "I", "IE", sysblk.regs[i]->cpuad, sysblk.regs[i]->guestregs->instcount);
+            WRMSG( HHC00867, "I", "IE", sysblk.regs[i]->cpuad, (S64)sysblk.regs[i]->guestregs->instcount);
             WRMSG( HHC00868, "I", "IE", sysblk.regs[i]->cpuad, sysblk.regs[i]->guestregs->siototal);
             copy_psw(sysblk.regs[i]->guestregs, curpsw);
             if (ARCH_900 == sysblk.arch_mode)

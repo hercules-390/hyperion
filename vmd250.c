@@ -448,7 +448,7 @@ int     cc;                         /* Condition code to return      */
          WRMSG (HHC01906, "I",
               dev->devnum,
               blksize,
-              offset,
+              (S64)offset,
               bioenv->begblk,
               bioenv->endblk
              );
@@ -1391,7 +1391,7 @@ RADR   bufend;    /* Last byte read or written                 */
       WRMSG (HHC01928, "I",
                ioctl->dev->devnum,
                ioctl->blkcount,
-               ioctl->listaddr,
+               (RADR)ioctl->listaddr,
                ioctl->key
                );
    }
@@ -1982,7 +1982,7 @@ RADR   bufend;    /* Last byte read or written                 */
       WRMSG (HHC01939, "I",
                ioctl->dev->devnum,
                ioctl->blkcount,
-               ioctl->listaddr,
+               (RADR)ioctl->listaddr,
                ioctl->key
                );
    }

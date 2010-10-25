@@ -474,6 +474,8 @@ static void buffer_addchar_and_alloc(char **bfr,char c,int *ix_p,int *max_p)
     *ix_p=ix;
     return;
 }
+
+#if 0
 static void append_string(char **bfr,char *text,int *ix_p,int *max_p)
 {
     int i;
@@ -483,6 +485,7 @@ static void append_string(char **bfr,char *text,int *ix_p,int *max_p)
     }
     return;
 }
+#endif
 
 #if 0
 static void append_symbol(char **bfr,char *sym,int *ix_p,int *max_p)

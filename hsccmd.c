@@ -1589,7 +1589,7 @@ int rc;
                         sysblk.defdir = pTAMDIR->dir;
                     }
 
-                    WRMSG(HHC02203, "default automount directory", sysblk.defdir);
+                    WRMSG(HHC02203, "I", "default automount directory", sysblk.defdir);
                 }
 
                 return 0;
@@ -4964,7 +4964,7 @@ BYTE    c;                              /* Character work area       */
         if (sysblk.pgminttr == 0xFFFFFFFFFFFFFFFFULL)
             WRMSG(HHC02281, "I", "pgmtrace == all");
         else if (sysblk.pgminttr == 0)
-            WRMSG(HHC02281, "I" "pgmtrace == none");
+            WRMSG(HHC02281, "I", "pgmtrace == none");
         else
         {
             char flags[64+1]; int i;
@@ -6661,23 +6661,23 @@ int sizeof_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(argc);
     UNREFERENCED(argv);
 
-    WRMSG(HHC02257, "I", "(unsigned short) ..",sizeof(unsigned short));
-    WRMSG(HHC02257, "I", "(void *) ..........",sizeof(void *));
-    WRMSG(HHC02257, "I", "(unsigned int) ....",sizeof(unsigned int));
-    WRMSG(HHC02257, "I", "(long) ............",sizeof(long));
-    WRMSG(HHC02257, "I", "(long long) .......",sizeof(long long));
-    WRMSG(HHC02257, "I", "(size_t) ..........",sizeof(size_t));
-    WRMSG(HHC02257, "I", "(off_t) ...........",sizeof(off_t));
+    WRMSG(HHC02257, "I", "(unsigned short) ..",(int)sizeof(unsigned short));
+    WRMSG(HHC02257, "I", "(void *) ..........",(int)sizeof(void *));
+    WRMSG(HHC02257, "I", "(unsigned int) ....",(int)sizeof(unsigned int));
+    WRMSG(HHC02257, "I", "(long) ............",(int)sizeof(long));
+    WRMSG(HHC02257, "I", "(long long) .......",(int)sizeof(long long));
+    WRMSG(HHC02257, "I", "(size_t) ..........",(int)sizeof(size_t));
+    WRMSG(HHC02257, "I", "(off_t) ...........",(int)sizeof(off_t));
     WRMSG(HHC02257, "I", "FILENAME_MAX ......",FILENAME_MAX);
     WRMSG(HHC02257, "I", "PATH_MAX ..........",PATH_MAX);
-    WRMSG(HHC02257, "I", "SYSBLK ............",sizeof(SYSBLK));
-    WRMSG(HHC02257, "I", "REGS ..............",sizeof(REGS));
+    WRMSG(HHC02257, "I", "SYSBLK ............",(int)sizeof(SYSBLK));
+    WRMSG(HHC02257, "I", "REGS ..............",(int)sizeof(REGS));
     WRMSG(HHC02257, "I", "REGS (copy len) ...",sysblk.regs_copy_len);
-    WRMSG(HHC02257, "I", "PSW ...............",sizeof(PSW));
-    WRMSG(HHC02257, "I", "DEVBLK ............",sizeof(DEVBLK));
-    WRMSG(HHC02257, "I", "TLB entry .........",sizeof(TLB)/TLBN);
-    WRMSG(HHC02257, "I", "TLB table .........",sizeof(TLB));
-    WRMSG(HHC02257, "I", "CPU_BITMAP ........",sizeof(CPU_BITMAP));
+    WRMSG(HHC02257, "I", "PSW ...............",(int)sizeof(PSW));
+    WRMSG(HHC02257, "I", "DEVBLK ............",(int)sizeof(DEVBLK));
+    WRMSG(HHC02257, "I", "TLB entry .........",(int)sizeof(TLB)/TLBN);
+    WRMSG(HHC02257, "I", "TLB table .........",(int)sizeof(TLB));
+    WRMSG(HHC02257, "I", "CPU_BITMAP ........",(int)sizeof(CPU_BITMAP));
     WRMSG(HHC02257, "I", "STFL_BYTESIZE .....",STFL_BYTESIZE);
     return 0;
 }

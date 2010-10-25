@@ -298,7 +298,7 @@ static void logdump(char *txt,DEVBLK *dev,BYTE *bfr,size_t sz)
             dev->commadpt->in_textmode?"YES":"NO",
             dev->commadpt->in_xparmode?"YES":"NO",
             dev->commadpt->xparwwait?"YES":"NO");
-    WRMSG(HHC01049, "D",SSID_TO_LCSS(dev->ssid),dev->devnum,txt,sz,sz);
+    WRMSG(HHC01049, "D",SSID_TO_LCSS(dev->ssid),dev->devnum,txt,(u_int)sz,(u_int)sz);
     buf[0] = 0;
     for( i=0; i<sz; i++ )
     {

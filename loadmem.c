@@ -273,7 +273,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
         {
             if (rlen > 0)
             {
-                WRMSG( HHC02301, "E", argv[0], recno, sizeof(buf) );
+                WRMSG( HHC02301, "E", argv[0], recno, (int)sizeof(buf) );
                 rc = -1;
             }
             break;
@@ -313,7 +313,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
                        RADR lastbyte = aaddr + n + len - 1;
                        if (lastbyte >= sysblk.mainsize)                         // Bytes must fit into storage
                        {
-                          WRMSG(HHC02307,"E", argv[0], recno, lastbyte);
+                          WRMSG(HHC02307,"E", argv[0], recno, (U64)lastbyte);
                           rc = -1;
                           break;
                        }
@@ -609,7 +609,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
     if (rc >= 0 && rc < 8)
     {
         if (rc > 0)
-            WRMSG(HHC02308, "W");
+            WRMSG(HHC02308, "W", argv[0] );
         WRMSG(HHC02249, "I");
     }
 

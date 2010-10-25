@@ -724,7 +724,7 @@ int             rc;                     /* Return code               */
     if (pid == 0)
     {
         /* Log start of child process */
-        WRMSG (HHC01106, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, getpid(), getpid());
+        WRMSG (HHC01106, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, getpid());
 
         /* Close the write end of the pipe */
         close_pipe ( pipefd[1] );

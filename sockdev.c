@@ -473,7 +473,7 @@ int bind_device_ex (DEVBLK* dev, char* spec, ONCONNECT fn, void* arg )
 
     if (!(bs->spec = strdup(spec)))
     {
-        WRMSG (HHC01000, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "strdup()");
+        WRMSG (HHC01000, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "strdup()", strerror(errno) );
         free (bs);
         return 0;   /* (failure) */
     }

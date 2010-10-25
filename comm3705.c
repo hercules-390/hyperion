@@ -975,7 +975,7 @@ static void logdump(char *txt,DEVBLK *dev,BYTE *bfr,size_t sz)
         return;
     }
     WRMSG(HHC01048,"D",SSID_TO_LCSS(dev->ssid),dev->devnum,txt);
-    WRMSG(HHC01049,"D",SSID_TO_LCSS(dev->ssid),dev->devnum,txt,sz,sz);
+    WRMSG(HHC01049,"D",SSID_TO_LCSS(dev->ssid),dev->devnum,txt,(u_int)sz,(u_int)sz);
     buf[0] = 0;
     for(i=0;i<sz;i++)
     {

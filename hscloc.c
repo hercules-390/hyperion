@@ -209,21 +209,21 @@ int locate_regs(int argc, char *argv[], char *cmdline)
         char tlr[32];
         char blknam[32];
 
-        MSGBUF( blknam, "%-4.4s_%2.2s%02.02X", HDL_NAME_REGS, PTYPSTR( cpu ), cpu );
+        MSGBUF( blknam, "%-4.4s_%2.2s%2.2X", HDL_NAME_REGS, PTYPSTR( cpu ), cpu );
         MSGBUF( hdr, "%-16.16s", blknam );
         MSGBUF( tlr, "END%13.13s", blknam );
         
         /* verify head, tail, length and address */
         if ( loc != (U64)regs )
         {
-            MSGBUF( msgbuf, "REGS[%02.02X] moved; was 0x"I64_FMTX", is 0x%p", 
+            MSGBUF( msgbuf, "REGS[%2.2X] moved; was 0x"I64_FMTX", is 0x%p", 
                             cpu, loc, regs );
             WRMSG( HHC90000, "D", msgbuf );
             ok = FALSE;
         }
         if ( swap_byte_U32(sysblk.regs[cpu]->blksiz) != (U32)sizeof(REGS) )
         {
-            MSGBUF( msgbuf, "REGS[%02.02X] size wrong; is %u, should be %u", 
+            MSGBUF( msgbuf, "REGS[%2.2X] size wrong; is %u, should be %u", 
                             cpu, 
                             swap_byte_U32(sysblk.regs[cpu]->blksiz), 
                             (U32)sizeof(REGS));
@@ -240,7 +240,7 @@ int locate_regs(int argc, char *argv[], char *cmdline)
                 bzero( sstr, sizeof(sstr) );
                 memcpy( sstr, sysblk.regs[cpu]->blknam, sizeof(sysblk.regs[cpu]->blknam) );
 
-                MSGBUF( msgbuf, "REGS[%02.02X] header wrong; is %s, should be %s", 
+                MSGBUF( msgbuf, "REGS[%2.2X] header wrong; is %s, should be %s", 
                                 cpu, sstr, hdr);
                 WRMSG( HHC90000, "D", msgbuf );
                 ok = FALSE;
@@ -260,7 +260,7 @@ int locate_regs(int argc, char *argv[], char *cmdline)
                 bzero( sstr, sizeof(sstr) );
                 memcpy( sstr, sysblk.regs[cpu]->blkver, sizeof(sysblk.regs[cpu]->blkver) );
 
-                MSGBUF( msgbuf, "REGS[%02.02X] version wrong; is %s, should be %s", cpu, sstr, str);
+                MSGBUF( msgbuf, "REGS[%2.2X] version wrong; is %s, should be %s", cpu, sstr, str);
                 WRMSG( HHC90000, "D", msgbuf );
                 ok = FALSE;
             }
@@ -274,14 +274,14 @@ int locate_regs(int argc, char *argv[], char *cmdline)
 
                 memcpy( sstr, sysblk.regs[cpu]->blkend, sizeof(sysblk.regs[cpu]->blkend) );
 
-                MSGBUF( msgbuf, "REGS[%02.02X] trailer wrong; is %s, should be %s", 
+                MSGBUF( msgbuf, "REGS[%2.2X] trailer wrong; is %s, should be %s", 
                                 cpu, sstr, tlr);
                 WRMSG( HHC90000, "D", msgbuf );
                 ok = FALSE;
             }
         }
 
-        MSGBUF( msgbuf, "REGS[%02.02X] @ 0x%p - %sVerified", cpu, regs, ok ? "" : "Not " );
+        MSGBUF( msgbuf, "REGS[%2.2X] @ 0x%p - %sVerified", cpu, regs, ok ? "" : "Not " );
         WRMSG( HHC90000, "D", msgbuf );
     }
 

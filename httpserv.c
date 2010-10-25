@@ -1134,7 +1134,7 @@ int http_command(int argc, char *argv[])
     {
         if ( http_serv.httpport == 0 )
         {
-            WRMSG( HHC01808, "E", "valid");
+            WRMSG( HHC01815, "E", "not valid");
             rc = -1;
         }
         else
@@ -1172,7 +1172,7 @@ int http_command(int argc, char *argv[])
         }
         else 
         {
-            WRMSG( HHC01810, "I", "stopped" );
+            WRMSG( HHC01810, "I" );
             rc = 1;
         }
 
