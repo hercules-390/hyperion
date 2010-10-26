@@ -2508,7 +2508,7 @@ u_int i;
     }
 
     /* Process options */
-    for (i = 2; i < argc; i++)
+    for (i = 2; (int)i < argc; i++)
     {
         if (strcaseabbrev("lock", argv[i], 1))
             sysblk.lock_mainstor = 1;
@@ -2568,7 +2568,7 @@ u_int i;
     }
 
     /* Process options */
-    for (i = 2; i < argc; i++)
+    for (i = 2; (int)i < argc; i++)
     {
         if (strcaseabbrev("lock", argv[i], 1))
             sysblk.lock_xpndstor = 1;

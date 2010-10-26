@@ -808,6 +808,7 @@ do { \
 #define  MINMAX(_x,_y,_z)  ((_x) = MIN(MAX((_x),(_y)),(_z)))
 #endif /*!defined(MINMAX)*/
 
+
 #if !defined(round_to_hostpagesize)
 #define round_to_hostpagesize(_n) ((_n + getpagesize() - 1) & ~(getpagesize() - 1))
 #endif
@@ -878,6 +879,8 @@ typedef struct _CHAIN {                 /* Chain member definition   */
 
 #define QUEUE   CHAIN
 
+// Leave this out until types are resolved
+#if 0 
 
 /*-------------------------------------------------------------------*/
 /* Chain management inline routines                                  */
@@ -1152,5 +1155,5 @@ static __inline__ int strcaseabbrev(char *string, char *abbrev, u_int n)
 }
 
 #endif /* !defined(_extended_string_routines_) */
-
+#endif /* if 0 */
 #endif // _HMACROS_H
