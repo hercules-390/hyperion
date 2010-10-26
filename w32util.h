@@ -101,7 +101,7 @@ W32_DLL_IMPORT char* strtok_r ( char* s, const char* sep, char** lasts);
   (
     const char *dir,
     struct dirent ***namelist,
-    int (*filter)(const struct dirent *),
+    int (*filter)(      struct dirent *),
     int (*compar)(const struct dirent **, const struct dirent **)
   );
 #endif
