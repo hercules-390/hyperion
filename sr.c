@@ -1020,7 +1020,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != sizeof(ORB))
             {
-                WRMSG(HHC02017, "E", dev->devnum, "ORB", len, sizeof(ORB));
+                WRMSG(HHC02017, "E", dev->devnum, "ORB", len, (int)sizeof(ORB));
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->orb, len);
@@ -1030,7 +1030,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != sizeof(PMCW))
             {
-                WRMSG(HHC02017, "E", dev->devnum, "PMCW", len, sizeof(PMCW));
+                WRMSG(HHC02017, "E", dev->devnum, "PMCW", len, (int)sizeof(PMCW));
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->pmcw, len);
@@ -1040,7 +1040,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != sizeof(SCSW))
             {
-                WRMSG(HHC02017, "E", dev->devnum, "SCSW", len, sizeof(SCSW));
+                WRMSG(HHC02017, "E", dev->devnum, "SCSW", len, (int)sizeof(SCSW));
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->scsw, len);
@@ -1050,7 +1050,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != sizeof(SCSW))
             {
-                WRMSG(HHC02017, "E", dev->devnum, "PCI SCSW", len, sizeof(SCSW));
+                WRMSG(HHC02017, "E", dev->devnum, "PCI SCSW", len, (int)sizeof(SCSW));
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->pciscsw, len);
@@ -1060,7 +1060,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != sizeof(SCSW))
             {
-                WRMSG(HHC02017, "E", dev->devnum, "ATTN SCSW", len, sizeof(SCSW));
+                WRMSG(HHC02017, "E", dev->devnum, "ATTN SCSW", len, (int)sizeof(SCSW));
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->attnscsw, len);

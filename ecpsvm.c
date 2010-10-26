@@ -2719,7 +2719,7 @@ static void ecpsvm_showstats2(ECPSVM_STAT *ar,size_t count)
     }
     if(unsupcc)
     {
-        WRMSG(HHC01705,"I",unsupcc);
+        WRMSG(HHC01705,"I",(int)unsupcc);
     }
     return;
 }

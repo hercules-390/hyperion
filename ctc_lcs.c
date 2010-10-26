@@ -1215,7 +1215,7 @@ static void  LCS_Startup( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
     if (pLCSDEV->iMaxFrameBufferSize > sizeof(pLCSDEV->bFrameBuffer))
     {
         WRMSG(HHC00939, "W", SSID_TO_LCSS(pLCSDEV->pDEVBLK[1]->ssid), pLCSDEV->pDEVBLK[1]->devnum,
-                  pLCSDEV->iMaxFrameBufferSize,
+                  pLCSDEV->iMaxFrameBufferSize, "LCS", 
                   sizeof( pLCSDEV->bFrameBuffer ) );
         pLCSDEV->iMaxFrameBufferSize = sizeof(pLCSDEV->bFrameBuffer);
     }
@@ -1224,7 +1224,7 @@ static void  LCS_Startup( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
     if (pLCSDEV->iMaxFrameBufferSize < CTC_MIN_FRAME_BUFFER_SIZE)
     {
         WRMSG(HHC00939, "W", SSID_TO_LCSS(pLCSDEV->pDEVBLK[1]->ssid), pLCSDEV->pDEVBLK[1]->devnum,
-                  pLCSDEV->iMaxFrameBufferSize,
+                  pLCSDEV->iMaxFrameBufferSize, "LCS", 
                   CTC_MIN_FRAME_BUFFER_SIZE );
         pLCSDEV->iMaxFrameBufferSize = sizeof(pLCSDEV->bFrameBuffer);
     }
@@ -2472,7 +2472,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
                         if( inet_aton( pszIPAddress, &addr ) == 0 )
                         {
-                            WRMSG(HHC00957, "E", pszOATName, szBuff, "IP address", pszIPAddress );
+                            WRMSG(HHC00957, "E", pszOATName, "IP address", pszIPAddress );
                             return -1;
                         }
 

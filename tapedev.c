@@ -1603,7 +1603,7 @@ void ReqAutoMount( DEVBLK *dev )
     char   volser[7];
     BYTE   tapeloaded, autoload, mountreq, unmountreq, stdlbled, ascii, scratch;
     char*  lbltype;
-    char*  tapemsg = "";
+    char*  tapemsg = "                  ";
 
     ///////////////////////////////////////////////////////////////////
 

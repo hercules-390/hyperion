@@ -431,7 +431,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
                           }
                           else
                           {
-                             WRMSG(HHC02307,"W", argv[0], recno, aarel);
+                             WRMSG(HHC02307,"W", argv[0], recno, (RADR)aarel);
                              rc = 4;
                           }
                        }
@@ -493,7 +493,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
 
                     if (aaddr >= sysblk.mainsize)
                     {
-                        WRMSG(HHC02307,"W", argv[0], recno, aaddr);
+                        WRMSG(HHC02307,"W", argv[0], recno, (RADR)aaddr);
                         rc = 4;
                     }
                 }

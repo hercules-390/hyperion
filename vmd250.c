@@ -92,7 +92,7 @@
 #include "opcode.h"
 #include "inline.h"
 #include "vmd250.h"
-
+#define FEATURE_VM_BLOCKIO
 #if defined(FEATURE_VM_BLOCKIO)
 
 #if !defined(_VMD250_C)

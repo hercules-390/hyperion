@@ -1082,7 +1082,7 @@ cpu.c:123:HABC1234I This is a message
 
 /* vmd250.c */
 #define HHC01905 "%04X triggered block I/O interrupt: code %4.4X parm "I64_FMTX" status %2.2X subcode %2.2X"
-#define HHC01906 "%04X d250_init32 s %"I64_FMT"i o %i b %"I64_FMT"i e %"I64_FMT"i"
+#define HHC01906 "%04X d250_init32 s %i o %"I64_FMT"i b %"I64_FMT"i e %"I64_FMT"i"
 #define HHC01907 "%04X d250_init BLKTAB: type %4.4X arch %i 512 %i 1024 %i 2048 %i 4096 %i"
 #define HHC01908 "Error in function '%s': '%s'"
 #define HHC01909 "%04X d250_preserve pending sense preserved"

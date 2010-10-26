@@ -447,6 +447,7 @@ DLL_EXPORT const char *get_symbol(const char *sym)
     return(tok->val);
 }
 
+#if 0
 static void buffer_addchar_and_alloc(char **bfr,char c,int *ix_p,int *max_p)
 {
     char *buf;
@@ -474,6 +475,7 @@ static void buffer_addchar_and_alloc(char **bfr,char c,int *ix_p,int *max_p)
     *ix_p=ix;
     return;
 }
+#endif
 
 #if 0
 static void append_string(char **bfr,char *text,int *ix_p,int *max_p)
