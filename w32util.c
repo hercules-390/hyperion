@@ -3463,4 +3463,49 @@ DLL_EXPORT char*  w32_strcasestr( const char* haystack, const char* needle )
     }  
     return NULL;  
 }
+
+DLL_EXPORT unsigned long w32_getpagesize(void)
+{
+    static long g_pagesize = 0 ;
+    if (! g_pagesize)
+    {
+        SYSTEM_INFO system_info ;
+        GetSystemInfo(&system_info) ;
+        g_pagesize = system_info.dwPageSize ;
+    }
+    return (unsigned long) g_pagesize ;
+}
+
+DLL_EXPORT int w32_mlock( void *addr, size_t len)
+{
+    int rc = VirtualLock(addr, len);
+    if ( rc == 0 ) 
+        rc = -1;
+    else
+        rc = 0;
+    return rc;
+}
+
+DLL_EXPORT int w32_munlock( void *addr, size_t len)
+{
+    int rc = VirtualUnlock(addr, len);
+    if ( rc == 0 ) 
+        rc = -1;
+    else
+        rc = 0;
+    return rc;
+}
+
+DLL_EXPORT void * w32_valloc( size_t bytes )
+{
+long pagesize;
+void *ret;
+
+    pagesize = getpagesize ();
+    ret = malloc (bytes + pagesize - 1);
+    if (ret)
+        ret = (void *)((long)((u_char)ret + pagesize - 1) &~ (pagesize - 1));
+    return ret;
+
+}
 #endif // defined( _MSVC_ )

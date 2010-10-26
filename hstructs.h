@@ -394,7 +394,7 @@ struct REGS {                           /* Processor registers       */
         unsigned int tlbID;             /* Validation identifier     */
         TLB     tlb;                    /* Translation lookaside buf */
         BYTE    blkend[16];             /* Name of block  END        */
-        
+
 };
 
 /*-------------------------------------------------------------------*/
@@ -438,7 +438,7 @@ struct SYSBLK {
         BYTE    blkver[8];              /* Version Number            */
         U64     blkloc;                 /* Address of block    big-e */
         U32     blksiz;                 /* size of block       big-e */
-        char   *hercules_pgmname;       /* Starting program name     */ 
+        char   *hercules_pgmname;       /* Starting program name     */
         char   *hercules_pgmpath;       /* Starting pgm path name    */
         char   *hercules_cmdline;       /* Hercules Command line     */
         pid_t   hercules_pid;           /* Process Id of Hercules    */
@@ -450,11 +450,13 @@ struct SYSBLK {
         RADR    mainsize;               /* Main storage size (bytes) */
         BYTE   *mainstor;               /* -> Main storage           */
         BYTE   *storkeys;               /* -> Main storage key array */
+        int     lock_mainstor:1;        /* Lock main storage         */
         U32     xpndsize;               /* Expanded size (4K pages)  */
         BYTE   *xpndstor;               /* -> Expanded storage       */
+        int     lock_xpndstor:1;        /* Lock expanded storage     */
         U64     todstart;               /* Time of initialisation    */
         U64     cpuid;                  /* CPU identifier for STIDP  */
-        BYTE    cpuidfmt;               /* STIDP format 0|1          */ 
+        BYTE    cpuidfmt;               /* STIDP format 0|1          */
         TID     impltid;                /* Thread-id for main progr. */
         TID     wdtid;                  /* Thread-id for watchdog    */
         U16     lparnuml;               /* #digits (0-2) in lparnum  */
@@ -491,7 +493,7 @@ struct SYSBLK {
         /* Active Facility List */
         BYTE    facility_list[GEN_MAXARCH][STFL_HBYTESIZE];
 
-     /* CPU Measurement Counter facility 
+     /* CPU Measurement Counter facility
         CPU Measurement Sampling facility
         Load Program Parameter facility */
         BYTE    program_parameter[8];   /* Program Parameter Register*/
@@ -556,12 +558,12 @@ struct SYSBLK {
 #define SYSGROUP_SYSNONE     0x08     /* Command valid with no group */
 #define SYSGROUP_SYSCONFIG   0x10     /* System Configuration Funcs  */
 #define SYSGROUP_SYSDEVEL    0x20     /* Developer functions         */
-#define SYSGROUP_SYSDEBUG    0x40     /* Internal Debug functions    */ 
+#define SYSGROUP_SYSDEBUG    0x40     /* Internal Debug functions    */
 #define SYSGROUP_SYSNDIAG    0x80     /* Not supported by DIAG008    */
 #define SYSGROUP_SYSALL      0x7F
         BYTE    diag8cmd;               /* Allow diagnose 8 commands */
 #define DIAG8CMD_ENABLE   0x01          /* Enable DIAG8 interface    */
-#define DIAG8CMD_RUNNING  0x40          /* Indicate DIAG8 in process */ 
+#define DIAG8CMD_RUNNING  0x40          /* Indicate DIAG8 in process */
 #define DIAG8CMD_ECHO     0x80          /* Echo command to console   */
         BYTE    shcmdopt;               /* 'sh'ell command option    */
 #define SHCMDOPT_ENABLE   0x01          /* Globally enable 'sh' cmd  */
@@ -572,11 +574,20 @@ struct SYSBLK {
 #if defined(OPTION_HAO)
         TID     haotid;                 /* Herc Auto-Oper thread-id  */
 #endif /* defined(OPTION_HAO) */
-#if defined(OPTION_SCSI_TAPE)
-        int     auto_scsi_mount_secs;   /* Check for SCSI tape mount
-                                           frequency; 0 == disabled  */
-#define DEFAULT_AUTO_SCSI_MOUNT_SECS  (5)
-#endif
+
+
+        /*-----------------------------------------------------------*/
+        /*      Control Units                                        */
+        /*-----------------------------------------------------------*/
+
+        U16     cuhigh;                 /* Highest used CU number    */
+       CHAINBLK cuchain;                /* -> CU chain               */
+
+
+        /*-----------------------------------------------------------*/
+        /*      Devices                                              */
+        /*-----------------------------------------------------------*/
+
         DEVBLK *firstdev;               /* -> First device block     */
         DEVBLK *sysgdev;                /* -> devblk for SYSG console*/
 #if defined(OPTION_FAST_DEVLOOKUP)
@@ -588,6 +599,12 @@ struct SYSBLK {
         U16     highsubchan[FEATURE_LCSS_MAX];  /* Highest subchan+1 */
         BYTE    dasdcache:1;            /* 0 = system cache off
                                            1 = system cache on       */
+
+
+        /*-----------------------------------------------------------*/
+        /*      I/O Management                                       */
+        /*-----------------------------------------------------------*/
+
         U32     chp_reset[8];           /* Channel path reset masks  */
         IOINT  *iointq;                 /* I/O interrupt queue       */
 #if !defined(OPTION_FISHIO)
@@ -609,10 +626,21 @@ struct SYSBLK {
         DEVBLK  *biodev;                /* Block I/O device          */
         /* Note: biodev is only used to detect BIO interrupt tracing */
 #endif /* defined(FEATURE_VM_BLOCKIO) */
+#if defined(OPTION_SCSI_TAPE)
+        int     auto_scsi_mount_secs;   /* Check for SCSI tape mount
+                                           frequency; 0 == disabled  */
+#define DEFAULT_AUTO_SCSI_MOUNT_SECS  (5)
+#endif
+#if defined( OPTION_TAPE_AUTOMOUNT )
+        TAMDIR *tamdir;                 /* Acc/Rej AUTOMOUNT dir ctl */
+        char   *defdir;                 /* Default AUTOMOUNT dir     */
+#endif
+
+
         U32     servparm;               /* Service signal parameter  */
         unsigned int                    /* Flags                     */
-                config_done:1,          /* 1 = config complete       */ 
-                sys_reset:1,            /* 1 = system in reset state */ 
+                config_done:1,          /* 1 = config complete       */
+                sys_reset:1,            /* 1 = system in reset state */
                 daemon_mode:1,          /* Daemon mode active        */
                 panel_init:1,           /* Panel display initialized */
                 npquiet:1,              /* New Panel quiet indicator */
@@ -667,10 +695,6 @@ struct SYSBLK {
         int     srvprio;                /* Listeners thread priority */
         TID     httptid;                /* HTTP listener thread id   */
 
-#if defined( OPTION_TAPE_AUTOMOUNT )
-        TAMDIR *tamdir;                 /* Acc/Rej AUTOMOUNT dir ctl */
-        char   *defdir;                 /* Default AUTOMOUNT dir     */
-#endif
      /* Fields used by SYNCHRONIZE_CPUS */
         int     syncing;                /* 1=Sync in progress        */
         CPU_BITMAP sync_mask;           /* CPU mask for syncing CPUs */
@@ -778,7 +802,7 @@ struct SYSBLK {
 #define MLVL_NORMAL  0x01
 #define MLVL_VERBOSE 0x02
 #define MLVL_DEBUG   0x80               /* bits */
-#define MLVL_ANY     0xff               
+#define MLVL_ANY     0xff
 
         int     emsg;                   /* error message display ctrl*/
 #define EMSG_ON     0x01
@@ -816,6 +840,37 @@ struct IOINT {                          /* I/O interrupt queue entry */
 };
 
 /*-------------------------------------------------------------------*/
+/* Control Unit configuration block                                  */
+/*-------------------------------------------------------------------*/
+
+typedef struct _CUBLK {                 /* CU configuration block    */
+        CHAIN   chain;                  /* Block chain               */
+        U16     cunum;                  /* CU number                 */
+        void   *cudesc;                 /* CU descriptor             */
+        U8      maxssid;                /* Maximum number of SSIDs   */
+        U8      ssidcount;              /* Number of associated SSID */
+       CHAINBLK sschain;                /* Associated SSIDs          */
+        U16     maxdev;                 /* Maximum associated dev    */
+        U16     devcount;               /* Number of associated dev  */
+} CUBLK;
+
+/*-------------------------------------------------------------------*/
+/* Subsystem ID configuration block                                  */
+/*-------------------------------------------------------------------*/
+
+typedef struct _SSBLK {                 /* Subsystem ID block        */
+        CHAIN   chain;                  /* Block chain               */
+        CUBLK  *cu;                     /* Owning CU                 */
+        U16     ssid;                   /* Subsystem ID (if present) */
+        LOCK    lock;                   /* Update lock               */
+        void   *cudesc;                 /* CU descriptor             */
+        U16     maxdev;                 /* Maximum associated dev    */
+        U8      devcount;               /* Number of associated dev  */
+        DEVBLK *dev[256];               /* Associated devblocks      */
+        void   *stats;                  /* Associated statistics     */
+} SSBLK;
+
+/*-------------------------------------------------------------------*/
 /* Device configuration block                                        */
 /*-------------------------------------------------------------------*/
 struct DEVBLK {                         /* Device configuration block*/
@@ -833,8 +888,8 @@ struct DEVBLK {                         /* Device configuration block*/
         int     allocated;              /* Device block free/in use  */
 
         /*  device identification                                    */
-        void   *cu;                     /* pointer to future control
-                                           unit support for stats,etc*/
+        CUBLK  *cu;                     /* -> Control Unit block     */
+        SSBLK  *ssidblk;                /* -> Subsystem ID block     */
         U16     ssid;                   /* Subsystem ID incl. lcssid */
         U16     subchan;                /* Subchannel number         */
         U16     devnum;                 /* Device number             */
@@ -966,7 +1021,7 @@ struct DEVBLK {                         /* Device configuration block*/
 #define DEV_SYS_NONE    0               /* No active system on device*/
 #define DEV_SYS_LOCAL   0xffff          /* Local system active on dev*/
         BYTE    drvpwd[11];             /* Password for drive        */
-        BYTE    reserved3;              /* (pad/align/unused/avail)  */
+        BYTE    sensemm[5];             /* Manuf. & model for sense  */
 
         /*  control flags...                                         */
         unsigned int                    /* Flags                     */
@@ -1115,11 +1170,11 @@ struct DEVBLK {                         /* Device configuration block*/
         int     optbrowse;              /* optimize for browse  1    */
                                         /* optimize for print   0    */
 
-        int     lpi;                    /* lines per inch 6/8        */  
-        int     index;                  /* 3211 indexing             */  
+        int     lpi;                    /* lines per inch 6/8        */
+        int     index;                  /* 3211 indexing             */
         int     lpp;                    /* lines per page            */
-        int     ffchan ;                /* ff when skip here         */  
-#define FCBSIZE 256         
+        int     ffchan ;                /* ff when skip here         */
+#define FCBSIZE 256
         int     fcb[FCBSIZE+1];         /* FCB image                 */
         int     fcbisdef;               /* FCB is default            */
 
@@ -1348,6 +1403,8 @@ struct DEVBLK {                         /* Device configuration block*/
                                         /* Line above ISW20030819-1  */
         u_int   ckdfakewr:1;            /* 1=Fake successful write
                                              for read only file      */
+        BYTE    ckdnvs:1;               /* 1=NVS defined             */
+        BYTE    ckdraid:1;              /* 1=RAID device             */
         U16     ckdssdlen;              /* #of bytes of data prepared
                                            for Read Subsystem Data   */
         BYTE    blkend[16];             /* eye-end                   */

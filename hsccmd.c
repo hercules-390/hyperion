@@ -18,10 +18,10 @@
 /* near the end of this module.                                      */
 /*-------------------------------------------------------------------*/
 
-/* HSCCMD.C has been split into 
+/* HSCCMD.C has been split into
  *          hscemode.c          - cpu trace and display commands
  *          hscpufun.c          - cpu functions like ipl, reset
- *          hscloc.c            - locate command 
+ *          hscloc.c            - locate command
  *          loadmem.c           - load core and load text
  */
 
@@ -2383,7 +2383,7 @@ BYTE    c;
             }
         }
 
-        configure_epoch(sysepoch);  
+        configure_epoch(sysepoch);
         configure_yroffset(yroffset);
 
         break;
@@ -2487,17 +2487,11 @@ int mainsize_cmd(int argc, char *argv[], char *cmdline)
 U32 mainsize;
 BYTE c;
 int rc;
+u_int i;
 
     UNREFERENCED(cmdline);
 
-    /* Validate argument count */
-    if ( argc > 2 )
-    {
-        WRMSG( HHC01455, "E", argv[0] );
-        return -1;
-    }
-
-    if ( argc == 1 )
+    if ( argc < 2 )
     {
         char *q_argv[2] = { "qstor", "main" };
         return qstor_cmd( 2, q_argv, "qstor main" );
@@ -2511,6 +2505,20 @@ int rc;
     {
         WRMSG( HHC01451, "E", argv[1], argv[0] );
         return -1;
+    }
+
+    /* Process options */
+    for (i = 2; i < argc; i++)
+    {
+        if (strcaseabbrev("lock", argv[i], 1))
+            sysblk.lock_mainstor = 1;
+        else if (strcaseabbrev("nolock", argv[i], 3))
+            sysblk.lock_mainstor = 0;
+        else
+        {
+            WRMSG( HHC01451, "E", argv[i], argv[0] );
+            return -1;
+        }
     }
 
     /* Update main storage size */
@@ -2540,15 +2548,9 @@ int xpndsize_cmd(int argc, char *argv[], char *cmdline)
 U32 xpndsize;
 BYTE c;
 int rc;
+u_int i;
 
     UNREFERENCED(cmdline);
-
-    /* Validate argument count */
-    if ( argc > 2 )
-    {
-        WRMSG( HHC01455, "E", argv[0] );
-        return  -1;
-    }
 
     if ( argc == 1 )
     {
@@ -2563,6 +2565,20 @@ int rc;
     {
         WRMSG( HHC01451, "E", argv[1], argv[0] );
         return -1;
+    }
+
+    /* Process options */
+    for (i = 2; i < argc; i++)
+    {
+        if (strcaseabbrev("lock", argv[i], 1))
+            sysblk.lock_xpndstor = 1;
+        else if (strcaseabbrev("nolock", argv[i], 3))
+            sysblk.lock_xpndstor = 0;
+        else
+        {
+            WRMSG( HHC01451, "E", argv[i], argv[0] );
+            return -1;
+        }
     }
 
     rc = configure_xstorage(xpndsize);
@@ -2675,7 +2691,7 @@ BYTE c;
                     if ( tid == 0 ) continue; // the mask check should prevent this.
 
                     curprio = getpriority(PRIO_PROCESS, tid );
-                    
+
                     if ( curprio == cpuprio ) continue;
 
                     rc = setpriority( PRIO_PROCESS, tid, cpuprio );
@@ -2785,14 +2801,14 @@ BYTE c;
 #if 0
             /* Set root mode in order to set priority */
             SETMODE(ROOT);
-            
+
             for(;;)
             {
                 S32 curprio;
                 TID tid = sysblk.todtid;
                 int rc;
-                
-                if ( tid == 0 ) 
+
+                if ( tid == 0 )
                     break;
 
                 curprio = getpriority(PRIO_PROCESS, tid );
@@ -2810,7 +2826,7 @@ BYTE c;
                 }
                 break;
             }
-            
+
             /* Back to user mode */
             SETMODE(USER);
 #endif
@@ -2849,7 +2865,7 @@ BYTE c;
             char *tname[3]  = { "HTTP server",  "Console connection",   NULL };
             TID tid[3]      = { sysblk.httptid, sysblk.cnsltid,         0 };
             int i;
-#endif   
+#endif
             configure_srv_priority(srvprio);
             if (MLVL(VERBOSE))
                 WRMSG( HHC02204, "I", argv[0], argv[1] );
@@ -2861,8 +2877,8 @@ BYTE c;
             {
                 S32 curprio;
                 int rc;
-                
-                if ( tid[i] == 0 ) 
+
+                if ( tid[i] == 0 )
                     continue;
 
                 curprio = tid[i] == 0 ? 0: getpriority(PRIO_PROCESS, tid[i] );
@@ -2879,7 +2895,7 @@ BYTE c;
                         WRMSG( HHC00136, "W", "setpriority()", strerror(errno));
                 }
             }
-            
+
             /* Back to user mode */
             SETMODE(USER);
 #endif
@@ -3022,13 +3038,13 @@ BYTE c;
         WRMSG( HHC01455, "E", argv[0] );
         return -1;
     }
-    
+
     if ( argc == 1 )
     {
         char msgbuf[32];
 
         MSGBUF(msgbuf, "%d", sysblk.maxcpu);
-        WRMSG( HHC02203, "I", argv[0], msgbuf ); 
+        WRMSG( HHC02203, "I", argv[0], msgbuf );
         if ( sysblk.maxcpu == 0 )
             return 1;
         else
@@ -5117,7 +5133,7 @@ int ostailor_cmd(int argc, char *argv[], char *cmdline)
 int k_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
-    
+
     if ( argc > 1 )
     {
         WRMSG( HHC02299, "E", argv[0] );
@@ -6842,10 +6858,10 @@ int cache_cmd(int argc, char *argv[], char *cmdline)
     int rc = 0;
 
     UNREFERENCED(cmdline);
-    
+
     if ( ( argc == 3 || argc == 4 ) && CMD(argv[1],dasd,2) && CMD(argv[2],system,3) )
     {
-        if ( argc == 4) 
+        if ( argc == 4)
         {
             if ( CMD(argv[3],on,2) )
                 sysblk.dasdcache = TRUE;
@@ -7077,7 +7093,7 @@ int qports_cmd(int argc, char *argv[], char *cmdline)
         WRMSG( HHC17000, "E" );
         return -1;
     }
-    
+
     MSGBUF( buf, "on port %s with %s", http_get_port(), http_get_portauth());
     WRMSG(HHC17001, "I", "HTTP", buf);
 

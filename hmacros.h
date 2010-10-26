@@ -78,8 +78,12 @@
   #define  fclose               w32_fclose
   #define  basename             w32_basename
   #define  dirname              w32_dirname
+  #define  getpagesize          w32_getpagesize
+  #define  mlock                w32_mlock
+  #define  munlock              w32_munlock
+  #define  valloc               w32_valloc
 #ifndef strcasestr
-  #define  strcasestr           w32_strcasestr 
+  #define  strcasestr           w32_strcasestr
 #endif
 #endif
 
@@ -199,8 +203,20 @@
                             strlen( str ) <= strlen(#cmd) && \
                             !strncasecmp( str, #cmd, strlen( str ) ) )
 
-#define  NCMP(_lvar,_rvar,_svar) ( !memcmp( _lvar, _rvar, _svar ) ) 
+#define  NCMP(_lvar,_rvar,_svar) ( !memcmp( _lvar, _rvar, _svar ) )
 #define  SNCMP(_lvar,_rvar,_svar) ( !strncasecmp( _lvar, _rvar, _svar ) )
+
+/*-------------------------------------------------------------------*/
+/* Macros for allocate storage functions                             */
+/*-------------------------------------------------------------------*/
+#if defined(_MSVC_)
+  #define PVALLOC     w32_valloc
+  #define VALLOC      w32_valloc
+#else
+  #define PVALLOC     pvalloc
+  #define VALLOC      valloc
+#endif
+
 
 /*-------------------------------------------------------------------*/
 /* Macro for Debugging / Tracing...                                  */
@@ -791,5 +807,350 @@ do { \
 #if !defined(MINMAX)
 #define  MINMAX(_x,_y,_z)  ((_x) = MIN(MAX((_x),(_y)),(_z)))
 #endif /*!defined(MINMAX)*/
+
+#if !defined(round_to_hostpagesize)
+#define round_to_hostpagesize(_n) ((_n + getpagesize() - 1) & ~(getpagesize() - 1))
+#endif
+
+
+/* chain.h      (c) Mark L. Gaubatz, 1985-2010                       */
+/*              Chain and queue macros and inline routines           */
+/*              Adapted for use by Hercules                          */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
+#if !defined(_chain_routines_)
+#define _chain_routines_
+
+/*-------------------------------------------------------------------*/
+/* Chain macros for inline routines                                  */
+/*-------------------------------------------------------------------*/
+
+#define anchor_id "ANCHOR->"
+#define aeyesize 8
+#define eyesize 8
+#define raise_chain_validation_error                                   \
+    raise (SIGSEGV);
+#define chain_validate_pointer(_arg)                                   \
+    if (_arg == 0 || _arg == NULL)                                     \
+        raise_chain_validation_error;
+
+
+/*-------------------------------------------------------------------*/
+/* Chain Block                                                       */
+/*-------------------------------------------------------------------*/
+
+typedef struct _CHAINBLK {              /* Chain definition block    */
+        char    anchoreye[aeyesize];    /* Anchor identifier         */
+        char    eyecatcher[eyesize];    /* Eyecatcher to check       */
+        void   *first;                  /* First entry pointer       */
+        void   *last;                   /* Last entry pointer        */
+        int     offset;                 /* Offset to container start */
+        LOCK    lock;                   /* Lock for chain            */
+} CHAINBLK;
+
+
+/*-------------------------------------------------------------------*/
+/* Queue Block                                                       */
+/*-------------------------------------------------------------------*/
+
+#define QUEUEBLK CHAINBLK
+
+
+/*-------------------------------------------------------------------*/
+/* Chain                                                             */
+/*-------------------------------------------------------------------*/
+
+typedef struct _CHAIN {                 /* Chain member definition   */
+        char      eyecatcher[eyesize];  /* Eyecatcher to check       */
+        void     *prev;                 /* -> previous chain entry   */
+        void     *next;                 /* -> next chain entry       */
+        int       offset;               /* Offset to container start */
+        CHAINBLK *anchor;               /* -> owning CHAINBLK        */
+} CHAIN;
+
+
+/*-------------------------------------------------------------------*/
+/* Queue                                                             */
+/*-------------------------------------------------------------------*/
+
+#define QUEUE   CHAIN
+
+
+/*-------------------------------------------------------------------*/
+/* Chain management inline routines                                  */
+/*-------------------------------------------------------------------*/
+
+static __inline__ CHAINBLK *chain_validate_entry_header(CHAIN *entry)
+{
+    CHAINBLK *anchor;
+
+    /* Ensure valid entry pointers */
+    chain_validate_pointer(entry);
+    chain_validate_pointer(entry->anchor);
+
+    /* Set anchor */
+    anchor = entry->anchor;
+
+    /* Make sure this is the anchor for a chain */
+    if (memcmp(anchor->anchoreye, anchor_id, aeyesize) != 0)
+        raise_chain_validation_error;
+
+    /* Validate eyecatchers (optimization matches gcc optimization) */
+    {
+        register u_int i = 0;
+        register char *a = anchor->eyecatcher;
+        register char *e = entry->eyecatcher;
+        for (i = 0; i < eyesize; i++)
+            if (a[i] < 0x20 || a[i] > 0x7E)
+                raise_chain_validation_error;
+        for (i = 0; i < eyesize; i++)
+            if (e[i] < 0x20 || e[i] > 0x7E)
+                raise_chain_validation_error;
+        for (i = 0; i < eyesize; i++)
+            if (a[i] != e[i])
+                raise_chain_validation_error;
+    }
+    return anchor;
+}
+
+static __inline__ void chain_init_anchor(void *container, CHAINBLK *anchor, char *eyecatcher)
+{
+    register u_int i = 0;
+    chain_validate_pointer(container);
+    chain_validate_pointer(anchor);
+    chain_validate_pointer(eyecatcher);
+    memcpy(anchor->anchoreye, anchor_id, aeyesize);
+    for (; i < eyesize && eyecatcher[i] != 0x00; i++)
+         anchor->eyecatcher[i] = eyecatcher[i];
+    if (!i)
+        raise_chain_validation_error;
+    for (; i < eyesize; i++)
+         anchor->eyecatcher[i] = ' ';
+    anchor->offset = (int) container - (int) anchor;
+    anchor->first = anchor->last = 0;
+    initialize_lock(&anchor->lock);
+}
+
+static __inline__ void chain_init_entry(CHAINBLK *anchor, void *container, CHAIN *entry)
+{
+    chain_validate_pointer(container);
+    chain_validate_pointer(anchor);
+    chain_validate_pointer(entry);
+    memcpy(&entry->eyecatcher, &anchor->eyecatcher, eyesize);
+    entry->prev = entry->next = 0;
+    entry->offset = (int) container - (int) entry;
+    entry->anchor = anchor;
+}
+
+
+static __inline__ void chain_first(CHAIN *entry)
+{
+    register CHAINBLK *anchor = chain_validate_entry_header(entry);
+    if (anchor->first == NULL)
+        anchor->first = anchor->last = (u_char *)entry + entry->offset;
+    else
+    {
+        entry->prev = anchor->first;
+        anchor->first = (u_char *)entry + entry->offset;
+    }
+}
+
+static __inline__ void chain_first_locked(CHAIN *entry)
+{
+    register CHAINBLK *anchor = chain_validate_entry_header(entry);
+    obtain_lock(&anchor->lock);
+    chain_first(entry);
+    release_lock(&anchor->lock);
+}
+
+static __inline__ void chain_last(CHAIN *entry)
+{
+    register CHAINBLK *anchor = chain_validate_entry_header(entry);
+    if (anchor->first == NULL)
+        anchor->first = anchor->last = (u_char *)entry + entry->offset;
+    else
+    {
+        entry->prev = anchor->last;
+        anchor->last = (u_char *)entry + entry->offset;
+    }
+}
+
+static __inline__ void chain_last_locked(CHAIN *entry)
+{
+    register CHAINBLK *anchor = chain_validate_entry_header(entry);
+    obtain_lock(&anchor->lock);
+    chain_last(entry);
+    release_lock(&anchor->lock);
+}
+
+static __inline__ void unchain(CHAIN *entry)
+{
+    register CHAINBLK *anchor = chain_validate_entry_header(entry);
+    if (entry->prev)
+    {
+        CHAIN *t = (void *)((u_char *)entry->prev + entry->offset);
+        t->next = entry->next;
+    }
+    else
+        anchor->first = entry->next;
+
+    if (entry->next)
+    {
+        CHAIN *t = (void *)((u_char *)entry->next + entry->offset);
+        t->prev = entry->prev;
+    }
+    else
+        anchor->last = entry->prev;
+
+    entry->prev = entry->next = 0;
+}
+
+static __inline__ CHAIN *unchain_first(CHAINBLK *anchor)
+{
+    register CHAIN *entry = anchor->first;
+    if (!entry)
+        return 0;
+    unchain(entry);
+    return entry;
+}
+
+static __inline__ CHAIN *unchain_first_locked(CHAINBLK *anchor)
+{
+    register CHAIN *entry = anchor->first;
+    if (!entry)
+        return 0;
+    obtain_lock(&anchor->lock);
+    entry = anchor->first;
+    if (entry)
+        unchain(entry);
+    release_lock(&anchor->lock);
+    return entry;
+}
+
+static __inline__ CHAIN *unchain_last(CHAINBLK *anchor)
+{
+    register CHAIN *entry = anchor->last;
+    if (!entry)
+        return 0;
+    unchain(entry);
+    return entry;
+}
+
+static __inline__ CHAIN *unchain_last_locked(CHAINBLK *anchor)
+{
+    register CHAIN *entry = anchor->last;
+    if (!entry)
+        return 0;
+    obtain_lock(&anchor->lock);
+    entry = anchor->first;
+    if (entry)
+        unchain(entry);
+    release_lock(&anchor->lock);
+    return entry;
+}
+
+static __inline__ void unchain_locked(CHAIN *entry)
+{
+    register CHAINBLK *anchor = chain_validate_entry_header(entry);
+    obtain_lock(&anchor->lock);
+    unchain(entry);
+    release_lock(&anchor->lock);
+}
+
+
+#define queue_init_anchor       chain_init_anchor
+#define queue_init_entry        chain_init_entry
+#define queue_lifo              chain_first
+#define queue_fifo              chain_last
+#define queue                   chain_last
+
+#define dequeue_locked          unchain_first_locked
+#define dequeue                 unchain_first
+
+#define chain_locked            chain_last_locked
+#define chain                   chain_last
+
+#undef chain_validate_pointer
+#undef raise_chain_validation_error
+#undef eyesize
+#undef aeyesize
+#undef anchor_id
+
+#endif /*!defined(_chain_routines_)*/
+
+
+/* extstring.h  (c) Mark L. Gaubatz, 1985-2010                       */
+/*              Extended string handling routines                    */
+/*              Adapted for use by Hercules                          */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
+#if !defined(_extended_string_routines_)
+#define _extended_string_routines_
+
+/*-------------------------------------------------------------------*/
+/* strabbrev(&string,&abbrev,n)     - Check for abbreviation         */
+/* strcaseabbrev(&string,&abbrev,n) - (caseless)                     */
+/*                                                                   */
+/* Returns:                                                          */
+/*                                                                   */
+/*   1     if abbrev is a truncation of string of at least n         */
+/*         characters. For example, strabbrev("hercules", "herc",    */
+/*         2) returns 1.                                             */
+/*                                                                   */
+/*   0     if abbrev is not a trunction of string of at least        */
+/*         n characters. For example, strabbrev("hercules",          */
+/*         "herculean", 2) returns 0.                                */
+/*                                                                   */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+static __inline__ int strabbrev(char *string, char *abbrev, u_int n)
+{
+        register u_int i;
+        if (abbrev[0] == 0x00)
+            return 0;
+        if (string[0] == 0x00)
+            return 0;
+        if (abbrev[0] != string[0])
+            return 0;
+        for (i = 1; ; i++)
+        {
+            if (abbrev[i] == 0x00)
+                break;
+            if (string[i] == 0x00)
+                return 0;
+            if (abbrev[i] != string[i])
+                return 0;
+        }
+        return (i >= n);
+}
+
+static __inline__ int strcaseabbrev(char *string, char *abbrev, u_int n)
+{
+        register u_int i;
+        if (abbrev[0] == 0x00)
+            return 0;
+        if (string[0] == 0x00)
+            return 0;
+        if (toupper(abbrev[0]) != toupper(string[0]))
+            return 0;
+        for (i = 1; ; i++)
+        {
+            if (abbrev[i] == 0x00)
+                break;
+            if (string[i] == 0x00)
+                return 0;
+            if (toupper(abbrev[i]) != toupper(string[i]))
+                return 0;
+        }
+        return (i >= n);
+}
+
+#endif /* !defined(_extended_string_routines_) */
 
 #endif // _HMACROS_H
