@@ -62,7 +62,7 @@ int     i;                              /* Array subscript           */
 
     if (strlen(argv[0]) >= sizeof(dev->filename))
     {
-        WRMSG (HHC01201, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[0], sizeof(dev->filename) - 1);
+        WRMSG (HHC01201, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[0], (int)sizeof(dev->filename) - 1);
         return -1;
     }
 

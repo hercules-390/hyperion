@@ -259,21 +259,21 @@ cpu.c:123:HABC1234I This is a message
 
 // reserve 002xx for tape device related
 #define HHC00201 "%1d:%04X Tape file '%s', type '%s': tape closed"
-#define HHC00202 "%1d:%04X Tape file '%s', type '%s': block length %d exceeds maximum at offset "I64_FMTX
-#define HHC00203 "%1d:%04X Tape file '%s', type '%s': invalid tapemark at offset "I64_FMTX
-#define HHC00204 "%1d:%04X Tape file '%s', type '%s': error in function '%s', offset "I64_FMTX": '%s'"
+#define HHC00202 "%1d:%04X Tape file '%s', type '%s': block length %d exceeds maximum at offset 0x"I32_FMTX""
+#define HHC00203 "%1d:%04X Tape file '%s', type '%s': invalid tapemark at offset 0x"I32_FMTX""
+#define HHC00204 "%1d:%04X Tape file '%s', type '%s': error in function '%s', offset 0x"I32_FMTX": '%s'"
 #define HHC00205 "%1d:%04X Tape file '%s', type '%s': error in function '%s': '%s'"
 #define HHC00206 "%1d:%04X Tape file '%s', type '%s': not a valid file"
 #define HHC00207 "%1d:%04X Tape file '%s', type '%s': line %d: '%s'"
 #define HHC00208 "%1d:%04X Tape file '%s', type '%s': maximum tape capacity exceeded"
 #define HHC00209 "%1d:%04X Tape file '%s', type '%s': maximum tape capacity enforced"
 #define HHC00210 "%1d:%04X Tape file '%s', type '%s': tape unloaded"
-#define HHC00211 "%1d:%04X Tape file '%s', type 'scsi' status '%s', sstat 0x%8.8lX: %s %s%s%s%s%s%s%s"
+#define HHC00211 "%1d:%04X Tape file '%s', type 'scsi' status '%s', sstat 0x"I32_FMTX": %s %s%s%s%s%s%s%s"
 #define HHC00212 "%1d:%04X Tape file '%s', type '%s': data chaining not supported for CCW %2.2X"
 #define HHC00214 "%1d:%04X Tape file '%s', type '%s': auto-mount rejected: drive not empty"
 #define HHC00215 "%1d:%04X Tape file '%s', type '%s': auto-mounted"
 #define HHC00216 "%1d:%04X Tape file '%s', type '%s': auto-unmounted"
-#define HHC00217 "%1d:%04X Tape file '%s', type '%s': locate block 0x%8.8"I32_FMT"X"
+#define HHC00217 "%1d:%04X Tape file '%s', type '%s': locate block 0x"I32_FMTX""
 #define HHC00218 "%1d:%04X Tape file '%s', type '%s': display '%s' until unmounted"
 #define HHC00219 "%1d:%04X Tape file '%s', type '%s': display '%s' until unmounted, then '%s' until mounted"
 #define HHC00220 "%1d:%04X Tape file '%s', type '%s': format type is not determinable, presumed '%s'"
@@ -296,7 +296,7 @@ cpu.c:123:HABC1234I This is a message
 // reserve 003xx for compressed dasd device related
 #define HHC00300 "%1d:%04X CCKD file: error initializing shadow files"
 #define HHC00301 "%1d:%04X CCKD file[%d] '%s': error in function '%s': '%s'"
-#define HHC00302 "%1d:%04X CCKD file[%d] '%s': error in function '%s' at offset "I64_FMTX": '%s'"
+#define HHC00302 "%1d:%04X CCKD file[%d] '%s': error in function '%s' at offset 0x"I64_FMTX": '%s'"
 #define HHC00303 "%1d:%04X CCKD file: error in function '%s': '%s'"
 #define HHC00304 "%1d:%04X CCKD file[%d] '%s': get space error, size exceeds %lldM"
 #define HHC00305 "%1d:%04X CCKD file[%d] '%s': device header id error"
@@ -351,7 +351,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC00352 "%1d:%04X CCKD file '%s': 'opened' bit is on, use -f"
 #define HHC00353 "%1d:%04X CCKD file '%s': check disk errors"
 #define HHC00354 "%1d:%04X CCKD file '%s': error in function '%s': '%s'"
-#define HHC00355 "%1d:%04X CCKD file '%s': error in function '%s' at offset 0x"I64_FMTx": '%s'"
+#define HHC00355 "%1d:%04X CCKD file '%s': error in function '%s' at offset 0x"I64_FMTX": '%s'"
 #define HHC00356 "%1d:%04X CCKD file '%s': not a compressed dasd file"
 #define HHC00357 "%1d:%04X CCKD file '%s': converting to '%s'"
 #define HHC00358 "%1d:%04X CCKD file '%s': file already compressed"
@@ -820,7 +820,7 @@ cpu.c:123:HABC1234I This is a message
 
 // reserve 012xx for card devices
 #define HHC01200 "%1d:%04X Card: error in function '%s': '%s'"
-#define HHC01201 "%1d:%04X Card: filename '%s' too long, maximum length is %ud"
+#define HHC01201 "%1d:%04X Card: filename '%s' too long, maximum length is %d"
 #define HHC01202 "%1d:%04X Card: options 'ascii' and 'ebcdic' are mutually exclusive"
 #define HHC01203 "%1d:%04X Card: only one filename (sock_spec) allowed for socket device"
 #define HHC01204 "%1d:%04X Card: option 'ascii' is default for socket device"
