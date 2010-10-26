@@ -1084,6 +1084,7 @@ static __inline__ void unchain_locked(CHAIN *entry)
 
 #endif /*!defined(_chain_routines_)*/
 
+#endif /* if 0 */
 
 /* extstring.h  (c) Mark L. Gaubatz, 1985-2010                       */
 /*              Extended string handling routines                    */
@@ -1155,5 +1156,5 @@ static __inline__ int strcaseabbrev(char *string, char *abbrev, u_int n)
 }
 
 #endif /* !defined(_extended_string_routines_) */
-#endif /* if 0 */
+
 #endif // _HMACROS_H
