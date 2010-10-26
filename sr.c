@@ -1100,7 +1100,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != sizeof(ESW))
             {
-                WRMSG(HHC02017, "E", dev->devnum, "ESW", len, sizeof(ESW));
+                WRMSG(HHC02017, "E", dev->devnum, "ESW", len, (int)sizeof(ESW));
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->esw, len);

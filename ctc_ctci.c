@@ -752,7 +752,7 @@ void  CTCI_Read( DEVBLK* pDEVBLK,   U16   sCount,
 
         if( pCTCBLK->fDebug )
         {
-            WRMSG(HHC00905, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, iLength );
+            WRMSG(HHC00905, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, (int)iLength );
             packet_trace( pCTCBLK->bFrameBuffer, (int)iLength, '>' );
         }
 

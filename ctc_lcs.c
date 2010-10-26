@@ -1216,7 +1216,7 @@ static void  LCS_Startup( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
     {
         WRMSG(HHC00939, "W", SSID_TO_LCSS(pLCSDEV->pDEVBLK[1]->ssid), pLCSDEV->pDEVBLK[1]->devnum,
                   pLCSDEV->iMaxFrameBufferSize, "LCS", 
-                  sizeof( pLCSDEV->bFrameBuffer ) );
+                  (int)sizeof( pLCSDEV->bFrameBuffer ) );
         pLCSDEV->iMaxFrameBufferSize = sizeof(pLCSDEV->bFrameBuffer);
     }
 

@@ -1943,7 +1943,9 @@ BYTE                   unitstat;        /* Status after receive data */
     /* Prepare the sockaddr structure for the bind */
     if(!( server = get_inet_socket(sysblk.cnslport) ))
     {
-        WRMSG(HHC01007, "E", "CNSLPORT", sysblk.cnslport);
+        char msgbuf[64];
+        MSGBUF(msgbuf, "%s = %s", "CNSLPORT", sysblk.cnslport );
+        WRMSG(HHC01017, "E", msgbuf );
         return NULL;
     }
 

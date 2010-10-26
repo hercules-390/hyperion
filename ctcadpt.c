@@ -890,8 +890,8 @@ static void  CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
     // Trace the packet received from the TUN device
     if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
     {
-        WRMSG(HHC00913, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->filename, iLength );
-        packet_trace( pDEVBLK->buf, iLength, '<' );
+        WRMSG(HHC00913, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, (int)iLength, "TUN" );
+        packet_trace( pDEVBLK->buf, (int)iLength, '<' );
     }
 
     // Fix-up Frame pointer

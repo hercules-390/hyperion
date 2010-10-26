@@ -1705,7 +1705,8 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             {
                 /* (an error message explaining the reason for the
                     failure should hopefully already have been issued) */
-                WRMSG(HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, newfile, "auto-unmount", "see previous message");
+                WRMSG(HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, newfile, 
+                      TTYPSTR(dev->tapedevt), "auto-unmount", "see previous message");
             }
             else
                 _HHC00205E( newfile, "file not found" ); // (presumed)
