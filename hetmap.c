@@ -391,12 +391,12 @@ main( int argc, char *argv[] )
     {
         if ( i_faketape )
         {
-            printf( "fet_open() returned %d\n", rc );
+            printf( "fet_open() returned %d\n", (int)rc );
             fet_close( &fetb );
         }
         else
         {
-            printf( "het_open() returned %d\n", rc );
+            printf( "het_open() returned %d\n", (int)rc );
             het_close( &hetb );
         }
         exit( 1 );
@@ -460,23 +460,23 @@ main( int argc, char *argv[] )
 
             if( opts & O_TAPEMAP_OUTPUT )
             {
-                printf ("File %u: Blocks=%u, block size min=%u, max=%u\n",
-                        fileno, gBlkCount, uminsz, umaxsz      );
+                printf ("File %d: Blocks=%d, block size min=%d, max=%d\n",
+                        (int)fileno, (int)gBlkCount, (int)uminsz, (int)umaxsz      );
             }
 
             if( opts & O_FILES )
             {
                 printf( sep );
-                printf( "%-20.20s: %d\n", "File #", fileno );
-                printf( "%-20.20s: %d\n", "Blocks", gBlkCount );
-                printf( "%-20.20s: %d\n", "Min Blocksize", uminsz );
-                printf( "%-20.20s: %d\n", "Max Blocksize", umaxsz );
+                printf( "%-20.20s: %d\n", "File #", (int)fileno );
+                printf( "%-20.20s: %d\n", "Blocks", (int)gBlkCount );
+                printf( "%-20.20s: %d\n", "Min Blocksize", (int)uminsz );
+                printf( "%-20.20s: %d\n", "Max Blocksize", (int)umaxsz );
                 if ( !i_faketape )
                 {
-                    printf( "%-20.20s: %d\n", "Uncompressed bytes", ubytes );
-                    printf( "%-20.20s: %d\n", "Min Blocksize-Comp", cminsz );
-                    printf( "%-20.20s: %d\n", "Max Blocksize-Comp", cmaxsz );
-                    printf( "%-20.20s: %d\n", "Compressed bytes", cbytes );
+                    printf( "%-20.20s: %d\n", "Uncompressed bytes", (int)ubytes );
+                    printf( "%-20.20s: %d\n", "Min Blocksize-Comp", (int)cminsz );
+                    printf( "%-20.20s: %d\n", "Max Blocksize-Comp", (int)cmaxsz );
+                    printf( "%-20.20s: %d\n", "Compressed bytes", (int)cbytes );
                 }
             }
 
@@ -500,9 +500,9 @@ main( int argc, char *argv[] )
         if( rc < 0 )
         {
             if ( i_faketape )
-                printf( "fet_read() returned %d\n", rc );
+                printf( "fet_read() returned %d\n", (int)rc );
             else
-                printf( "het_read() returned %d\n", rc );
+                printf( "het_read() returned %d\n", (int)rc );
             break;
         }
 
@@ -599,13 +599,13 @@ main( int argc, char *argv[] )
     {
         printf( sep );
         printf( "%-20.20s:\n", "Summary" );
-        printf( "%-20.20s: %d\n", "Files", fileno );
-        printf( "%-20.20s: %d\n", "Blocks", totblocks );
+        printf( "%-20.20s: %d\n", "Files", (int)fileno );
+        printf( "%-20.20s: %d\n", "Blocks", (int)totblocks );
         if ( !i_faketape )
         {
-            printf( "%-20.20s: %d\n", "Uncompressed bytes", totubytes );
-            printf( "%-20.20s: %d\n", "Compressed bytes", totcbytes );
-            printf( "%-20.20s: %d\n", "Reduction", totubytes - totcbytes );
+            printf( "%-20.20s: %d\n", "Uncompressed bytes", (int)totubytes );
+            printf( "%-20.20s: %d\n", "Compressed bytes", (int)totcbytes );
+            printf( "%-20.20s: %d\n", "Reduction", (int)(totubytes - totcbytes) );
         }
     }
 
@@ -646,7 +646,7 @@ Print_Dataset( SInt32 len, SInt32 fileno )
     {
         printf( "seq=%-17d  file#=%d\n",
                atoi( fmt.slds1.dsseq ),
-               fileno );
+               (int)fileno );
         printf( "dsn=%-17.17s  crtdt=%-8.8s  expdt=%-8.8s  blocks=%d\n",
                fmt.slds1.dsid,
                sl_fmtdate( crtdt, fmt.slds1.crtdt, TRUE ),
@@ -906,8 +906,8 @@ Print_Standard_Labels (void )
                         UInt64	 lBlockCnt  = (UInt64)(atol( bcnt ) % 1000000l) + (UInt64)(atol( ebcnt ) * 1000000l);
                         printf ( "%-4sBlock Count: "
                                 "Expected %llu; "
-                                "Actual %u", 
-                                "", lBlockCnt, gPrevBlkCnt );
+                                "Actual %d", 
+                                "", lBlockCnt, (int)gPrevBlkCnt );
                         if ( lBlockCnt == (UInt64)gPrevBlkCnt )	
                             printf ( "\n" );
                         else
@@ -1113,10 +1113,10 @@ Print_Block_Data	( SInt32 prtlen )
     
     BLANK_OUT ( lPadding, J );
     
-    printf ( "\n\nADDR%-4sBLOCK %-2u BYTES %-6d%s*%s%s%s|%s%s%s*\n"
+    printf ( "\n\nADDR%-4sBLOCK %-2d BYTES %-6d%s*%s%s%s|%s%s%s*\n"
             , ""
-            , gBlkCount
-            , lAmt2Prt
+            , (int)gBlkCount
+            , (int)lAmt2Prt
             , &pSpaces[25]
             , lPadding
             , lEBCDIC
@@ -1133,7 +1133,7 @@ Print_Block_Data	( SInt32 prtlen )
             Kl = Kr;
         }
         
-        printf ( "%04X    ", B );
+        printf ( "%04X    ", (int)B );
         BLANK_OUT ( pAscii, bytes_per_line + 1 );
         BLANK_OUT ( pEbcdic, bytes_per_line + 1 );
         bcopy ( &pAsciiBuf[B], pAscii, Kl ); pAscii[bytes_per_line] = '\0';
