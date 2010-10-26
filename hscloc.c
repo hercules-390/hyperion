@@ -65,7 +65,7 @@ int locate_sysblk(int argc, char *argv[], char *cmdline)
         U64 loc = swap_byte_U64(sysblk.blkloc);
 
         /* verify head, tail, length and address */
-        if ( loc != (U64)((u_int)&sysblk) )
+        if ( loc != (U64)((uintptr_t)&sysblk) )
         {
             MSGBUF( msgbuf, "SYSBLK moved; was 0x"I64_FMTX", is 0x%p", loc, &sysblk );
             WRMSG( HHC90000, "D", msgbuf );
@@ -214,7 +214,7 @@ int locate_regs(int argc, char *argv[], char *cmdline)
         MSGBUF( tlr, "END%13.13s", blknam );
         
         /* verify head, tail, length and address */
-        if ( loc != (U64)((u_int)regs) )
+        if ( loc != (U64)((uintptr_t)regs) )
         {
             MSGBUF( msgbuf, "REGS[%2.2X] moved; was 0x"I64_FMTX", is 0x%p", 
                             cpu, loc, regs );
