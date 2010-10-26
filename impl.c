@@ -363,7 +363,7 @@ int     dll_count;                      /* index into array          */
     memset(&sysblk.blknam,SPACE,sizeof(sysblk.blknam));
     memset(&sysblk.blkver,SPACE,sizeof(sysblk.blkver));
     memset(&sysblk.blkend,SPACE,sizeof(sysblk.blkend));
-    sysblk.blkloc = swap_byte_U64((U64)&sysblk);
+    sysblk.blkloc = swap_byte_U64((U64)((uintptr_t)&sysblk));
     memcpy(sysblk.blknam,HDL_NAME_SYSBLK,strlen(HDL_NAME_SYSBLK));
     memcpy(sysblk.blkver,HDL_VERS_SYSBLK,strlen(HDL_VERS_SYSBLK));
     sysblk.blksiz = swap_byte_U32((U32)sizeof(SYSBLK));
