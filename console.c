@@ -1921,7 +1921,7 @@ BYTE                   unitstat;        /* Status after receive data */
     SETMODE(USER);
     
     /* Display thread started message on control panel */
-    WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Console connection");
+    WRMSG(HHC00100, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), "Console connection");
 
     /* Get information about this system */
     init_hostinfo( &cons_hostinfo );
@@ -2245,7 +2245,7 @@ BYTE                   unitstat;        /* Status after receive data */
   
     free(server);
 
-    WRMSG(HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Console connection");
+    WRMSG(HHC00101, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), "Console connection");
 
     sysblk.cnsltid = 0;
 

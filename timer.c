@@ -191,7 +191,7 @@ static  int do_once = TRUE ;            /* Switch for onetime proc   */
     SETMODE(USER);
 
     /* Display thread started message on control panel */
-    WRMSG (HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Timer");
+    WRMSG (HHC00100, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), "Timer");
 
 #ifdef OPTION_MIPS_COUNTING
     /* Initialize "maxrates" command reporting intervals */
@@ -306,7 +306,7 @@ static  int do_once = TRUE ;            /* Switch for onetime proc   */
 
     } /* end while */
 
-    WRMSG (HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Timer");
+    WRMSG (HHC00101, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), "Timer");
 
     sysblk.todtid = 0;
 
@@ -365,7 +365,7 @@ int numcap = 1;              /* Number of CPU's being capped         */
     hdl_adsc("capping_manager_shutdown",capping_manager_shutdown, NULL);
 
     /* Display thread started message on control panel */
-    WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Capping manager");
+    WRMSG(HHC00100, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), "Capping manager");
 
     /* Initialize interrupt wait locks */
     for(cpu = 0; cpu < sysblk.maxcpu; cpu++)
@@ -464,7 +464,7 @@ int numcap = 1;              /* Number of CPU's being capped         */
     if ( !sysblk.shutdown )
         hdl_rmsc(capping_manager_shutdown, NULL);
 
-    WRMSG(HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Capping manager");
+    WRMSG(HHC00101, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), "Capping manager");
     return(NULL);
 }
 #endif // OPTION_CAPPING

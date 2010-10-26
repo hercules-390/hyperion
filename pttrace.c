@@ -307,7 +307,7 @@ void *ptt_timeout()
     struct timeval  now;
     struct timespec tm;
 
-    WRMSG(HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0),"PTT timeout timer");
+    WRMSG(HHC00100, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0),"PTT timeout timer");
     obtain_lock (&ptttolock);
     gettimeofday (&now, NULL);
     tm.tv_sec = now.tv_sec + pttto;
@@ -320,7 +320,7 @@ void *ptt_timeout()
         ptttotid = 0;
     }
     release_lock (&ptttolock);
-    WRMSG(HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), "PTT timeout timer");
+    WRMSG(HHC00101, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), "PTT timeout timer");
     return NULL;
 }
 

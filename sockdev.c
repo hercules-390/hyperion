@@ -391,7 +391,7 @@ void* socket_thread( void* arg )
     UNREFERENCED( arg );
 
     /* Display thread started message on control panel */
-    WRMSG (HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Socket device listener");
+    WRMSG (HHC00100, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), "Socket device listener");
 
     for (;;)
     {
@@ -425,7 +425,7 @@ void* socket_thread( void* arg )
         check_socket_devices_for_connections( &sockset );
     }
 
-    WRMSG(HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Socket device listener");
+    WRMSG(HHC00101, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), "Socket device listener");
 
     return NULL;
 }

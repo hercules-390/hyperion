@@ -1536,7 +1536,7 @@ int             rc;
     if (!cckdblk.batch)
     {
         MSGBUF( threadname, "Read-ahead thread-%d", ra);
-        WRMSG (HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), threadname);
+        WRMSG (HHC00100, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), threadname);
     }
 
     while (ra <= cckdblk.ramax)
@@ -1590,7 +1590,7 @@ int             rc;
     }
 
     if (!cckdblk.batch)
-        WRMSG (HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), threadname);
+        WRMSG (HHC00101, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), threadname);
     --cckdblk.ras;
     if (!cckdblk.ras) signal_condition(&cckdblk.termcond);
     release_lock(&cckdblk.ralock);
@@ -1748,7 +1748,7 @@ int             rc;
     if (!cckdblk.batch)
     {
         MSGBUF( threadname, "Writer thread-%d", writer);
-        WRMSG ( HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), threadname);
+        WRMSG ( HHC00100, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), threadname);
     }
 
     while (writer <= cckdblk.wrmax || cckdblk.wrpending)
@@ -1875,7 +1875,7 @@ int             rc;
     }
 
     if (!cckdblk.batch)
-        WRMSG (HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), threadname);
+        WRMSG (HHC00101, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), threadname);
     cckdblk.wrs--;
     if (cckdblk.wrs == 0) signal_condition(&cckdblk.termcond);
     release_lock(&cckdblk.wrlock);
@@ -4542,7 +4542,7 @@ int             gctab[5]= {             /* default gcol parameters   */
 
     if (!cckdblk.batch)
     {
-        WRMSG (HHC00100, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Garbage collector");
+        WRMSG (HHC00100, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), "Garbage collector");
     }
 
     while (gcol <= cckdblk.gcmax)
@@ -4660,7 +4660,7 @@ int             gctab[5]= {             /* default gcol parameters   */
     }
 
     if (!cckdblk.batch)
-    WRMSG (HHC00101, "I", thread_id(), getpriority(PRIO_PROCESS,0), "Garbage collector");
+    WRMSG (HHC00101, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), "Garbage collector");
 
     cckdblk.gcs--;
     if (!cckdblk.gcs) signal_condition (&cckdblk.termcond);
