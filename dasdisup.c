@@ -178,7 +178,7 @@ char           *strtok_str = NULL;
     if (memtab == NULL)
     {
         char buf[80];
-        MSGBUF( buf, "malloc %lu", sizeof(MEMINFO) * MAX_MEMBERS);
+        MSGBUF( buf, "malloc(%d)", (int)(sizeof(MEMINFO) * MAX_MEMBERS));
         fprintf (stdout, MSG(HHC02412, "E", buf, strerror(errno)));
         return -1;
     }

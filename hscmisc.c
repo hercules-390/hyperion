@@ -739,7 +739,7 @@ static REGS  *copy_regs (REGS *regs)
     if (newregs == NULL)
     {
         char buf[64];
-        MSGBUF(buf, "malloc(%lu)", size);
+        MSGBUF(buf, "malloc(%d)", (int)size);
         WRMSG(HHC00075, "E", buf, strerror(errno));
         return NULL;
     }

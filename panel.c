@@ -1993,7 +1993,7 @@ char    buf[1024];                      /* Buffer workarea           */
     if (!(kbbuf = malloc (kbbufsize)))
     {
         char buf[40];
-        MSGBUF(buf, "malloc(%lu)", kbbufsize);
+        MSGBUF(buf, "malloc(%d)", (int)kbbufsize);
         WRMSG(HHC00075, "E", buf, strerror(errno));
         return;
     }
@@ -2003,7 +2003,7 @@ char    buf[1024];                      /* Buffer workarea           */
     if (msgbuf == NULL)
     {
         char buf[40];
-        MSGBUF(buf, "malloc(%lu)", MAX_MSGS * sizeof(PANMSG));
+        MSGBUF(buf, "malloc(%d)", (int)(MAX_MSGS * (int)sizeof(PANMSG)));
         fprintf (stderr,
                 MSG(HHC00075, "E", buf, strerror(errno)));
         return;

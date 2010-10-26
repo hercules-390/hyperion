@@ -1307,7 +1307,7 @@ static char * check_define_default_automount_dir()
         if (!pNewTAMDIR)
         {
             char buf[64];
-            MSGBUF( buf, "malloc(%lu)", sizeof(TAMDIR));
+            MSGBUF( buf, "malloc(%d)", (int)sizeof(TAMDIR));
             WRMSG(HHC01430, "S", buf, strerror(errno));
             return NULL;
         }
@@ -1575,7 +1575,7 @@ int rc;
                     if (!(pTAMDIR = malloc( sizeof(TAMDIR) )))
                     {
                         char buf[40];
-                        MSGBUF( buf, "malloc(%lu)", sizeof(TAMDIR));
+                        MSGBUF( buf, "malloc(%d)", (int)sizeof(TAMDIR));
                         WRMSG(HHC02219, "E", buf, strerror(ENOMEM));
                         sysblk.defdir = cwd; /* EMERGENCY! */
                     }
@@ -1742,7 +1742,7 @@ int rc;
                                 if (!(pCurrTAMDIR = malloc( sizeof(TAMDIR) )))
                                 {
                                     char buf[40];
-                                    MSGBUF( buf, "malloc(%lu)", sizeof(TAMDIR));
+                                    MSGBUF( buf, "malloc(%d)", (int)sizeof(TAMDIR));
                                     WRMSG(HHC02219, "E", buf, strerror(ENOMEM));
                                     sysblk.defdir = cwd; /* EMERGENCY! */
                                 }
@@ -4579,7 +4579,7 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
 
     if (!(orig_pDevBlkPtrs = malloc(sizeof(DEVBLK*) * MAX_DEVLIST_DEVICES)))
     {
-        MSGBUF( buf, "malloc(%lu)", sizeof(DEVBLK*) * MAX_DEVLIST_DEVICES);
+        MSGBUF( buf, "malloc(%d)", (int)(sizeof(DEVBLK*) * MAX_DEVLIST_DEVICES) );
         WRMSG(HHC02219, "E", buf, strerror(errno) );
         return -1;
     }
@@ -4729,7 +4729,7 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
 
     if (!(orig_pDevBlkPtrs = malloc(sizeof(DEVBLK*) * MAX_DEVLIST_DEVICES)))
     {
-        MSGBUF( buf, "malloc(%lu)", sizeof(DEVBLK*) * MAX_DEVLIST_DEVICES);
+        MSGBUF( buf, "malloc(%d)", (int)(sizeof(DEVBLK*) * MAX_DEVLIST_DEVICES) );
         WRMSG(HHC02219, "E", buf, strerror(errno) );
         return -1;
     }

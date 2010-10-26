@@ -290,11 +290,11 @@ U64     dreg;
      /* Initialize guestregs if first time */
      if (GUESTREGS == NULL)
      {
-        GUESTREGS = calloc (sizeof(REGS), 1);
+        GUESTREGS = calloc (1, sizeof(REGS));
         if (GUESTREGS == NULL)
          {
          char buf[40];
-         MSGBUF(buf, "calloc(%lu, %d)", sizeof(REGS), 1);
+         MSGBUF(buf, "calloc(%d, %d)", 1, (int)sizeof(REGS));
              WRMSG (HHC00813, "E", PTYPSTR(regs->cpuad), regs->cpuad, buf, strerror(errno));
 #if !defined(NO_SIGABEND_HANDLER)
              signal_thread(sysblk.cputid[regs->cpuad], SIGUSR1);

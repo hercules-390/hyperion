@@ -758,8 +758,8 @@ void           *p;                      /* Pointer                   */
 
     if (p == NULL)
     {
-    char buf[64];
-    MSGBUF( buf, "malloc(%lu)", size);
+        char buf[64];
+        MSGBUF( buf, "malloc(%d)", (int)size);
         WRMSG (HHC00303, "E", dev ? SSID_TO_LCSS(dev->ssid) : 0, dev ? dev->devnum : 0, buf, strerror(errno));
         cckd_print_itrace ();
     }
@@ -780,8 +780,8 @@ void           *p;                      /* Pointer                   */
 
     if (p == NULL)
     {
-    char buf[64];
-    MSGBUF( buf, "calloc(%lu, %lu)", n, size);
+        char buf[64];
+        MSGBUF( buf, "calloc(%d, %d)", (int)n, (int)size);
         WRMSG (HHC00303, "E", dev ? SSID_TO_LCSS(dev->ssid) : 0, dev ? dev->devnum : 0, buf, strerror(errno));
         cckd_print_itrace ();
     }
@@ -5667,7 +5667,7 @@ int   rc;
                     else
                     {
                         char buf[64];
-                        MSGBUF( buf, "calloc(%d, %lu)", val, sizeof(CCKD_TRACE));
+                        MSGBUF( buf, "calloc(%d, %d)", val, (int)sizeof(CCKD_TRACE));
                         WRMSG (HHC00303, "E", 0, 0, buf, strerror(errno));
                     }
                 }

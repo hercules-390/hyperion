@@ -432,7 +432,7 @@ S32             nxthdro;                /* Offset of next header     */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "lseek()", blkpos, strerror(errno));
+        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "lseek()", (off_t)blkpos, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
@@ -445,7 +445,7 @@ S32             nxthdro;                /* Offset of next header     */
     /* Handle read error condition */
     if (rc < 0)
     {
-        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "read()", blkpos,
+        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "read()", (off_t)blkpos,
                 strerror(errno));
 
         /* Set unit check with equipment check */
@@ -456,7 +456,7 @@ S32             nxthdro;                /* Offset of next header     */
     /* Handle end of file within block header */
     if (rc < (int)sizeof(omahdr))
     {
-        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "readhdr_omaheaders()", blkpos, "unexpected end of file");
+        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "readhdr_omaheaders()", (off_t)blkpos, "unexpected end of file");
 
         /* Set unit check with data check and partial record */
         build_senseX(TAPE_BSENSE_BLOCKSHORT,dev,unitstat,code);
@@ -477,7 +477,7 @@ S32             nxthdro;                /* Offset of next header     */
     if (curblkl < -1 || curblkl == 0 || curblkl > MAX_BLKLEN
         || memcmp(omahdr.omaid, "@HDF", 4) != 0)
     {
-        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "readhdr_omaheaders()", blkpos, "invalid block header");
+        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "readhdr_omaheaders()", (off_t)blkpos, "invalid block header");
 
         build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
         return -1;
@@ -542,7 +542,7 @@ S32             nxthdro;                /* Offset of next header     */
     /* Handle read error condition */
     if (rc < 0)
     {
-        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "read()", blkpos,
+        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "read()", (off_t)blkpos,
                 strerror(errno));
 
         /* Set unit check with equipment check */
@@ -553,7 +553,7 @@ S32             nxthdro;                /* Offset of next header     */
     /* Handle end of file within data block */
     if (rc < curblkl)
     {
-        WRMSG(HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "read_omaheaders()", blkpos, "unexpected end of file");
+        WRMSG(HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "read_omaheaders()", (off_t)blkpos, "unexpected end of file");
 
         /* Set unit check with data check and partial record */
         build_senseX(TAPE_BSENSE_BLOCKSHORT,dev,unitstat,code);
@@ -589,7 +589,7 @@ long            blkpos;                 /* Offset of block in file   */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "lseek()", blkpos, strerror(errno));
+        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "lseek()", (off_t)blkpos, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
@@ -602,7 +602,7 @@ long            blkpos;                 /* Offset of block in file   */
     /* Handle read error condition */
     if (blklen < 0)
     {
-        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "read()", blkpos,
+        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "read()", (off_t)blkpos,
                 strerror(errno));
 
         build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
@@ -659,7 +659,7 @@ BYTE            c;                      /* Character work area       */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "lseek()", blkpos, strerror(errno));
+        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "lseek()", (off_t)blkpos, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
@@ -714,7 +714,7 @@ BYTE            c;                      /* Character work area       */
     /* Handle read error condition */
     if (rc < 0)
     {
-        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "read()", blkpos,
+        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "read()", (off_t)blkpos,
                 strerror(errno));
 
         build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
@@ -724,7 +724,7 @@ BYTE            c;                      /* Character work area       */
     /* Check for block not terminated by newline */
     if (rc < 1)
     {
-        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "read_omatext()", blkpos, "unexpected end of file");
+        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "read_omatext()", (off_t)blkpos, "unexpected end of file");
 
         /* Set unit check with data check and partial record */
         build_senseX(TAPE_BSENSE_BLOCKSHORT,dev,unitstat,code);
@@ -734,7 +734,7 @@ BYTE            c;                      /* Character work area       */
     /* Check for invalid zero length block */
     if (pos == 0)
     {
-        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "read_omatext()", blkpos, "invalid block header");
+        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, omadesc->filename, "oma", "read_omatext()", (off_t)blkpos, "invalid block header");
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_BLOCKSHORT,dev,unitstat,code);

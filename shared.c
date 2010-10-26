@@ -2677,7 +2677,7 @@ static void shared_device_manager_shutdown(void * unused)
 
 DLL_EXPORT void *shared_server (void *arg)
 {
-int                     rc;             /* Return code               */
+int                     rc = -32767;    /* Return code               */
 int                     hi;             /* Hi fd for select          */
 int                     lsock;          /* inet socket for listening */
 int                     usock;          /* unix socket for listening */
@@ -2846,7 +2846,7 @@ char                    threadname[40];
             if (psock == NULL)
             {
                 char buf[40];
-                MSGBUF(buf, "malloc(%lu)", sizeof(csock));
+                MSGBUF(buf, "malloc(%d)", (int)sizeof(csock));
                 WRMSG(HHC00735, "E", buf, strerror(HSO_errno));
                 close_socket (csock);
                 continue;
@@ -2944,11 +2944,11 @@ DLL_EXPORT int shared_cmd(int argc, char *argv[], char *cmdline)
             sysblk.shrdtracen = 0;
             if (n > 0)
             {
-                s = calloc (sizeof(SHRD_TRACE), n);
+                s = calloc( (size_t)n, sizeof(SHRD_TRACE) );
                 if (s == NULL)
                 {
                     char buf[40];
-                    MSGBUF(buf, "calloc(%lu, %d)", sizeof(SHRD_TRACE), n);
+                    MSGBUF(buf, "calloc(%d, %d)", (int)n, (int)sizeof(SHRD_TRACE) );
                     WRMSG (HHC00735, "E", buf, strerror(errno));
                     return 0;
                 }

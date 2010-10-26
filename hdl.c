@@ -555,7 +555,7 @@ void *fep;
             if(!(modent = malloc(sizeof(MODENT))))
             {
                 char buf[64];
-                MSGBUF( buf, "malloc(%lu)", sizeof(MODENT));
+                MSGBUF( buf, "malloc(%d)", (int)sizeof(MODENT));
                 WRMSG(HHC01511, "E", buf, strerror(errno));
                 return NULL;
             }
@@ -803,7 +803,7 @@ HDLPRE *preload;
     if(!(hdl_cdll = hdl_dll = malloc(sizeof(DLLENT))))
     {
         char buf[64];
-        MSGBUF( buf,  "malloc(%lu)", sizeof(DLLENT));
+        MSGBUF( buf,  "malloc(%d)", (int)sizeof(DLLENT));
         fprintf(stderr, MSG(HHC01511, "E", buf, strerror(errno)));
         exit(1);
     }
@@ -917,7 +917,7 @@ char *modname;
     if(!(dllent = malloc(sizeof(DLLENT))))
     {
         char buf[64];
-        MSGBUF( buf, "malloc(%lu)", sizeof(DLLENT));
+        MSGBUF( buf, "malloc(%d)", (int)sizeof(DLLENT));
         WRMSG(HHC01511, "E", buf, strerror(errno));
         return -1;
     }

@@ -259,9 +259,9 @@ cpu.c:123:HABC1234I This is a message
 
 // reserve 002xx for tape device related
 #define HHC00201 "%1d:%04X Tape file '%s', type '%s': tape closed"
-#define HHC00202 "%1d:%04X Tape file '%s', type '%s': block length %d exceeds maximum at offset 0x"I32_FMTX""
-#define HHC00203 "%1d:%04X Tape file '%s', type '%s': invalid tapemark at offset 0x"I32_FMTX""
-#define HHC00204 "%1d:%04X Tape file '%s', type '%s': error in function '%s', offset 0x"I32_FMTX": '%s'"
+#define HHC00202 "%1d:%04X Tape file '%s', type '%s': block length %d exceeds maximum at offset 0x"I64_FMTX""
+#define HHC00203 "%1d:%04X Tape file '%s', type '%s': invalid tapemark at offset 0x"I64_FMTX""
+#define HHC00204 "%1d:%04X Tape file '%s', type '%s': error in function '%s', offset 0x"I64_FMTX": '%s'"
 #define HHC00205 "%1d:%04X Tape file '%s', type '%s': error in function '%s': '%s'"
 #define HHC00206 "%1d:%04X Tape file '%s', type '%s': not a valid file"
 #define HHC00207 "%1d:%04X Tape file '%s', type '%s': line %d: '%s'"

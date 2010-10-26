@@ -175,7 +175,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         if( !pLCSBLK )
         {
             char buf[40];
-            MSGBUF(buf, "malloc(%lu)", sizeof(LCSBLK));
+            MSGBUF(buf, "malloc(%d)", (int)sizeof(LCSBLK));
             WRMSG(HHC00900, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, buf, strerror(errno) );
             return -1;
         }

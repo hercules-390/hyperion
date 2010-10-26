@@ -719,7 +719,7 @@ DEVBLK**dvpp;
         if (!(dev = (DEVBLK*)malloc(sizeof(DEVBLK))))
         {
             char buf[64];
-            MSGBUF(buf, "malloc(%lu)", sizeof(DEVBLK));
+            MSGBUF(buf, "malloc(%d)", (int)sizeof(DEVBLK));
             WRMSG (HHC01460, "E", lcss, devnum, buf, strerror(errno));
             return NULL;
         }

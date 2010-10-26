@@ -1095,7 +1095,7 @@ static int commadpt_alloc_device(DEVBLK *dev)
     if(dev->commadpt==NULL)
     {
         char buf[40];
-        MSGBUF(buf, "malloc(%lu)", sizeof(COMMADPT));
+        MSGBUF(buf, "malloc(%d)", (int)sizeof(COMMADPT));
         WRMSG(HHC01000, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, buf, strerror(errno));
         return -1;
     }

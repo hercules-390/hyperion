@@ -1847,7 +1847,7 @@ int     aswitch;
         else
         {
             char buf[40];
-            MSGBUF(buf, "malloc(%lu)", sizeof(REGS));
+            MSGBUF(buf, "malloc(%d)", (int)sizeof(REGS));
             WRMSG (HHC00813, "E", PTYPSTR(cpu), cpu, buf, strerror(errno));
             cpu_uninit (cpu, &regs);
         }

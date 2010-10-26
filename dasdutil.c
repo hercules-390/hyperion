@@ -521,11 +521,11 @@ char            typname[64];
 char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Obtain storage for the file descriptor structure */
-    cif = (CIFBLK*) calloc (sizeof(CIFBLK), 1);
+    cif = (CIFBLK*) calloc (1,sizeof(CIFBLK));
     if (cif == NULL)
     {
         char buf[40];
-        MSGBUF(buf, "calloc(%lu)", sizeof(CIFBLK));
+        MSGBUF(buf, "calloc(1,%d)", (int)sizeof(CIFBLK));
         fprintf (stderr, MSG(HHC00404, "E", SSID_TO_LCSS(cif->devblk.ssid), cif->devblk.devnum, fname,
                              buf, strerror(errno)));
         return NULL;
@@ -753,11 +753,11 @@ char           *argv[2];                /* Arguments to              */
 int             argc=0;                 /*  device open              */
 
     /* Obtain storage for the file descriptor structure */
-    cif = (CIFBLK*) calloc (sizeof(CIFBLK), 1);
+    cif = (CIFBLK*) calloc( 1, sizeof(CIFBLK) );
     if (cif == NULL)
     {
         char buf[40];
-        MSGBUF(buf, "calloc(%lu)", sizeof(CIFBLK));
+        MSGBUF(buf, "calloc(1,%d)", (int)sizeof(CIFBLK));
         fprintf (stderr, MSG(HHC00404, "E", SSID_TO_LCSS(cif->devblk.ssid), cif->devblk.devnum, fname,
                 buf, strerror(errno)));
         return NULL;
@@ -1263,7 +1263,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if (l1 == NULL)
         {
             char buf[40];
-            MSGBUF( buf, "calloc(%lu)", cdevhdr.numl1tab * CCKD_L1ENT_SIZE);
+            MSGBUF( buf, "calloc(%d,%d)", (int)cdevhdr.numl1tab, (int)CCKD_L1ENT_SIZE);
             fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname, buf, strerror(errno)));
             return -1;
         }

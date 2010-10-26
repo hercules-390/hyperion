@@ -609,7 +609,7 @@ struct VMBIOENV *bioenv;  /* -->allocated environement               */
    if (!(bioenv=(struct VMBIOENV *)malloc(sizeof(struct VMBIOENV))))
    {
       char buf[40];
-      MSGBUF(buf, "malloc(%lu)",sizeof(struct VMBIOENV));
+      MSGBUF(buf, "malloc(%d)",(int)sizeof(struct VMBIOENV));
       WRMSG (HHC01908, "E", buf, strerror(errno));
       *rc = RC_ERROR;  /* Indicate an irrecoverable error occurred */
       *cc = CC_FAILED;
@@ -1270,7 +1270,7 @@ int     rc2;
        if (!(asyncp=(IOCTL32 *)malloc(sizeof(IOCTL32))))
        {
           char buf[40];
-          MSGBUF(buf, "malloc(%lu)", sizeof(IOCTL32));
+          MSGBUF(buf, "malloc(%d)", (int)sizeof(IOCTL32));
           WRMSG (HHC01908, "E", buf, strerror(errno));
           *rc = RC_ERROR;
           return CC_FAILED;
@@ -1880,7 +1880,7 @@ int     rc2;
        if (!(asyncp=(IOCTL64 *)malloc(sizeof(IOCTL64))))
        {
           char buf[40];
-          MSGBUF(buf, "malloc(%lu)", sizeof(IOCTL64));
+          MSGBUF(buf, "malloc(%d)", (int)sizeof(IOCTL64));
           WRMSG (HHC01908, "E", buf, strerror(errno));
           *rc = RC_ERROR;
           return CC_FAILED;
