@@ -229,10 +229,17 @@
   #define PVFREE      w32_vfree      
   #define VFREE       w32_vfree      
 #else
-  #define PVALLOC     valloc
-  #define PVFREE      free 
-  #define VALLOC      valloc
-  #define VFREE       free   
+  #if !defined(__FreeBSD__) && !defined(__APPLE__)
+    #define PVALLOC     pvalloc
+    #define PVFREE      free 
+    #define VALLOC      valloc
+    #define VFREE       free   
+  #else
+    #define PVALLOC     valloc
+    #define PVFREE      free 
+    #define VALLOC      valloc
+    #define VFREE       free   
+  #endif
 #endif
 
 
