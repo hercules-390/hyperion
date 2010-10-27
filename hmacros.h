@@ -835,7 +835,7 @@ do { \
 
 
 #if !defined(round_to_hostpagesize)
-#define round_to_hostpagesize(_n) ((_n + getpagesize() - 1) & ~(getpagesize() - 1))
+#define round_to_hostpagesize(_n) ((U64)(_n + (U64)getpagesize() - 1) & ~(U64)((U64)getpagesize() - 1))
 #endif
 
 

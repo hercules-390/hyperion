@@ -2566,17 +2566,21 @@ u_int i;
 
     /* Update main storage size */
     rc = configure_storage(mainsize);
-    switch(rc)
+    if ( rc >= 0 )
     {
-        case 0:
-            if (MLVL(VERBOSE))
+        if (MLVL(VERBOSE))
                 WRMSG( HHC02204, "I", argv[0], argv[1] );
-            break;
-        case HERRCPUONL:
+    }
+    else if ( rc < 0 )
+    {
+        if ( rc == HERRCPUONL )
+        {
             WRMSG( HHC02389, "E" );
-            break;
-        default:
+        }
+        else
+        {
             WRMSG( HHC02388, "E", rc );
+        }
     }
 
     return rc;
@@ -2625,16 +2629,23 @@ u_int i;
     }
 
     rc = configure_xstorage(xpndsize);
-    switch(rc) {
-        case 0:
-            if (MLVL(VERBOSE))
-                WRMSG( HHC02204, "I", argv[0], argv[1] );
-            break;
-        case HERRCPUONL:
+    if ( rc >= 0 )
+    {
+        if (MLVL(VERBOSE))
+        {
+            WRMSG( HHC02204, "I", argv[0], argv[1] );
+        }
+    }
+    else
+    {
+        if ( rc == HERRCPUONL )
+        {
             WRMSG( HHC02389, "E" );
-            break;
-        default:
+        }
+        else
+        {
             WRMSG( HHC02387, "E", rc );
+        }
     }
 
     return rc;
