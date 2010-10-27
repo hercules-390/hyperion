@@ -674,6 +674,7 @@ noinst_HEADERS = fishhang.h     \
                  opcode.h       \
                  clock.h        \
                  hercules.h     \
+                 hinlines.h     \
                  inline.h       \
                  dat.h          \
                  vstore.h       \

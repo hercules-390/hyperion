@@ -138,4 +138,8 @@
 #include "hexterns.h"     // (Hercules-wide extern function prototypes)
 #include "msgenu.h"       // (Hercules messages)
 
+// Post-process includes
+#include "dasdtab.h"
+#include "hinlines.h"     // bring inlines here
+
 #endif // _HERCULES_H

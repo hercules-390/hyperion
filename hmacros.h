@@ -213,9 +213,7 @@
 /*-------------------------------------------------------------------*/
 /* Macro for command parsing with variable length                    */
 /*-------------------------------------------------------------------*/
-#define  CMD(str,cmd,min) ( strlen( str ) >= min && \
-                            strlen( str ) <= strlen(#cmd) && \
-                            !strncasecmp( str, #cmd, strlen( str ) ) )
+#define  CMD(str,cmd,min) ( strcaseabbrev(#cmd,str,min) )
 
 #define  NCMP(_lvar,_rvar,_svar) ( !memcmp( _lvar, _rvar, _svar ) )
 #define  SNCMP(_lvar,_rvar,_svar) ( !strncasecmp( _lvar, _rvar, _svar ) )
@@ -226,19 +224,19 @@
 #if defined(_MSVC_)
   #define PVALLOC     w32_valloc
   #define VALLOC      w32_valloc
-  #define PVFREE      w32_vfree      
-  #define VFREE       w32_vfree      
+  #define PVFREE      w32_vfree
+  #define VFREE       w32_vfree
 #else
   #if !defined(__FreeBSD__) && !defined(__APPLE__) && !defined(__SOLARIS__)
     #define PVALLOC     pvalloc
-    #define PVFREE      free 
+    #define PVFREE      free
     #define VALLOC      valloc
-    #define VFREE       free   
+    #define VFREE       free
   #else
     #define PVALLOC     valloc
-    #define PVFREE      free 
+    #define PVFREE      free
     #define VALLOC      valloc
-    #define VFREE       free   
+    #define VFREE       free
   #endif
 #endif
 
@@ -834,10 +832,6 @@ do { \
 #endif /*!defined(MINMAX)*/
 
 
-#if !defined(round_to_hostpagesize)
-#define round_to_hostpagesize(_n) ((U64)(_n + (U64)getpagesize() - 1) & ~(U64)((U64)getpagesize() - 1))
-#endif
-
 
 /* chain.h      (c) Mark L. Gaubatz, 1985-2010                       */
 /*              Chain and queue macros and inline routines           */
@@ -854,7 +848,7 @@ do { \
 /* Chain macros for inline routines                                  */
 /*-------------------------------------------------------------------*/
 
-#define anchor_id "ANCHOR->"
+#define anchor_id "Anchor->"
 #define aeyesize 8
 #define eyesize 8
 #define raise_chain_validation_error                                   \
@@ -869,20 +863,14 @@ do { \
 /*-------------------------------------------------------------------*/
 
 typedef struct _CHAINBLK {              /* Chain definition block    */
-        char    anchoreye[aeyesize];    /* Anchor identifier         */
-        char    eyecatcher[eyesize];    /* Eyecatcher to check       */
-        void   *first;                  /* First entry pointer       */
-        void   *last;                   /* Last entry pointer        */
-        int     offset;                 /* Offset to container start */
-        LOCK    lock;                   /* Lock for chain            */
+        char       anchoreye[aeyesize]; /* Anchor identifier         */
+        char       eyecatcher[eyesize]; /* Eyecatcher to check       */
+        u_int      containersize;       /* Size of container         */
+        LOCK       lock;                /* Lock for chain            */
+        uintptr_t *first;               /* First entry pointer       */
+        uintptr_t *last;                /* Last entry pointer        */
+        ptrdiff_t  offset;              /* Offset to container start */
 } CHAINBLK;
-
-
-/*-------------------------------------------------------------------*/
-/* Queue Block                                                       */
-/*-------------------------------------------------------------------*/
-
-#define QUEUEBLK CHAINBLK
 
 
 /*-------------------------------------------------------------------*/
@@ -890,28 +878,25 @@ typedef struct _CHAINBLK {              /* Chain definition block    */
 /*-------------------------------------------------------------------*/
 
 typedef struct _CHAIN {                 /* Chain member definition   */
-        char      eyecatcher[eyesize];  /* Eyecatcher to check       */
-        void     *prev;                 /* -> previous chain entry   */
-        void     *next;                 /* -> next chain entry       */
-        int       offset;               /* Offset to container start */
-        CHAINBLK *anchor;               /* -> owning CHAINBLK        */
+        char       eyecatcher[eyesize]; /* Eyecatcher to check       */
+        u_int      containersize;       /* Size of container         */
+        uintptr_t *prev;                /* -> previous chain entry   */
+        uintptr_t *next;                /* -> next chain entry       */
+        ptrdiff_t  offset;              /* Offset to container start */
+        CHAINBLK  *anchor;              /* -> owning CHAINBLK        */
 } CHAIN;
 
-
-/*-------------------------------------------------------------------*/
-/* Queue                                                             */
-/*-------------------------------------------------------------------*/
-
-#define QUEUE   CHAIN
-
-// Leave this out until types are resolved
-#if 0 
 
 /*-------------------------------------------------------------------*/
 /* Chain management inline routines                                  */
 /*-------------------------------------------------------------------*/
 
-static __inline__ CHAINBLK *chain_validate_entry_header(CHAIN *entry)
+INLINE uintptr_t *chain_container(CHAIN *entry)
+{
+    return ((uintptr_t *)entry + entry->offset);
+}
+
+INLINE CHAINBLK *chain_validate_entry_header(CHAIN *entry)
 {
     CHAINBLK *anchor;
 
@@ -944,7 +929,7 @@ static __inline__ CHAINBLK *chain_validate_entry_header(CHAIN *entry)
     return anchor;
 }
 
-static __inline__ void chain_init_anchor(void *container, CHAINBLK *anchor, char *eyecatcher)
+INLINE void chain_init_anchor(void *container, CHAINBLK *anchor, char *eyecatcher, u_int containersize)
 {
     register u_int i = 0;
     chain_validate_pointer(container);
@@ -957,36 +942,38 @@ static __inline__ void chain_init_anchor(void *container, CHAINBLK *anchor, char
         raise_chain_validation_error;
     for (; i < eyesize; i++)
          anchor->eyecatcher[i] = ' ';
-    anchor->offset = (int) container - (int) anchor;
-    anchor->first = anchor->last = 0;
+    anchor->containersize = containersize;
     initialize_lock(&anchor->lock);
+    anchor->first = anchor->last = 0;
+    anchor->offset = (uintptr_t) container - (uintptr_t) anchor;
 }
 
-static __inline__ void chain_init_entry(CHAINBLK *anchor, void *container, CHAIN *entry)
+INLINE void chain_init_entry(CHAINBLK *anchor, void *container, CHAIN *entry)
 {
     chain_validate_pointer(container);
     chain_validate_pointer(anchor);
     chain_validate_pointer(entry);
     memcpy(&entry->eyecatcher, &anchor->eyecatcher, eyesize);
+    entry->containersize = anchor->containersize;
     entry->prev = entry->next = 0;
-    entry->offset = (int) container - (int) entry;
+    entry->offset = (uintptr_t *) container - (uintptr_t *) entry;
     entry->anchor = anchor;
 }
 
 
-static __inline__ void chain_first(CHAIN *entry)
+INLINE void chain_first(CHAIN *entry)
 {
     register CHAINBLK *anchor = chain_validate_entry_header(entry);
-    if (anchor->first == NULL)
-        anchor->first = anchor->last = (u_char *)entry + entry->offset;
-    else
+    if (anchor->first)
     {
-        entry->prev = anchor->first;
-        anchor->first = (u_char *)entry + entry->offset;
+        entry->next = anchor->first;
+        anchor->first = (uintptr_t *)entry;
     }
+    else
+        anchor->first = anchor->last = (uintptr_t *)entry;
 }
 
-static __inline__ void chain_first_locked(CHAIN *entry)
+INLINE void chain_first_locked(CHAIN *entry)
 {
     register CHAINBLK *anchor = chain_validate_entry_header(entry);
     obtain_lock(&anchor->lock);
@@ -994,19 +981,45 @@ static __inline__ void chain_first_locked(CHAIN *entry)
     release_lock(&anchor->lock);
 }
 
-static __inline__ void chain_last(CHAIN *entry)
+INLINE void chain_before(CHAIN *entry, CHAIN *before)
 {
     register CHAINBLK *anchor = chain_validate_entry_header(entry);
-    if (anchor->first == NULL)
-        anchor->first = anchor->last = (u_char *)entry + entry->offset;
-    else
-    {
-        entry->prev = anchor->last;
-        anchor->last = (u_char *)entry + entry->offset;
-    }
+    if ((!before->prev && anchor->first != (uintptr_t *)before) ||
+        (before->prev && anchor->first == (uintptr_t *)before))
+        raise_chain_validation_error;
+    entry->next = (uintptr_t *)before;
+    entry->prev = before->prev;
+    before->prev = (uintptr_t *)entry;
+    if (!entry->prev)
+        anchor->first = (uintptr_t *)entry;
 }
 
-static __inline__ void chain_last_locked(CHAIN *entry)
+INLINE void chain_after(CHAIN *entry, CHAIN *after)
+{
+    register CHAINBLK *anchor = chain_validate_entry_header(entry);
+    if ((!after->next && anchor->last != (uintptr_t *)after) ||
+        (after->next && anchor->last == (uintptr_t *)after))
+        raise_chain_validation_error;
+    entry->next = after->next;
+    entry->prev = (uintptr_t *)after;
+    after->next = (uintptr_t *)entry;
+    if (!entry->next)
+        anchor->last = (uintptr_t *)entry;
+}
+
+INLINE void chain_last(CHAIN *entry)
+{
+    register CHAINBLK *anchor = chain_validate_entry_header(entry);
+    if (anchor->last)
+    {
+        entry->prev = anchor->last;
+        anchor->last = (uintptr_t *)entry;
+    }
+    else
+        anchor->first = anchor->last = (uintptr_t *)entry;
+}
+
+INLINE void chain_last_locked(CHAIN *entry)
 {
     register CHAINBLK *anchor = chain_validate_entry_header(entry);
     obtain_lock(&anchor->lock);
@@ -1014,12 +1027,12 @@ static __inline__ void chain_last_locked(CHAIN *entry)
     release_lock(&anchor->lock);
 }
 
-static __inline__ void unchain(CHAIN *entry)
+INLINE void unchain(CHAIN *entry)
 {
     register CHAINBLK *anchor = chain_validate_entry_header(entry);
     if (entry->prev)
     {
-        CHAIN *t = (void *)((u_char *)entry->prev + entry->offset);
+        CHAIN *t = (CHAIN *)entry->prev;
         t->next = entry->next;
     }
     else
@@ -1027,7 +1040,7 @@ static __inline__ void unchain(CHAIN *entry)
 
     if (entry->next)
     {
-        CHAIN *t = (void *)((u_char *)entry->next + entry->offset);
+        CHAIN *t = (CHAIN *)entry->next;
         t->prev = entry->prev;
     }
     else
@@ -1036,51 +1049,51 @@ static __inline__ void unchain(CHAIN *entry)
     entry->prev = entry->next = 0;
 }
 
-static __inline__ CHAIN *unchain_first(CHAINBLK *anchor)
+INLINE uintptr_t *unchain_first(CHAINBLK *anchor)
 {
-    register CHAIN *entry = anchor->first;
+    register CHAIN *entry = (CHAIN *)anchor->first;
     if (!entry)
         return 0;
     unchain(entry);
-    return entry;
+    return chain_container(entry);
 }
 
-static __inline__ CHAIN *unchain_first_locked(CHAINBLK *anchor)
+INLINE uintptr_t *unchain_first_locked(CHAINBLK *anchor)
 {
-    register CHAIN *entry = anchor->first;
+    register CHAIN *entry = (CHAIN *)anchor->first;
     if (!entry)
         return 0;
     obtain_lock(&anchor->lock);
-    entry = anchor->first;
+    entry = (CHAIN *)anchor->first;
     if (entry)
         unchain(entry);
     release_lock(&anchor->lock);
-    return entry;
+    return chain_container(entry);
 }
 
-static __inline__ CHAIN *unchain_last(CHAINBLK *anchor)
+INLINE uintptr_t *unchain_last(CHAINBLK *anchor)
 {
-    register CHAIN *entry = anchor->last;
+    register CHAIN *entry = (CHAIN *)anchor->last;
     if (!entry)
         return 0;
     unchain(entry);
-    return entry;
+    return chain_container(entry);
 }
 
-static __inline__ CHAIN *unchain_last_locked(CHAINBLK *anchor)
+INLINE uintptr_t *unchain_last_locked(CHAINBLK *anchor)
 {
-    register CHAIN *entry = anchor->last;
+    register CHAIN *entry = (CHAIN *)anchor->last;
     if (!entry)
         return 0;
     obtain_lock(&anchor->lock);
-    entry = anchor->first;
+    entry = (CHAIN *)anchor->last;
     if (entry)
         unchain(entry);
     release_lock(&anchor->lock);
-    return entry;
+    return chain_container(entry);
 }
 
-static __inline__ void unchain_locked(CHAIN *entry)
+INLINE void unchain_locked(CHAIN *entry)
 {
     register CHAINBLK *anchor = chain_validate_entry_header(entry);
     obtain_lock(&anchor->lock);
@@ -1088,6 +1101,21 @@ static __inline__ void unchain_locked(CHAIN *entry)
     release_lock(&anchor->lock);
 }
 
+
+/*-------------------------------------------------------------------*/
+/* Queue aliases                                                     */
+/*-------------------------------------------------------------------*/
+
+#define chain_locked            chain_last_locked
+#define chain                   chain_last
+
+
+/*-------------------------------------------------------------------*/
+/* Queue aliases                                                     */
+/*-------------------------------------------------------------------*/
+
+#define QUEUEBLK CHAINBLK
+#define QUEUE   CHAIN
 
 #define queue_init_anchor       chain_init_anchor
 #define queue_init_entry        chain_init_entry
@@ -1098,9 +1126,6 @@ static __inline__ void unchain_locked(CHAIN *entry)
 #define dequeue_locked          unchain_first_locked
 #define dequeue                 unchain_first
 
-#define chain_locked            chain_last_locked
-#define chain                   chain_last
-
 #undef chain_validate_pointer
 #undef raise_chain_validation_error
 #undef eyesize
@@ -1109,8 +1134,10 @@ static __inline__ void unchain_locked(CHAIN *entry)
 
 #endif /*!defined(_chain_routines_)*/
 
-#endif /* if 0 */
 
+
+/*********************************************************************/
+/*                                                                   */
 /* extstring.h  (c) Mark L. Gaubatz, 1985-2010                       */
 /*              Extended string handling routines                    */
 /*              Adapted for use by Hercules                          */
@@ -1118,13 +1145,44 @@ static __inline__ void unchain_locked(CHAIN *entry)
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
+/*                                                                   */
+/*********************************************************************/
 
 #if !defined(_extended_string_routines_)
 #define _extended_string_routines_
 
+
 /*-------------------------------------------------------------------*/
-/* strabbrev(&string,&abbrev,n)     - Check for abbreviation         */
-/* strcaseabbrev(&string,&abbrev,n) - (caseless)                     */
+/*                                                                   */
+/* char asciitoupper(c)         - local ASCII toupper routine        */
+/* char asciitolower(c)         - local ASCII tolower routine        */
+/*                                                                   */
+/* Returns:                                                          */
+/*                                                                   */
+/* char    in uppercase, if asciitoupper specified, else in          */
+/*         lowercase, if asciitolower specified.                     */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+
+
+INLINE char asciitoupper(char c)
+{
+  if (c < 'a' || c > 'z')
+      return c;
+  return (c - 32);
+}
+
+INLINE char asciitolower(char c)
+{
+  if (c < 'A' || c > 'Z')
+      return c;
+  return (c + 32);
+}
+
+
+/*-------------------------------------------------------------------*/
+/* u_int strabbrev(&string,&abbrev,n)     - Check for abbreviation   */
+/* u_int strcaseabbrev(&string,&abbrev,n) - (caseless)               */
 /*                                                                   */
 /* Returns:                                                          */
 /*                                                                   */
@@ -1136,49 +1194,125 @@ static __inline__ void unchain_locked(CHAIN *entry)
 /*         n characters. For example, strabbrev("hercules",          */
 /*         "herculean", 2) returns 0.                                */
 /*                                                                   */
+/* Note:  Optimization based on current C99 compatible compilers,    */
+/*        and updating pointers is faster than using indexes on      */
+/*        most platforms in use.                                     */
+/*                                                                   */
+/* Sidebar: s390 is not optimized at present; use of index can       */
+/*          generate faster code. However, the code generated        */
+/*          here takes less than 5-10 additional machine             */
+/*          instructions.                                            */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-static __inline__ int strabbrev(char *string, char *abbrev, u_int n)
+
+INLINE u_int strabbrev(char *string, char *abbrev, const u_int n)
 {
-        register u_int i;
-        if (abbrev[0] == 0x00)
-            return 0;
-        if (string[0] == 0x00)
-            return 0;
-        if (abbrev[0] != string[0])
-            return 0;
-        for (i = 1; ; i++)
+    register char *s = string;
+    register char *a = abbrev;
+    if (a[0] &&
+        s[0] &&
+        a[0] == s[0])
+    {
+        for (;;)
         {
-            if (abbrev[i] == 0x00)
+            a++;
+            if (!a[0])
+                return (((unsigned)a - (unsigned)abbrev) >= n);
+            s++;
+            if (!s[0] ||
+                a[0] != s[0])
                 break;
-            if (string[i] == 0x00)
-                return 0;
-            if (abbrev[i] != string[i])
-                return 0;
         }
-        return (i >= n);
+    }
+    return 0;
 }
 
-static __inline__ int strcaseabbrev(char *string, char *abbrev, u_int n)
+INLINE u_int strcaseabbrev(const char *string, const char *abbrev, const u_int n)
 {
-        register u_int i;
-        if (abbrev[0] == 0x00)
-            return 0;
-        if (string[0] == 0x00)
-            return 0;
-        if (toupper(abbrev[0]) != toupper(string[0]))
-            return 0;
-        for (i = 1; ; i++)
+    register const char *s = string;
+    register const char *a = abbrev;
+    if (a[0] &&
+        s[0] &&
+        (a[0] == s[0] ||
+        asciitoupper(a[0]) == asciitoupper(s[0])))
+    {
+        for (;;)
         {
-            if (abbrev[i] == 0x00)
+            a++;
+            if (!a[0])
+                return (((unsigned)a - (unsigned)abbrev) >= n);
+            s++;
+            if (!s[0])
                 break;
-            if (string[i] == 0x00)
-                return 0;
-            if (toupper(abbrev[i]) != toupper(string[i]))
-                return 0;
+            if (a[0] == s[0])
+                continue;
+            if (asciitoupper(a[0]) != asciitoupper(s[0]))
+                break;
         }
-        return (i >= n);
+    }
+    return 0;
 }
+
+/*-------------------------------------------------------------------*/
+/* void strlower(&result,&string)        - Translate to lowercase    */
+/* void strnlower(&result,&string,n)     - ...                       */
+/* void strupper(&result,&string)        - Translate to uppercase    */
+/* void strnupper(&result,&string,n)     - ...                       */
+/*                                                                   */
+/* Translates strings to lower or uppercase; optionally limited by   */
+/* n in strnlower and strnupper.                                     */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+INLINE void strlower(char *result, char *string)
+{
+    register char *r = result;
+    register char *s = string;
+    for (; s[0]; r++, s++)
+    {
+        r[0] = asciitolower(s[0]);
+    }
+    r[0] = 0;
+    return;
+}
+
+INLINE void strnlower(char *result, char *string, const u_int n)
+{
+    register char *r = result;
+    register char *s = string;
+    register uintptr_t limit = (uintptr_t)s + (uintptr_t)n - 1;
+    for (; (uintptr_t)s < limit && s[0]; r++, s++)
+    {
+        r[0] = asciitolower(s[0]);
+    }
+    r[0] = 0;
+    return;
+}
+
+INLINE void strupper(char *result, char *string)
+{
+    register char *r = result;
+    register char *s = string;
+    for (; s[0]; r++, s++)
+    {
+        r[0] = asciitoupper(s[0]);
+    }
+    r[0] = 0;
+    return;
+}
+
+INLINE void strnupper(char *result, char *string, const u_int n)
+{
+    register char *r = result;
+    register char *s = string;
+    register uintptr_t limit = (uintptr_t)s + (uintptr_t)n - 1;
+    for (; (uintptr_t)s < limit && s[0]; r++, s++)
+    {
+        r[0] = asciitoupper(s[0]);
+    }
+    r[0] = 0;
+    return;
+}
+
 
 #endif /* !defined(_extended_string_routines_) */
 

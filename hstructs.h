@@ -447,6 +447,7 @@ struct SYSBLK {
                                         /* 0 == S/370   (ARCH_370)   */
                                         /* 1 == ESA/390 (ARCH_390)   */
                                         /* 2 == ESAME   (ARCH_900)   */
+        RADR    hostpagesz;             /* Host page size            */
         RADR    mainsize;               /* Main storage size (bytes) */
         BYTE   *mainstor;               /* -> Main storage           */
         BYTE   *storkeys;               /* -> Main storage key array */
