@@ -229,7 +229,7 @@
   #define PVFREE      w32_vfree      
   #define VFREE       w32_vfree      
 #else
-  #if !defined(__FreeBSD__) && !defined(__APPLE__)
+  #if !defined(__FreeBSD__) && !defined(__APPLE__) && !defined(__SOLARIS__)
     #define PVALLOC     pvalloc
     #define PVFREE      free 
     #define VALLOC      valloc
