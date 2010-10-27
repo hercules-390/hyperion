@@ -1856,7 +1856,9 @@ DLL_EXPORT void update_maxrates_hwm()       // (update high-water-mark values)
     if ( elapsed_secs >= ( maxrates_rpt_intvl * 60 ) )
     {
         if (sysblk.panel_init)
-            do_panel_command("-herc maxrates");
+        {
+            panel_command("-herc maxrates");
+        }
 
         prev_high_mips_rate = curr_high_mips_rate;
         prev_high_sios_rate = curr_high_sios_rate;
