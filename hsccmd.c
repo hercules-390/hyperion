@@ -283,42 +283,85 @@ int maxrates_cmd(int argc, char *argv[],char *cmdline)
     }
     else
     {
-        char*   pszPrevIntervalStartDateTime;
-        char*   pszCurrIntervalStartDateTime;
-        char*   pszCurrentDateTime;
-        time_t  current_time;
+        char*   pszPrevIntervalStartDateTime = NULL;
+        char*   pszCurrIntervalStartDateTime = NULL;
+        char*   pszCurrentDateTime           = NULL;
+        time_t  current_time    = 0;
+        int     rc              = TRUE;
+        size_t  len             = 0;
 
         current_time = time( NULL );
+    
+        do {
+                pszPrevIntervalStartDateTime = strdup( ctime( &prev_int_start_time ) );
+                len = strlen(pszPrevIntervalStartDateTime);
+                if ( pszPrevIntervalStartDateTime != NULL && len > 0 )
+                {
+                    pszPrevIntervalStartDateTime[len - 1] = 0;
+                }
+                else
+                {
+                    rc = FALSE;
+                    break;
+                }
+                
+                pszCurrIntervalStartDateTime = strdup( ctime( &curr_int_start_time ) );
+                len = strlen(pszCurrIntervalStartDateTime);
+                if ( pszCurrIntervalStartDateTime != NULL && len > 0 )
+                {
+                    pszCurrIntervalStartDateTime[len - 1] = 0;
+                }
+                else
+                {
+                    rc = FALSE;
+                    break;
+                }
 
-        pszPrevIntervalStartDateTime = strdup( ctime( &prev_int_start_time ) );
-        pszPrevIntervalStartDateTime[strlen(pszPrevIntervalStartDateTime) - 1] = 0;
-        pszCurrIntervalStartDateTime = strdup( ctime( &curr_int_start_time ) );
-        pszCurrIntervalStartDateTime[strlen(pszCurrIntervalStartDateTime) - 1] = 0;
-        pszCurrentDateTime           = strdup( ctime(    &current_time     ) );
-        pszCurrentDateTime[strlen(pszCurrentDateTime) - 1] = 0;
+                pszCurrentDateTime           = strdup( ctime(    &current_time     ) );
+                len = strlen(pszCurrentDateTime);
+                if ( pszCurrentDateTime != NULL && len > 0 )
+                {
+                    pszCurrentDateTime[len - 1] = 0;
+                }
+                else
+                {
+                    rc = FALSE;
+                    break;
+                }
 
-        WRMSG(HHC02272, "I", "Highest observed MIPS and IO/s rates:");
-        if ( prev_int_start_time != curr_int_start_time )
+                break;
+
+            } while(0);
+
+        if ( rc )
         {
-            MSGBUF( buf, "From %s to %s", pszPrevIntervalStartDateTime,
+            WRMSG(HHC02272, "I", "Highest observed MIPS and IO/s rates:");
+            if ( prev_int_start_time != curr_int_start_time )
+            {
+                MSGBUF( buf, "From %s to %s", pszPrevIntervalStartDateTime,
                          pszCurrIntervalStartDateTime);
-            WRMSG(HHC02272, "I", buf);
-            MSGBUF( buf, "MIPS: %d.%02d", prev_high_mips_rate / 1000000,
+                WRMSG(HHC02272, "I", buf);
+                MSGBUF( buf, "MIPS: %d.%02d", prev_high_mips_rate / 1000000,
                          prev_high_mips_rate % 1000000);
+                WRMSG(HHC02272, "I", buf);
+                MSGBUF( buf, "IO/s: %d", prev_high_sios_rate);
+                WRMSG(HHC02272, "I", buf);
+            }
+            MSGBUF( buf, "From %s to %s", pszCurrIntervalStartDateTime,
+                     pszCurrentDateTime);
             WRMSG(HHC02272, "I", buf);
-            MSGBUF( buf, "IO/s: %d", prev_high_sios_rate);
+            MSGBUF( buf, "MIPS: %d.%02d", curr_high_mips_rate / 1000000,
+                     curr_high_mips_rate % 1000000);
+            WRMSG(HHC02272, "I", buf);
+            MSGBUF( buf, "IO/s: %d", curr_high_sios_rate);
+            WRMSG(HHC02272, "I", buf);
+            MSGBUF( buf, "Current interval is %d minutes", maxrates_rpt_intvl);
             WRMSG(HHC02272, "I", buf);
         }
-        MSGBUF( buf, "From %s to %s", pszCurrIntervalStartDateTime,
-                     pszCurrentDateTime);
-        WRMSG(HHC02272, "I", buf);
-        MSGBUF( buf, "MIPS: %d.%02d", curr_high_mips_rate / 1000000,
-                     curr_high_mips_rate % 1000000);
-        WRMSG(HHC02272, "I", buf);
-        MSGBUF( buf, "IO/s: %d", curr_high_sios_rate);
-        WRMSG(HHC02272, "I", buf);
-        MSGBUF( buf, "Current interval is %d minutes", maxrates_rpt_intvl);
-        WRMSG(HHC02272, "I", buf);
+        else
+        {
+            WRMSG( HHC02219, "E", "strdup()", "zero length"); 
+        }
 
         free( pszPrevIntervalStartDateTime );
         free( pszCurrIntervalStartDateTime );

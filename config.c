@@ -85,14 +85,13 @@ int i;
 static RADR config_allocmsize = 0;
 int configure_storage(RADR mbstor)
 {
-int off;
 BYTE *mainstor;
 BYTE *storkeys;
 RADR  mainsize;
 RADR  storsize;
 RADR  skeysize;
-BYTE *dofree = NULL;
 int cpu;
+int rc = 0;
 
     OBTAIN_INTLOCK(NULL);
     if(sysblk.cpus)
@@ -105,61 +104,81 @@ int cpu;
     RELEASE_INTLOCK(NULL);
 
     /* Convert from configuration units to bytes */
-    mainsize = mbstor * 1024 * 1024;
+    if ( mbstor == 0 )
+        mainsize = 64 * 1024;
+    else
+        mainsize = mbstor * 1024 * 1024;
     /* Adjust for alignment */
-    storsize = mainsize + 8192;
+    storsize = round_to_hostpagesize(mainsize);
     /* Storage key array size */
-    skeysize = storsize / STORAGE_KEY_UNITSIZE;
+    skeysize = round_to_hostpagesize(storsize / STORAGE_KEY_UNITSIZE);
     /* Add Storage key array size */
     storsize += skeysize;
 
-    if(storsize > config_allocmsize)
+    sysblk.main_clear = 0;
+
+    if(storsize != config_allocmsize)
     {
+        if (sysblk.storkeys)
+        {
+            if (sysblk.lock_mainstor)
+                munlock(sysblk.storkeys,
+                        round_to_hostpagesize(sysblk.mainsize) +
+                        round_to_hostpagesize(sysblk.mainsize / STORAGE_KEY_UNITSIZE));
+            PVFREE(sysblk.storkeys);
+        }
+
         /* Obtain storage */
-        storkeys = calloc((size_t)(storsize >> 10), 1024);
-
-        if (storkeys != NULL)
-            sysblk.main_clear = 1;
-        else
+        if (storsize == 0)
         {
-            sysblk.main_clear = 0;
-            storkeys = malloc((size_t)(storsize));
-        }
-
-        if (storkeys == NULL)
-        {
-            char buf[64];
-            MSGBUF( buf, "malloc(%" I64_FMT "d)", storsize);
-            WRMSG(HHC01430, "S", buf, strerror(errno));
-            return -1;
+            sysblk.storkeys = 0;
+            sysblk.mainstor = 0;
+            sysblk.mainsize = 0;
+            config_allocmsize = 0;
         }
         else
+        {
+            storkeys = PVALLOC(storsize);
+
+            if (storkeys == NULL)
+            {
+                char buf[64];
+                if (sysblk.storkeys)
+                {
+                    storkeys = PVALLOC(config_allocmsize);
+                    if (storkeys == NULL)
+                    {
+                        sysblk.storkeys = 0;
+                        sysblk.mainstor = 0;
+                        sysblk.mainsize = 0;
+                        config_allocmsize = 0;
+                    }
+                    else
+                    {
+                        if (sysblk.lock_mainstor)
+                            mlock(storkeys, config_allocmsize);
+                        sysblk.storkeys = storkeys;
+                        sysblk.mainstor = storkeys + (sysblk.mainstor - sysblk.storkeys);
+                    }
+                }
+                MSGBUF( buf, "malloc(%" I64_FMT "d)", storsize);
+                WRMSG(HHC01430, "S", buf, strerror(errno));
+                return -1;
+            }
+
+            if (sysblk.lock_mainstor)
+                mlock(storkeys, storsize);
             config_allocmsize = storsize;
 
-        /* Free previously allocated storage */
-        dofree = sysblk.storkeys;
+            /* Mainstor is located beyond the storage key array */
+            mainstor = storkeys + skeysize;
+
+            /* Set in sysblk */
+            sysblk.storkeys = storkeys;
+            sysblk.mainstor = mainstor;
+            sysblk.mainsize = mainsize;
+        }
     }
-    else
-    {
-        storkeys = sysblk.storkeys;
-        sysblk.main_clear = 0;
-        dofree = NULL;
-    }
-
-    /* Mainstor is located beyond the storage key array */
-    mainstor = storkeys + skeysize;
-
-    /* Trying to get mainstor aligned to the next 4K boundary - Greg */
-    off = (uintptr_t)mainstor & 0xFFF;
-    mainstor += off ? 4096 - off : 0;
-
-    /* Set in sysblk */
-    sysblk.storkeys = storkeys;
-    sysblk.mainstor = mainstor;
-    sysblk.mainsize = mainsize;
-
-    if(dofree)
-        free(dofree);
 
     /* Initial power-on reset for main storage */
     storage_clear();
@@ -190,17 +209,20 @@ int cpu;
 
     configure_region_reloc();
 
-    return 0;
+    if ( rc == 0 && ( config_allocmsize == 0 || config_allocmsize < (1024 * 1024) ) )
+        rc = 1;
+
+    return rc;
 }
 
 static U32 config_allocxsize = 0;
 int configure_xstorage(U32 mbxstor)
 {
 #ifdef _FEATURE_EXPANDED_STORAGE
-BYTE *xpndstor;
-RADR  xpndsize;
-BYTE *dofree = NULL;
+BYTE *xpndstor  = NULL;
+RADR  xpndsize  = 0;
 int cpu;
+int rc = 0;
 
     OBTAIN_INTLOCK(NULL);
     if(sysblk.cpus)
@@ -214,48 +236,61 @@ int cpu;
 
     /* Convert from configuration units to bytes */
     xpndsize = mbxstor * 1024 * 1024;
-    /* Adjust for alignment */
 
-    if (xpndsize > config_allocxsize)
+    sysblk.xpnd_clear = 0;
+
+    if (xpndsize != config_allocxsize)
     {
+
+        if (sysblk.xpndsize)
+        {
+            if (sysblk.lock_mainstor)
+                munlock(sysblk.xpndstor, config_allocxsize);
+            PVFREE(sysblk.xpndstor);
+        }
 
         /* Obtain expanded storage */
-        xpndstor = calloc((size_t)(xpndsize >> 10), 1024);
-
-        if (xpndstor)
-            sysblk.xpnd_clear = 1;
-        else
+        if (xpndstor == 0)
         {
-            sysblk.xpnd_clear = 0;
-            xpndstor = malloc((size_t)xpndsize);
-        }
-
-        if (xpndstor == NULL)
-        {
-            char buf[64];
-            MSGBUF( buf, "malloc(%lu)", (unsigned long)sysblk.xpndsize * XSTORE_PAGESIZE);
-            WRMSG(HHC01430, "S", buf, strerror(errno));
-            return -1;
+            sysblk.xpndstor = 0;
+            sysblk.xpndsize = 0;
+            config_allocxsize = 0;
         }
         else
+        {
+            xpndstor = PVALLOC(xpndsize);
+
+            if (xpndstor == NULL)
+            {
+                char buf[64];
+                if (sysblk.xpndstor != NULL)
+                {
+                    xpndstor = PVALLOC(config_allocxsize);
+                    if (xpndstor)
+                    {
+                        if (sysblk.lock_mainstor)
+                            mlock(xpndstor, config_allocxsize);
+                        sysblk.xpndstor = xpndstor;
+                    }
+                    else
+                    {
+                      sysblk.xpndstor = 0;
+                      sysblk.xpndsize = 0;
+                      config_allocxsize = 0;
+                    }
+                }
+                MSGBUF( buf, "malloc(%lu)", (unsigned long)(xpndsize / XSTORE_PAGESIZE));
+                WRMSG(HHC01430, "S", buf, strerror(errno));
+                return -1;
+            }
+
+            if (sysblk.lock_mainstor)
+                mlock(xpndstor, xpndsize);
             config_allocxsize = xpndsize;
-
-        /* Free previously allocated storage */
-        dofree = sysblk.xpndstor;
+            sysblk.xpndstor = xpndstor;
+            sysblk.xpndsize = xpndsize / XSTORE_PAGESIZE;
+        }
     }
-    else
-    {
-        xpndstor = sysblk.xpndstor;
-        sysblk.xpnd_clear = 0;
-        dofree = NULL;
-    }
-
-
-    sysblk.xpndstor = xpndstor;
-    sysblk.xpndsize = xpndsize / XSTORE_PAGESIZE;
-
-    if(dofree)
-        free(dofree);
 
     /* Initial power-on reset for expanded storage */
     xstorage_clear();
@@ -265,8 +300,11 @@ int cpu;
 #endif /*!_FEATURE_EXPANDED_STORAGE*/
 
     configure_region_reloc();
+    
+    if ( rc == 0 && config_allocxsize == 0 )
+        rc = 1;
 
-    return 0;
+    return rc;
 }
 
 /*-------------------------------------------------------------------*/
@@ -301,6 +339,12 @@ int     cpu;
     broadcast_condition (&sysblk.ioqcond);
     release_lock (&sysblk.ioqlock);
 #endif
+    
+    /* release storage          */
+    WRMSG( HHC01427, "I", "Main", configure_storage(0) == 1 ? "" : "not " );
+    
+    /* release expanded storage */
+    WRMSG( HHC01427, "I", "Expanded", configure_xstorage(0) == 1 ? "" : "not ");
 
     WRMSG(HHC01422, "I");
 
@@ -329,7 +373,7 @@ int rc;
         WRMSG(HHC00744, "E");
         return -1;
     }
-    
+
     /* Start the shared server */
     if ((sysblk.shrdport = shrdport))
     {
@@ -505,7 +549,7 @@ char  thread_name[32];
 
     rc = create_thread (&sysblk.cputid[cpu], DETACHED, cpu_thread,
                         &cpu, thread_name);
-    if (rc)   
+    if (rc)
     {
         WRMSG(HHC00102, "E", strerror(rc));
         return HERRCPUOFF; /* CPU offline */
@@ -520,7 +564,7 @@ char  thread_name[32];
         sysblk.regs[i]->intwait = 1;
 
     /* Wait for CPU thread to initialize */
-    do 
+    do
        wait_condition (&sysblk.cpucond, &sysblk.intlock);
     while (!IS_CPU_ONLINE(cpu));
 
@@ -622,7 +666,7 @@ int cpu;
         }
 
     RELEASE_INTLOCK(NULL);
- 
+
     return 0;
 }
 
@@ -1722,7 +1766,7 @@ parse_and_attach_devices(const char *sdevnum,
 #endif /* #if defined(OPTION_CONFIG_SYMBOLS) */
         free(dnd.da);
         return baddev?-1:0;
-} 
+}
 #endif /*defined(OPTION_ENHANCED_DEVICE_ATTACH)*/
 
 #define MAX_LOGO_LINES 256

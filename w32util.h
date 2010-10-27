@@ -212,6 +212,7 @@ W32_DLL_IMPORT unsigned long w32_getpagesize(void);
 W32_DLL_IMPORT int w32_mlock(const void *addr, size_t len);
 W32_DLL_IMPORT int w32_munlock(const void *addr, size_t len);
 W32_DLL_IMPORT void * w32_valloc(size_t bytes);
+W32_DLL_IMPORT void w32_vfree(void * _maddr);
 
 //////////////////////////////////////////////////////////////////////////////////////////
 

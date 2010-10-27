@@ -3498,14 +3498,17 @@ DLL_EXPORT int w32_munlock( void *addr, size_t len)
 
 DLL_EXPORT void * w32_valloc( size_t bytes )
 {
-long pagesize;
-void *ret;
 
-    pagesize = getpagesize ();
-    ret = malloc (bytes + pagesize - 1);
-    if (ret)
-        ret = (void *)((long)((u_char)ret + pagesize - 1) &~ (pagesize - 1));
-    return ret;
+    return (_aligned_malloc( bytes, (size_t)w32_getpagesize()));
+
+}
+
+DLL_EXPORT void w32_vfree( void * maddr )
+{
+
+    _aligned_free( maddr );
+
+    return;
 
 }
 #endif // defined( _MSVC_ )

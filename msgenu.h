@@ -903,6 +903,7 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01424 "All termination routines complete"
 #define HHC01425 "Hercules shutdown complete"
 #define HHC01426 "Shutdown initiated"
+#define HHC01427 "%s storage %sreleased"
 
 /* bldcfg.c */
 #define HHC01430 "Error in function '%s': '%s'"

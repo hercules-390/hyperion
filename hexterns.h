@@ -206,16 +206,16 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
 
 /* Function used to compare filenames */
 #if defined(MIXEDCASE_FILENAMES_ARE_UNIQUE)
-  #define strfilenamecmp  strcmp
+  #define strfilenamecmp   strcmp
   #define strnfilenamecmp  strncmp
 #else
-  #define strfilenamecmp  strcasecmp
+  #define strfilenamecmp   strcasecmp
   #define strnfilenamecmp  strncasecmp
 #endif
 
 /* Global data areas in module config.c                              */
-HSYS_DLL_IMPORT SYSBLK   sysblk;         /* System control block      */
-CCKD_DLL_IMPORT CCKDBLK  cckdblk;                /* CCKD global block         */
+HSYS_DLL_IMPORT SYSBLK   sysblk;                /* System control block      */
+CCKD_DLL_IMPORT CCKDBLK  cckdblk;               /* CCKD global block         */
 #ifdef EXTERNALGUI
 HSYS_DLL_IMPORT int extgui;             // __attribute__ ((deprecated));
 /* The external gui interface is now external and now uses the

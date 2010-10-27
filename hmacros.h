@@ -226,9 +226,13 @@
 #if defined(_MSVC_)
   #define PVALLOC     w32_valloc
   #define VALLOC      w32_valloc
+  #define PVFREE      w32_vfree      
+  #define VFREE       w32_vfree      
 #else
   #define PVALLOC     pvalloc
+  #define PVFREE      free 
   #define VALLOC      valloc
+  #define VFREE       free   
 #endif
 
 
