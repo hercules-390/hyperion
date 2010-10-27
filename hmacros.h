@@ -869,7 +869,7 @@ typedef struct _CHAINBLK {              /* Chain definition block    */
         LOCK       lock;                /* Lock for chain            */
         uintptr_t *first;               /* First entry pointer       */
         uintptr_t *last;                /* Last entry pointer        */
-        ptrdiff_t  offset;              /* Offset to container start */
+        uintptr_t  offset;              /* Offset to container start */
 } CHAINBLK;
 
 
@@ -882,7 +882,7 @@ typedef struct _CHAIN {                 /* Chain member definition   */
         u_int      containersize;       /* Size of container         */
         uintptr_t *prev;                /* -> previous chain entry   */
         uintptr_t *next;                /* -> next chain entry       */
-        ptrdiff_t  offset;              /* Offset to container start */
+        uintptr_t  offset;              /* Offset to container start */
         CHAINBLK  *anchor;              /* -> owning CHAINBLK        */
 } CHAIN;
 
@@ -1217,7 +1217,7 @@ INLINE u_int strabbrev(char *string, char *abbrev, const u_int n)
         {
             a++;
             if (!a[0])
-                return (((unsigned)a - (unsigned)abbrev) >= n);
+                return (((uintptr_t)a - (uintptr_t)abbrev) >= n);
             s++;
             if (!s[0] ||
                 a[0] != s[0])
@@ -1240,7 +1240,7 @@ INLINE u_int strcaseabbrev(const char *string, const char *abbrev, const u_int n
         {
             a++;
             if (!a[0])
-                return (((unsigned)a - (unsigned)abbrev) >= n);
+                return (((uintptr_t)a - (uintptr_t)abbrev) >= n);
             s++;
             if (!s[0])
                 break;
