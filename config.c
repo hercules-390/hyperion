@@ -138,14 +138,14 @@ int rc = 0;
         }
         else
         {
-            storkeys = PVALLOC(storsize);
+            storkeys = PVALLOC((uintptr_t)storsize);
 
             if (storkeys == NULL)
             {
                 char buf[64];
                 if (sysblk.storkeys)
                 {
-                    storkeys = PVALLOC(config_allocmsize);
+                    storkeys = PVALLOC((uintptr_t)config_allocmsize);
                     if (storkeys == NULL)
                     {
                         sysblk.storkeys = 0;
@@ -258,14 +258,14 @@ int rc = 0;
         }
         else
         {
-            xpndstor = PVALLOC(xpndsize);
+            xpndstor = PVALLOC((uintptr_t)xpndsize);
 
             if (xpndstor == NULL)
             {
                 char buf[64];
                 if (sysblk.xpndstor != NULL)
                 {
-                    xpndstor = PVALLOC(config_allocxsize);
+                    xpndstor = PVALLOC((uintptr_t)config_allocxsize);
                     if (xpndstor)
                     {
                         if (sysblk.lock_mainstor)

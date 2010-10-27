@@ -229,7 +229,7 @@
   #define PVFREE      w32_vfree      
   #define VFREE       w32_vfree      
 #else
-  #define PVALLOC     pvalloc
+  #define PVALLOC     valloc
   #define PVFREE      free 
   #define VALLOC      valloc
   #define VFREE       free   
