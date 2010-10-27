@@ -171,6 +171,7 @@ DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
     char   *bfr     =   NULL;
     char   *msgbuf  =   NULL;
     int     rc      =   1;
+    int     errmsg  =   FALSE;
     int     siz     =   1024;
     char    file[FILENAME_MAX];
     char    prefix[64];
@@ -208,20 +209,17 @@ DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
 
     BFR_VSNPRINTF();
 
+    if ( strlen(bfr) > 10 && SNCMP(bfr,"HHC",3) && (bfr[8] == 'S' || bfr[8] == 'E' || bfr[8] == 'W') )
+        errmsg = TRUE;
+
 #if defined( OPTION_MSGCLR )
-    if (!strlen(color))
+    if (!strlen(color) && errmsg )
     {
-        switch(msg[8])
-        {
-            case 'S':
-            case 'E':
-            case 'W':
-                color = "<pnl,color(lightred,black),keep>";
-                break;
-            default:
-                color = "";
-                break;
-        }
+         color = "<pnl,color(lightred,black),keep>";
+    }
+    else
+    {
+        color = "";
     }
 #else
     color = "";
@@ -230,7 +228,7 @@ DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
     if ( lvl & MLVL_DEBUG )
     {
 #if defined( OPTION_MSGCLR )
-        if (strlen(color) > 0 && !sysblk.shutdown && sysblk.panel_init)
+        if (strlen(color) > 0 && !sysblk.shutdown && sysblk.panel_init && !sysblk.daemon_mode)
             MSGBUF(prefix, "%s%-10.10s %5d ", color, file, line);
         else
             MSGBUF(prefix, "%-10.10s %5d ", file, line);
@@ -241,7 +239,7 @@ DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
     else
     {
 #if defined( OPTION_MSGCLR )
-        if (strlen(color) > 0 && !sysblk.shutdown && sysblk.panel_init)
+        if (strlen(color) > 0 && !sysblk.shutdown && sysblk.panel_init && !sysblk.daemon_mode)
         {
             MSGBUF(prefix, "%s", color );
         }
@@ -254,7 +252,7 @@ DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
         msgbuf = calloc(1,l);
         if (msgbuf)
         {
-            if ( strlen(bfr) > 10 && !strncmp(bfr, "HHC", 3) )
+            if ( strlen(bfr) > 10 && SNCMP(bfr, "HHC", 3) )
                 snprintf( msgbuf, l-1, "%s%s", prefix, ( sysblk.emsg & EMSG_TEXT ) ? &bfr[10] : bfr ); 
             else
                 snprintf( msgbuf, l-1, "%s%s", prefix, bfr );
@@ -264,8 +262,7 @@ DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
         free(bfr);
     }
 
-    if ( ( MLVL(DEBUG) && msg[8] != 'D' ) || ( strlen(msg) > 10 && SNCMP(msg,"HHC",3) &&
-                        (msg[8] == 'S' || msg[8] == 'E' || msg[8] == 'W') ) )
+    if ( MLVL(DEBUG) && errmsg )
     {
         if ( MLVL(DEBUG) )
         {

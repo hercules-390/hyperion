@@ -174,9 +174,6 @@ static void do_shutdown_now()
 #ifdef _MSVC_
         socket_deinit();
 #endif
-#ifdef DEBUG
-        fprintf(stdout, _("DO_SHUTDOWN_NOW EXIT\n"));
-#endif
         if ( sysblk.emsg & EMSG_TEXT )
             fprintf(stdout, HHC01412);
         else
