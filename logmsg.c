@@ -213,13 +213,12 @@ DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
         errmsg = TRUE;
 
 #if defined( OPTION_MSGCLR )
-    if (!strlen(color) && errmsg )
+    if ( !strlen(color) )
     {
-         color = "<pnl,color(lightred,black),keep>";
-    }
-    else
-    {
-        color = "";
+        if ( errmsg )
+            color = "<pnl,color(lightred,black),keep>";
+        else
+            color = "";
     }
 #else
     color = "";
