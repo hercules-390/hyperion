@@ -375,9 +375,11 @@ int     cpu;
 #endif
 
     /* release storage          */
+    sysblk.lock_mainstor = 0;
     WRMSG( HHC01427, "I", "Main", configure_storage(0) == 1 ? "" : "not " );
 
     /* release expanded storage */
+    sysblk.lock_xpndstor = 0;
     WRMSG( HHC01427, "I", "Expanded", configure_xstorage(0) == 1 ? "" : "not ");
 
     WRMSG(HHC01422, "I");
