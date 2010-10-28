@@ -302,7 +302,7 @@ int maxrates_cmd(int argc, char *argv[],char *cmdline)
         size_t  len             = 0;
 
         current_time = time( NULL );
-    
+
         do {
                 pszPrevIntervalStartDateTime = strdup( ctime( &prev_int_start_time ) );
                 len = strlen(pszPrevIntervalStartDateTime);
@@ -315,7 +315,7 @@ int maxrates_cmd(int argc, char *argv[],char *cmdline)
                     rc = FALSE;
                     break;
                 }
-                
+
                 pszCurrIntervalStartDateTime = strdup( ctime( &curr_int_start_time ) );
                 len = strlen(pszCurrIntervalStartDateTime);
                 if ( pszCurrIntervalStartDateTime != NULL && len > 0 )
@@ -371,7 +371,7 @@ int maxrates_cmd(int argc, char *argv[],char *cmdline)
         }
         else
         {
-            WRMSG( HHC02219, "E", "strdup()", "zero length"); 
+            WRMSG( HHC02219, "E", "strdup()", "zero length");
         }
 
         free( pszPrevIntervalStartDateTime );
@@ -2540,10 +2540,11 @@ int qstor_cmd(int argc, char *argv[], char *cmdline);
 /*-------------------------------------------------------------------*/
 int mainsize_cmd(int argc, char *argv[], char *cmdline)
 {
-U32 mainsize;
-BYTE c;
-int rc;
-u_int i;
+U32     mainsize;
+BYTE    c;
+int     rc;
+u_int   i;
+char    check[16];
 
     UNREFERENCED(cmdline);
 
@@ -2566,9 +2567,10 @@ u_int i;
     /* Process options */
     for (i = 2; (int)i < argc; i++)
     {
-        if (strcaseabbrev("lock", argv[i], 1))
+        strnupper(check, argv[i], (u_int)sizeof(check));
+        if (strabbrev("LOCKED", check, 1))
             sysblk.lock_mainstor = 1;
-        else if (strcaseabbrev("nolock", argv[i], 3))
+        else if (strabbrev("UNLOCKED", check, 3))
             sysblk.lock_mainstor = 0;
         else
         {
@@ -2605,10 +2607,11 @@ u_int i;
 /*-------------------------------------------------------------------*/
 int xpndsize_cmd(int argc, char *argv[], char *cmdline)
 {
-U32 xpndsize;
-BYTE c;
-int rc;
-u_int i;
+U32     xpndsize;
+BYTE    c;
+int     rc;
+u_int   i;
+char    check[16];
 
     UNREFERENCED(cmdline);
 
@@ -2630,9 +2633,10 @@ u_int i;
     /* Process options */
     for (i = 2; (int)i < argc; i++)
     {
-        if (strcaseabbrev("lock", argv[i], 1))
+        strnupper(check, argv[i], (u_int)sizeof(check));
+        if (strabbrev("LOCKED", check, 1))
             sysblk.lock_xpndstor = 1;
-        else if (strcaseabbrev("nolock", argv[i], 3))
+        else if (strabbrev("UNLOCKED", check, 3))
             sysblk.lock_xpndstor = 0;
         else
         {

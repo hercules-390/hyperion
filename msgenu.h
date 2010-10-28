@@ -905,6 +905,10 @@ cpu.c:123:HABC1234I This is a message
 #define HHC01426 "Shutdown initiated"
 #define HHC01427 "%s storage %sreleased"
 
+/* config.c */
+#define HHC01428 "Locking %s storage"
+#define HHC01429 "Unlocking %s storage"
+
 /* bldcfg.c */
 #define HHC01430 "Error in function '%s': '%s'"
 #define HHC01431 "Expanded storage support not installed"

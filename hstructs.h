@@ -450,10 +450,12 @@ struct SYSBLK {
         RADR    mainsize;               /* Main storage size (bytes) */
         BYTE   *mainstor;               /* -> Main storage           */
         BYTE   *storkeys;               /* -> Main storage key array */
-        u_int   lock_mainstor:1;        /* Lock main storage         */
+        u_int   lock_mainstor:1;        /* Request mainstor to lock  */
+        u_int   mainstor_locked:1;      /* Main storage locked       */
         U32     xpndsize;               /* Expanded size (4K pages)  */
         BYTE   *xpndstor;               /* -> Expanded storage       */
-        u_int   lock_xpndstor:1;        /* Lock expanded storage     */
+        u_int   lock_xpndstor:1;        /* Request xpndstor to lock  */
+        u_int   xpndstor_locked:1;      /* Expanded storage locked   */
         U64     todstart;               /* Time of initialisation    */
         U64     cpuid;                  /* CPU identifier for STIDP  */
         BYTE    cpuidfmt;               /* STIDP format 0|1          */

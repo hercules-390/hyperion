@@ -1,6 +1,21 @@
+28 Oct 2010 MAINSIZE and XPNDSIZE UNLOCKED and LOCKED options - Mark L. Gaubatz
+            LOCKED option indicates memory is to be locked into storage while
+            UNLOCKED indicates memory is not locked into storage. The default is
+            UNLOCKED.
+
+            Note: Hercules preserves the last locking state of MAINSIZE and
+            XPNDSIZE. Consequently, once storage is locked, any change to a
+            storage size will honor the existing lock state of memory unless
+            the lock state (UNLOCKED or LOCKED) is specified on the new MAINSIZE
+            or XPNDSIZE command.
+
+            CAUTION: Do not lock main storage or expanded storage unless
+            sufficient real memory is available to back the request. Failure to
+            do so may require host system reboot to recover.
+
 21 Oct 2010 Split CPU and DEBUG functions from hsccmd.c to hscpufun.c and hscemode.c - Paul Gorlinsky
 03 Oct 2010 Split loadtext_cmd() and loadcore_cmd() from hsccmd.c to loadmem.c - Paul Gorlinsky
-02 Oct 2010 Change MAX_CPU_ENGINES to MAX_CPU in several places. Wrong use of 
+02 Oct 2010 Change MAX_CPU_ENGINES to MAX_CPU in several places. Wrong use of
             MAX_CPU_ENGINES. MAX_CPU_ENGINES is a build time option. Paul Gorlinsky
 29 Sep 2010 CKD non-lfs and non-compressed disk, maximum 35 chunks 1-9,A-Z Paul Gorlinsky
 29 Sep 2010 MODEL, PLANT, MANUFACTURER changed to PANEL+CONFIG, enhanced support - Paul Gorlinsky

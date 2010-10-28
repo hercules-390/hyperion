@@ -832,7 +832,6 @@ do { \
 #endif /*!defined(MINMAX)*/
 
 
-
 /* chain.h      (c) Mark L. Gaubatz, 1985-2010                       */
 /*              Chain and queue macros and inline routines           */
 /*              Adapted for use by Hercules                          */
@@ -929,19 +928,23 @@ INLINE CHAINBLK *chain_validate_entry_header(CHAIN *entry)
     return anchor;
 }
 
-INLINE void chain_init_anchor(void *container, CHAINBLK *anchor, char *eyecatcher, u_int containersize)
+INLINE void chain_init_anchor(void *container, CHAINBLK *anchor, char *eyecatcher, const u_int containersize)
 {
-    register u_int i = 0;
     chain_validate_pointer(container);
     chain_validate_pointer(anchor);
     chain_validate_pointer(eyecatcher);
     memcpy(anchor->anchoreye, anchor_id, aeyesize);
-    for (; i < eyesize && eyecatcher[i] != 0x00; i++)
-         anchor->eyecatcher[i] = eyecatcher[i];
-    if (!i)
-        raise_chain_validation_error;
-    for (; i < eyesize; i++)
-         anchor->eyecatcher[i] = ' ';
+    {
+        register char *a = anchor->eyecatcher;
+        register char *e = eyecatcher;
+        register char *limit = a + eyesize;
+        for (; a < limit && e[0]; a++, e++)
+             a[0] = e[0];
+        if (a == anchor->eyecatcher)
+            raise_chain_validation_error;
+        for (; a < limit; a++)
+             a[0] = ' ';
+    }
     anchor->containersize = containersize;
     initialize_lock(&anchor->lock);
     anchor->first = anchor->last = 0;
@@ -1263,6 +1266,7 @@ INLINE u_int strcaseabbrev(const char *string, const char *abbrev, const u_int n
 /* n in strnlower and strnupper.                                     */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
+
 INLINE void strlower(char *result, char *string)
 {
     register char *r = result;
@@ -1279,8 +1283,8 @@ INLINE void strnlower(char *result, char *string, const u_int n)
 {
     register char *r = result;
     register char *s = string;
-    register uintptr_t limit = (uintptr_t)s + (uintptr_t)n - 1;
-    for (; (uintptr_t)s < limit && s[0]; r++, s++)
+    register char *limit = s + n - 1;
+    for (; s < limit && s[0]; r++, s++)
     {
         r[0] = asciitolower(s[0]);
     }
@@ -1304,8 +1308,8 @@ INLINE void strnupper(char *result, char *string, const u_int n)
 {
     register char *r = result;
     register char *s = string;
-    register uintptr_t limit = (uintptr_t)s + (uintptr_t)n - 1;
-    for (; (uintptr_t)s < limit && s[0]; r++, s++)
+    register char *limit = s + n - 1;
+    for (; s < limit && s[0]; r++, s++)
     {
         r[0] = asciitoupper(s[0]);
     }

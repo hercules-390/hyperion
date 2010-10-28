@@ -140,6 +140,6 @@
 
 // Post-process includes
 #include "dasdtab.h"
-#include "hinlines.h"     // bring inlines here
+#include "hinlines.h"     // bring Hercules specific inlines here
 
 #endif // _HERCULES_H

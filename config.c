@@ -92,6 +92,7 @@ RADR  storsize;
 RADR  skeysize;
 int cpu;
 int rc = 0;
+int was_locked = sysblk.mainstor_locked;
 
     OBTAIN_INTLOCK(NULL);
     if(sysblk.cpus)
@@ -117,14 +118,20 @@ int rc = 0;
 
     sysblk.main_clear = 0;
 
-    if(storsize != config_allocmsize)
+    if(storsize != config_allocmsize ||
+       sysblk.lock_mainstor != sysblk.mainstor_locked)
     {
         if (sysblk.storkeys)
         {
-            if (sysblk.lock_mainstor)
+            if (sysblk.mainstor_locked)
+            {
+                WRMSG(HHC01429, "I", "main");
+                usleep(250);
                 munlock(sysblk.storkeys,
                         round_to_hostpagesize(sysblk.mainsize) +
                         round_to_hostpagesize(sysblk.mainsize / STORAGE_KEY_UNITSIZE));
+                sysblk.mainstor_locked = 0;
+            }
             PVFREE(sysblk.storkeys);
         }
 
@@ -155,8 +162,13 @@ int rc = 0;
                     }
                     else
                     {
-                        if (sysblk.lock_mainstor)
+                        if (was_locked)
+                        {
+                            WRMSG(HHC01428, "I", "main");
+                            usleep(250);
                             mlock(storkeys, config_allocmsize);
+                            sysblk.mainstor_locked = 1;
+                        }
                         sysblk.storkeys = storkeys;
                         sysblk.mainstor = storkeys + (sysblk.mainstor - sysblk.storkeys);
                     }
@@ -167,7 +179,12 @@ int rc = 0;
             }
 
             if (sysblk.lock_mainstor)
+            {
+                WRMSG(HHC01428, "I", "main");
+                usleep(250);
                 mlock(storkeys, storsize);
+                sysblk.mainstor_locked = 1;
+            }
             config_allocmsize = storsize;
 
             /* Mainstor is located beyond the storage key array */
@@ -223,6 +240,7 @@ BYTE *xpndstor  = NULL;
 RADR  xpndsize  = 0;
 int cpu;
 int rc = 0;
+int was_locked = sysblk.xpndstor_locked;
 
     OBTAIN_INTLOCK(NULL);
     if(sysblk.cpus)
@@ -239,13 +257,19 @@ int rc = 0;
 
     sysblk.xpnd_clear = 0;
 
-    if (xpndsize != config_allocxsize)
+    if (xpndsize != config_allocxsize ||
+        sysblk.lock_xpndstor != sysblk.xpndstor_locked)
     {
 
         if (sysblk.xpndsize)
         {
-            if (sysblk.lock_mainstor)
+            if (sysblk.xpndstor_locked)
+            {
+                WRMSG(HHC01428, "I", "expanded");
+                usleep(250);
                 munlock(sysblk.xpndstor, config_allocxsize);
+                sysblk.xpndstor_locked = 0;
+            }
             PVFREE(sysblk.xpndstor);
         }
 
@@ -268,8 +292,13 @@ int rc = 0;
                     xpndstor = PVALLOC((uintptr_t)config_allocxsize);
                     if (xpndstor)
                     {
-                        if (sysblk.lock_mainstor)
+                        if (was_locked)
+                        {
+                            WRMSG(HHC01428, "I", "expanded");
+                            usleep(250);
                             mlock(xpndstor, config_allocxsize);
+                            sysblk.xpndstor_locked = 1;
+                        }
                         sysblk.xpndstor = xpndstor;
                     }
                     else
@@ -285,7 +314,12 @@ int rc = 0;
             }
 
             if (sysblk.lock_mainstor)
+            {
+                WRMSG(HHC01428, "I", "expanded");
+                usleep(250);
                 mlock(xpndstor, xpndsize);
+                sysblk.xpndstor_locked = 1;
+            }
             config_allocxsize = xpndsize;
             sysblk.xpndstor = xpndstor;
             sysblk.xpndsize = xpndsize / XSTORE_PAGESIZE;
@@ -300,7 +334,7 @@ int rc = 0;
 #endif /*!_FEATURE_EXPANDED_STORAGE*/
 
     configure_region_reloc();
-    
+
     if ( rc == 0 && config_allocxsize == 0 )
         rc = 1;
 
@@ -339,10 +373,10 @@ int     cpu;
     broadcast_condition (&sysblk.ioqcond);
     release_lock (&sysblk.ioqlock);
 #endif
-    
+
     /* release storage          */
     WRMSG( HHC01427, "I", "Main", configure_storage(0) == 1 ? "" : "not " );
-    
+
     /* release expanded storage */
     WRMSG( HHC01427, "I", "Expanded", configure_xstorage(0) == 1 ? "" : "not ");
 
