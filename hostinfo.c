@@ -56,19 +56,23 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
     strlcpy( pHostInfo->release,  uname_info.release,  sizeof(pHostInfo->release)  );
     strlcpy( pHostInfo->version,  uname_info.version,  sizeof(pHostInfo->version)  );
     strlcpy( pHostInfo->machine,  uname_info.machine,  sizeof(pHostInfo->machine)  );
-  #else
+   #else
     strlcpy( pHostInfo->sysname,  "(unknown)", sizeof(pHostInfo->sysname)  );
     strlcpy( pHostInfo->nodename, "(unknown)", sizeof(pHostInfo->nodename) );
     strlcpy( pHostInfo->release,  "(unknown)", sizeof(pHostInfo->release)  );
     strlcpy( pHostInfo->version,  "(unknown)", sizeof(pHostInfo->version)  );
     strlcpy( pHostInfo->machine,  "(unknown)", sizeof(pHostInfo->machine)  );
-  #endif
-  #if defined(HAVE_SYSCONF) && \
-      defined(HAVE_DECL__SC_NPROCESSORS_CONF) && \
-      HAVE_DECL__SC_NPROCESSORS_CONF
-    pHostInfo->num_procs = sysconf(_SC_NPROCESSORS_CONF);
-    pHostInfo->ullTotalPhys = (RADR)((RADR)sysconf(_SC_PAGESIZE) * (RADR)sysconf(_SC_PHYS_PAGES));
-  #endif
+   #endif
+   #if defined(HAVE_SYSCONF)
+      #if defined(HAVE_DECL__SC_NPROCESSORS_CONF) && \
+                  HAVE_DECL__SC_NPROCESSORS_CONF
+        pHostInfo->num_procs = sysconf(_SC_NPROCESSORS_CONF);
+      #endif
+      #if defined(HAVE_DECL__SC_PHYS_PAGES) && \
+                  HAVE_DECL__SC_PHYS_PAGES
+        pHostInfo->ullTotalPhys = (RADR)((RADR)sysconf(_SC_PAGESIZE) * (RADR)sysconf(_SC_PHYS_PAGES));
+      #endif
+   #endif
 #endif
 
    pHostInfo->hostpagesz = (RADR)getpagesize();
