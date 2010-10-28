@@ -13,7 +13,7 @@
 #if !defined(round_to_hostpagesize)
 INLINE U64 round_to_hostpagesize(U64 n)
 {
-    register U64 factor = (U64)sysblk.hostpagesz - 1;
+    register U64 factor = (U64)hostinfo.hostpagesz - 1;
     return ((n + factor) & ~factor);
 }
 #endif

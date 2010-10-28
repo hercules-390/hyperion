@@ -353,9 +353,6 @@ int     dll_count;                      /* index into array          */
     /* Clear the system configuration block */
     memset (&sysblk, 0, sizeof(SYSBLK));
     
-    /* set host page size          */
-    sysblk.hostpagesz = (RADR)getpagesize();
-
 #if defined (_MSVC_)
     VERIFY( VirtualLock( &sysblk, sizeof(SYSBLK) ) ); 
 #else

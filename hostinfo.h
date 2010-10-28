@@ -23,15 +23,40 @@
 #define HI_DLL_IMPORT DLL_EXPORT
 #endif
 
+/*-------------------------------------------------------------------*/
+/* Host System Information block                                     */
+/*-------------------------------------------------------------------*/
 typedef struct HOST_INFO
 {
-    char  sysname[20];
-    char  nodename[20];
-    char  release[20];
-    char  version[50];
-    char  machine[20];
-    int   trycritsec_avail;             /* 1=TryEnterCriticalSection */
-    int   num_procs;                    /* #of processors            */
+#define HDL_NAME_HOST_INFO  "HOST_INFO"
+#define HDL_VERS_HOST_INFO  "3.08"      /* Internal Version Number   */
+#define HDL_SIZE_HOST_INFO  sizeof(HOST_INFO)
+        BYTE    blknam[16];             /* Name of block             */
+        BYTE    blkver[8];              /* Version Number            */
+        U64     blkloc;                 /* Address of block    big-e */
+        U32     blksiz;                 /* size of block       big-e */
+/*-------------------- HDR /\ ---------------------------------------*/
+
+        char    sysname[20];
+        char    nodename[20];
+        char    release[20];
+        char    version[50];
+        char    machine[20];
+        int     trycritsec_avail;       /* 1=TryEnterCriticalSection */
+        int     num_procs;              /* #of processors            */
+        RADR    hostpagesz;             /* Host page size            */
+        u_long  dwMemoryLoad;
+        RADR    dwAllocationGranularity;
+        RADR    ullTotalPhys;
+        RADR    ullAvailPhys;
+        RADR    ullTotalPageFile;
+        RADR    ullAvailPageFile;
+        RADR    ullTotalVirtual;
+        RADR    ullAvailVirtual;
+
+/*-------------------- TLR \/ ---------------------------------------*/
+        BYTE    blkend[16];             /* eye-end                   */
+
 } HOST_INFO;
 
 HI_DLL_IMPORT HOST_INFO     hostinfo;

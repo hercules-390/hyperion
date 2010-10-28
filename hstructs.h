@@ -447,14 +447,13 @@ struct SYSBLK {
                                         /* 0 == S/370   (ARCH_370)   */
                                         /* 1 == ESA/390 (ARCH_390)   */
                                         /* 2 == ESAME   (ARCH_900)   */
-        RADR    hostpagesz;             /* Host page size            */
         RADR    mainsize;               /* Main storage size (bytes) */
         BYTE   *mainstor;               /* -> Main storage           */
         BYTE   *storkeys;               /* -> Main storage key array */
-        int     lock_mainstor:1;        /* Lock main storage         */
+        u_int   lock_mainstor:1;        /* Lock main storage         */
         U32     xpndsize;               /* Expanded size (4K pages)  */
         BYTE   *xpndstor;               /* -> Expanded storage       */
-        int     lock_xpndstor:1;        /* Lock expanded storage     */
+        u_int   lock_xpndstor:1;        /* Lock expanded storage     */
         U64     todstart;               /* Time of initialisation    */
         U64     cpuid;                  /* CPU identifier for STIDP  */
         BYTE    cpuidfmt;               /* STIDP format 0|1          */
@@ -598,7 +597,7 @@ struct SYSBLK {
                                         /* lookup table              */
 #endif  /* FAST_DEVICE_LOOKUP */
         U16     highsubchan[FEATURE_LCSS_MAX];  /* Highest subchan+1 */
-        BYTE    dasdcache:1;            /* 0 = system cache off
+        u_int   dasdcache:1;            /* 0 = system cache off
                                            1 = system cache on       */
 
 

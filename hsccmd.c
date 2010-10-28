@@ -149,7 +149,9 @@ int test_cmd(int argc, char *argv[],char *cmdline)
 //  UNREFERENCED(argc);
 //  UNREFERENCED(argv);
     UNREFERENCED(cmdline);
-//  cause_crash();
+
+    if ( CMD(argv[1],crash,5) )
+        cause_crash();
 
     if (test_tid)
     {
@@ -169,23 +171,32 @@ int test_cmd(int argc, char *argv[],char *cmdline)
 
     if (argc > 1)
     {
-        if ( CMD(argv[1],p=,2) ) test_p = atoi( &argv[1][2] );
-        if ( CMD(argv[1],n=,2) ) test_n = atoi( &argv[1][2] );
-        if (argv[1][0] == '&') test_t = 1;
+        do
+        {
+            if ( SNCMP(argv[1],"p=",2) ) { test_p = atoi( &argv[1][2] ); break; }
+            if ( SNCMP(argv[1],"n=",2) ) { test_n = atoi( &argv[1][2] ); break; }
+            if ( argv[1][0] == '&') test_t = 1;
+        } while(0);
     }
 
     if (argc > 2)
     {
-        if ( CMD(argv[2],p=,2) ) test_p = atoi( &argv[2][2] );
-        if ( CMD(argv[2],n=,2) ) test_n = atoi( &argv[2][2] );
-        if (argv[2][0] == '&') test_t = 1;
+        do
+        {
+            if ( SNCMP(argv[2],"p=",2) ) { test_p = atoi( &argv[2][2] ); break; }
+            if ( SNCMP(argv[2],"n=",2) ) { test_n = atoi( &argv[2][2] ); break; }
+            if ( argv[2][0] == '&') test_t = 1;
+        } while(0);
     }
 
     if (argc > 3)
     {
-        if ( CMD(argv[3],p=,2) ) test_p = atoi( &argv[3][2] );
-        if ( CMD(argv[3],n=,2) ) test_n = atoi( &argv[3][2] );
-        if (argv[3][0] == '&') test_t = 1;
+        do
+        {
+            if ( SNCMP(argv[3],"p=",2) ) { test_p = atoi( &argv[3][2] ); break; }
+            if ( SNCMP(argv[3],"n=",2) ) { test_n = atoi( &argv[3][2] ); break; }
+            if ( argv[3][0] == '&') test_t = 1;
+        } while(0);
     }
 
     if (test_t)

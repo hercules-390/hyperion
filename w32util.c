@@ -1240,8 +1240,9 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
 {
     CRITICAL_SECTION  cs;
     OSVERSIONINFOEX   vi;
-    BOOL              ext;
+    MEMORYSTATUSEX    ms;
     SYSTEM_INFO       si;
+    BOOL              ext;
     char             *psz = "", *prod_id = "", *prod_proc = "";
     DWORD             dw;
     PGNSI             pgnsi;
@@ -1251,6 +1252,17 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
 
     ZeroMemory(&si, sizeof(SYSTEM_INFO));
     ZeroMemory(&vi, sizeof(OSVERSIONINFOEX));
+    ZeroMemory(&ms, sizeof(MEMORYSTATUSEX));
+
+    ms.dwLength = sizeof(ms);
+    GlobalMemoryStatusEx(&ms);
+    pHostInfo->dwMemoryLoad = ms.dwMemoryLoad;
+    pHostInfo->ullTotalPhys = ms.ullTotalPhys;
+    pHostInfo->ullAvailPhys = ms.ullAvailPhys;
+    pHostInfo->ullTotalPageFile = ms.ullTotalPageFile;
+    pHostInfo->ullAvailPageFile = ms.ullAvailPageFile;
+    pHostInfo->ullTotalVirtual = ms.ullTotalVirtual;
+    pHostInfo->ullAvailVirtual = ms.ullAvailVirtual;
 
     dw = sizeof(pHostInfo->nodename)-1;
     GetComputerName( pHostInfo->nodename, &dw );
@@ -1755,6 +1767,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
     }
 
     pHostInfo->num_procs = si.dwNumberOfProcessors;
+    pHostInfo->dwAllocationGranularity = si.dwAllocationGranularity;
 
     InitializeCriticalSection( &cs );
 
