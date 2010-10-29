@@ -12,14 +12,8 @@
 #define _HDL_C_
 #define _HUTIL_DLL_
 
-#if !defined(WIN32) && !defined(__FreeBSD__) && !defined(__APPLE__) && defined(OPTION_DYNAMIC_LOAD)
-#define ZZ_NO_BACKLINK
-#endif
-
 #include "hercules.h"
-#ifdef ZZ_NO_BACKLINK
-#include "opcode.h" /* for the opcode tables */
-#endif
+#include "opcode.h" 
 
 /*
 extern HDLPRE hdl_preload[];
@@ -64,9 +58,7 @@ static LOCK   hdl_sdlock;                /* shutdown lock            */
 static HDLSHD *hdl_shdlist;              /* Shutdown call list       */
 
 static void hdl_didf (int, int, char *, void *);
-#ifdef ZZ_NO_BACKLINK
 static void hdl_modify_opcode(int, HDLINS *);
-#endif
 
 /* Global hdl_device_type_equates */
 
@@ -1104,9 +1096,8 @@ char *modname;
             for(ins = tmpdll->insent; ins;)
             {
             HDLINS *nextins;
-#ifdef ZZ_NO_BACKLINK
+
                 hdl_modify_opcode(FALSE, ins);
-#endif
                 free(ins->instname);
                 nextins = ins->next;
                 free(ins);
@@ -1146,143 +1137,40 @@ char *modname;
 }
 
 
-#ifdef ZZ_NO_BACKLINK
-static void hdl_modify_optab(int insert,zz_func *tabent, HDLINS *instr)
-{
-    if(insert)
-    {
-#if defined(_370)
-        if(instr->archflags & HDL_INSTARCH_370)
-        {
-            instr->original = tabent[ARCH_370];
-            tabent[ARCH_370] = instr->instruction;
-        }
-#endif
-#if defined(_390)
-        if(instr->archflags & HDL_INSTARCH_390)
-        {
-            instr->original = tabent[ARCH_390];
-            tabent[ARCH_390] = instr->instruction;
-        }
-#endif
-#if defined(_900)
-        if(instr->archflags & HDL_INSTARCH_900)
-        {
-            instr->original = tabent[ARCH_900];
-            tabent[ARCH_900] = instr->instruction;
-        }
-#endif
-    }
-    else
-    {
-#if defined(_370)
-        if(instr->archflags & HDL_INSTARCH_370)
-            tabent[ARCH_370] = instr->original; 
-#endif
-#if defined(_900)
-        if(instr->archflags & HDL_INSTARCH_390)
-            tabent[ARCH_390] = instr->original; 
-#endif
-#if defined(_900)
-        if(instr->archflags & HDL_INSTARCH_900)
-            tabent[ARCH_900] = instr->original; 
-#endif
-    }
-}
-
-
 static void hdl_modify_opcode(int insert, HDLINS *instr)
 {
-    switch(instr->opcode & 0xff00)
-    {
-        case 0x0100:
-            hdl_modify_optab(insert,opcode_01xx[instr->opcode & 0xff],instr);
-            break;
-
-#if defined (FEATURE_VECTOR_FACILITY)
-        case 0xA400:
-            hdl_modify_optab(insert,v_opcode_a4xx[instr->opcode & 0xff],instr);
-            table = v_opcode_a4xx;
-            break;
+  if(insert)
+  {
+#ifdef _370
+    if(instr->archflags & HDL_INSTARCH_370)
+      instr->original = replace_opcode(ARCH_370, instr->instruction, instr->opcode >> 8, instr->opcode & 0x00ff);
 #endif
-
-        case 0xA500:
-            hdl_modify_optab(insert,opcode_a5xx[instr->opcode & 0x0f],instr);
-            break;
-
-        case 0xA700:
-            hdl_modify_optab(insert,opcode_a7xx[instr->opcode & 0x0f],instr);
-            break;
-
-        case 0xB200:
-            hdl_modify_optab(insert,opcode_b2xx[instr->opcode & 0xff],instr);
-            break;
-
-        case 0xB300:
-            hdl_modify_optab(insert,opcode_b3xx[instr->opcode & 0xff],instr);
-            break;
-
-        case 0xB900:
-            hdl_modify_optab(insert,opcode_b9xx[instr->opcode & 0xff],instr);
-            break;
-
-        case 0xC000:
-            hdl_modify_optab(insert,opcode_c0xx[instr->opcode & 0x0f],instr);
-            break;
-
-        case 0xC200:
-            hdl_modify_optab(insert,opcode_c2xx[instr->opcode & 0x0f],instr);
-            break;
-
-        case 0xC400:
-            hdl_modify_optab(insert,opcode_c4xx[instr->opcode & 0x0f],instr);
-            break;
-
-        case 0xC600:
-            hdl_modify_optab(insert,opcode_c6xx[instr->opcode & 0x0f],instr);
-            break;
-
-        case 0xC800:
-            hdl_modify_optab(insert,opcode_c8xx[instr->opcode & 0x0f],instr);
-            break;
-
-        case 0xCC00:                                                              /*810*/
-            hdl_modify_optab(insert,opcode_ccxx[instr->opcode & 0x0f],instr);     /*810*/
-            break;                                                                /*810*/
-
-        case 0xE300:
-            hdl_modify_optab(insert,opcode_e3xx[instr->opcode & 0xff],instr);
-            break;
-
-        case 0xE500:
-            hdl_modify_optab(insert,opcode_e5xx[instr->opcode & 0xff],instr);
-            break;
-
-        case 0xE600:
-            hdl_modify_optab(insert,opcode_e6xx[instr->opcode & 0xff],instr);
-            break;
-
-        case 0xEB00:
-            hdl_modify_optab(insert,opcode_ebxx[instr->opcode & 0xff],instr);
-            break;
-
-        case 0xEC00:
-            hdl_modify_optab(insert,opcode_ecxx[instr->opcode & 0xff],instr);
-            break;
-
-        case 0xED00:
-            hdl_modify_optab(insert,opcode_edxx[instr->opcode & 0xff],instr);
-            break;
-
-        default:
-            hdl_modify_optab(insert,opcode_table[instr->opcode >> 8],instr);
-    }
-
-    /* Copy opcodes to shadow tables */
-    copy_opcode_tables();
-
+#ifdef _390
+    if(instr->archflags & HDL_INSTARCH_390)
+      instr->original = replace_opcode(ARCH_390, instr->instruction, instr->opcode >> 8, instr->opcode & 0x00ff);
+#endif
+#ifdef _900
+    if(instr->archflags & HDL_INSTARCH_900)
+      instr->original = replace_opcode(ARCH_900, instr->instruction, instr->opcode >> 8, instr->opcode & 0x00ff);
+#endif
+  }
+  else
+  {
+#ifdef _370
+    if(instr->archflags & HDL_INSTARCH_370)
+      replace_opcode(ARCH_370, instr->original, instr->opcode >> 8, instr->opcode & 0x00ff);
+#endif
+#ifdef _390
+    if(instr->archflags & HDL_INSTARCH_390)
+      replace_opcode(ARCH_390, instr->original, instr->opcode >> 8, instr->opcode & 0x00ff);
+#endif
+#ifdef _900
+    if(instr->archflags & HDL_INSTARCH_900)
+      replace_opcode(ARCH_900, instr->original, instr->opcode >> 8, instr->opcode & 0x00ff);
+#endif    
+  }
+  return;
 }
-#endif
 
 
 /* hdl_didf - Define instruction call */
@@ -1297,9 +1185,7 @@ HDLINS *newins;
     newins->instruction = routine;
     newins->next = hdl_cdll->insent;
     hdl_cdll->insent = newins;
-#ifdef ZZ_NO_BACKLINK
     hdl_modify_opcode(TRUE, newins);
-#endif
 }
 
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/

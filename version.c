@@ -156,8 +156,7 @@ static const char *build_info[] = {
  && !defined( ASSIST_CMPXCHG8  ) \
  && !defined( ASSIST_CMPXCHG16 ) \
  && !defined( ASSIST_FETCH_DW  ) \
- && !defined( ASSIST_STORE_DW  ) \
- && !defined( MULTI_BYTE_ASSIST)
+ && !defined( ASSIST_STORE_DW  ) 
     " (none)",
 #else
   #if defined( ASSIST_CMPXCHG1 )
@@ -177,9 +176,6 @@ static const char *build_info[] = {
   #endif
   #if defined( ASSIST_STORE_DW )
                     " store_dw"
-  #endif
-  #if defined( MULTI_BYTE_ASSIST )
-                    " multi_byte"
   #endif
     ,
 #endif

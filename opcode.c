@@ -425,17 +425,8 @@
  UNDEF_INST(reset_reference_bits_multiple)                      /*810*/
 #endif /*!defined(FEATURE_RESET_REFERENCE_BITS_MULTIPLE_FACILITY)*/
 
+
 #if !defined(FEATURE_VECTOR_FACILITY)
- UNDEF_INST(execute_a4xx)
-#if 0
- #if !defined(FEATURE_ESAME) && !defined(FEATURE_ESAME_N3_ESA390)
-  UNDEF_INST(execute_a5xx)
- #endif /*!defined(FEATURE_ESAME) && !defined(FEATURE_ESAME_N3_ESA390)*/
-#endif
-
- UNDEF_INST(execute_a6xx)
- UNDEF_INST(execute_e4xx)
-
  UNDEF_INST(v_test_vmr)
  UNDEF_INST(v_complement_vmr)
  UNDEF_INST(v_count_left_zeros_in_vmr)
@@ -463,25 +454,6 @@
  UNDEF_INST(v_save_vac)
  UNDEF_INST(v_restore_vac)
 #endif /*!defined(FEATURE_VECTOR_FACILITY)*/
-
-
-#if 0
-#if !defined(FEATURE_ESAME) && !defined(FEATURE_ESAME_N3_ESA390)
- UNDEF_INST(execute_e3xx)
- UNDEF_INST(execute_ecxx)
- UNDEF_INST(execute_c0xx)
- UNDEF_INST(execute_c2xx)                                       /*@Z9*/
-#endif /*!defined(FEATURE_ESAME) && !defined(FEATURE_ESAME_N3_ESA390)*/
-
-#if !defined(FEATURE_ESAME)
- UNDEF_INST(execute_c8xx)
-#endif /*!defined(FEATURE_ESAME)*/
-
-#if !defined(FEATURE_BASIC_FP_EXTENSIONS)
- UNDEF_INST(execute_b3xx)
- UNDEF_INST(execute_edxx)
-#endif /*!defined(FEATURE_BASIC_FP_EXTENSIONS)*/
-#endif
 
 
 #if !defined(FEATURE_HEXADECIMAL_FLOATING_POINT)
@@ -1156,122 +1128,29 @@
    as the called routine has the same arguments, and the routine
    exits immediately after the call.                             *JJ */
 
-DEF_INST(execute_01xx)
+DEF_INST(execute_opcode_e3________xx)
 {
-    regs->ARCH_DEP(opcode_01xx)[inst[1]](inst, regs);
+//  logmsg("opcode e3%02x\n", inst[5]);
+  regs->ARCH_DEP(runtime_opcode_e3________xx)[inst[5]](inst, regs);
 }
 
-
-DEF_INST(execute_a7xx)
+DEF_INST(execute_opcode_eb________xx)
 {
-    regs->ARCH_DEP(opcode_a7xx)[inst[1]](inst, regs);
+//  logmsg("opcode eb%02x\n", inst[5]);
+  regs->ARCH_DEP(runtime_opcode_eb________xx)[inst[5]](inst, regs);
 }
 
-DEF_INST(execute_b2xx)
+DEF_INST(execute_opcode_ec________xx)
 {
-    regs->ARCH_DEP(opcode_b2xx)[inst[1]](inst, regs);
+//  logmsg("opcode ec%02x\n", inst[5]);
+  regs->ARCH_DEP(runtime_opcode_ec________xx)[inst[5]](inst, regs);
 }
 
-DEF_INST(execute_b9xx)
+DEF_INST(execute_opcode_ed________xx)
 {
-    regs->ARCH_DEP(opcode_b9xx)[inst[1]](inst, regs);
+//  logmsg("opcode ed%02x\n", inst[5]);
+  regs->ARCH_DEP(runtime_opcode_ed________xx)[inst[5]](inst, regs);
 }
-
-DEF_INST(execute_ebxx)
-{
-    regs->ARCH_DEP(opcode_ebxx)[inst[5]](inst, regs);
-}
-
-DEF_INST(execute_b3xx)
-{
-    regs->ARCH_DEP(opcode_b3xx)[inst[1]](inst, regs);
-}
-
-DEF_INST(execute_edxx)
-{
-    regs->ARCH_DEP(opcode_edxx)[inst[5]](inst, regs);
-}
-
-DEF_INST(execute_e5xx)
-{
-    regs->ARCH_DEP(opcode_e5xx)[inst[1]](inst, regs);
-}
-
-DEF_INST(execute_e6xx)
-{
-    regs->ARCH_DEP(opcode_e6xx)[inst[1]](inst, regs);
-}
-
-/* Will be defined in VF support further down */
-#if !defined(VECTOR_FACILITY)
-DEF_INST(execute_a5xx)
-{
-    regs->ARCH_DEP(opcode_a5xx)[inst[1]](inst, regs);
-}
-#endif
-
-DEF_INST(execute_e3xx)
-{
-    regs->ARCH_DEP(opcode_e3xx)[inst[5]](inst, regs);
-}
-
-DEF_INST(execute_ecxx)
-{
-    regs->ARCH_DEP(opcode_ecxx[inst[5]])(inst, regs);
-}
-
-DEF_INST(execute_c0xx)
-{
-    regs->ARCH_DEP(opcode_c0xx)[inst[1]](inst, regs);
-}
-
-DEF_INST(execute_c2xx)                                          /*@Z9*/
-{                                                               /*@Z9*/
-    regs->ARCH_DEP(opcode_c2xx)[inst[1]](inst, regs);           /*@Z9*/
-}                                                               /*@Z9*/
-
-DEF_INST(execute_c4xx)                                          /*208*/
-{                                                               /*208*/
-    regs->ARCH_DEP(opcode_c4xx)[inst[1]](inst, regs);           /*208*/
-}                                                               /*208*/
-
-DEF_INST(execute_c6xx)                                          /*208*/
-{                                                               /*208*/
-    regs->ARCH_DEP(opcode_c6xx)[inst[1]](inst, regs);           /*208*/
-}                                                               /*208*/
-
-DEF_INST(execute_c8xx)
-{
-    regs->ARCH_DEP(opcode_c8xx)[inst[1]](inst, regs);
-}
-
-DEF_INST(execute_ccxx)                                          /*810*/
-{                                                               /*810*/
-    regs->ARCH_DEP(opcode_ccxx)[inst[1]](inst, regs);           /*810*/
-}                                                               /*810*/
-
-#if defined(FEATURE_VECTOR_FACILITY)
-
-DEF_INST(execute_a4xx)
-{
-    regs->ARCH_DEP(opcode_a4xx)[inst[1]](inst, regs);
-}
-
-DEF_INST(execute_a5xx)
-{
-    regs->ARCH_DEP(opcode_a5xx)[inst[1]](inst, regs);
-}
-
-DEF_INST(execute_a6xx)
-{
-    regs->ARCH_DEP(opcode_a6xx)[inst[1]](inst, regs);
-}
-
-DEF_INST(execute_e4xx)
-{
-    regs->ARCH_DEP(opcode_e4xx)[inst[1]](inst, regs);
-}
-#endif /*defined(FEATURE_VECTOR_FACILITY)*/
 
 
 DEF_INST(operation_exception)
@@ -2119,478 +1998,315 @@ int d2,b2;
     DISASM_LOGMSG;
 }
 
-/* Gabor Hoffer (performance option) */
-zz_func s370_opcode_table[256];
-static zz_func s370_opcode_01xx[256];
-static zz_func s370_opcode_a4xx[256];
-static zz_func s370_opcode_a5xx[256];
-static zz_func s370_opcode_a6xx[256];
-static zz_func s370_opcode_a7xx[256];
-static zz_func s370_opcode_b2xx[256];
-static zz_func s370_opcode_b3xx[256];                           /*FPE*/
-static zz_func s370_opcode_b9xx[256];
-static zz_func s370_opcode_c0xx[256];                           /*@N3*/
-static zz_func s370_opcode_c2xx[256];                           /*208*/
-static zz_func s370_opcode_c4xx[256];                           /*208*/
-static zz_func s370_opcode_c6xx[256];                           /*208*/
-static zz_func s370_opcode_c8xx[256];
-static zz_func s370_opcode_ccxx[256];
-static zz_func s370_opcode_e3xx[256];                           /*@N3*/
-static zz_func s370_opcode_e4xx[256];
-static zz_func s370_opcode_e5xx[256];
-static zz_func s370_opcode_e6xx[256];
-static zz_func s370_opcode_ebxx[256];
-static zz_func s370_opcode_ecxx[256];                           /*@N3*/
-static zz_func s370_opcode_edxx[256];                           /*@N3*/
 
-zz_func s390_opcode_table[256];
-static zz_func s390_opcode_01xx[256];
-static zz_func s390_opcode_a4xx[256];
-static zz_func s390_opcode_a5xx[256];
-static zz_func s390_opcode_a6xx[256];
-static zz_func s390_opcode_a7xx[256];
-static zz_func s390_opcode_b2xx[256];
-static zz_func s390_opcode_b3xx[256];
-static zz_func s390_opcode_b9xx[256];
-static zz_func s390_opcode_c0xx[256];
-static zz_func s390_opcode_c2xx[256];                           /*@Z9*/
-static zz_func s390_opcode_c4xx[256];                           /*208*/
-static zz_func s390_opcode_c6xx[256];                           /*208*/
-static zz_func s390_opcode_c8xx[256];                           /*208*/
-static zz_func s390_opcode_ccxx[256];                           /*208*/
-static zz_func s390_opcode_e3xx[256];
-static zz_func s390_opcode_e4xx[256];
-static zz_func s390_opcode_e5xx[256];
-static zz_func s390_opcode_e6xx[256];
-static zz_func s390_opcode_ebxx[256];
-static zz_func s390_opcode_ecxx[256];
-static zz_func s390_opcode_edxx[256];
+/* Two byte runtime opcode table + 4 6 byte opcode tables */
+zz_func runtime_opcode_xxxx[GEN_ARCHCOUNT][0x100 * 0x100];
+zz_func runtime_opcode_e3________xx[GEN_ARCHCOUNT][0x100];
+zz_func runtime_opcode_eb________xx[GEN_ARCHCOUNT][0x100];
+zz_func runtime_opcode_ec________xx[GEN_ARCHCOUNT][0x100];
+zz_func runtime_opcode_ed________xx[GEN_ARCHCOUNT][0x100];
 
-zz_func z900_opcode_table[256];
-static zz_func z900_opcode_01xx[256];
-static zz_func z900_opcode_a5xx[256];
-static zz_func z900_opcode_a7xx[256];
-static zz_func z900_opcode_b2xx[256];
-static zz_func z900_opcode_b3xx[256];
-static zz_func z900_opcode_b9xx[256];
-static zz_func z900_opcode_c0xx[256];
-static zz_func z900_opcode_c2xx[256];                           /*@Z9*/
-static zz_func z900_opcode_c4xx[256];                           /*208*/
-static zz_func z900_opcode_c6xx[256];                           /*208*/
-static zz_func z900_opcode_c8xx[256];
-static zz_func z900_opcode_ccxx[256];                           /*810*/
-static zz_func z900_opcode_e3xx[256];
-static zz_func z900_opcode_e5xx[256];
-static zz_func z900_opcode_e6xx[256];
-static zz_func z900_opcode_ebxx[256];
-static zz_func z900_opcode_ecxx[256];
-static zz_func z900_opcode_edxx[256];
-
-/* FIXME ! Can't use ARCH_DEP() to reference 
-   stuff generate inside ifndef(_GEN_ARCH) in
-   opcode.c (because the auto inclusion is done
-   at the start...) - Required because the non
-   ARCH_DEP'd stuff references ARCH_DEP'd stuff */
-
-
-#define _REP_FUNC_256(_arch,_code) \
-    case 0x ## _code: \
-        oldfun=opcode_ ## _code ## xx[code2][arch]; \
-        opcode_ ## _code ## xx[code2][arch]=newfunc; \
-        _arch ## _opcode_ ## _code ## xx[code2]=newfunc; \
-        return oldfun;
-
-#define _REP_FUNC_256_v(_arch,_code) \
-    case 0x ## _code: \
-        oldfun=v_opcode_ ## _code ## xx[code2][arch]; \
-        v_opcode_ ## _code ## xx[code2][arch]=newfunc; \
-        _arch ## _opcode_ ## _code ## xx[code2]=newfunc; \
-        return oldfun;
-
-#define _REP_FUNC_16(_arch,_code) \
-    case 0x ## _code: \
-        if(code2 > 15) return NULL; \
-        oldfun=opcode_ ## _code ## xx[code2][arch]; \
-        opcode_ ## _code ## xx[code2][arch]=newfunc; \
-        for(i=0;i<16;i++) \
-        { \
-            _arch ## _opcode_ ## _code ## xx[i*16+code2]=newfunc; \
-        } \
-        return oldfun; \
-
-DLL_EXPORT  zz_func opcode_replace_instruction(int arch,zz_func newfunc,int code1,int code2)
+/*----------------------------------------------------------------------------*/
+/* replace_opcode_xx                                                          */
+/*----------------------------------------------------------------------------*/
+zz_func replace_opcode_xx(int arch, zz_func inst, int opcode)
 {
-    zz_func oldfun = NULL;
-    int i;
-    if(arch>=GEN_ARCHCOUNT) return NULL;
-    if(code1>255) return NULL;
-    if(code2<0)
+  int i;
+  zz_func oldinst;
+
+//  logmsg("replace_opcode_xx(%d, %02x)\n", arch, opcode);
+  if(arch < 0 || arch > GEN_ARCHCOUNT)
+    return(NULL);
+  if(opcode < 0 || opcode > 0xff)
+    return(NULL);
+  if(!inst)
+    return(NULL);
+  oldinst = runtime_opcode_xxxx[arch][opcode * 0x100];
+  for(i = 0; i < 0x100; i++)
+    runtime_opcode_xxxx[arch][opcode * 0x100 + i] = inst;
+  return(oldinst);
+}
+
+/*---------------------------------------------------------------------------*/
+/* replace_opcode_xxxx                                                       */
+/*---------------------------------------------------------------------------*/
+zz_func replace_opcode_xxxx(int arch, zz_func inst, int opcode1, int opcode2)
+{
+  zz_func oldinst;
+
+//  logmsg("replace_opcode_xxxx(%d, %02x, %02x)\n", arch, opcode1, opcode2);
+  if(arch < 0 || arch >= GEN_ARCHCOUNT)
+    return(NULL);
+  if(opcode1 < 0 || opcode1 > 0xff || opcode2 < 0 || opcode2 > 0xff)
+    return(NULL);
+  if(!inst)
+    return(NULL);  
+  oldinst = runtime_opcode_xxxx[arch][opcode1 * 0x100 + opcode2];
+  runtime_opcode_xxxx[arch][opcode1 * 0x100 + opcode2] = inst;
+  return(oldinst);
+}
+
+/*---------------------------------------------------------------------------*/
+/* replace_opcode_xx_x                                                       */
+/*---------------------------------------------------------------------------*/
+zz_func replace_opcode_xx_x(int arch, zz_func inst, int opcode1, int opcode2)
+{
+  int i;
+  zz_func oldinst;
+
+//  logmsg("replace_opcode_xx_x(%d, %02x, %1x)\n", arch, opcode1, opcode2);
+  if(arch < 0 || arch >= GEN_ARCHCOUNT)
+    return(NULL);
+  if(opcode1 < 0 || opcode1 > 0xff || opcode2 < 0 || opcode2 > 0xf)
+    return(NULL);
+  if(!inst)
+    return(NULL);
+  oldinst = runtime_opcode_xxxx[arch][opcode1 * 0x100 + opcode2];
+  for(i = 0; i < 0x10; i++)
+    runtime_opcode_xxxx[arch][opcode1 * 0x100 + i * 0x10 + opcode2] = inst;
+  return(oldinst);
+}
+
+/*---------------------------------------------------------------------------*/
+/* replace_opcode_xx________xx                                               */
+/*---------------------------------------------------------------------------*/
+zz_func replace_opcode_xx________xx(int arch, zz_func inst, int opcode1, int opcode2)
+{
+  zz_func oldinst;
+
+//  logmsg("replace_opcode_xx________xx(%d, %02x, %02x)\n", arch, opcode1, opcode2);
+  if(arch < 0 || arch >= GEN_ARCHCOUNT)
+    return(NULL);
+  if(opcode2 < 0 || opcode2 > 0xff)
+    return(NULL);
+  if(!inst)
+    return(NULL);
+  switch(opcode1)
+  {
+    case 0xe3:
     {
-        switch(arch)
-        {
-#if defined(_370)
-            case ARCH_370:
-                oldfun=opcode_table[code1][ARCH_370];
-                opcode_table[code1][ARCH_370]=newfunc;
-                s370_opcode_table[code1]=newfunc;
-                break;
-#endif
-#if defined(_390)
-            case ARCH_390:
-                oldfun=opcode_table[code1][ARCH_390];
-                opcode_table[code1][ARCH_390]=newfunc;
-                s390_opcode_table[code1]=newfunc;
-                break;
-#endif
-#if defined(_900)
-            case ARCH_900:
-                oldfun=opcode_table[code1][ARCH_900];
-                opcode_table[code1][ARCH_900]=newfunc;
-                z900_opcode_table[code1]=newfunc;
-                break;
-#endif
-        }
-        return oldfun;
+      oldinst = runtime_opcode_e3________xx[arch][opcode2];
+      runtime_opcode_e3________xx[arch][opcode2] = inst;
     }
-    if(code2>255) return NULL;
-    switch(arch)
+    case 0xeb:
     {
-#if defined(_370)
-        case ARCH_370:
-            switch(code1)
-            {
-                _REP_FUNC_256(s370,01)
-                _REP_FUNC_256_v(s370,a4)
-                _REP_FUNC_256_v(s370,a5)
-                _REP_FUNC_256_v(s370,a6)
-                _REP_FUNC_16(s370,a7)
-                _REP_FUNC_256(s370,b2)
-                _REP_FUNC_256(s370,b3)
-                _REP_FUNC_256(s370,b9)
-                _REP_FUNC_16(s370,c0)
-                _REP_FUNC_16(s370,c2)
-                _REP_FUNC_16(s370,c4)
-                _REP_FUNC_16(s370,c6)
-                _REP_FUNC_16(s370,c8)
-                _REP_FUNC_16(s370,cc)
-                _REP_FUNC_256(s370,e3)
-                _REP_FUNC_256(s370,e4)
-                _REP_FUNC_256(s370,e5)
-                _REP_FUNC_256(s370,e6)
-                _REP_FUNC_256(s370,eb)
-                _REP_FUNC_256(s370,ec)
-                _REP_FUNC_256(s370,ed)
-                default:
-                    return NULL;
-            }
-            break;
-#endif
-#if defined(_390)
-        case ARCH_390:
-            switch(code1)
-            {
-                _REP_FUNC_256(s390,01)
-                _REP_FUNC_256_v(s390,a4)
-                _REP_FUNC_256_v(s390,a5)
-                _REP_FUNC_256_v(s390,a6)
-                _REP_FUNC_16(s390,a7)
-                _REP_FUNC_256(s390,b2)
-                _REP_FUNC_256(s390,b3)
-                _REP_FUNC_256(s390,b9)
-                _REP_FUNC_16(s390,c0)
-                _REP_FUNC_16(s390,c2)
-                _REP_FUNC_16(s390,c4)
-                _REP_FUNC_16(s390,c6)
-                _REP_FUNC_16(s390,c8)
-                _REP_FUNC_16(s390,cc)
-                _REP_FUNC_256(s390,e3)
-                _REP_FUNC_256(s390,e4)
-                _REP_FUNC_256(s390,e5)
-                _REP_FUNC_256(s390,e6)
-                _REP_FUNC_256(s390,eb)
-                _REP_FUNC_256(s390,ec)
-                _REP_FUNC_256(s390,ed)
-                default:
-                    return NULL;
-            }
-            break;
-#endif
-#if defined(_900)
-        case ARCH_900:
-            switch(code1)
-            {
-                _REP_FUNC_256(z900,01)
-                /* Vector NOT in z/Arch */
-                /*
-                _REP_FUNC_256_v(z900,a4)
-                */
-                _REP_FUNC_256(z900,a5)   /* NOT Vector */
-                /*
-                _REP_FUNC_256(z900,a6)
-                */
-                _REP_FUNC_16(z900,a7)
-                _REP_FUNC_256(z900,b2)
-                _REP_FUNC_256(z900,b3)
-                _REP_FUNC_256(z900,b9)
-                _REP_FUNC_16(z900,c0)
-                _REP_FUNC_16(z900,c2)
-                _REP_FUNC_16(z900,c4)
-                _REP_FUNC_16(z900,c6)
-                _REP_FUNC_16(z900,c8)
-                _REP_FUNC_16(z900,cc)
-                _REP_FUNC_256(z900,e3)
-                /*
-                _REP_FUNC_256(e4)
-                */
-                _REP_FUNC_256(z900,e5)
-                _REP_FUNC_256(z900,e6)
-                _REP_FUNC_256(z900,eb)
-                _REP_FUNC_256(z900,ec)
-                _REP_FUNC_256(z900,ed)
-                default:
-                    return NULL;
-            }
-#endif
-            default:
-                return NULL;
-            break;
+      oldinst = runtime_opcode_eb________xx[arch][opcode2];
+      runtime_opcode_eb________xx[arch][opcode2] = inst;
     }
-}
-
-#undef _REP_FUNC_256
-#undef _REP_FUNC_16
-
-/* For callers that can use ARCH_DEP() */
-#if defined(_370)
-DLL_EXPORT  zz_func s370_opcode_replace_instruction(zz_func newfunc,int code1,int code2)
-{
-    return opcode_replace_instruction(ARCH_370,newfunc,code1,code2);
-}
-#endif
-#if defined(_390)
-DLL_EXPORT  zz_func s390_opcode_replace_instruction(zz_func newfunc,int code1,int code2)
-{
-    return opcode_replace_instruction(ARCH_390,newfunc,code1,code2);
-}
-#endif
-#if defined(_900)
-DLL_EXPORT  zz_func z900_opcode_replace_instruction(zz_func newfunc,int code1,int code2)
-{
-    return opcode_replace_instruction(ARCH_900,newfunc,code1,code2);
-}
-#endif
-
-DLL_EXPORT void copy_opcode_tables()
-{
-int i;
-
-    for (i = 0; i < 256; i++)
+    case 0xec:
     {
-#if defined(_370)
-        s370_opcode_table[i] = opcode_table[i][ARCH_370];
-        s370_opcode_01xx [i] = opcode_01xx [i][ARCH_370];
-        s370_opcode_a4xx [i] = v_opcode_a4xx [i][ARCH_370];
-        s370_opcode_a5xx [i] = v_opcode_a5xx [i][ARCH_370];
-        s370_opcode_a6xx [i] = v_opcode_a6xx [i][ARCH_370];
-        s370_opcode_a7xx [i] = opcode_a7xx [i&0x0F][ARCH_370];
-        s370_opcode_b2xx [i] = opcode_b2xx [i][ARCH_370];
-        s370_opcode_b3xx [i] = opcode_b3xx [i][ARCH_370];       /*FPE*/
-        s370_opcode_b9xx [i] = opcode_b9xx [i][ARCH_370];
-        s370_opcode_c0xx [i] = opcode_c0xx [i&0x0F][ARCH_370];  /*@N3*/
-        s370_opcode_c2xx [i] = opcode_c2xx [i&0x0F][ARCH_370];  /*208*/
-        s370_opcode_c4xx [i] = opcode_c4xx [i&0x0F][ARCH_370];  /*208*/
-        s370_opcode_c6xx [i] = opcode_c6xx [i&0x0F][ARCH_370];  /*208*/
-        s370_opcode_c8xx [i] = opcode_c8xx [i&0x0F][ARCH_370];  /*208*/
-        s370_opcode_ccxx [i] = opcode_ccxx [i&0x0F][ARCH_370];  /*208*/
-        s370_opcode_e3xx [i] = opcode_e3xx [i][ARCH_370];       /*@N3*/
-        s370_opcode_e4xx [i] = v_opcode_e4xx [i][ARCH_370];
-        s370_opcode_e5xx [i] = opcode_e5xx [i][ARCH_370];
-        s370_opcode_e6xx [i] = opcode_e6xx [i][ARCH_370];
-        s370_opcode_ebxx [i] = opcode_ebxx [i][ARCH_370];
-        s370_opcode_ecxx [i] = opcode_ecxx [i][ARCH_370];       /*@N3*/
-        s370_opcode_edxx [i] = opcode_edxx [i][ARCH_370];       /*@N3*/
-#endif
-
-#if defined(_390)
-        s390_opcode_table[i] = opcode_table[i][ARCH_390];
-        s390_opcode_01xx [i] = opcode_01xx [i][ARCH_390];
-        s390_opcode_a4xx [i] = v_opcode_a4xx [i][ARCH_390];
-        s390_opcode_a5xx [i] = v_opcode_a5xx [i][ARCH_390];
-        s390_opcode_a6xx [i] = v_opcode_a6xx [i][ARCH_390];
-        s390_opcode_a7xx [i] = opcode_a7xx [i&0x0F][ARCH_390];
-        s390_opcode_b2xx [i] = opcode_b2xx [i][ARCH_390];
-        s390_opcode_b3xx [i] = opcode_b3xx [i][ARCH_390];
-        s390_opcode_b9xx [i] = opcode_b9xx [i][ARCH_390];
-        s390_opcode_c0xx [i] = opcode_c0xx [i&0x0F][ARCH_390];
-        s390_opcode_c2xx [i] = opcode_c2xx [i&0x0F][ARCH_390];  /*@Z9*/
-        s390_opcode_c4xx [i] = opcode_c4xx [i&0x0F][ARCH_390];  /*208*/
-        s390_opcode_c6xx [i] = opcode_c6xx [i&0x0F][ARCH_390];  /*208*/
-        s390_opcode_c8xx [i] = opcode_c8xx [i&0x0F][ARCH_390];  /*208*/
-        s390_opcode_ccxx [i] = opcode_ccxx [i&0x0F][ARCH_390];  /*208*/
-        s390_opcode_e3xx [i] = opcode_e3xx [i][ARCH_390];
-        s390_opcode_e4xx [i] = v_opcode_e4xx [i][ARCH_390];
-        s390_opcode_e5xx [i] = opcode_e5xx [i][ARCH_390];
-        s390_opcode_e6xx [i] = opcode_e6xx [i][ARCH_390];
-        s390_opcode_ebxx [i] = opcode_ebxx [i][ARCH_390];
-        s390_opcode_ecxx [i] = opcode_ecxx [i][ARCH_390];
-        s390_opcode_edxx [i] = opcode_edxx [i][ARCH_390];
-#endif
-
-#if defined(_900)
-        z900_opcode_table[i] = opcode_table[i][ARCH_900];
-        z900_opcode_01xx [i] = opcode_01xx [i][ARCH_900];
-        z900_opcode_a5xx [i] = opcode_a5xx [i&0x0F][ARCH_900];
-        z900_opcode_a7xx [i] = opcode_a7xx [i&0x0F][ARCH_900];
-        z900_opcode_b2xx [i] = opcode_b2xx [i][ARCH_900];
-        z900_opcode_b3xx [i] = opcode_b3xx [i][ARCH_900];
-        z900_opcode_b9xx [i] = opcode_b9xx [i][ARCH_900];
-        z900_opcode_c0xx [i] = opcode_c0xx [i&0x0F][ARCH_900];
-        z900_opcode_c2xx [i] = opcode_c2xx [i&0x0F][ARCH_900];  /*@Z9*/
-        z900_opcode_c4xx [i] = opcode_c4xx [i&0x0F][ARCH_900];  /*208*/
-        z900_opcode_c6xx [i] = opcode_c6xx [i&0x0F][ARCH_900];  /*208*/
-        z900_opcode_c8xx [i] = opcode_c8xx [i&0x0F][ARCH_900];
-        z900_opcode_ccxx [i] = opcode_ccxx [i&0x0F][ARCH_900];  /*810*/
-        z900_opcode_e3xx [i] = opcode_e3xx [i][ARCH_900];
-        z900_opcode_e5xx [i] = opcode_e5xx [i][ARCH_900];
-        z900_opcode_e6xx [i] = opcode_e6xx [i][ARCH_900];
-        z900_opcode_ebxx [i] = opcode_ebxx [i][ARCH_900];
-        z900_opcode_ecxx [i] = opcode_ecxx [i][ARCH_900];
-        z900_opcode_edxx [i] = opcode_edxx [i][ARCH_900];
-#endif
+      oldinst = runtime_opcode_ec________xx[arch][opcode2];
+      runtime_opcode_ec________xx[arch][opcode2] = inst;
     }
-
-#if 0
-    /* optimization for branch relative */
-#if defined(_370)
-    s370_opcode_a7xx [0x74]  = s370_branch_relative_not_equal;
-    s370_opcode_a7xx [0x84]  = s370_branch_relative_equal;
-    s370_opcode_a7xx [0xf4]  = s370_branch_relative_unconditional;
-#endif
-#if defined(_390)
-    s390_opcode_a7xx [0x74]  = s390_branch_relative_not_equal;
-    s390_opcode_a7xx [0x84]  = s390_branch_relative_equal;
-    s390_opcode_a7xx [0xf4]  = s390_branch_relative_unconditional;
-#endif
-#if defined(_900)
-    z900_opcode_a7xx [0x74]  = z900_branch_relative_not_equal;
-    z900_opcode_a7xx [0x84]  = z900_branch_relative_equal;
-    z900_opcode_a7xx [0xf4]  = z900_branch_relative_unconditional;
-#endif
-#endif
-
+    case 0xed:
+    {
+      oldinst = runtime_opcode_ed________xx[arch][opcode2];
+      runtime_opcode_ed________xx[arch][opcode2] = inst;
+    }
+    default:
+    {
+      oldinst = NULL;
+    }
+  }
+  return(oldinst);
 }
 
-void set_opcode_pointers(REGS *regs)
+/*---------------------------------------------------------------------------*/
+/* replace_opcode                                                            */
+/*---------------------------------------------------------------------------*/
+zz_func replace_opcode(int arch, zz_func inst, int opcode1, int opcode2)
 {
-#if defined(_370)
-    regs->s370_opcode_table = s370_opcode_table;
-    regs->s370_opcode_01xx = s370_opcode_01xx;
-    regs->s370_opcode_a4xx = s370_opcode_a4xx;
-    regs->s370_opcode_a5xx = s370_opcode_a5xx;
-    regs->s370_opcode_a6xx = s370_opcode_a6xx;
- #if defined(MULTI_BYTE_ASSIST)
-    memcpy(regs->s370_opcode_a7xx, s370_opcode_a7xx,
-           sizeof(s370_opcode_a7xx));
-    memcpy(regs->s370_opcode_b2xx, s370_opcode_b2xx,
-           sizeof(s370_opcode_b2xx));
-    memcpy(regs->s370_opcode_b9xx, s370_opcode_b9xx,
-           sizeof(s370_opcode_b9xx));
-    memcpy(regs->s370_opcode_c0xx, s370_opcode_c0xx,            /*@N3*/
-           sizeof(s370_opcode_c0xx));                           /*@N3*/
-    memcpy(regs->s370_opcode_e3xx, s370_opcode_e3xx,            /*@N3*/
-           sizeof(s370_opcode_e3xx));                           /*@N3*/
-    memcpy(regs->s370_opcode_ebxx, s370_opcode_ebxx,
-           sizeof(s370_opcode_ebxx));
- #else
-    regs->s370_opcode_a7xx = s370_opcode_a7xx;
-    regs->s370_opcode_b2xx = s370_opcode_b2xx;
-    regs->s370_opcode_b9xx = s370_opcode_b9xx;
-    regs->s370_opcode_c0xx = s370_opcode_c0xx;                  /*@N3*/
-    regs->s370_opcode_e3xx = s370_opcode_e3xx;                  /*@N3*/
-    regs->s370_opcode_ebxx = s370_opcode_ebxx;
- #endif
-    regs->s370_opcode_b3xx = s370_opcode_b3xx;                  /*FPE*/
-    regs->s370_opcode_c2xx = s370_opcode_c2xx;                  /*208*/
-    regs->s370_opcode_c4xx = s370_opcode_c4xx;                  /*208*/
-    regs->s370_opcode_c6xx = s370_opcode_c6xx;                  /*208*/
-    regs->s370_opcode_e4xx = s370_opcode_e4xx;
-    regs->s370_opcode_e5xx = s370_opcode_e5xx;
-    regs->s370_opcode_e6xx = s370_opcode_e6xx;
-    regs->s370_opcode_ecxx = s370_opcode_ecxx;                  /*@N3*/
-#endif
-
-#if defined(_390)
-    regs->s390_opcode_table = s390_opcode_table;
-    regs->s390_opcode_01xx = s390_opcode_01xx;
-    regs->s390_opcode_a4xx = s390_opcode_a4xx;
-    regs->s390_opcode_a5xx = s390_opcode_a5xx;
-    regs->s390_opcode_a6xx = s390_opcode_a6xx;
- #if defined(MULTI_BYTE_ASSIST)
-    memcpy(regs->s390_opcode_a7xx, s390_opcode_a7xx,
-           sizeof(s390_opcode_a7xx));
-    memcpy(regs->s390_opcode_b2xx, s390_opcode_b2xx,
-           sizeof(s390_opcode_b2xx));
-    memcpy(regs->s390_opcode_b9xx, s390_opcode_b9xx,
-           sizeof(s390_opcode_b9xx));
-    memcpy(regs->s390_opcode_c0xx, s390_opcode_c0xx,
-           sizeof(s390_opcode_c0xx));
-    memcpy(regs->s390_opcode_e3xx, s390_opcode_e3xx,
-           sizeof(s390_opcode_e3xx));
-    memcpy(regs->s390_opcode_ebxx, s390_opcode_ebxx,
-           sizeof(s390_opcode_ebxx));
- #else
-    regs->s390_opcode_a7xx = s390_opcode_a7xx;
-    regs->s390_opcode_b2xx = s390_opcode_b2xx;
-    regs->s390_opcode_b9xx = s390_opcode_b9xx;
-    regs->s390_opcode_c0xx = s390_opcode_c0xx;
-    regs->s390_opcode_e3xx = s390_opcode_e3xx;
-    regs->s390_opcode_ebxx = s390_opcode_ebxx;
- #endif
-    regs->s390_opcode_b3xx = s390_opcode_b3xx;
-    regs->s390_opcode_c2xx = s390_opcode_c2xx;                  /*@Z9*/
-    regs->s390_opcode_c4xx = s390_opcode_c4xx;                  /*208*/
-    regs->s390_opcode_c6xx = s390_opcode_c6xx;                  /*208*/
-    regs->s390_opcode_e4xx = s390_opcode_e4xx;
-    regs->s390_opcode_e5xx = s390_opcode_e5xx;
-    regs->s390_opcode_ecxx = s390_opcode_ecxx;
-    regs->s390_opcode_edxx = s390_opcode_edxx;
-#endif
-#if defined(_900)
-    regs->z900_opcode_table = z900_opcode_table;
-    regs->z900_opcode_01xx = z900_opcode_01xx;
-    regs->z900_opcode_a5xx = z900_opcode_a5xx;
- #if defined(MULTI_BYTE_ASSIST)
-    memcpy(regs->z900_opcode_a7xx, z900_opcode_a7xx,
-           sizeof(z900_opcode_a7xx));
-    memcpy(regs->z900_opcode_b2xx, z900_opcode_b2xx,
-           sizeof(z900_opcode_b2xx));
-    memcpy(regs->z900_opcode_b9xx, z900_opcode_b9xx,
-           sizeof(z900_opcode_b9xx));
-    memcpy(regs->z900_opcode_c0xx, z900_opcode_c0xx,
-           sizeof(z900_opcode_c0xx));
-    memcpy(regs->z900_opcode_e3xx, z900_opcode_e3xx,
-           sizeof(z900_opcode_e3xx));
-    memcpy(regs->z900_opcode_ebxx, z900_opcode_ebxx,
-           sizeof(z900_opcode_ebxx));
- #else
-    regs->z900_opcode_a7xx = z900_opcode_a7xx;
-    regs->z900_opcode_b2xx = z900_opcode_b2xx;
-    regs->z900_opcode_b9xx = z900_opcode_b9xx;
-    regs->z900_opcode_c0xx = z900_opcode_c0xx;
-    regs->z900_opcode_e3xx = z900_opcode_e3xx;
-    regs->z900_opcode_ebxx = z900_opcode_ebxx;
- #endif
-    regs->z900_opcode_b3xx = z900_opcode_b3xx;
-    regs->z900_opcode_c2xx = z900_opcode_c2xx;                  /*@Z9*/
-    regs->z900_opcode_c4xx = z900_opcode_c4xx;                  /*208*/
-    regs->z900_opcode_c6xx = z900_opcode_c6xx;                  /*208*/
-    regs->z900_opcode_c8xx = z900_opcode_c8xx;
-    regs->z900_opcode_ccxx = z900_opcode_ccxx;                  /*810*/
-    regs->z900_opcode_e5xx = z900_opcode_e5xx;
-    regs->z900_opcode_ecxx = z900_opcode_ecxx;
-    regs->z900_opcode_edxx = z900_opcode_edxx;
-#endif
+//  logmsg("replace_opcode(%d, %02x, %02x)\n", arch, opcode1, opcode2);
+  switch(opcode1)
+  {
+    case 0x01:
+    case 0xa4:
+    case 0xa6:
+    case 0xb2:
+    case 0xb3:
+    case 0xb9:
+    case 0xe4:
+    case 0xe5:
+    case 0xe6:
+    {
+      return(replace_opcode_xxxx(arch, inst, opcode1, opcode2));
+    }
+    case 0xa5:
+    {
+      if(arch == ARCH_900)
+        return(replace_opcode_xx_x(arch, inst, opcode1, opcode2));
+      return(replace_opcode_xxxx(arch, inst, opcode1, opcode2));
+    }
+    case 0xa7:
+    case 0xc0:
+    case 0xc2:
+    case 0xc4:
+    case 0xc6:
+    case 0xc8:
+    case 0xcc:
+    {
+      return(replace_opcode_xx_x(arch, inst, opcode1, opcode2));
+    }
+    case 0xe3:
+    case 0xeb:
+    case 0xec:
+    case 0xed:
+    {
+      return(replace_opcode_xx________xx(arch, inst, opcode1, opcode2));
+    }
+    default:
+    {
+      return(replace_opcode_xx(arch, inst, opcode1));
+    }
+  }
 }
+
+/*----------------------------------------------------------------------------*/
+/* init_opcode_tables                                                         */
+/*----------------------------------------------------------------------------*/
+void init_opcode_tables(void)
+{
+  int arch;
+  int i;
+
+//  logmsg("init_opcode_tables()\n");
+
+  /* Start with clean opcode tables */
+  for(arch = 0; arch < GEN_ARCHCOUNT; arch++)
+  {
+    for(i = 0; i < 0x100 * 0x100; i++)
+      runtime_opcode_xxxx[arch][i] = NULL;
+    for(i = 0; i < 0x100; i++)
+    {
+      runtime_opcode_e3________xx[arch][i] = NULL;
+      runtime_opcode_eb________xx[arch][i] = NULL;
+      runtime_opcode_ec________xx[arch][i] = NULL;
+      runtime_opcode_ed________xx[arch][i] = NULL;
+    }
+  }
+
+  for(arch = 0; arch < GEN_ARCHCOUNT; arch++)
+  {
+    for(i = 0; i < 0x100; i++)
+      replace_opcode_xx(arch, opcode_table[i][arch], i);
+    for(i = 0; i < 0x100; i++)
+    {
+      replace_opcode_xxxx(arch, opcode_01xx[i][arch], 0x01, i);
+      if(arch != ARCH_900)
+      {
+        replace_opcode_xxxx(arch, v_opcode_a4xx[i][arch], 0xa4, i);
+        replace_opcode_xxxx(arch, v_opcode_a5xx[i][arch], 0xa5, i);
+        replace_opcode_xxxx(arch, v_opcode_a6xx[i][arch], 0xa6, i);
+      }
+      replace_opcode_xxxx(arch, opcode_b2xx[i][arch], 0xb2, i);
+      replace_opcode_xxxx(arch, opcode_b3xx[i][arch], 0xb3, i);
+      replace_opcode_xxxx(arch, opcode_b9xx[i][arch], 0xb9, i);
+      replace_opcode_xx________xx(arch, opcode_e3xx[i][arch], 0xe3, i);
+      if(arch != ARCH_900)
+        replace_opcode_xxxx(arch, v_opcode_e4xx[i][arch], 0xe4, i);
+      replace_opcode_xxxx(arch, opcode_e5xx[i][arch], 0xe5, i);
+      replace_opcode_xxxx(arch, opcode_e6xx[i][arch], 0xe6, i);
+      replace_opcode_xx________xx(arch, opcode_ebxx[i][arch], 0xeb, i);
+      replace_opcode_xx________xx(arch, opcode_ecxx[i][arch], 0xec, i);
+      replace_opcode_xx________xx(arch, opcode_edxx[i][arch], 0xed, i);
+    }
+    for(i = 0; i < 0x10; i++)
+    {
+      if(arch == ARCH_900)
+        replace_opcode_xx_x(arch, opcode_a5xx[i][arch], 0xa5, i);        
+      replace_opcode_xx_x(arch, opcode_a7xx[i][arch], 0xa7, i);
+      replace_opcode_xx_x(arch, opcode_c0xx[i][arch], 0xc0, i);
+      replace_opcode_xx_x(arch, opcode_c2xx[i][arch], 0xc2, i);
+      replace_opcode_xx_x(arch, opcode_c4xx[i][arch], 0xc4, i);
+      replace_opcode_xx_x(arch, opcode_c6xx[i][arch], 0xc6, i);
+      replace_opcode_xx_x(arch, opcode_c8xx[i][arch], 0xc8, i);
+      replace_opcode_xx_x(arch, opcode_ccxx[i][arch], 0xcc, i);
+    }
+  }
+
+  replace_opcode_xx(ARCH_370, s370_execute_opcode_e3________xx, 0xe3);
+  replace_opcode_xx(ARCH_370, s370_execute_opcode_eb________xx, 0xeb);
+  replace_opcode_xx(ARCH_370, s370_execute_opcode_ec________xx, 0xec);
+  replace_opcode_xx(ARCH_370, s370_execute_opcode_ed________xx, 0xed);
+  replace_opcode_xx(ARCH_390, s390_execute_opcode_e3________xx, 0xe3);
+  replace_opcode_xx(ARCH_390, s390_execute_opcode_eb________xx, 0xeb);
+  replace_opcode_xx(ARCH_390, s390_execute_opcode_ec________xx, 0xec);
+  replace_opcode_xx(ARCH_390, s390_execute_opcode_ed________xx, 0xed);
+  replace_opcode_xx(ARCH_900, z900_execute_opcode_e3________xx, 0xe3);
+  replace_opcode_xx(ARCH_900, z900_execute_opcode_eb________xx, 0xeb);
+  replace_opcode_xx(ARCH_900, z900_execute_opcode_ec________xx, 0xec);
+  replace_opcode_xx(ARCH_900, z900_execute_opcode_ed________xx, 0xed);
+
+  /* Check for completeness */
+  for(arch = 0; arch < GEN_ARCHCOUNT; arch++)
+  {
+    for(i = 0; i < 0x10000; i++)
+    {
+      if(!runtime_opcode_xxxx[arch][i])
+        logmsg("Severe error: No opcode %04x in arch %d\n", i, arch);
+    }
+    for(i = 0; i < 0x100; i++)
+    {
+      if(!runtime_opcode_e3________xx[arch][i])
+        logmsg("Severe error: No opcode e3%02x in arch %d\n", i, arch);
+      if(!runtime_opcode_eb________xx[arch][i])
+        logmsg("Severe error: No opcode eb%02x in arch %d\n", i, arch);
+      if(!runtime_opcode_ec________xx[arch][i])
+        logmsg("Severe error: No opcode ec%02x in arch %d\n", i, arch);
+      if(!runtime_opcode_ed________xx[arch][i])
+        logmsg("Severe error: No opcode ed%02x in arch %d\n", i, arch);
+    }
+  }
+}
+
+/*---------------------------------------------------------------------------*/
+/* init_opcode_pointers                                                      */
+/*---------------------------------------------------------------------------*/
+void init_opcode_pointers(REGS *regs)
+{
+//  logmsg("init_opcode_pointers()\n");
+  if(!regs)
+    return;
+  regs->s370_runtime_opcode_xxxx = runtime_opcode_xxxx[ARCH_370];
+  regs->s370_runtime_opcode_e3________xx = runtime_opcode_e3________xx[ARCH_370];
+  regs->s370_runtime_opcode_eb________xx = runtime_opcode_eb________xx[ARCH_370];
+  regs->s370_runtime_opcode_ec________xx = runtime_opcode_ec________xx[ARCH_370];
+  regs->s370_runtime_opcode_ed________xx = runtime_opcode_ed________xx[ARCH_370];
+  regs->s390_runtime_opcode_xxxx = runtime_opcode_xxxx[ARCH_390];
+  regs->s390_runtime_opcode_e3________xx = runtime_opcode_e3________xx[ARCH_390];
+  regs->s390_runtime_opcode_eb________xx = runtime_opcode_eb________xx[ARCH_390];
+  regs->s390_runtime_opcode_ec________xx = runtime_opcode_ec________xx[ARCH_390];
+  regs->s390_runtime_opcode_ed________xx = runtime_opcode_ed________xx[ARCH_390];
+  regs->z900_runtime_opcode_xxxx = runtime_opcode_xxxx[ARCH_900];
+  regs->z900_runtime_opcode_e3________xx = runtime_opcode_e3________xx[ARCH_900];
+  regs->z900_runtime_opcode_eb________xx = runtime_opcode_eb________xx[ARCH_900];
+  regs->z900_runtime_opcode_ec________xx = runtime_opcode_ec________xx[ARCH_900];
+  regs->z900_runtime_opcode_ed________xx = runtime_opcode_ed________xx[ARCH_900];
+}
+
+
+#define execute_01xx operation_exception
+#define execute_a4xx operation_exception
+#define execute_a5xx operation_exception
+#define execute_a6xx operation_exception
+#define execute_a7xx operation_exception
+#define execute_b2xx operation_exception
+#define execute_b3xx operation_exception
+#define execute_b9xx operation_exception
+#define execute_c0xx operation_exception
+#define execute_c2xx operation_exception
+#define execute_c4xx operation_exception
+#define execute_c6xx operation_exception
+#define execute_c8xx operation_exception
+#define execute_ccxx operation_exception
+#define execute_e3xx operation_exception
+#define execute_e4xx operation_exception
+#define execute_e5xx operation_exception
+#define execute_e6xx operation_exception
+#define execute_ebxx operation_exception
+#define execute_ecxx operation_exception
+#define execute_edxx operation_exception
+
 
 DLL_EXPORT zz_func opcode_table[256][GEN_MAXARCH] = {
  /*00*/   GENx___x___x___ ,

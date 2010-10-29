@@ -143,10 +143,6 @@ typedef void (ATTR_REGPARM(2) *zz_func) (BYTE inst[], REGS *regs);
 #define REAL_ILC(_regs) \
  (likely(!(_regs)->execflag) ? (_regs)->psw.ilc : (_regs)->exrl ? 6 : 4)
 
-/* Gabor Hoffer (performance option) */
-OPC_DLL_IMPORT zz_func s370_opcode_table[];
-OPC_DLL_IMPORT zz_func s390_opcode_table[];
-OPC_DLL_IMPORT zz_func z900_opcode_table[];
 
 OPC_DLL_IMPORT zz_func opcode_table[][GEN_MAXARCH];
 OPC_DLL_IMPORT zz_func opcode_01xx[][GEN_MAXARCH];
@@ -181,18 +177,7 @@ typedef int (*func) ();
 
 extern int disasm_table (BYTE inst[], char mnemonic[], char *p);
 
-OPC_DLL_IMPORT  zz_func opcode_replace_instruction(int arch,zz_func newfun,int code1,int code2);
-
-/* For callers that can ARCH_DEP() */
-#if defined(_370)
-OPC_DLL_IMPORT  zz_func s370_opcode_replace_instruction(zz_func newfun,int code1,int code2);
-#endif
-#if defined(_390)
-OPC_DLL_IMPORT  zz_func s390_opcode_replace_instruction(zz_func newfun,int code1,int code2);
-#endif
-#if defined(_900)
-OPC_DLL_IMPORT  zz_func s900_opcode_replace_instruction(zz_func newfun,int code1,int code2);
-#endif
+zz_func replace_opcode(int arch, zz_func inst, int opcode1, int opcode2);
 
 #if defined(OPTION_INSTRUCTION_COUNTING)
 
@@ -400,7 +385,7 @@ do { \
 do { \
     FOOTPRINT ((_regs)); \
     COUNT_INST ((_ip), (_regs)); \
-    (_oct)[_ip[0]]((_ip), (_regs)); \
+    (_oct)[fetch_hw((_ip))]((_ip), (_regs)); \
 } while(0)
 
 #define UNROLLED_EXECUTE(_oct, _regs) \
@@ -2799,8 +2784,10 @@ void sigabend_handler (int signo);
 
 
 /* Functions in module opcode.c */
-OPC_DLL_IMPORT void copy_opcode_tables ();
-void set_opcode_pointers (REGS *regs);
+zz_func replace_opcode_xx________xx(int arch, zz_func inst, int opcode1, int opcode2);
+zz_func replace_opcode(int arch, zz_func inst, int opcode1, int opcode2);
+void init_opcode_tables(void);
+void init_opcode_pointers(REGS *regs);
 
 
 /* Functions in module panel.c */
@@ -2893,25 +2880,10 @@ int ARCH_DEP(plo_cststx) (int r1, int r3, VADR effective_addr2, int b2,
 
 
 /* Instruction functions in opcode.c */
-DEF_INST(execute_01xx);
-DEF_INST(execute_a4xx);
-DEF_INST(execute_a5xx);
-DEF_INST(execute_a6xx);
-DEF_INST(execute_a7xx);
-DEF_INST(execute_b2xx);
-DEF_INST(execute_b3xx);
-DEF_INST(execute_b9xx);
-DEF_INST(execute_c0xx);
-DEF_INST(execute_c2xx);
-DEF_INST(execute_c4xx);
-DEF_INST(execute_c6xx);
-DEF_INST(execute_c8xx);
-DEF_INST(execute_e3xx);
-DEF_INST(execute_e4xx);
-DEF_INST(execute_e5xx);
-DEF_INST(execute_ebxx);
-DEF_INST(execute_ecxx);
-DEF_INST(execute_edxx);
+DEF_INST(execute_e3________xx);
+DEF_INST(execute_eb________xx);
+DEF_INST(execute_ec________xx);
+DEF_INST(execute_ed________xx);
 DEF_INST(operation_exception);
 DEF_INST(dummy_instruction);
 

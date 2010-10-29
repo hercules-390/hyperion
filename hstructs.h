@@ -295,99 +295,21 @@ struct REGS {                           /* Processor registers       */
         U64     regs_copy_end;          /* Copy regs to here         */
      /* ------------------------------------------------------------ */
 
-     /* Opcode table pointers                                        */
-        FUNC   *s370_opcode_table,
-               *s370_opcode_01xx,
-               *s370_opcode_a4xx,
-               *s370_opcode_a5xx,
-               *s370_opcode_a6xx,
- #if defined(MULTI_BYTE_ASSIST)
-                s370_opcode_a7xx[256],
-                s370_opcode_b2xx[256],
-                s370_opcode_b9xx[256],
-                s370_opcode_c0xx[256],                          /*@N3*/
-                s370_opcode_e3xx[256],                          /*@N3*/
-                s370_opcode_ebxx[256],
- #else
-               *s370_opcode_a7xx,
-               *s370_opcode_b2xx,
-               *s370_opcode_b9xx,
-               *s370_opcode_c0xx,                               /*@N3*/
-               *s370_opcode_e3xx,                               /*@N3*/
-               *s370_opcode_ebxx,
- #endif
-               *s370_opcode_b3xx,                               /*FPE*/
-               *s370_opcode_c2xx,                               /*208*/
-               *s370_opcode_c4xx,                               /*208*/
-               *s370_opcode_c6xx,                               /*208*/
-               *s370_opcode_c8xx,                               /*810*/
-               *s370_opcode_ccxx,                               /*810*/
-               *s370_opcode_e4xx,
-               *s370_opcode_e5xx,
-               *s370_opcode_e6xx,
-               *s370_opcode_ecxx,                               /*@N3*/
-               *s370_opcode_edxx;
-
-        FUNC   *s390_opcode_table,
-               *s390_opcode_01xx,
-               *s390_opcode_a4xx,
-               *s390_opcode_a5xx,
-               *s390_opcode_a6xx,
- #if defined(MULTI_BYTE_ASSIST)
-                s390_opcode_a7xx[256],
-                s390_opcode_b2xx[256],
-                s390_opcode_b9xx[256],
-                s390_opcode_c0xx[256],
-                s390_opcode_e3xx[256],
-                s390_opcode_ebxx[256],
- #else
-               *s390_opcode_a7xx,
-               *s390_opcode_b2xx,
-               *s390_opcode_b9xx,
-               *s390_opcode_c0xx,
-               *s390_opcode_e3xx,
-               *s390_opcode_ebxx,
- #endif
-               *s390_opcode_b3xx,
-               *s390_opcode_c2xx,
-               *s390_opcode_c4xx,                               /*208*/
-               *s390_opcode_c6xx,                               /*208*/
-               *s390_opcode_c8xx,                               /*810*/
-               *s390_opcode_ccxx,                               /*810*/
-               *s390_opcode_e4xx,
-               *s390_opcode_e5xx,
-               *s390_opcode_e6xx,
-               *s390_opcode_ecxx,
-               *s390_opcode_edxx;
-
-        FUNC   *z900_opcode_table,
-               *z900_opcode_01xx,
-               *z900_opcode_a5xx,
-               *z900_opcode_e6xx,
- #if defined(MULTI_BYTE_ASSIST)
-                z900_opcode_a7xx[256],
-                z900_opcode_b2xx[256],
-                z900_opcode_b9xx[256],
-                z900_opcode_c0xx[256],
-                z900_opcode_e3xx[256],
-                z900_opcode_ebxx[256],
- #else
-               *z900_opcode_a7xx,
-               *z900_opcode_b2xx,
-               *z900_opcode_b9xx,
-               *z900_opcode_c0xx,
-               *z900_opcode_e3xx,
-               *z900_opcode_ebxx,
- #endif
-               *z900_opcode_b3xx,
-               *z900_opcode_c2xx,
-               *z900_opcode_c4xx,                               /*208*/
-               *z900_opcode_c6xx,                               /*208*/
-               *z900_opcode_c8xx,
-               *z900_opcode_ccxx,                               /*810*/
-               *z900_opcode_e5xx,
-               *z900_opcode_ecxx,
-               *z900_opcode_edxx;
+        FUNC   *s370_runtime_opcode_xxxx,
+               *s370_runtime_opcode_e3________xx,
+               *s370_runtime_opcode_eb________xx,
+               *s370_runtime_opcode_ec________xx,
+               *s370_runtime_opcode_ed________xx;
+        FUNC   *s390_runtime_opcode_xxxx,
+               *s390_runtime_opcode_e3________xx,
+               *s390_runtime_opcode_eb________xx,
+               *s390_runtime_opcode_ec________xx,
+               *s390_runtime_opcode_ed________xx;
+        FUNC   *z900_runtime_opcode_xxxx,
+               *z900_runtime_opcode_e3________xx,
+               *z900_runtime_opcode_eb________xx,
+               *z900_runtime_opcode_ec________xx,
+               *z900_runtime_opcode_ed________xx;
 
      /* TLB - Translation lookaside buffer                           */
 

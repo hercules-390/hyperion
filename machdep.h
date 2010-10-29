@@ -377,11 +377,6 @@ __asm__ __volatile__ (
            "m" (*(U64 *)ptr));
 }
 
-#if defined(OPTION_MULTI_BYTE_ASSIST) && defined(__linux__)
-#define MULTI_BYTE_ASSIST
-#define MULTI_BYTE_ASSIST_IA32
-#endif
-
 #endif /* defined(_ext_ia32) */
 
 /*-------------------------------------------------------------------

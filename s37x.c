@@ -106,24 +106,11 @@ INST37X_TABLE_START(00)
  /*71*/   INST37X (multiply_single,0x71)
  /*84*/   INST37X (branch_relative_on_index_high,0x84)
  /*85*/   INST37X (branch_relative_on_index_low_or_equal,0x85)
- // /*A7*/   INST37X (execute_a7xx,0xa7)
- // /*B2*/   INST37X (execute_b2xx,0xb2)
- // /*B3*/   INST37X (execute_b3xx,0xb3)
- // /*B9*/   INST37X (execute_b9xx,0xb9)
- // /*C0*/   INST37X (execute_c0xx,0xc0)
- // /*C2*/   INST37X (execute_c2xx,0xc2)
- // /*C4*/   INST37X (execute_c4xx,0xc4)
- // /*C6*/   INST37X (execute_c6xx,0xc6)
- // /*C8*/   INST37X (execute_c8xx,0xc8)
  /*D0*/   INST37X (translate_and_test_reverse,0xd0)
  /*E1*/   INST37X (pack_unicode,0xe1)
  /*E2*/   INST37X (unpack_unicode,0xe2)
- // /*E3*/   INST37X (execute_e3xx,0xe3)
  /*E9*/   INST37X (pack_ascii,0xe9)
  /*EA*/   INST37X (unpack_ascii,0xea)
- // /*EB*/   INST37X (execute_ebxx,0xeb)
- // /*EC*/   INST37X (execute_ecxx,0xec)
- // /*ED*/   INST37X (execute_edxx,0xed)
 INST37X_TABLE_END(00)
 
 INST37X_TABLE_START(a7)
@@ -495,13 +482,13 @@ static  void    s37x_replace_opcode(struct s37x_inst_table_entry *tb,int code,in
         }
         if(set)
         {
-            tb[i].oldfun=s370_opcode_replace_instruction(tb[i].newfun,code1,code2);
+            tb[i].oldfun=replace_opcode(ARCH_370, tb[i].newfun,code1,code2);
 //            logmsg("Replacing Opcode %2.2X%2.2X; Old = %p, New=%p\n",(unsigned char)code1,(unsigned char)code2,tb[i].oldfun,tb[i].newfun);
         }
         else
         {
             zz_func old;
-            old=s370_opcode_replace_instruction(tb[i].oldfun,code1,code2);
+            old=replace_opcode(ARCH_370, tb[i].oldfun,code1,code2);
 //            logmsg("Restoring Opcode %2.2X%2.2X; Old = %p, New=%p\n",(unsigned char)code1,(unsigned char)code2,old,tb[i].oldfun);
         }
     }
