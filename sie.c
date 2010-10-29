@@ -1104,7 +1104,7 @@ int ARCH_DEP(run_sie) (REGS *regs)
                     break;
 
                 ip = INSTRUCTION_FETCH(GUESTREGS, 0);
-                current_opcode_table=GUESTREGS->ARCH_DEP(opcode_table);
+                current_opcode_table=GUESTREGS->ARCH_DEP(runtime_opcode_xxxx);
 
 #if defined(SIE_DEBUG)
                 /* Display the instruction */

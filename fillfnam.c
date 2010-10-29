@@ -25,7 +25,7 @@ int tab_pressed(char *cmdlinefull, size_t cmdlinelen, int *cmdoffset) {
 
 char *filterarray;
 
-int filter( struct dirent *ent) {
+int filter(const struct dirent *ent) {
   if (filterarray == NULL)
     return(1);
   if (strncmp(ent->d_name, filterarray, strlen(filterarray)) == 0)
