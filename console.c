@@ -1866,31 +1866,51 @@ char                    *logoout;
 } /* end function connect_client */
 
 
+
+/* Read the logofile */
+static void init_logo()
+{
+char   *p;            /* pointer logo filename */
+int     rc = 0;
+char    fn[FILENAME_MAX] = { 0 };
+
+    if (sysblk.logofile == NULL) /* LogoFile NOT passed in command line */
+    {
+        p = getenv("HERCLOGO");
+
+        if ( p == NULL)
+            p = "herclogo.txt";
+    }
+    else 
+        p = sysblk.logofile;
+
+    hostpath( fn, p, sizeof(fn) );
+
+    rc = readlogo(fn);
+
+    if ( rc == -1 && strcasecmp(fn,basename(fn)) == 0
+               && strlen(sysblk.hercules_pgmpath) > 0 )
+    {
+        char altfn[FILENAME_MAX];
+        char pathname[MAX_PATH];
+
+        bzero(altfn,sizeof(altfn));
+    
+        MSGBUF(altfn,"%s%c%s", sysblk.hercules_pgmpath, PATHSEPC, fn);
+
+        hostpath( pathname, altfn, sizeof(pathname));
+
+        rc = readlogo(pathname);
+    }
+} /* end of logo initialisation */
+
+
 /*-------------------------------------------------------------------*/
 /* CONSOLE CONNECTION AND ATTENTION HANDLER THREAD                   */
 /*-------------------------------------------------------------------*/
 
 static int     console_cnslcnt  = 0;    /* count of connected terms  */
 static LOCK    console_lock;            /* console_cnslcnt lock      */
-static COND    console_wait;            /* console wait for shutdown */
-static int     did_init     = FALSE;    /* console_lock initialized  */
-
-static void console_shutdown(void * unused)
-{
-    UNREFERENCED(unused);
-
-    obtain_lock( &console_lock );
-
-    console_cnslcnt = 0;
-
-    SIGNAL_CONSOLE_THREAD();
-
-    if ( sysblk.cnsltid != 0 )
-        timed_wait_condition_relative_usecs(&console_wait,&console_lock,2*1000*1000,NULL);
-
-    release_lock( &console_lock );
-
-}
 
 static void *
 console_connection_handler (void *arg)
@@ -1908,8 +1928,6 @@ BYTE                   unitstat;        /* Status after receive data */
 
     UNREFERENCED(arg);
 
-    hdl_adsc("console_shutdown",console_shutdown, NULL);
-    
     /* Set root mode in order to set priority */
     SETMODE(ROOT);
 
@@ -1925,6 +1943,8 @@ BYTE                   unitstat;        /* Status after receive data */
 
     /* Get information about this system */
     init_hostinfo( &cons_hostinfo );
+
+    init_logo();
 
     /* Obtain a socket */
     lsock = socket (AF_INET, SOCK_STREAM, 0);
@@ -1959,7 +1979,7 @@ BYTE                   unitstat;        /* Status after receive data */
         WRMSG(HHC01023, "W", ntohs(server->sin_port));
         SLEEP(10);
     }
-    while (console_cnslcnt);
+    while (console_cnslcnt > 0);
 
     if (rc != 0)
     {
@@ -1977,15 +1997,8 @@ BYTE                   unitstat;        /* Status after receive data */
     WRMSG(HHC01024, "I", ntohs(server->sin_port));
 
     /* Handle connection requests and attention interrupts */
-    for (;;)
+    while(console_cnslcnt > 0)
     {
-        /* Check if time to exit */
-        int time_to_exit;
-        obtain_lock( &console_lock );
-        time_to_exit = console_cnslcnt <= 0 ? 1 : 0;
-        release_lock( &console_lock );
-        if (time_to_exit) break;
-
         /* Initialize the select parameters */
 
         FD_ZERO ( &readset ); maxfd=INT_MIN;
@@ -2058,6 +2071,9 @@ BYTE                   unitstat;        /* Status after receive data */
 
         /* Clear the pipe signal if necessary */
         RECV_CONSOLE_THREAD_PIPE_SIGNAL();
+
+        if(!(console_cnslcnt > 0))
+            break;
 
         /* Log select errors */
         if (rc < 0 )
@@ -2249,13 +2265,6 @@ BYTE                   unitstat;        /* Status after receive data */
 
     WRMSG(HHC00101, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), "Console connection");
 
-    sysblk.cnsltid = 0;
-
-    signal_condition(&console_wait);
-
-    if ( !sysblk.shutdown )
-        hdl_rmsc(console_shutdown, NULL);
-
     return NULL;
 
 } /* end function console_connection_handler */
@@ -2264,91 +2273,53 @@ BYTE                   unitstat;        /* Status after receive data */
 static int
 console_initialise()
 {
-    int rc = 0;
 
-    if (!did_init)
+    if(!console_cnslcnt && !sysblk.cnsltid)
     {
-        did_init = TRUE;
+    int rc;
+
         initialize_lock( &console_lock );
-        initialize_condition( &console_wait );
+        console_cnslcnt++; // No serialisation needed just yet, as the console thread is not yet active
 
-        /* Read the logofile */
-        {
-            char   *p;            /* pointer logo filename */
-            int     rc = 0;
-            char    fn[FILENAME_MAX] = { 0 };
-
-            if (sysblk.logofile == NULL) /* LogoFile NOT passed in command line */
-            {
-                p = getenv("HERCLOGO");
-
-                if ( p == NULL)
-                    p = "herclogo.txt";
-            }
-            else 
-                p = sysblk.logofile;
-
-            hostpath( fn, p, sizeof(fn) );
-
-            rc = readlogo(fn);
-        
-            if ( rc == -1 && strcasecmp(fn,basename(fn)) == 0
-                       && strlen(sysblk.hercules_pgmpath) > 0 )
-            {
-                char altfn[FILENAME_MAX];
-                char pathname[MAX_PATH];
-
-                bzero(altfn,sizeof(altfn));
-            
-                MSGBUF(altfn,"%s%c%s", sysblk.hercules_pgmpath, PATHSEPC, fn);
-
-                hostpath( pathname, altfn, sizeof(pathname));
-
-                rc = readlogo(pathname);
-            }
-        } /* end of logo parm processing */
-
-    }
-
-    obtain_lock( &console_lock );
-    {
-        console_cnslcnt++;
-
-        if (!sysblk.cnsltid)
-        {
-            rc = create_thread (&sysblk.cnsltid, DETACHED,
+        if((rc = create_thread (&sysblk.cnsltid, JOINABLE,
                                 console_connection_handler, NULL,
-                                "console_connection_handler");
-            if ( rc )   
-            {
-                WRMSG(HHC00102, "E", strerror(rc));
-                rc = 1;
-            }
+                                "console_connection_handler")))
+        {
+            WRMSG(HHC00102, "E", strerror(rc));
+            return 1;
         }
     }
-    release_lock( &console_lock );
+    else
+    {
+        obtain_lock( &console_lock );
+        console_cnslcnt++;
+        release_lock( &console_lock );
+    }
 
-    return rc;
+    return 0;
 }
 
 
 static void
 console_remove(DEVBLK *dev)
 {
+    dev->connected = 0;
+    dev->console = 0;
+    dev->fd = -1;
+
     obtain_lock( &console_lock );
-    {
-        dev->connected = 0;
-        dev->console = 0;
-        dev->fd = -1;
-
-        if (console_cnslcnt <= 0 && !sysblk.shutdown )
-            logmsg(_("** BUG! console_remove() error! **\n"));
-        else
-            console_cnslcnt--;
-
-        SIGNAL_CONSOLE_THREAD();
-    }
+    console_cnslcnt--;
     release_lock( &console_lock );
+
+    SIGNAL_CONSOLE_THREAD();
+
+    if(!console_cnslcnt)
+    {
+        release_lock(&dev->lock);
+        join_thread( sysblk.cnsltid, NULL);
+        obtain_lock(&dev->lock);
+        sysblk.cnsltid = 0;
+    }
 }
 
 
@@ -3760,6 +3731,8 @@ HDL_DEPENDENCY_SECTION;
      HDL_DEPENDENCY(HERCULES);
      HDL_DEPENDENCY(DEVBLK);
      HDL_DEPENDENCY(SYSBLK);
+
+
 }
 END_DEPENDENCY_SECTION
 
