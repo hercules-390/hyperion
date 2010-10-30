@@ -313,7 +313,7 @@ int was_locked = sysblk.xpndstor_locked;
                 return -1;
             }
 
-            if (sysblk.lock_mainstor)
+            if (sysblk.lock_xpndstor)
             {
                 WRMSG(HHC01428, "I", "expanded");
                 usleep(250);
