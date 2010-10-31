@@ -25,7 +25,12 @@ int tab_pressed(char *cmdlinefull, size_t cmdlinelen, int *cmdoffset) {
 
 char *filterarray;
 
-int filter(const struct dirent *ent) {
+#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__SOLARIS__) || defined(_MSVC_)
+int filter(      struct dirent *ent) 
+#else
+int filter(const struct dirent *ent) 
+#endif
+{
   if (filterarray == NULL)
     return(1);
   if (strncmp(ent->d_name, filterarray, strlen(filterarray)) == 0)
