@@ -144,33 +144,6 @@ typedef zz_func (*zz_mod)(int arch, zz_func inst, int opcode1, int opcode2);
 #define REAL_ILC(_regs) \
  (likely(!(_regs)->execflag) ? (_regs)->psw.ilc : (_regs)->exrl ? 6 : 4)
 
-
-OPC_DLL_IMPORT zz_func opcode_table[][GEN_MAXARCH];
-OPC_DLL_IMPORT zz_func opcode_01xx[][GEN_MAXARCH];
-extern         zz_func v_opcode_a4xx[][GEN_MAXARCH];
-OPC_DLL_IMPORT zz_func opcode_a5xx[][GEN_MAXARCH];
-extern         zz_func v_opcode_a5xx[][GEN_MAXARCH];
-extern         zz_func v_opcode_a6xx[][GEN_MAXARCH];
-OPC_DLL_IMPORT zz_func opcode_a7xx[][GEN_MAXARCH];
-OPC_DLL_IMPORT zz_func opcode_b2xx[][GEN_MAXARCH];
-OPC_DLL_IMPORT zz_func opcode_b3xx[][GEN_MAXARCH];
-OPC_DLL_IMPORT zz_func opcode_b9xx[][GEN_MAXARCH];
-OPC_DLL_IMPORT zz_func opcode_c0xx[][GEN_MAXARCH];
-OPC_DLL_IMPORT zz_func opcode_c2xx[][GEN_MAXARCH];                      /*@Z9*/
-OPC_DLL_IMPORT zz_func opcode_c4xx[][GEN_MAXARCH];                      /*208*/
-OPC_DLL_IMPORT zz_func opcode_c6xx[][GEN_MAXARCH];                      /*208*/
-OPC_DLL_IMPORT zz_func opcode_c8xx[][GEN_MAXARCH];
-OPC_DLL_IMPORT zz_func opcode_ccxx[][GEN_MAXARCH];                      /*810*/
-OPC_DLL_IMPORT zz_func opcode_e3xx[][GEN_MAXARCH];
-OPC_DLL_IMPORT zz_func opcode_e4xx[256][GEN_MAXARCH];
-extern         zz_func v_opcode_e4xx[][GEN_MAXARCH];
-OPC_DLL_IMPORT zz_func opcode_e5xx[][GEN_MAXARCH];
-OPC_DLL_IMPORT zz_func opcode_e6xx[][GEN_MAXARCH];
-OPC_DLL_IMPORT zz_func opcode_ebxx[][GEN_MAXARCH];
-OPC_DLL_IMPORT zz_func opcode_ecxx[][GEN_MAXARCH];
-OPC_DLL_IMPORT zz_func opcode_edxx[][GEN_MAXARCH];
-
-
 #define DISASM_INSTRUCTION(_inst, p) \
     disasm_table((_inst), 0, p)
 
