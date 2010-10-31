@@ -54,12 +54,12 @@ static void delayed_exit (int exit_code)
 #endif
     sysblk.shutimmed = TRUE;
 
-    fflush(stderr);  
-    fflush(stdout);  
+    fflush(stderr);
+    fflush(stdout);
     usleep(100000);
     do_shutdown();
-    fflush(stderr);  
-    fflush(stdout);  
+    fflush(stderr);
+    fflush(stdout);
     usleep(100000);
     return;
 }
@@ -156,11 +156,11 @@ BOOL WINAPI console_ctrl_handler (DWORD signo)
         case CTRL_LOGOFF_EVENT:
             if ( !sysblk.shutdown )  // (system shutdown not initiated)
             {
-                WRMSG(HHC01402, "I", ( signo == CTRL_CLOSE_EVENT ? "close" : 
+                WRMSG(HHC01402, "I", ( signo == CTRL_CLOSE_EVENT ? "close" :
                                       signo == CTRL_SHUTDOWN_EVENT ? "shutdown" : "logoff" ),
                                     ( signo == CTRL_CLOSE_EVENT ? "immediate " : "" ) );
 
-                if ( signo == CTRL_CLOSE_EVENT ) 
+                if ( signo == CTRL_CLOSE_EVENT )
                     sysblk.shutimmed = TRUE;
                 do_shutdown();
 
@@ -174,14 +174,14 @@ BOOL WINAPI console_ctrl_handler (DWORD signo)
 //                                __FILE__, __LINE__, i );           /* debug */
                         break;
                     }
-                    else 
+                    else
                     {
 //                        logmsg("%s(%d): %d waiting for shutdown to complete\n",   /* debug */
 //                                __FILE__, __LINE__, i );                          /* debug */
                         sleep(1);
                     }
                 }
-                if ( !sysblk.shutfini ) 
+                if ( !sysblk.shutfini )
                 {
                     sysblk.shutimmed = TRUE;
                     do_shutdown();
@@ -191,10 +191,10 @@ BOOL WINAPI console_ctrl_handler (DWORD signo)
             {
                 sysblk.shutimmed = TRUE;
                 do_shutdown();
-                WRMSG(HHC01403, "W", ( signo == CTRL_CLOSE_EVENT ? "close" : 
+                WRMSG(HHC01403, "W", ( signo == CTRL_CLOSE_EVENT ? "close" :
                                       signo == CTRL_SHUTDOWN_EVENT ? "shutdown" : "logoff" ) );
             }
-            return TRUE;           
+            return TRUE;
             break;
         default:
             return FALSE;
@@ -330,7 +330,7 @@ char    pathname[MAX_PATH];             /* work area for filenames   */
 #if defined ( OPTION_LOCK_CONFIG_FILE )
 int     fd_cfg = -1;                    /* fd for config file        */
 #if !defined ( _MSVC_ )
-struct  flock  fl_cfg;                  /* file lock for conf file   */  
+struct  flock  fl_cfg;                  /* file lock for conf file   */
 #endif
 #endif
 int     c;                              /* Work area for getopt      */
@@ -347,18 +347,21 @@ int     e_gui = FALSE;                  /* EXTERNALGUI parm          */
 #if defined(OPTION_DYNAMIC_LOAD)
 #define MAX_DLL_TO_LOAD         50
 char   *dll_load[MAX_DLL_TO_LOAD];      /* Pointers to modnames      */
-int     dll_count;                      /* index into array          */ 
+int     dll_count;                      /* index into array          */
 #endif
 
     /* Clear the system configuration block */
     memset (&sysblk, 0, sizeof(SYSBLK));
-    
+
+    /* Initialize Guest System Information */
+    init_gsysinfo();
+
 #if defined (_MSVC_)
-    VERIFY( VirtualLock( &sysblk, sizeof(SYSBLK) ) ); 
+    VERIFY( VirtualLock( &sysblk, sizeof(SYSBLK) ) );
 #else
     VERIFY( mlock( &sysblk, sizeof(SYSBLK) ) == 0 );
 #endif
-    
+
     /* Initialize EYE-CATCHERS for SYSBLK       */
     memset(&sysblk.blknam,SPACE,sizeof(sysblk.blknam));
     memset(&sysblk.blkver,SPACE,sizeof(sysblk.blkver));
@@ -520,7 +523,7 @@ int     dll_count;                      /* index into array          */
 #endif
 
     /* set default system state to reset */
-    sysblk.sys_reset = TRUE; 
+    sysblk.sys_reset = TRUE;
 
     /* set default SHCMDOPT enabled     */
     sysblk.shcmdopt = SHCMDOPT_ENABLE + SHCMDOPT_DIAG8;
@@ -616,8 +619,8 @@ int     dll_count;                      /* index into array          */
 
     }
 #endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS */
-    
-    
+
+
     /* Initialize locks, conditions, and attributes */
     initialize_lock (&sysblk.todlock);
     initialize_lock (&sysblk.mainlock);
@@ -710,7 +713,7 @@ int     dll_count;                      /* index into array          */
         e_gui = TRUE;
         argc--;
     }
-#endif 
+#endif
 
 #if !defined(WIN32) && !defined(HAVE_STRERROR_R)
     strerror_r_init();
@@ -731,7 +734,7 @@ int     dll_count;                      /* index into array          */
         case 'f':
             cfgfile = optarg;
             break;
-#if defined(OPTION_CONFIG_SYMBOLS)  
+#if defined(OPTION_CONFIG_SYMBOLS)
         case 's':
             {
             char *sym        = NULL;
@@ -805,13 +808,13 @@ int     dll_count;                      /* index into array          */
         strncpy(pgm, sysblk.hercules_pgmname, sizeof(pgm));
 
 #if defined(OPTION_DYNAMIC_LOAD)
-        WRMSG (HHC01407, "S", strtok_r(pgm,".",&strtok_str), 
+        WRMSG (HHC01407, "S", strtok_r(pgm,".",&strtok_str),
                              " [-p dyn-load-dir] [[-l dynmod-to-load]...]");
 #else
         WRMSG (HHC01407, "S", strtok_r(pgm,".", &strtok_str), "");
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
-        fflush(stderr);  
-        fflush(stdout);  
+        fflush(stderr);
+        fflush(stdout);
         usleep(100000);
         return(1);
     }
@@ -1054,10 +1057,10 @@ int     dll_count;                      /* index into array          */
         fl_cfg.l_whence = SEEK_SET;
         fl_cfg.l_start = 0;
         fl_cfg.l_len = 1;
-        
-        if ( fcntl(fd_cfg, F_SETLK, &fl_cfg) == -1 ) 
+
+        if ( fcntl(fd_cfg, F_SETLK, &fl_cfg) == -1 )
         {
-            if (errno == EACCES || errno == EAGAIN) 
+            if (errno == EACCES || errno == EAGAIN)
             {
                 WRMSG( HHC01432, "S", pathname, "fcntl()", strerror( errno ) );
                 delayed_exit(-1);

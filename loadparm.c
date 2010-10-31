@@ -18,6 +18,17 @@
 #define _LOADPARM_C_
 
 #include "hercules.h"
+                                          /*  H    E    R    C    U    L    E    S  */
+static const BYTE dflt_lparname[8]      = { 0xC8,0xC5,0xD9,0xC3,0xE4,0xD3,0xC5,0xE2 };
+
+                                         /*   E    M    U    L    A    T    O    R  */
+static const BYTE dflt_model[16]        = { 0xC5,0xD4,0xE4,0xD3,0xC1,0xE3,0xD6,0xD9,
+                                            0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
+                                          /*  H    R    C  */
+static const BYTE default_manufact[16]  = { 0xC8,0xD9,0xC3,0x40,0x40,0x40,0x40,0x40,
+                                            0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
+                                          /*  Z    Z           */
+static const BYTE default_plant[4]      = { 0xE9,0xE9,0x40,0x40 };
 
 // ebcdic_to_stringz_allow_return returns a null terminated string allowing
 //                                embedded spaces
@@ -85,6 +96,25 @@
     return n; \
 }
 
+void init_gsysinfo(void)
+{
+static int do_once = TRUE;
+
+    if ( do_once )
+    {
+        do_once = FALSE;
+        memset(&gsysinfo, 0x40, sizeof(GSYSINFO));
+
+        memcpy(gsysinfo.lparname,  dflt_lparname,       sizeof(gsysinfo.lparname));
+        memcpy(gsysinfo.manufact,  default_manufact,    sizeof(gsysinfo.manufact));
+        memcpy(gsysinfo.plant,     default_plant,       sizeof(gsysinfo.plant));
+        memcpy(gsysinfo.model,     dflt_model,          sizeof(gsysinfo.model));
+        memcpy(gsysinfo.modelcapa, dflt_model,          sizeof(gsysinfo.modelcapa));
+        bzero(gsysinfo.modelperm,  sizeof(gsysinfo.modelperm));
+        bzero(gsysinfo.modeltemp,  sizeof(gsysinfo.modeltemp));
+    }
+    return;
+}
 
 /*-------------------------------------------------------------------*/
 /* SUBROUTINE TO COPY A STRINGZ TO A FIXED-LENGTH EBCDIC FIELD       */
@@ -158,23 +188,22 @@ int copy_ebcdic_to_stringz(char *name, size_t nlen, BYTE* fld, size_t flen)
 /* Set by: LOADPARM configuration statement or panel command         */
 /* Retrieved by: SERVC and MSSF_CALL instructions                    */
 /*-------------------------------------------------------------------*/
-static BYTE loadparm[8] = {0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40};
 
 void set_loadparm(char *name)
 {
-    set_static(loadparm, name);
+    set_static(gsysinfo.loadparm, name);
 }
 
 
 void get_loadparm(BYTE *dest)
 {
-    memcpy(dest, loadparm, sizeof(loadparm));
+    memcpy(dest, gsysinfo.loadparm, sizeof(gsysinfo.loadparm));
 }
 
 
 char *str_loadparm()
 {
-    ebcdic_to_stringz_allow_return(loadparm);
+    ebcdic_to_stringz_allow_return(gsysinfo.loadparm);
 }
 
 
@@ -183,25 +212,23 @@ char *str_loadparm()
 /* Set by: LPARNAME configuration statement                          */
 /* Retrieved by: STSI and MSSF_CALL instructions                     */
 /*-------------------------------------------------------------------*/
-                          /*  H    E    R    C    U    L    E    S  */
-static BYTE lparname[8] = { 0xC8,0xC5,0xD9,0xC3,0xE4,0xD3,0xC5,0xE2 };
 
 void set_lparname(char *name)
 {
-    set_static(lparname, name);
+    set_static(gsysinfo.lparname, name);
 }
 
 
 void get_lparname(BYTE *dest)
 {
-    memcpy(dest, lparname, sizeof(lparname));
+    memcpy(dest, gsysinfo.lparname, sizeof(gsysinfo.lparname));
 }
 
 
 LOADPARM_DLL_IMPORT
 char *str_lparname()
 {
-    ebcdic_to_stringz_return(lparname);
+    ebcdic_to_stringz_return(gsysinfo.lparname);
 }
 
 
@@ -210,56 +237,47 @@ char *str_lparname()
 /* Set by: MANUFACTURER configuration statement                      */
 /* Retrieved by: STSI instruction                                    */
 /*-------------------------------------------------------------------*/
-                          /*   H    R    C   */
-static BYTE manufact[16] = { 0xC8,0xD9,0xC3,0x40,0x40,0x40,0x40,0x40,
-                             0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
 
 int set_manufacturer(char *name)
 {
-                                      /*  H    R    C  */
-    const BYTE default_manufact[16] = { 0xC8,0xD9,0xC3,0x40,0x40,0x40,0x40,0x40,
-                                        0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
 
-    set_stsi_and_return(manufact, name, default_manufact);
+    set_stsi_and_return(gsysinfo.manufact, name, default_manufact);
 }
+
 
 void get_manufacturer(BYTE *dest)
 {
-    memcpy(dest, manufact, sizeof(manufact));
+    memcpy(dest, gsysinfo.manufact, sizeof(gsysinfo.manufact));
 }
 
 LOADPARM_DLL_IMPORT
 char *str_manufacturer()
 {
-    ebcdic_to_stringz_return(manufact);
-    }
+    ebcdic_to_stringz_return(gsysinfo.manufact);
+}
 
 /*-------------------------------------------------------------------*/
 /* MANUFACTURING PLANT NAME                                          */
 /* Set by: PLANT configuration statement                             */
 /* Retrieved by: STSI instruction      A-Z, 0-9                      */
 /*-------------------------------------------------------------------*/
-                      /*  "Z    Z"  */
-static BYTE plant[4] = { 0xE9,0xE9,0x40,0x40 };
 
 int set_plant(char *name)
 {
-                                  /*  Z    Z           */
-    const BYTE default_plant[4] = { 0xE9,0xE9,0x40,0x40 };
 
-    set_stsi_and_return(plant, name, default_plant);
+    set_stsi_and_return(gsysinfo.plant, name, default_plant);
 }
 
 void get_plant(BYTE *dest)
 {
-    memcpy(dest, plant, sizeof(plant));
+    memcpy(dest, gsysinfo.plant, sizeof(gsysinfo.plant));
 }
 
 LOADPARM_DLL_IMPORT
 char *str_plant()
 {
-    ebcdic_to_stringz_return(plant);
-    }
+    ebcdic_to_stringz_return(gsysinfo.plant);
+}
 
 /*-------------------------------------------------------------------*/
 /* MODEL IDENTIFICATION                                              */
@@ -275,28 +293,18 @@ char *str_plant()
  * with blanks.
  */
 /*-------------------------------------------------------------------*/
-                            /*  E    M    U    L    A    T    O    R  */
-static BYTE     model[16] = { 0xC5,0xD4,0xE4,0xD3,0xC1,0xE3,0xD6,0xD9,
-                              0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
-static BYTE modelcapa[16] = { 0xC5,0xD4,0xE4,0xD3,0xC1,0xE3,0xD6,0xD9,
-                              0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
-static BYTE modelperm[16] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
-static BYTE modeltemp[16] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 
 int set_model(char *m1, char *m2, char *m3, char *m4)
 {
-                               /*   E    M    U    L    A    T    O    R  */
-    const BYTE dflt_model[16] = { 0xC5,0xD4,0xE4,0xD3,0xC1,0xE3,0xD6,0xD9,
-                                  0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
 
     /* Model maybe binary zero */
     if ( m1 != NULL && m1[0] != '*' )
     {
         if ( strlen(m1) == 0 )
-            bzero(model,sizeof(model));
+            bzero(gsysinfo.model,sizeof(gsysinfo.model));
         else if ( strcmp(m1, "=") == 0)
-            memcpy(model, dflt_model, sizeof(model));
-        else if ( copy_stringz_to_ebcdic(model,     sizeof(model),     m1) <= 0 ) return 1;
+            memcpy(gsysinfo.model, dflt_model, sizeof(gsysinfo.model));
+        else if ( copy_stringz_to_ebcdic(gsysinfo.model,     sizeof(gsysinfo.model),     m1) <= 0 ) return 1;
     }
     else if ( m1 == NULL )
         return 0;
@@ -306,10 +314,10 @@ int set_model(char *m1, char *m2, char *m3, char *m4)
     if ( m2 != NULL && m2[0] != '*' )
     {
         if ( strlen(m2) == 0 )
-            memcpy(modelcapa,dflt_model,sizeof(modelcapa));
+            memcpy(gsysinfo.modelcapa,dflt_model,sizeof(gsysinfo.modelcapa));
         else if ( strcmp(m2, "=") == 0)
-            memcpy(modelcapa, model, sizeof(modelcapa));
-        else if ( copy_stringz_to_ebcdic(modelcapa, sizeof(modelcapa), m2) <= 0) return 2;
+            memcpy(gsysinfo.modelcapa, gsysinfo.model, sizeof(gsysinfo.modelcapa));
+        else if ( copy_stringz_to_ebcdic(gsysinfo.modelcapa, sizeof(gsysinfo.modelcapa), m2) <= 0) return 2;
     }
     else if ( m2 == NULL )
         return 0;
@@ -318,10 +326,10 @@ int set_model(char *m1, char *m2, char *m3, char *m4)
     if ( m3 != NULL && m3[0] != '*' )
     {
         if ( strlen(m3) == 0 )
-            bzero(modelperm,sizeof(modelperm));
+            bzero(gsysinfo.modelperm,sizeof(gsysinfo.modelperm));
         else if ( strcmp(m3, "=") == 0)
-            memcpy(modelperm, modelcapa, sizeof(modelperm));
-        else if ( copy_stringz_to_ebcdic(modelperm, sizeof(modelperm), m3) <= 0 ) return 3;
+            memcpy(gsysinfo.modelperm, gsysinfo.modelcapa, sizeof(gsysinfo.modelperm));
+        else if ( copy_stringz_to_ebcdic(gsysinfo.modelperm, sizeof(gsysinfo.modelperm), m3) <= 0 ) return 3;
     }
     else if ( m3 == NULL )
         return 0;
@@ -330,10 +338,10 @@ int set_model(char *m1, char *m2, char *m3, char *m4)
     if ( m4 != NULL && m4[0] != '*' )
     {
         if ( strlen(m4) == 0 )
-            bzero(modeltemp,sizeof(modeltemp));
+            bzero(gsysinfo.modeltemp,sizeof(gsysinfo.modeltemp));
         else if ( strcmp(m4, "=") == 0)
-            memcpy(modeltemp, modelperm, sizeof(modeltemp));
-        else if ( copy_stringz_to_ebcdic(modeltemp, sizeof(modeltemp), m4) <= 0 ) return 4;
+            memcpy(gsysinfo.modeltemp, gsysinfo.modelperm, sizeof(gsysinfo.modeltemp));
+        else if ( copy_stringz_to_ebcdic(gsysinfo.modeltemp, sizeof(gsysinfo.modeltemp), m4) <= 0 ) return 4;
     }
 //  else if ( m4 == NULL )      // uncomment test if anything else is done
 //      return 0;
@@ -344,10 +352,10 @@ int set_model(char *m1, char *m2, char *m3, char *m4)
 LOADPARM_DLL_IMPORT
 char **str_model()
 {
-    static char h_model[sizeof(model)+1];
-    static char c_model[sizeof(modelcapa)+1];
-    static char p_model[sizeof(modelperm)+1];
-    static char t_model[sizeof(modeltemp)+1];
+    static char h_model[sizeof(gsysinfo.model)+1];
+    static char c_model[sizeof(gsysinfo.modelcapa)+1];
+    static char p_model[sizeof(gsysinfo.modelperm)+1];
+    static char t_model[sizeof(gsysinfo.modeltemp)+1];
     static char *models[5] = { h_model, c_model, p_model, t_model, NULL };
     int rc;
 
@@ -356,52 +364,52 @@ char **str_model()
     bzero(p_model,sizeof(p_model));
     bzero(t_model,sizeof(t_model));
 
-    rc = copy_ebcdic_to_stringz(h_model, sizeof(h_model), model, sizeof(model));
-    rc = copy_ebcdic_to_stringz(c_model, sizeof(c_model), modelcapa, sizeof(modelcapa));
-    rc = copy_ebcdic_to_stringz(p_model, sizeof(p_model), modelperm, sizeof(modelperm));
-    rc = copy_ebcdic_to_stringz(t_model, sizeof(t_model), modeltemp, sizeof(modeltemp));
+    rc = copy_ebcdic_to_stringz(h_model, sizeof(h_model), gsysinfo.model, sizeof(gsysinfo.model));
+    rc = copy_ebcdic_to_stringz(c_model, sizeof(c_model), gsysinfo.modelcapa, sizeof(gsysinfo.modelcapa));
+    rc = copy_ebcdic_to_stringz(p_model, sizeof(p_model), gsysinfo.modelperm, sizeof(gsysinfo.modelperm));
+    rc = copy_ebcdic_to_stringz(t_model, sizeof(t_model), gsysinfo.modeltemp, sizeof(gsysinfo.modeltemp));
 
     return models;
 }
 
 void get_model(BYTE *dest)
 {
-    memcpy(dest, model, sizeof(model));
+    memcpy(dest, gsysinfo.model, sizeof(gsysinfo.model));
 }
 
 void get_modelcapa(BYTE *dest)
 {
-    memcpy(dest, modelcapa, sizeof(modelcapa));
+    memcpy(dest, gsysinfo.modelcapa, sizeof(gsysinfo.modelcapa));
 }
 
 void get_modelperm(BYTE *dest)
 {
-    memcpy(dest, modelperm, sizeof(modelperm));
+    memcpy(dest, gsysinfo.modelperm, sizeof(gsysinfo.modelperm));
 }
 
 void get_modeltemp(BYTE *dest)
 {
-    memcpy(dest, modeltemp, sizeof(modeltemp));
+    memcpy(dest, gsysinfo.modeltemp, sizeof(gsysinfo.modeltemp));
 }
 
 char *str_modelhard()
 {
-    ebcdic_to_stringz_return(model);
+    ebcdic_to_stringz_return(gsysinfo.model);
 }
 
 char *str_modelcapa()
 {
-    ebcdic_to_stringz_return(modelcapa);
+    ebcdic_to_stringz_return(gsysinfo.modelcapa);
 }
 
 char *str_modelperm()
 {
-    ebcdic_to_stringz_return(modelperm);
+    ebcdic_to_stringz_return(gsysinfo.modelperm);
 }
 
 char *str_modeltemp()
 {
-    ebcdic_to_stringz_return(modeltemp);
+    ebcdic_to_stringz_return(gsysinfo.modeltemp);
 }
 
 
@@ -410,22 +418,21 @@ char *str_modeltemp()
 /* Set by: SERVC instruction                                         */
 /* Retrieved by: DIAG204 instruction                                 */
 /*-------------------------------------------------------------------*/
-static BYTE systype[8] = { 0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
 
 void set_systype(BYTE *src)
 {
-    memcpy(systype, src, sizeof(systype));
+    memcpy(gsysinfo.systype, src, sizeof(gsysinfo.systype));
 }
 
 void get_systype(BYTE *dst)
 {
-    memcpy(dst, systype, sizeof(systype));
+    memcpy(dst, gsysinfo.systype, sizeof(gsysinfo.systype));
 }
 
 LOADPARM_DLL_IMPORT
 char *str_systype()
 {
-    ebcdic_to_stringz_return(systype);
+    ebcdic_to_stringz_return(gsysinfo.systype);
 }
 
 
@@ -434,22 +441,21 @@ char *str_systype()
 /* Set by: SERVC instruction                                         */
 /* Retrieved by: DIAG204 instruction                                 */
 /*-------------------------------------------------------------------*/
-static BYTE sysname[8] = { 0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
 
 void set_sysname(BYTE *src)
 {
-    memcpy(sysname, src, sizeof(sysname));
+    memcpy(gsysinfo.sysname, src, sizeof(gsysinfo.sysname));
 }
 
 void get_sysname(BYTE *dst)
 {
-    memcpy(dst, sysname, sizeof(sysname));
+    memcpy(dst, gsysinfo.sysname, sizeof(gsysinfo.sysname));
 }
 
 LOADPARM_DLL_IMPORT
 char *str_sysname()
 {
-    ebcdic_to_stringz_return(sysname);
+    ebcdic_to_stringz_return(gsysinfo.sysname);
 }
 
 
@@ -458,22 +464,21 @@ char *str_sysname()
 /* Set by: SERVC instruction                                         */
 /* Retrieved by: DIAG204 instruction                                 */
 /*-------------------------------------------------------------------*/
-static BYTE sysplex[8] = { 0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
 
 void set_sysplex(BYTE *src)
 {
-    memcpy(sysplex, src, sizeof(sysplex));
+    memcpy(gsysinfo.sysplex, src, sizeof(gsysinfo.sysplex));
 }
 
 void get_sysplex(BYTE *dst)
 {
-    memcpy(dst, sysplex, sizeof(sysplex));
+    memcpy(dst, gsysinfo.sysplex, sizeof(gsysinfo.sysplex));
 }
 
 LOADPARM_DLL_IMPORT
 char *str_sysplex()
 {
-    ebcdic_to_stringz_return(sysplex);
+    ebcdic_to_stringz_return(gsysinfo.sysplex);
 }
 
 

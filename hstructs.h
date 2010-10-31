@@ -351,6 +351,23 @@ struct ZPBLK {
 // #endif /*defined(FEATURE_REGION_RELOCATE)*/
 
 /*-------------------------------------------------------------------*/
+/* Guest System Information block                                    */
+/*-------------------------------------------------------------------*/
+struct GSYSINFO {
+        BYTE    loadparm[8];
+        BYTE    lparname[8];
+        BYTE    manufact[16];
+        BYTE    plant[4];
+        BYTE    model[16];
+        BYTE    modelcapa[16];
+        BYTE    modelperm[16];
+        BYTE    modeltemp[16];
+        BYTE    systype[8];
+        BYTE    sysname[8];
+        BYTE    sysplex[8];
+};
+
+/*-------------------------------------------------------------------*/
 /* System configuration block                                        */
 /*-------------------------------------------------------------------*/
 struct SYSBLK {

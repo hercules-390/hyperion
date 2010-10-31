@@ -225,7 +225,9 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
 
 /* Global data areas in module config.c                              */
 HSYS_DLL_IMPORT SYSBLK   sysblk;                /* System control block      */
+HSYS_DLL_IMPORT GSYSINFO gsysinfo;              /* Guest System Information  */
 CCKD_DLL_IMPORT CCKDBLK  cckdblk;               /* CCKD global block         */
+
 #ifdef EXTERNALGUI
 HSYS_DLL_IMPORT int extgui;             // __attribute__ ((deprecated));
 /* The external gui interface is now external and now uses the
@@ -376,6 +378,7 @@ char *http_get_port();
 char *http_get_portauth();
 
 /* Functions in module loadparm.c */
+LOADPARM_DLL_IMPORT void init_gsysinfo(void);
 void set_loadparm(char *name);
 void get_loadparm(BYTE *dest);
 char *str_loadparm();

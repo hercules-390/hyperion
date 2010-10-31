@@ -175,6 +175,8 @@ typedef struct ZPBLK     ZPBLK;     // Zone Parameter Block
 typedef struct DEVBLK    DEVBLK;    // Device configuration block
 typedef struct IOINT     IOINT;     // I/O interrupt queue
 
+typedef struct GSYSINFO  GSYSINFO;  // Ebcdic machine information
+
 typedef struct DEVDATA   DEVDATA;   // xxxxxxxxx
 typedef struct DEVGRP    DEVGRP;    // xxxxxxxxx
 typedef struct DEVHND    DEVHND;    // xxxxxxxxx
