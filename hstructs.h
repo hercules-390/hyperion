@@ -295,7 +295,7 @@ struct REGS {                           /* Processor registers       */
         U64     regs_copy_end;          /* Copy regs to here         */
      /* ------------------------------------------------------------ */
 
-     /* Runctime opcode tables, use sysblk->replace_opcode to modify */
+     /* Runctime opcode tables, use replace_opcode to modify */
         const zz_func *s370_runtime_opcode_xxxx,
                *s370_runtime_opcode_e3________xx,
                *s370_runtime_opcode_eb________xx,
@@ -721,7 +721,6 @@ struct SYSBLK {
 #ifdef OPTION_MSGLCK
         int     msggrp;                 /* msg group writing active  */
         LOCK    msglock;                /* lock for writemsg         */
-        U64     msglocktime;            /* Time lock locked          */
 #endif
         int     msglvl;                 /* Message level             */
 #define MLVL_NORMAL  0x01
@@ -747,9 +746,6 @@ struct SYSBLK {
         time_t  shutquittime;           /* Quit requested time       */
         time_t  SSD_time;               /* SSD requested time        */
 #endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
-
-	/* The only function to modify the runtime opcode tables */
-        zz_mod  replace_opcode;
 
         BYTE    blkend[16];             /* eye-end                   */
 };

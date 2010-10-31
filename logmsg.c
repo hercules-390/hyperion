@@ -186,21 +186,7 @@ DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
 
 #ifdef OPTION_MSGLCK
     if(!sysblk.msggrp || (sysblk.msggrp && !grp))
-    {   
-        BYTE lock_released = FALSE;
-        while(try_obtain_lock(&sysblk.msglock))
-        {
-            usleep(10000);
-            if(host_tod() - sysblk.msglocktime > 1000000 || sysblk.msglocktime > host_tod() )
-            {
-                release_lock(&sysblk.msglock);
-                lock_released = TRUE;
-            }
-        }
-        if ( lock_released )
-            logmsg("HHC00016" "E" " " HHC00016 "\n");
-        sysblk.msglocktime = host_tod();
-    }
+        WRGMSG_ON;
 #endif
 
   #ifdef NEED_LOGMSG_FFLUSH
@@ -282,7 +268,7 @@ DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
 
 #ifdef OPTION_MSGLCK
     if(!sysblk.msggrp || (sysblk.msggrp && !grp))
-      release_lock(&sysblk.msglock);
+        WRGMSG_OFF;
 #endif
 }
 

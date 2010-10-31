@@ -2756,7 +2756,6 @@ void sigabend_handler (int signo);
 
 
 /* Functions in module opcode.c */
-zz_func replace_opcode(int arch, zz_func inst, int opcode1, int opcode2);
 void init_opcode_tables(void);
 void init_opcode_pointers(REGS *regs);
 

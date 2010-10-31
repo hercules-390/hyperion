@@ -79,13 +79,60 @@ static void destroy_dyninst()
 {
   int i;
 
-  /* Wait if opcode_replace pointer not present */
-  while(!sysblk.replace_opcode)
-    usleep(100);
-
   for(i = 0; i < dyninst_index; i++)
-    sysblk.replace_opcode(dyninst[i].arch, dyninst[i].oldinst, dyninst[i].opcode1, dyninst[i].opcode2);
+    replace_opcode(dyninst[i].arch, dyninst[i].oldinst, dyninst[i].opcode1, dyninst[i].opcode2);
 }
+
+static void update_dyninst()
+{
+  int arch;
+  char name[64];
+  zz_func newinst;
+  zz_func oldinst;
+  int opcode1;
+  int opcode2;
+
+  for(arch = 0; arch < GEN_ARCHCOUNT; arch++)
+  {
+    for(opcode1 = 0; opcode1 < 0x100 && dyninst_index < MAXDYNINST; opcode1++)
+    {
+      snprintf(name, sizeof(name), "%s%02X", prefix[arch], opcode1);
+      newinst = HDL_FINDSYM(name);
+      if(newinst)
+      {
+        oldinst = replace_opcode(arch, newinst, opcode1, -1);
+        if(oldinst)
+        {
+          dyninst[dyninst_index].opcode1 = opcode1;
+          dyninst[dyninst_index].opcode2 = -1;
+          dyninst[dyninst_index].arch = arch;
+          dyninst[dyninst_index].newinst = newinst;
+          dyninst[dyninst_index].oldinst = oldinst;
+          dyninst_index++;
+        }
+      }
+      for(opcode2 = 0; opcode2 < 0x100 && dyninst_index < MAXDYNINST; opcode2++)
+      {
+        snprintf(name, sizeof(name), "%s%02X%02X", prefix[arch], opcode1, opcode2);
+        newinst = HDL_FINDSYM(name);
+        if(newinst)
+        {
+          oldinst = replace_opcode(arch, newinst, opcode1, opcode2);
+          if(oldinst)
+          {
+            dyninst[dyninst_index].opcode1 = opcode1;
+            dyninst[dyninst_index].opcode2 = opcode2;
+            dyninst[dyninst_index].arch = arch;
+            dyninst[dyninst_index].newinst = newinst;
+            dyninst[dyninst_index].oldinst = oldinst;
+            dyninst_index++;
+          }
+        }
+      }
+    }
+  }
+}
+
 
 /* Libtool static name colision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
@@ -117,57 +164,9 @@ END_REGISTER_SECTION
 
 HDL_RESOLVER_SECTION;
 {
-  int arch;
-  char name[64];
-  zz_func newinst;
-  zz_func oldinst;
-  int opcode1;
-  int opcode2;
+  HDL_RESOLVE ( replace_opcode );
 
-
-  /* Wait if opcode_replace pointer not present */
-  while(!sysblk.replace_opcode)
-    usleep(100);
-
-  for(arch = 0; arch < GEN_ARCHCOUNT; arch++)
-  {
-    for(opcode1 = 0; opcode1 < 0x100 && dyninst_index < MAXDYNINST; opcode1++)
-    {
-      snprintf(name, sizeof(name), "%s%02X", prefix[arch], opcode1);
-      newinst = HDL_FINDSYM(name);
-      if(newinst)
-      {
-        oldinst = sysblk.replace_opcode(arch, newinst, opcode1, -1);
-        if(oldinst)
-        {
-          dyninst[dyninst_index].opcode1 = opcode1;
-          dyninst[dyninst_index].opcode2 = -1;
-          dyninst[dyninst_index].arch = arch;
-          dyninst[dyninst_index].newinst = newinst;
-          dyninst[dyninst_index].oldinst = oldinst;
-          dyninst_index++;
-        }
-      }
-      for(opcode2 = 0; opcode2 < 0x100 && dyninst_index < MAXDYNINST; opcode2++)
-      {
-        snprintf(name, sizeof(name), "%s%02X%02X", prefix[arch], opcode1, opcode2);
-        newinst = HDL_FINDSYM(name);
-        if(newinst)
-        {
-          oldinst = sysblk.replace_opcode(arch, newinst, opcode1, opcode2);
-          if(oldinst)
-          {
-            dyninst[dyninst_index].opcode1 = opcode1;
-            dyninst[dyninst_index].opcode2 = opcode2;
-            dyninst[dyninst_index].arch = arch;
-            dyninst[dyninst_index].newinst = newinst;
-            dyninst[dyninst_index].oldinst = oldinst;
-            dyninst_index++;
-          }
-        }
-      }
-    }
-  }
+  update_dyninst();
 }
 END_RESOLVER_SECTION
 

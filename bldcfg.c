@@ -135,7 +135,6 @@ int     devtmax;                        /* Max number device threads */
 
     /* Initialize runtime opcode tables */
     init_opcode_tables();
-    sysblk.replace_opcode = replace_opcode;
 
     /* Default Storage & NUMCPU */
     configure_storage(2);

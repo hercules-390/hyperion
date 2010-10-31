@@ -158,19 +158,25 @@ cpu.c:123:HABC1234I This is a message
 #ifndef OPTION_MSGLCK
 #define WRGMSG_ON \
 { \
-  while(try_obtain_lock(&sysblk.msglock)) \
+int have_lock = 0; try_lock = 10; \
+  while(!have_lock) \
   { \
-    usleep(100); \
-    if(host_tod() - sysblk.msglocktime > 1000000) \
+    obtain_lock(&sysblk.msglock) \
+    if(!sysblk.msggrp) \
+        have_lock = sysblk.msggrp = 1; \
+    release_lock(&sysblk.msglock); \
+    if(have_lock) \
+        break; \
+    if(--try_lock) \
+      usleep(100); \
+    else \
     { \
-      release_lock(&sysblk.msglock); \
       WRMSG(HHC00016, "E"); \
+      break; \
     } \
   } \
-  sysblk.msglocktime = host_tod(); \
-  sysblk.msggrp = 1; \
 }
-#define WRGMSG_OFF                   { sysblk.msggrp = 0; release_lock(&sysblk.msglock); }
+#define WRGMSG_OFF                   do { sysblk.msggrp = 0; } while (0)
 #else
 #define WRGMSG_OFF
 #define WRGMSG_ON

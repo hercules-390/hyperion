@@ -2232,7 +2232,11 @@ static zz_func replace_opcode_xx________xx(int arch, zz_func inst, int opcode1, 
 /*---------------------------------------------------------------------------*/
 /* replace_opcode                                                            */
 /*---------------------------------------------------------------------------*/
-zz_func replace_opcode(int arch, zz_func inst, int opcode1, int opcode2)
+#if defined(OPTION_DYNAMIC_LOAD)
+DLL_EXPORT void *replace_opcode_r(int arch, zz_func inst, int opcode1, int opcode2)
+#else
+void *replace_opcode(int arch, zz_func inst, int opcode1, int opcode2)
+#endif
 {
 //  logmsg("replace_opcode(%d, %02x, %02x)\n", arch, opcode1, opcode2);
   switch(opcode1)

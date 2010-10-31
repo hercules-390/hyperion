@@ -185,6 +185,16 @@
 #define LOADPARM_DLL_IMPORT DLL_EXPORT
 #endif
 
+#ifndef _OPCODE_C_
+#ifndef _HENGINE_DLL_
+#define OPCD_DLL_IMPORT DLL_IMPORT
+#else   /* _HENGINE_DLL_ */
+#define OPCD_DLL_IMPORT extern
+#endif  /* _HENGINE_DLL_ */
+#else
+#define OPCD_DLL_IMPORT DLL_EXPORT
+#endif
+
 #if defined( _MSC_VER ) && (_MSC_VER >= 1300) && (_MSC_VER < 1400)
 //  '_ftol'   is defined in MSVCRT.DLL
 //  '_ftol2'  we define ourselves in "w32ftol2.c"
@@ -320,10 +330,12 @@ void losc_check(char *ostype);
 HHDL_DLL_IMPORT char *(*hdl_device_type_equates) (const char *);
 CMDT_DLL_IMPORT void *(panel_command_r)          (void *cmdline);
 HPAN_DLL_IMPORT void  (panel_display_r)          (void);
+OPCD_DLL_IMPORT void *(replace_opcode_r)         (int arch, zz_func inst, int opcode1, int opcode2);
 
 HSYS_DLL_IMPORT int   (*system_command) (int argc, char *argv[], char *cmdline);
 HSYS_DLL_IMPORT void  (*daemon_task)    (void);
 HSYS_DLL_IMPORT void  (*panel_display)  (void);
+HSYS_DLL_IMPORT void *(*replace_opcode) (int arch, zz_func inst, int opcode1, int opcode2);
 HSYS_DLL_IMPORT void *(*panel_command)  (void *);
 
 HSYS_DLL_IMPORT void *(*debug_device_state)         (DEVBLK *);
@@ -342,6 +354,7 @@ HSYS_DLL_IMPORT void *(*debug_sclp_event_data)      (void *, void *, REGS *);
 #else
 void *panel_command (void *cmdline);
 void panel_display (void);
+void *replace_opcode (int arch, zz_func inst, int opcode1, int opcode2);
 #define debug_cpu_state                 NULL
 #define debug_cd_cmd                    NULL
 #define debug_device_state              NULL
