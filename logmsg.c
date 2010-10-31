@@ -186,7 +186,11 @@ DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
 
 #ifdef OPTION_MSGLCK
     if(!sysblk.msggrp || (sysblk.msggrp && !grp))
+    {
+        int a = 0;
         WRGMSG_ON;
+        UNREFERENCED(a);
+    }
 #endif
 
   #ifdef NEED_LOGMSG_FFLUSH
@@ -268,7 +272,11 @@ DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
 
 #ifdef OPTION_MSGLCK
     if(!sysblk.msggrp || (sysblk.msggrp && !grp))
+    {
+        int a = 0;
         WRGMSG_OFF;
+        UNREFERENCED(a);
+    }
 #endif
 }
 
