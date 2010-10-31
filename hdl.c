@@ -53,9 +53,8 @@ static int   hdl_arg_p = FALSE;
 
 #endif
 
-static int    hdl_sdlock_initialized = FALSE;
-static LOCK   hdl_sdlock;                /* shutdown lock            */
 static HDLSHD *hdl_shdlist;              /* Shutdown call list       */
+static int   hdl_sdip = FALSE;           /* hdl shutdown in progesss */
 
 static void hdl_didf (int, int, char *, void *);
 static void hdl_modify_opcode(int, HDLINS *);
@@ -71,38 +70,22 @@ DLL_EXPORT void hdl_adsc (char* shdname, void * shdcall, void * shdarg)
 HDLSHD *newcall;
 HDLSHD **tmpcall;
 
-int not_found = TRUE;
-
-    if ( !hdl_sdlock_initialized )
-    {
-        initialize_lock(&hdl_sdlock);
-        hdl_sdlock_initialized = TRUE;
-    }
-
-    obtain_lock(&hdl_sdlock);
+    if(hdl_sdip)
+        return;
 
     /* avoid duplicates - keep the first one */
     for(tmpcall = &(hdl_shdlist); *tmpcall; tmpcall = &((*tmpcall)->next) )
-    {
         if( (*tmpcall)->shdcall == shdcall
           && (*tmpcall)->shdarg == shdarg )
-        {
-            not_found = FALSE;
-            break;
-        }
-    }
+            return;
     
-    if ( not_found )
-    {
-        newcall = malloc(sizeof(HDLSHD));
-        newcall->shdname = shdname;
-        newcall->shdcall = shdcall;
-        newcall->shdarg = shdarg;
-        newcall->next = hdl_shdlist;
-        hdl_shdlist = newcall;
-    }
+    newcall = malloc(sizeof(HDLSHD));
+    newcall->shdname = shdname;
+    newcall->shdcall = shdcall;
+    newcall->shdarg = shdarg;
+    newcall->next = hdl_shdlist;
+    hdl_shdlist = newcall;
 
-    release_lock(&hdl_sdlock);
 }
 
 /* hdl_rmsc - remove shutdown call
@@ -112,14 +95,9 @@ DLL_EXPORT int hdl_rmsc (void *shdcall, void *shdarg)
 HDLSHD **tmpcall;
 int rc = -1;
 
-    if ( !hdl_sdlock_initialized )
-    {
-        initialize_lock(&hdl_sdlock);
-        hdl_sdlock_initialized = TRUE;
-    }
+    if(hdl_sdip)
+        return rc;
 
-    obtain_lock( &hdl_sdlock );
-   
     for(tmpcall = &(hdl_shdlist); *tmpcall; tmpcall = &((*tmpcall)->next) )
     {
         if( (*tmpcall)->shdcall == shdcall
@@ -132,7 +110,6 @@ int rc = -1;
             rc = 0;
         }
     }
-    release_lock( &hdl_sdlock );
     return rc;
 }
 
@@ -145,13 +122,7 @@ HDLSHD *shdent;
 
     WRMSG(HHC01500, "I");
     
-    if ( !hdl_sdlock_initialized )
-    {
-        initialize_lock(&hdl_sdlock);
-        hdl_sdlock_initialized = TRUE;
-    }
-
-    obtain_lock (&hdl_sdlock);
+    hdl_sdip = TRUE;
 
     for(shdent = hdl_shdlist; shdent; shdent = hdl_shdlist)
     {
@@ -168,8 +139,6 @@ HDLSHD *shdent;
         free(shdent);
         log_wakeup(NULL);
     }
-
-    release_lock (&hdl_sdlock);
 
     WRMSG(HHC01504, "I");
 }
@@ -760,6 +729,8 @@ DLL_EXPORT void hdl_main (void)
 HDLPRE *preload;
 
     initialize_lock(&hdl_lock);
+
+    hdl_sdip = FALSE;
 
     if ( hdl_modpath == NULL )
     {
