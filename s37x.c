@@ -16,7 +16,9 @@
 
 #if defined(OPTION_370_EXTENSION)
 
+#if 0
 static void    *(*resolver)(char *ep);
+#endif
 
 /**********************************************************/
 /* Table structures                                       */

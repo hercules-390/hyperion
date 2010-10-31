@@ -317,7 +317,7 @@ packet_trace( BYTE* pAddr, int iLen )
 #endif
 
 
-#if 1
+#if 0
 static struct sockaddr_in * get_inet_socket(char *host_serv)
 {
 char *host = NULL;
