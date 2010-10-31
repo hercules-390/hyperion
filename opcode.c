@@ -1056,25 +1056,25 @@
  || !defined(FEATURE_HEXADECIMAL_FLOATING_POINT)*/
 
 
-#if !defined(FEATURE_MESSAGE_SECURITY_ASSIST)
- UNDEF_INST(cipher_message_r)
- UNDEF_INST(cipher_message_with_chaining_r)
- UNDEF_INST(compute_intermediate_message_digest_r)
- UNDEF_INST(compute_last_message_digest_r)
- UNDEF_INST(compute_message_authentication_code_r)
+#if !defined(FEATURE_MESSAGE_SECURITY_ASSIST) || !defined(OPTION_STATIC_CRYPTO)
+ UNDEF_INST(cipher_message)
+ UNDEF_INST(cipher_message_with_chaining)
+ UNDEF_INST(compute_intermediate_message_digest)
+ UNDEF_INST(compute_last_message_digest)
+ UNDEF_INST(compute_message_authentication_code)
 #endif /*!defined(FEATURE_MESSAGE_SECURITY_ASSIST)*/
 
 
-#if !defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3)       /*810*/
- UNDEF_INST(perform_cryptographic_key_management_operation_r)   /*810*/
+#if !defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3) || !defined(OPTION_STATIC_CRYPTO)      /*810*/ 
+ UNDEF_INST(perform_cryptographic_key_management_operation)     /*810*/
 #endif /*!defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3)*/
 
 
-#if !defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4)       /*810*/
- UNDEF_INST(perform_cryptographic_computation_r)                /*810*/
- UNDEF_INST(cipher_message_with_cipher_feedback_r)              /*810*/
- UNDEF_INST(cipher_message_with_output_feedback_r)              /*810*/
- UNDEF_INST(cipher_message_with_counter_r)                      /*810*/
+#if !defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4) || !defined(OPTION_STATIC_CRYPTO)      /*810*/ 
+ UNDEF_INST(perform_cryptographic_computation)                  /*810*/
+ UNDEF_INST(cipher_message_with_cipher_feedback)                /*810*/
+ UNDEF_INST(cipher_message_with_output_feedback)                /*810*/
+ UNDEF_INST(cipher_message_with_counter)                        /*810*/
 #endif /*!defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4)*/
 
 
@@ -3524,7 +3524,7 @@ static zz_func opcode_b9xx[0x100][GEN_MAXARCH] = {
  /*B91B*/ GENx___x___x900 (subtract_logical_long_fullword_register,RRE,"SLGFR"),
  /*B91C*/ GENx___x___x900 (multiply_single_long_fullword_register,RRE,"MSGFR"),
  /*B91D*/ GENx___x___x900 (divide_single_long_fullword_register,RRE,"DSGFR"),
- /*B91E*/ GENx37Xx390x900 (compute_message_authentication_code_r,RRE,"KMAC"),
+ /*B91E*/ GENx37Xx390x900 (compute_message_authentication_code,RRE,"KMAC"),
  /*B91F*/ GENx___x390x900 (load_reversed_register,RRE,"LRVR"),
  /*B920*/ GENx___x___x900 (compare_long_register,RRE,"CGR"),
  /*B921*/ GENx___x___x900 (compare_logical_long_register,RRE,"CLGR"),
@@ -3534,14 +3534,14 @@ static zz_func opcode_b9xx[0x100][GEN_MAXARCH] = {
  /*B925*/ GENx___x___x900 (store_using_real_address_long,RRE,"STURG"),
  /*B926*/ GENx37Xx390x900 (load_byte_register,RRE,"LBR"),                          /*@Z9*/
  /*B927*/ GENx37Xx390x900 (load_halfword_register,RRE,"LHR"),                      /*@Z9*/
- /*B928*/ GENx37Xx390x900 (perform_cryptographic_key_management_operation_r,RRE,"PCKMO"), /*810*/
+ /*B928*/ GENx37Xx390x900 (perform_cryptographic_key_management_operation,RRE,"PCKMO"), /*810*/
  /*B929*/ GENx___x___x___ ,
- /*B92A*/ GENx37Xx390x900 (cipher_message_with_cipher_feedback_r,RRE,"KMF"),       /*810*/
- /*B92B*/ GENx37Xx390x900 (cipher_message_with_output_feedback_r,RRE,"KMO"),       /*810*/
- /*B92C*/ GENx37Xx390x900 (perform_cryptographic_computation_r,none,"PCC"),        /*810*/
- /*B92D*/ GENx37Xx390x900 (cipher_message_with_counter_r,RRF_M,"KMCTR"),           /*810*/
- /*B92E*/ GENx37Xx390x900 (cipher_message_r,RRE,"KM"),
- /*B92F*/ GENx37Xx390x900 (cipher_message_with_chaining_r,RRE,"KMC"),
+ /*B92A*/ GENx37Xx390x900 (cipher_message_with_cipher_feedback,RRE,"KMF"),       /*810*/
+ /*B92B*/ GENx37Xx390x900 (cipher_message_with_output_feedback,RRE,"KMO"),       /*810*/
+ /*B92C*/ GENx37Xx390x900 (perform_cryptographic_computation,none,"PCC"),        /*810*/
+ /*B92D*/ GENx37Xx390x900 (cipher_message_with_counter,RRF_M,"KMCTR"),           /*810*/
+ /*B92E*/ GENx37Xx390x900 (cipher_message,RRE,"KM"),
+ /*B92F*/ GENx37Xx390x900 (cipher_message_with_chaining,RRE,"KMC"),
  /*B930*/ GENx___x___x900 (compare_long_fullword_register,RRE,"CGFR"),
  /*B931*/ GENx___x___x900 (compare_logical_long_fullword_register,RRE,"CLGFR"),
  /*B932*/ GENx___x___x___ ,
@@ -3556,8 +3556,8 @@ static zz_func opcode_b9xx[0x100][GEN_MAXARCH] = {
  /*B93B*/ GENx___x___x___ ,
  /*B93C*/ GENx___x___x___ ,
  /*B93D*/ GENx___x___x___ ,
- /*B93E*/ GENx37Xx390x900 (compute_intermediate_message_digest_r,RRE,"KIMD"),
- /*B93F*/ GENx37Xx390x900 (compute_last_message_digest_r,RRE,"KLMD"),
+ /*B93E*/ GENx37Xx390x900 (compute_intermediate_message_digest,RRE,"KIMD"),
+ /*B93F*/ GENx37Xx390x900 (compute_last_message_digest,RRE,"KLMD"),
  /*B940*/ GENx___x___x___ ,
  /*B941*/ GENx___x390x900 (convert_dfp_long_to_fix32_reg,RRF_MM,"CFDTR"),          /*810*/
  /*B942*/ GENx___x___x900 (convert_dfp_long_to_u64_reg,RRF_MM,"CLGDTR"),           /*810*/

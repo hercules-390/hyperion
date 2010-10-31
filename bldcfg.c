@@ -133,9 +133,6 @@ int     devtmax;                        /* Max number device threads */
     for (i = 0; i < sysblk.maxcpu; i++)
         sysblk.ptyp[i] = SCCB_PTYP_CP;
 
-    /* Initialize runtime opcode tables */
-    init_opcode_tables();
-
     /* Default Storage & NUMCPU */
     configure_storage(2);
     configure_numcpu(1);

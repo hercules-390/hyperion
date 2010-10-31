@@ -3918,7 +3918,7 @@ static void ARCH_DEP(pckmo_aes)(REGS *regs)
 /*----------------------------------------------------------------------------*/
 /* B93E KIMD  - Compute intermediate message digest                     [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(compute_intermediate_message_digest_d)
+DEF_INST(_compute_intermediate_message_digest)
 {
   int msa;
   BYTE query_bits[][16] =
@@ -4022,7 +4022,7 @@ DEF_INST(compute_intermediate_message_digest_d)
 /*----------------------------------------------------------------------------*/
 /* B93F KLMD  - Compute last message digest                             [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(compute_last_message_digest_d)
+DEF_INST(_compute_last_message_digest)
 {
   int msa;
   BYTE query_bits[][16] =
@@ -4114,7 +4114,7 @@ DEF_INST(compute_last_message_digest_d)
 /*----------------------------------------------------------------------------*/
 /* B92E KM    - Cipher message                                          [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(cipher_message_d)
+DEF_INST(_cipher_message)
 {
   int msa;
   BYTE query_bits[][16] =
@@ -4250,7 +4250,7 @@ DEF_INST(cipher_message_d)
 /*----------------------------------------------------------------------------*/
 /* B91E KMAC  - Compute message authentication code                     [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(compute_message_authentication_code_d)
+DEF_INST(_compute_message_authentication_code)
 {
   int msa;
   BYTE query_bits[][16] =
@@ -4350,7 +4350,7 @@ DEF_INST(compute_message_authentication_code_d)
 /*----------------------------------------------------------------------------*/
 /* B92F KMC   - Cipher message with chaining                            [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(cipher_message_with_chaining_d)
+DEF_INST(_cipher_message_with_chaining)
 {
   int msa;
   BYTE query_bits[][16] =
@@ -4484,7 +4484,7 @@ DEF_INST(cipher_message_with_chaining_d)
 /*----------------------------------------------------------------------------*/
 /* B92D KMCTR - Cipher message with counter                             [RRF] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(cipher_message_with_counter_d)
+DEF_INST(_cipher_message_with_counter)
 {
   int msa;
   BYTE query_bits[][16] =
@@ -4577,7 +4577,7 @@ DEF_INST(cipher_message_with_counter_d)
 /*----------------------------------------------------------------------------*/
 /* B92A KMF   - Cipher message with cipher feedback                     [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(cipher_message_with_cipher_feedback_d)
+DEF_INST(_cipher_message_with_cipher_feedback)
 {
   int msa;
   BYTE query_bits[][16] =
@@ -4670,7 +4670,7 @@ DEF_INST(cipher_message_with_cipher_feedback_d)
 /*----------------------------------------------------------------------------*/
 /* B92B KMO   - Cipher message with output feedback                     [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(cipher_message_with_output_feedback_d)
+DEF_INST(_cipher_message_with_output_feedback)
 {
   int msa;
   BYTE query_bits[][16] =
@@ -4760,7 +4760,7 @@ DEF_INST(cipher_message_with_output_feedback_d)
 /*----------------------------------------------------------------------------*/
 /* B92C PCC   - Perform cryptographic computation                       [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(perform_cryptographic_computation_d)
+DEF_INST(_perform_cryptographic_computation)
 {
   int msa;
   BYTE query_bits[][16] =
@@ -4864,7 +4864,7 @@ DEF_INST(perform_cryptographic_computation_d)
 /*----------------------------------------------------------------------------*/
 /* B928 PCKMO - Perform cryptographic key management operation          [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(perform_cryptographic_key_management_operation_d)
+DEF_INST(_perform_cryptographic_key_management_operation)
 {
   int fc;
   int msa;
@@ -4971,34 +4971,23 @@ HDL_DEPENDENCY_SECTION;
 }
 END_DEPENDENCY_SECTION;
 
+HDL_INSTRUCTION_SECTION;
+{
+  HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB93E,_compute_intermediate_message_digest);
+  HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB93F,_compute_last_message_digest);
+  HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB92E,_cipher_message);
+  HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB91E,_compute_message_authentication_code);
+  HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB92F,_cipher_message_with_chaining);
+  HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB92D,_cipher_message_with_counter);
+  HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB92A,_cipher_message_with_cipher_feedback);
+  HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB92B,_cipher_message_with_output_feedback);
+  HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB92C,_perform_cryptographic_computation);
+  HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB928,_perform_cryptographic_key_management_operation);
+}
+END_INSTRUCTION_SECTION;
+
 HDL_REGISTER_SECTION;
 {
-#if defined(_390_FEATURE_MESSAGE_SECURITY_ASSIST)
-  HDL_REGISTER(s390_cipher_message, s390_cipher_message_d);
-  HDL_REGISTER(s390_cipher_message_with_chaining, s390_cipher_message_with_chaining_d);
-  HDL_REGISTER(s390_cipher_message_with_cipher_feedback, s390_cipher_message_with_cipher_feedback_d);
-  HDL_REGISTER(s390_cipher_message_with_counter, s390_cipher_message_with_counter_d);
-  HDL_REGISTER(s390_cipher_message_with_output_feedback, s390_cipher_message_with_output_feedback_d);
-  HDL_REGISTER(s390_compute_intermediate_message_digest, s390_compute_intermediate_message_digest_d);
-  HDL_REGISTER(s390_compute_last_message_digest, s390_compute_last_message_digest_d);
-  HDL_REGISTER(s390_compute_message_authentication_code, s390_compute_message_authentication_code_d);
-  HDL_REGISTER(s390_perform_cryptographic_computation, s390_perform_cryptographic_computation_d);
-  HDL_REGISTER(s390_perform_cryptographic_key_management_operation, s390_perform_cryptographic_key_management_operation_d);
-#endif /*defined(_390_FEATURE_MESSAGE_SECURITY_ASSIST)*/
-
-#if defined(_900_FEATURE_MESSAGE_SECURITY_ASSIST)
-  HDL_REGISTER(z900_cipher_message, z900_cipher_message_d);
-  HDL_REGISTER(z900_cipher_message_with_chaining, z900_cipher_message_with_chaining_d);
-  HDL_REGISTER(z900_cipher_message_with_cipher_feedback, z900_cipher_message_with_cipher_feedback_d);
-  HDL_REGISTER(z900_cipher_message_with_counter, z900_cipher_message_with_counter_d);
-  HDL_REGISTER(z900_cipher_message_with_output_feedback, z900_cipher_message_with_output_feedback_d);
-  HDL_REGISTER(z900_compute_intermediate_message_digest, z900_compute_intermediate_message_digest_d);
-  HDL_REGISTER(z900_compute_last_message_digest, z900_compute_last_message_digest_d);
-  HDL_REGISTER(z900_compute_message_authentication_code, z900_compute_message_authentication_code_d);
-  HDL_REGISTER(z900_perform_cryptographic_computation, z900_perform_cryptographic_computation_d);
-  HDL_REGISTER(z900_perform_cryptographic_key_management_operation, z900_perform_cryptographic_key_management_operation_d);
-#endif /*defined(_900_FEATURE_MESSAGE_SECURITY_ASSIST)*/
-
   WRMSG(HHC00150, "I", "Crypto", " (c) Copyright 2003-2010 by Bernard van der Helm"); // Copyright notice
   WRMSG(HHC00151, "I", "Message Security Assist"); // Feature notice
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4

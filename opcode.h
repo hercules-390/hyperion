@@ -2878,16 +2878,16 @@ DEF_INST(compression_call);
 
 
 /* Instructions in crypto.c */
-DEF_INST(cipher_message_r);
-DEF_INST(cipher_message_with_chaining_r);
-DEF_INST(compute_intermediate_message_digest_r);
-DEF_INST(compute_last_message_digest_r);
-DEF_INST(compute_message_authentication_code_r);
-DEF_INST(perform_cryptographic_key_management_operation_r);
-DEF_INST(cipher_message_with_cipher_feedback_r);
-DEF_INST(cipher_message_with_counter_r);
-DEF_INST(cipher_message_with_output_feedback_r);
-DEF_INST(perform_cryptographic_computation_r);
+DEF_INST(cipher_message);
+DEF_INST(cipher_message_with_chaining);
+DEF_INST(compute_intermediate_message_digest);
+DEF_INST(compute_last_message_digest);
+DEF_INST(compute_message_authentication_code);
+DEF_INST(perform_cryptographic_key_management_operation);
+DEF_INST(cipher_message_with_cipher_feedback);
+DEF_INST(cipher_message_with_counter);
+DEF_INST(cipher_message_with_output_feedback);
+DEF_INST(perform_cryptographic_computation);
 
 
 /* Instructions in control.c */

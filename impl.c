@@ -816,6 +816,10 @@ int     dll_count;                      /* index into array          */
         return(1);
     }
 #if defined(OPTION_DYNAMIC_LOAD)
+
+    /* Initialize runtime opcode tables */
+    init_opcode_tables();
+
     /* Initialize the hercules dynamic loader */
     hdl_main();
 

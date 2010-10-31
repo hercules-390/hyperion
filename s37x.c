@@ -257,18 +257,18 @@ INST37X_TABLE_START(b3)
 INST37X_TABLE_END(b3)
 
 INST37X_TABLE_START(b9)
- /*B91E*/ INST37X (compute_message_authentication_code_r,0x1e)
+ /*B91E*/ INST37X (compute_message_authentication_code,0x1e)
  /*B926*/ INST37X (load_byte_register,0x26)
  /*B927*/ INST37X (load_halfword_register,0x27)
- /*B928*/ INST37X (perform_cryptographic_key_management_operation_r,0x28)          /*810*/
- /*B92A*/ INST37X (cipher_message_with_cipher_feedback_r,0x2a)                     /*810*/
- /*B92B*/ INST37X (cipher_message_with_output_feedback_r,0x2b)                     /*810*/
- /*B92C*/ INST37X (perform_cryptographic_computation_r,0x2c)                       /*810*/
- /*B92D*/ INST37X (cipher_message_with_counter_r,0x2d)                             /*810*/
- /*B92E*/ INST37X (cipher_message_r,0x2e)
- /*B92F*/ INST37X (cipher_message_with_chaining_r,0x2f)
- /*B93E*/ INST37X (compute_intermediate_message_digest_r,0x3e)
- /*B93F*/ INST37X (compute_last_message_digest_r,0x3f)
+ /*B928*/ INST37X (perform_cryptographic_key_management_operation,0x28)            /*810*/
+ /*B92A*/ INST37X (cipher_message_with_cipher_feedback,0x2a)                       /*810*/
+ /*B92B*/ INST37X (cipher_message_with_output_feedback,0x2b)                       /*810*/
+ /*B92C*/ INST37X (perform_cryptographic_computation,0x2c)                         /*810*/
+ /*B92D*/ INST37X (cipher_message_with_counter,0x2d)                               /*810*/
+ /*B92E*/ INST37X (cipher_message,0x2e)
+ /*B92F*/ INST37X (cipher_message_with_chaining,0x2f)
+ /*B93E*/ INST37X (compute_intermediate_message_digest,0x3e)
+ /*B93F*/ INST37X (compute_last_message_digest,0x3f)
  /*B972*/ INST37X (compare_and_trap_register,0x72)
  /*B973*/ INST37X (compare_logical_and_trap_register,0x73)
  /*B98D*/ INST37X (extract_psw,0x8d)
