@@ -1139,34 +1139,38 @@ char *modname;
 
 static void hdl_modify_opcode(int insert, HDLINS *instr)
 {
+  /* Wait if opcode_replace pointer not present */
+  while(!sysblk.replace_opcode)
+    usleep(100);
+
   if(insert)
   {
 #ifdef _370
     if(instr->archflags & HDL_INSTARCH_370)
-      instr->original = replace_opcode(ARCH_370, instr->instruction, instr->opcode >> 8, instr->opcode & 0x00ff);
+      instr->original = sysblk.replace_opcode(ARCH_370, instr->instruction, instr->opcode >> 8, instr->opcode & 0x00ff);
 #endif
 #ifdef _390
     if(instr->archflags & HDL_INSTARCH_390)
-      instr->original = replace_opcode(ARCH_390, instr->instruction, instr->opcode >> 8, instr->opcode & 0x00ff);
+      instr->original = sysblk.replace_opcode(ARCH_390, instr->instruction, instr->opcode >> 8, instr->opcode & 0x00ff);
 #endif
 #ifdef _900
     if(instr->archflags & HDL_INSTARCH_900)
-      instr->original = replace_opcode(ARCH_900, instr->instruction, instr->opcode >> 8, instr->opcode & 0x00ff);
+      instr->original = sysblk.replace_opcode(ARCH_900, instr->instruction, instr->opcode >> 8, instr->opcode & 0x00ff);
 #endif
   }
   else
   {
 #ifdef _370
     if(instr->archflags & HDL_INSTARCH_370)
-      replace_opcode(ARCH_370, instr->original, instr->opcode >> 8, instr->opcode & 0x00ff);
+      sysblk.replace_opcode(ARCH_370, instr->original, instr->opcode >> 8, instr->opcode & 0x00ff);
 #endif
 #ifdef _390
     if(instr->archflags & HDL_INSTARCH_390)
-      replace_opcode(ARCH_390, instr->original, instr->opcode >> 8, instr->opcode & 0x00ff);
+      sysblk.replace_opcode(ARCH_390, instr->original, instr->opcode >> 8, instr->opcode & 0x00ff);
 #endif
 #ifdef _900
     if(instr->archflags & HDL_INSTARCH_900)
-      replace_opcode(ARCH_900, instr->original, instr->opcode >> 8, instr->opcode & 0x00ff);
+      sysblk.replace_opcode(ARCH_900, instr->original, instr->opcode >> 8, instr->opcode & 0x00ff);
 #endif    
   }
   return;

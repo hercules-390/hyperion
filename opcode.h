@@ -137,6 +137,7 @@
 #define GENx37Xx390x900 GENx___x390x900
 
 typedef void (ATTR_REGPARM(2) *zz_func) (BYTE inst[], REGS *regs);
+typedef zz_func (*zz_mod)(int arch, zz_func inst, int opcode1, int opcode2);
 
 #define ILC(_b) ((_b) < 0x40 ? 2 : (_b) < 0xc0 ? 4 : 6)
 
@@ -176,8 +177,6 @@ OPC_DLL_IMPORT zz_func opcode_edxx[][GEN_MAXARCH];
 typedef int (*func) ();
 
 extern int disasm_table (BYTE inst[], char mnemonic[], char *p);
-
-zz_func replace_opcode(int arch, zz_func inst, int opcode1, int opcode2);
 
 #if defined(OPTION_INSTRUCTION_COUNTING)
 
@@ -2784,7 +2783,6 @@ void sigabend_handler (int signo);
 
 
 /* Functions in module opcode.c */
-zz_func replace_opcode_xx________xx(int arch, zz_func inst, int opcode1, int opcode2);
 zz_func replace_opcode(int arch, zz_func inst, int opcode1, int opcode2);
 void init_opcode_tables(void);
 void init_opcode_pointers(REGS *regs);

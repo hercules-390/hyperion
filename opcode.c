@@ -2000,16 +2000,16 @@ int d2,b2;
 
 
 /* Two byte runtime opcode table + 4 6 byte opcode tables */
-zz_func runtime_opcode_xxxx[GEN_ARCHCOUNT][0x100 * 0x100];
-zz_func runtime_opcode_e3________xx[GEN_ARCHCOUNT][0x100];
-zz_func runtime_opcode_eb________xx[GEN_ARCHCOUNT][0x100];
-zz_func runtime_opcode_ec________xx[GEN_ARCHCOUNT][0x100];
-zz_func runtime_opcode_ed________xx[GEN_ARCHCOUNT][0x100];
+static zz_func runtime_opcode_xxxx[GEN_ARCHCOUNT][0x100 * 0x100];
+static zz_func runtime_opcode_e3________xx[GEN_ARCHCOUNT][0x100];
+static zz_func runtime_opcode_eb________xx[GEN_ARCHCOUNT][0x100];
+static zz_func runtime_opcode_ec________xx[GEN_ARCHCOUNT][0x100];
+static zz_func runtime_opcode_ed________xx[GEN_ARCHCOUNT][0x100];
 
 /*----------------------------------------------------------------------------*/
 /* replace_opcode_xx                                                          */
 /*----------------------------------------------------------------------------*/
-zz_func replace_opcode_xx(int arch, zz_func inst, int opcode)
+static zz_func replace_opcode_xx(int arch, zz_func inst, int opcode)
 {
   int i;
   zz_func oldinst;
@@ -2030,7 +2030,7 @@ zz_func replace_opcode_xx(int arch, zz_func inst, int opcode)
 /*---------------------------------------------------------------------------*/
 /* replace_opcode_xxxx                                                       */
 /*---------------------------------------------------------------------------*/
-zz_func replace_opcode_xxxx(int arch, zz_func inst, int opcode1, int opcode2)
+static zz_func replace_opcode_xxxx(int arch, zz_func inst, int opcode1, int opcode2)
 {
   zz_func oldinst;
 
@@ -2049,7 +2049,7 @@ zz_func replace_opcode_xxxx(int arch, zz_func inst, int opcode1, int opcode2)
 /*---------------------------------------------------------------------------*/
 /* replace_opcode_xx_x                                                       */
 /*---------------------------------------------------------------------------*/
-zz_func replace_opcode_xx_x(int arch, zz_func inst, int opcode1, int opcode2)
+static zz_func replace_opcode_xx_x(int arch, zz_func inst, int opcode1, int opcode2)
 {
   int i;
   zz_func oldinst;
@@ -2070,7 +2070,7 @@ zz_func replace_opcode_xx_x(int arch, zz_func inst, int opcode1, int opcode2)
 /*---------------------------------------------------------------------------*/
 /* replace_opcode_xx________xx                                               */
 /*---------------------------------------------------------------------------*/
-zz_func replace_opcode_xx________xx(int arch, zz_func inst, int opcode1, int opcode2)
+static zz_func replace_opcode_xx________xx(int arch, zz_func inst, int opcode1, int opcode2)
 {
   zz_func oldinst;
 

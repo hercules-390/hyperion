@@ -295,17 +295,18 @@ struct REGS {                           /* Processor registers       */
         U64     regs_copy_end;          /* Copy regs to here         */
      /* ------------------------------------------------------------ */
 
-        FUNC   *s370_runtime_opcode_xxxx,
+     /* Runctime opcode tables, use sysblk->replace_opcode to modify */
+        const zz_func *s370_runtime_opcode_xxxx,
                *s370_runtime_opcode_e3________xx,
                *s370_runtime_opcode_eb________xx,
                *s370_runtime_opcode_ec________xx,
                *s370_runtime_opcode_ed________xx;
-        FUNC   *s390_runtime_opcode_xxxx,
+        const zz_func *s390_runtime_opcode_xxxx,
                *s390_runtime_opcode_e3________xx,
                *s390_runtime_opcode_eb________xx,
                *s390_runtime_opcode_ec________xx,
                *s390_runtime_opcode_ed________xx;
-        FUNC   *z900_runtime_opcode_xxxx,
+        const zz_func *z900_runtime_opcode_xxxx,
                *z900_runtime_opcode_e3________xx,
                *z900_runtime_opcode_eb________xx,
                *z900_runtime_opcode_ec________xx,
@@ -746,6 +747,10 @@ struct SYSBLK {
         time_t  shutquittime;           /* Quit requested time       */
         time_t  SSD_time;               /* SSD requested time        */
 #endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
+
+	/* The only function to modify the runtime opcode tables */
+        zz_mod  replace_opcode;
+
         BYTE    blkend[16];             /* eye-end                   */
 };
 
