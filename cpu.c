@@ -1773,7 +1773,7 @@ REGS *ARCH_DEP(run_cpu) (int cpu, REGS *oldregs)
 {
 BYTE   *ip;
 REGS    regs;
-FUNC    *current_opcode_table;
+const zz_func *current_opcode_table;
 int     aswitch;
 
     if (oldregs)
