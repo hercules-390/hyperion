@@ -78,9 +78,13 @@ static void init_dyninst()
 static void destroy_dyninst()
 {
   int i;
-  
+
+  /* Wait if opcode_replace pointer not present */
+  while(!sysblk.replace_opcode)
+    usleep(100);
+
   for(i = 0; i < dyninst_index; i++)
-    replace_opcode(dyninst[i].arch, dyninst[i].oldinst, dyninst[i].opcode1, dyninst[i].opcode2);
+    sysblk.replace_opcode(dyninst[i].arch, dyninst[i].oldinst, dyninst[i].opcode1, dyninst[i].opcode2);
 }
 
 /* Libtool static name colision resolution */
@@ -120,6 +124,11 @@ HDL_RESOLVER_SECTION;
   int opcode1;
   int opcode2;
 
+
+  /* Wait if opcode_replace pointer not present */
+  while(!sysblk.replace_opcode)
+    usleep(100);
+
   for(arch = 0; arch < GEN_ARCHCOUNT; arch++)
   {
     for(opcode1 = 0; opcode1 < 0x100 && dyninst_index < MAXDYNINST; opcode1++)
@@ -128,7 +137,7 @@ HDL_RESOLVER_SECTION;
       newinst = HDL_FINDSYM(name);
       if(newinst)
       {
-        oldinst = replace_opcode(arch, newinst, opcode1, -1);
+        oldinst = sysblk.replace_opcode(arch, newinst, opcode1, -1);
         if(oldinst)
         {
           dyninst[dyninst_index].opcode1 = opcode1;
@@ -145,7 +154,7 @@ HDL_RESOLVER_SECTION;
         newinst = HDL_FINDSYM(name);
         if(newinst)
         {
-          oldinst = replace_opcode(arch, newinst, opcode1, opcode2);
+          oldinst = sysblk.replace_opcode(arch, newinst, opcode1, opcode2);
           if(oldinst)
           {
             dyninst[dyninst_index].opcode1 = opcode1;
