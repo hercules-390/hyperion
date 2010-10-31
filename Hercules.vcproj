@@ -205,6 +205,8 @@
 		</Configuration>
 		<Configuration
 			Name="All-All|x64"
+			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="0"
 			BuildLogFile="$(SolutionDir)$(ConfigurationName) BuildLog.htm"
 			>
