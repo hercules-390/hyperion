@@ -1237,7 +1237,7 @@ U16     sx, px;                         /* Segment and page index,
                     goto tran_spec_excp;
 
 #if defined(FEATURE_ENHANCED_DAT_FACILITY)
-                if(FEATURE_ENABLED(ENHANCED_DAT)
+                if(FACILITY_ENABLED(ENHANCED_DAT,regs)
                  && (regs->CR_L(0) & CR0_ZPAG_SZ_1M)
                  && (rte & REGTAB_P))
                     regs->dat.protect |= 1;
@@ -1291,7 +1291,7 @@ U16     sx, px;                         /* Segment and page index,
                     goto tran_spec_excp;
 
 #if defined(FEATURE_ENHANCED_DAT_FACILITY)
-                if(FEATURE_ENABLED(ENHANCED_DAT)
+                if(FACILITY_ENABLED(ENHANCED_DAT,regs)
                  && (regs->CR_L(0) & CR0_ZPAG_SZ_1M)
                  && (rte & REGTAB_P))
                     regs->dat.protect |= 1;
@@ -1345,7 +1345,7 @@ U16     sx, px;                         /* Segment and page index,
                     goto tran_spec_excp;
 
 #if defined(FEATURE_ENHANCED_DAT_FACILITY)
-                if(FEATURE_ENABLED(ENHANCED_DAT)
+                if(FACILITY_ENABLED(ENHANCED_DAT,regs)
                  && (regs->CR_L(0) & CR0_ZPAG_SZ_1M)
                  && (rte & REGTAB_P))
                     regs->dat.protect |= 1;
@@ -1402,7 +1402,7 @@ U16     sx, px;                         /* Segment and page index,
                 goto tran_spec_excp;
         
 #if defined(FEATURE_ENHANCED_DAT_FACILITY)
-            if(FEATURE_ENABLED(ENHANCED_DAT)
+            if(FACILITY_ENABLED(ENHANCED_DAT,regs)
               && (regs->CR_L(0) & CR0_ZPAG_SZ_1M)
               && (ste & ZSEGTAB_FC))
             {
@@ -1413,8 +1413,8 @@ U16     sx, px;                         /* Segment and page index,
 
                 /* Combine the page frame real address with the byte index
                    of the virtual address to form the real address */
-                regs->dat.raddr = (ste & ZPGETAB_SFAA) | (vaddr & ~ZPGETAB_SFAA);
-                regs->dat.rpfra = (ste & ZPGETAB_SFAA);
+                regs->dat.raddr = (ste & ZSEGTAB_SFAA) | (vaddr & ~ZSEGTAB_SFAA);
+                regs->dat.rpfra = (ste & ZSEGTAB_SFAA);
 
 // ZZ: INCOMPLETE
 

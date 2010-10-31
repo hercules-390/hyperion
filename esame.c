@@ -5155,7 +5155,7 @@ int     r1, r2;                         /* Register values           */
 
     RRE(inst, regs, r1, r2);
 
-    FACILITY_CHECK(ENHANCED_DAT,regs)
+    FACILITY_CHECK(ENHANCED_DAT,regs);
 
     PRIV_CHECK(regs);
 
