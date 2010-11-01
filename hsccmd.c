@@ -2608,8 +2608,8 @@ char    check[16];
         }
     }
 
-    if ( (mainsize > (U64)(((U64)4096*ONE_MEGABYTE)-1) && 
-         ( sizeof(sysblk.mainsize) < 8) || sizeof(size_t) < 8 ) )
+    if ( (mainsize > (U64)(((U64)4096*ONE_MEGABYTE)-1)) && 
+         ( sizeof(sysblk.mainsize) < 8 || sizeof(size_t) < 8 ) )
     {
         WRMSG( HHC01451, "E", argv[1], argv[0]);
         return -1;
