@@ -4504,8 +4504,9 @@ DEF_INST(multiply_subtract_bfp_short)
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
-/* B299 SRNM  - SET ROUNDING MODE                                [S] */
-/* This instruction is in module esame.c                             */
+/* B299 SRNM  - SET BFP ROUNDING MODE (2-BIT)                    [S] */
+/* B2B8 SRNMB - SET BFP ROUNDING MODE (3-BIT)                    [S] */
+/* These instructions are in module esame.c                          */
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/

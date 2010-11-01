@@ -137,9 +137,9 @@ int     r1, unused;                     /* Values of R fields        */
 
 #if defined(FEATURE_BINARY_FLOATING_POINT)
 /*-------------------------------------------------------------------*/
-/* B299 SRNM  - Set BFP Rounding Mode                            [S] */
+/* B299 SRNM  - Set BFP Rounding Mode (2-bit)                    [S] */
 /*-------------------------------------------------------------------*/
-DEF_INST(set_bfp_rounding_mode)
+DEF_INST(set_bfp_rounding_mode_2bit)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -149,11 +149,47 @@ VADR    effective_addr2;                /* Effective address         */
     BFPINST_CHECK(regs);
 
     /* Set FPC register BFP rounding mode bits from operand address */
-    regs->fpc &= ~(FPC_BRM);
-    regs->fpc |= (effective_addr2 & FPC_BRM);
+    regs->fpc &= ~(FPC_BRM_2BIT);
+    regs->fpc |= (effective_addr2 & FPC_BRM_2BIT);
 
-} /* end DEF_INST(set_bfp_rounding_mode) */
+#if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)          /*810*/
+    /* Zeroize FPC bit 29 if FP Extension Facility is installed */
+    regs->fpc &= ~(FPC_BIT29);
+#endif /*defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)*/   /*810*/
+
+} /* end DEF_INST(set_bfp_rounding_mode_2bit) */
 #endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
+
+
+#if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)          /*810*/
+/*-------------------------------------------------------------------*/
+/* B2B8 SRNMB - Set BFP Rounding Mode (3-bit)                    [S] */
+/*-------------------------------------------------------------------*/
+DEF_INST(set_bfp_rounding_mode_3bit)                            /*810*/
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    S(inst, regs, b2, effective_addr2);
+
+    BFPINST_CHECK(regs);
+
+    /* Program check if operand address bits 56-60 are non-zero */
+    if ((effective_addr2 & 0xFF) & ~(FPC_BRM_3BIT))
+        regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
+
+    /* Program check if operand address bits 61-63 not a valid BRM */
+    if ((effective_addr2 & FPC_BRM_3BIT) == BRM_RESV4
+     || (effective_addr2 & FPC_BRM_3BIT) == BRM_RESV5
+     || (effective_addr2 & FPC_BRM_3BIT) == BRM_RESV6)
+        regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
+
+    /* Set FPC 3-bit BFP rounding mode bits from operand address */
+    regs->fpc &= ~(FPC_BRM_3BIT);
+    regs->fpc |= (effective_addr2 & FPC_BRM_3BIT);
+
+} /* end DEF_INST(set_bfp_rounding_mode_3bit) */
+#endif /*defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)*/   /*810*/
 
 
 #if defined(FEATURE_LINKAGE_STACK)

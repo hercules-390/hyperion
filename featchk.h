@@ -559,6 +559,11 @@
  #error HFP unnormalized extension requires hexadecimal floating point
 #endif
 
+#if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY) \
+ && !defined(FEATURE_BINARY_FLOATING_POINT)
+ #error Floating point extension facility requires binary floating point
+#endif
+
 #if defined(FEATURE_PER2) && !defined(FEATURE_PER)
  #error FEATURE_PER must be defined when using FEATURE_PER2
 #endif

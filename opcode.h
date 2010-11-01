@@ -545,9 +545,20 @@ do { \
         (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
     /* Program check if fpc is not valid contents for FPC register */
-#define FPC_CHECK(_fpc, _regs) \
+#if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)          /*810*/
+ #define FPC_BRM FPC_BRM_3BIT
+ #define FPC_CHECK(_fpc, _regs) \
+    if(((_fpc) & FPC_RESV_FPX) \
+     || ((_fpc) & FPC_BRM_3BIT) == BRM_RESV4 \
+     || ((_fpc) & FPC_BRM_3BIT) == BRM_RESV5 \
+     || ((_fpc) & FPC_BRM_3BIT) == BRM_RESV6) \
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
+#else /*!defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)*/   /*810*/
+ #define FPC_BRM FPC_BRM_2BIT
+ #define FPC_CHECK(_fpc, _regs) \
     if((_fpc) & FPC_RESERVED) \
         (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
+#endif /*!defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)*/  /*810*/
 
 #define SSID_CHECK(_regs) \
     if((!((_regs)->GR_LHH(1) & 0x0001)) \
@@ -3477,7 +3488,7 @@ DEF_INST(store_fpc);
 DEF_INST(load_fpc);
 DEF_INST(set_fpc);
 DEF_INST(extract_fpc);
-DEF_INST(set_bfp_rounding_mode);
+DEF_INST(set_bfp_rounding_mode_2bit);
 DEF_INST(set_bfp_rounding_mode_3bit);                           /*810*/
 DEF_INST(trap2);
 DEF_INST(trap4);

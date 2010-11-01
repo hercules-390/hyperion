@@ -2144,7 +2144,10 @@ typedef struct _PTFFQSI {               /* Query Steering Information*/
 #define FPC_DXC_X       0x00000800
 #define FPC_DXC_Y       0x00000400
 #define FPC_DRM         0x00000070
-#define FPC_BRM         0x00000003
+#define FPC_BRM_3BIT    0x00000007                              /*810*/
+#define FPC_BIT29       0x00000004                              /*810*/
+#define FPC_BRM_2BIT    0x00000003                              /*810*/
+#define FPC_RESV_FPX    0x03030088                              /*810*/
 #define FPC_RESERVED    0x0707008C
 
 /* Shift counts to allow alignment of each field in the FPC register */
@@ -2194,6 +2197,10 @@ typedef struct _PTFFQSI {               /* Query Steering Information*/
 #define BRM_RTZ                 1       /* Round toward zero         */
 #define BRM_RTPI                2       /* Round toward +infinity    */
 #define BRM_RTMI                3       /* Round toward -infinity    */
+#define BRM_RESV4               4       /* Reserved (invalid)     810*/
+#define BRM_RESV5               5       /* Reserved (invalid)     810*/
+#define BRM_RESV6               6       /* Reserved (invalid)     810*/
+#define BRM_RFSP                7       /* Prep shorter precision 810*/
 
 /* Mask bits for conditional SSKE facility */
 #define SSKE_MASK_MR            0x04    /* Reference bit update mask */
