@@ -679,7 +679,8 @@ char *http_root()
             sizeof(absolute_httproot_path) );
         if (rc == 0)
         {
-            free(http_serv.httproot);
+            if ( http_serv.httproot != NULL )
+                free(http_serv.httproot);
             http_serv.httproot = strdup(absolute_httproot_path);
         }
 #endif /* defined(_MSVC_) */

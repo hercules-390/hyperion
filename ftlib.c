@@ -295,7 +295,6 @@ U16             curblkl;                /* Current block length      */
     if ( rc == FETE_EOT ) return FETE_EOT;
     if (rc < 0) 
         return FETE_BADHDR; /* (error message already issued) */
-    ASSERT( curblkl >= 0 );
 
     /* Calculate the offset of the next block header */
     blkpos += sizeof(FAKETAPE_BLKHDR) + curblkl;

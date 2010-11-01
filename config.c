@@ -83,16 +83,19 @@ int i;
 
 /* storage configuration */
 static RADR config_allocmsize = 0;
-int configure_storage(RADR mbstor)
+int configure_storage(RADR stor)
 {
 BYTE *mainstor;
 BYTE *storkeys;
-RADR  mainsize;
+RADR  mainsize = stor;
 RADR  storsize;
 RADR  skeysize;
 int cpu;
 int rc = 0;
 int was_locked = sysblk.mainstor_locked;
+
+    if ( mainsize < 4096 ) 
+        mainsize = 4096;
 
     OBTAIN_INTLOCK(NULL);
     if(sysblk.cpus)
@@ -104,11 +107,6 @@ int was_locked = sysblk.mainstor_locked;
             }
     RELEASE_INTLOCK(NULL);
 
-    /* Convert from configuration units to bytes */
-    if ( mbstor == 0 )
-        mainsize = 64 * 1024;
-    else
-        mainsize = mbstor * 1024 * 1024;
     /* Adjust for alignment */
     storsize = round_to_hostpagesize(mainsize);
     /* Storage key array size */

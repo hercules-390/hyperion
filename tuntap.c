@@ -763,7 +763,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
         request_name="SIOCDELRT"; break;
 #endif
     default:
-        sprintf(unknown_request,"Unknown (0x%x)",iRequest);
+        sprintf(unknown_request,"Unknown (0x%lx)",iRequest);
         request_name=unknown_request;
     }
 

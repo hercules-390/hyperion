@@ -2540,8 +2540,8 @@ int qstor_cmd(int argc, char *argv[], char *cmdline);
 /*-------------------------------------------------------------------*/
 int mainsize_cmd(int argc, char *argv[], char *cmdline)
 {
-U32     mainsize;
-BYTE    c;
+U64     mainsize;
+BYTE    f = ' ', c = '\0';
 int     rc;
 u_int   i;
 char    check[16];
@@ -2555,12 +2555,63 @@ char    check[16];
     }
 
     /* Parse main storage size operand */
-    if (sscanf(argv[1], "%u%c", &mainsize, &c) != 1
-        || (mainsize == 0 && sysblk.maxcpu > 0)
-        || (mainsize > 4095 && sizeof(sysblk.mainsize) < 8)
-        || (mainsize > 4095 && sizeof(size_t) < 8))
+    rc = sscanf(argv[1], "%"I64_FMT"u%c%c", &mainsize, &f, &c); 
+    
+    if ( rc > 2 || (mainsize == 0 && sysblk.maxcpu > 0))
     {
         WRMSG( HHC01451, "E", argv[1], argv[0] );
+        return -1;
+    }
+
+    if ( rc == 2 )
+    {
+        switch (f)
+        {
+        case 'k':
+        case 'K':
+            mainsize *= (U64)ONE_KILOBYTE;
+            break;
+        case 'm':
+        case 'M':
+            mainsize *= ONE_MEGABYTE;
+            break;
+        case 'g':
+        case 'G':
+            mainsize *= ONE_GIGABYTE;
+            break;
+        case 't':
+        case 'T':
+            mainsize *= ONE_TERABYTE;
+            break;
+        default:
+            WRMSG( HHC01451, "E", argv[1], argv[0]);
+            return -1;
+        }
+    }
+    else
+        mainsize *= ONE_MEGABYTE;
+
+    if ( sysblk.arch_mode != ARCH_370 )
+    {
+        if ( mainsize < (U64)(ONE_MEGABYTE) )
+        {
+            WRMSG( HHC01451, "E", argv[1], argv[0] );
+            return -1;
+        }
+    }
+    else
+    {
+        if ( mainsize < (U64)(64*ONE_KILOBYTE) )
+        {
+            WRMSG( HHC01451, "E", argv[1], argv[0]);
+            return -1;
+        }
+    }
+
+    if ( (mainsize > (U64)(((U64)4096*ONE_MEGABYTE)-1) && 
+         ( sizeof(sysblk.mainsize) < 8) || sizeof(size_t) < 8 ) )
+    {
+        WRMSG( HHC01451, "E", argv[1], argv[0]);
         return -1;
     }
 
@@ -7334,9 +7385,13 @@ int qstor_cmd(int argc, char *argv[], char *cmdline)
         {
             MSGBUF( buf, "%3.3" I64_FMT "d G", sysblk.mainsize >> 30 );
         }
-        else
+        else if ( sysblk.mainsize >= ONE_MEGABYTE )
         {
             MSGBUF( buf, "%3.3" I64_FMT "d M", sysblk.mainsize >> 20 );
+        }
+        else
+        {
+            MSGBUF( buf, "%3.3" I64_FMT "d K", sysblk.mainsize >> 10 );
         }
 
         WRMSG( HHC17003, "I", "MAIN", buf, "main" );
