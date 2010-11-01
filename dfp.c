@@ -2033,6 +2033,103 @@ BYTE            dxc;                    /* Data exception code       */
     }
 
 } /* end DEF_INST(convert_dfp_long_to_fix32_reg) */
+
+ 
+/*-------------------------------------------------------------------*/
+/* B94B CLFXTR - Convert from DFP Ext Register to unsigned 32 [RRF]  */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_dfp_ext_to_u32_reg)
+{
+int             r1, r2;                 /* Values of R fields        */
+int             m3, m4;                 /* Values of M fields        */
+U32             n1;                     /* Result value              */
+decimal128      x2;                     /* Extended DFP value        */
+decNumber       d2;                     /* Working decimal number    */
+decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRF_MM(inst, regs, r1, r2, m3, m4);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR_CHECK(r2, regs);
+
+    /* Initialise the context for extended DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL128);
+    ARCH_DEP(dfp_rounding_mode)(&set, m3, regs);
+
+    /* Load extended DFP value from FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal128)(r2, &x2, regs);
+    decimal128ToNumber(&x2, &d2);
+
+    /* Convert decimal number to 32-bit unsigned integer */
+    n1 = dfp_number_to_u32(&d2, &set);
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Load result into general register r1 */
+    regs->GR_L(r1) = n1;
+
+    /* Set condition code */
+    regs->psw.cc = (set.status & DEC_IEEE_854_Invalid_operation) ? 3 :
+                   decNumberIsZero(&d2) ? 0 :
+                   decNumberIsNegative(&d2) ? 1 : 2;
+
+    /* Raise data exception if error occurred */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(convert_dfp_ext_to_u32_reg) */
+
+
+/*-------------------------------------------------------------------*/
+/* B943 CLFDTR - Convert from DFP Long Register to unsigned 32 [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_dfp_long_to_u32_reg)
+{
+int             r1, r2;                 /* Values of R fields        */
+int             m3, m4;                 /* Values of M fields        */
+U32             n1;                     /* Result value              */
+decimal64       x2;                     /* Long DFP value            */
+decNumber       d2;                     /* Working decimal number    */
+decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRF_MM(inst, regs, r1, r2, m3, m4);
+    DFPINST_CHECK(regs);
+
+    /* Initialise the context for long DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL64);
+    ARCH_DEP(dfp_rounding_mode)(&set, m3, regs);
+
+    /* Load long DFP value from FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal64)(r2, &x2, regs);
+    decimal64ToNumber(&x2, &d2);
+
+    /* Convert decimal number to 32-bit unsigned integer */
+    n1 = dfp_number_to_u32(&d2, &set);
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Load result into general register r1 */
+    regs->GR_L(r1) = n1;
+
+    /* Set condition code */
+    regs->psw.cc = (set.status & DEC_IEEE_854_Invalid_operation) ? 3 :
+                   decNumberIsZero(&d2) ? 0 :
+                   decNumberIsNegative(&d2) ? 1 : 2;
+
+    /* Raise data exception if error occurred */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(convert_dfp_long_to_u32_reg) */
 #endif /*defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)*/   /*810*/
 
 
@@ -2131,6 +2228,105 @@ BYTE            dxc;                    /* Data exception code       */
     }
 
 } /* end DEF_INST(convert_dfp_long_to_fix64_reg) */
+
+
+#if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)          /*810*/
+/*-------------------------------------------------------------------*/
+/* B94A CLGXTR - Convert from DFP Ext Register to unsigned 64 [RRF]  */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_dfp_ext_to_u64_reg)
+{
+int             r1, r2;                 /* Values of R fields        */
+int             m3, m4;                 /* Values of M fields        */
+U64             n1;                     /* Result value              */
+decimal128      x2;                     /* Extended DFP value        */
+decNumber       d2;                     /* Working decimal number    */
+decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRF_MM(inst, regs, r1, r2, m3, m4);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR_CHECK(r2, regs);
+
+    /* Initialise the context for extended DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL128);
+    ARCH_DEP(dfp_rounding_mode)(&set, m3, regs);
+
+    /* Load extended DFP value from FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal128)(r2, &x2, regs);
+    decimal128ToNumber(&x2, &d2);
+
+    /* Convert decimal number to 64-bit unsigned integer */
+    n1 = dfp_number_to_u64(&d2, &set);
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Load result into general register r1 */
+    regs->GR_G(r1) = n1;
+
+    /* Set condition code */
+    regs->psw.cc = (set.status & DEC_IEEE_854_Invalid_operation) ? 3 :
+                   decNumberIsZero(&d2) ? 0 :
+                   decNumberIsNegative(&d2) ? 1 : 2;
+
+    /* Raise data exception if error occurred */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(convert_dfp_ext_to_u64_reg) */
+
+
+/*-------------------------------------------------------------------*/
+/* B942 CLGDTR - Convert from DFP Long Register to unsigned 64 [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_dfp_long_to_u64_reg)
+{
+int             r1, r2;                 /* Values of R fields        */
+int             m3, m4;                 /* Values of M fields        */
+U64             n1;                     /* Result value              */
+decimal64       x2;                     /* Long DFP value            */
+decNumber       d2;                     /* Working decimal number    */
+decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRF_MM(inst, regs, r1, r2, m3, m4);
+    DFPINST_CHECK(regs);
+
+    /* Initialise the context for long DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL64);
+    ARCH_DEP(dfp_rounding_mode)(&set, m3, regs);
+
+    /* Load long DFP value from FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal64)(r2, &x2, regs);
+    decimal64ToNumber(&x2, &d2);
+
+    /* Convert decimal number to 64-bit unsigned integer */
+    n1 = dfp_number_to_u64(&d2, &set);
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Load result into general register r1 */
+    regs->GR_G(r1) = n1;
+
+    /* Set condition code */
+    regs->psw.cc = (set.status & DEC_IEEE_854_Invalid_operation) ? 3 :
+                   decNumberIsZero(&d2) ? 0 :
+                   decNumberIsNegative(&d2) ? 1 : 2;
+
+    /* Raise data exception if error occurred */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(convert_dfp_long_to_u64_reg) */
+#endif /*defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)*/   /*810*/
 
 
 /*-------------------------------------------------------------------*/
