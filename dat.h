@@ -1416,7 +1416,22 @@ U16     sx, px;                         /* Segment and page index,
                 regs->dat.raddr = (ste & ZSEGTAB_SFAA) | (vaddr & ~ZSEGTAB_SFAA);
                 regs->dat.rpfra = (ste & ZSEGTAB_SFAA);
 
-// ZZ: INCOMPLETE
+
+                /* [3.11.4.2] Place the translated address in the TLB */
+                if (!(acctype & ACC_NOTLB))
+                {
+                    regs->tlb.TLB_ASD(tlbix)   = regs->dat.asd;
+                    regs->tlb.TLB_VADDR(tlbix) = (vaddr & TLBID_PAGEMASK) | regs->tlbID;
+                    regs->tlb.TLB_PTE(tlbix)   = 0;
+                    regs->tlb.common[tlbix]    = (ste & SEGTAB_COMMON) ? 1 : 0;
+                    regs->tlb.protect[tlbix]   = regs->dat.protect;
+                    regs->tlb.acc[tlbix]       = 0;
+                    regs->tlb.main[tlbix]      = NULL;
+                }
+
+                /* Clear exception code and return with zero return code */
+                regs->dat.xcode = 0;
+                return 0;
 
             }
 #endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
