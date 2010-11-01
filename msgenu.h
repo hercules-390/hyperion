@@ -1285,6 +1285,12 @@ int have_lock = 0; try_lock = 10; \
 #define HHC02309 "%s: Record %d is unsupported record type %s; skipped"
 #define HHC02310 "Panel command %s is not supported in this build; see option %s"
 
+#define HHC02370 "%1d:%04X CU or LCU %s conflicts with existing CUNUM %04X SSID %04X CU/LCU %s"
+#define HHC02371 "%1d:%04X Adding device exceeds CU and/or LCU device limits"
+#define HHC02372 "%1d:%04X Device number already defined for CU and/or LCU"
+#define HHC02373 "CUNUM %04X does not match CUNUM %04X for SSID %04X"
+#define HHC02374 "%1d:%04X Attached to CUNUM %04X SSID %04X"
+
 #define HHC02386 "Configure CPU error %d"
 #define HHC02387 "Configure expanded storage error %d"
 #define HHC02388 "Configure storage error %d"

@@ -1943,7 +1943,7 @@ void int_scsi_status_update( DEVBLK* dev, int mountstat_only ) // (internal call
                 ,dev->devnum
                 ,( (dev->filename[0]) ? (dev->filename)  : ("(undefined)") )
                 ,( (dev->fd   <   0 ) ? ("closed")       : ("opened") )
-                ,dev->sstat
+                ,(U32)dev->sstat
                 ,STS_ONLINE(dev)      ? "ON-LINE"        : "OFF-LINE"
                 ,STS_NOT_MOUNTED(dev) ? "NO-TAPE"        : "READY"
                 ,STS_TAPEMARK(dev)    ? " TAPE-MARK"     : ""

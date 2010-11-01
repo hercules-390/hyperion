@@ -1937,7 +1937,7 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
         WRMSG(HHC02203, "I", argv[0], buf);
     }
     else
-        WRMSG(HHC02275, "I", argv[0], "NO");
+        WRMSG(HHC02203, "I", argv[0], "NO");
 
     // Scan the device list looking for all SCSI tape devices
     // with either an active scsi mount thread and/or an out-
