@@ -2293,21 +2293,6 @@ void init_opcode_tables(void)
   int i;
 
 //  logmsg("init_opcode_tables()\n");
-
-  /* Start with clean opcode tables */
-  for(arch = 0; arch < GEN_ARCHCOUNT; arch++)
-  {
-    for(i = 0; i < 0x100 * 0x100; i++)
-      runtime_opcode_xxxx[arch][i] = NULL;
-    for(i = 0; i < 0x100; i++)
-    {
-      runtime_opcode_e3________xx[arch][i] = NULL;
-      runtime_opcode_eb________xx[arch][i] = NULL;
-      runtime_opcode_ec________xx[arch][i] = NULL;
-      runtime_opcode_ed________xx[arch][i] = NULL;
-    }
-  }
-
   for(arch = 0; arch < GEN_ARCHCOUNT; arch++)
   {
     for(i = 0; i < 0x100; i++)
@@ -2344,27 +2329,6 @@ void init_opcode_tables(void)
       replace_opcode_xx_x(arch, opcode_c6_x[i][arch], 0xc6, i);
       replace_opcode_xx_x(arch, opcode_c8_x[i][arch], 0xc8, i);
       replace_opcode_xx_x(arch, opcode_cc_x[i][arch], 0xcc, i);
-    }
-  }
-
-  /* Check for completeness */
-  for(arch = 0; arch < GEN_ARCHCOUNT; arch++)
-  {
-    for(i = 0; i < 0x10000; i++)
-    {
-      if(!runtime_opcode_xxxx[arch][i])
-        logmsg("Severe error: No opcode %04x in arch %d\n", i, arch);
-    }
-    for(i = 0; i < 0x100; i++)
-    {
-      if(!runtime_opcode_e3________xx[arch][i])
-        logmsg("Severe error: No opcode e3%02x in arch %d\n", i, arch);
-      if(!runtime_opcode_eb________xx[arch][i])
-        logmsg("Severe error: No opcode eb%02x in arch %d\n", i, arch);
-      if(!runtime_opcode_ec________xx[arch][i])
-        logmsg("Severe error: No opcode ec%02x in arch %d\n", i, arch);
-      if(!runtime_opcode_ed________xx[arch][i])
-        logmsg("Severe error: No opcode ed%02x in arch %d\n", i, arch);
     }
   }
 }
