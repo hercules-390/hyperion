@@ -648,8 +648,10 @@ DEVINITTAB*     pDevInitTab;
        a single buffer before passing data to the device handler */
     dev->cdwmerge = 1;
 
+#if 0 // (defer syncio until 'tapedevt' is known!)
     /* Tape is a syncio type 2 device */
     dev->syncio = 2;
+#endif
 
     /* ISW */
     /* Build a 'clear' sense */
@@ -697,6 +699,11 @@ DEVINITTAB*     pDevInitTab;
 
     if (dev->devchar[8] & 0x08)     // SIC supported?
         dev->SIC_supported = 1;     // remember that fact
+
+    if (dev->tapedevt == TAPEDEVT_SCSITAPE)
+        dev->syncio = 0;  // (SCSI i/o too slow; causes Machine checks)
+    else
+        dev->syncio = 2;  // (aws/het/etc are fast; syncio likely safe)
 
     return rc;
 
