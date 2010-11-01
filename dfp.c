@@ -1540,6 +1540,75 @@ BYTE            dxc;                    /* Data exception code       */
     ARCH_DEP(dfp_reg_from_decimal64)(r1, &x1, regs);
 
 } /* end DEF_INST(convert_fix32_to_dfp_long_reg) */
+
+
+/*-------------------------------------------------------------------*/
+/* B95B CXLFTR - Convert from unsigned 32 to DFP Ext Register [RRF]  */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_u32_to_dfp_ext_reg)
+{
+int             r1, r2;                 /* Values of R fields        */
+int             m3, m4;                 /* Values of M fields        */
+U32             n2;                     /* Value of R2 register      */
+decimal128      x1;                     /* Extended DFP value        */
+decNumber       d1;                     /* Working decimal number    */
+decContext      set;                    /* Working context           */
+
+    RRF_MM(inst, regs, r1, r2, m3, m4);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR_CHECK(r1, regs);
+
+    /* Initialise the context for extended DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL128);
+    ARCH_DEP(dfp_rounding_mode)(&set, m3, regs);
+
+    /* Load 32-bit unsigned value from r2 register */
+    n2 = regs->GR_L(r2);
+
+    /* Convert unsigned binary integer to extended DFP format */
+    dfp_number_from_u32(&d1, n2, &set);
+    decimal128FromNumber(&x1, &d1, &set);
+
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal128)(r1, &x1, regs);
+
+} /* end DEF_INST(convert_u32_to_dfp_ext_reg) */
+
+
+/*-------------------------------------------------------------------*/
+/* B953 CDLFTR - Convert from unsigned 32 to DFP Long Register [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_u32_to_dfp_long_reg)
+{
+int             r1, r2;                 /* Values of R fields        */
+int             m3, m4;                 /* Values of M fields        */
+U32             n2;                     /* Value of R2 register      */
+decimal64       x1;                     /* Long DFP value            */
+decNumber       d1;                     /* Working decimal number    */
+decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRF_MM(inst, regs, r1, r2, m3, m4);
+    DFPINST_CHECK(regs);
+
+    /* Initialise the context for long DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL64);
+    ARCH_DEP(dfp_rounding_mode)(&set, m3, regs);
+
+    /* Load 32-bit unsigned value from r2 register */
+    n2 = regs->GR_L(r2);
+
+    /* Convert unsigned binary integer to long DFP format */
+    dfp_number_from_u32(&d1, n2, &set);
+    decimal64FromNumber(&x1, &d1, &set);
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal64)(r1, &x1, regs);
+
+} /* end DEF_INST(convert_u32_to_dfp_long_reg) */
 #endif /*defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)*/   /*810*/
 
 
@@ -1615,6 +1684,77 @@ BYTE            dxc;                    /* Data exception code       */
     }
 
 } /* end DEF_INST(convert_fix64_to_dfp_long_reg) */
+
+
+#if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)          /*810*/
+/*-------------------------------------------------------------------*/
+/* B95A CXLGTR - Convert from unsigned 64 to DFP Ext Register [RRF]  */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_u64_to_dfp_ext_reg)
+{
+int             r1, r2;                 /* Values of R fields        */
+int             m3, m4;                 /* Values of M fields        */
+U64             n2;                     /* Value of R2 register      */
+decimal128      x1;                     /* Extended DFP value        */
+decNumber       d1;                     /* Working decimal number    */
+decContext      set;                    /* Working context           */
+
+    RRF_MM(inst, regs, r1, r2, m3, m4);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR_CHECK(r1, regs);
+
+    /* Initialise the context for extended DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL128);
+    ARCH_DEP(dfp_rounding_mode)(&set, m3, regs);
+
+    /* Load 64-bit unsigned value from r2 register */
+    n2 = regs->GR_G(r2);
+
+    /* Convert unsigned binary integer to extended DFP format */
+    dfp_number_from_u64(&d1, n2, &set);
+    decimal128FromNumber(&x1, &d1, &set);
+
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal128)(r1, &x1, regs);
+
+} /* end DEF_INST(convert_u64_to_dfp_ext_reg) */
+
+
+/*-------------------------------------------------------------------*/
+/* B952 CDLGTR - Convert from unsigned 64 to DFP Long Register [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_u64_to_dfp_long_reg)
+{
+int             r1, r2;                 /* Values of R fields        */
+int             m3, m4;                 /* Values of M fields        */
+U64             n2;                     /* Value of R2 register      */
+decimal64       x1;                     /* Long DFP value            */
+decNumber       d1;                     /* Working decimal number    */
+decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRF_MM(inst, regs, r1, r2, m3, m4);
+    DFPINST_CHECK(regs);
+
+    /* Initialise the context for long DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL64);
+    ARCH_DEP(dfp_rounding_mode)(&set, m3, regs);
+
+    /* Load 64-bit unsigned value from r2 register */
+    n2 = regs->GR_G(r2);
+
+    /* Convert unsigned binary integer to long DFP format */
+    dfp_number_from_u64(&d1, n2, &set);
+    decimal64FromNumber(&x1, &d1, &set);
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal64)(r1, &x1, regs);
+
+} /* end DEF_INST(convert_u64_to_dfp_long_reg) */
+#endif /*defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)*/   /*810*/
 
 
 /*-------------------------------------------------------------------*/
