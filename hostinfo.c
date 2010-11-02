@@ -75,7 +75,43 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
    #endif
 #endif
 
-   pHostInfo->hostpagesz = (RADR)getpagesize();
+#if defined(__APPLE__) || defined(__FreeBSD__)
+    {
+        size_t  length;
+        int     mib[2];
+        int64_t iRV;
+        struct  xsw_usage   xsu;
+
+        mib[0] = CTL_HW;
+        length = (size_t)sizeof(iRV);
+        
+        mib[1] = HW_MEMSIZE;
+        sysctl( mib, 2, &iRV, &length, NULL, 0 );
+        pHostInfo->ullTotalPhys = iRV;
+
+        mib[1] = HW_USERMEM;
+        sysctl( mib, 2, &iRV, &length, NULL, 0 );
+        pHostInfo->ullAvailPhys = iRV;
+
+        mib[1] = HW_PAGESIZE;
+        sysctl( mib, 2, &iRV, &length, NULL, 0 );
+        pHostInfo->hostpagesz = iRV;
+        
+        mib[1] = HW_CACHELINE;
+        sysctl( mib, 2, &iRV, &length, NULL, 0 );
+        pHostInfo->dwAllocationGranularity = iRV;
+
+        mib[0] = CTL_VM;
+        length = (size_t)sizeof(xsu);
+
+        mib[1] = VM_SWAPUSAGE;
+        sysctl( mib, 2, &xsu, &length, NULL, 0 );
+        
+        pHostInfo->ullTotalPageFile = xsu.xsu_total;
+        pHostInfo->ullAvailPageFile = xsu.xsu_avail;
+    }
+#endif
+    pHostInfo->hostpagesz = (RADR)getpagesize();
 
 }
 
