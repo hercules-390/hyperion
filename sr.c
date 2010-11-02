@@ -726,7 +726,7 @@ S64      dreg;
         case SR_CPU_CR_15:
             if (regs == NULL) goto sr_null_regs_exit;
             i = key - SR_CPU_CR;
-            SR_READ_VALUE(file, len, &regs->cr[i], sizeof(regs->cr[0]));
+            SR_READ_VALUE(file, len, &regs->CR(i), sizeof(regs->CR(0)));
             break;
 
         case SR_CPU_AR_0:

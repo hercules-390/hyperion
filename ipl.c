@@ -445,7 +445,11 @@ int rc1 = 0, rc;
     /* Clear the registers */
     memset ( &regs->psw,           0, sizeof(regs->psw)           );
     memset ( &regs->captured_zpsw, 0, sizeof(regs->captured_zpsw) );
-    memset ( regs->cr,             0, sizeof(regs->cr)            );
+#ifndef NOCHECK_AEA_ARRAY_BOUNDS
+    memset ( &regs->cr_struct,     0, sizeof(regs->cr_struct)     );
+#else
+    memset ( &regs->cr,            0, sizeof(regs->cr)            );
+#endif
     regs->fpc    = 0;
     regs->PX     = 0;
     regs->psw.AMASK_G = AMASK24;

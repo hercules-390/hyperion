@@ -96,9 +96,18 @@ struct REGS {                           /* Processor registers       */
 
         DW      gr[16];                 /* General registers         */
 
-        DW      cr[16+16+1];            /* 16 Control registers      */
-#define CR_ALB_OFFSET   16              /* 16 Accesslist lookaside   */
-#define CR_ASD_REAL     32              /*  1 Real asd register      */
+#define CR_ASD_REAL     -1
+#define CR_ALB_OFFSET   16
+
+#ifndef NOCHECK_AEA_ARRAY_BOUNDS
+        DW      cr_struct[1+16+16];
+#define XR(_crn) cr_struct[1+(_crn)]
+#else
+#define XR(_crn) cr[(_crn)]
+        DW      cr_special[1];          /* Negative Index into cr    */
+        DW      cr[16];                 /* Control registers         */
+        DW      alb[16];                /* Accesslist Lookaside cr   */
+#endif
 
         U32     ar[16];                 /* Access registers          */
         U32     fpr[32];                /* Floating point registers  */
@@ -163,14 +172,14 @@ struct REGS {                           /* Processor registers       */
 #define GR_LA8(_r) gr[(_r)].F.L.A.B      /* 24 bit addr, unused bits */
 #define GR_LHLCL(_r) gr[(_r)].F.L.H.L.B.L   /* Character, bits 56-63 */
 #define GR_LHLCH(_r) gr[(_r)].F.L.H.L.B.H   /* Character, bits 48-55 */
-#define CR_G(_r)   cr[(_r)].D            /* Bits 0-63                */
-#define CR_H(_r)   cr[(_r)].F.H.F        /* Fullword bits 0-31       */
-#define CR_HHH(_r) cr[(_r)].F.H.H.H.H    /* Halfword bits 0-15       */
-#define CR_HHL(_r) cr[(_r)].F.H.H.L.H    /* Halfword low, bits 16-31 */
-#define CR_L(_r)   cr[(_r)].F.L.F        /* Fullword low, bits 32-63 */
-#define CR_LHH(_r) cr[(_r)].F.L.H.H.H    /* Halfword bits 32-47      */
-#define CR_LHHCH(_r) cr[(_r)].F.L.H.H.B.H   /* Character, bits 32-39 */
-#define CR_LHL(_r) cr[(_r)].F.L.H.L.H    /* Halfword low, bits 48-63 */
+#define CR_G(_r)   XR((_r)).D            /* Bits 0-63                */
+#define CR_H(_r)   XR((_r)).F.H.F        /* Fullword bits 0-31       */
+#define CR_HHH(_r) XR((_r)).F.H.H.H.H    /* Halfword bits 0-15       */
+#define CR_HHL(_r) XR((_r)).F.H.H.L.H    /* Halfword low, bits 16-31 */
+#define CR_L(_r)   XR((_r)).F.L.F        /* Fullword low, bits 32-63 */
+#define CR_LHH(_r) XR((_r)).F.L.H.H.H    /* Halfword bits 32-47      */
+#define CR_LHHCH(_r) XR((_r)).F.L.H.H.B.H   /* Character, bits 32-39 */
+#define CR_LHL(_r) XR((_r)).F.L.H.L.H    /* Halfword low, bits 48-63 */
 #define MC_G      mc.D
 #define MC_L      mc.F.L.F
 #define EA_G      ea.D
@@ -275,12 +284,24 @@ struct REGS {                           /* Processor registers       */
 
         BYTE    aea_mode;               /* aea addressing mode       */
 
-        int     aea_ar[16+5];           /* arn to cr number          */
-                                        /* 5 Special registers       */
+#ifndef NOCHECK_AEA_ARRAY_BOUNDS
+        int     aea_ar_struct[5+16];
+#define AEA_AR(_arn) aea_ar_struct[5+(_arn)]
+#else
+#define AEA_AR(_arn) aea_ar[(_arn)]
+        int     aea_ar_special[5];      /* Negative index into ar    */
+        int     aea_ar[16];             /* arn to cr number          */
+#endif
 
-        BYTE    aea_common[16+16+1];    /* 1=asd is not private      */
-                                        /* 16 Accesslist lookaside   */
-                                        /*  1 Real asd register      */
+#ifndef NOCHECK_AEA_ARRAY_BOUNDS
+        BYTE    aea_common_struct[1+16+16];
+#define AEA_COMMON(_asd) aea_common_struct[1+(_asd)]
+#else
+#define AEA_COMMON(_asd) aea_common[(_asd)]
+        BYTE    aea_common_special[1];  /* real asd                  */
+        BYTE    aea_common[16];         /* 1=asd is not private      */
+        BYTE    aea_common_alb[16];     /* alb pseudo registers      */
+#endif
 
         BYTE    aea_aleprot[16];        /* ale protected             */
 

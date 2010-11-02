@@ -80,28 +80,28 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
     WRMSG(HHC02282, "I", buf);
 
     len = sprintf(buf, "aea ar    ");
-    for (i = 16; i < 21; i++)
-         if (regs->aea_ar[i] > 0)
-            len += sprintf(buf + len, " %2.2X",regs->aea_ar[i]);
+    for (i = USE_HOME_SPACE; i < 0; i++)
+         if (regs->AEA_AR(i) > 0)
+            len += sprintf(buf + len, " %2.2X",regs->AEA_AR(i));
         else
-            len += sprintf(buf + len, " %2d",regs->aea_ar[i]);
+            len += sprintf(buf + len, " %2d",regs->AEA_AR(i));
     for (i = 0; i < 16; i++)
-         if (regs->aea_ar[i] > 0)
-            len += sprintf(buf + len, " %2.2X",regs->aea_ar[i]);
+         if (regs->AEA_AR(i) > 0)
+            len += sprintf(buf + len, " %2.2X",regs->AEA_AR(i));
         else
-            len += sprintf(buf + len, " %2d",regs->aea_ar[i]);
+            len += sprintf(buf + len, " %2d",regs->AEA_AR(i));
     WRMSG(HHC02282, "I", buf);
 
     len = sprintf(buf, "aea common            ");
-    if (regs->aea_common[32] > 0)
-        len += sprintf(buf + len, " %2.2X",regs->aea_common[32]);
+    if (regs->AEA_COMMON(CR_ASD_REAL) > 0)
+        len += sprintf(buf + len, " %2.2X",regs->AEA_COMMON(CR_ASD_REAL));
     else
-        len += sprintf(buf + len, " %2d",regs->aea_common[32]);
+        len += sprintf(buf + len, " %2d",regs->AEA_COMMON(CR_ASD_REAL));
     for (i = 0; i < 16; i++)
-        if (regs->aea_common[i] > 0)
-            len += sprintf(buf + len, " %2.2X",regs->aea_common[i]);
+        if (regs->AEA_COMMON(i) > 0)
+            len += sprintf(buf + len, " %2.2X",regs->AEA_COMMON(i));
         else
-            len += sprintf(buf + len, " %2d",regs->aea_common[i]);
+            len += sprintf(buf + len, " %2d",regs->AEA_COMMON(i));
     WRMSG(HHC02282, "I", buf);
 
     MSGBUF( buf, "aea cr[1]  %16.16" I64_FMT "X", regs->CR_G(1));
@@ -114,7 +114,7 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
     WRMSG(HHC02282, "I", buf);
 
     for (i = 0; i < 16; i++)
-        if (regs->aea_ar[i] > 15)
+        if (regs->AEA_AR(i) > 15)
         {
             MSGBUF( buf, "    alb[%d] %16.16" I64_FMT "X", i,
                     regs->CR_G(CR_ALB_OFFSET + i));
@@ -130,28 +130,28 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
         WRMSG(HHC02282, "I", buf);
 
         len = sprintf(buf, "aea ar    ");
-        for (i = 16; i < 21; i++)
-            if (regs->aea_ar[i] > 0)
-                len += sprintf(buf + len, " %2.2X",regs->aea_ar[i]);
+        for (i = USE_HOME_SPACE; i < 0; i++)
+            if (regs->AEA_AR(i) > 0)
+                len += sprintf(buf + len, " %2.2X",regs->AEA_AR(i));
             else
-                len += sprintf(buf + len, " %2d",regs->aea_ar[i]);
+                len += sprintf(buf + len, " %2d",regs->AEA_AR(i));
         for (i = 0; i < 16; i++)
-            if (regs->aea_ar[i] > 0)
-                len += sprintf(buf + len, " %2.2X",regs->aea_ar[i]);
+            if (regs->AEA_AR(i) > 0)
+                len += sprintf(buf + len, " %2.2X",regs->AEA_AR(i));
             else
-                len += sprintf(buf + len, " %2d",regs->aea_ar[i]);
+                len += sprintf(buf + len, " %2d",regs->AEA_AR(i));
         WRMSG(HHC02282, "I", buf);
 
         len = sprintf(buf, "aea common            ");
-        if (regs->aea_common[32] > 0)
-            len += sprintf(buf + len, " %2.2X",regs->aea_common[32]);
+        if (regs->AEA_COMMON(CR_ASD_REAL) > 0)
+            len += sprintf(buf + len, " %2.2X",regs->AEA_COMMON(CR_ASD_REAL));
         else
-            len += sprintf(buf + len, " %2d",regs->aea_common[32]);
+            len += sprintf(buf + len, " %2d",regs->AEA_COMMON(CR_ASD_REAL));
         for (i = 0; i < 16; i++)
-        if (regs->aea_common[i] > 0)
-            len += sprintf(buf + len, " %2.2X",regs->aea_common[i]);
+        if (regs->AEA_COMMON(i) > 0)
+            len += sprintf(buf + len, " %2.2X",regs->AEA_COMMON(i));
         else
-            len += sprintf(buf + len, " %2d",regs->aea_common[i]);
+            len += sprintf(buf + len, " %2d",regs->AEA_COMMON(i));
         WRMSG(HHC02282, "I", buf);
 
         MSGBUF( buf, "aea cr[1]  %16.16" I64_FMT "X", regs->CR_G(1));
@@ -164,7 +164,7 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
         WRMSG(HHC02282, "I", buf);
 
         for (i = 0; i < 16; i++)
-            if (regs->aea_ar[i] > 15)
+            if (regs->AEA_AR(i) > 15)
             {
                 MSGBUF( buf, "    alb[%d] %16.16" I64_FMT "X", i,
                         regs->CR_G(CR_ALB_OFFSET + i));

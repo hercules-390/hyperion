@@ -494,13 +494,13 @@ _DAT_C_STATIC void ARCH_DEP(purge_alb) (REGS *regs)
 int i;
 
     for(i = 1; i < 16; i++)
-        if(regs->aea_ar[i] >= CR_ALB_OFFSET && regs->aea_ar[i] != CR_ASD_REAL)
-            regs->aea_ar[i] = 0;
+        if(regs->AEA_AR(i) >= CR_ALB_OFFSET)
+            regs->AEA_AR(i) = 0;
 
     if(regs->host && regs->guestregs)
         for(i = 1; i < 16; i++)
-            if(regs->guestregs->aea_ar[i] >= CR_ALB_OFFSET && regs->guestregs->aea_ar[i] != CR_ASD_REAL)
-                regs->guestregs->aea_ar[i] = 0;
+            if(regs->guestregs->AEA_AR(i) >= CR_ALB_OFFSET)
+                regs->guestregs->AEA_AR(i) = 0;
 
 } /* end function purge_alb */
 
@@ -599,7 +599,7 @@ U16     eax;                            /* Authorization index       */
         break;
 
     case USE_INST_SPACE:
-        switch(regs->aea_ar[USE_INST_SPACE]) {
+        switch(regs->AEA_AR(USE_INST_SPACE)) {
 
         case 1:
             regs->dat.stid = TEA_ST_PRIMARY;
@@ -611,9 +611,9 @@ U16     eax;                            /* Authorization index       */
     #endif
         default:
             regs->dat.stid = 0;
-        } /* end switch(regs->aea_ar[USE_INST_SPACE]) */
+        } /* end switch(regs->AEA_AR(USE_INST_SPACE)) */
 
-        regs->dat.asd = regs->CR(regs->aea_ar[USE_INST_SPACE]);
+        regs->dat.asd = regs->CR(regs->AEA_AR(USE_INST_SPACE));
         break;
 
     default:
@@ -621,7 +621,7 @@ U16     eax;                            /* Authorization index       */
     #if defined(FEATURE_ACCESS_REGISTERS)
         if (ACCESS_REGISTER_MODE(&regs->psw)
          || (SIE_ACTIVE(regs) && MULTIPLE_CONTROLLED_DATA_SPACE(regs->guestregs))
-         || (arn & USE_ARMODE)
+         || (arn >= USE_ARMODE)
            )
         {
             /* Remove flags giving access register number 0-15 */
@@ -654,9 +654,9 @@ U16     eax;                            /* Authorization index       */
 
             default:
                 /* ALB Lookup */
-                if(regs->aea_ar[arn] >= CR_ALB_OFFSET && regs->aea_ar[arn] != CR_ASD_REAL)
+                if(regs->AEA_AR(arn) >= CR_ALB_OFFSET)
                 {
-                    regs->dat.asd = regs->CR(regs->aea_ar[arn]);
+                    regs->dat.asd = regs->CR(regs->AEA_AR(arn));
                     regs->dat.protect = regs->aea_aleprot[arn];
                     regs->dat.stid = TEA_ST_ARMODE;
                 }
@@ -687,8 +687,8 @@ U16     eax;                            /* Authorization index       */
 
                     /* Update ALB */
                     regs->CR(CR_ALB_OFFSET + arn) = regs->dat.asd;
-                    regs->aea_ar[arn] = CR_ALB_OFFSET + arn;
-                    regs->aea_common[CR_ALB_OFFSET + arn] = (regs->dat.asd & ASD_PRIVATE) == 0;
+                    regs->AEA_AR(arn) = CR_ALB_OFFSET + arn;
+                    regs->AEA_COMMON(CR_ALB_OFFSET + arn) = (regs->dat.asd & ASD_PRIVATE) == 0;
                     regs->aea_aleprot[arn] = regs->dat.protect & 2;
 
                 }
@@ -1406,7 +1406,6 @@ U16     sx, px;                         /* Segment and page index,
               && (regs->CR_L(0) & CR0_ZPAG_SZ_1M)
               && (ste & ZSEGTAB_FC))
             {
-            
                 /* Set protection indicator if page protection is indicated */
                 if (ste & ZSEGTAB_P)
                     regs->dat.protect |= 1;
@@ -1707,7 +1706,7 @@ tran_excp_addr:
     if (ACCESS_REGISTER_MODE(&regs->psw)
      || (SIE_ACTIVE(regs) && MULTIPLE_CONTROLLED_DATA_SPACE(regs->guestregs))
        )
-       regs->excarid = arn > 15 ? 0 : arn;
+       regs->excarid = arn < 0 ? 0 : arn;
 
     /* Return condition code */
     return cc;
@@ -2107,7 +2106,7 @@ static inline int ARCH_DEP(check_sa_per2) (int arn, int acctype, REGS *regs)
     UNREFERENCED(acctype);
     if((regs->dat.asd & SAEVENT_BIT) || !(regs->CR(9) & CR9_SAC))
     {
-        regs->peraid = arn > 0 && arn < 16 ? arn : 0;
+        regs->peraid = arn > 0 ? arn : 0;
         regs->perc |= regs->dat.stid;
         return 1;
     }
@@ -2206,7 +2205,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
     {
 
         if (SIE_TRANSLATE_ADDR (regs->sie_mso + regs->dat.aaddr,
-                    (arn > 0 && arn < 16 && MULTIPLE_CONTROLLED_DATA_SPACE(regs)) ? arn : USE_PRIMARY_SPACE,
+                    (arn > 0 && MULTIPLE_CONTROLLED_DATA_SPACE(regs)) ? arn : USE_PRIMARY_SPACE,
                     regs->hostregs, ACCTYPE_SIE))
             (regs->hostregs->program_interrupt) (regs->hostregs, regs->hostregs->dat.xcode);
 
@@ -2217,7 +2216,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
             regs->tlb.TLB_PTE(ix)   = addr & TLBID_PAGEMASK;
 
         /* Indicate a host real space entry for a XC dataspace */
-        if (arn > 0 && arn < 16 && MULTIPLE_CONTROLLED_DATA_SPACE(regs))
+        if (arn > 0 && MULTIPLE_CONTROLLED_DATA_SPACE(regs))
         {
             regs->tlb.TLB_ASD(ix) = regs->dat.asd;
             /* Ensure that the private bit is percolated to the guest such that LAP is applied correctly */
@@ -2226,8 +2225,8 @@ int     ix = TLBIX(addr);               /* TLB index                 */
             /* Build tlb entry of XC dataspace */
             regs->dat.asd = regs->hostregs->dat.asd ^ TLB_HOST_ASD;
             regs->CR(CR_ALB_OFFSET + arn) = regs->dat.asd;
-            regs->aea_ar[arn] = CR_ALB_OFFSET + arn;
-            regs->aea_common[CR_ALB_OFFSET + arn] = (regs->dat.asd & ASD_PRIVATE) == 0;
+            regs->AEA_AR(arn) = CR_ALB_OFFSET + arn;
+            regs->AEA_COMMON(CR_ALB_OFFSET + arn) = (regs->dat.asd & ASD_PRIVATE) == 0;
             regs->aea_aleprot[arn] = regs->hostregs->dat.protect & 2;
         }
 
@@ -2337,7 +2336,7 @@ vabs_prot_excp:
   #endif /*defined(FEATURE_ESAME)*/
     }
     regs->TEA |= regs->dat.stid;
-    regs->excarid = (arn > 0 && arn < 16 ? arn : 0);
+    regs->excarid = (arn > 0 ? arn : 0);
 #endif /*FEATURE_SUPPRESSION_ON_PROTECTION*/
 
 #if defined(_FEATURE_PROTECTION_INTERCEPTION_CONTROL)

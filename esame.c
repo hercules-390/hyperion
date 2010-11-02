@@ -4248,7 +4248,7 @@ U16     updated = 0;                    /* Updated control regs      */
     SET_IC_MASK(regs);
     if (updated & (BIT(1) | BIT(7) | BIT(13)))
         SET_AEA_COMMON(regs);
-    if (updated & BIT(regs->aea_ar[USE_INST_SPACE]))
+    if (updated & BIT(regs->AEA_AR(USE_INST_SPACE)))
         INVALIDATE_AIA(regs);
     if (updated & BIT(9))
     {
@@ -5198,7 +5198,6 @@ int     r1, r2;                         /* Register values           */
     if((regs->GR_L(r1) & PFMF_RESERVED)
       || (!FACILITY_ENABLED(NONQ_KEY_SET,regs) && (regs->GR_L(r1) & PFMF_FMFI_NQ)))
         regs->program_interrupt (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
-
 
 // ZZ INCOMPLETE
 

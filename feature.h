@@ -624,20 +624,20 @@ z900_ ## _name
 #if defined(FEATURE_DUAL_ADDRESS_SPACE) && defined(FEATURE_LINKAGE_STACK)
 #define SET_AEA_COMMON(_regs) \
 do { \
-  (_regs)->aea_common[1]  = ((_regs)->CR(1)  & ASD_PRIVATE) == 0; \
-  (_regs)->aea_common[7]  = ((_regs)->CR(7)  & ASD_PRIVATE) == 0; \
-    (_regs)->aea_common[13] = ((_regs)->CR(13) & ASD_PRIVATE) == 0; \
+    (_regs)->AEA_COMMON(1)  = ((_regs)->CR(1)  & ASD_PRIVATE) == 0; \
+    (_regs)->AEA_COMMON(7)  = ((_regs)->CR(7)  & ASD_PRIVATE) == 0; \
+    (_regs)->AEA_COMMON(13) = ((_regs)->CR(13) & ASD_PRIVATE) == 0; \
 } while (0)
 #elif defined(FEATURE_DUAL_ADDRESS_SPACE)
   #define SET_AEA_COMMON(_regs) \
 do { \
-    (_regs)->aea_common[1]  = ((_regs)->CR(1)  & ASD_PRIVATE) == 0; \
-    (_regs)->aea_common[7]  = ((_regs)->CR(7)  & ASD_PRIVATE) == 0; \
+    (_regs)->AEA_COMMON(1)  = ((_regs)->CR(1)  & ASD_PRIVATE) == 0; \
+    (_regs)->AEA_COMMON(7)  = ((_regs)->CR(7)  & ASD_PRIVATE) == 0; \
 } while (0)
 #else
   #define SET_AEA_COMMON(_regs) \
 do { \
-    (_regs)->aea_common[1]  = ((_regs)->CR(1)  & ASD_PRIVATE) == 0; \
+    (_regs)->AEA_COMMON(1)  = ((_regs)->CR(1)  & ASD_PRIVATE) == 0; \
 } while (0)
 #endif
 
@@ -677,13 +677,13 @@ do { \
   #define SET_AEA_AR(_regs, _arn) \
   do \
   { \
-    if (ACCESS_REGISTER_MODE(&(_regs)->psw) && (_arn) > 0 && (_arn) < 16) { \
+    if (ACCESS_REGISTER_MODE(&(_regs)->psw) && (_arn) > 0) { \
       if ((_regs)->AR((_arn)) == ALET_PRIMARY) \
-        (_regs)->aea_ar[(_arn)] = 1; \
+        (_regs)->AEA_AR((_arn)) = 1; \
       else if ((_regs)->AR((_arn)) == ALET_SECONDARY) \
-        (_regs)->aea_ar[(_arn)] = 7; \
+        (_regs)->AEA_AR((_arn)) = 7; \
       else \
-        (_regs)->aea_ar[(_arn)] = 0; \
+        (_regs)->AEA_AR((_arn)) = 0; \
      } \
   } while (0)
 #else
@@ -715,12 +715,11 @@ do \
 #if defined(FEATURE_ACCESS_REGISTERS)
   #define _CASE_AR_SET_AEA_MODE(_regs) \
     case 2: /* AR */ \
-      (_regs)->aea_ar[USE_INST_SPACE] = 1; \
-      for(i = 0; i < 16; i++) \
-          (_regs)->aea_ar[i] = 1; \
+      for(i = USE_INST_SPACE; i < 16; i++) \
+          (_regs)->AEA_AR(i) = 1; \
       for (i = 1; i < 16; i++) { \
-        if ((_regs)->AR(i) == ALET_SECONDARY) (_regs)->aea_ar[i] = 7; \
-        else if ((_regs)->AR(i) != ALET_PRIMARY) (_regs)->aea_ar[i] = 0; \
+        if ((_regs)->AR(i) == ALET_SECONDARY) (_regs)->AEA_AR(i) = 7; \
+        else if ((_regs)->AR(i) != ALET_PRIMARY) (_regs)->AEA_AR(i) = 0; \
       } \
       break;
 #else
@@ -730,9 +729,9 @@ do \
 #if defined(FEATURE_DUAL_ADDRESS_SPACE)
   #define _CASE_DAS_SET_AEA_MODE(_regs) \
     case 3: /* SEC */ \
-      (_regs)->aea_ar[USE_INST_SPACE] = 1; \
+      (_regs)->AEA_AR(USE_INST_SPACE) = 1; \
       for(i = 0; i < 16; i++) \
-          (_regs)->aea_ar[i] = 7; \
+          (_regs)->AEA_AR(i) = 7; \
       break;
 #else
   #define _CASE_DAS_SET_AEA_MODE(_regs)
@@ -741,9 +740,8 @@ do \
 #if defined(FEATURE_LINKAGE_STACK)
   #define _CASE_HOME_SET_AEA_MODE(_regs) \
     case 4: /* HOME */ \
-      (_regs)->aea_ar[USE_INST_SPACE] = 13; \
-      for(i = 0; i < 16; i++) \
-          (_regs)->aea_ar[i] = 13; \
+      for(i = USE_INST_SPACE; i < 16; i++) \
+          (_regs)->AEA_AR(i) = 13; \
       break;
 #else
   #define _CASE_HOME_SET_AEA_MODE(_regs)
@@ -752,24 +750,22 @@ do \
 #define SET_AEA_MODE(_regs) \
 do { \
   int i; \
-  int inst_cr = (_regs)->aea_ar[USE_INST_SPACE]; \
+  int inst_cr = (_regs)->AEA_AR(USE_INST_SPACE); \
   BYTE oldmode = (_regs)->aea_mode; \
   (_regs)->aea_mode = AEA_MODE((_regs)); \
   switch ((_regs)->aea_mode & 0x0F) { \
     case 1: /* PRIM */ \
-      (_regs)->aea_ar[USE_INST_SPACE] = 1; \
-      for(i = 0; i < 16; i++) \
-          (_regs)->aea_ar[i] = 1; \
+      for(i = USE_INST_SPACE; i < 16; i++) \
+          (_regs)->AEA_AR(i) = 1; \
       break; \
     _CASE_AR_SET_AEA_MODE((_regs)) \
     _CASE_DAS_SET_AEA_MODE((_regs)) \
     _CASE_HOME_SET_AEA_MODE((_regs)) \
     default: /* case 0: REAL */ \
-      (_regs)->aea_ar[USE_INST_SPACE] = CR_ASD_REAL; \
-      for(i = 0; i < 16; i++) \
-          (_regs)->aea_ar[i] = CR_ASD_REAL; \
+      for(i = USE_INST_SPACE; i < 16; i++) \
+          (_regs)->AEA_AR(i) = CR_ASD_REAL; \
   } \
-  if (inst_cr != (_regs)->aea_ar[USE_INST_SPACE]) \
+  if (inst_cr != (_regs)->AEA_AR(USE_INST_SPACE)) \
     INVALIDATE_AIA((_regs)); \
   if ((oldmode & PSW_PERMODE) == 0 && ((_regs)->aea_mode & PSW_PERMODE) != 0) { \
     INVALIDATE_AIA((_regs)); \
@@ -784,10 +780,10 @@ do { \
   */
 #define MADDRL(_addr, _len, _arn, _regs, _acctype, _akey) \
  ( \
-       likely((_regs)->aea_ar[(_arn)]) \
+       likely((_regs)->AEA_AR((_arn))) \
    &&  likely( \
-              ((_regs)->CR((_regs)->aea_ar[(_arn)]) == (_regs)->tlb.TLB_ASD(TLBIX(_addr))) \
-           || ((_regs)->aea_common[(_regs)->aea_ar[(_arn)]] & (_regs)->tlb.common[TLBIX(_addr)]) \
+              ((_regs)->CR((_regs)->AEA_AR((_arn))) == (_regs)->tlb.TLB_ASD(TLBIX(_addr))) \
+           || ((_regs)->AEA_COMMON((_regs)->AEA_AR((_arn))) & (_regs)->tlb.common[TLBIX(_addr)]) \
              ) \
    &&  likely((_akey) == 0 || (_akey) == (_regs)->tlb.skey[TLBIX(_addr)]) \
    &&  likely((((_addr) & TLBID_PAGEMASK) | (_regs)->tlbID) == (_regs)->tlb.TLB_VADDR(TLBIX(_addr))) \
