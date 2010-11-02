@@ -144,7 +144,7 @@ INST37X_TABLE_START(b2)
  /*B2A5*/ INST37X (translate_extended,0xa5)
  /*B2A6*/ INST37X (convert_utf16_to_utf8,0xa6)
  /*B2A7*/ INST37X (convert_utf8_to_utf16,0xa7)
- /*B2B8*/ INST37X (set_bfp_rounding_mode_3bit,0xb8)                                /*810*/
+// /*B2B8*/ INST37X (set_bfp_rounding_mode_3bit,0xb8)                                /*810*/
 // /*B2BD*/ INST37X (load_fpc_and_signal,0xbd)
 INST37X_TABLE_END(b2)
 
