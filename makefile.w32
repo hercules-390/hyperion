@@ -216,7 +216,7 @@ HEADERS  = codepage.h commadpt.h cpuint.h ctcadpt.h dasdblks.h \
            hetlib.h hostinfo.h httpmisc.h htypes.h ieee-w32.h \
            inline.h linklist.h logger.h machdep.h opcode.h chsc.h \
            parser.h sllib.h tapedev.h tt32api.h tuntap.h version.h \
-           vstore.h w32chan.h w32ctca.h shared.h hdl.h crypto.h \
+           vstore.h w32chan.h w32ctca.h shared.h hdl.h \
            sockdev.h history.h sr.h hthreads.h hostopts.h w32util.h \
            hconsts.h hmacros.h hstructs.h hexterns.h hconsole.h
 

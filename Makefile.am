@@ -712,7 +712,6 @@ noinst_HEADERS = fishhang.h     \
                  hscutl.h       \
                  cmdtab.h       \
                  hdl.h          \
-                 crypto.h       \
                  sockdev.h      \
                  ltdl.h         \
                  herc_getopt.h  \

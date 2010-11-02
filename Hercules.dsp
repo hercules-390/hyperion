@@ -443,10 +443,6 @@ SOURCE=.\crypto.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\crypto.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\ctc_ctci.c
 # End Source File
 # Begin Source File

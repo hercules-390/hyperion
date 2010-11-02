@@ -1241,10 +1241,6 @@
 							>
 						</File>
 						<File
-							RelativePath=".\crypto.h"
-							>
-						</File>
-						<File
 							RelativePath=".\dat.h"
 							>
 						</File>
