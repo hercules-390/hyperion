@@ -16,13 +16,9 @@
 
 #if defined(FEATURE_MESSAGE_SECURITY_ASSIST)
 
-#include "opcode.h"
-
 #define CRYPTO_EXTERN
 #include "crypto.h"
 
-#ifndef __WK__
-#define __WK__
 /*----------------------------------------------------------------------------*/
 /* Function: renew_wrapping_keys                                              */
 /*                                                                            */
@@ -103,20 +99,5 @@ void renew_wrapping_keys(void)
   WRGMSG_OFF;
 #endif
 }
-#endif
 #endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
 
-#if !defined(_GEN_ARCH)
-
-#if defined(_ARCHMODE2)
- #define  _GEN_ARCH _ARCHMODE2
- #include "crypto.c"
-#endif
-
-#if defined(_ARCHMODE3)
- #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCHMODE3
- #include "crypto.c"
-#endif
-
-#endif /*!defined(_GEN_ARCH)*/
