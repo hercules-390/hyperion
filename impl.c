@@ -1011,16 +1011,12 @@ int     dll_count;                      /* index into array          */
 
     hdl_adsc("release_config", release_config, NULL);
 
-    sysblk.config_done = FALSE;
-
     /* Build system configuration */
     if ( build_config (cfgfile) )
     {
         delayed_exit(-1);
         return(1);
     }
-
-    sysblk.config_done = TRUE;
 
 #if defined(OPTION_HAO)
     /* Initialize the Hercules Automatic Operator */
