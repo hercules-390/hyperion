@@ -867,9 +867,6 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
 
     /* Print run totals, close files, and exit... */
 
-#define  ONE_MEGABYTE    ( 1024 * 1024 )
-#define  HALF_MEGABYTE   ( ONE_MEGABYTE / 2 )
-
     printf
     (
         MSG( HHC02724, "I" 

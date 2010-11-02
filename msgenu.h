@@ -904,6 +904,7 @@ int have_lock = 0; try_lock = 10; \
 
 /* hscmisc.c */
 #define HHC01420 "Begin Hercules shutdown"
+#define HHC01421 "Main Storage %sreconfigured to %s due to machine architecture change"
 #define HHC01422 "Configuration released"
 #define HHC01423 "Calling termination routines"
 #define HHC01424 "All termination routines complete"
@@ -1284,6 +1285,7 @@ int have_lock = 0; try_lock = 10; \
 #define HHC02308 "%s: Warning messages issued, review before executing"
 #define HHC02309 "%s: Record %d is unsupported record type %s; skipped"
 #define HHC02310 "Panel command %s is not supported in this build; see option %s"
+#define HHC02311 "%s completed"
 
 #define HHC02370 "%1d:%04X CU or LCU %s conflicts with existing CUNUM %04X SSID %04X CU/LCU %s"
 #define HHC02371 "%1d:%04X Adding device exceeds CU and/or LCU device limits"
@@ -1763,7 +1765,7 @@ int have_lock = 0; try_lock = 10; \
 #define HHC17000 "Missing or invalid argument(s)"
 #define HHC17001 "%s server listening %s"
 #define HHC17002 "%s server inactive"
-#define HHC17003 "%-8s storage is %sBytes '%ssize' "
+#define HHC17003 "%-8s storage is %sBytes '%ssize'; storage is %slocked"
 #define HHC17004 "CPUID  = "I64_FMTX""
 #define HHC17005 "CPC SI = %4.4X.%s.%s.%s.%16.16X"
 #define HHC17006 "LPARNAME[%2.2X] = %s"

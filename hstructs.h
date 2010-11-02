@@ -295,7 +295,7 @@ struct REGS {                           /* Processor registers       */
         U64     regs_copy_end;          /* Copy regs to here         */
      /* ------------------------------------------------------------ */
 
-     /* Runctime opcode tables, use replace_opcode to modify */
+     /* Runtime opcode tables, use replace_opcode to modify */
         const zz_func *s370_runtime_opcode_xxxx,
                *s370_runtime_opcode_e3________xx,
                *s370_runtime_opcode_eb________xx,
@@ -392,7 +392,7 @@ struct SYSBLK {
         BYTE   *storkeys;               /* -> Main storage key array */
         u_int   lock_mainstor:1;        /* Request mainstor to lock  */
         u_int   mainstor_locked:1;      /* Main storage locked       */
-        U32     xpndsize;               /* Expanded size (4K pages)  */
+        U32     xpndsize;               /* Expanded size in 4K pages */
         BYTE   *xpndstor;               /* -> Expanded storage       */
         u_int   lock_xpndstor:1;        /* Request xpndstor to lock  */
         u_int   xpndstor_locked:1;      /* Expanded storage locked   */

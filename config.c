@@ -124,7 +124,7 @@ int was_locked = sysblk.mainstor_locked;
             if (sysblk.mainstor_locked)
             {
                 WRMSG(HHC01429, "I", "main");
-                usleep(250);
+                log_wakeup(NULL);
                 munlock(sysblk.storkeys,
                         round_to_hostpagesize(sysblk.mainsize) +
                         round_to_hostpagesize(sysblk.mainsize / STORAGE_KEY_UNITSIZE));
@@ -163,7 +163,7 @@ int was_locked = sysblk.mainstor_locked;
                         if (was_locked)
                         {
                             WRMSG(HHC01428, "I", "main");
-                            usleep(250);
+                            log_wakeup(NULL);
                             mlock(storkeys, config_allocmsize);
                             sysblk.mainstor_locked = 1;
                         }
@@ -179,7 +179,7 @@ int was_locked = sysblk.mainstor_locked;
             if (sysblk.lock_mainstor)
             {
                 WRMSG(HHC01428, "I", "main");
-                usleep(250);
+                log_wakeup(NULL);
                 mlock(storkeys, storsize);
                 sysblk.mainstor_locked = 1;
             }
@@ -230,12 +230,12 @@ int was_locked = sysblk.mainstor_locked;
     return rc;
 }
 
-static U32 config_allocxsize = 0;
-int configure_xstorage(U32 mbxstor)
+static U32 config_allocxsize = 0;       // numbers of pages
+int configure_xstorage(RADR xstor)      // amount of memory
 {
 #ifdef _FEATURE_EXPANDED_STORAGE
 BYTE *xpndstor  = NULL;
-RADR  xpndsize  = 0;
+RADR  xpndsize  = xstor;
 int cpu;
 int rc = 0;
 int was_locked = sysblk.xpndstor_locked;
@@ -250,12 +250,9 @@ int was_locked = sysblk.xpndstor_locked;
             }
     RELEASE_INTLOCK(NULL);
 
-    /* Convert from configuration units to bytes */
-    xpndsize = mbxstor * 1024 * 1024;
-
     sysblk.xpnd_clear = 0;
 
-    if (xpndsize != config_allocxsize ||
+    if ( xpndsize != (RADR)( (RADR)config_allocxsize << XSTORE_PAGESHIFT ) ||
         sysblk.lock_xpndstor != sysblk.xpndstor_locked)
     {
 
@@ -264,15 +261,15 @@ int was_locked = sysblk.xpndstor_locked;
             if (sysblk.xpndstor_locked)
             {
                 WRMSG(HHC01428, "I", "expanded");
-                usleep(250);
-                munlock(sysblk.xpndstor, config_allocxsize);
+                log_wakeup(NULL);
+                munlock(sysblk.xpndstor,(RADR)( (RADR)config_allocxsize << XSTORE_PAGESHIFT ));
                 sysblk.xpndstor_locked = 0;
             }
             PVFREE(sysblk.xpndstor);
         }
 
         /* Obtain expanded storage */
-        if (xpndstor == 0)
+        if (xpndsize == 0)
         {
             sysblk.xpndstor = 0;
             sysblk.xpndsize = 0;
@@ -287,14 +284,14 @@ int was_locked = sysblk.xpndstor_locked;
                 char buf[64];
                 if (sysblk.xpndstor != NULL)
                 {
-                    xpndstor = PVALLOC((uintptr_t)config_allocxsize);
+                    xpndstor = PVALLOC((uintptr_t)((RADR)( (RADR)config_allocxsize << XSTORE_PAGESHIFT )));
                     if (xpndstor)
                     {
                         if (was_locked)
                         {
                             WRMSG(HHC01428, "I", "expanded");
-                            usleep(250);
-                            mlock(xpndstor, config_allocxsize);
+                            log_wakeup(NULL);
+                            mlock(xpndstor, (RADR)( (RADR)config_allocxsize << XSTORE_PAGESHIFT ));
                             sysblk.xpndstor_locked = 1;
                         }
                         sysblk.xpndstor = xpndstor;
@@ -306,7 +303,7 @@ int was_locked = sysblk.xpndstor_locked;
                       config_allocxsize = 0;
                     }
                 }
-                MSGBUF( buf, "malloc(%lu)", (unsigned long)(xpndsize / XSTORE_PAGESIZE));
+                MSGBUF( buf, "malloc(%"FRADR"u)", xpndsize );
                 WRMSG(HHC01430, "S", buf, strerror(errno));
                 return -1;
             }
@@ -314,13 +311,12 @@ int was_locked = sysblk.xpndstor_locked;
             if (sysblk.lock_xpndstor)
             {
                 WRMSG(HHC01428, "I", "expanded");
-                usleep(250);
+                log_wakeup(NULL);
                 mlock(xpndstor, xpndsize);
                 sysblk.xpndstor_locked = 1;
             }
-            config_allocxsize = xpndsize;
+            sysblk.xpndsize = config_allocxsize = (U32)(xpndsize >> XSTORE_PAGESHIFT );
             sysblk.xpndstor = xpndstor;
-            sysblk.xpndsize = xpndsize / XSTORE_PAGESIZE;
         }
     }
 

@@ -132,6 +132,54 @@
 #endif
 
 /*-------------------------------------------------------------------*/
+/* some handy quantity definitions                                   */
+/*-------------------------------------------------------------------*/
+#define  ONE_KILOBYTE   ((U32)(1024))                       /* 2^10 (16^2)  * 4  */
+#define  _64_KILOBYTE    ((U32)(64 * 1024))                  /* 2^16 (16^4)       */
+#define  HALF_MEGABYTE  ((U32)(512 * 1024))                 /* 2^19 (16^4)  * 8  */
+#define  ONE_MEGABYTE   ((U32)(1024 * 1024))                /* 2^20 (16^5)       */
+#define  ONE_GIGABYTE   ((U64)ONE_MEGABYTE * (U64)(1024))   /* 2^30 (16^7)  * 4  */
+#define  ONE_TERABYTE   (ONE_GIGABYTE * (U64)(1024))        /* 2^40 (16^10)      */
+#define  ONE_PETABYTE   (ONE_TERABYTE * (U64)(1024))        /* 2^50 (16^12) * 4  */
+#define  ONE_EXABYTE    (ONE_PETABYTE * (U64)(1024))        /* 2^60 (16^15)      */
+
+#define  SHIFT_KILOBYTE 10
+#define  SHIFT_64KBYTE  16
+#define  SHIFT_MEGABYTE 20
+#define  SHIFT_GIGABYTE 30
+#define  SHIFT_TERABYTE 40
+#define  SHIFT_PETABYTE 50
+
+/* US VERSIONS */
+#define ONE_HUNDRED	    ((U32)(100))                            /* zeros = 2  */
+#define	ONE_THOUSAND	((U32)(1000))                           /* zeros = 3  */
+#define	ONE_MILLION	    ((U32)(1000 * 1000))		            /* zeros = 6  */
+#define ONE_BILLION	    ((U64)ONE_MILLION	* (U64)(1000))	    /* zeros = 9  */
+#define ONE_TRILLION	((U64)ONE_BILLION	* (U64)(1000))	    /* zeros = 12 */
+#define ONE_QUADRILLION ((U64)ONE_TRILLION	* (U64)(1000))	    /* zeros = 15 */
+#define ONE_QUINTILLION ((U64)ONE_QUADRILLION * (U64)(1000))	/* zeros = 18 */
+#define ONE_SEXTILLION  ((U64)ONE_QUINTILLION * (U64)(1000))	/* zeros = 21 */
+#define ONE_SEPTILLION  ((U64)ONE_SEXTILLION  * (U64)(1000))	/* zeros = 24 */
+
+/*-------------------------------------------------------------------*/
+/* some handy array/struct macros...                                 */
+/*-------------------------------------------------------------------*/
+#define mem_eq(_a,_b,_n)        (!memcmp(_a,_b,_n))
+#define mem_ne(_a,_b,_n)        (memcmp(_a,_b,_n))
+
+#define str_eq(_a,_b)           (!strcmp(_a,_b))
+#define str_ne(_a,_b)           (strcmp(_a,_b))
+
+#define str_eq_n(_a,_b,_n)      (!strncmp(_a,_b,_n))
+#define str_ne_n(_a,_b,_n)      (strncmp(_a,_b,_n))
+
+#define str_caseless_eq(_a,_b)      (!strcasecmp(_a,_b))
+#define str_caseless_ne(_a,_b)      (strcasecmp(_a,_b))
+
+#define str_caseless_eq_n(_a,_b,_n) (!strcasencmp(_a,_b,_n))
+#define str_caseless_ne_n(_a,_b,_n) (strcasencmp(_a,_b,_n))
+
+/*-------------------------------------------------------------------*/
 /* some handy array/struct macros...                                 */
 /*-------------------------------------------------------------------*/
 #ifndef   bzero
@@ -844,7 +892,7 @@ do { \
 #define _chain_routines_
 
 /*-------------------------------------------------------------------*/
-/* Chain macros for inline routines                                  */
+/* Define local macros for inline routines                           */
 /*-------------------------------------------------------------------*/
 
 #define anchor_id "Anchor->"
@@ -897,35 +945,20 @@ INLINE uintptr_t *chain_container(CHAIN *entry)
 
 INLINE CHAINBLK *chain_validate_entry_header(CHAIN *entry)
 {
-    CHAINBLK *anchor;
 
     /* Ensure valid entry pointers */
     chain_validate_pointer(entry);
     chain_validate_pointer(entry->anchor);
 
-    /* Set anchor */
-    anchor = entry->anchor;
-
     /* Make sure this is the anchor for a chain */
-    if (memcmp(anchor->anchoreye, anchor_id, aeyesize) != 0)
+    if (memcmp(entry->anchor->anchoreye, anchor_id, aeyesize))
         raise_chain_validation_error;
 
-    /* Validate eyecatchers (optimization matches gcc optimization) */
-    {
-        register u_int i = 0;
-        register char *a = anchor->eyecatcher;
-        register char *e = entry->eyecatcher;
-        for (i = 0; i < eyesize; i++)
-            if (a[i] < 0x20 || a[i] > 0x7E)
-                raise_chain_validation_error;
-        for (i = 0; i < eyesize; i++)
-            if (e[i] < 0x20 || e[i] > 0x7E)
-                raise_chain_validation_error;
-        for (i = 0; i < eyesize; i++)
-            if (a[i] != e[i])
-                raise_chain_validation_error;
-    }
-    return anchor;
+    /* Validate eyecatcher */
+    if (memcmp(entry->anchor->eyecatcher, entry->eyecatcher, eyesize))
+        raise_chain_validation_error;
+
+    return entry->anchor;
 }
 
 INLINE void chain_init_anchor(void *container, CHAINBLK *anchor, char *eyecatcher, const u_int containersize)
@@ -967,13 +1000,14 @@ INLINE void chain_init_entry(CHAINBLK *anchor, void *container, CHAIN *entry)
 INLINE void chain_first(CHAIN *entry)
 {
     register CHAINBLK *anchor = chain_validate_entry_header(entry);
-    if (anchor->first)
-    {
-        entry->next = anchor->first;
-        anchor->first = (uintptr_t *)entry;
-    }
-    else
+    if (!anchor->first)
         anchor->first = anchor->last = (uintptr_t *)entry;
+    else
+    {
+        CHAIN *next = (CHAIN *)anchor->first + entry->offset;
+        entry->next = anchor->first;
+        next->prev = anchor->first = (uintptr_t *)entry;
+    }
 }
 
 INLINE void chain_first_locked(CHAIN *entry)
@@ -1013,13 +1047,14 @@ INLINE void chain_after(CHAIN *entry, CHAIN *after)
 INLINE void chain_last(CHAIN *entry)
 {
     register CHAINBLK *anchor = chain_validate_entry_header(entry);
-    if (anchor->last)
-    {
-        entry->prev = anchor->last;
-        anchor->last = (uintptr_t *)entry;
-    }
-    else
+    if (!anchor->last)
         anchor->first = anchor->last = (uintptr_t *)entry;
+    else
+    {
+        CHAIN *prev = (CHAIN *)anchor->last + entry->offset;
+        entry->prev = anchor->last;
+        prev->next = anchor->last = (uintptr_t *)entry;
+    }
 }
 
 INLINE void chain_last_locked(CHAIN *entry)
@@ -1106,28 +1141,45 @@ INLINE void unchain_locked(CHAIN *entry)
 
 
 /*-------------------------------------------------------------------*/
+/* Chain aliases                                                     */
+/*-------------------------------------------------------------------*/
+
+INLINE void chain(CHAIN *entry)
+{chain_last(entry);}
+
+
+/*-------------------------------------------------------------------*/
 /* Queue aliases                                                     */
 /*-------------------------------------------------------------------*/
 
-#define chain_locked            chain_last_locked
-#define chain                   chain_last
+#define QUEUEBLK    CHAINBLK
+#define QUEUE       CHAIN
+
+INLINE void queue_init_anchor(void *container, CHAINBLK *anchor, char *eyecatcher, const u_int containersize)
+{chain_init_anchor(container, anchor, eyecatcher, containersize);}
+
+INLINE void queue_init_entry(CHAINBLK *anchor, void *container, CHAIN *entry)
+{chain_init_entry(anchor, container, entry);}
+
+INLINE void queue(CHAIN *entry)
+{chain_last(entry);}
+
+INLINE void queue_fifo(CHAIN *entry)
+{chain_last(entry);}
+
+INLINE void queue_lifo(CHAIN *entry)
+{chain_first(entry);}
+
+INLINE uintptr_t *dequeue_locked(CHAINBLK *anchor)
+{return unchain_first_locked(anchor);}
+
+INLINE uintptr_t *dequeue(CHAINBLK *anchor)
+{return unchain_first(anchor);}
 
 
 /*-------------------------------------------------------------------*/
-/* Queue aliases                                                     */
+/* Undefine local macros                                             */
 /*-------------------------------------------------------------------*/
-
-#define QUEUEBLK CHAINBLK
-#define QUEUE   CHAIN
-
-#define queue_init_anchor       chain_init_anchor
-#define queue_init_entry        chain_init_entry
-#define queue_lifo              chain_first
-#define queue_fifo              chain_last
-#define queue                   chain_last
-
-#define dequeue_locked          unchain_first_locked
-#define dequeue                 unchain_first
 
 #undef chain_validate_pointer
 #undef raise_chain_validation_error

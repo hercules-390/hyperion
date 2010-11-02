@@ -75,15 +75,6 @@
 #include "dasdtab.h"
 #include "ctcadpt.h"
 
-#define  ONE_KILOBYTE   ((U32)(1024))                /* 2^10     (16^2)  * 4  */
-#define  HALF_MEGABYTE  ((U32)(512 * 1024))          /* 2^19     (16^4)  * 8  */
-#define  ONE_MEGABYTE   ((U64)(1024 * 1024))         /* 2^20     (16^5)       */
-#define  ONE_GIGABYTE   (ONE_MEGABYTE * (U64)(1024)) /* 2^30     (16^7)  * 4  */
-#define  ONE_TERABYTE   (ONE_GIGABYTE * (U64)(1024)) /* 2^40     (16^10)      */
-#define  ONE_PETABYTE   (ONE_TERABYTE * (U64)(1024)) /* 2^50     (16^12) * 4  */
-#define  ONE_EXABYTE    (ONE_PETABYTE * (U64)(1024)) /* 2^60     (16^15)      */
-
-
 // (forward references, etc)
 
 #define MAX_DEVLIST_DEVICES  1024
@@ -2545,12 +2536,13 @@ BYTE    f = ' ', c = '\0';
 int     rc;
 u_int   i;
 char    check[16];
+char *q_argv[2] = { "qstor", "main" };
+
 
     UNREFERENCED(cmdline);
 
     if ( argc < 2 )
     {
-        char *q_argv[2] = { "qstor", "main" };
         return qstor_cmd( 2, q_argv, "qstor main" );
     }
 
@@ -2565,31 +2557,29 @@ char    check[16];
 
     if ( rc == 2 )
     {
-        switch (f)
+        switch (toupper(f))
         {
-        case 'k':
         case 'K':
-            mainsize *= (U64)ONE_KILOBYTE;
+            mainsize <<= SHIFT_KILOBYTE;
             break;
-        case 'm':
         case 'M':
-            mainsize *= ONE_MEGABYTE;
+            mainsize <<= SHIFT_MEGABYTE;
             break;
-        case 'g':
         case 'G':
-            mainsize *= ONE_GIGABYTE;
+            mainsize <<= SHIFT_GIGABYTE;
             break;
-        case 't':
+#if SIZEOF_SIZE_T >= 8
         case 'T':
-            mainsize *= ONE_TERABYTE;
+            mainsize <<= SHIFT_TERABYTE;
             break;
+#endif
         default:
             WRMSG( HHC01451, "E", argv[1], argv[0]);
             return -1;
         }
     }
     else
-        mainsize *= ONE_MEGABYTE;
+        mainsize <<= SHIFT_MEGABYTE;
 
     if ( sysblk.arch_mode != ARCH_370 )
     {
@@ -2601,7 +2591,7 @@ char    check[16];
     }
     else
     {
-        if ( mainsize < (U64)(64*ONE_KILOBYTE) )
+        if ( mainsize < (U64)(_64_KILOBYTE) )
         {
             WRMSG( HHC01451, "E", argv[1], argv[0]);
             return -1;
@@ -2635,7 +2625,7 @@ char    check[16];
     if ( rc >= 0 )
     {
         if (MLVL(VERBOSE))
-                WRMSG( HHC02204, "I", argv[0], argv[1] );
+            qstor_cmd( 2, q_argv, "qstor main" );
     }
     else if ( rc < 0 )
     {
@@ -2658,29 +2648,76 @@ char    check[16];
 /*-------------------------------------------------------------------*/
 int xpndsize_cmd(int argc, char *argv[], char *cmdline)
 {
-U32     xpndsize;
-BYTE    c;
+RADR    xpndsize;
+BYTE    f = ' ', c = '\0';
 int     rc;
 u_int   i;
 char    check[16];
+char *q_argv[2] = { "qstor", "xpnd" };
 
     UNREFERENCED(cmdline);
 
     if ( argc == 1 )
     {
-        char *q_argv[2] = { "qstor", "xpnd" };
         return qstor_cmd( 2, q_argv, "qstor xpnd" );
     }
 
     /* Parse expanded storage size operand */
-    if (sscanf(argv[1], "%u%c", &xpndsize, &c) != 1
-        || xpndsize > (0x100000000ULL / XSTORE_PAGESIZE) - 1
-        || (xpndsize > 4095 && sizeof(size_t) < 8))
+    rc = sscanf(argv[1], "%"FRADR"u%c%c", &xpndsize, &f, &c);
+
+    if (rc > 2 )
     {
         WRMSG( HHC01451, "E", argv[1], argv[0] );
         return -1;
     }
 
+    if ( rc == 2 )
+    {
+        switch (toupper(f))
+        {
+        case 'M':
+            xpndsize <<= SHIFT_MEGABYTE;
+            break;
+        case 'G':
+            if ( sizeof(xpndsize) < 8  && xpndsize > 2 )
+            {
+                WRMSG( HHC01451, "E", argv[1], argv[0]);
+                return -1;
+            }
+            xpndsize <<= SHIFT_GIGABYTE;
+            break;
+#if SIZEOF_SIZE_T >= 8
+        case 'T':
+            xpndsize <<= SHIFT_TERABYTE;
+            break;
+#endif
+        default:
+            WRMSG( HHC01451, "E", argv[1], argv[0]);
+            return -1;
+        }
+    }
+    else
+        xpndsize <<= SHIFT_MEGABYTE;
+
+    if ( sizeof(xpndsize) < 8 || sizeof(size_t) < 8 )
+    {
+        if (xpndsize > (RADR)(2 << SHIFT_GIGABYTE) )
+        {
+            WRMSG( HHC01451, "E", argv[1], argv[0]);
+            return -1;
+        }
+    }
+#if SIZEOF_SIZE_T >= 8
+    else
+    {
+        if (xpndsize > (RADR)((RADR)16 << SHIFT_TERABYTE) )  
+        {
+            WRMSG( HHC01451, "E", argv[1], argv[0]);
+            return -1;
+        }
+    }
+#endif
+    
     /* Process options */
     for (i = 2; (int)i < argc; i++)
     {
@@ -2701,7 +2738,7 @@ char    check[16];
     {
         if (MLVL(VERBOSE))
         {
-            WRMSG( HHC02204, "I", argv[0], argv[1] );
+            qstor_cmd( 2, q_argv, "qstor xpnd" );
         }
     }
     else
@@ -7394,7 +7431,7 @@ int qstor_cmd(int argc, char *argv[], char *cmdline)
             MSGBUF( buf, "%3.3" I64_FMT "d K", sysblk.mainsize >> 10 );
         }
 
-        WRMSG( HHC17003, "I", "MAIN", buf, "main" );
+        WRMSG( HHC17003, "I", "MAIN", buf, "main", sysblk.mainstor_locked ? "":"not " );
     }
     if ( display_xpnd )
     {
@@ -7418,7 +7455,7 @@ int qstor_cmd(int argc, char *argv[], char *cmdline)
         {
             MSGBUF( buf, "%3.3" I64_FMT "d M", xpndsize >> 20 );
         }
-        WRMSG( HHC17003, "I", "EXPANDED", buf, "xpnd" );
+        WRMSG( HHC17003, "I", "EXPANDED", buf, "xpnd", sysblk.xpndstor_locked ? "":"not "  );
     }
     return 0;
 }

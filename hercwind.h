@@ -234,7 +234,7 @@ inline void DebugTrace(char* fmt, ...)
     }
     while (rc < 0 || rc >= buffsize);
     OutputDebugStringA( buffer );
-    free( buffer );
+    if (buffer) free( buffer );
     va_end( args );
 }
 

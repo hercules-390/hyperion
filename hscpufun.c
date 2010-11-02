@@ -301,7 +301,13 @@ static int reset_cmd(int ac,char *av[],char *cmdline,int clear)
 /*-------------------------------------------------------------------*/
 int sysreset_cmd(int ac,char *av[],char *cmdline)
 {
-    return reset_cmd(ac,av,cmdline,0);
+    int rc = reset_cmd(ac,av,cmdline,0);
+    if ( rc >= 0 )
+    {
+        WRMSG( HHC02311, "I", av[0] );
+    }
+
+    return rc;
 }
 
 
@@ -310,7 +316,14 @@ int sysreset_cmd(int ac,char *av[],char *cmdline)
 /*-------------------------------------------------------------------*/
 int sysclear_cmd(int ac,char *av[],char *cmdline)
 {
-    return reset_cmd(ac,av,cmdline,1);
+    int rc = reset_cmd(ac,av,cmdline,1);
+
+    if ( rc >= 0 )
+    {
+        WRMSG( HHC02311, "I", av[0] );
+    }
+
+    return rc;
 }
 
 

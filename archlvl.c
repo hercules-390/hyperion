@@ -354,6 +354,15 @@ ARCHTAB *tb;
         set_alslevel(tb->alslevel);
         if (sysblk.cpus != 0)
             request_pending = TRUE;
+        else
+        {
+            if ( sysblk.mainsize < ONE_MEGABYTE && sysblk.arch_mode != ARCH_370 )
+            {
+                int rc;
+                rc = configure_storage((U64)ONE_MEGABYTE);
+                WRMSG( HHC01421, "I", "will be ", "1 Mbyte" );
+            }
+        }
 
 #if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
         set_symbol( "ARCHMODE", get_arch_mode_string(NULL) );
@@ -768,6 +777,11 @@ int archlvl_cmd(int argc, char *argv[], char *cmdline)
     ios_arch_mode = sysblk.arch_mode;
 #endif /* defined(OPTION_FISHIO) */
 
+    if ( argc == 2 )
+    {
+        char *q_argv[1] = { "archmode" };
+        return archlvl_cmd( 1, q_argv, "archmode" );
+    }
 
     return 0;
 }
