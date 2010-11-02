@@ -3918,7 +3918,7 @@ static void ARCH_DEP(pckmo_aes)(REGS *regs)
 /*----------------------------------------------------------------------------*/
 /* B93E KIMD  - Compute intermediate message digest                     [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(_compute_intermediate_message_digest)
+DEF_INST(compute_intermediate_message_digest)
 {
   int msa;
   BYTE query_bits[][16] =
@@ -4022,7 +4022,7 @@ DEF_INST(_compute_intermediate_message_digest)
 /*----------------------------------------------------------------------------*/
 /* B93F KLMD  - Compute last message digest                             [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(_compute_last_message_digest)
+DEF_INST(compute_last_message_digest)
 {
   int msa;
   BYTE query_bits[][16] =
@@ -4114,7 +4114,7 @@ DEF_INST(_compute_last_message_digest)
 /*----------------------------------------------------------------------------*/
 /* B92E KM    - Cipher message                                          [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(_cipher_message)
+DEF_INST(cipher_message)
 {
   int msa;
   BYTE query_bits[][16] =
@@ -4250,7 +4250,7 @@ DEF_INST(_cipher_message)
 /*----------------------------------------------------------------------------*/
 /* B91E KMAC  - Compute message authentication code                     [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(_compute_message_authentication_code)
+DEF_INST(compute_message_authentication_code)
 {
   int msa;
   BYTE query_bits[][16] =
@@ -4350,7 +4350,7 @@ DEF_INST(_compute_message_authentication_code)
 /*----------------------------------------------------------------------------*/
 /* B92F KMC   - Cipher message with chaining                            [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(_cipher_message_with_chaining)
+DEF_INST(cipher_message_with_chaining)
 {
   int msa;
   BYTE query_bits[][16] =
@@ -4484,7 +4484,7 @@ DEF_INST(_cipher_message_with_chaining)
 /*----------------------------------------------------------------------------*/
 /* B92D KMCTR - Cipher message with counter                             [RRF] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(_cipher_message_with_counter)
+DEF_INST(cipher_message_with_counter)
 {
   int msa;
   BYTE query_bits[][16] =
@@ -4577,7 +4577,7 @@ DEF_INST(_cipher_message_with_counter)
 /*----------------------------------------------------------------------------*/
 /* B92A KMF   - Cipher message with cipher feedback                     [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(_cipher_message_with_cipher_feedback)
+DEF_INST(cipher_message_with_cipher_feedback)
 {
   int msa;
   BYTE query_bits[][16] =
@@ -4670,7 +4670,7 @@ DEF_INST(_cipher_message_with_cipher_feedback)
 /*----------------------------------------------------------------------------*/
 /* B92B KMO   - Cipher message with output feedback                     [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(_cipher_message_with_output_feedback)
+DEF_INST(cipher_message_with_output_feedback)
 {
   int msa;
   BYTE query_bits[][16] =
@@ -4760,7 +4760,7 @@ DEF_INST(_cipher_message_with_output_feedback)
 /*----------------------------------------------------------------------------*/
 /* B92C PCC   - Perform cryptographic computation                       [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(_perform_cryptographic_computation)
+DEF_INST(perform_cryptographic_computation)
 {
   int msa;
   BYTE query_bits[][16] =
@@ -4864,7 +4864,7 @@ DEF_INST(_perform_cryptographic_computation)
 /*----------------------------------------------------------------------------*/
 /* B928 PCKMO - Perform cryptographic key management operation          [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(_perform_cryptographic_key_management_operation)
+DEF_INST(perform_cryptographic_key_management_operation)
 {
   int fc;
   int msa;
@@ -4973,16 +4973,16 @@ END_DEPENDENCY_SECTION;
 
 HDL_INSTRUCTION_SECTION;
 {
-  HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB93E,_compute_intermediate_message_digest);
-  HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB93F,_compute_last_message_digest);
-  HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB92E,_cipher_message);
-  HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB91E,_compute_message_authentication_code);
-  HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB92F,_cipher_message_with_chaining);
-  HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB92D,_cipher_message_with_counter);
-  HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB92A,_cipher_message_with_cipher_feedback);
-  HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB92B,_cipher_message_with_output_feedback);
-  HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB92C,_perform_cryptographic_computation);
-  HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB928,_perform_cryptographic_key_management_operation);
+  HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB93E,compute_intermediate_message_digest);
+  HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB93F,compute_last_message_digest);
+  HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB92E,cipher_message);
+  HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB91E,compute_message_authentication_code);
+  HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB92F,cipher_message_with_chaining);
+  HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB92D,cipher_message_with_counter);
+  HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB92A,cipher_message_with_cipher_feedback);
+  HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB92B,cipher_message_with_output_feedback);
+  HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB92C,perform_cryptographic_computation);
+  HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB928,perform_cryptographic_key_management_operation);
 }
 END_INSTRUCTION_SECTION;
 
