@@ -792,13 +792,18 @@ and how they are used.
     <p>
 
 <a name="MAINSIZE"></a>
-<dt><code>MAINSIZE &nbsp; <em>nnnn</em></code>
+<dt><code>MAINSIZE &nbsp; <em>nnnn</em>  &#124; nnnK &#124; nnnM &#124; nnnG &#124; nnnT</code>
 <dd><p>
     specifies the main storage size in megabytes, where
-    <code><em>nnnn</em></code>&nbsp; is a decimal number. The lower limit is 2.
-    The actual upper limit is determined by your host system's architecture
-    and operating system, and (on some systems) the amount of physical
-    memory and paging space you have available.
+    <code><em>nnnn</em></code>&nbsp; is a decimal number. 
+    <p>
+    Or, nnnM where M is either K - KILO, M - MEGA, G - GIGA, or T - TERA - BYTES 
+    <p>
+    In archmode S/370, the storage must be 64K or greater, otherwise, the storage must be
+    1 megabyte or greater. The actual upper limit is determined by your host 
+    system's architecture and operating system, and (on some systems) the amount of physical
+    memory and paging space you have available. Host systems with a 32-bit architecture will be limited
+    to less than 4 Gigabyte.  
     <p>
 
 <a name="MANUFACTURER"></a>
@@ -1191,13 +1196,14 @@ and how they are used.
     <p>
 
 <a name="XPNDSIZE"></a>
-<dt><code>XPNDSIZE &nbsp; <em>nnnn</em></code>
+<dt><code>XPNDSIZE &nbsp; <em>nnnn</em> &#124; nnnM &#124; nnnG &#124; nnnT</code>
 <dd><p>
     specifies the expanded storage size in megabytes, where
     <code><em>nnnn</em></code> is a decimal number. The lower limit is 0.
-    The actual upper limit is determined by your host system's architecture
-    and operating system, and (on some systems) the amount of physical
-    memory and paging space you have available.
+    The actual upper limit is determined by your host system's architecture, 
+    the architecture selected, and operating system, and (on some systems) the amount of physical
+    memory and paging space you have available. Host systems with a 32-bit architecture will 
+    be limited 2 Gigabytes, 64-bit machines will be limited to 16 Terabytes.
     <p>
 
 <a name="YROFFSET"></a>
