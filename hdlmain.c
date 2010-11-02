@@ -17,9 +17,6 @@
 
 #include "httpmisc.h"
 
-#define CRYPTO_EXTERN extern
-#include "crypto.h"
-
 
 #if !defined(_GEN_ARCH)
 

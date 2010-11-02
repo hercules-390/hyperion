@@ -7,17 +7,11 @@
 
 // $Id$
 
-#include "hstdinc.h"
-
 #define _CRYPTO_C_
-#define _HENGINE_DLL_
 
 #include "hercules.h"
 
 #if defined(FEATURE_MESSAGE_SECURITY_ASSIST)
-
-#define CRYPTO_EXTERN
-#include "crypto.h"
 
 /*----------------------------------------------------------------------------*/
 /* Function: renew_wrapping_keys                                              */

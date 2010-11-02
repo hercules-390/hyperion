@@ -7,16 +7,3 @@
 
 // $Id$
 
-#if defined(_FEATURE_MESSAGE_SECURITY_ASSIST)
-
-#ifndef _CRYPTO_C_
-#ifndef _HENGINE_DLL_
-#define CRY_DLL_IMPORT DLL_IMPORT
-#else   /* _HDASD_DLL_ */
-#define CRY_DLL_IMPORT extern
-#endif  /* _HDASD_DLL_ */
-#else
-#define CRY_DLL_IMPORT DLL_EXPORT
-#endif
-
-#endif /*defined(_FEATURE_MESSAGE_SECURITY_ASSIST)*/

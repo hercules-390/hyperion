@@ -40,9 +40,6 @@
 
 #include "inline.h"
 
-#define CRYPTO_EXTERN extern
-#include "crypto.h"
-
 #include "clock.h"
 
 
