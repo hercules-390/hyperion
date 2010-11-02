@@ -65,6 +65,9 @@ static void init_dyninst()
 {
   int i;
 
+  logmsg("\ndyninst is deprecated, use HDL_DEFINST to replace instructions\n"); 
+  logmsg("Please refer to README.HDL for details on the use of HDL_DEFINST\n\n");
+
   for(i = 0; i < MAXDYNINST; i++)
   {
     dyninst[i].opcode1 = 0;
@@ -111,24 +114,48 @@ static void update_dyninst()
           dyninst_index++;
         }
       }
-      for(opcode2 = 0; opcode2 < 0x100 && dyninst_index < MAXDYNINST; opcode2++)
-      {
-        snprintf(name, sizeof(name), "%s%02X%02X", prefix[arch], opcode1, opcode2);
-        newinst = HDL_FINDSYM(name);
-        if(newinst)
-        {
-          oldinst = replace_opcode(arch, newinst, opcode1, opcode2);
-          if(oldinst)
+
+      switch(opcode1) {
+        case 0x01:
+        case 0xa4:
+        case 0xa6:
+        case 0xb2:
+        case 0xb3:
+        case 0xb9:
+        case 0xe4:
+        case 0xe5:
+        case 0xe6:
+        case 0xa5:
+        case 0xa7:
+        case 0xc0:
+        case 0xc2:
+        case 0xc4:
+        case 0xc6:
+        case 0xc8:
+        case 0xcc:
+        case 0xe3:
+        case 0xeb:
+        case 0xec:
+        case 0xed:
+          for(opcode2 = 0; opcode2 < 0x100 && dyninst_index < MAXDYNINST; opcode2++)
           {
-            dyninst[dyninst_index].opcode1 = opcode1;
-            dyninst[dyninst_index].opcode2 = opcode2;
-            dyninst[dyninst_index].arch = arch;
-            dyninst[dyninst_index].newinst = newinst;
-            dyninst[dyninst_index].oldinst = oldinst;
-            dyninst_index++;
+            snprintf(name, sizeof(name), "%s%02X%02X", prefix[arch], opcode1, opcode2);
+            newinst = HDL_FINDSYM(name);
+            if(newinst)
+            {
+              oldinst = replace_opcode(arch, newinst, opcode1, opcode2);
+              if(oldinst)
+              {
+                dyninst[dyninst_index].opcode1 = opcode1;
+                dyninst[dyninst_index].opcode2 = opcode2;
+                dyninst[dyninst_index].arch = arch;
+                dyninst[dyninst_index].newinst = newinst;
+                dyninst[dyninst_index].oldinst = oldinst;
+                dyninst_index++;
+              }
+            }
           }
-        }
-      }
+       }
     }
   }
 }
