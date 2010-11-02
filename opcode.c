@@ -44,7 +44,7 @@
 #include "opcode.h"
 
 #define UNDEF_INST(_x) \
-        DEF_INST(_x) { ARCH_DEP(operation_exception) \
+ static DEF_INST(_x) { ARCH_DEP(operation_exception) \
         (inst,regs); }
 
 
