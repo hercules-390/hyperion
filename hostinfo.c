@@ -1,4 +1,5 @@
 /* HOSTINFO.C   (c) Copyright "Fish" (David B. Trout), 2002-2009     */
+/*              (c) Copyright TurboHercules, SAS 2010                */
 /*                 Hercules functions to set/query host information  */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -49,6 +50,8 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
 
         memcpy(pHostInfo->blkend, buf, sizeof(pHostInfo->blkend));
     }
+    
+    pHostInfo->hostpagesz = (RADR)getpagesize();
 
 #if defined(_MSVC_)
     w32_init_hostinfo( pHostInfo );
@@ -103,7 +106,23 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
         
         mib[1] = HW_CACHELINE;
         sysctl( mib, 2, &iRV, &length, NULL, 0 );
-        pHostInfo->dwAllocationGranularity = iRV;
+        pHostInfo->cachelinesz = iRV;
+
+        mib[1] = HW_L1ICACHESIZE;
+        sysctl( mib, 2, &iRV, &length, NULL, 0 );
+        pHostInfo->L1Icachesz = iRV;
+
+        mib[1] = HW_L1DCACHESIZE;
+        sysctl( mib, 2, &iRV, &length, NULL, 0 );
+        pHostInfo->L1Dcachesz = iRV;
+
+        mib[1] = HW_L2CACHESIZE;
+        sysctl( mib, 2, &iRV, &length, NULL, 0 );
+        pHostInfo->L2cachesz = iRV;
+
+        mib[1] = HW_L3CACHESIZE;
+        sysctl( mib, 2, &iRV, &length, NULL, 0 );
+        pHostInfo->L3cachesz = iRV;
 
         mib[0] = CTL_VM;
         length = (size_t)sizeof(xsu);
@@ -115,8 +134,77 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
         pHostInfo->ullAvailPageFile = xsu.xsu_avail;
     }
 #endif
-    pHostInfo->hostpagesz = (RADR)getpagesize();
 
+    if (MLVL(DEBUG))
+    {
+        char msgbuf[256];
+
+        MSGBUF( msgbuf, "%-17s = %s", "sysname", pHostInfo->sysname );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %s", "nodename", pHostInfo->nodename );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %s", "release", pHostInfo->release );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %s", "version", pHostInfo->version );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %s", "machine", pHostInfo->machine );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %s", "trycritsec_avail", pHostInfo->trycritsec_avail ? "YES" : "NO" );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %d", "num_procs", pHostInfo->num_procs );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %"FRADR"u", "hostpagesz", pHostInfo->hostpagesz );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %"FRADR"u", "dwAllocationGranularity", pHostInfo->dwAllocationGranularity );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %"FRADR"u", "cachelinesz", pHostInfo->cachelinesz );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %"FRADR"u", "L1Dcachesz", pHostInfo->L1Dcachesz );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %"FRADR"u", "L1Icachesz", pHostInfo->L1Icachesz );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %"FRADR"u", "L1Ucachesz", pHostInfo->L1Ucachesz );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %"FRADR"u", "L2cachesz", pHostInfo->L2cachesz );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %"FRADR"u", "L3cachesz", pHostInfo->L3cachesz );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %"FRADR"u", "ullTotalPhys", pHostInfo->ullTotalPhys );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %"FRADR"u", "ullAvailPhys", pHostInfo->ullAvailPhys );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %"FRADR"u", "ullTotalPageFile", pHostInfo->ullTotalPageFile );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %"FRADR"u", "ullAvailPageFile", pHostInfo->ullAvailPageFile );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %"FRADR"u", "ullTotalVirtual", pHostInfo->ullTotalVirtual );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %"FRADR"u", "ullAvailVirtual", pHostInfo->ullAvailVirtual );
+        WRMSG( HHC90000, "D", msgbuf );
+
+    }
+
+    return;
 }
 
 /*-------------------------------------------------------------------*/

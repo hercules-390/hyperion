@@ -1,4 +1,5 @@
 /* HOSTINFO.H   (c) Copyright "Fish" (David B. Trout), 2002-2009     */
+/*              (c) Copyright TurboHercules, SAS 2010                */
 /*            Header file contains host system information           */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -45,7 +46,12 @@ typedef struct HOST_INFO
         int     trycritsec_avail;       /* 1=TryEnterCriticalSection */
         int     num_procs;              /* #of processors            */
         RADR    hostpagesz;             /* Host page size            */
-        u_long  dwMemoryLoad;
+        RADR    cachelinesz;            /* cache line size           */
+        RADR    L1Icachesz;             /* cache size L1 Inst        */
+        RADR    L1Dcachesz;             /* cache size L1 Data        */
+        RADR    L1Ucachesz;             /* cache size L1 Unified     */
+        RADR    L2cachesz;              /* cache size L2             */
+        RADR    L3cachesz;              /* cache size L3             */
         RADR    dwAllocationGranularity;
         RADR    ullTotalPhys;
         RADR    ullAvailPhys;

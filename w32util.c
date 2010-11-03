@@ -1235,6 +1235,7 @@ DLL_EXPORT int expand_environ_vars( const char* inbuff, char* outbuff, DWORD out
 
 typedef void (WINAPI *PGNSI)(LPSYSTEM_INFO);
 typedef BOOL (WINAPI *PGPI)(DWORD, DWORD, DWORD, DWORD, PDWORD);
+typedef BOOL (WINAPI *LPFN_GLPI)(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION, PDWORD);
 
 DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
 {
@@ -1246,6 +1247,11 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
     char             *psz = "", *prod_id = "", *prod_proc = "";
     DWORD             dw;
     PGNSI             pgnsi;
+    LPFN_GLPI         glpi;
+    PSYSTEM_LOGICAL_PROCESSOR_INFORMATION buffer = NULL;
+    PSYSTEM_LOGICAL_PROCESSOR_INFORMATION ptr = NULL;
+    PCACHE_DESCRIPTOR Cache;
+
 #if _MSC_VER >= 1500 // && defined(PRODUCT_ULTIMATE_E)
     PGPI              pgpi;
 #endif /* VS9 && SDK7 */
@@ -1256,7 +1262,6 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
 
     ms.dwLength = sizeof(ms);
     GlobalMemoryStatusEx(&ms);
-    pHostInfo->dwMemoryLoad = ms.dwMemoryLoad;
     pHostInfo->ullTotalPhys = ms.ullTotalPhys;
     pHostInfo->ullAvailPhys = ms.ullAvailPhys;
     pHostInfo->ullTotalPageFile = ms.ullTotalPageFile;
@@ -1268,7 +1273,88 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
     GetComputerName( pHostInfo->nodename, &dw );
     pHostInfo->nodename[sizeof(pHostInfo->nodename)-1] = 0;
 
-    pgnsi = (PGNSI) GetProcAddress( GetModuleHandle(TEXT("kernal32.dll")),
+    glpi = (LPFN_GLPI) GetProcAddress( GetModuleHandle(TEXT("kernel32.dll")),
+                                   "GetLogicalProcessorInformation"); 
+    if ( glpi != NULL )
+    {
+        BOOL done = FALSE;
+        DWORD       retlen = 0;
+        
+        while (!done)
+        {
+            DWORD rc = glpi( buffer, &retlen );
+            
+            if ( rc == FALSE )
+            {
+                if ( GetLastError() == ERROR_INSUFFICIENT_BUFFER )
+                {
+                    if (buffer)
+                        free(buffer);
+
+                    buffer = (PSYSTEM_LOGICAL_PROCESSOR_INFORMATION)malloc(retlen);
+
+                    if (buffer == NULL)
+                        break;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            else
+                done = TRUE;
+        }
+
+        if ( done == TRUE )
+        {
+            DWORD byteOffset = 0;
+            ptr = buffer;
+
+            pHostInfo->cachelinesz = 0;
+
+            while (byteOffset + sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION) <= retlen)
+            {
+                if ( ptr->Relationship == RelationCache )
+                {
+                    Cache = &ptr->Cache;
+
+                    if ( pHostInfo->cachelinesz == 0 )
+                        pHostInfo->cachelinesz = Cache->LineSize;
+
+                    if (Cache->Level == 1 && Cache->Type == CacheData)
+                    {
+                        pHostInfo->L1Dcachesz = Cache->Size;
+                    }
+                    if (Cache->Level == 1 && Cache->Type == CacheInstruction)
+                    {
+                        pHostInfo->L1Icachesz = Cache->Size;
+                    }
+                    if (Cache->Type == CacheUnified)
+                    {
+                        if (Cache->Level == 1)
+                        {
+                            pHostInfo->L1Ucachesz = Cache->Size;
+                        }
+                        if (Cache->Level == 2)
+                        {
+                            pHostInfo->L2cachesz = Cache->Size;
+                        }
+                        if (Cache->Level == 3)
+                        {
+                            pHostInfo->L3cachesz = Cache->Size;
+                        }
+                    }
+                }
+                byteOffset += sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION);
+                ptr++;
+            }
+
+            if (buffer) 
+                free(buffer);
+        }
+    }
+
+    pgnsi = (PGNSI) GetProcAddress( GetModuleHandle(TEXT("kernel32.dll")),
                                    "GetNativeSystemInfo");
     if (NULL != pgnsi)
         pgnsi( &si );
@@ -1780,6 +1866,9 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
     }
 
     DeleteCriticalSection( &cs );
+
+    return;
+
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
