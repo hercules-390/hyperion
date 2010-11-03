@@ -7,9 +7,10 @@
 
 // $Id$
 
-#define _CRYPTO_C_
-
+#include "hstdinc.h"
 #include "hercules.h"
+
+#define _CRYPTO_C_
 
 #if defined(FEATURE_MESSAGE_SECURITY_ASSIST)
 

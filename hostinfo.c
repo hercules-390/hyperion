@@ -18,6 +18,10 @@
 
 #include "hercules.h"
 
+#if defined(__APPLE__) || defined(__FreeBSD__)
+#include <sys/sysctl.h>
+#endif
+
 DLL_EXPORT HOST_INFO  hostinfo;     /* Host system information       */
 
 /*-------------------------------------------------------------------*/
