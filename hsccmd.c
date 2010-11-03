@@ -7405,54 +7405,57 @@ int qstor_cmd(int argc, char *argv[], char *cmdline)
 #if defined(_900)
         if ( sysblk.mainsize >= ONE_EXABYTE )
         {
-            MSGBUF( buf, "%" I64_FMT "d E", sysblk.mainsize >> 60 );
+            MSGBUF( buf, "%" I64_FMT "d E", sysblk.mainsize >> SHIFT_EXABYTE );
         }
         else if ( sysblk.mainsize >= ONE_PETABYTE )
         {
-            MSGBUF( buf, "%" I64_FMT "d P", sysblk.mainsize >> 50 );
+            MSGBUF( buf, "%" I64_FMT "d P", sysblk.mainsize >> SHIFT_PETABYTE );
         }
         else if ( sysblk.mainsize >= ONE_TERABYTE )
         {
-            MSGBUF( buf, "%" I64_FMT "d T", sysblk.mainsize >> 40 );
+            MSGBUF( buf, "%" I64_FMT "d T", sysblk.mainsize >> SHIFT_TERABYTE );
         }
         else
 #endif // defined(_900)
              if ( sysblk.mainsize >= ONE_GIGABYTE )
         {
-            MSGBUF( buf, "%3.3" I64_FMT "d G", sysblk.mainsize >> 30 );
+            MSGBUF( buf, "%3.3" I64_FMT "d G", sysblk.mainsize >> SHIFT_GIGABYTE );
         }
         else if ( sysblk.mainsize >= ONE_MEGABYTE )
         {
-            MSGBUF( buf, "%3.3" I64_FMT "d M", sysblk.mainsize >> 20 );
+            MSGBUF( buf, "%3.3" I64_FMT "d M", sysblk.mainsize >> SHIFT_MEGABYTE );
         }
         else
         {
-            MSGBUF( buf, "%3.3" I64_FMT "d K", sysblk.mainsize >> 10 );
+            MSGBUF( buf, "%3.3" I64_FMT "d K", sysblk.mainsize >> SHIFT_KILOBYTE );
         }
 
         WRMSG( HHC17003, "I", "MAIN", buf, "main", sysblk.mainstor_locked ? "":"not " );
     }
     if ( display_xpnd )
     {
+#if defined(_900)
         if ( xpndsize >= ONE_EXABYTE )
         {
-            MSGBUF( buf, "%" I64_FMT "d E", xpndsize >> 60 );
+            MSGBUF( buf, "%" I64_FMT "d E", xpndsize >> SHIFT_EXABYTE );
         }
         else if ( xpndsize >= ONE_PETABYTE )
         {
-            MSGBUF( buf, "%" I64_FMT "d P", xpndsize >> 50 );
+            MSGBUF( buf, "%" I64_FMT "d P", xpndsize >> SHIFT_PETABYTE );
         }
         else if ( xpndsize >= ONE_TERABYTE )
         {
-            MSGBUF( buf, "%" I64_FMT "d T", xpndsize >> 40 );
+            MSGBUF( buf, "%" I64_FMT "d T", xpndsize >> SHIFT_TERABYTE );
         }
-        else if ( xpndsize >= ONE_GIGABYTE )
+        else 
+#endif // defined(_900)
+            if ( xpndsize >= ONE_GIGABYTE )
         {
-            MSGBUF( buf, "%3.3" I64_FMT "d G", xpndsize >> 30 );
+            MSGBUF( buf, "%3.3" I64_FMT "d G", xpndsize >> SHIFT_GIGABYTE );
         }
         else
         {
-            MSGBUF( buf, "%3.3" I64_FMT "d M", xpndsize >> 20 );
+            MSGBUF( buf, "%3.3" I64_FMT "d M", xpndsize >> SHIFT_MEGABYTE );
         }
         WRMSG( HHC17003, "I", "EXPANDED", buf, "xpnd", sysblk.xpndstor_locked ? "":"not "  );
     }

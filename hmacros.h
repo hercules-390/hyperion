@@ -149,6 +149,7 @@
 #define  SHIFT_GIGABYTE 30
 #define  SHIFT_TERABYTE 40
 #define  SHIFT_PETABYTE 50
+#define  SHIFT_EXABYTE  60
 
 /* US VERSIONS */
 #define ONE_HUNDRED	    ((U32)(100))                            /* zeros = 2  */

@@ -332,6 +332,216 @@ int locate_regs(int argc, char *argv[], char *cmdline)
 }
 
 /*-------------------------------------------------------------------*/
+/* locate - display hostinfo block                                   */
+/*-------------------------------------------------------------------*/
+int locate_hostinfo(int argc, char *argv[], char *cmdline)
+{
+    int         rc = 0;
+    char        msgbuf[256];
+    int         start = 0; 
+    int         start_adj = 0;
+    int         length = 512;
+    u_char     *tbl = (u_char *)&hostinfo;
+    HOST_INFO  *pHostInfo = &hostinfo;
+    int         ok = TRUE;
+    U64         loc = swap_byte_U64(hostinfo.blkloc);
+
+    UNREFERENCED(cmdline);
+
+        /* verify head, tail, length and address */
+        if ( loc != (U64)((uintptr_t)&hostinfo) )
+        {
+            MSGBUF( msgbuf, "HOSTINFO moved; was 0x"I64_FMTX", is 0x%p", loc, &hostinfo );
+            WRMSG( HHC90000, "D", msgbuf );
+            ok = FALSE;
+        }
+        if ( swap_byte_U32(hostinfo.blksiz) != (U32)sizeof(HOST_INFO) )
+        {
+            MSGBUF( msgbuf, "HOSTINFO size wrong; is %u, should be %u", swap_byte_U32(hostinfo.blksiz), (U32)sizeof(HOST_INFO));
+            WRMSG( HHC90000, "D", msgbuf );
+            ok = FALSE;
+        }
+        { /* verify header */
+            char str[32];
+
+            memset( str, SPACE, sizeof(str) );
+
+            memcpy( str, HDL_NAME_HOST_INFO, strlen(HDL_NAME_HOST_INFO) );
+                
+            if ( memcmp( hostinfo.blknam, str, sizeof(hostinfo.blknam) ) != 0 )
+            {
+                char sstr[32];
+
+                bzero( sstr,sizeof(sstr) );
+                memcpy( sstr, hostinfo.blknam, sizeof(hostinfo.blknam) );
+
+                MSGBUF( msgbuf, "HOSTINFO header wrong; is %s, should be %s", sstr, str);
+                WRMSG( HHC90000, "D", msgbuf );
+                ok = FALSE;
+            }
+        }
+        {   /* verify version */
+            char str[32];
+
+            memset( str, SPACE, sizeof(str) );
+            memcpy( str, HDL_VERS_HOST_INFO, strlen(HDL_VERS_HOST_INFO) );
+
+            if ( memcmp( hostinfo.blkver, str, sizeof(hostinfo.blkver) ) != 0 )
+            {
+                char sstr[32];
+                bzero( sstr,sizeof(sstr) );
+                memcpy( sstr, hostinfo.blkver, sizeof(hostinfo.blkver) );
+
+                MSGBUF( msgbuf, "HOSTINFO version wrong; is %s, should be %s", sstr, str);
+                WRMSG( HHC90000, "D", msgbuf );
+                ok = FALSE;
+            }
+        }
+        {   /* verify trailer */
+            char str[32];
+            char trailer[32];
+            
+            MSGBUF( trailer, "END%13.13s", HDL_NAME_HOST_INFO );
+            memset( str, SPACE, sizeof(str) );
+            memcpy( str, trailer, strlen(trailer) );
+               
+            if ( memcmp(hostinfo.blkend, str, sizeof(hostinfo.blkend)) != 0 )
+            {
+                char sstr[32];
+                bzero( sstr, sizeof(sstr) );
+
+                memcpy( sstr, hostinfo.blkend, sizeof(hostinfo.blkend) );
+
+                MSGBUF( msgbuf, "HOSTINFO trailer wrong; is %s, should be %s", sstr, trailer);
+                WRMSG( HHC90000, "D", msgbuf );
+                ok = FALSE;
+            }
+        }
+
+        MSGBUF( msgbuf, "HOSTINFO @ 0x%p - %sVerified", &hostinfo, ok ? "" : "Not " );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %s", "sysname", pHostInfo->sysname );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %s", "nodename", pHostInfo->nodename );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %s", "release", pHostInfo->release );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %s", "version", pHostInfo->version );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %s", "machine", pHostInfo->machine );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %s", "trycritsec_avail", pHostInfo->trycritsec_avail ? "YES" : "NO" );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %d", "num_procs", pHostInfo->num_procs );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %"FRADR"uK", "hostpagesz", pHostInfo->hostpagesz >> SHIFT_KILOBYTE );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %"FRADR"uK", "dwAllocationGranularity", pHostInfo->dwAllocationGranularity  >> SHIFT_KILOBYTE );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %s", "valid_cache_nums", pHostInfo->valid_cache_nums ? "YES" : "NO" );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %"FRADR"u", "cachelinesz", pHostInfo->cachelinesz );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %"FRADR"uK", "L1Dcachesz", pHostInfo->L1Dcachesz >> SHIFT_KILOBYTE );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %"FRADR"uK", "L1Icachesz", pHostInfo->L1Icachesz >> SHIFT_KILOBYTE );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %"FRADR"uK", "L1Ucachesz", pHostInfo->L1Ucachesz >> SHIFT_KILOBYTE );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %"FRADR"uK", "L2cachesz", pHostInfo->L2cachesz >> SHIFT_KILOBYTE );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        if ( pHostInfo->L3cachesz > ONE_MEGABYTE )
+            MSGBUF( msgbuf, "%-17s = %"FRADR"uM", "L3cachesz", pHostInfo->L3cachesz >> SHIFT_MEGABYTE );
+        else
+            MSGBUF( msgbuf, "%-17s = %"FRADR"uK", "L3cachesz", pHostInfo->L3cachesz >> SHIFT_KILOBYTE );
+        WRMSG( HHC90000, "D", msgbuf );
+
+#if SIZEOF_SIZE_T > 4
+        if ( pHostInfo->ullTotalPhys > ONE_TERABYTE )
+            MSGBUF( msgbuf, "%-17s = %"FRADR"uT", "ullTotalPhys", pHostInfo->ullTotalPhys >> SHIFT_TERABYTE );
+        else 
+#endif
+        if ( pHostInfo->ullTotalPhys > ONE_GIGABYTE )
+            MSGBUF( msgbuf, "%-17s = %"FRADR"uG", "ullTotalPhys", pHostInfo->ullTotalPhys >> SHIFT_GIGABYTE );
+        else
+            MSGBUF( msgbuf, "%-17s = %"FRADR"uM", "ullTotalPhys", pHostInfo->ullTotalPhys >> SHIFT_MEGABYTE );
+        WRMSG( HHC90000, "D", msgbuf );
+
+#if SIZEOF_SIZE_T > 4
+        if ( pHostInfo->ullAvailPhys > ONE_TERABYTE )
+            MSGBUF( msgbuf, "%-17s = %"FRADR"uT", "ullAvailPhys", pHostInfo->ullAvailPhys >> SHIFT_TERABYTE );
+        else
+#endif
+        if ( pHostInfo->ullAvailPhys > ONE_GIGABYTE )
+            MSGBUF( msgbuf, "%-17s = %"FRADR"uG", "ullAvailPhys", pHostInfo->ullAvailPhys >> SHIFT_GIGABYTE );
+        else
+            MSGBUF( msgbuf, "%-17s = %"FRADR"uM", "ullAvailPhys", pHostInfo->ullAvailPhys >> SHIFT_MEGABYTE );
+        WRMSG( HHC90000, "D", msgbuf );
+
+#if SIZEOF_SIZE_T > 4
+        if ( pHostInfo->ullTotalPageFile > ONE_TERABYTE )
+            MSGBUF( msgbuf, "%-17s = %"FRADR"uT", "ullTotalPageFile", pHostInfo->ullTotalPageFile >> SHIFT_TERABYTE );
+        else
+#endif
+        if ( pHostInfo->ullTotalPageFile > ONE_GIGABYTE )
+            MSGBUF( msgbuf, "%-17s = %"FRADR"uG", "ullTotalPageFile", pHostInfo->ullTotalPageFile >> SHIFT_GIGABYTE );
+        else
+            MSGBUF( msgbuf, "%-17s = %"FRADR"uM", "ullTotalPageFile", pHostInfo->ullTotalPageFile >> SHIFT_MEGABYTE );
+        WRMSG( HHC90000, "D", msgbuf );
+
+#if SIZEOF_SIZE_T > 4
+        if ( pHostInfo->ullAvailPageFile > ONE_TERABYTE )
+            MSGBUF( msgbuf, "%-17s = %"FRADR"uT", "ullAvailPageFile", pHostInfo->ullAvailPageFile >> SHIFT_TERABYTE );
+        else
+#endif
+        if ( pHostInfo->ullAvailPageFile > ONE_GIGABYTE )
+            MSGBUF( msgbuf, "%-17s = %"FRADR"uG", "ullAvailPageFile", pHostInfo->ullAvailPageFile >> SHIFT_GIGABYTE );
+        else
+            MSGBUF( msgbuf, "%-17s = %"FRADR"uM", "ullAvailPageFile", pHostInfo->ullAvailPageFile >> SHIFT_MEGABYTE );
+        WRMSG( HHC90000, "D", msgbuf );
+
+#if SIZEOF_SIZE_T > 4
+        if ( pHostInfo->ullTotalVirtual > ONE_TERABYTE )
+            MSGBUF( msgbuf, "%-17s = %"FRADR"uT", "ullTotalVirtual", pHostInfo->ullTotalVirtual >> SHIFT_TERABYTE );
+        else
+#endif
+        if ( pHostInfo->ullTotalVirtual > ONE_GIGABYTE )
+            MSGBUF( msgbuf, "%-17s = %"FRADR"uG", "ullTotalVirtual", pHostInfo->ullTotalVirtual >> SHIFT_GIGABYTE );
+        else
+            MSGBUF( msgbuf, "%-17s = %"FRADR"uM", "ullTotalVirtual", pHostInfo->ullTotalVirtual >> SHIFT_MEGABYTE );
+        WRMSG( HHC90000, "D", msgbuf );
+
+#if SIZEOF_SIZE_T > 4
+        if ( pHostInfo->ullAvailVirtual > ONE_TERABYTE )
+            MSGBUF( msgbuf, "%-17s = %"FRADR"uT", "ullAvailVirtual", pHostInfo->ullAvailVirtual >> SHIFT_TERABYTE );
+        else
+#endif
+        if ( pHostInfo->ullAvailVirtual > ONE_GIGABYTE )
+            MSGBUF( msgbuf, "%-17s = %"FRADR"uG", "ullAvailVirtual", pHostInfo->ullAvailVirtual >> SHIFT_GIGABYTE );
+        else
+            MSGBUF( msgbuf, "%-17s = %"FRADR"uM", "ullAvailVirtual", pHostInfo->ullAvailVirtual >> SHIFT_MEGABYTE );
+        WRMSG( HHC90000, "D", msgbuf );
+
+    return rc;
+}
+
+/*-------------------------------------------------------------------*/
 /* locate   display control blocks by name                           */
 /*-------------------------------------------------------------------*/
 int locate_cmd(int argc, char *argv[], char *cmdline)
@@ -348,6 +558,11 @@ int locate_cmd(int argc, char *argv[], char *cmdline)
     if (argc > 1 && CMD(argv[1],regs,4))
     {
         rc = locate_regs(argc, argv, cmdline);
+    }
+    else 
+    if (argc > 1 && CMD(argv[1],hostinfo,4))
+    {
+        rc = locate_hostinfo(argc, argv, cmdline);
     }
     else
     {

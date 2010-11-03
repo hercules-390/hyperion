@@ -50,8 +50,8 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
 
         memcpy(pHostInfo->blkend, buf, sizeof(pHostInfo->blkend));
     }
-    
-    pHostInfo->hostpagesz = (RADR)getpagesize();
+
+    pHostInfo->valid_cache_nums = TRUE;     /* assume the cache size numbers are good */
 
 #if defined(_MSVC_)
     w32_init_hostinfo( pHostInfo );
@@ -93,115 +93,67 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
         length = (size_t)sizeof(iRV);
         
         mib[1] = HW_MEMSIZE;
-        sysctl( mib, 2, &iRV, &length, NULL, 0 );
-        pHostInfo->ullTotalPhys = iRV;
+        if ( sysctl( mib, 2, &iRV, &length, NULL, 0 ) != -1 )
+            pHostInfo->ullTotalPhys = iRV;
 
         mib[1] = HW_USERMEM;
-        sysctl( mib, 2, &iRV, &length, NULL, 0 );
-        pHostInfo->ullAvailPhys = iRV;
+        if ( sysctl( mib, 2, &iRV, &length, NULL, 0 ) != -1 )
+            pHostInfo->ullAvailPhys = iRV;
 
         mib[1] = HW_PAGESIZE;
-        sysctl( mib, 2, &iRV, &length, NULL, 0 );
-        pHostInfo->hostpagesz = iRV;
+        if ( sysctl( mib, 2, &iRV, &length, NULL, 0 ) != -1 )
+            pHostInfo->hostpagesz = iRV;
         
         mib[1] = HW_CACHELINE;
-        sysctl( mib, 2, &iRV, &length, NULL, 0 );
-        pHostInfo->cachelinesz = iRV;
+        if ( sysctl( mib, 2, &iRV, &length, NULL, 0 ) != -1 )
+            pHostInfo->cachelinesz = iRV;
 
         mib[1] = HW_L1ICACHESIZE;
-        sysctl( mib, 2, &iRV, &length, NULL, 0 );
-        pHostInfo->L1Icachesz = iRV;
+        if ( sysctl( mib, 2, &iRV, &length, NULL, 0 ) != -1 )
+            pHostInfo->L1Icachesz = iRV;
 
         mib[1] = HW_L1DCACHESIZE;
-        sysctl( mib, 2, &iRV, &length, NULL, 0 );
-        pHostInfo->L1Dcachesz = iRV;
+        if ( sysctl( mib, 2, &iRV, &length, NULL, 0 ) != -1 )
+            pHostInfo->L1Dcachesz = iRV;
 
         mib[1] = HW_L2CACHESIZE;
-        sysctl( mib, 2, &iRV, &length, NULL, 0 );
-        pHostInfo->L2cachesz = iRV;
+        if ( sysctl( mib, 2, &iRV, &length, NULL, 0 ) != -1 )
+            pHostInfo->L2cachesz = iRV;
 
         mib[1] = HW_L3CACHESIZE;
-        sysctl( mib, 2, &iRV, &length, NULL, 0 );
-        pHostInfo->L3cachesz = iRV;
+        if ( sysctl( mib, 2, &iRV, &length, NULL, 0 ) != -1 )
+            pHostInfo->L3cachesz = iRV;
 
         mib[0] = CTL_VM;
         length = (size_t)sizeof(xsu);
 
         mib[1] = VM_SWAPUSAGE;
-        sysctl( mib, 2, &xsu, &length, NULL, 0 );
-        
-        pHostInfo->ullTotalPageFile = xsu.xsu_total;
-        pHostInfo->ullAvailPageFile = xsu.xsu_avail;
+        if ( sysctl( mib, 2, &xsu, &length, NULL, 0 ) != -1 )
+        {
+            pHostInfo->ullTotalPageFile = xsu.xsu_total;
+            pHostInfo->ullAvailPageFile = xsu.xsu_avail;
+        }
     }
 #endif
 
-    if (MLVL(DEBUG))
+    pHostInfo->hostpagesz = (RADR)getpagesize();
+
+    if ( pHostInfo->cachelinesz == 0 )
     {
-        char msgbuf[256];
+        pHostInfo->cachelinesz = 64;
+        pHostInfo->valid_cache_nums = FALSE;
+    }
+    
+    if ( pHostInfo->L1Dcachesz == 0 && pHostInfo->L1Icachesz == 0 && pHostInfo->L1Ucachesz == 0 )
+    {
+        pHostInfo->L1Dcachesz = pHostInfo->L1Icachesz = (RADR)((RADR)8 << SHIFT_KILOBYTE );
+        pHostInfo->valid_cache_nums = FALSE;
+    }
 
-        MSGBUF( msgbuf, "%-17s = %s", "sysname", pHostInfo->sysname );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %s", "nodename", pHostInfo->nodename );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %s", "release", pHostInfo->release );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %s", "version", pHostInfo->version );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %s", "machine", pHostInfo->machine );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %s", "trycritsec_avail", pHostInfo->trycritsec_avail ? "YES" : "NO" );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %d", "num_procs", pHostInfo->num_procs );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %"FRADR"u", "hostpagesz", pHostInfo->hostpagesz );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %"FRADR"u", "dwAllocationGranularity", pHostInfo->dwAllocationGranularity );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %"FRADR"u", "cachelinesz", pHostInfo->cachelinesz );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %"FRADR"u", "L1Dcachesz", pHostInfo->L1Dcachesz );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %"FRADR"u", "L1Icachesz", pHostInfo->L1Icachesz );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %"FRADR"u", "L1Ucachesz", pHostInfo->L1Ucachesz );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %"FRADR"u", "L2cachesz", pHostInfo->L2cachesz );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %"FRADR"u", "L3cachesz", pHostInfo->L3cachesz );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %"FRADR"u", "ullTotalPhys", pHostInfo->ullTotalPhys );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %"FRADR"u", "ullAvailPhys", pHostInfo->ullAvailPhys );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %"FRADR"u", "ullTotalPageFile", pHostInfo->ullTotalPageFile );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %"FRADR"u", "ullAvailPageFile", pHostInfo->ullAvailPageFile );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %"FRADR"u", "ullTotalVirtual", pHostInfo->ullTotalVirtual );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %"FRADR"u", "ullAvailVirtual", pHostInfo->ullAvailVirtual );
-        WRMSG( HHC90000, "D", msgbuf );
-
+    if ( pHostInfo->L2cachesz == 0 )
+    {    
+        pHostInfo->L2cachesz = (RADR)((RADR)256 << SHIFT_KILOBYTE );
+        pHostInfo->valid_cache_nums = FALSE;
     }
 
     return;

@@ -46,6 +46,7 @@ typedef struct HOST_INFO
         int     trycritsec_avail;       /* 1=TryEnterCriticalSection */
         int     num_procs;              /* #of processors            */
         RADR    hostpagesz;             /* Host page size            */
+        int     valid_cache_nums;       /*                           */
         RADR    cachelinesz;            /* cache line size           */
         RADR    L1Icachesz;             /* cache size L1 Inst        */
         RADR    L1Dcachesz;             /* cache size L1 Data        */
