@@ -87,14 +87,35 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
         size_t  length;
         int     mib[2];
         int     iRV;
+        uint64_t ui64RV;
         struct  xsw_usage   xsu;
+        char    machine[64];
 
         mib[0] = CTL_HW;
 
+        length = (size_t)sizeof(machine);
+        if ( sysctl( mib, 2, &machine, &length, NULL, 0 ) != -1 )
+        {
+            machine[length] = 0;
+            strlcpy( pHostInfo->machine, machine, sizeof( pHostInfo->machine ) );
+        }
+        
         length = (size_t)sizeof(iRV);
+        if ( CMD(machine,i386,4) )
+        {
+            if ( sysctlbyname("hw.optional.x86_64", &iRV, &length, NULL, 0 ) != -1 )
+                strlcat( pHostInfo->machine, iRV == 1 ? " 64-bit" : " 32-bit", sizeof( pHostInfo->machine ) );
+        }
+        else
+        {
+            if ( sysctlbyname("hw.optional.64bitops", &iRV, &length, NULL, 0 ) != -1 )
+                strlcat( pHostInfo->machine, iRV == 1 ? " 64-bit" : " 32-bit", sizeof( pHostInfo->machine ) );
+        }
+
+        length = (size_t)sizeof(ui64RV);
         mib[1] = HW_MEMSIZE;
-        if ( sysctl( mib, 2, &iRV, &length, NULL, 0 ) != -1 )
-            pHostInfo->ullTotalPhys = iRV;
+        if ( sysctl( mib, 2, &ui64RV, &length, NULL, 0 ) != -1 )
+            pHostInfo->ullTotalPhys = ui64RV;
 
         length = (size_t)sizeof(iRV);
         mib[1] = HW_USERMEM;
@@ -138,7 +159,7 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
         if ( sysctl( mib, 2, &xsu, &length, NULL, 0 ) != -1 )
         {
             pHostInfo->ullTotalPageFile = xsu.xsu_total;
-            pHostInfo->ullAvailPageFile = xsu.xsu_avail;
+            pHostInfo->ullAvailPageFile = xsu.xsu_total - xsu.xsu_used;
         }
     }
 #endif
