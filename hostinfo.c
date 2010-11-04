@@ -86,40 +86,47 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
     {
         size_t  length;
         int     mib[2];
-        int64_t iRV;
+        int     iRV;
         struct  xsw_usage   xsu;
 
         mib[0] = CTL_HW;
+
         length = (size_t)sizeof(iRV);
-        
         mib[1] = HW_MEMSIZE;
         if ( sysctl( mib, 2, &iRV, &length, NULL, 0 ) != -1 )
             pHostInfo->ullTotalPhys = iRV;
 
+        length = (size_t)sizeof(iRV);
         mib[1] = HW_USERMEM;
         if ( sysctl( mib, 2, &iRV, &length, NULL, 0 ) != -1 )
             pHostInfo->ullAvailPhys = iRV;
 
+        length = (size_t)sizeof(iRV);
         mib[1] = HW_PAGESIZE;
         if ( sysctl( mib, 2, &iRV, &length, NULL, 0 ) != -1 )
             pHostInfo->hostpagesz = iRV;
         
+        length = (size_t)sizeof(iRV);
         mib[1] = HW_CACHELINE;
         if ( sysctl( mib, 2, &iRV, &length, NULL, 0 ) != -1 )
             pHostInfo->cachelinesz = iRV;
 
+        length = (size_t)sizeof(iRV);
         mib[1] = HW_L1ICACHESIZE;
         if ( sysctl( mib, 2, &iRV, &length, NULL, 0 ) != -1 )
             pHostInfo->L1Icachesz = iRV;
 
+        length = (size_t)sizeof(iRV);
         mib[1] = HW_L1DCACHESIZE;
         if ( sysctl( mib, 2, &iRV, &length, NULL, 0 ) != -1 )
             pHostInfo->L1Dcachesz = iRV;
 
+        length = (size_t)sizeof(iRV);
         mib[1] = HW_L2CACHESIZE;
         if ( sysctl( mib, 2, &iRV, &length, NULL, 0 ) != -1 )
             pHostInfo->L2cachesz = iRV;
 
+        length = (size_t)sizeof(iRV);
         mib[1] = HW_L3CACHESIZE;
         if ( sysctl( mib, 2, &iRV, &length, NULL, 0 ) != -1 )
             pHostInfo->L3cachesz = iRV;
