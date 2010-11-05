@@ -388,10 +388,6 @@ int locate_hostinfo(int argc, char *argv[], char *cmdline)
 {
     int         rc = 0;
     char        msgbuf[256];
-//    int         start = 0; 
-//    int         start_adj = 0;
-//    int         length = 512;
-    u_char     *tbl = (u_char *)&hostinfo;
     HOST_INFO  *pHostInfo = &hostinfo;
     int         ok = TRUE;
     U64         loc = swap_byte_U64(hostinfo.blkloc);
