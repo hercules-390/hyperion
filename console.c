@@ -1910,7 +1910,6 @@ char    fn[FILENAME_MAX] = { 0 };
 /*-------------------------------------------------------------------*/
 
 static int     console_cnslcnt  = 0;    /* count of connected terms  */
-static LOCK    console_lock;            /* console_cnslcnt lock      */
 
 static void *
 console_connection_handler (void *arg)
@@ -2278,7 +2277,6 @@ console_initialise()
     {
     int rc;
 
-        initialize_lock( &console_lock );
         console_cnslcnt++; // No serialisation needed just yet, as the console thread is not yet active
 
         if((rc = create_thread (&sysblk.cnsltid, JOINABLE,
@@ -2290,11 +2288,7 @@ console_initialise()
         }
     }
     else
-    {
-        obtain_lock( &console_lock );
         console_cnslcnt++;
-        release_lock( &console_lock );
-    }
 
     return 0;
 }
@@ -2307,9 +2301,7 @@ console_remove(DEVBLK *dev)
     dev->console = 0;
     dev->fd = -1;
 
-    obtain_lock( &console_lock );
     console_cnslcnt--;
-    release_lock( &console_lock );
 
     SIGNAL_CONSOLE_THREAD();
 
