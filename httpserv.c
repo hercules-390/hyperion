@@ -82,6 +82,7 @@ typedef struct _HTTP_SERV {
 
 static HTTP_SERV    http_serv;
 static BYTE         http_struct_init = FALSE;
+static LOCK         http_lock_root;         /* HTTP Root Change Lock     */
 
 DLL_EXPORT int html_include(WEBBLK *webblk, char *filename)
 {
@@ -652,6 +653,8 @@ static void *http_request(int sock)
 /*-------------------------------------------------------------------*/
 char *http_root()
 {
+    obtain_lock( &http_lock_root );
+
     /* If the HTTP root directory is not specified,
        use a reasonable default */
     if (!http_serv.httproot)
@@ -679,9 +682,11 @@ char *http_root()
             sizeof(absolute_httproot_path) );
         if (rc == 0)
         {
+            char *p = strdup(absolute_httproot_path);;
             if ( http_serv.httproot != NULL )
                 free(http_serv.httproot);
-            http_serv.httproot = strdup(absolute_httproot_path);
+
+            http_serv.httproot = p;
         }
 #endif /* defined(_MSVC_) */
         /* Convert to absolute path */
@@ -696,7 +701,9 @@ char *http_root()
                 MSGBUF(msgbuf, "'%s'", http_serv.httproot);
 
             WRMSG(HHC01801, "E", p, strerror(errno));
-            
+
+            release_lock( &http_lock_root );
+
             return NULL;
         }
         /* Verify that the absolute path is valid */
@@ -715,6 +722,9 @@ char *http_root()
             }
 
             WRMSG(HHC01801, "E", p, strerror(errno));
+
+            release_lock( &http_lock_root );
+
             return p;
         }
         /* Append trailing [back]slash, but only if needed */
@@ -737,6 +747,9 @@ char *http_root()
                 MSGBUF(msgbuf, "'%s'", absolute_httproot_path);
 
             WRMSG(HHC01801, "E", p, "path length too long");
+            
+            release_lock( &http_lock_root );
+
             return NULL;
         }
         else
@@ -758,6 +771,9 @@ char *http_root()
             WRMSG(HHC01802, "I", p);
         }
     }
+    
+    release_lock( &http_lock_root );
+
     return http_serv.httproot;
 }
 
@@ -951,14 +967,15 @@ int http_startup(int isconfigcalling)
 
     if ( first_call )
     {
-        initialize_condition( &http_serv.http_wait_shutdown );
-        initialize_lock( &http_serv.http_lock_shutdown );
-        first_call = FALSE;
         if ( !http_struct_init )
         {
             bzero(&http_serv,sizeof(HTTP_SERV));
+            initialize_condition( &http_serv.http_wait_shutdown );
+            initialize_lock( &http_serv.http_lock_shutdown );
+            initialize_lock( &http_lock_root );
             http_struct_init = TRUE;
         }
+        first_call = FALSE;
     }
 
     if ( http_serv.httpport == 0 )
@@ -1011,6 +1028,9 @@ int http_command(int argc, char *argv[])
     if ( !http_struct_init )
     {
         bzero(&http_serv,sizeof(HTTP_SERV));
+        initialize_condition( &http_serv.http_wait_shutdown );
+        initialize_lock( &http_serv.http_lock_shutdown );
+        initialize_lock( &http_lock_root );
         http_struct_init = TRUE;
     }
 
