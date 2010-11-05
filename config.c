@@ -93,6 +93,9 @@ RADR  skeysize;
 int cpu;
 int rc = 0;
 int was_locked = sysblk.mainstor_locked;
+    
+    /* Obtain (re)configuration lock */
+    obtain_lock(&sysblk.config);
 
     if ( mainsize < 4096 ) 
         mainsize = 4096;
@@ -103,6 +106,7 @@ int was_locked = sysblk.mainstor_locked;
             if(IS_CPU_ONLINE(cpu) && sysblk.regs[cpu]->cpustate == CPUSTATE_STARTED)
             {
                 RELEASE_INTLOCK(NULL);
+                release_lock(&sysblk.config);
                 return HERRCPUONL;
             }
     RELEASE_INTLOCK(NULL);
@@ -173,6 +177,7 @@ int was_locked = sysblk.mainstor_locked;
                 }
                 MSGBUF( buf, "malloc(%" I64_FMT "d)", storsize);
                 WRMSG(HHC01430, "S", buf, strerror(errno));
+                release_lock(&sysblk.config);
                 return -1;
             }
 
@@ -227,6 +232,7 @@ int was_locked = sysblk.mainstor_locked;
     if ( rc == 0 && ( config_allocmsize == 0 || config_allocmsize < (1024 * 1024) ) )
         rc = 1;
 
+    release_lock(&sysblk.config);
     return rc;
 }
 
@@ -240,12 +246,16 @@ int cpu;
 int rc = 0;
 int was_locked = sysblk.xpndstor_locked;
 
+    /* Obtain (re)configuration lock */
+    obtain_lock(&sysblk.config);
+
     OBTAIN_INTLOCK(NULL);
     if(sysblk.cpus)
         for(cpu = 0; cpu < sysblk.maxcpu; cpu++)
             if(IS_CPU_ONLINE(cpu) && sysblk.regs[cpu]->cpustate == CPUSTATE_STARTED)
             {
                 RELEASE_INTLOCK(NULL);
+                release_lock(&sysblk.config);
                 return HERRCPUONL;
             }
     RELEASE_INTLOCK(NULL);
@@ -305,6 +315,7 @@ int was_locked = sysblk.xpndstor_locked;
                 }
                 MSGBUF( buf, "malloc(%"FRADR"u)", xpndsize );
                 WRMSG(HHC01430, "S", buf, strerror(errno));
+                release_lock(&sysblk.config);
                 return -1;
             }
 
@@ -332,6 +343,7 @@ int was_locked = sysblk.xpndstor_locked;
     if ( rc == 0 && config_allocxsize == 0 )
         rc = 1;
 
+    release_lock(&sysblk.config);
     return rc;
 }
 
@@ -571,7 +583,7 @@ int configure_cpu(int cpu)
 int   i;
 int   rc;
 char  thread_name[32];
-
+            
     if(IS_CPU_ONLINE(cpu))
         return -1;
 
@@ -906,10 +918,14 @@ DEVBLK *dev;                            /* -> Device block           */
 int     rc;                             /* Return code               */
 int     i;                              /* Loop index                */
 
+    /* Obtain (re)configuration lock */
+    obtain_lock(&sysblk.config);
+
     /* Check whether device number has already been defined */
     if (find_device_by_devnum(lcss,devnum) != NULL)
     {
         WRMSG (HHC01461, "E", lcss, devnum);
+        release_lock(&sysblk.config);
         return 1;
     }
 
@@ -919,9 +935,8 @@ int     i;                              /* Loop index                */
     if(!(dev->hnd = hdl_ghnd(type)))
     {
         WRMSG (HHC01462, "E", lcss, devnum, type);
-
         ret_devblk(dev);
-
+        release_lock(&sysblk.config);
         return 1;
     }
 
@@ -958,6 +973,7 @@ int     i;                              /* Loop index                */
 
         ret_devblk(dev);
 
+        release_lock(&sysblk.config);
         return 1;
     }
 
@@ -981,6 +997,7 @@ int     i;                              /* Loop index                */
 
             ret_devblk(dev);
 
+            release_lock(&sysblk.config);
             return 1;
         }
     }
@@ -1003,6 +1020,7 @@ int     i;                              /* Loop index                */
     }
     */
 
+    release_lock(&sysblk.config);
     return 0;
 } /* end function attach_device */
 
@@ -1013,6 +1031,9 @@ int     i;                              /* Loop index                */
 static int detach_devblk (DEVBLK *dev)
 {
 int     i;                              /* Loop index                */
+    
+    /* Obtain (re)configuration lock */
+    obtain_lock(&sysblk.config);
 
     /* Obtain the device lock */
     obtain_lock(&dev->lock);
@@ -1082,6 +1103,7 @@ int     i;                              /* Loop index                */
         machine_check_crwpend();
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
+    release_lock(&sysblk.config);
     return 0;
 } /* end function detach_device */
 
@@ -1147,12 +1169,16 @@ int define_device (U16 lcss, U16 olddevn,U16 newdevn)
 {
 DEVBLK *dev;                            /* -> Device block           */
 
+    /* Obtain (re)configuration lock */
+    obtain_lock(&sysblk.config);
+
     /* Find the device block */
     dev = find_device_by_devnum (lcss, olddevn);
 
     if (dev == NULL)
     {
         WRMSG (HHC01464, "E", lcss, olddevn, "device");
+        release_lock(&sysblk.config);
         return 1;
     }
 
@@ -1160,6 +1186,7 @@ DEVBLK *dev;                            /* -> Device block           */
     if (find_device_by_devnum(lcss, newdevn) != NULL)
     {
         WRMSG (HHC01461, "E", lcss, newdevn);
+        release_lock(&sysblk.config);
         return 1;
     }
 
@@ -1201,6 +1228,7 @@ DEVBLK *dev;                            /* -> Device block           */
 
 //    WRMSG (HHC01459, "I", lcss, olddevn, lcss, newdevn);
 
+    release_lock(&sysblk.config);
     return 0;
 } /* end function define_device */
 

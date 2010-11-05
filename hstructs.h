@@ -404,6 +404,7 @@ struct SYSBLK {
         char   *hercules_cmdline;       /* Hercules Command line     */
         pid_t   hercules_pid;           /* Process Id of Hercules    */
         time_t  impltime;               /* TOD system was IMPL'ed    */
+        LOCK    config;                 /* (Re)Configuration Lock    */
         int     arch_mode;              /* Architecturual mode       */
                                         /* 0 == S/370   (ARCH_370)   */
                                         /* 1 == ESA/390 (ARCH_390)   */

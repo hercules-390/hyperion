@@ -622,6 +622,7 @@ int     dll_count;                      /* index into array          */
 
 
     /* Initialize locks, conditions, and attributes */
+    initialize_lock (&sysblk.config);
     initialize_lock (&sysblk.todlock);
     initialize_lock (&sysblk.mainlock);
     sysblk.mainowner = LOCK_OWNER_NONE;
