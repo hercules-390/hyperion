@@ -1340,11 +1340,13 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
                     pHostInfo->num_logical_cpu += CountSetBits(ptr->ProcessorMask);
                 }
                 else
+#if _MSC_VER >= 1500 
                 if ( ptr->Relationship == RelationProcessorPackage )
                 {
                     pHostInfo->num_packages++;
                 }
                 else
+#endif
                 if ( ptr->Relationship == RelationCache )
                 {
                     Cache = &ptr->Cache;
