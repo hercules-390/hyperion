@@ -91,7 +91,7 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
         struct  xsw_usage   xsu;
         char    machine[64];
 
-        bzero(machine,sizeof(machine);
+        bzero(machine,sizeof(machine));
 
         mib[0] = CTL_HW;
 
@@ -157,12 +157,12 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
         length = (size_t)sizeof(ui64RV);
         mib[1] = HW_MEMSIZE;
         if ( sysctl( mib, 2, &ui64RV, &length, NULL, 0 ) != -1 )
-            pHostInfo->ullTotalPhys = ui64RV;
+            pHostInfo->TotalPhys = ui64RV;
 
         length = (size_t)sizeof(iRV);
         mib[1] = HW_USERMEM;
         if ( sysctl( mib, 2, &iRV, &length, NULL, 0 ) != -1 )
-            pHostInfo->ullAvailPhys = iRV;
+            pHostInfo->AvailPhys = iRV;
 
         length = (size_t)sizeof(iRV);
         mib[1] = HW_PAGESIZE;
@@ -200,8 +200,8 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
         mib[1] = VM_SWAPUSAGE;
         if ( sysctl( mib, 2, &xsu, &length, NULL, 0 ) != -1 )
         {
-            pHostInfo->ullTotalPageFile = xsu.xsu_total;
-            pHostInfo->ullAvailPageFile = xsu.xsu_total - xsu.xsu_used;
+            pHostInfo->TotalPageFile = xsu.xsu_total;
+            pHostInfo->AvailPageFile = xsu.xsu_total - xsu.xsu_used;
         }
     }
 #endif
