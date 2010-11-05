@@ -91,6 +91,8 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
         struct  xsw_usage   xsu;
         char    machine[64];
 
+        bzero(machine,sizeof(machine);
+
         mib[0] = CTL_HW;
 
         length = (size_t)sizeof(machine);
@@ -101,15 +103,55 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
         }
         
         length = (size_t)sizeof(iRV);
-        if ( CMD(machine,i386,4) )
+        if ( sysctlbyname("hw.packages", &iRV, &length, NULL, 0 ) != -1 )
+            pHostInfo->num_packages = iRV;
+
+        length = (size_t)sizeof(iRV);
+        if ( sysctlbyname("hw.physicalcpu", &iRV, &length, NULL, 0 ) != -1 )
+            pHostInfo->num_physical_cpu = iRV;
+
+        length = (size_t)sizeof(iRV);
+        if ( sysctlbyname("hw.logicalcpu", &iRV, &length, NULL, 0 ) != -1 )
+            pHostInfo->num_logical_cpu = iRV;
+
+        length = (size_t)sizeof(iRV);
+        if ( sysctlbyname("hw.vectorunit", &iRV, &length, NULL, 0 ) != -1 )
+            pHostInfo->vector_unit = iRV;
+
+        length = (size_t)sizeof(iRV);
+        if ( sysctlbyname("hw.optional.floatingpoint", &iRV, &length, NULL, 0 ) != -1 )
+            pHostInfo->fp_unit = iRV;
+
+        length = (size_t)sizeof(ui64RV);
+        if ( sysctlbyname("hw.busfrequency", &ui64RV, &length, NULL, 0 ) != -1 )
+            pHostInfo->bus_speed = ui64RV;
+
+        length = (size_t)sizeof(ui64RV);
+        if ( sysctlbyname("hw.cpufrequency", &ui64RV, &length, NULL, 0 ) != -1 )
+            pHostInfo->cpu_speed = ui64RV;
+
+        length = (size_t)sizeof(iRV);
+        if ( CMD(pHostInfo->machine,i386,4) )
         {
             if ( sysctlbyname("hw.optional.x86_64", &iRV, &length, NULL, 0 ) != -1 )
-                strlcat( pHostInfo->machine, iRV == 1 ? " 64-bit" : " 32-bit", sizeof( pHostInfo->machine ) );
+            {
+                char mach[64];
+
+                MSGBUF( mach, "%s %s", iRV != 0 ? "64-bit" : "32-bit", pHostInfo->machine );
+                strlcpy( pHostInfo->machine, mach, sizeof( pHostInfo->machine ) );
+                pHostInfo->cpu_64bits = 1;
+            }
         }
         else
         {
             if ( sysctlbyname("hw.optional.64bitops", &iRV, &length, NULL, 0 ) != -1 )
-                strlcat( pHostInfo->machine, iRV == 1 ? " 64-bit" : " 32-bit", sizeof( pHostInfo->machine ) );
+            {
+                char mach[64];
+
+                MSGBUF( mach, "%s %s", iRV != 0 ? "64-bit" : "32-bit", pHostInfo->machine );
+                strlcpy( pHostInfo->machine, mach, sizeof( pHostInfo->machine ) );
+                pHostInfo->cpu_64bits = 1;
+            }
         }
 
         length = (size_t)sizeof(ui64RV);
@@ -207,7 +249,7 @@ DLL_EXPORT char* get_hostinfo_str ( HOST_INFO*  pHostInfo,
             strlcpy( num_procs,   "",  sizeof(num_procs) );
 
         snprintf( pszHostInfoStrBuff, nHostInfoStrBuffSiz,
-            _("Running on %s %s-%s. %s %s%s"),
+            _("Running on %s %s-%s. %s, %s%s"),
             pHostInfo->nodename,
             pHostInfo->sysname,
             pHostInfo->release,

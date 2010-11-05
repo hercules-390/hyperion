@@ -1224,6 +1224,23 @@ DLL_EXPORT int expand_environ_vars( const char* inbuff, char* outbuff, DWORD out
     return ( ( dwOutLen && dwOutLen < outbufsiz ) ? 0 : -1 );
 }
 
+// Helper function to count set bits in the processor mask.
+DWORD CountSetBits(ULONG_PTR bitMask)
+{
+    DWORD LSHIFT = sizeof(ULONG_PTR)*8 - 1;
+    DWORD bitSetCount = 0;
+    ULONG_PTR bitTest = (ULONG_PTR)1 << LSHIFT;    
+    DWORD i;
+    
+    for (i = 0; i <= LSHIFT; ++i)
+    {
+        bitSetCount += ((bitMask & bitTest)?1:0);
+        bitTest/=2;
+    }
+
+    return bitSetCount;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////
 // Initialize Hercules HOSTINFO structure
 // see: http://msdn.microsoft.com/en-us/library/ms724429(VS.85).aspx
@@ -1262,12 +1279,12 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
 
     ms.dwLength = sizeof(ms);
     GlobalMemoryStatusEx(&ms);
-    pHostInfo->ullTotalPhys = ms.ullTotalPhys;
-    pHostInfo->ullAvailPhys = ms.ullAvailPhys;
-    pHostInfo->ullTotalPageFile = ms.ullTotalPageFile;
-    pHostInfo->ullAvailPageFile = ms.ullAvailPageFile;
-    pHostInfo->ullTotalVirtual = ms.ullTotalVirtual;
-    pHostInfo->ullAvailVirtual = ms.ullAvailVirtual;
+    pHostInfo->TotalPhys = ms.ullTotalPhys;
+    pHostInfo->AvailPhys = ms.ullAvailPhys;
+    pHostInfo->TotalPageFile = ms.ullTotalPageFile;
+    pHostInfo->AvailPageFile = ms.ullAvailPageFile;
+    pHostInfo->TotalVirtual = ms.ullTotalVirtual;
+    pHostInfo->AvailVirtual = ms.ullAvailVirtual;
 
     dw = sizeof(pHostInfo->nodename)-1;
     GetComputerName( pHostInfo->nodename, &dw );
@@ -1311,9 +1328,23 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
             ptr = buffer;
 
             pHostInfo->cachelinesz = 0;
+            pHostInfo->num_physical_cpu = 0;       /* #of cores                 */
+            pHostInfo->num_logical_cpu = 0;        /* #of of hyperthreads       */
+            pHostInfo->num_packages = 0;           /* #of CPU "chips"           */    
 
             while (byteOffset + sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION) <= retlen)
             {
+                if ( ptr->Relationship == RelationProcessorCore )
+                {
+                    pHostInfo->num_physical_cpu++;
+                    pHostInfo->num_logical_cpu += CountSetBits(ptr->ProcessorMask);
+                }
+                else
+                if ( ptr->Relationship == RelationProcessorPackage )
+                {
+                    pHostInfo->num_packages++;
+                }
+                else
                 if ( ptr->Relationship == RelationCache )
                 {
                     Cache = &ptr->Cache;
@@ -1772,9 +1803,12 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
             if ( vi.dwMajorVersion >= 6 )
             {
                 if ( si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64 )
-                    prod_proc = ", 64-bit";
+                {
+                    prod_proc = " 64-bit";
+                    pHostInfo->cpu_64bits = 1;
+                }
                 else if ( si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL )
-                    prod_proc = ", 32-bit";
+                    prod_proc = " 32-bit";
                 else 
                     prod_proc = "";
             }
@@ -1853,7 +1887,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
     }
 
     pHostInfo->num_procs = si.dwNumberOfProcessors;
-    pHostInfo->dwAllocationGranularity = si.dwAllocationGranularity;
+    pHostInfo->AllocationGranularity = si.dwAllocationGranularity;
 
     InitializeCriticalSection( &cs );
 
