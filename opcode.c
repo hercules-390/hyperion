@@ -1226,6 +1226,8 @@ static zz_func v_opcode_a5xx[0x100][GEN_MAXARCH];
 static zz_func v_opcode_a6xx[0x100][GEN_MAXARCH];
 static zz_func v_opcode_e4xx[0x100][GEN_MAXARCH];
 
+static zz_func opcode_47x_[0x10][GEN_MAXARCH];
+
 
 #define DISASM_ROUTE(_table,_route) \
 int disasm_ ## _table (BYTE inst[], char unused[], char *p) \
@@ -2291,6 +2293,7 @@ void init_opcode_tables(void)
 {
   int arch;
   int i;
+  int j;
 
 //  logmsg("init_opcode_tables()\n");
   for(arch = 0; arch < GEN_ARCHCOUNT; arch++)
@@ -2329,6 +2332,10 @@ void init_opcode_tables(void)
       replace_opcode_xx_x(arch, opcode_c6_x[i][arch], 0xc6, i);
       replace_opcode_xx_x(arch, opcode_c8_x[i][arch], 0xc8, i);
       replace_opcode_xx_x(arch, opcode_cc_x[i][arch], 0xcc, i);
+
+      /* Optimized BC */
+      for(j = 0; j < 0x10; j++)
+        replace_opcode_xxxx(arch, opcode_47x_[i][arch], 0x47, i * 0x10 + j);
     }
   }
 }
@@ -6420,6 +6427,25 @@ static zz_func v_opcode_e4xx[0x100][GEN_MAXARCH] = {
  /*E4FD*/ GENx___x___x___ ,
  /*E4FE*/ GENx___x___x___ ,
  /*E4FF*/ GENx___x___x___  };
+
+
+static zz_func opcode_47x_[0x10][GEN_MAXARCH] = {
+ /*470x*/ GENx370x390x900 (opcode_470x,RX,"BC"),
+ /*471x*/ GENx370x390x900 (opcode_471x,RX,"BC"),
+ /*472x*/ GENx370x390x900 (opcode_472x,RX,"BC"),
+ /*473x*/ GENx370x390x900 (opcode_473x,RX,"BC"),
+ /*474x*/ GENx370x390x900 (opcode_474x,RX,"BC"),
+ /*475x*/ GENx370x390x900 (opcode_475x,RX,"BC"),
+ /*476x*/ GENx370x390x900 (branch_on_condition,RX,"BC"),
+ /*477x*/ GENx370x390x900 (opcode_477x,RX,"BC"),
+ /*478x*/ GENx370x390x900 (opcode_478x,RX,"BC"),
+ /*479x*/ GENx370x390x900 (branch_on_condition,RX,"BC"),
+ /*47Ax*/ GENx370x390x900 (opcode_47ax,RX,"BC"),
+ /*47Bx*/ GENx370x390x900 (opcode_47bx,RX,"BC"),
+ /*47Cx*/ GENx370x390x900 (opcode_47cx,RX,"BC"),
+ /*47Dx*/ GENx370x390x900 (opcode_47dx,RX,"BC"),
+ /*47Ex*/ GENx370x390x900 (opcode_47ex,RX,"BC"),
+ /*47Fx*/ GENx370x390x900 (opcode_47fx,RX,"BC") };
 
  
 #endif /*!defined (_GEN_ARCH)*/
