@@ -5419,9 +5419,9 @@ int     fc;                             /* Frame Count               */
 
 #if defined(FEATURE_ENHANCED_DAT_FACILITY)
         if(regs->psw.amode64)
-            regs->GR_G(r2) = n;
+            regs->GR_G(r2) = APPLY_PREFIXING (n, regs->PX);
         else
-            regs->GR_L(r2) = n;
+            regs->GR_L(r2) = APPLY_PREFIXING (n, regs->PX);
     }
 #endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
 
