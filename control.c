@@ -5194,16 +5194,18 @@ int     fc;                             /* Frame Count               */
     PERFORM_SERIALIZATION (regs);
     PERFORM_CHKPT_SYNC (regs);
 
+#if defined(FEATURE_ENHANCED_DAT_FACILITY)
+    if(FACILITY_ENABLED(ENHANCED_DAT,regs)
+     && (m3 & SSKE_MASK_MB))
+        fc = 0x100 - ((a & 0xFF000) >> 12);
+    else
+        fc = 1;
+#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
+
     /* Convert real address to absolute address */
     n = a = APPLY_PREFIXING (a, regs->PX);
 
 #if defined(FEATURE_ENHANCED_DAT_FACILITY)
-    if(FACILITY_ENABLED(ENHANCED_DAT,regs)
-     && (m3 & SSKE_MASK_MB))
-        fc = 0x100 - ((n & 0xFF000) >> 12);
-    else
-        fc = 1;
-
     for( ; fc--; n = a += 0x1000)
     {
 #endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
@@ -5418,10 +5420,23 @@ int     fc;                             /* Frame Count               */
         STORKEY_INVALIDATE(regs, n);
 
 #if defined(FEATURE_ENHANCED_DAT_FACILITY)
+        if(FACILITY_ENABLED(ENHANCED_DAT,regs)
+         && (m3 & SSKE_MASK_MB))
+        {
+            if(regs->psw.amode64)
+                regs->GR_G(r2) = APPLY_PREFIXING (a, regs->PX);
+            else
+                regs->GR_L(r2) = APPLY_PREFIXING (a, regs->PX);
+        }
+    }
+
+    if(FACILITY_ENABLED(ENHANCED_DAT,regs)
+     && (m3 & SSKE_MASK_MB))
+    {
         if(regs->psw.amode64)
-            regs->GR_G(r2) = APPLY_PREFIXING (a, regs->PX);
+            regs->GR_G(r2) = APPLY_PREFIXING (a, regs->PX) & ADDRESS_MAXWRAP(regs);
         else
-            regs->GR_L(r2) = APPLY_PREFIXING (a, regs->PX);
+            regs->GR_L(r2) = APPLY_PREFIXING (a, regs->PX) & ADDRESS_MAXWRAP(regs);
     }
 #endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
 
