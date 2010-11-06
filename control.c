@@ -5178,7 +5178,7 @@ DEF_INST(set_storage_key_extended)
 {
 int     r1, r2;                         /* Register numbers          */
 int     m3;                             /* Mask field                */
-RADR    n;                              /* Abs frame addr stor key   */
+RADR    a,n;                            /* Abs frame addr stor key   */
 #if defined(FEATURE_ENHANCED_DAT_FACILITY)
 int     fc;                             /* Frame Count               */
 #endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
@@ -5188,14 +5188,14 @@ int     fc;                             /* Frame Count               */
     PRIV_CHECK(regs);
 
     /* Load 4K block address from R2 register */
-    n = regs->GR(r2) & ADDRESS_MAXWRAP_E(regs);
+    a = regs->GR(r2) & ADDRESS_MAXWRAP_E(regs);
 
     /* Perform serialization and checkpoint-synchronization */
     PERFORM_SERIALIZATION (regs);
     PERFORM_CHKPT_SYNC (regs);
 
     /* Convert real address to absolute address */
-    n = APPLY_PREFIXING (n, regs->PX);
+    a = n = APPLY_PREFIXING (a, regs->PX);
 
 #if defined(FEATURE_ENHANCED_DAT_FACILITY)
     if(FACILITY_ENABLED(ENHANCED_DAT,regs)
@@ -5204,7 +5204,7 @@ int     fc;                             /* Frame Count               */
     else
         fc = 1;
 
-    for( ; fc--; n += 0x1000)
+    for( ; fc--; a = n += 0x1000)
     {
 #endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
 
@@ -5419,9 +5419,9 @@ int     fc;                             /* Frame Count               */
 
 #if defined(FEATURE_ENHANCED_DAT_FACILITY)
         if(regs->psw.amode64)
-            regs->GR_G(r2) = APPLY_PREFIXING (n, regs->PX);
+            regs->GR_G(r2) = APPLY_PREFIXING (a, regs->PX);
         else
-            regs->GR_L(r2) = APPLY_PREFIXING (n, regs->PX);
+            regs->GR_L(r2) = APPLY_PREFIXING (a, regs->PX);
     }
 #endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
 
