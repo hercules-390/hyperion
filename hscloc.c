@@ -13,7 +13,7 @@
 
 #include "hercules.h"
 
-char *fmt_memsize( const U64 memsize )
+static char *fmt_memsize( const U64 memsize )
 {
     static  char    fmt_mem[64];
     double  mem  = (double)memsize;
@@ -64,7 +64,7 @@ char *fmt_memsize( const U64 memsize )
     return fmt_mem;
 }
 
-char *fmt_decimal( const U64 number )
+static char *fmt_decimal( const U64 number )
 {
     static  char    fmt_dec[64];
     double  num  = (double)number;

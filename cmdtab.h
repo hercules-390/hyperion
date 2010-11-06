@@ -342,6 +342,10 @@ COMMAND("yroffset",  SYSCONFIG|SYSNDIAG, yroffset_cmd,
   "Set yroffset parameter",
     NULL)
 
+CMDABBR("defstore",7,SYSCONFIG|SYSNDIAG, defstore_cmd,
+  "Define/Display main and expanded storage values",
+    NULL)
+
 COMMAND("mainsize",  SYSCONFIG|SYSNDIAG, mainsize_cmd,
   "Set mainsize parameter",
     NULL)

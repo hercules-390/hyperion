@@ -2525,6 +2525,64 @@ BYTE c;
 }
 
 int qstor_cmd(int argc, char *argv[], char *cmdline);
+int mainsize_cmd(int argc, char *argv[], char *cmdline);
+int xpndsize_cmd(int argc, char *argv[], char *cmdline);
+
+/*-------------------------------------------------------------------*/
+/* defstore command                                                     */
+/*-------------------------------------------------------------------*/
+int defstore_cmd(int argc, char *argv[], char *cmdline)
+{
+    int rc;
+
+    UNREFERENCED(cmdline);
+
+    if ( argc < 2 || argc > 4 )
+    {
+        WRMSG( HHC02299, "E", argv[0] );
+        rc = -1;
+    }
+    else
+    {
+        char *av[4];
+        int   ac;
+
+        av[0] = argv[0];
+        ac    = 1;
+
+        if ( argc > 2 )
+        {
+            av[1] = argv[2];
+            ac++;
+        }
+        if ( argc > 3 )
+        {
+            av[2] = argv[3];
+            ac++;
+        }
+        if ( argc > 4 )
+        {
+            av[3] = argv[4];
+            ac++;
+        }
+        if ( CMD(argv[1],main,1) )
+        {
+            rc = mainsize_cmd( ac, av, NULL );
+        }
+        else
+        if ( CMD(argv[1],xpanded,1) || CMD(argv[1],expanded,1) )
+        {
+            rc = xpndsize_cmd( ac, av, NULL );
+        }
+        else
+        {
+            WRMSG( HHC02205, "E", argv[1], "; must be main, xpanded, or expanded" );
+            rc = -1;
+        }
+    }
+
+    return rc;
+}
 
 /*-------------------------------------------------------------------*/
 /* mainsize command                                                  */
@@ -2717,6 +2775,9 @@ char *q_argv[2] = { "qstor", "xpnd" };
         }
     }
 #endif
+
+    if ( xpndsize == 0 )                    // default to unlock if size is zero
+        sysblk.lock_xpndstor = 0;
     
     /* Process options */
     for (i = 2; (int)i < argc; i++)
@@ -7371,6 +7432,70 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
+
+static char *fmt_memsize( const U64 memsize )
+{
+    static  char    fmt_mem[64];
+    double  mem  = (double)memsize;
+    BYTE    size;
+    int     i;
+
+    bzero(fmt_mem, sizeof(fmt_mem));
+
+    if ( mem >= (double)ONE_EXBIBYTE )
+    {
+        mem /= (double)ONE_EXBIBYTE;
+        size = 'E';
+    }
+    if ( mem >= (double)ONE_PEBIBYTE )
+    {
+        mem /= (double)ONE_PEBIBYTE;
+        size = 'P';
+    }
+    if ( mem >= (double)ONE_TEBIBYTE )
+    {
+        mem /= (double)ONE_TEBIBYTE;
+        size = 'T';
+    }
+    else if ( mem >= ONE_GIBIBYTE )
+    {
+        mem /= (double)ONE_GIBIBYTE;
+        size = 'G';
+    }
+    else if ( mem >= (double)ONE_MEBIBYTE )
+    {
+        mem /= (double)ONE_MEBIBYTE;
+        size = 'M';
+    }
+    else 
+    {
+        mem /= (double)ONE_KIBIBYTE;
+        size = 'K';
+    }
+
+    MSGBUF( fmt_mem, "%9.4f", mem );
+    
+    i = (int)strlen(fmt_mem);
+
+    if ( i > 0 )
+    {
+        for ( i--; i > 0; i-- )
+        {
+            if      ( fmt_mem[i] == '0' ) fmt_mem[i] = '\0';
+            else if ( fmt_mem[i] == '.' ) { fmt_mem[i] = '\0'; break; }
+            else break;
+        }
+    }
+
+    fmt_mem[strlen(fmt_mem)] = '\0';
+    fmt_mem[strlen(fmt_mem)+1] = '\0';
+    fmt_mem[strlen(fmt_mem)+2] = '\0';
+    fmt_mem[strlen(fmt_mem)] = ' ';
+    fmt_mem[strlen(fmt_mem)] = size;
+
+    return fmt_mem;
+}
+
 /*-------------------------------------------------------------------*/
 /* qstor command                                                     */
 /*-------------------------------------------------------------------*/
@@ -7402,61 +7527,14 @@ int qstor_cmd(int argc, char *argv[], char *cmdline)
 
     if ( display_main )
     {
-#if defined(_900)
-        if ( sysblk.mainsize >= ONE_EXBIBYTE )
-        {
-            MSGBUF( buf, "%" I64_FMT "d E", sysblk.mainsize >> SHIFT_EXBIBYTE );
-        }
-        else if ( sysblk.mainsize >= ONE_PEBIBYTE )
-        {
-            MSGBUF( buf, "%" I64_FMT "d P", sysblk.mainsize >> SHIFT_PEBIBYTE );
-        }
-        else if ( sysblk.mainsize >= ONE_TEBIBYTE )
-        {
-            MSGBUF( buf, "%" I64_FMT "d T", sysblk.mainsize >> SHIFT_TEBIBYTE );
-        }
-        else
-#endif // defined(_900)
-             if ( sysblk.mainsize >= ONE_GIBIBYTE )
-        {
-            MSGBUF( buf, "%3.3" I64_FMT "d G", sysblk.mainsize >> SHIFT_GIBIBYTE );
-        }
-        else if ( sysblk.mainsize >= ONE_MEBIBYTE )
-        {
-            MSGBUF( buf, "%3.3" I64_FMT "d M", sysblk.mainsize >> SHIFT_MEBIBYTE );
-        }
-        else
-        {
-            MSGBUF( buf, "%3.3" I64_FMT "d K", sysblk.mainsize >> SHIFT_KIBIBYTE );
-        }
+        MSGBUF( buf, "%s", fmt_memsize((U64)sysblk.mainsize) );
 
         WRMSG( HHC17003, "I", "MAIN", buf, "main", sysblk.mainstor_locked ? "":"not " );
     }
     if ( display_xpnd )
     {
-#if defined(_900)
-        if ( xpndsize >= ONE_EXBIBYTE )
-        {
-            MSGBUF( buf, "%" I64_FMT "d E", xpndsize >> SHIFT_EXBIBYTE );
-        }
-        else if ( xpndsize >= ONE_PEBIBYTE )
-        {
-            MSGBUF( buf, "%" I64_FMT "d P", xpndsize >> SHIFT_PEBIBYTE );
-        }
-        else if ( xpndsize >= ONE_TEBIBYTE )
-        {
-            MSGBUF( buf, "%" I64_FMT "d T", xpndsize >> SHIFT_TEBIBYTE );
-        }
-        else 
-#endif // defined(_900)
-            if ( xpndsize >= ONE_GIBIBYTE )
-        {
-            MSGBUF( buf, "%3.3" I64_FMT "d G", xpndsize >> SHIFT_GIBIBYTE );
-        }
-        else
-        {
-            MSGBUF( buf, "%3.3" I64_FMT "d M", xpndsize >> SHIFT_MEBIBYTE );
-        }
+        MSGBUF( buf, "%s", fmt_memsize((U64)xpndsize) );
+
         WRMSG( HHC17003, "I", "EXPANDED", buf, "xpnd", sysblk.xpndstor_locked ? "":"not "  );
     }
     return 0;
