@@ -1253,6 +1253,19 @@ DWORD CountSetBits(ULONG_PTR bitMask)
 typedef void (WINAPI *PGNSI)(LPSYSTEM_INFO);
 typedef BOOL (WINAPI *PGPI)(DWORD, DWORD, DWORD, DWORD, PDWORD);
 typedef BOOL (WINAPI *LPFN_GLPI)(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION, PDWORD);
+typedef NTSTATUS (WINAPI *CNPI)(POWER_INFORMATION_LEVEL,PVOID,ULONG,PVOID,ULONG);
+
+typedef struct _PROCESSOR_POWER_INFORMATION 
+{
+    ULONG Number;
+    ULONG MaxMhz;
+    ULONG CurrentMhz;
+    ULONG MhzLimit;
+    ULONG MaxIdleState;
+    ULONG CurrentIdleState;
+} PROCESSOR_POWER_INFORMATION, *PPROCESSOR_POWER_INFORMATION;
+
+
 
 DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
 {
@@ -1386,9 +1399,42 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
                 free(buffer);
         }
     }
+    
+    {
+        PPROCESSOR_POWER_INFORMATION ppi = NULL;
+        CNPI        Pwrinfo;
+        ULONG       size = (ULONG)sizeof(PROCESSOR_POWER_INFORMATION);
+        
+        size *= (ULONG)pHostInfo->num_logical_cpu;
 
-    pgnsi = (PGNSI) GetProcAddress( GetModuleHandle(TEXT("kernel32.dll")),
-                                   "GetNativeSystemInfo");
+        ppi = (PPROCESSOR_POWER_INFORMATION)malloc((size_t)size);
+
+        if ( NULL != ppi )
+        {   
+            bzero(ppi, (size_t)size);
+
+            Pwrinfo = (CNPI)GetProcAddress(LoadLibrary(TEXT("powrprof.dll")), "CallNtPowerInformation");
+
+            if ( (NTSTATUS)0 == Pwrinfo(ProcessorInformation, NULL, 0, ppi, size) )
+                pHostInfo->cpu_speed = (U64)((U64)ppi->MaxMhz * (U64)ONE_MILLION);
+            
+            free(ppi);
+        }
+    }
+
+    {   /* CPUID information */
+        int CPUInfo[4] = {-1, -1, -1, -1 };
+
+        __cpuid(CPUInfo, 1);
+        if ( CPUInfo[2] & ( 1 << 25 ) )
+            pHostInfo->cpu_aes_extns = 1;
+        if ( CPUInfo[3] & 1 ) 
+            pHostInfo->fp_unit = 1;
+        if ( CPUInfo[3] & 0x03800000 ) /* bit 23 = MMX, 24 = SSE, 25 == SSE2 */
+            pHostInfo->vector_unit = 1;
+    }
+
+    pgnsi = (PGNSI) GetProcAddress( GetModuleHandle(TEXT("kernel32.dll")), "GetNativeSystemInfo");
     if (NULL != pgnsi)
         pgnsi( &si );
     else GetSystemInfo( &si );
@@ -1877,7 +1923,45 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
 #define PROCESSOR_ARCHITECTURE_AMD64            9
 #define PROCESSOR_ARCHITECTURE_IA32_ON_WIN64    10
 
-        case PROCESSOR_ARCHITECTURE_AMD64:         strlcpy( pHostInfo->machine, "AMD64"         , sizeof(pHostInfo->machine) ); break;
+        case PROCESSOR_ARCHITECTURE_AMD64:  
+            {
+                int CPUInfo[4] = {-1, -1, -1, -1 };
+                char CPUString[0x20];
+                char CPUBrand[0x40];
+
+                __cpuid(CPUInfo, 0);
+                memset(CPUString, 0, sizeof(CPUString));
+                *((int*)CPUString) = CPUInfo[1];
+                *((int*)(CPUString+4)) = CPUInfo[3];
+                *((int*)(CPUString+8)) = CPUInfo[2];
+                
+                if ( mem_eq(CPUString,"GenuineIntel",12) )
+                {
+                    strlcpy( pHostInfo->machine, "Intel(R) x64", sizeof(pHostInfo->machine) );
+                }
+                else if ( mem_eq(CPUString,"AuthenticAMD",12) )
+                {
+                    strlcpy( pHostInfo->machine, "AMD(R) x64", sizeof(pHostInfo->machine) );
+                }
+                else
+                {
+                    strlcpy( pHostInfo->machine, "AMD64", sizeof(pHostInfo->machine) ); 
+                }
+                memset(CPUBrand, 0, sizeof(CPUBrand));
+                
+                __cpuid(CPUInfo, 0x80000002);
+                memcpy(CPUBrand, CPUInfo, sizeof(CPUInfo));
+                
+                __cpuid(CPUInfo, 0x80000003);
+                memcpy(CPUBrand+16, CPUInfo, sizeof(CPUInfo));
+                
+                __cpuid(CPUInfo, 0x80000004);
+                memcpy(CPUBrand+32, CPUInfo, sizeof(CPUInfo));
+                
+                memcpy(pHostInfo->cpu_brand, CPUBrand, sizeof(pHostInfo->cpu_brand));
+                
+            }
+            break;
         case PROCESSOR_ARCHITECTURE_PPC:           strlcpy( pHostInfo->machine, "PowerPC"       , sizeof(pHostInfo->machine) ); break;
         case PROCESSOR_ARCHITECTURE_SHX:           strlcpy( pHostInfo->machine, "SH"            , sizeof(pHostInfo->machine) ); break;
         case PROCESSOR_ARCHITECTURE_ARM:           strlcpy( pHostInfo->machine, "ARM"           , sizeof(pHostInfo->machine) ); break;

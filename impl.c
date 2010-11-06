@@ -459,23 +459,31 @@ int     dll_count;                      /* index into array          */
     set_symbol( "BTIME", __TIME__ );
 
     {
-        HOST_INFO  cons_hostinfo;       /* Host info for this system */
-        char buf[8];
+        char num_procs[64];
 
-        /* Get information about this system */
-        init_hostinfo( &cons_hostinfo );
-
-        if ( cons_hostinfo.num_procs > 1 )
-            MSGBUF( buf, "MP=%d", cons_hostinfo.num_procs );
+        if ( hostinfo.num_packages     != 0 &&
+             hostinfo.num_physical_cpu != 0 &&
+             hostinfo.num_logical_cpu  != 0 )
+        {
+            MSGBUF( num_procs, "LP=%d, Cores=%d, CPUs=%d", hostinfo.num_logical_cpu, 
+                                hostinfo.num_physical_cpu, hostinfo.num_packages );
+        }
         else
-            MSGBUF( buf, "UP" );
+        {
+            if ( hostinfo.num_procs > 1 )
+                MSGBUF( num_procs, "MP=%d", hostinfo.num_procs );
+            else if ( hostinfo.num_procs == 1 )
+                strlcpy( num_procs, "UP", sizeof(num_procs) );
+            else
+                strlcpy( num_procs,   "",  sizeof(num_procs) );
+        }
 
-        set_symbol( "HOSTNAME", cons_hostinfo.nodename );
-        set_symbol( "HOSTOS", cons_hostinfo.sysname );
-        set_symbol( "HOSTOSREL", cons_hostinfo.release );
-        set_symbol( "HOSTOSVER", cons_hostinfo.version );
-        set_symbol( "HOSTARCH", cons_hostinfo.machine );
-        set_symbol( "HOSTNUMCPUS", buf );
+        set_symbol( "HOSTNAME", hostinfo.nodename );
+        set_symbol( "HOSTOS", hostinfo.sysname );
+        set_symbol( "HOSTOSREL", hostinfo.release );
+        set_symbol( "HOSTOSVER", hostinfo.version );
+        set_symbol( "HOSTARCH", hostinfo.machine );
+        set_symbol( "HOSTNUMCPUS", num_procs );
     }
 
     set_symbol( "MODNAME", sysblk.hercules_pgmname );

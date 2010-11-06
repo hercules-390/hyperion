@@ -43,6 +43,7 @@ typedef struct HOST_INFO
         char    release[20];
         char    version[50];
         char    machine[20];
+        char    cpu_brand[64];          /* x86/x64 cpu brand string  */
         int     trycritsec_avail;       /* 1=TryEnterCriticalSection */
         
         int     num_procs;              /* #of processors            */
@@ -50,10 +51,11 @@ typedef struct HOST_INFO
         int     num_logical_cpu;        /* #of of hyperthreads       */
         int     num_packages;           /* #of physical CPUS         */
         U64     bus_speed;              /* Motherboard BUS Speed   Hz*/
-        U64     cpu_speed;              /* maximum CPU speed       Hz*/
+        U64     cpu_speed;              /* Maximum CPU speed       Hz*/
         int     vector_unit;            /* CPU has vector processor  */
         int     fp_unit;                /* CPU has Floating Point    */
         int     cpu_64bits;             /* cpu is 64 bit             */
+        int     cpu_aes_extns;          /* cpu supports aes extension*/
 
         int     valid_cache_nums;       /* Cache nums are obtained   */
         RADR    cachelinesz;            /* cache line size           */
