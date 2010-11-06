@@ -1044,7 +1044,8 @@ int http_command(int argc, char *argv[])
         {
             http_serv.httpstmtold = TRUE;
         }
-
+        
+        obtain_lock( &http_lock_root );
         if (http_serv.httproot)
         {
             free(http_serv.httproot);
@@ -1062,7 +1063,8 @@ int http_command(int argc, char *argv[])
 
             http_serv.httproot = strdup(pathname);
         }
-        
+        release_lock( &http_lock_root );
+
         http_root();
 
         if ( MLVL(VERBOSE) )
@@ -1091,7 +1093,7 @@ int http_command(int argc, char *argv[])
         else
         {
             char c;
-
+            
             if (sscanf(argv[1], "%hu%c", &http_serv.httpport, &c) != 1
                     || http_serv.httpport == 0 
                     || (http_serv.httpport < 1024 && http_serv.httpport != 80) )
@@ -1127,7 +1129,7 @@ int http_command(int argc, char *argv[])
                 WRMSG( HHC02299, "E", "http" );
                 rc = -1;
             }
-
+            
             if ( rc >= 0 && MLVL(VERBOSE) )
             {
                 char msgbuf[128];
