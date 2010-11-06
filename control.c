@@ -5195,7 +5195,7 @@ int     fc;                             /* Frame Count               */
     PERFORM_CHKPT_SYNC (regs);
 
     /* Convert real address to absolute address */
-    a = n = APPLY_PREFIXING (a, regs->PX);
+    n = a = APPLY_PREFIXING (a, regs->PX);
 
 #if defined(FEATURE_ENHANCED_DAT_FACILITY)
     if(FACILITY_ENABLED(ENHANCED_DAT,regs)
@@ -5204,7 +5204,7 @@ int     fc;                             /* Frame Count               */
     else
         fc = 1;
 
-    for( ; fc--; a = n += 0x1000)
+    for( ; fc--; n = a += 0x1000)
     {
 #endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
 
