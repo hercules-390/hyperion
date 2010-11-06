@@ -1306,7 +1306,7 @@ typedef struct _MBK {
 #define PFMF_FMFI_CF         0x00010000 /* Clear-Frame Control       */
 #define PFMF_FMFI_UI         0x00008000 /* Usage Indication          */
 #define PFMF_FMFI_FSC        0x00007000 /* Frame-Size Code           */
-#define PFMF_FMFI_FSC_2K     0x00000000 /* 4K                        */
+#define PFMF_FMFI_FSC_4K     0x00000000 /* 4K                        */
 #define PFMF_FMFI_FSC_1M     0x00001000 /* 1M                        */
 #define PFMF_FMFI_FSC_RESV   0x00006000 /* Reserved                  */
 #define PFMF_FMFI_NQ         0x00000800 /* Quiesce (SK must be one)  */
@@ -2203,7 +2203,9 @@ typedef struct _PTFFQSI {               /* Query Steering Information*/
 #define BRM_RFSP                7       /* Prep shorter precision 810*/
 
 /* Mask bits for conditional SSKE facility */
+#define SSKE_MASK_NQ            0x08    /* NonQuiesce                */
 #define SSKE_MASK_MR            0x04    /* Reference bit update mask */
 #define SSKE_MASK_MC            0x02    /* Change bit update mask    */
+#define SSKE_MASK_MB            0x01    /* Multiple Block            */
 
 #endif // _ESA390_H
