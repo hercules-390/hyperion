@@ -715,9 +715,9 @@ VADR    effective_addr2;                /* Effective address         */
 
 
 /*-------------------------------------------------------------------*/
-/* 47   BC    - Branch on Condition                             [RX] */
+/* 470x BC    - Branch on Condition                             [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(opcode_470x)
+DEF_INST(branch_on_condition_470x)
 {
     UNREFERENCED(inst);
     INST_UPDATE_PSW(regs, 4, 0);
@@ -725,9 +725,9 @@ DEF_INST(opcode_470x)
 } /* end DEF_INST(branch_on_condition) */
 
 /*-------------------------------------------------------------------*/
-/* 47   BC    - Branch on Condition                             [RX] */
+/* 471x BC    - Branch on Condition                             [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(opcode_471x)
+DEF_INST(branch_on_condition_471x)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -744,9 +744,9 @@ VADR    effective_addr2;                /* Effective address         */
 } /* end DEF_INST(branch_on_condition) */
 
 /*-------------------------------------------------------------------*/
-/* 47   BC    - Branch on Condition                             [RX] */
+/* 472x BC    - Branch on Condition                             [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(opcode_472x)
+DEF_INST(branch_on_condition_472x)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -763,9 +763,9 @@ VADR    effective_addr2;                /* Effective address         */
 } /* end DEF_INST(branch_on_condition) */
 
 /*-------------------------------------------------------------------*/
-/* 47   BC    - Branch on Condition                             [RX] */
+/* 473x BC    - Branch on Condition                             [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(opcode_473x)
+DEF_INST(branch_on_condition_473x)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -782,9 +782,9 @@ VADR    effective_addr2;                /* Effective address         */
 } /* end DEF_INST(branch_on_condition) */
 
 /*-------------------------------------------------------------------*/
-/* 47   BC    - Branch on Condition                             [RX] */
+/* 474x BC    - Branch on Condition                             [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(opcode_474x)
+DEF_INST(branch_on_condition_474x)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -801,9 +801,9 @@ VADR    effective_addr2;                /* Effective address         */
 } /* end DEF_INST(branch_on_condition) */
 
 /*-------------------------------------------------------------------*/
-/* 47   BC    - Branch on Condition                             [RX] */
+/* 475x BC    - Branch on Condition                             [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(opcode_475x)
+DEF_INST(branch_on_condition_475x)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -820,28 +820,9 @@ VADR    effective_addr2;                /* Effective address         */
 } /* end DEF_INST(branch_on_condition) */
 
 /*-------------------------------------------------------------------*/
-/* 47   BC    - Branch on Condition                             [RX] */
+/* 477x BC    - Branch on Condition                             [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(opcode_476x)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    /* Branch to operand address if r1 mask bit is set */
-    if ((0x08 >> regs->psw.cc) & 0x06)
-    {
-        RX_BC(inst, regs, b2, effective_addr2);
-        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
-    }
-    else
-        INST_UPDATE_PSW(regs, 4, 0);
-
-} /* end DEF_INST(branch_on_condition) */
-
-/*-------------------------------------------------------------------*/
-/* 47   BC    - Branch on Condition                             [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(opcode_477x)
+DEF_INST(branch_on_condition_477x)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -858,9 +839,9 @@ VADR    effective_addr2;                /* Effective address         */
 } /* end DEF_INST(branch_on_condition) */
 
 /*-------------------------------------------------------------------*/
-/* 47   BC    - Branch on Condition                             [RX] */
+/* 478x BC    - Branch on Condition                             [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(opcode_478x)
+DEF_INST(branch_on_condition_478x)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -877,28 +858,9 @@ VADR    effective_addr2;                /* Effective address         */
 } /* end DEF_INST(branch_on_condition) */
 
 /*-------------------------------------------------------------------*/
-/* 47   BC    - Branch on Condition                             [RX] */
+/* 47Ax BC    - Branch on Condition                             [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(opcode_479x)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    /* Branch to operand address if r1 mask bit is set */
-    if ((0x08 >> regs->psw.cc) & 0x09)
-    {
-        RX_BC(inst, regs, b2, effective_addr2);
-        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
-    }
-    else
-        INST_UPDATE_PSW(regs, 4, 0);
-
-} /* end DEF_INST(branch_on_condition) */
-
-/*-------------------------------------------------------------------*/
-/* 47   BC    - Branch on Condition                             [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(opcode_47ax)
+DEF_INST(branch_on_condition_47Ax)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -915,9 +877,9 @@ VADR    effective_addr2;                /* Effective address         */
 } /* end DEF_INST(branch_on_condition) */
 
 /*-------------------------------------------------------------------*/
-/* 47   BC    - Branch on Condition                             [RX] */
+/* 47Bx BC    - Branch on Condition                             [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(opcode_47bx)
+DEF_INST(branch_on_condition_47Bx)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -934,9 +896,9 @@ VADR    effective_addr2;                /* Effective address         */
 } /* end DEF_INST(branch_on_condition) */
 
 /*-------------------------------------------------------------------*/
-/* 47   BC    - Branch on Condition                             [RX] */
+/* 47Cx BC    - Branch on Condition                             [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(opcode_47cx)
+DEF_INST(branch_on_condition_47Cx)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -953,9 +915,9 @@ VADR    effective_addr2;                /* Effective address         */
 } /* end DEF_INST(branch_on_condition) */
 
 /*-------------------------------------------------------------------*/
-/* 47   BC    - Branch on Condition                             [RX] */
+/* 47Dx BC    - Branch on Condition                             [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(opcode_47dx)
+DEF_INST(branch_on_condition_47Dx)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -972,9 +934,9 @@ VADR    effective_addr2;                /* Effective address         */
 } /* end DEF_INST(branch_on_condition) */
 
 /*-------------------------------------------------------------------*/
-/* 47   BC    - Branch on Condition                             [RX] */
+/* 47Ex BC    - Branch on Condition                             [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(opcode_47ex)
+DEF_INST(branch_on_condition_47Ex)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -991,9 +953,9 @@ VADR    effective_addr2;                /* Effective address         */
 } /* end DEF_INST(branch_on_condition) */
 
 /*-------------------------------------------------------------------*/
-/* 47   BC    - Branch on Condition                             [RX] */
+/* 47Fx BC    - Branch on Condition                             [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(opcode_47fx)
+DEF_INST(branch_on_condition_47Fx)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */

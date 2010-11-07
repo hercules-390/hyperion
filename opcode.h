@@ -3222,22 +3222,22 @@ DEF_INST(branch_and_set_mode);
 #endif /*defined(FEATURE_BIMODAL_ADDRESSING)*/
 DEF_INST(branch_on_condition_register);
 DEF_INST(branch_on_condition);
-DEF_INST(opcode_470x);
-DEF_INST(opcode_471x);
-DEF_INST(opcode_472x);
-DEF_INST(opcode_473x);
-DEF_INST(opcode_474x);
-DEF_INST(opcode_475x);
-DEF_INST(opcode_476x);
-DEF_INST(opcode_477x);
-DEF_INST(opcode_478x);
-DEF_INST(opcode_479x);
-DEF_INST(opcode_47ax);
-DEF_INST(opcode_47bx);
-DEF_INST(opcode_47cx);
-DEF_INST(opcode_47dx);
-DEF_INST(opcode_47ex);
-DEF_INST(opcode_47fx);
+DEF_INST(branch_on_condition_470x);
+DEF_INST(branch_on_condition_471x);
+DEF_INST(branch_on_condition_472x);
+DEF_INST(branch_on_condition_473x);
+DEF_INST(branch_on_condition_474x);
+DEF_INST(branch_on_condition_475x);
+/* No real optimalization for 476x */
+DEF_INST(branch_on_condition_477x);
+DEF_INST(branch_on_condition_478x);
+/* No real optimalization for 479x */
+DEF_INST(branch_on_condition_47Ax);
+DEF_INST(branch_on_condition_47Bx);
+DEF_INST(branch_on_condition_47Cx);
+DEF_INST(branch_on_condition_47Dx);
+DEF_INST(branch_on_condition_47Ex);
+DEF_INST(branch_on_condition_47Fx);
 DEF_INST(branch_on_count_register);
 DEF_INST(branch_on_count);
 DEF_INST(branch_on_index_high);

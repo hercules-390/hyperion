@@ -6430,22 +6430,22 @@ static zz_func v_opcode_e4xx[0x100][GEN_MAXARCH] = {
 
 
 static zz_func opcode_47x_[0x10][GEN_MAXARCH] = {
- /*470x*/ GENx370x390x900 (opcode_470x,RX,"BC"),
- /*471x*/ GENx370x390x900 (opcode_471x,RX,"BC"),
- /*472x*/ GENx370x390x900 (opcode_472x,RX,"BC"),
- /*473x*/ GENx370x390x900 (opcode_473x,RX,"BC"),
- /*474x*/ GENx370x390x900 (opcode_474x,RX,"BC"),
- /*475x*/ GENx370x390x900 (opcode_475x,RX,"BC"),
+ /*470x*/ GENx370x390x900 (branch_on_condition_470x,RX,"BC"),
+ /*471x*/ GENx370x390x900 (branch_on_condition_471x,RX,"BC"),
+ /*472x*/ GENx370x390x900 (branch_on_condition_472x,RX,"BC"),
+ /*473x*/ GENx370x390x900 (branch_on_condition_473x,RX,"BC"),
+ /*474x*/ GENx370x390x900 (branch_on_condition_474x,RX,"BC"),
+ /*475x*/ GENx370x390x900 (branch_on_condition_475x,RX,"BC"),
  /*476x*/ GENx370x390x900 (branch_on_condition,RX,"BC"),
- /*477x*/ GENx370x390x900 (opcode_477x,RX,"BC"),
- /*478x*/ GENx370x390x900 (opcode_478x,RX,"BC"),
+ /*477x*/ GENx370x390x900 (branch_on_condition_477x,RX,"BC"),
+ /*478x*/ GENx370x390x900 (branch_on_condition_478x,RX,"BC"),
  /*479x*/ GENx370x390x900 (branch_on_condition,RX,"BC"),
- /*47Ax*/ GENx370x390x900 (opcode_47ax,RX,"BC"),
- /*47Bx*/ GENx370x390x900 (opcode_47bx,RX,"BC"),
- /*47Cx*/ GENx370x390x900 (opcode_47cx,RX,"BC"),
- /*47Dx*/ GENx370x390x900 (opcode_47dx,RX,"BC"),
- /*47Ex*/ GENx370x390x900 (opcode_47ex,RX,"BC"),
- /*47Fx*/ GENx370x390x900 (opcode_47fx,RX,"BC") };
+ /*47Ax*/ GENx370x390x900 (branch_on_condition_47Ax,RX,"BC"),
+ /*47Bx*/ GENx370x390x900 (branch_on_condition_47Bx,RX,"BC"),
+ /*47Cx*/ GENx370x390x900 (branch_on_condition_47Cx,RX,"BC"),
+ /*47Dx*/ GENx370x390x900 (branch_on_condition_47Dx,RX,"BC"),
+ /*47Ex*/ GENx370x390x900 (branch_on_condition_47Ex,RX,"BC"),
+ /*47Fx*/ GENx370x390x900 (branch_on_condition_47Fx,RX,"BC") };
 
  
 #endif /*!defined (_GEN_ARCH)*/
