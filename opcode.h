@@ -3244,6 +3244,20 @@ DEF_INST(branch_on_index_high);
 DEF_INST(branch_on_index_low_or_equal);
 #if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
 DEF_INST(branch_relative_on_condition);
+DEF_INST(branch_relative_on_condition_A704);
+DEF_INST(branch_relative_on_condition_A714);
+DEF_INST(branch_relative_on_condition_A724);
+DEF_INST(branch_relative_on_condition_A734);
+DEF_INST(branch_relative_on_condition_A744);
+DEF_INST(branch_relative_on_condition_A754);
+DEF_INST(branch_relative_on_condition_A774);
+DEF_INST(branch_relative_on_condition_A784);
+DEF_INST(branch_relative_on_condition_A7A4);
+DEF_INST(branch_relative_on_condition_A7B4);
+DEF_INST(branch_relative_on_condition_A7C4);
+DEF_INST(branch_relative_on_condition_A7D4);
+DEF_INST(branch_relative_on_condition_A7E4);
+DEF_INST(branch_relative_on_condition_A7F4);
 #if 0
 DEF_INST(branch_relative_not_equal);
 DEF_INST(branch_relative_equal);

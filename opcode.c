@@ -78,6 +78,20 @@
  UNDEF_INST(test_under_mask_high)
  UNDEF_INST(test_under_mask_low)
  UNDEF_INST(branch_relative_on_condition)
+ UNDEF_INST(branch_relative_on_condition_A704)
+ UNDEF_INST(branch_relative_on_condition_A714)
+ UNDEF_INST(branch_relative_on_condition_A724)
+ UNDEF_INST(branch_relative_on_condition_A734)
+ UNDEF_INST(branch_relative_on_condition_A744)
+ UNDEF_INST(branch_relative_on_condition_A754)
+ UNDEF_INST(branch_relative_on_condition_A774)
+ UNDEF_INST(branch_relative_on_condition_A784)
+ UNDEF_INST(branch_relative_on_condition_A7A4)
+ UNDEF_INST(branch_relative_on_condition_A7B4)
+ UNDEF_INST(branch_relative_on_condition_A7C4)
+ UNDEF_INST(branch_relative_on_condition_A7D4)
+ UNDEF_INST(branch_relative_on_condition_A7E4)
+ UNDEF_INST(branch_relative_on_condition_A7F4)
  UNDEF_INST(branch_relative_and_save)
  UNDEF_INST(branch_relative_on_count)
  UNDEF_INST(load_halfword_immediate)
@@ -1227,7 +1241,7 @@ static zz_func v_opcode_a6xx[0x100][GEN_MAXARCH];
 static zz_func v_opcode_e4xx[0x100][GEN_MAXARCH];
 
 static zz_func opcode_47x_[0x10][GEN_MAXARCH];
-
+static zz_func opcode_A7x4[0x10][GEN_MAXARCH];
 
 #define DISASM_ROUTE(_table,_route) \
 int disasm_ ## _table (BYTE inst[], char unused[], char *p) \
@@ -2336,6 +2350,9 @@ void init_opcode_tables(void)
       /* Optimized BC */
       for(j = 0; j < 0x10; j++)
         replace_opcode_xxxx(arch, opcode_47x_[i][arch], 0x47, i * 0x10 + j);
+
+      /* Optimized BRC */
+      replace_opcode_xxxx(arch, opcode_A7x4[i][arch], 0xa7, i * 0x10 + 0x04);
     }
   }
 }
@@ -6446,6 +6463,25 @@ static zz_func opcode_47x_[0x10][GEN_MAXARCH] = {
  /*47Dx*/ GENx370x390x900 (branch_on_condition_47Dx,RX,"BC"),
  /*47Ex*/ GENx370x390x900 (branch_on_condition_47Ex,RX,"BC"),
  /*47Fx*/ GENx370x390x900 (branch_on_condition_47Fx,RX,"BC") };
+
+
+static zz_func opcode_A7x4[0x10][GEN_MAXARCH] = {
+ /*A704*/ GENx370x390x900 (branch_relative_on_condition_A704,RI_B,"BRC"),
+ /*A714*/ GENx370x390x900 (branch_relative_on_condition_A714,RI_B,"BRC"),
+ /*A724*/ GENx370x390x900 (branch_relative_on_condition_A724,RI_B,"BRC"),
+ /*A734*/ GENx370x390x900 (branch_relative_on_condition_A734,RI_B,"BRC"),
+ /*A744*/ GENx370x390x900 (branch_relative_on_condition_A744,RI_B,"BRC"),
+ /*A754*/ GENx370x390x900 (branch_relative_on_condition_A754,RI_B,"BRC"),
+ /*A764*/ GENx370x390x900 (branch_relative_on_condition,RI_B,"BRC"),
+ /*A774*/ GENx370x390x900 (branch_relative_on_condition_A774,RI_B,"BRC"),
+ /*A784*/ GENx370x390x900 (branch_relative_on_condition_A784,RI_B,"BRC"),
+ /*A794*/ GENx370x390x900 (branch_relative_on_condition,RI_B,"BRC"),
+ /*A7A4*/ GENx370x390x900 (branch_relative_on_condition_A7A4,RI_B,"BRC"),
+ /*A7B4*/ GENx370x390x900 (branch_relative_on_condition_A7B4,RI_B,"BRC"),
+ /*A7C4*/ GENx370x390x900 (branch_relative_on_condition_A7C4,RI_B,"BRC"),
+ /*A7D4*/ GENx370x390x900 (branch_relative_on_condition_A7D4,RI_B,"BRC"),
+ /*A7E4*/ GENx370x390x900 (branch_relative_on_condition_A7E4,RI_B,"BRC"),
+ /*A7F4*/ GENx370x390x900 (branch_relative_on_condition_A7F4,RI_B,"BRC") };
 
  
 #endif /*!defined (_GEN_ARCH)*/

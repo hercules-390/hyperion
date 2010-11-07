@@ -965,6 +965,321 @@ VADR    effective_addr2;                /* Effective address         */
 
 } /* end DEF_INST(branch_on_condition) */
 
+#if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
+/*-------------------------------------------------------------------*/
+/* A7x4 BRC   - Branch Relative on Condition                    [RI] */
+/*-------------------------------------------------------------------*/
+DEF_INST(branch_relative_on_condition)
+{
+//int   r1;                             /* Register number           */
+//int   opcd;                           /* Opcode                    */
+U16   i2;                               /* 16-bit operand values     */
+
+//  RI(inst, regs, r1, opcd, i2);
+
+    /* Branch if R1 mask bit is set */
+    if (inst[1] & (0x80 >> regs->psw.cc))
+    {
+        i2 = fetch_fw(inst) & 0xFFFF;
+        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
+    }
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_relative_on_condition) */
+
+/*-------------------------------------------------------------------*/
+/* A704 BRC   - Branch Relative on Condition                    [RI] */
+/*-------------------------------------------------------------------*/
+DEF_INST(branch_relative_on_condition_A704)
+{
+    UNREFERENCED(inst);
+    INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_relative_on_condition) */
+
+/*-------------------------------------------------------------------*/
+/* A714 BRC   - Branch Relative on Condition                    [RI] */
+/*-------------------------------------------------------------------*/
+DEF_INST(branch_relative_on_condition_A714)
+{
+//int   r1;                             /* Register number           */
+//int   opcd;                           /* Opcode                    */
+U16   i2;                               /* 16-bit operand values     */
+
+//  RI(inst, regs, r1, opcd, i2);
+
+    /* Branch if R1 mask bit is set */
+    if (regs->psw.cc == 3)
+    {
+        i2 = fetch_fw(inst) & 0xFFFF;
+        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
+    }
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_relative_on_condition) */
+
+/*-------------------------------------------------------------------*/
+/* A724 BRC   - Branch Relative on Condition                    [RI] */
+/*-------------------------------------------------------------------*/
+DEF_INST(branch_relative_on_condition_A724)
+{
+//int   r1;                             /* Register number           */
+//int   opcd;                           /* Opcode                    */
+U16   i2;                               /* 16-bit operand values     */
+
+//  RI(inst, regs, r1, opcd, i2);
+
+    /* Branch if R1 mask bit is set */
+    if (regs->psw.cc == 2)
+    {
+        i2 = fetch_fw(inst) & 0xFFFF;
+        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
+    }
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_relative_on_condition) */
+
+/*-------------------------------------------------------------------*/
+/* A734 BRC   - Branch Relative on Condition                    [RI] */
+/*-------------------------------------------------------------------*/
+DEF_INST(branch_relative_on_condition_A734)
+{
+//int   r1;                             /* Register number           */
+//int   opcd;                           /* Opcode                    */
+U16   i2;                               /* 16-bit operand values     */
+
+//  RI(inst, regs, r1, opcd, i2);
+
+    /* Branch if R1 mask bit is set */
+    if (regs->psw.cc >= 2)
+    {
+        i2 = fetch_fw(inst) & 0xFFFF;
+        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
+    }
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_relative_on_condition) */
+
+/*-------------------------------------------------------------------*/
+/* A744 BRC   - Branch Relative on Condition                    [RI] */
+/*-------------------------------------------------------------------*/
+DEF_INST(branch_relative_on_condition_A744)
+{
+//int   r1;                             /* Register number           */
+//int   opcd;                           /* Opcode                    */
+U16   i2;                               /* 16-bit operand values     */
+
+//  RI(inst, regs, r1, opcd, i2);
+
+    /* Branch if R1 mask bit is set */
+    if (regs->psw.cc == 1)
+    {
+        i2 = fetch_fw(inst) & 0xFFFF;
+        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
+    }
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_relative_on_condition) */
+
+/*-------------------------------------------------------------------*/
+/* A754 BRC   - Branch Relative on Condition                    [RI] */
+/*-------------------------------------------------------------------*/
+DEF_INST(branch_relative_on_condition_A754)
+{
+//int   r1;                             /* Register number           */
+//int   opcd;                           /* Opcode                    */
+U16   i2;                               /* 16-bit operand values     */
+
+//  RI(inst, regs, r1, opcd, i2);
+
+    /* Branch if R1 mask bit is set */
+    if (regs->psw.cc & 0x01)
+    {
+        i2 = fetch_fw(inst) & 0xFFFF;
+        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
+    }
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_relative_on_condition) */
+
+/*-------------------------------------------------------------------*/
+/* A774 BRC   - Branch Relative on Condition                    [RI] */
+/*-------------------------------------------------------------------*/
+DEF_INST(branch_relative_on_condition_A774)
+{
+//int   r1;                             /* Register number           */
+//int   opcd;                           /* Opcode                    */
+U16   i2;                               /* 16-bit operand values     */
+
+//  RI(inst, regs, r1, opcd, i2);
+
+    /* Branch if R1 mask bit is set */
+    if (regs->psw.cc)
+    {
+        i2 = fetch_fw(inst) & 0xFFFF;
+        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
+    }
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_relative_on_condition) */
+
+/*-------------------------------------------------------------------*/
+/* A784 BRC   - Branch Relative on Condition                    [RI] */
+/*-------------------------------------------------------------------*/
+DEF_INST(branch_relative_on_condition_A784)
+{
+//int   r1;                             /* Register number           */
+//int   opcd;                           /* Opcode                    */
+U16   i2;                               /* 16-bit operand values     */
+
+//  RI(inst, regs, r1, opcd, i2);
+
+    /* Branch if R1 mask bit is set */
+    if (!regs->psw.cc)
+    {
+        i2 = fetch_fw(inst) & 0xFFFF;
+        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
+    }
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_relative_on_condition) */
+
+/*-------------------------------------------------------------------*/
+/* A7A4 BRC   - Branch Relative on Condition                    [RI] */
+/*-------------------------------------------------------------------*/
+DEF_INST(branch_relative_on_condition_A7A4)
+{
+//int   r1;                             /* Register number           */
+//int   opcd;                           /* Opcode                    */
+U16   i2;                               /* 16-bit operand values     */
+
+//  RI(inst, regs, r1, opcd, i2);
+
+    /* Branch if R1 mask bit is set */
+    if (!(regs->psw.cc & 0x01))
+    {
+        i2 = fetch_fw(inst) & 0xFFFF;
+        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
+    }
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_relative_on_condition) */
+
+/*-------------------------------------------------------------------*/
+/* A7B4 BRC   - Branch Relative on Condition                    [RI] */
+/*-------------------------------------------------------------------*/
+DEF_INST(branch_relative_on_condition_A7B4)
+{
+//int   r1;                             /* Register number           */
+//int   opcd;                           /* Opcode                    */
+U16   i2;                               /* 16-bit operand values     */
+
+//  RI(inst, regs, r1, opcd, i2);
+
+    /* Branch if R1 mask bit is set */
+    if (regs->psw.cc != 1)
+    {
+        i2 = fetch_fw(inst) & 0xFFFF;
+        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
+    }
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_relative_on_condition) */
+
+/*-------------------------------------------------------------------*/
+/* A7C4 BRC   - Branch Relative on Condition                    [RI] */
+/*-------------------------------------------------------------------*/
+DEF_INST(branch_relative_on_condition_A7C4)
+{
+//int   r1;                             /* Register number           */
+//int   opcd;                           /* Opcode                    */
+U16   i2;                               /* 16-bit operand values     */
+
+//  RI(inst, regs, r1, opcd, i2);
+
+    /* Branch if R1 mask bit is set */
+    if (regs->psw.cc <= 1)
+    {
+        i2 = fetch_fw(inst) & 0xFFFF;
+        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
+    }
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_relative_on_condition) */
+
+/*-------------------------------------------------------------------*/
+/* A7D4 BRC   - Branch Relative on Condition                    [RI] */
+/*-------------------------------------------------------------------*/
+DEF_INST(branch_relative_on_condition_A7D4)
+{
+//int   r1;                             /* Register number           */
+//int   opcd;                           /* Opcode                    */
+U16   i2;                               /* 16-bit operand values     */
+
+//  RI(inst, regs, r1, opcd, i2);
+
+    /* Branch if R1 mask bit is set */
+    if (regs->psw.cc != 2)
+    {
+        i2 = fetch_fw(inst) & 0xFFFF;
+        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
+    }
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_relative_on_condition) */
+
+/*-------------------------------------------------------------------*/
+/* A7E4 BRC   - Branch Relative on Condition                    [RI] */
+/*-------------------------------------------------------------------*/
+DEF_INST(branch_relative_on_condition_A7E4)
+{
+//int   r1;                             /* Register number           */
+//int   opcd;                           /* Opcode                    */
+U16   i2;                               /* 16-bit operand values     */
+
+//  RI(inst, regs, r1, opcd, i2);
+
+    /* Branch if R1 mask bit is set */
+    if (regs->psw.cc != 3)
+    {
+        i2 = fetch_fw(inst) & 0xFFFF;
+        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
+    }
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_relative_on_condition) */
+
+/*-------------------------------------------------------------------*/
+/* A7F4 BRC   - Branch Relative on Condition                    [RI] */
+/*-------------------------------------------------------------------*/
+DEF_INST(branch_relative_on_condition_A7F4)
+{
+//int   r1;                             /* Register number           */
+//int   opcd;                           /* Opcode                    */
+U16   i2;                               /* 16-bit operand values     */
+
+//  RI(inst, regs, r1, opcd, i2);
+
+    i2 = fetch_fw(inst) & 0xFFFF;
+    SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
+
+} /* end DEF_INST(branch_relative_on_condition) */
+
+#endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
+
 /*-------------------------------------------------------------------*/
 /* 06   BCTR  - Branch on Count Register                        [RR] */
 /*-------------------------------------------------------------------*/
@@ -1067,30 +1382,6 @@ S32     i, j;                           /* Integer work areas        */
 
 } /* end DEF_INST(branch_on_index_low_or_equal) */
 
-
-#if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
-/*-------------------------------------------------------------------*/
-/* A7x4 BRC   - Branch Relative on Condition                    [RI] */
-/*-------------------------------------------------------------------*/
-DEF_INST(branch_relative_on_condition)
-{
-//int   r1;                             /* Register number           */
-//int   opcd;                           /* Opcode                    */
-U16   i2;                               /* 16-bit operand values     */
-
-//  RI(inst, regs, r1, opcd, i2);
-
-    /* Branch if R1 mask bit is set */
-    if (inst[1] & (0x80 >> regs->psw.cc))
-    {
-        i2 = fetch_fw(inst) & 0xFFFF;
-        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
-    }
-    else
-        INST_UPDATE_PSW(regs, 4, 0);
-
-} /* end DEF_INST(branch_relative_on_condition) */
-#endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
 
 #if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
 /*-------------------------------------------------------------------*/
