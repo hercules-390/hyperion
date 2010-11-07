@@ -253,14 +253,14 @@ int ProcessCmdLine (char* pszCmdLine)
 
     obtain_lock(&ProcessConsoleCommandLock);
 
-    CommandLockCounter++;
-
     if (MLVL(DEBUG))
     {
         char msgbuf[64];
         MSGBUF( msgbuf, "Panel_Enter CommandLockCounter %d", CommandLockCounter );
         WRMSG( HHC90000, "D", msgbuf );
     }
+
+    CommandLockCounter++;
 
     if (!pszCmdLine || !*pszCmdLine)
     {

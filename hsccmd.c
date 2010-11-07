@@ -2537,7 +2537,12 @@ int defstore_cmd(int argc, char *argv[], char *cmdline)
 
     UNREFERENCED(cmdline);
 
-    if ( argc < 2 || argc > 4 )
+    if ( argc == 1 )
+    {
+        rc = qstor_cmd( argc, argv, cmdline );
+    }
+    else
+    if ( argc > 4 )
     {
         WRMSG( HHC02299, "E", argv[0] );
         rc = -1;
@@ -2570,13 +2575,13 @@ int defstore_cmd(int argc, char *argv[], char *cmdline)
             rc = mainsize_cmd( ac, av, NULL );
         }
         else
-        if ( CMD(argv[1],xpanded,1) || CMD(argv[1],expanded,1) )
+        if ( CMD(argv[1],xstore,1) || CMD(argv[1],expanded,1) )
         {
             rc = xpndsize_cmd( ac, av, NULL );
         }
         else
         {
-            WRMSG( HHC02205, "E", argv[1], "; must be main, xpanded, or expanded" );
+            WRMSG( HHC02205, "E", argv[1], "; must be main, xstore, or expanded" );
             rc = -1;
         }
     }
@@ -2617,18 +2622,28 @@ char *q_argv[2] = { "qstor", "main" };
     {
         switch (toupper(f))
         {
+        case 'B':
+            if ( mainsize < 4096 )
+                mainsize = 4096;
+            break;
         case 'K':
-            mainsize <<= SHIFT_KILOBYTE;
+            mainsize <<= SHIFT_KIBIBYTE;
             break;
         case 'M':
-            mainsize <<= SHIFT_MEGABYTE;
+            mainsize <<= SHIFT_MEBIBYTE;
             break;
         case 'G':
-            mainsize <<= SHIFT_GIGABYTE;
+            mainsize <<= SHIFT_GIBIBYTE;
             break;
 #if SIZEOF_SIZE_T >= 8
         case 'T':
-            mainsize <<= SHIFT_TERABYTE;
+            mainsize <<= SHIFT_TEBIBYTE;
+            break;
+        case 'P':
+            mainsize <<= SHIFT_PEBIBYTE;
+            break;
+        case 'E':
+            mainsize <<= SHIFT_EXBIBYTE;
             break;
 #endif
         default:
@@ -7433,112 +7448,98 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
+
+
+/*-------------------------------------------------------------------*/
+/* fmt_memsize routine for qstor                                     */
+/*-------------------------------------------------------------------*/
 static char *fmt_memsize( const U64 memsize )
 {
-    static  char    fmt_mem[64];
-    double  mem  = (double)memsize;
-    BYTE    size;
-    int     i;
+    // Mainframe memory and DASD amounts are reported in 2**(10*n)
+    // values, (x_iB international format, and shown as x_ or x_B, when
+    // x >= 1024; x when x < 1024). Open Systems and Windows report
+    // memory in the same format, but report DASD storage in 10**(3*n)
+    // values. (Thank you, various marketing groups and international
+    // standards committees...)
 
-    bzero(fmt_mem, sizeof(fmt_mem));
+    // For Hercules, mainframe oriented reporting characteristics will
+    // be formatted and shown as x_, when x >= 1024, and as x when x <
+    // 1024. Reporting of Open Systems and Windows specifics should
+    // follow the international format, shown as x_iB, when x >= 1024,
+    // and x or xB when x < 1024. Reporting is done at the highest
+    // integral boundary.
 
-    if ( mem >= (double)ONE_EXBIBYTE )
-    {
-        mem /= (double)ONE_EXBIBYTE;
-        size = 'E';
-    }
-    if ( mem >= (double)ONE_PEBIBYTE )
-    {
-        mem /= (double)ONE_PEBIBYTE;
-        size = 'P';
-    }
-    if ( mem >= (double)ONE_TEBIBYTE )
-    {
-        mem /= (double)ONE_TEBIBYTE;
-        size = 'T';
-    }
-    else if ( mem >= ONE_GIBIBYTE )
-    {
-        mem /= (double)ONE_GIBIBYTE;
-        size = 'G';
-    }
-    else if ( mem >= (double)ONE_MEBIBYTE )
-    {
-        mem /= (double)ONE_MEBIBYTE;
-        size = 'M';
-    }
-    else 
-    {
-        mem /= (double)ONE_KIBIBYTE;
-        size = 'K';
-    }
+    // Format storage in 2**(10*n) values at the highest integral
+    // integer boundary.
 
-    MSGBUF( fmt_mem, "%9.4f", mem );
-    
-    i = (int)strlen(fmt_mem);
+    const  char suffix[9] = {0x00, 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'};
+    static char fmt_mem[128];    // Max of 21 bytes used for U64
+    u_int   i = 0;
+    U64 mem = memsize;
 
-    if ( i > 0 )
-    {
-        for ( i--; i > 0; i-- )
-        {
-            if      ( fmt_mem[i] == '0' ) fmt_mem[i] = '\0';
-            else if ( fmt_mem[i] == '.' ) { fmt_mem[i] = '\0'; break; }
-            else break;
-        }
-    }
+    if (mem)
+        for (i = 0; i < sizeof(suffix); i++)
+            {
+                if (mem & 0x3FF)
+                    break;
+                mem >>= 10;
+            }
 
-    fmt_mem[strlen(fmt_mem)] = '\0';
-    fmt_mem[strlen(fmt_mem)+1] = '\0';
-    fmt_mem[strlen(fmt_mem)+2] = '\0';
-    fmt_mem[strlen(fmt_mem)] = ' ';
-    fmt_mem[strlen(fmt_mem)] = size;
+    MSGBUF( fmt_mem, "%"I64_FMT"u %c", mem, suffix[i]);
 
     return fmt_mem;
 }
+
 
 /*-------------------------------------------------------------------*/
 /* qstor command                                                     */
 /*-------------------------------------------------------------------*/
 int qstor_cmd(int argc, char *argv[], char *cmdline)
 {
-    BYTE    display_main = TRUE;
-    BYTE    display_xpnd = TRUE;
-
-    char buf[64];
-    U64  xpndsize = (U64)(sysblk.xpndsize) << 12;
+    BYTE    display_main = FALSE;
+    BYTE    display_xpnd = FALSE;
 
     UNREFERENCED(cmdline);
 
-    if (argc > 2)
+    if ( argc < 2 )
+        display_main = display_xpnd = TRUE;
+    else
     {
-        WRMSG( HHC02299, "E", argv[0] );
-        return -1;
-    }
-
-    if ( argc == 2 && CMD(argv[1],mainsize,1) )
-        display_xpnd = FALSE;
-    else if ( argc == 2 && ( CMD(argv[1],xpndsize,1) || CMD(argv[1],expanded,2) ) )
-        display_main = FALSE;
-    else if ( argc == 2 )
-    {
-        WRMSG( HHC02205, "E", argv[1], "; either 'mainsize' or 'xpndsize' is valid" );
-        return -1;
+        u_int i;
+        for (i = 1; i < (u_int)argc; i++)
+        {
+            char check[16];
+            strnupper(check, argv[i], (u_int)sizeof(check));    // Uppercase for multiple checks
+            if ( strabbrev("MAINSIZE", check, 1) )
+                display_main = TRUE;
+            else if ( strabbrev("XPNDSIZE", check, 1) ||
+                      strabbrev("EXPANDED", check, 1) )
+                display_xpnd = TRUE;
+            else
+            {
+                WRMSG( HHC02205, "E", argv[1], "; either 'mainsize' or 'xpndsize' is valid" );
+                return -1;
+            }
+        }
     }
 
     if ( display_main )
     {
-        MSGBUF( buf, "%s", fmt_memsize((U64)sysblk.mainsize) );
-
-        WRMSG( HHC17003, "I", "MAIN", buf, "main", sysblk.mainstor_locked ? "":"not " );
+        U64 mainsize = sysblk.mainsize;
+        if (!sysblk.maxcpu && mainsize <= _64_KILOBYTE )
+            mainsize = 0;
+        WRMSG( HHC17003, "I", "MAIN", fmt_memsize((U64)mainsize),
+                              "main", sysblk.mainstor_locked ? "":"not " );
     }
     if ( display_xpnd )
     {
-        MSGBUF( buf, "%s", fmt_memsize((U64)xpndsize) );
-
-        WRMSG( HHC17003, "I", "EXPANDED", buf, "xpnd", sysblk.xpndstor_locked ? "":"not "  );
+        WRMSG( HHC17003, "I", "EXPANDED", fmt_memsize((U64)sysblk.xpndsize << 12),
+                              "xpnd", sysblk.xpndstor_locked ? "":"not "  );
     }
     return 0;
 }
+
+
 
 /*-------------------------------------------------------------------*/
 /* cmdlevel - display/set the current command level group(s)         */

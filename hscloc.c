@@ -13,56 +13,62 @@
 
 #include "hercules.h"
 
+/*-------------------------------------------------------------------*/
+/* fmt_memsize routine for qstor                                     */
+/*-------------------------------------------------------------------*/
 static char *fmt_memsize( const U64 memsize )
 {
-    static  char    fmt_mem[64];
-    double  mem  = (double)memsize;
-    BYTE    size;
-    int     i;
+    // Mainframe memory and DASD amounts are reported in 2**(10*n)
+    // values, (x_iB international format, and shown as x_ or x_B, when
+    // x >= 1024; x when x < 1024). Open Systems and Windows report
+    // memory in the same format, but report DASD storage in 10**(3*n)
+    // values. (Thank you, various marketing groups and international
+    // standards committees...)
 
-    bzero(fmt_mem, sizeof(fmt_mem));
+    // For Hercules, mainframe oriented reporting characteristics will
+    // be formatted and shown as x_, when x >= 1024, and as x when x <
+    // 1024. Reporting of Open Systems and Windows specifics should
+    // follow the international format, shown as x_iB, when x >= 1024,
+    // and x or xB when x < 1024. Reporting is done at the highest
+    // integral boundary.
 
-    if ( mem >= (double)ONE_TEBIBYTE )
-    {
-        mem /= (double)ONE_TEBIBYTE;
-        size = 'T';
-    }
-    else if ( mem >= ONE_GIBIBYTE )
-    {
-        mem /= (double)ONE_GIBIBYTE;
-        size = 'G';
-    }
-    else if ( mem >= (double)ONE_MEBIBYTE )
-    {
-        mem /= (double)ONE_MEBIBYTE;
-        size = 'M';
-    }
-    else 
-    {
-        mem /= (double)ONE_KIBIBYTE;
-        size = 'K';
-    }
+    // Format storage in 2**(10*n) values at the highest integral
+    // integer boundary.
 
-    MSGBUF( fmt_mem, "%9.4f", mem );
-    
-    i = (int)strlen(fmt_mem);
+    const  char suffix[9] = {0x00, 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'};
+    static char fmt_mem[128];    // Max of 21 bytes used for U64
+    U64 mem = memsize;
+    u_int   i = 0;
 
-    if ( i > 0 )
-    {
-        for ( i--; i > 0; i-- )
-        {
-            if      ( fmt_mem[i] == '0' ) fmt_mem[i] = '\0';
-            else if ( fmt_mem[i] == '.' ) { fmt_mem[i] = '\0'; break; }
-            else break;
-        }
-    }
+    if (mem)
+        for (i = 0; i < sizeof(suffix); i++)
+            {
+/*                    if ( mem > ONE_YOBIBYTE )
+                    mem &= 0xFFFFFFFFC0000000ULL;
+                     if ( mem > ONE_ZEBIBYTE )
+                    mem &= 0xFFFFFFFFC0000000ULL;
+                else 
+*/
+                     if ( mem > ONE_EXBIBYTE )
+                    mem &= 0xFFFC000000000000ULL;
+                else if ( mem > ONE_PEBIBYTE )
+                    mem &= 0xFFFFFF0000000000ULL;
+                else if ( mem > ONE_TEBIBYTE )
+                    mem &= 0xFFFFFFFFC0000000ULL;
+                else if ( mem > ONE_GIBIBYTE )
+                    mem &= 0xFFFFFFFFFFF00000ULL;
+                else if ( mem > ONE_MEBIBYTE )
+                    mem &= 0xFFFFFFFFFFFFFC00ULL;
+                if (mem & 0x03FF) 
+                    break;
+                mem >>= 10;
+            }
 
-    fmt_mem[strlen(fmt_mem)] = '\0';
-    fmt_mem[strlen(fmt_mem)+1] = '\0';
-    fmt_mem[strlen(fmt_mem)] = size;
+    MSGBUF( fmt_mem, "%5"I64_FMT"u %c", mem, suffix[i]);
 
     return fmt_mem;
 }
+
 
 static char *fmt_decimal( const U64 number )
 {
@@ -73,44 +79,54 @@ static char *fmt_decimal( const U64 number )
 
     bzero(fmt_dec, sizeof(fmt_dec));
 
-    if ( num >= (double)ONE_TRILLION )
+    if ( num > 0 )
     {
-        num /= (double)ONE_TRILLION;
-        size = 'T';
-    }
-    else if ( num >= ONE_BILLION )
-    {
-        num /= (double)ONE_BILLION;
-        size = 'G';
-    }
-    else if ( num >= (double)ONE_MILLION )
-    {
-        num /= (double)ONE_MILLION;
-        size = 'M';
-    }
-    else 
-    {
-        num /= (double)ONE_THOUSAND;
-        size = 'K';
-    }
-
-    MSGBUF( fmt_dec, "%7.3f", num );
-    
-    i = (int)strlen(fmt_dec);
-
-    if ( i > 0 )
-    {
-        for ( i--; i > 0; i-- )
+        if ( num >= (double)ONE_TRILLION )
         {
-            if      ( fmt_dec[i] == '0' ) fmt_dec[i] = '\0';
-            else if ( fmt_dec[i] == '.' ) { fmt_dec[i] = '\0'; break; }
-            else break;
+            num /= (double)ONE_TRILLION;
+            size = 'T';
         }
-    }
+        else if ( num >= ONE_BILLION )
+        {
+            num /= (double)ONE_BILLION;
+            size = 'G';
+        }
+        else if ( num >= (double)ONE_MILLION )
+        {
+            num /= (double)ONE_MILLION;
+            size = 'M';
+        }
+        else 
+        {
+            num /= (double)ONE_THOUSAND;
+            size = 'K';
+        }
 
-    fmt_dec[strlen(fmt_dec)] = '\0';
-    fmt_dec[strlen(fmt_dec)+1] = '\0';
-    fmt_dec[strlen(fmt_dec)] = size;
+        MSGBUF( fmt_dec, "%7.3f", num );
+    
+        i = (int)strlen(fmt_dec);
+
+        if ( i > 0 )
+        {
+            for ( i--; i > 0; i-- )
+            {
+                if      ( fmt_dec[i] == '0' ) fmt_dec[i] = '\0';
+                else if ( fmt_dec[i] == '.' ) { fmt_dec[i] = '\0'; break; }
+                else break;
+            }
+        }
+
+        fmt_dec[strlen(fmt_dec)] = '\0';
+        fmt_dec[strlen(fmt_dec)+1] = '\0';
+        fmt_dec[strlen(fmt_dec)+2] = '\0';
+        fmt_dec[strlen(fmt_dec)] = ' ';
+        fmt_dec[strlen(fmt_dec)] = size;
+    }
+    else
+    {
+        MSGBUF( fmt_dec, "%3d ", 0 );
+        size = ' ';
+    }
 
     return fmt_dec;
 }
@@ -545,42 +561,42 @@ int locate_hostinfo(int argc, char *argv[], char *cmdline)
 
         WRMSG( HHC90000, "D", "" );
 
-        MSGBUF( msgbuf, "%-17s = %d", "num_procs", pHostInfo->num_procs );
+        MSGBUF( msgbuf, "%-17s = %3d", "num_procs", pHostInfo->num_procs );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %d", "num_packages", pHostInfo->num_packages );
+        MSGBUF( msgbuf, "%-17s = %3d", "num_packages", pHostInfo->num_packages );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %d", "num_physical_cpu", pHostInfo->num_physical_cpu );
+        MSGBUF( msgbuf, "%-17s = %3d", "num_physical_cpu", pHostInfo->num_physical_cpu );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %d", "num_logical_cpu", pHostInfo->num_logical_cpu );
+        MSGBUF( msgbuf, "%-17s = %3d", "num_logical_cpu", pHostInfo->num_logical_cpu );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %shz", "bus_speed", fmt_decimal((U64)pHostInfo->bus_speed) );
+        MSGBUF( msgbuf, "%-17s = %sHz", "bus_speed", fmt_decimal((U64)pHostInfo->bus_speed) );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %shz", "cpu_speed", fmt_decimal((U64)pHostInfo->cpu_speed) );
+        MSGBUF( msgbuf, "%-17s = %sHz", "cpu_speed", fmt_decimal((U64)pHostInfo->cpu_speed) );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %s", "vector_unit", pHostInfo->vector_unit ? "YES" : "NO" );
+        MSGBUF( msgbuf, "%-17s = %s", "vector_unit", pHostInfo->vector_unit ? "YES" : " NO" );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %s", "fp_unit", pHostInfo->fp_unit ? "YES" : "NO" );
+        MSGBUF( msgbuf, "%-17s = %s", "fp_unit", pHostInfo->fp_unit ? "YES" : " NO" );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %s", "cpu_64bits", pHostInfo->cpu_64bits ? "YES" : "NO" );
+        MSGBUF( msgbuf, "%-17s = %s", "cpu_64bits", pHostInfo->cpu_64bits ? "YES" : " NO" );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %s", "cpu_aes_extns", pHostInfo->cpu_aes_extns ? "YES" : "NO" );
+        MSGBUF( msgbuf, "%-17s = %s", "cpu_aes_extns", pHostInfo->cpu_aes_extns ? "YES" : " NO" );
         WRMSG( HHC90000, "D", msgbuf );
 
         WRMSG( HHC90000, "D", "" );
 
-        MSGBUF( msgbuf, "%-17s = %s", "valid_cache_nums", pHostInfo->valid_cache_nums ? "YES" : "NO" );
+        MSGBUF( msgbuf, "%-17s = %s", "valid_cache_nums", pHostInfo->valid_cache_nums ? "YES" : " NO" );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %"FRADR"u", "cachelinesz", pHostInfo->cachelinesz );
+        MSGBUF( msgbuf, "%-17s = %5"FRADR"u B", "cachelinesz", pHostInfo->cachelinesz );
         WRMSG( HHC90000, "D", msgbuf );
 
         if ( pHostInfo->L1Dcachesz != 0 )
@@ -614,6 +630,8 @@ int locate_hostinfo(int argc, char *argv[], char *cmdline)
 
         MSGBUF( msgbuf, "%-17s = %siB", "AllocGran", fmt_memsize((U64)pHostInfo->AllocationGranularity) );
         WRMSG( HHC90000, "D", msgbuf );
+
+        WRMSG( HHC90000, "D", "" );
 
         MSGBUF( msgbuf, "%-17s = %siB", "TotalPhys", fmt_memsize((U64)pHostInfo->TotalPhys) );
         WRMSG( HHC90000, "D", msgbuf );

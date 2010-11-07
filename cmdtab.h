@@ -344,15 +344,70 @@ COMMAND("yroffset",  SYSCONFIG|SYSNDIAG, yroffset_cmd,
 
 CMDABBR("defstore",7,SYSCONFIG|SYSNDIAG, defstore_cmd,
   "Define/Display main and expanded storage values",
-    NULL)
+  "Format: defstorE [ mAIN | xSTORE | eXPANDED [ ssss[S] [ lOCK | unlOCK ] ] ]\n"
+  "                   Without any options, display current settings\n"
+  "        mAIN     - define/display main storage allocations\n"
+  "        xSTORE   - define/display expanded storage allocations\n"
+  "        eXPANDED\n"
+  "\n"
+  "        ssssS    - specify amount of storage in 'S' units\n"
+  "                   B = no multiplier             - main only\n"
+  "                   K = 2**10 (kilo/kibi)         - main only\n"
+  "                   M = 2**20 (mega/mebi)\n"
+  "                   G = 2**30 (giga/gibi)\n"
+  "                   T = 2**40 (tera/tebi)         - not 32-bit\n"
+  "                   P = 2**50 (peta/pebi)         - not 32-bit\n"
+  "                   E = 2**60 (exa/exbi)          - not 32-bit\n"
+  "\n"
+  "        lOCK    - attempt to lock storage (pages lock by host OS)\n"
+  "        unlOCK  - leave storage unlocked (pagable by host OS)\n"
+  "\n"
+  "      (none)    - display current mainsize value\n"
+  "\n"
+  " Note: Multipliers 'T', 'P', and 'E' are not available on 32bit machines\n" 
+  "       Expanded Storage is allocated in minimum of 1M units\n"
+  "")
 
 COMMAND("mainsize",  SYSCONFIG|SYSNDIAG, mainsize_cmd,
-  "Set mainsize parameter",
-    NULL)
+  "Define/Display mainsize parameter",
+  "Format: mainsize [ mmmm | nnnS [ lOCK | unlOCK ] ]\n"
+  "        mmmm    - define main storage size mmmm Megabytes\n"
+  "\n"
+  "        nnnS    - define main storage size nnn S where S is the multiplier\n"
+  "                  B = no multiplier\n"
+  "                  K = 2**10 (kilo/kibi)\n"
+  "                  M = 2**20 (mega/mebi)\n"
+  "                  G = 2**30 (giga/gibi)\n"
+  "                  T = 2**40 (tera/tebi)\n"
+  "                  P = 2**50 (peta/pebi)\n"
+  "                  E = 2**60 (exa/exbi)\n"
+  "\n"
+  "        lOCK    - attempt to lock storage (pages lock by host OS)\n"
+  "        unlOCK  - leave storage unlocked (pagable by host OS)\n"
+  "\n"
+  "      (none)    - display current mainsize value\n"
+  "\n"
+  " Note: Multipliers 'T', 'P', and 'E' are not available on 32bit machines\n"
+  "")
 
 COMMAND("xpndsize",  SYSCONFIG|SYSNDIAG, xpndsize_cmd,
-  "Set xpndsize parameter",
-    NULL)
+  "Define/Display mainsize parameter",
+  "Format: xpndsize [ mmmm | nnnS ]\n"
+  "        mmmm    - define expanded storage size mmmm Megabytes\n"
+  "\n"
+  "        nnnS    - define expanded storage size nnn S where S is the multiplier\n"
+  "                  M = 2**20 (mega/mebi)\n"
+  "                  G = 2**30 (giga/gibi)\n"
+  "                  T = 2**40 (tera/tebi)\n"
+  "\n"
+  "      (none)    - display current mainsize value\n"
+  "\n"
+  "        lOCK    - attempt to lock storage (pages lock by host OS)\n"
+  "        unlOCK  - leave storage unlocked (pagable by host OS)\n"
+  "\n"
+  " Note: Multiplier 'T' is not available on 32bit machines\n"
+  "       Expanded storage is limited to 1G on 32bit machines\n"
+  "")
 
 COMMAND("hercprio",  SYSCONFIG|SYSNDIAG, hercprio_cmd,
   "Set/Display hercprio parameter",
