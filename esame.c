@@ -4999,7 +4999,7 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
         ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
     /* Ignore bits 46-63 of the 2nd operand */
-    a &= ~0x3fULL;
+    a &= ~0x3ffffULL;
 
 #if defined(_FEATURE_SIE)
     if(SIE_MODE(regs) && (SIE_STATB(regs, IC2, RRBE)))
