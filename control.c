@@ -5109,7 +5109,7 @@ RADR    n;                              /* Absolute storage addr     */
 /*        code is set to 0 and the function return value is 1;       */
 /*-------------------------------------------------------------------*/
 static inline int ARCH_DEP(conditional_sske_procedure)
-        (REGS *regs, int r1, int m3, BYTE skey)
+        (REGS *regs, int r1, int m3, BYTE skey, BYTE r1key)
 {
     /* Perform normal SSKE if MR and MC bits are both zero */
     if ((m3 & (SSKE_MASK_MR | SSKE_MASK_MC)) == 0)
@@ -5117,14 +5117,17 @@ static inline int ARCH_DEP(conditional_sske_procedure)
 
     /* Perform conditional SSKE if either MR or MC bits are set */
 
+    /* Ignore Bad Frame indicator */
+    skey &= ~(STORKEY_BADFRM);
+
     /* Insert storage key into R1 register bits 48-55 */
-    regs->GR_LHLCH(r1) = skey & ~(STORKEY_BADFRM);
+    regs->GR_LHLCH(r1) = skey;
 
     /* If storage key and fetch bit do not equal new values
        in R1 register bits 56-60 then set condition code 1
        and return to SSKE to update storage key */
-    if ((regs->GR_LHLCH(r1) & (STORKEY_KEY | STORKEY_FETCH))
-        != (regs->GR_LHLCL(r1) & (STORKEY_KEY | STORKEY_FETCH)))
+    if ((skey & (STORKEY_KEY | STORKEY_FETCH))
+        != (r1key & (STORKEY_KEY | STORKEY_FETCH)))
     {
         regs->psw.cc = 1;
         return 0;
@@ -5143,8 +5146,8 @@ static inline int ARCH_DEP(conditional_sske_procedure)
        bit 61 of R1 register then set condition code 0
        and leave storage key unchanged */
     if ((m3 & SSKE_MASK_MR) == 0
-        && ((regs->GR_LHLCH(r1) & STORKEY_REF)
-           == (regs->GR_LHLCL(r1) & STORKEY_REF)))
+        && ((skey & STORKEY_REF)
+           == (r1key & STORKEY_REF)))
     {
         regs->psw.cc = 0;
         return 1;
@@ -5154,8 +5157,8 @@ static inline int ARCH_DEP(conditional_sske_procedure)
        bit 62 of R1 register then set condition code 0
        and leave storage key unchanged */
     if ((m3 & SSKE_MASK_MC) == 0
-        && ((regs->GR_LHLCH(r1) & STORKEY_CHANGE)
-           == (regs->GR_LHLCL(r1) & STORKEY_CHANGE)))
+        && ((skey & STORKEY_CHANGE)
+           == (r1key & STORKEY_CHANGE)))
     {
         regs->psw.cc = 0;
         return 1;
@@ -5182,6 +5185,7 @@ RADR    a,n;                            /* Abs frame addr stor key   */
 #if defined(FEATURE_ENHANCED_DAT_FACILITY)
 int     fc;                             /* Frame Count               */
 #endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
+BYTE    r1key;
 
     RRF_M(inst, regs, r1, r2, m3);
 
@@ -5189,6 +5193,9 @@ int     fc;                             /* Frame Count               */
 
     /* Load 4K block address from R2 register */
     a = regs->GR(r2) & ADDRESS_MAXWRAP_E(regs);
+
+    /* Key to be applied */
+    r1key = regs->GR_LHLCL(r1);
 
     /* Perform serialization and checkpoint-synchronization */
     PERFORM_SERIALIZATION (regs);
@@ -5208,6 +5215,15 @@ int     fc;                             /* Frame Count               */
 #if defined(FEATURE_ENHANCED_DAT_FACILITY)
     for( ; fc--; n = a += 0x1000)
     {
+
+        if(FACILITY_ENABLED(ENHANCED_DAT,regs)
+         && (m3 & SSKE_MASK_MB))
+        {
+            if(regs->psw.amode64)
+                regs->GR_G(r2) = APPLY_PREFIXING (a, regs->PX);
+            else
+                regs->GR_L(r2) = APPLY_PREFIXING (a, regs->PX);
+        }
 #endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
 
         /* Addressing exception if block is outside main storage */
@@ -5322,14 +5338,14 @@ int     fc;                             /* Frame Count               */
 
 #if defined(FEATURE_CONDITIONAL_SSKE)
                     /* Perform conditional SSKE procedure */
-                    if (ARCH_DEP(conditional_sske_procedure)(regs, r1, m3, protkey))
+                    if (ARCH_DEP(conditional_sske_procedure)(regs, r1, m3, protkey, r1key))
                         return;
 #endif /*defined(FEATURE_CONDITIONAL_SSKE)*/
                     /* or with host set */
                     rcpkey |= realkey << 4;
                     /* insert new settings of the guest set */
                     rcpkey &= ~(STORKEY_REF | STORKEY_CHANGE);
-                    rcpkey |= regs->GR_LHLCL(r1) & (STORKEY_REF | STORKEY_CHANGE);
+                    rcpkey |= r1key & (STORKEY_REF | STORKEY_CHANGE);
                     regs->mainstor[rcpa] = rcpkey;
                     STORAGE_KEY(rcpa, regs) |= (STORKEY_REF|STORKEY_CHANGE);
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
@@ -5339,21 +5355,21 @@ int     fc;                             /* Frame Count               */
                         || (regs->hostregs->arch_mode == ARCH_900)
 #endif /*defined(_FEATURE_ZSIE)*/
                                                                   )
-                        regs->mainstor[rcpa-1] = regs->GR_LHLCL(r1)
+                        regs->mainstor[rcpa-1] = r1key
                                                 & (STORKEY_KEY | STORKEY_FETCH);
                     if(!sr)
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
                     {
 #if !defined(_FEATURE_2K_STORAGE_KEYS)
                         STORAGE_KEY(n, regs) &= STORKEY_BADFRM;
-                        STORAGE_KEY(n, regs) |= regs->GR_LHLCL(r1)
+                        STORAGE_KEY(n, regs) |= r1key
                                         & (STORKEY_KEY | STORKEY_FETCH);
 #else
                         STORAGE_KEY1(n, regs) &= STORKEY_BADFRM;
-                        STORAGE_KEY1(n, regs) |= regs->GR_LHLCL(r1)
+                        STORAGE_KEY1(n, regs) |= r1key
                                          & (STORKEY_KEY | STORKEY_FETCH);
                         STORAGE_KEY2(n, regs) &= STORKEY_BADFRM;
-                        STORAGE_KEY2(n, regs) |= regs->GR_LHLCL(r1)
+                        STORAGE_KEY2(n, regs) |= r1key
                                          & (STORKEY_KEY | STORKEY_FETCH);
 #endif
                     }
@@ -5365,22 +5381,22 @@ int     fc;                             /* Frame Count               */
                 /* Perform conditional SSKE procedure */
                 if (ARCH_DEP(conditional_sske_procedure)(regs, r1, m3,
 #if defined(FEATURE_4K_STORAGE_KEYS) && !defined(_FEATURE_2K_STORAGE_KEYS)
-                        STORAGE_KEY(n, regs)
+                        STORAGE_KEY(n, regs),
 #else
-                        (STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs))
+                        (STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs)),
 #endif
-                    ))
+                    r1key))
                     return;
 #endif /*defined(FEATURE_CONDITIONAL_SSKE)*/
                 /* Update the storage key from R1 register bits 24-30 */
 #if !defined(_FEATURE_2K_STORAGE_KEYS)
                 STORAGE_KEY(n, regs) &= STORKEY_BADFRM;
-                STORAGE_KEY(n, regs) |= regs->GR_LHLCL(r1) & ~(STORKEY_BADFRM);
+                STORAGE_KEY(n, regs) |= r1key & ~(STORKEY_BADFRM);
 #else
                 STORAGE_KEY1(n, regs) &= STORKEY_BADFRM;
-                STORAGE_KEY1(n, regs) |= regs->GR_LHLCL(r1) & ~(STORKEY_BADFRM);
+                STORAGE_KEY1(n, regs) |= r1key & ~(STORKEY_BADFRM);
                 STORAGE_KEY2(n, regs) &= STORKEY_BADFRM;
-                STORAGE_KEY2(n, regs) |= regs->GR_LHLCL(r1) & ~(STORKEY_BADFRM);
+                STORAGE_KEY2(n, regs) |= r1key & ~(STORKEY_BADFRM);
 #endif
             }
         }
@@ -5391,23 +5407,23 @@ int     fc;                             /* Frame Count               */
             /* Perform conditional SSKE procedure */
             if (ARCH_DEP(conditional_sske_procedure)(regs, r1, m3,
 #if defined(FEATURE_4K_STORAGE_KEYS) && !defined(_FEATURE_2K_STORAGE_KEYS)
-                    STORAGE_KEY(n, regs)
+                    STORAGE_KEY(n, regs),
 #else
-                    (STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs))
+                    (STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs)),
 #endif
-                ))
+                r1key))
                 return;
 #endif /*defined(FEATURE_CONDITIONAL_SSKE)*/
 
             /* Update the storage key from R1 register bits 24-30 */
 #if defined(FEATURE_4K_STORAGE_KEYS) && !defined(_FEATURE_2K_STORAGE_KEYS)
             STORAGE_KEY(n, regs) &= STORKEY_BADFRM;
-            STORAGE_KEY(n, regs) |= regs->GR_LHLCL(r1) & ~(STORKEY_BADFRM);
+            STORAGE_KEY(n, regs) |= r1key & ~(STORKEY_BADFRM);
 #else
             STORAGE_KEY1(n, regs) &= STORKEY_BADFRM;
-            STORAGE_KEY1(n, regs) |= regs->GR_LHLCL(r1) & ~(STORKEY_BADFRM);
+            STORAGE_KEY1(n, regs) |= r1key & ~(STORKEY_BADFRM);
             STORAGE_KEY2(n, regs) &= STORKEY_BADFRM;
-            STORAGE_KEY2(n, regs) |= regs->GR_LHLCL(r1) & ~(STORKEY_BADFRM);
+            STORAGE_KEY2(n, regs) |= r1key & ~(STORKEY_BADFRM);
 #endif
         }
 
@@ -5420,14 +5436,6 @@ int     fc;                             /* Frame Count               */
         STORKEY_INVALIDATE(regs, n);
 
 #if defined(FEATURE_ENHANCED_DAT_FACILITY)
-        if(FACILITY_ENABLED(ENHANCED_DAT,regs)
-         && (m3 & SSKE_MASK_MB))
-        {
-            if(regs->psw.amode64)
-                regs->GR_G(r2) = APPLY_PREFIXING (a, regs->PX);
-            else
-                regs->GR_L(r2) = APPLY_PREFIXING (a, regs->PX);
-        }
     }
 
     if(FACILITY_ENABLED(ENHANCED_DAT,regs)
