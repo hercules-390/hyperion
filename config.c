@@ -1033,7 +1033,7 @@ static int detach_devblk (DEVBLK *dev)
 int     i;                              /* Loop index                */
     
     /* Obtain (re)configuration lock */
-    obtain_lock(&sysblk.config);
+// ZZ obtain_lock(&sysblk.config);
 
     /* Obtain the device lock */
     obtain_lock(&dev->lock);
@@ -1103,7 +1103,7 @@ int     i;                              /* Loop index                */
         machine_check_crwpend();
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
-    release_lock(&sysblk.config);
+// ZZ     release_lock(&sysblk.config);
     return 0;
 } /* end function detach_devblk */
 

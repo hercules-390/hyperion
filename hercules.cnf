@@ -101,6 +101,10 @@
   000D    3525    punch00d.txt ascii
   000E    1403    print00e.txt crlf
   001F    3270
+  0100    3390    dasd01.cckd
+  0101    3390    dasd02.cckd
+  0102    3390    dasd03.cckd
+  0103    3390    dasd04.cckd
 #         The following statements are examples. Some of them require
 #         user tailoring before being used.
 # 0580    3420    ickdsf.ipl
