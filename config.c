@@ -1105,7 +1105,7 @@ int     i;                              /* Loop index                */
 
     release_lock(&sysblk.config);
     return 0;
-} /* end function detach_device */
+} /* end function detach_devblk */
 
 
 /*-------------------------------------------------------------------*/
