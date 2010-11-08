@@ -2308,7 +2308,6 @@ void init_opcode_tables(void)
 {
   int arch;
   int i;
-  int j;
 
 //  logmsg("init_opcode_tables()\n");
   for(arch = 0; arch < GEN_ARCHCOUNT; arch++)
