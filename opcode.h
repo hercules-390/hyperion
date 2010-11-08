@@ -1273,7 +1273,7 @@ do { \
             if((_b2)) \
                 (_effective_addr2) += (_regs)->GR((_b2)); \
             if ((_len)) \
-            (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+                (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
             (_r1) = (temp >> 20) & 0xf; \
             INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
     }
