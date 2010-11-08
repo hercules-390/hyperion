@@ -392,7 +392,7 @@ COMMAND("mainsize",  SYSCONFIG|SYSNDIAG, mainsize_cmd,
 
 COMMAND("xpndsize",  SYSCONFIG|SYSNDIAG, xpndsize_cmd,
   "Define/Display mainsize parameter",
-  "Format: xpndsize [ mmmm | nnnS ]\n"
+  "Format: xpndsize [ mmmm | nnnS [ lOCK | unlOCK ] ]\n"
   "        mmmm    - define expanded storage size mmmm Megabytes\n"
   "\n"
   "        nnnS    - define expanded storage size nnn S where S is the multiplier\n"
