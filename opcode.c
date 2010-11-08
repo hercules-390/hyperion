@@ -1241,6 +1241,7 @@ static zz_func v_opcode_a6xx[0x100][GEN_MAXARCH];
 static zz_func v_opcode_e4xx[0x100][GEN_MAXARCH];
 
 static zz_func opcode_47x0[0x10][GEN_MAXARCH];
+static zz_func opcode_50x0[0x10][GEN_MAXARCH];
 static zz_func opcode_58x0[0x10][GEN_MAXARCH];
 static zz_func opcode_A7x4[0x10][GEN_MAXARCH];
 
@@ -2349,6 +2350,9 @@ void init_opcode_tables(void)
 
       /* Optimized BC */
       replace_opcode_xxxx(arch, opcode_47x0[i][arch], 0x47, i * 0x10 + 0x00);
+      
+      /* Optimized ST */
+      replace_opcode_xxxx(arch, opcode_50x0[i][arch], 0x50, i * 0x10 + 0x00);
 
       /* Optimized L */
       replace_opcode_xxxx(arch, opcode_58x0[i][arch], 0x58, i * 0x10 + 0x00);
@@ -6465,6 +6469,25 @@ static zz_func opcode_47x0[0x10][GEN_MAXARCH] = {
  /*47D0*/ GENx370x390x900 (branch_on_condition_47D0,RX,"BC"),
  /*47E0*/ GENx370x390x900 (branch_on_condition_47E0,RX,"BC"),
  /*47F0*/ GENx370x390x900 (branch_on_condition_47F0,RX,"BC") };
+
+
+ static zz_func opcode_50x0[0x10][GEN_MAXARCH] = {
+ /*5000*/ GENx370x390x900 (store_5000,RX,"L"),
+ /*5010*/ GENx370x390x900 (store_5010,RX,"L"),
+ /*5020*/ GENx370x390x900 (store_5020,RX,"L"),
+ /*5030*/ GENx370x390x900 (store_5030,RX,"L"),
+ /*5040*/ GENx370x390x900 (store_5040,RX,"L"),
+ /*5050*/ GENx370x390x900 (store_5050,RX,"L"),
+ /*5060*/ GENx370x390x900 (store_5060,RX,"L"),
+ /*5070*/ GENx370x390x900 (store_5070,RX,"L"),
+ /*5080*/ GENx370x390x900 (store_5080,RX,"L"),
+ /*5090*/ GENx370x390x900 (store_5090,RX,"L"),
+ /*50A0*/ GENx370x390x900 (store_50A0,RX,"L"),
+ /*50B0*/ GENx370x390x900 (store_50B0,RX,"L"),
+ /*50C0*/ GENx370x390x900 (store_50C0,RX,"L"),
+ /*50D0*/ GENx370x390x900 (store_50D0,RX,"L"),
+ /*50E0*/ GENx370x390x900 (store_50E0,RX,"L"),
+ /*50F0*/ GENx370x390x900 (store_50F0,RX,"L") };
 
  
 static zz_func opcode_58x0[0x10][GEN_MAXARCH] = {

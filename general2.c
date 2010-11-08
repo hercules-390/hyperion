@@ -856,36 +856,6 @@ U32     n;                              /* Integer work areas        */
 }
 
 
-/*-------------------------------------------------------------------*/
-/* 50   ST    - Store                                           [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(store)
-{
-int     r1;                             /* Values of R fields        */
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-#if 0
-U32    *p;                              /* Mainstor pointer          */
-#endif
-
-    RX(inst, regs, r1, b2, effective_addr2);
-
-    /* Store register contents at operand address */
-    /* FOLLOWING BLOCK COMMENTED OUT ISW 20060119 */
-#if 0
-    if ((effective_addr2 & 3) == 0)
-    {
-        p = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
-        STORE_FW (p, regs->GR_L(r1));
-        ITIMER_UPDATE(effective_addr2, 4-1, regs);
-    }
-    else
-#endif
-        ARCH_DEP(vstore4) ( regs->GR_L(r1), effective_addr2, b2, regs );
-
-} /* end DEF_INST(store) */
-
-
 #if defined(FEATURE_ACCESS_REGISTERS)
 /*-------------------------------------------------------------------*/
 /* 9B   STAM  - Store Access Multiple                           [RS] */

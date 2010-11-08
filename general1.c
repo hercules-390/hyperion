@@ -694,6 +694,7 @@ DEF_INST(branch_on_condition_register)
 
 } /* end DEF_INST(branch_on_condition_register) */
 
+
 /*-------------------------------------------------------------------*/
 /* 47   BC    - Branch on Condition                             [RX] */
 /*-------------------------------------------------------------------*/
@@ -1250,7 +1251,7 @@ DEF_INST(load_5800)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RX_L_X0(inst, regs, b2, effective_addr2);
+    RX_X0(inst, regs, b2, effective_addr2);
 
     /* Load R1 register from second operand */
 
@@ -1266,7 +1267,7 @@ DEF_INST(load_5810)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RX_L_X0(inst, regs, b2, effective_addr2);
+    RX_X0(inst, regs, b2, effective_addr2);
 
     /* Load R1 register from second operand */
 
@@ -1282,7 +1283,7 @@ DEF_INST(load_5820)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RX_L_X0(inst, regs, b2, effective_addr2);
+    RX_X0(inst, regs, b2, effective_addr2);
 
     /* Load R1 register from second operand */
 
@@ -1298,7 +1299,7 @@ DEF_INST(load_5830)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RX_L_X0(inst, regs, b2, effective_addr2);
+    RX_X0(inst, regs, b2, effective_addr2);
 
     /* Load R1 register from second operand */
 
@@ -1314,7 +1315,7 @@ DEF_INST(load_5840)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RX_L_X0(inst, regs, b2, effective_addr2);
+    RX_X0(inst, regs, b2, effective_addr2);
 
     /* Load R1 register from second operand */
 
@@ -1330,7 +1331,7 @@ DEF_INST(load_5850)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RX_L_X0(inst, regs, b2, effective_addr2);
+    RX_X0(inst, regs, b2, effective_addr2);
 
     /* Load R1 register from second operand */
 
@@ -1346,7 +1347,7 @@ DEF_INST(load_5860)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RX_L_X0(inst, regs, b2, effective_addr2);
+    RX_X0(inst, regs, b2, effective_addr2);
 
     /* Load R1 register from second operand */
 
@@ -1362,7 +1363,7 @@ DEF_INST(load_5870)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RX_L_X0(inst, regs, b2, effective_addr2);
+    RX_X0(inst, regs, b2, effective_addr2);
 
     /* Load R1 register from second operand */
 
@@ -1378,7 +1379,7 @@ DEF_INST(load_5880)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RX_L_X0(inst, regs, b2, effective_addr2);
+    RX_X0(inst, regs, b2, effective_addr2);
 
     /* Load R1 register from second operand */
 
@@ -1394,7 +1395,7 @@ DEF_INST(load_5890)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RX_L_X0(inst, regs, b2, effective_addr2);
+    RX_X0(inst, regs, b2, effective_addr2);
 
     /* Load R1 register from second operand */
 
@@ -1410,7 +1411,7 @@ DEF_INST(load_58A0)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RX_L_X0(inst, regs, b2, effective_addr2);
+    RX_X0(inst, regs, b2, effective_addr2);
 
     /* Load R1 register from second operand */
 
@@ -1426,7 +1427,7 @@ DEF_INST(load_58B0)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RX_L_X0(inst, regs, b2, effective_addr2);
+    RX_X0(inst, regs, b2, effective_addr2);
 
     /* Load R1 register from second operand */
 
@@ -1442,7 +1443,7 @@ DEF_INST(load_58C0)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RX_L_X0(inst, regs, b2, effective_addr2);
+    RX_X0(inst, regs, b2, effective_addr2);
 
     /* Load R1 register from second operand */
 
@@ -1458,7 +1459,7 @@ DEF_INST(load_58D0)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RX_L_X0(inst, regs, b2, effective_addr2);
+    RX_X0(inst, regs, b2, effective_addr2);
 
     /* Load R1 register from second operand */
 
@@ -1474,7 +1475,7 @@ DEF_INST(load_58E0)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RX_L_X0(inst, regs, b2, effective_addr2);
+    RX_X0(inst, regs, b2, effective_addr2);
 
     /* Load R1 register from second operand */
 
@@ -1490,13 +1491,270 @@ DEF_INST(load_58F0)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RX_L_X0(inst, regs, b2, effective_addr2);
+    RX_X0(inst, regs, b2, effective_addr2);
 
     /* Load R1 register from second operand */
 
     regs->GR_L(0xf) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
 
 } /* end DEF_INST(load) */
+
+/*-------------------------------------------------------------------*/
+/* 50   ST    - Store                                           [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store)
+{
+int     r1;                             /* Values of R fields        */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX(inst, regs, r1, b2, effective_addr2);
+
+    /* Store register contents at operand address */
+    ARCH_DEP(vstore4) ( regs->GR_L(r1), effective_addr2, b2, regs );
+
+} /* end DEF_INST(store) */
+
+
+/*-------------------------------------------------------------------*/
+/* 5000 ST    - Store                                           [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_5000)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store register contents at operand address */
+    ARCH_DEP(vstore4) ( regs->GR_L(0x0), effective_addr2, b2, regs );
+
+} /* end DEF_INST(store) */
+
+/*-------------------------------------------------------------------*/
+/* 5010 ST    - Store                                           [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_5010)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store register contents at operand address */
+    ARCH_DEP(vstore4) ( regs->GR_L(0x1), effective_addr2, b2, regs );
+
+} /* end DEF_INST(store) */
+
+/*-------------------------------------------------------------------*/
+/* 5020 ST    - Store                                           [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_5020)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store register contents at operand address */
+    ARCH_DEP(vstore4) ( regs->GR_L(0x2), effective_addr2, b2, regs );
+
+} /* end DEF_INST(store) */
+
+/*-------------------------------------------------------------------*/
+/* 5030 ST    - Store                                           [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_5030)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store register contents at operand address */
+    ARCH_DEP(vstore4) ( regs->GR_L(0x3), effective_addr2, b2, regs );
+
+} /* end DEF_INST(store) */
+
+/*-------------------------------------------------------------------*/
+/* 5040 ST    - Store                                           [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_5040)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store register contents at operand address */
+    ARCH_DEP(vstore4) ( regs->GR_L(0x4), effective_addr2, b2, regs );
+
+} /* end DEF_INST(store) */
+
+/*-------------------------------------------------------------------*/
+/* 5050 ST    - Store                                           [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_5050)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store register contents at operand address */
+    ARCH_DEP(vstore4) ( regs->GR_L(0x5), effective_addr2, b2, regs );
+
+} /* end DEF_INST(store) */
+
+/*-------------------------------------------------------------------*/
+/* 5060 ST    - Store                                           [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_5060)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store register contents at operand address */
+    ARCH_DEP(vstore4) ( regs->GR_L(0x6), effective_addr2, b2, regs );
+
+} /* end DEF_INST(store) */
+
+/*-------------------------------------------------------------------*/
+/* 5070 ST    - Store                                           [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_5070)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store register contents at operand address */
+    ARCH_DEP(vstore4) ( regs->GR_L(0x7), effective_addr2, b2, regs );
+
+} /* end DEF_INST(store) */
+
+/*-------------------------------------------------------------------*/
+/* 5080 ST    - Store                                           [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_5080)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store register contents at operand address */
+    ARCH_DEP(vstore4) ( regs->GR_L(0x8), effective_addr2, b2, regs );
+
+} /* end DEF_INST(store) */
+
+/*-------------------------------------------------------------------*/
+/* 5090 ST    - Store                                           [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_5090)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store register contents at operand address */
+    ARCH_DEP(vstore4) ( regs->GR_L(0x9), effective_addr2, b2, regs );
+
+} /* end DEF_INST(store) */
+
+/*-------------------------------------------------------------------*/
+/* 50A0 ST    - Store                                           [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_50A0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store register contents at operand address */
+    ARCH_DEP(vstore4) ( regs->GR_L(0xa), effective_addr2, b2, regs );
+
+} /* end DEF_INST(store) */
+
+/*-------------------------------------------------------------------*/
+/* 50B0 ST    - Store                                           [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_50B0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store register contents at operand address */
+    ARCH_DEP(vstore4) ( regs->GR_L(0xb), effective_addr2, b2, regs );
+
+} /* end DEF_INST(store) */
+
+/*-------------------------------------------------------------------*/
+/* 50C0 ST    - Store                                           [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_50C0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store register contents at operand address */
+    ARCH_DEP(vstore4) ( regs->GR_L(0xc), effective_addr2, b2, regs );
+
+} /* end DEF_INST(store) */
+
+/*-------------------------------------------------------------------*/
+/* 50D0 ST    - Store                                           [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_50D0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store register contents at operand address */
+    ARCH_DEP(vstore4) ( regs->GR_L(0xd), effective_addr2, b2, regs );
+
+} /* end DEF_INST(store) */
+
+/*-------------------------------------------------------------------*/
+/* 50E0 ST    - Store                                           [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_50E0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store register contents at operand address */
+    ARCH_DEP(vstore4) ( regs->GR_L(0xe), effective_addr2, b2, regs );
+
+} /* end DEF_INST(store) */
+
+/*-------------------------------------------------------------------*/
+/* 50F0 ST    - Store                                           [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_50F0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store register contents at operand address */
+    ARCH_DEP(vstore4) ( regs->GR_L(0xf), effective_addr2, b2, regs );
+
+} /* end DEF_INST(store) */
 
 
 /*-------------------------------------------------------------------*/

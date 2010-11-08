@@ -1309,12 +1309,12 @@ do { \
     }
 
 /* RX_LX0 register and indexed storage - optimized for L */
-#undef RX_L_X0
+#undef RX_X0
 
-#define RX_L_X0(_inst, _regs, _b2, _effective_addr2) \
-        RX_L_X0_DECODER(_inst, _regs, _b2, _effective_addr2, 4, 4)
+#define RX_X0(_inst, _regs, _b2, _effective_addr2) \
+        RX_X0_DECODER(_inst, _regs, _b2, _effective_addr2, 4, 4)
 
-#define RX_L_X0_DECODER(_inst, _regs, _b2, _effective_addr2, _len, _ilc) \
+#define RX_X0_DECODER(_inst, _regs, _b2, _effective_addr2, _len, _ilc) \
     {   U32 temp = fetch_fw(_inst); \
             (_effective_addr2) = temp & 0xfff; \
             (_b2) = (temp >> 12) & 0xf; \
@@ -3408,7 +3408,23 @@ DEF_INST(move_zones);
 DEF_INST(multiply_register);
 DEF_INST(multiply);
 DEF_INST(multiply_halfword);
-
+DEF_INST(store);
+DEF_INST(store_5000);
+DEF_INST(store_5010);
+DEF_INST(store_5020);
+DEF_INST(store_5030);
+DEF_INST(store_5040);
+DEF_INST(store_5050);
+DEF_INST(store_5060);
+DEF_INST(store_5070);
+DEF_INST(store_5080);
+DEF_INST(store_5090);
+DEF_INST(store_50A0);
+DEF_INST(store_50B0);
+DEF_INST(store_50C0);
+DEF_INST(store_50D0);
+DEF_INST(store_50E0);
+DEF_INST(store_50F0);
 
 /* Instructions in general2.c */
 DEF_INST(or_register);
@@ -3435,7 +3451,6 @@ DEF_INST(shift_right_double);
 DEF_INST(shift_right_double_logical);
 DEF_INST(shift_right_single);
 DEF_INST(shift_right_single_logical);
-DEF_INST(store);
 #if defined(FEATURE_ACCESS_REGISTERS)
 DEF_INST(store_access_multiple);
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
