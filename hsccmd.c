@@ -2529,7 +2529,7 @@ int mainsize_cmd(int argc, char *argv[], char *cmdline);
 int xpndsize_cmd(int argc, char *argv[], char *cmdline);
 
 /*-------------------------------------------------------------------*/
-/* defstore command                                                     */
+/* defstore command                                                  */
 /*-------------------------------------------------------------------*/
 int defstore_cmd(int argc, char *argv[], char *cmdline)
 {
@@ -2537,48 +2537,29 @@ int defstore_cmd(int argc, char *argv[], char *cmdline)
 
     UNREFERENCED(cmdline);
 
-    if ( argc == 1 )
+    if ( argc < 2 )
     {
         rc = qstor_cmd( argc, argv, cmdline );
     }
     else
-    if ( argc > 4 )
     {
-        WRMSG( HHC02299, "E", argv[0] );
-        rc = -1;
-    }
-    else
-    {
-        char *av[4];
+        /* Recreate parameter list for call */
+        char *av[MAX_ARGS];   // Dynamic array size based on incoming call
         int   ac;
+        char check[16];
 
+        /* Copy parameter list pointers, skipping argv[1] */
         av[0] = argv[0];
-        ac    = 1;
+        for (ac = 1, rc = 2; rc < argc; ac++, rc++)
+            av[ac] = argv[rc];
 
-        if ( argc > 2 )
-        {
-            av[1] = argv[2];
-            ac++;
-        }
-        if ( argc > 3 )
-        {
-            av[2] = argv[3];
-            ac++;
-        }
-        if ( argc > 4 )
-        {
-            av[3] = argv[4];
-            ac++;
-        }
-        if ( CMD(argv[1],main,1) )
-        {
+        /* Call correct command processor based on the first argument */
+        strnupper(check, argv[1], sizeof(check));   // Uppercase for multiple caseless checks
+        if ( strabbrev("MAIN", check, 1) )
             rc = mainsize_cmd( ac, av, NULL );
-        }
-        else
-        if ( CMD(argv[1],xstore,1) || CMD(argv[1],expanded,1) )
-        {
+        else if ( strabbrev("XSTORE", check, 1) ||
+                  strabbrev("EXPANDED", check, 1) )
             rc = xpndsize_cmd( ac, av, NULL );
-        }
         else
         {
             WRMSG( HHC02205, "E", argv[1], "; must be main, xstore, or expanded" );
@@ -2600,6 +2581,8 @@ int     rc;
 u_int   i;
 char    check[16];
 char *q_argv[2] = { "qstor", "main" };
+u_int   lockreq = 0;
+u_int   locktype = 0;
 
 
     UNREFERENCED(cmdline);
@@ -2610,9 +2593,9 @@ char *q_argv[2] = { "qstor", "main" };
     }
 
     /* Parse main storage size operand */
-    rc = sscanf(argv[1], "%"I64_FMT"u%c%c", &mainsize, &f, &c); 
-    
-    if ( rc > 2 || (mainsize == 0 && sysblk.maxcpu > 0))
+    rc = sscanf(argv[1], "%"I64_FMT"u%c%c", &mainsize, &f, &c);
+
+    if ( rc > 2 )
     {
         WRMSG( HHC01451, "E", argv[1], argv[0] );
         return -1;
@@ -2654,25 +2637,11 @@ char *q_argv[2] = { "qstor", "main" };
     else
         mainsize <<= SHIFT_MEGABYTE;
 
-    if ( sysblk.arch_mode != ARCH_370 )
-    {
-        if ( mainsize < (U64)(ONE_MEGABYTE) )
-        {
-            WRMSG( HHC01451, "E", argv[1], argv[0] );
-            return -1;
-        }
-    }
-    else
-    {
-        if ( mainsize < (U64)(_64_KILOBYTE) )
-        {
-            WRMSG( HHC01451, "E", argv[1], argv[0]);
-            return -1;
-        }
-    }
-
-    if ( (mainsize > (U64)(((U64)4096*ONE_MEGABYTE)-1)) && 
-         ( sizeof(sysblk.mainsize) < 8 || sizeof(size_t) < 8 ) )
+    if ( ( ( mainsize || sysblk.maxcpu ) &&                                             // 0 only valid if MAXCPU 0
+           ( (sysblk.arch_mode == ARCH_370 && mainsize < (U64)(_64_KILOBYTE) ) ||       // 64K minimum for S/370
+             (sysblk.arch_mode != ARCH_370 && mainsize < (U64)(ONE_MEGABYTE) ) ) ) ||   // Else 1M minimum
+         ( (mainsize > (U64)(((U64)ONE_MEGABYTE << 12)-1)) &&                           // Check for 32-bit addressing limits
+           ( sizeof(sysblk.mainsize) < 8 || sizeof(size_t) < 8 ) ) )
     {
         WRMSG( HHC01451, "E", argv[1], argv[0]);
         return -1;
@@ -2682,16 +2651,29 @@ char *q_argv[2] = { "qstor", "main" };
     for (i = 2; (int)i < argc; i++)
     {
         strnupper(check, argv[i], (u_int)sizeof(check));
-        if (strabbrev("LOCKED", check, 1))
-            sysblk.lock_mainstor = 1;
+        if (strabbrev("LOCKED", check, 1) &&
+            mainsize)
+        {
+            lockreq = 1;
+            locktype = 1;
+        }
         else if (strabbrev("UNLOCKED", check, 3))
-            sysblk.lock_mainstor = 0;
+        {
+            lockreq = 1;
+            locktype = 0;
+        }
         else
         {
             WRMSG( HHC01451, "E", argv[i], argv[0] );
             return -1;
         }
     }
+
+    /* Set lock request; if mainsize 0, storage is always UNLOCKED */
+    if (!mainsize)
+        sysblk.lock_mainstor = 0;
+    else if (lockreq)
+        sysblk.lock_mainstor = locktype;
 
     /* Update main storage size */
     rc = configure_storage(mainsize);
@@ -2700,16 +2682,13 @@ char *q_argv[2] = { "qstor", "main" };
         if (MLVL(VERBOSE))
             qstor_cmd( 2, q_argv, "qstor main" );
     }
-    else if ( rc < 0 )
+    else if ( rc == HERRCPUONL )
     {
-        if ( rc == HERRCPUONL )
-        {
-            WRMSG( HHC02389, "E" );
-        }
-        else
-        {
-            WRMSG( HHC02388, "E", rc );
-        }
+        WRMSG( HHC02389, "E" );
+    }
+    else
+    {
+        WRMSG( HHC02388, "E", rc );
     }
 
     return rc;
@@ -2727,6 +2706,8 @@ int     rc;
 u_int   i;
 char    check[16];
 char *q_argv[2] = { "qstor", "xpnd" };
+u_int   lockreq = 0;
+u_int   locktype = 0;
 
     UNREFERENCED(cmdline);
 
@@ -2783,7 +2764,7 @@ char *q_argv[2] = { "qstor", "xpnd" };
 #if SIZEOF_SIZE_T >= 8
     else
     {
-        if (xpndsize > (RADR)((RADR)16 << SHIFT_TERABYTE) )  
+        if (xpndsize > (RADR)((RADR)16 << SHIFT_TERABYTE) )
         {
             WRMSG( HHC01451, "E", argv[1], argv[0]);
             return -1;
@@ -2791,23 +2772,31 @@ char *q_argv[2] = { "qstor", "xpnd" };
     }
 #endif
 
-    if ( xpndsize == 0 )                    // default to unlock if size is zero
-        sysblk.lock_xpndstor = 0;
-    
     /* Process options */
     for (i = 2; (int)i < argc; i++)
     {
         strnupper(check, argv[i], (u_int)sizeof(check));
-        if (strabbrev("LOCKED", check, 1))
-            sysblk.lock_xpndstor = 1;
+        if (strabbrev("LOCKED", check, 1) &&
+            xpndsize)
+        {
+            lockreq = 1;
+            locktype = 1;
+        }
         else if (strabbrev("UNLOCKED", check, 3))
-            sysblk.lock_xpndstor = 0;
+        {
+            lockreq = 1;
+            locktype = 0;
+        }
         else
         {
             WRMSG( HHC01451, "E", argv[i], argv[0] );
             return -1;
         }
     }
+    if (!xpndsize)
+        sysblk.lock_xpndstor = 0;
+    else if (lockreq)
+        sysblk.lock_xpndstor = locktype;
 
     rc = configure_xstorage(xpndsize);
     if ( rc >= 0 )
@@ -7131,91 +7120,101 @@ int cache_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int msglevel_cmd(int argc, char *argv[], char *cmdline)
 {
-int i;
+    char msgbuf[81];
 
     UNREFERENCED(cmdline);
 
-    if ( argc >= 2 )
+    if ( argc < 1 )
     {
-        for ( i=1; i<argc; i++)
+        WRMSG( HHC17000, "E" );
+        return -1;
+    }
+
+    if ( argc > 1 )
+    {
+        int emsg    = sysblk.emsg;
+        int msglvl  = sysblk.msglvl;
+        int i;
+
+        for ( i=1; i<argc; i++ )
         {
-            if ( CMD(argv[i],on,2) )
+            char check[16];
+            strnupper(check, argv[i], sizeof(check));
+            if ( strabbrev("ON", check, 2) )
             {
-                sysblk.emsg |= EMSG_ON;
-                sysblk.emsg &= ~EMSG_TEXT;
-                sysblk.emsg &= ~EMSG_TS;
+                emsg |= EMSG_ON;
+                emsg &= ~EMSG_TEXT;
+                emsg &= ~EMSG_TS;
             }
-            else if ( CMD(argv[i],off,3) )
+            else if ( strabbrev("OFF", check, 2) )
             {
-                sysblk.emsg &= ~EMSG_ON;
-                sysblk.emsg &= ~EMSG_TEXT;
-                sysblk.emsg &= ~EMSG_TS;
+                emsg &= ~EMSG_ON;
+                emsg &= ~EMSG_TEXT;
+                emsg &= ~EMSG_TS;
             }
-            else if ( CMD(argv[i],text,4) )
+            else if ( strabbrev("TEXT", check, 3) )
             {
-                sysblk.emsg |= EMSG_TEXT + EMSG_ON;
-                sysblk.emsg &= ~EMSG_TS;
+                emsg |= EMSG_TEXT + EMSG_ON;
+                emsg &= ~EMSG_TS;
             }
-            else if ( CMD(argv[i],timestamp,4) )
+            else if ( strabbrev("TIMESTAMP", check, 2) )
             {
-                sysblk.emsg |= EMSG_TS + EMSG_ON;
-                sysblk.emsg &= ~EMSG_TEXT;
+                emsg |= EMSG_TS + EMSG_ON;
+                emsg &= ~EMSG_TEXT;
             }
-            else if ( CMD(argv[i],terse,5) )
+            else if ( strabbrev("TERSE", check, 3) )
             {
-                sysblk.msglvl &= ~MLVL_VERBOSE;
+                msglvl &= ~MLVL_VERBOSE;
             }
-            else if ( CMD(argv[i],verbose,4) )
+            else if ( strabbrev("VERBOSE", check, 1) )
             {
-                sysblk.msglvl |= MLVL_VERBOSE;
+                msglvl |= MLVL_VERBOSE;
             }
-            else if ( CMD(argv[i],nodebug,5) )
+            else if ( strabbrev("NODEBUG", check, 7) )
             {
-                sysblk.msglvl &= ~MLVL_DEBUG;
+                msglvl &= ~MLVL_DEBUG;
             }
-            else if ( CMD(argv[i],debug,5) )
+            else if ( strabbrev("DEBUG", check, 5) )
             {
-                sysblk.msglvl |= MLVL_DEBUG;
+                msglvl |= MLVL_DEBUG;
             }
             else
             {
                 WRMSG( HHC02205, "E", argv[i], "" );
                 return -1;
             }
+        sysblk.emsg = emsg;
+        sysblk.msglvl = msglvl;
         }
     }
-    else if ( argc < 1 )
-    {
-        WRMSG( HHC17000, "E" );
-        return -1;
-    }
+
+    msgbuf[0] = 0x00;
+
+    if ( sysblk.emsg & EMSG_TS )
+        strlcat(msgbuf, "timestamp ",sizeof(msgbuf));
+
+    if ( sysblk.emsg & EMSG_TEXT )
+        strlcat(msgbuf, "text ",sizeof(msgbuf));
+    else if ( sysblk.emsg & EMSG_ON )
+        strlcat(msgbuf, "on ",sizeof(msgbuf));
+
+    if ( sysblk.msglvl & MLVL_VERBOSE )
+        strlcat(msgbuf, "verbose ",sizeof(msgbuf));
     else
-    {
-        char msgbuf[80];
+        strlcat(msgbuf, "terse ",sizeof(msgbuf));
 
-        msgbuf[0] = '\0';
+    if ( sysblk.msglvl & MLVL_DEBUG )
+        strlcat(msgbuf, "debug ",sizeof(msgbuf));
+    else
+        strlcat(msgbuf, "nodebug ",sizeof(msgbuf));
 
-        if ( sysblk.emsg & EMSG_TS )
-            strlcat(msgbuf, "timestamp ",sizeof(msgbuf));
-        if ( sysblk.emsg & EMSG_TEXT )
-            strlcat(msgbuf, "text ",sizeof(msgbuf));
-        else if ( sysblk.emsg & EMSG_ON )
-            strlcat(msgbuf, "on ",sizeof(msgbuf));
-        if ( sysblk.msglvl & MLVL_VERBOSE )
-            strlcat(msgbuf, "verbose ",sizeof(msgbuf));
-        else
-            strlcat(msgbuf, "terse ",sizeof(msgbuf));
-        if ( sysblk.msglvl & MLVL_DEBUG )
-            strlcat(msgbuf, "debug ",sizeof(msgbuf));
-        else
-            strlcat(msgbuf, "nodebug ",sizeof(msgbuf));
-        if ( strlen(msgbuf) > 0 && msgbuf[(int)strlen(msgbuf) - 1] == ' ' )
-            msgbuf[(int)strlen(msgbuf) - 1] = '\0';
-        if ( strlen(msgbuf) == 0 )
-            WRMSG( HHC17012, "I", "off" );
-        else
-            WRMSG( HHC17012, "I", msgbuf );
-    }
+    if ( strlen(msgbuf) > 0 && msgbuf[(int)strlen(msgbuf) - 1] == ' ' )
+        msgbuf[(int)strlen(msgbuf) - 1] = '\0';
+
+    if ( strlen(msgbuf) == 0 )
+        WRMSG( HHC17012, "I", "off" );
+    else
+        WRMSG( HHC17012, "I", msgbuf );
 
     return 0;
 }
@@ -7364,6 +7363,7 @@ int qports_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
+
 /*-------------------------------------------------------------------*/
 /* qproc command                                                     */
 /*-------------------------------------------------------------------*/
@@ -7386,11 +7386,11 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
 
     {
 #ifdef    _FEATURE_VECTOR_FACILITY
-        u_int i = sysblk.numvec;
+        u_int nv = sysblk.numvec;
 #else  /*!_FEATURE_VECTOR_FACILITY*/
-        u_int i = 0;
+        u_int nv = 0;
 #endif /* _FEATURE_VECTOR_FACILITY*/
-        WRMSG( HHC17007, "I",   sysblk.cpus, i, sysblk.maxcpu - sysblk.cpus, sysblk.maxcpu );
+        WRMSG( HHC17007, "I",   sysblk.cpus, nv, sysblk.maxcpu - sysblk.cpus, sysblk.maxcpu );
     }
 
     for ( i = j = 0; i < sysblk.maxcpu; i++ )
@@ -7447,7 +7447,6 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
-
 
 
 /*-------------------------------------------------------------------*/
@@ -7546,135 +7545,67 @@ int qstor_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int CmdLevel(int argc, char *argv[], char *cmdline)
 {
-    int i;
 
     UNREFERENCED(cmdline);
 
  /* Parse CmdLevel operands */
-    if (argc > 1)
-        for (i = 1; i < argc; i++)
+
+    if ( argc > 1)
+    {
+        BYTE merged_options = sysblk.sysgroup;
+        int i;
+
+        for ( i = 1; i < argc; i++ )
         {
-            if (strcasecmp (argv[i], "all") == 0)
-                sysblk.sysgroup = SYSGROUP_SYSALL;
-            else
-            if (strcasecmp (argv[i], "+all") == 0)
-                sysblk.sysgroup = SYSGROUP_SYSALL;
-            else
-            if (strcasecmp (argv[i], "-all") == 0)
-                sysblk.sysgroup = SYSGROUP_SYSNONE;
-            else
-            if  ( strlen( argv[i] ) >= 4 &&
-                  strlen( argv[i] ) <= 8 &&
-                  !strncasecmp( argv[i], "operator", strlen( argv[i] ) )
-                )
-                sysblk.sysgroup |= SYSGROUP_SYSOPER;
-            else
-            if  ( strlen( argv[i] ) >= 5 &&
-                  strlen( argv[i] ) <= 9 &&
-                  !strncasecmp( argv[i], "+operator", strlen( argv[i] ) )
-                )
-                sysblk.sysgroup |= SYSGROUP_SYSOPER;
-            else
-            if  ( strlen( argv[i] ) >= 5 &&
-                  strlen( argv[i] ) <= 9 &&
-                  !strncasecmp( argv[i], "-operator", strlen( argv[i] ) )
-                )
-                sysblk.sysgroup &= ~SYSGROUP_SYSOPER;
-            else
-            if  ( strlen( argv[i] ) >= 5  &&
-                  strlen( argv[i] ) <= 11 &&
-                  !strncasecmp( argv[i], "maintenance", strlen( argv[i] ) )
-                )
-                sysblk.sysgroup |= SYSGROUP_SYSMAINT;
-            else
-            if  ( strlen( argv[i] ) >= 6  &&
-                  strlen( argv[i] ) <= 12 &&
-                  !strncasecmp( argv[i], "+maintenance", strlen( argv[i] ) )
-                )
-                sysblk.sysgroup |= SYSGROUP_SYSMAINT;
-            else
-            if  ( strlen( argv[i] ) >= 6  &&
-                  strlen( argv[i] ) <= 12 &&
-                  !strncasecmp( argv[i], "-maintenance", strlen( argv[i] ) )
-                )
-                sysblk.sysgroup &= ~SYSGROUP_SYSMAINT;
-            else
-            if  ( strlen( argv[i] ) >= 4  &&
-                  strlen( argv[i] ) <= 10 &&
-                  !strncasecmp( argv[i], "programmer", strlen( argv[i] ) )
-                )
-                sysblk.sysgroup |= SYSGROUP_SYSPROG;
-            else
-            if  ( strlen( argv[i] ) >= 5  &&
-                  strlen( argv[i] ) <= 11 &&
-                  !strncasecmp( argv[i], "+programmer", strlen( argv[i] ) )
-                )
-                sysblk.sysgroup |= SYSGROUP_SYSPROG;
-            else
-            if  ( strlen( argv[i] ) >= 5  &&
-                  strlen( argv[i] ) <= 11 &&
-                  !strncasecmp( argv[i], "-programmer", strlen( argv[i] ) )
-                )
-                sysblk.sysgroup &= ~SYSGROUP_SYSPROG;
-            else
-            if  ( strlen( argv[i] ) >= 6  &&
-                  strlen( argv[i] ) <= 13 &&
-                  !strncasecmp( argv[i], "configuration", strlen( argv[i] ) )
-                )
-                sysblk.sysgroup |= SYSGROUP_SYSCONFIG;
-            else
-            if  ( strlen( argv[i] ) >= 7  &&
-                  strlen( argv[i] ) <= 14 &&
-                  !strncasecmp( argv[i], "+configuration", strlen( argv[i] ) )
-                )
-                sysblk.sysgroup |= SYSGROUP_SYSCONFIG;
-            else
-            if  ( strlen( argv[i] ) >= 7  &&
-                  strlen( argv[i] ) <= 14 &&
-                  !strncasecmp( argv[i], "-configuration", strlen( argv[i] ) )
-                )
-                sysblk.sysgroup &= ~SYSGROUP_SYSCONFIG;
-            else            if  ( strlen( argv[i] ) >= 3  &&
-                  strlen( argv[i] ) <= 9 &&
-                  !strncasecmp( argv[i], "developer", strlen( argv[i] ) )
-                )
-                sysblk.sysgroup |= SYSGROUP_SYSDEVEL;
-            else
-            if  ( strlen( argv[i] ) >= 4  &&
-                  strlen( argv[i] ) <= 10 &&
-                  !strncasecmp( argv[i], "+developer", strlen( argv[i] ) )
-                )
-                sysblk.sysgroup |= SYSGROUP_SYSDEVEL;
-            else
-            if  ( strlen( argv[i] ) >= 4  &&
-                  strlen( argv[i] ) <= 10 &&
-                  !strncasecmp( argv[i], "-developer", strlen( argv[i] ) )
-                )
-                sysblk.sysgroup &= ~SYSGROUP_SYSDEVEL;
-            else
-            if  ( strlen( argv[i] ) >= 3  &&
-                  strlen( argv[i] ) <= 5  &&
-                  !strncasecmp( argv[i], "debug", strlen( argv[i] ) )
-                )
-                sysblk.sysgroup |= SYSGROUP_SYSDEBUG;
-            else
-            if  ( strlen( argv[i] ) >= 4  &&
-                  strlen( argv[i] ) <= 6  &&
-                  !strncasecmp( argv[i], "+debug", strlen( argv[i] ) )
-                )
-                sysblk.sysgroup |= SYSGROUP_SYSDEBUG;
-            else
-            if  ( strlen( argv[i] ) >= 4  &&
-                  strlen( argv[i] ) <= 6  &&
-                  !strncasecmp( argv[i], "-debug", strlen( argv[i] ) )
-                )
-                sysblk.sysgroup &= ~SYSGROUP_SYSDEBUG;
+            char check[16];
+            BYTE on;
+            BYTE option;
+
+            {
+               char *p = argv[i];
+               if (p[0] == '-')
+               {
+                    on = FALSE;
+                    p++;
+                }
+                else if (p[0] == '+')
+                {
+                    on = TRUE;
+                    p++;
+                }
+                else
+                    on = TRUE;
+                strnupper(check, p, (u_int)sizeof(check));
+            }
+            if ( strabbrev("ALL", check, 1) )
+                if ( on )
+                    option = SYSGROUP_SYSALL;
+                else
+                    option = ~SYSGROUP_SYSNONE;
+            else if ( strabbrev("OPERATOR", check, 4) )
+                option = SYSGROUP_SYSOPER;
+            else if ( strabbrev("MAINTENANCE", check, 5) )
+                option = SYSGROUP_SYSMAINT;
+            else if ( strabbrev("PROGRAMMER", check, 4) )
+                option = SYSGROUP_SYSPROG;
+            else if ( strabbrev("CONFIGURATION", check, 6) )
+                option = SYSGROUP_SYSCONFIG;
+            else if ( strabbrev("DEVELOPER", check, 3) )
+                option = SYSGROUP_SYSDEVEL;
+            else if ( strabbrev("DEBUG", check, 3) )
+                option = SYSGROUP_SYSDEBUG;
             else
             {
                 WRMSG(HHC01605,"E", argv[i]);
                 return -1;
             }
+            if ( on )
+                merged_options |= option;
+            else
+                merged_options &= ~option;
         }
+        sysblk.sysgroup = merged_options;
+    }
 
     if ( sysblk.sysgroup == SYSGROUP_SYSALL )
     {
@@ -7693,7 +7624,7 @@ int CmdLevel(int argc, char *argv[], char *cmdline)
             (sysblk.sysgroup&SYSGROUP_SYSPROG)?"programmer ":"",
             (sysblk.sysgroup&SYSGROUP_SYSCONFIG)?"configuration ":"",
             (sysblk.sysgroup&SYSGROUP_SYSDEVEL)?"developer ":"",
-            (sysblk.sysgroup&SYSGROUP_SYSDEBUG)?"debugging ":"");
+            (sysblk.sysgroup&SYSGROUP_SYSDEBUG)?"debug ":"");
         if ( strlen(buf) > 1 )
             buf[strlen(buf)-1] = 0;
         WRMSG(HHC01606, "I", sysblk.sysgroup, buf);
