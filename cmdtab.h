@@ -193,16 +193,16 @@ COMMAND("cpu",       SYSCMDALL,          cpu_cmd,
     "change the target cpu for subsequent panel displays and commands.\n")
 
 COMMAND("start",     SYSCMDALL,          start_cmd,
-  "Start CPU (or printer device if argument given)",
+  "Start CPU (or printer/punch device if argument given)",
     "Entering the 'start' command by itself simply starts a stopped\n"
     "CPU, whereas 'start <devn>' presses the virtual start button on\n"
-    "printer device <devn>.\n")
+    "printer/punch device <devn>.\n")
 
 COMMAND("stop",      SYSCMDALL,          stop_cmd,
-  "Stop CPU (or printer device if argument given)",
+  "Stop CPU (or printer/punch device if argument given)",
     "Entering the 'stop' command by itself simply stops a running\n"
     "CPU, whereas 'stop <devn>' presses the virtual stop button on\n"
-    "printer device <devn>, usually causing an INTREQ.\n")
+    "printer/punch device <devn>, usually causing an INTREQ.\n")
 
 COMMAND("startall",  SYSCMDALL|SYSNDIAG,          startall_cmd,
   "Start all CPU's",
