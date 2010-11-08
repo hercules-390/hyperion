@@ -350,7 +350,8 @@ CMDABBR("defstore",7,SYSCONFIG|SYSNDIAG, defstore_cmd,
   "        xSTORE   - define/display expanded storage allocations\n"
   "        eXPANDED\n"
   "\n"
-  "        ssssS    - specify amount of storage in 'S' units\n"
+  "        ssss     - specify amount of storate in M units\n"
+  "        ssssS    - specify amount of storage in 'S' units where 'S' is\n"
   "                   B = no multiplier             - main only\n"
   "                   K = 2**10 (kilo/kibi)         - main only\n"
   "                   M = 2**20 (mega/mebi)\n"
@@ -391,7 +392,7 @@ COMMAND("mainsize",  SYSCONFIG|SYSNDIAG, mainsize_cmd,
   "")
 
 COMMAND("xpndsize",  SYSCONFIG|SYSNDIAG, xpndsize_cmd,
-  "Define/Display mainsize parameter",
+  "Define/Display xpndsize parameter",
   "Format: xpndsize [ mmmm | nnnS [ lOCK | unlOCK ] ]\n"
   "        mmmm    - define expanded storage size mmmm Megabytes\n"
   "\n"
