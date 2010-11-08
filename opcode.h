@@ -1308,7 +1308,7 @@ do { \
                 (_effective_addr2) += (_regs)->GR((_b2)); \
     }
 
-/* RX_LX0 register and indexed storage - optimized for L */
+/* RX_X0 register and indexed storage - optimized for L and ST */
 #undef RX_X0
 
 #define RX_X0(_inst, _regs, _b2, _effective_addr2) \
