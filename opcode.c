@@ -1240,7 +1240,8 @@ static zz_func v_opcode_a5xx[0x100][GEN_MAXARCH];
 static zz_func v_opcode_a6xx[0x100][GEN_MAXARCH];
 static zz_func v_opcode_e4xx[0x100][GEN_MAXARCH];
 
-static zz_func opcode_47x_[0x10][GEN_MAXARCH];
+static zz_func opcode_47x0[0x10][GEN_MAXARCH];
+static zz_func opcode_58x0[0x10][GEN_MAXARCH];
 static zz_func opcode_A7x4[0x10][GEN_MAXARCH];
 
 #define DISASM_ROUTE(_table,_route) \
@@ -2348,9 +2349,11 @@ void init_opcode_tables(void)
       replace_opcode_xx_x(arch, opcode_cc_x[i][arch], 0xcc, i);
 
       /* Optimized BC */
-      for(j = 0; j < 0x10; j++)
-        replace_opcode_xxxx(arch, opcode_47x_[i][arch], 0x47, i * 0x10 + j);
+      replace_opcode_xxxx(arch, opcode_47x0[i][arch], 0x47, i * 0x10 + 0x00);
 
+      /* Optimized L */
+      replace_opcode_xxxx(arch, opcode_58x0[i][arch], 0x58, i * 0x10 + 0x00);
+      
       /* Optimized BRC */
       replace_opcode_xxxx(arch, opcode_A7x4[i][arch], 0xa7, i * 0x10 + 0x04);
     }
@@ -6446,24 +6449,43 @@ static zz_func v_opcode_e4xx[0x100][GEN_MAXARCH] = {
  /*E4FF*/ GENx___x___x___  };
 
 
-static zz_func opcode_47x_[0x10][GEN_MAXARCH] = {
- /*470x*/ GENx370x390x900 (branch_on_condition_470x,RX,"BC"),
- /*471x*/ GENx370x390x900 (branch_on_condition_471x,RX,"BC"),
- /*472x*/ GENx370x390x900 (branch_on_condition_472x,RX,"BC"),
- /*473x*/ GENx370x390x900 (branch_on_condition_473x,RX,"BC"),
- /*474x*/ GENx370x390x900 (branch_on_condition_474x,RX,"BC"),
- /*475x*/ GENx370x390x900 (branch_on_condition_475x,RX,"BC"),
- /*476x*/ GENx370x390x900 (branch_on_condition,RX,"BC"),
- /*477x*/ GENx370x390x900 (branch_on_condition_477x,RX,"BC"),
- /*478x*/ GENx370x390x900 (branch_on_condition_478x,RX,"BC"),
- /*479x*/ GENx370x390x900 (branch_on_condition,RX,"BC"),
- /*47Ax*/ GENx370x390x900 (branch_on_condition_47Ax,RX,"BC"),
- /*47Bx*/ GENx370x390x900 (branch_on_condition_47Bx,RX,"BC"),
- /*47Cx*/ GENx370x390x900 (branch_on_condition_47Cx,RX,"BC"),
- /*47Dx*/ GENx370x390x900 (branch_on_condition_47Dx,RX,"BC"),
- /*47Ex*/ GENx370x390x900 (branch_on_condition_47Ex,RX,"BC"),
- /*47Fx*/ GENx370x390x900 (branch_on_condition_47Fx,RX,"BC") };
+static zz_func opcode_47x0[0x10][GEN_MAXARCH] = {
+ /*4700*/ GENx370x390x900 (branch_on_condition_4700,RX,"BC"),
+ /*4710*/ GENx370x390x900 (branch_on_condition_4710,RX,"BC"),
+ /*4720*/ GENx370x390x900 (branch_on_condition_4720,RX,"BC"),
+ /*4730*/ GENx370x390x900 (branch_on_condition_4730,RX,"BC"),
+ /*4740*/ GENx370x390x900 (branch_on_condition_4740,RX,"BC"),
+ /*4750*/ GENx370x390x900 (branch_on_condition_4750,RX,"BC"),
+ /*4760*/ GENx370x390x900 (branch_on_condition,RX,"BC"),
+ /*4770*/ GENx370x390x900 (branch_on_condition_4770,RX,"BC"),
+ /*4780*/ GENx370x390x900 (branch_on_condition_4780,RX,"BC"),
+ /*4790*/ GENx370x390x900 (branch_on_condition,RX,"BC"),
+ /*47A0*/ GENx370x390x900 (branch_on_condition_47A0,RX,"BC"),
+ /*47B0*/ GENx370x390x900 (branch_on_condition_47B0,RX,"BC"),
+ /*47C0*/ GENx370x390x900 (branch_on_condition_47C0,RX,"BC"),
+ /*47D0*/ GENx370x390x900 (branch_on_condition_47D0,RX,"BC"),
+ /*47E0*/ GENx370x390x900 (branch_on_condition_47E0,RX,"BC"),
+ /*47F0*/ GENx370x390x900 (branch_on_condition_47F0,RX,"BC") };
 
+ 
+static zz_func opcode_58x0[0x10][GEN_MAXARCH] = {
+ /*5800*/ GENx370x390x900 (load_5800,RX,"L"),
+ /*5810*/ GENx370x390x900 (load_5810,RX,"L"),
+ /*5820*/ GENx370x390x900 (load_5820,RX,"L"),
+ /*5830*/ GENx370x390x900 (load_5830,RX,"L"),
+ /*5840*/ GENx370x390x900 (load_5840,RX,"L"),
+ /*5850*/ GENx370x390x900 (load_5850,RX,"L"),
+ /*5860*/ GENx370x390x900 (load_5860,RX,"L"),
+ /*5870*/ GENx370x390x900 (load_5870,RX,"L"),
+ /*5880*/ GENx370x390x900 (load_5880,RX,"L"),
+ /*5890*/ GENx370x390x900 (load_5890,RX,"L"),
+ /*58A0*/ GENx370x390x900 (load_58A0,RX,"L"),
+ /*58B0*/ GENx370x390x900 (load_58B0,RX,"L"),
+ /*58C0*/ GENx370x390x900 (load_58C0,RX,"L"),
+ /*58D0*/ GENx370x390x900 (load_58D0,RX,"L"),
+ /*58E0*/ GENx370x390x900 (load_58E0,RX,"L"),
+ /*58F0*/ GENx370x390x900 (load_58F0,RX,"L") };
+ 
 
 static zz_func opcode_A7x4[0x10][GEN_MAXARCH] = {
  /*A704*/ GENx370x390x900 (branch_relative_on_condition_A704,RI_B,"BRC"),

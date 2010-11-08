@@ -1295,6 +1295,36 @@ do { \
                 (_effective_addr2) += (_regs)->GR((_b2)); \
     }
 
+#undef RX_BC_X0
+
+#define RX_BC_X0(_inst, _regs, _b2, _effective_addr2) \
+        RX_BC_X0_DECODER(_inst, _regs, _b2, _effective_addr2, 0, 0)
+
+#define RX_BC_X0_DECODER(_inst, _regs, _b2, _effective_addr2, _len, _ilc) \
+    {   U32 temp = fetch_fw(_inst); \
+            (_effective_addr2) = temp & 0xfff; \
+            (_b2) = (temp >> 12) & 0xf; \
+            if(likely((_b2))) \
+                (_effective_addr2) += (_regs)->GR((_b2)); \
+    }
+
+/* RX_LX0 register and indexed storage - optimized for L */
+#undef RX_L_X0
+
+#define RX_L_X0(_inst, _regs, _b2, _effective_addr2) \
+        RX_L_X0_DECODER(_inst, _regs, _b2, _effective_addr2, 4, 4)
+
+#define RX_L_X0_DECODER(_inst, _regs, _b2, _effective_addr2, _len, _ilc) \
+    {   U32 temp = fetch_fw(_inst); \
+            (_effective_addr2) = temp & 0xfff; \
+            (_b2) = (temp >> 12) & 0xf; \
+            if((_b2)) \
+                (_effective_addr2) += (_regs)->GR((_b2)); \
+            if ((_len)) \
+                (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+            INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
+    }
+
 /* RXE register and indexed storage with extended op code */
 #undef RXE
 
@@ -3222,22 +3252,22 @@ DEF_INST(branch_and_set_mode);
 #endif /*defined(FEATURE_BIMODAL_ADDRESSING)*/
 DEF_INST(branch_on_condition_register);
 DEF_INST(branch_on_condition);
-DEF_INST(branch_on_condition_470x);
-DEF_INST(branch_on_condition_471x);
-DEF_INST(branch_on_condition_472x);
-DEF_INST(branch_on_condition_473x);
-DEF_INST(branch_on_condition_474x);
-DEF_INST(branch_on_condition_475x);
-/* No real optimalization for 476x */
-DEF_INST(branch_on_condition_477x);
-DEF_INST(branch_on_condition_478x);
-/* No real optimalization for 479x */
-DEF_INST(branch_on_condition_47Ax);
-DEF_INST(branch_on_condition_47Bx);
-DEF_INST(branch_on_condition_47Cx);
-DEF_INST(branch_on_condition_47Dx);
-DEF_INST(branch_on_condition_47Ex);
-DEF_INST(branch_on_condition_47Fx);
+DEF_INST(branch_on_condition_4700);
+DEF_INST(branch_on_condition_4710);
+DEF_INST(branch_on_condition_4720);
+DEF_INST(branch_on_condition_4730);
+DEF_INST(branch_on_condition_4740);
+DEF_INST(branch_on_condition_4750);
+/* No real optimalization for 4760 */
+DEF_INST(branch_on_condition_4770);
+DEF_INST(branch_on_condition_4780);
+/* No real optimalization for 4790 */
+DEF_INST(branch_on_condition_47A0);
+DEF_INST(branch_on_condition_47B0);
+DEF_INST(branch_on_condition_47C0);
+DEF_INST(branch_on_condition_47D0);
+DEF_INST(branch_on_condition_47E0);
+DEF_INST(branch_on_condition_47F0);
 DEF_INST(branch_on_count_register);
 DEF_INST(branch_on_count);
 DEF_INST(branch_on_index_high);
@@ -3325,6 +3355,22 @@ DEF_INST(insert_character);
 DEF_INST(insert_characters_under_mask);
 DEF_INST(insert_program_mask);
 DEF_INST(load);
+DEF_INST(load_5800);
+DEF_INST(load_5810);
+DEF_INST(load_5820);
+DEF_INST(load_5830);
+DEF_INST(load_5840);
+DEF_INST(load_5850);
+DEF_INST(load_5860);
+DEF_INST(load_5870);
+DEF_INST(load_5880);
+DEF_INST(load_5890);
+DEF_INST(load_58A0);
+DEF_INST(load_58B0);
+DEF_INST(load_58C0);
+DEF_INST(load_58D0);
+DEF_INST(load_58E0);
+DEF_INST(load_58F0);
 DEF_INST(load_register);
 #if defined(FEATURE_ACCESS_REGISTERS)
 DEF_INST(load_access_multiple);
