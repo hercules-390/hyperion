@@ -779,8 +779,8 @@ int archlvl_cmd(int argc, char *argv[], char *cmdline)
 
     if ( argc == 2 )
     {
-        char *q_argv[1] = { "archmode" };
-        return archlvl_cmd( 1, q_argv, "archmode" );
+        if ( MLVL(VERBOSE) )
+            WRMSG(HHC02204, "I", "archmode", get_arch_mode_string(NULL) );
     }
 
     return 0;

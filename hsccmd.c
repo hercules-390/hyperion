@@ -4212,18 +4212,18 @@ int stsi_model_cmd(int argc, char *argv[], char *cmdline)
 
         if ( MLVL(VERBOSE) )
         {
-            WRMSG( HHC02204, "I", "hdw model", str_modelhard() );
-            WRMSG( HHC02204, "I", "cap model", str_modelcapa() );
-            WRMSG( HHC02204, "I", "prm model", str_modelperm() );
-            WRMSG( HHC02204, "I", "tmp model", str_modeltemp() );
+            char msgbuf[128];
+            MSGBUF( msgbuf, "hardware(%s) capacity(%s) perm(%s) temp(%s)",
+                            str_modelhard(), str_modelcapa(), str_modelperm(), str_modeltemp() );  
+            WRMSG( HHC02204, "I", "model", msgbuf );
         }
     }
     else
     {
-        WRMSG( HHC02203, "I", "hdw model", str_modelhard() );
-        WRMSG( HHC02203, "I", "cap model", str_modelcapa() );
-        WRMSG( HHC02203, "I", "prm model", str_modelperm() );
-        WRMSG( HHC02203, "I", "tmp model", str_modeltemp() );
+        char msgbuf[128];
+        MSGBUF( msgbuf, "hardware(%s) capacity(%s) perm(%s) temp(%s)",
+                        str_modelhard(), str_modelcapa(), str_modelperm(), str_modeltemp() );  
+        WRMSG( HHC02203, "I", "model", msgbuf );
     }
 
     return 0;
