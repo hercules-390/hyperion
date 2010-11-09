@@ -2544,27 +2544,68 @@ int defstore_cmd(int argc, char *argv[], char *cmdline)
     else
     {
         /* Recreate parameter list for call */
-        char *av[MAX_ARGS];   // Dynamic array size based on incoming call
-        int   ac;
-        char check[16];
+        char *avm[MAX_ARGS];   // Dynamic array size based on incoming call
+        char *avx[MAX_ARGS];   // Dynamic array size based on incoming call
+        int   acm = 1;
+        int   acx = 1;
+        int   do_main = -1;
+        int   do_xpnd = -1;
 
         /* Copy parameter list pointers, skipping argv[1] */
-        av[0] = argv[0];
-        for (ac = 1, rc = 2; rc < argc; ac++, rc++)
-            av[ac] = argv[rc];
-
-        /* Call correct command processor based on the first argument */
-        strnupper(check, argv[1], sizeof(check));   // Uppercase for multiple caseless checks
-        if ( strabbrev("MAIN", check, 1) )
-            rc = mainsize_cmd( ac, av, NULL );
-        else if ( strabbrev("XSTORE", check, 1) ||
-                  strabbrev("EXPANDED", check, 1) )
-            rc = xpndsize_cmd( ac, av, NULL );
-        else
+        avm[0] = avx[0] = argv[0];
+        
+        for ( rc = 1; rc < argc; rc++ )
         {
-            WRMSG( HHC02205, "E", argv[1], "; must be main, xstore, or expanded" );
-            rc = -1;
+            if ( CMD(argv[rc],main,1) )
+            {
+                if ( do_main != -1 )
+                {
+                    WRMSG( HHC02205, "E", argv[rc], "; second main statement detected" );
+                    rc = -1;
+                    break;
+                }
+                do_main = 1;
+                if ( do_xpnd > 0 ) do_xpnd = 0;
+            
+            }
+            else 
+            if ( CMD(argv[rc],xstore,1) || CMD(argv[rc],expanded,1) )
+            {
+                if ( do_xpnd != -1 )
+                {
+                    WRMSG( HHC02205, "E", argv[rc], "; second xstore|expanded statement detected" );
+                    rc = -1;
+                    break;
+                }
+                do_xpnd = 1;
+                if ( do_main > 0 ) do_main = 0;
+            }
+            else 
+            if ( do_main > 0 )
+            {
+                avm[acm] = argv[rc];
+                acm++;
+                
+            }
+            else
+            if ( do_xpnd > 0 )
+            {
+                avx[acx] = argv[rc];
+                acx++;
+            }
+            else
+            {
+                WRMSG( HHC02205, "E", argv[rc] );
+                rc = -1;
+                break;
+            }
         }
+
+        if ( do_main >= 0 && rc >= 0 )
+            rc = mainsize_cmd( acm, avm, NULL );
+
+        if ( do_xpnd >= 0 && rc >= 0)
+            rc = xpndsize_cmd( acx, avx, NULL );
     }
 
     return rc;

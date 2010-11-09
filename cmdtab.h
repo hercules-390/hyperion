@@ -344,8 +344,14 @@ COMMAND("yroffset",  SYSCONFIG|SYSNDIAG, yroffset_cmd,
 
 CMDABBR("defstore",7,SYSCONFIG|SYSNDIAG, defstore_cmd,
   "Define/Display main and expanded storage values",
-  "Format: defstorE [ mAIN | xSTORE | eXPANDED [ ssss[S] [ lOCK | unlOCK ] ] ]\n"
-  "                   Without any options, display current settings\n"
+  "Format: defstorE [ mAIN [ ssss[S] [ lOCK | unlOCK ] ] ]\n"
+  "                 [ xSTORE | eXPANDED [ ssss[S] [ lOCK | unlOCK ] ] ]\n"
+  "        Main and Expanded Storage may be specified on the same command\n"
+  "        line.\n"
+  "\n"
+  "                   Without any options, display current settings for both\n"
+  "                   types of storage\n"
+  "\n"
   "        mAIN     - define/display main storage allocations\n"
   "        xSTORE   - define/display expanded storage allocations\n"
   "        eXPANDED\n"
@@ -363,7 +369,7 @@ CMDABBR("defstore",7,SYSCONFIG|SYSNDIAG, defstore_cmd,
   "        lOCK    - attempt to lock storage (pages lock by host OS)\n"
   "        unlOCK  - leave storage unlocked (pagable by host OS)\n"
   "\n"
-  "      (none)    - display current mainsize value\n"
+  "      (none)    - display current value(s)\n"
   "\n"
   " Note: Multipliers 'T', 'P', and 'E' are not available on 32bit machines\n" 
   "       Expanded Storage is allocated in minimum of 1M units\n"
