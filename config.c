@@ -1032,9 +1032,6 @@ static int detach_devblk (DEVBLK *dev)
 {
 int     i;                              /* Loop index                */
     
-    /* Obtain (re)configuration lock */
-// ZZ obtain_lock(&sysblk.config);
-
     /* Obtain the device lock */
     obtain_lock(&dev->lock);
 
@@ -1103,7 +1100,6 @@ int     i;                              /* Loop index                */
         machine_check_crwpend();
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
-// ZZ     release_lock(&sysblk.config);
     return 0;
 } /* end function detach_devblk */
 
@@ -1127,7 +1123,11 @@ char   str[64];
         return 1;
     }
 
+    obtain_lock(&sysblk.config);
+
     rc = detach_devblk( dev );
+
+    release_lock(&sysblk.config);
 
     if(!rc)
         WRMSG (HHC01465, "I", lcss, devnum, str);
@@ -1153,7 +1153,11 @@ int    rc;
         return 1;
     }
 
+    obtain_lock(&sysblk.config);
+
     rc = detach_devblk( dev );
+
+    release_lock(&sysblk.config);
 
     if(!rc)
         WRMSG (HHC01465, "I", lcss, devnum, "device");
