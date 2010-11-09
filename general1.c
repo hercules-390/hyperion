@@ -1106,7 +1106,7 @@ VADR    effective_addr2;                /* Effective address         */
 #ifdef OPTION_RX_OPTIMIZATION
 #define OPT_load_address_41x0(x) \
 /*-------------------------------------------------------------------*/ \
-/* 4100 LA    - Load Address                                    [RX] */ \
+/* 41x0 LA    - Load Address                                    [RX] */ \
 /*-------------------------------------------------------------------*/ \
 DEF_INST(load_address_41 ## x ## 0) \
 { \
@@ -1161,7 +1161,7 @@ U32     n;                              /* 32-bit operand values     */
 #ifdef OPTION_RX_OPTIMIZATION 
 #define OPT_compare_logical_55x0(x) \
 /*-------------------------------------------------------------------*/ \
-/* 5500 CL    - Compare Logical                                 [RX] */ \
+/* 55x0 CL    - Compare Logical                                 [RX] */ \
 /*-------------------------------------------------------------------*/ \
 DEF_INST(compare_logical_55 ## x ## 0) \
 { \
@@ -1216,7 +1216,7 @@ VADR    effective_addr2;                /* Effective address         */
 #ifdef OPTION_RX_OPTIMIZATION
 #define OPT_load_halfword_48x0(x) \
 /*-------------------------------------------------------------------*/ \
-/* 4800 LH    - Load Halfword                                   [RX] */ \
+/* 48x0 LH    - Load Halfword                                   [RX] */ \
 /*-------------------------------------------------------------------*/ \
 DEF_INST(load_halfword_48 ## x ## 0) \
 { \
