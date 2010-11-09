@@ -1942,6 +1942,21 @@ typedef struct _ZPB2 {
 #define ZPB2_ES_VALID 0x00FFFFFFFFFFFFFFULL
 } ZPB2;
 
+typedef struct _SCAENT {
+        FWORD   scn;
+        FWORD   resv1;
+        DBLWRD  sda;                    /* Address of SIEBK          */
+        DBLWRD  resv2[2];
+} SCAENT;
+
+typedef struct _SCABLK {
+        DBLWRD  ipte_control;
+        DBLWRD  resv1[5];
+        DBLWRD  mcn;                    /* Bitmap of VCPUs config    */
+        DBLWRD  resv2;
+        SCAENT  vcpu[64];
+} SCABLK;
+
 #define LKPG_GPR0_LOCKBIT       0x00000200
 #define LKPG_GPR0_RESV          0x0000FD00
 
