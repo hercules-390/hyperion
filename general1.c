@@ -716,6 +716,25 @@ VADR    effective_addr2;                /* Effective address         */
 
 #ifdef OPTION_RX_OPTIMIZATION
 /*-------------------------------------------------------------------*/
+/* 47   BC    - Branch on Condition                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(branch_on_condition_47x0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    /* Branch to operand address if r1 mask bit is set */
+    if ((0x80 >> regs->psw.cc) & inst[1])
+    {
+        RX_BC_X0(inst, regs, b2, effective_addr2);
+        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+    }
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_on_condition) */
+
+/*-------------------------------------------------------------------*/
 /* 4700 BC    - Branch on Condition                             [RX] */
 /*-------------------------------------------------------------------*/
 DEF_INST(branch_on_condition_4700)
@@ -966,267 +985,6 @@ VADR    effective_addr2;                /* Effective address         */
 
 } /* end DEF_INST(branch_on_condition) */
 #endif /* OPTION_RX_OPTIMIZATION */
-
-#if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
-/*-------------------------------------------------------------------*/
-/* A7x4 BRC   - Branch Relative on Condition                    [RI] */
-/*-------------------------------------------------------------------*/
-DEF_INST(branch_relative_on_condition)
-{
-U16   i2;                               /* 16-bit operand values     */
-
-    /* Branch if R1 mask bit is set */
-    if (inst[1] & (0x80 >> regs->psw.cc))
-    {
-        i2 = fetch_fw(inst) & 0xFFFF;
-        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
-    }
-    else
-        INST_UPDATE_PSW(regs, 4, 0);
-
-} /* end DEF_INST(branch_relative_on_condition) */
-
-#ifdef OPTION_RX_OPTIMIZATION
-/*-------------------------------------------------------------------*/
-/* A704 BRC   - Branch Relative on Condition                    [RI] */
-/*-------------------------------------------------------------------*/
-DEF_INST(branch_relative_on_condition_A704)
-{
-    UNREFERENCED(inst);
-    INST_UPDATE_PSW(regs, 4, 0);
-
-} /* end DEF_INST(branch_relative_on_condition) */
-
-/*-------------------------------------------------------------------*/
-/* A714 BRC   - Branch Relative on Condition                    [RI] */
-/*-------------------------------------------------------------------*/
-DEF_INST(branch_relative_on_condition_A714)
-{
-U16   i2;                               /* 16-bit operand values     */
-
-    /* Branch if R1 mask bit is set */
-    if (regs->psw.cc == 3)
-    {
-        i2 = fetch_fw(inst) & 0xFFFF;
-        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
-    }
-    else
-        INST_UPDATE_PSW(regs, 4, 0);
-
-} /* end DEF_INST(branch_relative_on_condition) */
-
-/*-------------------------------------------------------------------*/
-/* A724 BRC   - Branch Relative on Condition                    [RI] */
-/*-------------------------------------------------------------------*/
-DEF_INST(branch_relative_on_condition_A724)
-{
-U16   i2;                               /* 16-bit operand values     */
-
-    /* Branch if R1 mask bit is set */
-    if (regs->psw.cc == 2)
-    {
-        i2 = fetch_fw(inst) & 0xFFFF;
-        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
-    }
-    else
-        INST_UPDATE_PSW(regs, 4, 0);
-
-} /* end DEF_INST(branch_relative_on_condition) */
-
-/*-------------------------------------------------------------------*/
-/* A734 BRC   - Branch Relative on Condition                    [RI] */
-/*-------------------------------------------------------------------*/
-DEF_INST(branch_relative_on_condition_A734)
-{
-U16   i2;                               /* 16-bit operand values     */
-
-    /* Branch if R1 mask bit is set */
-    if (regs->psw.cc >= 2)
-    {
-        i2 = fetch_fw(inst) & 0xFFFF;
-        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
-    }
-    else
-        INST_UPDATE_PSW(regs, 4, 0);
-
-} /* end DEF_INST(branch_relative_on_condition) */
-
-/*-------------------------------------------------------------------*/
-/* A744 BRC   - Branch Relative on Condition                    [RI] */
-/*-------------------------------------------------------------------*/
-DEF_INST(branch_relative_on_condition_A744)
-{
-U16   i2;                               /* 16-bit operand values     */
-
-    /* Branch if R1 mask bit is set */
-    if (regs->psw.cc == 1)
-    {
-        i2 = fetch_fw(inst) & 0xFFFF;
-        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
-    }
-    else
-        INST_UPDATE_PSW(regs, 4, 0);
-
-} /* end DEF_INST(branch_relative_on_condition) */
-
-/*-------------------------------------------------------------------*/
-/* A754 BRC   - Branch Relative on Condition                    [RI] */
-/*-------------------------------------------------------------------*/
-DEF_INST(branch_relative_on_condition_A754)
-{
-U16   i2;                               /* 16-bit operand values     */
-
-    /* Branch if R1 mask bit is set */
-    if (regs->psw.cc & 0x01)
-    {
-        i2 = fetch_fw(inst) & 0xFFFF;
-        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
-    }
-    else
-        INST_UPDATE_PSW(regs, 4, 0);
-
-} /* end DEF_INST(branch_relative_on_condition) */
-
-/*-------------------------------------------------------------------*/
-/* A774 BRC   - Branch Relative on Condition                    [RI] */
-/*-------------------------------------------------------------------*/
-DEF_INST(branch_relative_on_condition_A774)
-{
-U16   i2;                               /* 16-bit operand values     */
-
-    /* Branch if R1 mask bit is set */
-    if (regs->psw.cc)
-    {
-        i2 = fetch_fw(inst) & 0xFFFF;
-        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
-    }
-    else
-        INST_UPDATE_PSW(regs, 4, 0);
-
-} /* end DEF_INST(branch_relative_on_condition) */
-
-/*-------------------------------------------------------------------*/
-/* A784 BRC   - Branch Relative on Condition                    [RI] */
-/*-------------------------------------------------------------------*/
-DEF_INST(branch_relative_on_condition_A784)
-{
-U16   i2;                               /* 16-bit operand values     */
-
-    /* Branch if R1 mask bit is set */
-    if (!regs->psw.cc)
-    {
-        i2 = fetch_fw(inst) & 0xFFFF;
-        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
-    }
-    else
-        INST_UPDATE_PSW(regs, 4, 0);
-
-} /* end DEF_INST(branch_relative_on_condition) */
-
-/*-------------------------------------------------------------------*/
-/* A7A4 BRC   - Branch Relative on Condition                    [RI] */
-/*-------------------------------------------------------------------*/
-DEF_INST(branch_relative_on_condition_A7A4)
-{
-U16   i2;                               /* 16-bit operand values     */
-
-    /* Branch if R1 mask bit is set */
-    if (!(regs->psw.cc & 0x01))
-    {
-        i2 = fetch_fw(inst) & 0xFFFF;
-        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
-    }
-    else
-        INST_UPDATE_PSW(regs, 4, 0);
-
-} /* end DEF_INST(branch_relative_on_condition) */
-
-/*-------------------------------------------------------------------*/
-/* A7B4 BRC   - Branch Relative on Condition                    [RI] */
-/*-------------------------------------------------------------------*/
-DEF_INST(branch_relative_on_condition_A7B4)
-{
-U16   i2;                               /* 16-bit operand values     */
-
-    /* Branch if R1 mask bit is set */
-    if (regs->psw.cc != 1)
-    {
-        i2 = fetch_fw(inst) & 0xFFFF;
-        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
-    }
-    else
-        INST_UPDATE_PSW(regs, 4, 0);
-
-} /* end DEF_INST(branch_relative_on_condition) */
-
-/*-------------------------------------------------------------------*/
-/* A7C4 BRC   - Branch Relative on Condition                    [RI] */
-/*-------------------------------------------------------------------*/
-DEF_INST(branch_relative_on_condition_A7C4)
-{
-U16   i2;                               /* 16-bit operand values     */
-
-    /* Branch if R1 mask bit is set */
-    if (regs->psw.cc <= 1)
-    {
-        i2 = fetch_fw(inst) & 0xFFFF;
-        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
-    }
-    else
-        INST_UPDATE_PSW(regs, 4, 0);
-
-} /* end DEF_INST(branch_relative_on_condition) */
-
-/*-------------------------------------------------------------------*/
-/* A7D4 BRC   - Branch Relative on Condition                    [RI] */
-/*-------------------------------------------------------------------*/
-DEF_INST(branch_relative_on_condition_A7D4)
-{
-U16   i2;                               /* 16-bit operand values     */
-
-    /* Branch if R1 mask bit is set */
-    if (regs->psw.cc != 2)
-    {
-        i2 = fetch_fw(inst) & 0xFFFF;
-        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
-    }
-    else
-        INST_UPDATE_PSW(regs, 4, 0);
-
-} /* end DEF_INST(branch_relative_on_condition) */
-
-/*-------------------------------------------------------------------*/
-/* A7E4 BRC   - Branch Relative on Condition                    [RI] */
-/*-------------------------------------------------------------------*/
-DEF_INST(branch_relative_on_condition_A7E4)
-{
-U16   i2;                               /* 16-bit operand values     */
-
-    /* Branch if R1 mask bit is set */
-    if (regs->psw.cc != 3)
-    {
-        i2 = fetch_fw(inst) & 0xFFFF;
-        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
-    }
-    else
-        INST_UPDATE_PSW(regs, 4, 0);
-
-} /* end DEF_INST(branch_relative_on_condition) */
-
-/*-------------------------------------------------------------------*/
-/* A7F4 BRC   - Branch Relative on Condition                    [RI] */
-/*-------------------------------------------------------------------*/
-DEF_INST(branch_relative_on_condition_A7F4)
-{
-U16   i2;                               /* 16-bit operand values     */
-
-    i2 = fetch_fw(inst) & 0xFFFF;
-    SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
-
-} /* end DEF_INST(branch_relative_on_condition) */
-
-#endif /* OPTION_RX_OPTIMIZATION */
-#endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
 
 /*-------------------------------------------------------------------*/
 /* 58   L     - Load                                            [RX] */
@@ -2002,6 +1760,595 @@ VADR    effective_addr2;                /* Effective address         */
 }
 #endif /* OPTION_RX_OPTIMIZATION */
 
+
+/*-------------------------------------------------------------------*/
+/* 55   CL    - Compare Logical                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical)
+{
+int     r1;                             /* Values of R fields        */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX(inst, regs, r1, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Compare unsigned operands and set condition code */
+    regs->psw.cc = regs->GR_L(r1) < n ? 1 :
+                   regs->GR_L(r1) > n ? 2 : 0;
+}
+
+#ifdef OPTION_RX_OPTIMIZATION 
+/*-------------------------------------------------------------------*/
+/* 5500 CL    - Compare Logical                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_5500)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Compare unsigned operands and set condition code */
+    regs->psw.cc = regs->GR_L(0x0) < n ? 1 :
+                   regs->GR_L(0x0) > n ? 2 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 5510 CL    - Compare Logical                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_5510)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Compare unsigned operands and set condition code */
+    regs->psw.cc = regs->GR_L(0x1) < n ? 1 :
+                   regs->GR_L(0x1) > n ? 2 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 5520 CL    - Compare Logical                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_5520)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Compare unsigned operands and set condition code */
+    regs->psw.cc = regs->GR_L(0x2) < n ? 1 :
+                   regs->GR_L(0x2) > n ? 2 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 5530 CL    - Compare Logical                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_5530)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Compare unsigned operands and set condition code */
+    regs->psw.cc = regs->GR_L(0x3) < n ? 1 :
+                   regs->GR_L(0x3) > n ? 2 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 5540 CL    - Compare Logical                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_5540)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Compare unsigned operands and set condition code */
+    regs->psw.cc = regs->GR_L(0x4) < n ? 1 :
+                   regs->GR_L(0x4) > n ? 2 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 5550 CL    - Compare Logical                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_5550)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Compare unsigned operands and set condition code */
+    regs->psw.cc = regs->GR_L(0x5) < n ? 1 :
+                   regs->GR_L(0x5) > n ? 2 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 5560 CL    - Compare Logical                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_5560)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Compare unsigned operands and set condition code */
+    regs->psw.cc = regs->GR_L(0x6) < n ? 1 :
+                   regs->GR_L(0x6) > n ? 2 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 5570 CL    - Compare Logical                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_5570)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Compare unsigned operands and set condition code */
+    regs->psw.cc = regs->GR_L(0x7) < n ? 1 :
+                   regs->GR_L(0x7) > n ? 2 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 5580 CL    - Compare Logical                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_5580)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Compare unsigned operands and set condition code */
+    regs->psw.cc = regs->GR_L(0x8) < n ? 1 :
+                   regs->GR_L(0x8) > n ? 2 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 5590 CL    - Compare Logical                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_5590)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Compare unsigned operands and set condition code */
+    regs->psw.cc = regs->GR_L(0x9) < n ? 1 :
+                   regs->GR_L(0x9) > n ? 2 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 55A0 CL    - Compare Logical                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_55A0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Compare unsigned operands and set condition code */
+    regs->psw.cc = regs->GR_L(0xa) < n ? 1 :
+                   regs->GR_L(0xa) > n ? 2 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 55B0 CL    - Compare Logical                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_55B0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Compare unsigned operands and set condition code */
+    regs->psw.cc = regs->GR_L(0xb) < n ? 1 :
+                   regs->GR_L(0xb) > n ? 2 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 55C0 CL    - Compare Logical                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_55C0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Compare unsigned operands and set condition code */
+    regs->psw.cc = regs->GR_L(0xc) < n ? 1 :
+                   regs->GR_L(0xc) > n ? 2 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 55D0 CL    - Compare Logical                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_55D0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Compare unsigned operands and set condition code */
+    regs->psw.cc = regs->GR_L(0xd) < n ? 1 :
+                   regs->GR_L(0xd) > n ? 2 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 55E0 CL    - Compare Logical                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_55E0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Compare unsigned operands and set condition code */
+    regs->psw.cc = regs->GR_L(0xe) < n ? 1 :
+                   regs->GR_L(0xe) > n ? 2 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 55F0 CL    - Compare Logical                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_55F0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Compare unsigned operands and set condition code */
+    regs->psw.cc = regs->GR_L(0xf) < n ? 1 :
+                   regs->GR_L(0xf) > n ? 2 : 0;
+}
+#endif /* OPTION_RX_OPTIMIZATION */
+
+
+/*-------------------------------------------------------------------*/
+/* 48   LH    - Load Halfword                                   [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_halfword)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX(inst, regs, r1, b2, effective_addr2);
+
+    /* Load rightmost 2 bytes of register from operand address */
+    regs->GR_L(r1) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+}
+
+#ifdef OPTION_RX_OPTIMIZATION
+/*-------------------------------------------------------------------*/
+/* 4800 LH    - Load Halfword                                   [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_halfword_4800)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load rightmost 2 bytes of register from operand address */
+    regs->GR_L(0x0) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 4810 LH    - Load Halfword                                   [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_halfword_4810)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load rightmost 2 bytes of register from operand address */
+    regs->GR_L(0x1) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 4820 LH    - Load Halfword                                   [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_halfword_4820)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load rightmost 2 bytes of register from operand address */
+    regs->GR_L(0x2) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 4830 LH    - Load Halfword                                   [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_halfword_4830)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load rightmost 2 bytes of register from operand address */
+    regs->GR_L(0x3) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 4840 LH    - Load Halfword                                   [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_halfword_4840)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load rightmost 2 bytes of register from operand address */
+    regs->GR_L(0x4) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 4850 LH    - Load Halfword                                   [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_halfword_4850)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load rightmost 2 bytes of register from operand address */
+    regs->GR_L(0x5) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 4860 LH    - Load Halfword                                   [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_halfword_4860)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load rightmost 2 bytes of register from operand address */
+    regs->GR_L(0x6) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 4870 LH    - Load Halfword                                   [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_halfword_4870)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load rightmost 2 bytes of register from operand address */
+    regs->GR_L(0x7) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 4880 LH    - Load Halfword                                   [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_halfword_4880)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load rightmost 2 bytes of register from operand address */
+    regs->GR_L(0x8) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 4890 LH    - Load Halfword                                   [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_halfword_4890)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load rightmost 2 bytes of register from operand address */
+    regs->GR_L(0x9) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 48A0 LH    - Load Halfword                                   [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_halfword_48A0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load rightmost 2 bytes of register from operand address */
+    regs->GR_L(0xa) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 48B0 LH    - Load Halfword                                   [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_halfword_48B0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load rightmost 2 bytes of register from operand address */
+    regs->GR_L(0xb) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 48C0 LH    - Load Halfword                                   [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_halfword_48C0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load rightmost 2 bytes of register from operand address */
+    regs->GR_L(0xc) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 48D0 LH    - Load Halfword                                   [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_halfword_48D0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load rightmost 2 bytes of register from operand address */
+    regs->GR_L(0xd) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 48E0 LH    - Load Halfword                                   [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_halfword_48E0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load rightmost 2 bytes of register from operand address */
+    regs->GR_L(0xe) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 48F0 LH    - Load Halfword                                   [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_halfword_48F0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load rightmost 2 bytes of register from operand address */
+    regs->GR_L(0xf) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+}
+#endif /* OPTION_RX_OPTIMIZATION */
+
+
+#if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
+/*-------------------------------------------------------------------*/
+/* A7x4 BRC   - Branch Relative on Condition                    [RI] */
+/*-------------------------------------------------------------------*/
+DEF_INST(branch_relative_on_condition)
+{
+U16   i2;                               /* 16-bit operand values     */
+
+    /* Branch if R1 mask bit is set */
+    if (inst[1] & (0x80 >> regs->psw.cc))
+    {
+        i2 = fetch_fw(inst) & 0xFFFF;
+        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
+    }
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_relative_on_condition) */
+#endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
 
 /*-------------------------------------------------------------------*/
 /* 06   BCTR  - Branch on Count Register                        [RR] */
@@ -2909,27 +3256,6 @@ int     r1, r2;                         /* Values of R fields        */
     /* Compare unsigned operands and set condition code */
     regs->psw.cc = regs->GR_L(r1) < regs->GR_L(r2) ? 1 :
                    regs->GR_L(r1) > regs->GR_L(r2) ? 2 : 0;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* 55   CL    - Compare Logical                                 [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(compare_logical)
-{
-int     r1;                             /* Values of R fields        */
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
-
-    RX(inst, regs, r1, b2, effective_addr2);
-
-    /* Load second operand from operand address */
-    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-    /* Compare unsigned operands and set condition code */
-    regs->psw.cc = regs->GR_L(r1) < n ? 1 :
-                   regs->GR_L(r1) > n ? 2 : 0;
 }
 
 
@@ -4761,22 +5087,6 @@ int     r1, r2;                         /* Values of R fields        */
 
     regs->psw.cc = (S32)regs->GR_L(r1) < 0 ? 1 :
                    (S32)regs->GR_L(r1) > 0 ? 2 : 0;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* 48   LH    - Load Halfword                                   [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_halfword)
-{
-int     r1;                             /* Value of R field          */
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX(inst, regs, r1, b2, effective_addr2);
-
-    /* Load rightmost 2 bytes of register from operand address */
-    regs->GR_L(r1) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
 }
 
 

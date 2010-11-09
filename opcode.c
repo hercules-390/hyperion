@@ -78,20 +78,6 @@
  UNDEF_INST(test_under_mask_high)
  UNDEF_INST(test_under_mask_low)
  UNDEF_INST(branch_relative_on_condition)
- UNDEF_INST(branch_relative_on_condition_A704)
- UNDEF_INST(branch_relative_on_condition_A714)
- UNDEF_INST(branch_relative_on_condition_A724)
- UNDEF_INST(branch_relative_on_condition_A734)
- UNDEF_INST(branch_relative_on_condition_A744)
- UNDEF_INST(branch_relative_on_condition_A754)
- UNDEF_INST(branch_relative_on_condition_A774)
- UNDEF_INST(branch_relative_on_condition_A784)
- UNDEF_INST(branch_relative_on_condition_A7A4)
- UNDEF_INST(branch_relative_on_condition_A7B4)
- UNDEF_INST(branch_relative_on_condition_A7C4)
- UNDEF_INST(branch_relative_on_condition_A7D4)
- UNDEF_INST(branch_relative_on_condition_A7E4)
- UNDEF_INST(branch_relative_on_condition_A7F4)
  UNDEF_INST(branch_relative_and_save)
  UNDEF_INST(branch_relative_on_count)
  UNDEF_INST(load_halfword_immediate)
@@ -1243,9 +1229,10 @@ static zz_func v_opcode_e4xx[0x100][GEN_MAXARCH];
 #ifdef OPTION_RX_OPTIMIZATION
 static zz_func opcode_41x0[0x10][GEN_MAXARCH];
 static zz_func opcode_47x0[0x10][GEN_MAXARCH];
+static zz_func opcode_48x0[0x10][GEN_MAXARCH];
 static zz_func opcode_50x0[0x10][GEN_MAXARCH];
+static zz_func opcode_55x0[0x10][GEN_MAXARCH];
 static zz_func opcode_58x0[0x10][GEN_MAXARCH];
-static zz_func opcode_A7x4[0x10][GEN_MAXARCH];
 #endif /* OPTION_RX_OPTIMIZATION */
 
 #define DISASM_ROUTE(_table,_route) \
@@ -2357,9 +2344,10 @@ void init_opcode_tables(void)
     {
       replace_opcode_xxxx(arch, opcode_41x0[i][arch], 0x41, i * 0x10 + 0x00);
       replace_opcode_xxxx(arch, opcode_47x0[i][arch], 0x47, i * 0x10 + 0x00);
+      replace_opcode_xxxx(arch, opcode_48x0[i][arch], 0x48, i * 0x10 + 0x00);      
       replace_opcode_xxxx(arch, opcode_50x0[i][arch], 0x50, i * 0x10 + 0x00);
+      replace_opcode_xxxx(arch, opcode_55x0[i][arch], 0x55, i * 0x10 + 0x00);
       replace_opcode_xxxx(arch, opcode_58x0[i][arch], 0x58, i * 0x10 + 0x00);
-      replace_opcode_xxxx(arch, opcode_A7x4[i][arch], 0xa7, i * 0x10 + 0x04);
     }
 #endif /* OPTION_RX_OPTIMIZATION */
   }
@@ -6481,10 +6469,10 @@ static zz_func opcode_47x0[0x10][GEN_MAXARCH] = {
  /*4730*/ GENx370x390x900 (branch_on_condition_4730,RX,"BC"),
  /*4740*/ GENx370x390x900 (branch_on_condition_4740,RX,"BC"),
  /*4750*/ GENx370x390x900 (branch_on_condition_4750,RX,"BC"),
- /*4760*/ GENx370x390x900 (branch_on_condition,RX,"BC"),
+ /*4760*/ GENx370x390x900 (branch_on_condition_47x0,RX,"BC"),
  /*4770*/ GENx370x390x900 (branch_on_condition_4770,RX,"BC"),
  /*4780*/ GENx370x390x900 (branch_on_condition_4780,RX,"BC"),
- /*4790*/ GENx370x390x900 (branch_on_condition,RX,"BC"),
+ /*4790*/ GENx370x390x900 (branch_on_condition_47x0,RX,"BC"),
  /*47A0*/ GENx370x390x900 (branch_on_condition_47A0,RX,"BC"),
  /*47B0*/ GENx370x390x900 (branch_on_condition_47B0,RX,"BC"),
  /*47C0*/ GENx370x390x900 (branch_on_condition_47C0,RX,"BC"),
@@ -6493,7 +6481,26 @@ static zz_func opcode_47x0[0x10][GEN_MAXARCH] = {
  /*47F0*/ GENx370x390x900 (branch_on_condition_47F0,RX,"BC") };
 
 
- static zz_func opcode_50x0[0x10][GEN_MAXARCH] = {
+static zz_func opcode_48x0[0x10][GEN_MAXARCH] = {
+ /*4800*/ GENx370x390x900 (load_halfword_4800,RX,"LH"),
+ /*4810*/ GENx370x390x900 (load_halfword_4810,RX,"LH"),
+ /*4820*/ GENx370x390x900 (load_halfword_4820,RX,"LH"),
+ /*4830*/ GENx370x390x900 (load_halfword_4830,RX,"LH"),
+ /*4840*/ GENx370x390x900 (load_halfword_4840,RX,"LH"),
+ /*4850*/ GENx370x390x900 (load_halfword_4850,RX,"LH"),
+ /*4860*/ GENx370x390x900 (load_halfword_4860,RX,"LH"),
+ /*4870*/ GENx370x390x900 (load_halfword_4870,RX,"LH"),
+ /*4880*/ GENx370x390x900 (load_halfword_4880,RX,"LH"),
+ /*4890*/ GENx370x390x900 (load_halfword_4890,RX,"LH"),
+ /*48A0*/ GENx370x390x900 (load_halfword_48A0,RX,"LH"),
+ /*48B0*/ GENx370x390x900 (load_halfword_48B0,RX,"LH"),
+ /*48C0*/ GENx370x390x900 (load_halfword_48C0,RX,"LH"),
+ /*48D0*/ GENx370x390x900 (load_halfword_48D0,RX,"LH"),
+ /*48E0*/ GENx370x390x900 (load_halfword_48E0,RX,"LH"),
+ /*48F0*/ GENx370x390x900 (load_halfword_48F0,RX,"LH") };
+
+ 
+static zz_func opcode_50x0[0x10][GEN_MAXARCH] = {
  /*5000*/ GENx370x390x900 (store_5000,RX,"ST"),
  /*5010*/ GENx370x390x900 (store_5010,RX,"ST"),
  /*5020*/ GENx370x390x900 (store_5020,RX,"ST"),
@@ -6510,6 +6517,25 @@ static zz_func opcode_47x0[0x10][GEN_MAXARCH] = {
  /*50D0*/ GENx370x390x900 (store_50D0,RX,"ST"),
  /*50E0*/ GENx370x390x900 (store_50E0,RX,"ST"),
  /*50F0*/ GENx370x390x900 (store_50F0,RX,"ST") };
+
+ 
+static zz_func opcode_55x0[0x10][GEN_MAXARCH] = {
+ /*5500*/ GENx370x390x900 (compare_logical_5500,RX,"CL"),
+ /*5510*/ GENx370x390x900 (compare_logical_5510,RX,"CL"),
+ /*5520*/ GENx370x390x900 (compare_logical_5520,RX,"CL"),
+ /*5530*/ GENx370x390x900 (compare_logical_5530,RX,"CL"),
+ /*5540*/ GENx370x390x900 (compare_logical_5540,RX,"CL"),
+ /*5550*/ GENx370x390x900 (compare_logical_5550,RX,"CL"),
+ /*5560*/ GENx370x390x900 (compare_logical_5560,RX,"CL"),
+ /*5570*/ GENx370x390x900 (compare_logical_5570,RX,"CL"),
+ /*5580*/ GENx370x390x900 (compare_logical_5580,RX,"CL"),
+ /*5590*/ GENx370x390x900 (compare_logical_5590,RX,"CL"),
+ /*55A0*/ GENx370x390x900 (compare_logical_55A0,RX,"CL"),
+ /*55B0*/ GENx370x390x900 (compare_logical_55B0,RX,"CL"),
+ /*55C0*/ GENx370x390x900 (compare_logical_55C0,RX,"CL"),
+ /*55D0*/ GENx370x390x900 (compare_logical_55D0,RX,"CL"),
+ /*55E0*/ GENx370x390x900 (compare_logical_55E0,RX,"CL"),
+ /*55F0*/ GENx370x390x900 (compare_logical_55F0,RX,"CL") };
 
  
 static zz_func opcode_58x0[0x10][GEN_MAXARCH] = {
@@ -6529,27 +6555,8 @@ static zz_func opcode_58x0[0x10][GEN_MAXARCH] = {
  /*58D0*/ GENx370x390x900 (load_58D0,RX,"L"),
  /*58E0*/ GENx370x390x900 (load_58E0,RX,"L"),
  /*58F0*/ GENx370x390x900 (load_58F0,RX,"L") };
- 
-
-static zz_func opcode_A7x4[0x10][GEN_MAXARCH] = {
- /*A704*/ GENx370x390x900 (branch_relative_on_condition_A704,RI_B,"BRC"),
- /*A714*/ GENx370x390x900 (branch_relative_on_condition_A714,RI_B,"BRC"),
- /*A724*/ GENx370x390x900 (branch_relative_on_condition_A724,RI_B,"BRC"),
- /*A734*/ GENx370x390x900 (branch_relative_on_condition_A734,RI_B,"BRC"),
- /*A744*/ GENx370x390x900 (branch_relative_on_condition_A744,RI_B,"BRC"),
- /*A754*/ GENx370x390x900 (branch_relative_on_condition_A754,RI_B,"BRC"),
- /*A764*/ GENx370x390x900 (branch_relative_on_condition,RI_B,"BRC"),
- /*A774*/ GENx370x390x900 (branch_relative_on_condition_A774,RI_B,"BRC"),
- /*A784*/ GENx370x390x900 (branch_relative_on_condition_A784,RI_B,"BRC"),
- /*A794*/ GENx370x390x900 (branch_relative_on_condition,RI_B,"BRC"),
- /*A7A4*/ GENx370x390x900 (branch_relative_on_condition_A7A4,RI_B,"BRC"),
- /*A7B4*/ GENx370x390x900 (branch_relative_on_condition_A7B4,RI_B,"BRC"),
- /*A7C4*/ GENx370x390x900 (branch_relative_on_condition_A7C4,RI_B,"BRC"),
- /*A7D4*/ GENx370x390x900 (branch_relative_on_condition_A7D4,RI_B,"BRC"),
- /*A7E4*/ GENx370x390x900 (branch_relative_on_condition_A7E4,RI_B,"BRC"),
- /*A7F4*/ GENx370x390x900 (branch_relative_on_condition_A7F4,RI_B,"BRC") };
 #endif /* OPTION_RX_OPTIMIZATION */
- 
+
 #endif /*!defined (_GEN_ARCH)*/
 
 /* end of OPCODE.C */

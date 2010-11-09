@@ -3255,6 +3255,7 @@ DEF_INST(branch_and_set_mode);
 DEF_INST(branch_on_condition_register);
 DEF_INST(branch_on_condition);
 #ifdef OPTION_RX_OPTIMIZATION
+DEF_INST(branch_on_condition_47x0);
 DEF_INST(branch_on_condition_4700);
 DEF_INST(branch_on_condition_4710);
 DEF_INST(branch_on_condition_4720);
@@ -3278,22 +3279,6 @@ DEF_INST(branch_on_index_high);
 DEF_INST(branch_on_index_low_or_equal);
 #if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
 DEF_INST(branch_relative_on_condition);
-#ifdef OPTION_RX_OPTIMIZATION 
-DEF_INST(branch_relative_on_condition_A704);
-DEF_INST(branch_relative_on_condition_A714);
-DEF_INST(branch_relative_on_condition_A724);
-DEF_INST(branch_relative_on_condition_A734);
-DEF_INST(branch_relative_on_condition_A744);
-DEF_INST(branch_relative_on_condition_A754);
-DEF_INST(branch_relative_on_condition_A774);
-DEF_INST(branch_relative_on_condition_A784);
-DEF_INST(branch_relative_on_condition_A7A4);
-DEF_INST(branch_relative_on_condition_A7B4);
-DEF_INST(branch_relative_on_condition_A7C4);
-DEF_INST(branch_relative_on_condition_A7D4);
-DEF_INST(branch_relative_on_condition_A7E4);
-DEF_INST(branch_relative_on_condition_A7F4);
-#endif /* OPTION_RX_OPTIMIZATION */
 DEF_INST(branch_relative_and_save);
 DEF_INST(branch_relative_on_count);
 DEF_INST(branch_relative_on_index_high);
@@ -3312,6 +3297,24 @@ DEF_INST(compare_and_swap_and_store);
 #endif /*defined(FEATURE_COMPARE_AND_SWAP_AND_STORE)*/
 DEF_INST(compare_halfword);
 DEF_INST(compare_logical_register);
+#ifdef OPTION_RX_OPTIMIZATION 
+DEF_INST(compare_logical_5500);
+DEF_INST(compare_logical_5510);
+DEF_INST(compare_logical_5520);
+DEF_INST(compare_logical_5530);
+DEF_INST(compare_logical_5540);
+DEF_INST(compare_logical_5550);
+DEF_INST(compare_logical_5560);
+DEF_INST(compare_logical_5570);
+DEF_INST(compare_logical_5580);
+DEF_INST(compare_logical_5590);
+DEF_INST(compare_logical_55A0);
+DEF_INST(compare_logical_55B0);
+DEF_INST(compare_logical_55C0);
+DEF_INST(compare_logical_55D0);
+DEF_INST(compare_logical_55E0);
+DEF_INST(compare_logical_55F0);
+#endif /* OPTION_RX_OPTIMIZATION */
 DEF_INST(compare_logical);
 DEF_INST(compare_logical_immediate);
 DEF_INST(compare_logical_character);
@@ -3401,6 +3404,24 @@ DEF_INST(load_address_extended);
 DEF_INST(load_and_test_register);
 DEF_INST(load_complement_register);
 DEF_INST(load_halfword);
+#ifdef OPTION_RX_OPTIMIZATION
+DEF_INST(load_halfword_4800);
+DEF_INST(load_halfword_4810);
+DEF_INST(load_halfword_4820);
+DEF_INST(load_halfword_4830);
+DEF_INST(load_halfword_4840);
+DEF_INST(load_halfword_4850);
+DEF_INST(load_halfword_4860);
+DEF_INST(load_halfword_4870);
+DEF_INST(load_halfword_4880);
+DEF_INST(load_halfword_4890);
+DEF_INST(load_halfword_48A0);
+DEF_INST(load_halfword_48B0);
+DEF_INST(load_halfword_48C0);
+DEF_INST(load_halfword_48D0);
+DEF_INST(load_halfword_48E0);
+DEF_INST(load_halfword_48F0);
+#endif /* OPTION_RX_OPTIMIZATION */
 #if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
 DEF_INST(load_halfword_immediate);
 DEF_INST(add_halfword_immediate);
