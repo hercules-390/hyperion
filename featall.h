@@ -52,6 +52,8 @@
 #define OPTION_IPLPARM                  /* IPL PARM a la VM          */
 
 #define OPTION_CAPPING                  /* Enable capping cnf stmnt  */
+#define OPTION_RX_OPTIMIZATION          /* RX format optimization    */      
+
 #ifndef FISH_HANG
 #ifndef OPTION_WTHREADS
 #define OPTION_PTTRACE                  /* Pthreads tracing          */

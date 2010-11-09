@@ -1295,11 +1295,11 @@ do { \
                 (_effective_addr2) += (_regs)->GR((_b2)); \
     }
 
-#undef RX_BC_X0
-
+#ifdef OPTION_RX_OPTIMIZATION
+/* RX_X0 register and indexed storage - optimized for zero X2 */
+#undef  RX_BC_X0
 #define RX_BC_X0(_inst, _regs, _b2, _effective_addr2) \
         RX_BC_X0_DECODER(_inst, _regs, _b2, _effective_addr2, 0, 0)
-
 #define RX_BC_X0_DECODER(_inst, _regs, _b2, _effective_addr2, _len, _ilc) \
     {   U32 temp = fetch_fw(_inst); \
             (_effective_addr2) = temp & 0xfff; \
@@ -1308,22 +1308,24 @@ do { \
                 (_effective_addr2) += (_regs)->GR((_b2)); \
     }
 
-/* RX_X0 register and indexed storage - optimized for L and ST */
-#undef RX_X0
-
+#undef  RX_X0
 #define RX_X0(_inst, _regs, _b2, _effective_addr2) \
         RX_X0_DECODER(_inst, _regs, _b2, _effective_addr2, 4, 4)
-
 #define RX_X0_DECODER(_inst, _regs, _b2, _effective_addr2, _len, _ilc) \
     {   U32 temp = fetch_fw(_inst); \
             (_effective_addr2) = temp & 0xfff; \
             (_b2) = (temp >> 12) & 0xf; \
             if((_b2)) \
                 (_effective_addr2) += (_regs)->GR((_b2)); \
-            if ((_len)) \
+            if((_len)) \
                 (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
             INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
     }
+    
+#undef  RX0_X0
+#define RX0_X0(_inst, _regs, _b2, _effective_addr2) \
+        RX_X0_DECODER(_inst, _regs, _b2, _effective_addr2, 4, 0)
+#endif /* OPTION_RX_OPTIMIZATION */
 
 /* RXE register and indexed storage with extended op code */
 #undef RXE
@@ -3252,6 +3254,7 @@ DEF_INST(branch_and_set_mode);
 #endif /*defined(FEATURE_BIMODAL_ADDRESSING)*/
 DEF_INST(branch_on_condition_register);
 DEF_INST(branch_on_condition);
+#ifdef OPTION_RX_OPTIMIZATION
 DEF_INST(branch_on_condition_4700);
 DEF_INST(branch_on_condition_4710);
 DEF_INST(branch_on_condition_4720);
@@ -3268,12 +3271,14 @@ DEF_INST(branch_on_condition_47C0);
 DEF_INST(branch_on_condition_47D0);
 DEF_INST(branch_on_condition_47E0);
 DEF_INST(branch_on_condition_47F0);
+#endif /* OPTION_RX_OPTIMIZATION */
 DEF_INST(branch_on_count_register);
 DEF_INST(branch_on_count);
 DEF_INST(branch_on_index_high);
 DEF_INST(branch_on_index_low_or_equal);
 #if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
 DEF_INST(branch_relative_on_condition);
+#ifdef OPTION_RX_OPTIMIZATION 
 DEF_INST(branch_relative_on_condition_A704);
 DEF_INST(branch_relative_on_condition_A714);
 DEF_INST(branch_relative_on_condition_A724);
@@ -3288,11 +3293,7 @@ DEF_INST(branch_relative_on_condition_A7C4);
 DEF_INST(branch_relative_on_condition_A7D4);
 DEF_INST(branch_relative_on_condition_A7E4);
 DEF_INST(branch_relative_on_condition_A7F4);
-#if 0
-DEF_INST(branch_relative_not_equal);
-DEF_INST(branch_relative_equal);
-DEF_INST(branch_relative_unconditional);
-#endif
+#endif /* OPTION_RX_OPTIMIZATION */
 DEF_INST(branch_relative_and_save);
 DEF_INST(branch_relative_on_count);
 DEF_INST(branch_relative_on_index_high);
@@ -3355,6 +3356,7 @@ DEF_INST(insert_character);
 DEF_INST(insert_characters_under_mask);
 DEF_INST(insert_program_mask);
 DEF_INST(load);
+#ifdef OPTION_RX_OPTIMIZATION
 DEF_INST(load_5800);
 DEF_INST(load_5810);
 DEF_INST(load_5820);
@@ -3371,11 +3373,30 @@ DEF_INST(load_58C0);
 DEF_INST(load_58D0);
 DEF_INST(load_58E0);
 DEF_INST(load_58F0);
+#endif /* OPTION_RX_OPTIMIZATION */
 DEF_INST(load_register);
 #if defined(FEATURE_ACCESS_REGISTERS)
 DEF_INST(load_access_multiple);
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 DEF_INST(load_address);
+#ifdef OPTION_RX_OPTIMIZATION
+DEF_INST(load_address_4100);
+DEF_INST(load_address_4110);
+DEF_INST(load_address_4120);
+DEF_INST(load_address_4130);
+DEF_INST(load_address_4140);
+DEF_INST(load_address_4150);
+DEF_INST(load_address_4160);
+DEF_INST(load_address_4170);
+DEF_INST(load_address_4180);
+DEF_INST(load_address_4190);
+DEF_INST(load_address_41A0);
+DEF_INST(load_address_41B0);
+DEF_INST(load_address_41C0);
+DEF_INST(load_address_41D0);
+DEF_INST(load_address_41E0);
+DEF_INST(load_address_41F0);
+#endif /* OPTION_RX_OPTIMIZATION */
 DEF_INST(load_address_extended);
 DEF_INST(load_and_test_register);
 DEF_INST(load_complement_register);
@@ -3409,6 +3430,7 @@ DEF_INST(multiply_register);
 DEF_INST(multiply);
 DEF_INST(multiply_halfword);
 DEF_INST(store);
+#ifdef OPTION_RX_OPTIMIZATION
 DEF_INST(store_5000);
 DEF_INST(store_5010);
 DEF_INST(store_5020);
@@ -3425,6 +3447,7 @@ DEF_INST(store_50C0);
 DEF_INST(store_50D0);
 DEF_INST(store_50E0);
 DEF_INST(store_50F0);
+#endif /* OPTION_RX_OPTIMIZATION */
 
 /* Instructions in general2.c */
 DEF_INST(or_register);

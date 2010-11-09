@@ -1240,10 +1240,13 @@ static zz_func v_opcode_a5xx[0x100][GEN_MAXARCH];
 static zz_func v_opcode_a6xx[0x100][GEN_MAXARCH];
 static zz_func v_opcode_e4xx[0x100][GEN_MAXARCH];
 
+#ifdef OPTION_RX_OPTIMIZATION
+static zz_func opcode_41x0[0x10][GEN_MAXARCH];
 static zz_func opcode_47x0[0x10][GEN_MAXARCH];
 static zz_func opcode_50x0[0x10][GEN_MAXARCH];
 static zz_func opcode_58x0[0x10][GEN_MAXARCH];
 static zz_func opcode_A7x4[0x10][GEN_MAXARCH];
+#endif /* OPTION_RX_OPTIMIZATION */
 
 #define DISASM_ROUTE(_table,_route) \
 int disasm_ ## _table (BYTE inst[], char unused[], char *p) \
@@ -2347,19 +2350,18 @@ void init_opcode_tables(void)
       replace_opcode_xx_x(arch, opcode_c6_x[i][arch], 0xc6, i);
       replace_opcode_xx_x(arch, opcode_c8_x[i][arch], 0xc8, i);
       replace_opcode_xx_x(arch, opcode_cc_x[i][arch], 0xcc, i);
+    }
 
-      /* Optimized BC */
+#ifdef OPTION_RX_OPTIMIZATION
+    for(i = 0; i < 0x10; i++)
+    {
+      replace_opcode_xxxx(arch, opcode_41x0[i][arch], 0x41, i * 0x10 + 0x00);
       replace_opcode_xxxx(arch, opcode_47x0[i][arch], 0x47, i * 0x10 + 0x00);
-      
-      /* Optimized ST */
       replace_opcode_xxxx(arch, opcode_50x0[i][arch], 0x50, i * 0x10 + 0x00);
-
-      /* Optimized L */
       replace_opcode_xxxx(arch, opcode_58x0[i][arch], 0x58, i * 0x10 + 0x00);
-      
-      /* Optimized BRC */
       replace_opcode_xxxx(arch, opcode_A7x4[i][arch], 0xa7, i * 0x10 + 0x04);
     }
+#endif /* OPTION_RX_OPTIMIZATION */
   }
 }
 
@@ -6451,7 +6453,27 @@ static zz_func v_opcode_e4xx[0x100][GEN_MAXARCH] = {
  /*E4FE*/ GENx___x___x___ ,
  /*E4FF*/ GENx___x___x___  };
 
+ 
+#ifdef OPTION_RX_OPTIMIZATION
+static zz_func opcode_41x0[0x10][GEN_MAXARCH] = {
+ /*4100*/ GENx370x390x900 (load_address_4100,RX,"LA"),
+ /*4110*/ GENx370x390x900 (load_address_4110,RX,"LA"),
+ /*4120*/ GENx370x390x900 (load_address_4120,RX,"LA"),
+ /*4130*/ GENx370x390x900 (load_address_4130,RX,"LA"),
+ /*4140*/ GENx370x390x900 (load_address_4140,RX,"LA"),
+ /*4150*/ GENx370x390x900 (load_address_4150,RX,"LA"),
+ /*4160*/ GENx370x390x900 (load_address_4160,RX,"LA"),
+ /*4170*/ GENx370x390x900 (load_address_4170,RX,"LA"),
+ /*4180*/ GENx370x390x900 (load_address_4180,RX,"LA"),
+ /*4190*/ GENx370x390x900 (load_address_4190,RX,"LA"),
+ /*41A0*/ GENx370x390x900 (load_address_41A0,RX,"LA"),
+ /*41B0*/ GENx370x390x900 (load_address_41B0,RX,"LA"),
+ /*41C0*/ GENx370x390x900 (load_address_41C0,RX,"LA"),
+ /*41D0*/ GENx370x390x900 (load_address_41D0,RX,"LA"),
+ /*41E0*/ GENx370x390x900 (load_address_41E0,RX,"LA"),
+ /*41F0*/ GENx370x390x900 (load_address_41F0,RX,"LA") };
 
+ 
 static zz_func opcode_47x0[0x10][GEN_MAXARCH] = {
  /*4700*/ GENx370x390x900 (branch_on_condition_4700,RX,"BC"),
  /*4710*/ GENx370x390x900 (branch_on_condition_4710,RX,"BC"),
@@ -6526,7 +6548,7 @@ static zz_func opcode_A7x4[0x10][GEN_MAXARCH] = {
  /*A7D4*/ GENx370x390x900 (branch_relative_on_condition_A7D4,RI_B,"BRC"),
  /*A7E4*/ GENx370x390x900 (branch_relative_on_condition_A7E4,RI_B,"BRC"),
  /*A7F4*/ GENx370x390x900 (branch_relative_on_condition_A7F4,RI_B,"BRC") };
-
+#endif /* OPTION_RX_OPTIMIZATION */
  
 #endif /*!defined (_GEN_ARCH)*/
 

@@ -714,7 +714,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 } /* end DEF_INST(branch_on_condition) */
 
-
+#ifdef OPTION_RX_OPTIMIZATION
 /*-------------------------------------------------------------------*/
 /* 4700 BC    - Branch on Condition                             [RX] */
 /*-------------------------------------------------------------------*/
@@ -965,7 +965,7 @@ VADR    effective_addr2;                /* Effective address         */
     SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
 
 } /* end DEF_INST(branch_on_condition) */
-
+#endif /* OPTION_RX_OPTIMIZATION */
 
 #if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
 /*-------------------------------------------------------------------*/
@@ -986,6 +986,7 @@ U16   i2;                               /* 16-bit operand values     */
 
 } /* end DEF_INST(branch_relative_on_condition) */
 
+#ifdef OPTION_RX_OPTIMIZATION
 /*-------------------------------------------------------------------*/
 /* A704 BRC   - Branch Relative on Condition                    [RI] */
 /*-------------------------------------------------------------------*/
@@ -1224,6 +1225,7 @@ U16   i2;                               /* 16-bit operand values     */
 
 } /* end DEF_INST(branch_relative_on_condition) */
 
+#endif /* OPTION_RX_OPTIMIZATION */
 #endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
 
 /*-------------------------------------------------------------------*/
@@ -1243,6 +1245,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 } /* end DEF_INST(load) */
 
+#ifdef OPTION_RX_OPTIMIZATION
 /*-------------------------------------------------------------------*/
 /* 5800 L     - Load                                            [RX] */
 /*-------------------------------------------------------------------*/
@@ -1498,6 +1501,7 @@ VADR    effective_addr2;                /* Effective address         */
     regs->GR_L(0xf) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
 
 } /* end DEF_INST(load) */
+#endif /* OPTION_RX_OPTIMIZATION */
 
 /*-------------------------------------------------------------------*/
 /* 50   ST    - Store                                           [RX] */
@@ -1515,7 +1519,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 } /* end DEF_INST(store) */
 
-
+#ifdef OPTION_RX_OPTIMIZATION
 /*-------------------------------------------------------------------*/
 /* 5000 ST    - Store                                           [RX] */
 /*-------------------------------------------------------------------*/
@@ -1755,6 +1759,248 @@ VADR    effective_addr2;                /* Effective address         */
     ARCH_DEP(vstore4) ( regs->GR_L(0xf), effective_addr2, b2, regs );
 
 } /* end DEF_INST(store) */
+#endif /* OPTION_RX_OPTIMIZATION */
+
+/*-------------------------------------------------------------------*/
+/* 41   LA    - Load Address                                    [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_address)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX0(inst, regs, r1, b2, effective_addr2);
+
+    /* Load operand address into register */
+    SET_GR_A(r1, regs, effective_addr2);
+}
+
+#ifdef OPTION_RX_OPTIMIZATION
+/*-------------------------------------------------------------------*/
+/* 4100 LA    - Load Address                                    [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_address_4100)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX0_X0(inst, regs, b2, effective_addr2);
+
+    /* Load operand address into register */
+    SET_GR_A(0x0, regs, effective_addr2);
+}
+
+/*-------------------------------------------------------------------*/
+/* 4110 LA    - Load Address                                    [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_address_4110)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX0_X0(inst, regs, b2, effective_addr2);
+
+    /* Load operand address into register */
+    SET_GR_A(0x1, regs, effective_addr2);
+}
+
+/*-------------------------------------------------------------------*/
+/* 4120 LA    - Load Address                                    [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_address_4120)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX0_X0(inst, regs, b2, effective_addr2);
+
+    /* Load operand address into register */
+    SET_GR_A(0x2, regs, effective_addr2);
+}
+
+/*-------------------------------------------------------------------*/
+/* 4130 LA    - Load Address                                    [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_address_4130)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX0_X0(inst, regs, b2, effective_addr2);
+
+    /* Load operand address into register */
+    SET_GR_A(0x3, regs, effective_addr2);
+}
+
+/*-------------------------------------------------------------------*/
+/* 4140 LA    - Load Address                                    [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_address_4140)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX0_X0(inst, regs, b2, effective_addr2);
+
+    /* Load operand address into register */
+    SET_GR_A(0x4, regs, effective_addr2);
+}
+
+/*-------------------------------------------------------------------*/
+/* 4150 LA    - Load Address                                    [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_address_4150)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX0_X0(inst, regs, b2, effective_addr2);
+
+    /* Load operand address into register */
+    SET_GR_A(0x5, regs, effective_addr2);
+}
+
+/*-------------------------------------------------------------------*/
+/* 4160 LA    - Load Address                                    [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_address_4160)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX0_X0(inst, regs, b2, effective_addr2);
+
+    /* Load operand address into register */
+    SET_GR_A(0x6, regs, effective_addr2);
+}
+
+/*-------------------------------------------------------------------*/
+/* 4170 LA    - Load Address                                    [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_address_4170)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX0_X0(inst, regs, b2, effective_addr2);
+
+    /* Load operand address into register */
+    SET_GR_A(0x7, regs, effective_addr2);
+}
+
+/*-------------------------------------------------------------------*/
+/* 4180 LA    - Load Address                                    [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_address_4180)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX0_X0(inst, regs, b2, effective_addr2);
+
+    /* Load operand address into register */
+    SET_GR_A(0x8, regs, effective_addr2);
+}
+
+/*-------------------------------------------------------------------*/
+/* 4190 LA    - Load Address                                    [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_address_4190)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX0_X0(inst, regs, b2, effective_addr2);
+
+    /* Load operand address into register */
+    SET_GR_A(0x9, regs, effective_addr2);
+}
+
+/*-------------------------------------------------------------------*/
+/* 41A0 LA    - Load Address                                    [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_address_41A0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX0_X0(inst, regs, b2, effective_addr2);
+
+    /* Load operand address into register */
+    SET_GR_A(0xa, regs, effective_addr2);
+}
+
+/*-------------------------------------------------------------------*/
+/* 41B0 LA    - Load Address                                    [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_address_41B0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX0_X0(inst, regs, b2, effective_addr2);
+
+    /* Load operand address into register */
+    SET_GR_A(0xb, regs, effective_addr2);
+}
+
+/*-------------------------------------------------------------------*/
+/* 41C0 LA    - Load Address                                    [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_address_41C0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX0_X0(inst, regs, b2, effective_addr2);
+
+    /* Load operand address into register */
+    SET_GR_A(0xc, regs, effective_addr2);
+}
+
+/*-------------------------------------------------------------------*/
+/* 41D0 LA    - Load Address                                    [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_address_41D0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX0_X0(inst, regs, b2, effective_addr2);
+
+    /* Load operand address into register */
+    SET_GR_A(0xd, regs, effective_addr2);
+}
+
+/*-------------------------------------------------------------------*/
+/* 41E0 LA    - Load Address                                    [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_address_41E0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX0_X0(inst, regs, b2, effective_addr2);
+
+    /* Load operand address into register */
+    SET_GR_A(0xe, regs, effective_addr2);
+}
+
+/*-------------------------------------------------------------------*/
+/* 41F0 LA    - Load Address                                    [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_address_41F0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX0_X0(inst, regs, b2, effective_addr2);
+
+    /* Load operand address into register */
+    SET_GR_A(0xf, regs, effective_addr2);
+}
+#endif /* OPTION_RX_OPTIMIZATION */
 
 
 /*-------------------------------------------------------------------*/
@@ -4443,22 +4689,6 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
 
 }
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
-
-
-/*-------------------------------------------------------------------*/
-/* 41   LA    - Load Address                                    [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_address)
-{
-int     r1;                             /* Value of R field          */
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX0(inst, regs, r1, b2, effective_addr2);
-
-    /* Load operand address into register */
-    SET_GR_A(r1, regs, effective_addr2);
-}
 
 
 #if defined(FEATURE_ACCESS_REGISTERS)
