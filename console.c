@@ -265,12 +265,6 @@ static BYTE sba_code[] = { "\x40\xC1\xC2\xC3\xC4\xC5\xC6\xC7"
 #undef  FIX_QWS_BUG_FOR_MCS_CONSOLES
 
 /*-------------------------------------------------------------------*/
-/* Static data areas                                                 */
-/*-------------------------------------------------------------------*/
-static  HOST_INFO  cons_hostinfo;       /* Host info for this system */
-
-
-/*-------------------------------------------------------------------*/
 /* SUBROUTINE TO TRACE THE CONTENTS OF AN ASCII MESSAGE PACKET       */
 /*-------------------------------------------------------------------*/
 #if DEBUG_LVL == 3
@@ -1563,7 +1557,7 @@ char                    buf[1920];       /* Message buffer            */
 char                    conmsg[256];    /* Connection message        */
 char                    devmsg[64];     /* Device message            */
 char                    hostmsg[256];   /* Host ID message           */
-char                    num_procs[16];  /* #of processors string     */
+char                    num_procs[64];  /* #of processors string     */
 char                    rejmsg[256];    /* Rejection message         */
 char                    group[16];      /* Console group             */
 size_t                  logoheight;
@@ -1696,19 +1690,30 @@ char                    *logoout;
     } /* end for(dev) */
 
     /* Build connection message for client */
-
-    if ( cons_hostinfo.num_procs > 1 )
-        MSGBUF( num_procs, "MP=%d", cons_hostinfo.num_procs );
+    if ( hostinfo.num_packages     != 0 &&
+         hostinfo.num_physical_cpu != 0 &&
+         hostinfo.num_logical_cpu  != 0 )
+    {
+        MSGBUF( num_procs, "LP=%d, Cores=%d, CPUs=%d", hostinfo.num_logical_cpu, 
+                            hostinfo.num_physical_cpu, hostinfo.num_packages );
+    }
     else
-        MSGBUF( num_procs, "UP" );
+    {
+        if ( hostinfo.num_procs > 1 )
+            MSGBUF( num_procs, "MP=%d", hostinfo.num_procs );
+        else if ( hostinfo.num_procs == 1 )
+            strlcpy( num_procs, "UP", sizeof(num_procs) );
+        else
+            strlcpy( num_procs,   "",  sizeof(num_procs) );
+    }
 
     MSGBUF( hostmsg, 
             MSG(HHC01031, "I"
-                ,cons_hostinfo.nodename
-                ,cons_hostinfo.sysname
-                ,cons_hostinfo.release
-                ,cons_hostinfo.version
-                ,cons_hostinfo.machine
+                ,hostinfo.nodename
+                ,hostinfo.sysname
+                ,hostinfo.release
+                ,hostinfo.version
+                ,hostinfo.machine
                 ,num_procs)
           );
     MSGBUF( conmsg, MSG(HHC01027, "I", VERSION, __DATE__, __TIME__) );
@@ -1941,7 +1946,7 @@ BYTE                   unitstat;        /* Status after receive data */
     WRMSG(HHC00100, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), "Console connection");
 
     /* Get information about this system */
-    init_hostinfo( &cons_hostinfo );
+    init_hostinfo( NULL );
 
     init_logo();
 
