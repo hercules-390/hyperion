@@ -378,10 +378,10 @@ U64     dreg;
             return;
         }
 
-        mso = sysblk.zpb[STATEBK->zone].mso << 20;
-        msl = (sysblk.zpb[STATEBK->zone].msl << 20) | 0xFFFFF;
-        eso = sysblk.zpb[STATEBK->zone].eso << 20;
-        esl = (sysblk.zpb[STATEBK->zone].esl << 20) | 0xFFFFF;
+        mso = (sysblk.zpb[STATEBK->zone].mso & 0xFFFFF) << 20;
+        msl = (sysblk.zpb[STATEBK->zone].msl & 0xFFFFF) << 20;
+        eso = (sysblk.zpb[STATEBK->zone].eso & 0xFFFFF) << 20;
+        esl = (sysblk.zpb[STATEBK->zone].esl & 0xFFFFF) << 20;
 
         if(mso > msl)
         {
@@ -481,6 +481,15 @@ U64     dreg;
 
     /* System Control Area Origin */
     FETCH_FW(GUESTREGS->sie_scao, STATEBK->scao);
+#if defined(FEATURE_ESAME)
+    {
+    U32 sie_scaoh;
+        /* For ESAME insert the high word of the address */
+        FETCH_FW(sie_scaoh, STATEBK->scaoh);
+        GUESTREGS->sie_scao |= (RADR)sie_scaoh << 32;
+    }
+#endif /*defined(FEATURE_ESAME)*/
+
     if(GUESTREGS->sie_scao > regs->mainlim)
     {
         SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,

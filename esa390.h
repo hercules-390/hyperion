@@ -1760,7 +1760,7 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 #define vi_why  ipb
 #define vi_zero ipb+2
 /*058*/ FWORD ipb;                      /* Instruction parameter B   */
-/*05C*/ FWORD ipc;                      /* Instruction parameter C   */
+/*05C*/ FWORD scaoh;                    /* SCAO high word            */
 /*060*/ FWORD rcpo;                     /* RCP area origin           */
 #define SIE_RCPO0       rcpo[0]
 #define SIE_RCPO0_SKA   0x80            /* Storage Key Assist        */
@@ -1798,11 +1798,13 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 #define SIE_II_PSA_OFFSET       0x30    /* Offset of the IP field
                                            relative to the I/O fields
                                            in the PSA for ESAME guest*/
+/*0CE   HWORD  iprcc;                                                */
 /*0F4*/ BYTE   resv0f4b[6];
 /*0FA*/ HWORD  ief;                     /* Migration Emulation cnlt  */
 /*0FC*/ FWORD  resv0fcf;
 /*100*/ DBLWRD cr[16];                  /* Control registers         */
-/*180*/ BYTE   resv180b[32];
+/*180*/ DBLWRD gbea;
+/*188*/ BYTE   resv188b[24];
 /*1A0*/ FWORD  fld;                     /* Facility List Designation */
 /*1A4*/ BYTE   resv1a4b[92];
 } SIE2BK;
