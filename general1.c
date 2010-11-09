@@ -998,267 +998,43 @@ VADR    effective_addr2;                /* Effective address         */
     RX(inst, regs, r1, b2, effective_addr2);
 
     /* Load R1 register from second operand */
-
     regs->GR_L(r1) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
 
 } /* end DEF_INST(load) */
 
 #ifdef OPTION_RX_OPTIMIZATION
-/*-------------------------------------------------------------------*/
-/* 5800 L     - Load                                            [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_5800)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load R1 register from second operand */
-
-    regs->GR_L(0x0) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
+#define OPT_load_58x0(x) \
+/*-------------------------------------------------------------------*/ \
+/* 58x0 L     - Load                                            [RX] */ \
+/*-------------------------------------------------------------------*/ \
+DEF_INST(load_58 ## x ## 0) \
+{ \
+int     b2;                             /* Base of effective addr    */ \
+VADR    effective_addr2;                /* Effective address         */ \
+\
+    RX_X0(inst, regs, b2, effective_addr2); \
+\
+    /* Load R1 register from second operand */ \
+    regs->GR_L(0x ## x) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs ); \
+\
 } /* end DEF_INST(load) */
 
-/*-------------------------------------------------------------------*/
-/* 5810 L     - Load                                            [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_5810)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load R1 register from second operand */
-
-    regs->GR_L(0x1) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-} /* end DEF_INST(load) */
-
-/*-------------------------------------------------------------------*/
-/* 5820 L     - Load                                            [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_5820)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load R1 register from second operand */
-
-    regs->GR_L(0x2) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-} /* end DEF_INST(load) */
-
-/*-------------------------------------------------------------------*/
-/* 5830 L     - Load                                            [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_5830)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load R1 register from second operand */
-
-    regs->GR_L(0x3) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-} /* end DEF_INST(load) */
-
-/*-------------------------------------------------------------------*/
-/* 5840 L     - Load                                            [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_5840)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load R1 register from second operand */
-
-    regs->GR_L(0x4) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-} /* end DEF_INST(load) */
-
-/*-------------------------------------------------------------------*/
-/* 5850 L     - Load                                            [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_5850)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load R1 register from second operand */
-
-    regs->GR_L(0x5) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-} /* end DEF_INST(load) */
-
-/*-------------------------------------------------------------------*/
-/* 5860 L     - Load                                            [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_5860)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load R1 register from second operand */
-
-    regs->GR_L(0x6) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-} /* end DEF_INST(load) */
-
-/*-------------------------------------------------------------------*/
-/* 5870 L     - Load                                            [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_5870)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load R1 register from second operand */
-
-    regs->GR_L(0x7) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-} /* end DEF_INST(load) */
-
-/*-------------------------------------------------------------------*/
-/* 5880 L     - Load                                            [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_5880)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load R1 register from second operand */
-
-    regs->GR_L(0x8) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-} /* end DEF_INST(load) */
-
-/*-------------------------------------------------------------------*/
-/* 5890 L     - Load                                            [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_5890)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load R1 register from second operand */
-
-    regs->GR_L(0x9) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-} /* end DEF_INST(load) */
-
-/*-------------------------------------------------------------------*/
-/* 58A0 L     - Load                                            [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_58A0)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load R1 register from second operand */
-
-    regs->GR_L(0xa) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-} /* end DEF_INST(load) */
-
-/*-------------------------------------------------------------------*/
-/* 58B0 L     - Load                                            [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_58B0)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load R1 register from second operand */
-
-    regs->GR_L(0xb) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-} /* end DEF_INST(load) */
-
-/*-------------------------------------------------------------------*/
-/* 58C0 L     - Load                                            [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_58C0)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load R1 register from second operand */
-
-    regs->GR_L(0xc) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-} /* end DEF_INST(load) */
-
-/*-------------------------------------------------------------------*/
-/* 58D0 L     - Load                                            [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_58D0)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load R1 register from second operand */
-
-    regs->GR_L(0xd) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-} /* end DEF_INST(load) */
-
-/*-------------------------------------------------------------------*/
-/* 58E0 L     - Load                                            [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_58E0)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load R1 register from second operand */
-
-    regs->GR_L(0xe) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-} /* end DEF_INST(load) */
-
-/*-------------------------------------------------------------------*/
-/* 58F0 L     - Load                                            [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_58F0)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load R1 register from second operand */
-
-    regs->GR_L(0xf) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-} /* end DEF_INST(load) */
+OPT_load_58x0(0)
+OPT_load_58x0(1)
+OPT_load_58x0(2)
+OPT_load_58x0(3)
+OPT_load_58x0(4)
+OPT_load_58x0(5)
+OPT_load_58x0(6)
+OPT_load_58x0(7)
+OPT_load_58x0(8)
+OPT_load_58x0(9)
+OPT_load_58x0(A)
+OPT_load_58x0(B)
+OPT_load_58x0(C)
+OPT_load_58x0(D)
+OPT_load_58x0(E)
+OPT_load_58x0(F)
 #endif /* OPTION_RX_OPTIMIZATION */
 
 /*-------------------------------------------------------------------*/
@@ -1278,245 +1054,38 @@ VADR    effective_addr2;                /* Effective address         */
 } /* end DEF_INST(store) */
 
 #ifdef OPTION_RX_OPTIMIZATION
-/*-------------------------------------------------------------------*/
-/* 5000 ST    - Store                                           [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(store_5000)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Store register contents at operand address */
-    ARCH_DEP(vstore4) ( regs->GR_L(0x0), effective_addr2, b2, regs );
-
+#define OPT_store_50x0(x) \
+/*-------------------------------------------------------------------*/ \
+/* 50x0 ST    - Store                                           [RX] */ \
+/*-------------------------------------------------------------------*/ \
+DEF_INST(store_50 ## x ## 0) \
+{ \
+int     b2;                             /* Base of effective addr    */ \
+VADR    effective_addr2;                /* Effective address         */ \
+\
+    RX_X0(inst, regs, b2, effective_addr2); \
+\
+    /* Store register contents at operand address */ \
+    ARCH_DEP(vstore4) ( regs->GR_L(0x ## x), effective_addr2, b2, regs ); \
+\
 } /* end DEF_INST(store) */
 
-/*-------------------------------------------------------------------*/
-/* 5010 ST    - Store                                           [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(store_5010)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Store register contents at operand address */
-    ARCH_DEP(vstore4) ( regs->GR_L(0x1), effective_addr2, b2, regs );
-
-} /* end DEF_INST(store) */
-
-/*-------------------------------------------------------------------*/
-/* 5020 ST    - Store                                           [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(store_5020)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Store register contents at operand address */
-    ARCH_DEP(vstore4) ( regs->GR_L(0x2), effective_addr2, b2, regs );
-
-} /* end DEF_INST(store) */
-
-/*-------------------------------------------------------------------*/
-/* 5030 ST    - Store                                           [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(store_5030)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Store register contents at operand address */
-    ARCH_DEP(vstore4) ( regs->GR_L(0x3), effective_addr2, b2, regs );
-
-} /* end DEF_INST(store) */
-
-/*-------------------------------------------------------------------*/
-/* 5040 ST    - Store                                           [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(store_5040)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Store register contents at operand address */
-    ARCH_DEP(vstore4) ( regs->GR_L(0x4), effective_addr2, b2, regs );
-
-} /* end DEF_INST(store) */
-
-/*-------------------------------------------------------------------*/
-/* 5050 ST    - Store                                           [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(store_5050)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Store register contents at operand address */
-    ARCH_DEP(vstore4) ( regs->GR_L(0x5), effective_addr2, b2, regs );
-
-} /* end DEF_INST(store) */
-
-/*-------------------------------------------------------------------*/
-/* 5060 ST    - Store                                           [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(store_5060)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Store register contents at operand address */
-    ARCH_DEP(vstore4) ( regs->GR_L(0x6), effective_addr2, b2, regs );
-
-} /* end DEF_INST(store) */
-
-/*-------------------------------------------------------------------*/
-/* 5070 ST    - Store                                           [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(store_5070)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Store register contents at operand address */
-    ARCH_DEP(vstore4) ( regs->GR_L(0x7), effective_addr2, b2, regs );
-
-} /* end DEF_INST(store) */
-
-/*-------------------------------------------------------------------*/
-/* 5080 ST    - Store                                           [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(store_5080)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Store register contents at operand address */
-    ARCH_DEP(vstore4) ( regs->GR_L(0x8), effective_addr2, b2, regs );
-
-} /* end DEF_INST(store) */
-
-/*-------------------------------------------------------------------*/
-/* 5090 ST    - Store                                           [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(store_5090)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Store register contents at operand address */
-    ARCH_DEP(vstore4) ( regs->GR_L(0x9), effective_addr2, b2, regs );
-
-} /* end DEF_INST(store) */
-
-/*-------------------------------------------------------------------*/
-/* 50A0 ST    - Store                                           [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(store_50A0)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Store register contents at operand address */
-    ARCH_DEP(vstore4) ( regs->GR_L(0xa), effective_addr2, b2, regs );
-
-} /* end DEF_INST(store) */
-
-/*-------------------------------------------------------------------*/
-/* 50B0 ST    - Store                                           [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(store_50B0)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Store register contents at operand address */
-    ARCH_DEP(vstore4) ( regs->GR_L(0xb), effective_addr2, b2, regs );
-
-} /* end DEF_INST(store) */
-
-/*-------------------------------------------------------------------*/
-/* 50C0 ST    - Store                                           [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(store_50C0)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Store register contents at operand address */
-    ARCH_DEP(vstore4) ( regs->GR_L(0xc), effective_addr2, b2, regs );
-
-} /* end DEF_INST(store) */
-
-/*-------------------------------------------------------------------*/
-/* 50D0 ST    - Store                                           [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(store_50D0)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Store register contents at operand address */
-    ARCH_DEP(vstore4) ( regs->GR_L(0xd), effective_addr2, b2, regs );
-
-} /* end DEF_INST(store) */
-
-/*-------------------------------------------------------------------*/
-/* 50E0 ST    - Store                                           [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(store_50E0)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Store register contents at operand address */
-    ARCH_DEP(vstore4) ( regs->GR_L(0xe), effective_addr2, b2, regs );
-
-} /* end DEF_INST(store) */
-
-/*-------------------------------------------------------------------*/
-/* 50F0 ST    - Store                                           [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(store_50F0)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Store register contents at operand address */
-    ARCH_DEP(vstore4) ( regs->GR_L(0xf), effective_addr2, b2, regs );
-
-} /* end DEF_INST(store) */
+OPT_store_50x0(0)
+OPT_store_50x0(1)
+OPT_store_50x0(2)
+OPT_store_50x0(3)
+OPT_store_50x0(4)
+OPT_store_50x0(5)
+OPT_store_50x0(6)
+OPT_store_50x0(7)
+OPT_store_50x0(8)
+OPT_store_50x0(9)
+OPT_store_50x0(A)
+OPT_store_50x0(B)
+OPT_store_50x0(C)
+OPT_store_50x0(D)
+OPT_store_50x0(E)
+OPT_store_50x0(F)
 #endif /* OPTION_RX_OPTIMIZATION */
 
 /*-------------------------------------------------------------------*/
@@ -1535,229 +1104,37 @@ VADR    effective_addr2;                /* Effective address         */
 }
 
 #ifdef OPTION_RX_OPTIMIZATION
-/*-------------------------------------------------------------------*/
-/* 4100 LA    - Load Address                                    [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_address_4100)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX0_X0(inst, regs, b2, effective_addr2);
-
-    /* Load operand address into register */
-    SET_GR_A(0x0, regs, effective_addr2);
+#define OPT_load_address_41x0(x) \
+/*-------------------------------------------------------------------*/ \
+/* 4100 LA    - Load Address                                    [RX] */ \
+/*-------------------------------------------------------------------*/ \
+DEF_INST(load_address_41 ## x ## 0) \
+{ \
+int     b2;                             /* Base of effective addr    */ \
+VADR    effective_addr2;                /* Effective address         */ \
+\
+    RX0_X0(inst, regs, b2, effective_addr2); \
+\
+    /* Load operand address into register */ \
+    SET_GR_A(0x ## x, regs, effective_addr2); \
 }
 
-/*-------------------------------------------------------------------*/
-/* 4110 LA    - Load Address                                    [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_address_4110)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX0_X0(inst, regs, b2, effective_addr2);
-
-    /* Load operand address into register */
-    SET_GR_A(0x1, regs, effective_addr2);
-}
-
-/*-------------------------------------------------------------------*/
-/* 4120 LA    - Load Address                                    [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_address_4120)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX0_X0(inst, regs, b2, effective_addr2);
-
-    /* Load operand address into register */
-    SET_GR_A(0x2, regs, effective_addr2);
-}
-
-/*-------------------------------------------------------------------*/
-/* 4130 LA    - Load Address                                    [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_address_4130)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX0_X0(inst, regs, b2, effective_addr2);
-
-    /* Load operand address into register */
-    SET_GR_A(0x3, regs, effective_addr2);
-}
-
-/*-------------------------------------------------------------------*/
-/* 4140 LA    - Load Address                                    [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_address_4140)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX0_X0(inst, regs, b2, effective_addr2);
-
-    /* Load operand address into register */
-    SET_GR_A(0x4, regs, effective_addr2);
-}
-
-/*-------------------------------------------------------------------*/
-/* 4150 LA    - Load Address                                    [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_address_4150)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX0_X0(inst, regs, b2, effective_addr2);
-
-    /* Load operand address into register */
-    SET_GR_A(0x5, regs, effective_addr2);
-}
-
-/*-------------------------------------------------------------------*/
-/* 4160 LA    - Load Address                                    [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_address_4160)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX0_X0(inst, regs, b2, effective_addr2);
-
-    /* Load operand address into register */
-    SET_GR_A(0x6, regs, effective_addr2);
-}
-
-/*-------------------------------------------------------------------*/
-/* 4170 LA    - Load Address                                    [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_address_4170)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX0_X0(inst, regs, b2, effective_addr2);
-
-    /* Load operand address into register */
-    SET_GR_A(0x7, regs, effective_addr2);
-}
-
-/*-------------------------------------------------------------------*/
-/* 4180 LA    - Load Address                                    [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_address_4180)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX0_X0(inst, regs, b2, effective_addr2);
-
-    /* Load operand address into register */
-    SET_GR_A(0x8, regs, effective_addr2);
-}
-
-/*-------------------------------------------------------------------*/
-/* 4190 LA    - Load Address                                    [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_address_4190)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX0_X0(inst, regs, b2, effective_addr2);
-
-    /* Load operand address into register */
-    SET_GR_A(0x9, regs, effective_addr2);
-}
-
-/*-------------------------------------------------------------------*/
-/* 41A0 LA    - Load Address                                    [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_address_41A0)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX0_X0(inst, regs, b2, effective_addr2);
-
-    /* Load operand address into register */
-    SET_GR_A(0xa, regs, effective_addr2);
-}
-
-/*-------------------------------------------------------------------*/
-/* 41B0 LA    - Load Address                                    [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_address_41B0)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX0_X0(inst, regs, b2, effective_addr2);
-
-    /* Load operand address into register */
-    SET_GR_A(0xb, regs, effective_addr2);
-}
-
-/*-------------------------------------------------------------------*/
-/* 41C0 LA    - Load Address                                    [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_address_41C0)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX0_X0(inst, regs, b2, effective_addr2);
-
-    /* Load operand address into register */
-    SET_GR_A(0xc, regs, effective_addr2);
-}
-
-/*-------------------------------------------------------------------*/
-/* 41D0 LA    - Load Address                                    [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_address_41D0)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX0_X0(inst, regs, b2, effective_addr2);
-
-    /* Load operand address into register */
-    SET_GR_A(0xd, regs, effective_addr2);
-}
-
-/*-------------------------------------------------------------------*/
-/* 41E0 LA    - Load Address                                    [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_address_41E0)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX0_X0(inst, regs, b2, effective_addr2);
-
-    /* Load operand address into register */
-    SET_GR_A(0xe, regs, effective_addr2);
-}
-
-/*-------------------------------------------------------------------*/
-/* 41F0 LA    - Load Address                                    [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_address_41F0)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX0_X0(inst, regs, b2, effective_addr2);
-
-    /* Load operand address into register */
-    SET_GR_A(0xf, regs, effective_addr2);
-}
+OPT_load_address_41x0(0)
+OPT_load_address_41x0(1)
+OPT_load_address_41x0(2)
+OPT_load_address_41x0(3)
+OPT_load_address_41x0(4)
+OPT_load_address_41x0(5)
+OPT_load_address_41x0(6)
+OPT_load_address_41x0(7)
+OPT_load_address_41x0(8)
+OPT_load_address_41x0(9)
+OPT_load_address_41x0(A)
+OPT_load_address_41x0(B)
+OPT_load_address_41x0(C)
+OPT_load_address_41x0(D)
+OPT_load_address_41x0(E)
+OPT_load_address_41x0(F)
 #endif /* OPTION_RX_OPTIMIZATION */
 
 
@@ -1782,309 +1159,42 @@ U32     n;                              /* 32-bit operand values     */
 }
 
 #ifdef OPTION_RX_OPTIMIZATION 
-/*-------------------------------------------------------------------*/
-/* 5500 CL    - Compare Logical                                 [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_5500)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load second operand from operand address */
-    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-    /* Compare unsigned operands and set condition code */
-    regs->psw.cc = regs->GR_L(0x0) < n ? 1 :
-                   regs->GR_L(0x0) > n ? 2 : 0;
+#define OPT_compare_logical_55x0(x) \
+/*-------------------------------------------------------------------*/ \
+/* 5500 CL    - Compare Logical                                 [RX] */ \
+/*-------------------------------------------------------------------*/ \
+DEF_INST(compare_logical_55 ## x ## 0) \
+{ \
+int     b2;                             /* Base of effective addr    */ \
+VADR    effective_addr2;                /* Effective address         */ \
+U32     n;                              /* 32-bit operand values     */ \
+\
+    RX_X0(inst, regs, b2, effective_addr2); \
+\
+    /* Load second operand from operand address */ \
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs ); \
+\
+    /* Compare unsigned operands and set condition code */ \
+    regs->psw.cc = regs->GR_L(0x ## x) < n ? 1 : \
+                   regs->GR_L(0x ## x) > n ? 2 : 0; \
 }
 
-/*-------------------------------------------------------------------*/
-/* 5510 CL    - Compare Logical                                 [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_5510)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load second operand from operand address */
-    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-    /* Compare unsigned operands and set condition code */
-    regs->psw.cc = regs->GR_L(0x1) < n ? 1 :
-                   regs->GR_L(0x1) > n ? 2 : 0;
-}
-
-/*-------------------------------------------------------------------*/
-/* 5520 CL    - Compare Logical                                 [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_5520)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load second operand from operand address */
-    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-    /* Compare unsigned operands and set condition code */
-    regs->psw.cc = regs->GR_L(0x2) < n ? 1 :
-                   regs->GR_L(0x2) > n ? 2 : 0;
-}
-
-/*-------------------------------------------------------------------*/
-/* 5530 CL    - Compare Logical                                 [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_5530)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load second operand from operand address */
-    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-    /* Compare unsigned operands and set condition code */
-    regs->psw.cc = regs->GR_L(0x3) < n ? 1 :
-                   regs->GR_L(0x3) > n ? 2 : 0;
-}
-
-/*-------------------------------------------------------------------*/
-/* 5540 CL    - Compare Logical                                 [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_5540)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load second operand from operand address */
-    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-    /* Compare unsigned operands and set condition code */
-    regs->psw.cc = regs->GR_L(0x4) < n ? 1 :
-                   regs->GR_L(0x4) > n ? 2 : 0;
-}
-
-/*-------------------------------------------------------------------*/
-/* 5550 CL    - Compare Logical                                 [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_5550)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load second operand from operand address */
-    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-    /* Compare unsigned operands and set condition code */
-    regs->psw.cc = regs->GR_L(0x5) < n ? 1 :
-                   regs->GR_L(0x5) > n ? 2 : 0;
-}
-
-/*-------------------------------------------------------------------*/
-/* 5560 CL    - Compare Logical                                 [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_5560)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load second operand from operand address */
-    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-    /* Compare unsigned operands and set condition code */
-    regs->psw.cc = regs->GR_L(0x6) < n ? 1 :
-                   regs->GR_L(0x6) > n ? 2 : 0;
-}
-
-/*-------------------------------------------------------------------*/
-/* 5570 CL    - Compare Logical                                 [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_5570)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load second operand from operand address */
-    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-    /* Compare unsigned operands and set condition code */
-    regs->psw.cc = regs->GR_L(0x7) < n ? 1 :
-                   regs->GR_L(0x7) > n ? 2 : 0;
-}
-
-/*-------------------------------------------------------------------*/
-/* 5580 CL    - Compare Logical                                 [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_5580)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load second operand from operand address */
-    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-    /* Compare unsigned operands and set condition code */
-    regs->psw.cc = regs->GR_L(0x8) < n ? 1 :
-                   regs->GR_L(0x8) > n ? 2 : 0;
-}
-
-/*-------------------------------------------------------------------*/
-/* 5590 CL    - Compare Logical                                 [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_5590)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load second operand from operand address */
-    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-    /* Compare unsigned operands and set condition code */
-    regs->psw.cc = regs->GR_L(0x9) < n ? 1 :
-                   regs->GR_L(0x9) > n ? 2 : 0;
-}
-
-/*-------------------------------------------------------------------*/
-/* 55A0 CL    - Compare Logical                                 [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_55A0)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load second operand from operand address */
-    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-    /* Compare unsigned operands and set condition code */
-    regs->psw.cc = regs->GR_L(0xa) < n ? 1 :
-                   regs->GR_L(0xa) > n ? 2 : 0;
-}
-
-/*-------------------------------------------------------------------*/
-/* 55B0 CL    - Compare Logical                                 [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_55B0)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load second operand from operand address */
-    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-    /* Compare unsigned operands and set condition code */
-    regs->psw.cc = regs->GR_L(0xb) < n ? 1 :
-                   regs->GR_L(0xb) > n ? 2 : 0;
-}
-
-/*-------------------------------------------------------------------*/
-/* 55C0 CL    - Compare Logical                                 [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_55C0)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load second operand from operand address */
-    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-    /* Compare unsigned operands and set condition code */
-    regs->psw.cc = regs->GR_L(0xc) < n ? 1 :
-                   regs->GR_L(0xc) > n ? 2 : 0;
-}
-
-/*-------------------------------------------------------------------*/
-/* 55D0 CL    - Compare Logical                                 [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_55D0)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load second operand from operand address */
-    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-    /* Compare unsigned operands and set condition code */
-    regs->psw.cc = regs->GR_L(0xd) < n ? 1 :
-                   regs->GR_L(0xd) > n ? 2 : 0;
-}
-
-/*-------------------------------------------------------------------*/
-/* 55E0 CL    - Compare Logical                                 [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_55E0)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load second operand from operand address */
-    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-    /* Compare unsigned operands and set condition code */
-    regs->psw.cc = regs->GR_L(0xe) < n ? 1 :
-                   regs->GR_L(0xe) > n ? 2 : 0;
-}
-
-/*-------------------------------------------------------------------*/
-/* 55F0 CL    - Compare Logical                                 [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_55F0)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load second operand from operand address */
-    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-    /* Compare unsigned operands and set condition code */
-    regs->psw.cc = regs->GR_L(0xf) < n ? 1 :
-                   regs->GR_L(0xf) > n ? 2 : 0;
-}
+OPT_compare_logical_55x0(0)
+OPT_compare_logical_55x0(1)
+OPT_compare_logical_55x0(2)
+OPT_compare_logical_55x0(3)
+OPT_compare_logical_55x0(4)
+OPT_compare_logical_55x0(5)
+OPT_compare_logical_55x0(6)
+OPT_compare_logical_55x0(7)
+OPT_compare_logical_55x0(8)
+OPT_compare_logical_55x0(9)
+OPT_compare_logical_55x0(A)
+OPT_compare_logical_55x0(B)
+OPT_compare_logical_55x0(C)
+OPT_compare_logical_55x0(D)
+OPT_compare_logical_55x0(E)
+OPT_compare_logical_55x0(F)
 #endif /* OPTION_RX_OPTIMIZATION */
 
 
@@ -2104,229 +1214,37 @@ VADR    effective_addr2;                /* Effective address         */
 }
 
 #ifdef OPTION_RX_OPTIMIZATION
-/*-------------------------------------------------------------------*/
-/* 4800 LH    - Load Halfword                                   [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_halfword_4800)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load rightmost 2 bytes of register from operand address */
-    regs->GR_L(0x0) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+#define OPT_load_halfword_48x0(x) \
+/*-------------------------------------------------------------------*/ \
+/* 4800 LH    - Load Halfword                                   [RX] */ \
+/*-------------------------------------------------------------------*/ \
+DEF_INST(load_halfword_48 ## x ## 0) \
+{ \
+int     b2;                             /* Base of effective addr    */ \
+VADR    effective_addr2;                /* Effective address         */ \
+\
+    RX_X0(inst, regs, b2, effective_addr2); \
+\
+    /* Load rightmost 2 bytes of register from operand address */ \
+    regs->GR_L(0x ## x) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs ); \
 }
 
-/*-------------------------------------------------------------------*/
-/* 4810 LH    - Load Halfword                                   [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_halfword_4810)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load rightmost 2 bytes of register from operand address */
-    regs->GR_L(0x1) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
-}
-
-/*-------------------------------------------------------------------*/
-/* 4820 LH    - Load Halfword                                   [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_halfword_4820)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load rightmost 2 bytes of register from operand address */
-    regs->GR_L(0x2) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
-}
-
-/*-------------------------------------------------------------------*/
-/* 4830 LH    - Load Halfword                                   [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_halfword_4830)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load rightmost 2 bytes of register from operand address */
-    regs->GR_L(0x3) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
-}
-
-/*-------------------------------------------------------------------*/
-/* 4840 LH    - Load Halfword                                   [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_halfword_4840)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load rightmost 2 bytes of register from operand address */
-    regs->GR_L(0x4) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
-}
-
-/*-------------------------------------------------------------------*/
-/* 4850 LH    - Load Halfword                                   [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_halfword_4850)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load rightmost 2 bytes of register from operand address */
-    regs->GR_L(0x5) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
-}
-
-/*-------------------------------------------------------------------*/
-/* 4860 LH    - Load Halfword                                   [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_halfword_4860)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load rightmost 2 bytes of register from operand address */
-    regs->GR_L(0x6) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
-}
-
-/*-------------------------------------------------------------------*/
-/* 4870 LH    - Load Halfword                                   [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_halfword_4870)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load rightmost 2 bytes of register from operand address */
-    regs->GR_L(0x7) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
-}
-
-/*-------------------------------------------------------------------*/
-/* 4880 LH    - Load Halfword                                   [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_halfword_4880)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load rightmost 2 bytes of register from operand address */
-    regs->GR_L(0x8) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
-}
-
-/*-------------------------------------------------------------------*/
-/* 4890 LH    - Load Halfword                                   [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_halfword_4890)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load rightmost 2 bytes of register from operand address */
-    regs->GR_L(0x9) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
-}
-
-/*-------------------------------------------------------------------*/
-/* 48A0 LH    - Load Halfword                                   [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_halfword_48A0)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load rightmost 2 bytes of register from operand address */
-    regs->GR_L(0xa) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
-}
-
-/*-------------------------------------------------------------------*/
-/* 48B0 LH    - Load Halfword                                   [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_halfword_48B0)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load rightmost 2 bytes of register from operand address */
-    regs->GR_L(0xb) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
-}
-
-/*-------------------------------------------------------------------*/
-/* 48C0 LH    - Load Halfword                                   [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_halfword_48C0)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load rightmost 2 bytes of register from operand address */
-    regs->GR_L(0xc) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
-}
-
-/*-------------------------------------------------------------------*/
-/* 48D0 LH    - Load Halfword                                   [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_halfword_48D0)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load rightmost 2 bytes of register from operand address */
-    regs->GR_L(0xd) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
-}
-
-/*-------------------------------------------------------------------*/
-/* 48E0 LH    - Load Halfword                                   [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_halfword_48E0)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load rightmost 2 bytes of register from operand address */
-    regs->GR_L(0xe) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
-}
-
-/*-------------------------------------------------------------------*/
-/* 48F0 LH    - Load Halfword                                   [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_halfword_48F0)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, b2, effective_addr2);
-
-    /* Load rightmost 2 bytes of register from operand address */
-    regs->GR_L(0xf) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
-}
+OPT_load_halfword_48x0(0)
+OPT_load_halfword_48x0(1)
+OPT_load_halfword_48x0(2)
+OPT_load_halfword_48x0(3)
+OPT_load_halfword_48x0(4)
+OPT_load_halfword_48x0(5)
+OPT_load_halfword_48x0(6)
+OPT_load_halfword_48x0(7)
+OPT_load_halfword_48x0(8)
+OPT_load_halfword_48x0(9)
+OPT_load_halfword_48x0(A)
+OPT_load_halfword_48x0(B)
+OPT_load_halfword_48x0(C)
+OPT_load_halfword_48x0(D)
+OPT_load_halfword_48x0(E)
+OPT_load_halfword_48x0(F)
 #endif /* OPTION_RX_OPTIMIZATION */
 
 

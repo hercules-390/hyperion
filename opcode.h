@@ -1253,12 +1253,12 @@ do { \
             (_r1) = (temp >> 20) & 0xf; \
             (_b2) = (temp >> 16) & 0xf; \
             (_effective_addr2) = temp & 0xfff; \
-            if((_b2)) \
+            if(unlikely(_b2)) \
                 (_effective_addr2) += (_regs)->GR((_b2)); \
             (_b2) = (temp >> 12) & 0xf; \
-            if((_b2)) \
+            if(likely(_b2)) \
                 (_effective_addr2) += (_regs)->GR((_b2)); \
-            if ((_len)) \
+            if((_len)) \
             (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
             INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
     }
@@ -1315,7 +1315,7 @@ do { \
     {   U32 temp = fetch_fw(_inst); \
             (_effective_addr2) = temp & 0xfff; \
             (_b2) = (temp >> 12) & 0xf; \
-            if((_b2)) \
+            if(likely(_b2)) \
                 (_effective_addr2) += (_regs)->GR((_b2)); \
             if((_len)) \
                 (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
