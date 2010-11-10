@@ -1301,9 +1301,9 @@ do { \
 #define RX_BC_X0(_inst, _regs, _b2, _effective_addr2) \
         RX_BC_X0_DECODER(_inst, _regs, _b2, _effective_addr2, 0, 0)
 #define RX_BC_X0_DECODER(_inst, _regs, _b2, _effective_addr2, _len, _ilc) \
-    {   U32 temp = fetch_fw(_inst); \
-            (_effective_addr2) = temp & 0xfff; \
-            (_b2) = (temp >> 12) & 0xf; \
+    {   U16 temp = fetch_hw(&(_inst)[2]); \
+            (_effective_addr2) = temp & 0x0fff; \
+            (_b2) = (temp >> 12); \
             if(likely((_b2))) \
                 (_effective_addr2) += (_regs)->GR((_b2)); \
     }
@@ -1312,9 +1312,9 @@ do { \
 #define RX_X0(_inst, _regs, _b2, _effective_addr2) \
         RX_X0_DECODER(_inst, _regs, _b2, _effective_addr2, 4, 4)
 #define RX_X0_DECODER(_inst, _regs, _b2, _effective_addr2, _len, _ilc) \
-    {   U32 temp = fetch_fw(_inst); \
-            (_effective_addr2) = temp & 0xfff; \
-            (_b2) = (temp >> 12) & 0xf; \
+    {   U16 temp = fetch_hw(&(_inst)[2]); \
+            (_effective_addr2) = temp & 0x0fff; \
+            (_b2) = (temp >> 12); \
             if(likely(_b2)) \
                 (_effective_addr2) += (_regs)->GR((_b2)); \
             if((_len)) \

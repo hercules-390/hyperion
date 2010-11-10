@@ -1013,7 +1013,6 @@ VADR    effective_addr2;                /* Effective address         */
     RX_X0(inst, regs, b2, effective_addr2);
 
     /* Load R1 register from second operand */
-
     regs->GR_L(0x0) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
 }
 
