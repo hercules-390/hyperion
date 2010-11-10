@@ -48,9 +48,34 @@ int main(int ac,char *av[])
 /*                                                                   */
 /* The purpose of the exception trap is to call a function which     */
 /* will write a minidump file in the event of a Hercules crash.      */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*          ******************************************               */
+/*          **       IMPORTANT!  PLEASE NOTE!       **               */
+/*          ******************************************               */
+/*                                                                   */
+/*  Without a compatible version of DBGHELP.dll to use, the below    */
+/*  exception handling logic accomplishes absolutely *NOTHING*.      */
+/*                                                                   */
+/*  The below exception handling requires DBGHELP.DLL version 6.1    */
+/*  or greater. Windows XP is known to ship a version of DbgHelp     */
+/*  that is too old (version 5.1). Hercules *SHOULD* be shipping     */
+/*  DbgHelp.DLL as part of its distribution. The latest version      */
+/*  of the DbgHelp redistributable DLL can be downloaded as part     */
+/*  of Microsoft's "Debugging Tools for Windows" package at the      */
+/*  following URLs:                                                  */
+/*                                                                   */
+/*  http://msdn.microsoft.com/en-us/library/ms679294(VS.85).aspx     */
+/*  http://go.microsoft.com/FWLink/?LinkId=84137                     */
+/*  http://www.microsoft.com/whdc/devtools/debugging/default.mspx    */
+/*                                                                   */
+/*  The DbgHelp.dll that ships in Windows is *NOT* redistributable.  */
+/*  The "Debugging Tools for Windows" DbgHelp *IS* redistributable.  */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
 
-#pragma optimize( "", off )
+#pragma optimize( "", off )   // (this code should NOT be optimized!)
 
 typedef BOOL (MINIDUMPWRITEDUMPFUNC)
 (
@@ -66,6 +91,7 @@ typedef BOOL (MINIDUMPWRITEDUMPFUNC)
 static MINIDUMPWRITEDUMPFUNC*  g_pfnMiniDumpWriteDumpFunc  = NULL;
 static HMODULE                 g_hDbgHelpDll               = NULL;
 
+///////////////////////////////////////////////////////////////////////////////
 // Global string buffers to prevent C4748 warning: "/GS can not protect
 // parameters and local variables from local buffer overrun because
 // optimizations are disabled in function"
@@ -80,21 +106,46 @@ static WCHAR  g_wszFileName  [ 4 * _MAX_FNAME ]  = {0};
 static TCHAR    g_szSaveTitle[ 512 ] = {0};
 static LPCTSTR  g_pszTempTitle = _T("{98C1C303-2A9E-11d4-9FF5-0060677l8D04}");
 
-// (forward reference)
+///////////////////////////////////////////////////////////////////////////////
+// (forward references)
 
+static LONG WINAPI HerculesUnhandledExceptionFilter( EXCEPTION_POINTERS* pExceptionPtrs );
 static void ProcessException( EXCEPTION_POINTERS* pExceptionPtrs );
+static BOOL CreateMiniDump( EXCEPTION_POINTERS* pExceptionPtrs );
+static void BuildUserStreams( MINIDUMP_USER_STREAM_INFORMATION* pMDUSI );
+static BOOL IsDataSectionNeeded( const WCHAR* pwszModuleName );
+static BOOL CALLBACK MyMiniDumpCallback
+(
+    PVOID                            pParam,
+    const PMINIDUMP_CALLBACK_INPUT   pInput,
+    PMINIDUMP_CALLBACK_OUTPUT        pOutput
+);
 static HWND FindConsoleHandle();
 
-// (helper macro)
+///////////////////////////////////////////////////////////////////////////////
+// MessageBoxTimeout API support...
 
-#ifndef ARRAYSIZE
-#define ARRAYSIZE(x) (sizeof(x)/sizeof(x[0]))
+#include <winuser.h>                // (need WINUSERAPI)
+#pragma comment(lib,"user32.lib")   // (need user32.dll)
+
+#ifndef MB_TIMEDOUT
+#define MB_TIMEDOUT   32000         // (timed out return code)
 #endif
+
+#if defined( _UNICODE ) || defined( UNICODE )
+  int  WINAPI  MessageBoxTimeoutW ( IN HWND hWnd,  IN LPCWSTR lpText,      IN LPCWSTR lpCaption,
+                                    IN UINT uType, IN WORD    wLanguageId, IN DWORD   dwMilliseconds );
+  #define MessageBoxTimeout MessageBoxTimeoutW
+#else // not unicode
+  int  WINAPI  MessageBoxTimeoutA ( IN HWND hWnd,  IN LPCSTR  lpText,      IN LPCSTR  lpCaption,
+                                    IN UINT uType, IN WORD    wLanguageId, IN DWORD   dwMilliseconds );
+  #define MessageBoxTimeout MessageBoxTimeoutA
+#endif // unicode or not
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <Mmsystem.h>
-#pragma comment( lib, "Winmm" )
+#include <Mmsystem.h>               // (timeBeginPeriod, timeEndPeriod)
+#pragma comment( lib, "Winmm" )     // (timeBeginPeriod, timeEndPeriod)
 
 int main(int ac,char *av[])
 {
@@ -114,14 +165,13 @@ int main(int ac,char *av[])
     // catch the exception. Otherwise, let our exception
     // handler catch it...
 
-    if ( IsDebuggerPresent() )      // (are we being debugged?)
+    if (!IsDebuggerPresent())
     {
-        rc = impl(ac,av);           // (yes, let debugger catch the exception)
-    }
-    else // (not being debugged; use our exception handler)
-    {
-        EnableMenuItem( GetSystemMenu( FindConsoleHandle(), FALSE ),
-                        SC_CLOSE, MF_BYCOMMAND | MF_GRAYED );
+        if (!sysblk.daemon_mode)    // (normal panel mode?)
+        {
+            EnableMenuItem( GetSystemMenu( FindConsoleHandle(), FALSE ),
+                            SC_CLOSE, MF_BYCOMMAND | MF_GRAYED );
+        }
 
         if (1
             && (g_hDbgHelpDll = LoadLibrary(_T("DbgHelp.dll")))
@@ -129,49 +179,129 @@ int main(int ac,char *av[])
                 GetProcAddress( g_hDbgHelpDll, _T("MiniDumpWriteDump")))
         )
         {
-            GetModuleFileNameW( NULL, g_wszHercPath, ARRAYSIZE(g_wszHercPath) );
+            GetModuleFileNameW( NULL, g_wszHercPath, _countof( g_wszHercPath ) );
             _wsplitpath( g_wszHercPath, g_wszHercDrive, g_wszHercDir, NULL, NULL );
         }
 
+        SetUnhandledExceptionFilter( HerculesUnhandledExceptionFilter );
         SetErrorMode( SEM_NOGPFAULTERRORBOX );
-
-        __try
-        {
-            rc = impl(ac,av);  // (Hercules, do your thing!)
-        }
-        __except
-        (
-            fflush(stdout),
-            fflush(stderr),
-            _ftprintf( stderr, _T("]!OOPS!\n") ),
-            fflush(stdout),
-            fflush(stderr),
-            Sleep(10),
-            _tprintf( _T("\n\n") ),
-            _tprintf( _T("                   ***************\n") ),
-            _tprintf( _T("                   *    OOPS!    *\n") ),
-            _tprintf( _T("                   ***************\n") ),
-            _tprintf( _T("\n") ),
-            _tprintf( _T("                 Hercules has crashed!\n") ),
-            _tprintf( _T("\n") ),
-            _tprintf( _T("(you may need to press ENTER if no 'oops!' dialog-box appears)\n") ),
-            _tprintf( _T("\n") ),
-            ProcessException( GetExceptionInformation() ),
-            EXCEPTION_EXECUTE_HANDLER
-        )
-        {
-            rc = -1; // (indicate error)
-        }
     }
+
+    rc = impl(ac,av);       // (Hercules, do your thing!)
 
     // Each call to "timeBeginPeriod" must be matched with a call to "timeEndPeriod"
 
     timeEndPeriod( 1 );     // (no longer care about accurate time intervals)
 
-    EnableMenuItem( GetSystemMenu( FindConsoleHandle(), FALSE ),
-                SC_CLOSE, MF_BYCOMMAND | MF_ENABLED );
+    if (!IsDebuggerPresent())
+    {
+        if (!sysblk.daemon_mode)    // (normal panel mode?)
+        {
+            EnableMenuItem( GetSystemMenu( FindConsoleHandle(), FALSE ),
+                        SC_CLOSE, MF_BYCOMMAND | MF_ENABLED );
+        }
+    }
 
     return rc;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Hercules unhandled exception filter...
+
+#include <Wincon.h>                             // (need SetConsoleMode, etc)
+
+static LONG WINAPI HerculesUnhandledExceptionFilter( EXCEPTION_POINTERS* pExceptionPtrs )
+{
+    static BOOL bDidThis = FALSE;               // (if we did this once already)
+    if (bDidThis)
+        return EXCEPTION_EXECUTE_HANDLER;       // (quick exit to prevent loop)
+    bDidThis = TRUE;
+    SetErrorMode( 0 );                          // (reset back to default handling)
+
+    if (sysblk.daemon_mode)                     // (is an external GUI in control?)
+    {
+        fflush( stdout );
+        fflush( stderr );
+
+        _ftprintf( stderr, _T("]!OOPS!\n") );   // (external GUI pre-processing...)
+
+        fflush( stdout );
+        fflush( stderr );
+        Sleep( 10 );
+    }
+    else
+    {
+        // Normal panel mode: reset console mode and clear the screen...
+
+        DWORD                       dwCellsWritten;
+        CONSOLE_SCREEN_BUFFER_INFO  csbi;
+        HANDLE                      hStdIn, hStdErr;
+        COORD                       ptConsole = { 0, 0 };
+
+        EnableMenuItem( GetSystemMenu( FindConsoleHandle(), FALSE ),
+                    SC_CLOSE, MF_BYCOMMAND | MF_ENABLED );
+
+        hStdIn  = GetStdHandle( STD_INPUT_HANDLE );
+        hStdErr = GetStdHandle( STD_ERROR_HANDLE );
+
+#define DEFAULT_CONSOLE_ATTRIBUTES     (0   \
+        | FOREGROUND_RED                    \
+        | FOREGROUND_GREEN                  \
+        | FOREGROUND_BLUE                   \
+        )
+
+#define DEFAULT_CONSOLE_INPUT_MODE     (0   \
+        | ENABLE_ECHO_INPUT                 \
+        | ENABLE_INSERT_MODE                \
+        | ENABLE_LINE_INPUT                 \
+        | ENABLE_MOUSE_INPUT                \
+        | ENABLE_PROCESSED_INPUT            \
+        | ENABLE_QUICK_EDIT_MODE            \
+        )
+
+#define DEFAULT_CONSOLE_OUTPUT_MODE    (0   \
+        | ENABLE_PROCESSED_OUTPUT           \
+        | ENABLE_WRAP_AT_EOL_OUTPUT         \
+        )
+
+        SetConsoleTextAttribute( hStdErr, DEFAULT_CONSOLE_ATTRIBUTES  );
+        SetConsoleMode         ( hStdIn,  DEFAULT_CONSOLE_INPUT_MODE  );
+        SetConsoleMode         ( hStdErr, DEFAULT_CONSOLE_OUTPUT_MODE );
+
+        GetConsoleScreenBufferInfo( hStdErr, &csbi );
+        FillConsoleOutputCharacter( hStdErr, ' ', csbi.dwSize.X * csbi.dwSize.Y, ptConsole, &dwCellsWritten );
+        GetConsoleScreenBufferInfo( hStdErr, &csbi );
+        FillConsoleOutputAttribute( hStdErr, csbi.wAttributes, csbi.dwSize.X * csbi.dwSize.Y, ptConsole, &dwCellsWritten );
+        SetConsoleCursorPosition  ( hStdErr, ptConsole );
+
+        fflush( stdout );
+        fflush( stderr );
+        Sleep( 10 );
+    }
+
+    _tprintf( _T("\n\n") );
+    _tprintf( _T("                      ***************\n") );
+    _tprintf( _T("                      *    OOPS!    *\n") );
+    _tprintf( _T("                      ***************\n") );
+    _tprintf( _T("\n") );
+    _tprintf( _T("                    Hercules has crashed!\n") );
+    _tprintf( _T("\n") );
+    _tprintf( _T("(you may or may not need to press ENTER if no 'oops!' dialog-box appears)\n") );
+    _tprintf( _T("\n") );
+
+    fflush( stdout );
+    fflush( stderr );
+    Sleep( 10 );
+
+    ProcessException( pExceptionPtrs );     // (create a minidump, if possible)
+
+    fflush( stdout );
+    fflush( stderr );
+    Sleep( 10 );
+
+    timeEndPeriod( 1 );                     // (reset to default time interval)
+
+    return EXCEPTION_EXECUTE_HANDLER;       // (quite likely exits the process)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -179,22 +309,44 @@ int main(int ac,char *av[])
 static HWND FindConsoleHandle()
 {
     HWND hWnd;
-    if (!GetConsoleTitle(g_szSaveTitle,ARRAYSIZE(g_szSaveTitle)))
+    if (!GetConsoleTitle( g_szSaveTitle, _countof( g_szSaveTitle )))
         return NULL;
-    if (!SetConsoleTitle(g_pszTempTitle))
+    if (!SetConsoleTitle( g_pszTempTitle ))
         return NULL;
     Sleep(20);
-    hWnd = FindWindow(NULL,g_pszTempTitle);
-    SetConsoleTitle(g_szSaveTitle);
+    hWnd = FindWindow( NULL, g_pszTempTitle );
+    SetConsoleTitle( g_szSaveTitle );
     return hWnd;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static BOOL CreateMiniDump( EXCEPTION_POINTERS* pExceptionPtrs );
+#define  USE_MSGBOX_TIMEOUT     // (to force default = yes take a minidump)
+
+#ifdef USE_MSGBOX_TIMEOUT
+  #define  MESSAGEBOX   MessageBoxTimeout
+#else
+  #define  MESSAGEBOX   MessageBox
+#endif
+
+///////////////////////////////////////////////////////////////////////////////
+
+static inline int MsgBox( HWND hWnd, LPCTSTR pszText, LPCTSTR pszCaption,
+                          UINT uType, WORD wLanguageId, DWORD dwMilliseconds )
+{
+    return MESSAGEBOX( hWnd, pszText, pszCaption, uType
+#ifdef USE_MSGBOX_TIMEOUT
+        , wLanguageId
+        , dwMilliseconds
+#endif
+    );
+}
+
+///////////////////////////////////////////////////////////////////////////////
 
 static void ProcessException( EXCEPTION_POINTERS* pExceptionPtrs )
 {
+    int rc;
     UINT uiMBFlags =
         0
         | MB_SYSTEMMODAL
@@ -209,7 +361,7 @@ static void ProcessException( EXCEPTION_POINTERS* pExceptionPtrs )
 
     if ( !g_pfnMiniDumpWriteDumpFunc )
     {
-        MessageBox
+        MsgBox
         (
             hwndMBOwner,
             _T("The creation of a crash dump for analysis by the Hercules ")
@@ -219,12 +371,14 @@ static void ProcessException( EXCEPTION_POINTERS* pExceptionPtrs )
             uiMBFlags
                 | MB_ICONERROR
                 | MB_OK
+            ,0                  // (default/neutral language)
+            ,(15 * 1000)        // (timeout == 15 seconds)
         );
 
         return;
     }
 
-    if ( IDYES == MessageBox
+    if ( IDYES == ( rc = MsgBox
     (
         hwndMBOwner,
         _T("The creation of a crash dump for further analysis by ")
@@ -235,11 +389,15 @@ static void ProcessException( EXCEPTION_POINTERS* pExceptionPtrs )
         uiMBFlags
             | MB_ICONERROR
             | MB_YESNO
+        ,0                      // (default/neutral language)
+        ,(10 * 1000)            // (timeout == 10 seconds)
     ))
+        || MB_TIMEDOUT == rc
+    )
     {
-        if ( CreateMiniDump( pExceptionPtrs ) )
+        if ( CreateMiniDump( pExceptionPtrs ) && MB_TIMEDOUT != rc )
         {
-            MessageBox
+            MsgBox
             (
                 hwndMBOwner,
                 _T("Please send the dump to the Hercules development team for analysis.")
@@ -247,6 +405,8 @@ static void ProcessException( EXCEPTION_POINTERS* pExceptionPtrs )
                 uiMBFlags
                     | MB_ICONEXCLAMATION
                     | MB_OK
+                ,0              // (default/neutral language)
+                ,(5 * 1000)     // (timeout == 5 seconds)
             );
         }
     }
@@ -256,15 +416,6 @@ static void ProcessException( EXCEPTION_POINTERS* pExceptionPtrs )
 // The following CreateMiniDump functions are based on
 // Oleg Starodumov's sample at http://www.debuginfo.com
 
-static void BuildUserStreams( MINIDUMP_USER_STREAM_INFORMATION* pMDUSI );
-
-static BOOL CALLBACK MyMiniDumpCallback  // (fwd ref)
-(
-    PVOID                            pParam,
-    const PMINIDUMP_CALLBACK_INPUT   pInput,
-    PMINIDUMP_CALLBACK_OUTPUT        pOutput
-);
-
 static BOOL CreateMiniDump( EXCEPTION_POINTERS* pExceptionPtrs )
 {
     BOOL bSuccess = FALSE;
@@ -272,9 +423,9 @@ static BOOL CreateMiniDump( EXCEPTION_POINTERS* pExceptionPtrs )
 
     _wmakepath( g_wszDumpPath, g_wszHercDrive, g_wszHercDir, L"Hercules", L".dmp" );
 
-    _tprintf( _T("Creating crash dump \"%ls\"...\n"), g_wszDumpPath );
-    _tprintf( _T("Please wait; this may take a few minutes...\n") );
-    _tprintf( _T("(another message will appear when the dump is complete)\n") );
+    _tprintf( _T("Creating crash dump \"%ls\"...\n\n"), g_wszDumpPath );
+    _tprintf( _T("Please wait; this may take a few minutes...\n\n") );
+    _tprintf( _T("(another message will appear when the dump is complete)\n\n") );
 
     hDumpFile = CreateFileW
     (
@@ -319,14 +470,14 @@ static BOOL CreateMiniDump( EXCEPTION_POINTERS* pExceptionPtrs )
 
         if ( bSuccess )
         {
-            _tprintf( _T("Dump \"%ls\" created.\n"), g_wszDumpPath );
+            _tprintf( _T("\nDump \"%ls\" created.\n\nPlease forward the dump to the Hercules team for analysis.\n\n"), g_wszDumpPath );
         }
         else
-            _tprintf( _T("MiniDumpWriteDump failed! Error: %u\n"), GetLastError() );
+            _tprintf( _T("\nMiniDumpWriteDump failed! Error: %u\n\n"), GetLastError() );
     }
     else
     {
-        _tprintf( _T("CreateFile failed! Error: %u\n"), GetLastError() );
+        _tprintf( _T("\nCreateFile failed! Error: %u\n\n"), GetLastError() );
     }
 
     return bSuccess;
@@ -393,8 +544,6 @@ static void BuildUserStreams( MINIDUMP_USER_STREAM_INFORMATION* pMDUSI )
 
 ///////////////////////////////////////////////////////////////////////////////
 // Custom minidump callback
-
-static BOOL IsDataSectionNeeded( const WCHAR* pwszModuleName );  // (fwd ref)
 
 static BOOL CALLBACK MyMiniDumpCallback
 (
@@ -511,6 +660,6 @@ static BOOL IsDataSectionNeeded( const WCHAR* pwszModuleName )
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#pragma optimize( "", on )
+#pragma optimize( "", on )      // (we're done; re-enable optimizations)
 
 #endif // !defined( _MSVC_ )
