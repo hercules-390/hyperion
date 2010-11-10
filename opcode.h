@@ -3240,8 +3240,44 @@ DEF_INST(add);
 DEF_INST(add_halfword);
 DEF_INST(add_logical_register);
 DEF_INST(add_logical);
+#ifdef OPTION_RX_OPTIMIZATION 
+DEF_INST(add_logical_5E00);
+DEF_INST(add_logical_5E10);
+DEF_INST(add_logical_5E20);
+DEF_INST(add_logical_5E30);
+DEF_INST(add_logical_5E40);
+DEF_INST(add_logical_5E50);
+DEF_INST(add_logical_5E60);
+DEF_INST(add_logical_5E70);
+DEF_INST(add_logical_5E80);
+DEF_INST(add_logical_5E90);
+DEF_INST(add_logical_5EA0);
+DEF_INST(add_logical_5EB0);
+DEF_INST(add_logical_5EC0);
+DEF_INST(add_logical_5ED0);
+DEF_INST(add_logical_5EE0);
+DEF_INST(add_logical_5EF0);
+#endif /* OPTION_RX_OPTIMIZATION */
 DEF_INST(and_register);
 DEF_INST(and);
+#ifdef OPTION_RX_OPTIMIZATION 
+DEF_INST(and_5400);
+DEF_INST(and_5410);
+DEF_INST(and_5420);
+DEF_INST(and_5430);
+DEF_INST(and_5440);
+DEF_INST(and_5450);
+DEF_INST(and_5460);
+DEF_INST(and_5470);
+DEF_INST(and_5480);
+DEF_INST(and_5490);
+DEF_INST(and_54A0);
+DEF_INST(and_54B0);
+DEF_INST(and_54C0);
+DEF_INST(and_54D0);
+DEF_INST(and_54E0);
+DEF_INST(and_54F0);
+#endif /* OPTION_RX_OPTIMIZATION */
 DEF_INST(and_immediate);
 DEF_INST(and_character);
 DEF_INST(branch_and_link_register);
@@ -3356,6 +3392,24 @@ DEF_INST(execute_relative_long);                                /*208*/
 DEF_INST(extract_access_register);
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 DEF_INST(insert_character);
+#ifdef OPTION_RX_OPTIMIZATION
+DEF_INST(insert_character_4300);
+DEF_INST(insert_character_4310);
+DEF_INST(insert_character_4320);
+DEF_INST(insert_character_4330);
+DEF_INST(insert_character_4340);
+DEF_INST(insert_character_4350);
+DEF_INST(insert_character_4360);
+DEF_INST(insert_character_4370);
+DEF_INST(insert_character_4380);
+DEF_INST(insert_character_4390);
+DEF_INST(insert_character_43A0);
+DEF_INST(insert_character_43B0);
+DEF_INST(insert_character_43C0);
+DEF_INST(insert_character_43D0);
+DEF_INST(insert_character_43E0);
+DEF_INST(insert_character_43F0);
+#endif /* OPTION_RX_OPTIMIZATION */
 DEF_INST(insert_characters_under_mask);
 DEF_INST(insert_program_mask);
 DEF_INST(load);
@@ -3499,6 +3553,24 @@ DEF_INST(shift_right_single_logical);
 DEF_INST(store_access_multiple);
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 DEF_INST(store_character);
+#ifdef OPTION_RX_OPTIMIZATION
+DEF_INST(store_character_4200);
+DEF_INST(store_character_4210);
+DEF_INST(store_character_4220);
+DEF_INST(store_character_4230);
+DEF_INST(store_character_4240);
+DEF_INST(store_character_4250);
+DEF_INST(store_character_4260);
+DEF_INST(store_character_4270);
+DEF_INST(store_character_4280);
+DEF_INST(store_character_4290);
+DEF_INST(store_character_42A0);
+DEF_INST(store_character_42B0);
+DEF_INST(store_character_42C0);
+DEF_INST(store_character_42D0);
+DEF_INST(store_character_42E0);
+DEF_INST(store_character_42F0);
+#endif /* OPTION_RX_OPTIMIZATION */
 DEF_INST(store_characters_under_mask);
 DEF_INST(store_clock);
 #if defined(FEATURE_EXTENDED_TOD_CLOCK)

@@ -900,22 +900,6 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
 
 
 /*-------------------------------------------------------------------*/
-/* 42   STC   - Store Character                                 [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(store_character)
-{
-int     r1;                             /* Value of R field          */
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX(inst, regs, r1, b2, effective_addr2);
-
-    /* Store rightmost byte of R1 register at operand address */
-    ARCH_DEP(vstoreb) ( regs->GR_LHLCL(r1), effective_addr2, b2, regs );
-}
-
-
-/*-------------------------------------------------------------------*/
 /* BE   STCM  - Store Characters under Mask                     [RS] */
 /*-------------------------------------------------------------------*/
 DEF_INST(store_characters_under_mask)

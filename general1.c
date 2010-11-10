@@ -173,29 +173,6 @@ int     r1, r2;                         /* Values of R fields        */
 
 
 /*-------------------------------------------------------------------*/
-/* 5E   AL    - Add Logical                                     [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(add_logical)
-{
-int     r1;                             /* Value of R field          */
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
-
-    RX(inst, regs, r1, b2, effective_addr2);
-
-    /* Load second operand from operand address */
-    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-    /* Add signed operands and set condition code */
-    regs->psw.cc =
-            add_logical (&(regs->GR_L(r1)),
-                    regs->GR_L(r1),
-                    n);
-}
-
-
-/*-------------------------------------------------------------------*/
 /* 14   NR    - And Register                                    [RR] */
 /*-------------------------------------------------------------------*/
 DEF_INST(and_register)
@@ -206,26 +183,6 @@ int     r1, r2;                         /* Values of R fields        */
 
     /* AND second operand with first and set condition code */
     regs->psw.cc = ( regs->GR_L(r1) &= regs->GR_L(r2) ) ? 1 : 0;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* 54   N     - And                                             [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(and)
-{
-int     r1;                             /* Value of R field          */
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
-
-    RX(inst, regs, r1, b2, effective_addr2);
-
-    /* Load second operand from operand address */
-    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-    /* AND second operand with first and set condition code */
-    regs->psw.cc = ( regs->GR_L(r1) &= n ) ? 1 : 0;
 }
 
 
@@ -696,6 +653,248 @@ DEF_INST(branch_on_condition_register)
 
 
 /*-------------------------------------------------------------------*/
+/* 42   STC   - Store Character                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_character)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX(inst, regs, r1, b2, effective_addr2);
+
+    /* Store rightmost byte of R1 register at operand address */
+    ARCH_DEP(vstoreb) ( regs->GR_LHLCL(r1), effective_addr2, b2, regs );
+}
+
+#ifdef OPTION_RX_OPTIMIZATION
+/*-------------------------------------------------------------------*/
+/* 4200 STC   - Store Character                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_character_4200)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store rightmost byte of R1 register at operand address */
+    ARCH_DEP(vstoreb) ( regs->GR_LHLCL(0x0), effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 4210 STC   - Store Character                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_character_4210)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store rightmost byte of R1 register at operand address */
+    ARCH_DEP(vstoreb) ( regs->GR_LHLCL(0x1), effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 4220 STC   - Store Character                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_character_4220)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store rightmost byte of R1 register at operand address */
+    ARCH_DEP(vstoreb) ( regs->GR_LHLCL(0x2), effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 4230 STC   - Store Character                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_character_4230)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store rightmost byte of R1 register at operand address */
+    ARCH_DEP(vstoreb) ( regs->GR_LHLCL(0x3), effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 4240 STC   - Store Character                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_character_4240)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store rightmost byte of R1 register at operand address */
+    ARCH_DEP(vstoreb) ( regs->GR_LHLCL(0x4), effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 4250 STC   - Store Character                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_character_4250)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store rightmost byte of R1 register at operand address */
+    ARCH_DEP(vstoreb) ( regs->GR_LHLCL(0x5), effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 4260 STC   - Store Character                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_character_4260)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store rightmost byte of R1 register at operand address */
+    ARCH_DEP(vstoreb) ( regs->GR_LHLCL(0x6), effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 4270 STC   - Store Character                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_character_4270)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store rightmost byte of R1 register at operand address */
+    ARCH_DEP(vstoreb) ( regs->GR_LHLCL(0x7), effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 4280 STC   - Store Character                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_character_4280)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store rightmost byte of R1 register at operand address */
+    ARCH_DEP(vstoreb) ( regs->GR_LHLCL(0x8), effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 4290 STC   - Store Character                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_character_4290)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store rightmost byte of R1 register at operand address */
+    ARCH_DEP(vstoreb) ( regs->GR_LHLCL(0x9), effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 42A0 STC   - Store Character                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_character_42A0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store rightmost byte of R1 register at operand address */
+    ARCH_DEP(vstoreb) ( regs->GR_LHLCL(0xa), effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 42B0 STC   - Store Character                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_character_42B0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store rightmost byte of R1 register at operand address */
+    ARCH_DEP(vstoreb) ( regs->GR_LHLCL(0xb), effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 42C0 STC   - Store Character                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_character_42C0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store rightmost byte of R1 register at operand address */
+    ARCH_DEP(vstoreb) ( regs->GR_LHLCL(0xc), effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 42D0 STC   - Store Character                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_character_42D0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store rightmost byte of R1 register at operand address */
+    ARCH_DEP(vstoreb) ( regs->GR_LHLCL(0xd), effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 42E0 STC   - Store Character                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_character_42E0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store rightmost byte of R1 register at operand address */
+    ARCH_DEP(vstoreb) ( regs->GR_LHLCL(0xe), effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 42F0 STC   - Store Character                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_character_42F0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Store rightmost byte of R1 register at operand address */
+    ARCH_DEP(vstoreb) ( regs->GR_LHLCL(0xf), effective_addr2, b2, regs );
+}
+#endif /* OPTION_RX_OPTIMIZATION */
+
+
+/*-------------------------------------------------------------------*/
 /* 47   BC    - Branch on Condition                             [RX] */
 /*-------------------------------------------------------------------*/
 DEF_INST(branch_on_condition)
@@ -984,6 +1183,316 @@ VADR    effective_addr2;                /* Effective address         */
     SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
 
 } /* end DEF_INST(branch_on_condition) */
+#endif /* OPTION_RX_OPTIMIZATION */
+
+
+/*-------------------------------------------------------------------*/
+/* 54   N     - And                                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(and)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX(inst, regs, r1, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* AND second operand with first and set condition code */
+    regs->psw.cc = ( regs->GR_L(r1) &= n ) ? 1 : 0;
+}
+
+#ifdef OPTION_RX_OPTIMIZATION
+/*-------------------------------------------------------------------*/
+/* 5400 N     - And                                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(and_5400)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* AND second operand with first and set condition code */
+    regs->psw.cc = ( regs->GR_L(0x0) &= n ) ? 1 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 5410 N     - And                                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(and_5410)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* AND second operand with first and set condition code */
+    regs->psw.cc = ( regs->GR_L(0x1) &= n ) ? 1 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 5420 N     - And                                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(and_5420)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* AND second operand with first and set condition code */
+    regs->psw.cc = ( regs->GR_L(0x2) &= n ) ? 1 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 5430   N     - And                                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(and_5430)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* AND second operand with first and set condition code */
+    regs->psw.cc = ( regs->GR_L(0x3) &= n ) ? 1 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 5440 N     - And                                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(and_5440)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* AND second operand with first and set condition code */
+    regs->psw.cc = ( regs->GR_L(0x4) &= n ) ? 1 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 5450 N     - And                                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(and_5450)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* AND second operand with first and set condition code */
+    regs->psw.cc = ( regs->GR_L(0x5) &= n ) ? 1 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 5460 N     - And                                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(and_5460)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* AND second operand with first and set condition code */
+    regs->psw.cc = ( regs->GR_L(0x6) &= n ) ? 1 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 5470 N     - And                                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(and_5470)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* AND second operand with first and set condition code */
+    regs->psw.cc = ( regs->GR_L(0x7) &= n ) ? 1 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 5480 N     - And                                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(and_5480)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* AND second operand with first and set condition code */
+    regs->psw.cc = ( regs->GR_L(0x8) &= n ) ? 1 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 5490 N     - And                                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(and_5490)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* AND second operand with first and set condition code */
+    regs->psw.cc = ( regs->GR_L(0x9) &= n ) ? 1 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 54A0 N     - And                                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(and_54A0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* AND second operand with first and set condition code */
+    regs->psw.cc = ( regs->GR_L(0xa) &= n ) ? 1 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 54B0 N     - And                                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(and_54B0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* AND second operand with first and set condition code */
+    regs->psw.cc = ( regs->GR_L(0xb) &= n ) ? 1 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 54C0 N     - And                                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(and_54C0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* AND second operand with first and set condition code */
+    regs->psw.cc = ( regs->GR_L(0xc) &= n ) ? 1 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 54D0 N     - And                                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(and_54D0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* AND second operand with first and set condition code */
+    regs->psw.cc = ( regs->GR_L(0xd) &= n ) ? 1 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 54E0 N     - And                                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(and_54E0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* AND second operand with first and set condition code */
+    regs->psw.cc = ( regs->GR_L(0xe) &= n ) ? 1 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 54F0 N     - And                                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(and_54F0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* AND second operand with first and set condition code */
+    regs->psw.cc = ( regs->GR_L(0xf) &= n ) ? 1 : 0;
+}
 #endif /* OPTION_RX_OPTIMIZATION */
 
 /*-------------------------------------------------------------------*/
@@ -1745,6 +2254,609 @@ VADR    effective_addr2;                /* Effective address         */
 
 
 /*-------------------------------------------------------------------*/
+/* 43   IC    - Insert Character                                [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(insert_character)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX(inst, regs, r1, b2, effective_addr2);
+
+    /* Insert character in r1 register */
+    regs->GR_LHLCL(r1) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+}
+
+#ifdef OPTION_RX_OPTIMIZATION
+/*-------------------------------------------------------------------*/
+/* 4300 IC    - Insert Character                                [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(insert_character_4300)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Insert character in r1 register */
+    regs->GR_LHLCL(0x0) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 4310 IC    - Insert Character                                [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(insert_character_4310)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Insert character in r1 register */
+    regs->GR_LHLCL(0x1) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 4320 IC    - Insert Character                                [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(insert_character_4320)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Insert character in r1 register */
+    regs->GR_LHLCL(0x2) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 4330 IC    - Insert Character                                [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(insert_character_4330)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Insert character in r1 register */
+    regs->GR_LHLCL(0x3) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 4340 IC    - Insert Character                                [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(insert_character_4340)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Insert character in r1 register */
+    regs->GR_LHLCL(0x4) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 4350 IC    - Insert Character                                [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(insert_character_4350)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Insert character in r1 register */
+    regs->GR_LHLCL(0x5) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 4360 IC    - Insert Character                                [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(insert_character_4360)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Insert character in r1 register */
+    regs->GR_LHLCL(0x6) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 4370 IC    - Insert Character                                [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(insert_character_4370)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Insert character in r1 register */
+    regs->GR_LHLCL(0x7) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 4380 IC    - Insert Character                                [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(insert_character_4380)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Insert character in r1 register */
+    regs->GR_LHLCL(0x8) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 4390 IC    - Insert Character                                [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(insert_character_4390)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Insert character in r1 register */
+    regs->GR_LHLCL(0x9) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 43A0 IC    - Insert Character                                [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(insert_character_43A0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Insert character in r1 register */
+    regs->GR_LHLCL(0xa) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 43B0 IC    - Insert Character                                [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(insert_character_43B0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Insert character in r1 register */
+    regs->GR_LHLCL(0xb) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 43C0 IC    - Insert Character                                [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(insert_character_43C0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Insert character in r1 register */
+    regs->GR_LHLCL(0xc) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 43D0 IC    - Insert Character                                [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(insert_character_43D0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Insert character in r1 register */
+    regs->GR_LHLCL(0xd) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 43E0 IC    - Insert Character                                [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(insert_character_43E0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Insert character in r1 register */
+    regs->GR_LHLCL(0xe) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* 43F0 IC    - Insert Character                                [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(insert_character_43F0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Insert character in r1 register */
+    regs->GR_LHLCL(0xf) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+}
+#endif /* OPTION_RX_OPTIMIZATION */
+
+
+/*-------------------------------------------------------------------*/
+/* 5E   AL    - Add Logical                                     [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_logical)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX(inst, regs, r1, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc =
+            add_logical (&(regs->GR_L(r1)),
+                    regs->GR_L(r1),
+                    n);
+}
+
+#ifdef OPTION_RX_OPTIMIZATION
+/*-------------------------------------------------------------------*/
+/* 5E00 AL    - Add Logical                                     [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_logical_5E00)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc =
+            add_logical (&(regs->GR_L(0x0)),
+                    regs->GR_L(0x0),
+                    n);
+}
+
+/*-------------------------------------------------------------------*/
+/* 5E10 AL    - Add Logical                                     [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_logical_5E10)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc =
+            add_logical (&(regs->GR_L(0x1)),
+                    regs->GR_L(0x1),
+                    n);
+}
+
+/*-------------------------------------------------------------------*/
+/* 5E20 AL    - Add Logical                                     [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_logical_5E20)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc =
+            add_logical (&(regs->GR_L(0x2)),
+                    regs->GR_L(0x2),
+                    n);
+}
+
+/*-------------------------------------------------------------------*/
+/* 5E30 AL    - Add Logical                                     [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_logical_5E30)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc =
+            add_logical (&(regs->GR_L(0x3)),
+                    regs->GR_L(0x3),
+                    n);
+}
+
+/*-------------------------------------------------------------------*/
+/* 5E40 AL    - Add Logical                                     [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_logical_5E40)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc =
+            add_logical (&(regs->GR_L(0x4)),
+                    regs->GR_L(0x4),
+                    n);
+}
+
+/*-------------------------------------------------------------------*/
+/* 5E50 AL    - Add Logical                                     [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_logical_5E50)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc =
+            add_logical (&(regs->GR_L(0x5)),
+                    regs->GR_L(0x5),
+                    n);
+}
+
+/*-------------------------------------------------------------------*/
+/* 5E60 AL    - Add Logical                                     [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_logical_5E60)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc =
+            add_logical (&(regs->GR_L(0x6)),
+                    regs->GR_L(0x6),
+                    n);
+}
+
+/*-------------------------------------------------------------------*/
+/* 5E70 AL    - Add Logical                                     [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_logical_5E70)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc =
+            add_logical (&(regs->GR_L(0x7)),
+                    regs->GR_L(0x7),
+                    n);
+}
+
+/*-------------------------------------------------------------------*/
+/* 5E80 AL    - Add Logical                                     [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_logical_5E80)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc =
+            add_logical (&(regs->GR_L(0x8)),
+                    regs->GR_L(0x8),
+                    n);
+}
+
+/*-------------------------------------------------------------------*/
+/* 5E90 AL    - Add Logical                                     [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_logical_5E90)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc =
+            add_logical (&(regs->GR_L(0x9)),
+                    regs->GR_L(0x9),
+                    n);
+}
+
+/*-------------------------------------------------------------------*/
+/* 5EA0 AL    - Add Logical                                     [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_logical_5EA0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc =
+            add_logical (&(regs->GR_L(0xa)),
+                    regs->GR_L(0xa),
+                    n);
+}
+
+/*-------------------------------------------------------------------*/
+/* 5EB0 AL    - Add Logical                                     [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_logical_5EB0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc =
+            add_logical (&(regs->GR_L(0xb)),
+                    regs->GR_L(0xb),
+                    n);
+}
+
+/*-------------------------------------------------------------------*/
+/* 5EC0 AL    - Add Logical                                     [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_logical_5EC0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc =
+            add_logical (&(regs->GR_L(0xc)),
+                    regs->GR_L(0xc),
+                    n);
+}
+
+/*-------------------------------------------------------------------*/
+/* 5ED0 AL    - Add Logical                                     [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_logical_5ED0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc =
+            add_logical (&(regs->GR_L(0xd)),
+                    regs->GR_L(0xd),
+                    n);
+}
+
+/*-------------------------------------------------------------------*/
+/* 5EE0 AL    - Add Logical                                     [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_logical_5EE0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc =
+            add_logical (&(regs->GR_L(0xe)),
+                    regs->GR_L(0xe),
+                    n);
+}
+
+/*-------------------------------------------------------------------*/
+/* 5EF0 AL    - Add Logical                                     [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_logical_5EF0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc =
+            add_logical (&(regs->GR_L(0xf)),
+                    regs->GR_L(0xf),
+                    n);
+}
+#endif /* OPTION_RX_OPTIMIZATION */
+
+
+/*-------------------------------------------------------------------*/
 /* 55   CL    - Compare Logical                                 [RX] */
 /*-------------------------------------------------------------------*/
 DEF_INST(compare_logical)
@@ -1763,6 +2875,7 @@ U32     n;                              /* 32-bit operand values     */
     regs->psw.cc = regs->GR_L(r1) < n ? 1 :
                    regs->GR_L(r1) > n ? 2 : 0;
 }
+
 
 #ifdef OPTION_RX_OPTIMIZATION 
 /*-------------------------------------------------------------------*/
@@ -4835,23 +5948,6 @@ int     r1, r2;                         /* Values of R fields        */
     regs->GR_L(r1) = regs->AR(r2);
 }
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
-
-
-/*-------------------------------------------------------------------*/
-/* 43   IC    - Insert Character                                [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(insert_character)
-{
-int     r1;                             /* Value of R field          */
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX(inst, regs, r1, b2, effective_addr2);
-
-    /* Insert character in r1 register */
-    regs->GR_LHLCL(r1) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
-
-}
 
 
 /*-------------------------------------------------------------------*/

@@ -1228,11 +1228,15 @@ static zz_func v_opcode_e4xx[0x100][GEN_MAXARCH];
 
 #ifdef OPTION_RX_OPTIMIZATION
 static zz_func opcode_41x0[0x10][GEN_MAXARCH];
+static zz_func opcode_42x0[0x10][GEN_MAXARCH];
+static zz_func opcode_43x0[0x10][GEN_MAXARCH];
 static zz_func opcode_47x0[0x10][GEN_MAXARCH];
 static zz_func opcode_48x0[0x10][GEN_MAXARCH];
 static zz_func opcode_50x0[0x10][GEN_MAXARCH];
+static zz_func opcode_54x0[0x10][GEN_MAXARCH];
 static zz_func opcode_55x0[0x10][GEN_MAXARCH];
 static zz_func opcode_58x0[0x10][GEN_MAXARCH];
+static zz_func opcode_5Ex0[0x10][GEN_MAXARCH];
 #endif /* OPTION_RX_OPTIMIZATION */
 
 #define DISASM_ROUTE(_table,_route) \
@@ -2343,11 +2347,15 @@ void init_opcode_tables(void)
     for(i = 0; i < 0x10; i++)
     {
       replace_opcode_xxxx(arch, opcode_41x0[i][arch], 0x41, i * 0x10 + 0x00);
+      replace_opcode_xxxx(arch, opcode_42x0[i][arch], 0x42, i * 0x10 + 0x00);
+      replace_opcode_xxxx(arch, opcode_43x0[i][arch], 0x43, i * 0x10 + 0x00);
       replace_opcode_xxxx(arch, opcode_47x0[i][arch], 0x47, i * 0x10 + 0x00);
       replace_opcode_xxxx(arch, opcode_48x0[i][arch], 0x48, i * 0x10 + 0x00);      
       replace_opcode_xxxx(arch, opcode_50x0[i][arch], 0x50, i * 0x10 + 0x00);
+      replace_opcode_xxxx(arch, opcode_54x0[i][arch], 0x54, i * 0x10 + 0x00);      
       replace_opcode_xxxx(arch, opcode_55x0[i][arch], 0x55, i * 0x10 + 0x00);
       replace_opcode_xxxx(arch, opcode_58x0[i][arch], 0x58, i * 0x10 + 0x00);
+      replace_opcode_xxxx(arch, opcode_5Ex0[i][arch], 0x5e, i * 0x10 + 0x00);
     }
 #endif /* OPTION_RX_OPTIMIZATION */
   }
@@ -6462,6 +6470,44 @@ static zz_func opcode_41x0[0x10][GEN_MAXARCH] = {
  /*41F0*/ GENx370x390x900 (load_address_41F0,RX,"LA") };
 
  
+static zz_func opcode_42x0[0x10][GEN_MAXARCH] = {
+ /*4200*/ GENx370x390x900 (store_character_4200,RX,"STC"),
+ /*4210*/ GENx370x390x900 (store_character_4210,RX,"STC"),
+ /*4220*/ GENx370x390x900 (store_character_4220,RX,"STC"),
+ /*4230*/ GENx370x390x900 (store_character_4230,RX,"STC"),
+ /*4240*/ GENx370x390x900 (store_character_4240,RX,"STC"),
+ /*4250*/ GENx370x390x900 (store_character_4250,RX,"STC"),
+ /*4260*/ GENx370x390x900 (store_character_4260,RX,"STC"),
+ /*4270*/ GENx370x390x900 (store_character_4270,RX,"STC"),
+ /*4280*/ GENx370x390x900 (store_character_4280,RX,"STC"),
+ /*4290*/ GENx370x390x900 (store_character_4290,RX,"STC"),
+ /*42A0*/ GENx370x390x900 (store_character_42A0,RX,"STC"),
+ /*42B0*/ GENx370x390x900 (store_character_42B0,RX,"STC"),
+ /*42C0*/ GENx370x390x900 (store_character_42C0,RX,"STC"),
+ /*42D0*/ GENx370x390x900 (store_character_42D0,RX,"STC"),
+ /*42E0*/ GENx370x390x900 (store_character_42E0,RX,"STC"),
+ /*42F0*/ GENx370x390x900 (store_character_42F0,RX,"STC") }; 
+
+ 
+static zz_func opcode_43x0[0x10][GEN_MAXARCH] = {
+ /*4300*/ GENx370x390x900 (insert_character_4300,RX,"IC"),
+ /*4310*/ GENx370x390x900 (insert_character_4310,RX,"IC"),
+ /*4320*/ GENx370x390x900 (insert_character_4320,RX,"IC"),
+ /*4330*/ GENx370x390x900 (insert_character_4330,RX,"IC"),
+ /*4340*/ GENx370x390x900 (insert_character_4340,RX,"IC"),
+ /*4350*/ GENx370x390x900 (insert_character_4350,RX,"IC"),
+ /*4360*/ GENx370x390x900 (insert_character_4360,RX,"IC"),
+ /*4370*/ GENx370x390x900 (insert_character_4370,RX,"IC"),
+ /*4380*/ GENx370x390x900 (insert_character_4380,RX,"IC"),
+ /*4390*/ GENx370x390x900 (insert_character_4390,RX,"IC"),
+ /*43A0*/ GENx370x390x900 (insert_character_43A0,RX,"IC"),
+ /*43B0*/ GENx370x390x900 (insert_character_43B0,RX,"IC"),
+ /*43C0*/ GENx370x390x900 (insert_character_43C0,RX,"IC"),
+ /*43D0*/ GENx370x390x900 (insert_character_43D0,RX,"IC"),
+ /*43E0*/ GENx370x390x900 (insert_character_43E0,RX,"IC"),
+ /*43F0*/ GENx370x390x900 (insert_character_43F0,RX,"IC") };  
+
+  
 static zz_func opcode_47x0[0x10][GEN_MAXARCH] = {
  /*4700*/ GENx370x390x900 (branch_on_condition_4700,RX,"BC"),
  /*4710*/ GENx370x390x900 (branch_on_condition_4710,RX,"BC"),
@@ -6519,6 +6565,25 @@ static zz_func opcode_50x0[0x10][GEN_MAXARCH] = {
  /*50F0*/ GENx370x390x900 (store_50F0,RX,"ST") };
 
  
+static zz_func opcode_54x0[0x10][GEN_MAXARCH] = {
+ /*5400*/ GENx370x390x900 (and_5400,RX,"N"),
+ /*5410*/ GENx370x390x900 (and_5410,RX,"N"),
+ /*5420*/ GENx370x390x900 (and_5420,RX,"N"),
+ /*5430*/ GENx370x390x900 (and_5430,RX,"N"),
+ /*5440*/ GENx370x390x900 (and_5440,RX,"N"),
+ /*5450*/ GENx370x390x900 (and_5450,RX,"N"),
+ /*5460*/ GENx370x390x900 (and_5460,RX,"N"),
+ /*5470*/ GENx370x390x900 (and_5470,RX,"N"),
+ /*5480*/ GENx370x390x900 (and_5480,RX,"N"),
+ /*5490*/ GENx370x390x900 (and_5490,RX,"N"),
+ /*54A0*/ GENx370x390x900 (and_54A0,RX,"N"),
+ /*54B0*/ GENx370x390x900 (and_54B0,RX,"N"),
+ /*54C0*/ GENx370x390x900 (and_54C0,RX,"N"),
+ /*54D0*/ GENx370x390x900 (and_54D0,RX,"N"),
+ /*54E0*/ GENx370x390x900 (and_54E0,RX,"N"),
+ /*54F0*/ GENx370x390x900 (and_54F0,RX,"N") };
+
+
 static zz_func opcode_55x0[0x10][GEN_MAXARCH] = {
  /*5500*/ GENx370x390x900 (compare_logical_5500,RX,"CL"),
  /*5510*/ GENx370x390x900 (compare_logical_5510,RX,"CL"),
@@ -6555,6 +6620,25 @@ static zz_func opcode_58x0[0x10][GEN_MAXARCH] = {
  /*58D0*/ GENx370x390x900 (load_58D0,RX,"L"),
  /*58E0*/ GENx370x390x900 (load_58E0,RX,"L"),
  /*58F0*/ GENx370x390x900 (load_58F0,RX,"L") };
+
+ 
+static zz_func opcode_5Ex0[0x10][GEN_MAXARCH] = {
+ /*5E00*/ GENx370x390x900 (add_logical_5E00,RX,"AL"),
+ /*5E10*/ GENx370x390x900 (add_logical_5E10,RX,"AL"),
+ /*5E20*/ GENx370x390x900 (add_logical_5E20,RX,"AL"),
+ /*5E30*/ GENx370x390x900 (add_logical_5E30,RX,"AL"),
+ /*5E40*/ GENx370x390x900 (add_logical_5E40,RX,"AL"),
+ /*5E50*/ GENx370x390x900 (add_logical_5E50,RX,"AL"),
+ /*5E60*/ GENx370x390x900 (add_logical_5E60,RX,"AL"),
+ /*5E70*/ GENx370x390x900 (add_logical_5E70,RX,"AL"),
+ /*5E80*/ GENx370x390x900 (add_logical_5E80,RX,"AL"),
+ /*5E90*/ GENx370x390x900 (add_logical_5E90,RX,"AL"),
+ /*5EA0*/ GENx370x390x900 (add_logical_5EA0,RX,"AL"),
+ /*5EB0*/ GENx370x390x900 (add_logical_5EB0,RX,"AL"),
+ /*5EC0*/ GENx370x390x900 (add_logical_5EC0,RX,"AL"),
+ /*5ED0*/ GENx370x390x900 (add_logical_5ED0,RX,"AL"),
+ /*5EE0*/ GENx370x390x900 (add_logical_5EE0,RX,"AL"),
+ /*5EF0*/ GENx370x390x900 (add_logical_5EF0,RX,"AL") };
 #endif /* OPTION_RX_OPTIMIZATION */
 
 #endif /*!defined (_GEN_ARCH)*/
