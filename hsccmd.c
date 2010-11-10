@@ -2595,7 +2595,7 @@ int defstore_cmd(int argc, char *argv[], char *cmdline)
             }
             else
             {
-                WRMSG( HHC02205, "E", argv[rc] );
+                WRMSG( HHC02299, "E", argv[0] );
                 rc = -1;
                 break;
             }
