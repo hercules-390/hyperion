@@ -1511,6 +1511,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 } /* end DEF_INST(load) */
 
+#ifdef OPTION_RX_OPTIMIZATION
 /*-------------------------------------------------------------------*/
 /* 5800 L     - Load                                            [RX] */
 /*-------------------------------------------------------------------*/
@@ -1525,7 +1526,6 @@ VADR    effective_addr2;                /* Effective address         */
     regs->GR_L(0x0) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
 }
 
-#ifdef OPTION_RX_OPTIMIZATION
 /*-------------------------------------------------------------------*/
 /* 5810 L     - Load                                            [RX] */
 /*-------------------------------------------------------------------*/
