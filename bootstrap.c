@@ -470,7 +470,9 @@ static BOOL CreateMiniDump( EXCEPTION_POINTERS* pExceptionPtrs )
 
         if ( bSuccess )
         {
-            _tprintf( _T("\nDump \"%ls\" created.\n\nPlease forward the dump to the Hercules team for analysis.\n\n"), g_wszDumpPath );
+            _tprintf( _T("\nDump \"%ls\" created.\n\n"
+                         "Please forward the dump to the Hercules team for analysis.\n\n"), 
+                         g_wszDumpPath );
         }
         else
             _tprintf( _T("\nMiniDumpWriteDump failed! Error: %u\n\n"), GetLastError() );
@@ -529,7 +531,7 @@ static void BuildUserStreams( MINIDUMP_USER_STREAM_INFORMATION* pMDUSI )
     {
         UserStreamArray[UserStreamCount].Type       = CommentStreamA;
         UserStreamArray[UserStreamCount].Buffer     =        g_host_info_str;
-        UserStreamArray[UserStreamCount].BufferSize = strlen(g_host_info_str)+1;
+        UserStreamArray[UserStreamCount].BufferSize = (ULONG)strlen(g_host_info_str)+1;
         UserStreamCount++;
     }
 
@@ -538,7 +540,7 @@ static void BuildUserStreams( MINIDUMP_USER_STREAM_INFORMATION* pMDUSI )
     {
         UserStreamArray[UserStreamCount].Type       = CommentStreamA;
         UserStreamArray[UserStreamCount].Buffer     = (PVOID)*ppszBldInfoStr;
-        UserStreamArray[UserStreamCount].BufferSize = strlen(*ppszBldInfoStr)+1;
+        UserStreamArray[UserStreamCount].BufferSize = (ULONG)strlen(*ppszBldInfoStr)+1;
     }
 }
 
