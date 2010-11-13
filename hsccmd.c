@@ -2621,7 +2621,7 @@ BYTE    f = ' ', c = '\0';
 int     rc;
 u_int   i;
 char    check[16];
-char *q_argv[2] = { "qstor", "main" };
+char   *q_argv[2] = { "qstor", "main" };
 u_int   lockreq = 0;
 u_int   locktype = 0;
 
@@ -2746,7 +2746,7 @@ BYTE    f = ' ', c = '\0';
 int     rc;
 u_int   i;
 char    check[16];
-char *q_argv[2] = { "qstor", "xpnd" };
+char   *q_argv[2] = { "qstor", "xpnd" };
 u_int   lockreq = 0;
 u_int   locktype = 0;
 
@@ -7445,7 +7445,7 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
 
     WRMSG( HHC17008, "I", ( j == 0 ? 0 : ( cpupct / j ) ), j,
                     sysblk.mipsrate / 1000000, ( sysblk.mipsrate % 1000000 ) / 10000,
-                    sysblk.siosrate );
+                    sysblk.siosrate, "" );
 
 #if defined(OPTION_CAPPING)
 
@@ -7474,13 +7474,76 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
     {
         if ( IS_CPU_ONLINE(i) )
         {
+            char *pmsg = "";
+#if defined(_MSVC_)
+            char    msgbuf[128];
+            FILETIME ftCreate, ftExit, ftKernel, ftUser;
+
+            if ( GetThreadTimes(win_thread_handle(sysblk.cputid[i]), &ftCreate, &ftExit, &ftKernel, &ftUser) != 0 )
+            {
+                char    msgKernel[64];
+                char    msgUser[64];
+                char    yy[8], mm[8], dd[8], hh[8], mn[8], ss[8], ms[8];
+
+                SYSTEMTIME  st;
+
+                FileTimeToSystemTime( &ftKernel, &st ); 
+                st.wYear    -= 1601;
+                st.wDay     -= 1;
+                st.wMonth   -= 1;
+
+                MSGBUF( yy, "%02d", st.wYear );
+                MSGBUF( mm, "%02d", st.wMonth );
+                MSGBUF( dd, "%02d", st.wDay );
+                MSGBUF( hh, "%02d", st.wHour );
+                MSGBUF( mn, "%02d", st.wMinute );
+                MSGBUF( ss, "%02d", st.wSecond );
+                MSGBUF( ms, "%03d", st.wMilliseconds );
+
+                if ( st.wYear != 0 )
+                    MSGBUF( msgKernel, "%s/%s/%s %s:%s:%s.%s", yy, mm, dd, hh, mn, ss, ms );
+                else if ( st.wMonth != 0 )
+                    MSGBUF( msgKernel, "%s/%s %s:%s:%s.%s", mm, dd, hh, mn, ss, ms );
+                else if ( st.wDay != 0 )
+                    MSGBUF( msgKernel, "%s %s:%s:%s.%s", dd, hh, mn, ss, ms );
+                else
+                    MSGBUF( msgKernel, "%s:%s:%s.%s", hh, mn, ss, ms );
+
+                FileTimeToSystemTime( &ftUser, &st ); 
+                st.wYear    -= 1601;
+                st.wDay     -= 1;
+                st.wMonth   -= 1;
+                
+                MSGBUF( yy, "%02d", st.wYear );
+                MSGBUF( mm, "%02d", st.wMonth );
+                MSGBUF( dd, "%02d", st.wDay );
+                MSGBUF( hh, "%02d", st.wHour );
+                MSGBUF( mn, "%02d", st.wMinute );
+                MSGBUF( ss, "%02d", st.wSecond );
+                MSGBUF( ms, "%03d", st.wMilliseconds );
+
+                if ( st.wYear != 0 )
+                    MSGBUF( msgUser, "%s/%s/%s %s:%s:%s.%s", yy, mm, dd, hh, mn, ss, ms );
+                else if ( st.wMonth != 0 )
+                    MSGBUF( msgUser, "%s/%s %s:%s:%s.%s", mm, dd, hh, mn, ss, ms );
+                else if ( st.wDay != 0 )
+                    MSGBUF( msgUser, "%s %s:%s:%s.%s", dd, hh, mn, ss, ms );
+                else
+                    MSGBUF( msgUser, "%s:%s:%s.%s", hh, mn, ss, ms );
+                
+                MSGBUF( msgbuf, " - Host Kernel(%s) User(%s)", msgKernel, msgUser );
+
+                pmsg = msgbuf;
+            }
+#endif
             WRMSG( HHC17009, "I", PTYPSTR(i), i,
                                 ( sysblk.regs[i]->cpustate == CPUSTATE_STARTED ) ? '-' :
                                 ( sysblk.regs[i]->cpustate == CPUSTATE_STOPPING ) ? ':' : '*',
                                   sysblk.regs[i]->cpupct,
                                   sysblk.regs[i]->mipsrate / 1000000,
                                 ( sysblk.regs[i]->mipsrate % 1000000 ) / 10000,
-                                  sysblk.regs[i]->siosrate );
+                                  sysblk.regs[i]->siosrate,
+                                  pmsg );
         }
     }
 
