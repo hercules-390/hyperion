@@ -59,6 +59,7 @@
  #define _GEN900(_name)
 #endif
 
+OPC_DLL_IMPORT LOCK Lock_Compare_Swap;         /* Compare and Swap Lock     */
 
 #define GENx___x___x___ \
     { \
