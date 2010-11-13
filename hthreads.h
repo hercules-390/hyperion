@@ -41,9 +41,9 @@ typedef fthread_attr_t         ATTR;
 #define thread_id()                            winthread_self()
 #define exit_thread(exitvar_ptr)               winthread_exit((exitvar_ptr))
 #define equal_threads(tid1,tid2)               winthread_equal((tid1),(tid2))
-#define initialize_detach_attr(pat)            winthread_attr_init((pat)); 
-#define initialize_join_attr(pat)              winthread_attr_init((pat));
-#define win_thread_handle(tid)                 winthread_get_handle(tid);
+#define initialize_detach_attr(pat)            winthread_attr_init((pat)) 
+#define initialize_join_attr(pat)              winthread_attr_init((pat))
+#define win_thread_handle(tid)                 winthread_get_handle(tid)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
