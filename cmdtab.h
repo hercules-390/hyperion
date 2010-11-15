@@ -488,8 +488,16 @@ COMMAND("cnslport",  SYSCONFIG|SYSNDIAG, cnslport_cmd,
 
 #ifdef OPTION_CAPPING
 COMMAND("capping",   SYSCONFIG|SYSNDIAG, capping_cmd,
-  "Set capping value",
-    NULL)
+  "Set/display capping value",
+  "Format: capping [ n | off ]\n"
+  "         If no operands are specified, the current capping value is displayed,\n"
+  "         the value represents the maximum total number of MIPS for all of the\n"
+  "         'CP' type processors.\n"
+  "\n"
+  "     n    Maximum total number of MIPS for all of the 'CP' type processors.\n"
+  "          A zero value will turn off MIP capping\n"
+  "     off  Turn off capping\n"
+  "\n")
 #endif // OPTION_CAPPING
 
 #if defined(OPTION_SHARED_DEVICES)

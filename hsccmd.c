@@ -7203,19 +7203,19 @@ int msglevel_cmd(int argc, char *argv[], char *cmdline)
                 emsg |= EMSG_TS + EMSG_ON;
                 emsg &= ~EMSG_TEXT;
             }
-            else if ( strabbrev("TERSE", check, 3) )
+            else if ( strabbrev("TERSE", check, 3) || strabbrev("+TERSE", check, 4) || strabbrev("-VERBOSE", check, 2) )
             {
                 msglvl &= ~MLVL_VERBOSE;
             }
-            else if ( strabbrev("VERBOSE", check, 1) )
+            else if ( strabbrev("VERBOSE", check, 1) || strabbrev("+VERBOSE", check, 2) || strabbrev("-TERSE", check, 4) )
             {
                 msglvl |= MLVL_VERBOSE;
             }
-            else if ( strabbrev("NODEBUG", check, 7) )
+            else if ( strabbrev("NODEBUG", check, 7) || strabbrev("-DEBUG", check, 6) )
             {
                 msglvl &= ~MLVL_DEBUG;
             }
-            else if ( strabbrev("DEBUG", check, 5) )
+            else if ( strabbrev("DEBUG", check, 5) || strabbrev("+DEBUG", check, 6) )
             {
                 msglvl |= MLVL_DEBUG;
             }

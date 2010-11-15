@@ -580,6 +580,7 @@ int have_lock = 0; try_lock = 10; \
 #define HHC00835 "Processor %s%02X: offline; not eligible for ipl nor restart"
 #define HHC00836 "%d processor%s %s"
 #define HHC00837 "No processors started in configuration"
+#define HHC00838 "Capping is not enabled"
 
 /* external.c */
 #define HHC00840 "External interrupt: interrupt key"

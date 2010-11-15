@@ -489,17 +489,17 @@ int iplc_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int capping_cmd(int argc, char *argv[], char *cmdline)
 {
-U32  cap;
-BYTE c;
-int rc;
+U32     cap;
+BYTE    c;
+int     rc = 0;
 
     UNREFERENCED(cmdline);
 
     /* Update capping value */
-    if (argc > 1)
+    if ( argc == 2 )
     {
         if( CMD( argv[1], off, 3))
-            configure_capping(0);
+            rc = configure_capping(0);
         else
         if (strlen(argv[1]) >= 1
           && sscanf(argv[1], "%u%c", &cap, &c) == 1)
@@ -507,22 +507,32 @@ int rc;
             if((rc = configure_capping(cap)))
             {
                 WRMSG(HHC00102, "E", strerror(rc));
-                return -1;
+                rc = -1;
             }
         }
         else
         {
             WRMSG( HHC01451, "E", argv[1], argv[0] );
-            return -1;
+            rc = -1;
         }
     }
     else
+    if ( argc > 2 )
     {
-        WRMSG( HHC00832, "I", sysblk.capvalue );
-        return 0;
+        WRMSG( HHC02299, "E", argv[0] );
+        rc = -1;
+    }
+    else
+    {
+        if ( sysblk.capvalue == 0 )
+        {
+            WRMSG( HHC00838, "I" );
+        }
+        else
+            WRMSG( HHC00832, "I", sysblk.capvalue );
     }
 
-    return 0;
+    return rc;
 }
 #endif // OPTION_CAPPING
 
