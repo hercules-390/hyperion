@@ -207,6 +207,8 @@ typedef struct _DAT {
       } DAT;
 
 /* Bit definitions for control register 0 */
+#define CR0_MCX_AUTH    0x0001000000000000 /* Measurement Counter 
+                                           Extraction Authority      */
 #define CR0_BMPX        0x80000000      /* Block multiplex ctl  S/370*/
 #define CR0_SSM_SUPP    0x40000000      /* SSM suppression control   */
 #define CR0_TOD_SYNC    0x20000000      /* TOD clock sync control    */
@@ -239,6 +241,7 @@ typedef struct _DAT {
 #define CR0_XM_ITIMER   0x00000080      /* Interval timer mask  S/370*/
 #define CR0_XM_INTKEY   0x00000040      /* Interrupt key mask        */
 #define CR0_XM_EXTSIG   0x00000020      /* External signal mask S/370*/
+#define CR0_XM_MALERT   0x00000020      /* Measurement alert mask    */
 #define CR0_XM_ETR      0x00000010      /* External timer mask       */
 #define CR0_PC_FAST     0x00000008      /* PC fast control        390*/
 #define CR0_CRYPTO      0x00000004      /* Crypto control       ESAME*/
@@ -954,6 +957,7 @@ typedef struct _PSA_900 {               /* Prefixed storage area     */
 #define EXT_EMERGENCY_SIGNAL_INTERRUPT                  0x1201
 #define EXT_EXTERNAL_CALL_INTERRUPT                     0x1202
 #define EXT_ETR_INTERRUPT                               0x1406
+#define EXT_MEASUREMENT_ALERT_INTERRUPT                 0x1407
 #define EXT_SERVICE_SIGNAL_INTERRUPT                    0x2401
 #define EXT_IUCV_INTERRUPT                              0x4000
 #if defined(FEATURE_ECPSVM)
@@ -2225,4 +2229,16 @@ typedef struct _PTFFQSI {               /* Query Steering Information*/
 #define SSKE_MASK_MC            0x02    /* Change bit update mask    */
 #define SSKE_MASK_MB            0x01    /* Multiple Block            */
 
+/* Measurement alert external interruption parameter */
+#define MAEIP_IEA         0x80000000   /* Invalid Entry Address      */
+#define MAEIP_ISDBTE      0x80000000   /* Incorrect sample-data-block-
+                                          table entry                */
+#define MAEIP_PRA         0x20000000   /* Program request alert      */
+#define MAEIP_SACA        0x00800000   /* Sampling authorisation 
+                                          change alert               */
+#define MAEIP_LSDA        0x00400000   /* Loss of sample data alert  */
+#define MAEIP_CACA        0x00000080   /* Counter Authorisation 
+                                          change alert               */
+#define MAEIP_LCDA        0x00000040   /* Loss of counter data alert */
+                                          
 #endif // _ESA390_H

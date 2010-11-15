@@ -460,7 +460,7 @@ struct SYSBLK {
      /* CPU Measurement Counter facility
         CPU Measurement Sampling facility
         Load Program Parameter facility */
-        BYTE    program_parameter[8];   /* Program Parameter Register*/
+        U64     program_parameter;      /* Program Parameter Register*/
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
         RWLOCK  wklock;                 /* Update lock               */
