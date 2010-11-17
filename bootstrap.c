@@ -251,8 +251,8 @@ static LONG WINAPI HerculesUnhandledExceptionFilter( EXCEPTION_POINTERS* pExcept
         )
 
 /* FIXME these are defined in SDK V6+ */
-#ifndef ENABLE_LINE_INPUT
-#define ENABLE_LINE_INPUT 0
+#ifndef ENABLE_INSERT_MODE
+#define ENABLE_INSERT_MODE 0
 #endif
 #ifndef ENABLE_QUICK_EDIT_MODE
 #define ENABLE_QUICK_EDIT_MODE 0
