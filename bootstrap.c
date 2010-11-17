@@ -250,6 +250,14 @@ static LONG WINAPI HerculesUnhandledExceptionFilter( EXCEPTION_POINTERS* pExcept
         | FOREGROUND_BLUE                   \
         )
 
+/* FIXME these are defined in SDK V6+ */
+#ifndef ENABLE_LINE_INPUT
+#define ENABLE_LINE_INPUT 0
+#endif
+#ifndef ENABLE_QUICK_EDIT_MODE
+#define ENABLE_QUICK_EDIT_MODE 0
+#endif
+
 #define DEFAULT_CONSOLE_INPUT_MODE     (0   \
         | ENABLE_ECHO_INPUT                 \
         | ENABLE_INSERT_MODE                \
