@@ -1862,7 +1862,7 @@ LOCK    *caplock = &sysblk.caplock[cpu];
 #if defined(_MSVC_) && (_MSC_VER >= 1400) && defined( _WIN64 )
             _InterlockedIncrement64( grand_cnt_inst );
 #else
-
+            UNREFERENCED(grand_cnt_inst);
 #endif
         EXECUTE_INSTRUCTION(current_opcode_table, ip, &regs);
 
@@ -1880,7 +1880,7 @@ LOCK    *caplock = &sysblk.caplock[cpu];
     #if defined(_MSVC_) && ( _MSC_VER >= 1400 ) && defined( _WIN64)
             _InterlockedExchangeAdd64( grand_cnt_inst, (S64)12 );
     #else
-
+            UNREFERENCED(grand_cnt_inst);
     #endif
             if (caplocked[0])
             {
