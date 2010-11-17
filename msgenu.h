@@ -242,6 +242,7 @@ int have_lock = 0; try_lock = 10; \
 #define HHC00101 "Thread id "TIDPAT", prio %2d, name '%s' ended"
 #define HHC00102 "Error in function create_thread(): %s"
 #define HHC00103 "Thread id "TIDPAT" name %s, priority change: old %2d, new %2d"
+#define HHC00105 "Thread id "TIDPAT" name %s is still active"
 // reserve 102-129 thread related
 #define HHC00130 "PGMPRDOS LICENSED specified and a licenced program product operating system is running"
 #define HHC00131 "A licensed program product operating system detected, all processors have been stopped"

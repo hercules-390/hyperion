@@ -1253,7 +1253,7 @@ DWORD CountSetBits(ULONG_PTR bitMask)
 typedef void (WINAPI *PGNSI)(LPSYSTEM_INFO);
 typedef BOOL (WINAPI *PGPI)(DWORD, DWORD, DWORD, DWORD, PDWORD);
 typedef BOOL (WINAPI *LPFN_GLPI)(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION, PDWORD);
-typedef NTSTATUS (WINAPI *CNPI)(POWER_INFORMATION_LEVEL,PVOID,ULONG,PVOID,ULONG);
+typedef LONG (WINAPI *CNPI)(POWER_INFORMATION_LEVEL,PVOID,ULONG,PVOID,ULONG);
 
 typedef struct _PROCESSOR_POWER_INFORMATION 
 {
@@ -1415,7 +1415,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
 
             Pwrinfo = (CNPI)GetProcAddress(LoadLibrary(TEXT("powrprof.dll")), "CallNtPowerInformation");
 
-            if ( (NTSTATUS)0 == Pwrinfo(ProcessorInformation, NULL, 0, ppi, size) )
+            if ( (LONG)0 == Pwrinfo(ProcessorInformation, NULL, 0, ppi, size) )
                 pHostInfo->cpu_speed = (U64)((U64)ppi->MaxMhz * (U64)ONE_MILLION);
             
             free(ppi);

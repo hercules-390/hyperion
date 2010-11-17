@@ -1769,6 +1769,7 @@ int     aswitch;
 
 #ifdef OPTION_CAPPING 
 int     *caplocked = &sysblk.caplocked[cpu];
+U64     *grand_cnt_inst = &sysblk.grand_cnt_inst; 
 LOCK    *caplock = &sysblk.caplock[cpu];
 #endif
 
@@ -1857,6 +1858,12 @@ LOCK    *caplock = &sysblk.caplock[cpu];
 
         ip = INSTRUCTION_FETCH(&regs, 0);
         regs.instcount++;
+
+#if defined(_MSVC_) && (_MSC_VER >= 1400) && defined( _WIN64 )
+            _InterlockedIncrement64( grand_cnt_inst );
+#else
+
+#endif
         EXECUTE_INSTRUCTION(current_opcode_table, ip, &regs);
 
         do {
@@ -1869,8 +1876,13 @@ LOCK    *caplock = &sysblk.caplock[cpu];
 
             regs.instcount += 12;
 
-#ifdef OPTION_CAPPING
-            if (caplocked)
+#if defined(OPTION_CAPPING)
+    #if defined(_MSVC_) && ( _MSC_VER >= 1400 ) && defined( _WIN64)
+            _InterlockedExchangeAdd64( grand_cnt_inst, (S64)12 );
+    #else
+
+    #endif
+            if (caplocked[0])
             {
                 obtain_lock(caplock);
                  /* Greg must be proud of me */
