@@ -1569,15 +1569,6 @@ void *cpu_uninit (int cpu, REGS *regs)
 /*-------------------------------------------------------------------*/
 void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
 {
-#ifdef OPTION_CAPPING
-    if(sysblk.caplocked[regs->cpuad])
-    {
-      obtain_lock(&sysblk.caplock[regs->cpuad]);
-      /* Greg must be proud of me */
-      release_lock(&sysblk.caplock[regs->cpuad]);
-    }
-#endif // OPTION_CAPPING
-
     /* Process PER program interrupts */
     if( OPEN_IC_PER(regs) )
         regs->program_interrupt (regs, PGM_PER_EVENT);
@@ -1776,6 +1767,11 @@ REGS    regs;
 const zz_func *current_opcode_table;
 int     aswitch;
 
+#ifdef OPTION_CAPPING 
+int     *caplocked = &sysblk.caplocked[cpu];
+LOCK    *caplock = &sysblk.caplock[cpu];
+#endif
+
     if (oldregs)
     {
         memcpy (&regs, oldregs, sizeof(REGS));
@@ -1872,6 +1868,15 @@ int     aswitch;
             UNROLLED_EXECUTE(current_opcode_table, &regs);
 
             regs.instcount += 12;
+
+#ifdef OPTION_CAPPING
+            if (caplocked)
+            {
+                obtain_lock(caplock);
+                 /* Greg must be proud of me */
+                release_lock(caplock);
+            }
+#endif // OPTION_CAPPING
 
             UNROLLED_EXECUTE(current_opcode_table, &regs);
             UNROLLED_EXECUTE(current_opcode_table, &regs);

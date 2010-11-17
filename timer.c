@@ -390,6 +390,10 @@ int numcap = 1;              /* Number of CPU's being capped         */
 
         /* Sleep for 1/100 of a second */
         usleep(10000);
+        
+        if ( sysblk.capvalue == 0 )
+            break;
+
         now = host_tod();
 
         /* Count the number of CPs to be capped */
@@ -414,9 +418,7 @@ int numcap = 1;              /* Number of CPU's being capped         */
             if(!IS_CPU_ONLINE(cpu) || sysblk.ptyp[cpu] != SCCB_PTYP_CP || sysblk.regs[cpu]->cpustate != CPUSTATE_STARTED)
                 break;
            
-            obtain_lock(&sysblk.cpulock[cpu]);
             instcnt[cpu] = sysblk.regs[cpu]->prevcount + sysblk.regs[cpu]->instcount;
-            release_lock(&sysblk.cpulock[cpu]);
 
             /* Check for CP reset */
             if(prevcnt[cpu] > instcnt[cpu])
@@ -441,9 +443,6 @@ int numcap = 1;              /* Number of CPU's being capped         */
                     /* Cap the CP */
                     obtain_lock(&sysblk.caplock[cpu]);
                     sysblk.caplocked[cpu] = 1;
-                    OBTAIN_INTLOCK(NULL);
-                    ON_IC_INTERRUPT(sysblk.regs[cpu]);
-                    RELEASE_INTLOCK(NULL);
                 }
             
             prevcnt[cpu] = instcnt[cpu];
@@ -463,6 +462,8 @@ int numcap = 1;              /* Number of CPU's being capped         */
 
     if ( !sysblk.shutdown )
         hdl_rmsc(capping_manager_shutdown, NULL);
+
+    sysblk.captid = 0;
 
     WRMSG(HHC00101, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), "Capping manager");
     return(NULL);

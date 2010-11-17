@@ -85,7 +85,7 @@ int ARCH_DEP(system_reset) (int cpu, int clear)
                 }
             }
     
-        memset(sysblk.program_parameter,0,sizeof(sysblk.program_parameter));
+        memset(&sysblk.program_parameter,0,sizeof(sysblk.program_parameter));
     
         /* Clear storage */
         sysblk.main_clear = sysblk.xpnd_clear = 0;

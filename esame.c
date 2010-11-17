@@ -8414,7 +8414,6 @@ DEF_INST(load_program_parameter)
 {
 int     b2;                             /* Base of effective addr    */
 U64     effective_addr2;                /* Effective address         */
-BYTE    dword[8];
 
     S(inst, regs, b2, effective_addr2);
 

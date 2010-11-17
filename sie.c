@@ -984,6 +984,10 @@ int ARCH_DEP(run_sie) (REGS *regs)
     BYTE  oldv;     /* siebk->v change check reference */
     BYTE *ip;       /* instruction pointer             */
     const zz_func *current_opcode_table;
+#ifdef OPTION_CAPPING 
+    int     *caplocked = &sysblk.caplocked[regs->cpuad];
+    LOCK    *caplock = &sysblk.caplock[regs->cpuad];
+#endif
 
     SIE_PERFMON(SIE_PERF_RUNSIE);
 
@@ -1123,6 +1127,7 @@ int ARCH_DEP(run_sie) (REGS *regs)
 
                 SIE_PERFMON(SIE_PERF_EXEC);
                 GUESTREGS->instcount = 1;
+
                 EXECUTE_INSTRUCTION(current_opcode_table, ip, GUESTREGS);
 
                 do
@@ -1137,6 +1142,15 @@ int ARCH_DEP(run_sie) (REGS *regs)
                     UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
 
                     GUESTREGS->instcount += 12;
+
+#if defined(OPTION_CAPPING)
+                    if (caplocked[0])
+                    {
+                        obtain_lock(caplock);
+                        /* Greg must be proud of me */
+                        release_lock(caplock);
+                    }
+#endif // OPTION_CAPPING
 
                     UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
                     UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
