@@ -1768,9 +1768,9 @@ const zz_func *current_opcode_table;
 int     aswitch;
 
 #ifdef OPTION_CAPPING 
-int     *caplocked = &sysblk.caplocked[cpu];
-U64     *grand_cnt_inst = &sysblk.grand_cnt_inst; 
-LOCK    *caplock = &sysblk.caplock[cpu];
+register int    *caplocked = &sysblk.caplocked[cpu];
+register U64    *grand_cnt_inst = &sysblk.grand_cnt_inst; 
+         LOCK   *caplock = &sysblk.caplock[cpu];
 #endif
 
     if (oldregs)
@@ -1860,9 +1860,9 @@ LOCK    *caplock = &sysblk.caplock[cpu];
         regs.instcount++;
 
 #if defined(_MSVC_) && (_MSC_VER >= 1400) && defined( _WIN64 )
-            _InterlockedIncrement64( grand_cnt_inst );
+        _InterlockedIncrement64( grand_cnt_inst );
 #else
-            UNREFERENCED(grand_cnt_inst);
+        UNREFERENCED(grand_cnt_inst);
 #endif
         EXECUTE_INSTRUCTION(current_opcode_table, ip, &regs);
 
@@ -1880,7 +1880,7 @@ LOCK    *caplock = &sysblk.caplock[cpu];
     #if defined(_MSVC_) && ( _MSC_VER >= 1400 ) && defined( _WIN64)
             _InterlockedExchangeAdd64( grand_cnt_inst, (S64)12 );
     #else
-            UNREFERENCED(grand_cnt_inst);
+
     #endif
             if (caplocked[0])
             {

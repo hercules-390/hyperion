@@ -985,9 +985,9 @@ int ARCH_DEP(run_sie) (REGS *regs)
     BYTE *ip;       /* instruction pointer             */
     const zz_func *current_opcode_table;
 #ifdef OPTION_CAPPING 
-    int     *caplocked = &sysblk.caplocked[regs->cpuad];
-    U64     *grand_cnt_inst = &sysblk.grand_cnt_inst; 
-    LOCK    *caplock = &sysblk.caplock[regs->cpuad];
+    register    int     *caplocked = &sysblk.caplocked[regs->cpuad];
+    register    U64     *grand_cnt_inst = &sysblk.grand_cnt_inst; 
+                LOCK    *caplock = &sysblk.caplock[regs->cpuad];
 #endif
 
     SIE_PERFMON(SIE_PERF_RUNSIE);
@@ -1153,7 +1153,7 @@ int ARCH_DEP(run_sie) (REGS *regs)
     #if defined(_MSVC_) && ( _MSC_VER >= 1400 ) && defined( _WIN64)
                     _InterlockedExchangeAdd64( grand_cnt_inst, (S64)12 );
     #else
-                    UNREFERENCED(grand_cnt_inst);
+
     #endif
                     if (caplocked[0])
                     {
