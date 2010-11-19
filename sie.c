@@ -986,7 +986,6 @@ int ARCH_DEP(run_sie) (REGS *regs)
     const zz_func *current_opcode_table;
 #ifdef OPTION_CAPPING 
     register    int     *caplocked = &sysblk.caplocked[regs->cpuad];
-    register    U64     *grand_cnt_inst = &sysblk.grand_cnt_inst; 
                 LOCK    *caplock = &sysblk.caplock[regs->cpuad];
 #endif
 
@@ -1129,11 +1128,6 @@ int ARCH_DEP(run_sie) (REGS *regs)
                 SIE_PERFMON(SIE_PERF_EXEC);
                 GUESTREGS->instcount = 1;
 
-#if defined(_MSVC_) && (_MSC_VER >= 1400) && defined( _WIN64 )
-                _InterlockedIncrement64( grand_cnt_inst );
-#else
-                UNREFERENCED(grand_cnt_inst);
-#endif
                 EXECUTE_INSTRUCTION(current_opcode_table, ip, GUESTREGS);
 
                 do
@@ -1150,11 +1144,6 @@ int ARCH_DEP(run_sie) (REGS *regs)
                     GUESTREGS->instcount += 12;
 
 #if defined(OPTION_CAPPING)
-    #if defined(_MSVC_) && ( _MSC_VER >= 1400 ) && defined( _WIN64)
-                    _InterlockedExchangeAdd64( grand_cnt_inst, (S64)12 );
-    #else
-
-    #endif
                     if (caplocked[0])
                     {
                         obtain_lock(caplock);
