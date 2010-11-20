@@ -476,13 +476,27 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int HelpMessage(char *msg)
 {
+    char *help[][4] = {
+      { HMSG(HHC01415), 
+        "This message displays the build data and time of the Hercules executables.",
+        "Information.",
+        "None." },
+
+      { NULL, NULL, NULL, NULL }
+    };
+
+    int i;
     char id[9];
 
     strlcpy(id, "HHC",sizeof(id));
     strncpy(&id[3], &msg[3], 5);
     id[8] = 0;
 
-    WRMSG(HHC01607, "I", id);
+    for(i = 0; help[i][0] && strncmp(help[i][0], id, 8); i++);
+    if(help[i][0])
+      WRMSG(HHC00017, "I", help[i][0], help[i][1], help[i][2], help[i][3]);
+    else
+      WRMSG(HHC01607, "I", id);
     return(-1);
 }
     
