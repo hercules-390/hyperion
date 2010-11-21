@@ -94,7 +94,7 @@ cpu.c:123:HABC1234I This is a message
 
 #define MSG(id, s, ...)              #id s " " id "\n", ## __VA_ARGS__
 #define MSG_C(id, s, ...)            #id s " " id "", ## __VA_ARGS__
-#define HMSG(id)                     #id " " id
+#define HMSG(id)                     #id "x " id
 
 #if defined(_DEBUG_) || defined(DEBUG) || defined(_DEBUG)
 #define WRMSG(id, s, ...) \
@@ -206,13 +206,13 @@ int have_lock = 0; try_lock = 10; \
 #define HHC00015 "keyboard read: %s"
 #define HHC00016 "Message lock hold longer than 1 second, release forced"
 #define HHC00017 "Message:\n" \
-       "              %s\n" \
-       "          Explanation:\n" \
-       "              %s\n" \
-       "          Severity\n" \
-       "              %s\n" \
-       "          Action:\n" \
-       "              %s"
+       "HHC00017I     %s\n" \
+       "HHC00017I Explanation:\n" \
+       "HHC00017I     %s\n" \
+       "HHC00017I Severity\n" \
+       "HHC00017I     %s\n" \
+       "HHC00017I Action:\n" \
+       "HHC00017I     %s"
 
 // reserve 20-39 for file related
 
