@@ -449,6 +449,15 @@ int configure_tzoffset(int tzoffset)
 
 
 /*-------------------------------------------------------------------*/
+/* Query current tzoffset value for reporting                        */
+/*-------------------------------------------------------------------*/
+int query_tzoffset(void)
+{
+    return default_tzoffset;
+}
+
+
+/*-------------------------------------------------------------------*/
 /* Update TOD clock                                                  */
 /*                                                                   */
 /* This function updates the TOD clock.                              */

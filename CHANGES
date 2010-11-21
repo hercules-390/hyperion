@@ -1,3 +1,4 @@
+21 Nov 2010 Corrected DIAGNOSE X'000' to report timezone differential - Harold Grovesteen
 28 Oct 2010 MAINSIZE and XPNDSIZE UNLOCKED and LOCKED options - Mark L. Gaubatz
             LOCKED option indicates memory is to be locked into storage while
             UNLOCKED indicates memory is not locked into storage. The default is

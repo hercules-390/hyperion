@@ -933,6 +933,7 @@ void ARCH_DEP(extid_call) (int r1, int r2, REGS *regs)
 {
 int        i;                           /* Array subscript           */
 int        ver, rel;                    /* Version and release number*/
+int        tzdiff;                      /* Time zone differential    */
 U32        idaddr;                      /* Address of storage operand*/
 U32        idlen;                       /* Length of storage operand */
 BYTE       buf[40];                     /* Extended identification   */
@@ -1005,7 +1006,9 @@ BYTE       c;                           /* Character work area       */
     memcpy (buf+24, "\x7F\xFE\x00\x00\x00\x00\x00\x00", 8);
 
     /* Bytes 32-35 contain the time zone differential */
-    memset (buf+32, '\0', 4);
+    tzdiff = query_tzoffset();   /* returns +/-HHMM as an integer */
+    tzdiff = ((tzdiff/100)*3600)+((tzdiff%100)*60);
+    STORE_FW(buf+32,tzdiff);
 
     /* Bytes 36-39 contain version, level, and service level */
     buf[36] = ver;

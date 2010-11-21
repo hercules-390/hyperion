@@ -46,6 +46,7 @@ void set_tod_clock(U64);                /* Set TOD clock             */
 int chk_int_timer(REGS *);              /* Check int_timer pending   */
 int clock_hsuspend(void *file);         /* Hercules suspend          */
 int clock_hresume(void *file);          /* Hercules resume           */
+int query_tzoffset(void);               /* Report current TzOFFSET   */
 
 static __inline__ U64 host_tod(void)
 {
