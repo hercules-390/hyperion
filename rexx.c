@@ -23,7 +23,6 @@
 
 #if defined( _MSVC_ )
 #include "rexxsaa.h"
-# typedef LONG APIENTRY RexxExitHandler( LONG, LONG, /* CONST */ PEXIT ) ;
 #else
 #include <regina/rexxsaa.h>
 #endif
