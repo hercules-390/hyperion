@@ -1411,7 +1411,7 @@ U16     sx, px;                         /* Segment and page index,
                     regs->dat.protect |= 1;
 
                 /* For LPTEA instruction, return the address of the STE */
-                if (acctype & ACC_LPTEA)
+                if (unlikely(acctype & ACC_LPTEA))
                 {
                     regs->dat.raddr = sto | (regs->dat.protect ? 0x04 : 0);
 //                  logmsg("raddr:%16.16" I64_FMT "X cc=2\n",regs->dat.raddr);
@@ -1433,7 +1433,7 @@ U16     sx, px;                         /* Segment and page index,
                 {
                     regs->tlb.TLB_ASD(tlbix)   = regs->dat.asd;
                     regs->tlb.TLB_VADDR(tlbix) = (vaddr & TLBID_PAGEMASK) | regs->tlbID;
-                    regs->tlb.TLB_PTE(tlbix)   = (ste & ZSEGTAB_SFAA) | ((vaddr & ~ZSEGTAB_SFAA) & ~TLBID_PAGEMASK);
+                    regs->tlb.TLB_PTE(tlbix)   = (ste & ZSEGTAB_SFAA) | (vaddr & ~ZSEGTAB_SFAA);
                     regs->tlb.common[tlbix]    = (ste & SEGTAB_COMMON) ? 1 : 0;
                     regs->tlb.protect[tlbix]   = regs->dat.protect;
                     regs->tlb.acc[tlbix]       = 0;
