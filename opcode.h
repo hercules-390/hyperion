@@ -256,16 +256,16 @@ int used; \
    determination only, as it severely impacts performance.       *JJ */
 
 #if defined(OPTION_FOOTPRINT_BUFFER)
-#define FOOTPRINT(_regs) \
+#define FOOTPRINT(_ip, _regs) \
 do { \
     sysblk.footprregs[(_regs)->cpuad][sysblk.footprptr[(_regs)->cpuad]] = *(_regs); \
-    memcpy(&sysblk.footprregs[(_regs)->cpuad][sysblk.footprptr[(_regs)->cpuad]++].inst,(_inst),6); \
+    memcpy(&sysblk.footprregs[(_regs)->cpuad][sysblk.footprptr[(_regs)->cpuad]++].inst,(_ip),6); \
     sysblk.footprptr[(_regs)->cpuad] &= OPTION_FOOTPRINT_BUFFER - 1; \
 } while(0)
 #endif
 
 #if !defined(FOOTPRINT)
-#define FOOTPRINT(_regs)
+#define FOOTPRINT(_ip, _regs)
 #endif
 
 /* PSW Instruction Address manipulation */
@@ -355,7 +355,7 @@ do { \
 
 #define EXECUTE_INSTRUCTION(_oct, _ip, _regs) \
 do { \
-    FOOTPRINT ((_regs)); \
+    FOOTPRINT ((_ip), (_regs)); \
     COUNT_INST ((_ip), (_regs)); \
     (_oct)[fetch_hw((_ip))]((_ip), (_regs)); \
 } while(0)
