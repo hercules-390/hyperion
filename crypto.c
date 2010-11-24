@@ -29,9 +29,9 @@ void renew_wrapping_keys(void)
   BYTE lparname[8];
   U64 cpuid;
 
-  obtain_wrlock(&sysblk.wklock);
   time = host_tod();
   srandom(time);
+  obtain_wrlock(&sysblk.wklock);
   for(i = 0; i < 32; i++)
     sysblk.wkaes_reg[i] = random();
   for(i = 0; i < 24; i++)
