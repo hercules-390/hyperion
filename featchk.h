@@ -588,6 +588,10 @@
  #error VM Standard Block I/O DIAGNOSE 0x250 requires FEATURE_EMULATE_VM
 #endif
 
+#if defined(FEATURE_HOST_RESOURCE_FACILITY) && !defined(_FEATURE_HERCULES_DIAGCALLS)
+ #error Hercules Host Resource Access DIAGNOSE 0xF18 requires FEATURE_HERCULES_DIAGCALLS
+#endif
+
 #if defined(FEATURE_MESSAGE_SECURITY_ASSIST)
  #if defined(_370)
   #define _370_FEATURE_MESSAGE_SECURITY_ASSIST
