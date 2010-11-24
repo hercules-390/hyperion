@@ -278,6 +278,10 @@ SOURCE=.\README.HDL
 # End Source File
 # Begin Source File
 
+SOURCE=.\README.IOARCH
+# End Source File
+# Begin Source File
+
 SOURCE=.\README.ISSUES
 # End Source File
 # Begin Source File

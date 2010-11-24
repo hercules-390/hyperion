@@ -606,6 +606,7 @@ EXTRA_DIST = autoconf/config.rpath \
              README.ECPSVM         \
              README.HAO            \
              README.HDL            \
+             README.IOARCH         \
              README.ISSUES         \
              README.MINGW          \
              README.NETWORKING     \
