@@ -11,6 +11,7 @@
 #include "hstdinc.h"
 
 #define _HSCPUFUN_C_
+#define _HENGINE_DLL_
 
 #include "hercules.h"
 
