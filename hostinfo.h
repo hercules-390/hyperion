@@ -45,6 +45,7 @@ typedef struct HOST_INFO
         char    machine[20];
         char    cpu_brand[64];          /* x86/x64 cpu brand string  */
         int     trycritsec_avail;       /* 1=TryEnterCriticalSection */
+        int     maxfilesopen;           /* Max num of open files     */
         
         int     num_procs;              /* #of processors            */
         int     num_physical_cpu;       /* #of cores                 */

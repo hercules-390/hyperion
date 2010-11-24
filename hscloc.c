@@ -10,6 +10,7 @@
 #include "hstdinc.h"
 
 #define _HSCLOC_C_
+#define _HENGINE_DLL_
 
 #include "hercules.h"
 
@@ -557,6 +558,9 @@ int locate_hostinfo(int argc, char *argv[], char *cmdline)
         WRMSG( HHC90000, "D", msgbuf );
 
         MSGBUF( msgbuf, "%-17s = %s", "trycritsec_avail", pHostInfo->trycritsec_avail ? "YES" : "NO" );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %d", "maxfilesopen", pHostInfo->maxfilesopen );
         WRMSG( HHC90000, "D", msgbuf );
 
         WRMSG( HHC90000, "D", "" );

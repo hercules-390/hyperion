@@ -358,6 +358,7 @@ int     dll_count;                      /* index into array          */
 
 #if defined (_MSVC_)
     VERIFY( VirtualLock( &sysblk, sizeof(SYSBLK) ) );
+    _setmaxstdio(2048);
 #else
     VERIFY( mlock( &sysblk, sizeof(SYSBLK) ) == 0 );
 #endif

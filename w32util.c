@@ -1299,6 +1299,8 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
     pHostInfo->TotalVirtual = ms.ullTotalVirtual;
     pHostInfo->AvailVirtual = ms.ullAvailVirtual;
 
+    pHostInfo->maxfilesopen = _getmaxstdio();
+
     dw = sizeof(pHostInfo->nodename)-1;
     GetComputerName( pHostInfo->nodename, &dw );
     pHostInfo->nodename[sizeof(pHostInfo->nodename)-1] = 0;

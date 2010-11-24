@@ -103,6 +103,10 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
         }
         
         length = (size_t)sizeof(iRV);
+        if ( sysctlbyname("kern.maxfilesperproc", &iRV, &length, NULL, 0 ) != -1 )
+            pHostInfo->num_packages = iRV;
+
+        length = (size_t)sizeof(iRV);
         if ( sysctlbyname("hw.packages", &iRV, &length, NULL, 0 ) != -1 )
             pHostInfo->num_packages = iRV;
 
