@@ -1001,6 +1001,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\hdiagf18.c"
+							>
+						</File>
+						<File
 							RelativePath=".\hdl.c"
 							>
 						</File>

@@ -583,6 +583,15 @@ U32   code;
         break;
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
 
+#if defined(_FEATURE_HOST_RESOURCE_ACCESS_FACILITY)
+    case 0xF18:
+    /*---------------------------------------------------------------*/
+    /* Diagnose F18: Hercules Access Host Resource                   */
+    /*---------------------------------------------------------------*/
+        ARCH_DEP(diagf18_call) (r1, r2, regs);
+        break;
+#endif /* defined(_FEATURE_HOST_RESOURCE_ACCESS_FACILITY) */
+
 #if !defined(NO_SIGABEND_HANDLER)
     /* The following diagnose calls cause a exigent (non-repressible)
        machine check, and are used for test purposes only *JJ */

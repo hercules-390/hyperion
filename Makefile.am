@@ -362,6 +362,7 @@ endif
                        diagmssf.c   \
                        vm.c         \
                        vmd250.c     \
+                       hdiagf18.c   \
                        channel.c    \
                        external.c   \
                        float.c      \
@@ -744,6 +745,7 @@ noinst_HEADERS = fishhang.h     \
                  vmd250.h       \
                  msgenu.h       \
                  wthreads.h     \
+                 hdiagf18.h     \
                  $(extra_dynamic_SRC)
 
 cckd: cckd2ckd$(EXEEXT)  \

@@ -2730,6 +2730,8 @@ void ARCH_DEP(perform_external_interrupt) (REGS *regs);
 void ARCH_DEP(store_status) (REGS *ssreg, RADR aaddr);
 void store_status (REGS *ssreg, U64 aaddr);
 
+/* Function in module hdiagf18.c */
+void ARCH_DEP(diagf18_call) (int r1, int r2, REGS *regs);
 
 /* Functions in module ipl.c */
 int          load_ipl           (U16 lcss, U16  devnum, int cpu, int clear);
