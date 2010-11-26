@@ -1862,10 +1862,10 @@ register int    *caplocked = &sysblk.caplocked[cpu];
         EXECUTE_INSTRUCTION(current_opcode_table, ip, &regs);
 
         for(i = 0; i < 256; i++)
-	{
+        {
             UNROLLED_EXECUTE(current_opcode_table, &regs);
         }
-	regs.instcount += i;
+        regs.instcount += i;
 
 #if defined(OPTION_CAPPING)
         if (caplocked[0])
