@@ -980,6 +980,7 @@ int     n;
 /* Execute guest instructions */
 int ARCH_DEP(run_sie) (REGS *regs)
 {
+    int i;
     int   icode;    /* SIE longjmp intercept code      */
     BYTE  oldv;     /* siebk->v change check reference */
     BYTE *ip;       /* instruction pointer             */
@@ -1126,51 +1127,27 @@ int ARCH_DEP(run_sie) (REGS *regs)
 #endif /*defined(SIE_DEBUG)*/
 
                 SIE_PERFMON(SIE_PERF_EXEC);
-                GUESTREGS->instcount = 1;
 
+                GUESTREGS->instcount = 1;
                 EXECUTE_INSTRUCTION(current_opcode_table, ip, GUESTREGS);
 
-                do
+                SIE_PERFMON(SIE_PERF_EXEC_U);
+
+                for(i = 0; i < 256; i++)
                 {
-                    SIE_PERFMON(SIE_PERF_EXEC_U);
-
+                    GUESTREGS->instcount++;
                     UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
-                    UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
-                    UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
-                    UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
-                    UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
-                    UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
-
-                    GUESTREGS->instcount += 12;
+                }
+                regs->instcount += GUESTREGS->instcount;
 
 #if defined(OPTION_CAPPING)
-                    if (caplocked[0])
-                    {
-                        obtain_lock(caplock);
-                        /* Greg must be proud of me */
-                        release_lock(caplock);
-                    }
+                if (caplocked[0])
+                {
+                    obtain_lock(caplock);
+                    /* Greg must be proud of me */
+                    release_lock(caplock);
+                }
 #endif // OPTION_CAPPING
-
-                    UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
-                    UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
-                    UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
-                    UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
-                    UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
-                    UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
-
-                } while( likely(!SIE_I_HOST(regs)
-                                && GUESTREGS->siebk->v==oldv
-                                && !SIE_INTERRUPT_PENDING(GUESTREGS)));
-                /******************************************/
-                /* ABOVE : Keep executing instructions    */
-                /*         in a tight loop until...       */
-                /*  - A Host Interrupt is made pending    */
-                /*  - An external source changes siebk->v */
-                /*  - A guest interrupt is made pending   */
-                /******************************************/
-
-                regs->instcount += GUESTREGS->instcount;
 
             } while( unlikely(!SIE_I_HOST(regs)
                             && !SIE_I_WAIT(GUESTREGS)

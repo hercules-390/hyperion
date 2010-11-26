@@ -1762,6 +1762,7 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
 /*-------------------------------------------------------------------*/
 REGS *ARCH_DEP(run_cpu) (int cpu, REGS *oldregs)
 {
+int     i;
 BYTE   *ip;
 REGS    regs;
 const zz_func *current_opcode_table;
@@ -1860,32 +1861,20 @@ register int    *caplocked = &sysblk.caplocked[cpu];
 
         EXECUTE_INSTRUCTION(current_opcode_table, ip, &regs);
 
-        do {
+        for(i = 0; i < 256; i++)
+	{
+            regs.instcount++;
             UNROLLED_EXECUTE(current_opcode_table, &regs);
-            UNROLLED_EXECUTE(current_opcode_table, &regs);
-            UNROLLED_EXECUTE(current_opcode_table, &regs);
-            UNROLLED_EXECUTE(current_opcode_table, &regs);
-            UNROLLED_EXECUTE(current_opcode_table, &regs);
-            UNROLLED_EXECUTE(current_opcode_table, &regs);
-
-            regs.instcount += 12;
+        }
 
 #if defined(OPTION_CAPPING)
-            if (caplocked[0])
-            {
-                obtain_lock(caplock);
-                 /* Greg must be proud of me */
-                release_lock(caplock);
-            }
+        if (caplocked[0])
+        {
+            obtain_lock(caplock);
+            /* Greg must be proud of me */
+            release_lock(caplock);
+        }
 #endif // OPTION_CAPPING
-
-            UNROLLED_EXECUTE(current_opcode_table, &regs);
-            UNROLLED_EXECUTE(current_opcode_table, &regs);
-            UNROLLED_EXECUTE(current_opcode_table, &regs);
-            UNROLLED_EXECUTE(current_opcode_table, &regs);
-            UNROLLED_EXECUTE(current_opcode_table, &regs);
-            UNROLLED_EXECUTE(current_opcode_table, &regs);
-        } while (!INTERRUPT_PENDING(&regs));
     } while (1);
 
     /* Never reached */
