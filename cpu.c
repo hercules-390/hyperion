@@ -1863,9 +1863,9 @@ register int    *caplocked = &sysblk.caplocked[cpu];
 
         for(i = 0; i < 256; i++)
         {
+            regs.instcount++;
             UNROLLED_EXECUTE(current_opcode_table, &regs);
         }
-        regs.instcount += i;
 
 #if defined(OPTION_CAPPING)
         if (caplocked[0])

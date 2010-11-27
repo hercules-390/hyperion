@@ -1135,9 +1135,10 @@ int ARCH_DEP(run_sie) (REGS *regs)
 
                 for(i = 0; i < 256; i++)
                 {
+                    GUESTREGS->instcount++;
                     UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
                 }
-                regs->instcount += i;
+                regs->instcount += GUESTREGS->instcount;
 
 #if defined(OPTION_CAPPING)
                 if (caplocked[0])
