@@ -5,6 +5,8 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to   */
 /*   Hercules.                                                        */
 
+// $Id$
+
 /*--------------------------------------------------------------------*/
 /* This module implements Hercules DIAGNOSE code X'F18'               */
 /* described in ?                                                     */

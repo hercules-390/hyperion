@@ -5,6 +5,8 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
+// $Id$
+
 #if !defined(__HDIAGF18_H__)
 #define __HDIAGF18_H__
 
