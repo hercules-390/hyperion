@@ -85,7 +85,7 @@
 /*----------------------------------------------------------------------------*/
 #ifdef OPTION_CMPSC_DEBUG
 #define COMMITREGS2(regs, iregs, r1, r2) \
-  if(INTERRUPT_PENDING(regs)) \
+  if(unlikely(INTERRUPT_PENDING(regs))) \
     WRMSG(HHC90315, "D"); \
   __COMMITREGS2((regs), (iregs), (r1), (r2)) \
   WRMSG(HHC90312, "D");
@@ -516,7 +516,7 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
     COMMITREGS2(regs, iregs, r1, r2);
 
     /* Return with cc3 on interrupt pending */
-    if(INTERRUPT_PENDING(regs))
+    if(unlikely(INTERRUPT_PENDING(regs)))
     {
       regs->psw.cc = 3;
       return;
@@ -1401,7 +1401,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
     COMMITREGS2(regs, iregs, r1, r2);
 
     /* Return with cc3 on interrupt pending */
-    if(INTERRUPT_PENDING(regs))
+    if(unlikely(INTERRUPT_PENDING(regs)))
     {
       regs->psw.cc = 3;
       return;
