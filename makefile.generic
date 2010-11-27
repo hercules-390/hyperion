@@ -14,14 +14,15 @@ DESTDIR  = $(PREFIX)/usr/bin
 DESTLIB  = $(PREFIX)/usr/lib
 
 # For Linux use:
-CFLAGS  = -O3 -march=pentium -fomit-frame-pointer -I. -IdecNumber
+//CFLAGS  = -O3 -march=pentium -fomit-frame-pointer -I. -IdecNumber
+CFLAGS  = -g -march=pentium -fomit-frame-pointer -I. -IdecNumber
 // CFLAGS += -DVERSION=$(VERSION) -DHAVE_INTTYPES_H -DMAX_CPU_ENGINES=2
 CFLAGS += -W -Wall
 # For older Linux versions use:
 # For Linux/390 use:
 #CFLAGS  = -DNO_BYTESWAP_H -DNO_ASM_BYTESWAP -DNO_ATTR_REGPARM
 
-LFLAGS   = -lpthread -lm -lz
+LFLAGS   = -lpthread -lm -lz -lregina
 
 CFLAGS += -DHAVE_CONFIG_H
 
@@ -68,7 +69,12 @@ hercules_OBJ = hostinfo.o impl.o config.o panel.o \
                hsccmd.o hscmisc.o logger.o history.o \
                cache.o ecpsvm.o shared.o logmsg.o hdl.o hdlmain.o \
                hscutl.o hscutl2.o hsys.o bootstrap.o pttrace.o \
-               strsignal.o hconsole.o w32util.o
+               strsignal.o hconsole.o w32util.o \
+               clock.o archlvl.o hscpufun.o cmdtab.o hscemode.o rexx.o hsocket.o vmd250.o hscloc.o hao.o \
+               decNumber/decContext.o decNumber/decimal128.o decNumber/decimal32.o decNumber/decimal64.o decNumber/decNumber.o decNumber/decPacked.o \
+               printer.o sockdev.o console.o commadpt.o cardrdr.o cardpch.o \
+               tapedev.o tapeccws.o faketape.o awstape.o hettape.o omatape.o scsitape.o hetlib.o \
+               ctc_lcs.o ctc_ctci.o ctcadpt.o w32ctca.o tuntap.o
 
 hdt1403_OBJ  = printer.o sockdev.o
 hdt2703_OBJ  = commadpt.o

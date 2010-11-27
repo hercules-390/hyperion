@@ -829,11 +829,11 @@ int     dll_count;                      /* index into array          */
         usleep(100000);
         return(1);
     }
-#if defined(OPTION_DYNAMIC_LOAD)
 
     /* Initialize runtime opcode tables */
     init_opcode_tables();
 
+#if defined(OPTION_DYNAMIC_LOAD)
     /* Initialize the hercules dynamic loader */
     hdl_main();
 

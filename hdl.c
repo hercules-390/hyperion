@@ -51,13 +51,13 @@ static HDLDEP *hdl_depend;               /* Version codes in hdlmain */
 static char *hdl_modpath = NULL;
 static int   hdl_arg_p = FALSE;
 
+static void hdl_didf (int, int, char *, void *);
+static void hdl_modify_opcode(int, HDLINS *);
+
 #endif
 
 static HDLSHD *hdl_shdlist;              /* Shutdown call list       */
 static int   hdl_sdip = FALSE;           /* hdl shutdown in progesss */
-
-static void hdl_didf (int, int, char *, void *);
-static void hdl_modify_opcode(int, HDLINS *);
 
 /* Global hdl_device_type_equates */
 

@@ -7368,8 +7368,10 @@ int qports_cmd(int argc, char *argv[], char *cmdline)
         return -1;
     }
 
+#if defined(OPTION_HTTP_SERVER)
     MSGBUF( buf, "on port %s with %s", http_get_port(), http_get_portauth());
     WRMSG(HHC17001, "I", "HTTP", buf);
+#endif /*defined(OPTION_HTTP_SERVER)*/
 
     if ( sysblk.shrdport > 0 )
     {

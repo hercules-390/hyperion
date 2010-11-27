@@ -43,8 +43,6 @@
 #include "httpmisc.h"
 #include "hostinfo.h"
 
-#define OPTION_HTTP_SERVER
-
 #if defined(OPTION_HTTP_SERVER)
 
 /* External reference to the cgi-bin directory in cgibin.c */

@@ -140,6 +140,7 @@ HDL_DEVICE_SECTION;
     /* 3270 consoles */
     HDL_DEVICE(3270, loc3270_device_hndinfo );
     HDL_DEVICE(3287, loc3270_device_hndinfo );
+    HDL_DEVICE(SYSG, loc3270_device_hndinfo );
 
     /* Communication line devices */
     HDL_DEVICE(2703, comadpt_device_hndinfo );
