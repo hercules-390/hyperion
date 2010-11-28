@@ -3271,7 +3271,7 @@ BYTE   *ip;                             /* -> executed instruction   */
     if (ip != regs->exinst)
         memcpy (regs->exinst, ip, 8);
 
-#if 1
+#if 0
     /* Display target instruction if stepping or tracing */
     if (CPU_STEPPING_OR_TRACING(regs, 6))
     {
