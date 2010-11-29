@@ -567,6 +567,7 @@ static char *pgmintname[] = {
 
     /* Prevent machine check when in (almost) interrupt loop */
     realregs->instcount++;
+    realregs->fakecount++;
 
     /* Release any locks */
     if (sysblk.intowner == realregs->cpuad)
@@ -1857,14 +1858,16 @@ register int    *caplocked = &sysblk.caplocked[cpu];
             ARCH_DEP(process_interrupt)(&regs);
 
         ip = INSTRUCTION_FETCH(&regs, 0);
-        regs.instcount++;
 
+        //regs.instcount++;
         EXECUTE_INSTRUCTION(current_opcode_table, ip, &regs);
+        regs.instcount++;
 
         for(i = 0; i < 256; i++)
         {
-            regs.instcount++;
+            //regs.instcount++;
             UNROLLED_EXECUTE(current_opcode_table, &regs);
+            regs.instcount++;
         }
 
 #if defined(OPTION_CAPPING)

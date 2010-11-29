@@ -3240,7 +3240,9 @@ BYTE   *ip;                             /* -> executed instruction   */
     regs->exrl = 0;
     regs->ip -= ILC(regs->exinst[0]);
 
+    //regs->instcount++;
     EXECUTE_INSTRUCTION(regs->ARCH_DEP(runtime_opcode_xxxx), regs->exinst, regs);
+    regs->instcount++;
 
     /* Leave execflag on if pending PER so ILC will reflect EX */
     if (!OPEN_IC_PER(regs))
@@ -3309,7 +3311,9 @@ BYTE   *ip;                             /* -> executed instruction   */
     regs->exrl = 1;
     regs->ip -= ILC(regs->exinst[0]);
 
+    //regs->instcount++;
     EXECUTE_INSTRUCTION(regs->ARCH_DEP(runtime_opcode_xxxx), regs->exinst, regs);
+    regs->instcount++;
 
     /* Leave execflag on if pending PER so ILC will reflect EXRL */
     if (!OPEN_IC_PER(regs))

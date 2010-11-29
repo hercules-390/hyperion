@@ -1128,17 +1128,18 @@ int ARCH_DEP(run_sie) (REGS *regs)
 
                 SIE_PERFMON(SIE_PERF_EXEC);
 
-                GUESTREGS->instcount = 1;
+                //regs->instcount++;
                 EXECUTE_INSTRUCTION(current_opcode_table, ip, GUESTREGS);
+                regs->instcount++;
 
                 SIE_PERFMON(SIE_PERF_EXEC_U);
 
                 for(i = 0; i < 256; i++)
                 {
-                    GUESTREGS->instcount++;
+                    //regs->instcount++;
                     UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
+                    regs->instcount++;
                 }
-                regs->instcount += GUESTREGS->instcount;
 
 #if defined(OPTION_CAPPING)
                 if (caplocked[0])

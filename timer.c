@@ -261,8 +261,11 @@ static  int do_once = TRUE ;            /* Switch for onetime proc   */
                 }
 
                 /* Calculate instructions per second */
-                mipsrate = regs->instcount;
-                regs->instcount = 0;
+                if(regs->instcount > regs->fakecount)
+                    mipsrate = regs->instcount - regs->fakecount;
+                else
+                    mipsrate = regs->instcount;
+                regs->instcount = regs->fakecount = 0;
                 regs->prevcount += mipsrate;
                 mipsrate = (mipsrate*1000000 + diff/2) / diff;
                 regs->mipsrate = mipsrate;
