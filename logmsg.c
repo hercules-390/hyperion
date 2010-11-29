@@ -55,7 +55,8 @@
             rc=-1;                            \
             siz+=BFR_CHUNKSIZE;               \
             bfr=realloc(bfr,siz);             \
-        }
+        }                                     \
+        ASSERT(bfr)
 #else
 #define  BFR_VSNPRINTF()                      \
         bfr=(char*)calloc(1,siz);             \
@@ -70,7 +71,8 @@
             rc=-1;                            \
             siz+=BFR_CHUNKSIZE;               \
             bfr=realloc(bfr,siz);             \
-        }
+        }                                     \
+        ASSERT(bfr)
 #endif
 static LOCK log_route_lock;
 
@@ -186,11 +188,7 @@ DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
 
 #ifdef OPTION_MSGLCK
     if(!sysblk.msggrp || (sysblk.msggrp && !grp))
-    {
-        int a = 0;
         WRGMSG_ON;
-        UNREFERENCED(a);
-    }
 #endif
 
   #ifdef NEED_LOGMSG_FFLUSH
@@ -198,6 +196,15 @@ DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
   #endif
 
     BFR_VSNPRINTF();
+
+    if (!bfr)
+    {
+#ifdef OPTION_MSGLCK
+        if(!sysblk.msggrp || (sysblk.msggrp && !grp))
+            WRGMSG_OFF;
+#endif
+        return;
+    }
 
     if ( strlen(bfr) > 10 && SNCMP(bfr,"HHC",3) && (bfr[8] == 'S' || bfr[8] == 'E' || bfr[8] == 'W') )
         errmsg = TRUE;
@@ -272,11 +279,7 @@ DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
 
 #ifdef OPTION_MSGLCK
     if(!sysblk.msggrp || (sysblk.msggrp && !grp))
-    {
-        int a = 0;
         WRGMSG_OFF;
-        UNREFERENCED(a);
-    }
 #endif
 }
 

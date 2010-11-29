@@ -536,7 +536,7 @@ rexx_done:
 #endif // !defined( OPTION_ENHANCED_CONFIG_INCLUDE )
 
     if(!sysblk.msglvl)
-        sysblk.msglvl = MLVL_VERBOSE;
+        sysblk.msglvl = DEFAULT_MLVL;
 
     return errorcount;
 } /* end function process_config */

@@ -95,70 +95,12 @@ cpu.c:123:HABC1234I This is a message
 #define MSG(id, s, ...)              #id s " " id "\n", ## __VA_ARGS__
 #define MSG_C(id, s, ...)            #id s " " id "", ## __VA_ARGS__
 #define HMSG(id)                     #id "x " id
-
-#if defined(_DEBUG_) || defined(DEBUG) || defined(_DEBUG)
-#define WRMSG(id, s, ...) \
-    do { \
-         char _msgbuf[32768]; \
-         int _rc; \
-         _rc = MSGBUF( _msgbuf, #id s " " id "\n", ## __VA_ARGS__); \
-         ASSERT( _rc != -1 ); \
-         ASSERT( _rc < (int)sizeof(_msgbuf)-1 ); \
-         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", _msgbuf ); \
-       } while(0)
-
-#define WRMSG_C(id, s, ...) \
-    do { \
-         char _msgbuf[32768]; \
-         int _rc; \
-         _rc = MSGBUF( _msgbuf, #id s " " id "", ## __VA_ARGS__); \
-         ASSERT( _rc != -1 ); \
-         ASSERT( _rc < (int)sizeof(_msgbuf)-1 ); \
-         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", _msgbuf ); \
-       } while(0)
-
-#define WRCMSG(color, id, s, ...) \
-    do { \
-         char _msgbuf[32768]; \
-         int _rc; \
-         _rc = MSGBUF( _msgbuf, #id s " " id "\n", ## __VA_ARGS__); \
-         ASSERT( _rc != -1 ); \
-         ASSERT( _rc < (int)sizeof(_msgbuf)-1 ); \
-         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), color, "%s", _msgbuf ); \
-       } while(0)
-
-#define WRCMSG_C(color, id, s, ...) \
-    do { \
-         char _msgbuf[32768]; \
-         int _rc; \
-         _rc = MSGBUF( _msgbuf, #id s " " id "\n", ## __VA_ARGS__); \
-         ASSERT( _rc != -1 ); \
-         ASSERT( _rc < (int)sizeof(_msgbuf)-1 ); \
-         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), color, "%s", _msgbuf ); \
-       } while(0)
-#else
 #define WRMSG(id, s, ...)            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", _(#id s " " id "\n"), ## __VA_ARGS__)
-#define WRMSG_C(id, s, ...)          writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", _(#id s " " id ""), ## __VA_ARGS__)
 #define WRCMSG(color, id, s, ...)    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), color, _(#id s " " id "\n"), ## __VA_ARGS__)
-#define WRCMSG_C(color, id, s, ...)  writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), color, _(#id s " " id ""), ## __VA_ARGS__)
-#endif
-
-#if 0 // ZZ
-#define WRMSG(id, s, ...)            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", _(#id s " " id "\n"), ## __VA_ARGS__)
-#define WRMSG_C(id, s, ...)          writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", _(#id s " " id ""), ## __VA_ARGS__)
-#define WRCMSG(color, id, s, ...)    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), color, _(#id s " " id "\n"), ## __VA_ARGS__)
-#define WRCMSG_C(color, id, s, ...)  writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), color, _(#id s " " id ""), ## __VA_ARGS__)
-//#else
-/* simple message processing */
-#define WRMSG(id, s, ...) printf(#id s " " id "\n", ## __VA_ARGS__)
-#define WRMSG_C(id, s, ...) printf(#id s " " id, ## __VA_ARGS__)
-#define WRCMSG(c, id, s, ...) printf(#id s " " id "\n", ## __VA_ARGS__)
-#define WRCMSG_C(c, id, s, ...) printf(#id s " " id, ## __VA_ARGS__)
-#endif
 
 #ifndef OPTION_MSGLCK
 #define WRGMSG_ON \
-{ \
+do { \
 int have_lock = 0; try_lock = 10; \
   while(!have_lock) \
   { \
@@ -176,7 +118,7 @@ int have_lock = 0; try_lock = 10; \
       break; \
     } \
   } \
-}
+} while (0)
 #define WRGMSG_OFF                   do { sysblk.msggrp = 0; } while (0)
 #else
 #define WRGMSG_OFF

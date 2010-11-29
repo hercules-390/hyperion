@@ -525,6 +525,17 @@ struct SYSBLK {
 #define SYSGROUP_SYSDEBUG    0x40     /* Internal Debug functions    */
 #define SYSGROUP_SYSNDIAG    0x80     /* Not supported by DIAG008    */
 #define SYSGROUP_SYSALL      0x7F
+#if defined(_DEBUG) || defined(DEBUG)
+  #define  DEFAULT_SYSGROUP     SYSGROUP_SYSALL
+#else
+  #define  DEFAULT_SYSGROUP     (0                    \
+                                 | SYSGROUP_SYSOPER   \
+                                 | SYSGROUP_SYSMAINT  \
+                                 | SYSGROUP_SYSPROG   \
+                                 | SYSGROUP_SYSNONE   \
+                                 | SYSGROUP_SYSCONFIG \
+                                )
+#endif
         BYTE    diag8cmd;               /* Allow diagnose 8 commands */
 #define DIAG8CMD_ENABLE   0x01          /* Enable DIAG8 interface    */
 #define DIAG8CMD_RUNNING  0x40          /* Indicate DIAG8 in process */
@@ -765,6 +776,11 @@ struct SYSBLK {
 #define MLVL_VERBOSE 0x02
 #define MLVL_DEBUG   0x80               /* bits */
 #define MLVL_ANY     0xff
+#if defined(_DEBUG) || defined(DEBUG)
+  #define  DEFAULT_MLVL     MLVL_ANY
+#else
+  #define  DEFAULT_MLVL     MLVL_VERBOSE
+#endif
 
         int     emsg;                   /* error message display ctrl*/
 #define EMSG_ON     0x01

@@ -453,7 +453,8 @@ int     dll_count;                      /* index into array          */
             sysblk.hercules_pgmpath = strdup("");
     }
 
-#if       defined( OPTION_CONFIG_SYMBOLS )
+#if defined( OPTION_CONFIG_SYMBOLS )
+
     /* These were moved from console.c to make them available sooner */
     set_symbol( "VERSION", VERSION);
     set_symbol( "BDATE", __DATE__ );
@@ -490,18 +491,10 @@ int     dll_count;                      /* index into array          */
     set_symbol( "MODNAME", sysblk.hercules_pgmname );
     set_symbol( "MODPATH", sysblk.hercules_pgmpath );
 
-#endif
+#endif // defined( OPTION_CONFIG_SYMBOLS )
 
-    /* set default operations mode */
-#if defined (OPTION_HERCULES_DEVELOPER)
-    sysblk.sysgroup = SYSGROUP_SYSALL;
-#else //    !OPTION_HERCULES_DEVELOPER
-    sysblk.sysgroup = SYSGROUP_SYSOPER  +
-                      SYSGROUP_SYSMAINT +
-                      SYSGROUP_SYSPROG  +
-                      SYSGROUP_SYSNONE  +
-                      SYSGROUP_SYSCONFIG;
-#endif//     OPTION_HERCULES_DEVELOPER
+    sysblk.sysgroup = DEFAULT_SYSGROUP;
+    sysblk.msglvl   = DEFAULT_MLVL;
 
     /* set default console port address */
     sysblk.cnslport = strdup("3270");
@@ -515,10 +508,10 @@ int     dll_count;                      /* index into array          */
     /* set default error message display (emsg) */
     sysblk.emsg = EMSG_ON;
 
-#if       defined( OPTION_SHUTDOWN_CONFIRMATION )
+#if defined( OPTION_SHUTDOWN_CONFIRMATION )
     /* set default quit timeout value (also ssd) */
     sysblk.quitmout = QUITTIME_PERIOD;
-#endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
+#endif
 
     /* Default command separator to off (NULL) */
     sysblk.cmdsep = NULL;
@@ -566,8 +559,8 @@ int     dll_count;                      /* index into array          */
     /* Cap the default priorities at zero if setuid not available */
 #if !defined(NO_SETUID)
     if (sysblk.suid)
+#endif
     {
-#endif /*!defined(NO_SETUID)*/
         if (sysblk.hercprio < 0)
             sysblk.hercprio = 0;
         if (sysblk.todprio < 0)
@@ -578,9 +571,7 @@ int     dll_count;                      /* index into array          */
             sysblk.devprio = 0;
         if (sysblk.srvprio < 0)
             sysblk.srvprio = 0;
-#if !defined(NO_SETUID)
     }
-#endif /*!defined(NO_SETUID)*/
 
     /* set default console keep alive values */
     sysblk.kaidle = KEEPALIVE_IDLE_TIME;
@@ -590,20 +581,20 @@ int     dll_count;                      /* index into array          */
 #if defined(_FEATURE_ECPSVM)
     sysblk.ecpsvm.available = 0;
     sysblk.ecpsvm.level = 20;
-#endif /*defined(_FEATURE_ECPSVM)*/
+#endif
 
 #ifdef PANEL_REFRESH_RATE
     sysblk.panrate = PANEL_REFRESH_RATE_SLOW;
 #endif
 
-#if       defined( OPTION_SHUTDOWN_CONFIRMATION )
+#if defined( OPTION_SHUTDOWN_CONFIRMATION )
     /* Set the quitmout value */
     sysblk.quitmout = QUITTIME_PERIOD;     /* quit timeout value        */
-#endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
+#endif
 
 #if defined(OPTION_SHARED_DEVICES)
     sysblk.shrdport = 0;
-#endif /*defined(OPTION_SHARED_DEVICES)*/
+#endif
 
 #ifdef OPTION_MSGHLD
     /* Set the default timeout value */
@@ -645,7 +636,7 @@ int     dll_count;                      /* index into array          */
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
     /* Initialize the wrapping key registers lock */
     initialize_rwlock(&sysblk.wklock);
-#endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
+#endif
 
     /* Initialize thread creation attributes so all of hercules
        can use them at any time when they need to create_thread
