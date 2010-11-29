@@ -114,11 +114,11 @@ struct fkeeper
     struct fkeeper *next; /* May or may not end up in the global list */
     U32  SaveArea;        /* Space to save a work register */
     U32  id;              /* Used to identify this fkeeper to the guest */
-	int  handle;          /* linked list handle for clean-ups */
+    int  handle;          /* linked list handle for clean-ups */
     int  mode;            /* Text/Binary-Mode */
     int  data;            /* filenames index and for read/write */
-	char oldname  [260];
-	char filename [260];  /* Also used for 256 byte read/write buffer */
+    char oldname  [260];
+    char filename [260];  /* Also used for 256 byte read/write buffer */
 };
 
 //static fkeeper_ptr fkpr_head = NULL;
@@ -379,17 +379,17 @@ static int RemoveFKByName (char * filename) {
   R0  = Set to 0 prior to call, 
         but due to possible instruction restart, >=0 on return
   R1  = Function number:
-		0/ int rename (char * oldname - char * newname); 
-		       -special 1 parm points to dual nul-term-strings
-		1/ int unlink (char * filename);
+        0/ int rename (char * oldname - char * newname); 
+               -special 1 parm points to dual nul-term-strings
+        1/ int unlink (char * filename);
         2/ int open   (char * filename, int oflg, int pmode);
         3/ int close  (char * filename); 
                -special version to allow abended pgm cleanups "by hand"
-		4/ int read   (char * buf, int h, int count);
-		5/ int write  (char * buf, int h, int count);
-		6/ int seek   (int h, int offset, int origin);
-		7/ int commit (int h);
-		8/ int close  (int h);
+        4/ int read   (char * buf, int h, int count);
+        5/ int write  (char * buf, int h, int count);
+        6/ int seek   (int h, int offset, int origin);
+        7/ int commit (int h);
+        8/ int close  (int h);
         9/ int setmode (int h, int mode);
   R2..R4 = Parameters, depending on function number  
            All may be destroyed on return
