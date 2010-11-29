@@ -1,4 +1,4 @@
-/* HDIAGF18.C   (c) Copyright, Harold Grovesteen, 2010                */
+/* HDIAGF18.C   (c) Copyright Harold Grovesteen, 2010                 */
 /*              Hercules DIAGNOSE code X'F18'                         */
 /*                                                                    */
 /*   Released under "The Q Public License Version 1"                  */
@@ -18,27 +18,16 @@
 /*                                                                    */
 /* From diagnose.c                                                    */
 /*                                                                    */
-/* AD:host_rsc_acc                                                    */
+/* AD:diagf18_call                                                    */
 /*    |                                                               */
 /*   QUERY:                                                           */
-/*    +---> d250_init32---+                                           */
-/*    |                   +---> d250_init                             */
-/*    +---> d250_init64---+                                           */
+/*    +                                                               */
 /*    |                                                               */
 /*   CSOCKET:                                                         */
-/*    +-> AD:d250_iorq32--+---SYNC----> d250_list32--+                */
-/*    |                   V                   ^      |                */
-/*    |               ASYNC Thread            |      |    d250_read   */
-/*    |                   +-> AD:d250_async32-+      +--> d250_write  */
-/*    |                       d250_bio_interrupt     |    (calls      */
-/*    |                                              |    drivers)    */
-/*    +-> AD:d250_iorq64--+----SYNC---> d250_list64--+                */
-/*    |                   V                   ^                       */
-/*    |               ASYNC Thread            |                       */
-/*    |                   +-> AD:d250_async64-+                       */
-/*    |                       d250_bio_interrupt                      */
+/*    +                                                               */
+/*    |                                                               */
 /*   CFILE:                                                           */
-/*    +---> d250_remove                                               */
+/*    +                                                               */
 /*    |                                                               */
 /*   NSOCKET:                                                         */
 /*    +--->                                                           */
@@ -49,7 +38,7 @@
 /*  Function         ARCH_DEP   On CPU   On Async    Owns             */
 /*                              thread    thread     device           */
 /*                                                                    */
-/*  host_rsc_acc        Yes      Yes        No         No             */
+/*  diagf18_call        Yes      Yes        No         No             */
 
 
 #include "hstdinc.h"
@@ -80,16 +69,9 @@
 /* Function Subcodes                                                 */
 #define QUERY   0x00000000   /* Query Operation */
 //#define CSOCKET 0x00000001 /* Socket Function Compatibility Mode */
-//#define CFILE   0x00000002 /* File Operation Compatibility Mode  */
+#define CFILE   0x00000002   /* File Operation Compatibility Mode  */
 //#define NSOCKET 0x00000003 /* Socket Function Native Mode */ 
 //#define NFILE   0x00000004 /* File Operation Native Mode  */
-
-#define DF18_VER 0x01      /* Version of DIAGNOSE X'F18'    */
-#define VER_MASK 0x0F      /* Mask for version in options   */
-#define NATIVE_OPTIONS (0x0000+DF18_VER)
-#define COMPAT_OPTIONS (0xC000+DF18_VER)
-
-
 
 /*-------------------------------------------------------------------*/
 /* Capability Parameter Block                                        */
@@ -129,9 +111,9 @@ CPB cap =
 #endif
         ,
         /* Compatibility Operation Options in big endian format */
-        {COMPAT_OPTIONS>>8,COMPAT_OPTIONS&0xFF},
+        {(COMPAT_OPTIONS+DF18_VER)>>8,(COMPAT_OPTIONS+DF18_VER)&0xFF},
         /* Native Operation Options in big endian format */
-        {NATIVE_OPTIONS>>8,NATIVE_OPTIONS&0xFF}
+        {(NATIVE_OPTIONS+DF18_VER)>>8,(NATIVE_OPTIONS+DF18_VER)&0xFF}
 };
     
 #endif /* !defined(_HDIAGF18_H) */
@@ -139,31 +121,31 @@ CPB cap =
 /*-------------------------------------------------------------------*/
 /* Internal Architecture Independent Function Prototypes             */
 /*-------------------------------------------------------------------*/
-/* Initialization Functions */
-
-
-
-
+U16 df18_ck_opts(U16, U16, REGS *);  /* Check options */
 
 /*-------------------------------------------------------------------*/
-/*  Trigger Block I/O External Interrupt                             */
+/*  Check Operation Options                                          */
 /*-------------------------------------------------------------------*/
-
-
-/*-------------------------------------------------------------------*/
-/*  Initialize Environment - 32-bit Addressing                       */
-/*-------------------------------------------------------------------*/
-
-
-/*-------------------------------------------------------------------*/
-/*  Initialize Environment - 64-bit Addressing                       */
-/*-------------------------------------------------------------------*/
-
-
-/*-------------------------------------------------------------------*/
-/*  Initialize Environment - Addressing Independent                  */
-/*-------------------------------------------------------------------*/
-
+U16 df18_ck_opts(U16 regopts, U16 invalid, REGS *regs)
+{
+U16 amode;     /* address mode requested for parameter block */
+    
+    amode = regopts & AMODE_MASK;
+    if (   
+           /* version must be specified */
+           ( (regopts & VER_MASK)==0 ) ||
+           /* version must not be higher than we support */
+           ( (regopts & VER_MASK)>DF18_VER )  ||
+           /* options are valid */
+           ( ((regopts & OPTIONS_MASK) & invalid ) != 0 ) ||
+           /* one and only one amode requested */
+           ( amode!=0x0040 && amode!=0x0020 && amode!=0x0010 )
+       )
+    {
+        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+    }
+    return regopts;
+}
 
 #endif /*!defined(_HDIAGF18_C)*/
 
@@ -171,7 +153,7 @@ CPB cap =
 /* Internal Architecture Dependent Function Prototypes               */
 /*-------------------------------------------------------------------*/
 /* Input/Output Request Functions */
-//int   ARCH_DEP(d250_iorq32)(DEVBLK *, int *, BIOPL_IORQ32 *, REGS *);
+void ARCH_DEP(hdiagf18_FC) (U32, VADR, REGS *);
 
 /*-------------------------------------------------------------------*/
 /* Access Host Resource (Function code 0xF18)                        */
@@ -188,7 +170,7 @@ CPB cap =
 void ARCH_DEP(diagf18_call) (int r1, int r2, REGS *regs)
 {
 /* Guest related paramters and values                                */
-RADR    pbaddr;                      /* Parameter block real address */
+//RADR    pbaddr;                      /* Parameter block real address */
 U16     options;                     /* supplied options             */
 
 #if 0
@@ -202,29 +184,24 @@ union   parmlist                     /* Parmater block formats that  */
 union   parmlist plin;               /* Parm block from/to guest     */
 #endif
     
-    /* Retrieve the Parameter Block address from Ry */
-    pbaddr = regs->GR(r2);
+//#if 0
+    if (sizeof(CPB) != 8)
+    {
+            logmsg("CPB size not 8: %d\n",sizeof(CPB));
+    }
+//#endif
 
-    /* Specification exception if the Rx is 15 */
-    if ( (!FACILITY_ENABLED(HOST_RESOURCE_ACCESS,regs)) || (r1 == 15) ) 
+
+    /* Retrieve the Parameter Block address from Ry */
+    //pbaddr = regs->GR(r2);
+
+    /* Specification exception if Rx is not even/odd or facility not enabled */
+    if ( (!FACILITY_ENABLED(HOST_RESOURCE_ACCESS,regs)) || 
+         ((r1 & 0x1) != 0) 
+       ) 
     {
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
     }
-    
-    /* Get the options from Rx+1 */
-    options = regs->GR_L(r1+1) & 0x0000FFFF;
-
-#if 0
-    /* Specification exception if version missing or greater than supported */
-    if ( ((options & VER_MASK)==0) || ((options & VER_MASK)>=DF18_VER) )
-    {
-        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
-    }
-    /* This needs to go under the individual subcodes that use options */
-#endif
-    
-    /* Retrieve the Parameter Block address from Ry */
-    pbaddr = regs->GR(r2);
 
     switch(regs->GR_L(r1))
     {
@@ -233,15 +210,35 @@ union   parmlist plin;               /* Parm block from/to guest     */
 /* Perform the Query Operation                            */
 /*--------------------------------------------------------*/
     case QUERY:
-            
-
-         break;
+        
+        logmsg("DF18: QUERY\n");
+        
+        /* Specification exception if CPB is not on a doubleword boundary */
+        if ( (regs->GR(2) & 0x7 ) !=0 )
+        {
+            ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        }
+        
+        /* Store the CPB at the designated location */
+        ARCH_DEP(wstorec)
+            (&cap,(BYTE)sizeof(CPB)-1,(VADR)GR_A(r2,regs),USE_REAL_ADDR,regs);
+        
+        break;
 
 #if defined(CSOCKET)
 /*--------------------------------------------------------*/
 /* Perform Socket Function in Compatibility Mode          */
 /*--------------------------------------------------------*/
     case CSOCKET:
+        
+        logmsg("DF18: CSOCKET\n");
+        
+#if defined(FEATURE_ESAME)
+        if (regs->psw.amode64)
+        {
+            ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        }
+#endif /* defined(ESAME) */
          break;
 
 #endif /* defined(CSOCKET) */
@@ -251,6 +248,23 @@ union   parmlist plin;               /* Parm block from/to guest     */
 /* Perform File Operation in Compatibility Mode           */
 /*--------------------------------------------------------*/
     case CFILE:
+
+        logmsg("DF18: CFILE\n");
+        
+#if defined(FEATURE_ESAME)
+        if (regs->psw.amode64)
+        {
+            ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        }
+#endif /* defined(ESAME) */
+
+        options = df18_ck_opts
+            ( (U16)regs->GR_L(r1+1) & 0x0000FFFF, (U16) COMPAT_INVALID, regs );
+            
+        /* Retrieve the Parameter Block address from Ry */
+        //pbaddr = regs->GR(r2);
+        ARCH_DEP(hdiagf18_FC) (options, (VADR)GR_A(r2,regs), regs);
+
         break;
 
 #endif /* defined(CFILE) */
