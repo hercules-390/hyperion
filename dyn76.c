@@ -5,6 +5,8 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to   */
 /*   Hercules.                                                        */
 
+// $Id$
+
 /*
 *** For *nix type systems: (be warned: this information is quite old!)
 *** compile by: (Update "i686" to "i586" if required.) ***
