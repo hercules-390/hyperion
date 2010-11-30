@@ -567,7 +567,6 @@ static char *pgmintname[] = {
 
     /* Prevent machine check when in (almost) interrupt loop */
     realregs->instcount++;
-    realregs->fakecount++;
 
     /* Release any locks */
     if (sysblk.intowner == realregs->cpuad)

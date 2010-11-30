@@ -386,7 +386,7 @@ int i, rc = 0;                          /* Array subscript           */
     for (i = 0; i < sysblk.maxcpu; i++)
         regs->emercpu[i] = 0;
     regs->instinvalid = 1;
-    regs->instcount = regs->prevcount = regs->fakecount = 0;
+    regs->instcount = regs->prevcount = 0;
 
     /* Clear interrupts */
     SET_IC_INITIAL_MASK(regs);

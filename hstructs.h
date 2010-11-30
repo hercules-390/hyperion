@@ -149,8 +149,6 @@ struct REGS {                           /* Processor registers       */
         S32     ecps_oldtmr;            /* ECPS Virtual Int. tmr int */
         BYTE   *ecps_vtmrpt;            /* Pointer to VTMR or zero   */
         U32     instcount;              /* Instruction counter       */
-        U32     fakecount;              /* Fake instuction count in
-                                           program_interrupt()       */
         U64     prevcount;              /* Previous instruction count*/
         U32     mipsrate;               /* Instructions per second   */
         U32     siocount;               /* SIO/SSCH counter          */
