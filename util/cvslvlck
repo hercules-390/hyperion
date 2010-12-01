@@ -1,22 +1,18 @@
 #!/usr/bin/perl -w
 
-#****************************************************************************
-#
 # $Id$
+
+#****************************************************************************
 #
 #                         C V S L V L C K
 #
 #  This perl script checks the user's system for the required levels of
-#  software required to properly build Hercules from the CVS repository.
+#  software needed to properly build Hercules from the source repository.
 #
 #****************************************************************************
 #
 #                       ---- CHANGE LOG ----
-# $Log$
-# Revision 1.12  2006/12/25 13:55:19  jj
-# Add cvs message log
 #
-# 
 # DD/MM/YY Description...
 # 21/09/03 Removed libintl & libtool. Although "gettextize" is no longer
 #          run, pkg "gettext" is still needed to run the msgfmt/msgmerge
@@ -26,6 +22,8 @@
 # 24/10/05 According to jj, automake 1.6 is insufficient. He says 1.9 works
 #          though, but doesn't know about 1.7 or 1.8 yet. (Fish)
 # 30/11/07 Changed URL to point to hercules-390.org. (JRM)
+# 30/11/10 Remove obsolete CVS test, add special gsed test for Apple/Darwin
+#          (Enrico Sorichetti by Fish)
 #****************************************************************************
 
 use strict;
@@ -33,7 +31,7 @@ use strict;
 #    Facility, required level, special flag, download URL
 
 my @req = qw(
-     cvs         0      1  http://www.cvshome.org
+     svn         0      0  http://subversion.tigris.org/
      autoconf    2.5    0  http://www.gnu.org/directory/autoconf.html
      automake    1.9    0  http://www.gnu.org/directory/automake.html
      flex        2.5    0  http://www.gnu.org/directory/flex.html
@@ -48,186 +46,155 @@ my @req = qw(
      sed         3.02   0  http://www.gnu.org/directory/sed.html
 );
 
-my $cvsroot = ":pserver:anonymous\@cvs.hercules-390.org:/usr/cvs/hercules";
 my $msg;
 my $instversion;
 
 sayintro();
 
 for (my $i = 0; $i < @req; $i += 4) {
-	my $facility = $req[$i];
-	my $level = $req[$i+1];
-	my $special = $req[$i+2];
-	my $url = $req[$i+3];
-	if ($special) {
-		weird($facility, $level, $url);
-	} else {
-		if (present($facility, $url)) {
-			my @resp = `$facility --version`;
-			chomp $resp[0];
-			$instversion = getvers($resp[0]);
-			$msg = ckvers($level, $instversion);
-			print "$msg\t$facility requires $level, found $instversion\n";
-			print "\tURL: $url\n" if $msg eq 'UPGRADE';
-		}
-	}
-	print "\n";
-}
-
-print "Do you wish to set CVSROOT for this userid? (y, n, default y)\n";
-print "New CVS users are recommended to reply y to this prompt.\n";
-
-my $ans = <STDIN>;
-chomp $ans;
-$ans = substr($ans, 0, 1);
-$ans = lc $ans;
-
-if ($ans eq 'y' || $ans eq '') {
-	die "HOME environment variable not set" if ! exists $ENV{'HOME'};
-	my $home = $ENV{'HOME'};		# root nonsense, ~ doesn't work right
-	unless (open PROFILE, ">> $home/.profile") {die "Open $home/.profile failed: $!"};
-	print PROFILE "\nCVSROOT=$cvsroot ; export CVSROOT\n";
-	close PROFILE;
-	print "Updated $home/.profile for CVSROOT\n";
-	print "To use updated CVSROOT value, open new session or logout/login\n";
-	# Sorry, I can't figure out how to set CVSROOT in current session
-	# I tried system, exec, creating a shell script ... nada
-} else {
-	print "Hercules CVSROOT=$cvsroot\n";
+  my $facility = $req[$i];
+  if ($facility eq 'sed') {
+    if ($^O eq 'darwin') {
+      print "Apple/Darwin ==> sed changed to gsed!\n" ;
+      $facility = 'gsed';
+    }
+  }
+  my $level = $req[$i+1];
+  my $special = $req[$i+2];
+  my $url = $req[$i+3];
+  if ($special) {
+    weird($facility, $level, $url);
+  } else {
+    if (present($facility, $url)) {
+      my @resp = `$facility --version`;
+      chomp $resp[0];
+      $instversion = getvers($resp[0]);
+      $msg = ckvers($level, $instversion);
+      print "$msg\t$facility requires $level, found $instversion\n";
+      print "\tURL: $url\n" if $msg eq 'UPGRADE';
+    }
+  }
+  print "\n";
 }
 
 exit 0;
 
 sub weird {
-	my ($facility, $level, $url) = @_;
-	if ($facility eq 'cvs') {
-		if (present('cvs', $url)) {
-			my @resp = `cvs --version`;
-			chomp $resp[1];
-			my $instversion = getvers($resp[1]);
-			my $msg = ckvers($level, $instversion);
-			print "$msg\t$facility (informational), found $instversion\n";
-		} else {
-			print "INSTALL\tcvs\n";
-			print "URL: $url\n";
-		}
-		return;
-	}
-	if ($facility eq 'libiconv') {
-		if (present('iconv', $url)) {
-			my @resp = `iconv --version`;
-			chomp $resp[0];
-			my $instversion = getvers($resp[0]);
-			my $msg = ckvers($level, $instversion);
-			print "$msg\t$facility requires $level, found $instversion\n";
-		}
-		print "\tFor first-time Libiconv installs, a recompile and reinstall of gettext\n";
-		print "\tis recommended.  Source: libiconv-1.8/README\n";
-		print "\tURL: $url\n" if $msg eq 'UPGRADE';
-		return;
-	}
-	if ($facility eq 'perl') {
-		if (present($facility, $url)) {
-			my @resp = `perl --version`;
-			chomp $resp[1];
-			my $instversion = getvers($resp[1]);
-			my $msg = ckvers($level, $instversion);
-			print "$msg\t$facility requires $level, found $instversion\n";
-			print "\tURL: $url\n" if $msg eq 'UPGRADE';
-		}
-		return;
-	}
-	if ($facility eq 'libtool') {
-		if (present($facility, $url)) {
-			my @resp = `libtoolize --version`;
-			print "\t$resp[0]\n";
-			chomp $resp[0];
-			my $instversion = getvers($resp[0]);
-			my $msg = ckvers($level, $instversion);
-			print "$msg\t$facility requires $level, found $instversion\n";
-			print "\tURL: $url\n" if $msg eq 'UPGRADE';
-		}
-		return;
-	}
-	if ($facility eq 'libintl') {
-		my @filelist = glob '/lib/libc.so.*';
-		if (@filelist) {
-			print "OK\tYou are running on a glibc system ($filelist[0] exists)\n";
-			print "\tgettext-0.11.5/PACKAGING says libintl is not installed on glibc systems.\n";
-		} else {
-			print "\tWARNING: I have no personal experience with non-glibc systems\n";
-			print "\t         so take this result as my best guess.\n";
-			my @libintl = glob '/lib/libintl.so.*';
-			if (@libintl) {
-				foreach my $lib (@libintl) {
-					my $msg = ckvers($level, $instversion);
-					if ($msg eq 'OK') {
-						print "OK\t$facility requires $level, found $instversion\n";
-						return;
-					}
-					print "UPGRADE?\t$facility requires $level\n";
-					print "INSTALL\tLibintl is included in the gettext source tarball.\n";
-					print "\tURL: $url\n";
-					return;
-				}
-			} else {
-				print "INSTALL\tLibintl is included in the gettext source tarball.\n";
-				print "\tURL: $url\n";
-			}
-		}
-		return;
-	}
-	if ($facility eq 'm4') {			# m4 --version: GNU m4 1.4o
-		if (present($facility, $url)) {
-			my $resp = `m4 --version`;
-			chomp $resp;
-			my $msg = 'HUH?   ';
-			my $instversion = "DUNNO";
-			if ($resp =~ /GNU [mM]4 (\d+.\d+)/) {
-				$instversion = '';
-				$instversion = $1 if defined $1;
-				$instversion = "$1.$2" if defined $1 && defined $2;
-				$msg = ckvers($level, $instversion);
-			}
-			print "$msg\t$facility requires $level, found $instversion\n";
-			print "\tURL: $url\n" if $msg eq 'UPGRADE';
-		}
-		return;
-	}
-	print "ERROR $facility flagged as special, not found\n";
+  my ($facility, $level, $url) = @_;
+
+  if ($facility eq 'libiconv') {
+    if (present('iconv', $url)) {
+      my @resp = `iconv --version`;
+      chomp $resp[0];
+      my $instversion = getvers($resp[0]);
+      my $msg = ckvers($level, $instversion);
+      print "$msg\t$facility requires $level, found $instversion\n";
+    }
+    print "\tFor first-time Libiconv installs, a recompile and reinstall of gettext\n";
+    print "\tis recommended.  Source: libiconv-1.8/README\n";
+    print "\tURL: $url\n" if $msg eq 'UPGRADE';
+    return;
+  }
+  if ($facility eq 'perl') {
+    if (present($facility, $url)) {
+      my $instversion = getvers($^V);
+      my $msg = ckvers($level, $instversion);
+      print "$msg\t$facility requires $level, found $instversion\n";
+      print "\tURL: $url\n" if $msg eq 'UPGRADE';
+    }
+    return;
+  }
+  if ($facility eq 'libtool') {
+    if (present($facility, $url)) {
+      my @resp = `libtoolize --version`;
+      print "\t$resp[0]\n";
+      chomp $resp[0];
+      my $instversion = getvers($resp[0]);
+      my $msg = ckvers($level, $instversion);
+      print "$msg\t$facility requires $level, found $instversion\n";
+      print "\tURL: $url\n" if $msg eq 'UPGRADE';
+    }
+    return;
+  }
+  if ($facility eq 'libintl') {
+    my @filelist = glob '/lib/libc.so.*';
+    if (@filelist) {
+      print "OK\tYou are running on a glibc system ($filelist[0] exists)\n";
+      print "\tgettext-0.11.5/PACKAGING says libintl is not installed on glibc systems.\n";
+    } else {
+      print "\tWARNING: I have no personal experience with non-glibc systems\n";
+      print "\t         so take this result as my best guess.\n";
+      my @libintl = glob '/lib/libintl.so.*';
+      if (@libintl) {
+        foreach my $lib (@libintl) {
+          my $msg = ckvers($level, $instversion);
+          if ($msg eq 'OK') {
+            print "OK\t$facility requires $level, found $instversion\n";
+            return;
+          }
+          print "UPGRADE?\t$facility requires $level\n";
+          print "INSTALL\tLibintl is included in the gettext source tarball.\n";
+          print "\tURL: $url\n";
+          return;
+        }
+      } else {
+        print "INSTALL\tLibintl is included in the gettext source tarball.\n";
+        print "\tURL: $url\n";
+      }
+    }
+    return;
+  }
+  if ($facility eq 'm4') {      # m4 --version: GNU m4 1.4o
+    if (present($facility, $url)) {
+      my $resp = `m4 --version`;
+      chomp $resp;
+      my $msg = 'HUH?   ';
+      my $instversion = "DUNNO";
+      if ($resp =~ /GNU [mM]4 (\d+.\d+)/) {
+        $instversion = '';
+        $instversion = $1 if defined $1;
+        $instversion = "$1.$2" if defined $1 && defined $2;
+        $msg = ckvers($level, $instversion);
+      }
+      print "$msg\t$facility requires $level, found $instversion\n";
+      print "\tURL: $url\n" if $msg eq 'UPGRADE';
+    }
+    return;
+  }
+  print "ERROR $facility flagged as special, not found\n";
 }
 
 sub getvers {
-	my $resp = $_[0];
-	my $vers;
-	if ($resp =~ /(\d+).(\d+).(\d+)/) {
-		$vers = "$1.$2.$3";
-		return $vers;
-	}
-	if ($resp =~ /(\d+).(\d+)/) {
-		$vers = "$1.$2";
-		return $vers;
-	}
-	print "HUH?\n";
+  my $resp = $_[0];
+  my $vers;
+  if ($resp =~ /(\d+).(\d+).(\d+)/) {
+    $vers = "$1.$2.$3";
+    return $vers;
+  }
+  if ($resp =~ /(\d+).(\d+)/) {
+    $vers = "$1.$2";
+    return $vers;
+  }
+  print "HUH?\n";
 }
 
 sub ckvers {
-	my ($reqvers, $instvers) = @_;
-	my @rv = split /\./, $reqvers;
-	my @iv = split /\./, $instvers;
-	for (my $i = 0; $i < @rv; $i++) {
-		if ( (exists $rv[$i])
-		  && (exists $iv[$i])
-		  && ($iv[$i] > $rv[$i]) ) {
-			return 'OK';
-		}
-		if ( (exists $rv[$i])
-		  && (exists $iv[$i])
-		  && ($iv[$i] < $rv[$i]) ) {
-			return 'UPGRADE';
-		}
-	}
-	return 'OK';
+  my ($reqvers, $instvers) = @_;
+  my @rv = split /\./, $reqvers;
+  my @iv = split /\./, $instvers;
+  for (my $i = 0; $i < @rv; $i++) {
+    if ( (exists $rv[$i])
+      && (exists $iv[$i])
+      && ($iv[$i] > $rv[$i]) ) {
+      return 'OK';
+    }
+    if ( (exists $rv[$i])
+      && (exists $iv[$i])
+      && ($iv[$i] < $rv[$i]) ) {
+      return 'UPGRADE';
+    }
+  }
+  return 'OK';
 }
 
 sub sayintro {
@@ -239,11 +206,11 @@ sub sayintro {
 }
 
 sub present {
-	my ($facility, $url) = @_;
-	my @present = `which $facility 2>/dev/null`;
-	if (! @present) {
-		print "INSTALL\t$facility not found\n";
-		print "\tURL: $url\n";
-	}
-	return scalar @present;
+  my ($facility, $url) = @_;
+  my @present = `which $facility 2>/dev/null`;
+  if (! @present) {
+    print "INSTALL\t$facility not found\n";
+    print "\tURL: $url\n";
+  }
+  return scalar @present;
 }
