@@ -82,7 +82,7 @@
 
   BUG: instruction tracing: control registers not being shown for some
   instructions which use/modify them. We need a better way to determine
-  if FPRs/CRs/ARs should be traced or not. (New bits in INSTR table?)
+  if FPRs/CRs/ARs should be traced or not. (New bits in OPCODE table?)
   (see "display_inst_regs" function in "hscmisc.c")
 
 -------------------------------------------------------------------------------
