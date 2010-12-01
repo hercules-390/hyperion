@@ -33,9 +33,9 @@ or add the same statement to the hercules.cnf file.
 #define _HENGINE_DLL_
 #endif /*_HENGINE_DLL_*/
 
-#if !defined(_DYN76_C)
-#define _DYN76_C
-#endif /* !defined(_DYN76_C) */
+//#if !defined(_DYN76_C)
+//#define _DYN76_C
+//#endif /* !defined(_DYN76_C) */
 
 #include "hercules.h"
 #include "opcode.h"
@@ -54,9 +54,9 @@ or add the same statement to the hercules.cnf file.
    checked for the parameter block.
 */
 #define set_reg(_r, _v) \
-    ARCH_DEP(vstore4)(_v ,cmpb+(_r * 4), USE_REAL_ADDR, regs)
+    ARCH_DEP(vstore4)((U32)_v, (VADR)cmpb+(_r * 4), USE_REAL_ADDR, regs)
 #define get_reg(_v, _r) \
-    _v = ARCH_DEP(vfetch4)(cmpb+(_r * 4), USE_REAL_ADDR, regs)
+    _v = ARCH_DEP(vfetch4)((VADR)(cmpb+(_r * 4)), USE_REAL_ADDR, regs)
 
 #if 0
  #if defined(WIN32) && !defined(HDL_USE_LIBTOOL)

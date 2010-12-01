@@ -988,10 +988,7 @@
 							RelativePath=".\getopt.c"
 							>
 						</File>
-						<File
-							RelativePath=".\dyn76.c"
-							>
-						</File>
+
 						<File
 							RelativePath=".\hao.c"
 							>

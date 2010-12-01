@@ -363,7 +363,6 @@ endif
                        vm.c         \
                        vmd250.c     \
                        hdiagf18.c   \
-                       dyn76.c      \
                        channel.c    \
                        external.c   \
                        float.c      \
