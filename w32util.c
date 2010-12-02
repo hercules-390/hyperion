@@ -1084,6 +1084,10 @@ DLL_EXPORT BYTE *hostpath( BYTE *outpath, const BYTE *inpath, size_t buffsize )
     //      x:/dir\foo.bar
     //      x:\dir/foo.bar
 
+    //   e. Windows device name
+    //      \\.\foo
+    //      //./foo
+
     // For case a we check for special Cygwin format "/cygdrive/x/..."
     // and convert it to "normalized" (forward-slash) case d format.
     // (Note that the slashes in this case MUST be forward slashes
@@ -1098,14 +1102,34 @@ DLL_EXPORT BYTE *hostpath( BYTE *outpath, const BYTE *inpath, size_t buffsize )
     // (other than normalize all backward slashes to forward slashes
     // since Windows supports both) 
 
+    // For case e we convert forward slashes to backward slashes. If
+    // the device name is already in the proper format we do nothing.
+
     // NOTE that we do NOT attempt to convert relative paths to absolute
     // paths! The caller is responsible for doing that themselves after
     // calling this function if so desired.
 
-    if (outpath && buffsize)
-        *outpath = 0;
+    if (!outpath || !buffsize)
+        return NULL;
 
-    if (inpath && *inpath && outpath && buffsize > 1)
+    *outpath = 0;
+
+    if (!inpath)
+        return outpath;
+
+    ASSERT( outpath && inpath && buffsize );
+
+    if (0
+        || strncmp( inpath, "\\\\.\\", 4 ) == 0   // (Windows device name?)
+        || strncmp( inpath, "//./",    4 ) == 0   // (unnormalized format?)
+    )
+    {
+        strlcpy( outpath, "\\\\.\\", buffsize );
+        strlcat( outpath, inpath+4,  buffsize );
+        return outpath;
+    }
+
+    if (*inpath && buffsize > 1)
     {
         size_t inlen = strlen(inpath);
 

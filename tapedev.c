@@ -809,7 +809,7 @@ struct  tape_format_entry   fmttab   [] =   /*    (table itself)     */
 #undef   SCSITAPE_FMTENTRY
 #define  SCSITAPE_FMTENTRY  5
     {
-        "^\\\\\\\\\\.\\\\\\w",
+        "^((\\\\\\\\\\.\\\\)|(//\\./))\\w",
         TAPEDEVT_SCSITAPE,
         &tmh_scsi,
         "SCSI attached tape drive",
