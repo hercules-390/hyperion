@@ -48,7 +48,7 @@ int ARCH_DEP(chsc_get_sch_desc) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
     FETCH_HW(resv1,chsc_req4->resv1);
     FETCH_HW(resv2,chsc_req4->resv2);
     FETCH_HW(resv3,chsc_req4->resv3);
-    logmsg(D_("chsc_get_sch_desc: resv1=%4.4X resv2=%4.4X resv3=%4.4X\n"),resv1,resv2,resv3);
+    logmsg(_("chsc_get_sch_desc: resv1=%4.4X resv2=%4.4X resv3=%4.4X\n"),resv1,resv2,resv3);
 }
 #endif
 

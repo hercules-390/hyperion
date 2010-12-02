@@ -736,7 +736,7 @@ U16 evd_len;
 U16 sysa_len;
 BYTE *sysa_data;
 int i;
-    logmsg(D_("SYSA write:"));
+    logmsg(_("SYSA write:"));
     FETCH_HW(evd_len,evd_hdr->totlen);
     sysa_data = (BYTE*)(evd_hdr+1);
     sysa_len = evd_len - sizeof(SCCB_EVD_HDR);
@@ -769,7 +769,7 @@ SCCB_EVD_HDR *evd_hdr = (SCCB_EVD_HDR*)(sccb+1);
     UNREFERENCED(sccb);
     UNREFERENCED(evd_hdr);
     
-    logmsg(D_("VT220 poll\n"));
+    logmsg(_("VT220 poll\n"));
 }
 #endif /*defined(_FEATURE_INTEGRATED_ASCII_CONSOLE)*/
 

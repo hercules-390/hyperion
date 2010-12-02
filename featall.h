@@ -50,56 +50,41 @@
                                            of inter-thread signaling */
 #define OPTION_TIMESTAMP_LOGFILE        /* Hardcopy logfile HH:MM:SS */
 #define OPTION_IPLPARM                  /* IPL PARM a la VM          */
-
 #define OPTION_CAPPING                  /* Enable capping cnf stmnt  */
-
 #ifndef FISH_HANG
 #ifndef OPTION_WTHREADS
 #define OPTION_PTTRACE                  /* Pthreads tracing          */
 #endif
 #endif
-
-//#define OPTION_DEBUG_MESSAGES         /* Prefix msgs with filename
-//                                         and line# if DEBUG build  */
 #define OPTION_SET_STSI_INFO            /* Set STSI info in cfg file */
-
 #define OPTION_TAPE_AUTOMOUNT           /* "Automount" CCWs support  */
 #define OPTION_CMDTGT                   /* the cmdtgt command        */
-
 #define OPTION_MSGCLR                   /* Colored messages          */
 #define OPTION_MSGHLD                   /* Sticky messages           */
 #define OPTION_MSGLCK                   /* Lock during msg write     */
-
 //#define OPTION_SCP_MSG_PREFIX         /* Prefix scp msg with HHC*  */
-
 //#define  OPTION_WINDOWS_HOST_FILENAMES/* Format files for display  
 //                                         in native host format       
 //                                         slashes                   */
 //#define  OPTION_SHUTDOWN_CONFIRMATION /* Confirm quit and ssd cmds */
-
 //#define  OPTION_LOCK_CONFIG_FILE      /* Keep Configuration file 
 //                                         locked during execution   */
-
 #define OPTION_ENHANCED_DEVICE_ATTACH   /* Multiple device att feat  */
-
-                                           
 //#define  OPTION_BUILTIN_SYMBOLS       /* Internal Symbols Defined  */
 
 #if defined(OPTION_BUILTIN_SYMBOLS) && !defined(OPTION_CONFIG_SYMBOLS)
   #error OPTION_BUILTIN_SYMBOLS requires OPTION_CONFIG_SYMBOLS
 #endif
-
 #if defined(OPTION_DYNAMIC_LOAD)
   #define OPTION_DYNAMIC_RESOLVE_REXX   /* Dynamically load REXX     */
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
-
 #if defined(OPTION_MSGHLD) && !defined(OPTION_MSGCLR)
   #error OPTION_MSGHLD requires OPTION_MSGCLR
 #endif // defined(OPTION_MSGHLD) && !defined(OPTION_MSGCLR)
-
 #if (CKD_MAXFILES > 35)
   #error CKD_MAXFILES can not exceed design limit of 35
 #endif
+
 /*********************************************************************\
  *********************************************************************
  **                                                                 **

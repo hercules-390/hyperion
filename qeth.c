@@ -47,10 +47,10 @@ static int qeth_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 UNREFERENCED(argc);
 UNREFERENCED(argv);
 
-logmsg(D_("dev(%4.4x) experimental driver\n"),dev->devnum);
+logmsg(_("dev(%4.4x) experimental driver\n"),dev->devnum);
 
     dev->numdevid = sizeof(sense_id_bytes);
-logmsg(D_("senseidnum=%d\n"),dev->numdevid);
+logmsg(_("senseidnum=%d\n"),dev->numdevid);
     memcpy(dev->devid, sense_id_bytes, sizeof(sense_id_bytes));
     dev->devtype = dev->devid[1] << 8 | dev->devid[2];
     
@@ -58,13 +58,13 @@ logmsg(D_("senseidnum=%d\n"),dev->numdevid);
 
     if(!group_device(dev,3))
     {
-        logmsg(D_("group device(%4.4x) pending\n"),dev->devnum);
+        logmsg(_("group device(%4.4x) pending\n"),dev->devnum);
         return 0;
     }
     else
     {
     int i;
-        logmsg(D_("group = ( "));
+        logmsg(_("group = ( "));
         for(i = 0; i < dev->group->acount; i++)
             logmsg("%4.4x ",dev->group->memdev[i]->devnum);
         logmsg(") complete\n");
@@ -126,7 +126,7 @@ int     blocksize = 1024;
     /*---------------------------------------------------------------*/
     /* WRITE                                                         */
     /*---------------------------------------------------------------*/
-logmsg(D_("Write dev(%4.4x)\n"),dev->devnum);
+logmsg(_("Write dev(%4.4x)\n"),dev->devnum);
 #define WR_SIZE 0x22
 
         /* Calculate number of bytes to read and set residual count */
@@ -142,7 +142,7 @@ logmsg(D_("Write dev(%4.4x)\n"),dev->devnum);
     /*---------------------------------------------------------------*/
     /* READ                                                          */
     /*---------------------------------------------------------------*/
-logmsg(D_("Read dev(%4.4x)\n"),dev->devnum);
+logmsg(_("Read dev(%4.4x)\n"),dev->devnum);
 
 #define RD_SIZE 0x22
         /* Calculate number of bytes to read and set residual count */
@@ -158,7 +158,7 @@ logmsg(D_("Read dev(%4.4x)\n"),dev->devnum);
     /*---------------------------------------------------------------*/
     /* CONTROL NO-OPERATION                                          */
     /*---------------------------------------------------------------*/
-logmsg(D_("NOP dev(%4.4x)\n"),dev->devnum);
+logmsg(_("NOP dev(%4.4x)\n"),dev->devnum);
         *residual = 0;
         *unitstat = CSW_CE | CSW_DE;
         break;
@@ -167,7 +167,7 @@ logmsg(D_("NOP dev(%4.4x)\n"),dev->devnum);
     /*---------------------------------------------------------------*/
     /* SENSE                                                         */
     /*---------------------------------------------------------------*/
-logmsg(D_("Sense dev(%4.4x)\n"),dev->devnum);
+logmsg(_("Sense dev(%4.4x)\n"),dev->devnum);
         /* Calculate residual byte count */
         num = (count < dev->numsense) ? count : dev->numsense;
         *residual = count - num;
@@ -187,7 +187,7 @@ logmsg(D_("Sense dev(%4.4x)\n"),dev->devnum);
     /*---------------------------------------------------------------*/
     /* SENSE ID                                                      */
     /*---------------------------------------------------------------*/
-logmsg(D_("Sense ID dev(%4.4x)\n"),dev->devnum);
+logmsg(_("Sense ID dev(%4.4x)\n"),dev->devnum);
         /* Calculate residual byte count */
         num = (count < dev->numdevid) ? count : dev->numdevid;
         *residual = count - num;
@@ -204,7 +204,7 @@ logmsg(D_("Sense ID dev(%4.4x)\n"),dev->devnum);
     /*---------------------------------------------------------------*/
     /* READ CONFIGURATION DATA                                       */
     /*---------------------------------------------------------------*/
-logmsg(D_("Read Configuration Data dev(%4.4x)\n"),dev->devnum);
+logmsg(_("Read Configuration Data dev(%4.4x)\n"),dev->devnum);
         /* Calculate residual byte count */
         num = (count < CONFIG_DATA_SIZE) ? count : CONFIG_DATA_SIZE;
         *residual = count - num;
@@ -222,7 +222,7 @@ logmsg(D_("Read Configuration Data dev(%4.4x)\n"),dev->devnum);
     /*---------------------------------------------------------------*/
     /* ESTABLISH QUEUES                                              */
     /*---------------------------------------------------------------*/
-logmsg(D_("Establish Queues dev(%4.4x)\n"),dev->devnum);
+logmsg(_("Establish Queues dev(%4.4x)\n"),dev->devnum);
         /* Calculate residual byte count */
         num = (count < CONFIG_DATA_SIZE) ? count : CONFIG_DATA_SIZE;
         *residual = count - num;
@@ -242,7 +242,7 @@ logmsg(D_("Establish Queues dev(%4.4x)\n"),dev->devnum);
     /*---------------------------------------------------------------*/
     /* ACTIVATE QUEUES                                               */
     /*---------------------------------------------------------------*/
-logmsg(D_("Activate Queues dev(%4.4x)\n"),dev->devnum);
+logmsg(_("Activate Queues dev(%4.4x)\n"),dev->devnum);
         /* Calculate residual byte count */
         num = (count < CONFIG_DATA_SIZE) ? count : CONFIG_DATA_SIZE;
         *residual = count - num;
@@ -263,7 +263,7 @@ logmsg(D_("Activate Queues dev(%4.4x)\n"),dev->devnum);
     /*---------------------------------------------------------------*/
     /* INVALID OPERATION                                             */
     /*---------------------------------------------------------------*/
-logmsg(D_("Unkown CCW dev(%4.4x) code(%2.2x)\n"),dev->devnum,code);
+logmsg(_("Unkown CCW dev(%4.4x) code(%2.2x)\n"),dev->devnum,code);
         /* Set command reject sense byte, and unit check status */
         dev->sense[0] = SENSE_CR;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -280,7 +280,7 @@ static int qeth_initiate_input(DEVBLK *dev, U32 qmask)
 {
     UNREFERENCED(qmask);
 
-logmsg(D_("SIGA-r dev(%4.4x) qmask(%8.8x)\n"),dev->devnum);
+logmsg(_("SIGA-r dev(%4.4x) qmask(%8.8x)\n"),dev->devnum);
     return 0;
 }
 
@@ -292,7 +292,7 @@ static int qeth_initiate_output(DEVBLK *dev, U32 qmask)
 {
     UNREFERENCED(qmask);
 
-logmsg(D_("SIGA-w dev(%4.4x) qmask(%8.8x)\n"),dev->devnum);
+logmsg(_("SIGA-w dev(%4.4x) qmask(%8.8x)\n"),dev->devnum);
     return 0;
 }
 

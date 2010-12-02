@@ -781,7 +781,6 @@ struct SYSBLK {
 #else
   #define  DEFAULT_MLVL     MLVL_VERBOSE
 #endif
-
         int     emsg;                   /* error message display ctrl*/
 #define EMSG_ON     0x01
 #define EMSG_TEXT   0x02

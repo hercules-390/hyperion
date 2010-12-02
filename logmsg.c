@@ -258,20 +258,8 @@ DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
         free(bfr);
     }
 
-    if ( MLVL(DEBUG) && errmsg )
-    {
-        if ( MLVL(DEBUG) )
-        {
-            char *fn = strdup(__FILE__);
-
-            logmsg("%-10.10s %5d " "HHC00007" "I" " " HHC00007 "\n", 
-                    basename(fn), (int)(__LINE__), function, file, line);
-
-            free(fn);
-        }
-        else
-            logmsg("HHC00007" "I" " " HHC00007 "\n", function, file, line);
-    }
+    if ( errmsg && !MLVL(DEBUG) )
+        logmsg("HHC00007" "I" " " HHC00007 "\n", function, file, line);
 
   #ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  

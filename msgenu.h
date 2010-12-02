@@ -68,85 +68,37 @@ Processor:  "%s%02X", PTYPSTR(procnum), procnum
 Regs:       "GR%02d CR%02d AR%02d FP%02d", grnum, crnum, arnum, fpnum
 Strings:    '%s', ""
 -----------------------------------------------------------------------
-DEBUG
+#define _DEBUG/DEBUG and the MLVL(DEBUG) flag (i.e. MLVL_DEBUG)
 -----------------------------------------------------------------------
-If DEBUG is defined, either by #define or configure --enable-debug
-and OPTION_DEBUG_MESSAGES is enabled in featall.h then messages
-will be prefixed by sourcefile.c:lineno: where the message originates
-cpu.c:123:HABC1234I This is a message
+If DEBUG is defined, either by #define or configure '--enable-debug'
+then sysblk.msglvl has the MLVL_DEBUG flag enabled by default causing
+the 'writemsg' function to prefix all messages with the sourcefile and
+lineno where it issued from ("cpu.c 123 HABC1234I This is a message").
+Otherwise normal message formatting occurs. This default behavior can
+always be manually overridden at any time via the "msglevel" command.
 ---------------------------------------------------------------------*/
 
-// I'm not sure if this is needed, but __FUNCTION__ wasn't part of the standard until C99
-#if __STDC_VERSION__ < 199901L
-#if __GNUC__ >= 2
-#define __func__ __FUNCTION__
-#else
-#define __func__ "<unknown>"
-#endif
-#endif
-
 /* Use these macro's */
+/* PROGRAMMING NOTE: "## __VA_ARGS__" has special meaning to gcc and should not be removed */
 #if defined (_MSVC_)
-#define MSGBUF(_buf, ...)             _snprintf_s(_buf, sizeof(_buf), sizeof(_buf)-1, ## __VA_ARGS__)
+#define MSGBUF( _buf, ... )           _snprintf_s( _buf, sizeof(_buf), sizeof(_buf)-1, ## __VA_ARGS__ )
 #else
-#define MSGBUF(_buf, ...)             snprintf(_buf, sizeof(_buf)-1, ## __VA_ARGS__)
+#define MSGBUF( _buf, ... )           snprintf(    _buf,               sizeof(_buf)-1, ## __VA_ARGS__ )
 #endif
 
-#define MSG(id, s, ...)              #id s " " id "\n", ## __VA_ARGS__
-#define MSG_C(id, s, ...)            #id s " " id "", ## __VA_ARGS__
-#define HMSG(id)                     #id "x " id
+#define MSG(   id, s, ... )           #id s" " id "\n", ## __VA_ARGS__
+#define MSG_C( id, s, ... )           #id s" " id  "",  ## __VA_ARGS__
+#define HMSG(  id         )           #id "x " id
 
-#if defined(DEBUG_MSGS)
-#define WRMSG(id, s, ...) \
-    do { \
-         char _msgbuf[32768]; \
-         int _rc; \
-         _rc = MSGBUF( _msgbuf, #id s " " id "\n", ## __VA_ARGS__); \
-         ASSERT( _rc != -1 ); \
-         ASSERT( _rc < (int)sizeof(_msgbuf)-1 ); \
-         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", _msgbuf ); \
-       } while(0)
-
-#define WRMSG_C(id, s, ...) \
-    do { \
-         char _msgbuf[32768]; \
-         int _rc; \
-         _rc = MSGBUF( _msgbuf, #id s " " id "", ## __VA_ARGS__); \
-         ASSERT( _rc != -1 ); \
-         ASSERT( _rc < (int)sizeof(_msgbuf)-1 ); \
-         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", _msgbuf ); \
-       } while(0)
-
-#define WRCMSG(color, id, s, ...) \
-    do { \
-         char _msgbuf[32768]; \
-         int _rc; \
-         _rc = MSGBUF( _msgbuf, #id s " " id "\n", ## __VA_ARGS__); \
-         ASSERT( _rc != -1 ); \
-         ASSERT( _rc < (int)sizeof(_msgbuf)-1 ); \
-         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), color, "%s", _msgbuf ); \
-       } while(0)
-
-#define WRCMSG_C(color, id, s, ...) \
-    do { \
-         char _msgbuf[32768]; \
-         int _rc; \
-         _rc = MSGBUF( _msgbuf, #id s " " id "\n", ## __VA_ARGS__); \
-         ASSERT( _rc != -1 ); \
-         ASSERT( _rc < (int)sizeof(_msgbuf)-1 ); \
-         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), color, "%s", _msgbuf ); \
-       } while(0)
-#else
 #define WRMSG(id, s, ...)            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", _(#id s " " id "\n"), ## __VA_ARGS__)
 #define WRMSG_C(id, s, ...)          writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", _(#id s " " id ""), ## __VA_ARGS__)
 #define WRCMSG(color, id, s, ...)    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), color, _(#id s " " id "\n"), ## __VA_ARGS__)
 #define WRCMSG_C(color, id, s, ...)  writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), color, _(#id s " " id ""), ## __VA_ARGS__)
-#endif
 
 #ifndef OPTION_MSGLCK
 #define WRGMSG_ON \
 do { \
-int have_lock = 0; try_lock = 10; \
+  int have_lock = 0, try_lock = 10; \
   while(!have_lock) \
   { \
     obtain_lock(&sysblk.msglock) \
@@ -1707,14 +1659,6 @@ int have_lock = 0; try_lock = 10; \
        "                -s   strict AWSTAPE specification (chunksize=4096,no compression)\n" \
        "                -v   verbose (debug) information\n" \
        "                -z   use ZLIB compression\n"
-
-#define HHC02738 "%s"
-#define HHC02739 "Usage: %s [options] infile outtmplt\n" \
-       "\n" \
-       "            Options:\n" \
-       "                -j  Join file pieces\n" \
-       "                -s  Split file into pieces\n" \
-       "                -h  display usage summary"
 
 #define HHC02740 "File '%s': writing output file"
 #define HHC02741 "File '%s': Error, incomplete %s header"

@@ -763,7 +763,7 @@ static void AddSubchanFastLookup(DEVBLK *dev,U16 ssid, U16 subchan)
 {
     unsigned int schw;
 #if 0
-    logmsg(D_("DEBUG : ASFL Adding %d\n"),subchan);
+    logmsg(_("DEBUG : ASFL Adding %d\n"),subchan);
 #endif
     if(sysblk.subchan_fl==NULL)
     {
@@ -800,7 +800,7 @@ static void DelSubchanFastLookup(U16 ssid, U16 subchan)
 {
     unsigned int schw;
 #if 0
-    logmsg(D_("DEBUG : DSFL Removing %d\n"),subchan);
+    logmsg(_("DEBUG : DSFL Removing %d\n"),subchan);
 #endif
     if(sysblk.subchan_fl==NULL)
     {
@@ -1421,13 +1421,13 @@ DEVBLK *find_device_by_subchan (U32 ioid)
 #if defined(OPTION_FAST_DEVLOOKUP)
     unsigned int schw = ((subchan & 0xff00)>>8)|(IOID_TO_LCSS(ioid)<<8);
 #if 0
-    logmsg(D_("DEBUG : FDBS FL Looking for %d\n"),subchan);
+    logmsg(_("DEBUG : FDBS FL Looking for %d\n"),subchan);
 #endif
     if(sysblk.subchan_fl && sysblk.subchan_fl[schw] && sysblk.subchan_fl[schw][subchan & 0xff])
         return sysblk.subchan_fl[schw][subchan & 0xff];
 #endif
 #if 0
-    logmsg(D_("DEBUG : FDBS SL Looking for %8.8x\n"),ioid);
+    logmsg(_("DEBUG : FDBS SL Looking for %8.8x\n"),ioid);
 #endif
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
         if (dev->ssid == IOID_TO_SSID(ioid) && dev->subchan == subchan) break;
