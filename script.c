@@ -188,6 +188,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
                 return -1;
             }
             strlcpy(buf,buf1,buflen);
+            free(buf1);
         }
 #endif /*defined(OPTION_CONFIG_SYMBOLS)*/
 
