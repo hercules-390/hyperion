@@ -200,7 +200,8 @@ static void logger_term(void *arg)
 
         fwrite("\n",1,1,stderr);
         /* Read and display any msgs still remaining in the system log */
-        while((lmscnt = log_read(&lmsbuf, &lmsnum, LOG_NOBLOCK)))
+        lmsnum = log_line(-1);
+        while((lmscnt = log_read(&lmsbuf, &lmsnum, LOG_BLOCK)))
         {
             char *p = NULL;
             char *strtok_str = NULL;
