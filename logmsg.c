@@ -54,7 +54,13 @@
                 break;                        \
             rc=-1;                            \
             siz+=BFR_CHUNKSIZE;               \
+            if ( siz > 65536 ) break;         \
             bfr=realloc(bfr,siz);             \
+        }                                     \
+        if ( bfr != NULL && strlen(bfr) == 0) \
+        {                                     \
+            free(bfr);                        \
+            bfr = strdup(msg);                \
         }                                     \
         ASSERT(bfr)
 #else
@@ -70,7 +76,13 @@
                 break;                        \
             rc=-1;                            \
             siz+=BFR_CHUNKSIZE;               \
+            if ( siz > 65536 ) break;         \
             bfr=realloc(bfr,siz);             \
+        }                                     \
+        if ( bfr != NULL && strlen(bfr) == 0) \
+        {                                     \
+            free(bfr);                        \
+            bfr = strdup(msg);                \
         }                                     \
         ASSERT(bfr)
 #endif
@@ -269,6 +281,8 @@ DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
     if(!sysblk.msggrp || (sysblk.msggrp && !grp))
         WRGMSG_OFF;
 #endif
+
+    log_wakeup(NULL);
 }
 
 /*-------------------------------------------------------------------*/
