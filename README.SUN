@@ -93,11 +93,11 @@ HOW TO BUILD HERCULES FROM SVN UNDER SOLARIS
       From your home directory issue these commands:
 
       cd hercules
-      util/cvslvlck
+      util/bldlvlck
 
       which should produce output something like this:
 
-       OK      cvs (informational), found 1.11.22
+       OK      SVN (informational), found x.yy.zz
        OK      autoconf requires 2.5, found 2.61
        OK      automake requires 1.9, found 1.9.6
        OK      flex requires 2.5, found 2.5.4

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
@@ -988,7 +988,6 @@
 							RelativePath=".\getopt.c"
 							>
 						</File>
-
 						<File
 							RelativePath=".\hao.c"
 							>
@@ -1525,10 +1524,6 @@
 						>
 					</File>
 					<File
-						RelativePath=".\README.CVS"
-						>
-					</File>
-					<File
 						RelativePath=".\README.DYNMOD"
 						>
 					</File>
@@ -1582,6 +1577,10 @@
 					</File>
 					<File
 						RelativePath=".\README.SUN"
+						>
+					</File>
+					<File
+						RelativePath=".\README.SVN"
 						>
 					</File>
 					<File
@@ -1965,11 +1964,11 @@
 						>
 					</File>
 					<File
-						RelativePath=".\configure.ac"
+						RelativePath=".\util\bldlvlck"
 						>
 					</File>
 					<File
-						RelativePath=".\util\cvslvlck"
+						RelativePath=".\configure.ac"
 						>
 					</File>
 					<File

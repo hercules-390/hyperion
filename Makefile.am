@@ -602,7 +602,7 @@ EXTRA_DIST = autoconf/config.rpath \
              hercules.cnf          \
              cckdfix.c             \
              README.COMMADPT       \
-             README.CVS            \
+             README.SVN            \
              README.DYNMOD         \
              README.ECPSVM         \
              README.HAO            \

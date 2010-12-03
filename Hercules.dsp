@@ -266,7 +266,7 @@ SOURCE=.\README.COMMADPT
 # End Source File
 # Begin Source File
 
-SOURCE=.\README.CVS
+SOURCE=.\README.SVN
 # End Source File
 # Begin Source File
 

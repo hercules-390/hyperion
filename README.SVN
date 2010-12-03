@@ -1,0 +1,159 @@
+
+                    Building Hercules
+
+If you're simply trying to figure out how to build Hercules from the
+distributed source files (i.e. NOT from the SVN sources), then skip
+to the "Building Hercules" section further below.
+
+
+BUILD PREPARATION
+-----------------
+
+In order to build Hercules from the SVN sources, you must have installed:
+
+
+     Package   Version  (or greater!)
+    ----------------------------------
+     autoconf    2.54   (or greater!)
+     automake    1.7    (or greater!)
+     flex        2.5    (or greater!)
+     gawk        3.0    (or greater!)
+     gcc         2.95   (or greater!)
+     gettext     0.11   (or greater!)  (--enable-nls only)
+     grep        2.5    (or greater!)
+     libiconv    1.8    (or greater!)
+     libintl     0.10   (or greater!)
+     libtool     ?.??   (or greater!)
+     m4          0.0    (or greater!)
+     make        3.79   (or greater!)
+     perl        5.6    (or greater!)
+     sed         3.02   (or greater!)
+
+The following package(s) is(are) optional
+
+     Package   Version  (or greater!)
+    ----------------------------------
+     libgcrypt   0.4.4  (or greater!)   (for z990 crypto instructions)
+     zlib            ?                  (for ZLIB compression)
+     libbz2          ?                  (for BZIP2 compression)
+
+* If an optional package is not installed, the resulting build may lack
+  an optional feature, but should be usable otherwise.
+
+All of these tools can be found at www.gnu.org in source code form, and
+are also widely available in packaged form (RPM, DEB, Solaris packages,
+etc.).
+
+    +------------------------------------------------------------+
+    |                                                            |
+    |                      ** NOTE **                            |
+    |                                                            |
+    |  There is a handy utility (script) found in the 'util'     |
+    |  subdirectory that will check for the required version     |
+    |  of all of the above mentioned packages. Simply 'cd' to    |
+    |  that subdirectory (in the hercules source code tree) and  |
+    |  enter the command 'bldlvlck'. It will then simply check   |
+    |  and report for you whether or not you have all of the     |
+    |  required version(s) of all the packages needed to build   |
+    |  Hercules from SVN source.                                 |
+    |                                                            |
+    +------------------------------------------------------------+
+
+Once you have these tools installed, simply enter the command:
+
+    sh ./autogen.sh
+
+This will, among other things, create you a shell script called "configure".
+The resulting configure script (created by the above 'autogen' command) is
+then what you use to build Hercules with. (It will probably create a bunch
+of other directories and files too, but we're mostly concerned about the
+configure script).
+
+
+BUILDING HERCULES
+-----------------
+
+Now that a 'configure' script has been built for us, let's use it! :)
+
+(Note: if you're simply trying to build Hercules from the distributed
+source files (i.e. NOT from the SVN sources), then just use the 'configure'
+script that should have been included with the source distribution tarball.)
+
+    +------------------------------------------------------------+
+    |                                                            |
+    |                      ** NOTE **                            |
+    |                                                            |
+    |  See also the boxed Note in the BUILD PREPARATION section  |
+    |  further above regarding the 'bldlvlck' script which can   |
+    |  be used to check to see if you have all of the required   |
+    |  packages installed or not to build Hercules from source.  |
+    |                                                            |
+    +------------------------------------------------------------+
+
+Before you trying using the configure script, you may wish to review
+the information in the INSTALL file. It contains generic installation
+instructions for how to build/install most any package. The instructions
+there pertain just as much to Hercules as they do to any other package.
+
+Since the information there is pretty detailed however, rather than try
+to slog your way through it all, you may wish to first review the below
+summarized version first.
+
+Briefly, the way you build Herc is to first "configure" the building
+process and then invoke your pre-configured building process. The build
+process basically consists of a 'make' command which processes a 'makefile'.
+The makfile however needs to be customized for your system. That's what
+the "configure" script does. It contructs a customized makefile and that
+is what is meant by "configuring your building process".
+
+
+Here's the entire build process step-by-step:
+
+
+    To build Herc, first switch to the directory where the source files
+    are and then configure the build process by entering the following
+    command:
+
+        ./configure
+
+    (Note: you may or may not wish to enter additional parameters
+    to the configure command. See further below)
+
+    Then simply invoke your pre-configured build process by entering
+    the following command:
+
+        make
+
+    That's it! The 'make' command should build Hercules for you. After
+    it's been built, you may or may not wish to "install" it.
+
+    To "install" Hercules into the default package installation
+    directory after building it, enter the following command:
+
+        make install
+
+    That will copy the just built binaries to their proper place.
+
+    To uninstall Hercules once it's been installed, simply enter the
+    command:
+
+        make uninstall
+
+    and the previously copied files will be removed (deleted).
+
+
+Note: you may or may not wish to add some additional parameters to
+the above mentioned "configure" command. One of the more common ones
+for those who are building Herc under Cygwin is "--enable-fthreads".
+Enter "./configure --help" for more information regarding the various
+parameters that Hercules's customized "configure" script supports
+for building Hercules.
+
+
+--
+Matt Zimmerman <mdz@debian.org>
+08 Oct, 2001
+
+updated in detail by:
+"Fish" (David B. Trout)
+30 Jul, 2002

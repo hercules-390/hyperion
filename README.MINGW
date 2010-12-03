@@ -271,7 +271,7 @@ we need to create a   "d:/msys/1.0/local/bin"  directory.
 
 
 --------------------------------------------------------------
-Do a hercules 'cvslvlck' to make sure you have everything that
+Do a hercules 'bldlvlck' to make sure you have everything that
 autoconf needs...
 
 Fish@SYSTEM2 ~
@@ -281,7 +281,7 @@ Fish@SYSTEM2 ~/hercules
 $ cd util
 
 Fish@SYSTEM2 ~/hercules/util
-$ cvslvlck
+$ bldlvlck
 
 This utility will check the level of various utilities needed to build
 hercules. Checking is done against versions that are KNOWN to work.
@@ -290,7 +290,7 @@ of the utilities, but will give a hint as to what package may need
 an upgrade if the build ever fails with some odd reason.
 
 
-OK      cvs (informational), found 1.11
+OK      SVN (informational), found x.yy
 
 OK      autoconf requires 2.5, found 2.56
 
@@ -320,11 +320,6 @@ OK      make requires 3.79, found 3.79.1
 OK      perl requires 5.6, found 5.6.1
 
 OK      sed requires 3.02, found 3.02
-
-Do you wish to set CVSROOT for this userid? (y, n, default y)
-New CVS users are recommended to reply y to this prompt.
-n
-Hercules CVSROOT=:pserver:anonymous@cvs.hercules-390.org:/usr/cvs/hercules
 
 
 --------------------------------------------------------------

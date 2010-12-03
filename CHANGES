@@ -1,3 +1,5 @@
+01 Dec 2010 cvslvlck renamed to bldlvlck and corrections made for Apple/Darwin
+            - Enrico Sorichetti by Fish (README.CVS also renamed to README.SVN)
 01 Dec 2010 Allow //./Tape0 or \\.\Tape0 for Windows device filename - Fish
 21 Nov 2010 Corrected DIAGNOSE X'000' to report timezone differential - Harold Grovesteen
 28 Oct 2010 MAINSIZE and XPNDSIZE UNLOCKED and LOCKED options - Mark L. Gaubatz
