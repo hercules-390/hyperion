@@ -42,10 +42,17 @@ extern int logger_syslogfd[2];
 #define LOG_NOBLOCK 0
 #define LOG_BLOCK   1
 
+#if !defined(LOG_DEFSIZE)
 #if defined(SSIZE_MAX) && SSIZE_MAX < 1048576
  #define LOG_DEFSIZE SSIZE_MAX
 #else
- #define LOG_DEFSIZE 65536
+ #define LOG_DEFSIZE 1048576
+#endif
+#else
+#if LOG_DEFSIZE < 65536
+#undef LOG_DEFSIZE
+#define LOG_DEFSIZE 65536
+#endif
 #endif
 
 /* Logging functions in logmsg.c */
