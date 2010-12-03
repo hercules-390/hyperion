@@ -4356,7 +4356,7 @@ struct stat     st;                     /* File information          */
 int             i;                      /* Index                     */
 int             rc;                     /* Return code               */
 char           *ost[] = {"  ", "ro", "rd", "rw"};
-U64             size=0,free=0;          /* Total size, free space    */
+U64             usize=0,ufree=0;         /* Total size, free space    */
 int             freenbr=0;              /* Total number free spaces  */
 
     if (dev == NULL)
@@ -4386,9 +4386,9 @@ int             freenbr=0;              /* Total number free spaces  */
     rc = fstat (cckd->fd[0], &st);
     for (i = 0; i <= cckd->sfn; i++)
     {
-        if (!i) size = st.st_size;
-        else size += cckd->cdevhdr[i].size;
-        free += cckd->cdevhdr[i].free_total;
+        if (!i) usize = st.st_size;
+        else usize += cckd->cdevhdr[i].size;
+        ufree += cckd->cdevhdr[i].free_total;
         freenbr += cckd->cdevhdr[i].free_number;
     }
 
@@ -4400,7 +4400,7 @@ int             freenbr=0;              /* Total number free spaces  */
 
     /* total statistics */
     WRMSG (HHC00336, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
-            size, (free * 100) / size, freenbr,
+            usize, (ufree * 100) / usize, freenbr,
             cckd->totreads, cckd->totwrites, cckd->totl2reads,
             cckd->cachehits, cckd->switches);
     if (cckd->readaheads || cckd->misses)
