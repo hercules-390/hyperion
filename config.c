@@ -414,7 +414,7 @@ int configure_capping(U32 value)
 
         if ( cnt == 0 )
         {
-            WRMSG( HHC00105, "E", sysblk.captid, "Capping manager" );
+            WRMSG( HHC00105, "E", (u_long)sysblk.captid, "Capping manager" );
             return HERRTHREADACT;
         }
 
