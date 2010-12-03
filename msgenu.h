@@ -92,62 +92,151 @@ always be manually overridden at any time via the "msglevel" command.
 
 
 /* DO NOT REMOVE - This code is used to verify various printf type functions have the
-   correct arguments and data types 
+ * correct arguments and data types 
  */
-#if 0
+#if !defined(_MSVC_) && ( defined(_DEBUG) || defined(DEBUG) )
 #define WRMSG(id, s, ...) \
     do { \
-         char _msgbuf[32768]; \
-         int _rc; \
-         _rc = MSGBUF( _msgbuf, #id s " " id "\n", ## __VA_ARGS__); \
+         char *_msgbuf = (char *)malloc((size_t)32768); \
+         char *_buf; \
+         int _rc = 0; \
+         ASSERT( _msgbuf != NULL); \
+         _rc =  snprintf( _msgbuf, 32767, #id s " " id "\n", ## __VA_ARGS__); \
          ASSERT( _rc != -1 ); \
-         ASSERT( _rc < (int)sizeof(_msgbuf)-1 ); \
-         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", _msgbuf ); \
-       } while(0)
+         _buf = strdup( _msgbuf ); \
+         free(_msgbuf); \
+         ASSERT( _buf != NULL ); \
+         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", _buf, NULL ); \
+         free(_buf); \
+    } \
+    while(0)
 
 #define WRMSG_C(id, s, ...) \
     do { \
-         char _msgbuf[32768]; \
-         int _rc; \
-         _rc = MSGBUF( _msgbuf, #id s " " id "", ## __VA_ARGS__); \
+         char *_msgbuf = (char *)malloc((size_t)32768); \
+         char *_buf; \
+         int _rc = 0; \
+         ASSERT( _msgbuf != NULL); \
+         _rc =  snprintf( _msgbuf, 32767, #id s " " id "", ## __VA_ARGS__); \
          ASSERT( _rc != -1 ); \
-         ASSERT( _rc < (int)sizeof(_msgbuf)-1 ); \
-         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", _msgbuf ); \
-       } while(0)
+         _buf = strdup( _msgbuf ); \
+         free(_msgbuf); \
+         ASSERT( _buf != NULL ); \
+         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", _buf, NULL ); \
+         free(_buf); \
+    } while(0)
 
 #define WRCMSG(color, id, s, ...) \
     do { \
-         char _msgbuf[32768]; \
-         int _rc; \
-         _rc = MSGBUF( _msgbuf, #id s " " id "\n", ## __VA_ARGS__); \
+         char *_msgbuf = (char *)malloc((size_t)32768); \
+         char *_buf; \
+         int _rc = 0; \
+         ASSERT( _msgbuf != NULL); \
+         _rc =  snprintf( _msgbuf, 32767, #id s " " id "\n", ## __VA_ARGS__); \
          ASSERT( _rc != -1 ); \
-         ASSERT( _rc < (int)sizeof(_msgbuf)-1 ); \
-         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), color, "%s", _msgbuf ); \
-       } while(0)
+         _buf = strdup( _msgbuf ); \
+         free(_msgbuf); \
+         ASSERT( _buf != NULL ); \
+         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), color, _buf, NULL ); \
+         free(_buf); \
+    } while(0)
 
 #define WRCMSG_C(color, id, s, ...) \
     do { \
-         char _msgbuf[32768]; \
-         int _rc; \
-         _rc = MSGBUF( _msgbuf, #id s " " id "\n", ## __VA_ARGS__); \
+         char *_msgbuf = (char *)malloc((size_t)32768); \
+         char *_buf; \
+         int _rc = 0; \
+         ASSERT( _msgbuf != NULL); \
+         _rc =  snprintf( _msgbuf, 32767, #id s " " id "\n", ## __VA_ARGS__); \
          ASSERT( _rc != -1 ); \
-         ASSERT( _rc < (int)sizeof(_msgbuf)-1 ); \
-         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), color, "%s", _msgbuf ); \
-       } while(0)
+         _buf = strdup( _msgbuf ); \
+         free(_msgbuf); \
+         ASSERT( _buf != NULL ); \
+         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), color, _buf, NULL ); \
+         free(_buf); \
+    } while(0)
+
+/* grouped messages */
+#define WRGMSG(id, s, ...) \
+    do { \
+         char *_msgbuf = (char *)malloc((size_t)32768); \
+         char *_buf; \
+         int _rc = 0; \
+         ASSERT( _msgbuf != NULL); \
+         _rc =  snprintf( _msgbuf, 32767, #id s " " id "\n", ## __VA_ARGS__); \
+         ASSERT( _rc != -1 ); \
+         _buf = strdup( _msgbuf ); \
+         free(_msgbuf); \
+         ASSERT( _buf != NULL ); \
+         writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), "", _buf, NULL ); \
+         free(_buf); \
+    } \
+    while(0)
+
+#define WRGMSG_C(id, s, ...) \
+    do { \
+         char *_msgbuf = (char *)malloc((size_t)32768); \
+         char *_buf; \
+         int _rc = 0; \
+         ASSERT( _msgbuf != NULL); \
+         _rc =  snprintf( _msgbuf, 32767, #id s " " id "", ## __VA_ARGS__); \
+         ASSERT( _rc != -1 ); \
+         _buf = strdup( _msgbuf ); \
+         free(_msgbuf); \
+         ASSERT( _buf != NULL ); \
+         writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), "", _buf, NULL ); \
+         free(_buf); \
+    } while(0)
+
+#define WRGCMSG(color, id, s, ...) \
+    do { \
+         char *_msgbuf = (char *)malloc((size_t)32768); \
+         char *_buf; \
+         int _rc = 0; \
+         ASSERT( _msgbuf != NULL); \
+         _rc =  snprintf( _msgbuf, 32767, #id s " " id "\n", ## __VA_ARGS__); \
+         ASSERT( _rc != -1 ); \
+         _buf = strdup( _msgbuf ); \
+         free(_msgbuf); \
+         ASSERT( _buf != NULL ); \
+         writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), color, _buf, NULL ); \
+         free(_buf); \
+    } while(0)
+
+#define WRGCMSG_C(color, id, s, ...) \
+    do { \
+         char *_msgbuf = (char *)malloc((size_t)32768); \
+         char *_buf; \
+         int _rc = 0; \
+         ASSERT( _msgbuf != NULL); \
+         _rc =  snprintf( _msgbuf, 32767, #id s " " id "\n", ## __VA_ARGS__); \
+         ASSERT( _rc != -1 ); \
+         _buf = strdup( _msgbuf ); \
+         free(_msgbuf); \
+         ASSERT( _buf != NULL ); \
+         writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), color, _buf, NULL ); \
+         free(_buf); \
+    } while(0)
 #else
 #define WRMSG(id, s, ...)            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", _(#id s " " id "\n"), ## __VA_ARGS__)
 #define WRMSG_C(id, s, ...)          writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", _(#id s " " id ""), ## __VA_ARGS__)
 #define WRCMSG(color, id, s, ...)    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), color, _(#id s " " id "\n"), ## __VA_ARGS__)
 #define WRCMSG_C(color, id, s, ...)  writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), color, _(#id s " " id ""), ## __VA_ARGS__)
+
+/* grouped messages */
+#define WRGMSG(id, s, ...)           writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), "", _(#id s " " id "\n"), ## __VA_ARGS__)
+#define WRGMSG_C(id, s, ...)         writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), "", _(#id s " " id ""), ## __VA_ARGS__)
+#define WRGCMSG(color, id, s, ...)   writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), color, _(#id s " " id "\n"), ## __VA_ARGS__)
+#define WRGCMSG_C(color, id, s, ...) writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), color, _(#id s " " id ""), ## __VA_ARGS__)
 #endif
 
-#ifndef OPTION_MSGLCK
+#ifdef OPTION_MSGLCK
 #define WRGMSG_ON \
 do { \
   int have_lock = 0, try_lock = 10; \
   while(!have_lock) \
   { \
-    obtain_lock(&sysblk.msglock) \
+    obtain_lock(&sysblk.msglock); \
     if(!sysblk.msggrp) \
         have_lock = sysblk.msggrp = 1; \
     release_lock(&sysblk.msglock); \
@@ -168,10 +257,6 @@ do { \
 #define WRGMSG_ON
 #endif
 
-#define WRGMSG(id, s, ...)           writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), "", _(#id s " " id "\n"), ## __VA_ARGS__)
-#define WRGMSG_C(id, s, ...)         writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), "", _(#id s " " id ""), ## __VA_ARGS__)
-#define WRGCMSG(color, id, s, ...)   writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), color, _(#id s " " id "\n"), ## __VA_ARGS__)
-#define WRGCMSG_C(color, id, s, ...) writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), color, _(#id s " " id ""), ## __VA_ARGS__)
 
 /* Hercules messages */
 #define HHC00001 "%s"
