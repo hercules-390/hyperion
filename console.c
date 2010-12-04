@@ -1948,7 +1948,11 @@ BYTE                   unitstat;        /* Status after receive data */
     /* Get information about this system */
     init_hostinfo( NULL );
 
-    init_logo();
+    /* If logo hasn't been built yet, build it now */
+    if(sysblk.herclogo == NULL)
+    {
+        init_logo();
+    }
 
     /* Obtain a socket */
     lsock = socket (AF_INET, SOCK_STREAM, 0);
