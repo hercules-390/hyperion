@@ -33,9 +33,9 @@ or add the same statement to the hercules.cnf file.
 #define _HENGINE_DLL_
 #endif /*_HENGINE_DLL_*/
 
-//#if !defined(_DYN76_C)
-//#define _DYN76_C
-//#endif /* !defined(_DYN76_C) */
+#if !defined(_DYN76_C)
+#define _DYN76_C
+#endif /* !defined(_DYN76_C) */
 
 #include "hercules.h"
 #include "opcode.h"
@@ -44,6 +44,8 @@ or add the same statement to the hercules.cnf file.
 
 #if !defined(_DYN76_H)
 #define _DYN76_H
+
+
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
@@ -53,8 +55,9 @@ or add the same statement to the hercules.cnf file.
    register save area.  These macros ensure storage keys and accesses are
    checked for the parameter block.
 */
+
 #define set_reg(_r, _v) \
-    ARCH_DEP(vstore4)((U32)_v, (VADR)cmpb+(_r * 4), USE_REAL_ADDR, regs)
+    ARCH_DEP(vstore4)((U32)(_v), (VADR)cmpb+(_r * 4), USE_REAL_ADDR, regs)
 #define get_reg(_v, _r) \
     _v = ARCH_DEP(vfetch4)((VADR)(cmpb+(_r * 4)), USE_REAL_ADDR, regs)
 
@@ -124,7 +127,8 @@ struct fkeeper
 //static fkeeper_ptr fkpr_head = NULL;
 static struct fkeeper *fkpr_head = NULL;
 
-static unsigned char DCCascii_to_ebcdic[] = {
+static unsigned char DCCascii_to_ebcdic[] = 
+{
     "\x00\x01\x02\x03\x37\x2D\x2E\x2F\x16\x05\x15\x0B\x0C\x0D\x0E\x0F"
     "\x10\x11\x12\x13\x3C\x3D\x32\x26\x18\x19\x3F\x27\x1C\x1D\x1E\x1F"
     "\x40\x5A\x7F\x7B\x5B\x6C\x50\x7D\x4D\x5D\x5C\x4E\x6B\x60\x4B\x61"
@@ -143,7 +147,8 @@ static unsigned char DCCascii_to_ebcdic[] = {
     "\x8C\x49\xCD\xCE\xCB\xCF\xCC\xE1\x70\xDD\xDE\xDB\xDC\x8D\x8E\xDF"
 };
 
-static unsigned char DCCebcdic_to_ascii[] = {
+static unsigned char DCCebcdic_to_ascii[] = 
+{
     "\x00\x01\x02\x03\x9C\x09\x86\x7F\x97\x8D\x8E\x0B\x0C\x0D\x0E\x0F"
     "\x10\x11\x12\x13\x9D\x0A\x08\x87\x18\x19\x92\x8F\x1C\x1D\x1E\x1F"
     "\x80\x81\x82\x83\x84\x85\x17\x1B\x88\x89\x8A\x8B\x8C\x05\x06\x07"
@@ -242,8 +247,10 @@ static int GetMode (int h)
 
     dolock (nfile_lock); /* Take ownership of the list */
     fk = fkpr_head; /* Search the list */
-    while (fk) {
-        if (fk->handle == h) { /* Found the entry? */
+    while (fk) 
+    {
+        if (fk->handle == h) 
+        {   /* Found the entry? */
             mode = fk->mode;
             break;
         }
@@ -260,9 +267,10 @@ static int SetMode (int h, int m)
 
     dolock (nfile_lock); /* Take ownership of the list */
     fk = fkpr_head; /* Search the list */
-    while (fk) {
+    while (fk) 
+    {
         if (fk->handle == h) 
-        { /* Found the entry? */
+        {   /* Found the entry? */
             mode = fk->mode;
             fk->mode = m;
             break;
@@ -301,8 +309,10 @@ static void RemoveFK (int h)
     dolock (nfile_lock); /* Take ownership of the list */
     pfk = NULL;
     fk = fkpr_head; /* Search the list */
-    while (fk) {
-        if (fk->handle == h) { /* Found the entry? */
+    while (fk) 
+    {
+        if (fk->handle == h) 
+        {   /* Found the entry? */
             if (pfk) /* Wasn't the head entry */
                 pfk->next = fk->next;
             else     /* Was the head entry */
@@ -349,8 +359,10 @@ static int RemoveFKByName (char * filename) {
     dolock (nfile_lock); /* Take ownership of the list */
     pfk = NULL;
     fk = fkpr_head; /* Search the list */
-    while (fk) {
-        if (strcmp (fk->filename, filename) == 0) { /* Found the entry? */
+    while (fk) 
+    {
+        if (strcmp (fk->filename, filename) == 0) 
+        {   /* Found the entry? */
             i = _close (fk->handle); /* Additional step here is to close the file too */
             if (i == -1)
                 i = -errno;
@@ -444,11 +456,11 @@ DLL_EXPORT DEF_INST(dyninst_opcode_76) {
     
     if (R1 > 9)
     {
-        {   /* Invalid Operation - generate an exception */
-            R0 = 0;
-            set_reg(0,R0); /* don't restart this */
-            ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
-        }
+        /* Invalid Operation - generate an exception */
+        R0 = 0;
+        set_reg(0,R0); /* don't restart this */
+        ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
+    }
     get_reg(R2, 2);
     if (R1 == 9) 
     { 
@@ -610,7 +622,7 @@ DLL_EXPORT DEF_INST(dyninst_opcode_76) {
     /* Interruptible operation restart                             */
     /*-------------------------------------------------------------*/
     
-        /* Must have restarted, refresh fk */
+    {   /* Must have restarted, refresh fk */
         //fk = (struct fkeeper *)(regs->GR_L(5));
         get_reg(R5,5);    /* R5 contains the previous restart id */
         fk = FindFK(R5);
@@ -620,6 +632,7 @@ DLL_EXPORT DEF_INST(dyninst_opcode_76) {
             set_reg(0,R0); /* restart failed, so don't do it again */
             ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
         }
+    }
 
     /*-------------------------------------------------------------*/
     /* Work Stage 1 Initial or Restart                             */
@@ -685,7 +698,7 @@ DLL_EXPORT DEF_INST(dyninst_opcode_76) {
                 //(regs->GR_L(b2)) += 1;
                 R2 += 1;
                 set_reg(2,R2);
-                fk->data += 1;  /* Next PC byte location */
+                fk->data += 1;  /* Next host byte location */
                 if (fk->data >= 259) 
                 {
                     fk->filename [fk->data] = 0;
@@ -933,7 +946,6 @@ DLL_EXPORT DEF_INST(dyninst_opcode_76) {
     /*-----------------------------*/
     /* WRITE File Operation        */
     /*-----------------------------*/             
-        
         
     if (R1 == 5) 
     {
