@@ -7448,7 +7448,8 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
 
     mipsrate = sysblk.mipsrate;
 
-    WRMSG( HHC17008, "I", j, ( j == 0 ? 0 : ( cpupct / j ) ), '%',
+    MSGBUF( msgbuf, "%3.3d%%", ( j == 0 ? 0 : ( cpupct / j ) ) ); 
+    WRMSG( HHC17008, "I", j, msgbuf,
                     mipsrate / 1000000, ( mipsrate % 1000000 ) / 10000,
                     sysblk.siosrate, "" );
 
@@ -7471,9 +7472,12 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
         }
 
         if ( k > 0 && k != j )
-            WRMSG( HHC17011, "I", k, ( k == 0 ? 0 : ( cpupct / k ) ), '%',
+        {
+            MSGBUF( msgbuf, "%3.3d%%", ( k == 0 ? 0 : ( cpupct / k ) ) );
+            WRMSG( HHC17011, "I", k, msgbuf,
                                   mipsrate / 1000000,
                                 ( mipsrate % 1000000 ) / 10000 );
+        }
     }
 #endif
     for ( i = 0; i < sysblk.maxcpu; i++ )
@@ -7542,10 +7546,11 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
             }
 #endif
             mipsrate = sysblk.regs[i]->mipsrate;
+            MSGBUF( msgbuf, "%3.3d%%", sysblk.regs[i]->cpupct );
             WRMSG( HHC17009, "I", PTYPSTR(i), i,
                                 ( sysblk.regs[i]->cpustate == CPUSTATE_STARTED ) ? '-' :
                                 ( sysblk.regs[i]->cpustate == CPUSTATE_STOPPING ) ? ':' : '*',
-                                  sysblk.regs[i]->cpupct, '%', 
+                                  msgbuf, 
                                   mipsrate / 1000000,
                                 ( mipsrate % 1000000 ) / 10000,
                                   sysblk.regs[i]->siosrate,
