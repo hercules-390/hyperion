@@ -7415,6 +7415,7 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
     int i, j, k;
     int cpupct = 0;
     U32 mipsrate = 0;
+    char msgbuf[128];
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argv);
@@ -7445,8 +7446,10 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
         }
     }
 
-    WRMSG( HHC17008, "I", j, ( j == 0 ? 0 : ( cpupct / j ) ),
-                    sysblk.mipsrate / 1000000, ( sysblk.mipsrate % 1000000 ) / 10000,
+    mipsrate = sysblk.mipsrate;
+
+    WRMSG( HHC17008, "I", j, ( j == 0 ? 0 : ( cpupct / j ) ), '%',
+                    mipsrate / 1000000, ( mipsrate % 1000000 ) / 10000,
                     sysblk.siosrate, "" );
 
 #if defined(OPTION_CAPPING)
@@ -7454,6 +7457,7 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
     if ( sysblk.capvalue > 0 )
     {
         cpupct = 0;
+        mipsrate = 0;
         for ( i = k = 0; i < sysblk.maxcpu; i++ )
         {
             if ( IS_CPU_ONLINE(i) &&
@@ -7467,7 +7471,7 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
         }
 
         if ( k > 0 && k != j )
-            WRMSG( HHC17011, "I", k, ( k == 0 ? 0 : ( cpupct / k ) ),
+            WRMSG( HHC17011, "I", k, ( k == 0 ? 0 : ( cpupct / k ) ), '%',
                                   mipsrate / 1000000,
                                 ( mipsrate % 1000000 ) / 10000 );
     }
@@ -7478,7 +7482,6 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
         {
             char *pmsg = "";
 #if defined(_MSVC_)
-            char    msgbuf[128];
             FILETIME ftCreate, ftExit, ftKernel, ftUser;
 
             if ( GetThreadTimes(win_thread_handle(sysblk.cputid[i]), &ftCreate, &ftExit, &ftKernel, &ftUser) != 0 )
@@ -7538,12 +7541,13 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
                 pmsg = msgbuf;
             }
 #endif
+            mipsrate = sysblk.regs[i]->mipsrate;
             WRMSG( HHC17009, "I", PTYPSTR(i), i,
                                 ( sysblk.regs[i]->cpustate == CPUSTATE_STARTED ) ? '-' :
                                 ( sysblk.regs[i]->cpustate == CPUSTATE_STOPPING ) ? ':' : '*',
-                                  sysblk.regs[i]->cpupct,
-                                  sysblk.regs[i]->mipsrate / 1000000,
-                                ( sysblk.regs[i]->mipsrate % 1000000 ) / 10000,
+                                  sysblk.regs[i]->cpupct, '%', 
+                                  mipsrate / 1000000,
+                                ( mipsrate % 1000000 ) / 10000,
                                   sysblk.regs[i]->siosrate,
                                   pmsg );
         }
