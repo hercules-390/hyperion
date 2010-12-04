@@ -7445,7 +7445,7 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
         }
     }
 
-    WRMSG( HHC17008, "I", ( j == 0 ? 0 : ( cpupct / j ) ), j,
+    WRMSG( HHC17008, "I", j, ( j == 0 ? 0 : ( cpupct / j ) ),
                     sysblk.mipsrate / 1000000, ( sysblk.mipsrate % 1000000 ) / 10000,
                     sysblk.siosrate, "" );
 
@@ -7457,7 +7457,7 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
         for ( i = k = 0; i < sysblk.maxcpu; i++ )
         {
             if ( IS_CPU_ONLINE(i) &&
-                 sysblk.ptyp[i] == SCCB_PTYP_CP &&
+                ( sysblk.ptyp[i] == SCCB_PTYP_CP || sysblk.ptyp[i] == SCCB_PTYP_IFA ) &&
                  sysblk.regs[i]->cpustate == CPUSTATE_STARTED )
             {
                 k++;
@@ -7467,7 +7467,7 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
         }
 
         if ( k > 0 && k != j )
-            WRMSG( HHC17011, "I", ( k == 0 ? 0 : ( cpupct / k ) ), k,
+            WRMSG( HHC17011, "I", k, ( k == 0 ? 0 : ( cpupct / k ) ),
                                   mipsrate / 1000000,
                                 ( mipsrate % 1000000 ) / 10000 );
     }
