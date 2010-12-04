@@ -2873,6 +2873,15 @@ BYTE c;
 
     UNREFERENCED(cmdline);
 
+    if ( argc == 1 )
+    {
+        char msgbuf[8];
+
+        VERIFY( MSGBUF( msgbuf, "%d", sysblk.hercprio ) != -1);
+        WRMSG( HHC02203, "I", argv[0], msgbuf );
+    }
+    else
+
     /* Parse priority value */
     if ( argc == 2 )
     {
