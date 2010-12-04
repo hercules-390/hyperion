@@ -57,10 +57,19 @@
             if ( siz > 65536 ) break;         \
             bfr=realloc(bfr,siz);             \
         }                                     \
-        if ( bfr != NULL && strlen(bfr) == 0) \
+        if ( bfr != NULL && strlen(bfr) == 0 && strlen(msg) != 0 )            \
         {                                     \
             free(bfr);                        \
             bfr = strdup(msg);                \
+        }                                     \
+        else                                  \
+        {                                     \
+            if ( bfr != NULL )                \
+            {                                 \
+                char *p = strdup( bfr );      \
+                free( bfr );                  \
+                bfr = p;                      \
+            }                                 \
         }                                     \
         ASSERT(bfr)
 #else
@@ -72,17 +81,25 @@
             va_start(vl,msg);                 \
             rc=vsnprintf(bfr,siz,msg,vl);     \
             va_end(vl);                       \
-            if(rc>=0 && rc<siz)               \
-                break;                        \
+            if(rc>=0 && rc<siz) break;        \
             rc=-1;                            \
             siz+=BFR_CHUNKSIZE;               \
             if ( siz > 65536 ) break;         \
             bfr=realloc(bfr,siz);             \
         }                                     \
-        if ( bfr != NULL && strlen(bfr) == 0) \
+        if ( bfr != NULL && strlen(bfr) == 0 && strlen(msg) != 0 )            \
         {                                     \
             free(bfr);                        \
             bfr = strdup(msg);                \
+        }                                     \
+        else                                  \
+        {                                     \
+            if ( bfr != NULL )                \
+            {                                 \
+                char *p = strdup( bfr );      \
+                free( bfr );                  \
+                bfr = p;                      \
+            }                                 \
         }                                     \
         ASSERT(bfr)
 #endif

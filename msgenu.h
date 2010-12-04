@@ -106,7 +106,7 @@ always be manually overridden at any time via the "msglevel" command.
          _buf = strdup( _msgbuf ); \
          free(_msgbuf); \
          ASSERT( _buf != NULL ); \
-         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", _buf, NULL ); \
+         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", _buf ); \
          free(_buf); \
     } \
     while(0)
@@ -122,7 +122,7 @@ always be manually overridden at any time via the "msglevel" command.
          _buf = strdup( _msgbuf ); \
          free(_msgbuf); \
          ASSERT( _buf != NULL ); \
-         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", _buf, NULL ); \
+         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", _buf ); \
          free(_buf); \
     } while(0)
 
@@ -137,7 +137,7 @@ always be manually overridden at any time via the "msglevel" command.
          _buf = strdup( _msgbuf ); \
          free(_msgbuf); \
          ASSERT( _buf != NULL ); \
-         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), color, _buf, NULL ); \
+         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), color, "%s", _buf ); \
          free(_buf); \
     } while(0)
 
@@ -152,7 +152,7 @@ always be manually overridden at any time via the "msglevel" command.
          _buf = strdup( _msgbuf ); \
          free(_msgbuf); \
          ASSERT( _buf != NULL ); \
-         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), color, _buf, NULL ); \
+         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), color, "%s", _buf ); \
          free(_buf); \
     } while(0)
 
@@ -168,7 +168,7 @@ always be manually overridden at any time via the "msglevel" command.
          _buf = strdup( _msgbuf ); \
          free(_msgbuf); \
          ASSERT( _buf != NULL ); \
-         writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), "", _buf, NULL ); \
+         writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), "", "%s", _buf ); \
          free(_buf); \
     } \
     while(0)
@@ -184,7 +184,7 @@ always be manually overridden at any time via the "msglevel" command.
          _buf = strdup( _msgbuf ); \
          free(_msgbuf); \
          ASSERT( _buf != NULL ); \
-         writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), "", _buf, NULL ); \
+         writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), "", "%s", _buf ); \
          free(_buf); \
     } while(0)
 
@@ -199,7 +199,7 @@ always be manually overridden at any time via the "msglevel" command.
          _buf = strdup( _msgbuf ); \
          free(_msgbuf); \
          ASSERT( _buf != NULL ); \
-         writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), color, _buf, NULL ); \
+         writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), color, "%s", _buf ); \
          free(_buf); \
     } while(0)
 
@@ -214,7 +214,7 @@ always be manually overridden at any time via the "msglevel" command.
          _buf = strdup( _msgbuf ); \
          free(_msgbuf); \
          ASSERT( _buf != NULL ); \
-         writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), color, _buf, NULL ); \
+         writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), color, "%s", _buf ); \
          free(_buf); \
     } while(0)
 #else
@@ -420,12 +420,12 @@ do { \
 #define HHC00333 "%1d:%04X           size free  nbr st   reads  writes l2reads    hits switches"
 #define HHC00334 "%1d:%04X                                                  readaheads   misses"
 #define HHC00335 "%1d:%04X --------------------------------------------------------------------"
-#define HHC00336 "%1d:%04X [*] %10" I64_FMT "d %3" I64_FMT "d%% %4d    %7d %7d %7d %7d  %7d"
-#define HHC00337 "%1d:%04X                                                     %7d  %7d"
+#define HHC00336 "%1d:%04X [*] %10.10" I64_FMT "d %3.3" I64_FMT "d" "%%" " %4.4d    %7.7d %7.7d %7.7d %7.7d  %7.7d"
+#define HHC00337 "%1d:%04X                                                     %7.7d  %7.7d"
 #define HHC00338 "%1d:%04X %s"
-#define HHC00339 "%1d:%04X [0] %10" I64_FMT "d %3" I64_FMT "d%% %4d %s %7d %7d %7d"
+#define HHC00339 "%1d:%04X [0] %10.10" I64_FMT "d %3.3" I64_FMT "d" "%%" " %4.4d %s %7.7d %7.7d %7.7d"
 #define HHC00340 "%1d:%04X %s"
-#define HHC00341 "%1d:%04X [%d] %10" I64_FMT "d %3" I64_FMT "d%% %4d %s %7d %7d %7d"
+#define HHC00341 "%1d:%04X [%d] %10.10" I64_FMT "d %3.3" I64_FMT "d" "%%" " %4.4d %s %7.7d %7.7d %7.7d"
 #define HHC00342 "%1d:%04X CCKD file[%d] '%s': offset 0x"I64_FMTx" unknown space %2.2x%2.2x%2.2x%2.2x%2.2x"
 #define HHC00343 "%1d:%04X CCKD file[%d] '%s': uncompress error trk %d: %2.2x%2.2x%2.2x%2.2x%2.2x"
 #define HHC00344 "%1d:%04X CCKD file[%d] '%s': compression '%s' not supported"
@@ -1629,8 +1629,8 @@ do { \
 #define HHC02520 "Creating %4.4X volume %s: %u trks/cyl, %u bytes/track"
 #define HHC02521 "Loading %4.4X volume %s"
 #define HHC02522 "IPL text address=%06X length=%04X"
-#define HHC02523 "Updating cyl[%04X/%d] head[%%04X/%d] rec[%02X/%d]; kl[%d] dl[%d]"
-#define HHC02524 "VTOC starts at cyl[%04X/%d] head[%%04X/%d] and is %d track%s"
+#define HHC02523 "Updating cyl[%04X/%d] head[%04X/%d] rec[%02X/%d]; kl[%d] dl[%d]"
+#define HHC02524 "VTOC starts at cyl[%04X/%d] head[%04X/%d] and is %d track%s"
 #define HHC02525 "Format %d DSCB CCHHR[%04X%04X%02X] (TTR[%04X%02X]) %s"
 #define HHC02526 "\t+%04X %-8.8s %04X %04X"
 #define HHC02527 "File number: %d"
