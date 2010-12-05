@@ -1,10 +1,25 @@
 -------------------------------------------------------------------------------
 
-                     Version 3.08 RELEASE NOTES
+                     Version 4.0 RELEASE NOTES
 
 
 * The new minimum supported Microsoft Windows platform is now Windows XP or
   greater. Windows 98, Windows NT and Windows 2000 are no longer supported.
+
+
+* The combination of NUMCPU and MAXCPU controls the behavior of how many
+  CPU engines will be configured online upon startup and how many can be
+  configured online later. In previous versions this was controlled via
+  the NUMCPU statement and the compile-time constant 'MAX_CPU_ENGINES'.
+
+  For compatibility with previous versions if MAXCPU is not specified its
+  value defaults to NUMCPU. If neither is specified it defaults to 1.
+
+
+* All configuration file statements are now available as and processed as
+  panel commands. Any valid configuration file statement may now also be
+  entered as a panel command. Some panel commands however are not allowed
+  as configuration file statements. See the documentation for details.
 
 
 -------------------------------------------------------------------------------
