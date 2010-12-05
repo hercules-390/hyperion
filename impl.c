@@ -557,9 +557,10 @@ int     dll_count;                      /* index into array          */
     sysblk.srvprio  = DEFAULT_SRV_PRIO;
 
     /* Cap the default priorities at zero if setuid not available */
-#if !defined(NO_SETUID)
+#if !defined( _MSVC_ )
+  #if !defined(NO_SETUID)
     if (sysblk.suid)
-#endif
+  #endif
     {
         if (sysblk.hercprio < 0)
             sysblk.hercprio = 0;
@@ -572,6 +573,7 @@ int     dll_count;                      /* index into array          */
         if (sysblk.srvprio < 0)
             sysblk.srvprio = 0;
     }
+#endif
 
     /* set default console keep alive values */
     sysblk.kaidle = KEEPALIVE_IDLE_TIME;
