@@ -3254,6 +3254,7 @@ BYTE c;
         return -1;
     }
 
+    /* Display current value */
     if ( argc == 1 )
     {
         char msgbuf[32];
@@ -3279,7 +3280,7 @@ BYTE c;
     }
 
     /* Configure CPUs */
-    rc = configure_numcpu(numcpu);
+    rc = configure_numcpu(g_numcpu = numcpu);
     switch(rc) {
     case 0:
         if ( MLVL(VERBOSE) )
@@ -3313,6 +3314,7 @@ BYTE c;
         return -1;
     }
 
+    /* Display current value */
     if ( argc == 1 )
     {
         char msgbuf[32];
@@ -3360,7 +3362,7 @@ BYTE c;
     }
 
 
-    sysblk.maxcpu = maxcpu;
+    sysblk.maxcpu = g_maxcpu = maxcpu;
 
     if (MLVL(VERBOSE))
     {

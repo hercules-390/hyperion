@@ -240,7 +240,7 @@ int build_config (char *fname);
 /* Functions in module script.c */
 SCRI_DLL_IMPORT int process_config (char *fname);
 SCRI_DLL_IMPORT int parse_args (char* p, int maxargc, char** pargv, int* pargc);
- 
+
 /* Functions in module config.c */
 void release_config ();
 CONF_DLL_IMPORT DEVBLK *find_device_by_devnum (U16 lcss, U16 devnum);
@@ -258,7 +258,7 @@ int  configure_cpu (int cpu);
 int  deconfigure_cpu (int cpu);
 int  configure_numcpu (int numcpu);
 int  configure_storage(RADR);               // amount of storage
-int  configure_xstorage(RADR);              // amount of storage 
+int  configure_xstorage(RADR);              // amount of storage
 int  configure_capping(U32 value);
 
 int  configure_herc_priority(int prio);
@@ -308,6 +308,8 @@ HAO_DLL_IMPORT void hao_message(char *message); /* process message */
 
 /* Functions in module hsccmd.c (so PTT debugging patches can access them) */
 int qproc_cmd(int argc, char *argv[], char *cmdline);
+extern int g_numcpu;  /* Number of CPUs         */
+extern int g_maxcpu;  /* Maximum number of CPUs */
 
 /* Functions in module hscpufun.c (so PTT debugging patches can access them) */
 HCPU_DLL_IMPORT int stopall_cmd (int argc, char *argv[], char *cmdline);
@@ -458,11 +460,11 @@ int ckddasd_hresume  ( DEVBLK *dev, void *file );
 /* Functions in module fbadasd.c */
 FBA_DLL_IMPORT void fbadasd_syncblk_io (DEVBLK *dev, BYTE type, int blknum,
         int blksize, BYTE *iobuf, BYTE *unitstat, U16 *residual);
-FBA_DLL_IMPORT void fbadasd_read_block 
-      ( DEVBLK *dev, int blknum, int blksize, int blkfactor, 
+FBA_DLL_IMPORT void fbadasd_read_block
+      ( DEVBLK *dev, int blknum, int blksize, int blkfactor,
         BYTE *iobuf, BYTE *unitstat, U16 *residual );
-FBA_DLL_IMPORT void fbadasd_write_block 
-      ( DEVBLK *dev, int blknum, int blksize, int blkfactor, 
+FBA_DLL_IMPORT void fbadasd_write_block
+      ( DEVBLK *dev, int blknum, int blksize, int blkfactor,
         BYTE *iobuf, BYTE *unitstat, U16 *residual );
 int fbadasd_init_handler ( DEVBLK *dev, int argc, char *argv[]);
 void fbadasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,

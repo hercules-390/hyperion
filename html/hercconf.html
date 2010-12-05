@@ -823,8 +823,11 @@ and how they are used.
     <a href="#ENGINES">ENGINES</a> statement.
     <p>
     The value of MAXCPU cannot exceed the value of <code>MAX_CPU_ENGINES</code>.
-    If MAXCPU is not specified then the default value is the value of
-    <code>MAX_CPU_ENGINES</code>.
+
+    If MAXCPU is not specified in the Hercules configuration file,
+    then its initial value is equal to NUMCPU.
+
+    If MAXCPU and NUMCPU are both omitted, MAXCPU is set to 1.
     <p>
     <code>MAX_CPU_ENGINES</code> is a compile-time variable which sets
     an upper limit on the value of MAXCPU.
@@ -914,7 +917,7 @@ and how they are used.
     NUMCPU cannot exceed the value of <a href="#MAXCPU">MAXCPU</a>.
     If NUMCPU is less than <a href="#MAXCPU">MAXCPU</a>
     then the remaining engines can be configured online later.
-    The default value of NUMCPU is 1.
+    The default NUMCPU value is 1. The minimum value is 0.
     <p>
     Multiprocessor emulation works best
     if your host system actually has more than one physical CPU, but you can
