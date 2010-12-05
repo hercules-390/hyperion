@@ -522,13 +522,6 @@ int cpu;
     for(cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
         if(sysblk.cputid[cpu])
         {
-            prio -= getpriority(PRIO_PROCESS,
-#if defined(USE_GETTID)
-                                             sysblk.cputidp[cpu]);
-#else /*!defined(USE_GETTID)*/
-                                             sysblk.cputid[cpu]);
-#endif /*!defined(USE_GETTID)*/
-
             if(setpriority(PRIO_PROCESS,
 #if defined(USE_GETTID)
                                         sysblk.cputidp[cpu],
@@ -566,13 +559,6 @@ int configure_tod_priority(int prio)
     sysblk.todprio = prio;
 
     SETMODE(ROOT);
-
-    prio -= getpriority(PRIO_PROCESS,
-#if defined(USE_GETTID)
-                                     sysblk.todtidp);
-#else /*!defined(USE_GETTID)*/
-                                     sysblk.todtid);
-#endif /*!defined(USE_GETTID)*/
 
     if(sysblk.todtid)
         if(setpriority(PRIO_PROCESS,
