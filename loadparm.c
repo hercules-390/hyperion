@@ -290,14 +290,15 @@ char *str_plant()
  * field other than "modelcapa" to all blanks will result in the field
  * being set to binary zeros. "modelcapa" must have at least one
  * character in the field. Valid characters are 0-9,A-Z, right padded
- * with blanks.
+ * with blanks. '*' means not specified (keep existing value/default),
+ * '=' means use same value that was specified in the previous field,
+ * empty string means field is undefined (set field to binary zeros).
  */
 /*-------------------------------------------------------------------*/
 
 int set_model(char *m1, char *m2, char *m3, char *m4)
 {
-
-    /* Model maybe binary zero */
+    /* Model may be binary zero */
     if ( m1 != NULL && m1[0] != '*' )
     {
         if ( strlen(m1) == 0 )
@@ -309,14 +310,13 @@ int set_model(char *m1, char *m2, char *m3, char *m4)
     else if ( m1 == NULL )
         return 0;
 
-    /* model-capa may never be binary zero, if NULL or "" then default of "EMULATOR" will
-       be assigned */
+    /* model-capa may NEVER be binary zero, if "" then default to
+       the same value as the Model field if not binary zero. Otherwise
+       if the Model field is binary zero the value 'EMULATOR' is used */
     if ( m2 != NULL && m2[0] != '*' )
     {
-        if ( strlen(m2) == 0 )
-            memcpy(gsysinfo.modelcapa,dflt_model,sizeof(gsysinfo.modelcapa));
-        else if ( strcmp(m2, "=") == 0)
-            memcpy(gsysinfo.modelcapa, gsysinfo.model, sizeof(gsysinfo.modelcapa));
+        if ( strlen(m2) == 0 || strcmp(m2, "=") == 0)
+            memcpy(gsysinfo.modelcapa, gsysinfo.model[0] ? gsysinfo.model : dflt_model, sizeof(gsysinfo.modelcapa));
         else if ( copy_stringz_to_ebcdic(gsysinfo.modelcapa, sizeof(gsysinfo.modelcapa), m2) <= 0) return 2;
     }
     else if ( m2 == NULL )
