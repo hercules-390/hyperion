@@ -1859,10 +1859,10 @@ do { \
 #define HHC17005 "CPC SI = %4.4X.%s.%s.%s.%16.16X"
 #define HHC17006 "LPARNAME[%2.2X] = %s"
 #define HHC17007 "NumCPU = %2.2d, NumVEC = %2.2d, ReservedCPU = %2.2d, MaxCPU = %2.2d"
-#define HHC17008 "Avgproc  %2.2d %s; MIPS[%4d.%2.2d]; SIOS[%6d]%s"
-#define HHC17009 "PROC %s%2.2X %c %s; MIPS[%4d.%2.2d]; SIOS[%6d]%s"
+#define HHC17008 "Avgproc  %2.2d %3.3d%%; MIPS[%4d.%2.2d]; SIOS[%6d]%s"
+#define HHC17009 "PROC %s%2.2X %c %3.3d%%; MIPS[%4d.%2.2d]; SIOS[%6d]%s"
 #define HHC17010 " - Started        : Stopping        * Stopped"
-#define HHC17011 "Avg CP   %2.2d %s; MIPS[%4d.%2d];"
+#define HHC17011 "Avg CP   %2.2d %3.3d%%; MIPS[%4d.%2d];"
 #define HHC17012 "MSGLEVEL = %s"
 #define HHC17013 "Process ID = %d"
 

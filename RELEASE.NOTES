@@ -16,9 +16,9 @@
   value defaults to NUMCPU. If neither is specified it defaults to 1.
 
 
-* All configuration file statements are now available as and processed as
-  panel commands. Any valid configuration file statement may now also be
-  entered as a panel command. Some panel commands however are not allowed
+* Most configuration file statements are now available as and processed as
+  panel commands. Most valid configuration file statement may now also be
+  entered as a panel command. Most panel commands however are allowed
   as configuration file statements. See the documentation for details.
 
 
