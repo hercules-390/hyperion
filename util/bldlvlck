@@ -25,6 +25,7 @@
 # 30/11/07 Changed URL to point to hercules-390.org. (JRM)
 # 30/11/10 Remove obsolete CVS test, add special gsed test for Apple/Darwin
 #          (Enrico Sorichetti by Fish)
+# 06/12/10 M4 fix (Enrico Sorichetti by Fish)
 #****************************************************************************
 
 use strict;
@@ -41,7 +42,7 @@ my @req = qw(
      gettext     0.11   0  http://www.gnu.org/directory/gettext.html
      grep        0      0  http://www.gnu.org/directory/grep.html
      libiconv    1.8    1  http://www.gnu.org/directory/libiconv.html
-     m4          0.0    1  http://www.gnu.org/directory/GNU/gnum4.html
+     m4          0.0    0  http://www.gnu.org/directory/GNU/gnum4.html
      make        3.79   0  http://www.gnu.org/directory/make.html
      perl        5.6    1  http://www.gnu.org/directory/perl/html
      sed         3.02   0  http://www.gnu.org/directory/sed.html
@@ -60,8 +61,16 @@ for (my $i = 0; $i < @req; $i += 4) {
       $facility = 'gsed';
     }
   }
+
   my $level = $req[$i+1];
   my $special = $req[$i+2];
+  if ($facility eq 'm4') {
+    if ($^O eq 'darwin') {
+      print "Apple/Darwin ==> custom version parsing!\n" ;
+      $special = 1;
+    }
+  }
+
   my $url = $req[$i+3];
   if ($special) {
     weird($facility, $level, $url);
@@ -151,10 +160,11 @@ sub weird {
       chomp $resp;
       my $msg = 'HUH?   ';
       my $instversion = "DUNNO";
-      if ($resp =~ /GNU [mM]4 (\d+.\d+)/) {
+      if ($resp =~ /GNU [mM]4 (\d+.\d+.\d+)/) {
         $instversion = '';
         $instversion = $1 if defined $1;
         $instversion = "$1.$2" if defined $1 && defined $2;
+        $instversion = "$1.$2.$3" if defined $1 && defined $2 && defined $3;
         $msg = ckvers($level, $instversion);
       }
       print "$msg\t$facility requires $level, found $instversion\n";
