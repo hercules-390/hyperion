@@ -57,6 +57,15 @@ static char *spaces[] = { "none", "devhdr", "cdevhdr", "l1",  "l2",
 static char *comps[]  = { "none", "zlib",   "bzip2" };
 
 /*-------------------------------------------------------------------*/
+/* EXTERNALGUI support                                               */
+/*-------------------------------------------------------------------*/
+#ifdef EXTERNALGUI
+  #define gui_fprintf if (extgui) fprintf
+#else
+  #define gui_fprintf()
+#endif
+
+/*-------------------------------------------------------------------*/
 /* Change the endianess of a compressed file                         */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int cckd_swapend (DEVBLK *dev)
@@ -84,12 +93,14 @@ CCKD_FREEBLK      freeblk;              /* Free block                */
     /* Get file size */
     if (fstat (fd, &fst) < 0)
         goto cswp_fstat_error;
+    gui_fprintf (stderr, "SIZE=%"I64_FMT"u\n", (U64) fst.st_size);
     hipos = fst.st_size;
 
     /* Device header */
     off = CCKD_DEVHDR_POS;
     if (lseek (fd, off, SEEK_SET) < 0)
         goto cswp_lseek_error;
+    gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
     len = CCKD_DEVHDR_SIZE;
     if ((rc = read (fd, &cdevhdr, len)) != len)
         goto cswp_read_error;
@@ -98,6 +109,7 @@ CCKD_FREEBLK      freeblk;              /* Free block                */
     cdevhdr.options |= CCKD_ORDWR;
     if (lseek (fd, off, SEEK_SET) < 0)
         goto cswp_lseek_error;
+    gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
     if ((rc = write (fd, &cdevhdr, len)) != len)
         goto cswp_write_error;
     if (!swapend) cckd_swapend_chdr (&cdevhdr);
@@ -109,11 +121,13 @@ CCKD_FREEBLK      freeblk;              /* Free block                */
     off = CCKD_L1TAB_POS;
     if (lseek (fd, off, SEEK_SET) < 0)
         goto cswp_lseek_error;
+    gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
     if ((rc = read (fd, l1, len)) != len)
         goto cswp_read_error;
     cckd_swapend_l1 (l1, (int)cdevhdr.numl1tab);
     if (lseek (fd, off, SEEK_SET) < 0)
         goto cswp_lseek_error;
+    gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
     if ((rc = write (fd, l1, len)) != len)
         goto cswp_write_error;
     if (!swapend) cckd_swapend_l1 (l1, (int)cdevhdr.numl1tab);
@@ -128,12 +142,14 @@ CCKD_FREEBLK      freeblk;              /* Free block                */
         off = (off_t)l1[i];
         if (lseek (fd, off, SEEK_SET) < 0)
             goto cswp_lseek_error;
+        gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
         len = CCKD_L2TAB_SIZE;
         if ((rc = read (fd, l2, len)) != len)
             goto cswp_read_error;
         cckd_swapend_l2 (l2);
         if (lseek (fd, off, SEEK_SET) < 0)
             goto cswp_lseek_error;
+        gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
         if ((rc = write (fd, l2, len)) != len)
             goto cswp_write_error;
     }
@@ -148,6 +164,7 @@ CCKD_FREEBLK      freeblk;              /* Free block                */
         off = (off_t)cdevhdr.free;
         if (lseek (fd, off, SEEK_SET) < 0)
             goto cswp_lseek_error;
+        gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
         len = CCKD_FREEBLK_SIZE;
         if ((rc = read (fd, &freeblk, len)) != len)
             goto cswp_read_error;
@@ -161,11 +178,13 @@ CCKD_FREEBLK      freeblk;              /* Free block                */
                     break;
                 if (lseek (fd, off, SEEK_SET) < 0)
                     goto cswp_lseek_error;
+                gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
                 if ((rc = read (fd, &freeblk, len)) != len)
                     goto cswp_read_error;
                 cckd_swapend_free (&freeblk);
                 if (lseek (fd, off, SEEK_SET) < 0)
                     goto cswp_lseek_error;
+                gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
                 if ((rc = write (fd, &freeblk, len)) != len)
                     goto cswp_write_error;
             } /* for each free space */
@@ -179,11 +198,13 @@ CCKD_FREEBLK      freeblk;              /* Free block                */
                     break;
                 if (lseek (fd, off, SEEK_SET) < 0)
                     goto cswp_lseek_error;
+                gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
                 if ((rc = read (fd, &freeblk, len)) != len)
                     goto cswp_read_error;
                 cckd_swapend_free (&freeblk);
                 if (lseek (fd, off, SEEK_SET) < 0)
                     goto cswp_lseek_error;
+                gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
                 if ((rc = write (fd, &freeblk, len)) != len)
                     goto cswp_write_error;
                 if (!swapend) cckd_swapend_free (&freeblk);
@@ -387,6 +408,7 @@ BYTE            buf[65536*4];           /* Buffer                    */
      *---------------------------------------------------------------*/
     if (fstat (fd, &fst) < 0)
         goto comp_fstat_error;
+    gui_fprintf (stderr, "SIZE=%"I64_FMT"u\n", (U64) fst.st_size);
     maxsize = sizeof(off_t) == 4 ? 0x7fffffffll : 0xffffffffll;
 
     /*---------------------------------------------------------------
@@ -395,6 +417,7 @@ BYTE            buf[65536*4];           /* Buffer                    */
     off = 0;
     if (lseek (fd, off, SEEK_SET) < 0)
         goto comp_lseek_error;
+    gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
     len = CKDDASD_DEVHDR_SIZE;
     if ((rc = read (fd, &devhdr, len)) != len)
         goto comp_read_error;
@@ -418,6 +441,7 @@ comp_restart:
     off = CCKD_DEVHDR_POS;
     if (lseek (fd, off, SEEK_SET) < 0)
         goto comp_lseek_error;
+    gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
     len = CCKD_DEVHDR_SIZE;
     if ((rc = read (fd, &cdevhdr, len)) != len)
         goto comp_read_error;
@@ -466,6 +490,7 @@ comp_restart:
     off = CCKD_L1TAB_POS;
     if (lseek (fd, off, SEEK_SET) < 0)
         goto comp_lseek_error;
+    gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
     if ((rc = read (fd, l1, len)) != len)
         goto comp_read_error;
 
@@ -534,6 +559,7 @@ comp_restart:
         off = (off_t)spctab[i].pos;
         if (lseek (fd, off, SEEK_SET) < 0)
             goto comp_lseek_error;
+        gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
         if ((rc = read (fd, l2[l], len)) != len)
             goto comp_read_error;
         for (j = 0; j < 256; j++)
@@ -618,6 +644,7 @@ comp_restart:
             off = (off_t)spctab[i].pos;
             if (lseek (fd, off, SEEK_SET) < 0)
                 goto comp_lseek_error;
+            gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
             len = spctab[i].len;
             if ((rc = read (fd, p, len)) != len)
                 goto comp_read_error;
@@ -686,6 +713,7 @@ comp_restart:
         /* read the image(s) to be relocated */
         if (lseek (fd, off, SEEK_SET) < 0)
             goto comp_lseek_error;
+        gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
         if ((rc = read (fd, buf, len)) != len)
             goto comp_write_error;
 
@@ -693,6 +721,7 @@ comp_restart:
         off = (off_t)spctab[i].pos + spctab[i].len;
         if (lseek (fd, off, SEEK_SET) < 0)
             goto comp_lseek_error;
+        gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
         if ((rc = write (fd, buf, len)) != len)
             goto comp_write_error;
     }
@@ -717,6 +746,7 @@ comp_restart:
 
         if (lseek (fd, off, SEEK_SET) < 0)
             goto comp_lseek_error;
+        gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
         len = spctab[s].len;
         if ((rc = write (fd, p, len)) != len)
             goto comp_write_error;
@@ -772,6 +802,7 @@ comp_restart:
     off = CCKD_DEVHDR_POS;
     if (lseek (fd, off, SEEK_SET) < 0)
         goto comp_lseek_error;
+    gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
     len = CCKD_DEVHDR_SIZE;
     if ((rc = write (fd, &cdevhdr, len)) != len)
         goto comp_write_error;
@@ -780,6 +811,7 @@ comp_restart:
     off = CCKD_L1TAB_POS;
     if (lseek (fd, off, SEEK_SET) < 0)
         goto comp_lseek_error;
+    gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
     len = l1size;
     if ((rc = write (fd, l1, len)) != len)
         goto comp_write_error;
@@ -791,6 +823,7 @@ comp_restart:
             off = (off_t)l1[i];
             if (lseek (fd, off, SEEK_SET) < 0)
                 goto comp_lseek_error;
+            gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
             len = CCKD_L2TAB_SIZE;
             if ((rc = write (fd, l2[i], len)) != len)
                 goto comp_lseek_error;
@@ -824,6 +857,8 @@ comp_return_ok:
     rc = 0;
 
 comp_return:
+
+    gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
 
     if (rbuf) free(rbuf);
     if (l2)
@@ -1003,6 +1038,7 @@ BYTE            buf[4*65536];           /* buffer                    */
     /* Get some file information */
     if ( fstat (fd, &fst) < 0 )
         goto cdsk_fstat_error;
+    gui_fprintf (stderr, "SIZE=%"I64_FMT"u\n", (U64) fst.st_size);
     hipos = fst.st_size;
     maxsize = sizeof(off_t) == 4 ? 0x7fffffffll : 0xffffffffll;
     fdflags = get_file_accmode_flags(fd);
@@ -1030,7 +1066,7 @@ BYTE            buf[4*65536];           /* buffer                    */
     off = 0;
     if ( lseek (fd, off, SEEK_SET) < 0)
         goto cdsk_lseek_error;
-
+    gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
     len = CKDDASD_DEVHDR_SIZE;
     if ((rc = read (fd, &devhdr, len)) != len)
         goto cdsk_read_error;
@@ -1063,7 +1099,7 @@ BYTE            buf[4*65536];           /* buffer                    */
     off = CCKD_DEVHDR_POS;
     if ( lseek (fd, off, SEEK_SET) < 0)
         goto cdsk_lseek_error;
-
+    gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
     len = CCKD_DEVHDR_SIZE;
     if ((rc = read (fd, &cdevhdr, len)) != len)
         goto cdsk_read_error;
@@ -1266,13 +1302,13 @@ BYTE            buf[4*65536];           /* buffer                    */
     /*---------------------------------------------------------------
      * read the level 1 table
      *---------------------------------------------------------------*/
-
     len = l1size;
     if ((l1 = malloc (len)) == NULL)
         goto cdsk_error;
     off = CCKD_L1TAB_POS;
     if ( lseek (fd, off, SEEK_SET) < 0)
         goto cdsk_lseek_error;
+    gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
     if ((rc = read (fd, l1, len)) != len)
         goto cdsk_read_error;
     if (swapend) cckd_swapend_l1 (l1, (int)cdevhdr.numl1tab);
@@ -1399,6 +1435,7 @@ BYTE            buf[4*65536];           /* buffer                    */
         off = spctab[i].pos;
         if ( lseek (fd, off, SEEK_SET) < 0 )
             goto cdsk_lseek_error;
+        gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
         len = CCKD_L2TAB_SIZE;
         if ((rc = read (fd, l2tab, len)) != len)
             goto cdsk_read_error;
@@ -1597,6 +1634,8 @@ BYTE            buf[4*65536];           /* buffer                    */
              || (rc = read (fd, &freeblk, len)) != len)
                 break;
 
+            gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
+
             if (memcmp (&freeblk, "FREE_BLK", 8) == 0)
             {
                 /* new format free space */
@@ -1633,6 +1672,7 @@ BYTE            buf[4*65536];           /* buffer                    */
                     if (off < lopos || off > hipos) break;
                     if (lseek (fd, off, SEEK_SET) < 0)
                         goto cdsk_lseek_error;
+                    gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
                     if ((rc = read (fd, &freeblk, len)) != len)
                         goto cdsk_read_error;
                     if (swapend) cckd_swapend_free (&freeblk);
@@ -1685,6 +1725,7 @@ cdsk_space_check:
             off = spctab[i].pos;
             if ( lseek (fd, off, SEEK_SET) < 0 )
                 goto cdsk_lseek_error;
+            gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
             len = level < 3 ? CKDDASD_TRKHDR_SIZE : spctab[i].len;
             if ((rc = read (fd, buf, len)) != len)
                 goto cdsk_read_error;
@@ -1775,7 +1816,6 @@ cdsk_recovery:
         /*-----------------------------------------------------------
          * Phase 1 -- recover trk/blkgrp images
          *-----------------------------------------------------------*/
-
         /*
          * Reset the end-of-file pos to the file size
          * It might have been changed if new format free space
@@ -1819,6 +1859,7 @@ cdsk_recovery:
                 off = (off_t)fpos;
                 if (lseek (fd, off, SEEK_SET) < 0)
                     goto cdsk_lseek_error;
+                gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
                 if ((rc = read (fd, buf, len)) != len)
                     goto cdsk_read_error;
 
@@ -2042,6 +2083,7 @@ cdsk_ckd_recover:
                 off = (off_t)fpos;
                 if (lseek (fd, off, SEEK_SET) < 0)
                     goto cdsk_lseek_error;
+                gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
                 if ((rc = read (fd, buf, len)) != len)
                     goto cdsk_read_error;
 
@@ -2360,6 +2402,7 @@ cdsk_fba_recover:
         off = CCKD_L1TAB_POS;
         if (lseek (fd, off, SEEK_SET) < 0)
             goto cdsk_lseek_error;
+        gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
         len = l1size;
         if ((rc = write (fd, l1, len)) != len)
             goto cdsk_write_error;
@@ -2374,6 +2417,7 @@ cdsk_fba_recover:
             off = (off_t)l1[l1x];
             if (lseek (fd, off, SEEK_SET) < 0)
                 goto cdsk_lseek_error;
+            gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
             len = CCKD_L2TAB_SIZE;
             if ((rc = write (fd, l2[l1x], len)) != len)
                 goto cdsk_write_error;
@@ -2451,12 +2495,14 @@ cdsk_fsperr_retry:
                 off = (off_t)spctab[i].pos;
                 if (lseek (fd, off, SEEK_SET) < 0)
                     goto cdsk_lseek_error;
+                gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
                 len = spctab[i].siz;
                 if ((rc = read (fd, buf, len)) != len) 
                     goto cdsk_read_error;
                 off -= l;
                 if (lseek (fd, off, SEEK_SET) < 0)
                     goto cdsk_lseek_error;
+                gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
                 if ((rc = write (fd, buf, len)) != len) 
                     goto cdsk_write_error;
                 spctab[i].pos -= l;
@@ -2469,12 +2515,14 @@ cdsk_fsperr_retry:
                     off = (off_t)l1[l1x] + l2x * CCKD_L2ENT_SIZE;
                     if (lseek (fd, off, SEEK_SET) < 0)
                         goto cdsk_lseek_error;
+                    gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
                     len = CCKD_L2ENT_SIZE;
                     if ((rc = read (fd, &l2ent, len)) != len) 
                         goto cdsk_read_error;
                     l2ent.pos -= l;
                     if (lseek (fd, off, SEEK_SET) < 0)
                         goto cdsk_lseek_error;
+                    gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
                     if ((rc = write (fd, &l2ent, len)) != len) 
                         goto cdsk_write_error;
                 } /* trk/blkgrp relocated */
@@ -2516,6 +2564,7 @@ cdsk_fsperr_retry:
         /*-----------------------------------------------------------
          * Phase 3 -- write the free space
          *-----------------------------------------------------------*/
+
         if (cdevhdr.free_number)
         {
             /* size needed for new format free space */
@@ -2548,6 +2597,7 @@ cdsk_fsperr_retry:
                 /* Write the free space */
                 if (lseek (fd, off, SEEK_SET) < 0)
                     goto cdsk_lseek_error;
+                gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
                 if ((rc = write (fd, fsp, len)) != len)
                     goto cdsk_write_error;
                 cdevhdr.free = (U32)off;
@@ -2570,6 +2620,7 @@ cdsk_fsperr_retry:
                         freeblk.pos = spctab[i].pos;
                         if (lseek (fd, off, SEEK_SET) < 0)
                             goto cdsk_lseek_error;
+                        gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
                         if (write (fd, &freeblk, len) != len)
                             goto cdsk_write_error;
                         off = (off_t)spctab[i].pos;
@@ -2578,6 +2629,7 @@ cdsk_fsperr_retry:
                     }
                 if (lseek (fd, off, SEEK_SET) < 0)
                     goto cdsk_lseek_error;
+                gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
                 if (write (fd, &freeblk, len) != len)
                     goto cdsk_write_error;
             } /* old format free space */
@@ -2587,6 +2639,7 @@ cdsk_fsperr_retry:
         off = CCKD_DEVHDR_POS;
         if (lseek (fd, off, SEEK_SET) < 0)
             goto cdsk_lseek_error;
+        gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
         len = CCKD_DEVHDR_SIZE;
         if (write (fd, &cdevhdr, len) != len)
             goto cdsk_write_error;
@@ -2594,6 +2647,7 @@ cdsk_fsperr_retry:
         off = CCKD_L1TAB_POS;
         if (lseek (fd, off, SEEK_SET) < 0)
             goto cdsk_lseek_error;
+        gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
         len = l1size;
         if (write (fd, l1, len) != len)
             goto cdsk_write_error;
@@ -2639,9 +2693,12 @@ cdsk_return_ok:
         off = CCKD_DEVHDR_POS;
         if (lseek (fd, CCKD_DEVHDR_POS, SEEK_SET) >= 0)
             write (fd, &cdevhdr, CCKD_DEVHDR_SIZE);
+        gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
     }
 
 cdsk_return:
+
+    gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
 
     /* free all space */
     if (l1)     free (l1);

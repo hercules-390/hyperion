@@ -1,3 +1,4 @@
+06 Dec 2010 Dyngui mods: 64-bit MAINSIZE fix, SCD fix, multi-CPU% support - Fish
 03 Dec 2010 Build logo in console initialization only if it hasn't already
             been built via HERCLOGO configuration statement - Kevin Leonard
 01 Dec 2010 cvslvlck renamed to bldlvlck and corrections made for Apple/Darwin

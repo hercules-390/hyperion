@@ -341,9 +341,10 @@ BYTE   gui_wants_devlist     = 0;
 BYTE   gui_wants_new_devlist = 1;       // (should always be initially on)
 #if defined(OPTION_MIPS_COUNTING)
 BYTE   gui_wants_cpupct      = 0;
+BYTE   gui_wants_cpupct_all  = 0;
 #endif
-
-#ifdef OPTION_MIPS_COUNTING
+#if defined(OPTION_MIPS_COUNTING)
+int    prev_cpupct [ MAX_CPU_ENGINES ];
 U32    prev_mips_rate  = 0;
 U32    prev_sios_rate  = 0;
 #endif
@@ -373,7 +374,17 @@ void*  gui_panel_command (char* pszCommand)
 
     if (strncasecmp(pszCommand,"SCD=",4) == 0)
     {
-        chdir(pszCommand+4);
+        // (set current directory)
+        if (chdir(pszCommand+4) != 0)
+        {
+            // (inform gui of error)
+            char *cwd = getcwd( NULL, 0 );
+            if (cwd)
+            {
+                debug_cd_cmd( cwd );
+                free( cwd );
+            }
+        }
         return NULL;
     }
 
@@ -448,7 +459,10 @@ void*  gui_panel_command (char* pszCommand)
         // future versions of HercGUI to know whether the version of Hercules
         // that it's talking to supports a given feature or not. Slick, eh? :)
         gui_fprintf(fStatusStream,"MAINSIZE=%s\n",VERSION);
-        gui_fprintf(fStatusStream,"MAINSIZE=%d\n",(U32)sysblk.mainsize);
+        if (gui_version < 1.11)
+            gui_fprintf(fStatusStream,"MAINSIZE=%d\n",(U32)sysblk.mainsize);
+        else
+            gui_fprintf(fStatusStream,"MAINSIZE=%"UINT_PTR_FMT"d\n",(uintptr_t)sysblk.mainsize);
         return NULL;
     }
 
@@ -456,6 +470,12 @@ void*  gui_panel_command (char* pszCommand)
     if (strncasecmp(pszCommand,"CPUPCT=",7) == 0)
     {
         gui_wants_cpupct = atoi(pszCommand+7);
+        return NULL;
+    }
+    if (strncasecmp(pszCommand,"CPUPCTALL=",10) == 0)
+    {
+        if (!(gui_wants_cpupct_all = atoi(pszCommand+10)))
+            memset( &prev_cpupct[0], 0xFF, sizeof(prev_cpupct) );
         return NULL;
     }
 #endif
@@ -537,12 +557,33 @@ void  UpdateStatus ()
 #if defined(OPTION_MIPS_COUNTING)
     if (gui_wants_cpupct)
     {
-            gui_fprintf(fStatusStream,
+        gui_fprintf(fStatusStream,
 
-                "CPUPCT=%d\n"
+            "CPUPCT=%d\n"
 
-                ,pTargetCPU_REGS->cpupct
-            );
+            ,pTargetCPU_REGS->cpupct
+        );
+    }
+    if (gui_wants_cpupct_all)
+    {
+        int  i, cpupct;
+
+        for (i = 0; i < sysblk.hicpu; i++)
+        {
+            if (0
+                || !IS_CPU_ONLINE(i)
+                || CPUSTATE_STARTED != sysblk.regs[i]->cpustate
+            )
+                cpupct = 0;
+            else
+                cpupct = sysblk.regs[i]->cpupct;
+
+            if (cpupct != prev_cpupct[i])
+            {
+                prev_cpupct[i] = cpupct;
+                gui_fprintf( fStatusStream, "CPUPCT%d=%d\n", i, cpupct );
+            }
+        }
     }
 #endif
 
@@ -650,6 +691,11 @@ void HandleForcedRefresh()
 
     memset(   &prev_fpr64[0], 0xFF,
         sizeof(prev_fpr64) );
+
+#if defined(OPTION_MIPS_COUNTING)
+    memset(   &prev_cpupct[0], 0xFF,
+        sizeof(prev_cpupct) );
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1632,11 +1678,12 @@ void  UpdateDeviceStatus ()
 
 void  NewUpdateDevStats ()
 {
-    DEVBLK*   pDEVBLK;
-    GUISTAT*  pGUIStat;
-    char*     pDEVClass;
-    BYTE      chOnlineStat, chBusyStat, chPendingStat, chOpenStat;
-    BOOL      bUpdatesSent = FALSE;
+    DEVBLK*     pDEVBLK;
+    GUISTAT*    pGUIStat;
+    char*       pDEVClass;
+    BYTE        chOnlineStat, chBusyStat, chPendingStat, chOpenStat;
+    BOOL        bUpdatesSent = FALSE;
+    static BOOL bFirstBatch  = TRUE;
 
     if (sysblk.shutdown) return;
 
@@ -1743,8 +1790,14 @@ void  NewUpdateDevStats ()
         }
     }
 
-    if ( bUpdatesSent )
+    // Only send End-of-Batch indicator if we sent any updates or
+    // if this is the first device-list update since powering on...
+
+    if ( bUpdatesSent || bFirstBatch )
+    {
+        bFirstBatch = FALSE;
         gui_fprintf(fStatusStream, "DEVX=\n");  // (send end-of-batch indicator)
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1833,6 +1886,13 @@ void  Initialize ()
 
     gui_nounload = 1;
 
+    // Disable the "quiet" command...
+    {
+        char* $zapcmd[] = { "$zapcmd", "quiet", "NoCmd" };
+
+        ProcessCommand( 3, $zapcmd, NULL );
+    }
+
     // Initialize streams...
 
     fOutputStream = OUTPUT_STREAM_FILE_PTR;
@@ -1889,20 +1949,15 @@ void Cleanup()
 
 void gui_panel_display ()
 {
-static char *DisQuietCmd[] = { "$zapcmd", "quiet", "NoCmd" };
+    SET_THREAD_NAME( "dyngui" );    // (for debugging)
+    WRMSG( HHC01541,"I" );          // "Dyngui.dll initiated"
+    Initialize();                   // (acquire resources)
 
-    SET_THREAD_NAME("dyngui");
+    ProcessingLoop();               // PRIMARY PROCESSING LOOP... (does not
+                                    // return until Hercules is terminated)
 
-    ProcessCommand(3,DisQuietCmd,NULL); // Disable the quiet command
-
-    if ( !bDoneProcessing )
-    {
-        WRMSG(HHC01541,"I");
-        Initialize();               // (allocate buffers, etc)
-        ProcessingLoop();           // (primary processing loop)
-        WRMSG(HHC01542,"I");
-        Cleanup();                  // (de-allocate resources)
-    }
+    Cleanup();                      // (relinquish resources)
+    WRMSG( HHC01542,"I" );          // "Dyngui.dll terminated"
 }
 
 /*****************************************************************************\
