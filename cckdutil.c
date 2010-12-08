@@ -62,7 +62,7 @@ static char *comps[]  = { "none", "zlib",   "bzip2" };
 #ifdef EXTERNALGUI
   #define gui_fprintf if (extgui) fprintf
 #else
-  #define gui_fprintf()
+  #define gui_fprintf(...)
 #endif
 
 /*-------------------------------------------------------------------*/

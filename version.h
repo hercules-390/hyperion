@@ -42,7 +42,7 @@
   Some modules, such as dyngui, might need these values,
   since they are ALWAYS numeric whereas VERSION is not.
 */
-#if !defined(V1) || !defined(V2) || !defined(V3) || !defined(V4)
+#if defined( _MSVC_ ) && (!defined(V1) || !defined(V2) || !defined(V3) || !defined(V4))
   #error VERSION not defined properly
 #endif
 
