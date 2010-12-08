@@ -59,8 +59,7 @@ extern void  blockid_32_to_22( BYTE *in_32blkid, BYTE *out_22blkid );
 extern void  blockid_22_to_32( BYTE *in_22blkid, BYTE *out_32blkid );
 
 extern void  create_automount_thread( DEVBLK* dev );
-extern void *scsi_tapemountmon_thread( void* devblk );
-extern void  shutdown_worker_threads( DEVBLK *dev );
+extern void *scsi_tapemountmon_thread( void* notused );
 extern void  define_BOT_pos( DEVBLK *dev );
 
 // PROGRAMMING NOTE: I'm not sure of what the the actual/proper value

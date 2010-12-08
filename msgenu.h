@@ -360,6 +360,7 @@ do { \
 #define HHC00210 "%1d:%04X Tape file '%s', type '%s': tape unloaded"
 #define HHC00211 "%1d:%04X Tape file '%s', type 'scsi' status '%s', sstat 0x"I32_FMTX": %s %s%s%s%s%s%s%s"
 #define HHC00212 "%1d:%04X Tape file '%s', type '%s': data chaining not supported for CCW %2.2X"
+#define HHC00213 "%1d:%04X Tape file '%s', type '%s': Error opening: errno=%d: %s"
 #define HHC00214 "%1d:%04X Tape file '%s', type '%s': auto-mount rejected: drive not empty"
 #define HHC00215 "%1d:%04X Tape file '%s', type '%s': auto-mounted"
 #define HHC00216 "%1d:%04X Tape file '%s', type '%s': auto-unmounted"

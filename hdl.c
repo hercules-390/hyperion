@@ -1015,7 +1015,7 @@ char *modname;
             }
 
             for(dev = sysblk.firstdev; dev; dev = dev->nextdev)
-                if(dev->pmcw.flag5 & PMCW5_V)
+                if (IS_DEV( dev ))
                     for(hnd = (*dllent)->hndent; hnd; hnd = hnd->next)
                         if(hnd->hnd == dev->hnd)
                         {

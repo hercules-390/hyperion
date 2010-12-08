@@ -632,13 +632,10 @@ DEVINITTAB*     pDevInitTab;
 #if defined( OPTION_TAPE_AUTOMOUNT )
     dev->noautomount         = 0;   // (always, initially)
 #endif
-
     /* Initialize SCSI tape control fields */
 #if defined(OPTION_SCSI_TAPE)
-    dev->sstat               = GMT_DR_OPEN(-1);
-    dev->stape_getstat_sstat = GMT_DR_OPEN(-1);
+    dev->sstat = GMT_DR_OPEN(-1);
 #endif
-
     /* Clear the DPA */
     memset (dev->pgid, 0, sizeof(dev->pgid));
     /* Clear Drive password - Adrian */
@@ -1167,8 +1164,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
     /* Initialize device dependent fields */
     dev->fd                = -1;
 #if defined(OPTION_SCSI_TAPE)
-    dev->sstat               = GMT_DR_OPEN(-1);
-    dev->stape_getstat_sstat = GMT_DR_OPEN(-1);
+    dev->sstat             = GMT_DR_OPEN(-1);
 #endif
     dev->omadesc           = NULL;
     dev->omafiles          = 0;

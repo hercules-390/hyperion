@@ -657,6 +657,18 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
   )
 
 /*-------------------------------------------------------------------*/
+/* Utility macro to check if DEVBLK is for an existing device        */
+/*-------------------------------------------------------------------*/
+
+#if defined(_FEATURE_INTEGRATED_3270_CONSOLE)
+  #define IS_DEV(_dev) \
+    ((_dev)->allocated && (((_dev)->pmcw.flag5 & PMCW5_V) || (_dev) == sysblk.sysgdev))
+#else // !defined(_FEATURE_INTEGRATED_3270_CONSOLE)
+  #define IS_DEV(_dev) \
+    ((_dev)->allocated && ((_dev)->pmcw.flag5 & PMCW5_V))
+#endif // defined(_FEATURE_INTEGRATED_3270_CONSOLE)
+
+/*-------------------------------------------------------------------*/
 /* Hercules Dynamic Loader macro to call optional function override  */
 /*-------------------------------------------------------------------*/
 

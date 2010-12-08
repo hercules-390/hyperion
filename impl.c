@@ -723,6 +723,13 @@ int     dll_count;                      /* index into array          */
     strerror_r_init();
 #endif
 
+#if defined(OPTION_SCSI_TAPE)
+    initialize_lock      ( &sysblk.stape_lock         );
+    initialize_condition ( &sysblk.stape_getstat_cond );
+    InitializeListHead   ( &sysblk.stape_mount_link   );
+    InitializeListHead   ( &sysblk.stape_status_link  );
+#endif /* defined(OPTION_SCSI_TAPE) */
+
     /* Get name of configuration file or default to hercules.cnf */
     if(!(cfgfile = getenv("HERCULES_CNF")))
         cfgfile = "hercules.cnf";

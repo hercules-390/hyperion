@@ -549,6 +549,21 @@ struct SYSBLK {
 #if defined(OPTION_HAO)
         TID     haotid;                 /* Herc Auto-Oper thread-id  */
 #endif /* defined(OPTION_HAO) */
+#if defined( OPTION_SCSI_TAPE )
+        /* Access to all SCSI fields controlled by sysblk.stape_lock */
+        LOCK    stape_lock;             /* LOCK for all SCSI fields  */
+        int     auto_scsi_mount_secs;   /* scsimount frequency: #of  */
+                                        /*   seconds; 0 == disabled  */
+#define DEF_SCSIMOUNT_SECS  (5)         /* Default scsimount value   */
+        TID     stape_getstat_tid;      /* Tape-status worker thread */
+        TID     stape_mountmon_tid;     /* Tape-mount  worker thread */
+        COND    stape_getstat_cond;     /* Tape-status thread COND   */
+        u_int   stape_getstat_busy:1;   /* 1=Status thread is busy   */
+        LIST_ENTRY  stape_status_link;  /* get status request chain  */
+        LIST_ENTRY  stape_mount_link;   /* scsimount  request chain  */
+        struct  timeval
+                stape_query_status_tod; /* TOD of last status query  */
+#endif // defined( OPTION_SCSI_TAPE )
 
 
         /*-----------------------------------------------------------*/
@@ -601,11 +616,6 @@ struct SYSBLK {
         DEVBLK  *biodev;                /* Block I/O device          */
         /* Note: biodev is only used to detect BIO interrupt tracing */
 #endif /* defined(FEATURE_VM_BLOCKIO) */
-#if defined(OPTION_SCSI_TAPE)
-        int     auto_scsi_mount_secs;   /* Check for SCSI tape mount
-                                           frequency; 0 == disabled  */
-#define DEFAULT_AUTO_SCSI_MOUNT_SECS  (5)
-#endif
 #if defined( OPTION_TAPE_AUTOMOUNT )
         TAMDIR *tamdir;                 /* Acc/Rej AUTOMOUNT dir ctl */
         char   *defdir;                 /* Default AUTOMOUNT dir     */
@@ -816,6 +826,28 @@ struct IOINT {                          /* I/O interrupt queue entry */
                 pcipending:1,           /* 1=PCI interrupt           */
                 attnpending:1;          /* 1=ATTN interrupt          */
 };
+
+/*-------------------------------------------------------------------*/
+/* SCSI support threads request structures...   (i.e. work items)    */
+/*-------------------------------------------------------------------*/
+
+#if defined(OPTION_SCSI_TAPE)
+
+  struct STSTATRQ                       /* Status Update Request     */
+  {
+      LIST_ENTRY   link;                /* just a link in the chain  */
+      DEVBLK*      dev;                 /* ptr to device block       */
+  };
+  typedef struct STSTATRQ  STSTATRQ;
+
+  struct STMNTDRQ                       /* Automatic Mount Request   */
+  {
+      LIST_ENTRY   link;                /* just a link in the chain  */
+      DEVBLK*      dev;                 /* ptr to device block       */
+  };
+  typedef struct STMNTDRQ  STMNTDRQ;
+
+#endif // defined( OPTION_SCSI_TAPE )
 
 /*-------------------------------------------------------------------*/
 /* Control Unit configuration block                                  */
@@ -1212,27 +1244,20 @@ struct DEVBLK {                         /* Device configuration block*/
 #if defined( OPTION_TAPE_AUTOMOUNT )
         u_int   noautomount:1;          /* 1=AUTOMOUNT disabled      */
 #endif
-        U32     msgid;                  /* Message Id of async. i/o  */
-#if defined(OPTION_SCSI_TAPE)
-        struct mtget mtget;             /* SCSI tape status struct   */
+#if defined( OPTION_SCSI_TAPE )
+        struct mtget mtget;             /* Current SCSI tape status  */
 #define sstat  mtget.mt_gstat           /* Generic SCSI tape device-
                                            independent status field;
                                            (struct mtget->mt_gstat)  */
-        TID     stape_mountmon_tid;     /* Tape-mount monitor thread */
         u_int   stape_close_rewinds:1;  /* 1=Rewind at close         */
         u_int   stape_blkid_32:1;       /* 1=block-ids are 32 bits   */
         u_int   stape_no_erg:1;         /* 1=ignore Erase Gap CCWs   */
-        u_int   stape_getstat_busy:1;   /* 1=Status wrkr thrd busy   */
-        u_int   stape_threads_exit:1;   /* 1=Ask helpr thrds to exit */
-        TID     stape_getstat_tid;      /* Tape status wrkr thrd tid */
-        LOCK    stape_getstat_lock;     /* LOCK for status wrkr thrd */
-        COND    stape_getstat_cond;     /* COND for status wrkr thrd */
-        COND    stape_exit_cond;        /* thread wait for exit COND */
-        struct mtget stape_getstat_mtget;/* status wrkr thrd status  */
-#define stape_getstat_sstat stape_getstat_mtget.mt_gstat /* (gstat)  */
-        struct timeval
-                stape_getstat_query_tod;/* TOD of actual drive query */
-#endif
+        /* Access to SCSI fields controlled via sysblk.stape_lock    */
+        COND      stape_sstat_cond;     /* Tape-status updated COND  */
+        STSTATRQ  stape_statrq;         /* Status request structure  */
+        STMNTDRQ  stape_mntdrq;         /* Mounted request structure */
+#endif // defined( OPTION_SCSI_TAPE )
+        U32     msgid;                  /* Message Id of async. i/o  */
         BYTE    tapedevt;               /* Hercules tape device type */
         TAPEMEDIA_HANDLER *tmh;         /* Tape Media Handling       */
                                         /* dispatcher                */
