@@ -95,3 +95,7 @@ ldebug = $(ldebug) /base:0x400000
 !IF "$(CPU)" == "AMD64"
 cflags = $(cflags) /favor:AMD64
 !ENDIF
+
+# Increase the sockets set size limit/default to be the
+# same value as used on most non-Windows platforms (1024)
+cflags  = $(cflags)  /D FD_SETSIZE=1024

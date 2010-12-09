@@ -6965,6 +6965,7 @@ int sizeof_cmd(int argc, char *argv[], char *cmdline)
     WRMSG(HHC02257, "I", "TLB table .........",(int)sizeof(TLB));
     WRMSG(HHC02257, "I", "CPU_BITMAP ........",(int)sizeof(CPU_BITMAP));
     WRMSG(HHC02257, "I", "STFL_BYTESIZE .....",STFL_BYTESIZE);
+    WRMSG(HHC02257, "I", "FD_SETSIZE ........",FD_SETSIZE);
     return 0;
 }
 
