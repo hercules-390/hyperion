@@ -5497,9 +5497,9 @@ RADR    addr, aaddr;
 
         /* Update r2 - point to the next frame */
         if(regs->GR_L(r1) & PFMF_FMFI_FSC_1M)
-            SET_GR_A(r1, regs, (addr & ADDRESS_MAXWRAP(regs)));
+            SET_GR_A(r2, regs, (addr & ADDRESS_MAXWRAP(regs)));
         else
-            SET_GR_A(r1, regs, (APPLY_PREFIXING (addr, regs->PX) & ADDRESS_MAXWRAP(regs)));
+            SET_GR_A(r2, regs, (APPLY_PREFIXING (addr, regs->PX) & ADDRESS_MAXWRAP(regs)));
 
 #if 0
         /* Usage Indication */
