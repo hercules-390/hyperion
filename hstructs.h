@@ -462,7 +462,7 @@ struct SYSBLK {
         Load Program Parameter facility */
         U64     program_parameter;      /* Program Parameter Register*/
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
+#ifdef _FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
         RWLOCK  wklock;                 /* Update lock               */
         BYTE    wkaes_reg[32];          /* Wrapping-key registers    */
         BYTE    wkdea_reg[24];
@@ -608,7 +608,7 @@ struct SYSBLK {
         int     devtunavail;            /* Count thread unavailable  */
 #endif // !defined(OPTION_FISHIO)
         RADR    addrlimval;             /* Address limit value (SAL) */
-#if defined(FEATURE_VM_BLOCKIO)
+#if defined(_FEATURE_VM_BLOCKIO)
         U16     servcode;               /* External interrupt code   */
         BYTE    biosubcd;               /* Block I/O sub int. code   */
         BYTE    biostat;                /* Block I/O status          */
@@ -660,7 +660,7 @@ struct SYSBLK {
 #if defined(OPTION_IPLPARM)
         BYTE    iplparmstring[64];      /* 64 bytes loadable at IPL  */
 #endif
-#ifdef FEATURE_ECPSVM
+#ifdef _FEATURE_ECPSVM
 //
         /* ECPS:VM */
         struct {
@@ -1087,7 +1087,7 @@ struct DEVBLK {                         /* Device configuration block*/
         GUISTAT* pGUIStat;              /* EXTERNALGUI Dev Stat Ctl  */
 #endif
 
-#if defined(FEATURE_VM_BLOCKIO)
+#if defined(_FEATURE_VM_BLOCKIO)
         /* VM DIAGNOSE X'250' Emulation Environment                  */
         struct VMBIOENV *vmd250env;     /* Established environment   */
 #endif /* defined(FEATURE_VM_BLOCKIO) */
