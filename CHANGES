@@ -1,3 +1,4 @@
+14 Dec 2010 Enhanced DAT - Jan Jaeger
 06 Dec 2010 Improved scsimount functionality (better scaling) - Fish
 06 Dec 2010 Dyngui mods: 64-bit MAINSIZE fix, SCD fix, multi-CPU% support - Fish
 03 Dec 2010 Build logo in console initialization only if it hasn't already

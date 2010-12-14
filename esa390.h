@@ -223,7 +223,7 @@ typedef struct _DAT {
 #define CR0_PAGE_SIZE   0x00C00000      /* Page size for S/370...    */
 #define CR0_PAGE_SZ_2K  0x00400000      /* ...2K pages               */
 #define CR0_PAGE_SZ_4K  0x00800000      /* ...4K pages               */
-#define CR0_ZPAG_SZ_1M  0x00800000      /* ...1M pages           EDAT*/
+#define CR0_ED          0x00800000      /* Enhanced DAT enable   EDAT*/
 #define CR0_SEG_SIZE    0x00380000      /* Segment size for S/370... */
 #define CR0_SEG_SZ_64K  0x00000000      /* ...64K segments           */
 #define CR0_SEG_SZ_1M   0x00100000      /* ...1M segments            */
