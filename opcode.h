@@ -1295,6 +1295,27 @@ do { \
             if(likely((_b2))) \
                 (_effective_addr2) += (_regs)->GR((_b2)); \
     }
+    
+#ifdef OPTION_OPTINST
+/* BHe: This decoder is for optimized instructions where the X2 is zero */
+#define RX_X0(_inst, _regs, _r1, _b2, _effective_addr2) \
+        RX_X0_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, 4, 4)
+
+#define RX_X0_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc) \
+        { \
+          U32 temp = fetch_fw((_inst)); \
+          (_r1) = (temp >> 20) & 0xf; \
+          (_effective_addr2) = temp & 0xfff; \
+          (_b2) = (temp >> 12) & 0xf; \
+          if(likely((_b2))) \
+          { \
+            (_effective_addr2) += (_regs)->GR((_b2)); \
+            if((_len)) \
+              (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+          }\
+          INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
+        }
+#endif /* OPTION_OPTINST */
 
 /* RXE register and indexed storage with extended op code */
 #undef RXE
@@ -1502,6 +1523,27 @@ do { \
             (_r1) = (temp >> 20) & 0xf; \
             INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
     }
+
+#ifdef OPTION_OPTINST
+/* BHe: This decoder is for optimized instructions where the X2 is zero */
+#define RXY_X0(_inst, _regs, _r1, _b2, _effective_addr2) \
+        RXY_X0_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, 6, 6)
+        
+#define RXY_X0_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc) \
+        { \
+          U32 temp = fetch_fw((_inst)); \
+          (_r1) = (temp >> 20) & 0xf; \
+          (_effective_addr2) = temp & 0xfff; \
+          (_b2) = (temp >> 12) & 0xf; \
+          if((_b2)) \
+          { \
+            (_effective_addr2) += (_regs)->GR((_b2)); \
+            if((_len)) \
+              (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+          } \
+          INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
+        }
+#endif /* OPTION_OPTINST */
 
 /* RS register and storage with additional R3 or M3 field */
 #undef RS
@@ -3225,12 +3267,50 @@ DEF_INST(branch_and_set_mode);
 #endif /*defined(FEATURE_BIMODAL_ADDRESSING)*/
 DEF_INST(branch_on_condition_register);
 DEF_INST(branch_on_condition);
+#ifdef OPTION_OPTINST
+/* Optimized BC instructions */
+DEF_INST(4700);
+DEF_INST(4710);
+DEF_INST(4720);
+DEF_INST(4730);
+DEF_INST(4740);
+DEF_INST(4750);
+/* 4760 not optimized */
+DEF_INST(4770);
+DEF_INST(4780);
+/* 4790 not optimized */
+DEF_INST(47A0);
+DEF_INST(47B0);
+DEF_INST(47C0);
+DEF_INST(47D0);
+DEF_INST(47E0);
+DEF_INST(47F0);
+#endif /* OPTION_OPTINST */
 DEF_INST(branch_on_count_register);
 DEF_INST(branch_on_count);
 DEF_INST(branch_on_index_high);
 DEF_INST(branch_on_index_low_or_equal);
 #if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
 DEF_INST(branch_relative_on_condition);
+#ifdef OPTION_OPTINST
+/* Optimized BRC instructions */
+DEF_INST(A704);
+DEF_INST(A714);
+DEF_INST(A724);
+DEF_INST(A734);
+DEF_INST(A744);
+DEF_INST(A754);
+/* A764 not optimized */
+DEF_INST(A774);
+DEF_INST(A784);
+/* A794 not optimized */
+DEF_INST(A7A4);
+DEF_INST(A7B4);
+DEF_INST(A7C4);
+DEF_INST(A7D4);
+DEF_INST(A7E4);
+DEF_INST(A7F4);
+#endif /* OPTION_OPTINST */
 DEF_INST(branch_relative_and_save);
 DEF_INST(branch_relative_on_count);
 DEF_INST(branch_relative_on_index_high);
@@ -3250,6 +3330,10 @@ DEF_INST(compare_and_swap_and_store);
 DEF_INST(compare_halfword);
 DEF_INST(compare_logical_register);
 DEF_INST(compare_logical);
+#ifdef OPTION_OPTINST
+/* Optimized CL instruction */
+DEF_INST(55x0);
+#endif /* OPTION_OPTINST */
 DEF_INST(compare_logical_immediate);
 DEF_INST(compare_logical_character);
 DEF_INST(compare_logical_characters_under_mask);
@@ -3293,6 +3377,10 @@ DEF_INST(insert_character);
 DEF_INST(insert_characters_under_mask);
 DEF_INST(insert_program_mask);
 DEF_INST(load);
+#ifdef OPTION_OPTINST
+/* Optimized L instruction */
+DEF_INST(58x0);
+#endif /* OPTION_OPTINST */
 DEF_INST(load_register);
 #if defined(FEATURE_ACCESS_REGISTERS)
 DEF_INST(load_access_multiple);
@@ -3331,6 +3419,10 @@ DEF_INST(multiply_register);
 DEF_INST(multiply);
 DEF_INST(multiply_halfword);
 DEF_INST(store);
+#ifdef OPTION_OPTINST
+/* Optimized ST instruction */
+DEF_INST(50x0);
+#endif /* OPTION_OPTINST */
 DEF_INST(store_character);
 
 /* Instructions in general2.c */
@@ -3753,8 +3845,16 @@ DEF_INST(set_addressing_mode_31);
 DEF_INST(set_addressing_mode_64);
 DEF_INST(load_program_status_word_extended);
 DEF_INST(store_long);
+#ifdef OPTION_OPTINST
+/* Optimized STG instruction */
+DEF_INST(E3x0______24);
+#endif /* OPTION_OPTINST */
 DEF_INST(store_real_address);
 DEF_INST(load_long);
+#ifdef OPTION_OPTINST
+/* Optimized LG instruction */
+DEF_INST(E3x0______04);
+#endif /* OPTION_OPTINST */
 DEF_INST(multiply_single_long_register);
 DEF_INST(multiply_single_long_fullword_register);
 DEF_INST(multiply_single_long);

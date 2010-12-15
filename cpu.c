@@ -1858,16 +1858,19 @@ register int    *caplocked = &sysblk.caplocked[cpu];
 
         ip = INSTRUCTION_FETCH(&regs, 0);
 
-        //regs.instcount++;
         EXECUTE_INSTRUCTION(current_opcode_table, ip, &regs);
         regs.instcount++;
 
-        for(i = 0; i < 256; i++)
+        /* BHe: I have tried several settings. But 2 unrolled */
+        /* executes gives (core i7 at my place) the best results. */
+        /* Even a 'do { } while(0);' with several unrolled executes */
+        /* and without the 'i' was slower. That surprised me. */
+        for(i = 0; i < 128; i++)
         {
-            //regs.instcount++;
             UNROLLED_EXECUTE(current_opcode_table, &regs);
-            regs.instcount++;
+            UNROLLED_EXECUTE(current_opcode_table, &regs);
         }
+        regs.instcount += i * 2;
 
 #if defined(OPTION_CAPPING)
         if (caplocked[0])

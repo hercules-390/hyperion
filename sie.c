@@ -1134,12 +1134,16 @@ int ARCH_DEP(run_sie) (REGS *regs)
 
                 SIE_PERFMON(SIE_PERF_EXEC_U);
 
-                for(i = 0; i < 256; i++)
+                /* BHe: I have tried several settings. But 2 unrolled */
+                /* executes gives (core i7 at my place) the best results. */
+                /* Even a do { } while(0); with several unrolled executes */
+                /* and without the 'i' was slower. That surprised me. */                
+                for(i = 0; i < 128; i++)
                 {
-                    //regs->instcount++;
                     UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
-                    regs->instcount++;
+                    UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
                 }
+                regs->instcount += i * 2;
 
 #if defined(OPTION_CAPPING)
                 if (caplocked[0])

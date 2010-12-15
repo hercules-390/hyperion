@@ -1150,30 +1150,35 @@ DLL_EXPORT LOCK Lock_Compare_Swap;
    as the called routine has the same arguments, and the routine
    exits immediately after the call.                             *JJ */
 
+#ifdef OPTION_OPTINST
+/* Optimized execute routine where x2 is zero */
+DEF_INST(E3x0)
+{
+  regs->ARCH_DEP(runtime_opcode_e3x0______xx)[inst[5]](inst, regs);
+}
+#endif /* OPTION_OPTINST */
+
+
 DEF_INST(execute_opcode_e3________xx)
 {
-//  logmsg("opcode e3%02x\n", inst[5]);
   regs->ARCH_DEP(runtime_opcode_e3________xx)[inst[5]](inst, regs);
 }
 
 
 DEF_INST(execute_opcode_eb________xx)
 {
-//  logmsg("opcode eb%02x\n", inst[5]);
   regs->ARCH_DEP(runtime_opcode_eb________xx)[inst[5]](inst, regs);
 }
 
 
 DEF_INST(execute_opcode_ec________xx)
 {
-//  logmsg("opcode ec%02x\n", inst[5]);
   regs->ARCH_DEP(runtime_opcode_ec________xx)[inst[5]](inst, regs);
 }
 
 
 DEF_INST(execute_opcode_ed________xx)
 {
-//  logmsg("opcode ed%02x\n", inst[5]);
   regs->ARCH_DEP(runtime_opcode_ed________xx)[inst[5]](inst, regs);
 }
 
@@ -1227,6 +1232,17 @@ static zz_func v_opcode_a4xx[0x100][GEN_MAXARCH];
 static zz_func v_opcode_a5xx[0x100][GEN_MAXARCH];
 static zz_func v_opcode_a6xx[0x100][GEN_MAXARCH];
 static zz_func v_opcode_e4xx[0x100][GEN_MAXARCH];
+
+#ifdef OPTION_OPTINST
+static zz_func opt47x0[0x10][GEN_MAXARCH]; /* BC */
+static zz_func opt50x0[0x01][GEN_MAXARCH]; /* ST */
+static zz_func opt55x0[0x01][GEN_MAXARCH]; /* CL */
+static zz_func opt58x0[0x01][GEN_MAXARCH]; /* L */
+static zz_func optA7x4[0x10][GEN_MAXARCH]; /* BRC */
+static zz_func optE3x0[0x01][GEN_MAXARCH]; /* Optimized execute routine */
+static zz_func optE3x0______04[0x01][GEN_MAXARCH]; /* LG */
+static zz_func optE3x0______24[0x01][GEN_MAXARCH]; /* STG */
+#endif /* OPTION_OPTINST */
 
 
 #define DISASM_ROUTE(_table,_route) \
@@ -2120,6 +2136,10 @@ static zz_func runtime_opcode_e3________xx[GEN_ARCHCOUNT][0x100];
 static zz_func runtime_opcode_eb________xx[GEN_ARCHCOUNT][0x100];
 static zz_func runtime_opcode_ec________xx[GEN_ARCHCOUNT][0x100];
 static zz_func runtime_opcode_ed________xx[GEN_ARCHCOUNT][0x100];
+#ifdef OPTION_OPTINST
+/* Jump to E3x0______xx routine where x2 is zero */
+static zz_func runtime_opcode_e3x0______xx[GEN_ARCHCOUNT][0x100];
+#endif /* OPTION_OPTINST */
 
 
 /*----------------------------------------------------------------------------*/
@@ -2332,6 +2352,26 @@ void init_opcode_tables(void)
       replace_opcode_xx_x(arch, opcode_c8_x[i][arch], 0xc8, i);
       replace_opcode_xx_x(arch, opcode_cc_x[i][arch], 0xcc, i);
     }
+
+#ifdef OPTION_OPTINST    
+    /* Set non-optimized E3xx instructions */
+    for(i = 0; i < 0x100; i++)
+      runtime_opcode_e3x0______xx[arch][i] = opcode_e3xx[i][arch];
+
+    /* Set optimized instructions */
+    for(i = 0; i < 0x10; i++)
+    {
+      replace_opcode_xxxx(arch, opt47x0[i][arch], 0x47, i << 4); /* BC */
+      replace_opcode_xxxx(arch, opt50x0[0][arch], 0x50, i << 4); /* ST */
+      replace_opcode_xxxx(arch, opt55x0[0][arch], 0x55, i << 4); /* CL */
+      replace_opcode_xxxx(arch, opt58x0[0][arch], 0x58, i << 4); /* L */
+      replace_opcode_xxxx(arch, optA7x4[i][arch], 0xA7, (i << 4) + 0x04); /* BRC */
+      replace_opcode_xxxx(arch, optE3x0[0][arch], 0xe3, i << 4); /* jump to E3x0______xx */
+    }
+    runtime_opcode_e3x0______xx[arch][0x04] = optE3x0______04[0][arch]; /* LG */
+    runtime_opcode_e3x0______xx[arch][0x24] = optE3x0______24[0][arch]; /* STG */
+#endif /* OPTION_OPTINST */
+
   }
 }
 
@@ -2359,6 +2399,14 @@ void init_opcode_pointers(REGS *regs)
   regs->z900_runtime_opcode_eb________xx = runtime_opcode_eb________xx[ARCH_900];
   regs->z900_runtime_opcode_ec________xx = runtime_opcode_ec________xx[ARCH_900];
   regs->z900_runtime_opcode_ed________xx = runtime_opcode_ed________xx[ARCH_900];
+
+#ifdef OPTION_OPTINST
+  /* Set jump addresses to E3x0______xx */
+  regs->s370_runtime_opcode_e3x0______xx = runtime_opcode_e3x0______xx[ARCH_370];
+  regs->s390_runtime_opcode_e3x0______xx = runtime_opcode_e3x0______xx[ARCH_390];
+  regs->z900_runtime_opcode_e3x0______xx = runtime_opcode_e3x0______xx[ARCH_900];
+#endif /* OPTION_OPTINST */
+
 }
 
 
@@ -6422,6 +6470,84 @@ static zz_func v_opcode_e4xx[0x100][GEN_MAXARCH] = {
  /*E4FD*/ GENx___x___x___ ,
  /*E4FE*/ GENx___x___x___ ,
  /*E4FF*/ GENx___x___x___  };
+
+
+#ifdef OPTION_OPTINST
+/* BHe: The optimalization is based on the fact that most of the time */
+/* RX instructions are called with a zero X2. The two-byte opcode table */
+/* calls these functions in the case of zero X2. Then we can leave out the */
+/* calculation of X2. See opcode.h for RX_X0 and RXY_X0. */
+
+/* BHe: The branch instructions normaly shift a bit to test. By jumping */
+/* to the mask function, testing can be done directly on the psw.cc. */
+
+/* BHe: I have tried several settings. A ST 50x0 instructions could be */
+/* further break down into for example for ST 5000, 5010, 5020, ..., */
+/* but that setting was slower. */
+
+/* Optimized BC */
+static zz_func opt47x0[0x10][GEN_MAXARCH] = {
+ /*4700*/ GENx370x390x900 (4700,RX,"BC"),
+ /*4710*/ GENx370x390x900 (4710,RX,"BC"),
+ /*4720*/ GENx370x390x900 (4720,RX,"BC"),
+ /*4730*/ GENx370x390x900 (4730,RX,"BC"),
+ /*4740*/ GENx370x390x900 (4740,RX,"BC"),
+ /*4750*/ GENx370x390x900 (4750,RX,"BC"),
+ /*4760*/ GENx370x390x900 (branch_on_condition,RX,"BC"), /* Not optimized */
+ /*4770*/ GENx370x390x900 (4770,RX,"BC"),
+ /*4780*/ GENx370x390x900 (4780,RX,"BC"),
+ /*4790*/ GENx370x390x900 (branch_on_condition,RX,"BC"), /* Not optimized */
+ /*47A0*/ GENx370x390x900 (47A0,RX,"BC"),
+ /*47B0*/ GENx370x390x900 (47B0,RX,"BC"),
+ /*47C0*/ GENx370x390x900 (47C0,RX,"BC"),
+ /*47D0*/ GENx370x390x900 (47D0,RX,"BC"),
+ /*47E0*/ GENx370x390x900 (47E0,RX,"BC"),
+ /*47F0*/ GENx370x390x900 (47F0,RX,"BC") };
+
+/* Optimized ST */
+static zz_func opt50x0[0x1][GEN_MAXARCH] = {
+ /*50x0*/ GENx370x390x900 (50x0,RX,"ST") };
+ 
+/* Optimized CL */
+static zz_func opt55x0[0x1][GEN_MAXARCH] = {
+ /*55x0*/ GENx370x390x900 (55x0,RX,"CL") };
+
+/* Optimized L */
+static zz_func opt58x0[0x1][GEN_MAXARCH] = {
+ /*58x0*/ GENx370x390x900 (58x0,RX,"L") };
+
+/* Optimized BRC */
+static zz_func optA7x4[0x10][GEN_MAXARCH] = {
+ /*A704*/ GENx370x390x900 (A704,RI_B,"BRC"),
+ /*A714*/ GENx370x390x900 (A714,RI_B,"BRC"),
+ /*A724*/ GENx370x390x900 (A724,RI_B,"BRC"),
+ /*A734*/ GENx370x390x900 (A734,RI_B,"BRC"),
+ /*A744*/ GENx370x390x900 (A744,RI_B,"BRC"),
+ /*A754*/ GENx370x390x900 (A754,RI_B,"BRC"),
+ /*A764*/ GENx370x390x900 (branch_relative_on_condition,RI_B,"BRC"), /* Not optimized */
+ /*A774*/ GENx370x390x900 (A774,RI_B,"BRC"),
+ /*A784*/ GENx370x390x900 (A784,RI_B,"BRC"),
+ /*A794*/ GENx370x390x900 (branch_relative_on_condition,RI_B,"BRC"), /* Not optimized */
+ /*A7A4*/ GENx370x390x900 (A7A4,RI_B,"BRC"),
+ /*A7B4*/ GENx370x390x900 (A7B4,RI_B,"BRC"),
+ /*A7C4*/ GENx370x390x900 (A7C4,RI_B,"BRC"),
+ /*A7D4*/ GENx370x390x900 (A7D4,RI_B,"BRC"),
+ /*A7E4*/ GENx370x390x900 (A7E4,RI_B,"BRC"),
+ /*A7F4*/ GENx370x390x900 (A7F4,RI_B,"BRC") };
+
+/* Jump to E3x0______xx where x2 is zero */
+static zz_func optE3x0[0x1][GEN_MAXARCH] = {
+ /*E3x0*/ GENx370x390x900 (E3x0,e3xx,""), };
+
+/* Optimized LG */
+static zz_func optE3x0______04[0x1][GEN_MAXARCH] = {
+ /*E30x______04*/ GENx___x___x900 (E3x0______04,RXY,"LG") };
+
+/* Optimized STG */
+static zz_func optE3x0______24[0x1][GEN_MAXARCH] = {
+ /*E3x0______24*/ GENx___x___x900 (E3x0______24,RXY,"STG") };
+#endif /* OPTION_OPTINST */
+
 
 #endif /*!defined (_GEN_ARCH)*/
 
