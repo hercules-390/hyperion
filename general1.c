@@ -705,7 +705,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if (regs->psw.cc == 3)
     {
-        RX_BC(inst, regs, b2, effective_addr2);
+        RX_BC_X0(inst, regs, b2, effective_addr2);
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     }
     else
@@ -721,7 +721,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if (regs->psw.cc == 2)
     {
-        RX_BC(inst, regs, b2, effective_addr2);
+        RX_BC_X0(inst, regs, b2, effective_addr2);
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     }
     else
@@ -737,7 +737,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if (regs->psw.cc > 1)
     {
-        RX_BC(inst, regs, b2, effective_addr2);
+        RX_BC_X0(inst, regs, b2, effective_addr2);
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     }
     else
@@ -753,7 +753,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if (regs->psw.cc == 1)
     {
-        RX_BC(inst, regs, b2, effective_addr2);
+        RX_BC_X0(inst, regs, b2, effective_addr2);
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     }
     else
@@ -769,7 +769,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if (regs->psw.cc & 0x1)
     {
-        RX_BC(inst, regs, b2, effective_addr2);
+        RX_BC_X0(inst, regs, b2, effective_addr2);
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     }
     else
@@ -787,7 +787,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if (regs->psw.cc != 0)
     {
-        RX_BC(inst, regs, b2, effective_addr2);
+        RX_BC_X0(inst, regs, b2, effective_addr2);
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     }
     else
@@ -803,7 +803,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if (regs->psw.cc == 0)
     {
-        RX_BC(inst, regs, b2, effective_addr2);
+        RX_BC_X0(inst, regs, b2, effective_addr2);
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     }
     else
@@ -821,7 +821,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if ((regs->psw.cc & 0x1) == 0)
     {
-        RX_BC(inst, regs, b2, effective_addr2);
+        RX_BC_X0(inst, regs, b2, effective_addr2);
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     }
     else
@@ -837,7 +837,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if (regs->psw.cc != 1)
     {
-        RX_BC(inst, regs, b2, effective_addr2);
+        RX_BC_X0(inst, regs, b2, effective_addr2);
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     }
     else
@@ -853,7 +853,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if (regs->psw.cc < 2)
     {
-        RX_BC(inst, regs, b2, effective_addr2);
+        RX_BC_X0(inst, regs, b2, effective_addr2);
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     }
     else
@@ -869,7 +869,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if (regs->psw.cc != 2)
     {
-        RX_BC(inst, regs, b2, effective_addr2);
+        RX_BC_X0(inst, regs, b2, effective_addr2);
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     }
     else
@@ -885,7 +885,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if (regs->psw.cc != 3)
     {
-        RX_BC(inst, regs, b2, effective_addr2);
+        RX_BC_X0(inst, regs, b2, effective_addr2);
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     }
     else
@@ -898,7 +898,7 @@ DEF_INST(47F0)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RX_BC(inst, regs, b2, effective_addr2);
+    RX_BC_X0(inst, regs, b2, effective_addr2);
     SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
 
 } /* end DEF_INST(branch_on_condition) */
