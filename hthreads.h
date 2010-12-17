@@ -19,6 +19,10 @@
  #define USE_GETTID
 #endif
 
+#if !defined(THREAD_STACK_SIZE)
+ #define THREAD_STACK_SIZE 0x100000
+#endif
+
 #if defined( OPTION_WTHREADS )
 
 #include "wthreads.h"
@@ -172,14 +176,14 @@ typedef fthread_attr_t    ATTR;
 #define initialize_detach_attr(pat) \
     do { \
         fthread_attr_init((pat)); \
-        fthread_attr_setstacksize((pat),1048576); \
+        fthread_attr_setstacksize((pat),THREAD_STACK_SIZE); \
         fthread_attr_setdetachstate((pat),FTHREAD_CREATE_DETACHED); \
     } while (0)
 
 #define initialize_join_attr(pat) \
     do { \
         fthread_attr_init((pat)); \
-        fthread_attr_setstacksize((pat),1048576); \
+        fthread_attr_setstacksize((pat),THREAD_STACK_SIZE); \
         fthread_attr_setdetachstate((pat),FTHREAD_CREATE_JOINABLE); \
     } while (0)
 
@@ -231,14 +235,14 @@ typedef pthread_attr_t                          ATTR;
 #define initialize_detach_attr(pat) \
     do { \
         pthread_attr_init((pat)); \
-        pthread_attr_setstacksize((pat),1048576); \
+        pthread_attr_setstacksize((pat),THREAD_STACK_SIZE); \
         pthread_attr_setdetachstate((pat),PTHREAD_CREATE_DETACHED); \
     } while (0)
 
 #define initialize_join_attr(pat) \
     do { \
         pthread_attr_init((pat)); \
-        pthread_attr_setstacksize((pat),1048576); \
+        pthread_attr_setstacksize((pat),THREAD_STACK_SIZE); \
         pthread_attr_setdetachstate((pat),PTHREAD_CREATE_JOINABLE); \
     } while (0)
 
