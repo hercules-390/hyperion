@@ -140,32 +140,31 @@ U16 req_len, rsp_len;
 #if defined(FEATURE_CANCEL_IO_FACILITY)
                                    | 0x02
 #endif
-                                       ;
+                                   ;
 
-#if defined(FEATURE_QUEUED_DIRECT_IO)
+    chsc_rsp10->general_char[0][1] = 0
+//                                 | 0x08  /* Dynamic I/O */
+                                   ;
+
     chsc_rsp10->general_char[1][1] = 0
+#if defined(FEATURE_QUEUED_DIRECT_IO)
                                    | 0x40  /* Adapter Interruption Facility */
+#endif /*defined(FEATURE_QUEUED_DIRECT_IO)*/
+//                                 | 0x40  /* Multiple CSS */
                                    ;
 
-#if 0
     chsc_rsp10->general_char[1][3] = 0
-                                   | 0x80  /* AIF Time Delay Disablement fac*/
+//                                 | 0x80  /* AIF Time Delay Disablement fac*/
                                    ;
-#endif
-
-    chsc_rsp10->chsc_char[3][1] = 0
-                                | 0x10 /* Set Channel Subsystem Char */
-                                | 0x08 /* Fast CHSCs */
-                                ;
 
     chsc_rsp10->general_char[2][0] = 0
 //                                 | 0x10 /* OSA/FCP Thin interrupts */
                                    ;
 
-    chsc_rsp10->general_char[1][3] = 0
-//                                 | 0x80 /* AIF Time Delay Disablement Fac */
-                                   ;
-#endif /*defined(FEATURE_QUEUED_DIRECT_IO)*/
+    chsc_rsp10->chsc_char[3][1] = 0
+//                              | 0x10 /* Set Channel Subsystem Char */
+//                              | 0x08 /* Fast CHSCs */
+                                ;
 
     /* Store request OK */
     STORE_HW(chsc_rsp->rsp,CHSC_REQ_OK);
@@ -224,11 +223,11 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
         case CHSC_REQ_SCHDESC:
             regs->psw.cc = ARCH_DEP(chsc_get_sch_desc) (chsc_req, chsc_rsp);
             break;
-#if 0
+
         case CHSC_REQ_CSSINFO:
             regs->psw.cc = ARCH_DEP(chsc_get_css_info) (chsc_req, chsc_rsp);
             break;
-#endif
+
         default:
 
             PTT(PTT_CL_ERR,"*CHSC",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
