@@ -51,6 +51,7 @@ struct DEVHND {
         DEVIM immed;                   /* Immediate CCW Codes        */
         DEVSA *siga_r;                 /* Signal Adapter Input       */
         DEVSA *siga_w;                 /* Signal Adapter Output      */
+        DEVQD *ssqd;                   /* QDIO subsys desc           */
         DEVSR *hsuspend;               /* Hercules suspend           */
         DEVSR *hresume;                /* Hercules resume            */
 };
@@ -68,6 +69,7 @@ extern DEVHND cardrdr_device_hndinfo;
 extern DEVHND cardpch_device_hndinfo;
 extern DEVHND printer_device_hndinfo;
 extern DEVHND tapedev_device_hndinfo;
+extern DEVHND qeth_device_hndinfo;
 #endif /*!defined(OPTION_DYNAMIC_LOAD)*/
 CKD_DLL_IMPORT DEVHND ckddasd_device_hndinfo;
 FBA_DLL_IMPORT DEVHND fbadasd_device_hndinfo;

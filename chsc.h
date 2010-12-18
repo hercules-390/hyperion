@@ -7,6 +7,10 @@
 
 // $Id$
 
+/* This module implements channel subsystem interface functions      */
+/* for the Hercules ESA/390 emulator.                                */
+/*                                                                   */
+/* This implementation is based on the S/390 Linux implementation    */
 
 #if !defined(_CHSC_H)
 
@@ -16,15 +20,18 @@
 typedef struct _CHSC_REQ {
         HWORD   length;                 /* Offset to response field  */
         HWORD   req;                    /* Request code              */
+#define CHSC_REQ_SCHDESC        0x04
+#define CHSC_REQ_CSSINFO        0x10
+#define CHSC_REQ_GETSSQD        0x24
         FWORD   resv[3];
     } CHSC_REQ;
 
 typedef struct _CHSC_REQ4 {
         HWORD   length;                 /* Offset to response field  */
         HWORD   req;                    /* Request code              */
-#define CHSC_REQ_SCHDESC        0x04
-#define CHSC_REQ_CSSINFO        0x10
-        HWORD   resv1;  
+        HWORD   ssidfmt;
+#define CHSC_REQ4_SSID          0x0030
+#define CHSC_REQ4_FMT           0x000f
         HWORD   f_sch;                  /* First subchannel          */
         HWORD   resv2;
         HWORD   l_sch;                  /* Last subchannel           */
@@ -74,6 +81,59 @@ typedef struct _CHSC_RSP10 {
                                            in length which is probably
                                            an error -    *JJ/10/10/04*/
     } CHSC_RSP10;
+
+
+typedef struct _CHSC_REQ24 {
+        HWORD   length;                 /* Offset to response field  */
+        HWORD   req;                    /* Request code              */
+
+        HWORD   ssidfmt;
+#define CHSC_REQ24_SSID         0x0030
+#define CHSC_REQ24_FMT          0x000f
+        HWORD   first_sch;
+        HWORD   resv1;
+        HWORD   last_sch;
+        FWORD   resv2;
+    } CHSC_REQ24;
+
+
+typedef struct _CHSC_RSP24 {
+        BYTE    flags;
+/* flags for st qdio sch data */
+#define CHSC_FLAG_QDIO_CAPABILITY       0x80
+#define CHSC_FLAG_VALIDITY              0x40
+        BYTE    resv1;
+        HWORD   sch;
+        BYTE    qfmt;
+        BYTE    parm;
+        BYTE    qdioac1;
+/* qdio adapter-characteristics-1 flag */
+#define AC1_SIGA_INPUT_NEEDED           0x40    /* process input queues */
+#define AC1_SIGA_OUTPUT_NEEDED          0x20    /* process output queues */
+#define AC1_SIGA_SYNC_NEEDED            0x10    /* ask hypervisor to sync */
+#define AC1_AUTOMATIC_SYNC_ON_THININT   0x08    /* set by hypervisor */
+#define AC1_AUTOMATIC_SYNC_ON_OUT_PCI   0x04    /* set by hypervisor */
+#define AC1_SC_QEBSM_AVAILABLE          0x02    /* available for subchannel */
+#define AC1_SC_QEBSM_ENABLED            0x01    /* enabled for subchannel */
+        BYTE    sch_class;
+        BYTE    pcnt;
+        BYTE    icnt;
+        BYTE    resv2;
+        BYTE    ocnt;
+        BYTE    resv3;
+        BYTE    mbccnt;
+        HWORD   qdioac2;
+/* qdio adapter-characteristics-2 flag */
+#define QETH_SNIFF_AVAIL                0x0008  /* promisc mode avail */
+        DBLWRD  sch_token;
+        BYTE    mro;
+        BYTE    mri;
+        BYTE    resv4;
+        BYTE    sbalic;
+        HWORD   resv5;
+        BYTE    resv6;
+        BYTE    mmwc;
+    } CHSC_RSP24;
 
 // #endif /*defined(FEATURE_CHSC)*/
 

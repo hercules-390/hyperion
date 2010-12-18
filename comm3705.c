@@ -2322,6 +2322,7 @@ DEVHND com3705_device_hndinfo = {
         commadpt_immed_command,        /* Immediate CCW Codes        */
         NULL,                          /* Signal Adapter Input       */
         NULL,                          /* Signal Adapter Output      */
+        NULL,                          /* QDIO subsys desc           */
         NULL,                          /* Hercules suspend           */
         NULL                           /* Hercules resume            */
 };

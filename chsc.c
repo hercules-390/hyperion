@@ -10,10 +10,10 @@
 
 // $Id$
 
-/*-------------------------------------------------------------------*/
 /* This module implements channel subsystem interface functions      */
 /* for the Hercules ESA/390 emulator.                                */
-/*-------------------------------------------------------------------*/
+/*                                                                   */
+/* This implementation is based on the S/390 Linux implementation    */
 
 #include "hstdinc.h"
 
@@ -38,22 +38,16 @@
 
 int ARCH_DEP(chsc_get_sch_desc) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 {
-    U16 req_len, sch, f_sch, l_sch, rsp_len;
+    U16 req_len, sch, f_sch, l_sch, rsp_len, lcss;
 
     CHSC_REQ4 *chsc_req4 = (CHSC_REQ4 *)(chsc_req);
-    CHSC_RSP4 *chsc_rsp4 = (CHSC_RSP4 *)(chsc_rsp);
-
-#if 0
-{ U16 resv1, resv2, resv3;
-    FETCH_HW(resv1,chsc_req4->resv1);
-    FETCH_HW(resv2,chsc_req4->resv2);
-    FETCH_HW(resv3,chsc_req4->resv3);
-    logmsg(_("chsc_get_sch_desc: resv1=%4.4X resv2=%4.4X resv3=%4.4X\n"),resv1,resv2,resv3);
-}
-#endif
+    CHSC_RSP4 *chsc_rsp4 = (CHSC_RSP4 *)(chsc_rsp+1);
 
     FETCH_HW(f_sch,chsc_req4->f_sch);
     FETCH_HW(l_sch,chsc_req4->l_sch);
+    FETCH_HW(lcss,chsc_req4->ssidfmt);
+    lcss &= CHSC_REQ4_SSID;
+    lcss >>= 4;
     
     /* Fetch length of request field */
     FETCH_HW(req_len, chsc_req4->length);
@@ -75,8 +69,7 @@ int ARCH_DEP(chsc_get_sch_desc) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
     {
     DEVBLK *dev;
         memset(chsc_rsp4, 0x00, sizeof(CHSC_RSP4) );
-// ZZ FIXME:  Dunno how to put the proper lcss id in here...
-        if((dev = find_device_by_subchan(0x00010000|sch)))
+        if((dev = find_device_by_subchan((LCSS_TO_SSID(lcss) << 16)|sch)))
         {
             chsc_rsp4->sch_val = 1;
             if(dev->pmcw.flag5 & PMCW5_V)
@@ -176,6 +169,58 @@ U16 req_len, rsp_len;
 }
 
 
+int ARCH_DEP(chsc_get_ssqd) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
+{
+    U16 req_len, sch, f_sch, l_sch, rsp_len, lcss;
+
+    CHSC_REQ24 *chsc_req24 = (CHSC_REQ24 *)(chsc_req);
+    CHSC_RSP24 *chsc_rsp24 = (CHSC_RSP24 *)(chsc_rsp+1);
+
+    FETCH_HW(f_sch,chsc_req24->first_sch);
+    FETCH_HW(l_sch,chsc_req24->last_sch);
+    FETCH_HW(lcss,chsc_req24->ssidfmt);
+    lcss &= CHSC_REQ24_SSID;
+    lcss >>= 4;
+
+    /* Fetch length of request field */
+    FETCH_HW(req_len, chsc_req24->length);
+
+    rsp_len = sizeof(CHSC_RSP) + ((1 + l_sch - f_sch) * sizeof(CHSC_RSP24));
+
+    if(l_sch < f_sch 
+      || rsp_len > (0x1000 - req_len)) {
+        /* Set response field length */
+        STORE_HW(chsc_rsp->length,sizeof(CHSC_RSP));
+        /* Store request error */
+        STORE_HW(chsc_rsp->rsp,CHSC_REQ_ERRREQ);
+        /* No reaon code */
+        STORE_FW(chsc_rsp->info,0);
+        return 0;
+    }
+
+    for(sch = f_sch; sch <= l_sch; sch++, chsc_rsp24++)
+    {
+    DEVBLK *dev;
+        memset(chsc_rsp24, 0x00, sizeof(CHSC_RSP24) );
+        if((dev = find_device_by_subchan((LCSS_TO_SSID(lcss) << 16)|sch)))
+            if(dev->hnd->ssqd)
+                (dev->hnd->ssqd)(dev, chsc_rsp24);
+    }
+    
+    /* Store response length */
+    STORE_HW(chsc_rsp->length,rsp_len);
+    
+    /* Store request OK */
+    STORE_HW(chsc_rsp->rsp,CHSC_REQ_OK);
+
+    /* No reaon code */
+    STORE_FW(chsc_rsp->info,0);
+
+    return 0;
+
+}
+
+
 /*-------------------------------------------------------------------*/
 /* B25F CHSC  - Channel Subsystem Call                         [RRE] */
 /*-------------------------------------------------------------------*/
@@ -226,6 +271,10 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
 
         case CHSC_REQ_CSSINFO:
             regs->psw.cc = ARCH_DEP(chsc_get_css_info) (chsc_req, chsc_rsp);
+            break;
+
+        case CHSC_REQ_GETSSQD:
+            regs->psw.cc = ARCH_DEP(chsc_get_ssqd) (chsc_req, chsc_rsp);
             break;
 
         default:

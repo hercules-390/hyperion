@@ -143,25 +143,26 @@
 
 DEVHND  tapedev_device_hndinfo   =
 {
-    &tapedev_init_handler,             /* Device Initialisation      */
-    &tapedev_execute_ccw,              /* Device CCW execute         */
-    &tapedev_close_device,             /* Device Close               */
-    &tapedev_query_device,             /* Device Query               */
-    NULL,                              /* Device Start channel pgm   */
-    NULL,                              /* Device End channel pgm     */
-    NULL,                              /* Device Resume channel pgm  */
-    NULL,                              /* Device Suspend channel pgm */
-    NULL,                              /* Device Read                */
-    NULL,                              /* Device Write               */
-    NULL,                              /* Device Query used          */
-    NULL,                              /* Device Reserve             */
-    NULL,                              /* Device Release             */
-    NULL,                              /* Device Attention           */
-    TapeImmedCommands,                 /* Immediate CCW Codes        */
-    NULL,                              /* Signal Adapter Input       */
-    NULL,                              /* Signal Adapter Output      */
-    NULL,                              /* Hercules suspend           */
-    NULL                               /* Hercules resume            */
+        &tapedev_init_handler,         /* Device Initialisation      */
+        &tapedev_execute_ccw,          /* Device CCW execute         */
+        &tapedev_close_device,         /* Device Close               */
+        &tapedev_query_device,         /* Device Query               */
+        NULL,                          /* Device Start channel pgm   */
+        NULL,                          /* Device End channel pgm     */
+        NULL,                          /* Device Resume channel pgm  */
+        NULL,                          /* Device Suspend channel pgm */
+        NULL,                          /* Device Read                */
+        NULL,                          /* Device Write               */
+        NULL,                          /* Device Query used          */
+        NULL,                          /* Device Reserve             */
+        NULL,                          /* Device Release             */
+        NULL,                          /* Device Attention           */
+        TapeImmedCommands,             /* Immediate CCW Codes        */
+        NULL,                          /* Signal Adapter Input       */
+        NULL,                          /* Signal Adapter Output      */
+        NULL,                          /* QDIO subsys desc           */
+        NULL,                          /* Hercules suspend           */
+        NULL                           /* Hercules resume            */
 };
 
 /*-------------------------------------------------------------------*/

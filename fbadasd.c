@@ -1566,23 +1566,24 @@ BYTE byte;
 }
 
 DLL_EXPORT DEVHND fbadasd_device_hndinfo = {
-        &fbadasd_init_handler,          /* Device Initialisation      */
-        &fbadasd_execute_ccw,           /* Device CCW execute         */
-        &fbadasd_close_device,          /* Device Close               */
-        &fbadasd_query_device,          /* Device Query               */
-        NULL,                           /* Device Start channel pgm   */
-        &fbadasd_end,                   /* Device End channel pgm     */
-        NULL,                           /* Device Resume channel pgm  */
-        &fbadasd_end,                   /* Device Suspend channel pgm */
-        &fbadasd_read_blkgrp,           /* Device Read                */
-        &fbadasd_update_blkgrp,         /* Device Write               */
-        &fbadasd_used,                  /* Device Query used          */
-        NULL,                           /* Device Reserve             */
-        NULL,                           /* Device Release             */
-        NULL,                           /* Device Attention           */
-        NULL,                           /* Immediate CCW Codes        */
-        NULL,                           /* Signal Adapter Input       */
-        NULL,                           /* Signal Adapter Ouput       */
-        &fbadasd_hsuspend,              /* Hercules suspend           */
-        &fbadasd_hresume                /* Hercules resume            */
+        &fbadasd_init_handler,         /* Device Initialisation      */
+        &fbadasd_execute_ccw,          /* Device CCW execute         */
+        &fbadasd_close_device,         /* Device Close               */
+        &fbadasd_query_device,         /* Device Query               */
+        NULL,                          /* Device Start channel pgm   */
+        &fbadasd_end,                  /* Device End channel pgm     */
+        NULL,                          /* Device Resume channel pgm  */
+        &fbadasd_end,                  /* Device Suspend channel pgm */
+        &fbadasd_read_blkgrp,          /* Device Read                */
+        &fbadasd_update_blkgrp,        /* Device Write               */
+        &fbadasd_used,                 /* Device Query used          */
+        NULL,                          /* Device Reserve             */
+        NULL,                          /* Device Release             */
+        NULL,                          /* Device Attention           */
+        NULL,                          /* Immediate CCW Codes        */
+        NULL,                          /* Signal Adapter Input       */
+        NULL,                          /* Signal Adapter Ouput       */
+        NULL,                          /* QDIO subsys desc           */
+        &fbadasd_hsuspend,             /* Hercules suspend           */
+        &fbadasd_hresume               /* Hercules resume            */
 };

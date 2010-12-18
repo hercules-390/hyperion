@@ -9,6 +9,8 @@
 
 /* This module contains device handling functions for the            */
 /* OSA Express emulated card                                         */
+/*                                                                   */
+/* This implementation is based on the S/390 Linux implementation    */
 
 /* Device module hdtqeth.dll devtype QETH (config)                   */
 /* hercules.cnf:                                                     */
@@ -21,6 +23,8 @@
 #include "hercules.h"
 
 #include "devtype.h"
+
+#include "chsc.h"
 
 
 #if defined(WIN32) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
@@ -38,6 +42,27 @@ static BYTE sense_id_bytes[] = { 0xff,
                                  0x04, 0xfd, 0x01, 0x00 /* Act Q CIW */
                                };
 
+
+static BYTE  qeth_immed_commands [256] =
+{
+/* 0 1 2 3 4 5 6 7 8 9 A B C D E F */
+   0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0, /* 00 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 10 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 20 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 30 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 40 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 50 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 60 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 70 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 80 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 90 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* A0 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* B0 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* C0 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* D0 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* E0 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0  /* F0 */
+};
 
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
@@ -101,6 +126,32 @@ static int qeth_close_device ( DEVBLK *dev )
 
 
 /*-------------------------------------------------------------------*/
+/* QDIO subsys desc                                                  */
+/*-------------------------------------------------------------------*/
+static int qeth_ssqd_desc ( DEVBLK *dev, void *desc )
+{
+    CHSC_RSP24 *chsc_rsp24 = (void *)desc;
+
+logmsg(_("QETH: dev(%4.4x) CHSC get ssqd\n"),dev->devnum);
+
+    STORE_HW(chsc_rsp24->sch, dev->subchan);
+
+    if(dev->hnd->siga_r)
+        chsc_rsp24->qdioac1 |= AC1_SIGA_INPUT_NEEDED;
+    if(dev->hnd->siga_w)
+        chsc_rsp24->qdioac1 |= AC1_SIGA_OUTPUT_NEEDED;
+
+    if(dev->hnd->siga_r || dev->hnd->siga_w)
+        chsc_rsp24->flags |= ( CHSC_FLAG_QDIO_CAPABILITY | CHSC_FLAG_VALIDITY );
+
+    if(chsc_rsp24->flags)
+        logmsg(_("QETH: SubChannel(%8.8x) QDIO Capable\n"),(dev->ssid << 16)|dev->subchan);
+
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
 /* Execute a Channel Command Word                                    */
 /*-------------------------------------------------------------------*/
 static void qeth_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
@@ -126,7 +177,7 @@ int     blocksize = 1024;
     /*---------------------------------------------------------------*/
     /* WRITE                                                         */
     /*---------------------------------------------------------------*/
-logmsg(_("Write dev(%4.4x)\n"),dev->devnum);
+logmsg(_("Write dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
 #define WR_SIZE 0x22
 
         /* Calculate number of bytes to read and set residual count */
@@ -142,9 +193,9 @@ logmsg(_("Write dev(%4.4x)\n"),dev->devnum);
     /*---------------------------------------------------------------*/
     /* READ                                                          */
     /*---------------------------------------------------------------*/
-logmsg(_("Read dev(%4.4x)\n"),dev->devnum);
+logmsg(_("Read dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
 
-#define RD_SIZE 0x22
+#define RD_SIZE 0x4096
         /* Calculate number of bytes to read and set residual count */
         num = (count < RD_SIZE) ? count : RD_SIZE;
         *residual = count - num;
@@ -205,6 +256,7 @@ logmsg(_("Sense ID dev(%4.4x)\n"),dev->devnum);
     /* READ CONFIGURATION DATA                                       */
     /*---------------------------------------------------------------*/
 logmsg(_("Read Configuration Data dev(%4.4x)\n"),dev->devnum);
+
         /* Calculate residual byte count */
         num = (count < CONFIG_DATA_SIZE) ? count : CONFIG_DATA_SIZE;
         *residual = count - num;
@@ -212,6 +264,10 @@ logmsg(_("Read Configuration Data dev(%4.4x)\n"),dev->devnum);
 
         /* Clear the configuration data area */
         memset (iobuf, 0x00, CONFIG_DATA_SIZE);
+
+        /* INCOMPLETE ZZ
+         * NODE ELEMENT DESCRIPTOR MUST BE SETUP HERE
+         */
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
@@ -253,6 +309,8 @@ logmsg(_("Activate Queues dev(%4.4x)\n"),dev->devnum);
         /* INCOMPLETE ZZ
          * QUEUES MUST BE HANDLED HERE, THIS CCW WILL ONLY EXIT
          * IN CASE OF AN ERROR OR A HALT, CLEAR OR CANCEL SIGNAL
+         *
+         * CARE MUST BE TAKEN THAT THIS CCW RUNS AS A SEPARATE THREAD
          */
 
         /* Return unit status */
@@ -316,9 +374,10 @@ DEVHND qeth_device_hndinfo =
         NULL,                   /* Device Reserve             */
         NULL,                   /* Device Release             */
         NULL,                   /* Device Attention           */
-        NULL,                   /* Immediate CCW Codes        */
+        qeth_immed_commands,    /* Immediate CCW Codes        */
         &qeth_initiate_input,   /* Signal Adapter Input       */
         &qeth_initiate_output,  /* Signal Adapter Output      */
+        &qeth_ssqd_desc,        /* QDIO subsys desc           */
         NULL,                   /* Hercules suspend           */
         NULL                    /* Hercules resume            */
 };

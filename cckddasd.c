@@ -5831,45 +5831,47 @@ int             l;
 } /* end function cckd_trace */
 
 DEVHND cckddasd_device_hndinfo = {
-        &ckddasd_init_handler,          /* Device Initialisation      */
-        &ckddasd_execute_ccw,           /* Device CCW execute         */
-        &cckddasd_close_device,         /* Device Close               */
-        &ckddasd_query_device,          /* Device Query               */
-        &cckddasd_start,                /* Device Start channel pgm   */
-        &cckddasd_end,                  /* Device End channel pgm     */
-        &cckddasd_start,                /* Device Resume channel pgm  */
-        &cckddasd_end,                  /* Device Suspend channel pgm */
-        &cckd_read_track,               /* Device Read                */
-        &cckd_update_track,             /* Device Write               */
-        &cckd_used,                     /* Device Query used          */
-        NULL,                           /* Device Reserve             */
-        NULL,                           /* Device Release             */
-        NULL,                           /* Device Attention           */
-        NULL,                           /* Immediate CCW Codes        */
-        NULL,                           /* Signal Adapter Input       */
-        NULL,                           /* Signal Adapter Ouput       */
-        &ckddasd_hsuspend,              /* Hercules suspend           */
-        &ckddasd_hresume                /* Hercules resume            */
+        &ckddasd_init_handler,         /* Device Initialisation      */
+        &ckddasd_execute_ccw,          /* Device CCW execute         */
+        &cckddasd_close_device,        /* Device Close               */
+        &ckddasd_query_device,         /* Device Query               */
+        &cckddasd_start,               /* Device Start channel pgm   */
+        &cckddasd_end,                 /* Device End channel pgm     */
+        &cckddasd_start,               /* Device Resume channel pgm  */
+        &cckddasd_end,                 /* Device Suspend channel pgm */
+        &cckd_read_track,              /* Device Read                */
+        &cckd_update_track,            /* Device Write               */
+        &cckd_used,                    /* Device Query used          */
+        NULL,                          /* Device Reserve             */
+        NULL,                          /* Device Release             */
+        NULL,                          /* Device Attention           */
+        NULL,                          /* Immediate CCW Codes        */
+        NULL,                          /* Signal Adapter Input       */
+        NULL,                          /* Signal Adapter Ouput       */
+        NULL,                          /* QDIO subsys desc           */
+        &ckddasd_hsuspend,             /* Hercules suspend           */
+        &ckddasd_hresume               /* Hercules resume            */
 };
 
 DEVHND cfbadasd_device_hndinfo = {
-        &fbadasd_init_handler,          /* Device Initialisation      */
-        &fbadasd_execute_ccw,           /* Device CCW execute         */
-        &cckddasd_close_device,         /* Device Close               */
-        &fbadasd_query_device,          /* Device Query               */
-        &cckddasd_start,                /* Device Start channel pgm   */
-        &cckddasd_end,                  /* Device End channel pgm     */
-        &cckddasd_start,                /* Device Resume channel pgm  */
-        &cckddasd_end,                  /* Device Suspend channel pgm */
-        &cfba_read_block,               /* Device Read                */
-        &cfba_write_block,              /* Device Write               */
-        &cfba_used,                     /* Device Query used          */
-        NULL,                           /* Device Reserve             */
-        NULL,                           /* Device Release             */
-        NULL,                           /* Device Attention           */
-        NULL,                           /* Immediate CCW Codes        */
-        NULL,                           /* Signal Adapter Input       */
-        NULL,                           /* Signal Adapter Ouput       */
-        &fbadasd_hsuspend,              /* Hercules suspend           */
-        &fbadasd_hresume                /* Hercules resume            */
+        &fbadasd_init_handler,         /* Device Initialisation      */
+        &fbadasd_execute_ccw,          /* Device CCW execute         */
+        &cckddasd_close_device,        /* Device Close               */
+        &fbadasd_query_device,         /* Device Query               */
+        &cckddasd_start,               /* Device Start channel pgm   */
+        &cckddasd_end,                 /* Device End channel pgm     */
+        &cckddasd_start,               /* Device Resume channel pgm  */
+        &cckddasd_end,                 /* Device Suspend channel pgm */
+        &cfba_read_block,              /* Device Read                */
+        &cfba_write_block,             /* Device Write               */
+        &cfba_used,                    /* Device Query used          */
+        NULL,                          /* Device Reserve             */
+        NULL,                          /* Device Release             */
+        NULL,                          /* Device Attention           */
+        NULL,                          /* Immediate CCW Codes        */
+        NULL,                          /* Signal Adapter Input       */
+        NULL,                          /* Signal Adapter Ouput       */
+        NULL,                          /* QDIO subsys desc           */
+        &fbadasd_hsuspend,             /* Hercules suspend           */
+        &ckddasd_hresume               /* Hercules resume            */
 };

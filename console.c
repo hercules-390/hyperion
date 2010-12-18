@@ -3685,6 +3685,7 @@ DEVHND constty_device_hndinfo = {
         constty_immed,                 /* Immediate CCW Codes        */
         NULL,                          /* Signal Adapter Input       */
         NULL,                          /* Signal Adapter Output      */
+        NULL,                          /* QDIO subsys desc           */
         NULL,                          /* Hercules suspend           */
         NULL                           /* Hercules resume            */
 };
@@ -3721,6 +3722,7 @@ DEVHND loc3270_device_hndinfo = {
         loc3270_immed,                 /* Immediate CCW Codes        */
         NULL,                          /* Signal Adapter Input       */
         NULL,                          /* Signal Adapter Output      */
+        NULL,                          /* QDIO subsys desc           */
         &loc3270_hsuspend,             /* Hercules suspend           */
         &loc3270_hresume               /* Hercules resume            */
 };

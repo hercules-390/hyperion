@@ -867,6 +867,7 @@ DEVHND cardrdr_device_hndinfo = {
         NULL,                          /* Immediate CCW Codes        */
         NULL,                          /* Signal Adapter Input       */
         NULL,                          /* Signal Adapter Output      */
+        NULL,                          /* QDIO subsys desc           */
         NULL,                          /* Hercules suspend           */
         NULL                           /* Hercules resume            */
 };

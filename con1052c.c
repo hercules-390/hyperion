@@ -362,6 +362,7 @@ DEVHND con1052_device_hndinfo = {
         con1052_immed,                 /* Immediate CCW Codes        */
         NULL,                          /* Signal Adapter Input       */
         NULL,                          /* Signal Adapter Output      */
+        NULL,                          /* QDIO subsys desc           */
         NULL,                          /* Hercules suspend           */
         NULL                           /* Hercules resume            */
 };
