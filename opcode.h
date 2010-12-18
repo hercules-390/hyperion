@@ -1539,10 +1539,35 @@ do { \
     }
 
 #ifdef OPTION_OPTINST
+#undef RXY_X0
 /* BHe: This decoder is for optimized instructions where the X2 is zero */
-#define RXY_X0(_inst, _regs, _r1, _b2, _effective_addr2) \
-        RXY_X0_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, 6, 6)
-        
+#ifdef FEATURE_LONG_DISPLACEMENT
+  #define RXY_X0(_inst, _regs, _r1, _b2, _effective_addr2) \
+          RXY_X0_DECODER_LD(_inst, _regs, _r1, _b2, _effective_addr2, 6, 6)
+#else
+  #define RXY_X0(_inst, _regs, _r1, _b2, _effective_addr2) \
+          RXY_X0_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, 6, 6)
+#endif /* #ifdef FEATURE_LONG_DISPLACEMENT */
+
+#define RXY_X0_DECODER_LD(_inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc) \
+        { \
+          U32 temp; S32 temp2; \
+          temp  = fetch_fw(_inst); \
+          (_r1) = (temp >> 20) & 0xf; \
+          (_b2) = (temp >> 12) & 0xf; \
+          temp2 = (_inst[4] << 12) | (temp & 0xfff); \
+          if(temp2 & 0x80000) \
+            temp2 |= 0xfff00000; \
+          (_effective_addr2) = temp2; \
+          if((_b2)) \
+          { \
+            (_effective_addr2) += (_regs)->GR((_b2)); \
+            if((_len)) \
+              (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+          } \
+          INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
+        }
+
 #define RXY_X0_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc) \
         { \
           U32 temp = fetch_fw((_inst)); \
