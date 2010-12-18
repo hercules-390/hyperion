@@ -581,7 +581,7 @@ void  UpdateStatus ()
             if (cpupct != prev_cpupct[i])
             {
                 prev_cpupct[i] = cpupct;
-                gui_fprintf( fStatusStream, "CPUPCT%d=%d\n", i, cpupct );
+                gui_fprintf( fStatusStream, "CPUPCT%02d=%d\n", i, cpupct );
             }
         }
     }
