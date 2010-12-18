@@ -1551,14 +1551,13 @@ do { \
 
 #define RXY_X0_DECODER_LD(_inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc) \
         { \
-          U32 temp; S32 temp2; \
-          temp  = fetch_fw(_inst); \
+          U32 temp; \
+          temp  = fetch_fw((_inst)); \
           (_r1) = (temp >> 20) & 0xf; \
           (_b2) = (temp >> 12) & 0xf; \
-          temp2 = (_inst[4] << 12) | (temp & 0xfff); \
-          if(temp2 & 0x80000) \
-            temp2 |= 0xfff00000; \
-          (_effective_addr2) = temp2; \
+          (_effective_addr2) = ((_inst)[4] << 12) | (temp & 0xfff); \
+          if((_effective_addr2) & 0x80000) \
+            (_effective_addr2) |= 0xfff00000; \
           if((_b2)) \
           { \
             (_effective_addr2) += (_regs)->GR((_b2)); \
