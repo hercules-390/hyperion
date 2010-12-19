@@ -2631,7 +2631,7 @@ u_int   locktype = 0;
     /* Parse main storage size operand */
     rc = sscanf(argv[1], "%"I64_FMT"u%c%c", &mainsize, &f, &c);
 
-    if ( rc > 2 )
+    if ( rc < 1 || rc > 2 )
     {
         WRMSG( HHC01451, "E", argv[1], argv[0] );
         return -1;
