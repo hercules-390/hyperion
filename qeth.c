@@ -41,8 +41,8 @@ static BYTE sense_id_bytes[] = {
     0x17, 0x32, 0x01,                   // Control Unit Type
     0x00,
     0x40, 0xfa, 0x00, 0x60,             // Read Configuration Data CIW
-    0x43, 0xfc, 0x10, 0x00,             // Establish Queues CIW
-    0x44, 0xfd, 0x00, 0x00              // Activate Queues CIW
+    0x03, 0xfc, 0x10, 0x00,             // Establish Queues CIW
+    0x04, 0xfd, 0x00, 0x00              // Activate Queues CIW
 };
 
 static BYTE read_configuration_data_bytes[96] = {
