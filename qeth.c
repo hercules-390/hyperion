@@ -35,15 +35,53 @@
 #endif
 
 
-static BYTE sense_id_bytes[] = { 0xff,
-                                 0x17, 0x31, 0x01,            /* D/T */
-                                 0x17, 0x32, 0x01,           /* CU/T */
-                                 0x00,
-                                 0x40, 0xfa, 0x01, 0x00,  /* RCD CIW */
-                                 0x03, 0xfc, 0x01, 0x00, /*Ena Q CIW */
-                                 0x04, 0xfd, 0x01, 0x00 /* Act Q CIW */
-                               };
+static BYTE sense_id_bytes[] = {
+    0xff,
+    0x17, 0x31, 0x01,                   // Device Type
+    0x17, 0x32, 0x01,                   // Control Unit Type
+    0x00,
+    0x40, 0xfa, 0x00, 0x60,             // Read Configuration Data CIW
+    0x43, 0xfc, 0x10, 0x00,             // Establish Queues CIW
+    0x44, 0xfd, 0x00, 0x00              // Activate Queues CIW
+};
 
+static BYTE read_configuration_data_bytes[96] = {
+    // ---------------- Device NED ---------------------------------------------------
+    0xCC,                               // 0:      NED code
+    0x01,                               // 1:      Type  (X'01' = I/O Device)
+    0x00,                               // 2:      Class (X'??' = OSAE)
+    0x00,                               // 3:      (Reserved)
+    0xF0,0xF0,0xF1,0xF7,0xF3,0xF1,      // 4-9:    Type  ('001731')
+    0xC3,0xF1,0xF0,                     // 10-12:  Model ('001')
+    0xC0,0xC0,0xC1,                     // 13-15:  Manufacturer ('HRC' = Hercules)
+    0xE9,0xE9,                          // 16-17:  Plant of Manufacture ('ZZ' = Herc)
+    0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      // 18-29:  Sequence Number
+    0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      //
+    0x00, 0x00,                         // 30-31: Tag (x'ccua', cc = chpid, ua=unit address)
+    // ---------------- Control Unit NED ---------------------------------------------
+    0xC4,                               // 32:     NED code
+    0x02,                               // 33:     Type  (X'02' = Control Unit)
+    0x00,                               // 34:     Class (X'00' = Undefined)
+    0x00,                               // 35:     (Reserved)
+    0xF0,0xF0,0xF1,0xF7,0xF3,0xF1,      // 36-41:  Type  ('001732')
+    0xF0,0xF0,0xF1,                     // 42-44:  Model ('001')
+    0xC8,0xD9,0xC3,                     // 45-47:  Manufacturer ('HRC' = Hercules)
+    0xE9,0xE9,                          // 48-49:  Plant of Manufacture ('ZZ' = Herc)
+    0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      // 50-61:  Sequence Number
+    0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      //
+    0x00, 0x00,                         // 62-63:  Tag cuaddr
+    // ---------------- General NEQ --------------------------------------------------
+    0x80,                               // 64:     NED code
+    0x00,                               // 65:     ?
+    0x00,0x00,                          // 66-67:  ?
+    0x00,                               // 68:     ?
+    0x00,0x00,0x00,                     // 69-71:  ?
+    0x00,                               // 72:     ?
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00, // 73-95:  ?
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    0x00,0x00,
+};
 
 static BYTE  qeth_immed_commands [256] =
 {
@@ -196,8 +234,19 @@ logmsg(_("Read dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
         memset(iobuf, 0x00, RD_SIZE);
 
         if(IS_OSA_READ_DEVICE(dev))
+        {
             iobuf[0x08] = 2;
-
+            iobuf[0x10] = 0x02;
+            iobuf[0x11] = 0x01;
+        }
+         
+        if(IS_OSA_WRITE_DEVICE(dev))
+        {
+            iobuf[0x08] = 2;
+            iobuf[0x10] = 0x02;
+            iobuf[0x11] = 0x01;
+        }
+         
         /* Calculate number of bytes to read and set residual count */
         num = (count < RD_SIZE) ? count : RD_SIZE;
         *residual = count - num;
@@ -212,12 +261,6 @@ logmsg(_("Read dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
     /* CONTROL NO-OPERATION                                          */
     /*---------------------------------------------------------------*/
 logmsg(_("NOP dev(%4.4x) "),dev->devnum);
-if(IS_OSA_READ_DEVICE(dev))
-    logmsg(_("OSA READ device\n"));
-if(IS_OSA_WRITE_DEVICE(dev))
-    logmsg(_("OSA WRITE device\n"));
-if(IS_OSA_DATA_DEVICE(dev))
-    logmsg(_("OSA DATA device\n"));
         *residual = 0;
         *unitstat = CSW_CE | CSW_DE;
         break;
@@ -246,7 +289,11 @@ logmsg(_("Sense dev(%4.4x)\n"),dev->devnum);
     /*---------------------------------------------------------------*/
     /* SENSE ID                                                      */
     /*---------------------------------------------------------------*/
-logmsg(_("Sense ID dev(%4.4x)\n"),dev->devnum);
+logmsg(_("Sense ID dev(%4.4x) %s\n"),dev->devnum,
+  IS_OSA_READ_DEVICE(dev) ? "(OSA Read)" :
+  IS_OSA_WRITE_DEVICE(dev) ? "(OSA Write)" : 
+  IS_OSA_DATA_DEVICE(dev) ? "(OSA Data)" : "(Unkown OSA device type)");
+
         /* Calculate residual byte count */
         num = (count < dev->numdevid) ? count : dev->numdevid;
         *residual = count - num;
@@ -266,16 +313,20 @@ logmsg(_("Sense ID dev(%4.4x)\n"),dev->devnum);
 logmsg(_("Read Configuration Data dev(%4.4x)\n"),dev->devnum);
 
         /* Calculate residual byte count */
-        num = (count < CONFIG_DATA_SIZE) ? count : CONFIG_DATA_SIZE;
+        num = (count < sizeof(read_configuration_data_bytes) ? count : sizeof(read_configuration_data_bytes));
         *residual = count - num;
-        if (count < CONFIG_DATA_SIZE) *more = 1;
+        if (count < sizeof(read_configuration_data_bytes)) *more = 1;
 
-        /* Clear the configuration data area */
-        memset (iobuf, 0x00, CONFIG_DATA_SIZE);
+        /* Copy configuration data from tempate */
+        memcpy (iobuf, read_configuration_data_bytes, num);
 
-        /* INCOMPLETE ZZ
-         * NODE ELEMENT DESCRIPTOR MUST BE SETUP HERE
-         */
+        /* Insert chpid & unit address in the device ned */
+        iobuf[30] = (dev->devnum >> 8) & 0xff;
+        iobuf[31] = (dev->devnum) & 0xff;
+
+        /* Use unit address of OSA read device as control unit address */
+        iobuf[62] = (dev->group->memdev[OSA_READ_DEVICE]->devnum >> 8) & 0xff;
+        iobuf[63] = (dev->group->memdev[OSA_READ_DEVICE]->devnum) & 0xff;
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
