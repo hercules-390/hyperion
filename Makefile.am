@@ -719,6 +719,7 @@ noinst_HEADERS = fishhang.h     \
                  herc_getopt.h  \
                  service.h      \
                  chsc.h         \
+                 qeth.h         \
                  pttrace.h      \
                  history.h      \
                  sr.h           \
