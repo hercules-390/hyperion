@@ -26,6 +26,8 @@
 
 #include "chsc.h"
 
+#include "qeth.h"
+
 
 #if defined(WIN32) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
   SYSBLK *psysblk;
@@ -136,16 +138,9 @@ logmsg(_("QETH: dev(%4.4x) CHSC get ssqd\n"),dev->devnum);
 
     STORE_HW(chsc_rsp24->sch, dev->subchan);
 
-    if(dev->hnd->siga_r)
-        chsc_rsp24->qdioac1 |= AC1_SIGA_INPUT_NEEDED;
-    if(dev->hnd->siga_w)
-        chsc_rsp24->qdioac1 |= AC1_SIGA_OUTPUT_NEEDED;
+    chsc_rsp24->flags |= ( CHSC_FLAG_QDIO_CAPABILITY | CHSC_FLAG_VALIDITY );
 
-    if(dev->hnd->siga_r || dev->hnd->siga_w)
-        chsc_rsp24->flags |= ( CHSC_FLAG_QDIO_CAPABILITY | CHSC_FLAG_VALIDITY );
-
-    if(chsc_rsp24->flags)
-        logmsg(_("QETH: SubChannel(%8.8x) QDIO Capable\n"),(dev->ssid << 16)|dev->subchan);
+    chsc_rsp24->qdioac1 |= ( AC1_SIGA_INPUT_NEEDED | AC1_SIGA_OUTPUT_NEEDED );
 
     return 0;
 }
@@ -161,7 +156,7 @@ static void qeth_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
 int     rc = 0;                         /* Return code               */
 int     num;                            /* Number of bytes to move   */
 int     blocksize = 1024;
-#define CONFIG_DATA_SIZE 1024
+#define CONFIG_DATA_SIZE 96
 
     UNREFERENCED(flags);
     UNREFERENCED(prevcode);
@@ -195,7 +190,14 @@ logmsg(_("Write dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
     /*---------------------------------------------------------------*/
 logmsg(_("Read dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
 
-#define RD_SIZE 0x4096
+#define RD_SIZE 0x22
+
+
+        memset(iobuf, 0x00, RD_SIZE);
+
+        if(IS_OSA_READ_DEVICE(dev))
+            iobuf[0x08] = 2;
+
         /* Calculate number of bytes to read and set residual count */
         num = (count < RD_SIZE) ? count : RD_SIZE;
         *residual = count - num;
@@ -209,7 +211,13 @@ logmsg(_("Read dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
     /*---------------------------------------------------------------*/
     /* CONTROL NO-OPERATION                                          */
     /*---------------------------------------------------------------*/
-logmsg(_("NOP dev(%4.4x)\n"),dev->devnum);
+logmsg(_("NOP dev(%4.4x) "),dev->devnum);
+if(IS_OSA_READ_DEVICE(dev))
+    logmsg(_("OSA READ device\n"));
+if(IS_OSA_WRITE_DEVICE(dev))
+    logmsg(_("OSA WRITE device\n"));
+if(IS_OSA_DATA_DEVICE(dev))
+    logmsg(_("OSA DATA device\n"));
         *residual = 0;
         *unitstat = CSW_CE | CSW_DE;
         break;
