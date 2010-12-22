@@ -458,11 +458,19 @@ void*  gui_panel_command (char* pszCommand)
         // send it the CORRECT mainsize immediately afterwards. This allows
         // future versions of HercGUI to know whether the version of Hercules
         // that it's talking to supports a given feature or not. Slick, eh? :)
-        gui_fprintf(fStatusStream,"MAINSIZE=%s\n",VERSION);
-        if (gui_version < 1.11)
-            gui_fprintf(fStatusStream,"MAINSIZE=%d\n",(U32)sysblk.mainsize);
+
+        // PROGRAMMING NOTE: we use 'V1' and 'V2' here (instead of 'VERSION')
+        // since the 'VERSION' string can be any value the user wants and thus
+        // might not be numeric nor even correspond at all to Hercules's actual
+        // build version. V1 and V2 however should ALWAYS be numbers and should
+        // ALWAYS equal Hercules's actual build version...
+
+        gui_fprintf(fStatusStream,"MAINSIZE=%u.%u\n",V1,V2);
+
+        if (gui_version < 1.12)
+            gui_fprintf(fStatusStream,"MAINSIZE=%u\n",(U32)sysblk.mainsize);
         else
-            gui_fprintf(fStatusStream,"MAINSIZE=%"UINT_PTR_FMT"d\n",(uintptr_t)sysblk.mainsize);
+            gui_fprintf(fStatusStream,"MAINSIZE=%"UINT_PTR_FMT"u\n",(uintptr_t)sysblk.mainsize);
         return NULL;
     }
 
@@ -502,7 +510,7 @@ NotSpecialGUICommand:
     next_panel_command_handler = HDL_FINDNXT( gui_panel_command );
 
     if (!next_panel_command_handler)    // (extremely unlikely!)
-        return (char *)-1;                   // (extremely unlikely!)
+        return (char *)-1;              // (extremely unlikely!)
 
     return  next_panel_command_handler( pszCommand );
 }
@@ -581,7 +589,7 @@ void  UpdateStatus ()
             if (cpupct != prev_cpupct[i])
             {
                 prev_cpupct[i] = cpupct;
-                gui_fprintf( fStatusStream, "CPUPCT%02d=%d\n", i, cpupct );
+                gui_fprintf( fStatusStream, "CPUPCT%02u=%u\n", i, cpupct );
             }
         }
     }
@@ -1613,8 +1621,7 @@ void  UpdateDeviceStatus ()
     {
         // Does this device actually exist in the configuration?
 
-        if (!pDEVBLK->allocated || !(pDEVBLK->pmcw.flag5 & PMCW5_V))
-            continue;   // (no, skip)
+        if (!IS_DEV( pDEVBLK )) continue;   // (no, skip)
 
         // Retrieve this device's filename and optional settings parameter values...
 
@@ -1649,6 +1656,25 @@ void  UpdateDeviceStatus ()
 
         // Send status message back to gui...
 
+#if defined(_FEATURE_INTEGRATED_3270_CONSOLE)
+        if (pDEVBLK == sysblk.sysgdev)
+        {
+            gui_fprintf( fStatusStream,
+
+                "DEV=0000 SYSG %-4.4s %c%c%c%c %s\n"
+
+                ,pDEVClass
+
+                ,chOnlineStat
+                ,chBusyStat
+                ,chPendingStat
+                ,chOpenStat
+
+                ,szQueryDeviceBuff
+            );
+        }
+        else
+#endif // defined(_FEATURE_INTEGRATED_3270_CONSOLE)
         gui_fprintf(fStatusStream,
 
             "DEV=%4.4X %4.4X %-4.4s %c%c%c%c %s\n"
@@ -1698,7 +1724,7 @@ void  NewUpdateDevStats ()
 
         // Does this device exist in the configuration?
 
-        if (!pDEVBLK->allocated || !(pDEVBLK->pmcw.flag5 & PMCW5_V))
+        if (!IS_DEV( pDEVBLK ))
         {
             // This device no longer exists in the configuration...
             // If we haven't yet notified the GUI about this device
@@ -1732,7 +1758,6 @@ void  NewUpdateDevStats ()
                 HHC01540, "E" 
                 ,SSID_TO_LCSS(pDEVBLK->ssid)
                 ,pDEVBLK->devnum
-
             );
         }
 
@@ -1753,6 +1778,26 @@ void  NewUpdateDevStats ()
         // Build a new "device added" or "device changed"
         // status string for this device...
 
+#if defined(_FEATURE_INTEGRATED_3270_CONSOLE)
+        if (pDEVBLK == sysblk.sysgdev)
+        {
+            snprintf( pGUIStat->pszNewStatStr, GUI_STATSTR_BUFSIZ,
+
+                "DEV%c=0000 SYSG %-4.4s %c%c%c%c %s"
+
+                ,*pGUIStat->pszOldStatStr ? 'C' : 'A'
+                ,pDEVClass
+
+                ,chOnlineStat
+                ,chBusyStat
+                ,chPendingStat
+                ,chOpenStat
+
+                ,szQueryDeviceBuff
+            );
+        }
+        else
+#endif // defined(_FEATURE_INTEGRATED_3270_CONSOLE)
         snprintf( pGUIStat->pszNewStatStr, GUI_STATSTR_BUFSIZ,
 
             "DEV%c=%4.4X %4.4X %-4.4s %c%c%c%c %s"
@@ -1791,7 +1836,7 @@ void  NewUpdateDevStats ()
     }
 
     // Only send End-of-Batch indicator if we sent any updates or
-    // if this is the first device-list update since powering on...
+    // if this is the first device-list update since powering on.
 
     if ( bUpdatesSent || bFirstBatch )
     {
