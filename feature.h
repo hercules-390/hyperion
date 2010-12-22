@@ -83,6 +83,7 @@
 #undef RSTNEW
 #undef RADR
 #undef F_RADR
+#undef FRADR
 #undef VADR
 #undef VADR_L
 #undef F_VADR
@@ -290,9 +291,11 @@ s390_ ## _name
 #if !defined(_FEATURE_ZSIE)
 #define RADR    U32
 #define F_RADR  "%8.8"I32_FMT"X"
+#define FRADR   I32_FMT
 #else
 #define RADR    U64
 #define F_RADR  "%8.8"I64_FMT"X"
+#define FRADR   I64_FMT
 #endif
 #define VADR    U32
 #define VADR_L  VADR
@@ -420,6 +423,7 @@ z900_ ## _name
 #define RADR    U64
 #endif
 #define F_RADR  "%16.16"I64_FMT"X"
+#define FRADR   I64_FMT
 #define VADR    U64
 #if SIZEOF_INT == 4
 #define VADR_L  U32
