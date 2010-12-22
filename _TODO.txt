@@ -10,6 +10,20 @@
 
 -------------------------------------------------------------------------------
 
+BUG? reported by halfmeg:
+
+  http://tech.groups.yahoo.com/group/hercules-390/message/63671
+
+  a. Large increase in required memory to start Hercules between SVN 6988 & SVN
+  6989. MSVC executable SVN 6989 thrashs the swapfile for a while then finally
+  proceeds with the remainder of Hercules startup on a 1GB WinXP Pro laptop when
+  1024 Meg specified in configure file. It agains thrashes shortly after IPL is
+  entered and finally settles down to process somewhat normally without thrashing.
+
+  Not noticeable in either place when using SVN 6988 and before.
+
+-------------------------------------------------------------------------------
+
   We should have a 'SetConsoleCtrlHandler' function to intercept Ctrl+C and
   Ctrl+Break, etc, signals/keystrokes to prevent Hercules from immediately
   exiting without having a chance to close its files and/or giving the guest
