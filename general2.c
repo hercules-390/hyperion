@@ -1405,7 +1405,7 @@ BYTE    old;                            /* Old value                 */
 /*-------------------------------------------------------------------*/
 /* 91   TM    - Test under Mask                                 [SI] */
 /*-------------------------------------------------------------------*/
-DEF_INST(test_under_mask)
+DEF_INST(test_under_mask) /* TM has an optimized twin */
 {
 BYTE    i2;                             /* Immediate operand         */
 int     b1;                             /* Base of effective addr    */
@@ -1431,113 +1431,16 @@ BYTE    tbyte;                          /* Work byte                 */
 /*-------------------------------------------------------------------*/
 /* 91   TM    - Test under Mask                                 [SI] */
 /*-------------------------------------------------------------------*/
-DEF_INST(9101)
+DEF_INST(91xx) /* Optimized for single bit mask */
 {
+BYTE    i2;                             /* Immediate operand         */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
 
-    SI_OPT(inst, regs, b1, effective_addr1);
+    SI(inst, regs, i2, b1, effective_addr1);
 
     /* Fetch byte from operand address */
-    if(ARCH_DEP(vfetchb) ( effective_addr1, b1, regs ) & 0x01)
-      regs->psw.cc = 3;
-    else
-      regs->psw.cc = 0;
-}
-
-DEF_INST(9102)
-{
-int     b1;                             /* Base of effective addr    */
-VADR    effective_addr1;                /* Effective address         */
-
-    SI_OPT(inst, regs, b1, effective_addr1);
-
-    /* Fetch byte from operand address */
-    if(ARCH_DEP(vfetchb) ( effective_addr1, b1, regs ) & 0x02)
-      regs->psw.cc = 3;
-    else
-      regs->psw.cc = 0;
-}
-
-DEF_INST(9104)
-{
-int     b1;                             /* Base of effective addr    */
-VADR    effective_addr1;                /* Effective address         */
-
-    SI_OPT(inst, regs, b1, effective_addr1);
-
-    /* Fetch byte from operand address */
-    if(ARCH_DEP(vfetchb) ( effective_addr1, b1, regs ) & 0x04)
-      regs->psw.cc = 3;
-    else
-      regs->psw.cc = 0;
-}
-
-DEF_INST(9108)
-{
-int     b1;                             /* Base of effective addr    */
-VADR    effective_addr1;                /* Effective address         */
-
-    SI_OPT(inst, regs, b1, effective_addr1);
-
-    /* Fetch byte from operand address */
-    if(ARCH_DEP(vfetchb) ( effective_addr1, b1, regs ) & 0x08)
-      regs->psw.cc = 3;
-    else
-      regs->psw.cc = 0;
-}
-
-DEF_INST(9110)
-{
-int     b1;                             /* Base of effective addr    */
-VADR    effective_addr1;                /* Effective address         */
-
-    SI_OPT(inst, regs, b1, effective_addr1);
-
-    /* Fetch byte from operand address */
-    if(ARCH_DEP(vfetchb) ( effective_addr1, b1, regs ) & 0x10)
-      regs->psw.cc = 3;
-    else
-      regs->psw.cc = 0;
-}
-
-DEF_INST(9120)
-{
-int     b1;                             /* Base of effective addr    */
-VADR    effective_addr1;                /* Effective address         */
-
-    SI_OPT(inst, regs, b1, effective_addr1);
-
-    /* Fetch byte from operand address */
-    if(ARCH_DEP(vfetchb) ( effective_addr1, b1, regs ) & 0x20)
-      regs->psw.cc = 3;
-    else
-      regs->psw.cc = 0;
-}
-
-DEF_INST(9140)
-{
-int     b1;                             /* Base of effective addr    */
-VADR    effective_addr1;                /* Effective address         */
-
-    SI_OPT(inst, regs, b1, effective_addr1);
-
-    /* Fetch byte from operand address */
-    if(ARCH_DEP(vfetchb) ( effective_addr1, b1, regs ) & 0x40)
-      regs->psw.cc = 3;
-    else
-      regs->psw.cc = 0;
-}
-
-DEF_INST(9180)
-{
-int     b1;                             /* Base of effective addr    */
-VADR    effective_addr1;                /* Effective address         */
-
-    SI_OPT(inst, regs, b1, effective_addr1);
-
-    /* Fetch byte from operand address */
-    if(ARCH_DEP(vfetchb) ( effective_addr1, b1, regs ) & 0x80)
+    if(ARCH_DEP(vfetchb) ( effective_addr1, b1, regs ) & i2)
       regs->psw.cc = 3;
     else
       regs->psw.cc = 0;

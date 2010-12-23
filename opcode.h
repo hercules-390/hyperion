@@ -2166,24 +2166,6 @@ do { \
             INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
     }
 
-#ifdef OPTION_OPTINST
-#define SI_OPT(_inst, _regs, _b1, _effective_addr1) \
-        SI_OPT_DECODER(_inst, _regs, _b1, _effective_addr1, 4, 4)
-
-#define SI_OPT_DECODER(_inst, _regs, _b1, _effective_addr1, _len, _ilc) \
-        { \
-          U32 temp = fetch_fw(_inst); \
-          (_b1) = (temp >> 12) & 0xf; \
-          (_effective_addr1) = temp & 0xfff; \
-          if((_b1)) \
-          { \
-            (_effective_addr1) += (_regs)->GR((_b1)); \
-            (_effective_addr1) &= ADDRESS_MAXWRAP((_regs)); \
-          } \
-          INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
-        }
-#endif /* OPTION_OPTINST */
-
 /* SIY storage and immediate with long displacement */
 #undef SIY
 
@@ -3528,14 +3510,7 @@ DEF_INST(supervisor_call);
 DEF_INST(test_and_set);
 DEF_INST(test_under_mask);
 #ifdef OPTION_OPTINST
-DEF_INST(9101);
-DEF_INST(9102);
-DEF_INST(9104);
-DEF_INST(9108);
-DEF_INST(9110);
-DEF_INST(9120);
-DEF_INST(9140);
-DEF_INST(9180);
+DEF_INST(91xx);
 #endif /* OPTION_OPTINST */
 #if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
 DEF_INST(test_under_mask_high);
