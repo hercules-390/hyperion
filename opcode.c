@@ -1238,6 +1238,7 @@ static zz_func opt47x0[0x10][GEN_MAXARCH]; /* BC */
 static zz_func opt50x0[0x01][GEN_MAXARCH]; /* ST */
 static zz_func opt55x0[0x01][GEN_MAXARCH]; /* CL */
 static zz_func opt58x0[0x01][GEN_MAXARCH]; /* L */
+static zz_func opt91xx[0x08][GEN_MAXARCH]; /* TM */
 static zz_func optA7x4[0x10][GEN_MAXARCH]; /* BRC */
 static zz_func optE3x0[0x01][GEN_MAXARCH]; /* Optimized execute routine */
 static zz_func optE3x0______04[0x01][GEN_MAXARCH]; /* LG */
@@ -2368,6 +2369,8 @@ void init_opcode_tables(void)
       replace_opcode_xxxx(arch, optA7x4[i][arch], 0xA7, (i << 4) + 0x04); /* BRC */
       replace_opcode_xxxx(arch, optE3x0[0][arch], 0xe3, i << 4); /* jump to E3x0______xx */
     }
+    for(i = 0; i < 8; i++)
+      replace_opcode_xxxx(arch, opt91xx[i][arch], 0x91, 1 << i); /* TM */
     runtime_opcode_e3x0______xx[arch][0x04] = optE3x0______04[0][arch]; /* LG */
     runtime_opcode_e3x0______xx[arch][0x24] = optE3x0______24[0][arch]; /* STG */
 #endif /* OPTION_OPTINST */
@@ -6515,6 +6518,16 @@ static zz_func opt55x0[0x1][GEN_MAXARCH] = {
 /* Optimized L */
 static zz_func opt58x0[0x1][GEN_MAXARCH] = {
  /*58x0*/ GENx370x390x900 (58x0,RX,"L") };
+ 
+static zz_func opt91xx[0x8][GEN_MAXARCH] = {
+ /*9101*/ GENx370x390x900 (9101,SI,"TM"), 
+ /*9102*/ GENx370x390x900 (9102,SI,"TM"), 
+ /*9104*/ GENx370x390x900 (9104,SI,"TM"), 
+ /*9108*/ GENx370x390x900 (9108,SI,"TM"), 
+ /*9110*/ GENx370x390x900 (9110,SI,"TM"), 
+ /*9120*/ GENx370x390x900 (9120,SI,"TM"), 
+ /*9140*/ GENx370x390x900 (9140,SI,"TM"), 
+ /*9180*/ GENx370x390x900 (9180,SI,"TM") };
 
 /* Optimized BRC */
 static zz_func optA7x4[0x10][GEN_MAXARCH] = {
@@ -6537,7 +6550,7 @@ static zz_func optA7x4[0x10][GEN_MAXARCH] = {
 
 /* Jump to E3x0______xx where x2 is zero */
 static zz_func optE3x0[0x1][GEN_MAXARCH] = {
- /*E3x0*/ GENx370x390x900 (E3x0,e3xx,""), };
+ /*E3x0*/ GENx370x390x900 (E3x0,e3xx,"") };
 
 /* Optimized LG */
 static zz_func optE3x0______04[0x1][GEN_MAXARCH] = {
