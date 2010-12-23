@@ -2370,7 +2370,7 @@ void init_opcode_tables(void)
       replace_opcode_xxxx(arch, optE3x0[0][arch], 0xe3, i << 4); /* jump to E3x0______xx */
     }
     for(i = 0; i < 8; i++)
-      replace_opcode_xxxx(arch, opt91xx[0][arch], 0x91, 1 << i); /* TM */
+      replace_opcode_xxxx(arch, opt91xx[0][arch], 0x91, 0x01 << i); /* TM */
     runtime_opcode_e3x0______xx[arch][0x04] = optE3x0______04[0][arch]; /* LG */
     runtime_opcode_e3x0______xx[arch][0x24] = optE3x0______24[0][arch]; /* STG */
 #endif /* OPTION_OPTINST */
