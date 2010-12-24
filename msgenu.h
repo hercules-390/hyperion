@@ -925,9 +925,9 @@ do { \
 // reserve 013xx for channel related messages
 /* channel.c */
 #define HHC01300 "%1d:%04X CHAN: halt subchannel: cc=%d"
-#define HHC01301 "%1d:%04X CHAN: midaw %2.2X %4.4"I16_FMT"X %16.16"I64_FMT"X: '%s'"
-#define HHC01302 "%1d:%04X CHAN: idaw %8.8"I32_FMT"X, len %3.3"I16_FMT"X: '%s'"
-#define HHC01303 "%1d:%04X CHAN: idaw %16.16"I64_FMT"X, len %4.4"I16_FMT"X: '%s'"
+#define HHC01301 "%1d:%04X CHAN: midaw %2.2X %4.4"I16_FMT"X %16.16"I64_FMT"X: %s"
+#define HHC01302 "%1d:%04X CHAN: idaw %8.8"I32_FMT"X, len %3.3"I16_FMT"X: %s"
+#define HHC01303 "%1d:%04X CHAN: idaw %16.16"I64_FMT"X, len %4.4"I16_FMT"X: %s"
 #define HHC01304 "%1d:%04X CHAN: attention signaled"
 #define HHC01305 "%1d:%04X CHAN: attention"
 #define HHC01306 "%1d:%04X CHAN: initial status interrupt"
@@ -936,7 +936,7 @@ do { \
 #define HHC01309 "%1d:%04X CHAN: halt completed"
 #define HHC01310 "%1d:%04X CHAN: suspended"
 #define HHC01311 "%1d:%04X CHAN: resumed"
-#define HHC01312 "%1d:%04X CHAN: stat %2.2X%2.2X, count %4.4X '%s'"
+#define HHC01312 "%1d:%04X CHAN: stat %2.2X%2.2X, count %4.4X%s"
 #define HHC01313 "%1d:%04X CHAN: sense %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X"
 #define HHC01314 "%1d:%04X CHAN: sense %s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s"
 #define HHC01315 "%1d:%04X CHAN: ccw %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%s"
@@ -954,7 +954,7 @@ do { \
 
 /* hchan.c */
 #define HHC01350 "%1d:%04X CHAN: missing generic channel method"
-#define HHC01351 "%1d:%04X CHAN: incorrect generic channel method '%s'"
+#define HHC01351 "%1d:%04X CHAN: incorrect generic channel method %s"
 #define HHC01352 "%1d:%04X CHAN: generic channel initialisation failed"
 #define HHC01353 "%1d:%04X CHAN: generic channel is currently in development"
 
