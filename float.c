@@ -7448,7 +7448,6 @@ EXTENDED_FLOAT fx1;                     /* Intermediate result       */
 DEF_INST(multiply_add_unnormal_float_long_to_ext_reg)
 {
 int            r1, r2, r3;              /* Values of R fields        */
-int            i1;                      /* Index of FP register      */
 LONG_FLOAT     fl2, fl3;                /* Multiplier/Multiplicand   */
 LONG_FLOAT     fl1;                     /* Addend                    */
 EXTENDED_FLOAT fxp1;                    /* Intermediate product      */
@@ -7459,11 +7458,9 @@ EXTENDED_FLOAT fxres;                   /* Extended result           */
     HFPREG2_CHECK(r2, r3, regs);
     HFPREG_CHECK(r1, regs);
     /* Either the low- or high-numbered register of a pair is valid */
-    r1 &= 13;               /* Convert to the low numbered register */
-    i1 = FPR2I(r1);
 
     /* Get the operands */
-    get_lf(&fl1, regs->fpr + i1);
+    get_lf(&fl1, regs->fpr + FPR2I(r1));
     get_lf(&fl2, regs->fpr + FPR2I(r2));
     get_lf(&fl3, regs->fpr + FPR2I(r3));
 
@@ -7477,6 +7474,7 @@ EXTENDED_FLOAT fxres;                   /* Extended result           */
     ARCH_DEP(add_ef_unnorm)(&fxp1, &fxadd, &fxres);
 
     /* Place result in register */
+    r1 &= 13;               /* Convert to the low numbered register */
     ARCH_DEP(store_ef_unnorm)(&fxres, regs->fpr + FPR2I(r1));
 
 } /* end DEF_INST(multiply_add_unnormal_float_long_to_ext_reg) */
@@ -7647,7 +7645,6 @@ DEF_INST(multiply_add_unnormal_float_long_to_ext)
 int            r1, r3;                  /* Values of R fields        */
 int            b2;                      /* Base of effective addr    */
 VADR           effective_addr2;         /* Effective address         */
-int            i1;                      /* Index of FP register      */
 LONG_FLOAT     fl2, fl3;                /* Multiplier/Multiplicand   */
 LONG_FLOAT     fl1;                     /* Addend                    */
 EXTENDED_FLOAT fxp1;                    /* Intermediate product      */
@@ -7657,11 +7654,9 @@ EXTENDED_FLOAT fxres;                   /* Extended result           */
     RXF(inst, regs, r1, r3, b2, effective_addr2);
     HFPREG2_CHECK(r1, r3, regs);
     /* Either the low- or high-numbered register of a pair is valid */
-    r1 &= 13;               /* Convert to the low numbered register */
-    i1 = FPR2I(r1);
 
     /* Get the operands */
-    get_lf(&fl1, regs->fpr + i1);
+    get_lf(&fl1, regs->fpr + FPR2I(r1));
     vfetch_lf(&fl2, effective_addr2, b2, regs );
     get_lf(&fl3, regs->fpr + FPR2I(r3));
 
@@ -7675,6 +7670,7 @@ EXTENDED_FLOAT fxres;                   /* Extended result           */
     ARCH_DEP(add_ef_unnorm)(&fxp1, &fxadd, &fxres);
 
     /* Place result in register */
+    r1 &= 13;               /* Convert to the low numbered register */
     ARCH_DEP(store_ef_unnorm)(&fxres, regs->fpr + FPR2I(r1));
 
 } /* end DEF_INST(multiply_add_unnormal_float_long_to_ext) */
