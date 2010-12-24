@@ -1417,6 +1417,12 @@ struct DEVBLK {                         /* Device configuration block*/
         BYTE    ckdraid:1;              /* 1=RAID device             */
         U16     ckdssdlen;              /* #of bytes of data prepared
                                            for Read Subsystem Data   */
+
+        /*  Device dependent fields for QDIO devices                 */
+        COND    qcond;                  /* Condition for QDIO thread */
+        LOCK    qlock;                  /* Lock for QDIO thread      */
+
+
         BYTE    blkend[16];             /* eye-end                   */
 };
 

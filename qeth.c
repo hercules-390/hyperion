@@ -107,6 +107,15 @@ static BYTE  qeth_immed_commands [256] =
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
 /*-------------------------------------------------------------------*/
+static int qeth_halt_device ( DEVBLK *dev)
+{
+    signal_condition(&dev->qcond);
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Initialize the device handler                                     */
+/*-------------------------------------------------------------------*/
 static int qeth_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
 UNREFERENCED(argc);
@@ -134,6 +143,12 @@ logmsg(_("senseidnum=%d\n"),dev->numdevid);
             logmsg("%4.4x ",dev->group->memdev[i]->devnum);
         logmsg(") complete\n");
     }
+
+    initialize_condition(&dev->qcond);
+    initialize_lock(&dev->qlock);
+    
+    /* ZZ dev->halt_device shouldmove to DEVHND */
+    dev->halt_device = qeth_halt_device;
 
     return 0;
 } /* end function qeth_init_handler */
@@ -226,7 +241,7 @@ logmsg(_("Write dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
     /*---------------------------------------------------------------*/
     /* READ                                                          */
     /*---------------------------------------------------------------*/
-logmsg(_("Read dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
+//logmsg(_("Read dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
 
 #define RD_SIZE 0x22
 
@@ -371,6 +386,10 @@ logmsg(_("Activate Queues dev(%4.4x)\n"),dev->devnum);
          *
          * CARE MUST BE TAKEN THAT THIS CCW RUNS AS A SEPARATE THREAD
          */
+
+        obtain_lock(&dev->qlock);
+        wait_condition(&dev->qcond, &dev->qlock);
+        release_lock(&dev->qlock);
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
