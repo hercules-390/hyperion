@@ -14,8 +14,11 @@
 #define OSA_WRITE_DEVICE        1
 #define OSA_DATA_DEVICE         2
 
+// #define _IS_OSA_TYPE_DEVICE(_dev, _type) 
+//    ((_dev) == (_dev)->group->memdev[(_type)])
+
 #define _IS_OSA_TYPE_DEVICE(_dev, _type) \
-    ((_dev) == (_dev)->group->memdev[(_type)])
+    ((_dev)->member == (_type))
 
 #define IS_OSA_READ_DEVICE(_dev) \
        _IS_OSA_TYPE_DEVICE((_dev),OSA_READ_DEVICE)
