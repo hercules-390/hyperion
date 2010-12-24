@@ -811,13 +811,23 @@ int pending = 0;
             dev->scsw.flag2 |= SCSW2_AC_RESUM;
             signal_condition (&dev->resumecond);
         }
-#if !defined(NO_SIGABEND_HANDLER)
         else
         {
-            if( dev->ctctype )
-                signal_thread(dev->tid, SIGUSR2);
-        }
+            /* Invoke the provided halt_device routine @ISW */
+            /* if it has been provided by the handler  @ISW */
+            /* code at init                            @ISW */
+            if(dev->halt_device!=NULL)              /* @ISW */
+            {                                       /* @ISW */
+                dev->halt_device(dev);              /* @ISW */
+            }                                       /* @ISW */
+#if !defined(NO_SIGABEND_HANDLER)
+            else
+            {
+                if( dev->ctctype )
+                    signal_thread(dev->tid, SIGUSR2);
+            }
 #endif /*!defined(NO_SIGABEND_HANDLER)*/
+        }
     }
     else
     {

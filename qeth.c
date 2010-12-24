@@ -36,51 +36,64 @@
 
 
 static BYTE sense_id_bytes[] = {
-    0xff,
-    0x17, 0x31, 0x01,                   // Device Type
-    0x17, 0x32, 0x01,                   // Control Unit Type
+    0xFF,
+    0x17, 0x31, 0x01,                   // Control Unit Type
+    0x17, 0x32, 0x01,                   // Device Type
     0x00,
-    0x40, 0xfa, 0x00, 0x60,             // Read Configuration Data CIW
-    0x03, 0xfc, 0x10, 0x00,             // Establish Queues CIW
-    0x04, 0xfd, 0x00, 0x00              // Activate Queues CIW
+    0x40, 0xFA, 0x00, 0x80,             // Read Configuration Data CIW
+    0x43, 0xFC, 0x10, 0x00,             // Establish Queues CIW
+    0x44, 0xFD, 0x00, 0x00              // Activate Queues CIW
 };
 
-static BYTE read_configuration_data_bytes[96] = {
+          
+static BYTE read_configuration_data_bytes[128] = {
     // ---------------- Device NED ---------------------------------------------------
-    0xCC,                               // 0:      NED code
+    0xD0,                               // 0:      NED code
     0x01,                               // 1:      Type  (X'01' = I/O Device)
-    0x00,                               // 2:      Class (X'??' = OSAE)
+    0x06,                               // 2:      Class (X'06' = Comms)
     0x00,                               // 3:      (Reserved)
-    0xF0,0xF0,0xF1,0xF7,0xF3,0xF1,      // 4-9:    Type  ('001731')
-    0xC3,0xF1,0xF0,                     // 10-12:  Model ('001')
-    0xC0,0xC0,0xC1,                     // 13-15:  Manufacturer ('HRC' = Hercules)
+    0xF0,0xF0,0xF1,0xF7,0xF3,0xF2,      // 4-9:    Type  ('001732')
+    0xF0,0xF0,0xF1,                     // 10-12:  Model ('001')
+    0xC8,0xD9,0xC3,                     // 13-15:  Manufacturer ('HRC' = Hercules)
     0xE9,0xE9,                          // 16-17:  Plant of Manufacture ('ZZ' = Herc)
     0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      // 18-29:  Sequence Number
     0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      //
-    0x00, 0x00,                         // 30-31: Tag (x'ccua', cc = chpid, ua=unit address)
+    0x00,0x00,                          // 30-31: Tag (x'ccua', cc = chpid, ua=unit address)
     // ---------------- Control Unit NED ---------------------------------------------
-    0xC4,                               // 32:     NED code
+    0xD0,                               // 32:     NED code
     0x02,                               // 33:     Type  (X'02' = Control Unit)
     0x00,                               // 34:     Class (X'00' = Undefined)
     0x00,                               // 35:     (Reserved)
-    0xF0,0xF0,0xF1,0xF7,0xF3,0xF1,      // 36-41:  Type  ('001732')
+    0xF0,0xF0,0xF1,0xF7,0xF3,0xF1,      // 36-41:  Type  ('001731')
     0xF0,0xF0,0xF1,                     // 42-44:  Model ('001')
     0xC8,0xD9,0xC3,                     // 45-47:  Manufacturer ('HRC' = Hercules)
     0xE9,0xE9,                          // 48-49:  Plant of Manufacture ('ZZ' = Herc)
     0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      // 50-61:  Sequence Number
     0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      //
     0x00, 0x00,                         // 62-63:  Tag cuaddr
+    // ---------------- Token NED ----------------------------------------------------
+    0xF0,                               // 64:     NED code
+    0x00,                               // 65:     Type  (X'00' = Undefined)   
+    0x06,                               // 66:     Class (X'06' = Comms)
+    0x00,                               // 67:     (Reserved)
+    0xF0,0xF0,0xF1,0xF7,0xF3,0xF0,      // 68-73:  Type  ('001730')
+    0xF0,0xF0,0xF1,                     // 74-76:  Model ('001')
+    0xC8,0xD9,0xC3,                     // 77-79:  Manufacturer ('HRC' = Hercules)
+    0xE9,0xE9,                          // 80-81:  Plant of Manufacture ('ZZ' = Herc)
+    0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      // 82-93:  Sequence Number
+    0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      //
+    0x00, 0x00,                         // 94-95:  Tag cuaddr
     // ---------------- General NEQ --------------------------------------------------
-    0x80,                               // 64:     NED code
-    0x00,                               // 65:     ?
-    0x00,0x00,                          // 66-67:  ?
-    0x00,                               // 68:     ?
-    0x00,0x00,0x00,                     // 69-71:  ?
-    0x00,                               // 72:     ?
-    0x00,0x00,0x00,0x00,0x00,0x00,0x00, // 73-95:  ?
-    0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-    0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-    0x00,0x00,
+    0x80,                               // 96:     NED code
+    0x00,                               // 97:     ?
+    0x01,0x00,                          // 98-99:  ?
+    0x00,                               // 100:    ?
+    0x00,0x0F,0x00,                     // 101-103:?
+    0x00,                               // 104:    ?
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00, // 105-125:?
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00, //
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00, //
+    0x00,0x00                           // 126-127:?
 };
 
 static BYTE  qeth_immed_commands [256] =
@@ -109,6 +122,7 @@ static BYTE  qeth_immed_commands [256] =
 /*-------------------------------------------------------------------*/
 static int qeth_halt_device ( DEVBLK *dev)
 {
+logmsg(_("QETH: dev(%4.4x) Halt Device\n"),dev->devnum);
     signal_condition(&dev->qcond);
 }
 
@@ -343,6 +357,16 @@ logmsg(_("Read Configuration Data dev(%4.4x)\n"),dev->devnum);
         iobuf[62] = (dev->group->memdev[OSA_READ_DEVICE]->devnum >> 8) & 0xff;
         iobuf[63] = (dev->group->memdev[OSA_READ_DEVICE]->devnum) & 0xff;
 
+        /* Use unit address of OSA read device as control unit address */
+        iobuf[94] = (dev->group->memdev[OSA_READ_DEVICE]->devnum >> 8) & 0xff;
+        iobuf[95] = (dev->group->memdev[OSA_READ_DEVICE]->devnum) & 0xff;
+
+#if 0 /* ZZ: THIS IS A GUESS */
+        /* Use unit address of OSA read device as control unit address */
+        iobuf[98] = (dev->group->memdev[OSA_READ_DEVICE]->devnum >> 8) & 0xff;
+        iobuf[99] = (dev->group->memdev[OSA_READ_DEVICE]->devnum) & 0xff;
+#endif
+
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
         break;
@@ -373,12 +397,6 @@ logmsg(_("Establish Queues dev(%4.4x)\n"),dev->devnum);
     /* ACTIVATE QUEUES                                               */
     /*---------------------------------------------------------------*/
 logmsg(_("Activate Queues dev(%4.4x)\n"),dev->devnum);
-        /* Calculate residual byte count */
-        num = (count < CONFIG_DATA_SIZE) ? count : CONFIG_DATA_SIZE;
-        *residual = count - num;
-        if (count < CONFIG_DATA_SIZE) *more = 1;
-
-        memset (iobuf, 0x00, CONFIG_DATA_SIZE);
 
         /* INCOMPLETE ZZ
          * QUEUES MUST BE HANDLED HERE, THIS CCW WILL ONLY EXIT
@@ -390,6 +408,9 @@ logmsg(_("Activate Queues dev(%4.4x)\n"),dev->devnum);
         obtain_lock(&dev->qlock);
         wait_condition(&dev->qcond, &dev->qlock);
         release_lock(&dev->qlock);
+
+        /* Calculate residual byte count */
+        *residual = 0;
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
