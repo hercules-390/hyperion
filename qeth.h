@@ -14,6 +14,12 @@
 #define OSA_WRITE_DEVICE        1
 #define OSA_DATA_DEVICE         2
 
+#define OSA_GROUP_SIZE          3
+
+#define OSA_RCD                 0x72
+#define OSA_EQ                  0x1E
+#define OSA_AQ                  0x1F
+
 // #define _IS_OSA_TYPE_DEVICE(_dev, _type) 
 //    ((_dev) == (_dev)->group->memdev[(_type)])
 

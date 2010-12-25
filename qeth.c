@@ -40,15 +40,17 @@ static BYTE sense_id_bytes[] = {
     0x17, 0x31, 0x01,                   // Control Unit Type
     0x17, 0x32, 0x01,                   // Device Type
     0x00,
-    0x40, 0xFA, 0x00, 0x80,             // Read Configuration Data CIW
-    0x43, 0xFC, 0x10, 0x00,             // Establish Queues CIW
-    0x44, 0xFD, 0x00, 0x00              // Activate Queues CIW
+    0x40, OSA_RCD,0x00, 0x80,           // Read Configuration Data CIW
+//  0x41, 0x83, 0x00, 0x04,             // Set Interface Identifier
+//  0x42, 0x82, 0x00, 0x40,             // Read Node Identifier
+    0x43, OSA_EQ, 0x10, 0x00,           // Establish Queues CIW
+    0x44, OSA_AQ, 0x00, 0x00            // Activate Queues CIW
 };
 
-          
+
 static BYTE read_configuration_data_bytes[128] = {
     // ---------------- Device NED ---------------------------------------------------
-    0xD0,                               // 0:      NED code
+    0xDA,                               // 0:      NED code
     0x01,                               // 1:      Type  (X'01' = I/O Device)
     0x06,                               // 2:      Class (X'06' = Comms)
     0x00,                               // 3:      (Reserved)
@@ -60,9 +62,9 @@ static BYTE read_configuration_data_bytes[128] = {
     0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      //
     0x00,0x00,                          // 30-31: Tag (x'ccua', cc = chpid, ua=unit address)
     // ---------------- Control Unit NED ---------------------------------------------
-    0xD0,                               // 32:     NED code
+    0xDA,                               // 32:     NED code
     0x02,                               // 33:     Type  (X'02' = Control Unit)
-    0x00,                               // 34:     Class (X'00' = Undefined)
+    0x06,                               // 34:     Class (X'06' = Comms)
     0x00,                               // 35:     (Reserved)
     0xF0,0xF0,0xF1,0xF7,0xF3,0xF1,      // 36-41:  Type  ('001731')
     0xF0,0xF0,0xF1,                     // 42-44:  Model ('001')
@@ -70,9 +72,9 @@ static BYTE read_configuration_data_bytes[128] = {
     0xE9,0xE9,                          // 48-49:  Plant of Manufacture ('ZZ' = Herc)
     0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      // 50-61:  Sequence Number
     0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      //
-    0x00, 0x00,                         // 62-63:  Tag cuaddr
+    0x00,0x00,                          // 62-63:  Tag cuaddr
     // ---------------- Token NED ----------------------------------------------------
-    0xF0,                               // 64:     NED code
+    0xFA,                               // 64:     NED code
     0x00,                               // 65:     Type  (X'00' = Undefined)   
     0x06,                               // 66:     Class (X'06' = Comms)
     0x00,                               // 67:     (Reserved)
@@ -82,7 +84,7 @@ static BYTE read_configuration_data_bytes[128] = {
     0xE9,0xE9,                          // 80-81:  Plant of Manufacture ('ZZ' = Herc)
     0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      // 82-93:  Sequence Number
     0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      //
-    0x00, 0x00,                         // 94-95:  Tag cuaddr
+    0x00,0x00,                          // 94-95:  Tag cuaddr
     // ---------------- General NEQ --------------------------------------------------
     0x80,                               // 96:     NED code
     0x00,                               // 97:     ?
@@ -117,13 +119,19 @@ static BYTE  qeth_immed_commands [256] =
    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0  /* F0 */
 };
 
+int temp_write_req = 0;
+int temp_read_req = 0;
+
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
 /*-------------------------------------------------------------------*/
-static int qeth_halt_device ( DEVBLK *dev)
+static void qeth_halt_device ( DEVBLK *dev)
 {
 logmsg(_("QETH: dev(%4.4x) Halt Device\n"),dev->devnum);
-    signal_condition(&dev->qcond);
+
+    /* Signal QDIO end if QDIO is active */
+    if(dev->scsw.flag2 & SCSW2_Q)
+        signal_condition(&dev->qcond);
 }
 
 
@@ -135,16 +143,22 @@ static int qeth_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 UNREFERENCED(argc);
 UNREFERENCED(argv);
 
-logmsg(_("dev(%4.4x) experimental driver\n"),dev->devnum);
+logmsg(_("QETH: dev(%4.4x) experimental driver\n"),dev->devnum);
 
     dev->numdevid = sizeof(sense_id_bytes);
 logmsg(_("senseidnum=%d\n"),dev->numdevid);
     memcpy(dev->devid, sense_id_bytes, sizeof(sense_id_bytes));
     dev->devtype = dev->devid[1] << 8 | dev->devid[2];
     
+    initialize_condition(&dev->qcond);
+    initialize_lock(&dev->qlock);
+    
+    /* ZZ dev->halt_device shouldmove to dev->hnd->halt_device (DEVHND) */
+    dev->halt_device = qeth_halt_device;
+
     dev->pmcw.flag4 |= PMCW4_Q;
 
-    if(!group_device(dev,3))
+    if(!group_device(dev,OSA_GROUP_SIZE))
     {
         logmsg(_("group device(%4.4x) pending\n"),dev->devnum);
         return 0;
@@ -158,12 +172,6 @@ logmsg(_("senseidnum=%d\n"),dev->numdevid);
         logmsg(") complete\n");
     }
 
-    initialize_condition(&dev->qcond);
-    initialize_lock(&dev->qlock);
-    
-    /* ZZ dev->halt_device shouldmove to DEVHND */
-    dev->halt_device = qeth_halt_device;
-
     return 0;
 } /* end function qeth_init_handler */
 
@@ -174,9 +182,11 @@ logmsg(_("senseidnum=%d\n"),dev->numdevid);
 static void qeth_query_device (DEVBLK *dev, char **class,
                 int buflen, char *buffer)
 {
+    static char *osa_devtyp[] = { "OSA Read", "OSA Write", "OSA Data" };
+
     BEGIN_DEVICE_CLASS_QUERY( "QETH", dev, class, buflen, buffer );
 
-    snprintf (buffer, buflen-1, "\n");
+    snprintf (buffer, buflen-1, "%s",osa_devtyp[dev->member]);
 
 } /* end function qeth_query_device */
 
@@ -187,8 +197,6 @@ static void qeth_query_device (DEVBLK *dev, char **class,
 static int qeth_close_device ( DEVBLK *dev )
 {
     UNREFERENCED(dev);
-
-    /* Close the device file */
 
     return 0;
 } /* end function qeth_close_device */
@@ -232,6 +240,15 @@ int     blocksize = 1024;
     UNREFERENCED(rc);
     UNREFERENCED(blocksize);
 
+    /* Command reject if the device group has not been established */
+    if(dev->group->acount != OSA_GROUP_SIZE)
+    {
+        /* Set command reject sense byte, and unit check status */
+        dev->sense[0] = SENSE_CR;
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
+
     /* Process depending on CCW opcode */
     switch (code) {
 
@@ -242,6 +259,12 @@ int     blocksize = 1024;
 logmsg(_("Write dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
 #define WR_SIZE 0x22
 
+        if(IS_OSA_READ_DEVICE(dev) && count == 0x22)
+            temp_read_req = 1;
+        
+        if(IS_OSA_WRITE_DEVICE(dev) && count == 0x22)
+            temp_write_req = 1;
+        
         /* Calculate number of bytes to read and set residual count */
         num = (count < WR_SIZE) ? count : WR_SIZE;
         *residual = count - num;
@@ -255,35 +278,42 @@ logmsg(_("Write dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
     /*---------------------------------------------------------------*/
     /* READ                                                          */
     /*---------------------------------------------------------------*/
+    {
 //logmsg(_("Read dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
 
 #define RD_SIZE 0x22
+        
+        int rd_size = 0;
 
-
-        memset(iobuf, 0x00, RD_SIZE);
-
-        if(IS_OSA_READ_DEVICE(dev))
+        if(IS_OSA_READ_DEVICE(dev) && temp_read_req)
         {
+            temp_read_req = 0;
+            rd_size = RD_SIZE;
+            memset(iobuf, 0x00, RD_SIZE);
             iobuf[0x08] = 2;
             iobuf[0x10] = 0x02;
             iobuf[0x11] = 0x01;
         }
          
-        if(IS_OSA_WRITE_DEVICE(dev))
+        if(IS_OSA_WRITE_DEVICE(dev) && temp_write_req)
         {
+            temp_write_req = 0;
+            rd_size = RD_SIZE;
+            memset(iobuf, 0x00, RD_SIZE);
             iobuf[0x08] = 2;
             iobuf[0x10] = 0x02;
             iobuf[0x11] = 0x01;
         }
          
         /* Calculate number of bytes to read and set residual count */
-        num = (count < RD_SIZE) ? count : RD_SIZE;
+        num = (count < rd_size) ? count : rd_size;
         *residual = count - num;
-        if (count < RD_SIZE) *more = 1;
+        if (count < rd_size) *more = 1;
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
         break;
+    }
 
     case 0x03:
     /*---------------------------------------------------------------*/
@@ -318,10 +348,7 @@ logmsg(_("Sense dev(%4.4x)\n"),dev->devnum);
     /*---------------------------------------------------------------*/
     /* SENSE ID                                                      */
     /*---------------------------------------------------------------*/
-logmsg(_("Sense ID dev(%4.4x) %s\n"),dev->devnum,
-  IS_OSA_READ_DEVICE(dev) ? "(OSA Read)" :
-  IS_OSA_WRITE_DEVICE(dev) ? "(OSA Write)" : 
-  IS_OSA_DATA_DEVICE(dev) ? "(OSA Data)" : "(Unkown OSA device type)");
+logmsg(_("Sense ID dev(%4.4x)\n"),dev->devnum);
 
         /* Calculate residual byte count */
         num = (count < dev->numdevid) ? count : dev->numdevid;
@@ -335,7 +362,7 @@ logmsg(_("Sense ID dev(%4.4x) %s\n"),dev->devnum,
         *unitstat = CSW_CE | CSW_DE;
         break;
 
-    case 0xFA:
+    case OSA_RCD:
     /*---------------------------------------------------------------*/
     /* READ CONFIGURATION DATA                                       */
     /*---------------------------------------------------------------*/
@@ -372,7 +399,7 @@ logmsg(_("Read Configuration Data dev(%4.4x)\n"),dev->devnum);
         break;
 
         
-    case 0xFC:
+    case OSA_EQ:
     /*---------------------------------------------------------------*/
     /* ESTABLISH QUEUES                                              */
     /*---------------------------------------------------------------*/
@@ -392,11 +419,11 @@ logmsg(_("Establish Queues dev(%4.4x)\n"),dev->devnum);
         *unitstat = CSW_CE | CSW_DE;
         break;
 
-    case 0xFD:
+    case OSA_AQ:
     /*---------------------------------------------------------------*/
     /* ACTIVATE QUEUES                                               */
     /*---------------------------------------------------------------*/
-logmsg(_("Activate Queues dev(%4.4x)\n"),dev->devnum);
+logmsg(_("Activate Queues dev(%4.4x) Start\n"),dev->devnum);
 
         /* INCOMPLETE ZZ
          * QUEUES MUST BE HANDLED HERE, THIS CCW WILL ONLY EXIT
@@ -406,7 +433,9 @@ logmsg(_("Activate Queues dev(%4.4x)\n"),dev->devnum);
          */
 
         obtain_lock(&dev->qlock);
+        dev->scsw.flag2 |= SCSW2_Q;
         wait_condition(&dev->qcond, &dev->qlock);
+        dev->scsw.flag2 &= ~SCSW2_Q;
         release_lock(&dev->qlock);
 
         /* Calculate residual byte count */
@@ -414,6 +443,8 @@ logmsg(_("Activate Queues dev(%4.4x)\n"),dev->devnum);
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
+
+logmsg(_("Activate Queues dev(%4.4x) End\n"),dev->devnum);
         break;
 
     default:
@@ -437,7 +468,7 @@ static int qeth_initiate_input(DEVBLK *dev, U32 qmask)
 {
     UNREFERENCED(qmask);
 
-logmsg(_("SIGA-r dev(%4.4x) qmask(%8.8x)\n"),dev->devnum);
+logmsg(_("SIGA-r dev(%4.4x) qmask(%8.8x)\n"),dev->devnum,qmask);
     return 0;
 }
 
@@ -449,7 +480,7 @@ static int qeth_initiate_output(DEVBLK *dev, U32 qmask)
 {
     UNREFERENCED(qmask);
 
-logmsg(_("SIGA-w dev(%4.4x) qmask(%8.8x)\n"),dev->devnum);
+logmsg(_("SIGA-w dev(%4.4x) qmask(%8.8x)\n"),dev->devnum,qmask);
     return 0;
 }
 
