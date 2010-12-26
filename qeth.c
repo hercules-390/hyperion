@@ -49,7 +49,9 @@ static BYTE sense_id_bytes[] = {
 
 
 static BYTE read_configuration_data_bytes[128] = {
-    // ---------------- Device NED ---------------------------------------------------
+/*-------------------------------------------------------------------*/
+/* Device NED                                                        */
+/*-------------------------------------------------------------------*/
     0xDA,                               // 0:      NED code
     0x01,                               // 1:      Type  (X'01' = I/O Device)
     0x06,                               // 2:      Class (X'06' = Comms)
@@ -61,7 +63,9 @@ static BYTE read_configuration_data_bytes[128] = {
     0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      // 18-29:  Sequence Number
     0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      //
     0x00,0x00,                          // 30-31: Tag (x'ccua', cc = chpid, ua=unit address)
-    // ---------------- Control Unit NED ---------------------------------------------
+/*-------------------------------------------------------------------*/
+/* Control Unit NED                                                  */
+/*-------------------------------------------------------------------*/
     0xDA,                               // 32:     NED code
     0x02,                               // 33:     Type  (X'02' = Control Unit)
     0x06,                               // 34:     Class (X'06' = Comms)
@@ -73,7 +77,9 @@ static BYTE read_configuration_data_bytes[128] = {
     0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      // 50-61:  Sequence Number
     0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      //
     0x00,0x00,                          // 62-63:  Tag cuaddr
-    // ---------------- Token NED ----------------------------------------------------
+/*-------------------------------------------------------------------*/
+/* Token NED                                                         */
+/*-------------------------------------------------------------------*/
     0xFA,                               // 64:     NED code
     0x00,                               // 65:     Type  (X'00' = Undefined)   
     0x06,                               // 66:     Class (X'06' = Comms)
@@ -85,7 +91,9 @@ static BYTE read_configuration_data_bytes[128] = {
     0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      // 82-93:  Sequence Number
     0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      //
     0x00,0x00,                          // 94-95:  Tag cuaddr
-    // ---------------- General NEQ --------------------------------------------------
+/*-------------------------------------------------------------------*/
+/* General NEQ                                                       */
+/*-------------------------------------------------------------------*/
     0x80,                               // 96:     NED code
     0x00,                               // 97:     ?
     0x01,0x00,                          // 98-99:  ?
@@ -131,7 +139,11 @@ logmsg(_("QETH: dev(%4.4x) Halt Device\n"),dev->devnum);
 
     /* Signal QDIO end if QDIO is active */
     if(dev->scsw.flag2 & SCSW2_Q)
+    {
+        dev->scsw.flag2 &= ~SCSW2_Q;
         signal_condition(&dev->qcond);
+    }
+
 }
 
 
@@ -432,11 +444,19 @@ logmsg(_("Activate Queues dev(%4.4x) Start\n"),dev->devnum);
          * CARE MUST BE TAKEN THAT THIS CCW RUNS AS A SEPARATE THREAD
          */
 
-        obtain_lock(&dev->qlock);
         dev->scsw.flag2 |= SCSW2_Q;
-        wait_condition(&dev->qcond, &dev->qlock);
-        dev->scsw.flag2 &= ~SCSW2_Q;
-        release_lock(&dev->qlock);
+
+        do
+        {
+
+// ZZ INCOMPLETE
+//   CODE TO MANAGE QUEUES 
+
+            obtain_lock(&dev->qlock);
+            wait_condition(&dev->qcond, &dev->qlock);
+            release_lock(&dev->qlock);
+
+        } while (dev->scsw.flag2 & SCSW2_Q);
 
         /* Calculate residual byte count */
         *residual = 0;
@@ -469,6 +489,13 @@ static int qeth_initiate_input(DEVBLK *dev, U32 qmask)
     UNREFERENCED(qmask);
 
 logmsg(_("SIGA-r dev(%4.4x) qmask(%8.8x)\n"),dev->devnum,qmask);
+
+    obtain_lock(&dev->qlock);
+    dev->qrmask |= qmask;
+    release_lock(&dev->qlock);
+
+    signal_condition(&dev->qcond);
+
     return 0;
 }
 
@@ -481,6 +508,13 @@ static int qeth_initiate_output(DEVBLK *dev, U32 qmask)
     UNREFERENCED(qmask);
 
 logmsg(_("SIGA-w dev(%4.4x) qmask(%8.8x)\n"),dev->devnum,qmask);
+
+    obtain_lock(&dev->qlock);
+    dev->qwmask |= qmask;
+    release_lock(&dev->qlock);
+
+    signal_condition(&dev->qcond);
+
     return 0;
 }
 

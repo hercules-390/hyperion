@@ -1421,6 +1421,8 @@ struct DEVBLK {                         /* Device configuration block*/
         /*  Device dependent fields for QDIO devices                 */
         COND    qcond;                  /* Condition for QDIO thread */
         LOCK    qlock;                  /* Lock for QDIO thread      */
+        U32     qrmask;                 /* Read queue mask           */
+        U32     qwmask;                 /* Write queue mask          */
 
 
         BYTE    blkend[16];             /* eye-end                   */
