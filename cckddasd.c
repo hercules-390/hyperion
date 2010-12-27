@@ -5839,6 +5839,7 @@ DEVHND cckddasd_device_hndinfo = {
         &cckddasd_end,                 /* Device End channel pgm     */
         &cckddasd_start,               /* Device Resume channel pgm  */
         &cckddasd_end,                 /* Device Suspend channel pgm */
+        NULL,                          /* Device Halt channel pgm    */
         &cckd_read_track,              /* Device Read                */
         &cckd_update_track,            /* Device Write               */
         &cckd_used,                    /* Device Query used          */
@@ -5862,6 +5863,7 @@ DEVHND cfbadasd_device_hndinfo = {
         &cckddasd_end,                 /* Device End channel pgm     */
         &cckddasd_start,               /* Device Resume channel pgm  */
         &cckddasd_end,                 /* Device Suspend channel pgm */
+        NULL,                          /* Device Halt channel pgm    */
         &cfba_read_block,              /* Device Read                */
         &cfba_write_block,             /* Device Write               */
         &cfba_used,                    /* Device Query used          */

@@ -997,13 +997,6 @@ struct DEVBLK {                         /* Device configuration block*/
         /*  device handler function pointers...                      */
 
         DEVHND *hnd;                    /* -> Device handlers        */
-        /* Supplemental handler functions - Set by init handler @ISW */
-        /* Function invoked during HDV/HIO & HSCH instructions  @ISW */
-        /* processing occurs in channel.c in haltio et al.      @ISW */
-        /* when the device is busy, but the channel subsystem   @ISW */
-        /* does not know how to perform the halt itself but has @ISW */
-        /* to rely on the handler to perform the halt           @ISW */
-        void ( *halt_device)(DEVBLK *);                      /* @ISW */
 
         DEVIM   *immed;                 /* Model Specific IM codes   */
                                         /* (overrides devhnd immed)  */

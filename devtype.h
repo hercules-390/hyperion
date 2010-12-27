@@ -42,6 +42,7 @@ struct DEVHND {
         DEVSF *end;                    /* Device End channel pgm     */
         DEVSF *resume;                 /* Device Resume channel pgm  */
         DEVSF *suspend;                /* Device Suspend channel pgm */
+        DEVSF *halt;                   /* Device Halt                */
         DEVRF *read;                   /* Device Read                */
         DEVWF *write;                  /* Device Write               */
         DEVUF *used;                   /* Device Query used          */

@@ -2989,6 +2989,7 @@ DEVHND shared_ckd_device_hndinfo = {
         &shared_end,                   /* Device End channel pgm     */
         &shared_start,                 /* Device Resume channel pgm  */
         &shared_end,                   /* Device Suspend channel pgm */
+        NULL,                          /* Device Halt channel pgm    */
         &shared_ckd_read,              /* Device Read                */
         &shared_ckd_write,             /* Device Write               */
         &shared_used,                  /* Device Query used          */
@@ -3012,6 +3013,7 @@ DEVHND shared_fba_device_hndinfo = {
         &shared_end,                   /* Device End channel pgm     */
         &shared_start,                 /* Device Resume channel pgm  */
         &shared_end,                   /* Device Suspend channel pgm */
+        NULL,                          /* Device Halt channel pgm    */
         &shared_ckd_read,              /* Device Read                */
         &shared_ckd_write,             /* Device Write               */
         &shared_used,                  /* Device Query used          */

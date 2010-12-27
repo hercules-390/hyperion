@@ -163,9 +163,6 @@ logmsg(_("senseidnum=%d\n"),dev->numdevid);
     initialize_condition(&dev->qcond);
     initialize_lock(&dev->qlock);
     
-    /* ZZ dev->halt_device shouldmove to dev->hnd->halt_device (DEVHND) */
-    dev->halt_device = qeth_halt_device;
-
     dev->pmcw.flag4 |= PMCW4_Q;
 
     if(!group_device(dev,OSA_GROUP_SIZE))
@@ -524,26 +521,27 @@ static
 #endif
 DEVHND qeth_device_hndinfo =
 {
-        &qeth_init_handler,     /* Device Initialisation      */
-        &qeth_execute_ccw,      /* Device CCW execute         */
-        &qeth_close_device,     /* Device Close               */
-        &qeth_query_device,     /* Device Query               */
-        NULL,                   /* Device Start channel pgm   */
-        NULL,                   /* Device End channel pgm     */
-        NULL,                   /* Device Resume channel pgm  */
-        NULL,                   /* Device Suspend channel pgm */
-        NULL,                   /* Device Read                */
-        NULL,                   /* Device Write               */
-        NULL,                   /* Device Query used          */
-        NULL,                   /* Device Reserve             */
-        NULL,                   /* Device Release             */
-        NULL,                   /* Device Attention           */
-        qeth_immed_commands,    /* Immediate CCW Codes        */
-        &qeth_initiate_input,   /* Signal Adapter Input       */
-        &qeth_initiate_output,  /* Signal Adapter Output      */
-        &qeth_ssqd_desc,        /* QDIO subsys desc           */
-        NULL,                   /* Hercules suspend           */
-        NULL                    /* Hercules resume            */
+        &qeth_init_handler,            /* Device Initialisation      */
+        &qeth_execute_ccw,             /* Device CCW execute         */
+        &qeth_close_device,            /* Device Close               */
+        &qeth_query_device,            /* Device Query               */
+        NULL,                          /* Device Start channel pgm   */
+        NULL,                          /* Device End channel pgm     */
+        NULL,                          /* Device Resume channel pgm  */
+        NULL,                          /* Device Suspend channel pgm */
+        &qeth_halt_device,             /* Device Halt channel pgm    */
+        NULL,                          /* Device Read                */
+        NULL,                          /* Device Write               */
+        NULL,                          /* Device Query used          */
+        NULL,                          /* Device Reserve             */
+        NULL,                          /* Device Release             */
+        NULL,                          /* Device Attention           */
+        qeth_immed_commands,           /* Immediate CCW Codes        */
+        &qeth_initiate_input,          /* Signal Adapter Input       */
+        &qeth_initiate_output,         /* Signal Adapter Output      */
+        &qeth_ssqd_desc,               /* QDIO subsys desc           */
+        NULL,                          /* Hercules suspend           */
+        NULL                           /* Hercules resume            */
 };
 
 /* Libtool static name colision resolution */

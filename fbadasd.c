@@ -1574,6 +1574,7 @@ DLL_EXPORT DEVHND fbadasd_device_hndinfo = {
         &fbadasd_end,                  /* Device End channel pgm     */
         NULL,                          /* Device Resume channel pgm  */
         &fbadasd_end,                  /* Device Suspend channel pgm */
+        NULL,                          /* Device Halt channel pgm    */
         &fbadasd_read_blkgrp,          /* Device Read                */
         &fbadasd_update_blkgrp,        /* Device Write               */
         &fbadasd_used,                 /* Device Query used          */

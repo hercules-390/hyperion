@@ -349,12 +349,12 @@ int      pending = 0;                   /* New interrupt pending     */
     /* Test device status and set condition code */
     if (dev->busy)
     {
-        /* Invoke the provided halt_device routine @ISW */
+        /* Invoke the provided halt device routine @ISW */
         /* if it has been provided by the handler  @ISW */
         /* code at init                            @ISW */
-        if(dev->halt_device!=NULL)              /* @ISW */
+        if(dev->hnd->halt!=NULL)                /* @ISW */
         {                                       /* @ISW */
-            dev->halt_device(dev);              /* @ISW */
+            dev->hnd->halt(dev);                /* @ISW */
             cc=0;                               /* @ISW */
         }                                       /* @ISW */
         else
@@ -813,12 +813,12 @@ int pending = 0;
         }
         else
         {
-            /* Invoke the provided halt_device routine @ISW */
+            /* Invoke the provided halt device routine @ISW */
             /* if it has been provided by the handler  @ISW */
             /* code at init                            @ISW */
-            if(dev->halt_device!=NULL)              /* @ISW */
+            if(dev->hnd->halt!=NULL)                /* @ISW */
             {                                       /* @ISW */
-                dev->halt_device(dev);              /* @ISW */
+                dev->hnd->halt(dev);                /* @ISW */
             }                                       /* @ISW */
 #if !defined(NO_SIGABEND_HANDLER)
             else
@@ -973,12 +973,12 @@ int pending = 0;
         release_lock(&sysblk.ioqlock);
 #endif /*!defined(OPTION_FISHIO)*/
 
-        /* Invoke the provided halt_device routine @ISW */
+        /* Invoke the provided halt device routine @ISW */
         /* if it has been provided by the handler  @ISW */
         /* code at init                            @ISW */
-        if(dev->halt_device!=NULL)              /* @ISW */
+        if(dev->hnd->halt!=NULL)                /* @ISW */
         {                                       /* @ISW */
-            dev->halt_device(dev);              /* @ISW */
+            dev->hnd->halt(dev);                /* @ISW */
         }                                       /* @ISW */
 #if !defined(NO_SIGABEND_HANDLER)
         else

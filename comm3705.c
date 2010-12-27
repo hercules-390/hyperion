@@ -1420,7 +1420,7 @@ static void *commadpt_thread(void *vca)
 /*-------------------------------------------------------------------*/
 /* Halt currently executing I/O command                              */
 /*-------------------------------------------------------------------*/
-static void    commadpt_halt(DEVBLK *dev)
+static void commadpt_halt(DEVBLK *dev)
 {
     if(!dev->busy)
     {
@@ -1557,9 +1557,6 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
 
         /* Allocate I/O -> Thread signaling pipe */
         create_pipe(dev->commadpt->pipe);
-
-        /* Point to the halt routine for HDV/HIO/HSCH handling */
-        dev->halt_device=commadpt_halt;
 
         /* Obtain the CA lock */
         obtain_lock(&dev->commadpt->lock);
@@ -2313,6 +2310,7 @@ DEVHND com3705_device_hndinfo = {
         NULL,                          /* Device End channel pgm     */
         NULL,                          /* Device Resume channel pgm  */
         NULL,                          /* Device Suspend channel pgm */
+        &commadpt_halt,                /* Device Halt channel pgm    */
         NULL,                          /* Device Read                */
         NULL,                          /* Device Write               */
         NULL,                          /* Device Query used          */

@@ -5929,6 +5929,7 @@ DLL_EXPORT DEVHND ckddasd_device_hndinfo = {
         &ckddasd_end,                  /* Device End channel pgm     */
         &ckddasd_start,                /* Device Resume channel pgm  */
         &ckddasd_end,                  /* Device Suspend channel pgm */
+        NULL,                          /* Device Halt channel pgm    */
         &ckddasd_read_track,           /* Device Read                */
         &ckddasd_update_track,         /* Device Write               */
         &ckddasd_used,                 /* Device Query used          */
