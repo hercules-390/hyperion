@@ -88,7 +88,7 @@ DEVBLK *dev;                            /* -> device block           */
     switch(regs->GR_L(0)) {
 
     case SIGA_FC_R:
-    if(dev->hnd->siga_r)
+        if(dev->hnd->siga_r)
             regs->psw.cc = (dev->hnd->siga_r) (dev, regs->GR_L(2) );
         else
         {
@@ -98,7 +98,7 @@ DEVBLK *dev;                            /* -> device block           */
         break;
 
     case SIGA_FC_W:
-    if(dev->hnd->siga_w)
+        if(dev->hnd->siga_w)
             regs->psw.cc = (dev->hnd->siga_w) (dev, regs->GR_L(2) );
         else
         {
