@@ -10,18 +10,14 @@
 /* This implementation is based on the S/390 Linux implementation    */
 
 
+#if !defined(_QETH_H)
+#define _QETH_H
+/*-------------------------------------------------------------------*/
+/* OSA Relative Device Numbers                                       */
+/*-------------------------------------------------------------------*/
 #define OSA_READ_DEVICE         0
 #define OSA_WRITE_DEVICE        1
 #define OSA_DATA_DEVICE         2
-
-
-#define OSA_GROUP_SIZE          3
-
-
-#define OSA_RCD                 0x72
-#define OSA_EQ                  0x1E
-#define OSA_AQ                  0x1F
-
 
 #define _IS_OSA_TYPE_DEVICE(_dev, _type) \
     ((_dev)->member == (_type))
@@ -34,6 +30,26 @@
 
 #define IS_OSA_DATA_DEVICE(_dev) \
        _IS_OSA_TYPE_DEVICE((_dev),OSA_DATA_DEVICE)
+
+
+/*-------------------------------------------------------------------*/
+/* Number of Devices per OSA Adapter                                 */
+/*-------------------------------------------------------------------*/
+#define OSA_GROUP_SIZE          3
+
+
+/*-------------------------------------------------------------------*/
+/* OSA CCW Assignments                                               */
+/*-------------------------------------------------------------------*/
+#define OSA_RCD                 0x72
+#define OSA_EQ                  0x1E
+#define OSA_AQ                  0x1F
+
+
+/*-------------------------------------------------------------------*/
+/* OSA Read Timeout in Seconds                                       */
+/*-------------------------------------------------------------------*/
+#define OSA_READ_TIMEOUT        5
 
 
 /*-------------------------------------------------------------------*/
@@ -77,3 +93,59 @@ typedef struct _OSA_QDR {
 /*03D*/ BYTE    resv03d[3];
 /*040*/ OSA_QDES0 qdf0[126];    /* Format 0 Queue Descriptors        */
     } OSA_QDR;
+
+
+/*-------------------------------------------------------------------*/
+/* Identification Exchange Activate                                  */
+/*-------------------------------------------------------------------*/
+typedef struct _OSA_IEA {
+/*000*/ HWORD   resv000;        /*                                   */
+/*002*/ HWORD   ddc;            /* Device Directed Command           */
+#define IDX_ACT_DDC     0x8000
+/*004*/ FWORD   thsn;           /* Thansport Header Sequence Number  */
+/*008*/ HWORD   type;           /* IDX_ACT type (read or write)      */
+#define IDX_ACT_TYPE_READ       0x1901
+#define IDX_ACT_TYPE_WRITE      0x1501
+/*00A*/ BYTE    resv00a;        /*                                   */
+#define IDX_ACT_RESV00A  0x01
+/*00B*/ BYTE    port;           /* Port number (bit 0 set)           */
+#define IDX_ACT_PORT    0x80
+/*00C*/ FWORD   token;          /* Issuer rm_w token                 */
+#define IDX_ACT_TOKEN   0x00010103UL
+/*010*/ HWORD   flevel;         /* Function level                    */
+#define IDX_ACT_FLEVEL_READ     0x0000
+#define IDX_ACT_FLEVEL_WRITE    0xFFFF
+/*012*/ FWORD   uclevel;        /* Microcode level                   */
+/*016*/ BYTE    hello[8];       /* EBCDIC CL8'HELLO'                 */
+#define IDX_ACT_HELLO   0xC8C1D3D3D6D3C540ULL
+/*01E*/ HWORD   datadev;        /* Data Device Number                */
+/*020*/ BYTE    ddcua;          /* Data Device Control Unit Address  */
+/*021*/ BYTE    ddua;           /* Data Device Unit Address          */
+    } OSA_IEA;
+
+
+/*-------------------------------------------------------------------*/
+/* Identification Exchange Activate Response                         */
+/*-------------------------------------------------------------------*/
+typedef struct _OSA_IEAR {
+/*000*/ HWORD   resv000;        /*                                   */
+/*002*/ BYTE    cmd;            /* Response code                     */
+#define IDX_RSP_CMD_MASK        0xC0
+#define IDX_RSP_CMD_TERM        0xC0 /* IDX_TERMINATE received       */
+/*003*/ BYTE    resv003;        /*                                   */
+/*004*/ BYTE    reason;         /* Reason code                       */
+#define IDX_RSP_REASON_INVPORT  0x22  
+/*005*/ BYTE    resv005[3];     /*                                   */
+/*008*/ BYTE    resp;           /* Response code                     */
+#define IDX_RSP_RESP_MASK       0x03
+#define IDX_RSP_RESP_OK         0x02
+/*009*/ BYTE    cause;          /* Negative response cause code      */
+#define IDX_RSP_CAUSE_INUSE     0x19
+/*00A*/ BYTE    resv010;        /*                                   */
+/*00B*/ BYTE    flags;          /* Flags                             */
+#define IDX_RSP_FLAGS_PORTREQ   0x80
+/*00C*/ FWORD   token;          /* Issues rm_r token                 */
+/*010*/ HWORD   flevel;         /* Funtion level                     */
+/*012*/ FWORD   uclevel;        /* Microcode level                   */
+    } OSA_IEAR;
+#endif /*!defined(_QETH_H)*/

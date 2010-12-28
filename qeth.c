@@ -250,8 +250,8 @@ int     num;                            /* Number of bytes to move   */
     if((dev->group->acount != OSA_GROUP_SIZE)
       && !(IS_CCW_SENSE(code) || IS_CCW_NOP(code) || (code == OSA_RCD)))
     {
-        /* Set command reject sense byte, and unit check status */
-        dev->sense[0] = SENSE_CR;
+        /* Set Intervention required sense, and unit check status */
+        dev->sense[0] = SENSE_IR;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
         return;
     }
@@ -263,13 +263,15 @@ int     num;                            /* Number of bytes to move   */
     /*---------------------------------------------------------------*/
     /* WRITE                                                         */
     /*---------------------------------------------------------------*/
+    {
 logmsg(_("Write dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
-#define WR_SIZE 0x22
+        OSA_IEA *idx_act = (OSA_IEA*)iobuf;
+#define WR_SIZE 0x1000
 
-        if(count == 0x22)
+        if(count == sizeof(OSA_IEA))
             temp_req[dev->member] = 1;
         
-        /* Calculate number of bytes to read and set residual count */
+        /* Calculate number of bytes to write and set residual count */
         num = (count < WR_SIZE) ? count : WR_SIZE;
         *residual = count - num;
         if (count < WR_SIZE) *more = 1;
@@ -277,31 +279,38 @@ logmsg(_("Write dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
         break;
+    }
 
     case 0x02:
     /*---------------------------------------------------------------*/
     /* READ                                                          */
     /*---------------------------------------------------------------*/
     {
-//logmsg(_("Read dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
+logmsg(_("Read dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
+        OSA_IEAR *idx_rsp = (OSA_IEAR*)iobuf;
 
-#define RD_SIZE 0x22
-        
         int rd_size = 0;
+        int timeoutrc;
+        struct timespec waittime;
+        struct timeval  now;
+
 
         if(temp_req[dev->member])
         {
             temp_req[dev->member] = 0;
-            rd_size = RD_SIZE;
-            memset(iobuf, 0x00, RD_SIZE);
-            iobuf[0x08] = 2;
-            iobuf[0x10] = 0x02;
-            iobuf[0x11] = 0x01;
+            rd_size = sizeof(OSA_IEAR);
+            memset(idx_rsp, 0x00, sizeof(OSA_IEAR));
+            idx_rsp->resp = IDX_RSP_RESP_OK;
+            STORE_HW(idx_rsp->flevel, 0x0201);
         }
         else
         {
+            gettimeofday( &now, NULL );
+            waittime.tv_sec  = now.tv_sec  + OSA_READ_TIMEOUT;
+            waittime.tv_nsec = now.tv_usec * 1000;
+
             obtain_lock(&dev->qlock);
-//          wait_condition(&dev->qcond, &dev->qlock);
+            timeoutrc = timed_wait_condition(&dev->qcond, &dev->qlock, &waittime);
             release_lock(&dev->qlock);
         }
          
@@ -443,9 +452,6 @@ logmsg(_("Activate Queues dev(%4.4x) Start\n"),dev->devnum);
             release_lock(&dev->qlock);
 
         } while (dev->scsw.flag2 & SCSW2_Q);
-
-        /* Calculate residual byte count */
-        *residual = 0;
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
