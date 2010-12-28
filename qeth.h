@@ -40,17 +40,17 @@
 /* Queue Descriptor Entry (Format 0)                                 */
 /*-------------------------------------------------------------------*/
 typedef struct _OSA_QDES0 {
-        DBLWRD  sliba;          /* Storage List Info Block Address   */
-        DBLWRD  sla;            /* Storage List Address              */
-        DBLWRD  slsba;          /* Storage List State Block Address  */
-        FWORD   resv1;  
-        BYTE    keyp1;          /* Access keys for DLIB and SL       */  
+/*000*/ DBLWRD  sliba;          /* Storage List Info Block Address   */
+/*008*/ DBLWRD  sla;            /* Storage List Address              */
+/*010*/ DBLWRD  slsba;          /* Storage List State Block Address  */
+/*018*/ FWORD   resv018;  
+/*01C*/ BYTE    keyp1;          /* Access keys for DLIB and SL       */  
 #define QDES_KEYP1_A_DLIB 0xF0
 #define QDES_KEYP1_A_SL   0x0F
-        BYTE    keyp2;          /* Access keys for SBALs ad SLSB     */
+/*01D*/ BYTE    keyp2;          /* Access keys for SBALs ad SLSB     */
 #define QDES_KEYP2_A_SBAL 0xF0
 #define QDES_KEYP2_A_SLSB 0x0F
-        HWORD   resv2;
+/*01E*/ HWORD   resv01e;
     } OSA_QDES0;
 
 
@@ -58,22 +58,22 @@ typedef struct _OSA_QDES0 {
 /* Queue Descriptor Record (QDR)                                     */
 /*-------------------------------------------------------------------*/
 typedef struct _OSA_QDR {
-        BYTE    qfmt;           /* Queue Format                      */
-        BYTE    pfmt;           /* Model Dependent Parameter Format  */
-        BYTE    resv1;
-        BYTE    ac;             /* Adapter Characteristics           */
-        BYTE    resv2;
-        BYTE    iqdcnt;         /* Input Queue Descriptor Count      */
-        BYTE    resv3;
-        BYTE    oqdcnt;         /* Output Queue Descriptor Count     */
-        BYTE    resv4;
-        BYTE    iqdsz;          /* Input Queue Descriptor Size       */
-        BYTE    resv5;
-        BYTE    oqdsz;          /* Output Queue Descriptor Size      */
-        FWORD   resv6[9];
-        DBLWRD  qiba;           /* Queue Information Block Address   */
-        FWORD   resv7;     
-        BYTE    qkey;           /* Queue Information Block Key       */
-        BYTE    resv8[3];
-        OSA_QDES0 qdf0[126];    /* Format 0 Queue Descriptors        */
+/*000*/ BYTE    qfmt;           /* Queue Format                      */
+/*001*/ BYTE    pfmt;           /* Model Dependent Parameter Format  */
+/*002*/ BYTE    resv002;
+/*003*/ BYTE    ac;             /* Adapter Characteristics           */
+/*004*/ BYTE    resv004;
+/*005*/ BYTE    iqdcnt;         /* Input Queue Descriptor Count      */
+/*006*/ BYTE    resv006;
+/*007*/ BYTE    oqdcnt;         /* Output Queue Descriptor Count     */
+/*008*/ BYTE    resv008;
+/*009*/ BYTE    iqdsz;          /* Input Queue Descriptor Size       */
+/*00A*/ BYTE    resv00a;
+/*00B*/ BYTE    oqdsz;          /* Output Queue Descriptor Size      */
+/*00C*/ FWORD   resv00c[9];
+/*030*/ DBLWRD  qiba;           /* Queue Information Block Address   */
+/*038*/ FWORD   resv038;     
+/*03C*/ BYTE    qkey;           /* Queue Information Block Key       */
+/*03D*/ BYTE    resv03d[3];
+/*040*/ OSA_QDES0 qdf0[126];    /* Format 0 Queue Descriptors        */
     } OSA_QDR;

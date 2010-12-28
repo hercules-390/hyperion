@@ -125,8 +125,7 @@ static BYTE  qeth_immed_commands [256] =
    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0  /* F0 */
 };
 
-int temp_write_req = 0;
-int temp_read_req = 0;
+int temp_req[3] = { 0, 0, 0 };
 
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
@@ -141,6 +140,9 @@ logmsg(_("QETH: dev(%4.4x) Halt Device\n"),dev->devnum);
         dev->scsw.flag2 &= ~SCSW2_Q;
         signal_condition(&dev->qcond);
     }
+    else
+        if(IS_OSA_READ_DEVICE(dev) || IS_OSA_WRITE_DEVICE(dev))
+            signal_condition(&dev->qcond);
 
 }
 
@@ -264,11 +266,8 @@ int     num;                            /* Number of bytes to move   */
 logmsg(_("Write dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
 #define WR_SIZE 0x22
 
-        if(IS_OSA_READ_DEVICE(dev) && count == 0x22)
-            temp_read_req = 1;
-        
-        if(IS_OSA_WRITE_DEVICE(dev) && count == 0x22)
-            temp_write_req = 1;
+        if(count == 0x22)
+            temp_req[dev->member] = 1;
         
         /* Calculate number of bytes to read and set residual count */
         num = (count < WR_SIZE) ? count : WR_SIZE;
@@ -290,24 +289,20 @@ logmsg(_("Write dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
         
         int rd_size = 0;
 
-        if(IS_OSA_READ_DEVICE(dev) && temp_read_req)
+        if(temp_req[dev->member])
         {
-            temp_read_req = 0;
+            temp_req[dev->member] = 0;
             rd_size = RD_SIZE;
             memset(iobuf, 0x00, RD_SIZE);
             iobuf[0x08] = 2;
             iobuf[0x10] = 0x02;
             iobuf[0x11] = 0x01;
         }
-         
-        if(IS_OSA_WRITE_DEVICE(dev) && temp_write_req)
+        else
         {
-            temp_write_req = 0;
-            rd_size = RD_SIZE;
-            memset(iobuf, 0x00, RD_SIZE);
-            iobuf[0x08] = 2;
-            iobuf[0x10] = 0x02;
-            iobuf[0x11] = 0x01;
+            obtain_lock(&dev->qlock);
+//          wait_condition(&dev->qcond, &dev->qlock);
+            release_lock(&dev->qlock);
         }
          
         /* Calculate number of bytes to read and set residual count */
@@ -405,6 +400,8 @@ logmsg(_("Read Configuration Data dev(%4.4x)\n"),dev->devnum);
     {
 logmsg(_("Establish Queues dev(%4.4x)\n"),dev->devnum);
         OSA_QDR *qdr = (OSA_QDR*)iobuf;
+
+        UNREFERENCED(qdr);
 
         /* INCOMPLETE ZZ
          * QUEUES MUST BE SETUP HERE
