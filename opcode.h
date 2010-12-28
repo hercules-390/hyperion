@@ -3510,7 +3510,7 @@ DEF_INST(supervisor_call);
 DEF_INST(test_and_set);
 DEF_INST(test_under_mask);
 #ifdef OPTION_OPTINST
-DEF_INST(91xx);
+DEF_INST(91sb);
 #endif /* OPTION_OPTINST */
 #if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
 DEF_INST(test_under_mask_high);

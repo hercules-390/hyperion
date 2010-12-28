@@ -1431,7 +1431,7 @@ BYTE    tbyte;                          /* Work byte                 */
 /*-------------------------------------------------------------------*/
 /* 91   TM    - Test under Mask                                 [SI] */
 /*-------------------------------------------------------------------*/
-DEF_INST(91xx) /* Optimized for single bit mask */
+DEF_INST(91sb) /* Optimized for single bit mask */
 {
 BYTE    i2;                             /* Immediate operand         */
 int     b1;                             /* Base of effective addr    */

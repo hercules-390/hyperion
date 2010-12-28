@@ -1234,11 +1234,9 @@ static zz_func v_opcode_a6xx[0x100][GEN_MAXARCH];
 static zz_func v_opcode_e4xx[0x100][GEN_MAXARCH];
 
 #ifdef OPTION_OPTINST
+static zz_func optxxx0[0x100][GEN_MAXARCH]; /* Optimized zero x2 instructions */
 static zz_func opt47x0[0x10][GEN_MAXARCH]; /* BC */
-static zz_func opt50x0[0x01][GEN_MAXARCH]; /* ST */
-static zz_func opt55x0[0x01][GEN_MAXARCH]; /* CL */
-static zz_func opt58x0[0x01][GEN_MAXARCH]; /* L */
-static zz_func opt91xx[0x01][GEN_MAXARCH]; /* TM */
+static zz_func opt91sb[0x01][GEN_MAXARCH]; /* TM */
 static zz_func optA7x4[0x10][GEN_MAXARCH]; /* BRC */
 static zz_func optE3x0[0x01][GEN_MAXARCH]; /* Optimized execute routine */
 static zz_func optE3x0______04[0x01][GEN_MAXARCH]; /* LG */
@@ -2314,6 +2312,9 @@ void init_opcode_tables(void)
 {
   int arch;
   int i;
+#ifdef OPTION_OPTINST
+  int j;
+#endif
 
 //  logmsg("init_opcode_tables()\n");
   for(arch = 0; arch < GEN_ARCHCOUNT; arch++)
@@ -2363,14 +2364,24 @@ void init_opcode_tables(void)
     for(i = 0; i < 0x10; i++)
     {
       replace_opcode_xxxx(arch, opt47x0[i][arch], 0x47, i << 4); /* BC */
-      replace_opcode_xxxx(arch, opt50x0[0][arch], 0x50, i << 4); /* ST */
-      replace_opcode_xxxx(arch, opt55x0[0][arch], 0x55, i << 4); /* CL */
-      replace_opcode_xxxx(arch, opt58x0[0][arch], 0x58, i << 4); /* L */
       replace_opcode_xxxx(arch, optA7x4[i][arch], 0xA7, (i << 4) + 0x04); /* BRC */
       replace_opcode_xxxx(arch, optE3x0[0][arch], 0xe3, i << 4); /* jump to E3x0______xx */
     }
+    
+    /* Implement optimized zero x2 instructions */
+    for(j = 0; j < 0x100; j++)
+    {
+      if(optxxx0[j][arch] != optxxx0[0][arch])
+      {
+        for(i = 0; i < 0x10; i++)
+          replace_opcode_xxxx(arch, optxxx0[j][arch], j, i << 4); /* Optimized zero x2 instruction */
+      }
+    }
+    
+    /* Install optimized single bit TM instruction */
     for(i = 0; i < 8; i++)
-      replace_opcode_xxxx(arch, opt91xx[0][arch], 0x91, 0x01 << i); /* TM */
+      replace_opcode_xxxx(arch, opt91sb[0][arch], 0x91, 0x01 << i); 
+    
     runtime_opcode_e3x0______xx[arch][0x04] = optE3x0______04[0][arch]; /* LG */
     runtime_opcode_e3x0______xx[arch][0x24] = optE3x0______24[0][arch]; /* STG */
 #endif /* OPTION_OPTINST */
@@ -6488,6 +6499,264 @@ static zz_func v_opcode_e4xx[0x100][GEN_MAXARCH] = {
 /* further break down into for example for ST 5000, 5010, 5020, ..., */
 /* but that setting was slower. */
 
+static zz_func optxxx0[0x100][GEN_MAXARCH] = {
+ /*00*/   GENx___x___x___ ,
+ /*01*/   GENx___x___x___ ,
+ /*02*/   GENx___x___x___ ,
+ /*03*/   GENx___x___x___ ,
+ /*04*/   GENx___x___x___ ,
+ /*05*/   GENx___x___x___ ,
+ /*06*/   GENx___x___x___ ,
+ /*07*/   GENx___x___x___ ,
+ /*08*/   GENx___x___x___ ,
+ /*09*/   GENx___x___x___ ,
+ /*0A*/   GENx___x___x___ ,
+ /*0B*/   GENx___x___x___ ,
+ /*0C*/   GENx___x___x___ ,
+ /*0D*/   GENx___x___x___ ,
+ /*0E*/   GENx___x___x___ ,
+ /*0F*/   GENx___x___x___ ,
+ /*10*/   GENx___x___x___ ,
+ /*11*/   GENx___x___x___ ,
+ /*12*/   GENx___x___x___ ,
+ /*13*/   GENx___x___x___ ,
+ /*14*/   GENx___x___x___ ,
+ /*15*/   GENx___x___x___ ,
+ /*16*/   GENx___x___x___ ,
+ /*17*/   GENx___x___x___ ,
+ /*18*/   GENx___x___x___ ,
+ /*19*/   GENx___x___x___ ,
+ /*1A*/   GENx___x___x___ ,
+ /*1B*/   GENx___x___x___ ,
+ /*1C*/   GENx___x___x___ ,
+ /*1D*/   GENx___x___x___ ,
+ /*1E*/   GENx___x___x___ ,
+ /*1F*/   GENx___x___x___ ,
+ /*20*/   GENx___x___x___ ,
+ /*21*/   GENx___x___x___ ,
+ /*22*/   GENx___x___x___ ,
+ /*23*/   GENx___x___x___ ,
+ /*24*/   GENx___x___x___ ,
+ /*25*/   GENx___x___x___ ,
+ /*26*/   GENx___x___x___ ,
+ /*27*/   GENx___x___x___ ,
+ /*28*/   GENx___x___x___ ,
+ /*29*/   GENx___x___x___ ,
+ /*2A*/   GENx___x___x___ ,
+ /*2B*/   GENx___x___x___ ,
+ /*2C*/   GENx___x___x___ ,
+ /*2D*/   GENx___x___x___ ,
+ /*2E*/   GENx___x___x___ ,
+ /*2F*/   GENx___x___x___ ,
+ /*30*/   GENx___x___x___ ,
+ /*31*/   GENx___x___x___ ,
+ /*32*/   GENx___x___x___ ,
+ /*33*/   GENx___x___x___ ,
+ /*34*/   GENx___x___x___ ,
+ /*35*/   GENx___x___x___ ,
+ /*36*/   GENx___x___x___ ,
+ /*37*/   GENx___x___x___ ,
+ /*38*/   GENx___x___x___ ,
+ /*39*/   GENx___x___x___ ,
+ /*3A*/   GENx___x___x___ ,
+ /*3B*/   GENx___x___x___ ,
+ /*3C*/   GENx___x___x___ ,
+ /*3D*/   GENx___x___x___ ,
+ /*3E*/   GENx___x___x___ ,
+ /*3F*/   GENx___x___x___ ,
+ /*40*/   GENx___x___x___ ,
+ /*41*/   GENx___x___x___ ,
+ /*42*/   GENx___x___x___ ,
+ /*43*/   GENx___x___x___ ,
+ /*44*/   GENx___x___x___ ,
+ /*45*/   GENx___x___x___ ,
+ /*46*/   GENx___x___x___ ,
+ /*47*/   GENx___x___x___ ,
+ /*48*/   GENx___x___x___ ,
+ /*49*/   GENx___x___x___ ,
+ /*4A*/   GENx___x___x___ ,
+ /*4B*/   GENx___x___x___ ,
+ /*4C*/   GENx___x___x___ ,
+ /*4D*/   GENx___x___x___ ,
+ /*4E*/   GENx___x___x___ ,
+ /*4F*/   GENx___x___x___ ,
+ /*50*/   GENx370x390x900 (50x0,RX,"ST"),
+ /*51*/   GENx___x___x___ ,
+ /*52*/   GENx___x___x___ ,
+ /*53*/   GENx___x___x___ ,
+ /*54*/   GENx___x___x___ ,
+ /*55*/   GENx370x390x900 (55x0,RX,"CL"),
+ /*56*/   GENx___x___x___ ,
+ /*57*/   GENx___x___x___ ,
+ /*58*/   GENx370x390x900 (58x0,RX,"L"),
+ /*59*/   GENx___x___x___ ,
+ /*5A*/   GENx___x___x___ ,
+ /*5B*/   GENx___x___x___ ,
+ /*5C*/   GENx___x___x___ ,
+ /*5D*/   GENx___x___x___ ,
+ /*5E*/   GENx___x___x___ ,
+ /*5F*/   GENx___x___x___ ,
+ /*60*/   GENx___x___x___ ,
+ /*61*/   GENx___x___x___ ,
+ /*62*/   GENx___x___x___ ,
+ /*63*/   GENx___x___x___ ,
+ /*64*/   GENx___x___x___ ,
+ /*65*/   GENx___x___x___ ,
+ /*66*/   GENx___x___x___ ,
+ /*67*/   GENx___x___x___ ,
+ /*68*/   GENx___x___x___ ,
+ /*69*/   GENx___x___x___ ,
+ /*6A*/   GENx___x___x___ ,
+ /*6B*/   GENx___x___x___ ,
+ /*6C*/   GENx___x___x___ ,
+ /*6D*/   GENx___x___x___ ,
+ /*6E*/   GENx___x___x___ ,
+ /*6F*/   GENx___x___x___ ,
+ /*70*/   GENx___x___x___ ,
+ /*71*/   GENx___x___x___ ,
+ /*72*/   GENx___x___x___ ,
+ /*73*/   GENx___x___x___ ,
+ /*74*/   GENx___x___x___ ,
+ /*75*/   GENx___x___x___ ,
+ /*76*/   GENx___x___x___ ,
+ /*77*/   GENx___x___x___ ,
+ /*78*/   GENx___x___x___ ,
+ /*79*/   GENx___x___x___ ,
+ /*7A*/   GENx___x___x___ ,
+ /*7B*/   GENx___x___x___ ,
+ /*7C*/   GENx___x___x___ ,
+ /*7D*/   GENx___x___x___ ,
+ /*7E*/   GENx___x___x___ ,
+ /*7F*/   GENx___x___x___ ,
+ /*80*/   GENx___x___x___ ,
+ /*81*/   GENx___x___x___ ,
+ /*82*/   GENx___x___x___ ,
+ /*83*/   GENx___x___x___ ,
+ /*84*/   GENx___x___x___ ,
+ /*85*/   GENx___x___x___ ,
+ /*86*/   GENx___x___x___ ,
+ /*87*/   GENx___x___x___ ,
+ /*88*/   GENx___x___x___ ,
+ /*89*/   GENx___x___x___ ,
+ /*8A*/   GENx___x___x___ ,
+ /*8B*/   GENx___x___x___ ,
+ /*8C*/   GENx___x___x___ ,
+ /*8D*/   GENx___x___x___ ,
+ /*8E*/   GENx___x___x___ ,
+ /*8F*/   GENx___x___x___ ,
+ /*90*/   GENx___x___x___ ,
+ /*91*/   GENx___x___x___ ,
+ /*92*/   GENx___x___x___ ,
+ /*93*/   GENx___x___x___ ,
+ /*94*/   GENx___x___x___ ,
+ /*95*/   GENx___x___x___ ,
+ /*96*/   GENx___x___x___ ,
+ /*97*/   GENx___x___x___ ,
+ /*98*/   GENx___x___x___ ,
+ /*99*/   GENx___x___x___ ,
+ /*9A*/   GENx___x___x___ ,
+ /*9B*/   GENx___x___x___ ,
+ /*9C*/   GENx___x___x___ ,
+ /*9D*/   GENx___x___x___ ,
+ /*9E*/   GENx___x___x___ ,
+ /*9F*/   GENx___x___x___ ,
+ /*A0*/   GENx___x___x___ ,
+ /*A1*/   GENx___x___x___ ,
+ /*A2*/   GENx___x___x___ ,
+ /*A3*/   GENx___x___x___ ,
+ /*A4*/   GENx___x___x___ ,
+ /*A5*/   GENx___x___x___ ,
+ /*A6*/   GENx___x___x___ ,
+ /*A7*/   GENx___x___x___ ,
+ /*A8*/   GENx___x___x___ ,
+ /*A9*/   GENx___x___x___ ,
+ /*AA*/   GENx___x___x___ ,
+ /*AB*/   GENx___x___x___ ,
+ /*AC*/   GENx___x___x___ ,
+ /*AD*/   GENx___x___x___ ,
+ /*AE*/   GENx___x___x___ ,
+ /*AF*/   GENx___x___x___ ,
+ /*B0*/   GENx___x___x___ ,
+ /*B1*/   GENx___x___x___ ,
+ /*B2*/   GENx___x___x___ ,
+ /*B3*/   GENx___x___x___ ,
+ /*B4*/   GENx___x___x___ ,
+ /*B5*/   GENx___x___x___ ,
+ /*B6*/   GENx___x___x___ ,
+ /*B7*/   GENx___x___x___ ,
+ /*B8*/   GENx___x___x___ ,
+ /*B9*/   GENx___x___x___ ,
+ /*BA*/   GENx___x___x___ ,
+ /*BB*/   GENx___x___x___ ,
+ /*BC*/   GENx___x___x___ ,
+ /*BD*/   GENx___x___x___ ,
+ /*BE*/   GENx___x___x___ ,
+ /*BF*/   GENx___x___x___ ,
+ /*C0*/   GENx___x___x___ ,
+ /*C1*/   GENx___x___x___ ,
+ /*C2*/   GENx___x___x___ ,
+ /*C3*/   GENx___x___x___ ,
+ /*C4*/   GENx___x___x___ ,
+ /*C5*/   GENx___x___x___ ,
+ /*C6*/   GENx___x___x___ ,
+ /*C7*/   GENx___x___x___ ,
+ /*C8*/   GENx___x___x___ ,
+ /*C9*/   GENx___x___x___ ,
+ /*CA*/   GENx___x___x___ ,
+ /*CB*/   GENx___x___x___ ,
+ /*CC*/   GENx___x___x___ ,
+ /*CD*/   GENx___x___x___ ,
+ /*CE*/   GENx___x___x___ ,
+ /*CF*/   GENx___x___x___ ,
+ /*D0*/   GENx___x___x___ ,
+ /*D1*/   GENx___x___x___ ,
+ /*D2*/   GENx___x___x___ ,
+ /*D3*/   GENx___x___x___ ,
+ /*D4*/   GENx___x___x___ ,
+ /*D5*/   GENx___x___x___ ,
+ /*D6*/   GENx___x___x___ ,
+ /*D7*/   GENx___x___x___ ,
+ /*D8*/   GENx___x___x___ ,
+ /*D9*/   GENx___x___x___ ,
+ /*DA*/   GENx___x___x___ ,
+ /*DB*/   GENx___x___x___ ,
+ /*DC*/   GENx___x___x___ ,
+ /*DD*/   GENx___x___x___ ,
+ /*DE*/   GENx___x___x___ ,
+ /*DF*/   GENx___x___x___ ,
+ /*E0*/   GENx___x___x___ ,
+ /*E1*/   GENx___x___x___ ,
+ /*E2*/   GENx___x___x___ ,
+ /*E3*/   GENx___x___x___ ,
+ /*E4*/   GENx___x___x___ ,
+ /*E5*/   GENx___x___x___ ,
+ /*E6*/   GENx___x___x___ ,
+ /*E7*/   GENx___x___x___ ,
+ /*E8*/   GENx___x___x___ ,
+ /*E9*/   GENx___x___x___ ,
+ /*EA*/   GENx___x___x___ ,
+ /*EB*/   GENx___x___x___ ,
+ /*EC*/   GENx___x___x___ ,
+ /*ED*/   GENx___x___x___ ,
+ /*EE*/   GENx___x___x___ ,
+ /*EF*/   GENx___x___x___ ,
+ /*F0*/   GENx___x___x___ ,
+ /*F1*/   GENx___x___x___ ,
+ /*F2*/   GENx___x___x___ ,
+ /*F3*/   GENx___x___x___ ,
+ /*F4*/   GENx___x___x___ ,
+ /*F5*/   GENx___x___x___ ,
+ /*F6*/   GENx___x___x___ ,
+ /*F7*/   GENx___x___x___ ,
+ /*F8*/   GENx___x___x___ ,
+ /*F9*/   GENx___x___x___ ,
+ /*FA*/   GENx___x___x___ ,
+ /*FB*/   GENx___x___x___ ,
+ /*FC*/   GENx___x___x___ ,
+ /*FD*/   GENx___x___x___ ,
+ /*FE*/   GENx___x___x___ ,
+ /*FF*/   GENx___x___x___ };
+
 /* Optimized BC */
 static zz_func opt47x0[0x10][GEN_MAXARCH] = {
  /*4700*/ GENx370x390x900 (4700,RX,"BC"),
@@ -6507,20 +6776,8 @@ static zz_func opt47x0[0x10][GEN_MAXARCH] = {
  /*47E0*/ GENx370x390x900 (47E0,RX,"BC"),
  /*47F0*/ GENx370x390x900 (47F0,RX,"BC") };
 
-/* Optimized ST */
-static zz_func opt50x0[0x1][GEN_MAXARCH] = {
- /*50x0*/ GENx370x390x900 (50x0,RX,"ST") };
- 
-/* Optimized CL */
-static zz_func opt55x0[0x1][GEN_MAXARCH] = {
- /*55x0*/ GENx370x390x900 (55x0,RX,"CL") };
-
-/* Optimized L */
-static zz_func opt58x0[0x1][GEN_MAXARCH] = {
- /*58x0*/ GENx370x390x900 (58x0,RX,"L") };
- 
-static zz_func opt91xx[0x1][GEN_MAXARCH] = {
- /*9101*/ GENx370x390x900 (91xx,SI,"TM")  };
+static zz_func opt91sb[0x1][GEN_MAXARCH] = {
+ /*91sb*/ GENx370x390x900 (91sb,SI,"TM")  };
 
 /* Optimized BRC */
 static zz_func optA7x4[0x10][GEN_MAXARCH] = {
