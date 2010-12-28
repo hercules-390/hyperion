@@ -908,7 +908,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* 54   N     - And                                             [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(and)
+DEF_INST(and) /* N has an optimized twin */
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -923,6 +923,27 @@ U32     n;                              /* 32-bit operand values     */
     /* AND second operand with first and set condition code */
     regs->psw.cc = ( regs->GR_L(r1) &= n ) ? 1 : 0;
 }
+
+#ifdef OPTION_OPTINST
+/*-------------------------------------------------------------------*/
+/* 54x0 N     - And                                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(54x0)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, r1, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* AND second operand with first and set condition code */
+    regs->psw.cc = ( regs->GR_L(r1) &= n ) ? 1 : 0;
+}
+#endif /* OPTION_OPTINST */
 
 
 /*-------------------------------------------------------------------*/
@@ -998,7 +1019,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* 41   LA    - Load Address                                    [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_address)
+DEF_INST(load_address) /* LA has an optimized twin */
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -1010,11 +1031,27 @@ VADR    effective_addr2;                /* Effective address         */
     SET_GR_A(r1, regs, effective_addr2);
 }
 
+#ifdef OPTION_OPTINST
+/*-------------------------------------------------------------------*/
+/* 41x0 LA    - Load Address                                    [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(41x0)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX0_X0(inst, regs, r1, b2, effective_addr2);
+
+    /* Load operand address into register */
+    SET_GR_A(r1, regs, effective_addr2);
+}
+#endif /* OPTION_OPTINST */
 
 /*-------------------------------------------------------------------*/
 /* 43   IC    - Insert Character                                [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(insert_character)
+DEF_INST(insert_character) /* IC has an optimized twin */
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -1026,10 +1063,27 @@ VADR    effective_addr2;                /* Effective address         */
     regs->GR_LHLCL(r1) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
 }
 
+#ifdef OPTION_OPTINST
+/*-------------------------------------------------------------------*/
+/* 43x0 IC    - Insert Character                                [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(43x0)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, r1, b2, effective_addr2);
+
+    /* Insert character in r1 register */
+    regs->GR_LHLCL(r1) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+}
+#endif /* OPTION_OPTINST */
+
 /*-------------------------------------------------------------------*/
 /* 5E   AL    - Add Logical                                     [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(add_logical)
+DEF_INST(add_logical) /* AL has an optimized twin */
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -1048,6 +1102,29 @@ U32     n;                              /* 32-bit operand values     */
                     n);
 }
 
+#ifdef OPTION_OPTINST
+/*-------------------------------------------------------------------*/
+/* 5Ex0 AL    - Add Logical                                     [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(5Ex0)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, r1, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc =
+            add_logical (&(regs->GR_L(r1)),
+                    regs->GR_L(r1),
+                    n);
+}
+#endif /* OPTION_OPTINST */
 
 /*-------------------------------------------------------------------*/
 /* 55   CL    - Compare Logical                                 [RX] */
@@ -1095,7 +1172,7 @@ U32     n;                              /* 32-bit operand values     */
 /*-------------------------------------------------------------------*/
 /* 48   LH    - Load Halfword                                   [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_halfword)
+DEF_INST(load_halfword) /* LH has an optimized twin */
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -1106,6 +1183,23 @@ VADR    effective_addr2;                /* Effective address         */
     /* Load rightmost 2 bytes of register from operand address */
     regs->GR_L(r1) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
 }
+
+#ifdef OPTION_OPTINST
+/*-------------------------------------------------------------------*/
+/* 48x0 LH    - Load Halfword                                   [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(48x0)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, r1, b2, effective_addr2);
+
+    /* Load rightmost 2 bytes of register from operand address */
+    regs->GR_L(r1) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+}
+#endif /* OPTION_OPTINST */
 
 #if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
 /*-------------------------------------------------------------------*/
@@ -1652,7 +1746,7 @@ int     r1, r2;                         /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* 59   C     - Compare                                         [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare)
+DEF_INST(compare) /* C has an optimized twin */
 {
 int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
@@ -1670,6 +1764,28 @@ U32     n;                              /* 32-bit operand values     */
             (S32)regs->GR_L(r1) > (S32)n ? 2 : 0;
 }
 
+#ifdef OPTION_OPTINST
+/*-------------------------------------------------------------------*/
+/* 59x0 C     - Compare                                         [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(59x0)
+{
+int     r1;                             /* Values of R fields        */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, r1, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Compare signed operands and set condition code */
+    regs->psw.cc =
+            (S32)regs->GR_L(r1) < (S32)n ? 1 :
+            (S32)regs->GR_L(r1) > (S32)n ? 2 : 0;
+}
+#endif /* OPTION_OPTINST */
 
 /*-------------------------------------------------------------------*/
 /* B21A CFC   - Compare and Form Codeword                        [S] */

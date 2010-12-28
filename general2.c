@@ -1055,7 +1055,7 @@ U64     dreg;                           /* Double word work area     */
 /*-------------------------------------------------------------------*/
 /* 40   STH   - Store Halfword                                  [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(store_halfword)
+DEF_INST(store_halfword) /* STH has an optimized twin */
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -1066,6 +1066,23 @@ VADR    effective_addr2;                /* Effective address         */
     /* Store rightmost 2 bytes of R1 register at operand address */
     ARCH_DEP(vstore2) ( regs->GR_LHL(r1), effective_addr2, b2, regs );
 }
+
+#ifdef OPTION_OPTINST
+/*-------------------------------------------------------------------*/
+/* 40x0 STH   - Store Halfword                                  [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(40x0)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, r1, b2, effective_addr2);
+
+    /* Store rightmost 2 bytes of R1 register at operand address */
+    ARCH_DEP(vstore2) ( regs->GR_LHL(r1), effective_addr2, b2, regs );
+}
+#endif /* OPTION_OPTINST */
 
 
 /*-------------------------------------------------------------------*/

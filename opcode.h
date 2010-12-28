@@ -1314,6 +1314,8 @@ do { \
 /* BHe: This decoder is for optimized instructions where the X2 is zero */
 #define RX_X0(_inst, _regs, _r1, _b2, _effective_addr2) \
         RX_X0_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, 4, 4)
+#define RX0_X0(_inst, _regs, _r1, _b2, _effective_addr2) \
+        RX_X0_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, 4, 0)
 
 #define RX_X0_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc) \
         { \
@@ -3291,8 +3293,14 @@ DEF_INST(add);
 DEF_INST(add_halfword);
 DEF_INST(add_logical_register);
 DEF_INST(add_logical);
+#ifdef OPTION_OPTINST
+DEF_INST(5Ex0);
+#endif /* OPTION_OPTINST */
 DEF_INST(and_register);
 DEF_INST(and);
+#ifdef OPTION_OPTINST
+DEF_INST(54x0);
+#endif /* OPTION_OPTINST */
 DEF_INST(and_immediate);
 DEF_INST(and_character);
 DEF_INST(branch_and_link_register);
@@ -3359,6 +3367,9 @@ DEF_INST(checksum);
 #endif /*defined(FEATURE_CHECKSUM_INSTRUCTION)*/
 DEF_INST(compare_register);
 DEF_INST(compare);
+#ifdef OPTION_OPTINST
+DEF_INST(59x0);
+#endif /* OPTION_OPTINST */
 DEF_INST(compare_and_form_codeword);
 DEF_INST(compare_and_swap);
 DEF_INST(compare_double_and_swap);
@@ -3412,6 +3423,9 @@ DEF_INST(execute_relative_long);                                /*208*/
 DEF_INST(extract_access_register);
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 DEF_INST(insert_character);
+#ifdef OPTION_OPTINST
+DEF_INST(43x0);
+#endif /* OPTION_OPTINST */
 DEF_INST(insert_characters_under_mask);
 DEF_INST(insert_program_mask);
 DEF_INST(load);
@@ -3424,10 +3438,16 @@ DEF_INST(load_register);
 DEF_INST(load_access_multiple);
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 DEF_INST(load_address);
+#ifdef OPTION_OPTINST
+DEF_INST(41x0);
+#endif /* OPTION_OPTINST */
 DEF_INST(load_address_extended);
 DEF_INST(load_and_test_register);
 DEF_INST(load_complement_register);
 DEF_INST(load_halfword);
+#ifdef OPTION_OPTINST
+DEF_INST(48x0);
+#endif /* OPTION_OPTINST */
 #if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
 DEF_INST(load_halfword_immediate);
 DEF_INST(add_halfword_immediate);
@@ -3500,6 +3520,9 @@ DEF_INST(store_clock_extended);
 DEF_INST(store_clock_fast);                                     /*@Z9*/
 #endif /*defined(FEATURE_STORE_CLOCK_FAST)*/
 DEF_INST(store_halfword);
+#ifdef OPTION_OPTINST
+DEF_INST(40x0);
+#endif /* OPTION_OPTINST */
 DEF_INST(store_multiple);
 DEF_INST(subtract_register);
 DEF_INST(subtract);
