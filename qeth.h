@@ -39,6 +39,16 @@
 
 
 /*-------------------------------------------------------------------*/
+/* OSA Group Structure                                               */
+/*-------------------------------------------------------------------*/
+typedef struct _OSA_GRP {
+    void *idxrdbuff;            /* Read buffer pointer               */
+    int   idxrdbufn;            /* Read buffer size                  */
+    int   idxrdretn;            /* Read return size                  */
+    } OSA_GRP;
+
+
+/*-------------------------------------------------------------------*/
 /* OSA CCW Assignments                                               */
 /*-------------------------------------------------------------------*/
 #define OSA_RCD                 0x72

@@ -35,7 +35,7 @@
 #endif
 
 
-static BYTE sense_id_bytes[] = {
+static const BYTE sense_id_bytes[] = {
     0xFF,
     0x17, 0x31, 0x01,                   // Control Unit Type
     0x17, 0x32, 0x01,                   // Device Type
@@ -46,7 +46,7 @@ static BYTE sense_id_bytes[] = {
 };
 
 
-static BYTE read_configuration_data_bytes[128] = {
+static const BYTE read_configuration_data_bytes[128] = {
 /*-------------------------------------------------------------------*/
 /* Device NED                                                        */
 /*-------------------------------------------------------------------*/
@@ -104,7 +104,8 @@ static BYTE read_configuration_data_bytes[128] = {
     0x00,0x00                           // 126-127:?
 };
 
-static BYTE  qeth_immed_commands [256] =
+
+static BYTE qeth_immed_commands [256] =
 {
 /* 0 1 2 3 4 5 6 7 8 9 A B C D E F */
    0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0, /* 00 */
@@ -125,7 +126,91 @@ static BYTE  qeth_immed_commands [256] =
    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0  /* F0 */
 };
 
-int temp_req[3] = { 0, 0, 0 };
+
+static const char *osa_devtyp[] = { "OSA Read", "OSA Write", "OSA Data" };
+
+
+/*-------------------------------------------------------------------*/
+/* Device Response Routine                                           */
+/*-------------------------------------------------------------------*/
+static int osa_devrsp(DEVBLK *dev, OSA_IEAR *iear)
+{
+    memset(iear, 0x00, sizeof(OSA_IEAR));
+
+    switch(dev->qidxstate) {
+
+    case OSA_IDX_STATE_ACTPEND:
+
+        switch(dev->member) {
+
+        case OSA_READ_DEVICE:
+        case OSA_WRITE_DEVICE:
+            iear->resp = IDX_RSP_RESP_OK;
+            STORE_HW(iear->flevel, 0x0201);
+            dev->qidxstate = OSA_IDX_STATE_ACTIVE;
+            break;
+
+        default:
+            logmsg(_("QETH: IDX state for device %2.2X reset\n"),dev->devnum);
+            dev->qidxstate = OSA_IDX_STATE_INITIAL;
+            break;
+
+        }
+
+    default:
+        break;
+
+    }
+
+    return sizeof(OSA_IEAR);
+}
+
+
+
+/*-------------------------------------------------------------------*/
+/* Device Command Routine                                            */
+/*-------------------------------------------------------------------*/
+static int osa_devcmd(DEVBLK *dev, OSA_IEA *iea)
+{
+U16 reqtype;
+
+    FETCH_HW(reqtype, iea->type);
+
+    switch(reqtype) {
+
+    case IDX_ACT_TYPE_READ:
+        if(IS_OSA_READ_DEVICE(dev))
+        {
+            dev->qidxstate = OSA_IDX_STATE_ACTPEND;
+        }
+        else
+        {
+            logmsg(_("QETH: IDX ACTIVATE READ Invalid for %s device %2.2X\n"),osa_devtyp[dev->member],dev->devnum); 
+            dev->qidxstate = OSA_IDX_STATE_ERRPEND;
+        }
+        break;
+
+    case IDX_ACT_TYPE_WRITE:
+        if(IS_OSA_WRITE_DEVICE(dev))
+        {
+            dev->qidxstate = OSA_IDX_STATE_ACTPEND;
+        }
+        else
+        {
+            logmsg(_("QETH: IDX ACTIVATE WRITE Invalid for %s device %2.2X\n"),osa_devtyp[dev->member],dev->devnum); 
+            dev->qidxstate = OSA_IDX_STATE_ERRPEND;
+        }
+        break;
+
+    default:
+        logmsg(_("QETH: IDX ACTIVATE invalid request %2.2X for %s device %2.2X\n"),reqtype,osa_devtyp[dev->member],dev->devnum); 
+        dev->qidxstate = OSA_IDX_STATE_ERRPEND;
+        break;
+    }
+
+    return sizeof(OSA_IEA);
+}
+
 
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
@@ -179,6 +264,9 @@ logmsg(_("senseidnum=%d\n"),dev->numdevid);
         for(i = 0; i < dev->group->acount; i++)
             logmsg("%4.4x ",dev->group->memdev[i]->devnum);
         logmsg(") complete\n");
+
+        dev->group->grp_data = malloc(sizeof(OSA_GRP));
+        memset (dev->group->grp_data, 0, sizeof(OSA_GRP));
     }
 
     return 0;
@@ -191,8 +279,6 @@ logmsg(_("senseidnum=%d\n"),dev->numdevid);
 static void qeth_query_device (DEVBLK *dev, char **class,
                 int buflen, char *buffer)
 {
-    static char *osa_devtyp[] = { "OSA Read", "OSA Write", "OSA Data" };
-
     BEGIN_DEVICE_CLASS_QUERY( "QETH", dev, class, buflen, buffer );
 
     snprintf (buffer, buflen-1, "%s%s",
@@ -207,7 +293,12 @@ static void qeth_query_device (DEVBLK *dev, char **class,
 /*-------------------------------------------------------------------*/
 static int qeth_close_device ( DEVBLK *dev )
 {
-    UNREFERENCED(dev);
+
+    if(!dev->member && dev->group->grp_data)
+    {
+        free(dev->group->grp_data);
+        dev->group->grp_data = NULL;
+    }
 
     return 0;
 } /* end function qeth_close_device */
@@ -239,6 +330,7 @@ static void qeth_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U16 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual )
 {
+OSA_GRP *osa_grp = (OSA_GRP*)dev->group->grp_data;
 int     num;                            /* Number of bytes to move   */
 
     UNREFERENCED(flags);
@@ -264,13 +356,22 @@ int     num;                            /* Number of bytes to move   */
     /* WRITE                                                         */
     /*---------------------------------------------------------------*/
     {
-logmsg(_("Write dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
-        OSA_IEA *idx_act = (OSA_IEA*)iobuf;
 #define WR_SIZE 0x1000
+logmsg(_("Write dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
 
-        if(count == sizeof(OSA_IEA))
-            temp_req[dev->member] = 1;
-        
+        if(iobuf[2] == 0x80)
+        {
+            osa_devcmd(dev,(OSA_IEA*)iobuf);
+        }
+        else
+        {
+            if(IS_OSA_WRITE_DEVICE(dev) 
+              && (dev->qidxstate == OSA_IDX_STATE_ACTIVE)
+              && (dev->group->memdev[OSA_READ_DEVICE]->qidxstate == OSA_IDX_STATE_ACTIVE))
+            osa_grp->idxrdretn = count;
+            signal_condition(&dev->group->memdev[OSA_READ_DEVICE]->qcond);
+        }
+            
         /* Calculate number of bytes to write and set residual count */
         num = (count < WR_SIZE) ? count : WR_SIZE;
         *residual = count - num;
@@ -287,7 +388,6 @@ logmsg(_("Write dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
     /*---------------------------------------------------------------*/
     {
 logmsg(_("Read dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
-        OSA_IEAR *idx_rsp = (OSA_IEAR*)iobuf;
 
         int rd_size = 0;
         int timeoutrc;
@@ -295,13 +395,9 @@ logmsg(_("Read dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
         struct timeval  now;
 
 
-        if(temp_req[dev->member])
+        if(dev->qidxstate != OSA_IDX_STATE_ACTIVE)
         {
-            temp_req[dev->member] = 0;
-            rd_size = sizeof(OSA_IEAR);
-            memset(idx_rsp, 0x00, sizeof(OSA_IEAR));
-            idx_rsp->resp = IDX_RSP_RESP_OK;
-            STORE_HW(idx_rsp->flevel, 0x0201);
+            rd_size = osa_devrsp(dev, (OSA_IEAR*)iobuf);
         }
         else
         {
@@ -310,7 +406,15 @@ logmsg(_("Read dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
             waittime.tv_nsec = now.tv_usec * 1000;
 
             obtain_lock(&dev->qlock);
+            osa_grp->idxrdbuff = iobuf;
+            osa_grp->idxrdbufn = count;
+#if 1
             timeoutrc = timed_wait_condition(&dev->qcond, &dev->qlock, &waittime);
+#else
+            wait_condition(&dev->qcond, &dev->qlock);
+#endif
+            osa_grp->idxrdbuff = NULL;
+            rd_size = osa_grp->idxrdretn;
             release_lock(&dev->qlock);
         }
          

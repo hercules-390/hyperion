@@ -1416,7 +1416,11 @@ struct DEVBLK {                         /* Device configuration block*/
         LOCK    qlock;                  /* Lock for QDIO thread      */
         U32     qrmask;                 /* Read queue mask           */
         U32     qwmask;                 /* Write queue mask          */
-
+        int     qidxstate;              /* IDX state                 */
+#define OSA_IDX_STATE_INITIAL	0x00
+#define OSA_IDX_STATE_ACTIVE 	0x01
+#define OSA_IDX_STATE_ACTPEND	0x02
+#define OSA_IDX_STATE_ERRPEND   0x03
 
         BYTE    blkend[16];             /* eye-end                   */
 };
