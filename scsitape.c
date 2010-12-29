@@ -1576,6 +1576,7 @@ void* get_stape_status_thread( void* notused )
     int           timeout;
     char          buf[64];
 
+    UNREFERENCED(notused);
     MSGBUF( buf, "SCSI-TAPE status monitor");
     WRMSG( HHC00100, "I", (u_long)thread_id(), getpriority( PRIO_PROCESS, 0 ), buf );
 
@@ -1962,6 +1963,7 @@ void *scsi_tapemountmon_thread( void *notused )
     DEVBLK*         dev = NULL;
     char            buf[64];
 
+    UNREFERENCED(notused);
     MSGBUF( buf, "SCSI-TAPE mount monitor");
     WRMSG( HHC00100, "I", (u_long)thread_id(), getpriority( PRIO_PROCESS, 0 ), buf );
 

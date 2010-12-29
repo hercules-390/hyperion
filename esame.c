@@ -1496,7 +1496,7 @@ U32     n;
 /*-------------------------------------------------------------------*/
 /* E390 LLGC  - Load Logical Long Character                    [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_logical_long_character)
+DEF_INST(load_logical_long_character) /* LLGC has an optimized twin */
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -1507,6 +1507,23 @@ VADR    effective_addr2;                /* Effective address         */
     regs->GR_G(r1) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
 
 } /* end DEF_INST(load_logical_long_character) */
+
+#ifdef OPTION_OPTINST
+/*-------------------------------------------------------------------*/
+/* E390 LLGC  - Load Logical Long Character                    [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(E3_0______90)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXY_X0(inst, regs, r1, b2, effective_addr2);
+
+    regs->GR_G(r1) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+
+} /* end DEF_INST(load_logical_long_character) */
+#endif /* OPTION_OPTINST */
 #endif /*defined(FEATURE_ESAME)*/
 
 
@@ -2603,7 +2620,7 @@ int     r1, r2;                         /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* E320 CG    - Compare Long                                   [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_long)
+DEF_INST(compare_long) /* CG has an optimized twin */
 {
 register int     r1;                    /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
@@ -2621,6 +2638,32 @@ U64     n;                              /* 64-bit operand values     */
             (S64)regs->GR_G(r1) > (S64)n ? 2 : 0;
 
 } /* end DEF_INST(compare_long) */
+
+#ifdef OPTION_OPTINST
+/*-------------------------------------------------------------------*/
+/* E320 CG    - Compare Long                                   [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(E3_0______20)
+{
+register int     r1;                    /* Values of R fields        */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U64     n;                              /* 64-bit operand values     */
+
+    RXY_X0(inst, regs, r1, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
+
+    /* Compare signed operands and set condition code */
+    regs->psw.cc =
+            (S64)regs->GR_G(r1) < (S64)n ? 1 :
+            (S64)regs->GR_G(r1) > (S64)n ? 2 : 0;
+
+} /* end DEF_INST(compare_long) */
+
+#endif /* OPTION_OPTINST */
+
 #endif /*defined(FEATURE_ESAME)*/
 
 
@@ -2732,7 +2775,7 @@ U32     n;                              /* 32-bit operand values     */
 /*-------------------------------------------------------------------*/
 /* E308 AG    - Add Long                                       [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(add_long)
+DEF_INST(add_long) /* AG has an optimized twin */
 {
 int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
@@ -2754,6 +2797,34 @@ U64     n;                              /* 64-bit operand values     */
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(add_long) */
+
+#ifdef OPTION_OPTINST
+/*-------------------------------------------------------------------*/
+/* E308 AG    - Add Long                                       [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(E3_0______08)
+{
+int     r1;                             /* Values of R fields        */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U64     n;                              /* 64-bit operand values     */
+
+    RXY_X0(inst, regs, r1, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc = add_signed_long (&(regs->GR_G(r1)),
+                                      regs->GR_G(r1),
+                                      n);
+
+    /* Program check if fixed-point overflow */
+    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+        regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+
+} /* end DEF_INST(add_long) */
+#endif /* OPTION_OPTINST */
 #endif /*defined(FEATURE_ESAME)*/
 
 
@@ -3233,7 +3304,7 @@ U16     i2;                             /* 16-bit operand values     */
 /*-------------------------------------------------------------------*/
 /* E321 CLG   - Compare Logical long                           [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_long)
+DEF_INST(compare_logical_long) /* CLG has an optimized twin */
 {
 int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
@@ -3250,6 +3321,29 @@ U64     n;                              /* 64-bit operand values     */
                    regs->GR_G(r1) > n ? 2 : 0;
 
 } /* end DEF_INST(compare_logical_long) */
+
+#ifdef OPTION_OPTINST
+/*-------------------------------------------------------------------*/
+/* E321 CLG   - Compare Logical long                           [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(E3_0______21) 
+{
+int     r1;                             /* Values of R fields        */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U64     n;                              /* 64-bit operand values     */
+
+    RXY_X0(inst, regs, r1, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
+
+    /* Compare unsigned operands and set condition code */
+    regs->psw.cc = regs->GR_G(r1) < n ? 1 :
+                   regs->GR_G(r1) > n ? 2 : 0;
+
+} /* end DEF_INST(compare_logical_long) */
+#endif /* OPTION_OPTINST */
 #endif /*defined(FEATURE_ESAME)*/
 
 
@@ -3723,7 +3817,7 @@ int     r1, r2;                         /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* E380 NG    - And Long                                       [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(and_long)
+DEF_INST(and_long) /* NG has an optimized twin */
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -3739,6 +3833,28 @@ U64     n;                              /* 64-bit operand values     */
     regs->psw.cc = ( regs->GR_G(r1) &= n ) ? 1 : 0;
 
 } /* end DEF_INST(and_long) */
+
+#ifdef OPTION_OPTINST
+/*-------------------------------------------------------------------*/
+/* E380 NG    - And Long                                       [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(E3_0______80)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U64     n;                              /* 64-bit operand values     */
+
+    RXY_X0(inst, regs, r1, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
+
+    /* AND second operand with first and set condition code */
+    regs->psw.cc = ( regs->GR_G(r1) &= n ) ? 1 : 0;
+
+} /* end DEF_INST(and_long) */
+#endif /* OPTION_OPTINST */
 #endif /*defined(FEATURE_ESAME)*/
 
 
@@ -4610,7 +4726,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* E324 STG   - Store Long                                     [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(E3x0______24)
+DEF_INST(E3_0______24)
 {
 int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
@@ -4674,7 +4790,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* E304 LG    - Load Long                                      [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(E3x0______04)
+DEF_INST(E3_0______04)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */

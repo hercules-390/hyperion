@@ -335,9 +335,9 @@ struct REGS {                           /* Processor registers       */
                
 #ifdef OPTION_OPTINST
         const zz_func
-               *s370_runtime_opcode_e3x0______xx,
-               *s390_runtime_opcode_e3x0______xx,
-               *z900_runtime_opcode_e3x0______xx;
+               *s370_runtime_opcode_e3_0______xx,
+               *s390_runtime_opcode_e3_0______xx,
+               *z900_runtime_opcode_e3_0______xx;
 #endif /* OPTION_OPTINST */               
 
      /* TLB - Translation lookaside buffer                           */

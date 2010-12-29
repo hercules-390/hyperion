@@ -1069,9 +1069,9 @@ VADR    effective_addr2;                /* Effective address         */
 
 #ifdef OPTION_OPTINST
 /*-------------------------------------------------------------------*/
-/* 40x0 STH   - Store Halfword                                  [RX] */
+/* 40_0 STH   - Store Halfword                                  [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(40x0)
+DEF_INST(40_0)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -1446,7 +1446,7 @@ BYTE    tbyte;                          /* Work byte                 */
 
 #ifdef OPTION_OPTINST
 /*-------------------------------------------------------------------*/
-/* 91   TM    - Test under Mask                                 [SI] */
+/* 91sb TM    - Test under Mask                                 [SI] */
 /*-------------------------------------------------------------------*/
 DEF_INST(91sb) /* Optimized for single bit mask */
 {

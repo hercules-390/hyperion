@@ -3294,12 +3294,12 @@ DEF_INST(add_halfword);
 DEF_INST(add_logical_register);
 DEF_INST(add_logical);
 #ifdef OPTION_OPTINST
-DEF_INST(5Ex0);
+DEF_INST(5E_0);
 #endif /* OPTION_OPTINST */
 DEF_INST(and_register);
 DEF_INST(and);
 #ifdef OPTION_OPTINST
-DEF_INST(54x0);
+DEF_INST(54_0);
 #endif /* OPTION_OPTINST */
 DEF_INST(and_immediate);
 DEF_INST(and_character);
@@ -3313,22 +3313,22 @@ DEF_INST(branch_and_set_mode);
 #endif /*defined(FEATURE_BIMODAL_ADDRESSING)*/
 DEF_INST(branch_on_condition_register);
 #ifdef OPTION_OPTINST
-DEF_INST(070x);
-DEF_INST(071x);
-DEF_INST(072x);
-DEF_INST(073x);
-DEF_INST(074x);
-DEF_INST(075x);
+DEF_INST(070_);
+DEF_INST(071_);
+DEF_INST(072_);
+DEF_INST(073_);
+DEF_INST(074_);
+DEF_INST(075_);
 /* 076x not optimized */
-DEF_INST(077x);
-DEF_INST(078x);
+DEF_INST(077_);
+DEF_INST(078_);
 /* 079x not optimized */
-DEF_INST(07Ax);
-DEF_INST(07Bx);
-DEF_INST(07Cx);
-DEF_INST(07Dx);
-DEF_INST(07Ex);
-DEF_INST(07Fx);
+DEF_INST(07A_);
+DEF_INST(07B_);
+DEF_INST(07C_);
+DEF_INST(07D_);
+DEF_INST(07E_);
+DEF_INST(07F_);
 #endif /* OPTION_OPTINST */
 DEF_INST(branch_on_condition);
 #ifdef OPTION_OPTINST
@@ -3386,7 +3386,7 @@ DEF_INST(checksum);
 DEF_INST(compare_register);
 DEF_INST(compare);
 #ifdef OPTION_OPTINST
-DEF_INST(59x0);
+DEF_INST(59_0);
 #endif /* OPTION_OPTINST */
 DEF_INST(compare_and_form_codeword);
 DEF_INST(compare_and_swap);
@@ -3399,7 +3399,7 @@ DEF_INST(compare_logical_register);
 DEF_INST(compare_logical);
 #ifdef OPTION_OPTINST
 /* Optimized CL instruction */
-DEF_INST(55x0);
+DEF_INST(55_0);
 #endif /* OPTION_OPTINST */
 DEF_INST(compare_logical_immediate);
 DEF_INST(compare_logical_character);
@@ -3442,14 +3442,14 @@ DEF_INST(extract_access_register);
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 DEF_INST(insert_character);
 #ifdef OPTION_OPTINST
-DEF_INST(43x0);
+DEF_INST(43_0);
 #endif /* OPTION_OPTINST */
 DEF_INST(insert_characters_under_mask);
 DEF_INST(insert_program_mask);
 DEF_INST(load);
 #ifdef OPTION_OPTINST
 /* Optimized L instruction */
-DEF_INST(58x0);
+DEF_INST(58_0);
 #endif /* OPTION_OPTINST */
 DEF_INST(load_register);
 #if defined(FEATURE_ACCESS_REGISTERS)
@@ -3457,14 +3457,14 @@ DEF_INST(load_access_multiple);
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 DEF_INST(load_address);
 #ifdef OPTION_OPTINST
-DEF_INST(41x0);
+DEF_INST(41_0);
 #endif /* OPTION_OPTINST */
 DEF_INST(load_address_extended);
 DEF_INST(load_and_test_register);
 DEF_INST(load_complement_register);
 DEF_INST(load_halfword);
 #ifdef OPTION_OPTINST
-DEF_INST(48x0);
+DEF_INST(48_0);
 #endif /* OPTION_OPTINST */
 #if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
 DEF_INST(load_halfword_immediate);
@@ -3497,9 +3497,13 @@ DEF_INST(multiply_halfword);
 DEF_INST(store);
 #ifdef OPTION_OPTINST
 /* Optimized ST instruction */
-DEF_INST(50x0);
+DEF_INST(50_0);
 #endif /* OPTION_OPTINST */
 DEF_INST(store_character);
+#ifdef OPTION_OPTINST
+/* Optimized ST instruction */
+DEF_INST(42_0);
+#endif /* OPTION_OPTINST */
 
 /* Instructions in general2.c */
 DEF_INST(or_register);
@@ -3539,7 +3543,7 @@ DEF_INST(store_clock_fast);                                     /*@Z9*/
 #endif /*defined(FEATURE_STORE_CLOCK_FAST)*/
 DEF_INST(store_halfword);
 #ifdef OPTION_OPTINST
-DEF_INST(40x0);
+DEF_INST(40_0);
 #endif /* OPTION_OPTINST */
 DEF_INST(store_multiple);
 DEF_INST(subtract_register);
@@ -3874,6 +3878,9 @@ DEF_INST(divide_single_long_fullword);
 DEF_INST(divide_single_long_register);
 DEF_INST(divide_single_long_fullword_register);
 DEF_INST(load_logical_long_character);
+#ifdef OPTION_OPTINST
+DEF_INST(E3_0______90);
+#endif /* OPTION_OPTINST */
 DEF_INST(load_logical_long_halfword);
 DEF_INST(store_pair_to_quadword);
 DEF_INST(load_pair_from_quadword);
@@ -3903,6 +3910,9 @@ DEF_INST(add_long_halfword_immediate);
 DEF_INST(multiply_long_halfword_immediate);
 DEF_INST(compare_long_halfword_immediate);
 DEF_INST(and_long);
+#ifdef OPTION_OPTINST
+DEF_INST(E3_0______80);
+#endif /* OPTION_OPTINST */
 DEF_INST(or_long);
 DEF_INST(exclusive_or_long);
 DEF_INST(and_long_register);
@@ -3929,13 +3939,13 @@ DEF_INST(load_program_status_word_extended);
 DEF_INST(store_long);
 #ifdef OPTION_OPTINST
 /* Optimized STG instruction */
-DEF_INST(E3x0______24);
+DEF_INST(E3_0______24);
 #endif /* OPTION_OPTINST */
 DEF_INST(store_real_address);
 DEF_INST(load_long);
 #ifdef OPTION_OPTINST
 /* Optimized LG instruction */
-DEF_INST(E3x0______04);
+DEF_INST(E3_0______04);
 #endif /* OPTION_OPTINST */
 DEF_INST(multiply_single_long_register);
 DEF_INST(multiply_single_long_fullword_register);
@@ -3947,6 +3957,10 @@ DEF_INST(shift_left_single_long);
 DEF_INST(shift_right_single_logical_long);
 DEF_INST(shift_left_single_logical_long);
 DEF_INST(compare_logical_long);
+#ifdef OPTION_OPTINST
+/* Optimized LG instruction */
+DEF_INST(E3_0______21);
+#endif /* OPTION_OPTINST */
 DEF_INST(compare_logical_long_fullword);
 DEF_INST(compare_logical_long_fullword_register);
 DEF_INST(load_logical_long_thirtyone_register);
@@ -3967,6 +3981,9 @@ DEF_INST(subtract_long_fullword_register);
 DEF_INST(add_logical_long);
 DEF_INST(add_logical_long_fullword);
 DEF_INST(add_long);
+#ifdef OPTION_OPTINST
+DEF_INST(E3_0______08);
+#endif /* OPTION_OPTINST */
 DEF_INST(add_long_fullword);
 DEF_INST(subtract_logical_long);
 DEF_INST(subtract_logical_long_fullword);
@@ -3974,6 +3991,9 @@ DEF_INST(subtract_long);
 DEF_INST(subtract_long_fullword);
 DEF_INST(compare_long_register);
 DEF_INST(compare_long);
+#ifdef OPTION_OPTINST
+DEF_INST(E3_0______20);
+#endif /* OPTION_OPTINST */
 DEF_INST(branch_on_count_long_register);
 DEF_INST(branch_on_count_long);
 DEF_INST(compare_and_swap_long);

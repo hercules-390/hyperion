@@ -655,7 +655,7 @@ DEF_INST(branch_on_condition_register) /* BCR has optimized twins */
 /*-------------------------------------------------------------------*/
 /* 07xx BCR   - Branch on Condition Register                    [RR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(070x) 
+DEF_INST(070_) 
 {
     INST_UPDATE_PSW(regs, 2, 0);
     /* Perform serialization and checkpoint synchronization if
@@ -676,7 +676,7 @@ DEF_INST(070x)
 
 } /* end DEF_INST(branch_on_condition_register) */
 
-DEF_INST(071x) 
+DEF_INST(071_) 
 {
     /* Branch if R1 mask bit is set and R2 is not register 0 */
     if ((inst[1] & 0x0F) != 0 && (regs->psw.cc == 3))
@@ -703,7 +703,7 @@ DEF_INST(071x)
     
 } /* end DEF_INST(branch_on_condition_register) */
 
-DEF_INST(072x) 
+DEF_INST(072_) 
 {
     /* Branch if R1 mask bit is set and R2 is not register 0 */
     if ((inst[1] & 0x0F) != 0 && (regs->psw.cc == 2))
@@ -730,7 +730,7 @@ DEF_INST(072x)
 
 } /* end DEF_INST(branch_on_condition_register) */
 
-DEF_INST(073x) 
+DEF_INST(073_) 
 {
     /* Branch if R1 mask bit is set and R2 is not register 0 */
     if ((inst[1] & 0x0F) != 0 && (regs->psw.cc > 1))
@@ -757,7 +757,7 @@ DEF_INST(073x)
 
 } /* end DEF_INST(branch_on_condition_register) */
 
-DEF_INST(074x) 
+DEF_INST(074_) 
 {
     /* Branch if R1 mask bit is set and R2 is not register 0 */
     if ((inst[1] & 0x0F) != 0 && (regs->psw.cc == 1))
@@ -784,7 +784,7 @@ DEF_INST(074x)
 
 } /* end DEF_INST(branch_on_condition_register) */
 
-DEF_INST(075x) 
+DEF_INST(075_) 
 {
     /* Branch if R1 mask bit is set and R2 is not register 0 */
     if ((inst[1] & 0x0F) != 0 && (regs->psw.cc & 0x1))
@@ -813,7 +813,7 @@ DEF_INST(075x)
 
 /* 076x not optimized */
 
-DEF_INST(077x) 
+DEF_INST(077_) 
 {
     /* Branch if R1 mask bit is set and R2 is not register 0 */
     if ((inst[1] & 0x0F) != 0 && (regs->psw.cc != 0))
@@ -840,7 +840,7 @@ DEF_INST(077x)
 
 } /* end DEF_INST(branch_on_condition_register) */
 
-DEF_INST(078x) 
+DEF_INST(078_) 
 {
     /* Branch if R1 mask bit is set and R2 is not register 0 */
     if ((inst[1] & 0x0F) != 0 && (regs->psw.cc == 0))
@@ -869,7 +869,7 @@ DEF_INST(078x)
 
 /* 079x not optimized */
 
-DEF_INST(07Ax) 
+DEF_INST(07A_) 
 {
     /* Branch if R1 mask bit is set and R2 is not register 0 */
     if ((inst[1] & 0x0F) != 0 && ((regs->psw.cc & 0x1) == 0))
@@ -896,7 +896,7 @@ DEF_INST(07Ax)
 
 } /* end DEF_INST(branch_on_condition_register) */
 
-DEF_INST(07Bx) 
+DEF_INST(07B_) 
 {
     /* Branch if R1 mask bit is set and R2 is not register 0 */
     if ((inst[1] & 0x0F) != 0 && (regs->psw.cc != 1))
@@ -923,7 +923,7 @@ DEF_INST(07Bx)
 
 } /* end DEF_INST(branch_on_condition_register) */
 
-DEF_INST(07Cx) 
+DEF_INST(07C_) 
 {
     /* Branch if R1 mask bit is set and R2 is not register 0 */
     if ((inst[1] & 0x0F) != 0 && (regs->psw.cc < 2))
@@ -950,7 +950,7 @@ DEF_INST(07Cx)
 
 } /* end DEF_INST(branch_on_condition_register) */
 
-DEF_INST(07Dx) 
+DEF_INST(07D_) 
 {
     /* Branch if R1 mask bit is set and R2 is not register 0 */
     if ((inst[1] & 0x0F) != 0 && (regs->psw.cc != 2))
@@ -977,7 +977,7 @@ DEF_INST(07Dx)
 
 } /* end DEF_INST(branch_on_condition_register) */
 
-DEF_INST(07Ex) 
+DEF_INST(07E_) 
 {
     /* Branch if R1 mask bit is set and R2 is not register 0 */
     if ((inst[1] & 0x0F) != 0 && (regs->psw.cc != 3))
@@ -1004,7 +1004,7 @@ DEF_INST(07Ex)
 
 } /* end DEF_INST(branch_on_condition_register) */
 
-DEF_INST(07Fx) 
+DEF_INST(07F_) 
 {
     /* Branch if R1 mask bit is set and R2 is not register 0 */
     if ((inst[1] & 0x0F) != 0)
@@ -1036,7 +1036,7 @@ DEF_INST(07Fx)
 /*-------------------------------------------------------------------*/
 /* 42   STC   - Store Character                                 [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(store_character)
+DEF_INST(store_character) /* STC has an optimized twin */
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -1047,6 +1047,23 @@ VADR    effective_addr2;                /* Effective address         */
     /* Store rightmost byte of R1 register at operand address */
     ARCH_DEP(vstoreb) ( regs->GR_LHLCL(r1), effective_addr2, b2, regs );
 }
+
+#ifdef OPTION_OPTINST
+/*-------------------------------------------------------------------*/
+/* 42_0 STC   - Store Character                                 [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(42_0)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RX_X0(inst, regs, r1, b2, effective_addr2);
+
+    /* Store rightmost byte of R1 register at operand address */
+    ARCH_DEP(vstoreb) ( regs->GR_LHLCL(r1), effective_addr2, b2, regs );
+}
+#endif /* OPTION_OPTINST */
 
 /*-------------------------------------------------------------------*/
 /* 47   BC    - Branch on Condition                             [RX] */
@@ -1069,7 +1086,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 #ifdef OPTION_OPTINST
  /*-------------------------------------------------------------------*/
-/* 47x0 BC    - Branch on Condition                             [RX] */
+/* 47_0 BC    - Branch on Condition                             [RX] */
 /*-------------------------------------------------------------------*/
 DEF_INST(4700)
 {
@@ -1307,9 +1324,9 @@ U32     n;                              /* 32-bit operand values     */
 
 #ifdef OPTION_OPTINST
 /*-------------------------------------------------------------------*/
-/* 54x0 N     - And                                             [RX] */
+/* 54_0 N     - And                                             [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(54x0)
+DEF_INST(54_0)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -1345,9 +1362,9 @@ VADR    effective_addr2;                /* Effective address         */
 
 #ifdef OPTION_OPTINST
  /*-------------------------------------------------------------------*/
-/* 58x0 L     - Load                                            [RX] */
+/* 58_0 L     - Load                                            [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(58x0)
+DEF_INST(58_0)
 {
 int     r1;                             /* Value of R field          */        
 int     b2;                             /* Base of effective addr    */
@@ -1380,9 +1397,9 @@ VADR    effective_addr2;                /* Effective address         */
 
 #ifdef OPTION_OPTINST
  /*-------------------------------------------------------------------*/
-/* 50x0 ST    - Store                                           [RX] */
+/* 50_0 ST    - Store                                           [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(50x0)
+DEF_INST(50_0)
 {
 int     r1;                             /* Value of R field          */        
 int     b2;                             /* Base of effective addr    */
@@ -1414,9 +1431,9 @@ VADR    effective_addr2;                /* Effective address         */
 
 #ifdef OPTION_OPTINST
 /*-------------------------------------------------------------------*/
-/* 41x0 LA    - Load Address                                    [RX] */
+/* 41_0 LA    - Load Address                                    [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(41x0)
+DEF_INST(41_0)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -1446,9 +1463,9 @@ VADR    effective_addr2;                /* Effective address         */
 
 #ifdef OPTION_OPTINST
 /*-------------------------------------------------------------------*/
-/* 43x0 IC    - Insert Character                                [RX] */
+/* 43_0 IC    - Insert Character                                [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(43x0)
+DEF_INST(43_0)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -1485,9 +1502,9 @@ U32     n;                              /* 32-bit operand values     */
 
 #ifdef OPTION_OPTINST
 /*-------------------------------------------------------------------*/
-/* 5Ex0 AL    - Add Logical                                     [RX] */
+/* 5E_0 AL    - Add Logical                                     [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(5Ex0)
+DEF_INST(5E_0)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -1529,9 +1546,9 @@ U32     n;                              /* 32-bit operand values     */
 
 #ifdef OPTION_OPTINST
  /*-------------------------------------------------------------------*/
-/* 55x0 CL    - Compare Logical                                 [RX] */
+/* 55_0 CL    - Compare Logical                                 [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(55x0)
+DEF_INST(55_0)
 {
 int     r1;                             /* Value of R field          */        
 int     b2;                             /* Base of effective addr    */
@@ -1567,9 +1584,9 @@ VADR    effective_addr2;                /* Effective address         */
 
 #ifdef OPTION_OPTINST
 /*-------------------------------------------------------------------*/
-/* 48x0 LH    - Load Halfword                                   [RX] */
+/* 48_0 LH    - Load Halfword                                   [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(48x0)
+DEF_INST(48_0)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -2147,9 +2164,9 @@ U32     n;                              /* 32-bit operand values     */
 
 #ifdef OPTION_OPTINST
 /*-------------------------------------------------------------------*/
-/* 59x0 C     - Compare                                         [RX] */
+/* 59_0 C     - Compare                                         [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(59x0)
+DEF_INST(59_0)
 {
 int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
@@ -4238,7 +4255,7 @@ BYTE   *ip;                             /* -> executed instruction   */
 
 #if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
 /*-------------------------------------------------------------------*/
-/* C6x0 EXRL  - Execute Relative Long                          [RIL] */
+/* C6_0 EXRL  - Execute Relative Long                          [RIL] */
 /*-------------------------------------------------------------------*/
 DEF_INST(execute_relative_long)
 {
