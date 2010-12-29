@@ -3549,13 +3549,15 @@ DEF_INST(50_0);
 #endif /* OPTION_OPTINST */
 DEF_INST(store_character);
 #ifdef OPTION_OPTINST
-/* Optimized ST instruction */
 DEF_INST(42_0);
 #endif /* OPTION_OPTINST */
 
 /* Instructions in general2.c */
 DEF_INST(or_register);
 DEF_INST(or);
+#ifdef OPTION_OPTINST
+DEF_INST(56_0);
+#endif /* OPTION_OPTINST */
 DEF_INST(or_immediate);
 DEF_INST(or_character);
 #if defined(FEATURE_PERFORM_LOCKED_OPERATION)
@@ -3596,9 +3598,18 @@ DEF_INST(40_0);
 DEF_INST(store_multiple);
 DEF_INST(subtract_register);
 DEF_INST(subtract);
+#ifdef OPTION_OPTINST
+DEF_INST(5B_0);
+#endif /* OPTION_OPTINST */
 DEF_INST(subtract_halfword);
+#ifdef OPTION_OPTINST
+DEF_INST(4B_0);
+#endif /* OPTION_OPTINST */
 DEF_INST(subtract_logical_register);
 DEF_INST(subtract_logical);
+#ifdef OPTION_OPTINST
+DEF_INST(5F_0);
+#endif /* OPTION_OPTINST */
 DEF_INST(supervisor_call);
 DEF_INST(test_and_set);
 DEF_INST(test_under_mask);

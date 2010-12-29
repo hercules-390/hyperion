@@ -66,7 +66,7 @@ int     r1, r2;                         /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* 56   O     - Or                                              [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(or)
+DEF_INST(or) /* O has an optimized twin */
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -82,6 +82,27 @@ U32     n;                              /* 32-bit operand values     */
     regs->psw.cc = ( regs->GR_L(r1) |= n ) ? 1 : 0;
 }
 
+#ifdef OPTION_OPTINST
+/*-------------------------------------------------------------------*/
+/* 56_0 O     - Or                                              [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(56_0)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, r1, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* OR second operand with first and set condition code */
+    regs->psw.cc = ( regs->GR_L(r1) |= n ) ? 1 : 0;
+}
+
+#endif /* OPTION_OPTINST */
 
 /*-------------------------------------------------------------------*/
 /* 96   OI    - Or Immediate                                    [SI] */
@@ -1194,7 +1215,7 @@ int     r1, r2;                         /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* 5B   S     - Subtract                                        [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(subtract)
+DEF_INST(subtract) /* S has an optimized twin */
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -1217,11 +1238,38 @@ U32     n;                              /* 32-bit operand values     */
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 }
 
+#ifdef OPTION_OPTINST
+/*-------------------------------------------------------------------*/
+/* 5B_0 S     - Subtract                                        [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(5B_0)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, r1, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Subtract signed operands and set condition code */
+    regs->psw.cc =
+            sub_signed (&(regs->GR_L(r1)),
+                    regs->GR_L(r1),
+                    n);
+
+    /* Program check if fixed-point overflow */
+    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+        regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+}
+#endif /* OPTION_OPTINST */
 
 /*-------------------------------------------------------------------*/
 /* 4B   SH    - Subtract Halfword                               [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(subtract_halfword)
+DEF_INST(subtract_halfword) /* SH has an optimized twin */
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -1244,6 +1292,33 @@ U32     n;                              /* 32-bit operand values     */
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 }
 
+#ifdef OPTION_OPTINST
+/*-------------------------------------------------------------------*/
+/* 4B   SH    - Subtract Halfword                               [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(4B_0)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, r1, b2, effective_addr2);
+
+    /* Load 2 bytes from operand address */
+    n = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+
+    /* Subtract signed operands and set condition code */
+    regs->psw.cc =
+            sub_signed (&(regs->GR_L(r1)),
+                    regs->GR_L(r1),
+                    n);
+
+    /* Program check if fixed-point overflow */
+    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+        regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+}
+#endif /* OPTION_OPTINST */
 
 /*-------------------------------------------------------------------*/
 /* 1F   SLR   - Subtract Logical Register                       [RR] */
@@ -1271,7 +1346,7 @@ int     r1, r2;                         /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* 5F   SL    - Subtract Logical                                [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(subtract_logical)
+DEF_INST(subtract_logical) /* SL has an optimized twin */
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -1290,6 +1365,30 @@ U32     n;                              /* 32-bit operand values     */
                     n);
 }
 
+
+#ifdef OPTION_OPTINST
+/*-------------------------------------------------------------------*/
+/* 5F_0 SL    - Subtract Logical                                [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(5F_0)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RX_X0(inst, regs, r1, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Subtract unsigned operands and set condition code */
+    regs->psw.cc =
+            sub_logical (&(regs->GR_L(r1)),
+                    regs->GR_L(r1),
+                    n);
+}
+#endif /* OPTION_OPTINST */
 
 /*-------------------------------------------------------------------*/
 /* 0A   SVC   - Supervisor Call                                 [RR] */
