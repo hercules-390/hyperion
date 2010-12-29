@@ -3312,6 +3312,24 @@ DEF_INST(branch_and_save_and_set_mode);
 DEF_INST(branch_and_set_mode);
 #endif /*defined(FEATURE_BIMODAL_ADDRESSING)*/
 DEF_INST(branch_on_condition_register);
+#ifdef OPTION_OPTINST
+DEF_INST(070x);
+DEF_INST(071x);
+DEF_INST(072x);
+DEF_INST(073x);
+DEF_INST(074x);
+DEF_INST(075x);
+/* 076x not optimized */
+DEF_INST(077x);
+DEF_INST(078x);
+/* 079x not optimized */
+DEF_INST(07Ax);
+DEF_INST(07Bx);
+DEF_INST(07Cx);
+DEF_INST(07Dx);
+DEF_INST(07Ex);
+DEF_INST(07Fx);
+#endif /* OPTION_OPTINST */
 DEF_INST(branch_on_condition);
 #ifdef OPTION_OPTINST
 /* Optimized BC instructions */

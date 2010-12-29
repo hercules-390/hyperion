@@ -1235,6 +1235,7 @@ static zz_func v_opcode_e4xx[0x100][GEN_MAXARCH];
 
 #ifdef OPTION_OPTINST
 static zz_func optxxx0[0x100][GEN_MAXARCH]; /* Optimized zero x2 instructions */
+static zz_func opt07xx[0x10][GEN_MAXARCH]; /* BCR */
 static zz_func opt47x0[0x10][GEN_MAXARCH]; /* BC */
 static zz_func opt91sb[0x01][GEN_MAXARCH]; /* TM */
 static zz_func optA7x4[0x10][GEN_MAXARCH]; /* BRC */
@@ -2362,9 +2363,11 @@ void init_opcode_tables(void)
     /* Set optimized instructions */
     for(i = 0; i < 0x10; i++)
     {
-      replace_opcode_xxxx(arch, opt47x0[i][arch], 0x47, i << 4); /* BC */
-      replace_opcode_xxxx(arch, optA7x4[i][arch], 0xA7, (i << 4) + 0x04); /* BRC */
-      replace_opcode_xxxx(arch, optE3x0[0][arch], 0xe3, i << 4); /* jump to E3x0______xx */
+      for(j = 0; j < 0x10; j++)
+        replace_opcode_xxxx(arch, opt07xx[i][arch], 0x07, (i << 4) + j); /* BCR */
+      replace_opcode_xxxx(arch, opt47x0[i][arch], 0x47, (i << 4) + 0x0); /* BC */
+      replace_opcode_xxxx(arch, optA7x4[i][arch], 0xA7, (i << 4) + 0x4); /* BRC */
+      replace_opcode_xxxx(arch, optE3x0[0][arch], 0xe3, (i << 4) + 0x0); /* jump to E3x0______xx */
     }
     
     /* Implement optimized zero x2 instructions */
@@ -7016,6 +7019,25 @@ static zz_func optE3x0______xx[0x100][GEN_MAXARCH] = {
  /*E3FE*/   GENx___x___x___ ,
  /*E3FF*/   GENx___x___x___ };
 
+/* Optimized BCR */
+static zz_func opt07xx[0x10][GEN_MAXARCH] = {
+ /*070x*/ GENx370x390x900 (070x,RR,"BCR"),
+ /*071x*/ GENx370x390x900 (071x,RR,"BCR"),
+ /*072x*/ GENx370x390x900 (072x,RR,"BCR"),
+ /*073x*/ GENx370x390x900 (073x,RR,"BCR"),
+ /*074x*/ GENx370x390x900 (074x,RR,"BCR"),
+ /*075x*/ GENx370x390x900 (075x,RR,"BCR"),
+ /*076x*/ GENx370x390x900 (branch_on_condition_register,RR,"BCR"), /* Not optimized */
+ /*077x*/ GENx370x390x900 (077x,RR,"BCR"),
+ /*078x*/ GENx370x390x900 (078x,RR,"BCR"),
+ /*079x*/ GENx370x390x900 (branch_on_condition_register,RR,"BCR"), /* Not optimized */
+ /*07Ax*/ GENx370x390x900 (07Ax,RR,"BCR"),
+ /*07Bx*/ GENx370x390x900 (07Bx,RR,"BCR"),
+ /*07Cx*/ GENx370x390x900 (07Cx,RR,"BCR"),
+ /*07Dx*/ GENx370x390x900 (07Dx,RR,"BCR"),
+ /*07Ex*/ GENx370x390x900 (07Ex,RR,"BCR"),
+ /*07Fx*/ GENx370x390x900 (07Fx,RR,"BCR") };
+ 
 /* Optimized BC */
 static zz_func opt47x0[0x10][GEN_MAXARCH] = {
  /*4700*/ GENx370x390x900 (4700,RX,"BC"),

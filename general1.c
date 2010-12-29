@@ -620,7 +620,7 @@ VADR    newia;                          /* New instruction address   */
 /*-------------------------------------------------------------------*/
 /* 07   BCR   - Branch on Condition Register                    [RR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(branch_on_condition_register)
+DEF_INST(branch_on_condition_register) /* BCR has optimized twins */
 {
 //int   r1, r2;                         /* Values of R fields        */
 
@@ -650,6 +650,387 @@ DEF_INST(branch_on_condition_register)
     }
 
 } /* end DEF_INST(branch_on_condition_register) */
+
+#ifdef OPTION_OPTINST
+/*-------------------------------------------------------------------*/
+/* 07xx BCR   - Branch on Condition Register                    [RR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(070x) 
+{
+    INST_UPDATE_PSW(regs, 2, 0);
+    /* Perform serialization and checkpoint synchronization if
+       the mask is all ones and R2 is register 0 */
+    if ( inst[1] == 0xF0 )
+    {
+        PERFORM_SERIALIZATION (regs);
+        PERFORM_CHKPT_SYNC (regs);
+    }
+#if defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)            /*810*/
+    /* Perform serialization without checkpoint synchronization
+       the mask is B'1110' and R2 is register 0 */
+    else if (inst[1] == 0xE0)
+    {
+        PERFORM_SERIALIZATION (regs);
+    }
+#endif /*defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)*/
+
+} /* end DEF_INST(branch_on_condition_register) */
+
+DEF_INST(071x) 
+{
+    /* Branch if R1 mask bit is set and R2 is not register 0 */
+    if ((inst[1] & 0x0F) != 0 && (regs->psw.cc == 3))
+        SUCCESSFUL_BRANCH(regs, regs->GR(inst[1] & 0x0F), 2);
+    else
+    {
+        INST_UPDATE_PSW(regs, 2, 0);
+        /* Perform serialization and checkpoint synchronization if
+           the mask is all ones and R2 is register 0 */
+        if ( inst[1] == 0xF0 )
+        {
+            PERFORM_SERIALIZATION (regs);
+            PERFORM_CHKPT_SYNC (regs);
+        }
+#if defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)            /*810*/
+        /* Perform serialization without checkpoint synchronization
+           the mask is B'1110' and R2 is register 0 */
+        else if (inst[1] == 0xE0)
+        {
+            PERFORM_SERIALIZATION (regs);
+        }
+#endif /*defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)*/
+    }
+    
+} /* end DEF_INST(branch_on_condition_register) */
+
+DEF_INST(072x) 
+{
+    /* Branch if R1 mask bit is set and R2 is not register 0 */
+    if ((inst[1] & 0x0F) != 0 && (regs->psw.cc == 2))
+        SUCCESSFUL_BRANCH(regs, regs->GR(inst[1] & 0x0F), 2);
+    else
+    {
+        INST_UPDATE_PSW(regs, 2, 0);
+        /* Perform serialization and checkpoint synchronization if
+           the mask is all ones and R2 is register 0 */
+        if ( inst[1] == 0xF0 )
+        {
+            PERFORM_SERIALIZATION (regs);
+            PERFORM_CHKPT_SYNC (regs);
+        }
+#if defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)            /*810*/
+        /* Perform serialization without checkpoint synchronization
+           the mask is B'1110' and R2 is register 0 */
+        else if (inst[1] == 0xE0)
+        {
+            PERFORM_SERIALIZATION (regs);
+        }
+#endif /*defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)*/
+    }
+
+} /* end DEF_INST(branch_on_condition_register) */
+
+DEF_INST(073x) 
+{
+    /* Branch if R1 mask bit is set and R2 is not register 0 */
+    if ((inst[1] & 0x0F) != 0 && (regs->psw.cc > 1))
+        SUCCESSFUL_BRANCH(regs, regs->GR(inst[1] & 0x0F), 2);
+    else
+    {
+        INST_UPDATE_PSW(regs, 2, 0);
+        /* Perform serialization and checkpoint synchronization if
+           the mask is all ones and R2 is register 0 */
+        if ( inst[1] == 0xF0 )
+        {
+            PERFORM_SERIALIZATION (regs);
+            PERFORM_CHKPT_SYNC (regs);
+        }
+#if defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)            /*810*/
+        /* Perform serialization without checkpoint synchronization
+           the mask is B'1110' and R2 is register 0 */
+        else if (inst[1] == 0xE0)
+        {
+            PERFORM_SERIALIZATION (regs);
+        }
+#endif /*defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)*/
+    }
+
+} /* end DEF_INST(branch_on_condition_register) */
+
+DEF_INST(074x) 
+{
+    /* Branch if R1 mask bit is set and R2 is not register 0 */
+    if ((inst[1] & 0x0F) != 0 && (regs->psw.cc == 1))
+        SUCCESSFUL_BRANCH(regs, regs->GR(inst[1] & 0x0F), 2);
+    else
+    {
+        INST_UPDATE_PSW(regs, 2, 0);
+        /* Perform serialization and checkpoint synchronization if
+           the mask is all ones and R2 is register 0 */
+        if ( inst[1] == 0xF0 )
+        {
+            PERFORM_SERIALIZATION (regs);
+            PERFORM_CHKPT_SYNC (regs);
+        }
+#if defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)            /*810*/
+        /* Perform serialization without checkpoint synchronization
+           the mask is B'1110' and R2 is register 0 */
+        else if (inst[1] == 0xE0)
+        {
+            PERFORM_SERIALIZATION (regs);
+        }
+#endif /*defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)*/
+    }
+
+} /* end DEF_INST(branch_on_condition_register) */
+
+DEF_INST(075x) 
+{
+    /* Branch if R1 mask bit is set and R2 is not register 0 */
+    if ((inst[1] & 0x0F) != 0 && (regs->psw.cc & 0x1))
+        SUCCESSFUL_BRANCH(regs, regs->GR(inst[1] & 0x0F), 2);
+    else
+    {
+        INST_UPDATE_PSW(regs, 2, 0);
+        /* Perform serialization and checkpoint synchronization if
+           the mask is all ones and R2 is register 0 */
+        if ( inst[1] == 0xF0 )
+        {
+            PERFORM_SERIALIZATION (regs);
+            PERFORM_CHKPT_SYNC (regs);
+        }
+#if defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)            /*810*/
+        /* Perform serialization without checkpoint synchronization
+           the mask is B'1110' and R2 is register 0 */
+        else if (inst[1] == 0xE0)
+        {
+            PERFORM_SERIALIZATION (regs);
+        }
+#endif /*defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)*/
+    }
+
+} /* end DEF_INST(branch_on_condition_register) */
+
+/* 076x not optimized */
+
+DEF_INST(077x) 
+{
+    /* Branch if R1 mask bit is set and R2 is not register 0 */
+    if ((inst[1] & 0x0F) != 0 && (regs->psw.cc != 0))
+        SUCCESSFUL_BRANCH(regs, regs->GR(inst[1] & 0x0F), 2);
+    else
+    {
+        INST_UPDATE_PSW(regs, 2, 0);
+        /* Perform serialization and checkpoint synchronization if
+           the mask is all ones and R2 is register 0 */
+        if ( inst[1] == 0xF0 )
+        {
+            PERFORM_SERIALIZATION (regs);
+            PERFORM_CHKPT_SYNC (regs);
+        }
+#if defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)            /*810*/
+        /* Perform serialization without checkpoint synchronization
+           the mask is B'1110' and R2 is register 0 */
+        else if (inst[1] == 0xE0)
+        {
+            PERFORM_SERIALIZATION (regs);
+        }
+#endif /*defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)*/
+    }
+
+} /* end DEF_INST(branch_on_condition_register) */
+
+DEF_INST(078x) 
+{
+    /* Branch if R1 mask bit is set and R2 is not register 0 */
+    if ((inst[1] & 0x0F) != 0 && (regs->psw.cc == 0))
+        SUCCESSFUL_BRANCH(regs, regs->GR(inst[1] & 0x0F), 2);
+    else
+    {
+        INST_UPDATE_PSW(regs, 2, 0);
+        /* Perform serialization and checkpoint synchronization if
+           the mask is all ones and R2 is register 0 */
+        if ( inst[1] == 0xF0 )
+        {
+            PERFORM_SERIALIZATION (regs);
+            PERFORM_CHKPT_SYNC (regs);
+        }
+#if defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)            /*810*/
+        /* Perform serialization without checkpoint synchronization
+           the mask is B'1110' and R2 is register 0 */
+        else if (inst[1] == 0xE0)
+        {
+            PERFORM_SERIALIZATION (regs);
+        }
+#endif /*defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)*/
+    }
+
+} /* end DEF_INST(branch_on_condition_register) */
+
+/* 079x not optimized */
+
+DEF_INST(07Ax) 
+{
+    /* Branch if R1 mask bit is set and R2 is not register 0 */
+    if ((inst[1] & 0x0F) != 0 && ((regs->psw.cc & 0x1) == 0))
+        SUCCESSFUL_BRANCH(regs, regs->GR(inst[1] & 0x0F), 2);
+    else
+    {
+        INST_UPDATE_PSW(regs, 2, 0);
+        /* Perform serialization and checkpoint synchronization if
+           the mask is all ones and R2 is register 0 */
+        if ( inst[1] == 0xF0 )
+        {
+            PERFORM_SERIALIZATION (regs);
+            PERFORM_CHKPT_SYNC (regs);
+        }
+#if defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)            /*810*/
+        /* Perform serialization without checkpoint synchronization
+           the mask is B'1110' and R2 is register 0 */
+        else if (inst[1] == 0xE0)
+        {
+            PERFORM_SERIALIZATION (regs);
+        }
+#endif /*defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)*/
+    }
+
+} /* end DEF_INST(branch_on_condition_register) */
+
+DEF_INST(07Bx) 
+{
+    /* Branch if R1 mask bit is set and R2 is not register 0 */
+    if ((inst[1] & 0x0F) != 0 && (regs->psw.cc != 1))
+        SUCCESSFUL_BRANCH(regs, regs->GR(inst[1] & 0x0F), 2);
+    else
+    {
+        INST_UPDATE_PSW(regs, 2, 0);
+        /* Perform serialization and checkpoint synchronization if
+           the mask is all ones and R2 is register 0 */
+        if ( inst[1] == 0xF0 )
+        {
+            PERFORM_SERIALIZATION (regs);
+            PERFORM_CHKPT_SYNC (regs);
+        }
+#if defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)            /*810*/
+        /* Perform serialization without checkpoint synchronization
+           the mask is B'1110' and R2 is register 0 */
+        else if (inst[1] == 0xE0)
+        {
+            PERFORM_SERIALIZATION (regs);
+        }
+#endif /*defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)*/
+    }
+
+} /* end DEF_INST(branch_on_condition_register) */
+
+DEF_INST(07Cx) 
+{
+    /* Branch if R1 mask bit is set and R2 is not register 0 */
+    if ((inst[1] & 0x0F) != 0 && (regs->psw.cc < 2))
+        SUCCESSFUL_BRANCH(regs, regs->GR(inst[1] & 0x0F), 2);
+    else
+    {
+        INST_UPDATE_PSW(regs, 2, 0);
+        /* Perform serialization and checkpoint synchronization if
+           the mask is all ones and R2 is register 0 */
+        if ( inst[1] == 0xF0 )
+        {
+            PERFORM_SERIALIZATION (regs);
+            PERFORM_CHKPT_SYNC (regs);
+        }
+#if defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)            /*810*/
+        /* Perform serialization without checkpoint synchronization
+           the mask is B'1110' and R2 is register 0 */
+        else if (inst[1] == 0xE0)
+        {
+            PERFORM_SERIALIZATION (regs);
+        }
+#endif /*defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)*/
+    }
+
+} /* end DEF_INST(branch_on_condition_register) */
+
+DEF_INST(07Dx) 
+{
+    /* Branch if R1 mask bit is set and R2 is not register 0 */
+    if ((inst[1] & 0x0F) != 0 && (regs->psw.cc != 2))
+        SUCCESSFUL_BRANCH(regs, regs->GR(inst[1] & 0x0F), 2);
+    else
+    {
+        INST_UPDATE_PSW(regs, 2, 0);
+        /* Perform serialization and checkpoint synchronization if
+           the mask is all ones and R2 is register 0 */
+        if ( inst[1] == 0xF0 )
+        {
+            PERFORM_SERIALIZATION (regs);
+            PERFORM_CHKPT_SYNC (regs);
+        }
+#if defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)            /*810*/
+        /* Perform serialization without checkpoint synchronization
+           the mask is B'1110' and R2 is register 0 */
+        else if (inst[1] == 0xE0)
+        {
+            PERFORM_SERIALIZATION (regs);
+        }
+#endif /*defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)*/
+    }
+
+} /* end DEF_INST(branch_on_condition_register) */
+
+DEF_INST(07Ex) 
+{
+    /* Branch if R1 mask bit is set and R2 is not register 0 */
+    if ((inst[1] & 0x0F) != 0 && (regs->psw.cc != 3))
+        SUCCESSFUL_BRANCH(regs, regs->GR(inst[1] & 0x0F), 2);
+    else
+    {
+        INST_UPDATE_PSW(regs, 2, 0);
+        /* Perform serialization and checkpoint synchronization if
+           the mask is all ones and R2 is register 0 */
+        if ( inst[1] == 0xF0 )
+        {
+            PERFORM_SERIALIZATION (regs);
+            PERFORM_CHKPT_SYNC (regs);
+        }
+#if defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)            /*810*/
+        /* Perform serialization without checkpoint synchronization
+           the mask is B'1110' and R2 is register 0 */
+        else if (inst[1] == 0xE0)
+        {
+            PERFORM_SERIALIZATION (regs);
+        }
+#endif /*defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)*/
+    }
+
+} /* end DEF_INST(branch_on_condition_register) */
+
+DEF_INST(07Fx) 
+{
+    /* Branch if R1 mask bit is set and R2 is not register 0 */
+    if ((inst[1] & 0x0F) != 0)
+        SUCCESSFUL_BRANCH(regs, regs->GR(inst[1] & 0x0F), 2);
+    else
+    {
+        INST_UPDATE_PSW(regs, 2, 0);
+        /* Perform serialization and checkpoint synchronization if
+           the mask is all ones and R2 is register 0 */
+        if ( inst[1] == 0xF0 )
+        {
+            PERFORM_SERIALIZATION (regs);
+            PERFORM_CHKPT_SYNC (regs);
+        }
+#if defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)            /*810*/
+        /* Perform serialization without checkpoint synchronization
+           the mask is B'1110' and R2 is register 0 */
+        else if (inst[1] == 0xE0)
+        {
+            PERFORM_SERIALIZATION (regs);
+        }
+#endif /*defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)*/
+    }
+
+} /* end DEF_INST(branch_on_condition_register) */
+#endif /* OPTION_OPTINST */
 
 
 /*-------------------------------------------------------------------*/
