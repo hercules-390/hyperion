@@ -19,6 +19,13 @@
 #define OSA_WRITE_DEVICE        1
 #define OSA_DATA_DEVICE         2
 
+
+/*-------------------------------------------------------------------*/
+/* OSA Port Number                                                   */
+/*-------------------------------------------------------------------*/
+#define OSA_PORTNO 0
+
+
 #define _IS_OSA_TYPE_DEVICE(_dev, _type) \
     ((_dev)->member == (_type))
 

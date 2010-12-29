@@ -131,6 +131,23 @@ static const char *osa_devtyp[] = { "OSA Read", "OSA Write", "OSA Data" };
 
 
 /*-------------------------------------------------------------------*/
+/* Adapter Command Routine                                           */
+/*-------------------------------------------------------------------*/
+static int osa_adaptercmd(DEVBLK *dev, void *request)
+{
+OSA_GRP *osa_grp = (OSA_GRP*)dev->group->grp_data;
+
+    UNREFERENCED(request);
+
+// ZZ Process adapter commands here
+// ZZ Response needs to be stored at osa_grp->idxrdbuff
+// ZZ The size of the response buffer os osa_grp->idxrdbufn
+
+    return 122; // ZZ the actual reponse size needs to be returned
+}
+
+
+/*-------------------------------------------------------------------*/
 /* Device Response Routine                                           */
 /*-------------------------------------------------------------------*/
 static int osa_devrsp(DEVBLK *dev, OSA_IEAR *iear)
@@ -151,13 +168,16 @@ static int osa_devrsp(DEVBLK *dev, OSA_IEAR *iear)
             break;
 
         default:
-            logmsg(_("QETH: IDX state for device %2.2X reset\n"),dev->devnum);
+            logmsg(_("QETH: IDX Activate Error for %s Device %4.4x\n"),osa_devtyp[dev->member],dev->devnum);
             dev->qidxstate = OSA_IDX_STATE_INITIAL;
             break;
 
         }
+        break;
 
     default:
+        logmsg(_("QETH: IDX State for %s Device %4.4x reset\n"),osa_devtyp[dev->member],dev->devnum);
+        dev->qidxstate = OSA_IDX_STATE_INITIAL;
         break;
 
     }
@@ -166,44 +186,66 @@ static int osa_devrsp(DEVBLK *dev, OSA_IEAR *iear)
 }
 
 
-
 /*-------------------------------------------------------------------*/
 /* Device Command Routine                                            */
 /*-------------------------------------------------------------------*/
 static int osa_devcmd(DEVBLK *dev, OSA_IEA *iea)
 {
 U16 reqtype;
+U16 datadev;
 
     FETCH_HW(reqtype, iea->type);
 
     switch(reqtype) {
 
     case IDX_ACT_TYPE_READ:
-        if(IS_OSA_READ_DEVICE(dev))
+        FETCH_HW(datadev, iea->datadev);
+        if(!IS_OSA_READ_DEVICE(dev))
         {
-            dev->qidxstate = OSA_IDX_STATE_ACTPEND;
+            logmsg(_("QETH: IDX ACTIVATE READ Invalid for %s Device %4.4x\n"),osa_devtyp[dev->member],dev->devnum); 
+            dev->qidxstate = OSA_IDX_STATE_ERRPEND;
+        }
+        else if((iea->port & ~IDX_ACT_PORT) != OSA_PORTNO)
+        {
+            logmsg(_("QETH: IDX ACTIVATE READ Invalid OSA Port %d for %s Device %4.4x\n"),(iea->port & ~IDX_ACT_PORT),osa_devtyp[dev->member],dev->devnum); 
+            dev->qidxstate = OSA_IDX_STATE_ERRPEND;
+        }
+        else if(datadev != dev->group->memdev[OSA_DATA_DEVICE]->devnum)
+        {
+            logmsg(_("QETH: IDX ACTIVATE READ Invalid OSA Data Device %d for %s Device %4.4x\n"),datadev,osa_devtyp[dev->member],dev->devnum); 
+            dev->qidxstate = OSA_IDX_STATE_ERRPEND;
         }
         else
         {
-            logmsg(_("QETH: IDX ACTIVATE READ Invalid for %s device %2.2X\n"),osa_devtyp[dev->member],dev->devnum); 
-            dev->qidxstate = OSA_IDX_STATE_ERRPEND;
+            dev->qidxstate = OSA_IDX_STATE_ACTPEND;
         }
         break;
 
     case IDX_ACT_TYPE_WRITE:
-        if(IS_OSA_WRITE_DEVICE(dev))
+        FETCH_HW(datadev, iea->datadev);
+        if(!IS_OSA_WRITE_DEVICE(dev))
         {
-            dev->qidxstate = OSA_IDX_STATE_ACTPEND;
+            logmsg(_("QETH: IDX ACTIVATE WRITE Invalid for %s Device %4.4x\n"),osa_devtyp[dev->member],dev->devnum); 
+            dev->qidxstate = OSA_IDX_STATE_ERRPEND;
+        }
+        else if((iea->port & ~IDX_ACT_PORT) != OSA_PORTNO)
+        {
+            logmsg(_("QETH: IDX ACTIVATE WRITE Invalid OSA Port %d for %s Device %4.4x\n"),(iea->port & ~IDX_ACT_PORT),osa_devtyp[dev->member],dev->devnum); 
+            dev->qidxstate = OSA_IDX_STATE_ERRPEND;
+        }
+        else if(datadev != dev->group->memdev[OSA_DATA_DEVICE]->devnum)
+        {
+            logmsg(_("QETH: IDX ACTIVATE WRITE Invalid OSA Data Device %d for %s Device %4.4x\n"),datadev,osa_devtyp[dev->member],dev->devnum); 
+            dev->qidxstate = OSA_IDX_STATE_ERRPEND;
         }
         else
         {
-            logmsg(_("QETH: IDX ACTIVATE WRITE Invalid for %s device %2.2X\n"),osa_devtyp[dev->member],dev->devnum); 
-            dev->qidxstate = OSA_IDX_STATE_ERRPEND;
+            dev->qidxstate = OSA_IDX_STATE_ACTPEND;
         }
         break;
 
     default:
-        logmsg(_("QETH: IDX ACTIVATE invalid request %2.2X for %s device %2.2X\n"),reqtype,osa_devtyp[dev->member],dev->devnum); 
+        logmsg(_("QETH: IDX ACTIVATE Invalid Request %4.4x for %s device %4.4x\n"),reqtype,osa_devtyp[dev->member],dev->devnum); 
         dev->qidxstate = OSA_IDX_STATE_ERRPEND;
         break;
     }
@@ -351,6 +393,7 @@ int     num;                            /* Number of bytes to move   */
     /* Process depending on CCW opcode */
     switch (code) {
 
+
     case 0x01:
     /*---------------------------------------------------------------*/
     /* WRITE                                                         */
@@ -368,7 +411,7 @@ logmsg(_("Write dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
             if(IS_OSA_WRITE_DEVICE(dev) 
               && (dev->qidxstate == OSA_IDX_STATE_ACTIVE)
               && (dev->group->memdev[OSA_READ_DEVICE]->qidxstate == OSA_IDX_STATE_ACTIVE))
-            osa_grp->idxrdretn = count;
+            osa_grp->idxrdretn = osa_adaptercmd(dev, (void*)iobuf);
             signal_condition(&dev->group->memdev[OSA_READ_DEVICE]->qcond);
         }
             
@@ -382,10 +425,11 @@ logmsg(_("Write dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
         break;
     }
 
-    case 0x02:
+
     /*---------------------------------------------------------------*/
     /* READ                                                          */
     /*---------------------------------------------------------------*/
+    case 0x02:
     {
 logmsg(_("Read dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
 
@@ -428,6 +472,7 @@ logmsg(_("Read dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
         break;
     }
 
+
     case 0x03:
     /*---------------------------------------------------------------*/
     /* CONTROL NO-OPERATION                                          */
@@ -436,6 +481,7 @@ logmsg(_("NOP dev(%4.4x)\n"),dev->devnum);
         *residual = 0;
         *unitstat = CSW_CE | CSW_DE;
         break;
+
 
     case 0x04:
     /*---------------------------------------------------------------*/
@@ -457,6 +503,7 @@ logmsg(_("Sense dev(%4.4x)\n"),dev->devnum);
         *unitstat = CSW_CE | CSW_DE;
         break;
 
+
     case 0xE4:
     /*---------------------------------------------------------------*/
     /* SENSE ID                                                      */
@@ -474,6 +521,7 @@ logmsg(_("Sense ID dev(%4.4x)\n"),dev->devnum);
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
         break;
+
 
     case OSA_RCD:
     /*---------------------------------------------------------------*/
@@ -530,6 +578,7 @@ logmsg(_("Establish Queues dev(%4.4x)\n"),dev->devnum);
         break;
     }
 
+
     case OSA_AQ:
     /*---------------------------------------------------------------*/
     /* ACTIVATE QUEUES                                               */
@@ -562,6 +611,7 @@ logmsg(_("Activate Queues dev(%4.4x) Start\n"),dev->devnum);
 
 logmsg(_("Activate Queues dev(%4.4x) End\n"),dev->devnum);
         break;
+
 
     default:
     /*---------------------------------------------------------------*/
