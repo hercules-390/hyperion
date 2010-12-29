@@ -824,6 +824,7 @@ DEF_INST(07E_)
 DEF_INST(07E0)
 {
     /* Optimized for cases when r2 == 0 */
+    UNREFERENCED(inst);
     INST_UPDATE_PSW(regs, 2, 0);
     /* Perform serialization and checkpoint synchronization if
        the mask is all ones and R2 is register 0 */
