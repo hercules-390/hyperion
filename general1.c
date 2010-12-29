@@ -802,8 +802,9 @@ DEF_INST(07D_)
 
 DEF_INST(07E_) 
 {
+    /* Optimized for cases when r2 != 0 */
     /* Branch if R1 mask bit is set and R2 is not register 0 */
-    if ((inst[1] & 0x0F) != 0 && (regs->psw.cc != 3))
+    if (regs->psw.cc != 3)
         SUCCESSFUL_BRANCH(regs, regs->GR(inst[1] & 0x0F), 2);
     else
     {
@@ -814,30 +815,46 @@ DEF_INST(07E_)
 #if defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)            /*810*/
         /* Perform serialization without checkpoint synchronization
            the mask is B'1110' and R2 is register 0 */
-        if (inst[1] == 0xE0)
-        {
-            PERFORM_SERIALIZATION (regs);
-        }
+        PERFORM_SERIALIZATION (regs);
 #endif /*defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)*/
     }
 
 } /* end DEF_INST(branch_on_condition_register) */
 
+DEF_INST(07E0)
+{
+    /* Optimized for cases when r2 == 0 */
+    INST_UPDATE_PSW(regs, 2, 0);
+    /* Perform serialization and checkpoint synchronization if
+       the mask is all ones and R2 is register 0 */
+
+#if defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)            /*810*/
+    /* Perform serialization without checkpoint synchronization
+       the mask is B'1110' and R2 is register 0 */
+    PERFORM_SERIALIZATION (regs);
+#endif /*defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)*/
+}
+
 DEF_INST(07F_) 
 {
-    /* Branch if R1 mask bit is set and R2 is not register 0 */
-    if ((inst[1] & 0x0F) != 0)
-        SUCCESSFUL_BRANCH(regs, regs->GR(inst[1] & 0x0F), 2);
-    else
-    {
-        INST_UPDATE_PSW(regs, 2, 0);
-        /* Perform serialization and checkpoint synchronization if
-           the mask is all ones and R2 is register 0 */
-        PERFORM_SERIALIZATION (regs);
-        PERFORM_CHKPT_SYNC (regs);
-    }
+    /* Optimized for cases when r2 != 0 */
+    UNREFERENCED(inst);
+    SUCCESSFUL_BRANCH(regs, regs->GR(inst[1] & 0x0F), 2);
 
 } /* end DEF_INST(branch_on_condition_register) */
+
+DEF_INST(07F0)
+{
+    /* Optimized for cases when r2 == 0 */
+    UNREFERENCED(inst);
+    INST_UPDATE_PSW(regs, 2, 0);
+    /* Perform serialization and checkpoint synchronization if
+    the mask is all ones and R2 is register 0 */
+    PERFORM_SERIALIZATION (regs);
+    PERFORM_CHKPT_SYNC (regs);
+
+} /* end DEF_INST(branch_on_condition_register) */
+
 #endif /* OPTION_OPTINST */
 
 

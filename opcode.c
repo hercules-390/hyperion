@@ -1235,7 +1235,7 @@ static zz_func v_opcode_e4xx[0x100][GEN_MAXARCH];
 
 #ifdef OPTION_OPTINST
 static zz_func optxx_0[0x100][GEN_MAXARCH]; /* Optimized zero x2 instructions */
-static zz_func opt07x_[0x10][GEN_MAXARCH]; /* BCR */
+static zz_func opt07x_[0x12][GEN_MAXARCH]; /* BCR */
 static zz_func opt47x0[0x10][GEN_MAXARCH]; /* BC */
 static zz_func opt91sb[0x01][GEN_MAXARCH]; /* TM */
 static zz_func optA7x4[0x10][GEN_MAXARCH]; /* BRC */
@@ -2369,6 +2369,8 @@ void init_opcode_tables(void)
       replace_opcode_xxxx(arch, optA7x4[i][arch], 0xA7, (i << 4) + 0x4); /* BRC */
       replace_opcode_xxxx(arch, optE3_0[0][arch], 0xe3, (i << 4) + 0x0); /* jump to E3_0______xx */
     }
+    replace_opcode_xxxx(arch, opt07x_[0x10][arch], 0x07, 0xe0);
+    replace_opcode_xxxx(arch, opt07x_[0x11][arch], 0x07, 0xf0);
     
     /* Implement optimized zero x2 instructions */
     for(j = 0; j < 0x100; j++)
@@ -7020,7 +7022,7 @@ static zz_func optE3_0______xx[0x100][GEN_MAXARCH] = {
  /*E3FF*/   GENx___x___x___ };
 
 /* Optimized BCR */
-static zz_func opt07x_[0x10][GEN_MAXARCH] = {
+static zz_func opt07x_[0x12][GEN_MAXARCH] = {
  /*070_*/ GENx370x390x900 (070_,RR,"BCR"),
  /*071_*/ GENx370x390x900 (071_,RR,"BCR"),
  /*072_*/ GENx370x390x900 (072_,RR,"BCR"),
@@ -7036,8 +7038,10 @@ static zz_func opt07x_[0x10][GEN_MAXARCH] = {
  /*07C_*/ GENx370x390x900 (07C_,RR,"BCR"),
  /*07D_*/ GENx370x390x900 (07D_,RR,"BCR"),
  /*07E_*/ GENx370x390x900 (07E_,RR,"BCR"),
- /*07F_*/ GENx370x390x900 (07F_,RR,"BCR") };
- 
+ /*07F_*/ GENx370x390x900 (07F_,RR,"BCR"),
+ /*07E0*/ GENx370x390x900 (07E0,RR,"BCR"),
+ /*07F0*/ GENx370x390x900 (07F0,RR,"BCR") };
+
 /* Optimized BC */
 static zz_func opt47x0[0x10][GEN_MAXARCH] = {
  /*4700*/ GENx370x390x900 (4700,RX,"BC"),
@@ -7058,7 +7062,7 @@ static zz_func opt47x0[0x10][GEN_MAXARCH] = {
  /*47F0*/ GENx370x390x900 (47F0,RX,"BC") };
 
 static zz_func opt91sb[0x1][GEN_MAXARCH] = {
- /*91sb*/ GENx370x390x900 (91sb,SI,"TM")  };
+ /*91sb*/ GENx370x390x900 (91sb,SI,"TM") };
 
 /* Optimized BRC */
 static zz_func optA7x4[0x10][GEN_MAXARCH] = {
