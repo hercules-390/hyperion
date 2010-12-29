@@ -160,7 +160,7 @@ typedef struct _OSA_IEAR {
 #define IDX_RSP_CAUSE_INUSE     0x19
 /*00A*/ BYTE    resv010;        /*                                   */
 /*00B*/ BYTE    flags;          /* Flags                             */
-#define IDX_RSP_FLAGS_PORTREQ   0x80
+#define IDX_RSP_FLAGS_NOPORTREQ 0x80
 /*00C*/ FWORD   token;          /* Issues rm_r token                 */
 /*010*/ HWORD   flevel;         /* Funtion level                     */
 /*012*/ FWORD   uclevel;        /* Microcode level                   */

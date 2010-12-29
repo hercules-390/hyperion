@@ -163,6 +163,7 @@ static int osa_devrsp(DEVBLK *dev, OSA_IEAR *iear)
         case OSA_READ_DEVICE:
         case OSA_WRITE_DEVICE:
             iear->resp = IDX_RSP_RESP_OK;
+            iear->flags = IDX_RSP_FLAGS_NOPORTREQ;
             STORE_HW(iear->flevel, 0x0201);
             dev->qidxstate = OSA_IDX_STATE_ACTIVE;
             break;
