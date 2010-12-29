@@ -1316,6 +1316,8 @@ do { \
         RX_X0_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, 4, 4)
 #define RX0_X0(_inst, _regs, _r1, _b2, _effective_addr2) \
         RX_X0_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, 4, 0)
+#define RX_B_X0(_inst, _regs, _r1, _b2, _effective_addr2) \
+        RX_X0_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, 0, 0)
 
 #define RX_X0_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc) \
         { \
@@ -3290,7 +3292,13 @@ DEF_INST(store_float_short_y);
 /* Instructions in general1.c */
 DEF_INST(add_register);
 DEF_INST(add);
+#ifdef OPTION_OPTINST
+DEF_INST(5A_0);
+#endif /* OPTION_OPTINST */
 DEF_INST(add_halfword);
+#ifdef OPTION_OPTINST
+DEF_INST(4A_0);
+#endif /* OPTION_OPTINST */
 DEF_INST(add_logical_register);
 DEF_INST(add_logical);
 #ifdef OPTION_OPTINST
@@ -3305,8 +3313,14 @@ DEF_INST(and_immediate);
 DEF_INST(and_character);
 DEF_INST(branch_and_link_register);
 DEF_INST(branch_and_link);
+#ifdef OPTION_OPTINST
+DEF_INST(45_0);
+#endif /* OPTION_OPTINST */
 DEF_INST(branch_and_save_register);
 DEF_INST(branch_and_save);
+#ifdef OPTION_OPTINST
+DEF_INST(4D_0);
+#endif /* OPTION_OPTINST */
 #if defined(FEATURE_BIMODAL_ADDRESSING)
 DEF_INST(branch_and_save_and_set_mode);
 DEF_INST(branch_and_set_mode);
@@ -3354,6 +3368,9 @@ DEF_INST(47F0);
 #endif /* OPTION_OPTINST */
 DEF_INST(branch_on_count_register);
 DEF_INST(branch_on_count);
+#ifdef OPTION_OPTINST
+DEF_INST(46_0);
+#endif /* OPTION_OPTINST */
 DEF_INST(branch_on_index_high);
 DEF_INST(branch_on_index_low_or_equal);
 #if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
@@ -3397,10 +3414,12 @@ DEF_INST(compare_double_and_swap);
 DEF_INST(compare_and_swap_and_store);
 #endif /*defined(FEATURE_COMPARE_AND_SWAP_AND_STORE)*/
 DEF_INST(compare_halfword);
+#ifdef OPTION_OPTINST
+DEF_INST(49_0);
+#endif /* OPTION_OPTINST */
 DEF_INST(compare_logical_register);
 DEF_INST(compare_logical);
 #ifdef OPTION_OPTINST
-/* Optimized CL instruction */
 DEF_INST(55_0);
 #endif /* OPTION_OPTINST */
 DEF_INST(compare_logical_immediate);
@@ -3424,18 +3443,33 @@ DEF_INST(convert_utf32_to_utf16);
 DEF_INST(convert_utf32_to_utf8);
 DEF_INST(convert_utf8_to_utf32);
 DEF_INST(convert_to_binary);
+#ifdef OPTION_OPTINST
+DEF_INST(4F_0);
+#endif /* OPTION_OPTINST */
 DEF_INST(convert_to_decimal);
+#ifdef OPTION_OPTINST
+DEF_INST(4E_0);
+#endif /* OPTION_OPTINST */
 #endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_3)*/
 #if defined(FEATURE_ACCESS_REGISTERS)
 DEF_INST(copy_access);
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 DEF_INST(divide_register);
 DEF_INST(divide);
+#ifdef OPTION_OPTINST
+DEF_INST(5D_0);
+#endif /* OPTION_OPTINST */
 DEF_INST(exclusive_or_register);
 DEF_INST(exclusive_or);
+#ifdef OPTION_OPTINST
+DEF_INST(57_0);
+#endif /* OPTION_OPTINST */
 DEF_INST(exclusive_or_immediate);
 DEF_INST(exclusive_or_character);
 DEF_INST(execute);
+#ifdef OPTION_OPTINST
+DEF_INST(44_0);
+#endif /* OPTION_OPTINST */
 #if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
 DEF_INST(execute_relative_long);                                /*208*/
 #endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
@@ -3462,6 +3496,9 @@ DEF_INST(load_address);
 DEF_INST(41_0);
 #endif /* OPTION_OPTINST */
 DEF_INST(load_address_extended);
+#ifdef OPTION_OPTINST
+DEF_INST(51_0);
+#endif /* OPTION_OPTINST */
 DEF_INST(load_and_test_register);
 DEF_INST(load_complement_register);
 DEF_INST(load_halfword);
@@ -3475,6 +3512,9 @@ DEF_INST(compare_halfword_immediate);
 DEF_INST(multiply_halfword_immediate);
 DEF_INST(multiply_single_register);
 DEF_INST(multiply_single);
+#ifdef OPTION_OPTINST
+DEF_INST(71_0);
+#endif /* OPTION_OPTINST */
 #endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
 DEF_INST(load_multiple);
 DEF_INST(load_negative_register);
@@ -3495,7 +3535,13 @@ DEF_INST(move_with_offset);
 DEF_INST(move_zones);
 DEF_INST(multiply_register);
 DEF_INST(multiply);
+#ifdef OPTION_OPTINST
+DEF_INST(5C_0);
+#endif /* OPTION_OPTINST */
 DEF_INST(multiply_halfword);
+#ifdef OPTION_OPTINST
+DEF_INST(4C_0);
+#endif /* OPTION_OPTINST */
 DEF_INST(store);
 #ifdef OPTION_OPTINST
 /* Optimized ST instruction */
