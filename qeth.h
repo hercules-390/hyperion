@@ -52,6 +52,7 @@ typedef struct _OSA_GRP {
     void *idxrdbuff;            /* Read buffer pointer               */
     int   idxrdbufn;            /* Read buffer size                  */
     int   idxrdretn;            /* Read return size                  */
+    char *tuntap;               /* Pathname of TUNTAP device         */
     } OSA_GRP;
 
 
@@ -113,13 +114,21 @@ typedef struct _OSA_QDR {
 
 
 /*-------------------------------------------------------------------*/
-/* Identification Exchange Activate                                  */
+/* Header for OSA command frames                                     */
 /*-------------------------------------------------------------------*/
-typedef struct _OSA_IEA {
+typedef struct _OSA_HDR {
 /*000*/ HWORD   resv000;        /*                                   */
 /*002*/ HWORD   ddc;            /* Device Directed Command           */
 #define IDX_ACT_DDC     0x8000
-/*004*/ FWORD   thsn;           /* Thansport Header Sequence Number  */
+/*004*/ FWORD   thsn;           /* Transport Header Sequence Number  */
+    } OSA_HDR;
+
+
+/*-------------------------------------------------------------------*/
+/* Identification Exchange Activate                                  */
+/*-------------------------------------------------------------------*/
+typedef struct _OSA_IEA {
+/*000*/ OSA_HDR hdr;
 /*008*/ HWORD   type;           /* IDX_ACT type (read or write)      */
 #define IDX_ACT_TYPE_READ       0x1901
 #define IDX_ACT_TYPE_WRITE      0x1501
@@ -133,8 +142,8 @@ typedef struct _OSA_IEA {
 #define IDX_ACT_FLEVEL_READ     0x0000
 #define IDX_ACT_FLEVEL_WRITE    0xFFFF
 /*012*/ FWORD   uclevel;        /* Microcode level                   */
-/*016*/ BYTE    hello[8];       /* EBCDIC CL8'HELLO'                 */
-#define IDX_ACT_HELLO   0xC8C1D3D3D6D3C540ULL
+/*016*/ BYTE    portname[8];    /* Portname                          */
+#define IDX_ACT_PORTNAME_HELLO  0xC8C1D3D3D6D3C540ULL
 /*01E*/ HWORD   datadev;        /* Data Device Number                */
 /*020*/ BYTE    ddcua;          /* Data Device Control Unit Address  */
 /*021*/ BYTE    ddua;           /* Data Device Unit Address          */
@@ -165,4 +174,12 @@ typedef struct _OSA_IEAR {
 /*010*/ HWORD   flevel;         /* Funtion level                     */
 /*012*/ FWORD   uclevel;        /* Microcode level                   */
     } OSA_IEAR;
+
+
+/*-------------------------------------------------------------------*/
+/* Default pathname of the TUNTAP adapter                            */
+/*-------------------------------------------------------------------*/
+#define TUNTAP_NAME "/dev/net/tun"
+
+
 #endif /*!defined(_QETH_H)*/

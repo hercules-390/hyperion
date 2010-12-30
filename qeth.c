@@ -133,11 +133,12 @@ static const char *osa_devtyp[] = { "OSA Read", "OSA Write", "OSA Data" };
 /*-------------------------------------------------------------------*/
 /* Adapter Command Routine                                           */
 /*-------------------------------------------------------------------*/
-static int osa_adaptercmd(DEVBLK *dev, void *request)
+static int osa_adapter_cmd(DEVBLK *dev, void *request)
 {
 OSA_GRP *osa_grp = (OSA_GRP*)dev->group->grp_data;
 
     UNREFERENCED(request);
+    UNREFERENCED(osa_grp);
 
 // ZZ Process adapter commands here
 // ZZ Response needs to be stored at osa_grp->idxrdbuff
@@ -150,7 +151,7 @@ OSA_GRP *osa_grp = (OSA_GRP*)dev->group->grp_data;
 /*-------------------------------------------------------------------*/
 /* Device Response Routine                                           */
 /*-------------------------------------------------------------------*/
-static int osa_devrsp(DEVBLK *dev, OSA_IEAR *iear)
+static int osa_device_rsp(DEVBLK *dev, OSA_IEAR *iear)
 {
     memset(iear, 0x00, sizeof(OSA_IEAR));
 
@@ -190,7 +191,7 @@ static int osa_devrsp(DEVBLK *dev, OSA_IEAR *iear)
 /*-------------------------------------------------------------------*/
 /* Device Command Routine                                            */
 /*-------------------------------------------------------------------*/
-static int osa_devcmd(DEVBLK *dev, OSA_IEA *iea)
+static int osa_device_cmd(DEVBLK *dev, OSA_IEA *iea)
 {
 U16 reqtype;
 U16 datadev;
@@ -280,8 +281,8 @@ logmsg(_("QETH: dev(%4.4x) Halt Device\n"),dev->devnum);
 /*-------------------------------------------------------------------*/
 static int qeth_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
-UNREFERENCED(argc);
-UNREFERENCED(argv);
+OSA_GRP *osa_grp;
+int grouped;
 
 logmsg(_("QETH: dev(%4.4x) experimental driver\n"),dev->devnum);
 
@@ -295,8 +296,16 @@ logmsg(_("senseidnum=%d\n"),dev->numdevid);
     
     dev->pmcw.flag4 |= PMCW4_Q;
 
-    if(!group_device(dev,OSA_GROUP_SIZE))
+    if(!(grouped = group_device(dev,OSA_GROUP_SIZE)))
     {
+        if(!dev->member)
+        {
+            dev->group->grp_data = osa_grp = malloc(sizeof(OSA_GRP));
+            memset (osa_grp, 0, sizeof(OSA_GRP));
+            /* Set defaults */
+            osa_grp->tuntap = TUNTAP_NAME;
+        }
+
         logmsg(_("group device(%4.4x) pending\n"),dev->devnum);
         return 0;
     }
@@ -307,9 +316,20 @@ logmsg(_("senseidnum=%d\n"),dev->numdevid);
         for(i = 0; i < dev->group->acount; i++)
             logmsg("%4.4x ",dev->group->memdev[i]->devnum);
         logmsg(") complete\n");
+    }
 
-        dev->group->grp_data = malloc(sizeof(OSA_GRP));
-        memset (dev->group->grp_data, 0, sizeof(OSA_GRP));
+    if(!grouped)
+    {
+    // process all command line options here
+        UNREFERENCED(argc);
+        UNREFERENCED(argv);
+
+
+    }
+    else
+    {
+    // Perform initialisation here
+
     }
 
     return 0;
@@ -400,20 +420,29 @@ int     num;                            /* Number of bytes to move   */
     /* WRITE                                                         */
     /*---------------------------------------------------------------*/
     {
+    OSA_HDR *osa_hdr = (OSA_HDR*)iobuf;
+    U16 ddc;
 #define WR_SIZE 0x1000
 logmsg(_("Write dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
 
-        if(iobuf[2] == 0x80)
+        FETCH_HW(ddc,osa_hdr->ddc);
+  
+        if(ddc == IDX_ACT_DDC)
         {
-            osa_devcmd(dev,(OSA_IEA*)iobuf);
+            osa_device_cmd(dev,(OSA_IEA*)iobuf);
         }
         else
         {
             if(IS_OSA_WRITE_DEVICE(dev) 
               && (dev->qidxstate == OSA_IDX_STATE_ACTIVE)
               && (dev->group->memdev[OSA_READ_DEVICE]->qidxstate == OSA_IDX_STATE_ACTIVE))
-            osa_grp->idxrdretn = osa_adaptercmd(dev, (void*)iobuf);
-            signal_condition(&dev->group->memdev[OSA_READ_DEVICE]->qcond);
+            {
+//              obtain_lock(&dev->group->memdev[OSA_READ_DEVICE]->qlock);
+// ZZ need to test if(osa_grp->idxrdbuff) before callins osa_adapter_cmd
+                osa_grp->idxrdretn = osa_adapter_cmd(dev, (void*)iobuf);
+//              release_lock(&dev->group->memdev[OSA_READ_DEVICE]->qlock);
+                signal_condition(&dev->group->memdev[OSA_READ_DEVICE]->qcond);
+            }
         }
             
         /* Calculate number of bytes to write and set residual count */
@@ -441,7 +470,7 @@ logmsg(_("Read dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
 
         if(dev->qidxstate != OSA_IDX_STATE_ACTIVE)
         {
-            rd_size = osa_devrsp(dev, (OSA_IEAR*)iobuf);
+            rd_size = osa_device_rsp(dev, (OSA_IEAR*)iobuf);
         }
         else
         {
