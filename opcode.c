@@ -2373,17 +2373,17 @@ void init_opcode_tables(void)
     replace_opcode_xxxx(arch, opt07x_[0x11][arch], 0x07, 0xf0);
     
     /* Implement optimized zero x2 instructions */
-    for(j = 0; j < 0x100; j++)
+    for(i = 0; i < 0x100; i++)
     {
-      if(optxx_0[j][arch] != optxx_0[0][arch])
+      if(optxx_0[i][arch] != optxx_0[0][arch])
       {
-        for(i = 0; i < 0x10; i++)
-          replace_opcode_xxxx(arch, optxx_0[j][arch], j, (i << 4) + 0x0); /* Optimized zero x2 instruction */
+        for(j = 0; j < 0x10; j++)
+          replace_opcode_xxxx(arch, optxx_0[i][arch], i, (j << 4) + 0x0); /* Optimized zero x2 instruction */
       }
-      if(optE3_0______xx[j][arch] != optxx_0[0][arch])
+      if(optE3_0______xx[i][arch] != optxx_0[0][arch])
       {
-        for(i = 0; i < 0x10; i++)
-          runtime_opcode_e3_0______xx[arch][j] = optE3_0______xx[j][arch]; /* Optimized zero x2 instruction */
+        for(j = 0; j < 0x10; j++)
+          runtime_opcode_e3_0______xx[arch][i] = optE3_0______xx[i][arch]; /* Optimized zero x2 instruction */
       }
     }
     
