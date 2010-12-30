@@ -3292,108 +3292,29 @@ DEF_INST(store_float_short_y);
 /* Instructions in general1.c */
 DEF_INST(add_register);
 DEF_INST(add);
-#ifdef OPTION_OPTINST
-DEF_INST(5A_0);
-#endif /* OPTION_OPTINST */
 DEF_INST(add_halfword);
-#ifdef OPTION_OPTINST
-DEF_INST(4A_0);
-#endif /* OPTION_OPTINST */
 DEF_INST(add_logical_register);
 DEF_INST(add_logical);
-#ifdef OPTION_OPTINST
-DEF_INST(5E_0);
-#endif /* OPTION_OPTINST */
 DEF_INST(and_register);
 DEF_INST(and);
-#ifdef OPTION_OPTINST
-DEF_INST(54_0);
-#endif /* OPTION_OPTINST */
 DEF_INST(and_immediate);
 DEF_INST(and_character);
 DEF_INST(branch_and_link_register);
 DEF_INST(branch_and_link);
-#ifdef OPTION_OPTINST
-DEF_INST(45_0);
-#endif /* OPTION_OPTINST */
 DEF_INST(branch_and_save_register);
 DEF_INST(branch_and_save);
-#ifdef OPTION_OPTINST
-DEF_INST(4D_0);
-#endif /* OPTION_OPTINST */
 #if defined(FEATURE_BIMODAL_ADDRESSING)
 DEF_INST(branch_and_save_and_set_mode);
 DEF_INST(branch_and_set_mode);
 #endif /*defined(FEATURE_BIMODAL_ADDRESSING)*/
 DEF_INST(branch_on_condition_register);
-#ifdef OPTION_OPTINST
-DEF_INST(070_);
-DEF_INST(071_);
-DEF_INST(072_);
-DEF_INST(073_);
-DEF_INST(074_);
-DEF_INST(075_);
-/* 076x not optimized */
-DEF_INST(077_);
-DEF_INST(078_);
-/* 079x not optimized */
-DEF_INST(07A_);
-DEF_INST(07B_);
-DEF_INST(07C_);
-DEF_INST(07D_);
-DEF_INST(07E_);
-DEF_INST(07E0);
-DEF_INST(07F_);
-DEF_INST(07F0);
-#endif /* OPTION_OPTINST */
 DEF_INST(branch_on_condition);
-#ifdef OPTION_OPTINST
-/* Optimized BC instructions */
-DEF_INST(4700);
-DEF_INST(4710);
-DEF_INST(4720);
-DEF_INST(4730);
-DEF_INST(4740);
-DEF_INST(4750);
-/* 4760 not optimized */
-DEF_INST(4770);
-DEF_INST(4780);
-/* 4790 not optimized */
-DEF_INST(47A0);
-DEF_INST(47B0);
-DEF_INST(47C0);
-DEF_INST(47D0);
-DEF_INST(47E0);
-DEF_INST(47F0);
-#endif /* OPTION_OPTINST */
 DEF_INST(branch_on_count_register);
 DEF_INST(branch_on_count);
-#ifdef OPTION_OPTINST
-DEF_INST(46_0);
-#endif /* OPTION_OPTINST */
 DEF_INST(branch_on_index_high);
 DEF_INST(branch_on_index_low_or_equal);
 #if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
 DEF_INST(branch_relative_on_condition);
-#ifdef OPTION_OPTINST
-/* Optimized BRC instructions */
-DEF_INST(A704);
-DEF_INST(A714);
-DEF_INST(A724);
-DEF_INST(A734);
-DEF_INST(A744);
-DEF_INST(A754);
-/* A764 not optimized */
-DEF_INST(A774);
-DEF_INST(A784);
-/* A794 not optimized */
-DEF_INST(A7A4);
-DEF_INST(A7B4);
-DEF_INST(A7C4);
-DEF_INST(A7D4);
-DEF_INST(A7E4);
-DEF_INST(A7F4);
-#endif /* OPTION_OPTINST */
 DEF_INST(branch_relative_and_save);
 DEF_INST(branch_relative_on_count);
 DEF_INST(branch_relative_on_index_high);
@@ -3404,9 +3325,6 @@ DEF_INST(checksum);
 #endif /*defined(FEATURE_CHECKSUM_INSTRUCTION)*/
 DEF_INST(compare_register);
 DEF_INST(compare);
-#ifdef OPTION_OPTINST
-DEF_INST(59_0);
-#endif /* OPTION_OPTINST */
 DEF_INST(compare_and_form_codeword);
 DEF_INST(compare_and_swap);
 DEF_INST(compare_double_and_swap);
@@ -3414,14 +3332,8 @@ DEF_INST(compare_double_and_swap);
 DEF_INST(compare_and_swap_and_store);
 #endif /*defined(FEATURE_COMPARE_AND_SWAP_AND_STORE)*/
 DEF_INST(compare_halfword);
-#ifdef OPTION_OPTINST
-DEF_INST(49_0);
-#endif /* OPTION_OPTINST */
 DEF_INST(compare_logical_register);
 DEF_INST(compare_logical);
-#ifdef OPTION_OPTINST
-DEF_INST(55_0);
-#endif /* OPTION_OPTINST */
 DEF_INST(compare_logical_immediate);
 DEF_INST(compare_logical_character);
 DEF_INST(compare_logical_characters_under_mask);
@@ -3443,33 +3355,18 @@ DEF_INST(convert_utf32_to_utf16);
 DEF_INST(convert_utf32_to_utf8);
 DEF_INST(convert_utf8_to_utf32);
 DEF_INST(convert_to_binary);
-#ifdef OPTION_OPTINST
-DEF_INST(4F_0);
-#endif /* OPTION_OPTINST */
 DEF_INST(convert_to_decimal);
-#ifdef OPTION_OPTINST
-DEF_INST(4E_0);
-#endif /* OPTION_OPTINST */
 #endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_3)*/
 #if defined(FEATURE_ACCESS_REGISTERS)
 DEF_INST(copy_access);
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 DEF_INST(divide_register);
 DEF_INST(divide);
-#ifdef OPTION_OPTINST
-DEF_INST(5D_0);
-#endif /* OPTION_OPTINST */
 DEF_INST(exclusive_or_register);
 DEF_INST(exclusive_or);
-#ifdef OPTION_OPTINST
-DEF_INST(57_0);
-#endif /* OPTION_OPTINST */
 DEF_INST(exclusive_or_immediate);
 DEF_INST(exclusive_or_character);
 DEF_INST(execute);
-#ifdef OPTION_OPTINST
-DEF_INST(44_0);
-#endif /* OPTION_OPTINST */
 #if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
 DEF_INST(execute_relative_long);                                /*208*/
 #endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
@@ -3477,34 +3374,18 @@ DEF_INST(execute_relative_long);                                /*208*/
 DEF_INST(extract_access_register);
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 DEF_INST(insert_character);
-#ifdef OPTION_OPTINST
-DEF_INST(43_0);
-#endif /* OPTION_OPTINST */
 DEF_INST(insert_characters_under_mask);
 DEF_INST(insert_program_mask);
 DEF_INST(load);
-#ifdef OPTION_OPTINST
-/* Optimized L instruction */
-DEF_INST(58_0);
-#endif /* OPTION_OPTINST */
 DEF_INST(load_register);
 #if defined(FEATURE_ACCESS_REGISTERS)
 DEF_INST(load_access_multiple);
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 DEF_INST(load_address);
-#ifdef OPTION_OPTINST
-DEF_INST(41_0);
-#endif /* OPTION_OPTINST */
 DEF_INST(load_address_extended);
-#ifdef OPTION_OPTINST
-DEF_INST(51_0);
-#endif /* OPTION_OPTINST */
 DEF_INST(load_and_test_register);
 DEF_INST(load_complement_register);
 DEF_INST(load_halfword);
-#ifdef OPTION_OPTINST
-DEF_INST(48_0);
-#endif /* OPTION_OPTINST */
 #if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
 DEF_INST(load_halfword_immediate);
 DEF_INST(add_halfword_immediate);
@@ -3512,9 +3393,6 @@ DEF_INST(compare_halfword_immediate);
 DEF_INST(multiply_halfword_immediate);
 DEF_INST(multiply_single_register);
 DEF_INST(multiply_single);
-#ifdef OPTION_OPTINST
-DEF_INST(71_0);
-#endif /* OPTION_OPTINST */
 #endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
 DEF_INST(load_multiple);
 DEF_INST(load_negative_register);
@@ -3535,29 +3413,13 @@ DEF_INST(move_with_offset);
 DEF_INST(move_zones);
 DEF_INST(multiply_register);
 DEF_INST(multiply);
-#ifdef OPTION_OPTINST
-DEF_INST(5C_0);
-#endif /* OPTION_OPTINST */
 DEF_INST(multiply_halfword);
-#ifdef OPTION_OPTINST
-DEF_INST(4C_0);
-#endif /* OPTION_OPTINST */
 DEF_INST(store);
-#ifdef OPTION_OPTINST
-/* Optimized ST instruction */
-DEF_INST(50_0);
-#endif /* OPTION_OPTINST */
 DEF_INST(store_character);
-#ifdef OPTION_OPTINST
-DEF_INST(42_0);
-#endif /* OPTION_OPTINST */
 
 /* Instructions in general2.c */
 DEF_INST(or_register);
 DEF_INST(or);
-#ifdef OPTION_OPTINST
-DEF_INST(56_0);
-#endif /* OPTION_OPTINST */
 DEF_INST(or_immediate);
 DEF_INST(or_character);
 #if defined(FEATURE_PERFORM_LOCKED_OPERATION)
@@ -3592,30 +3454,15 @@ DEF_INST(store_clock_extended);
 DEF_INST(store_clock_fast);                                     /*@Z9*/
 #endif /*defined(FEATURE_STORE_CLOCK_FAST)*/
 DEF_INST(store_halfword);
-#ifdef OPTION_OPTINST
-DEF_INST(40_0);
-#endif /* OPTION_OPTINST */
 DEF_INST(store_multiple);
 DEF_INST(subtract_register);
 DEF_INST(subtract);
-#ifdef OPTION_OPTINST
-DEF_INST(5B_0);
-#endif /* OPTION_OPTINST */
 DEF_INST(subtract_halfword);
-#ifdef OPTION_OPTINST
-DEF_INST(4B_0);
-#endif /* OPTION_OPTINST */
 DEF_INST(subtract_logical_register);
 DEF_INST(subtract_logical);
-#ifdef OPTION_OPTINST
-DEF_INST(5F_0);
-#endif /* OPTION_OPTINST */
 DEF_INST(supervisor_call);
 DEF_INST(test_and_set);
 DEF_INST(test_under_mask);
-#ifdef OPTION_OPTINST
-DEF_INST(91sb);
-#endif /* OPTION_OPTINST */
 #if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
 DEF_INST(test_under_mask_high);
 DEF_INST(test_under_mask_low);
@@ -4446,5 +4293,98 @@ DEF_INST(test_data_group_dfp_short);
 #if defined(FEATURE_PFPO)
 DEF_INST(perform_floating_point_operation);
 #endif /*defined(FEATURE_PFPO)*/
+
+#ifdef OPTION_OPTINST
+/* RX zero x2 optimized instructions */
+DEF_INST(40_0); /* STH */
+DEF_INST(41_0); /* LA */
+DEF_INST(42_0); /* STC */
+DEF_INST(43_0); /* IC */
+DEF_INST(44_0); /* EX */
+DEF_INST(45_0); /* BAL */
+DEF_INST(46_0); /* BCT */
+DEF_INST(48_0); /* LH */
+DEF_INST(49_0); /* CH */
+DEF_INST(4A_0); /* AH */
+DEF_INST(4B_0); /* SH */
+DEF_INST(4C_0); /* MH */
+DEF_INST(4D_0); /* BAS */
+DEF_INST(4E_0); /* CVD */
+DEF_INST(4F_0); /* CVB */
+DEF_INST(50_0); /* ST */
+DEF_INST(51_0); /* LAE */
+DEF_INST(54_0); /* N */
+DEF_INST(55_0); /* CL */
+DEF_INST(56_0); /* O */
+DEF_INST(57_0); /* X */
+DEF_INST(58_0); /* L */
+DEF_INST(59_0); /* C */
+DEF_INST(5A_0); /* A */
+DEF_INST(5B_0); /* S */
+DEF_INST(5C_0); /* M */
+DEF_INST(5D_0); /* D */
+DEF_INST(5E_0); /* AL */
+DEF_INST(5F_0); /* SL */
+DEF_INST(71_0); /* MS */
+
+/* Optimized BCR instructions */
+DEF_INST(070_);
+DEF_INST(071_);
+DEF_INST(072_);
+DEF_INST(073_);
+DEF_INST(074_);
+DEF_INST(075_);
+/* 076x not optimized */
+DEF_INST(077_);
+DEF_INST(078_);
+/* 079x not optimized */
+DEF_INST(07A_);
+DEF_INST(07B_);
+DEF_INST(07C_);
+DEF_INST(07D_);
+DEF_INST(07E_);
+DEF_INST(07E0);
+DEF_INST(07F_);
+DEF_INST(07F0);
+
+/* Optimized BC instructions */
+DEF_INST(4700);
+DEF_INST(4710);
+DEF_INST(4720);
+DEF_INST(4730);
+DEF_INST(4740);
+DEF_INST(4750);
+/* 4760 not optimized */
+DEF_INST(4770);
+DEF_INST(4780);
+/* 4790 not optimized */
+DEF_INST(47A0);
+DEF_INST(47B0);
+DEF_INST(47C0);
+DEF_INST(47D0);
+DEF_INST(47E0);
+DEF_INST(47F0);
+
+/* Optimized single bit TM instruction */
+DEF_INST(91sb);
+
+/* Optimized BRC instructions */
+DEF_INST(A704);
+DEF_INST(A714);
+DEF_INST(A724);
+DEF_INST(A734);
+DEF_INST(A744);
+DEF_INST(A754);
+/* A764 not optimized */
+DEF_INST(A774);
+DEF_INST(A784);
+/* A794 not optimized */
+DEF_INST(A7A4);
+DEF_INST(A7B4);
+DEF_INST(A7C4);
+DEF_INST(A7D4);
+DEF_INST(A7E4);
+DEF_INST(A7F4);
+#endif /* OPTION_OPTINST */
 
 /* end of OPCODE.H */

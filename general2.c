@@ -82,27 +82,6 @@ U32     n;                              /* 32-bit operand values     */
     regs->psw.cc = ( regs->GR_L(r1) |= n ) ? 1 : 0;
 }
 
-#ifdef OPTION_OPTINST
-/*-------------------------------------------------------------------*/
-/* 56_0 O     - Or                                              [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(56_0)
-{
-int     r1;                             /* Value of R field          */
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
-
-    RX_X0(inst, regs, r1, b2, effective_addr2);
-
-    /* Load second operand from operand address */
-    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-    /* OR second operand with first and set condition code */
-    regs->psw.cc = ( regs->GR_L(r1) |= n ) ? 1 : 0;
-}
-
-#endif /* OPTION_OPTINST */
 
 /*-------------------------------------------------------------------*/
 /* 96   OI    - Or Immediate                                    [SI] */
@@ -1088,23 +1067,6 @@ VADR    effective_addr2;                /* Effective address         */
     ARCH_DEP(vstore2) ( regs->GR_LHL(r1), effective_addr2, b2, regs );
 }
 
-#ifdef OPTION_OPTINST
-/*-------------------------------------------------------------------*/
-/* 40_0 STH   - Store Halfword                                  [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(40_0)
-{
-int     r1;                             /* Value of R field          */
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    RX_X0(inst, regs, r1, b2, effective_addr2);
-
-    /* Store rightmost 2 bytes of R1 register at operand address */
-    ARCH_DEP(vstore2) ( regs->GR_LHL(r1), effective_addr2, b2, regs );
-}
-#endif /* OPTION_OPTINST */
-
 
 /*-------------------------------------------------------------------*/
 /* 90   STM   - Store Multiple                                  [RS] */
@@ -1238,33 +1200,6 @@ U32     n;                              /* 32-bit operand values     */
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 }
 
-#ifdef OPTION_OPTINST
-/*-------------------------------------------------------------------*/
-/* 5B_0 S     - Subtract                                        [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(5B_0)
-{
-int     r1;                             /* Value of R field          */
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
-
-    RX_X0(inst, regs, r1, b2, effective_addr2);
-
-    /* Load second operand from operand address */
-    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-    /* Subtract signed operands and set condition code */
-    regs->psw.cc =
-            sub_signed (&(regs->GR_L(r1)),
-                    regs->GR_L(r1),
-                    n);
-
-    /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
-        regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
-}
-#endif /* OPTION_OPTINST */
 
 /*-------------------------------------------------------------------*/
 /* 4B   SH    - Subtract Halfword                               [RX] */
@@ -1292,33 +1227,6 @@ U32     n;                              /* 32-bit operand values     */
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 }
 
-#ifdef OPTION_OPTINST
-/*-------------------------------------------------------------------*/
-/* 4B   SH    - Subtract Halfword                               [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(4B_0)
-{
-int     r1;                             /* Value of R field          */
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
-
-    RX_X0(inst, regs, r1, b2, effective_addr2);
-
-    /* Load 2 bytes from operand address */
-    n = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
-
-    /* Subtract signed operands and set condition code */
-    regs->psw.cc =
-            sub_signed (&(regs->GR_L(r1)),
-                    regs->GR_L(r1),
-                    n);
-
-    /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
-        regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
-}
-#endif /* OPTION_OPTINST */
 
 /*-------------------------------------------------------------------*/
 /* 1F   SLR   - Subtract Logical Register                       [RR] */
@@ -1542,26 +1450,6 @@ BYTE    tbyte;                          /* Work byte                 */
             ( tbyte == i2) ? 3 :            /* result all ones   */
             1 ;                             /* result mixed      */
 }
-
-#ifdef OPTION_OPTINST
-/*-------------------------------------------------------------------*/
-/* 91sb TM    - Test under Mask                                 [SI] */
-/*-------------------------------------------------------------------*/
-DEF_INST(91sb) /* Optimized for single bit mask */
-{
-BYTE    i2;                             /* Immediate operand         */
-int     b1;                             /* Base of effective addr    */
-VADR    effective_addr1;                /* Effective address         */
-
-    SI(inst, regs, i2, b1, effective_addr1);
-
-    /* Fetch byte from operand address */
-    if(ARCH_DEP(vfetchb) ( effective_addr1, b1, regs ) & i2)
-      regs->psw.cc = 3;
-    else
-      regs->psw.cc = 0;
-}
-#endif /* OPTION_OPTINST */
 
 
 #if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
