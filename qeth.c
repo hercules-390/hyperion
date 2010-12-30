@@ -432,13 +432,12 @@ logmsg(_("Write dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
     /*---------------------------------------------------------------*/
     case 0x02:
     {
-logmsg(_("Read dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
-
         int rd_size = 0;
         int timeoutrc;
         struct timespec waittime;
         struct timeval  now;
 
+logmsg(_("Read dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
 
         if(dev->qidxstate != OSA_IDX_STATE_ACTIVE)
         {
@@ -560,10 +559,11 @@ logmsg(_("Read Configuration Data dev(%4.4x)\n"),dev->devnum);
     /* ESTABLISH QUEUES                                              */
     /*---------------------------------------------------------------*/
     {
-logmsg(_("Establish Queues dev(%4.4x)\n"),dev->devnum);
         OSA_QDR *qdr = (OSA_QDR*)iobuf;
 
         UNREFERENCED(qdr);
+
+logmsg(_("Establish Queues dev(%4.4x)\n"),dev->devnum);
 
         /* INCOMPLETE ZZ
          * QUEUES MUST BE SETUP HERE

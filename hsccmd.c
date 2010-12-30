@@ -7422,7 +7422,9 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
     int i, j, k;
     int cpupct = 0;
     U32 mipsrate = 0;
-//    char msgbuf[128];
+#if defined(_MSVC_)
+    char msgbuf[128];
+#endif
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argv);
