@@ -577,7 +577,25 @@ U16     eax;                            /* Authorization index       */
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 
     switch(arn) {
+      
+    case USE_INST_SPACE:
+        switch(regs->AEA_AR(USE_INST_SPACE)) {
 
+        case 1:
+            regs->dat.stid = TEA_ST_PRIMARY;
+            break;
+    #if defined(FEATURE_LINKAGE_STACK)
+        case 13:
+            regs->dat.stid = TEA_ST_HOME;
+            break;
+    #endif
+        default:
+            regs->dat.stid = 0;
+        } /* end switch(regs->AEA_AR(USE_INST_SPACE)) */
+
+        regs->dat.asd = regs->CR(regs->AEA_AR(USE_INST_SPACE));
+        break;      
+        
     case USE_PRIMARY_SPACE:
         regs->dat.stid = TEA_ST_PRIMARY;
         regs->dat.asd = regs->CR(1);
@@ -596,24 +614,6 @@ U16     eax;                            /* Authorization index       */
     case USE_REAL_ADDR:
         regs->dat.stid = 0;
         regs->dat.asd = TLB_REAL_ASD;
-        break;
-
-    case USE_INST_SPACE:
-        switch(regs->AEA_AR(USE_INST_SPACE)) {
-
-        case 1:
-            regs->dat.stid = TEA_ST_PRIMARY;
-            break;
-    #if defined(FEATURE_LINKAGE_STACK)
-        case 13:
-            regs->dat.stid = TEA_ST_HOME;
-            break;
-    #endif
-        default:
-            regs->dat.stid = 0;
-        } /* end switch(regs->AEA_AR(USE_INST_SPACE)) */
-
-        regs->dat.asd = regs->CR(regs->AEA_AR(USE_INST_SPACE));
         break;
 
     default:
