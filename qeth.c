@@ -133,20 +133,36 @@ static const char *osa_devtyp[] = { "Read", "Write", "Data" };
 /*-------------------------------------------------------------------*/
 /* Adapter Command Routine                                           */
 /*-------------------------------------------------------------------*/
-static void osa_adapter_cmd(DEVBLK *dev, void *request, DEVBLK *rdev)
+static void osa_adapter_cmd(DEVBLK *dev, OSA_TH *cmdhdr, DEVBLK *rdev)
 {
 OSA_GRP *osa_grp = (OSA_GRP*)dev->group->grp_data;
 
-    UNREFERENCED(request);
-    UNREFERENCED(rdev);
     UNREFERENCED(osa_grp);
 
 // ZZ Process adapter commands here
 // ZZ Response needs to be stored in the rdev->qrspbf buffer
 // ZZ The size of the response buffer rdev->qrspsz;
 
-    // set some reponse
-    memcpy(rdev->qrspbf,request, 122);
+#if defined(DEBUG)
+logmsg(_("OSA REQ:\n"));
+    {
+        int i;
+
+        logmsg(_("DATA: %4.4X"), 0x100);
+        for(i = 0; i < 0x100; i++)
+        {
+            if(!(i & 15))
+                logmsg(_("\n%4.4X:"), i);
+            logmsg(_(" %2.2X"), ((BYTE*)cmdhdr)[i]);
+        }
+        if(--i & 15)
+            logmsg(_("\n"));
+
+    }
+#endif
+
+    // set some response
+    memcpy(rdev->qrspbf,cmdhdr, 122);
     rdev->qrspsz = 122;
 }
 
@@ -244,7 +260,7 @@ TRACE(_("QETH: dev(%4.4x) Halt Device\n"),dev->devnum);
         signal_condition(&dev->qcond);
     }
     else
-        if(IS_OSA_READ_DEVICE(dev) || IS_OSA_WRITE_DEVICE(dev))
+        if(IS_OSA_READ_DEVICE(dev))
             signal_condition(&dev->qcond);
 
 }
@@ -304,9 +320,10 @@ static void qeth_query_device (DEVBLK *dev, char **class,
 {
     BEGIN_DEVICE_CLASS_QUERY( "OSA", dev, class, buflen, buffer );
 
-    snprintf (buffer, buflen-1, "%s%s",
+    snprintf (buffer, buflen-1, "%s%s%s",
       (dev->group->acount == OSA_GROUP_SIZE) ? osa_devtyp[dev->member] : "*Incomplete",
-      (dev->scsw.flag2 & SCSW2_Q) ? " QDIO" : "");
+      (dev->scsw.flag2 & SCSW2_Q) ? " QDIO" : "",
+      (dev->qidxstate == OSA_IDX_STATE_ACTIVE) ? " IDX" : "");
 
 } /* end function qeth_query_device */
 
@@ -394,26 +411,35 @@ int     num;                            /* Number of bytes to move   */
 
 TRACE(_("Write dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
 
-        FETCH_HW(ddc,osa_hdr->ddc);
+        if(!rdev->qrspsz)
+        {
+            FETCH_HW(ddc,osa_hdr->ddc);
   
-        obtain_lock(&rdev->qlock);
-        if(ddc == IDX_ACT_DDC)
-            osa_device_cmd(dev,(OSA_IEA*)iobuf, rdev);
+            obtain_lock(&rdev->qlock);
+            if(ddc == IDX_ACT_DDC)
+                osa_device_cmd(dev,(OSA_IEA*)iobuf, rdev);
+            else
+                osa_adapter_cmd(dev, (OSA_TH*)iobuf, rdev);
+            release_lock(&rdev->qlock);
+
+            if(dev != rdev)
+                signal_condition(&rdev->qcond);
+       
+            /* Calculate number of bytes to write and set residual count */
+            num = (count < RSP_BUFSZ) ? count : RSP_BUFSZ;
+            *residual = count - num;
+            if (count < RSP_BUFSZ) *more = 1;
+    
+            /* Return normal status */
+            *unitstat = CSW_CE | CSW_DE;
+        }
         else
-            osa_adapter_cmd(dev, (void*)iobuf, rdev);
-        release_lock(&rdev->qlock);
-
-        if(dev != rdev)
-            signal_condition(&rdev->qcond);
-            
-        /* Calculate number of bytes to write and set residual count */
-        num = (count < RSP_BUFSZ) ? count : RSP_BUFSZ;
-        *residual = count - num;
-        if (count < RSP_BUFSZ) *more = 1;
-
-        /* Return normal status */
-        *unitstat = CSW_CE | CSW_DE;
-        break;
+        {
+            /* Command reject if no response buffer available */
+            dev->sense[0] = SENSE_CR;
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        }
+            break;
     }
 
 
@@ -423,7 +449,9 @@ TRACE(_("Write dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
     case 0x02:
     {
         int rd_size = 0;
+#if defined(OSA_READ_TIMEOUT)
         int timeoutrc = 0;
+#endif
 
 TRACE(_("Read dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
 
@@ -439,6 +467,7 @@ TRACE(_("Read dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
             if(IS_OSA_READ_DEVICE(dev)
               && (dev->qidxstate == OSA_IDX_STATE_ACTIVE))
             {
+#if defined(OSA_READ_TIMEOUT)
             struct timespec waittime;
             struct timeval  now;
                 gettimeofday( &now, NULL );
@@ -446,6 +475,11 @@ TRACE(_("Read dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
                 waittime.tv_nsec = now.tv_usec * 1000;
     
                 if(!(timeoutrc = timed_wait_condition(&dev->qcond, &dev->qlock, &waittime)))
+#else
+
+                wait_condition(&dev->qcond, &dev->qlock);
+                if(dev->qrspsz)
+#endif
                 {
                     rd_size = dev->qrspsz;
                     memcpy(iobuf,dev->qrspbf,rd_size);
@@ -455,8 +489,10 @@ TRACE(_("Read dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
         }
         release_lock(&dev->qlock);
 
+#if defined(OSA_READ_TIMEOUT)
         if(!timeoutrc)
         {
+#endif
 TRACE(_("Read dev(%4.4x) %d bytes\n"),dev->devnum,rd_size);
             /* Calculate number of bytes to read and set residual count */
             num = (count < rd_size) ? count : rd_size;
@@ -465,6 +501,7 @@ TRACE(_("Read dev(%4.4x) %d bytes\n"),dev->devnum,rd_size);
 
             /* Return normal status */
             *unitstat = CSW_CE | CSW_DE;
+#if defined(OSA_READ_TIMEOUT)
         }
         else
         {
@@ -473,6 +510,7 @@ TRACE(_("Read timeout\n"));
             dev->sense[0] = 0;
             *unitstat = CSW_CE | CSW_DE | CSW_UC | CSW_SM;
         }
+#endif
         break;
     }
 
@@ -531,13 +569,8 @@ TRACE(_("Read timeout\n"));
     /* READ CONFIGURATION DATA                                       */
     /*---------------------------------------------------------------*/
 
-        /* Calculate residual byte count */
-        num = (count < sizeof(read_configuration_data_bytes) ? count : sizeof(read_configuration_data_bytes));
-        *residual = count - num;
-        if (count < sizeof(read_configuration_data_bytes)) *more = 1;
-
         /* Copy configuration data from tempate */
-        memcpy (iobuf, read_configuration_data_bytes, num);
+        memcpy (iobuf, read_configuration_data_bytes, sizeof(read_configuration_data_bytes));
 
         /* Insert chpid & unit address in the device ned */
         iobuf[30] = (dev->devnum >> 8) & 0xff;
@@ -550,6 +583,11 @@ TRACE(_("Read timeout\n"));
         /* Use unit address of OSA read device as control unit address */
         iobuf[94] = (dev->group->memdev[OSA_READ_DEVICE]->devnum >> 8) & 0xff;
         iobuf[95] = (dev->group->memdev[OSA_READ_DEVICE]->devnum) & 0xff;
+
+        /* Calculate residual byte count */
+        num = (count < sizeof(read_configuration_data_bytes) ? count : sizeof(read_configuration_data_bytes));
+        *residual = count - num;
+        if (count < sizeof(read_configuration_data_bytes)) *more = 1;
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
