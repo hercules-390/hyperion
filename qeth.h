@@ -67,7 +67,7 @@ typedef struct _OSA_GRP {
 /*-------------------------------------------------------------------*/
 /* OSA Read Timeout in Seconds                                       */
 /*-------------------------------------------------------------------*/
-#define OSA_READ_TIMEOUT        5
+//#define OSA_READ_TIMEOUT        5
 
 
 /*-------------------------------------------------------------------*/
@@ -174,6 +174,91 @@ typedef struct _OSA_IEAR {
 /*010*/ HWORD   flevel;         /* Funtion level                     */
 /*012*/ FWORD   uclevel;        /* Microcode level                   */
     } OSA_IEAR;
+
+
+/*-------------------------------------------------------------------*/
+/* Transport Header                                                  */
+/*-------------------------------------------------------------------*/
+typedef struct _OSA_TH {
+/*000*/ OSA_HDR hdr;
+/*008*/ HWORD   resv008;        /*                                   */
+/*00A*/ HWORD   rroff;          /* Offset to request/response struct */
+/*00C*/ HWORD   resv00c;        /*                                   */
+/*00E*/ HWORD   rrlen;          /* Length of request/response struct */
+/*010*/ FWORD   end;            /* X'10000001'                       */
+    } OSA_TH;
+
+
+/*-------------------------------------------------------------------*/
+/* Request/Response Header                                           */
+/*-------------------------------------------------------------------*/
+typedef struct _OSA_RRH {
+/*000*/ FWORD   resv000;        /*                                   */
+/*004*/ BYTE    type;           /* Request type                      */
+#define RRH_TYPE_CM     0x81
+#define RRH_TYPE_ULP    0x41
+#define RRH_TYPE_IPA    0xC1
+/*005*/ BYTE    prot;           /* Protocol type                     */
+#define RRH_PROT_L2     0x08
+#define RRH_PROT_L3     0x03
+#define RRH_PROT_NCP    0x0A
+#define RRH_PROT_UNK    0x7E
+/*006*/ HWORD   unkn006;        /* X'0001'                           */
+/*008*/ FWORD   pduseq;         /* PDU Sequence Number               */
+/*00C*/ FWORD   ackseq;         /* ACK Sequence Number               */
+/*010*/ HWORD   pduhoff;        /* Offset to PDU Header              */
+/*012*/ HWORD   pduhlen;        /* Length of PDU Header              */
+/*014*/ BYTE    resv014;        /*                                   */
+/*015*/ HWORD   reqlen;         /* Request length                    */
+/*017*/ BYTE    unkn016;        /* X'05'                             */
+/*018*/ FWORD   token;          /*                                   */
+/*01C*/ FWORD   resv020;        /*                                   */
+/*020*/ FWORD   resv024;        /*                                   */
+    } OSA_RRH;
+
+
+/*-------------------------------------------------------------------*/
+/* Protocol Data Unit Header                                         */
+/*-------------------------------------------------------------------*/
+typedef struct _OSA_PDUH {
+/*000*/ HWORD   type;           /*                                   */
+/*002*/ HWORD   pdulen;         /* Length of request                 */
+/*004*/ HWORD   resv004;        /*                                   */
+/*006*/ HWORD   hdrlen;         /* Total Header lenght               */
+    } OSA_PDUH;
+
+
+/*-------------------------------------------------------------------*/
+/* Protocol Data Unit                                                */
+/*-------------------------------------------------------------------*/
+typedef struct _OSA_PDU {
+/*000*/ HWORD   type;           /*                                   */
+/*002*/ HWORD   pdulen;         /* Length of request                 */
+/*004*/ HWORD   resv004;        /*                                   */
+/*006*/ HWORD   hdrlen;         /* Total Header lenght               */
+// ZZ INCOMPLETE
+    } OSA_PDU;
+
+
+/*-------------------------------------------------------------------*/
+/* IP Assist Header                                                  */
+/*-------------------------------------------------------------------*/
+typedef struct _OSA_IPA {
+/*000*/ BYTE    cmd;            /* Command                           */
+/*001*/ BYTE    iid;            /* Initator Identifier               */
+#define IPA_IID_HOST    0x00
+/*002*/ HWORD   seq;            /* Sequence number                   */
+// ZZ INCOMPLETE
+    } OSA_IPA;
+
+
+/*-------------------------------------------------------------------*/
+/* IP Assist Header                                                  */
+/*-------------------------------------------------------------------*/
+typedef struct _OSA_IPA_MAC {
+/*000*/ FWORD   maclen;         /* Length of MAC Address             */
+/*004*/ BYTE    macaddr;        /* MAC Address                       */
+    } OSA_IPA_MAC;
 
 
 /*-------------------------------------------------------------------*/
