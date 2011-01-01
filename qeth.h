@@ -1,4 +1,4 @@
-/* QETH.H       (c) Copyright Jan Jaeger,   2010                     */
+/* QETH.H       (c) Copyright Jan Jaeger,   2010-2011                */
 /*              OSA Express                                          */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -49,9 +49,9 @@
 /* OSA Group Structure                                               */
 /*-------------------------------------------------------------------*/
 typedef struct _OSA_GRP {
-    void *idxrdbuff;            /* Read buffer pointer               */
-    int   idxrdbufn;            /* Read buffer size                  */
-    int   idxrdretn;            /* Read return size                  */
+//  void *idxrdbuff;            /* Read buffer pointer               */
+//  int   idxrdbufn;            /* Read buffer size                  */
+//  int   idxrdretn;            /* Read return size                  */
     char *tuntap;               /* Pathname of TUNTAP device         */
     } OSA_GRP;
 
@@ -180,6 +180,12 @@ typedef struct _OSA_IEAR {
 /* Default pathname of the TUNTAP adapter                            */
 /*-------------------------------------------------------------------*/
 #define TUNTAP_NAME "/dev/net/tun"
+
+
+/*-------------------------------------------------------------------*/
+/* Response buffer size                                              */
+/*-------------------------------------------------------------------*/
+#define RSP_BUFSZ       4096
 
 
 #endif /*!defined(_QETH_H)*/

@@ -1,4 +1,4 @@
-/* QETH.C       (c) Copyright Jan Jaeger,   1999-2009                */
+/* QETH.C       (c) Copyright Jan Jaeger,   1999-2011                */
 /*              OSA Express                                          */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -16,7 +16,7 @@
 /* hercules.cnf:                                                     */
 /* 0A00-0A02 QETH <optional parameters>                              */
 
-
+//#define DEBUG
 
 #include "hstdinc.h"
 
@@ -127,74 +127,40 @@ static BYTE qeth_immed_commands [256] =
 };
 
 
-static const char *osa_devtyp[] = { "OSA Read", "OSA Write", "OSA Data" };
+static const char *osa_devtyp[] = { "Read", "Write", "Data" };
 
 
 /*-------------------------------------------------------------------*/
 /* Adapter Command Routine                                           */
 /*-------------------------------------------------------------------*/
-static int osa_adapter_cmd(DEVBLK *dev, void *request)
+static void osa_adapter_cmd(DEVBLK *dev, void *request, DEVBLK *rdev)
 {
 OSA_GRP *osa_grp = (OSA_GRP*)dev->group->grp_data;
 
     UNREFERENCED(request);
+    UNREFERENCED(rdev);
     UNREFERENCED(osa_grp);
 
 // ZZ Process adapter commands here
-// ZZ Response needs to be stored at osa_grp->idxrdbuff
-// ZZ The size of the response buffer os osa_grp->idxrdbufn
+// ZZ Response needs to be stored in the rdev->qrspbf buffer
+// ZZ The size of the response buffer rdev->qrspsz;
 
-    return 122; // ZZ the actual reponse size needs to be returned
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Device Response Routine                                           */
-/*-------------------------------------------------------------------*/
-static int osa_device_rsp(DEVBLK *dev, OSA_IEAR *iear)
-{
-    memset(iear, 0x00, sizeof(OSA_IEAR));
-
-    switch(dev->qidxstate) {
-
-    case OSA_IDX_STATE_ACTPEND:
-
-        switch(dev->member) {
-
-        case OSA_READ_DEVICE:
-        case OSA_WRITE_DEVICE:
-            iear->resp = IDX_RSP_RESP_OK;
-            iear->flags = IDX_RSP_FLAGS_NOPORTREQ;
-            STORE_HW(iear->flevel, 0x0201);
-            dev->qidxstate = OSA_IDX_STATE_ACTIVE;
-            break;
-
-        default:
-            logmsg(_("QETH: IDX Activate Error for %s Device %4.4x\n"),osa_devtyp[dev->member],dev->devnum);
-            dev->qidxstate = OSA_IDX_STATE_INITIAL;
-            break;
-
-        }
-        break;
-
-    default:
-        logmsg(_("QETH: IDX State for %s Device %4.4x reset\n"),osa_devtyp[dev->member],dev->devnum);
-        dev->qidxstate = OSA_IDX_STATE_INITIAL;
-        break;
-
-    }
-
-    return sizeof(OSA_IEAR);
+    // set some reponse
+    memcpy(rdev->qrspbf,request, 122);
+    rdev->qrspsz = 122;
 }
 
 
 /*-------------------------------------------------------------------*/
 /* Device Command Routine                                            */
 /*-------------------------------------------------------------------*/
-static int osa_device_cmd(DEVBLK *dev, OSA_IEA *iea)
+static void osa_device_cmd(DEVBLK *dev, OSA_IEA *iea, DEVBLK *rdev)
 {
 U16 reqtype;
 U16 datadev;
+OSA_IEAR *iear = (OSA_IEAR*)rdev->qrspbf;
+
+    memset(iear, 0x00, sizeof(OSA_IEAR));
 
     FETCH_HW(reqtype, iea->type);
 
@@ -205,21 +171,25 @@ U16 datadev;
         if(!IS_OSA_READ_DEVICE(dev))
         {
             logmsg(_("QETH: IDX ACTIVATE READ Invalid for %s Device %4.4x\n"),osa_devtyp[dev->member],dev->devnum); 
-            dev->qidxstate = OSA_IDX_STATE_ERRPEND;
+            dev->qidxstate = OSA_IDX_STATE_INACTIVE;
         }
         else if((iea->port & ~IDX_ACT_PORT) != OSA_PORTNO)
         {
             logmsg(_("QETH: IDX ACTIVATE READ Invalid OSA Port %d for %s Device %4.4x\n"),(iea->port & ~IDX_ACT_PORT),osa_devtyp[dev->member],dev->devnum); 
-            dev->qidxstate = OSA_IDX_STATE_ERRPEND;
+            dev->qidxstate = OSA_IDX_STATE_INACTIVE;
         }
         else if(datadev != dev->group->memdev[OSA_DATA_DEVICE]->devnum)
         {
             logmsg(_("QETH: IDX ACTIVATE READ Invalid OSA Data Device %d for %s Device %4.4x\n"),datadev,osa_devtyp[dev->member],dev->devnum); 
-            dev->qidxstate = OSA_IDX_STATE_ERRPEND;
+            dev->qidxstate = OSA_IDX_STATE_INACTIVE;
         }
         else
         {
-            dev->qidxstate = OSA_IDX_STATE_ACTPEND;
+            iear->resp = IDX_RSP_RESP_OK;
+            iear->flags = IDX_RSP_FLAGS_NOPORTREQ;
+            STORE_HW(iear->flevel, 0x0201);
+
+            dev->qidxstate = OSA_IDX_STATE_ACTIVE;
         }
         break;
 
@@ -228,31 +198,35 @@ U16 datadev;
         if(!IS_OSA_WRITE_DEVICE(dev))
         {
             logmsg(_("QETH: IDX ACTIVATE WRITE Invalid for %s Device %4.4x\n"),osa_devtyp[dev->member],dev->devnum); 
-            dev->qidxstate = OSA_IDX_STATE_ERRPEND;
+            dev->qidxstate = OSA_IDX_STATE_INACTIVE;
         }
         else if((iea->port & ~IDX_ACT_PORT) != OSA_PORTNO)
         {
             logmsg(_("QETH: IDX ACTIVATE WRITE Invalid OSA Port %d for %s Device %4.4x\n"),(iea->port & ~IDX_ACT_PORT),osa_devtyp[dev->member],dev->devnum); 
-            dev->qidxstate = OSA_IDX_STATE_ERRPEND;
+            dev->qidxstate = OSA_IDX_STATE_INACTIVE;
         }
         else if(datadev != dev->group->memdev[OSA_DATA_DEVICE]->devnum)
         {
             logmsg(_("QETH: IDX ACTIVATE WRITE Invalid OSA Data Device %d for %s Device %4.4x\n"),datadev,osa_devtyp[dev->member],dev->devnum); 
-            dev->qidxstate = OSA_IDX_STATE_ERRPEND;
+            dev->qidxstate = OSA_IDX_STATE_INACTIVE;
         }
         else
         {
-            dev->qidxstate = OSA_IDX_STATE_ACTPEND;
+            iear->resp = IDX_RSP_RESP_OK;
+            iear->flags = IDX_RSP_FLAGS_NOPORTREQ;
+            STORE_HW(iear->flevel, 0x0201);
+
+            dev->qidxstate = OSA_IDX_STATE_ACTIVE;
         }
         break;
 
     default:
         logmsg(_("QETH: IDX ACTIVATE Invalid Request %4.4x for %s device %4.4x\n"),reqtype,osa_devtyp[dev->member],dev->devnum); 
-        dev->qidxstate = OSA_IDX_STATE_ERRPEND;
+        dev->qidxstate = OSA_IDX_STATE_INACTIVE;
         break;
     }
 
-    return sizeof(OSA_IEA);
+    rdev->qrspsz = sizeof(OSA_IEAR);
 }
 
 
@@ -261,7 +235,7 @@ U16 datadev;
 /*-------------------------------------------------------------------*/
 static void qeth_halt_device ( DEVBLK *dev)
 {
-logmsg(_("QETH: dev(%4.4x) Halt Device\n"),dev->devnum);
+TRACE(_("QETH: dev(%4.4x) Halt Device\n"),dev->devnum);
 
     /* Signal QDIO end if QDIO is active */
     if(dev->scsw.flag2 & SCSW2_Q)
@@ -287,7 +261,6 @@ int grouped;
 logmsg(_("QETH: dev(%4.4x) experimental driver\n"),dev->devnum);
 
     dev->numdevid = sizeof(sense_id_bytes);
-logmsg(_("senseidnum=%d\n"),dev->numdevid);
     memcpy(dev->devid, sense_id_bytes, sizeof(sense_id_bytes));
     dev->devtype = dev->devid[1] << 8 | dev->devid[2];
     
@@ -296,39 +269,26 @@ logmsg(_("senseidnum=%d\n"),dev->numdevid);
     
     dev->pmcw.flag4 |= PMCW4_Q;
 
-    if(!(grouped = group_device(dev,OSA_GROUP_SIZE)))
+    if(!(grouped = group_device(dev,OSA_GROUP_SIZE)) && !dev->member)
     {
-        if(!dev->member)
-        {
-            dev->group->grp_data = osa_grp = malloc(sizeof(OSA_GRP));
-            memset (osa_grp, 0, sizeof(OSA_GRP));
-            /* Set defaults */
-            osa_grp->tuntap = TUNTAP_NAME;
-        }
+        dev->group->grp_data = osa_grp = malloc(sizeof(OSA_GRP));
+        memset (osa_grp, 0, sizeof(OSA_GRP));
 
-        logmsg(_("group device(%4.4x) pending\n"),dev->devnum);
-        return 0;
-    }
-    else
-    {
-    int i;
-        logmsg(_("group = ( "));
-        for(i = 0; i < dev->group->acount; i++)
-            logmsg("%4.4x ",dev->group->memdev[i]->devnum);
-        logmsg(") complete\n");
+        /* Set defaults */
+        osa_grp->tuntap = TUNTAP_NAME;
     }
 
-    if(!grouped)
-    {
+    /* Allocate reponse buffer */
+    dev->qrspbf = malloc(RSP_BUFSZ);
+    dev->qrspsz = 0;
+
     // process all command line options here
-        UNREFERENCED(argc);
-        UNREFERENCED(argv);
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
 
-
-    }
-    else
+    if(grouped)
     {
-    // Perform initialisation here
+        // Perform group initialisation here
 
     }
 
@@ -342,10 +302,10 @@ logmsg(_("senseidnum=%d\n"),dev->numdevid);
 static void qeth_query_device (DEVBLK *dev, char **class,
                 int buflen, char *buffer)
 {
-    BEGIN_DEVICE_CLASS_QUERY( "QETH", dev, class, buflen, buffer );
+    BEGIN_DEVICE_CLASS_QUERY( "OSA", dev, class, buflen, buffer );
 
     snprintf (buffer, buflen-1, "%s%s",
-      (dev->group->acount == OSA_GROUP_SIZE) ? osa_devtyp[dev->member] : "*incomplete",
+      (dev->group->acount == OSA_GROUP_SIZE) ? osa_devtyp[dev->member] : "*Incomplete",
       (dev->scsw.flag2 & SCSW2_Q) ? " QDIO" : "");
 
 } /* end function qeth_query_device */
@@ -363,6 +323,12 @@ static int qeth_close_device ( DEVBLK *dev )
         dev->group->grp_data = NULL;
     }
 
+    if(dev->qrspbf)
+    {
+        free(dev->qrspbf);
+        dev->qrspbf = NULL;
+    }
+
     return 0;
 } /* end function qeth_close_device */
 
@@ -373,8 +339,6 @@ static int qeth_close_device ( DEVBLK *dev )
 static int qeth_ssqd_desc ( DEVBLK *dev, void *desc )
 {
     CHSC_RSP24 *chsc_rsp24 = (void *)desc;
-
-logmsg(_("QETH: dev(%4.4x) CHSC get ssqd\n"),dev->devnum);
 
     STORE_HW(chsc_rsp24->sch, dev->subchan);
 
@@ -393,7 +357,6 @@ static void qeth_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U16 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual )
 {
-OSA_GRP *osa_grp = (OSA_GRP*)dev->group->grp_data;
 int     num;                            /* Number of bytes to move   */
 
     UNREFERENCED(flags);
@@ -422,33 +385,31 @@ int     num;                            /* Number of bytes to move   */
     {
     OSA_HDR *osa_hdr = (OSA_HDR*)iobuf;
     U16 ddc;
-#define WR_SIZE 0x1000
-logmsg(_("Write dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
+
+    /* Device block of device to which response is sent */
+    DEVBLK *rdev = (IS_OSA_WRITE_DEVICE(dev) 
+                  && (dev->qidxstate == OSA_IDX_STATE_ACTIVE)
+                  && (dev->group->memdev[OSA_READ_DEVICE]->qidxstate == OSA_IDX_STATE_ACTIVE)) 
+                 ? dev->group->memdev[OSA_READ_DEVICE] : dev;
+
+TRACE(_("Write dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
 
         FETCH_HW(ddc,osa_hdr->ddc);
   
+        obtain_lock(&rdev->qlock);
         if(ddc == IDX_ACT_DDC)
-        {
-            osa_device_cmd(dev,(OSA_IEA*)iobuf);
-        }
+            osa_device_cmd(dev,(OSA_IEA*)iobuf, rdev);
         else
-        {
-            if(IS_OSA_WRITE_DEVICE(dev) 
-              && (dev->qidxstate == OSA_IDX_STATE_ACTIVE)
-              && (dev->group->memdev[OSA_READ_DEVICE]->qidxstate == OSA_IDX_STATE_ACTIVE))
-            {
-//              obtain_lock(&dev->group->memdev[OSA_READ_DEVICE]->qlock);
-// ZZ need to test if(osa_grp->idxrdbuff) before callins osa_adapter_cmd
-                osa_grp->idxrdretn = osa_adapter_cmd(dev, (void*)iobuf);
-//              release_lock(&dev->group->memdev[OSA_READ_DEVICE]->qlock);
-                signal_condition(&dev->group->memdev[OSA_READ_DEVICE]->qcond);
-            }
-        }
+            osa_adapter_cmd(dev, (void*)iobuf, rdev);
+        release_lock(&rdev->qlock);
+
+        if(dev != rdev)
+            signal_condition(&rdev->qcond);
             
         /* Calculate number of bytes to write and set residual count */
-        num = (count < WR_SIZE) ? count : WR_SIZE;
+        num = (count < RSP_BUFSZ) ? count : RSP_BUFSZ;
         *residual = count - num;
-        if (count < WR_SIZE) *more = 1;
+        if (count < RSP_BUFSZ) *more = 1;
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
@@ -462,42 +423,56 @@ logmsg(_("Write dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
     case 0x02:
     {
         int rd_size = 0;
-        int timeoutrc;
-        struct timespec waittime;
-        struct timeval  now;
+        int timeoutrc = 0;
 
-logmsg(_("Read dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
+TRACE(_("Read dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
 
-        if(dev->qidxstate != OSA_IDX_STATE_ACTIVE)
+        obtain_lock(&dev->qlock);
+        if(dev->qrspsz)
         {
-            rd_size = osa_device_rsp(dev, (OSA_IEAR*)iobuf);
+            rd_size = dev->qrspsz;
+            memcpy(iobuf,dev->qrspbf,rd_size);
+            dev->qrspsz = 0;
         }
         else
         {
-            gettimeofday( &now, NULL );
-            waittime.tv_sec  = now.tv_sec  + OSA_READ_TIMEOUT;
-            waittime.tv_nsec = now.tv_usec * 1000;
-
-            obtain_lock(&dev->qlock);
-            osa_grp->idxrdbuff = iobuf;
-            osa_grp->idxrdbufn = count;
-#if 1
-            timeoutrc = timed_wait_condition(&dev->qcond, &dev->qlock, &waittime);
-#else
-            wait_condition(&dev->qcond, &dev->qlock);
-#endif
-            osa_grp->idxrdbuff = NULL;
-            rd_size = osa_grp->idxrdretn;
-            release_lock(&dev->qlock);
+            if(IS_OSA_READ_DEVICE(dev)
+              && (dev->qidxstate == OSA_IDX_STATE_ACTIVE))
+            {
+            struct timespec waittime;
+            struct timeval  now;
+                gettimeofday( &now, NULL );
+                waittime.tv_sec  = now.tv_sec  + OSA_READ_TIMEOUT;
+                waittime.tv_nsec = now.tv_usec * 1000;
+    
+                if(!(timeoutrc = timed_wait_condition(&dev->qcond, &dev->qlock, &waittime)))
+                {
+                    rd_size = dev->qrspsz;
+                    memcpy(iobuf,dev->qrspbf,rd_size);
+                    dev->qrspsz = 0;
+                }
+            }
         }
-         
-        /* Calculate number of bytes to read and set residual count */
-        num = (count < rd_size) ? count : rd_size;
-        *residual = count - num;
-        if (count < rd_size) *more = 1;
+        release_lock(&dev->qlock);
 
-        /* Return normal status */
-        *unitstat = CSW_CE | CSW_DE;
+        if(!timeoutrc)
+        {
+TRACE(_("Read dev(%4.4x) %d bytes\n"),dev->devnum,rd_size);
+            /* Calculate number of bytes to read and set residual count */
+            num = (count < rd_size) ? count : rd_size;
+            *residual = count - num;
+            if (count < rd_size) *more = 1;
+
+            /* Return normal status */
+            *unitstat = CSW_CE | CSW_DE;
+        }
+        else
+        {
+TRACE(_("Read timeout\n"));
+            /* Return unit check with status modifier */
+            dev->sense[0] = 0;
+            *unitstat = CSW_CE | CSW_DE | CSW_UC | CSW_SM;
+        }
         break;
     }
 
@@ -506,7 +481,7 @@ logmsg(_("Read dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
     /*---------------------------------------------------------------*/
     /* CONTROL NO-OPERATION                                          */
     /*---------------------------------------------------------------*/
-logmsg(_("NOP dev(%4.4x)\n"),dev->devnum);
+
         *residual = 0;
         *unitstat = CSW_CE | CSW_DE;
         break;
@@ -516,7 +491,7 @@ logmsg(_("NOP dev(%4.4x)\n"),dev->devnum);
     /*---------------------------------------------------------------*/
     /* SENSE                                                         */
     /*---------------------------------------------------------------*/
-logmsg(_("Sense dev(%4.4x)\n"),dev->devnum);
+
         /* Calculate residual byte count */
         num = (count < dev->numsense) ? count : dev->numsense;
         *residual = count - num;
@@ -537,7 +512,6 @@ logmsg(_("Sense dev(%4.4x)\n"),dev->devnum);
     /*---------------------------------------------------------------*/
     /* SENSE ID                                                      */
     /*---------------------------------------------------------------*/
-logmsg(_("Sense ID dev(%4.4x)\n"),dev->devnum);
 
         /* Calculate residual byte count */
         num = (count < dev->numdevid) ? count : dev->numdevid;
@@ -556,7 +530,6 @@ logmsg(_("Sense ID dev(%4.4x)\n"),dev->devnum);
     /*---------------------------------------------------------------*/
     /* READ CONFIGURATION DATA                                       */
     /*---------------------------------------------------------------*/
-logmsg(_("Read Configuration Data dev(%4.4x)\n"),dev->devnum);
 
         /* Calculate residual byte count */
         num = (count < sizeof(read_configuration_data_bytes) ? count : sizeof(read_configuration_data_bytes));
@@ -592,7 +565,7 @@ logmsg(_("Read Configuration Data dev(%4.4x)\n"),dev->devnum);
 
         UNREFERENCED(qdr);
 
-logmsg(_("Establish Queues dev(%4.4x)\n"),dev->devnum);
+TRACE(_("Establish Queues dev(%4.4x)\n"),dev->devnum);
 
         /* INCOMPLETE ZZ
          * QUEUES MUST BE SETUP HERE
@@ -613,7 +586,7 @@ logmsg(_("Establish Queues dev(%4.4x)\n"),dev->devnum);
     /*---------------------------------------------------------------*/
     /* ACTIVATE QUEUES                                               */
     /*---------------------------------------------------------------*/
-logmsg(_("Activate Queues dev(%4.4x) Start\n"),dev->devnum);
+TRACE(_("Activate Queues dev(%4.4x) Start\n"),dev->devnum);
 
         /* INCOMPLETE ZZ
          * QUEUES MUST BE HANDLED HERE, THIS CCW WILL ONLY EXIT
@@ -636,10 +609,10 @@ logmsg(_("Activate Queues dev(%4.4x) Start\n"),dev->devnum);
 
         } while (dev->scsw.flag2 & SCSW2_Q);
 
+TRACE(_("Activate Queues dev(%4.4x) End\n"),dev->devnum);
+
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
-
-logmsg(_("Activate Queues dev(%4.4x) End\n"),dev->devnum);
         break;
 
 
@@ -647,7 +620,7 @@ logmsg(_("Activate Queues dev(%4.4x) End\n"),dev->devnum);
     /*---------------------------------------------------------------*/
     /* INVALID OPERATION                                             */
     /*---------------------------------------------------------------*/
-logmsg(_("Unkown CCW dev(%4.4x) code(%2.2x)\n"),dev->devnum,code);
+TRACE(_("Unkown CCW dev(%4.4x) code(%2.2x)\n"),dev->devnum,code);
         /* Set command reject sense byte, and unit check status */
         dev->sense[0] = SENSE_CR;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -662,7 +635,7 @@ logmsg(_("Unkown CCW dev(%4.4x) code(%2.2x)\n"),dev->devnum,code);
 /*-------------------------------------------------------------------*/
 static int qeth_initiate_input(DEVBLK *dev, U32 qmask)
 {
-logmsg(_("SIGA-r dev(%4.4x) qmask(%8.8x)\n"),dev->devnum,qmask);
+TRACE(_("SIGA-r dev(%4.4x) qmask(%8.8x)\n"),dev->devnum,qmask);
 
     obtain_lock(&dev->qlock);
     /* Return CC1 if the device is not QDIO active */
@@ -685,7 +658,7 @@ logmsg(_("SIGA-r dev(%4.4x) qmask(%8.8x)\n"),dev->devnum,qmask);
 /*-------------------------------------------------------------------*/
 static int qeth_initiate_output(DEVBLK *dev, U32 qmask)
 {
-logmsg(_("SIGA-w dev(%4.4x) qmask(%8.8x)\n"),dev->devnum,qmask);
+TRACE(_("SIGA-w dev(%4.4x) qmask(%8.8x)\n"),dev->devnum,qmask);
 
     obtain_lock(&dev->qlock);
     /* Return CC1 if the device is not QDIO active */
