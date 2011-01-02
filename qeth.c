@@ -16,7 +16,7 @@
 /* hercules.cnf:                                                     */
 /* 0A00-0A02 QETH <optional parameters>                              */
 
-//#define DEBUG
+// #define DEBUG
 
 #include "hstdinc.h"
 
@@ -27,6 +27,8 @@
 #include "chsc.h"
 
 #include "qeth.h"
+
+#include "tuntap.h"
 
 
 #if defined(WIN32) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
@@ -131,7 +133,7 @@ static const char *osa_devtyp[] = { "Read", "Write", "Data" };
 
 
 #if defined(DEBUG)
-static inline void dump(char* name, void* ptr, int len)
+static inline void DUMP(char* name, void* ptr, int len)
 {
 int i;
 
@@ -146,7 +148,7 @@ int i;
         logmsg(_("\n"));
 }
 #else
- #define dump(_name, _ptr, _len)
+ #define DUMP(_name, _ptr, _len)
 #endif
 
 
@@ -157,9 +159,10 @@ static void osa_adapter_cmd(DEVBLK *dev, OSA_TH *osa_th, DEVBLK *rdev)
 {
 OSA_GRP *osa_grp = (OSA_GRP*)dev->group->grp_data;
 OSA_RRH *osa_rrh;
-OSA_PDUH *osa_pduh;
+OSA_PH  *osa_ph;
 OSA_PDU *osa_pdu;
 U16 offset;
+U16 rqsize;
 
     UNREFERENCED(osa_grp);
 
@@ -167,40 +170,91 @@ U16 offset;
 // ZZ Response needs to be stored in the rdev->qrspbf buffer
 // ZZ The size of the response buffer rdev->qrspsz;
 
+    /* Copy request to response buffer */
+    FETCH_HW(rqsize,osa_th->rrlen);
+    memcpy(rdev->qrspbf,osa_th,rqsize);
+
     FETCH_HW(offset,osa_th->rroff);
     osa_rrh = (OSA_RRH*)((BYTE*)osa_th+offset);
 
     FETCH_HW(offset,osa_rrh->pduhoff);
-    osa_pduh = (OSA_PDUH*)((BYTE*)osa_rrh+offset);
-
+    osa_ph = (OSA_PH*)((BYTE*)osa_rrh+offset);
 
     switch(osa_rrh->type) {
 
     case RRH_TYPE_CM:
-TRACE("Type=CM\n");
         break;
 
     case RRH_TYPE_ULP:
-TRACE("Type=ULP\n");
+        {
+        OSA_PDU *osa_pdu = (OSA_PDU*)(osa_ph+1);
+        int rc;
+TRACE("Protocol=%s\n",osa_pdu->proto == RRH_PROTO_L2 ? "Layer 2" :
+                      osa_pdu->proto == RRH_PROTO_L3 ? "Layer 3" :
+                      osa_pdu->proto == RRH_PROTO_NCP ? "NCP" :
+                      osa_pdu->proto == RRH_PROTO_UNK ? "N/A" : "?");
+TRACE("Target=%s\n",osa_pdu->tgt == PDU_TGT_OSA ? "OSA" :
+                    osa_pdu->tgt == PDU_TGT_QDIO ? "QDIO" : "?");
+TRACE("Command=%s\n",osa_pdu->cmd == PDU_CMD_ENABLE ? "ENABLE" :
+                     osa_pdu->cmd == PDU_CMD_SETUP  ? "SETUP" :
+                     osa_pdu->cmd == PDU_CMD_ACTIVATE ? "ACTIVATE" : "?");
+            DUMP("RRH",osa_rrh,sizeof(OSA_RRH));
+            DUMP("PDU",osa_pdu,sizeof(OSA_PDU));
+            if(osa_pdu->tgt == PDU_TGT_OSA && osa_pdu->cmd == PDU_CMD_ENABLE)
+                if((rc = TUNTAP_CreateInterface(osa_grp->tuntap,
+                 ((osa_pdu->proto != RRH_PROTO_L3) ? IFF_TAP : IFF_TUN) | IFF_NO_PI,
+                                       &osa_grp->fd,                      
+                                       osa_grp->ttdevn)))
+                    logmsg(_("QETH: TUNTAP_CreateInterface(%s,%s) error %d\n"),
+                      osa_grp->tuntap,osa_pdu->proto == RRH_PROTO_L2 ? "TAP" : "TUN",rc);
+
+        }
         break;
 
     case RRH_TYPE_IPA:
         {
-TRACE("Type=IPA\n");
-        OSA_IPA *osa_ipa = (OSA_IPA*)(osa_pduh+1);
+        OSA_IPA *osa_ipa = (OSA_IPA*)(osa_ph+1);
+TRACE("Type=IPA ");
         
             switch(osa_ipa->cmd) {
+
+            case IPA_CMD_STARTLAN:
+                {
+                    TRACE(_("STARTLAN Layer %d IPv%d\n"),
+                      (osa_ipa->lvl == IPA_LVL_L2) ? 2 : 3,osa_ipa->proto[1]);
+                }
+                break;
+
+            case IPA_CMD_STOPLAN:
+                {
+                    TRACE(_("STOPLAN\n"));
+                }
+                break;
 
             case IPA_CMD_SETVMAC:
                 {
                 OSA_IPA_MAC *ipa_mac = (OSA_IPA_MAC*)(osa_ipa+1);
-                TRACE("Set vMAC: %02x:%02x:%02x:%02x:%02x:%02x\n",
-                  ipa_mac->macaddr[0],ipa_mac->macaddr[1],ipa_mac->macaddr[2],
-                  ipa_mac->macaddr[3],ipa_mac->macaddr[4],ipa_mac->macaddr[5]);
+                char macaddr[18];
+                int rc;
+                    snprintf(macaddr,sizeof(macaddr),"%02x:%02x:%02x:%02x:%02x:%02x",
+                      ipa_mac->macaddr[0],ipa_mac->macaddr[1],ipa_mac->macaddr[2],
+                      ipa_mac->macaddr[3],ipa_mac->macaddr[4],ipa_mac->macaddr[5]);
+
+                    TRACE("Set VMAC: %s\n",macaddr);
+
+#if defined(OPTION_TUNTAP_SETMACADDR)
+                    if((rc = TUNTAP_SetMACAddr(osa_grp->ttdevn,macaddr)))
+                        logmsg(_("QETH: TUNTAP_SetMACAddr(%s,%s) error %d\n"),osa_grp->ttdevn,macaddr,rc);
+#endif /*defined(OPTION_TUNTAP_SETMACADDR)*/
+
                 }
                 break;
+
             default:
-                TRACE("IPA Cmd(%02x)\n",osa_ipa->cmd);
+                TRACE("Cmd(%02x)\n",osa_ipa->cmd);
+                DUMP("IPA",osa_ipa,sizeof(OSA_IPA));
+                FETCH_HW(offset,osa_ph->pdulen);
+                DUMP("REQ",(osa_ipa+1),offset-sizeof(OSA_IPA));
             }
         }
         break;
@@ -210,9 +264,8 @@ TRACE("Invalid Type=%2.2x\n",osa_rrh->type);
 
     }
 
-    // set some response
-    memcpy(rdev->qrspbf,osa_th, 122);
-    rdev->qrspsz = 122;
+    // Set Response
+    rdev->qrspsz = rqsize;
 }
 
 
@@ -322,6 +375,7 @@ static int qeth_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
 OSA_GRP *osa_grp;
 int grouped;
+int i;
 
 logmsg(_("QETH: dev(%4.4x) experimental driver\n"),dev->devnum);
 
@@ -340,16 +394,33 @@ logmsg(_("QETH: dev(%4.4x) experimental driver\n"),dev->devnum);
         memset (osa_grp, 0, sizeof(OSA_GRP));
 
         /* Set defaults */
-        osa_grp->tuntap = TUNTAP_NAME;
+        osa_grp->tuntap = strdup(TUNTAP_NAME);
     }
+    else
+        osa_grp = dev->group->grp_data;
 
     /* Allocate reponse buffer */
     dev->qrspbf = malloc(RSP_BUFSZ);
     dev->qrspsz = 0;
 
     // process all command line options here
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
+    // commands to have ifconfig type args
+    // iface /dev/net/tun
+    // hwaddr 01:02:03:04:05:06
+    // ipaddr 172.16.0.1
+    // netmask 255.255.255.0
+    // etc
+    for(i = 0; i < argc; i++)
+    {
+        if(!strcasecmp("iface",argv[i]) && (i+1) < argc)
+        {
+            free(osa_grp->tuntap);
+            osa_grp->tuntap = strdup(argv[++i]);
+        }
+        else
+            logmsg(_("QETH: Invalid option %s for device %4.4X\n"),argv[i],dev->devnum);
+
+    }
 
     if(grouped)
     {

@@ -251,7 +251,7 @@ if OPTION_DYNAMIC_LOAD
   hdt3525_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
   hdt3525_la_LIBADD  = $(DYNMOD_LD_ADD)
 
-  hdtqeth_la_SOURCES = qeth.c
+  hdtqeth_la_SOURCES = qeth.c tuntap.c
   hdtqeth_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
   hdtqeth_la_LIBADD  = $(DYNMOD_LD_ADD)
 
