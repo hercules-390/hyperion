@@ -248,8 +248,48 @@ typedef struct _OSA_IPA {
 /*001*/ BYTE    iid;            /* Initator Identifier               */
 #define IPA_IID_HOST    0x00
 /*002*/ HWORD   seq;            /* Sequence number                   */
-// ZZ INCOMPLETE
+/*004*/ HWORD   rc;             /* Return Code                       */
+#define IPA_RC_OK       0x00
+/*006*/ BYTE    at;             /* Adapter Type                      */
+#define IPA_AT_ANY      0x01
+/*007*/ BYTE    port;           /* OSA Port Number                   */
+/*008*/ BYTE    lvl;            /* OSA Level                         */
+#define IPA_LVL_ANY     0x01
+#define IPA_LVL_L2      0x02
+/*009*/ BYTE    cnt;            /* Parameter Count                   */
+/*00A*/ HWORD   prot;           /* Protocol                          */
+#define IPA_PROT_ANY    0x0000
+#define IPA_PROT_IPV4   0x0004
+#define IPA_PROT_IPV6   0x0006
+/*00C*/ FWORD   ipas;           /* Supported IP Assist mask          */
+/*010*/ FWORD   ipae;           /* Enabled IP Assist mask            */
     } OSA_IPA;
+
+
+#define IPA_CMD_STARTLAN  0x01  /* Start LAN operations              */
+#define IPA_CMD_STOPLAN 0x02    /* Stop LAN operations               */
+#define IPA_CMD_SETVMAC 0x21    /* Set Layer-2 MAC address           */
+#define IPA_CMD_DELVMAC 0x22    /* Delete Layer-2 MAC address        */
+#define IPA_CMD_SETGMAC 0x23    /* Set Layer-2 Group Multicast addr  */
+#define IPA_CMD_DELGMAC 0x24    /* Del Layer-2 Group Multicast addr  */
+#define IPA_CMD_SETVLAN 0x25    /* Set Layer-2 VLAN                  */
+#define IPA_CMD_DELVLAN 0x26    /* Delete Layer-2 VLAN               */
+#define IPA_CMD_SETCCID 0x41    /*                                   */
+#define IPA_CMD_DELCCID 0x42    /*                                   */
+#define IPA_CMD_MODCCID 0x43    /*                                   */
+#define IPA_CMD_SETIP   0xB1    /* Set Layer-3 IP unicast address    */
+#define IPA_CMD_QIPASSIST 0xB2  /* Query Layer-3 IP assist capability*/
+#define IPA_CMD_SETASSPARMS 0xB3 /* Set Layer-3 IP assist parameters */
+#define IPA_CMD_SETIPM  0xB4    /* Set Layer-3 IP multicast address  */
+#define IPA_CMD_DELIPM  0xB5    /* Delete Layer-3 IP multicast addr  */
+#define IPA_CMD_SETRTG  0xB6    /* Set Layer-3 routing informatio    */
+#define IPA_CMD_DELIP   0xB7    /* Delete Layer-3 IP unicast addr    */
+#define IPA_CMD_SETADPPARMS 0xB8 /* Various adapter directed sub-cmds*/
+#define IPA_CMD_SETDIAGASS 0xB9 /* Set Layer-3 diagnostic assists    */
+#define IPA_CMD_CREATEADDR 0xC3 /* Create L3 IPv6 addr from L2 MAC   */
+#define IPA_CMD_DESTROYADDR 0xC4 /* Destroy L3 IPv6 addr from L2 MAC */
+#define IPA_CMD_REGLCLADDR 0xD1 /*                                   */
+#define IPA_CMD_UNREGLCLADDR 0xD2 /*                                 */
 
 
 /*-------------------------------------------------------------------*/
@@ -257,7 +297,7 @@ typedef struct _OSA_IPA {
 /*-------------------------------------------------------------------*/
 typedef struct _OSA_IPA_MAC {
 /*000*/ FWORD   maclen;         /* Length of MAC Address             */
-/*004*/ BYTE    macaddr;        /* MAC Address                       */
+/*004*/ BYTE    macaddr[FLEXIBLE_ARRAY];  /* MAC Address             */
     } OSA_IPA_MAC;
 
 

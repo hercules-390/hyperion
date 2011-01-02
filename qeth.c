@@ -130,12 +130,36 @@ static BYTE qeth_immed_commands [256] =
 static const char *osa_devtyp[] = { "Read", "Write", "Data" };
 
 
+#if defined(DEBUG)
+static inline void dump(char* name, void* ptr, int len)
+{
+int i;
+
+    logmsg(_("DATA: %4.4X %s"), len, name);
+    for(i = 0; i < len; i++)
+    {
+        if(!(i & 15))
+            logmsg(_("\n%4.4X:"), i);
+        logmsg(_(" %2.2X"), ((BYTE*)ptr)[i]);
+    }
+    if(--i & 15)
+        logmsg(_("\n"));
+}
+#else
+ #define dump(_name, _ptr, _len)
+#endif
+
+
 /*-------------------------------------------------------------------*/
 /* Adapter Command Routine                                           */
 /*-------------------------------------------------------------------*/
-static void osa_adapter_cmd(DEVBLK *dev, OSA_TH *cmdhdr, DEVBLK *rdev)
+static void osa_adapter_cmd(DEVBLK *dev, OSA_TH *osa_th, DEVBLK *rdev)
 {
 OSA_GRP *osa_grp = (OSA_GRP*)dev->group->grp_data;
+OSA_RRH *osa_rrh;
+OSA_PDUH *osa_pduh;
+OSA_PDU *osa_pdu;
+U16 offset;
 
     UNREFERENCED(osa_grp);
 
@@ -143,26 +167,51 @@ OSA_GRP *osa_grp = (OSA_GRP*)dev->group->grp_data;
 // ZZ Response needs to be stored in the rdev->qrspbf buffer
 // ZZ The size of the response buffer rdev->qrspsz;
 
-#if defined(DEBUG)
-logmsg(_("OSA REQ:\n"));
-    {
-        int i;
+    FETCH_HW(offset,osa_th->rroff);
+    osa_rrh = (OSA_RRH*)((BYTE*)osa_th+offset);
 
-        logmsg(_("DATA: %4.4X"), 0x100);
-        for(i = 0; i < 0x100; i++)
+    FETCH_HW(offset,osa_rrh->pduhoff);
+    osa_pduh = (OSA_PDUH*)((BYTE*)osa_rrh+offset);
+
+
+    switch(osa_rrh->type) {
+
+    case RRH_TYPE_CM:
+TRACE("Type=CM\n");
+        break;
+
+    case RRH_TYPE_ULP:
+TRACE("Type=ULP\n");
+        break;
+
+    case RRH_TYPE_IPA:
         {
-            if(!(i & 15))
-                logmsg(_("\n%4.4X:"), i);
-            logmsg(_(" %2.2X"), ((BYTE*)cmdhdr)[i]);
+TRACE("Type=IPA\n");
+        OSA_IPA *osa_ipa = (OSA_IPA*)(osa_pduh+1);
+        
+            switch(osa_ipa->cmd) {
+
+            case IPA_CMD_SETVMAC:
+                {
+                OSA_IPA_MAC *ipa_mac = (OSA_IPA_MAC*)(osa_ipa+1);
+                TRACE("Set vMAC: %02x:%02x:%02x:%02x:%02x:%02x\n",
+                  ipa_mac->macaddr[0],ipa_mac->macaddr[1],ipa_mac->macaddr[2],
+                  ipa_mac->macaddr[3],ipa_mac->macaddr[4],ipa_mac->macaddr[5]);
+                }
+                break;
+            default:
+                TRACE("IPA Cmd(%02x)\n",osa_ipa->cmd);
+            }
         }
-        if(--i & 15)
-            logmsg(_("\n"));
+        break;
+
+    default:
+TRACE("Invalid Type=%2.2x\n",osa_rrh->type);
 
     }
-#endif
 
     // set some response
-    memcpy(rdev->qrspbf,cmdhdr, 122);
+    memcpy(rdev->qrspbf,osa_th, 122);
     rdev->qrspsz = 122;
 }
 
