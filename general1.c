@@ -4897,9 +4897,6 @@ DEF_INST(07E_)
     else
     {
         INST_UPDATE_PSW(regs, 2, 0);
-        /* Perform serialization and checkpoint synchronization if
-           the mask is all ones and R2 is register 0 */
-
 #if defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)            /*810*/
         /* Perform serialization without checkpoint synchronization
            the mask is B'1110' and R2 is register 0 */
@@ -4917,9 +4914,6 @@ DEF_INST(07E0)
     /* Optimized for cases when r2 == 0 */
     UNREFERENCED(inst);
     INST_UPDATE_PSW(regs, 2, 0);
-    /* Perform serialization and checkpoint synchronization if
-       the mask is all ones and R2 is register 0 */
-
 #if defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)            /*810*/
     /* Perform serialization without checkpoint synchronization
        the mask is B'1110' and R2 is register 0 */
