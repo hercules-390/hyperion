@@ -3784,9 +3784,6 @@ DEF_INST(divide_single_long_fullword);
 DEF_INST(divide_single_long_register);
 DEF_INST(divide_single_long_fullword_register);
 DEF_INST(load_logical_long_character);
-#ifdef OPTION_OPTINST
-DEF_INST(E3_0______90);
-#endif /* OPTION_OPTINST */
 DEF_INST(load_logical_long_halfword);
 DEF_INST(store_pair_to_quadword);
 DEF_INST(load_pair_from_quadword);
@@ -3816,9 +3813,6 @@ DEF_INST(add_long_halfword_immediate);
 DEF_INST(multiply_long_halfword_immediate);
 DEF_INST(compare_long_halfword_immediate);
 DEF_INST(and_long);
-#ifdef OPTION_OPTINST
-DEF_INST(E3_0______80);
-#endif /* OPTION_OPTINST */
 DEF_INST(or_long);
 DEF_INST(exclusive_or_long);
 DEF_INST(and_long_register);
@@ -3843,16 +3837,8 @@ DEF_INST(set_addressing_mode_31);
 DEF_INST(set_addressing_mode_64);
 DEF_INST(load_program_status_word_extended);
 DEF_INST(store_long);
-#ifdef OPTION_OPTINST
-/* Optimized STG instruction */
-DEF_INST(E3_0______24);
-#endif /* OPTION_OPTINST */
 DEF_INST(store_real_address);
 DEF_INST(load_long);
-#ifdef OPTION_OPTINST
-/* Optimized LG instruction */
-DEF_INST(E3_0______04);
-#endif /* OPTION_OPTINST */
 DEF_INST(multiply_single_long_register);
 DEF_INST(multiply_single_long_fullword_register);
 DEF_INST(multiply_single_long);
@@ -3863,10 +3849,6 @@ DEF_INST(shift_left_single_long);
 DEF_INST(shift_right_single_logical_long);
 DEF_INST(shift_left_single_logical_long);
 DEF_INST(compare_logical_long);
-#ifdef OPTION_OPTINST
-/* Optimized LG instruction */
-DEF_INST(E3_0______21);
-#endif /* OPTION_OPTINST */
 DEF_INST(compare_logical_long_fullword);
 DEF_INST(compare_logical_long_fullword_register);
 DEF_INST(load_logical_long_thirtyone_register);
@@ -3887,9 +3869,6 @@ DEF_INST(subtract_long_fullword_register);
 DEF_INST(add_logical_long);
 DEF_INST(add_logical_long_fullword);
 DEF_INST(add_long);
-#ifdef OPTION_OPTINST
-DEF_INST(E3_0______08);
-#endif /* OPTION_OPTINST */
 DEF_INST(add_long_fullword);
 DEF_INST(subtract_logical_long);
 DEF_INST(subtract_logical_long_fullword);
@@ -3897,9 +3876,6 @@ DEF_INST(subtract_long);
 DEF_INST(subtract_long_fullword);
 DEF_INST(compare_long_register);
 DEF_INST(compare_long);
-#ifdef OPTION_OPTINST
-DEF_INST(E3_0______20);
-#endif /* OPTION_OPTINST */
 DEF_INST(branch_on_count_long_register);
 DEF_INST(branch_on_count_long);
 DEF_INST(compare_and_swap_long);
@@ -4346,6 +4322,7 @@ DEF_INST(07E_);
 DEF_INST(07E0);
 DEF_INST(07F_);
 DEF_INST(07F0);
+DEF_INST(07_0);
 
 /* Optimized BC instructions */
 DEF_INST(4700);
@@ -4385,6 +4362,14 @@ DEF_INST(A7C4);
 DEF_INST(A7D4);
 DEF_INST(A7E4);
 DEF_INST(A7F4);
+
+DEF_INST(E3_0______04);
+DEF_INST(E3_0______08);
+DEF_INST(E3_0______20);
+DEF_INST(E3_0______21);
+DEF_INST(E3_0______24);
+DEF_INST(E3_0______80);
+DEF_INST(E3_0______90);
 #endif /* OPTION_OPTINST */
 
 /* end of OPCODE.H */

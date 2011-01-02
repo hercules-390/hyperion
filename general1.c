@@ -4726,7 +4726,7 @@ DEF_INST(070_)
 DEF_INST(071_) 
 {
     /* Branch if R1 mask bit is set and R2 is not register 0 */
-    if ((inst[1] & 0x0F) != 0 && (regs->psw.cc == 3))
+    if (/*(inst[1] & 0x0F) != 0 &&*/ (regs->psw.cc == 3))
         SUCCESSFUL_BRANCH(regs, regs->GR(inst[1] & 0x0F), 2);
     else
     {
@@ -4741,7 +4741,7 @@ DEF_INST(071_)
 DEF_INST(072_) 
 {
     /* Branch if R1 mask bit is set and R2 is not register 0 */
-    if ((inst[1] & 0x0F) != 0 && (regs->psw.cc == 2))
+    if (/*(inst[1] & 0x0F) != 0 &&*/ (regs->psw.cc == 2))
         SUCCESSFUL_BRANCH(regs, regs->GR(inst[1] & 0x0F), 2);
     else
     {
@@ -4756,7 +4756,7 @@ DEF_INST(072_)
 DEF_INST(073_) 
 {
     /* Branch if R1 mask bit is set and R2 is not register 0 */
-    if ((inst[1] & 0x0F) != 0 && (regs->psw.cc > 1))
+    if (/*(inst[1] & 0x0F) != 0 &&*/ (regs->psw.cc > 1))
         SUCCESSFUL_BRANCH(regs, regs->GR(inst[1] & 0x0F), 2);
     else
     {
@@ -4771,7 +4771,7 @@ DEF_INST(073_)
 DEF_INST(074_) 
 {
     /* Branch if R1 mask bit is set and R2 is not register 0 */
-    if ((inst[1] & 0x0F) != 0 && (regs->psw.cc == 1))
+    if (/*(inst[1] & 0x0F) != 0 &&*/ (regs->psw.cc == 1))
         SUCCESSFUL_BRANCH(regs, regs->GR(inst[1] & 0x0F), 2);
     else
     {
@@ -4786,7 +4786,7 @@ DEF_INST(074_)
 DEF_INST(075_) 
 {
     /* Branch if R1 mask bit is set and R2 is not register 0 */
-    if ((inst[1] & 0x0F) != 0 && (regs->psw.cc & 0x1))
+    if (/*(inst[1] & 0x0F) != 0 &&*/ (regs->psw.cc & 0x1))
         SUCCESSFUL_BRANCH(regs, regs->GR(inst[1] & 0x0F), 2);
     else
     {
@@ -4801,7 +4801,7 @@ DEF_INST(075_)
 DEF_INST(077_) 
 {
     /* Branch if R1 mask bit is set and R2 is not register 0 */
-    if ((inst[1] & 0x0F) != 0 && (regs->psw.cc != 0))
+    if (/*(inst[1] & 0x0F) != 0 &&*/ (regs->psw.cc != 0))
         SUCCESSFUL_BRANCH(regs, regs->GR(inst[1] & 0x0F), 2);
     else
     {
@@ -4816,7 +4816,7 @@ DEF_INST(077_)
 DEF_INST(078_) 
 {
     /* Branch if R1 mask bit is set and R2 is not register 0 */
-    if ((inst[1] & 0x0F) != 0 && (regs->psw.cc == 0))
+    if (/*(inst[1] & 0x0F) != 0 &&*/ (regs->psw.cc == 0))
         SUCCESSFUL_BRANCH(regs, regs->GR(inst[1] & 0x0F), 2);
     else
     {
@@ -4831,7 +4831,7 @@ DEF_INST(078_)
 DEF_INST(07A_) 
 {
     /* Branch if R1 mask bit is set and R2 is not register 0 */
-    if ((inst[1] & 0x0F) != 0 && ((regs->psw.cc & 0x1) == 0))
+    if (/*(inst[1] & 0x0F) != 0 &&*/ ((regs->psw.cc & 0x1) == 0))
         SUCCESSFUL_BRANCH(regs, regs->GR(inst[1] & 0x0F), 2);
     else
     {
@@ -4846,7 +4846,7 @@ DEF_INST(07A_)
 DEF_INST(07B_) 
 {
     /* Branch if R1 mask bit is set and R2 is not register 0 */
-    if ((inst[1] & 0x0F) != 0 && (regs->psw.cc != 1))
+    if (/*(inst[1] & 0x0F) != 0 &&*/ (regs->psw.cc != 1))
         SUCCESSFUL_BRANCH(regs, regs->GR(inst[1] & 0x0F), 2);
     else
     {
@@ -4861,7 +4861,7 @@ DEF_INST(07B_)
 DEF_INST(07C_) 
 {
     /* Branch if R1 mask bit is set and R2 is not register 0 */
-    if ((inst[1] & 0x0F) != 0 && (regs->psw.cc < 2))
+    if (/*(inst[1] & 0x0F) != 0 &&*/ (regs->psw.cc < 2))
         SUCCESSFUL_BRANCH(regs, regs->GR(inst[1] & 0x0F), 2);
     else
     {
@@ -4876,13 +4876,11 @@ DEF_INST(07C_)
 DEF_INST(07D_) 
 {
     /* Branch if R1 mask bit is set and R2 is not register 0 */
-    if ((inst[1] & 0x0F) != 0 && (regs->psw.cc != 2))
+    if (/*(inst[1] & 0x0F) != 0 &&*/ (regs->psw.cc != 2))
         SUCCESSFUL_BRANCH(regs, regs->GR(inst[1] & 0x0F), 2);
     else
     {
         INST_UPDATE_PSW(regs, 2, 0);
-        /* Perform serialization and checkpoint synchronization if
-           the mask is all ones and R2 is register 0 */
     }
 
 } /* end DEF_INST(branch_on_condition_register) */
@@ -4954,6 +4952,17 @@ DEF_INST(07F0)
     PERFORM_CHKPT_SYNC (regs);
 
 } /* end DEF_INST(branch_on_condition_register) */
+
+/*-------------------------------------------------------------------*/
+/* 07_0 BCR   - Branch on Condition Register                    [RR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(07_0)
+{
+    UNREFERENCED(inst);
+    INST_UPDATE_PSW(regs, 2, 0);
+
+} /* end DEF_INST(branch_on_condition_register) */
+
 
 /*-------------------------------------------------------------------*/
 /* 40_0 STH   - Store Halfword                                  [RX] */
