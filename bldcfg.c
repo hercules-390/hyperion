@@ -152,7 +152,9 @@ int     devtmax;                        /* Max number device threads */
     if (!g_maxcpu)
         sysblk.maxcpu = g_maxcpu = g_numcpu ? g_numcpu : 1;
     else
+    {
         ASSERT( g_maxcpu == sysblk.maxcpu );
+    }
     ASSERT( g_maxcpu && g_maxcpu <= MAX_CPU_ENGINES );
     ASSERT( g_numcpu <= g_maxcpu );
 

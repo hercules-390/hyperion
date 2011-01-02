@@ -4304,7 +4304,7 @@ DEF_INST(5F_0); /* SL */
 DEF_INST(71_0); /* MS */
 
 /* Optimized BCR instructions */
-DEF_INST(070_);
+DEF_INST(nop2);
 DEF_INST(071_);
 DEF_INST(072_);
 DEF_INST(073_);
@@ -4322,10 +4322,9 @@ DEF_INST(07E_);
 DEF_INST(07E0);
 DEF_INST(07F_);
 DEF_INST(07F0);
-DEF_INST(07_0);
 
 /* Optimized BC instructions */
-DEF_INST(4700);
+DEF_INST(nop4);
 DEF_INST(4710);
 DEF_INST(4720);
 DEF_INST(4730);
@@ -4346,7 +4345,7 @@ DEF_INST(47F0);
 DEF_INST(91sb);
 
 /* Optimized BRC instructions */
-DEF_INST(A704);
+DEF_INST(nop4);
 DEF_INST(A714);
 DEF_INST(A724);
 DEF_INST(A734);

@@ -4713,7 +4713,7 @@ U32     n;                              /* 32-bit operand values     */
 /*-------------------------------------------------------------------*/
 /* 070_ BCR   - Branch on Condition Register                    [RR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(070_) 
+DEF_INST(nop2) 
 {
     UNREFERENCED(inst);
     INST_UPDATE_PSW(regs, 2, 0);
@@ -4950,13 +4950,7 @@ DEF_INST(07F0)
 /*-------------------------------------------------------------------*/
 /* 07_0 BCR   - Branch on Condition Register                    [RR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(07_0)
-{
-    UNREFERENCED(inst);
-    INST_UPDATE_PSW(regs, 2, 0);
-
-} /* end DEF_INST(branch_on_condition_register) */
-
+//DEF_INST(nop2)
 
 /*-------------------------------------------------------------------*/
 /* 40_0 STH   - Store Halfword                                  [RX] */
@@ -5121,7 +5115,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* 4700 BC    - Branch on Condition                             [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(4700)
+DEF_INST(nop4)
 {
     UNREFERENCED(inst);
     INST_UPDATE_PSW(regs, 4, 0);
@@ -5902,12 +5896,7 @@ VADR    effective_addr1;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* A704 BRC   - Branch Relative on Condition                    [RI] */
 /*-------------------------------------------------------------------*/
-DEF_INST(A704)
-{
-    UNREFERENCED(inst);
-    INST_UPDATE_PSW(regs, 4, 0);
-
-} /* end DEF_INST(branch_relative_on_condition) */
+//DEF_INST(nop4)
 
 /*-------------------------------------------------------------------*/
 /* A714 BRC   - Branch Relative on Condition                    [RI] */

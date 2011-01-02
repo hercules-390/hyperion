@@ -1235,7 +1235,7 @@ static zz_func v_opcode_e4xx[0x100][GEN_MAXARCH];
 
 #ifdef OPTION_OPTINST
 static zz_func optxx_0[0x100][GEN_MAXARCH]; /* Optimized zero x2 instructions */
-static zz_func opt07xx[0x13][GEN_MAXARCH]; /* BCR */
+static zz_func opt07xx[0x12][GEN_MAXARCH]; /* BCR */
 static zz_func opt47x0[0x10][GEN_MAXARCH]; /* BC */
 static zz_func opt91sb[0x01][GEN_MAXARCH]; /* TM */
 static zz_func optA7x4[0x10][GEN_MAXARCH]; /* BRC */
@@ -2372,7 +2372,7 @@ void init_opcode_tables(void)
     replace_opcode_xxxx(arch, opt07xx[0x10][arch], 0x07, 0xe0); /* BCR 07E0____ */
     replace_opcode_xxxx(arch, opt07xx[0x11][arch], 0x07, 0xf0); /* BCR 07F0____ */
     for(j = 1; j < 0xe; j++)
-      replace_opcode_xxxx(arch, opt07xx[0x12][arch], 0x07, (j << 4) + 0x0); /* BCR 07_0____ */
+      replace_opcode_xxxx(arch, opt07xx[0][arch], 0x07, (j << 4) + 0x0); /* nop2 BCR 07_0____ */
     
     /* Implement optimized zero x2 instructions */
     for(i = 0; i < 0x100; i++)
@@ -7024,8 +7024,8 @@ static zz_func optE3_0______xx[0x100][GEN_MAXARCH] = {
  /*E3FF*/   GENx___x___x___ };
 
 /* Optimized BCR */
-static zz_func opt07xx[0x13][GEN_MAXARCH] = {
- /*070_*/ GENx370x390x900 (070_,RR,"BCR"),
+static zz_func opt07xx[0x12][GEN_MAXARCH] = {
+ /*070_*/ GENx370x390x900 (nop2,RR,"BCR"),
  /*071_*/ GENx370x390x900 (071_,RR,"BCR"),
  /*072_*/ GENx370x390x900 (072_,RR,"BCR"),
  /*073_*/ GENx370x390x900 (073_,RR,"BCR"),
@@ -7042,12 +7042,11 @@ static zz_func opt07xx[0x13][GEN_MAXARCH] = {
  /*07E_*/ GENx370x390x900 (07E_,RR,"BCR"),
  /*07F_*/ GENx370x390x900 (07F_,RR,"BCR"),
  /*07E0*/ GENx370x390x900 (07E0,RR,"BCR"),
- /*07F0*/ GENx370x390x900 (07F0,RR,"BCR"),
- /*07_0*/ GENx370x390x900 (07_0,RR,"BCR") };
+ /*07F0*/ GENx370x390x900 (07F0,RR,"BCR") };
 
 /* Optimized BC */
 static zz_func opt47x0[0x10][GEN_MAXARCH] = {
- /*4700*/ GENx370x390x900 (4700,RX,"BC"),
+ /*4700*/ GENx370x390x900 (nop4,RX,"BC"),
  /*4710*/ GENx370x390x900 (4710,RX,"BC"),
  /*4720*/ GENx370x390x900 (4720,RX,"BC"),
  /*4730*/ GENx370x390x900 (4730,RX,"BC"),
@@ -7069,7 +7068,7 @@ static zz_func opt91sb[0x1][GEN_MAXARCH] = {
 
 /* Optimized BRC */
 static zz_func optA7x4[0x10][GEN_MAXARCH] = {
- /*A704*/ GENx370x390x900 (A704,RI_B,"BRC"),
+ /*A704*/ GENx370x390x900 (nop4,RI_B,"BRC"),
  /*A714*/ GENx370x390x900 (A714,RI_B,"BRC"),
  /*A724*/ GENx370x390x900 (A724,RI_B,"BRC"),
  /*A734*/ GENx370x390x900 (A734,RI_B,"BRC"),
