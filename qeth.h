@@ -238,6 +238,10 @@ typedef struct _OSA_PDU {
 /*00E*/ BYTE    unkn00e;        /*                                   */
 /*00F*/ BYTE    unkn00f;        /*                                   */
 /*010*/ BYTE    proto;          /*                                   */
+#define PDU_PROTO_L2    0x08
+#define PDU_PROTO_L3    0x03
+#define PDU_PROTO_NCP   0x0A
+#define PDU_PROTO_UNK   0x7E
 // ZZ INCOMPLETE
     } OSA_PDU;
 

@@ -188,10 +188,10 @@ U16 rqsize;
             FETCH_HW(pduoff,osa_ph->hdrlen);
             osa_pdu=(OSA_PDU*)((BYTE*)osa_th+pduoff);
 
-TRACE("Protocol=%s\n",osa_pdu->proto == RRH_PROTO_L2 ? "Layer 2" :
-                      osa_pdu->proto == RRH_PROTO_L3 ? "Layer 3" :
-                      osa_pdu->proto == RRH_PROTO_NCP ? "NCP" :
-                      osa_pdu->proto == RRH_PROTO_UNK ? "N/A" : "?");
+TRACE("Protocol=%s\n",osa_pdu->proto == PDU_PROTO_L2 ? "Layer 2" :
+                      osa_pdu->proto == PDU_PROTO_L3 ? "Layer 3" :
+                      osa_pdu->proto == PDU_PROTO_NCP ? "NCP" :
+                      osa_pdu->proto == PDU_PROTO_UNK ? "N/A" : "?");
 TRACE("Target=%s\n",osa_pdu->tgt == PDU_TGT_OSA ? "OSA" :
                     osa_pdu->tgt == PDU_TGT_QDIO ? "QDIO" : "?");
 TRACE("Command=%s\n",osa_pdu->cmd == PDU_CMD_ENABLE ? "ENABLE" :
@@ -211,7 +211,7 @@ TRACE("Command=%s\n",osa_pdu->cmd == PDU_CMD_ENABLE ? "ENABLE" :
 
                 case PDU_CMD_ENABLE:
                     VERIFY(!TUNTAP_CreateInterface(osa_grp->tuntap,
-                      ((osa_pdu->proto != RRH_PROTO_L3) ? IFF_TAP : IFF_TUN) | IFF_NO_PI,
+                      ((osa_pdu->proto != PDU_PROTO_L3) ? IFF_TAP : IFF_TUN) | IFF_NO_PI,
                                            &osa_grp->fd,                      
                                            osa_grp->ttdevn));
                     break;
@@ -220,7 +220,7 @@ TRACE("Command=%s\n",osa_pdu->cmd == PDU_CMD_ENABLE ? "ENABLE" :
                     break;
 
                 default:
-                    TRACE(_("ULP TOSA cmd %2.2x\n"),osa_pdu->cmd);
+                    TRACE(_("ULP Target OSA Cmd %2.2x\n"),osa_pdu->cmd);
                 }
                 break;
 
@@ -277,6 +277,31 @@ TRACE("Type=IPA ");
 
                 }
                 break;
+
+            case IPA_CMD_DELGMAC:
+                break;
+
+            case IPA_CMD_SETGMAC:
+                {
+                OSA_IPA_MAC *ipa_mac = (OSA_IPA_MAC*)(osa_ipa+1);
+                char macaddr[18];
+                    snprintf(macaddr,sizeof(macaddr),"%02x:%02x:%02x:%02x:%02x:%02x",
+                      ipa_mac->macaddr[0],ipa_mac->macaddr[1],ipa_mac->macaddr[2],
+                      ipa_mac->macaddr[3],ipa_mac->macaddr[4],ipa_mac->macaddr[5]);
+
+                    TRACE("Set GMAC: %s\n",macaddr);
+
+// ZZ FIXME SETMULTADDR NOT YET SUPPORTED BY TUNTAP!!!
+#if defined(OPTION_TUNTAP_SETMULTADDR)
+                    VERIFY(!TUNTAP_SetMULTAddr(osa_grp->ttdevn,macaddr));
+#endif /*defined(OPTION_TUNTAP_SETMULTADDR)*/
+
+                }
+                break;
+
+            case IPA_CMD_DELVMAC:
+                break;
+
 
             default:
                 TRACE("Cmd(%02x)\n",osa_ipa->cmd);
