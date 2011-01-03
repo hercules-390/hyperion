@@ -128,6 +128,73 @@ typedef struct _OSA_QIB {
 
 
 /*-------------------------------------------------------------------*/
+/* Storage List Information Block (SLIB)                             */
+/*-------------------------------------------------------------------*/
+typedef struct _OSA_SLIB {
+/*000*/ DBLWRD  nsliba;         /* Next SLIB in queue                */
+/*008*/ DBLWRD  sla;            /* Storage List Address              */
+/*010*/ DBLWRD  slsba;          /* Storage List State Block Address  */
+/*018*/ BYTE    resv018[1000];
+/*400*/ DBLWRD  slibe[128];     /* Storage List Info Block Entry     */
+    } OSA_SLIB;
+
+
+/*-------------------------------------------------------------------*/
+/* Storage List (SL)                                                 */
+/*-------------------------------------------------------------------*/
+typedef struct _OSA_SL {
+/*000*/ DBLWRD  sbala[128];     /* Storage Block Address List address*/
+    } OSA_SL;
+
+
+/*-------------------------------------------------------------------*/
+/* Storage Block Address List Entry (SBALE)                          */
+/*-------------------------------------------------------------------*/
+typedef struct _OSA_SBALE {
+/*000*/ FWORD   flags;          /* Flags                             */
+#define SBAL_FLAGS_LAST_ENTRY   0x40000000
+#define SBAL_FLAGS_CONTIGUOUS   0x20000000
+#define SBAL_FLAGS_FRAG_MASK    0x0C000000
+#define SBAL_FLAGS_FRAG_FIRST   0x04000000
+#define SBAL_FLAGS_FRAG_MIDDLE  0x08000000
+#define SBAL_FLAGS_FRAG_LAST    0x0C000000
+#define SBAL_FLAGS_PCI_REQ      0x00400000
+/*004*/ FWORD   length;         /* Storage length                    */
+/*008*/ DBLWRD  addr;           /* Storage Address                   */
+    } OSA_SBALE;
+
+
+/*-------------------------------------------------------------------*/
+/* Storage Block Address List (SBAL)                                 */
+/*-------------------------------------------------------------------*/
+typedef struct _OSA_SBAL {
+/*000*/ OSA_SBALE sbale[16];    /* Storage Block Address List entry  */
+    } OSA_SBAL;
+
+
+/*-------------------------------------------------------------------*/
+/* Storage List State Block (SLSB)                                   */
+/*-------------------------------------------------------------------*/
+typedef struct _OSA_SLSB {
+/*000*/ BYTE    slsbe[128];     /* Storage Block Address List entry  */
+#define SLSBE_OWNER             0xC0 /* Owner Mask                   */
+#define SLSBE_OWNER_OS          0x80 /* Control Program is owner     */
+#define SLSBE_OWNER_CU          0x40 /* Control Unit is owner        */
+#define SLSBE_TYPE              0x20 /* Buffer type mask             */
+#define SLSBE_TYPE_RD           0x00 /* Input Buffer                 */
+#define SLSBE_TYPE_WR           0x20 /* Output Buffer                */
+#define SLSBE_VALID             0x10 /* Buffer Valid                 */
+#define SLSBE_STATE             0x0F /* Buffer state mask            */
+#define SLSBE_STATE_NOTINIT     0x00 /* Not initialised              */
+#define SLSBE_STATE_EMPTY       0x01 /* Buffer empty (but owned)     */
+#define SLSBE_STATE_PRIMED      0x02 /* Buffer ready (not owned)     */
+#define SLSBE_STATE_HALTED      0x0E /* I/O halted                   */
+#define SLSBE_STATE_ERROR       0x0F /* I/O Error                    */
+#define SLSBE_ERROR             0xFF /* Addressing Error             */
+    } OSA_SLSB;
+
+
+/*-------------------------------------------------------------------*/
 /* Header for OSA command frames                                     */
 /*-------------------------------------------------------------------*/
 typedef struct _OSA_HDR {

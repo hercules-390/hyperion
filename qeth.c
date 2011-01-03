@@ -161,7 +161,6 @@ OSA_GRP *osa_grp = (OSA_GRP*)dev->group->grp_data;
 OSA_TH  *osa_th = (OSA_TH*)rdev->qrspbf;
 OSA_RRH *osa_rrh;
 OSA_PH  *osa_ph;
-OSA_PDU *osa_pdu;
 U16 offset;
 U16 rqsize;
 
