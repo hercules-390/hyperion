@@ -53,6 +53,68 @@ static void tuntap_term(void)
 
 #endif
 
+
+// ---------------------------------------------------------------------
+// ParseMAC
+// ---------------------------------------------------------------------
+//
+// Parse a string containing a MAC (hardware) address and return the
+// binary equivalent.
+//
+// Input:
+//      pszMACAddr   Pointer to string containing a MAC Address in the
+//                   format "xx-xx-xx-xx-xx-xx" or "xx:xx:xx:xx:xx:xx".
+//
+// Output:
+//      pbMACAddr    Pointer to a BYTE array to receive the MAC Address
+//                   that MUST be at least sizeof(MAC) bytes long.
+//
+// Returns:
+//      0 on success, -1 otherwise
+//
+
+int  ParseMAC( char* pszMACAddr, BYTE* pbMACAddr )
+{
+    char    work[((sizeof(MAC)*3)-0)];
+    BYTE    sep;
+    int       x;
+    unsigned  i;
+
+    if (strlen(pszMACAddr) != ((sizeof(MAC)*3)-1)
+        || (sizeof(MAC) > 1 &&
+            *(pszMACAddr+2) != '-' &&
+            *(pszMACAddr+2) != ':')
+    )
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    strncpy(work,pszMACAddr,((sizeof(MAC)*3)-1));
+    work[((sizeof(MAC)*3)-1)] = sep = *(pszMACAddr+2);
+
+    for (i=0; i < sizeof(MAC); i++)
+    {
+        if
+        (0
+            || !isxdigit(work[(i*3)+0])
+            || !isxdigit(work[(i*3)+1])
+            ||  sep  !=  work[(i*3)+2]
+        )
+        {
+            errno = EINVAL;
+            return -1;
+        }
+
+        work[(i*3)+2] = 0;
+        sscanf(&work[(i*3)+0],"%x",&x);
+        *(pbMACAddr+i) = x;
+    }
+
+    return 0;
+}
+
+
 // ====================================================================
 // Primary Module Entry Points
 // ====================================================================

@@ -103,7 +103,6 @@ extern void     LCS_SDC( DEVBLK* pDEVBLK,   BYTE   bOpCode,
                          BYTE*   UnitStat,  U16*   pResidual,
                          BYTE*   pMore );
 
-extern int      ParseMAC( char* pszMACAddr, BYTE* pbMACAddr );
 extern void     packet_trace( BYTE *addr, int len, BYTE dir );
 
 

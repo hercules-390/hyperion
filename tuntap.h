@@ -25,6 +25,8 @@
 // Declarations
 // ====================================================================
 
+extern int      ParseMAC( char* pszMACAddr, BYTE* pbMACAddr );
+
 //
 // Create TUN/TAP Interface
 //
