@@ -155,24 +155,19 @@ int i;
 /*-------------------------------------------------------------------*/
 /* Adapter Command Routine                                           */
 /*-------------------------------------------------------------------*/
-static void osa_adapter_cmd(DEVBLK *dev, OSA_TH *osa_th, DEVBLK *rdev)
+static void osa_adapter_cmd(DEVBLK *dev, OSA_TH *req_th, DEVBLK *rdev)
 {
 OSA_GRP *osa_grp = (OSA_GRP*)dev->group->grp_data;
+OSA_TH  *osa_th = (OSA_TH*)rdev->qrspbf;
 OSA_RRH *osa_rrh;
 OSA_PH  *osa_ph;
 OSA_PDU *osa_pdu;
 U16 offset;
 U16 rqsize;
 
-    UNREFERENCED(osa_grp);
-
-// ZZ Process adapter commands here
-// ZZ Response needs to be stored in the rdev->qrspbf buffer
-// ZZ The size of the response buffer rdev->qrspsz;
-
     /* Copy request to response buffer */
-    FETCH_HW(rqsize,osa_th->rrlen);
-    memcpy(rdev->qrspbf,osa_th,rqsize);
+    FETCH_HW(rqsize,req_th->rrlen);
+    memcpy(osa_th,req_th,rqsize);
 
     FETCH_HW(offset,osa_th->rroff);
     osa_rrh = (OSA_RRH*)((BYTE*)osa_th+offset);
@@ -187,8 +182,12 @@ U16 rqsize;
 
     case RRH_TYPE_ULP:
         {
-        OSA_PDU *osa_pdu = (OSA_PDU*)(osa_ph+1);
-        int rc;
+        OSA_PDU *osa_pdu;
+        U16 pduoff;
+
+            FETCH_HW(pduoff,osa_ph->hdrlen);
+            osa_pdu=(OSA_PDU*)((BYTE*)osa_th+pduoff);
+
 TRACE("Protocol=%s\n",osa_pdu->proto == RRH_PROTO_L2 ? "Layer 2" :
                       osa_pdu->proto == RRH_PROTO_L3 ? "Layer 3" :
                       osa_pdu->proto == RRH_PROTO_NCP ? "NCP" :
@@ -200,13 +199,37 @@ TRACE("Command=%s\n",osa_pdu->cmd == PDU_CMD_ENABLE ? "ENABLE" :
                      osa_pdu->cmd == PDU_CMD_ACTIVATE ? "ACTIVATE" : "?");
             DUMP("RRH",osa_rrh,sizeof(OSA_RRH));
             DUMP("PDU",osa_pdu,sizeof(OSA_PDU));
-            if(osa_pdu->tgt == PDU_TGT_OSA && osa_pdu->cmd == PDU_CMD_ENABLE)
-                if((rc = TUNTAP_CreateInterface(osa_grp->tuntap,
-                 ((osa_pdu->proto != RRH_PROTO_L3) ? IFF_TAP : IFF_TUN) | IFF_NO_PI,
-                                       &osa_grp->fd,                      
-                                       osa_grp->ttdevn)))
-                    logmsg(_("QETH: TUNTAP_CreateInterface(%s,%s) error %d\n"),
-                      osa_grp->tuntap,osa_pdu->proto == RRH_PROTO_L2 ? "TAP" : "TUN",rc);
+
+            switch(osa_pdu->tgt) {
+
+            case PDU_TGT_OSA:
+
+                switch(osa_pdu->cmd) {
+
+                case PDU_CMD_SETUP:
+                    break;
+
+                case PDU_CMD_ENABLE:
+                    VERIFY(!TUNTAP_CreateInterface(osa_grp->tuntap,
+                      ((osa_pdu->proto != RRH_PROTO_L3) ? IFF_TAP : IFF_TUN) | IFF_NO_PI,
+                                           &osa_grp->fd,                      
+                                           osa_grp->ttdevn));
+                    break;
+
+                case PDU_CMD_ACTIVATE:
+                    break;
+
+                default:
+                    TRACE(_("ULP TOSA cmd %2.2x\n"),osa_pdu->cmd);
+                }
+                break;
+
+            case PDU_TGT_QDIO:
+                break;
+
+            default:
+                TRACE(_("ULP Target %2.2x\n"),osa_pdu->tgt);
+            }
 
         }
         break;
@@ -220,14 +243,21 @@ TRACE("Type=IPA ");
 
             case IPA_CMD_STARTLAN:
                 {
-                    TRACE(_("STARTLAN Layer %d IPv%d\n"),
-                      (osa_ipa->lvl == IPA_LVL_L2) ? 2 : 3,osa_ipa->proto[1]);
+                    TRACE(_("STARTLAN\n"));
+
+                    VERIFY(!TUNTAP_SetFlags(osa_grp->ttdevn,IFF_UP
+#if defined(TUNTAP_IFF_RUNNING_NEEDED)
+                                                          | IFF_RUNNING
+#endif /*defined(TUNTAP_IFF_RUNNING_NEEDED)*/
+                                                          | IFF_BROADCAST ));
                 }
                 break;
 
             case IPA_CMD_STOPLAN:
                 {
                     TRACE(_("STOPLAN\n"));
+
+                    VERIFY(!TUNTAP_SetFlags(osa_grp->ttdevn,0));
                 }
                 break;
 
@@ -235,7 +265,6 @@ TRACE("Type=IPA ");
                 {
                 OSA_IPA_MAC *ipa_mac = (OSA_IPA_MAC*)(osa_ipa+1);
                 char macaddr[18];
-                int rc;
                     snprintf(macaddr,sizeof(macaddr),"%02x:%02x:%02x:%02x:%02x:%02x",
                       ipa_mac->macaddr[0],ipa_mac->macaddr[1],ipa_mac->macaddr[2],
                       ipa_mac->macaddr[3],ipa_mac->macaddr[4],ipa_mac->macaddr[5]);
@@ -243,8 +272,7 @@ TRACE("Type=IPA ");
                     TRACE("Set VMAC: %s\n",macaddr);
 
 #if defined(OPTION_TUNTAP_SETMACADDR)
-                    if((rc = TUNTAP_SetMACAddr(osa_grp->ttdevn,macaddr)))
-                        logmsg(_("QETH: TUNTAP_SetMACAddr(%s,%s) error %d\n"),osa_grp->ttdevn,macaddr,rc);
+                    VERIFY(!TUNTAP_SetMACAddr(osa_grp->ttdevn,macaddr));
 #endif /*defined(OPTION_TUNTAP_SETMACADDR)*/
 
                 }
@@ -404,12 +432,6 @@ logmsg(_("QETH: dev(%4.4x) experimental driver\n"),dev->devnum);
     dev->qrspsz = 0;
 
     // process all command line options here
-    // commands to have ifconfig type args
-    // iface /dev/net/tun
-    // hwaddr 01:02:03:04:05:06
-    // ipaddr 172.16.0.1
-    // netmask 255.255.255.0
-    // etc
     for(i = 0; i < argc; i++)
     {
         if(!strcasecmp("iface",argv[i]) && (i+1) < argc)
@@ -559,7 +581,7 @@ TRACE(_("Write dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
         }
-            break;
+        break;
     }
 
 
@@ -569,9 +591,6 @@ TRACE(_("Write dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
     case 0x02:
     {
         int rd_size = 0;
-#if defined(OSA_READ_TIMEOUT)
-        int timeoutrc = 0;
-#endif
 
 TRACE(_("Read dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
 
@@ -587,19 +606,8 @@ TRACE(_("Read dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
             if(IS_OSA_READ_DEVICE(dev)
               && (dev->qidxstate == OSA_IDX_STATE_ACTIVE))
             {
-#if defined(OSA_READ_TIMEOUT)
-            struct timespec waittime;
-            struct timeval  now;
-                gettimeofday( &now, NULL );
-                waittime.tv_sec  = now.tv_sec  + OSA_READ_TIMEOUT;
-                waittime.tv_nsec = now.tv_usec * 1000;
-    
-                if(!(timeoutrc = timed_wait_condition(&dev->qcond, &dev->qlock, &waittime)))
-#else
-
                 wait_condition(&dev->qcond, &dev->qlock);
                 if(dev->qrspsz)
-#endif
                 {
                     rd_size = dev->qrspsz;
                     memcpy(iobuf,dev->qrspbf,rd_size);
@@ -609,11 +617,9 @@ TRACE(_("Read dev(%4.4x) count(%4.4x)\n"),dev->devnum,count);
         }
         release_lock(&dev->qlock);
 
-#if defined(OSA_READ_TIMEOUT)
-        if(!timeoutrc)
-        {
-#endif
 TRACE(_("Read dev(%4.4x) %d bytes\n"),dev->devnum,rd_size);
+        if(rd_size)
+        {
             /* Calculate number of bytes to read and set residual count */
             num = (count < rd_size) ? count : rd_size;
             *residual = count - num;
@@ -621,16 +627,13 @@ TRACE(_("Read dev(%4.4x) %d bytes\n"),dev->devnum,rd_size);
 
             /* Return normal status */
             *unitstat = CSW_CE | CSW_DE;
-#if defined(OSA_READ_TIMEOUT)
         }
         else
         {
-TRACE(_("Read timeout\n"));
             /* Return unit check with status modifier */
             dev->sense[0] = 0;
             *unitstat = CSW_CE | CSW_DE | CSW_UC | CSW_SM;
         }
-#endif
         break;
     }
 
