@@ -107,6 +107,27 @@ typedef struct _OSA_QDR {
 
 
 /*-------------------------------------------------------------------*/
+/* Queue Information Block (QIB)                                     */
+/*-------------------------------------------------------------------*/
+typedef struct _OSA_QIB {
+/*000*/ BYTE    qfmt;           /* Queue Format                      */
+/*001*/ BYTE    pfmt;           /* Parameter Format                  */
+#define QID_PFMT_QETH   0x00
+/*002*/ BYTE    rflags;         /* Flags                             */
+/*003*/ BYTE    ac;             /* Adapter Characteristics           */
+#define QIB_AC_QEBSM_O  0x40
+/*004*/ FWORD   resv004;
+/*008*/ DBLWRD  isliba;         /* Input SLIB queue address          */
+/*010*/ DBLWRD  osliba;         /* Output SLIB queue address         */
+/*018*/ FWORD   resv018;
+/*01C*/ FWORD   resv01c;
+/*020*/ BYTE    ebcnam[8];      /* Adapter ID in EBCDIC              */
+/*028*/ BYTE    resv028[88];
+/*080*/ BYTE    parm[128];      /* Model Dependent Parameters        */
+    } OSA_QIB;
+
+
+/*-------------------------------------------------------------------*/
 /* Header for OSA command frames                                     */
 /*-------------------------------------------------------------------*/
 typedef struct _OSA_HDR {
