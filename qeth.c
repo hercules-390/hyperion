@@ -170,10 +170,13 @@ U16 rqsize;
     memcpy(osa_th,req_th,rqsize);
 
     FETCH_HW(offset,osa_th->rroff);
+    DUMP("TH",osa_th,offset);
     osa_rrh = (OSA_RRH*)((BYTE*)osa_th+offset);
 
     FETCH_HW(offset,osa_rrh->pduhoff);
+    DUMP("RRH",osa_rrh,offset);
     osa_ph = (OSA_PH*)((BYTE*)osa_rrh+offset);
+    DUMP("PH",osa_ph,sizeof(OSA_PH));
 
     switch(osa_rrh->type) {
 
@@ -182,11 +185,7 @@ U16 rqsize;
 
     case RRH_TYPE_ULP:
         {
-        OSA_PDU *osa_pdu;
-        U16 pduoff;
-
-            FETCH_HW(pduoff,osa_ph->hdrlen);
-            osa_pdu=(OSA_PDU*)((BYTE*)osa_th+pduoff);
+        OSA_PDU *osa_pdu = (OSA_PDU*)(osa_ph+1);
 
 TRACE("Protocol=%s\n",osa_pdu->proto == PDU_PROTO_L2 ? "Layer 2" :
                       osa_pdu->proto == PDU_PROTO_L3 ? "Layer 3" :
@@ -197,7 +196,6 @@ TRACE("Target=%s\n",osa_pdu->tgt == PDU_TGT_OSA ? "OSA" :
 TRACE("Command=%s\n",osa_pdu->cmd == PDU_CMD_ENABLE ? "ENABLE" :
                      osa_pdu->cmd == PDU_CMD_SETUP  ? "SETUP" :
                      osa_pdu->cmd == PDU_CMD_ACTIVATE ? "ACTIVATE" : "?");
-            DUMP("RRH",osa_rrh,sizeof(OSA_RRH));
             DUMP("PDU",osa_pdu,sizeof(OSA_PDU));
 
             switch(osa_pdu->tgt) {
@@ -238,6 +236,9 @@ TRACE("Command=%s\n",osa_pdu->cmd == PDU_CMD_ENABLE ? "ENABLE" :
         {
         OSA_IPA *osa_ipa = (OSA_IPA*)(osa_ph+1);
 TRACE("Type=IPA ");
+            DUMP("IPA",osa_ipa,sizeof(OSA_IPA));
+            FETCH_HW(offset,osa_ph->pdulen);
+            DUMP("REQ",(osa_ipa+1),offset-sizeof(OSA_IPA));
         
             switch(osa_ipa->cmd) {
 
@@ -272,13 +273,16 @@ TRACE("Type=IPA ");
                     TRACE("Set VMAC: %s\n",macaddr);
 
 #if defined(OPTION_TUNTAP_SETMACADDR)
+// ZZ FIXME SetMACAddr may be called when the interface is up
+//          This condition needs to be handled here
                     VERIFY(!TUNTAP_SetMACAddr(osa_grp->ttdevn,macaddr));
 #endif /*defined(OPTION_TUNTAP_SETMACADDR)*/
 
                 }
                 break;
 
-            case IPA_CMD_DELGMAC:
+            case IPA_CMD_DELVMAC:
+                    TRACE("Del VMAC\n");
                 break;
 
             case IPA_CMD_SETGMAC:
@@ -299,15 +303,12 @@ TRACE("Type=IPA ");
                 }
                 break;
 
-            case IPA_CMD_DELVMAC:
+            case IPA_CMD_DELGMAC:
+                    TRACE("Del GMAC\n");
                 break;
 
-
             default:
-                TRACE("Cmd(%02x)\n",osa_ipa->cmd);
-                DUMP("IPA",osa_ipa,sizeof(OSA_IPA));
-                FETCH_HW(offset,osa_ph->pdulen);
-                DUMP("REQ",(osa_ipa+1),offset-sizeof(OSA_IPA));
+                TRACE("Invalid IPA Cmd(%02x)\n",osa_ipa->cmd);
             }
         }
         break;
