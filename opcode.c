@@ -2369,10 +2369,10 @@ void init_opcode_tables(void)
       replace_opcode_xxxx(arch, optA7x4[i][arch], 0xA7, (i << 4) + 0x4); /* BRC */
       replace_opcode_xxxx(arch, optE3_0[0][arch], 0xe3, (i << 4) + 0x0); /* jump to E3_0______xx */
     }
-    replace_opcode_xxxx(arch, opt07xx[0x10][arch], 0x07, 0xe0); /* BCR 07E0____ */
-    replace_opcode_xxxx(arch, opt07xx[0x11][arch], 0x07, 0xf0); /* BCR 07F0____ */
     for(j = 1; j < 0xe; j++)
       replace_opcode_xxxx(arch, opt07xx[0][arch], 0x07, (j << 4) + 0x0); /* nop2 BCR 07_0____ */
+    replace_opcode_xxxx(arch, opt07xx[0x10][arch], 0x07, 0xe0); /* BCR 07E0____ */
+    replace_opcode_xxxx(arch, opt07xx[0x11][arch], 0x07, 0xf0); /* BCR 07F0____ */    
     
     /* Implement optimized zero x2 instructions */
     for(i = 0; i < 0x100; i++)
