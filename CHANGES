@@ -1,3 +1,4 @@
+05 Jan 2011 Fix configure '-g' flag handling for "--enable-debug=yes" - Fish
 14 Dec 2010 Enhanced DAT - Jan Jaeger
 06 Dec 2010 Improved scsimount functionality (better scaling) - Fish
 06 Dec 2010 Dyngui mods: 64-bit MAINSIZE fix, SCD fix, multi-CPU% support - Fish

@@ -96,7 +96,8 @@ esac
 # Remove "-g" and "-O2" CFLAGS that "AC_PROG_CC" helpfully(?)
 # added for us that we don't want... (since we handle setting
 # the optimization flags ourselves; refer to near the end of
-# configure.ac where "$hc_cv_opt_optimization" is handled).
+# configure.ac where "$hc_cv_opt_optimization" is handled, in
+# the "AUTOMATIC DETERMINATION OF OPTIMIZATION FLAGS" section.
 
 CFLAGS="`echo $CFLAGS | sed -e 's/-g//'`"
 CFLAGS="`echo $CFLAGS | sed -e 's/-O2//'`"
@@ -1771,6 +1772,15 @@ AC_CACHE_SAVE()
 
 AC_MSG_CHECKING( [for what optimization flags to use] )
 
+if test "$hc_cv_opt_debug" = "yes"; then
+
+    # Note: the -g option we start with below will be removed if they specified
+    # their own optimization flags via "--enable-optimization=(flags)", but will
+    # be kept if they specify an optimized build via "--enable-optimization=yes"
+
+    hc_cv_optimization_flags="-g"
+fi
+
 case "$hc_cv_opt_optimization" in
 
     no)
@@ -1794,6 +1804,8 @@ case "$hc_cv_opt_optimization" in
             fi
 
         else
+            # They specified their own flags; use them as-is.
+            # This removes the -g option if we added it above.
 
             hc_cv_auto_optimize=no
             hc_cv_optimization_flags="$hc_cv_opt_optimization"
@@ -1803,10 +1815,9 @@ esac
 
 if test "$hc_cv_auto_optimize" = "yes"; then
 
-    if test "$hc_cv_builtin_alloca_broke" != "yes"  &&
-       test "$hc_cv_opt_debug"            != "yes"; then
+    if test "$hc_cv_builtin_alloca_broke" != "yes"; then
 
-        hc_cv_optimization_flags="-O3"
+        hc_cv_optimization_flags="$hc_cv_optimization_flags -O3"
     fi
 
     hc_cv_is_intel_x86_arch=no
@@ -1853,8 +1864,7 @@ if test "$hc_cv_auto_optimize" = "yes"; then
 
         hc_cv_optimization_flags="$hc_cv_optimization_flags -march=$hc_cv_intel_cpu_type"
 
-        if test "$hc_cv_builtin_alloca_broke" != "yes"  &&
-           test "$hc_cv_opt_debug"            != "yes"; then
+        if test "$hc_cv_builtin_alloca_broke" != "yes"; then
 
             hc_cv_optimization_flags="$hc_cv_optimization_flags -fomit-frame-pointer"
         else
