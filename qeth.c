@@ -29,6 +29,11 @@
 #include "qeth.h"
 
 #include "tuntap.h"
+#include "hercifc.h"
+
+#if defined(OPTION_W32_CTCI)
+#include "tt32api.h"
+#endif
 
 
 #if defined(WIN32) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
@@ -245,11 +250,16 @@ TRACE("Type=IPA ");
                 {
                     TRACE(_("STARTLAN\n"));
 
-                    VERIFY(!TUNTAP_SetFlags(osa_grp->ttdevn,IFF_UP
 #if defined(TUNTAP_IFF_RUNNING_NEEDED)
+                    VERIFY(!TUNTAP_SetFlags(osa_grp->ttdevn,IFF_UP
                                                           | IFF_RUNNING
-#endif /*defined(TUNTAP_IFF_RUNNING_NEEDED)*/
                                                           | IFF_BROADCAST ));
+#else
+                    VERIFY(!TUNTAP_SetFlags(osa_grp->ttdevn,IFF_UP
+                                                          | IFF_BROADCAST ));
+#endif /*defined(TUNTAP_IFF_RUNNING_NEEDED)*/
+
+
                 }
                 break;
 
