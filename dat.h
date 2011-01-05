@@ -850,10 +850,10 @@ U32     ptl;                            /* Page table length         */
        goto tran_spec_excp;
 
     /* Look up the address in the TLB */
-    if (   !(acctype & ACC_NOTLB)
-        && ((vaddr & TLBID_PAGEMASK) | regs->tlbID) == regs->tlb.TLB_VADDR(tlbix)
+    if (   ((vaddr & TLBID_PAGEMASK) | regs->tlbID) == regs->tlb.TLB_VADDR(tlbix)
         && (regs->tlb.common[tlbix] || regs->dat.asd == regs->tlb.TLB_ASD(tlbix))
-        && !(regs->tlb.common[tlbix] && regs->dat.private) )
+        && !(regs->tlb.common[tlbix] && regs->dat.private) 
+        && !(acctype & ACC_NOTLB) )
     {
         pte = regs->tlb.TLB_PTE(tlbix);
 
@@ -1005,10 +1005,10 @@ U32     ptl;                            /* Page table length         */
     regs->dat.private = ((regs->dat.asd & STD_PRIVATE) != 0);
 
     /* [3.11.4] Look up the address in the TLB */
-    if (   !(acctype & ACC_NOTLB)
-        && ((vaddr & TLBID_PAGEMASK) | regs->tlbID) == regs->tlb.TLB_VADDR(tlbix)
+    if (   ((vaddr & TLBID_PAGEMASK) | regs->tlbID) == regs->tlb.TLB_VADDR(tlbix)
         && (regs->tlb.common[tlbix] || regs->dat.asd == regs->tlb.TLB_ASD(tlbix))
-        && !(regs->tlb.common[tlbix] && regs->dat.private) )
+        && !(regs->tlb.common[tlbix] && regs->dat.private) 
+        && !(acctype & ACC_NOTLB) )
     {
         pte = regs->tlb.TLB_PTE(tlbix);
         if (regs->tlb.protect[tlbix])
@@ -1138,10 +1138,10 @@ U16     sx, px;                         /* Segment and page index,
 //  logmsg("asce=%16.16" I64_FMT "X\n",regs->dat.asd);
 
     /* [3.11.4] Look up the address in the TLB */
-    if (   !(acctype & ACC_NOTLB)
-        && ((vaddr & TLBID_PAGEMASK) | regs->tlbID) == regs->tlb.TLB_VADDR(tlbix)
+    if (   ((vaddr & TLBID_PAGEMASK) | regs->tlbID) == regs->tlb.TLB_VADDR(tlbix)
         && (regs->tlb.common[tlbix] || regs->dat.asd == regs->tlb.TLB_ASD(tlbix))
-        && !(regs->tlb.common[tlbix] && regs->dat.private) )
+        && !(regs->tlb.common[tlbix] && regs->dat.private) 
+        && !(acctype & ACC_NOTLB) )
     {
         pte = regs->tlb.TLB_PTE(tlbix);
         if (regs->tlb.protect[tlbix])
