@@ -14,6 +14,12 @@
 
 #include "hercules.h"
 
+#include "hercifc.h"
+
+#if defined(OPTION_W32_CTCI)
+ #include "tt32api.h"
+#endif
+
 #if defined( HAVE_STRUCT_SOCKADDR_IN_SIN_LEN )
   #define set_sockaddr_in_sin_len( sockaddr_in_ptr ) \
     (sockaddr_in_ptr)->sin_len = sizeof( struct sockaddr_in )

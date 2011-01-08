@@ -1412,12 +1412,8 @@ struct DEVBLK {                         /* Device configuration block*/
                                            for Read Subsystem Data   */
 
         /*  Device dependent fields for QDIO devices                 */
-        COND    qcond;                  /* Condition for QDIO thread */
-        LOCK    qlock;                  /* Lock for QDIO thread      */
-        U32     qrmask;                 /* Read queue mask           */
-        U32     qwmask;                 /* Write queue mask          */
         BYTE   *qrspbf;                 /* Response Buffer           */
-        int     qrspsz;                 /* Return Buffer Size        */
+        int     qrspsz;                 /* Response Buffer Size      */
         int     qidxstate;              /* IDX state                 */
 #define OSA_IDX_STATE_INACTIVE  0x00
 #define OSA_IDX_STATE_ACTIVE 	0x01

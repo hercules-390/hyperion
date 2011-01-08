@@ -46,20 +46,66 @@
 
 
 /*-------------------------------------------------------------------*/
+/* Maximum number of supported Queues (Read or Write)                */
+/*-------------------------------------------------------------------*/
+#define QDIO_MAXQ               32
+
+
+/*-------------------------------------------------------------------*/
 /* OSA Group Structure                                               */
 /*-------------------------------------------------------------------*/
 typedef struct _OSA_GRP {
+    COND    qcond;              /* Condition for IDX read thread     */
+    LOCK    qlock;              /* Lock for IDX read thread          */
+
     char *tuntap;               /* Interface path name               */
     char  ttdevn[IFNAMSIZ];     /* Interface network name            */
-    int   fd;
+
+    int   ttfd;                 /* File Descriptor TUNTAP Device     */
+    int   ppfd[2];              /* File Descriptor pair write pipe   */
+
+    int   reqpci;               /* PCI has been requested            */
+
+    int   i_qcnt;               /* Input Queue Count                 */
+    int   i_qpos;               /*   Current Queue Position          */
+    int   i_bpos[QDIO_MAXQ];    /*     Current Buffer Position       */
+
+    int   o_qcnt;               /* Output Queue Count                */
+    int   o_qpos;               /*   Current Queue Position          */
+    int   o_bpos[QDIO_MAXQ];    /*     Current Buffer Position       */
+
+    U32   i_qmask;              /* Input Queue Mask                  */
+    U32   o_qmask;              /* Output Queue Mask                 */
+
+    BYTE  i_slibk[QDIO_MAXQ];   /* Input SLIB Key                    */
+    BYTE  i_slk[QDIO_MAXQ];     /* Input Storage List Key            */
+    BYTE  i_sbalk[QDIO_MAXQ];   /* Input SBAL Key                    */
+    BYTE  i_slsblk[QDIO_MAXQ];  /* Input SLSB Key                    */
+
+    U64   i_sliba[QDIO_MAXQ];   /* Input SLIB Address                */
+    U64   i_sla[QDIO_MAXQ];     /* Input Storage List Address        */
+    U64   i_slsbla[QDIO_MAXQ];  /* Input SLSB Address                */
+
+    BYTE  o_slibk[QDIO_MAXQ];   /* Output SLIB Key                   */
+    BYTE  o_slk[QDIO_MAXQ];     /* Output Storage List Key           */
+    BYTE  o_sbalk[QDIO_MAXQ];   /* Output SBAL Key                   */
+    BYTE  o_slsblk[QDIO_MAXQ];  /* Output SLSB Key                   */
+
+    U64   o_sliba[QDIO_MAXQ];   /* Output SLIB Address               */
+    U64   o_sla[QDIO_MAXQ];     /* Output Storage List Address       */
+    U64   o_slsbla[QDIO_MAXQ];  /* Output SLSB Address               */
+
+    BYTE  qibk;                 /* Queue Information Block Key       */
+    U64   qiba;                 /* Queue Information Block Address   */
+
     } OSA_GRP;
 
 
 /*-------------------------------------------------------------------*/
 /* OSA CCW Assignments                                               */
 /*-------------------------------------------------------------------*/
-#define OSA_RCD                 0x72
-#define OSA_EQ                  0x1E
+#define OSA_RCD                 0xFA
+#define OSA_EQ                  0x1B
 #define OSA_AQ                  0x1F
 
 
@@ -71,8 +117,8 @@ typedef struct _OSA_QDES0 {
 /*008*/ DBLWRD  sla;            /* Storage List Address              */
 /*010*/ DBLWRD  slsba;          /* Storage List State Block Address  */
 /*018*/ FWORD   resv018;  
-/*01C*/ BYTE    keyp1;          /* Access keys for DLIB and SL       */  
-#define QDES_KEYP1_A_DLIB 0xF0
+/*01C*/ BYTE    keyp1;          /* Access keys for SLIB and SL       */  
+#define QDES_KEYP1_A_SLIB 0xF0
 #define QDES_KEYP1_A_SL   0x0F
 /*01D*/ BYTE    keyp2;          /* Access keys for SBALs ad SLSB     */
 #define QDES_KEYP2_A_SBAL 0xF0
@@ -151,14 +197,14 @@ typedef struct _OSA_SL {
 /* Storage Block Address List Entry (SBALE)                          */
 /*-------------------------------------------------------------------*/
 typedef struct _OSA_SBALE {
-/*000*/ FWORD   flags;          /* Flags                             */
-#define SBAL_FLAGS_LAST_ENTRY   0x40000000
-#define SBAL_FLAGS_CONTIGUOUS   0x20000000
-#define SBAL_FLAGS_FRAG_MASK    0x0C000000
-#define SBAL_FLAGS_FRAG_FIRST   0x04000000
-#define SBAL_FLAGS_FRAG_MIDDLE  0x08000000
-#define SBAL_FLAGS_FRAG_LAST    0x0C000000
-#define SBAL_FLAGS_PCI_REQ      0x00400000
+/*000*/ BYTE    flags[4];       /* Flags                             */
+#define SBAL_FLAGS0_LAST_ENTRY   0x40
+#define SBAL_FLAGS0_CONTIGUOUS   0x20
+#define SBAL_FLAGS0_FRAG_MASK    0x0C
+#define SBAL_FLAGS0_FRAG_FIRST   0x04
+#define SBAL_FLAGS0_FRAG_MIDDLE  0x08
+#define SBAL_FLAGS0_FRAG_LAST    0x0C
+#define SBAL_FLAGS1_PCI_REQ      0x40
 /*004*/ FWORD   length;         /* Storage length                    */
 /*008*/ DBLWRD  addr;           /* Storage Address                   */
     } OSA_SBALE;
@@ -181,8 +227,8 @@ typedef struct _OSA_SLSB {
 #define SLSBE_OWNER_OS          0x80 /* Control Program is owner     */
 #define SLSBE_OWNER_CU          0x40 /* Control Unit is owner        */
 #define SLSBE_TYPE              0x20 /* Buffer type mask             */
-#define SLSBE_TYPE_RD           0x00 /* Input Buffer                 */
-#define SLSBE_TYPE_WR           0x20 /* Output Buffer                */
+#define SLSBE_TYPE_INPUT        0x00 /* Input Buffer                 */
+#define SLSBE_TYPE_OUTPUT       0x20 /* Output Buffer                */
 #define SLSBE_VALID             0x10 /* Buffer Valid                 */
 #define SLSBE_STATE             0x0F /* Buffer state mask            */
 #define SLSBE_STATE_NOTINIT     0x00 /* Not initialised              */
@@ -191,6 +237,27 @@ typedef struct _OSA_SLSB {
 #define SLSBE_STATE_HALTED      0x0E /* I/O halted                   */
 #define SLSBE_STATE_ERROR       0x0F /* I/O Error                    */
 #define SLSBE_ERROR             0xFF /* Addressing Error             */
+
+#define SLSBE_OUTPUT_PRIMED     ( 0 \
+                                | SLSBE_OWNER_CU                    \
+                                | SLSBE_TYPE_OUTPUT                 \
+                                | SLSBE_STATE_PRIMED                \
+                                )
+#define SLSBE_OUTPUT_COMPLETED  ( 0 \
+                                | SLSBE_OWNER_OS                    \
+                                | SLSBE_TYPE_OUTPUT                 \
+                                | SLSBE_STATE_EMPTY                 \
+                                )
+#define SLSBE_INPUT_EMPTY       ( 0 \
+                                | SLSBE_OWNER_CU                    \
+                                | SLSBE_TYPE_INPUT                  \
+                                | SLSBE_STATE_EMPTY                 \
+                                )
+#define SLSBE_INPUT_COMPLETED   ( 0 \
+                                | SLSBE_OWNER_OS                    \
+                                | SLSBE_TYPE_INPUT                  \
+                                | SLSBE_STATE_PRIMED                \
+                                )
     } OSA_SLSB;
 
 
@@ -393,6 +460,37 @@ typedef struct _OSA_IPA_MAC {
 /*000*/ FWORD   maclen;         /* Length of MAC Address             */
 /*004*/ BYTE    macaddr[FLEXIBLE_ARRAY];  /* MAC Address             */
     } OSA_IPA_MAC;
+
+
+/*-------------------------------------------------------------------*/
+/* Set Adapter Parameters                                            */
+/*-------------------------------------------------------------------*/
+typedef struct _OSA_IPA_SAP {
+/*000*/ FWORD   suppcm;         /* Supported subcommand mask         */
+/*004*/ FWORD   resv004;        /*                                   */
+/*008*/ HWORD   cmdlen;         /* Subcommand length                 */
+/*00A*/ HWORD   resv00a;        /*                                   */
+/*00C*/ FWORD   cmd;            /* Subcommand                        */
+/*010*/ HWORD   rc;             /* Return Code                       */
+/*012*/ BYTE    used;           /*                                   */
+/*013*/ BYTE    seqno;          /*                                   */
+/*014*/ HWORD   resv014;        /*                                   */
+    } OSA_IPA_SAP;
+
+
+/*-------------------------------------------------------------------*/
+/* OSA Layer 2 Header                                                */
+/*-------------------------------------------------------------------*/
+typedef struct _OSA_HDR2 {
+/*000*/ BYTE    id;             /*                                   */
+/*001*/ BYTE    flags[3];       /*                                   */
+/*004*/ BYTE    portno;         /*                                   */
+/*005*/ BYTE    hdrlen;         /*                                   */
+/*006*/ HWORD   pktlen;         /*                                   */
+/*008*/ HWORD   seqno;          /*                                   */
+/*00A*/ HWORD   vlanid;         /*                                   */
+/*00C*/ FWORD   resv00c[5];     /*                                   */
+    } OSA_HDR2;
 
 
 /*-------------------------------------------------------------------*/

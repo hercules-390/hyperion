@@ -20,13 +20,9 @@
 #include "hercules.h"
 #include "ctcadpt.h"
 #include "tuntap.h"
-#include "hercifc.h"
 #include "opcode.h"
 /* getopt dynamic linking kludge */
 #include "herc_getopt.h"
-#if defined(OPTION_W32_CTCI)
-#include "tt32api.h"
-#endif
 
 /*-------------------------------------------------------------------*/
 /* Ivan Warren 20040227                                              */

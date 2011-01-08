@@ -26,12 +26,8 @@
 #include "hercules.h"
 #include "ctcadpt.h"
 #include "tuntap.h"
-#include "hercifc.h"
 #include "opcode.h"
 #include "herc_getopt.h"
-#if defined(OPTION_W32_CTCI)
-#include "tt32api.h"
-#endif
 
 //-----------------------------------------------------------------------------
 // Debugging...
