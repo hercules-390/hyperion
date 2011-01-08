@@ -303,7 +303,11 @@ U32 ackseq;
                 char macaddr[18];
                     snprintf(macaddr,sizeof(macaddr),"%02x:%02x:%02x:%02x:%02x:%02x",
                       ipa_mac->macaddr[0],ipa_mac->macaddr[1],ipa_mac->macaddr[2],
-                      ipa_mac->macaddr[3],ipa_mac->macaddr[4],ipa_mac->macaddr[5]);
+                      ipa_mac->macaddr[3],ipa_mac->macaddr[4],
+// ZZ THE TAP INTERFACE MUST NOT HAVE THE SAME MACADDR AS THE 
+// ZZ GUEST INTERFACE DOING SO WILL CAUSE FRAMES TO BE SENT TO
+// ZZ THE HOST RATHER THEN TO THE GUEST WHEN USING BRIDGED INTERFACES
+                      ipa_mac->macaddr[5]^1);
 
                     TRACE("Set VMAC: %s\n",macaddr);
 
