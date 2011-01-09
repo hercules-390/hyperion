@@ -1438,7 +1438,7 @@ DEVBLK *find_device_by_subchan (U32 ioid)
 /*-------------------------------------------------------------------*/
 /* Returns a CPU register context for the device, or else NULL       */
 /*-------------------------------------------------------------------*/
-REGS *devregs(DEVBLK *dev)
+DLL_EXPORT REGS *devregs(DEVBLK *dev)
 {
     /* If a register context already exists then use it */
     if (dev->regs)
