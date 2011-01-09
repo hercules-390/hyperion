@@ -15,6 +15,7 @@
 /* Device module hdtqeth.dll devtype QETH (config)                   */
 /* hercules.cnf:                                                     */
 /* 0A00-0A02 QETH <optional parameters>                              */
+/* Default parm:  iface /dev/net/tun                                 */
 
 // #define DEBUG
 
@@ -450,6 +451,7 @@ OSA_IEAR *iear = (OSA_IEAR*)rdev->qrspbf;
 static void raise_adapter_interrupt(DEVBLK *dev)
 {
     obtain_lock(&dev->lock);
+    dev->pciscsw.flag2 |= SCSW2_Q;
     dev->pciscsw.flag3 |= SCSW3_SC_INTER | SCSW3_SC_PEND;
     dev->pciscsw.chanstat = CSW_PCI;
     QUEUE_IO_INTERRUPT(&dev->pciioint);
@@ -459,7 +461,6 @@ static void raise_adapter_interrupt(DEVBLK *dev)
     OBTAIN_INTLOCK(devregs(dev));
     UPDATE_IC_IOPENDING();
     RELEASE_INTLOCK(devregs(dev));
-
 }
 
 
@@ -517,7 +518,7 @@ TRACE(_("Input Queue(%d) Buffer(%d)\n"),iq,ib);
 // ZZ THIS CODE IS NOT QUITE RIGHT YET!!!!
 // ZZ IS MUST BE ABLE TO SPLIT FRAMES INTO MULTIPLE SEGMENTS
 // ZZ ALL STORAGE ACCESS IS NOT CHECKED FOR VALIDITY (ACCESS LIMITS KEYS...)
-// ZZ INCORRECT BUFFER ADDRESSES MAT GENERATE SEGFAULTS!!!!!
+// ZZ INCORRECT BUFFER ADDRESSES MAY GENERATE SEGFAULTS!!!!!
                         if(len > sizeof(OSA_HDR2))
                         {
                             olen = TUNTAP_Read(grp->ttfd,buf+sizeof(OSA_HDR2),len-sizeof(OSA_HDR2));
@@ -622,8 +623,8 @@ int mq = grp->o_qcnt;
                 U64 sa; U32 len; BYTE *buf;
                 U64 la;
                 OSA_SBAL *sbal;
-                
                 int ns;
+
 TRACE(_("Output Queue(%d) Buffer(%d)\n"),oq,ob);
 
                     FETCH_DW(sa,sl->sbala[ob]);
@@ -639,7 +640,7 @@ TRACE(_("Output Queue(%d) Buffer(%d)\n"),oq,ob);
 // ZZ THIS CODE IS NOT QUITE RIGHT YET IT MUST BE ABLE TO ASSEMBLE
 // ZZ MULTIPLE FRAGMENTS INTO ONE ETHERNET FRAME
 // ZZ ALL STORAGE ACCESS IS NOT CHECKED FOR VALIDITY (ACCESS LIMITS KEYS...)
-// ZZ INCORRECT BUFFER ADDRESSES MAT GENERATE SEGFAULTS!!!!!
+// ZZ INCORRECT BUFFER ADDRESSES MAY GENERATE SEGFAULTS!!!!!
 
 if(sa && la && len)
 {
@@ -797,6 +798,9 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
         if(grp->ppfd[1])
             close(grp->ppfd[1]);
         
+        if(grp->tuntap)
+            free(grp->tuntap);
+
         destroy_condition(&grp->qcond);
         destroy_lock(&grp->qlock);
     
@@ -1055,7 +1059,7 @@ int num;                                /* Number of bytes to move   */
 
 //      {
 //      OSA_QIB *qib = (OSA_QIB*)(dev->mainstor + grp->qiba);
-//          qib->ac |= 0x40; // Incidate PCI on output is supported
+//          qib->ac |= QIB_AC_PCI; // Incidate PCI on output is supported
 //      }
 
         qdes = qdr->qdf0;

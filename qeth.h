@@ -160,8 +160,9 @@ typedef struct _OSA_QIB {
 /*001*/ BYTE    pfmt;           /* Parameter Format                  */
 #define QID_PFMT_QETH   0x00
 /*002*/ BYTE    rflags;         /* Flags                             */
+#define QIB_RFLAGS_QEBSM  0x80
 /*003*/ BYTE    ac;             /* Adapter Characteristics           */
-#define QIB_AC_QEBSM_O  0x40
+#define QIB_AC_PCI      0x40
 /*004*/ FWORD   resv004;
 /*008*/ DBLWRD  isliba;         /* Input SLIB queue address          */
 /*010*/ DBLWRD  osliba;         /* Output SLIB queue address         */
