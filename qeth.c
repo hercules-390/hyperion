@@ -470,7 +470,7 @@ static void raise_adapter_interrupt(DEVBLK *dev)
 // When a buffer becomes available, then we will advance to that location 
 // When we reach the end of the buffer queue, we will advance to the 
 // next available queue. 
-// When a queue is newly enable then we will start at the beginning of 
+// When a queue is newly enabled then we will start at the beginning of 
 // the queue (this is handled in signal adapter)
 
 /*-------------------------------------------------------------------*/
@@ -500,8 +500,7 @@ TRACE("Input Qpos(%d) Bpos(%d)\n",grp->i_qpos,grp->i_bpos[grp->i_qpos]);
                 U64 sa; U32 len; BYTE *buf;
                 U64 la;
                 OSA_SBAL *sbal;
-                int olen, tlen = 0;;
-                
+                int olen = 0; int tlen = 0;
                 int ns;
 TRACE(_("Input Queue(%d) Buffer(%d)\n"),iq,ib);
 
@@ -684,7 +683,7 @@ DUMP("OUTPUT BUF",buf,len);
 
 
 /*-------------------------------------------------------------------*/
-/* Initialize the device handler                                     */
+/* Halt device handler                                               */
 /*-------------------------------------------------------------------*/
 static void qeth_halt_device ( DEVBLK *dev)
 {
@@ -1107,7 +1106,6 @@ int num;                                /* Number of bytes to move   */
     /*---------------------------------------------------------------*/
     {
     fd_set readset;
-    int n;
 
         grp->i_qmask = grp->o_qmask = 0;
 
