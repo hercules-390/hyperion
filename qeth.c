@@ -243,7 +243,7 @@ U32 ackseq;
 #endif /*defined(OPTION_TUNTAP_SETMACADDR)*/
                     if(grp->ttipaddr)
                         VERIFY(!TUNTAP_SetIPAddr(grp->ttdevn,grp->ttipaddr));
-#ifdef defined(OPTION_TUNTAP_SETNETMASK)
+#if defined(OPTION_TUNTAP_SETNETMASK)
                     if(grp->ttnetmask)
                         VERIFY(!TUNTAP_SetNetMask(grp->ttdevn,grp->ttnetmask));
 #endif /*defined(OPTION_TUNTAP_SETNETMASK)*/
@@ -561,7 +561,7 @@ TRACE(_("Input Queue(%d) Buffer(%d)\n"),iq,ib);
                             noread = 0;
                         }
 if(olen > 0)
-DUMP("INPUT TAP",buf+sizeof(OSA_HDR2),olen);
+{ DUMP("INPUT TAP",buf+sizeof(OSA_HDR2),olen); }
                         if(olen > 0)
                         {
                         OSA_HDR2 *hdr2 = (OSA_HDR2*)buf;
