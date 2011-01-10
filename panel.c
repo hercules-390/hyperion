@@ -3493,7 +3493,10 @@ int i;
 PANMSG* p;
 
     UNREFERENCED(unused);
-    
+
+    /* BHe: FIXME: I put a sleep(1) here to prevent a segmentation fault */
+    /* in the case when the hercules.rc has only a quit command. */
+    sleep(1);    
     log_wakeup(NULL);
 
     set_screen_color( stderr, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
