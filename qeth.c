@@ -15,7 +15,28 @@
 /* Device module hdtqeth.dll devtype QETH (config)                   */
 /* hercules.cnf:                                                     */
 /* 0A00-0A02 QETH <optional parameters>                              */
-/* Default parm:  iface /dev/net/tun                                 */
+/* Default parm:   iface /dev/net/tun                                */
+/* Optional parms: hwaddr  <mac address of TAP device>               */
+/*                 ipaddr  <IP address of TAP device>                */
+/*                 netmask <netmask of TAP device>                   */
+/*                                                                   */
+/* When using a bridged configuration no parameters are required     */
+/* on the QETH device statement.  The tap device will in that case   */
+/* need to be  bridged to another virtual or real ethernet adapter.  */
+/* e.g.                                                              */
+/* 0A00.3 QETH                                                       */
+/* The tap device will need to be bridged e.g.                       */
+/* brctl addif <bridge> tap0                                         */
+/*                                                                   */
+/*                                                                   */
+/* When using a routed configuration the tap device needs to have    */
+/* an IP address assigned in the same subnet as the guests virtual   */
+/* eth adapter.                                                      */
+/* e.g.                                                              */
+/* 0A00.3 QETH ipaddr 192.168.10.1                                   */
+/* where the guest can then use any other IP address in the          */
+/* 192.168.10 range                                                  */
+/*                                                                   */
 
 // #define DEBUG
 
@@ -216,6 +237,17 @@ U32 ackseq;
                     /* Set Non-Blocking mode */
                     socket_set_blocking_mode(grp->ttfd,0);
 
+#if defined(OPTION_TUNTAP_SETMACADDR)
+                    if(grp->tthwaddr)
+                        VERIFY(!TUNTAP_SetMACAddr(grp->ttdevn,grp->tthwaddr));
+#endif /*defined(OPTION_TUNTAP_SETMACADDR)*/
+                    if(grp->ttipaddr)
+                        VERIFY(!TUNTAP_SetIPAddr(grp->ttdevn,grp->ttipaddr));
+#ifdef defined(OPTION_TUNTAP_SETNETMASK)
+                    if(grp->ttnetmask)
+                        VERIFY(!TUNTAP_SetNetMask(grp->ttdevn,grp->ttnetmask));
+#endif /*defined(OPTION_TUNTAP_SETNETMASK)*/
+
                     break;
 
                 case PDU_CMD_ACTIVATE:
@@ -302,24 +334,29 @@ U32 ackseq;
                 {
                 OSA_IPA_MAC *ipa_mac = (OSA_IPA_MAC*)(ipa+1);
                 char macaddr[18];
-                    snprintf(macaddr,sizeof(macaddr),"%02x:%02x:%02x:%02x:%02x:%02x",
-                      ipa_mac->macaddr[0],ipa_mac->macaddr[1],ipa_mac->macaddr[2],
-                      ipa_mac->macaddr[3],ipa_mac->macaddr[4],
+
+                    TRACE("Set VMAC: %s\n",macaddr);
+
+                    /* Do not override the config specified MAC address */
+                    if(!grp->tthwaddr)
+                    {
+                        snprintf(macaddr,sizeof(macaddr),"%02x:%02x:%02x:%02x:%02x:%02x",
+                          ipa_mac->macaddr[0],ipa_mac->macaddr[1],ipa_mac->macaddr[2],
+                          ipa_mac->macaddr[3],ipa_mac->macaddr[4],
 // ZZ THE TAP INTERFACE MUST NOT HAVE THE SAME MACADDR AS THE 
 // ZZ GUEST INTERFACE DOING SO WILL CAUSE FRAMES TO BE SENT TO
 // ZZ THE HOST RATHER THEN TO THE GUEST WHEN USING BRIDGED INTERFACES
-                      ipa_mac->macaddr[5]^1);
-
-                    TRACE("Set VMAC: %s\n",macaddr);
+                          ipa_mac->macaddr[5]^1);
 
 #if defined(OPTION_TUNTAP_SETMACADDR)
 // ZZ FIXME SetMACAddr may be called when the interface is up
 //          This may be an error in linux, however we may need
 //          to handle this condition here...
 //          ifconfig up/down (ioctl IFUP) should call STARTLAN/STOPLAN                       
-                    if( TUNTAP_SetMACAddr(grp->ttdevn,macaddr) )
-                        STORE_HW(ipa->rc,0xFFFF);
+                        if( TUNTAP_SetMACAddr(grp->ttdevn,macaddr) )
+                            STORE_HW(ipa->rc,0xFFFF);
 #endif /*defined(OPTION_TUNTAP_SETMACADDR)*/
+                    }
 
                 }
                 break;
@@ -696,7 +733,8 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
         write(grp->ppfd[1],"*",1);
     }
     else
-        if(IS_OSA_READ_DEVICE(dev))
+        if(IS_OSA_READ_DEVICE(dev) 
+          && (dev->group->acount == OSA_GROUP_SIZE))
             signal_condition(&grp->qcond);
 
 }
@@ -748,6 +786,28 @@ int i;
         {
             free(grp->tuntap);
             grp->tuntap = strdup(argv[++i]);
+            continue;
+        }
+        else if(!strcasecmp("hwaddr",argv[i]) && (i+1) < argc)
+        {
+            if(grp->tthwaddr)
+                free(grp->tthwaddr);
+            grp->tthwaddr = strdup(argv[++i]);
+            continue;
+        }
+        else if(!strcasecmp("ipaddr",argv[i]) && (i+1) < argc)
+        {
+            if(grp->ttipaddr)
+                free(grp->ttipaddr);
+            grp->ttipaddr = strdup(argv[++i]);
+            continue;
+        }
+        else if(!strcasecmp("netmask",argv[i]) && (i+1) < argc)
+        {
+            if(grp->ttnetmask)
+                free(grp->ttnetmask);
+            grp->ttnetmask = strdup(argv[++i]);
+            continue;
         }
         else
             logmsg(_("QETH: Invalid option %s for device %4.4X\n"),argv[i],dev->devnum);
@@ -799,6 +859,12 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
         
         if(grp->tuntap)
             free(grp->tuntap);
+        if(grp->tthwaddr)
+            free(grp->tthwaddr);
+        if(grp->ttipaddr)
+            free(grp->ttipaddr);
+        if(grp->ttnetmask)
+            free(grp->ttnetmask);
 
         destroy_condition(&grp->qcond);
         destroy_lock(&grp->qlock);

@@ -60,6 +60,9 @@ typedef struct _OSA_GRP {
 
     char *tuntap;               /* Interface path name               */
     char  ttdevn[IFNAMSIZ];     /* Interface network name            */
+    char *tthwaddr;             /* MAC address of the TAP adapter    */
+    char *ttipaddr;             /* IP address of the TAP adapter     */
+    char *ttnetmask;            /* Netmask of the TAP adapter        */
 
     int   ttfd;                 /* File Descriptor TUNTAP Device     */
     int   ppfd[2];              /* File Descriptor pair write pipe   */
