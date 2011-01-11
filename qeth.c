@@ -16,9 +16,10 @@
 /* hercules.cnf:                                                     */
 /* 0A00-0A02 QETH <optional parameters>                              */
 /* Default parm:   iface /dev/net/tun                                */
-/* Optional parms: hwaddr  <mac address of TAP device>               */
-/*                 ipaddr  <IP address of TAP device>                */
-/*                 netmask <netmask of TAP device>                   */
+/* Optional parms: hwaddr  <mac address of TAP adapter>              */
+/*                 ipaddr  <IP address of TAP adapter>               */
+/*                 netmask <netmask of TAP adapter>                  */
+/*                 mtu     <mtu of TAP adapter>                      */
 /*                                                                   */
 /* When using a bridged configuration no parameters are required     */
 /* on the QETH device statement.  The tap device will in that case   */
@@ -153,6 +154,21 @@ static BYTE qeth_immed_commands [256] =
 
 static const char *osa_devtyp[] = { "Read", "Write", "Data" };
 
+/*-------------------------------------------------------------------*/
+/* STORCHK macro: check storage access & update ref & change bits    */
+/*-------------------------------------------------------------------*/
+#define STORCHK(_addr,_len,_key,_acc,_dev) \
+  (((((_addr) + (_len)) > (_dev)->mainlim) \
+    || ((dev->orb.flag5 & ORB5_A) \
+      && ((((_dev)->pmcw.flag5 & PMCW5_LM_LOW)  \
+        && ((_addr) < sysblk.addrlimval)) \
+      || (((_dev)->pmcw.flag5 & PMCW5_LM_HIGH) \
+        && (((_addr) + (_len)) > sysblk.addrlimval)) ) )) ? CSW_PROGC : \
+   ((_key) && ((STORAGE_KEY((_addr), (_dev)) & STORKEY_KEY) != (_key)) \
+&& ((STORAGE_KEY((_addr), (_dev)) & STORKEY_FETCH) || ((_acc) == STORKEY_CHANGE))) ? CSW_PROTC : \
+  ((STORAGE_KEY((_addr), (_dev)) |= ((((_acc) == STORKEY_CHANGE)) \
+    ? (STORKEY_REF|STORKEY_CHANGE) : STORKEY_REF)) && 0))
+
 
 #if defined(DEBUG)
 static inline void DUMP(char* name, void* ptr, int len)
@@ -247,6 +263,8 @@ U32 ackseq;
                     if(grp->ttnetmask)
                         VERIFY(!TUNTAP_SetNetMask(grp->ttdevn,grp->ttnetmask));
 #endif /*defined(OPTION_TUNTAP_SETNETMASK)*/
+                    if(grp->ttmtu)
+                        VERIFY(!TUNTAP_SetMTU(grp->ttdevn,grp->ttmtu));
 
                     break;
 
@@ -331,6 +349,7 @@ U32 ackseq;
                 break;
 
             case IPA_CMD_SETVMAC:
+#if 0 // Not valid for Layer 2
                 {
                 OSA_IPA_MAC *ipa_mac = (OSA_IPA_MAC*)(ipa+1);
                 char macaddr[18];
@@ -357,15 +376,18 @@ U32 ackseq;
                             STORE_HW(ipa->rc,0xFFFF);
 #endif /*defined(OPTION_TUNTAP_SETMACADDR)*/
                     }
-
                 }
+#endif
                 break;
 
             case IPA_CMD_DELVMAC:
+#if 0 // Not valid for Layer 2
                     TRACE("Del VMAC\n");
+#endif
                 break;
 
             case IPA_CMD_SETGMAC:
+#if 0 // Not valid for Layer 2
                 {
                 OSA_IPA_MAC *ipa_mac = (OSA_IPA_MAC*)(ipa+1);
                 char macaddr[18];
@@ -382,10 +404,13 @@ U32 ackseq;
 #endif /*defined(OPTION_TUNTAP_SETMULTADDR)*/
 
                 }
+#endif
                 break;
 
             case IPA_CMD_DELGMAC:
+#if 0 // Not valid for layer 2
                     TRACE("Del GMAC\n");
+#endif
                 break;
 
             default:
@@ -579,6 +604,8 @@ TRACE("FLAGS %2.2x %2.2x\n",sbal->sbale[ns].flags[0],sbal->sbale[ns].flags[1]);
 DUMP("INPUT BUF",hdr2,olen+sizeof(OSA_HDR2));
 }
                         }
+                        else
+                            break;
                     }
                 
                     if(tlen > 0)
@@ -603,7 +630,8 @@ DUMP("INPUT BUF",hdr2,olen+sizeof(OSA_HDR2));
                             sbal->sbale[ns-1].flags[0] = 0x40;
                         return;
                     }
-                    sbal->sbale[ns-1].flags[0] = 0x40;
+                    if(ns)
+                        sbal->sbale[ns-1].flags[0] = 0x40;
                 }
                 else /* Buffer not empty */
                 {
@@ -807,6 +835,13 @@ int i;
             if(grp->ttnetmask)
                 free(grp->ttnetmask);
             grp->ttnetmask = strdup(argv[++i]);
+            continue;
+        }
+        else if(!strcasecmp("mtu",argv[i]) && (i+1) < argc)
+        {
+            if(grp->ttmtu)
+                free(grp->ttmtu);
+            grp->ttmtu = strdup(argv[++i]);
             continue;
         }
         else
@@ -1111,6 +1146,7 @@ int num;                                /* Number of bytes to move   */
     {
         OSA_QDR *qdr = (OSA_QDR*)dev->qrspbf;
         OSA_QDES0 *qdes;
+        int storchk;
         int i;
 
         /* Copy QDR from I/O buffer */
@@ -1120,8 +1156,9 @@ int num;                                /* Number of bytes to move   */
         grp->o_qcnt = qdr->oqdcnt < QDIO_MAXQ ? qdr->oqdcnt : QDIO_MAXQ;
 
         FETCH_DW(grp->qiba,qdr->qiba);
-        grp->qibk = qdr->qkey;
+        grp->qibk = qdr->qkey & 0xF0;
 
+        storchk = STORCHK(grp->qiba,sizeof(OSA_QIB),grp->qibk,STORKEY_CHANGE,dev);
 //      {
 //      OSA_QIB *qib = (OSA_QIB*)(dev->mainstor + grp->qiba);
 //          qib->ac |= QIB_AC_PCI; // Incidate PCI on output is supported
