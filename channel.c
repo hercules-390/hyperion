@@ -2994,6 +2994,10 @@ resume_suspend:
             ARCH_DEP(raise_pci) (dev, ccwkey, ccwfmt, ccwaddr); /*@MW*/
         }
 
+        /* Allow the device handler to determine whether this is
+           an immediate CCW (i.e. CONTROL with no data transfer) */
+        dev->is_immed = IS_CCW_IMMEDIATE(dev);
+
         /* Channel program check if invalid count */
         if (count == 0 && (ccwfmt == 0 ||
             (flags & CCW_FLAGS_CD) || (dev->chained & CCW_FLAGS_CD)))
@@ -3002,9 +3006,12 @@ resume_suspend:
             break;
         }
 
-        /* Allow the device handler to determine whether this is
-           an immediate CCW (i.e. CONTROL with no data transfer) */
-        dev->is_immed = IS_CCW_IMMEDIATE(dev);
+        /* If immediate, chain data is ignored */
+        if (dev->is_immed && (flags & CCW_FLAGS_CD))
+        {
+            flags &= ~CCW_FLAGS_CD;
+            dev->chained &= ~CCW_FLAGS_CD;
+        }
 
         /* If synchronous I/O and a syncio 2 device and not an
            immediate CCW then retry asynchronously */
