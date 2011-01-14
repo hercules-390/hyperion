@@ -1233,7 +1233,7 @@ int num;                                /* Number of bytes to move   */
             grp->i_slsblk[i] = (qdes->keyp2 << 4) & 0xF0;
     
             accerr |= STORCHK(grp->i_slsbla[i],sizeof(OSA_SLSB)-1,grp->i_slsblk[i],STORKEY_CHANGE,dev);
-            accerr |= STORCHK(grp->i_sla[i],sizeof(OSA_SL)-1,grp->i_slk[i],STORKEY_CHANGE,dev);
+            accerr |= STORCHK(grp->i_sla[i],sizeof(OSA_SL)-1,grp->i_slk[i],STORKEY_REF,dev);
 
             qdes = (OSA_QDES0*)((BYTE*)qdes+(qdr->iqdsz<<2));
         }
@@ -1249,7 +1249,7 @@ int num;                                /* Number of bytes to move   */
             grp->o_slsblk[i] = (qdes->keyp2 << 4) & 0xF0;
 
             accerr |= STORCHK(grp->o_slsbla[i],sizeof(OSA_SLSB)-1,grp->o_slsblk[i],STORKEY_CHANGE,dev);
-            accerr |= STORCHK(grp->o_sla[i],sizeof(OSA_SL)-1,grp->o_slk[i],STORKEY_CHANGE,dev);
+            accerr |= STORCHK(grp->o_sla[i],sizeof(OSA_SL)-1,grp->o_slk[i],STORKEY_REF,dev);
 
             qdes = (OSA_QDES0*)((BYTE*)qdes+(qdr->oqdsz<<2));
         }
