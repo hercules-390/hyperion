@@ -70,6 +70,9 @@ typedef struct _OSA_GRP {
 
     int   reqpci;               /* PCI has been requested            */
 
+    unsigned rxcnt;             /* Receive count                     */
+    unsigned txcnt;             /* Transmit count                    */
+
     int   i_qcnt;               /* Input Queue Count                 */
     int   i_qpos;               /*   Current Queue Position          */
     int   i_bpos[QDIO_MAXQ];    /*     Current Buffer Position       */

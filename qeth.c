@@ -159,7 +159,7 @@ static const char *osa_devtyp[] = { "Read", "Write", "Data" };
 /*-------------------------------------------------------------------*/
 #define STORCHK(_addr,_len,_key,_acc,_dev) \
   (((((_addr) + (_len)) > (_dev)->mainlim) \
-    || ((dev->orb.flag5 & ORB5_A) \
+    || (((_dev)->orb.flag5 & ORB5_A) \
       && ((((_dev)->pmcw.flag5 & PMCW5_LM_LOW)  \
         && ((_addr) < sysblk.addrlimval)) \
       || (((_dev)->pmcw.flag5 & PMCW5_LM_HIGH) \
@@ -205,13 +205,17 @@ U32 ackseq;
 
     /* Copy request to response buffer */
     FETCH_HW(rqsize,req_th->rrlen);
-    memcpy(th,req_th,rqsize);
+    memcpy(th,req_th,rqsize < RSP_BUFSZ ? rqsize : RSP_BUFSZ);
 
     FETCH_HW(offset,th->rroff);
+    if(offset > 0x400)
+        return;
     DUMP("TH",th,offset);
     rrh = (OSA_RRH*)((BYTE*)th+offset);
 
     FETCH_HW(offset,rrh->pduhoff);
+    if(offset > 0x400)
+        return;
     DUMP("RRH",rrh,offset);
     ph = (OSA_PH*)((BYTE*)rrh+offset);
     DUMP("PH",ph,sizeof(OSA_PH));
@@ -291,6 +295,8 @@ U32 ackseq;
         OSA_IPA *ipa = (OSA_IPA*)(ph+1);
             DUMP("IPA",ipa,sizeof(OSA_IPA));
             FETCH_HW(offset,ph->pdulen);
+            if(offset > 0x400)
+                return;
             DUMP("REQ",(ipa+1),offset-sizeof(OSA_IPA));
 
             STORE_HW(ipa->rc,0x0000);
@@ -567,12 +573,28 @@ TRACE("Input Qpos(%d) Bpos(%d)\n",grp->i_qpos,grp->i_bpos[grp->i_qpos]);
 TRACE(_("Input Queue(%d) Buffer(%d)\n"),iq,ib);
 
                     FETCH_DW(sa,sl->sbala[ib]);
+                    if(STORCHK(sa,sizeof(OSA_SBAL)-1,grp->i_slk[iq],STORKEY_REF,dev))
+                    {
+                        slsb->slsbe[ib] = SLSBE_ERROR;  
+                        grp->reqpci = 1;
+                        TRACE(_("STORCHK ERROR sa(%llx), key(%2.2x)\n"),sa,grp->i_slk[iq]);
+                        return;
+                    }
                     sbal = (OSA_SBAL*)(dev->mainstor + sa);
 
                     for(ns = 0; ns < 16; ns++)
                     {
                         FETCH_DW(la,sbal->sbale[ns].addr);
                         FETCH_FW(len,sbal->sbale[ns].length);
+                        if(!len)
+                            break;
+                        if(STORCHK(la,len-1,grp->i_sbalk[iq],STORKEY_CHANGE,dev))
+                        {
+                            slsb->slsbe[ib] = SLSBE_ERROR;  
+                            grp->reqpci = 1;
+                            TRACE(_("STORCHK ERROR la(%llx), len(%d), key(%2.2x)\n"),la,len,grp->i_sbalk[iq]);
+                            return;
+                        }
                         buf = (BYTE*)(dev->mainstor + la);
 
 // ZZ INCOMPLETE PROCESS BUFFER HERE
@@ -582,7 +604,8 @@ TRACE(_("Input Queue(%d) Buffer(%d)\n"),iq,ib);
 // ZZ INCORRECT BUFFER ADDRESSES MAY GENERATE SEGFAULTS!!!!!
                         if(len > sizeof(OSA_HDR2))
                         {
-                            olen = TUNTAP_Read(grp->ttfd,buf+sizeof(OSA_HDR2),len-sizeof(OSA_HDR2));
+                            if((olen = TUNTAP_Read(grp->ttfd,buf+sizeof(OSA_HDR2),len-sizeof(OSA_HDR2))) > 0)
+                                grp->rxcnt++;
                             noread = 0;
                         }
 if(olen > 0)
@@ -590,7 +613,7 @@ if(olen > 0)
                         if(olen > 0)
                         {
                         OSA_HDR2 *hdr2 = (OSA_HDR2*)buf;
-                        memset(hdr2,0x00,sizeof(OSA_HDR2));
+                            memset(hdr2,0x00,sizeof(OSA_HDR2));
                             hdr2->id = 0x02;
                             hdr2->flags[2] = 0x02;
                             STORE_HW(hdr2->pktlen,olen);
@@ -612,6 +635,7 @@ DUMP("INPUT BUF",hdr2,olen+sizeof(OSA_HDR2));
                     {
                         grp->reqpci = 1;
                         slsb->slsbe[ib] = SLSBE_INPUT_COMPLETED;
+                        STORAGE_KEY(grp->i_slsbla[iq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
                         if(++ib >= 128)
                         {
                             ib = 0;
@@ -654,7 +678,7 @@ DUMP("INPUT BUF",hdr2,olen+sizeof(OSA_HDR2));
     {
     char buff[4096];
     int n;
-        if((n = TUNTAP_Read(grp->ttfd,buff,4096)) > 0)
+        if((n = TUNTAP_Read(grp->ttfd,buff,sizeof(buff))) > 0)
         {
             grp->reqpci = 1;
 DUMP("TAP DROPPED",buff,n);
@@ -692,12 +716,28 @@ int mq = grp->o_qcnt;
 TRACE(_("Output Queue(%d) Buffer(%d)\n"),oq,ob);
 
                     FETCH_DW(sa,sl->sbala[ob]);
+                    if(STORCHK(sa,sizeof(OSA_SBAL)-1,grp->o_slk[oq],STORKEY_REF,dev))
+                    {
+                        slsb->slsbe[ob] = SLSBE_ERROR;  
+                        grp->reqpci = 1;
+                        TRACE(_("STORCHK ERROR sa(%llx), key(%2.2x)\n"),sa,grp->o_slk[oq]);
+                        return;
+                    }
                     sbal = (OSA_SBAL*)(dev->mainstor + sa);
 
                     for(ns = 0; ns < 16; ns++)
                     {
                         FETCH_DW(la,sbal->sbale[ns].addr);
                         FETCH_FW(len,sbal->sbale[ns].length);
+                        if(!len)
+                            break;
+                        if(STORCHK(la,len-1,grp->o_sbalk[oq],STORKEY_REF,dev))
+                        {
+                            slsb->slsbe[ob] = SLSBE_ERROR;  
+                            grp->reqpci = 1;
+                            TRACE(_("STORCHK ERROR la(%llx), len(%d), key(%2.2x)\n"),la,len,grp->o_sbalk[oq]);
+                            return;
+                        }
                         buf = (BYTE*)(dev->mainstor + la);
 
 // ZZ INCOMPLETE PROCESS BUFFER HERE
@@ -713,13 +753,17 @@ TRACE("FLAGS %2.2x %2.2x\n",sbal->sbale[ns].flags[0],sbal->sbale[ns].flags[1]);
 DUMP("OUTPUT BUF",buf,len);
 }
                         if(len > sizeof(OSA_HDR2))
+                        {
                             TUNTAP_Write(grp->ttfd,buf+sizeof(OSA_HDR2),len-sizeof(OSA_HDR2));
+                            grp->txcnt++;
+                        }
 
                         if((sbal->sbale[ns].flags[1] & SBAL_FLAGS1_PCI_REQ))
                             grp->reqpci = 1;
                     }
                 
                     slsb->slsbe[ob] = SLSBE_OUTPUT_COMPLETED;
+                    STORAGE_KEY(grp->o_slsbla[oq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
                     if(++ob >= 128)
                     {
                         ob = 0;
@@ -865,11 +909,21 @@ int i;
 static void qeth_query_device (DEVBLK *dev, char **class,
                 int buflen, char *buffer)
 {
+char qdiostat[80];
+
     BEGIN_DEVICE_CLASS_QUERY( "OSA", dev, class, buflen, buffer );
 
+    if(dev->group->acount == OSA_GROUP_SIZE)
+    {
+        OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
+        snprintf(qdiostat,sizeof(qdiostat)-1," QDIO tx[%u] rx[%u]",grp->txcnt,grp->rxcnt);
+    }
+    else
+        strcpy(qdiostat," QDIO");
+    
     snprintf (buffer, buflen-1, "%s%s%s",
       (dev->group->acount == OSA_GROUP_SIZE) ? osa_devtyp[dev->member] : "*Incomplete",
-      (dev->scsw.flag2 & SCSW2_Q) ? " QDIO" : "",
+      (dev->scsw.flag2 & SCSW2_Q) ? qdiostat : "",
       (dev->qidxstate == OSA_IDX_STATE_ACTIVE) ? " IDX" : "");
 
 } /* end function qeth_query_device */
@@ -900,6 +954,8 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
             free(grp->ttipaddr);
         if(grp->ttnetmask)
             free(grp->ttnetmask);
+        if(grp->ttmtu)
+            free(grp->ttmtu);
 
         destroy_condition(&grp->qcond);
         destroy_lock(&grp->qlock);
@@ -1146,7 +1202,7 @@ int num;                                /* Number of bytes to move   */
     {
         OSA_QDR *qdr = (OSA_QDR*)dev->qrspbf;
         OSA_QDES0 *qdes;
-        int storchk;
+        int accerr;
         int i;
 
         /* Copy QDR from I/O buffer */
@@ -1158,7 +1214,7 @@ int num;                                /* Number of bytes to move   */
         FETCH_DW(grp->qiba,qdr->qiba);
         grp->qibk = qdr->qkey & 0xF0;
 
-        storchk = STORCHK(grp->qiba,sizeof(OSA_QIB),grp->qibk,STORKEY_CHANGE,dev);
+        accerr = 0; // STORCHK(grp->qiba,sizeof(OSA_QIB)-1,grp->qibk,STORKEY_CHANGE,dev);
 //      {
 //      OSA_QIB *qib = (OSA_QIB*)(dev->mainstor + grp->qiba);
 //          qib->ac |= QIB_AC_PCI; // Incidate PCI on output is supported
@@ -1176,6 +1232,9 @@ int num;                                /* Number of bytes to move   */
             grp->i_sbalk[i] = qdes->keyp2 & 0xF0;
             grp->i_slsblk[i] = (qdes->keyp2 << 4) & 0xF0;
     
+            accerr |= STORCHK(grp->i_slsbla[i],sizeof(OSA_SLSB)-1,grp->i_slsblk[i],STORKEY_CHANGE,dev);
+            accerr |= STORCHK(grp->i_sla[i],sizeof(OSA_SL)-1,grp->i_slk[i],STORKEY_CHANGE,dev);
+
             qdes = (OSA_QDES0*)((BYTE*)qdes+(qdr->iqdsz<<2));
         }
 
@@ -1189,6 +1248,9 @@ int num;                                /* Number of bytes to move   */
             grp->o_sbalk[i] = qdes->keyp2 & 0xF0;
             grp->o_slsblk[i] = (qdes->keyp2 << 4) & 0xF0;
 
+            accerr |= STORCHK(grp->o_slsbla[i],sizeof(OSA_SLSB)-1,grp->o_slsblk[i],STORKEY_CHANGE,dev);
+            accerr |= STORCHK(grp->o_sla[i],sizeof(OSA_SL)-1,grp->o_slk[i],STORKEY_CHANGE,dev);
+
             qdes = (OSA_QDES0*)((BYTE*)qdes+(qdr->oqdsz<<2));
         }
 
@@ -1197,8 +1259,18 @@ int num;                                /* Number of bytes to move   */
         *residual = count - num;
         if (count < sizeof(OSA_QDR)) *more = 1;
 
-        /* Return unit status */
-        *unitstat = CSW_CE | CSW_DE;
+        if(!accerr)
+        {
+            /* Return unit status */
+            *unitstat = CSW_CE | CSW_DE;
+        }
+        else
+        {
+            /* Command reject on invalid or inaccessible storage addresses */
+            dev->sense[0] = SENSE_CR;
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        }
+
         break;
     }
 
@@ -1296,10 +1368,10 @@ TRACE(_("SIGA-r dev(%4.4x) qmask(%8.8x)\n"),dev->devnum,qmask);
                 grp->i_bpos[n] = 0;
         if(!grp->i_qmask)
             grp->i_qpos = 0;
-    }
 
-    /* Update Read Queue Mask */
-    grp->i_qmask = qmask;
+        /* Update Read Queue Mask */
+        grp->i_qmask = qmask;
+    }
 
     /* Send signal to QDIO thread */
     if(noselrd && grp->i_qmask)
@@ -1333,10 +1405,10 @@ TRACE(_("SIGA-w dev(%4.4x) qmask(%8.8x)\n"),dev->devnum,qmask);
                 grp->o_bpos[n] = 0;
         if(!grp->o_qmask)
             grp->o_qpos = 0;
-    }
 
-    /* Update Write Queue Mask */
-    grp->o_qmask = qmask;
+        /* Update Write Queue Mask */
+        grp->o_qmask = qmask;
+    }
 
     /* Send signal to QDIO thread */
     if(grp->o_qmask)
