@@ -42,55 +42,11 @@
 
 #ifndef __GETOPT_H__
 #define __GETOPT_H__
-
-#ifdef _MSVC_
-#include "hostopts.h"
-
-#ifdef HDL_BUILD_SHARED
-#ifndef _GETOPT_C_
-#ifndef _HUTIL_DLL_
-#define GOP_DLL_IMPORT DLL_IMPORT
-#else   /* _HUTIL_DLL_ */
-#define GOP_DLL_IMPORT extern
-#endif  /* _HUTIL_DLL_ */
-#else
-#define GOP_DLL_IMPORT DLL_EXPORT
-#endif
-#else
-#define GOP_DLL_IMPORT extern
-#endif
-#endif
-
-#ifndef _MSVC_
-#define GOP_DLL_IMPORT extern
-#endif
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-GOP_DLL_IMPORT int   opterr;      /* if error message should be printed */
-GOP_DLL_IMPORT int   optind;      /* index into parent argv vector */
-GOP_DLL_IMPORT int   optopt;      /* character checked for validity */
-GOP_DLL_IMPORT int   optreset;    /* reset getopt */
-GOP_DLL_IMPORT char *optarg;      /* argument associated with option */
-
-GOP_DLL_IMPORT int getopt (int, char * const *, const char *);
-
-#ifdef __cplusplus
-}
-#endif
-
 #endif /* __GETOPT_H__ */
 
 #ifndef __UNISTD_GETOPT__
 #ifndef __GETOPT_LONG_H__
 #define __GETOPT_LONG_H__
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 struct option {
     const char *name;
@@ -99,7 +55,6 @@ struct option {
     int val;
 };
 
-GOP_DLL_IMPORT int getopt_long (int, char *const *, const char *, const struct option *, int *);
 #ifndef HAVE_DECL_GETOPT
 #define HAVE_DECL_GETOPT 1
 #endif
@@ -107,10 +62,6 @@ GOP_DLL_IMPORT int getopt_long (int, char *const *, const char *, const struct o
 #define no_argument             0
 #define required_argument       1
 #define optional_argument       2
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* __GETOPT_LONG_H__ */
 #endif /* __UNISTD_GETOPT__ */

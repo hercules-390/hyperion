@@ -27,8 +27,11 @@
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
-#include "hercules.h"
 
+#define _CHANNEL_C_
+#define _HENGINE_DLL_
+
+#include "hercules.h"
 #include "devtype.h"
 #include "opcode.h"
 
@@ -3745,7 +3748,7 @@ DEVLIST *pZoneDevs = NULL;              /* devices in requested zone */
 #endif
 
 
-int device_attention (DEVBLK *dev, BYTE unitstat)
+DLL_EXPORT int device_attention (DEVBLK *dev, BYTE unitstat)
 {
     switch(sysblk.arch_mode) {
 #if defined(_370)

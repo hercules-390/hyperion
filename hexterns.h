@@ -38,11 +38,21 @@
 #ifndef _HDL_C_
 #ifndef _HUTIL_DLL_
 #define HHDL_DLL_IMPORT DLL_IMPORT
-#else   /* _HDASD_DLL_ */
+#else   /* _HUTIL_DLL_ */
 #define HHDL_DLL_IMPORT extern
-#endif  /* _HDASD_DLL_ */
+#endif  /* _HUTIL_DLL_ */
 #else
 #define HHDL_DLL_IMPORT DLL_EXPORT
+#endif
+
+#ifndef _GETOPT_C_
+#ifndef _HUTIL_DLL_
+#define GOP_DLL_IMPORT DLL_IMPORT
+#else   /* _HUTIL_DLL_ */
+#define GOP_DLL_IMPORT extern
+#endif  /* _HUTIL_DLL_ */
+#else
+#define GOP_DLL_IMPORT DLL_EXPORT
 #endif
 
 #ifndef _HSCCMD_C_
@@ -138,19 +148,29 @@
 #ifndef _CONFIG_C_
 #ifndef _HENGINE_DLL_
 #define CONF_DLL_IMPORT DLL_IMPORT
-#else   /* _HDASD_DLL_ */
+#else   /* _HENGINE_DLL_ */
 #define CONF_DLL_IMPORT extern
-#endif  /* _HDASD_DLL_ */
+#endif  /* _HENGINE_DLL_ */
 #else
 #define CONF_DLL_IMPORT DLL_EXPORT
+#endif
+
+#ifndef _CHANNEL_C_
+#ifndef _HENGINE_DLL_
+#define CHAN_DLL_IMPORT DLL_IMPORT
+#else   /* _HENGINE_DLL_ */
+#define CHAN_DLL_IMPORT extern
+#endif  /* _HENGINE_DLL_ */
+#else
+#define CHAN_DLL_IMPORT DLL_EXPORT
 #endif
 
 #ifndef _SCRIPT_C_
 #ifndef _HENGINE_DLL_
 #define SCRI_DLL_IMPORT DLL_IMPORT
-#else   /* _SCRIPT_DLL_ */
+#else   /* _HENGINE_DLL_ */
 #define SCRI_DLL_IMPORT extern
-#endif  /* _SCRIPT_DLL_ */
+#endif  /* _HENGINE_DLL_ */
 #else
 #define SCRI_DLL_IMPORT DLL_EXPORT
 #endif
@@ -158,9 +178,9 @@
 #ifndef _BLDCFG_C_
 #ifndef _HENGINE_DLL_
 #define BLDC_DLL_IMPORT DLL_IMPORT
-#else   /* _HDASD_DLL_ */
+#else   /* _HENGINE_DLL_ */
 #define BLDC_DLL_IMPORT extern
-#endif  /* _HDASD_DLL_ */
+#endif  /* _HENGINE_DLL_ */
 #else
 #define BLDC_DLL_IMPORT DLL_EXPORT
 #endif
@@ -552,5 +572,18 @@ HSYS_DLL_IMPORT void (*debug_tt32_tracing) (int);
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
 void renew_wrapping_keys(void);
 #endif
+
+/* Function in getopt.c */
+GOP_DLL_IMPORT int   opterr;    /* if error message should be printed */
+GOP_DLL_IMPORT int   optind;    /* index into parent argv vector */
+GOP_DLL_IMPORT int   optopt;    /* character checked for validity */
+GOP_DLL_IMPORT int   optreset;  /* reset getopt */
+GOP_DLL_IMPORT char* optarg;    /* argument associated with option */
+GOP_DLL_IMPORT int   getopt      ( int nargc, char * const *nargv, const char *options );
+GOP_DLL_IMPORT int   getopt_long ( int nargc, char * const *nargv, const char *options, const struct option *long_options, int *idx );
+
+/* Function in channel.c */
+CHAN_DLL_IMPORT int  device_attention (DEVBLK *dev, BYTE unitstat);
+CHAN_DLL_IMPORT int  ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat);
 
 #endif // _HEXTERNS_H

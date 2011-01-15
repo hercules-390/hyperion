@@ -2775,8 +2775,6 @@ int ARCH_DEP(present_zone_io_interrupt) (U32 *ioid, U32 *ioparm,
 void io_reset (void);
 int  chp_reset(REGS *, BYTE chpid);
 void channelset_reset(REGS *regs);
-DLL_EXPORT int  device_attention (DEVBLK *dev, BYTE unitstat);
-DLL_EXPORT int  ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat);
 
 
 /* Functions in module cpu.c */

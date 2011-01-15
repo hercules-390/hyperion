@@ -47,10 +47,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "hstdinc.h"
+
 #define _GETOPT_C_
 #define _HUTIL_DLL_
 
-#include "hstdinc.h"
 #include "hercules.h"
 /*
 #include <errno.h>

@@ -695,3 +695,157 @@ HDL_INSTRUCTION_SECTION;
 } END_INSTRUCTION_SECTION;
 
 #endif /*!defined(_GEN_ARCH)*/
+
+
+=======================================================================
+=======================================================================
+=======================================================================
+
+
+  IMPORTANT HERCULES INTERNALS BUILD INFORMATION RELATING TO HDL
+
+           (our 'DLL_EXPORT' and 'DLL_IMPORT' design)
+
+
+Here's the poop. Any function that needs to be exported/imported
+to another MODULE (i.e. 'module' is defined as .DLL or .SO, etc),
+*MUST* have its functon declaration defined in the "hexterns.h"
+header and *ONLY* in the "hexterns.h" header!
+
+That is to say, you must NOT declare the function in a separate
+header file! (That might be the way you normally do things for a
+normal project, but that is NOT the way you do it with Hercules)
+
+
+                       --------------
+                       +   STEP 1   +
+                       --------------
+
+You need to ensure your .c SOURCE member always begins with the
+following very specific header file #include sequence:
+
+
+    /*  XXXXXX.C    (c) Copyright XXXXXXXXXXX & Others, yyyy-2011        */
+    /*              Module description goes here...                      */
+    /*                                                                   */
+    /*   Released under "The Q Public License Version 1"                 */
+    /*   (http://www.hercules-390.org/herclic.html) as modifications     */
+    /*   to Hercules.                                                    */
+
+
+    #include "hstdinc.h"
+
+    #define _XXXXXXX_C_
+    #define _ZZZZZZZ_DLL_
+
+    #include "hercules.h"
+
+
+    ...(other #includes go here)...
+
+
+
+where 'XXXXX' is the name of your source member and 'ZZZZZ' is the name
+of the MODULE (.dll or .so) your code will be a part of. Refer to the
+"OBJ_CODE.msvc" and/or "makefile.am" members to see how all of hercules
+code is divided into separate modules.
+
+
+                       --------------
+                       +   STEP 2   +
+                       --------------
+
+Add a new entry at the BEGINNING of "hexterns.h" as follows:
+
+
+    #ifndef _XXXXXXX_C_
+    #ifndef _ZZZZZZZ_DLL_
+    #define MMMM_DLL_IMPORT  DLL_IMPORT
+    #else
+    #define MMMM_DLL_IMPORT  extern
+    #endif
+    #else
+    #define MMMM_DLL_IMPORT  DLL_EXPORT
+    #endif
+
+
+where 'MMMM' is a unique 2-4 character prefix of your own choosing
+that identifies your source member export (e.g. HUTL_DLL_IMPORT).
+
+
+                       --------------
+                       +   STEP 3   +
+                       --------------
+
+Add your exported function declarations to END of "hexterns.h":
+
+
+    /* Functions in module xxxxxxx.c */
+    MMMM_DLL_IMPORT int myfunction1 (DEVBLK*, int myarg, int otherarg);
+    MMMM_DLL_IMPORT int myfunction2 (DEVBLK*, int myarg, int otherarg);
+    MMMM_DLL_IMPORT int myfunction3 (DEVBLK*, int myarg, int otherarg);
+    ...etc...
+
+
+                       --------------
+                       +   STEP 4   +
+                       --------------
+
+Update BOTH the "OBJ_CODE.msvc" and "makefile.am" members with your
+new source member. Be sure to update BOTH files, e.g.:
+
+
+    ---(makefile.am)---
+
+
+      libhercu_la_SOURCES = version.c    \
+                            hscutl.c     \
+                            hscutl2.c    \
+                            codepage.c   \
+                            logger.c     \
+                            logmsg.c     \
+                            hdl.c        \
+                            hostinfo.c   \
+                            hsocket.c    \
+                            memrchr.c    \
+                            parser.c     \
+                            pttrace.c    \
+                            xxxxxxxx.c   \
+                            $(FTHREADS)  \
+                            $(FISHHANG)  \
+                            $(LTDL)
+
+
+    ---(OBJ_CODE.msvc)---
+
+
+        hutil_OBJ = \
+            $(O)codepage.obj \
+            $(O)fthreads.obj \
+            $(O)getopt.obj   \
+            $(O)hdl.obj      \
+            $(O)hostinfo.obj \
+            $(O)hscutl.obj   \
+            $(O)hscutl2.obj  \
+            $(O)logger.obj   \
+            $(O)logmsg.obj   \
+            $(O)memrchr.obj  \
+            $(O)parser.obj   \
+            $(O)pttrace.obj  \
+            $(O)version.obj  \
+            $(O)hsocket.obj  \
+            $(O)wthreads.obj \
+            $(O)w32util.obj  \
+            $(O)xxxxxxxx.obj
+
+
+That's it. That's all you should have to do.
+
+Again, you MAY use a separate #include header file for your new source
+member with NON-EXPORTED functions declared within it but any function
+you need to export to another module must NOT be declared there. The
+function must instead be declared in "hexterns.h" as described above.
+
+=======================================================================
+=======================================================================
+=======================================================================
