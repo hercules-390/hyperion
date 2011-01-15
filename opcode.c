@@ -1239,6 +1239,7 @@ static zz_func opt07xx[0x12][GEN_MAXARCH]; /* BCR */
 static zz_func opt47x0[0x10][GEN_MAXARCH]; /* BC */
 static zz_func opt91sb[0x01][GEN_MAXARCH]; /* TM */
 static zz_func optA7x4[0x10][GEN_MAXARCH]; /* BRC */
+static zz_func optBF_x[0x02][GEN_MAXARCH]; /* ICM */
 static zz_func optE3_0[0x01][GEN_MAXARCH]; /* Optimized execute routine */
 static zz_func optE3_0______xx[0x100][GEN_MAXARCH]; /* Optimized zero x2 instructions */
 #endif /* OPTION_OPTINST */
@@ -2366,13 +2367,15 @@ void init_opcode_tables(void)
       for(j = 0; j < 0x10; j++)
         replace_opcode_xxxx(arch, opt07xx[i][arch], 0x07, (i << 4) + j); /* BCR */
       replace_opcode_xxxx(arch, opt47x0[i][arch], 0x47, (i << 4) + 0x0); /* BC */
-      replace_opcode_xxxx(arch, optA7x4[i][arch], 0xA7, (i << 4) + 0x4); /* BRC */
+      replace_opcode_xxxx(arch, optA7x4[i][arch], 0xa7, (i << 4) + 0x4); /* BRC */
+      replace_opcode_xxxx(arch, optBF_x[0][arch], 0xbf, (i << 4) + 0x7); /* ICM with mask 7 */
+      replace_opcode_xxxx(arch, optBF_x[1][arch], 0xbf, (i << 4) + 0xf); /* ICM with mask f */
       replace_opcode_xxxx(arch, optE3_0[0][arch], 0xe3, (i << 4) + 0x0); /* jump to E3_0______xx */
     }
     for(j = 1; j < 0xe; j++)
       replace_opcode_xxxx(arch, opt07xx[0][arch], 0x07, (j << 4) + 0x0); /* nop2 BCR 07_0____ */
     replace_opcode_xxxx(arch, opt07xx[0x10][arch], 0x07, 0xe0); /* BCR 07E0____ */
-    replace_opcode_xxxx(arch, opt07xx[0x11][arch], 0x07, 0xf0); /* BCR 07F0____ */    
+    replace_opcode_xxxx(arch, opt07xx[0x11][arch], 0x07, 0xf0); /* BCR 07F0____ */
     
     /* Implement optimized zero x2 instructions */
     for(i = 0; i < 0x100; i++)
@@ -7084,6 +7087,11 @@ static zz_func optA7x4[0x10][GEN_MAXARCH] = {
  /*A7D4*/ GENx370x390x900 (A7D4,RI_B,"BRC"),
  /*A7E4*/ GENx370x390x900 (A7E4,RI_B,"BRC"),
  /*A7F4*/ GENx370x390x900 (A7F4,RI_B,"BRC") };
+
+/* Optimized ICM */
+static zz_func optBF_x[0x2][GEN_MAXARCH] = {
+ /*BF_7*/ GENx370x390x900 (BF_7,RS,"ICM"),
+ /*BF_F*/ GENx370x390x900 (BF_F,RS,"ICM") };
 
 /* Jump to E3_0______xx where x2 is zero */
 static zz_func optE3_0[0x1][GEN_MAXARCH] = {

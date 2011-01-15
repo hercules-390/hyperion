@@ -3353,7 +3353,7 @@ int     r1, r2;                         /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* BF   ICM   - Insert Characters under Mask                    [RS] */
 /*-------------------------------------------------------------------*/
-DEF_INST(insert_characters_under_mask)
+DEF_INST(insert_characters_under_mask) /* ICM has optimized twins */
 {
 int    r1, r3;                          /* Register numbers          */
 int    b2;                              /* effective address base    */
@@ -3373,6 +3373,7 @@ static const unsigned int               /* Turn reg bytes off by mask*/
 
     switch (r3) {
 
+#ifndef OPTION_OPTINST
     case 7:
         /* Optimized case */
         vbyte[0] = 0;
@@ -3389,6 +3390,7 @@ static const unsigned int               /* Turn reg bytes off by mask*/
         regs->psw.cc = regs->GR_L(r1) ? regs->GR_L(r1) & 0x80000000 ?
                        1 : 2 : 0;
         break;
+#endif /* ifndef OPTION OPTINST */
 
     default:
         memset (vbyte, 0, 4);
@@ -6126,6 +6128,41 @@ U16   i2;                               /* 16-bit operand values     */
 
 } /* end DEF_INST(branch_relative_on_condition) */
 #endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
+
+/*-------------------------------------------------------------------*/
+/* BF_7 ICM   - Insert Characters under Mask                    [RS] */
+/*-------------------------------------------------------------------*/
+DEF_INST(BF_7)
+{
+int    r1, r3;                          /* Register numbers          */
+int    b2;                              /* effective address base    */
+VADR   effective_addr2;                 /* effective address         */
+BYTE   vbyte[4];                        /* Fetched storage bytes     */
+U32    n;                               /* Fetched value             */
+
+    RS(inst, regs, r1, r3, b2, effective_addr2);
+
+    vbyte[0] = 0;
+    ARCH_DEP(vfetchc) (vbyte + 1, 2, effective_addr2, b2, regs);
+    n = fetch_fw (vbyte);
+    regs->GR_L(r1) = (regs->GR_L(r1) & 0xFF000000) | n;
+    regs->psw.cc = n ? n & 0x00800000 ? 1 : 2 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* BF_F ICM   - Insert Characters under Mask                    [RS] */
+/*-------------------------------------------------------------------*/
+DEF_INST(BF_F)
+{
+int    r1, r3;                          /* Register numbers          */
+int    b2;                              /* effective address base    */
+VADR   effective_addr2;                 /* effective address         */
+
+    RS(inst, regs, r1, r3, b2, effective_addr2);
+
+    regs->GR_L(r1) = ARCH_DEP(vfetch4) (effective_addr2, b2, regs);
+    regs->psw.cc = regs->GR_L(r1) ? regs->GR_L(r1) & 0x80000000 ? 1 : 2 : 0;
+}
 #endif /* OPTION_OPTINST */
 
 

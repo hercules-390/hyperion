@@ -4362,6 +4362,11 @@ DEF_INST(A7D4);
 DEF_INST(A7E4);
 DEF_INST(A7F4);
 
+/* Optimized ICM instructions */
+DEF_INST(BF_7);
+DEF_INST(BF_F);
+
+/* Optimized zero x2 instructions */
 DEF_INST(E3_0______04);
 DEF_INST(E3_0______08);
 DEF_INST(E3_0______20);
