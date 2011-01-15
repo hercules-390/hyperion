@@ -420,7 +420,7 @@ void  LCS_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
 #if 0
     // Special case for LCS CIW's
     else if( ( bCode == 72 || bCode == 82 || bCode == 83 ) )
-        bOpCode == bCode;
+        bOpCode = bCode;
 #endif
     else
         bOpCode = bCode;

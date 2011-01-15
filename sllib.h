@@ -171,7 +171,7 @@ typedef struct _slfmt
 /*
 || Label types
 */
-#define SLT_UNKOWN  0
+#define SLT_UNKNOWN 0
 #define SLT_VOL     1
 #define SLT_HDR     2
 #define SLT_UHL     3

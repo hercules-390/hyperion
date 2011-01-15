@@ -58,8 +58,8 @@
   /* TUNSETIFF ifr flags */
   #define IFF_TUN         0x0001
   #define IFF_TAP         0x0002
-  #define IFF_NO_PI       0x1000
-  #define IFF_ONE_QUEUE   0x2000
+  #define IFF_NO_PI       0x1000          /* Don't provide packet info    */
+  #define IFF_ONE_QUEUE   0x2000          /* Use only one packet queue    */
 
 #endif
 
