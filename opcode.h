@@ -2418,6 +2418,32 @@ do { \
             (_l) = (_inst)[1]; \
             INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
     }
+    
+    
+#ifdef OPTION_OPTINST
+#define _SS_L(_inst, _regs, _b1, _effective_addr1, _b2, _effective_addr2) \
+        _SS_L_DECODER(_inst, _regs, _b1, _effective_addr1, _b2, _effective_addr2, 6, 6)
+#define _SS_L_DECODER(_inst, _regs, _b1, _effective_addr1, _b2, _effective_addr2, _len, _ilc) \
+        { \
+          U32 temp = fetch_fw(_inst); \
+          (_b1) = (temp >> 12) & 0xf; \
+          (_effective_addr1) = temp & 0xfff; \
+          if((_b1) != 0) \
+          { \
+            (_effective_addr1) += (_regs)->GR((_b1)); \
+            (_effective_addr1) &= ADDRESS_MAXWRAP((_regs)); \
+          } \
+          (_b2) = (_inst)[4] >> 4; \
+          (_effective_addr2) = (((_inst)[4] & 0x0F) << 8) | (_inst)[5]; \
+          if((_b2) != 0) \
+          { \
+            (_effective_addr2) += (_regs)->GR((_b2)); \
+            (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+          } \
+          INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
+        }
+#endif /* OPTION_OPTINST */
+
 
 /* SSE storage to storage with extended op code */
 #undef SSE
@@ -4384,6 +4410,10 @@ DEF_INST(A7F4);
 /* Optimized ICM instructions */
 DEF_INST(BF_7);
 DEF_INST(BF_F);
+
+/* Optimized CLC instruction */
+DEF_INST(D503);
+DEF_INST(D507);
 
 /* Optimized zero x2 instructions */
 DEF_INST(E3_0______04);
