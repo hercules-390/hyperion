@@ -1333,6 +1333,25 @@ do { \
           }\
           INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
         }
+
+/* BHe: This decoder is for RX instructions with a not zero X2 */
+#define _RX(_inst, _regs, _r1, _b2, _effective_addr2) \
+        _RX_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, 4, 4)
+
+#define _RX_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc) \
+        { \
+          U32 temp = fetch_fw(_inst); \
+          (_r1) = (temp >> 20) & 0xf; \
+          (_b2) = (temp >> 16) & 0xf; \
+          (_effective_addr2) = temp & 0xfff; \
+          (_effective_addr2) += (_regs)->GR((_b2)); \
+          (_b2) = (temp >> 12) & 0xf; \
+          if(likely(_b2)) \
+            (_effective_addr2) += (_regs)->GR((_b2)); \
+          if((_len)) \
+            (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+          INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
+        }
 #endif /* OPTION_OPTINST */
 
 /* RXE register and indexed storage with extended op code */

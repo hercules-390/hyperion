@@ -718,7 +718,11 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+#ifdef OPTION_OPTINST
+    _RX(inst, regs, r1, b2, effective_addr2);
+#else
     RX(inst, regs, r1, b2, effective_addr2);
+#endif /* OPTION_OPTINST */
 
     /* Load R1 register from second operand */
     regs->GR_L(r1) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
