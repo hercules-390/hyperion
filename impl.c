@@ -351,16 +351,14 @@ int     dll_count;                      /* index into array          */
 #endif
 
     /* Clear the system configuration block */
-    memset (&sysblk, 0, sizeof(SYSBLK));
+    MLOCK ( &sysblk,    sizeof( SYSBLK ));
+    memset( &sysblk, 0, sizeof( SYSBLK ));
 
     /* Initialize Guest System Information */
     init_gsysinfo();
 
 #if defined (_MSVC_)
-    VERIFY( VirtualLock( &sysblk, sizeof(SYSBLK) ) );
     _setmaxstdio(2048);
-#else
-    VERIFY( mlock( &sysblk, sizeof(SYSBLK) ) == 0 );
 #endif
 
     /* Initialize EYE-CATCHERS for SYSBLK       */

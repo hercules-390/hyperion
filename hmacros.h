@@ -92,19 +92,12 @@
   #define  fclose               w32_fclose
   #define  basename             w32_basename
   #define  dirname              w32_dirname
-  #define  getpagesize          w32_getpagesize
-  #define  mlock                w32_mlock
-  #define  munlock              w32_munlock
-  #define  valloc               w32_valloc
-#ifndef strcasestr
-  #define  strcasestr           w32_strcasestr
-#endif
-#endif
-
-#ifdef _MSVC_
+  #ifndef    strcasestr
+    #define  strcasestr         w32_strcasestr
+  #endif
   #define  fdatasync            _commit
   #define  atoll                _atoi64
-#else
+#else /* !_MSVC_ */
   #if !defined(HAVE_FDATASYNC_SUPPORTED)
     #ifdef HAVE_FSYNC
       #define  fdatasync        fsync
@@ -293,27 +286,43 @@
 #define  SNCMP(_lvar,_rvar,_svar) ( !strncasecmp( _lvar, _rvar, _svar ) )
 
 /*-------------------------------------------------------------------*/
-/* Macros for allocate storage functions                             */
+/* Macros for storage functions:                                     */
+/*                                                                   */
+/*    HPCALLOC:    Hercules page-aligned 'calloc'. Used *ONLY*       */
+/*                 for allocating mainstor and xpndstor since it     */
+/*                 also automatically sets main_clear/xpnd_clear.    */
+/*    HPCFREE:     free the memory allocated by HPCALLOC. The        */
+/*                 main_clear/xpnd_clear is automatically reset.     */
+/*    HPAGESIZE:   HOST system page size.                            */
+/*    MLOCK:       lock a range of memory.                           */
+/*    MUNLOCK:     unlock a range of memory.                         */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
-#if defined(_MSVC_)
-  #define PVALLOC     w32_valloc
-  #define VALLOC      w32_valloc
-  #define PVFREE      w32_vfree
-  #define VFREE       w32_vfree
-#else
-  #if !defined(__FreeBSD__) && !defined(__APPLE__) && !defined(__SOLARIS__)
-    #define PVALLOC     pvalloc
-    #define PVFREE      free
-    #define VALLOC      valloc
-    #define VFREE       free
-  #else
-    #define PVALLOC     valloc
-    #define PVFREE      free
-    #define VALLOC      valloc
-    #define VFREE       free
-  #endif
-#endif
 
+  #define  HPCALLOC(t,a)        hpcalloc((t),(a))  /* (type, amount) */
+  #define  HPCFREE(t,a)         hpcfree((t),(a))   /* (type, amount) */
+
+  #define  HPC_MAINSTOR         1  /* mainstor being allocated/freed */
+  #define  HPC_XPNDSTOR         2  /* xpndstor being allocated/freed */
+
+#ifdef _MSVC_
+
+  #define  HPAGESIZE()          w32_hpagesize()
+  #define  MLOCK                w32_mlock
+  #define  MUNLOCK              w32_munlock
+
+#else /* !_MSVC_ */
+
+  #define  HPAGESIZE()          sysconf( _SC_PAGESIZE )
+ #if defined(HAVE_MLOCK)
+  #define  MLOCK                mlock
+  #define  MUNLOCK              munlock
+ #else
+  #define  MLOCK(a,l)           (-1)
+  #define  MUNLOCK(a,l)         (-1)
+ #endif
+
+#endif
 
 /*-------------------------------------------------------------------*/
 /* Macro for Debugging / Tracing...                                  */
@@ -331,7 +340,7 @@
   #define bindtextdomain(_package, _directory)
 #endif
 
-#if defined(DEBUG) || defined(_DEBUG)
+#if 1 // defined(DEBUG) || defined(_DEBUG)
 
   #ifdef _MSVC_
 

@@ -438,6 +438,7 @@ AC_CHECK_HEADER( unistd.h,     [], [ AC_MSG_RESULT( [ERROR: Required header 'uni
 AC_CHECK_HEADER( sys/stat.h,   [], [ AC_MSG_RESULT( [ERROR: Required header 'sys/stat.h' not found]   ); hc_error=yes ] )
 AC_CHECK_HEADER( sys/time.h,   [], [ AC_MSG_RESULT( [ERROR: Required header 'sys/time.h' not found]   ); hc_error=yes ] )
 AC_CHECK_HEADER( sys/types.h,  [], [ AC_MSG_RESULT( [ERROR: Required header 'sys/types.h' not found]  ); hc_error=yes ] )
+AC_CHECK_HEADER( sys/mman.h,   [], [ AC_MSG_RESULT( [ERROR: Required header 'sys/mman.h' not found]   ); hc_error=yes ] )
 
 #  PROGRAMMING NOTE: the pthread.h header only required if this is not
 #  an fthreads build. Thus we delay aborting until later once we know
@@ -531,7 +532,6 @@ AC_CHECK_HEADERS( net/route.h,    [hc_cv_have_net_route_h=yes],    [hc_cv_have_n
 AC_CHECK_HEADERS( arpa/inet.h,    [hc_cv_have_arpa_inet_h=yes],    [hc_cv_have_arpa_inet_h=no]    )
 AC_CHECK_HEADERS( linux/if_tun.h, [hc_cv_have_linux_if_tun_h=yes], [hc_cv_have_linux_if_tun_h=no] )
 AC_CHECK_HEADERS( sys/ioctl.h,    [hc_cv_have_sys_ioctl_h=yes],    [hc_cv_have_sys_ioctl_h=no]    )
-AC_CHECK_HEADERS( sys/mman.h,     [hc_cv_have_sys_mman_h=yes],     [hc_cv_have_sys_mman_h=no]     )
 
 #------------------------------------------------------------------------------
 #  PROGRAMMING NOTE: on *BSD systems sys/param.h must be #included before
@@ -739,6 +739,7 @@ AC_CHECK_FUNCS( fdatasync fsync ftruncate )
 AC_CHECK_FUNCS( inet_aton )
 AC_CHECK_FUNCS( fork socketpair )
 AC_CHECK_FUNCS( sysconf )
+AC_CHECK_FUNCS( mlock )
 AC_CHECK_FUNCS( gettid )
 
 AC_CHECK_FUNCS( vsscanf,

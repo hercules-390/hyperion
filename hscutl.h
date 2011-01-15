@@ -225,4 +225,8 @@ static __inline__ U64 swap_byte_U64(U64 ll )
     return( (U64)bswap_64( (uint64_t) ll ) );
 }
 
+/* Hercules page-aligned calloc/free */
+HUT_DLL_IMPORT  void*  hpcalloc ( BYTE type, size_t size );
+HUT_DLL_IMPORT  void   hpcfree  ( BYTE type, void*  ptr  );
+
 #endif /* __HSCUTL_H__ */

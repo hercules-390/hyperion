@@ -167,9 +167,9 @@ BUG? reported by halfmeg:
   Add SRF (Suspend/Resume) support for CTC devices.
 
 -------------------------------------------------------------------------------
-  
+
   BCTC support for sysplex'ing via GRS.
-  
+
 -------------------------------------------------------------------------------
 
   Generic native host SCSI support (mostly for tape,

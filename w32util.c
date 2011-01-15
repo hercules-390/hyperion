@@ -500,7 +500,7 @@ static int w32_nanosleep ( const struct timespec* rqtp )
         (((__int64)rqtp->tv_nsec + 99) / 100)
     );
 
-    // Set the waitable timer... 
+    // Set the waitable timer...
 
     VERIFY( SetWaitableTimer( hTimer, &liDueTime, 0, NULL, NULL, FALSE ) );
 
@@ -1100,7 +1100,7 @@ DLL_EXPORT BYTE *hostpath( BYTE *outpath, const BYTE *inpath, size_t buffsize )
 
     // For case d we do nothing since it is already a Windows path
     // (other than normalize all backward slashes to forward slashes
-    // since Windows supports both) 
+    // since Windows supports both)
 
     // For case e we convert forward slashes to backward slashes. If
     // the device name is already in the proper format we do nothing.
@@ -1253,9 +1253,9 @@ DWORD CountSetBits(ULONG_PTR bitMask)
 {
     DWORD LSHIFT = sizeof(ULONG_PTR)*8 - 1;
     DWORD bitSetCount = 0;
-    ULONG_PTR bitTest = (ULONG_PTR)1 << LSHIFT;    
+    ULONG_PTR bitTest = (ULONG_PTR)1 << LSHIFT;
     DWORD i;
-    
+
     for (i = 0; i <= LSHIFT; ++i)
     {
         bitSetCount += ((bitMask & bitTest)?1:0);
@@ -1279,7 +1279,7 @@ typedef BOOL (WINAPI *PGPI)(DWORD, DWORD, DWORD, DWORD, PDWORD);
 typedef BOOL (WINAPI *LPFN_GLPI)(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION, PDWORD);
 typedef LONG (WINAPI *CNPI)(POWER_INFORMATION_LEVEL,PVOID,ULONG,PVOID,ULONG);
 
-typedef struct _PROCESSOR_POWER_INFORMATION 
+typedef struct _PROCESSOR_POWER_INFORMATION
 {
     ULONG Number;
     ULONG MaxMhz;
@@ -1330,16 +1330,16 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
     pHostInfo->nodename[sizeof(pHostInfo->nodename)-1] = 0;
 
     glpi = (LPFN_GLPI) GetProcAddress( GetModuleHandle(TEXT("kernel32.dll")),
-                                   "GetLogicalProcessorInformation"); 
+                                   "GetLogicalProcessorInformation");
     if ( glpi != NULL )
     {
         BOOL done = FALSE;
         DWORD       retlen = 0;
-        
+
         while (!done)
         {
             DWORD rc = glpi( buffer, &retlen );
-            
+
             if ( rc == FALSE )
             {
                 if ( GetLastError() == ERROR_INSUFFICIENT_BUFFER )
@@ -1369,7 +1369,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
             pHostInfo->cachelinesz = 0;
             pHostInfo->num_physical_cpu = 0;       /* #of cores                 */
             pHostInfo->num_logical_cpu = 0;        /* #of of hyperthreads       */
-            pHostInfo->num_packages = 0;           /* #of CPU "chips"           */    
+            pHostInfo->num_packages = 0;           /* #of CPU "chips"           */
 
             while (byteOffset + sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION) <= retlen)
             {
@@ -1379,7 +1379,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
                     pHostInfo->num_logical_cpu += CountSetBits(ptr->ProcessorMask);
                 }
                 else
-#if _MSC_VER >= 1500 
+#if _MSC_VER >= 1500
                 if ( ptr->Relationship == RelationProcessorPackage )
                 {
                     pHostInfo->num_packages++;
@@ -1421,29 +1421,29 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
                 ptr++;
             }
 
-            if (buffer) 
+            if (buffer)
                 free(buffer);
         }
     }
-    
+
     {
         PPROCESSOR_POWER_INFORMATION ppi = NULL;
         CNPI        Pwrinfo;
         ULONG       size = (ULONG)sizeof(PROCESSOR_POWER_INFORMATION);
-        
+
         size *= (ULONG)pHostInfo->num_logical_cpu;
 
         ppi = (PPROCESSOR_POWER_INFORMATION)malloc((size_t)size);
 
         if ( NULL != ppi )
-        {   
+        {
             bzero(ppi, (size_t)size);
 
             Pwrinfo = (CNPI)GetProcAddress(LoadLibrary(TEXT("powrprof.dll")), "CallNtPowerInformation");
 
             if ( (LONG)0 == Pwrinfo(ProcessorInformation, NULL, 0, ppi, size) )
                 pHostInfo->cpu_speed = (U64)((U64)ppi->MaxMhz * (U64)ONE_MILLION);
-            
+
             free(ppi);
         }
     }
@@ -1454,7 +1454,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
         __cpuid(CPUInfo, 1);
         if ( CPUInfo[2] & ( 1 << 25 ) )
             pHostInfo->cpu_aes_extns = 1;
-        if ( CPUInfo[3] & 1 ) 
+        if ( CPUInfo[3] & 1 )
             pHostInfo->fp_unit = 1;
         if ( CPUInfo[3] & 0x03800000 ) /* bit 23 = MMX, 24 = SSE, 25 == SSE2 */
             pHostInfo->vector_unit = 1;
@@ -1477,29 +1477,29 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
 
     switch ( vi.dwPlatformId )
     {
-        case VER_PLATFORM_WIN32_WINDOWS: 
-            psz = "9x"; 
+        case VER_PLATFORM_WIN32_WINDOWS:
+            psz = "9x";
             break;
         case VER_PLATFORM_WIN32_NT:
 #if _MSC_VER >= 1500 // && defined(PRODUCT_ULTIMATE_E)
 // This list is current as of 2010-03-13 using V7.0 MS SDK
             if ( vi.dwMajorVersion == 6 )
             {
-                pgpi = (PGPI) GetProcAddress( 
+                pgpi = (PGPI) GetProcAddress(
                                   GetModuleHandle( TEXT( "kernel32.dll" ) ),
                                  "GetProductInfo" );
-                pgpi( vi.dwMajorVersion, vi.dwMinorVersion, 
+                pgpi( vi.dwMajorVersion, vi.dwMinorVersion,
                       vi.wServicePackMajor, vi.wServicePackMinor, &dw );
 
                 if ( vi.dwMinorVersion == 0 )
-                { 
+                {
                     if ( vi.wProductType == VER_NT_WORKSTATION )
                         psz = "Vista";
                     else
                         psz = "Server 2008";
                 }
                 if ( vi.dwMinorVersion == 1 )
-                { 
+                {
                     if ( vi.wProductType == VER_NT_WORKSTATION )
                         psz = "7";
                     else
@@ -1520,20 +1520,20 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
 #if defined(PRODUCT_PROFESSIONAL) || defined(PRODUCT_PROFESSIONAL_E) || defined(PRODUCT_PROFESSION_N)
 #if defined(PRODUCT_PROFESSIONAL)
                     case PRODUCT_PROFESSIONAL:
-#endif 
+#endif
 #if defined(PRODUCT_PROFESSIONAL_E)
                     case PRODUCT_PROFESSIONAL_E:
-#endif 
+#endif
 #if defined(PRODUCT_PROFESSIONAL_N)
                     case PRODUCT_PROFESSIONAL_N:
-#endif 
+#endif
                         prod_id = "Professional";
                         break;
-#endif 
+#endif
                     case PRODUCT_HOME_PREMIUM:
 #if defined(PRODUCT_HOME_PREMIUM_E)
                     case PRODUCT_HOME_PREMIUM_E:
-#endif 
+#endif
 #if defined(PRODUCT_HOME_PREMIUM_N)
                     case PRODUCT_HOME_PREMIUM_N:
 #endif
@@ -1542,7 +1542,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
                     case PRODUCT_HOME_BASIC:
 #if defined(PRODUCT_HOME_BASIC_E)
                     case PRODUCT_HOME_BASIC_E:
-#endif 
+#endif
                     case PRODUCT_HOME_BASIC_N:
                         prod_id = "Home Basic Edition";
                         break;
@@ -1553,19 +1553,19 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
                     case PRODUCT_HOME_PREMIUM_SERVER:
                         prod_id = "Home Premium Server";
                         break;
-#endif 
+#endif
 #if defined(PRODUCT_HYPERV)
                     case PRODUCT_HYPERV:
                         prod_id = "Hyper-V";
                         break;
-#endif 
+#endif
                     case PRODUCT_ENTERPRISE:
 #if defined(PRODUCT_ENTERPRISE_E)
                     case PRODUCT_ENTERPRISE_E:
-#endif 
+#endif
 #if defined(PRODUCT_ENTERPRISE_N)
                     case PRODUCT_ENTERPRISE_N:
-#endif 
+#endif
                         prod_id = "Enterprise Edition";
                         break;
                     case PRODUCT_BUSINESS:
@@ -1611,7 +1611,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
                     case PRODUCT_DATACENTER_SERVER_V:
                         prod_id = "Datacenter Edition w/o Hyper-V";
                         break;
-#endif 
+#endif
 
                     case PRODUCT_DATACENTER_SERVER_CORE:
                         prod_id = "Datacenter Edition (core)";
@@ -1636,7 +1636,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
                     case PRODUCT_ENTERPRISE_SERVER_CORE_V:
                         prod_id = "Enterprise Edition w/o Hyper-V (core)";
                         break;
-#endif 
+#endif
                     case PRODUCT_ENTERPRISE_SERVER_IA64:
                         prod_id = "Enterprise Edition for IA64 Systems";
                         break;
@@ -1674,7 +1674,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
                     case PRODUCT_STANDARD_SERVER_CORE_V:
                         prod_id = "Standard Edition w/o Hyper-V (core)";
                         break;
-#endif 
+#endif
                     case PRODUCT_STORAGE_ENTERPRISE_SERVER:
                         prod_id = "Storage Server Enterprise";
                         break;
@@ -1723,7 +1723,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
 #endif
 #if defined(PRODUCT_SERVER_FOR_SB_SOLUTIONS_EM)
                     case PRODUCT_SERVER_FOR_SB_SOLUTIONS_EM:
-#endif 
+#endif
                         prod_id = "Server for Small Business Solutions";
                         break;
 #endif
@@ -1811,7 +1811,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
 #if defined(VER_SUITE_WH_SERVER)
                 else if ( vi.wSuiteMask & VER_SUITE_WH_SERVER )
                     psz = "Home Server";
-#endif 
+#endif
                 else if ( vi.wProductType == VER_NT_WORKSTATION &&
                           si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64 )
                     psz = "XP Professional x64 Edition";
@@ -1839,7 +1839,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
                     }
                     else
                     {
-                        if ( vi.wSuiteMask & VER_SUITE_COMPUTE_SERVER ) 
+                        if ( vi.wSuiteMask & VER_SUITE_COMPUTE_SERVER )
                             prod_id = "Computer Cluster Edition";
                         else if ( vi.wSuiteMask & VER_SUITE_DATACENTER )
                             prod_id = "Datacenter Edition";
@@ -1847,7 +1847,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
                             prod_id = "Enterprise Edition";
                         else if ( vi.wSuiteMask & VER_SUITE_BLADE )
                             prod_id = "Web Edition";
-                        else 
+                        else
                             prod_id = "Standard Edition";
                     }
                 }
@@ -1883,7 +1883,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
                 }
                 else if ( si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL )
                     prod_proc = " 32-bit";
-                else 
+                else
                     prod_proc = "";
             }
             break;
@@ -1949,7 +1949,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
 #define PROCESSOR_ARCHITECTURE_AMD64            9
 #define PROCESSOR_ARCHITECTURE_IA32_ON_WIN64    10
 
-        case PROCESSOR_ARCHITECTURE_AMD64:  
+        case PROCESSOR_ARCHITECTURE_AMD64:
             {
                 int CPUInfo[4] = {-1, -1, -1, -1 };
                 char CPUString[0x20];
@@ -1960,7 +1960,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
                 *((int*)CPUString) = CPUInfo[1];
                 *((int*)(CPUString+4)) = CPUInfo[3];
                 *((int*)(CPUString+8)) = CPUInfo[2];
-                
+
                 if ( mem_eq(CPUString,"GenuineIntel",12) )
                 {
                     strlcpy( pHostInfo->machine, "Intel(R) x64", sizeof(pHostInfo->machine) );
@@ -1971,21 +1971,21 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
                 }
                 else
                 {
-                    strlcpy( pHostInfo->machine, "AMD64", sizeof(pHostInfo->machine) ); 
+                    strlcpy( pHostInfo->machine, "AMD64", sizeof(pHostInfo->machine) );
                 }
                 memset(CPUBrand, 0, sizeof(CPUBrand));
-                
+
                 __cpuid(CPUInfo, 0x80000002);
                 memcpy(CPUBrand, CPUInfo, sizeof(CPUInfo));
-                
+
                 __cpuid(CPUInfo, 0x80000003);
                 memcpy(CPUBrand+16, CPUInfo, sizeof(CPUInfo));
-                
+
                 __cpuid(CPUInfo, 0x80000004);
                 memcpy(CPUBrand+32, CPUInfo, sizeof(CPUInfo));
-                
+
                 memcpy(pHostInfo->cpu_brand, CPUBrand, sizeof(pHostInfo->cpu_brand));
-                
+
             }
             break;
         case PROCESSOR_ARCHITECTURE_PPC:           strlcpy( pHostInfo->machine, "PowerPC"       , sizeof(pHostInfo->machine) ); break;
@@ -3089,7 +3089,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
         // PROGRAMMING NOTE: KB article 190351 "HOWTO: Spawn Console Processes with
         // Redirected Standard Handles" http://support.microsoft.com/?kbid=190351
         // is WRONG! (or at the very least quite misleading!)
-        
+
         // It states that for those stdio handles you do NOT wish to redirect, you
         // should use "GetStdHandle(STD_xxx_HANDLE)", but that ONLY works when you
         // have a console to begin with! (which Hercules would NOT have when started
@@ -3647,11 +3647,11 @@ DLL_EXPORT char*  w32_basename( const char* path )
 
     bzero( _basename, sizeof(_basename) );      // zero for security reasons
     _splitpath( path, NULL, NULL, fname, ext ); // C4996
-    
+
     strlcpy( _basename, fname, sizeof( _basename ) );
     strlcat( _basename, ext,   sizeof( _basename ) );
 
-    if ( strlen( _basename ) == 0 || path == NULL ) 
+    if ( strlen( _basename ) == 0 || path == NULL )
         strlcpy( _basename, ".", sizeof( _basename ) );
 
     return( _basename );
@@ -3681,41 +3681,41 @@ DLL_EXPORT char*  w32_dirname( const char* path )
 
     if ( strlen( _dirname ) == 0 || path == NULL )
         strlcpy( _dirname, ".", sizeof(_dirname) );
-    
+
     return( _dirname );
 }
 DLL_EXPORT char*  w32_strcasestr( const char* haystack, const char* needle )
 {
     int i = -1;
-    
-    while ( haystack[++i] != '\0' ) 
+
+    while ( haystack[++i] != '\0' )
     {
-        if ( tolower( haystack[i] ) == tolower( needle[0] ) ) 
-        {  
-            int j=i, k=0, match=0;  
-            while ( tolower( haystack[++j] ) == tolower( needle[++k] ) ) 
-            {  
-                match=1;  
-                // Catch case when they match at the end  
-                if ( haystack[j] == '\0' && needle[k] == '\0' ) 
-                {  
-                    return (char*)&haystack[i];  
-                }  
-            }  
-            // Catch normal case  
+        if ( tolower( haystack[i] ) == tolower( needle[0] ) )
+        {
+            int j=i, k=0, match=0;
+            while ( tolower( haystack[++j] ) == tolower( needle[++k] ) )
+            {
+                match=1;
+                // Catch case when they match at the end
+                if ( haystack[j] == '\0' && needle[k] == '\0' )
+                {
+                    return (char*)&haystack[i];
+                }
+            }
+            // Catch normal case
             if ( match && needle[k] == '\0' )
-            {  
-                return (char*)&haystack[i];  
-            }  
-        }  
-    }  
-    return NULL;  
+            {
+                return (char*)&haystack[i];
+            }
+        }
+    }
+    return NULL;
 }
 
-DLL_EXPORT unsigned long w32_getpagesize(void)
+DLL_EXPORT unsigned long w32_hpagesize()
 {
-    static long g_pagesize = 0 ;
-    if (! g_pagesize)
+    static long g_pagesize = 0;
+    if (!g_pagesize)
     {
         SYSTEM_INFO system_info ;
         GetSystemInfo(&system_info) ;
@@ -3724,39 +3724,14 @@ DLL_EXPORT unsigned long w32_getpagesize(void)
     return (unsigned long) g_pagesize ;
 }
 
-DLL_EXPORT int w32_mlock( void *addr, size_t len)
+DLL_EXPORT int w32_mlock( void* addr, size_t len )
 {
-    int rc = VirtualLock(addr, len);
-    if ( rc == 0 ) 
-        rc = -1;
-    else
-        rc = 0;
-    return rc;
+    return VirtualLock( addr, len ) ? 0 : -1;
 }
 
-DLL_EXPORT int w32_munlock( void *addr, size_t len)
+DLL_EXPORT int w32_munlock( void* addr, size_t len )
 {
-    int rc = VirtualUnlock(addr, len);
-    if ( rc == 0 ) 
-        rc = -1;
-    else
-        rc = 0;
-    return rc;
+    return VirtualUnlock( addr, len ) ? 0 : -1;
 }
 
-DLL_EXPORT void * w32_valloc( size_t bytes )
-{
-
-    return (_aligned_malloc( bytes, (size_t)w32_getpagesize()));
-
-}
-
-DLL_EXPORT void w32_vfree( void * maddr )
-{
-
-    _aligned_free( maddr );
-
-    return;
-
-}
 #endif // defined( _MSVC_ )

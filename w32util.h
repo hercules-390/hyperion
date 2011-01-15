@@ -208,11 +208,10 @@ W32_DLL_IMPORT int    w32_get_stdin_char ( char* pCharBuff, int wait_millisecs )
 W32_DLL_IMPORT pid_t  w32_poor_mans_fork ( char*  pszCommandLine, int* pnWriteToChildStdinFD );
 W32_DLL_IMPORT void   w32_set_thread_name( TID tid, char* name );
 
-W32_DLL_IMPORT unsigned long w32_getpagesize(void);
-W32_DLL_IMPORT int w32_mlock(const void *addr, size_t len);
-W32_DLL_IMPORT int w32_munlock(const void *addr, size_t len);
-W32_DLL_IMPORT void * w32_valloc(size_t bytes);
-W32_DLL_IMPORT void w32_vfree(void * _maddr);
+W32_DLL_IMPORT unsigned long  w32_hpagesize();
+
+W32_DLL_IMPORT int    w32_mlock   ( const void* addr, size_t len );
+W32_DLL_IMPORT int    w32_munlock ( const void *addr, size_t len );
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
