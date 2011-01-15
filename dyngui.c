@@ -340,14 +340,13 @@ BYTE   gui_wants_fregs64     = 0;
 BYTE   gui_wants_devlist     = 0;
 BYTE   gui_wants_new_devlist = 1;       // (should always be initially on)
 #if defined(OPTION_MIPS_COUNTING)
+BYTE   gui_wants_aggregates  = 1;
 BYTE   gui_wants_cpupct      = 0;
 BYTE   gui_wants_cpupct_all  = 0;
-#endif
-#if defined(OPTION_MIPS_COUNTING)
-int    prev_cpupct [ MAX_CPU_ENGINES ];
+int    prev_cpupct    [ MAX_CPU_ENGINES ];
 U32    prev_mips_rate  = 0;
 U32    prev_sios_rate  = 0;
-#endif
+#endif // defined(OPTION_MIPS_COUNTING)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Our Hercules "panel_command" override...
@@ -465,12 +464,12 @@ void*  gui_panel_command (char* pszCommand)
         // build version. V1 and V2 however should ALWAYS be numbers and should
         // ALWAYS equal Hercules's actual build version...
 
-        gui_fprintf(fStatusStream,"MAINSIZE=%u.%u\n",V1,V2);
+        gui_fprintf(fStatusStream,"MAINSIZE=%d.%d\n",V1,V2);
 
         if (gui_version < 1.12)
-            gui_fprintf(fStatusStream,"MAINSIZE=%u\n",(U32)sysblk.mainsize);
+            gui_fprintf(fStatusStream,"MAINSIZE=%d\n",(U32)sysblk.mainsize);
         else
-            gui_fprintf(fStatusStream,"MAINSIZE=%"UINT_PTR_FMT"u\n",(uintptr_t)sysblk.mainsize);
+            gui_fprintf(fStatusStream,"MAINSIZE=%"UINT_PTR_FMT"d\n",(uintptr_t)sysblk.mainsize);
         return NULL;
     }
 
@@ -484,6 +483,12 @@ void*  gui_panel_command (char* pszCommand)
     {
         if (!(gui_wants_cpupct_all = atoi(pszCommand+10)))
             memset( &prev_cpupct[0], 0xFF, sizeof(prev_cpupct) );
+        return NULL;
+    }
+    if (strncasecmp(pszCommand,"AGGREGATE=",10) == 0)
+    {
+        gui_wants_aggregates = atoi(pszCommand+10);
+        gui_forced_refresh = 1;
         return NULL;
     }
 #endif
@@ -565,12 +570,36 @@ void  UpdateStatus ()
 #if defined(OPTION_MIPS_COUNTING)
     if (gui_wants_cpupct)
     {
-        gui_fprintf(fStatusStream,
+        if (gui_wants_aggregates)
+        {
+            int cpu, cpupct = 0, started = 0;
+            for (cpupct=0, cpu=0; cpu < sysblk.maxcpu; cpu++)
+            {
+                if (1
+                    && IS_CPU_ONLINE( cpu )
+                    && CPUSTATE_STARTED == sysblk.regs[ cpu ]->cpustate
+                )
+                {
+                    started++;
+                    cpupct += sysblk.regs[ cpu ]->cpupct; 
+                }
+            }
+            gui_fprintf(fStatusStream,
 
-            "CPUPCT=%d\n"
+                "CPUPCT=%d\n"
 
-            ,pTargetCPU_REGS->cpupct
-        );
+                ,started ? (cpupct / started) : 0
+            );
+        }
+        else
+        {
+            gui_fprintf(fStatusStream,
+
+                "CPUPCT=%d\n"
+
+                ,pTargetCPU_REGS->cpupct
+            );
+        }
     }
     if (gui_wants_cpupct_all)
     {
@@ -589,7 +618,7 @@ void  UpdateStatus ()
             if (cpupct != prev_cpupct[i])
             {
                 prev_cpupct[i] = cpupct;
-                gui_fprintf( fStatusStream, "CPUPCT%02u=%u\n", i, cpupct );
+                gui_fprintf( fStatusStream, "CPUPCT%02d=%d\n", i, cpupct );
             }
         }
     }
@@ -701,8 +730,8 @@ void HandleForcedRefresh()
         sizeof(prev_fpr64) );
 
 #if defined(OPTION_MIPS_COUNTING)
-    memset(   &prev_cpupct[0], 0xFF,
-        sizeof(prev_cpupct) );
+    memset(   &prev_cpupct   [0], 0xFF,
+        sizeof(prev_cpupct   ) );
 #endif
 }
 
@@ -768,37 +797,48 @@ void  UpdateCPUStatus ()
 
     } // endif cpu is online/offline
 
-    // MIPS rate and SIOS rate...
-
 #if defined(OPTION_MIPS_COUNTING)
 
-    // MIPS rate...
-
-    if (sysblk.mipsrate != prev_mips_rate)
+    // MIPS rate and SIOS rate...
     {
-        gui_fprintf(fStatusStream,
+        U32* mipsrate;
+        U32* siosrate;
 
-            "MIPS=%2.1d.%2.2d\n"
+        if (gui_wants_aggregates)
+        {
+            mipsrate = &sysblk.mipsrate;
+            siosrate = &sysblk.siosrate;
+        }
+        else
+        {
+            mipsrate = &pTargetCPU_REGS->mipsrate;
+            siosrate = &pTargetCPU_REGS->siosrate;
+        }
 
-            , sysblk.mipsrate / 1000000
-            ,(sysblk.mipsrate % 1000000) / 10000
-        );
+        if (*mipsrate != prev_mips_rate)
+        {
+            gui_fprintf( fStatusStream,
 
-        prev_mips_rate = sysblk.mipsrate;
-    }
+                "MIPS=%2.1d.%2.2d\n"
 
-    // SIOS rate...
+                , *mipsrate / 1000000
+                ,(*mipsrate % 1000000) / 10000
+            );
 
-    if (sysblk.siosrate != prev_sios_rate)
-    {
-        gui_fprintf(fStatusStream,
+            prev_mips_rate = *mipsrate;
+        }
 
-            "SIOS=%5d\n"
+        if (*siosrate != prev_sios_rate)
+        {
+            gui_fprintf( fStatusStream,
 
-            ,sysblk.siosrate
-        );
+                "SIOS=%5d\n"
 
-        prev_sios_rate = sysblk.siosrate;
+                ,*siosrate
+            );
+
+            prev_sios_rate = *siosrate;
+        }
     }
 
 #endif // defined(OPTION_MIPS_COUNTING)
