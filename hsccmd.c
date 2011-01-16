@@ -7455,11 +7455,13 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
         }
     }
 
+#ifdef OPTION_MIPS_COUNTING
     mipsrate = sysblk.mipsrate;
 
     WRMSG( HHC17008, "I", j, ( j == 0 ? 0 : ( cpupct / j ) ),
                     mipsrate / 1000000, ( mipsrate % 1000000 ) / 10000,
                     sysblk.siosrate, "" );
+#endif
 
 #if defined(OPTION_CAPPING)
 

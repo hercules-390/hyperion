@@ -3527,6 +3527,7 @@ PANMSG* p;
     /* Position to next line */
     fwrite("\n",1,1,stderr);
 
+#ifdef OPTION_MIPS_COUNTING
     {
         char*   pszCurrIntervalStartDateTime;
         char*   pszCurrentDateTime;
@@ -3554,6 +3555,7 @@ PANMSG* p;
         free( pszCurrIntervalStartDateTime );
         free( pszCurrentDateTime           );
     }
+#endif
 
     /* Read and display any msgs still remaining in the system log */
     while((lmscnt = log_read(&lmsbuf, &lmsnum, LOG_NOBLOCK)))
