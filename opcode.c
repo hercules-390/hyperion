@@ -1240,7 +1240,6 @@ static zz_func opt47x0[0x10][GEN_MAXARCH]; /* BC */
 static zz_func opt91sb[0x01][GEN_MAXARCH]; /* TM */
 static zz_func optA7x4[0x10][GEN_MAXARCH]; /* BRC */
 static zz_func optBF_x[0x02][GEN_MAXARCH]; /* ICM */
-static zz_func optD5xx[0x02][GEN_MAXARCH]; /* CLC */
 static zz_func optE3_0[0x01][GEN_MAXARCH]; /* Optimized execute routine */
 static zz_func optE3_0______xx[0x100][GEN_MAXARCH]; /* Optimized zero x2 instructions */
 #endif /* OPTION_OPTINST */
@@ -2396,10 +2395,6 @@ void init_opcode_tables(void)
     /* Install optimized single bit TM instruction */
     for(i = 0; i < 8; i++)
       replace_opcode_xxxx(arch, opt91sb[0][arch], 0x91, 0x01 << i); 
-
-    /* Install optimized CLC len 3 and 7 instruction */
-    replace_opcode_xxxx(arch, optD5xx[0][arch], 0xd5, 0x03);
-    replace_opcode_xxxx(arch, optD5xx[1][arch], 0xd5, 0x07);
 
 #endif /* OPTION_OPTINST */
 
@@ -7098,10 +7093,6 @@ static zz_func optA7x4[0x10][GEN_MAXARCH] = {
 static zz_func optBF_x[0x2][GEN_MAXARCH] = {
  /*BF_7*/ GENx370x390x900 (BF_7,RS,"ICM"),
  /*BF_F*/ GENx370x390x900 (BF_F,RS,"ICM") };
-
-static zz_func optD5xx[0x2][GEN_MAXARCH] = {
- /*D503*/ GENx370x390x900 (D503,SS_L,"CLC"),
- /*D507*/ GENx370x390x900 (D507,SS_L,"CLC") };
 
 /* Jump to E3_0______xx where x2 is zero */
 static zz_func optE3_0[0x1][GEN_MAXARCH] = {

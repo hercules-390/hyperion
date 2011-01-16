@@ -4409,10 +4409,6 @@ DEF_INST(A7F4);
 DEF_INST(BF_7);
 DEF_INST(BF_F);
 
-/* Optimized CLC instruction */
-DEF_INST(D503);
-DEF_INST(D507);
-
 /* Optimized zero x2 instructions */
 DEF_INST(E3_0______04);
 DEF_INST(E3_0______08);
