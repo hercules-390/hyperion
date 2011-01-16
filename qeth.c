@@ -802,7 +802,7 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
     if(dev->scsw.flag2 & SCSW2_Q)
     {
         dev->scsw.flag2 &= ~SCSW2_Q;
-        write(grp->ppfd[1],"*",1);
+        write_pipe(grp->ppfd[1],"*",1);
     }
     else
         if(IS_OSA_READ_DEVICE(dev) 
@@ -1299,7 +1299,7 @@ int num;                                /* Number of bytes to move   */
             if(FD_ISSET(grp->ppfd[0],&readset))
             {
             char c;
-                read(grp->ppfd[0],&c,1);
+                read_pipe(grp->ppfd[0],&c,1);
                
                 if(grp->o_qmask)
                     process_output_queue(dev);
@@ -1375,7 +1375,7 @@ TRACE(_("SIGA-r dev(%4.4x) qmask(%8.8x)\n"),dev->devnum,qmask);
 
     /* Send signal to QDIO thread */
     if(noselrd && grp->i_qmask)
-        write(grp->ppfd[1],"*",1);
+        write_pipe(grp->ppfd[1],"*",1);
 
     return 0;
 }
@@ -1412,7 +1412,7 @@ TRACE(_("SIGA-w dev(%4.4x) qmask(%8.8x)\n"),dev->devnum,qmask);
 
     /* Send signal to QDIO thread */
     if(grp->o_qmask)
-        write(grp->ppfd[1],"*",1);
+        write_pipe(grp->ppfd[1],"*",1);
 
     return 0;
 }
