@@ -613,13 +613,14 @@ if(olen > 0)
                         if(olen > 0)
                         {
                         OSA_HDR2 *hdr2 = (OSA_HDR2*)buf;
+                        BYTE brdcst[6] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
                             memset(hdr2,0x00,sizeof(OSA_HDR2));
-                            hdr2->id = 0x02;
-                            hdr2->flags[2] = 0x02;
+                            hdr2->id = HDR2_ID_LAYER2;
                             STORE_HW(hdr2->pktlen,olen);
+                            if(memcmp(brdcst,buf+sizeof(OSA_HDR2),sizeof(brdcst)))
+                                hdr2->flags[2] |= HDR2_FLAGS2_BROADCAST;
                             tlen += olen;
                             STORE_FW(sbal->sbale[ns].length,olen+sizeof(OSA_HDR2));
-//                          sbal->sbale[ns].flags[0] = 0x40;
 if(sa && la && len)
 {
 TRACE("SBAL(%d): %llx ADDR: %llx LEN: %d ",ns,sa,la,len);
@@ -942,9 +943,9 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
             TUNTAP_Close(grp->ttfd);
 
         if(grp->ppfd[0])
-            close(grp->ppfd[0]);
+            close_pipe(grp->ppfd[0]);
         if(grp->ppfd[1])
-            close(grp->ppfd[1]);
+            close_pipe(grp->ppfd[1]);
         
         if(grp->tuntap)
             free(grp->tuntap);

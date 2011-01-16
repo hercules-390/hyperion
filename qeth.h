@@ -491,7 +491,23 @@ typedef struct _OSA_IPA_SAP {
 /*-------------------------------------------------------------------*/
 typedef struct _OSA_HDR2 {
 /*000*/ BYTE    id;             /*                                   */
+#define HDR2_ID_LAYER3  0x01
+#define HDR2_ID_LAYER2  0x02
+#define HDR2_ID_TSO     0x03
+#define HDR2_ID_OSN     0x04
 /*001*/ BYTE    flags[3];       /*                                   */
+#define HDR2_FLAGS0_PASSTHRU    0x10
+#define HDR2_FLAGS0_IPV6        0x80
+#define HDR2_FLAGS0_CASTMASK    0x07
+#define HDR2_FLAGS0_ANYCAST     0x07
+#define HDR2_FLAGS0_UNICAST     0x06
+#define HDR2_FLAGS0_BROADCAST   0x05
+#define HDR2_FLAGS0_MULTICAST   0x04
+#define HDR2_FLAGS0_NOCAST      0x00
+#define HDR2_FLAGS2_MULTICAST   0x01
+#define HDR2_FLAGS2_BROADCAST   0x02
+#define HDR2_FLAGS2_UNICAST     0x03
+#define HDR2_FLAGS2_VLAN        0x04
 /*004*/ BYTE    portno;         /*                                   */
 /*005*/ BYTE    hdrlen;         /*                                   */
 /*006*/ HWORD   pktlen;         /*                                   */
