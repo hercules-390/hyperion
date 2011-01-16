@@ -340,7 +340,7 @@
   #define bindtextdomain(_package, _directory)
 #endif
 
-#if 1 // defined(DEBUG) || defined(_DEBUG)
+#if defined(DEBUG) || defined(_DEBUG)
 
   #ifdef _MSVC_
 
