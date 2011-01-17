@@ -10,29 +10,6 @@
 
 -------------------------------------------------------------------------------
 
-BUG? reported by halfmeg:
-
-  http://tech.groups.yahoo.com/group/hercules-390/message/63671
-
-  a. Large increase in required memory to start Hercules between SVN 6988 & SVN
-  6989. MSVC executable SVN 6989 thrashs the swapfile for a while then finally
-  proceeds with the remainder of Hercules startup on a 1GB WinXP Pro laptop when
-  1024 Meg specified in configure file. It agains thrashes shortly after IPL is
-  entered and finally settles down to process somewhat normally without thrashing.
-
-  Not noticeable in either place when using SVN 6988 and before.
-
--------------------------------------------------------------------------------
-
-  We should have a 'SetConsoleCtrlHandler' function to intercept Ctrl+C and
-  Ctrl+Break, etc, signals/keystrokes to prevent Hercules from immediately
-  exiting without having a chance to close its files and/or giving the guest
-  an opportunity to shutdown cleanly beforehand. (i.e. we need to prevent
-  clicking the [x] close button as well as provide a way to detect the user
-  shutting down the system (or logging off) while Herc is still running.)
-
--------------------------------------------------------------------------------
-
   BUG? 'cmdtgt' support needs re-worked to prevent e.g. DIAG8 commands from
   being erroneously sent to (processed by) the guest instead of by Hercules.
   Issue was raised by Martin Trübner [Martin@pi-sysprog.de] on the main Herc
@@ -69,10 +46,6 @@ BUG? reported by halfmeg:
     init_hostinfo:
     BOOL WINAPI IsProcessorFeaturePresent( PF_COMPARE_EXCHANGE128 );
     _INTEGRAL_MAX_BITS (machdep.h ==> _InterlockedCompareExchange128 ==> cmpxchg16b)
-
--------------------------------------------------------------------------------
-
-  Support multiple command-line commands (i.e. cmdsep character). (COMPLETED)
 
 -------------------------------------------------------------------------------
 
@@ -114,10 +87,6 @@ BUG? reported by halfmeg:
 
 -------------------------------------------------------------------------------
 
-  Add MSVC support for 'MULTI_BYTE_ASSIST' (cpu.c "set_jump_pointers")
-
--------------------------------------------------------------------------------
-
   ISSUE: there's the possibility for "socketpair" function to connect to some
   other socket other than the pair's listening socket due to some other socket
   on the host already listening for connections on INADDR_LOOPBACK. Fix is to
@@ -145,13 +114,6 @@ BUG? reported by halfmeg:
   Add new "+rdbwd" 3590-device-only option to set flag in
   TapeCommands3590 table to allow/accept Read Backward CCW.
   (Requested by "herc_fun" = Charlie <os_390@hotmail.com>)
-
--------------------------------------------------------------------------------
-
-  Add 'auto' option to MAXRATES command, to have it also issue
-  the command automatically at the end of the interval (so you
-  can monitor the rate). (COMPLETED - MAXRATES are displayed when interval
-  expires)
 
 -------------------------------------------------------------------------------
 
