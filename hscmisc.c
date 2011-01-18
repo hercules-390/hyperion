@@ -731,7 +731,7 @@ static REGS  *copy_regs (REGS *regs)
  REGS  *newregs, *hostregs;
  size_t size;
 
-    size = SIE_MODE(regs) ? 2*sizeof(REGS) : sizeof(REGS);
+    size = (SIE_MODE(regs) || SIE_ACTIVE(regs)) ? 2*sizeof(REGS) : sizeof(REGS);
     newregs = malloc(size);
     if (newregs == NULL)
     {
@@ -747,8 +747,10 @@ static REGS  *copy_regs (REGS *regs)
     newregs->ghostregs = 1;
     newregs->hostregs = newregs;
     newregs->guestregs = NULL;
+    newregs->sie_active=0;
 
     /* Copy host regs if in SIE mode */
+    /* newregs is a SIE Guest REGS */
     if(SIE_MODE(newregs))
     {
         hostregs = newregs + 1;
