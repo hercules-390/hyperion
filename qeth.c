@@ -354,7 +354,7 @@ U32 ackseq;
             case IPA_CMD_SETADPPARMS:
                 {
                 OSA_IPA_SAP *sap = (OSA_IPA_SAP*)(ipa+1);
-                int cmd;
+                U32 cmd;
 
                     FETCH_FW(cmd,sap->cmd);
                     TRACE("Set Adapter Parameters: %8.8x\n",cmd);
@@ -642,7 +642,7 @@ TRACE(_("Input Queue(%d) Buffer(%d)\n"),iq,ib);
                                 olen = TUNTAP_Read(grp->ttfd,buf+sizeof(OSA_HDR2),len-sizeof(OSA_HDR2));
 if(olen > 0)
 { DUMP("INPUT TAP",buf+sizeof(OSA_HDR2),olen); }
-if (olen > 0 && !(mactype = validate_mac(buf+sizeof(OSA_HDR2),MAC_TYPE_ANY,grp)))
+if (olen > 0 && !validate_mac(buf+sizeof(OSA_HDR2),MAC_TYPE_ANY,grp))
 { TRACE("DROPPED, INVALID MAC\n"); }
                                 noread = 0;
                             } while (olen > 0 && !(mactype = validate_mac(buf+sizeof(OSA_HDR2),MAC_TYPE_ANY,grp)));
