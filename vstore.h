@@ -1,4 +1,4 @@
-/* VSTORE.H     (c) Copyright Roger Bowler, 2000-2010                */
+/* VSTORE.H     (c) Copyright Roger Bowler, 2000-2011                */
 /*               ESA/390 Virtual Storage Functions                   */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -37,68 +37,6 @@
 /* wmove_chars                                                       */
 /* wvalidate_operand                                                 */
 /*-------------------------------------------------------------------*/
-
-// $Log$
-// Revision 1.85  2009/01/23 13:13:46  bernard
-// copyright notice
-//
-// Revision 1.84  2009/01/17 17:02:15  jj
-// Fix change recording on page crossing first op of MVC - Reported by Greg Price
-//
-// Revision 1.83  2008/04/02 21:52:19  rbowler
-// Fix PIC4 when MVCOS operand finishes on page boundary
-//
-// Revision 1.82  2008/03/23 06:13:07  rbowler
-// Add MVCOS instruction (part 3)
-//
-// Revision 1.81  2008/03/23 03:03:45  gsmith
-// 22 Mar 2008 fix unbalanced comment - Peter J Farley III - by Greg
-//
-// Revision 1.80  2008/03/16 00:09:57  rbowler
-// Add MVCOS instruction (part 2)
-//
-// Revision 1.79  2008/02/20 23:47:22  ptl00
-// Fix branch to odd address so pgm old is bumped
-//
-// Revision 1.78  2007/06/23 00:04:19  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.77  2007/03/13 00:11:14  gsmith
-// Updates to concpy for 64-bit hosts
-//
-// Revision 1.76  2007/03/09 00:54:31  gsmith
-// concpy rework
-//
-// Revision 1.75  2007/03/08 01:27:02  gsmith
-// Remove inline attr from vfetchx/vstorex _full functions
-//
-// Revision 1.74  2007/02/18 16:27:36  gsmith
-// Fix instfetch when instruction crosses 0x800
-//
-// Revision 1.73  2007/01/11 02:44:25  gsmith
-// Temp patch to help messed up gcc v4 optimizations
-//
-// Revision 1.72  2007/01/09 23:19:35  gsmith
-// Tweaks to sloppy fetch
-//
-// Revision 1.71  2007/01/04 23:12:04  gsmith
-// remove thunk calls for program_interrupt
-//
-// Revision 1.70  2007/01/04 01:08:41  gsmith
-// 03 Jan 2007 single_cpu_dw fetch/store patch for ia32
-//
-// Revision 1.69  2007/01/04 00:29:17  gsmith
-// 03 Jan 2007 vstorex patch to vstore2, vstore4, vstore8
-//
-// Revision 1.68  2007/01/03 05:53:34  gsmith
-// 03 Jan 2007 Sloppy fetch - Greg Smith
-//
-// Revision 1.67  2006/12/20 04:26:20  gsmith
-// 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
-//
-// Revision 1.66  2006/12/08 09:43:31  jj
-// Add CVS message log
-//
 
 #define s370_wstorec(_src, _len, _addr, _arn, _regs) \
         s370_vstorec((_src), (_len), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs)) 
@@ -403,6 +341,7 @@ BYTE    temp[8];                        /* Copied value              */
 _VSTORE_C_STATIC void ARCH_DEP(vstore8) (U64 value, VADR addr, int arn,
                                                             REGS *regs)
 {
+#if defined(OPTION_SINGLE_CPU_DW) && defined(ASSIST_STORE_DW)
     /* Check alignement. If aligned then we are guaranteed
        not to cross a page boundary */
     if(likely(!((VADR_L)addr & 0x07)))
@@ -410,21 +349,20 @@ _VSTORE_C_STATIC void ARCH_DEP(vstore8) (U64 value, VADR addr, int arn,
         /* Most common case : Aligned */
         U64 *mn;
         mn = (U64*)MADDRL(addr,8,arn,regs,ACCTYPE_WRITE,regs->psw.pkey);
-#if defined(OPTION_SINGLE_CPU_DW) && defined(ASSIST_STORE_DW)
         if (regs->cpubit == regs->sysblk->started_mask)
             *mn = CSWAP64(value);
         else
-#endif
         STORE_DW(mn, value);
     }
     else
+#endif	    
     {
         /* We're not aligned. So we have to check whether we are
            crossing a page boundary. This cannot be the same
            code as above because casting U64 * to a non aligned
            pointer may break on those architectures mandating
            strict alignement */
-        if((((VADR_L)addr & 0x7ff) <= 0x7f8))
+        if(likely(((VADR_L)addr & 0x7ff) <= 0x7f8))
         {
             /* Non aligned but not crossing page boundary */
             BYTE *mn;
@@ -620,21 +558,22 @@ BYTE    temp[16];                       /* Copy destination          */
 
 _VSTORE_C_STATIC U64 ARCH_DEP(vfetch8) (VADR addr, int arn, REGS *regs)
 {
+#if defined(OPTION_SINGLE_CPU_DW) && defined(ASSIST_STORE_DW)	
     if(likely(!((VADR_L)addr & 0x07)))
     {
         /* doubleword aligned fetch */
         U64 *mn;
         ITIMER_SYNC(addr,8-1,regs);
         mn=(U64*)MADDR (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
-#if defined(OPTION_SINGLE_CPU_DW) && defined(ASSIST_FETCH_DW)
         if (regs->cpubit == regs->sysblk->started_mask)
             return CSWAP64(*mn);
-#endif
         return fetch_dw(mn);
     }
     else
+#endif	    
     {
-        if((((VADR_L)addr & 0x7ff) <= 0x7f8 ))
+	    
+        if(likely(((VADR_L)addr & 0x7ff) <= 0x7f8))
         {
             /* unaligned, non-crossing doubleword fetch */
             BYTE *mn;
