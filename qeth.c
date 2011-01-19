@@ -395,11 +395,13 @@ U32 ackseq;
                     if(
 #if defined(TUNTAP_IFF_RUNNING_NEEDED)
                        TUNTAP_SetFlags(grp->ttdevn,IFF_UP
-                                                     | IFF_RUNNING
-                                                     | IFF_BROADCAST )
+                                                 | IFF_RUNNING
+                                                 | IFF_MULTICAST
+                                                 | IFF_BROADCAST )
 #else
                        TUNTAP_SetFlags(grp->ttdevn,IFF_UP
-                                                     | IFF_BROADCAST )
+                                                 | IFF_MULTICAST
+                                                 | IFF_BROADCAST )
 #endif /*defined(TUNTAP_IFF_RUNNING_NEEDED)*/
                                 )
                         STORE_HW(ipa->rc,0xFFFF);
