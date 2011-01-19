@@ -51,6 +51,20 @@
 #define QDIO_MAXQ               32
 
 
+#define OSA_MAXMAC              32
+
+
+typedef struct _OSA_MAC {
+        BYTE    addr[6];
+        int     type;
+#define MAC_TYPE_NONE   0x00
+#define MAC_TYPE_BRDCST 0x01
+#define MAC_TYPE_UNICST 0x02
+#define MAC_TYPE_MLTCST 0x04
+#define MAC_TYPE_ANY    0x0F
+    } OSA_MAC;
+
+
 /*-------------------------------------------------------------------*/
 /* OSA Group Structure                                               */
 /*-------------------------------------------------------------------*/
@@ -104,6 +118,10 @@ typedef struct _OSA_GRP {
 
     BYTE  qibk;                 /* Queue Information Block Key       */
     U64   qiba;                 /* Queue Information Block Address   */
+
+    OSA_MAC mac[OSA_MAXMAC];    /* Locally recognised MAC addresses  */
+    int   promisc;              /* Adapter in promiscuous mode       */
+#define MAC_PROMISC     0x80
 
     } OSA_GRP;
 
@@ -475,6 +493,12 @@ typedef struct _OSA_IPA_MAC {
 /*-------------------------------------------------------------------*/
 typedef struct _OSA_IPA_SAP {
 /*000*/ FWORD   suppcm;         /* Supported subcommand mask         */
+#define IPA_SAP_QUERY   0x00000001
+#define IPA_SAP_PROMISC 0x00000800
+#define IPA_SAP_SUPP ( 0 \
+                     | IPA_SAP_QUERY \
+                     | IPA_SAP_PROMISC \
+                     )
 /*004*/ FWORD   resv004;        /*                                   */
 /*008*/ HWORD   cmdlen;         /* Subcommand length                 */
 /*00A*/ HWORD   resv00a;        /*                                   */
@@ -482,8 +506,30 @@ typedef struct _OSA_IPA_SAP {
 /*010*/ HWORD   rc;             /* Return Code                       */
 /*012*/ BYTE    used;           /*                                   */
 /*013*/ BYTE    seqno;          /*                                   */
-/*014*/ HWORD   resv014;        /*                                   */
+/*014*/ FWORD   resv014;        /*                                   */
     } OSA_IPA_SAP;
+
+
+/*-------------------------------------------------------------------*/
+/* SAP ADP Qeury                                                     */
+/*-------------------------------------------------------------------*/
+typedef struct _SAP_QRY {
+/*000*/ FWORD   nlan;           /* Number of Lan types supported     */
+/*004*/ BYTE    rsp;            /* LAN type response                 */
+/*005*/ BYTE    resv005[3];
+/*008*/ FWORD   suppcm;         /* Supported commands bit map        */
+/*00A*/ DBLWRD  resv00a;
+    } SAP_QRY;
+
+
+/*-------------------------------------------------------------------*/
+/* Set Promiscuous Mode on/off                                       */
+/*-------------------------------------------------------------------*/
+typedef struct _SAP_SPM {
+/*000*/ FWORD   promisc;        /* Promiscuous mode                  */
+#define SAP_PROMISC_ON  0x00000001
+#define SAP_PROMISC_OFF 0x00000000
+    } SAP_SPM;
 
 
 /*-------------------------------------------------------------------*/

@@ -191,6 +191,54 @@ int i;
 
 
 /*-------------------------------------------------------------------*/
+/* Register local MAC address                                        */
+/*-------------------------------------------------------------------*/
+static inline int register_mac(BYTE *mac, int type, OSA_GRP *grp)
+{
+int i;
+    for(i = 0; i < OSA_MAXMAC; i++)
+        if(!grp->mac[i].type || !memcmp(grp->mac[i].addr,mac,6))
+        {
+            memcpy(grp->mac[i].addr,mac,6);
+            grp->mac[i].type = type;
+            return type;
+        }
+    return MAC_TYPE_NONE;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Deregister local MAC address                                      */
+/*-------------------------------------------------------------------*/
+static inline int deregister_mac(BYTE *mac, int type, OSA_GRP *grp)
+{
+int i;
+    for(i = 0; i < OSA_MAXMAC; i++)
+        if((grp->mac[i].type == type) && !memcmp(grp->mac[i].addr,mac,6))
+        {
+            grp->mac[i].type = MAC_TYPE_NONE;
+            return type;
+        }
+    return MAC_TYPE_NONE;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Validate MAC address and return MAC type                          */
+/*-------------------------------------------------------------------*/
+static inline int validate_mac(BYTE *mac, int type, OSA_GRP *grp)
+{
+int i;
+    for(i = 0; i < OSA_MAXMAC; i++)
+    {
+        if((grp->mac[i].type & type) && !memcmp(grp->mac[i].addr,mac,6))
+            return grp->mac[i].type | grp->promisc;
+    }
+    return grp->promisc;
+}
+
+
+/*-------------------------------------------------------------------*/
 /* Adapter Command Routine                                           */
 /*-------------------------------------------------------------------*/
 static void osa_adapter_cmd(DEVBLK *dev, OSA_TH *req_th, DEVBLK *rdev)
@@ -305,22 +353,36 @@ U32 ackseq;
 
             case IPA_CMD_SETADPPARMS:
                 {
-                OSA_IPA_SAP *ipa_sap = (OSA_IPA_SAP*)(ipa+1);
+                OSA_IPA_SAP *sap = (OSA_IPA_SAP*)(ipa+1);
                 int cmd;
 
-                    FETCH_FW(cmd,ipa_sap->cmd);
+                    FETCH_FW(cmd,sap->cmd);
                     TRACE("Set Adapter Parameters: %8.8x\n",cmd);
 
                     switch(cmd) {
 
-                    case 1:
-                        STORE_FW(ipa_sap->suppcm,1);
-                        STORE_HW(ipa_sap->rc,0x0000);
-// ZZ INCOMPLETE NEED TO ADD SUPPORTEN LAN TYPES RESPONSE
+                    case IPA_SAP_QUERY:
+                        {    
+                        SAP_QRY *qry = (SAP_QRY*)(sap+1);
+                            TRACE("Query SubCommands\n");
+                            STORE_FW(qry->suppcm,IPA_SAP_SUPP);
+                            STORE_HW(sap->rc,0x0000);
+                        }
+                        break;
+
+                    case IPA_SAP_PROMISC:
+                        {
+                        SAP_SPM *spm = (SAP_SPM*)(sap+1);
+                        U32 promisc;
+                            FETCH_FW(promisc,spm->promisc);
+                            grp->promisc = promisc ? MAC_PROMISC : promisc;
+                            STORE_HW(sap->rc,0x0000);
+                            TRACE("Set Promiscous Mode %s\n",grp->promisc ? "On" : "Off");
+                        }
                         break;
 
                     default:
-                        STORE_HW(ipa_sap->rc,0xE00E);
+                        STORE_HW(sap->rc,0xE00E);
                     }
 
                 }
@@ -355,68 +417,39 @@ U32 ackseq;
                 break;
 
             case IPA_CMD_SETVMAC:
-#if 0 // Not valid for Layer 2
                 {
                 OSA_IPA_MAC *ipa_mac = (OSA_IPA_MAC*)(ipa+1);
-                char macaddr[18];
 
-                    TRACE("Set VMAC: %s\n",macaddr);
-
-                    /* Do not override the config specified MAC address */
-                    if(!grp->tthwaddr)
-                    {
-                        snprintf(macaddr,sizeof(macaddr),"%02x:%02x:%02x:%02x:%02x:%02x",
-                          ipa_mac->macaddr[0],ipa_mac->macaddr[1],ipa_mac->macaddr[2],
-                          ipa_mac->macaddr[3],ipa_mac->macaddr[4],
-// ZZ THE TAP INTERFACE MUST NOT HAVE THE SAME MACADDR AS THE 
-// ZZ GUEST INTERFACE DOING SO WILL CAUSE FRAMES TO BE SENT TO
-// ZZ THE HOST RATHER THEN TO THE GUEST WHEN USING BRIDGED INTERFACES
-                          ipa_mac->macaddr[5]^1);
-
-#if defined(OPTION_TUNTAP_SETMACADDR)
-// ZZ FIXME SetMACAddr may be called when the interface is up
-//          This may be an error in linux, however we may need
-//          to handle this condition here...
-//          ifconfig up/down (ioctl IFUP) should call STARTLAN/STOPLAN                       
-                        if( TUNTAP_SetMACAddr(grp->ttdevn,macaddr) )
-                            STORE_HW(ipa->rc,0xFFFF);
-#endif /*defined(OPTION_TUNTAP_SETMACADDR)*/
-                    }
+                    TRACE("Set VMAC\n");
+                    VERIFY(register_mac(ipa_mac->macaddr,MAC_TYPE_UNICST,grp));
                 }
-#endif
                 break;
 
             case IPA_CMD_DELVMAC:
-#if 0 // Not valid for Layer 2
+                {
+                OSA_IPA_MAC *ipa_mac = (OSA_IPA_MAC*)(ipa+1);
+
                     TRACE("Del VMAC\n");
-#endif
+                    VERIFY(deregister_mac(ipa_mac->macaddr,MAC_TYPE_UNICST,grp));
+                }
                 break;
 
             case IPA_CMD_SETGMAC:
-#if 0 // Not valid for Layer 2
                 {
                 OSA_IPA_MAC *ipa_mac = (OSA_IPA_MAC*)(ipa+1);
-                char macaddr[18];
-                    snprintf(macaddr,sizeof(macaddr),"%02x:%02x:%02x:%02x:%02x:%02x",
-                      ipa_mac->macaddr[0],ipa_mac->macaddr[1],ipa_mac->macaddr[2],
-                      ipa_mac->macaddr[3],ipa_mac->macaddr[4],ipa_mac->macaddr[5]);
 
-                    TRACE("Set GMAC: %s\n",macaddr);
-
-// ZZ FIXME SETMULTADDR NOT YET SUPPORTED BY TUNTAP!!!
-#if defined(OPTION_TUNTAP_SETMULTADDR)
-                    if( TUNTAP_SetMULTAddr(grp->ttdevn,macaddr) )
-                        STORE_HW(ipa->rc,0xFFFF);
-#endif /*defined(OPTION_TUNTAP_SETMULTADDR)*/
-
+                    TRACE("Set GMAC\n");
+                    VERIFY(register_mac(ipa_mac->macaddr,MAC_TYPE_MLTCST,grp));
                 }
-#endif
                 break;
 
             case IPA_CMD_DELGMAC:
-#if 0 // Not valid for layer 2
+                {
+                OSA_IPA_MAC *ipa_mac = (OSA_IPA_MAC*)(ipa+1);
+
                     TRACE("Del GMAC\n");
-#endif
+                    VERIFY(deregister_mac(ipa_mac->macaddr,MAC_TYPE_MLTCST,grp));
+                }
                 break;
 
             default:
@@ -570,13 +603,14 @@ TRACE("Input Qpos(%d) Bpos(%d)\n",grp->i_qpos,grp->i_bpos[grp->i_qpos]);
                 OSA_SBAL *sbal;
                 int olen = 0; int tlen = 0;
                 int ns;
+                int mactype;
 TRACE(_("Input Queue(%d) Buffer(%d)\n"),iq,ib);
 
                     FETCH_DW(sa,sl->sbala[ib]);
                     if(STORCHK(sa,sizeof(OSA_SBAL)-1,grp->i_slk[iq],STORKEY_REF,dev))
                     {
                         slsb->slsbe[ib] = SLSBE_ERROR;  
-                        grp->reqpci = 1;
+                        grp->reqpci = TRUE;
                         TRACE(_("STORCHK ERROR sa(%llx), key(%2.2x)\n"),sa,grp->i_slk[iq]);
                         return;
                     }
@@ -587,11 +621,11 @@ TRACE(_("Input Queue(%d) Buffer(%d)\n"),iq,ib);
                         FETCH_DW(la,sbal->sbale[ns].addr);
                         FETCH_FW(len,sbal->sbale[ns].length);
                         if(!len)
-                            break;
+                            break;  // Or should this be continue - ie a discontiguous sbal???  
                         if(STORCHK(la,len-1,grp->i_sbalk[iq],STORKEY_CHANGE,dev))
                         {
                             slsb->slsbe[ib] = SLSBE_ERROR;  
-                            grp->reqpci = 1;
+                            grp->reqpci = TRUE;
                             TRACE(_("STORCHK ERROR la(%llx), len(%d), key(%2.2x)\n"),la,len,grp->i_sbalk[iq]);
                             return;
                         }
@@ -604,21 +638,38 @@ TRACE(_("Input Queue(%d) Buffer(%d)\n"),iq,ib);
 // ZZ INCORRECT BUFFER ADDRESSES MAY GENERATE SEGFAULTS!!!!!
                         if(len > sizeof(OSA_HDR2))
                         {
-                            if((olen = TUNTAP_Read(grp->ttfd,buf+sizeof(OSA_HDR2),len-sizeof(OSA_HDR2))) > 0)
-                                grp->rxcnt++;
-                            noread = 0;
-                        }
+                            do {
+                                olen = TUNTAP_Read(grp->ttfd,buf+sizeof(OSA_HDR2),len-sizeof(OSA_HDR2));
 if(olen > 0)
 { DUMP("INPUT TAP",buf+sizeof(OSA_HDR2),olen); }
+if (olen > 0 && !(mactype = validate_mac(buf+sizeof(OSA_HDR2),MAC_TYPE_ANY,grp)))
+{ TRACE("DROPPED, INVALID MAC\n"); }
+                                noread = 0;
+                            } while (olen > 0 && !(mactype = validate_mac(buf+sizeof(OSA_HDR2),MAC_TYPE_ANY,grp)));
+
+                        }
                         if(olen > 0)
                         {
                         OSA_HDR2 *hdr2 = (OSA_HDR2*)buf;
-                        BYTE brdcst[6] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
                             memset(hdr2,0x00,sizeof(OSA_HDR2));
+
+                            grp->rxcnt++;
+
                             hdr2->id = HDR2_ID_LAYER2;
                             STORE_HW(hdr2->pktlen,olen);
-                            if(memcmp(brdcst,buf+sizeof(OSA_HDR2),sizeof(brdcst)))
+
+                            switch(mactype & MAC_TYPE_ANY) {
+                            case MAC_TYPE_UNICST:
+                                hdr2->flags[2] |= HDR2_FLAGS2_UNICAST;
+                                break;
+                            case MAC_TYPE_BRDCST:
                                 hdr2->flags[2] |= HDR2_FLAGS2_BROADCAST;
+                                break;
+                            case MAC_TYPE_MLTCST:
+                                hdr2->flags[2] |= HDR2_FLAGS2_MULTICAST;
+                                break;
+                            }
+
                             tlen += olen;
                             STORE_FW(sbal->sbale[ns].length,olen+sizeof(OSA_HDR2));
 if(sa && la && len)
@@ -634,7 +685,7 @@ DUMP("INPUT BUF",hdr2,olen+sizeof(OSA_HDR2));
                 
                     if(tlen > 0)
                     {
-                        grp->reqpci = 1;
+                        grp->reqpci = TRUE;
                         slsb->slsbe[ib] = SLSBE_INPUT_COMPLETED;
                         STORAGE_KEY(grp->i_slsbla[iq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
                         if(++ib >= 128)
@@ -681,7 +732,7 @@ DUMP("INPUT BUF",hdr2,olen+sizeof(OSA_HDR2));
     int n;
         if((n = TUNTAP_Read(grp->ttfd,buff,sizeof(buff))) > 0)
         {
-            grp->reqpci = 1;
+            grp->reqpci = TRUE;
 DUMP("TAP DROPPED",buff,n);
         }
     }
@@ -720,7 +771,7 @@ TRACE(_("Output Queue(%d) Buffer(%d)\n"),oq,ob);
                     if(STORCHK(sa,sizeof(OSA_SBAL)-1,grp->o_slk[oq],STORKEY_REF,dev))
                     {
                         slsb->slsbe[ob] = SLSBE_ERROR;  
-                        grp->reqpci = 1;
+                        grp->reqpci = TRUE;
                         TRACE(_("STORCHK ERROR sa(%llx), key(%2.2x)\n"),sa,grp->o_slk[oq]);
                         return;
                     }
@@ -731,11 +782,11 @@ TRACE(_("Output Queue(%d) Buffer(%d)\n"),oq,ob);
                         FETCH_DW(la,sbal->sbale[ns].addr);
                         FETCH_FW(len,sbal->sbale[ns].length);
                         if(!len)
-                            break;
+                            break;  // Or should this be continue - ie a discontiguous sbal???  
                         if(STORCHK(la,len-1,grp->o_sbalk[oq],STORKEY_REF,dev))
                         {
                             slsb->slsbe[ob] = SLSBE_ERROR;  
-                            grp->reqpci = 1;
+                            grp->reqpci = TRUE;
                             TRACE(_("STORCHK ERROR la(%llx), len(%d), key(%2.2x)\n"),la,len,grp->o_sbalk[oq]);
                             return;
                         }
@@ -755,12 +806,15 @@ DUMP("OUTPUT BUF",buf,len);
 }
                         if(len > sizeof(OSA_HDR2))
                         {
-                            TUNTAP_Write(grp->ttfd,buf+sizeof(OSA_HDR2),len-sizeof(OSA_HDR2));
-                            grp->txcnt++;
+                            if(validate_mac(buf+sizeof(OSA_HDR2)+6,MAC_TYPE_ANY,grp))
+                            {
+                                TUNTAP_Write(grp->ttfd,buf+sizeof(OSA_HDR2),len-sizeof(OSA_HDR2));
+                                grp->txcnt++;
+                            }
                         }
 
                         if((sbal->sbale[ns].flags[1] & SBAL_FLAGS1_PCI_REQ))
-                            grp->reqpci = 1;
+                            grp->reqpci = TRUE;
                     }
                 
                     slsb->slsbe[ob] = SLSBE_OUTPUT_COMPLETED;
@@ -832,6 +886,8 @@ int i;
     {
         dev->group->grp_data = grp = malloc(sizeof(OSA_GRP));
         memset (grp, 0, sizeof(OSA_GRP));
+
+        register_mac((BYTE*)"\xFF\xFF\xFF\xFF\xFF\xFF",MAC_TYPE_BRDCST,grp);
 
         initialize_condition(&grp->qcond);
         initialize_lock(&grp->qlock);
@@ -1312,7 +1368,7 @@ int num;                                /* Number of bytes to move   */
 
             if(grp->reqpci)
             {
-                grp->reqpci = 0;
+                grp->reqpci = FALSE;
                 raise_adapter_interrupt(dev);
             }
 
