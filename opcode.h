@@ -1335,10 +1335,10 @@ do { \
         }
 
 /* BHe: This decoder is for RX instructions with a not zero X2 */
-#define _RX(_inst, _regs, _r1, _b2, _effective_addr2) \
-        _RX_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, 4, 4)
+#define RX_Xn(_inst, _regs, _r1, _b2, _effective_addr2) \
+        RX_Xn_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, 4, 4)
 
-#define _RX_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc) \
+#define RX_Xn_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc) \
         { \
           U32 temp = fetch_fw(_inst); \
           (_r1) = (temp >> 20) & 0xf; \
