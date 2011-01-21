@@ -4955,7 +4955,7 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
 
     if ( cnt == 0 )
     {
-        WRMSG(HHC02216, "W" );
+        WRMSG(HHC02312, "W" );
         return 1;
     }
 
@@ -5036,7 +5036,7 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
 
     if (nDevCount == 0)
     {
-        WRMSG(HHC02216, "W");
+        WRMSG(HHC02312, "W");
         return 0;
     }
 
@@ -5494,7 +5494,7 @@ int syncio_cmd(int argc, char *argv[], char *cmdline)
 
     if (!found)
     {
-        WRMSG(HHC02216, "I");
+        WRMSG(HHC02313, "I");
         return 1;
     }
     else

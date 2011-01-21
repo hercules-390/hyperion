@@ -1368,6 +1368,8 @@ do { \
 #define HHC02309 "%s: Record %d is unsupported record type %s; skipped"
 #define HHC02310 "Panel command %s is not supported in this build; see option %s"
 #define HHC02311 "%s completed"
+#define HHC02312 "Empty list"
+#define HHC02313 "Empty list"
 
 #define HHC02370 "%1d:%04X CU or LCU %s conflicts with existing CUNUM %04X SSID %04X CU/LCU %s"
 #define HHC02371 "%1d:%04X Adding device exceeds CU and/or LCU device limits"
