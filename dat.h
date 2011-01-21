@@ -2266,17 +2266,18 @@ int     ix = TLBIX(addr);               /* TLB index                 */
         }
 #endif
     }
-
-    /* Do not apply host key access when SIE fetches/stores data */
-    if(SIE_ACTIVE(regs))
-        akey = 0;
 #endif /*defined(_FEATURE_SIE)*/
 
     /* Check protection and set reference and change bits */
     regs->dat.storkey = &(STORAGE_KEY(aaddr, regs));
 
+#if defined(_FEATURE_SIE)
+    /* Do not apply host key access when SIE fetches/stores data */
+    if (unlikely(SIE_ACTIVE(regs)))
+        return regs->mainstor + aaddr;
+#endif /*defined(_FEATURE_SIE)*/
 
-    if (acctype & ACC_READ)
+    if (likely(acctype & ACC_READ))
     {
         /* Program check if fetch protected location */
         if (unlikely(ARCH_DEP(is_fetch_protected) (addr, *regs->dat.storkey, akey, regs)))
@@ -2295,8 +2296,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
         regs->tlb.main[ix]       = NEW_MAINADDR (regs, addr, apfra);
 
     }
-    else
-    if (acctype & (ACC_WRITE|ACC_CHECK))
+    else /* if(acctype & (ACC_WRITE|ACC_CHECK)) */
     {
         /* Program check if store protected location */
         if (unlikely(ARCH_DEP(is_store_protected) (addr, *regs->dat.storkey, akey, regs)))
