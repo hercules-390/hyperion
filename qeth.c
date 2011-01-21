@@ -393,16 +393,11 @@ U32 ackseq;
                     TRACE(_("STARTLAN\n"));
 
                     if(
-#if defined(TUNTAP_IFF_RUNNING_NEEDED)
                        TUNTAP_SetFlags(grp->ttdevn,IFF_UP
-                                                 | IFF_RUNNING
+                                                 |QETH_RUNNING
+                                                 |QETH_PROMISC
                                                  | IFF_MULTICAST
                                                  | IFF_BROADCAST )
-#else
-                       TUNTAP_SetFlags(grp->ttdevn,IFF_UP
-                                                 | IFF_MULTICAST
-                                                 | IFF_BROADCAST )
-#endif /*defined(TUNTAP_IFF_RUNNING_NEEDED)*/
                                 )
                         STORE_HW(ipa->rc,0xFFFF);
 
@@ -452,6 +447,52 @@ U32 ackseq;
                     TRACE("Del GMAC\n");
                     VERIFY(deregister_mac(ipa_mac->macaddr,MAC_TYPE_MLTCST,grp));
                 }
+                break;
+
+            case IPA_CMD_SETIP:
+            {
+            char ipaddr[16], ipmask[16];
+            BYTE *ip = (BYTE*)(ipa+1);
+// ZZ FIXME WE ALSO NEED TO SUPPORT IPV6 HERE
+
+                TRACE("L3 Set IP\n");
+
+                snprintf(ipaddr,sizeof(ipaddr),"%d.%d.%d.%d",ip[0],ip[1],ip[2],ip[3]);
+                snprintf(ipmask,sizeof(ipmask),"%d.%d.%d.%d",ip[4],ip[5],ip[6],ip[7]);
+
+                VERIFY(!TUNTAP_SetDestAddr(grp->ttdevn,ipaddr));
+#if defined(OPTION_TUNTAP_SETNETMASK)
+                VERIFY(!TUNTAP_SetNetMask(grp->ttdevn,ipmask));
+#endif /*defined(OPTION_TUNTAP_SETNETMASK)*/
+            }
+                break;
+
+            case IPA_CMD_QIPASSIST:
+                TRACE("L3 Query IP Assist\n");
+                break;
+
+            case IPA_CMD_SETASSPARMS:
+                TRACE("L3 Set IP Assist parameters\n");
+                break;
+
+            case IPA_CMD_SETIPM:
+                TRACE("L3 Set IPM\n");
+                break;
+
+            case IPA_CMD_DELIPM:
+                TRACE("L3 Del IPM\n");
+                break;
+
+            case IPA_CMD_SETRTG:
+                TRACE("L3 Set Routing\n");
+                break;
+
+            case IPA_CMD_DELIP:
+                TRACE("L3 Del IP\n");
+                break;
+
+            case IPA_CMD_CREATEADDR:
+                TRACE("L3 Create IPv6 addr from MAC\n");
                 break;
 
             default:
@@ -605,7 +646,7 @@ TRACE("Input Qpos(%d) Bpos(%d)\n",grp->i_qpos,grp->i_bpos[grp->i_qpos]);
                 OSA_SBAL *sbal;
                 int olen = 0; int tlen = 0;
                 int ns;
-                int mactype;
+                int mactype = 0;
 TRACE(_("Input Queue(%d) Buffer(%d)\n"),iq,ib);
 
                     FETCH_DW(sa,sl->sbala[ib]);
@@ -645,7 +686,7 @@ TRACE(_("Input Queue(%d) Buffer(%d)\n"),iq,ib);
 if(olen > 0)
 { DUMP("INPUT TAP",buf+sizeof(OSA_HDR2),olen); }
 if (olen > 0 && !validate_mac(buf+sizeof(OSA_HDR2),MAC_TYPE_ANY,grp))
-{ TRACE("DROPPED, INVALID MAC\n"); }
+{ TRACE("INPUT DROPPED, INVALID MAC\n"); }
                                 noread = 0;
                             } while (olen > 0 && !(mactype = validate_mac(buf+sizeof(OSA_HDR2),MAC_TYPE_ANY,grp)));
 
@@ -808,11 +849,12 @@ DUMP("OUTPUT BUF",buf,len);
 }
                         if(len > sizeof(OSA_HDR2))
                         {
-                            if(validate_mac(buf+sizeof(OSA_HDR2)+6,MAC_TYPE_ANY,grp))
+                            if(validate_mac(buf+sizeof(OSA_HDR2)+6,MAC_TYPE_UNICST,grp))
                             {
                                 TUNTAP_Write(grp->ttfd,buf+sizeof(OSA_HDR2),len-sizeof(OSA_HDR2));
                                 grp->txcnt++;
                             }
+else { TRACE("OUTPUT DROPPED, INVALID MAC\n"); }
                         }
 
                         if((sbal->sbale[ns].flags[1] & SBAL_FLAGS1_PCI_REQ))
@@ -975,7 +1017,8 @@ char qdiostat[80];
     if(dev->group->acount == OSA_GROUP_SIZE)
     {
         OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
-        snprintf(qdiostat,sizeof(qdiostat)-1," QDIO tx[%u] rx[%u]",grp->txcnt,grp->rxcnt);
+        snprintf(qdiostat,sizeof(qdiostat)-1," QDIO tx[%u] rx[%u] %s",
+          grp->txcnt,grp->rxcnt,grp->ttdevn);
     }
     else
         strcpy(qdiostat," QDIO");

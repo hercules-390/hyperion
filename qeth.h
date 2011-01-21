@@ -12,6 +12,23 @@
 
 #if !defined(_QETH_H)
 #define _QETH_H
+
+
+/* We need all frames from CTCI-W32 */
+#if defined(OPTION_W32_CTCI)
+ #define QETH_PROMISC IFF_PROMISC
+#else
+ #define QETH_PROMISC 0
+#endif
+
+/* Some systems need IFF_RUNNING to be set */
+#if defined(TUNTAP_IFF_RUNNING_NEEDED)
+  #define QETH_RUNNING IFF_RUNNING
+#else
+ #define QETH_RUNNING 0
+#endif
+
+
 /*-------------------------------------------------------------------*/
 /* OSA Relative Device Numbers                                       */
 /*-------------------------------------------------------------------*/
@@ -469,7 +486,7 @@ typedef struct _OSA_IPA {
 #define IPA_CMD_SETASSPARMS 0xB3 /* Set Layer-3 IP assist parameters */
 #define IPA_CMD_SETIPM  0xB4    /* Set Layer-3 IP multicast address  */
 #define IPA_CMD_DELIPM  0xB5    /* Delete Layer-3 IP multicast addr  */
-#define IPA_CMD_SETRTG  0xB6    /* Set Layer-3 routing informatio    */
+#define IPA_CMD_SETRTG  0xB6    /* Set Layer-3 routing information   */
 #define IPA_CMD_DELIP   0xB7    /* Delete Layer-3 IP unicast addr    */
 #define IPA_CMD_SETADPPARMS 0xB8 /* Various adapter directed sub-cmds*/
 #define IPA_CMD_SETDIAGASS 0xB9 /* Set Layer-3 diagnostic assists    */
