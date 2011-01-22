@@ -317,8 +317,8 @@
   #define  MLOCK                mlock
   #define  MUNLOCK              munlock
  #if !defined(HAVE_MLOCK)
-  inline  int  mlock   ( const void* addr, size_t len ) {return -1;}
-  inline  int  munlock ( const void* addr, size_t len ) {return -1;}
+  static inline int mlock(const void*,size_t){return -1;}
+  static inline int munlock(const void*,size_t){return -1;}
  #endif
 
 #endif
