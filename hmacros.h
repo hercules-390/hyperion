@@ -319,6 +319,7 @@
  #if !defined(HAVE_MLOCK)
   static inline int mlock(const void*,size_t){return -1;}
   static inline int munlock(const void*,size_t){return -1;}
+  #define HAVE_MLOCK
  #endif
 
 #endif
