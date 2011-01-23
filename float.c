@@ -526,29 +526,6 @@ static inline void store_ef( EXTENDED_FLOAT *fl, U32 *fpr )
 
 #if defined(FEATURE_HFP_UNNORMALIZED_EXTENSION)
 /*-------------------------------------------------------------------*/
-/* Store extended float to register pair unnormalized                */
-/*                                                                   */
-/* Input:                                                            */
-/*      fl      Internal float format to be converted from           */
-/*      fpr     Pointer to register to be converted to               */
-/*-------------------------------------------------------------------*/
-static inline void ARCH_DEP(store_ef_unnorm)( EXTENDED_FLOAT *fl, U32 *fpr )
-{
-    fpr[0] = ((U32)fl->sign << 31)
-           | (((U32)fl->expo & 0x7f) << 24)
-           | (fl->ms_fract >> 24);
-    fpr[1] = (fl->ms_fract << 8)
-           | (fl->ls_fract >> 56);
-    fpr[FPREX] = ((U32)fl->sign << 31)
-               | ((fl->ls_fract >> 32) & 0x00FFFFFF);
-    fpr[FPREX+1] = fl->ls_fract;
-
-    fpr[FPREX] |= ((((U32)fl->expo - 14) << 24) & 0x7f000000);
-
-} /* end ARCH_DEP(store_ef_unnorm) */
-
-
-/*-------------------------------------------------------------------*/
 /* Store extended float high-order part to register unnormalized     */
 /*                                                                   */
 /* Input:                                                            */
@@ -559,7 +536,7 @@ static inline void ARCH_DEP(store_ef_unnorm_hi)( EXTENDED_FLOAT *fl, U32 *fpr )
 {
     fpr[0] = ((U32)fl->sign << 31)
            | (((U32)fl->expo & 0x7f) << 24)
-           | (fl->ms_fract >> 24);
+           | ((fl->ms_fract >> 24) & 0x00FFFFFF);
     fpr[1] = (fl->ms_fract << 8)
            | (fl->ls_fract >> 56);
 
@@ -581,6 +558,20 @@ static inline void ARCH_DEP(store_ef_unnorm_lo)( EXTENDED_FLOAT *fl, U32 *fpr )
     fpr[1] = fl->ls_fract;
 
 } /* end ARCH_DEP(store_ef_unnorm_lo) */
+
+/*-------------------------------------------------------------------*/
+/* Store extended float to register pair unnormalized                */
+/*                                                                   */
+/* Input:                                                            */
+/*      fl      Internal float format to be converted from           */
+/*      fpr     Pointer to register to be converted to               */
+/*-------------------------------------------------------------------*/
+static inline void ARCH_DEP(store_ef_unnorm)( EXTENDED_FLOAT *fl, U32 *fpr )
+{
+    ARCH_DEP(store_ef_unnorm_hi)(fl,fpr);
+    ARCH_DEP(store_ef_unnorm_lo)(fl,fpr+FPREX);
+
+} /* end ARCH_DEP(store_ef_unnorm) */
 
 
 /*-------------------------------------------------------------------*/
