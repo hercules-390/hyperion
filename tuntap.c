@@ -250,6 +250,9 @@ static int TUNTAP_SetMode (int fd, struct ifreq *ifr)
 //                       IFF_TAP   - Create a TAP interface or
 //                       IFF_TUN   - Create a TUN interface
 //                       IFF_NO_PI - Do not include packet information
+//      pszNetDevName Pointer to receive the name if the interface,
+//                    If this field is prefilled then that interface
+//                    will be allocated.
 //
 // Output:
 //      pfd           Pointer to receive the file descriptor of the
@@ -295,6 +298,8 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
 
         memset( &ifr, 0, sizeof( ifr ) );
         ifr.ifr_flags = iFlags;
+        if(*pszNetDevName)
+            strcpy( ifr.ifr_name, pszNetDevName );
 
         if( TUNTAP_SetMode (fd, &ifr) < 0 )
         {

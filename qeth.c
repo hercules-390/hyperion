@@ -182,8 +182,7 @@ int i;
             logmsg(_("\n%4.4X:"), i);
         logmsg(_(" %2.2X"), ((BYTE*)ptr)[i]);
     }
-    if(--i & 15)
-        logmsg(_("\n"));
+    logmsg(_("\n"));
 }
 #else
  #define DUMP(_name, _ptr, _len)
@@ -347,8 +346,6 @@ U32 ackseq;
                 return;
             DUMP("REQ",(ipa+1),offset-sizeof(OSA_IPA));
 
-            STORE_HW(ipa->rc,0x0000);
-
             switch(ipa->cmd) {
 
             case IPA_CMD_SETADPPARMS:
@@ -366,7 +363,8 @@ U32 ackseq;
                         SAP_QRY *qry = (SAP_QRY*)(sap+1);
                             TRACE("Query SubCommands\n");
                             STORE_FW(qry->suppcm,IPA_SAP_SUPP);
-                            STORE_HW(sap->rc,0x0000);
+                            STORE_HW(sap->rc,IPA_RC_OK);
+                            STORE_HW(ipa->rc,IPA_RC_OK);
                         }
                         break;
 
@@ -374,15 +372,18 @@ U32 ackseq;
                         {
                         SAP_SPM *spm = (SAP_SPM*)(sap+1);
                         U32 promisc;
+                            TRACE("Set Promiscous Mode %s\n",grp->promisc ? "On" : "Off");
                             FETCH_FW(promisc,spm->promisc);
                             grp->promisc = promisc ? MAC_PROMISC : promisc;
-                            STORE_HW(sap->rc,0x0000);
-                            TRACE("Set Promiscous Mode %s\n",grp->promisc ? "On" : "Off");
+                            STORE_HW(sap->rc,IPA_RC_OK);
+                            STORE_HW(ipa->rc,IPA_RC_OK);
                         }
                         break;
 
                     default:
-                        STORE_HW(sap->rc,0xE00E);
+                        TRACE("Invalid SetAdapter SubCmd(%08x)\n",cmd);
+                        STORE_HW(sap->rc,IPA_RC_UNSUPPORTED_SUBCMD);
+                        STORE_HW(ipa->rc,IPA_RC_UNSUPPORTED_SUBCMD);
                     }
 
                 }
@@ -399,7 +400,9 @@ U32 ackseq;
                                                  | IFF_MULTICAST
                                                  | IFF_BROADCAST )
                                 )
-                        STORE_HW(ipa->rc,0xFFFF);
+                        STORE_HW(ipa->rc,IPA_RC_FFFF);
+                    else
+                        STORE_HW(ipa->rc,IPA_RC_OK);
 
                 }
                 break;
@@ -409,7 +412,9 @@ U32 ackseq;
                     TRACE(_("STOPLAN\n"));
 
                     if( TUNTAP_SetFlags(grp->ttdevn,0) )
-                        STORE_HW(ipa->rc,0xFFFF);
+                        STORE_HW(ipa->rc,IPA_RC_FFFF);
+                    else
+                        STORE_HW(ipa->rc,IPA_RC_OK);
                 }
                 break;
 
@@ -418,7 +423,10 @@ U32 ackseq;
                 OSA_IPA_MAC *ipa_mac = (OSA_IPA_MAC*)(ipa+1);
 
                     TRACE("Set VMAC\n");
-                    VERIFY(register_mac(ipa_mac->macaddr,MAC_TYPE_UNICST,grp));
+                    if(register_mac(ipa_mac->macaddr,MAC_TYPE_UNICST,grp))
+                        STORE_HW(ipa->rc,IPA_RC_OK);
+                    else
+                        STORE_HW(ipa->rc,IPA_RC_L2_DUP_MAC);
                 }
                 break;
 
@@ -427,7 +435,10 @@ U32 ackseq;
                 OSA_IPA_MAC *ipa_mac = (OSA_IPA_MAC*)(ipa+1);
 
                     TRACE("Del VMAC\n");
-                    VERIFY(deregister_mac(ipa_mac->macaddr,MAC_TYPE_UNICST,grp));
+                    if(deregister_mac(ipa_mac->macaddr,MAC_TYPE_UNICST,grp))
+                        STORE_HW(ipa->rc,IPA_RC_OK);
+                    else
+                        STORE_HW(ipa->rc,IPA_RC_L2_MAC_NOT_FOUND);
                 }
                 break;
 
@@ -436,7 +447,10 @@ U32 ackseq;
                 OSA_IPA_MAC *ipa_mac = (OSA_IPA_MAC*)(ipa+1);
 
                     TRACE("Set GMAC\n");
-                    VERIFY(register_mac(ipa_mac->macaddr,MAC_TYPE_MLTCST,grp));
+                    if(register_mac(ipa_mac->macaddr,MAC_TYPE_MLTCST,grp))
+                        STORE_HW(ipa->rc,IPA_RC_OK);
+                    else
+                        STORE_HW(ipa->rc,IPA_RC_L2_DUP_MAC);
                 }
                 break;
 
@@ -445,58 +459,71 @@ U32 ackseq;
                 OSA_IPA_MAC *ipa_mac = (OSA_IPA_MAC*)(ipa+1);
 
                     TRACE("Del GMAC\n");
-                    VERIFY(deregister_mac(ipa_mac->macaddr,MAC_TYPE_MLTCST,grp));
+                    if(deregister_mac(ipa_mac->macaddr,MAC_TYPE_MLTCST,grp))
+                        STORE_HW(ipa->rc,IPA_RC_OK);
+                    else
+                        STORE_HW(ipa->rc,IPA_RC_L2_GMAC_NOT_FOUND);
                 }
                 break;
 
             case IPA_CMD_SETIP:
             {
-            char ipaddr[16], ipmask[16];
+            char ipaddr[16];
+//          char ipmask[16];
             BYTE *ip = (BYTE*)(ipa+1);
 // ZZ FIXME WE ALSO NEED TO SUPPORT IPV6 HERE
 
                 TRACE("L3 Set IP\n");
 
                 snprintf(ipaddr,sizeof(ipaddr),"%d.%d.%d.%d",ip[0],ip[1],ip[2],ip[3]);
-                snprintf(ipmask,sizeof(ipmask),"%d.%d.%d.%d",ip[4],ip[5],ip[6],ip[7]);
+//              snprintf(ipmask,sizeof(ipmask),"%d.%d.%d.%d",ip[4],ip[5],ip[6],ip[7]);
 
                 VERIFY(!TUNTAP_SetDestAddr(grp->ttdevn,ipaddr));
 #if defined(OPTION_TUNTAP_SETNETMASK)
-                VERIFY(!TUNTAP_SetNetMask(grp->ttdevn,ipmask));
+//              VERIFY(!TUNTAP_SetNetMask(grp->ttdevn,ipmask));
 #endif /*defined(OPTION_TUNTAP_SETNETMASK)*/
+                STORE_HW(ipa->rc,IPA_RC_OK);
             }
                 break;
 
             case IPA_CMD_QIPASSIST:
                 TRACE("L3 Query IP Assist\n");
+                STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
             case IPA_CMD_SETASSPARMS:
                 TRACE("L3 Set IP Assist parameters\n");
+                STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
             case IPA_CMD_SETIPM:
                 TRACE("L3 Set IPM\n");
+                STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
             case IPA_CMD_DELIPM:
                 TRACE("L3 Del IPM\n");
+                STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
             case IPA_CMD_SETRTG:
                 TRACE("L3 Set Routing\n");
+                STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
             case IPA_CMD_DELIP:
                 TRACE("L3 Del IP\n");
+                STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
             case IPA_CMD_CREATEADDR:
                 TRACE("L3 Create IPv6 addr from MAC\n");
+                STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
             default:
                 TRACE("Invalid IPA Cmd(%02x)\n",ipa->cmd);
+                STORE_HW(ipa->rc,IPA_RC_NOTSUPP);
             }
         }
         break;

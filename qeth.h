@@ -453,7 +453,7 @@ typedef struct _OSA_IPA {
 #define IPA_IID_HOST    0x00
 /*002*/ HWORD   seq;            /* Sequence number                   */
 /*004*/ HWORD   rc;             /* Return Code                       */
-#define IPA_RC_OK       0x00
+#define IPA_RC_OK       IPA_RC_SUCCESS
 /*006*/ BYTE    at;             /* Adapter Type                      */
 #define IPA_AT_ANY      0x01
 /*007*/ BYTE    port;           /* OSA Port Number                   */
@@ -494,6 +494,53 @@ typedef struct _OSA_IPA {
 #define IPA_CMD_DESTROYADDR 0xC4 /* Destroy L3 IPv6 addr from L2 MAC */
 #define IPA_CMD_REGLCLADDR 0xD1 /*                                   */
 #define IPA_CMD_UNREGLCLADDR 0xD2 /*                                 */
+
+#define IPA_RC_SUCCESS                   0x0000
+#define IPA_RC_NOTSUPP                   0x0001
+#define IPA_RC_IP_TABLE_FULL             0x0002
+#define IPA_RC_UNKNOWN_ERROR             0x0003
+#define IPA_RC_UNSUPPORTED_COMMAND       0x0004
+#define IPA_RC_TRACE_ALREADY_ACTIVE      0x0005
+#define IPA_RC_INVALID_FORMAT            0x0006
+#define IPA_RC_DUP_IPV6_REMOTE           0x0008
+#define IPA_RC_DUP_IPV6_HOME             0x0010
+#define IPA_RC_UNREGISTERED_ADDR         0x0011
+#define IPA_RC_NO_ID_AVAILABLE           0x0012
+#define IPA_RC_ID_NOT_FOUND              0x0013
+#define IPA_RC_INVALID_IP_VERSION        0x0020
+#define IPA_RC_LAN_FRAME_MISMATCH        0x0040
+#define IPA_RC_L2_UNSUPPORTED_CMD        0x2003
+#define IPA_RC_L2_DUP_MAC                0x2005
+#define IPA_RC_L2_ADDR_TABLE_FULL        0x2006
+#define IPA_RC_L2_DUP_LAYER3_MAC         0x200a
+#define IPA_RC_L2_GMAC_NOT_FOUND         0x200b
+#define IPA_RC_L2_MAC_NOT_AUTH_BY_HYP    0x200c
+#define IPA_RC_L2_MAC_NOT_AUTH_BY_ADP    0x200d
+#define IPA_RC_L2_MAC_NOT_FOUND          0x2010
+#define IPA_RC_L2_INVALID_VLAN_ID        0x2015
+#define IPA_RC_L2_DUP_VLAN_ID            0x2016
+#define IPA_RC_L2_VLAN_ID_NOT_FOUND      0x2017
+#define IPA_RC_DATA_MISMATCH             0xe001
+#define IPA_RC_INVALID_MTU_SIZE          0xe002
+#define IPA_RC_INVALID_LANTYPE           0xe003
+#define IPA_RC_INVALID_LANNUM            0xe004
+#define IPA_RC_DUPLICATE_IP_ADDRESS      0xe005
+#define IPA_RC_IP_ADDR_TABLE_FULL        0xe006
+#define IPA_RC_LAN_PORT_STATE_ERROR      0xe007
+#define IPA_RC_SETIP_NO_STARTLAN         0xe008
+#define IPA_RC_SETIP_ALREADY_RECEIVED    0xe009
+#define IPA_RC_IP_ADDR_ALREADY_USED      0xe00a
+#define IPA_RC_MC_ADDR_NOT_FOUND         0xe00b
+#define IPA_RC_SETIP_INVALID_VERSION     0xe00d
+#define IPA_RC_UNSUPPORTED_SUBCMD        0xe00e
+#define IPA_RC_ARP_ASSIST_NO_ENABLE      0xe00f
+#define IPA_RC_PRIMARY_ALREADY_DEFINED   0xe010
+#define IPA_RC_SECOND_ALREADY_DEFINED    0xe011
+#define IPA_RC_INVALID_SETRTG_INDICATOR  0xe012
+#define IPA_RC_MC_ADDR_ALREADY_DEFINED   0xe013
+#define IPA_RC_LAN_OFFLINE               0xe080
+#define IPA_RC_INVALID_IP_VERSION2       0xf001
+#define IPA_RC_FFFF                      0xffff
 
 
 /*-------------------------------------------------------------------*/
