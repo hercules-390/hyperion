@@ -314,12 +314,12 @@
 #else /* !_MSVC_ */
 
   #define  HPAGESIZE()          sysconf( _SC_PAGESIZE )
+ #if defined(HAVE_MLOCK)
   #define  MLOCK                mlock
   #define  MUNLOCK              munlock
- #if !defined(HAVE_MLOCK)
-  static inline int mlock(const void*,size_t){return -1;}
-  static inline int munlock(const void*,size_t){return -1;}
-  #define HAVE_MLOCK
+ #else /* !defined(HAVE_MLOCK) */
+  #define  MLOCK                hlock       /* (hscutl: returns -1) */
+  #define  MUNLOCK              hunlock     /* (hscutl: returns -1) */
  #endif
 
 #endif

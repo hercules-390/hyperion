@@ -906,7 +906,22 @@ void socket_keepalive( int sfd, int idle_time, int probe_interval,
   #endif
 }
 
-#endif // !defined(WIN32)
+#if !defined( HAVE_MLOCK ) && !defined( _MSVC_ )
+DLL_EXPORT  int  hlock( const void* addr, size_t len )
+{
+    UNREFERENCED( addr );
+    UNREFERENCED( len  );
+    return -1;
+}
+DLL_EXPORT  int  hunlock( const void* addr, size_t len )
+{
+    UNREFERENCED( addr );
+    UNREFERENCED( len  );
+    return -1;
+}
+#endif
+
+#endif // !defined(_MSVC_)
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // (testing)

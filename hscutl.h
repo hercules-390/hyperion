@@ -229,4 +229,9 @@ static __inline__ U64 swap_byte_U64(U64 ll )
 HUT_DLL_IMPORT  void*  hpcalloc ( BYTE type, size_t size );
 HUT_DLL_IMPORT  void   hpcfree  ( BYTE type, void*  ptr  );
 
+#if !defined( HAVE_MLOCK ) && !defined( _MSVC_ )
+HUT_DLL_IMPORT  int  hlock   ( const void* addr, size_t len );
+HUT_DLL_IMPORT  int  hunlock ( const void* addr, size_t len );
+#endif
+
 #endif /* __HSCUTL_H__ */
