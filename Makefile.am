@@ -601,6 +601,7 @@ EXTRA_DIST = autoconf/config.rpath \
              COPYRIGHT             \
              hercules.cnf          \
              cckdfix.c             \
+             license_dyn76.txt     \
              README.COMMADPT       \
              README.SVN            \
              README.DYNMOD         \
