@@ -332,7 +332,7 @@
 /*                                                                   */
 /* ms   most significant 64 bit of operand                           */
 /* ls   least significant 64 bit of operand                          */
-/* dig  lesast significant 4 bits removed by right shift             */
+/* dig  least significant 4 bits removed by right shift              */
 /*                                                                   */
 /* all operands are expected to be defined as U64                    */
 /*-------------------------------------------------------------------*/
@@ -354,7 +354,7 @@
 #define shift_left4_U128(ms, ls, dig) \
     (dig) = (ms) >> 60; \
     (ms) = ((ms) << 4) | ((ls) >> 60); \
-    (ls) <<= 1
+    (ls) <<= 4
 
 
 /*-------------------------------------------------------------------*/
