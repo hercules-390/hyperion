@@ -246,5 +246,6 @@
 
 #include "hostopts.h"           // Must come before htypes.h
 #include "htypes.h"             // Hercules-wide data types
+#include "dbgtrace.h"           // Hercules default debugging
 
 #endif // _HSTDINC_H

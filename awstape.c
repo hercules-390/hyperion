@@ -5,18 +5,18 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
+// $Id$
+
 /* Original Author: Roger Bowler                                     */
 /* Prime Maintainer: Ivan Warren                                     */
 /* Secondary Maintainer: "Fish" (David B. Trout)                     */
 
-// $Id$
-
 /*-------------------------------------------------------------------*/
 /* This module contains the AWSTAPE emulated tape format support.    */
-/*                                                                   */
 /* The subroutines in this module are called by the general tape     */
 /* device handler (tapedev.c) when the tape format is AWSTAPE.       */
-/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
 /* Messages issued by this module are prefixed HHCTA1nn              */
 /*-------------------------------------------------------------------*/
 
@@ -24,21 +24,8 @@
 #include "hercules.h"  /* need Hercules control blocks               */
 #include "tapedev.h"   /* Main tape handler header file              */
 
-//#define  ENABLE_TRACING_STMTS     // (Fish: DEBUGGING)
-
-#ifdef ENABLE_TRACING_STMTS
-  #if !defined(DEBUG)
-    #warning DEBUG required for ENABLE_TRACING_STMTS
-  #endif
-  // (TRACE, ASSERT, and VERIFY macros are #defined in hmacros.h)
-#else
-  #undef  TRACE
-  #undef  ASSERT
-  #undef  VERIFY
-  #define TRACE       1 ? ((void)0) : logmsg
-  #define ASSERT(a)
-  #define VERIFY(a)   ((void)(a))
-#endif
+//#define  ENABLE_TRACING_STMTS   1       // (Fish: DEBUGGING)
+//#include "dbgtrace.h"                   // (Fish: DEBUGGING)
 
 /*********************************************************************/
 /* START OF ORIGINAL AWS FUNCTIONS   (ISW Additions)                 */

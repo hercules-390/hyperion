@@ -13,11 +13,9 @@
 
 /*-------------------------------------------------------------------*/
 /* This module contains the OMATAPE emulated tape format support.    */
-/*                                                                   */
 /* The subroutines in this module are called by the general tape     */
 /* device handler (tapedev.c) when the tape format is OMATAPE.       */
 /*-------------------------------------------------------------------*/
-
 /*-------------------------------------------------------------------*/
 /* Reference information:                                            */
 /* SC53-1200 S/370 and S/390 Optical Media Attach/2 User's Guide     */
@@ -28,21 +26,8 @@
 #include "hercules.h"  /* need Hercules control blocks               */
 #include "tapedev.h"   /* Main tape handler header file              */
 
-//#define  ENABLE_TRACING_STMTS     // (Fish: DEBUGGING)
-
-#ifdef ENABLE_TRACING_STMTS
-  #if !defined(DEBUG)
-    #warning DEBUG required for ENABLE_TRACING_STMTS
-  #endif
-  // (TRACE, ASSERT, and VERIFY macros are #defined in hmacros.h)
-#else
-  #undef  TRACE
-  #undef  ASSERT
-  #undef  VERIFY
-  #define TRACE       1 ? ((void)0) : logmsg
-  #define ASSERT(a)
-  #define VERIFY(a)   ((void)(a))
-#endif
+//#define  ENABLE_TRACING_STMTS   1       // (Fish: DEBUGGING)
+//#include "dbgtrace.h"                   // (Fish: DEBUGGING)
 
 /*-------------------------------------------------------------------*/
 /* Read the OMA tape descriptor file                                 */

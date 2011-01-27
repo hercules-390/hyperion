@@ -214,28 +214,4 @@ typedef int             mode_t;
   #define  SIZEOF_SIZE_T      4
 #endif
 
-#define DBGTRACE DebugTrace
-
-inline void DebugTrace(char* fmt, ...)
-{
-    const int chunksize = 512;
-    int buffsize = 0;
-    char* buffer = NULL;
-    int rc = -1;
-    va_list args;
-    va_start( args, fmt );
-    do
-    {
-        if (buffer) free( buffer );
-        buffsize += chunksize;
-        buffer = malloc( buffsize + 1 );
-        if (!buffer) __debugbreak();
-        rc = _vsnprintf_s( buffer, buffsize+1, buffsize, fmt, args);
-    }
-    while (rc < 0 || rc >= buffsize);
-    OutputDebugStringA( buffer );
-    if (buffer) free( buffer );
-    va_end( args );
-}
-
 #endif /*!defined(_HERCWIND_H)*/

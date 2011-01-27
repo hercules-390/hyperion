@@ -1249,6 +1249,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\dbgtrace.h"
+							>
+						</File>
+						<File
 							RelativePath=".\devtype.h"
 							>
 						</File>

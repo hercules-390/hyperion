@@ -11,7 +11,7 @@
 /* OSA Express emulated card                                         */
 /*                                                                   */
 /* This implementation is based on the S/390 Linux implementation    */
-
+/*                                                                   */
 /* Device module hdtqeth.dll devtype QETH (config)                   */
 /* hercules.cnf:                                                     */
 /* 0A00-0A02 QETH <optional parameters>                              */
@@ -29,7 +29,6 @@
 /* The tap device will need to be bridged e.g.                       */
 /* brctl addif <bridge> tap0                                         */
 /*                                                                   */
-/*                                                                   */
 /* When using a routed configuration the tap device needs to have    */
 /* an IP address assigned in the same subnet as the guests virtual   */
 /* eth adapter.                                                      */
@@ -39,22 +38,17 @@
 /* 192.168.10 range                                                  */
 /*                                                                   */
 
-// #define DEBUG
-
 #include "hstdinc.h"
-
 #include "hercules.h"
-
 #include "devtype.h"
-
 #include "chsc.h"
-
 #include "qeth.h"
-
 #include "tuntap.h"
 
+//#define  ENABLE_TRACING_STMTS   1       // (Fish: DEBUGGING)
+//#include "dbgtrace.h"                   // (Fish: DEBUGGING)
 
-#if defined(WIN32) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
+#if defined(WIN32) && !defined(_MSVC_) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL)
   SYSBLK *psysblk;
   #define sysblk (*psysblk)
 #endif
@@ -170,7 +164,7 @@ static const char *osa_devtyp[] = { "Read", "Write", "Data" };
     ? (STORKEY_REF|STORKEY_CHANGE) : STORKEY_REF)) && 0))
 
 
-#if defined(DEBUG)
+#if defined( ENABLE_TRACING_STMTS ) && ENABLE_TRACING_STMTS
 static inline void DUMP(char* name, void* ptr, int len)
 {
 int i;
@@ -654,7 +648,7 @@ int iq = grp->i_qpos;
 int mq = grp->i_qcnt;
 int noread = 1;
 
-TRACE("Input Qpos(%d) Bpos(%d)\n",grp->i_qpos,grp->i_bpos[grp->i_qpos]);
+    TRACE("Input Qpos(%d) Bpos(%d)\n",grp->i_qpos,grp->i_bpos[grp->i_qpos]);
 
     while (mq--)
         if(grp->i_qmask & (0x80000000 >> iq))
@@ -674,7 +668,8 @@ TRACE("Input Qpos(%d) Bpos(%d)\n",grp->i_qpos,grp->i_bpos[grp->i_qpos]);
                 int olen = 0; int tlen = 0;
                 int ns;
                 int mactype = 0;
-TRACE(_("Input Queue(%d) Buffer(%d)\n"),iq,ib);
+
+                    TRACE(_("Input Queue(%d) Buffer(%d)\n"),iq,ib);
 
                     FETCH_DW(sa,sl->sbala[ib]);
                     if(STORCHK(sa,sizeof(OSA_SBAL)-1,grp->i_slk[iq],STORKEY_REF,dev))
@@ -835,7 +830,7 @@ int mq = grp->o_qcnt;
                 OSA_SBAL *sbal;
                 int ns;
 
-TRACE(_("Output Queue(%d) Buffer(%d)\n"),oq,ob);
+                    TRACE(_("Output Queue(%d) Buffer(%d)\n"),oq,ob);
 
                     FETCH_DW(sa,sl->sbala[ob]);
                     if(STORCHK(sa,sizeof(OSA_SBAL)-1,grp->o_slk[oq],STORKEY_REF,dev))
@@ -1424,7 +1419,7 @@ int num;                                /* Number of bytes to move   */
                 process_input_queue(dev);
             }
 
-            /* Process Output Queue if data needs to be send */
+            /* Process Output Queue if data needs to be sent */
             if(FD_ISSET(grp->ppfd[0],&readset))
             {
             char c;
@@ -1459,7 +1454,7 @@ int num;                                /* Number of bytes to move   */
     /*---------------------------------------------------------------*/
     /* INVALID OPERATION                                             */
     /*---------------------------------------------------------------*/
-TRACE(_("Unkown CCW dev(%4.4x) code(%2.2x)\n"),dev->devnum,code);
+        TRACE(_("Unkown CCW dev(%4.4x) code(%2.2x)\n"),dev->devnum,code);
         /* Set command reject sense byte, and unit check status */
         dev->sense[0] = SENSE_CR;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1476,7 +1471,8 @@ static int qeth_initiate_input(DEVBLK *dev, U32 qmask)
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 int noselrd;
-TRACE(_("SIGA-r dev(%4.4x) qmask(%8.8x)\n"),dev->devnum,qmask);
+
+    TRACE(_("SIGA-r dev(%4.4x) qmask(%8.8x)\n"),dev->devnum,qmask);
 
     /* Return CC1 if the device is not QDIO active */
     if(!(dev->scsw.flag2 & SCSW2_Q))
@@ -1516,7 +1512,8 @@ TRACE(_("SIGA-r dev(%4.4x) qmask(%8.8x)\n"),dev->devnum,qmask);
 static int qeth_initiate_output(DEVBLK *dev, U32 qmask)
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
-TRACE(_("SIGA-w dev(%4.4x) qmask(%8.8x)\n"),dev->devnum,qmask);
+
+    TRACE(_("SIGA-w dev(%4.4x) qmask(%8.8x)\n"),dev->devnum,qmask);
 
     /* Return CC1 if the device is not QDIO active */
     if(!(dev->scsw.flag2 & SCSW2_Q))

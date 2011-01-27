@@ -7,40 +7,27 @@
 
 // $Id$
 
-////////////////////////////////////////////////////////////////////////////////////
-//
-//  This module contains only the support for SCSI tapes. Please see
-//  the 'tapedev.c' (and possibly other) source module(s) for infor-
-//  mation regarding other supported emulated tape/media formats.
-//
-////////////////////////////////////////////////////////////////////////////////////
+/* Original Author: "Fish" (David B. Trout)                          */
+/* Prime Maintainer: "Fish" (David B. Trout)                         */
+/* Secondary Maintainer: Ivan Warren                                 */
 
+/*-------------------------------------------------------------------*/
+/* This module contains only the support for SCSI tapes. Please see  */
+/* the 'tapedev.c' (and possibly other) source module(s) for infor-  */
+/* mation regarding other supported emulated tape/media formats.     */
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/* Messages issued by this module are prefixed HHCTA3nn              */
+/*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
 #include "hercules.h"
 #include "scsitape.h"
 
+//#define  ENABLE_TRACING_STMTS   1       // (Fish: DEBUGGING)
+//#include "dbgtrace.h"                   // (Fish: DEBUGGING)
+
 #if defined(OPTION_SCSI_TAPE)
-
-/*-------------------------------------------------------------------*/
-/* Messages issued by this module are prefixed HHCTA3nn              */
-/*-------------------------------------------------------------------*/
-
-//#define  ENABLE_TRACING_STMTS     // (Fish: DEBUGGING)
-
-#ifdef ENABLE_TRACING_STMTS
-  #if !defined(DEBUG)
-    #warning DEBUG required for ENABLE_TRACING_STMTS
-  #endif
-  // (TRACE, ASSERT, and VERIFY macros are #defined in hmacros.h)
-#else
-  #undef  TRACE
-  #define TRACE       1 ? ((void)0) : logmsg
-  #undef  ASSERT
-  #define ASSERT(a)
-  #undef  VERIFY
-  #define VERIFY(a)   ((void)(a))
-#endif
 
 // (the following is just a [slightly] shorter name for our own internal use)
 #define SLOW_UPDATE_STATUS_TIMEOUT  MAX_NORMAL_SCSI_DRIVE_QUERY_RESPONSE_TIMEOUT_USECS

@@ -748,6 +748,7 @@ noinst_HEADERS = fishhang.h     \
                  msgenu.h       \
                  wthreads.h     \
                  hdiagf18.h     \
+                 dbgtrace.h     \
                  $(extra_dynamic_SRC)
 
 cckd: cckd2ckd$(EXEEXT)  \

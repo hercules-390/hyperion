@@ -340,67 +340,6 @@
   #define bindtextdomain(_package, _directory)
 #endif
 
-#if defined(DEBUG) || defined(_DEBUG)
-
-  #ifdef _MSVC_
-
-    #define TRACE(...) \
-      do \
-      { \
-        IsDebuggerPresent() ? DebugTrace (__VA_ARGS__): \
-                              logmsg     (__VA_ARGS__); \
-      } \
-      while (0)
-
-    #undef ASSERT /* For VS9 2008 */
-    #define ASSERT(a) \
-      do \
-      { \
-        if (!(a)) \
-        { \
-          TRACE("HHC90999W *** Assertion Failed! *** %s(%d); function: %s\n",__FILE__,__LINE__,__FUNCTION__); \
-          if (IsDebuggerPresent()) DebugBreak();   /* (break into debugger) */ \
-        } \
-      } \
-      while(0)
-
-  #else // ! _MSVC_
-
-    #define TRACE logmsg
-
-    #define ASSERT(a) \
-      do \
-      { \
-        if (!(a)) \
-        { \
-          TRACE("HHC91999W *** Assertion Failed! *** %s(%d)\n",__FILE__,__LINE__); \
-        } \
-      } \
-      while(0)
-
-  #endif // _MSVC_
-
-  #define VERIFY  ASSERT
-
-#else // non-debug build...
-
-  #ifdef _MSVC_
-
-    #define TRACE       __noop
-    #undef ASSERT /* For VS9 2008 */
-    #define ASSERT(a)   __noop
-    #define VERIFY(a)   ((void)(a))
-
-  #else // ! _MSVC_
-
-    #define TRACE       1 ? ((void)0) : logmsg
-    #define ASSERT(a)
-    #define VERIFY(a)   ((void)(a))
-
-  #endif // _MSVC_
-
-#endif
-
 /* Opcode routing table function pointer */
 typedef void (ATTR_REGPARM(2)*FUNC)();
 
