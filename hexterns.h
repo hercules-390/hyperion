@@ -441,7 +441,7 @@ typedef void (*LOGCALLBACK)(const char *,size_t);
 typedef void *(*COMMANDHANDLER)(void *);
 
 IMPL_DLL_IMPORT int impl(int,char **);
-IMPL_DLL_IMPORT void regiserLogCallback(LOGCALLBACK);
+IMPL_DLL_IMPORT void registerLogCallback(LOGCALLBACK);
 IMPL_DLL_IMPORT COMMANDHANDLER getCommandHandler(void);
 
 /* Functions in module timer.c */

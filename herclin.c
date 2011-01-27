@@ -18,23 +18,27 @@
 /* INTERFACE FEATURE.                           */
 /************************************************/
 
-#ifdef _MSVC_
-#include <windows.h>
-#include <conio.h>
+#if 1 // fish test: we SHOULD be doing it this way! Why aren't we?!
+
+  #include "hstdinc.h"
+  #include "hercules.h"
+
+#else
+
+  #ifdef _MSVC_
+  #include <windows.h>
+  #include <conio.h>
+  #endif
+  #ifdef HAVE_CONFIG_H
+    #include <config.h> // Hercules build configuration options/settings
+  #endif
+  #include <stdio.h>
+  #include <stdlib.h>
+  #include <string.h>
+  #include <sys/mman.h>
+
 #endif
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "hextapi.h"
-
-#if defined(HDL_USE_LIBTOOL)
-
-/* This must be included if HDL uses the   */
-/* libtool ltdl convenience library        */
-
-#include "ltdl.h"
-#endif
-
 
 /**********************************************/
 /* The following function is the LOG callback */

@@ -76,6 +76,7 @@
 #if !defined(_MSVC_)
   #include <sys/time.h>
   #include <sys/ioctl.h>
+  #include <sys/mman.h>
 #endif
 #include <sys/types.h>
 
@@ -113,9 +114,6 @@
 #endif
 #ifdef HAVE_SYS_IOCTL_H
   #include <sys/ioctl.h>
-#endif
-#ifdef HAVE_SYS_MMAN_H
-  #include <sys/mman.h>
 #endif
 #ifdef HAVE_SYS_PARAM_H
   #include <sys/param.h>
