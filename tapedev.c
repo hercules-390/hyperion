@@ -520,6 +520,7 @@ DEVINITTAB*     pDevInitTab;
 
     if (pDevInitTab->devtype == 0xFFFF)         /* (entry not found?) */
     {
+        // "Unsupported tape device type '%04X' specified"
         WRMSG(HHC00225, "E", dev->devtype );
 
         pDevInitTab++;                          /* (default entry; s/b same as 0x3420) */
@@ -830,6 +831,7 @@ int gettapetype_byname (DEVBLK *dev)
         if (rc < 0)
         {
             regerror (rc, &regwrk, errbfr, 1024);
+            // "%1d:%04X Tape file '%s', type '%s': error in function '%s': '%s'"
             WRMSG(HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), "regcomp()", errbfr);
             return -1;
         }
@@ -839,6 +841,7 @@ int gettapetype_byname (DEVBLK *dev)
         {
             regerror (rc, &regwrk, errbfr, 1024);
             regfree ( &regwrk );
+            // "%1d:%04X Tape file '%s', type '%s': error in function '%s': '%s'"
             WRMSG(HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), "regexec()", errbfr);
             return -1;
         }
@@ -1002,7 +1005,10 @@ int gettapetype (DEVBLK *dev, char **short_descr)
     {
         i = DEFAULT_FMTENTRY;
         if (strcmp (dev->filename, TAPE_UNLOADED) != 0)
+        {
+            // "%1d:%04X Tape file '%s', type '%s': format type is not determinable, presumed '%s'"
             WRMSG(HHC00220, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), fmttab[i].short_descr );
+        }
     }
 
     dev->tapedevt = fmttab[i].fmtcode;
@@ -1011,7 +1017,10 @@ int gettapetype (DEVBLK *dev, char **short_descr)
     *short_descr  = fmttab[i].short_descr;
 
     if (strcmp (dev->filename, TAPE_UNLOADED) != 0)
+    {
+        // "%1d:%04X Tape file '%s', type '%s': format type '%s'"
         WRMSG(HHC00221, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), descr);
+    }
 
     return 0;   // (success)
 
@@ -1184,6 +1193,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
     }
 #endif
 
+// "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
 #define  _HHC00223E() WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), argv[i], msg)
 
     /* Process remaining options */
@@ -1194,6 +1204,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         switch (parser (&ptab[0], argv[i], &res))
         {
         case TDPARM_NONE:
+            // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
             WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), argv[i], "unrecognized");
             optrc = -1;
             break;
@@ -1204,6 +1215,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                 || TAPEDEVT_FAKETAPE == dev->tapedevt
             )
             {
+                // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
             dev->tdparms.compress = FALSE;
@@ -1217,6 +1229,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                 || TAPEDEVT_FAKETAPE == dev->tapedevt
             )
             {
+                // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
             dev->tdparms.compress = (res.num ? TRUE : FALSE);
@@ -1228,10 +1241,12 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                 || TAPEDEVT_FAKETAPE == dev->tapedevt
             )
             {
+                // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
             if (res.num < HETMIN_METHOD || res.num > HETMAX_METHOD)
             {
+                // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), argv[i], "method out of range");
                 optrc = -1;
                 break;
@@ -1245,10 +1260,12 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                 || TAPEDEVT_FAKETAPE == dev->tapedevt
             )
             {
+                // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                _HHC00223E(); optrc = -1; break;
             }
             if (res.num < HETMIN_LEVEL || res.num > HETMAX_LEVEL)
             {
+                // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), argv[i], "level out of range");
                 optrc = -1;
                 break;
@@ -1262,10 +1279,12 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                 || TAPEDEVT_FAKETAPE == dev->tapedevt
             )
             {
+                // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
             if (res.num < HETMIN_CHUNKSIZE || res.num > HETMAX_CHUNKSIZE)
             {
+                // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), argv[i], "chunksize out of range");
                 optrc = -1;
                 break;
@@ -1276,6 +1295,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_MAXSIZE:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
+                // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
             dev->tdparms.maxsize=res.num;
@@ -1284,6 +1304,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_MAXSIZEK:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
+                // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
             dev->tdparms.maxsize=res.num*1024;
@@ -1292,6 +1313,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_MAXSIZEM:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
+                // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
             dev->tdparms.maxsize=res.num*1024*1024;
@@ -1304,6 +1326,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_STRICTSIZE:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
+                // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
             dev->tdparms.strictsize=res.num;
@@ -1312,6 +1335,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_READONLY:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
+                // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
             dev->tdparms.logical_readonly=(res.num ? 1 : 0 );
@@ -1321,6 +1345,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_NORING:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
+                // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
             dev->tdparms.logical_readonly=1;
@@ -1330,6 +1355,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_RING:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
+                // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
             dev->tdparms.logical_readonly=0;
@@ -1338,6 +1364,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_DEONIRQ:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
+                // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
             dev->tdparms.deonirq=(res.num ? 1 : 0 );
@@ -1348,6 +1375,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_NOAUTOMOUNT:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
+                // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
             dev->noautomount = 1;
@@ -1360,6 +1388,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_BLKID24:
             if (TAPEDEVT_SCSITAPE != dev->tapedevt)
             {
+                // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
             dev->stape_blkid_32 = 0;
@@ -1368,6 +1397,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_BLKID32:
             if (TAPEDEVT_SCSITAPE != dev->tapedevt)
             {
+                // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
             dev->stape_blkid_32 = 1;
@@ -1376,6 +1406,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_NOERG:
             if (TAPEDEVT_SCSITAPE != dev->tapedevt)
             {
+                // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
             dev->stape_no_erg = 1;
@@ -1383,6 +1414,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
 #endif /* defined(OPTION_SCSI_TAPE) */
 
         default:
+            // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
             WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), argv[i], "parse error");
             optrc = -1;
             break;
@@ -1392,7 +1424,10 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         if (optrc < 0)
             rc = -1;
         else
+        {
+            // "%1d:%04X Tape file '%s', type '%s': option '%s' accepted"
             WRMSG(HHC00222, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), argv[i]);
+        }
 
     } // end for (i = 1; i < argc; i++)
 
@@ -1575,6 +1610,7 @@ void UpdateDisplay( DEVBLK *dev )
 
         dev->prev_tapemsg = strdup( msgbfr );
 
+        // "%1d:%04X Tape file '%s', type '%s': display '%s'"
         WRMSG(HHC00224, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), msgbfr );
     }
 #if defined(OPTION_SCSI_TAPE)
@@ -1790,11 +1826,13 @@ void ReqAutoMount( DEVBLK *dev )
 
         if ( unmountreq )
         {
+            // "%1d:%04X Tape file '%s', type '%s': '%s' tape volume '%s' being auto unloaded"
             WRMSG(HHC00226, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
                             TTYPSTR(dev->tapedevt), lbltype, scratch ? "<scratch>" : volser);
         }
         if ( mountreq )
         {
+            // "%1d:%04X Tape file '%s', type '%s': '%s' tape volume '%s' being auto loaded"
             WRMSG(HHC00227, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
                             TTYPSTR(dev->tapedevt), lbltype, scratch ? "<scratch>" : volser);
         }
@@ -2035,68 +2073,45 @@ int ldpt=0;
 /*-------------------------------------------------------------------*/
 /*  initialise the Autoloader feature                                */
 /*-------------------------------------------------------------------*/
-void autoload_init(DEVBLK *dev,int ac,char **av)
+void autoload_init( DEVBLK *dev, int ac, char **av )
 {
-    char        bfr[4096];
-    char    *rec;
-    FILE        *aldf;
-    char    *verb;
-    int        i;
-    char    *strtokw = NULL;
-    char     pathname[MAX_PATH];
+char     bfr[4096];
+char    *rec;
+FILE    *aldf;
+char     pathname[MAX_PATH];
+int      argc;
+char    *argv[MAX_ARGS];
 
-    autoload_close(dev);
-    if(ac<1)
-    {
+    autoload_close( dev );
+
+    if (0
+        || ac < 1
+        || av[0][0] != '@'
+    )
         return;
-    }
-    if(av[0][0]!='@')
-    {
-        return;
-    }
+
+    // "Tape autoloader: file request fn '%s'"
     WRMSG(HHC00228, "I", &av[0][1]);
-    hostpath(pathname, &av[0][1], sizeof(pathname));
-    if(!(aldf=fopen(pathname,"r")))
+
+    hostpath( pathname, &av[0][1], sizeof(pathname) );
+
+    if (!(aldf = fopen( pathname, "r" )))
+        return; // open error
+
+    if (ac > 1)
+        autoload_global_parms( dev, ac-1, &av[1] );
+
+    while ((rec = fgets( bfr, 4096, aldf )))
     {
-        return;
+        if (0 == parse_args( rec, MAX_ARGS, argv, &argc ))
+            continue; // (zero args == blank line; skip..)
+
+        if (strcmp( argv[0], "*" ) == 0)
+            autoload_global_parms( dev, argc, argv );
+        else
+            autoload_tape_entry( dev, argc, argv );
     }
-    for(i=1;i<ac;i++)
-    {
-        autoload_global_parms(dev,av[i]);
-    }
-    while((rec=fgets(bfr,4096,aldf)))
-    {
-        for(i=((int)strlen(rec)-1);isspace(rec[i]) && i>=0;i--)
-        {
-            rec[i]=0;
-        }
-        if(strlen(rec)==0)
-        {
-            continue;
-        }
-        verb=strtok_r(rec," \t",&strtokw);
-        if(verb==NULL)
-        {
-            continue;
-        }
-        if(verb[0]==0)
-        {
-            continue;
-        }
-        if(verb[0]=='#')
-        {
-            continue;
-        }
-        if(strcmp(verb,"*")==0)
-        {
-            while((verb=strtok_r(NULL," \t",&strtokw)))
-            {
-                autoload_global_parms(dev,verb);
-            }
-            continue;
-        }
-        autoload_tape_entry(dev,verb,&strtokw);
-    } // end while((rec=fgets(bfr,4096,aldf)))
+
     fclose(aldf);
     return;
 
@@ -2111,7 +2126,8 @@ void autoload_init(DEVBLK *dev,int ac,char **av)
 /*-------------------------------------------------------------------*/
 void autoload_close(DEVBLK *dev)
 {
-    int        i;
+int i;
+
     if(dev->al_argv!=NULL)
     {
         for(i=0;i<dev->al_argc;i++)
@@ -2145,7 +2161,8 @@ void autoload_close(DEVBLK *dev)
 /*-------------------------------------------------------------------*/
 void autoload_clean_entry(DEVBLK *dev,int ix)
 {
-    int i;
+int i;
+
     for(i=0;i<dev->als[ix].argc;i++)
     {
         free(dev->als[ix].argv[i]);
@@ -2163,20 +2180,31 @@ void autoload_clean_entry(DEVBLK *dev,int ix)
 /*-------------------------------------------------------------------*/
 /*                    autoload_global_parms                          */
 /*-------------------------------------------------------------------*/
-/*  Appends a blank delimited word to the list of parameters         */
-/*  that will be passed for every tape mounted by the autoloader     */
+/*  Appends an additional list of parameters that will               */
+/*  be passed for every tape mounted by the autoloader               */
 /*-------------------------------------------------------------------*/
-void autoload_global_parms(DEVBLK *dev,char *par)
+void autoload_global_parms( DEVBLK *dev, int argc, char *argv[] )
 {
-    WRMSG(HHC00229, "I", "global parm", par);
-    if(dev->al_argv==NULL)
+int i;
+char *p;
+
+    if (!dev->al_argv)
     {
-        dev->al_argv=malloc(sizeof(char *)*256);
-        dev->al_argc=0;
+        dev->al_argv = calloc( AUTOLOADER_MAX, sizeof(char*));
+        dev->al_argc = 0;
+        if (!dev->al_argv) return;
     }
-    dev->al_argv[dev->al_argc]=(char *)malloc(strlen(par)+sizeof(char));
-    strcpy(dev->al_argv[dev->al_argc],par);
-    dev->al_argc++;
+
+    for (i=1; i < argc && dev->al_argc < AUTOLOADER_MAX; ++i)
+    {
+        p = (char*) strdup( argv[i] );
+        if (!p) return;
+
+        // "Tape autoloader: adding '%s' value '%s'"
+        WRMSG(HHC00229, "I", "global parm", p);
+        dev->al_argv[ dev->al_argc ] = p;
+        dev->al_argc++;
+    }
 
 } /* end function autoload_global_parms */
 
@@ -2186,34 +2214,54 @@ void autoload_global_parms(DEVBLK *dev,char *par)
 /*-------------------------------------------------------------------*/
 /*  populate an autoloader slot  (creates new slot if needed)        */
 /*-------------------------------------------------------------------*/
-void autoload_tape_entry(DEVBLK *dev,char *fn,char **strtokw)
+void autoload_tape_entry( DEVBLK *dev, int argc, char *argv[] )
 {
-    char *p;
-    TAPEAUTOLOADENTRY tae;
-    WRMSG(HHC00229, "I", "tape entry", fn);
-    memset(&tae,0,sizeof(tae));
-    tae.filename=malloc(strlen(fn)+sizeof(char)+1);
-    strcpy(tae.filename,fn);
-    while((p=strtok_r(NULL," \t",strtokw)))
+int                i;
+TAPEAUTOLOADENTRY  tae;
+
+    if (dev->alss >= AUTOLOADER_MAX)
+        return;
+
+    if (!dev->als)
     {
-        if(tae.argv==NULL)
-        {
-            tae.argv=malloc(sizeof(char *)*256);
-        }
-        tae.argv[tae.argc]=malloc(strlen(p)+sizeof(char)+1);
-        strcpy(tae.argv[tae.argc],p);
-        tae.argc++;
-    }
-    if(dev->als==NULL)
-    {
-        dev->als=malloc(sizeof(tae));
-        dev->alss=0;
+        dev->als  = calloc( 1, sizeof(tae) );
+        dev->alss = 0;
+        if (!dev->als) return;
     }
     else
     {
-        dev->als=realloc(dev->als,sizeof(tae)*(dev->alss+1));
+        TAPEAUTOLOADENTRY *als = (TAPEAUTOLOADENTRY*)
+            realloc( dev->als, (dev->alss + 1) * sizeof(tae) );
+        if (!als) return;
+        dev->als = als;
     }
-    memcpy(&dev->als[dev->alss],&tae,sizeof(tae));
+
+    tae.argc = 0;
+    tae.argv = NULL;
+    tae.filename = strdup( argv[0] );
+    if (!tae.filename) return;
+
+    // "Tape autoloader: adding '%s' value '%s'"
+    WRMSG( HHC00229, "I", "tape entry", tae.filename );
+
+    if (argc > 1)
+    {
+        tae.argv = calloc( argc-1, sizeof(char*));
+        if (!tae.argv)
+        {
+            free( tae.filename );
+            return;
+        }
+
+        for (i=1, tae.argc=0; i < argc-1; i++)
+        {
+            tae.argv[ tae.argc ] = strdup( argv[i] );
+            if (!tae.argv[ tae.argc ]) break;
+            tae.argc++;
+        }
+    }
+
+    memcpy( &dev->als[ dev->alss ], &tae, sizeof(tae) );
     dev->alss++;
 
 } /* end function autoload_tape_entry */
@@ -2224,8 +2272,8 @@ void autoload_tape_entry(DEVBLK *dev,char *fn,char **strtokw)
 /*-------------------------------------------------------------------*/
 void *autoload_wait_for_tapemount_thread(void *db)
 {
-int     rc  = -1;
-DEVBLK *dev = (DEVBLK*) db;
+int      rc   =  -1;
+DEVBLK  *dev  =  (DEVBLK*) db;
 
     obtain_lock(&dev->lock);
     {
@@ -2287,43 +2335,38 @@ int autoload_mount_next(DEVBLK *dev)
 /*  mount in the drive the tape which is                             */
 /*  positionned in the autoloader slot #alix                         */
 /*-------------------------------------------------------------------*/
-int autoload_mount_tape(DEVBLK *dev,int alix)
+int autoload_mount_tape( DEVBLK *dev, int alix )
 {
-    char        **pars;
-    int        pcount=1;
-    int        i;
-    int        rc;
-    if(alix>=dev->alss)
-    {
+int     argc, i, rc;
+char  **argv;
+
+    if (alix >= dev->alss)
         return -1;
-    }
-    pars=malloc(sizeof(BYTE *)*256);
-    pars[0]=dev->als[alix].filename;
-    for(i=0;i<dev->al_argc;i++,pcount++)
+
+    argc = 1 + dev->al_argc + dev->als[ alix ].argc;
+    argv = calloc( argc, sizeof(BYTE*) );
+    if (!argv) return -1;
+    argv[0] = dev->als[ alix ].filename;
+
+    for (i=0, argc=1; i < dev->al_argc; i++, argc++)
     {
-        pars[pcount]=malloc(strlen(dev->al_argv[i])+10);
-        strcpy(pars[pcount],dev->al_argv[i]);
-        if(pcount>255)
-        {
-            break;
-        }
+        argv[ argc ] = strdup( dev->al_argv[i] );
+        if (!argv[ argc ]) break;
     }
-    for(i=0;i<dev->als[alix].argc;i++,pcount++)
+
+    for (i=0; i < dev->als[ alix ].argc; i++, argc++)
     {
-        pars[pcount]=malloc(strlen(dev->als[alix].argv[i])+10);
-        strcpy(pars[pcount],dev->als[alix].argv[i]);
-        if(pcount>255)
-        {
-            break;
-        }
+        argv[ argc ] = strdup( dev->als[ alix ].argv[i] );
+        if (!argv[ argc ]) break;
     }
-    rc=mountnewtape(dev,pcount,pars);
-    for(i=1;i<pcount;i++)
-    {
-        free(pars[i]);
-    }
-    free(pars);
-    return(rc);
+
+    rc = mountnewtape( dev, argc, argv );
+
+    for (i=1; i < argc; i++)
+        free( argv[i] );
+    free( argv );
+
+    return rc;
 
 } /* end function autoload_mount_tape */
 

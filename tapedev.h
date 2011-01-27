@@ -302,8 +302,8 @@ FAKETAPE_BLKHDR;
 struct TAPEAUTOLOADENTRY
 {
     char  *filename;
-    int    argc;
-    char **argv;
+    int    argc;                /* max entries == AUTOLOADER_MAX     */
+    char **argv;                /* max entries == AUTOLOADER_MAX     */
 };
 
 /*-------------------------------------------------------------------*/
@@ -378,9 +378,9 @@ extern void  autoload_init          (DEVBLK *dev, int ac,   char **av);
 extern int   autoload_mount_first   (DEVBLK *dev);
 extern int   autoload_mount_next    (DEVBLK *dev);
 extern void  autoload_close         (DEVBLK *dev);
-extern void  autoload_global_parms  (DEVBLK *dev, char *par);
+extern void  autoload_global_parms  (DEVBLK *dev, int argc, char *argv[]);
 extern void  autoload_clean_entry   (DEVBLK *dev, int ix);
-extern void  autoload_tape_entry    (DEVBLK *dev, char *fn, char **strtokw);
+extern void  autoload_tape_entry    (DEVBLK *dev, int argc, char *argv[]);
 extern int   autoload_mount_tape    (DEVBLK *dev, int alix);
 
 extern void* autoload_wait_for_tapemount_thread (void *db);

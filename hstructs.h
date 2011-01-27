@@ -1268,6 +1268,7 @@ struct DEVBLK {                         /* Device configuration block*/
         int     alsix;                   /* Current Autoloader index */
         char  **al_argv;                 /* ARGV in autoloader       */
         int     al_argc;                 /* ARGC in autoloader       */
+#define AUTOLOADER_MAX      256          /* Maximum #of entries      */
         /* ---------- end Autoloader feature ----------------------- */
 
         /* 3480/3490/3590 Message display */
