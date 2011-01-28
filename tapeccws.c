@@ -434,19 +434,17 @@ int             len;                    /* Length of data block      */
 long            num;                    /* Number of bytes to read   */
 int             drc;                    /* code disposition          */
 BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
-static BYTE     supvr_inhibit  = 0;     /* Supvr-Inhibit mode active */
-static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
 
     UNREFERENCED(ccwseq);
-    
+
     dev->excps++;
-    
+
     /* Reset flags at start of CCW chain */
     if (dev->ccwseq == 0)
     {
-        supvr_inhibit  = 0;             /* (reset to default mode)   */
-        write_immed    = 0;             /* (reset to default mode)   */
-        dev->tapssdlen = 0;             /* (clear all subsys data)   */
+        dev->supvr_inhibit = 0;         /* (reset to default mode)   */
+        dev->write_immed   = 0;         /* (reset to default mode)   */
+        dev->tapssdlen     = 0;         /* (clear all subsys data)   */
     }
 
     /* If this is a data-chained READ, then return any data remaining
@@ -650,7 +648,10 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         *residual = 0;
 
         /* Perform flush/sync and/or set normal completion status */
-        if (!write_immed || (rc = dev->tmh->sync( dev, unitstat, code )) == 0)
+        if (0
+            || !dev->write_immed
+            || (rc = dev->tmh->sync( dev, unitstat, code )) == 0
+        )
             build_senseX( TAPE_BSENSE_STATUSONLY, dev, unitstat, code );
 
         break;
@@ -1096,7 +1097,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
 
         /* Perform flush/sync and/or set normal completion status */
         if (0
-            || !write_immed
+            || !dev->write_immed
             || (rc = dev->tmh->sync( dev, unitstat, code )) == 0
         )
             build_senseX( TAPE_BSENSE_STATUSONLY, dev, unitstat, code );
@@ -1141,7 +1142,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
 
         /* Perform flush/sync and/or set normal completion status */
         if (0
-            || !write_immed
+            || !dev->write_immed
             || (rc = dev->tmh->sync( dev, unitstat, code )) == 0
         )
             build_senseX( TAPE_BSENSE_STATUSONLY, dev, unitstat, code );
@@ -1334,7 +1335,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         */
 
         /* Command Reject if Supervisor-Inhibit */
-        if (supvr_inhibit)
+        if (dev->supvr_inhibit)
         {
             build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
             break;
@@ -1538,7 +1539,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         }
 
         /* Command Reject if Supervisor-Inhibit */
-        if (supvr_inhibit)
+        if (dev->supvr_inhibit)
         {
             build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
             break;
@@ -1585,7 +1586,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             int minlen = 0;
             int rej = 0;
 
-            /* (because i hate typing) BHe: Shame on you ;-) */ 
+            /* (because i hate typing) BHe: Shame on you ;-) */
 #define  _HHC00205E(_file,_reason) \
             { \
                 WRMSG(HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, _file, TTYPSTR(dev->tapedevt), "auto-mount", _reason); \
@@ -1689,7 +1690,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             {
                 /* (an error message explaining the reason for the
                     failure should hopefully already have been issued) */
-                WRMSG(HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, newfile, 
+                WRMSG(HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, newfile,
                       TTYPSTR(dev->tapedevt), "auto-unmount", "see previous message");
             }
             else
@@ -1895,7 +1896,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         */
 
         /* Command Reject if Supervisor-Inhibit */
-        if (supvr_inhibit)
+        if (dev->supvr_inhibit)
         {
             build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
             break;
@@ -1982,7 +1983,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         BYTE  parm   = iobuf[2];
 
         /* Command Reject if Supervisor-Inhibit */
-        if (supvr_inhibit)
+        if (dev->supvr_inhibit)
         {
             build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
             break;
@@ -2559,7 +2560,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
 
         /* Perform flush/sync and/or set normal completion status */
         if (0
-            || !write_immed
+            || !dev->write_immed
             || (rc = dev->tmh->sync( dev, unitstat, code )) == 0
         )
             build_senseX( TAPE_BSENSE_STATUSONLY, dev, unitstat, code );
@@ -2574,7 +2575,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
     case 0x9F:
     {
         /* Command Reject if Supervisor-Inhibit */
-        if (supvr_inhibit)
+        if (dev->supvr_inhibit)
         {
             build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
             break;
@@ -2663,7 +2664,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         */
 
         /* Command Reject if Supervisor-Inhibit */
-        if (supvr_inhibit)
+        if (dev->supvr_inhibit)
         {
             build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
             break;
@@ -2732,7 +2733,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
     case 0xB7:
     {
         /* Command Reject if Supervisor-Inhibit */
-        if (supvr_inhibit)
+        if (dev->supvr_inhibit)
         {
             build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
             break;
@@ -2898,7 +2899,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         INCREMENT_MESSAGEID(dev);
 
         /* set write-immedediate mode and perform sync function */
-        write_immed = 1;
+        dev->write_immed = 1;
         if ((rc = dev->tmh->sync( dev, unitstat, code )) == 0)
             build_senseX( TAPE_BSENSE_STATUSONLY, dev, unitstat, code );
         break;
@@ -2911,7 +2912,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
     case 0xC7:
     {
         /* Command Reject if Supervisor-Inhibit */
-        if (supvr_inhibit)
+        if (dev->supvr_inhibit)
         {
             build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
             break;
@@ -3032,7 +3033,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
            supvr-inhibit mode hasn't already been established */
         if (0
             || count < len
-            || supvr_inhibit
+            || dev->supvr_inhibit
         )
         {
             build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
@@ -3044,10 +3045,10 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
 
         /* Process request */
         if (iobuf[0] & MSET_SUPVR_INHIBIT)
-            supvr_inhibit = 1;              /* set supvr-inhibit mode*/
+            dev->supvr_inhibit = 1;         /* set supvr-inhibit mode*/
 
         if (iobuf[0] & MSET_WRITE_IMMED)
-            write_immed = 1;                /* set write-immed. mode */
+            dev->write_immed = 1;           /* set write-immed. mode */
 
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
@@ -3087,7 +3088,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         */
 
         /* Command Reject if Supervisor-Inhibit */
-        if (supvr_inhibit)
+        if (dev->supvr_inhibit)
         {
             build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
             break;
@@ -4354,7 +4355,7 @@ void BuildTapeSense( BYTE era, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode )
         break;
 
     case TAPE_ERA_UNSOL_ENVIRONMENTAL_DATA:     // ERA 2A
-        
+
         fmt = 0x21;
         break;
 
@@ -4375,12 +4376,12 @@ void BuildTapeSense( BYTE era, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode )
         break;
 
     case TAPE_ERA_END_OF_VOLUME_COMPLETE:       // ERA 52
-        
+
         fmt = 0x22;
         break;
 
     case TAPE_ERA_FORMAT_3480_2_XF_INCOMPAT:    // ERA 5C
-        
+
         fmt = 0x24;
         break;
 

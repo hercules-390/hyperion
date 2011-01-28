@@ -1252,6 +1252,8 @@ struct DEVBLK {                         /* Device configuration block*/
         u_int   stape_close_rewinds:1;  /* 1=Rewind at close         */
         u_int   stape_blkid_32:1;       /* 1=block-ids are 32 bits   */
         u_int   stape_no_erg:1;         /* 1=ignore Erase Gap CCWs   */
+        u_int   supvr_inhibit:1;        /* 1=Supvr-Inhibit mode      */
+        u_int   write_immed:1;          /* 1=Write-Immediate mode    */
         /* Access to SCSI fields controlled via sysblk.stape_lock    */
         COND      stape_sstat_cond;     /* Tape-status updated COND  */
         STSTATRQ  stape_statrq;         /* Status request structure  */
