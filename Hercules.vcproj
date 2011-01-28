@@ -1513,6 +1513,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\README.ISSUES"
+					>
+				</File>
+				<File
 					RelativePath=".\RELEASE.NOTES"
 					>
 				</File>
@@ -1549,10 +1553,6 @@
 					</File>
 					<File
 						RelativePath=".\README.IOARCH"
-						>
-					</File>
-					<File
-						RelativePath=".\README.ISSUES"
 						>
 					</File>
 					<File
