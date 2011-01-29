@@ -435,8 +435,6 @@ long            num;                    /* Number of bytes to read   */
 int             drc;                    /* code disposition          */
 BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
-    UNREFERENCED(ccwseq);
-
     dev->excps++;
 
     /* Reset flags at start of CCW chain */
