@@ -1007,9 +1007,17 @@ DLL_EXPORT int hprintf(int s,char *fmt,...)
 
 DLL_EXPORT void* hpcalloc( BYTE type, size_t size )
 {
-    void *ptr = NULL, *p = calloc( size + HPAGESIZE() - 1 + sizeof(void*), 1 );
-    if (p) {
-        ptr = (void*)(((uintptr_t)p + sizeof(void*) + HPAGESIZE() - 1) & ~(HPAGESIZE()-1));
+    void *ptr       = NULL; 
+    void *p         = NULL;
+    size_t hpgsz    = 0;
+
+    hpgsz = (size_t)HPAGESIZE();
+
+    p = calloc( size + hpgsz - 1 + sizeof(void*), 1 );
+    
+    if (p) 
+    {
+        ptr = (void*)(((uintptr_t)p + sizeof(void*) + hpgsz - 1) & ~(hpgsz-1));
         *(void**)((uintptr_t)ptr - sizeof(void*)) = p;
         if (HPC_MAINSTOR == type) sysblk.main_clear = 1;
         if (HPC_XPNDSTOR == type) sysblk.xpnd_clear = 1;
