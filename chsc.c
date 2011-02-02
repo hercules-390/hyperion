@@ -133,6 +133,7 @@ U16 req_len, rsp_len;
 #if defined(FEATURE_CANCEL_IO_FACILITY)
                                    | 0x02
 #endif
+                                   | 0x01   /* Concurrent Sense Fac */
                                    ;
 
     chsc_rsp10->general_char[0][1] = 0
