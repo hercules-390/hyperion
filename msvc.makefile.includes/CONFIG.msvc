@@ -12,14 +12,17 @@
 
 # Use environment variables to determine the Visual Studio compiler level
 
-!IFDEF VS90COMNTOOLS
-!MESSAGE Makefile will assume VS9 or VS2008Express (MSVC version 15)
+!IFDEF VS100COMNTOOLS
+!MESSAGE Makefile will assume VS10 or VS2010 Express (MSVC version 16)
+vsversion=10
+!ELSEIFDEF VS90COMNTOOLS
+!MESSAGE Makefile will assume VS9 or VS2008 Express (MSVC version 15)
 vsversion=9
 !ELSEIFDEF VS80COMNTOOLS
-!MESSAGE Makefile will assume VS8 or VS2005Express (MSVC version 14)
+!MESSAGE Makefile will assume VS8 or VS2005 Express (MSVC version 14)
 vsversion=8
 !ELSE
-!ERROR This build requires Visual Studio 8 (or VS2005Express) or later
+!ERROR This build requires Visual Studio 8 (or VS2005 Express) or later
 !ENDIF
 
 # Use environment variables to determine the target processor type

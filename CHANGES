@@ -1,3 +1,4 @@
+04 Jan 2011 VS2010 support for Windows builds - John P. Baker by Fish
 10 Jan 2011 QETH(QDIO) IP Layer 2 support for linux guests - Jan Jaeger / Harold Grovesteen
 05 Jan 2011 Fix configure '-g' flag handling for "--enable-debug=yes" - Fish
 14 Dec 2010 Enhanced DAT - Jan Jaeger

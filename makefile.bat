@@ -179,9 +179,10 @@
 ::                                                -- Fish, March 2009
 ::
 ::-----------------------------------------------------------------------------
-::                         VS2005  or  VS2008
+::                   VS2005  or  VS2008  or  VS2010
 ::-----------------------------------------------------------------------------
 
+:vs100
 :vs90
 :vs80
 
@@ -219,6 +220,14 @@
 
   set rc=0
   set build_env=
+
+  if "%VS100COMNTOOLS%" == "" goto :try_vs90
+
+  set   build_env=vs100
+  set VSTOOLSDIR=%VS100COMNTOOLS%
+  goto :EOF
+
+:try_vs90
 
   if "%VS90COMNTOOLS%" == "" goto :try_vs80
 
@@ -304,10 +313,13 @@
   if /i     "%build_type%" == "RETAIL-X64"  set CFG=RETAIL
   if /i     "%build_type%" == "RETAIL-IA64" set CFG=RETAIL
 
-  :: Check for VS2008 multi-configuration multi-platform parallel build...
+  :: Check for VS2008/VS2010 multi-configuration multi-platform parallel build...
 
   if    not "%CFG%"        == ""            goto :EOF
+  if /i     "%build_env%"  == "vs100"       goto :multi_cfg
   if /i not "%build_env%"  == "vs90"        goto :bad_cfg
+
+:multi_cfg
 
   if /i     "%build_type%" == "DEBUG-ALL"   set CFG=debug
   if /i     "%build_type%" == "RETAIL-ALL"  set CFG=retail
@@ -337,10 +349,13 @@
   if /i     "%build_type%" == "DEBUG-IA64"  set targ_arch=ia64
   if /i     "%build_type%" == "RETAIL-IA64" set targ_arch=ia64
 
-  :: Check for VS2008 multi-configuration multi-platform parallel build...
+  :: Check for VS2008/VS2010 multi-configuration multi-platform parallel build...
 
   if    not "%targ_arch%"  == ""            goto :set_CPU_etc
+  if /i     "%build_env%"  == "vs100"       goto :multi_targ_arch
   if /i not "%build_env%"  == "vs90"        goto :bad_targ_arch
+
+:multi_targ_arch
 
   if /i     "%build_type%" == "DEBUG-ALL"   set targ_arch=all
   if /i     "%build_type%" == "RETAIL-ALL"  set targ_arch=all
@@ -480,7 +495,7 @@
 
 
 ::-----------------------------------------------------------------------------
-::     VS2008 multi-configuration multi-platform parallel build
+::       VS2008/VS2010 multi-configuration multi-platform parallel build
 ::-----------------------------------------------------------------------------
 ::
 ::  The following is special logic to leverage Fish's "RunJobs" tool
