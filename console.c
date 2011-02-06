@@ -2400,19 +2400,11 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 
                 strupper(r, argv[ac]);
 
-                for (i = 0; i < strlen(r) || rc != 0; i++ )
-                {
-                    if ( i == 0 )
-                    {
-                        if ( !isalpha( r[i] ) ) rc = -1;
-                    }
-                    else
-                    {
-                        if ( !isalnum( r[i] ) ) rc = -1;  
-                    }
-                }
+                for (i = 1; i < strlen(r) && rc == 0; i++ )
+                    if ( !isalnum( r[i] ) )
+                        rc = -1;
                      
-                if ( rc == 0 )
+                if ( rc == 0 && isalpha( r[0] ))
                 {
                     strlcpy(dev->filename,r,sizeof(dev->filename));
                 }
