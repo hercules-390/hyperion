@@ -964,7 +964,7 @@ int pending = 0;
         {
             if(sysblk.ioq == dev)
                 sysblk.ioq = dev->nextioq;
-            else
+            else if ( sysblk.ioq != NULL )      /* add check for empty IOQ */
             {
              DEVBLK *tmp;
                 for(tmp = sysblk.ioq; tmp->nextioq != NULL && tmp->nextioq != dev; tmp = tmp->nextioq);
