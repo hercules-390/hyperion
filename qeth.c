@@ -287,6 +287,7 @@ U32 ackseq;
                 switch(pdu->cmd) {
 
                 case PDU_CMD_SETUP:
+                    TRACE(_("PDU CMD SETUP\n"));
                     break;
 
                 case PDU_CMD_ENABLE:
@@ -314,6 +315,7 @@ U32 ackseq;
                     break;
 
                 case PDU_CMD_ACTIVATE:
+                    TRACE(_("PDU CMD ACTIVATE\n"));
                     break;
 
                 default:
@@ -322,6 +324,7 @@ U32 ackseq;
                 break;
 
             case PDU_TGT_QDIO:
+                TRACE(_("PDU QDIO\n"));
                 break;
 
             default:
@@ -366,9 +369,9 @@ U32 ackseq;
                         {
                         SAP_SPM *spm = (SAP_SPM*)(sap+1);
                         U32 promisc;
-                            TRACE("Set Promiscous Mode %s\n",grp->promisc ? "On" : "Off");
                             FETCH_FW(promisc,spm->promisc);
                             grp->promisc = promisc ? MAC_PROMISC : promisc;
+                            TRACE("Set Promiscous Mode %s\n",grp->promisc ? "On" : "Off");
                             STORE_HW(sap->rc,IPA_RC_OK);
                             STORE_HW(ipa->rc,IPA_RC_OK);
                         }
@@ -482,6 +485,7 @@ U32 ackseq;
 
             case IPA_CMD_QIPASSIST:
                 TRACE("L3 Query IP Assist\n");
+                STORE_FW(ipa->ipas,IPA_SUPP);
                 STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
@@ -519,6 +523,11 @@ U32 ackseq;
                 TRACE("Invalid IPA Cmd(%02x)\n",ipa->cmd);
                 STORE_HW(ipa->rc,IPA_RC_NOTSUPP);
             }
+
+            ipa->iid = IPA_IID_ADAPTER | IPA_IID_REPLY;
+
+            DUMP("IPA_HDR RSP",ipa,sizeof(OSA_IPA));
+            DUMP("IPA_REQ RSP",(ipa+1),offset-sizeof(OSA_IPA));
         }
         break;
 

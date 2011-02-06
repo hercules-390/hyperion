@@ -451,6 +451,8 @@ typedef struct _OSA_IPA {
 /*000*/ BYTE    cmd;            /* Command                           */
 /*001*/ BYTE    iid;            /* Initator Identifier               */
 #define IPA_IID_HOST    0x00
+#define IPA_IID_ADAPTER 0x01
+#define IPA_IID_REPLY   0x80
 /*002*/ HWORD   seq;            /* Sequence number                   */
 /*004*/ HWORD   rc;             /* Return Code                       */
 #define IPA_RC_OK       IPA_RC_SUCCESS
@@ -468,6 +470,35 @@ typedef struct _OSA_IPA {
 /*00C*/ FWORD   ipas;           /* Supported IP Assist mask          */
 /*010*/ FWORD   ipae;           /* Enabled IP Assist mask            */
     } OSA_IPA;
+
+
+#define IPA_ARP_PROCESSING      0x00000001L
+#define IPA_INBOUND_CHECKSUM    0x00000002L
+#define IPA_OUTBOUND_CHECKSUM   0x00000004L
+#define IPA_IP_FRAGMENTATION    0x00000008L
+#define IPA_FILTERING           0x00000010L
+#define IPA_IPV6                0x00000020L
+#define IPA_MULTICASTING        0x00000040L
+#define IPA_IP_REASSEMBLY       0x00000080L
+#define IPA_QUERY_ARP_COUNTERS  0x00000100L
+#define IPA_QUERY_ARP_ADDR_INFO 0x00000200L
+#define IPA_SETADAPTERPARMS     0x00000400L
+#define IPA_VLAN_PRIO           0x00000800L
+#define IPA_PASSTHRU            0x00001000L
+#define IPA_FLUSH_ARP_SUPPORT   0x00002000L
+#define IPA_FULL_VLAN           0x00004000L
+#define IPA_INBOUND_PASSTHRU    0x00008000L
+#define IPA_SOURCE_MAC          0x00010000L
+#define IPA_OSA_MC_ROUTER       0x00020000L
+#define IPA_QUERY_ARP_ASSIST    0x00040000L
+#define IPA_INBOUND_TSO         0x00080000L
+#define IPA_OUTBOUND_TSO        0x00100000L
+
+
+#define IPA_SUPP ( 0 \
+                 | IPA_PASSTHRU \
+                 | IPA_INBOUND_PASSTHRU \
+                 )
 
 
 #define IPA_CMD_STARTLAN  0x01  /* Start LAN operations              */
@@ -557,12 +588,28 @@ typedef struct _OSA_IPA_MAC {
 /*-------------------------------------------------------------------*/
 typedef struct _OSA_IPA_SAP {
 /*000*/ FWORD   suppcm;         /* Supported subcommand mask         */
-#define IPA_SAP_QUERY   0x00000001
-#define IPA_SAP_PROMISC 0x00000800
+#define IPA_SAP_QUERY   0x00000001L
+#define IPA_SAP_SETMAC  0x00000002L
+#define IPA_SAP_SETGADR 0x00000004L
+#define IPA_SAP_SETFADR 0x00000008L
+#define IPA_SAP_SETAMODE 0x00000010L
+#define IPA_SAP_SETCFG  0x00000020L
+#define IPA_SAP_SETCFGE 0x00000040L
+#define IPA_SAP_BRDCST  0x00000080L
+#define IPA_SAP_OSAMSG  0x00000100L
+#define IPA_SAP_SETSNMP 0x00000200L
+#define IPA_SAP_CARDINFO 0x00000400L
+#define IPA_SAP_PROMISC 0x00000800L
+#define IPA_SAP_SETDIAG 0x00002000L
+#define IPA_SAP_SETACCESS 0x00010000L
+
+
 #define IPA_SAP_SUPP ( 0 \
                      | IPA_SAP_QUERY \
                      | IPA_SAP_PROMISC \
                      )
+
+
 /*004*/ FWORD   resv004;        /*                                   */
 /*008*/ HWORD   cmdlen;         /* Subcommand length                 */
 /*00A*/ HWORD   resv00a;        /*                                   */
