@@ -2391,7 +2391,43 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
             ;   // NOP (not really a group name; an '*' is
                 // simply used as an argument place holder)
         else
-            strlcpy(dev->filename,argv[ac],sizeof(dev->filename));
+        {
+            if ( strlen(argv[ac]) < 9 )
+            {
+                char r[9];
+                int  i;
+                int  rc = 0;
+
+                strupper(r, argv[ac]);
+
+                for (i = 0; i < strlen(r) || rc != 0; i++ )
+                {
+                    if ( i == 0 )
+                    {
+                        if ( !isalpha( r[i] ) ) rc = -1;
+                    }
+                    else
+                    {
+                        if ( !isalnum( r[i] ) ) rc = -1;  
+                    }
+                }
+                     
+                if ( rc == 0 )
+                {
+                    strlcpy(dev->filename,r,sizeof(dev->filename));
+                }
+                else
+                {
+                    WRMSG(HHC01091, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[ac] );
+                    return -1;
+                }
+            }
+            else
+            {
+                WRMSG(HHC01091, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[ac] );
+                return -1;
+            }
+        }
 
         argc--; ac++;
         if (argc > 0)   // ip address?

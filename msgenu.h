@@ -898,6 +898,7 @@ do { \
 #define HHC01083 "%1d:%04X COMM: cthread - socket write available"
 #define HHC01084 "%1d:%04X COMM: set mode '%s'"
 #define HHC01090 "%1d:%04X COMM: client %s devtype %4.4X: connection reset"
+#define HHC01091 "%1d:%04X COMM: '%s' has an invalid GROUP name length or format; must be a valid luname or poolname"
 
 // reserve 011xx for printer specific component messages
 #define HHC01100 "%1d:%04X Printer: client '%s', ip '%s' disconnected from device '%s'"
