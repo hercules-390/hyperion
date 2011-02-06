@@ -1,3 +1,6 @@
+06 Feb 2011 VS2010 Solution File HERCULES_VS2010.SLN
+06 Feb 2011 WINDOWS - bootstrap.c change for VS2010 C4748 warning
+06 Feb 2011 console.c LUNAME rules for GROUP on 3270 statement
 04 Feb 2011 VS2010 support for Windows builds - John P. Baker by Fish
 27 Jan 2011 Fix multiple simultaneous tape use CMDREJ issue - Fish
 10 Jan 2011 QETH(QDIO) IP Layer 2 support for linux guests - Jan Jaeger / Harold Grovesteen
