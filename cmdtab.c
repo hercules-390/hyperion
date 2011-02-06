@@ -103,6 +103,10 @@ int zapcmd_cmd(int argc, char *argv[], char *cmdline)
 CMDTAB* cmdent;
 int i;
 
+//      Format:     $zapcmd  xxxx NoCfg
+//                  $zapcmd  xxxx Cmd
+//                      ...etc...
+
     UNREFERENCED(cmdline);
 
     if (argc > 1)
