@@ -210,6 +210,9 @@ int main(int ac,char *av[])
 
 #include <Wincon.h>                             // (need SetConsoleMode, etc)
 
+#pragma warning (disable : 4748)
+#pragma optimize( "", off )
+
 static LONG WINAPI HerculesUnhandledExceptionFilter( EXCEPTION_POINTERS* pExceptionPtrs )
 {
     static BOOL bDidThis = FALSE;               // (if we did this once already)
