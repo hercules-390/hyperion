@@ -2392,7 +2392,7 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
                 // simply used as an argument place holder)
         else
         {
-            if ( strlen(argv[ac]) < 9 )
+            if ( strlen(argv[ac]) < 9 && strlen(argv[ac]) > 0 )
             {
                 char r[9];
                 int  i;
@@ -2400,9 +2400,13 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 
                 strupper(r, argv[ac]);
 
-                for (i = 1; i < strlen(r) && rc == 0; i++ )
+                for (i = 1; i < (int)strlen(r) && rc == 0; i++ )
+                {
                     if ( !isalnum( r[i] ) )
+                    {
                         rc = -1;
+                    }
+                }
                      
                 if ( rc == 0 && isalpha( r[0] ))
                 {
@@ -2453,7 +2457,9 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
                     }
                 }
                 else
+                {
                     dev->acc_ipmask = (in_addr_t)(-1);
+                }
             }
         }
     }
