@@ -103,9 +103,18 @@ int zapcmd_cmd(int argc, char *argv[], char *cmdline)
 CMDTAB* cmdent;
 int i;
 
-//      Format:     $zapcmd  xxxx NoCfg
-//                  $zapcmd  xxxx Cmd
-//                      ...etc...
+//  Format:
+//
+//      $zapcmd  xxxx  NoCfg
+//      $zapcmd  xxxx  Cmd
+//            ...etc...
+//
+//  For non-DEBUG (i.e. RETAIL/Release) builds:
+//
+//      msglvl   VERBOSE        (optional)
+//      msglvl   DEBUG          (optional)
+//      cmdlvl   DEBUG          (*required!*)  (because not debug build,
+//      $zapcmd  XXXX  Cmd                      and $zapcmd is SYSDEBUG)
 
     UNREFERENCED(cmdline);
 
