@@ -15,13 +15,14 @@
 /*                                                                   */
 /*      dasdinit [-options] filename devtype[-model] [volser] [size] */
 /*                                                                   */
-/* options      options:                                             */
-/*                -a    include alternate cylinders                  */
+/* options    options:                                               */
+/*              -a      include alternate cylinders                  */
 /*                      (ignored if size specified manually)         */
-/*                -z    build compressed device using zlib           */
-/*                -bz2  build compressed device using bzip2          */
-/*                -0    build compressed device with no compression  */
-/*                -r    "raw" init (bypass VOL1 & IPL track fmt)     */
+/*              -z      build compressed device using zlib           */
+/*              -bz2    build compressed device using bzip2          */
+/*              -0      build compressed device with no compression  */
+/*              -r      "raw" init (bypass VOL1 & IPL track fmt)     */
+/*              -linux  format dasd using linux null track format    */
 /*                                                                   */
 /* filename     is the name of the disk image file to be created     */
 /*              (this program will not overwrite an existing file)   */
