@@ -1273,9 +1273,13 @@ struct DEVBLK {                         /* Device configuration block*/
 #define AUTOLOADER_MAX      256          /* Maximum #of entries      */
         /* ---------- end Autoloader feature ----------------------- */
 
-        /* 3480/3490/3590 Message display */
+        /* 3480/3490/3590 tape vault support */
 
         TID     tape_mountmon_tid;      /* Thread ID for async mnts  */
+        u_int   utapemountreq;          /* Count of tape mounts      */    
+        char   *pszVaultPath;           /* path to tape vault        */
+
+        /* 3480/3490/3590 Message display */
         char   *tapemsg;                /* tape volser               */
         char    tapemsg1[9];            /* 1st Host Message          */
         char    tapemsg2[9];            /* 2nd Host Message          */
