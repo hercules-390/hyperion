@@ -84,36 +84,62 @@ int cache_hit_percent (int ix)
     return (int)((cacheblk[ix].hits * 100) / total);
 }
 
-int cache_lookup (int ix, U64 key, int *o)
+int cache_lookup (int ix, U64 key, int *oldest_entry)
 {
     int i,p;
-    if (o) *o = -1;
-    if (cache_check_ix(ix)) return -1;
+
+    if (oldest_entry) 
+        *oldest_entry = -1;
+    if (cache_check_ix(ix)) 
+        return -1;
     /* `p' is the preferred index */
     p = (int)(key % cacheblk[ix].nbr);
-    if (cacheblk[ix].cache[p].key == key) {
+    
+    if (cacheblk[ix].cache[p].key == key) 
+    {
         i = p;
-        cacheblk[ix].fasthits++;
-    }
-    else {
-        if (cache_isbusy(ix, p) || cacheblk[ix].age - cacheblk[ix].cache[p].age < 20)
-            p = -2;
-        for (i = 0; i < cacheblk[ix].nbr; i++) {
-            if (cacheblk[ix].cache[i].key == key) break;
-            if (o && !cache_isbusy(ix, i)
-             && (*o < 0 || i == p || cacheblk[ix].cache[i].age < cacheblk[ix].cache[*o].age))
-                if (*o != p) *o = i;
+        if (!cache_isempty(ix, i))
+        {
+            cacheblk[ix].fasthits++;
         }
     }
-    if (i >= cacheblk[ix].nbr) {
+    else 
+    {
+        if (cache_isbusy(ix, p) || cacheblk[ix].age - cacheblk[ix].cache[p].age < 20)
+            p = -2;
+        for (i = 0; i < cacheblk[ix].nbr; i++) 
+        {
+            if (cacheblk[ix].cache[i].key == key) break;
+            if (oldest_entry && !cache_isbusy(ix, i)
+             && (*oldest_entry < 0 || i == p || cacheblk[ix].cache[i].age < cacheblk[ix].cache[*oldest_entry].age))
+                if (*oldest_entry != p) *oldest_entry = i;
+        }
+    }
+
+    if (i >= cacheblk[ix].nbr)
+    {   
         i = -1;
-        cacheblk[ix].misses++;
+    }
+    else if ( i >= 0 && cache_isempty(ix, i) ) 
+    {
+        if ( oldest_entry && *oldest_entry < 0 )
+        {
+            *oldest_entry = i;
+        }
+        i = -1;
+    }
+    if ( i >= 0 )
+    {
+        cacheblk[ix].hits++;
     }
     else
-        cacheblk[ix].hits++;
-
-    if (i < 0 && o && *o < 0) cache_adjust(ix,1);
-    else cache_adjust(ix, 0);
+    {
+        cacheblk[ix].misses++;
+    }
+    if (i < 0 && oldest_entry && *oldest_entry < 0) 
+        cache_adjust(ix, 1);
+    else 
+        cache_adjust(ix, 0);
     return i;
 }
 
