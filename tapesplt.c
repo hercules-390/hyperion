@@ -227,7 +227,8 @@ char           *strtok_str = NULL;
             if ((awshdr.flags1 & AWSTAPE_FLAG1_TAPEMARK) != 0)
             {
                 /* Print summary of current file */
-                printf( MSG( HHC02721, "I", fileno, blkcount, file_bytes, minblksz, maxblksz, (int)file_bytes/blkcount ) );
+                if (blkcount)
+                    printf( MSG( HHC02721, "I", fileno, blkcount, file_bytes, minblksz, maxblksz, (int)file_bytes/blkcount ) );
 
                 /* Reset counters for next file */
                 fileno++;
