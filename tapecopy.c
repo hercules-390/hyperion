@@ -183,7 +183,7 @@ static void print_usage (void)
         "Where:\n\n"
 
         "   tapedrive    specifies the device filename of the SCSI tape drive.\n"
-        "                Must begin with /dev to be recognized.\n"
+        "                Must begin with /dev%s to be recognized.\n"
         "   awsfile      specifies the filename of the AWSTAPE disk file.\n\n"
 
         "The first filename is the input; the second is the output.\n\n"
@@ -210,8 +210,8 @@ static void print_usage (void)
         "   %2d           Unrecoverable I/O error obtaining status of SCSI device.\n"
         "   %2d           Unrecoverable I/O error reading block header\n"
         "                from AWSTAPE disk file.\n"
-        "   %2d           AWSTAPE block size too large.\n"
         "   %2d           Unrecoverable I/O error reading data block.\n"
+        "   %2d           AWSTAPE block size too large.\n"
         "   %2d           Unrecoverable I/O error writing tapemark.\n"
         "   %2d           Unrecoverable I/O error writing block header\n"
         "                to AWSTAPE disk file.\n"
@@ -219,6 +219,11 @@ static void print_usage (void)
         "\n"
         )
 
+#if defined(_MSVC_)
+        ," or \\\\.\\Tape"
+#else
+        ,""
+#endif
         ,RC_SUCCESS
         ,RC_ERROR_BAD_ARGUMENTS
         ,RC_ERROR_OPENING_SCSI_DEVICE
@@ -228,8 +233,8 @@ static void print_usage (void)
         ,RC_ERROR_REWINDING_SCSI
         ,RC_ERROR_OBTAINING_SCSI_STATUS
         ,RC_ERROR_READING_AWS_HEADER
-        ,RC_ERROR_AWSTAPE_BLOCK_TOO_LARGE
         ,RC_ERROR_READING_DATA
+        ,RC_ERROR_AWSTAPE_BLOCK_TOO_LARGE
         ,RC_ERROR_WRITING_TAPEMARK
 
         ,RC_ERROR_WRITING_OUTPUT_AWS_HEADER_BLOCK
