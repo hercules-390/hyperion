@@ -1,3 +1,4 @@
+21 Feb 2011 Fix CCKD stmt 'comp=' validation bug - Fish
 06 Feb 2011 VS2010 Solution File HERCULES_VS2010.SLN
 06 Feb 2011 WINDOWS - bootstrap.c change for VS2010 C4748 warning
 06 Feb 2011 console.c LUNAME rules for GROUP on 3270 statement

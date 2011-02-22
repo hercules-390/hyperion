@@ -5492,7 +5492,7 @@ int   rc;
         }
         else if ( CMD(kw,comp,4) )
         {
-            if (val < -1 || (val & ~cckdblk.comps) || c != '\0')
+            if (val < -1 || ((val & CCKD_COMPRESS_MASK) & ~cckdblk.comps) || c != '\0')
             {
                 WRMSG(HHC00348, "E", val, kw);
                 return -1;
