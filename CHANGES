@@ -1,3 +1,4 @@
+22 Feb 2011 Function logmsg() renamed to log_msg(); LOGMSG define added to simply implementation
 21 Feb 2011 Fix CCKD stmt 'comp=' validation bug - Fish
 06 Feb 2011 VS2010 Solution File HERCULES_VS2010.SLN
 06 Feb 2011 WINDOWS - bootstrap.c change for VS2010 C4748 warning
