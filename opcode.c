@@ -1202,7 +1202,7 @@ DEF_INST(operation_exception)
 
 DEF_INST(dummy_instruction)
 {
-//  logmsg(_("Dummy instruction: ")); ARCH_DEP(display_inst) (regs, inst);
+//  LOGMSG(_("Dummy instruction: ")); ARCH_DEP(display_inst) (regs, inst);
     INST_UPDATE_PSW (regs, ILC(inst[0]), ILC(inst[0]));
 }
 
@@ -2150,7 +2150,7 @@ static zz_func replace_opcode_xx(int arch, zz_func inst, int opcode)
   int i;
   zz_func oldinst;
 
-//  logmsg("replace_opcode_xx(%d, %02x)\n", arch, opcode);
+//  LOGMSG("replace_opcode_xx(%d, %02x)\n", arch, opcode);
   if(arch < 0 || arch > GEN_ARCHCOUNT)
     return(NULL);
   if(opcode < 0 || opcode > 0xff)
@@ -2171,7 +2171,7 @@ static zz_func replace_opcode_xxxx(int arch, zz_func inst, int opcode1, int opco
 {
   zz_func oldinst;
 
-//  logmsg("replace_opcode_xxxx(%d, %02x, %02x)\n", arch, opcode1, opcode2);
+//  LOGMSG("replace_opcode_xxxx(%d, %02x, %02x)\n", arch, opcode1, opcode2);
   if(arch < 0 || arch >= GEN_ARCHCOUNT)
     return(NULL);
   if(opcode1 < 0 || opcode1 > 0xff || opcode2 < 0 || opcode2 > 0xff)
@@ -2192,7 +2192,7 @@ static zz_func replace_opcode_xx_x(int arch, zz_func inst, int opcode1, int opco
   int i;
   zz_func oldinst;
 
-//  logmsg("replace_opcode_xx_x(%d, %02x, %1x)\n", arch, opcode1, opcode2);
+//  LOGMSG("replace_opcode_xx_x(%d, %02x, %1x)\n", arch, opcode1, opcode2);
   if(arch < 0 || arch >= GEN_ARCHCOUNT)
     return(NULL);
   if(opcode1 < 0 || opcode1 > 0xff || opcode2 < 0 || opcode2 > 0xf)
@@ -2213,7 +2213,7 @@ static zz_func replace_opcode_xx________xx(int arch, zz_func inst, int opcode1, 
 {
   zz_func oldinst;
 
-//  logmsg("replace_opcode_xx________xx(%d, %02x, %02x)\n", arch, opcode1, opcode2);
+//  LOGMSG("replace_opcode_xx________xx(%d, %02x, %02x)\n", arch, opcode1, opcode2);
   if(arch < 0 || arch >= GEN_ARCHCOUNT)
     return(NULL);
   if(opcode2 < 0 || opcode2 > 0xff)
@@ -2260,7 +2260,7 @@ DLL_EXPORT void *replace_opcode_r(int arch, zz_func inst, int opcode1, int opcod
 void *replace_opcode(int arch, zz_func inst, int opcode1, int opcode2)
 #endif
 {
-//  logmsg("replace_opcode(%d, %02x, %02x)\n", arch, opcode1, opcode2);
+//  LOGMSG("replace_opcode(%d, %02x, %02x)\n", arch, opcode1, opcode2);
   switch(opcode1)
   {
     case 0x01:
@@ -2317,7 +2317,7 @@ void init_opcode_tables(void)
   int j;
 #endif
 
-//  logmsg("init_opcode_tables()\n");
+//  LOGMSG("init_opcode_tables()\n");
   for(arch = 0; arch < GEN_ARCHCOUNT; arch++)
   {
     for(i = 0; i < 0x100; i++)
@@ -2407,7 +2407,7 @@ void init_opcode_tables(void)
 /*---------------------------------------------------------------------------*/
 void init_opcode_pointers(REGS *regs)
 {
-//  logmsg("init_opcode_pointers()\n");
+//  LOGMSG("init_opcode_pointers()\n");
   if(!regs)
     return;
   regs->s370_runtime_opcode_xxxx = runtime_opcode_xxxx[ARCH_370];

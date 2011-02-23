@@ -56,7 +56,7 @@ extern int logger_syslogfd[2];
 #endif
 
 /* Logging functions in logmsg.c */
-LOG_DLL_IMPORT void logmsg(char *,...);
+LOG_DLL_IMPORT void log_msg(char *,...);
 LOG_DLL_IMPORT void writemsg(const char *file, int line, const char *function, int grp, int lvl, char *color, char *msg, ...);
 
 // BHe I want to remove these functions for simplification

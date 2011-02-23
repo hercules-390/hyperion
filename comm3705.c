@@ -230,24 +230,24 @@ static  HOST_INFO  cons_hostinfo;       /* Host info for this system */
 #define DEBUG_LVL        0
 
 #if DEBUG_LVL == 0
-  #define TNSDEBUG1      1 ? ((void)0) : logmsg
-  #define TNSDEBUG2      1 ? ((void)0) : logmsg
-  #define TNSDEBUG3      1 ? ((void)0) : logmsg
+  #define TNSDEBUG1      1 ? ((void)0) : LOGMSG
+  #define TNSDEBUG2      1 ? ((void)0) : LOGMSG
+  #define TNSDEBUG3      1 ? ((void)0) : LOGMSG
 #endif
 #if DEBUG_LVL == 1
-  #define TNSDEBUG1      logmsg
-  #define TNSDEBUG2      1 ? ((void)0) : logmsg
-  #define TNSDEBUG3      1 ? ((void)0) : logmsg
+  #define TNSDEBUG1      LOGMSG
+  #define TNSDEBUG2      1 ? ((void)0) : LOGMSG
+  #define TNSDEBUG3      1 ? ((void)0) : LOGMSG
 #endif
 #if DEBUG_LVL == 2
-  #define TNSDEBUG1      logmsg
-  #define TNSDEBUG2      logmsg
-  #define TNSDEBUG3      1 ? ((void)0) : logmsg
+  #define TNSDEBUG1      LOGMSG
+  #define TNSDEBUG2      LOGMSG
+  #define TNSDEBUG3      1 ? ((void)0) : LOGMSG
 #endif
 #if DEBUG_LVL == 3
-  #define TNSDEBUG1      logmsg
-  #define TNSDEBUG2      logmsg
-  #define TNSDEBUG3      logmsg
+  #define TNSDEBUG1      LOGMSG
+  #define TNSDEBUG2      LOGMSG
+  #define TNSDEBUG3      LOGMSG
 #endif
 
 #define BUFLEN_3270     65536           /* 3270 Send/Receive buffer  */
@@ -309,7 +309,7 @@ packet_trace( BYTE* pAddr, int iLen )
             }
         }
 
-        logmsg( "%s %s %s\n", print_line, print_ascii, print_ebcdic );
+        LOGMSG( "%s %s %s\n", print_line, print_ascii, print_ebcdic );
     }
 } /* end function packet_trace */
 #else

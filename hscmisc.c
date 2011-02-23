@@ -136,11 +136,11 @@ static void do_shutdown_now()
 //#endif
 
     /*
-    logmsg("Terminating threads\n");
+    LOGMSG("Terminating threads\n");
     {
         // (none we really care about at the moment...)
     }
-    logmsg("Threads terminations complete\n");
+    LOGMSG("Threads terminations complete\n");
     */
 
     WRMSG(HHC01425, "I");

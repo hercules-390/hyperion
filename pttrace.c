@@ -762,7 +762,7 @@ time_t tt;
                 else
                     MSGBUF(result, "%d", pttrace[i].result);
 
-            logmsg
+            LOGMSG
             (
                 "%-18s "                           // File name
                 "%s.%6.6ld "                       // Time of day (HH:MM:SS.usecs)

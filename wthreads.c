@@ -185,7 +185,7 @@ int  winthread_create
 
     if ( !pWINTHREAD )
     {
-        logmsg("winthread_create: malloc(WINTHREAD) failed\n");
+        LOGMSG("winthread_create: malloc(WINTHREAD) failed\n");
         return RC(ENOMEM);      // (out of memory)
     }
 
@@ -222,7 +222,7 @@ int  winthread_create
 // We won't need the list, unlock the list, send log message and free up resources
 
         release_lock ( &WinThreadListLock );
-        logmsg("fthread_create: MyCreateThread failed\n");
+        LOGMSG("fthread_create: MyCreateThread failed\n");
         if ( pWINTHREAD->pszWinThreadName != NULL )
             free( pWINTHREAD->pszWinThreadName );
         free ( pWINTHREAD );

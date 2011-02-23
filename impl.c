@@ -70,7 +70,7 @@ static void delayed_exit (int exit_code)
 /*-------------------------------------------------------------------*/
 static void sigint_handler (int signo)
 {
-//  logmsg ("impl.c: sigint handler entered for thread %lu\n",/*debug*/
+//  LOGMSG ("impl.c: sigint handler entered for thread %lu\n",/*debug*/
 //          thread_id());                                     /*debug*/
 
     UNREFERENCED(signo);
@@ -102,7 +102,7 @@ static void sigint_handler (int signo)
 /*-------------------------------------------------------------------*/
 static void sigterm_handler (int signo)
 {
-//  logmsg ("impl.c: sigterm handler entered for thread %lu\n",/*debug*/
+//  LOGMSG ("impl.c: sigterm handler entered for thread %lu\n",/*debug*/
 //          thread_id());                                      /*debug*/
 
     UNREFERENCED(signo);
@@ -164,19 +164,19 @@ BOOL WINAPI console_ctrl_handler (DWORD signo)
                     sysblk.shutimmed = TRUE;
                 do_shutdown();
 
-//                logmsg("%s(%d): return from shutdown\n", __FILE__, __LINE__ ); /* debug */
+//                LOGMSG("%s(%d): return from shutdown\n", __FILE__, __LINE__ ); /* debug */
 
                 for ( i = 0; i < 120; i++ )
                 {
                     if ( sysblk.shutdown && sysblk.shutfini )
                     {
-//                        logmsg("%s(%d): %d shutdown completed\n",  /* debug */
+//                        LOGMSG("%s(%d): %d shutdown completed\n",  /* debug */
 //                                __FILE__, __LINE__, i );           /* debug */
                         break;
                     }
                     else
                     {
-//                        logmsg("%s(%d): %d waiting for shutdown to complete\n",   /* debug */
+//                        LOGMSG("%s(%d): %d waiting for shutdown to complete\n",   /* debug */
 //                                __FILE__, __LINE__, i );                          /* debug */
                         sleep(1);
                     }

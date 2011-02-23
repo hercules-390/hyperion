@@ -236,27 +236,27 @@ static BYTE sba_code[] = { "\x40\xC1\xC2\xC3\xC4\xC5\xC6\xC7"
 #define DEBUG_LVL        0
 
 #if DEBUG_LVL == 0
-  #define TNSDEBUG1      1 ? ((void)0) : logmsg
-  #define TNSDEBUG2      1 ? ((void)0) : logmsg
-  #define TNSDEBUG3      1 ? ((void)0) : logmsg
+  #define TNSDEBUG1      1 ? ((void)0) : LOGMSG
+  #define TNSDEBUG2      1 ? ((void)0) : LOGMSG
+  #define TNSDEBUG3      1 ? ((void)0) : LOGMSG
 #endif
 #if DEBUG_LVL == 1
-  #define TNSDEBUG1      logmsg
-  #define TNSDEBUG2      1 ? ((void)0) : logmsg
-  #define TNSDEBUG3      1 ? ((void)0) : logmsg
+  #define TNSDEBUG1      LOGMSG
+  #define TNSDEBUG2      1 ? ((void)0) : LOGMSG
+  #define TNSDEBUG3      1 ? ((void)0) : LOGMSG
 #endif
 #if DEBUG_LVL == 2
-  #define TNSDEBUG1      logmsg
-  #define TNSDEBUG2      logmsg
-  #define TNSDEBUG3      1 ? ((void)0) : logmsg
+  #define TNSDEBUG1      LOGMSG
+  #define TNSDEBUG2      LOGMSG
+  #define TNSDEBUG3      1 ? ((void)0) : LOGMSG
 #endif
 #if DEBUG_LVL == 3
-  #define TNSDEBUG1      logmsg
-  #define TNSDEBUG2      logmsg
-  #define TNSDEBUG3      logmsg
+  #define TNSDEBUG1      LOGMSG
+  #define TNSDEBUG2      LOGMSG
+  #define TNSDEBUG3      LOGMSG
 #endif
 
-#define TNSERROR        logmsg
+#define TNSERROR        LOGMSG
 
 #define BUFLEN_3270     65536           /* 3270 Send/Receive buffer  */
 #define BUFLEN_1052     150             /* 1052 Send/Receive buffer  */
@@ -278,26 +278,26 @@ BYTE print_chars[17];
     for (offset=0; offset < len; )
     {
         memset(print_chars,0,sizeof(print_chars));
-        logmsg("+%4.4X  ", offset);
+        LOGMSG("+%4.4X  ", offset);
         for (i=0; i < 16; i++)
         {
             c = *addr++;
             if (offset < len) {
-                logmsg("%2.2X", c);
+                LOGMSG("%2.2X", c);
                 print_chars[i] = '.';
                 if (isprint(c)) print_chars[i] = c;
                 c = guest_to_host(c);
                 if (isprint(c)) print_chars[i] = c;
             }
             else {
-                logmsg("  ");
+                LOGMSG("  ");
             }
             offset++;
             if ((offset & 3) == 0) {
-                logmsg(" ");
+                LOGMSG(" ");
             }
         } /* end for(i) */
-        logmsg(" %s\n", print_chars);
+        LOGMSG(" %s\n", print_chars);
     } /* end for(offset) */
 
 } /* end function packet_trace */
@@ -1205,6 +1205,72 @@ BYTE    c;                              /* Character work area       */
 
 #define SF_ATTR_MDT         0x01
 
+#if defined(TURBO_HERCULES)
+static char *herclogo[]={
+"@ALIGN NONE",
+"@SBA 0,0",
+"@SF P",
+"TurboHercules Ver :",
+"@SF HP",
+"$(VERSION)",
+"@NL",
+"@SF P",
+"Host Name         :",
+"@SF HP",
+"$(HOSTNAME)",
+"@NL",
+"@SF P",
+"Host OS           :",
+"@SF HP",
+"$(HOSTOS)-$(HOSTOSREL) $(HOSTOSVER)",
+"@NL",
+"@SF P",
+"Host Architecture :",
+"@SF HP",
+"$(HOSTARCH)",
+"@NL",
+"@SF P",
+"Processors        :",
+"@SF HP",
+"$(HOSTNUMCPUS)",
+"@NL",
+"@SF P",
+"LPARNAME          :",
+"@SF HP",
+"$(LPARNAME)",
+"@NL",
+"@SF P",
+"Device Number     :",
+"@SF HP",
+"$(CSS):$(CCUU)",
+"@NL",
+"@SF P",
+"Subchannel        :",
+"@SF HP",
+"$(SUBCHAN)",
+"@SF HP",
+"@NL",
+"@NL",
+"TTTTTTTTTTTT        b          ","@SF P","HH        HH                       l           ","@SF HP","@NL",
+"TTTTTTTTTTTT        b          ","@SF P","HH        HH                       l           ","@SF HP","@NL",
+"     TT             b          ","@SF P","HH        HH                       l           ","@SF HP","@NL",
+"     TT             b          ","@SF P","HH        HH                       l           ","@SF HP","@NL",
+"     TT             b          ","@SF P","HHHHHHHHHHHH                       l           ","@SF HP","@NL",   
+"     TT  u   u r rr bbbb   ooo ","@SF P","HHHHHHHHHHHH  ee  r rr  ccc  u   u l  ee   sss ","@SF HP","@NL",
+"     TT  u   u r    b   b o   o","@SF P","HH        HH e  e r    c   c u   u l e  e s   s","@SF HP","@NL",
+"     TT  u   u r    b   b o   o","@SF P","HH        HH eeee r    c     u   u l eeee  ss  ","@SF HP","@NL",
+"     TT  u   u r    b   b o   o","@SF P","HH        HH e    r    c     u   u l e      ss ","@SF HP","@NL",
+"     TT  u   u r    b   b o   o","@SF P","HH        HH e  e r    c   c u   u l e  e s  ss","@SF HP","@NL",
+"     TT   uuu  r    bbbb   ooo ","@SF P","HH        HH  ee  r     ccc   uuu  l  ee   sss ","@SF HP","@NL",
+"@NL",
+"           (c) Copyright Roger Bowler, Jan Jaeger, and others 1999-2010","@NL",
+"           (c) Copyright TurboHercules, SAS 2010 - All Rights Reserved","@NL",
+"            Contains Licensed Materials - Property of TurboHercules, SAS"
+};
+
+#define LOGO_BUFFERSIZE 256;
+#else // !defined(TURBO_HERCULES)
+
 /*
 static char *herclogo[]={
     " HHH          HHH   The S/370, ESA/390 and z/Architecture",
@@ -1283,6 +1349,9 @@ static char *herclogo[]={
 "           Copyright (C) 1999-2010 Roger Bowler, Jan Jaeger, and others"};
 
 #define LOGO_BUFFERSIZE 256;
+
+#endif // defined(TURBO_HERCULES)
+
 
 static char *buffer_addchar(char *b,size_t *l,size_t *al,char c)
 {
@@ -2987,7 +3056,7 @@ int     woff;                           /* Current offset in buffer  */
         /* Exit if desired screen position has been reached */
         if (wpos >= pos)
         {
-//          logmsg (_("console: Pos %4.4X reached at %4.4X\n"),
+//          LOGMSG (_("console: Pos %4.4X reached at %4.4X\n"),
 //                  wpos, woff);
 
 #ifdef FIX_QWS_BUG_FOR_MCS_CONSOLES
@@ -3003,7 +3072,7 @@ int     woff;                           /* Current offset in buffer  */
                 && buf[woff+6] == O3270_SFE)
             {
                 woff += 8;
-//              logmsg (_("console: Pos %4.4X adjusted to %4.4X\n"),
+//              LOGMSG (_("console: Pos %4.4X adjusted to %4.4X\n"),
 //                      wpos, woff);
         }
 #endif /*FIX_QWS_BUG_FOR_MCS_CONSOLES*/

@@ -304,7 +304,7 @@ DEVBLK   *dev;                   /* -> DEVBLK                       */
     for (i = 0; i < (int)VMDEV_NUM; i++)
        {
 #if 0
-           logmsg ("vmdevice_data: i=%i %4.4X %2.2X %2.2X %2.2X\n",i,
+           LOGMSG ("vmdevice_data: i=%i %4.4X %2.2X %2.2X %2.2X\n",i,
                    vmdev[i].vmhtype,vmdev[i].vmdevcls,vmdev[i].vmdevtyp,vmdev[i].vmdiags);
 #endif
            if (dev->devtype == vmdev[i].vmhtype)
@@ -314,7 +314,7 @@ DEVBLK   *dev;                   /* -> DEVBLK                       */
            }
        }
 #if 0
-    logmsg ("FOUND: %4.4X %2.2X %2.2X %2.2X\n",
+    LOGMSG ("FOUND: %4.4X %2.2X %2.2X %2.2X\n",
             vmentry->vmhtype,vmentry->vmdevcls,vmentry->vmdevtyp,vmentry->vmdiags);
 #endif
 
@@ -452,7 +452,7 @@ VRDCRCDT        rdat;                   /* Real device data          */
     if (r2 != 15)
         FETCH_FW(regs->GR_L(r2+1),&rdat);
 #if 0
-    logmsg ("Diagnose X\'024\':"
+    LOGMSG ("Diagnose X\'024\':"
             "devnum=%4.4X VRDCVDAT=%8.8X VRDCRCDT=%8.8X\n",
             devnum, vdat, rdat);
 #endif
@@ -1017,7 +1017,7 @@ BYTE       c;                           /* Character work area       */
     buf[39] = 0x00;
 
 #if 0
-    logmsg ("Diagnose X\'000\':"
+    LOGMSG ("Diagnose X\'000\':"
             "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
             "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n\t\t"
             "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
@@ -1562,7 +1562,7 @@ static  char timefmt[]="%m/%d/%y%H:%M:%S%m/%d/%Y%Y-%m-%d";
     /* Bytes 61-63 contain binary zeroes */
 
 #if 0
-    logmsg ("Diagnose X\'%3.3X\':"
+    LOGMSG ("Diagnose X\'%3.3X\':"
             "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
             "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n\t\t"
             "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "

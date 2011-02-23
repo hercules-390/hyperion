@@ -272,10 +272,10 @@ static void logger_logfile_write( void* pBuff, size_t nBytes )
 
 #ifdef OPTION_TIMESTAMP_LOGFILE
 /* ZZ FIXME:
- * This should really be part of logmsg, as the timestamps have currently
+ * This should really be part of log_msg, as the timestamps have currently
  * the time when the logger reads the message from the log pipe.  There can be 
  * quite a delay at times when there is a high system activity. Moving the timestamp 
- * to logmsg() will fix this.
+ * to log_msg() will fix this.
  * The timestamp option should also NOT depend on anything like daemon mode.
  * logs entries should always be timestamped, in a fixed format, such that 
  * log readers may decide to skip the timestamp when displaying (ie panel.c).

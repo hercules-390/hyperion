@@ -115,7 +115,7 @@
 #include "clock.h"        // (TOD definitions)
 
 #include "codepage.h"
-#include "logger.h"       // (logmsg, etc)
+#include "logger.h"       // (log_msg, etc)
 #include "hdl.h"          // (Hercules Dynamic Loader)
 
 #include "cache.h"

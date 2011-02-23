@@ -105,15 +105,15 @@ void do_test_msgs()
 {
     int  i;
     for (i=0; i < test_n; i++)
-        logmsg(   test_n_msg, test_msg_num++ );
+        LOGMSG(   test_n_msg, test_msg_num++ );
 
     if (         !test_p) return;
     for (i=0; i < test_p; i++)
-        logmsg(   test_p_msg, test_msg_num++ );
+        LOGMSG(   test_p_msg, test_msg_num++ );
 
     if (         !test_n) return;
     for (i=0; i < test_n; i++)
-        logmsg(   test_n_msg, test_msg_num++ );
+        LOGMSG(   test_n_msg, test_msg_num++ );
 
 }
 
@@ -121,13 +121,13 @@ void* test_thread(void* parg)
 {
     UNREFERENCED(parg);
 
-    logmsg("test thread: STARTING\n");
+    LOGMSG("test thread: STARTING\n");
 
     SLEEP( 5 );
 
     do_test_msgs();
 
-    logmsg("test thread: EXITING\n");
+    LOGMSG("test thread: EXITING\n");
     test_tid = 0;
     return NULL;
 }
@@ -146,13 +146,13 @@ int test_cmd(int argc, char *argv[],char *cmdline)
 
     if (test_tid)
     {
-        logmsg("ERROR: test thread still running!\n");
+        LOGMSG("ERROR: test thread still running!\n");
         return 0;
     }
 
     if (argc < 2 || argc > 4)
     {
-        logmsg("Format: \"$test p=#msgs n=#msgs &\" (args can be in any order)\n");
+        LOGMSG("Format: \"$test p=#msgs n=#msgs &\" (args can be in any order)\n");
         return 0;
     }
 

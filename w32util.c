@@ -3373,7 +3373,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
 
         // Now print ALL captured messages AT ONCE...
 
-        logmsg( "%s", pPipedProcessCtl->pszBuffer );
+        LOGMSG( "%s", pPipedProcessCtl->pszBuffer );
 
         // Free resources...
 
@@ -3523,7 +3523,7 @@ void w32_parse_piped_process_stdxxx_data ( PIPED_PROCESS_CTL* pPipedProcessCtl, 
 
         if (!pPipedProcessCtl)
         {
-            logmsg("%s\n",pbeg);    // send all child's msgs to Herc console
+            LOGMSG("%s\n",pbeg);    // send all child's msgs to Herc console
         }
         else
         {

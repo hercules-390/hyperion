@@ -981,7 +981,7 @@ U64     dreg;                           /* Double word work area     */
         /* Insert the cpu address to ensure a unique value */
         dreg |= regs->cpuad;
 
-// /*debug*/logmsg("Store TOD clock=%16.16" I64_FMT "X\n", dreg);
+// /*debug*/LOGMSG("Store TOD clock=%16.16" I64_FMT "X\n", dreg);
 
     /* Store TOD clock value at operand address */
     ARCH_DEP(vstore8) ( dreg, effective_addr2, b2, regs );
@@ -1024,14 +1024,14 @@ U64     dreg;                           /* Double word work area     */
     /* Check that all 16 bytes of the operand are accessible */
     ARCH_DEP(validate_operand) (effective_addr2, b2, 15, ACCTYPE_WRITE, regs);
 
-//  /*debug*/logmsg("Store TOD clock extended: +0=%16.16" I64_FMT "X\n",
+//  /*debug*/LOGMSG("Store TOD clock extended: +0=%16.16" I64_FMT "X\n",
 //  /*debug*/       dreg);
 
     /* Store the 8 bit TOD epoch, clock bits 0-51, and bits
        20-23 of the TOD uniqueness value at operand address */
     ARCH_DEP(vstore8) ( dreg, effective_addr2, b2, regs );
 
-//  /*debug*/logmsg("Store TOD clock extended: +8=%16.16" I64_FMT "X\n",
+//  /*debug*/LOGMSG("Store TOD clock extended: +8=%16.16" I64_FMT "X\n",
 //  /*debug*/       dreg);
 
     /* Store second doubleword value at operand+8 */
