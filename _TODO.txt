@@ -10,6 +10,18 @@
 
 -------------------------------------------------------------------------------
 
+  (BUG?) Issue: missing ckd dasd support for doing i/o to CE/SA cylinders:
+  http://tech.groups.yahoo.com/group/hercules-390/message/64487
+  ckddasd.c, ckddasd_execute_ccw, missing CCWs 0x44 (Diagnostic Sense),
+  0x53 (Diagnostic Load), 0x73 (Diagnostic Write), 0xC4 (Diagnostic Read)
+  and proper handling of 'CKDMASK_AAUTH_DIAG' Set File Mask for Seek and
+  Seek Cylinder CCWs (0x07, 0x0B). We should add CE/SA cyls to our dasdtab
+  and provide a dasdinit option to init dasd with them (or maybe *always*
+  create dasd with alternate and ce/sa cylinders and eliminate the option
+  altogether?).
+
+-------------------------------------------------------------------------------
+
   Maxrates off: reset/disable automatic maxrates
 
 -------------------------------------------------------------------------------
