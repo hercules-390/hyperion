@@ -589,7 +589,7 @@ char           *strtok_str = NULL;      /* save last position        */
             dev->ckdheads, dev->ckdtrks, dev->ckdtrksz);
 
     /* Locate the CKD dasd table entry */
-    dev->ckdtab = dasd_lookup (DASD_CKDDEV, NULL, dev->devtype, dev->ckdcyls);
+    dev->ckdtab = dasd_lookup (DASD_CKDDEV, NULL, dev->devtype, 0);
     if (dev->ckdtab == NULL)
     {
         WRMSG (HHC00415, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, dev->devtype);

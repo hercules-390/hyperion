@@ -1158,7 +1158,7 @@ CKDDEV         *ckdtab;                 /* -> CKD table entry        */
 char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Locate the CKD dasd table entry */
-    ckdtab = dasd_lookup (DASD_CKDDEV, NULL, devtype, volcyls);
+    ckdtab = dasd_lookup (DASD_CKDDEV, NULL, devtype, 0);
     if (ckdtab == NULL)
     {
         fprintf (stderr, MSG(HHC00415, "E", 0, 0, fname, devtype));

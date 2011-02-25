@@ -307,7 +307,7 @@ char           *strtok_str = NULL;
     {
         if (cyls < 0) cyls = idev->ckdcyls;
         else if (cyls == 0) cyls = (idev->hnd->used)(idev);
-        ckd = dasd_lookup (DASD_CKDDEV, NULL, idev->devtype, cyls);
+        ckd = dasd_lookup (DASD_CKDDEV, NULL, idev->devtype, 0);
         if (ckd == NULL)
         {
             fprintf (stderr, MSG(HHC02430, "E",
@@ -315,7 +315,6 @@ char           *strtok_str = NULL;
             close_image_file (icif);
             return -1;
         }
-        if (out == CCKD) cyls = ckd->cyls;
         if (cyls <= ckd->cyls && alt) cyls = ckd->cyls + ckd->altcyls;
         n = cyls * idev->ckdheads;
         max = idev->ckdtrks;
@@ -326,7 +325,7 @@ char           *strtok_str = NULL;
         fba_bytes_remaining = idev->fbanumblk * idev->fbablksiz;
         if (blks < 0) blks = idev->fbanumblk;
         else if (blks == 0) blks = (idev->hnd->used)(idev);
-        fba = dasd_lookup (DASD_FBADEV, NULL, idev->devtype, blks);
+        fba = dasd_lookup (DASD_FBADEV, NULL, idev->devtype, 0);
         if (fba == NULL)
         {
             fprintf (stderr, MSG(HHC02431, "E", blks));

@@ -1145,7 +1145,7 @@ BYTE            buf[4*65536];           /* buffer                    */
               + (devhdr.trksize[0]);
 
         /* ckd dasd lookup */
-        ckd = dasd_lookup (DASD_CKDDEV, NULL, devhdr.devtype, cyls);
+        ckd = dasd_lookup (DASD_CKDDEV, NULL, devhdr.devtype, 0);
         if (ckd == NULL)
         {
             if(dev->batch)
