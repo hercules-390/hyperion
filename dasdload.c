@@ -4413,9 +4413,9 @@ char           *strtok_str = NULL;      /* last token position       */
     outmaxdl = ckd->r1;
 
     /* Use default device size if requested size is omitted or
-       is zero or is "*" or compression is specified */
+       is zero or is "*" */
     reqcyls = 0;
-    if (sdevsz != NULL && strcmp(sdevsz, "*") != 0 && comp == 0xff)
+    if (sdevsz != NULL && strcmp(sdevsz, "*") != 0)
     {
         /* Validate the requested device size in cylinders */
         if (sscanf(sdevsz, "%u%c", &reqcyls, &c) != 1)
