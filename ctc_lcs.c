@@ -146,10 +146,7 @@ static int      ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
         &&  (pLCSDEV)->pLCSBLK->Port[(pLCSDEV)->bPort].fd != -1             \
         && !(pLCSDEV)->pLCSBLK->Port[(pLCSDEV)->bPort].fCloseInProgress     \
     )                                                                       \
-    {                                                                       \
-        TRACE("** ENQUEUE_REPLY_FRAME() failed...\n");                      \
-        SLEEP( 1 );                                                         \
-    }
+        usleep( CTC_DELAY_USECS )
 
 // ====================================================================
 //                    find_group_device
