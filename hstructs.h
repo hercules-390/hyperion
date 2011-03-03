@@ -1,5 +1,5 @@
-/* HSTRUCTS.H   (c) Copyright Roger Bowler, 1999-2010                */
-/*              (c) Copyright TurboHercules, SAS 2010                */
+/* HSTRUCTS.H   (c) Copyright Roger Bowler, 1999-2011                */
+/*              (c) Copyright TurboHercules, SAS 2011                */
 /*              Hercules Structure Definitions                       */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -1278,6 +1278,7 @@ struct DEVBLK {                         /* Device configuration block*/
         TID     tape_mountmon_tid;      /* Thread ID for async mnts  */
         u_int   utapemountreq;          /* Count of tape mounts      */    
         char   *pszVaultPath;           /* path to tape vault        */
+        void   *ptvfb;                  /* reserve pointer to struct */
 
         /* 3480/3490/3590 Message display */
         char   *tapemsg;                /* tape volser               */

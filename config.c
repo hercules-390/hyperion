@@ -1062,6 +1062,12 @@ int     i;                              /* Loop index                */
         /* Call the device close handler */
         (dev->hnd->close)(dev);
 
+    if ( dev->pszVaultPath != NULL )
+    {
+        free( dev->pszVaultPath );
+        dev->pszVaultPath = NULL;
+    }
+
     for (i = 0; i < dev->argc; i++)
         if (dev->argv[i])
             free(dev->argv[i]);
