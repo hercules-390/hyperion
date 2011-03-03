@@ -821,7 +821,7 @@ DLL_EXPORT int scandir
 
       if (!filter || filter(&current))
         {
-          struct dirent *copyentry = malloc(sizeof(struct dirent));
+          struct dirent *copyentry = (struct dirent *)malloc(sizeof(struct dirent));
           strlcpy(copyentry->d_name, current.d_name, sizeof(copyentry->d_name) );
           names[pos] = copyentry;
           pos++;
@@ -1120,22 +1120,22 @@ DLL_EXPORT BYTE *hostpath( BYTE *outpath, const BYTE *inpath, size_t buffsize )
     ASSERT( outpath && inpath && buffsize );
 
     if (0
-        || strncmp( inpath, "\\\\.\\", 4 ) == 0   // (Windows device name?)
-        || strncmp( inpath, "//./",    4 ) == 0   // (unnormalized format?)
+        || strncmp( (const char *)inpath, "\\\\.\\", 4 ) == 0   // (Windows device name?)
+        || strncmp( (const char *)inpath, "//./",    4 ) == 0   // (unnormalized format?)
     )
     {
-        strlcpy( outpath, "\\\\.\\", buffsize );
-        strlcat( outpath, inpath+4,  buffsize );
+        strlcpy( (char *)outpath, "\\\\.\\", buffsize );
+        strlcat( (char *)outpath, (const char *)inpath+4,  buffsize );
         return outpath;
     }
 
     if (*inpath && buffsize > 1)
     {
-        size_t inlen = strlen(inpath);
+        size_t inlen = strlen((const char *)inpath);
 
         if (1
             && inlen >= 11
-            && strncasecmp(inpath,"/cygdrive/",10) == 0
+            && strncasecmp((const char *)inpath,"/cygdrive/",10) == 0
             && isalpha(inpath[10])
         )
         {
@@ -3646,7 +3646,7 @@ DLL_EXPORT char*  w32_basename( const char* path )
     char ext[_MAX_EXT];
 
     bzero( _basename, sizeof(_basename) );      // zero for security reasons
-    _splitpath( path, NULL, NULL, fname, ext ); // C4996
+    _splitpath_s( path, NULL, 0, NULL, 0, fname, sizeof(fname), ext, sizeof(ext) ); // C4996
 
     strlcpy( _basename, fname, sizeof( _basename ) );
     strlcat( _basename, ext,   sizeof( _basename ) );
@@ -3670,7 +3670,7 @@ DLL_EXPORT char*  w32_dirname( const char* path )
     char *t;
 
     memset( _dirname, '\0', MAX_PATH );          // zero for security reasons
-    _splitpath( path, drive, dir, NULL, NULL ); // C4996
+    _splitpath_s( path, drive, sizeof(drive), dir, sizeof(dir), NULL, 0, NULL, 0 ); // C4996
 
     /* Remove trailing slashes */
     t = dir + strlen(dir) -1;

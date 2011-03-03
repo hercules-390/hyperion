@@ -134,26 +134,26 @@
 
       #pragma intrinsic ( _InterlockedCompareExchange64 )
 
-      static __inline BYTE __fastcall cmpxchg8_x86 ( U64 *old, U64 new, volatile void *ptr )
+      static __inline BYTE __fastcall cmpxchg8_x86 ( U64 *old, U64 unew, volatile void *ptr )
       {
           // returns 0 == success, 1 otherwise
           U64 tmp = *old;
-          *old = _InterlockedCompareExchange64( ptr, new, *old );
+          *old = _InterlockedCompareExchange64( ptr, unew, *old );
           return ((tmp == *old) ? 0 : 1);
       }
 
     #endif // ( _MSC_VER >= 1400 )
 
-    static __inline BYTE __fastcall cmpxchg4_x86 ( U32 *old, U32 new, volatile void *ptr )
+    static __inline BYTE __fastcall cmpxchg4_x86 ( U32 *old, U32 unew, volatile void *ptr )
     {
         // returns 0 == success, 1 otherwise
         U32 tmp = *old;
-        *old = _InterlockedCompareExchange( ptr, new, *old );
+        *old = _InterlockedCompareExchange( ptr, unew, *old );
         return ((tmp == *old) ? 0 : 1);
     }
 
     // (must follow cmpxchg4 since it uses it)
-    static __inline BYTE __fastcall cmpxchg1_x86 ( BYTE *old, BYTE new, volatile void *ptr )
+    static __inline BYTE __fastcall cmpxchg1_x86 ( BYTE *old, BYTE unew, volatile void *ptr )
     {
         // returns 0 == success, 1 otherwise
 
@@ -167,7 +167,7 @@
         val4  = CSWAP32(*ptr4);
 
         old4  = CSWAP32((val4 & ~(0xff << shift)) | (*old << shift));
-        new4  = CSWAP32((val4 & ~(0xff << shift)) | ( new << shift));
+        new4  = CSWAP32((val4 & ~(0xff << shift)) | ( unew << shift));
 
         cc    = cmpxchg4( &old4, new4, ptr4 );
 
