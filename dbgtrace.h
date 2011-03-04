@@ -5,6 +5,8 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This header implements the TRACE, ASSERT and VERIFY debugging     */
 /* macros. Use TRACE statements during and after developing your     */
@@ -20,8 +22,6 @@
 /* This allows you to enable/disable TRACING separate from _DEBUG    */
 /* on an individual module by module basis if needed or desired.     */
 /*-------------------------------------------------------------------*/
-
-// $Id:
 
 /* PROGRAMMING NOTE: this header purposely does not prevent itself   */
 /* from being #included multiple times. This is so default handling  */
