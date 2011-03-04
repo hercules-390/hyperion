@@ -4073,10 +4073,33 @@ void build_sense_3490 (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode)
 /*-------------------------------------------------------------------*/
 void build_sense_3590 (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode)
 {
+    unsigned char ERA;
+
     // Until we know for sure that we have to do something different,
     // we should be able to safely use the 3480 sense function here...
 
     build_sense_3480_etal ( ERCode, dev, unitstat, ccwcode );
+
+    ERA = dev->sense[3];
+    switch ( ERA )
+    {
+    case 0x24:
+    case 0x2b:
+    case 0x50:
+    case 0x51:
+    case 0x52:
+        dev->sense[2] = 0x40;
+        break;
+    case 0x21:
+    case 0x2A:
+    case 0x42:
+    case 0x4C:
+    case 0x48:
+        dev->sense[2] = 0x80;
+        break;
+    default:
+        break;
+    }
 }
 
 /*-------------------------------------------------------------------*/
