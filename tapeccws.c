@@ -3883,7 +3883,7 @@ void build_sense_3420 (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode)
 /*-------------------------------------------------------------------*/
 void build_sense_3480_etal (int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE ccwcode)
 {
-int sns4mat = 0x20;
+int sns4mat = TAPE_SNS7_FMT_20_3480;
 
     // NOTE: caller should have cleared sense area to zeros
     //       if this isn't a 'TAPE_BSENSE_STATUSONLY' call
@@ -3891,8 +3891,8 @@ int sns4mat = 0x20;
     switch(ERCode)
     {
     case TAPE_BSENSE_TAPEUNLOADED:
-        dev->sense[0] = SENSE_IR;
-        dev->sense[3] = 0x43; /* ERA 43 = Drive Not Ready */
+        dev->sense[0] = TAPE_SNS0_INTVREQ;
+        dev->sense[3] = TAPE_ERA_DRIVE_NOT_READY; /* ERA 43 = Int Req */
         switch(ccwcode)
         {
         case 0x01: // write
@@ -3905,15 +3905,15 @@ int sns4mat = 0x20;
             break;
         case 0x04: // sense
             *unitstat = CSW_CE | CSW_UC | CSW_DE;
-            dev->sense[3] = 0x2B; // ERA 2B
+            dev->sense[3] = TAPE_ERA_ENVIRONMENTAL_DATA_PRESENT;
             break;
         case 0x0f: // rewind unload
             *unitstat = CSW_CE | CSW_UC | CSW_DE | CSW_CUE;
-            dev->sense[3] = 0x2B; /* ERA 2B = Env Data present after a rewind unload command */
+            dev->sense[3] = TAPE_ERA_ENVIRONMENTAL_DATA_PRESENT;
             break;
         default:
-            dev->sense[3] = 0x2B; // ERA 2B
             *unitstat = CSW_CE | CSW_UC | CSW_DE;
+            dev->sense[3] = TAPE_ERA_ENVIRONMENTAL_DATA_PRESENT;
             break;
         } // end switch(ccwcode)
         break;
@@ -3924,101 +3924,108 @@ int sns4mat = 0x20;
         /* Note that Initial status & Secondary statuses are merged here */
         /* when they should be presented separatly */
         *unitstat = CSW_CE|CSW_DE|CSW_UC;
-        dev->sense[0] = SENSE_IR;
-        dev->sense[3] = 0x2B;
-        sns4mat = 0x21;
+        dev->sense[0] = TAPE_SNS0_INTVREQ;
+        dev->sense[3] = TAPE_ERA_ENVIRONMENTAL_DATA_PRESENT;
+        sns4mat = TAPE_SNS7_FMT_22_3480_EOV_STATS;
         break;
     case TAPE_BSENSE_TAPELOADFAIL:
         *unitstat = CSW_CE|CSW_DE|CSW_UC;
-        dev->sense[0] = SENSE_IR|0x02;
-        dev->sense[3] = 0x33; /* ERA 33 = Load Failed */
+        dev->sense[0] = TAPE_SNS0_INTVREQ|TAPE_SNS0_DEFUNITCK;
+        dev->sense[3] = TAPE_ERA_LOAD_FAILURE; /* ERA 33 = Load Failed */
         break;
     case TAPE_BSENSE_READFAIL:
         *unitstat = CSW_CE|CSW_DE|CSW_UC;
-        dev->sense[0] = SENSE_DC;
-        dev->sense[3] = 0x23;
+        dev->sense[0] = TAPE_SNS0_DATACHK;
+        dev->sense[3] = TAPE_ERA_READ_DATA_CHECK;
         break;
     case TAPE_BSENSE_WRITEFAIL:
         *unitstat = CSW_CE|CSW_DE|CSW_UC;
-        dev->sense[0] = SENSE_DC;
-        dev->sense[3] = 0x25;
+        dev->sense[0] = TAPE_SNS0_DATACHK;
+        dev->sense[3] = TAPE_ERA_WRITE_DATA_CHECK;
         break;
     case TAPE_BSENSE_BADCOMMAND:
         *unitstat = CSW_CE|CSW_DE|CSW_UC;
-        dev->sense[0] = SENSE_CR;
-        dev->sense[3] = 0x27;
+        dev->sense[0] = TAPE_SNS0_CMDREJ;
+        dev->sense[3] = TAPE_ERA_COMMAND_REJECT;
         break;
     case TAPE_BSENSE_INCOMPAT:
         *unitstat = CSW_CE|CSW_DE|CSW_UC;
-        dev->sense[0] = SENSE_CR;
-        dev->sense[3] = 0x29;
+        dev->sense[0] = TAPE_SNS0_CMDREJ;
+        dev->sense[3] = TAPE_ERA_FUNCTION_INCOMPATIBLE;
         break;
     case TAPE_BSENSE_WRITEPROTECT:
         *unitstat = CSW_CE|CSW_DE|CSW_UC;
-        dev->sense[0] = SENSE_CR;
-        dev->sense[3] = 0x30;
+        dev->sense[0] = TAPE_SNS0_CMDREJ;
+        dev->sense[3] = TAPE_ERA_WRITE_PROTECTED;
         break;
     case TAPE_BSENSE_EMPTYTAPE:
         *unitstat = CSW_CE|CSW_DE|CSW_UC;
-        dev->sense[0] = SENSE_DC;
-        dev->sense[3] = 0x31;
+        dev->sense[0] = TAPE_SNS0_DATACHK;
+        dev->sense[3] = TAPE_ERA_TAPE_VOID;
         break;
     case TAPE_BSENSE_ENDOFTAPE:
         *unitstat = CSW_CE|CSW_DE|CSW_UC;
-        dev->sense[0] = SENSE_EC;
-        dev->sense[3] = 0x38;
+        dev->sense[0] = TAPE_SNS0_EQUIPCHK;
+        dev->sense[3] = TAPE_ERA_PHYSICAL_END_OF_TAPE;
         break;
     case TAPE_BSENSE_LOADPTERR:
         *unitstat = CSW_CE|CSW_DE|CSW_UC;
         dev->sense[0] = 0;
-        dev->sense[3] = 0x39;
+        dev->sense[3] = TAPE_ERA_BACKWARD_AT_BOT;
         break;
     case TAPE_BSENSE_FENCED:
         *unitstat = CSW_CE|CSW_DE|CSW_UC;
-        dev->sense[0] = SENSE_EC|0x02; /* Deffered UC */
-        dev->sense[3] = 0x47;
+        dev->sense[0] = TAPE_SNS0_EQUIPCHK|TAPE_SNS0_DEFUNITCK; /* Deffered UC */
+        dev->sense[3] = TAPE_ERA_VOLUME_FENCED;
         break;
     case TAPE_BSENSE_BADALGORITHM:
         *unitstat = CSW_CE|CSW_DE|CSW_UC;
-        dev->sense[0] = SENSE_EC;
+        dev->sense[0] = TAPE_SNS0_EQUIPCHK;
         if (dev->devtype==0x3480)
         {
-            dev->sense[3] = 0x47;   // (volume fenced)
+            dev->sense[3] = TAPE_ERA_VOLUME_FENCED;   // (volume fenced)
         }
         else // 3490, 3590, etc.
         {
-            dev->sense[3] = 0x5E;   // (bad compaction algorithm)
+            dev->sense[3] = TAPE_ERA_COMPACT_ALGORITHM_INCOMPAT;   // (bad compaction algorithm)
         }
         break;
     case TAPE_BSENSE_LOCATEERR:
         *unitstat = CSW_CE|CSW_DE|CSW_UC;
-        dev->sense[0] = SENSE_EC;
-        dev->sense[3] = 0x44;
+        dev->sense[0] = TAPE_SNS0_EQUIPCHK;
+        dev->sense[3] = TAPE_ERA_LOCATE_BLOCK_FAILED;
         break;
     case TAPE_BSENSE_BLOCKSHORT:
         *unitstat = CSW_CE|CSW_DE|CSW_UC;
-        dev->sense[0] = SENSE_EC;
-        dev->sense[3] = 0x36;
+        dev->sense[0] = TAPE_SNS0_EQUIPCHK;
+        dev->sense[3] = TAPE_ERA_END_OF_DATA;
         break;
     case TAPE_BSENSE_ITFERROR:
         *unitstat = CSW_CE|CSW_DE|CSW_UC;
-        dev->sense[0] = SENSE_EC;
-        dev->sense[3] = 0x22;
+        dev->sense[0] = TAPE_SNS0_EQUIPCHK;
+        dev->sense[3] = TAPE_ERA_PATH_EQUIPMENT_CHECK;
         break;
     case TAPE_BSENSE_REWINDFAILED:
         *unitstat = CSW_CE|CSW_DE|CSW_UC;
-        dev->sense[0] = SENSE_EC;
-        dev->sense[3] = 0x2C; /* Generic Equipment Malfunction ERP code */
+        dev->sense[0] = TAPE_SNS0_EQUIPCHK;
+        dev->sense[3] = TAPE_ERA_PERMANENT_EQUIPMENT_CHECK; /* Generic Equipment Malfunction ERP code */
         break;
     case TAPE_BSENSE_READTM:
         *unitstat = CSW_CE|CSW_DE|CSW_UX;
         break;
     case TAPE_BSENSE_UNSOLICITED:
         *unitstat = CSW_CE|CSW_DE;
-        dev->sense[3] = 0x00;
+        dev->sense[3] = TAPE_ERA_UNSOLICITED_SENSE;
         break;
     case TAPE_BSENSE_STATUSONLY:
     default:
+        if ( ccwcode == 0x24 )      // READ BUFFERED LOG
+        {
+            if ( dev->tdparms.compress == 0 )
+                sns4mat = TAPE_SNS7_FMT_21_3480_READ_BUF_LOG;
+            else
+                sns4mat = TAPE_SNS7_FMT_30_3480_READ_BUF_LOG;
+        }
         *unitstat = CSW_CE|CSW_DE;
         break;
     } // end switch(ERCode)
@@ -4028,32 +4035,62 @@ int sns4mat = 0x20;
 
     /* Fill in the common sense information */
 
-    switch(sns4mat)
+    if ( sns4mat == TAPE_SNS7_FMT_20_3480              ||
+         sns4mat == TAPE_SNS7_FMT_21_3480_READ_BUF_LOG || 
+         sns4mat == TAPE_SNS7_FMT_22_3480_EOV_STATS    ||
+         sns4mat == TAPE_SNS7_FMT_30_3480_READ_BUF_LOG )
     {
-        default:
-        case 0x20:
-        case 0x21:
-            dev->sense[7] = sns4mat;
-            memset(&dev->sense[8],0,31-8);
-            break;
-    } // end switch(sns4mat)
+        dev->sense[7] = sns4mat;
+        memset(&dev->sense[8],0,31-8);
+    
+        if ( sns4mat == TAPE_SNS7_FMT_20_3480 )
+        {
+            dev->sense[25] = 0x06;                  // IDRC Installed & Upgraded Buffer
+            if ( sysblk.tamdir != NULL )            // is AUTOLOADER ENABLED
+            {
+                dev->sense[25] |= 0x01;             // ACL is installed
+            }
+        }
+
+        if ( dev->devtype == 0x3480 )
+        {
+            dev->sense[27] = 0xf0;                  // indicate 3480-A22/B22
+        }
+        else if ( dev->devtype==0x3490 )
+        {
+            dev->sense[27] = 0xe0;                  // indicate 3490-D31/D32
+        }
+        else if ( dev->devtype==0x3590 )
+        {
+            dev->sense[27] = 0xe0;                  // indicate same as 3490 for now
+        }
+        else ;
+
+        /* create a serial Number */
+        dev->sense[27] |= 0x0C;
+        dev->sense[28] = (BYTE)( ( dev->devnum >> 12 ) & 0xFF );
+        dev->sense[29] = (BYTE)( ( dev->devnum >>  4 ) & 0xFF );
+
+        dev->sense[30] = (BYTE)( dev->devnum & 0x000F ) | ( (BYTE)((BYTE)( dev->devnum & 0x000F )) << 4 );    
+    }
 
     if (strcmp(dev->filename,TAPE_UNLOADED) == 0
         || !dev->tmh->tapeloaded(dev,NULL,0))
     {
-        dev->sense[0] |= SENSE_IR;
-        dev->sense[1] |= SENSE1_TAPE_FP;
+        dev->sense[0] |= TAPE_SNS0_INTVREQ;
+        dev->sense[1] |= TAPE_SNS1_FILEPROT;
     }
     else
     {
-        dev->sense[0] &= ~SENSE_IR;
-        dev->sense[1] &= ~(SENSE1_TAPE_LOADPT|SENSE1_TAPE_FP);
-        dev->sense[1] |= IsAtLoadPoint( dev ) ? SENSE1_TAPE_LOADPT : 0;
+        dev->sense[0] &= ~TAPE_SNS0_INTVREQ;
+        dev->sense[1] &= ~(TAPE_SNS1_BOT|TAPE_SNS1_FILEPROT);
+        dev->sense[1] |= IsAtLoadPoint( dev ) ? TAPE_SNS1_BOT : 0;
         dev->sense[1] |= dev->readonly || dev->tdparms.logical_readonly ?
-            SENSE1_TAPE_FP : 0;
+            TAPE_SNS1_FILEPROT : 0;
     }
 
-    dev->sense[1] |= SENSE1_TAPE_TUA;
+    dev->sense[1] |= TAPE_SNS1_ONLINE;
+    dev->sense[2] |= TAPE_SNS2_REPORTING_CHAN_A;
 
 } /* end function build_sense_3480_etal */
 
@@ -4065,7 +4102,7 @@ void build_sense_3490 (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode)
     // Until we know for sure that we have to do something different,
     // we should be able to safely use the 3480 sense function here...
 
-    build_sense_3480_etal ( ERCode, dev, unitstat, ccwcode );
+    build_sense_3480_etal( ERCode, dev, unitstat, ccwcode );
 }
 
 /*-------------------------------------------------------------------*/
@@ -4074,30 +4111,30 @@ void build_sense_3490 (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode)
 void build_sense_3590 (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode)
 {
     unsigned char ERA;
-
     // Until we know for sure that we have to do something different,
     // we should be able to safely use the 3480 sense function here...
 
-    build_sense_3480_etal ( ERCode, dev, unitstat, ccwcode );
+    build_sense_3480_etal( ERCode, dev, unitstat, ccwcode );
 
     ERA = dev->sense[3];
     switch ( ERA )
     {
-    case 0x24:
-    case 0x2b:
-    case 0x50:
-    case 0x51:
-    case 0x52:
-        dev->sense[2] = 0x40;
+    case TAPE_ERA_LOAD_DISPLAY_CHECK:
+    case TAPE_ERA_ENVIRONMENTAL_DATA_PRESENT:
+    case TAPE_ERA_READ_BUFFERED_LOG:
+    case TAPE_ERA_END_OF_VOLUME_PROCESSING:
+    case TAPE_ERA_END_OF_VOLUME_COMPLETE:
+        dev->sense[2] |= TAPE_SNS2_NTP_BRAC_01_CONTINUE;
         break;
-    case 0x21:
-    case 0x2A:
-    case 0x42:
-    case 0x4C:
-    case 0x48:
-        dev->sense[2] = 0x80;
+    case TAPE_ERA_DATA_STREAMING_NOT_OPER:
+    case TAPE_ERA_UNSOL_ENVIRONMENTAL_DATA:
+    case TAPE_ERA_DEGRADED_MODE:
+    case TAPE_ERA_RECOVERED_CHECKONE_FAILURE:
+    case TAPE_ERA_CONTROLLING_COMP_RETRY_REQ:
+        dev->sense[2] |= TAPE_SNS2_NTP_BRAC_10_REISSUE;
         break;
     default:
+        dev->sense[2] |= TAPE_SNS2_NTP_BRAC_00_PERM_ERR;
         break;
     }
 }

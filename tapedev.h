@@ -542,4 +542,261 @@ extern int  readhdr_omaheaders (DEVBLK *dev, OMATAPE_DESC *omadesc,
 /*-------------------------------------------------------------------*/
 // (see SCSITAPE.H)
 
+/*
+|| Tape ERA, HRA and SENSE constants
+|| Note: For 3480/3490 tape drives HRA was an assumed function of the OS
+||       For 3590 (NTP) tape drives HRA is no longer assumed. The labels
+||       here are the 3480/3590 labels but the values are NTP values. See
+||       sense byte 2 for additional information.
+*/
+/*-------------------------------------------------------------------*/
+/* Host Recovery Action (HRA)    (these are the 3590 codes           */
+/*-------------------------------------------------------------------*/
+#define TAPE_HRA_PERMANENT_ERROR             0x00
+#define TAPE_HRA_RETRY                       0x80
+#define TAPE_HRA_DDR                         0x00       // Same as error for VT
+#define TAPE_HRA_RESUME                      0x40
+#define TAPE_HRA_OPERATOR_INTERVENTION       0xC0   
+
+// Sense byte 0
+
+#define  TAPE_SNS0_CMDREJ     0x80          // Command Reject
+#define  TAPE_SNS0_INTVREQ    0x40          // Intervention Required
+#define  TAPE_SNS0_BUSCHK     0x20          // Bus-out Check
+#define  TAPE_SNS0_EQUIPCHK   0x10          // Equipment Check
+#define  TAPE_SNS0_DATACHK    0x08          // Data check
+#define  TAPE_SNS0_OVERRUN    0x04          // Overrun
+#define  TAPE_SNS0_DEFUNITCK  0x02          // Deferred Unit Check
+#define  TAPE_SNS0_ASSIGNED   0x01          // Assigned Elsewhere
+
+// Sense byte 1
+
+#define  TAPE_SNS1_LOCFAIL    0x80          // Locate Failure
+#define  TAPE_SNS1_ONLINE     0x40          // Drive Online to CU
+#define  TAPE_SNS1_RSRVD      0x20          // Reserved
+#define  TAPE_SNS1_RCDSEQ     0x10          // Record Sequence Error
+#define  TAPE_SNS1_BOT        0x08          // Beginning of Tape
+#define  TAPE_SNS1_WRTMODE    0x04          // Write Mode
+#define  TAPE_SNS1_FILEPROT   0x02          // Write Protect
+#define  TAPE_SNS1_NOTCAPBL   0x01          // Not Capable
+
+// Sense byte 2
+/*
+||  NTP SENSE BYTE 2 
+||  Log code is in byte 2(3-4), BRAC is in byte 2(0-1)
+*/
+#define  TAPE_SNS2_NTP_BRAC_00_PERM_ERR     0x00      // BRAC 00 - PERM ERR
+#define  TAPE_SNS2_NTP_BRAC_01_CONTINUE     0x40      // BRAC 01 - Continue ( RESUME )
+#define  TAPE_SNS2_NTP_BRAC_10_REISSUE      0x80      // BRAC 10 - Reissue  ( RETRY  )
+#define  TAPE_SNS2_NTP_BRAC_11_DEFER_REISS  0xC0      // BRAC 11 - Deferred Reissue ( I/R ? )
+#define  TAPE_SNS2_NTP_LOG_CD0_NO_LOG       0x00
+#define  TAPE_SNS2_NTP_LOG_CD1_TEMP_OBR     0x08
+#define  TAPE_SNS2_NTP_LOG_CD2_PERM_OBR     0x10
+#define  TAPE_SNS2_NTP_LOG_CD3_A3           0x18
+
+#define  TAPE_SNS2_REPORTING_CHAN_PATH      0xF0      // Interface in the first 4 bits 
+#define  TAPE_SNS2_REPORTING_CHAN_A         0x20      // Channel A Interface
+#define  TAPE_SNS2_REPORTING_CHAN_B         0x40      // Channel B Interface
+#define  TAPE_SNS2_REPORTING_CU             0x00      // Always 0 (ZERO) Bit 4
+#define  TAPE_SNS2_ACL_ACTIVE               0x04      // AutoLoader in SYS MODE and has Cart
+#define  TAPE_SNS2_SYNCMODE                 0x02      // Tape Synchronous Mode
+#define  TAPE_SNS2_POSITION                 0x01      // Tape Positioning
+
+// Sense Byte 3
+/*-------------------------------------------------------------------*/
+/* Error Recovery Action (ERA) SENSE BYTE 3                          */
+/*-------------------------------------------------------------------*/
+
+#define  TAPE_ERA_UNSOLICITED_SENSE           0x00
+
+#define  TAPE_ERA_DATA_STREAMING_NOT_OPER     0x21
+#define  TAPE_ERA_PATH_EQUIPMENT_CHECK        0x22
+#define  TAPE_ERA_READ_DATA_CHECK             0x23
+#define  TAPE_ERA_LOAD_DISPLAY_CHECK          0x24
+#define  TAPE_ERA_WRITE_DATA_CHECK            0x25
+#define  TAPE_ERA_READ_OPPOSITE               0x26
+#define  TAPE_ERA_COMMAND_REJECT              0x27
+#define  TAPE_ERA_WRITE_ID_MARK_CHECK         0x28
+#define  TAPE_ERA_FUNCTION_INCOMPATIBLE       0x29
+#define  TAPE_ERA_UNSOL_ENVIRONMENTAL_DATA    0x2A
+#define  TAPE_ERA_ENVIRONMENTAL_DATA_PRESENT  0x2B
+#define  TAPE_ERA_PERMANENT_EQUIPMENT_CHECK   0x2C
+#define  TAPE_ERA_DATA_SECURE_ERASE_FAILURE   0x2D
+#define  TAPE_ERA_NOT_CAPABLE_BOT_ERROR       0x2E
+
+#define  TAPE_ERA_WRITE_PROTECTED             0x30
+#define  TAPE_ERA_TAPE_VOID                   0x31
+#define  TAPE_ERA_TENSION_LOST                0x32
+#define  TAPE_ERA_LOAD_FAILURE                0x33
+#define  TAPE_ERA_UNLOAD_FAILURE              0x34
+#define  TAPE_ERA_MANUAL_UNLOAD               0x34
+#define  TAPE_ERA_DRIVE_EQUIPMENT_CHECK       0x35
+#define  TAPE_ERA_END_OF_DATA                 0x36
+#define  TAPE_ERA_TAPE_LENGTH_ERROR           0x37
+#define  TAPE_ERA_PHYSICAL_END_OF_TAPE        0x38
+#define  TAPE_ERA_BACKWARD_AT_BOT             0x39
+#define  TAPE_ERA_DRIVE_SWITCHED_NOT_READY    0x3A
+#define  TAPE_ERA_DRIVE_RESET_BY_OPERATOR     0x3A
+#define  TAPE_ERA_MANUAL_REWIND_OR_UNLOAD     0x3B
+#define  TAPE_ERA_VOLUME_REMOVE_BY_OPERATOR   0x3B
+#define  TAPE_ERA_VOLUME_MANUALLY_UNLOADED    0x3C
+
+#define  TAPE_ERA_OVERRUN                     0x40
+#define  TAPE_ERA_DEVICE_DEFERRED_ACCESS      0x40
+#define  TAPE_ERA_RECORD_SEQUENCE_ERROR       0x41
+#define  TAPE_ERA_BLOCK_ID_SEQUENCE_ERROR     0x41
+#define  TAPE_ERA_DEGRADED_MODE               0x42
+#define  TAPE_ERA_DRIVE_NOT_READY             0x43
+#define  TAPE_ERA_INTERVENTION_REQ            0x43
+#define  TAPE_ERA_LOCATE_BLOCK_FAILED         0x44
+#define  TAPE_ERA_DRIVE_ASSIGNED_ELSEWHERE    0x45
+#define  TAPE_ERA_DRIVE_NOT_ONLINE            0x46
+#define  TAPE_ERA_VOLUME_FENCED               0x47
+#define  TAPE_ERA_UNSOL_INFORMATIONAL_DATA    0x48
+#define  TAPE_ERA_CONTROLLING_COMP_RETRY_REQ  0x48
+#define  TAPE_ERA_BUS_OUT_CHECK               0x49
+#define  TAPE_ERA_BUS_OUT_PARITY              0x49
+#define  TAPE_ERA_CU_ERP_FAILURE              0x4A
+#define  TAPE_ERA_CU_AND_DRIVE_INCOMPATIBLE   0x4B
+#define  TAPE_ERA_RECOVERED_CHECKONE_FAILURE  0x4C
+#define  TAPE_ERA_RESETTING_EVENT             0x4D
+#define  TAPE_ERA_MAX_BLOCKSIZE_EXCEEDED      0x4E
+#define  TAPE_ERA_DEVICE_CONTROLLER_INCOMP    0x4F
+
+#define  TAPE_ERA_READ_BUFFERED_LOG           0x50
+#define  TAPE_ERA_BUFFERED_LOG_OVERFLOW       0x50
+#define  TAPE_ERA_BUFFERED_LOG_END_OF_VOLUME  0x51
+#define  TAPE_ERA_END_OF_VOLUME_PROCESSING    0x51
+#define  TAPE_ERA_END_OF_VOLUME_COMPLETE      0x52
+#define  TAPE_ERA_GLOBAL_COMMAND_INTERCEPT    0x53
+#define  TAPE_ERA_TEMP_CHNL_INTERFACE_ERROR   0x54
+#define  TAPE_ERA_PERM_CHNL_INTERFACE_ERROR   0x55
+#define  TAPE_ERA_CHNL_PROTOCOL_ERROR         0x56
+#define  TAPE_ERA_GLOBAL_STATUS_INTERCEPT     0x57
+#define  TAPE_ERA_ATTENTION_INTERCEPT         0x57
+#define  TAPE_ERA_TAPE_LENGTH_INCOMPAT        0x5A
+#define  TAPE_ERA_FORMAT_3480_XF_INCOMPAT     0x5B
+#define  TAPE_ERA_FORMAT_3480_2_XF_INCOMPAT   0x5C
+#define  TAPE_ERA_TAPE_LENGTH_VIOLATION       0x5D
+#define  TAPE_ERA_COMPACT_ALGORITHM_INCOMPAT  0x5E
+
+/*
+|| 3490/3590/NTP IN AN AUTOMATED LIBRARY SYSTEM
+*/
+#define  TAPE_ERA_LIB_ATT_FAC_EQ_CHK          0x60
+#define  TAPE_ERA_LIB_MGR_OFFLINE_TO_SUBSYS   0x62
+#define  TAPE_ERA_LIB_MGR_CU_INCOMPAT         0x63
+#define  TAPE_ERA_LIB_VOLSER_IN_USE           0x64
+#define  TAPE_ERA_LIB_VOLUME_RESERVED         0x65
+#define  TAPE_ERA_LIB_VOLSER_NOT_IN_LIB       0x66
+#define  TAPE_ERA_LIB_CATEGORY_EMPTY          0x67
+#define  TAPE_ERA_LIB_ORDER_SEQ_CHK           0x68
+#define  TAPE_ERA_LIB_OUTPUT_STATIONS_FULL    0x69
+#define  TAPE_ERA_LIB_VOLUME_MISPLACED        0x6B
+#define  TAPE_ERA_LIB_MISPLACED_VOLUME_FOUND  0x6C
+#define  TAPE_ERA_LIB_DRIVE_NOT_UNLOADED      0x6D
+#define  TAPE_ERA_LIB_INACCESS_VOLUME_REST    0x6E
+#define  TAPE_ERA_LIB_OPTICS_FAILURE          0x6F
+#define  TAPE_ERA_LIB_MGR_EQ_CHK              0x70
+#define  TAPE_ERA_LIB_EQ_CHK                  0x71
+#define  TAPE_ERA_LIB_NOT_CAP_MANUAL_MODE     0x72
+#define  TAPE_ERA_LIB_INTERVENTION_REQ        0x73
+#define  TAPE_ERA_LIB_INFORMATION_DATA        0x74
+#define  TAPE_ERA_LIB_VOLSER_INACCESS         0x75
+#define  TAPE_ERA_LIB_ALL_CELLS_FULL          0x76
+#define  TAPE_ERA_LIB_DUP_VOLSER_EJECTED      0x77
+#define  TAPE_ERA_LIB_DUP_VOLSER_LEFT_IN_STAT 0x78
+#define  TAPE_ERA_LIB_UNREADABLE_INVLD_VOLSER 0x79
+#define  TAPE_ERA_LIB_READ_STATISTICS         0x7A
+#define  TAPE_ERA_LIB_VOLUME_MAN_EJECTED      0x7B
+#define  TAPE_ERA_LIB_OUT_OF_CLEANER_VOLUMES  0x7C
+#define  TAPE_ERA_LIB_VOLUME_EXPORTED         0x7D
+#define  TAPE_ERA_LIB_CATEGORY_IN_USE         0x7F
+
+#define  TAPE_ERA_LIB_UNEXPECTED_VOLUME_EJECT 0x80
+#define  TAPE_ERA_LIB_IO_STATION_DOOR_OPEN    0x81
+#define  TAPE_ERA_LIB_MGR_PROG_EXCEPTION      0x82
+#define  TAPE_ERA_LIB_DRIVE_EXCEPTION         0x83
+#define  TAPE_ERA_LIB_DRIVE_FAILURE           0x84
+#define  TAPE_ERA_LIB_SMOKE_DETECTION_ALERT   0x85
+#define  TAPE_ERA_LIB_ALL_CATEGORYS_RESERVED  0x86
+#define  TAPE_ERA_LIB_DUP_VOLSER_ADDITION     0x87
+#define  TAPE_ERA_LIB_DAMAGE_CART_EJECTED     0x88
+
+#define  TAPE_ERA_LIB_VOLUME_INACCESSIBLE     0x91
+
+/*
+|| SENSE BYTE 3 for NTP (3590) TAPES
+*/
+
+#define  TAPE_ERA_RAC_USE_BRAC                0xC0
+#define  TAPE_ERA_RAC_FENCE_DEVICE            0xC1
+#define  TAPE_ERA_RAC_FENCH_DEVICE_PATH       0xC2
+#define  TAPE_ERA_RAC_LONG_BUSY               0xC6
+#define  TAPE_ERA_RAC_READ_ALT                0xD2
+
+// Sense byte 4
+/*
+||  SENSE BYTE 4 FOR TAPES 
+*/
+#define  TAPE_SNS4_3420_TAPE_INDICATE         0x20      // EOT FOUND 
+#define  TAPE_SNS4_3480_FORMAT_MODE           0xC0       
+#define  TAPE_SNS4_3480_FORMAT_MODE_XF        0x80       
+#define  TAPE_SNS4_3490_FORMAT_MODE           0x00       
+#define  TAPE_SNS4_3490_FORMAT_MODE_RSVD      0x40
+#define  TAPE_SNS4_3490_FORMAT_MODE_IDRC      0x80
+#define  TAPE_SNS4_3490_FORMAT_MODE_SPECIAL   0xC0
+
+#define  TAPE_SNS4_3480_HO_CHAN_LOG_BLK_ID    0x3F      // 22-bits for BLK ID
+
+// Sense byte 5
+/*
+||  SENSE BYTE 5 FOR TAPES 
+*/
+#define  TAPE_SNS5_3480_MO_CHAN_LOG_BLK_ID    0xFF
+
+// Sense byte 6
+/*
+||  SENSE BYTE 5 FOR TAPES 
+*/
+#define  TAPE_SNS6_3480_LO_CHAN_LOG_BLK_ID    0xFF
+
+/*
+|| SENSE BYTES 4-5 FOR NTP BYTE 4 is Reason Code(RC) and 5 is Reason Qualifer Code(RQC)
+*/
+#define  TAPE_SNS4_5_NTP_RC_UA_RQC_DEV_LOG      0x1110      // UNIT ATTENTION/Device Log
+
+#define  TAPE_SNS4_5_NTP_RC_LA_RQC_DEV_CLEANED  0x1211      // LIBRARY ATTENTION/Device CLEANED
+#define  TAPE_SNS4_5_NTP_RC_LA_RQC_DEV_QUIESCED 0x1212      // LIBRARY ATTENTION/Device QUIESCE
+#define  TAPE_SNS4_5_NTP_RC_LA_RQC_DEV_RESUMED  0x1213      // LIBRARY ATTENTION/Device RESUMED
+
+#define  TAPE_SNS4_5_NTP_RC_CMD_REJ             0x2000      // COMMAND REJECT
+
+#define  TAPE_SNS4_5_NTP_RC_PE_RQC_GBL_CMD      0x2230      // PROTECTION EXCEPTION/Global Command
+#define  TAPE_SNS4_5_NTP_RC_PE_RQC_GBL_STATUS   0x2231      // PROTECTION EXCEPTION/Global Status
+
+#define  TAPE_SNS4_5_NTP_RC_BE_RQC_EOV          0x3012      // BOUNDARY EXCEPTION/End of Volume
+
+#define  TAPE_SNS4_5_NTP_RC_DC_RQC_NO_FMT_BOV   0x5050      // DATA CHECK/No Formatting at BOV
+#define  TAPE_SNS4_5_NTP_RC_DC_RQC_NO_FMT       0x5051      // DATA CHECK/No Formatting Past BOV
+
+#define  TAPE_SNS4_5_NTP_RC_OE_RQC_MED_NOT_LD   0x4010      // OPERATIONAL EXCEPTION/Medium Not Loaded
+#define  TAPE_SNS4_5_NTP_RC_OE_RQC_DRV_NOT_RDY  0x4011      // OPERATIONAL EXCEPTION/Drive Not Ready
+#define  TAPE_SNS4_5_NTP_RC_OE_RQC_DEV_LONG_BSY 0x4012      // OPERATIONAL EXCEPTION/Device long busy
+#define  TAPE_SNS4_5_NTP_RC_OE_RQC_LDR_IR       0x4020      // OPERATIONAL EXCEPTION/Loader Interv Req'd
+
+// Sense byte 7
+/*
+||  SENSE BYTE 5 FOR TAPES 
+*/
+#define  TAPE_SNS7_TAPE_SECURITY_ERASE_CMD    0x08
+#define  TAPE_SNS7_FMT_20_3480                0x20 // DRIVE AND CU ERROR INFORMATION
+#define  TAPE_SNS7_FMT_21_3480_READ_BUF_LOG   0x21 // BUFFERED LOG DATA WHEN NO IDRC is installed
+#define  TAPE_SNS7_FMT_30_3480_READ_BUF_LOG   0x30 // BUFFERED LOG DATA WHEN IDRC is installed
+#define  TAPE_SNS7_FMT_22_3480_EOV_STATS      0x22
+#define  TAPE_SNS7_FMT_23_ALT                 0x23
+#define  TAPE_SNS7_FMT_51_NTP                 0x51
+#define  TAPE_SNS7_FMT_70_3490                0x70
+#define  TAPE_SNS7_FMT_71_3490                0x71
+
 #endif // __TAPEDEV_H__

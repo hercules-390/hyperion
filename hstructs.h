@@ -1016,7 +1016,7 @@ struct DEVBLK {                         /* Device configuration block*/
         ESW     esw;                    /* Extended status word      */
         BYTE    ecw[32];                /* Extended control word     */
         U32     numsense;               /* Number of sense bytes     */
-        BYTE    sense[32];              /* Sense bytes               */
+        BYTE    sense[256];             /* Sense bytes 3480+ 64 bytes*/
         U32     numdevid;               /* Number of device id bytes */
         BYTE    devid[256];             /* Device identifier bytes   */
         U32     numdevchar;             /* Number of devchar bytes   */
