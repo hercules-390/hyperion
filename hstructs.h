@@ -791,6 +791,10 @@ struct SYSBLK {
         int     msglvl;                 /* Message level             */
 #define MLVL_NORMAL  0x01
 #define MLVL_VERBOSE 0x02
+#define MLVL_COMM    0x08
+#define MLVL_UR      0x10
+#define MLVL_DASD    0x20
+#define MLVL_TAPE    0x40
 #define MLVL_DEBUG   0x80               /* bits */
 #define MLVL_ANY     0xff
 #if defined(_DEBUG) || defined(DEBUG)

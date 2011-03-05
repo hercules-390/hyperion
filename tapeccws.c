@@ -1,4 +1,5 @@
-/* TAPECCWS.C   (c) Copyright Roger Bowler, 1999-2010                */
+/* TAPECCWS.C   (c) Copyright Roger Bowler, 1999-2011                */
+/*              (c) Copyright TurboHercules, SAS 2011                */
 /*              Hercules Tape Device Handler CCW Processing          */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

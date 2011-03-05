@@ -1,4 +1,5 @@
-/* TAPEDEV.H    (c) Copyright Ivan Warren and others, 2003-2010      */
+/* TAPEDEV.H    (c) Copyright Ivan Warren and others, 2003-2011      */
+/*              (c) Copyright TurboHercules, SAS 2011                */
 /*              Tape Device Handler Structure Definitions            */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

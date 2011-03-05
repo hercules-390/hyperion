@@ -1,6 +1,6 @@
-/* HSCCMD.C     (c) Copyright Roger Bowler, 1999-2010                */
+/* HSCCMD.C     (c) Copyright Roger Bowler, 1999-2011                */
 /*              (c) Copyright "Fish" (David B. Trout), 2002-2009     */
-/*              (c) Copyright TurboHercules, SAS 2010                */
+/*              (c) Copyright TurboHercules, SAS 2011                */
 /*              Execute Hercules System Commands                     */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -7226,6 +7226,38 @@ int msglevel_cmd(int argc, char *argv[], char *cmdline)
             {
                 msglvl |= MLVL_DEBUG;
             }
+            else if ( strabbrev("NOTAPE", check, 6) || strabbrev("-TAPE", check, 5) )
+            {
+                msglvl &= ~MLVL_TAPE;
+            }
+            else if ( strabbrev("TAPE", check, 5) || strabbrev("+TAPE", check, 5) )
+            {
+                msglvl |= MLVL_TAPE;
+            }
+            else if ( strabbrev("NODASD", check, 6) || strabbrev("-DASD", check, 5) )
+            {
+                msglvl &= ~MLVL_DASD;
+            }
+            else if ( strabbrev("DASD", check, 4) || strabbrev("+DASD", check, 5) )
+            {
+                msglvl |= MLVL_DASD;
+            }
+            else if ( strabbrev("NOUR", check, 4) || strabbrev("-UR", check, 3) )
+            {
+                msglvl &= ~MLVL_UR;
+            }
+            else if ( strabbrev("UR", check, 2) || strabbrev("+UR", check, 3) )
+            {
+                msglvl |= MLVL_UR;
+            }
+            else if ( strabbrev("NOCOMM", check, 7) || strabbrev("-COMM", check, 6) )
+            {
+                msglvl &= ~MLVL_COMM;
+            }
+            else if ( strabbrev("COMM", check, 5) || strabbrev("+COMM", check, 6) )
+            {
+                msglvl |= MLVL_COMM;
+            }
             else
             {
                 WRMSG( HHC02205, "E", argv[i], "" );
@@ -7255,6 +7287,15 @@ int msglevel_cmd(int argc, char *argv[], char *cmdline)
         strlcat(msgbuf, "debug ",sizeof(msgbuf));
     else
         strlcat(msgbuf, "nodebug ",sizeof(msgbuf));
+
+    if ( sysblk.msglvl & MLVL_TAPE )
+        strlcat(msgbuf, "tape ",sizeof(msgbuf));
+    if ( sysblk.msglvl & MLVL_DASD )
+        strlcat(msgbuf, "dasd ",sizeof(msgbuf));
+    if ( sysblk.msglvl & MLVL_UR )
+        strlcat(msgbuf, "ur ",sizeof(msgbuf));
+    if ( sysblk.msglvl & MLVL_COMM )
+        strlcat(msgbuf, "comm ",sizeof(msgbuf));
 
     if ( strlen(msgbuf) > 0 && msgbuf[(int)strlen(msgbuf) - 1] == ' ' )
         msgbuf[(int)strlen(msgbuf) - 1] = '\0';
