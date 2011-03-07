@@ -5823,7 +5823,8 @@ BYTE     unitstat, code = 0;
             ( CMD(argv[2],fsr,3) ) ||
             ( CMD(argv[2],bsr,3) ) ||
             ( CMD(argv[2],asf,3) ) ||
-            ( CMD(argv[2],wtm,3) )
+            ( CMD(argv[2],wtm,3) ) ||
+            ( CMD(argv[2],dvol1,4) )
           )
        )
     {
@@ -5976,6 +5977,34 @@ BYTE     unitstat, code = 0;
                 }
             }
         }
+    }
+    else if ( CMD(argv[2],dvol1,4) )
+    {
+        rc = dev->tmh->rewind( dev, &unitstat, code);
+        if ( rc == 0 )
+        {
+            char    sLABEL[65535];
+
+            rc = dev->tmh->read( dev, sLABEL, &unitstat, code );
+
+            if ( rc == 80 )
+            {
+                for( count = 0; count < rc; count++ )
+                sLABEL[count] = guest_to_host(sLABEL[count]);
+                sLABEL[52] = '\0';
+                if ( strncmp( sLABEL, "VOL1", 4 ) )
+                {
+                    WRMSG( HHC02805, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, &sLABEL[4] ); 
+                }
+                else
+                    WRMSG( HHC02805, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "missing" ); 
+            }
+            else
+            {
+                WRMSG( HHC02805, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "missing" ); 
+            }
+        }
+        rc = dev->tmh->rewind( dev, &unitstat, code);
     }
     else if ( CMD(argv[2],wtm,3) )
     {
@@ -7230,7 +7259,7 @@ int msglevel_cmd(int argc, char *argv[], char *cmdline)
             {
                 msglvl &= ~MLVL_TAPE;
             }
-            else if ( strabbrev("TAPE", check, 5) || strabbrev("+TAPE", check, 5) )
+            else if ( strabbrev("TAPE", check, 4) || strabbrev("+TAPE", check, 5) )
             {
                 msglvl |= MLVL_TAPE;
             }
@@ -7250,11 +7279,11 @@ int msglevel_cmd(int argc, char *argv[], char *cmdline)
             {
                 msglvl |= MLVL_UR;
             }
-            else if ( strabbrev("NOCOMM", check, 7) || strabbrev("-COMM", check, 6) )
+            else if ( strabbrev("NOCOMM", check, 6) || strabbrev("-COMM", check, 5) )
             {
                 msglvl &= ~MLVL_COMM;
             }
-            else if ( strabbrev("COMM", check, 5) || strabbrev("+COMM", check, 6) )
+            else if ( strabbrev("COMM", check, 4) || strabbrev("+COMM", check, 5) )
             {
                 msglvl |= MLVL_COMM;
             }

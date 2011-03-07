@@ -383,6 +383,9 @@ do { \
 #define HHC00233 "%1d:%04X Tape file '%s', '%s' volume '%s': not loaded; rename failed"
 #define HHC00234 "%1d:%04X Tape file '%s', '%s' volume '%s': not loaded; not enough space on volume"
 #define HHC00235 "%1d:%04X Tape file '%s', type '%s': tape created"
+#define HHC00236 "%1d:%04X Tape SCRATCH LIST for %s tapes not found"
+#define HHC00237 "%1d:%04X Tape SCRATCH '%s', type '%s': tape volume '%s' being auto loaded"
+#define HHC00238 "%1d:%04X Tape file '%s', type '%s': tape not created"
 
 // reserve 003xx for compressed dasd device related
 #define HHC00300 "%1d:%04X CCKD file: error initializing shadow files"
@@ -1824,6 +1827,7 @@ do { \
 #define HHC02802 "%1d:%04X Current file number %d"
 #define HHC02803 "%1d:%04X Current block number %d"
 #define HHC02804 "%1d:%04X File protect enabled"
+#define HHC02805 "%1d:%04X VOL1 = %s"
 
 
 // reserve 04xxx for host os specific component messages
@@ -1981,6 +1985,8 @@ do { \
 
 /* tapeccws tapedev */
 #define HHC93480 "%1d:%04X TDSPSTAT[%02X] msg1[%-8s] msg2[%-8s] msg[%-8s] mnt[%s] unmnt[%s] TDSPFLAG[%02X]"
+/* tape general     */
+#define HHC93590 "DBG: TAPE: %s"
 
 /* ctc/lcs/ndis */
 #define HHC90900 "DBG: CTC: %s device port %2.2X: %s"

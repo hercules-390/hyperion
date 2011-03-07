@@ -64,13 +64,17 @@ COMMAND("cmdsep",    SYSALL,             cmdsep_cmd,
 
 COMMAND("msglevel", SYSALL,             msglevel_cmd,
   "Display/Set current Message Display output",
-  "Format: msglevel [on|off|text|time|debug|nodebug|verbose|terse]\n"
+  "Format: msglevel [on|off|text|time|debug|nodebug|verbose|terse|{device}]\n"
   "  on      Normal message display\n"
   "  off     No messages are displayed\n"
   "  text    Text portion only of message is display\n"
   "  time    Timestamp is prefixed to message\n"
   "  debug   Messages prefixed with source and linenumber\n"
   "  nodebug Turn off debug\n"
+  "  tape    Tape related messages\n"
+  "  dasd    DASD related messages\n"
+  "  comm    Communications related messages\n"
+  "  ur      Unit Record related messages\n"
   "  verbose Display messages during configuration file processing\n"
   "  terse   Turn off verbose")
 
@@ -963,7 +967,8 @@ COMMAND("mt",          SYSCMDALL,          mt_cmd,
   "       bsf n     backward space 'n' files   (default = 1)\n"
   "       fsr n     forward space 'n' records  (default = 1)\n"
   "       bsr n     backward space 'n' records (default = 1)\n"
-  "       wtm n     write 'n' tapemarks        (default = 1)\n")
+  "       wtm n     write 'n' tapemarks        (default = 1)\n"
+  "       dvol1     display VOL1 header\n"                     )
 
 COMMAND("cd",        SYSCMDALL|SYSNDIAG, cd_cmd,
   "Change directory",

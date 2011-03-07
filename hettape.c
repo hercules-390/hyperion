@@ -222,6 +222,12 @@ int write_het (DEVBLK *dev, BYTE *buf, U16 blklen,
 int             rc;                     /* Return code               */
 off_t           cursize;                /* Current size for size chk */
 
+    if ( dev->hetb->writeprotect )
+    {
+        build_senseX(TAPE_BSENSE_WRITEPROTECT,dev,unitstat,code);
+            return -1;
+    }
+    
     /* Check if we have already violated the size limit */
     if(dev->tdparms.maxsize>0)
     {
@@ -279,9 +285,15 @@ off_t           cursize;                /* Current size for size chk */
 /* If successful, return value is zero.                              */
 /* If error, return value is -1 and unitstat is set to CE+DE+UC      */
 /*-------------------------------------------------------------------*/
-int write_hetmark (DEVBLK *dev, BYTE *unitstat,BYTE code)
+int write_hetmark( DEVBLK *dev, BYTE *unitstat, BYTE code )
 {
 int             rc;                     /* Return code               */
+    
+    if ( dev->hetb->writeprotect )
+    {
+        build_senseX(TAPE_BSENSE_WRITEPROTECT,dev,unitstat,code);
+        return -1;
+    }
 
     /* Write the tape mark */
     rc = het_tapemark (dev->hetb);

@@ -1214,7 +1214,7 @@ struct DEVBLK {                         /* Device configuration block*/
                                            for Read Subsystem Data   */
         HETB   *hetb;                   /* HET control block         */
 
-        struct                          /* HET device parms          */
+        struct                          /* TAPE device parms         */
         {
           u_int compress:1;             /* 1=Compression enabled     */
           u_int method:3;               /* Compression method        */
@@ -1225,6 +1225,7 @@ struct DEVBLK {                         /* Device configuration block*/
           u_int deonirq:1;              /* DE on IRQ on tape motion  */
                                         /* MVS 3.8j workaround       */
           u_int logical_readonly:1;     /* Tape is forced READ ONLY  */
+          u_int auto_create:1;          /* Create Tape if needed     */
           U16   chksize;                /* Chunk size                */
           off_t maxsize;                /* Maximum allowed TAPE file
                                            size                      */
