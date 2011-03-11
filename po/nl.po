@@ -6,21 +6,38 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hercules 2.16\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-08-13 14:39+0200\n"
+"POT-Creation-Date: 2011-03-11 14:50+0100\n"
 "PO-Revision-Date: 2002-05-10 16:16+0200\n"
 "Last-Translator: Jan Jaeger <jj@septa.nl>\n"
 "Language-Team: none <test@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=ISO-8859-1\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: cckddiag.c:496
+#: cckddiag.c:497
 #, c-format
 msgid "cckddiag: error opening file %s: %s\n"
 msgstr ""
 
-#: console.c:2302
-msgid "** BUG! console_remove() error! **\n"
+#: config.c:752
+#, c-format
+msgid "DEBUG : ASFL Adding %d\n"
+msgstr ""
+
+#: config.c:789
+#, c-format
+msgid "DEBUG : DSFL Removing %d\n"
+msgstr ""
+
+#: config.c:1419
+#, c-format
+msgid "DEBUG : FDBS FL Looking for %d\n"
+msgstr ""
+
+#: config.c:1425
+#, c-format
+msgid "DEBUG : FDBS SL Looking for %8.8x\n"
 msgstr ""
 
 #: cpu.c:651
@@ -28,7 +45,7 @@ msgstr ""
 msgid "program_int() passing to guest code=%4.4X\n"
 msgstr ""
 
-#: ctc_ctci.c:852 ctcadpt.c:742
+#: ctc_ctci.c:848 ctcadpt.c:748
 #, c-format
 msgid "CTC101W %4.4X: Write buffer contains invalid frame offset %u\n"
 msgstr ""
@@ -43,12 +60,12 @@ msgstr ""
 msgid "\r"
 msgstr ""
 
-#: dyngui.c:1850
+#: dyngui.c:1993
 #, c-format
 msgid "HHC90000D DBG: malloc() pszInputBuff failed: %s\n"
 msgstr ""
 
-#: dyngui.c:1863
+#: dyngui.c:2006
 #, c-format
 msgid "HHC90000D DBG: malloc() pszCommandBuff failed: %s\n"
 msgstr ""
@@ -58,42 +75,42 @@ msgstr ""
 msgid "Saving 64-bit Block I/O interrupt parm at %16.16X: %16.16X\n"
 msgstr ""
 
-#: float.c:3067
+#: float.c:3058
 #, c-format
 msgid "Prod Frac: %16.16llX %16.16llX\n"
 msgstr ""
 
-#: float.c:3070
+#: float.c:3061
 #, c-format
 msgid "Adnd Frac: %16.16llX %16.16llX\n"
 msgstr ""
 
-#: float.c:3117
+#: float.c:3108
 #, c-format
 msgid "Shft Frac: %16.16llX %16.16llX\n"
 msgstr ""
 
-#: float.c:3162
+#: float.c:3153
 #, c-format
 msgid "Barw Frac: %16.16llX %16.16llX\n"
 msgstr ""
 
-#: float.c:3174
+#: float.c:3165
 #, c-format
 msgid "P-A  Frac: %16.16llX %16.16llX\n"
 msgstr ""
 
-#: float.c:3190
+#: float.c:3181
 #, c-format
 msgid "A-P  Frac: %16.16llX %16.16llX\n"
 msgstr ""
 
-#: float.c:3197
+#: float.c:3188
 #, c-format
 msgid "Resl Frac: %16.16llX %16.16llX\n"
 msgstr ""
 
-#: general1.c:3935
+#: general1.c:3996
 msgid "MVCL destructive overlap: "
 msgstr ""
 
@@ -132,59 +149,50 @@ msgstr "HHCDC001E %1$s:Fout %3$s bij openen bestand \"%2$s\"\n"
 msgid "HHCIF005E %s: ioctl error doing %s on %s: %d %s\n"
 msgstr "HHCDC001E %1$s:Fout %3$s bij openen bestand \"%2$s\"\n"
 
-#: hostinfo.c:83
+#: hostinfo.c:267
 #, fuzzy, c-format
-msgid "Running on %s %s-%s.%s %s%s"
+msgid "Running on %s %s-%s. %s, %s%s"
 msgstr "Draaiend op %s %s%s %s %s\n"
 
-#: hsccmd.c:1253
+#: hsccmd.c:1267
 msgid "disabled"
 msgstr ""
 
-#: hsccmd.c:1253
+#: hsccmd.c:1267
 msgid "enabled"
 msgstr ""
 
-#: hsccmd.c:3508
-msgid "tracing"
-msgstr ""
-
-#: hsccmd.c:3509
-msgid "stepping"
-msgstr ""
-
-#: hsccmd.c:3509
-msgid "break"
-msgstr ""
-
-#: hsccmd.c:3510 hsccmd.c:7249
-msgid "on"
-msgstr ""
-
-#: hsccmd.c:3510 hsccmd.c:7252
-msgid "off"
-msgstr ""
-
-#: hsccmd.c:4359
+#: hsccmd.c:4917
 msgid "open "
 msgstr ""
 
-#: hsccmd.c:4360
+#: hsccmd.c:4918
 msgid "busy "
 msgstr ""
 
-#: hsccmd.c:4361
+#: hsccmd.c:4919
 msgid "pending "
 msgstr ""
 
-#: hscmisc.c:185
-#, c-format
-msgid "DO_SHUTDOWN_NOW EXIT\n"
+#: hsccmd.c:6496
+msgid "on"
 msgstr ""
 
-#: httpserv.c:322
+#: hsccmd.c:6499
+msgid "off"
+msgstr ""
+
+#: httpserv.c:339
 #, c-format
 msgid "cgi_var_dump: pointer(%p) name(%s) value(%s) type(%d)\n"
+msgstr ""
+
+#: service.c:739
+msgid "SYSA write:"
+msgstr ""
+
+#: service.c:772
+msgid "VT220 poll\n"
 msgstr ""
 
 #: sie.c:271
@@ -196,7 +204,7 @@ msgstr ""
 msgid "SIE: zone %d: mso="
 msgstr ""
 
-#: sie.c:745
+#: sie.c:783
 #, c-format
 msgid "SIE: interception code %d\n"
 msgstr ""
@@ -306,7 +314,7 @@ msgid ""
 "Where:\n"
 "\n"
 "   tapedrive    specifies the device filename of the SCSI tape drive.\n"
-"                Must begin with /dev to be recognized.\n"
+"                Must begin with /dev%s to be recognized.\n"
 "   awsfile      specifies the filename of the AWSTAPE disk file.\n"
 "\n"
 "The first filename is the input; the second is the output.\n"
@@ -337,8 +345,8 @@ msgid ""
 "   %2d           Unrecoverable I/O error obtaining status of SCSI device.\n"
 "   %2d           Unrecoverable I/O error reading block header\n"
 "                from AWSTAPE disk file.\n"
-"   %2d           AWSTAPE block size too large.\n"
 "   %2d           Unrecoverable I/O error reading data block.\n"
+"   %2d           AWSTAPE block size too large.\n"
 "   %2d           Unrecoverable I/O error writing tapemark.\n"
 "   %2d           Unrecoverable I/O error writing block header\n"
 "                to AWSTAPE disk file.\n"
@@ -346,7 +354,7 @@ msgid ""
 "\n"
 msgstr ""
 
-#: tapecopy.c:804
+#: tapecopy.c:817
 #, c-format
 msgid "          (tapemark)\n"
 msgstr ""

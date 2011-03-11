@@ -1578,6 +1578,15 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 
     memcpy( reply.MAC_Address, pIFaceMAC, IFHWADDRLEN );
 
+    /* Respond with a different MAC address for the LCS side */
+    /* unless the TAP mechanism is designed as such          */
+    /* cf : hostopts.h for an explanation                    */
+#if !defined(OPTION_TUNTAP_LCS_SAME_ADDR)
+
+    reply.MAC_Address[5]++;
+
+#endif
+
     // FIXME: Really should read /proc/net/dev to retrieve actual stats
 
     ENQUEUE_REPLY_FRAME( pLCSDEV, reply );

@@ -129,6 +129,7 @@
 #undef    OPTION_TUNTAP_SETMACADDR      /* (default initial setting) */
 #undef    OPTION_TUNTAP_DELADD_ROUTES   /* (default initial setting) */
 #undef    OPTION_TUNTAP_CLRIPADDR       /* (default initial setting) */
+#undef    OPTION_TUNTAP_LCS_SAME_ADDR   /* (default initial setting) */
 
 #if defined(HAVE_DECL_SIOCSIFNETMASK) && \
             HAVE_DECL_SIOCSIFNETMASK
@@ -226,6 +227,18 @@
 #endif
 
 #define IsEventSet(h)   (WaitForSingleObject(h,0) == WAIT_OBJECT_0)
+
+/* Because Fish's TUNTAP emulation isn't seen as a network interface */
+/* by the host operating system, there is only one MAC address.      */
+/* (The Windows "tap" is a capture and re-inject mechanism)          */
+/* For other tuntap implementation, the host and guest have          */
+/* separate abstracted NIC implementation - and therefore require    */
+/* a separate MAC address to address that (lest briding won't work)  */
+
+/* If at one point, a TUNTAP implementation comes up and is then     */
+/* seen as a proper network interface by Windows, then this option   */
+/* will have to go away - or anyway "undefined" for windows          */
+#define   OPTION_TUNTAP_LCS_SAME_ADDR   1
 
 
 /*-------------------------------------------------------------------*/
