@@ -387,6 +387,9 @@ do { \
 #define HHC00236 "%1d:%04X Tape SCRATCH LIST for %s tapes not found"
 #define HHC00237 "%1d:%04X Tape SCRATCH '%s', type '%s': tape volume '%s' being auto loaded"
 #define HHC00238 "%1d:%04X Tape file '%s', type '%s': tape not created"
+#define HHC00239 "%1d:%04X Tape AUTO_CREATE or AUTOINIT not specified; Mount request failed"
+#define HHC00240 "%1d:%04X Tape SCRATCH '%s', type '%s': tape volume '%s' being returned to pool"
+#define HHC00241 "%1d:%04X Tape file '%s', type '%s': '%s'"
 
 // reserve 003xx for compressed dasd device related
 #define HHC00300 "%1d:%04X CCKD file: error initializing shadow files"
@@ -1377,6 +1380,7 @@ do { \
 #define HHC02311 "%s completed"
 #define HHC02312 "Empty list"
 #define HHC02313 "Empty list"
+#define HHC02314 "%s"
 
 #define HHC02370 "%1d:%04X CU or LCU %s conflicts with existing CUNUM %04X SSID %04X CU/LCU %s"
 #define HHC02371 "%1d:%04X Adding device exceeds CU and/or LCU device limits"

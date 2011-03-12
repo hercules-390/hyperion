@@ -875,6 +875,16 @@ typedef struct _CUBLK {                 /* CU configuration block    */
         U16     devcount;               /* Number of associated dev  */
 } CUBLK;
 
+
+/*-------------------------------------------------------------------*/
+/* tdparms loader types (ACL mode)                                   */
+/*-------------------------------------------------------------------*/
+enum type_loader {  LDR_MANUAL, /* No automation             */
+                    LDR_AUTO,   /* Automatic Mode            */
+                    LDR_SILO,   /* Use LOAD DISPLAY          */
+                    LDR_QUEUE   /* Like AUTO                 */
+                 };
+
 /*-------------------------------------------------------------------*/
 /* Subsystem ID configuration block                                  */
 /*-------------------------------------------------------------------*/
@@ -1226,9 +1236,18 @@ struct DEVBLK {                         /* Device configuration block*/
                                         /* MVS 3.8j workaround       */
           u_int logical_readonly:1;     /* Tape is forced READ ONLY  */
           u_int auto_create:1;          /* Create Tape if needed     */
+          u_int no_initt:1;             /* default to SL labels      */
+          u_int SL_tape_mounted:1;      /* Tape is SL labeled        */
           U16   chksize;                /* Chunk size                */
           off_t maxsize;                /* Maximum allowed TAPE file
                                            size                      */
+          enum  type_loader loader;     /* Loader Operation          */
+          char *pszACLfilename;         /* Pointer to FQ filename for
+                                           ACL AUTO mode options     */
+          char *psACLvolsers;           /* pointer to ACL volser buf */
+          char *psACLvolser;            /* pointer to cur ACL volser */
+          u_int uiACLvolsers;           /* length of ACL volser buf  */
+
         }       tdparms;                /* HET device parms          */
 
         off_t   eotmargin;              /* Amount of space left before

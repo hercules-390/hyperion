@@ -87,7 +87,7 @@ int passedeot_faketape (DEVBLK *dev)
         dev->eotwarning = 0;
         return 0;
     }
-    if(dev->nxtblkpos+dev->eotmargin > dev->tdparms.maxsize)
+    if(dev->nxtblkpos + dev->eotmargin > dev->tdparms.maxsize)
     {
         dev->eotwarning = 1;
         return 1;

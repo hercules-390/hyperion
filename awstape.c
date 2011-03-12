@@ -76,17 +76,17 @@ int rewind_awstape (DEVBLK *dev,BYTE *unitstat,BYTE code)
 /*-------------------------------------------------------------------*/
 int passedeot_awstape (DEVBLK *dev)
 {
-    if(dev->nxtblkpos==0)
+    if( dev->nxtblkpos == 0 )
     {
         dev->eotwarning = 0;
         return 0;
     }
-    if(dev->tdparms.maxsize==0)
+    if( dev->tdparms.maxsize == 0 )
     {
         dev->eotwarning = 0;
         return 0;
     }
-    if(dev->nxtblkpos+dev->eotmargin > dev->tdparms.maxsize)
+    if( dev->nxtblkpos + dev->eotmargin > dev->tdparms.maxsize )
     {
         dev->eotwarning = 1;
         return 1;
