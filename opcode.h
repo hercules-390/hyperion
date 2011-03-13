@@ -1296,64 +1296,6 @@ do { \
                 (_effective_addr2) += (_regs)->GR((_b2)); \
     }
     
-#ifdef OPTION_OPTINST
-#define RX_BC_X0(_inst, _regs, _b2, _effective_addr2) \
-        RX_BC_X0_DECODER(_inst, _regs, _b2, _effective_addr2, 0, 0)
-
-#define RX_BC_X0_DECODER(_inst, _regs, _b2, _effective_addr2, _len, _ilc) \
-        { \
-          U32 temp = fetch_fw(_inst); \
-          (_effective_addr2) = temp & 0xfff; \
-          (_b2) = (temp >> 12) & 0xf; \
-          if(likely((_b2))) \
-            (_effective_addr2) += (_regs)->GR((_b2)); \
-        }
-#endif /* OPTION_OPTINST */
-
-#ifdef OPTION_OPTINST
-/* BHe: This decoder is for optimized instructions where the X2 is zero */
-#define RX_X0(_inst, _regs, _r1, _b2, _effective_addr2) \
-        RX_X0_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, 4, 4)
-#define RX0_X0(_inst, _regs, _r1, _b2, _effective_addr2) \
-        RX_X0_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, 4, 0)
-#define RX_B_X0(_inst, _regs, _r1, _b2, _effective_addr2) \
-        RX_X0_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, 0, 0)
-
-#define RX_X0_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc) \
-        { \
-          U32 temp = fetch_fw((_inst)); \
-          (_r1) = (temp >> 20) & 0xf; \
-          (_effective_addr2) = temp & 0xfff; \
-          (_b2) = (temp >> 12) & 0xf; \
-          if(likely((_b2))) \
-          { \
-            (_effective_addr2) += (_regs)->GR((_b2)); \
-            if((_len)) \
-              (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
-          }\
-          INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
-        }
-
-/* BHe: This decoder is for RX instructions with a not zero X2 */
-#define RX_Xn(_inst, _regs, _r1, _b2, _effective_addr2) \
-        RX_Xn_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, 4, 4)
-
-#define RX_Xn_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc) \
-        { \
-          U32 temp = fetch_fw(_inst); \
-          (_r1) = (temp >> 20) & 0xf; \
-          (_b2) = (temp >> 16) & 0xf; \
-          (_effective_addr2) = temp & 0xfff; \
-          (_effective_addr2) += (_regs)->GR((_b2)); \
-          (_b2) = (temp >> 12) & 0xf; \
-          if(likely(_b2)) \
-            (_effective_addr2) += (_regs)->GR((_b2)); \
-          if((_len)) \
-            (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
-          INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
-        }
-#endif /* OPTION_OPTINST */
-
 /* RXE register and indexed storage with extended op code */
 #undef RXE
 
@@ -1560,51 +1502,6 @@ do { \
             (_r1) = (temp >> 20) & 0xf; \
             INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
     }
-
-#ifdef OPTION_OPTINST
-#undef RXY_X0
-/* BHe: This decoder is for optimized instructions where the X2 is zero */
-#ifdef FEATURE_LONG_DISPLACEMENT
-  #define RXY_X0(_inst, _regs, _r1, _b2, _effective_addr2) \
-          RXY_X0_DECODER_LD(_inst, _regs, _r1, _b2, _effective_addr2, 6, 6)
-#else
-  #define RXY_X0(_inst, _regs, _r1, _b2, _effective_addr2) \
-          RXY_X0_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, 6, 6)
-#endif /* #ifdef FEATURE_LONG_DISPLACEMENT */
-
-#define RXY_X0_DECODER_LD(_inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc) \
-        { \
-          U32 temp; \
-          temp  = fetch_fw((_inst)); \
-          (_r1) = (temp >> 20) & 0xf; \
-          (_b2) = (temp >> 12) & 0xf; \
-          (_effective_addr2) = ((_inst)[4] << 12) | (temp & 0xfff); \
-          if((_effective_addr2) & 0x80000) \
-            (_effective_addr2) |= 0xfff00000; \
-          if((_b2)) \
-          { \
-            (_effective_addr2) += (_regs)->GR((_b2)); \
-            if((_len)) \
-              (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
-          } \
-          INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
-        }
-
-#define RXY_X0_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc) \
-        { \
-          U32 temp = fetch_fw((_inst)); \
-          (_r1) = (temp >> 20) & 0xf; \
-          (_effective_addr2) = temp & 0xfff; \
-          (_b2) = (temp >> 12) & 0xf; \
-          if((_b2)) \
-          { \
-            (_effective_addr2) += (_regs)->GR((_b2)); \
-            if((_len)) \
-              (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
-          } \
-          INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
-        }
-#endif /* OPTION_OPTINST */
 
 /* RS register and storage with additional R3 or M3 field */
 #undef RS
@@ -2419,32 +2316,6 @@ do { \
             INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
     }
     
-    
-#ifdef OPTION_OPTINST
-#define _SS_L(_inst, _regs, _b1, _effective_addr1, _b2, _effective_addr2) \
-        _SS_L_DECODER(_inst, _regs, _b1, _effective_addr1, _b2, _effective_addr2, 6, 6)
-#define _SS_L_DECODER(_inst, _regs, _b1, _effective_addr1, _b2, _effective_addr2, _len, _ilc) \
-        { \
-          U32 temp = fetch_fw(_inst); \
-          (_b1) = (temp >> 12) & 0xf; \
-          (_effective_addr1) = temp & 0xfff; \
-          if((_b1) != 0) \
-          { \
-            (_effective_addr1) += (_regs)->GR((_b1)); \
-            (_effective_addr1) &= ADDRESS_MAXWRAP((_regs)); \
-          } \
-          (_b2) = (_inst)[4] >> 4; \
-          (_effective_addr2) = (((_inst)[4] & 0x0F) << 8) | (_inst)[5]; \
-          if((_b2) != 0) \
-          { \
-            (_effective_addr2) += (_regs)->GR((_b2)); \
-            (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
-          } \
-          INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
-        }
-#endif /* OPTION_OPTINST */
-
-
 /* SSE storage to storage with extended op code */
 #undef SSE
 
@@ -4312,111 +4183,5 @@ DEF_INST(test_data_group_dfp_short);
 #if defined(FEATURE_PFPO)
 DEF_INST(perform_floating_point_operation);
 #endif /*defined(FEATURE_PFPO)*/
-
-#ifdef OPTION_OPTINST
-/* RX zero x2 optimized instructions */
-DEF_INST(40_0); /* STH */
-DEF_INST(41_0); /* LA */
-DEF_INST(42_0); /* STC */
-DEF_INST(43_0); /* IC */
-DEF_INST(44_0); /* EX */
-DEF_INST(45_0); /* BAL */
-DEF_INST(46_0); /* BCT */
-DEF_INST(48_0); /* LH */
-DEF_INST(49_0); /* CH */
-DEF_INST(4A_0); /* AH */
-DEF_INST(4B_0); /* SH */
-DEF_INST(4C_0); /* MH */
-DEF_INST(4D_0); /* BAS */
-DEF_INST(4E_0); /* CVD */
-DEF_INST(4F_0); /* CVB */
-DEF_INST(50_0); /* ST */
-DEF_INST(51_0); /* LAE */
-DEF_INST(54_0); /* N */
-DEF_INST(55_0); /* CL */
-DEF_INST(56_0); /* O */
-DEF_INST(57_0); /* X */
-DEF_INST(58_0); /* L */
-DEF_INST(59_0); /* C */
-DEF_INST(5A_0); /* A */
-DEF_INST(5B_0); /* S */
-DEF_INST(5C_0); /* M */
-DEF_INST(5D_0); /* D */
-DEF_INST(5E_0); /* AL */
-DEF_INST(5F_0); /* SL */
-DEF_INST(71_0); /* MS */
-
-/* Optimized BCR instructions */
-DEF_INST(nop2);
-DEF_INST(071_);
-DEF_INST(072_);
-DEF_INST(073_);
-DEF_INST(074_);
-DEF_INST(075_);
-/* 076x not optimized */
-DEF_INST(077_);
-DEF_INST(078_);
-/* 079x not optimized */
-DEF_INST(07A_);
-DEF_INST(07B_);
-DEF_INST(07C_);
-DEF_INST(07D_);
-DEF_INST(07E_);
-DEF_INST(07E0);
-DEF_INST(07F_);
-DEF_INST(07F0);
-
-/* Optimized BC instructions */
-DEF_INST(nop4);
-DEF_INST(4710);
-DEF_INST(4720);
-DEF_INST(4730);
-DEF_INST(4740);
-DEF_INST(4750);
-/* 4760 not optimized */
-DEF_INST(4770);
-DEF_INST(4780);
-/* 4790 not optimized */
-DEF_INST(47A0);
-DEF_INST(47B0);
-DEF_INST(47C0);
-DEF_INST(47D0);
-DEF_INST(47E0);
-DEF_INST(47F0);
-
-/* Optimized single bit TM instruction */
-DEF_INST(91sb);
-
-/* Optimized BRC instructions */
-DEF_INST(nop4);
-DEF_INST(A714);
-DEF_INST(A724);
-DEF_INST(A734);
-DEF_INST(A744);
-DEF_INST(A754);
-/* A764 not optimized */
-DEF_INST(A774);
-DEF_INST(A784);
-/* A794 not optimized */
-DEF_INST(A7A4);
-DEF_INST(A7B4);
-DEF_INST(A7C4);
-DEF_INST(A7D4);
-DEF_INST(A7E4);
-DEF_INST(A7F4);
-
-/* Optimized ICM instructions */
-DEF_INST(BF_7);
-DEF_INST(BF_F);
-
-/* Optimized zero x2 instructions */
-DEF_INST(E3_0______04);
-DEF_INST(E3_0______08);
-DEF_INST(E3_0______20);
-DEF_INST(E3_0______21);
-DEF_INST(E3_0______24);
-DEF_INST(E3_0______80);
-DEF_INST(E3_0______90);
-#endif /* OPTION_OPTINST */
 
 /* end of OPCODE.H */

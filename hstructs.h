@@ -333,15 +333,7 @@ struct REGS {                           /* Processor registers       */
                *z900_runtime_opcode_ec________xx,
                *z900_runtime_opcode_ed________xx;
                
-#ifdef OPTION_OPTINST
-        const zz_func
-               *s370_runtime_opcode_e3_0______xx,
-               *s390_runtime_opcode_e3_0______xx,
-               *z900_runtime_opcode_e3_0______xx;
-#endif /* OPTION_OPTINST */               
-
      /* TLB - Translation lookaside buffer                           */
-
         unsigned int tlbID;             /* Validation identifier     */
         TLB     tlb;                    /* Translation lookaside buf */
         BYTE    blkend[16];             /* Name of block  END        */

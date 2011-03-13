@@ -71,7 +71,6 @@
 //                                         locked during execution   */
 #define OPTION_ENHANCED_DEVICE_ATTACH   /* Multiple device att feat  */
 //#define  OPTION_BUILTIN_SYMBOLS       /* Internal Symbols Defined  */
-#undef  OPTION_OPTINST                  /* Optimized instructions    */
 
 #if defined(OPTION_BUILTIN_SYMBOLS) && !defined(OPTION_CONFIG_SYMBOLS)
   #error OPTION_BUILTIN_SYMBOLS requires OPTION_CONFIG_SYMBOLS

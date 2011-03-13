@@ -1274,30 +1274,6 @@ U32     n;                              /* 32-bit operand values     */
 }
 
 
-#ifdef OPTION_OPTINST
-/*-------------------------------------------------------------------*/
-/* 5F_0 SL    - Subtract Logical                                [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(5F_0)
-{
-int     r1;                             /* Value of R field          */
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
-
-    RX_X0(inst, regs, r1, b2, effective_addr2);
-
-    /* Load second operand from operand address */
-    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-    /* Subtract unsigned operands and set condition code */
-    regs->psw.cc =
-            sub_logical (&(regs->GR_L(r1)),
-                    regs->GR_L(r1),
-                    n);
-}
-#endif /* OPTION_OPTINST */
-
 /*-------------------------------------------------------------------*/
 /* 0A   SVC   - Supervisor Call                                 [RR] */
 /*-------------------------------------------------------------------*/
