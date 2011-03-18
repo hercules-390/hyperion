@@ -1,31 +1,12 @@
 /* DYN76   (c) Copyright Jason Paul Winter, 2010                      */
 /*             See license_dyn76.txt for licensing                    */
-/* DYN76.C (c) Copyright Harold Grovesteen, 2010                      */ 
+/* DYN76.C (c) Copyright Harold Grovesteen, 2010-2011                 */ 
 /*   Released under "The Q Public License Version 1"                  */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to   */
 /*   Hercules.                                                        */
 
 // $Id$
 
-/*
-*** For *nix type systems: (be warned: this information is quite old!)
-*** compile by: (Update "i686" to "i586" if required.) ***
-
-gcc -DHAVE_CONFIG_H -I. -fomit-frame-pointer -O3 -march=i686 -W -Wall -shared -export-dynamic -o dyn76.dll dyn76.c .libs/libherc.dll.a .libs/libhercs.dll.a
-
-  *** Or ***
-  
-gcc -DHAVE_CONFIG_H -I. -fomit-frame-pointer -O3 -march=i686 -W -Wall -shared -export-dynamic -o dyn76.dll dyn76.c hercules.a
-
-libherc*.dll.a - is windows only, it's not required on unix.
-It provides back-link support under cygwin.
-
-If hercules is built without libtool, then hercules.a should
-be used to include backlink support.
-
-You can then issue ldmod dyninst dyn76 from the hercules panel,
-or add the same statement to the hercules.cnf file.
-*/
 
 #include "hstdinc.h"
  
@@ -51,81 +32,35 @@ or add the same statement to the hercules.cnf file.
 /*-------------------------------------------------------------------*/
 
 /* These macros allow retrieving and setting of register contents from/to
-   the Compatibility Mode Parameter Block, which is in essence a R0-R15
-   register save area.  These macros ensure storage keys and accesses are
-   checked for the parameter block.
+   the Compatibility Parameter Block, which is in essence a R0-R15 register 
+   save area.  These macros ensure storage keys and accesses are checked for 
+   the parameter block.
 */
 
 #define set_reg(_r, _v) \
     ARCH_DEP(vstore4)((U32)(_v), (VADR)cmpb+(_r * 4), USE_REAL_ADDR, regs)
 #define get_reg(_v, _r) \
     _v = ARCH_DEP(vfetch4)((VADR)(cmpb+(_r * 4)), USE_REAL_ADDR, regs)
-
-#if 0
- #if defined(WIN32) && !defined(HDL_USE_LIBTOOL)
-/* We need to do some special tricks for cygwin here, since cygwin   */
-/* does not support backlink and we need to resolve symbols during   */
-/* dll initialisation (REGISTER/RESOLVER). Opcode tables are renamed */
-/* such that no naming conflicts occur.                              */
-  #define opcode_table opcode_table_r
-  #define opcode_01xx  opcode_01xx_r
-  #define opcode_a5xx  opcode_a5xx_r
-  #define opcode_a4xx  opcode_a4xx_r
-  #define opcode_a7xx  opcode_a1xx_r
-  #define opcode_b2xx  opcode_b2xx_r
-  #define opcode_b3xx  opcode_b3xx_r
-  #define opcode_b9xx  opcode_b9xx_r
-  #define opcode_c0xx  opcode_c0xx_r
-  #define opcode_e3xx  opcode_e3xx_r
-  #define opcode_e5xx  opcode_e5xx_r
-  #define opcode_e6xx  opcode_e6xx_r
-  #define opcode_ebxx  opcode_ebxx_r
-  #define opcode_ecxx  opcode_ecxx_r
-  #define opcode_edxx  opcode_edxx_r
-  #define s370_opcode_table s370_opcode_table_r
-  #define s390_opcode_table s390_opcode_table_r
-  #define z900_opcode_table z900_opcode_table_r
- #endif /* defined(WIN32) && !defined(HDL_USE_LIBTOOL) */
- 
- #if defined(WIN32) && !defined(HDL_USE_LIBTOOL)
-  #undef opcode_table
-  #undef opcode_01xx
-  #undef opcode_a5xx
-  #undef opcode_a4xx
-  #undef opcode_a7xx
-  #undef opcode_b2xx
-  #undef opcode_b3xx
-  #undef opcode_b9xx
-  #undef opcode_c0xx
-  #undef opcode_e3xx
-  #undef opcode_e5xx
-  #undef opcode_e6xx
-  #undef opcode_ebxx
-  #undef opcode_ecxx
-  #undef opcode_edxx
-  #undef s370_opcode_table
-  #undef s390_opcode_table
-  #undef z900_opcode_table
- #endif /* defined(WIN32) && !defined(HDL_USE_LIBTOOL) */
-#endif
+    
+/* Compile with debugging */
+#define DYN76_DEBUG
 
 /* Keep track of open files, a utility can then be used to close them if needed (fn3) */
-
-//typedef struct fkeeper_tag * fkeeper_ptr;
 struct fkeeper 
 {
     struct fkeeper *next; /* May or may not end up in the global list */
     U32  SaveArea;        /* Space to save a work register */
     U32  id;              /* Used to identify this fkeeper to the guest */
-    int  handle;          /* linked list handle for clean-ups */
+    int  handle;          /* Host file system handle */
     int  mode;            /* Text/Binary-Mode */
     int  data;            /* filenames index and for read/write */
     char oldname  [260];
     char filename [260];  /* Also used for 256 byte read/write buffer */
 };
 
-//static fkeeper_ptr fkpr_head = NULL;
-static struct fkeeper *fkpr_head = NULL;
+/* File Keeper list.  New entries are added at the top of the list */
+static struct fkeeper *fkpr_head = NULL;  /* open file status list */
+static struct fkeeper *rst_head = NULL;   /* Restart list */
 
 static unsigned char DCCascii_to_ebcdic[] = 
 {
@@ -167,7 +102,6 @@ static unsigned char DCCebcdic_to_ascii[] =
     "\x30\x31\x32\x33\x34\x35\x36\x37\x38\x39\xB3\xDB\xDC\xD9\xDA\x9F"
 };
 
-//static void StrConverter (unsigned char * s, unsigned char * cct)
 static void StrConverter (char * s, unsigned char * cct) 
 {
     int i = 0;
@@ -207,6 +141,7 @@ static void MemConverter (char * s, unsigned char * cct, int len)
 static LOCK nfile_lock;
 static long nfile_init_req = 1;
 static U32 nfile_id = 0;
+statuc U32 restart_id = 0;
 
 static void nfile_init () 
 {
@@ -239,11 +174,11 @@ static void nfile_init ()
 #define _O_EXCL   O_EXCL
 #endif
 
+#if 0
 static int GetMode (int h) 
 {
     int mode = 0;
     struct fkeeper *fk;
-    //fkeeper_ptr fk;
 
     dolock (nfile_lock); /* Take ownership of the list */
     fk = fkpr_head; /* Search the list */
@@ -280,17 +215,19 @@ static int SetMode (int h, int m)
     unlock (nfile_lock); /* Release ownership of the list */
     return (mode);
 }
+# endif
 
 static struct fkeeper * FindFK (U32 id)
 {
     struct fkeeper *fk;
 
     dolock (nfile_lock); /* Take ownership of the list */
-    fk = fkpr_head; /* Search the list */
+    fk = fkpr_head;      /* Search the list */
     while (fk) 
     {
         if (fk->id == id) 
         {   /* Found the entry */
+            unlock (nfile_lock);
             return fk;
         }
         fk = fk->next;
@@ -300,15 +237,15 @@ static struct fkeeper * FindFK (U32 id)
     return 0;
 }
 
-
+#if 0
 static void RemoveFK (int h) 
 {
     struct fkeeper *pfk;
     struct fkeeper *fk;
 
     dolock (nfile_lock); /* Take ownership of the list */
-    pfk = NULL;
-    fk = fkpr_head; /* Search the list */
+    pfk = NULL;          /* previous entry */
+    fk = fkpr_head;      /* Current entry, starting with the head */
     while (fk) 
     {
         if (fk->handle == h) 
@@ -320,11 +257,13 @@ static void RemoveFK (int h)
             free (fk);
             break;
         }
-        pfk = fk;
-        fk = fk->next;
+        /* Set up for next cycle */
+        pfk = fk;      /* current entry becomes the previous */
+        fk = fk->next; /* current entry's next, becomes the current */
     }
     unlock (nfile_lock); /* Release ownership of the list */
 }
+#endif
 
 static void RemoveFKByID (U32 id) 
 {
@@ -337,7 +276,7 @@ static void RemoveFKByID (U32 id)
     while (fk) 
     {
         if (fk->id == id) 
-        {   /* Found the entry? */
+        {   /* Found the entry */
             if (pfk) /* Wasn't the head entry */
                 pfk->next = fk->next;
             else     /* Was the head entry */
@@ -409,33 +348,23 @@ static int RemoveFKByName (char * filename) {
   R15 = Return Code (0 = ok/handle, +ve = handle, -ve = errno)
 */
 
-// void ARCH_DEP(hdiagf18_FC) (U32 options, CMPB *cmpb, REGS * regs)
 void ARCH_DEP(hdiagf18_FC) (U32 options, VADR cmpb, REGS *regs)
 {
-    int    space_ctl;   /* This is used to control address space selection */
+    int    space_ctl;           /* This is used to control address space selection */
     int    i;
-    struct fkeeper *fk = NULL;
+    int    handle = 0;          /* Host file file handle for this file */
+    U32    ghandle = 0;         /* Guest file descriptor */
+    struct fkeeper *fk = NULL;  /* Host file structure */
+    struct fkeeper *rfk = NULL; /* Restart structure */
+    
     /* Pseudo register contents are cached here once retrieved */
-    U32     R0;
-    U32     R1;
-    U32     R2;
-    U32     R3;
-    U32     R4;
-    U32     R5;
-    U32     R15;
-
-#if 0
-DLL_EXPORT DEF_INST(dyninst_opcode_76) {
-    int     r1;              /* Value of R field        */
-    int     b2;              /* Base of effective addr  */
-    VADR    effective_addr2; /* Effective address       */
-
-    /*  vv---vv---------------- input variables to NFILE */
-    RX(inst, regs, r1, b2, effective_addr2);
-    /*                     ^^-- becomes yyy+gr[b]+gr[c] */
-    /*                 ^^------ becomes access register c */
-    /*             ^^---------- becomes to-store register a */
-#endif
+    U32    R0;
+    U32    R1;
+    U32    R2;
+    U32    R3;
+    U32    R4;
+    U32    R5;
+    U32    R15;
 
     /* Initialise the LOCK on our first use */
     if (nfile_init_req) 
@@ -443,45 +372,93 @@ DLL_EXPORT DEF_INST(dyninst_opcode_76) {
         nfile_init_req = 0;
         nfile_init ();
     }
-
-    /* The following 4 functions are always ready to attempt 
-       and they are not interruptible
-    */
     
+#ifdef DYN76_DEBUG
+    LOGMSG("DF18: CFILE Validating FOCPB Address %X\n", cmpb);
+#endif
+    
+    /* CPB must be on a doubleword and must not cross physical page boundary */
+    if ( ((cmpb & 0x7) != 0 ) ||
+         (((cmpb + 63) & STORAGE_KEY_PAGEMASK) != (cmpb & STORAGE_KEY_PAGEMASK)) )
+        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        
+#ifdef DYN76_DEBUG
+    LOGMSG("DF18: CFILE Validated FOCPB Address\n");
+#endif
+
+    get_reg(R1, 1);     /* Retrieve the function number */
+    if (R1 > 9)
+    {   /* Invalid Function - generate an exception */
+        R0 = 0;
+        set_reg(0,R0);  /* don't restart this */
+        ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
+    }
+    
+    get_reg(R2, 2);  /* All functions use parameter 1, so fetch it */
+    
+    /* read, write, seek, commit, close and setmode use the file descriptor */
+    if (R1 >= 4 && R1 <= 9)
+    {
+        if (R1 == 4 || R1 == 5) 
+        {   /* For read and write guest file descriptor is in pseudo R3 */ 
+            get_reg(R3, 3);
+            ghandle = R3;
+        } 
+        else
+        {   /* For seek, commit, close and setmode, file descriptor is in
+               previously fetched pseudo R2 */
+            ghandle = R2;
+        }
+        
+        /* If read, write, seek, commit, close or setmode */
+        /* convert the file descriptor into a file handle */
+        fk = FindFK(ghandle);
+        if (!fk)
+        {   /* Did not find the file descriptor - generate an exception */
+            
+#ifdef DYN76_DEBUG
+            LOGMSG("DF18: CFILE - guest file descriptor not found: %d\n", ghandle);
+#endif
+            R0 = 0;
+            set_reg(0,R0); /* No restart on a failure */
+            ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
+        }
+        handle = fk->handle;  /* All host file accesses use this variable */
+#ifdef DYN76_DEBUG
+        LOGMSG("DF18: CFILE - host file handle: %d\n", handle);
+#endif
+    }
+
+/* The following 4 functions are always ready to attempt 
+   and they are not interruptible: CLOSE, COMMIT, SEEK, SETMODE
+*/
+
     /*------------------------*/
     /* SETMODE File Operation */
     /*------------------------*/
-
-    get_reg(R1, 1);
     
-    if (R1 > 9)
-    {
-        /* Invalid Operation - generate an exception */
-        R0 = 0;
-        set_reg(0,R0); /* don't restart this */
-        ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
-    }
-    get_reg(R2, 2);
     if (R1 == 9) 
-    { 
-        get_reg(R3, 3);
+    {   
+#ifdef DYN76_DEBUG
+        LOGMSG("DF18: CFILE - setmode file operation\n");
+#endif
+        get_reg(R3, 3);   /* Fetch parameter two - new file mode */
         if (R3 & 0x04)
             i = _O_TEXT;
         else
             i = _O_BINARY;
 #ifdef _MSVC_
-        // get_reg(R2, 2);
-        i = _setmode (R2, i); /* Alter the Windows mode */
+        i = _setmode (handle, i); /* Alter the Windows mode */
         if (i == -1) 
         {
-            // regs->GR_L(15) = -errno;
             R15 = -errno;
             set_reg(15,R15);
             return;
         }
 #else
         get_reg(R3, 3);
-        if (GetMode (R3)) /* *nix doesn't need handle updates */
+        /* *nix doesn't need handle updates */
+        if (fk->mode)
             i = _O_TEXT;
         else
             i = _O_BINARY;
@@ -493,9 +470,9 @@ DLL_EXPORT DEF_INST(dyninst_opcode_76) {
         set_reg(15,R15);
 
         if (R3 & 0x04) /* Update translation details: */
-            SetMode (R2, 1); /* yes, translate */
+            fk->mode = 1;    /* yes, translate */
         else
-            SetMode (R2, 0); /* no, dont */
+            fk->mode = 0;    /* no, dont */
         return;
     } else
      
@@ -505,15 +482,16 @@ DLL_EXPORT DEF_INST(dyninst_opcode_76) {
         
     if (R1 == 8) 
     {
-        get_reg(R2,2);
-        R15 = _close (R2);
+#ifdef DYN76_DEBUG
+        LOGMSG("DF18: CFILE - close file operation\n");
+#endif
+        R15 = _close (handle);
         set_reg(15,R15);
         if (R15 == 0)
-            RemoveFK (R2);
+        {   RemoveFKByID (fk->id);
+        }
         else
-        {
-            // regs->GR_L(15) = -errno;
-            R15 = -errno;
+        {   R15 = -errno;
             set_reg(15,R15);
         }
         return;
@@ -525,16 +503,16 @@ DLL_EXPORT DEF_INST(dyninst_opcode_76) {
         
     if (R1 == 7) 
     {
-        get_reg(R2,2);
+#ifdef DYN76_DEBUG
+        LOGMSG("DF18: CFILE - commit file operation\n");
+#endif
+
 #ifdef _MSVC_
-        // regs->GR_L(15) = _commit (regs->GR_L(2));
-        R15 =  _commit (R2);
+        R15 =  _commit (handle);
 #else
-        // regs->GR_L(15) = fsync (regs->GR_L(2));
-        R15 = fsync (R2);
+        R15 = fsync (handle);
 #endif
         if (R15 != 0)
-            // regs->GR_L(15) = -errno;
             R15 = -errno;
         set_reg(15,R15);
         return;
@@ -546,13 +524,13 @@ DLL_EXPORT DEF_INST(dyninst_opcode_76) {
         
     if (R1 == 6)
     {
-        // regs->GR_L(15) = _lseek (regs->GR_L(2), regs->GR_L(3), regs->GR_L(4));
-        get_reg(R2,2);
+#ifdef DYN76_DEBUG
+        LOGMSG("DF18: CFILE - seek file operation\n");
+#endif
         get_reg(R3,3);
         get_reg(R4,4);
-        R15 = _lseek (R2, R3, R4);
+        R15 = _lseek (handle, R3, R4);
         if (R15 == (U32)-1)
-            // regs->GR_L(15) = -errno;
             R15 = -errno;
         set_reg(15,R15);
         return;
@@ -567,54 +545,43 @@ DLL_EXPORT DEF_INST(dyninst_opcode_76) {
     else
         space_ctl = USE_PRIMARY_SPACE;
 
-    get_reg(R0,0);
-    get_reg(R2,2);
+    get_reg(R0,0);        /* Retrieve Restart Stage */
     
     if (R0 == 0) 
-    {   /* New operation, not a restart.  Establish new state */
-        fk = malloc (sizeof (struct fkeeper));
-        if (fk == NULL) 
+    {   /* New operation, not a restart.  Establish new operational state */
+        rfk = malloc (sizeof (struct fkeeper));
+        if (rfk == NULL) 
         {
-            //regs->GR_L(15) = -1 * ENOMEM; /* Error */
             R15 = -1 * ENOMEM; /* Error */
             set_reg(15,R15);
             return;
         }
-        fk->mode = -1;  /* mode is not initially set */
-        fk->data = 0;   /* Nothing in the buffer yet */
-        //fk->SaveArea = regs->GR_L(5);
-        get_reg(R5,5);
-        fk->SaveArea = R5;
+        rfk->mode = -1;      /* mode is not initially set */
+        rfk->data = 0;       /* Nothing in the buffer yet */
+        rfk->handle = 0;     /* No file handle yet either (could be an open) */
+        get_reg(R5,5);       /* Save pseudo R5 */
+        rfk->SaveArea = R5;
         
         /* Set this state's id for the guest and increment 
            and link the structure to the list even if not yet open.
            This is required to allow open to be restarted based upon the
            id.  If the file does not successfully open, then the linked entry
-           must be removed.
+           must be removed in stage 3
         */
-        // /* This does not work on 64-bit hosts and is replaced by nfile_id */
-        // regs->GR_L(5) = (unsigned int)fk;
+        dolock (nfile_lock);    /* Take ownership of the list */
+        R5 = nfile_id++;        /* safely increment the id counter */
+        rfk->id = R5;
+        rfk->next = fkpr_head;  /* Add to the top of the list */
+        fkpr_head = rfk;        /* New potential entry becomes the first */
+        unlock (nfile_lock);    /* Release ownership of the list */
+        set_reg(5,R5);          /* Set the restart state for this new operation */
         
-        /* Because the actual host pointer is no longer returned to the guest,
-           the fkeeper structure must actually be linked to the list now, whereas
-           in the past the structure hung unlinked in the host process address
-           space and just freed if the file did not open.
-        */
-        dolock (nfile_lock); /* Take ownership of the list */
-        R5 = nfile_id++;
-        fk->id = R5;
-        fk->next = fkpr_head;      /* Add to the list */
-        fkpr_head = fk;
-        unlock (nfile_lock); /* Release ownership of the list */
-        set_reg(5,R5);
-        
-        // regs->GR_L(15) = 0; /* For read/write we need this cleared here */
+        /* For read/write we need this cleared here */
         R15 = 0;
         set_reg(15,R15);
         
-        /* Set the restart state in case the next stage is interrupted */
-        // regs->GR_L(0) = 1;
-        R0 = 1;                /* Set work stage 1 */
+        /* Set the restart stage in case the next stage is interrupted */
+        R0 = 1;                /* Set work stage 1 on restart */
         set_reg(0,R0);
     } else
         
@@ -623,10 +590,9 @@ DLL_EXPORT DEF_INST(dyninst_opcode_76) {
     /*-------------------------------------------------------------*/
     
     {   /* Must have restarted, refresh fk */
-        //fk = (struct fkeeper *)(regs->GR_L(5));
         get_reg(R5,5);    /* R5 contains the previous restart id */
-        fk = FindFK(R5);
-        if (!fk)
+        rfk = FindFK(R5);
+        if (!rfk)
         {   /* Did not find the restart - generate an exception */
             R0 = 0;
             set_reg(0,R0); /* restart failed, so don't do it again */
@@ -642,35 +608,31 @@ DLL_EXPORT DEF_INST(dyninst_opcode_76) {
     {
         if (R1 == 0) 
         { /* rename - need to get 2 filenames */
-            while ((fk->data == 0) ||                    /* Started? */
-                   (fk->oldname [fk->data - 1] != 0)) 
+            while ((rfk->data == 0) ||                    /* Started? */
+                   (rfk->oldname [rfk->data - 1] != 0)) 
             {   /* Not Finished */
 
-                // ARCH_DEP(vfetchc) 
-                //    (&(fk->oldname [fk->data]), 0, effective_addr2, b2, regs);
-
+                /* WARNING: This is where interruption might occur */
                 ARCH_DEP(wfetchc) 
-                    (&(fk->oldname [fk->data]), 
+                    (&(fk->oldname [rfk->data]), 
                      0, 
                      R2, 
                      space_ctl, 
                      regs);
 
                 /* Exception, can recalculate if/when restart */
-                // (regs->GR_L(b2)) += 1;
                 R2 += 1;
                 set_reg(2,R2);
-                fk->data += 1;  /* Next host byte location */
-                if (fk->data >= 259) 
+                rfk->data += 1;  /* Next host byte location */
+                if (rfk->data >= 259) 
                 {
-                    fk->oldname [fk->data] = 0;
+                    rfk->oldname [fk->data] = 0;
                     break;
                 }
             }
-            StrConverter (fk->oldname, DCCebcdic_to_ascii);
-            fk->data = 0; /* Get ready for newname */
+            StrConverter (rfk->oldname, DCCebcdic_to_ascii);
+            rfk->data = 0; /* Get ready for newname */
         }
-        // regs->GR_L(0) = 2;
         R0 = 2;               /* Set work stage 2 */
         set_reg(0,R0);
     }
@@ -684,30 +646,29 @@ DLL_EXPORT DEF_INST(dyninst_opcode_76) {
         if (R1 <= 3) 
         {   /* unlink/open/close - need to get 1 filename */
             /* rename - needs to get 2nd filename */
-            while ((fk->data == 0)                        /* Starting */ 
-                   || (fk->filename [fk->data - 1] != 0)) /* Not Finished */
+            while ((rfk->data == 0)                        /* Starting */ 
+                   || (rfk->filename [rfk->data - 1] != 0)) /* Not Finished */
             {
+                /* WARNING: This is where interruption might occur */
                 ARCH_DEP(wfetchc) 
-                    (&(fk->filename [fk->data]), 
+                    (&(rfk->filename [rfk->data]), 
                      0, 
                      R2, 
                      space_ctl, 
                      regs);
 
                 /* Exception, can recalculate if/when restart */
-                //(regs->GR_L(b2)) += 1;
                 R2 += 1;
                 set_reg(2,R2);
-                fk->data += 1;  /* Next host byte location */
-                if (fk->data >= 259) 
+                rfk->data += 1;  /* Next host byte location */
+                if (rfk->data >= 259) 
                 {
-                    fk->filename [fk->data] = 0;
+                    rfk->filename [rfk->data] = 0;
                     break;
                 }
             }
-            StrConverter (fk->filename, DCCebcdic_to_ascii);
+            StrConverter (rfk->filename, DCCebcdic_to_ascii);
         }
-        // regs->GR_L(0) = 3;
         R0 = 3;               /* Set work stage */
         set_reg(0,R0);
     }
@@ -716,26 +677,22 @@ DLL_EXPORT DEF_INST(dyninst_opcode_76) {
     /* Work Stage 3 Initial or Restart - Interruptible Operation & Results */
     /*---------------------------------------------------------------------*/  
     
-    /* Final stage - if we are here, 
-       R0==3 which prevents reentering the routines above 
-    */
-    
     /*------------------------*/
     /* RENAME File Operation  */
     /*------------------------*/
 
     if (R1 == 0) 
     { 
+#ifdef DYN76_DEBUG
+        LOGMSG("DF18: CFILE - rename file operation\n");
+#endif
         /* This is safe to restore early here */
-        // regs->GR_L(5) = fk->SaveArea;
-        R5 = fk->SaveArea;
+        R5 = rfk->SaveArea;
         set_reg(5,R5);
         
-        // regs->GR_L(15) = rename (fk->oldname, fk->filename);
-        R15 = rename (fk->oldname, fk->filename);
+        R15 = rename (rfk->oldname, rfk->filename);
         
         if (R15 != 0)
-            // regs->GR_L(15) = -errno;
             R15 = -errno;
         set_reg(15,R15);
     } else
@@ -746,20 +703,19 @@ DLL_EXPORT DEF_INST(dyninst_opcode_76) {
         
     if (R1 == 1) 
     {
+#ifdef DYN76_DEBUG
+        LOGMSG("DF18: CFILE - unlink file operation\n");
+#endif
         /* This is safe to restore early here */
-        // regs->GR_L(5) = fk->SaveArea;
-        R5 = fk->SaveArea;
+        R5 = rfk->SaveArea;
         set_reg(5,R5);
         
 #ifdef _MSVC_
-        // regs->GR_L(15) = _unlink (fk->filename);
-        R15 = _unlink (fk->filename);
+        R15 = _unlink (rfk->filename);
 #else
-        // regs->GR_L(15) = remove (fk->filename);
-        R15 = remove (fk->filename);
+        R15 = remove (rfk->filename);
 #endif
         if (R15 != 0)
-            // regs->GR_L(15) = -errno;
             R15 = -errno;
         set_reg(15,R15);
     } else
@@ -770,12 +726,14 @@ DLL_EXPORT DEF_INST(dyninst_opcode_76) {
         
     if (R1 == 2) 
     {
+#ifdef DYN76_DEBUG
+        LOGMSG("DF18: CFILE - Open operation\n");
+#endif
         /* This is safe to restore early here */
-        // regs->GR_L(5) = fk->SaveArea;
-        R5 = fk->SaveArea;
+        R5 = rfk->SaveArea;
         set_reg(5,R5);
         
-        /* Convert from JCC to Native open flags */
+        /* Convert to host platform native open flags */
         i = 0;
         get_reg(R3,3);
         if (R3 & 0x01)
@@ -786,14 +744,14 @@ DLL_EXPORT DEF_INST(dyninst_opcode_76) {
             i |= _O_RDONLY;
         if (R3 & 0x04) 
         {
-            fk->mode = 1; /* Record the desire to translate codepages */
+            rfk->mode = 1; /* Record the desire to translate codepages */
 #ifdef _MSVC_
             i |= _O_TEXT; /* Windows can translate newlines to CRLF pairs */
 #endif
         } 
         else
         {  
-            fk->mode = 0; /* Binary mode (untranslated) */
+            rfk->mode = 0; /* Binary mode (untranslated) */
         }
         if (R3 & 0x10)
             i |= _O_APPEND;
@@ -807,7 +765,6 @@ DLL_EXPORT DEF_INST(dyninst_opcode_76) {
             if (R4 == 0) /* Pass 0x100 in Windows for readonly */
             {
                 /* Set a Windows default */
-                // regs->GR_L(4) = _S_IWRITE;
                 R4 = _S_IWRITE;
                 set_reg(4,R4);
             }
@@ -819,37 +776,44 @@ DLL_EXPORT DEF_INST(dyninst_opcode_76) {
         get_reg(R4,4);
         if (R4 == 0)
         {   /* Set a *nix default */
-            // regs->GR_L(4) = 0666;
-            R4 = 0666;
+            R4 = 0666;  /* Note octal value */
             set_reg(4,R4);
         }
 #endif
-        // regs->GR_L(15) = _open (fk->filename, i, regs->GR_L(4));
-        R15 = _open (fk->filename, i, R4);
-        set_reg(15,R15);
-        if (R15 != (unsigned int)-1) 
-        {
-            /* Save the handle for clean-up later */
-            // fk->handle = regs->GR_L(15);
-            fk->handle = R15;
-#if 0
-            dolock (nfile_lock);         /* Take ownership of the list */
-            fk->next = fkpr_head;        /* Add to the list */
-            fkpr_head = fk;
-            unlock (nfile_lock);         /* Release ownership of the list */
+#ifdef DYN76_DEBUG
+        LOGMSG("DF18: CFILE - Opening file: %s\n", rfk->filename);
 #endif
-            fk = NULL;                   /* Don't free the structure now */
+        R15 = _open (rfk->filename, i, R4);
+        if (R15 != (unsigned int)-1) 
+        {   /* Successful host file open */
+            
+            /* Save the handle for use in other operations */
+            rfk->handle = R15;  /* Save the host handle */
+            /* This restart ID becomes the guest file descriptor */
+            R15 = rfk->id;
+            set_reg(15,R15);
+#ifdef DYN76_DEBUG
+            LOGMSG("DF18: CFILE - opened host file handle: %d\n", rfk->handle);
+            LOGMSG("DF18: CFILE - opened guest file descriptor: %d\n", rfk->id);
+#endif
+            rfk = NULL;                   
+            /* Note: during the start of the interruptable open operation the
+               fkeeper structure was linked to the fkeeper list to allow restart 
+               of the operation from the restart id.  Now that we have been 
+               successful in opening the file, we will leave the restart fkeeper
+               on the list as the link to the host file from the guest.
+            */
         } 
         else
-        {
-            // regs->GR_L(15) = -errno;
+        {   /* Failed host file open */
+            
             R15 = -errno;
             set_reg(15,R15);
-            RemoveFKByID( fk->id );
-            /* Note: during start of open operation the fkeeper structure was
-               linked to the fkeeper list to allow restart of the open from the 
-               id.  On a failure to actually open the file, the structure 
-               needs to be removed from the list.
+            /* Note: during start of the interruptable open operation the 
+               fkeeper structure was linked to the fkeeper list to allow restart 
+               of the operation from the restart id.  On a failure to actually open 
+               the file, the structure needs to be removed from the list and that
+               will happen below just before returning to hdiagf18.c
             */
         }
     } else
@@ -860,13 +824,14 @@ DLL_EXPORT DEF_INST(dyninst_opcode_76) {
         
     if (R1 == 3) 
     { /* close (char * filename) */
+#ifdef DYN76_DEBUG
+        LOGMSG("DF18: CFILE - Orphan close operation\n");
+#endif
         /* This is safe to restore early here */
-        // regs->GR_L(5) = fk->SaveArea;
-        R5 = fk->SaveArea;
+        R5 = rfk->SaveArea;
         set_reg(5,R5);
         
-        // regs->GR_L(15) = RemoveFKByName (fk->filename);
-        R15 = RemoveFKByName (fk->filename);
+        R15 = RemoveFKByName (rfk->filename);
         set_reg(15,R15);
     } else
         
@@ -876,45 +841,45 @@ DLL_EXPORT DEF_INST(dyninst_opcode_76) {
         
     if (R1 == 4) 
     {
-        if (fk->mode == -1)
-        {
-            // fk->mode = GetMode (regs->GR_L(3));
-            get_reg(R3,3);
-            fk->mode = GetMode (R3);
-        }
+#ifdef DYN76_DEBUG
+        LOGMSG("DF18: CFILE - read file operation\n");
+#endif
         get_reg(R4,4);
-        get_reg(R2,2);
         /* Note: R15 has been set to zero above during operation initialization */
+#ifdef DYN76_DEBUG
+        LOGMSG("DF18: CFILE - read requested bytes: %d\n", R4);
+#endif
         while (R4 != 0) 
         {
-            if (fk->data == 0) { /* Need to fill our buffer with some data? */
-                // i = regs->GR_L(4);
+            if (rfk->data == 0) { /* Need to fill our buffer with some data? */
                 i = R4;
                 
                 if (i > 256) 
                     i = 256;
                 
-                // fk->data = _read (regs->GR_L(3), fk->filename, i);
-                get_reg(R3,3);
-                fk->data = _read (R3, fk->filename, i);
-                
+                /*get_reg(R3,3); */
+                rfk->data = _read (handle, rfk->filename, i);
+#ifdef DYN76_DEBUG
+                LOGMSG("DF18: CFILE - host read result: %d\n", rfk->data);
+#endif
                 if (fk->mode)
-                    MemConverter (fk->filename, DCCascii_to_ebcdic, fk->data);
+                    MemConverter (rfk->filename, DCCascii_to_ebcdic, rfk->data);
             }
-            if (fk->data < 0)
+            if (rfk->data < 0)
             {
-                // regs->GR_L(15) = -errno;
                 R15 = -errno;
                 set_reg(15,R15);
             }
-            if (fk->data <= 0)
+            if (rfk->data <= 0)
                 /* All done, we reached EOF (or an error occured) */
                 break;
 
             /* Move the data read to the guest's storage */
-            i = fk->data - 1;
+            i = rfk->data - 1;
+            
+            /* WARNING: This is where interruption might occur */
             ARCH_DEP(wstorec) 
-                (fk->filename,  /* This member is used a buffer */
+                (rfk->filename,  /* This member is used as a buffer */
                  (unsigned char)i, 
                  R2, 
                  space_ctl, 
@@ -922,24 +887,20 @@ DLL_EXPORT DEF_INST(dyninst_opcode_76) {
             i++;
             
             /* Exception, can recalculate if/when restart */
-            // (regs->GR_L(b2)) += i;
             R2 += i;
             set_reg(2,R2);
             
             /* Remember to stop when enough is read */
-            //(regs->GR_L(4)) -= i;
             R4 -= i;
             set_reg(4,R4);
             
             /* Return accumulated total */
-            // (regs->GR_L(15)) += i;
             R15 += i;
             set_reg(15,R15);
             
-            fk->data = 0;
+            rfk->data = 0;
         }
-        // regs->GR_L(5) = fk->SaveArea;
-        R5 = fk->SaveArea;
+        R5 = rfk->SaveArea;
         set_reg(5,R5);
     } else
         
@@ -949,14 +910,10 @@ DLL_EXPORT DEF_INST(dyninst_opcode_76) {
         
     if (R1 == 5) 
     {
-        if (fk->mode == -1)
-        {
-            get_reg(R3,3);
-            fk->mode = GetMode (R3);
-        }
+#ifdef DYN76_DEBUG
+        LOGMSG("DF18: CFILE - write file operation\n");
+#endif
         get_reg(R4,4);
-        get_reg(R2,2);
-        get_reg(R3,3);
         /* Note: R15 has been set to zero above during operation initialization */
 
         while (R4 != 0) 
@@ -966,8 +923,10 @@ DLL_EXPORT DEF_INST(dyninst_opcode_76) {
             /* Move guest's write data to the internal buffer */
             if (i > 255) 
                 i = 255;
+            
+            /* WARNING: This is where interruption might occur */
             ARCH_DEP(wfetchc) 
-                (fk->filename, 
+                (rfk->filename, 
                  (unsigned char)i, 
                  R2, 
                  space_ctl, 
@@ -975,25 +934,22 @@ DLL_EXPORT DEF_INST(dyninst_opcode_76) {
             i++;
             
             /* Exception, can recalculate if/when restart */
-            // (regs->GR_L(b2)) += i;
             R2 += i;
             set_reg(2,R2);
             
             /* Remember to stop when enough is written */
-            //(regs->GR_L(4)) -= i;
             R4 -= i;
             set_reg(4,R4);
 
             if (fk->mode)
-                MemConverter (fk->filename, DCCebcdic_to_ascii, i);
+                MemConverter (rfk->filename, DCCebcdic_to_ascii, i);
+                /* rfk->filename is being used as a data buffer here */
             
             /* Write to the host file from the internal buffer */
-            // i = _write (regs->GR_L(3), fk->filename, i);
-            i = _write (R3, fk->filename, i);
+            i = _write (handle, rfk->filename, i);
             
             if (i < 0)
             {
-                // regs->GR_L(15) = -errno;
                 R15 = -errno;
                 set_reg(15,R15);
             }
@@ -1003,21 +959,19 @@ DLL_EXPORT DEF_INST(dyninst_opcode_76) {
                 break;
             
             /* Return accumulated total */
-            // (regs->GR_L(15)) += i;
             R15 += i;
             set_reg(15,R15);
         }
-        // regs->GR_L(5) = fk->SaveArea;
         R5 = fk->SaveArea;
         set_reg(5,R5);
     }
     
+    if (rfk) /* clean up, unless open already has */
+        RemoveFKByID (rfk->id);  /* Safely remove from the restart state */
+    
     /* Make sure we do not restart this operation */
     R0 = 0;
-    set_reg(5,R5);
-    
-    if (fk) /* clean up, unless open out this into the global list */
-        free (fk);
+    set_reg(0,R0);
 }
 
 #if !defined(_GEN_ARCH)
@@ -1034,31 +988,4 @@ DLL_EXPORT DEF_INST(dyninst_opcode_76) {
 #endif 
 
 #endif /*!defined(_GEN_ARCH)*/
-
-#if 0
-/* Libtool static name colision resolution */
-/* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
-#if !defined(HDL_BUILD_SHARED) && defined(HDL_USE_LIBTOOL)
-#define hdl_ddev dyn76_LTX_hdl_ddev
-#define hdl_depc dyn76_LTX_hdl_depc
-#define hdl_reso dyn76_LTX_hdl_reso
-#define hdl_init dyn76_LTX_hdl_init
-#define hdl_fini dyn76_LTX_hdl_fini
-#endif
-
-HDL_DEPENDENCY_SECTION;
-
-/*HDL_DEPENDENCY (HERCULES);*/
-HDL_DEPENDENCY (REGS);
-
-END_DEPENDENCY_SECTION;
-
-HDL_REGISTER_SECTION;
-
-HDL_REGISTER (s370_dyninst_opcode_76, s370_dyninst_opcode_76);
-HDL_REGISTER (s390_dyninst_opcode_76, s390_dyninst_opcode_76);
-HDL_REGISTER (z900_dyninst_opcode_76, z900_dyninst_opcode_76);
-
-END_REGISTER_SECTION;
-#endif
 

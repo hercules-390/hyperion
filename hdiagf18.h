@@ -21,6 +21,13 @@ typedef struct _CPB
         BYTE    platform;     /* Platform and Large File Support     */
         HWORD   comptopt;     /* Compatibility Operation Options     */
         HWORD   nativopt;     /* Native Operation Options            */
+        HWORD   maxnshsk;     /* Maximum Guest Native Shadow Sockets */
+        BYTE    r1;
+        BYTE    r2;
+        BYTE    r3;
+        BYTE    r4;
+        BYTE    r5;
+        BYTE    r6;
     } CPB;
 
 /* Socket Type Masks */

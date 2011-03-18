@@ -27,7 +27,7 @@
 /*    +                                                               */
 /*    |                                                               */
 /*   CFILE:                                                           */
-/*    +                                                               */
+/*    +---> diagfi8_FC in dyn76.c                                     */
 /*    |                                                               */
 /*   NSOCKET:                                                         */
 /*    +--->                                                           */
@@ -113,7 +113,11 @@ CPB cap =
         /* Compatibility Operation Options in big endian format */
         {(COMPAT_OPTIONS+DF18_VER)>>8,(COMPAT_OPTIONS+DF18_VER)&0xFF},
         /* Native Operation Options in big endian format */
-        {(NATIVE_OPTIONS+DF18_VER)>>8,(NATIVE_OPTIONS+DF18_VER)&0xFF}
+        {(NATIVE_OPTIONS+DF18_VER)>>8,(NATIVE_OPTIONS+DF18_VER)&0xFF},
+        /* Maximum Guest Shadow Sockets */
+        {0,0},
+        /* reserved */
+        0,0,0,0,0,0
 };
     
 #endif /* !defined(_HDIAGF18_H) */
@@ -139,7 +143,7 @@ U16 amode;     /* address mode requested for parameter block */
            /* options are valid */
            ( ((regopts & OPTIONS_MASK) & invalid ) != 0 ) ||
            /* one and only one amode requested */
-           ( amode!=0x0040 && amode!=0x0020 && amode!=0x0010 )
+           ( !(amode==0x0040 || amode==0x0020 || amode==0x0010) )
        )
     {
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
@@ -172,28 +176,14 @@ void ARCH_DEP(diagf18_call) (int r1, int r2, REGS *regs)
 /* Guest related paramters and values                                */
 //RADR    pbaddr;                      /* Parameter block real address */
 U16     options;                     /* supplied options             */
-
-#if 0
-union   parmlist                     /* Parmater block formats that  */
-        {                            /* May be supplied by the guest */        
-            BIOPL biopl;
-            BIOPL_INIT32 init32;
-            BIOPL_IORQ32 iorq32;
-            BIOPL_REMOVE remove;
-        };
-union   parmlist plin;               /* Parm block from/to guest     */
-#endif
     
 //#if 0
-    if (sizeof(CPB) != 8)
+    if (sizeof(CPB) != 16)
     {
-            logmsg("CPB size not 8: %d\n",sizeof(CPB));
+            LOGMSG("CPB size not 8: %d\n",sizeof(CPB));
     }
 //#endif
 
-
-    /* Retrieve the Parameter Block address from Ry */
-    //pbaddr = regs->GR(r2);
 
     /* Specification exception if Rx is not even/odd or facility not enabled */
     if ( (!FACILITY_ENABLED(HOST_RESOURCE_ACCESS,regs)) || 
@@ -211,7 +201,7 @@ union   parmlist plin;               /* Parm block from/to guest     */
 /*--------------------------------------------------------*/
     case QUERY:
         
-        logmsg("DF18: QUERY\n");
+        LOGMSG("DF18: QUERY\n");
         
         /* Specification exception if CPB is not on a doubleword boundary */
         if ( (regs->GR(2) & 0x7 ) !=0 )
@@ -231,7 +221,7 @@ union   parmlist plin;               /* Parm block from/to guest     */
 /*--------------------------------------------------------*/
     case CSOCKET:
         
-        logmsg("DF18: CSOCKET\n");
+        LOGMSG("DF18: CSOCKET\n");
         
 #if defined(FEATURE_ESAME)
         if (regs->psw.amode64)
@@ -249,7 +239,7 @@ union   parmlist plin;               /* Parm block from/to guest     */
 /*--------------------------------------------------------*/
     case CFILE:
 
-        logmsg("DF18: CFILE\n");
+        LOGMSG("DF18: CFILE\n");
         
 #if defined(FEATURE_ESAME)
         if (regs->psw.amode64)
@@ -262,7 +252,6 @@ union   parmlist plin;               /* Parm block from/to guest     */
             ( (U16)regs->GR_L(r1+1) & 0x0000FFFF, (U16) COMPAT_INVALID, regs );
             
         /* Retrieve the Parameter Block address from Ry */
-        //pbaddr = regs->GR(r2);
         ARCH_DEP(hdiagf18_FC) (options, (VADR)GR_A(r2,regs), regs);
 
         break;
