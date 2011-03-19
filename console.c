@@ -3772,6 +3772,7 @@ DEVHND constty_device_hndinfo = {
         &constty_execute_ccw,          /* Device CCW execute         */
         &constty_close_device,         /* Device Close               */
         &constty_query_device,         /* Device Query               */
+        NULL,                          /* Device Extended Query      */
         NULL,                          /* Device Start channel pgm   */
         NULL,                          /* Device End channel pgm     */
         NULL,                          /* Device Resume channel pgm  */
@@ -3810,6 +3811,7 @@ DEVHND loc3270_device_hndinfo = {
         &loc3270_execute_ccw,          /* Device CCW execute         */
         &loc3270_close_device,         /* Device Close               */
         &loc3270_query_device,         /* Device Query               */
+        NULL,                          /* Device Extended Query      */
         NULL,                          /* Device Start channel pgm   */
         NULL,                          /* Device End channel pgm     */
         NULL,                          /* Device Resume channel pgm  */

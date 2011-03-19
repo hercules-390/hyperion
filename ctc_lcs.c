@@ -2614,6 +2614,7 @@ DEVHND lcs_device_hndinfo =
         &LCS_ExecuteCCW,              /* Device CCW execute         */
         &LCS_Close,                   /* Device Close               */
         &LCS_Query,                   /* Device Query               */
+        NULL,                          /* Device Extended Query      */
         NULL,                          /* Device Start channel pgm   */
         NULL,                          /* Device End channel pgm     */
         NULL,                          /* Device Resume channel pgm  */

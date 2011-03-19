@@ -355,6 +355,7 @@ DEVHND cardpch_device_hndinfo = {
         &cardpch_execute_ccw,          /* Device CCW execute         */
         &cardpch_close_device,         /* Device Close               */
         &cardpch_query_device,         /* Device Query               */
+        NULL,                          /* Device Extended Query      */
         NULL,                          /* Device Start channel pgm   */
         NULL,                          /* Device End channel pgm     */
         NULL,                          /* Device Resume channel pgm  */

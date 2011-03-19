@@ -84,6 +84,7 @@ DEVHND ctcadpt_device_hndinfo =
         &CTCX_ExecuteCCW,              /* Device CCW execute         */
         &CTCX_Close,                   /* Device Close               */
         &CTCX_Query,                   /* Device Query               */
+        NULL,                          /* Device Extended Query      */
         NULL,                          /* Device Start channel pgm   */
         NULL,                          /* Device End channel pgm     */
         NULL,                          /* Device Resume channel pgm  */
@@ -109,6 +110,7 @@ DEVHND ctct_device_hndinfo =
         &CTCX_ExecuteCCW,              /* Device CCW execute         */
         &CTCX_Close,                   /* Device Close               */
         &CTCX_Query,                   /* Device Query               */
+        NULL,                          /* Device Extended Query      */
         NULL,                          /* Device Start channel pgm   */
         NULL,                          /* Device End channel pgm     */
         NULL,                          /* Device Resume channel pgm  */
@@ -134,6 +136,7 @@ DEVHND vmnet_device_hndinfo =
         &CTCX_ExecuteCCW,              /* Device CCW execute         */
         &CTCX_Close,                   /* Device Close               */
         &CTCX_Query,                   /* Device Query               */
+        NULL,                          /* Device Extended Query      */
         NULL,                          /* Device Start channel pgm   */
         NULL,                          /* Device End channel pgm     */
         NULL,                          /* Device Resume channel pgm  */

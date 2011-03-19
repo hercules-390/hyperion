@@ -5835,6 +5835,7 @@ DEVHND cckddasd_device_hndinfo = {
         &ckddasd_execute_ccw,          /* Device CCW execute         */
         &cckddasd_close_device,        /* Device Close               */
         &ckddasd_query_device,         /* Device Query               */
+        NULL,                          /* Device Extended Query      */
         &cckddasd_start,               /* Device Start channel pgm   */
         &cckddasd_end,                 /* Device End channel pgm     */
         &cckddasd_start,               /* Device Resume channel pgm  */
@@ -5859,6 +5860,7 @@ DEVHND cfbadasd_device_hndinfo = {
         &fbadasd_execute_ccw,          /* Device CCW execute         */
         &cckddasd_close_device,        /* Device Close               */
         &fbadasd_query_device,         /* Device Query               */
+        NULL,                          /* Device Extended Query      */
         &cckddasd_start,               /* Device Start channel pgm   */
         &cckddasd_end,                 /* Device End channel pgm     */
         &cckddasd_start,               /* Device Resume channel pgm  */

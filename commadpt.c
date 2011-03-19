@@ -3117,6 +3117,7 @@ DEVHND comadpt_device_hndinfo = {
         &commadpt_execute_ccw,         /* Device CCW execute         */
         &commadpt_close_device,        /* Device Close               */
         &commadpt_query_device,        /* Device Query               */
+        NULL,                          /* Device Extended Query      */
         NULL,                          /* Device Start channel pgm   */
         NULL,                          /* Device End channel pgm     */
         NULL,                          /* Device Resume channel pgm  */

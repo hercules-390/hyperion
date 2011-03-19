@@ -132,6 +132,7 @@ DEVHND  tapedev_device_hndinfo   =
         &tapedev_execute_ccw,          /* Device CCW execute         */
         &tapedev_close_device,         /* Device Close               */
         &tapedev_query_device,         /* Device Query               */
+        NULL,                          /* Device Extended Query      */
         NULL,                          /* Device Start channel pgm   */
         NULL,                          /* Device End channel pgm     */
         NULL,                          /* Device Resume channel pgm  */

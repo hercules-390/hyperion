@@ -1570,6 +1570,7 @@ DLL_EXPORT DEVHND fbadasd_device_hndinfo = {
         &fbadasd_execute_ccw,          /* Device CCW execute         */
         &fbadasd_close_device,         /* Device Close               */
         &fbadasd_query_device,         /* Device Query               */
+        NULL,                          /* Device Extended Query      */
         NULL,                          /* Device Start channel pgm   */
         &fbadasd_end,                  /* Device End channel pgm     */
         NULL,                          /* Device Resume channel pgm  */

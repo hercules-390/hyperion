@@ -2985,6 +2985,7 @@ DEVHND shared_ckd_device_hndinfo = {
         &ckddasd_execute_ccw,          /* Device CCW execute         */
         &shared_ckd_close,             /* Device Close               */
         &ckddasd_query_device,         /* Device Query               */
+        NULL,                          /* Device Extended Query      */
         &shared_start,                 /* Device Start channel pgm   */
         &shared_end,                   /* Device End channel pgm     */
         &shared_start,                 /* Device Resume channel pgm  */
@@ -3009,6 +3010,7 @@ DEVHND shared_fba_device_hndinfo = {
         &fbadasd_execute_ccw,          /* Device CCW execute         */
         &shared_fba_close,             /* Device Close               */
         &fbadasd_query_device,         /* Device Query               */
+        NULL,                          /* Device Extended Query      */
         &shared_start,                 /* Device Start channel pgm   */
         &shared_end,                   /* Device End channel pgm     */
         &shared_start,                 /* Device Resume channel pgm  */

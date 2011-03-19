@@ -1562,6 +1562,7 @@ DEVHND qeth_device_hndinfo =
         &qeth_execute_ccw,             /* Device CCW execute         */
         &qeth_close_device,            /* Device Close               */
         &qeth_query_device,            /* Device Query               */
+        NULL,                          /* Device Extended Query      */
         NULL,                          /* Device Start channel pgm   */
         NULL,                          /* Device End channel pgm     */
         NULL,                          /* Device Resume channel pgm  */

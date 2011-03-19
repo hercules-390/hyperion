@@ -38,6 +38,7 @@ struct DEVHND {
         DEVXF *exec;                   /* Device CCW execute         */
         DEVCF *close;                  /* Device Close               */
         DEVQF *query;                  /* Device Query               */
+        DEVQF *ext_query;              /* Extended Device Query      */
         DEVSF *start;                  /* Device Start channel pgm   */
         DEVSF *end;                    /* Device End channel pgm     */
         DEVSF *resume;                 /* Device Resume channel pgm  */

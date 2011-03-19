@@ -1378,6 +1378,7 @@ DEVHND printer_device_hndinfo = {
         &printer_execute_ccw,          /* Device CCW execute         */
         &printer_close_device,         /* Device Close               */
         &printer_query_device,         /* Device Query               */
+        NULL,                          /* Device Extended Query      */
         NULL,                          /* Device Start channel pgm   */
         NULL,                          /* Device End channel pgm     */
         NULL,                          /* Device Resume channel pgm  */

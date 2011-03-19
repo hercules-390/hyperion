@@ -349,6 +349,7 @@ DEVHND con1052_device_hndinfo = {
         &con1052_execute_ccw,          /* Device CCW execute         */
         &con1052_close_device,         /* Device Close               */
         &con1052_query_device,         /* Device Query               */
+        NULL,                          /* Device Extended Query      */
         NULL,                          /* Device Start channel pgm   */
         NULL,                          /* Device End channel pgm     */
         NULL,                          /* Device Resume channel pgm  */

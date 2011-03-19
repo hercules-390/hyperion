@@ -78,6 +78,7 @@ DEVHND ctci_device_hndinfo =
         &CTCI_ExecuteCCW,              /* Device CCW execute         */
         &CTCI_Close,                   /* Device Close               */
         &CTCI_Query,                   /* Device Query               */
+        NULL,                          /* Device Extended Query      */
         NULL,                          /* Device Start channel pgm   */
         NULL,                          /* Device End channel pgm     */
         NULL,                          /* Device Resume channel pgm  */

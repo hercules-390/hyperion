@@ -2300,7 +2300,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         break;
 
     case 0xA6:
-//FIXME: 0xA6 ccw is undoc'd.  We are treating it as 0x86 except
+    case 0xB6:
+//FIXME: 0xA6/0xB6 ccw is undoc'd.  We are treating it as 0x86 except
 //       we will allow a DX ccw to follow.
     case 0x06:
     case 0x86:
@@ -3867,7 +3868,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         break;
 
     case 0xA5:
-//FIXME: 0xA5 ccw is undoc'd.  We are treating it as 0x85 except
+    case 0xB5:
+//FIXME: 0xA5/0xB5 ccw is undoc'd.  We are treating it as 0x85 except
 //       we will allow a DX ccw to follow.
     case 0x85:
     /*---------------------------------------------------------------*/
@@ -5925,6 +5927,7 @@ DLL_EXPORT DEVHND ckddasd_device_hndinfo = {
         &ckddasd_execute_ccw,          /* Device CCW execute         */
         &ckddasd_close_device,         /* Device Close               */
         &ckddasd_query_device,         /* Device Query               */
+        NULL,                          /* Device Extended Query      */
         &ckddasd_start,                /* Device Start channel pgm   */
         &ckddasd_end,                  /* Device End channel pgm     */
         &ckddasd_start,                /* Device Resume channel pgm  */
