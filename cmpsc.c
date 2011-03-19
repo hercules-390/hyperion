@@ -1,4 +1,4 @@
-/* CMPSC.C      (c) Bernard van der Helm, 2000-2010                  */
+/* CMPSC.C      (c) Bernard van der Helm, 2000-2011                  */
 /*              S/390 compression call instruction                   */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -14,7 +14,7 @@
 /* Mario Bezzi. Thanks Mario! Also special thanks to Greg Smith who           */
 /* introduced iregs, needed when a page fault occurs.                         */
 /*                                                                            */
-/*                              (c) Copyright Bernard van der Helm, 2000-2010 */
+/*                              (c) Copyright Bernard van der Helm, 2000-2011 */
 /*                              Noordwijkerhout, The Netherlands.             */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
@@ -23,20 +23,19 @@
 
 #include "hstdinc.h"
 
-#if !defined(_HENGINE_DLL_)
+#ifndef _HENGINE_DLL_
 #define _HENGINE_DLL_
-#endif
+#endif /* #ifndef _HENGINE_DLL_ */
 
-#if !defined(_CMPSC_C_)
+#ifndef _CMPSC_C_
 #define _CMPSC_C_
-#endif
+#endif /* #ifndef _CMPSC_C_ */
 
 #include "hercules.h"
 #include "opcode.h"
 #include "inline.h"
 
 #ifdef FEATURE_COMPRESSION
-
 /*============================================================================*/
 /* Common                                                                     */
 /*============================================================================*/
@@ -47,7 +46,7 @@
 #if 0
 #define OPTION_CMPSC_DEBUG
 #define TRUEFALSE(boolean)   ((boolean) ? "True" : "False")
-#endif
+#endif /* #if 0|1 */
 
 /*----------------------------------------------------------------------------*/
 /* After a succesful compression of characters to an index symbol or a        */
@@ -55,9 +54,9 @@
 /* be updated.                                                                */
 /*----------------------------------------------------------------------------*/
 #define ADJUSTREGS(r, regs, iregs, len) \
-{\
-  SET_GR_A((r), (iregs), (GR_A((r), (iregs)) + (len)) & ADDRESS_MAXWRAP((regs)));\
-  SET_GR_A((r) + 1, (iregs), GR_A((r) + 1, (iregs)) - (len));\
+{ \
+  SET_GR_A((r), (iregs), (GR_A((r), (iregs)) + (len)) & ADDRESS_MAXWRAP((regs))); \
+  SET_GR_A((r) + 1, (iregs), GR_A((r) + 1, (iregs)) - (len)); \
 }
 
 /*----------------------------------------------------------------------------*/
@@ -70,14 +69,14 @@
 #else
 #define COMMITREGS(regs, iregs, r1, r2) \
   __COMMITREGS((regs), (iregs), (r1), (r2))
-#endif
+#endif /* ifdef OPTION_CMPSC_DEBUG */
 #define __COMMITREGS(regs, iregs, r1, r2) \
-{\
-  SET_GR_A(1, (regs), GR_A(1, (iregs)));\
-  SET_GR_A((r1), (regs), GR_A((r1), (iregs)));\
-  SET_GR_A((r1) + 1, (regs), GR_A((r1) + 1, (iregs)));\
-  SET_GR_A((r2), (regs), GR_A((r2), (iregs)));\
-  SET_GR_A((r2) + 1, (regs), GR_A((r2) + 1, (iregs)));\
+{ \
+  SET_GR_A(1, (regs), GR_A(1, (iregs))); \
+  SET_GR_A((r1), (regs), GR_A((r1), (iregs))); \
+  SET_GR_A((r1) + 1, (regs), GR_A((r1) + 1, (iregs))); \
+  SET_GR_A((r2), (regs), GR_A((r2), (iregs))); \
+  SET_GR_A((r2) + 1, (regs), GR_A((r2) + 1, (iregs))); \
 }
 
 /*----------------------------------------------------------------------------*/
@@ -92,13 +91,13 @@
 #else
 #define COMMITREGS2(regs, iregs, r1, r2) \
   __COMMITREGS2((regs), (iregs), (r1), (r2))
-#endif
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
 #define __COMMITREGS2(regs, iregs, r1, r2) \
-{\
-  SET_GR_A((r1), (regs), GR_A((r1), (iregs)));\
-  SET_GR_A((r1) + 1, (regs), GR_A((r1) + 1, (iregs)));\
-  SET_GR_A((r2), (regs), GR_A((r2), (iregs)));\
-  SET_GR_A((r2) + 1, (regs), GR_A((r2) + 1, (iregs)));\
+{ \
+  SET_GR_A((r1), (regs), GR_A((r1), (iregs))); \
+  SET_GR_A((r1) + 1, (regs), GR_A((r1) + 1, (iregs))); \
+  SET_GR_A((r2), (regs), GR_A((r2), (iregs))); \
+  SET_GR_A((r2) + 1, (regs), GR_A((r2) + 1, (iregs))); \
 }
 
 /*----------------------------------------------------------------------------*/
@@ -113,7 +112,7 @@
   (iregs)->gr[(r2) + 1] = (regs)->gr[(r2) + 1]; \
 }
 
-#if (__GEN_ARCH == 900)
+#if __GEN_ARCH == 900
 #undef INITREGS
 #define INITREGS(iregs, regs, r1, r2) \
 { \
@@ -124,7 +123,7 @@
   (iregs)->gr[(r2) + 1] = (regs)->gr[(r2) + 1]; \
   (iregs)->psw.amode64 = (regs)->psw.amode64; \
 }
-#endif /* defined(__GEN_ARCH == 900) */
+#endif /* #if __GEN_ARCH == 900 */
 
 /*----------------------------------------------------------------------------*/
 /* General Purpose Register 0 macro's (GR0)                                   */
@@ -139,6 +138,9 @@
 #define GR0_e(regs)          ((regs)->GR_L(0) & 0x00000100)
 #define GR0_f1(regs)         ((regs)->GR_L(0) & 0x00000200)
 #define GR0_st(regs)         ((regs)->GR_L(0) & 0x00010000)
+/* We recognize the zp flag, but we were running a similar zero padding for   */
+/* years by writing or reading 8 index symbols at a time. 8 index symbols     */
+/* always fit within a byte boundary!                                         */
 #define GR0_zp(regs)         ((regs)->GR_L(0) & 0x00020000)
 
 /*----------------------------------------------------------------------------*/
@@ -224,7 +226,7 @@ static void  ARCH_DEP(fetch_iss)(struct ec *ec, U16 is[8]);
 static void  print_cce(BYTE *cce);
 static void  print_ece(U16 is, BYTE *ece);
 static void  print_sd(int f1, BYTE *sd1, BYTE *sd2);
-#endif
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
 static int   ARCH_DEP(search_cce)(struct cc *cc, BYTE *ch, U16 *is);
 static int   ARCH_DEP(search_sd)(struct cc *cc, BYTE *ch, U16 *is);
 static int   ARCH_DEP(store_is)(struct cc *cc, U16 is);
@@ -253,7 +255,7 @@ DEF_INST(compression_call)
   WRGMSG(HHC90302, "D", regs->GR(r2));
   WRGMSG(HHC90303, "D", regs->GR(r2 + 1));
   WRGMSG(HHC90304, "D", 0, regs->GR(0));
-  WRGMSG(HHC90364, "D", TRUEFALSE(GR0_zp(regs))); // We currently do nothing with zp
+  WRGMSG(HHC90364, "D", TRUEFALSE(GR0_zp(regs)));
   WRGMSG(HHC90305, "D", TRUEFALSE(GR0_st(regs)));
   WRGMSG(HHC90306, "D", GR0_cdss(regs));
   WRGMSG(HHC90307, "D", TRUEFALSE(GR0_f1(regs)));
@@ -263,7 +265,7 @@ DEF_INST(compression_call)
   WRGMSG(HHC90310, "D", GR1_sttoff(regs));
   WRGMSG(HHC90311, "D", GR1_cbn(regs));
   WRGMSG_OFF;
-#endif 
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
 
   /* Check the registers on even-odd pairs and valid compression-data symbol size */
   if(unlikely(r1 & 0x01 || r2 & 0x01 || !GR0_cdss(regs) || GR0_cdss(regs) > 5))
@@ -365,7 +367,7 @@ DEF_INST(compression_call)
 /* y(i)   : examine child bit for sibling 1 to 12                             */
 /*----------------------------------------------------------------------------*/
 #define SD1_sct(sd1)         ((sd1)[0] >> 4)
-#define SD1_y(sd1, i)        ((i) < 4 ? ((sd1)[0] & (0x08 >> (i))): ((sd1)[1] & (0x800 >> (i))))
+#define SD1_y(sd1, i)        ((i) < 4 ? ((sd1)[0] & (0x08 >> (i))) : ((sd1)[1] & (0x800 >> (i))))
 
 /*----------------------------------------------------------------------------*/
 /* Format-1 Sibling Descriptors macro's (SD1) derived                         */
@@ -448,7 +450,7 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
  
 #ifdef OPTION_CMPSC_DEBUG
     WRMSG(HHC90313, "D");
-#endif
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
 
     while(likely(GR1_cbn(regs)))
     {
@@ -507,7 +509,7 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 
 #ifdef OPTION_CMPSC_DEBUG
       WRMSG(HHC90314, "D", is, i);
-#endif
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
 
     }
     ARCH_DEP(store_iss)(&cc);
@@ -564,7 +566,7 @@ static BYTE *ARCH_DEP(fetch_cce)(struct cc *cc, unsigned index)
 #ifdef OPTION_CMPSC_DEBUG
   WRMSG(HHC90316, "D", index / 8);
   print_cce(cce);
-#endif
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
 
   cct = CCE_cct(cce);
   if(cct < 2)
@@ -601,7 +603,7 @@ static int ARCH_DEP(fetch_ch)(struct cc *cc, BYTE *ch)
 
 #ifdef OPTION_CMPSC_DEBUG
     WRMSG(HHC90317, "D");
-#endif
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
 
     cc->regs->psw.cc = 0;
     return(-1);
@@ -618,7 +620,7 @@ static int ARCH_DEP(fetch_ch)(struct cc *cc, BYTE *ch)
 
 #ifdef OPTION_CMPSC_DEBUG
   WRMSG(HHC90318, "D", *ch, GR_A(cc->r2, cc->iregs));
-#endif
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
 
   return(0);
 }
@@ -788,7 +790,7 @@ static void print_sd(int f1, BYTE *sd1, BYTE *sd2)
       WRMSG(HHC90336, "D", buf);
   }
 }
-#endif
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
 #endif /* #ifndef NO_2ND_COMPILE */
 
 /*----------------------------------------------------------------------------*/
@@ -847,7 +849,7 @@ static int ARCH_DEP(search_cce)(struct cc *cc, BYTE *ch, U16 *is)
 
 #ifdef OPTION_CMPSC_DEBUG
           WRMSG(HHC90338, "D", *is);
-#endif 
+#endif  /* #ifdef OPTION_CMPSC_DEBUG */
 
           /* Found a matching child, make it parent */
           cc->cce = ccce;
@@ -876,7 +878,7 @@ static int ARCH_DEP(search_sd)(struct cc *cc, BYTE *ch, U16 *is)
 
 #ifdef FEATURE_INTERVAL_TIMER
   GREG dictor;                         /* Dictionary origin                   */
-#endif
+#endif /* #ifdef FEATURE_INTERVAL_TIMER */
 
   int i;                               /* Sibling character index             */
   U16 index;                           /* Index within dictionary             */
@@ -892,7 +894,7 @@ static int ARCH_DEP(search_sd)(struct cc *cc, BYTE *ch, U16 *is)
 
 #ifdef FEATURE_INTERVAL_TIMER
   dictor = GR1_dictor(cc->regs);
-#endif
+#endif /* #ifdef FEATURE_INTERVAL_TIMER */
 
   ind_search_siblings = 1;
 
@@ -923,7 +925,7 @@ static int ARCH_DEP(search_sd)(struct cc *cc, BYTE *ch, U16 *is)
       /* Print before possible exception */
       WRMSG(HHC90339, "D", CCE_cptr(cc->cce) + sd_ptr);
       print_sd(1, sd1, sd2);
-#endif
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
 
       /* Check for data exception */
       if(unlikely(!SD1_sct(sd1)))
@@ -935,7 +937,7 @@ static int ARCH_DEP(search_sd)(struct cc *cc, BYTE *ch, U16 *is)
 #ifdef OPTION_CMPSC_DEBUG
       WRMSG(HHC90340, "D", CCE_cptr(cc->cce) + sd_ptr);
       print_sd(0, sd1, sd2);
-#endif
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
  
     }
 
@@ -975,7 +977,7 @@ static int ARCH_DEP(search_sd)(struct cc *cc, BYTE *ch, U16 *is)
 
 #ifdef OPTION_CMPSC_DEBUG
           WRMSG(HHC90341, "D", *is);
-#endif 
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
 
           /* Found a matching child, make it parent */
           cc->cce = ccce;
@@ -1022,7 +1024,7 @@ static int ARCH_DEP(store_is)(struct cc *cc, U16 is)
 
 #ifdef OPTION_CMPSC_DEBUG
       WRMSG(HHC90342, "D");
-#endif 
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
 
       return(-1);
     }
@@ -1036,7 +1038,7 @@ static int ARCH_DEP(store_is)(struct cc *cc, U16 is)
 
 #ifdef OPTION_CMPSC_DEBUG
     WRMSG(HHC90343, "D", is, work[0], work[1]);
-#endif
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
 
     /* set index_symbol to interchange symbol */
     is = (work[0] << 8) + work[1];
@@ -1074,7 +1076,7 @@ static int ARCH_DEP(store_is)(struct cc *cc, U16 is)
 
 #ifdef OPTION_CMPSC_DEBUG
   WRMSG(HHC90344, "D", is, GR1_cbn(cc->iregs), cc->r1, cc->iregs->GR(cc->r1), cc->r1 + 1, cc->iregs->GR(cc->r1 + 1));
-#endif 
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
 
   return(0);
 }
@@ -1086,7 +1088,7 @@ static void ARCH_DEP(store_iss)(struct cc *cc)
 {
 #ifdef OPTION_CMPSC_DEBUG
   char buf[128];
-#endif
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
   GREG dictor;                         /* dictionary origin                   */ 
   int i;
   U16 *is;                             /* Index symbol array                  */
@@ -1107,7 +1109,7 @@ static void ARCH_DEP(store_iss)(struct cc *cc)
 
 #ifdef OPTION_CMPSC_DEBUG
       WRMSG(HHC90345, "D", cc->is[i], mem[0], mem[1]);
-#endif
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
 
       /* set index_symbol to interchange symbol */
       cc->is[i] = (mem[0] << 8) + mem[1];
@@ -1120,10 +1122,10 @@ static void ARCH_DEP(store_iss)(struct cc *cc)
   {
     case 9: /* 9-bits */
     {
-      /* 0        1        2        3        4        5        6        7        8        */
-      /* 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 */
-      /* 01234567 80123456 78012345 67801234 56780123 45678012 34567801 23456780 12345678 */
-      /* 0         1         2         3         4         5         6         7          */
+      /* 0       1       2       3       4       5       6       7       8        */
+      /* 012345670123456701234567012345670123456701234567012345670123456701234567 */
+      /* 012345678012345678012345678012345678012345678012345678012345678012345678 */
+      /* 0        1        2        3        4        5        6        7         */
       mem[0] = (               (is[0] >> 1));
       mem[1] = ((is[0] << 7) | (is[1] >> 2)) & 0xff;
       mem[2] = ((is[1] << 6) | (is[2] >> 3)) & 0xff;
@@ -1137,10 +1139,10 @@ static void ARCH_DEP(store_iss)(struct cc *cc)
     }
     case 10: /* 10-bits */
     {
-      /* 0        1        2        3        4        5        6        7        8        9        */
-      /* 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 */
-      /* 01234567 89012345 67890123 45678901 23456789 01234567 89012345 67890123 45678901 23456789 */
-      /* 0          1          2          3           4          5          6          7           */
+      /* 0       1       2       3       4       5       6       7       8       9        */
+      /* 01234567012345670123456701234567012345670123456701234567012345670123456701234567 */
+      /* 01234567890123456789012345678901234567890123456789012345678901234567890123456789 */
+      /* 0         1         2         3         4         5         6         7          */
       mem[0] = (               (is[0] >> 2));
       mem[1] = ((is[0] << 6) | (is[1] >> 4)) & 0xff;
       mem[2] = ((is[1] << 4) | (is[2] >> 6)) & 0xff;
@@ -1155,10 +1157,10 @@ static void ARCH_DEP(store_iss)(struct cc *cc)
     }
     case 11: /* 11-bits */
     {
-      /* 0        1        2        3        4        5        6        7        8        9        a        */
-      /* 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 */
-      /* 01234567 89a01234 56789a01 23456789 a0123456 789a0123 456789a0 12345678 9a012345 6789a012 3456789a */
-      /* 0           1           2            3           4           5            6           7            */
+      /* 0       1       2       3       4       5       6       7       8       9       a        */
+      /* 0123456701234567012345670123456701234567012345670123456701234567012345670123456701234567 */
+      /* 0123456789a0123456789a0123456789a0123456789a0123456789a0123456789a0123456789a0123456789a */
+      /* 0          1          2          3          4          5          6          7           */
       mem[ 0] = (               (is[0] >>  3));
       mem[ 1] = ((is[0] << 5) | (is[1] >>  6)) & 0xff;
       mem[ 2] = ((is[1] << 2) | (is[2] >>  9)) & 0xff;
@@ -1174,10 +1176,10 @@ static void ARCH_DEP(store_iss)(struct cc *cc)
     }
     case 12: /* 12-bits */
     {
-      /* 0        1        2        3        4        5        6        7        8        9        a        b        */
-      /* 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 */
-      /* 01234567 89ab0123 456789ab 01234567 89ab0123 456789ab 01234567 89ab0123 456789ab 01234567 89ab0123 456789ab */
-      /* 0            1             2            3             4            5             6            7             */
+      /* 0       1       2       3       4       5       6       7       8       9       a       b        */
+      /* 012345670123456701234567012345670123456701234567012345670123456701234567012345670123456701234567 */
+      /* 0123456789ab0123456789ab0123456789ab0123456789ab0123456789ab0123456789ab0123456789ab0123456789ab */
+      /* 0           1           2           3           4           5           6           7            */
       mem[ 0] = (               (is[0] >> 4));
       mem[ 1] = ((is[0] << 4) | (is[1] >> 8)) & 0xff;
       mem[ 2] = ((is[1])                    ) & 0xff;
@@ -1194,10 +1196,10 @@ static void ARCH_DEP(store_iss)(struct cc *cc)
     }
     case 13: /* 13-bits */
     {
-      /* 0        1        2        3        4        5        6        7        8        9        a        b        c        */
-      /* 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 */
-      /* 01234567 89abc012 3456789a bc012345 6789abc0 12345678 9abc0123 456789ab c0123456 789abc01 23456789 abc01234 56789abc */
-      /* 0             1              2             3              4              5             6              7              */
+      /* 0       1       2       3       4       5       6       7       8       9       a       b       c        */
+      /* 01234567012345670123456701234567012345670123456701234567012345670123456701234567012345670123456701234567 */
+      /* 0123456789abc0123456789abc0123456789abc0123456789abc0123456789abc0123456789abc0123456789abc0123456789abc */
+      /* 0            1            2            3            4            5            6            7             */
       mem[ 0] = (               (is[0] >>  5));
       mem[ 1] = ((is[0] << 3) | (is[1] >> 10)) & 0xff;
       mem[ 2] = (               (is[1] >>  2)) & 0xff;
@@ -1250,7 +1252,7 @@ static void ARCH_DEP(store_iss)(struct cc *cc)
     snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " %04X", cc->is[i]);
   buf[sizeof(buf)-1] = '\0';
   WRMSG(HHC90346, "D", buf, cc->r1, cc->iregs->GR(cc->r1), cc->r1 + 1, cc->iregs->GR(cc->r1 + 1));
-#endif
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
 
 }
 
@@ -1382,7 +1384,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 
 #ifdef OPTION_CMPSC_DEBUG
       WRMSG(HHC90347, "D", iss[i], i);
-#endif
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
 
       if(unlikely(!ec.ecl[iss[i]]))
         ARCH_DEP(expand_is)(&ec, iss[i]);
@@ -1440,7 +1442,7 @@ static void ARCH_DEP(expand_is)(struct ec *ec, U16 is)
 
 #ifdef FEATURE_INTERVAL_TIMER
   GREG dictor;                         /* Dictionary origin                   */
-#endif
+#endif /* #ifdef FEATURE_INTERVAL_TIMER */
 
   BYTE *ece;                           /* Expansion Character Entry           */
   int psl;                             /* Partial symbol length               */
@@ -1450,7 +1452,7 @@ static void ARCH_DEP(expand_is)(struct ec *ec, U16 is)
 
 #ifdef FEATURE_INTERVAL_TIMER
   dictor = GR1_dictor(ec->regs);
-#endif
+#endif /* #ifdef FEATURE_INTERVAL_TIMER */
 
   /* Get expansion character entry */
   index = is * 8;
@@ -1459,7 +1461,7 @@ static void ARCH_DEP(expand_is)(struct ec *ec, U16 is)
 
 #ifdef OPTION_CMPSC_DEBUG
   print_ece(is, ece);
-#endif
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
 
   /* Process preceded entries */
   psl = ECE_psl(ece);
@@ -1484,7 +1486,7 @@ static void ARCH_DEP(expand_is)(struct ec *ec, U16 is)
 
 #ifdef OPTION_CMPSC_DEBUG
     print_ece(index / 8, ece);
-#endif
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
 
     /* Calculate partial symbol length */
     psl = ECE_psl(ece);
@@ -1536,7 +1538,7 @@ static int ARCH_DEP(fetch_is)(struct ec *ec, U16 *is)
 
 #ifdef OPTION_CMPSC_DEBUG
       WRMSG(HHC90350, "D");
-#endif
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
 
       ec->regs->psw.cc = 0;
       return(-1);
@@ -1561,7 +1563,7 @@ static int ARCH_DEP(fetch_is)(struct ec *ec, U16 *is)
 
 #ifdef OPTION_CMPSC_DEBUG
   WRMSG(HHC90351, "D", *is, GR1_cbn(ec->iregs), ec->r2, ec->iregs->GR(ec->r2), ec->r2 + 1, ec->iregs->GR(ec->r2 + 1));
-#endif
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
 
   return(0);
 }
@@ -1604,10 +1606,10 @@ static void ARCH_DEP(fetch_iss)(struct ec *ec, U16 is[8])
   {
     case 9: /* 9-bits */
     {
-      /* 0       1        2        3        4        5        6        7        8        */
-      /* 012345670 123456701 234567012 345670123 456701234 567012345 670123456 701234567 */
-      /* 012345678 012345678 012345678 012345678 012345678 012345678 012345678 012345678 */
-      /* 0         1         2         3         4         5         6         7         */
+      /* 0       1       2       3       4       5       6       7       8        */
+      /* 012345670123456701234567012345670123456701234567012345670123456701234567 */
+      /* 012345678012345678012345678012345678012345678012345678012345678012345678 */
+      /* 0        1        2        3        4        5        6        7         */
       is[0] = ((mem[0] << 1) | (mem[1] >> 7));
       is[1] = ((mem[1] << 2) | (mem[2] >> 6)) & 0x01ff;
       is[2] = ((mem[2] << 3) | (mem[3] >> 5)) & 0x01ff;
@@ -1620,10 +1622,10 @@ static void ARCH_DEP(fetch_iss)(struct ec *ec, U16 is[8])
     }
     case 10: /* 10-bits */
     {
-      /* 0       1        2        3        4        5       6        7        8        9        */
-      /* 0123456701 2345670123 4567012345 6701234567 0123456701 2345670123 4567012345 6701234567 */
-      /* 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 */
-      /* 0          1          2          3          4          5          6          7          */
+      /* 0       1       2       3       4       5       6       7       8       9        */
+      /* 01234567012345670123456701234567012345670123456701234567012345670123456701234567 */
+      /* 01234567890123456789012345678901234567890123456789012345678901234567890123456789 */
+      /* 0         1         2         3         4         5         6         7          */
       is[0] = ((mem[0] << 2) | (mem[1] >> 6));
       is[1] = ((mem[1] << 4) | (mem[2] >> 4)) & 0x03ff;
       is[2] = ((mem[2] << 6) | (mem[3] >> 2)) & 0x03ff;
@@ -1636,10 +1638,10 @@ static void ARCH_DEP(fetch_iss)(struct ec *ec, U16 is[8])
     }
     case 11: /* 11-bits */
     {
-      /* 0       1        2        3       4        5        6        7       8        9        a        */
-      /* 01234567012 34567012345 67012345670 12345670123 45670123456 70123456701 23456701234 56701234567 */
-      /* 0123456789a 0123456789a 0123456789a 0123456789a 0123456789a 0123456789a 0123456789a 0123456789a */
-      /* 0           1           2           3           4           5           6           7           */
+      /* 0       1       2       3       4       5       6       7       8       9       a        */
+      /* 0123456701234567012345670123456701234567012345670123456701234567012345670123456701234567 */
+      /* 0123456789a0123456789a0123456789a0123456789a0123456789a0123456789a0123456789a0123456789a */
+      /* 0          1          2          3          4          5          6          7           */
       is[0] = ((mem[0] <<  3) | (mem[ 1] >> 5)                );
       is[1] = ((mem[1] <<  6) | (mem[ 2] >> 2)                ) & 0x07ff;
       is[2] = ((mem[2] <<  9) | (mem[ 3] << 1) | (mem[4] >> 7)) & 0x07ff;
@@ -1652,10 +1654,10 @@ static void ARCH_DEP(fetch_iss)(struct ec *ec, U16 is[8])
     }
     case 12: /* 12-bits */
     {
-      /* 0       1        2        3       4        5        6       7        8        9       a        b        */
-      /* 012345670123 456701234567 012345670123 456701234567 012345670123 456701234567 012345670123 456701234567 */
-      /* 0123456789ab 0123456789ab 0123456789ab 0123456789ab 0123456789ab 0123456789ab 0123456789ab 0123456789ab */
-      /* 0            1            2            3            4            5            6            7            */
+      /* 0       1       2       3       4       5       6       7       8       9       a       b        */
+      /* 012345670123456701234567012345670123456701234567012345670123456701234567012345670123456701234567 */
+      /* 0123456789ab0123456789ab0123456789ab0123456789ab0123456789ab0123456789ab0123456789ab0123456789ab */
+      /* 0           1           2           3           4           5           6           7            */
       is[0] = ((mem[ 0] << 4) | (mem[ 1] >> 4));
       is[1] = ((mem[ 1] << 8) | (mem[ 2]     )) & 0x0fff;
       is[2] = ((mem[ 3] << 4) | (mem[ 4] >> 4));
@@ -1668,10 +1670,10 @@ static void ARCH_DEP(fetch_iss)(struct ec *ec, U16 is[8])
     }
     case 13: /* 13-bits */
     {
-      /* 0       1        2       3        4        5       6        7       8        9        a       b        c        */
-      /* 0123456701234 5670123456701 2345670123456 7012345670123 4567012345670 1234567012345 6701234567012 3456701234567 */
-      /* 0123456789abc 0123456789abc 0123456789abc 0123456789abc 0123456789abc 0123456789abc 0123456789abc 0123456789abc */
-      /* 0             1             2             3             4             5             6             7             */
+      /* 0       1       2       3       4       5       6       7       8       9       a       b       c        */
+      /* 01234567012345670123456701234567012345670123456701234567012345670123456701234567012345670123456701234567 */
+      /* 0123456789abc0123456789abc0123456789abc0123456789abc0123456789abc0123456789abc0123456789abc0123456789abc */
+      /* 0            1            2            3            4            5            6            7             */
       is[0] = ((mem[ 0] <<  5) | (mem[ 1] >> 3)                 );
       is[1] = ((mem[ 1] << 10) | (mem[ 2] << 2) | (mem[ 3] >> 6)) & 0x1fff;
       is[2] = ((mem[ 3] <<  7) | (mem[ 4] >> 1)                 ) & 0x1fff;
@@ -1689,7 +1691,7 @@ static void ARCH_DEP(fetch_iss)(struct ec *ec, U16 is[8])
 
 #ifdef OPTION_CMPSC_DEBUG
   WRMSG(HHC90352, "D", ec->r2, ec->iregs->GR(ec->r2), ec->r2 + 1, ec->iregs->GR(ec->r2 + 1));
-#endif
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
 }
 
 #ifndef NO_2ND_COMPILE
@@ -1742,7 +1744,7 @@ static void print_ece(U16 is, BYTE *ece)
   }
   WRGMSG_OFF;
 }
-#endif
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
 #endif /* #ifndef NO_2ND_COMPILE */
 
 /*----------------------------------------------------------------------------*/
@@ -1762,7 +1764,7 @@ static int ARCH_DEP(vstore)(struct ec *ec, BYTE *buf, unsigned len)
   unsigned j;
   static BYTE pbuf[2060];
   static unsigned plen = 2061;         /* Impossible value                    */
-#endif
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
 
   /* Check destination size */
   if(unlikely(GR_A(ec->r1 + 1, ec->iregs) < len))
@@ -1770,7 +1772,7 @@ static int ARCH_DEP(vstore)(struct ec *ec, BYTE *buf, unsigned len)
 
 #ifdef OPTION_CMPSC_DEBUG
     WRMSG(HHC90360, "D");
-#endif
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
 
     /* Indicate end of destination */
     ec->regs->psw.cc = 1;
@@ -1829,7 +1831,7 @@ static int ARCH_DEP(vstore)(struct ec *ec, BYTE *buf, unsigned len)
     memcpy(pbuf, buf, len);
     plen = len;
   }
-#endif
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
 
   /* Fingers crossed that we stay within one page */
   ofst = GR_A(ec->r1, ec->iregs) & 0x7ff; 
@@ -1884,17 +1886,14 @@ static int ARCH_DEP(vstore)(struct ec *ec, BYTE *buf, unsigned len)
 #define NO_2ND_COMPILE
 #endif /* FEATURE_COMPRESSION */
 
-#if !defined(_GEN_ARCH)
-
-#if defined(_ARCHMODE2)
- #define  _GEN_ARCH _ARCHMODE2
- #include "cmpsc.c"
-#endif
-
-#if defined(_ARCHMODE3)
- #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCHMODE3
- #include "cmpsc.c"
-#endif
-
-#endif /*!defined(_GEN_ARCH) */
+#ifndef _GEN_ARCH
+  #ifdef _ARCHMODE2
+    #define _GEN_ARCH _ARCHMODE2
+    #include "cmpsc.c"
+  #endif /* #ifdef _ARCHMODE2 */
+  #ifdef _ARCHMODE3
+    #undef _GEN_ARCH
+    #define _GEN_ARCH _ARCHMODE3
+    #include "cmpsc.c"
+  #endif /* #ifdef _ARCHMODE3 */
+#endif /*#ifndef _GEN_ARCH */
