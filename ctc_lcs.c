@@ -2610,10 +2610,10 @@ static char*  ReadOAT( char* pszOATName, FILE* fp, char* pszBuff )
 /* NOTE : lcs_device_hndinfo is NEVER static as it is referenced by the CTC meta driver */
 DEVHND lcs_device_hndinfo =
 {
-        &LCS_Init,                    /* Device Initialisation      */
-        &LCS_ExecuteCCW,              /* Device CCW execute         */
-        &LCS_Close,                   /* Device Close               */
-        &LCS_Query,                   /* Device Query               */
+        &LCS_Init,                     /* Device Initialisation      */
+        &LCS_ExecuteCCW,               /* Device CCW execute         */
+        &LCS_Close,                    /* Device Close               */
+        &LCS_Query,                    /* Device Query               */
         NULL,                          /* Device Extended Query      */
         NULL,                          /* Device Start channel pgm   */
         NULL,                          /* Device End channel pgm     */
