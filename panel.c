@@ -1254,7 +1254,7 @@ static void NP_update(REGS *regs)
     DEVBLK *dev;
     int     online, busy, open;
     char   *devclass;
-    char    devnam[128];
+    char    devnam[MAX_PATH];
     char    buf[1024];
 
     if (NPhelpup == 1)
@@ -1743,6 +1743,18 @@ static void NP_update(REGS *regs)
                 || NPasgn != i
             )
             {
+                /* locate first nonprintable and truncate */
+                int l, p;
+                
+                l = (int)strlen(devnam);
+                for ( p = 0; p < l; p++ )
+                {
+                    if ( !isprint(devnam[p]) )
+                    {
+                        devnam[p] = '\0';
+                        break;
+                    }
+                }
                 set_pos (DEV_LINE+i, 58);
                 draw_text (devnam);
                 fill_text (' ', PANEL_MAX_COLS);
