@@ -111,6 +111,7 @@ hengine_OBJ = \
     $(O)dfp.obj      \
     $(O)diagmssf.obj \
     $(O)diagnose.obj \
+    $(O)dyn76.obj \
     $(O)ecpsvm.obj   \
     $(O)esame.obj    \
     $(O)external.obj \
@@ -120,6 +121,7 @@ hengine_OBJ = \
     $(O)general2.obj \
     $(O)general3.obj \
     $(O)hconsole.obj \
+    $(O)hdiagf18.obj \
     $(O)history.obj  \
     $(O)hsccmd.obj   \
     $(O)hscemode.obj \

@@ -382,6 +382,7 @@
     <ClCompile Include="dasdpdsu.c" />
     <ClCompile Include="dasdseq.c" />
     <ClCompile Include="dmap2hrc.c" />
+    <ClCompile Include="dyn76.c" />
     <ClCompile Include="herclin.c" />
     <ClCompile Include="hetget.c" />
     <ClCompile Include="hetinit.c" />
@@ -759,6 +760,7 @@
     <ClInclude Include="decNumber\decPacked.h" />
     <ClInclude Include="commadpt.h" />
     <ClInclude Include="ctcadpt.h" />
+    <ClInclude Include="hdiagf18.h" />
     <ClInclude Include="hercifc.h" />
     <ClInclude Include="tt32api.h" />
     <ClInclude Include="tuntap.h" />

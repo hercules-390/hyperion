@@ -937,6 +937,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\dyn76.c"
+							>
+						</File>
+						<File
 							RelativePath=".\dyngui.c"
 							>
 						</File>
@@ -1318,6 +1322,10 @@
 						</File>
 						<File
 							RelativePath=".\hconsts.h"
+							>
+						</File>
+						<File
+							RelativePath=".\hdiagf18.h"
 							>
 						</File>
 						<File

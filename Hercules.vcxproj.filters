@@ -621,6 +621,9 @@
     <ClCompile Include="xstore.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dyn76.c">
+      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="crypto\Makefile.am">
@@ -1544,6 +1547,9 @@
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="wthreads.h">
+      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hdiagf18.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
   </ItemGroup>

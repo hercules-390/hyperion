@@ -141,7 +141,7 @@ static void MemConverter (char * s, unsigned char * cct, int len)
 static LOCK nfile_lock;
 static long nfile_init_req = 1;
 static U32 nfile_id = 0;
-statuc U32 restart_id = 0;
+static U32 restart_id = 0;
 
 static void nfile_init () 
 {
