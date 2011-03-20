@@ -208,8 +208,6 @@ U16     options;                     /* supplied options             */
 /*--------------------------------------------------------*/
     case QUERY:
         
-        LOGMSG("DF18: QUERY\n");
-        
         /* Specification exception if CPB is not on a doubleword boundary */
         if ( (regs->GR(2) & 0x7 ) !=0 )
         {
@@ -228,8 +226,6 @@ U16     options;                     /* supplied options             */
 /*--------------------------------------------------------*/
     case CSOCKET:
         
-        LOGMSG("DF18: CSOCKET\n");
-        
 #if defined(FEATURE_ESAME)
         if (regs->psw.amode64)
         {
@@ -245,8 +241,6 @@ U16     options;                     /* supplied options             */
 /* Perform File Operation in Compatibility Mode           */
 /*--------------------------------------------------------*/
     case CFILE:
-
-        LOGMSG("DF18: CFILE\n");
         
 #if defined(FEATURE_ESAME)
         if (regs->psw.amode64)

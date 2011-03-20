@@ -43,7 +43,8 @@
     _v = ARCH_DEP(vfetch4)((VADR)(cmpb+(_r * 4)), USE_REAL_ADDR, regs)
     
 /* Compile with debugging */
-#define DYN76_DEBUG
+//#define DYN76_DEBUG
+//#define DYN76_DEBUG_FKEEPER
 
 /* Keep track of open files, a utility can then be used to close them if needed (fn3) */
 struct fkeeper 
@@ -187,7 +188,7 @@ static void AddFKByID (U32 id, struct fkeeper *item, struct fkeeper **list)
     item->id = id;
     item->next = *list;
     *list = item;
-#ifdef DYN76_DEBUG
+#ifdef DYN76_DEBUG_FKEEPER
     LOGMSG("DF18: AddFKByID added id=%d at %X with next item at %X to list head=%X at %X\n", 
            item->id, item, item->next, *list, list);
 #endif 
@@ -196,19 +197,19 @@ static void AddFKByID (U32 id, struct fkeeper *item, struct fkeeper **list)
 static struct fkeeper * FindFK (U32 id, struct fkeeper **list)
 {
     struct fkeeper *fk;
-#ifdef DYN76_DEBUG
+#ifdef DYN76_DEBUG_FKEEPER
     LOGMSG("DF18: FindFK id=%d in list head at=%X\n", id, list);
 #endif
     dolock (nfile_lock); /* Take ownership of the list */
 
     fk = *list;          /* Search the list */
 
-#ifdef DYN76_DEBUG
+#ifdef DYN76_DEBUG_FKEEPER
     LOGMSG("DF18: FindFK list head points to first entry at %X\n", fk);
 #endif
     while (fk) 
     {
-#ifdef DYN76_DEBUG
+#ifdef DYN76_DEBUG_FKEEPER
         LOGMSG("DF18: FindFK id=%d (0x%X) is at: %X\n", fk->id, fk->id, fk);
 #endif
         if (fk->id == id) 
@@ -227,7 +228,7 @@ static void RemoveFKByID (U32 id, struct fkeeper **list, int free_entry)
 {
     struct fkeeper *pfk;
     struct fkeeper *fk;
-#ifdef DYN76_DEBUG
+#ifdef DYN76_DEBUG_FKEEPER
     LOGMSG("DF18: RemoveFKByID id %d from list head at=%X\n", id, list);
 #endif
     dolock (nfile_lock); /* Take ownership of the list */
@@ -235,7 +236,7 @@ static void RemoveFKByID (U32 id, struct fkeeper **list, int free_entry)
     fk = *list;
     while (fk) 
     {
-#ifdef DYN76_DEBUG
+#ifdef DYN76_DEBUG_FKEEPER
         LOGMSG("DF18: RemoveFKByID id=%d (0x%X) is at: %X\n", fk->id, fk->id, fk);
 #endif
         if (fk->id == id) 
@@ -250,7 +251,7 @@ static void RemoveFKByID (U32 id, struct fkeeper **list, int free_entry)
             }
             if (free_entry)
             {
-#ifdef DYN76_DEBUG
+#ifdef DYN76_DEBUG_FKEEPER
                 LOGMSG("DF18: RemoveFKByID freeing id=%d at: %X\n", fk->id, fk);
 #endif
                 free (fk);
@@ -275,11 +276,24 @@ static int RemoveFKByName (char * filename)
     while (fk) 
     {
         if (strcmp (fk->filename, filename) == 0) 
-        {   /* Found the entry? */
+        {   /* Found the entry! */
+#ifdef DYN76_DEBUG
+        LOGMSG("DF18: CFILE - orphan _close(%d)\n", fk->handle);
+#endif
             i = _close (fk->handle); /* Additional step here is to close the file too */
+#ifdef DYN76_DEBUG
+            LOGMSG("DF18: CFILE - orphan _close result: %d\n", i);
+#endif
             if (i == -1)
-                i = -errno;
-            else {
+            {
+                i = errno;
+#ifdef DYN76_DEBUG
+            LOGMSG("DF18: CFILE - orphan _close errno: %d\n", i);
+#endif                
+                i = -1 * i;
+            }
+            else 
+            {
                 if (pfk) /* Wasn't the head entry */
                 {
                     pfk->next = fk->next;
@@ -330,6 +344,7 @@ void ARCH_DEP(hdiagf18_FC) (U32 options, VADR cmpb, REGS *regs)
 {
     int    space_ctl;           /* This is used to control address space selection */
     int    i;
+    int    res;                 /* I/O integer results */
     int    handle = 0;          /* Host file file handle for this file */
     U32    ghandle = 0;         /* Guest file descriptor */
     struct fkeeper *fk = NULL;  /* Host file structure */
@@ -393,11 +408,11 @@ void ARCH_DEP(hdiagf18_FC) (U32 options, VADR cmpb, REGS *regs)
         
         /* If read, write, seek, commit, close or setmode */
         /* convert the file descriptor into a file handle */
-#ifdef DYN76_DEBUG
+#ifdef DYN76_DEBUG_FKEEPER
         LOGMSG("DF18: CFILE - looking for guest file descriptor %d\n", ghandle);
 #endif
         fk = FindFK(ghandle, &fkpr_head);
-#ifdef DYN76_DEBUG
+#ifdef DYN76_DEBUG_FKEEPER
         LOGMSG("DF18: CFILE - guest file descriptor %d found at %X\n", 
                ghandle, fk);
 #endif
@@ -414,7 +429,7 @@ void ARCH_DEP(hdiagf18_FC) (U32 options, VADR cmpb, REGS *regs)
             return;
         }
         handle = fk->handle;  /* All host file accesses use this variable */
-#ifdef DYN76_DEBUG
+#ifdef DYN76_DEBUG_FKEEPER
         LOGMSG("DF18: CFILE - host file handle: %d\n", handle);
 #endif
     }
@@ -473,9 +488,13 @@ void ARCH_DEP(hdiagf18_FC) (U32 options, VADR cmpb, REGS *regs)
     if (R1 == 8) 
     {
 #ifdef DYN76_DEBUG
-        LOGMSG("DF18: CFILE - close file operation on host handle %d\n", handle);
+        LOGMSG("DF18: CFILE - _close(%d)\n", handle);
 #endif
-        R15 = _close (handle);
+        res = _close (handle);
+#ifdef DYN76_DEBUG
+        LOGMSG("DF18: CFILE - _close result: %d\n", res);
+#endif
+        R15 = res;
         set_reg(15,R15);
         if (R15 == 0)
         {   RemoveFKByID (fk->id, &fkpr_head, DO_FREE);
@@ -498,12 +517,35 @@ void ARCH_DEP(hdiagf18_FC) (U32 options, VADR cmpb, REGS *regs)
 #endif
 
 #ifdef _MSVC_
-        R15 =  _commit (handle);
-#else
-        R15 = fsync (handle);
+#ifdef DYN76_DEBUG
+        LOGMSG("DF18: CFILE - _commit(%d)\n", handle);
 #endif
-        if (R15 != 0)
-            R15 = -errno;
+        res =  _commit (handle);
+#ifdef DYN76_DEBUG
+        LOGMSG("DF18: CFILE - _commit result: %d\n", res);
+#endif
+#else /* ifdef __MSVC__ */
+
+#ifdef DYN76_DEBUG
+        LOGMSG("DF18: CFILE - fsync(%d)\n", handle);
+#endif
+        res = fsync (handle);
+#ifdef DYN76_DEBUG
+        LOGMSG("DF18: CFILE - fsync result: %d \n", res);
+#endif
+#endif /* ifdef __MSVC__ */
+        if (res != 0)
+        {
+            res = errno;
+#ifdef DYN76_DEBUG
+        LOGMSG("DF18: CFILE - fsync/_commit errno: %d \n", res);
+#endif            
+            R15 = -1 * res;
+        }
+        else
+        {    
+            R15 = res;
+        }
         set_reg(15,R15);
         return;
     } else
@@ -515,14 +557,28 @@ void ARCH_DEP(hdiagf18_FC) (U32 options, VADR cmpb, REGS *regs)
     if (R1 == 6)
     {
 #ifdef DYN76_DEBUG
-        LOGMSG("DF18: CFILE - seek file operation\n");
+        LOGMSG("DF18: CFILE - seek\n");
 #endif
-        get_reg(R3,3);
-        get_reg(R4,4);
-        R15 = _lseek (handle, R3, R4);
-        if (R15 == (U32)-1)
+        get_reg(R3,3);  /* offset in bytes */
+        get_reg(R4,4);  /* origin of the seek */
+#ifdef DYN76_DEBUG
+        LOGMSG("DF18: CFILE - _lseek(%d, %d, %d)\n", handle, (long)R3, (int)R4);
+#endif
+        res = _lseek (handle, (long)R3, (int)R4);
+#ifdef DYN76_DEBUG
+        LOGMSG("DF18: CFILE - _lseek result: %d\n", res);
+#endif        
+        if (res == -1)
         {
-            R15 = -errno;
+            res = errno;
+#ifdef DYN76_DEBUG
+            LOGMSG("DF18: CFILE - _lseek errno: %d\n", res);
+#endif            
+            R15 = -1 * res;
+        }
+        else
+        {    
+            R15 = res;
         }
         set_reg(15,R15);
         return;
@@ -563,7 +619,7 @@ void ARCH_DEP(hdiagf18_FC) (U32 options, VADR cmpb, REGS *regs)
         dolock (nfile_lock);    /* Take ownership of the list */
 
         R5 = restart_id++;        /* safely increment the id counter */
-#ifdef DYN76_DEBUG
+#ifdef DYN76_DEBUG_FKEEPER
         LOGMSG("DF18: CFILE - adding restart fkeeper to rst_head list\n");
 #endif
         AddFKByID(R5, rfk, &rst_head);
@@ -609,7 +665,7 @@ void ARCH_DEP(hdiagf18_FC) (U32 options, VADR cmpb, REGS *regs)
 
                 /* WARNING: This is where interruption might occur */
                 ARCH_DEP(wfetchc) 
-                    (&(fk->oldname [rfk->data]), 
+                    (&(rfk->oldname [rfk->data]), 
                      0, 
                      R2, 
                      space_ctl, 
@@ -679,16 +735,31 @@ void ARCH_DEP(hdiagf18_FC) (U32 options, VADR cmpb, REGS *regs)
     if (R1 == 0) 
     { 
 #ifdef DYN76_DEBUG
-        LOGMSG("DF18: CFILE - rename file operation\n");
+        LOGMSG("DF18: CFILE - rename\n");
 #endif
         /* This is safe to restore early here */
         R5 = rfk->SaveArea;
         set_reg(5,R5);
-        
-        R15 = rename (rfk->oldname, rfk->filename);
-        
-        if (R15 != 0)
-            R15 = -errno;
+#ifdef DYN76_DEBUG
+        LOGMSG("DF18: CFILE - rename(from='%s',to='%s')\n", 
+                rfk->oldname, rfk->filename);
+#endif
+        res = rename (rfk->oldname, rfk->filename);
+#ifdef DYN76_DEBUG
+        LOGMSG("DF18: CFILE - rename result: %d\n", res);
+#endif
+        if (res != 0)
+        {
+            res = errno;
+#ifdef DYN76_DEBUG
+        LOGMSG("DF18: CFILE - rename errno: %d\n", res);
+#endif            
+            R15 = -1 * res;
+        }
+        else
+        {
+            R15 = res;
+        }
         set_reg(15,R15);
     } else
        
@@ -699,19 +770,41 @@ void ARCH_DEP(hdiagf18_FC) (U32 options, VADR cmpb, REGS *regs)
     if (R1 == 1) 
     {
 #ifdef DYN76_DEBUG
-        LOGMSG("DF18: CFILE - unlink file operation\n");
+        LOGMSG("DF18: CFILE - unlink\n");
 #endif
         /* This is safe to restore early here */
         R5 = rfk->SaveArea;
         set_reg(5,R5);
         
 #ifdef _MSVC_
-        R15 = _unlink (rfk->filename);
-#else
-        R15 = remove (rfk->filename);
+#ifdef DYN76_DEBUG
+        LOGMSG("DF18: CFILE - _unkink('%s')\n", rfk->filename);
+#endif  
+        res = _unlink (rfk->filename);
+#ifdef DYN76_DEBUG
+        LOGMSG("DF18: CFILE - _unlink result: %d\n", res);
 #endif
-        if (R15 != 0)
-            R15 = -errno;
+#else
+#ifdef DYN76_DEBUG
+        LOGMSG("DF18: CFILE - remove('%s')\n", rfk->filename);
+#endif
+        res = remove (rfk->filename);
+#ifdef DYN76_DEBUG
+        LOGMSG("DF18: CFILE - remove result: %d\n", res);
+#endif
+#endif
+        if (res != 0)
+        {
+            res = errno;
+#ifdef DYN76_DEBUG
+            LOGMSG("DF18: CFILE - remove/_unlink errno: %d\n", res);
+#endif            
+            R15 = -1 * res;
+        }
+        else
+        {
+            R15 = res;
+        }
         set_reg(15,R15);
     } else
         
@@ -722,7 +815,7 @@ void ARCH_DEP(hdiagf18_FC) (U32 options, VADR cmpb, REGS *regs)
     if (R1 == 2) 
     {
 #ifdef DYN76_DEBUG
-        LOGMSG("DF18: CFILE - Open operation\n");
+        LOGMSG("DF18: CFILE - open\n");
 #endif
         /* This is safe to restore early here */
         R5 = rfk->SaveArea;
@@ -766,7 +859,9 @@ void ARCH_DEP(hdiagf18_FC) (U32 options, VADR cmpb, REGS *regs)
 #endif
         }
         if (R3 & 0x80)
+        {
             i |= _O_EXCL;
+        }
 #ifndef _MSVC_
         get_reg(R4,4);
         if (R4 == 0)
@@ -776,33 +871,32 @@ void ARCH_DEP(hdiagf18_FC) (U32 options, VADR cmpb, REGS *regs)
         }
 #endif
 #ifdef DYN76_DEBUG
-        LOGMSG("DF18: CFILE - Opening file: %s\n", rfk->filename);
+        LOGMSG("DF18: CFILE - _open('%s', 0x%X, 0%o)\n", rfk->filename, i, R4);
 #endif
-        R15 = _open (rfk->filename, i, R4);
-        if (R15 != (unsigned int)-1) 
+        res = _open (rfk->filename, i, (mode_t)R4);
+#ifdef DYN76_DEBUG
+        LOGMSG("DF18: CFILE - _open result: %d\n", res);
+#endif        
+        if (res != -1) 
         {   /* Successful host file open */
             
             /* Save the handle for use in other operations */
-            rfk->handle = R15;  /* Save the host handle */
-            /* This restart ID becomes the guest file descriptor */
-#ifdef DYN76_DEBUG
-            LOGMSG("DF18: CFILE - opened host file handle: %d\n", rfk->handle);
-#endif
+            rfk->handle = res;  /* Save the host handle */
 
             /* Transfer the restart fkeeper to the open file fkeeper list */
-#ifdef DYN76_DEBUG
+#ifdef DYN76_DEBUG_FKEEPER
             LOGMSG("DF18: CFILE - removing  w/o freeing fkeeper from restart list rst_head\n");
 #endif
             RemoveFKByID (rfk->id, &rst_head, NO_FREE);
             dolock(nfile_lock);
-#ifdef DYN76_DEBUG
+#ifdef DYN76_DEBUG_FKEEPER
             LOGMSG("DF18: CFILE - adding fkeeper to open file list with fkpr_head\n");
 #endif
             AddFKByID(nfile_id++, rfk, &fkpr_head);
 #ifdef DYN76_DEBUG
-            LOGMSG("DF18: CFILE - opened guest file descriptor: %d\n", rfk->id);
+            LOGMSG("DF18: CFILE - opened guest file descriptor %d, host handle: %d\n", 
+                    rfk->id, rfk->handle);
 #endif            
-            set_reg(15,R15);
             unlock(nfile_lock);
 
             R15 = rfk->id;
@@ -817,8 +911,12 @@ void ARCH_DEP(hdiagf18_FC) (U32 options, VADR cmpb, REGS *regs)
         } 
         else
         {   /* Failed host file open */
-            
-            R15 = -errno;
+
+            res = errno;
+#ifdef DYN76_DEBUG
+            LOGMSG("DF18: CFILE - _open errno: %X\n", res);
+#endif
+            R15 = -1 * res;
             set_reg(15,R15);
             /* Note: during start of the interruptable open operation the 
                fkeeper structure was linked to the fkeeper list to allow restart 
@@ -834,9 +932,9 @@ void ARCH_DEP(hdiagf18_FC) (U32 options, VADR cmpb, REGS *regs)
     /*-----------------------------*/        
         
     if (R1 == 3) 
-    { /* close (char * filename) */
+    {
 #ifdef DYN76_DEBUG
-        LOGMSG("DF18: CFILE - Orphan close operation\n");
+        LOGMSG("DF18: CFILE - orphan close: '%s'\n", rfk->filename);
 #endif
         /* This is safe to restore early here */
         R5 = rfk->SaveArea;
@@ -853,7 +951,7 @@ void ARCH_DEP(hdiagf18_FC) (U32 options, VADR cmpb, REGS *regs)
     if (R1 == 4) 
     {
 #ifdef DYN76_DEBUG
-        LOGMSG("DF18: CFILE - read file operation\n");
+        LOGMSG("DF18: CFILE - read\n");
 #endif
         get_reg(R4,4);
         /* Note: R15 has been set to zero above during operation initialization */
@@ -930,7 +1028,7 @@ void ARCH_DEP(hdiagf18_FC) (U32 options, VADR cmpb, REGS *regs)
     if (R1 == 5) 
     {
 #ifdef DYN76_DEBUG
-        LOGMSG("DF18: CFILE - write file operation\n");
+        LOGMSG("DF18: CFILE - write\n");
 #endif
         get_reg(R4,4);
         /* Note: R15 has been set to zero above during operation initialization */
@@ -968,33 +1066,31 @@ void ARCH_DEP(hdiagf18_FC) (U32 options, VADR cmpb, REGS *regs)
             
             /* Write to the host file from the internal buffer */
 #ifdef DYN76_DEBUG
-            LOGMSG("DF18: CFILE - executing _write(%d, rfk->filename, %d)\n",
-                    handle, i);
+            LOGMSG("DF18: CFILE - _write(%d, rfk->filename, %d)\n", handle, i);
 #endif   
-            i = _write (handle, rfk->filename, i);
+            res = _write (handle, rfk->filename, (size_t)i);
 #ifdef DYN76_DEBUG
-            LOGMSG("DF18: CFILE - write with host handle %d resulted in %d\n",
-                    handle, i);
+            LOGMSG("DF18: CFILE - _write result: %d\n", res);
 #endif   
-            if (i < 0)
+            if (res < 0)
             {
 #ifdef DYN76_DEBUG
-            io_error = errno;
-            LOGMSG("DF18: CFILE - write errno: %d\n", io_error);
+                io_error = errno;
+                LOGMSG("DF18: CFILE - write errno: %d\n", io_error);
 #endif 
                 R15 = -errno;
                 set_reg(15,R15);
                 break;
             }
 
-            /* Not an error, so 'i' is the number of bytes actually written */
+            /* Not an error, so 'res' is the number of bytes actually written */
             /* Update the address pointer and remaining bytes to write */
-            R2 += i;
+            R2 += res;
             set_reg(2,R2);
-            R4 -= i;
+            R4 -= res;
             set_reg(4,R4);
             /* update the accumlated total */
-            R15 += i;
+            R15 += res;
             set_reg(15,R15);
         }
         R5 = rfk->SaveArea;
@@ -1003,7 +1099,7 @@ void ARCH_DEP(hdiagf18_FC) (U32 options, VADR cmpb, REGS *regs)
     
     if (rfk) /* clean up, unless open already has */
     {
-#ifdef DYN76_DEBUG
+#ifdef DYN76_DEBUG_FKEEPER
         LOGMSG("DF18: CFILE - removing and freeing restart fkeeper in rst_head list\n");
 #endif
         /* Safely remove from the restart state */
