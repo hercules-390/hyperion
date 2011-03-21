@@ -166,6 +166,7 @@ DEVHND hchan_device_hndinfo = {
         &hchan_execute_ccw,            /* Device CCW execute         */
         &hchan_close_device,           /* Device Close               */
         &hchan_query_device,           /* Device Query               */
+        NULL,                          /* Extended Device Query      */
         NULL,                          /* Device Start channel pgm   */
         NULL,                          /* Device End channel pgm     */
         NULL,                          /* Device Resume channel pgm  */

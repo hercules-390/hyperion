@@ -270,14 +270,15 @@ U32 ackseq;
 
     case RRH_TYPE_CM:
         {
-        OSA_PDU *pdu = (OSA_PDU*)(ph+1);
+            OSA_PDU *pdu = (OSA_PDU*)(ph+1);
             DUMP("PDU CM",pdu,sizeof(OSA_PDU));
+            UNREFERENCED(pdu);
         }
         break;
 
     case RRH_TYPE_ULP:
         {
-        OSA_PDU *pdu = (OSA_PDU*)(ph+1);
+            OSA_PDU *pdu = (OSA_PDU*)(ph+1);
             DUMP("PDU ULP",pdu,sizeof(OSA_PDU));
 
             switch(pdu->tgt) {

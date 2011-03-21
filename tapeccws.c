@@ -437,6 +437,7 @@ int             drc;                    /* code disposition          */
 BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
     dev->excps++;
+    UNREFERENCED(ccwseq);
 
     /* Reset flags at start of CCW chain */
     if (dev->ccwseq == 0)
@@ -4065,7 +4066,6 @@ int sns4mat = TAPE_SNS7_FMT_20_3480;
         {
             dev->sense[27] = 0xe0;                  // indicate same as 3490 for now
         }
-        else ;
 
         /* create a serial Number */
         dev->sense[27] |= 0x0C;
