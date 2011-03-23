@@ -2210,3 +2210,35 @@ DLL_EXPORT void set_verbose_util(int v)
 {
     verbose = v;
 }
+
+DLL_EXPORT int valid_dsname( const char *pszdsname )
+{
+    int i;
+    int iLen = (int)strlen(pszdsname);
+
+    if ( iLen > 44 || iLen == 0 ) return FALSE;
+
+    for ( i = 0; i < iLen; i++ )
+    {
+        BYTE c = pszdsname[i];
+        if ( isalnum( c ) ) 
+            continue;
+        else if ( c == '$' )
+            continue;
+        else if ( c == '@' )
+            continue;
+        else if ( c == '#' )
+            continue;
+        else if ( c == '-' )
+            continue;
+        else if ( c == '.' )
+            continue;
+        else if ( c == '{' )
+            continue;
+        else if ( i > 1 && c == '\0' )
+            break;
+        else
+            return FALSE;
+    }
+    return TRUE;
+}

@@ -140,15 +140,21 @@ int list_contents(CIFBLK *cif, char *volser, DSXTENT *extent)
 
         ptr = cif->trkbuf + CKDDASD_TRKHDR_SIZE;
 
-        while (!end_of_track(ptr)) {
+        while (!end_of_track(ptr)) 
+        {
             char dsname[45];
+
             CKDDASD_RECHDR *rechdr = (CKDDASD_RECHDR*)ptr;
             int kl = rechdr->klen;
             int dl = (rechdr->dlen[0] << 8) | rechdr->dlen[1];
+            
             make_asciiz(dsname, sizeof(dsname), ptr + CKDDASD_RECHDR_SIZE, kl);
-            /* XXXX Is this a suitable sanity check for a legal dsname? */
-            if (isalnum(*dsname))
-                    printf("%s\n", dsname);
+
+            dsname[44] = '\0';
+
+            if ( valid_dsname( dsname ) )
+                printf("%s\n", dsname);
+
             ptr += CKDDASD_RECHDR_SIZE + kl + dl;
         }
 

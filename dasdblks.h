@@ -393,5 +393,5 @@ int create_compressed_fba (char *fname, U16 devtype, U32 sectsz,
 int get_verbose_util(void);
 DUT_DLL_IMPORT void set_verbose_util(int v);
 
-
+DUT_DLL_IMPORT int valid_dsname( const char *pszdsname );
 #define DEFAULT_FBA_TYPE 0x3370
