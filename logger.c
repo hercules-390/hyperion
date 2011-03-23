@@ -28,6 +28,8 @@ static COND  logger_cond;
 static LOCK  logger_lock;
 static TID   logger_tid;
 
+static int   logger_init_flg = FALSE;   /* will be reset by logger_init() */
+
 static char *logger_buffer;
 static int   logger_bufsize;
 
@@ -541,6 +543,7 @@ DLL_EXPORT void logger_init(void)
 
     initialize_condition (&logger_cond);
     initialize_lock (&logger_lock);
+    logger_init_flg = TRUE;
 
     /* this is a conditional macro based upon OPTION_MSGLCK */
     INIT_MSGLCK;
@@ -766,11 +769,14 @@ DLL_EXPORT void log_wakeup(void *arg)
 {
     UNREFERENCED(arg);
 
-    obtain_lock(&logger_lock);
+    if ( logger_init_flg )
+    {
+        obtain_lock(&logger_lock);
 
-    broadcast_condition(&logger_cond);
+        broadcast_condition(&logger_cond);
 
-    release_lock(&logger_lock);
+        release_lock(&logger_lock);
+    }
 }
 
 /* is logger active */
