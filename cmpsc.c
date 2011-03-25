@@ -1447,7 +1447,9 @@ static void ARCH_DEP(expand_is)(struct ec *ec, U16 is)
 #endif /* #ifdef FEATURE_INTERVAL_TIMER */
 
   BYTE *ece;                           /* Expansion Character Entry           */
+  int i;
   int psl;                             /* Partial symbol length               */
+  U64 u64;
 
   /* Initialize values */
   cw = 0;
@@ -1468,7 +1470,15 @@ static void ARCH_DEP(expand_is)(struct ec *ec, U16 is)
   /* Process preceded entries */
   psl = ECE_psl(ece);
 
-  PTT(PTT_CL_INF, "CMPSCe", ece, (U32) psl, is);
+  if(unlikely(pttclass & PTT_CL_INF))
+  {
+    for(i = 0; i < 8; i++)
+    {
+      u64 <<= 8;
+      u64 |= ece[i];
+    }
+    PTT(PTT_CL_INF, "CMPSCe", u64, (U32) psl, is);
+  }
 
   while(likely(psl))
   {
@@ -1496,7 +1506,15 @@ static void ARCH_DEP(expand_is)(struct ec *ec, U16 is)
     /* Calculate partial symbol length */
     psl = ECE_psl(ece);
 
-    PTT(PTT_CL_INF, "CMPSCe", ece, (U32) psl, 0xffffffff);
+    if(unlikely(pttclass & PTT_CL_INF))
+    {
+      for(i = 0; i < 8; i++)
+      {
+        u64 <<= 8;
+        u64 |= ece[i];
+      } 
+      PTT(PTT_CL_INF, "CMPSCe", u64, (U32) psl, 0xffffffff);
+    }	
   }
 
   /* Check data exception */
