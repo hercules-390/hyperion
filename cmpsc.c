@@ -34,6 +34,7 @@
 #include "hercules.h"
 #include "opcode.h"
 #include "inline.h"
+#include "pttrace.h"
 
 #ifdef FEATURE_COMPRESSION
 /*============================================================================*/
@@ -270,6 +271,8 @@ DEF_INST(compression_call)
   /* Check the registers on even-odd pairs and valid compression-data symbol size */
   if(unlikely(r1 & 0x01 || r2 & 0x01 || !GR0_cdss(regs) || GR0_cdss(regs) > 5))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+  PTT(PTT_CL_INF, "CMPSC", regs->GR_L(r1), regs->GR_L(r2), regs->GR_L(0));
 
   /* Check for empty input */
   if(unlikely(!GR_A(r2 + 1, regs)))
@@ -1465,6 +1468,9 @@ static void ARCH_DEP(expand_is)(struct ec *ec, U16 is)
 
   /* Process preceded entries */
   psl = ECE_psl(ece);
+
+  PTT(PTT_CL_INF, "CMPSCe", ece, (U32) psl, is);
+
   while(likely(psl))
   {
     /* Check data exception */
@@ -1490,6 +1496,8 @@ static void ARCH_DEP(expand_is)(struct ec *ec, U16 is)
 
     /* Calculate partial symbol length */
     psl = ECE_psl(ece);
+
+    PTT(PTT_CL_INF, "CMPSCe", ece, (U32) psl, 0xffffffff);
   }
 
   /* Check data exception */
