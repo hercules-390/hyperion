@@ -34,7 +34,6 @@
 #include "hercules.h"
 #include "opcode.h"
 #include "inline.h"
-#include "pttrace.h"
 
 #ifdef FEATURE_COMPRESSION
 /*============================================================================*/
