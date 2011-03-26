@@ -1449,7 +1449,8 @@ static void ARCH_DEP(expand_is)(struct ec *ec, U16 is)
   BYTE *ece;                           /* Expansion Character Entry           */
   int i;
   int psl;                             /* Partial symbol length               */
-  U64 u64;
+  U64 u64a;
+  U64 u64b;
 
   /* Initialize values */
   cw = 0;
@@ -1472,12 +1473,14 @@ static void ARCH_DEP(expand_is)(struct ec *ec, U16 is)
 
   if(unlikely(pttclass & PTT_CL_INF))
   {
+    u64a = 0;
     for(i = 0; i < 8; i++)
     {
-      u64 <<= 8;
-      u64 |= ece[i];
+      u64a <<= 8;
+      u64a |= ece[i];
     }
-    PTT(PTT_CL_INF, "CMPSCe", u64, (U32) psl, is);
+    u64b = ((U64)(ECE_psl(ece)) << 56) | ((U64)(ECE_csl(ece)) << 40) | ((U64)(ECE_pptr(ece)) << 16) | ECE_ofst(ece);
+    PTT(PTT_CL_INF, "CMPSCe", u64a, u64b, is);
   }
 
   while(likely(psl))
@@ -1508,12 +1511,14 @@ static void ARCH_DEP(expand_is)(struct ec *ec, U16 is)
 
     if(unlikely(pttclass & PTT_CL_INF))
     {
+      u64a = 0;
       for(i = 0; i < 8; i++)
       {
-        u64 <<= 8;
-        u64 |= ece[i];
-      } 
-      PTT(PTT_CL_INF, "CMPSCe", u64, (U32) psl, 0xffffffff);
+        u64a <<= 8;
+        u64a |= ece[i];
+      }
+      u64b = ((U64)(ECE_psl(ece)) << 56) | ((U64)(ECE_csl(ece)) << 40) | ((U64)(ECE_pptr(ece)) << 16) | ECE_ofst(ece);
+      PTT(PTT_CL_INF, "CMPSCe", u64a, u64b, 0xffffffff);
     }	
   }
 
