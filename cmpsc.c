@@ -271,8 +271,6 @@ DEF_INST(compression_call)
   if(unlikely(r1 & 0x01 || r2 & 0x01 || !GR0_cdss(regs) || GR0_cdss(regs) > 5))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
-  PTT(PTT_CL_INF, "CMPSC", regs->GR_L(r1), regs->GR_L(r2), regs->GR_L(0));
-
   /* Check for empty input */
   if(unlikely(!GR_A(r2 + 1, regs)))
   {
@@ -1471,18 +1469,6 @@ static void ARCH_DEP(expand_is)(struct ec *ec, U16 is)
   /* Process preceded entries */
   psl = ECE_psl(ece);
 
-  if(unlikely(pttclass & PTT_CL_INF))
-  {
-    u64a = 0;
-    for(i = 0; i < 8; i++)
-    {
-      u64a <<= 8;
-      u64a |= ece[i];
-    }
-    u64b = ((U64)(ECE_psl(ece)) << 56) | ((U64)(ECE_csl(ece)) << 40) | ((U64)(ECE_pptr(ece)) << 16) | ECE_ofst(ece);
-    PTT(PTT_CL_INF, "CMPSCe", u64a, u64b, is);
-  }
-
   while(likely(psl))
   {
     /* Check data exception */
@@ -1508,18 +1494,6 @@ static void ARCH_DEP(expand_is)(struct ec *ec, U16 is)
 
     /* Calculate partial symbol length */
     psl = ECE_psl(ece);
-
-    if(unlikely(pttclass & PTT_CL_INF))
-    {
-      u64a = 0;
-      for(i = 0; i < 8; i++)
-      {
-        u64a <<= 8;
-        u64a |= ece[i];
-      }
-      u64b = ((U64)(ECE_psl(ece)) << 56) | ((U64)(ECE_csl(ece)) << 40) | ((U64)(ECE_pptr(ece)) << 16) | ECE_ofst(ece);
-      PTT(PTT_CL_INF, "CMPSCe", u64a, u64b, 0xffffffff);
-    }	
   }
 
   /* Check data exception */
