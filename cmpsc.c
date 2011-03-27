@@ -1445,10 +1445,7 @@ static void ARCH_DEP(expand_is)(struct ec *ec, U16 is)
 #endif /* #ifdef FEATURE_INTERVAL_TIMER */
 
   BYTE *ece;                           /* Expansion Character Entry           */
-  int i;
   int psl;                             /* Partial symbol length               */
-  U64 u64a;
-  U64 u64b;
 
   /* Initialize values */
   cw = 0;
