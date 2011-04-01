@@ -308,8 +308,8 @@ DLL_EXPORT
 char *
 sl_etoa( void *dbuf, void *sbuf, int slen )
 {
-    unsigned char *sptr;
-    unsigned char *dptr;
+    BYTE *sptr;
+    BYTE *dptr;
 
     sptr = sbuf;
     dptr = dbuf;
@@ -319,11 +319,7 @@ sl_etoa( void *dbuf, void *sbuf, int slen )
         dptr = sptr;
     }
 
-    while( slen > 0 )
-    {
-        slen--;
-        dptr[ slen ] = guest_to_host( sptr[ slen ] );
-    }
+    buf_guest_to_host( sptr, dptr, (u_int)slen );
 
     return( (char *)dptr );
 }

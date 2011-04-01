@@ -96,7 +96,6 @@ int             len;                    /* Result length             */
 
     set_codepage(NULL);
 
-
     for (len=0; len < srclen && len < destlen-1; len++)
         dest[len] = guest_to_host(src[len]);
     while (len > 0 && dest[len-1] == SPACE) len--;

@@ -5996,25 +5996,49 @@ BYTE     unitstat, code = 0;
 
                 if ( rc == 80 )
                 {
-                    buf_guest_to_host( sLABEL, sLABEL, 80 );
-                    sLABEL[52] = '\0';
+                    int a = TRUE;
+                    if ( strncmp( (char *)sLABEL, "VOL1", 4 ) != 0 )
+                    {
+                        str_guest_to_host( sLABEL, sLABEL, 51 );
+                        a = FALSE;
+                    }
+
                     if ( strncmp( (char *)sLABEL, "VOL1", 4 ) == 0 )
                     {
-                        WRMSG( HHC02805, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, &sLABEL[4] ); 
+                        char msgbuf[64];
+                        char volser[7];
+                        char owner[15];
+
+                        bzero( msgbuf, sizeof(msgbuf) );
+                        bzero( volser, sizeof(volser) );
+                        bzero( owner,  sizeof(owner)  );
+
+                        strncpy( volser, &sLABEL[04],  6 );
+                        strncpy( owner,  &sLABEL[37], 14 );
+
+                        MSGBUF( msgbuf, "%s%s%s%s%s", 
+                                        volser, 
+                                        strlen(owner) == 0? "":", Owner = \"",
+                                        strlen(owner) == 0? "": owner,
+                                        strlen(owner) == 0? "": "\"",
+                                        a ? " (ASCII LABELED) ": "" );
+                        
+                        WRMSG( HHC02805, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, msgbuf ); 
+                        msg = FALSE;
                     }
                     else
-                        WRMSG( HHC02805, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "missing" ); 
+                        WRMSG( HHC02806, "I", SSID_TO_LCSS(dev->ssid), dev->devnum ); 
                 }
                 else
                 {
-                    WRMSG( HHC02805, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "missing" ); 
+                    WRMSG( HHC02806, "I", SSID_TO_LCSS(dev->ssid), dev->devnum ); 
                 }
     
                 rc = dev->tmh->rewind( dev, &unitstat, code);
             }
             else
             {
-                WRMSG( HHC02801, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "Tape not at BOT" );
+                WRMSG( HHC02801, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[2], "Tape not at BOT" );
                 msg = FALSE;
             }
         }

@@ -3612,10 +3612,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if ((*unitstat & CSW_SM) && dev->ckdkeytrace
             && isprint(guest_to_host(iobuf[0])))
         {
-            BYTE module[45]; int i;
-            for (i=0; i < (ssize_t)sizeof(module)-1 && i < num; i++)
-                module[i] = guest_to_host(iobuf[i]);
-            module[i] = '\0';
+            BYTE module[45]; 
+            str_guest_to_host( iobuf, module, (u_int)num );
             WRMSG (HHC00423, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, module);
         }
 #endif /*OPTION_CKD_KEY_TRACING*/

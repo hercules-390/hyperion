@@ -390,6 +390,7 @@ do { \
 #define HHC00239 "%1d:%04X Tape AUTO_CREATE or AUTOINIT not specified; Mount request failed"
 #define HHC00240 "%1d:%04X Tape SCRATCH '%s', type '%s': tape volume '%s' being returned to pool"
 #define HHC00241 "%1d:%04X Tape file '%s', type '%s': '%s'"
+#define HHC00242 "%1d:%04X Tape DWTVFscrtap must be 6 character volser; defaulting to SCRTAP"
 
 // reserve 003xx for compressed dasd device related
 #define HHC00300 "%1d:%04X CCKD file: error initializing shadow files"
@@ -1834,7 +1835,8 @@ do { \
 #define HHC02802 "%1d:%04X Current file number %d"
 #define HHC02803 "%1d:%04X Current block number %d"
 #define HHC02804 "%1d:%04X File protect enabled"
-#define HHC02805 "%1d:%04X VOL1 = %s"
+#define HHC02805 "%1d:%04X Volser = %s"
+#define HHC02806 "%1d:%04X Unlabeled tape"
 
 
 // reserve 04xxx for host os specific component messages

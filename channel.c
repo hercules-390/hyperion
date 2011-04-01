@@ -74,8 +74,7 @@ do { \
 static void format_iobuf_data (RADR addr, BYTE *area, DEVBLK *dev)          /*@IWZ*/
 {
 BYTE   *a;                              /* -> Byte in main storage   */
-int     i, j;                           /* Array subscripts          */
-BYTE    c;                              /* Character work area       */
+int     j;                              /* Array subscripts          */
 
     area[0] = '\0';
     if (addr <= dev->mainlim - 16)
@@ -87,13 +86,7 @@ BYTE    c;                              /* Character work area       */
                 a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7],
                 a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]);
 
-        for (i = 0; i < 16; i++)
-        {
-            c = guest_to_host(*a++);
-            if (!isprint(c)) c = '.';
-            area[j++] = c;
-        }
-        area[j] = '\0';
+        prt_guest_to_host(a, &area[j], 16);
     }
 
 } /* end function format_iobuf_data */
@@ -964,7 +957,7 @@ int pending = 0;
         {
             if(sysblk.ioq == dev)
                 sysblk.ioq = dev->nextioq;
-            else if ( sysblk.ioq != NULL )      /* add check for empty IOQ */
+            else if ( sysblk.ioq != NULL )
             {
              DEVBLK *tmp;
                 for(tmp = sysblk.ioq; tmp->nextioq != NULL && tmp->nextioq != dev; tmp = tmp->nextioq);
