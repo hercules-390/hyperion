@@ -272,10 +272,10 @@
 /* Use these to suppress unreferenced variable warnings...           */
 /*-------------------------------------------------------------------*/
 
-#define  UNREFERENCED(x)      ((x)==(x))
-#define  UNREFERENCED_370(x)  ((x)==(x))
-#define  UNREFERENCED_390(x)  ((x)==(x))
-#define  UNREFERENCED_900(x)  ((x)==(x))
+#define  UNREFERENCED(x)      while(0 && x)
+#define  UNREFERENCED_370(x)  while(0 && x)
+#define  UNREFERENCED_390(x)  while(0 && x)
+#define  UNREFERENCED_900(x)  while(0 && x)
 
 /*-------------------------------------------------------------------*/
 /* Macro for command parsing with variable length                    */
