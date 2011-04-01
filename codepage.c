@@ -1620,6 +1620,26 @@ size_t inbytes = 1, outbytes = 1;
         return codepage_conv->g2h[byte];
 }
 
+DLL_EXPORT void buf_host_to_guest( const byte *psinbuf, byte *psoutbuf, u_int ilength )
+{
+    u_int count;
+
+    for( count = 0; count < ilength; count++ )
+        psoutbuf[count] = host_to_guest(psinbuf[count]);
+
+    return;
+}
+
+DLL_EXPORT void buf_guest_to_host( const byte *psinbuf, byte *psoutbuf, u_int ilength )
+{
+    u_int count;
+
+    for( count = 0; count < ilength; count++ )
+        psoutbuf[count] = guest_to_host(psinbuf[count]);
+    
+    return;
+}
+
 static int import_file(char *fn, char *buf, int buflen)
 {
     FILE   *binfile;

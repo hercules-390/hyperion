@@ -5996,10 +5996,9 @@ BYTE     unitstat, code = 0;
 
                 if ( rc == 80 )
                 {
-                    for( count = 0; count < rc; count++ )
-                    sLABEL[count] = guest_to_host(sLABEL[count]);
+                    buf_guest_to_host( sLABEL, sLABEL, 80 );
                     sLABEL[52] = '\0';
-                    if ( strncmp( (char *)sLABEL, "VOL1", 4 ) )
+                    if ( strncmp( (char *)sLABEL, "VOL1", 4 ) == 0 )
                     {
                         WRMSG( HHC02805, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, &sLABEL[4] ); 
                     }

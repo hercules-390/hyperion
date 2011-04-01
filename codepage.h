@@ -28,5 +28,6 @@ COD_DLL_IMPORT void set_codepage(char *name);
 COD_DLL_IMPORT int update_codepage(int argc, char *argv[], char *table );
 COD_DLL_IMPORT unsigned char host_to_guest (unsigned char byte);
 COD_DLL_IMPORT unsigned char guest_to_host (unsigned char byte);
-
+COD_DLL_IMPORT void buf_guest_to_host( const byte *psinbuf, byte *psoutbuf, u_int ilength );
+COD_DLL_IMPORT void buf_host_to_guest( const byte *psinbuf, byte *psoutbuf, u_int ilength );
 #endif /* _HERCULES_CODEPAGE_H */
