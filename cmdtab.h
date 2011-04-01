@@ -968,6 +968,7 @@ COMMAND("mt",          SYSCMDALL,          mt_cmd,
   "       fsr n     forward space 'n' records  (default = 1)\n"
   "       bsr n     backward space 'n' records (default = 1)\n"
   "       wtm n     write 'n' tapemarks        (default = 1)\n"
+  "       dse       data secure erase\n"
   "       dvol1     display VOL1 header\n"                     )
 
 COMMAND("cd",        SYSCMDALL|SYSNDIAG, cd_cmd,

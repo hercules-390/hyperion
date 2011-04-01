@@ -5824,6 +5824,7 @@ BYTE     unitstat, code = 0;
             ( CMD(argv[2],bsr,3) ) ||
             ( CMD(argv[2],asf,3) ) ||
             ( CMD(argv[2],wtm,3) ) ||
+            ( CMD(argv[2],dse,3) ) ||
             ( CMD(argv[2],dvol1,4) )
           )
        )
@@ -5980,36 +5981,43 @@ BYTE     unitstat, code = 0;
     }
     else if ( CMD(argv[2],dvol1,4) )
     {
-        if ( dev->blockid == 0 )
+        if (argc > 3)
         {
-            BYTE    sLABEL[65535];
-
-            rc = dev->tmh->read( dev, sLABEL, &unitstat, code );
-
-            if ( rc == 80 )
-            {
-                for( count = 0; count < rc; count++ )
-                sLABEL[count] = guest_to_host(sLABEL[count]);
-                sLABEL[52] = '\0';
-                if ( strncmp( (char *)sLABEL, "VOL1", 4 ) )
-                {
-                    WRMSG( HHC02805, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, &sLABEL[4] ); 
-                }
-                else
-                    WRMSG( HHC02805, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "missing" ); 
-            }
-            else
-            {
-                WRMSG( HHC02805, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "missing" ); 
-            }
-    
-            rc = dev->tmh->rewind( dev, &unitstat, code);
-
+            WRMSG(HHC02299,"E", argv[0]);
+            msg = FALSE;
         }
         else
         {
-            WRMSG( HHC02801, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "Tape not at BOT" );
-            msg = FALSE;
+            if ( dev->blockid == 0 )
+            {
+                BYTE    sLABEL[65535];
+
+                rc = dev->tmh->read( dev, sLABEL, &unitstat, code );
+
+                if ( rc == 80 )
+                {
+                    for( count = 0; count < rc; count++ )
+                    sLABEL[count] = guest_to_host(sLABEL[count]);
+                    sLABEL[52] = '\0';
+                    if ( strncmp( (char *)sLABEL, "VOL1", 4 ) )
+                    {
+                        WRMSG( HHC02805, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, &sLABEL[4] ); 
+                    }
+                    else
+                        WRMSG( HHC02805, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "missing" ); 
+                }
+                else
+                {
+                    WRMSG( HHC02805, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "missing" ); 
+                }
+    
+                rc = dev->tmh->rewind( dev, &unitstat, code);
+            }
+            else
+            {
+                WRMSG( HHC02801, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "Tape not at BOT" );
+                msg = FALSE;
+            }
         }
     }
     else if ( CMD(argv[2],wtm,3) )
@@ -6036,6 +6044,28 @@ BYTE     unitstat, code = 0;
             }
 
             dev->tmh->sync( dev, &unitstat, code );
+        }
+    }
+    else if ( CMD(argv[2],dse,3) )
+    {
+        if (argc > 3)
+        {
+            WRMSG(HHC02299,"E", argv[0]);
+            msg = FALSE;
+        }
+        else
+        {
+            if ( dev->readonly || dev->tdparms.logical_readonly )
+            {
+                WRMSG( HHC02804, "E", SSID_TO_LCSS(dev->ssid), dev->devnum );
+                msg = FALSE;
+            }
+            else
+            {
+                rc = dev->tmh->dse( dev, &unitstat, code);
+
+                dev->tmh->sync( dev, &unitstat, code );
+            }
         }
     }
 
