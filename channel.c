@@ -39,6 +39,41 @@
 #include "w32chan.h"
 #endif // defined(OPTION_FISHIO)
 
+#if !defined(PREFETCH_STRUCT)
+#define PREFETCH_STRUCT
+
+/* Define 256 entries in the prefetch table */
+#define PF_SIZE 256
+
+/* IDAW Types */
+enum PF_IDATYPE {
+   PF_NO_IDAW = 0,
+   PF_IDAW1   = 1,
+   PF_IDAW2   = 2,
+   PF_MIDAW   = 3
+};
+
+typedef struct                          /* Prefetch data structure   */
+{
+    u_int   seq;                        /* Counter                   */
+    u_int   pos;                        /* Highest valid position    */
+    u_int   reqcount;                   /* Requested count           */
+    U8      prevcode;                   /* Previous CCW opcode       */
+    U8      opcode;                     /* CCW opcode                */
+    U16     reserved;
+    BYTE    chanstat[PF_SIZE];          /* Channel status            */
+    U32     ccwaddr[PF_SIZE];           /* CCW address (SCSW CCW)    */
+    U32     datalen[PF_SIZE];           /* Count (length)            */
+    RADR    dataaddr[PF_SIZE];          /* Address                   */
+    U8      ccwflags[PF_SIZE];          /* CCW flags                 */
+    U16     ccwcount[PF_SIZE];          /* Count (length)            */
+    U32     idawaddr[PF_SIZE];          /* IDAW address              */
+    U8      idawtype[PF_SIZE];          /* IDAW type                 */
+    U8      idawflag[PF_SIZE];          /* IDAW flags                */
+} PREFETCH;
+
+#endif
+
 void  call_execute_ccw_chain(int arch_mode, void* pDevBlk);
 
 #ifdef OPTION_IODELAY_KLUDGE
@@ -71,22 +106,35 @@ do { \
 /*-------------------------------------------------------------------*/
 /* FORMAT I/O BUFFER DATA                                            */
 /*-------------------------------------------------------------------*/
-static void format_iobuf_data (RADR addr, BYTE *area, DEVBLK *dev)          /*@IWZ*/
+void format_iobuf_data( const RADR addr, BYTE *area, const DEVBLK *dev, const u_int len)          /*@IWZ*/
 {
 BYTE   *a;                              /* -> Byte in main storage   */
-int     j;                              /* Array subscripts          */
+u_int   i, j, k;                        /* Array subscripts          */
+BYTE    workarea[17];                   /* Character String work     */
 
+    k = MIN(len, sizeof(workarea)-1);
+    
     area[0] = '\0';
-    if (addr <= dev->mainlim - 16)
+    
+    if (!dev->is_immed && k && addr <= dev->mainlim - k)
     {
-        a = dev->mainstor + addr;
+        memcpy(workarea, dev->mainstor + addr, k);
+        a = workarea;
         j = sprintf ((char *)area,
                 "=>%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X"
                 " %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X ",
                 a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7],
                 a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]);
 
-        prt_guest_to_host(a, &area[j], 16);
+        /* Blank out unused area */
+        if (k != 16)
+        {
+            i = ((len + 1) * 2) + (len / 4);
+            memset(area + i, ' ', strlen((char *)area) - i);
+        }
+
+        /* Append translation */
+        prt_guest_to_host(a, &area[j], k);
     }
 
 } /* end function format_iobuf_data */
@@ -94,11 +142,15 @@ int     j;                              /* Array subscripts          */
 /*-------------------------------------------------------------------*/
 /* DISPLAY CHANNEL COMMAND WORD AND DATA                             */
 /*-------------------------------------------------------------------*/
-static void display_ccw (DEVBLK *dev, BYTE ccw[], U32 addr)
+void display_ccw ( const DEVBLK *dev, const BYTE ccw[], const U32 addr, U32 count, const U8 flags )
 {
 BYTE    area[64];                       /* Data display area         */
 
-    format_iobuf_data (addr, area, dev);
+    if ( flags & CCW_FLAGS_SKIP || ( ccw[0] & 0x0f ) == 0x08 )
+        count = 0;
+
+    format_iobuf_data( addr, area, dev, count );
+   
     WRMSG (HHC01315, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
             ccw[0], ccw[1], ccw[2], ccw[3],
             ccw[4], ccw[5], ccw[6], ccw[7], area);
@@ -106,9 +158,32 @@ BYTE    area[64];                       /* Data display area         */
 } /* end function display_ccw */
 
 /*-------------------------------------------------------------------*/
+/* DISPLAY IDAW AND DATA                                             */
+/*-------------------------------------------------------------------*/
+void display_idaw ( const DEVBLK *dev, const BYTE type, const BYTE flag, const RADR addr, const U16 count )
+{
+BYTE    area[64];                       /* Data display area         */
+
+    format_iobuf_data( addr, area, dev, count );
+    
+    switch(type)
+    {
+        case PF_IDAW1:
+            WRMSG (HHC01302, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, (U32)addr, count, area ); 
+            break;
+        case PF_IDAW2:
+            WRMSG (HHC01303, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, (U64)addr, count, area ); 
+            break;
+        case PF_MIDAW:
+            WRMSG (HHC01301, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, flag, count, (U64)addr, area ); 
+    }
+
+} /* end function display_idaw */
+
+/*-------------------------------------------------------------------*/
 /* DISPLAY CHANNEL STATUS WORD                                       */
 /*-------------------------------------------------------------------*/
-static void display_csw (DEVBLK *dev, BYTE csw[])
+void display_csw (const DEVBLK *dev, const BYTE csw[])
 {
     WRMSG (HHC01316, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
             csw[4], csw[5], csw[6], csw[7],
@@ -119,7 +194,7 @@ static void display_csw (DEVBLK *dev, BYTE csw[])
 /*-------------------------------------------------------------------*/
 /* DISPLAY SUBCHANNEL STATUS WORD                                    */
 /*-------------------------------------------------------------------*/
-static void display_scsw (DEVBLK *dev, SCSW scsw)
+void display_scsw ( const DEVBLK *dev, const SCSW scsw)
 {
     WRMSG (HHC01317, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
             scsw.flag0, scsw.flag1, scsw.flag2, scsw.flag3,
@@ -1871,7 +1946,7 @@ BYTE    midawflg;                       /* MIDAW flags            @MW*/
             /* Display the MIDAW if CCW tracing is on */
             if (dev->ccwtrace || dev->ccwstep)
             {
-                format_iobuf_data (midawdat, area, dev);
+                format_iobuf_data (midawdat, area, dev, count);
                 WRMSG (HHC01301, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, midawflg, midawlen, (U64)midawdat, area);
             }
 
@@ -1964,7 +2039,7 @@ BYTE    midawflg;                       /* MIDAW flags            @MW*/
             /* Display the IDAW if CCW tracing is on */
             if (dev->ccwtrace || dev->ccwstep)
             {
-                format_iobuf_data (idadata, area, dev);
+                format_iobuf_data (idadata, area, dev, count);
                 if (idawfmt == 1)                              /*@IWZ*/
                 {                                              /*@IWZ*/
                     WRMSG (HHC01302, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, (U32)idadata, idalen, area); /*@IWZ*/
@@ -2743,7 +2818,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 
         /* Display the CCW */
         if (dev->ccwtrace || dev->ccwstep)
-            display_ccw (dev, ccw, addr);
+            display_ccw( dev, ccw, addr, count, flags );
 
         /*----------------------------------------------*/
         /* TRANSFER IN CHANNEL (TIC) command            */
@@ -3152,7 +3227,7 @@ resume_suspend:
             if (!(dev->ccwtrace || dev->ccwstep || tracethis)
               && (CPU_STEPPING_OR_TRACING_ALL || sysblk.pgminttr
                 || dev->ccwtrace || dev->ccwstep) )
-                display_ccw (dev, ccw, addr);
+                display_ccw( dev, ccw, addr, count, flags );
 
             /* Activate tracing for this CCW chain only
                if any trace is already active */
@@ -3166,7 +3241,7 @@ resume_suspend:
         {
             /* Format data for READ or SENSE commands only */
             if (IS_CCW_READ(dev->code) || IS_CCW_SENSE(dev->code) || IS_CCW_RDBACK(dev->code))
-                format_iobuf_data (addr, area, dev);
+                format_iobuf_data (addr, area, dev, count);
             else
                 area[0] = '\0';
 
@@ -3772,7 +3847,7 @@ DLL_EXPORT int device_attention (DEVBLK *dev, BYTE unitstat)
     return 3;
 }
 
-void  call_execute_ccw_chain(int arch_mode, void* pDevBlk)
+void  call_execute_ccw_chain( int arch_mode, void* pDevBlk)
 {
     switch (arch_mode)
     {

@@ -5990,7 +5990,7 @@ BYTE     unitstat, code = 0;
         {
             if ( dev->blockid == 0 )
             {
-                BYTE    sLABEL[65535];
+                BYTE    sLABEL[65536];
 
                 rc = dev->tmh->read( dev, sLABEL, &unitstat, code );
 
