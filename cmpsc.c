@@ -1863,7 +1863,7 @@ static int ARCH_DEP(vstore)(struct ec *ec, BYTE *buf, unsigned len)
     {
       memcpy(ec->dest, &buf[len1], (len2 > 0x800 ? 0x800 : len2));
       *sk |= (STORKEY_REF | STORKEY_CHANGE);
-      if(unlikely(len2 > 0x800))
+      if(unlikely(len2 >= 0x800))
       {
         len1 += 0x800;
         len2 -= 0x800;
@@ -1897,4 +1897,4 @@ static int ARCH_DEP(vstore)(struct ec *ec, BYTE *buf, unsigned len)
     #define _GEN_ARCH _ARCHMODE3
     #include "cmpsc.c"
   #endif /* #ifdef _ARCHMODE3 */
-#endif /*#ifndef _GEN_ARCH */
+#endif /* #ifndef _GEN_ARCH */
