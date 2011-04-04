@@ -967,7 +967,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             int_scsi_rewind_unload( dev, unitstat, code );
         else
 #endif
+        {
             dev->tmh->close(dev);
+            *unitstat=0;
+        }
 
         /* Update matrix display if needed */
         if ( TAPEDISPTYP_UNLOADING == dev->tapedisptype )
@@ -3731,33 +3734,16 @@ void build_sense_3410_3420 (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcod
     switch(ERCode)
     {
     case TAPE_BSENSE_TAPEUNLOADED:
-        switch(ccwcode)
-        {
-        case 0x01: // write
-        case 0x02: // read
-        case 0x0C: // read backward
-            *unitstat = CSW_CE | CSW_UC | (dev->tdparms.deonirq?CSW_DE:0);
-            break;
-        case 0x03: // nop
-            *unitstat = CSW_UC;
-            break;
-        case 0x0f: // rewind unload
-            /*
-            *unitstat = CSW_CE | CSW_UC | CSW_DE | CSW_CUE;
-            */
-            *unitstat = CSW_CE | CSW_UC | CSW_DE | CSW_CUE; /* pfg why is CE missing ? */
-            break;
-        default:
-            *unitstat = CSW_CE | CSW_UC | CSW_DE;
-            break;
-        } // end switch(ccwcode)
+        *unitstat = CSW_UC;
         dev->sense[0] = SENSE_IR;
         dev->sense[1] = SENSE1_TAPE_TUB;
         break;
     case TAPE_BSENSE_RUN_SUCCESS: /* RewUnld op */
-        *unitstat = CSW_UC | CSW_DE | CSW_CUE;
-        /*
+        /* FIXME : CE Should have been presented before */
+        /*         Same as for 348x drives */
         *unitstat = CSW_CE | CSW_UC | CSW_DE | CSW_CUE;
+        /*
+        *unitstat = CSW_UC | CSW_DE | CSW_CUE;
         */
         dev->sense[0] = SENSE_IR;
         dev->sense[1] = SENSE1_TAPE_TUB;
@@ -3798,7 +3784,7 @@ void build_sense_3410_3420 (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcod
         break;
     case TAPE_BSENSE_BADCOMMAND:
     case TAPE_BSENSE_INCOMPAT:
-        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        *unitstat = CSW_UC;
         dev->sense[0] = SENSE_CR;
         dev->sense[4] = 0x01;
         break;
@@ -3895,29 +3881,7 @@ int sns4mat = TAPE_SNS7_FMT_20_3480;
     case TAPE_BSENSE_TAPEUNLOADED:
         dev->sense[0] = TAPE_SNS0_INTVREQ;
         dev->sense[3] = TAPE_ERA_43_DRIVE_NOT_READY; /* ERA 43 = Int Req */
-        switch(ccwcode)
-        {
-        case 0x01: // write
-        case 0x02: // read
-        case 0x0C: // read backward
-            *unitstat = CSW_CE | CSW_UC;
-            break;
-        case 0x03: // nop
-            *unitstat = CSW_UC;
-            break;
-        case 0x04: // sense
-            *unitstat = CSW_CE | CSW_UC | CSW_DE;
-            dev->sense[3] = TAPE_ERA_2B_ENVIRONMENTAL_DATA_PRESENT;
-            break;
-        case 0x0f: // rewind unload
-            *unitstat = CSW_CE | CSW_UC | CSW_DE | CSW_CUE;
-            dev->sense[3] = TAPE_ERA_2B_ENVIRONMENTAL_DATA_PRESENT;
-            break;
-        default:
-            *unitstat = CSW_CE | CSW_UC | CSW_DE;
-            dev->sense[3] = TAPE_ERA_2B_ENVIRONMENTAL_DATA_PRESENT;
-            break;
-        } // end switch(ccwcode)
+        *unitstat = CSW_UC;
         break;
     case TAPE_BSENSE_RUN_SUCCESS:        /* Not an error */
         /* NOT an error, But according to GA32-0219-02 2.1.2.2
@@ -3946,7 +3910,7 @@ int sns4mat = TAPE_SNS7_FMT_20_3480;
         dev->sense[3] = TAPE_ERA_25_WRITE_DATA_CHECK;
         break;
     case TAPE_BSENSE_BADCOMMAND:
-        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        *unitstat = CSW_UC;
         dev->sense[0] = TAPE_SNS0_CMDREJ;
         dev->sense[3] = TAPE_ERA_27_COMMAND_REJECT;
         break;
@@ -4227,31 +4191,12 @@ void build_sense_Streaming (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcod
     switch(ERCode)
     {
     case TAPE_BSENSE_TAPEUNLOADED:
-        switch(ccwcode)
-        {
-        case 0x01: // write
-        case 0x02: // read
-        case 0x0C: // read backward
-            *unitstat = CSW_CE | CSW_UC | (dev->tdparms.deonirq?CSW_DE:0);
-            break;
-        case 0x03: // nop
-            *unitstat = CSW_UC;
-            break;
-        case 0x0f: // rewind unload
-            /*
-            *unitstat = CSW_CE | CSW_UC | CSW_DE | CSW_CUE;
-            */
-            *unitstat = CSW_UC | CSW_DE | CSW_CUE;
-            break;
-        default:
-            *unitstat = CSW_CE | CSW_UC | CSW_DE;
-            break;
-        } // end switch(ccwcode)
+        *unitstat = CSW_UC;
         dev->sense[0] = SENSE_IR;
         dev->sense[3] = 6;        /* Int Req ERAC */
         break;
     case TAPE_BSENSE_RUN_SUCCESS: /* RewUnld op */
-        *unitstat = CSW_UC | CSW_DE | CSW_CUE;
+        *unitstat = CSW_UC | CSW_CE | CSW_DE | CSW_CUE;
         /*
         *unitstat = CSW_CE | CSW_UC | CSW_DE | CSW_CUE;
         */
@@ -4289,7 +4234,7 @@ void build_sense_Streaming (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcod
     case TAPE_BSENSE_BADCOMMAND:
         dev->sense[0] = SENSE_CR;
         dev->sense[3] = 0x0C;     /* Bad Command */
-        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        *unitstat = CSW_UC;
         break;
     case TAPE_BSENSE_WRITEPROTECT:
         dev->sense[0] = SENSE_CR;

@@ -1700,8 +1700,17 @@ void ReqAutoMount( DEVBLK *dev )
     if (dev->fd < 0)
     {
         BYTE unitstat = 0, code = 0;
+        BYTE *sensebkup;
+
+        /* Save any pending sense */
+        sensebkup=malloc(dev->numsense);
+        memcpy(sensebkup,dev->sense,dev->numsense);
 
         dev->tmh->open( dev, &unitstat, code );
+
+        /* Restore pending sense */
+        memcpy(dev->sense,sensebkup,dev->numsense);
+        free(sensebkup);
 
 #if defined(OPTION_SCSI_TAPE)
         if (TAPEDEVT_SCSITAPE == dev->tapedevt)
