@@ -916,7 +916,7 @@ char            wbuf[150];
     {
         /* Set unit check with intervention required */
         dev->sense[0] = SENSE_IR;
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        *unitstat = CSW_UC;
         return;
     }
 
@@ -1363,7 +1363,7 @@ char            wbuf[150];
     /*---------------------------------------------------------------*/
         /* Set command reject sense byte, and unit check status */
         dev->sense[0] = SENSE_CR;
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        *unitstat = CSW_UC;
 
     } /* end switch(code) */
 
