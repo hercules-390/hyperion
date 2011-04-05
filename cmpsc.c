@@ -1323,7 +1323,8 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   ec.dest = NULL;
 
   /* Initialize dictionary maddr addresses */
-  vaddr = GR1_dictor(regs) + 0x800;    /* Address alphabet entries not needed */
+  ec.dict[0] = NULL;                   /* Address alphabet entries not needed */
+  vaddr = GR1_dictor(regs) + 0x800;
   for(i = 1; i < (0x01 << GR0_cdss(regs)); i++)
   {
     ec.dict[i] = MADDR(vaddr, r2, regs, ACCTYPE_READ, regs->psw.pkey);
