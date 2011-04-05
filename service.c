@@ -819,7 +819,10 @@ int servc_hresume(void *file)
             SR_READ_VALUE(file, len, &servc_attn_pending, sizeof(servc_attn_pending));
             break;
         case SR_SYS_SERVC_SCPCMD:
-            SR_READ_STRING(file, servc_scpcmdstr, sizeof(servc_scpcmdstr));
+            if ( len <= sizeof(servc_scpcmdstr) )
+                SR_READ_STRING(file, servc_scpcmdstr, sizeof(servc_scpcmdstr));
+            else
+                SR_READ_SKIP(file, len);
             break;
         case SR_SYS_SERVC_SQC:
             SR_READ_VALUE(file, len, &servc_signal_quiesce_count,
