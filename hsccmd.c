@@ -1114,30 +1114,37 @@ int start_cmd(int argc, char *argv[], char *cmdline)
 
             if ( CMD(devclass,PRT,3) || CMD(devclass,PCH,3) )
             {
-                /* un-stop the unit record device and raise attention interrupt */
-                /* PRINTER or PUNCH */
+                if(dev->stopdev == TRUE)
+                {
+                    /* un-stop the unit record device and raise attention interrupt */
+                    /* PRINTER or PUNCH */
 
-                stopdev = dev->stopdev;
+                    stopdev = dev->stopdev;
 
-                dev->stopdev = FALSE;
+                    dev->stopdev = FALSE;
 
-                rc = device_attention (dev, CSW_ATTN);
+                    rc = device_attention (dev, CSW_DE);
 
-                if (rc) dev->stopdev = stopdev;
+                    if (rc) dev->stopdev = stopdev;
 
-                switch (rc) {
-                case 0: WRMSG(HHC02212, "I", lcss,devnum);
-                    break;
-                case 1: WRMSG(HHC02213, "E", lcss, devnum, ": busy or interrupt pending");
-                    break;
-                case 2: WRMSG(HHC02213, "E", lcss, devnum, ": attention request rejected");
-                    break;
-                case 3: WRMSG(HHC02213, "E", lcss, devnum, ": subchannel not enabled");
-                    break;
+                    switch (rc) {
+                    case 0: WRMSG(HHC02212, "I", lcss,devnum);
+                        break;
+                    case 1: WRMSG(HHC02213, "E", lcss, devnum, ": busy or interrupt pending");
+                        break;
+                    case 2: WRMSG(HHC02213, "E", lcss, devnum, ": attention request rejected");
+                        break;
+                    case 3: WRMSG(HHC02213, "E", lcss, devnum, ": subchannel not enabled");
+                        break;
+                    }
+
+                    if ( rc != 0 )
+                        rc = -1;
                 }
-
-                if ( rc != 0 )
-                    rc = -1;
+                else
+                {
+                    WRMSG(HHC02213, "W", lcss, devnum, ": already started");
+                }
             }
             else
             {
