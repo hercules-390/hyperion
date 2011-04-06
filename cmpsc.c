@@ -84,8 +84,6 @@
 /*----------------------------------------------------------------------------*/
 #ifdef OPTION_CMPSC_DEBUG
 #define COMMITREGS2(regs, iregs, r1, r2) \
-  if(unlikely(INTERRUPT_PENDING(regs))) \
-    WRMSG(HHC90315, "D"); \
   __COMMITREGS2((regs), (iregs), (r1), (r2)) \
   WRMSG(HHC90312, "D");
 #else
@@ -174,6 +172,7 @@
 /* Constants                                                                  */
 /*----------------------------------------------------------------------------*/
 #define ECACHE_SIZE          32768     /* Expanded iss cache size             */
+#define MINPROC_SIZE         32768     /* Minumum processing size             */
 
 /*----------------------------------------------------------------------------*/
 /* Typedefs and prototypes                                                    */
@@ -182,8 +181,10 @@
 struct cc                              /* Compress context                    */
 {
   BYTE *cce;                           /* Character entry under investigation */
+  unsigned dctsz;                      /* Dictionary size                     */
   BYTE *dest;                          /* Destination MADDR address           */
   BYTE *dict[32];                      /* Dictionary MADDR addresses          */
+  GREG dictor;                         /* Dictionary origin                   */
   BYTE *edict[32];                     /* Expansion dictionary MADDR addrs    */
   int f1;                              /* Indication format-1 sibling descr   */
   REGS *iregs;                         /* Intermediate registers              */
@@ -200,6 +201,7 @@ struct ec                              /* Expand context                      */
 {
   BYTE *dest;                          /* Destination MADDR page address      */
   BYTE *dict[32];                      /* Dictionary MADDR addresses          */
+  GREG dictor;                         /* Dictionary origin                   */
   BYTE ec[ECACHE_SIZE];                /* Expanded index symbol cache         */
   int eci[8192];                       /* Index within cache for is           */
   int ecl[8192];                       /* Size of expanded is                 */
@@ -402,40 +404,25 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 {
   struct cc cc;                        /* Compression context                 */
   BYTE ch;                             /* Character read                      */
-  GREG dictor;                         /* Dictionary origin                   */
   int eos;                             /* indication end of source            */
   int i;
   U16 is;                              /* Last matched index symbol           */
-  GREG vaddr;                          /* Virtual address                     */
+  GREG srclen;                         /* Source length                       */
 
   /* Initialize values */
-  dictor = GR1_dictor(regs);
   eos = 0;
+  srclen = GR_A(r2 + 1, regs);
 
-  /* Initialize dictionary MADDR addresses */
-  vaddr = dictor;
+  /* Initialize compression context */
+  cc.dctsz = GR0_dctsz(regs);
+  cc.dest = NULL;
   for(i = 0; i < (0x01 << GR0_cdss(regs)); i++)
   {
-    cc.dict[i] = MADDR(vaddr, r2, regs, ACCTYPE_READ, regs->psw.pkey);
-    vaddr += 0x800;
-  }
-
-  /* Initialize format-1 sibling descriptor indicator */
+    cc.dict[i] = NULL;
+    cc.edict[i] = NULL;
+  }  
+  cc.dictor = GR1_dictor(regs);
   cc.f1 = GR0_f1(regs);
-
-  /* Initialize expansion dictionary MADDR addresses */
-  if(cc.f1)
-  {
-    vaddr = dictor + GR0_dctsz(regs);
-    for(i = 0; i < (0x01 << GR0_cdss(regs)); i++)
-    {
-      cc.edict[i] = MADDR(vaddr, r2, regs, ACCTYPE_READ, regs->psw.pkey);
-      vaddr += 0x800;
-    }
-  }
-
-  /* Initialize dest, source maddr page address and symbol size */
-  cc.dest = NULL;
   cc.iregs = iregs;
   cc.ofst = 0;
   cc.r1 = r1;
@@ -517,9 +504,14 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
     /* Commit registers */
     COMMITREGS2(regs, iregs, r1, r2);
 
-    /* Return with cc3 on interrupt pending */
-    if(unlikely(INTERRUPT_PENDING(regs)))
+    /* Return with cc3 on interrupt pending after a minumum size of processing */
+    if(unlikely(srclen - GR_A(r2 + 1, regs) >= MINPROC_SIZE && INTERRUPT_PENDING(regs)))
     {
+
+#ifdef OPTION_CMPSC_DEBUG
+      WRMSG(HHC90315, "D");
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
+
       regs->psw.cc = 3;
       return;
     }
@@ -560,8 +552,10 @@ static BYTE *ARCH_DEP(fetch_cce)(struct cc *cc, unsigned index)
   unsigned cct;                        /* Child count                         */
 
   index *= 8;
+  if(unlikely(!cc->dict[index / 0x800]))
+    cc->dict[index / 0x800] = MADDR(cc->dictor + (index / 0x800) * 0x800, cc->r2, cc->regs, ACCTYPE_READ, cc->regs->psw.pkey);
   cce = &cc->dict[index / 0x800][index % 0x800];
-  ITIMER_SYNC(GR1_dictor(cc->regs) + index, 8 - 1, cc->regs);
+  ITIMER_SYNC(cc->dictor + index, 8 - 1, cc->regs);
 
 #ifdef OPTION_CMPSC_DEBUG
   WRMSG(HHC90316, "D", index / 8);
@@ -875,11 +869,6 @@ static int ARCH_DEP(search_cce)(struct cc *cc, BYTE *ch, U16 *is)
 static int ARCH_DEP(search_sd)(struct cc *cc, BYTE *ch, U16 *is)
 {
   BYTE *ccce;                          /* Child compression character entry   */
-
-#ifdef FEATURE_INTERVAL_TIMER
-  GREG dictor;                         /* Dictionary origin                   */
-#endif /* #ifdef FEATURE_INTERVAL_TIMER */
-
   int i;                               /* Sibling character index             */
   U16 index;                           /* Index within dictionary             */
   int ind_search_siblings;             /* Indicator for keep searching        */
@@ -891,10 +880,6 @@ static int ARCH_DEP(search_sd)(struct cc *cc, BYTE *ch, U16 *is)
   int y_in_parent;                     /* Indicator if y bits are in parent   */
 
   /* Initialize values */
-
-#ifdef FEATURE_INTERVAL_TIMER
-  dictor = GR1_dictor(cc->regs);
-#endif /* #ifdef FEATURE_INTERVAL_TIMER */
 
   ind_search_siblings = 1;
 
@@ -912,14 +897,18 @@ static int ARCH_DEP(search_sd)(struct cc *cc, BYTE *ch, U16 *is)
   {
     /* Get the sibling descriptor */
     index = (CCE_cptr(cc->cce) + sd_ptr) * 8;
+    if(unlikely(!cc->dict[index / 0x800]))
+      cc->dict[index / 0x800] = MADDR(cc->dictor + (index / 0x800) * 0x800, cc->r2, cc->regs, ACCTYPE_READ, cc->regs->psw.pkey);
     sd1 = &cc->dict[index / 0x800][index % 0x800];
-    ITIMER_SYNC(dictor + index, 8 - 1, cc->regs);
+    ITIMER_SYNC(cc->dictor + index, 8 - 1, cc->regs);
 
     /* If format-1, get second half from the expansion dictionary */ 
     if(cc->f1)
     {
+      if(unlikely(!cc->edict[index / 0x800]))
+        cc->edict[index / 0x800] = MADDR(cc->dictor + cc->dctsz + (index / 0x800) * 0x800, cc->r2, cc->regs, ACCTYPE_READ, cc->regs->psw.pkey); 
       sd2 = &cc->edict[index / 0x800][index % 0x800];
-      ITIMER_SYNC(dictor + GR0_dctsz(cc->regs) + index, 8 - 1, cc->regs);
+      ITIMER_SYNC(cc->dictor + cc->dctsz + index, 8 - 1, cc->regs);
 
 #ifdef OPTION_CMPSC_DEBUG
       /* Print before possible exception */
@@ -1034,7 +1023,7 @@ static int ARCH_DEP(store_is)(struct cc *cc, U16 is)
   if(unlikely(GR0_st(cc->regs)))
   {
     /* Get the interchange symbol */
-    ARCH_DEP(vfetchc)(work, 1, (GR1_dictor(cc->regs) + GR1_sttoff(cc->regs) + is * 2) & ADDRESS_MAXWRAP(cc->regs), cc->r2, cc->regs);
+    ARCH_DEP(vfetchc)(work, 1, (cc->dictor + GR1_sttoff(cc->regs) + is * 2) & ADDRESS_MAXWRAP(cc->regs), cc->r2, cc->regs);
 
 #ifdef OPTION_CMPSC_DEBUG
     WRMSG(HHC90343, "D", is, work[0], work[1]);
@@ -1101,7 +1090,7 @@ static void ARCH_DEP(store_iss)(struct cc *cc)
   /* Check if symbol translation is requested */
   if(unlikely(GR0_st(cc->regs)))
   {
-    dictor = GR1_dictor(cc->regs) + GR1_sttoff(cc->regs);
+    dictor = cc->dictor + GR1_sttoff(cc->regs);
     for(i = 0; i < 8; i++)
     {
       /* Get the interchange symbol */
@@ -1310,26 +1299,21 @@ static int ARCH_DEP(test_ec)(struct cc *cc, BYTE *cce)
 static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 {
   int dcten;                           /* Number of different symbols         */
+  GREG destlen;                        /* Destination length                  */
   struct ec ec;                        /* Expand cache                        */
   int i;
   U16 is;                              /* Index symbol                        */
   U16 iss[8] = { 0, 0, 0, 0, 0, 0, 0, 0 }; /* Index symbols                   */
-  GREG vaddr;                          /* Virtual address                     */
 
   /* Initialize values */
   dcten = GR0_dcten(regs);
+  destlen = GR_A(r1 + 1, regs);
 
-  /* Initialize destination dictionary address */
+  /* Initialize expansion context */
   ec.dest = NULL;
-
-  /* Initialize dictionary maddr addresses */
-  ec.dict[0] = NULL;                   /* Address alphabet entries not needed */
-  vaddr = GR1_dictor(regs) + 0x800;
-  for(i = 1; i < (0x01 << GR0_cdss(regs)); i++)
-  {
-    ec.dict[i] = MADDR(vaddr, r2, regs, ACCTYPE_READ, regs->psw.pkey);
-    vaddr += 0x800;
-  }
+  ec.dictor = GR1_dictor(regs);
+  for(i = 0; i < (0x01 << GR0_cdss(regs)); i++)
+    ec.dict[i] = NULL;
 
   /* Initialize expanded index symbol cache and prefill with alphabet entries */
   for(i = 0; i < 256; i++)             /* Alphabet entries                    */
@@ -1342,7 +1326,6 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
     ec.ecl[i] = 0;
   ec.ecwm = 256;                       /* Set watermark after alphabet part   */
 
-  /* Initialize source maddr page address and symbols size */
   ec.iregs = iregs;
   ec.r1 = r1;
   ec.r2 = r2;
@@ -1404,8 +1387,13 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
     COMMITREGS2(regs, iregs, r1, r2);
 
     /* Return with cc3 on interrupt pending */
-    if(unlikely(INTERRUPT_PENDING(regs)))
+    if(unlikely(destlen - GR_A(r1 + 1, regs) >= MINPROC_SIZE && INTERRUPT_PENDING(regs)))
     {
+
+#ifdef OPTION_CMPSC_DEBUG
+      WRMSG(HHC90315, "D");
+#endif /* #ifdef OPTION_CMPSC_DEBUG */       
+
       regs->psw.cc = 3;
       return;
     }
@@ -1440,25 +1428,18 @@ static void ARCH_DEP(expand_is)(struct ec *ec, U16 is)
   int csl;                             /* Complete symbol length              */
   unsigned cw;                         /* Characters written                  */
   U16 index;                           /* Index within dictionary             */
-
-#ifdef FEATURE_INTERVAL_TIMER
-  GREG dictor;                         /* Dictionary origin                   */
-#endif /* #ifdef FEATURE_INTERVAL_TIMER */
-
   BYTE *ece;                           /* Expansion Character Entry           */
   int psl;                             /* Partial symbol length               */
 
   /* Initialize values */
   cw = 0;
 
-#ifdef FEATURE_INTERVAL_TIMER
-  dictor = GR1_dictor(ec->regs);
-#endif /* #ifdef FEATURE_INTERVAL_TIMER */
-
   /* Get expansion character entry */
   index = is * 8;
+  if(unlikely(!ec->dict[index / 0x800]))
+    ec->dict[index / 0x800] = MADDR(ec->dictor + (index / 0x800) * 0x800, ec->r2, ec->regs, ACCTYPE_READ, ec->regs->psw.pkey);
   ece = &ec->dict[index / 0x800][index % 0x800];
-  ITIMER_SYNC(dictor + index, 8 - 1, ec->regs);
+  ITIMER_SYNC(ec->dictor + index, 8 - 1, ec->regs);
 
 #ifdef OPTION_CMPSC_DEBUG
   print_ece(is, ece);
@@ -1483,8 +1464,10 @@ static void ARCH_DEP(expand_is)(struct ec *ec, U16 is)
 
     /* Get preceding entry */
     index = ECE_pptr(ece) * 8;
+    if(unlikely(!ec->dict[index / 0x800]))
+      ec->dict[index / 0x800] = MADDR(ec->dictor + (index / 0x800) * 0x800, ec->r2, ec->regs, ACCTYPE_READ, ec->regs->psw.pkey);	  
     ece = &ec->dict[index / 0x800][index % 0x800];
-    ITIMER_SYNC(dictor + index, 8 - 1, ec->regs);
+    ITIMER_SYNC(ec->dictor + index, 8 - 1, ec->regs);
 
 #ifdef OPTION_CMPSC_DEBUG
     print_ece(index / 8, ece);
