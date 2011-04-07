@@ -43,7 +43,7 @@
 /*----------------------------------------------------------------------------*/
 /* Debugging options:                                                         */
 /*----------------------------------------------------------------------------*/
-#if 0
+#if 1
 #define OPTION_CMPSC_DEBUG
 #define TRUEFALSE(boolean)   ((boolean) ? "True" : "False")
 #endif /* #if 0|1 */
@@ -553,7 +553,7 @@ static BYTE *ARCH_DEP(fetch_cce)(struct cc *cc, unsigned index)
 
   index *= 8;
   if(unlikely(!cc->dict[index / 0x800]))
-    cc->dict[index / 0x800] = MADDR(cc->dictor + (index / 0x800) * 0x800, cc->r2, cc->regs, ACCTYPE_READ, cc->regs->psw.pkey);
+    cc->dict[index / 0x800] = MADDR((cc->dictor + (index / 0x800) * 0x800) & ADDRESS_MAXWRAP(cc->regs), cc->r2, cc->regs, ACCTYPE_READ, cc->regs->psw.pkey);
   cce = &cc->dict[index / 0x800][index % 0x800];
   ITIMER_SYNC(cc->dictor + index, 8 - 1, cc->regs);
 
@@ -898,7 +898,7 @@ static int ARCH_DEP(search_sd)(struct cc *cc, BYTE *ch, U16 *is)
     /* Get the sibling descriptor */
     index = (CCE_cptr(cc->cce) + sd_ptr) * 8;
     if(unlikely(!cc->dict[index / 0x800]))
-      cc->dict[index / 0x800] = MADDR(cc->dictor + (index / 0x800) * 0x800, cc->r2, cc->regs, ACCTYPE_READ, cc->regs->psw.pkey);
+      cc->dict[index / 0x800] = MADDR((cc->dictor + (index / 0x800) * 0x800) & ADDRESS_MAXWRAP(cc->regs), cc->r2, cc->regs, ACCTYPE_READ, cc->regs->psw.pkey);
     sd1 = &cc->dict[index / 0x800][index % 0x800];
     ITIMER_SYNC(cc->dictor + index, 8 - 1, cc->regs);
 
@@ -906,7 +906,7 @@ static int ARCH_DEP(search_sd)(struct cc *cc, BYTE *ch, U16 *is)
     if(cc->f1)
     {
       if(unlikely(!cc->edict[index / 0x800]))
-        cc->edict[index / 0x800] = MADDR(cc->dictor + cc->dctsz + (index / 0x800) * 0x800, cc->r2, cc->regs, ACCTYPE_READ, cc->regs->psw.pkey); 
+        cc->edict[index / 0x800] = MADDR((cc->dictor + cc->dctsz + (index / 0x800) * 0x800) & ADDRESS_MAXWRAP(cc->regs), cc->r2, cc->regs, ACCTYPE_READ, cc->regs->psw.pkey); 
       sd2 = &cc->edict[index / 0x800][index % 0x800];
       ITIMER_SYNC(cc->dictor + cc->dctsz + index, 8 - 1, cc->regs);
 
@@ -1437,7 +1437,7 @@ static void ARCH_DEP(expand_is)(struct ec *ec, U16 is)
   /* Get expansion character entry */
   index = is * 8;
   if(unlikely(!ec->dict[index / 0x800]))
-    ec->dict[index / 0x800] = MADDR(ec->dictor + (index / 0x800) * 0x800, ec->r2, ec->regs, ACCTYPE_READ, ec->regs->psw.pkey);
+    ec->dict[index / 0x800] = MADDR((ec->dictor + (index / 0x800) * 0x800) & ADDRESS_MAXWRAP(ec->regs), ec->r2, ec->regs, ACCTYPE_READ, ec->regs->psw.pkey);
   ece = &ec->dict[index / 0x800][index % 0x800];
   ITIMER_SYNC(ec->dictor + index, 8 - 1, ec->regs);
 
@@ -1465,7 +1465,7 @@ static void ARCH_DEP(expand_is)(struct ec *ec, U16 is)
     /* Get preceding entry */
     index = ECE_pptr(ece) * 8;
     if(unlikely(!ec->dict[index / 0x800]))
-      ec->dict[index / 0x800] = MADDR(ec->dictor + (index / 0x800) * 0x800, ec->r2, ec->regs, ACCTYPE_READ, ec->regs->psw.pkey);	  
+      ec->dict[index / 0x800] = MADDR((ec->dictor + (index / 0x800) * 0x800) & ADDRESS_MAXWRAP(ec->regs), ec->r2, ec->regs, ACCTYPE_READ, ec->regs->psw.pkey);	  
     ece = &ec->dict[index / 0x800][index % 0x800];
     ITIMER_SYNC(ec->dictor + index, 8 - 1, ec->regs);
 
